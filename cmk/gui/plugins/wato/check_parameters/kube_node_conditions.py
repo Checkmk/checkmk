@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
@@ -72,7 +71,7 @@ def migrate(
     old: dict[str, int] = value  # type: ignore[assignment]
 
     def by_key(key: str, value: int) -> tuple[str, int, int, int]:
-        match key:
+        match key:  # type: ignore[exhaustive-match]
             case "ready":
                 return ("Ready", 0, value, 2)
             case "memorypressure":

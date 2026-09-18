@@ -199,13 +199,13 @@ class RuleExtensionsModel:
 
 @api_model
 class RuleObjectModel(DomainObjectModel):
-    domainType: Literal["rule"] = api_field(description="Domain type of this object.")  # type: ignore[mutable-override]
+    domainType: Literal["rule"] = api_field(description="Domain type of this object.")
     extensions: RuleExtensionsModel = api_field(description="Attributes specific to rule objects.")
 
 
 @api_model
 class RuleCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["rule"] = api_field(description="Domain type of this object.")  # type: ignore[mutable-override]
+    domainType: Literal["rule"] = api_field(description="Domain type of this object.")
     value: list[RuleObjectModel] = api_field(
         description="The collection itself. Each entry in here is part of the collection.",
     )

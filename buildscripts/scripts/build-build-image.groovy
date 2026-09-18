@@ -54,8 +54,17 @@ void main() {
         ],
         "minimal-alpine-python-checkmk": [
             "tag_name": "minimal-alpine-python-checkmk-${safe_branch_name}",
-            "image_alias_name": "IMAGE_PYTHON_3_13",
+            "image_alias_name": "IMAGE_PYTHON_3_14",
             "docker_file_path": "buildscripts/scripts/Dockerfile",
+        ],
+        // centos:6 is EOL and has no docker_image_aliases entry, hence
+        // base_image instead of image_alias_name. tag_name is fixed (not
+        // branch-suffixed): Bazel pins this image by digest at one name
+        // (see oci.MODULE.bazel).
+        "cmk-update-agent": [
+            "tag_name": "cmk-update-agent-toolchain",
+            "base_image": "${docker_registry_no_http}/centos:6",
+            "docker_file_path": "non-free/packages/cmk-update-agent/Dockerfile",
         ],
     ];
     def tag_suffix = branch_base_folder.startsWith("Testing") ? "-testing" : "";
@@ -138,8 +147,12 @@ void main() {
                 }
             } else if (distro in special_image_details) {
                 def details = special_image_details[distro];
-                inside_container_minimal(safe_branch_name: safe_branch_name) {
-                    distro_base_image_id = resolve_docker_image_alias(details.image_alias_name);
+                if (details.base_image) {
+                    distro_base_image_id = details.base_image;
+                } else {
+                    inside_container_minimal(safe_branch_name: safe_branch_name) {
+                        distro_base_image_id = resolve_docker_image_alias(details.image_alias_name);
+                    }
                 }
 
                 image_name = "${details.tag_name}${tag_suffix}"
@@ -159,6 +172,21 @@ void main() {
                     + " --destination ${docker_registry_no_http}/${image_name}"
                     + " --destination ${docker_registry_no_http}/${details.tag_name}:latest${tag_suffix}"
                 );
+            } else if (distro == "reference-image") {
+                // use the a few moments earlier built image
+                def reference_distro = "ubuntu-22.04";
+                def tag_name = "testing-${reference_distro}-checkmk-${safe_branch_name}:latest-with-docker${tag_suffix}";
+                image_name = "${reference_distro}:${safe_branch_name}-latest";
+                distro_base_image_id = "${docker_registry_no_http}/${image_name}";
+
+                docker_build_args = (""
+                    + " --build-arg BASE_BUILD_IMAGE='${distro_base_image_id}'"
+
+                    + " --dockerfile 'defines/dev-images/reference/Dockerfile'"
+                    + " --context temp-build-context"
+
+                    + " --destination ${docker_registry_no_http}/${tag_name}"
+                );
             } else if (distro == "testing-image") {
                 // use the a few moments earlier built image
                 def testing_distro = "ubuntu-22.04";
@@ -174,6 +202,21 @@ void main() {
                     + " --context temp-build-context"
 
                     + " --destination ${docker_registry_no_http}/${image_name}"
+                    + " --destination ${docker_registry_no_http}/${tag_name}:latest${tag_suffix}"
+                );
+            } else if (distro == "deb-package-signer") {
+                // use the a few moments earlier built image
+                def signing_distro = "ubuntu-22.04";
+                def tag_name = "deb-package-signer-${safe_branch_name}";
+                image_name = "deb-package-signer-${safe_branch_name}:latest";
+                distro_base_image_id = "${docker_registry_no_http}/${signing_distro}:${safe_branch_name}-latest";
+
+                docker_build_args = (""
+                    + " --build-arg IMAGE_BASE='${distro_base_image_id}'"
+
+                    + " --dockerfile 'buildscripts/infrastructure/build-nodes/package-signing/Dockerfile'"
+                    + " --context temp-build-context"
+
                     + " --destination ${docker_registry_no_http}/${tag_name}:latest${tag_suffix}"
                 );
             } else {

@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Protocol
 
 from cmk.ccc.user import UserId
 from cmk.crypto.password import Password
@@ -16,6 +16,24 @@ from cmk.gui.user_connection_config_types import UserConnectionConfig
 from .._user_attribute import UserAttribute
 
 CheckCredentialsResult = UserId | None | Literal[False]
+
+
+class LoadUsersFunction(Protocol):
+    def __call__(self, lock: bool = False) -> Users: ...
+
+
+class SaveUsersFunction(Protocol):
+    def __call__(
+        self,
+        profiles: Users,
+        user_attributes: Sequence[tuple[str, UserAttribute]],
+        user_connections: Sequence[UserConnectionConfig],
+        now: datetime,
+        pprint_value: bool,
+        call_users_saved_hook: bool,
+        /,
+        changed_users: list[UserId] | Literal["all"] = "all",
+    ) -> None: ...
 
 
 class UserConnector[T_Config: UserConnectionConfig](abc.ABC):
@@ -65,11 +83,11 @@ class UserConnector[T_Config: UserConnectionConfig](abc.ABC):
     #     None        -> Unknown user
     def check_credentials(
         self,
-        user_id: UserId,
-        password: Password,
-        user_attributes: Sequence[tuple[str, UserAttribute]],
-        user_connections: Sequence[UserConnectionConfig],
-        default_user_profile: UserSpec,
+        user_id: UserId,  # noqa: ARG002
+        password: Password,  # noqa: ARG002
+        user_attributes: Sequence[tuple[str, UserAttribute]],  # noqa: ARG002
+        user_connections: Sequence[UserConnectionConfig],  # noqa: ARG002
+        default_user_profile: UserSpec,  # noqa: ARG002
     ) -> CheckCredentialsResult:
         return None
 
@@ -78,22 +96,12 @@ class UserConnector[T_Config: UserConnectionConfig](abc.ABC):
     def do_sync(
         self,
         *,
-        add_to_changelog: bool,
-        only_username: UserId | None,
-        user_attributes: Sequence[tuple[str, UserAttribute]],
-        load_users_func: Callable[[bool], Users],
-        save_users_func: Callable[
-            [
-                Users,
-                Sequence[tuple[str, UserAttribute]],
-                Sequence[UserConnectionConfig],
-                datetime,
-                bool,
-                bool,
-            ],
-            None,
-        ],
-        default_user_profile: UserSpec,
+        add_to_changelog: bool,  # noqa: ARG002
+        only_username: UserId | None,  # noqa: ARG002
+        user_attributes: Sequence[tuple[str, UserAttribute]],  # noqa: ARG002
+        load_users_func: LoadUsersFunction,  # noqa: ARG002
+        save_users_func: SaveUsersFunction,  # noqa: ARG002
+        default_user_profile: UserSpec,  # noqa: ARG002
     ) -> None:
         return
 
@@ -104,23 +112,26 @@ class UserConnector[T_Config: UserConnectionConfig](abc.ABC):
 
     # Optional: Hook function can be registered here to be xecuted
     # to save all users.
-    def save_users(self, users: dict[UserId, UserSpec]) -> None:
+    def save_users(self, users: dict[UserId, UserSpec]) -> None:  # noqa: ARG002
         return
 
     # List of user attributes locked for all users attached to this
     # connection. Those locked attributes are read-only in Setup.
     def locked_attributes(
-        self, user_attributes: Sequence[tuple[str, UserAttribute]]
+        self,
+        user_attributes: Sequence[tuple[str, UserAttribute]],  # noqa: ARG002
     ) -> Sequence[str]:
         return []
 
     def multisite_attributes(
-        self, user_attributes: Sequence[tuple[str, UserAttribute]]
+        self,
+        user_attributes: Sequence[tuple[str, UserAttribute]],  # noqa: ARG002
     ) -> Sequence[str]:
         return []
 
     def non_contact_attributes(
-        self, user_attributes: Sequence[tuple[str, UserAttribute]]
+        self,
+        user_attributes: Sequence[tuple[str, UserAttribute]],  # noqa: ARG002
     ) -> Sequence[str]:
         return []
 

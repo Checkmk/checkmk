@@ -33,15 +33,7 @@ from cmk.gui.page_menu_entry import enable_page_menu_entry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.table import Foldable, Table, table_element
-from cmk.gui.type_defs import (
-    ActionResult,
-    DynamicIcon,
-    DynamicIconName,
-    HTTPVariables,
-    IconNames,
-    PermissionName,
-    StaticIcon,
-)
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions
@@ -89,9 +81,13 @@ from cmk.gui.watolib.pending_changes import (
 from cmk.gui.watolib.rulespecs import rulespec_registry
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.ruleset_matcher.definition import RuleGroup, RuleGroupType
+from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.escaping import escape_to_html_permissive
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
+from cmk.web.utils.urls import HTTPVariable
 
 
 def register(
@@ -308,7 +304,7 @@ class ModeEditConfigurationBundles(WatoMode):
         *,
         user_permissions: UserPermissions,
         pprint_value: bool,
-        use_git: bool,
+        use_git: bool,  # noqa: ARG002
         debug: bool,
         pending_changes: PendingChanges,
     ) -> None:
@@ -345,7 +341,7 @@ class ModeEditConfigurationBundles(WatoMode):
             return
 
         bundles_with_references = identify_bundle_references(
-            tree, group_name, bundle_ids, acting_user=user
+            tree, group_name, bundle_ids, acting_user=user, program_id=PROGRAM_ID_QUICK_SETUP
         )
         if self._bundle_group_type is RuleGroupType.SPECIAL_AGENTS:
             self._special_agent_bundles_listing(group_name, bundles_with_references)
@@ -377,7 +373,7 @@ class ModeEditConfigurationBundles(WatoMode):
         raise MKGeneralException("Not implemented")
 
     def _action_url(self, action: str, bundle_id: BundleId) -> str:
-        vars_: HTTPVariables = [
+        vars_: list[HTTPVariable] = [
             ("mode", request.var("mode", self.name())),
             (self.VAR_NAME, self._name),
             (self.VAR_BUNDLE_ID, bundle_id),
@@ -761,7 +757,7 @@ class ModeConfigurationBundle(WatoMode):
 
     @classmethod
     @override
-    def parent_mode(cls) -> type["WatoMode"]:
+    def parent_mode(cls) -> type[WatoMode]:
         return ModeEditConfigurationBundles
 
     @staticmethod
@@ -806,7 +802,11 @@ class ModeConfigurationBundle(WatoMode):
         self._bundle: ConfigBundle = bundle_store[self._bundle_id]
         self._bundle_group = self._bundle["group"]
         self._bundle_references = identify_bundle_references(
-            folder_tree(), self._bundle_group, {self._bundle_id}, acting_user=user
+            folder_tree(),
+            self._bundle_group,
+            {self._bundle_id},
+            acting_user=user,
+            program_id=self._bundle["program_id"],
         )[self._bundle_id]
 
         self._rule_group_type = RuleGroupType(self._bundle_group.split(":")[0])
@@ -985,7 +985,11 @@ class ModeConfigurationBundle(WatoMode):
         if request.has_var("_clean_up"):
             tree = make_folder_tree(config)
             references = identify_bundle_references(
-                tree, None, {self._bundle_id}, acting_user=user
+                tree,
+                None,
+                {self._bundle_id},
+                acting_user=user,
+                program_id=self._bundle["program_id"],
             )[self._bundle_id]
             delete_config_bundle_objects(
                 tree,

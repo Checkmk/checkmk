@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 
 """Host tag groups
 
@@ -88,10 +87,10 @@ class HostTagGroupName(fields.String):
     }
 
     @override
-    def _validate(self, value):
+    def _validate(self, value: str) -> None:
         super()._validate(value)
 
-        if not tag_group_exists(value, builtin_included=True):
+        if not tag_group_exists(TagGroupID(value), builtin_included=True):
             raise self.make_error("should_exist", name=value)
 
 
@@ -150,7 +149,7 @@ def show_host_tag_group(params: Mapping[str, Any]) -> Response:
     response_schema=HostTagGroupCollection,
     permissions_required=PERMISSIONS,
 )
-def list_host_tag_groups(params: Mapping[str, Any]) -> Response:
+def list_host_tag_groups(params: Mapping[str, Any]) -> Response:  # noqa: ARG001
     """Show all host tag groups"""
     user.need_permission("wato.hosttags")
     tag_config = load_tag_config()

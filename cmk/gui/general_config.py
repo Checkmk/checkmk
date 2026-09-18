@@ -30,7 +30,7 @@ from cmk.gui.type_defs import (
     VirtualHostTreeSpec,
 )
 from cmk.gui.user_connection_config_types import ConfigurableUserConnectionSpec
-from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.inventory.config import InvCleanupParams
 from cmk.livestatus_client import (
     AuthenticationConnectionEntry,
@@ -268,7 +268,9 @@ class GeneralConfig:
     # MISC
     doculink_urlformat: str = "https://checkmk.com/checkmk_%s.html"
 
-    acknowledge_problems: dict[str, bool] = field(
+    # `ack_expire` is an age in seconds, so this is not the dict of flags it looks like; the
+    # sibling `user_downtime_timeranges` setting is typed the same way for the same reason.
+    acknowledge_problems: dict[str, Any] = field(
         default_factory=lambda: {
             "ack_sticky": False,
             "ack_notify": True,

@@ -31,6 +31,7 @@ function mountEditableTable(options: {
   expandedRows?: Record<string, boolean>
   rowHeight?: string
   onReorder?: (fromIndex: number, toIndex: number) => void
+  onRowHover?: (row: Row | null) => void
   withFooter?: boolean
   withEmptyState?: boolean
   getRowVariant?: (row: Row, index: number) => 'error' | null
@@ -45,10 +46,11 @@ function mountEditableTable(options: {
           {
             rows,
             columns: options.columns ?? COLUMNS,
-            expandedRows: options.expandedRows ?? {},
+            isRowExpanded: (row: Row) => options.expandedRows?.[row.id] === true,
             getRowKey: (row: Row) => row.id,
             ...(options.rowHeight ? { rowHeight: options.rowHeight } : {}),
             ...(options.onReorder ? { onReorder: options.onReorder } : {}),
+            ...(options.onRowHover ? { onRowHover: options.onRowHover } : {}),
             ...(options.getRowVariant ? { getRowVariant: options.getRowVariant } : {})
           },
           {
@@ -241,7 +243,7 @@ test('moves the expansion row with its data row when a reorder is applied', asyn
             {
               rows: rows.value,
               columns: COLUMNS,
-              expandedRows: { 'row-1': true },
+              isRowExpanded: (row: Row) => row.id === 'row-1',
               getRowKey: (row: Row) => row.id,
               onReorder
             },
@@ -318,4 +320,22 @@ test('keeps the selection on the same row through a reorder', async () => {
   expect(rowSelection.value).toEqual({ 'row-0': true })
   expect((screen.getByTestId('select-row-0') as HTMLInputElement).checked).toBe(true)
   expect((screen.getByTestId('select-row-1') as HTMLInputElement).checked).toBe(false)
+})
+
+test('reports the row the pointer entered', async () => {
+  const onRowHover = vi.fn()
+  mountEditableTable({ onRowHover })
+
+  await fireEvent.mouseEnter(screen.getByTestId('row-row-1').closest('tr')!)
+
+  expect(onRowHover).toHaveBeenCalledWith({ id: 'row-1', name: 'line-1' })
+})
+
+test('reports null once the pointer leaves a row', async () => {
+  const onRowHover = vi.fn()
+  mountEditableTable({ onRowHover })
+
+  await fireEvent.mouseLeave(screen.getByTestId('row-row-1').closest('tr')!)
+
+  expect(onRowHover).toHaveBeenCalledWith(null)
 })

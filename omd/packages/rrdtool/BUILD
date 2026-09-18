@@ -14,9 +14,9 @@ rrd_cli_symlinks = [
 set_runpath(
     name = "rrdtool_bin_runpath",
     srcs = [
-        "@rrdtool_native//:rrdcached",
-        "@rrdtool_native//:rrdtool",
-        "@rrdtool_native//:rrdupdate",
+        "@rrdtool",
+        "@rrdtool//:rrdcached",
+        "@rrdtool//:rrdupdate",
     ],
     rpaths = ["$ORIGIN/../lib"],
     tags = ["manual"],
@@ -24,7 +24,7 @@ set_runpath(
 
 set_runpath(
     name = "rrdtool_lib_runpath",
-    srcs = ["@rrdtool_native//:rrd_shared"],
+    srcs = ["@rrdtool//:rrd_shared"],
     rpaths = ["$ORIGIN"],
     tags = ["manual"],
 )
@@ -92,7 +92,7 @@ pkg_tar(
 set_runpath_whl(
     name = "rrdtool_python_wheel_patched",
     rpath = "$ORIGIN/../..",
-    whl = "@rrdtool_native//:rrdtool_python_wheel",
+    whl = "@rrdtool//:rrdtool_python_wheel",
 )
 
 package_wheel(

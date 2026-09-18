@@ -61,7 +61,7 @@ agent_section_gcp_service_gce_cpu = AgentSection(
 )
 
 
-def discover_default(section: gcp.PiggyBackSection) -> DiscoveryResult:
+def discover_default(section: gcp.PiggyBackSection) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 
@@ -100,7 +100,7 @@ agent_section_gcp_service_gce_network = AgentSection(
 )
 
 
-def discover_network(section: gcp.PiggyBackSection) -> DiscoveryResult:
+def discover_network(section: gcp.PiggyBackSection) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="nic0")
 
 

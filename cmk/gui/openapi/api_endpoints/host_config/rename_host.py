@@ -26,7 +26,7 @@ from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.watolib.activate_changes import ActivateChanges
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.host_rename import (
     rename_hosts_job_entry_point,
     RenameHostBackgroundJob,
@@ -86,7 +86,7 @@ def rename_host_v1(
         )
 
     new_name = body.new_name
-    if is_locked_by_quick_setup(host.locked_by()):
+    if is_locked_by_config_bundle(host.locked_by()):
         raise ProblemException(
             status=400,
             title=f'The host "{host.name()}" is locked by Quick setup.',

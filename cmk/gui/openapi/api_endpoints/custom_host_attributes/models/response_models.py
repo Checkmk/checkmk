@@ -15,8 +15,8 @@ from cmk.gui.openapi.framework.model.base_models import (
 @api_model
 class CustomHostAttrExtensions:
     topic: str = api_field(
-        description="The section this attribute appears in when editing a host.",
-        example="Custom attributes",
+        description="The internal ID of the section this attribute appears in when editing a host.",
+        example="custom_attributes",
     )
     help: str = api_field(
         description="A help text shown next to the attribute in the UI.",
@@ -34,7 +34,7 @@ class CustomHostAttrExtensions:
 
 @api_model
 class CustomHostAttrObject(DomainObjectModel):
-    domainType: Literal["custom_host_attribute"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["custom_host_attribute"] = api_field(
         description="The domain type of the object.",
     )
     extensions: CustomHostAttrExtensions = api_field(
@@ -44,7 +44,7 @@ class CustomHostAttrObject(DomainObjectModel):
 
 @api_model
 class CustomHostAttrCollection(DomainObjectCollectionModel):
-    domainType: Literal["custom_host_attribute"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["custom_host_attribute"] = api_field(
         description="The domain type of the objects in the collection.",
     )
     value: list[CustomHostAttrObject] = api_field(

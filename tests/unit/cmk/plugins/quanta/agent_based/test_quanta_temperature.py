@@ -83,9 +83,8 @@ def test_discover_quanta_temperature() -> None:
         ),
     ],
 )
-def test_check_quanta_temperature(
-    item: str, expected_results: Sequence[object], empty_value_store: None
-) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_quanta_temperature(item: str, expected_results: Sequence[object]) -> None:
     parsed = parse_quanta(_INFO)
     result = list(check_quanta_temperature(item, {}, parsed))
     assert result == expected_results

@@ -4,10 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
-from __future__ import annotations
 
 import abc
 import random
@@ -33,7 +30,7 @@ class Entity(abc.ABC):
         self.key = key
 
     @abc.abstractmethod
-    def create(self, idx, amount: int) -> Entity: ...
+    def create(self, idx: Any, amount: Any) -> Any: ...
 
 
 #   ---structural-----------------------------------------------------------
@@ -51,7 +48,7 @@ class List(Entity):
         self._from_choice = from_choice
 
     @override
-    def create(self, idx, amount):
+    def create(self, idx: Any, amount: Any) -> Any:
         if self._from_choice:
             list_ = []
             for choice in self._from_choice.choices:
@@ -71,7 +68,7 @@ class Dict(Entity):
         self._enumerate_keys = enumerate_keys
 
     @override
-    def create(self, idx, amount):
+    def create(self, idx: Any, amount: Any) -> Any:
         dict_ = {}
         if self._enumerate_keys:
             for x in range(amount):
@@ -90,25 +87,25 @@ class Str(Entity):
         self.value = value
 
     @override
-    def create(self, idx, amount):
+    def create(self, idx: Any, amount: Any) -> Any:
         return f"{self.value or self.key}-{idx}"
 
 
 class Int(Entity):
     @override
-    def create(self, idx, amount):
+    def create(self, idx: Any, amount: Any) -> Any:
         return random.choice(list(range(100)))
 
 
 class Float(Entity):
     @override
-    def create(self, idx, amount):
+    def create(self, idx: Any, amount: Any) -> Any:
         return 1.0 * random.choice(list(range(100)))
 
 
 class Timestamp(Entity):
     @override
-    def create(self, idx, amount):
+    def create(self, idx: Any, amount: Any) -> Any:
         return "2019-%02d-%02d" % (
             random.choice(list(range(1, 13))),
             random.choice(list(range(1, 29))),
@@ -117,7 +114,7 @@ class Timestamp(Entity):
 
 class Enum(Entity):
     @override
-    def create(self, idx, amount):
+    def create(self, idx: Any, amount: Any) -> Any:
         return [f"{self.key}-{idx}-{x}" for x in range(amount)]
 
 
@@ -127,7 +124,7 @@ class Choice(Entity):
         self.choices = choices
 
     @override
-    def create(self, idx, amount):
+    def create(self, idx: Any, amount: Any) -> Any:
         return random.choice(self.choices)
 
 
@@ -138,7 +135,7 @@ class BoolChoice(Choice):
 
 class Bytes(Str):
     @override
-    def create(self, idx, amount):
+    def create(self, idx: Any, amount: Any) -> Any:
         return bytes(super().create(idx, amount), "utf-8")
 
 
@@ -164,7 +161,7 @@ class InstanceBuilder:
     def _fill_instance(self) -> Iterable[Entity]:
         return []
 
-    def _create_instance(self) -> Mapping[str, Any]:
+    def _create_instance(self) -> dict[str, Any]:
         return {
             value.key: value.create(self._idx, self._amount)
             for value in self._fill_instance()
@@ -172,8 +169,10 @@ class InstanceBuilder:
         }
 
     @classmethod
-    def create_instances(cls, amount, skip_entities=None):
-        return [cls(idx, amount, skip_entities)._create_instance() for idx in range(amount)]  # noqa: SLF001
+    def create_instances(
+        cls, amount: int, skip_entities: Collection[str] | None = None
+    ) -> list[dict[str, Any]]:
+        return [cls(idx, amount, skip_entities or ())._create_instance() for idx in range(amount)]  # noqa: SLF001
 
 
 class DictInstanceBuilder:
@@ -2745,7 +2744,7 @@ class WAFV2ListOperationIB(InstanceBuilder):
 
 
 class WAFV2GetWebACLIB(InstanceBuilder):
-    def _field_to_match(self):
+    def _field_to_match(self) -> Entity:
         return Dict(
             "FieldToMatch",
             [
@@ -2759,7 +2758,7 @@ class WAFV2GetWebACLIB(InstanceBuilder):
             ],
         )
 
-    def _text_transformations(self):
+    def _text_transformations(self) -> Entity:
         return List(
             "TextTransformations",
             [
@@ -2778,7 +2777,7 @@ class WAFV2GetWebACLIB(InstanceBuilder):
             ],
         )
 
-    def _visibility_config(self):
+    def _visibility_config(self) -> Entity:
         return Dict(
             "VisibilityConfig",
             [
@@ -2788,7 +2787,7 @@ class WAFV2GetWebACLIB(InstanceBuilder):
             ],
         )
 
-    def _process_firewall_manager_rule_groups(self, key):
+    def _process_firewall_manager_rule_groups(self, key: str) -> Entity:
         return List(
             key,
             [
@@ -3008,7 +3007,7 @@ class WAFV2ListTagsForResourceIB(InstanceBuilder):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 class FakeCloudwatchClientDescribeAlarmsPaginator:
-    def paginate(self, AlarmNames=None):
+    def paginate(self, AlarmNames: Sequence[str] | None = None) -> Iterator[Mapping[str, Any]]:
         alarms = CloudwatchDescribeAlarmsIB.create_instances(amount=2)
         if AlarmNames:
             alarms = [alarm for alarm in alarms if alarm["AlarmName"] in AlarmNames]
@@ -3016,12 +3015,17 @@ class FakeCloudwatchClientDescribeAlarmsPaginator:
 
 
 class FakeCloudwatchClient:
-    def get_paginator(self, api_call):
+    def get_paginator(self, api_call: str) -> FakeCloudwatchClientDescribeAlarmsPaginator:
         if api_call == "describe_alarms":
             return FakeCloudwatchClientDescribeAlarmsPaginator()
         raise NotImplementedError(f"Please implement the paginator for {api_call}")
 
-    def get_metric_data(self, MetricDataQueries, StartTime="START", EndTime="END"):
+    def get_metric_data(
+        self,
+        MetricDataQueries: Iterable[Mapping[str, Any]],
+        StartTime: str = "START",  # noqa: ARG002
+        EndTime: str = "END",  # noqa: ARG002
+    ) -> Mapping[str, Any]:
         results = []
         for query in MetricDataQueries:
             results.append(
@@ -3128,7 +3132,7 @@ class FakeCloudwatchClientLogsClientExceptions:
 
 
 class FakeCloudwatchClientLogsDescribeLogGroupsPaginator:
-    def paginate(self, *args, **kwargs):
+    def paginate(self, *args: Any, **kwargs: Any) -> Sequence[Mapping[str, Any]]:  # noqa: ARG002
         return FAKE_LOGWATCH_CLIENT_DESCRIBE_LOG_GROUPS_PAGINATOR_RESPONSE
 
 
@@ -3136,17 +3140,21 @@ class FakeCloudwatchClientLogsClient:
     exceptions = FakeCloudwatchClientLogsClientExceptions()
 
     def start_query(
-        self, logGroupNames: list[str], startTime: int, endTime: int, queryString: str
+        self,
+        logGroupNames: list[str],  # noqa: ARG002
+        startTime: int,  # noqa: ARG002
+        endTime: int,  # noqa: ARG002
+        queryString: str,  # noqa: ARG002
     ) -> QueryId:
         return {"queryId": "MY_QUERY_ID"}
 
-    def get_query_results(self, queryId: str) -> QueryResults:
+    def get_query_results(self, queryId: str) -> QueryResults:  # noqa: ARG002
         return FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE
 
     def stop_query(self, queryId: str) -> None:
         pass
 
-    def get_paginator(self, api_call):
+    def get_paginator(self, api_call: str) -> FakeCloudwatchClientLogsDescribeLogGroupsPaginator:
         if api_call == "describe_log_groups":
             return FakeCloudwatchClientLogsDescribeLogGroupsPaginator()
         raise NotImplementedError(f"Please implement the paginator for {api_call}")
@@ -3337,11 +3345,11 @@ class LambdaListFunctionsIB(InstanceBuilder):
 
 class LambdaListTagsInstancesIB(DictInstanceBuilder):
     @override
-    def _key(self):
+    def _key(self) -> Entity:
         return Str("Tag")
 
     @override
-    def _value(self):
+    def _value(self) -> Entity:
         return Str("Value")
 
 
@@ -3399,9 +3407,9 @@ class GlacierListVaultsIB(InstanceBuilder):
 
 class GlacierListTagsInstancesIB(DictInstanceBuilder):
     @override
-    def _key(self):
+    def _key(self) -> Entity:
         return Str("Tag")
 
     @override
-    def _value(self):
+    def _value(self) -> Entity:
         return Str("Value")

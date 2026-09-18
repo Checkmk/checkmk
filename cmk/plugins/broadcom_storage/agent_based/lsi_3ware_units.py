@@ -67,7 +67,7 @@ def discover_3ware_units(section: Section) -> DiscoveryResult:
     yield from (Service(item=name) for name in section)
 
 
-def check_3ware_units(item: str, params: object, section: Section) -> CheckResult:
+def check_3ware_units(item: str, params: object, section: Section) -> CheckResult:  # noqa: ARG001
     if (unit := section.get(item)) is None:
         return
 

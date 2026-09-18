@@ -4,60 +4,138 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkBadge, { type Colors as CmkBadgeColor } from 'cmk-ui-library/components/CmkBadge.vue'
+import CmkIcon from 'cmk-ui-library/components/CmkIcon'
+import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
+import StateTag, { type StateTone } from 'cmk-ui-library/components/StateTag.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import KpiSparkLine from './KpiSparkLine.vue'
-import type { CmkKpiStatCardProps, DeltaSemantics, KpiStateSeverity } from './types'
+import type {
+  CmkKpiStatCardProps,
+  ComparisonBasis,
+  KpiDelta,
+  KpiStateSeverity,
+  TimestampedSample
+} from './types'
 
 const props = withDefaults(defineProps<CmkKpiStatCardProps>(), {
+  title: undefined,
   unit: undefined,
   series: () => [],
-  deltaRatio: undefined,
-  deltaSemantics: 'neutral',
+  delta: () => ({}),
+  formatValue: (value: number) => value.toFixed(1),
   state: undefined,
+  stale: undefined,
   rangeLimits: undefined,
   range: undefined,
   href: undefined,
   sparkHeightMode: 'full'
 })
 
-const isUp = computed(() => (props.deltaRatio ?? 0) >= 0)
-const deltaPercent = computed(() => `${Math.abs((props.deltaRatio ?? 0) * 100).toFixed(1)}%`)
+const { _t } = usei18n()
+const showDelta = computed(() => props.delta.show ?? true)
+const comparisonBasis = computed(() => props.delta.comparisonBasis ?? 'average')
 
-const DELTA_NEUTRAL = 'var(--color-mid-grey-50)'
-const DELTA_IMPROVED = 'var(--color-corporate-green-50)'
-const DELTA_WORSENED = 'var(--color-light-red-50)'
+// Reuses the shared adaptive-unit formatter (the same one profiling's own
+// formatDuration() wraps) rather than hand-rolling seconds -> "6h" maths.
+const { formatter: durationFormatter } = userSpecificUnit(
+  { notation: 'time', symbol: 's', precision: { type: 'auto', digits: 0 } },
+  'celsius'
+)
 
-// Neutral metrics make no judgment about direction; for good/bad metrics the
-// direction is judged against what an increase means (up on an "up is bad"
-// metric renders red).
-function resolveDeltaColor(semantics: DeltaSemantics, up: boolean): string {
-  switch (semantics) {
-    case 'neutral':
-      return DELTA_NEUTRAL
-    case 'good':
-      return up ? DELTA_IMPROVED : DELTA_WORSENED
-    case 'bad':
-      return up ? DELTA_WORSENED : DELTA_IMPROVED
+const BASIS_LABEL: Record<ComparisonBasis, () => TranslatedString> = {
+  average: () => _t('avg.'),
+  last: () => _t('prev. sample'),
+  minimum: () => _t('min.'),
+  maximum: () => _t('max.'),
+  median: () => _t('median')
+}
+
+function median(values: number[]): number {
+  const sorted = [...values].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  return sorted.length % 2 === 0 ? (sorted[mid - 1]! + sorted[mid]!) / 2 : sorted[mid]!
+}
+
+function computeBasisValue(basis: ComparisonBasis, values: number[]): number {
+  switch (basis) {
+    case 'average':
+      return values.reduce((sum, value) => sum + value, 0) / values.length
+    case 'last':
+      return values[values.length - 1]!
+    case 'minimum':
+      return Math.min(...values)
+    case 'maximum':
+      return Math.max(...values)
+    case 'median':
+      return median(values)
   }
 }
 
-const deltaColor = computed(() => resolveDeltaColor(props.deltaSemantics, isUp.value))
+// The basis excludes the current sample itself - it is a comparison, not a
+// self-inclusive average. Hidden below two real samples: one alone has
+// nothing to compare against, and a zero basis has no meaningful ratio.
+// Superseded by `delta.override` when given - see the `delta` computed below.
+const seriesDelta = computed<KpiDelta | undefined>(() => {
+  if (!showDelta.value) {
+    return undefined
+  }
+  const realSamples = props.series.filter(
+    (sample): sample is TimestampedSample & { value: number } => sample.value !== null
+  )
+  if (realSamples.length < 2) {
+    return undefined
+  }
+  const currentSample = realSamples[realSamples.length - 1]!
+  const basisSamples = realSamples.slice(0, -1)
+  const basisValue = computeBasisValue(
+    comparisonBasis.value,
+    basisSamples.map((sample) => sample.value)
+  )
+  if (basisValue === 0) {
+    return undefined
+  }
+  const ratio = (currentSample.value - basisValue) / basisValue
+  // "prev. sample" is a single adjacent point, not a range - a window duration
+  // describes a span being averaged/scanned, which doesn't apply to it.
+  const comparisonText =
+    comparisonBasis.value === 'last'
+      ? _t('vs. %{basisValue} %{basisLabel}', {
+          basisValue: props.formatValue(basisValue),
+          basisLabel: BASIS_LABEL[comparisonBasis.value]()
+        })
+      : _t('vs. %{basisValue} %{basisLabel} (%{window})', {
+          basisValue: props.formatValue(basisValue),
+          basisLabel: BASIS_LABEL[comparisonBasis.value](),
+          window: durationFormatter.render(currentSample.timestamp - basisSamples[0]!.timestamp)
+        })
+  return {
+    percent: `${Math.abs(ratio * 100).toFixed(1)}%`,
+    up: ratio >= 0,
+    comparisonText
+  }
+})
 
-const { _t } = usei18n()
+// A caller-supplied delta takes priority over series-derived one; fromCaller uses
+// delta.override exclusively so a per-render undefined stays empty, not a wrong fallback.
+const delta = computed<KpiDelta | undefined>(() => {
+  if (!showDelta.value) {
+    return undefined
+  }
+  const override = props.delta.override
+  return props.delta.fromCaller ? override : (override ?? seriesDelta.value)
+})
 
-// Checkmk's monitoring state colors, UNKNOWN among them -- orange, rather than
-// the grey a generic "default" would give it.
-const STATE_BADGE_COLOR: Record<KpiStateSeverity, CmkBadgeColor> = {
-  ok: 'success',
+const STATE_TAG_TONE: Record<KpiStateSeverity, StateTone> = {
+  ok: 'ok',
   warn: 'warning',
-  crit: 'danger',
+  crit: 'critical',
   unknown: 'unknown',
-  pending: 'default'
+  pending: 'pending'
 }
 
 // The raw color behind the badge, for the card's optional tint.
@@ -88,19 +166,203 @@ const stateLabel = computed<TranslatedString | undefined>(() => {
 
 const stateColor = computed(() => (props.state ? STATE_CSS_COLOR[props.state.severity] : undefined))
 
-const tintColor = computed(() => (props.state?.tintBackground ? stateColor.value : undefined))
+// No state to color when there's no data at all - card colorization doesn't apply.
+const hasData = computed(() => props.value !== undefined)
+const tintColor = computed(() =>
+  hasData.value && props.state?.tintBackground ? stateColor.value : undefined
+)
+const curveColor = computed(() => stateColor.value ?? props.color)
+
+const lastRealSample = computed<TimestampedSample | undefined>(() =>
+  [...props.series].reverse().find((d) => d.value !== null)
+)
+
+// A trailing null run means nothing has arrived since - stale. A null run
+// bounded by real samples on both sides is just a gap, not stale. A caller
+// that knows better (e.g. the check's own staleness) overrides this.
+const isStale = computed(
+  () =>
+    props.stale ??
+    (lastRealSample.value !== undefined && props.series[props.series.length - 1]?.value === null)
+)
+
+const lastSampleTimeLabel = computed<string | undefined>(() => {
+  const sample = lastRealSample.value
+  if (!sample) {
+    return undefined
+  }
+  return new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(
+    sample.timestamp * 1000
+  )
+})
+
+// Below this, a plotted curve is too cramped to read - the card falls back to
+// the plain value-only display instead.
+const MIN_HISTORY_WIDTH = 280
+const MIN_HISTORY_HEIGHT = 180
+
+const cardSize = ref<{ width: number; height: number } | null>(null)
+const isTooSmallForHistory = computed(() => {
+  const size = cardSize.value
+  return size !== null && (size.width < MIN_HISTORY_WIDTH || size.height < MIN_HISTORY_HEIGHT)
+})
 
 // A single point draws no line, so anything under two is "no plot" and the
-// value takes the card to itself.
-const hasSparkLine = computed(() => props.series.length >= 2)
+// value takes the card to itself. No data at all means no curve either.
+const hasSparkLine = computed(
+  () => hasData.value && props.series.length >= 2 && !isTooSmallForHistory.value
+)
+
+// KpiSparkLine reports the focused real sample here while scrubbing; a tile with no
+// curve has nothing to scrub.
+const sparkLine = ref<InstanceType<typeof KpiSparkLine> | null>(null)
+const hoveredSample = ref<TimestampedSample | undefined>(undefined)
+// Drives the card-wide crosshair line - kept separate from KpiSparkLine's own dot,
+// which band mode confines below the value/date text.
+const hoveredXPercent = ref<number | undefined>(undefined)
+
+function onSparkLineFocus(
+  sample: TimestampedSample | undefined,
+  xPercent: number | undefined
+): void {
+  hoveredSample.value = sample
+  hoveredXPercent.value = xPercent
+}
+
+// formatValue's output may embed its own unit (e.g. "414.49 Mbps"), so split it like
+// the headline value/unit or a hovered sample's unit doubles up with the static one.
+const hoveredFormatted = computed<{ value: string; unit: string | undefined } | undefined>(() => {
+  const sample = hoveredSample.value
+  if (!sample) {
+    return undefined
+  }
+  const rendered = props.formatValue(sample.value!)
+  const spaceIndex = rendered.indexOf(' ')
+  return spaceIndex === -1
+    ? { value: rendered, unit: undefined }
+    : { value: rendered.slice(0, spaceIndex), unit: rendered.slice(spaceIndex + 1) }
+})
+
+const hoveredValueText = computed<string | undefined>(() => hoveredFormatted.value?.value)
+
+const hoveredTimeLabel = computed<string | undefined>(() => {
+  const sample = hoveredSample.value
+  if (!sample) {
+    return undefined
+  }
+  return new Intl.DateTimeFormat(undefined, {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(sample.timestamp * 1000)
+})
+
+const realSampleCount = computed(
+  () => props.series.filter((sample) => sample.value !== null).length
+)
+const sparkFocusedIndex = computed(() => sparkLine.value?.focusedIndex)
+const scrubValueNow = computed<number | undefined>(() =>
+  realSampleCount.value > 0 ? (sparkFocusedIndex.value ?? realSampleCount.value - 1) : undefined
+)
+const scrubValueText = computed<string | undefined>(() => {
+  if (hoveredSample.value) {
+    return `${hoveredTimeLabel.value}: ${hoveredValueText.value}`
+  }
+  const sample = lastRealSample.value
+  return sample ? `${lastSampleTimeLabel.value}: ${props.formatValue(sample.value!)}` : undefined
+})
+
+// A freshly polled value dips in opacity rather than counting up - rolling digits would
+// imply readings that never existed; skipped on mount since watch() doesn't fire for
+// the initial value.
+const isRefreshing = ref(false)
+let refreshTimer: ReturnType<typeof setTimeout> | undefined
+watch(
+  () => props.value,
+  (current, previous) => {
+    if (current === previous) {
+      return
+    }
+    clearTimeout(refreshTimer)
+    isRefreshing.value = true
+    refreshTimer = setTimeout(() => {
+      isRefreshing.value = false
+    }, 240)
+  }
+)
+onBeforeUnmount(() => clearTimeout(refreshTimer))
+
+// One announcement per settle, not per keystroke/pointer-move, so a held key or a
+// mouse sweep doesn't flood the live region.
+const ANNOUNCE_SETTLE_MS = 300
+const announcedText = ref<TranslatedString>('' as TranslatedString)
+let announceTimer: ReturnType<typeof setTimeout> | undefined
+
+watch(hoveredSample, (sample) => {
+  clearTimeout(announceTimer)
+  if (!sample) {
+    announcedText.value = '' as TranslatedString
+    return
+  }
+  announceTimer = setTimeout(() => {
+    const formatted = hoveredFormatted.value
+    announcedText.value = _t('%{time}: %{value}', {
+      time: hoveredTimeLabel.value ?? '',
+      value: formatted ? `${formatted.value}${formatted.unit ? ` ${formatted.unit}` : ''}` : ''
+    })
+  }, ANNOUNCE_SETTLE_MS)
+})
+
+onBeforeUnmount(() => clearTimeout(announceTimer))
+
+const KEYDOWN_HANDLERS: Record<string, (spark: InstanceType<typeof KpiSparkLine>) => void> = {
+  ArrowLeft: (spark) => spark.stepBy(-1),
+  ArrowRight: (spark) => spark.stepBy(1),
+  PageUp: (spark) => spark.stepBy(-10),
+  PageDown: (spark) => spark.stepBy(10),
+  Home: (spark) => spark.jumpToStart(),
+  End: (spark) => spark.jumpToEnd(),
+  ArrowUp: (spark) => spark.jumpToPeak(),
+  ArrowDown: (spark) => spark.jumpToLow(),
+  Escape: (spark) => spark.clear()
+}
+
+function onCardKeydown(event: KeyboardEvent): void {
+  if (event.target !== event.currentTarget) {
+    return
+  }
+  const spark = sparkLine.value
+  const handler = spark && KEYDOWN_HANDLERS[event.key]
+  if (!handler) {
+    return
+  }
+  event.preventDefault()
+  handler(spark)
+}
+
+// Scrubbing spans the whole card, so the card (not KpiSparkLine's SVG) owns pointer
+// capture; KpiSparkLine still does the coordinate math.
+function onCardPointerMove(event: PointerEvent): void {
+  sparkLine.value?.focusFromPointerX(event.clientX)
+}
+
+function onCardPointerLeave(): void {
+  sparkLine.value?.clearWithDelay()
+}
+
+// Curve-less metrics center the value to fill the card. No-data is
+// different - it would normally plot a curve, so it stays top-left.
+const isValueOnly = computed(
+  () => hasData.value && (props.series.length < 2 || isTooSmallForHistory.value)
+)
 
 // Band mode never overlaps the value row, so only full mode needs a scrim.
 const showScrim = computed(() => hasSparkLine.value && props.sparkHeightMode === 'full')
 
 const cardEl = ref<HTMLElement | null>(null)
 const valueRowEl = ref<HTMLElement | null>(null)
-// The value row's live edges - the scrim must stay within the text's own band, not the whole card.
-const scrimRightEdge = ref(0)
+// The value row's live bottom edge - the scrim fades out below it, not at a fixed height.
 const scrimBottomEdge = ref(0)
 
 function measureScrim(): void {
@@ -111,14 +373,69 @@ function measureScrim(): void {
   }
   const cardRect = card.getBoundingClientRect()
   const rowRect = row.getBoundingClientRect()
-  scrimRightEdge.value = rowRect.right - cardRect.left
   scrimBottomEdge.value = rowRect.bottom - cardRect.top
+  if (cardRect.width > 0 && cardRect.height > 0) {
+    cardSize.value = { width: cardRect.width, height: cardRect.height }
+  }
 }
 
 const { observe } = useResizeObserver(measureScrim)
 observe(valueRowEl)
-watch(() => [props.value, props.unit, props.deltaRatio], measureScrim, { flush: 'post' })
+observe(cardEl)
+watch(() => [props.value, props.unit, delta.value, hoveredSample.value], measureScrim, {
+  flush: 'post'
+})
 onMounted(measureScrim)
+
+// Window low/high for the composite aria-label below; prefers the caller's
+// rangeLimits, else the real samples' own min/max.
+const windowRangeLabel = computed<string | undefined>(() => {
+  if (props.rangeLimits) {
+    return _t('%{minimum} to %{maximum}', {
+      minimum: props.rangeLimits.minimum,
+      maximum: props.rangeLimits.maximum
+    })
+  }
+  const realValues = props.series
+    .filter((sample): sample is TimestampedSample & { value: number } => sample.value !== null)
+    .map((sample) => sample.value)
+  if (realValues.length < 2) {
+    return undefined
+  }
+  return _t('%{minimum} to %{maximum}', {
+    minimum: props.formatValue(Math.min(...realValues)),
+    maximum: props.formatValue(Math.max(...realValues))
+  })
+})
+
+// A scrubbable card is one tab stop, so on focus it reads as a single composite
+// string; state stays text, matching the visible badge.
+const cardAriaLabel = computed<TranslatedString | undefined>(() => {
+  if (!hasSparkLine.value) {
+    return undefined
+  }
+  const parts: TranslatedString[] = []
+  if (props.title) {
+    parts.push(props.title as TranslatedString)
+  }
+  parts.push(`${props.value} ${props.unit ?? ''}`.trim() as TranslatedString)
+  if (stateLabel.value) {
+    parts.push(stateLabel.value)
+  }
+  if (delta.value) {
+    parts.push(
+      _t('%{direction} %{percent} %{comparison}', {
+        direction: delta.value.up ? _t('up') : _t('down'),
+        percent: delta.value.percent,
+        comparison: delta.value.comparisonText
+      })
+    )
+  }
+  if (windowRangeLabel.value) {
+    parts.push(_t('range %{range}', { range: windowRangeLabel.value }))
+  }
+  return parts.join(', ') as TranslatedString
+})
 </script>
 
 <template>
@@ -127,57 +444,122 @@ onMounted(measureScrim)
     class="db-cmk-kpi-stat-card"
     :class="{
       'db-cmk-kpi-stat-card--tinted': tintColor !== undefined,
-      'db-cmk-kpi-stat-card--value-only': !hasSparkLine,
-      'db-cmk-kpi-stat-card--band': hasSparkLine && sparkHeightMode === 'band'
+      'db-cmk-kpi-stat-card--value-only': isValueOnly,
+      'db-cmk-kpi-stat-card--value-only-small': isTooSmallForHistory,
+      'db-cmk-kpi-stat-card--band': hasSparkLine && sparkHeightMode === 'band',
+      'db-cmk-kpi-stat-card--has-range': rangeLimits
     }"
     :style="{
       '--accent-color': color,
       '--tint-color': tintColor,
-      '--scrim-right-edge': `${scrimRightEdge}px`,
       '--scrim-bottom-edge': `${scrimBottomEdge}px`
     }"
+    :tabindex="hasSparkLine ? 0 : undefined"
+    :role="hasSparkLine ? 'slider' : undefined"
+    :aria-valuemin="hasSparkLine ? 0 : undefined"
+    :aria-valuemax="hasSparkLine ? realSampleCount - 1 : undefined"
+    :aria-valuenow="scrubValueNow"
+    :aria-valuetext="scrubValueText"
+    :aria-label="cardAriaLabel"
+    @keydown="onCardKeydown"
+    @pointermove="hasSparkLine ? onCardPointerMove($event) : undefined"
+    @pointerleave="hasSparkLine ? onCardPointerLeave() : undefined"
   >
-    <div ref="valueRowEl" class="db-cmk-kpi-stat-card__value-row">
+    <!-- A focusable, scrubbable card reads as one composite aria-label (see
+         cardAriaLabel); its visible text is redundant to a screen reader and
+         hidden accordingly, rather than trusting every AT to dedupe it itself. -->
+    <div
+      ref="valueRowEl"
+      class="db-cmk-kpi-stat-card__value-row"
+      :aria-hidden="hasSparkLine ? 'true' : undefined"
+    >
       <component :is="href ? 'a' : 'span'" :href="href" class="db-cmk-kpi-stat-card__value-link">
-        <span class="db-cmk-kpi-stat-card__value">{{ value }}</span>
-        <span v-if="unit" class="db-cmk-kpi-stat-card__unit">{{ unit }}</span>
+        <span
+          class="db-cmk-kpi-stat-card__value"
+          :class="{ 'db-cmk-kpi-stat-card__value--refreshing': isRefreshing && !hoveredValueText }"
+        >
+          {{ hoveredValueText ?? (hasData ? value : '—') }}
+        </span>
+        <span
+          v-if="hoveredFormatted ? (hoveredFormatted.unit ?? unit) : unit"
+          class="db-cmk-kpi-stat-card__unit"
+        >
+          {{ hoveredFormatted ? (hoveredFormatted.unit ?? unit) : unit }}
+        </span>
       </component>
-      <span
-        v-if="deltaRatio !== undefined"
-        class="db-cmk-kpi-stat-card__pill db-cmk-kpi-stat-card__delta"
-        :class="{ 'db-cmk-kpi-stat-card__delta--down': !isUp }"
-        :style="{ '--pill-color': deltaColor }"
+      <div
+        v-if="hasData && (hoveredSample || isStale || delta !== undefined)"
+        class="db-cmk-kpi-stat-card__info-slot"
       >
-        <svg class="db-cmk-kpi-stat-card__delta-arrow" viewBox="0 0 8 6" aria-hidden="true">
-          <path d="m0 6 4-6 4 6z" fill="currentColor" />
-        </svg>
-        {{ deltaPercent }}
-      </span>
+        <span v-if="hoveredSample" class="db-cmk-kpi-stat-card__hover-note">
+          {{ hoveredTimeLabel }}
+        </span>
+        <span v-else-if="isStale" class="db-cmk-kpi-stat-card__stale-note">
+          <CmkIcon name="clock" size="small" :colored="false" />
+          {{ _t('No recent data — last sample %{time}', { time: lastSampleTimeLabel ?? '' }) }}
+        </span>
+        <span
+          v-else-if="delta"
+          class="db-cmk-kpi-stat-card__delta"
+          :class="{ 'db-cmk-kpi-stat-card__delta--down': !delta.up }"
+        >
+          <svg class="db-cmk-kpi-stat-card__delta-arrow" viewBox="0 0 8 6" aria-hidden="true">
+            <path d="m0 6 4-6 4 6z" fill="currentColor" />
+          </svg>
+          <span class="db-cmk-kpi-stat-card__delta-percent">{{ delta.percent }}</span>
+          <span class="db-cmk-kpi-stat-card__delta-comparison">{{ delta.comparisonText }}</span>
+        </span>
+      </div>
     </div>
+
+    <CmkVisuallyHidden live="polite" :text="announcedText" />
+
+    <p v-if="!hasData" class="db-cmk-kpi-stat-card__no-data-note">
+      {{ _t('No data in this timeframe.') }}
+    </p>
 
     <div v-if="showScrim" class="db-cmk-kpi-stat-card__scrim" aria-hidden="true" />
 
-    <CmkBadge
-      v-if="state && stateLabel"
+    <!-- Spans the whole card, not just KpiSparkLine's own box: in band mode
+         that box only covers the area below the value/date text, but the
+         crosshair itself should still reach the widget's actual top and bottom. -->
+    <div
+      v-if="hoveredXPercent !== undefined"
+      class="db-cmk-kpi-stat-card__crosshair-line"
+      :style="{ left: `${hoveredXPercent}%` }"
+      aria-hidden="true"
+    />
+
+    <StateTag
+      v-if="hasData && state && stateLabel"
       class="db-cmk-kpi-stat-card__state"
-      :color="STATE_BADGE_COLOR[state.severity]"
-      size="medium"
-    >
-      {{ stateLabel }}
-    </CmkBadge>
+      :label="stateLabel"
+      :tone="STATE_TAG_TONE[state.severity]"
+      kind="service"
+      :stale="isStale"
+      :aria-hidden="hasSparkLine ? 'true' : undefined"
+    />
 
     <div v-if="hasSparkLine" class="db-cmk-kpi-stat-card__spark-line">
       <KpiSparkLine
+        ref="sparkLine"
         :series="series"
-        :color="color"
+        :color="curveColor"
         :fade-to-floor="tintColor !== undefined"
         :range="range"
+        @focus="onSparkLineFocus"
       />
       <template v-if="rangeLimits">
-        <span class="db-cmk-kpi-stat-card__range db-cmk-kpi-stat-card__range--maximum">
+        <span
+          class="db-cmk-kpi-stat-card__range db-cmk-kpi-stat-card__range--maximum"
+          aria-hidden="true"
+        >
           {{ rangeLimits.maximum }}
         </span>
-        <span class="db-cmk-kpi-stat-card__range db-cmk-kpi-stat-card__range--minimum">
+        <span
+          class="db-cmk-kpi-stat-card__range db-cmk-kpi-stat-card__range--minimum"
+          aria-hidden="true"
+        >
           {{ rangeLimits.minimum }}
         </span>
       </template>
@@ -199,13 +581,28 @@ onMounted(measureScrim)
 
   /* The card's own background, shared with the full-height scrim below so the two can't drift apart. */
   --card-effective-bg: var(--db-content-bg-color);
+
+  /* Set unconditionally (not just on --tinted) so toggling the tint state
+     transitions the color instead of jumping between "unset" and "set". */
+  background-color: var(--card-effective-bg);
+  transition: background-color 120ms linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .db-cmk-kpi-stat-card {
+    transition: none;
+  }
+}
+
+/* Crosshair only where scrubbing does something - a tile without a curve (no
+   [tabindex]) keeps the default cursor. */
+.db-cmk-kpi-stat-card[tabindex] {
+  cursor: crosshair;
 }
 
 .db-cmk-kpi-stat-card--tinted {
   /* Opaque (mixed against the real backdrop, not transparent), so the scrim can reuse it to block the curve. */
   --card-effective-bg: color-mix(in srgb, var(--tint-color) 12%, var(--db-content-bg-color));
-
-  background-color: var(--card-effective-bg);
 }
 
 /* Full-bleed by default; band mode overrides this below. */
@@ -230,9 +627,12 @@ onMounted(measureScrim)
 .db-cmk-kpi-stat-card__value-row {
   position: relative;
   z-index: 2;
+
+  /* Stacked, not inline: the stale note can run long, so it gets its own row. */
   display: inline-flex;
-  gap: clamp(4px, 1.5cqw, 10px);
-  align-items: baseline;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(2px, 1cqh, 6px);
   min-width: 0;
 
   /* The card itself is full-bleed, so that a tinted background and the spark
@@ -254,11 +654,36 @@ onMounted(measureScrim)
 
 .db-cmk-kpi-stat-card__value {
   font-size: clamp(18px, min(40cqh, 16cqw), 52px);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-medium);
   line-height: 1;
 
   /* Neutral: the accent/data color belongs to the curve, not the number. */
   color: var(--font-color);
+}
+
+/* A freshly polled value dips in opacity instead of counting up - digits
+   rolling through intermediate numbers would imply readings that never
+   existed. Two 120ms fades (out, then back in), never tweening the digits
+   themselves. */
+.db-cmk-kpi-stat-card__value--refreshing {
+  animation: db-cmk-kpi-stat-card-value-dip 240ms linear;
+}
+
+@keyframes db-cmk-kpi-stat-card-value-dip {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .db-cmk-kpi-stat-card__value--refreshing {
+    animation: none;
+  }
 }
 
 .db-cmk-kpi-stat-card__unit {
@@ -272,6 +697,7 @@ onMounted(measureScrim)
    left it. */
 .db-cmk-kpi-stat-card--value-only {
   display: flex;
+  flex-direction: column;
   gap: clamp(4px, 1.5cqw, 10px);
   align-items: center;
   justify-content: center;
@@ -279,6 +705,12 @@ onMounted(measureScrim)
 
 .db-cmk-kpi-stat-card--value-only .db-cmk-kpi-stat-card__value-row {
   justify-content: center;
+}
+
+/* Extra breathing room so the status badge isn't clipped when the card
+   falls back to value-only at small sizes. */
+.db-cmk-kpi-stat-card--value-only-small .db-cmk-kpi-stat-card__value-row {
+  padding: calc(var(--spacing) / 2);
 }
 
 .db-cmk-kpi-stat-card--value-only .db-cmk-kpi-stat-card__value {
@@ -291,28 +723,31 @@ onMounted(measureScrim)
   font-size: clamp(10px, min(18cqh, 7cqw), 38px);
 }
 
-/* Delta and state read as siblings: same shape, same weight, tinted in whatever
-   each one is saying. */
-.db-cmk-kpi-stat-card__pill {
+/* Neutral: the delta makes no judgment about direction, only reports it, so it
+   reads in the same dimmed color as the stale note it swaps places with. */
+.db-cmk-kpi-stat-card__delta {
   display: inline-flex;
+  flex-shrink: 0;
   gap: clamp(2px, 1cqw, 5px);
   align-items: center;
-  align-self: center;
   min-width: 0;
-  padding: clamp(1px, 2cqh, 4px) clamp(4px, 1.5cqw, 10px);
   overflow: hidden;
   font-size: clamp(9px, 14cqh, 16px);
-  font-weight: var(--font-weight-bold);
-  line-height: 1.4;
-  color: var(--pill-color);
-  text-overflow: ellipsis;
+  color: var(--font-color-dimmed);
   white-space: nowrap;
-  background-color: color-mix(in srgb, var(--pill-color) 15%, transparent);
-  border-radius: 99999px;
 }
 
-.db-cmk-kpi-stat-card__delta {
+.db-cmk-kpi-stat-card__delta-percent {
   flex-shrink: 0;
+  font-weight: var(--font-weight-bold);
+  color: var(--font-color);
+}
+
+/* The comparison text ("vs. 47.1% avg. (6h)") is the part most likely to be
+   clipped in a narrow card - the percent and direction matter more. */
+.db-cmk-kpi-stat-card__delta-comparison {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .db-cmk-kpi-stat-card__delta-arrow {
@@ -325,25 +760,91 @@ onMounted(measureScrim)
   transform: rotate(180deg);
 }
 
-/* CmkBadge is sized for counts, so it pads to a bubble around a short label
-   like "OK". Widen it to read as the state name it is.
-   Same top-right corner in every variant, so a dashboard grid can be scanned by corner alone.
-   Positioned against the card, so it must be a child of the card, not of the value row. */
+/* Delta and stale note share this slot; reserving height keeps the card from jumping when they swap. */
+.db-cmk-kpi-stat-card__info-slot {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  min-height: clamp(16px, 20cqh, 28px);
+}
+
+.db-cmk-kpi-stat-card__hover-note {
+  overflow: hidden;
+  font-size: clamp(9px, 14cqh, 16px);
+  font-weight: var(--font-weight-bold);
+  color: var(--font-color-dimmed);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.db-cmk-kpi-stat-card__stale-note {
+  display: inline-flex;
+  gap: clamp(2px, 1cqw, 5px);
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  font-size: clamp(9px, 14cqh, 16px);
+  color: var(--font-color-dimmed);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.db-cmk-kpi-stat-card__no-data-note {
+  margin: 0;
+
+  /* Left-aligned under the value, not centered - this isn't a value-only card. */
+  padding: 0 calc(var(--spacing) * 2);
+  font-size: clamp(10px, 14cqh, 16px);
+  color: var(--font-color-dimmed);
+}
+
+/* Same top-right corner in every variant, so a dashboard grid can be scanned by corner alone.
+   Positioned against the card, so it must be a child of the card, not of the value row.
+   Sizing is StateTag's own (the Views 3.0 state label): fixed, not scaled with card height
+   like the old CmkBadge - StateTag exposes no scaling hook, so this is deliberate. */
 .db-cmk-kpi-stat-card__state {
   position: absolute;
   top: var(--spacing);
   right: var(--spacing);
   z-index: 3;
   max-width: 40%;
-  height: auto;
-  padding: clamp(2px, 3cqh, 7px) clamp(8px, 3cqw, 18px);
-  margin: 0;
-  font-size: clamp(11px, 18cqh, 24px);
-  font-weight: var(--font-weight-bold);
-  line-height: 1.4;
 }
 
-/* Fades out in both directions past the text, so a curve peak near it isn't sliced off flat. */
+/* Offset below the top edge by the range-maximum label's own height (plus a small
+   gap), so the two don't overlap - only when that label is actually rendered. */
+.db-cmk-kpi-stat-card--has-range .db-cmk-kpi-stat-card__state {
+  top: calc(var(--spacing) + clamp(8px, 9cqh, 11px) + 4px);
+}
+
+/* With no plot, the corner badge has nowhere to anchor against - it joins the
+   centered column below the value instead, in its normal DOM position. */
+.db-cmk-kpi-stat-card--value-only .db-cmk-kpi-stat-card__state {
+  position: static;
+}
+
+/* Grey and dashed, not accent-colored: this marks a scrub position, not data -
+   the curve and its own dot already carry the data color. Matches the
+   graphing initiative's own crosshair exactly (setLineDash([3, 3]) at
+   lineWidth 1) - a plain `dotted` border renders much tighter, browser-default
+   spacing, so the dash/gap is drawn via a repeating gradient instead. */
+.db-cmk-kpi-stat-card__crosshair-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 2;
+  width: 1px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--font-color-dimmed) 0,
+    var(--font-color-dimmed) 3px,
+    transparent 3px,
+    transparent 6px
+  );
+  pointer-events: none;
+}
+
+/* A full-width top vignette, fading continuously - not just a box under the text. */
 .db-cmk-kpi-stat-card__scrim {
   position: absolute;
   top: 0;
@@ -351,16 +852,10 @@ onMounted(measureScrim)
   left: 0;
   height: calc(var(--scrim-bottom-edge) + clamp(8px, 6cqh, 32px));
   z-index: 1;
-  background: linear-gradient(
-    to right,
-    var(--card-effective-bg) 0,
-    var(--card-effective-bg) var(--scrim-right-edge),
-    transparent calc(var(--scrim-right-edge) + clamp(8px, 6cqw, 32px))
-  );
+  background: var(--card-effective-bg);
   mask-image: linear-gradient(
     to bottom,
     black 0,
-    black var(--scrim-bottom-edge),
     transparent calc(var(--scrim-bottom-edge) + clamp(8px, 6cqh, 32px))
   );
   pointer-events: none;

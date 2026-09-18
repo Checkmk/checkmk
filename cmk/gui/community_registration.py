@@ -25,8 +25,8 @@ from cmk.gui.dashboard import (
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.features import Features as GuiFeatures
 from cmk.gui.features import features_registry
-from cmk.gui.graphing import community_registration as graphing_community_registration
-from cmk.gui.graphing_main import PageHostServiceGraphPopup
+from cmk.gui.graphing import PageHostServiceGraphPopup
+from cmk.gui.graphing import registration as graphing_registration
 from cmk.gui.help_menu import (
     default_about_checkmk_entries,
     default_developer_entries,
@@ -364,7 +364,7 @@ def register(
     )
     agent_commands.register(agent_commands_registry)
 
-    graphing_community_registration.register(
+    graphing_registration.register(
         edition,
         page_registry,
         config_variable_registry,

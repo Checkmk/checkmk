@@ -12,7 +12,7 @@
     "class-variance-authority": "^0.7.1",
     "openapi-fetch": "^0.17.0",
     "reka-ui": "^2.9.6",
-    "sanitize-html": "^2.17.2",
+    "sanitize-html": "^2.17.7",
     "vue3-gettext": "4.0.0-beta.1"
   },
   "devDependencies": {

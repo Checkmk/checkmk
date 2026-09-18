@@ -49,7 +49,7 @@ class MasterControlExtensionsModel:
 
 @api_model
 class MasterControlModel(DomainObjectModel):
-    domainType: Literal["master_control"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["master_control"] = api_field(
         description="The domain type of the object.",
     )
     extensions: MasterControlExtensionsModel = api_field(
@@ -59,7 +59,7 @@ class MasterControlModel(DomainObjectModel):
 
 @api_model
 class MasterControlCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["master_control"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["master_control"] = api_field(
         description="The domain type of the objects in the collection.",
     )
     value: list[MasterControlModel] = api_field(

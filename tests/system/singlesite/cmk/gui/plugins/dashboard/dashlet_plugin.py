@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # Names are made available dynamically
 from cmk.gui.plugins.dashboard.utils import (  # type: ignore[attr-defined]
     Dashlet,
@@ -15,15 +13,15 @@ from cmk.gui.plugins.dashboard.utils import (  # type: ignore[attr-defined]
 @dashlet_registry.register
 class TestDashlet(Dashlet):  # type: ignore[misc]
     @classmethod
-    def type_name(cls):
+    def type_name(cls) -> str:
         return "test"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return "test"
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return "test"
 
     @classmethod
@@ -34,5 +32,5 @@ class TestDashlet(Dashlet):  # type: ignore[misc]
     def is_selectable(cls) -> bool:
         return False
 
-    def show(self):
+    def show(self) -> None:
         pass

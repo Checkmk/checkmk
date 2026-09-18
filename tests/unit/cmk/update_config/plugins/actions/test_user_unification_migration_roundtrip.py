@@ -12,8 +12,6 @@ operate only on the sites config and the connection config; user records are
 never read or written, so user accounts/contact groups/roles are untouched by
 construction (the meaningful losslessness here is config-level)."""
 
-from __future__ import annotations
-
 import copy
 import logging
 from types import SimpleNamespace
@@ -68,7 +66,7 @@ def _drive(
     monkeypatch.setattr(
         UserConnectionConfigFile,
         "save",
-        lambda _self, _cfg, pprint_value: conn_saved.__setitem__("called", True),
+        lambda _self, _cfg, pprint_value: conn_saved.__setitem__("called", True),  # noqa: ARG005
     )
 
     MigrateUserSyncToAuthConnections(

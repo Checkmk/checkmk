@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import abc
@@ -15,55 +14,49 @@ from typing import Any, Literal, NotRequired, override
 import cmk.livestatus_client as livestatus
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v1 import translations as translations_v1
+from cmk.graphing_engine import ConsolidationFunction, TimeRange
+from cmk.graphing_engine import HostName as EngineHostName
+from cmk.graphing_engine import ServiceName as EngineServiceName
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard.exceptions import WidgetRenderError
 from cmk.gui.dashboard.type_defs import ABCGraphDashletConfig
-from cmk.gui.exceptions import MKMissingDataError, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing import (
-    fetch_graph_row,
-    get_graph_plugin_and_single_metric_choices,
+    build_template_graphs,
+    discover_template_graphs,
+    DiscoveredGraphs,
+    evaluate_built_graphs,
     get_graph_plugin_choices,
-    get_metric_spec,
-    get_temperature_unit,
-    get_template_graph_specification,
+    graph_choices,
+    GraphChoices,
     GraphDestinations,
-    GraphEnvironment,
     GraphFromAPI,
     GraphPluginChoice,
-    GraphRecipeWithOverrides,
     graphs_from_api,
     GraphSpecification,
-    metrics_from_api,
-    MKCombinedGraphLimitExceededError,
-    RegisteredMetric,
+    registered_metrics,
+    registered_translations,
     resolve_graph_id_from_index,
+    RRDFetchMetricNames,
     sort_registered_graph_plugins,
     TemplateGraphSpecification,
 )
-from cmk.gui.graphing._engine_discovery import DiscoveredGraphs
-from cmk.gui.graphing._engine_template_graphs import discover_template_graphs
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import (
-    Choices,
-    GraphRenderOptionsVS,
-    SingleInfos,
-    SizePT,
-    VisualContext,
-)
+from cmk.gui.type_defs import GraphRenderOptionsVS, SingleInfos, VisualContext
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.valuespec import (
-    DropdownChoiceWithHostAndServiceHints,
+    Timerange,
 )
 from cmk.gui.visuals import (
     get_only_sites_from_context,
     get_singlecontext_vars,
 )
 from cmk.utils.servicename import ServiceName
-from cmk.web.utils.autocompleter_config import ContextAutocompleterConfig
+from cmk.web.utils.choices import Choices
 
 from ..base import (
     Dashlet,
@@ -71,76 +64,11 @@ from ..base import (
     ResponsiveLayoutConstraints,
     WidgetSize,
 )
-from .status_helpers import make_mk_missing_data_error
 
 GRAPH_TEMPLATE_CHOICE_AUTOCOMPLETER_ID = "available_graph_templates"
 
 
-class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
-    """Factory of a Dropdown menu from all graph templates"""
-
-    _MARKER_DEPRECATED_CHOICE = "_deprecated_int_value"
-
-    def __init__(self, **kwargs: Any) -> None:
-        kwargs_with_defaults: Mapping[str, Any] = {
-            "css_spec": ["ajax-vals"],
-            "hint_label": _("graph"),
-            "title": _("Graph"),
-            "help": _(
-                "Select the graph to be displayed by this element. In case the current selection "
-                "displays 'Deprecated choice, please re-select', this element was created before "
-                "the release of version 2.0. Before this version, the graph selection was based on "
-                "a single number indexing the output of the corresponding service. Such elements "
-                "will continue to work, however, if you want to re-edit them, you have to re-"
-                "select the graph. To check which graph is currently selected, look at the title "
-                "of the element in the dashboard.",
-            ),
-            "autocompleter": ContextAutocompleterConfig(
-                ident=GRAPH_TEMPLATE_CHOICE_AUTOCOMPLETER_ID,
-                strict=True,
-                show_independent_of_context=True,
-                dynamic_params_callback_name="host_and_service_hinted_autocompleter",
-            ),
-            **kwargs,
-        }
-        super().__init__(**kwargs_with_defaults)
-
-    @override
-    def _validate_value(self, value: str | None, varprefix: str) -> None:
-        if not value or value == self._MARKER_DEPRECATED_CHOICE:
-            raise MKUserError(varprefix, _("Please select a graph."))
-
-    @override
-    def _choices_from_value(self, value: str | None) -> Choices:
-        if not value:
-            return list(self.choices())
-        return [
-            next(
-                (
-                    (c.id, c.title)
-                    for c in get_graph_plugin_choices(graphs_from_api)
-                    if c.id == value
-                ),
-                (
-                    value,
-                    (
-                        _("Deprecated choice, please re-select")
-                        if value == self._MARKER_DEPRECATED_CHOICE
-                        else str(get_metric_spec(value, metrics_from_api).title)
-                    ),
-                ),
-            )
-        ]
-
-    @override
-    def render_input(self, varprefix: str, value: str | None) -> None:
-        return super().render_input(
-            varprefix,
-            self._MARKER_DEPRECATED_CHOICE if isinstance(value, int) else value,  # type: ignore[redundant-expr]
-        )
-
-
-class ABCGraphDashlet[T: ABCGraphDashletConfig, TGraphSpec: GraphSpecification](Dashlet[T]):
+class ABCGraphDashlet[T: ABCGraphDashletConfig](Dashlet[T]):
     @classmethod
     @override
     def has_context(cls) -> bool:
@@ -173,17 +101,10 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig, TGraphSpec: GraphSpecification](
                 )
 
     @abc.abstractmethod
-    def build_graph_specification(self, context: VisualContext) -> TGraphSpec: ...
-
-    @abc.abstractmethod
     def discover_graphs(
         self, *, debug: bool, user_permissions: UserPermissions
     ) -> DiscoveredGraphs:
         """The data-less engine graphs this widget renders.
-
-        The client-side graph widgets fetch their data for these definitions; the server-side
-        rendering path goes through `recipes` instead. Only the graph specification is needed
-        here, so a widget whose legacy recipes cannot be computed still resolves its graphs.
 
         What discovery needs of the configuration is passed in rather than read from the active
         config, so the token-authenticated fetch can supply it from the API context.
@@ -202,22 +123,60 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig, TGraphSpec: GraphSpecification](
         if "timerange" not in self._dashlet_spec:
             self._dashlet_spec["timerange"] = "25h"  # type: ignore[unreachable]
 
+        self._cached_display_title: str | None = None
+
+    @override
+    def default_display_title(self) -> str:
+        # TODO: This evaluates the graph only to substitute a title expression. Move the macro
+        # resolution to the frontend, or give the engine a performance-data-only fetch for titles.
+        if self._cached_display_title is None:
+            self._cached_display_title = self._resolve_display_title()
+        return self._cached_display_title
+
+    def _resolve_display_title(self) -> str:
+        try:
+            start, end = Timerange.compute_range(self._dashlet_spec["timerange"]).range
+            discovered = self.discover_graphs(
+                debug=active_config.debug,
+                user_permissions=UserPermissions.from_config(active_config, permission_registry),
+            )
+            evaluated = evaluate_built_graphs(
+                [built.graph for built in discovered.graphs[:1]],
+                {
+                    "consolidation_function": ConsolidationFunction.MAX,
+                    "time_range": TimeRange(start=int(start), end=int(end), step=60),
+                    "destination": None,
+                },
+            )
+        except Exception:
+            return self.title()
+        return evaluated.graphs[0].title if evaluated.graphs else self.title()
+
+
+class ABCGraphSpecificationDashlet[T: ABCGraphDashletConfig, TGraphSpec: GraphSpecification](
+    ABCGraphDashlet[T]
+):
+    @abc.abstractmethod
+    def build_graph_specification(self, context: VisualContext) -> TGraphSpec: ...
+
+    def __init__(
+        self,
+        dashlet: T,
+        base_context: VisualContext | None = None,
+    ) -> None:
+        super().__init__(dashlet=dashlet, base_context=base_context)
         self._graph_resolved = False
         self._cached_graph_specification: TGraphSpec | None = None
-        self._cached_recipes: Sequence[GraphRecipeWithOverrides] | None = None
         self._resolve_exception: Exception | None = None
 
     def _resolve_graph(self) -> None:
-        """Build the specification and its recipes once, recording rather than raising failures."""
+        """Build the specification once, recording rather than raising a failure."""
         if self._graph_resolved:
             return
         self._graph_resolved = True
         try:
             self._cached_graph_specification = self.build_graph_specification(
                 self.context if self.has_context() else {}
-            )
-            self._cached_recipes = self._compute_graph_recipes(
-                self._cached_graph_specification, active_config
             )
         except Exception as e:
             self._resolve_exception = e
@@ -227,43 +186,6 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig, TGraphSpec: GraphSpecification](
         self._resolve_graph()
         return self._cached_graph_specification
 
-    @staticmethod
-    def _compute_graph_recipes(
-        graph_specification: TGraphSpec, config: Config
-    ) -> Sequence[GraphRecipeWithOverrides]:
-        try:
-            env = GraphEnvironment(
-                registered_metrics=metrics_from_api,
-                registered_graphs=graphs_from_api,
-                user_permissions=UserPermissions.from_config(config, permission_registry),
-                temperature_unit=get_temperature_unit(user, config.default_temperature_unit),
-                backend_time_series_fetcher=None,
-                debug=config.debug,
-            )
-            return graph_specification.recipes(env, graph_specification.fetch_graph_rows(env))
-        except MKMissingDataError:
-            raise
-        except livestatus.MKLivestatusNotFoundError:
-            raise make_mk_missing_data_error(reason=_("Service or host not found."))
-        except MKCombinedGraphLimitExceededError as limit_exceeded_error:
-            raise make_mk_missing_data_error(reason=str(limit_exceeded_error))
-        except Exception as e:
-            raise make_mk_missing_data_error(reason=_("Failed to calculate a graph recipe.")) from e
-
-    def recipes(self) -> Sequence[GraphRecipeWithOverrides]:
-        self._resolve_graph()
-        if self._cached_recipes is None:
-            assert self._resolve_exception is not None
-            raise self._resolve_exception
-        return self._cached_recipes
-
-    @override
-    def default_display_title(self) -> str:
-        self._resolve_graph()
-        if self._cached_recipes:
-            return self._cached_recipes[0].recipe.title
-        return self.title()
-
 
 class TemplateGraphDashletConfig(ABCGraphDashletConfig):
     # Legacy 1-based graph index. Present only in pre-CMK-7308 configs.
@@ -272,7 +194,9 @@ class TemplateGraphDashletConfig(ABCGraphDashletConfig):
     graph_id: NotRequired[str]
 
 
-class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateGraphSpecification]):
+class TemplateGraphDashlet(
+    ABCGraphSpecificationDashlet[TemplateGraphDashletConfig, TemplateGraphSpecification]
+):
     """Dashlet for rendering a single performance graph"""
 
     @classmethod
@@ -282,12 +206,12 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
 
     @classmethod
     @override
-    def title(cls):
+    def title(cls) -> str:
         return _("Time series graph")
 
     @classmethod
     @override
-    def description(cls):
+    def description(cls) -> str:
         return _("Displays a time series graph of a host or service.")
 
     @classmethod
@@ -327,30 +251,19 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
             graph_id: str | None = configured_graph_id
         elif legacy_source is not None:
             graph_id = resolve_graph_id_from_index(
-                env=GraphEnvironment(
-                    registered_metrics=metrics_from_api,
-                    registered_graphs=graphs_from_api,
-                    user_permissions=UserPermissions.from_config(
-                        active_config, permission_registry
-                    ),
-                    temperature_unit=get_temperature_unit(
-                        user, active_config.default_temperature_unit
-                    ),
-                    backend_time_series_fetcher=None,
-                    debug=active_config.debug,
-                ),
                 site_id=site_id,
                 host_name=host,
                 service_name=service,
                 graph_index=legacy_source - 1,
+                debug=active_config.debug,
             )
         else:
             graph_id = None
 
-        return get_template_graph_specification(
-            site_id=site_id,
+        return TemplateGraphSpecification(
+            site=site_id,
             host_name=host,
-            service_name=service,
+            service_description=service,
             graph_id=graph_id,
             destination=GraphDestinations.dashlet,
         )
@@ -380,7 +293,6 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
 
 def default_dashlet_graph_render_options() -> GraphRenderOptionsVS:
     return GraphRenderOptionsVS(
-        font_size=SizePT(8),
         show_graph_time=False,
         show_margin=False,
         show_legend=False,
@@ -400,10 +312,10 @@ def graph_templates_autocompleter(
     return _graph_templates_autocompleter_testable(
         value_entered_by_user=value_entered_by_user,
         params=params,
-        registered_metrics=metrics_from_api,
-        registered_graphs=graphs_from_api,
+        registered_plugin_graphs=graphs_from_api,
+        registered_metric_definitions=registered_metrics(),
+        registered_translations=registered_translations(),
         debug=config.debug,
-        temperature_unit=get_temperature_unit(user, config.default_temperature_unit),
     )
 
 
@@ -411,71 +323,72 @@ def _graph_templates_autocompleter_testable(
     *,
     value_entered_by_user: str,
     params: Mapping[str, Any],
-    registered_metrics: Mapping[str, RegisteredMetric],
-    registered_graphs: Mapping[str, GraphFromAPI],
+    registered_plugin_graphs: Mapping[str, GraphFromAPI],
+    registered_metric_definitions: Mapping[str, metrics_v1.Metric],
+    registered_translations: Sequence[translations_v1.Translation],
     debug: bool,
-    temperature_unit: TemperatureUnit,
 ) -> Choices:
     if not params.get("context") and params.get("show_independent_of_context") is True:
         return _sorted_matching_graph_template_choices(
             value_entered_by_user,
-            get_graph_plugin_choices(registered_graphs),
+            get_graph_plugin_choices(registered_plugin_graphs),
         )
 
-    graph_template_choices, single_metric_template_choices = (
-        _graph_and_single_metric_templates_choices_for_context(
-            params["context"],
-            registered_metrics,
-            registered_graphs,
-            debug=debug,
-            temperature_unit=temperature_unit,
-        )
+    choices = _graph_and_single_metric_templates_choices_for_context(
+        params["context"],
+        registered_plugin_graphs,
+        registered_metric_definitions,
+        registered_translations,
+        debug=debug,
     )
-
     return _sorted_matching_graph_template_choices(
         value_entered_by_user,
-        graph_template_choices,
+        choices.plugin_graphs,
     ) + _sorted_matching_graph_template_choices(
         value_entered_by_user,
-        single_metric_template_choices,
+        choices.single_metrics,
     )
 
 
 def _graph_and_single_metric_templates_choices_for_context(
     context: VisualContext,
-    registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, GraphFromAPI],
+    registered_metric_definitions: Mapping[str, metrics_v1.Metric],
+    registered_translations: Sequence[translations_v1.Translation],
     *,
     debug: bool,
-    temperature_unit: TemperatureUnit,
-) -> tuple[list[GraphPluginChoice], list[GraphPluginChoice]]:
+) -> GraphChoices:
     if "host" not in context or "service" not in context:
-        return [], []
+        return GraphChoices(plugin_graphs=[], single_metrics=[])
 
     only_sites = get_only_sites_from_context(context)
     site_id = only_sites[0] if only_sites and len(only_sites) == 1 else None
     host_name = HostName(context["host"]["host"])
     service_name = ServiceName(context["service"]["service"])
-
-    try:
-        graph_row = fetch_graph_row(
-            site_id,
-            host_name,
-            service_name,
-            registered_metrics,
-            debug=debug,
-            temperature_unit=temperature_unit,
-        )
-    except livestatus.MKLivestatusNotFoundError:
-        return [], []
-
-    return get_graph_plugin_and_single_metric_choices(
-        registered_metrics,
-        sort_registered_graph_plugins(registered_graphs),
-        graph_row.site_id,
-        graph_row.host_name,
-        graph_row.service_name,
-        graph_row.translated_metrics,
+    sorted_graph_plugins = [
+        plugin for _name, plugin in sort_registered_graph_plugins(registered_graphs)
+    ]
+    return graph_choices(
+        [
+            built.graph
+            for built in build_template_graphs(
+                TemplateGraphSpecification(
+                    site=site_id,
+                    host_name=host_name,
+                    service_description=service_name,
+                ),
+                registered_graphs=sorted_graph_plugins,
+                registered_metrics=registered_metric_definitions,
+                fetch_metric_names=RRDFetchMetricNames(
+                    host_name=EngineHostName(host_name),
+                    service_name=EngineServiceName(service_name),
+                    debug=debug,
+                    site_id=site_id,
+                    registered_translations=registered_translations,
+                ),
+            )
+        ],
+        sorted_graph_plugins,
     )
 
 

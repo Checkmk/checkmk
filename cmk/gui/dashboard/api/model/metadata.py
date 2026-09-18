@@ -59,7 +59,7 @@ class DashboardMetadata:
     display: DashboardDisplay = api_field(description="Display and presentation preferences.")
 
     @classmethod
-    def from_dashboard_metadata_object(cls, obj: DashboardMetadataObject) -> "DashboardMetadata":
+    def from_dashboard_metadata_object(cls, obj: DashboardMetadataObject) -> DashboardMetadata:
         return cls(
             name=obj.name,
             owner=obj.owner,
@@ -84,7 +84,7 @@ class DashboardMetadata:
 
 @api_model
 class DashboardMetadataModel(DomainObjectModel):
-    domainType: Literal["dashboard_metadata"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["dashboard_metadata"] = api_field(
         description="The domain type of the object."
     )
     extensions: DashboardMetadata = api_field(description="The metadata of this dashboard.")
@@ -92,7 +92,7 @@ class DashboardMetadataModel(DomainObjectModel):
 
 @api_model
 class DashboardMetadataCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["dashboard_metadata"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["dashboard_metadata"] = api_field(
         description="The domain type of the objects in the collection",
         example="dashboard",
     )

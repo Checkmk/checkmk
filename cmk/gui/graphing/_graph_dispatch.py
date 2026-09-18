@@ -1,0 +1,139 @@
+#!/usr/bin/env python3
+# Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
+from typing import override, Protocol
+
+from cmk.ccc.plugin_registry import Registry
+from cmk.graphing_engine import (
+    ConsolidationFunction,
+    EvaluatedGraph,
+    FetchDataProtocol,
+    Graph,
+    TimeRange,
+)
+
+from ._decoding import ensure_type
+from ._from_api import GraphFromAPI
+from ._graph_codec import GraphCodec
+from ._source import FetchDiagnostics
+
+
+def legacy_graph_id(graph: Graph, registered_graphs: Sequence[GraphFromAPI]) -> str:
+    """The graph id a built graph is addressed by in the specifications legacy stores and replays.
+
+    A fallback single-metric graph must carry the "METRIC_" prefix legacy stores it under; without
+    it the legacy recipe lookup finds neither a plug-in nor the metric.
+    """
+    if graph.name.startswith("METRIC_") or any(
+        registered.name == graph.name for registered in registered_graphs
+    ):
+        return graph.name
+    return f"METRIC_{graph.name}"
+
+
+def _consolidation_function_of(options: Mapping[str, object]) -> ConsolidationFunction:
+    return ensure_type(options["consolidation_function"], ConsolidationFunction)
+
+
+def _time_range_of(options: Mapping[str, object]) -> TimeRange:
+    return ensure_type(options["time_range"], TimeRange)
+
+
+@dataclass(frozen=True, kw_only=True)
+class CommonGraphOptions:
+    consolidation_function: ConsolidationFunction
+    time_range: TimeRange
+
+    @classmethod
+    def from_request_options(cls, options: Mapping[str, object]) -> CommonGraphOptions:
+        return cls(
+            consolidation_function=_consolidation_function_of(options),
+            time_range=_time_range_of(options),
+        )
+
+
+@dataclass(frozen=True, kw_only=True)
+class EvaluatedGraphs:
+    # The evaluated graphs plus the non-fatal fetch diagnostics (hit series caps, fetch errors) the
+    # caller surfaces to the user - the engine evaluation itself stays diagnostics-free.
+    graphs: Sequence[EvaluatedGraph]
+    diagnostics: FetchDiagnostics
+
+
+class FetchDataWithDiagnosticsProtocol(FetchDataProtocol, Protocol):
+    # The fetch a dispatched evaluation runs on: it resolves the data and accumulates the non-fatal
+    # diagnostics the evaluation reads back into its result.
+    @property
+    def diagnostics(self) -> FetchDiagnostics: ...
+
+
+class DispatchedEvaluateProtocol(Protocol):
+    # A graph type's evaluation of one graph. The request options it runs under are its own fields,
+    # deserialized when it was made for those options, so it is handed nothing but the graph.
+    def __call__(self, graph: Graph) -> EvaluatedGraphs: ...
+
+
+@dataclass(frozen=True)
+class GraphDispatcher:
+    kind: str
+    codec: GraphCodec
+    # How to make this graph type's evaluation for the options of a request: that is where it
+    # deserializes the common options and whatever else it alone needs from them.
+    make_evaluate: Callable[[Mapping[str, object]], DispatchedEvaluateProtocol]
+
+    def serialize(self, graph: Graph) -> Mapping[str, object]:
+        return self.codec.serialize_graph(graph)
+
+    def deserialize(self, graph: Mapping[str, object]) -> Graph:
+        return self.codec.deserialize_graph(graph)
+
+
+class GraphDispatcherRegistry(Registry[GraphDispatcher]):
+    @override
+    def plugin_name(self, instance: GraphDispatcher) -> str:
+        return instance.kind
+
+
+graph_dispatcher_registry = GraphDispatcherRegistry()
+
+
+def serialize_graphs(graphs: Sequence[Graph]) -> Mapping[str, object]:
+    return {"graphs": [graph_dispatcher_registry[graph.kind].serialize(graph) for graph in graphs]}
+
+
+def _deserialized_graphs(internal: Mapping[str, object]) -> Sequence[Graph]:
+    graphs = []
+    for serialized in ensure_type(internal["graphs"], list):
+        graph = ensure_type(serialized, dict)
+        graphs.append(graph_dispatcher_registry[ensure_type(graph["kind"], str)].deserialize(graph))
+    return graphs
+
+
+def evaluate_built_graphs(
+    graphs: Sequence[Graph],
+    options: Mapping[str, object],
+) -> EvaluatedGraphs:
+    evaluated_graphs: list[EvaluatedGraph] = []
+    diagnostics = FetchDiagnostics()
+    # The graphs may be of different kinds, but they share the options of one request: each graph
+    # type makes its evaluation for them and evaluates the graph of its own kind.
+    for graph in graphs:
+        evaluated = graph_dispatcher_registry[graph.kind].make_evaluate(options)(graph)
+        evaluated_graphs.extend(evaluated.graphs)
+        diagnostics.limits_reached.extend(evaluated.diagnostics.limits_reached)
+        diagnostics.errors.extend(evaluated.diagnostics.errors)
+    return EvaluatedGraphs(graphs=evaluated_graphs, diagnostics=diagnostics)
+
+
+def evaluate_graphs(
+    internal: Mapping[str, object],
+    options: Mapping[str, object],
+) -> EvaluatedGraphs:
+    # The entry point of a definition that came off the wire; a caller that still holds the built
+    # graphs evaluates them directly.
+    return evaluate_built_graphs(_deserialized_graphs(internal), options)

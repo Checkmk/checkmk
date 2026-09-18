@@ -326,6 +326,7 @@ Supported test rules (auto-discovered from `BUILD` files under `tests/`, `packag
 
 | Rule          | Language | Notes                                                                           |
 | ------------- | -------- | ------------------------------------------------------------------------------- |
+| `py_cmk_test` | Python   | The repo's standard pytest macro — the bulk of the unit and integration tests.  |
 | `py_test`     | Python   | pytest, with `-k` keyword filter via the `Run with -k…` profile.                |
 | `py_doc_test` | Python   | Doctest targets.                                                                |
 | `vitest_test` | TS / Vue | Replaces the standalone Vitest extension — same hermetic version as CI.         |

@@ -26,8 +26,6 @@ down -- a daily cron shouldn't alarm on that), 1 = gap found (werks in git
 missing from the DB), 2 = usage / environment error.
 """
 
-from __future__ import annotations
-
 import argparse
 import logging
 import subprocess

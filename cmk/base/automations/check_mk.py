@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="unreachable"
 
 import abc
 import ast
@@ -134,6 +132,7 @@ from cmk.ccc.i18n import _
 from cmk.ccc.timeout import Timeout
 from cmk.ccc.version import edition_supports_nagvis
 from cmk.checkengine import agent_protocol
+from cmk.checkengine.auto_queue import AutoQueue
 from cmk.checkengine.checker_helper_config import make_packed_config_writer
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.checking import compute_check_parameters, ServiceConfigurer
@@ -178,7 +177,6 @@ from cmk.checkengine.snmplib import (
     get_snmp_table,
     oids_to_walk,
     SNMPBackend,
-    SNMPBackendEnum,
     SNMPCredentials,
     SNMPHostConfig,
     SNMPVersion,
@@ -223,8 +221,6 @@ from cmk.server_side_calls_backend import (
     SpecialAgentCommandLine,
 )
 from cmk.utils import config_warnings, ip_lookup, man_pages
-from cmk.utils.auto_queue import AutoQueue
-from cmk.utils.caching import cache_manager
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.ip_lookup import make_lookup_mgmt_board_ip_address
 from cmk.utils.macros import replace_macros_in_str
@@ -233,6 +229,7 @@ from cmk.utils.paths import (
     autochecks_dir,
     autodiscovery_dir,
     base_discovered_host_labels_dir,
+    builtin_host_labels_file,
     counters_dir,
     data_source_cache_dir,
     discovered_host_labels_dir,
@@ -388,7 +385,6 @@ def _automation_service_discovery(
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=force_snmp_cache_refresh,
         ip_address_of=ip_address_of,
-        ip_address_of_mandatory=ip_lookup.make_lookup_ip_address(env.ip_lookup_config),
         ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(env.ip_lookup_config),
         mode=Mode.DISCOVERY,
         simulation_mode=env.loaded_config.simulation_mode,
@@ -478,7 +474,7 @@ def _automation_service_discovery(
 
 def _automation_special_agent_discovery_preview(
     app: CheckmkBaseApp,
-    args: list[str],
+    args: list[str],  # noqa: ARG001
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> ServiceDiscoveryPreviewResult:
@@ -558,12 +554,16 @@ def _automation_discovery_preview(
     config_warnings.initialize()
 
     env = AutomationEnvironment.create(app, plugins, loading_result)
+    if host_name not in env.hosts_config.all_configured_hosts:
+        # There is no configuration to discover from, hence no data source to contact.
+        # An empty preview would be indistinguishable from a host without services.
+        raise MKAutomationError(f"Unknown host: {host_name}")
+
     config_cache = env.config_cache
     label_manager = env.label_manager
     ip_lookup_config = env.ip_lookup_config
 
     env.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
-    ip_address_of_bare = ip_lookup.make_lookup_ip_address(ip_lookup_config)
     ip_address_of_with_fallback = env.ip_address_of(on_failure=IPLookupFailureMode.HANDLE)
     on_error = OnError.RAISE if raise_errors else OnError.WARN
     file_cache_options = FileCacheOptions(
@@ -588,7 +588,7 @@ def _automation_discovery_preview(
     fetcher = CMKFetcher(
         config_cache,
         env.host_tags,
-        get_relay_id=lambda hn: relay_id,
+        get_relay_id=lambda hn: relay_id,  # noqa: ARG005
         make_trigger=lambda relay_id: env.make_fetcher_trigger(
             relay_id, config_source=ConfigSource.PENDING
         ),
@@ -620,7 +620,6 @@ def _automation_discovery_preview(
         force_snmp_cache_refresh=not prevent_fetching,
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of_with_fallback,
-        ip_address_of_mandatory=ip_address_of_bare,
         ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=Mode.DISCOVERY,
         simulation_mode=env.loaded_config.simulation_mode,
@@ -640,8 +639,12 @@ def _automation_discovery_preview(
         # because...  I don't know... global variables I guess.  In any case,
         # doing it the other way around breaks one integration test.
         # note (mo): The behavior of repeated lookups changed. The above _might_ not be true anymore.
-        else ip_address_of_bare(host_name, ip_family)
+        else ip_address_of_with_fallback(host_name, ip_family)
     )
+    if ip_address is not None and ip_lookup.is_fallback_ip(ip_address):
+        # A failed lookup must not abort the preview; the sources that need no
+        # address are still fetchable.  See CMK-38939.
+        ip_address = None
     return _get_discovery_preview(
         host_name,
         ip_lookup_config.default_address_family,
@@ -907,6 +910,7 @@ def _execute_discovery(
             value_store_manager,
             clusters=hosts_config.clusters,
             rtc_package=None,
+            omd_root=cmk.utils.paths.omd_root,
         )
         passive_check_preview = get_check_preview(
             host_name,
@@ -1030,7 +1034,7 @@ def _warn_service_name_conflicts(host_name: HostName, check_preview: CheckPrevie
 
 def _automation_autodiscovery(
     app: CheckmkBaseApp,
-    args: list[str],
+    args: list[str],  # noqa: ARG001
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> AutodiscoveryResult:
@@ -1044,7 +1048,7 @@ def _automation_autodiscovery(
 def _make_configured_notify_relay(
     relays_present: bool,
 ) -> Callable[[Callable[[str], object]], None]:
-    noop = lambda *a, **kw: None
+    noop = lambda *a, **kw: None  # noqa: ARG005
 
     if not relays_present:
         return noop
@@ -1140,7 +1144,6 @@ def _execute_autodiscovery(
         force_snmp_cache_refresh=False,
         get_ip_stack_config=env.ip_lookup_config.ip_stack_config,
         ip_address_of=slightly_different_ip_address_of,
-        ip_address_of_mandatory=ip_address_of,
         ip_address_of_mgmt=ip_address_of_mgmt,
         mode=Mode.DISCOVERY,
         simulation_mode=env.loaded_config.simulation_mode,
@@ -1283,7 +1286,7 @@ def _execute_autodiscovery(
                         discovery_results[host_name] = autodiscovery_result.discovery_result
                         activation_required |= autodiscovery_result.activate
 
-    except (MKTimeout, TimeoutError):
+    except MKTimeout, TimeoutError:
         remaining_hosts = list(autodiscovery_queue)
         logger.warning(
             "Autodiscovery: timed out after %(elapsed).1fs (limit: %(limit)ds). "
@@ -1312,6 +1315,22 @@ def _execute_autodiscovery(
     if not activation_required:
         return discovery_results, False
 
+    # Discovery rewrote autochecks and discovered host labels. Re-derive everything
+    # below the BaseConfig (which discovery does not touch), so that the core config
+    # is built from the new data.
+    env = AutomationEnvironment(
+        app=app,
+        plugins=env.plugins,
+        loading_result=config.make_loading_result(
+            env.loaded_config,
+            autochecks_dir=autochecks_dir,
+            discovered_host_labels_dir=discovered_host_labels_dir,
+            builtin_host_labels_file=builtin_host_labels_file,
+        ),
+    )
+    ip_address_of = env.ip_address_of(on_failure=IPLookupFailureMode.COLLECT)
+    ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(env.ip_lookup_config)
+
     core = app.create_core(
         app.edition,
         env.ruleset_matcher,
@@ -1322,84 +1341,75 @@ def _execute_autodiscovery(
         env.plugins,
     )
 
-    try:
-        cache_manager.clear_all()
-        env.config_cache.initialize()
-        hosts_config = config.make_hosts_config(env.loaded_config)
-        bake_on_restart = app.make_bake_on_restart(env.loading_result, hosts_config.hosts)
-        notify_relay = _make_configured_notify_relay(bool(env.loaded_config.relays))
-        core_objects_config = config.CoreObjectsConfig(
-            env.loaded_config, env.ruleset_matcher, env.label_manager
-        )
-        checker_config_writer = make_packed_config_writer(
-            {f.name: getattr(env.loaded_config, f.name) for f in fields(env.loaded_config)},
-            hosts_config,
-            is_online=env.config_cache.is_online,
-            is_active=env.config_cache.is_active,
-        )
+    hosts_config = env.hosts_config
+    notify_relay = _make_configured_notify_relay(bool(env.loaded_config.relays))
+    core_objects_config = config.CoreObjectsConfig(
+        env.loaded_config, env.ruleset_matcher, env.label_manager
+    )
+    checker_config_writer = make_packed_config_writer(
+        {f.name: getattr(env.loaded_config, f.name) for f in fields(env.loaded_config)},
+        hosts_config,
+        is_online=env.config_cache.is_online,
+        is_active=env.config_cache.is_active,
+    )
 
-        if env.loaded_config.monitoring_core == "cmc":
-            do_reload(
-                env.config_cache,
-                core_objects_config,
-                hosts_config,
-                env.host_tags,
-                env.final_service_name_config,
-                env.passive_service_name_config,
-                env.enforced_services_table,
-                env.ip_lookup_config.ip_stack_config,
-                env.ip_lookup_config.default_address_family,
-                ip_address_of,
-                ip_address_of_mgmt,
-                core,
-                env.plugins,
-                locking_mode=env.loaded_config.restart_locking,
-                hosts_to_update=None,
-                service_depends_on=config.ServiceDependsOn(
-                    tag_list=env.host_tags.tag_list,
-                    service_dependencies=env.loaded_config.service_dependencies,
+    if env.loaded_config.monitoring_core == "cmc":
+        do_reload(
+            env.config_cache,
+            core_objects_config,
+            hosts_config,
+            env.host_tags,
+            env.final_service_name_config,
+            env.passive_service_name_config,
+            env.enforced_services_table,
+            env.ip_lookup_config.ip_stack_config,
+            env.ip_lookup_config.default_address_family,
+            ip_address_of,
+            ip_address_of_mgmt,
+            core,
+            env.plugins,
+            locking_mode=env.loaded_config.restart_locking,
+            hosts_to_update=None,
+            service_depends_on=config.ServiceDependsOn(
+                tag_list=env.host_tags.tag_list,
+                service_dependencies=env.loaded_config.service_dependencies,
+            ),
+            duplicates=sorted(
+                hosts_config.duplicates(
+                    lambda hn: env.config_cache.is_active(hn) and env.config_cache.is_online(hn)
                 ),
-                duplicates=sorted(
-                    hosts_config.duplicates(
-                        lambda hn: env.config_cache.is_active(hn) and env.config_cache.is_online(hn)
-                    ),
+            ),
+            notify_relay=notify_relay,
+            checker_config_writer=checker_config_writer,
+        )
+    else:
+        do_restart(
+            env.config_cache,
+            core_objects_config,
+            hosts_config,
+            env.host_tags,
+            env.final_service_name_config,
+            env.passive_service_name_config,
+            env.enforced_services_table,
+            env.ip_lookup_config.ip_stack_config,
+            env.ip_lookup_config.default_address_family,
+            ip_address_of,
+            ip_address_of_mgmt,
+            core,
+            env.plugins,
+            service_depends_on=config.ServiceDependsOn(
+                tag_list=env.host_tags.tag_list,
+                service_dependencies=env.loaded_config.service_dependencies,
+            ),
+            locking_mode=env.loaded_config.restart_locking,
+            duplicates=sorted(
+                hosts_config.duplicates(
+                    lambda hn: env.config_cache.is_active(hn) and env.config_cache.is_online(hn)
                 ),
-                bake_on_restart=bake_on_restart,
-                notify_relay=notify_relay,
-                checker_config_writer=checker_config_writer,
-            )
-        else:
-            do_restart(
-                env.config_cache,
-                core_objects_config,
-                hosts_config,
-                env.host_tags,
-                env.final_service_name_config,
-                env.passive_service_name_config,
-                env.enforced_services_table,
-                env.ip_lookup_config.ip_stack_config,
-                env.ip_lookup_config.default_address_family,
-                ip_address_of,
-                ip_address_of_mgmt,
-                core,
-                env.plugins,
-                service_depends_on=config.ServiceDependsOn(
-                    tag_list=env.host_tags.tag_list,
-                    service_dependencies=env.loaded_config.service_dependencies,
-                ),
-                locking_mode=env.loaded_config.restart_locking,
-                duplicates=sorted(
-                    hosts_config.duplicates(
-                        lambda hn: env.config_cache.is_active(hn) and env.config_cache.is_online(hn)
-                    ),
-                ),
-                bake_on_restart=bake_on_restart,
-                notify_relay=notify_relay,
-                checker_config_writer=checker_config_writer,
-            )
-    finally:
-        cache_manager.clear_all()
-        env.config_cache.initialize()
+            ),
+            notify_relay=notify_relay,
+            checker_config_writer=checker_config_writer,
+        )
 
     return discovery_results, True
 
@@ -1436,7 +1446,7 @@ def _make_get_effective_host_of_autocheck_callback(
 # Consider changing the name back to 'set-autochecks' in 2.6
 def _automation_set_autochecks_v2(
     app: CheckmkBaseApp,
-    args: list[str],
+    args: list[str],  # noqa: ARG001
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> SetAutochecksV2Result:
@@ -1496,9 +1506,9 @@ def _automation_set_autochecks_v2(
 
 
 def _automation_update_host_labels(
-    app: CheckmkBaseApp,
+    _app: object,
     args: list[str],
-    plugins: AgentBasedPlugins | None,
+    plugins: AgentBasedPlugins | None,  # noqa: ARG001
     loading_result: config.LoadingResult | None,
 ) -> UpdateHostLabelsResult:
     """Set the new collection of discovered host labels"""
@@ -1511,9 +1521,7 @@ def _automation_update_host_labels(
     )
 
     if loading_result is None:
-        loading_result = load_config(
-            edition=app.edition,
-        )
+        loading_result = load_config()
     _trigger_discovery_check(
         loading_result.config_cache,
         loading_result.hosts_config,
@@ -1537,7 +1545,7 @@ class AutomationRenameHosts:
     def execute(
         self,
         app: CheckmkBaseApp,
-        args: list[str],
+        args: list[str],  # noqa: ARG002
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> RenameHostsResult:
@@ -1573,7 +1581,7 @@ class AutomationRenameHosts:
         # it now.
         core_was_running = core.core_client.is_running()
         if core_was_running:
-            core.core_client.run(CoreAction.STOP, log=lambda x: None)
+            core.core_client.run(CoreAction.STOP, log=lambda x: None)  # noqa: ARG005
 
         try:
             for oldname, newname in renamings:
@@ -1602,9 +1610,6 @@ class AutomationRenameHosts:
                         service_depends_on=config.ServiceDependsOn(
                             tag_list=env.host_tags.tag_list,
                             service_dependencies=env.loaded_config.service_dependencies,
-                        ),
-                        bake_on_restart=app.make_bake_on_restart(
-                            env.loading_result, hosts_config.hosts
                         ),
                         notify_relay=_make_configured_notify_relay(bool(env.loaded_config.relays)),
                     ),
@@ -2193,17 +2198,15 @@ class AutomationAnalyseServices:
 
 
 def _automation_analyse_host(
-    app: CheckmkBaseApp,
+    _app: object,
     args: list[str],
-    plugins: AgentBasedPlugins | None,
+    plugins: AgentBasedPlugins | None,  # noqa: ARG001
     loading_result: config.LoadingResult | None,
 ) -> AnalyseHostResult:
     host_name = HostName(args[0])
 
     if loading_result is None:
-        loading_result = load_config(
-            edition=app.edition,
-        )
+        loading_result = load_config()
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
 
@@ -2215,9 +2218,9 @@ def _automation_analyse_host(
 
 
 def _automation_analyze_host_rule_matches(
-    app: CheckmkBaseApp,
+    _app: object,
     args: list[str],
-    plugins: AgentBasedPlugins | None,
+    plugins: AgentBasedPlugins | None,  # noqa: ARG001
     loading_result: config.LoadingResult | None,
 ) -> AnalyzeHostRuleMatchesResult:
     host_name = HostName(args[0])
@@ -2225,9 +2228,7 @@ def _automation_analyze_host_rule_matches(
     match_rules = ast.literal_eval(sys.stdin.read())
 
     if loading_result is None:
-        loading_result = load_config(
-            edition=app.edition,
-        )
+        loading_result = load_config()
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
 
@@ -2249,9 +2250,9 @@ def _automation_analyze_host_rule_matches(
 
 
 def _automation_analyze_service_rule_matches(
-    app: CheckmkBaseApp,
+    _app: object,
     args: list[str],
-    plugins: AgentBasedPlugins | None,
+    plugins: AgentBasedPlugins | None,  # noqa: ARG001
     loading_result: config.LoadingResult | None,
 ) -> AnalyzeServiceRuleMatchesResult:
     host_name = HostName(args[0])
@@ -2263,9 +2264,7 @@ def _automation_analyze_service_rule_matches(
     match_rules, service_labels = ast.literal_eval(sys.stdin.read())
 
     if loading_result is None:
-        loading_result = load_config(
-            edition=app.edition,
-        )
+        loading_result = load_config()
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
 
@@ -2274,7 +2273,7 @@ def _automation_analyze_service_rule_matches(
     return AnalyzeServiceRuleMatchesResult(
         {
             rules[0]["id"]: list(
-                ruleset_matcher._get_service_ruleset_values(
+                ruleset_matcher._get_service_ruleset_values(  # noqa: SLF001
                     host_name,
                     service_or_item,
                     service_labels,
@@ -2293,18 +2292,16 @@ def _automation_analyze_service_rule_matches(
 
 
 def _automation_analyze_host_rule_effectiveness(
-    app: CheckmkBaseApp,
-    args: list[str],
-    plugins: AgentBasedPlugins | None,
+    _app: object,
+    args: list[str],  # noqa: ARG001
+    plugins: AgentBasedPlugins | None,  # noqa: ARG001
     loading_result: config.LoadingResult | None,
 ) -> AnalyzeHostRuleEffectivenessResult:
     # We read the list of rules from stdin since it could be too much for the command line
     match_rules = ast.literal_eval(sys.stdin.read())
 
     if loading_result is None:
-        loading_result = load_config(
-            edition=app.edition,
-        )
+        loading_result = load_config()
 
     hosts_config = loading_result.hosts_config
     config_cache = loading_result.config_cache
@@ -2398,10 +2395,10 @@ class ABCDeleteHosts:
 class AutomationDeleteHosts(ABCDeleteHosts):
     def execute(
         self,
-        app: CheckmkBaseApp,
+        app: CheckmkBaseApp,  # noqa: ARG002
         args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
+        plugins: AgentBasedPlugins | None,  # noqa: ARG002
+        loading_result: config.LoadingResult | None,  # noqa: ARG002
     ) -> DeleteHostsResult:
         self._execute(args)
         return DeleteHostsResult()
@@ -2455,10 +2452,10 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts):
 
     def execute(
         self,
-        app: CheckmkBaseApp,
+        app: CheckmkBaseApp,  # noqa: ARG002
         args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
+        plugins: AgentBasedPlugins | None,  # noqa: ARG002
+        loading_result: config.LoadingResult | None,  # noqa: ARG002
     ) -> DeleteHostsKnownRemoteResult:
         self._execute(args)
         return DeleteHostsKnownRemoteResult()
@@ -2530,7 +2527,6 @@ class AutomationRestart:
                 tag_list=env.host_tags.tag_list,
                 service_dependencies=env.loaded_config.service_dependencies,
             ),
-            bake_on_restart=app.make_bake_on_restart(env.loading_result, hosts_config.hosts),
             notify_relay=_make_configured_notify_relay(bool(env.loaded_config.relays)),
         )
 
@@ -2605,7 +2601,6 @@ class RestartContext:
     ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts]
     ip_address_of_mgmt: ip_lookup.IPLookupOptional
     service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]]
-    bake_on_restart: Callable[[], None]
     notify_relay: Callable[[Callable[[str], object]], None]
 
 
@@ -2657,7 +2652,6 @@ def _execute_silently(
                         lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
                     )
                 ),
-                bake_on_restart=rctx.bake_on_restart,
                 notify_relay=rctx.notify_relay,
                 checker_config_writer=checker_config_writer,
             )
@@ -2676,8 +2670,8 @@ def _execute_silently(
 
 
 def _automation_get_configuration(
-    app: CheckmkBaseApp,
-    args: list[str],
+    _app: object,
+    args: list[str],  # noqa: ARG001
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> GetConfigurationResult:
@@ -2693,10 +2687,7 @@ def _automation_get_configuration(
     # that could be too much for the command line
     variable_names = ast.literal_eval(sys.stdin.read())
 
-    base_config = config.load(
-        edition=app.edition,
-        with_conf_d=False,
-    ).loaded_config
+    base_config = config.load(with_conf_d=False).loaded_config
 
     result = {}
     for varname in variable_names:
@@ -2708,10 +2699,10 @@ def _automation_get_configuration(
 
 
 def _automation_get_check_information(
-    app: CheckmkBaseApp,
-    args: list[str],
+    app: CheckmkBaseApp,  # noqa: ARG001
+    args: list[str],  # noqa: ARG001
     plugins: AgentBasedPlugins | None,
-    loading_result: config.LoadingResult | None,
+    loading_result: config.LoadingResult | None,  # noqa: ARG001
 ) -> GetCheckInformationResult:
     man_page_path_map = man_pages.make_man_page_path_map(
         discover_families(raise_errors=cmk.ccc.debug.enabled()), PluginGroup.CHECKMAN.value
@@ -2754,10 +2745,10 @@ def _get_man_page_title(man_page_path_map: Mapping[str, Path], plugin_name: Chec
 
 
 def _automation_get_section_information(
-    app: CheckmkBaseApp,
-    args: object,
+    app: CheckmkBaseApp,  # noqa: ARG001
+    args: object,  # noqa: ARG001
     plugins: AgentBasedPlugins | None,
-    loading_result: config.LoadingResult | None,
+    loading_result: config.LoadingResult | None,  # noqa: ARG001
 ) -> GetSectionInformationResult:
     plugins = plugins or load_plugins()
     section_infos = {
@@ -2828,7 +2819,7 @@ def _automation_scan_parents(
         raise MKAutomationError("%s" % e)
 
 
-def _disabled_ip_lookup(host_name: object, family: object = None) -> None:
+def _disabled_ip_lookup(host_name: object, family: object = None) -> None:  # noqa: ARG001
     # TODO: this adds the restriction of only being able to use NO_IP hosts for now. When having an
     #  implementation for IP hosts, without using the config_cache, this restriction can be removed.
 
@@ -2886,10 +2877,10 @@ def get_special_agent_commandline(
 
 
 def _automation_diag_special_agent(
-    app: CheckmkBaseApp,
-    args: list[str],
-    plugins: AgentBasedPlugins | None,
-    loading_result: config.LoadingResult | None,
+    app: CheckmkBaseApp,  # noqa: ARG001
+    args: list[str],  # noqa: ARG001
+    plugins: AgentBasedPlugins | None,  # noqa: ARG001
+    loading_result: config.LoadingResult | None,  # noqa: ARG001
 ) -> DiagSpecialAgentResult:
     diag_special_agent_input = DiagSpecialAgentInput.deserialize(sys.stdin.read())
     return DiagSpecialAgentResult(
@@ -2943,7 +2934,7 @@ def _execute_diag_special_agent(
         yield 1, str(exc)
 
     with ad_hoc_secrets.provide_file():
-        for cmd in cmds:
+        for cmd in cmds:  # type: ignore[possibly-undefined]
             fetcher = ProgramFetcher(
                 cmdline=cmd.cmdline,
                 stdin=cmd.stdin,
@@ -2967,10 +2958,10 @@ def _execute_diag_special_agent(
 
 
 def _automation_ping_host(
-    app: CheckmkBaseApp,
-    args: list[str],
-    plugins: AgentBasedPlugins | None,
-    loaded_config: config.LoadingResult | None,
+    app: CheckmkBaseApp,  # noqa: ARG001
+    args: list[str],  # noqa: ARG001
+    plugins: AgentBasedPlugins | None,  # noqa: ARG001
+    loaded_config: config.LoadingResult | None,  # noqa: ARG001
 ) -> PingHostResult:
     ping_host_input = PingHostInput.deserialize(sys.stdin.read())
     return PingHostResult(*_execute_ping(ping_host_input.ip_or_dns_name, ping_host_input.base_cmd))
@@ -3010,8 +3001,8 @@ def _execute_ping(ip_or_dns_name: str, base_cmd: PingHostCmd) -> tuple[int, str]
 
 
 def _automation_diag_cmk_agent(
-    app: CheckmkBaseApp,
-    args: list[str],
+    app: CheckmkBaseApp,  # noqa: ARG001
+    args: list[str],  # noqa: ARG001
     _plugins: AgentBasedPlugins | None,
     _loading_result: config.LoadingResult | None,
 ) -> DiagCmkAgentResult:
@@ -3053,7 +3044,7 @@ def _automation_diag_cmk_agent(
             )
 
         if resolved_address is None:
-            return DiagCmkAgentResult(
+            return DiagCmkAgentResult(  # type: ignore[unreachable]
                 1,
                 "Cannot resolve host name %s into IP address" % host_name,
             )
@@ -3104,12 +3095,13 @@ def _automation_diag_cmk_agent(
 
 
 def _automation_diag_snmp(
-    app: CheckmkBaseApp,
-    args: list[str],
+    _app: object,
+    args: list[str],  # noqa: ARG001
     _plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> DiagSnmpResult:
     diag_input = DiagSnmpInput.deserialize(sys.stdin.read())
+    loading_result = loading_result or load_config()
     ip_address = diag_input.ip_address
 
     if not ip_address:
@@ -3145,9 +3137,6 @@ def _automation_diag_snmp(
     elif diag_input.snmp_community:
         credentials = diag_input.snmp_community
     else:
-        loading_result = loading_result or load_config(
-            edition=app.edition,
-        )
         credentials = loading_result.loaded_config.snmp_default_community
 
     # Determine SNMP version
@@ -3179,7 +3168,9 @@ def _automation_diag_snmp(
         oid_range_limits={},
         snmpv3_contexts=[],
         character_encoding=None,
-        snmp_backend=SNMPBackendEnum.INLINE,
+        # Test the backend the host is configured with. Hosts that are not configured
+        # (yet) get the default backend, there are no rules matching them.
+        snmp_backend=loading_result.config_cache.get_snmp_backend(diag_input.host_name),
         stored_walk_path=cmk.utils.paths.snmpwalks_dir,
     )
 
@@ -3729,7 +3720,7 @@ class AutomationActiveCheck:
         ip_address_of = ip_lookup.ConfiguredIPLookup(
             ip_lookup.make_lookup_ip_address(env.ip_lookup_config),
             allow_empty=env.hosts_config.clusters,
-            error_handler=lambda *a, **kw: None,
+            error_handler=lambda *a, **kw: None,  # noqa: ARG005
         )
 
         if plugin == "custom":
@@ -3826,7 +3817,7 @@ class AutomationActiveCheck:
         macros.update(
             config.load_resource_cfg_macros(
                 cmk.utils.paths.nagios_resource_cfg,
-                None if cmk.ccc.debug.enabled() else lambda x: None,
+                None if cmk.ccc.debug.enabled() else lambda x: None,  # noqa: ARG005
             )
         )
 
@@ -3868,14 +3859,12 @@ class AutomationActiveCheck:
 
 
 def _automation_update_passwords_merged_file(
-    app: CheckmkBaseApp,
-    args: list[str],
-    plugins: AgentBasedPlugins | None,
+    _app: object,
+    args: list[str],  # noqa: ARG001
+    plugins: AgentBasedPlugins | None,  # noqa: ARG001
     loading_result: config.LoadingResult | None,
 ) -> UpdatePasswordsMergedFileResult:
-    loading_result = loading_result or load_config(
-        edition=app.edition,
-    )
+    loading_result = loading_result or load_config()
     cmk.utils.password_store.save(
         {k: s.reveal() for k, s in loading_result.config_cache.collect_passwords().items()},
         cmk.utils.password_store.pending_secrets_path_site(),
@@ -3885,7 +3874,7 @@ def _automation_update_passwords_merged_file(
 
 def _automation_update_dns_cache(
     app: CheckmkBaseApp,
-    args: list[str],
+    args: list[str],  # noqa: ARG001
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> UpdateDNSCacheResult:
@@ -3926,7 +3915,7 @@ def _execute_snmp_walk(snmp_config: SNMPHostConfig, backend: SNMPBackend) -> tup
                 if cmk.ccc.debug.enabled():
                     raise
                 try:
-                    error_output += f"OID '{oid}': {e}\n"
+                    error_output += f"OID '{oid}': {e}\n"  # type: ignore[possibly-undefined]
                 except UnboundLocalError:
                     # Surprise, the exception was raised before the `oid` is assigned.
                     error_output += f"{e}\n"
@@ -4165,15 +4154,13 @@ def _automation_get_agent_output(
 
 
 def _automation_find_unknown_check_parameter_rule_sets(
-    app: CheckmkBaseApp,
-    args: list[str],
+    _app: object,
+    args: list[str],  # noqa: ARG001
     plugins: AgentBasedPlugins | None,
     loaded_config: config.LoadingResult | None,
 ) -> UnknownCheckParameterRuleSetsResult:
     plugins = plugins or load_plugins()  # do we really still need this?
-    loaded_config = loaded_config or load_config(
-        edition=app.edition,
-    )
+    loaded_config = loaded_config or load_config()
     known_check_rule_sets = {
         str(plugin.check_ruleset_name)
         for plugin in plugins.check_plugins.values()

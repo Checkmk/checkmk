@@ -19,22 +19,22 @@ separate fetch_data call - neither needs a site. See
 import pytest
 
 from tests.testlib.graphing import SKIP_PENDING_GRAPH_BACKEND
-from tests.testlib.site import Site
 
 
 @pytest.mark.skip(reason=SKIP_PENDING_GRAPH_BACKEND)
-def test_service_page_embeds_cmk_graph_without_legacy_markup(site: Site) -> None:
-    """CE-01 (R1.2 Area 1): the page embeds <cmk-graph> and drops legacy markup.
+@pytest.mark.usefixtures("site")
+def test_service_page_embeds_cmk_graph() -> None:
+    """CE-01 (R1.2 Area 1): the page embeds <cmk-graph>.
 
     Do: create a host with a known check (e.g. PING), discover+check; fetch the page HTML.
-    Assert: HTTP 200; >=1 <cmk-graph>; no legacy container (div.graph_container/
-    graph_with_timeranges) for the same graph.
+    Assert: HTTP 200; >=1 <cmk-graph>.
     """
     pytest.fail("CMK-35973 skeleton: body not implemented")
 
 
 @pytest.mark.skip(reason=SKIP_PENDING_GRAPH_BACKEND)
-def test_service_without_perfdata_embeds_no_cmk_graph(site: Site) -> None:
+@pytest.mark.usefixtures("site")
+def test_service_without_perfdata_embeds_no_cmk_graph() -> None:
     """CE-03 (R1.2 Area 1): a perfdata-less service embeds no <cmk-graph>.
 
     Do: fetch the page HTML for a service with no perfdata.

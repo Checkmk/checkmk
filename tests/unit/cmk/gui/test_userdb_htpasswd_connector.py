@@ -16,7 +16,7 @@ from cmk.gui.user_connection_config_types import HtpasswdUserConnectionConfig
 from cmk.gui.userdb import CheckCredentialsResult, htpasswd
 
 
-@pytest.fixture(name="htpasswd_file", autouse=True)
+@pytest.fixture(name="htpasswd_file", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def htpasswd_file_fixture(tmp_path: Path, monkeypatch: MonkeyPatch) -> Path:
     htpasswd_file_path = tmp_path / "htpasswd"
     # HtpasswdUserConnector will use this path:

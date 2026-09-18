@@ -31,7 +31,7 @@ from cmk.gui.sidebar import (
     VisualItem,
     VisualMenuItem,
 )
-from cmk.gui.type_defs import Choices, IconNames, RoleName, StaticIcon, ViewSpec
+from cmk.gui.type_defs import RoleName, ViewSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.watolib.activate_changes import ActivateChanges
@@ -47,6 +47,8 @@ from cmk.shared_typing.main_menu import (
     NavItemTopic,
     NavItemTopicEntry,
 )
+from cmk.web.utils.choices import Choices
+from cmk.web.utils.icons import IconNames, StaticIcon
 
 
 def register(
@@ -94,7 +96,7 @@ def render_wato(config: Config, mini: bool) -> None:
         html.div("", class_="clear")
 
 
-def get_wato_menu_items(user_permissions: UserPermissions) -> list[NavItemTopic]:
+def get_wato_menu_items(user_permissions: UserPermissions) -> list[NavItemTopic]:  # noqa: ARG001
     by_topic: dict[MainModuleTopic, list[NavItemTopicEntry]] = {}
     for module_class in main_module_registry.values():
         module = module_class()
@@ -388,9 +390,9 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
             targets: Choices = []
             for item in get_main_menu_items_prefixed_by_segment(topic):
                 if item.url and item.url.startswith("dashboard.py"):
-                    id = "dashboard|" + item.id
+                    id = "dashboard|" + item.id  # noqa: A001
                 else:
-                    id = item.id
+                    id = item.id  # noqa: A001
                 targets.append((id, item.title))
 
             if topic.title.lower() != selected_topic_name.lower():

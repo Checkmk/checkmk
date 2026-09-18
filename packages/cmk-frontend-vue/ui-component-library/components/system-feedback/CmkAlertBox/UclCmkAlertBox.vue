@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import { type Sizes, type Variants } from 'cmk-ui-library/components/CmkAlertBox.vue'
 
 import codeExample from './UclCmkAlertBoxCodeExample.vue?raw'
@@ -30,22 +30,22 @@ export const panelConfig = {
   variant: {
     type: 'list' as const,
     title: 'Variant',
-    options: [
-      { title: 'Info', name: 'info' },
-      { title: 'Success', name: 'success' },
-      { title: 'Warning', name: 'warning' },
-      { title: 'Error', name: 'error' },
-      { title: 'Loading', name: 'loading' }
-    ] satisfies Options<NonNullable<Variants>>[],
+    options: listOptions<NonNullable<Variants>>({
+      info: 'Info',
+      success: 'Success',
+      warning: 'Warning',
+      error: 'Error',
+      loading: 'Loading'
+    }),
     initialState: 'info' as const
   },
   size: {
     type: 'list' as const,
     title: 'Size',
-    options: [
-      { title: 'Medium', name: 'medium' },
-      { title: 'Small', name: 'small' }
-    ] satisfies Options<NonNullable<Sizes>>[],
+    options: listOptions<NonNullable<Sizes>>({
+      medium: 'Medium',
+      small: 'Small'
+    }),
     initialState: 'medium' as const
   },
   heading: { type: 'string' as const, title: 'Heading', initialState: 'Alert Heading' },

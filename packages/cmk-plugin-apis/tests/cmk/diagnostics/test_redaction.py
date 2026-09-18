@@ -70,6 +70,11 @@ from cmk.diagnostics.internal import redact_passwords_in_content, REDACT_STRING
         ),
         (
             1,
+            "network_flow.conf",
+            "-F=clickhouse;127.0.0.1@9000,9004;ntopng;network_flow;TESTPW",
+        ),
+        (
+            1,
             "conf.d/wato/rules.mk",
             """{'certificate': '-----BEGIN CERTIFICATE-----\\n'
 'TESTPW\\n'

@@ -65,7 +65,7 @@ def discover_ucs_c_rack_server_topsystem(parsed):
 
 
 # @get_parsed_item_data
-def check_ucs_c_rack_server_topsystem(item, _no_params, data):
+def check_ucs_c_rack_server_topsystem(item, _no_params, data):  # noqa: ARG001
     for title, value in data:
         yield 0, f"{title}: {value}"
 

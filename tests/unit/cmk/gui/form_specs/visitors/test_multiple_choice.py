@@ -108,7 +108,7 @@ def test_parse_default_value(multiple_choice_spec: MultipleChoice) -> None:
     visitor = get_visitor(
         multiple_choice_spec, VisitorOptions(migrate_values=True, mask_values=False)
     )
-    assert visitor._parse_value(FormSpecDefaultValue()) == SORTED_GOOD_CHOICES_FRONTEND
+    assert visitor._parse_value(FormSpecDefaultValue()) == SORTED_GOOD_CHOICES_FRONTEND  # noqa: SLF001
 
 
 class _Color(StrEnum):

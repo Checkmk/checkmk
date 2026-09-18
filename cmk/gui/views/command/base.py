@@ -13,11 +13,12 @@ from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.page_menu import PageMenuVue
 from cmk.gui.permissions import Permission
-from cmk.gui.type_defs import DynamicIconName, Row, Rows
-from cmk.gui.utils.speaklater import LazyString
+from cmk.gui.type_defs import Row, Rows
 from cmk.livestatus_client import Command as LivestatusCommand
 from cmk.livestatus_client import LivestatusClient
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIconName
+from cmk.web.utils.speaklater import LazyString
 
 from .group import CommandGroup
 
@@ -53,7 +54,7 @@ class Command:
         tables: Sequence[str],
         render: Callable[[str], None],
         action: Callable[
-            ["Command", Literal["HOST", "SVC"], str, Row, int, Rows], CommandActionResult
+            [Command, Literal["HOST", "SVC"], str, Row, int, Rows], CommandActionResult
         ],
         group: type[CommandGroup],
         confirm_button: LazyString | Callable[[], LazyString],
@@ -162,7 +163,9 @@ class Command:
         )
 
     def user_confirm_options(
-        self, len_rows: int, cmdtag: Literal["HOST", "SVC"]
+        self,
+        len_rows: int,  # noqa: ARG002
+        cmdtag: Literal["HOST", "SVC"],  # noqa: ARG002
     ) -> list[tuple[str, str]]:
         return [(_("Confirm"), "_do_confirm")]
 

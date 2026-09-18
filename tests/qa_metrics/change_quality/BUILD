@@ -5,6 +5,7 @@ package(default_visibility = ["//tests:__subpackages__"])
 
 py_library(
     name = "change_quality",
+    testonly = True,
     srcs = [
         "__init__.py",
         "components.py",
@@ -25,6 +26,7 @@ py_library(
 
 py_binary(
     name = "push",
+    testonly = True,
     srcs = ["push.py"],
     imports = ["../../.."],
     deps = [
@@ -38,6 +40,7 @@ py_binary(
 # unit-testable; the binary is a thin entry point over it.
 py_library(
     name = "check_gaps_lib",
+    testonly = True,
     srcs = ["check_gaps.py"],
     imports = ["../../.."],
     deps = [
@@ -50,6 +53,7 @@ py_library(
 
 py_binary(
     name = "check_gaps",
+    testonly = True,
     srcs = ["check_gaps.py"],
     imports = ["../../.."],
     deps = [

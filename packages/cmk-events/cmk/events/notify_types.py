@@ -17,6 +17,7 @@ from typing import (
     Required,
     TypedDict,
     TypeGuard,
+    TypeIs,
 )
 
 from pydantic import (
@@ -75,11 +76,11 @@ NotifyBulkType = (
 )
 
 
-def is_always_bulk(bulk_params: NotifyBulkParameters) -> TypeGuard[AlwaysBulkParameters]:
+def is_always_bulk(bulk_params: NotifyBulkParameters) -> TypeIs[AlwaysBulkParameters]:
     return "interval" in bulk_params
 
 
-def is_timeperiod_bulk(bulk_params: NotifyBulkParameters) -> TypeGuard[TimeperiodBulkParameters]:
+def is_timeperiod_bulk(bulk_params: NotifyBulkParameters) -> TypeIs[TimeperiodBulkParameters]:
     return "timeperiod" in bulk_params
 
 
@@ -570,9 +571,15 @@ class JsmOperationsPluginModel(TypedDict, total=False):
     elements: list[OpsgenieElement]
 
 
+PagerDutyWebhookURL = Literal[
+    "https://events.pagerduty.com/v2/enqueue",
+    "https://events.eu.pagerduty.com/v2/enqueue",
+]
+
+
 class PagerDutyPluginModel(TypedDict):
     routing_key: tuple[Literal["routing_key", "store"], str]
-    webhook_url: Literal["https://events.pagerduty.com/v2/enqueue"]
+    webhook_url: PagerDutyWebhookURL
     ignore_ssl: NotRequired[Literal[True]]
     proxy_url: NotRequired[ProxyUrl]
     url_prefix: NotRequired[URLPrefix]

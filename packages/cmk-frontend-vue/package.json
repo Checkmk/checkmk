@@ -26,7 +26,7 @@
     "marked": "^17.0.6",
     "openapi-fetch": "^0.17.0",
     "reka-ui": "^2.9.6",
-    "sanitize-html": "^2.17.2",
+    "sanitize-html": "^2.17.7",
     "uuid": "^13.0.0",
     "vue-component-type-helpers": "^3.2.6",
     "vue-router": "^5.0.4",

@@ -128,7 +128,7 @@ def _get_werk_by_id(werk_id: int, _: Callable[[str], str]) -> WerkV3:
     for werk in load_werk_entries():
         if werk.id == werk_id:
             return werk
-    raise MKUserError("werk", _("This werk does not exist."))
+    raise MKUserError("werk", _("This Werk does not exist."))
 
 
 def _render_werk_id(werk: WerkV3) -> str:

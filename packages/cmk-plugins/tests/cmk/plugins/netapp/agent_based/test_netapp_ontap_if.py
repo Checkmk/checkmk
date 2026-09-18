@@ -399,7 +399,7 @@ def test_merge_interface_counters(
 
 
 class TestMergeIfCountersSections:
-    @pytest.fixture(autouse=True)
+    @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
     def setup_sections(self) -> None:
         self.interfaces_section = {iface.name: iface for iface in INTERFACE_MODELS}
         self.ports_section = {port.item_name(): port for port in PORT_MODELS}

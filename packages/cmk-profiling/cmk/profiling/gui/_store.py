@@ -11,8 +11,6 @@ uploads / WSGI auto-save. The raw on-disk format lives in the shared backend so
 ``cmk/base`` and ``cmk/gui`` cannot drift.
 """
 
-from __future__ import annotations
-
 import logging
 import marshal
 import pstats

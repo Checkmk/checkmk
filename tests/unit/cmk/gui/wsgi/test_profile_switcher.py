@@ -2,6 +2,7 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import pathlib
 
 import pytest
@@ -41,12 +42,12 @@ from tests.testlib.gui.web_test_app import SetConfig
         ),
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_profile_switcher_under_various_settings(
     setting: dict[str, bool | str],
     url: str,
     profiling_enabled_expected: bool,
     set_config: SetConfig,
-    request_context: None,
 ) -> None:
     with set_config(**setting):
         environ = werkzeug.test.create_environ(url, method="GET")

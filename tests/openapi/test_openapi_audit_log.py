@@ -65,13 +65,13 @@ def test_openapi_audit_log_invalid_date_filter(clients: ClientRegistry) -> None:
         date="invalid", expect_ok=False
     ).assert_status_code(400)
     assert "date" in res_invalid_string.json["detail"]
-    assert "date" in res_invalid_string.json["fields"]
+    assert "query.date" in res_invalid_string.json["fields"]
 
     res_bad_date = clients.AuditLog.get_all(date="1981-12-32", expect_ok=False).assert_status_code(
         400
     )
     assert "date" in res_bad_date.json["detail"]
-    assert "date" in res_bad_date.json["fields"]
+    assert "query.date" in res_bad_date.json["fields"]
 
 
 def test_openapi_audit_log_archive(audit_log_store: AuditLogStore, clients: ClientRegistry) -> None:

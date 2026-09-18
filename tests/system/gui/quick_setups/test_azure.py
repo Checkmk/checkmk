@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import logging
 import re
 from collections.abc import Iterator
@@ -50,7 +51,7 @@ def fixture_fake_azure_dump(test_site: Site) -> Iterator[None]:
 
 @pytest.fixture(name="azure_qs_config_page")
 def fixture_azure_qs_config_page(
-    fake_azure_dump: None,
+    fake_azure_dump: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     dashboard_page: MainDashboard,
     test_site: Site,
 ) -> Iterator[AzureAddNewConfiguration]:
@@ -84,7 +85,6 @@ def fixture_azure_qs_config_page(
         list_hosts_page.activate_changes(test_site)
 
 
-@pytest.mark.skip(reason="This test is flaky, investigation is required. See CMK-32258")
 def test_minimal_configuration(
     azure_qs_config_page: AzureAddNewConfiguration, test_site: Site
 ) -> None:
@@ -147,9 +147,7 @@ def test_minimal_configuration(
         expected_locator=list_hosts_page.get_link(host_name),
     )
     logger.info("Validate Azure rule is setup.")
-    list_azure_rules_page = Ruleset(
-        list_hosts_page.page, "Azure", "VM, cloud, container", exact_rule=True
-    )
+    list_azure_rules_page = Ruleset(list_hosts_page.page, "Azure", "special_agents:azure_v2")
     expect(
         list_azure_rules_page.rule_source(rule_id=0),
         message="Expected the Azure rule to be created!",

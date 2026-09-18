@@ -9,6 +9,7 @@ import sys
 from collections.abc import Mapping, Sequence
 from typing import assert_never
 
+from cmk.ccc.log import CMKFormatter
 from cmk.ccc.version import edition
 from cmk.discover_plugins import (
     CMK_ADDONS_PLUGINS,
@@ -78,7 +79,7 @@ logger = logging.getLogger(__name__)
 
 def _initialize_logger(log_level: str) -> None:
     logger.addHandler(handler := logging.StreamHandler(stream=sys.stdout))
-    handler.setFormatter(logging.Formatter("%(message)s"))
+    handler.setFormatter(CMKFormatter(message_only=True))
     logger.setLevel(logging.getLevelNamesMapping()[log_level])
 
 

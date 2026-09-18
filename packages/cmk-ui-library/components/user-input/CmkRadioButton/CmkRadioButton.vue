@@ -74,6 +74,10 @@ const id = useId()
      parent's `not-allowed` cursor applies over the indicator too */
     pointer-events: none;
   }
+
+  &:focus-visible {
+    outline: revert;
+  }
 }
 
 body[data-theme='modern-dark'] .cmk-radio-button__button {

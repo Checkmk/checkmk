@@ -15,10 +15,10 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.search import index as search_index
 from cmk.gui.utils.misc import gen_id
-from cmk.gui.utils.speaklater import LazyString
 from cmk.livestatus_client import SiteConfigurations
 from cmk.web.utils import escaping
 from cmk.web.utils.html import HTML
+from cmk.web.utils.speaklater import LazyString
 
 from .config_domain_name import ConfigDomainName, SerializedSettings
 from .objref import ObjectRef
@@ -72,15 +72,15 @@ class ChangeScope:
     explicit_sites: frozenset[SiteId] = frozenset()
 
     @classmethod
-    def all_activation_sites(cls) -> "ChangeScope":
+    def all_activation_sites(cls) -> ChangeScope:
         return cls(kind=_ScopeKind.ALL_ACTIVATION_SITES)
 
     @classmethod
-    def sites(cls, site_ids: Iterable[SiteId]) -> "ChangeScope":
+    def sites(cls, site_ids: Iterable[SiteId]) -> ChangeScope:
         return cls(kind=_ScopeKind.EXPLICIT_SITES, explicit_sites=frozenset(site_ids))
 
     @classmethod
-    def local_site(cls) -> "ChangeScope":
+    def local_site(cls) -> ChangeScope:
         return cls(kind=_ScopeKind.LOCAL_SITE)
 
 

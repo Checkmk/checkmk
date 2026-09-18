@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 import functools
 from collections.abc import Callable, Sequence
@@ -23,6 +22,7 @@ from cmk.livestatus_client import (
     OnlySites,
     Query,
     QuerySpecification,
+    QueryTypes,
 )
 from cmk.utils.check_utils import worst_service_state
 
@@ -128,7 +128,7 @@ class RowTableLivestatus(RowTable):
         return rows, len(data)
 
 
-def debug_livestatus(query: Query) -> None:
+def debug_livestatus(query: QueryTypes) -> None:
     if all(
         (
             active_config.debug_livestatus_queries,
@@ -142,7 +142,7 @@ def debug_livestatus(query: Query) -> None:
 
 
 def query_row(
-    query: Query, only_sites: OnlySites, limit: int | None, auth_domain: str
+    query: QueryTypes, only_sites: OnlySites, limit: int | None, auth_domain: str
 ) -> LivestatusRow:
     debug_livestatus(query)
 
@@ -157,7 +157,7 @@ def query_row(
 
 
 def query_livestatus(
-    query: Query, only_sites: OnlySites, limit: int | None, auth_domain: str
+    query: QueryTypes, only_sites: OnlySites, limit: int | None, auth_domain: str
 ) -> list[LivestatusRow]:
     debug_livestatus(query)
 
@@ -183,7 +183,7 @@ def _merge_data(
 
     mergefuncs: list[Callable[[LivestatusColumn, LivestatusColumn], LivestatusColumn]] = [
         # site column is not merged
-        lambda a, b: ""
+        lambda a, b: ""  # noqa: ARG005
     ]
 
     def worst_host_state(a: int, b: int) -> int:
@@ -200,7 +200,7 @@ def _merge_data(
         elif col.startswith("worst_host"):
             mergefunc = worst_host_state
         else:
-            mergefunc = lambda a, b: a
+            mergefunc = lambda a, b: a  # noqa: ARG005
 
         mergefuncs.append(mergefunc)
 

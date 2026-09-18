@@ -18,6 +18,7 @@ from cmk.plugins.oracle.bakery.mk_oracle_unified import (
     GuiConfig,
     GuiConnectionConf,
     GuiDiscoveryConf,
+    GuiExcludedSectionConf,
     GuiInstanceConf,
     GuiMainConf,
     GuiOracleIdentificationConf,
@@ -53,7 +54,6 @@ field_warning_messages: Final[dict[str, str]] = {
     "sqlnet_ora_group": "'sqlnet.ora permission group' has been skipped because it is not needed anymore by the unified plugin.",
     "xinetd_or_systemd": "'Host uses xinetd or systemd' has been skipped because it is not needed by the unified plugin.",
     "sqlnet_send_timeout": "'Sqlnet Send timeout' has been skipped because it is not supported by the unified plugin. Use Connection Timeout instead if this is applicable.",
-    "excluded_sections": "'Exclude some sections on certain instances' cannot be mapped. The new rule format only supports disabling sections globally.",
     "remote_oracle_home": "'ORACLE_HOME to use for remote access' has been skipped because it is not needed by the unified plugin.",
     "tnsalias_pre_postfix": "'Add pre or postfix to TNSALIASes' has been skipped because it is not supported by the unified plugin.",
 }
@@ -134,6 +134,16 @@ def convert(legacy: Mapping[str, Any]) -> MigratedRule:
             "default has been written out explicitly. The new rule pins that selection "
             "instead of deferring to the plugin later."
         )
+    excluded_sections: list[GuiExcludedSectionConf] | None = None
+
+    if legacy_excluded_sections := legacy.get("excluded_sections"):
+        excluded_sections = [
+            GuiExcludedSectionConf(
+                target_id=("sid", GuiOracleIdentificationConf(sid=sid)), sections=exclusions
+            )
+            for sid, exclusions in legacy_excluded_sections
+            if exclusions
+        ]
 
     discovery = _convert_discovery(legacy.get("sids"))
 
@@ -163,6 +173,7 @@ def convert(legacy: Mapping[str, Any]) -> MigratedRule:
         cache_age=cache_age,
         discovery=discovery,
         sections=sections,
+        excluded_sections=excluded_sections,
     )
 
     warnings.extend(msg for key, msg in field_warning_messages.items() if key in legacy)

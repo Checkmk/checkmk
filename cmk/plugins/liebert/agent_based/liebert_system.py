@@ -44,7 +44,7 @@ def discover_liebert_system(section: SystemSection) -> DiscoveryResult:
         yield Service(item=model)
 
 
-def check_liebert_system(item: str, section: SystemSection) -> CheckResult:
+def check_liebert_system(item: str, section: SystemSection) -> CheckResult:  # noqa: ARG001
     # Variable 'item' is used to generate the service name.
     # However, only one item per host is expected, which is why it is not
     # used in this check funtion.

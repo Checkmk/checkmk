@@ -11,6 +11,10 @@ oracle:
       username: system
       password: $CI_ORA_TEST_PASSWORD
       type: standard
+    sections:
+      - jobs:
+          is_async: true
+      - instance:
 #      role: sysdba # it may be not enabled by Oracle DBA
 #    sections: # optional, if absent will use default as defined below
 #      - instance: # special section

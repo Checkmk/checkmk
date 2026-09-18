@@ -74,6 +74,17 @@ Map gerritGetAccess(String project, String auth_header) {
     return [status: http_status, body: body];
 }
 
+// @NonCPS: runs outside Jenkins CPS so HttpURLConnection (non-Serializable) is safe to hold.
+@NonCPS
+Map gerritGetChange(Map args) {
+    def conn = new URL("https://review.lan.tribe29.com/a/changes/${args.change_id}?o=LABELS").openConnection();
+    conn.setRequestMethod("GET");
+    conn.setRequestProperty("Authorization", args.auth_header);
+    def http_status = conn.responseCode;
+    def body = (http_status >= 200 && http_status < 300) ? conn.inputStream.text : (conn.errorStream?.text ?: "");
+    return [status: http_status, body: body];
+}
+
 // Matches Gerrit's three ref pattern styles: exact, wildcard (refs/heads/*), and regex (^refs/heads/.*).
 // Mirrors refPatternMatches() in gerrit/plugins/ci-block-banner/.../ci_block_banner.js.
 @NonCPS
@@ -123,6 +134,53 @@ Boolean isBranchSubmitBlocked(String project, String branch) {
     return is_blocked;
 }
 
+// Our chain rebase above resets Gerrit's "Verified" label and retriggers
+// the standard CV job, which runs in parallel with our own test cascade.
+// "Verified" has three states:
+// -1 (Fails) -> merge not possible, fail
+// 0 (No score) -> CV not done, wait
+// +1 (Verified) -> CV passed, merge when all have +1
+String gerritVerifiedState(Map args) {
+    def result = gerritGetChange(change_id: args.change_id, auth_header: args.auth_header);
+    if (result.status < 200 || result.status >= 300) {
+        error("Gerrit get-change failed (HTTP ${result.status}): ${result.body}");
+    }
+    // Strip Gitiles XSS protection prefix (5 bytes) before parsing.
+    def change_info = new groovy.json.JsonSlurper().parseText(result.body.drop(5));
+    def votes = (change_info.labels?.Verified?.all ?: []).collect { vote -> vote.value ?: 0 };
+    def has_failure = votes.any { vote -> vote < 0 };
+    def has_pass = votes.any { vote -> vote > 0 };
+    if (has_failure) {
+        return "FAILED";
+    }
+    return has_pass ? "PASSED" : "PENDING";
+}
+
+// Waits until "Verified" is no longer pending on every open (status NEW) change
+void waitForChainVerified(Map args) {
+    def pending = args.all_commits_in_chain.findAll { commit -> "${args.all_change_info.get(commit).status}" == "NEW" };
+    def deadline = System.currentTimeMillis() + args.timeout_minutes * 60 * 1000;
+    withGerritHttpCredentials {
+        def auth_header = "Basic " + "${GERRIT_USER}:${GERRIT_PASSWORD}".bytes.encodeBase64().toString();
+        while (true) {
+            pending = pending.findAll { commit ->
+                // .id is only unique per branch; .number is unique across all of Gerrit.
+                gerritVerifiedState(change_id: "${args.all_change_info.get(commit).number}", auth_header: auth_header) == "PENDING"
+            };
+            if (!pending) {
+                break;
+            }
+
+            if (System.currentTimeMillis() >= deadline) {
+                def pending_numbers = pending.collect { commit -> args.all_change_info.get(commit).number };
+                error("Timed out after ${args.timeout_minutes}min waiting for Gerrit CV on change(s) ${pending_numbers}.");
+            }
+
+            sleep(args.poll_interval_seconds);
+        }
+    }
+}
+
 // notify defaults to Gerrit's own default ("ALL") so callers only need to pass
 // it for the intermediate/progress votes we want to keep quiet.
 void voteGerrit(Map args) {
@@ -146,6 +204,156 @@ void voteGerrit(Map args) {
     }
 }
 
+/// The package pre-build and the test jobs are the same call with the same
+/// package identity, so keep it in one place: if the two drift apart, the test
+/// jobs stop finding the pre-built package and build their own.
+///
+/// @extra_build_params: entries specific to one job, e.g. TEST_FILTER. They take
+///     part in build matching, so a cached build from a run with different values
+///     does not get reused.
+/// @force_build: only where a cache hit is a problem, which is the package. The
+///     test jobs are already distinct through their own parameters.
+void triggerCascadeJob(Map args) {
+    smart_build(
+        // see global-defaults.yml, needs to run in minimal container
+        use_upstream_build: true,
+        force_build: args.force_build ?: false,
+        relative_job_name: args.relative_job_name,
+        build_params: [
+            CUSTOM_GIT_REF: args.git_ref,
+            EDITION: args.edition,
+            DISTRO: args.distro,
+            DISABLE_CACHE: args.disable_cache,
+            DISABLE_CMK_DISTRO_PACKAGE_SIGNING: args.disable_signing,
+            FAKE_ARTIFACTS: args.fake_artifacts,
+        ] + (args.extra_build_params ?: [:]),
+        build_params_no_check: [
+            CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+            CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+            CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+            CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,
+        ],
+        no_remove_others: true, // do not delete other files in the dest dir
+        download: false,    // use copyArtifacts to avoid nested directories
+    );
+}
+
+/// Build the TEST_FILTER of one cascade entry.
+///
+/// run_tests.sh evals TEST_FILTER as shell tokens, so it carries plain pytest
+/// options as well as markers.
+///
+/// At most one marker belongs here: the make targets append their own "-m" after
+/// TEST_FILTER and pytest lets the last one win. "-m medium_test_chain" also
+/// switches test-system-singlesite-single.groovy to its marker-only target, so an
+/// entry that wants the whole suite sharded must not carry it.
+String composeTestFilter(Map args) {
+    def parts = [];
+    if (args.marker) {
+        parts.add("-m ${args.marker}");
+    }
+    if (args.shard_count && args.shard_count > 1) {
+        parts.add("--shard-index ${args.shard_index} --shard-count ${args.shard_count}");
+    }
+    parts.addAll(args.options ?: []);
+    /// toString(), a GString reaching a build parameter is asking for trouble.
+    return parts.join(" ").toString();
+}
+
+/// Name the finished build the shards take their runtimes from.
+///
+/// Returns "<job>#<number>". Every shard reads that build itself. Pinning the
+/// number is what makes them agree: a finished test report never changes, so it
+/// does not matter when a shard starts, and a reference job finishing midway
+/// through the cascade changes nothing.
+///
+/// Raises when the report cannot be read or holds no test cases. The shards have
+/// no fallback, so the job that fails should be this one, before eight pods have
+/// built a site.
+String resolveShardDurations(Map args) {
+    def reference = "";
+    /// Same credentials ci-artifacts is invoked with, see global-defaults.yml.
+    withCredentials([usernamePassword(
+        credentialsId: "jenkins-api-token",
+        usernameVariable: "JENKINS_USERNAME",
+        passwordVariable: "JENKINS_PASSWORD",
+    )]) {
+        reference = sh(
+            returnStdout: true,
+            script: ("${checkout_dir}/tests/scripts/resolve_shard_durations.py " +
+                     "--job ${args.job}"),
+        ).trim();
+    }
+    /// No second guard on the value: the script exits non-zero on any problem and
+    /// prints nothing but the reference on stdout, its logging goes to stderr.
+    println("Shards balance against ${reference}");
+    return reference;
+}
+
+/// The entries of the medium cascade: stage label -> what to trigger for it.
+///
+/// Labels have to stay unique, the same job runs once per shard.
+Map cascadeJobSpecs(Map args) {
+    def specs = [:];
+    /// Rerun each failing test-case once; show tracebacks even on eventual pass
+    /// so flakes stay visible in the log. Applied to every triggered job.
+    def rerun_opts = ["--reruns=1", "--reruns-delay=2", "--rerun-show-tracebacks"];
+    def markerSpec = { job_name, options = [] -> [
+        job_name: job_name,
+        build_params: [
+            /// unsharded entry
+            TEST_FILTER: composeTestFilter(
+                marker: "medium_test_chain",
+                options: options + rerun_opts,
+            )
+        ],
+        start_delay: 0,
+    ] };
+
+    def multisite_job = "test-system-multisite-${args.edition}".toString();
+    /// limiting reruns; duration of multisite tests is approaching thresholds ~ 35 mins.
+    /// 10 ~ 10% of total multisite test-cases
+    specs["${multisite_job} [marker]".toString()] = markerSpec(
+        multisite_job, ["--max-suite-reruns=10"]
+    );
+
+    def singlesite_job = "test-system-singlesite-${args.edition}".toString();
+
+    /// Sharding off: exactly what this cascade did before, one job on the marker.
+    /// The switch is the SHARD_COUNT job parameter, so turning sharding on or off
+    /// is a checkmk_ci change and needs no change here and no rebase of open chains.
+    if (args.singlesite_shards < 2) {
+        /// limiting reruns; 50 ~ 10% of total singlesite test-cases
+        specs["${singlesite_job} [marker]".toString()] = markerSpec(
+            singlesite_job, ["--max-suite-reruns=50"]
+        );
+        return specs;
+    }
+
+    /// The whole single site suite, split over N jobs. No marker here: the point
+    /// is to run more than the marked tests, see composeTestFilter().
+    (0..<args.singlesite_shards).each { shard ->
+        def label = "${singlesite_job} [shard ${shard + 1}/${args.singlesite_shards}]";
+        specs[label.toString()] = [
+            job_name: singlesite_job,
+            build_params: [
+                TEST_FILTER: composeTestFilter(
+                    shard_index: shard,
+                    shard_count: args.singlesite_shards,
+                    options: [args.medium_chain_option] + rerun_opts,
+                ),
+                /// A build parameter and not part of TEST_FILTER, so the job
+                /// documents where its runtimes come from. It is matched, which
+                /// is what stops a cached shard build from an earlier run with
+                /// different runtimes being reused into this split.
+                SHARD_BUILD_BASED_ON: args.shard_durations_build,
+            ],
+            start_delay: shard == 0 ? 0 : args.package_visibility_delay,
+        ];
+    }
+    return specs;
+}
+
 // groovylint-disable MethodSize
 void main() {
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
@@ -166,13 +374,35 @@ void main() {
     def all_change_info = [:];
     def edition_medium_chain = "ultimate";
     def distro_medium_chain = "ubuntu-24.04";
-    def job_names = [
-        "test-system-multisite-${edition_medium_chain}",
-        "test-system-singlesite-${edition_medium_chain}",
-    ];
+    /// Run the whole single site suite instead of only the tests carrying the
+    /// medium_test_chain marker, split over this many pods. Each shard builds its
+    /// own site, so the cost is N site setups against roughly 1/N of the runtime.
+    /// The split is computed in pytest, see tests/testlib/pytest_helpers/sharding.py.
+    ///
+    /// A job parameter so the number can be tuned from checkmk_ci without a change
+    /// here. The fallback keeps this working before that parameter is deployed.
+    ///
+    /// One value for the whole cascade for now, since only the single site suite
+    /// is sharded. Once multisite shards too it needs a value per suite, they do
+    /// not want the same number.
+    def singlesite_shards = (params.SHARD_COUNT ?: 8) as Integer;
+    /// Build the shards take their runtimes from. Heavy has no singlesite job on
+    /// the gate's edition, so this is the closest full report. Only used for
+    /// balancing, never for selecting, so the mismatch does not matter.
+    /// Full job path, so this works from the Testing folder and on any branch.
+    def durations_job = "${branch_base_folder}/heavy/test-system-singlesite-ultimatemt";
+    /// Tests that cannot work pre-submit carry "skip_if_medium_chain".
+    def medium_chain_option = "--medium-chain";
+    /// The pre-build below waits for the package, but every shard still does its
+    /// own ci-artifacts lookup. Let the first go and hold the rest back briefly,
+    /// so that lookup finds the pre-built package instead of racing for it.
+    def package_visibility_delay = 60;
+    def job_specs = [:];
     def new_patchset_revision = effective_git_ref;
     def medium_chain_hashtag = "medium-chain-running";
     def gerrit_project = "check_mk";
+    def gerrit_verified_poll_interval_seconds = 30;
+    def gerrit_verified_wait_timeout_minutes = 30;
     /// In order to ensure a fixed order for stages executed in parallel,
     /// we wait an increasing amount of time (N * 1s).
     /// Without this we end up with a capped build overview matrix in the job view (Jenkins doesn
@@ -183,13 +413,15 @@ void main() {
         """
         |===== CONFIGURATION ===============================
         |branch_base_folder: │${branch_base_folder}│
+        |cv_verified_min:... │${gerrit_verified_wait_timeout_minutes}│
         |disable_cache:..... │${disable_cache}│
         |disable_signing:... │${disable_signing}│
         |do_automerge:...... │${do_automerge}│
         |do_rebase:......... │${do_rebase}│
         |fake_artifacts:.... │${fake_artifacts} (always active)│
         |force_build:....... │${force_build}│
-        |job_names:......... │${job_names}│
+        |singlesite_shards:. │${singlesite_shards}│
+        |durations_job:..... │${durations_job}│
         |safe_branch_name:.. │${safe_branch_name}│
         |===================================================
         """.stripMargin());
@@ -264,70 +496,65 @@ void main() {
                 println("New Patchset revision after Gerrit rebase: ${new_patchset_revision}");
             }
 
+            /// Before the package pre-build and fatal on purpose: an unusable
+            /// reference should stop the cascade here, see resolveShardDurations().
+            /// Skipped entirely while sharding is off, so the switch also takes the
+            /// Jenkins API call out of the gate's path.
+            smart_stage(
+                name: "Resolve shard durations",
+                raiseOnError: true,
+            ) {
+                job_specs = cascadeJobSpecs(
+                    edition: edition_medium_chain,
+                    singlesite_shards: singlesite_shards,
+                    medium_chain_option: medium_chain_option,
+                    package_visibility_delay: package_visibility_delay,
+                    shard_durations_build: (singlesite_shards < 2) ? "" : resolveShardDurations(job: durations_job),
+                );
+                println("Cascade entries:");
+                job_specs.each { label, spec ->
+                    println("  ${label}: ${spec.build_params}");
+                }
+            }
+
             smart_stage(
                 name: "Pre-build needed package",
                 raiseOnError: true,
             ) {
-                smart_build(
-                    // see global-defaults.yml, needs to run in minimal container
-                    use_upstream_build: true,
-                    force_build: force_build,
+                triggerCascadeJob(
                     relative_job_name: "${branch_base_folder}/builders/trigger-cmk-distro-package",
-                    build_params: [
-                        CUSTOM_GIT_REF: new_patchset_revision,
-                        EDITION: edition_medium_chain,
-                        DISTRO: distro_medium_chain,
-                        DISABLE_CACHE: force_build,
-                        DISABLE_CMK_DISTRO_PACKAGE_SIGNING: disable_signing,
-                        FAKE_ARTIFACTS: fake_artifacts,
-                    ],
-                    build_params_no_check: [
-                        CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
-                        CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
-                        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
-                        CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,
-                    ],
-                    no_remove_others: true, // do not delete other files in the dest dir
-                    download: false,    // use copyArtifacts to avoid nested directories
+                    git_ref: new_patchset_revision,
+                    edition: edition_medium_chain,
+                    distro: distro_medium_chain,
+                    disable_cache: force_build,
+                    disable_signing: disable_signing,
+                    fake_artifacts: fake_artifacts,
+                    force_build: force_build,
                 );
             }
         }
 
-        def stages = job_names.collectEntries { job_name ->
-            [("${job_name}") : {
+        def stages = job_specs.collectEntries { stage_label, spec ->
+            [(stage_label) : {
                 sleep(1 * timeOffsetForOrder++);
+                if (spec.start_delay) {
+                    println("Holding ${stage_label} for ${spec.start_delay}s so the pre-built " +
+                            "package is visible to ci-artifacts before this shard asks for it");
+                    sleep(spec.start_delay);
+                }
 
                 smart_stage(
-                    name: "Trigger ${job_name}",
+                    name: "Trigger ${stage_label}",
                 ) {
-                    smart_build(
-                        // see global-defaults.yml, needs to run in minimal container
-                        use_upstream_build: true,
-                        force_build: force_build,
-                        relative_job_name: "${branch_base_folder}/cv/${job_name}",
-                        build_params: [
-                            CUSTOM_GIT_REF: new_patchset_revision,
-                            EDITION: edition_medium_chain,
-                            DISTRO: distro_medium_chain,
-                            DISABLE_CACHE: force_build,
-                            DISABLE_CMK_DISTRO_PACKAGE_SIGNING: disable_signing,
-                            FAKE_ARTIFACTS: fake_artifacts,
-                            // if there is a test filter specified on make target level, the last one in the list of pytest arguments will
-                            // overwrite all previous ones. Place all required test filters in one place and connect them with "and"
-                            // "TEST_FILTER" is prepended to the pytest call and thereby always the first source of settings and so it is
-                            // overruled if there is an additional test filter set later in the list of pytest args
-                            // Remember to quote a chain of filters to prevent word splitting
-                            // Setting "-m medium_test_chain" will cause special handling in "test-system-singlesite-single.groovy"
-                            TEST_FILTER: '-m medium_test_chain',
-                        ],
-                        build_params_no_check: [
-                            CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
-                            CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
-                            CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
-                            CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,
-                        ],
-                        no_remove_others: true, // do not delete other files in the dest dir
-                        download: false,    // use copyArtifacts to avoid nested directories
+                    triggerCascadeJob(
+                        relative_job_name: "${branch_base_folder}/cv/${spec.job_name}",
+                        git_ref: new_patchset_revision,
+                        edition: edition_medium_chain,
+                        distro: distro_medium_chain,
+                        disable_cache: force_build,
+                        disable_signing: disable_signing,
+                        fake_artifacts: fake_artifacts,
+                        extra_build_params: spec.build_params,
                     );
                 }
             }]
@@ -382,14 +609,30 @@ void main() {
 
                         // Try submit; if submit fails roll back all votes to 0.
                         try {
-                            // Check right before submit: Gerrit's own submit rejection can't be
-                            // relied on here (see isBranchSubmitBlocked)
-                            // We want to vote but not submit.
+                            // Skip the CV wait entirely if the branch is already closed - we are
+                            // not going to submit anyway. We want to vote but not submit.
                             if (isBranchSubmitBlocked(gerrit_project, safe_branch_name)) {
                                 voteGerrit(vote: 2, submit: false, identifier: new_patchset_revision);
                                 println("NOT submitted: The branch is currently closed.");
                             } else {
-                                voteGerrit(vote: 2, submit: true, identifier: new_patchset_revision);
+                                // Our rebase reset Verified on every open change in the chain and
+                                // retriggered CV; wait for it to resolve before attempting submit,
+                                // rather than racing it (CMK-37686).
+                                waitForChainVerified(
+                                    all_commits_in_chain: all_commits_in_chain,
+                                    all_change_info: all_change_info,
+                                    poll_interval_seconds: gerrit_verified_poll_interval_seconds,
+                                    timeout_minutes: gerrit_verified_wait_timeout_minutes,
+                                );
+
+                                // Check again right before submit: the branch could have closed
+                                // while we were waiting for CV above (see isBranchSubmitBlocked).
+                                if (isBranchSubmitBlocked(gerrit_project, safe_branch_name)) {
+                                    voteGerrit(vote: 2, submit: false, identifier: new_patchset_revision);
+                                    println("NOT submitted: The branch is currently closed.");
+                                } else {
+                                    voteGerrit(vote: 2, submit: true, identifier: new_patchset_revision);
+                                }
                             }
                         } catch (e) {
                             for (commit in all_commits_in_chain) {

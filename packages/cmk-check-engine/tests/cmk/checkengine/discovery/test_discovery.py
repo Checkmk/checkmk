@@ -4,10 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="no-untyped-def"
-
-# ruff: noqa: SLF001
-# ruff: noqa: ARG001
 
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -236,8 +232,8 @@ def test__get_service_filter_func_no_lists(
     parameters_rediscovery: filters.RediscoveryParameters,
 ) -> None:
     service_filters = filters.ServiceFilters.from_settings(parameters_rediscovery)
-    assert service_filters.new is filters._accept_all_services
-    assert service_filters.vanished is filters._accept_all_services
+    assert service_filters.new is filters._accept_all_services  # noqa: SLF001
+    assert service_filters.vanished is filters._accept_all_services  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -249,9 +245,8 @@ def test__get_service_filter_func_no_lists(
         ([".*Descript$"], False),
     ],
 )
-def test__get_service_filter_func_same_lists(
-    monkeypatch: pytest.MonkeyPatch, whitelist: Sequence[str], result: bool
-) -> None:
+@pytest.mark.usefixtures("monkeypatch")
+def test__get_service_filter_func_same_lists(whitelist: Sequence[str], result: bool) -> None:
     service_filters = filters.ServiceFilters.from_settings({"service_whitelist": whitelist})
     assert service_filters.new is not None
     assert service_filters.new("Test Description") is result
@@ -743,18 +738,18 @@ def test__get_service_filter_func(
         ),
     ],
 )
-def test__get_service_filters_lists(  # type: ignore[misc]
-    parameters,
-    new_whitelist,
-    new_blacklist,
-    vanished_whitelist,
-    vanished_blacklist,
-    changed_labels_whitelist,
-    changed_labels_blacklist,
-    changed_params_whitelist,
-    changed_params_blacklist,
-):
-    service_filter_lists = filters._get_service_filter_lists(parameters)
+def test__get_service_filters_lists(
+    parameters: filters.RediscoveryParameters,
+    new_whitelist: list[str] | None,
+    new_blacklist: list[str] | None,
+    vanished_whitelist: list[str] | None,
+    vanished_blacklist: list[str] | None,
+    changed_labels_whitelist: list[str] | None,
+    changed_labels_blacklist: list[str] | None,
+    changed_params_whitelist: list[str] | None,
+    changed_params_blacklist: list[str] | None,
+) -> None:
+    service_filter_lists = filters._get_service_filter_lists(parameters)  # noqa: SLF001
     assert service_filter_lists.new_whitelist == new_whitelist
     assert service_filter_lists.new_blacklist == new_blacklist
     assert service_filter_lists.vanished_whitelist == vanished_whitelist

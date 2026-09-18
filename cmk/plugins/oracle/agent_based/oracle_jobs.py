@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 
 # <<<oracle_jobs>>>
 # IODBSZ1 SYS SM$CLEAN_AUTO_SPLIT_MERGE SCHEDULED 0 763 TRUE 24.04.13 00:00:00,600000 EUROPE/VIENNA - SUCCEEDED
@@ -33,8 +32,7 @@
 # QS1|ORACLE_OCM|MGMT_CONFIG_JOB|DISABLED|0|40|FALSE|08-APR-15 01.01.01.200000 AM +01:00|-|
 # QS1|DBADMIN|DATENEXPORT-FUR|COMPLETED|0|3|FALSE|22-AUG-14 01.11.00.000000 AM EUROPE/BERLIN|-|
 
-
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from cmk.agent_based.v2 import (
@@ -51,40 +49,70 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
+from .liboracle import Error, Ok, oracle_handle_ora_errors, Parsed
 
-def discover_oracle_jobs(section: StringTable) -> DiscoveryResult:
-    for line in section:
-        if len(line) <= 2:
+type _JobRows = list[Sequence[str]]
+type Section = Mapping[str, Parsed[_JobRows]]
+
+
+def parse_oracle_jobs(string_table: StringTable) -> Section:
+    rows_by_sid: dict[str, _JobRows] = {}
+    errors: dict[str, str] = {}
+    for line in string_table:
+        if len(line) < 2 or line[1].startswith(" Debug "):
+            # ignore wrong/corrupted lines
             continue
-        # old format < RDBMS 12.1
-        if 3 <= len(line) <= 10:
-            yield Service(item=f"{line[0]}.{line[1]}.{line[2]}")
-        else:
-            # new format: sid.pdb_name.job_owner.job_name
-            yield Service(item=f"{line[0]}.{line[1]}.{line[2]}.{line[3]}")
+        match oracle_handle_ora_errors(line):
+            case str() as message:
+                errors.setdefault(line[0], message)
+            case False:
+                continue
+            case None:
+                rows_by_sid.setdefault(line[0], []).append(line)
+
+    parsed: dict[str, Parsed[_JobRows]] = {
+        sid: Ok(rows) for sid, rows in rows_by_sid.items() if sid not in errors
+    }
+    for sid, message in errors.items():
+        parsed[sid] = Error(message)
+    return parsed
 
 
-def check_oracle_jobs(item: str, params: Mapping[str, Any], section: StringTable) -> CheckResult:
+def discover_oracle_jobs(section: Section) -> DiscoveryResult:
+    for result in section.values():
+        if not isinstance(result, Ok):
+            continue
+        for line in result.value:
+            if len(line) <= 2:
+                continue
+            # old format < RDBMS 12.1
+            if 3 <= len(line) <= 10:
+                yield Service(item=f"{line[0]}.{line[1]}.{line[2]}")
+            else:
+                # new format: sid.pdb_name.job_owner.job_name
+                yield Service(item=f"{line[0]}.{line[1]}.{line[2]}.{line[3]}")
+
+
+def check_oracle_jobs(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     # only extract the sid from item.
     sid = item[0 : item.index(".", 0)]
 
-    data_found = False
+    match section.get(sid):
+        case None:
+            # In case of missing information we assume that the login into
+            # the database has failed and we simply skip this check. It won't
+            # switch to UNKNOWN, but will get stale.
+            raise IgnoreResultsError("Login not possible for check %s" % item)
+        case Error(message):
+            yield Result(state=State.UNKNOWN, summary=message)
+        case Ok(rows):
+            yield from _check_job(item, params, rows)
 
-    for line in section:
-        service_found = False
 
-        if len(line) < 2:
-            # ignore wrong/corrupted lines
-            continue
+def _check_job(item: str, params: Mapping[str, Any], rows: _JobRows) -> CheckResult:
+    service_found = False
 
-        if line[1].startswith(" Debug "):
-            # Skip invalid lines from Agent
-            continue
-
-        # we need to check against valid lines before the following comparisonq
-        if line[0] == sid:
-            data_found = True
-
+    for line in rows:
         # check for pdb_name in agent output
         # => the agentoutput is responsible for the format of item from Checkmk!
         # item could have the following formats. Keep in mind, that job_name could include a '.'!
@@ -137,6 +165,7 @@ def check_oracle_jobs(item: str, params: Mapping[str, Any], section: StringTable
             itemowner = ""
             lineformat = 1
 
+            sid = line[0]
             job_name = line[2]
             job_state = line[3]
             job_runtime = line[4]
@@ -153,8 +182,8 @@ def check_oracle_jobs(item: str, params: Mapping[str, Any], section: StringTable
             (
                 lineformat == 3
                 and itemname == job_name
-                and itemowner == job_owner
-                and itempdb == job_pdb
+                and itemowner == job_owner  # type: ignore[possibly-undefined]
+                and itempdb == job_pdb  # type: ignore[possibly-undefined]
                 and itemsid == sid
             )
             or (
@@ -170,12 +199,6 @@ def check_oracle_jobs(item: str, params: Mapping[str, Any], section: StringTable
 
             break
 
-    if not data_found:
-        # In case of missing information we assume that the login into
-        # the database has failed and we simply skip this check. It won't
-        # switch to UNKNOWN, but will get stale.
-        raise IgnoreResultsError("Login not possible for check %s" % item)
-
     if not service_found:
         # 'missingjob' was once used in the default parameters, so we still need to keep this key
         # for old autochecks file to continue working.
@@ -189,22 +212,22 @@ def check_oracle_jobs(item: str, params: Mapping[str, Any], section: StringTable
     output = []
     perfdata = []
 
-    txt = "Job-State: %s" % job_state
+    txt = "Job-State: %s" % job_state  # type: ignore[possibly-undefined]
     if job_state == "BROKEN":
         txt += "(!!)"
         state = State.CRIT
     output.append(txt)
 
-    txt = "Enabled: %s" % (job_enabled == "TRUE" and "Yes" or "No")
+    txt = "Enabled: %s" % (job_enabled == "TRUE" and "Yes" or "No")  # type: ignore[possibly-undefined]
     if job_enabled != "TRUE" and job_state != "RUNNING":
-        if param_consider_job_status == "ignore":
+        if param_consider_job_status == "ignore":  # type: ignore[possibly-undefined]
             txt += " (ignored)"
         else:
             txt += "(!)"
             state = State.worst(state, State.WARN)
     output.append(txt)
 
-    if job_runtime in {"", "SCHEDULED"}:
+    if job_runtime in {"", "SCHEDULED"}:  # type: ignore[possibly-undefined]
         last_duration = 0
     else:
         last_duration = int(job_runtime.replace(".", ",").split(",", 1)[0])
@@ -226,8 +249,8 @@ def check_oracle_jobs(item: str, params: Mapping[str, Any], section: StringTable
     perfdata.append(Metric("duration", last_duration))
 
     # 01.05.13 01:01:01,000000 +01:00
-    if job_nextrun.startswith("01.01.70 00:00:00"):
-        if job_schedule == "-" and job_state != "DISABLED":
+    if job_nextrun.startswith("01.01.70 00:00:00"):  # type: ignore[possibly-undefined]
+        if job_schedule == "-" and job_state != "DISABLED":  # type: ignore[possibly-undefined]
             job_nextrun = "not scheduled(!)"
             state = State.worst(state, State.WARN)
         else:
@@ -238,7 +261,7 @@ def check_oracle_jobs(item: str, params: Mapping[str, Any], section: StringTable
 
     # A job who is running forever has no last run state and job_last_state is
     # STOPPED
-    if job_state == "RUNNING" and job_runtime == "" and job_last_state == "STOPPED":
+    if job_state == "RUNNING" and job_runtime == "" and job_last_state == "STOPPED":  # type: ignore[possibly-undefined]
         txt = "Job is running forever"
     elif job_last_state == "":
         # no information from job log (outer join in SQL is empty)
@@ -270,10 +293,6 @@ def check_oracle_jobs(item: str, params: Mapping[str, Any], section: StringTable
 
     yield Result(state=state, summary=", ".join(output))
     yield from perfdata
-
-
-def parse_oracle_jobs(string_table: StringTable) -> StringTable:
-    return string_table
 
 
 agent_section_oracle_jobs = AgentSection(

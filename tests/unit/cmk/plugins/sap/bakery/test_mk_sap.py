@@ -83,3 +83,37 @@ def test_deploy() -> None:
             include_header=True,
         ),
     ]
+
+
+def test_deploy_host_prefix_and_suffix() -> None:
+    config = {
+        **CONFIG,
+        "instances": [
+            {
+                **CONFIG["instances"][0],  # type: ignore[dict-item]
+                "host_prefix": "ECC_",
+                "host_suffix": "_S4H",
+            },
+        ],
+    }
+    conf = bakery_plugin_mk_sap.parameter_parser(config)
+    (_plugin, plugin_config) = bakery_plugin_mk_sap.files_function(conf)
+    assert isinstance(plugin_config, PluginConfig)
+    assert "  'host_prefix': 'ECC_'," in plugin_config.lines
+    assert "  'host_suffix': '_S4H'," in plugin_config.lines
+
+
+def test_deploy_exclude_paths() -> None:
+    config = {
+        **CONFIG,
+        "exclude_paths": [
+            "SAP CCMS Technical Expert Monitors/All Monitoring Contexts/Critical Number Ranges/*/Client 000*",
+        ],
+    }
+    conf = bakery_plugin_mk_sap.parameter_parser(config)
+    (_plugin, plugin_config) = bakery_plugin_mk_sap.files_function(conf)
+    assert isinstance(plugin_config, PluginConfig)
+    assert (
+        "exclude_paths += ['SAP CCMS Technical Expert Monitors/All Monitoring Contexts/Critical Number Ranges/*/Client 000*']"
+        in plugin_config.lines
+    )

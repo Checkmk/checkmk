@@ -68,7 +68,7 @@ export interface ServiceRef {
   description: string
 }
 
-export type HostState = components['schemas']['HostState']
+export type HostState = components['schemas']['HostStateLabel']
 
 export type ServiceState = components['schemas']['ServiceStateLabel']
 

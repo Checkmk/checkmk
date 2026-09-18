@@ -5,10 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-# ruff: noqa: ARG001
-# ruff: noqa: ARG002
-# ruff: noqa: ARG005
-
 from collections.abc import Callable, Iterable, Mapping, Sequence
 
 import pytest
@@ -32,12 +28,12 @@ def _section(
     return SectionName(name), SectionPlugin(
         supersedes={SectionName(n) for n in supersedes},
         parsed_section_name=ParsedSectionName(parsed_section_name),
-        parse_function=lambda *args, **kw: object,
+        parse_function=lambda *args, **kw: object,  # noqa: ARG005
     )
 
 
 class _FakeParser(dict[str, object]):
-    def parse(self, section_name: SectionName, *args: object) -> object:
+    def parse(self, section_name: SectionName, *args: object) -> object:  # noqa: ARG002
         return self.get(str(section_name))
 
     def disable(self, names: Iterable[SectionName]) -> None:
@@ -216,7 +212,7 @@ def make_parser() -> SectionsParser:
             }
         ),
         host_name=HostName("some-host"),
-        error_handling=lambda *args, **kw: "error",
+        error_handling=lambda *args, **kw: "error",  # noqa: ARG005
     )
 
 
@@ -250,7 +246,7 @@ class TestSectionsParser:
                 }
             ),
             host_name=HostName("only-neede-for-crash-reporting"),
-            error_handling=lambda *args, **kw: "error",
+            error_handling=lambda *args, **kw: "error",  # noqa: ARG005
         )
 
     @staticmethod
@@ -260,7 +256,7 @@ class TestSectionsParser:
         counter = iter((1,))
         section_name = SectionName("one")
 
-        def parse_function(*args: object, **kw: object) -> object:
+        def parse_function(*args: object, **kw: object) -> object:  # noqa: ARG001
             return next(counter)
 
         _ = sections_parser.parse(section_name, parse_function)
@@ -278,7 +274,7 @@ class TestSectionsParser:
         was_enabled = debug.enabled()
         debug.disable()
         try:
-            assert sections_parser.parse(section_name, lambda *args, **kw: 1 / 0) is None
+            assert sections_parser.parse(section_name, lambda *args, **kw: 1 / 0) is None  # noqa: ARG005
             assert len(sections_parser.parsing_errors) == 1
             assert sections_parser.parsing_errors == ["error"]
         finally:
@@ -290,7 +286,7 @@ class TestSectionsParser:
         parsed_data = object()
         section_name = SectionName("one")
 
-        parsing_result = sections_parser.parse(section_name, lambda *args, **kw: parsed_data)
+        parsing_result = sections_parser.parse(section_name, lambda *args, **kw: parsed_data)  # noqa: ARG005
 
         assert parsing_result is not None
         assert parsing_result.data is parsed_data
@@ -302,7 +298,7 @@ class TestSectionsParser:
 
         sections_parser.disable([section_name])
 
-        assert sections_parser.parse(section_name, lambda *args, **kw: 42) is None
+        assert sections_parser.parse(section_name, lambda *args, **kw: 42) is None  # noqa: ARG005
 
     @staticmethod
     def test_parse_missing_section(
@@ -310,7 +306,7 @@ class TestSectionsParser:
     ) -> None:
         section_name = SectionName("missing_section")
 
-        assert sections_parser.parse(section_name, lambda *args, **kw: 42) is None
+        assert sections_parser.parse(section_name, lambda *args, **kw: 42) is None  # noqa: ARG005
 
     @staticmethod
     def test_parse_section_returns_none(
@@ -318,4 +314,4 @@ class TestSectionsParser:
     ) -> None:
         section_name = SectionName("one")
 
-        assert sections_parser.parse(section_name, lambda *args, **kw: None) is None
+        assert sections_parser.parse(section_name, lambda *args, **kw: None) is None  # noqa: ARG005

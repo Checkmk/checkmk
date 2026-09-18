@@ -88,7 +88,7 @@ snmp_section_ciena_cpu_util_5171 = SimpleSNMPSection(
 )
 
 
-def discover_ciena_cpu_util(section: Section5171 | Section5142) -> DiscoveryResult:
+def discover_ciena_cpu_util(section: Section5171 | Section5142) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

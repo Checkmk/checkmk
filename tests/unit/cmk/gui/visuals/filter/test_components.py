@@ -9,11 +9,19 @@ from cmk.gui.visuals.filter.components import (
     CheckboxGroup,
     Dropdown,
     DualList,
+    DynamicDropdown,
+    FilterComponent,
+    Hidden,
     HorizontalGroup,
+    LabelGroupFilterComponent,
+    MultiselectWithFreeText,
     RadioButton,
     Slider,
+    StaticText,
     TagFilterComponent,
+    TextInput,
 )
+from cmk.web.utils.autocompleter_config import AutocompleterConfig
 
 
 def test_horizontal_group_valid() -> None:
@@ -227,3 +235,66 @@ def test_tag_filter_empty_variable_prefix() -> None:
             display_rows=1,
             variable_prefix="",
         )
+
+
+def test_text_input_is_configured_with_a_value() -> None:
+    component = TextInput(id="host_regex")
+
+    assert component.is_configured({"host_regex": "web"})
+    assert not component.is_configured({"host_regex": ""})
+    assert not component.is_configured({})
+
+
+def test_dynamic_dropdown_is_configured_with_a_value() -> None:
+    component = DynamicDropdown(
+        id="host", autocompleter=AutocompleterConfig(ident="monitored_hosts")
+    )
+
+    assert component.is_configured({"host": "my-host"})
+    assert not component.is_configured({"host": ""})
+
+
+def test_dropdown_is_configured_by_an_empty_choice() -> None:
+    component = Dropdown(id="wato_folder", choices={"": "Main", "server": "server"})
+
+    assert component.is_configured({"wato_folder": ""})
+    assert component.is_configured({"wato_folder": "server"})
+
+
+def test_dropdown_needs_a_value_the_choices_offer() -> None:
+    component = Dropdown(id="host_state", choices={"0": "UP", "1": "DOWN"}, default_value="0")
+
+    assert component.is_configured({"host_state": "0"})
+    assert not component.is_configured({"host_state": ""})
+
+
+def test_horizontal_group_is_configured_once_every_component_is() -> None:
+    component = HorizontalGroup(
+        components=[TextInput(id="from"), TextInput(id="until")],
+    )
+
+    assert component.is_configured({"from": "5", "until": "10"})
+    assert not component.is_configured({"from": "5", "until": ""})
+
+
+@pytest.mark.parametrize(
+    "component",
+    [
+        StaticText(text="nothing to fill in"),
+        Checkbox(id="is_stale", label="Stale", default_value=False),
+        CheckboxGroup(choices={"st0": "OK"}),
+        RadioButton(id="opt", choices={"on": "On"}, default_value="on"),
+        Slider(id="depth", min_value=0, max_value=10, step=1, default_value=0),
+        Hidden(id="site", value="heute"),
+        DualList(id="folders", choices={"server": "server"}),
+        MultiselectWithFreeText(
+            id="app", autocompleter=AutocompleterConfig(ident="monitored_hosts")
+        ),
+        LabelGroupFilterComponent(id="host_labels", object_type="host"),
+        TagFilterComponent(display_rows=1, variable_prefix="host_tag"),
+    ],
+)
+def test_a_component_that_always_carries_a_state_is_configured(
+    component: FilterComponent,
+) -> None:
+    assert component.is_configured({})

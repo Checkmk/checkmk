@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import logging
 import os
 import time
@@ -62,7 +64,7 @@ def _ensure_cloud_initial_config() -> None:
 logger = logging.getLogger(__name__)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def instrument_requests() -> None:
     RequestsInstrumentor().instrument()
 
@@ -98,14 +100,18 @@ def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator
 
 @pytest.fixture(name="remote_site", scope="session")
 def _remote_site(
-    central_site: Site, request: pytest.FixtureRequest, ensure_cron: None
+    central_site: Site,
+    request: pytest.FixtureRequest,
+    ensure_cron: None,
 ) -> Iterator[Site]:
     yield from _make_connected_remote_site("remote", central_site, request.node.name)
 
 
 @pytest.fixture(name="remote_site_2", scope="session")
 def _remote_site_2(
-    central_site: Site, request: pytest.FixtureRequest, ensure_cron: None
+    central_site: Site,
+    request: pytest.FixtureRequest,
+    ensure_cron: None,
 ) -> Iterator[Site]:
     yield from _make_connected_remote_site("remote2", central_site, request.node.name)
 
@@ -150,7 +156,7 @@ def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
         yield installed_agent_ctl_in_unknown_state
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _verify_central_livestatus_alive(
     central_site: Site,
     request: pytest.FixtureRequest,

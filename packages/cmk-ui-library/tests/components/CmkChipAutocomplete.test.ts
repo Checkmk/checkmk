@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { render, screen, waitFor } from '@testing-library/vue'
+import { render, screen, waitFor, within } from '@testing-library/vue'
 import CmkChipAutocomplete from 'cmk-ui-library/components/CmkChipAutocomplete.vue'
 import { ref } from 'vue'
 
@@ -37,13 +37,13 @@ test('asks for nothing before anything is typed', () => {
   const { suggest } = mountChips()
 
   expect(suggest).not.toHaveBeenCalled()
-  expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  expect(screen.queryAllByRole('listitem')).toHaveLength(0)
 })
 
 test('seeds the list on focus when asked to', async () => {
   mountChips({ suggestWhenEmpty: true })
 
-  await userEvent.click(screen.getByRole('textbox'))
+  await userEvent.click(screen.getByRole('searchbox'))
 
   await waitFor(() => {
     expect(screen.getByRole('button', { name: 'criticality:prod' })).toBeInTheDocument()
@@ -53,7 +53,7 @@ test('seeds the list on focus when asked to', async () => {
 test('suggests what the typed text matches', async () => {
   mountChips()
 
-  await userEvent.type(screen.getByRole('textbox'), 'os_family')
+  await userEvent.type(screen.getByRole('searchbox'), 'os_family')
 
   await waitFor(() => {
     expect(screen.getByRole('button', { name: 'cmk/os_family:linux' })).toBeInTheDocument()
@@ -64,20 +64,20 @@ test('suggests what the typed text matches', async () => {
 test('turns a picked suggestion into a chip and clears the input', async () => {
   const { rerender, selected } = mountChips()
 
-  await userEvent.type(screen.getByRole('textbox'), 'linux')
+  await userEvent.type(screen.getByRole('searchbox'), 'linux')
   await waitFor(() => screen.getByRole('button', { name: 'cmk/os_family:linux' }))
   await userEvent.click(screen.getByRole('button', { name: 'cmk/os_family:linux' }))
 
   expect(selected.value).toEqual(['cmk/os_family:linux'])
   await rerender({ modelValue: selected.value })
-  expect(screen.getByRole('textbox')).toHaveValue('')
+  expect(screen.getByRole('searchbox')).toHaveValue('')
   expect(screen.getByRole('button', { name: 'Remove cmk/os_family:linux' })).toBeInTheDocument()
 })
 
 test('moves focus into the suggestions with the arrow keys', async () => {
   mountChips()
 
-  await userEvent.type(screen.getByRole('textbox'), 'os_family')
+  await userEvent.type(screen.getByRole('searchbox'), 'os_family')
   await waitFor(() => screen.getByRole('button', { name: 'cmk/os_family:linux' }))
   await userEvent.keyboard('{ArrowDown}')
 
@@ -93,7 +93,7 @@ test('moves focus into the suggestions with the arrow keys', async () => {
 test('selects the focused suggestion with the keyboard', async () => {
   const { selected } = mountChips()
 
-  await userEvent.type(screen.getByRole('textbox'), 'linux')
+  await userEvent.type(screen.getByRole('searchbox'), 'linux')
   await waitFor(() => screen.getByRole('button', { name: 'cmk/os_family:linux' }))
   await userEvent.keyboard('{ArrowDown}{Enter}')
 
@@ -103,7 +103,7 @@ test('selects the focused suggestion with the keyboard', async () => {
 test('drops the chip added last on backspace in an empty input', async () => {
   const { selected } = mountChips({ selected: ['criticality:prod', 'cmk/site:heute'] })
 
-  await userEvent.click(screen.getByRole('textbox'))
+  await userEvent.click(screen.getByRole('searchbox'))
   await userEvent.keyboard('{Backspace}')
 
   expect(selected.value).toEqual(['criticality:prod'])
@@ -120,7 +120,7 @@ test('drops a chip through its remove button', async () => {
 test('never suggests what is already selected', async () => {
   mountChips({ selected: ['cmk/os_family:linux'] })
 
-  await userEvent.type(screen.getByRole('textbox'), 'os_family')
+  await userEvent.type(screen.getByRole('searchbox'), 'os_family')
 
   await waitFor(() => {
     expect(screen.getByRole('button', { name: 'cmk/os_family:windows' })).toBeInTheDocument()
@@ -131,7 +131,7 @@ test('never suggests what is already selected', async () => {
 test('says so when nothing matches', async () => {
   mountChips()
 
-  await userEvent.type(screen.getByRole('textbox'), 'nothing-matches-this')
+  await userEvent.type(screen.getByRole('searchbox'), 'nothing-matches-this')
 
   await waitFor(() => {
     expect(screen.getByText('No matching values')).toBeInTheDocument()
@@ -141,7 +141,7 @@ test('says so when nothing matches', async () => {
 test('refuses further picks once maxSelected is reached', async () => {
   const { selected } = mountChips({ selected: ['criticality:prod'], maxSelected: 1 })
 
-  await userEvent.type(screen.getByRole('textbox'), 'os_family')
+  await userEvent.type(screen.getByRole('searchbox'), 'os_family')
 
   await waitFor(() => {
     expect(screen.getByRole('button', { name: 'cmk/os_family:linux' })).toBeDisabled()
@@ -166,9 +166,9 @@ test('keeps only the newest response when an earlier one resolves late', async (
     }
   })
 
-  await userEvent.type(screen.getByRole('textbox'), 'a')
+  await userEvent.type(screen.getByRole('searchbox'), 'a')
   await waitFor(() => expect(resolvers).toHaveLength(1))
-  await userEvent.type(screen.getByRole('textbox'), 'b')
+  await userEvent.type(screen.getByRole('searchbox'), 'b')
   await waitFor(() => expect(resolvers).toHaveLength(2))
 
   resolvers[1]!(['newest'])
@@ -203,18 +203,18 @@ function mountKeyValue(options: { wildcardOption?: boolean } = {}) {
 test('picking a bare key continues the query instead of committing a chip', async () => {
   const { selected } = mountKeyValue()
 
-  await userEvent.type(screen.getByRole('textbox'), 'os_family')
+  await userEvent.type(screen.getByRole('searchbox'), 'os_family')
   await waitFor(() => screen.getByRole('button', { name: 'cmk/os_family' }))
   await userEvent.click(screen.getByRole('button', { name: 'cmk/os_family' }))
 
   expect(selected.value).toEqual([])
-  expect(screen.getByRole('textbox')).toHaveValue('cmk/os_family:')
+  expect(screen.getByRole('searchbox')).toHaveValue('cmk/os_family:')
 })
 
 test('picking the value of a key commits the pair', async () => {
   const { selected } = mountKeyValue()
 
-  await userEvent.type(screen.getByRole('textbox'), 'os_family')
+  await userEvent.type(screen.getByRole('searchbox'), 'os_family')
   await waitFor(() => screen.getByRole('button', { name: 'cmk/os_family' }))
   await userEvent.click(screen.getByRole('button', { name: 'cmk/os_family' }))
 
@@ -222,13 +222,13 @@ test('picking the value of a key commits the pair', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'cmk/os_family:linux' }))
 
   expect(selected.value).toEqual(['cmk/os_family:linux'])
-  expect(screen.getByRole('textbox')).toHaveValue('')
+  expect(screen.getByRole('searchbox')).toHaveValue('')
 })
 
 test('commits a pair straight away when the suggestion already carries a value', async () => {
   const { selected } = mountKeyValue()
 
-  await userEvent.type(screen.getByRole('textbox'), 'criticality:')
+  await userEvent.type(screen.getByRole('searchbox'), 'criticality:')
   await waitFor(() => screen.getByRole('button', { name: 'criticality:prod' }))
   await userEvent.click(screen.getByRole('button', { name: 'criticality:prod' }))
 
@@ -238,7 +238,7 @@ test('commits a pair straight away when the suggestion already carries a value',
 test('offers the keys of what came back in their own right', async () => {
   mountKeyValue()
 
-  await userEvent.type(screen.getByRole('textbox'), 'os_family')
+  await userEvent.type(screen.getByRole('searchbox'), 'os_family')
 
   await waitFor(() => {
     expect(screen.getByRole('button', { name: 'cmk/os_family' })).toBeInTheDocument()
@@ -249,7 +249,7 @@ test('offers the keys of what came back in their own right', async () => {
 test('offers no wildcard entry unless asked for one', async () => {
   mountKeyValue()
 
-  await userEvent.type(screen.getByRole('textbox'), 'os_family')
+  await userEvent.type(screen.getByRole('searchbox'), 'os_family')
 
   await waitFor(() => screen.getByRole('button', { name: 'cmk/os_family' }))
   expect(screen.queryByRole('button', { name: 'os_family*' })).not.toBeInTheDocument()
@@ -258,12 +258,32 @@ test('offers no wildcard entry unless asked for one', async () => {
 test('lists the wildcard entry first and commits it as typed', async () => {
   const { selected } = mountKeyValue({ wildcardOption: true })
 
-  await userEvent.type(screen.getByRole('textbox'), 'os_family')
+  await userEvent.type(screen.getByRole('searchbox'), 'os_family')
   await waitFor(() => screen.getByRole('button', { name: 'os_family*' }))
 
-  const listed = screen.getAllByRole('button').map((button) => button.textContent?.trim())
+  const results = within(screen.getByRole('list', { name: 'Search results' }))
+  const listed = results.getAllByRole('button').map((button) => button.textContent?.trim())
   expect(listed[0]).toBe('os_family*')
 
   await userEvent.click(screen.getByRole('button', { name: 'os_family*' }))
   expect(selected.value).toEqual(['os_family*'])
+})
+
+test('drops the wildcard entry once a single value is left to match', async () => {
+  mountKeyValue({ wildcardOption: true })
+
+  await userEvent.type(screen.getByRole('searchbox'), 'criticality:prod')
+  await waitFor(() => screen.getByRole('button', { name: 'criticality:prod' }))
+
+  expect(screen.queryByRole('button', { name: 'criticality:prod*' })).not.toBeInTheDocument()
+})
+
+test('drops the wildcard entry when a key leaves a single value to match', async () => {
+  mountKeyValue({ wildcardOption: true })
+
+  await userEvent.type(screen.getByRole('searchbox'), 'criticality')
+  await waitFor(() => screen.getByRole('button', { name: 'criticality:prod' }))
+
+  expect(screen.getByRole('button', { name: 'criticality' })).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'criticality*' })).not.toBeInTheDocument()
 })

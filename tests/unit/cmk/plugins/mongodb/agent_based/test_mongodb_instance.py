@@ -59,8 +59,8 @@ def test_discover_mongodb_instance(
     ],
 )
 def test_check_mongodb_instance(
-    item: str,
-    params: Mapping[str, object],
+    item: str,  # noqa: ARG001
+    params: Mapping[str, object],  # noqa: ARG001
     string_table: StringTable,
     expected_results: Sequence[object],
 ) -> None:

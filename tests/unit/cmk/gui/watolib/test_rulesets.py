@@ -49,7 +49,10 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
     with a direct call to the automation"""
 
     def analyze_with_matcher(
-        h: HostName, r: Sequence[Sequence[RuleSpec]], *, debug: bool
+        h: HostName,
+        r: Sequence[Sequence[RuleSpec]],
+        *,
+        debug: bool,  # noqa: ARG001
     ) -> ABCAutomationResult:
         ts = Scenario()
         ts.add_host(HostName("ding"))
@@ -175,7 +178,7 @@ def fixture_mock_analyze_service_rule_matches_automation(monkeypatch: pytest.Mon
         service_labels: Labels,
         rules: Sequence[Sequence[RuleSpec]],
         *,
-        debug: bool,
+        debug: bool,  # noqa: ARG001
     ) -> ABCAutomationResult:
         ts = Scenario()
         ts.add_host(HostName("ding"))
@@ -297,10 +300,10 @@ def test_predefined_conditions_allows_id_with_dash(
     monkeypatch.setattr(
         PredefinedConditionStore,
         "choices",
-        lambda self: [("my-condition-1", "My condition")],
+        lambda self: [("my-condition-1", "My condition")],  # noqa: ARG005
     )
 
-    rulesets._create_rule_conditions_catalog_topic(
+    rulesets._create_rule_conditions_catalog_topic(  # noqa: SLF001
         locked_conditions=None,
         tree=FolderTree(config=HostsAndFoldersConfig.from_config(active_config)),
         rule_spec_name="only_hosts",

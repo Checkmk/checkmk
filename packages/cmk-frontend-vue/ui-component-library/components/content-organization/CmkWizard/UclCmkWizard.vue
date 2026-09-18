@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import type { ListPropDef } from '@ucl/_ucl/types/prop-def'
 
 import codeExample from './UclCmkWizardCodeExample.vue?raw'
@@ -28,10 +28,10 @@ export const panelConfig = {
   mode: {
     type: 'list' as const,
     title: 'Wizard Mode',
-    options: [
-      { title: 'Guided (Step-by-Step)', name: 'guided' },
-      { title: 'Overview (Stacked)', name: 'overview' }
-    ] satisfies Options<'guided' | 'overview'>[],
+    options: listOptions<'guided' | 'overview'>({
+      guided: 'Guided (Step-by-Step)',
+      overview: 'Overview (Stacked)'
+    }),
     initialState: 'guided' as 'guided' | 'overview'
   },
   currentStep: {

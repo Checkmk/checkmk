@@ -110,7 +110,7 @@ def test_match_item_generator_setup_menu() -> None:
         MatchItemGeneratorMainMenu(
             "setup",
             provider="setup",
-            topic_generator=lambda p: [
+            topic_generator=lambda p: [  # noqa: ARG005
                 NavItemTopic(
                     id="topic",
                     title="Topic",

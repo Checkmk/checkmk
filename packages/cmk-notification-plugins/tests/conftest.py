@@ -9,7 +9,7 @@ from collections.abc import Generator
 import pytest
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(autouse=True, scope="session")  # ruff: ignore[pytest-fixture-autouse]
 def fixture_omd_site() -> Generator[None]:
     os.environ["OMD_SITE"] = "NO_SITE"
     yield

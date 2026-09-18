@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import datetime
@@ -22,28 +21,28 @@ class _TestModel:
     field: int | None | ApiOmitted = api_field(description="field", default_factory=ApiOmitted)
 
 
-def test_validation_valid_type_works():
+def test_validation_valid_type_works() -> None:
     model = TypeAdapter(_TestModel).validate_python(  # astrein: disable=pydantic-type-adapter
         {"field": 123}
     )
     assert model.field == 123
 
 
-def test_validation_none_stays_none():
+def test_validation_none_stays_none() -> None:
     model = TypeAdapter(_TestModel).validate_python(  # astrein: disable=pydantic-type-adapter
         {"field": None}
     )
     assert model.field is None
 
 
-def test_validation_omitted_stays_omitted():
+def test_validation_omitted_stays_omitted() -> None:
     model = TypeAdapter(_TestModel).validate_python(  # astrein: disable=pydantic-type-adapter
         {"field": ApiOmitted()}
     )
     assert isinstance(model.field, ApiOmitted)
 
 
-def test_validation_invalid_type_raises():
+def test_validation_invalid_type_raises() -> None:
     with pytest.raises(ValidationError):
         TypeAdapter(_TestModel).validate_python(  # astrein: disable=pydantic-type-adapter
             {"field": "string"}

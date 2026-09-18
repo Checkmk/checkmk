@@ -3,15 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import TypedDict
 
+from cmk.gui.type_defs import Row
 from cmk.inventory.structured_data import SDKey, SDPath
 
 from ._display_hints import AttributeDisplayHint, ColumnDisplayHintOfView
-from .registry import SortFunction
 
 
 class SorterFromHint(TypedDict):
@@ -19,7 +17,7 @@ class SorterFromHint(TypedDict):
     title: str
     columns: Sequence[str]
     load_inv: bool
-    cmp: SortFunction
+    cmp: Callable[[Row, Row], int]
 
 
 def attribute_sorter_from_hint(

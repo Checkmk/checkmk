@@ -120,13 +120,29 @@ def test_sections_asm_sections_are_renamed() -> None:
     }
 
 
+def test_missing_excluded_sections_are_not_mapped() -> None:
+    new_rule = convert({})
+    assert "excluded_sections" not in dump(new_rule.rule)["main"]
+
+
+def test_excluded_sections_are_mapped_correctly() -> None:
+    new_rule = convert(
+        {"excluded_sections": [("test_sid", ["performance", "tablespaces", "locks"])]}
+    )
+    assert dump(new_rule.rule)["main"]["excluded_sections"] == [
+        {
+            "target_id": ("sid", {"sid": "test_sid"}),
+            "sections": ["performance", "tablespaces", "locks"],
+        }
+    ]
+
+
 def test_unmappable_fields_ignored() -> None:
     new_rule = convert(
         {
             "sqlnet_ora_group": "some_group",
             "xinetd_or_systemd": ("xinetd", None),
             "sqlnet_send_timeout": 30,
-            "excluded_sections": [("s", ["x"])],
             "tnsalias_pre_postfix": ("all_sids", ("a", "b")),
             "remote_oracle_home": "/x",
         }
@@ -141,10 +157,6 @@ def test_unmappable_fields_ignored() -> None:
     )
     assert (
         "'Sqlnet Send timeout' has been skipped because it is not supported by the unified plugin. Use Connection Timeout instead if this is applicable."
-        in new_rule.warnings
-    )
-    assert (
-        "'Exclude some sections on certain instances' cannot be mapped. The new rule format only supports disabling sections globally."
         in new_rule.warnings
     )
     dumped = dump(new_rule.rule)

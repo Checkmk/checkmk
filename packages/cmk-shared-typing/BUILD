@@ -15,6 +15,7 @@ load(
 load("@openapi_spec_editions//:editions.bzl", "OPENAPI_SPEC_EDITION_GENERATORS")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 load("//bazel/rules:shared_typing_generators.bzl", "json2python", "json2typescript")
 
@@ -36,6 +37,7 @@ SOURCES_COMMON = [
     "global_time_picker.json",
     "loading_transition.json",
     "main_menu.json",
+    "mode_create_otel_conf.json",
     "mode_custom_services.json",
     "mode_host.json",
     "mode_oauth2_connection.json",
@@ -53,15 +55,16 @@ SOURCES_COMMON = [
     "welcome.json",
     "agent_slideout.json",
     "product_usage_analytics.json",
-    "trial_mode_selection.json",
+    "trial_mode_selection_props.json",
+    "trial_mode_selection_request.json",
     "two_factor_auth.json",
 ]
 
 SOURCES_SPECIAL_DATACLASSES = [
     "aggregation.json",
     "attribute_filter.json",
+    "consolidation.json",
     "cmk_time_series_graph.json",
-    "graph_designer.json",
     "profiling_flamegraph.json",
     "service_graphs.json",
     "unit_format.json",
@@ -197,6 +200,13 @@ py_library(
     ],
 )
 
+py_cmk_test(
+    name = "unit",
+    size = "small",
+    srcs = glob(["tests/**/*.py"]),
+    deps = [":cmk_shared_typing_formatter"],
+)
+
 json2python(
     name = "generated_py_files_special_dataclasses",
     srcs = SOURCES_SPECIAL_DATACLASSES,
@@ -206,7 +216,6 @@ json2python(
         "--use-title-as-name",
         "--use-double-quotes",
         "--use-default",
-        "--use-one-literal-as-default",
         "--custom-file-header-path=$(location :header_py.txt)",
         "--custom-formatters=utils.format",
         "--output-model-type=dataclasses.dataclass",
@@ -261,11 +270,12 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//cmk/nonfree:__subpackages__",
-        "//non-free/packages/cmk-metric-backend:__pkg__",
+        "//non-free/packages/cmk-data-backend:__pkg__",
         "//non-free/packages/cmk-network-flow:__pkg__",
         "//non-free/packages/cmk-robotmk:__pkg__",
         "//non-free/packages/cmk-telemetry:__pkg__",
         "//packages/cmk-profiling:__pkg__",
+        "//packages/cmk-web/cmk/web/utils:__pkg__",
         "//tests:__subpackages__",
     ],
 )

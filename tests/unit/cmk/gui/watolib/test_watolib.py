@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from typing import override
 
@@ -114,6 +113,8 @@ def test_registered_configvars() -> None:
         "escape_plugin_output",
         "event_limit",
         "eventsocket_queue_len",
+        "exp_ai_assistant",
+        "exp_relay_active_checks",
         "exp_trial_mode_selection",
         "failed_notification_horizon",
         "hard_query_limit",
@@ -245,7 +246,7 @@ def test_registered_configvar_groups() -> None:
         "Support",
         "Developer tools",
         "Product usage analytics",
-        "Release flags",
+        "Experimental flags (for testing only)",
     ]
 
     registered = sorted(config_variable_group_registry.keys())
@@ -260,5 +261,5 @@ def test_legacy_configvar_order_access() -> None:
 
 class _EvulToStr:
     @override
-    def __str__(self):
+    def __str__(self) -> str:
         return "' boom!"

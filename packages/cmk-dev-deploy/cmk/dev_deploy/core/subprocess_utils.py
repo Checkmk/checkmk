@@ -4,8 +4,6 @@
 
 """Shared subprocess runner with unified timeout and error handling."""
 
-from __future__ import annotations
-
 import subprocess
 from collections.abc import Sequence
 from pathlib import Path

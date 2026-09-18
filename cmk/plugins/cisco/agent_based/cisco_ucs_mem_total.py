@@ -21,7 +21,7 @@ from cmk.plugins.cisco.lib_ucs import DETECT
 # .1.3.6.1.4.1.9.9.719.1.9.35.1.9   cucsComputeRackUnitAvailableMemory
 
 
-def discover_cisco_ucs_mem_total(section: StringTable) -> DiscoveryResult:
+def discover_cisco_ucs_mem_total(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

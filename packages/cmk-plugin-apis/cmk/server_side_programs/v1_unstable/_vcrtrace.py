@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Arguments: unused / shadowing builtins. But we're following argparse.Action protocol.
-# ruff: noqa: A001, A002
-
 import argparse
 import atexit
 import sys
@@ -61,14 +58,14 @@ def vcrtrace(
             nargs: int | str | None = None,
             const: T | None = None,
             default: T | str | None = None,
-            type: Callable[[str], T] | argparse.FileType | None = None,
+            type: Callable[[str], T] | argparse.FileType | None = None,  # noqa: A002
             choices: Iterable[T] | None = None,
             required: bool = False,
-            help: str | None = None,
+            help: str | None = None,  # noqa: A002
             metavar: str | tuple[str, ...] | None = "TRACEFILE",
         ):
             help_part = "" if vcrtrace.__doc__ is None else vcrtrace.__doc__.split("\n\n")[3]
-            help = f"{help_part} {help}" if help else help_part
+            help = f"{help_part} {help}" if help else help_part  # noqa: A001
 
             super().__init__(
                 option_strings=option_strings,

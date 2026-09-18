@@ -55,7 +55,7 @@ agent_section_kube_cluster_info_v1 = AgentSection(
 )
 
 
-def discovery_kube_cluster_info(section: ClusterInfo) -> DiscoveryResult:
+def discovery_kube_cluster_info(section: ClusterInfo) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

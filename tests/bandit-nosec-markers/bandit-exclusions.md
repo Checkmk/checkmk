@@ -53,3 +53,4 @@ Note that Bandit is picky about the exact format.
 | `BNS:dcaf44`    | `B102`         | Well using exec to read `etc/omd/distributed.mk`                                                                                                                                     |
 | `BNS:59d87e`    | `B108`         | Developer-only CLI tool (`cmk-dev-deploy`) using namespaced temp directory; not exposed to site users.                                                                               |
 | `BNS:d18fa0`    | `B103`         | Downloaded binary made executable after SHA256 checksum verification.                                                                                                                |
+| `BNS:8f31c7`    | `B103`         | Developer-only CLI tool (`cmk-dev-deploy`): generated bazel wrapper shim needs the executable bit; its content is fully controlled by the tool and written atomically.               |

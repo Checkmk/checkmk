@@ -121,7 +121,7 @@ vmjkI6TZraE3
 )
 def test_analyze_cert(pem: Callable[[], str], expected: dict) -> None:  # type: ignore[misc]
     cert = Certificate.load_pem(CertificatePEM(pem()))
-    assert vs._CAorCAChain._analyse_cert(cert) == expected
+    assert vs._CAorCAChain._analyse_cert(cert) == expected  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -134,4 +134,4 @@ def test_analyze_cert(pem: Callable[[], str], expected: dict) -> None:  # type: 
 )
 def test_validate_value_invalid_certs(invalid_pem: str) -> None:
     with pytest.raises(MKUserError, match="Invalid certificate file"):
-        vs._CAorCAChain()._validate_value(invalid_pem, "test")
+        vs._CAorCAChain()._validate_value(invalid_pem, "test")  # noqa: SLF001

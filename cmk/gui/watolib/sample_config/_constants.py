@@ -91,6 +91,11 @@ PS_DISCOVERY_RULES: list[RuleSpec[Mapping[str, object]]] = [
             "~gunicorn:.*cmk.agent_receiver",
         ),
         (
+            "11683ac1-4306-47c2-bad5-d117c2fdd1d6",
+            "ai-control-plane",
+            "~python3 /omd/sites/[^/]+/bin/uvicorn.*cmk\\.ai_control_plane\\.api\\.app:create_app",
+        ),
+        (
             "6b3a78b3-b4e9-4aca-b427-2f656809bf49",
             "alert helper",
             "~python3 /omd/sites/[^/]+/bin/cmk --handle-alerts",

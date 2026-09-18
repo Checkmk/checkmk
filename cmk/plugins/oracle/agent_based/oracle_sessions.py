@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="unreachable"
 
 # <<<oracle_sessions>>>
 # pengt  15
@@ -30,40 +29,63 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-# Type alias for the section data structure
-# Maps instance name -> session metrics (cursess, maxsess, curmax)
-type SectionOracleSessions = Mapping[str, Mapping[str, int]]
+from .liboracle import Error, Ok, oracle_handle_ora_errors, Parsed
+
+type _Metrics = dict[str, int]
+type Section = Mapping[str, Parsed[_Metrics]]
 
 
-def parse_oracle_sessions(string_table: StringTable) -> SectionOracleSessions:
+def parse_oracle_sessions(string_table: StringTable) -> Section:
     header = ["cursess", "maxsess", "curmax"]
-    parsed: dict[str, dict[str, int]] = {}
+    metrics_by_sid: dict[str, _Metrics] = {}
+    errors: dict[str, str] = {}
     for line in string_table:
-        for key, entry in zip(header, line[1:]):
-            with contextlib.suppress(ValueError):
-                parsed.setdefault(line[0], {})[key] = int(entry)
+        match oracle_handle_ora_errors(line):
+            case str() as message:
+                errors.setdefault(line[0], message)
+            case False:
+                continue
+            case None:
+                for key, entry in zip(header, line[1:]):
+                    with contextlib.suppress(ValueError):
+                        metrics_by_sid.setdefault(line[0], {})[key] = int(entry)
+
+    parsed: dict[str, Parsed[_Metrics]] = {
+        sid: Ok(metrics) for sid, metrics in metrics_by_sid.items() if sid not in errors
+    }
+    for sid, message in errors.items():
+        parsed[sid] = Error(message)
     return parsed
 
 
-def discover_oracle_sessions(section: SectionOracleSessions) -> DiscoveryResult:
-    for sid in section:
-        yield Service(item=sid)
+def discover_oracle_sessions(section: Section) -> DiscoveryResult:
+    for sid, result in section.items():
+        if isinstance(result, Ok) and result.value:
+            yield Service(item=sid)
 
 
-def check_oracle_sessions(
-    item: str, params: Mapping[str, Any], section: SectionOracleSessions
-) -> CheckResult:
-    if isinstance(params, tuple):
-        params = {"sessions_abs": params}
+def check_oracle_sessions(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if isinstance(params, tuple):  # type: ignore[unreachable]
+        params = {"sessions_abs": params}  # type: ignore[unreachable]
 
-    if (data := section.get(item)) is None or "cursess" not in data:
-        # In case of missing information we assume that the login into
-        # the database has failed and we simply skip this check. It won't
-        # switch to UNKNOWN, but will get stale.
+    match section.get(item):
+        case None:
+            # In case of missing information we assume that the login into
+            # the database has failed and we simply skip this check. It won't
+            # switch to UNKNOWN, but will get stale.
+            raise IgnoreResultsError("Login into database failed")
+        case Error(message):
+            yield Result(state=State.UNKNOWN, summary=message)
+        case Ok(metrics):
+            yield from _check_sessions(params, metrics)
+
+
+def _check_sessions(params: Mapping[str, Any], metrics: _Metrics) -> CheckResult:
+    if "cursess" not in metrics:
         raise IgnoreResultsError("Login into database failed")
 
-    sessions = data["cursess"]
-    sessions_max = data.get("maxsess")
+    sessions = metrics["cursess"]
+    sessions_max = metrics.get("maxsess")
 
     yield from check_levels(
         sessions,

@@ -4,8 +4,6 @@
 
 """Unit tests for cmk.dev_deploy.site_resolver (find_repo_root, resolve_site, helpers)."""
 
-from __future__ import annotations
-
 import os
 import subprocess
 from pathlib import Path

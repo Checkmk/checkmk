@@ -43,6 +43,43 @@ def test_oracle_jobs_check_error(info: StringTable) -> None:
         _ = list(check_oracle_jobs("DB19.SYS.JOB1", {}, parse_oracle_jobs(info)))
 
 
+_failure_info = [["DB19", "FAILURE", "ORA-00942: table or view does not exist"]]
+
+
+def test_oracle_jobs_discovery_skips_failure_row() -> None:
+    assert not list(discover_oracle_jobs(parse_oracle_jobs(_failure_info)))
+
+
+def test_oracle_jobs_check_failure_row_surfaces_error() -> None:
+    assert list(check_oracle_jobs("DB19.SYS.JOB1", {}, parse_oracle_jobs(_failure_info))) == [
+        Result(state=State.UNKNOWN, summary="ORA-00942: table or view does not exist"),
+    ]
+
+
+# a PDB named "FAILURE" is data, not an error row
+_pdb_named_failure_info = [
+    [
+        "DB19",
+        "FAILURE",
+        "SYS",
+        "JOB1",
+        "SCHEDULED",
+        "0",
+        "46",
+        "TRUE",
+        "15-JUN-21 01.01.01.143871 AM +00:00",
+        "-",
+        "SUCCEEDED",
+    ]
+]
+
+
+def test_oracle_jobs_discovery_keeps_job_in_pdb_named_failure() -> None:
+    assert list(discover_oracle_jobs(parse_oracle_jobs(_pdb_named_failure_info))) == [
+        Service(item="DB19.FAILURE.SYS.JOB1")
+    ]
+
+
 _STRING_TABLE_CDB_NONCDB = [
     [
         "CDB",
@@ -247,3 +284,70 @@ def test_check2_last_run_succeded() -> None:
         ),
         Metric("duration", 6),
     ]
+
+
+def test_oracle_jobs_check_failure_row_after_other_instances_rows() -> None:
+    # the FAILURE row must still match after `sid` was rebound by the job row
+    info = [
+        [
+            "OTHER",
+            "SYS",
+            "JOB2",
+            "SCHEDULED",
+            "0",
+            "46",
+            "TRUE",
+            "15-JUN-21 01.01.01.143871 AM +00:00",
+            "-",
+            "SUCCEEDED",
+        ],
+        ["DB19", "FAILURE", "ORA-00942: table or view does not exist"],
+    ]
+    assert list(check_oracle_jobs("DB19.SYS.JOB1", {}, parse_oracle_jobs(info))) == [
+        Result(state=State.UNKNOWN, summary="ORA-00942: table or view does not exist"),
+    ]
+
+
+_legacy_error_info = [["DB19", "ORA-01017:", "invalid username/password"]]
+
+
+def test_oracle_jobs_discovery_skips_legacy_error_row() -> None:
+    assert not list(discover_oracle_jobs(parse_oracle_jobs(_legacy_error_info)))
+
+
+def test_oracle_jobs_check_legacy_error_row_surfaces_error() -> None:
+    assert list(check_oracle_jobs("DB19.SYS.JOB1", {}, parse_oracle_jobs(_legacy_error_info))) == [
+        Result(
+            state=State.UNKNOWN,
+            summary='Found error in agent output "ORA-01017: invalid username/password"',
+        ),
+    ]
+
+
+def test_oracle_jobs_check_old_format_without_owner() -> None:
+    # old format without job_owner; extra fields due to the missing separator
+    info = [
+        [
+            "IODBSZ1",
+            "SYS",
+            "SM$CLEAN_AUTO_SPLIT_MERGE",
+            "SCHEDULED",
+            "0",
+            "763",
+            "TRUE",
+            "24.04.13",
+            "00:00:00,600000",
+            "EUROPE/VIENNA",
+            "-",
+            "SUCCEEDED",
+        ]
+    ]
+    results = list(
+        check_oracle_jobs(
+            "IODBSZ1.SM$CLEAN_AUTO_SPLIT_MERGE",
+            {"consider_job_status": "ignore"},
+            parse_oracle_jobs(info),
+        )
+    )
+    assert results
+    assert not any(isinstance(r, Result) and "Job is missing" in (r.summary or "") for r in results)

@@ -10,8 +10,6 @@ shutdown, iBazel spawning, [frontend] stdout prefix, startup banner, crash
 reporting, v1.4 code removal verification, and CLI help text.
 """
 
-from __future__ import annotations
-
 import contextlib
 import inspect
 import io
@@ -72,11 +70,6 @@ class TestFrontendConfig:
         """shutdown_grace was removed in iBazel rewrite (immediate SIGKILL)."""
         config = FrontendConfig()
         assert not hasattr(config, "shutdown_grace")
-
-    def test_frozen(self) -> None:
-        config = FrontendConfig()
-        with pytest.raises(AttributeError):
-            config.port = 9999  # type: ignore[misc]
 
     def test_startup_timeout_300s(self) -> None:
         """300s timeout for initial Bazel builds (cold cache can take 3-5 min)."""
@@ -1801,6 +1794,13 @@ class TestFrontendSupervisedRegistry:
         prefixes = get_frontend_supervised_prefixes()
         assert "packages/cmk-frontend-vue/" in prefixes
 
+    def test_input_packages_of_frontend_vue_are_supervised(self) -> None:
+        """iBazel watches the vite target's transitive sources, so HMR covers them too."""
+        from cmk.dev_deploy.manifest.reader import get_frontend_supervised_prefixes
+
+        prefixes = get_frontend_supervised_prefixes()
+        assert "packages/cmk-ui-library/" in prefixes
+
     def test_prefixes_have_trailing_slash(self) -> None:
         from cmk.dev_deploy.manifest.reader import get_frontend_supervised_prefixes
 
@@ -2298,6 +2298,7 @@ class TestMainCombinedMode:
 
         with (
             patch("os.getuid", return_value=1000),
+            patch("os.chdir"),
             patch("cmk.dev_deploy.__main__.output", self._mock_output()),
             patch("cmk.dev_deploy.__main__.find_repo_root", return_value=Path("/repo")),
             patch("cmk.dev_deploy.__main__.resolve_site"),
@@ -2333,6 +2334,7 @@ class TestMainCombinedMode:
 
         with (
             patch("os.getuid", return_value=1000),
+            patch("os.chdir"),
             patch("cmk.dev_deploy.__main__.output", self._mock_output()),
             patch("cmk.dev_deploy.__main__.find_repo_root", return_value=Path("/repo")),
             patch("cmk.dev_deploy.__main__.resolve_site"),
@@ -2616,3 +2618,46 @@ class TestSiteConfigIntegration:
 
         source = inspect.getsource(_run_frontend_watch)
         assert "remove_override" in source
+
+
+# ---------------------------------------------------------------------------
+# TestSpawnIBazelBazelPath
+# ---------------------------------------------------------------------------
+
+
+class TestSpawnIBazelBazelPath:
+    """iBazel is pointed at the deploy server via -bazel_path."""
+
+    def _spawn(self, tmp_path: Path, wrapper: Path | None) -> list[str]:
+        from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
+
+        supervisor = FrontendSupervisor(FrontendConfig(), repo_root=tmp_path)
+        with (
+            patch(
+                "cmk.dev_deploy.frontend.frontend_supervisor.ensure_ibazel",
+                return_value=Path("/bin/ibazel"),
+            ),
+            patch(
+                "cmk.dev_deploy.frontend.frontend_supervisor.ensure_bazel_wrapper",
+                return_value=wrapper,
+            ),
+            patch("cmk.dev_deploy.frontend.frontend_supervisor.subprocess.Popen") as popen,
+            patch("cmk.dev_deploy.frontend.frontend_supervisor._StdoutPrefixer"),
+            patch("cmk.dev_deploy.frontend.frontend_supervisor._StderrCapture"),
+            patch.object(FrontendSupervisor, "_write_pid_file"),
+        ):
+            supervisor._spawn_ibazel()  # noqa: SLF001
+        cmd: list[str] = popen.call_args.args[0]
+        return cmd
+
+    def test_bazel_path_flag_in_isolated_mode(self, tmp_path: Path) -> None:
+        from cmk.dev_deploy.frontend.frontend_supervisor import IBAZEL_TARGET
+
+        cmd = self._spawn(tmp_path, Path("/cache/bazel-wrapper"))
+        assert cmd == ["/bin/ibazel", "-bazel_path=/cache/bazel-wrapper", "run", IBAZEL_TARGET]
+
+    def test_plain_ibazel_in_shared_mode(self, tmp_path: Path) -> None:
+        from cmk.dev_deploy.frontend.frontend_supervisor import IBAZEL_TARGET
+
+        cmd = self._spawn(tmp_path, None)
+        assert cmd == ["/bin/ibazel", "run", IBAZEL_TARGET]

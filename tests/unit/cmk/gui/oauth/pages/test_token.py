@@ -17,7 +17,7 @@ from cmk.gui.http import request, response
 from cmk.gui.oauth.pages._token import OAuthTokenPage
 from cmk.gui.oauth.store._auth_code_store import AuthCodeRecord, AuthCodeStore
 from cmk.gui.oauth.store.client_store import get_client_store
-from cmk.gui.oauth.store.token_store import get_token_store
+from cmk.gui.oauth.token.token_store import get_token_store
 from cmk.gui.pages import PageContext
 from cmk.gui.scopes import format_scopes
 from cmk.utils.redis import disable_redis
@@ -54,13 +54,13 @@ def _stored_record(
     )
 
 
-@pytest.fixture(autouse=True)
-def seeded_test_client(flask_app: Flask) -> None:
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+def seeded_test_client(flask_app: Flask) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     # Issued tokens reference their client (tokens.client_id), so _VALID_FORM's
     # client has to exist in the registry for redemption to succeed. Raw SQL
     # because register() mints its own client_id.
     with get_client_store() as store:
-        store._connection.execute(
+        store._connection.execute(  # noqa: SLF001
             """
             INSERT OR IGNORE INTO clients (client_id, redirect_uris, client_name, registered_at)
             VALUES ('test-client', '["https://client.example/callback"]', NULL, 0)

@@ -113,11 +113,16 @@ class GaugeDashletConfig(SingleMetricDashletConfig):
     status_display: StatusDisplayWithText
 
 
+SingleMetricSparkHeightMode = Literal["band", "full"]
+
+
 class SingleGraphDashletConfig(SingleMetricDashletConfig):
     display_range: MetricDisplayRangeWithAutomatic  # TODO: remove once the old setup page is gone
     toggle_range_display: bool  # TODO: remove once the old setup page is gone
     time_range: MetricTimeRange
     status_display: StatusDisplayWithText
+    spark_height_mode: NotRequired[SingleMetricSparkHeightMode]
+    show_delta: NotRequired[bool]
 
 
 class AverageScatterplotDashletConfig(DashletConfig):
@@ -162,6 +167,8 @@ class NetworkFlowDonutDashletConfig(DashletConfig):
     limit_to: int
     # Absent from every donut stored before the legend became configurable.
     legend_mode: NotRequired[NetworkFlowDonutLegendMode]
+    # Absent from every donut stored before the comparison existed.
+    show_delta: NotRequired[bool]
 
 
 NetworkFlowKpiStatCardMetric = Literal[
@@ -177,10 +184,14 @@ NetworkFlowKpiStatCardMetric = Literal[
 ]
 
 
+NetworkFlowKpiStatCardSparkHeightMode = Literal["band", "full"]
+
+
 class NetworkFlowKpiStatCardDashletConfig(DashletConfig):
     metric: NetworkFlowKpiStatCardMetric
     accent: NetworkFlowAccent
     show_delta: bool
+    spark_height_mode: NotRequired[NetworkFlowKpiStatCardSparkHeightMode]
 
 
 NetworkFlowTrendChartDimension = Literal["applications", "autonomous_systems", "total_bandwidth"]

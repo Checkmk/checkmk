@@ -29,7 +29,7 @@ def parse_ucs_c_rack_server_fans(string_table):
                 .replace("/fan-", " ")
             )
             parsed[fan] = {"operability": key_value_pairs[3][1]}
-        except (IndexError, ValueError):
+        except IndexError, ValueError:
             pass
 
     return parsed

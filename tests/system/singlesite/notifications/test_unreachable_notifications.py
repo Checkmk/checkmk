@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="no-untyped-def"
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 
 import logging
 import subprocess
@@ -16,8 +16,7 @@ import pytest
 from cmk.ruleset_matcher.definition import RuleGroup
 from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
-
-from .watch_log import WatchLog
+from tests.testlib.watch_log import WatchLog
 
 STATE_UP = 0
 STATE_DOWN = 1
@@ -26,7 +25,7 @@ STATE_UNREACHABLE = 2
 logger = logging.getLogger(__name__)
 
 
-def get_test_id(unreachable_enabled):
+def get_test_id(unreachable_enabled: bool) -> str:
     return "unreachable_enabled" if unreachable_enabled else "unreachable_disabled"
 
 
@@ -61,7 +60,7 @@ def unreachable_enabled_fixture(
             },
         )
 
-        if unreachable_enabled:
+        if unreachable_enabled:  # noqa: SIM108
             notification_options = "d,u,r,f,s"
         else:
             notification_options = "d,r,f,s"
@@ -109,7 +108,7 @@ def initial_state_fixture(
         inode_before = site.inode("var/check_mk/core/history")
         site.live.command("[%d] ROTATE_LOGFILE" % time.time())
 
-        def rotated_log():
+        def rotated_log() -> bool:
             try:
                 return inode_before != site.inode("var/check_mk/core/history")
             except subprocess.CalledProcessError:

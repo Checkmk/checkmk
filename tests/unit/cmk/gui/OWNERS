@@ -8,6 +8,9 @@ per-file test_authorization.py=set noparent
 per-file test_login_unit.py=file:/component_owners/user_management_and_authentication/OWNERS_DEFINITION
 per-file test_login_unit.py=set noparent
 
+per-file test_valuespec.py=file:/component_owners/ui_setup/OWNERS_DEFINITION
+per-file test_valuespec.py=set noparent
+
 # Please
 #  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
 #  - consider a `per-file <PATH>=set noparent` line for each `per-file` rule

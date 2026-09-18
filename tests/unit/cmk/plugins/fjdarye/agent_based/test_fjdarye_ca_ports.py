@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from collections.abc import Mapping, Sequence
 
 import pytest
@@ -268,10 +269,7 @@ def test_discover_fjdarye_ca_ports(
     ],
 )
 def test_check_fjdarye_ca_ports(
-    item: str,
-    section: Mapping[str, Mapping[str, float | str]],
-    check_result_showing_mode: Result,
-    empty_value_store: None,
+    item: str, section: Mapping[str, Mapping[str, float | str]], check_result_showing_mode: Result
 ) -> None:
     check_result = list(check_fjdarye_ca_ports(item=item, params={}, section=section))
     assert check_result[0] == check_result_showing_mode

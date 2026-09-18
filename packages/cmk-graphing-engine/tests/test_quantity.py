@@ -35,7 +35,7 @@ from cmk.graphing_engine import (
     TimeSeries,
     Unit,
 )
-from cmk.graphing_engine._evaluate import _evaluate_graph
+from cmk.graphing_engine._graph_evaluate import _evaluate_graph
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 _TR = TimeRange(start=0, end=30, step=10)  # three data points
@@ -92,6 +92,7 @@ class _FanOut:
     """A custom quantity that expands into one labelled curve per given label."""
 
     labels: Sequence[str]
+    aggregation_kind: object | None = None
 
     def kind(self) -> str:
         return "fan_out"

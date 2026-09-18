@@ -10,8 +10,6 @@ declaratively in module_layers.toml at the repository root and loaded
 by ``load_config``.
 """
 
-from __future__ import annotations
-
 import tomllib
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass

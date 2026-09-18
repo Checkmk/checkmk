@@ -11,6 +11,7 @@ from cmk.plugins.jolokia.bakery.mk_jolokia import bakery_plugin_jolokia
 jolokia_lines = [
     "# Default values",
     "protocol = 'https'",
+    "verify = '/etc/ssl/certs/company-ca.pem'",
     "server = '127.0.0.1'",
     "port = 8080",
     "timeout = 1.0",
@@ -23,12 +24,15 @@ jolokia_lines = [
     " ('another_mbean', 'another_path', 'another_path', [], False, 'string')]",
     "",
     "# Instances",
-    "instances = [{'protocol': 'http', 'server': 'use fqdn'}]",
+    "instances = [{'protocol': 'http', 'server': 'use fqdn'},",
+    " {'protocol': 'https', 'server': '10.0.0.1', 'verify': False},",
+    " {'server': 'use fqdn', 'verify': True}]",
 ]
 
 jolokia_conf = {
     "deployment": "sync",
     "protocol": "https",
+    "verify": ("ca_file", "/etc/ssl/certs/company-ca.pem"),
     "server": ("ip_or_fqdn", "127.0.0.1"),
     "port": 8080,
     "timeout": 1.0,
@@ -48,7 +52,11 @@ jolokia_conf = {
         },
         {"mbean": "another_mbean", "path": "another_path", "value_type": "string"},
     ],
-    "instances": [{"protocol": "http", "server": ("use_local_fqdn", None)}],
+    "instances": [
+        {"protocol": "http", "server": ("use_local_fqdn", None)},
+        {"protocol": "https", "server": ("ip_or_fqdn", "10.0.0.1"), "verify": ("disabled", None)},
+        {"verify": ("trust_store", None)},
+    ],
 }
 
 

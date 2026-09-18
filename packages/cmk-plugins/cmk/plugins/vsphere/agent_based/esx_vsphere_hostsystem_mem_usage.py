@@ -36,7 +36,7 @@ def _parse_mem_values(section: Section) -> EsxHostsystemMemory | None:
     try:
         memory_usage = float(section["summary.quickStats.overallMemoryUsage"][0]) * 1024 * 1024
         memory_size = float(section["hardware.memorySize"][0])
-    except (KeyError, IndexError, ValueError):
+    except KeyError, IndexError, ValueError:
         return None
 
     return EsxHostsystemMemory(memory_usage, memory_size)

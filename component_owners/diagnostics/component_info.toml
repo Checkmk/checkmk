@@ -2,6 +2,7 @@ type = "Component"
 display_name = "Diagnostics"
 has_support_component = true
 members_required = 2
+tier = 3
 description = """
 - Framework for support diagnostics (and what should become its plugins)
 """

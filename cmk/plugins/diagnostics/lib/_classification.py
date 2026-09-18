@@ -51,14 +51,16 @@ FILE_MAP_CONFIG = FileMapConfig(
         and (path.suffix in (".mk", ".conf", ".bi") or path.name == ".wato")
     ),
 )
+
+# A log file, optionally rotated (".1") and compressed (".2.gz") by logrotate. Without
+# the compressed rotations, a logrotate configuration using "compress" would contribute
+# its most recent file only.
+_LOG_NAME = re.compile(r"(?:.*\.(?:log|state)|access_log|error_log|stats)(?:\.[0-9]+)?(?:\.gz)?")
+
 FILE_MAP_LOG = FileMapConfig(
     file_type="log",
     rel_base_folder=Path("var/log"),
-    keep=lambda path: (
-        path.suffix in (".log", ".1", ".state")
-        or path.name in ("access_log", "error_log", "stats")
-        or path.name.startswith("update.log")
-    ),
+    keep=lambda path: _LOG_NAME.fullmatch(path.name) is not None,
 )
 
 
@@ -440,6 +442,12 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         description="Contains GUI related user properties.",
         encryption=CheckmkFileEncryption.none,
     ),
+    "network_flow.d/wato/global.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="Contains the global settings of the flow monitoring.",
+        encryption=CheckmkFileEncryption.none,
+    ),
     "otel_collector.d/otel_collector_prom_scrape.mk": CheckmkFileInfo(
         components=[],
         sensitivity=CheckmkFileSensitivity.sensitive,
@@ -596,6 +604,12 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         ],
         sensitivity=CheckmkFileSensitivity.sensitive,
         description="The current status of the notification spooler. This is primarily relevant for notifications in distributed environments.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "network-flow.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="The log file of the flow aggregator.",
         encryption=CheckmkFileEncryption.none,
     ),
     "notify.log": CheckmkFileInfo(

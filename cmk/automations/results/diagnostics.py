@@ -8,8 +8,6 @@
 Groups all "probe/diagnose a host" automations.
 """
 
-from __future__ import annotations
-
 import json
 import socket
 from ast import literal_eval

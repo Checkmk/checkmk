@@ -7,8 +7,6 @@
 
 """MK Livestatus Python API"""
 
-from __future__ import annotations
-
 import ast
 import contextlib
 import json
@@ -924,7 +922,7 @@ class SingleSiteConnection(Helpers):
                 json.loads(data) if query.supports_json_format() else ast.literal_eval(data)
             )
             return response
-        except (ValueError, SyntaxError):
+        except ValueError, SyntaxError:
             raise MKLivestatusQueryError("Malformed raw response output")
 
     def set_prepend_site(self, p: bool) -> None:

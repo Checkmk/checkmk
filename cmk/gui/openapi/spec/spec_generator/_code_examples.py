@@ -325,35 +325,6 @@ def first_sentence(text: str) -> str:
     return "".join(re.split(r"(\w\.)", text)[:2])
 
 
-def _transform_params(
-    param_list: Sequence[Mapping[str, object]],
-) -> dict[str, Mapping[str, object]]:
-    """Transform a list of parameters to a dict addressable by name.
-
-    Args:
-        param_list:
-            A list of parameters.
-
-    Examples:
-
-        >>> _transform_params([
-        ...     {'name': 'foo', 'in': 'query'},
-        ...     'bar',
-        ...     {'name': 'ETag', 'in': 'header'},
-        ... ])
-        {'foo': {'name': 'foo', 'in': 'query'}}
-
-
-    Returns:
-        A dict with the key being the parameters name and the value being the parameter.
-    """
-    return {
-        param["name"]: param  # type: ignore[misc]
-        for param in param_list
-        if "in" in param and param["in"] != "header"
-    }
-
-
 type JsonObject = dict[str, JsonSerializable]
 
 

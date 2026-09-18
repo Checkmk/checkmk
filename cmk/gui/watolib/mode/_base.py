@@ -18,10 +18,11 @@ from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.page_menu import PageMenu
 from cmk.gui.pages import PageContext
-from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.shared_typing.main_menu import NavItem
-from cmk.web.utils.urls import makeuri_contextless
+from cmk.web.utils.permission_verification import PermissionName
+from cmk.web.utils.urls import HTTPVariable, makeuri_contextless
 
 
 class WatoMode[RequestOK](abc.ABC):
@@ -61,12 +62,12 @@ class WatoMode[RequestOK](abc.ABC):
     @classmethod
     def mode_url(cls, **kwargs: str) -> str:
         """Create a URL pointing to this mode (with all needed vars)"""
-        get_vars: HTTPVariables = [("mode", cls.name())]
+        get_vars: list[HTTPVariable] = [("mode", cls.name())]
         get_vars += list(kwargs.items())
         return makeuri_contextless(request, get_vars, filename="wato.py")
 
     @classmethod
-    def parent_mode(cls) -> None | type["WatoMode"]:
+    def parent_mode(cls) -> None | type[WatoMode]:
         """Reference from a mode to it's parent mode to make the breadcrumb be able to render the
         hierarchy of modes"""
         return None
@@ -76,7 +77,7 @@ class WatoMode[RequestOK](abc.ABC):
         given HTTP variables."""
         return
 
-    def _parse_data_from_request(self, request: Request) -> Result[RequestOK, None]:
+    def _parse_data_from_request(self, request: Request) -> Result[RequestOK, None]:  # noqa: ARG002
         """Parses request and returns a data structure of type T or None"""
         return Error(None)
 
@@ -161,11 +162,11 @@ class WatoMode[RequestOK](abc.ABC):
     # The `config` argument of the handlers below is transitional: Now that the
     # mode carries its page context, these callers should read `self._ctx.config`
     # directly (CMK-35767).
-    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:  # noqa: ARG002
         """Returns the data structure representing the page menu for this mode"""
         return PageMenu(breadcrumb=breadcrumb)
 
-    def action(self, config: Config) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:  # noqa: ARG002
         return None  # Yes, there are various modes without an action.
 
     @abc.abstractmethod

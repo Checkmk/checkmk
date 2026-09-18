@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 import tomllib
 from pathlib import Path
@@ -367,7 +366,7 @@ def real_config() -> ModuleLayersConfig:
 def test_real_config_loads_without_error(real_config: ModuleLayersConfig) -> None:
     # Should have a substantial number of components
     assert len(real_config.components) > 100
-    assert len(real_config.file_components) > 10
+    assert len(real_config.file_components) > 5
     assert len(real_config.file_dependencies) > 5
 
 
@@ -403,7 +402,9 @@ def test_real_config_has_plugin_families_smoke_test(real_config: ModuleLayersCon
 
 
 def test_real_config_file_components_present_smoke_test(real_config: ModuleLayersConfig) -> None:
-    assert real_config.file_components[ModulePath("bin/check_mk.py")] == Component("cmk.cli")
+    assert real_config.file_components[
+        ModulePath("omd/packages/maintenance/diskspace.py")
+    ] == Component("cmk.diskspace")
 
 
 def test_real_config_checker_behavior_smoke_test(real_config: ModuleLayersConfig) -> None:

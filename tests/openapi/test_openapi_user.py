@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="type-arg"
 
 import datetime
@@ -426,7 +427,10 @@ def fixture_password_policy(set_config: SetConfig) -> Iterator[None]:
     ],
 )
 def test_openapi_create_user_password_failures(
-    clients: ClientRegistry, with_password_policy: None, password: str, reason: str
+    clients: ClientRegistry,
+    with_password_policy: None,
+    password: str,
+    reason: str,
 ) -> None:
     """Test that invalid passwords are denied and handled gracefully"""
 
@@ -490,7 +494,7 @@ def test_openapi_user_internal_auth_handling(
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.userdb.htpasswd.hash_password",
-        lambda x: "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
+        lambda x: "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",  # noqa: ARG005
     )
 
     name = UserId("foo")
@@ -774,7 +778,8 @@ def test_openapi_user_create_fails_because_alias_and_field_set(
 
 
 def test_openapi_user_disable_notifications(
-    clients: ClientRegistry, monkeypatch: MonkeyPatch
+    clients: ClientRegistry,
+    monkeypatch: MonkeyPatch,
 ) -> None:
     username = "cmkuser"
 
@@ -800,7 +805,7 @@ def test_show_all_users_with_no_email(clients: ClientRegistry, monkeypatch: Monk
     # We remove all the contact information to mimic the no email case
     monkeypatch.setattr(
         "cmk.gui.userdb.store.load_contacts",
-        lambda *args, **kwargs: {},
+        lambda *args, **kwargs: {},  # noqa: ARG005
     )
 
     resp = clients.User.get_all()
@@ -809,7 +814,8 @@ def test_show_all_users_with_no_email(clients: ClientRegistry, monkeypatch: Monk
 
 
 def test_user_enforce_password_change_option(
-    clients: ClientRegistry, monkeypatch: MonkeyPatch
+    clients: ClientRegistry,
+    monkeypatch: MonkeyPatch,
 ) -> None:
     username = "cmkuser"
 
@@ -837,7 +843,8 @@ def test_user_enforce_password_change_option(
 
 
 def test_response_schema_compatible_with_request_schema(
-    clients: ClientRegistry, monkeypatch: MonkeyPatch
+    clients: ClientRegistry,
+    monkeypatch: MonkeyPatch,
 ) -> None:
     username = "cmkuser"
 
@@ -911,7 +918,8 @@ def _load_internal_attributes(username: UserId) -> dict[str, Any]:
 
 
 def test_openapi_new_user_with_cloned_role(
-    clients: ClientRegistry, monkeypatch: MonkeyPatch
+    clients: ClientRegistry,
+    monkeypatch: MonkeyPatch,
 ) -> None:
     cloned_role: UserRole = clone_role(RoleID("admin"), pprint_value=False)
     username = f"new_user_with_role_{cloned_role.name}"
@@ -1042,7 +1050,8 @@ def test_edit_custom_attributes_of_user(_mock: None, clients: ClientRegistry) ->
 
 
 def test_create_user_with_non_existing_custom_attribute(
-    clients: ClientRegistry, monkeypatch: MonkeyPatch
+    clients: ClientRegistry,
+    monkeypatch: MonkeyPatch,
 ) -> None:
     result = clients.User.create(
         username="cmkuser",
@@ -1404,13 +1413,13 @@ def test_openapi_time_picker_preferences_use_default_round_trip(
             }
         },
     ).json["extensions"]["interface_options"]["time_picker"]
-    # Stored as an explicit None, and reported as the sentinel forms rather than omitted.
+    # The "use default" forms are reported rather than omitted.
     assert extensions["start_of_week"] == "browser_locale"
     assert extensions["default_time_range"] == {"option": "default"}
     assert extensions["default_refresh_time"] == {"option": "default"}
 
     internal_attributes = _load_internal_attributes(UserId(username))
-    assert internal_attributes["start_of_week"] is None
+    assert internal_attributes["start_of_week"] == "browser_locale"
     assert internal_attributes["graph_default_time_range"] is None
     assert internal_attributes["graph_default_refresh_time"] is None
 
@@ -1466,13 +1475,12 @@ def test_openapi_edit_user_should_not_modify_time_picker_preferences(
 def test_openapi_time_picker_preferences_default_for_fresh_user(
     clients: ClientRegistry,
 ) -> None:
-    # User creation fills in every registered attribute (explicit None, like
-    # contextual_help_icon), so even a fresh user reports the "use default" sentinels.
+    # User creation fills in every registered attribute, so nothing here is omitted.
     extensions = clients.User.create(
         username="time_picker_fresh_user",
         fullname="Time Picker User",
     ).json["extensions"]["interface_options"]["time_picker"]
-    assert extensions["start_of_week"] == "browser_locale"
+    assert extensions["start_of_week"] == "monday"
     assert extensions["default_time_range"] == {"option": "default"}
     assert extensions["default_refresh_time"] == {"option": "default"}
 

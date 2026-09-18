@@ -2,6 +2,9 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from unittest import mock
 
 import pytest
@@ -50,7 +53,8 @@ def test_list_currently_running_activations(clients: ClientRegistry) -> None:
     clients.ActivateChanges.get_running_activations()
 
 
-def test_activate_changes_unknown_site(clients: ClientRegistry, is_licensed: bool) -> None:
+@pytest.mark.usefixtures("is_licensed")
+def test_activate_changes_unknown_site(clients: ClientRegistry) -> None:
     resp = clients.ActivateChanges.activate_changes(sites=["asdf"], expect_ok=False)
     resp.assert_status_code(400)
     assert "Unknown site" in repr(resp.json), resp.json

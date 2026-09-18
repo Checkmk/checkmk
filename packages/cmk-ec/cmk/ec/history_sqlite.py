@@ -149,7 +149,7 @@ class SQLiteSettings:
     @classmethod
     def from_settings(
         cls, settings: Settings, *, database: Literal[":memory:"] | Path
-    ) -> "SQLiteSettings":
+    ) -> SQLiteSettings:
         return cls(paths=settings.paths, options=settings.options, database=database)
 
 

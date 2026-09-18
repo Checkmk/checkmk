@@ -49,8 +49,6 @@ Check the route to a network host using the traceroute command.
 #  5  66.249.94.88 (66.249.94.88)  24.481 ms  24.498 ms  24.271 ms
 #  6  209.85.240.99 (209.85.240.99)  27.628 ms  21.605 ms  21.943 ms
 
-from __future__ import annotations
-
 import argparse
 import enum
 import os

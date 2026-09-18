@@ -20,13 +20,14 @@ import BaseCell from './BaseCell.vue'
 defineProps<{
   icons: MonitoringIcon[]
   columnId?: string | undefined
+  maxPerRow?: number | undefined
 }>()
 </script>
 
 <template>
   <BaseCell :column-id="columnId">
     <template #default>
-      <IconList :icons="icons" />
+      <IconList :icons="icons" :max-per-row="maxPerRow" />
     </template>
   </BaseCell>
 </template>

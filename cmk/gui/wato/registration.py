@@ -89,7 +89,7 @@ def register(
     permission_section_registry: PermissionSectionRegistry,
     permission_registry: PermissionRegistry,
     main_module_topic_registry: MainModuleTopicRegistry,
-    rulespec_group_registry: RulespecGroupRegistry,
+    rulespec_group_registry: RulespecGroupRegistry,  # noqa: ARG001
     config_domain_registry: ConfigDomainRegistry,
     config_variable_registry: ConfigVariableRegistry,
     config_variable_group_registry: ConfigVariableGroupRegistry,

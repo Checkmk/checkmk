@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="unreachable"
 
 """
 # There are different types of information. Can we handle them in a
@@ -59,7 +58,7 @@ def get_int(mapping: Counters, key: str) -> int:
     """Try to return an int"""
     result = mapping.get(key)
     if isinstance(result, int):
-        return result
+        return result  # type: ignore[unreachable]
     raise ValueError(f"Cannot handle {key!r}={result!r}")
 
 

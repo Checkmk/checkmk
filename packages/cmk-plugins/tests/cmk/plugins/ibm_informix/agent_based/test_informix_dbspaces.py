@@ -31,6 +31,25 @@ SAMPLE_STRINGTABLE = [
 ]
 
 
+# SAMPLE_STRINGTABLE as reported by a mk_informix plugin older than werk 17873:
+# "pagesize" holds the system page size, chunk flags are an unlabeled second "flags"
+OLD_FORMAT_STRINGTABLE = [
+    ["[[[ol_informix15/0]]]"],
+    ["(expression)", "foo", "DBSPACE"],
+    ["dbsnum", "13"],
+    ["is_temp", "0"],
+    ["flags", "131089"],
+    ["(constant)", "CHUNK"],
+    ["fname", "/opt/informix/foo"],
+    ["pagesize", "2048"],
+    ["chksize", "1536000"],
+    ["nfree", "511323"],
+    ["flags", "580"],
+    ["(expression)"],
+    ["mflags"],
+]
+
+
 def test_discovery() -> None:
     discovered = list(discovery_informix_dbspaces(parse_informix_dbspaces(SAMPLE_STRINGTABLE)))
     assert discovered == [Service(item="ol_informix15/0 foo")]
@@ -109,3 +128,25 @@ def test_check(item: str, params: Mapping[str, object], expected: list[Result | 
         )
     )
     assert results == expected
+
+
+def test_check_old_agent_output() -> None:
+    results = list(
+        check_informix_dbspaces(
+            item="ol_informix15/0 foo",
+            params={"levels": ("no_levels", None), "levels_perc": ("no_levels", None)},
+            section=parse_informix_dbspaces(OLD_FORMAT_STRINGTABLE),
+        )
+    )
+    assert results == [
+        Result(state=State.OK, summary="Data files: 1"),
+        Result(
+            state=State.OK,
+            summary="Outdated mk_informix agent plugin, please update it: "
+            "reported sizes may be wrong for blobspaces",
+        ),
+        Result(state=State.OK, summary="Size: 3.15 GB"),
+        Metric("tablespace_size", 1536000 * 2048),
+        Result(state=State.OK, summary="Used: 2.10 GB"),
+        Metric("tablespace_used", (1536000 - 511323) * 2048),
+    ]

@@ -14,8 +14,6 @@ import pytest
 from opentelemetry import trace as otel_trace
 from pydantic import BaseModel
 
-import cmk.gui.log
-import cmk.utils.log
 import cmk.utils.paths
 from cmk.gui.background_job.job import (
     BackgroundJob,
@@ -37,7 +35,8 @@ from tests.testlib.common.utils import wait_until
 tracer = get_tracer()
 
 
-def test_registered_background_jobs(load_plugins: None) -> None:
+@pytest.mark.usefixtures("load_plugins")
+def test_registered_background_jobs() -> None:
     expected_jobs = [
         "ActivateChangesSchedulerBackgroundJob",
         "ParentScanBackgroundJob",
@@ -66,7 +65,7 @@ def test_registered_background_jobs_attributes() -> None:
         assert isinstance(job_class.gui_title(), str)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def job_base_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     var_dir = tmp_path
 
@@ -96,11 +95,11 @@ class DummyBackgroundJob(BackgroundJob):
 
         super().__init__(self.job_prefix)
 
-    def execute_hello(self, job_interface: BackgroundProcessInterface, args: NoArgs) -> None:
+    def execute_hello(self, job_interface: BackgroundProcessInterface, args: NoArgs) -> None:  # noqa: ARG002
         job_interface.send_progress_update("Hallo :-)")
         self.finish_hello_event.wait()
 
-    def execute_endless(self, job_interface: BackgroundProcessInterface, args: NoArgs) -> None:
+    def execute_endless(self, job_interface: BackgroundProcessInterface, args: NoArgs) -> None:  # noqa: ARG002
         job_interface.send_progress_update("Hanging loop")
         while not job_interface.stop_event.is_set():
             time.sleep(0.1)
@@ -450,14 +449,14 @@ def test_tracing_with_background_job(tmp_path: Path) -> None:
 
 @pytest.fixture(name="reset_global_tracer_provider")
 def _fixture_reset_global_tracer_provider() -> Iterator[None]:
-    provider_orig = otel_trace._TRACER_PROVIDER
+    provider_orig = otel_trace._TRACER_PROVIDER  # noqa: SLF001
     try:
-        otel_trace._TRACER_PROVIDER_SET_ONCE._done = False
-        otel_trace._TRACER_PROVIDER = None
+        otel_trace._TRACER_PROVIDER_SET_ONCE._done = False  # noqa: SLF001
+        otel_trace._TRACER_PROVIDER = None  # noqa: SLF001
         yield
     finally:
-        otel_trace._TRACER_PROVIDER_SET_ONCE._done = False
-        otel_trace._TRACER_PROVIDER = provider_orig
+        otel_trace._TRACER_PROVIDER_SET_ONCE._done = False  # noqa: SLF001
+        otel_trace._TRACER_PROVIDER = provider_orig  # noqa: SLF001
 
 
 class JobArgs(BaseModel, frozen=True):

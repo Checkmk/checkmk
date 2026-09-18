@@ -6,11 +6,21 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { TabsList, TabsRoot } from 'reka-ui'
 
+const { unmountOnHide = true } = defineProps<{
+  /** Set to false to keep hidden panels alive. */
+  unmountOnHide?: boolean
+}>()
+
 const model = defineModel<string | number>({ default: 1 })
 </script>
 
 <template>
-  <TabsRoot v-model="model" orientation="horizontal" class="cmk-tabs__root">
+  <TabsRoot
+    v-model="model"
+    orientation="horizontal"
+    class="cmk-tabs__root"
+    :unmount-on-hide="unmountOnHide"
+  >
     <TabsList as="ul" class="cmk-tabs__list">
       <slot name="tabs" />
     </TabsList>

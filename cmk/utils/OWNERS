@@ -2,7 +2,7 @@ set noparent  # don't inherit owners information from parent folders
 
 file:/component_owners/basic_python_functionality/OWNERS_DEFINITION
 
-per-file metrics.py=file:/component_owners/performance_data_and_metrics/OWNERS_DEFINITION
+per-file metrics.py=file:/component_owners/graphing_and_metrics/OWNERS_DEFINITION
 per-file metrics.py=set noparent
 per-file notify.py=file:/component_owners/notifications/OWNERS_DEFINITION
 per-file notify.py=set noparent
@@ -12,6 +12,8 @@ per-file certs.py=file:/component_owners/security/OWNERS_DEFINITION
 per-file certs.py=set noparent
 per-file security_event.py=file:/component_owners/security/OWNERS_DEFINITION
 per-file security_event.py=set noparent
+per-file host_storage.py=file:/component_owners/ui_setup/OWNERS_DEFINITION
+per-file host_storage.py=set noparent
 
 # Please
 #  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead

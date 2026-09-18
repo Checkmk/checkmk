@@ -36,6 +36,14 @@ def expect_validate_failure[T](
         validate(valuespec, value)
 
 
+# NOTE: Both the ValueSpecs themselves and the tests for them are a bit... "interesting"
+# regarding typing, so we effectively have to lie below. :-/
+def expect_validate_failure_untypeable[T, U](
+    valuespec: vs.ValueSpec[T], value: U, *, match: str | None = None
+) -> None:
+    expect_validate_failure(valuespec, value, match=match)  # type: ignore[misc]
+
+
 def expect_validate_success[T](valuespec: vs.ValueSpec[T], value: T) -> None:
     validate(valuespec, value)
 

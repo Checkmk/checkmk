@@ -37,7 +37,7 @@ def edit_quick_setup_v1(
             example="8558f956-3e45-4c4f-bd02-e88da17c99dd",
         ),
     ],
-    search: Annotated[
+    search: Annotated[  # noqa: ARG001
         str | None,
         QueryParam(
             description="Optional search query to preserve when redirecting after save",

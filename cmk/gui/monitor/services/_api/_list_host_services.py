@@ -64,7 +64,19 @@ _DEFAULT_FIELDS: frozenset[ServiceOptionalField] = frozenset()
 @api_model
 class HostServiceEntry:
     name: str = api_field(description="Service name", example="Check_MK HW/SW Inventory")
-    state: ServiceStateLabel = api_field(description="Service state", example="OK")
+    state: ServiceStateLabel = api_field(
+        description=(
+            "Service state. 'PENDING' means the service has never been checked, i.e. its state "
+            "is still pending the first check result"
+        ),
+        example="OK",
+    )
+    is_flapping: bool = api_field(
+        description="Whether the service state is flapping", example=False
+    )
+    stale: bool = api_field(
+        description="Whether the service hasn't been checked recently enough", example=False
+    )
     summary: str = api_field(
         description="Service summary",
         example="Found no data, execution time 0.0 sec",
@@ -121,6 +133,8 @@ class HostServiceEntry:
         return cls(
             name=service.name,
             state=service.state_label,
+            is_flapping=service.is_flapping,
+            stale=service.stale,
             summary=service.summary,
             last_check=service.last_check,
             last_state_change=service.last_state_change,
@@ -132,7 +146,12 @@ class HostServiceEntry:
             contact_groups=service.contact_groups
             if service.contact_groups is not None
             else ApiOmitted(),
-            perfometer=ServicePerfometer.from_perf_data(service.perf_data, service.check_command)
+            perfometer=ServicePerfometer.from_perf_data(
+                service.perf_data,
+                service.check_command,
+                host_name=hostname,
+                service_name=service.name,
+            )
             or ApiOmitted(),
         )
 
@@ -184,8 +203,9 @@ class ServicesRequestBody:
         PlainValidator(func=parse_service_search_query, json_schema_input_type=str),
     ] = api_field(
         description=(
-            "Search text, matched against the service name and its summary. Omit or pass empty "
-            "string to return all services."
+            "Search text, matched against the service name, its summary, and every text field "
+            "asked for through `fields` (labels, tags, contacts, contact_groups). Omit or pass "
+            "empty string to return all services."
         ),
         example="CPU",
         default_factory=ApiOmitted,
@@ -276,7 +296,7 @@ def _handle_list_services(
         matched_service_count = len(services)
     elif query or filters:
         matched_service_count = host_services_repo.count_matched(
-            hostname, query=query, filters=filters
+            hostname, query=query, filters=filters, fields=fields
         )
     else:
         matched_service_count = total_service_count
@@ -312,6 +332,8 @@ ENDPOINT_LIST_HOST_SERVICES = VersionedEndpoint(
                     permissions.OkayToIgnorePerm("bi.see_all"),
                     permissions.OkayToIgnorePerm("mkeventd.seeall"),
                     permissions.OkayToIgnorePerm("general.ignore_hard_limit"),
+                    permissions.OkayToIgnorePerm("general.see_crash_reports"),
+                    permissions.OkayToIgnorePerm("view.host"),
                 ]
             )
         )

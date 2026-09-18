@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 # This file is being used by the rule based notifications and (CEE
@@ -134,7 +133,7 @@ def event_keepalive(
                             raise
                         logger.info("Cannot read data from CMC: %(error)s", {"error": e})
 
-                    if not new_data:
+                    if not new_data:  # type: ignore[possibly-undefined]
                         logger.info("CMC has closed the connection. Shutting down.")
                         if shutdown_function:
                             shutdown_function()
@@ -159,7 +158,7 @@ def event_keepalive(
 
         if call_every_loop:
             try:
-                call_every_loop(timeperiods_active)
+                call_every_loop(timeperiods_active)  # type: ignore[possibly-undefined]
             except Exception:
                 if cmk.ccc.debug.enabled():
                     raise
@@ -727,14 +726,14 @@ def _event_match_servicegroups(
             if is_regex:
                 r = regex(group)
                 for sg in servicegroups:
-                    match_value = define_servicegroups[sg] if match_type == "match_alias" else sg
+                    match_value = define_servicegroups[sg] if match_type == "match_alias" else sg  # type: ignore[possibly-undefined]
                     if r.search(match_value):
                         return None
             elif group in servicegroups:
                 return None
 
         if is_regex:
-            if match_type == "match_alias":
+            if match_type == "match_alias":  # type: ignore[possibly-undefined]
                 return (
                     "The service is only in the groups %s. None of these patterns match: %s"
                     % (
@@ -818,7 +817,7 @@ def _event_match_exclude_servicegroups(
             if is_regex:
                 r = regex(group)
                 for sg in servicegroups:
-                    match_value = define_servicegroups[sg] if match_type == "match_alias" else sg
+                    match_value = define_servicegroups[sg] if match_type == "match_alias" else sg  # type: ignore[possibly-undefined]
                     match_value_inverse = (
                         sg if match_type == "match_alias" else define_servicegroups[sg]
                     )

@@ -6,9 +6,7 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="possibly-undefined"
 
-from __future__ import annotations
 
 import http.client
 import json
@@ -390,7 +388,7 @@ def _serve_spec(
 
     response = Response(status=200)
     response.data = _serialize_spec_cached(target, url, extension, version)
-    response.content_type = content_type
+    response.content_type = content_type  # type: ignore[possibly-undefined]
     response.freeze()
     return response
 

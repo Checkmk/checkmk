@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import type { CmkSplitPaneProps } from 'cmk-ui-library/components/CmkSplitPane.vue'
 
 import codeExample from './UclCmkSplitPaneCodeExample.vue?raw'
@@ -65,10 +65,10 @@ export const panelConfig = {
   sizeUnit: {
     type: 'list' as const,
     title: 'sizeUnit',
-    options: [
-      { title: 'Percent (responsive)', name: '%' },
-      { title: 'Pixels (fixed)', name: 'px' }
-    ] satisfies Options<NonNullable<CmkSplitPaneProps['sizeUnit']>>[],
+    options: listOptions<NonNullable<CmkSplitPaneProps['sizeUnit']>>({
+      '%': 'Percent (responsive)',
+      px: 'Pixels (fixed)'
+    }),
     initialState: '%' as const,
     help: 'Percent sizes scale with the container; pixel sizes stay fixed.'
   },

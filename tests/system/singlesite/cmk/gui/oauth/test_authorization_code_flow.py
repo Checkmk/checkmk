@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 """System-level tests for the RFC 6749 + PKCE authorization-code flow.
 
 Walks the whole flow over real HTTP against a running site -- dynamic client
@@ -89,13 +90,14 @@ def _get_consent_page(
     )
 
 
-def _hidden_form_fields(html_text: str) -> dict[str, str]:
-    """All hidden <input> values inside the consent page's <form>.
+def _form_fields(html_text: str) -> dict[str, str]:
+    """Everything a real browser would submit from the consent page's <form>.
 
-    Covers the echoed request params (html.hidden_fields()) plus the
+    Covers the echoed request params (html.hidden_fields()), the
     form-machinery fields added by html.form_context() (_transid, _csrf_token,
-    filled_in) -- everything the real POST needs to pass CSRF/transaction
-    validation, without hardcoding those field names here.
+    filled_in), and the preselected scope radio -- everything the real POST
+    needs to pass CSRF/transaction validation and to grant the scope the page
+    offered, without hardcoding those field names here.
     """
     form = BeautifulSoup(html_text, "lxml").find("form")
     assert isinstance(form, Tag), "consent page did not render a <form>"
@@ -103,6 +105,14 @@ def _hidden_form_fields(html_text: str) -> dict[str, str]:
     for field in form.find_all("input", type="hidden"):
         name = field.get("name")
         value = field.get("value", "")
+        assert isinstance(name, str)
+        assert isinstance(value, str)
+        fields[name] = value
+    for radio in form.find_all("input", type="radio"):
+        if not radio.has_attr("checked"):
+            continue
+        name = radio.get("name")
+        value = radio.get("value")
         assert isinstance(name, str)
         assert isinstance(value, str)
         fields[name] = value
@@ -130,11 +140,11 @@ def test_full_authorization_code_flow_with_pkce(mcp_enabled_site: Site, web: CMK
     consent_page = _get_consent_page(
         web, client_id=client_id, code_challenge=code_challenge, state=state
     )
-    hidden_fields = _hidden_form_fields(consent_page.text)
+    form_fields = _form_fields(consent_page.text)
 
     approval = web.post(
         _AUTHORIZE_ENDPOINT_PATH,
-        data={**hidden_fields, "_authorize": "Authorize"},
+        data={**form_fields, "_authorize": "Authorize"},
     )
     query = parse_qs(urlsplit(_redirect_target(approval.text)).query)
     assert query["state"] == [state]
@@ -171,11 +181,11 @@ def test_authorize_deny_redirects_with_access_denied(
     consent_page = _get_consent_page(
         web, client_id=client_id, code_challenge=code_challenge, state=state
     )
-    hidden_fields = _hidden_form_fields(consent_page.text)
+    form_fields = _form_fields(consent_page.text)
 
     denial = web.post(
         _AUTHORIZE_ENDPOINT_PATH,
-        data={**hidden_fields, "_deny": "Deny"},
+        data={**form_fields, "_deny": "Deny"},
     )
     query = parse_qs(urlsplit(_redirect_target(denial.text)).query)
     assert query["error"] == ["access_denied"]
@@ -184,9 +194,8 @@ def test_authorize_deny_redirects_with_access_denied(
 
 
 @pytest.mark.skip_if_edition("community", "cloud")
-def test_authorize_returns_400_for_unknown_client_id(
-    mcp_enabled_site: Site, web: CMKWebSession
-) -> None:
+@pytest.mark.usefixtures("mcp_enabled_site")
+def test_authorize_returns_400_for_unknown_client_id(web: CMKWebSession) -> None:
     """A client_id that was never dynamically registered must not reach the consent screen."""
     _, code_challenge = _make_pkce_pair()
     state = secrets.token_urlsafe(8)

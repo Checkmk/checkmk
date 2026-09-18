@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 import subprocess
 import sys
@@ -36,7 +35,7 @@ def send_trap(oids: dict[str, str | int | None], target: str, community: str) ->
         elif isinstance(value, str):
             oid_id = "s"
             value = '"%s"' % value.replace('"', " ")
-        cmd += [oid, oid_id, "%s" % value]
+        cmd += [oid, oid_id, "%s" % value]  # type: ignore[possibly-undefined]
 
     sys.stderr.write("%r" % cmd)
     return subprocess.run(cmd, stdin=subprocess.PIPE, check=False).returncode

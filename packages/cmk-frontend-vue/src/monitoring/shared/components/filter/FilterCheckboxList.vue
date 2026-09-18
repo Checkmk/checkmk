@@ -120,11 +120,12 @@ function toggleAll(): void {
     <FilterSearchInput
       v-if="showSearch"
       v-model="searchText"
+      class="monitoring-filter-checkbox-list__search"
       :placeholder="_t('Filter values')"
       :aria-label="_t('Filter values')"
     />
 
-    <div class="monitoring-filter-checkbox-list__row monitoring-filter-checkbox-list__row--all">
+    <div class="monitoring-filter-checkbox-list__row">
       <CmkCheckbox
         allow-indeterminate
         :model-value="selectAllModelValue"
@@ -164,6 +165,11 @@ function toggleAll(): void {
   gap: var(--dimension-2);
 }
 
+.monitoring-filter-checkbox-list__search {
+  margin: var(--dimension-3) var(--dimension-5);
+  width: auto;
+}
+
 .monitoring-filter-checkbox-list__options {
   display: flex;
   flex-direction: column;
@@ -173,16 +179,17 @@ function toggleAll(): void {
 
 .monitoring-filter-checkbox-list__row-separator {
   width: 100%;
-  height: var(--dimension-1);
+  height: 0;
   border: 0;
-  background-color: var(--ux-theme-4);
-  margin: var(--dimension-1) 0;
+  border-top: 1px dashed var(--ux-theme-4);
+  margin: 0;
 }
 
 .monitoring-filter-checkbox-list__row {
   display: flex;
   align-items: center;
-  padding: 0 var(--dimension-2) var(--dimension-2) var(--dimension-2);
+  padding: var(--dimension-3) var(--dimension-5);
+  line-height: 17px;
 
   &:hover,
   &:focus-within {
@@ -190,12 +197,9 @@ function toggleAll(): void {
   }
 }
 
-.monitoring-filter-checkbox-list__row--all {
-  font-weight: var(--font-weight-bold);
-}
-
 .monitoring-filter-checkbox-list__empty {
-  padding: var(--dimension-2) var(--dimension-4);
+  padding: var(--dimension-3) var(--dimension-5);
+  line-height: 17px;
   margin: 0;
   font-style: italic;
   opacity: 0.7;

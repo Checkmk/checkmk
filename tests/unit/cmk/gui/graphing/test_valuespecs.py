@@ -10,9 +10,25 @@ from typing import Literal
 
 import pytest
 
-from cmk.gui.graphing._valuespecs import (
-    migrate_graph_render_options,
+from cmk.gui.graphing import (
     migrate_graph_render_options_title_format,
+    migrate_graph_render_options_title_format_from_disk,
+    vs_graph_render_option_elements,
+)
+from cmk.gui.graphing._valuespecs import (
+    _value_with_unit_vs,
+    _vs_show_title,
+    migrate_graph_render_options,
+)
+from cmk.gui.http import request
+from cmk.gui.valuespec import (
+    Age,
+    DropdownChoice,
+    Filesize,
+    Float,
+    Integer,
+    Percentage,
+    ValueSpec,
 )
 
 
@@ -56,6 +72,11 @@ def test_migrate_graph_render_options_title_format(
     assert migrate_graph_render_options_title_format(entry) == result
 
 
+def test_migrate_graph_render_options_title_format_rejects_unknown_entries() -> None:
+    with pytest.raises(ValueError):
+        migrate_graph_render_options_title_format_from_disk(["plain", "bogus"])
+
+
 @pytest.mark.parametrize(
     "entry, result",
     [
@@ -79,3 +100,71 @@ def test_migrate_graph_render_options(
     entry: Mapping[str, object], result: Mapping[str, Sequence[str]]
 ) -> None:
     assert migrate_graph_render_options(entry) == result
+
+
+def test_graph_render_options_offer_the_legacy_renderer_options_by_default() -> None:
+    # Other callers still render all of these, so they may only be dropped where one asks for it.
+    elements = dict(vs_graph_render_option_elements())
+    assert {"font_size", "title_format", "show_time_range_previews", "fixed_timerange"} <= set(
+        elements
+    )
+    assert "inline" in _show_title_choice_ids(elements)
+
+
+def test_graph_render_options_can_drop_the_inline_title() -> None:
+    elements = dict(vs_graph_render_option_elements(with_inline_title=False))
+    assert _show_title_choice_ids(elements) == [False, True]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_graph_title_without_the_inline_choice_tolerates_a_stored_inline_title() -> None:
+    show_title = _vs_show_title(True, with_inline_title=False)
+    request.set_var("title", "inline")
+    assert show_title.from_html_vars("title") is True
+
+
+def _show_title_choice_ids(elements: Mapping[str, ValueSpec[object]]) -> list[object]:
+    show_title = elements["show_title"]
+    assert isinstance(show_title, DropdownChoice)
+    return [choice_id for choice_id, _title in show_title.choices()]
+
+
+@pytest.mark.parametrize(
+    "vs, expected_type",
+    [
+        pytest.param(Age, int, id="Age"),
+        pytest.param(Filesize, int, id="Filesize"),
+        pytest.param(Float, float, id="Float"),
+        pytest.param(Integer, int, id="Integer"),
+        pytest.param(Percentage, float, id="Percentage"),
+    ],
+)
+def test_value_with_unit_default_matches_the_valuespec_number_type(
+    vs: type[Age] | type[Filesize] | type[Float] | type[Integer] | type[Percentage],
+    expected_type: type[int] | type[float],
+) -> None:
+    assert isinstance(_value_with_unit_vs(vs, "s", "Title", 1.5).default_value(), expected_type)
+
+
+@pytest.mark.parametrize(
+    "key",
+    [
+        "show_graph_time",
+        "show_margin",
+        "show_legend",
+        "show_vertical_axis",
+        "show_time_axis",
+        "show_controls",
+        "show_pin",
+        "show_time_range_previews",
+        "fixed_timerange",
+    ],
+)
+def test_every_render_flag_takes_its_default_from_the_caller(key: str) -> None:
+    elements = dict(vs_graph_render_option_elements({key: False}))
+    assert elements[key].default_value() is False
+
+
+def test_the_font_size_takes_its_default_from_the_caller() -> None:
+    elements = dict(vs_graph_render_option_elements({"font_size": 11.0}))
+    assert elements["font_size"].default_value() == 11.0

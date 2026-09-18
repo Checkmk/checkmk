@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import type { BoolPropDef, ListPropDef, NumberPropDef } from '@ucl/_ucl/types/prop-def'
 
 import { type RankedTableCellRender } from '@/dashboard/components/CmkRankedTable'
@@ -48,12 +48,13 @@ export const panelConfig = {
   valueRender: {
     type: 'list' as const,
     title: 'Value rendering',
-    help: 'Bytes are formatted as SI values, count is right-aligned as-is, text is left-aligned.',
-    options: [
-      { title: 'Bytes', name: 'bytes' },
-      { title: 'Count', name: 'count' },
-      { title: 'Text', name: 'text' }
-    ] satisfies Options<RankedTableCellRender>[],
+    help: 'Bytes are formatted as SI values, count is right-aligned as-is, text is left-aligned, delta draws an arrow along the sign of the value.',
+    options: listOptions<RankedTableCellRender>({
+      bytes: 'Bytes',
+      count: 'Count',
+      text: 'Text',
+      delta: 'Delta'
+    }),
     initialState: 'bytes' as const
   },
   fixedBarRange: {

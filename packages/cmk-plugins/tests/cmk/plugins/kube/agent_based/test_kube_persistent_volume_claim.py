@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from typing import Any
@@ -187,7 +186,7 @@ def test_pvc_with_persistent_volume(bound_pvc: PersistentVolumeClaim) -> None:
     assert "Mounted Volume" in details
 
 
-def test_pvc_first_time_pending_status():
+def test_pvc_first_time_pending_status() -> None:
     """Test that the value store is updated when PVC with pending status is seen for first time."""
     pending_pvc = PVCFactory.build(
         status=PVCStatusFactory.build(
@@ -211,7 +210,7 @@ def test_pvc_first_time_pending_status():
     assert value_store == {"pending": timestamp}
 
 
-def test_pvc_warn_pending_status():
+def test_pvc_warn_pending_status() -> None:
     """Test that PVC with pending status is in warning state due to matching WARN threshold."""
     pending_pvc = PVCFactory.build(
         status=PVCStatusFactory.build(
@@ -235,7 +234,7 @@ def test_pvc_warn_pending_status():
     ] == [State.WARN]
 
 
-def test_pvc_lost_status_as_ok_state():
+def test_pvc_lost_status_as_ok_state() -> None:
     """Test that PVC with lost phase status is reported as OK due params."""
     lost_pvc = PVCFactory.build(
         status=PVCStatusFactory.build(

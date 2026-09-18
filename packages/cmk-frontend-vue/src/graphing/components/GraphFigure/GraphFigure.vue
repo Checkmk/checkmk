@@ -39,7 +39,11 @@ const props = withDefaults(defineProps<GraphFigureProps>(), {
   showLegend: false,
   showTimestamp: false,
   showBurgerMenu: false,
-  burgerMenuGroups: () => []
+  showPin: false,
+  burgerMenuGroups: () => [],
+  showTimeAxis: true,
+  showValueAxis: true,
+  showMargin: false
 })
 
 const graphAreaDiv = ref<HTMLDivElement | null>(null)
@@ -75,7 +79,7 @@ const { graphs, isLoading, error, partialErrors, warnings, reload } = useGraphDa
   () => plotWidth.value,
   () => [DEFAULT_CONSOLIDATION_FN],
   () => props.combinationMode,
-  props.fetchGraph ?? fetchGraphDataByDefinition
+  { fetchGraph: props.fetchGraph ?? fetchGraphDataByDefinition }
 )
 const graph = computed(() => graphs.value[0] ?? null)
 
@@ -134,13 +138,16 @@ const {
   viewTimeRange,
   viewValueRange,
   inspectionActive,
+  pinTime,
   onZoom,
   onPan,
   onReset,
+  onPinCreate,
+  clearPin,
   abandonInspection
 } = useGraphInteraction(
   () => baselineTimeRange.value,
-  () => false,
+  () => props.showPin,
   () => requestedTimeRange.value,
   onCommittedTimeRange
 )
@@ -158,7 +165,7 @@ watch(
 const {
   hiddenMetricNames,
   hiddenLineNames,
-  highlightedMetricName,
+  highlightedMetricNames,
   visibleMetrics,
   visibleHorizontalLines
 } = useGraphVisibility(
@@ -178,15 +185,21 @@ const onResetIntent = () => {
 
 // The host's surroundings render the title (e.g. the dashboard widget frame); the graph
 // time is shown by the header's GraphTimestamp, not by the renderer.
-const graphOptions = computed(
-  (): GraphOptions => ({
+const graphOptions = computed((): GraphOptions => {
+  const effectiveYAxis = deriveYAxis(graph.value?.metrics ?? [], props.yAxis ?? null)
+
+  return {
     name: '',
     header: { title: null, show_graph_time: false },
     x_axis: null,
-    y_axis: deriveYAxis(graph.value?.metrics ?? []),
+    y_axis: effectiveYAxis,
     font_size_pt: FONT_SIZE_PT
-  })
-)
+  }
+})
+
+// The marker stands above the plot, in the gap below the header, which is widened to fit it.
+// With no header there is no gap and the frame clips it, so the figure reserves the room.
+const hasHeader = computed(() => props.showTimestamp || props.showBurgerMenu)
 
 onMounted(() => {
   timer.start()
@@ -198,7 +211,13 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="graphing-graph-figure">
+  <div
+    class="graphing-graph-figure"
+    :class="{
+      'graphing-graph-figure--with-margin': showMargin,
+      'graphing-graph-figure--pin-overhang': showPin && !hasHeader
+    }"
+  >
     <!-- Initial load only: while a refetch is pending the held data stays rendered
          (the transient zoom bridges it). -->
     <CmkIcon
@@ -208,7 +227,11 @@ onBeforeUnmount(() => {
       class="graphing-graph-figure__loading-icon"
     />
     <template v-else-if="graph">
-      <div v-if="showTimestamp || showBurgerMenu" class="graphing-graph-figure__header">
+      <div
+        v-if="hasHeader"
+        class="graphing-graph-figure__header"
+        :class="{ 'graphing-graph-figure__header--pin-gap': showPin }"
+      >
         <GraphTimestamp v-if="showTimestamp && baselineTimeRange" :time-range="baselineTimeRange" />
         <GraphBurgerMenu
           v-if="showBurgerMenu"
@@ -217,12 +240,17 @@ onBeforeUnmount(() => {
           :groups="burgerMenuGroups"
         />
       </div>
-      <div ref="graphAreaDiv" class="graphing-graph-figure__graph">
+      <div
+        ref="graphAreaDiv"
+        class="graphing-graph-figure__graph"
+        :class="{ 'graphing-graph-figure__graph--pinnable': showPin }"
+      >
         <TimeSeriesGraph
           :view_time_range="viewTimeRange"
           :data_time_range="graph.timeRange"
           :metrics="visibleMetrics"
           :horizontal_lines="visibleHorizontalLines"
+          :shaded_regions="graph?.shadedRegions ?? []"
           :value-range="viewValueRange"
           zoom-mode="time"
           :size="figureSize"
@@ -231,23 +259,31 @@ onBeforeUnmount(() => {
           :inspecting="inspectionActive"
           :pan-enabled="true"
           :zoom-enabled="true"
+          :pin-enabled="showPin"
+          :pin-time="pinTime"
           :consolidation-function="DEFAULT_CONSOLIDATION_FN"
+          :show-time-axis="showTimeAxis"
+          :show-value-axis="showValueAxis"
+          :min-value-axis-width="minValueAxisWidth"
           :options="graphOptions"
-          :highlighted-metric-name="highlightedMetricName"
+          :highlighted-metric-names="highlightedMetricNames"
           @zoom="onZoom"
           @pan="onPan"
           @reset="onResetIntent"
+          @pin-create="onPinCreate"
+          @pin-action="clearPin"
         />
       </div>
       <GraphLegendCompact
         v-if="showLegend"
         :metrics="graph.metrics"
         :horizontal-lines="graph.horizontalLines"
+        :shaded-regions="graph.shadedRegions"
         :hidden-metric-names="hiddenMetricNames"
         :hidden-line-names="hiddenLineNames"
         @update:hidden-metric-names="hiddenMetricNames = $event"
         @update:hidden-line-names="hiddenLineNames = $event"
-        @hover-metric="highlightedMetricName = $event"
+        @hover-metrics="highlightedMetricNames = $event"
       />
     </template>
     <!-- A sibling of the graph rather than a branch beside it, so a failed refetch states itself
@@ -268,6 +304,9 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   position: relative;
+
+  /* The modifiers below pad this box, which fills its container exactly. */
+  box-sizing: border-box;
 }
 
 .graphing-graph-figure__loading-icon {
@@ -290,6 +329,10 @@ onBeforeUnmount(() => {
   margin-bottom: var(--dimension-4);
 }
 
+.graphing-graph-figure__header--pin-gap {
+  margin-bottom: var(--dimension-5);
+}
+
 .graphing-graph-figure__burger-menu {
   margin-left: auto;
 }
@@ -298,5 +341,18 @@ onBeforeUnmount(() => {
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
+}
+
+.graphing-graph-figure__graph--pinnable {
+  overflow: visible;
+}
+
+.graphing-graph-figure--with-margin {
+  padding: var(--dimension-3);
+}
+
+/* Declared after the margin so the overhang keeps the top edge it needs for the marker. */
+.graphing-graph-figure--pin-overhang {
+  padding-top: var(--dimension-5);
 }
 </style>

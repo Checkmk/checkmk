@@ -936,6 +936,34 @@
         }
       ]
     },
+    "ca_certificate": {
+      "id": "ca_certificate",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/form_spec"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "ca_certificate",
+              "default": "ca_certificate"
+            },
+            "label": {
+              "type": ["string", "null"]
+            },
+            "input_hint": {
+              "type": ["string", "null"]
+            },
+            "allow_fetch": {
+              "type": "boolean"
+            }
+          },
+          "required": ["type", "label", "input_hint", "allow_fetch"]
+        }
+      ]
+    },
     "oauth2_connection_setup": {
       "id": "oauth2_connection_setup",
       "type": "object",
@@ -983,8 +1011,22 @@
       },
       "required": ["authority_url", "display_name"]
     },
-    "metric_backend_custom_query": {
-      "id": "metric_backend_custom_query",
+    "telemetry_metrics_group_by_key": {
+      "id": "telemetry_metrics_group_by_key",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["resource", "scope", "data_point"]
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "required": ["kind", "key"]
+    },
+    "telemetry_metrics_custom_query": {
+      "id": "telemetry_metrics_custom_query",
       "type": "object",
       "allOf": [
         {
@@ -994,8 +1036,8 @@
           "type": "object",
           "properties": {
             "type": {
-              "const": "metric_backend_custom_query",
-              "default": "metric_backend_custom_query"
+              "const": "telemetry_metrics_custom_query",
+              "default": "telemetry_metrics_custom_query"
             },
             "metric_name": {
               "oneOf": [
@@ -1012,6 +1054,26 @@
             },
             "aggregation_lookback": {
               "type": "number"
+            },
+            "consolidation_function": {
+              "$ref": "../consolidation.json#/$defs/consolidation_function_name"
+            },
+            "aggregation_histogram_group_by": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/telemetry_metrics_group_by_key"
+              },
+              "default": []
+            },
+            "aggregator": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "../aggregation.json"
+                }
+              ]
             },
             "aggregation_histogram_percentile": {
               "type": "number"
@@ -1033,6 +1095,9 @@
             "type",
             "metric_name",
             "aggregation_lookback",
+            "consolidation_function",
+            "aggregation_histogram_group_by",
+            "aggregator",
             "aggregation_histogram_percentile",
             "aggregation_histogram_threshold_for_fraction_below",
             "aggregation_histogram_lower_threshold_for_fraction_between",
@@ -1042,8 +1107,8 @@
         }
       ]
     },
-    "dcd_metric_backend_filter": {
-      "id": "dcd_metric_backend_filter",
+    "dcd_telemetry_metrics_filter": {
+      "id": "dcd_telemetry_metrics_filter",
       "allOf": [
         {
           "$ref": "#/$defs/form_spec"
@@ -1052,8 +1117,8 @@
           "type": "object",
           "properties": {
             "type": {
-              "const": "dcd_metric_backend_filter",
-              "default": "dcd_metric_backend_filter"
+              "const": "dcd_telemetry_metrics_filter",
+              "default": "dcd_telemetry_metrics_filter"
             },
             "attribute_filter": {
               "$ref": "../attribute_filter.json"
@@ -1837,6 +1902,9 @@
           "$ref": "#/$defs/comment_text_area"
         },
         {
+          "$ref": "#/$defs/ca_certificate"
+        },
+        {
           "$ref": "#/$defs/password"
         },
         {
@@ -1855,10 +1923,10 @@
           "$ref": "#/$defs/time_span"
         },
         {
-          "$ref": "#/$defs/metric_backend_custom_query"
+          "$ref": "#/$defs/telemetry_metrics_custom_query"
         },
         {
-          "$ref": "#/$defs/dcd_metric_backend_filter"
+          "$ref": "#/$defs/dcd_telemetry_metrics_filter"
         },
         {
           "$ref": "#/$defs/oauth2_connection_setup"

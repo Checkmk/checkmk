@@ -16,12 +16,8 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 
-import {
-  GlobalRefreshControl,
-  seedRefreshIntervalSeconds,
-  useGlobalRefresh
-} from '../GlobalRefreshControl'
-import { rollingRange, useGlobalTimeRange } from '../GlobalTimePicker'
+import { GlobalRefreshControl } from '../GlobalRefreshControl'
+import { initGlobalRefresh, rollingRange, useGlobalTimeRange } from '../GlobalTimePicker'
 import {
   type CustomGraphObject,
   type CustomGraphOptions,
@@ -35,7 +31,7 @@ import type { SelectableGraph } from './components/GraphSelector.vue'
 import { type SaveAction, type SaveFailure, useSaveFailures } from './composables/saveFailure'
 import { useGraphItems } from './composables/useGraphItems'
 import { fromApiDataSource, toApiDataSources } from './drafts'
-import type { ItemId } from './types'
+import type { GraphItem, ItemId } from './types'
 import { pushUrlState, replaceUrlState } from './urlState'
 import { type RowIssue, isValid, validateDesign } from './validation'
 
@@ -51,7 +47,7 @@ if (activeTimeRange.value === null) {
   setActiveTimeRange(rollingRange(props.time_picker.default_time_range), 'time_picker')
 }
 
-seedRefreshIntervalSeconds(props.time_picker.default_refresh_time)
+initGlobalRefresh({ intervalSeconds: props.time_picker.refresh.interval_seconds, live: true })
 
 function returnToLiveMonitoring(): void {
   setActiveTimeRange(rollingRange(props.time_picker.default_time_range), 'time_picker')
@@ -69,7 +65,7 @@ const loadError = ref<string | null>(null)
 const store = useGraphItems(props.palette)
 const graphOptions = ref<CustomGraphOptions | null>(null)
 
-const { loadFilterDefinitions } = useProvideFilterDefinitions()
+const { filterDefinitions, loadFilterDefinitions } = useProvideFilterDefinitions()
 const filtersReady = ref(false)
 const filtersError = ref<string | null>(null)
 const displaySettings = ref<boolean>(false)
@@ -109,7 +105,7 @@ const isSaving = ref(false)
 const hasAttemptedSave = ref(false)
 const issuesAlert = ref<HTMLElement | null>(null)
 
-const blockingIssues = computed(() => validateDesign(store.items.value))
+const blockingIssues = computed(() => validateDesign(store.items.value, filterDefinitions.value))
 
 const issuesByRow = computed(() => {
   const byRow = new Map<ItemId, RowIssue[]>()
@@ -139,11 +135,38 @@ const blockedSummary = computed(() =>
   )
 )
 
+function snapshot(): string {
+  return JSON.stringify({ items: store.items.value, options: graphOptions.value })
+}
+
+const committedSnapshot = ref<string | null>(null)
+
+const isDirty = computed(
+  () =>
+    mode.value === 'edit' &&
+    committedSnapshot.value !== null &&
+    snapshot() !== committedSnapshot.value
+)
+
+function warnBeforeUnload(event: BeforeUnloadEvent): void {
+  event.preventDefault()
+  event.returnValue = ''
+}
+
+watch(isDirty, (dirty) => {
+  if (dirty) {
+    window.addEventListener('beforeunload', warnBeforeUnload)
+  } else {
+    window.removeEventListener('beforeunload', warnBeforeUnload)
+  }
+})
+
 function resetEditor(graph: CustomGraphObject): void {
   store.replaceAll(graph.extensions.content.data_sources.map(fromApiDataSource))
   graphOptions.value = graph.extensions.content.graph_options
   hasAttemptedSave.value = false
   saveFailure.value = null
+  committedSnapshot.value = snapshot()
 }
 
 function urlState(): { name: string; owner: string; mode: CustomGraphDesignerMode } {
@@ -206,11 +229,9 @@ function onRetry(): void {
   }
 }
 
-const { setRefreshPaused } = useGlobalRefresh()
 const onPopState = (): void => window.location.reload()
 
 onMounted(() => {
-  setRefreshPaused(false)
   window.addEventListener('popstate', onPopState)
   loadFilters()
   void load(props.mode)
@@ -218,6 +239,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('popstate', onPopState)
+  window.removeEventListener('beforeunload', warnBeforeUnload)
 })
 
 function onGraphChange(selected: SelectableGraph): void {
@@ -283,13 +305,18 @@ async function saveAgainst(version: 'loaded' | 'any'): Promise<void> {
         metadata: edited.graph.extensions.metadata,
         content: {
           graph_options: editedOptions,
-          data_sources: toApiDataSources(store.items.value.filter(isValid))
+          data_sources: toApiDataSources(
+            store.items.value.filter((item): item is GraphItem =>
+              isValid(item, filterDefinitions.value)
+            )
+          )
         }
       },
       ownerParam.value
     )
     hasAttemptedSave.value = false
     loaded.value = result
+    committedSnapshot.value = snapshot()
     mode.value = 'view'
     replaceUrlState(urlState())
   } catch (e) {
@@ -375,9 +402,9 @@ const saveFailureButtons = computed(() => {
         :title="loaded.graph.title ?? current.name"
         :mode="mode"
         :thresholds="{ warning: warning_color, critical: critical_color }"
-        :metric-backend-available="metric_backend_available"
+        :telemetry-metrics-available="telemetry_metrics_available"
         :create-services-available="create_services_available"
-        :metric-backend-default-title="metric_backend_default_title"
+        :telemetry-metrics-default-title="telemetry_metrics_default_title"
         :title-macros="title_macros"
         :issues-by-row="issuesByRow"
         @update-graph-options="graphOptions = $event"

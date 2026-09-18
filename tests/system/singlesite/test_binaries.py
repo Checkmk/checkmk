@@ -122,7 +122,6 @@ REPO_SCRIPTS: Sequence[RepoScript] = [
 ]
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.parametrize(
     "binary",
     (pytest.param(b, id=b.name) for b in ALL_SITE_BINARIES),

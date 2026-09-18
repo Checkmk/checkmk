@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import contextlib
@@ -44,13 +43,16 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import HTTPVariables, IconNames, StaticIcon
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb
 from cmk.livestatus_client import LivestatusClient, MKLogwatchAcknowledge
+from cmk.livestatus_client.queries import Query
+from cmk.livestatus_client.tables.hosts import Hosts
+from cmk.livestatus_client.types import escape_filename
 from cmk.web.utils.confirm_links import make_confirm_delete_link
-from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.urls import HTTPVariable, makeactionuri, makeuri, makeuri_contextless
 
 #   .--HTML Output---------------------------------------------------------.
 #   |     _   _ _____ __  __ _        ___        _               _         |
@@ -607,7 +609,7 @@ def _page_menu_entry_acknowledge(
 
     label = _("Clear log") if int_filename else _("Clear logs")
 
-    urivars: HTTPVariables = [("_ack", "1")]
+    urivars: list[HTTPVariable] = [("_ack", "1")]
     if int_filename:
         urivars.append(("file", form_file_to_ext(int_filename)))
 
@@ -713,7 +715,10 @@ def _get_ack_msg(host_name: HostName | None, file_name: str | None) -> str:
 
 
 def acknowledge_logfile(
-    site: SiteId, host_name: HostName, int_filename: str, display_name: str
+    site: SiteId,
+    host_name: HostName,
+    int_filename: str,
+    display_name: str,  # noqa: ARG001
 ) -> None:
     if not may_see(site, host_name):
         raise MKAuthException(_("Permission denied."))
@@ -813,7 +818,7 @@ def parse_file(
                 else:
                     continue  # ignore this line
 
-                log_lines.append({"level": line_level, "class": line_class, "line": line_display})
+                log_lines.append({"level": line_level, "class": line_class, "line": line_display})  # type: ignore[possibly-undefined]
     except Exception as e:
         if debug:
             raise
@@ -957,10 +962,9 @@ def logfiles_of_host(site: SiteId | None, host_name: HostName) -> list[str]:
 def get_logfile_lines(site: SiteId | None, host_name: HostName, file_name: str) -> list[str] | None:
     if site:  # Honor site hint if available
         sites.live().set_only_sites([site])
-    query = "GET hosts\nColumns: mk_logwatch_file:file:{}/{}\nFilter: name = {}\n".format(
-        livestatus.lqencode(host_name),
-        livestatus.lqencode(file_name.replace("\\", "\\\\").replace(" ", "\\s")),
-        livestatus.lqencode(host_name),
+    query = Query(
+        [Hosts.mk_logwatch_file.dynamic("file", f"{host_name}/{escape_filename(file_name)}")],
+        Hosts.name == host_name,
     )
     file_content = sites.live().query_value(query)
     if site:  # Honor site hint if available

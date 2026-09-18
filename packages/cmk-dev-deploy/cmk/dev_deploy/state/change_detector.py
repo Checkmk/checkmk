@@ -4,8 +4,6 @@
 
 """Change detection and categorization via git diff."""
 
-from __future__ import annotations
-
 import fnmatch
 import json
 import logging
@@ -117,7 +115,7 @@ def _load_rules() -> tuple[CategorizationRule, ...]:
 
     try:
         manifest_rules = get_categorization_rules()
-    except (FileNotFoundError, json.JSONDecodeError, KeyError):
+    except FileNotFoundError, json.JSONDecodeError, KeyError:
         logger.warning(
             "Manifest unavailable or missing categorization_rules -- "
             "using structural-only fallback (all files categorize as OTHER). "

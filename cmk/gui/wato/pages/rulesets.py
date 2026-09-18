@@ -5,11 +5,8 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """WATO's awesome rule editor: Lets the user edit rule based parameters"""
-
-from __future__ import annotations
 
 import abc
 import contextlib
@@ -82,17 +79,10 @@ from cmk.gui.search.matchers import (
     MatchItems,
 )
 from cmk.gui.table import Foldable, show_row_count, Table, table_element
-from cmk.gui.type_defs import (
-    ActionResult,
-    HTTPVariables,
-    IconNames,
-    PermissionName,
-    RenderMode,
-    StaticIcon,
-)
+from cmk.gui.type_defs import ActionResult, RenderMode
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.doc_references import doc_reference_url, DocReference, DocReferenceUtm
+from cmk.gui.utils.doc_reference_urls import doc_reference_url
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
@@ -126,7 +116,7 @@ from cmk.gui.watolib.check_mk_automations import (
 )
 from cmk.gui.watolib.config_domain_name import CORE
 from cmk.gui.watolib.config_hostname import ConfigHostname
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.host_label_sync import execute_host_label_sync
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
@@ -213,10 +203,13 @@ from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.servicename import Item, ServiceName
 from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
 from cmk.web.utils.escaping import escape_to_html_permissive, strip_tags
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
-from cmk.web.utils.urls import makeuri, makeuri_contextless
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
+from cmk.web.utils.urls import HTTPVariable, makeuri, makeuri_contextless
 
 from ._rule_conditions import DictHostTagCondition
 
@@ -407,7 +400,7 @@ class ABCRulesetMode(WatoMode):
                     html.open_div(class_=["ruleset"], title=strip_tags(ruleset.help() or ""))
                     html.open_div(class_="text")
 
-                    url_vars: HTTPVariables = [
+                    url_vars: list[HTTPVariable] = [
                         ("mode", "edit_ruleset"),
                         ("varname", ruleset.name),
                         ("back_mode", self.name()),
@@ -1232,14 +1225,14 @@ class ModeEditRuleset(WatoMode):
             # rule number relative to folder
             rule_id = request.get_ascii_input_mandatory("_rule_id")
             rule = ruleset.get_rule_by_id(rule_id)
-        except (IndexError, TypeError, ValueError, KeyError):
+        except IndexError, TypeError, ValueError, KeyError:
             raise MKUserError(
                 "_rule_id", _("You are trying to edit a rule which does not exist anymore.")
             )
 
         action = request.get_ascii_input_mandatory("_action")
         if action == "delete":
-            if is_locked_by_quick_setup(rule.locked_by):
+            if is_locked_by_config_bundle(rule.locked_by):
                 raise MKUserError(None, _("Cannot delete rules that are managed by Quick Setup."))
             ruleset.delete_rule(
                 rule,
@@ -1308,7 +1301,7 @@ class ModeEditRuleset(WatoMode):
             case "all" | "list":
                 html.write_text_permissive(_("All matching rules will add to the resulting list."))
             case _:
-                html.write_text_permissive(
+                html.write_text_permissive(  # type: ignore[unreachable]
                     _("Unknown match type: %(match_type)s") % {"match_type": match_type}
                 )
 
@@ -1392,7 +1385,7 @@ class ModeEditRuleset(WatoMode):
         )
 
     @staticmethod
-    def _css_for_rule(search_options: SearchOptions, rule: Rule) -> list[str]:
+    def _css_for_rule(search_options: SearchOptions, rule: Rule) -> list[str]:  # noqa: ARG004
         css = []
         if rule.is_disabled():
             css.append("disabled")
@@ -1468,7 +1461,7 @@ class ModeEditRuleset(WatoMode):
             export_url, _("Export this rule for API"), StaticIcon(IconNames.export_rule)
         )
 
-        if is_locked_by_quick_setup(rule.locked_by):
+        if is_locked_by_config_bundle(rule.locked_by):
             html.icon_button(
                 url="",
                 title=_("Rule cannot be moved, because it is managed by Quick Setup"),
@@ -1650,7 +1643,7 @@ class ModeEditRuleset(WatoMode):
         g.setdefault("host_label_sync", {})[cache_id] = True
 
     def _action_url(self, action: str, folder: Folder, rule_id: str) -> str:
-        vars_: HTTPVariables = [
+        vars_: list[HTTPVariable] = [
             ("mode", request.var("mode", "edit_ruleset")),
             ("ruleset_back_mode", self._back_mode),
             ("varname", self._name),
@@ -2156,7 +2149,7 @@ class ABCEditRuleMode(WatoMode):
                 render_link=quick_setup_render_link(self._rule.locked_by),
                 message=_("Cannot change rule conditions for rules managed by Quick Setup."),
             )
-            if is_locked_by_quick_setup(self._rule.locked_by)
+            if is_locked_by_config_bundle(self._rule.locked_by)
             else None
         )
         self._form_type = self._init_form_type()
@@ -2292,7 +2285,7 @@ class ABCEditRuleMode(WatoMode):
             try:
                 rule_id = request.get_ascii_input_mandatory(self.VAR_RULE_ID)
                 self._rule = self._ruleset.get_rule_by_id(rule_id)
-            except (KeyError, TypeError, ValueError, IndexError):
+            except KeyError, TypeError, ValueError, IndexError:
                 raise MKUserError(
                     self.VAR_RULE_ID,
                     _("You are trying to edit a rule which does not exist anymore."),
@@ -2364,7 +2357,7 @@ class ABCEditRuleMode(WatoMode):
     def _back_url(self) -> str:
         # TODO: Is this still needed + for which case?
         if self._back_mode == "edit_ruleset":
-            var_list: HTTPVariables = [
+            var_list: list[HTTPVariable] = [
                 ("mode", "edit_ruleset"),
                 (self.VAR_RULE_SPEC_NAME, self._name),
                 ("host", request.get_ascii_input_mandatory("host", "")),
@@ -2555,7 +2548,7 @@ class ABCEditRuleMode(WatoMode):
 
     def _page_form_quick_setup_warning(self) -> None:
         if (
-            is_locked_by_quick_setup(self._rule.locked_by)
+            is_locked_by_config_bundle(self._rule.locked_by)
             and request.get_ascii_input("mode") != "edit_configuration_bundle"
         ):
             quick_setup_locked_warning(self._rule.locked_by, "rule")
@@ -3421,7 +3414,7 @@ class ModeCloneRule(ABCEditRuleMode):
 
     @override
     def _page_form_quick_setup_warning(self) -> None:
-        if is_locked_by_quick_setup(self._orig_rule.locked_by):
+        if is_locked_by_config_bundle(self._orig_rule.locked_by):
             quick_setup_duplication_warning(self._orig_rule.locked_by, "rule")
 
 
@@ -3933,13 +3926,13 @@ class ModeUnknownRulesets(WatoMode):
 
     def _delete_cp_rule(
         self,
-        rulesets: AllRulesets,
+        rulesets: AllRulesets,  # noqa: ARG002
         ruleset: Ruleset,
         rule: Rule,
         *,
         pending_changes: PendingChanges,
     ) -> None:
-        if is_locked_by_quick_setup(rule.locked_by):
+        if is_locked_by_config_bundle(rule.locked_by):
             raise MKUserError(None, _("Cannot delete rules that are managed by Quick Setup."))
         ruleset.delete_rule(rule, create_change=True, pending_changes=pending_changes)
 
@@ -4010,7 +4003,12 @@ class ModeUnknownRulesets(WatoMode):
         return None
 
     def _delete_selected_rule(
-        self, selected_ruleset_name: str, selected_rule_id: str, *, pprint_value: bool, debug: bool
+        self,
+        selected_ruleset_name: str,  # noqa: ARG002
+        selected_rule_id: str,
+        *,
+        pprint_value: bool,
+        debug: bool,
     ) -> ActionResult:
         rulesets = AllRulesets.load_all_rulesets(folder_tree())
         for folder_path, rulespecs_by_name in rulesets.get_unknown_rulesets().items():

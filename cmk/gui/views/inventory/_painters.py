@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="type-arg"
 
 import time
 from collections.abc import Callable, Mapping, Sequence
@@ -83,6 +81,18 @@ def _validate_inventory_tree_uniqueness(row: Row) -> None:
         raise MultipleInventoryTreesError
 
 
+def _get_inventory_tree(row: Row) -> ImmutableTree:
+    return tree if isinstance(tree := row.get("host_inventory"), ImmutableTree) else ImmutableTree()
+
+
+def _get_delta_tree(row: Row) -> ImmutableDeltaTree:
+    return (
+        tree
+        if isinstance(tree := row.get("invhist_delta"), ImmutableDeltaTree)
+        else ImmutableDeltaTree()
+    )
+
+
 class PainterOptionShowInternalTreePaths(PainterOption):
     def __init__(self) -> None:
         super().__init__(
@@ -126,7 +136,7 @@ class PainterInventoryTree(Painter):
         except MultipleInventoryTreesError:
             return ImmutableTree()
 
-        return row.get("host_inventory", ImmutableTree())
+        return _get_inventory_tree(row)
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
@@ -223,7 +233,7 @@ class PainterInvhistDelta(Painter):
         except MultipleInventoryTreesError:
             return ImmutableDeltaTree()
 
-        return row.get("invhist_delta", ImmutableDeltaTree())
+        return _get_delta_tree(row)
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
@@ -360,7 +370,7 @@ def _get_attributes(row: Row, path: SDPath) -> ImmutableAttributes | None:
         _validate_inventory_tree_uniqueness(row)
     except MultipleInventoryTreesError:
         return None
-    return row.get("host_inventory", ImmutableTree()).get_tree(path).attributes
+    return _get_inventory_tree(row).get_tree(path).attributes
 
 
 def _compute_attribute_painter_data(row: Row, path: SDPath, key: SDKey) -> SDValue:
@@ -419,12 +429,12 @@ def attribute_painter_from_hint(
         load_inv=True,
         sorter=hint.name,
         paint=lambda row: _paint_host_inventory_attribute(row, path, key, hint),
-        export_for_python=lambda row, cell: _compute_attribute_painter_data(row, path, key),
-        export_for_csv=lambda row, cell: (
+        export_for_python=lambda row, _cell: _compute_attribute_painter_data(row, path, key),
+        export_for_csv=lambda row, _cell: (
             "" if (data := _compute_attribute_painter_data(row, path, key)) is None else str(data)
         ),
-        export_for_json=lambda row, cell: _compute_attribute_painter_data(row, path, key),
-        groupby=lambda row, cell: (
+        export_for_json=lambda row, _cell: _compute_attribute_painter_data(row, path, key),
+        groupby=lambda row, _cell: (
             r
             if isinstance(
                 r := _paint_host_inventory_attribute(row, path, key, hint)[1], (str | HTML)
@@ -440,7 +450,7 @@ class ColumnPainterFromHint(TypedDict):
     short: str
     tooltip_title: str
     columns: Sequence[str]
-    params: FixedValue
+    params: FixedValue[PainterParameters]
     sorter: str
     paint: Callable[[Row], CellSpec]
     export_for_python: Callable[[Row, Cell], SDValue]
@@ -482,9 +492,9 @@ def column_painter_from_hint(hint: ColumnDisplayHintOfView) -> ColumnPainterFrom
         params=FixedValue(PainterParameters(), totext=""),
         sorter=hint.name,
         paint=lambda row: _paint_host_inventory_column(row, hint),
-        export_for_python=lambda row, cell: row.get(hint.name),
-        export_for_csv=lambda row, cell: "" if (data := row.get(hint.name)) is None else str(data),
-        export_for_json=lambda row, cell: row.get(hint.name),
+        export_for_python=lambda row, _cell: row.get(hint.name),
+        export_for_csv=lambda row, _cell: "" if (data := row.get(hint.name)) is None else str(data),
+        export_for_json=lambda row, _cell: row.get(hint.name),
     )
 
 
@@ -510,7 +520,7 @@ def _compute_node_painter_data(row: Row, path: SDPath) -> ImmutableTree:
     except MultipleInventoryTreesError:
         return ImmutableTree()
 
-    return row.get("host_inventory", ImmutableTree()).get_tree(path)
+    return _get_inventory_tree(row).get_tree(path)
 
 
 def _paint_host_inventory_tree(row: Row, path: SDPath, painter_options: PainterOptions) -> CellSpec:
@@ -566,11 +576,11 @@ def node_painter_from_hint(
         load_inv=True,
         sorter=hint.name,
         paint=lambda row: _paint_host_inventory_tree(row, hint.path, painter_options),
-        export_for_python=lambda row, cell: serialize_tree(
+        export_for_python=lambda row, _cell: serialize_tree(
             _compute_node_painter_data(row, hint.path)
         ),
-        export_for_csv=lambda row, cell: _export_node_for_csv(),
-        export_for_json=lambda row, cell: serialize_tree(
+        export_for_csv=lambda _row, _cell: _export_node_for_csv(),
+        export_for_json=lambda row, _cell: serialize_tree(
             _compute_node_painter_data(row, hint.path)
         ),
     )

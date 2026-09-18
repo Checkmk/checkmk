@@ -23,8 +23,6 @@ Key design decisions (from CONTEXT.md):
 - 60s download timeout, fail fast, no retry
 """
 
-from __future__ import annotations
-
 import contextlib
 import hashlib
 import http.client
@@ -129,7 +127,7 @@ def _get_ibazel_version(binary_path: str) -> str | None:
         match = _VERSION_PATTERN.search(result.stderr)
         if match:
             return match.group(1)
-    except (subprocess.TimeoutExpired, OSError, FileNotFoundError):
+    except subprocess.TimeoutExpired, OSError, FileNotFoundError:
         pass
     return None
 

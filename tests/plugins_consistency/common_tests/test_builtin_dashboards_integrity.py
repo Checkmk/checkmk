@@ -10,8 +10,7 @@ from cmk.gui.dashboard.dashlet.dashlets.graph import (
     TemplateGraphDashlet,
     TemplateGraphDashletConfig,
 )
-from cmk.gui.graphing._from_api import graphs_from_api
-from cmk.gui.graphing._graph_templates import get_graph_plugin_from_id
+from cmk.gui.graphing import get_graph_plugin_from_id, graphs_from_api
 
 
 def test_all_template_graph_dashlets_reference_known_graph_templates() -> None:

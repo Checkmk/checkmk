@@ -3,19 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import logging
 import os
 from collections.abc import Iterator
 from pathlib import Path
 from random import randint
+from types import TracebackType
 from typing import Final
 
 import docker
 import docker.client
 import docker.errors
-import docker.models
 import docker.models.containers
 import docker.models.images
 import pytest
@@ -130,7 +129,7 @@ class OracleDatabase:
         # New mk-oracle plugin
         self.new_plugin_binary_path: Path = mk_oracle_binary_path
         self.new_plugin_binary_name: Final[str] = self.new_plugin_binary_path.name
-        self.new_plugin_dir: Final[Path] = self.cmk_plugin_dir / "packages" / "mk-oracle"
+        self.new_plugin_dir: Final[Path] = self.cmk_plugin_dir / "libexec" / "mk-oracle-v2"
         self.new_plugin: Final[Path] = self.new_plugin_dir / self.new_plugin_binary_name
         self.new_plugin_cfg: Final[Path] = self.cmk_cfg_dir / "mk-oracle.yml"
         self.new_plugin_credentials_cfg: Final[Path] = (
@@ -393,10 +392,15 @@ class OracleDatabase:
         assert isinstance(output, bytes)  # stream/socket/demux not used above
         assert rc == 0, f"Error while creating a link to Perl: {output.decode('UTF-8')}"
 
-    def __enter__(self):
+    def __enter__(self) -> OracleDatabase:
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
         if is_cleanup_enabled():
             self.container.stop(timeout=30)
             self.container.remove(force=True)

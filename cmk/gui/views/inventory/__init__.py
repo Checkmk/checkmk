@@ -4,29 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from __future__ import annotations
-
 from collections.abc import Iterable, Mapping, Sequence
 
 from cmk.ccc.user import UserId
-from cmk.gui import inventory
 from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.i18n import _l
 from cmk.gui.painter.v0 import Painter, PainterRegistry
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.type_defs import (
-    ColumnSpec,
-    DynamicIcon,
-    DynamicIconName,
-    FilterName,
-    StaticIcon,
-    VisualContext,
-    VisualLinkSpec,
-)
+from cmk.gui.type_defs import ColumnSpec, FilterName, VisualContext, VisualLinkSpec
 from cmk.gui.views.sorter import Sorter, SorterRegistry
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.visuals.info import VisualInfo, VisualInfoRegistry
+from cmk.inventory.structured_data import InventoryPath, TreeSource
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName, StaticIcon
 
 from ._data_sources import ABCDataSourceInventory, RowTableInventory
 from ._display_hints import (
@@ -86,27 +77,27 @@ def _register_painter(
         {
             "_ident": from_hint["name"],
             "_spec": from_hint,
-            "ident": property(lambda s: s._ident),
-            "title": lambda s, cell: s._spec["title"],
-            "short_title": lambda s, cell: s._spec.get("short", s.title),
-            "tooltip_title": lambda s, cell: s._spec.get("tooltip_title", s.title),
-            "columns": property(lambda s: s._spec["columns"]),
-            "render": lambda self, row, cell, user: from_hint["paint"](row),
-            "export_for_python": lambda self, row, cell, user: from_hint["export_for_python"](
+            "ident": property(lambda s: s._ident),  # noqa: SLF001
+            "title": lambda s, cell: s._spec["title"],  # noqa: ARG005, SLF001
+            "short_title": lambda s, cell: s._spec.get("short", s.title),  # noqa: ARG005, SLF001
+            "tooltip_title": lambda s, cell: s._spec.get("tooltip_title", s.title),  # noqa: ARG005, SLF001
+            "columns": property(lambda s: s._spec["columns"]),  # noqa: SLF001
+            "render": lambda self, row, cell, user: from_hint["paint"](row),  # noqa: ARG005
+            "export_for_python": lambda self, row, cell, user: from_hint["export_for_python"](  # noqa: ARG005
                 row, cell
             ),
-            "export_for_csv": lambda self, row, cell, user: from_hint["export_for_csv"](row, cell),
-            "export_for_json": lambda self, row, cell, user: from_hint["export_for_json"](
+            "export_for_csv": lambda self, row, cell, user: from_hint["export_for_csv"](row, cell),  # noqa: ARG005
+            "export_for_json": lambda self, row, cell, user: from_hint["export_for_json"](  # noqa: ARG005
                 row, cell
             ),
             "group_by": lambda self, row, cell: (
                 None if (f := self._spec.get("groupby")) is None else f(row, cell)
             ),
-            "parameters": property(lambda s: s._spec.get("params")),
-            "painter_options": property(lambda s: s._spec.get("options", [])),
-            "printable": property(lambda s: s._spec.get("printable", True)),
-            "sorter": property(lambda s: s._spec.get("sorter", None)),
-            "load_inv": property(lambda s: s._spec.get("load_inv", False)),
+            "parameters": property(lambda s: s._spec.get("params")),  # noqa: SLF001
+            "painter_options": property(lambda s: s._spec.get("options", [])),  # noqa: SLF001
+            "printable": property(lambda s: s._spec.get("printable", True)),  # noqa: SLF001
+            "sorter": property(lambda s: s._spec.get("sorter", None)),  # noqa: SLF001
+            "load_inv": property(lambda s: s._spec.get("load_inv", False)),  # noqa: SLF001
         },
     )
     painter_registry.register(cls)
@@ -136,10 +127,10 @@ def _register_views(
     search_view_name = table.name + "_search"
     multisite_builtin_views[search_view_name] = {
         # General options
-        "title": _l("Search %(title)s") % {"title": table.long_title.lower()},
+        "title": _l("Search %(title)s") % {"title": table.long_title},
         "description": (
             _l("A view for searching in the inventory data for %(title)s")
-            % {"title": table.long_title.lower()}
+            % {"title": table.long_title}
         ),
         "hidden": False,
         "hidebutton": False,
@@ -265,8 +256,8 @@ def _register_table_view(
                 "title": property(lambda self: self._title),
                 "_title_plural": table.long_title,
                 "title_plural": property(lambda self: self._title_plural),
-                "single_spec": property(lambda self: []),
-                "single_spec_components": lambda self: [],
+                "single_spec": property(lambda self: []),  # noqa: ARG005
+                "single_spec_components": lambda self: [],  # noqa: ARG005
             },
         )
     )
@@ -278,18 +269,16 @@ def _register_table_view(
             (ABCDataSourceInventory,),
             {
                 "_ident": table.name,
-                "_inventory_path": inventory.InventoryPath(
-                    path=table.path, source=inventory.TreeSource.table
-                ),
+                "_inventory_path": InventoryPath(path=table.path, source=TreeSource.table),
                 "_title": table.long_inventory_title,
                 "_infos": ["host", table.name],
-                "ident": property(lambda s: s._ident),
-                "title": property(lambda s: s._title),
-                "table": property(lambda s: RowTableInventory(s._ident, s._inventory_path)),
-                "infos": property(lambda s: s._infos),
-                "keys": property(lambda s: []),
-                "id_keys": property(lambda s: []),
-                "inventory_path": property(lambda s: s._inventory_path),
+                "ident": property(lambda s: s._ident),  # noqa: SLF001
+                "title": property(lambda s: s._title),  # noqa: SLF001
+                "table": property(lambda s: RowTableInventory(s._ident, s._inventory_path)),  # noqa: SLF001
+                "infos": property(lambda s: s._infos),  # noqa: SLF001
+                "keys": property(lambda s: []),  # noqa: ARG005
+                "id_keys": property(lambda s: []),  # noqa: ARG005
+                "inventory_path": property(lambda s: s._inventory_path),  # noqa: SLF001
                 "join": ("services", "host_name"),
             },
         )

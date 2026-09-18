@@ -235,9 +235,9 @@ class HostField(base.String):
             return
 
         if host:
-            host._user_needs_permission("read", user)
+            host._user_needs_permission("read", user)  # noqa: SLF001
             if self._permission_type == "setup_write":
-                host._user_needs_permission("write", user)
+                host._user_needs_permission("write", user)  # noqa: SLF001
 
         return
 
@@ -393,7 +393,7 @@ class RegexpRewrites(BaseSchema, CheckmkTuple):
     )
 
     @validates_schema
-    def validate_replacement(self, data: Mapping[str, str], **kwargs: object) -> None:  # type: ignore[misc]
+    def validate_replacement(self, data: Mapping[str, str], **kwargs: object) -> None:  # type: ignore[misc]  # noqa: ARG002
         search = re.compile(data["search"])
         replace_groups = list(set(re.findall(r"\\((?:[1-9]|\d\d)+)", data["replace_with"])))
         replace_groups.sort()
@@ -880,7 +880,7 @@ class NetworkScan(BaseSchema):
     translate_names = Nested(TranslateNames)
 
     @validates_schema
-    def validate_tag_criticality(self, data: dict[str, Any], **kwargs: Any) -> None:  # type: ignore[misc]
+    def validate_tag_criticality(self, data: dict[str, Any], **kwargs: Any) -> None:  # type: ignore[misc]  # noqa: ARG002
         tag_criticality = load_tag_group(TagGroupID("criticality"))
         if tag_criticality is None:
             if "tag_criticality" in data:
@@ -1053,11 +1053,11 @@ class SNMPCommunity(BaseSchema):
     )
 
     @post_load
-    def to_checkmk_str(self, data: dict[str, str], **kwargs: object) -> str:  # type: ignore[misc]
+    def to_checkmk_str(self, data: dict[str, str], **kwargs: object) -> str:  # type: ignore[misc]  # noqa: ARG002
         return data["community"]
 
     @pre_dump
-    def from_tuple(self, data: object, **kwargs: object) -> dict[str, str] | None:  # type: ignore[misc]
+    def from_tuple(self, data: object, **kwargs: object) -> dict[str, str] | None:  # type: ignore[misc]  # noqa: ARG002
         """
 
         v1 'community'

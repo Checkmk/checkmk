@@ -95,5 +95,6 @@ py_cmk_test(
         requirement("pytest-mock"),
         requirement("pytest-random-order"),
         requirement("time-machine"),
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 from collections.abc import Sequence
 
@@ -16,10 +15,10 @@ from cmk.gui.http import request as _request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import PageMenu, PageMenuPopupsRenderer, PageMenuRenderer
 from cmk.gui.page_state import PageState, PageStateRenderer
-from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.licensing.registry import get_licensing_user_effect
 from cmk.utils import paths
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless
 
 
@@ -51,7 +50,6 @@ def top_heading(
         title=title,
         class_="title",
         href="#",
-        onfocus="if (this.blur) this.blur();",
         onclick="this.innerHTML='%s'; document.location.reload();" % _("Reloading..."),
     )
 
@@ -113,7 +111,10 @@ def show_license_banner(writer: HTMLWriter, user_role_ids: Sequence[str]) -> Non
 
 
 def _make_default_page_state(
-    writer: HTMLWriter, request: Request, *, browser_reload: float
+    writer: HTMLWriter,
+    request: Request,  # noqa: ARG001
+    *,
+    browser_reload: float,
 ) -> PageState | None:
     """Create a general page state for all pages without specific one"""
     if not browser_reload:

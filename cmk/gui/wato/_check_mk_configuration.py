@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 from collections.abc import Generator, Iterable, Mapping, Sequence
 from typing import Any, Literal, override
@@ -17,11 +16,13 @@ from cmk.ccc.version import Edition
 from cmk.checkengine.snmplib import SNMPBackendEnum  # astrein: disable=cmk-module-layer-violation
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError, MKUserError
-from cmk.gui.form_specs._utils import create_validation_error_for_mk_user_error
+from cmk.gui.form_specs import create_validation_error_for_mk_user_error
 from cmk.gui.form_specs.generators.age import Age as FSAge
 from cmk.gui.form_specs.generators.alternative_utils import enable_deprecated_alternative
+from cmk.gui.form_specs.generators.host_address import HostAddressValidator
 from cmk.gui.form_specs.generators.log_level import LogLevelChoice
 from cmk.gui.form_specs.unstable import (
+    CACertificate,
     id_validators,
     LegacyValueSpec,
     not_empty,
@@ -38,7 +39,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.userdb import load_roles, show_mode_choices, validate_start_url
-from cmk.gui.utils.temperate_unit import temperature_unit_choices, TemperatureUnit
+from cmk.gui.utils.temperature_unit import temperature_unit_choices, TemperatureUnit
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -59,7 +60,6 @@ from cmk.gui.valuespec import (
     Labels,
     ListChoice,
     ListOf,
-    ListOfCAs,
     ListOfStrings,
     ListOfTimeRanges,
     Migrate,
@@ -149,6 +149,7 @@ from cmk.rulesets.internal.form_specs import (
 from cmk.rulesets.v1 import form_specs as fs
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.web.utils import html
+from cmk.web.utils.icons import IconNames
 from cmk.web.utils.urls import makeuri_contextless
 
 from ._check_plugin_selection import CheckPluginSelection
@@ -322,8 +323,7 @@ def register(
     rulespec_registry.register(SnmpWithoutSysDescr)
     rulespec_registry.register(Snmpv2CHosts)
     rulespec_registry.register(SnmpTiming)
-    rulespec_registry.register(NonInlineSnmpHosts)
-    rulespec_registry.register(SnmpBackendHosts)
+    rulespec_registry.register(make_snmp_backend_hosts_rulespec(edition))
     rulespec_registry.register(UsewalkHosts)
     rulespec_registry.register(SnmpPorts)
     rulespec_registry.register(AgentPorts)
@@ -386,7 +386,7 @@ ConfigVariableUITheme = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="ui_theme",
-    form_spec=lambda context: SingleChoiceExtended(
+    form_spec=lambda context: SingleChoiceExtended(  # noqa: ARG005
         title=Title("User interface theme"),
         help_text=Help("Change the default user interface theme of your Checkmk installation"),
         elements=_fs_single_choice_elements(theme_choices()),
@@ -398,7 +398,7 @@ ConfigVariableDefaultLanguage = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="default_language",
-    form_spec=lambda context: SingleChoiceExtended(
+    form_spec=lambda context: SingleChoiceExtended(  # noqa: ARG005
         title=Title("Default language"),
         elements=_fs_single_choice_elements(get_languages()),
         prefill=fs.DefaultValue("en"),
@@ -410,7 +410,7 @@ ConfigVariableShowMoreMode = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="show_mode",
-    form_spec=lambda context: SingleChoiceExtended(
+    form_spec=lambda context: SingleChoiceExtended(  # noqa: ARG005
         title=Title("Show more / Show less"),
         help_text=Help(
             "In some places like e.g. the main menu Checkmk divides "
@@ -429,7 +429,7 @@ ConfigVariableBulkDiscoveryDefaultSettings = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="bulk_discovery_default_settings",
-    form_spec=lambda context: fs_bulk_discovery(),
+    form_spec=lambda context: fs_bulk_discovery(),  # noqa: ARG005
 )
 
 
@@ -591,7 +591,7 @@ ConfigVariableSlowViewsDurationThreshold = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="slow_views_duration_threshold",
-    form_spec=lambda context: fs.Integer(
+    form_spec=lambda context: fs.Integer(  # noqa: ARG005
         title=Title("Threshold for slow views"),
         # title=_("Create a log entry for all view calls taking longer than"),
         unit_symbol="Seconds",
@@ -603,7 +603,7 @@ ConfigVariableDebug = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="debug",
-    form_spec=lambda context: fs.BooleanChoice(
+    form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
         title=Title("Debug mode"),
         label=Label("enable debug mode"),
         help_text=Help(
@@ -662,7 +662,7 @@ ConfigVariableDebugLivestatusQueries = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="debug_livestatus_queries",
-    form_spec=lambda context: fs.BooleanChoice(
+    form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
         title=Title("Debug Livestatus queries"),
         label=Label("enable debug of Livestatus queries"),
         help_text=Help(
@@ -676,7 +676,7 @@ ConfigVariableSelectionLivetime = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="selection_livetime",
-    form_spec=lambda context: fs.Integer(
+    form_spec=lambda context: fs.Integer(  # noqa: ARG005
         title=Title("Checkbox selection livetime"),
         help_text=Help(
             "This option defines the maximum age of unmodified checkbox selections stored for users. "
@@ -692,7 +692,7 @@ ConfigVariableShowLivestatusErrors = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="show_livestatus_errors",
-    form_spec=lambda context: fs.BooleanChoice(
+    form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
         title=Title("Show MK Livestatus error messages"),
         label=Label("show errors"),
         help_text=Help(
@@ -707,7 +707,7 @@ ConfigVariableEnableSounds = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="enable_sounds",
-    form_spec=lambda context: fs.BooleanChoice(
+    form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
         title=Title("Sounds in views"),
         label=Label("Sounds"),
         help_text=Help(
@@ -723,7 +723,7 @@ ConfigVariableSoftQueryLimit = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="soft_query_limit",
-    form_spec=lambda context: fs.Integer(
+    form_spec=lambda context: fs.Integer(  # noqa: ARG005
         title=Title("Soft query limit"),
         help_text=Help(
             "Whenever the number of returned datasets of a view would exceed this "
@@ -738,7 +738,7 @@ ConfigVariableHardQueryLimit = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="hard_query_limit",
-    form_spec=lambda context: fs.Integer(
+    form_spec=lambda context: fs.Integer(  # noqa: ARG005
         title=Title("Hard query limit"),
         help_text=Help(
             "Whenever the number of returned datasets of a view would exceed this "
@@ -754,7 +754,7 @@ ConfigVariableQuicksearchDropdownLimit = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="quicksearch_dropdown_limit",
-    form_spec=lambda context: fs.Integer(
+    form_spec=lambda context: fs.Integer(  # noqa: ARG005
         title=Title("Number of elements to show in quick search"),
         help_text=Help(
             "When typing a texts in the quick search snap-in, a drop-down will "
@@ -770,7 +770,7 @@ ConfigVariableQuicksearchSearchOrder = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="quicksearch_search_order",
-    form_spec=lambda context: ListExtended(
+    form_spec=lambda context: ListExtended(  # noqa: ARG005
         element_template=FSTuple(
             elements=[
                 SingleChoiceExtended(
@@ -821,27 +821,31 @@ ConfigVariableExperimentalFeatures = ConfigVariable(
     group=ConfigVariableGroupDeveloperTools,
     primary_domain=ConfigDomainGUI,
     ident="vue_experimental_features",
-    valuespec=lambda context: Dictionary(
-        title=_("Vue experimental features"),
-        help=_("These settings only affect features that are currently under development."),
-        elements=[
-            (
-                "rule_render_mode",
-                DropdownChoice(
-                    title=_("Rule rendering mode"),
-                    help=_(
+    form_spec=lambda context: fs.Dictionary(  # noqa: ARG005
+        title=Title("Vue experimental features"),
+        help_text=Help("These settings only affect features that are currently under development."),
+        elements={
+            "rule_render_mode": fs.DictElement(
+                required=True,
+                parameter_form=SingleChoiceExtended[str](
+                    title=Title("Rule rendering mode"),
+                    help_text=Help(
                         "Enable experimental rendering modes for form specs. Keep in mind that "
                         "some form specs are always rendered in the frontend, regardless "
                         "of this setting."
                     ),
-                    choices=[
-                        ("frontend", "Frontend (vue rendering)"),
-                        ("backend", "Backend (legacy rendering)"),
+                    elements=[
+                        SingleChoiceElementExtended(
+                            name="frontend", title=Title("Frontend (vue rendering)")
+                        ),
+                        SingleChoiceElementExtended(
+                            name="backend", title=Title("Backend (legacy rendering)")
+                        ),
                     ],
+                    prefill=fs.DefaultValue("frontend"),
                 ),
             ),
-        ],
-        optional_keys=False,
+        },
     ),
 )
 
@@ -849,9 +853,8 @@ ConfigVariableInjectJsProfiling = ConfigVariable(
     group=ConfigVariableGroupDeveloperTools,
     primary_domain=ConfigDomainGUI,
     ident="inject_js_profiling_code",
-    valuespec=lambda context: Checkbox(
-        title=_("Inject JavaScript profiling code"),
-        default_value=False,
+    form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
+        title=Title("Inject JavaScript profiling code"),
     ),
 )
 
@@ -859,9 +862,9 @@ ConfigVariableProfilingOptions = ConfigVariable(
     group=ConfigVariableGroupDeveloperTools,
     primary_domain=ConfigDomainGUI,
     ident="profiling_options",
-    valuespec=lambda context: Dictionary(
-        title=_("Performance profiles"),
-        help=_(
+    form_spec=lambda context: fs.Dictionary(  # noqa: ARG005
+        title=Title("Performance profiles"),
+        help_text=Help(
             "Controls the performance-profile feature. When enabled, profiled GUI "
             "requests and <tt>cmk --profile</tt> runs are stored under "
             "<tt>var/check_mk/profiles</tt> and the <b>Setup > Maintenance > "
@@ -872,42 +875,40 @@ ConfigVariableProfilingOptions = ConfigVariable(
             "and is therefore restricted to administrators. Disable the feature "
             "on hardened deployments if untrusted admin sessions are a concern."
         ),
-        elements=[
-            (
-                "enabled",
-                Checkbox(
-                    title=_("Enable performance profiles"),
-                    label=_("Show the Performance profiles page and record profiled requests"),
-                    default_value=False,
+        elements={
+            "enabled": fs.DictElement(
+                required=True,
+                parameter_form=fs.BooleanChoice(
+                    title=Title("Enable performance profiles"),
+                    label=Label("Show the Performance profiles page and record profiled requests"),
                 ),
             ),
-            (
-                "max_count",
-                Integer(
-                    title=_("Maximum number of stored profiles"),
-                    help=_(
+            "max_count": fs.DictElement(
+                required=True,
+                parameter_form=fs.Integer(
+                    title=Title("Maximum number of stored profiles"),
+                    help_text=Help(
                         "When a new profile is saved and this count is exceeded, the "
                         "oldest profiles are removed first."
                     ),
-                    default_value=100,
-                    minvalue=1,
+                    prefill=fs.DefaultValue(100),
+                    custom_validate=[fs.validators.NumberInRange(min_value=1)],
                 ),
             ),
-            (
-                "max_age_days",
-                Integer(
-                    title=_("Maximum age of stored profiles"),
-                    help=_(
+            "max_age_days": fs.DictElement(
+                parameter_form=fs.Integer(
+                    title=Title("Maximum age of stored profiles"),
+                    help_text=Help(
                         "Profiles older than this are discarded on the next save or "
                         "housekeeping run. Leave unset to keep profiles indefinitely "
                         "(count-based cap still applies)."
                     ),
-                    unit=_("days"),
-                    minvalue=1,
+                    unit_symbol="days",
+                    prefill=fs.DefaultValue(1),
+                    custom_validate=[fs.validators.NumberInRange(min_value=1)],
                 ),
             ),
-        ],
-        optional_keys=["max_age_days"],
+        },
     ),
 )
 
@@ -915,16 +916,21 @@ ConfigVariableLoadFrontendVue = ConfigVariable(
     group=ConfigVariableGroupDeveloperTools,
     primary_domain=ConfigDomainGUI,
     ident="load_frontend_vue",
-    valuespec=lambda context: DropdownChoice(
-        title=_("Inject frontend_vue files via vite client"),
-        help=_(
+    form_spec=lambda context: SingleChoiceExtended[str](  # noqa: ARG005
+        title=Title("Inject frontend_vue files via vite client"),
+        help_text=Help(
             "If you change this to 'inject' and there is no vite dev server running "
             "you may not be able to deactivate this option via UI, so be careful!"
         ),
-        choices=[
-            ("static_files", "Load JavaScript from shipped, static files"),
-            ("inject", "Inject vite client to enable auto hot reloading"),
+        elements=[
+            SingleChoiceElementExtended(
+                name="static_files", title=Title("Load JavaScript from shipped, static files")
+            ),
+            SingleChoiceElementExtended(
+                name="inject", title=Title("Inject vite client to enable auto hot reloading")
+            ),
         ],
+        prefill=fs.DefaultValue("static_files"),
     ),
 )
 
@@ -932,7 +938,7 @@ ConfigVariableTableRowLimit = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="table_row_limit",
-    form_spec=lambda context: fs.Integer(
+    form_spec=lambda context: fs.Integer(  # noqa: ARG005
         title=Title("Limit the number of rows shown in tables"),
         help_text=Help(
             "Several pages which use tables to show data in rows, like the "
@@ -949,7 +955,7 @@ ConfigVariableStartURL = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="start_url",
-    form_spec=lambda context: fs.String(
+    form_spec=lambda context: fs.String(  # noqa: ARG005
         title=Title("Start URL to display in main frame"),
         help_text=Help(
             "When you point your browser to the Checkmk GUI, usually the dashboard "
@@ -967,7 +973,7 @@ ConfigVariablePageHeading = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="page_heading",
-    form_spec=lambda context: fs.String(
+    form_spec=lambda context: fs.String(  # noqa: ARG005
         title=Title("Page title"),
         # astrein: disable=localization-named-placeholder
         help_text=Help(
@@ -982,7 +988,7 @@ ConfigVariableBIDefaultLayout = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="default_bi_layout",
-    form_spec=lambda context: fs.Dictionary(
+    form_spec=lambda context: fs.Dictionary(  # noqa: ARG005
         title=Title("Default BI visualization settings"),
         elements={
             "node_style": fs.DictElement(
@@ -1029,7 +1035,7 @@ ConfigVariablePagetitleDateFormat = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="pagetitle_date_format",
-    form_spec=lambda context: SingleChoiceExtended[str | None](
+    form_spec=lambda context: SingleChoiceExtended[str | None](  # noqa: ARG005
         title=Title("Date format for page titles"),
         help_text=Help(
             "When enabled, the headline of each page also displays the date in addition the time."
@@ -1047,7 +1053,7 @@ ConfigVariableEscapePluginOutput = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="escape_plugin_output",
-    form_spec=lambda context: fs.BooleanChoice(
+    form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
         title=Title("Escape HTML in service output (dangerous to deactivate - read help)"),
         help_text=Help(
             "By default, for security reasons, the GUI does not interpret any HTML "
@@ -1071,7 +1077,7 @@ ConfigVariableDrawRuleIcon = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="multisite_draw_ruleicon",
-    form_spec=lambda context: fs.BooleanChoice(
+    form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
         title=Title("Show icon linking to Setup parameter editor for services"),
         label=Label("Show Setup icon"),
         help_text=Help(
@@ -1086,7 +1092,7 @@ ConfigVariableVirtualHostTrees = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="virtual_host_trees",
-    form_spec=lambda context: fs.List(
+    form_spec=lambda context: fs.List(  # noqa: ARG005
         element_template=fs.Dictionary(
             elements={
                 "id": fs.DictElement(
@@ -1211,7 +1217,7 @@ ConfigVariableRescheduleTimeout = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="reschedule_timeout",
-    form_spec=lambda context: fs.Float(
+    form_spec=lambda context: fs.Float(  # noqa: ARG005
         title=Title("Timeout for rescheduling checks in graphical user interface (GUI)"),
         help_text=Help(
             'When you reschedule a check by clicking on the "arrow"-icon '
@@ -1228,7 +1234,7 @@ ConfigVariableSidebarUpdateInterval = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="sidebar_update_interval",
-    form_spec=lambda context: fs.Float(
+    form_spec=lambda context: fs.Float(  # noqa: ARG005
         title=Title("Interval of sidebar status updates"),
         help_text=Help(
             "The information provided by the sidebar snap-ins is refreshed in a regular "
@@ -1245,7 +1251,7 @@ ConfigVariableSidebarNotifyInterval = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="sidebar_notify_interval",
-    form_spec=lambda context: OptionalChoice(
+    form_spec=lambda context: OptionalChoice(  # noqa: ARG005
         parameter_form=fs.Float(
             custom_validate=[fs.validators.NumberInRange(min_value=10.0)],
             unit_symbol="sec",
@@ -1264,7 +1270,7 @@ ConfigVariableiAdHocDowntime = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="adhoc_downtime",
-    form_spec=lambda context: OptionalChoice(
+    form_spec=lambda context: OptionalChoice(  # noqa: ARG005
         parameter_form=fs.Dictionary(
             elements={
                 "duration": fs.DictElement(
@@ -1304,7 +1310,7 @@ ConfigVariableAuthByHTTPHeader = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="auth_by_http_header",
-    form_spec=lambda context: OptionalChoice(
+    form_spec=lambda context: OptionalChoice(  # noqa: ARG005
         parameter_form=fs.String(
             label=Label("HTTP request header variable"),
             help_text=Help(
@@ -1346,7 +1352,7 @@ EnableLoginViaGet = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="enable_login_via_get",
-    form_spec=lambda context: fs.BooleanChoice(
+    form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
         title=Title("Login via GET requests"),
         help_text=Help(
             "Using the GET method to authenticate against login.py "
@@ -1362,7 +1368,7 @@ ConfigVariableStalenessThreshold = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="staleness_threshold",
-    form_spec=lambda context: fs.Float(
+    form_spec=lambda context: fs.Float(  # noqa: ARG005
         title=Title("Staleness value to mark hosts / services stale"),
         help_text=Help(
             "The staleness value of a host / service is calculated by measuring the "
@@ -1400,7 +1406,7 @@ ConfigVariableLoginScreen = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="login_screen",
-    form_spec=lambda context: DictionaryExtended(
+    form_spec=lambda context: DictionaryExtended(  # noqa: ARG005
         title=Title("Customize login screen"),
         elements={
             "hide_version": fs.DictElement(
@@ -1488,7 +1494,7 @@ ConfigVariableUserLocalizations = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="user_localizations",
-    form_spec=lambda context: _fs_keyed_by_first_tuple_element(
+    form_spec=lambda context: _fs_keyed_by_first_tuple_element(  # noqa: ARG005
         fs.List[tuple[object, ...]](
             element_template=FSTuple(
                 elements=[
@@ -1520,7 +1526,7 @@ ConfigVariableUserIconsAndActions = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="user_icons_and_actions",
-    form_spec=lambda context: _fs_keyed_by_first_tuple_element(
+    form_spec=lambda context: _fs_keyed_by_first_tuple_element(  # noqa: ARG005
         fs.List[tuple[object, ...]](
             element_template=FSTuple(
                 elements=[
@@ -1639,7 +1645,7 @@ ConfigVariableCustomServiceAttributes = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="custom_service_attributes",
-    form_spec=lambda context: TransformDataForLegacyFormatOrRecomposeFunction(
+    form_spec=lambda context: TransformDataForLegacyFormatOrRecomposeFunction(  # noqa: ARG005
         wrapped_form_spec=fs.List(
             element_template=fs.Dictionary(
                 elements={
@@ -1794,7 +1800,7 @@ ConfigVariableUserDowntimeTimeranges = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="user_downtime_timeranges",
-    form_spec=lambda context: ListExtended(
+    form_spec=lambda context: ListExtended(  # noqa: ARG005
         element_template=fs.Dictionary(
             elements={
                 "title": fs.DictElement(
@@ -1862,7 +1868,7 @@ ConfigVariableBuiltinIconVisibility = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="builtin_icon_visibility",
-    form_spec=lambda context: _fs_keyed_by_first_tuple_element(
+    form_spec=lambda context: _fs_keyed_by_first_tuple_element(  # noqa: ARG005
         fs.List[tuple[object, ...]](
             element_template=FSTuple(
                 elements=[
@@ -1930,7 +1936,7 @@ ConfigVariableServiceViewGrouping = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="service_view_grouping",
-    form_spec=lambda context: fs.List(
+    form_spec=lambda context: fs.List(  # noqa: ARG005
         element_template=fs.Dictionary(
             elements={
                 "title": fs.DictElement(
@@ -1981,7 +1987,7 @@ ConfigVariableAcknowledgeProblems = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="acknowledge_problems",
-    form_spec=lambda context: fs.Dictionary(
+    form_spec=lambda context: fs.Dictionary(  # noqa: ARG005
         title=Title("Acknowledge problems"),
         elements={
             "ack_sticky": fs.DictElement(
@@ -2033,7 +2039,7 @@ ConfigVariableDefaultTemperatureUnit = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="default_temperature_unit",
-    form_spec=lambda context: SingleChoiceExtended(
+    form_spec=lambda context: SingleChoiceExtended(  # noqa: ARG005
         title=Title("Default temperature unit"),
         help_text=Help(
             "Set the default temperature unit used for graphs and Perf-O-Meters. The option can "
@@ -2054,22 +2060,22 @@ ConfigVariableTrustedCertificateAuthorities = ConfigVariable(
         )
     ),
     ident="trusted_certificate_authorities",
-    valuespec=lambda context: Dictionary(
-        title=_("Trusted certificate authorities for SSL"),
-        help=_(
+    form_spec=lambda context: fs.Dictionary(  # noqa: ARG005
+        title=Title("Trusted certificate authorities for SSL"),
+        help_text=Help(
             "Whenever a server component of Checkmk opens an SSL connection, it uses the "
             "certificate authorities configured here for verifying the SSL certificate of "
             "the destination server. This is used for example when performing Setup "
             "replication to remote sites or when special agents are communicating via HTTPS. "
             "The CA certificates configured here will be written to the CA bundle %(ca_bundle)s."
         )
-        % {"ca_bundle": site_neutral_path(ConfigDomainCACertificates.trusted_cas_file)},
-        elements=[
-            (
-                "use_system_wide_cas",
-                Checkbox(
-                    title=_("Use system wide CAs"),
-                    help=_(
+        % {"ca_bundle": str(site_neutral_path(ConfigDomainCACertificates.trusted_cas_file))},
+        elements={
+            "use_system_wide_cas": fs.DictElement(
+                required=True,
+                parameter_form=fs.BooleanChoice(
+                    title=Title("Use system wide CAs"),
+                    help_text=Help(
                         "All supported Linux distributions provide a mechanism of managing "
                         "trusted CAs. Depending on your Linux distributions the paths where "
                         "these CAs are stored and the commands to manage the CAs differ. "
@@ -2083,18 +2089,29 @@ ConfigVariableTrustedCertificateAuthorities = ConfigVariable(
                             ConfigDomainCACertificates.system_wide_trusted_ca_search_paths
                         )
                     },
-                    label=_("Trust system wide configured CAs"),
+                    label=Label("Trust system wide configured CAs"),
                 ),
             ),
-            (
-                "trusted_cas",
-                ListOfCAs(
-                    title=_("Manually added"),
-                    allow_empty=True,
+            "trusted_cas": fs.DictElement(
+                required=True,
+                parameter_form=ListExtended(
+                    title=Title("Manually added"),
+                    help_text=Help(
+                        "Only accepting HTTPS connections with a server which certificate "
+                        "is signed with one of the CAs that are listed here. That way it is "
+                        "guaranteed that it is communicating only with the authentic server. "
+                        "If you use self signed certificates for you server then enter that "
+                        "certificate here."
+                    ),
+                    element_template=CACertificate(
+                        title=Title("Certificate chain (root / intermediate certificate)")
+                    ),
+                    prefill=fs.DefaultValue([]),
+                    add_element_label=Label("Add new CA certificate or chain"),
+                    editable_order=False,
                 ),
             ),
-        ],
-        optional_keys=False,
+        },
     ),
 )
 
@@ -2103,10 +2120,12 @@ ConfigVariableSiteSubjectAlternativeNames = ConfigVariable(
     primary_domain=ConfigDomainSiteCertificate,
     ident="site_subject_alternative_names",
     need_restart=True,
-    valuespec=lambda context: ListOf(
-        valuespec=HostAddress(),
-        title=_("Site certificate subject alternative names"),
-        help=_(
+    form_spec=lambda context: ListExtended(  # noqa: ARG005
+        element_template=fs.String(
+            custom_validate=[HostAddressValidator()],
+        ),
+        title=Title("Site certificate subject alternative names"),
+        help_text=Help(
             "Set the host names or IP addresses of the site. "
             "The entries will be added as additional subject alternative names (SANs) to the site "
             "certificate, alongside the default SANs. "
@@ -2118,6 +2137,7 @@ ConfigVariableSiteSubjectAlternativeNames = ConfigVariable(
             "In distributed setups, configure SANs separately for each site in the distributed "
             "monitoring configuration."
         ),
+        prefill=fs.DefaultValue([]),
     ),
 )
 
@@ -2126,15 +2146,15 @@ ConfigVariableAgentControllerCertificates = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainGUI,
     ident="agent_controller_certificates",
-    valuespec=lambda context: Dictionary(
-        title=_("Agent certificates"),
-        help=_("Settings for certificates issued to registered agents."),
-        elements=[
-            (
-                "lifetime_in_months",
-                DropdownChoice(
-                    title=_("Lifetime of certificates"),
-                    help=_(
+    form_spec=lambda context: fs.Dictionary(  # noqa: ARG005
+        title=Title("Agent certificates"),
+        help_text=Help("Settings for certificates issued to registered agents."),
+        elements={
+            "lifetime_in_months": fs.DictElement(
+                required=True,
+                parameter_form=SingleChoiceExtended[int](
+                    title=Title("Lifetime of certificates"),
+                    help_text=Help(
                         "This setting limits the validity of agent certificates."
                         " Active agents (i.e., the Agent Controller is running as a daemon)"
                         " will automatically call the Checkmk site for renewal when"
@@ -2142,19 +2162,19 @@ ConfigVariableAgentControllerCertificates = ConfigVariable(
                         " setting, you can assure that registrations of inactive agents"
                         " expire after a given time."
                     ),
-                    choices=[
-                        (3, _("3 months")),
-                        (6, _("6 months")),
-                        (12, _("1 year")),
-                        (24, _("2 years")),
-                        (60, _("5 years")),
-                        (120, _("10 years")),
-                        (600, _("50 years")),
+                    elements=[
+                        SingleChoiceElementExtended(name=3, title=Title("3 months")),
+                        SingleChoiceElementExtended(name=6, title=Title("6 months")),
+                        SingleChoiceElementExtended(name=12, title=Title("1 year")),
+                        SingleChoiceElementExtended(name=24, title=Title("2 years")),
+                        SingleChoiceElementExtended(name=60, title=Title("5 years")),
+                        SingleChoiceElementExtended(name=120, title=Title("10 years")),
+                        SingleChoiceElementExtended(name=600, title=Title("50 years")),
                     ],
+                    prefill=fs.DefaultValue(3),
                 ),
             ),
-        ],
-        optional_keys=False,
+        },
     ),
 )
 
@@ -2162,9 +2182,9 @@ RestAPIETagLocking = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainGUI,
     ident="rest_api_etag_locking",
-    valuespec=lambda context: Checkbox(
-        title=_("REST API: Use HTTP ETags for optimistic locking"),
-        help=_(
+    form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
+        title=Title("REST API: Use HTTP ETags for optimistic locking"),
+        help_text=Help(
             "When multiple HTTP clients want to update an object at the same time, "
             "it can happen that the slower client will overwrite changes by the faster one. "
             "This is commonly referred to as the 'lost update problem'. To prevent this "
@@ -2193,7 +2213,7 @@ ConfigVariableWATOMaxSnapshots = ConfigVariable(
     group=ConfigVariableGroupWATO,
     primary_domain=ConfigDomainGUI,
     ident="wato_max_snapshots",
-    form_spec=lambda context: fs.Integer(
+    form_spec=lambda context: fs.Integer(  # noqa: ARG005
         title=Title("Number of configuration snapshots to keep"),
         help_text=Help(
             "Whenever you successfully activate changes a snapshot of the configuration "
@@ -2208,7 +2228,7 @@ ConfigVariableWATOActivateChangesCommentMode = ConfigVariable(
     group=ConfigVariableGroupWATO,
     primary_domain=ConfigDomainGUI,
     ident="wato_activate_changes_comment_mode",
-    form_spec=lambda context: SingleChoiceExtended[str](
+    form_spec=lambda context: SingleChoiceExtended[str](  # noqa: ARG005
         title=Title("Comment for activation of changes"),
         help_text=Help(
             "Whether or not Checkmk should ask the user for a comment before activating a "
@@ -2229,7 +2249,7 @@ ConfigVariableWATOActivationMethod = ConfigVariable(
     group=ConfigVariableGroupWATO,
     primary_domain=ConfigDomainGUI,
     ident="wato_activation_method",
-    form_spec=lambda context: SingleChoiceExtended[str](
+    form_spec=lambda context: SingleChoiceExtended[str](  # noqa: ARG005
         title=Title("Restart mode for Nagios"),
         help_text=Help("Restart or reload Nagios when changes are activated"),
         elements=[
@@ -2244,7 +2264,7 @@ ConfigVariableWATOHideFilenames = ConfigVariable(
     group=ConfigVariableGroupWATO,
     primary_domain=ConfigDomainGUI,
     ident="wato_hide_filenames",
-    form_spec=lambda context: fs.BooleanChoice(
+    form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
         title=Title("Hide internal folder names in Setup"),
         label=Label("hide folder names"),
         help_text=Help(
@@ -2260,7 +2280,7 @@ ConfigVariableWATOHideHosttags = ConfigVariable(
     group=ConfigVariableGroupWATO,
     primary_domain=ConfigDomainGUI,
     ident="wato_hide_hosttags",
-    form_spec=lambda context: fs.BooleanChoice(
+    form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
         title=Title("Hide host tags in Setup folder view"),
         label=Label("hide host tags"),
         help_text=Help("When enabled, host tags are no longer shown within the Setup folder view"),
@@ -2271,7 +2291,7 @@ ConfigVariableWATOHideVarnames = ConfigVariable(
     group=ConfigVariableGroupWATO,
     primary_domain=ConfigDomainGUI,
     ident="wato_hide_varnames",
-    form_spec=lambda context: fs.BooleanChoice(
+    form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
         title=Title("Hide names of configuration variables"),
         label=Label("hide variable names"),
         help_text=Help(
@@ -2285,7 +2305,7 @@ ConfigVariableWATOUseGit = ConfigVariable(
     group=ConfigVariableGroupWATO,
     primary_domain=ConfigDomainGUI,
     ident="wato_use_git",
-    form_spec=lambda context: fs.BooleanChoice(
+    form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
         title=Title("Use GIT version control for Setup"),
         label=Label("enable GIT version control"),
         help_text=Help(
@@ -2303,7 +2323,7 @@ ConfigVariableWATOPrettyPrintConfig = ConfigVariable(
     group=ConfigVariableGroupWATO,
     primary_domain=ConfigDomainGUI,
     ident="wato_pprint_config",
-    form_spec=lambda context: fs.BooleanChoice(
+    form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
         title=Title("Pretty-Print configuration files"),
         label=Label("pretty-print configuration files"),
         help_text=Help(
@@ -2318,7 +2338,7 @@ ConfigVariableWATOHideFoldersWithoutReadPermissions = ConfigVariable(
     group=ConfigVariableGroupWATO,
     primary_domain=ConfigDomainGUI,
     ident="wato_hide_folders_without_read_permissions",
-    form_spec=lambda context: fs.BooleanChoice(
+    form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
         title=Title("Hide folders without read permissions"),
         label=Label("hide folders without read permissions"),
         help_text=Help(
@@ -2333,7 +2353,7 @@ ConfigVariableWATOIconCategories = ConfigVariable(
     group=ConfigVariableGroupWATO,
     primary_domain=ConfigDomainGUI,
     ident="wato_icon_categories",
-    form_spec=lambda context: ListExtended(
+    form_spec=lambda context: ListExtended(  # noqa: ARG005
         element_template=FSTuple(
             elements=[
                 fs.String(
@@ -2373,6 +2393,8 @@ ConfigVariableWATOIconCategories = ConfigVariable(
 ConfigVariableGroupUserManagement = ConfigVariableGroup(
     title=_l("User management"),
     sort_index=40,
+    icon=IconNames.users,
+    description=_l("Configures user/authentication settings"),
 )
 
 
@@ -2380,7 +2402,7 @@ ConfigVariableDefaultDynamicVisualsPermission = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
     primary_domain=ConfigDomainGUI,
     ident="default_dynamic_visual_permission",
-    form_spec=lambda context: fs.SingleChoice(
+    form_spec=lambda context: fs.SingleChoice(  # noqa: ARG005
         title=Title("Default dynamic visuals permission"),
         help_text=Help(
             "Default permission for dynamic visuals (dashboards, views, etc.). If set to 'yes' "
@@ -2403,7 +2425,7 @@ ConfigVariableLogLogonFailures = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
     primary_domain=ConfigDomainGUI,
     ident="log_logon_failures",
-    form_spec=lambda context: fs.BooleanChoice(
+    form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
         title=Title("Logging of logon failures"),
         label=Label("Enable logging of logon failures"),
         help_text=Help(
@@ -2418,7 +2440,7 @@ ConfigVariableRequireTwoFactorAllUsers = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
     primary_domain=ConfigDomainGUI,
     ident="require_two_factor_all_users",
-    form_spec=lambda context: fs.BooleanChoice(
+    form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
         title=Title("Enforce two-factor authentication"),
         help_text=Help(
             "Enabling this option will enforce two-factor authentication for all users. "
@@ -2433,7 +2455,7 @@ ConfigVariableLockOnLogonFailures = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
     primary_domain=ConfigDomainGUI,
     ident="lock_on_logon_failures",
-    form_spec=lambda context: OptionalChoice(
+    form_spec=lambda context: OptionalChoice(  # noqa: ARG005
         parameter_form=fs.Integer(
             label=Label("Number of logon failures to lock the account"),
             prefill=fs.DefaultValue(1),
@@ -2458,7 +2480,7 @@ ConfigVariablePasswordPolicy = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
     primary_domain=ConfigDomainGUI,
     ident="password_policy",
-    form_spec=lambda context: fs.Dictionary(
+    form_spec=lambda context: fs.Dictionary(  # noqa: ARG005
         title=Title("Password policy for local accounts"),
         help_text=Help(
             "You can define some rules that every user password must meet. By default, "
@@ -2521,7 +2543,7 @@ ConfigVariableSessionManagement = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
     primary_domain=ConfigDomainGUI,
     ident="session_mgmt",
-    form_spec=lambda context: fs.Dictionary(
+    form_spec=lambda context: fs.Dictionary(  # noqa: ARG005
         title=Title("Session management"),
         elements={
             "max_duration": fs.DictElement(
@@ -2597,7 +2619,7 @@ ConfigVariableSingleUserSession = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
     primary_domain=ConfigDomainGUI,
     ident="single_user_session",
-    form_spec=lambda context: OptionalChoice(
+    form_spec=lambda context: OptionalChoice(  # noqa: ARG005
         parameter_form=FSAge(
             displayed_magnitudes=[fs.TimeMagnitude.MINUTE, fs.TimeMagnitude.HOUR],
             label=Label("Session timeout:"),
@@ -2621,7 +2643,7 @@ ConfigVariableLDAPQuarantinePeriod = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
     primary_domain=ConfigDomainGUI,
     ident="ldap_quarantine_period",
-    form_spec=lambda context: OptionalChoice(
+    form_spec=lambda context: OptionalChoice(  # noqa: ARG005
         parameter_form=FSAge(
             displayed_magnitudes=[fs.TimeMagnitude.DAY, fs.TimeMagnitude.HOUR],
             label=Label("Retention period:"),
@@ -2646,7 +2668,7 @@ ConfigVariableUserSecurityNotifications = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
     primary_domain=ConfigDomainGUI,
     ident="user_security_notification_duration",
-    form_spec=lambda context: fs.Dictionary(
+    form_spec=lambda context: fs.Dictionary(  # noqa: ARG005
         title=Title("User security notification duration"),
         help_text=Help(
             "If a user has an email address associated with their account, "
@@ -2728,7 +2750,7 @@ ConfigVariableDefaultUserProfile = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
     primary_domain=ConfigDomainGUI,
     ident="default_user_profile",
-    form_spec=lambda context: fs.Dictionary(
+    form_spec=lambda context: fs.Dictionary(  # noqa: ARG005
         title=Title("Default user profile"),
         help_text=Help(
             "With this option you can specify the attributes a user which is created during "
@@ -2809,10 +2831,12 @@ def find_usages_of_contact_group_in_default_user_profile(
 ConfigVariableGroupCheckExecution = ConfigVariableGroup(
     title=_l("Execution of checks"),
     sort_index=10,
+    icon=IconNames.reminders,
+    description=_l("Configures how checks technically run against hosts"),
 )
 
 
-def use_new_descriptions_for_form_spec(context: GlobalSettingsContext) -> fs.Dictionary:
+def use_new_descriptions_for_form_spec(context: GlobalSettingsContext) -> fs.Dictionary:  # noqa: ARG001
     def use_new_service_name(title: Title, label: Label | None = None) -> fs.DictElement[bool]:
         return fs.DictElement(
             required=True,
@@ -3010,7 +3034,7 @@ ConfigVariableTCPConnectTimeout = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
     primary_domain=ConfigDomainCore,
     ident="tcp_connect_timeout",
-    form_spec=lambda context: fs.Float(
+    form_spec=lambda context: fs.Float(  # noqa: ARG005
         title=Title("Agent TCP connect timeout"),
         help_text=Help(
             "Timeout for TCP connect to agent in seconds. If the connection "
@@ -3027,7 +3051,7 @@ ConfigVariableSimulationMode = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
     primary_domain=ConfigDomainCore,
     ident="simulation_mode",
-    form_spec=lambda context: fs.BooleanChoice(
+    form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
         title=Title("Simulation mode"),
         label=Label("Run in simulation mode"),
         help_text=Help(
@@ -3043,7 +3067,7 @@ ConfigVariableRestartLocking = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
     primary_domain=ConfigDomainCore,
     ident="restart_locking",
-    form_spec=lambda context: SingleChoiceExtended[None | str](
+    form_spec=lambda context: SingleChoiceExtended[None | str](  # noqa: ARG005
         title=Title("Simultaneous activation of changes"),
         help_text=Help(
             "When two users simultaneously try to activate the changes then "
@@ -3066,7 +3090,7 @@ ConfigVariableDelayPrecompile = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
     primary_domain=ConfigDomainCore,
     ident="delay_precompile",
-    form_spec=lambda context: fs.BooleanChoice(
+    form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
         title=Title("Delay precompiling of host checks"),
         label=Label("delay precompiling"),
         help_text=Help(
@@ -3084,7 +3108,7 @@ ConfigVariableClusterMaxCachefileAge = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
     primary_domain=ConfigDomainCore,
     ident="cluster_max_cachefile_age",
-    form_spec=lambda context: fs.Integer(
+    form_spec=lambda context: fs.Integer(  # noqa: ARG005
         title=Title("Maximum cache file age for clusters"),
         label=Label("seconds"),
         help_text=Help(
@@ -3101,7 +3125,7 @@ ConfigVariablePiggybackMaxCachefileAge = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
     primary_domain=ConfigDomainCore,
     ident="piggyback_max_cachefile_age",
-    form_spec=lambda context: FSAge(
+    form_spec=lambda context: FSAge(  # noqa: ARG005
         title=Title("Maximum age for piggyback files"),
         help_text=Help(
             "The maximum age for piggyback data from another host to be valid for monitoring. "
@@ -3115,7 +3139,7 @@ ConfigVariableCheckMKPerfdataWithTimes = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
     primary_domain=ConfigDomainCore,
     ident="check_mk_perfdata_with_times",
-    form_spec=lambda context: fs.BooleanChoice(
+    form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
         title=Title("Checkmk with times metrics"),
         label=Label("Return process times within metrics"),
         help_text=Help(
@@ -3131,7 +3155,7 @@ ConfigVariableUseDNSCache = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
     primary_domain=ConfigDomainCore,
     ident="use_dns_cache",
-    form_spec=lambda context: fs.BooleanChoice(
+    form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
         title=Title("Use DNS lookup cache"),
         label=Label("Prevent DNS lookups by use of a cache file"),
         help_text=Help(
@@ -3146,6 +3170,18 @@ ConfigVariableUseDNSCache = ConfigVariable(
         ),
     ),
 )
+
+
+def _snmp_backend_choices(edition: Edition) -> list[fs.SingleChoiceElement]:
+    """Offer the backends this installation can actually provide
+
+    We would rather discover the available backends (as the fetchers do) than
+    dispatch on the edition here, but that would mean a dependency of the GUI on
+    the check engine, which we do not want at the moment.
+    """
+    classic = fs.SingleChoiceElement(name="classic", title=Title("Use classic SNMP backend"))
+    inline = fs.SingleChoiceElement(name="inline", title=Title("Use inline SNMP backend"))
+    return [classic] if edition is Edition.COMMUNITY else [inline, classic]
 
 
 def _transform_snmp_backend_from_valuespec(
@@ -3170,12 +3206,9 @@ ConfigVariableChooseSNMPBackend = ConfigVariable(
     ident="snmp_backend_default",
     form_spec=lambda context: fs.SingleChoice(
         title=Title("Choose SNMP backend"),
-        elements=[
-            fs.SingleChoiceElement(name="classic", title=Title("Use classic SNMP backend")),
-            fs.SingleChoiceElement(name="inline", title=Title("Use inline SNMP backend")),
-        ],
+        elements=_snmp_backend_choices(context.edition_of_local_site),
         help_text=Help(
-            "By default, Checkmk uses command line calls of Net-SNMP tools like snmpget or snmpwalk to gather SNMP information. For each request a new command line program is being executed. It is now possible to use the inline SNMP implementation which calls the respective libraries directly via its Python bindings. This should increase the performance of SNMP checks in a significant way. Both SNMP modes are features which improve the performance for large installations and are only available via our subscription."
+            "The SNMP backend to use for all SNMP hosts. The classic backend uses command line calls of Net-SNMP tools like snmpget or snmpwalk to gather SNMP information, executing a new command line program for each request. The inline backend, which is shipped in the commercial editions, calls the respective libraries directly via their Python bindings instead. This increases the performance of SNMP checks in a significant way, especially in large installations. Only the backends this installation provides are offered here. You can override this setting for individual hosts with the ruleset 'Hosts using a specific SNMP Backend'."
         ),
         prefill=fs.DefaultValue("classic"),
         migrate=_migrate_snmp_backend_default,
@@ -3186,7 +3219,7 @@ ConfigVariableSNMPwalkDownloadTimeout = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
     primary_domain=ConfigDomainGUI,
     ident="snmp_walk_download_timeout",
-    form_spec=lambda context: FSAge(
+    form_spec=lambda context: FSAge(  # noqa: ARG005
         title=Title("SNMP walk download timeout"),
         help_text=Help(
             "This configuration option sets the timeout used when downloading "
@@ -3211,7 +3244,7 @@ ConfigVariableHTTPProxies = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
     primary_domain=ConfigDomainCore,
     ident="http_proxies",
-    form_spec=lambda context: TransformDataForLegacyFormatOrRecomposeFunction(
+    form_spec=lambda context: TransformDataForLegacyFormatOrRecomposeFunction(  # noqa: ARG005
         wrapped_form_spec=fs.List(
             title=Title("HTTP proxies"),
             help_text=Help(
@@ -3279,6 +3312,10 @@ def _validate_proxies(value: Sequence[Mapping[str, object]]) -> None:
 ConfigVariableGroupServiceDiscovery = ConfigVariableGroup(
     title=_l("Service discovery"),
     sort_index=4,
+    icon=IconNames.service_discovery,
+    description=_l(
+        "Configures service discovery behavior - how often it runs and how results are treated"
+    ),
 )
 
 
@@ -3286,7 +3323,7 @@ ConfigVariableInventoryCheckInterval = ConfigVariable(
     group=ConfigVariableGroupServiceDiscovery,
     primary_domain=ConfigDomainCore,
     ident="inventory_check_interval",
-    form_spec=lambda context: OptionalChoice(
+    form_spec=lambda context: OptionalChoice(  # noqa: ARG005
         title=Title("Enable regular service discovery checks (deprecated)"),
         help_text=Help(
             "If enabled, Checkmk will create one additional service per host "
@@ -3311,7 +3348,7 @@ ConfigVariableInventoryCheckSeverity = ConfigVariable(
     group=ConfigVariableGroupServiceDiscovery,
     primary_domain=ConfigDomainCore,
     ident="inventory_check_severity",
-    form_spec=lambda context: SingleChoiceExtended[int](
+    form_spec=lambda context: SingleChoiceExtended[int](  # noqa: ARG005
         title=Title("Severity of failed service discovery check"),
         help_text=Help(
             "Please select which alarm state the service discovery check services "
@@ -3331,7 +3368,7 @@ ConfigVariableInventoryCheckAutotrigger = ConfigVariable(
     group=ConfigVariableGroupServiceDiscovery,
     primary_domain=ConfigDomainCore,
     ident="inventory_check_autotrigger",
-    form_spec=lambda context: fs.BooleanChoice(
+    form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
         title=Title("Service discovery triggers service discovery check"),
         label=Label(
             "Automatically schedule service discovery check after service configuration changes"
@@ -4626,7 +4663,7 @@ def _migrate_automatic_rediscover_parameters(
     # already migrated to new format
     if isinstance(param, tuple):
         if param[0] == "update_everything" and param[1] is None:
-            return param[0], {
+            return param[0], {  # type: ignore[unreachable]
                 "add_new_services": True,
                 "remove_vanished_services": True,
                 "update_changed_service_labels": True,
@@ -5235,7 +5272,7 @@ ExtraServiceConfIconImage = ServiceRulespec(
 )
 
 
-def UserIconOrAction(title: str, help: str) -> DropdownChoice:
+def UserIconOrAction(title: str, help: str) -> DropdownChoice:  # noqa: A002
     empty_text = _(
         "In order to be able to choose actions here, you need to "
         '<a href="%(url)s">define your own actions</a>.'
@@ -5604,72 +5641,51 @@ SnmpTiming = HostRulespec(
 )
 
 
-def _help_non_inline_snmp_hosts() -> str:
-    return _(
-        "Checkmk has an efficient SNMP implementation called inline SNMP "
-        "which reduces the load produced by SNMP monitoring on the "
-        "monitoring host significantly. This option is enabled by default "
-        "for all SNMP hosts and it is a good idea to keep this default "
-        "setting. However, there are SNMP devices which have problems "
-        "with this SNMP implementation. You can use this rule to disable "
-        "inline SNMP for these hosts."
-    )
-
-
-NonInlineSnmpHosts = BinaryHostRulespec(
-    group=RulespecGroupAgentSNMP,
-    help_func=_help_non_inline_snmp_hosts,
-    name="non_inline_snmp_hosts",
-    title=lambda: _("Hosts not using inline SNMP"),
-    is_deprecated=True,
-)
-
-
 def _help_snmp_backend() -> str:
     return _(
-        "Checkmk has an efficient SNMP implementation called inline SNMP "
-        "which reduces the load produced by SNMP monitoring on the "
-        "monitoring host significantly. Inline SNMP is enabled by default "
-        "for all SNMP hosts and it is a good idea to keep this default "
-        "setting. However, there are SNMP devices which have problems "
-        "with some SNMP implementations. You can use this rule to select "
-        "the SNMP backend for these hosts."
+        "The backend used for all SNMP hosts is configured with the global "
+        "setting 'Choose SNMP backend'. Some SNMP devices have problems with "
+        "one or the other SNMP implementation, so you can use this rule to "
+        "select the backend for these hosts. The classic backend calls the "
+        "Net-SNMP command line tools, starting a new program for every "
+        "request. The inline backend, which is shipped in the commercial "
+        "editions, calls the respective libraries directly via their Python "
+        "bindings and reduces the load on the monitoring host significantly. "
+        "Only the backends this installation provides are offered here."
     )
 
 
 def _transform_snmp_backend_hosts_to_valuespec(backend: object) -> SNMPBackendEnum:
-    # During 2.0.0 Beta you could configure inline_legacy backend that's why
-    # we need to accept this as value as well.
-    if backend in [False, "inline", "inline_legacy"]:
-        return SNMPBackendEnum.INLINE
-    if backend in [True, "classic", "pysnmp"]:
-        # We dropped pysnmp during the 2.1 beta because it is currently slow
-        # and unreliable.
-        return SNMPBackendEnum.CLASSIC
-    raise MKConfigError("SNMPBackendEnum %r not implemented" % backend)
+    match backend:
+        case "inline":
+            return SNMPBackendEnum.INLINE
+        case "classic":
+            return SNMPBackendEnum.CLASSIC
+        case other:
+            raise MKConfigError(f"SNMPBackendEnum {other!r} not implemented")
 
 
-def _valuespec_snmp_backend() -> Transform:
+def _valuespec_snmp_backend(edition: Edition) -> Transform:
+    classic = (SNMPBackendEnum.CLASSIC, _("Use classic backend"))
+    inline = (SNMPBackendEnum.INLINE, _("Use inline SNMP backend"))
     return Transform(
         valuespec=DropdownChoice(
             title=_("Choose SNMP backend"),
-            choices=[
-                (SNMPBackendEnum.INLINE, _("Use inline SNMP backend")),
-                (SNMPBackendEnum.CLASSIC, _("Use classic backend")),
-            ],
+            choices=[classic] if edition is Edition.COMMUNITY else [inline, classic],
         ),
         to_valuespec=_transform_snmp_backend_hosts_to_valuespec,
         from_valuespec=_transform_snmp_backend_from_valuespec,
     )
 
 
-SnmpBackendHosts = HostRulespec(
-    valuespec=_valuespec_snmp_backend,
-    group=RulespecGroupAgentSNMP,
-    help_func=_help_snmp_backend,
-    name="snmp_backend_hosts",
-    title=lambda: _("Hosts using a specific SNMP backend"),
-)
+def make_snmp_backend_hosts_rulespec(edition: Edition) -> HostRulespec:
+    return HostRulespec(
+        valuespec=lambda: _valuespec_snmp_backend(edition),
+        group=RulespecGroupAgentSNMP,
+        help_func=_help_snmp_backend,
+        name="snmp_backend_hosts",
+        title=lambda: _("Hosts using a specific SNMP backend"),
+    )
 
 
 def _help_usewalk_hosts() -> str:
@@ -5818,8 +5834,8 @@ def _migrate_encryption_settings(p: Mapping[str, Any]) -> str | None:
     'this-is-also-for-the-agent'
 
     """
-    if p is None or isinstance(p, str):  # type: ignore[redundant-expr]
-        return p
+    if p is None or isinstance(p, str):  # type: ignore[redundant-expr, unreachable]
+        return p  # type: ignore[unreachable]
     return p["passphrase"] if "use_regular" in p else None
 
 

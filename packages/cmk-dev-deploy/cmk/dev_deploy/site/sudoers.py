@@ -23,8 +23,6 @@ prompt returns on the next run.  There is deliberately no SSH path —
 the sudoers rule is the single channel to the site user.
 """
 
-from __future__ import annotations
-
 import os
 import subprocess
 import sys
@@ -72,7 +70,7 @@ def probe(site_name: str) -> bool:
             check=False,
             timeout=_PROBE_TIMEOUT,
         )
-    except (subprocess.TimeoutExpired, OSError):
+    except subprocess.TimeoutExpired, OSError:
         return False
     return result.returncode == 0
 

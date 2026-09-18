@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 # <<<jenkins_instance>>>
 # {"quietingDown": false, "nodeDescription": "the master Jenkins node",
@@ -55,17 +54,17 @@ agent_section_jenkins_instance = AgentSection(
 )
 
 
-def discover_jenkins_instance(section: JenkinsInstance) -> DiscoveryResult:
+def discover_jenkins_instance(section: JenkinsInstance) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 
-def check_jenkins_instance(params: dict, section: JenkinsInstance) -> CheckResult:
+def check_jenkins_instance(params: dict, section: JenkinsInstance) -> CheckResult:  # noqa: ARG001
     if not section:
         return
 
     if (instance_description := section.get("nodeDescription")) is not None:
         if not isinstance(instance_description, str):
-            instance_description = str(instance_description)
+            instance_description = str(instance_description)  # type: ignore[unreachable]
 
         yield Result(state=State.OK, summary=f"Description: {instance_description.title()}")
 

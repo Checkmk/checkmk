@@ -15,17 +15,11 @@ export function overviewMultiplier(spanSeconds: number): number {
   return 3
 }
 
-function clampExtent(start: number, end: number, now: number, earliest?: number): TimeInterval {
+function clampExtent(start: number, end: number, now: number, earliest = -Infinity): TimeInterval {
   const width = end - start
-  if (end > now) {
-    end = now
-    start = now - width
-  }
-  if (earliest !== undefined && start < earliest) {
-    start = earliest
-    end = earliest + width
-  }
-  return { start, end }
+  const latestStart = now - width
+  const startWithinBounds = Math.max(earliest, Math.min(start, latestStart))
+  return { start: startWithinBounds, end: Math.min(now, startWithinBounds + width) }
 }
 
 function centerExtent(window: TimeInterval, width: number): TimeInterval {

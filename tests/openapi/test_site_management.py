@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from unittest.mock import MagicMock
 
@@ -75,15 +74,15 @@ def test_login_replication_enabled(
     monkeypatch.setattr("cmk.gui.fields.definitions.load_users", lambda: ["cmkadmin"])
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.do_site_login",
-        lambda site_id, username, password, debug: "watosecret",
+        lambda site_id, username, password, debug: "watosecret",  # noqa: ARG005
     )
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.trigger_remote_certs_creation",
-        lambda site_id, settings, force, debug: None,
+        lambda site_id, settings, force, debug: None,  # noqa: ARG005
     )
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.distribute_license_to_remotes",
-        lambda logger, remote_automation_configs: None,
+        lambda logger, remote_automation_configs: None,  # noqa: ARG005
     )
 
     clients.SiteManagement.login(
@@ -138,15 +137,15 @@ def test_login_replication_disabled(
     monkeypatch.setattr("cmk.gui.fields.definitions.load_users", lambda: ["cmkadmin"])
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.do_site_login",
-        lambda site_id, username, password, debug: "watosecret",
+        lambda site_id, username, password, debug: "watosecret",  # noqa: ARG005
     )
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.trigger_remote_certs_creation",
-        lambda site_id, settings, force, debug: None,
+        lambda site_id, settings, force, debug: None,  # noqa: ARG005
     )
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.distribute_license_to_remotes",
-        lambda logger, remote_automation_configs: None,
+        lambda logger, remote_automation_configs: None,  # noqa: ARG005
     )
 
     # TODO fix this.  We shouldn't return a 500 on login failure
@@ -175,7 +174,7 @@ def test_login_site_problem(
     monkeypatch.setattr("cmk.gui.fields.definitions.load_users", lambda: ["cmkadmin"])
 
     class MockLoginException:
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: object, **kwargs: object) -> None:  # noqa: ARG002
             raise Exception("There was a problem logging in.")
 
     monkeypatch.setattr(
@@ -212,7 +211,7 @@ def test_delete_site_connection_problem(
     monkeypatch: MonkeyPatch,
 ) -> None:
     class MockDeleteException:
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: object, **kwargs: object) -> None:  # noqa: ARG002
             raise MKUserError(varname=None, message="There was a problem deleting that site.")
 
     monkeypatch.setattr(
@@ -244,6 +243,27 @@ def test_create_site_connection_records_pending_change_for_new_site(
     )
 
 
+@pytest.mark.parametrize(
+    "site_id",
+    [
+        pytest.param("site-1", id="dash"),
+        pytest.param("1site", id="leading_digit"),
+        pytest.param("a" * 17, id="too_long"),
+        pytest.param("remote\n", id="trailing_newline"),
+    ],
+)
+def test_create_site_connection_with_invalid_site_id(
+    clients: ClientRegistry,
+    site_id: str,
+) -> None:
+    config = _default_config()
+    config["basic_settings"]["site_id"] = site_id
+    clients.SiteManagement.create(
+        site_config=config,
+        expect_ok=False,
+    ).assert_status_code(400)
+
+
 def test_create_site_connection_that_already_exists(
     clients: ClientRegistry,
 ) -> None:
@@ -263,6 +283,9 @@ def test_create_site_connection_missing_config(
     key: str,
 ) -> None:
     config = _default_config()
+    # NOTE: The whole test is very questionable from a typing perspecitve: Even if we make the type
+    # of `key` stricter via a `Literal`, things are incorrect: The key/value pairs we remove are
+    # required, so the whole typing is a lie here.
     config.pop(key)  # type: ignore[misc]
     clients.SiteManagement.create(
         site_config=config,
@@ -298,6 +321,20 @@ def test_update_site_connection(clients: ClientRegistry) -> None:
     extensions = resp.json["extensions"]
     extensions.pop("logged_in", None)
     assert extensions == config
+
+
+def test_update_site_connection_ignores_site_id_from_body(clients: ClientRegistry) -> None:
+    """The site ID from the path wins, the one in the request body is ignored."""
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+
+    config["basic_settings"]["site_id"] = "NO_SITE"
+    resp = clients.SiteManagement.update(site_id=site_id, site_config=config)
+
+    assert resp.json["id"] == site_id
+    assert resp.json["extensions"]["basic_settings"]["site_id"] == site_id
+    stored = clients.SiteManagement.get(site_id=site_id)
+    assert stored.json["extensions"]["basic_settings"]["site_id"] == site_id
 
 
 def test_update_site_connection_that_doesnt_exist(
@@ -669,10 +706,8 @@ def _saml_connection(monkeypatch: MonkeyPatch) -> None:
     )
 
 
-def test_site_connection_saml_authentication_connection_round_trip(
-    clients: ClientRegistry,
-    saml_connection: None,
-) -> None:
+@pytest.mark.usefixtures("saml_connection")
+def test_site_connection_saml_authentication_connection_round_trip(clients: ClientRegistry) -> None:
     config, site_id = _default_config_with_site_id()
     remote_site_url = config["configuration_connection"]["url_of_remote_site"]
     clients.SiteManagement.create(site_config=config)
@@ -716,9 +751,9 @@ def test_site_connection_saml_authentication_connection_round_trip(
     ]
 
 
+@pytest.mark.usefixtures("saml_connection")
 def test_update_site_connection_unknown_saml_authentication_connection_400(
     clients: ClientRegistry,
-    saml_connection: None,
 ) -> None:
     config, site_id = _default_config_with_site_id()
     clients.SiteManagement.create(site_config=config)
@@ -733,9 +768,9 @@ def test_update_site_connection_unknown_saml_authentication_connection_400(
     ).assert_status_code(400)
 
 
+@pytest.mark.usefixtures("saml_connection")
 def test_update_site_connection_saml_authentication_connection_needs_global_permission_403(
     clients: ClientRegistry,
-    saml_connection: None,
 ) -> None:
     """Holding "wato.sites" alone must not reveal which SAML connections exist."""
     config, site_id = _default_config_with_site_id()
@@ -1148,11 +1183,11 @@ def test_remote_site_logged_in(clients: ClientRegistry, monkeypatch: MonkeyPatch
     monkeypatch.setattr("cmk.gui.fields.definitions.load_users", lambda: ["cmkadmin"])
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.do_site_login",
-        lambda site_id, username, password, debug: "watosecret",
+        lambda site_id, username, password, debug: "watosecret",  # noqa: ARG005
     )
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.trigger_remote_certs_creation",
-        lambda site_id, settings, force, debug: None,
+        lambda site_id, settings, force, debug: None,  # noqa: ARG005
     )
     config, site_id = _default_config_with_site_id()
     clients.SiteManagement.create(site_config=config)

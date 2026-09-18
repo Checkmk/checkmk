@@ -28,8 +28,7 @@ from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.resulttype import OK
 from cmk.checkengine.checkerplugin import ConfiguredService
-from cmk.checkengine.discovery import ABCDiscoveryConfig, commandline_discovery
-from cmk.checkengine.discovery._autochecks import AutochecksStore
+from cmk.checkengine.discovery import ABCDiscoveryConfig, AutochecksStore, commandline_discovery
 from cmk.checkengine.fetcher_abc import Mode
 from cmk.checkengine.filecache import AgentFileCache, FileCacheMode, MaxAge
 from cmk.checkengine.helper_interface import SourceInfo
@@ -89,7 +88,7 @@ def parser(config: ParserConfig) -> CMKParser:
 
 
 def summarizer(hostname_: HostName) -> CMKSummarizer:
-    def _summary_config(host_name: HostName, source_id: str) -> SummaryConfig:
+    def _summary_config(host_name: HostName, source_id: str) -> SummaryConfig:  # noqa: ARG001
         return SummaryConfig(
             exit_spec={},
             piggyback_config=PiggybackConfig(host_name, ()),
@@ -156,6 +155,35 @@ class _EmptyDiscoveryConfig(ABCDiscoveryConfig):
         return [] if rule_set_type == "all" else {}
 
 
+class _SitelessAutochecksConfig:
+    """Minimal AutochecksConfig for the siteless discovery: no disabled-services rules, no
+    clustering and no service labels are configured in this context."""
+
+    def __init__(
+        self,
+        check_plugin_ignored: Callable[[HostName, CheckPluginName], bool],
+        check_plugins,
+    ) -> None:
+        self._check_plugin_ignored = check_plugin_ignored
+        self._check_plugins = check_plugins
+
+    def ignore_plugin(self, host_name: HostName, plugin_name: CheckPluginName) -> bool:
+        return self._check_plugin_ignored(host_name, plugin_name)
+
+    def ignore_service(self, host_name, entry) -> bool:  # noqa: ARG002
+        return False
+
+    def effective_host(self, host_name: HostName, entry) -> HostName:  # noqa: ARG002
+        return host_name
+
+    def service_description(self, host_name, entry):  # noqa: ARG002
+        service_name = self._check_plugins[entry.check_plugin_name].service_name
+        return service_name if entry.item is None else service_name % entry.item
+
+    def service_labels(self, host_name, entry) -> Mapping[str, str]:  # noqa: ARG002
+        return {}
+
+
 def discover_services(
     hostname: HostName,
     agent_data_filename: str,
@@ -166,7 +194,7 @@ def discover_services(
     source_info: SourceInfo,
 ) -> Sequence[ConfiguredService]:
     def _fetcher():
-        return lambda *a, **ka: [(source_info, get_raw_data(DUMPS_DIR / agent_data_filename))]
+        return lambda *a, **ka: [(source_info, get_raw_data(DUMPS_DIR / agent_data_filename))]  # noqa: ARG005
 
     commandline_discovery(
         hostname,
@@ -176,7 +204,7 @@ def discover_services(
         section_plugins=SectionPluginMapper(
             {**agent_based_plugins.agent_sections, **agent_based_plugins.snmp_sections}
         ),
-        section_error_handling=lambda *a: "",
+        section_error_handling=lambda *a: "",  # noqa: ARG005
         host_label_plugins=HostLabelPluginMapper(
             discovery_config=_EmptyDiscoveryConfig(),
             sections={
@@ -189,7 +217,10 @@ def discover_services(
             check_plugins=agent_based_plugins.check_plugins,
         ),
         run_plugin_names=EVERYTHING,
-        ignore_plugin=check_plugin_ignored,
+        autochecks_config=_SitelessAutochecksConfig(
+            check_plugin_ignored, agent_based_plugins.check_plugins
+        ),
+        enforced_services=frozenset(),
         arg_only_new=False,
         only_host_labels=False,
         on_error=OnError.RAISE,

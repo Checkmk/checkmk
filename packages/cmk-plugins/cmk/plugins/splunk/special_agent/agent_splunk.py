@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 """agent_splunk
 
 Checkmk special agent for Splunk
@@ -14,8 +10,8 @@ Checkmk special agent for Splunk
 
 import argparse
 import sys
-from collections.abc import Callable, Sequence
-from typing import Any, NamedTuple
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from typing import Any, NamedTuple, ReadOnly, TypedDict
 
 import requests
 import urllib3
@@ -31,10 +27,63 @@ USER_AGENT = f"checkmk-special-splunk-{__version__}"
 PASSWORD_OPTION = "password"
 
 
+# These are silly types, just crafted to match the assumptions the code makes.
+# They are currently only used when typing function arguments.
+# We're always passing the `Any`s returned by json.loads, no actual parsing.
+# At least it makes the assumptions explicit and lets us remove the module level suppressions.
+
+
+class _Entry[C](TypedDict):
+    name: ReadOnly[object]
+    content: ReadOnly[C]
+
+
+class _LicenseState(TypedDict):
+    label: ReadOnly[str]
+    max_violations: ReadOnly[object]
+    window_period: ReadOnly[object]
+    expiration_time: ReadOnly[object]
+    quota: ReadOnly[object]
+    status: ReadOnly[object]
+
+
+class _LicenseUsage(TypedDict):
+    quota: ReadOnly[object]
+    slaves_usage_bytes: ReadOnly[object]
+
+
+class _SystemMsg(TypedDict):
+    severity: ReadOnly[object]
+    server: ReadOnly[object]
+    timeCreated_iso: ReadOnly[object]
+    message: ReadOnly[object]
+
+
+class _JobsEntry(TypedDict):
+    published: object
+    author: object
+    content: _Jobs
+
+
+class _Jobs(TypedDict):
+    request: ReadOnly[Mapping[str, object]]
+    dispatchState: ReadOnly[object]
+    isZombie: ReadOnly[object]
+
+
+class _Health(TypedDict):
+    health: ReadOnly[object]
+    features: ReadOnly[Mapping[str, Mapping[str, Mapping[str, Mapping[str, object]]]]]
+
+
+class _Alert(TypedDict):
+    triggered_alert_count: ReadOnly[object]
+
+
 class Section(NamedTuple):
     name: str
     uri: str
-    handler: Callable[[Any], None]
+    handler: Callable[[Any], None]  # type: ignore[explicit-any]
 
 
 def main(argv: None | Sequence[str] = None) -> None | int:
@@ -86,7 +135,7 @@ def main(argv: None | Sequence[str] = None) -> None | int:
     return None
 
 
-def handle_request(args: argparse.Namespace, sections: Sequence[Section]) -> None | int:
+def handle_request(args: argparse.Namespace, sections: Sequence[Section]) -> object:  # type: ignore[explicit-any]
     url_base = "%s://%s:%d" % (args.proto, args.hostname, args.port)
     password = resolve_secret_option(args, PASSWORD_OPTION)
 
@@ -120,7 +169,7 @@ def handle_request(args: argparse.Namespace, sections: Sequence[Section]) -> Non
     return None
 
 
-def parse_arguments(argv):
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     prog, description = __doc__.split("\n\n", maxsplit=1)
     parser = argparse.ArgumentParser(
         prog=prog, description=description, formatter_class=argparse.RawTextHelpFormatter
@@ -159,7 +208,7 @@ def parse_arguments(argv):
     return parser.parse_args(argv)
 
 
-def handle_license_state(value):
+def handle_license_state(value: Iterable[_Entry[_LicenseState]]) -> None:
     for entries in value:
         sys.stdout.write(
             "%s %s %s %s %s %s\n"
@@ -180,7 +229,7 @@ def handle_license_state(value):
         )
 
 
-def handle_license_usage(value):
+def handle_license_usage(value: Iterable[_Entry[_LicenseUsage]]) -> None:
     for entries in value:
         sys.stdout.write(
             "%s %s\n"
@@ -193,7 +242,7 @@ def handle_license_usage(value):
         )
 
 
-def handle_system_msg(value):
+def handle_system_msg(value: Iterable[_Entry[_SystemMsg]]) -> None:
     for entries in value:
         sys.stdout.write(
             "%s %s %s %s %s\n"
@@ -209,7 +258,7 @@ def handle_system_msg(value):
         )
 
 
-def handle_jobs(value):
+def handle_jobs(value: Iterable[_JobsEntry]) -> None:
     for entries in value:
         sys.stdout.write(
             "%s %s %s %s %s\n"
@@ -224,7 +273,7 @@ def handle_jobs(value):
         )
 
 
-def handle_health(value):
+def handle_health(value: Sequence[_Entry[_Health]]) -> None:
     sys.stdout.write("Overall_state %s\n" % value[0].get("content", {}).get("health"))
 
     for func, state in value[0]["content"]["features"].items():
@@ -245,7 +294,7 @@ def handle_health(value):
             )
 
 
-def handle_alerts(value):
+def handle_alerts(value: Sequence[_Entry[_Alert]]) -> None:
     sys.stdout.write("%s\n" % value[0]["content"]["triggered_alert_count"])
 
 

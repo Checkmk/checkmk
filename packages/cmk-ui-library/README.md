@@ -28,6 +28,7 @@ bazel lint //packages/cmk-ui-library/...
 ```
 
 Unit tests live in `tests/`, mirroring the source layout, and run with vitest configured by `vite.config.ts` (jsdom, `tests/setup-tests.ts`).
+`VITEST_MAX_WORKERS` caps the worker pool, which is otherwise sized from the CPUs the OS advertises. CI sets it to its container's CPU quota; locally, pass it to keep a run from taking the machine over: `bazel test --test_env=VITEST_MAX_WORKERS=4 //packages/cmk-ui-library:unit-test`.
 License headers and UCL showcase parity are checked by `//packages/cmk-frontend-vue:test-code-integrity`.
 
 ## Adding the next Vue workspace package

@@ -159,7 +159,7 @@ def test_discovery(table: StringTable, detected_section: SimpleSNMPSection) -> N
     ],
 )
 def test_check_results(  # type: ignore[misc]
-    detected_section: SimpleSNMPSection,
+    detected_section: SimpleSNMPSection,  # noqa: ARG001
     params_misc: dict[str, object],
     expected_results: list[Result],
 ) -> None:

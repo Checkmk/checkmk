@@ -10,7 +10,8 @@ description:
  configurable via WATO.
  By default, no levels are set. Thus, the check is always OK.
 
- The check requires that the special agent kube is configured.
+ This check requires that Kubernetes monitoring is configured and that Checkmk
+ can receive data from the in-cluster agent.
 
 discovery:
  One service is created.

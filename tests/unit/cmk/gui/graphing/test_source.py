@@ -1,0 +1,390 @@
+#!/usr/bin/env python3
+# Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import time
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass, field
+
+import pytest
+
+from cmk.ccc.hostaddress import HostAddress
+from cmk.graphing.v1 import translations
+from cmk.graphing_engine import (
+    ConsolidationFunction,
+    EvaluatedCurve,
+    EvaluatedGraph,
+    HostName,
+    MetricName,
+    RRDMetric,
+    Service,
+    ServiceName,
+    SiteID,
+    TimeRange,
+    TimeSeries,
+)
+from cmk.gui.graphing import (
+    build_template_graphs,
+    CommonGraphOptions,
+    HOST_PSEUDO_SERVICE,
+    RRDFetchData,
+    RRDFetchMetricNames,
+    TemplateGraphSpecification,
+)
+from cmk.gui.graphing._graph_templates import _EvaluateTemplateGraphs
+from cmk.gui.graphing._source import (
+    chop_last_empty_step,
+    PerformanceDataRow,
+    RRDFetchMetricNameMapping,
+)
+from cmk.livestatus_client.testing import MockLiveStatusConnection
+
+_HOST_ROW = {
+    "name": "h",
+    "perf_data": "x=5",
+    "metrics": ["x"],
+    "check_command": "check-mk-host-ping",
+}
+_SERVICE_ROW = {
+    "host_name": "h",
+    "description": "svc",
+    "perf_data": "x=5",
+    "metrics": ["x"],
+    "check_command": "check_mk-foo",
+}
+
+
+@pytest.mark.usefixtures("load_config")
+def test_fetch_metric_names_of_a_host_reads_the_hosts_table(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    # Host metrics are addressed by the pseudo-service "_HOST_" and live on the hosts table, where
+    # they are filtered by host name alone - the table switch livestatus_lql makes for the legacy
+    # fetch. Queried against the services table, a host graph would find no metrics at all.
+    mock_livestatus.set_sites(["NO_SITE"])
+    mock_livestatus.add_table("hosts", [_HOST_ROW])
+    mock_livestatus.expect_query(
+        "GET hosts\nColumns: name perf_data metrics check_command\nFilter: name = h\n"
+    )
+
+    with mock_livestatus():
+        resolved = RRDFetchMetricNames(
+            host_name=HostName("h"), service_name=HOST_PSEUDO_SERVICE, debug=False
+        )()
+
+    assert resolved == {
+        Service(
+            site_id=SiteID("NO_SITE"), host_name=HostName("h"), service_name=HOST_PSEUDO_SERVICE
+        ): frozenset({MetricName("x")})
+    }
+
+
+@pytest.mark.usefixtures("load_config")
+def test_fetch_metric_names_of_a_service_reads_the_services_table(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.set_sites(["NO_SITE"])
+    mock_livestatus.add_table("services", [_SERVICE_ROW])
+    mock_livestatus.expect_query(
+        "GET services\nColumns: host_name description perf_data metrics check_command\n"
+        "Filter: host_name = h\nFilter: description = svc\nAnd: 2\n"
+    )
+
+    with mock_livestatus():
+        resolved = RRDFetchMetricNames(
+            host_name=HostName("h"), service_name=ServiceName("svc"), debug=False
+        )()
+
+    assert resolved == {
+        Service(
+            site_id=SiteID("NO_SITE"), host_name=HostName("h"), service_name=ServiceName("svc")
+        ): frozenset({MetricName("x")})
+    }
+
+
+@pytest.mark.usefixtures("load_config")
+def test_fetch_metric_name_mapping_pairs_a_services_perfdata_names(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    # The sibling fetcher only reports the canonical names, which cannot say which raw perf-data
+    # column each came from. This one carries the pairing out of livestatus intact.
+    translation = translations.Translation(
+        name="translation_cpu_utilization",
+        check_commands=[translations.PassiveCheck("cpu_utilization")],
+        translations={"wait": translations.RenameTo("io_wait")},
+    )
+    mock_livestatus.set_sites(["NO_SITE"])
+    mock_livestatus.add_table(
+        "services",
+        [
+            {
+                **_SERVICE_ROW,
+                "perf_data": "wait=5",
+                "metrics": ["wait"],
+                "check_command": "check_mk-cpu_utilization",
+            }
+        ],
+    )
+    mock_livestatus.expect_query(
+        "GET services\nColumns: host_name description perf_data metrics check_command\n"
+        "Filter: host_name = h\nFilter: description = svc\nAnd: 2\n"
+    )
+
+    with mock_livestatus():
+        mapping = RRDFetchMetricNameMapping(
+            host_name=HostName("h"),
+            service_name=ServiceName("svc"),
+            debug=False,
+            registered_translations=[translation],
+        )()
+
+    assert mapping == {
+        Service(
+            site_id=SiteID("NO_SITE"), host_name=HostName("h"), service_name=ServiceName("svc")
+        ): {"wait": "io_wait"}
+    }
+
+
+@pytest.mark.usefixtures("load_config")
+def test_fetch_data_of_a_host_metric_reads_the_hosts_table(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    # Both fetch stages of a host metric - the performance data and the RRD series - go to the hosts
+    # table as well.
+    metric = RRDMetric(
+        site_id=SiteID("NO_SITE"),
+        host_name=HostName("h"),
+        service_name=HOST_PSEUDO_SERVICE,
+        metric_name=MetricName("x"),
+    )
+    mock_livestatus.set_sites(["NO_SITE"])
+    mock_livestatus.add_table(
+        "hosts", [{**_HOST_ROW, "rrddata:x:x.max:0:30:10": [0, 30, 10, 1.0, 2.0, 3.0]}]
+    )
+    mock_livestatus.expect_query(
+        "GET hosts\nColumns: name perf_data check_command\nFilter: name = h\n"
+    )
+    mock_livestatus.expect_query(
+        "GET hosts\nColumns: name rrddata:x:x.max:0:30:10\nFilter: name = h\n"
+    )
+
+    with mock_livestatus():
+        [fetched] = RRDFetchData(debug=False)(
+            [metric],
+            consolidation_function=ConsolidationFunction.MAX,
+            time_range=TimeRange(start=0, end=30, step=10),
+        )[metric]
+
+    assert fetched.performance_data is not None
+    assert fetched.performance_data.value == 5.0
+    assert fetched.time_series is not None
+    assert list(fetched.time_series.values) == [1.0, 2.0, 3.0]
+
+
+_SITE = SiteID("mysite")
+_SERVICE = Service(site_id=_SITE, host_name=HostName("h"), service_name=ServiceName("svc"))
+_SPEC = TemplateGraphSpecification(site=None, host_name=HostAddress("h"), service_description="svc")
+_RANGE = TimeRange(start=0, end=30, step=10)
+# The check the translation under test is registered for, as the plug-in names it and as the
+# performance data of a passive check spells it.
+_CHECK_PLUGIN = "foo"
+
+type _MetricTranslations = Mapping[
+    str, translations.RenameTo | translations.ScaleBy | translations.RenameToAndScaleBy
+]
+
+
+@dataclass
+class _FakeMetricNames:
+    metric_name: str
+
+    def __call__(self) -> Mapping[Service, frozenset[MetricName]]:
+        return {_SERVICE: frozenset({MetricName(self.metric_name)})}
+
+
+@dataclass
+class _FakeRRDFetchPerformanceData:
+    # In place of RRDFetchPerformanceData: the performance data every requested service carries.
+    perf_data: str
+
+    def __call__(
+        self,
+        services: Sequence[Service],
+        *,
+        only_site: SiteID | None,  # noqa: ARG002
+    ) -> Sequence[PerformanceDataRow]:
+        return [
+            PerformanceDataRow(
+                service=service,
+                site_id=_SITE,
+                perf_data=self.perf_data,
+                check_command=f"check_mk-{_CHECK_PLUGIN}",
+            )
+            for service in services
+        ]
+
+
+@dataclass
+class _FakeRRDFetchTimeSeries:
+    # In place of RRDFetchTimeSeries: the RRDs behind a service, keyed by the column they are read
+    # from. Records which columns a series was asked for.
+    columns: Mapping[str, Sequence[float | None]]
+    requested: list[str] = field(default_factory=list)
+
+    def __call__(
+        self,
+        rrd_metrics: Sequence[RRDMetric],
+        *,
+        consolidation_function: ConsolidationFunction,  # noqa: ARG002
+        time_range: TimeRange,
+        only_site: SiteID | None,  # noqa: ARG002
+    ) -> Mapping[RRDMetric, TimeSeries]:
+        self.requested += [str(metric.metric_name) for metric in rrd_metrics]
+        return {
+            metric: TimeSeries(time_range=time_range, values=values)
+            for metric in rrd_metrics
+            if (values := self.columns.get(str(metric.metric_name))) is not None
+        }
+
+
+def _drawn_curves(evaluated: EvaluatedGraph) -> Sequence[EvaluatedCurve]:
+    return [
+        *(member for stack in evaluated.stacks for member in stack.members),
+        *(line.curve for line in evaluated.lines),
+    ]
+
+
+def _drawn(
+    metric_name: str,
+    perf_data: str,
+    columns: Mapping[str, Sequence[float | None]],
+    metric_translations: _MetricTranslations,
+) -> tuple[EvaluatedCurve, Sequence[str]]:
+    # The graph a service's metric is discovered into, evaluated over the data the sources serve:
+    # what a user ends up seeing, and the columns the fetch read it from.
+    time_series = _FakeRRDFetchTimeSeries(columns)
+    [built] = build_template_graphs(
+        _SPEC,
+        registered_graphs=[],
+        registered_metrics={},
+        fetch_metric_names=_FakeMetricNames(metric_name),
+    )
+    [evaluated] = _EvaluateTemplateGraphs(
+        CommonGraphOptions(consolidation_function=ConsolidationFunction.MAX, time_range=_RANGE),
+        RRDFetchData(
+            debug=True,
+            registered_translations=[
+                translations.Translation(
+                    name="t",
+                    check_commands=[translations.PassiveCheck(_CHECK_PLUGIN)],
+                    translations=metric_translations,
+                )
+            ],
+            performance_data_source=_FakeRRDFetchPerformanceData(perf_data),
+            time_series_source=time_series,
+        ),
+    )(built.graph).graphs
+    [curve] = _drawn_curves(evaluated)
+    return curve, time_series.requested
+
+
+def test_a_scaling_translation_draws_the_series_in_the_translated_unit() -> None:
+    # A translation that only scales leaves the column name untouched, so the series is read from the
+    # metric's own column - but it still has to carry the factor, exactly as the value and the
+    # thresholds do. Legacy applies it to the series as well (via the RPN of the rrddata column).
+    curve, requested = _drawn(
+        "x", "x=5;7;9", {"x": [1.0, 2.0, 3.0]}, {"x": translations.ScaleBy(1024)}
+    )
+    assert requested == ["x"]
+    assert curve.value == 5120.0
+    assert list(curve.time_series.values) == [1024.0, 2048.0, 3072.0]
+
+
+def test_a_renaming_translation_draws_the_old_column_scaled() -> None:
+    # The canonical metric has no column of its own here: the series comes from the column the perf
+    # data actually carried, scaled by the translation's factor.
+    curve, requested = _drawn(
+        "new",
+        "old=5",
+        {"old": [1.0, 2.0, 3.0]},
+        {"old": translations.RenameToAndScaleBy("new", 1000)},
+    )
+    assert requested == ["old"]
+    assert curve.value == 5000.0
+    assert list(curve.time_series.values) == [1000.0, 2000.0, 3000.0]
+
+
+def test_two_columns_translated_to_one_metric_are_drawn_as_one_curve() -> None:
+    # Two perf data columns renamed onto one metric contribute one series each - which reading the
+    # canonical column alone could not - merged point-wise, the first column with a value winning.
+    curve, requested = _drawn(
+        "m",
+        "a=1 b=2",
+        {"a": [None, 2.0, None], "b": [9.0, 9.0, 9.0]},
+        {"a": translations.RenameTo("m"), "b": translations.RenameTo("m")},
+    )
+    assert requested == ["a", "b"]
+    assert list(curve.time_series.values) == [9.0, 2.0, 9.0]
+
+
+def test_a_deprecated_column_absent_from_the_perf_data_is_still_drawn() -> None:
+    # The old column is gone from the perf data but its RRD is still around, so it is read alongside
+    # the current one - with the factor of the translation that renamed it, while the current column
+    # stays unscaled.
+    curve, requested = _drawn(
+        "new",
+        "new=5",
+        {"new": [None, None, 3.0], "old": [1.0, 2.0, None]},
+        {"old": translations.RenameToAndScaleBy("new", 1000)},
+    )
+    assert requested == ["new", "old"]
+    assert curve.value == 5.0
+    assert list(curve.time_series.values) == [1000.0, 2000.0, 3.0]
+
+
+def test_a_metric_without_perf_data_is_drawn_from_its_own_column_unscaled() -> None:
+    # No perf data entry means no translation was applied to this metric, so its own column is read
+    # as it is - and with no value, only the series is drawn.
+    curve, requested = _drawn("y", "x=5", {"y": [1.0, 2.0, 3.0]}, {"x": translations.ScaleBy(1024)})
+    assert requested == ["y"]
+    assert curve.value is None
+    assert list(curve.time_series.values) == [1.0, 2.0, 3.0]
+
+
+_CHOPPED_METRIC = RRDMetric(
+    host_name=HostName("h"), service_name=ServiceName("svc"), metric_name=MetricName("x")
+)
+
+
+def _chopped_series(start: int, end: int, step: int, values: Sequence[float | None]) -> TimeSeries:
+    return TimeSeries(time_range=TimeRange(start=start, end=end, step=step), values=values)
+
+
+def test_the_empty_trailing_step_of_a_graph_ending_now_is_dropped() -> None:
+    # The current RRD step has no data yet, so an all-None last point is stripped rather than drawn as
+    # a gap. "Now" is what makes it the current step, hence the clock.
+    end = int(time.time())
+    chopped = chop_last_empty_step(
+        {_CHOPPED_METRIC: _chopped_series(end - 30, end, 10, [1.0, 2.0, None])}, end
+    )
+    assert list(chopped[_CHOPPED_METRIC].values) == [1.0, 2.0]
+    assert chopped[_CHOPPED_METRIC].time_range == TimeRange(start=end - 30, end=end - 10, step=10)
+
+
+def test_a_trailing_gap_in_the_past_is_kept() -> None:
+    # Well before "now" an all-None last point is real missing data, not a step that has yet to fill.
+    time_series = {_CHOPPED_METRIC: _chopped_series(0, 30, 10, [1.0, 2.0, None])}
+    assert chop_last_empty_step(time_series, 30) == time_series
+
+
+def test_a_step_one_curve_still_has_data_for_is_kept() -> None:
+    end = int(time.time())
+    other = RRDMetric(
+        host_name=HostName("h"), service_name=ServiceName("svc"), metric_name=MetricName("y")
+    )
+    time_series = {
+        _CHOPPED_METRIC: _chopped_series(end - 30, end, 10, [1.0, 2.0, None]),
+        other: _chopped_series(end - 30, end, 10, [1.0, 2.0, 3.0]),
+    }
+    assert chop_last_empty_step(time_series, end) == time_series

@@ -2,6 +2,7 @@ type = "Component"
 display_name = "Developer Tools: Local Validation"
 has_support_component = false
 members_required = 1
+tier = 3
 description = """
 - The scripts allow developers to run a subset of the CI chain locally
 - This allows faster feedback cycles while taking off load of the CI

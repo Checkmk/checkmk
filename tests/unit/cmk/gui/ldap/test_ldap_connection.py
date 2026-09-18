@@ -15,7 +15,7 @@ from tests.testlib.rest_api_client import ClientRegistry
 
 
 # Mocking wato_audit.log as its contents are not used in these tests and accessing it causes flaky results.
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def mock_log_audit_file(mocker: MockerFixture) -> Iterator[None]:
     mocker.patch("cmk.gui.watolib.audit_log.log_audit")
     yield

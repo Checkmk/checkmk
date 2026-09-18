@@ -20,6 +20,7 @@ import { useDismissDialog } from 'cmk-ui-library/lib/useDismissDialog'
 import usePersistentRef from 'cmk-ui-library/lib/usePersistentRef'
 import { ref, watch } from 'vue'
 
+import { applyToken } from '../lib/commandTemplate'
 import type { AgentSlideOutTabs } from '../lib/type_def'
 import GenerateToken from './GenerateToken.vue'
 import RegisterAgent from './steps/RegisterAgent.vue'
@@ -104,13 +105,7 @@ function currentInstallMsg(tab: AgentSlideOutTabs): string {
 }
 
 function installCmdWithToken(cmd: string | undefined): string {
-  if (!cmd) {
-    return ''
-  }
-  if (ott.value && !(ott.value instanceof Error)) {
-    return cmd.replace('[AGENT_DOWNLOAD_OTT]', ott.value)
-  }
-  return cmd
+  return applyToken(cmd, 'download', ott.value)
 }
 
 const currentStep = ref(getInitStep())

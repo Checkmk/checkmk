@@ -13,7 +13,13 @@ from .dashboard import RelativeGridDashboardResponse
 
 @api_model
 class RelativeGridDashboardDomainObject(DomainObjectModel):
-    domainType: Literal["dashboard"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
+    domainType: Literal["dashboard"] = api_field(description="The domain type of the object.")
     extensions: RelativeGridDashboardResponse = api_field(
         description="All the data about this dashboard."
     )
+
+
+@api_model
+class ComputedWidgetResponse[T]:
+    domainType: Literal["widget-compute"] = api_field(description="The domain type of the object.")
+    value: T = api_field(description="The computed widget data.")

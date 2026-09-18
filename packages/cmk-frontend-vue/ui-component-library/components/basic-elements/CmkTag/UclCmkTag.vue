@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import { type Colors, type Sizes, type Variants } from 'cmk-ui-library/components/CmkTag.vue'
 
 import codeExample from './UclCmkTagCodeExample.vue?raw'
@@ -18,37 +18,37 @@ export const panelConfig = {
   size: {
     type: 'list' as const,
     title: 'Size',
-    options: [
-      { title: 'Small', name: 'small' },
-      { title: 'Medium', name: 'medium' },
-      { title: 'Large', name: 'large' }
-    ] satisfies Options<Sizes>[],
+    options: listOptions<Sizes>({
+      small: 'Small',
+      medium: 'Medium',
+      large: 'Large'
+    }),
     initialState: 'medium' as const
   },
   color: {
     type: 'list' as const,
     title: 'Color',
-    options: [
-      { title: 'Default', name: 'default' },
-      { title: 'Success', name: 'success' },
-      { title: 'Warning', name: 'warning' },
-      { title: 'Unknown', name: 'unknown' },
-      { title: 'Danger', name: 'danger' },
-      { title: 'Discovered', name: 'discovered' },
-      { title: 'Explicit', name: 'explicit' },
-      { title: 'Ruleset', name: 'ruleset' },
-      { title: 'Label', name: 'label' }
-    ] satisfies Options<Colors>[],
+    options: listOptions<Colors>({
+      default: 'Default',
+      success: 'Success',
+      warning: 'Warning',
+      unknown: 'Unknown',
+      danger: 'Danger',
+      discovered: 'Discovered',
+      explicit: 'Explicit',
+      ruleset: 'Ruleset',
+      label: 'Label'
+    }),
     initialState: 'default' as const
   },
   variant: {
     type: 'list' as const,
     title: 'Variant',
-    options: [
-      { title: 'Outline', name: 'outline' },
-      { title: 'Fill', name: 'fill' },
-      { title: 'Weighted', name: 'weighted' }
-    ] satisfies Options<Variants>[],
+    options: listOptions<Variants>({
+      outline: 'Outline',
+      fill: 'Fill',
+      weighted: 'Weighted'
+    }),
     initialState: 'outline' as const
   },
   title: {

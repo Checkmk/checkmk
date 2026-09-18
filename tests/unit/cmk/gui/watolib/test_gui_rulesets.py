@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-def"
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 import sys
 from collections.abc import Callable, Sequence
@@ -26,7 +24,6 @@ from cmk.base.community_app import make_app
 from cmk.base.config import LoadingResult, make_host_tags
 from cmk.ccc.hostaddress import HostName, Hosts
 from cmk.ccc.site import SiteId
-from cmk.ccc.user import UserId
 from cmk.gui.logged_in import user
 from cmk.gui.watolib import password_store, rulesets
 from cmk.gui.watolib import rulesets as gui_rulesets_module
@@ -58,11 +55,11 @@ def _ruleset(ruleset_name: RulesetName) -> rulesets.Ruleset:
 GEN_ID_COUNT = {"c": 0}
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_gen_id(monkeypatch: pytest.MonkeyPatch, request_context: None) -> None:
     GEN_ID_COUNT["c"] = 0
 
-    def _gen_id():
+    def _gen_id() -> str:
         GEN_ID_COUNT["c"] += 1
         return str(GEN_ID_COUNT["c"])
 
@@ -129,7 +126,10 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
     with a direct call to the automation"""
 
     def analyze_with_matcher(
-        h: HostName, r: Sequence[Sequence[RuleSpec]], *, debug: bool
+        h: HostName,
+        r: Sequence[Sequence[RuleSpec]],
+        *,
+        debug: bool,
     ) -> ABCAutomationResult:
         ts = Scenario()
         ts.add_host(HostName("foobar123"), host_path="/wato/regex_check/hosts.mk")
@@ -259,9 +259,8 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_analyze_host_rule_matches_automation")
+@pytest.mark.usefixtures("mock_analyze_host_rule_matches_automation", "with_admin_login")
 def test_matches_search_with_rules(  # type: ignore[misc]
-    with_admin_login: UserId,
     search_options: rulesets.SearchOptions,
     rule_config: RuleSpec,
     folder_name: str,
@@ -285,7 +284,9 @@ def fixture_inline_analyze_host_rule_effectiveness_automation(
     """Inline rule matching automation call"""
 
     def analyze_host_rule_effectiveness(
-        r: Sequence[Sequence[RuleSpec]], *, debug: bool
+        r: Sequence[Sequence[RuleSpec]],
+        *,
+        debug: bool,
     ) -> ABCAutomationResult:
         ts = Scenario()
         ts.add_host(HostName("ding"))
@@ -302,10 +303,8 @@ def fixture_inline_analyze_host_rule_effectiveness_automation(
     )
 
 
-@pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation")
-def test_matches_search_with_rules_negate_is_ineffective_finds_matching(
-    with_admin_login: UserId,
-) -> None:
+@pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation", "with_admin_login")
+def test_matches_search_with_rules_negate_is_ineffective_finds_matching() -> None:
     (ruleset := _ruleset("host_contactgroups")).append_rule(
         (folder := folder_tree().root_folder()),
         rulesets.Rule.from_config(
@@ -325,8 +324,8 @@ def test_matches_search_with_rules_negate_is_ineffective_finds_matching(
     assert ruleset.matches_search_with_rules({"rule_ineffective": False}, debug=False) is True
 
 
-@pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation")
-def test_matches_search_with_rules_is_ineffective_finds_matching(with_admin_login: UserId) -> None:
+@pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation", "with_admin_login")
+def test_matches_search_with_rules_is_ineffective_finds_matching() -> None:
     (ruleset := _ruleset("host_contactgroups")).append_rule(
         (folder := folder_tree().root_folder()),
         rulesets.Rule.from_config(
@@ -346,10 +345,8 @@ def test_matches_search_with_rules_is_ineffective_finds_matching(with_admin_logi
     assert ruleset.matches_search_with_rules({"rule_ineffective": True}, debug=False) is False
 
 
-@pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation")
-def test_matches_search_with_rules_is_ineffective_finds_not_matching(
-    with_admin_login: UserId,
-) -> None:
+@pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation", "with_admin_login")
+def test_matches_search_with_rules_is_ineffective_finds_not_matching() -> None:
     (ruleset := _ruleset("host_contactgroups")).append_rule(
         (folder := folder_tree().root_folder()),
         rulesets.Rule.from_config(
@@ -512,7 +509,7 @@ def test_rules_grouped_by_folder() -> None:
 
     # Also test renamed folder
     folder4 = Folder.new(tree=tree, name="folder4", parent_folder=root)
-    folder4._title = "abc"
+    folder4._title = "abc"  # noqa: SLF001
     rules.append(
         (
             folder4,

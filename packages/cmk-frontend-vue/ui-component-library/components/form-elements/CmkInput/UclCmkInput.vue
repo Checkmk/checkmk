@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import { type inputSizes } from 'cmk-ui-library/components/user-input/sizes'
 
 import codeExample from './UclCmkInputCodeExample.vue?raw'
@@ -39,25 +39,25 @@ export const panelConfig = {
   type: {
     type: 'list' as const,
     title: 'Type',
-    options: [
-      { title: 'Text', name: 'text' },
-      { title: 'Number', name: 'number' },
-      { title: 'Password', name: 'password' },
-      { title: 'Date', name: 'date' },
-      { title: 'Time', name: 'time' }
-    ] satisfies Options<InputType>[],
+    options: listOptions<InputType>({
+      text: 'Text',
+      number: 'Number',
+      password: 'Password',
+      date: 'Date',
+      time: 'Time'
+    }),
     initialState: 'text' as InputType
   },
   fieldSize: {
     type: 'list' as const,
     title: 'Size',
     help: 'This Only affects text inputs and controls the width of the input field.',
-    options: [
-      { title: 'Small', name: 'small' },
-      { title: 'Medium', name: 'medium' },
-      { title: 'Large', name: 'large' },
-      { title: 'Fill', name: 'fill' }
-    ] satisfies Options<keyof typeof inputSizes>[],
+    options: listOptions<keyof typeof inputSizes>({
+      small: 'Small',
+      medium: 'Medium',
+      large: 'Large',
+      fill: 'Fill'
+    }),
     initialState: 'small' as const
   },
   unit: {

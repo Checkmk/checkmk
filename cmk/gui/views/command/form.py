@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 from collections.abc import Sequence
 from typing import Literal
@@ -75,7 +74,7 @@ def core_command(
     if isinstance(commands, LivestatusCommand):
         commands = [commands]
 
-    return commands, confirm_options, confirm_dialog_options, executor
+    return commands, confirm_options, confirm_dialog_options, executor  # type: ignore[possibly-undefined]
 
 
 def should_show_command_form(
@@ -124,7 +123,7 @@ def get_command_groups(info_name: InfoName) -> dict[type[CommandGroup], list[Com
 # True -> Actions have been done
 # False -> No actions done because now rows selected
 def do_actions(
-    view: ViewSpec,
+    view: ViewSpec,  # noqa: ARG001
     what: InfoName,
     action_rows: Rows,
     backurl: str,

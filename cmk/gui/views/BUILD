@@ -45,7 +45,6 @@ py_library(
         "//cmk/gui/painter:v0_impl",
         "//cmk/gui/painter:v1",
         "//cmk/gui/utils",
-        "//cmk/gui/utils:base",
         "//cmk/gui/utils:middle",
         "//cmk/gui/valuespec",
         "//cmk/gui/visuals",
@@ -83,6 +82,12 @@ py_library(
         "visual_type.py",
     ] + glob(include = ["inventory/**/*.py"]),
     imports = ["../../.."],
+    tags = [
+        # ships only an empty icons/utils.py: it exists to materialize the
+        # cmk.gui.plugins.views[.icons] import paths that __init__.py populates
+        # by name injection for pre-1.6 icon plug-ins
+        "deballast-keep=//cmk/gui/plugins/views:views",
+    ],
     visibility = [
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
@@ -100,14 +105,12 @@ py_library(
         "//cmk/gui/availability",
         "//cmk/gui/dashboard:type_defs",
         "//cmk/gui/data_source",
-        "//cmk/gui/graphing",
         "//cmk/gui/inventory",
         "//cmk/gui/openapi/framework",
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/painter:v0_base",
         "//cmk/gui/plugins/views",
         "//cmk/gui/utils",
-        "//cmk/gui/utils:base",
         "//cmk/gui/utils:middle",
         "//cmk/gui/valuespec",
         "//cmk/gui/visuals",

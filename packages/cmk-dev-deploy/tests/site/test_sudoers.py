@@ -11,8 +11,6 @@ shim executables placed at the front of ``$PATH``.  ``get_real_user`` is
 stubbed by the conftest to return ``"testuser"``.
 """
 
-from __future__ import annotations
-
 import os
 from contextlib import AbstractContextManager
 from pathlib import Path

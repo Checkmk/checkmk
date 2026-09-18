@@ -31,6 +31,8 @@ import type { WidgetSpec } from '@/dashboard/types/widget'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard/utils'
 
 const CONTENT_TYPE = 'single_metric'
+type SparkHeightMode = NonNullable<SingleMetricContent['spark_height_mode']>
+
 export interface UseMetric extends UseWidgetHandler, UseWidgetVisualizationOptions {
   timeRangeType: Ref<TimeRangeType>
   timeRange: Ref<GraphTimerange>
@@ -38,6 +40,8 @@ export interface UseMetric extends UseWidgetHandler, UseWidgetVisualizationOptio
   showServiceStatusEnabled: Ref<boolean>
   showServiceStatus: Ref<ShowServiceStatusType>
   showServiceStatusSelection: Ref<ForStates>
+  sparkHeightMode: Ref<SparkHeightMode>
+  showDelta: Ref<boolean>
 
   dataRangeType: Ref<DataRangeType>
   dataRangeSymbol: Ref<string>
@@ -71,6 +75,8 @@ export const useMetric = async (
   const showServiceStatusSelection = ref<ForStates>(
     currentContent?.status_display?.for_states ?? 'all'
   )
+  const sparkHeightMode = ref<SparkHeightMode>(currentContent?.spark_height_mode ?? 'full')
+  const showDelta = ref<boolean>(currentContent?.show_delta ?? true)
 
   const {
     type: dataRangeType,
@@ -105,6 +111,8 @@ export const useMetric = async (
       metric: metric,
       display_range: dataRangeProps.value,
       show_display_range_limits: displayRangeLimits.value,
+      spark_height_mode: sparkHeightMode.value,
+      show_delta: showDelta.value,
       time_range:
         timeRangeType.value === 'current'
           ? 'current'
@@ -157,6 +165,8 @@ export const useMetric = async (
       showServiceStatusEnabled,
       showServiceStatus,
       showServiceStatusSelection,
+      sparkHeightMode,
+      showDelta,
       widgetGeneralSettings
     ],
     useDebounceFn(() => {
@@ -178,6 +188,8 @@ export const useMetric = async (
     showServiceStatusEnabled,
     showServiceStatus,
     showServiceStatusSelection,
+    sparkHeightMode,
+    showDelta,
 
     title,
     showTitle,

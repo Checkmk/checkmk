@@ -196,8 +196,8 @@ def _sort_wato_folder_abs(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
-    config: Config,
+    parameters: Mapping[str, Any] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
     request: Request,
 ) -> int:
     return cmp_wato_folder(r1, r2, "abs", request=request)
@@ -215,8 +215,8 @@ def _sort_wato_folder_rel(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
-    config: Config,
+    parameters: Mapping[str, Any] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
     request: Request,
 ) -> int:
     return cmp_wato_folder(r1, r2, "rel", request=request)
@@ -234,8 +234,8 @@ def _sort_wato_folder_plain(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
-    config: Config,
+    parameters: Mapping[str, Any] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
     request: Request,
 ) -> int:
     return cmp_wato_folder(r1, r2, "plain", request=request)

@@ -7,12 +7,19 @@ import { describe, expect, it } from 'vitest'
 import { type ModelRef, nextTick, ref } from 'vue'
 
 import {
+  READING_ORDER_BANDING_TOLERANCE_PX,
   determineSizingMode,
   legacySizeValue,
+  orderWidgetsByReadingOrder,
   useRelativeGridLayout,
   widgetHasTitle
 } from '@/dashboard/components/RelativeGrid/composables/useRelativeGridLayout'
-import { SIZING_MODE, WIDGET_MIN_SIZE } from '@/dashboard/components/RelativeGrid/types'
+import {
+  ANCHOR_POSITION,
+  type AbsoluteWidgetLayout,
+  SIZING_MODE,
+  WIDGET_MIN_SIZE
+} from '@/dashboard/components/RelativeGrid/types'
 import type { ContentRelativeGrid } from '@/dashboard/types/dashboard'
 import type { RelativeGridWidget } from '@/dashboard/types/widget'
 
@@ -101,6 +108,67 @@ describe('determineSizingMode', () => {
     const result = determineSizingMode(-2)
 
     expect(result).toBe(SIZING_MODE.MANUAL)
+  })
+})
+
+describe('orderWidgetsByReadingOrder', () => {
+  function makeAbsoluteWidgetLayout(top: number, left: number): AbsoluteWidgetLayout {
+    return {
+      anchorPosition: ANCHOR_POSITION.TOP_LEFT,
+      layout: {
+        frame: { position: { top, left }, dimensions: { width: 100, height: 100 } },
+        content: { position: { top, left }, dimensions: { width: 100, height: 100 } }
+      },
+      dimensionModes: { width: SIZING_MODE.MANUAL, height: SIZING_MODE.MANUAL }
+    }
+  }
+
+  it('should order widgets of one row band by their left edge', () => {
+    const layouts = {
+      right: makeAbsoluteWidgetLayout(0, 600),
+      left: makeAbsoluteWidgetLayout(20, 100)
+    }
+
+    const readingOrder = orderWidgetsByReadingOrder(layouts, READING_ORDER_BANDING_TOLERANCE_PX)
+
+    expect(readingOrder).toEqual(['left', 'right'])
+  })
+
+  it('should order widgets of separate row bands by their top edge', () => {
+    const layouts = {
+      lower: makeAbsoluteWidgetLayout(200, 100),
+      upper: makeAbsoluteWidgetLayout(0, 600)
+    }
+
+    const readingOrder = orderWidgetsByReadingOrder(layouts, READING_ORDER_BANDING_TOLERANCE_PX)
+
+    expect(readingOrder).toEqual(['upper', 'lower'])
+  })
+
+  it('should order widgets sharing top and left edge by their ID', () => {
+    const layouts = {
+      second: makeAbsoluteWidgetLayout(0, 100),
+      first: makeAbsoluteWidgetLayout(0, 100)
+    }
+
+    const readingOrder = orderWidgetsByReadingOrder(layouts, READING_ORDER_BANDING_TOLERANCE_PX)
+
+    expect(readingOrder).toEqual(['first', 'second'])
+  })
+
+  it('should anchor a row band at its topmost widget instead of chaining offsets', () => {
+    // each step stays below the tolerance, but the third widget is a full tolerance below the
+    // band anchor, so it must start a band of its own
+    const step = READING_ORDER_BANDING_TOLERANCE_PX - 10
+    const layouts = {
+      top: makeAbsoluteWidgetLayout(0, 300),
+      middle: makeAbsoluteWidgetLayout(step, 200),
+      bottom: makeAbsoluteWidgetLayout(2 * step, 100)
+    }
+
+    const readingOrder = orderWidgetsByReadingOrder(layouts, READING_ORDER_BANDING_TOLERANCE_PX)
+
+    expect(readingOrder).toEqual(['middle', 'top', 'bottom'])
   })
 })
 
@@ -443,6 +511,53 @@ describe('useRelativeGridLayout', () => {
 
       expect(composable.getLayoutZIndex('w2')).toBe(80)
       expect(composable.getLayoutZIndex('w1')).toBe(1)
+    })
+  })
+
+  describe('getWidgetReadingOrder', () => {
+    it('should order widgets at distinct vertical positions by their rendered top edge', () => {
+      const content = makeRelativeGridContent({
+        lower: makeRelativeGridWidget({ position: { x: 1, y: 41 } }),
+        upper: makeRelativeGridWidget({ position: { x: 1, y: 1 } }),
+        middle: makeRelativeGridWidget({ position: { x: 1, y: 21 } })
+      })
+      const { composable } = setupWithDashboard(content)
+
+      const readingOrder = composable.getWidgetReadingOrder()
+
+      expect(readingOrder).not.toBeNull()
+      const renderedTops = readingOrder!.map(
+        (widgetId) => composable.getAbsoluteLayout(widgetId).frame.position.top
+      )
+      expect(new Set(renderedTops).size).toBe(renderedTops.length)
+      expect(renderedTops).toEqual([...renderedTops].sort((first, second) => first - second))
+    })
+
+    it('should report unavailable while the dashboard has not been measured', () => {
+      const content = makeRelativeGridContent({
+        w1: makeRelativeGridWidget()
+      })
+      const { composable } = setup(content)
+
+      expect(composable.getWidgetReadingOrder()).toBeNull()
+    })
+
+    it('should list every widget exactly once', () => {
+      const widgetIds = ['w1', 'w2', 'w3', 'w4', 'w5']
+      const content = makeRelativeGridContent(
+        Object.fromEntries(
+          widgetIds.map((widgetId, index) => [
+            widgetId,
+            makeRelativeGridWidget({ position: { x: 1 + index, y: 1 + index * 20 } })
+          ])
+        )
+      )
+      const { composable } = setupWithDashboard(content)
+
+      const readingOrder = composable.getWidgetReadingOrder()
+
+      expect(readingOrder).not.toBeNull()
+      expect([...readingOrder!].sort()).toEqual([...widgetIds].sort())
     })
   })
 })

@@ -46,7 +46,7 @@ class ManPage:
     cluster: str | None
 
     @classmethod
-    def fallback(cls, path: Path, name: str, msg: str, content: str) -> "ManPage":
+    def fallback(cls, path: Path, name: str, msg: str, content: str) -> ManPage:
         return cls(
             name=name,
             path=path,
@@ -120,7 +120,7 @@ CATALOG_TITLES: Final = {
     "containerization": "Containerization",
     "couchbase": "Couchbase",
     "cps": "Cyber Power System Inc.",
-    "custom_query_metric_backend": "Custom query (metric backend)",
+    "telemetry_metrics_custom_query": "Custom query (metric backend)",
     "datadog": "Datadog",
     "db2": "IBM DB2",
     "ddn_s2a": "DDN S2A",
@@ -203,7 +203,6 @@ CATALOG_TITLES: Final = {
     "mcafee": "McAfee",
     "mcdata": "McDATA",
     "meinberg": "Meinberg",
-    "metric_backend": "Metric Backend",
     "mikrotik": "MikroTik",
     "misc": "Miscellaneous",
     "mongodb": "MongoDB",
@@ -344,7 +343,7 @@ def make_man_page_path_map(
     return {
         name: Path(dir, name)
         for source in reversed(families_man_paths)
-        for dir, _subdirs, files in os.walk(source)
+        for dir, _subdirs, files in os.walk(source)  # noqa: A001
         for name in files
         if _is_valid_basename(name) and os.path.realpath(Path(dir, name)) not in blocked_paths
     }

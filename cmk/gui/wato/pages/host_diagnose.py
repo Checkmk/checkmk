@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="type-arg"
 
 """Verify or find out a hosts agent related configuration"""
@@ -32,7 +31,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
-from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
@@ -59,6 +58,8 @@ from cmk.gui.watolib.pending_changes import (
 from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.web.utils.flashed_messages import flash
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 
 SNMPv3NoAuthNoPriv = tuple[str, str]
 SNMPv3AuthNoPriv = tuple[str, str, str, str]
@@ -259,7 +260,7 @@ class ModeDiagHost(WatoMode):
         tcp_connect_timeouts_ruleset = all_rulesets.get("tcp_connect_timeouts")
         snmp_timing_ruleset = all_rulesets.get("snmp_timing")
         agent_port: int | None = None
-        match agent_ports_ruleset.analyse_ruleset(
+        match agent_ports_ruleset.analyse_ruleset(  # type: ignore[exhaustive-match]
             hostname=self._hostname,
             svc_desc_or_item=None,
             svc_desc=None,
@@ -270,7 +271,7 @@ class ModeDiagHost(WatoMode):
                 pass
 
         tcp_connect_timeout: float | None = None
-        match tcp_connect_timeouts_ruleset.analyse_ruleset(
+        match tcp_connect_timeouts_ruleset.analyse_ruleset(  # type: ignore[exhaustive-match]
             hostname=self._hostname,
             svc_desc_or_item=None,
             svc_desc=None,
@@ -281,7 +282,7 @@ class ModeDiagHost(WatoMode):
                 pass
 
         snmp_timing: dict[str, int] = {}
-        match snmp_timing_ruleset.analyse_ruleset(
+        match snmp_timing_ruleset.analyse_ruleset(  # type: ignore[exhaustive-match]
             hostname=self._hostname,
             svc_desc_or_item=None,
             svc_desc=None,

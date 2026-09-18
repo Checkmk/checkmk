@@ -1,0 +1,26 @@
+# --- Known environment variables defined in legacy config ---
+# ASYNC_SECTIONS tablespaces	rman
+# DBUSER ***
+# SYNC_SECTIONS instance	sessions   undostat
+# --- Unified Config ---
+---
+oracle:
+  main:
+    connection:
+      hostname: localhost
+      port: 1521
+    authentication:
+      username: "user"
+      password: "pass"
+      type: standard
+    sections:
+      - instance:
+          is_async: false
+      - rman:
+          is_async: true
+      - sessions:
+          is_async: false
+      - tablespaces:
+          is_async: true
+      - undostat:
+          is_async: false

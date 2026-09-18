@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 """Scrape Werks from changes listed in Checkmk repository."""
 
 import netrc
@@ -66,7 +67,7 @@ def netrc_credentials() -> tuple[str, str]:
     """
     try:
         authenticators = netrc.netrc().authenticators(GERRIT_HOST)
-    except (FileNotFoundError, netrc.NetrcParseError):
+    except FileNotFoundError, netrc.NetrcParseError:
         return "", ""
     if authenticators is None:
         return "", ""
@@ -233,7 +234,7 @@ def collect_changes_with_werks(args: type[TCliArgs], client: GerritClient) -> li
             werk = werk_details(client, change)
         except FileNotFoundError as exc:
             exc.add_note("Skip change...")
-            print(exc)
+            print(exc)  # noqa: T201  # It's OK for scripts to print()
             continue
 
         jira_urls = [

@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.plugins.oracle.agent_based.libinstance import Instance
 
 
-def test_insance_model_accepts_empty_strings_as_none():
+def test_insance_model_accepts_empty_strings_as_none() -> None:
     instance = Instance.model_validate(
         {
             # mandatory fields:

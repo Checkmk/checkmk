@@ -24,7 +24,7 @@ from cmk.plugins.lib.cpu_utilization_os import SectionCpuUtilizationOs
 _THIS_TIME_SCHEME_VERSION = 1
 
 
-def discover_cpu_utilization_os(section: SectionCpuUtilizationOs) -> DiscoveryResult:
+def discover_cpu_utilization_os(section: SectionCpuUtilizationOs) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

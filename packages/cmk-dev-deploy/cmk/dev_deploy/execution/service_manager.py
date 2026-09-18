@@ -4,8 +4,6 @@
 
 """Service restart/reload engine for OMD sites."""
 
-from __future__ import annotations
-
 import subprocess
 import time
 from types import MappingProxyType
@@ -53,6 +51,7 @@ SERVICE_RESTART_ORDER: tuple[Service, ...] = (
     Service.MKEVENTD,
     Service.AGENT_RECEIVER,
     Service.MCP_SERVER,
+    Service.AI_CONTROL_PLANE,
     Service.NAGIOS,
     Service.CMC,
 )
@@ -62,6 +61,7 @@ EDITION_GATED_SERVICES: MappingProxyType[Service, frozenset[str]] = MappingProxy
     {
         Service.CMC: PRO_PLUS_EDITIONS,
         Service.DCD: PRO_PLUS_EDITIONS,
+        Service.AI_CONTROL_PLANE: PRO_PLUS_EDITIONS,
     }
 )
 """Services that only exist on specific editions."""
@@ -249,8 +249,14 @@ def _run_omd_command(
     timeout: int = 30,
 ) -> subprocess.CompletedProcess[str]:
     """Run an omd service command as the site user (via the sudoers rule)."""
+    command = f"omd {action} {service}"
+    if service == Service.APACHE.value:
+        # Apache reloads the Python registrations, but Redis retains the old
+        # Setup search index. Request its background rebuild using the same
+        # hook as Redis startup, after Apache successfully picks up the code.
+        command += " && init-redis"
     return run_as_site_user(
         site_name,
-        f"omd {action} {service}",
+        command,
         timeout=timeout,
     )

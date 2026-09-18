@@ -25,7 +25,7 @@ from cmk.plugins.ucs_bladecenter import lib as ucs_bladecenter
 # faultInst   Dn sys/chassis-1/bl...ault-F1256 Descr Local disk 2 missing on server 1/3    Severity info
 
 
-def discover_ucs_bladecenter_faultinst(section: ucs_bladecenter.GenericSection) -> DiscoveryResult:
+def discover_ucs_bladecenter_faultinst(section: ucs_bladecenter.GenericSection) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

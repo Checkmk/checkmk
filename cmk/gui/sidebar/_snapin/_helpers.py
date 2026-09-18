@@ -12,20 +12,22 @@ from typing import assert_never, get_args, Literal, NamedTuple, TypeGuard
 from cmk.ccc.site import SiteId, url_prefix
 from cmk.gui import pagetypes
 from cmk.gui.htmllib.foldable_container import foldable_container
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.icon_helpers import migrate_to_dynamic_icon, migrate_to_static_icon
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import get_main_menu_items_prefixed_by_segment
 from cmk.gui.sites import SiteStatus, states
-from cmk.gui.type_defs import Choices, DynamicIcon, IconNames, StaticIcon, Visual
+from cmk.gui.type_defs import Visual
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals import visual_title
 from cmk.shared_typing.main_menu import LoadingTransition as SharedLoadingTransition
 from cmk.shared_typing.main_menu import NavItemTopic, NavItemTopicEntry
+from cmk.web.utils.choices import Choices
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
 
 # Constants to be used in snap-ins
 snapin_width = 240
@@ -61,6 +63,7 @@ def render_link(
     target: str | None = None,
     onclick: str | None = None,
     title: str | None = None,
+    click_action: ClickAction | None = None,
 ) -> HTML:
     # Convert relative links into absolute links. We have three kinds
     # of possible links and we change only [3]
@@ -74,9 +77,9 @@ def render_link(
         href=url,
         class_="link",
         target=target or "",
-        onfocus="if (this.blur) this.blur();",
         onclick=onclick or None,
         title=title,
+        **(click_action.data_attributes() if click_action else {}),
     )
 
 
@@ -86,8 +89,13 @@ def link(
     target: str | None = None,
     onclick: str | None = None,
     title: str | None = None,
+    click_action: ClickAction | None = None,
 ) -> None:
-    html.write_html(render_link(text, url, target=target, onclick=onclick, title=title))
+    html.write_html(
+        render_link(
+            text, url, target=target, onclick=onclick, title=title, click_action=click_action
+        )
+    )
 
 
 def bulletlink(
@@ -252,7 +260,9 @@ def _visual_url(visual_type_name: VisualMenuItemType, name: str, visual: Visual)
             return name if name.endswith(".py") else f"{name}.py"
         case "reports":
             return f"report.py?name={name}"
-        case "custom_graph" | "graph_collection" | "forecast_graph":
+        case "custom_graph":
+            return f"custom_graph.py?name={name}&owner={visual['owner']}"
+        case "graph_collection" | "forecast_graph":
             # Handle page types
             return f"{visual_type_name}.py?name={name}"
         case other:

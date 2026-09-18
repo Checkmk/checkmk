@@ -36,15 +36,17 @@ const props = defineProps<{
   getRowKey: (row: T, index: number) => string | number
   rowHeight?: string
   /**
-   * Expanded state per row key. Each expanded row renders the `#expansion` slot beneath it;
-   * the slot must supply its own `<tr>` element(s).
+   * Whether a row renders the `#expansion` slot beneath it; the slot must supply its own
+   * `<tr>` element(s).
    */
-  expandedRows?: Record<string, boolean>
+  isRowExpanded?: (row: T, index: number) => boolean
   getRowVariant?: (row: T, index: number) => 'error' | null
 }>()
 
 const emit = defineEmits<{
   (event: 'reorder', fromIndex: number, toIndex: number): void
+  /** The row under the pointer, or null once it leaves. Expansion rows are not covered. */
+  (event: 'rowHover', row: T | null): void
 }>()
 
 const rowSelection = defineModel<RowSelectionState>('rowSelection', { default: () => ({}) })
@@ -121,10 +123,6 @@ provide(ROW_DRAG_KEY, {
   }
 })
 
-function isRowExpanded(row: T, index: number): boolean {
-  return props.expandedRows?.[String(props.getRowKey(row, index))] === true
-}
-
 const rowGroups = new Map<string, HTMLElement>()
 
 function registerRowGroup(key: string, element: Element | ComponentPublicInstance | null): void {
@@ -175,10 +173,12 @@ defineExpose({
             'monitoring-editable-table__row--no-hover': isDraggingRow,
             'monitoring-editable-table__row--error': getRowVariant?.(row, index) === 'error'
           }"
+          @mouseenter="emit('rowHover', row)"
+          @mouseleave="emit('rowHover', null)"
         >
           <slot name="row" :row="row" :table-row="tableRowAt(index)" :index="index" />
         </tr>
-        <template v-if="isRowExpanded(row, index)">
+        <template v-if="isRowExpanded?.(row, index)">
           <slot name="expansion" :row="row" :table-row="tableRowAt(index)" :index="index" />
         </template>
       </tbody>

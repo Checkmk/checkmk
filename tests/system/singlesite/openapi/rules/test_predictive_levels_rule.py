@@ -41,7 +41,7 @@ from tests.testlib.site import Site
 logger = logging.getLogger(__name__)
 
 
-@pytest.fixture(scope="module", autouse=True)
+@pytest.fixture(scope="module", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def setup_test_environment_fixture(site: Site) -> Generator:
     """Set up and tear down test environment with a folder and a host.."""
     with setup_test_environment(site=site, hostname=HOSTNAME, folder=FOLDER_PATH):
@@ -113,7 +113,6 @@ def test_predictive_levels_bounds(site: Site, config: BoundConfig) -> None:
         logger.info("Successfully tested %s", config.description)
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.skip_if_edition("cloud")
 def test_update_predictive_levels_rule(site: Site) -> None:
     """Test updating predictive levels rules via REST API."""

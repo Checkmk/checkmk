@@ -40,11 +40,11 @@ snmp_section_arbor_diskusage_peakflow_sp = SimpleSNMPSection(
 )
 
 
-def discover_arbor_disk_usage(section: int) -> DiscoveryResult:
+def discover_arbor_disk_usage(section: int) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="/")
 
 
-def check_arbor_disk_usage(item: str, params: Mapping[str, Any], section: int) -> CheckResult:
+def check_arbor_disk_usage(item: str, params: Mapping[str, Any], section: int) -> CheckResult:  # noqa: ARG001
     yield from check_levels_v1(
         section, levels_upper=params["levels"], label="Disk usage", render_func=render.percent
     )

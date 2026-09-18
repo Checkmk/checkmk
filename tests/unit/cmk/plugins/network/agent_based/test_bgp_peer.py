@@ -201,7 +201,7 @@ def test_bgp_peer_parse_cisco_2(data: StringByteTable, result: bgp_peer.Section)
 
 
 def test_convert_address_short_byte_list() -> None:
-    assert bgp_peer._convert_address([0x7C, 0x30]) == "unknown([124, 48])"
+    assert bgp_peer._convert_address([0x7C, 0x30]) == "unknown([124, 48])"  # noqa: SLF001
 
 
 @pytest.mark.parametrize(

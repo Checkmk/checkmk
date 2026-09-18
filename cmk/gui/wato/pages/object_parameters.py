@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="type-arg"
 
 """Mode for displaying and modifying the rule based host and service
@@ -31,7 +30,6 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuEntry, PageMenuTopic
-from cmk.gui.type_defs import PermissionName
 from cmk.gui.valuespec import Tuple, ValueSpecText
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.automations import (
@@ -62,6 +60,7 @@ from cmk.ruleset_matcher.labels import Labels, LabelSources
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.servicename import Item
 from cmk.web.utils.html import HTML
+from cmk.web.utils.permission_verification import PermissionName
 
 from ._status_links import make_service_status_link
 from .rulesets import render_value_model_readonly
@@ -360,7 +359,7 @@ class ModeObjectParameters(WatoMode):
             _("Determined by discovery"),
             "",
             False,
-            rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"]),
+            rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"]),  # noqa: SLF001
         )
         render_labels()
 
@@ -403,7 +402,7 @@ class ModeObjectParameters(WatoMode):
         )
         assert isinstance(rulespec.valuespec, Tuple)
         html.write_text_permissive(
-            rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"])
+            rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"])  # noqa: SLF001
         )
         html.close_td()
         html.close_tr()
@@ -416,7 +415,7 @@ class ModeObjectParameters(WatoMode):
         all_rulesets: AllRulesets,
         rulespec_allow_list: RulespecAllowList | AllowAll,
         service_result: AnalyseServiceResult,
-        render_labels: Callable[[], None],
+        render_labels: Callable[[], None],  # noqa: ARG002
         *,
         debug: bool,
     ) -> None:
@@ -499,8 +498,8 @@ class ModeObjectParameters(WatoMode):
     def _get_custom_check_origin_rule(
         self,
         ruleset: Ruleset,
-        hostname: str,
-        svc_desc: str,
+        hostname: str,  # noqa: ARG002
+        svc_desc: str,  # noqa: ARG002
         service_result: AnalyseServiceResult,
         *,
         debug: bool,
@@ -713,7 +712,7 @@ class ModeObjectParameters(WatoMode):
 
 
 def _get_irrelevant_rulesets(service: str | None) -> Container[str]:
-    match service:
+    match service:  # type: ignore[exhaustive-match]
         case "Check_MK Discovery":
             return {
                 # These two are not considered for the discovery service.

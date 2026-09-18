@@ -27,6 +27,12 @@ export const panelConfig = {
     initialState: false,
     help: 'Show an event icon of the History tab, which carries no link and stays read-only.'
   },
+  maxPerRow: {
+    type: 'number' as const,
+    title: 'maxPerRow',
+    initialState: 3,
+    help: 'How many icons fit one row before the rest wrap onto the next, growing the row.'
+  },
   minWidth: {
     type: 'number' as const,
     title: 'minWidth',
@@ -146,7 +152,7 @@ const columns = computed<ColumnDef<DemoRow>[]>(() => [
           @update:filter-state="filterState = $event"
         >
           <template #row>
-            <IconCell column-id="cell" :icons="icons" />
+            <IconCell column-id="cell" :icons="icons" :max-per-row="propState.maxPerRow" />
           </template>
         </MonitoringTable>
       </div>

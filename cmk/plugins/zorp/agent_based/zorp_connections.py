@@ -59,7 +59,7 @@ def check_zorp_connections(params: Mapping[str, Any], section: Section) -> Check
     )
 
 
-def discover_zorp_connections(section: Section) -> DiscoveryResult:
+def discover_zorp_connections(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

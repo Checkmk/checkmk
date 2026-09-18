@@ -99,7 +99,7 @@ def convert_legacy_sections(
                     location=LegacyPluginLocation(file),
                 )
             )
-        except (NotImplementedError, KeyError, AssertionError, ValueError):
+        except NotImplementedError, KeyError, AssertionError, ValueError:
             # NOTE: missing section plug-ins may lead to missing data for a check plug-in
             #       *or* to more obscure errors, when a check/inventory plug-in will be
             #       passed un-parsed data unexpectedly.

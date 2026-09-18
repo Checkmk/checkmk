@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="type-arg"
 
 # from typing import
@@ -44,7 +43,7 @@ def _tuple_do_dict_with_keys(*keys: str) -> Callable[[object], Mapping[str, obje
     def _tuple_to_dict(
         param: object,
     ) -> Mapping[str, object]:
-        match param:
+        match param:  # type: ignore[exhaustive-match]
             case tuple():
                 return dict(zip(keys, param))
             case dict() as already_migrated:

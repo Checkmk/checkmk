@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from typing import override
 
 import cmk.utils.paths
@@ -22,7 +21,6 @@ from cmk.gui.inventory import get_raw_status_data_via_livestatus, load_latest_de
 from cmk.gui.page_menu import PageMenuEntry
 from cmk.gui.type_defs import (
     AllViewSpecs,
-    HTTPVariables,
     PermittedViewSpecs,
     Rows,
     SingleInfos,
@@ -39,6 +37,7 @@ from cmk.inventory.structured_data import (
     ImmutableTree,
     SDPath,
 )
+from cmk.web.utils.urls import HTTPVariable
 
 _InventoryTreeCache = dict[tuple[bool, HostName, SiteId], ImmutableTree | ImmutableDeltaTree]
 
@@ -110,7 +109,7 @@ class VisualTypeViews(VisualType):
         linking_view_single_infos: SingleInfos,
         linking_view_rows: Rows,
         visual: Visual,
-        context_vars: HTTPVariables,
+        context_vars: Sequence[HTTPVariable],
     ) -> bool:
         """This has been implemented for HW/SW Inventory views which are often useless when a host
         has no such information available. For example the "Oracle Tablespaces" inventory view is
@@ -180,8 +179,8 @@ def _compute_link_from_result(
     linking_view_single_infos: SingleInfos,
     linking_view_rows: Rows,
     visual: Visual,
-    context_vars: HTTPVariables,
-    base_link_from: Callable[[SingleInfos, Rows, Visual, HTTPVariables], bool],
+    context_vars: Sequence[HTTPVariable],
+    base_link_from: Callable[[SingleInfos, Rows, Visual, Sequence[HTTPVariable]], bool],
     has_inventory_tree: Callable[[HostName, SiteId, SDPath | None, bool], bool],
 ) -> bool:
     link_from = visual["link_from"]

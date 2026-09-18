@@ -68,7 +68,7 @@ agent_section_cisco_meraki_org_device_status = AgentSection(
 )
 
 
-def discover_device_status(section: Section) -> DiscoveryResult:
+def discover_device_status(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

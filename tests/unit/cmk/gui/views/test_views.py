@@ -3,18 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
+
+from collections.abc import Mapping
 
 import pytest
 
-import cmk.gui.plugins.views
 import cmk.gui.views
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, RowTable
 from cmk.gui.display_options import display_options
+from cmk.gui.graphing import vs_graph_render_option_elements
 from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import (
@@ -28,7 +29,7 @@ from cmk.gui.painter.v0 import registry as painter_registry_module
 from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import painter_option_registry, PainterOptions
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import ColumnSpec, SorterSpec
+from cmk.gui.type_defs import ColumnSpec, Row, SorterSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view import View
@@ -37,6 +38,7 @@ from cmk.gui.views.command import command_group_registry, command_registry
 from cmk.gui.views.command import group as group_module
 from cmk.gui.views.command import registry as registry_module
 from cmk.gui.views.exporter import exporter_registry
+from cmk.gui.views.graph import _LEGACY_ONLY_RENDER_OPTIONS
 from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.page_show_view import get_limit
 from cmk.gui.views.store import multisite_builtin_views
@@ -44,7 +46,8 @@ from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.gui.web_test_app import WebTestAppForCMK
 
 
-def test_registered_painter_options(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_registered_painter_options() -> None:
     expected = [
         "aggr_expand",
         "aggr_onlydiff",
@@ -68,6 +71,13 @@ def test_registered_painter_options(request_context: None) -> None:
     for cls in painter_option_registry.values():
         vs = cls.valuespec
         assert isinstance(vs, ValueSpec)
+
+
+def test_legacy_only_render_options_name_existing_options() -> None:
+    # A stale key would silently stop excluding anything from the graph views' display options.
+    assert set(_LEGACY_ONLY_RENDER_OPTIONS) <= {
+        key for key, _vs in vs_graph_render_option_elements()
+    }
 
 
 def test_registered_layouts() -> None:
@@ -300,7 +310,7 @@ def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
     def render() -> None:
         pass
 
-    def action():
+    def action() -> None:
         pass
 
     command.register_legacy_command(
@@ -320,7 +330,8 @@ def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
     assert cmd.permission == cmk.gui.default_permissions.PermissionGeneralUse
 
 
-def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
+@pytest.mark.usefixtures("monkeypatch", "view")
+def test_painter_export_title() -> None:
     registered_painters = all_painters(active_config.tags.tag_groups)
     user_permissions = UserPermissions({}, {}, {}, [])
     painters: list[Painter] = [
@@ -349,17 +360,18 @@ def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> No
 
     dummy_ident: str = "einszwo"
     for painter, cell in painters_and_cells:
-        cell._painter_params = {"ident": dummy_ident}
+        cell._painter_params = {"ident": dummy_ident}  # noqa: SLF001
         expected_title: str = painter.ident
         if painter.ident in ["host_custom_variable", "service_custom_variable"]:
             expected_title += "_%s" % dummy_ident
         assert painter.export_title(cell) == expected_title
 
 
-def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
+@pytest.mark.usefixtures("view")
+def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(painter_registry_module, "painter_registry", PainterRegistry())
 
-    def rendr(row):
+    def rendr(row: Row) -> tuple[str, str]:
         return ("abc", "xyz")
 
     register_painter(
@@ -482,8 +494,8 @@ def test_view_page(
 ) -> None:
     wsgi_app = logged_in_admin_wsgi_app
 
-    def _prepend(prefix, dict_):
-        d = {}
+    def _prepend(prefix: str, dict_: Mapping[str, object]) -> dict[str, object]:
+        d: dict[str, object] = {}
         for key, value in dict_.items():
             d[key] = value
             d[prefix + key] = value

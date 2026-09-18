@@ -33,7 +33,7 @@ snmp_section_arbor_peakflow_sp_flow = SimpleSNMPSection(
 )
 
 
-def discover_arbor_peakflow_sp_flows(section: int) -> DiscoveryResult:
+def discover_arbor_peakflow_sp_flows(section: int) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

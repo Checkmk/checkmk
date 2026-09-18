@@ -13,7 +13,7 @@ windows_python_wheels = use_repo_rule("//agents/modules/windows:windows_python_w
 bazel_dep(name = "asio", version = "1.34.2.cmk.1")
 bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
 bazel_dep(name = "aspect_rules_js", version = "2.3.7")
-bazel_dep(name = "aspect_rules_lint", version = "2.0.0")
+bazel_dep(name = "aspect_rules_lint", version = "2.9.0")
 bazel_dep(name = "aspect_rules_py", version = "1.11.5")
 bazel_dep(name = "aspect_rules_ts", version = "3.6.0")
 bazel_dep(name = "aspect_rules_webpack", version = "0.17.0")
@@ -22,10 +22,10 @@ bazel_dep(name = "cabextract", version = "1.11")
 bazel_dep(name = "cmk", version = "0.0.0")
 bazel_dep(name = "crypt-ssleay", version = "0.72.cmk.2", repo_name = "Crypt-SSLeay")
 bazel_dep(name = "gazelle", version = "0.51.3")
-bazel_dep(name = "glib", version = "2.0.cmk.1", repo_name = "glib_module")
+bazel_dep(name = "gcc_toolchain", version = "gcc14.4.0.glibc2.28.cmk.4")
 bazel_dep(name = "googletest", version = "1.17.0", repo_name = "gtest")
+bazel_dep(name = "lcab", version = "1.0b12.cmk.1")
 bazel_dep(name = "libgsf", version = "1.14.44.cmk.4")
-bazel_dep(name = "libxml2", version = "2.0.cmk.1", repo_name = "libxml2_module")
 bazel_dep(name = "llvm_toolchain", version = "21.1.8.cmk.1")
 bazel_dep(name = "mod_fcgid", version = "2.3.9.cmk.1")
 bazel_dep(name = "mod_wsgi", version = "5.0.2.cmk.1")
@@ -39,10 +39,10 @@ bazel_dep(name = "patchelf", version = "0.18.0.bcr.1")
 bazel_dep(name = "perl-modules", version = "0.0.1.cmk.2")
 bazel_dep(name = "plantuml", version = "1.2026.2.cmk.1")
 bazel_dep(name = "platforms", version = "1.1.0")
-bazel_dep(name = "pnp4nagios", version = "0.6.26.cmk.1")
+bazel_dep(name = "pnp4nagios", version = "0.6.26.cmk.2")
 bazel_dep(name = "protobuf", version = "33.4")
 bazel_dep(name = "redis", version = "8.4.5.cmk.1")
-bazel_dep(name = "rules_cc", version = "0.2.19")
+bazel_dep(name = "rules_cc", version = "0.2.22")
 bazel_dep(name = "rules_foreign_cc", version = "0.15.1")
 bazel_dep(name = "rules_go", version = "0.61.1")
 bazel_dep(name = "rules_gzip", version = "1.0.0")
@@ -56,12 +56,11 @@ bazel_dep(name = "rules_distroless", version = "0.6.2")
 bazel_dep(name = "rules_pkg", version = "1.1.0")
 bazel_dep(name = "rules_proto", version = "7.1.0")
 bazel_dep(name = "rules_proto_grpc", version = "5.3.1")
-bazel_dep(name = "rules_python", version = "2.0.1")
-bazel_dep(name = "rules_rust", version = "0.70.0")
+bazel_dep(name = "rules_python", version = "2.3.3")
+bazel_dep(name = "rules_rust", version = "0.74.0")
 bazel_dep(name = "rules_shell", version = "0.8.0")
 bazel_dep(name = "rules_uv", version = "0.89.2")
-bazel_dep(name = "rrdtool", version = "1.7.2.cmk.1")
-bazel_dep(name = "rrdtool_native", version = "1.7.2.cmk.1")
+bazel_dep(name = "rrdtool", version = "1.7.2.cmk.3")
 bazel_dep(name = "shunit2", version = "2.1.9pre.cmk.1")
 bazel_dep(name = "tar.bzl", version = "0.6.0")
 bazel_dep(name = "toolchains_musl", version = "0.1.20")
@@ -69,6 +68,8 @@ bazel_dep(name = "clickhouse", version = "26.3.16.10001.altinitystable.cmk.1")
 bazel_dep(name = "rules_sphinx", version = "0.2.0")
 bazel_dep(name = "lcov", version = "2.3.2")
 bazel_dep(name = "zstd", version = "1.5.7")
+
+bazel_dep(name = "libpcap", version = "1.10.5.bcr.3", dev_dependency = True)
 
 # rules_sphinx is not yet on BCR
 archive_override(
@@ -156,6 +157,8 @@ single_version_override(
         "//bazel/patches:rules_lint-clang_tidy_per_file.patch",
         # https://github.com/aspect-build/rules_lint/pull/747
         "//bazel/patches:rules_lint-no_copy.patch",
+        # Completes the patch above, not part of that PR (yet).
+        "//bazel/patches:rules_lint-clippy_fixer_at_exec_root.patch",
         "//bazel/patches:rules_lint-clippy_fail_on_violation.patch",
         # For astrein and other internal tooling.
         "//bazel/patches:rules_lint_export_helpers.patch",
@@ -179,6 +182,12 @@ single_version_override(
 )
 
 single_version_override(
+    module_name = "libxml2",
+    patch_strip = 1,
+    patches = ["//bazel/patches:libxml2-silence_format_extra_args.patch"],
+)
+
+single_version_override(
     module_name = "protobuf",
     patch_strip = 1,
     patches = ["//bazel/patches:protobuf-silence_build_warnings.patch"],
@@ -189,7 +198,7 @@ single_version_override(
     patch_strip = 1,
     patches = [
         "//bazel/patches:rules_cc-publicize_unix_cc_toolchain_config.patch",
-        "//bazel/patches:rules_cc-add_static_link_cpp_runtimes.patch",
+        "//bazel/patches:rules_cc-drop_sanitize_pwd_env.patch",
     ],
 )
 
@@ -217,6 +226,15 @@ single_version_override(
 )
 
 single_version_override(
+    module_name = "rules_rust",
+    patch_strip = 1,
+    patches = [
+        # Carried locally — no upstream PR yet.
+        "//bazel/patches:rules_rust-construct_arguments_process_wrapper.patch",
+    ],
+)
+
+single_version_override(
     module_name = "rules_uv",
     patch_strip = 1,
     patches = [
@@ -235,6 +253,48 @@ local_path_override(
 
 # TODO: Duplicate from bazel_variables.bzl. won't be needed anymore when all omd packages are loaded via MODULE.bazel
 UPSTREAM_MIRROR_URL = "https://artifacts.lan.tribe29.com/repository/upstream-archives/"
+
+# matplotlib 3.11.1 vendored dependencies
+http_file(
+    name = "matplotlib_freetype_src",
+    downloaded_file_path = "freetype-2.14.3.tar.xz",
+    sha256 = "36bc4f1cc413335368ee656c42afca65c5a3987e8768cc28cf11ba775e785a5f",
+    urls = [
+        "https://download.savannah.nongnu.org/releases/freetype/freetype-2.14.3.tar.xz",
+        "https://downloads.sourceforge.net/project/freetype/freetype2/2.14.3/freetype-2.14.3.tar.xz",
+    ],
+)
+
+http_file(
+    name = "matplotlib_harfbuzz_src",
+    downloaded_file_path = "harfbuzz-14.1.0.tar.xz",
+    sha256 = "ee0eb3a1da2c5a28147f12dff55f6c7d60aeeeb29ac7ef334eabe84c8476c105",
+    urls = [
+        "https://github.com/harfbuzz/harfbuzz/releases/download/14.1.0/harfbuzz-14.1.0.tar.xz",
+        "https://github.com/mesonbuild/wrapdb/releases/download/harfbuzz_14.1.0-1/harfbuzz-14.1.0.tar.xz",
+    ],
+)
+
+http_file(
+    name = "matplotlib_sheenbidi_src",
+    downloaded_file_path = "sheenbidi-3.0.0.tar.gz",
+    sha256 = "86c56014034739ba39a24c23eb00323b0bf6f737354f665786015fca842af786",
+    url = "https://github.com/Tehreer/SheenBidi/archive/refs/tags/v3.0.0/sheenbidi-3.0.0.tar.gz",
+)
+
+http_file(
+    name = "matplotlib_libraqm_src",
+    downloaded_file_path = "libraqm-0.10.5.tar.gz",
+    sha256 = "7f3dd21b4b3bd28a36f2c911d31d91a9d69341697713923ef1aac65d56ebcafd",
+    url = "https://github.com/HOST-Oman/libraqm/archive/v0.10.5/libraqm-0.10.5.tar.gz",
+)
+
+http_file(
+    name = "matplotlib_qhull_src",
+    downloaded_file_path = "qhull-8.0.2.tgz",
+    sha256 = "8774e9a12c70b0180b95d6b0b563c5aa4bea8d5960c15e18ae3b6d2521d64f8b",
+    url = "https://github.com/qhull/qhull/archive/v8.0.2/qhull-8.0.2.tar.gz",
+)
 
 # Artifacts built and published by our own CI jobs, laid out like so:
 # <publisher>/<name>/<version>/<platform>/<arch>/<variant>/<file>
@@ -256,13 +316,26 @@ apt.install(
 )
 use_repo(apt, "relay_base_image")
 
-# @glib and @libxml2 overlay the distro-provided system libraries
-# (new_local_repository over /usr).
-glib_ext = use_extension("@glib_module//:extensions.bzl", "glib")
-use_repo(glib_ext, "glib")
+# Configure apt for the ReviewMK job image
+apt.install(
+    name = "reviewmk_job_image",
+    lock = "//non-free/packages/cmk-dev-ai:deploy/job-image/distro_packages.lock.json",
+    manifest = "//non-free/packages/cmk-dev-ai:deploy/job-image/distro_packages.yaml",
+)
+use_repo(apt, "reviewmk_job_image")
 
-libxml2_ext = use_extension("@libxml2_module//:extensions.bzl", "libxml2")
-use_repo(libxml2_ext, "libxml2")
+# Claude Code CLI is unfortunately not available through standard package managers, so
+# we expose it directly for the deploy target
+http_file(
+    name = "claude_code_linux_x64",
+    downloaded_file_path = "claude",
+    executable = True,
+    integrity = "sha256-JtAgNR6BEvQAZ5Dzz85DtMnfDBux0OVCNk1kFRuB1bo=",
+    urls = [
+        "https://downloads.claude.ai/claude-code-releases/2.1.263/linux-x64/claude",
+        UPSTREAM_MIRROR_URL + "/claude-code-2.1.263-linux-x64",
+    ],
+)
 
 # Java runtimes we hand to tools explicitly:
 #   remotejdk25_linux - Wiremock-based component/unit tests. Previously provided
@@ -300,47 +373,15 @@ http_archive(
 )
 
 http_archive(
-    name = "gcc-linux-x86_64",
-    build_file = "//bazel/toolchains/cc/gcc/bootlin:BUILD.bootlin.bazel",
-    integrity = "sha256-dgrNXDFZRIthjiN7YZNTNbqtp0/gzcDXYRgmy0m0HIw=",
-    patch_cmds = [
-        # The tools used by foreign_cc search the tools under their standard,
-        # non-decorated names and pass them all the flags, including `--sysroot`.
-        # But the combination of `--sysroot` and the multiple levels of symlink
-        # in the sandbox confuse the linker.
-        # This creates a wrapper for `ld` that removes the `--sysroot` argument.
-        "mv x86_64-buildroot-linux-gnu/bin/ld{,.orig}",
-        "echo '%s' > x86_64-buildroot-linux-gnu/bin/ld" % """\
-#!/usr/bin/env bash
-
-args=("$@")
-for ((i = 0; i < $#; i++)); do
-    [[ "${args[i]}" == --sysroot=* ]] && unset args[i]
-done
-exec "$(dirname -- "${BASH_SOURCE[0]}")"/ld.orig "${args[@]}"
-""",
-        "chmod 755 x86_64-buildroot-linux-gnu/bin/ld",
-    ],
-    strip_prefix = "x86-64--glibc--stable-2025.08-1",
-    urls = ["https://toolchains.bootlin.com/downloads/releases/toolchains/x86-64/tarballs/x86-64--glibc--stable-2025.08-1.tar.xz"],
-)
-
-http_archive(
-    name = "pcap",
-    build_file = "//omd/packages/pcap:BUILD.pcap.bazel",
-    integrity = "sha256-hPqJrG0wMCjBxbdUq/93Ik9F7KCpTrGjT/CqnO7OOSU=",
-    strip_prefix = "libpcap-1.10.5",
-    urls = [
-        "https://www.tcpdump.org/release/libpcap-1.10.5.tar.xz",
-    ],
-)
-
-http_archive(
     name = "oci-basic-light-win-x64",
+    # The archive holds one instantclient_<version> directory. Globbing it with
+    # ** rather than naming it keeps a version bump to the url and the checksum:
+    # a stale directory name would match nothing and produce an empty package
+    # instead of an error.
     build_file_content = """
 filegroup(
     name = "srcs",
-    srcs = glob(["instantclient_21_18/*.dll"]),
+    srcs = glob(["**/*.dll"]),
     visibility = ["//visibility:public"],
 )
 """,
@@ -613,22 +654,11 @@ http_archive(
 http_archive(
     name = "python",
     build_file = "//omd/packages/Python:BUILD.Python.bazel",
-    integrity = "sha256-Y55DJDxiCjCPloIT354A8vj2IzL3rbqnp+65eDBXxpA=",
-    strip_prefix = "Python-3.13.14",
+    integrity = "sha256-O0jayPtZ9i6qZ6yDwesSvaG3oIQG3ShuJSwRpmvif4E=",
+    strip_prefix = "Python-3.14.7",
     urls = [
-        "https://www.python.org/ftp/python/3.13.14/Python-3.13.14.tar.xz",
-        UPSTREAM_MIRROR_URL + "Python-3.13.14.tar.xz",
-    ],
-)
-
-http_archive(
-    name = "lcab",
-    build_file = "//omd/packages/lcab:BUILD.lcab.bazel",
-    sha256 = "065f2c1793b65f28471c0f71b7cf120a7064f28d1c44b07cabf49ec0e97f1fc8",
-    strip_prefix = "lcab-1.0b12",
-    urls = [
-        "http://archlinux.c3sl.ufpr.br/other/lcab/lcab-1.0b12.tar.gz",
-        UPSTREAM_MIRROR_URL + "lcab-1.0b12.tar.gz",
+        "https://www.python.org/ftp/python/3.14.7/Python-3.14.7.tar.xz",
+        UPSTREAM_MIRROR_URL + "Python-3.14.7.tar.xz",
     ],
 )
 
@@ -723,36 +753,36 @@ http_archive(
 http_file(
     name = "python_msi_ucrt",
     downloaded_file_path = "ucrt.msi",
-    sha256 = "5e6af3bfa726e50a320830ce6bf080d5fad049389cfea13d63812a7f4be50aa2",
-    url = "https://www.python.org/ftp/python/3.13.13/amd64/ucrt.msi",
+    sha256 = "c35e76105318b7472c6028e8d4a2f9b8ec1a3ef02897b4e49350c8adb84a2105",
+    url = "https://www.python.org/ftp/python/3.14.7/amd64/ucrt.msi",
 )
 
 http_file(
     name = "python_msi_core",
     downloaded_file_path = "core.msi",
-    sha256 = "863c2828e167418fc53e0290b379938f3bdbcfbb88e89e15e6265672345940a4",
-    url = "https://www.python.org/ftp/python/3.13.13/amd64/core.msi",
+    sha256 = "3dfcfe7b42e6f2d683be427af62369761c7e6627aff6a8da2f439a9d11e62cdf",
+    url = "https://www.python.org/ftp/python/3.14.7/amd64/core.msi",
 )
 
 http_file(
     name = "python_msi_exe",
     downloaded_file_path = "exe.msi",
-    sha256 = "6ec09f11d20a58d77bcc40c86eb1eff0bd55ea4d28a89a569754583705efa1ac",
-    url = "https://www.python.org/ftp/python/3.13.13/amd64/exe.msi",
+    sha256 = "63035cb1fc01ec085c0f18e73f8c1b000ca148378f4f4b1db11f3baabcc8cf3a",
+    url = "https://www.python.org/ftp/python/3.14.7/amd64/exe.msi",
 )
 
 http_file(
     name = "python_msi_lib",
     downloaded_file_path = "lib.msi",
-    sha256 = "c72f5fca7ed487818bb52c66fc9126f2ecc4260e8e394c9394e21825bbf0c936",
-    url = "https://www.python.org/ftp/python/3.13.13/amd64/lib.msi",
+    sha256 = "d68a92dcc61addb49e4678f60af2838d7675991341c9bf0facd2c5e7283841c3",
+    url = "https://www.python.org/ftp/python/3.14.7/amd64/lib.msi",
 )
 
 http_file(
     name = "python_msi_pip",
     downloaded_file_path = "pip.msi",
-    sha256 = "6899283565a7d4d85058518d58f9edcda2e0828496d46b0bca4fee20d7e7d7cf",
-    url = "https://www.python.org/ftp/python/3.13.13/amd64/pip.msi",
+    sha256 = "b9c87eee34ab2ded2702b1fb26ea031b07ffbb665617336b2a70508e660153eb",
+    url = "https://www.python.org/ftp/python/3.14.7/amd64/pip.msi",
 )
 
 # win_amd64 wheel closure for python-3.cab's .venv, fetched at the fetch phase
@@ -797,7 +827,7 @@ use_repo(powershell_repos, "converttosarif", "psscriptanalyzer", "pwsh")
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(
     edition = "2021",
-    versions = ["1.94.1"],
+    versions = ["1.96.1"],
 )
 rust.repository_set(
     name = "rust_linux_x86_64",
@@ -809,7 +839,7 @@ rust.repository_set(
         "@platforms//os:linux",
     ],
     target_triple = "x86_64-unknown-linux-gnu",
-    versions = ["1.94.1"],
+    versions = ["1.96.1"],
 )
 rust.repository_set(
     name = "rust_linux_x86_64",

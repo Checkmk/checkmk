@@ -30,10 +30,12 @@ def test_init_scripts(site: Site) -> None:
 
     if not site.edition.is_community_edition():
         scripts |= {
+            "ai-control-plane",
             "cmc",
             "dcd",
             "liveproxyd",
             "mcp-server",
+            "data-backend",
             "mknotifyd",
         }
     if site.edition.is_ultimate_edition() or site.edition.is_ultimatemt_edition():
@@ -41,12 +43,6 @@ def test_init_scripts(site: Site) -> None:
         # cmk-network-flow only ship on Ubuntu 24.04 for now.
         if os.environ.get("DISTRO") == "ubuntu-24.04":
             scripts |= {"network-flow"}
-    if (
-        site.edition.is_cloud_edition()
-        or site.edition.is_ultimate_edition()
-        or site.edition.is_ultimatemt_edition()
-    ):
-        scripts |= {"metric-backend"}
     if not site.edition.is_cloud_edition():
         scripts |= {"jaeger"}
 

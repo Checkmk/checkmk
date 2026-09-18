@@ -23,7 +23,7 @@ from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import all_painters
 from cmk.gui.painter.v0.painters import _paint_custom_notes
-from cmk.gui.type_defs import ColumnSpec, DynamicIconName, Row
+from cmk.gui.type_defs import ColumnSpec, Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views.page_edit_view import painters_of_datasource
@@ -32,6 +32,7 @@ from cmk.inventory.structured_data import deserialize_tree
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils.paths import default_config_dir
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIconName
 
 
 @pytest.fixture(name="live")
@@ -1307,9 +1308,10 @@ def _set_expected_queries(painter_ident, live):
             "GET hosts\nColumns: host_name\nLocaltime: 1523811000\nOutputFormat: json\nKeepAlive: on\nResponseHeader: fixed16"
         )
         return
-    if painter_ident in ("service_graphs", "svc_pnpgraph"):
-        # The engine resolves the metric names during the render; the legacy renderer
-        # deferred its fetch to a follow-up AJAX call and so issued no query here.
+    if painter_ident in ("service_graphs", "svc_pnpgraph", "host_graphs", "host_pnpgraph"):
+        # Every graph painter renders through the engine, which resolves the metric names
+        # during the render. The row carries a service_description, so the host painters
+        # address the same service as the service ones.
         live.expect_query(
             "GET services\nColumns: host_name description perf_data metrics check_command\n"
             "Filter: host_name = abc\nFilter: description = Interface 3\nAnd: 2"
@@ -1398,13 +1400,13 @@ def _load_notes_into_files(notes_dirs: list[Path], notes: list[dict[str, object]
         ),
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_paint_custom_notes(
     notes_type: Literal["host", "service"],
     notes_dir: Path,
     notes_file: Path,
     row: Row,
     notes: list[str],
-    request_context: None,
 ) -> None:
     notes_dir.mkdir(parents=True)
     with open(notes_file, "w") as f:
@@ -1630,13 +1632,13 @@ def test_paint_custom_notes(
         ),
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_paint_custom_notes_file_inclusion_and_html_tags(
     object_type: Literal["host", "service"],
     host_name: str,
     service_name: str | None,
     notes_dirs: list[Path],
     notes: list[dict[str, object]],
-    request_context: None,
 ) -> None:
     expected_notes: list[str] = _load_notes_into_files(notes_dirs, notes)
 

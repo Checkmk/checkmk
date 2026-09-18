@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.plugins.azure_deprecated.rulesets.azure import CCE_AZURE_SERVICES, RAW_AZURE_SERVICES
 from cmk.plugins.azure_deprecated.special_agent.agent_azure import ALL_METRICS
 
 
-def test_all_services_present_in_gui():
+def test_all_services_present_in_gui() -> None:
     # Test that all services fetched by the agent are selectable in the GUI.
     # This is to avoid to forget to add a new service in the GUI when adding it to the agent.
     all_gui_services = [

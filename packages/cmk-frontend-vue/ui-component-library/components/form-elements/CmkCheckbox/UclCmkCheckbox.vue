@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import type { ListPropDef } from '@ucl/_ucl/types/prop-def'
 
 import codeExample from './UclCmkCheckboxCodeExample.vue?raw'
@@ -59,11 +59,11 @@ export const panelConfig = {
     type: 'list' as const,
     title: 'Padding',
     help: 'Adds 2px of padding to the checkbox in the given direction.',
-    options: [
-      { title: 'Both', name: 'both' },
-      { title: 'Top', name: 'top' },
-      { title: 'Bottom', name: 'bottom' }
-    ] satisfies Options<CheckboxPadding>[],
+    options: listOptions<CheckboxPadding>({
+      both: 'Both',
+      top: 'Top',
+      bottom: 'Bottom'
+    }),
 
     initialState: 'both' as const
   },
@@ -71,10 +71,10 @@ export const panelConfig = {
     type: 'list' as const,
     title: 'Label Position',
     help: "With 'left' the label comes first and the checkbox sits at the far end of the component, top-aligned. Combine with dots to fill the gap between label and checkbox.",
-    options: [
-      { title: 'Right', name: 'right' },
-      { title: 'Left', name: 'left' }
-    ] satisfies Options<CheckboxLabelPosition>[],
+    options: listOptions<CheckboxLabelPosition>({
+      right: 'Right',
+      left: 'Left'
+    }),
     initialState: 'right' as const
   },
   dots: {

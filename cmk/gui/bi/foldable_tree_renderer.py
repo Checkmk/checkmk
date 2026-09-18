@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import abc
@@ -20,9 +19,10 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import DynamicIconName, IconNames, Row, StaticIcon
+from cmk.gui.type_defs import Row
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless, urlencode_vars
 
 from .helpers import get_state_assumption_key
@@ -206,13 +206,13 @@ class ABCFoldableTreeRenderer(abc.ABC):
             self._assume_icon(site, host, service)
 
             if show_host:
-                html.a(host.replace(" ", "&nbsp;"), href=host_url)
+                html.a(host.replace(" ", "&nbsp;"), href=host_url)  # type: ignore[possibly-undefined]
                 html.b(HTML.without_escaping("&diams;"), class_="bullet")
 
             if not service:
-                html.a(_("Host state"), href=host_url)
+                html.a(_("Host state"), href=host_url)  # type: ignore[possibly-undefined]
             else:
-                html.a(service.replace(" ", "&nbsp;"), href=service_url)
+                html.a(service.replace(" ", "&nbsp;"), href=service_url)  # type: ignore[possibly-undefined]
 
     @abc.abstractmethod
     def _show_node(

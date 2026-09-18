@@ -33,7 +33,7 @@ class UserRoleExtensionsModel:
 
 @api_model
 class UserRoleModel(DomainObjectModel):
-    domainType: Literal["user_role"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["user_role"] = api_field(
         description="The domain type of the object.",
     )
     extensions: UserRoleExtensionsModel = api_field(

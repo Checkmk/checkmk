@@ -28,10 +28,8 @@ description:
  There are no default thresholds for this service. However, thresholds can be configured via the
  "Kubernetes CPU resource utilization" ruleset.
 
- The check requires that the special agent kube is configured.
-
- For the Checkmk Openshift monitoring, the reported metric values will differ from the values
- reported on the Openshift dashboard as as the included values describe a different quantity.
+ This check requires that Kubernetes monitoring is configured and that Checkmk can receive
+ data from the in-cluster agent.
 
 discovery:
  One service is created per Kubernetes object.

@@ -189,7 +189,7 @@ defineProps<CmkChipProps>()
 
   &.cmk-chip--variant-outline {
     .cmk-chip__content {
-      background-color: var(--ux-theme-0);
+      background-color: var(--chip-outline-bg-color, var(--ux-theme-0));
       border: 1px solid var(--chip-border-color);
       color: var(--chip-outline-font-color, var(--chip-color));
     }

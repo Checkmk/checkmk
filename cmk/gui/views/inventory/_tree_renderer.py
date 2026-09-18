@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 import abc
 import time
@@ -37,6 +36,7 @@ from cmk.inventory.structured_data import (
     ImmutableDeltaTree,
     ImmutableTable,
     ImmutableTree,
+    parse_internal_raw_path,
     RetentionInterval,
     SDDeltaValue,
     SDKey,
@@ -126,9 +126,7 @@ class SDItem:
                 html_values=[html_value],
             )
 
-        valid_until = self.retention_interval.cached_at + self.retention_interval.cache_interval
-        keep_until = valid_until + self.retention_interval.retention_interval
-        if now > keep_until:
+        if now > self.retention_interval.keep_until:
             return TDSpec(
                 css_classes=(
                     [td_styles.css_class, "inactive_cell"]
@@ -152,7 +150,7 @@ class SDItem:
                 ],
             )
 
-        if now > valid_until:
+        if now > self.retention_interval.valid_until:
             return TDSpec(
                 css_classes=(
                     [td_styles.css_class, "inactive_cell"]
@@ -173,7 +171,9 @@ class SDItem:
                             "provided_at": cmk.utils.render.date_and_time(
                                 self.retention_interval.cached_at
                             ),
-                            "valid_until": cmk.utils.render.date_and_time(keep_until),
+                            "valid_until": cmk.utils.render.date_and_time(
+                                self.retention_interval.valid_until
+                            ),
                         },
                         css=["muted_text"],
                     )
@@ -484,7 +484,7 @@ def ajax_inv_render_tree(ctx: PageContext) -> None:
         theme=gui_theme,
         request=http_request,
         show_internal_tree_paths=show_internal_tree_paths,
-    ).show(time.time(), tree.get_tree(inventory.parse_internal_raw_path(raw_path).path), tree_id)
+    ).show(time.time(), tree.get_tree(parse_internal_raw_path(raw_path).path), tree_id)
 
 
 def _replace_title_placeholders(hint: NodeDisplayHint, path: SDPath) -> str:
@@ -625,6 +625,7 @@ class TreeRenderer:
 
         sorted_pairs: Sequence[SDItem] | Sequence[_SDDeltaItem]
         sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]]
+        columns: Sequence[_Column]
         match tree:
             case ImmutableTree():
                 items_sorter = _SDItemsSorter(

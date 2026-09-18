@@ -16,7 +16,7 @@ export {
   useFilterGroups,
   useProvideFilterDefinitions
 } from './useFilterDefinitions.ts'
-export { isFullyConfiguredFilter, parseFilterTypes } from './utils.ts'
+export { configuredFilters, parseFilterTypes, unconfiguredFilters } from './utils.ts'
 export {
   CATEGORY_DEFINITIONS,
   type CategoryDefinition,

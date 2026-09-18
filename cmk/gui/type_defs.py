@@ -6,7 +6,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
-from __future__ import annotations
 
 import uuid
 from collections.abc import Callable, Hashable, Iterable, Mapping, Sequence
@@ -33,25 +32,19 @@ from cmk.crypto.password_hashing import PasswordHash
 from cmk.crypto.secrets import Secret
 from cmk.events.notify_types import DisabledNotificationsOptions, EventRule
 from cmk.gui.exceptions import FinalizeRequest
-from cmk.gui.utils.speaklater import LazyString
 from cmk.inventory.structured_data import SDPath
 from cmk.ruleset_matcher.labels import Labels
-from cmk.shared_typing.icon import IconNames as IconNames
-from cmk.shared_typing.icon import IconSizes as IconSizes
-from cmk.utils.metrics import MetricName
 from cmk.utils.password_store import PasswordId
+from cmk.web.utils.choices import Choices, ChoiceText
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName
+from cmk.web.utils.speaklater import LazyString
 
 _ContactgroupName = str
 SizePT = NewType("SizePT", float)
 SizeMM = float
-HTTPVariables = list[tuple[str, int | str | None]]
+type VerticalAxisWidth = Literal["fixed"] | tuple[Literal["explicit"], SizePT]
 LivestatusQuery = str
-PermissionName = str
 RoleName = str
-ChoiceText = str
-ChoiceId = str | None
-Choice = tuple[ChoiceId, ChoiceText]
-Choices = list[Choice]  # TODO: Change to Sequence, perhaps DropdownChoiceEntries[str]
 ChoiceMapping = Mapping[str, ChoiceText]
 
 
@@ -274,7 +267,7 @@ class UserContactDetails(TypedDict):
     customer: NotRequired[str | None]
 
 
-StartOfWeek = Literal["saturday", "sunday", "monday"]
+StartOfWeek = Literal["browser_locale", "saturday", "sunday", "monday"]
 
 
 class UserDetails(TypedDict):
@@ -356,6 +349,7 @@ class UserSpec(TypedDict, total=False):
     ldap_quarantine: NotRequired[QuarantineInfo | None]
     navbar_changes_action: NotRequired[Literal["full_page", "slideout"] | None]
     created_on_version: NotRequired[str]  # The Checkmk version string when the user was created
+    ntop_alias: NotRequired[str]
 
 
 AnnotatedUserId = Annotated[
@@ -432,11 +426,17 @@ ViewName = str
 ColumnName = str
 
 
+type MetricHistoryAggregation = Literal["min", "max", "avg"] | tuple[Literal["percentile"], float]
+type MetricForecastAggregation = tuple[
+    Literal["linear", "prophettrend"], Literal["day", "week", "month"]
+]
+
+
 class PainterParameters(TypedDict, total=False):
     # TODO Improve:
     # First step was: make painter's param a typed dict with all obvious keys
     # but some possible keys are still missing
-    aggregation: Literal["min", "max", "avg"] | tuple[str, str]
+    aggregation: MetricHistoryAggregation | MetricForecastAggregation
     color_choices: list[str]
     column_title: str
     ident: str
@@ -449,7 +449,12 @@ class PainterParameters(TypedDict, total=False):
     path_to_table: SDPath
     column_to_display: str
     columns_to_match: list[tuple[str, str]]
-    color_levels: tuple[Literal["abs_vals"], tuple[MetricName, tuple[float, float]]]
+    # "rel_pop" levels are relative to the column maximum. Their choice is no longer offered,
+    # but views stored before it was withdrawn still carry them.
+    color_levels: (
+        tuple[Literal["abs_vals"], tuple[str, tuple[float, float]]]
+        | tuple[Literal["rel_pop"], tuple[float, float]]
+    )
     # From historic metric painters
     rrd_consolidation: Literal["average", "min", "max"]
     time_range: tuple[str | int, int] | Literal["report"]
@@ -713,23 +718,6 @@ class SetOnceDict(dict[K, V]):
         raise NotImplementedError("Deleting items are not supported.")
 
 
-DynamicIconName = NewType("DynamicIconName", str)
-
-
-class DynamicIconWithEmblem(TypedDict):
-    icon: DynamicIconName
-    emblem: str | None
-
-
-DynamicIcon = DynamicIconName | DynamicIconWithEmblem
-
-
-@dataclass(frozen=True)
-class StaticIcon:
-    icon: IconNames
-    emblem: str | None = None
-
-
 SearchQuery = str
 
 
@@ -751,8 +739,8 @@ SearchResultsByTopic = Iterable[tuple[str, Iterable[SearchResult]]]
 
 @dataclass(frozen=True, kw_only=True)
 class PerfDataTuple:
-    metric_name: MetricName
-    lookup_metric_name: MetricName
+    metric_name: str
+    lookup_metric_name: str
     value: float | int
     unit_name: str
     warn: float | None = None
@@ -780,10 +768,8 @@ GraphTitleFormatVS = Literal["plain", "add_host_name", "add_host_alias", "add_se
 class GraphRenderOptionsVS(TypedDict, total=False):
     border_width: SizeMM
     color_gradient: float
-    editing: bool
     fixed_timerange: bool
     font_size: SizePT
-    interaction: bool
     preview: bool
     resizable: bool
     show_controls: bool
@@ -796,7 +782,7 @@ class GraphRenderOptionsVS(TypedDict, total=False):
     show_title: bool | Literal["inline"]
     show_vertical_axis: bool
     size: tuple[int, int]
-    vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT]
+    vertical_axis_width: VerticalAxisWidth
     title_format: Sequence[GraphTitleFormatVS]
 
 

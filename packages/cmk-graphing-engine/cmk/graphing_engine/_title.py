@@ -7,8 +7,9 @@ import json
 import re
 from collections.abc import Iterable, Iterator, Mapping
 
+from ._fetched import ScalarKind
 from ._naming import Service
-from ._quantities import rrd_metric_of, RRDMetric, ScalarKind, ScalarOf
+from ._quantities import rrd_metric_of, RRDMetric, ScalarOf
 from ._quantity import (
     EvaluationContext,
     first_value,

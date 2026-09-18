@@ -10,6 +10,11 @@ import vue from '@vitejs/plugin-vue'
 import path from 'node:path'
 import { defineConfig } from 'vite'
 
+// CI hands over the CPU budget of its container. os.availableParallelism() does
+// not see a cgroup quota, and where that quota lives is CI's concern rather than
+// this config's. Unset elsewhere so vitest keeps its own default.
+const maxWorkers = Number(process.env.VITEST_MAX_WORKERS) || undefined
+
 export default defineConfig({
   plugins: [
     vue({
@@ -39,6 +44,7 @@ export default defineConfig({
     // enable jest-like global test APIs
     globals: true,
     environment: 'jsdom',
+    ...(maxWorkers === undefined ? {} : { maxWorkers }),
     setupFiles: ['tests/setup-tests.ts'],
     reporters: process.env.XML_OUTPUT_FILE // variable set by bazel
       ? [

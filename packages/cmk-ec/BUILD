@@ -9,7 +9,6 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
-    "pyproject.toml",
     "requirements.in",
 ])
 
@@ -92,6 +91,7 @@ py_library(
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:i18n",
+        "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:profile",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
@@ -136,7 +136,6 @@ py_wheel(
     distribution = "cmk-ec",
     entry_points = {"console_scripts": ["mkeventd = cmk.ec.main:main"]},
     strip_path_prefixes = ["packages/cmk-ec"],
-    # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [

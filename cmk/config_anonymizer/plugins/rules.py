@@ -54,7 +54,7 @@ from cmk.utils.global_ident_type import GlobalIdent
 class AnonymizedAllRulesets(AllRulesets):
     def __init__(self, anon_interface: AnonInterface, tree: FolderTree) -> None:
         """Load all rules of all folders"""
-        rulesets = RulesetCollection._initialize_rulesets()
+        rulesets = RulesetCollection._initialize_rulesets()  # noqa: SLF001
         super().__init__(rulesets, tree)
         self._load_rulesets_recursively(tree.root_folder())
         self._anon_interface = anon_interface
@@ -493,7 +493,7 @@ class RulesStep(AnonymizeStep):
                     )
             except AnonymizationError as e:
                 logger.warning(e)
-                anonymized_all_rulesets._rulesets.pop(ruleset_name)
+                anonymized_all_rulesets._rulesets.pop(ruleset_name)  # noqa: SLF001
                 continue
 
         anonymized_all_rulesets.save_anon_rulesets(pprint_value=True)

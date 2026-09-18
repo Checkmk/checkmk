@@ -4,8 +4,6 @@
 
 """XML builders for build failures and test failures."""
 
-from __future__ import annotations
-
 import xml.etree.ElementTree as ET
 
 from ._bep_types import ActionKey, ActionStderr, ActionTiming, BepEvent

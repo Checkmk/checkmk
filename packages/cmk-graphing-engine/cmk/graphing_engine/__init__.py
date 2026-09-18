@@ -4,16 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._display import metric_display_attributes
-from ._evaluate import (
-    evaluate_graphs,
-    EvaluatedCurve,
-    EvaluatedGraph,
-    EvaluatedLine,
-    EvaluatedRule,
-    EvaluatedStack,
-    EvaluatedVerticalRange,
-    VerticalRangeKind,
-)
 from ._fetch import (
     FetchDataProtocol,
     FetchMetricNamesProtocol,
@@ -22,21 +12,31 @@ from ._fetched import (
     FetchedData,
     MACRO_SERIES_ID,
     PerformanceData,
+    ScalarKind,
     SeriesAttributes,
 )
-from ._from_api import build_curve, parse_graph_from_api, QuantityBuilderProtocol
 from ._graph import (
-    Bound,
-    Curve,
     FixedRange,
     Graph,
     Line,
     MinimalRange,
+    Region,
     Rule,
     Stack,
     VerticalRange,
 )
-from ._matching import (
+from ._graph_evaluate import (
+    evaluate_graphs,
+    EvaluatedCurve,
+    EvaluatedGraph,
+    EvaluatedLine,
+    EvaluatedRegion,
+    EvaluatedRule,
+    EvaluatedStack,
+    EvaluatedVerticalRange,
+    VerticalRangeKind,
+)
+from ._graph_matching import (
     build_matched_graphs,
 )
 from ._naming import (
@@ -46,22 +46,38 @@ from ._naming import (
     ServiceName,
     SiteID,
 )
+from ._perfometer_evaluate import (
+    evaluate_perfometer,
+    EvaluatedBidirectional,
+    EvaluatedFocusBound,
+    EvaluatedFocusRange,
+    EvaluatedPerfometer,
+    EvaluatedPerfometerLayout,
+    EvaluatedSegment,
+    EvaluatedStacked,
+    FocusBoundKind,
+)
 from ._quantities import (
     Constant,
     Difference,
     Fraction,
+    PredictionCurveKind,
+    PredictionMetric,
     Product,
     RRDMetric,
-    ScalarKind,
     ScalarOf,
     Sum,
 )
 from ._quantity import (
+    Bound,
+    Curve,
     EvaluatedQuantity,
     EvaluationContext,
+    FanOutQuantity,
     MetricProtocol,
     QuantityProtocol,
 )
+from ._quantity_from_api import build_curve
 from ._timeseries import (
     ConsolidationFunction,
     constant_time_series,
@@ -88,24 +104,35 @@ __all__ = [
     "AutoPrecision",
     "Bound",
     "ConsolidationFunction",
+    "constant_time_series",
     "Constant",
     "Curve",
     "CurveAttributes",
     "DecimalNotation",
     "Difference",
     "EngineeringScientificNotation",
+    "EvaluatedBidirectional",
     "EvaluatedCurve",
+    "EvaluatedFocusBound",
+    "EvaluatedFocusRange",
     "EvaluatedGraph",
     "EvaluatedLine",
+    "EvaluatedPerfometer",
+    "EvaluatedPerfometerLayout",
     "EvaluatedQuantity",
+    "EvaluatedRegion",
     "EvaluatedRule",
+    "EvaluatedSegment",
     "EvaluatedStack",
+    "EvaluatedStacked",
     "EvaluatedVerticalRange",
     "EvaluationContext",
+    "FanOutQuantity",
     "FetchDataProtocol",
     "FetchMetricNamesProtocol",
     "FetchedData",
     "FixedRange",
+    "FocusBoundKind",
     "Fraction",
     "Graph",
     "HostName",
@@ -117,10 +144,12 @@ __all__ = [
     "Notation",
     "PerformanceData",
     "Precision",
+    "PredictionCurveKind",
+    "PredictionMetric",
     "Product",
-    "QuantityBuilderProtocol",
     "QuantityProtocol",
     "RRDMetric",
+    "Region",
     "Rule",
     "SINotation",
     "ScalarKind",
@@ -141,8 +170,7 @@ __all__ = [
     "VerticalRangeKind",
     "build_curve",
     "build_matched_graphs",
-    "constant_time_series",
     "evaluate_graphs",
+    "evaluate_perfometer",
     "metric_display_attributes",
-    "parse_graph_from_api",
 ]

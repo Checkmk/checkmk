@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.bluecat.agent_based import bluecat_dhcp
 
 
-def check_bluecat_dhcp_ok():
+def check_bluecat_dhcp_ok() -> None:
     assert list(
         bluecat_dhcp.check_bluecat_dhcp(
             {
@@ -39,7 +38,7 @@ def check_bluecat_dhcp_ok():
     ]
 
 
-def check_bluecat_dhcp_crit():
+def check_bluecat_dhcp_crit() -> None:
     assert list(
         bluecat_dhcp.check_bluecat_dhcp(
             {
@@ -69,7 +68,7 @@ def check_bluecat_dhcp_crit():
     ]
 
 
-def check_bluecat_dhcp_one_lease():
+def check_bluecat_dhcp_one_lease() -> None:
     assert list(
         bluecat_dhcp.check_bluecat_dhcp(
             {

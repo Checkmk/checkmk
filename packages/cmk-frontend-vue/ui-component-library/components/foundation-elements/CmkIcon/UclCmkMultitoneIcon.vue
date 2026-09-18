@@ -4,7 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
+import { allMultitoneIconOptions } from '@ucl/_ucl/lib/icon'
 import {
   type CmkMultitoneIconColor,
   type CmkMultitoneIconNames,
@@ -17,65 +18,58 @@ export const panelConfig = {
   name: {
     type: 'list' as const,
     title: 'Icon Name',
-    options: [
-      { title: 'Services', name: 'services' },
-      { title: 'Monitoring', name: 'monitoring' },
-      { title: 'Setup', name: 'setup' },
-      { title: 'User', name: 'user' },
-      { title: 'Success', name: 'success' },
-      { title: 'Error', name: 'error' },
-      { title: 'Warning', name: 'warning' },
-      { title: 'Aggregation (two-color)', name: 'aggr' }
-    ] satisfies Options<CmkMultitoneIconNames>[],
+    options: allMultitoneIconOptions satisfies Options<CmkMultitoneIconNames>[],
     initialState: 'services' as CmkMultitoneIconNames
   },
   size: {
     type: 'list' as const,
     title: 'Size',
-    options: [
-      { title: 'XX-Small', name: 'xxsmall' },
-      { title: 'X-Small', name: 'xsmall' },
-      { title: 'Small', name: 'small' },
-      { title: 'Medium', name: 'medium' },
-      { title: 'Large', name: 'large' },
-      { title: 'X-Large', name: 'xlarge' },
-      { title: 'XX-Large', name: 'xxlarge' },
-      { title: 'XXX-Large', name: 'xxxlarge' }
-    ] satisfies Options<IconSizeNames>[],
+    options: listOptions<IconSizeNames>({
+      xxsmall: 'XX-Small',
+      xsmall: 'X-Small',
+      small: 'Small',
+      medium: 'Medium',
+      large: 'Large',
+      xlarge: 'X-Large',
+      xxlarge: 'XX-Large',
+      xxxlarge: 'XXX-Large'
+    }),
     initialState: 'xxlarge' as const
   },
   primaryColor: {
     type: 'list' as const,
     title: 'Primary Color',
-    options: [
-      { name: 'success', title: 'Success (Green)' },
-      { name: 'danger', title: 'Danger (Red)' },
-      { name: 'warning', title: 'Warning (Yellow)' },
-      { name: 'info', title: 'Info (Blue)' },
-      { name: 'hosts', title: 'Hosts (Cyan)' },
-      { name: 'services', title: 'Services (Orange)' },
-      { name: 'specialAgents', title: 'Special Agents (Purple)' },
-      { name: 'users', title: 'Users (Pink)' },
-      { name: 'customization', title: 'Customization (Brown)' },
-      { name: 'others', title: 'Others (Grey)' }
-    ] satisfies Options<CmkMultitoneIconColor>[],
+    options: listOptions<CmkMultitoneIconColor>({
+      success: 'Success (Green)',
+      danger: 'Danger (Red)',
+      warning: 'Warning (Yellow)',
+      info: 'Info (Blue)',
+      hosts: 'Hosts (Cyan)',
+      services: 'Services (Orange)',
+      specialAgents: 'Special Agents (Purple)',
+      users: 'Users (Pink)',
+      customization: 'Customization (Brown)',
+      others: 'Others (Grey)',
+      font: 'Font (Text Color)'
+    }),
     initialState: 'success' as const
   },
   secondaryColor: {
     type: 'list' as const,
     title: 'Secondary Color',
-    options: [
-      { name: 'success', title: 'Success (Green)' },
-      { name: 'danger', title: 'Danger (Red)' },
-      { name: 'warning', title: 'Warning (Yellow)' },
-      { name: 'info', title: 'Info (Blue)' },
-      { name: 'hosts', title: 'Hosts (Cyan)' },
-      { name: 'services', title: 'Services (Orange)' },
-      { name: 'specialAgents', title: 'Special Agents (Purple)' },
-      { name: 'users', title: 'Users (Pink)' },
-      { name: 'customization', title: 'Customization (Brown)' },
-      { name: 'others', title: 'Others (Grey)' }
-    ] satisfies Options<CmkMultitoneIconColor>[],
+    options: listOptions<CmkMultitoneIconColor>({
+      success: 'Success (Green)',
+      danger: 'Danger (Red)',
+      warning: 'Warning (Yellow)',
+      info: 'Info (Blue)',
+      hosts: 'Hosts (Cyan)',
+      services: 'Services (Orange)',
+      specialAgents: 'Special Agents (Purple)',
+      users: 'Users (Pink)',
+      customization: 'Customization (Brown)',
+      others: 'Others (Grey)',
+      font: 'Font (Text Color)'
+    }),
     initialState: 'warning' as const
   },
   rotate: {

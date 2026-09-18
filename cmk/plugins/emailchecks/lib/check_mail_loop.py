@@ -8,7 +8,6 @@ Email server roundtrip active check"""
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 import argparse
 import email.utils
@@ -153,7 +152,7 @@ def subject_and_received_timestamp_from_msg(
     if isinstance(msg, GraphApiMessage):
         return msg.subject, int(msg.received_at) if msg.received_at else None
 
-    return assert_never(msg)
+    return assert_never(msg)  # type: ignore[unreachable]
 
 
 def check_mails(

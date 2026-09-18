@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 """Consolidate tests validating `check_httpv2` executable.
 
@@ -50,6 +49,6 @@ def test_cli(site: Site, check_httpv2: Path, args: Callable[[Site], list[str]]) 
     except CalledProcessError as excp:
         excp.add_note(
             f"\n'{check_httpv2.name}' execution resulted in unexpected failure!\n"
-            f"Command: {' '.join(cmd)}"
+            f"Command: {' '.join(cmd)}"  # type: ignore[possibly-undefined]
         )
         raise excp

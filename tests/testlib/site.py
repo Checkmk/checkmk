@@ -17,8 +17,6 @@ This module provides classes and functions for managing Checkmk test sites. The 
         provides a helper for running Python scripts within a Checkmk test site.
 """
 
-from __future__ import annotations
-
 import ast
 import glob
 import inspect
@@ -43,6 +41,7 @@ from typing import Any, Final, Literal, overload
 import pytest
 import pytest_check
 import requests
+from pydantic import BaseModel
 
 from cmk import trace
 from cmk.crypto.certificate import Certificate
@@ -104,6 +103,25 @@ class CMKCoreType(StrEnum):
 
 NO_TRACING = TracingConfig(collect_traces=False, otlp_endpoint="", extra_resource_attributes={})
 
+# The JSON of the REST API inventory endpoint. The whole host tree is validated, so the values
+# must cover everything the inventory serialiser can emit, not only what a test reads.
+_InventoryValue = int | float | str | bool | None
+
+
+class InventoryAttributes(BaseModel):
+    pairs: Mapping[str, _InventoryValue]
+
+
+class InventoryTable(BaseModel):
+    key_columns: Sequence[str]
+    rows: Sequence[Mapping[str, _InventoryValue]]
+
+
+class InventoryNode(BaseModel):
+    attributes: InventoryAttributes
+    table: InventoryTable
+    nodes: Mapping[str, InventoryNode]
+
 
 class Site:
     """
@@ -124,7 +142,8 @@ class Site:
         enforce_english_gui: bool = True,
         check_wait_timeout: int = 20,
     ) -> None:
-        assert site_id
+        if not site_id:
+            raise RuntimeError("A site needs a non-empty id")
         self.id = site_id
         self.root = Path("/omd/sites") / self.id
         self._package = package
@@ -239,8 +258,8 @@ class Site:
         Computes a full URL inkl. http://... from a URL starting with the path.
         In case no path component is in URL, prepend "/[site]/check_mk" to the path.
         """
-        assert not path.startswith("http")
-        assert "://" not in path
+        if path.startswith("http") or "://" in path:
+            raise RuntimeError(f"Expected a path, not a URL: {path!r}")
 
         if "/" not in urllib.parse.urlparse(path).path:
             path = f"/{self.id}/check_mk/{path}"
@@ -273,8 +292,6 @@ class Site:
                     f"(to check if core is actually running):\n{ps_proc.stdout}"
                 )
             time.sleep(0.2)
-
-        assert config_reloaded()
 
     @tracer.instrument("Site.restart_core")
     def restart_core(self) -> None:
@@ -416,8 +433,8 @@ class Site:
             self.schedule_check(hostname, "Check_MK", 0, wait_timeout)
             count += 1
 
-        if strict:
-            assert len(pending_services) == 0, (
+        if strict and pending_services:
+            raise AssertionError(
                 "The following services are in pending state after rescheduling checks:"
                 f"\n{pformat(pending_services)}\n"
             )
@@ -484,10 +501,11 @@ class Site:
             )
             count += 1
 
-        assert len(pending_services) == 0, (
-            "The following services are in pending state after waiting:"
-            f"\n{pformat(pending_services)}\n"
-        )
+        if pending_services:
+            raise AssertionError(
+                "The following services are in pending state after waiting:"
+                f"\n{pformat(pending_services)}\n"
+            )
 
     def get_host_services(
         self,
@@ -645,9 +663,10 @@ class Site:
             raise TimeoutError("\n".join(exc_msg))
         if expected_state is None:
             return
-        assert state == expected_state, (
-            f"Expected {expected_state} state, got {state} state, output {plugin_output}"
-        )
+        if state != expected_state:
+            raise AssertionError(
+                f"Expected {expected_state} state, got {state} state, output {plugin_output}"
+            )
 
     def _last_host_check(self, hostname: str) -> float:
         last_check: int = self.live.query_value(
@@ -690,6 +709,33 @@ class Site:
             f"GET hosts\nColumns: state\nFilter: host_name = {hostname}"
         )
         return state
+
+    def get_inventory_tree(self, host_name: str) -> InventoryNode:
+        trees = self.openapi.inventory.get_trees([host_name])
+        if host_name not in trees:
+            raise AssertionError(f"{host_name!r} has no HW/SW inventory tree.")
+        return InventoryNode.model_validate(trees[host_name])
+
+    @staticmethod
+    def _inventory_node(tree: InventoryNode, path: Sequence[str]) -> InventoryNode:
+        node = tree
+        for node_name in path:
+            try:
+                node = node.nodes[node_name]
+            except KeyError as exc:
+                exc.add_note(f"The inventory tree has no {' > '.join(path)!r} node.")
+                raise exc
+        return node
+
+    @staticmethod
+    def get_inventory_attributes(tree: InventoryNode, path: Sequence[str]) -> Mapping[str, str]:
+        pairs = Site._inventory_node(tree, path).attributes.pairs
+        return {key: str(value) for key, value in pairs.items()}
+
+    @staticmethod
+    def get_inventory_rows(tree: InventoryNode, path: Sequence[str]) -> Sequence[Mapping[str, str]]:
+        rows = Site._inventory_node(tree, path).table.rows
+        return [{key: str(value) for key, value in row.items()} for row in rows]
 
     def execute(
         self,
@@ -1048,11 +1094,12 @@ class Site:
                 ["ls", "-laR", self._package.version_path()], check=False, sudo=True
             ).stdout
             remaining_files = [_ for _ in output.strip().split("\n") if _]
-            assert not remaining_files, (
-                f"Package '{self._package}' is still installed, "
-                "even though the uninstallation was completed with RC=0!"
-                f"Remaining files: {remaining_files}"
-            )
+            if remaining_files:
+                raise RuntimeError(
+                    f"Package '{self._package}' is still installed, "
+                    "even though the uninstallation was completed with RC=0!"
+                    f"Remaining files: {remaining_files}"
+                )
 
     @tracer.instrument("Site.create")
     def create(self) -> None:
@@ -1079,8 +1126,10 @@ class Site:
                 check=False,
                 sudo=True,
             )
-            assert not completed_process.returncode, completed_process.stderr
-            assert self.exists(), "Site %s was not created!" % self.id
+            if completed_process.returncode:
+                raise RuntimeError(completed_process.stderr)
+            if not self.exists():
+                raise RuntimeError(f"Site {self.id} was not created!")
 
             self._ensure_sample_config_is_present()
             # This seems to cause an issue with GUI and XSS crawl (they take too long or seem to
@@ -1298,7 +1347,7 @@ class Site:
         if not self.is_running():
             logger.info("Starting site")
             # start the site and ensure it's fully running (including all services)
-            assert self.omd("start", check=True).returncode == 0
+            self.omd("start", check=True)
             # print("= BEGIN PROCESSES AFTER START ==============================")
             # self.execute(["ps", "aux"]).wait()
             # print("= END PROCESSES AFTER START ==============================")
@@ -1329,9 +1378,10 @@ class Site:
             # on k8s there is no need to have an mounted overlay filesystem
             return
 
-        assert self.path("tmp").is_mount(), (
-            "The site does not have a tmpfs mounted! We require this for good performing tests"
-        )
+        if not self.path("tmp").is_mount():
+            raise RuntimeError(
+                "The site does not have a tmpfs mounted! We require this for good performing tests"
+            )
 
     @tracer.instrument("Site.stop")
     def stop(self) -> None:
@@ -1418,6 +1468,37 @@ class Site:
 
     def is_running(self) -> bool:
         return self.omd("status").returncode == 0
+
+    def wait_until_api_ready(self, timeout: float = 60) -> None:
+        """Wait until the site's REST API is actually responsive.
+
+        Right after `start()` (e.g. following an update), `omd status` can already report all
+        processes as running while the web server is still warming up - a fresh worker process
+        can even crash and get replaced. Poll a cheap endpoint here so callers that immediately
+        depend on the REST API (like activating changes) don't race that startup window.
+        """
+
+        def _api_reachable() -> bool:
+            try:
+                response = self.openapi.get(
+                    "/domain-types/activation_run/collections/pending_changes"
+                )
+            except requests.exceptions.ConnectionError as exc:
+                logger.warning("Site %s API not reachable yet: %s", self.id, exc)
+                return False
+            if not response.ok:
+                logger.warning(
+                    "Site %s API not ready yet: [%d] %s",
+                    self.id,
+                    response.status_code,
+                    response.text,
+                )
+                return False
+            return True
+
+        wait_until(
+            _api_reachable, timeout=timeout, interval=1, condition_name=f"{self.id} API ready"
+        )
 
     def wait_for_status_update(
         self,
@@ -1529,9 +1610,8 @@ class Site:
             "wait_for_site_restarting_changes_to_complete: seen activation IDs: %(activation_ids)s",
             {"activation_ids": seen_activation_ids},
         )
-        assert len(seen_activation_ids) == 1, (
-            f"Expected exactly one activation, got: {seen_activation_ids}"
-        )
+        if len(seen_activation_ids) != 1:
+            raise RuntimeError(f"Expected exactly one activation, got: {seen_activation_ids}")
         (activation_id,) = seen_activation_ids
 
         final_status = self._get_activation_final_status(activation_id, timeout, interval)
@@ -1545,9 +1625,11 @@ class Site:
                 for status in final_status["extensions"].get("status_per_site", [])
                 if status["state"] != "success"
             ]
-            assert not not_succeeded_sites, (
-                f"Activation {activation_id!r} did not succeed on all sites: {not_succeeded_sites}"
-            )
+            if not_succeeded_sites:
+                raise AssertionError(
+                    f"Activation {activation_id!r} did not succeed on all sites: "
+                    f"{not_succeeded_sites}"
+                )
         self.wait_for_status_update(0, timeout, interval)
 
     def get_omd_service_names_and_statuses(self, service: str = "") -> dict[str, int]:
@@ -1590,17 +1672,18 @@ class Site:
         Fails if the site is partially running to begin with.
         """
         # fail for partially running sites.
-        assert (omd_status := self.omd("status").returncode) in (0, 1)
+        if (omd_status := self.omd("status").returncode) not in (0, 1):
+            raise RuntimeError(f"Site is only partially running (omd status: {omd_status})")
 
         if omd_status == 1:  # stopped anyway
             yield
             return
 
-        assert self.omd("stop").returncode == 0
+        self.omd("stop", check=True)
         try:
             yield
         finally:
-            assert self.omd("start").returncode == 0
+            self.omd("start", check=True)
 
     @contextmanager
     def omd_config(self, setting: str, value: str) -> Iterator[None]:
@@ -1614,13 +1697,13 @@ class Site:
             return
 
         with self.omd_stopped():
-            assert self.omd("config", "set", setting, value).returncode == 0
+            self.omd("config", "set", setting, value, check=True)
 
         try:
             yield
         finally:
             with self.omd_stopped():
-                assert self.omd("config", "set", setting, current_value).returncode == 0
+                self.omd("config", "set", setting, current_value, check=True)
 
     def set_config(self, key: str, val: str, with_restart: bool = False) -> None:
         if self.get_config(key) == val:
@@ -1632,7 +1715,7 @@ class Site:
             self.stop()
 
         logger.info("omd config: Set %(key)s to %(value)r", {"key": key, "value": val})
-        assert self.omd("config", "set", key, val).returncode == 0
+        self.omd("config", "set", key, val, check=True)
 
         if with_restart:
             self.start()
@@ -1735,7 +1818,8 @@ class Site:
 
     def enforce_non_localized_gui(self, web: CMKWebSession) -> None:
         r = web.get("user_profile.py")
-        assert "Edit profile" in r.text, "Body: %s" % r.text
+        if "Edit profile" not in r.text:
+            raise RuntimeError(f"Unexpected user profile page. Body: {r.text}")
 
         if (user := self.openapi.users.get(ADMIN_USER)) is None:
             raise Exception("User cmkadmin not found!")
@@ -1749,7 +1833,8 @@ class Site:
 
         # Verify the language is as expected now
         r = web.get("user_profile.py", allow_redirect_to_login=True)
-        assert "Edit profile" in r.text, "Body: %s" % r.text
+        if "Edit profile" not in r.text:
+            raise RuntimeError(f"User profile page is still localized. Body: {r.text}")
 
     def send_traces_to_central_collector(self, endpoint: str) -> None:
         """Configure the site to send traces to our central collector"""
@@ -1814,7 +1899,8 @@ class Site:
 
     def toggle_liveproxyd(self, enabled: bool = True) -> None:
         self.set_config("LIVEPROXYD", "on" if enabled else "off", with_restart=True)
-        assert self.file_exists("tmp/run/liveproxyd.pid") == enabled
+        if self.file_exists("tmp/run/liveproxyd.pid") != enabled:
+            raise RuntimeError(f"liveproxyd is not {'running' if enabled else 'stopped'}")
 
     def _disable_autostart(self) -> None:
         self.set_config("AUTOSTART", "off", with_restart=False)
@@ -1912,12 +1998,17 @@ class Site:
                 continue
             crash_type = crash.get("exc_type", "")
             crash_detail = crash.get("exc_value", "")
-            if (
-                re.search("ConnectionError", crash_type)
-                and re.search("redis", crash_detail)
-                or (
-                    re.search("TimeoutError", crash_type)
-                    and re.search("reading from socket", crash_detail)
+            # Most redis-py messages do not name redis ("max number of clients
+            # reached.", "Error 32 while writing to socket. Broken pipe.", "Timeout
+            # reading from socket"), so the exception is attributed via its traceback
+            # instead. Every ignored crash still has to point at redis one way or the
+            # other, so unrelated connection errors keep failing their test.
+            if re.search("ConnectionError|TimeoutError", crash_type) and (
+                re.search("redis", crash_detail)
+                or any(
+                    re.search("site-packages/redis/", str(frame[0]))
+                    for frame in crash.get("exc_traceback") or ()
+                    if frame
                 )
             ):
                 logger.warning("Ignored crash report. See CMK-38006")
@@ -2301,12 +2392,25 @@ class SiteFactory:
         logger.debug("Reused site %(site_id)s", {"site_id": site.id})
         return site
 
-    def restore_site_from_backup(self, backup_path: Path, name: str, reuse: bool = False) -> Site:
+    def restore_site_from_backup(
+        self,
+        backup_path: Path,
+        name: str,
+        reuse: bool = False,
+        check: bool = True,
+    ) -> Site:
+        """Restore a site from a backup.
+
+        Args:
+            check:  Fail if `omd restore` could not finalize the restored site. Pass False to
+                    handle that yourself: the site is then returned *stopped*, with an outdated
+                    core configuration and a closed livestatus port.
+        """
         self._base_ident = ""
         site = self._site_obj(name)
 
-        if not reuse:
-            assert not site.exists(), (
+        if not reuse and site.exists():
+            raise RuntimeError(
                 f"Site {name} already existing. Please remove it before restoring it from a backup."
             )
 
@@ -2333,9 +2437,21 @@ class SiteFactory:
             check=False,
         )
 
-        assert completed_process.returncode == 0, (
-            f"Restoring site from backup failed!\n{completed_process.stdout.strip()}"
-        )
+        if completed_process.returncode != 0:
+            if check:
+                raise RuntimeError(
+                    f"Restoring site from backup failed!\n{completed_process.stdout.strip()}"
+                )
+            logger.warning(
+                "'omd restore' could not finalize site '%(name)s'. Returning it stopped:\n"
+                "%(output)s",
+                {"name": name, "output": completed_process.stdout.strip()},
+            )
+            # 'omd restore' aborted before it could register the site with the system apache.
+            # Without that, the site is not reachable via HTTP once it is started.
+            _ = run(["omd", "update-apache-config", name], sudo=True)
+            restart_httpd()
+            return self.get_existing_site(site.id, start=False)
 
         site = self.get_existing_site(site.id)
         site.start()
@@ -2378,9 +2494,10 @@ class SiteFactory:
     def copy_site(self, site: Site, copy_name: str) -> Iterator[Site]:
         site_copy = self._site_obj(copy_name)
 
-        assert not site_copy.exists(), (
-            f"Site '{copy_name}' already existing. Please remove it before performing a copy."
-        )
+        if site_copy.exists():
+            raise RuntimeError(
+                f"Site '{copy_name}' already existing. Please remove it before performing a copy."
+            )
 
         site.stop()
         logger.info(
@@ -2556,31 +2673,35 @@ class SiteFactory:
             )
 
         if abort:
-            assert rc == 0, (
-                f"Update process with aborted scenario failed.\n"
-                "Logfile content:\n"
-                f"{pprint.pformat(Path(logfile_path).read_text(), indent=4)}\n\n"
-            )
+            if rc != 0:
+                raise AssertionError(
+                    f"Update process with aborted scenario failed.\n"
+                    "Logfile content:\n"
+                    f"{pprint.pformat(Path(logfile_path).read_text(), indent=4)}\n\n"
+                )
 
             site.start()
             return site
         if failed_precheck:
-            assert rc == 256, (
-                f"Update process with failed precheck scenario did not fail as expected.\n"
-                "Logfile content:\n"
-                f"{pprint.pformat(Path(logfile_path).read_text(), indent=4)}\n\n"
-            )
+            if rc != 256:
+                raise AssertionError(
+                    f"Update process with failed precheck scenario did not fail as expected.\n"
+                    "Logfile content:\n"
+                    f"{pprint.pformat(Path(logfile_path).read_text(), indent=4)}\n\n"
+                )
             return site
         if version_supported:
-            assert rc == 0, (
-                f"Failed to interactively update the test-site!\n"
-                "Logfile content:\n"
-                f"{pprint.pformat(Path(logfile_path).read_text(), indent=4)}\n\n"
-                f"You might want to consider modifying {min_version=} to adapt it to the current "
-                f"minimal supported version."
-            )
+            if rc != 0:
+                raise AssertionError(
+                    f"Failed to interactively update the test-site!\n"
+                    "Logfile content:\n"
+                    f"{pprint.pformat(Path(logfile_path).read_text(), indent=4)}\n\n"
+                    f"You might want to consider modifying {min_version=} to adapt it to the "
+                    "current minimal supported version."
+                )
         else:
-            assert rc == 256, f"Executed command returned {rc} exit status. Expected: 256"
+            if rc != 256:
+                raise AssertionError(f"Executed command returned {rc} exit status. Expected: 256")
             pytest.skip(f"{base_package} is not a supported version for {target_package}")
 
         with open(logfile_path) as logfile:
@@ -2590,11 +2711,12 @@ class SiteFactory:
         # refresh the site object after creating the site
         site = self.get_existing_site(test_site.id)
 
-        assert site.version.version == target_package.version.version, (
-            "Version mismatch after update process:\n"
-            f"Expected version: {target_package.version.version}\n"
-            f"Actual version: {site.version.version}"
-        )
+        if site.version.version != target_package.version.version:
+            raise AssertionError(
+                "Version mismatch after update process:\n"
+                f"Expected version: {target_package.version.version}\n"
+                f"Actual version: {site.version.version}"
+            )
 
         _assert_tmpfs(site, base_package.version)
         if not site.edition.is_cloud_edition():
@@ -2603,7 +2725,8 @@ class SiteFactory:
         # start the site after manually installing it
         site.start()
 
-        assert site.is_running(), "Site is not running!"
+        if not site.is_running():
+            raise RuntimeError("Site is not running!")
         logger.info("Site %(site_id)s is up", {"site_id": site.id})
 
         restart_httpd()
@@ -2691,11 +2814,12 @@ class SiteFactory:
         # refresh the site object after creating the site
         site = self.get_existing_site(site.id)
 
-        assert site.version.version == target_package.version.version, (
-            "Version mismatch after update process:\n"
-            f"Expected version: {target_package.version.version}\n"
-            f"Actual version: {site.version.version}"
-        )
+        if site.version.version != target_package.version.version:
+            raise AssertionError(
+                "Version mismatch after update process:\n"
+                f"Expected version: {target_package.version.version}\n"
+                f"Actual version: {site.version.version}"
+            )
 
         _assert_tmpfs(site, base_package.version)
         if not site.edition.is_cloud_edition():
@@ -2705,7 +2829,8 @@ class SiteFactory:
             # start the site after manually installing it
             site.start()
 
-            assert site.is_running(), "Site is not running!"
+            if not site.is_running():
+                raise RuntimeError("Site is not running!")
             logger.info("Site %(site_id)s is up", {"site_id": site.id})
 
             restart_httpd()
@@ -3002,16 +3127,16 @@ def _assert_tmpfs(site: Site, from_version: CMKVersion) -> None:
     ):
         # tmpfs should have been restored:
         tmp_dirs = site.listdir("tmp/check_mk")
-        assert "counters" in tmp_dirs
-        assert "piggyback" in tmp_dirs
-        assert "piggyback_sources" in tmp_dirs
+        if missing := {"counters", "piggyback", "piggyback_sources"} - set(tmp_dirs):
+            raise AssertionError(f"tmpfs was not restored, missing in tmp/check_mk: {missing}")
 
 
 def _assert_nagvis_server(package: CMKPackageInfo) -> None:
     nagvis_server_path = Path(
         f"/opt/omd/versions/{str(package)}/share/nagvis/htdocs/server/core/classes"
     )
-    assert nagvis_server_path.exists()
+    if not nagvis_server_path.exists():
+        raise AssertionError(f"NagVis server classes missing: {nagvis_server_path}")
 
 
 def tracing_config_from_env(env: Mapping[str, str]) -> TracingConfig:

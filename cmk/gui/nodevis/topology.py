@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="type-arg"
 
 import abc
@@ -84,17 +83,7 @@ from cmk.gui.pages import AjaxPage, Page, PageContext, PageEndpoint, PageRegistr
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import (
-    ColumnSpec,
-    DynamicIcon,
-    DynamicIconName,
-    IconNames,
-    PainterParameters,
-    Row,
-    StaticIcon,
-    Visual,
-    VisualLinkSpec,
-)
+from cmk.gui.type_defs import ColumnSpec, PainterParameters, Row, Visual, VisualLinkSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views.icon import Icon, IconConfig, IconRegistry
@@ -104,6 +93,7 @@ from cmk.gui.views.store import get_all_views, get_permitted_views, multisite_bu
 from cmk.gui.visuals import get_livestatus_filter_headers
 from cmk.gui.visuals.filter import Filter, FilterRegistry
 from cmk.ruleset_matcher.tags import TagID
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless
 
 
@@ -140,12 +130,12 @@ def register(
 
 
 def _render_network_topology_icon(
-    what: Literal["host", "service"],
+    what: Literal["host", "service"],  # noqa: ARG001
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> tuple[StaticIcon | DynamicIcon, str, str] | None:
     # Only show this icon if topology data is available
     files = glob.glob("data_*.json", root_dir=topology_data_dir / "default")
@@ -578,7 +568,7 @@ class ABCTopologyNodeDataGenerator:
             self._current_mesh_depth += 1
         return previous_border_nodes
 
-    def _grow_continue_nodes(self, border_nodes: set[str]) -> None:
+    def _grow_continue_nodes(self, border_nodes: set[str]) -> None:  # noqa: ARG002
         growth_continue_nodes = set(self._topology_configuration.frontend.growth_continue_nodes)
         while growth_continue_nodes:
             adjacent_nodes = set()
@@ -1679,7 +1669,7 @@ def _register_builtin_views() -> None:
     )
 
 
-def cleanup_topology_layouts(config: Config) -> None:
+def cleanup_topology_layouts(config: Config) -> None:  # noqa: ARG001
     """Topology layouts are currently restricted to a maximum number of 10000"""
     topology_configs_dir.mkdir(parents=True, exist_ok=True)
 

@@ -27,7 +27,7 @@ from cmk.plugins.lib.cpu_util import check_cpu_util
 # Suggested by customer
 
 
-def discover_barracuda_system_cpu_util(section: StringTable) -> DiscoveryResult:
+def discover_barracuda_system_cpu_util(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

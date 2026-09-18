@@ -16,7 +16,6 @@ from typing import (
 )
 
 import cmk.ruleset_matcher.tags
-import cmk.utils
 from cmk.base.default_config.cmc import (
     CMCAuthorization,
     CMCGraphiteConnection,
@@ -108,6 +107,7 @@ class BaseConfig:  # type: ignore[explicit-any]
     agent_encryption: Sequence[RuleSpec[str | None]]
     agent_exclude_sections: Sequence[RuleSpec[dict[str, str]]]
     telemetry_custom_service: Sequence[RuleSpec[Mapping[str, object]]]
+    metrics_identity_routing: Sequence[RuleSpec[Mapping[str, object]]]
     cmc_real_time_checks: RealTimeChecks | None
     snmp_check_interval: list[
         RuleSpec[
@@ -115,7 +115,6 @@ class BaseConfig:  # type: ignore[explicit-any]
         ]
     ]
     apply_bake_revision: bool
-    bake_agents_on_restart: bool
     agent_bakery_logging: int | None
     is_distributed_setup_remote_site: bool
     simulation_mode: bool

@@ -20,19 +20,18 @@ from cmk.graphing.v1 import translations as translations_api
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing.v2_unstable import perfometers as perfometers_v2_unstable
-from cmk.gui.graphing import GraphFromAPI, PerfometerFromAPI
-from cmk.gui.graphing_main import _load_graphing_plugins
+from cmk.gui.graphing import GraphFromAPI, graphing_plugins, PerfometerFromAPI
 
 
-def test_load_graphing_plugins() -> None:
-    discovered_graphing_plugins = _load_graphing_plugins()
+def test_graphing_plugins_load_without_errors() -> None:
+    discovered_graphing_plugins = graphing_plugins()
     assert not discovered_graphing_plugins.errors
     assert discovered_graphing_plugins.plugins
 
 
 def test_translations_to_be_standalone() -> None:
     by_module: dict[str, Counter] = {}
-    for plugin_location, plugin in _load_graphing_plugins().plugins.items():
+    for plugin_location, plugin in graphing_plugins().plugins.items():
         counter = by_module.setdefault(plugin_location.module, Counter())
         match plugin:
             case translations_api.Translation():
@@ -61,7 +60,7 @@ def test_growth_and_trend_translations_scale_mb_per_day_to_bytes_per_day() -> No
     every translation of them must rename and scale by 1 MiB. See SUP-29835."""
     offenders = [
         f"{location.module}: translation {plugin.name!r} maps {raw_name!r} via {op!r}"
-        for location, plugin in _load_graphing_plugins().plugins.items()
+        for location, plugin in graphing_plugins().plugins.items()
         if isinstance(plugin, translations_api.Translation)
         for raw_name, op in plugin.translations.items()
         if raw_name in _SIZE_TREND_RAW_METRICS
@@ -310,9 +309,7 @@ def _metric_names_by_module(
 def test_bundles() -> None:
     offenders = [
         (module, metric_names, bundles)
-        for module, metric_names in _metric_names_by_module(
-            _load_graphing_plugins().plugins
-        ).items()
+        for module, metric_names in _metric_names_by_module(graphing_plugins().plugins).items()
         if (bundles := metric_names.bundles)
         and (len(bundles) > 1 or set(metric_names.from_metrics) != set(bundles[0]))
     ]
@@ -434,7 +431,7 @@ _ALLOWED_DUPLICATE_METRIC_TITLES = {
 def test_duplicate_metric_titles_new() -> None:
     # CMK-26844
     metric_names_by_title: dict[str, set[str]] = {}
-    for plugin in _load_graphing_plugins().plugins.values():
+    for plugin in graphing_plugins().plugins.values():
         if isinstance(plugin, metrics_v1.Metric):
             metric_names_by_title.setdefault(plugin.title.localize(str), set()).add(plugin.name)
 
@@ -456,7 +453,7 @@ def test_duplicate_metric_titles_new() -> None:
 def test_duplicate_metric_titles_fixed() -> None:
     # CMK-26844
     metric_names_by_title: dict[str, set[str]] = {}
-    for plugin in _load_graphing_plugins().plugins.values():
+    for plugin in graphing_plugins().plugins.values():
         if isinstance(plugin, metrics_v1.Metric):
             metric_names_by_title.setdefault(plugin.title.localize(str), set()).add(plugin.name)
 
@@ -492,7 +489,7 @@ _ALLOWED_DUPLICATE_GRAPH_TITLES = {
 def test_duplicate_graph_titles_new() -> None:
     # CMK-26844
     graphs_by_title: dict[str, set[str]] = {}
-    for plugin in _load_graphing_plugins().plugins.values():
+    for plugin in graphing_plugins().plugins.values():
         if isinstance(
             plugin,
             graphs_v1.Graph
@@ -521,7 +518,7 @@ def test_duplicate_graph_titles_new() -> None:
 def test_duplicate_graph_titles_fixed() -> None:
     # CMK-26844
     graphs_by_title: dict[str, set[str]] = {}
-    for plugin in _load_graphing_plugins().plugins.values():
+    for plugin in graphing_plugins().plugins.values():
         if isinstance(
             plugin,
             graphs_v1.Graph

@@ -15,7 +15,7 @@ from cmk.post_rename_site.internal import (
 )
 
 
-def update_core_config(old_site_id: SiteId, new_site_id: SiteId, logger: Logger) -> None:
+def update_core_config(old_site_id: SiteId, new_site_id: SiteId, logger: Logger) -> None:  # noqa: ARG001
     """After all the changes to the configuration finally trigger a core config update"""
     subprocess.check_call(["cmk", "-U"])
 

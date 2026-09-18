@@ -5,8 +5,6 @@
 
 """Notification-related automation results."""
 
-from __future__ import annotations
-
 from ast import literal_eval
 from dataclasses import asdict, dataclass
 from typing import override, Self

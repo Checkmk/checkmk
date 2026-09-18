@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from argparse import Namespace as Args
 from collections.abc import Iterator, Mapping, Sequence
@@ -17,18 +15,20 @@ from mypy_boto3_logs.type_defs import GetQueryResultsRequestTypeDef, GetQueryRes
 
 from cmk.plugins.aws.special_agent.agent_aws import (
     _create_lamdba_sections,
-    AWSConfig,
     LambdaCloudwatch,
     LambdaCloudwatchInsights,
     LambdaProvisionedConcurrency,
     LambdaRegionLimits,
     LambdaSummary,
+)
+from cmk.plugins.aws.special_agent.config import (
+    AWSConfig,
     NamingConvention,
     OverallTags,
-    ResultDistributor,
     TagsImportPatternOption,
     TagsOption,
 )
+from cmk.plugins.aws.special_agent.sections.core import ResultDistributor
 
 from .agent_aws_fake_clients import (
     Entity,
@@ -47,7 +47,7 @@ class PaginatorListFunctions:
 
 class PaginatorProvisionedConcurrencyConfigs:
     # "FunctionName" must occur in the function signature, but is not used in the current implementation => disable warning
-    def paginate(self, FunctionName: str) -> Iterator[Mapping[str, Any]]:
+    def paginate(self, FunctionName: str) -> Iterator[Mapping[str, Any]]:  # noqa: ARG002
         yield {
             "ProvisionedConcurrencyConfigs": LambdaListProvisionedConcurrencyConfigsIB.create_instances(
                 2
@@ -287,7 +287,7 @@ def test_agent_aws_lambda_cloudwatch_insights(names: Sequence[str], tags: Overal
 
 def test_lambda_cloudwatch_insights_query_results_timeout() -> None:
     class CloudWatchLogsClientStub(CloudWatchLogsClient):
-        def __init__(self):
+        def __init__(self) -> None:
             pass
 
         @override

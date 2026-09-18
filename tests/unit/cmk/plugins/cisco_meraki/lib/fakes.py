@@ -13,7 +13,9 @@ from . import factories
 
 class _FakeApplianceSDK:
     def getOrganizationApplianceUplinkStatuses(
-        self, organizationId: str, total_pages: TotalPages
+        self,
+        organizationId: str,
+        total_pages: TotalPages,  # noqa: ARG002
     ) -> Sequence[schema.RawUplinkStatuses]:
         uplink_statuses = {
             "123": [
@@ -27,7 +29,9 @@ class _FakeApplianceSDK:
         return uplink_statuses.get(organizationId, [])
 
     def getOrganizationApplianceVpnStatuses(
-        self, organizationId: str, total_pages: TotalPages
+        self,
+        organizationId: str,
+        total_pages: TotalPages,  # noqa: ARG002
     ) -> Sequence[schema.RawUplinkVpnStatuses]:
         uplink_statuses = {
             "123": [
@@ -49,7 +53,10 @@ class _FakeApplianceSDK:
         return uplink_statuses.get(organizationId, [])
 
     def getOrganizationApplianceUplinksUsageByNetwork(
-        self, organizationId: str, total_pages: TotalPages, timespan: int
+        self,
+        organizationId: str,
+        total_pages: TotalPages,  # noqa: ARG002
+        timespan: int,  # noqa: ARG002
     ) -> Sequence[schema.RawUplinkUsage]:
         example_bandwith = {"sent": 100, "received": 200}
         uplink_usage = {
@@ -93,7 +100,9 @@ class _FakeOrganisationsSDK:
         ]
 
     def getOrganizationNetworks(
-        self, organizationId: str, total_pages: TotalPages
+        self,
+        organizationId: str,
+        total_pages: TotalPages,  # noqa: ARG002
     ) -> Sequence[schema.RawNetwork]:
         networks = {
             "123": [factories.RawNetworkFactory.build(id="1", name="one", organizationId="123")],
@@ -109,7 +118,9 @@ class _FakeOrganisationsSDK:
         return licenses_overviews[organizationId]
 
     def getOrganizationDevices(
-        self, organizationId: str, total_pages: TotalPages
+        self,
+        organizationId: str,
+        total_pages: TotalPages,  # noqa: ARG002
     ) -> Sequence[schema.RawDevice]:
         devices = {
             "123": [
@@ -141,7 +152,9 @@ class _FakeOrganisationsSDK:
         return devices.get(organizationId, [])
 
     def getOrganizationDevicesStatuses(
-        self, organizationId: str, total_pages: TotalPages
+        self,
+        organizationId: str,
+        total_pages: TotalPages,  # noqa: ARG002
     ) -> Sequence[schema.RawDevicesStatus]:
         devices_statuses = {
             "123": [
@@ -155,7 +168,11 @@ class _FakeOrganisationsSDK:
         return devices_statuses.get(organizationId, [])
 
     def getOrganizationApiRequestsOverviewResponseCodesByInterval(
-        self, organizationId: str, total_pages: TotalPages, t0: str, t1: str
+        self,
+        organizationId: str,
+        total_pages: TotalPages,  # noqa: ARG002
+        t0: str,  # noqa: ARG002
+        t1: str,  # noqa: ARG002
     ) -> Sequence[schema.RawApiResponseCodes]:
         response_codes = {
             "123": [
@@ -168,7 +185,9 @@ class _FakeOrganisationsSDK:
         return response_codes.get(organizationId, [])
 
     def getOrganizationDevicesUplinksAddressesByDevice(
-        self, organizationId: str, total_pages: TotalPages
+        self,
+        organizationId: str,
+        total_pages: TotalPages,  # noqa: ARG002
     ) -> Sequence[schema.RawDeviceUplinksAddress]:
         uplink_addresses = {
             "123": [
@@ -184,7 +203,9 @@ class _FakeOrganisationsSDK:
 
 class _FakeSensorSDK:
     def getOrganizationSensorReadingsLatest(
-        self, organizationId: str, total_pages: TotalPages
+        self,
+        organizationId: str,
+        total_pages: TotalPages,  # noqa: ARG002
     ) -> Sequence[schema.RawSensorReadings]:
         sensor_readings = {
             "123": [
@@ -200,7 +221,9 @@ class _FakeSensorSDK:
 
 class _FakeSwitchSDK:
     def getDeviceSwitchPortsStatuses(
-        self, serial: str, timespan: int
+        self,
+        serial: str,
+        timespan: int,  # noqa: ARG002
     ) -> Sequence[schema.RawSwitchPortsStatus]:
         switch_ports_statuses = {
             "S123-sw": [factories.RawSwitchPortsStatusFactory.build()],
@@ -218,7 +241,9 @@ class _FakeWirelessSDK:
         return wireless_statuses[serial]
 
     def getOrganizationWirelessDevicesEthernetStatuses(
-        self, organizationId: str, total_pages: TotalPages
+        self,
+        organizationId: str,
+        total_pages: TotalPages,  # noqa: ARG002
     ) -> Sequence[schema.RawWirelessEthernetStatus]:
         wireless_statuses = {
             "123": [

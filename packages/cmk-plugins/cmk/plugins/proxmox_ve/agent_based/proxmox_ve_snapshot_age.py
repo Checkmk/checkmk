@@ -33,7 +33,7 @@ def parse_proxmox_ve_snapshot_age(string_table: StringTable) -> SectionSnapshots
     return SectionSnapshots.model_validate_json(string_table[0][0])
 
 
-def discover_single(section: SectionSnapshots) -> DiscoveryResult:
+def discover_single(section: SectionSnapshots) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

@@ -8,9 +8,9 @@ import logging
 from collections.abc import Iterator
 from random import randint
 
-import docker
 import pytest
 
+import docker
 from tests.testlib.docker import CheckmkApp
 from tests.testlib.version import version_from_env
 

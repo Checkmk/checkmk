@@ -12,7 +12,7 @@ def _parse_cmk_update_agent_status(string_table: StringTable) -> CMKAgentUpdateS
 
     try:
         return CMKAgentUpdateSection.model_validate_json(string_table[0][0])
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         return None
 
 

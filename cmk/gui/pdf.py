@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 # Coords:
@@ -18,7 +16,6 @@
 # internal-style. In a later version we could have the user himself decide
 # about the unit he wants to use.
 
-from __future__ import annotations
 
 import io
 import os
@@ -323,6 +320,10 @@ class Document:
     def page_number(self) -> int:
         return self._page_number
 
+    def is_at_top_of_page(self) -> bool:
+        """Whether nothing has been rendered yet on the current page"""
+        return self._linepos == self._top
+
     def next_page(self) -> None:
         self._canvas.showPage()
         self._linepos = self._top
@@ -517,6 +518,35 @@ class Document:
         self.advance(self.lineskip() / 2.0)
         self.restore_state()
 
+    def reserve_for_heading(self, level: int) -> SizeMM:
+        """Approximate vertical space (mm) a heading at this level will occupy.
+
+        Use together with check_pagebreak() before adding a heading that is immediately
+        followed by other content (e.g. a graph), so the heading isn't left stranded alone
+        at the bottom of a page while its content starts on the next one.
+        """
+        level = self._gfx_state["heading_offset"] + level
+        zoom = {1: 1.8, 2: 1.5, 3: 1.2}.get(level, 1.0)
+        margin_mm = 7 + (5 if level == 1 else 0)
+        # add_heading() itself advances by one zoomed lineskip before the heading text, one
+        # more for the (at least one line of) text itself, and half a lineskip after - 2.5x
+        # in total.
+        return margin_mm + (self.lineskip() * zoom * 2.5) / mm
+
+    def reserve_for_table_rows(self, rows: int = 2) -> SizeMM:
+        """Conservative estimate of the vertical space (mm) `rows` table rows will occupy at
+        the current font size.
+
+        A table's real row height depends on column-width layout computed deep inside
+        add_table() itself, so unlike reserve_for_heading() this can only ever be an
+        estimate - deliberately on the generous side, since overestimating only wastes a
+        little page space, while underestimating would defeat the point of reserving at
+        all. Use together with check_pagebreak() before adding a heading that is
+        immediately followed by a table, so at least its header row and one data row stay
+        with the heading instead of being pushed to the next page while it is left behind.
+        """
+        return rows * ((self.lineskip() / mm) + 2)
+
     def headings(self) -> Sequence[tuple[str, int]]:
         return self._heading_entries
 
@@ -611,9 +641,7 @@ class Document:
 
         l = l.strip(" ")
         self._linepos -= self.lineskip()
-        tab = -1
-
-        for part in l.split("\t"):
+        for tab, part in enumerate(l.split("\t"), start=-1):
             self.save_state()
             self.set_font_color(color)
             self.set_font_bold(bold)
@@ -639,7 +667,6 @@ class Document:
             else:
                 x_position = 0
                 alignment = "l"
-            tab += 1
             abs_x = self._left + x_position
             abs_y = (
                 self._linepos
@@ -759,13 +786,25 @@ class Document:
             path = str(png_path)
 
         image = CMKImage.from_path(Path(path), ImageType.PNG)
-        ir = ImageReader(image.pil())
         try:
-            self._canvas.drawImage(
-                ir, left_mm * mm, top_mm * mm, width_mm * mm, height_mm * mm, mask="auto"
-            )
+            self.render_image_bytes(left_mm, top_mm, width_mm, height_mm, image)
         except Exception as e:
             raise Exception(f"Cannot render image {path}: {e}")
+
+    def render_image_bytes(
+        self,
+        left_mm: SizeMM,
+        top_mm: SizeMM,
+        width_mm: SizeMM,
+        height_mm: SizeMM,
+        image: CMKImage,
+    ) -> None:
+        """Like render_image(), but for an already-loaded image (e.g. bytes rendered
+        in-memory) instead of one read from a filesystem path."""
+        ir = ImageReader(image.pil())
+        self._canvas.drawImage(
+            ir, left_mm * mm, top_mm * mm, width_mm * mm, height_mm * mm, mask="auto"
+        )
 
     def get_line_skip(self) -> SizeMM:
         return self.lineskip() / mm  # fixed: true-division
@@ -991,10 +1030,10 @@ class Document:
                 if height_mm is not None:
                     height = height_mm * mm
                 if width_mm is None:
-                    width = height * aspect
+                    width = height * aspect  # type: ignore[possibly-undefined]
                 elif height_mm is None:
-                    height = width / aspect  # fixed: true-division
-        return width, height
+                    height = width / aspect  # type: ignore[possibly-undefined]  # fixed: true-division
+        return width, height  # type: ignore[possibly-undefined]
 
     @staticmethod
     def _sanitize_text(text: str) -> str:
@@ -1169,7 +1208,7 @@ class TableRenderer:
         # Now compute the available width, i.e. take the usable page width
         # and substract spacing and padding.
         available_width = (
-            self.pdf._inner_width - ((num_cols - 1) * x_spacing) - (num_cols * 2 * x_padding)
+            self.pdf._inner_width - ((num_cols - 1) * x_spacing) - (num_cols * 2 * x_padding)  # noqa: SLF001
         )
 
         # If there is space enough for not breaking single words, then
@@ -1342,21 +1381,21 @@ class TableRenderer:
         if row_shading["enabled"]:
             h = (row_height + 2 * y_padding) / mm  # fixed: true-division
             self.pdf.render_rect(
-                self.pdf._left / mm,  # fixed: true-division
-                self.pdf._linepos / mm - h,  # fixed: true-divisioin
-                self.pdf._inner_width / mm,  # fixed: true-division
+                self.pdf._left / mm,  # fixed: true-division  # noqa: SLF001
+                self.pdf._linepos / mm - h,  # fixed: true-divisioin  # noqa: SLF001
+                self.pdf._inner_width / mm,  # fixed: true-division  # noqa: SLF001
                 h,
                 fill_color=row_shading[row_oddeven],
             )
 
         # Finally paint
-        left = self.pdf._left
+        left = self.pdf._left  # noqa: SLF001
         for column_width, render_object in zip(column_widths, row):
-            old_linepos = self.pdf._linepos
+            old_linepos = self.pdf._linepos  # noqa: SLF001
             render_object.render(
                 self.pdf,
                 left / mm,
-                self.pdf._linepos / mm,  # fixed: true-division
+                self.pdf._linepos / mm,  # fixed: true-division  # noqa: SLF001
                 column_width / mm + 2 * x_padding / mm,  # fixed: true-division
                 (row_height + 2 * y_padding) / mm,
                 x_padding / mm,  # fixed: true-division
@@ -1364,7 +1403,7 @@ class TableRenderer:
                 row_oddeven if row_shading["enabled"] else None,
             )
 
-            self.pdf._linepos = old_linepos
+            self.pdf._linepos = old_linepos  # noqa: SLF001
 
             self._paint_vrule(rule_width, y_padding, row_height, vrules, left)
             left += column_width + 2 * x_padding + x_spacing
@@ -1386,10 +1425,13 @@ class TableRenderer:
         left: SizeInternal,
     ) -> None:
         if vrules:
-            self.pdf._canvas.setLineWidth(rule_width)
-            self.pdf._canvas.setStrokeColorRGB(*black)
-            self.pdf._canvas.line(
-                left, self.pdf._linepos, left, self.pdf._linepos - row_height - 2 * y_padding
+            self.pdf._canvas.setLineWidth(rule_width)  # noqa: SLF001
+            self.pdf._canvas.setStrokeColorRGB(*black)  # noqa: SLF001
+            self.pdf._canvas.line(  # noqa: SLF001
+                left,
+                self.pdf._linepos,  # noqa: SLF001
+                left,
+                self.pdf._linepos - row_height - 2 * y_padding,  # noqa: SLF001
             )
 
     def _paint_stepwise(
@@ -1517,7 +1559,7 @@ class TextCell(CellRenderer):
     def can_add_dynamic_width(self) -> bool:
         return not self._narrow
 
-    def width(self, pdfdoc: Document) -> SizeMM:
+    def width(self, pdfdoc: Document) -> SizeMM:  # noqa: ARG002
         return self._width
 
     # Do wrapping of text to actual width. width() and height()

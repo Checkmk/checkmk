@@ -35,3 +35,13 @@ test('CmkAlertBox does not dismiss when autoDismiss is false', async () => {
   await vi.advanceTimersByTimeAsync(10000)
   screen.getByRole('status')
 })
+
+test('CmkAlertBox is named by its heading', () => {
+  render(CmkAlertBox, { props: { variant: 'warning', heading: 'Something went wrong' } })
+  screen.getByRole('alert', { name: 'Something went wrong' })
+})
+
+test('CmkAlertBox without a heading has no accessible name', () => {
+  render(CmkAlertBox, { props: { variant: 'warning' } })
+  expect(screen.getByRole('alert')).not.toHaveAttribute('aria-labelledby')
+})

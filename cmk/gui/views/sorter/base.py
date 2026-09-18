@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from typing import NamedTuple, Protocol
@@ -11,8 +10,8 @@ from typing import NamedTuple, Protocol
 from cmk.gui.config import Config
 from cmk.gui.http import Request
 from cmk.gui.type_defs import ColumnName, ColumnSpec, Row
-from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import Dictionary
+from cmk.web.utils.speaklater import LazyString
 
 
 class SorterProtocol(Protocol):

@@ -13,6 +13,22 @@ export function bucketAnchorTime(bucket: M4Bucket): number {
   return bucket.gap ? NaN : (bucket.firstValueTime + bucket.lastValueTime) / 2
 }
 
+// Where a consolidated value belongs on the time axis: `min`/`max` are single samples with a
+// time of their own, an average is no sample and keeps the anchor. See `useHover.drawnTime`.
+export function consolidatedSampleTime(bucket: M4Bucket, consolidation: ConsolidationFn): number {
+  if (bucket.gap || bucket.sampleCount === 0) {
+    return NaN
+  }
+  switch (consolidation) {
+    case 'min':
+      return bucket.minValueTime
+    case 'max':
+      return bucket.maxValueTime
+    case 'avg':
+      return bucketAnchorTime(bucket)
+  }
+}
+
 export function selectConsolidatedValue(bucket: M4Bucket, consolidation: ConsolidationFn): number {
   if (bucket.gap || bucket.sampleCount === 0) {
     return NaN

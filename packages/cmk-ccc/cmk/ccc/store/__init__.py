@@ -139,7 +139,7 @@ def load_mk_file(path: Path, *, default: Mapping[str, object], lock: bool) -> Ma
             exec(compile(path.read_bytes(), path, "exec"), globals(), default)  # nosec B102 # BNS:aee528
         except FileNotFoundError:
             pass
-        except (MKTerminate, MKTimeout):
+        except MKTerminate, MKTimeout:
             raise
         except Exception as e:
             # TODO: How to handle debug mode or logging?
@@ -215,7 +215,7 @@ def load_object_from_file(path: Path, *, default: Any, lock: bool = False) -> An
     ):
         try:
             return ObjectStore(path, serializer=DimSerializer()).read_obj(default=default)
-        except (SyntaxError, ValueError):
+        except SyntaxError, ValueError:
             logger.warning("Failed to deserialize %(path)s, returning default", {"path": path})
             return default
 
@@ -310,7 +310,7 @@ def try_load_file_from_pickle_cache(
         if pickle_path.stat().st_mtime > path.stat().st_mtime:
             # Use pickled version since this file is newer and therefore valid
             return load_object_from_pickle_file(pickle_path, default=default)
-    except (FileNotFoundError, pickle.UnpicklingError):
+    except FileNotFoundError, pickle.UnpicklingError:
         pass
 
     # Scenarios depending on lock

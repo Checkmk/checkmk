@@ -191,7 +191,7 @@ def _parse_resource(resource_data: Sequence[Sequence[str]]) -> Resource | None:
     """
     try:
         resource = json.loads(AZURE_AGENT_SEPARATOR.join(resource_data[0]))
-    except (ValueError, IndexError):
+    except ValueError, IndexError:
         return None
 
     if len(resource_data) < 3:

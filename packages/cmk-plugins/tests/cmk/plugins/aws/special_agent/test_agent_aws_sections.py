@@ -4,20 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Sequence
 from datetime import datetime
+from typing import Any
 from unittest import mock
 
 import pytest
 
-from cmk.plugins.aws.special_agent.agent_aws import (
-    AWSSectionResult,
-    AWSSectionsGeneric,
-    get_seconds_since_midnight,
-    Results,
-)
+from cmk.plugins.aws.special_agent.agent_aws import AWSSectionsGeneric, Results
+from cmk.plugins.aws.special_agent.sections.core import AWSSectionResult, get_seconds_since_midnight
 
 
 @pytest.mark.parametrize(
@@ -33,19 +29,19 @@ def test_get_seconds_since_midnight(now: str, result: float) -> None:
 
 class TestAWSSections:
     @pytest.fixture
-    def services(self):
+    def services(self) -> Any:
         return "testservice"
 
     @pytest.fixture
-    def region(self):
+    def region(self) -> Any:
         return "testregion"
 
     @pytest.fixture
-    def config(self):
+    def config(self) -> Any:
         return "testconfig"
 
     @pytest.fixture
-    def generic_section(self, services, region, config):
+    def generic_section(self, services: Any, region: Any, config: Any) -> AWSSectionsGeneric:
         return AWSSectionsGeneric(services, region, config)
 
     def test_section_header(
@@ -81,11 +77,11 @@ class TestAWSSections:
 
 class TestAWSHostLabelSections:
     @pytest.fixture
-    def account_id(self):
+    def account_id(self) -> str:
         return "test-account"
 
     @pytest.fixture
-    def generic_section(self, account_id):
+    def generic_section(self, account_id: str) -> AWSSectionsGeneric:
         return AWSSectionsGeneric(hostname="", session=mock.Mock(), account_id=account_id)
 
     @pytest.mark.parametrize(

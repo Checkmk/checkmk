@@ -4,8 +4,6 @@
 
 """iBazel frontend supervisor subprocess lifecycle management."""
 
-from __future__ import annotations
-
 import contextlib
 import os
 import signal
@@ -18,6 +16,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from cmk.dev_deploy.core import output
+from cmk.dev_deploy.core.bazel import ensure_bazel_wrapper
 from cmk.dev_deploy.errors import FrontendError
 from cmk.dev_deploy.frontend.ibazel_manager import ensure_ibazel
 
@@ -57,7 +56,7 @@ def _check_port(host: str, port: int, timeout: float = 1.0) -> bool:
         conn = socket.create_connection((host, port), timeout=timeout)
         conn.close()
         return True
-    except (ConnectionRefusedError, OSError, TimeoutError):
+    except ConnectionRefusedError, OSError, TimeoutError:
         return False
 
 
@@ -65,7 +64,7 @@ def _kill_process_group(pid: int) -> None:
     """Send SIGKILL to the process group immediately (no grace period)."""
     try:
         pgid = os.getpgid(pid)
-    except (ProcessLookupError, PermissionError):
+    except ProcessLookupError, PermissionError:
         return
 
     with contextlib.suppress(ProcessLookupError, PermissionError):
@@ -86,9 +85,9 @@ def _find_bazel_children(pid: int) -> list[int]:
                     for child_str in children_text.split():
                         with contextlib.suppress(ValueError):
                             children.add(int(child_str))
-            except (OSError, FileNotFoundError, ValueError, PermissionError):
+            except OSError, FileNotFoundError, ValueError, PermissionError:
                 continue
-    except (OSError, FileNotFoundError, PermissionError):
+    except OSError, FileNotFoundError, PermissionError:
         # Strategy 2: Fallback -- scan /proc/ for processes with matching PPID
         try:
             for entry in Path("/proc").iterdir():
@@ -106,9 +105,9 @@ def _find_bazel_children(pid: int) -> list[int]:
                     # fields[0] = state, fields[1] = ppid
                     if len(fields) >= 2 and int(fields[1]) == pid:
                         children.add(int(entry.name))
-                except (OSError, FileNotFoundError, ValueError, PermissionError):
+                except OSError, FileNotFoundError, ValueError, PermissionError:
                     continue
-        except (OSError, FileNotFoundError, PermissionError):
+        except OSError, FileNotFoundError, PermissionError:
             pass
 
     # Filter to Bazel/Java processes only
@@ -118,7 +117,7 @@ def _find_bazel_children(pid: int) -> list[int]:
             cmdline = Path(f"/proc/{child_pid}/cmdline").read_text().lower()
             if "bazel" in cmdline or "java" in cmdline:
                 bazel_children.append(child_pid)
-        except (OSError, FileNotFoundError, ValueError, PermissionError):
+        except OSError, FileNotFoundError, ValueError, PermissionError:
             continue
 
     return bazel_children
@@ -155,7 +154,7 @@ def _cleanup_orphaned_port(port: int) -> None:
     # local_address is "hex_ip:hex_port"
     try:
         tcp_lines = Path("/proc/net/tcp").read_text().splitlines()
-    except (OSError, FileNotFoundError, PermissionError):
+    except OSError, FileNotFoundError, PermissionError:
         return
 
     # Find inodes matching our port
@@ -204,9 +203,9 @@ def _cleanup_orphaned_port(port: int) -> None:
                                 PermissionError,
                             ):
                                 pass
-                except (OSError, FileNotFoundError, ValueError, PermissionError):
+                except OSError, FileNotFoundError, ValueError, PermissionError:
                     continue
-        except (OSError, FileNotFoundError, PermissionError):
+        except OSError, FileNotFoundError, PermissionError:
             continue
 
 
@@ -214,7 +213,7 @@ def _check_inotify_watches() -> None:
     """Warn if inotify max_user_watches is below the recommended threshold."""
     try:
         current = int(_INOTIFY_SYSCTL_PATH.read_text().strip())
-    except (OSError, ValueError):
+    except OSError, ValueError:
         return  # Non-Linux or read error -- skip silently
 
     if current < _INOTIFY_MIN_WATCHES:
@@ -319,7 +318,7 @@ class FrontendSupervisor:
             # Check if process is still alive
             try:
                 os.kill(old_pid, 0)
-            except (ProcessLookupError, PermissionError):
+            except ProcessLookupError, PermissionError:
                 # Process gone -- use port cleanup fallback
                 _cleanup_orphaned_port(self._config.port)
                 return
@@ -343,7 +342,7 @@ class FrontendSupervisor:
                 output.warn(f"Killing orphaned Bazel child process (PID {child_pid})")
                 _kill_process_group(child_pid)
 
-        except (ProcessLookupError, PermissionError, ValueError, OSError):
+        except ProcessLookupError, PermissionError, ValueError, OSError:
             pass  # Any error: just clean up PID file
         finally:
             with contextlib.suppress(OSError):
@@ -387,9 +386,17 @@ class FrontendSupervisor:
     # -- Subprocess management -----------------------------------------------
 
     def _spawn_ibazel(self) -> None:
-        """Spawn iBazel via ``ibazel run`` in a new process group."""
+        """Spawn iBazel via ``ibazel run`` in a new process group.
+
+        ``-bazel_path`` points iBazel's bazel invocations at the deploy
+        server, so frontend rebuilds never contend with the developer's
+        own bazel commands (omitted in shared-server mode).
+        """
         ibazel_bin = ensure_ibazel()
-        cmd = [str(ibazel_bin), "run", IBAZEL_TARGET]
+        cmd = [str(ibazel_bin)]
+        if (bazel_wrapper := ensure_bazel_wrapper(self._repo_root)) is not None:
+            cmd.append(f"-bazel_path={bazel_wrapper}")
+        cmd.extend(["run", IBAZEL_TARGET])
         self._proc = subprocess.Popen(
             cmd,
             cwd=str(self._repo_root),

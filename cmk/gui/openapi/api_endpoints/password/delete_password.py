@@ -25,7 +25,7 @@ from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import RestAPIRequestGeneralException
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.passwords import load_password_to_modify, remove_password
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
@@ -56,7 +56,7 @@ def delete_password_v1(
     if api_context.etag.enabled:
         api_context.etag.verify(password_etag(name, password))
 
-    if is_locked_by_quick_setup(password.get("locked_by")):
+    if is_locked_by_config_bundle(password.get("locked_by")):
         raise RestAPIRequestGeneralException(
             status=400,
             title=f'The password "{name}" is locked by Quick setup.',

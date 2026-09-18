@@ -13,6 +13,8 @@ from logging.handlers import WatchedFileHandler
 from pathlib import Path
 from typing import TextIO
 
+from cmk.ccc.log import CMKFormatter
+
 ROOT_LOGGER_NAME = "cmk"
 
 
@@ -46,7 +48,10 @@ class LoggingManager:
         """
         handler = logging.StreamHandler(stream=stream)
         handler.setLevel(log_level)
-        handler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
+        handler.setFormatter(
+            # astrein: disable=logging-formatter
+            logging.Formatter("[%(levelname)s] %(message)s")
+        )
         self._logger.addHandler(handler)
         yield
         self._logger.removeHandler(handler)
@@ -61,9 +66,7 @@ class LoggingManager:
         path.parent.mkdir(parents=True, exist_ok=True)
         handler = WatchedFileHandler(filename=path, encoding="utf-8")
         handler.setLevel(log_level)
-        handler.setFormatter(
-            logging.Formatter("%(asctime)s [%(levelname)s] [%(name)s] %(message)s")
-        )
+        handler.setFormatter(CMKFormatter())
         self._logger.addHandler(handler)
         yield
         self._logger.removeHandler(handler)

@@ -36,7 +36,7 @@ def parse_juniper_trpz_flash(string_table: StringTable) -> Section | None:
     return Section(used=float(used), total=float(total))
 
 
-def discover_juniper_trpz_flash(section: Section) -> DiscoveryResult:
+def discover_juniper_trpz_flash(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

@@ -131,7 +131,7 @@ def test_discover() -> None:
     [
         pytest.param(
             "/",
-            lnx_quota._DEFAULT_PARAMETERS,
+            lnx_quota._DEFAULT_PARAMETERS,  # noqa: SLF001
             _STRING_TABLE,
             [
                 Result(state=State.OK, notice="User root has no space limits set"),
@@ -141,7 +141,7 @@ def test_discover() -> None:
         ),
         pytest.param(
             "/",
-            lnx_quota._DEFAULT_PARAMETERS,
+            lnx_quota._DEFAULT_PARAMETERS,  # noqa: SLF001
             [
                 ["[[[usr:/]]]"],
                 [

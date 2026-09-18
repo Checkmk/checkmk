@@ -6,7 +6,10 @@
 import dataclasses
 from collections.abc import Iterable, Mapping
 
-from cmk.base.configlib.fetchers import make_telemetry_custom_service_config
+from cmk.base.configlib.fetchers import (
+    make_metrics_identity_routing_config,
+    make_telemetry_custom_service_config,
+)
 from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.ccc.hostaddress import HostName
 from cmk.ruleset_matcher.matcher import RulesetMatcher, RuleSpec
@@ -82,3 +85,66 @@ def test_telemetry_custom_service_without_rules() -> None:
     )
 
     assert resolve(_MATCHING) == []
+
+
+_ROUTING_VALUE: Mapping[str, object] = {"filters": ("all_identity_labels", None)}
+
+
+def test_metrics_identity_routing_matches_the_host() -> None:
+    rule: RuleSpec[Mapping[str, object]] = RuleSpec(
+        value=_ROUTING_VALUE,
+        condition={"host_name": [_MATCHING]},
+        id="test-rule",
+    )
+    resolve = make_metrics_identity_routing_config(
+        dataclasses.replace(EMPTY_CONFIG, metrics_identity_routing=[rule]),
+        _matcher_with_hosts((_MATCHING, _OTHER)),
+        lambda _: {},
+    )
+
+    assert resolve(_MATCHING) == _ROUTING_VALUE
+
+
+def test_metrics_identity_routing_misses_other_hosts() -> None:
+    rule: RuleSpec[Mapping[str, object]] = RuleSpec(
+        value=_ROUTING_VALUE,
+        condition={"host_name": [_MATCHING]},
+        id="test-rule",
+    )
+    resolve = make_metrics_identity_routing_config(
+        dataclasses.replace(EMPTY_CONFIG, metrics_identity_routing=[rule]),
+        _matcher_with_hosts((_MATCHING, _OTHER)),
+        lambda _: {},
+    )
+
+    assert resolve(_OTHER) == {}
+
+
+def test_metrics_identity_routing_lets_the_topmost_matching_rule_win() -> None:
+    """The ruleset's eval type is MERGE and its value has a single key, so a more
+    specific rule above a broad one replaces it rather than adding to it."""
+    rules: list[RuleSpec[Mapping[str, object]]] = [
+        RuleSpec(
+            value={"filters": ("specific", None)},
+            condition={"host_name": [_MATCHING]},
+            id="specific",
+        ),
+        RuleSpec(value={"filters": ("catch_all", None)}, condition={}, id="catch-all"),
+    ]
+    resolve = make_metrics_identity_routing_config(
+        dataclasses.replace(EMPTY_CONFIG, metrics_identity_routing=rules),
+        _matcher_with_hosts((_MATCHING, _OTHER)),
+        lambda _: {},
+    )
+
+    assert resolve(_MATCHING) == {"filters": ("specific", None)}
+
+
+def test_metrics_identity_routing_without_rules() -> None:
+    resolve = make_metrics_identity_routing_config(
+        EMPTY_CONFIG,
+        _matcher_with_hosts((_MATCHING,)),
+        lambda _: {},
+    )
+
+    assert resolve(_MATCHING) == {}

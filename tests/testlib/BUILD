@@ -8,6 +8,7 @@ py_library(
     srcs = glob(
         include = ["**/*.py"],
         exclude = [
+            "consolidation_wire.py",  # dedicated target :consolidation_wire (extra shared-typing dep)
             "fake_site.py",
         ],
     ),
@@ -36,6 +37,7 @@ py_library(
         "//tests/testlib/common:repo",
         "//tests/testlib/common:utils",
         requirement("beautifulsoup4"),
+        requirement("checkmk-dev-tools"),
         requirement("clickhouse-connect"),
         requirement("cryptography"),
         requirement("docker"),
@@ -45,6 +47,7 @@ py_library(
         requirement("pexpect"),
         requirement("playwright"),
         requirement("psutil"),
+        requirement("pydantic"),
         requirement("pyjwt"),
         requirement("pyyaml"),
         requirement("pytest"),
@@ -71,6 +74,17 @@ py_library(
         "//cmk/gui/rest_api_types:notifications",
         "//packages/cmk-crash:crash",
         requirement("requests"),
+    ],
+)
+
+py_library(
+    name = "consolidation_wire",
+    testonly = True,
+    srcs = ["consolidation_wire.py"],
+    imports = ["../.."],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
     ],
 )
 
@@ -104,6 +118,7 @@ py_library(
     srcs = glob(
         include = ["**/*.py"],
         exclude = [
+            "consolidation_wire.py",  # dedicated target :consolidation_wire (extra shared-typing dep)
             "fake_site.py",
             "unit/**",
         ],
@@ -132,6 +147,7 @@ py_library(
         "//tests/testlib/common:repo",
         "//tests/testlib/common:utils",
         requirement("beautifulsoup4"),
+        requirement("checkmk-dev-tools"),
         requirement("clickhouse-connect"),
         requirement("cryptography"),
         requirement("docker"),

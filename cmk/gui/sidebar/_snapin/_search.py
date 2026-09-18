@@ -21,13 +21,9 @@ from cmk.gui.search.quicksearch import (
     get_url_builder,
     IncorrectLabelInputError,
 )
-from cmk.gui.type_defs import (
-    IconNames,
-    SearchQuery,
-    SearchResultsByTopic,
-    StaticIcon,
-)
+from cmk.gui.type_defs import SearchQuery, SearchResultsByTopic
 from cmk.gui.utils.roles import UserPermissions
+from cmk.web.utils.icons import IconNames, StaticIcon
 
 from ._base import PageHandlers, SidebarSnapin
 from ._quicksearch_manager import SnapinQuicksearchManager, TooManyRowsError

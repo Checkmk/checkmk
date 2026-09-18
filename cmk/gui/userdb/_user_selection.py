@@ -28,7 +28,7 @@ def UserSelection(
     only_automation: bool = False,
     # ValueSpec
     title: str | None = None,
-    help: ValueSpecHelp | None = None,
+    help: ValueSpecHelp | None = None,  # noqa: A002
     default_value: ValueSpecDefault[UserId] = DEF_VALUE,
     validate: ValueSpecValidateFunc[UserId | None] | None = None,
 ) -> Transform[UserId | None]:
@@ -56,7 +56,7 @@ class _UserSelection(DropdownChoice[UserId]):
         only_automation: bool = False,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[UserId] = DEF_VALUE,
     ) -> None:
         super().__init__(

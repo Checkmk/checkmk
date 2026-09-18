@@ -80,7 +80,7 @@ snmp_section_audiocodes_overall_operational_state = SimpleSNMPSection(
 
 
 def discover_audiocodes_overall_operational_state(
-    section: OperationalState,
+    section: OperationalState,  # noqa: ARG001
 ) -> DiscoveryResult:
     yield Service()
 

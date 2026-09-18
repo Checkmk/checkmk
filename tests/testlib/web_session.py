@@ -41,14 +41,12 @@ class CMKWebSession:
 
     def check_redirect(self, path: str, expected_target: str | None = None) -> None:
         response = self.get(path, expected_code=302, allow_redirects=False)
-        if expected_target:
-            if response.headers["Location"] != expected_target:
-                raise AssertionError(
-                    "REDIRECT FAILED: '{}' != '{}'".format(
-                        response.headers["Location"], expected_target
-                    )
+        if expected_target and response.headers["Location"] != expected_target:
+            raise AssertionError(
+                "REDIRECT FAILED: '{}' != '{}'".format(
+                    response.headers["Location"], expected_target
                 )
-            assert response.headers["Location"] == expected_target
+            )
 
     def get(self, *args, **kwargs) -> requests.Response:  # type: ignore[no-untyped-def]
         return self.request("get", *args, **kwargs)
@@ -87,21 +85,21 @@ class CMKWebSession:
     def _handle_http_response(
         self, response: requests.Response, expected_code: int, allow_redirect_to_login: bool
     ) -> None:
-        assert response.status_code == expected_code, (
-            "Got invalid status code (%d != %d) for URL %s (Location: %s)"
-            % (
-                response.status_code,
-                expected_code,
-                response.url,
-                response.headers.get("Location", "None"),
+        if response.status_code != expected_code:
+            raise AssertionError(
+                "Got invalid status code (%d != %d) for URL %s (Location: %s)"
+                % (
+                    response.status_code,
+                    expected_code,
+                    response.url,
+                    response.headers.get("Location", "None"),
+                )
             )
-        )
 
-        if not allow_redirect_to_login and response.history:
-            assert "check_mk/login.py" not in response.url, "Followed redirect (%d) %s -> %s" % (
-                response.history[0].status_code,
-                response.history[0].url,
-                response.url,
+        if not allow_redirect_to_login and response.history and "check_mk/login.py" in response.url:
+            raise AssertionError(
+                "Followed redirect (%d) %s -> %s"
+                % (response.history[0].status_code, response.history[0].url, response.url)
             )
 
         if self._get_mime_type(response) == "text/html":
@@ -111,12 +109,14 @@ class CMKWebSession:
             self._check_html_page_resources(response.url, soup)
 
     def _get_mime_type(self, response: requests.Response) -> str:
-        assert "Content-Type" in response.headers
+        if "Content-Type" not in response.headers:
+            raise RuntimeError(f"Response for {response.url} has no Content-Type header")
         return response.headers["Content-Type"].split(";", 1)[0]
 
     def _find_errors(self, body: str) -> None:
         matches = re.search("<div class=error>(.*?)</div>", body, re.M | re.DOTALL)
-        assert not matches, "Found error message: %s" % matches.groups()
+        if matches:
+            raise AssertionError("Found error message: %s" % matches.groups())
 
     def _check_html_page_resources(self, url: str | bytes | None, soup: BeautifulSoup) -> None:
         base_url = urllib.parse.urlparse(url).path
@@ -160,12 +160,16 @@ class CMKWebSession:
                 continue
             self.verified_resources.add(url)
 
-            assert not url.startswith("/")
+            if url.startswith("/"):
+                raise RuntimeError(f"Expected a relative resource URL, got {url!r}")
             assert isinstance(base_url, str)
             req = self.get(base_url + "/" + url, verify=False)
 
             mime_type = self._get_mime_type(req)
-            assert mime_type in allowed_mime_types
+            if mime_type not in allowed_mime_types:
+                raise AssertionError(
+                    f"Resource {url!r} has mime type {mime_type!r}, allowed: {allowed_mime_types}"
+                )
 
     def _find_resource_urls(
         self,
@@ -205,11 +209,13 @@ class CMKWebSession:
             _ in r.text for _ in login_page_patterns
         )
 
-        assert not logged_in, "Logged in unexpectedly!"
+        if logged_in:
+            raise RuntimeError("Logged in unexpectedly!")
 
         login_page = r.text
         for pattern in login_page_patterns:
-            assert pattern in login_page, f"{pattern} not found in login page - page broken?"
+            if pattern not in login_page:
+                raise AssertionError(f"{pattern} not found in login page - page broken?")
 
         r = self.post(
             "login.py",
@@ -221,16 +227,20 @@ class CMKWebSession:
             },
         )
         auth_cookie = self.session.cookies.get(f"auth_{self.site.id}")
-        assert auth_cookie
-        assert auth_cookie.startswith("%s:" % username)
+        if not auth_cookie:
+            raise AssertionError("Login did not set an auth cookie")
+        if not auth_cookie.startswith(f"{username}:"):
+            raise AssertionError(f"Auth cookie is not for {username!r}: {auth_cookie!r}")
 
         main_page = r.text
         for pattern in main_page_patterns:
-            assert pattern in main_page, f"{pattern} not found in main page - page broken?"
+            if pattern not in main_page:
+                raise AssertionError(f"{pattern} not found in main page - page broken?")
 
     def logout(self) -> None:
         r = self.get("logout.py", allow_redirect_to_login=True)
-        assert 'action="login.py"' in r.text
+        if 'action="login.py"' not in r.text:
+            raise AssertionError("Logout did not land on the login page")
 
     def is_logged_in(self) -> bool:
         """Check whether this session has an auth cookie and can access a protected page.

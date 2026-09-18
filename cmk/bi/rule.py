@@ -86,7 +86,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
 
     @classmethod
     @override
-    def schema(cls) -> type["BIRuleSchema"]:
+    def schema(cls) -> type[BIRuleSchema]:
         return BIRuleSchema
 
     def serialize(self) -> dict[str, Any]:
@@ -101,7 +101,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
         }
 
     @override
-    def clone(self, existing_rule_ids: Sequence[str]) -> "BIRule":
+    def clone(self, existing_rule_ids: Sequence[str]) -> BIRule:
         def get_clone_id(cloned_rule_id: str, existing_rule_ids: Sequence[str]) -> str:
             for index in range(1, len(existing_rule_ids) + 2):
                 new_id = f"{cloned_rule_id}_clone{index}"

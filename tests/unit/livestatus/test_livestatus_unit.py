@@ -23,7 +23,7 @@ from cmk.utils.certs import SiteCA
 
 
 # Override top level fixture to make livestatus connects possible here
-@pytest.fixture(autouse=True, scope="module")
+@pytest.fixture(autouse=True, scope="module")  # ruff: ignore[pytest-fixture-autouse]
 def prevent_livestatus_connect() -> None:
     pass
 
@@ -75,9 +75,8 @@ def test_quote_dict(inp: str, expected_result: str) -> None:
     assert result == expected_result
 
 
-def test_livestatus_local_connection_omd_root_not_set(
-    monkeypatch: MonkeyPatch, tmp_path: Path, patch_omd_site: None
-) -> None:
+@pytest.mark.usefixtures("tmp_path", "patch_omd_site")
+def test_livestatus_local_connection_omd_root_not_set(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.delenv("OMD_ROOT")
     with pytest.raises(livestatus.MKLivestatusConfigError, match="OMD_ROOT is not set"):
         livestatus.LocalConnection()
@@ -158,10 +157,9 @@ def test_livestatus_ipv6_connection() -> None:
         ("xyz:bla", None),
     ],
 )
+@pytest.mark.usefixtures("monkeypatch")
 def test_single_site_connection_socketurl(
-    socket_url: str,
-    result: tuple[socket.AddressFamily, str | tuple[str, int]] | None,
-    monkeypatch: MonkeyPatch,
+    socket_url: str, result: tuple[socket.AddressFamily, str | tuple[str, int]] | None
 ) -> None:
     if result is None:
         with pytest.raises(livestatus.MKLivestatusConfigError, match="Invalid livestatus"):
@@ -173,7 +171,7 @@ def test_single_site_connection_socketurl(
 
 def test_create_socket_create_plain_text_socket() -> None:
     live = livestatus.SingleSiteConnection("unix:/tmp/xyz", tls=False)
-    sock = live._create_socket(socket.AF_INET)
+    sock = live._create_socket(socket.AF_INET)  # noqa: SLF001
     assert isinstance(sock, socket.socket)
     assert not isinstance(sock, ssl.SSLSocket)
 
@@ -190,32 +188,34 @@ def test_create_socket_with_verification_using_custom_trust_store(
         "unix:/tmp/xyz", tls=True, verify=True, ca_file_path=ca_file_path
     )
 
-    sock = live._create_socket(socket.AF_INET)
+    sock = live._create_socket(socket.AF_INET)  # noqa: SLF001
 
     assert isinstance(sock, ssl.SSLSocket)
     assert sock.context.verify_mode == ssl.CERT_REQUIRED
     assert live.tls_ca_file_path == ca_file_path
 
 
+@pytest.mark.usefixtures("ca")
 def test_create_socket_with_verification_using_site_trust_store(
-    ca: SiteCA, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     monkeypatch.setenv("OMD_ROOT", str(tmp_path))
 
     live = livestatus.SingleSiteConnection("unix:/tmp/xyz", tls=True, verify=True)
-    sock = live._create_socket(socket.AF_INET)
+    sock = live._create_socket(socket.AF_INET)  # noqa: SLF001
     assert isinstance(sock, ssl.SSLSocket)
     assert sock.context.verify_mode == ssl.CERT_REQUIRED
     assert live.tls_ca_file_path == str(tmp_path / "var/ssl/ca-certificates.crt")
 
 
+@pytest.mark.usefixtures("ca")
 def test_create_socket_without_verification(
-    ca: SiteCA, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     monkeypatch.setenv("OMD_ROOT", str(tmp_path))
 
     live = livestatus.SingleSiteConnection("unix:/tmp/xyz", tls=True, verify=False)
-    sock = live._create_socket(socket.AF_INET)
+    sock = live._create_socket(socket.AF_INET)  # noqa: SLF001
     assert isinstance(sock, ssl.SSLSocket)
     assert sock.context.verify_mode == ssl.CERT_NONE
 
@@ -225,7 +225,7 @@ def test_create_socket_not_existing_ca_file() -> None:
         "unix:/tmp/xyz", tls=True, verify=True, ca_file_path="/x/y/z.pem"
     )
     with pytest.raises(livestatus.MKLivestatusConfigError, match="No such file or"):
-        live._create_socket(socket.AF_INET)
+        live._create_socket(socket.AF_INET)  # noqa: SLF001
 
 
 def test_create_socket_no_cert(tmp_path: Path) -> None:
@@ -236,10 +236,11 @@ def test_create_socket_no_cert(tmp_path: Path) -> None:
         with pytest.raises(
             livestatus.MKLivestatusConfigError, match="(unknown error|no certificate or crl found)"
         ):
-            live._create_socket(socket.AF_INET)
+            live._create_socket(socket.AF_INET)  # noqa: SLF001
 
 
-def test_local_connection(patch_omd_site: None, mock_livestatus: MockLiveStatusConnection) -> None:
+@pytest.mark.usefixtures("patch_omd_site")
+def test_local_connection(mock_livestatus: MockLiveStatusConnection) -> None:
     live = mock_livestatus
     live.set_sites(["NO_SITE"])
     live.add_table(
@@ -271,7 +272,8 @@ def test_local_connection(patch_omd_site: None, mock_livestatus: MockLiveStatusC
         ("a'dmin", False),
     ],
 )
-def test_set_auth_user(patch_omd_site: None, user_id: str, allowed: bool) -> None:
+@pytest.mark.usefixtures("patch_omd_site")
+def test_set_auth_user(user_id: str, allowed: bool) -> None:
     if not allowed:
         with pytest.raises(ValueError, match="invalid username"):
             livestatus.LocalConnection().set_auth_user("mydomain", UserId(user_id))

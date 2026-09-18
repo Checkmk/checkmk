@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Sequence
 
@@ -49,7 +47,7 @@ def discover_genua_state(section: Sequence[StringTable]) -> DiscoveryResult:
             yield Service()
 
 
-def genua_state_str(st):
+def genua_state_str(st: str) -> str:
     names = {
         "0": "init",
         "1": "backup",

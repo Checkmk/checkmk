@@ -6,6 +6,11 @@
 from cmk.web.utils.speaklater import LazyString, LazyText
 
 
+def test_lazy_string_add_translates_and_concatenates() -> None:
+    lazy = LazyString(lambda text: "xxx" + text, "yyy")
+    assert "" + lazy == "xxxyyy"
+
+
 def test_lazy_string_mod_returns_self_and_stores_args() -> None:
     lazy = LazyString(str, "Hello %s")
     result = lazy % "World"

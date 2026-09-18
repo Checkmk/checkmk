@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import type { StringArrayPropDef } from '@ucl/_ucl/types/prop-def'
 import {
   type DualListElement,
@@ -39,12 +39,12 @@ export const panelConfig = {
   width: {
     type: 'list' as const,
     title: 'Width',
-    options: [
-      { title: 'XSmall', name: 'xsmall' },
-      { title: 'Small', name: 'small' },
-      { title: 'Medium', name: 'medium' },
-      { title: 'Large', name: 'large' }
-    ] satisfies Options<SearchableListWidthVariants>[],
+    options: listOptions<SearchableListWidthVariants>({
+      xsmall: 'XSmall',
+      small: 'Small',
+      medium: 'Medium',
+      large: 'Large'
+    }),
     initialState: 'medium' as const
   },
   selectedData: {

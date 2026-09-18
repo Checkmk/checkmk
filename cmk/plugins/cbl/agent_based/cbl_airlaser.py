@@ -51,7 +51,7 @@ def saveint(i: str | int) -> int:
     you can not know whether it is really 0 or something went wrong."""
     try:
         return int(i)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return 0
 
 
@@ -189,7 +189,7 @@ def check_cbl_airlaser_hw(params: Mapping[str, Any], section: Section) -> CheckR
     yield from perfdata
 
 
-def discover_cbl_airlaser(section: Section) -> DiscoveryResult:
+def discover_cbl_airlaser(section: Section) -> DiscoveryResult:  # noqa: ARG001
     # start passing parameters, but since we might also need some for optics
     # this may change to using factory settings.
     # Or we just hardcode the margins we got from the vendor.

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 import sys
 from collections.abc import Callable, MutableMapping
@@ -170,7 +169,7 @@ def _send_func_trb140(context: Context) -> int:
             return 2
 
     except requests.exceptions.HTTPError as e:
-        sys.stderr.write(f"HTTPError sending SMS: {e}, {response.content!r}\n")
+        sys.stderr.write(f"HTTPError sending SMS: {e}, {response.content!r}\n")  # type: ignore[possibly-undefined]
         return 2
 
     except Exception as e:

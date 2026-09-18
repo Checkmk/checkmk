@@ -26,7 +26,7 @@ from cmk.plugins.hwg.agent_based.lib import parse_hwg
 from cmk.plugins.lib.temperature import TempParamDict
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _patch_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(hwg_temp, "get_value_store", dict)
 

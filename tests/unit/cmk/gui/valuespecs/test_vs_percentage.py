@@ -5,7 +5,11 @@
 
 import cmk.gui.valuespec as vs
 
-from .utils import expect_validate_failure, expect_validate_success
+from .utils import (
+    expect_validate_failure,
+    expect_validate_failure_untypeable,
+    expect_validate_success,
+)
 
 
 class TestValueSpecPercentage:
@@ -15,7 +19,7 @@ class TestValueSpecPercentage:
         expect_validate_failure(vs.Percentage(), -10.0)
         expect_validate_failure(vs.Percentage(), 10)
         expect_validate_success(vs.Percentage(allow_int=True), 10)
-        expect_validate_failure(vs.Percentage(allow_int=True), "10")  # type: ignore[misc]
+        expect_validate_failure_untypeable(vs.Percentage(allow_int=True), "10")
 
     def test_value_to_html(self) -> None:
         assert vs.Percentage().value_to_html(100) == "100%"

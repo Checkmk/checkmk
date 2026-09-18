@@ -11,6 +11,9 @@
     "site": {
       "type": "string"
     },
+    "host_url": {
+      "type": "string"
+    },
     "ai_explain": {
       "type": "boolean",
       "default": false
@@ -20,5 +23,5 @@
     },
     "edition": { "$ref": "monitoring/_base.json#/$defs/edition" }
   },
-  "required": ["host", "site", "user_id", "edition"]
+  "required": ["host", "site", "host_url", "user_id", "edition"]
 }

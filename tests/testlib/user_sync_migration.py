@@ -112,10 +112,11 @@ def run_update_config(site: Site) -> None:
         ["cmk-update-config", "--conflict=force", "--site-may-run"],
         check=False,
     )
-    assert result.returncode == 0, (
-        f"cmk-update-config failed (rc={result.returncode})\n"
-        f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
-    )
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"cmk-update-config failed (rc={result.returncode})\n"
+            f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
+        )
 
 
 def read_site_sync_fields(site: Site) -> dict[str, dict[str, object]]:

@@ -53,7 +53,9 @@ class StrWithStaleness(NamedTuple):
 
 
 def render_str_with_staleness(
-    painter_data: StrWithStaleness, painter_configuration: PainterConfiguration, user: LoggedInUser
+    painter_data: StrWithStaleness,
+    painter_configuration: PainterConfiguration,  # noqa: ARG001
+    user: LoggedInUser,  # noqa: ARG001
 ) -> CellSpec:
     if painter_data.is_stale:
         return "stale", painter_data.value

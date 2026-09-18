@@ -21,7 +21,7 @@ py_library(
     imports = ["../../.."],
     visibility = [
         "//buildscripts/scripts:__pkg__",
-        "//non-free/packages/cmk-metric-backend:__pkg__",
+        "//non-free/packages/cmk-data-backend:__pkg__",
         "//non-free/tests:__subpackages__",
         "//tests:__subpackages__",
     ],
@@ -38,6 +38,7 @@ py_library(
 
 py_library(
     name = "empty_config",
+    testonly = True,
     srcs = ["empty_config.py"],
     imports = ["../../.."],
     visibility = [

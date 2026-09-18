@@ -6,10 +6,7 @@
 
 import pytest
 
-from cmk.plugins.postgres.rulesets.mk_postgres import (
-    migrate,
-    migrate_instance,
-)
+from cmk.plugins.postgres.rulesets.mk_postgres import migrate
 
 _INSTANCES_SETTINGS = {
     "db_username": "postgres",
@@ -42,55 +39,3 @@ _INSTANCES_SETTINGS = {
 )
 def test_migrate(old: object, expected: dict[str, object]) -> None:
     assert migrate(old) == expected
-
-
-@pytest.mark.parametrize(
-    "from_disk, expected",
-    [
-        pytest.param(
-            {
-                "instance_env_filepath": "",
-                "instance_username": "",
-                "instance_pgpass_filepath": "",
-            },
-            {
-                "instance_name": "",
-                "instance_env_filepath": "",
-                "instance_username": "",
-                "instance_pgpass_filepath": "",
-            },
-            id="Legacy II - missing instance_name",
-        ),
-    ],
-)
-def test_forth_outdated(from_disk: dict[str, object], expected: object) -> None:
-    got = migrate_instance(from_disk)
-    assert got == expected
-
-
-@pytest.mark.parametrize(
-    "from_disk",
-    [
-        pytest.param(
-            {
-                "instance_name": "hi",
-                "instance_env_filepath": "",
-                "instance_username": "",
-                "instance_pgpass_filepath": "",
-            },
-            id="single instance, non-empty name",
-        ),
-        pytest.param(
-            {
-                "instance_name": "",
-                "instance_env_filepath": "",
-                "instance_username": "",
-                "instance_pgpass_filepath": "",
-            },
-            id="Empty instance name",
-        ),
-    ],
-)
-def test_forth_up_to_date(from_disk: dict[str, object]) -> None:
-    got = migrate_instance(from_disk)
-    assert got == from_disk

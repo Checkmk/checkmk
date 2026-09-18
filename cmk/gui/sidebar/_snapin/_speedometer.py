@@ -60,7 +60,7 @@ class Speedometer(SidebarSnapin):
             "sidebar_ajax_speedometer": self._ajax_speedometer,
         }
 
-    def _ajax_speedometer(self, ctx: PageContext) -> None:
+    def _ajax_speedometer(self, ctx: PageContext) -> None:  # noqa: ARG002
         response.set_content_type("application/json")
         try:
             # Try to get values from last call in order to compute

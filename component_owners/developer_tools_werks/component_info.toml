@@ -2,6 +2,7 @@ type = "Component"
 display_name = "Developer Tools: Werks"
 previous_name = "developer_tools"
 members_required = 2
+tier = 3
 description = """
 - Werk changelog management and related tooling
 """

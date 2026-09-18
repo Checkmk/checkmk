@@ -38,6 +38,21 @@ export const panelConfig = {
     type: 'string' as const,
     title: 'Placeholder',
     initialState: 'Search hosts…'
+  },
+  ariaLabel: {
+    type: 'string' as const,
+    title: 'Accessible name',
+    initialState: ''
+  },
+  inlineSearchIcon: {
+    type: 'boolean' as const,
+    title: 'Inline search icon',
+    initialState: false
+  },
+  showSubmitButton: {
+    type: 'boolean' as const,
+    title: 'Submit button',
+    initialState: true
   }
 } satisfies PanelConfigFor<typeof CmkSearchInput>
 </script>
@@ -72,6 +87,9 @@ const lastSearch = ref('')
         <CmkSearchInput
           v-model="propState.modelValue"
           :placeholder="propState.placeholder"
+          :aria-label="propState.ariaLabel"
+          :inline-search-icon="propState.inlineSearchIcon"
+          :show-submit-button="propState.showSubmitButton"
           @search="lastSearch = $event"
         />
         <CmkParagraph>Last submitted query: {{ lastSearch || '—' }}</CmkParagraph>

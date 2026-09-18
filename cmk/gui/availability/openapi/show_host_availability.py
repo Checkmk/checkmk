@@ -42,7 +42,7 @@ from .models.response_models import HostAvailabilityObject
 
 
 def show_host_availability_v1(
-    api_context: ApiContext,
+    api_context: ApiContext,  # noqa: ARG001
     host_name: Annotated[
         AnnotatedHostName,
         PathParam(

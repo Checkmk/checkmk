@@ -5,12 +5,10 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="possibly-undefined"
 
 import abc
 import binascii
 import email
-import email.message
 import email.mime.text
 import email.utils
 import imaplib
@@ -206,14 +204,14 @@ class EWS(_Connection):
                     break
             if i > 0:  # break loop if at least the 1st lvl subfolder is found in the root folder
                 break
-        subfolder_names = subfolder_names[i:]
+        subfolder_names = subfolder_names[i:]  # type: ignore[possibly-undefined]
 
         # Create new subfolder(s)
         for fname in subfolder_names:
             new_folder = Folder(parent=parent_folder, name=fname)
             new_folder.save()
             parent_folder = new_folder
-        return new_folder
+        return new_folder  # type: ignore[possibly-undefined]
 
     def mails_by_date(
         self,
@@ -326,7 +324,7 @@ class GraphApi(_Connection):
             secret=self.auth.client_secret,
             authority_urls=self.authority_urls,
             pw_store=PasswordStore(store_secret),
-            pw_store_file=storage._full_dir / "stored_tokens",
+            pw_store_file=storage._full_dir / "stored_tokens",  # noqa: SLF001
             storage=storage,
             initial_access_token=self.auth.initial_access_token,
             initial_refresh_token=self.auth.initial_refresh_token,

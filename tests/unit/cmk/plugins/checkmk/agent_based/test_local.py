@@ -71,7 +71,7 @@ def test_error_does_not_raise() -> None:
 def test_regex_parser(
     check_line: str, expected_components: tuple[str, str, str, str | None] | None
 ) -> None:
-    assert local._split_check_result(check_line) == expected_components
+    assert local._split_check_result(check_line) == expected_components  # noqa: SLF001
 
 
 @pytest.mark.parametrize(

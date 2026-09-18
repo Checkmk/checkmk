@@ -16,6 +16,7 @@ description:
  goes {WARN}/{CRIT}. This can be configured via the rule Kubernetes pod status. Note, the timer
  begins with the first time a status is seen by checkmk, not on data provided by the Kubernetes API.
 
- The check requires that the special agent kube is configured.
+ This check requires that Kubernetes monitoring is configured and that Checkmk can receive
+ data from the in-cluster agent.
 discovery:
  One service is created for each pod.

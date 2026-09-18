@@ -15,9 +15,9 @@ from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import DynamicIcon, IconNames, StaticIcon
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
+from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless, makeuri_contextless_rulespec_group
 
 from ._main_module_topics import (

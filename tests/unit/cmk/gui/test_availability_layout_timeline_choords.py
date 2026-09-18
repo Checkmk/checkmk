@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import calendar
 import time
@@ -22,8 +21,8 @@ HOURS = 3600
 DAYS = 24 * HOURS
 
 
-@pytest.fixture(autouse=True)
-def fix_localaity(monkeypatch):
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+def fix_localaity(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(time, "localtime", time.gmtime)
     monkeypatch.setattr(time, "mktime", calendar.timegm)
 

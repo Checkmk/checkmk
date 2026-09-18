@@ -101,6 +101,37 @@ describe('MonitoringService', () => {
     consoleErrorSpy.mockRestore()
   })
 
+  it('reports a failed fetch instead of passing it off as an empty result', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const fetchBatch = vi.fn().mockRejectedValue(new Error('boom'))
+    const service = new TestService(fetchBatch)
+
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(service.loadFailed.value).toBe(true)
+
+    service.stopPolling()
+    consoleErrorSpy.mockRestore()
+  })
+
+  it('drops the failure report once a retry brings rows back', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const fetchBatch = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('boom'))
+      .mockResolvedValue(makeResponse([{ id: 'a', value: 1 }], 1, 1))
+    const service = new TestService(fetchBatch)
+    await vi.advanceTimersByTimeAsync(0)
+
+    service.retry()
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(service.loadFailed.value).toBe(false)
+
+    service.stopPolling()
+    consoleErrorSpy.mockRestore()
+  })
+
   it('stays in a non-idle fetch state while a fetch is in flight', async () => {
     const pending = new Promise<PagedResponse<TestItem>>(() => {})
     const fetchBatch = vi.fn().mockReturnValue(pending)
@@ -805,6 +836,34 @@ describe('MonitoringService', () => {
 
       expect(service.columnVisibility.value).toEqual({ address: false })
       expect(fetchBatch).toHaveBeenCalledTimes(1)
+
+      service.stopPolling()
+    })
+
+    it('keeps the ordering and the rows when the column carrying it is hidden', async () => {
+      // Hiding a column drops neither the ordering it carries nor the listing it
+      // produced: the sort survives untouched and nothing is asked of the server,
+      // so the rows cannot silently come back in another order.
+      const rows = [
+        { id: 'b', value: 2 },
+        { id: 'a', value: 1 }
+      ]
+      const fetchBatch = vi.fn().mockResolvedValue(makeResponse(rows, 2, 2))
+      const service = new TestService(fetchBatch, {
+        columns: [{ accessorKey: 'value', header: 'Value' }]
+      })
+
+      await vi.advanceTimersByTimeAsync(0)
+      service.updateSort([{ id: 'value', desc: true }])
+      await vi.advanceTimersByTimeAsync(0)
+      expect(fetchBatch).toHaveBeenCalledTimes(2)
+
+      service.updateColumnVisibility({ value: false })
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(service.sortState.value).toEqual([{ id: 'value', desc: true }])
+      expect(service.items.value).toEqual(rows)
+      expect(fetchBatch).toHaveBeenCalledTimes(2)
 
       service.stopPolling()
     })

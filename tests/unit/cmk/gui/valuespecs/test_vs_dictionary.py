@@ -10,7 +10,12 @@ import pytest
 import cmk.gui.valuespec as vs
 from cmk.web.utils.html import HTML
 
-from .utils import expect_validate_failure, expect_validate_success, request_var
+from .utils import (
+    expect_validate_failure,
+    expect_validate_failure_untypeable,
+    expect_validate_success,
+    request_var,
+)
 
 
 def _test_elements() -> list[tuple[str, vs.ValueSpec]]:
@@ -52,7 +57,7 @@ class TestValueSpecDictionary:
             vs.Dictionary(elements=_test_elements(), ignored_keys=["z"]), {"z": "z"}
         )
 
-        expect_validate_failure(vs.Dictionary(elements=_test_elements()), ["a", "b"])  # type: ignore[misc]
+        expect_validate_failure_untypeable(vs.Dictionary(elements=_test_elements()), ["a", "b"])
 
         # required_keys do what you would expect
         expect_validate_success(
@@ -124,7 +129,8 @@ class TestValueSpecDictionary:
             "d": 1,
         }
 
-    def test_from_html_vars(self, request_context: None) -> None:
+    @pytest.mark.usefixtures("request_context")
+    def test_from_html_vars(self) -> None:
         with request_var(v_p_a="a", v_p_b="2", v_p_c="c", v_p_d="4"):
             assert vs.Dictionary(elements=_test_elements()).from_html_vars("v") == {}
             assert vs.Dictionary(elements=_test_elements(), optional_keys=False).from_html_vars(

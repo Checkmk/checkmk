@@ -3,34 +3,31 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from argparse import Namespace as Args
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Protocol
 
 import pytest
 
-from cmk.plugins.aws.special_agent.agent_aws import (
+from cmk.plugins.aws.special_agent.config import (
     AWSConfig,
-    Glacier,
-    GlacierLimits,
     NamingConvention,
     OverallTags,
-    ResultDistributor,
     TagsImportPatternOption,
     TagsOption,
 )
+from cmk.plugins.aws.special_agent.sections.core import ResultDistributor
+from cmk.plugins.aws.special_agent.sections.glacier import Glacier, GlacierLimits
 
 from .agent_aws_fake_clients import GlacierListTagsInstancesIB, GlacierListVaultsIB
 
 
 class FakeGlacierClient:
-    def list_vaults(self):
+    def list_vaults(self) -> Mapping[str, object]:
         return {"VaultList": GlacierListVaultsIB.create_instances(amount=4), "Marker": "string"}
 
-    def list_tags_for_vault(self, vaultName=""):
+    def list_tags_for_vault(self, vaultName: str = "") -> Mapping[str, object]:
         if vaultName == "VaultName-0":
             return {
                 "Tags": GlacierListTagsInstancesIB.create_instances(amount=1),
@@ -103,7 +100,7 @@ def test_agent_aws_glacier_limits(
     get_glacier_sections: GetGlacierSections,
     names: Sequence[str] | None,
     tags: OverallTags,
-    amount_vaults: int,
+    amount_vaults: int,  # noqa: ARG001
 ) -> None:
     glacier_limits, _glacier = get_glacier_sections(names, tags)
     glacier_limits_results = glacier_limits.run().results

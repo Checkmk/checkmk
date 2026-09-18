@@ -14,7 +14,6 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.form_specs._utils import migrate_form_spec_disk_value
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import GlobalSettings
-from cmk.gui.wato.pages.global_settings import make_global_settings_context
 from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
     filter_unknown_settings,
@@ -23,18 +22,20 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
     load_site_global_settings,
-    save_global_settings,
-    save_site_global_settings,
+    make_global_settings_context,
+    save_global_settings_raw,
+    save_site_global_settings_raw,
 )
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.sites import site_globals_editable, site_management_registry
-from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.utils.log import VERBOSE
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]
-_RENAMED_GLOBALS: Sequence[tuple[str, str, Mapping[object, object]]] = []
+_RENAMED_GLOBALS: Sequence[tuple[str, str, Mapping[object, object]]] = [
+    ("metric_backend", "data_backend", {}),
+]
 _REMOVED_OPTIONS: Sequence[str] = []
 
 
@@ -61,7 +62,7 @@ def _update_installation_wide_global_settings(
     ui_config: Config,
 ) -> None:
     """Update the globals.mk of the local site"""
-    save_global_settings(
+    save_global_settings_raw(
         update_global_config(
             logger,
             # Load full config (with undefined settings)
@@ -78,7 +79,7 @@ def _update_site_specific_global_settings(
     """Update the sitespecific.mk of the local site (which is a remote site)"""
     if not is_distributed_setup_remote_site(ui_config.sites):
         return
-    save_site_global_settings(
+    save_site_global_settings_raw(
         update_global_config(
             logger,
             load_site_global_settings(),
@@ -213,11 +214,13 @@ def _transform_global_config_value(
         config_variable = config_variable_registry[global_settings_var]
     except KeyError:
         return global_settings_val
-    context = make_global_settings_context(edition(cmk.utils.paths.omd_root), omd_site(), ui_config)
-    value_model = config_variable.value_model(context)
-    if isinstance(value_model, FormSpec):
-        return migrate_form_spec_disk_value(value_model, global_settings_val)
-    return value_model.transform_value(global_settings_val)
+    context = make_global_settings_context(
+        edition(cmk.utils.paths.omd_root),
+        omd_site(),
+        sites=ui_config.sites,
+        graph_timeranges=ui_config.graph_timeranges,
+    )
+    return migrate_form_spec_disk_value(config_variable.value_model(context), global_settings_val)
 
 
 def _transform_global_config_values(

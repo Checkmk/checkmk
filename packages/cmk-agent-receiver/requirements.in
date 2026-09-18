@@ -1,7 +1,7 @@
 fastapi
 gunicorn
 h11
-httpx
+httpx2
 python-dateutil
 python-multipart
 requests

@@ -7,8 +7,8 @@
 plugins. Additional individual plug-ins are allowed to create their own topics."""
 
 from cmk.gui.i18n import _l
-from cmk.gui.type_defs import DynamicIconName
 from cmk.gui.watolib.main_menu import MainModuleTopic, MainModuleTopicRegistry
+from cmk.web.utils.icons import DynamicIconName
 
 
 def register(main_module_topic_registry: MainModuleTopicRegistry) -> None:

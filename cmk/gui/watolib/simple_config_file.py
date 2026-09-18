@@ -159,12 +159,16 @@ class WatoSimpleConfigFile[T](WatoSingleConfigFile[dict[str, T]]):
         super().__init__(config_file_path, config_variable, dict[str, spec_class])
 
     def filter_usable_entries(
-        self, entries: dict[str, T], acting_user: LoggedInUser
+        self,
+        entries: dict[str, T],
+        acting_user: LoggedInUser,  # noqa: ARG002
     ) -> dict[str, T]:
         return entries
 
     def filter_editable_entries(
-        self, entries: dict[str, T], acting_user: LoggedInUser
+        self,
+        entries: dict[str, T],
+        acting_user: LoggedInUser,  # noqa: ARG002
     ) -> dict[str, T]:
         return entries
 

@@ -11,6 +11,7 @@ import * as d3Sankey from 'd3-sankey'
 import $ from 'jquery'
 
 import * as callable_functions from '@/modules/callable_functions'
+import * as click_actions from '@/modules/click_actions'
 
 import * as activation from './modules/activation'
 import * as ajax from './modules/ajax'
@@ -27,7 +28,6 @@ import { register } from './modules/figures/register'
 import * as foldable_container from './modules/foldable_container'
 import * as forms from './modules/forms'
 import * as graph_integration from './modules/graph_integration'
-import * as graphs from './modules/graphs'
 import * as help from './modules/help'
 import * as host_diagnose from './modules/host_diagnose'
 import * as hover from './modules/hover'
@@ -42,9 +42,7 @@ import * as number_format from './modules/number_format'
 import * as page_menu from './modules/page_menu'
 import { initPasswordStrength } from './modules/password_meter'
 import * as popup_menu from './modules/popup_menu'
-import * as prediction from './modules/prediction'
 import * as quicksearch from './modules/quicksearch'
-import * as reload_pause from './modules/reload_pause'
 import * as selection from './modules/selection'
 import * as service_discovery from './modules/service_discovery'
 import * as sidebar from './modules/sidebar'
@@ -64,11 +62,15 @@ register()
 $(() => {
   utils.update_header_timer()
   forms.enable_dynamic_form_elements()
+  visibility_detection.initialize()
   // TODO: only register when needed?
   element_dragging.register_event_handlers()
 
   // add a confirmation popup for each for that has a valid confirmation text
   callable_functions.init_callable_ts_functions(document)
+
+  // CSP-compatible replacement for inline onclick handlers
+  click_actions.init_click_action_dispatcher()
 
   document
     .querySelectorAll<HTMLFormElement>('form[data-cmk_form_confirmation]')
@@ -97,7 +99,6 @@ export const cmk_export = {
     foldable_container: foldable_container,
     forms: forms,
     graph_integration: graph_integration,
-    graphs: graphs,
     help: help,
     host_diagnose: host_diagnose,
     hover: hover,
@@ -115,9 +116,7 @@ export const cmk_export = {
     number_format: number_format,
     page_menu: page_menu,
     popup_menu: popup_menu,
-    prediction: prediction,
     quicksearch: quicksearch,
-    reload_pause: reload_pause,
     render_stats_table: render_stats_table,
     selection: selection,
     service_discovery: service_discovery,

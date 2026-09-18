@@ -121,6 +121,9 @@ def fetch_widget_graph_data_v1(
                 requested_time_range=body.requested_time_range,
                 consolidation_function=body.consolidation_function,
                 combination_mode=_combination_mode(widget_config),
+                temperature_unit=issuer.temperature_unit(
+                    api_context.config.default_temperature_unit
+                ),
             )
     except InvalidWidgetError as exc:
         if exc.disable_token:

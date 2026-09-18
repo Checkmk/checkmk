@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from pathlib import Path
 
@@ -89,7 +87,7 @@ def test_body_templates(
     assert mail.body_templates(*args) == expected
 
 
-def mock_service_context():
+def mock_service_context() -> dict[str, str]:
     return {
         "CONTACTALIAS": "cmkadmin",
         "CONTACTEMAIL": "test@abc.de",
@@ -210,7 +208,8 @@ another line\\nlast line
 
 
 # TODO: validate the HTML content
-def test_mail_content_from_service_context(mocker: MockerFixture) -> None:  # noqa: ARG001
+@pytest.mark.usefixtures("mocker")
+def test_mail_content_from_service_context() -> None:
     # The items below are added by the mail plugin
     context = mock_service_context()
     assert "EVENT_TXT" not in context
@@ -275,7 +274,7 @@ def test_mail_content_from_service_context(mocker: MockerFixture) -> None:  # no
         assert content.attachments == []
 
 
-def mock_host_context():
+def mock_host_context() -> dict[str, str]:
     return {
         "CONTACTALIAS": "cmkadmin",
         "CONTACTEMAIL": "test@abc.de",

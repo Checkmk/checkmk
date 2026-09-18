@@ -10,11 +10,11 @@ import os
 from pathlib import Path
 from random import randint, sample
 
-import docker
 import pytest
 import requests
 from pytest import LogCaptureFixture
 
+import docker
 from tests.testlib.docker import (
     build_checkmk,
     build_path,

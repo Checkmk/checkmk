@@ -9,6 +9,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import DashboardContent from '@/dashboard/components/DashboardContent/DashboardContent.vue'
 import type { ContentProps } from '@/dashboard/components/DashboardContent/types'
 import MissingFiltersMsg from '@/dashboard/components/DashboardFilterSettings/MissingFiltersMsg.vue'
+import type { WidgetEmitTimeRange } from '@/dashboard/types/widget'
 
 import ResponsiveGridWidgetButton from './ResponsiveGridWidgetButton.vue'
 
@@ -21,11 +22,13 @@ interface Props {
 }
 const { spec, isEditing, rows } = defineProps<Props>()
 
-defineEmits<{
-  'click:edit': []
-  'click:clone': []
-  'click:delete': []
-}>()
+defineEmits<
+  {
+    'click:edit': []
+    'click:clone': []
+    'click:delete': []
+  } & WidgetEmitTimeRange
+>()
 </script>
 
 <template>
@@ -58,7 +61,11 @@ defineEmits<{
       </div>
     </div>
     <MissingFiltersMsg :effective-filter-context="spec.effective_filter_context">
-      <DashboardContent v-bind="spec" class="db-responsive-grid-widget__content" />
+      <DashboardContent
+        v-bind="spec"
+        class="db-responsive-grid-widget__content"
+        @update-time-range="$emit('updateTimeRange', $event)"
+      />
     </MissingFiltersMsg>
   </div>
 </template>

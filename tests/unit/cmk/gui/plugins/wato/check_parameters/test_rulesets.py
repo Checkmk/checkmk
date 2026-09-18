@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # Tests in this file exercise the legacy rulesets API (Rule.from_config,
 # Ruleset.replace_folder_config, ordering helpers) using rulesets that are
 # registered as side effects of importing cmk.gui.plugins.wato.check_parameters.*
@@ -11,10 +13,7 @@
 # those registrations.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 from collections.abc import Iterator, Mapping
 
@@ -24,7 +23,6 @@ from livestatus import SiteConfigurations
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
-from cmk.ccc.user import UserId
 from cmk.gui.config import Config, get_default_config, make_config_object
 from cmk.gui.logged_in import LoggedInSuperUser, user
 from cmk.gui.utils.roles import UserPermissions
@@ -75,18 +73,18 @@ def _ruleset(ruleset_name: RulesetName) -> rulesets.Ruleset:
 GEN_ID_COUNT = {"c": 0}
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_gen_id(monkeypatch: pytest.MonkeyPatch, request_context: None) -> None:
     GEN_ID_COUNT["c"] = 0
 
-    def _gen_id():
+    def _gen_id() -> str:
         GEN_ID_COUNT["c"] += 1
         return str(GEN_ID_COUNT["c"])
 
     monkeypatch.setattr(gui_rulesets_module, "gen_id", _gen_id)
 
 
-def test_rule_from_config_unhandled_format(tree: FolderTree):
+def test_rule_from_config_unhandled_format(tree: FolderTree) -> None:
     ruleset = _ruleset(RuleGroup.DiscoveryParameters("inventory_processes_rules"))
 
     with pytest.raises(MKGeneralException, match="Invalid rule"):
@@ -360,7 +358,7 @@ def test_rule_from_config_dict(  # type: ignore[misc]
     if rule_options is not None:
         assert rule.rule_options == RuleOptions.from_config(rule_options)
     else:
-        assert rule.rule_options == RuleOptions.from_config({})
+        assert rule.rule_options == RuleOptions.from_config({})  # type: ignore[unreachable]
 
     # test for synchronous to_dict on the way. Except when rule_spec.id was not set, because the ID
     # is added dynamically when processing such rules.
@@ -370,7 +368,7 @@ def test_rule_from_config_dict(  # type: ignore[misc]
     if "id" in rule_spec:
         assert new_rule_config == rule_spec_for_config
     else:
-        assert new_rule_config["id"] == "1"
+        assert new_rule_config["id"] == "1"  # type: ignore[unreachable]
         del new_rule_config["id"]
         assert new_rule_config == rule_spec_for_config
 
@@ -467,11 +465,9 @@ checkgroup_parameters['local'] = [
         ),
     ],
 )
+@pytest.mark.usefixtures("with_admin_login")
 def test_ruleset_to_config_sub_folder(
-    tree: FolderTree,
-    with_admin_login: UserId,
-    wato_use_git: bool,
-    expected_result: str,
+    tree: FolderTree, wato_use_git: bool, expected_result: str
 ) -> None:
     ruleset = rulesets.Ruleset(RuleGroup.CheckgroupParameters("local"))
 

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 
 import time
 from collections.abc import Mapping
@@ -290,7 +289,7 @@ def test_check_netapp_qtree_quota_unknown(qtree: Qtree, expected_result: CheckRe
     assert result == expected_result
 
 
-def test_check_netapp_vs_traffic():
+def test_check_netapp_vs_traffic() -> None:
     protocol_map = {
         "iscsi_lif": (
             "iSCSI",

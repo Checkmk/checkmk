@@ -6,9 +6,13 @@
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
+import type { NetworkFlowDonutContent, VisualContext } from '@/dashboard/types/widget'
+
 export type ComputedNetworkFlowHost = components['schemas']['ComputedNetworkFlowHost']
 export type ComputedNetworkFlowAutonomousSystem =
   components['schemas']['ComputedNetworkFlowAutonomousSystem']
+export type ComputedNetworkFlowDonutOtherBreakdown =
+  components['schemas']['ComputedNetworkFlowDonutOtherBreakdown']
 
 const CONTENT_TYPE_HEADER = { params: { header: { 'Content-Type': 'application/json' } } }
 
@@ -27,6 +31,23 @@ export const networkFlowContextApi = {
         {
           ...CONTENT_TYPE_HEADER,
           body: { ip }
+        }
+      )
+    )
+    return response.value
+  },
+  /** The categories behind a donut's aggregated "Other" slice, over `window`. */
+  donutOtherBreakdown: async (
+    content: NetworkFlowDonutContent,
+    context: VisualContext,
+    window: { start: number; end: number }
+  ): Promise<ComputedNetworkFlowDonutOtherBreakdown> => {
+    const response = unwrap(
+      await client.POST(
+        '/domain-types/dashboard/actions/compute-network-flow-donut-other-breakdown/invoke',
+        {
+          ...CONTENT_TYPE_HEADER,
+          body: { content, context, window }
         }
       )
     )

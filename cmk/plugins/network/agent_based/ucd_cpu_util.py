@@ -90,7 +90,7 @@ def parse_ucd_cpu_util(string_table: StringTable) -> Section | None:
     return Section(error=error or None, cpu_ticks=cpu_ticks, io=io)
 
 
-def discover_ucd_cpu_util(section: Section) -> DiscoveryResult:
+def discover_ucd_cpu_util(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

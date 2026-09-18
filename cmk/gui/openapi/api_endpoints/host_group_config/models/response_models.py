@@ -28,7 +28,7 @@ class HostGroupExtensions:
 
 @api_model
 class HostGroupModel(DomainObjectModel):
-    domainType: Literal["host_group_config"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["host_group_config"] = api_field(
         description="The domain type of the object.",
     )
     members: dict[str, object] = api_field(
@@ -41,7 +41,7 @@ class HostGroupModel(DomainObjectModel):
 
 @api_model
 class HostGroupCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["host_group_config"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["host_group_config"] = api_field(
         description="The domain type of the objects in the collection.",
     )
     value: list[HostGroupModel] = api_field(

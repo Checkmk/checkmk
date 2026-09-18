@@ -135,19 +135,20 @@ build_test(
 genrule(
     name = "test-runtime-dir",
     outs = [
-        "runtimes/plugins/packages/mk-oracle/.marker",
+        "runtimes/plugins/libexec/mk-oracle-v2/oic/.marker",
         # fake client libraries: runtime detection accepts a directory only
         # if it contains one
-        "runtimes/plugins/packages/mk-oracle/libclntsh.so",
-        "runtimes/plugins/packages/mk-oracle/oci.dll",
+        "runtimes/plugins/libexec/mk-oracle-v2/oic/libclntsh.so",
+        "runtimes/plugins/libexec/mk-oracle-v2/oic/oci.dll",
     ],
-    cmd = "mkdir -p $(RULEDIR)/runtimes/plugins/packages/mk-oracle && touch $(OUTS)",
+    cmd = "mkdir -p $(RULEDIR)/runtimes/plugins/libexec/mk-oracle-v2/oic && touch $(OUTS)",
 )
 
 rust_test(
     name = "mk-oracle-lib-test-internal",
     compile_data = [
         "tests/files/not-ora_sql.yml",
+        "tests/files/tns/tnsnames.ora",
         "tests/files/not-yaml.yml",
         "tests/files/test-config.yml",
         "tests/files/test-mini.yml",
@@ -187,8 +188,8 @@ rust_test_suite(
         "tests/test_ora_with_db.rs",
     ],
     compile_data = [
-        "tests/files/tns/tnsnames.ora",
         "tests/files/not-ora_sql.yml",
+        "tests/files/tns/tnsnames.ora",
         "tests/files/not-yaml.yml",
         "tests/files/test-config.yml",
         "tests/files/test-mini.yml",
@@ -243,6 +244,7 @@ rust_test(
     name = "mk-oracle-lib-test-internal-windows",
     compile_data = [
         "tests/files/not-ora_sql.yml",
+        "tests/files/tns/tnsnames.ora",
         "tests/files/not-yaml.yml",
         "tests/files/test-config.yml",
         "tests/files/test-mini.yml",

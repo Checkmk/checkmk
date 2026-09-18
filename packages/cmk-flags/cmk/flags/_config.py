@@ -2,11 +2,11 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Release flags: site-wide, file-backed boolean feature toggles.
+"""Experimental flags: site-wide, file-backed boolean feature toggles.
 
-A release flag lets us merge unfinished work to the master and 2.5 branches
+An experimental flag lets us merge unfinished work to the master and 2.5 branches
 without exposing it to users. Flags are declared as fields on the single
-:class:`ReleaseFlagConfig` model and persisted as JSON in
+:class:`ExperimentalFlagConfig` model and persisted as JSON in
 ``$OMD_ROOT/etc/check_mk/release_flag.json``.
 
 Every flag carries the metadata that keeps it from rotting: a description, the
@@ -20,10 +20,15 @@ from typing import Annotated, cast, Final
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.fields import FieldInfo
 
+# Kept as "release_flag.json" (not "experimental_flag.json"): this filename is
+# replicated verbatim to remote sites during activate_changes, and a mismatch
+# between a central and a remote site running different versions raises a hard
+# KeyError there. Renaming it requires a dual-registration alias spanning a
+# major version boundary; see CMK-38694 / the 2026-09-09 revert of #22265.
 CONFIG_FILENAME: Final = "release_flag.json"
 
 
-def release_field(
+def experimental_field(
     *,
     description: str,
     remove_ticket: str,
@@ -44,12 +49,12 @@ def release_field(
     )
 
 
-class ReleaseFlagConfig(BaseModel):
-    """The single source of truth for all release flags.
+class ExperimentalFlagConfig(BaseModel):
+    """The single source of truth for all experimental flags.
 
-    Flags are declared per branch via ``release_field()``, e.g.::
+    Flags are declared per branch via ``experimental_field()``, e.g.::
 
-        new_monitoring_views: Annotated[bool, release_field(
+        new_monitoring_views: Annotated[bool, experimental_field(
             description="Enable the experimental new monitoring views.",
             remove_ticket="CMK-12345",
             remove_after="2.6.0",
@@ -64,7 +69,7 @@ class ReleaseFlagConfig(BaseModel):
 
     exp_trial_mode_selection: Annotated[
         bool,
-        release_field(
+        experimental_field(
             description=(
                 "Ask admins on their next visit whether this site is used as a trial "
                 "or with an existing license. The selection workflow is not yet complete."
@@ -75,11 +80,41 @@ class ReleaseFlagConfig(BaseModel):
         ),
     ] = False
 
+    exp_relay_active_checks: Annotated[
+        bool,
+        experimental_field(
+            description=(
+                "Run the relay-supported active checks (check_httpv2, check_cert, "
+                "check_icmp) on the relay for hosts monitored by a relay, including the "
+                "ad-hoc run from the service discovery page. While disabled, active "
+                "checks on relay-monitored hosts are reported as not supported there."
+            ),
+            remove_ticket="CMK-38421",
+            remove_after="3.1.0",
+            owner="pablo.municio@checkmk.com",
+        ),
+    ] = False
 
-def load_release_flags(config_dir: Path) -> ReleaseFlagConfig:
-    """Read the release flags from ``config_dir``, defaulting to all-off."""
+    exp_ai_assistant: Annotated[
+        bool,
+        experimental_field(
+            description=(
+                "Show the settings for Checkmk's AI assistant, starting with the "
+                "toggle for the AI control plane, the site-side daemon that hosts "
+                "LLM-backed agents. More AI assistant UI features will land behind "
+                "this same gate."
+            ),
+            remove_ticket="CMK-39016",
+            remove_after="3.1.0",
+            owner="max.linke@checkmk.com",
+        ),
+    ] = False
+
+
+def load_experimental_flags(config_dir: Path) -> ExperimentalFlagConfig:
+    """Read the experimental flags from ``config_dir``, defaulting to all-off."""
     try:
         raw = (config_dir / CONFIG_FILENAME).read_text()
     except FileNotFoundError:
-        return ReleaseFlagConfig()
-    return ReleaseFlagConfig.model_validate_json(raw)
+        return ExperimentalFlagConfig()
+    return ExperimentalFlagConfig.model_validate_json(raw)

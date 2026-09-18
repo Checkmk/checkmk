@@ -9,8 +9,6 @@
 
 """Manage the currently logged in user"""
 
-from __future__ import annotations
-
 import contextlib
 import logging
 import os
@@ -27,7 +25,7 @@ from cmk.ccc.user import UserId
 from cmk.gui import hooks
 from cmk.gui.authorization import request_authorization
 from cmk.gui.ctx_stack import session_attr
-from cmk.gui.exceptions import MKAuthException
+from cmk.gui.exceptions import MKAuthException, MKInsufficientScope
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import DismissableWarning, UserSpec
 from cmk.gui.utils.roles import UserPermissions
@@ -35,9 +33,9 @@ from cmk.gui.utils.security_log_events import PermissionCheckFailureEvent
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.livestatus_client import SiteConfigurations
-from cmk.shared_typing.user_frontend_config import UserFrontendConfig
 from cmk.utils.security_event import log_security_event
 from cmk.web.utils.permission_verification import BasePerm
+from cmk.web.utils.user_frontend_settings_cookie import UserFrontendConfig
 
 _logger = logging.getLogger(__name__)
 _ContactgroupName = str
@@ -56,7 +54,6 @@ UserFileName = Literal[
     "favorites",
     "foldertree",
     "graph_pin",
-    "graph_size",
     "help",
     "notification_display_options",
     "parameter_column",
@@ -82,9 +79,6 @@ UserFileName = Literal[
 
 # a str consisting of `rowselection/` and a SelectionId (uuid)
 _RowSelection = NewType("_RowSelection", str)
-
-# a str that is supposed to be "path safe"
-UserGraphRangesFileName = NewType("UserGraphRangesFileName", str)
 
 
 class UserUIConfig(TypedDict, total=False):
@@ -173,12 +167,12 @@ class LoggedInUser:
     def get_attribute(self, key: str, deflt: Any = None) -> Any:
         return self.attributes.get(key, deflt)
 
-    def _set_attribute(self, key: str, value: Any) -> None:
-        self.attributes[key] = value  # type: ignore[literal-required]
+    def _set_attribute(self, key: Literal["language", "ntop_alias"], value: Any) -> None:
+        self.attributes[key] = value
 
-    def _unset_attribute(self, key: str) -> None:
+    def _unset_attribute(self, key: Literal["language"]) -> None:
         with contextlib.suppress(KeyError):
-            del self.attributes[key]  # type: ignore[misc]
+            del self.attributes[key]
 
     @property
     def language(self) -> str:
@@ -484,34 +478,49 @@ class LoggedInUser:
         hooks.call("permission-checked", permission_name)
         return they_may
 
-    def _may_by_roles(self, permission_name: str) -> bool:
-        return (
-            permission_name in self.explicitly_given_permissions
-        ) or self._user_permissions.may_with_roles(self.role_ids, permission_name)
-
     def need_permission(self, permission: str | BasePerm) -> None:
         if isinstance(permission, BasePerm):
             for p in permission.iter_perms():
                 self.need_permission(p.name)
             return
 
-        if not self.may(permission):
-            perm = self._user_permissions._permissions.get(permission)
-            title = permission if perm is None else perm.title
-            log_security_event(PermissionCheckFailureEvent(permission=title, username=self.id))
-            raise MKAuthException(
+        permitted_by_roles = self._may_by_roles(permission)
+        permitted_by_request = request_authorization().permits(permission)
+        hooks.call("permission-checked", permission)
+
+        if permitted_by_roles and permitted_by_request:
+            return
+
+        perm = self._user_permissions._permissions.get(permission)  # noqa: SLF001
+        title = permission if perm is None else perm.title
+        log_security_event(PermissionCheckFailureEvent(permission=title, username=self.id))
+
+        if permitted_by_roles:
+            raise MKInsufficientScope(
                 _(
-                    "We are sorry, but you lack the permission "
-                    "for this operation. If you do not like this "
-                    "then please ask your administrator to provide you with "
-                    "the following permission: '<b>%(title)s</b>'."
+                    "The presented token scope was not granted the "
+                    "permission for this operation: '<b>%(title)s</b>'."
                 )
                 % {"title": title}
             )
+        raise MKAuthException(
+            _(
+                "We are sorry, but you lack the permission "
+                "for this operation. If you do not like this "
+                "then please ask your administrator to provide you with "
+                "the following permission: '<b>%(title)s</b>'."
+            )
+            % {"title": title}
+        )
+
+    def _may_by_roles(self, permission_name: str) -> bool:
+        return (
+            permission_name in self.explicitly_given_permissions
+        ) or self._user_permissions.may_with_roles(self.role_ids, permission_name)
 
     def load_file(
         self,
-        name: UserFileName | _RowSelection | UserGraphRangesFileName,
+        name: UserFileName | _RowSelection,
         deflt: Any,
         lock: bool = False,
     ) -> Any:
@@ -521,9 +530,7 @@ class LoggedInUser:
             return deflt
         return load_user_file(name, self.id, deflt, lock=lock)
 
-    def save_file(
-        self, name: UserFileName | _RowSelection | UserGraphRangesFileName, content: object
-    ) -> None:
+    def save_file(self, name: UserFileName | _RowSelection, content: object) -> None:
         assert self.id is not None
         save_user_file(name, content, self.id)
 
@@ -613,7 +620,7 @@ def _confdir_for_user_id(user_id: UserId | None) -> Path | None:
 
 
 def load_user_file(
-    name: UserFileName | _RowSelection | UserGraphRangesFileName,
+    name: UserFileName | _RowSelection,
     user_id: UserId,
     deflt: object,
     *,
@@ -627,7 +634,7 @@ def load_user_file(
     # failing at some random places.
     try:
         return store.load_object_from_file(path, default=deflt, lock=lock)
-    except (ValueError, SyntaxError):
+    except ValueError, SyntaxError:
         return deflt
 
 

@@ -10,8 +10,6 @@ They are split out of :mod:`cmk.gui.session` so that callers like
 machinery that lives in the rest of `session.py`.
 """
 
-from __future__ import annotations
-
 import contextlib
 from collections.abc import Container, Iterator
 from contextlib import AbstractContextManager as ContextManager

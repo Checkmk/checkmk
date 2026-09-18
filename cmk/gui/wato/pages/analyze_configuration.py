@@ -11,8 +11,6 @@ Provides the user with hints about his setup. Performs different
 checks and tells the user what could be improved.
 """
 
-from __future__ import annotations
-
 import dataclasses
 import time
 from collections.abc import Collection
@@ -39,9 +37,8 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import PageContext
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.analyze_configuration import (
     ACResultState,
@@ -52,6 +49,9 @@ from cmk.gui.watolib.analyze_configuration import (
 )
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.web.utils import escaping
+from cmk.web.utils.doc_references import DocReference
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeactionuri
 
 

@@ -7,13 +7,13 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.gui.inventory._tree import InventoryPath, TreeSource
+import cmk.utils.render
 from cmk.gui.inventory.filters import FilterInvText
+from cmk.gui.views.inventory import NodeDisplayHint
 from cmk.gui.views.inventory._display_hints import (
     _wrap_paint_function,
     AttributeDisplayHint,
     ColumnDisplayHint,
-    NodeDisplayHint,
     Table,
 )
 from cmk.gui.views.inventory._paint_functions import inv_paint_generic
@@ -29,10 +29,12 @@ from cmk.inventory.structured_data import (
     ImmutableDeltaAttributes,
     ImmutableDeltaTable,
     ImmutableTable,
+    InventoryPath,
     RetentionInterval,
     SDDeltaValue,
     SDKey,
     SDPath,
+    TreeSource,
 )
 
 
@@ -550,7 +552,7 @@ def test_sort_attributes_pairs_displayhint(
                     short_title="",
                     long_title="",
                     paint_function=_wrap_paint_function(inv_paint_generic),
-                    sort_function=lambda *args: 0,
+                    sort_function=lambda *args: 0,  # noqa: ARG005
                     filter=FilterInvText(
                         ident="inv_a",
                         title="",
@@ -568,7 +570,7 @@ def test_sort_attributes_pairs_displayhint(
                     short_title="",
                     long_title="",
                     paint_function=_wrap_paint_function(inv_paint_generic),
-                    sort_function=lambda *args: 0,
+                    sort_function=lambda *args: 0,  # noqa: ARG005
                     filter=FilterInvText(
                         ident="inv_b",
                         title="",
@@ -586,7 +588,7 @@ def test_sort_attributes_pairs_displayhint(
                     short_title="",
                     long_title="",
                     paint_function=_wrap_paint_function(inv_paint_generic),
-                    sort_function=lambda *args: 0,
+                    sort_function=lambda *args: 0,  # noqa: ARG005
                     filter=FilterInvText(
                         ident="inv_d",
                         title="",
@@ -604,7 +606,7 @@ def test_sort_attributes_pairs_displayhint(
                     short_title="",
                     long_title="",
                     paint_function=_wrap_paint_function(inv_paint_generic),
-                    sort_function=lambda *args: 0,
+                    sort_function=lambda *args: 0,  # noqa: ARG005
                     filter=FilterInvText(
                         ident="inv_c",
                         title="",
@@ -691,7 +693,7 @@ def test_sort_delta_attributes_pairs_displayhint(
                     short_title="",
                     long_title="",
                     paint_function=_wrap_paint_function(inv_paint_generic),
-                    sort_function=lambda *args: 0,
+                    sort_function=lambda *args: 0,  # noqa: ARG005
                     filter=FilterInvText(
                         ident="inv_a",
                         title="",
@@ -709,7 +711,7 @@ def test_sort_delta_attributes_pairs_displayhint(
                     short_title="",
                     long_title="",
                     paint_function=_wrap_paint_function(inv_paint_generic),
-                    sort_function=lambda *args: 0,
+                    sort_function=lambda *args: 0,  # noqa: ARG005
                     filter=FilterInvText(
                         ident="inv_b",
                         title="",
@@ -727,7 +729,7 @@ def test_sort_delta_attributes_pairs_displayhint(
                     short_title="",
                     long_title="",
                     paint_function=_wrap_paint_function(inv_paint_generic),
-                    sort_function=lambda *args: 0,
+                    sort_function=lambda *args: 0,  # noqa: ARG005
                     filter=FilterInvText(
                         ident="inv_d",
                         title="",
@@ -745,7 +747,7 @@ def test_sort_delta_attributes_pairs_displayhint(
                     short_title="",
                     long_title="",
                     paint_function=_wrap_paint_function(inv_paint_generic),
-                    sort_function=lambda *args: 0,
+                    sort_function=lambda *args: 0,  # noqa: ARG005
                     filter=FilterInvText(
                         ident="inv_c",
                         title="",
@@ -808,3 +810,15 @@ def test__replace_title_placeholders(
         )
         == expected_title
     )
+
+
+def test_td_spec_tooltip_names_the_validity() -> None:
+    item = SDItem(
+        key=SDKey("key"),
+        title="Title",
+        value="value",
+        retention_interval=RetentionInterval(100, 20, 3, "previous"),
+        paint_function=_wrap_paint_function(inv_paint_generic),
+        icon_path_svc_problems="",
+    )
+    assert cmk.utils.render.date_and_time(120) in str(item.compute_td_spec(121).html_values[0])

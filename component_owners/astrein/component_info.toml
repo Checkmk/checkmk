@@ -1,0 +1,5 @@
+type = "System"
+members_required = 1
+description = """
+astrein is the repository's custom AST-based Python linter/checker framework
+"""

@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """All core related things like direct communication with the running core"""
 
-# mypy: disable-error-code="type-arg"
-
 import os
 import shutil
 import socket
@@ -69,7 +67,6 @@ def do_reload(
     service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]],
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
-    bake_on_restart: Callable[[], None],
     notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
     checker_config_writer: Callable[[Path], None],
 ) -> None:
@@ -92,7 +89,6 @@ def do_reload(
         service_depends_on=service_depends_on,
         locking_mode=locking_mode,
         duplicates=duplicates,
-        bake_on_restart=bake_on_restart,
         notify_relay=notify_relay,
         checker_config_writer=checker_config_writer,
     )
@@ -124,7 +120,6 @@ def do_restart(
     service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]],
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
-    bake_on_restart: Callable[[], None],
     notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
     checker_config_writer: Callable[[Path], None],
 ) -> None:
@@ -149,7 +144,6 @@ def do_restart(
                 hosts_to_update=hosts_to_update,
                 service_depends_on=service_depends_on,
                 duplicates=duplicates,
-                bake_on_restart=bake_on_restart,
                 notify_relay=notify_relay,
                 checker_config_writer=checker_config_writer,
             )
@@ -185,7 +179,6 @@ def do_create_config(
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     *,
     duplicates: Collection[HostName],
-    bake_on_restart: Callable[[], None],
     notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
     checker_config_writer: Callable[[Path], None],
 ) -> None:
@@ -231,9 +224,6 @@ def do_create_config(
         if cmk.ccc.debug.enabled():
             raise
         raise MKGeneralException("Error creating configuration: %s" % e)
-
-    with tracer.span("bake_on_restart"):
-        bake_on_restart()
 
     with tracer.span("announce_new_serial"):
         notify_relay(config_warnings.warn)

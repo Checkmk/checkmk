@@ -29,7 +29,7 @@ agent_section_prometheus_debug_v1 = AgentSection(
 )
 
 
-def discover(section: OpenShiftEndpoint) -> DiscoveryResult:
+def discover(section: OpenShiftEndpoint) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

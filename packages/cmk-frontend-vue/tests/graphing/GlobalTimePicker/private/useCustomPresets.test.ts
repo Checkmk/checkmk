@@ -47,7 +47,7 @@ describe('useCustomPresets', () => {
   })
 
   test('ids are content-derived, so they survive reordering of the configured ranges', () => {
-    const idOf = (label: string, presets: { id: string; label: string }[]) =>
+    const idOf = (label: string, presets: { id: string | null; label: string }[]) =>
       presets.find((preset) => preset.label === label)!.id
 
     const original = setup().presets.value

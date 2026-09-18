@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
 from typing import override
 
 import cmk.utils.paths
@@ -14,6 +12,7 @@ from cmk.gui.valuespec import (
     Age,
     CascadingDropdown,
     Dictionary,
+    DictionaryModel,
     DropdownChoice,
     DualListChoice,
     ListOf,
@@ -21,7 +20,6 @@ from cmk.gui.valuespec import (
     MonitoringState,
     RegExp,
     TextInput,
-    ValueSpec,
 )
 from cmk.gui.watolib.rulespecs import (
     HostRulespec,
@@ -310,7 +308,7 @@ InvParameterLnxSysctl = HostRulespec(
 )
 
 
-def _valuespec_inv_retention_intervals() -> ValueSpec:
+def _valuespec_inv_retention_intervals() -> ListOf[DictionaryModel]:
     def vs_choices(title: str) -> CascadingDropdown:
         return CascadingDropdown(
             title=title,

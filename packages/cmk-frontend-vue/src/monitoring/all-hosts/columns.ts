@@ -7,19 +7,37 @@ import type { ColumnDef, ColumnPinningState, VisibilityState } from '@tanstack/v
 import type { Site } from 'cmk-shared-typing/typescript/monitoring/all_hosts'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
+import {
+  autocompleter,
+  labelAutocompleter,
+  tagAutocompleter
+} from '@/monitoring/shared/api/autocomplete'
 import type { HostEntry, HostOptionalField, HostState } from '@/monitoring/shared/api/types'
 import type {
+  AutocompleteChoiceFilter,
   BooleanGroupFilter,
   CheckboxListFilter,
+  CheckboxListWithFlagsFilter,
   DateTimeRangeFilter,
   NumericFilter,
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
+import { MODE_COLUMN_ID } from '@/monitoring/shared/components/modeColumn'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 
 export interface HostColumnOptions {
+  /**
+   * Whether to offer the row-selection column. Only a user who may run a command on the
+   * selection gets it - without one, ticking a row would lead nowhere.
+   */
+  includeSelect: boolean
   /** Whether to render the row-action column, which needs permitted actions. */
   includeActions: boolean
+  /**
+   * Whether to offer the customer column. Only hosts monitored by an edition with multi-tenancy
+   * support belong to a customer, so everywhere else the column does not exist at all.
+   */
+  showCustomer: boolean
   /** Configured sites the user is authorized to see, for the site column's filter options. */
   sites: readonly Site[]
 }
@@ -49,8 +67,26 @@ const OPTIONAL_FIELD_COLUMNS = [
 /**
  * Columns the user may hide whose fields are always included in every API
  * response (not declared optional) and therefore never need to be requested.
+ *
+ * The customer is one of them because the API derives it from the site, which every host
+ * carries anyway.
  */
-const ALWAYS_FETCHED_HIDEABLE_COLUMNS = ['site_id'] as const
+const ALWAYS_FETCHED_HIDEABLE_COLUMNS = ['site_id', 'customer'] as const
+
+/** The boolean host fields the Mode column renders as icons and offers as filters. */
+type HostModeField =
+  | 'in_downtime'
+  | 'acknowledged'
+  | 'notifications_enabled'
+  | 'has_comments'
+  | 'active_checks_disabled'
+  | 'passive_checks_disabled'
+  | 'in_notification_period'
+  | 'in_service_period'
+  | 'in_check_period'
+
+/** Picks a column filter offers before it refuses more, per the views-table design. */
+const MAX_FILTER_CHOICES = 8
 
 const HIDEABLE_COLUMN_IDS: ReadonlySet<string> = new Set([
   ...OPTIONAL_FIELD_COLUMNS,
@@ -78,10 +114,11 @@ function fixUnlessHideable(column: ColumnDef<HostEntry>): ColumnDef<HostEntry> {
  * horizontally.
  */
 export function buildHostColumnPinning({
+  includeSelect,
   includeActions
-}: Pick<HostColumnOptions, 'includeActions'>): ColumnPinningState {
+}: Pick<HostColumnOptions, 'includeSelect' | 'includeActions'>): ColumnPinningState {
   return {
-    left: ['select', 'state', 'modes', 'name'],
+    left: [...(includeSelect ? ['select'] : []), 'state', MODE_COLUMN_ID, 'name'],
     ...(includeActions ? { right: ['actions'] } : {})
   }
 }
@@ -94,19 +131,26 @@ export function buildHostColumnPinning({
  * which defines the set shown on first use.
  */
 export function buildHostColumns({
+  includeSelect,
   includeActions,
+  showCustomer,
   sites
 }: HostColumnOptions): ColumnDef<HostEntry>[] {
   const { _t } = usei18n()
 
-  const stateFilter: CheckboxListFilter<'state'> = {
-    type: 'checkbox-list',
+  const stateFilter: CheckboxListWithFlagsFilter<'state', 'is_flapping' | 'stale'> = {
+    type: 'checkbox-list-with-flags',
     field: 'state',
     options: [
       { value: 'UP', title: _t('UP') },
       { value: 'DOWN', title: _t('DOWN') },
-      { value: 'UNREACHABLE', title: _t('UNREACH') }
-    ] satisfies { value: HostState; title: string }[]
+      { value: 'UNREACHABLE', title: _t('UNREACH') },
+      { value: 'PENDING', title: _t('PENDING') }
+    ] satisfies { value: HostState; title: string }[],
+    flags: [
+      { field: 'is_flapping', title: _t('Flapping') },
+      { field: 'stale', title: _t('Stale') }
+    ]
   }
 
   const nameFilter: StringInputFilter<'name'> = {
@@ -175,23 +219,65 @@ export function buildHostColumns({
     field: 'last_state_change'
   }
 
-  const modesFilter: BooleanGroupFilter<'in_downtime' | 'acknowledged'> = {
+  const labelsFilter: AutocompleteChoiceFilter<'labels'> = {
+    type: 'autocomplete-choice',
+    field: 'labels',
+    suggest: labelAutocompleter('host'),
+    keyValue: true,
+    wildcardOption: true,
+    maxSelected: MAX_FILTER_CHOICES
+  }
+
+  const tagsFilter: AutocompleteChoiceFilter<'tags'> = {
+    type: 'autocomplete-choice',
+    field: 'tags',
+    suggest: tagAutocompleter(),
+    keyValue: true,
+    wildcardOption: true,
+    maxSelected: MAX_FILTER_CHOICES
+  }
+
+  const contactsFilter: StringInputFilter<'contacts'> = {
+    type: 'string-input',
+    field: 'contacts'
+  }
+
+  const contactGroupsFilter: AutocompleteChoiceFilter<'contact_groups'> = {
+    type: 'autocomplete-choice',
+    field: 'contact_groups',
+    suggest: autocompleter('allgroups', { group_type: 'contact' }),
+    wildcardOption: true,
+    maxSelected: MAX_FILTER_CHOICES
+  }
+
+  const modesFilter: BooleanGroupFilter<HostModeField> = {
     type: 'boolean-group',
     groups: [
       { field: 'in_downtime', title: _t('In downtime') },
-      { field: 'acknowledged', title: _t('Acknowledged') }
+      { field: 'acknowledged', title: _t('Acknowledged') },
+      { field: 'notifications_enabled', title: _t('Notifications enabled') },
+      { field: 'has_comments', title: _t('Has comments') },
+      { field: 'active_checks_disabled', title: _t('Active checks disabled') },
+      { field: 'passive_checks_disabled', title: _t('Passive checks disabled') },
+      { field: 'in_notification_period', title: _t('In notification period') },
+      { field: 'in_service_period', title: _t('In service period') },
+      { field: 'in_check_period', title: _t('In check period') }
     ]
   }
 
   const columns: ColumnDef<HostEntry>[] = [
-    {
-      id: 'select',
-      header: '',
-      enableSorting: false,
-      minSize: 36,
-      maxSize: 36,
-      meta: { selectColumn: true, justify: 'center' }
-    },
+    ...(includeSelect
+      ? [
+          {
+            id: 'select',
+            header: '',
+            enableSorting: false,
+            minSize: 36,
+            maxSize: 36,
+            meta: { selectColumn: true, justify: 'center' }
+          } satisfies ColumnDef<HostEntry>
+        ]
+      : []),
     {
       accessorKey: 'state',
       header: _t('State'),
@@ -201,11 +287,9 @@ export function buildHostColumns({
       meta: { filter: stateFilter }
     },
     {
-      accessorKey: 'modes',
+      accessorKey: MODE_COLUMN_ID,
       header: _t('Mode'),
       enableSorting: false,
-      minSize: 80,
-      maxSize: 80,
       meta: { justify: 'left', filter: modesFilter }
     },
     {
@@ -341,7 +425,7 @@ export function buildHostColumns({
       enableSorting: false,
       minSize: 100,
       maxSize: 400,
-      meta: { hidden: true }
+      meta: { hidden: true, filter: labelsFilter }
     },
     {
       accessorKey: 'tags',
@@ -349,7 +433,7 @@ export function buildHostColumns({
       enableSorting: false,
       minSize: 100,
       maxSize: 400,
-      meta: { hidden: true }
+      meta: { hidden: true, filter: tagsFilter }
     },
     {
       accessorKey: 'contacts',
@@ -357,7 +441,7 @@ export function buildHostColumns({
       enableSorting: false,
       minSize: 100,
       maxSize: 300,
-      meta: { hidden: true }
+      meta: { hidden: true, filter: contactsFilter }
     },
     {
       accessorKey: 'contact_groups',
@@ -365,8 +449,20 @@ export function buildHostColumns({
       enableSorting: false,
       minSize: 100,
       maxSize: 300,
-      meta: { hidden: true }
+      meta: { hidden: true, filter: contactGroupsFilter }
     },
+    ...(showCustomer
+      ? [
+          {
+            accessorKey: 'customer',
+            header: _t('Customer'),
+            enableSorting: false,
+            minSize: 100,
+            maxSize: 300,
+            meta: { hidden: true }
+          } satisfies ColumnDef<HostEntry>
+        ]
+      : []),
     ...(includeActions
       ? [
           {

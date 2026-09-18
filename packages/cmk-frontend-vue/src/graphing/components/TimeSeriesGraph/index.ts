@@ -14,6 +14,7 @@ export type {
   MetricRender,
   PinPayload,
   RequestedTimeRange,
+  ShadedRegion,
   Size,
   SizeMode,
   TimeRange,

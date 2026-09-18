@@ -27,7 +27,7 @@ class FieldsFilter(ABC):
     def is_included(self, field_path: str | None = None) -> bool: ...
 
     @abstractmethod
-    def get_nested_fields(self, field_path: str) -> "FieldsFilter": ...
+    def get_nested_fields(self, field_path: str) -> FieldsFilter: ...
 
     @abstractmethod
     def apply(self, data: _T) -> _T: ...
@@ -39,7 +39,7 @@ class _Included(FieldsFilter):
         return True
 
     @override
-    def get_nested_fields(self, field_path: str) -> "FieldsFilter":
+    def get_nested_fields(self, field_path: str) -> FieldsFilter:
         return self
 
     @override
@@ -61,7 +61,7 @@ class _Excluded(FieldsFilter):
         return False
 
     @override
-    def get_nested_fields(self, field_path: str) -> "FieldsFilter":
+    def get_nested_fields(self, field_path: str) -> FieldsFilter:
         return self
 
     @override
@@ -129,7 +129,7 @@ class _IncludeFields(_SpecificFieldsFilter):
         super().__init__(fields)
 
     @override
-    def get_nested_fields(self, field_path: str) -> "FieldsFilter":
+    def get_nested_fields(self, field_path: str) -> FieldsFilter:
         key, _, remainder = field_path.partition(".")
         if key not in self.fields:
             return _Excluded()
@@ -153,7 +153,7 @@ class _ExcludeFields(_SpecificFieldsFilter):
         super().__init__(fields)
 
     @override
-    def get_nested_fields(self, field_path: str) -> "FieldsFilter":
+    def get_nested_fields(self, field_path: str) -> FieldsFilter:
         key, _, remainder = field_path.partition(".")
         if key not in self.fields:
             return _Included()
@@ -174,7 +174,7 @@ class _Mode(Enum):
 
 class _Field(TypedDict):
     path: list[str]
-    fields: NotRequired["_Fields"]
+    fields: NotRequired[_Fields]
 
 
 type _Fields = list[_Field]

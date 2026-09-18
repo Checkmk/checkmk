@@ -2,6 +2,9 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# ruff: noqa: T201  # It's OK for scripts to print()
+
 """Regenerate the pinned win_amd64 wheel closure for ``python-3.cab``.
 
 The Windows agent CAB ships the Pipfile packages (and their transitive
@@ -22,8 +25,6 @@ matches the one the build action installs with:
 
 ``--check`` exits non-zero if the on-disk lock is stale (for CI).
 """
-
-from __future__ import annotations
 
 import argparse
 import json

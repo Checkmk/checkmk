@@ -77,12 +77,13 @@ npm_link_all_packages(name = "node_modules")
 copy_to_directory(
     name = "werks_group",
     srcs = [
+        "defines.make",
         "//.werks",
         "//.werks:werks_config",
         "//.werks:werks_first_free",
     ],
     out = "werks_dir",
-    root_paths = [".werks"],
+    replace_prefixes = {".werks": "werks"},
     visibility = ["//:__subpackages__"],
 )
 
@@ -163,7 +164,7 @@ write_file(
     name = "bazel-requirements-constraints",
     out = "bazel-requirements-constraints.txt",
     content = [
-        "ruff==0.16.2",  # keep in sync with the multitool hub % RUFF_VERSION,
+        "ruff==0.16.7",  # keep in sync with the multitool hub % RUFF_VERSION,
         "protobuf==%s" % PROTOBUF_PYTHON_VERSION,
     ],
 )
@@ -293,7 +294,7 @@ write_file(
         "    sys.path = [",
         "        str(p)",
         "        for p in sorted(from_path.glob('packages/*'))",
-        "        if p.joinpath('pyproject.toml').exists()",
+        "        if p.joinpath('cmk').is_dir()",
         "    ] + sys.path",
         "",
         "add_packages(repo_path)",
@@ -321,7 +322,7 @@ create_venv(
     }),
     site_packages_extra_files = [":sitecustomize.py"],
     whls = [
-        "@rrdtool_native//:rrdtool_python_wheel",
+        "@rrdtool//:rrdtool_python_wheel",
         "//packages/cmk-shared-typing:wheel",
         "//packages/cmk-werks:wheel_entrypoint_only",
         "//packages/cmk-mkp-tool:wheel_entrypoint_only",

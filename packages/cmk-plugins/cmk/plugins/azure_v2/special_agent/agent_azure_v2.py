@@ -7,9 +7,7 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """agent_azure_v2
 
@@ -17,8 +15,6 @@ Checkmk special agent for monitoring Azure cloud applications.
 Resources and resourcegroups are all treated lowercase because of:
 https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/frequently-asked-questions#are-resource-group-names-case-sensitive
 """
-
-from __future__ import annotations
 
 import argparse
 import asyncio
@@ -583,7 +579,7 @@ class ExplicitConfig:
             return
         if self.current_group is None:
             raise RuntimeError("missing arg: group=<name>")
-        self.current_group.add_key(key, value)
+        self.current_group.add_key(key, value)  # type: ignore[unreachable]
 
     def is_configured(self, resource: AzureResource) -> bool:
         if self.fetchall:
@@ -1577,7 +1573,7 @@ class AzureAsyncCache(DataCache):
                 LOGGER.debug(
                     "Cache file is empty, getting live data from cache: %(key)s", {"key": self._key}
                 )
-            except (OSError, ValueError):
+            except OSError, ValueError:
                 LOGGER.exception("Getting live data (failed to read from cache).")
                 if self.debug:
                     raise
@@ -1585,7 +1581,7 @@ class AzureAsyncCache(DataCache):
         live_data = await self.get_live_data(*args)
         try:
             await self._write_to_cache(live_data)
-        except (OSError, TypeError):
+        except OSError, TypeError:
             LOGGER.exception("Failed to write data to cache file")
             if self.debug:
                 raise
@@ -1700,7 +1696,7 @@ class UsageDetailsCache(AzureAsyncCache):
                             remaining_tenant_requests_str.removeprefix("DefaultQuota:")
                         )
 
-                    if remaining_tenant_requests <= 0 or retry_after > 10:
+                    if remaining_tenant_requests <= 0 or retry_after > 10:  # type: ignore[possibly-undefined]
                         LOGGER.warning(
                             "Rate limit exceeded for Microsoft.CostManagement API. "
                             "Received a 'retry after' of %(retry_after)d seconds. "
@@ -2089,7 +2085,7 @@ async def get_resource_groups(
 
 def write_group_info(
     monitored_groups: Mapping[str, AzureResourceGroup],
-    monitored_resources: Sequence[AzureResource],
+    monitored_resources: Sequence[AzureResource],  # noqa: ARG001
     subscription: AzureSubscription,
 ) -> None:
     labels = {
@@ -2596,7 +2592,7 @@ async def process_bulk_resources(
     groups_with_monitored_resources: Mapping[str, AzureResourceGroup],
     monitored_services: set[str],
     monitored_resources: Mapping[ResourceId, AzureResource],
-    subscription: AzureSubscription,
+    subscription: AzureSubscription,  # noqa: ARG001
 ) -> Sequence[AzureSection]:
     tasks = set()
     if FetchedResource.VIRTUAL_MACHINES.type in monitored_services:
@@ -2952,7 +2948,7 @@ async def main_async(args: argparse.Namespace, selector: Selector) -> int:
 
 
 def _setup_logging(verbose: int) -> None:
-    logging.basicConfig(
+    logging.basicConfig(  # astrein: disable=logging-formatter
         level={0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}.get(verbose, logging.DEBUG),
         format="%(levelname)s %(asctime)s %(name)s - %(funcName)s: %(message)s",
         force=True,

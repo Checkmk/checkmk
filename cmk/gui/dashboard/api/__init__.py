@@ -14,12 +14,14 @@ from ._ajax_handler import (
 from ._family import DASHBOARD_FAMILY
 from ._registration import register_endpoints
 from ._utils import (
+    clone_dashboard_config,
     convert_internal_relative_dashboard_to_api_model_dict,
     dashboard_owner_description,
     DashboardConstants,
     DashboardOwnerWithBuiltin,
     get_dashboard_for_read,
     get_permitted_user_id,
+    INTERNAL_TO_API_TYPE_NAME,
     make_pending_changes,
     PERMISSIONS_DASHBOARD,
     PERMISSIONS_DASHBOARD_EDIT,
@@ -36,9 +38,11 @@ __all__ = [
     "FigureRequestInternal",
     "GraphDashletConfig",
     "GraphRequestInternal",
+    "INTERNAL_TO_API_TYPE_NAME",
     "PERMISSIONS_DASHBOARD",
     "PERMISSIONS_DASHBOARD_EDIT",
     "PERMISSIONS_DASHBOARD_READ",
+    "clone_dashboard_config",
     "convert_internal_relative_dashboard_to_api_model_dict",
     "dashboard_owner_description",
     "get_dashboard_for_read",

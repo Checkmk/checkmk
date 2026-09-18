@@ -20,6 +20,8 @@ from cmk.rulesets.v1.form_specs import (
     FixedValue,
     Integer,
     List,
+    MultipleChoice,
+    MultipleChoiceElement,
     Password,
     SingleChoice,
     SingleChoiceElement,
@@ -412,7 +414,7 @@ def _oracle_id() -> CascadingSingleChoice:
     )
 
 
-def _connection_options() -> Dictionary:
+def _connection_options(*, include_tns_admin: bool) -> Dictionary:
     base: dict[str, DictElement[str] | DictElement[int]] = {
         "host": DictElement(
             parameter_form=String(
@@ -435,7 +437,12 @@ def _connection_options() -> Dictionary:
             ),
             required=False,
         ),
-        "tns_admin": DictElement(
+    }
+    # TNS_ADMIN is honored only for the default (main) connection. A per-instance
+    # override is reserved and currently ignored by the plug-in, so the field is
+    # offered on the main connection only.
+    if include_tns_admin:
+        base["tns_admin"] = DictElement(
             parameter_form=String(
                 title=Title("TNS_ADMIN directory path"),
                 help_text=Help(
@@ -451,29 +458,28 @@ def _connection_options() -> Dictionary:
                 ),
             ),
             required=False,
-        ),
-        "oracle_local_registry": DictElement(
-            parameter_form=String(
-                title=Title("Oracle local registry path"),
-                help_text=Help(
-                    "Path to the olr.loc file of Oracle Grid Infrastructure, which "
-                    "covers both Oracle Clusterware and Oracle Restart. If not "
-                    "specified, /etc/oracle/olr.loc and /var/opt/oracle/olr.loc are "
-                    "probed in that order. Once the Grid home named in that file is "
-                    "found, the plug-in connects to this node by its own name instead "
-                    "of localhost, because a listener under Grid Infrastructure binds "
-                    "the node address. The Grid home is also used as the last "
-                    "candidate for ORACLE_HOME, since Grid Infrastructure stops "
-                    "maintaining oratab from version 12.2 on. Set this to a path that "
-                    "does not exist to switch the behavior off."
-                ),
-                custom_validate=(
-                    validators.MatchRegex("^/.*", Message("Please enter an absolute path.")),
-                ),
+        )
+    base["oracle_local_registry"] = DictElement(
+        parameter_form=String(
+            title=Title("Oracle local registry path"),
+            help_text=Help(
+                "Path to the olr.loc file of Oracle Grid Infrastructure, which "
+                "covers both Oracle Clusterware and Oracle Restart. If not "
+                "specified, /etc/oracle/olr.loc and /var/opt/oracle/olr.loc are "
+                "probed in that order. Once the Grid home named in that file is "
+                "found, the plug-in connects to this node by its own name instead "
+                "of localhost, because a listener under Grid Infrastructure binds "
+                "the node address. The Grid home is also used as the last "
+                "candidate for ORACLE_HOME, since Grid Infrastructure stops "
+                "maintaining oratab from version 12.2 on. Set this to a path that "
+                "does not exist to switch the behavior off."
             ),
-            required=False,
+            custom_validate=(
+                validators.MatchRegex("^/.*", Message("Please enter an absolute path.")),
+            ),
         ),
-    }
+        required=False,
+    )
     return Dictionary(
         title=Title("Connection options"),
         elements=base,
@@ -637,7 +643,7 @@ def _oracle_client_library_options() -> Dictionary:
                         "Two sources are available: "
                         "the <b>agent-local client</b> — Oracle Instant Client libraries manually installed "
                         "alongside the Checkmk agent under "
-                        "<tt>$MK_LIBDIR/packages/mk-oracle/</tt> — "
+                        "<tt>$MK_LIBDIR/plugins/libexec/mk-oracle-v2/oic/</tt> — "
                         "and the <b>host client</b> — an Oracle installation already present on the monitored host. "
                         "Note: Checkmk does <b>not</b> deploy Oracle Instant Client automatically; "
                         "you must install it manually if you want to use the agent-local client. "
@@ -694,14 +700,6 @@ def _options(is_default_options: bool = True) -> Dictionary:
         | DictElement[_NamedOption]
         | DictElement[_AuthOptions],
     ] = {
-        "max_connections": DictElement(
-            parameter_form=Integer(
-                title=Title("Maximum connections"),
-                help_text=Help("Maximum number of database connections to open."),
-                prefill=DefaultValue(5),
-            ),
-            required=False,
-        ),
         "max_queries": DictElement(
             parameter_form=Integer(
                 title=Title("Maximum queries"),
@@ -746,7 +744,7 @@ def _endpoint(
             required=is_main_entry,
         ),
         "connection": DictElement(
-            parameter_form=_connection_options(),
+            parameter_form=_connection_options(include_tns_admin=is_main_entry),
             required=is_main_entry,
         ),
     }
@@ -791,7 +789,64 @@ def _main() -> Dictionary:
                 parameter_form=_sections(),
                 required=False,
             ),
+            "excluded_sections": DictElement(
+                parameter_form=_excluded_sections(),
+                required=False,
+            ),
         },
+    )
+
+
+# identical tp the legacy list
+def _oracle_sections_to_exclude() -> Sequence[tuple[str, Title]]:
+    return [
+        ("performance", Title("Performance")),
+        ("iostats", Title("Performance: I/O stats")),
+        ("processes", Title("Current number of processes")),
+        ("sessions", Title("Current number of sessions")),
+        ("longactivesessions", Title("Long active sessions")),
+        ("logswitches", Title("Logswitches")),
+        ("undostat", Title("Undo statistics")),
+        ("recovery_area", Title("Recovery area")),
+        ("recovery_status", Title("Recovery status")),
+        ("dataguard_stats", Title("Data Guard statistics")),
+        ("tablespaces", Title("Tablespaces")),
+        ("ts_quotas", Title("TS quotas (not used)")),
+        ("rman", Title("RMAN backups")),
+        ("jobs", Title("Scheduled jobs")),
+        ("resumable", Title("Resumables")),
+        ("locks", Title("Locks")),
+        ("systemparameter", Title("System parameters")),
+    ]
+
+
+def _excluded_sections() -> List[_NamedOption]:
+    return List(
+        title=Title("Exclude some sections on certain instances"),
+        help_text=Help("Define sections to be excluded from monitoring for certain instances"),
+        add_element_label=Label("Add exclusion rule"),
+        element_template=Dictionary(
+            title=Title("Excluded sections"),
+            elements={
+                "target_id": DictElement(
+                    parameter_form=_oracle_id(),
+                    required=True,
+                ),
+                "sections": DictElement(
+                    required=False,
+                    parameter_form=MultipleChoice(
+                        title=Title("Sections to exclude"),
+                        elements=[
+                            MultipleChoiceElement(
+                                name=name,
+                                title=title,  # astrein: disable=localization-checker
+                            )
+                            for name, title in _oracle_sections_to_exclude()
+                        ],
+                    ),
+                ),
+            },
+        ),
     )
 
 

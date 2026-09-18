@@ -58,6 +58,12 @@ export const panelConfig = {
     initialState: false,
     help: 'Show the stale indicator icon.'
   },
+  flapping: {
+    type: 'boolean' as const,
+    title: 'flapping',
+    initialState: false,
+    help: 'Show the flapping indicator icon.'
+  },
   pending: {
     type: 'boolean' as const,
     title: 'pending',
@@ -105,6 +111,19 @@ const propState = ref(
 const hostState = computed<HostState>(() => propState.value.hostState)
 const serviceState = computed<ServiceState>(() => propState.value.serviceState)
 const justify = computed<ColumnJustify>(() => propState.value.justify as ColumnJustify)
+
+const STATE_KEY_OF_UNSELECTED_KIND: Record<Kind, string> = {
+  host: 'serviceState',
+  service: 'hostState'
+}
+
+const visibleConfig = computed(() =>
+  Object.fromEntries(
+    Object.entries(panelConfig).filter(
+      ([key]) => key !== STATE_KEY_OF_UNSELECTED_KIND[propState.value.kind]
+    )
+  )
+)
 
 const SLIDER_MIN = 50
 const SLIDER_MAX = 250
@@ -189,6 +208,7 @@ const currentWidth = computed(() => `${effectiveWidth.value} px`)
                 kind="service"
                 :state="serviceState"
                 :stale="propState.stale"
+                :flapping="propState.flapping"
                 :pending="propState.pending"
               />
               <StateCell
@@ -196,6 +216,7 @@ const currentWidth = computed(() => `${effectiveWidth.value} px`)
                 column-id="cell"
                 :state="hostState"
                 :stale="propState.stale"
+                :flapping="propState.flapping"
                 :pending="propState.pending"
               />
             </template>
@@ -206,7 +227,7 @@ const currentWidth = computed(() => `${effectiveWidth.value} px`)
       </div>
 
       <template #properties>
-        <UclPropertiesPanel v-model="propState" :config="panelConfig" />
+        <UclPropertiesPanel v-model="propState" :config="visibleConfig" />
       </template>
     </UclDetailPageComponent>
 

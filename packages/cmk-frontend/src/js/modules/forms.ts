@@ -11,6 +11,7 @@ import 'select2'
 import Swal from 'sweetalert2'
 
 import { call_ajax } from './ajax'
+import { getCsrfToken } from './csrf'
 import type { CMKAjaxReponse, RequireConfirmation } from './types'
 import { add_class, prevent_default_events, remove_class } from './utils'
 import { initialize_autocompleters, toggle_label_row_opacity } from './valuespecs'
@@ -484,7 +485,7 @@ export function confirm_link(
       const csrf_token_input = Object.assign(document.createElement('input'), {
         type: 'hidden',
         name: '_csrf_token',
-        value: global_csrf_token
+        value: getCsrfToken()
       })
 
       form.appendChild(csrf_token_input)

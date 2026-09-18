@@ -17,8 +17,8 @@ py_library(
         "//cmk/gui:core_toolkit",
         "//cmk/gui:page_toolkit",
         "//cmk/gui:painter_options",
-        "//cmk/gui/utils:base",
         "//packages/cmk-ccc:plugin-registry",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 
@@ -75,7 +75,6 @@ py_library(
         "//cmk/gui:painter_options",
         "//cmk/gui:visual_link",
         "//cmk/gui/graphing",
-        "//cmk/gui/utils",
         "//cmk/gui/utils:middle",
         "//cmk/gui/valuespec",
         "//cmk/utils",

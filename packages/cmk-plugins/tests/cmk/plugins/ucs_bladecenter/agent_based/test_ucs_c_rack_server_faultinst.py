@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
@@ -291,7 +290,7 @@ def test_check_ucs_c_rack_server_faultinst_critical_present() -> None:
     ]
 
 
-def test_ucs_c_rack_server_faultinst_discovery():
+def test_ucs_c_rack_server_faultinst_discovery() -> None:
     """Test discovery of UCS rack server fault instances."""
     # Pattern 3: Empty special agent data (no faults)
     string_table: list[list[str]] = []
@@ -304,7 +303,7 @@ def test_ucs_c_rack_server_faultinst_discovery():
     assert result[0] == Service()
 
 
-def test_ucs_c_rack_server_faultinst_no_faults():
+def test_ucs_c_rack_server_faultinst_no_faults() -> None:
     """Test check with no fault instances found."""
     # Pattern 3: Empty special agent data
     string_table: list[list[str]] = []
@@ -317,7 +316,7 @@ def test_ucs_c_rack_server_faultinst_no_faults():
     assert result[0] == Result(state=State.OK, summary="No fault instances found")
 
 
-def test_ucs_c_rack_server_faultinst_critical_fault():
+def test_ucs_c_rack_server_faultinst_critical_fault() -> None:
     """Test check with critical fault instance."""
     # Pattern 3: Special agent data with critical fault
     string_table = [
@@ -342,7 +341,7 @@ def test_ucs_c_rack_server_faultinst_critical_fault():
     ]
 
 
-def test_ucs_c_rack_server_faultinst_major_fault():
+def test_ucs_c_rack_server_faultinst_major_fault() -> None:
     """Test check with major fault instance."""
     # Pattern 3: Special agent data with major fault
     string_table = [
@@ -367,7 +366,7 @@ def test_ucs_c_rack_server_faultinst_major_fault():
     ]
 
 
-def test_ucs_c_rack_server_faultinst_info_fault():
+def test_ucs_c_rack_server_faultinst_info_fault() -> None:
     """Test check with info level fault instance."""
     # Pattern 3: Special agent data with info fault
     string_table = [
@@ -392,7 +391,7 @@ def test_ucs_c_rack_server_faultinst_info_fault():
     ]
 
 
-def test_ucs_c_rack_server_faultinst_multiple_faults():
+def test_ucs_c_rack_server_faultinst_multiple_faults() -> None:
     """Test check with multiple fault instances of different severities."""
     # Pattern 3: Special agent data with multiple faults
     string_table = [
@@ -444,7 +443,7 @@ def test_ucs_c_rack_server_faultinst_multiple_faults():
     ]
 
 
-def test_ucs_c_rack_server_faultinst_unknown_severity():
+def test_ucs_c_rack_server_faultinst_unknown_severity() -> None:
     """Test check with unknown severity fault instance."""
     # Pattern 3: Special agent data with unknown severity
     string_table = [

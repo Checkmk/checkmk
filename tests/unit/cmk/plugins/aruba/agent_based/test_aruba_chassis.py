@@ -123,11 +123,9 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_aruba_chassis_temp(
-    string_table: StringTable,
-    item: str,
-    result: CheckResult,
-    empty_value_store: None,
+    string_table: StringTable, item: str, result: CheckResult
 ) -> None:
     section = aruba_chassis.parse_aruba_chassis(string_table)
     assert (

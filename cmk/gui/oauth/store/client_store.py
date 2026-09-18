@@ -2,7 +2,6 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from __future__ import annotations
 
 import json
 import secrets
@@ -14,7 +13,7 @@ from datetime import datetime, UTC
 from typing import NewType
 
 from cmk.ccc.resulttype import Error, OK, Result
-from cmk.gui.oauth.store.backend import Backend, connect, oauth_db_path
+from cmk.gui.oauth.token.backend import Backend, connect, oauth_db_path
 
 _MAX_REGISTERED_CLIENTS = 1000
 
@@ -27,6 +26,7 @@ class ClientRegistration:
 
     client_id: ClientId
     redirect_uris: list[str]
+    # Unauthenticated free text (RFC 7591) -- never render without escaping.
     client_name: str | None
     registered_at: datetime
 

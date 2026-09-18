@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 
 import pytest
 
@@ -88,7 +87,7 @@ def test_discover_vsp_switches_temperature(
 
 
 @pytest.fixture(name="value_store_patch")
-def value_store_fixture(monkeypatch):
+def value_store_fixture(monkeypatch: pytest.MonkeyPatch) -> Iterator[dict[str, tuple[int, int]]]:
     value_store_patched = {
         "vsp_switch_PHY1": (30, 40),
     }

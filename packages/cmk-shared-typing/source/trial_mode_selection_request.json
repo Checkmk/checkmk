@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "trial_mode_selection_request",
+  "properties": {
+    "selection": { "title": "Selection", "enum": ["trial", "customer"] },
+    "verification_mode": { "title": "VerificationMode", "enum": ["online", "offline"] }
+  },
+  "required": ["selection"]
+}

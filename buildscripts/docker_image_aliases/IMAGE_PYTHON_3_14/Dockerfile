@@ -1,0 +1,1 @@
+FROM artifacts.lan.tribe29.com:4000/python@sha256:360347229110fab2d1ac75433a67268cf968bdc496415f02791286b2df6af48f

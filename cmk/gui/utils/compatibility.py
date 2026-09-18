@@ -85,7 +85,7 @@ def is_distributed_setup_compatible_for_licensing(
     if central_edition is cmk_version.Edition.CLOUD or remote_edition is cmk_version.Edition.CLOUD:
         return EditionsIncompatible(_("Checkmk Cloud is not allowed in distributed monitoring."))
 
-    if remote_license_state is LicenseState.FREE:
+    if remote_license_state and not remote_license_state.is_adding_as_remote_enabled():
         return LicenseStateIncompatible(
             _("Remote site in license state %(license_state)s is not allowed")
             % {"license_state": remote_license_state.readable}
@@ -157,7 +157,7 @@ def _common_is_compatible_for_licensing(
         return LicensingCompatible()
 
     if central_edition is cmk_version.Edition.ULTIMATE:
-        if central_license_state in [LicenseState.UNLICENSED, LicenseState.FREE]:
+        if central_license_state and not central_license_state.is_connecting_to_remotes_enabled():
             return LicenseStateIncompatible(
                 _(
                     "Remote sites are not allowed when central site in license state %(license_state)s"

@@ -37,7 +37,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import PageContext
 from cmk.gui.site_config import site_is_local
 from cmk.gui.table import Table
-from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites, get_configured_site_choices
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato import SimpleEditMode, SimpleListMode, SimpleModeType
@@ -87,6 +87,8 @@ from cmk.shared_typing.mode_oauth2_connection import (
 )
 from cmk.utils.oauth2_connection import OAuth2Connection
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeuri, makeuri_contextless
 
 

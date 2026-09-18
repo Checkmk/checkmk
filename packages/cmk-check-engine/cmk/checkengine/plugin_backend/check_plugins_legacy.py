@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 """Helper to register a new-style section based on config.check_info"""
@@ -135,15 +134,15 @@ def _create_signature_check_function(
     """Create the function for a check function with the required signature"""
     if requires_item:
 
-        def check_migration_wrapper(item, params, section):
+        def check_migration_wrapper_with_item(item: object, params: object, section: object) -> Any:
             return original_function(item, params, section)
 
-    else:
+        return check_migration_wrapper_with_item
 
-        def check_migration_wrapper(params, section):  # type: ignore[misc]
-            return original_function(None, params, section)
+    def check_migration_wrapper_without_item(params: object, section: object) -> Any:
+        return original_function(None, params, section)
 
-    return check_migration_wrapper
+    return check_migration_wrapper_without_item
 
 
 def _create_check_plugin_from_legacy(
@@ -202,7 +201,7 @@ def convert_legacy_check_plugins(
                     validate_creation_kwargs=validate_creation_kwargs,
                 )
             )
-        except (NotImplementedError, KeyError, AssertionError, ValueError):
+        except NotImplementedError, KeyError, AssertionError, ValueError:
             # NOTE: as a result of a missing check plug-in, the corresponding services
             #       will be silently droppend on most (all?) occasions.
             if raise_errors:

@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Classes used by the API for check plug-ins"""
 
-from __future__ import annotations
-
 import enum
 import sys
 from collections.abc import Iterable, Mapping, Sequence
@@ -436,7 +434,7 @@ def _create_result_fields(
     details: str | None = None,
 ) -> tuple[State, str, str]:
     if not isinstance(state, State):
-        raise TypeError(f"'state' must be a checkmk State constant, got {state}")
+        raise TypeError(f"'state' must be a checkmk State constant, got {state!r}")
 
     for var, name in (
         (summary, "summary"),
@@ -446,9 +444,9 @@ def _create_result_fields(
         if var is None:
             continue
         if not isinstance(var, str):
-            raise TypeError(f"'{name}' must be non-empty str or None, got {var}")
+            raise TypeError(f"'{name}' must be non-empty str or None, got {var!r}")
         if not var:
-            raise ValueError(f"'{name}' must be non-empty str or None, got {var}")
+            raise ValueError(f"'{name}' must be non-empty str or None, got {var!r}")
 
     if summary:
         if notice:

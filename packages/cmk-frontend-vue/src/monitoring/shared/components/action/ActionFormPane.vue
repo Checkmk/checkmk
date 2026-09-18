@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
+import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkIndent from 'cmk-ui-library/components/CmkIndent.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
@@ -20,6 +21,8 @@ const props = defineProps<{
   formProps?: Record<string, unknown> | undefined
   initialValues?: unknown
   indent?: boolean | undefined
+  /** An 'x' that closes the pane. Off where a host already offers one, as the slide-ins do. */
+  showClose?: boolean | undefined
 }>()
 
 const emit = defineEmits<{
@@ -50,6 +53,15 @@ function cancel(): void {
       <header class="monitoring-action-form-pane__header">
         <div class="monitoring-action-form-pane__title-row">
           <h2 class="monitoring-action-form-pane__title">{{ title }}</h2>
+          <CmkIconButton
+            v-if="showClose"
+            class="monitoring-action-form-pane__close"
+            name="close"
+            size="xsmall"
+            :title="_t('Close')"
+            :aria-label="_t('Close')"
+            @click="cancel"
+          />
         </div>
         <p v-if="subtitle" class="monitoring-action-form-pane__subtitle">{{ subtitle }}</p>
       </header>
@@ -100,16 +112,22 @@ function cancel(): void {
   display: flex;
   align-items: center;
   gap: var(--dimension-3);
+  margin-bottom: var(--spacing-double);
 }
 
 .monitoring-action-form-pane__title {
-  margin: 0 0 var(--spacing-double) 0;
+  margin: 0;
   font-size: var(--font-size-large);
   font-weight: var(--font-weight-bold);
 }
 
+.monitoring-action-form-pane__close {
+  margin-left: auto;
+}
+
 .monitoring-action-form-pane__subtitle {
-  margin: var(--dimension-2) 0 0;
+  /* No top margin: it would collapse into the title row's bottom margin anyway. */
+  margin: 0;
   color: var(--font-color-dimmed);
 }
 

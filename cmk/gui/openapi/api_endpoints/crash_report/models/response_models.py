@@ -23,7 +23,7 @@ class JavascriptCrashReportExtensions:
 
 @api_model
 class JavascriptCrashReportObjectModel(DomainObjectModel):
-    domainType: Literal["javascript_crash_report"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["javascript_crash_report"] = api_field(
         description="The domain type of the object.",
         example="javascript_crash_report",
     )

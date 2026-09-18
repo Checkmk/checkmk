@@ -43,7 +43,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
@@ -62,6 +61,7 @@ from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.escaping import escape_to_html_permissive, strip_tags
 from cmk.web.utils.flashed_messages import get_flashed_messages
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
 from cmk.werks.site import load_werk_entries
 from cmk.werks.site.acknowledgement import is_acknowledged

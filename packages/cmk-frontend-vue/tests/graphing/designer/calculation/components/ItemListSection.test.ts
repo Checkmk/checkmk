@@ -46,10 +46,15 @@ test('clicking a badge emits insertId with the item id', async () => {
   expect(emitted('insertId')).toEqual([['A']])
 })
 
-test('isItemDisabled disables exactly the matching badges', () => {
-  renderSection({ isItemDisabled: (item: GraphItem) => item.id === 'A' })
-  expect(screen.getByRole('button', { name: 'Insert A' })).toBeDisabled()
-  expect(screen.getByRole('button', { name: 'Insert D' })).toBeEnabled()
+test('itemBlockReason explains exactly the matching badges', () => {
+  renderSection({
+    itemBlockReason: (item: GraphItem) =>
+      item.id === 'A' ? untranslated('Aggregate this query first') : null
+  })
+  const blocked = screen.getByRole('button', { name: 'Insert A' })
+  expect(blocked).toHaveAttribute('aria-disabled', 'true')
+  expect(blocked).toHaveAttribute('title', 'Aggregate this query first')
+  expect(screen.getByRole('button', { name: 'Insert D' })).toHaveAttribute('aria-disabled', 'false')
 })
 
 test('edit and delete actions render only with showActions and emit the item id', async () => {

@@ -7,8 +7,6 @@
 
 """Execute an automation call in a background job running on a remote site."""
 
-from __future__ import annotations
-
 import ast
 import uuid
 from collections.abc import Callable, Iterable, Mapping

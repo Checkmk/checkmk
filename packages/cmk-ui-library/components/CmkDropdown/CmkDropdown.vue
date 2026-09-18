@@ -8,6 +8,7 @@ import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import CmkSuggestions, {
   ErrorResponse,
   NoSelection,
+  type Section,
   Selection,
   SelectionWithTitle,
   type Suggestion,
@@ -35,6 +36,7 @@ export interface DropdownOption {
 }
 
 const {
+  modelValue = null,
   inputHint = untranslated(''),
   noResultsHint = '',
   disabled = false,
@@ -46,8 +48,10 @@ const {
   label,
   formValidation = false,
   describedBy,
-  floating = false
+  floating = false,
+  busy = false
 } = defineProps<{
+  modelValue?: string | null
   options: Suggestions
   inputHint?: TranslatedString
   noResultsHint?: TranslatedString
@@ -60,9 +64,12 @@ const {
   formValidation?: boolean
   describedBy?: string | undefined
   floating?: boolean
+  busy?: boolean
 }>()
 
-const selectedOptionPublic = defineModel<string | null>({ default: null })
+const emit = defineEmits<{
+  'update:modelValue': [name: string | null, section?: Section]
+}>()
 
 const vClickOutside = useClickOutside()
 
@@ -77,7 +84,7 @@ const selectedOption = ref<SuggestionValue>(new NoSelection())
 
 immediateWatch(
   () => ({
-    newValue: selectedOptionPublic.value,
+    newValue: modelValue,
     newOptions: options
   }),
   async ({ newValue, newOptions }) => {
@@ -90,7 +97,7 @@ immediateWatch(
     callbackFilteredLoading.value = false
     internallyDisabled.value = false
     // Only update if the selected option hasn't changed again while awaiting
-    if (newValue === selectedOptionPublic.value) {
+    if (newValue === modelValue) {
       buttonLabel.value = currentSelectionState.buttonLabel
       selectedOption.value = currentSelectionState.value
     }
@@ -189,8 +196,17 @@ const flippedUp = ref(false)
 const nonFloatingMaxHeight = supportsAnchorPositioning ? 'none' : `${PREFERRED_MIN_BELOW_PX}px`
 // Grace margin kept between the list and the viewport edge.
 const VIEWPORT_MARGIN_PX = 40
-const viewportMargin = `${VIEWPORT_MARGIN_PX}px`
 const floatingCollisionPadding = { top: VIEWPORT_MARGIN_PX, bottom: VIEWPORT_MARGIN_PX }
+
+// Mirrors CmkSuggestions' max-width, which our same-axis max-inline-size would otherwise override.
+const SUGGESTIONS_MAX_INLINE_SIZE_PX = 512
+
+// Height and width caps for the anchor-positioned list, updated from JS on open; these fallbacks
+// keep it scrollable and width-bounded until then.
+const listMaxBlockSize = ref<string>(`calc(100dvh - ${2 * VIEWPORT_MARGIN_PX}px)`)
+const listMaxInlineSize = ref<string>(
+  `min(${SUGGESTIONS_MAX_INLINE_SIZE_PX}px, calc(100dvw - ${2 * VIEWPORT_MARGIN_PX}px))`
+)
 // reka-ui provides the collision-aware available height, already less the collision padding above.
 // The floor is what lets its flip still fire: a list capped to exactly the room it has never
 // collides, so without it the list stays below the button and shrinks to a sliver.
@@ -250,8 +266,16 @@ function updateNonFloatingPlacement(): void {
   const spaceAbove = anchorRect.top
   flippedUp.value = spaceBelow < PREFERRED_MIN_BELOW_PX && spaceAbove > spaceBelow
 
+  // Floored so a cramped side still yields a usable, scrollable list.
+  const availableInDirection = (flippedUp.value ? spaceAbove : spaceBelow) - VIEWPORT_MARGIN_PX
+  listMaxBlockSize.value = `${Math.max(PREFERRED_MIN_BELOW_PX, availableInDirection)}px`
+
+  // Cap to the room right of the button so a wide list never overflows and hides its scrollbar.
+  const roomRightOfButton = window.innerWidth - anchorRect.left - VIEWPORT_MARGIN_PX
+  listMaxInlineSize.value = `${Math.min(SUGGESTIONS_MAX_INLINE_SIZE_PX, roomRightOfButton)}px`
+
   if (supportsAnchorPositioning) {
-    // From here the CSS positions and sizes the list, keyed on the flippedUp class.
+    // From here the CSS positions the list, keyed on the flippedUp class.
     return
   }
   if (flippedUp.value) {
@@ -291,11 +315,13 @@ function onFloatingInteractOutside(event: Event): void {
   }
 }
 
-function handleUpdate(selected: Suggestion | null): void {
-  // Only write the model; the internal state syncs back from the watch, so a
-  // controlled parent that keeps its value (e.g. an add-control pinned to
-  // null) keeps the dropdown unselected and repeated picks emit again.
-  selectedOptionPublic.value = selected === null || selected.name === null ? null : selected.name
+function handleUpdate(selected: Suggestion | null, section: Section | null): void {
+  // Blur reports an option click first; the click itself then finds the list already closed.
+  if (!suggestionsShown.value) {
+    return
+  }
+  // Internal state syncs back from the watch, so a parent that keeps its value stays unselected.
+  emit('update:modelValue', selected?.name ?? null, section ?? undefined)
   callbackFilteredErrorMessage.value = null
   hideSuggestions()
 }
@@ -334,6 +360,7 @@ const group = computed<ButtonVariants['group']>(() => {
       :aria-label="label"
       :aria-expanded="suggestionsShown"
       :aria-invalid="formValidation || undefined"
+      :aria-busy="busy || undefined"
       :aria-describedby="describedBy"
       :disabled="disabled"
       :multiple-choices-available="canOpenDropdown"
@@ -409,8 +436,6 @@ const group = computed<ButtonVariants['group']>(() => {
 
 <style scoped>
 .cmk-dropdown {
-  --cmk-dropdown-viewport-margin: v-bind(viewportMargin);
-
   display: inline-block;
   position: relative;
   white-space: nowrap;
@@ -460,8 +485,8 @@ const group = computed<ButtonVariants['group']>(() => {
   min-width: var(--reka-popper-anchor-width);
 }
 
-/* Fill the list to the viewport edge (upward when flipped) less a grace margin, and scroll the
-   overflow. The layout engine keeps this correct on scroll, resize and zoom with no JS listener. */
+/* Anchor the list edge to its own button explicitly rather than via position-area, whose block
+   sizing fails to clamp once a transformed ancestor becomes the fixed containing block. */
 @supports (anchor-name: --x) and (anchor-scope: all) {
   .cmk-dropdown {
     anchor-name: --cmk-dropdown-anchor;
@@ -473,18 +498,16 @@ const group = computed<ButtonVariants['group']>(() => {
   .cmk-dropdown > .cmk-dropdown__suggestions {
     position: fixed;
     position-anchor: --cmk-dropdown-anchor;
-    position-area: block-end span-inline-end;
+    inset-block-start: anchor(bottom);
+    inset-inline-start: anchor(left);
     block-size: fit-content;
-
-    /* fit-content stops clamping once a transformed ancestor becomes the fixed containing block. */
-    max-block-size: calc(100dvh - (2 * var(--cmk-dropdown-viewport-margin)));
+    max-block-size: v-bind(listMaxBlockSize);
     min-width: anchor-size(width);
-    margin-block: 0 var(--cmk-dropdown-viewport-margin);
+    max-inline-size: v-bind(listMaxInlineSize);
   }
 
   .cmk-dropdown > .cmk-dropdown__suggestions.cmk-dropdown__suggestions--flipped {
-    position-area: block-start span-inline-end;
-    margin-block: var(--cmk-dropdown-viewport-margin) 0;
+    inset-block: auto anchor(top);
   }
 }
 </style>

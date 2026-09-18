@@ -154,16 +154,16 @@ def test_cleanup_not_called_on_empty_mailbox() -> None:
     """
 
     class StubConnection:
-        def __enter__(self) -> "StubConnection":
+        def __enter__(self) -> StubConnection:
             return self
 
         def __exit__(self, *args: object) -> None:
             pass
 
-        def copy(self, *args: object, **kwargs: object) -> None:
+        def copy(self, *args: object, **kwargs: object) -> None:  # noqa: ARG002
             raise AssertionError("copy must not be called on an empty mailbox")
 
-        def delete(self, *args: object, **kwargs: object) -> None:
+        def delete(self, *args: object, **kwargs: object) -> None:  # noqa: ARG002
             raise AssertionError("delete must not be called on an empty mailbox")
 
     args = Args(

@@ -52,7 +52,7 @@ class TopologyFilterConfiguration:
     query: str = ""
 
     @classmethod
-    def parse(cls, serialized_config: dict[str, Any]) -> "TopologyFilterConfiguration":
+    def parse(cls, serialized_config: dict[str, Any]) -> TopologyFilterConfiguration:
         return cls(
             max_nodes=serialized_config.get(
                 "max_nodes", FilterTopologyMaxNodes().range_config.default
@@ -91,7 +91,7 @@ class ComputationOptions:
     enforce_hierarchy_update: bool = False
 
     @classmethod
-    def parse(cls, serialized_config: dict[str, Any]) -> "ComputationOptions":
+    def parse(cls, serialized_config: dict[str, Any]) -> ComputationOptions:
         show_services: Literal["none", "all", "only_problems"] = "all"
         show_services = serialized_config.get("show_services", show_services)
         hierarchy: Literal["flat", "full"] = "full"
@@ -112,7 +112,7 @@ class OverlaysConfig:
     computation_options: ComputationOptions = field(default_factory=ComputationOptions)
 
     @classmethod
-    def parse(cls, serialized_config: dict[str, Any]) -> "OverlaysConfig":
+    def parse(cls, serialized_config: dict[str, Any]) -> OverlaysConfig:
         return cls(
             available_layers=serialized_config.get("available_layers") or [],
             overlays=serialized_config.get("overlays", {}),
@@ -150,7 +150,7 @@ class FrontendConfiguration:
         self._growth_continue_nodes_set = set(self.growth_continue_nodes)
 
     @classmethod
-    def parse(cls, serialized_config: dict[str, Any]) -> "FrontendConfiguration":
+    def parse(cls, serialized_config: dict[str, Any]) -> FrontendConfiguration:
         return cls(
             overlays_config=OverlaysConfig.parse(serialized_config.get("overlays_config", {})),
             growth_root_nodes=serialized_config.get("growth_root_nodes", []),
@@ -217,7 +217,7 @@ class TopologyConfiguration:
     @classmethod
     def parse(
         cls, serialized_config: dict[str, Any], query_identifier: TopologyQueryIdentifier
-    ) -> "TopologyConfiguration":
+    ) -> TopologyConfiguration:
         if serialized_config.get("version") is None:
             serialized_config = cls._migrate_legacy_data(serialized_config, query_identifier)
 
@@ -307,7 +307,7 @@ class HierarchyNode:
     id: str
     name: str
     node_type: str
-    children: list["HierarchyNode"]
+    children: list[HierarchyNode]
     growth_settings: GrowthSettings = field(default_factory=GrowthSettings)
     type_specific: dict[str, Any] = field(default_factory=dict)
 

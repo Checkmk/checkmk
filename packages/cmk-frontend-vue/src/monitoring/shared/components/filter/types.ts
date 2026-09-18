@@ -82,19 +82,20 @@ export interface DateTimeRangeFilter<F extends FilterField = FilterField> {
   field: F
 }
 
-/** A single boolean field shown as a tri-state radio group in a {@link BooleanGroupFilter}. */
+/** A single boolean field shown as a tri-state toggle button group in a {@link BooleanGroupFilter}. */
 export interface BooleanFilterGroup<F extends FilterField = FilterField> {
   /** Boolean API field this group targets (e.g. `in_downtime`, `acknowledged`). */
   field: F
-  /** Label shown above the group's radio buttons. */
+  /** Title naming the group, shown beside its buttons. */
   title: string
 }
 
 /**
- * Filter that presents one tri-state radio group per boolean field. Each group
- * offers "both" (no condition), "has to be true" and "has to be false". A group
- * left on "both" contributes nothing; the remaining groups produce `eq` boolean
- * conditions that are AND-combined into the column filter node.
+ * Filter that presents one tri-state toggle button group per boolean field.
+ * Each group offers "Any" (no condition), "Yes" (has to be true) and "No" (has
+ * to be false). A group left on "Any" contributes nothing; the remaining groups
+ * produce `eq` boolean conditions that are AND-combined into the column filter
+ * node.
  *
  * The v-model value is a `ColumnFilterNode<F>` so the column filter state stores
  * a typed condition directly — no `filterToNode` translation needed.
@@ -107,7 +108,7 @@ export interface BooleanGroupFilter<F extends FilterField = FilterField> {
 /**
  * Filter that presents a {@link CheckboxListFilter}'s fixed list of checkable
  * values together with one or more boolean flags, each rendered as a
- * {@link BooleanGroupFilter}-style tri-state radio group below the checkbox
+ * {@link BooleanGroupFilter}-style tri-state toggle button group below the checkbox
  * list. Used for the state column, whose filter combines the state enum with
  * orthogonal flags (flapping, stale) that used to live in a separate column.
  *
@@ -125,7 +126,7 @@ export interface CheckboxListWithFlagsFilter<
   options: FilterCheckboxOption[]
   /** Show the inline search field once the option count exceeds this value. */
   searchThreshold?: number
-  /** Boolean flags shown below the checkbox list, each as a tri-state radio group. */
+  /** Boolean flags shown below the checkbox list, each as a tri-state toggle button group. */
   flags: BooleanFilterGroup<BF>[]
 }
 

@@ -37,17 +37,29 @@ function renderFilter() {
 test('each group carries the name of the field it switches', () => {
   renderFilter()
 
-  expect(screen.getByRole('radiogroup', { name: 'In downtime' })).toBeInTheDocument()
-  expect(screen.getByRole('radiogroup', { name: 'Acknowledged' })).toBeInTheDocument()
+  expect(screen.getByRole('group', { name: 'In downtime' })).toBeInTheDocument()
+  expect(screen.getByRole('group', { name: 'Acknowledged' })).toBeInTheDocument()
 })
 
-test('the repeated "All" option is told apart by its group', () => {
+test('the repeated "Any" option is told apart by its group', () => {
   renderFilter()
 
-  const downtime = screen.getByRole('radiogroup', { name: 'In downtime' })
-  const acknowledged = screen.getByRole('radiogroup', { name: 'Acknowledged' })
+  const downtime = screen.getByRole('group', { name: 'In downtime' })
+  const acknowledged = screen.getByRole('group', { name: 'Acknowledged' })
 
-  expect(within(downtime).getByRole('radio', { name: 'All' })).not.toBe(
-    within(acknowledged).getByRole('radio', { name: 'All' })
+  expect(within(downtime).getByRole('button', { name: 'Toggle Any' })).not.toBe(
+    within(acknowledged).getByRole('button', { name: 'Toggle Any' })
   )
+})
+
+test('the icon buttons carry the same three words the legend heads them with', () => {
+  renderFilter()
+
+  const group = screen.getByRole('group', { name: 'Acknowledged' })
+  const buttonLabels = within(group)
+    .getAllByRole('button')
+    .map((button) => button.getAttribute('aria-label'))
+  const legendLabels = ['Any', 'Yes', 'No'].map((word) => screen.getByText(word).textContent)
+
+  expect(buttonLabels).toEqual(legendLabels.map((word) => `Toggle ${word}`))
 })

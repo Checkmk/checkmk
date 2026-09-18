@@ -278,17 +278,12 @@ function moveFocus(delta: number): void {
   focusRow(current + delta)
 }
 
-// Filter types whose input owns the vertical arrow keys. Numeric/date-time
-// fields use them for native increment/decrement; boolean-group and
-// checkbox-list-with-flags render a tri-state radio group, and reka-ui already
-// gives each one its own roving-tabindex Up/Down handling. For all of these
-// the dropdown must not hijack ArrowUp/ArrowDown for row navigation - Tab
-// still moves between rows, including into and out of a radio group.
+// Filter types whose input owns the vertical arrow keys: numeric and date-time
+// fields use them for native increment/decrement, so the dropdown must not
+// hijack ArrowUp/ArrowDown for row navigation there.
 const ARROW_NAV_DISABLED_TYPES = new Set<ColumnFilterDefinition['type']>([
   'numeric',
-  'date-time-range',
-  'boolean-group',
-  'checkbox-list-with-flags'
+  'date-time-range'
 ])
 
 function registerShortcuts(): void {

@@ -5,18 +5,28 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <!--
 Content component for the "boolean-group" filter type. It renders one tri-state
-radio group per boolean field, separated by a divider: "All" (no condition), the
-field's own label (has to be true) and "NOT <label>" (has to be false).
+icon-only toggle button group per boolean field: a dash for "Any" (no
+condition), a checkmark for "Yes" (has to be true) and an X for "No" (has to be
+false). A legend row heads the three columns with the very labels the buttons
+carry as their accessible name and tooltip, and each group is named by its own
+title, so "Yes" is never read out of context.
+
+Legend and buttons share one grid - the legend row borrows its columns via
+subgrid - so a heading sits above the button it heads. The three columns are as
+wide as the library makes an icon-only small toggle button, declared once as
+`--monitoring-filter-boolean-group-option-width`.
 
 The v-model is a `ColumnFilterNode<F>` (or undefined for "no filter"). Group
-states are derived from the model at render time; on change the non-"all"
+states are derived from the model at render time; on change the non-"Any"
 groups produce `eq` boolean conditions that are AND-combined into the node (a
 single active group stays a lone condition). The parent `FilterDropdown` owns
 the popover shell and Clear/Apply handling.
 -->
 <script setup lang="ts" generic="F extends FilterField">
-import { CmkRadioButton, CmkRadioGroup } from 'cmk-ui-library/components/user-input/CmkRadioButton'
-import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import CmkToggleButtonGroup, {
+  type ToggleButtonOption
+} from 'cmk-ui-library/components/CmkToggleButtonGroup.vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
@@ -56,6 +66,12 @@ function stateOf(field: F): BooleanState {
   return stateByField.value[field] ?? 'all'
 }
 
+const options = computed<ToggleButtonOption[]>(() => [
+  { label: _t('Any'), value: 'all', icon: 'dash', tooltip: _t('Any') },
+  { label: _t('Yes'), value: 'true', icon: 'checkmark', tooltip: _t('Yes') },
+  { label: _t('No'), value: 'false', icon: 'cancel', tooltip: _t('No') }
+])
+
 function setState(field: F, next: BooleanState): void {
   const active = props.definition.groups
     .map((group) => ({
@@ -85,38 +101,69 @@ function setState(field: F, next: BooleanState): void {
 
 <template>
   <div class="monitoring-filter-boolean-group">
-    <template v-for="(group, index) in definition.groups" :key="group.field">
-      <hr v-if="index > 0" class="monitoring-filter-boolean-group__separator" />
-      <CmkRadioGroup
-        class="monitoring-filter-boolean-group__group"
-        :label="untranslated(group.title)"
-        :model-value="stateOf(group.field)"
-        @update:model-value="setState(group.field, $event as BooleanState)"
+    <div class="monitoring-filter-boolean-group__legend" aria-hidden="true">
+      <span
+        v-for="option in options"
+        :key="option.value"
+        class="monitoring-filter-boolean-group__legend-label"
+        >{{ option.label }}</span
       >
-        <CmkRadioButton value="all" :label="_t('All')" />
-        <CmkRadioButton value="true" :label="untranslated(group.title)" />
-        <CmkRadioButton value="false" :label="untranslated(`NOT ${group.title}`)" />
-      </CmkRadioGroup>
-    </template>
+    </div>
+    <div
+      v-for="group in definition.groups"
+      :key="group.field"
+      class="monitoring-filter-boolean-group__group"
+      role="group"
+      :aria-label="group.title"
+    >
+      <span class="monitoring-filter-boolean-group__title">{{ group.title }}</span>
+      <CmkToggleButtonGroup
+        class="monitoring-filter-boolean-group__options"
+        :options="options"
+        :model-value="stateOf(group.field)"
+        size="small"
+        spacing="none"
+        @update:model-value="setState(group.field, $event as BooleanState)"
+      />
+    </div>
   </div>
 </template>
 
 <style scoped>
 .monitoring-filter-boolean-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-4);
+  --monitoring-filter-boolean-group-option-width: var(--dimension-8);
+
+  display: grid;
+  grid-template-columns: 1fr repeat(3, var(--monitoring-filter-boolean-group-option-width));
+  align-items: center;
+  row-gap: var(--dimension-4);
+  margin: var(--dimension-3) 0;
+  padding: var(--dimension-3) var(--dimension-5);
+}
+
+.monitoring-filter-boolean-group__legend {
+  display: grid;
+  grid-column: 2 / -1;
+  grid-template-columns: subgrid;
+}
+
+.monitoring-filter-boolean-group__legend-label {
+  text-align: center;
+  font-size: var(--font-size-small);
 }
 
 .monitoring-filter-boolean-group__group {
-  padding: 0 var(--dimension-2);
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
 }
 
-.monitoring-filter-boolean-group__separator {
-  width: 100%;
-  height: var(--dimension-1);
-  border: 0;
-  background-color: var(--ux-theme-4);
-  margin: 0;
+.monitoring-filter-boolean-group__title {
+  padding-right: var(--dimension-4);
+}
+
+.monitoring-filter-boolean-group__options {
+  grid-column: 2 / -1;
 }
 </style>

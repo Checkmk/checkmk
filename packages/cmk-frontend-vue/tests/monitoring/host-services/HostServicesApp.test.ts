@@ -305,8 +305,16 @@ test('requests services that are not acknowledged and not in downtime', async ()
 
   await userEvent.click(await screen.findByRole('button', { name: 'Filter Mode' }))
   const panel = screen.getByRole('group', { name: 'Filter Mode' })
-  await userEvent.click(within(panel).getByLabelText('NOT Acknowledged'))
-  await userEvent.click(within(panel).getByLabelText('NOT In downtime'))
+  await userEvent.click(
+    within(within(panel).getByRole('group', { name: 'Acknowledged' })).getByRole('button', {
+      name: 'Toggle No'
+    })
+  )
+  await userEvent.click(
+    within(within(panel).getByRole('group', { name: 'In downtime' })).getByRole('button', {
+      name: 'Toggle No'
+    })
+  )
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 
   expect(servicesPost).toHaveBeenLastCalledWith(
@@ -336,9 +344,9 @@ test('clearing the mode filter restores the full, unfiltered list', async () => 
   await userEvent.click(await screen.findByRole('button', { name: 'Filter Mode' }))
   let panel = screen.getByRole('group', { name: 'Filter Mode' })
   await userEvent.click(
-    within(within(panel).getByRole('radiogroup', { name: 'Acknowledged' })).getByLabelText(
-      'Acknowledged'
-    )
+    within(within(panel).getByRole('group', { name: 'Acknowledged' })).getByRole('button', {
+      name: 'Toggle Yes'
+    })
   )
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 
@@ -507,7 +515,9 @@ test('requests services in a picked state that are also flapping', async () => {
   const panel = screen.getByRole('group', { name: 'Filter State' })
   await userEvent.click(within(panel).getByLabelText('CRIT'))
   await userEvent.click(
-    within(within(panel).getByRole('radiogroup', { name: 'Flapping' })).getByLabelText('Flapping')
+    within(within(panel).getByRole('group', { name: 'Flapping' })).getByRole('button', {
+      name: 'Toggle Yes'
+    })
   )
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 
@@ -536,7 +546,9 @@ test('clearing the state filter also clears its flapping/stale flags', async () 
   await userEvent.click(await screen.findByRole('button', { name: 'Filter State' }))
   let panel = screen.getByRole('group', { name: 'Filter State' })
   await userEvent.click(
-    within(within(panel).getByRole('radiogroup', { name: 'Stale' })).getByLabelText('Stale')
+    within(within(panel).getByRole('group', { name: 'Stale' })).getByRole('button', {
+      name: 'Toggle Yes'
+    })
   )
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 

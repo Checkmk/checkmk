@@ -17,7 +17,7 @@ export const a11yData = [
   {
     keys: ['↑', '↓', 'Home', 'End'],
     description:
-      'While the dropdown is open, arrow keys move the active option (Home/End jump to first/last). The active option is tracked by the parent FilterDropdown and exposed via aria-activedescendant; the option rows only render the highlight. Exception: a numeric or date-time-range filter leaves its arrow keys to the input itself, and a tri-state radio group (a boolean-group filter, or the flag rows of a checkbox-list-with-flags filter) moves focus within itself instead, since it owns Up/Down navigation natively.'
+      'While the dropdown is open, arrow keys move the active option (Home/End jump to first/last). The active option is tracked by the parent FilterDropdown and exposed via aria-activedescendant; the option rows only render the highlight. Exception: a numeric or date-time-range filter leaves its arrow keys to the input itself, since those step the value natively.'
   },
   {
     keys: ['Enter', 'Space'],
@@ -428,7 +428,7 @@ const sortedRows = computed<HostEntry[]>(() => {
           they survive closing the dropdown and drive the (server-side) query. Future filter types —
           numeric range, IP range — plug in as additional dropdown contents without changing this
           wiring. The Mode column declares a <code>boolean-group</code> filter: one tri-state group
-          per boolean field, whose non-"All" groups are AND-combined into the node. The Labels
+          per boolean field, whose non-"Any" groups are AND-combined into the node. The Labels
           column shows the same <code>string-input</code> type with a <code>suggest</code> callback,
           which swaps its plain text field for a CmkChipAutocomplete: several picks become an
           <code>or</code> of one <code>contains</code> each. It targets the host name here because

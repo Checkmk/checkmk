@@ -33,6 +33,7 @@ py_library(
         "//cmk/legacy_checks",
         "//cmk/legacy_includes",
         "//cmk/piggyback:backend",
+        "//cmk/piggyback:cli",
         "//cmk/piggyback:hub",
         "//cmk/plugins",
         "//cmk/plugins/checkmk/post_rename_site",

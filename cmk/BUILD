@@ -85,6 +85,7 @@ py_wheel(
         "cmk-convert-rrds = cmk.rrd.convert_rrds.__main__:main",
         "cmk-create-rrd = cmk.rrd.create_rrd.__main__:main",
         "cmk-passwd = cmk.cmkpasswd.main:main",
+        "cmk-piggyback = cmk.piggyback.cli:main",
         "cmk-product-usage = cmk.product_usage.cli:main",
         "cmk-pwstore = cmk.utils.password_store.cli:main",
         "cmk-ui-job-scheduler = cmk.gui.job_scheduler.main:main",

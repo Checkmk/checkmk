@@ -1359,6 +1359,9 @@ allows = ["@plugin_apis"]
 [components."cmk.notification_plugins"]
 allows = ["@ccc", "cmk.events", "cmk.utils"]
 
+[components."cmk.piggyback.cli"]
+allows = ["@livestatus_client", "cmk.piggyback", "cmk.utils"]
+
 [components."cmk.piggyback"]
 allows = ["@ccc", "@messaging"]
 
@@ -2069,9 +2072,6 @@ allows = [
 
 [file_dependencies."bin/cmk-piggyback-hub.py"]
 allows = ["@ccc", "cmk.crash", "cmk.piggyback", "cmk.utils"]
-
-[file_dependencies."bin/cmk-piggyback.py"]
-allows = ["@livestatus_client", "cmk.piggyback", "cmk.utils"]
 
 [file_dependencies."bin/mkp.py"]
 allows = [

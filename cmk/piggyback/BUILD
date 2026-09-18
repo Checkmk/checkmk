@@ -33,3 +33,15 @@ py_library(
         "//packages/cmk-messaging",
     ],
 )
+
+py_library(
+    name = "cli",
+    srcs = ["cli.py"],
+    imports = ["../.."],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":backend",
+        "//cmk/utils:paths",
+        "//packages/cmk-livestatus-client",
+    ],
+)

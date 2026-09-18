@@ -65,7 +65,6 @@ pkg_files(
         ":cmk-monitor-mkbackup",
         ":cmk-monitor-mknotifyd",
         ":cmk-monitor-otel-collector",
-        ":cmk-piggyback.py",
         ":cmk-piggyback-hub.py",
         ":cmk-ui-job-scheduler-health",
         ":mkevent",
@@ -79,7 +78,6 @@ pkg_files(
         "cmk-migrate-extension-rulesets.py": "cmk-migrate-extension-rulesets",
         "cmk-migrate-oracle-rulesets.py": "cmk-migrate-oracle-rulesets",
         "cmk-piggyback-hub.py": "cmk-piggyback-hub",
-        "cmk-piggyback.py": "cmk-piggyback",
         "mkp.py": "mkp",
     },
 )
@@ -106,17 +104,6 @@ py_library(
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:version-info",
         "//packages/cmk-crash:crash",
-    ],
-)
-
-py_library(
-    name = "cmk_piggyback_py",
-    srcs = ["cmk-piggyback.py"],
-    imports = ["."],
-    deps = [
-        "//cmk/piggyback:backend",
-        "//cmk/utils:paths",
-        "//packages/cmk-livestatus-client",
     ],
 )
 

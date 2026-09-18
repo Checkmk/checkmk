@@ -14,7 +14,7 @@ THIS DOES NOT PROVIDE A STABLE INTERFACE FOR SCRIPTING.
 import argparse
 import sys
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 from cmk.livestatus_client import LocalConnection, MKLivestatusSocketError, Query
 from cmk.livestatus_client.queries import (
@@ -132,7 +132,7 @@ def _command_track(
     return 0
 
 
-def _parse_arguments(argv: list[str]) -> argparse.Namespace:
+def _parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     prog, description = __doc__.split("\n\n", 1)
     parser = argparse.ArgumentParser(
         prog=prog,
@@ -163,9 +163,9 @@ def _add_command(
     subparser.set_defaults(handler=handler)
 
 
-def main(
-    argv: list[str],
-) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
+    if argv is None:
+        argv = sys.argv[1:]
     args = _parse_arguments(argv)
 
     try:
@@ -178,4 +178,4 @@ def main(
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main())

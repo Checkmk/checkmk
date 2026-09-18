@@ -10,6 +10,7 @@ py_library(
     deps = [
         "//tests/testlib/common",
         requirement("psutil"),
+        requirement("pydantic"),
         requirement("pytest"),
         requirement("pytest-check"),
     ],

@@ -30,6 +30,7 @@ py_library(
         "//packages/cmk-wsgi",
         "//tests/system:pkg_marker",
         "//tests/testlib/common",
+        "//tests/testlib/pytest_helpers",
         "//tests/testlib/system",
     ] + select({
         "//:gpl+nonfree_repo": [

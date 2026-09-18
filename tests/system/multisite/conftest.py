@@ -19,6 +19,7 @@ from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
 from tests.system.multisite.utils import get_cre_agent_path
 from tests.testlib.common.utils2 import is_containerized, run
+from tests.testlib.pytest_helpers import flake_reporter
 from tests.testlib.system.agent import (
     agent_controller_daemon,
     bake_agents,
@@ -244,3 +245,7 @@ def _run_cron() -> None:
 
     # Start cron daemon. It forks an will keep running in the background
     run([cron_cmd], check=True, sudo=True)
+
+
+def pytest_addoption(pluginmanager: pytest.PytestPluginManager) -> None:
+    pluginmanager.register(flake_reporter.FlakeReporter(), flake_reporter.__name__)

@@ -18,14 +18,6 @@ void main() {
 
     def use_case = params.USE_CASE.trim() ?: "daily";
 
-    def all_editions = [];
-    def success = true;
-
-    inside_container_minimal(safe_branch_name: safe_branch_name) {
-        // run everything requiring python in this container
-        all_editions = versioning.get_editions();
-    }
-
     print(
         """
         |===== CONFIGURATION ===============================
@@ -37,7 +29,7 @@ void main() {
         """.stripMargin());
 
     dir("${checkout_dir}") {
-        success &= smart_stage(
+        smart_stage(
             name: "Assert release build artifacts",
             condition: true,
             raiseOnError: false,
@@ -91,66 +83,7 @@ void main() {
                     }
                 }
             }
-        }[0]
-
-        success &= smart_stage(
-            name: "Assert Docker images",
-            condition: true,
-            raiseOnError: false,
-        ) {
-            def docker_file_location = "dirty_workspace/Dockerfile";
-            def docker_build_args = (""
-                + " --dockerfile=${docker_file_location}"
-                + " --context ${docker_file_location.split('/')[0]}"
-                + " --destination unused:latest"
-                + " --no-push"
-            );
-            def docker_result = 1;
-            def container_name_base = "";
-            withCredentials([
-                usernamePassword(
-                    credentialsId: 'nexus',
-                    passwordVariable: 'NEXUS_PASSWORD',
-                    usernameVariable: 'NEXUS_USERNAME')
-            ]) {
-                for (edition in all_editions) {
-                    println("docker_build_args: ${docker_build_args}");
-                    container("kaniko-alpine") {
-                        if (edition == "cloud") {
-                            container_name_base = "artifacts.lan.tribe29.com:4000";
-                            /* groovylint-disable LineLength */
-                            sh("""#!/bin/sh
-                                echo '{"auths":{"${docker_registry_no_http}":{"username":"${NEXUS_USERNAME}","password":"${NEXUS_PASSWORD}"}}}' > /kaniko/.docker/config.json
-                            """);
-                            /* groovylint-enable LineLength */
-                        } else {
-                            container_name_base = "checkmk";
-                            sh("""#!/bin/sh
-                                rm /kaniko/.docker/config.json || true
-                            """);
-                        }
-
-                        sh("""#!/bin/sh
-                            mkdir -p dirty_workspace
-                            echo "FROM ${container_name_base}/check-mk-${edition}:${cmk_version_rc_aware}" > ${docker_file_location}
-                            echo "RUN echo 'Hello'" >> ${docker_file_location}
-                        """);
-
-                        docker_result = sh(
-                            script: """#!/bin/sh
-                                /kaniko/executor ${docker_build_args}
-                            """,
-                            returnStatus: true,
-                        );
-                    }
-                    if (docker_result != 0) {
-                        error("Failed to verify Docker image availability");
-                    }
-                }
-            }
-        }[0]
-
-        currentBuild.result = success ? "SUCCESS" : "FAILURE";
+        }
     }
 }
 

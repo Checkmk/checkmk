@@ -42,7 +42,25 @@ config_dir = mk_confdir + "/mtr.d/*.cfg"
 status_filename = mk_vardir + "/mtr.state"
 report_filepre = mk_vardir + "/mtr.report."
 
+# Trailing marker in the agent output, followed by one field holding whatever mtr
+# wrote instead of a report. It sits behind the hops, where older check plug-ins
+# never look.
+error_marker = "**ERROR**"
+max_error_length = 250
+
 debug = "-d" in sys.argv[2:] or "--debug" in sys.argv[1:]
+
+
+def error_trailer(error):
+    """The fields carrying an error behind the hops, empty if there is none."""
+    return "|%s|%s" % (error_marker, error) if error else ""
+
+
+def error_from_trailer(fields):
+    """The error out of the fields behind the hops, None if there is none."""
+    if len(fields) >= 2 and fields[0] == error_marker:
+        return fields[1].rstrip("\n") or None
+    return None
 
 
 def ensure_str(s):
@@ -51,6 +69,17 @@ def ensure_str(s):
             return s.decode("utf-8")
     elif isinstance(s, unicode):  # pylint: disable=undefined-variable # noqa: F821
         return s.encode("utf-8")
+    return s
+
+
+def ensure_text(s):
+    """The 2.x variant of this plug-in gets "from io import open", and io.open in
+    text mode only accepts unicode. Section names come from ConfigParser as bytes."""
+    if sys.version_info[0] >= 3:
+        if isinstance(s, bytes):
+            return s.decode("utf-8")
+    elif isinstance(s, str):
+        return s.decode("utf-8", "replace")
     return s
 
 
@@ -122,9 +151,13 @@ def read_status():
                         "wrst": parts[i * 8 + 9].rstrip(),
                         "stddev": parts[i * 8 + 10].rstrip(),
                     }
+                error = error_from_trailer(parts[hops * 8 + 3 :])
+                if error:
+                    current_status[host]["error"] = error
             except Exception as e:
                 sys.stdout.write(
-                    "*ERROR** (BUG) Could not parse status line: %s, reason: %s\n" % (line, repr(e))
+                    "**ERROR** (BUG) Could not parse status line: %s, reason: %s\n"
+                    % (line, repr(e))
                 )
     return current_status
 
@@ -147,11 +180,18 @@ def save_status(current_status):
                     hi["wrst"],
                     hi["stddev"],
                 )
-            hoststring = hoststring.rstrip()
-            f.write("%s\n" % hoststring)
+            hoststring = hoststring.rstrip() + error_trailer(hostdict.get("error"))
+            f.write(ensure_text("%s\n" % hoststring))
 
 
 _punct_re = re.compile(r'[\t !"#$%&\'()*\-/<=>?@\[\\\]^_`{|},.:]+')
+
+# " 1.|-- 129.250.2.147   0.0%   10  325.6 315.5 310.3 325.6   5.0"
+_hopline_re = re.compile(r"^\s*\d+\.")
+
+# Everything mtr prints around the hops: the "Start:"/"HOST:" headers and the
+# continuation lines of a wide report ("|  `|-- 129.250.2.159").
+_noise_re = re.compile(r"^\s*($|Start:|HOST:|\||`)")
 
 
 def host_to_filename(host, delim="-"):
@@ -187,7 +227,54 @@ def check_mtr_pid(pid):
         return False  # any error
 
 
-def parse_report(host, status):  # pylint: disable=too-many-branches
+def sanitized_error(lines):
+    """Squeeze what mtr wrote instead of a report into a single output field."""
+    text = " ".join(ensure_str(line).strip() for line in lines if line.strip())
+    text = text.replace("|", "/")
+    if len(text) > max_error_length:
+        text = text[: max_error_length - 3] + "..."
+    return text
+
+
+def parse_report_lines(lines):
+    """Split a report file into (lasttime, hops, error).
+
+    mtr writes its complaints into the very same file, so anything that is neither a
+    hop nor part of the report layout is the reason why there are no hops.
+    """
+    try:
+        lasttime = int(float(lines[0]))
+    except (IndexError, ValueError):
+        return 0, {}, "report has no time stamp"
+
+    hops = {}  # type: dict[int, dict[str, str]]
+    unexpected = []
+    for line in lines[1:]:
+        if not _hopline_re.match(line):
+            if not _noise_re.match(line):
+                unexpected.append(line)
+            continue
+        parts = line.split()
+        if len(parts) < 9:
+            unexpected.append(line)
+            continue
+        hops[len(hops) + 1] = {
+            "hopname": parts[1],
+            "loss": parts[2],
+            "snt": parts[3],
+            "last": parts[4],
+            "avg": parts[5],
+            "best": parts[6],
+            "wrst": parts[7],
+            "stddev": parts[8],
+        }
+
+    if hops:
+        return lasttime, hops, None
+    return lasttime, {}, sanitized_error(unexpected) or "report contains no hop"
+
+
+def parse_report(host, status):
     reportfile = report_filepre + host_to_filename(host)
     if not os.path.exists(reportfile):
         if host not in status.keys():
@@ -228,56 +315,18 @@ def parse_report(host, status):  # pylint: disable=too-many-branches
     # Parse the existing report
     with open(reportfile) as opened_file:
         lines = opened_file.readlines()
-    if len(lines) < 3:
-        sys.stdout.write(
-            "**ERROR** Report file %s has less than 3 lines, "
-            "expecting at least 1 hop! Throwing away invalid report\n" % reportfile
-        )
-        os.unlink(reportfile)
-        if host not in status.keys():
-            # New host
-            status[host] = {"hops": {}, "lasttime": 0}
-        return
-    status[host] = {"hops": {}, "lasttime": 0}
-
-    hopcount = 0
-    status[host]["lasttime"] = int(float(lines.pop(0)))
-    while len(lines) > 0 and not lines[0].startswith("HOST:"):
-        lines.pop(0)
-    if len(lines) < 2:  # Not enough lines
-        return
-    try:
-        lines.pop(0)  # Get rid of HOST: header
-        hopline = re.compile(
-            r"^\s*\d+\."
-        )  # 10.|-- 129.250.2.147   0.0%    10  325.6 315.5 310.3 325.6   5.0
-        for line in lines:
-            if not hopline.match(line):
-                continue  # |  `|-- 129.250.2.159
-            hopcount += 1
-            parts = line.split()
-            if len(parts) < 8:
-                sys.stdout.write(
-                    "**ERROR** Bug parsing host/hop, " "line has less than 8 parts: %s\n" % line
-                )
-                continue
-            status[host]["hops"][hopcount] = {
-                "hopname": parts[1],
-                "loss": parts[2],
-                "snt": parts[3],
-                "last": parts[4],
-                "avg": parts[5],
-                "best": parts[6],
-                "wrst": parts[7],
-                "stddev": parts[8],
-            }
-    except Exception as e:
-        sys.stdout.write(
-            "**ERROR** Could not parse report file %s, "
-            "tossing away invalid data %s\n" % (reportfile, e)
-        )
-        del status[host]
     os.unlink(reportfile)
+
+    lasttime, hops, error = parse_report_lines(lines)
+    if error is None:
+        status[host] = {"hops": hops, "lasttime": lasttime}
+        return
+
+    # Keep the hops of the last successful run, but say why they are not being
+    # refreshed - reporting them as if nothing happened is what hid the problem.
+    if not status.get(host, {}).get("hops"):
+        status[host] = {"hops": {}, "lasttime": lasttime}
+    status[host]["error"] = error
 
 
 def output_report(host, status):
@@ -300,6 +349,7 @@ def output_report(host, status):
             hi["wrst"],
             hi["stddev"],
         )
+    hoststring += error_trailer(hostdict.get("error"))
     sys.stdout.write("%s\n" % hoststring)
 
 
@@ -388,14 +438,14 @@ def start_mtr(host, mtr_binary, config, status):  # pylint: disable=too-many-bra
     if os.path.exists(reportfile):
         os.unlink(reportfile)
     with open(reportfile, "a+") as report:
-        report.write(str(int(time.time())) + "\n")
+        report.write(ensure_text(str(int(time.time())) + "\n"))
         report.flush()
         process = subprocess.Popen(  # pylint: disable=consider-using-with
             options, stdout=report, stderr=report
         )
     # Write pid to report.pid
     with open(reportfile + ".pid", "w") as pidfile:
-        pidfile.write("%d\n" % process.pid)
+        pidfile.write(ensure_text("%d\n" % process.pid))
         pidfile.flush()
 
     os._exit(os.EX_OK)

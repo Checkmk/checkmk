@@ -31,11 +31,15 @@ const optionalButton = {
   <CmkAlert
     v-if="isOpen"
     variant="warning"
-    size="medium"
-    heading="Confirm deletion"
+    :heading="_t('Confirm deletion')"
+    :text="_t('This action cannot be undone. Are you sure you want to continue?')"
     :main-button="mainButton"
     :optional-button="optionalButton"
-  >
-    This action cannot be undone. Are you sure you want to continue?
-  </CmkAlert>
+  />
+
+  <CmkAlert
+    variant="info"
+    size="small"
+    :text="_t('The metadata endpoint is derived from the site URL.')"
+  />
 </template>

@@ -1,10 +1,10 @@
 <!--
-Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type VariantProps, cva } from 'class-variance-authority'
+import { cva } from 'class-variance-authority'
 import type { ButtonVariants } from 'cmk-ui-library/components/CmkButton'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon'
@@ -12,7 +12,6 @@ import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import useId from 'cmk-ui-library/lib/useId'
 import { computed, onUnmounted, watch } from 'vue'
 
 import CmkHeading from './typography/CmkHeading.vue'
@@ -32,7 +31,10 @@ const propsCva = cva('', {
 })
 
 export type Variants = 'error' | 'warning' | 'success' | 'info' | 'loading'
-export type Sizes = VariantProps<typeof propsCva>['size']
+export type Sizes = 'small' | 'medium'
+
+export type CmkAlertButton = { title: TranslatedString; onclick: () => void }
+export type CmkAlertOptionalButton = CmkAlertButton & { icon?: SimpleIcons }
 
 const DISMISSIBLE_VARIANTS = ['info', 'success'] as const
 type DismissibleVariants = (typeof DISMISSIBLE_VARIANTS)[number]
@@ -45,26 +47,34 @@ const ALERT_TO_BUTTON_VARIANT = {
   loading: 'info'
 } as const satisfies Record<NonNullable<Variants>, ButtonVariants['variant']>
 
-type BaseProps = {
-  size?: Sizes
-  heading?: string | undefined
+type MessageProps = {
+  text: TranslatedString
   autoDismiss?: boolean | undefined
-  mainButton?: { title: TranslatedString; onclick: () => void }
-  optionalButton?: { title: TranslatedString; icon?: SimpleIcons; onclick: () => void }
 }
 
-export type CmkAlertProps = BaseProps &
-  (
-    | { variant?: DismissibleVariants; dismissible?: boolean }
-    | { variant: 'error' | 'warning'; dismissible?: false }
-    | { variant: 'loading'; dismissible?: false; mainButton?: never; optionalButton?: never }
-  )
+type SizeProps =
+  | {
+      size: 'small'
+      heading?: never
+      mainButton?: never
+      optionalButton?: never
+    }
+  | {
+      size?: 'medium'
+      heading?: TranslatedString | undefined
+      mainButton?: CmkAlertButton
+      optionalButton?: CmkAlertOptionalButton
+    }
+
+type VariantProps =
+  | { variant?: Variants; dismissible?: false }
+  | { variant?: DismissibleVariants; dismissible?: boolean }
+
+export type CmkAlertProps = MessageProps & SizeProps & VariantProps
 
 const props = defineProps<CmkAlertProps>()
 
 const open = defineModel<boolean>('open', { default: true })
-
-const headingId = useId()
 
 let timeoutId: number | null = null
 
@@ -90,6 +100,10 @@ onUnmounted(() => {
     timeoutId = null
   }
 })
+
+const isSmall = computed(() => props.size === 'small')
+
+const iconSize = computed(() => (isSmall.value ? 'small' : 'large'))
 
 const mainButtonVariant = computed(() => ALERT_TO_BUTTON_VARIANT[props.variant ?? 'info'])
 
@@ -127,17 +141,21 @@ const alertIconColor = computed(() => {
     :class="propsCva({ size })"
     :style="{ background: `var(--cmk-alert-box-${variant ?? 'info'}-bg-color)` }"
     :role="variant === 'error' || variant === 'warning' ? 'alert' : 'status'"
-    :aria-labelledby="heading ? headingId : undefined"
   >
     <div class="cmk-alert__icon">
-      <CmkIcon v-if="variant === 'loading'" name="load-graph" size="large" />
-      <CmkMultitoneIcon v-else :name="alertIconName" :primary-color="alertIconColor" size="large" />
+      <CmkIcon v-if="variant === 'loading'" name="load-graph" :size="iconSize" />
+      <CmkMultitoneIcon
+        v-else
+        :name="alertIconName"
+        :primary-color="alertIconColor"
+        :size="iconSize"
+      />
     </div>
     <div class="cmk-alert__text">
-      <CmkHeading v-if="heading" :id="headingId" type="h4">{{ heading }}</CmkHeading>
-      <div class="cmk-alert__body">
-        <slot />
-      </div>
+      <CmkHeading v-if="heading" type="h4">{{ heading }}</CmkHeading>
+      <p class="cmk-alert__body" :title="isSmall ? text : undefined">
+        {{ text }}
+      </p>
       <div v-if="mainButton || optionalButton" class="cmk-alert__actions">
         <CmkButton v-if="mainButton" :variant="mainButtonVariant" @click="mainButton.onclick">
           {{ mainButton.title }}
@@ -161,8 +179,6 @@ const alertIconColor = computed(() => {
 </template>
 
 <style scoped>
-/* TODO: try to unify this component with component CmkInlineValidation. the styling should be the same
-         for all error messages, so the same base component should be used. */
 .cmk-alert {
   color: var(--font-color);
   display: flex;
@@ -194,6 +210,7 @@ const alertIconColor = computed(() => {
 
 .cmk-alert__body {
   width: 100%;
+  margin: 0;
   white-space: pre-line;
   color: var(--cmk-alert-box-text-color);
 }
@@ -214,18 +231,42 @@ const alertIconColor = computed(() => {
   justify-content: center;
 }
 
-.cmk-alert--small {
-  padding: var(--dimension-1) var(--dimension-5);
-
-  .cmk-alert__icon {
-    width: 14px;
-  }
-}
-
 .cmk-alert__actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--dimension-4);
   margin-top: calc(var(--dimension-5) - var(--dimension-2));
+}
+
+.cmk-alert--small {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  height: 20px;
+  box-sizing: border-box;
+  padding: var(--dimension-3);
+  border-radius: var(--border-radius-half);
+  margin: 0;
+  gap: var(--dimension-3);
+
+  .cmk-alert__icon {
+    width: 12px;
+  }
+
+  .cmk-alert__text {
+    flex: 0 1 auto;
+  }
+
+  .cmk-alert__body {
+    font-size: var(--font-size-normal);
+    line-height: normal;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cmk-alert__close {
+    margin-left: var(--dimension-5);
+  }
 }
 </style>

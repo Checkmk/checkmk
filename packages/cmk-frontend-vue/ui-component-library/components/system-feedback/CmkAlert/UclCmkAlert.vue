@@ -12,16 +12,15 @@ import codeExample from './UclCmkAlertCodeExample.vue?raw'
 export const a11yData = [
   {
     keys: ['Tab'],
-    description:
-      'Moves keyboard focus to the button. While the focus outline is hidden from view, its underlying functionality remains intact.'
+    description: 'Moves keyboard focus through the buttons and the close button in reading order.'
   },
   {
     keys: [['Shift', 'Tab']],
-    description: 'Moves focus in reverse order through the interactive elements within the dialog.'
+    description: 'Moves focus in reverse order through the interactive elements within the box.'
   },
   {
     keys: ['Enter', 'Space'],
-    description: 'Activates the focused action or dismissal button within the dialog.'
+    description: 'Activates the focused action or the close button.'
   }
 ]
 
@@ -46,9 +45,20 @@ export const panelConfig = {
       medium: 'Medium',
       small: 'Small'
     }),
-    initialState: 'medium' as const
+    initialState: 'medium' as const,
+    help: 'Small is a single line without heading or buttons; long text is cut off and shown on hover.'
   },
-  heading: { type: 'string' as const, title: 'Heading', initialState: 'Alert Heading' },
+  heading: {
+    type: 'string' as const,
+    title: 'Heading',
+    initialState: 'Alert Heading',
+    help: 'Medium size only.'
+  },
+  text: {
+    type: 'string' as const,
+    title: 'Text',
+    initialState: 'This is the alert text. It provides context for the user.'
+  },
   dismissible: {
     type: 'boolean' as const,
     title: 'Dismissible',
@@ -56,8 +66,18 @@ export const panelConfig = {
     help: 'Only available for info and success variants. Only has effect when no buttons are enabled.'
   },
   autoDismiss: { type: 'boolean' as const, title: 'Auto Dismiss (6s)', initialState: false },
-  mainButton: { type: 'boolean' as const, title: 'Main Button', initialState: false },
-  optionalButton: { type: 'boolean' as const, title: 'Optional Button', initialState: false }
+  mainButton: {
+    type: 'boolean' as const,
+    title: 'Main Button',
+    initialState: false,
+    help: 'Medium size only.'
+  },
+  optionalButton: {
+    type: 'boolean' as const,
+    title: 'Optional Button',
+    initialState: false,
+    help: 'Medium size only.'
+  }
 } satisfies PanelConfigFor<typeof CmkAlert>
 </script>
 
@@ -81,27 +101,33 @@ defineProps<{ screenshotMode: boolean }>()
 
 const propState = new PanelStateCreator<typeof CmkAlert>().createRef(panelConfig)
 
-const alertBoxProps = computed(
-  () =>
-    ({
-      open: propState.value.open,
-      variant: propState.value.variant,
-      size: propState.value.size,
-      heading: propState.value.heading,
-      autoDismiss: propState.value.autoDismiss,
-      dismissible: propState.value.dismissible,
-      ...(propState.value.mainButton && {
-        mainButton: { title: 'Confirm', onclick: () => console.log('Confirm clicked') }
-      }),
-      ...(propState.value.optionalButton && {
-        optionalButton: {
-          title: 'Dismiss',
-          icon: 'cancel' as const,
-          onclick: () => console.log('Dismiss clicked')
-        }
-      })
-    }) as CmkAlertProps & { open: boolean }
-)
+const alertBoxProps = computed(() => {
+  const state = propState.value
+  const message = {
+    variant: state.variant,
+    text: state.text,
+    autoDismiss: state.autoDismiss,
+    dismissible: state.dismissible
+  }
+  if (state.size === 'small') {
+    return { ...message, size: 'small' } as CmkAlertProps
+  }
+  return {
+    ...message,
+    size: 'medium',
+    heading: state.heading,
+    ...(state.mainButton && {
+      mainButton: { title: 'Confirm', onclick: () => console.log('Confirm clicked') }
+    }),
+    ...(state.optionalButton && {
+      optionalButton: {
+        title: 'Dismiss',
+        icon: 'cancel' as const,
+        onclick: () => console.log('Dismiss clicked')
+      }
+    })
+  } as CmkAlertProps
+})
 </script>
 
 <template>
@@ -109,10 +135,7 @@ const alertBoxProps = computed(
     <UclDetailPageHeader>CmkAlert</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <CmkAlert v-bind="alertBoxProps" v-model:open="propState.open">
-        This is a demonstration of the alert box content. You can put any long text or HTML elements
-        in here to showcase wrapping and layout.
-      </CmkAlert>
+      <CmkAlert v-bind="alertBoxProps" v-model:open="propState.open" />
 
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" />

@@ -1484,7 +1484,7 @@ FROZEN_SERVICE_NAMES: Final[Mapping[str, str]] = {
     "mem_vmalloc": "Vmalloc address space",
     "mem_win": "Memory",
     "memory_utilization": "Memory",
-    "data_backend_telemetry_metrics_omd": "OMD %s metric backend",
+    "data_backend_telemetry_metrics_omd": "OMD %s data backend",
     "mikrotik_signal": "Signal %s",
     "mkbackup": "Backup %s",
     "mkbackup_site": "OMD %s",

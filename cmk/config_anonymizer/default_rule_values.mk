@@ -7597,7 +7597,7 @@ checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
 checkgroup_parameters.setdefault('veeam_tapejobs', [])
 
 checkgroup_parameters['veeam_tapejobs'] = [
-{'id': 'ac73039b-b8c6-455c-a4c6-23d670f139f7', 'value': {'levels_upper': (0, 0)}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'ac73039b-b8c6-455c-a4c6-23d670f139f7', 'value': {'levels_upper': ('fixed', (0.0, 0.0))}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['veeam_tapejobs']
 
 
@@ -14838,7 +14838,7 @@ static_checks = locals().setdefault('static_checks', {})
 static_checks.setdefault('veeam_tapejobs', [])
 
 static_checks['veeam_tapejobs'] = [
-{'id': '2060b07e-8fc4-440f-840c-2ac1bd491d26', 'value': ('veeam_tapejobs', 'example', {'levels_upper': (0, 0)}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '2060b07e-8fc4-440f-840c-2ac1bd491d26', 'value': ('veeam_tapejobs', 'example', {'levels_upper': ('fixed', (0.0, 0.0))}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['veeam_tapejobs']
 
 

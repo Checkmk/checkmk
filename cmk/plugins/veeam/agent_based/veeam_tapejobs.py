@@ -88,7 +88,7 @@ def check_veeam_tapejobs(item: str, params: Mapping[str, Any], section: Section)
     )
     yield from check_levels(
         running_time,
-        levels_upper=("fixed", params["levels_upper"]),
+        levels_upper=params["levels_upper"],
         render_func=render.timespan,
         label="Running time",
     )
@@ -106,6 +106,6 @@ check_plugin_veeam_tapejobs = CheckPlugin(
     check_function=check_veeam_tapejobs,
     check_ruleset_name="veeam_tapejobs",
     check_default_parameters={
-        "levels_upper": (1 * _DAY, 2 * _DAY),
+        "levels_upper": ("fixed", (1.0 * _DAY, 2.0 * _DAY)),
     },
 )

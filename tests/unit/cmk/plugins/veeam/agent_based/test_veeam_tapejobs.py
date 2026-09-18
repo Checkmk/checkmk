@@ -112,7 +112,7 @@ def test_check_veeam_tapejobs_completed_success(
 
     results = list(
         veeam_tapejobs.check_veeam_tapejobs(
-            "Job One", {"levels_upper": (86400, 172800)}, parsed_data
+            "Job One", {"levels_upper": ("fixed", (86400.0, 172800.0))}, parsed_data
         )
     )
 
@@ -132,7 +132,7 @@ def test_check_veeam_tapejobs_completed_warning(
 
     results = list(
         veeam_tapejobs.check_veeam_tapejobs(
-            "Job Two", {"levels_upper": (86400, 172800)}, parsed_data
+            "Job Two", {"levels_upper": ("fixed", (86400.0, 172800.0))}, parsed_data
         )
     )
 
@@ -152,7 +152,7 @@ def test_check_veeam_tapejobs_completed_failed(
 
     results = list(
         veeam_tapejobs.check_veeam_tapejobs(
-            "Job Three", {"levels_upper": (86400, 172800)}, parsed_data
+            "Job Three", {"levels_upper": ("fixed", (86400.0, 172800.0))}, parsed_data
         )
     )
 
@@ -172,7 +172,7 @@ def test_check_veeam_tapejobs_working_normal_runtime(
 
     results = list(
         veeam_tapejobs.check_veeam_tapejobs(
-            "Job Four", {"levels_upper": (86400, 172800)}, parsed_data
+            "Job Four", {"levels_upper": ("fixed", (86400.0, 172800.0))}, parsed_data
         )
     )
 
@@ -197,7 +197,7 @@ def test_check_veeam_tapejobs_working_long_runtime(
 
     results = list(
         veeam_tapejobs.check_veeam_tapejobs(
-            "Job Five (older)", {"levels_upper": (86400, 172800)}, parsed_data
+            "Job Five (older)", {"levels_upper": ("fixed", (86400.0, 172800.0))}, parsed_data
         )
     )
 
@@ -214,6 +214,28 @@ def test_check_veeam_tapejobs_working_long_runtime(
 
 
 @time_machine.travel(1562056877.0)
+def test_check_veeam_tapejobs_working_warn_runtime(
+    parsed_data: veeam_tapejobs.Section, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test check for working job whose runtime crosses the warning level only."""
+    # 1562056877 - 1561956877 == 100000 s, between the 1 day / 2 day levels.
+    value_store: dict[str, object] = {"4.running_since": 1561956877}
+    monkeypatch.setattr(veeam_tapejobs, "get_value_store", lambda: value_store)
+
+    results = list(
+        veeam_tapejobs.check_veeam_tapejobs(
+            "Job Four", {"levels_upper": ("fixed", (86400.0, 172800.0))}, parsed_data
+        )
+    )
+
+    assert len(results) == 2
+    assert isinstance(results[1], Result)
+    assert results[1].state == State.WARN
+    assert "Running time:" in results[1].summary
+    assert "warn/crit at" in results[1].summary
+
+
+@time_machine.travel(1562056877.0)
 def test_check_veeam_tapejobs_idle_normal_runtime(
     parsed_data: veeam_tapejobs.Section, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -223,7 +245,7 @@ def test_check_veeam_tapejobs_idle_normal_runtime(
 
     results = list(
         veeam_tapejobs.check_veeam_tapejobs(
-            "Job Six", {"levels_upper": (86400, 172800)}, parsed_data
+            "Job Six", {"levels_upper": ("fixed", (86400.0, 172800.0))}, parsed_data
         )
     )
 
@@ -248,7 +270,7 @@ def test_check_veeam_tapejobs_new_job_no_runtime_tracking(
 
     results = list(
         veeam_tapejobs.check_veeam_tapejobs(
-            "Job Four", {"levels_upper": (86400, 172800)}, parsed_data
+            "Job Four", {"levels_upper": ("fixed", (86400.0, 172800.0))}, parsed_data
         )
     )
 
@@ -266,7 +288,7 @@ def test_check_veeam_tapejobs_nonexistent_item(
     """Test check for non-existent job item."""
     result = list(
         veeam_tapejobs.check_veeam_tapejobs(
-            "Nonexistent Job", {"levels_upper": (86400, 172800)}, parsed_data
+            "Nonexistent Job", {"levels_upper": ("fixed", (86400.0, 172800.0))}, parsed_data
         )
     )
 

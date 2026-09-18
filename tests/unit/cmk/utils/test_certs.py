@@ -6,6 +6,7 @@
 from datetime import datetime, UTC
 from ipaddress import ip_address, ip_network
 from pathlib import Path
+from stat import S_IMODE
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -18,6 +19,18 @@ from cmk.crypto.certificate import Certificate, CertificatePEM, CertificateWithP
 from cmk.crypto.keys import PlaintextPrivateKeyPEM, PrivateKey
 from cmk.crypto.x509 import SAN, SubjectAlternativeNames, X509Name
 from cmk.utils.certs import CN_TEMPLATE, CustomerBrokerCA, RelaysCA, RootCA, SiteCA
+
+SITE_ID = SiteId("test_site")
+
+
+@pytest.fixture(name="ca")
+def fixture_ca(tmp_path: Path) -> SiteCA:
+    ca_path = tmp_path / "site" / "etc" / "ssl"
+    return SiteCA.load_or_create(
+        site_id=SITE_ID,
+        certificate_directory=ca_path,
+        key_size=1024,
+    )
 
 
 @pytest.fixture(name="ca_cert_files")
@@ -263,6 +276,46 @@ MC4CAQAwBQYDK2VwBCIEIK/fWo6sKC4PDigGfEntUd/o8KKs76Hsi03su4QhpZox
     assert daughter_cert.common_name == "peters_daughter", "subject CN is the daughter"
     assert daughter_cert.subject_alternative_names == alt_names, "subject alt name is the daughter"
     assert daughter_cert.issuer == peter_cert.subject, "issuer is peter"
+
+
+def test_initialize(ca: SiteCA) -> None:
+    assert isinstance(ca.root_ca.certificate.common_name, str)
+    assert ca.root_ca.certificate.common_name.startswith(f"Site '{SITE_ID}' local CA")
+    assert ca.root_ca.certificate.public_key == ca.root_ca.private_key.public_key
+
+
+def _file_permissions_is_660(path: Path) -> bool:
+    return oct(S_IMODE(path.stat().st_mode)) == "0o660"
+
+
+def test_create_site_certificate(ca: SiteCA) -> None:
+    assert not ca.site_certificate_exists(ca.cert_dir, SITE_ID)
+
+    ca.create_site_certificate(
+        SITE_ID,
+        additional_sans=["checkmk.testing.local", "127.0.0.1"],
+        key_size=1024,
+    )
+    assert ca.site_certificate_exists(ca.cert_dir, SITE_ID)
+    assert _file_permissions_is_660(ca.site_certificate_path(ca.cert_dir, SITE_ID))
+
+    mixed_pem = ca.site_certificate_path(ca.cert_dir, SITE_ID).read_bytes()
+    certificate = Certificate.load_pem(CertificatePEM(mixed_pem))
+    private_key = PrivateKey.load_pem(PlaintextPrivateKeyPEM(mixed_pem), None)
+
+    assert certificate.common_name == str(SITE_ID)
+    assert certificate.public_key == private_key.public_key
+    certificate.verify_is_signed_by(ca.root_ca.certificate)
+
+    expected_sans = [
+        SAN.dns_name("test_site"),
+        SAN.dns_name("checkmk.testing.local"),
+        SAN.checkmk_site(SiteId("test_site")),
+        SAN.ip_address(ip_address("127.0.0.1")),
+    ]
+    assert sorted(certificate.subject_alternative_names or [], key=str) == sorted(
+        expected_sans, key=str
+    )
 
 
 def test_site_certificate_alternative_names(ca_cert_files: Path) -> None:

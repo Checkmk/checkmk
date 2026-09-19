@@ -102,6 +102,7 @@ function setSelectedOption(value: string) {
   align-items: center;
   justify-content: center;
   height: var(--dimension-9);
+  margin: 0;
   padding: 0 var(--dimension-4);
   border: 1px solid var(--toggle-button-group-inactive-border-color);
   border-radius: 0;
@@ -109,6 +110,7 @@ function setSelectedOption(value: string) {
   color: var(--toggle-button-group-inactive-text-color);
   font-size: var(--font-size-normal);
   font-weight: var(--font-weight-default);
+  letter-spacing: unset;
 }
 
 .cmk-toggle-button-group__toggle-option:first-child {

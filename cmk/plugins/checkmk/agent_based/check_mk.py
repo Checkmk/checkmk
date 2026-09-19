@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import re
+
 from cmk.agent_based.v2 import (
     AgentSection,
     Attributes,
@@ -83,6 +85,13 @@ def host_label_function_labels(section: CheckmkSection) -> HostLabelGenerator:
 
     if (osversion := section.get("osversion")) is not None:
         yield HostLabel("cmk/os_version", osversion)
+
+    if (agent_version := section.get("version")) is not None:
+        yield HostLabel("cmk/agent_version", agent_version)
+        agent_major = re.match(r"[0-9.]+", agent_version)
+        yield HostLabel(
+            "cmk/agent_version_major", agent_major.group(0) if agent_major else agent_version
+        )
 
 
 agent_section_check_mk = AgentSection(

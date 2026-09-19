@@ -447,6 +447,25 @@ def write_paged(txt: str) -> None:
         write_stdout(txt)
 
 
+def _map_options(modes: Sequence[Mode]) -> Mapping[OptionName, Mode]:
+    """Map every spelling of every command to it, rejecting a collision.
+
+    Two commands claiming the same option would otherwise shadow one another
+    silently, and the one that loses simply could not be invoked.
+    """
+    mapped: dict[OptionName, Mode] = {}
+    for mode in modes:
+        for name in (mode.long_option, mode.short_option):
+            if name is None:
+                continue
+            if (other := mapped.get(name)) is not None:
+                raise MKGeneralException(
+                    f"{name!r} is claimed by the commands {other.name!r} and {mode.name!r}"
+                )
+            mapped[name] = mode
+    return mapped
+
+
 class Modes:
     def __init__(
         self,
@@ -456,10 +475,7 @@ class Modes:
     ) -> None:
         super().__init__()
         modes = [*plugins, self.mode_help()]
-        self._mode_map: Mapping[OptionName, Mode] = {
-            **{m.long_option: m for m in modes},
-            **{m.short_option: m for m in modes if m.short_option is not None},
-        }
+        self._mode_map: Mapping[OptionName, Mode] = _map_options(modes)
         self._modes = modes
         self._general_options = general_options
 

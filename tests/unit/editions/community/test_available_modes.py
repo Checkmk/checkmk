@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.cli.engine.modes import discover_modes
+from cmk.cli.engine.modes import discover_modes, general_options, Modes
 
 
 def test_available_modes() -> None:
@@ -37,3 +37,9 @@ def test_available_modes() -> None:
         "update-dns-cache",
         "version",
     }
+
+
+def test_no_two_commands_claim_the_same_option() -> None:
+    # Modes() rejects a collision; nothing else sees one, because the names above
+    # are a set and a duplicate would collapse into it.
+    Modes(plugins=discover_modes(), general_options=general_options())

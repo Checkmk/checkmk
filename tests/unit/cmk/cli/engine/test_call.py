@@ -4,15 +4,28 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from typing import Final
+from typing import Final, NoReturn
 
-from cmk.base.community_app import make_app
+from cmk.base.base_app import CheckmkBaseApp
+from cmk.ccc.version import Edition
 from cmk.cli.engine.call import call
 from cmk.cli.engine.modes import Mode, Option
 from cmk.cli.internal import Args, CommandHandler, GlobalOptions, Options
 from cmk.trace import Context
 
-_APP: Final = make_app()
+
+def _untouched(*_args: object, **_kwargs: object) -> NoReturn:
+    raise AssertionError("the engine must not use the application object")
+
+
+# The engine only hands this through to the command's handler, so a double is
+# enough, and it proves the engine keeps its hands off it.
+_APP: Final = CheckmkBaseApp(
+    edition=Edition.COMMUNITY,
+    create_core=_untouched,
+    licensing_handler_factory=_untouched,
+    make_fetcher_trigger=_untouched,
+)
 
 _GLOBAL_OPTIONS: Final = GlobalOptions(verbosity=2)
 

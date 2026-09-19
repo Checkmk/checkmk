@@ -113,6 +113,7 @@ py_library(
         "//cmk/cli/engine:__pkg__",
         "//cmk/config_anonymizer:__pkg__",
         "//non-free/packages/cmk-bakery:__pkg__",
+        "//tests:__subpackages__",
     ],
     deps = [
         "//cmk/base/config",

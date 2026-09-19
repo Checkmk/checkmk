@@ -6,12 +6,15 @@
 import signal
 import sys
 from collections.abc import Iterator
+from typing import NoReturn
 
 import pytest
 
 from cmk.ccc.exceptions import MKGeneralException, raise_mkterminate_on_sigint
 from cmk.cli.engine.modes import (
     _pager_environment,
+    Mode,
+    Modes,
     Option,
     option_count,
     option_names,
@@ -152,3 +155,31 @@ def test_the_verbosity_counts_the_short_and_long_spelling_alike() -> None:
 
 def test_an_option_that_is_not_a_general_one_is_left_alone() -> None:
     assert parse_general_options([("--flag", "")]) == GlobalOptions()
+
+
+def _never(*_args: object, **_kwargs: object) -> NoReturn:
+    raise AssertionError("the command must not run")
+
+
+def _mode(long_option: str, short_option: str | None = None) -> Mode:
+    return Mode(
+        long_option=long_option,
+        short_option=short_option,
+        handler_function=_never,
+        short_help="a command under test",
+    )
+
+
+def test_two_commands_cannot_claim_the_same_long_option() -> None:
+    with pytest.raises(MKGeneralException, match="'twice'"):
+        Modes(plugins=[_mode("twice"), _mode("twice")], general_options=[])
+
+
+def test_two_commands_cannot_claim_the_same_short_option() -> None:
+    with pytest.raises(MKGeneralException, match="'x'"):
+        Modes(plugins=[_mode("one", "x"), _mode("other", "x")], general_options=[])
+
+
+def test_a_command_cannot_claim_the_built_in_help_option() -> None:
+    with pytest.raises(MKGeneralException, match="'help'"):
+        Modes(plugins=[_mode("help")], general_options=[])

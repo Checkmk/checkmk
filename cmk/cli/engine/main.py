@@ -27,7 +27,6 @@ except KeyError:
     sys.exit(1)
 
 import cmk.ccc.debug
-import cmk.ccc.version as cmk_version
 import cmk.ccc.version_info as cmk_version_info
 from cmk import trace
 from cmk.base.app import make_app
@@ -181,7 +180,7 @@ def main() -> int:
             return 0
 
         return call(
-            make_app(cmk_version.edition(OMD_ROOT)),
+            make_app(OMD_ROOT),
             parsed.mode,
             global_options,
             parsed.argument,

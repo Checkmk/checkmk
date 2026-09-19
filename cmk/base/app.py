@@ -4,16 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable
+from pathlib import Path
 from typing import assert_never
 
 from cmk.ccc.version import Edition
+from cmk.ccc.version import edition as edition_of_site
 
 from .base_app import CheckmkBaseApp
 
 
-def make_app(edition: Edition) -> CheckmkBaseApp:
+def make_app(omd_root: Path) -> CheckmkBaseApp:
+    """Build the application the site's edition provides."""
     make_app: Callable[[], CheckmkBaseApp]
-    match edition:
+    match edition_of_site(omd_root):
         case Edition.PRO:
             from cmk.base.nonfree.pro.app import (  # type: ignore[import-not-found, import-untyped, unused-ignore, no-redef]
                 make_app,

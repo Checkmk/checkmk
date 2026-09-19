@@ -14,7 +14,6 @@ from pathlib import Path
 from fastapi import FastAPI
 from setproctitle import setproctitle
 
-import cmk.ccc.version as cmk_version
 from cmk.automations.logging import LoggingManager
 from cmk.base import config
 from cmk.base.automations.automations import Automations, discover_automations
@@ -106,7 +105,7 @@ def _application() -> FastAPI:
         configure_tracer(omd_root)
 
     return make_application(
-        edition=cmk_version.edition(omd_root),
+        omd_root=omd_root,
         engine=Automations(plugins=discover_automations()),
         cache=Cache.setup(client=get_redis_client()),
         config=config,

@@ -11,6 +11,7 @@ import time
 from collections.abc import AsyncGenerator, Awaitable, Callable, Iterator
 from contextlib import asynccontextmanager, contextmanager, redirect_stderr, redirect_stdout
 from dataclasses import dataclass
+from pathlib import Path
 from typing import assert_never, Protocol
 
 from fastapi import FastAPI, Request, status
@@ -100,7 +101,7 @@ class HealthCheckResponse(BaseModel, frozen=True):
 
 def make_application(
     *,
-    edition: cmk_version.Edition,
+    omd_root: Path,
     engine: AutomationEngine,
     cache: Cache,
     config: Config,
@@ -148,7 +149,7 @@ def make_application(
         dependencies: _ApplicationDependencies = request.app.state.dependencies
         async with dependencies.state.automation_or_reload_lock:
             return _execute_automation_endpoint(
-                edition,
+                omd_root,
                 payload,
                 dependencies.automation_engine,
                 dependencies.clear_caches_before_each_call,
@@ -265,7 +266,7 @@ async def _reloader_task(
 
 
 def _execute_automation_endpoint(
-    edition: cmk_version.Edition,
+    omd_root: Path,
     payload: AutomationPayload,
     engine: AutomationEngine,
     clear_caches_before_each_call: Callable[[ConfigCache, Hosts], None],
@@ -313,7 +314,7 @@ def _execute_automation_endpoint(
         try:
             automation_start_time = time.time()
             result_or_error_code: ABCAutomationResult | int = engine.execute(
-                make_app(edition),
+                make_app(omd_root),
                 payload.name,
                 list(payload.args),
                 state.plugins,

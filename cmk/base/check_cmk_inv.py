@@ -10,7 +10,6 @@ from collections.abc import Sequence
 from contextlib import suppress
 from pathlib import Path
 
-import cmk.ccc.version as cmk_version
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.base import config
@@ -128,7 +127,7 @@ def main(argv: Sequence[str]) -> int:
     active_config_path = VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root)
 
     return _inventory_as_check(
-        make_app(cmk_version.edition(cmk.utils.paths.omd_root)),
+        make_app(cmk.utils.paths.omd_root),
         parameters,
         active_config_path,
         args.hostname,

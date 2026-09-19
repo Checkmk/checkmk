@@ -36,7 +36,7 @@ from cmk.base.automations.automations import AutomationError
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.config import ConfigCache, LoadingResult, make_host_tags, make_hosts_config
 from cmk.ccc.hostaddress import Hosts
-from cmk.ccc.version import Edition, Version
+from cmk.ccc.version import Version
 from cmk.checkengine.plugins import AgentBasedPlugins
 from tests.testlib.common.empty_config import EMPTY_CONFIG
 from tests.testlib.common.utils import wait_until
@@ -127,7 +127,8 @@ def _make_test_client(
     )
     return TestClient(
         make_application(
-            edition=Edition.COMMUNITY,
+            # The application is never built: no automation in these tests reaches it.
+            omd_root=dev_null,
             engine=engine,
             cache=cache,
             config=config,

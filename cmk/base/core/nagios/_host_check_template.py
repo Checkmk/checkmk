@@ -10,7 +10,6 @@ import sys
 from contextlib import suppress
 
 import cmk.ccc.debug
-import cmk.ccc.version as cmk_version
 import cmk.utils.log
 import cmk.utils.password_store
 from cmk.base import config
@@ -99,7 +98,7 @@ def main() -> int:
         _errors, sections, checks = config.load_and_convert_legacy_checks(CONFIG.checks_to_load)
         plugins = load_selected_plugins(CONFIG.locations, sections, checks, validate=debug)
 
-        app = make_app(cmk_version.edition(omd_root))
+        app = make_app(omd_root)
         raw_config = {
             **load_packed_config(active_config_path),
             # The precompiled host check resolves the addresses dynamically at

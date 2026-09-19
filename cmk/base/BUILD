@@ -260,7 +260,6 @@ py_library(
         "//packages/cmk-ccc:cpu-tracking",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
-        "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine:fetchers",
         "//packages/cmk-check-engine:inventory",
         "//packages/cmk-check-engine:specs",

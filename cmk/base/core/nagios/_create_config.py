@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
 """Code for support of Nagios (and compatible) cores"""
 
 import base64
@@ -300,7 +298,7 @@ class NagiosConfig:
 
 
 def _validate_licensing(
-    hosts: Hosts, licensing_handler: LicensingHandler, licensing_counter: Counter
+    hosts: Hosts, licensing_handler: LicensingHandler, licensing_counter: Counter[str]
 ) -> None:
     if block_effect := licensing_handler.effect_core(
         licensing_counter["services"], len(hosts.shadow_hosts)
@@ -340,7 +338,7 @@ def create_config(
 
     _output_conf_header(cfg)
 
-    licensing_counter = Counter("services")
+    licensing_counter: Counter[str] = Counter()
     descendants_per_host = build_descendants_map(
         {hostname: config_cache.parents(hostname) for hostname in hostnames}
     )
@@ -424,7 +422,7 @@ def _create_nagios_config_host(
     ip_stack_config: IPStackConfig,
     host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     stored_passwords: Mapping[str, Secret[str]],
-    license_counter: Counter,
+    license_counter: Counter[str],
     ip_address_of: ip_lookup.IPLookup,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     for_relay: bool,
@@ -639,7 +637,7 @@ def _process_services_data(
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     plugins: Mapping[CheckPluginName, CheckPlugin],
     hostname: HostName,
-    license_counter: Counter,
+    license_counter: Counter[str],
     check_mk_attrs: ObjectAttributes,
 ) -> tuple[dict[ServiceName, AbstractServiceID], _ServiceLabels]:
     host_check_table = config_cache.check_table(
@@ -736,7 +734,7 @@ def create_nagios_servicedefs(
     host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     host_attrs: ObjectAttributes,
     stored_passwords: Mapping[str, Secret[str]],
-    license_counter: Counter,
+    license_counter: Counter[str],
     ip_address_of: ip_lookup.IPLookup,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     for_relay: bool,
@@ -990,7 +988,7 @@ def _create_custom_check(
         [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
     ],
     hostname: HostName,
-    license_counter: Counter,
+    license_counter: Counter[str],
     services_ids: dict[ServiceName, AbstractServiceID],
     service_labels: dict[ServiceName, Labels],
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
@@ -1143,7 +1141,7 @@ def _add_ping_service(
     host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     host_attrs: ObjectAttributes,
     ping_service: _PingServiceNames,
-    licensing_counter: Counter,
+    licensing_counter: Counter[str],
     pingonly_template: str,
     define_servicegroups: Mapping[str, str],
 ) -> None:

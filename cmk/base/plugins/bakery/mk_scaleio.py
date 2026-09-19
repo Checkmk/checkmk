@@ -23,17 +23,13 @@ def get_mk_scaleio_files(conf: ScaleioConfig) -> FileGenerator:
 
     yield PluginConfig(
         base_os=OS.LINUX,
-        lines=_get_mk_scaleio_config(conf),
+        lines=[
+            f"SIO_USER={conf['user']}",
+            f"SIO_PASSWORD={password_store.extract(conf['password'])}",
+        ],
         target=Path("mk_scaleio.cfg"),
         include_header=True,
     )
-
-
-def _get_mk_scaleio_config(conf: ScaleioConfig) -> list[str]:
-    return [
-        "SIO_USER=%s" % conf["user"],
-        "SIO_PASSWORD=%s" % password_store.extract(conf["password"]),
-    ]
 
 
 register.bakery_plugin(

@@ -33,24 +33,6 @@ def get_mk_sap_hana_files(conf: Mapping[str, object]) -> FileGenerator:
 
 
 def _get_mk_sap_hana_config(config: _Conf) -> Iterator[str]:
-    """
-    >>> list(
-    ...    _get_mk_sap_hana_config({"credentials": ("peter", ("password", "abc123"))})
-    ... )  # doctest: +SKIP
-    ['USER=peter', 'PASSWORD=abc123']
-    >>> list(
-    ...    _get_mk_sap_hana_config({"credentials": "storekey", "runas": "agent"})
-    ... )  # doctest: +SKIP
-    ['USERSTOREKEY=storekey', 'RUNAS=agent']
-    >>> list(_get_mk_sap_hana_config({
-    ...    "credentials": [
-    ...        ("sid1", "inst1", "db1", ("usr1", ("password", "pw1"))),
-    ...        ("sid2", "inst2", "db2", "storekey2"),
-    ...    ],
-    ...    "credentials_sap_connect": ("peter", ("password", "abc123"))
-    ... }))  # doctest: +SKIP
-    ['DBS=(sid1,inst1,db1,usr1,pw1, sid2,inst2,db2,,,storekey2)', 'USER_CONNECT=peter', 'PASSWORD_CONNECT=abc123']
-    """
     match config.credentials:
         case list() as credentials:
             yield _get_sap_hana_databases(credentials)
@@ -62,7 +44,7 @@ def _get_mk_sap_hana_config(config: _Conf) -> Iterator[str]:
     if (csc := config.credentials_sap_connect) is not None:
         yield from _user_and_pwd_lines(csc, suffix="_CONNECT")
 
-    if config.runas:
+    if config.runas is not None:
         yield f"RUNAS={config.runas}"
 
 
@@ -76,16 +58,22 @@ def _user_and_pwd_lines(
     return (f"USER{suffix}={user}", f"PASSWORD{suffix}={pwd}")
 
 
-def _get_sap_hana_databases(db_conf: Iterable[tuple[str, str, str, _UserAndPwd | str]]) -> str:
-    databases = []
-    for sid, instance, db_name, credentials in db_conf:
-        user = credentials[0] if isinstance(credentials, tuple) else ""
-        password = password_store.extract(credentials[1]) if isinstance(credentials, tuple) else ""
-        userstorekey = "" if isinstance(credentials, tuple) else credentials
-        databases.append(f"{sid},{instance},{db_name},{user},{password},{userstorekey}")
+def _database_credential_fields(credentials: _UserAndPwd | str) -> tuple[str, str, str]:
+    """Return (user, password, userstorekey)"""
+    match credentials:
+        case (user, indiv_or_stored_pwd):
+            return user, password_store.extract(indiv_or_stored_pwd), ""
+        case str(key):
+            return "", "", key
 
-    db_list = " ".join(databases)
-    return f"DBS=({db_list})"
+
+def _get_sap_hana_databases(db_conf: Iterable[tuple[str, str, str, _UserAndPwd | str]]) -> str:
+    entries = []
+    for sid, instance, db_name, credentials in db_conf:
+        user, password, userstorekey = _database_credential_fields(credentials)
+        entries.append(f"{sid},{instance},{db_name},{user},{password},{userstorekey}")
+
+    return "DBS=({})".format(" ".join(entries))
 
 
 register.bakery_plugin(

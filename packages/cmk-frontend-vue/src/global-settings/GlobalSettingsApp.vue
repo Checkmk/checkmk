@@ -9,7 +9,6 @@ import type {
   GlobalSettingsVariable
 } from 'cmk-shared-typing/typescript/global_settings'
 import CmkAccordion from 'cmk-ui-library/components/CmkAccordion/CmkAccordion.vue'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import CmkBreadcrumb from 'cmk-ui-library/components/CmkBreadcrumb'
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import CmkSlideInDialog from 'cmk-ui-library/components/CmkSlideInDialog.vue'
@@ -182,9 +181,6 @@ function resetSearchAndFilters(): void {
         />
       </div>
     </div>
-    <CmkAlertBox variant="warning">
-      {{ _t('This page is work in progress. It shows a subset of the global settings.') }}
-    </CmkAlertBox>
     <GlobalSettingsEmptyState v-if="shownTopics.length === 0" @reset="resetSearchAndFilters" />
     <CmkAccordion v-else v-model="openedItems" :min-open="0" :max-open="0">
       <GlobalSettingsTopic

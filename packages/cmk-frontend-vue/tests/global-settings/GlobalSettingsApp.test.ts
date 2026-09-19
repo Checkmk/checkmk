@@ -277,14 +277,6 @@ describe('GlobalSettingsApp page header', () => {
     expect(screen.getByText('Setup')).toBeInTheDocument()
     expect(screen.getByText('Global settings')).toBeInTheDocument()
   })
-
-  test('renders the work in progress notice', () => {
-    render(GlobalSettingsApp, { props: data })
-
-    expect(
-      screen.getByText('This page is work in progress. It shows a subset of the global settings.')
-    ).toBeInTheDocument()
-  })
 })
 
 describe('GlobalSettingsApp accordion', () => {

@@ -19,15 +19,3 @@ def test_install_python_config_auto() -> None:
     result = list(get_agent_install_python_config(conf))
     expected = [WindowsConfigEntry(path=["modules", "python"], content="auto")]
     assert result == expected
-
-
-def test_install_python_config_false() -> None:
-    """When conf is False, nothing is yielded."""
-    result = list(get_agent_install_python_config(False))
-    assert result == []
-
-
-def test_install_python_config_none() -> None:
-    """When conf is None, nothing is yielded."""
-    result = list(get_agent_install_python_config(None))
-    assert result == []

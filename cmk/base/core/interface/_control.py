@@ -48,9 +48,9 @@ def do_reload(
     hosts_config: Hosts,
     host_tags: HostTags,
     final_service_name_config: Callable[
-        [HostName, ServiceName, Callable[[HostName], Mapping[str, str]]], ServiceName
+        [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
     ],
-    passive_service_name_config: Callable[[HostName, ServiceID, str | None], str],
+    passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     enforced_services_table: Callable[
         [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
     ],
@@ -64,7 +64,7 @@ def do_reload(
     plugins: AgentBasedPlugins,
     *,
     hosts_to_update: set[HostName] | None,
-    service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]],
+    service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
     notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
@@ -100,9 +100,9 @@ def do_restart(
     host_config: Hosts,
     host_tags: HostTags,
     final_service_name_config: Callable[
-        [HostName, ServiceName, Callable[[HostName], Mapping[str, str]]], ServiceName
+        [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
     ],
-    passive_service_name_config: Callable[[HostName, ServiceID, str | None], str],
+    passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     enforced_services_table: Callable[
         [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
     ],
@@ -117,7 +117,7 @@ def do_restart(
     *,
     action: CoreAction = CoreAction.RESTART,
     hosts_to_update: set[HostName] | None = None,
-    service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]],
+    service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
     notify_relay: Callable[[config_warnings.IssueConfigWarning], None],

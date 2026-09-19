@@ -1577,6 +1577,8 @@ def _mode_dump_nagios_config(
         ),
         plugins=plugins.check_plugins,
         hostnames=hostnames,
+        # This only dumps the configuration; unlike an activation it deliberately
+        # does not persist the licensed state.
         licensing_handler=app.licensing_handler_factory(),
         passwords=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
@@ -1732,6 +1734,7 @@ def _mode_update(
                     is_online=loading_result.config_cache.is_online,
                     is_active=loading_result.config_cache.is_active,
                 ),
+                licensing_handler_factory=app.licensing_handler_factory,
             )
     except Exception as e:
         console.error(f"Configuration Error: {e}", file=sys.stderr)
@@ -1852,6 +1855,7 @@ def _mode_restart(
             is_online=loading_result.config_cache.is_online,
             is_active=loading_result.config_cache.is_active,
         ),
+        licensing_handler_factory=app.licensing_handler_factory,
     )
     for warning in ip_address_of.error_handler.format_errors():
         console.warning(tty.format_warning(f"\n{warning}"))
@@ -1967,6 +1971,7 @@ def _mode_reload(
             is_online=loading_result.config_cache.is_online,
             is_active=loading_result.config_cache.is_active,
         ),
+        licensing_handler_factory=app.licensing_handler_factory,
     )
     for warning in ip_address_of.error_handler.format_errors():
         console.warning(tty.format_warning(f"\n{warning}"))

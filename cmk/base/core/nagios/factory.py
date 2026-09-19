@@ -12,7 +12,6 @@ from cmk.ccc.version import Edition
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.checkengine.snmplib import SNMPPluginStore
 from cmk.core_client import NagiosClient
-from cmk.licensing.community_handler import CommunityLicensingHandler
 from cmk.ruleset_matcher.labels import LabelManager
 from cmk.ruleset_matcher.matcher import RulesetMatcher
 from cmk.utils import paths
@@ -41,7 +40,6 @@ def create_core(
                     binary_file=paths.nagios_binary,
                     cleanup_base=paths.omd_root,
                 ),
-                CommunityLicensingHandler,
                 get_all_timeperiods(loaded_config.timeperiods),
                 NagiosCoreConfig(
                     delay_precompile=loaded_config.delay_precompile,

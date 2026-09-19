@@ -109,11 +109,10 @@ class NagiosCore(MonitoringCore):
     def __init__(
         self,
         core_client: NagiosClient,
-        licensing_handler_factory: Callable[[], LicensingHandler],
         timeperiods: TimeperiodSpecs,
         nagios_core_config: NagiosCoreConfig,
     ) -> None:
-        super().__init__(core_client, licensing_handler_factory)
+        super().__init__(core_client)
         self.timeperiods: Final = timeperiods
         self.nagios_core_config: Final = nagios_core_config
 
@@ -123,9 +122,7 @@ class NagiosCore(MonitoringCore):
         return "nagios"
 
     @override
-    def _create_config(
-        self, request: MonitoringConfigRequest, licensing_handler: LicensingHandler
-    ) -> None:
+    def create_monitoring_config(self, request: MonitoringConfigRequest) -> None:
         self._config_cache = request.config_cache
         self._core_objects_config = request.core_objects_config
         self._create_core_config(
@@ -136,7 +133,7 @@ class NagiosCore(MonitoringCore):
             request.passive_service_name_config,
             request.enforced_services_table,
             request.plugins.check_plugins,
-            licensing_handler,
+            request.licensing_handler,
             request.passwords,
             request.get_ip_stack_config,
             request.default_address_family,

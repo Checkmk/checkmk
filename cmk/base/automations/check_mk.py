@@ -197,6 +197,7 @@ from cmk.discover_plugins import (
 )
 from cmk.inventory import structured_data
 from cmk.inventory.paths import Paths as InventoryPaths
+from cmk.licensing.handler import LicensingHandler
 from cmk.piggyback.backend import (
     get_messages_for as get_piggyback_messages_for,
 )
@@ -1381,6 +1382,7 @@ def _execute_autodiscovery(
             ),
             notify_relay=notify_relay,
             checker_config_writer=checker_config_writer,
+            licensing_handler_factory=app.licensing_handler_factory,
         )
     else:
         do_restart(
@@ -1409,6 +1411,7 @@ def _execute_autodiscovery(
             ),
             notify_relay=notify_relay,
             checker_config_writer=checker_config_writer,
+            licensing_handler_factory=app.licensing_handler_factory,
         )
 
     return discovery_results, True
@@ -1612,6 +1615,7 @@ class AutomationRenameHosts:
                             service_dependencies=env.loaded_config.service_dependencies,
                         ),
                         notify_relay=_make_configured_notify_relay(bool(env.loaded_config.relays)),
+                        licensing_handler_factory=app.licensing_handler_factory,
                     ),
                     action=CoreAction.START,
                     hosts_to_update=None,
@@ -2528,6 +2532,7 @@ class AutomationRestart:
                 service_dependencies=env.loaded_config.service_dependencies,
             ),
             notify_relay=_make_configured_notify_relay(bool(env.loaded_config.relays)),
+            licensing_handler_factory=app.licensing_handler_factory,
         )
 
         return _execute_silently(
@@ -2602,6 +2607,7 @@ class RestartContext:
     ip_address_of_mgmt: ip_lookup.IPLookupOptional
     service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]]
     notify_relay: Callable[[Callable[[str], object]], None]
+    licensing_handler_factory: Callable[[], LicensingHandler]
 
 
 def _execute_silently(
@@ -2654,6 +2660,7 @@ def _execute_silently(
                 ),
                 notify_relay=rctx.notify_relay,
                 checker_config_writer=checker_config_writer,
+                licensing_handler_factory=rctx.licensing_handler_factory,
             )
         except (MKBailOut, MKGeneralException) as e:
             raise MKAutomationError(str(e))

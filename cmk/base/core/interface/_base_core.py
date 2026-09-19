@@ -17,12 +17,11 @@ from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
 from cmk.core_client import CoreClient
-from cmk.licensing.basics.paths import get_licensed_state_file_path
 from cmk.licensing.handler import LicensingHandler
 from cmk.password_store.v1_unstable import Secret
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.tags import HostTags
-from cmk.utils import ip_lookup, paths
+from cmk.utils import ip_lookup
 from cmk.utils.servicename import ServiceName
 
 tracer = trace.get_tracer()
@@ -40,6 +39,7 @@ class MonitoringConfigRequest:
     # created by the engine per activation
     config_creation_context: ConfigCreationContext
     passwords: Mapping[str, Secret[str]]
+    licensing_handler: LicensingHandler
 
     # what shall be monitored
     config_cache: ConfigCache
@@ -67,10 +67,7 @@ class MonitoringConfigRequest:
 
 
 class MonitoringCore(abc.ABC):
-    def __init__(
-        self, core_client: CoreClient, licensing_handler_factory: Callable[[], LicensingHandler]
-    ):
-        self.licensing_handler_factory: Final = licensing_handler_factory
+    def __init__(self, core_client: CoreClient) -> None:
         self.core_client: Final = core_client
 
     @classmethod
@@ -78,13 +75,6 @@ class MonitoringCore(abc.ABC):
     def name(cls) -> Literal["nagios", "cmc"]:
         raise NotImplementedError
 
-    def create_config(self, request: MonitoringConfigRequest) -> None:
-        licensing_handler = self.licensing_handler_factory()
-        licensing_handler.persist_licensed_state(get_licensed_state_file_path(paths.omd_root))
-        self._create_config(request, licensing_handler)
-
     @abc.abstractmethod
-    def _create_config(
-        self, request: MonitoringConfigRequest, licensing_handler: LicensingHandler
-    ) -> None:
+    def create_monitoring_config(self, request: MonitoringConfigRequest) -> None:
         raise NotImplementedError

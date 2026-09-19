@@ -26,6 +26,8 @@ from cmk.ccc.store import activation_lock
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
 from cmk.core_client import CoreAction, CoreClient
+from cmk.licensing.basics.paths import get_licensed_state_file_path
+from cmk.licensing.handler import LicensingHandler
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.tags import HostTags
 from cmk.utils import config_warnings, ip_lookup
@@ -69,6 +71,7 @@ def do_reload(
     duplicates: Sequence[HostName],
     notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
     checker_config_writer: Callable[[Path], None],
+    licensing_handler_factory: Callable[[], LicensingHandler],
 ) -> None:
     do_restart(
         config_cache,
@@ -91,6 +94,7 @@ def do_reload(
         duplicates=duplicates,
         notify_relay=notify_relay,
         checker_config_writer=checker_config_writer,
+        licensing_handler_factory=licensing_handler_factory,
     )
 
 
@@ -122,6 +126,7 @@ def do_restart(
     duplicates: Sequence[HostName],
     notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
     checker_config_writer: Callable[[Path], None],
+    licensing_handler_factory: Callable[[], LicensingHandler],
 ) -> None:
     try:
         with activation_lock(
@@ -146,6 +151,7 @@ def do_restart(
                 duplicates=duplicates,
                 notify_relay=notify_relay,
                 checker_config_writer=checker_config_writer,
+                licensing_handler_factory=licensing_handler_factory,
             )
             core.core_client.run(action, log=_print)
 
@@ -181,6 +187,7 @@ def do_create_config(
     duplicates: Collection[HostName],
     notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
     checker_config_writer: Callable[[Path], None],
+    licensing_handler_factory: Callable[[], LicensingHandler],
 ) -> None:
     """Creating the monitoring core configuration and additional files
 
@@ -219,6 +226,7 @@ def do_create_config(
                 service_depends_on=service_depends_on,
                 duplicates=duplicates,
                 checker_config_writer=checker_config_writer,
+                licensing_handler_factory=licensing_handler_factory,
             )
     except Exception as e:
         if cmk.ccc.debug.enabled():
@@ -296,6 +304,7 @@ def _create_active_config(
     *,
     duplicates: Collection[HostName],
     checker_config_writer: Callable[[Path], None],
+    licensing_handler_factory: Callable[[], LicensingHandler],
 ) -> None:
     config_warnings.initialize()
 
@@ -317,10 +326,15 @@ def _create_active_config(
 
         checker_config_writer(config_creation_context.path_created)
 
-        core.create_config(
+        licensing_handler = licensing_handler_factory()
+        licensing_handler.persist_licensed_state(
+            get_licensed_state_file_path(cmk.utils.paths.omd_root)
+        )
+        core.create_monitoring_config(
             MonitoringConfigRequest(
                 config_creation_context=config_creation_context,
                 passwords=passwords,
+                licensing_handler=licensing_handler,
                 config_cache=config_cache,
                 core_objects_config=core_objects_config,
                 hosts_config=hosts_config,

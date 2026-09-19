@@ -6,11 +6,11 @@
 from pathlib import Path
 
 from cmk.bakery.v1 import OS, Plugin, PluginConfig
-from cmk.base.plugins.bakery.mssql import Conf, get_mssql_files
+from cmk.base.plugins.bakery.mssql import get_mssql_files
 
 
 def test_mssql_files_system_auth() -> None:
-    conf: Conf = {}
+    conf: dict[str, object] = {}
     result = sorted(get_mssql_files(conf), key=repr)
     expected = sorted(
         [
@@ -31,7 +31,7 @@ def test_mssql_files_system_auth() -> None:
 
 
 def test_mssql_files_db_auth() -> None:
-    conf: Conf = {
+    conf = {
         "auth_default": ("db", ("myuser", "mypass")),
     }
     result = sorted(get_mssql_files(conf), key=repr)
@@ -56,7 +56,7 @@ def test_mssql_files_db_auth() -> None:
 
 
 def test_mssql_files_with_excludes() -> None:
-    conf: Conf = {
+    conf = {
         "inst_excludes": ["inst1", "inst2"],
     }
     result = sorted(get_mssql_files(conf), key=repr)
@@ -81,7 +81,7 @@ def test_mssql_files_with_excludes() -> None:
 
 
 def test_mssql_files_with_timeouts() -> None:
-    conf: Conf = {
+    conf = {
         "timeout_connection": 10,
         "timeout_command": 30,
     }
@@ -107,7 +107,7 @@ def test_mssql_files_with_timeouts() -> None:
 
 
 def test_mssql_files_with_auth_instances() -> None:
-    conf: Conf = {
+    conf = {
         "auth_instances": [
             ("SERVER\\INST1", ("db", ("user1", "pass1"))),
         ],
@@ -143,7 +143,7 @@ def test_mssql_files_with_auth_instances() -> None:
 
 
 def test_mssql_files_sanitize_instance_with_comma() -> None:
-    conf: Conf = {
+    conf = {
         "auth_instances": [
             ("SERVER,1433", "system"),
         ],

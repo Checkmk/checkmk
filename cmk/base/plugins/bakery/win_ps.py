@@ -5,17 +5,21 @@
 
 from collections.abc import Mapping
 
+from pydantic import BaseModel
+
 from .bakery_api.v1 import register, WindowsConfigEntry, WindowsConfigGenerator
 
 
-def get_win_ps_windows_config(conf: Mapping[str, bool]) -> WindowsConfigGenerator:
-    use_wmi = conf.get("use_wmi", False)
-    yield WindowsConfigEntry(path=["ps", "use_wmi"], content=use_wmi is True)
+class _Config(BaseModel):
+    use_wmi: bool = False
+    full_path: bool = False
 
-    if not use_wmi:
-        return
 
-    if conf.get("full_path", False):
+def get_win_ps_windows_config(conf: Mapping[str, object]) -> WindowsConfigGenerator:
+    config = _Config.model_validate(conf)
+    yield WindowsConfigEntry(path=["ps", "use_wmi"], content=config.use_wmi)
+
+    if config.use_wmi and config.full_path:
         yield WindowsConfigEntry(path=["ps", "full_path"], content=True)
 
 

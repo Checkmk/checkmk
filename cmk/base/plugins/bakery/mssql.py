@@ -2,77 +2,70 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Iterable
+from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
-from typing import TypedDict
+from typing import Literal
+
+from pydantic import BaseModel
 
 from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
 
-Auth = str | tuple[str, tuple[str, str]]
-Excludes = list[str]
+_Auth = Literal["system"] | tuple[Literal["db"], tuple[str, str]]
 
 
-class Conf(TypedDict, total=False):
-    auth_default: Auth
-    auth_instances: list[tuple[str, Auth]]
-    inst_excludes: Excludes
-    timeout_connection: int
-    timeout_command: int
+class _Config(BaseModel):
+    auth_default: _Auth = "system"
+    auth_instances: Sequence[tuple[str, _Auth]] = ()
+    inst_excludes: Sequence[str] = ()
+    timeout_connection: int | None = None
+    timeout_command: int | None = None
 
 
-def get_mssql_files(conf: Conf) -> FileGenerator:
+def get_mssql_files(conf: Mapping[str, object]) -> FileGenerator:
+    config = _Config.model_validate(conf)
+
     yield Plugin(base_os=OS.WINDOWS, source=Path("mssql.vbs"))
 
-    auth = conf.get("auth_default", "system")
     yield PluginConfig(
         base_os=OS.WINDOWS,
         lines=list(
-            _get_mssql_ini_lines(
-                auth,
-                conf,
-                excludes=conf.get("inst_excludes"),
-            ),
+            _get_mssql_ini_lines(config.auth_default, config, excludes=config.inst_excludes)
         ),
         target=Path("mssql.ini"),
     )
 
-    for instance, auth_conf in conf.get("auth_instances", []):
+    for instance, auth in config.auth_instances:
         sane_id = _sanitize_instance_for_filename(instance)
         yield PluginConfig(
             base_os=OS.WINDOWS,
-            lines=list(
-                _get_mssql_ini_lines(
-                    auth_conf,
-                    conf,
-                ),
-            ),
+            lines=list(_get_mssql_ini_lines(auth, config)),
             target=Path(f"mssql_{sane_id}.ini"),
         )
 
 
 def _get_mssql_ini_lines(
-    auth: Auth,
-    conf: Conf,
-    excludes: Excludes | None = None,
-) -> Iterable[str]:
+    auth: _Auth,
+    config: _Config,
+    excludes: Sequence[str] = (),
+) -> Iterator[str]:
     yield "[auth]"
-    if auth == "system":
-        yield "type = system"
-    else:
-        assert isinstance(auth, tuple)
-        yield "type = db"
-        yield "username = %s" % auth[1][0]
-        yield "password = %s" % auth[1][1]
+    match auth:
+        case "system":
+            yield "type = system"
+        case ("db", (user, password)):
+            yield "type = db"
+            yield f"username = {user}"
+            yield f"password = {password}"
 
     if excludes:
         yield "[instance]"
         yield "exclude = %s" % ",".join(excludes)
 
     yield "[timeouts]"
-    if "timeout_connection" in conf:
-        yield f"timeout_connection = {conf['timeout_connection']}"
-    if "timeout_command" in conf:
-        yield f"timeout_command = {conf['timeout_command']}"
+    if config.timeout_connection is not None:
+        yield f"timeout_connection = {config.timeout_connection}"
+    if config.timeout_command is not None:
+        yield f"timeout_command = {config.timeout_command}"
 
 
 def _sanitize_instance_for_filename(instance: str) -> str:

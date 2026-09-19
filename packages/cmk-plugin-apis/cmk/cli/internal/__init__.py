@@ -14,14 +14,9 @@ plug-in family (``cmk/plugins/<family>/cli/<module>.py``) and the plug-in instan
 name must start with the prefix returned by :func:`entry_point_prefixes`.
 """
 
-# The application object handed to every command is not typed yet (see BaseApp).
-# mypy: disable-error-code="explicit-any"
-
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any
-
-type BaseApp = Any  # FIXME: the application object's type lives in cmk.base for now
+from pathlib import Path
 
 type Options = Mapping[str, object]
 """The parsed sub-options of a command, keyed by their long option name.
@@ -62,8 +57,12 @@ class GlobalOptions:
     """
 
 
-type CommandHandler = Callable[[BaseApp, GlobalOptions, Options, Args], int]
-"""The signature of a command's handler; it returns the exit status."""
+type CommandHandler = Callable[[Path, GlobalOptions, Options, Args], int]
+"""The signature of a command's handler; it returns the exit status.
+
+The first argument is the site's root directory. A command that needs more of
+the runtime than that builds it itself, e.g. with ``cmk.base.app.make_app()``.
+"""
 
 
 def _validate_argument_declaration(
@@ -117,7 +116,7 @@ class CLICommand:
     Example:
     ********
 
-    >>> def greet(app: BaseApp, global_options: GlobalOptions, options: Options, args: Args) -> int:
+    >>> def greet(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
     ...     print("Hello", ", ".join(args))
     ...     return 0
     >>> mode_greet = CLICommand(
@@ -168,7 +167,6 @@ def entry_point_prefixes() -> Mapping[type[CLICommand], str]:
 
 __all__ = [
     "Args",
-    "BaseApp",
     "CLICommand",
     "CLIOption",
     "CommandHandler",

@@ -5,6 +5,7 @@
 """The "cmk --man" and "cmk --browse-man" commands."""
 
 import sys
+from pathlib import Path
 
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKBailOut
@@ -14,7 +15,7 @@ from cmk.licensing.basics.finder import blocked_feature_files
 from cmk.utils.paths import omd_root
 
 
-def _mode_man(_app: object, _global_options: GlobalOptions, options: Options, args: Args) -> int:
+def _mode_man(_omd_root: Path, _global_options: GlobalOptions, options: Options, args: Args) -> int:
     from cmk.utils import man_pages
 
     man_page_path_map = man_pages.make_man_page_path_map(
@@ -77,7 +78,7 @@ cli_command_man = CLICommand(
 
 
 def _mode_browse_man(
-    _app: object, _global_options: GlobalOptions, _options: Options, _args: Args
+    _omd_root: Path, _global_options: GlobalOptions, _options: Options, _args: Args
 ) -> int:
     from cmk.utils import man_pages
 

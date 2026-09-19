@@ -6,6 +6,7 @@
 
 import itertools
 import os
+from pathlib import Path
 
 import cmk.utils.paths
 from cmk.base import config
@@ -31,7 +32,7 @@ from cmk.utils import ip_lookup
 
 
 def _mode_update_dns_cache(
-    _app: object, global_options: GlobalOptions, _options: Options, _args: Args
+    _omd_root: Path, global_options: GlobalOptions, _options: Options, _args: Args
 ) -> int:
     set_fake_dns(global_options.fake_dns)
     loading_result = config.load()
@@ -72,7 +73,7 @@ cli_command_update_dns_cache = CLICommand(
 
 
 def _mode_cleanup_piggyback(
-    _app: object, _global_options: GlobalOptions, _options: Options, _args: Args
+    _omd_root: Path, _global_options: GlobalOptions, _options: Options, _args: Args
 ) -> int:
     loaded_config = config.load().loaded_config
     piggyback_backend.cleanup_piggyback_files(
@@ -101,7 +102,9 @@ cli_command_cleanup_piggyback = CLICommand(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_flush(_app: object, _global_options: GlobalOptions, _options: Options, args: Args) -> int:
+def _mode_flush(
+    _omd_root: Path, _global_options: GlobalOptions, _options: Options, args: Args
+) -> int:
     hosts = host_addresses(args)
     plugins = load_checks()
     loading_result = config.load()

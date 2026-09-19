@@ -6,11 +6,12 @@
 
 import sys
 from contextlib import suppress
+from pathlib import Path
 
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk import trace
-from cmk.base.base_app import CheckmkBaseApp
+from cmk.base.app import make_app
 from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
 from cmk.profiling import backend as profiling
 
@@ -18,8 +19,9 @@ tracer = trace.get_tracer()
 
 
 def _mode_automation(
-    app: CheckmkBaseApp, _global_options: GlobalOptions, _options: Options, args: Args
+    omd_root: Path, _global_options: GlobalOptions, _options: Options, args: Args
 ) -> int:
+    app = make_app(omd_root)
     from cmk.automations.types import AutomationID
     from cmk.base.automations.automations import (
         AutomationError,

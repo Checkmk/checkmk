@@ -12,13 +12,13 @@ import ast
 import logging
 import sys
 from collections.abc import Mapping
+from pathlib import Path
 
 import cmk.livestatus_client as livestatus
 import cmk.utils.paths
 from cmk.automations.backends.helper import AutomationHelperUnavailable, HelperExecutor
 from cmk.automations.types import AutomationID
 from cmk.base import config
-from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.notify import (
     do_notify,
     make_ensure_nagios,
@@ -27,6 +27,7 @@ from cmk.base.notify import (
 from cmk.ccc import store
 from cmk.ccc.exceptions import raise_mkterminate_on_sigint
 from cmk.ccc.version import Edition
+from cmk.ccc.version import edition as edition_of_site
 from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 from cmk.utils import timeperiod
 from cmk.utils.http_proxy_config import make_http_proxy_getter
@@ -39,10 +40,11 @@ def _notify_flags(parsed: Mapping[str, object]) -> dict[str, bool]:
 
 
 def _mode_notify(
-    app: CheckmkBaseApp, _global_options: GlobalOptions, parsed: Options, args: Args
+    omd_root: Path, _global_options: GlobalOptions, parsed: Options, args: Args
 ) -> int:
     options = _notify_flags(parsed)
-    community_edition = app.edition is Edition.COMMUNITY
+    edition = edition_of_site(omd_root)
+    community_edition = edition is Edition.COMMUNITY
     if not community_edition and "spoolfile" in args:
         return (
             _do_notify_via_automation(
@@ -65,7 +67,7 @@ def _mode_notify(
         options,
         list(args),
         notification_config=make_notification_config(
-            app.edition,
+            edition,
             loading_result.loaded_config,
             loading_result.config_cache.ruleset_matcher,
             loading_result.config_cache.label_manager,

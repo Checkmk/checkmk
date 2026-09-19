@@ -32,7 +32,7 @@ domain = "multisite"
 
 
 def _mode_localize(
-    _app: object, _global_options: GlobalOptions, _options: Options, args: Args
+    _omd_root: Path, _global_options: GlobalOptions, _options: Options, args: Args
 ) -> int:
     do_localize(list(args))
     return 0

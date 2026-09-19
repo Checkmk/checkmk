@@ -8,13 +8,14 @@ import itertools
 import sys
 from collections.abc import Callable
 from dataclasses import fields
+from pathlib import Path
 
 import cmk.ccc.debug
 import cmk.ccc.site
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.base import config
-from cmk.base.base_app import CheckmkBaseApp
+from cmk.base.app import make_app
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core import interface as core_interface
 from cmk.base.modes.check_mk import forced_ip_lookup, host_addresses, load_checks, set_fake_dns
@@ -40,8 +41,9 @@ from cmk.utils.log import console
 
 
 def _mode_dump_nagios_config(
-    app: CheckmkBaseApp, global_options: GlobalOptions, _options: Options, raw_host_names: Args
+    omd_root: Path, global_options: GlobalOptions, _options: Options, raw_host_names: Args
 ) -> int:
+    app = make_app(omd_root)
     set_fake_dns(global_options.fake_dns)
     args = host_addresses(raw_host_names)
 
@@ -202,8 +204,9 @@ def _make_configured_notify_relay(
 
 
 def _mode_update(
-    app: CheckmkBaseApp, global_options: GlobalOptions, _options: Options, _args: Args
+    omd_root: Path, global_options: GlobalOptions, _options: Options, _args: Args
 ) -> int:
+    app = make_app(omd_root)
     set_fake_dns(global_options.fake_dns)
     plugins = load_checks()
     loading_result = config.load()
@@ -325,8 +328,9 @@ cli_command_update = CLICommand(
 
 
 def _mode_restart(
-    app: CheckmkBaseApp, global_options: GlobalOptions, _options: Options, raw_host_names: Args
+    omd_root: Path, global_options: GlobalOptions, _options: Options, raw_host_names: Args
 ) -> int:
+    app = make_app(omd_root)
     set_fake_dns(global_options.fake_dns)
     args = host_addresses(raw_host_names)
     plugins = load_checks()
@@ -442,8 +446,9 @@ cli_command_restart = CLICommand(
 
 
 def _mode_reload(
-    app: CheckmkBaseApp, global_options: GlobalOptions, _options: Options, raw_host_names: Args
+    omd_root: Path, global_options: GlobalOptions, _options: Options, raw_host_names: Args
 ) -> int:
+    app = make_app(omd_root)
     set_fake_dns(global_options.fake_dns)
     args = host_addresses(raw_host_names)
     plugins = load_checks()

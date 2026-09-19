@@ -225,6 +225,7 @@ py_library(
         "//cmk/base:__subpackages__",
         "//cmk/cli/engine:__pkg__",
         "//cmk/config_anonymizer:__pkg__",
+        "//cmk/plugins/checkmk:__subpackages__",
         "//cmk/product_usage:__pkg__",
         "//cmk/update_config:__pkg__",
         "//tests:__subpackages__",

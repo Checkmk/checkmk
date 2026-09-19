@@ -8,12 +8,13 @@ import itertools
 import sys
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
+from pathlib import Path
 
 import cmk.ccc.debug
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.base import config
-from cmk.base.base_app import CheckmkBaseApp
+from cmk.base.app import make_app
 from cmk.base.checkers import (
     CMKFetcher,
     CMKParser,
@@ -91,8 +92,9 @@ def _write_active_check_result(check_result: ActiveCheckResult) -> ServiceState:
 
 
 def _mode_check_discovery(
-    app: CheckmkBaseApp, global_options: GlobalOptions, options: Options, args: Args
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
 ) -> int:
+    app = make_app(omd_root)
     set_fake_dns(global_options.fake_dns)
     raw_host_name = args[0]
     hostname = host_address(raw_host_name)
@@ -365,8 +367,9 @@ def _preprocess_hostnames(
 
 
 def _mode_discover(
-    app: CheckmkBaseApp, global_options: GlobalOptions, parsed: Options, args: Args
+    omd_root: Path, global_options: GlobalOptions, parsed: Options, args: Args
 ) -> int:
+    app = make_app(omd_root)
     set_fake_dns(global_options.fake_dns)
     options = _discovery_options(parsed)
     plugins = load_checks()

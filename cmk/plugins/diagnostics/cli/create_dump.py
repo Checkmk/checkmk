@@ -11,6 +11,7 @@ line into a selection of diagnostics plug-ins.
 import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Final
 
 import cmk.utils.paths
@@ -102,7 +103,7 @@ def _print_available_plugins(catalogue: Mapping[str, DiagnosticsPlugin]) -> None
 
 
 def _mode_create_diagnostics_dump(
-    _app: object, _global_options: GlobalOptions, parsed: Options, _args: Args
+    _omd_root: Path, _global_options: GlobalOptions, parsed: Options, _args: Args
 ) -> int:
     options = _cli_selection(parsed)
     # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.

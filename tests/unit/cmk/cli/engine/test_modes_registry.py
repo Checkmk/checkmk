@@ -3,33 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Final, NoReturn
+from pathlib import Path
+from typing import Final
 
 import pytest
 
 from cmk import trace
-from cmk.base.base_app import CheckmkBaseApp
-from cmk.ccc.version import Edition
 from cmk.cli.engine.call import call
 from cmk.cli.engine.modes import make_mode, make_option, parse_sub_options
 from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 
-
-def _untouched(*_args: object, **_kwargs: object) -> NoReturn:
-    raise AssertionError("the engine must not use the application object")
-
-
-# The engine only hands this through to the command's handler, so a double is
-# enough, and it proves the engine keeps its hands off it.
-_APP: Final = CheckmkBaseApp(
-    edition=Edition.COMMUNITY,
-    create_core=_untouched,
-    licensing_handler_factory=_untouched,
-    make_fetcher_trigger=_untouched,
-)
+# The engine only hands this through to the command's handler.
+_OMD_ROOT: Final = Path("/omd/sites/mysite")
 
 
-def _handler(_app: object, _global_options: GlobalOptions, _options: Options, _args: Args) -> int:
+def _handler(
+    _omd_root: Path, _global_options: GlobalOptions, _options: Options, _args: Args
+) -> int:
     return 0
 
 
@@ -86,7 +76,9 @@ def test_call_shapes_the_positional_arguments(
 ) -> None:
     seen: list[Args] = []
 
-    def _record(_app: object, _global_options: GlobalOptions, _options: Options, args: Args) -> int:
+    def _record(
+        _omd_root: Path, _global_options: GlobalOptions, _options: Options, args: Args
+    ) -> int:
         seen.append(args)
         return 42
 
@@ -101,7 +93,7 @@ def test_call_shapes_the_positional_arguments(
         )
     )
     exit_status = call(
-        _APP,
+        _OMD_ROOT,
         mode,
         GlobalOptions(),
         "ARG" if argument else "",

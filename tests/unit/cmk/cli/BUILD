@@ -9,9 +9,7 @@ py_cmk_test(
     use_project_pytest_config = True,
     visibility = ["//visibility:private"],
     deps = [
-        "//cmk/base:base-app",
         "//cmk/cli/engine",
-        "//packages/cmk-ccc:version",
         "//packages/cmk-plugin-apis:cli",
         requirement("pytest-random-order"),
     ],

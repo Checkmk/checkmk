@@ -8,6 +8,7 @@ import dataclasses
 import itertools
 import time
 from collections.abc import Container, Mapping, Sequence
+from pathlib import Path
 
 import cmk.ccc.cleanup
 import cmk.ccc.debug
@@ -15,7 +16,7 @@ import cmk.livestatus_client as livestatus
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.base import config
-from cmk.base.base_app import CheckmkBaseApp
+from cmk.base.app import make_app
 from cmk.base.checkers import CMKFetcher, CMKParser, CMKSummarizer, SectionPluginMapper
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.servicename import make_final_service_name_config
@@ -97,8 +98,9 @@ def _inventory_options(parsed: Mapping[str, object]) -> InventoryOptions:
 
 
 def _mode_inventory(
-    app: CheckmkBaseApp, global_options: GlobalOptions, parsed: Options, args: Args
+    omd_root: Path, global_options: GlobalOptions, parsed: Options, args: Args
 ) -> int:
+    app = make_app(omd_root)
     set_fake_dns(global_options.fake_dns)
     options = _inventory_options(parsed)
     file_cache_options = handle_fetcher_options(options)
@@ -336,8 +338,9 @@ cli_command_inventory = CLICommand(
 
 
 def _mode_inventorize_marked_hosts(
-    app: CheckmkBaseApp, global_options: GlobalOptions, options: Options, _args: Args
+    omd_root: Path, global_options: GlobalOptions, options: Options, _args: Args
 ) -> int:
+    app = make_app(omd_root)
     set_fake_dns(global_options.fake_dns)
     file_cache_options = handle_fetcher_options(options)
     try:

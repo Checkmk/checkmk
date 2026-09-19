@@ -13,6 +13,7 @@ import itertools
 import sys
 from collections.abc import Iterable, Mapping, Sequence
 from contextlib import suppress
+from pathlib import Path
 
 import cmk.ccc.debug
 from cmk.base import config
@@ -79,7 +80,7 @@ def _list_all_hosts(
 
 
 def _mode_list_hosts(
-    _app: object, _global_options: GlobalOptions, options: Options, args: Args
+    _omd_root: Path, _global_options: GlobalOptions, options: Options, args: Args
 ) -> int:
     loading_result = config.load()
     config_cache = loading_result.config_cache
@@ -155,7 +156,7 @@ def _list_all_hosts_with_tags(
 
 
 def _mode_list_tag(
-    _app: object, _global_options: GlobalOptions, _options: Options, args: Args
+    _omd_root: Path, _global_options: GlobalOptions, _options: Options, args: Args
 ) -> int:
     loading_result = config.load()
     hosts = _list_all_hosts_with_tags(
@@ -233,7 +234,7 @@ def _get_ds_type(
 
 
 def _mode_list_checks(
-    _app: object, _global_options: GlobalOptions, _options: Options, _args: Args
+    _omd_root: Path, _global_options: GlobalOptions, _options: Options, _args: Args
 ) -> int:
     from cmk.utils import man_pages
 

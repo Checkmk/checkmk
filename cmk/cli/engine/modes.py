@@ -13,9 +13,9 @@ import textwrap
 from collections import Counter
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
+from pathlib import Path
 from typing import Final, override
 
-from cmk.base.base_app import CheckmkBaseApp
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.cli.internal import CLICommand, CLIOption, entry_point_prefixes, GlobalOptions
@@ -29,12 +29,9 @@ ConvertFunction = Callable[[str], object]
 Options = list[tuple[OptionSpec, Argument]]
 Arguments = Sequence[str]
 
-type ModeHandler = Callable[
-    [CheckmkBaseApp, GlobalOptions, Mapping[str, object], Sequence[str]], int
-]
-"""The signature of every mode's handler: the application, the parsed sub-options (empty if
-the mode has none) and the positional arguments (none, exactly one, or all remaining ones,
-depending on the declaration); it returns the exit status."""
+# Signature of mode handlers:
+# site root, general options, parsed sub-options, positional arguments
+type ModeHandler = Callable[[Path, GlobalOptions, Mapping[str, object], Sequence[str]], int]
 
 
 class Option:
@@ -459,7 +456,7 @@ class Modes:
         # It's a little weird to implement the --help option like this,
         # but it is the easiest way to be consistent with how we use `getopt`.
         def _show_help(
-            _app: object, _global_options: GlobalOptions, _options: object, _args: object
+            _omd_root: Path, _global_options: GlobalOptions, _options: object, _args: object
         ) -> int:
             write_paged(self.help())
             return 0

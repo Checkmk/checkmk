@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from pathlib import Path
 from typing import Final, NoReturn
 
 import pytest
@@ -19,7 +20,9 @@ from cmk.cli.engine.modes import (
 from cmk.cli.internal import Args, GlobalOptions, Options
 
 
-def _unreachable(_app: object, _global: GlobalOptions, _options: Options, _args: Args) -> NoReturn:
+def _unreachable(
+    _omd_root: Path, _global: GlobalOptions, _options: Options, _args: Args
+) -> NoReturn:
     raise AssertionError("parsing must not run the command")
 
 

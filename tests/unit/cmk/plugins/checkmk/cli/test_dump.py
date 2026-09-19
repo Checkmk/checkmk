@@ -8,7 +8,7 @@
 
 from dataclasses import replace
 from pathlib import Path
-from typing import Any, override
+from typing import Any, Final, override
 
 import pytest
 
@@ -29,6 +29,7 @@ from cmk.checkengine.sources._sources import SNMPSource
 from cmk.cli.engine.call import call
 from cmk.cli.engine.modes import make_mode, Options
 from cmk.cli.internal import GlobalOptions
+from cmk.plugins.checkmk.cli import dump
 from cmk.plugins.checkmk.cli.dump import cli_command_dump_agent
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.trace import Context
@@ -46,6 +47,25 @@ class _MockFetcherTrigger(PlainFetcherTrigger):
         if isinstance(fetcher, PiggybackFetcher):
             return result.OK(b"")
         return result.OK(self._payload)
+
+
+_OMD_ROOT: Final = Path("/omd/sites/mysite")
+
+
+def _patch_fetcher_trigger(monkeypatch: pytest.MonkeyPatch, raw_data: bytes) -> None:
+    """Make the command build an application that fetches the given data.
+
+    The command builds its own application, so the fake has to go in where it
+    does that.
+    """
+    monkeypatch.setattr(
+        dump,
+        "make_app",
+        lambda _omd_root: replace(
+            make_app(),
+            make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data),  # noqa: ARG005
+        ),
+    )
 
 
 class TestModeDumpAgent:
@@ -116,15 +136,16 @@ class TestModeDumpAgent:
     @pytest.mark.usefixtures("scenario")
     @pytest.mark.usefixtures("patch_config_load")
     def test_success(
-        self, hostname: HostName, raw_data: bytes, capsys: pytest.CaptureFixture[str]
+        self,
+        hostname: HostName,
+        raw_data: bytes,
+        capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        app = replace(
-            make_app(),
-            make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data),  # noqa: ARG005
-        )
+        _patch_fetcher_trigger(monkeypatch, raw_data)
 
         call(
-            app,
+            _OMD_ROOT,
             make_mode(cli_command_dump_agent),
             GlobalOptions(),
             hostname,
@@ -233,12 +254,9 @@ class TestModeDumpAgentSnmpBackend:
 
         monkeypatch.setattr(SNMPSource, "__init__", capturing_snmp_source_init)
 
-        app = replace(
-            make_app(),
-            make_fetcher_trigger=lambda *args: _MockFetcherTrigger(b""),  # noqa: ARG005
-        )
+        _patch_fetcher_trigger(monkeypatch, b"")
         call(
-            app,
+            _OMD_ROOT,
             make_mode(cli_command_dump_agent),
             GlobalOptions(),
             hostname,

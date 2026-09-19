@@ -54,7 +54,7 @@ def _make_local_mibs_dir(omd_root: Path) -> Path:
 
 
 def _mode_snmptranslate(
-    _app: object, _global_options: GlobalOptions, _options: Options, args: Args
+    _omd_root: Path, _global_options: GlobalOptions, _options: Options, args: Args
 ) -> int:
     walk_filename = args[0]
     if not walk_filename:
@@ -197,7 +197,7 @@ def _make_backend(snmp_config: SNMPHostConfig) -> SNMPBackend:
 
 
 def _mode_snmpwalk(
-    _app: object, global_options: GlobalOptions, options: Options, hostnames: Args
+    _omd_root: Path, global_options: GlobalOptions, options: Options, hostnames: Args
 ) -> int:
     set_fake_dns(global_options.fake_dns)
     oids = option_strings(options, "oid")
@@ -292,7 +292,9 @@ cli_command_snmpwalk = CLICommand(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_snmpget(_app: object, global_options: GlobalOptions, options: Options, args: Args) -> int:
+def _mode_snmpget(
+    _omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> int:
     set_fake_dns(global_options.fake_dns)
     if not args:
         raise MKBailOut("You need to specify an OID.")

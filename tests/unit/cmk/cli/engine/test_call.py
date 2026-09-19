@@ -4,28 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from typing import Final, NoReturn
+from pathlib import Path
+from typing import Final
 
-from cmk.base.base_app import CheckmkBaseApp
-from cmk.ccc.version import Edition
 from cmk.cli.engine.call import call
 from cmk.cli.engine.modes import Mode, Option
 from cmk.cli.internal import Args, CommandHandler, GlobalOptions, Options
 from cmk.trace import Context
 
-
-def _untouched(*_args: object, **_kwargs: object) -> NoReturn:
-    raise AssertionError("the engine must not use the application object")
-
-
-# The engine only hands this through to the command's handler, so a double is
-# enough, and it proves the engine keeps its hands off it.
-_APP: Final = CheckmkBaseApp(
-    edition=Edition.COMMUNITY,
-    create_core=_untouched,
-    licensing_handler_factory=_untouched,
-    make_fetcher_trigger=_untouched,
-)
+# The engine only hands this through to the command's handler.
+_OMD_ROOT: Final = Path("/omd/sites/mysite")
 
 _GLOBAL_OPTIONS: Final = GlobalOptions(verbosity=2)
 
@@ -38,7 +26,7 @@ class _Recorder:
         self._exit_code = exit_code
 
     def __call__(
-        self, _app: object, global_options: GlobalOptions, options: Options, args: Args
+        self, _omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
     ) -> int:
         self.calls.append((global_options, options, args))
         return self._exit_code
@@ -63,7 +51,7 @@ def _mode(
 
 
 def _call(mode: Mode, argument: str = "", *, arguments: Sequence[str] = ()) -> int:
-    return call(_APP, mode, _GLOBAL_OPTIONS, argument, [("--flag", "")], arguments, Context())
+    return call(_OMD_ROOT, mode, _GLOBAL_OPTIONS, argument, [("--flag", "")], arguments, Context())
 
 
 def test_a_mode_returns_its_handlers_exit_code() -> None:

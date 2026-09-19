@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
+
 from cmk import trace
-from cmk.base.base_app import CheckmkBaseApp
 from cmk.cli.engine.modes import (
     Argument,
     Arguments,
@@ -18,7 +19,7 @@ tracer = trace.get_tracer()
 
 
 def call(
-    app: CheckmkBaseApp,
+    omd_root: Path,
     mode: Mode,
     global_options: GlobalOptions,
     arg: Argument,
@@ -44,4 +45,4 @@ def call(
         },
         context=trace_context,
     ):
-        return mode.handler_function(app, global_options, sub_options, args)
+        return mode.handler_function(omd_root, global_options, sub_options, args)

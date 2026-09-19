@@ -29,7 +29,6 @@ except KeyError:
 import cmk.ccc.debug
 import cmk.ccc.version_info as cmk_version_info
 from cmk import trace
-from cmk.base.app import make_app
 from cmk.ccc.exceptions import (
     MKBailOut,
     MKGeneralException,
@@ -180,7 +179,7 @@ def main() -> int:
             return 0
 
         return call(
-            make_app(OMD_ROOT),
+            OMD_ROOT,
             parsed.mode,
             global_options,
             parsed.argument,

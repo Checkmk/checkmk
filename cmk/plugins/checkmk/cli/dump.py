@@ -15,7 +15,7 @@ import cmk.livestatus_client as livestatus
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.base import config
-from cmk.base.base_app import CheckmkBaseApp
+from cmk.base.app import make_app
 from cmk.base.config import handle_ip_lookup_failure
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.servicename import make_final_service_name_config
@@ -61,8 +61,9 @@ from cmk.utils.log import console
 
 
 def _mode_dump_agent(
-    app: CheckmkBaseApp, global_options: GlobalOptions, options: Options, args: Args
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
 ) -> int:
+    app = make_app(omd_root)
     set_fake_dns(global_options.fake_dns)
     raw_host_name = args[0]
     hostname = host_address(raw_host_name)
@@ -299,7 +300,7 @@ cli_command_dump_agent = CLICommand(
 
 
 def _mode_dump_hosts(
-    _app: object, global_options: GlobalOptions, _options: Options, args: Args
+    _omd_root: Path, global_options: GlobalOptions, _options: Options, args: Args
 ) -> int:
     set_fake_dns(global_options.fake_dns)
     hostlist: Iterable[HostName] = host_addresses(args)

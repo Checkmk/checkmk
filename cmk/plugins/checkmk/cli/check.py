@@ -5,11 +5,12 @@
 """The "cmk --check" command."""
 
 from collections.abc import Mapping
+from pathlib import Path
 
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.base import config
-from cmk.base.base_app import CheckmkBaseApp
+from cmk.base.app import make_app
 from cmk.base.modes.check_mk import (
     CheckingOptions,
     FETCHER_OPTIONS,
@@ -63,9 +64,8 @@ def _checking_options(parsed: Mapping[str, object]) -> CheckingOptions:
     return options
 
 
-def _mode_check(
-    app: CheckmkBaseApp, global_options: GlobalOptions, parsed: Options, args: Args
-) -> int:
+def _mode_check(omd_root: Path, global_options: GlobalOptions, parsed: Options, args: Args) -> int:
+    app = make_app(omd_root)
     set_fake_dns(global_options.fake_dns)
     options = _checking_options(parsed)
     plugins = load_checks()

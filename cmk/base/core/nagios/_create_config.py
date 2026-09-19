@@ -31,7 +31,7 @@ from cmk.base.config import (
 )
 from cmk.base.configlib.loaded_config import CustomCheck
 from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
-from cmk.base.core.interface import MonitoringCore
+from cmk.base.core.interface import MonitoringConfigRequest, MonitoringCore
 from cmk.base.core.shared import (
     AbstractServiceID,
     autodetect_plugin,
@@ -47,7 +47,6 @@ from cmk.base.core.shared import (
     host_check_command,
 )
 from cmk.ccc import store, tty
-from cmk.ccc.config_path import ConfigCreationContext
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.checkerplugin import ConfiguredService
@@ -127,61 +126,37 @@ class NagiosCore(MonitoringCore):
 
     @override
     def _create_config(
-        self,
-        config_creation_context: ConfigCreationContext,
-        config_cache: ConfigCache,
-        core_objects_config: CoreObjectsConfig,
-        hosts_config: Hosts,
-        host_tags: HostTags,
-        final_service_name_config: Callable[
-            [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
-        ],
-        passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
-        enforced_services_table: Callable[
-            [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
-        ],
-        get_ip_stack_config: Callable[[HostName], IPStackConfig],
-        default_address_family: Callable[
-            [HostName], Literal[AddressFamily.AF_INET, AddressFamily.AF_INET6]
-        ],
-        ip_address_of: ip_lookup.IPLookup,
-        ip_address_of_mgmt: ip_lookup.IPLookupOptional,
-        licensing_handler: LicensingHandler,
-        plugins: AgentBasedPlugins,
-        passwords: Mapping[str, Secret[str]],
-        *,
-        hosts_to_update: set[HostName] | None = None,
-        service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
+        self, request: MonitoringConfigRequest, licensing_handler: LicensingHandler
     ) -> None:
-        self._config_cache = config_cache
-        self._core_objects_config = core_objects_config
+        self._config_cache = request.config_cache
+        self._core_objects_config = request.core_objects_config
         self._create_core_config(
-            config_creation_context.path_created,
-            hosts_config,
-            host_tags,
-            final_service_name_config,
-            passive_service_name_config,
-            enforced_services_table,
-            plugins.check_plugins,
+            request.config_creation_context.path_created,
+            request.hosts_config,
+            request.host_tags,
+            request.final_service_name_config,
+            request.passive_service_name_config,
+            request.enforced_services_table,
+            request.plugins.check_plugins,
             licensing_handler,
-            passwords,
-            get_ip_stack_config,
-            default_address_family,
-            ip_address_of,
-            service_depends_on,
+            request.passwords,
+            request.get_ip_stack_config,
+            request.default_address_family,
+            request.ip_address_of,
+            request.service_depends_on,
         )
         store.save_text_to_file(
-            plugin_index.make_index_file(config_creation_context.path_created),
-            plugin_index.create_plugin_index(plugins),
+            plugin_index.make_index_file(request.config_creation_context.path_created),
+            plugin_index.create_plugin_index(request.plugins),
         )
         self._precompile_hostchecks(
-            config_creation_context.path_created,
-            hosts_config,
-            passive_service_name_config,
-            enforced_services_table,
-            plugins,
-            get_ip_stack_config,
-            ip_address_of,
+            request.config_creation_context.path_created,
+            request.hosts_config,
+            request.passive_service_name_config,
+            request.enforced_services_table,
+            request.plugins,
+            request.get_ip_stack_config,
+            request.ip_address_of,
             precompile_mode=(
                 PrecompileMode.DELAYED
                 if self.nagios_core_config.delay_precompile

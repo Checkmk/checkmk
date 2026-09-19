@@ -7,6 +7,7 @@
 import abc
 import socket
 from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
 from typing import Final, Literal
 
 from cmk import trace
@@ -27,6 +28,44 @@ from cmk.utils.servicename import ServiceName
 tracer = trace.get_tracer()
 
 
+@dataclass(frozen=True, kw_only=True, eq=False)
+class MonitoringConfigRequest:
+    """Everything a monitoring core needs to create its configuration.
+
+    NOTE: This is where the engine puts pre-computed information. Today the cores
+    still do most of the computing themselves; every computation that moves out of
+    a core should arrive here as a new field.
+    """
+
+    # created by the engine per activation
+    config_creation_context: ConfigCreationContext
+    passwords: Mapping[str, Secret[str]]
+
+    # what shall be monitored
+    config_cache: ConfigCache
+    core_objects_config: CoreObjectsConfig
+    hosts_config: Hosts
+    host_tags: HostTags
+    plugins: AgentBasedPlugins
+    hosts_to_update: set[HostName] | None
+
+    # naming / lookups
+    final_service_name_config: Callable[
+        [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
+    ]
+    passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName]
+    enforced_services_table: Callable[
+        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+    ]
+    get_ip_stack_config: Callable[[HostName], ip_lookup.IPStackConfig]
+    default_address_family: Callable[
+        [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+    ]
+    ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts]
+    ip_address_of_mgmt: ip_lookup.IPLookupOptional
+    service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]]
+
+
 class MonitoringCore(abc.ABC):
     def __init__(
         self, core_client: CoreClient, licensing_handler_factory: Callable[[], LicensingHandler]
@@ -39,79 +78,13 @@ class MonitoringCore(abc.ABC):
     def name(cls) -> Literal["nagios", "cmc"]:
         raise NotImplementedError
 
-    def create_config(
-        self,
-        config_creation_context: ConfigCreationContext,
-        config_cache: ConfigCache,
-        core_objects_config: CoreObjectsConfig,
-        hosts_config: Hosts,
-        host_tags: HostTags,
-        final_service_name_config: Callable[
-            [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
-        ],
-        passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
-        enforced_services_table: Callable[
-            [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
-        ],
-        plugins: AgentBasedPlugins,
-        get_ip_stack_config: Callable[[HostName], ip_lookup.IPStackConfig],
-        default_address_family: Callable[
-            [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
-        ],
-        ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
-        ip_address_of_mgmt: ip_lookup.IPLookupOptional,
-        passwords: Mapping[str, Secret[str]],
-        hosts_to_update: set[HostName] | None,
-        service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
-    ) -> None:
+    def create_config(self, request: MonitoringConfigRequest) -> None:
         licensing_handler = self.licensing_handler_factory()
         licensing_handler.persist_licensed_state(get_licensed_state_file_path(paths.omd_root))
-        self._create_config(
-            config_creation_context,
-            config_cache,
-            core_objects_config,
-            hosts_config,
-            host_tags,
-            final_service_name_config,
-            passive_service_name_config,
-            enforced_services_table,
-            get_ip_stack_config,
-            default_address_family,
-            ip_address_of,
-            ip_address_of_mgmt,
-            licensing_handler,
-            plugins,
-            passwords,
-            hosts_to_update=hosts_to_update,
-            service_depends_on=service_depends_on,
-        )
+        self._create_config(request, licensing_handler)
 
     @abc.abstractmethod
     def _create_config(
-        self,
-        config_creation_context: ConfigCreationContext,
-        config_cache: ConfigCache,
-        core_objects_config: CoreObjectsConfig,
-        hosts_config: Hosts,
-        host_tags: HostTags,
-        final_service_name_config: Callable[
-            [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
-        ],
-        passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
-        enforced_services_table: Callable[
-            [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
-        ],
-        get_ip_stack_config: Callable[[HostName], ip_lookup.IPStackConfig],
-        default_address_family: Callable[
-            [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
-        ],
-        ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
-        ip_address_of_mgmt: ip_lookup.IPLookupOptional,
-        licensing_handler: LicensingHandler,
-        plugins: AgentBasedPlugins,
-        passwords: Mapping[str, Secret[str]],
-        *,
-        hosts_to_update: set[HostName] | None = None,
-        service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
+        self, request: MonitoringConfigRequest, licensing_handler: LicensingHandler
     ) -> None:
         raise NotImplementedError

@@ -32,7 +32,7 @@ from cmk.utils import config_warnings, ip_lookup
 from cmk.utils.log import console
 from cmk.utils.servicename import ServiceName
 
-from ._base_core import MonitoringCore
+from ._base_core import MonitoringConfigRequest, MonitoringCore
 from ._snapshot_local_dir import snapshot_local_dir
 from ._snapshot_trusted_cas import snapshot_trusted_cas
 
@@ -318,22 +318,24 @@ def _create_active_config(
         checker_config_writer(config_creation_context.path_created)
 
         core.create_config(
-            config_creation_context,
-            config_cache,
-            core_objects_config,
-            hosts_config,
-            host_tags,
-            final_service_name_config,
-            passive_service_name_config,
-            enforced_services_table,
-            plugins,
-            get_ip_stack_config,
-            default_address_family,
-            ip_address_of,
-            ip_address_of_mgmt,
-            hosts_to_update=hosts_to_update,
-            service_depends_on=service_depends_on,
-            passwords=passwords,
+            MonitoringConfigRequest(
+                config_creation_context=config_creation_context,
+                passwords=passwords,
+                config_cache=config_cache,
+                core_objects_config=core_objects_config,
+                hosts_config=hosts_config,
+                host_tags=host_tags,
+                plugins=plugins,
+                hosts_to_update=hosts_to_update,
+                final_service_name_config=final_service_name_config,
+                passive_service_name_config=passive_service_name_config,
+                enforced_services_table=enforced_services_table,
+                get_ip_stack_config=get_ip_stack_config,
+                default_address_family=default_address_family,
+                ip_address_of=ip_address_of,
+                ip_address_of_mgmt=ip_address_of_mgmt,
+                service_depends_on=service_depends_on,
+            )
         )
         cmk.utils.password_store.save(
             {k: s.reveal() for k, s in passwords.items()},

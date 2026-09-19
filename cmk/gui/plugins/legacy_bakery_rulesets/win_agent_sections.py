@@ -6,7 +6,7 @@
 
 from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsWindowsAgent
 from cmk.gui.i18n import _
-from cmk.gui.plugins.legacy_bakery_rulesets.utils import windows_sections
+from cmk.gui.plugins.legacy_bakery_rulesets._windows_sections import windows_sections
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import ListChoice
 from cmk.ruleset_matcher.definition import RuleGroup
@@ -25,8 +25,8 @@ def _valuespec_agent_config_win_agent_sections() -> ListChoice:
             "The most CPU performance is needed by the Eventlog monitoring and the "
             "performance counters. "
         ),
-        choices=[(k, v) for k, v, _, _ in windows_sections()],
-        default_value=[k if e else "" for k, _, e, _ in windows_sections()],
+        choices=[(s.name, s.title) for s in windows_sections()],
+        default_value=[s.name if s.enabled_by_default else "" for s in windows_sections()],
     )
 
 

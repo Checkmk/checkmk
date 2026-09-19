@@ -4,22 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.bakery.v1 import WindowsGlobalConfigEntry
-from cmk.base.plugins.bakery.win_agent_sections import (
-    get_win_agent_sections_windows_config,
-)
+from cmk.base.plugins.bakery.win_agent_sections import get_win_agent_sections_windows_config
 
 
 def test_win_agent_sections_windows_config() -> None:
-    conf = "check_mk logwatch mrpe"
-    result = list(get_win_agent_sections_windows_config(conf))
-    assert result == [
-        WindowsGlobalConfigEntry(name="sections", content="check_mk logwatch mrpe"),
+    assert list(get_win_agent_sections_windows_config(["check_mk", "logwatch"])) == [
+        WindowsGlobalConfigEntry(name="sections", content=["check_mk", "logwatch"]),
     ]
 
 
 def test_win_agent_sections_windows_config_empty() -> None:
-    conf = ""
-    result = list(get_win_agent_sections_windows_config(conf))
-    assert result == [
-        WindowsGlobalConfigEntry(name="sections", content=""),
+    assert list(get_win_agent_sections_windows_config([])) == [
+        WindowsGlobalConfigEntry(name="sections", content=[]),
     ]

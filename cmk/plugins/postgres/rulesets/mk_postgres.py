@@ -23,14 +23,13 @@ from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
 def migrate(value: object) -> Mapping[str, object]:
-    if not isinstance(value, dict):
-        return {"deployment": ("do_not_deploy", None)}
-    if "deployment" in value:
-        return value
-    return {
-        "deployment": ("sync", None),
-        **value,
-    }
+    match value:
+        case dict() if "deployment" in value:
+            return value
+        case dict():
+            return {"deployment": ("sync", None), **value}
+        case _:
+            return {"deployment": ("do_not_deploy", None)}
 
 
 def _instance_settings() -> Dictionary:

@@ -50,15 +50,17 @@ def migrate_auth(value: object) -> Mapping[str, object]:
 
 
 def migrate(value: object) -> Mapping[str, object]:
-    if isinstance(value, dict) and "deployment" in value:
-        return value
-    if value is None:
-        return {"deployment": ("do_not_deploy", None)}
-    if value is True:
-        return {"deployment": ("sync", None)}
-    if isinstance(value, dict):
-        return {"deployment": ("sync", None), "auth": value}
-    raise ValueError(f"Unexpected value: {value!r}")
+    match value:
+        case None:
+            return {"deployment": ("do_not_deploy", None)}
+        case True:
+            return {"deployment": ("sync", None)}
+        case dict() if "deployment" in value:
+            return value
+        case dict():
+            return {"deployment": ("sync", None), "auth": value}
+        case _:
+            raise ValueError(f"Unexpected value: {value!r}")
 
 
 def _tls_form() -> Dictionary:

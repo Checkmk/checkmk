@@ -4,10 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Sequence
+
 from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsAgentPlugins
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Alternative,
+    AlternativeModel,
+    CascadingDropdownChoiceValue,
     Dictionary,
     DropdownChoice,
     FixedValue,
@@ -15,10 +19,37 @@ from cmk.gui.valuespec import (
     ListOf,
     TextInput,
     Tuple,
+    ValueSpec,
 )
 from cmk.gui.wato import IndividualOrStoredPassword
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 from cmk.ruleset_matcher.definition import RuleGroup
+
+
+def _user_and_password_valuespec(title: str) -> Tuple[tuple[str, CascadingDropdownChoiceValue]]:
+    return Tuple(
+        title=title,
+        elements=[
+            TextInput(
+                title=_("Username"),
+                allow_empty=False,
+            ),
+            IndividualOrStoredPassword(
+                title=_("Password"),
+                allow_empty=False,
+            ),
+        ],
+    )
+
+
+def _single_credentials_elements() -> Sequence[ValueSpec[AlternativeModel]]:
+    return [
+        _user_and_password_valuespec(_("User and password")),
+        TextInput(
+            title=_("User store key"),
+            allow_empty=False,
+        ),
+    ]
 
 
 def _valuespec_agent_config_mk_sap_hana() -> Alternative:
@@ -46,25 +77,7 @@ def _valuespec_agent_config_mk_sap_hana() -> Alternative:
                             elements=[
                                 Alternative(
                                     title=_("Default credentials"),
-                                    elements=[
-                                        Tuple(
-                                            title=_("User and password"),
-                                            elements=[
-                                                TextInput(
-                                                    title=_("Username"),
-                                                    allow_empty=False,
-                                                ),
-                                                IndividualOrStoredPassword(
-                                                    title=_("Password"),
-                                                    allow_empty=False,
-                                                ),
-                                            ],
-                                        ),
-                                        TextInput(
-                                            title=_("User store key"),
-                                            allow_empty=False,
-                                        ),
-                                    ],
+                                    elements=_single_credentials_elements(),
                                 ),
                                 ListOf(
                                     valuespec=Tuple(
@@ -84,27 +97,7 @@ def _valuespec_agent_config_mk_sap_hana() -> Alternative:
                                                 title=_("Database"),
                                                 allow_empty=False,
                                             ),
-                                            Alternative(
-                                                elements=[
-                                                    Tuple(
-                                                        title=_("User and password"),
-                                                        elements=[
-                                                            TextInput(
-                                                                title=_("Username"),
-                                                                allow_empty=False,
-                                                            ),
-                                                            IndividualOrStoredPassword(
-                                                                title=_("Password"),
-                                                                allow_empty=False,
-                                                            ),
-                                                        ],
-                                                    ),
-                                                    TextInput(
-                                                        title=_("User store key"),
-                                                        allow_empty=False,
-                                                    ),
-                                                ]
-                                            ),
+                                            Alternative(elements=_single_credentials_elements()),
                                         ],
                                     ),
                                     title=_("Credentials for selected databases"),

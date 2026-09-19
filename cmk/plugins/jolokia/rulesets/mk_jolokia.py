@@ -60,7 +60,7 @@ def _migrate_instance_config(instance_config: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
-def _migrate_to_agent_config(value: object) -> Mapping[str, object]:
+def migrate(value: object) -> Mapping[str, object]:
     """Migrate old ruleset format to new format with deployment field.
 
     Old format had Alternative at the top level:
@@ -86,6 +86,43 @@ def _migrate_to_agent_config(value: object) -> Mapping[str, object]:
             return {"deployment": "sync", **config}
         case _:
             raise ValueError(f"Cannot migrate jolokia agent config value: {value!r}")
+
+
+def _login_form(title: Title) -> Dictionary:
+    return Dictionary(
+        title=title,
+        elements={
+            "user": DictElement(
+                required=True,
+                parameter_form=String(
+                    title=Title("User ID for web login (if login required)"),
+                    prefill=DefaultValue("monitoring"),
+                ),
+            ),
+            "password": DictElement(
+                required=True,
+                parameter_form=Password(
+                    title=Title("Password for this user"),
+                ),
+            ),
+            "mode": DictElement(
+                required=True,
+                parameter_form=SingleChoice(
+                    title=Title("Login mode"),
+                    elements=[
+                        SingleChoiceElement(
+                            name="basic",
+                            # weblate-flags: read-only, vendor-name
+                            title=Title("HTTP Basic authentication"),
+                        ),
+                        # weblate-flags: read-only, vendor-name
+                        SingleChoiceElement(name="digest", title=Title("HTTP Digest")),
+                    ],
+                    prefill=DefaultValue("basic"),
+                ),
+            ),
+        },
+    )
 
 
 def _jolokia_instance_elements() -> Mapping[str, DictElement[Any]]:
@@ -204,40 +241,7 @@ def _jolokia_instance_elements() -> Mapping[str, DictElement[Any]]:
         ),
         "login": DictElement(
             required=False,
-            parameter_form=Dictionary(
-                title=Title("Optional login (if required)"),
-                elements={
-                    "user": DictElement(
-                        required=True,
-                        parameter_form=String(
-                            title=Title("User ID for web login (if login required)"),
-                            prefill=DefaultValue("monitoring"),
-                        ),
-                    ),
-                    "password": DictElement(
-                        required=True,
-                        parameter_form=Password(
-                            title=Title("Password for this user"),
-                        ),
-                    ),
-                    "mode": DictElement(
-                        required=True,
-                        parameter_form=SingleChoice(
-                            title=Title("Login mode"),
-                            elements=[
-                                SingleChoiceElement(
-                                    name="basic",
-                                    # weblate-flags: read-only, vendor-name
-                                    title=Title("HTTP Basic authentication"),
-                                ),
-                                # weblate-flags: read-only, vendor-name
-                                SingleChoiceElement(name="digest", title=Title("HTTP Digest")),
-                            ],
-                            prefill=DefaultValue("basic"),
-                        ),
-                    ),
-                },
-            ),
+            parameter_form=_login_form(Title("Optional login (if required)")),
         ),
         "suburi": DictElement(
             required=False,
@@ -334,7 +338,7 @@ def _form_spec_agent_config_mk_jolokia() -> Dictionary:
             " the requests Python library on the host running the plug-in <b>and</b> the"
             " WAR file on the JVMs."
         ),
-        migrate=_migrate_to_agent_config,
+        migrate=migrate,
         elements={
             "deployment": DictElement(
                 required=True,

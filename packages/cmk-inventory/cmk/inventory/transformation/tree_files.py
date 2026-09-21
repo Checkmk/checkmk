@@ -16,7 +16,31 @@ from typing import TypedDict
 import cmk.ccc.store
 from cmk.ccc.hostaddress import HostName
 from cmk.inventory.paths import InventoryPaths, TreePath, TreePathGz
-from cmk.inventory.store import transform
+from cmk.inventory.store import parse_from_gzipped, save_raw_tree, save_raw_tree_gz
+
+
+def _transform_tree_path(tree_path: TreePath, mtime: float) -> None:
+    with cmk.ccc.store.locked(tree_path.path), cmk.ccc.store.locked(tree_path.legacy):
+        if raw_tree := cmk.ccc.store.load_object_from_file(tree_path.legacy, default=None):
+            save_raw_tree(tree_path, raw_tree)
+            os.utime(tree_path.path, (mtime, mtime))
+    tree_path.legacy.unlink(missing_ok=True)
+
+
+def _transform_tree_path_gz(tree_path_gz: TreePathGz, mtime: float) -> None:
+    with cmk.ccc.store.locked(tree_path_gz.path), cmk.ccc.store.locked(tree_path_gz.legacy):
+        if gzipped := cmk.ccc.store.load_bytes_from_file(tree_path_gz.legacy, default=b""):
+            save_raw_tree_gz(tree_path_gz, parse_from_gzipped(gzipped))
+            os.utime(tree_path_gz.path, (mtime, mtime))
+    tree_path_gz.legacy.unlink(missing_ok=True)
+
+
+def transform(tree_path: TreePath | TreePathGz, mtime: float) -> None:
+    match tree_path:
+        case TreePath():
+            _transform_tree_path(tree_path, mtime)
+        case TreePathGz():
+            _transform_tree_path_gz(tree_path, mtime)
 
 
 @dataclass(frozen=True)

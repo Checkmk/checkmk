@@ -22,30 +22,6 @@ from .serialization import deserialize_tree, SDRawTree, serialize_tree
 from .trees import ImmutableTree, MutableTree
 
 
-def _transform_tree_path(tree_path: TreePath, mtime: float) -> None:
-    with store.locked(tree_path.path), store.locked(tree_path.legacy):
-        if raw_tree := store.load_object_from_file(tree_path.legacy, default=None):
-            _save_raw_tree(tree_path, raw_tree)
-            os.utime(tree_path.path, (mtime, mtime))
-    tree_path.legacy.unlink(missing_ok=True)
-
-
-def _transform_tree_path_gz(tree_path_gz: TreePathGz, mtime: float) -> None:
-    with store.locked(tree_path_gz.path), store.locked(tree_path_gz.legacy):
-        if gzipped := store.load_bytes_from_file(tree_path_gz.legacy, default=b""):
-            _save_raw_tree_gz(tree_path_gz, parse_from_gzipped(gzipped))
-            os.utime(tree_path_gz.path, (mtime, mtime))
-    tree_path_gz.legacy.unlink(missing_ok=True)
-
-
-def transform(tree_path: TreePath | TreePathGz, mtime: float) -> None:
-    match tree_path:
-        case TreePath():
-            _transform_tree_path(tree_path, mtime)
-        case TreePathGz():
-            _transform_tree_path_gz(tree_path, mtime)
-
-
 def rename(
     omd_root: Path, *, old_host_name: HostName, new_host_name: HostName
 ) -> Sequence[Literal["inv", "invarch"]]:
@@ -103,12 +79,12 @@ class SDMeta(TypedDict):
     do_archive: bool
 
 
-def _save_raw_tree(tree_path: TreePath, raw_tree: SDRawTree) -> None:
+def save_raw_tree(tree_path: TreePath, raw_tree: SDRawTree) -> None:
     tree_path.path.parent.mkdir(parents=True, exist_ok=True)
     store.save_text_to_file(tree_path.path, json.dumps(raw_tree) + "\n")
 
 
-def _save_raw_tree_gz(tree_path_gz: TreePathGz, meta_and_raw_tree: SDMetaAndRawTree) -> None:
+def save_raw_tree_gz(tree_path_gz: TreePathGz, meta_and_raw_tree: SDMetaAndRawTree) -> None:
     tree_path_gz.path.parent.mkdir(parents=True, exist_ok=True)
     buf = io.BytesIO()
     with gzip.GzipFile(fileobj=buf, mode="wb") as f:
@@ -238,12 +214,12 @@ class RawInventoryStore:
         self, *, host_name: HostName, meta_and_raw_tree: SDMetaAndRawTree, timestamp: int
     ) -> None:
         tree_path = self.inv_paths.inventory_tree(host_name)
-        _save_raw_tree(tree_path, meta_and_raw_tree["raw_tree"])
+        save_raw_tree(tree_path, meta_and_raw_tree["raw_tree"])
         tree_path.legacy.unlink(missing_ok=True)
         os.utime(tree_path.path, (timestamp, timestamp))
 
         tree_path_gz = self.inv_paths.inventory_tree_gz(host_name)
-        _save_raw_tree_gz(tree_path_gz, meta_and_raw_tree)
+        save_raw_tree_gz(tree_path_gz, meta_and_raw_tree)
         tree_path_gz.legacy.unlink(missing_ok=True)
         os.utime(tree_path_gz.path, (timestamp, timestamp))
 
@@ -264,11 +240,11 @@ class InventoryStore:
         raw_tree = serialize_tree(tree)
 
         tree_path = self.inv_paths.inventory_tree(host_name)
-        _save_raw_tree(tree_path, raw_tree)
+        save_raw_tree(tree_path, raw_tree)
         tree_path.legacy.unlink(missing_ok=True)
 
         tree_path_gz = self.inv_paths.inventory_tree_gz(host_name)
-        _save_raw_tree_gz(tree_path_gz, SDMetaAndRawTree(meta=meta, raw_tree=raw_tree))
+        save_raw_tree_gz(tree_path_gz, SDMetaAndRawTree(meta=meta, raw_tree=raw_tree))
         tree_path_gz.legacy.unlink(missing_ok=True)
 
         # Inform Livestatus about the latest inventory update
@@ -290,7 +266,7 @@ class InventoryStore:
         self, *, host_name: HostName, tree: MutableTree | ImmutableTree
     ) -> None:
         tree_path = self.inv_paths.status_data_tree(host_name)
-        _save_raw_tree(tree_path, serialize_tree(tree))
+        save_raw_tree(tree_path, serialize_tree(tree))
         tree_path.legacy.unlink(missing_ok=True)
 
         # Inform Livestatus about the latest inventory update

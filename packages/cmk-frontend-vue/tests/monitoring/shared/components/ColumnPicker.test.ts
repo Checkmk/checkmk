@@ -95,7 +95,7 @@ test('renders one eye toggle per column in column order, with a search field', a
 
   await openPicker()
 
-  expect(screen.getByRole('textbox', { name: 'Search' })).toBeInTheDocument()
+  expect(screen.getByRole('searchbox', { name: 'Search' })).toBeInTheDocument()
   const address = screen.getByRole('button', { name: 'IP address' })
   const alias = screen.getByRole('button', { name: 'Alias' })
   expect(address.compareDocumentPosition(alias) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
@@ -160,7 +160,7 @@ test('the search field filters the offered columns', async () => {
   mountPicker()
 
   const user = await openPicker()
-  await user.type(screen.getByRole('textbox', { name: 'Search' }), 'ip')
+  await user.type(screen.getByRole('searchbox', { name: 'Search' }), 'ip')
 
   expect(screen.getByRole('button', { name: 'IP address' })).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'Alias' })).not.toBeInTheDocument()
@@ -170,7 +170,7 @@ test('an empty search result shows the empty state', async () => {
   mountPicker()
 
   const user = await openPicker()
-  await user.type(screen.getByRole('textbox', { name: 'Search' }), 'zzz')
+  await user.type(screen.getByRole('searchbox', { name: 'Search' }), 'zzz')
 
   expect(screen.getByText('No matching columns')).toBeInTheDocument()
 })

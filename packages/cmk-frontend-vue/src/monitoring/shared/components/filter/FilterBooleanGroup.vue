@@ -27,6 +27,7 @@ import CmkToggleButtonGroup, {
   type ToggleButtonOption
 } from 'cmk-ui-library/components/CmkToggleButtonGroup.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import useId from 'cmk-ui-library/lib/useId'
 import { computed } from 'vue'
 
 import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
@@ -40,6 +41,12 @@ const props = defineProps<{ definition: BooleanGroupFilter<F> }>()
 const model = defineModel<ColumnFilterNode<F> | undefined>({ default: undefined })
 
 const { _t } = usei18n()
+
+const groupId = useId()
+
+function titleId(field: F): string {
+  return `${groupId}-${field}`
+}
 
 function conditionsOf(node: ColumnFilterNode<F> | undefined): { field: F; value: boolean }[] {
   if (!node) {
@@ -114,9 +121,11 @@ function setState(field: F, next: BooleanState): void {
       :key="group.field"
       class="monitoring-filter-boolean-group__group"
       role="group"
-      :aria-label="group.title"
+      :aria-labelledby="titleId(group.field)"
     >
-      <span class="monitoring-filter-boolean-group__title">{{ group.title }}</span>
+      <span :id="titleId(group.field)" class="monitoring-filter-boolean-group__title">{{
+        group.title
+      }}</span>
       <CmkToggleButtonGroup
         class="monitoring-filter-boolean-group__options"
         :options="options"

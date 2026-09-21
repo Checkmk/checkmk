@@ -52,7 +52,7 @@ from cmk.gui.watolib.rulesets import FolderRulesets
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
-from cmk.inventory.config import (
+from cmk.inventory.cleanup import (
     InvCleanupParams,
     InvCleanupParamsDefaultCombined,
 )

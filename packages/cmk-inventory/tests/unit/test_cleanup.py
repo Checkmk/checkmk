@@ -4,19 +4,281 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
+import pytest
+
 from cmk.ccc.hostaddress import HostName
-from cmk.inventory.cleanup import InventoryCleanup
-from cmk.inventory.config import (
+from cmk.inventory.cleanup import (
+    filter_inventory_cleanup_parameters,
     InvCleanupParams,
     InvCleanupParamsCombined,
+    InvCleanupParamsDefaultCombined,
     InvCleanupParamsOfHosts,
+    InventoryCleanup,
 )
 from cmk.inventory.paths import InventoryPaths, TreePath, TreePathGz
 
 from ._logger import null_logger
+
+
+@pytest.mark.parametrize(
+    "cleanup_parameters, hosts_of_site, expected",
+    [
+        pytest.param(
+            InvCleanupParams(
+                for_hosts=[],
+                default=InvCleanupParamsDefaultCombined(
+                    strategy="and",
+                    file_age=123,
+                    number_of_history_entries=456,
+                ),
+                abandoned_file_age=100,
+            ),
+            [],
+            InvCleanupParams(
+                for_hosts=[],
+                default=InvCleanupParamsDefaultCombined(
+                    strategy="and",
+                    file_age=123,
+                    number_of_history_entries=456,
+                ),
+                abandoned_file_age=100,
+            ),
+            id="no-of-hosts-and-no-hosts-of-site",
+        ),
+        pytest.param(
+            InvCleanupParams(
+                for_hosts=[
+                    InvCleanupParamsOfHosts(
+                        regex_or_explicit=["hostname"],
+                        parameters=(
+                            "combined",
+                            InvCleanupParamsCombined(
+                                strategy="and",
+                                file_age=1,
+                                number_of_history_entries=2,
+                            ),
+                        ),
+                    )
+                ],
+                default=InvCleanupParamsDefaultCombined(
+                    strategy="and",
+                    file_age=123,
+                    number_of_history_entries=456,
+                ),
+                abandoned_file_age=100,
+            ),
+            [],
+            InvCleanupParams(
+                for_hosts=[],
+                default=InvCleanupParamsDefaultCombined(
+                    strategy="and",
+                    file_age=123,
+                    number_of_history_entries=456,
+                ),
+                abandoned_file_age=100,
+            ),
+            id="of-hosts-and-no-hosts-of-site",
+        ),
+        pytest.param(
+            InvCleanupParams(
+                for_hosts=[],
+                default=InvCleanupParamsDefaultCombined(
+                    strategy="and",
+                    file_age=123,
+                    number_of_history_entries=456,
+                ),
+                abandoned_file_age=100,
+            ),
+            [HostName("hostname")],
+            InvCleanupParams(
+                for_hosts=[],
+                default=InvCleanupParamsDefaultCombined(
+                    strategy="and",
+                    file_age=123,
+                    number_of_history_entries=456,
+                ),
+                abandoned_file_age=100,
+            ),
+            id="no-of-hosts-and-hosts-of-site",
+        ),
+        pytest.param(
+            InvCleanupParams(
+                for_hosts=[
+                    InvCleanupParamsOfHosts(
+                        regex_or_explicit=["hostname1"],
+                        parameters=(
+                            "combined",
+                            InvCleanupParamsCombined(
+                                strategy="and",
+                                file_age=1,
+                                number_of_history_entries=2,
+                            ),
+                        ),
+                    )
+                ],
+                default=InvCleanupParamsDefaultCombined(
+                    strategy="and",
+                    file_age=123,
+                    number_of_history_entries=456,
+                ),
+                abandoned_file_age=100,
+            ),
+            [HostName("hostname2")],
+            InvCleanupParams(
+                for_hosts=[],
+                default=InvCleanupParamsDefaultCombined(
+                    strategy="and",
+                    file_age=123,
+                    number_of_history_entries=456,
+                ),
+                abandoned_file_age=100,
+            ),
+            id="of-hosts-and-hosts-of-site-and-no-match",
+        ),
+        pytest.param(
+            InvCleanupParams(
+                for_hosts=[
+                    InvCleanupParamsOfHosts(
+                        regex_or_explicit=["hostname"],
+                        parameters=(
+                            "combined",
+                            InvCleanupParamsCombined(
+                                strategy="and",
+                                file_age=1,
+                                number_of_history_entries=2,
+                            ),
+                        ),
+                    )
+                ],
+                default=InvCleanupParamsDefaultCombined(
+                    strategy="and",
+                    file_age=123,
+                    number_of_history_entries=456,
+                ),
+                abandoned_file_age=100,
+            ),
+            [HostName("hostname")],
+            InvCleanupParams(
+                for_hosts=[
+                    InvCleanupParamsOfHosts(
+                        regex_or_explicit=["hostname"],
+                        parameters=(
+                            "combined",
+                            InvCleanupParamsCombined(
+                                strategy="and",
+                                file_age=1,
+                                number_of_history_entries=2,
+                            ),
+                        ),
+                    )
+                ],
+                default=InvCleanupParamsDefaultCombined(
+                    strategy="and",
+                    file_age=123,
+                    number_of_history_entries=456,
+                ),
+                abandoned_file_age=100,
+            ),
+            id="of-hosts-and-hosts-of-site-and-match",
+        ),
+        pytest.param(
+            InvCleanupParams(
+                for_hosts=[
+                    InvCleanupParamsOfHosts(
+                        regex_or_explicit=["~h", "~g", "hostname"],
+                        parameters=(
+                            "combined",
+                            InvCleanupParamsCombined(
+                                strategy="and",
+                                file_age=1,
+                                number_of_history_entries=2,
+                            ),
+                        ),
+                    )
+                ],
+                default=InvCleanupParamsDefaultCombined(
+                    strategy="and",
+                    file_age=123,
+                    number_of_history_entries=456,
+                ),
+                abandoned_file_age=100,
+            ),
+            [HostName("hostname")],
+            InvCleanupParams(
+                for_hosts=[
+                    InvCleanupParamsOfHosts(
+                        regex_or_explicit=["~h", "hostname"],
+                        parameters=(
+                            "combined",
+                            InvCleanupParamsCombined(
+                                strategy="and",
+                                file_age=1,
+                                number_of_history_entries=2,
+                            ),
+                        ),
+                    )
+                ],
+                default=InvCleanupParamsDefaultCombined(
+                    strategy="and",
+                    file_age=123,
+                    number_of_history_entries=456,
+                ),
+                abandoned_file_age=100,
+            ),
+            id="regex-match",
+        ),
+        pytest.param(
+            InvCleanupParams(
+                for_hosts=[
+                    InvCleanupParamsOfHosts(
+                        regex_or_explicit=["~g"],
+                        parameters=(
+                            "combined",
+                            InvCleanupParamsCombined(
+                                strategy="and",
+                                file_age=1,
+                                number_of_history_entries=2,
+                            ),
+                        ),
+                    ),
+                ],
+                default=InvCleanupParamsDefaultCombined(
+                    strategy="and",
+                    file_age=123,
+                    number_of_history_entries=456,
+                ),
+                abandoned_file_age=100,
+            ),
+            [HostName("hostname")],
+            InvCleanupParams(
+                for_hosts=[],
+                default=InvCleanupParamsDefaultCombined(
+                    strategy="and",
+                    file_age=123,
+                    number_of_history_entries=456,
+                ),
+                abandoned_file_age=100,
+            ),
+            id="no-regex-match",
+        ),
+    ],
+)
+def test_filter_inventory_cleanup_parameters(
+    cleanup_parameters: InvCleanupParams,
+    hosts_of_site: Sequence[HostName],
+    expected: InvCleanupParams,
+) -> None:
+    assert (
+        filter_inventory_cleanup_parameters(
+            cleanup_parameters=cleanup_parameters,
+            host_names=hosts_of_site,
+        )
+        == expected
+    )
 
 
 def test_nothing_to_do(tmp_path: Path) -> None:

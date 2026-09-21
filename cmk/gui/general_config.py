@@ -31,7 +31,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.user_connection_config_types import ConfigurableUserConnectionSpec
 from cmk.gui.utils.temperature_unit import TemperatureUnit
-from cmk.inventory.config import InvCleanupParams
+from cmk.inventory.cleanup import InvCleanupParams
 from cmk.livestatus_client import (
     AuthenticationConnectionEntry,
     BrokerConnections,

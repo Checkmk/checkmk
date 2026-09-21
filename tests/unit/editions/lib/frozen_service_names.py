@@ -2168,6 +2168,7 @@ FROZEN_SERVICE_NAMES: Final[Mapping[str, str]] = {
     "varnish_worker": "Varnish Worker",
     "varnish_worker_thread_ratio": "Varnish Worker Thread Ratio",
     "vbox_guest": "VBox Guest Additions",
+    "veeam_backup_jobs": "Backup job %s",
     "veeam_cdp_jobs": "VEEAM CDP Job %s",
     "veeam_client": "VEEAM Client %s",
     "veeam_jobs": "VEEAM Job %s",

@@ -6,12 +6,12 @@
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_link, PageMenuEntry
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request, folder_tree
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request, FolderTree
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless
 
 
-def make_host_status_link(host_name: str, view_name: str) -> PageMenuEntry:
+def make_host_status_link(tree: FolderTree, host_name: str, view_name: str) -> PageMenuEntry:
     return PageMenuEntry(
         title=_("Monitoring status"),
         icon_name=StaticIcon(IconNames.status),
@@ -23,7 +23,7 @@ def make_host_status_link(host_name: str, view_name: str) -> PageMenuEntry:
                     (
                         "filename",
                         folder_from_request(
-                            folder_tree(), request.var("folder"), request.get_ascii_input("host")
+                            tree, request.var("folder"), request.get_ascii_input("host")
                         ).path()
                         + "/hosts.mk",
                     ),

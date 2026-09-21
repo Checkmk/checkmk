@@ -888,7 +888,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
             ),
         )
 
-    yield make_host_status_link(host_name=host.name(), view_name="hoststatus")
+    yield make_host_status_link(host.folder().tree, host_name=host.name(), view_name="hoststatus")
 
     if user.may("wato.rulesets") and host.is_cluster():
         yield PageMenuEntry(

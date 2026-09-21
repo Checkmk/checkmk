@@ -35,7 +35,7 @@ from cmk.gui.type_defs import RoleName, ViewSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.watolib.activate_changes import ActivateChanges
-from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderTree
+from cmk.gui.watolib.hosts_and_folders import FolderTree, make_folder_tree
 from cmk.gui.watolib.main_menu import main_module_registry, MainModuleTopic
 from cmk.shared_typing.main_menu import (
     LoadingTransition as MainMenuLoadingTransition,
@@ -205,7 +205,7 @@ FolderEntry = TypedDict(
 )
 
 
-def compute_foldertree() -> dict[str, FolderEntry]:
+def compute_foldertree(tree: FolderTree) -> dict[str, FolderEntry]:
     sites.live().set_prepend_site(True)
     query = "GET hosts\nStats: state >= 0\nColumns: filename"
     hosts = sites.live().query(query)
@@ -228,7 +228,6 @@ def compute_foldertree() -> dict[str, FolderEntry]:
     # Now get number of hosts by folder
     # Count all children for each folder
     user_folders: dict[str, FolderEntry] = {}
-    tree = folder_tree()
     for _site, filename, num in sorted(hosts):
         # Remove leading /wato/
         wato_folder_path = filename[6:]
@@ -340,7 +339,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         ):
             html.write_text_permissive(_("Setup is disabled."))
 
-        user_folders = compute_foldertree()
+        user_folders = compute_foldertree(make_folder_tree(config))
 
         #
         # Render link target selection

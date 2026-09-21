@@ -6,6 +6,8 @@
 from logging import Logger
 from typing import override
 
+from cmk.gui.config import active_config
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.validate_config import validate_mk_files
@@ -14,7 +16,7 @@ from cmk.validate_config import validate_mk_files
 class ValidateConfigFiles(UpdateAction):
     @override
     def __call__(self, logger: Logger) -> None:
-        result = validate_mk_files()
+        result = validate_mk_files(make_folder_tree(active_config))
         if result.logs_invalid:
             log_prefix = " " * 7
             logger.info(

@@ -8,6 +8,8 @@ import sys
 from cmk.base import config
 from cmk.ccc.version import edition as get_edition
 from cmk.gui import main_modules
+from cmk.gui.config import active_config
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.wsgi.app import gui_context
 from cmk.utils import paths
 from cmk.utils.redis import disable_redis
@@ -29,7 +31,7 @@ def main() -> int:
             # The validation step will not be executed otherwise.
             config.load()
 
-            result = validate_mk_files()
+            result = validate_mk_files(make_folder_tree(active_config))
 
     except Exception as e:
         sys.stderr.write("ERROR: Failed to validate configuration\n")

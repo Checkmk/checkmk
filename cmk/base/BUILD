@@ -205,25 +205,13 @@ py_library(
     name = "community-app",
     srcs = ["community_app.py"],
     imports = ["../.."],
-    tags = [
-        "deballast-keep=//cmk/base:diagnostics",  # loaded at runtime via discover_modes()
-        "deballast-keep=//cmk/base:notify",  # loaded at runtime via discover_modes()
-        "deballast-keep=//cmk/base/automations:automations",  # loaded at runtime via discover_automations()
-        "deballast-keep=//cmk/base/modes:modes",  # loaded at runtime via discover_modes()
-        "deballast-keep=//cmk/cli/engine",  # provides discover_modes()/Modes for CLI assembly
-    ],
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
     ],
     deps = [
         ":base-app",
-        ":diagnostics",
-        ":notify",
-        "//cmk/base/automations",
         "//cmk/base/core",
-        "//cmk/base/modes",
-        "//cmk/cli/engine",
         "//cmk/utils:paths",
         "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine:fetchers",

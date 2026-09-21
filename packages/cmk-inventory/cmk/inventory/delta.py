@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pprint
 from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Literal, override, Self, TypedDict
+from typing import Literal, Self
 
 from ._dict_keys import DictKeys
 from .trees import (
@@ -25,22 +24,6 @@ from .trees import (
 class SDDeltaValue:
     old: SDValue
     new: SDValue
-
-
-class SDBareDeltaAttributes(TypedDict):
-    Pairs: Mapping[SDKey, SDDeltaValue]
-
-
-class SDBareDeltaTable(TypedDict, total=False):
-    KeyColumns: Sequence[SDKey]
-    Rows: Sequence[Mapping[SDKey, SDDeltaValue]]
-
-
-class SDBareDeltaTree(TypedDict):
-    Path: SDPath
-    Attributes: SDBareDeltaAttributes
-    Table: SDBareDeltaTable
-    Nodes: Mapping[SDNodeName, SDBareDeltaTree]
 
 
 _SDEncodeAs = Callable[[SDValue], SDDeltaValue]
@@ -76,11 +59,6 @@ class ImmutableDeltaAttributes:
     def get_stats(self) -> SDDeltaCounter:
         return _compute_delta_stats(self.pairs)
 
-    @property
-    def bare(self) -> SDBareDeltaAttributes:
-        # Useful for debugging; no restrictions
-        return {"Pairs": self.pairs}
-
 
 @dataclass(frozen=True, kw_only=True)
 class ImmutableDeltaTable:
@@ -102,14 +80,6 @@ class ImmutableDeltaTable:
         for row in self.rows:
             counter.update(_compute_delta_stats(row))
         return counter
-
-    @property
-    def bare(self) -> SDBareDeltaTable:
-        # Useful for debugging; no restrictions
-        return {
-            "KeyColumns": self.key_columns,
-            "Rows": self.rows,
-        }
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -162,20 +132,6 @@ class ImmutableDeltaTree:
         for node in self.nodes_by_name.values():
             counter.update(node.get_stats())
         return counter
-
-    @property
-    def bare(self) -> SDBareDeltaTree:
-        # Useful for debugging; no restrictions
-        return {
-            "Path": self.path,
-            "Attributes": self.attributes.bare,
-            "Table": self.table.bare,
-            "Nodes": {edge: node.bare for edge, node in self.nodes_by_name.items()},
-        }
-
-    @override
-    def __str__(self) -> str:
-        return f"{self.__class__.__name__}({pprint.pformat(self.bare)})"
 
 
 def _encode_as_new(value: SDValue) -> SDDeltaValue:

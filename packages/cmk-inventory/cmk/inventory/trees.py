@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pprint
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Literal, NewType, override, TypedDict
@@ -55,24 +54,6 @@ class RetentionInterval:
     @property
     def keep_until(self) -> int:
         return self.valid_until + self.retention_interval
-
-
-class SDBareAttributes(TypedDict):
-    Pairs: Mapping[SDKey, SDValue]
-    Retentions: Mapping[SDKey, RetentionInterval]
-
-
-class SDBareTable(TypedDict):
-    KeyColumns: Sequence[SDKey]
-    RowsByIdent: Mapping[SDRowIdent, Mapping[SDKey, SDValue]]
-    Retentions: Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]]
-
-
-class SDBareTree(TypedDict):
-    Path: SDPath
-    Attributes: SDBareAttributes
-    Table: SDBareTable
-    Nodes: Mapping[SDNodeName, SDBareTree]
 
 
 def parse_visible_raw_path(raw_path: str) -> SDPath:
@@ -158,14 +139,6 @@ class _MutableAttributes:
                     ),
                 )
             )
-
-    @property
-    def bare(self) -> SDBareAttributes:
-        # Useful for debugging; no restrictions
-        return {
-            "Pairs": self.pairs,
-            "Retentions": self.retentions,
-        }
 
 
 def _format_update_result_table(ident: SDRowIdent, *, title: str, message: str) -> str:
@@ -324,15 +297,6 @@ class _MutableTable:
                     )
                 )
 
-    @property
-    def bare(self) -> SDBareTable:
-        # Useful for debugging; no restrictions
-        return {
-            "KeyColumns": self.key_columns,
-            "RowsByIdent": self.rows_by_ident,
-            "Retentions": self.retentions,
-        }
-
 
 @dataclass(frozen=True, kw_only=True)
 class MutableTree:
@@ -433,20 +397,6 @@ class MutableTree:
                 by_path.update({p: list(rs) for p, rs in update_results.items()})
         return by_path
 
-    @property
-    def bare(self) -> SDBareTree:
-        # Useful for debugging; no restrictions
-        return {
-            "Path": self.path,
-            "Attributes": self.attributes.bare,
-            "Table": self.table.bare,
-            "Nodes": {name: node.bare for name, node in self.nodes_by_name.items()},
-        }
-
-    @override
-    def __str__(self) -> str:
-        return f"{self.__class__.__name__}({pprint.pformat(self.bare)})"
-
 
 @dataclass(frozen=True, kw_only=True)
 class ImmutableAttributes:
@@ -463,14 +413,6 @@ class ImmutableAttributes:
         if not isinstance(other, _MutableAttributes | ImmutableAttributes):
             return NotImplemented
         return self.pairs == other.pairs
-
-    @property
-    def bare(self) -> SDBareAttributes:
-        # Useful for debugging; no restrictions
-        return {
-            "Pairs": self.pairs,
-            "Retentions": self.retentions,
-        }
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -516,15 +458,6 @@ class ImmutableTable:
             {key: (value, self.retentions.get(ident, {}).get(key)) for key, value in row.items()}
             for ident, row in self.rows_by_ident.items()
         ]
-
-    @property
-    def bare(self) -> SDBareTable:
-        # Useful for debugging; no restrictions
-        return {
-            "KeyColumns": self.key_columns,
-            "RowsByIdent": self.rows_by_ident,
-            "Retentions": self.retentions,
-        }
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -577,20 +510,6 @@ class ImmutableTree:
             if (node := self.nodes_by_name.get(path[0])) is None
             else node.get_tree(path[1:])
         )
-
-    @property
-    def bare(self) -> SDBareTree:
-        # Useful for debugging; no restrictions
-        return {
-            "Path": self.path,
-            "Attributes": self.attributes.bare,
-            "Table": self.table.bare,
-            "Nodes": {name: node.bare for name, node in self.nodes_by_name.items()},
-        }
-
-    @override
-    def __str__(self) -> str:
-        return f"{self.__class__.__name__}({pprint.pformat(self.bare)})"
 
 
 def _make_retentions_filter_func(

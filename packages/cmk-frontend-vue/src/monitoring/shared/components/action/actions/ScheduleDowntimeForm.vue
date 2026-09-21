@@ -131,11 +131,17 @@ export function adhocMinutesTotal(values: ScheduleDowntimeFormValues): number {
   return (values.adhocHours ?? 0) * 60 + (values.adhocMinutes ?? 0)
 }
 
+/** A custom downtime has to end after it starts. */
+export function customRangeIsOrdered(values: ScheduleDowntimeFormValues): boolean {
+  return values.selection !== 'custom' || values.customRange.from.compare(values.customRange.to) < 0
+}
+
 export function isScheduleDowntimeValid(
   values: ScheduleDowntimeFormValues,
   presets: readonly DowntimePresetOption[]
 ): boolean {
-  const durationValid = values.selection !== 'adhoc' || adhocMinutesTotal(values) > 0
+  const durationValid =
+    (values.selection !== 'adhoc' || adhocMinutesTotal(values) > 0) && customRangeIsOrdered(values)
   return (
     values.comment.trim() !== '' && durationValid && repeatsOnADayEveryMonthHas(values, presets)
   )
@@ -185,7 +191,7 @@ import CmkChipSelect from 'cmk-ui-library/components/CmkChipSelect.vue'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
 import CmkLink from 'cmk-ui-library/components/CmkLink.vue'
 import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
-import CmkTimeRangePicker from 'cmk-ui-library/components/date-time/CmkTimeRangePicker.vue'
+import CmkDateTimePicker from 'cmk-ui-library/components/date-time/CmkDateTimePicker.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
@@ -195,6 +201,8 @@ import useId from 'cmk-ui-library/lib/useId'
 import { computed, ref, watch } from 'vue'
 
 import { usePresetOverflow } from '@/lib/usePresetOverflow'
+
+import { ACTION_DATE_TIME_SETTINGS } from '@/monitoring/shared/constants'
 
 import type { ActionTargetKind } from '../types'
 
@@ -250,6 +258,10 @@ const repeatOptions = computed(() => ({
     : [{ recur: 'fixed', title: _t('never') }]
   ).map(({ recur, title }) => ({ name: recur, title: title as TranslatedString }))
 }))
+
+const rangeOrderHint = computed(() =>
+  customRangeIsOrdered(model.value) ? null : _t('The downtime has to end after it starts.')
+)
 
 const monthDayHint = computed(() =>
   repeatsOnADayEveryMonthHas(model.value, props.presets)
@@ -421,13 +433,38 @@ function selectOverflow(id: string | null): void {
           </CmkLink>
         </div>
 
-        <CmkTimeRangePicker
-          v-if="model.selection === 'custom'"
-          v-model="model.customRange"
-          v-model:open="customOpen"
-          :time-zone="timeZone"
-          :label="_t('Downtime time range')"
-        />
+        <div v-if="model.selection === 'custom'" class="monitoring-schedule-downtime-form__range">
+          <div
+            class="monitoring-schedule-downtime-form__range-row"
+            role="group"
+            :aria-label="_t('From')"
+          >
+            <span class="monitoring-schedule-downtime-form__range-label">{{ _t('From') }}</span>
+            <CmkDateTimePicker
+              v-model="model.customRange.from"
+              v-model:open="customOpen"
+              :time-zone="timeZone"
+              :settings="ACTION_DATE_TIME_SETTINGS"
+              :label="_t('Choose when the downtime starts')"
+            />
+          </div>
+          <div
+            class="monitoring-schedule-downtime-form__range-row"
+            role="group"
+            :aria-label="_t('To')"
+          >
+            <span class="monitoring-schedule-downtime-form__range-label">{{ _t('To') }}</span>
+            <CmkDateTimePicker
+              v-model="model.customRange.to"
+              :time-zone="timeZone"
+              :settings="ACTION_DATE_TIME_SETTINGS"
+              :label="_t('Choose when the downtime ends')"
+            />
+          </div>
+          <p v-if="rangeOrderHint" class="monitoring-schedule-downtime-form__preset-hint">
+            {{ rangeOrderHint }}
+          </p>
+        </div>
         <div
           v-else-if="model.selection === 'adhoc'"
           class="monitoring-schedule-downtime-form__adhoc"
@@ -572,6 +609,22 @@ function selectOverflow(id: string | null): void {
 .monitoring-schedule-downtime-form__presets-link {
   align-self: center;
   width: auto;
+}
+
+.monitoring-schedule-downtime-form__range {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-3);
+}
+
+.monitoring-schedule-downtime-form__range-row {
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-5);
+}
+
+.monitoring-schedule-downtime-form__range-label {
+  min-width: var(--dimension-11);
 }
 
 .monitoring-schedule-downtime-form__adhoc {

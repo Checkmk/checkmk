@@ -427,3 +427,44 @@ describe('Repeat', () => {
     ).toBeInTheDocument()
   })
 })
+
+describe('Custom duration', () => {
+  const start = toZoned(parseAbsolute('2026-08-28T15:00:00Z', 'UTC'), 'UTC')
+
+  it('picks the start and the end with a date & time picker each', () => {
+    mountForm({ selection: 'custom', customRange: { from: start, to: start.add({ hours: 4 }) } })
+
+    expect(within(screen.getByRole('group', { name: 'From' })).getByLabelText('Time')).toBeVisible()
+    expect(within(screen.getByRole('group', { name: 'To' })).getByLabelText('Time')).toBeVisible()
+  })
+
+  it('reads times as 24 hours, so no AM/PM segment widens the pickers', () => {
+    mountForm({ selection: 'custom', customRange: { from: start, to: start.add({ hours: 4 }) } })
+
+    expect(screen.queryByRole('spinbutton', { name: 'AM or PM' })).not.toBeInTheDocument()
+  })
+
+  it('is invalid when the downtime ends before it starts', () => {
+    expect(
+      isScheduleDowntimeValid(
+        {
+          ...defaultScheduleDowntimeValues(PRESETS),
+          comment: 'maintenance',
+          selection: 'custom',
+          customRange: { from: start, to: start.subtract({ hours: 1 }) }
+        },
+        PRESETS
+      )
+    ).toBe(false)
+  })
+
+  it('says why a downtime ending before it starts is refused', async () => {
+    mountForm({
+      comment: 'maintenance',
+      selection: 'custom',
+      customRange: { from: start, to: start.subtract({ hours: 1 }) }
+    })
+
+    expect(await screen.findByText('The downtime has to end after it starts.')).toBeVisible()
+  })
+})

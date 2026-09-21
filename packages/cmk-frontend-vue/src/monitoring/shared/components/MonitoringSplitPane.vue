@@ -25,6 +25,7 @@ import MonitoringActionBar from '@/monitoring/shared/components/action/Monitorin
 import MonitoringActionPane from '@/monitoring/shared/components/action/MonitoringActionPane.vue'
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
+import { ACTION_PANE_MIN_WIDTH } from '@/monitoring/shared/constants'
 import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 import { useMonitoringActions } from '@/monitoring/shared/services/useMonitoringActions'
 
@@ -158,6 +159,7 @@ function onRightPaneCollapse(collapsed: boolean): void {
     :collapsed="!activeAction && !displayOptionsOpen"
     :right-min-size="30"
     :right-max-size="50"
+    :right-min-width="ACTION_PANE_MIN_WIDTH"
     :collapsible-on-resize="false"
     class="monitoring-split-pane"
     @update:collapsed="onRightPaneCollapse($event as boolean)"

@@ -245,6 +245,7 @@ CMK_PACKAGES = [
     "//packages/cmk-werks",
 ] + select({
     "@//:gpl+nonfree_repo": [
+        "//non-free/packages/cmk-ai-control-plane:protocols",
         "//non-free/packages/cmk-core-helpers:check-helper-protocol",
         "//non-free/packages/cmk-core-helpers:fetcher-helper",
         "//non-free/packages/cmk-core-helpers:inline-snmp",

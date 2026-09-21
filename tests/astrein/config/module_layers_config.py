@@ -672,6 +672,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_PLUGIN_APIS,
         *PACKAGE_CRYPTO,
         *PACKAGE_MKP_TOOL,
+        "cmk.ai_control_plane.protocols",
         "cmk.nonfree.pro.bakery",
         "cmk.nonfree.pro.robotmk.gui",
         "cmk.discover_plugins",

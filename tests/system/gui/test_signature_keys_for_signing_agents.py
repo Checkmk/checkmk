@@ -157,6 +157,7 @@ def test_download_key(dashboard_page: MainDashboard) -> None:
     )
 
 
+@pytest.mark.skip_if_faked_artifacts
 def test_bake_and_sign(test_site: Site, dashboard_page: MainDashboard, with_key: str) -> None:
     """Go to agents and click "bake and sign."""
     agent_bakery_page = AgentBakeryPage(dashboard_page.page)

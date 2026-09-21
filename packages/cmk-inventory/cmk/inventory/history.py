@@ -30,15 +30,15 @@ class HistoryDeltaPath:
 
 
 @dataclass(frozen=True)
-class HistoryPath:
+class _HistoryPath:
     tree_path: TreePath
     timestamp: int
 
 
 @dataclass(frozen=True, kw_only=True)
 class HistoryArchivePath:
-    previous: HistoryPath
-    current: HistoryPath
+    previous: _HistoryPath
+    current: _HistoryPath
 
     @property
     def current_timestamp(self) -> int:
@@ -91,6 +91,12 @@ class HistoryEntry:
         )
 
 
+@dataclass(frozen=True)
+class History:
+    entries: Sequence[HistoryEntry]
+    corrupted: Sequence[Path]
+
+
 class HistoryStore:
     def __init__(self, omd_root: Path) -> None:
         self.inv_paths = InventoryPaths(omd_root)
@@ -123,17 +129,17 @@ class HistoryStore:
 
     def _collect_paths_from_archive(
         self, host_name: HostName
-    ) -> Iterator[Result[HistoryPath, Path]]:
+    ) -> Iterator[Result[_HistoryPath, Path]]:
         try:
             file_paths = list(self.inv_paths.archive_host(host_name).iterdir())
         except FileNotFoundError:
             return
 
-        yield OK(HistoryPath(TreePath(path=Path(), legacy=Path()), -1))
+        yield OK(_HistoryPath(TreePath(path=Path(), legacy=Path()), -1))
         for file_path in file_paths:
             try:
                 yield OK(
-                    HistoryPath(
+                    _HistoryPath(
                         tree_path=TreePath.from_archive_or_delta_cache_file_path(file_path),
                         timestamp=int(file_path.with_suffix("").name),
                     )
@@ -144,7 +150,7 @@ class HistoryStore:
         tree_path = self.inv_paths.inventory_tree(host_name)
         try:
             yield OK(
-                HistoryPath(
+                _HistoryPath(
                     tree_path=tree_path,
                     timestamp=int(tree_path.path.stat().st_mtime),
                 )
@@ -153,13 +159,13 @@ class HistoryStore:
             # TODO CMK-23408
             with contextlib.suppress(FileNotFoundError):
                 yield OK(
-                    HistoryPath(
+                    _HistoryPath(
                         tree_path=tree_path,
                         timestamp=int(tree_path.legacy.stat().st_mtime),
                     )
                 )
 
-    def collect_history_paths(
+    def _collect_history_paths(
         self, *, host_name: HostName
     ) -> Iterator[Result[HistoryDeltaPath | HistoryArchivePath, Path]]:
         known_paths: dict[tuple[HostName, int, int], HistoryDeltaPath | HistoryArchivePath] = {}
@@ -200,7 +206,7 @@ class HistoryStore:
 
         return self._lookup.setdefault(key, load_tree_from_tree_path(tree_path))
 
-    def load_history_entry(
+    def _load_history_entry(
         self, *, host_name: HostName, path: HistoryDeltaPath | HistoryArchivePath
     ) -> Result[HistoryEntry, Sequence[Path]]:
         match path:
@@ -237,7 +243,7 @@ class HistoryStore:
 
                 if entry.new or entry.changed or entry.removed:
                     if path.current.tree_path != self.inv_paths.inventory_tree(host_name):
-                        self.save_history_entry(host_name=host_name, history_entry=entry)
+                        self._save_history_entry(host_name=host_name, history_entry=entry)
                     return OK(entry)
 
                 return Error(
@@ -249,7 +255,7 @@ class HistoryStore:
                     ]
                 )
 
-    def save_history_entry(self, *, host_name: HostName, history_entry: HistoryEntry) -> None:
+    def _save_history_entry(self, *, host_name: HostName, history_entry: HistoryEntry) -> None:
         delta_cache_tree = self.inv_paths.delta_cache_tree(
             host_name,
             history_entry.previous_timestamp,
@@ -269,52 +275,43 @@ class HistoryStore:
         )
         delta_cache_tree.legacy.unlink(missing_ok=True)
 
-
-@dataclass(frozen=True)
-class History:
-    entries: Sequence[HistoryEntry]
-    corrupted: Sequence[Path]
-
-
-def load_history(
-    history_store: HistoryStore,
-    host_name: HostName,
-    *,
-    history_paths_filter: Callable[
-        [Sequence[HistoryDeltaPath | HistoryArchivePath]],
-        Sequence[HistoryDeltaPath | HistoryArchivePath],
-    ],
-    delta_tree_filters: Sequence[SDFilterChoice] | None,
-) -> History:
-    paths = []
-    corrupted: set[Path] = set()
-    for path_result in history_store.collect_history_paths(host_name=host_name):
-        if path_result.is_ok():
-            paths.append(path_result.ok)
-        else:
-            corrupted.add(path_result.error)
-
-    entries = []
-    for path in history_paths_filter(paths):
-        if (
-            entry_result := history_store.load_history_entry(host_name=host_name, path=path)
-        ).is_ok():
-            entries.append(entry_result.ok)
-        else:
-            corrupted.update(entry_result.error)
-
-    if delta_tree_filters is None:
-        return History(entries=entries, corrupted=list(corrupted))
-
-    return History(
-        entries=[
-            HistoryEntry.from_delta_tree(
-                previous_timestamp=e.previous_timestamp,
-                current_timestamp=e.current_timestamp,
-                delta_tree=d,
-            )
-            for e in entries
-            if (d := filter_delta_tree(e.delta_tree, delta_tree_filters))
+    def load(
+        self,
+        host_name: HostName,
+        *,
+        history_paths_filter: Callable[
+            [Sequence[HistoryDeltaPath | HistoryArchivePath]],
+            Sequence[HistoryDeltaPath | HistoryArchivePath],
         ],
-        corrupted=list(corrupted),
-    )
+        delta_tree_filters: Sequence[SDFilterChoice] | None,
+    ) -> History:
+        paths = []
+        corrupted: set[Path] = set()
+        for path_result in self._collect_history_paths(host_name=host_name):
+            if path_result.is_ok():
+                paths.append(path_result.ok)
+            else:
+                corrupted.add(path_result.error)
+
+        entries = []
+        for path in history_paths_filter(paths):
+            if (entry_result := self._load_history_entry(host_name=host_name, path=path)).is_ok():
+                entries.append(entry_result.ok)
+            else:
+                corrupted.update(entry_result.error)
+
+        if delta_tree_filters is None:
+            return History(entries=entries, corrupted=list(corrupted))
+
+        return History(
+            entries=[
+                HistoryEntry.from_delta_tree(
+                    previous_timestamp=e.previous_timestamp,
+                    current_timestamp=e.current_timestamp,
+                    delta_tree=d,
+                )
+                for e in entries
+                if (d := filter_delta_tree(e.delta_tree, delta_tree_filters))
+            ],
+            corrupted=list(corrupted),
+        )

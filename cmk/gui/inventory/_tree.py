@@ -27,7 +27,6 @@ from cmk.inventory.history import (
     HistoryDeltaPath,
     HistoryEntry,
     HistoryStore,
-    load_history,
 )
 from cmk.inventory.merging import merge_trees
 from cmk.inventory.store import InventoryStore, parse_from_raw_status_data_tree
@@ -195,8 +194,7 @@ def load_latest_delta_tree(history_store: HistoryStore, hostname: HostName) -> I
     if "/" in hostname:
         return ImmutableDeltaTree()
 
-    history = load_history(
-        history_store,
+    history = history_store.load(
         hostname,
         history_paths_filter=lambda paths: [paths[-1]] if paths else [],
         delta_tree_filters=(
@@ -236,8 +234,7 @@ def load_delta_tree(
             % {"timestamp": timestamp, "hostname": hostname}
         )
 
-    history = load_history(
-        history_store,
+    history = history_store.load(
         hostname,
         history_paths_filter=lambda paths: _search_timestamps(paths, timestamp),
         delta_tree_filters=(
@@ -258,8 +255,7 @@ def get_history(
     if "/" in hostname:
         return [], []  # just for security reasons
 
-    history = load_history(
-        history_store,
+    history = history_store.load(
         hostname,
         history_paths_filter=lambda paths: paths,
         delta_tree_filters=(

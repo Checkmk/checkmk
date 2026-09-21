@@ -7,7 +7,7 @@ from pathlib import Path
 
 import cmk.ccc.store
 from cmk.ccc.hostaddress import HostName
-from cmk.inventory.history import HistoryStore, load_history
+from cmk.inventory.history import HistoryStore
 
 from ._fixtures import gzipped_repr, raw_tree
 
@@ -24,8 +24,7 @@ def test_load_history(tmp_path: Path) -> None:
     cmk.ccc.store.save_object_to_file(tmp_path / "var/check_mk/inventory/hostname", tree)
     cmk.ccc.store.save_bytes_to_file(tmp_path / "var/check_mk/inventory/hostname.gz", gzipped)
 
-    history = load_history(
-        HistoryStore(tmp_path),
+    history = HistoryStore(tmp_path).load(
         host_name,
         history_paths_filter=lambda paths: paths,
         delta_tree_filters=None,
@@ -67,8 +66,7 @@ def test_load_history_only_from_archive_files(tmp_path: Path) -> None:
         )
 
     # No delta cache files — history must still be computed from archives alone.
-    history = load_history(
-        HistoryStore(tmp_path),
+    history = HistoryStore(tmp_path).load(
         host_name,
         history_paths_filter=lambda paths: paths,
         delta_tree_filters=None,

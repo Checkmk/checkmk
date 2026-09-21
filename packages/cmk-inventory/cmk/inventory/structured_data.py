@@ -59,22 +59,9 @@ class SDRawAttributes(TypedDict, total=False):
     Retentions: Mapping[SDKey, tuple[int, int, int, Literal["previous", "current"]]]
 
 
-class SDBareAttributes(TypedDict):
-    Pairs: Mapping[SDKey, SDValue]
-    Retentions: Mapping[SDKey, tuple[int, int, int, Literal["previous", "current"]]]
-
-
 class SDRawTable(TypedDict, total=False):
     KeyColumns: Sequence[SDKey]
     Rows: Sequence[Mapping[SDKey, SDValue]]
-    Retentions: Mapping[
-        SDRowIdent, Mapping[SDKey, tuple[int, int, int, Literal["previous", "current"]]]
-    ]
-
-
-class SDBareTable(TypedDict):
-    KeyColumns: Sequence[SDKey]
-    RowsByIdent: Mapping[SDRowIdent, Mapping[SDKey, SDValue]]
     Retentions: Mapping[
         SDRowIdent, Mapping[SDKey, tuple[int, int, int, Literal["previous", "current"]]]
     ]
@@ -86,18 +73,7 @@ class SDRawTree(TypedDict):
     Nodes: Mapping[SDNodeName, SDRawTree]
 
 
-class SDBareTree(TypedDict):
-    Path: SDPath
-    Attributes: SDBareAttributes
-    Table: SDBareTable
-    Nodes: Mapping[SDNodeName, SDBareTree]
-
-
 class SDRawDeltaAttributes(TypedDict, total=False):
-    Pairs: Mapping[SDKey, tuple[SDValue, SDValue]]
-
-
-class SDBareDeltaAttributes(TypedDict):
     Pairs: Mapping[SDKey, tuple[SDValue, SDValue]]
 
 
@@ -106,22 +82,10 @@ class SDRawDeltaTable(TypedDict, total=False):
     Rows: Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]]
 
 
-class SDBareDeltaTable(TypedDict, total=False):
-    KeyColumns: Sequence[SDKey]
-    Rows: Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]]
-
-
 class SDRawDeltaTree(TypedDict):
     Attributes: SDRawDeltaAttributes
     Table: SDRawDeltaTable
     Nodes: Mapping[SDNodeName, SDRawDeltaTree]
-
-
-class SDBareDeltaTree(TypedDict):
-    Path: SDPath
-    Attributes: SDBareDeltaAttributes
-    Table: SDBareDeltaTable
-    Nodes: Mapping[SDNodeName, SDBareDeltaTree]
 
 
 class _RawIntervalFromConfigMandatory(TypedDict):
@@ -160,6 +124,24 @@ class RetentionInterval:
     @property
     def keep_until(self) -> int:
         return self.valid_until + self.retention_interval
+
+
+class SDBareAttributes(TypedDict):
+    Pairs: Mapping[SDKey, SDValue]
+    Retentions: Mapping[SDKey, RetentionInterval]
+
+
+class SDBareTable(TypedDict):
+    KeyColumns: Sequence[SDKey]
+    RowsByIdent: Mapping[SDRowIdent, Mapping[SDKey, SDValue]]
+    Retentions: Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]]
+
+
+class SDBareTree(TypedDict):
+    Path: SDPath
+    Attributes: SDBareAttributes
+    Table: SDBareTable
+    Nodes: Mapping[SDNodeName, SDBareTree]
 
 
 def parse_visible_raw_path(raw_path: str) -> SDPath:
@@ -335,7 +317,7 @@ class _MutableAttributes:
         # Useful for debugging; no restrictions
         return {
             "Pairs": self.pairs,
-            "Retentions": {k: _serialize_retention_interval(v) for k, v in self.retentions.items()},
+            "Retentions": self.retentions,
         }
 
 
@@ -501,10 +483,7 @@ class _MutableTable:
         return {
             "KeyColumns": self.key_columns,
             "RowsByIdent": self.rows_by_ident,
-            "Retentions": {
-                i: {k: _serialize_retention_interval(v) for k, v in ri.items()}
-                for i, ri in self.retentions.items()
-            },
+            "Retentions": self.retentions,
         }
 
 
@@ -632,6 +611,22 @@ class SDDeltaValue:
     new: SDValue
 
 
+class SDBareDeltaAttributes(TypedDict):
+    Pairs: Mapping[SDKey, SDDeltaValue]
+
+
+class SDBareDeltaTable(TypedDict, total=False):
+    KeyColumns: Sequence[SDKey]
+    Rows: Sequence[Mapping[SDKey, SDDeltaValue]]
+
+
+class SDBareDeltaTree(TypedDict):
+    Path: SDPath
+    Attributes: SDBareDeltaAttributes
+    Table: SDBareDeltaTable
+    Nodes: Mapping[SDNodeName, SDBareDeltaTree]
+
+
 @dataclass(frozen=True, kw_only=True)
 class ImmutableAttributes:
     pairs: Mapping[SDKey, SDValue] = field(default_factory=dict)
@@ -653,7 +648,7 @@ class ImmutableAttributes:
         # Useful for debugging; no restrictions
         return {
             "Pairs": self.pairs,
-            "Retentions": {k: _serialize_retention_interval(v) for k, v in self.retentions.items()},
+            "Retentions": self.retentions,
         }
 
 
@@ -707,10 +702,7 @@ class ImmutableTable:
         return {
             "KeyColumns": self.key_columns,
             "RowsByIdent": self.rows_by_ident,
-            "Retentions": {
-                i: {k: _serialize_retention_interval(v) for k, v in ri.items()}
-                for i, ri in self.retentions.items()
-            },
+            "Retentions": self.retentions,
         }
 
 
@@ -820,7 +812,7 @@ class ImmutableDeltaAttributes:
     @property
     def bare(self) -> SDBareDeltaAttributes:
         # Useful for debugging; no restrictions
-        return {"Pairs": {k: _serialize_delta_value(v) for k, v in self.pairs.items()}}
+        return {"Pairs": self.pairs}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -849,7 +841,7 @@ class ImmutableDeltaTable:
         # Useful for debugging; no restrictions
         return {
             "KeyColumns": self.key_columns,
-            "Rows": [{k: _serialize_delta_value(v) for k, v in r.items()} for r in self.rows],
+            "Rows": self.rows,
         }
 
 

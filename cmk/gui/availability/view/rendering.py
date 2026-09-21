@@ -665,10 +665,19 @@ def _render_availability_timeline(
 
             table.cell(_("Links"), css=["buttons"])
             if what == "bi":
-                url = makeuri(request, [("timewarp", str(int(row["from"])))])
-                if request.var("timewarp") and request.get_integer_input_mandatory(
-                    "timewarp"
-                ) == int(row["from"]):
+                url = makeuri(
+                    request,
+                    [
+                        ("timewarp", str(int(row["from"]))),
+                        ("timewarp_aggr", str(av_entry["service"])),
+                    ],
+                )
+                timewarp_aggr = request.get_str_input("timewarp_aggr")
+                if (
+                    request.var("timewarp")
+                    and request.get_integer_input_mandatory("timewarp") == int(row["from"])
+                    and timewarp_aggr in (None, str(av_entry["service"]))
+                ):
                     html.disabled_icon_button(StaticIcon(IconNames.timewarp_off))
                 else:
                     html.icon_button(
@@ -1000,13 +1009,21 @@ def show_bi_availability(
             if only_sites is None or site_id in only_sites
         ]
 
+        # Render the selected time warp for the aggregation it was opened from. The
+        # timewarp link carries that aggregation, older links without it warp all of
+        # the aggregations shown on this page.
+        timewarp_aggr = request.get_str_input("timewarp_aggr")
+
         for timeline_container in timeline_containers:
             tree = timeline_container.aggr_tree
             these_spans = timeline_container.timeline
             timewarp_tree_state = timeline_container.timewarp_state
+            phase_index = timeline_container.timewarp_index
 
-            # render selected time warp for the corresponding aggregation row (should be matched by only one)
-            if timewarp and timewarp_tree_state:
+            if timewarp_aggr is not None and tree["title"] != timewarp_aggr:
+                continue
+
+            if timewarp_tree_state is not None and phase_index is not None:
                 state, assumed_state, node, _subtrees = timewarp_tree_state
                 eff_state = state
                 if assumed_state is not None:
@@ -1034,63 +1051,49 @@ def show_bi_availability(
                 )
                 tdclass, htmlcode = renderer.css_class(), renderer.render()
 
-                with output_funnel.plugged():
-                    # TODO: SOMETHING IS WRONG IN HERE (used to be the same situation in original code!)
-                    # FIXME: WHAT is wrong in here??
+                timewarp_time = these_spans[phase_index]["from"]
 
+                with output_funnel.plugged():
                     html.open_h3()
                     # render icons for back and forth
-                    button_back_shown = False
-                    button_forth_shown = False
-                    if int(these_spans[0]["from"]) == timewarp:
+                    if phase_index > 0:
+                        html.icon_button(
+                            makeuri(
+                                request,
+                                [("timewarp", str(these_spans[phase_index - 1]["from"]))],
+                            ),
+                            _("Jump one phase back"),
+                            StaticIcon(IconNames.back),
+                        )
+                    else:
                         html.disabled_icon_button(StaticIcon(IconNames.back_off))
-                        button_back_shown = True
 
-                    previous_span = None
-                    for span in these_spans:
-                        if (
-                            not button_back_shown
-                            and int(span["from"]) == timewarp
-                            and previous_span is not None
-                        ):
-                            html.icon_button(
-                                makeuri(request, [("timewarp", str(int(previous_span["from"])))]),
-                                _("Jump one phase back"),
-                                StaticIcon(IconNames.back),
-                            )
-                            button_back_shown = True
-                        # Multiple followup spans can have the same "from" time
-                        # We only show one forth-arrow with an actual time difference
-                        elif (
-                            not button_forth_shown
-                            and previous_span
-                            and int(previous_span["from"]) == timewarp
-                            and int(span["from"]) != timewarp
-                        ):
-                            html.icon_button(
-                                makeuri(
-                                    request,
-                                    [("timewarp", str(int(span["from"])))],
-                                ),
-                                _("Jump one phase forth"),
-                                StaticIcon(IconNames.forth),
-                            )
-                            button_forth_shown = True
-                        previous_span = span
-                    if not button_forth_shown:
+                    if phase_index + 1 < len(these_spans):
+                        html.icon_button(
+                            makeuri(
+                                request,
+                                [("timewarp", str(these_spans[phase_index + 1]["from"]))],
+                            ),
+                            _("Jump one phase forth"),
+                            StaticIcon(IconNames.forth),
+                        )
+                    else:
                         html.disabled_icon_button(StaticIcon(IconNames.forth_off))
 
                     html.write_text_permissive(" &nbsp; ")
                     html.icon_button(
-                        makeuri(request, [], delvars=["timewarp"]),
+                        makeuri(request, [], delvars=["timewarp", "timewarp_aggr"]),
                         _("Close timewarp"),
                         StaticIcon(IconNames.closetimewarp),
                     )
                     html.write_text_permissive(
-                        "%s %s"
+                        "%s %s%s"
                         % (
                             _("Timewarp to "),
-                            time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timewarp)),
+                            time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timewarp_time)),
+                            ""
+                            if timewarp_time == timewarp
+                            else " (%s)" % _("nearest phase of the selected time range"),
                         )
                     )
                     html.close_h3()

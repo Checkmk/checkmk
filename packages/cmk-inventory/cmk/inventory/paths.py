@@ -103,3 +103,12 @@ class InventoryPaths:
             path=self.delta_cache_host(host_name) / f"{previous_name}_{current}.json",
             legacy=self.delta_cache_host(host_name) / f"{previous_name}_{current}",
         )
+
+
+def parse_archive_timestamp(file_path: Path) -> int:
+    return int(file_path.with_suffix("").name)
+
+
+def parse_delta_cache_timestamps(file_path: Path) -> tuple[int, int]:
+    previous_name, current_name = file_path.with_suffix("").name.split("_")
+    return -1 if previous_name == "None" else int(previous_name), int(current_name)

@@ -8,7 +8,13 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.hostaddress import HostName
-from cmk.inventory.paths import InventoryPaths, TreePath, TreePathGz
+from cmk.inventory.paths import (
+    InventoryPaths,
+    parse_archive_timestamp,
+    parse_delta_cache_timestamps,
+    TreePath,
+    TreePathGz,
+)
 
 
 @pytest.mark.parametrize(
@@ -87,3 +93,33 @@ def test_delta_cache_tree(tmp_path: Path, previous: int, current: int, expected_
 def test_delta_cache_tree_error(tmp_path: Path, previous: int, current: int) -> None:
     with pytest.raises(ValueError):
         InventoryPaths(tmp_path).delta_cache_tree(HostName("hostname"), previous, current)
+
+
+def test_parse_archive_timestamp() -> None:
+    assert parse_archive_timestamp(Path("/var/check_mk/inventory_archive/hostname/123.json")) == 123
+
+
+def test_parse_archive_timestamp_of_a_legacy_file() -> None:
+    assert parse_archive_timestamp(Path("/var/check_mk/inventory_archive/hostname/123")) == 123
+
+
+def test_parse_archive_timestamp_of_an_unknown_file() -> None:
+    with pytest.raises(ValueError):
+        parse_archive_timestamp(Path("/var/check_mk/inventory_archive/hostname/not-a-timestamp"))
+
+
+def test_parse_delta_cache_timestamps() -> None:
+    assert parse_delta_cache_timestamps(
+        Path("/var/check_mk/inventory_delta_cache/hostname/1_2.json")
+    ) == (1, 2)
+
+
+def test_parse_delta_cache_timestamps_without_a_previous_tree() -> None:
+    assert parse_delta_cache_timestamps(
+        Path("/var/check_mk/inventory_delta_cache/hostname/None_2.json")
+    ) == (-1, 2)
+
+
+def test_parse_delta_cache_timestamps_of_an_unknown_file() -> None:
+    with pytest.raises(ValueError):
+        parse_delta_cache_timestamps(Path("/var/check_mk/inventory_delta_cache/hostname/2.json"))

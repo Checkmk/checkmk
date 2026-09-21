@@ -17,7 +17,7 @@ from typing import Literal, TypedDict
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
 
-from .paths import InventoryPaths, TreePath, TreePathGz
+from .paths import InventoryPaths, parse_archive_timestamp, TreePath, TreePathGz
 from .serialization import deserialize_tree, SDRawTree, serialize_tree
 from .trees import ImmutableTree, MutableTree
 
@@ -284,7 +284,7 @@ class InventoryStore:
         try:
             latest_archive_file_path = max(
                 self.inv_paths.archive_host(host_name).iterdir(),
-                key=lambda fp: int(fp.with_suffix("").name),
+                key=parse_archive_timestamp,
             )
         except FileNotFoundError, ValueError:
             return ImmutableTree()

@@ -16,7 +16,12 @@ from cmk.ccc.resulttype import Error, OK, Result
 
 from .delta import compare_trees, ImmutableDeltaTree
 from .filtering import filter_delta_tree, SDFilterChoice
-from .paths import InventoryPaths, TreePath
+from .paths import (
+    InventoryPaths,
+    parse_archive_timestamp,
+    parse_delta_cache_timestamps,
+    TreePath,
+)
 from .serialization import deserialize_delta_tree, SDRawDeltaTree, serialize_delta_tree
 from .store import load_tree_from_tree_path
 from .trees import ImmutableTree
@@ -112,9 +117,7 @@ class HistoryStore:
 
         for file_path in file_paths:
             try:
-                previous_name, current_name = file_path.with_suffix("").name.split("_")
-                previous_timestamp = -1 if previous_name == "None" else int(previous_name)
-                current_timestamp = int(current_name)
+                previous_timestamp, current_timestamp = parse_delta_cache_timestamps(file_path)
             except ValueError:
                 yield Error(file_path)
                 continue
@@ -141,7 +144,7 @@ class HistoryStore:
                 yield OK(
                     _HistoryPath(
                         tree_path=TreePath.from_archive_or_delta_cache_file_path(file_path),
-                        timestamp=int(file_path.with_suffix("").name),
+                        timestamp=parse_archive_timestamp(file_path),
                     )
                 )
             except ValueError:

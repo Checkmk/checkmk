@@ -13,7 +13,13 @@ from typing import Literal, Protocol, TypedDict
 
 from cmk.ccc.hostaddress import HostName
 
-from .paths import InventoryPaths, TreePath, TreePathGz
+from .paths import (
+    InventoryPaths,
+    parse_archive_timestamp,
+    parse_delta_cache_timestamps,
+    TreePath,
+    TreePathGz,
+)
 
 
 class InvCleanupParamsCombined(TypedDict):
@@ -228,18 +234,14 @@ def _compute_timestamp_from_file_path(file_path: Path) -> int | None:
 
 def _compute_timestamp_from_archive_file_name(file_path: Path) -> int | None:
     try:
-        return int(file_path.with_suffix("").name)
+        return parse_archive_timestamp(file_path)
     except ValueError:
         return None
 
 
 def _compute_timestamps_from_delta_cache_file_name(file_path: Path) -> tuple[int, int] | None:
     try:
-        previous_name, current_name = file_path.with_suffix("").name.split("_")
-        return (
-            -1 if previous_name == "None" else int(previous_name),
-            int(current_name),
-        )
+        return parse_delta_cache_timestamps(file_path)
     except ValueError:
         return None
 

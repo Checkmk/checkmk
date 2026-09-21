@@ -18,12 +18,15 @@ import cmk.utils.password_store
 import cmk.utils.paths
 from cmk import trace
 from cmk.base.config import ConfigCache, CoreObjectsConfig
+from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
 from cmk.ccc import config_path
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.store import activation_lock
+from cmk.ccc.version import Edition
 from cmk.checkengine.checkerplugin import ConfiguredService
+from cmk.checkengine.fetcher_utils.trigger import FetcherTriggerFactory
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
 from cmk.core_client import CoreAction, CoreClient
 from cmk.licensing.basics.paths import get_licensed_state_file_path
@@ -73,6 +76,9 @@ def do_reload(
     notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
     checker_config_writer: Callable[[Path], None],
     licensing_handler_factory: Callable[[], LicensingHandler],
+    edition: Edition,
+    loaded_config: BaseConfig,
+    make_fetcher_trigger: FetcherTriggerFactory,
 ) -> None:
     do_restart(
         config_cache,
@@ -97,6 +103,9 @@ def do_reload(
         notify_relay=notify_relay,
         checker_config_writer=checker_config_writer,
         licensing_handler_factory=licensing_handler_factory,
+        edition=edition,
+        loaded_config=loaded_config,
+        make_fetcher_trigger=make_fetcher_trigger,
     )
 
 
@@ -130,6 +139,9 @@ def do_restart(
     notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
     checker_config_writer: Callable[[Path], None],
     licensing_handler_factory: Callable[[], LicensingHandler],
+    edition: Edition,
+    loaded_config: BaseConfig,
+    make_fetcher_trigger: FetcherTriggerFactory,
 ) -> None:
     try:
         with activation_lock(
@@ -156,6 +168,9 @@ def do_restart(
                 notify_relay=notify_relay,
                 checker_config_writer=checker_config_writer,
                 licensing_handler_factory=licensing_handler_factory,
+                edition=edition,
+                loaded_config=loaded_config,
+                make_fetcher_trigger=make_fetcher_trigger,
             )
             core_client.run(action, log=_print)
 
@@ -193,6 +208,9 @@ def do_create_config(
     notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
     checker_config_writer: Callable[[Path], None],
     licensing_handler_factory: Callable[[], LicensingHandler],
+    edition: Edition,
+    loaded_config: BaseConfig,
+    make_fetcher_trigger: FetcherTriggerFactory,
 ) -> None:
     """Creating the monitoring core configuration and additional files
 
@@ -233,6 +251,9 @@ def do_create_config(
                 duplicates=duplicates,
                 checker_config_writer=checker_config_writer,
                 licensing_handler_factory=licensing_handler_factory,
+                edition=edition,
+                loaded_config=loaded_config,
+                make_fetcher_trigger=make_fetcher_trigger,
             )
     except Exception as e:
         if cmk.ccc.debug.enabled():
@@ -312,6 +333,9 @@ def _create_active_config(
     duplicates: Collection[HostName],
     checker_config_writer: Callable[[Path], None],
     licensing_handler_factory: Callable[[], LicensingHandler],
+    edition: Edition,
+    loaded_config: BaseConfig,
+    make_fetcher_trigger: FetcherTriggerFactory,
 ) -> None:
     config_warnings.initialize()
 
@@ -331,6 +355,8 @@ def _create_active_config(
         _backup_objects_file(core_client),
     ):
         intermediate_config = IntermediateMonitoringConfig(
+            edition=edition,
+            make_fetcher_trigger=make_fetcher_trigger,
             config_creation_context=config_creation_context,
             passwords=passwords,
             licensing_handler=licensing_handler_factory(),
@@ -340,6 +366,7 @@ def _create_active_config(
             host_tags=host_tags,
             plugins=plugins,
             hosts_to_update=hosts_to_update,
+            loaded_config=loaded_config,
             final_service_name_config=final_service_name_config,
             passive_service_name_config=passive_service_name_config,
             enforced_services_table=enforced_services_table,

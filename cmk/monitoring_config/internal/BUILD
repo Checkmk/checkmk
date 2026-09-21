@@ -12,10 +12,13 @@ py_library(
     ],
     deps = [
         "//cmk/base/config",
+        "//cmk/base/configlib",
         "//cmk/utils",
         "//packages/cmk-ccc:config-path",
         "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine:checker-plugin",
+        "//packages/cmk-check-engine:fetchers",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-licensing",
         "//packages/cmk-plugin-apis:password_store",

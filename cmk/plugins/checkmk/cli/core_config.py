@@ -270,6 +270,9 @@ def _mode_update(
                     is_active=loading_result.config_cache.is_active,
                 ),
                 licensing_handler_factory=app.licensing_handler_factory,
+                edition=app.edition,
+                loaded_config=loaded_config,
+                make_fetcher_trigger=app.make_fetcher_trigger,
             )
     except Exception as e:
         console.error(f"Configuration Error: {e}", file=sys.stderr)
@@ -396,6 +399,9 @@ def _mode_restart(
             is_active=loading_result.config_cache.is_active,
         ),
         licensing_handler_factory=app.licensing_handler_factory,
+        edition=app.edition,
+        loaded_config=loaded_config,
+        make_fetcher_trigger=app.make_fetcher_trigger,
     )
     for warning in ip_address_of.error_handler.format_errors():
         console.warning(tty.format_warning(f"\n{warning}"))
@@ -517,6 +523,9 @@ def _mode_reload(
             is_active=loading_result.config_cache.is_active,
         ),
         licensing_handler_factory=app.licensing_handler_factory,
+        edition=app.edition,
+        loaded_config=loaded_config,
+        make_fetcher_trigger=app.make_fetcher_trigger,
     )
     for warning in ip_address_of.error_handler.format_errors():
         console.warning(tty.format_warning(f"\n{warning}"))

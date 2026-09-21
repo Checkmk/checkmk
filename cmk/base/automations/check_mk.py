@@ -1372,6 +1372,9 @@ def _execute_autodiscovery(
             notify_relay=notify_relay,
             checker_config_writer=checker_config_writer,
             licensing_handler_factory=app.licensing_handler_factory,
+            edition=app.edition,
+            loaded_config=env.loaded_config,
+            make_fetcher_trigger=app.make_fetcher_trigger,
         )
     else:
         do_restart(
@@ -1402,6 +1405,9 @@ def _execute_autodiscovery(
             notify_relay=notify_relay,
             checker_config_writer=checker_config_writer,
             licensing_handler_factory=app.licensing_handler_factory,
+            edition=app.edition,
+            loaded_config=env.loaded_config,
+            make_fetcher_trigger=app.make_fetcher_trigger,
         )
 
     return discovery_results, True
@@ -2616,6 +2622,9 @@ def _execute_silently(
             notify_relay=rctx.notify_relay,
             checker_config_writer=checker_config_writer,
             licensing_handler_factory=rctx.licensing_handler_factory,
+            edition=env.app.edition,
+            loaded_config=env.loaded_config,
+            make_fetcher_trigger=env.app.make_fetcher_trigger,
         )
     except (MKBailOut, MKGeneralException) as e:
         raise MKAutomationError(str(e))

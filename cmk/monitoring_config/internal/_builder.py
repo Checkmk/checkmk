@@ -10,9 +10,12 @@ from dataclasses import dataclass
 from typing import Literal
 
 from cmk.base.config import ConfigCache, CoreObjectsConfig
+from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.ccc.config_path import ConfigCreationContext
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
+from cmk.ccc.version import Edition
 from cmk.checkengine.checkerplugin import ConfiguredService
+from cmk.checkengine.fetcher_utils.trigger import FetcherTriggerFactory
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
 from cmk.licensing.handler import LicensingHandler
 from cmk.password_store.v1 import Secret
@@ -47,6 +50,10 @@ class IntermediateMonitoringConfig:
     plug-in gets it.
     """
 
+    # the site this runs in
+    edition: Edition
+    make_fetcher_trigger: FetcherTriggerFactory
+
     # created by the engine per activation
     config_creation_context: ConfigCreationContext
     passwords: Mapping[str, Secret[str]]
@@ -59,6 +66,8 @@ class IntermediateMonitoringConfig:
     host_tags: HostTags
     plugins: AgentBasedPlugins
     hosts_to_update: set[HostName] | None
+
+    loaded_config: BaseConfig
 
     # naming / lookups
     final_service_name_config: Callable[

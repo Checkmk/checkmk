@@ -298,7 +298,7 @@ defineExpose({ focus })
             <CmkIconButton
               class="cmk-chip-autocomplete__remove"
               name="close"
-              size="xxsmall"
+              size="xsmall"
               :title="_t('Remove %{value}', { value })"
               @click="remove(value)"
             />
@@ -376,8 +376,8 @@ defineExpose({ focus })
 .cmk-chip-autocomplete__remove {
   align-items: center;
   justify-content: center;
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   margin-left: var(--dimension-2);
 }
 

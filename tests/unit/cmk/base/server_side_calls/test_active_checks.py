@@ -229,6 +229,34 @@ def test_get_active_service_data_cmk_inv_is_site_side_and_does_not_raise(
     assert service.plugin_name == "cmk_inv"
 
 
+def test_relay_host_with_fallback_ip_gets_the_dns_fallback_backstop() -> None:
+    active_check = ActiveCheck(
+        TEST_PLUGIN_STORE,
+        HostName("myhost"),
+        HOST_CONFIG,
+        global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
+            global_proxies={}, password_lookup=lambda _name: None
+        ),
+        oauth2_connections={},
+        service_name_finalizer=str,
+        secrets_config=StoredSecrets(path=Path("/pw/store"), secrets={}),
+        finder=lambda executable, module: f"/path/to/{executable}",
+        ip_lookup_failed=True,
+        for_relay=True,
+        relay_supported_active_checks=frozenset({"my_active_check"}),
+        site_side_only_active_checks=frozenset(),
+    )
+
+    (service,) = active_check.get_active_service_data("my_active_check", [{}])
+    assert service.command == (
+        "/path/to/check_always_crit",
+        (
+            "'Unexpected Error: Unresolved DNS fallback IP 0.0.0.0 from the CMK site reached the"
+            " Relay, a Dyn DNS was expected instead.'"
+        ),
+    )
+
+
 def argument_function_with_exception(*args: object, **kwargs: object) -> Never:
     raise Exception("Can't create argument list")
 

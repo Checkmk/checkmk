@@ -1163,8 +1163,7 @@ class Site:
         # Checkmk configuration files and want to be sure they are used once the core
         # starts.
         self._update_cmk_core_config()
-        if os.environ.get("POD_LABEL"):
-            self.set_config("TMPFS", "off")
+        self.disable_tmpfs_on_k8s()
 
         self.openapi.port = self.apache_port
         # set the sites timezone according to TZ
@@ -1717,6 +1716,12 @@ class Site:
         finally:
             with self.omd_stopped():
                 self.omd("config", "set", setting, current_value, check=True)
+
+    def disable_tmpfs_on_k8s(self) -> None:
+        # a site inside a k8s pod cannot mount its tmpfs
+        if os.environ.get("POD_LABEL"):
+            self.stop()
+            self.set_config("TMPFS", "off")
 
     def set_config(self, key: str, val: str, with_restart: bool = False) -> None:
         if self.get_config(key) == val:
@@ -2417,7 +2422,8 @@ class SiteFactory:
         Args:
             check:  Fail if `omd restore` could not finalize the restored site. Pass False to
                     handle that yourself: the site is then returned *stopped*, with an outdated
-                    core configuration and a closed livestatus port.
+                    core configuration and a closed livestatus port. Inside a k8s pod
+                    (POD_LABEL set) its TMPFS is switched off, as for created sites.
         """
         self._base_ident = ""
         site = self._site_obj(name)
@@ -2464,9 +2470,12 @@ class SiteFactory:
             # Without that, the site is not reachable via HTTP once it is started.
             _ = run(["omd", "update-apache-config", name], sudo=True)
             restart_httpd()
-            return self.get_existing_site(site.id, start=False)
+            site = self.get_existing_site(site.id, start=False)
+            site.disable_tmpfs_on_k8s()
+            return site
 
-        site = self.get_existing_site(site.id)
+        site = self.get_existing_site(site.id, start=False)
+        site.disable_tmpfs_on_k8s()
         site.start()
         restart_httpd()
 

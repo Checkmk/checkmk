@@ -5,17 +5,14 @@
 
 import pytest
 
+from cmk.inventory.delta import SDDeltaValue
 from cmk.inventory.filtering import (
     filter_delta_tree,
     filter_tree,
     make_filter_choices_from_api_request_paths,
     SDFilterChoice,
 )
-from cmk.inventory.structured_data import (
-    SDDeltaValue,
-    SDKey,
-    SDNodeName,
-)
+from cmk.inventory.structured_data import SDKey, SDNodeName
 
 from ._fixtures import (
     filled_delta_tree,

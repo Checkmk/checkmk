@@ -8,12 +8,10 @@ from dataclasses import dataclass, field
 from typing import Literal
 
 from ._choices import consolidate_filter_funcs, get_filtered_dict
+from .delta import ImmutableDeltaAttributes, ImmutableDeltaTable, ImmutableDeltaTree
 from .raw_paths import InventoryPath, parse_internal_raw_path
 from .structured_data import (
     ImmutableAttributes,
-    ImmutableDeltaAttributes,
-    ImmutableDeltaTable,
-    ImmutableDeltaTree,
     ImmutableTable,
     ImmutableTree,
     SDKey,

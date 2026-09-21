@@ -28,17 +28,19 @@ from cmk.gui.pages import PageContext
 from cmk.gui.theme import Theme
 from cmk.gui.theme.current_theme import theme as gui_theme
 from cmk.gui.utils.user_errors import user_errors
+from cmk.inventory.delta import (
+    ImmutableDeltaAttributes,
+    ImmutableDeltaTable,
+    ImmutableDeltaTree,
+    SDDeltaValue,
+)
 from cmk.inventory.history import HistoryStore
 from cmk.inventory.raw_paths import parse_internal_raw_path
 from cmk.inventory.structured_data import (
     ImmutableAttributes,
-    ImmutableDeltaAttributes,
-    ImmutableDeltaTable,
-    ImmutableDeltaTree,
     ImmutableTable,
     ImmutableTree,
     RetentionInterval,
-    SDDeltaValue,
     SDKey,
     SDPath,
     SDRowIdent,

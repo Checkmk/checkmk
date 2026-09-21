@@ -20,6 +20,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.groups_io import NothingOrChoices, PermittedPath
+from cmk.inventory.delta import ImmutableDeltaTree
 from cmk.inventory.filtering import filter_tree, SDFilterChoice
 from cmk.inventory.history import (
     HistoryArchivePath,
@@ -30,13 +31,7 @@ from cmk.inventory.history import (
 )
 from cmk.inventory.merging import merge_trees
 from cmk.inventory.store import InventoryStore, parse_from_raw_status_data_tree
-from cmk.inventory.structured_data import (
-    ImmutableDeltaTree,
-    ImmutableTree,
-    parse_visible_raw_path,
-    SDKey,
-    SDNodeName,
-)
+from cmk.inventory.structured_data import ImmutableTree, parse_visible_raw_path, SDKey, SDNodeName
 
 
 def _transform_attribute[T](

@@ -8,6 +8,7 @@ import io
 import json
 from pathlib import Path
 
+from cmk.inventory.delta import ImmutableDeltaTree
 from cmk.inventory.serialization import (
     deserialize_delta_tree,
     deserialize_tree,
@@ -16,13 +17,7 @@ from cmk.inventory.serialization import (
     serialize_tree,
 )
 from cmk.inventory.store import InventoryStore, make_meta, SDMetaAndRawTree
-from cmk.inventory.structured_data import (
-    ImmutableDeltaTree,
-    ImmutableTree,
-    MutableTree,
-    SDKey,
-    SDNodeName,
-)
+from cmk.inventory.structured_data import ImmutableTree, MutableTree, SDKey, SDNodeName
 
 
 def inventory_store() -> InventoryStore:

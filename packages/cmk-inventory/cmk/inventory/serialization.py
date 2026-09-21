@@ -7,17 +7,14 @@ from collections.abc import Mapping, Sequence
 from typing import Literal, TypedDict
 
 from ._legacy import deserialize_legacy_tree
+from .delta import ImmutableDeltaAttributes, ImmutableDeltaTable, ImmutableDeltaTree, SDDeltaValue
 from .structured_data import (
     ImmutableAttributes,
-    ImmutableDeltaAttributes,
-    ImmutableDeltaTable,
-    ImmutableDeltaTree,
     ImmutableTable,
     ImmutableTree,
     make_row_ident,
     MutableTree,
     RetentionInterval,
-    SDDeltaValue,
     SDKey,
     SDNodeName,
     SDPath,

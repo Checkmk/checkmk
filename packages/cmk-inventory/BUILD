@@ -18,6 +18,7 @@ py_library(
         "cmk/inventory/_dict_keys.py",
         "cmk/inventory/_legacy.py",
         "cmk/inventory/cleanup.py",
+        "cmk/inventory/delta.py",
         "cmk/inventory/filtering.py",
         "cmk/inventory/history.py",
         "cmk/inventory/merging.py",

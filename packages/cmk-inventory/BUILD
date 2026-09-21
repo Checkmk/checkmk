@@ -27,7 +27,6 @@ py_library(
     deps = [
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
-        "//packages/cmk-ccc:regex",
         "//packages/cmk-ccc:resulttype",
         "//packages/cmk-ccc:store",
     ],

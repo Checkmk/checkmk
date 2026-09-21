@@ -5,13 +5,13 @@
 
 import contextlib
 import logging
+import re
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, Protocol, TypedDict
 
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.regex import regex
 
 from .paths import InventoryPaths, TreePath, TreePathGz
 
@@ -48,11 +48,8 @@ class InvCleanupParams(TypedDict):
 
 def matches(*, regex_or_name: str, host_name: HostName) -> bool:
     if regex_or_name.startswith("~"):
-        if regex(regex_or_name[1:]).match(host_name):
-            return True
-    elif host_name == regex_or_name:
-        return True
-    return False
+        return re.match(regex_or_name[1:], host_name) is not None
+    return host_name == regex_or_name
 
 
 def _filter_regex_or_explicit(

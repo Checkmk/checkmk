@@ -18,10 +18,31 @@ from cmk.inventory.cleanup import (
     InvCleanupParamsDefaultCombined,
     InvCleanupParamsOfHosts,
     InventoryCleanup,
+    matches,
 )
 from cmk.inventory.paths import InventoryPaths, TreePath, TreePathGz
 
 from ._logger import null_logger
+
+
+def test_matches_the_host_name() -> None:
+    assert matches(regex_or_name="hostname", host_name=HostName("hostname"))
+
+
+def test_does_not_match_another_host_name() -> None:
+    assert not matches(regex_or_name="hostname", host_name=HostName("other-hostname"))
+
+
+def test_matches_a_regex() -> None:
+    assert matches(regex_or_name="~host.*", host_name=HostName("hostname"))
+
+
+def test_matches_a_regex_that_covers_the_beginning() -> None:
+    assert matches(regex_or_name="~host", host_name=HostName("hostname"))
+
+
+def test_does_not_match_a_regex_that_covers_the_end() -> None:
+    assert not matches(regex_or_name="~name", host_name=HostName("hostname"))
 
 
 @pytest.mark.parametrize(

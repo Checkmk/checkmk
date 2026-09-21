@@ -64,6 +64,3 @@ def parse_internal_raw_path(raw: str) -> InventoryPath:
         source=source,
         key=SDKey(path[-1]),
     )
-
-
-#   .--helper--------------------------------------------------------------.

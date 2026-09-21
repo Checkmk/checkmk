@@ -3,11 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""
-This module handles tree structures for HW/SW Inventory system and
-structured monitoring data of Check_MK.
-"""
-
 import pprint
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
@@ -15,21 +10,6 @@ from typing import Literal, NewType, override, TypedDict
 
 from ._choices import get_filtered_dict, make_filter_func
 from ._dict_keys import DictKeys
-
-# TODO Cleanup path in utils, base, gui, find ONE place (type defs or similar)
-# TODO filter table rows?
-# TODO Check filter logic:
-#   - choices = ["all", "nothing", ["k1", ...]]
-#   - How to handle?
-# TODO Improve _make_filter_func:
-# For contact groups (via make_filter)
-#   - ('choices', ['some', 'keys'])
-#   - 'nothing' -> _use_nothing
-#   - None -> _use_all
-# For retention intervals (directly)
-#   - ('choices', ['some', 'keys'])
-#   - MISSING (see mk/base/agent_based/inventory.py::_get_intervals_from_config) -> _use_nothing
-#   - 'all' -> _use_all
 
 SDNodeName = NewType("SDNodeName", str)
 SDPath = tuple[SDNodeName, ...]
@@ -468,10 +448,6 @@ class MutableTree:
         return f"{self.__class__.__name__}({pprint.pformat(self.bare)})"
 
 
-# .
-#   .--immutable tree------------------------------------------------------.
-
-
 @dataclass(frozen=True, kw_only=True)
 class ImmutableAttributes:
     pairs: Mapping[SDKey, SDValue] = field(default_factory=dict)
@@ -615,10 +591,6 @@ class ImmutableTree:
     @override
     def __str__(self) -> str:
         return f"{self.__class__.__name__}({pprint.pformat(self.bare)})"
-
-
-# .
-#   .--filtering-----------------------------------------------------------.
 
 
 def _make_retentions_filter_func(

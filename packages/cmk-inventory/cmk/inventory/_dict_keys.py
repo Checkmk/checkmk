@@ -15,18 +15,8 @@ class DictKeys[T]:
 
     @classmethod
     def compare(cls, *, left: set[T], right: set[T]) -> Self:
-        """
-        Returns the set relationships of the keys between two dictionaries:
-        - relative complement of right in left
-        - intersection of both
-        - relative complement of left in right
-        """
         return cls(
             only_left=left - right,
             both=left.intersection(right),
             only_right=right - left,
         )
-
-
-# .
-#   .--mutable tree--------------------------------------------------------.

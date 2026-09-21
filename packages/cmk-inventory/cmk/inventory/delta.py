@@ -195,13 +195,6 @@ class _DeltaDict:
     def compare(
         cls, *, left: Mapping[SDKey, SDValue], right: Mapping[SDKey, SDValue], keep_identical: bool
     ) -> Self:
-        """
-        Format of compared entries:
-          new:          {k: (None, new_value), ...}
-          changed:      {k: (old_value, new_value), ...}
-          removed:      {k: (old_value, None), ...}
-          identical:    {k: (value, value), ...}
-        """
         compared_keys = DictKeys.compare(left=set(left), right=set(right))
         compared_dict: dict[SDKey, SDDeltaValue] = {}
 

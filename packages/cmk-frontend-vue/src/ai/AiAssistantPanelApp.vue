@@ -15,15 +15,29 @@ import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 // the toggle and the panel lives in different frames, so we use local storage to sync them:
 // Keep in sync with `cmk.aiAssistant` of cmk-frontend.
 const OPEN_STORAGE_KEY = 'cmk-ai-assistant-open'
+const POSITION_STORAGE_KEY = 'cmk-ai-assistant-position'
 const PANEL_SIZE = '300px'
+
+const DOCK_POSITIONS = ['left', 'right', 'bottom'] as const
+type DockPosition = (typeof DOCK_POSITIONS)[number]
 
 const { _t } = usei18n()
 
-const { position = 'right' } = defineProps<{
-  position?: 'left' | 'right' | 'bottom'
-}>()
+function parseDockPosition(value: unknown): DockPosition {
+  return DOCK_POSITIONS.find((candidate) => candidate === value) ?? 'right'
+}
 
 const open = usePersistentRef(OPEN_STORAGE_KEY, false, (value) => value === true, 'session')
+const position = usePersistentRef<DockPosition>(
+  POSITION_STORAGE_KEY,
+  'right',
+  parseDockPosition,
+  'local'
+)
+
+function parseStorageValue(value: string | null): unknown {
+  return value === null ? null : JSON.parse(value)
+}
 
 // e.g. a view in a dashboard iframe, but not the content frame of index.py
 function isNestedInIframe(): boolean {
@@ -44,25 +58,26 @@ function isNestedInIframe(): boolean {
 const renderPanel = !isNestedInIframe()
 
 function onStorage(event: StorageEvent): void {
-  if (event.key !== OPEN_STORAGE_KEY) {
-    return
+  if (event.key === OPEN_STORAGE_KEY) {
+    open.value = parseStorageValue(event.newValue) === true
+  } else if (event.key === POSITION_STORAGE_KEY) {
+    position.value = parseDockPosition(parseStorageValue(event.newValue))
   }
-  open.value = event.newValue !== null && (JSON.parse(event.newValue) as boolean)
 }
 
 /* Shrinks `#ai-panel-container`, so that the panel does not overlay the page */
 function updateMainAreaInset(isOpen: boolean): void {
   const size = isOpen ? PANEL_SIZE : '0px'
   const style = document.documentElement.style
-  style.setProperty('--main-area-inset-right', position === 'right' ? size : '0px')
-  style.setProperty('--main-area-inset-left', position === 'left' ? size : '0px')
-  style.setProperty('--main-area-inset-bottom', position === 'bottom' ? size : '0px')
+  style.setProperty('--main-area-inset-right', position.value === 'right' ? size : '0px')
+  style.setProperty('--main-area-inset-left', position.value === 'left' ? size : '0px')
+  style.setProperty('--main-area-inset-bottom', position.value === 'bottom' ? size : '0px')
   // trigger JavaScript layout flow:
   window.dispatchEvent(new Event('resize'))
 }
 
 if (renderPanel) {
-  watch(open, updateMainAreaInset)
+  watch([open, position], () => updateMainAreaInset(open.value))
 
   onMounted(() => {
     window.addEventListener('storage', onStorage)

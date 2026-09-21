@@ -50,10 +50,10 @@ def _comprehensive_graph() -> Graph:
                 members=[
                     Curve(
                         quantity=Sum(
-                            summands=[
+                            summands=(
                                 rrd,
                                 Constant(2, CurveAttributes(title="c", unit=unit, color="#c")),
-                            ]
+                            )
                         ),
                         attributes=attrs,
                     )

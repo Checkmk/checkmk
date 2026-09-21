@@ -703,7 +703,7 @@ class _SumQuantityBuilder:
     # Stand-in for a real aggregating QuantityBuilderProtocol (e.g. the pro CombinedAggregation):
     # wraps what one drawn quantity is per service in the engine's own Sum.
     def __call__(self, per_object: Sequence[QuantityProtocol]) -> QuantityProtocol:
-        return Sum(summands=list(per_object))
+        return Sum(summands=tuple(per_object))
 
 
 def _discover_combined(
@@ -738,7 +738,7 @@ def test_build_matched_graphs_aggregates_a_drawn_metric_across_services() -> Non
 
     # The drawn metric is wrapped in the builder's aggregation over both services' RRDMetrics.
     [line] = discovered.lines
-    assert line.curve.quantity == Sum(summands=[_rrd_on(h1, cpu_user), _rrd_on(h2, cpu_user)])
+    assert line.curve.quantity == Sum(summands=(_rrd_on(h1, cpu_user), _rrd_on(h2, cpu_user)))
     # Both services contribute; the evaluated value is their sum.
     assert [line.curve.value for line in _evaluate(discovered, fetch_data).lines] == [2.0]
 
@@ -857,7 +857,7 @@ def test_build_matched_graphs_falls_back_across_services() -> None:
 
     assert discovered.name == extra
     [member] = discovered.stacks[0].members
-    assert member.quantity == Sum(summands=[_rrd_on(h1, extra), _rrd_on(h2, extra)])
+    assert member.quantity == Sum(summands=(_rrd_on(h1, extra), _rrd_on(h2, extra)))
     assert discovered.rules == ()
 
 

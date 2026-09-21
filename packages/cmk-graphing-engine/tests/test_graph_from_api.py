@@ -309,13 +309,13 @@ def test_parse_graph_from_api_operations_carry_their_intrinsic_display() -> None
     assert parsed.lines == [
         _dline(
             Sum(
-                summands=[_rrd("a"), _rrd("b")],
+                summands=(_rrd("a"), _rrd("b")),
                 display=CurveAttributes(title="s", unit=_DECIMAL, color="#28a2f3"),
             )
         ),
         _dline(
             Product(
-                factors=[_rrd("x"), _rrd("y")],
+                factors=(_rrd("x"), _rrd("y")),
                 display=CurveAttributes(title="p", unit=_DECIMAL, color="#ed3b3b"),
             )
         ),
@@ -355,13 +355,13 @@ def test_parse_graph_from_api_recurses_into_nested_quantities() -> None:
     assert parsed.lines == [
         _dline(
             Sum(
-                summands=[
+                summands=(
                     _rrd("a"),
                     Product(
-                        factors=[_rrd("b"), _rrd("c")],
+                        factors=(_rrd("b"), _rrd("c")),
                         display=CurveAttributes(title="inner", unit=_DECIMAL, color="#ed3b3b"),
                     ),
-                ],
+                ),
                 display=CurveAttributes(title="outer", unit=_DECIMAL, color="#28a2f3"),
             )
         ),
@@ -522,7 +522,7 @@ def test_parse_resolves_reads_operation_display_from_the_quantity() -> None:
     assert concrete.lines == [
         _line(
             Sum(
-                summands=[_rrd("a"), _rrd("b")],
+                summands=(_rrd("a"), _rrd("b")),
                 display=CurveAttributes(title="s", unit=_DECIMAL, color="#28a2f3"),
             ),
             CurveAttributes(title="s", unit=_DECIMAL, color="#28a2f3"),

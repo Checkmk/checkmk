@@ -56,7 +56,9 @@ def first_value(results: Sequence[EvaluatedQuantity]) -> float | None:
     return results[0].value if results else None
 
 
-class QuantityProtocol(Protocol):
+# Every quantity is hashable by value: the evaluation keys the data it holds per quantity by
+# the quantity itself.
+class QuantityProtocol(Hashable, Protocol):
     def kind(self) -> str: ...
 
     def ident(self) -> str: ...
@@ -86,9 +88,8 @@ class FanOutQuantity(Protocol):
 
 # The leaves a graph fetches data for: the keys of EvaluationContext.fetched and the elements
 # QuantityProtocol.metrics() yields. A metric is a quantity that draws itself, identified by its
-# metric_name - that is what sets it apart from an expression node. It must be hashable: the
-# evaluation context keys its fetched data by the metric leaf.
-class MetricProtocol(QuantityProtocol, Hashable, Protocol):
+# metric_name - that is what sets it apart from an expression node.
+class MetricProtocol(QuantityProtocol, Protocol):
     @property
     def metric_name(self) -> MetricName: ...
 

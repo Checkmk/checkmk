@@ -258,8 +258,8 @@ def _operands_to_json(
     return [codec.serialize(operand) for operand in operands]
 
 
-def _operands_from_json(data: object, codec: QuantityCodec) -> Sequence[QuantityProtocol]:
-    return [codec.deserialize(operand) for operand in _as_list(data)]
+def _operands_from_json(data: object, codec: QuantityCodec) -> tuple[QuantityProtocol, ...]:
+    return tuple(codec.deserialize(operand) for operand in _as_list(data))
 
 
 def _sum_to_json(quantity: QuantityProtocol, codec: QuantityCodec) -> Mapping[str, object]:

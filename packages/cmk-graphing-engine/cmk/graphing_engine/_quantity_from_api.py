@@ -133,12 +133,12 @@ def parse_quantity(quantity: ApiQuantity, context: QuantityContext) -> QuantityP
             )
         case metrics_v1.Sum():
             return Sum(
-                summands=[parse_quantity(s, context) for s in quantity.summands],
+                summands=tuple(parse_quantity(s, context) for s in quantity.summands),
                 display=_curve_display(quantity, context),
             )
         case metrics_v1.Product():
             return Product(
-                factors=[parse_quantity(f, context) for f in quantity.factors],
+                factors=tuple(parse_quantity(f, context) for f in quantity.factors),
                 display=_curve_display(quantity, context),
             )
         case metrics_v1.Difference():

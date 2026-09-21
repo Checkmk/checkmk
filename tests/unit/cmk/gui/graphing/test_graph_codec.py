@@ -94,7 +94,7 @@ def _rich_graphs() -> Sequence[Graph]:
                 Stack(
                     members=[
                         Curve(quantity=_METRIC, attributes=decimal, source_id="A"),
-                        Curve(quantity=Sum([_METRIC, _METRIC_CF], decimal), attributes=decimal),
+                        Curve(quantity=Sum((_METRIC, _METRIC_CF), decimal), attributes=decimal),
                     ],
                     inverse=True,
                     reference=Curve(quantity=Constant(5, scientific), attributes=scientific),
@@ -110,7 +110,7 @@ def _rich_graphs() -> Sequence[Graph]:
                 ),
                 Line(
                     curve=Curve(
-                        quantity=Product([_METRIC, Constant(3.5)], display=None),
+                        quantity=Product((_METRIC, Constant(3.5)), display=None),
                         attributes=scientific,
                     ),
                     inverse=True,
@@ -150,7 +150,7 @@ def _rich_graphs() -> Sequence[Graph]:
                     inverse=False,
                 ),
                 Line(
-                    curve=Curve(quantity=Sum([_METRIC], iec), attributes=iec),
+                    curve=Curve(quantity=Sum((_METRIC,), iec), attributes=iec),
                     inverse=False,
                 ),
                 Line(
@@ -251,8 +251,8 @@ _ENGINE_QUANTITY_SAMPLES: Mapping[str, QuantityProtocol] = {
     "scalar_of": ScalarOf(
         metric=_ROUND_TRIP_METRIC, scalar_kind=ScalarKind.LOWER_CRITICAL, color="#040506"
     ),
-    "sum": Sum([_ROUND_TRIP_METRIC, Constant(1.0)], _ROUND_TRIP_DISPLAY),
-    "product": Product([_ROUND_TRIP_METRIC, Constant(2.0)], _ROUND_TRIP_DISPLAY),
+    "sum": Sum((_ROUND_TRIP_METRIC, Constant(1.0)), _ROUND_TRIP_DISPLAY),
+    "product": Product((_ROUND_TRIP_METRIC, Constant(2.0)), _ROUND_TRIP_DISPLAY),
     "difference": Difference(
         minuend=_ROUND_TRIP_METRIC, subtrahend=Constant(3.0), display=_ROUND_TRIP_DISPLAY
     ),

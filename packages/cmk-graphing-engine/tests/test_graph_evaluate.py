@@ -5,7 +5,6 @@
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import override
 
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing_engine import (
@@ -363,28 +362,24 @@ def test_evaluate_graph_preserves_ids_across_recalculation() -> None:
 # --- source ids ---------------------------------------------------------------------------------
 
 
-@dataclass(frozen=True)
-class _FannedQuantity(QuantityProtocol):
+@dataclass(frozen=True, eq=False)
+class _FannedQuantity:
     """A fan-out leaf expanding into one curve per (label, value) pair."""
 
     series: Sequence[tuple[str, float]]
     series_attributes: Mapping[str, SeriesAttributes] = field(default_factory=dict)
     aggregation_kind: object | None = None
 
-    @override
     def kind(self) -> str:
         return "fan"
 
-    @override
     def ident(self) -> str:
         return f"{self.kind()}(test)"
 
-    @override
     def metrics(self) -> Iterable[MetricProtocol]:
         return ()
 
-    @override
-    def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
+    def evaluate(self, _context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
         return [
             EvaluatedQuantity(
                 value=value,
@@ -395,7 +390,6 @@ class _FannedQuantity(QuantityProtocol):
             for label, value in self.series
         ]
 
-    @override
     def attributes(
         self,
         _localizer: Callable[[str], str],
@@ -571,7 +565,7 @@ def test_evaluate_graph_carries_the_macros_of_an_operation_over_one_series() -> 
         name="g",
         title="g",
         kind="test",
-        lines=[Line(curve=_curve(Sum([fan]), "$SERIES_ID$"), inverse=False)],
+        lines=[Line(curve=_curve(Sum((fan,)), "$SERIES_ID$"), inverse=False)],
     )
 
     result = _evaluate_graph(graph, _context({}, {}))
@@ -587,7 +581,7 @@ def test_evaluate_graph_pads_an_operation_over_operands_of_different_lengths() -
         name="g",
         title="g",
         kind="test",
-        lines=[Line(curve=_curve(Sum([long_metric, short_metric]), "sum"), inverse=False)],
+        lines=[Line(curve=_curve(Sum((long_metric, short_metric)), "sum"), inverse=False)],
     )
 
     result = _evaluate_graph(
@@ -637,7 +631,7 @@ def test_evaluate_graph_carries_the_attributes_of_an_operation_over_one_series()
         name="g",
         title="g",
         kind="test",
-        lines=[Line(curve=_curve(Sum([fan]), "sum"), inverse=False)],
+        lines=[Line(curve=_curve(Sum((fan,)), "sum"), inverse=False)],
     )
 
     result = _evaluate_graph(graph, _context({}, {}))

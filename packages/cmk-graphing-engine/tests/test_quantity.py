@@ -87,7 +87,7 @@ class Negated:
         ]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, eq=False)
 class _FanOut:
     """A custom quantity that expands into one labelled curve per given label."""
 
@@ -152,7 +152,7 @@ def test_engine_rejects_a_fan_out_quantity_as_an_operation_operand() -> None:
         lines=[
             Line(
                 curve=Curve(
-                    quantity=Sum(summands=[_FanOut(labels=["a", "b"])]),
+                    quantity=Sum(summands=(_FanOut(labels=["a", "b"]),)),
                     attributes=CurveAttributes(title="s", unit=_UNIT, color="#000000"),
                 ),
                 inverse=False,

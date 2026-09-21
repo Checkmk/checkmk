@@ -323,7 +323,7 @@ class ScalarOf:
 
 @dataclass(frozen=True)
 class Sum:
-    summands: Sequence[QuantityProtocol]
+    summands: tuple[QuantityProtocol, ...]
     display: CurveAttributes | None = None
 
     def kind(self) -> str:
@@ -348,7 +348,7 @@ class Sum:
 
 @dataclass(frozen=True)
 class Product:
-    factors: Sequence[QuantityProtocol]
+    factors: tuple[QuantityProtocol, ...]
     display: CurveAttributes | None = None
 
     def kind(self) -> str:

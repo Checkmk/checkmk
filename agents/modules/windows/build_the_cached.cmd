@@ -53,40 +53,63 @@ set fname=python-%version%.%subversion%_%git_hash%_%BUILD_NUM%.cab
 set artifact_name=%arti_dir%\python-3.cab
 echo Used artifact: %artifact_name%
 powershell Write-Host "Downloading %fname% from cache..." -Foreground cyan
-curl -sSf --user %creds% -o %fname%  %url%/%fname% > nul 2>&1
-IF /I "!ERRORLEVEL!" NEQ "0" (
+call :http_request "%url%/%fname%" "%fname%"
+if "!http_code!" == "200" goto :from_cache
+
+del %fname% > nul 2>&1
+if "!http_code!" == "404" (
   powershell Write-Host "%fname% not found on %url%, building python %version%.%subversion% ..." -Foreground cyan
-
-  :: BUILDING
-  make build PY_VER=%version% PY_SUBVER=%subversion% ||  powershell Write-Host "[-] make failed"  -Foreground red && exit /B 34
-
-
-  echo "Checking the result of the build..."
-  if NOT exist %artifact_name% (
-    echo "The file %artifact_name% absent, build failed"
-    exit /B 14
-  )
-  powershell Write-Host "Build successful" -Foreground green
-
-  :: UPLOADING to the Nexus Cache:
-  echo Uploading to cache %artifact_name% ... %fname% ...
-  copy %artifact_name% %fname%
-
-  powershell Write-Host "To be executed: curl -sSf --user creds --upload-file %fname% %url%" -foreground white
-  curl -sSf --user %creds% --upload-file %fname% %url%
-  IF /I "!ERRORLEVEL!" NEQ "0" (
-    del %fname% > nul
-    powershell Write-Host "[-] Failed to upload" -Foreground red
-    exit /B 35
-  ) else (
-    del %fname% > nul
-    powershell Write-Host "[+] Uploaded successfully" -Foreground green
-    exit /B 0
-  )
-) else (
-  :: Most probable case. We have the python cab in the cache, just copy cached file to the artifact folder
-  powershell Write-Host "The file exists in cache. Moving cached file to artifact" -Foreground green
-  move /Y %fname% %artifact_name%
-  powershell Write-Host "[+] Downloaded successfully" -Foreground green
-  exit /b 0
+  goto :build
 )
+
+:: anything else is an auth, proxy or network problem rather than a cache miss.
+:: treating it as a miss would hide it and cost a full rebuild, so stop here
+powershell Write-Host "[-] Cache lookup for %fname% failed with HTTP !http_code!" -Foreground red
+exit /B 36
+
+:from_cache
+:: Most probable case. We have the python cab in the cache, just copy cached file to the artifact folder
+powershell Write-Host "The file exists in cache. Moving cached file to artifact" -Foreground green
+move /Y %fname% %artifact_name%
+powershell Write-Host "[+] Downloaded successfully" -Foreground green
+exit /B 0
+
+:build
+make build PY_VER=%version% PY_SUBVER=%subversion% ||  powershell Write-Host "[-] make failed"  -Foreground red && exit /B 34
+
+echo "Checking the result of the build..."
+if NOT exist %artifact_name% (
+  echo "The file %artifact_name% absent, build failed"
+  exit /B 14
+)
+powershell Write-Host "Build successful" -Foreground green
+
+:: UPLOADING to the Nexus Cache:
+echo Uploading to cache %artifact_name% ... %fname% ...
+copy %artifact_name% %fname%
+
+powershell Write-Host "To be executed: curl -sS -f --user creds --upload-file %fname% %url%" -foreground white
+curl -sS -f --user %creds% --upload-file %fname% %url%
+if !ERRORLEVEL! EQU 0 (
+  del %fname% > nul 2>&1
+  powershell Write-Host "[+] Uploaded successfully" -Foreground green
+  exit /B 0
+)
+
+:: the cache rejects a redeploy with HTTP 400, so a name that turned up while we
+:: were building is not a failure: the artifact we wanted to store is there
+call :http_request "%url%/%fname%" "NUL"
+del %fname% > nul 2>&1
+if "!http_code!" == "200" (
+  powershell Write-Host "[~] %fname% is already in the cache, keeping the stored copy" -Foreground yellow
+  exit /B 0
+)
+powershell Write-Host "[-] Failed to upload %fname%" -Foreground red
+exit /B 35
+
+:: %1 is the url, %2 the file to write the body to (NUL discards it).
+:: sets http_code and lets curl report its own diagnostics on stderr
+:http_request
+set http_code=000
+for /f "tokens=*" %%a in ('curl -sS --user %creds% -o %~2 -w "%%{http_code}" %~1') do set http_code=%%a
+exit /B 0

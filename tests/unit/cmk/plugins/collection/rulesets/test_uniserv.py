@@ -9,7 +9,9 @@ import pytest
 
 from cmk.ccc.version import Edition
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
+from cmk.gui.valuespec import ValueSpec
 
 from cmk.plugins.collection.rulesets.uniserv import rule_spec_active_check_uniserv
 from cmk.plugins.collection.server_side_calls.check_uniserv import active_check_uniserv
@@ -21,6 +23,12 @@ _ADDRESS = {
     "city": "SomeCity",
     "search_regex": "SomeCity",
 }
+
+
+def _legacy_valuespec() -> ValueSpec:
+    return convert_to_legacy_rulespec(
+        rule_spec_active_check_uniserv, Edition.CRE, lambda x: x
+    ).valuespec
 
 
 @pytest.mark.parametrize(
@@ -99,17 +107,33 @@ def test_rule_spec_uniserv_migration(
     expected_services: Sequence[str],
 ) -> None:
     """Mirror the update: migrate the rule, validate it, then let the plug-in parse it"""
-    legacy_rule_spec = convert_to_legacy_rulespec(
-        rule_spec_active_check_uniserv, Edition.CRE, lambda x: x
-    )
+    valuespec = _legacy_valuespec()
 
-    migrated = legacy_rule_spec.valuespec.transform_value(rule)
+    migrated = valuespec.transform_value(rule)
     assert migrated == expected_value
 
-    legacy_rule_spec.valuespec.validate_datatype(migrated, "")
-    legacy_rule_spec.valuespec.validate_value(migrated, "")
+    valuespec.validate_datatype(migrated, "")
+    valuespec.validate_value(migrated, "")
 
     commands = active_check_uniserv(
         migrated, HostConfig(name="host", ipv4_config=IPv4Config(address="1.2.3.4"))
     )
     assert [command.service_description for command in commands] == list(expected_services)
+
+
+def test_rule_spec_uniserv_new_rule_does_not_preselect_address_check() -> None:
+    """The rule editor renders the migrated default value; the address check must start
+    at "Please choose", which the legacy CascadingDropdown represents as None"""
+    valuespec = _legacy_valuespec()
+    assert valuespec.transform_value(valuespec.default_value())["check_address"] is None
+
+
+def test_rule_spec_uniserv_rejects_unselected_address_check() -> None:
+    """Saving a rule with the address check left at "Please choose" must fail validation
+    instead of being healed into a value the user never chose"""
+    valuespec = _legacy_valuespec()
+    rule = {"port": 18004, "service": "post_d", "check_version": True, "check_address": None}
+
+    valuespec.validate_datatype(rule, "")
+    with pytest.raises(MKUserError, match="Please make a selection"):
+        valuespec.validate_value(rule, "")

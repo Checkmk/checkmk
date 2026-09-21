@@ -3423,16 +3423,11 @@ def test_relay_active_checks_gated_by_experimental_flag(
     )
     monkeypatch.setattr(
         config,
-        "relay_compatible_active_checks",
-        lambda: frozenset({"my_active_check"}),
-    )
-    monkeypatch.setattr(
-        config,
         "load_experimental_flags",
         lambda _config_dir: ExperimentalFlagConfig(exp_relay_active_checks=flag_enabled),
     )
     host_name = HostName("test_host")
-    ts = Scenario()
+    ts = Scenario(relay_supported_active_checks=frozenset({"my_active_check"}))
     ts.add_host(host_name)
     ts.set_ruleset_bundle(
         "active_checks",

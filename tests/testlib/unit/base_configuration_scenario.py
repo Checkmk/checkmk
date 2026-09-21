@@ -54,16 +54,19 @@ class Scenario:
             ),
             self.get_builtin_host_labels,
             excluded_service_ids=self._excluded_service_ids,
+            relay_supported_active_checks=self._relay_supported_active_checks,
         )
 
     def __init__(
         self,
         site_id: str = "unit",
         excluded_service_ids: Container[ServiceID] = frozenset(),
+        relay_supported_active_checks: Container[str] = frozenset(),
     ) -> None:
         super().__init__()
 
         self._excluded_service_ids = excluded_service_ids
+        self._relay_supported_active_checks = relay_supported_active_checks
 
         self.get_builtin_host_labels = make_app(
             edition(cmk.utils.paths.omd_root)

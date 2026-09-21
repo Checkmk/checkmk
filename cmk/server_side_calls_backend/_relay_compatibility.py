@@ -39,7 +39,7 @@ def _discover_local_plugin_families(local_root: Path) -> Iterable[PluginFamily]:
     ]
 
 
-def relay_compatible_active_checks() -> frozenset[str]:
+def relay_supported_active_checks() -> frozenset[str]:
     """Active-check plugin names a relay may run, from the entry-point group.
 
     Unlike relay_compatible_plugin_families this reads only the entry-point group

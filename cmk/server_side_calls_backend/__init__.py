@@ -18,10 +18,10 @@ from ._loading import load_special_agents as load_special_agents
 from ._relay_compatibility import NotSupportedError as NotSupportedError
 from ._relay_compatibility import PluginFamily as PluginFamily
 from ._relay_compatibility import (
-    relay_compatible_active_checks as relay_compatible_active_checks,
+    relay_compatible_plugin_families as relay_compatible_plugin_families,
 )
 from ._relay_compatibility import (
-    relay_compatible_plugin_families as relay_compatible_plugin_families,
+    relay_supported_active_checks as relay_supported_active_checks,
 )
 from ._special_agents import SpecialAgent as SpecialAgent
 from ._special_agents import SpecialAgentCommandLine as SpecialAgentCommandLine

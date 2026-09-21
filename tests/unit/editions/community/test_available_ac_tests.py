@@ -11,6 +11,7 @@ from cmk.gui.watolib.analyze_configuration import ac_test_registry
 @pytest.mark.usefixtures("load_gui_plugins")
 def test_registered_ac_tests() -> None:
     expected_ac_tests = [
+        "ACTestApacheForwardedHeaders",
         "ACTestApacheNumberOfProcesses",
         "ACTestApacheProcessUsage",
         "ACTestAutomationUserSecret",

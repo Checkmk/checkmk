@@ -14,7 +14,7 @@ from cmk.gui.type_defs import ViewSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views.inventory._data_sources import RowTableInventory, RowTableInventoryHistory
-from cmk.inventory.structured_data import parse_internal_raw_path
+from cmk.inventory.raw_paths import parse_internal_raw_path
 
 EXPECTED_INV_KEYS = [
     "site",

@@ -29,6 +29,7 @@ from cmk.gui.theme import Theme
 from cmk.gui.theme.current_theme import theme as gui_theme
 from cmk.gui.utils.user_errors import user_errors
 from cmk.inventory.history import HistoryStore
+from cmk.inventory.raw_paths import parse_internal_raw_path
 from cmk.inventory.structured_data import (
     ImmutableAttributes,
     ImmutableDeltaAttributes,
@@ -36,7 +37,6 @@ from cmk.inventory.structured_data import (
     ImmutableDeltaTree,
     ImmutableTable,
     ImmutableTree,
-    parse_internal_raw_path,
     RetentionInterval,
     SDDeltaValue,
     SDKey,

@@ -16,7 +16,7 @@ from cmk.gui.views.sorter import Sorter, SorterRegistry
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.visuals.info import VisualInfo, VisualInfoRegistry
-from cmk.inventory.structured_data import InventoryPath, TreeSource
+from cmk.inventory.raw_paths import InventoryPath, TreeSource
 from cmk.web.utils.icons import DynamicIcon, DynamicIconName, StaticIcon
 
 from ._data_sources import ABCDataSourceInventory, RowTableInventory

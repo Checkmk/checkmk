@@ -24,17 +24,16 @@ from cmk.gui.views.inventory._tree_renderer import (
     _SDItemsSorter,
     SDItem,
 )
+from cmk.inventory.raw_paths import InventoryPath, TreeSource
 from cmk.inventory.structured_data import (
     ImmutableAttributes,
     ImmutableDeltaAttributes,
     ImmutableDeltaTable,
     ImmutableTable,
-    InventoryPath,
     RetentionInterval,
     SDDeltaValue,
     SDKey,
     SDPath,
-    TreeSource,
 )
 
 

@@ -22,6 +22,7 @@ py_library(
         "cmk/inventory/history.py",
         "cmk/inventory/merging.py",
         "cmk/inventory/paths.py",
+        "cmk/inventory/raw_paths.py",
         "cmk/inventory/serialization.py",
         "cmk/inventory/store.py",
         "cmk/inventory/structured_data.py",

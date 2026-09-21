@@ -41,7 +41,8 @@ from cmk.gui.visuals.filter.components import (
     StaticText,
     TextInput,
 )
-from cmk.inventory.structured_data import InventoryPath, SDValue
+from cmk.inventory.raw_paths import InventoryPath
+from cmk.inventory.structured_data import SDValue
 from cmk.inventory_ui.v1 import Comparable
 from cmk.web.utils.speaklater import LazyString
 

@@ -153,6 +153,7 @@ watch(model, (values) => emit('update:valid', isAcknowledgeValid(values)), {
           {{ notifyLabelParts[0]
           }}<CmkLink
             v-if="notificationRulesUrl"
+            class="monitoring-acknowledge-form__notify-link"
             :href="notificationRulesUrl"
             target="_blank"
             rel="noopener"
@@ -203,6 +204,11 @@ watch(model, (values) => emit('update:valid', isAcknowledgeValid(values)), {
 
 .monitoring-acknowledge-form__presets-link {
   /* `.cmk-link` is `display: flex; width: 100%`, which would stretch the header row. */
+  width: auto;
+}
+
+.monitoring-acknowledge-form__notify-link {
+  display: inline-flex;
   width: auto;
 }
 

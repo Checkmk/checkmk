@@ -50,7 +50,7 @@ withDefaults(
   width: 68%;
   height: 68%;
   position: absolute;
-  right: 5%;
+  right: -20%;
   bottom: -20%;
 }
 

@@ -26,11 +26,11 @@ from cmk.ccc import site
 from cmk.events.notification_result import NotificationContext
 from cmk.events.notify import find_wato_folder
 from cmk.events.notify_types import PluginNotificationContext
-from cmk.utils.escaping import escape, escape_permissive
 from cmk.utils.html import replace_state_markers
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.paths import omd_root
+from cmk.web.utils.escaping import escape, escape_permissive
 
 format_plugin_output = replace_state_markers
 

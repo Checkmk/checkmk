@@ -29,7 +29,7 @@ py_library(
         "//cmk/gui/utils:middle",
         "//cmk/gui/valuespec",
         "//cmk/gui/watolib:groups_io",
-        "//cmk/utils",
+        "//cmk/utils:paths",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-ccc:site",

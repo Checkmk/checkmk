@@ -14,7 +14,7 @@ const { allowedClasses } = defineProps<{
 
 const options = computed<sanitizeHtml.IOptions>(() => ({
   allowedClasses: allowedClasses,
-  // Following cmk/utils/escaping.py
+  // Following packages/cmk-web/cmk/web/utils/escaping.py
   allowedTags: [
     'h1',
     'h2',

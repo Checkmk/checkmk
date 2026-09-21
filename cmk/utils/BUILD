@@ -206,7 +206,6 @@ py_library(
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:password_store",
         "//packages/cmk-ruleset-matcher",
-        "//packages/cmk-web",
         requirement("cryptography"),
         requirement("pydantic"),
         requirement("python-dateutil"),

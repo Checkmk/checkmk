@@ -120,7 +120,7 @@
       "type": "object",
       "properties": {
         "text": {
-          "description": "Trusted HTML, sanitized to the allow-list of cmk/utils/escaping.py.",
+          "description": "Trusted HTML, sanitized to the allow-list of packages/cmk-web/cmk/web/utils/escaping.py.",
           "type": "string"
         },
         "variant": { "$ref": "#/$defs/global_settings_hint_variant" },

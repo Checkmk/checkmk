@@ -31,7 +31,7 @@ from cmk.gui.site_config import enabled_sites
 from cmk.gui.type_defs import RoleName, Visual, VisualName, VisualTypeName
 from cmk.gui.utils.roles import UserPermissions
 from cmk.mkp_tool import id_to_mkp, Installer, PackageName, PackagePart
-from cmk.utils.escaping import escape
+from cmk.web.utils.escaping import escape
 from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.speaklater import LazyString
 

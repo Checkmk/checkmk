@@ -1343,7 +1343,6 @@ allows = [
   "cmk.utils.dateutils",
   "cmk.utils.encoding",
   "cmk.utils.encryption",
-  "cmk.utils.escaping",
   "cmk.utils.everythingtype",
   "cmk.utils.global_ident_type",
   "cmk.utils.host_storage",
@@ -1421,7 +1420,7 @@ allows = []
 allows = ["@plugin_apis"]
 
 [components."cmk.notification_plugins"]
-allows = ["@ccc", "cmk.events", "cmk.utils"]
+allows = ["@ccc", "cmk.events", "cmk.utils", "cmk.web.utils.escaping"]
 
 [components."cmk.piggyback.hub.cli"]
 allows = ["@ccc", "cmk.crash", "cmk.piggyback", "cmk.utils"]
@@ -1869,9 +1868,6 @@ allows = []
 
 [components."cmk.utils.encryption"]
 allows = ["@crypto", "cmk.ccc.exceptions"]
-
-[components."cmk.utils.escaping"]
-allows = ["cmk.web.utils.escaping"]
 
 [components."cmk.utils.everythingtype"]
 allows = []

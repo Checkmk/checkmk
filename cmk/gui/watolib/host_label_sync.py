@@ -38,7 +38,7 @@ from cmk.gui.watolib.automations import (
     MKAutomationException,
     remote_automation_config_from_site_config,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree, make_folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree, make_folder_tree
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.livestatus_client import SiteConfiguration
 from cmk.ruleset_matcher.labels import DiscoveredHostLabelsStore
@@ -71,7 +71,7 @@ class SiteRequest:
     debug: bool
 
     @classmethod
-    def deserialize(cls, serialized: dict[str, Any]) -> SiteRequest:
+    def deserialize(cls, tree: FolderTree, serialized: dict[str, Any]) -> SiteRequest:
         enforce_host = (
             EnforcedHostRequest(**serialized["enforce_host"])
             if serialized["enforce_host"]
@@ -79,7 +79,7 @@ class SiteRequest:
         )
 
         if enforce_host:
-            host = folder_tree().host(enforce_host.host_name)
+            host = tree.host(enforce_host.host_name)
             if host is None:
                 raise MKGeneralException(
                     _(
@@ -328,7 +328,7 @@ class AutomationDiscoveredHostLabelSync(AutomationCommand[SiteRequest]):
             raise MKUserError(
                 "request", _('The parameter "%(parameter)s" is missing.') % {"parameter": "request"}
             )
-        return SiteRequest.deserialize(ast.literal_eval(ascii_input))
+        return SiteRequest.deserialize(make_folder_tree(config), ast.literal_eval(ascii_input))
 
     @override
     def execute(self, api_request: SiteRequest) -> dict[str, Any]:

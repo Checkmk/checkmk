@@ -148,7 +148,12 @@ from cmk.gui.watolib.check_mk_automations import (
 )
 from cmk.gui.watolib.config_domain_name import CORE
 from cmk.gui.watolib.global_settings import load_configuration_settings
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, make_action_link
+from cmk.gui.watolib.hosts_and_folders import (
+    folder_preserving_link,
+    FolderTree,
+    make_action_link,
+    make_folder_tree,
+)
 from cmk.gui.watolib.mode import mode_registry, mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.notification_parameter import notification_parameter_registry
 from cmk.gui.watolib.notifications import (
@@ -1117,13 +1122,13 @@ class ModeNotifications(ABCNotificationsMode):
 
     @override
     def page(self, config: Config) -> None:
-        self._show_overview()
+        self._show_overview(make_folder_tree(config))
         self._show_rules(analyse=None, config=config)
 
-    def _show_overview(self) -> None:
+    def _show_overview(self, tree: FolderTree) -> None:
         html.vue_component(
             component_name="cmk-notification-overview",
-            data=asdict(_get_vue_data()),
+            data=asdict(_get_vue_data(tree)),
         )
 
     def _get_date(self, context: NotificationContext) -> str:
@@ -1283,7 +1288,7 @@ def _fallback_mail_contacts_configured() -> bool:
     return False
 
 
-def _get_vue_data() -> Notifications:
+def _get_vue_data(tree: FolderTree) -> Notifications:
     all_sites_count, sites_with_disabled_notifications = get_disabled_notifications_infos()
     total_send_notifications = _get_total_sent_notifications_last_seven_days()
     return Notifications(
@@ -1374,11 +1379,11 @@ def _get_vue_data() -> Notifications:
         rule_sections=[
             RuleSection(
                 i18n=_("Optimize notifications"),
-                topics=_get_ruleset_infos(OPTIMIZE_NOTIFICATIONS_ENTRIES),
+                topics=_get_ruleset_infos(tree, OPTIMIZE_NOTIFICATIONS_ENTRIES),
             ),
             RuleSection(
                 i18n=_("Supporting rules"),
-                topics=_get_ruleset_infos(SUPPORT_NOTIFICATIONS_ENTRIES),
+                topics=_get_ruleset_infos(tree, SUPPORT_NOTIFICATIONS_ENTRIES),
             ),
         ],
         user_id=str(user.id),
@@ -1392,8 +1397,8 @@ def _get_total_sent_notifications_last_seven_days() -> int:
     return get_total_sent_notifications(from_timestamp=from_timestamp)
 
 
-def _get_ruleset_infos(entries: dict[str, list[str]]) -> list[RuleTopic]:
-    all_rulesets = AllRulesets.load_all_rulesets(folder_tree())
+def _get_ruleset_infos(tree: FolderTree, entries: dict[str, list[str]]) -> list[RuleTopic]:
+    all_rulesets = AllRulesets.load_all_rulesets(tree)
     rule_topic_list: list[RuleTopic] = []
     for section, ruleset in entries.items():
         rule_list: list[Rule] = []

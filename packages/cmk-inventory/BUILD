@@ -28,7 +28,7 @@ py_library(
         "cmk/inventory/store.py",
         "cmk/inventory/transformation/__init__.py",
         "cmk/inventory/transformation/__main__.py",
-        "cmk/inventory/transformation/main.py",
+        "cmk/inventory/transformation/tree_files.py",
         "cmk/inventory/trees.py",
     ],
     data = [":inventory_py_typed"],

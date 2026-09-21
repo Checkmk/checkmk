@@ -10,7 +10,11 @@ from pathlib import Path
 import cmk.ccc.store
 from cmk.inventory.serialization import SDRawTree
 from cmk.inventory.store import make_meta, SDMetaAndRawTree
-from cmk.inventory.transformation import transform_inventory_trees
+from cmk.inventory.transformation.tree_files import (
+    transform_inventory_trees,
+    TransformationResult,
+    TransformationResultsStore,
+)
 from cmk.inventory.trees import SDKey, SDNodeName
 
 from ._logger import null_logger
@@ -138,3 +142,14 @@ def test_transform_delta_cache_tree(tmp_path: Path) -> None:
 
     assert not (tmp_path / "var/check_mk/inventory_delta_cache/hostname/123_456").exists()
     assert (tmp_path / "var/check_mk/inventory_delta_cache/hostname/123_456.json").exists()
+
+
+def test_transformation_results_store_is_empty_without_a_file(tmp_path: Path) -> None:
+    assert not TransformationResultsStore(tmp_path).load()
+
+
+def test_transformation_results_store_reads_back_what_it_saved(tmp_path: Path) -> None:
+    results = [TransformationResult(host_name="hostname", path="a/path", duration=1.5, size=23)]
+    store = TransformationResultsStore(tmp_path)
+    store.save(results)
+    assert list(store.load()) == results

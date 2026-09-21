@@ -3,10 +3,18 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { ConditionNode, FilterField, FilterNode } from '@/monitoring/shared/api/types'
+import type {
+  AgeCondition,
+  ConditionNode,
+  FilterField,
+  FilterNode
+} from '@/monitoring/shared/api/types'
 
-function isCondition(node: FilterNode): node is ConditionNode {
-  return node.type === 'condition'
+/** A leaf a column funnel owns: a condition on its field, or a relative age bound on it. */
+type FieldNode = ConditionNode | AgeCondition
+
+function isFieldNode(node: FilterNode): node is FieldNode {
+  return node.type === 'condition' || node.type === 'age'
 }
 
 function getTopChildren(node: FilterNode): FilterNode[] {
@@ -28,7 +36,7 @@ export function setCondition(
   value: FilterNode | undefined
 ): FilterNode | undefined {
   const others = (node !== undefined ? getTopChildren(node) : []).filter(
-    (c) => !(isCondition(c) && c.field === field)
+    (c) => !(isFieldNode(c) && c.field === field)
   )
   const additions = value !== undefined ? getTopChildren(value) : []
   const next = [...others, ...additions]
@@ -41,13 +49,14 @@ export function setCondition(
   return { type: 'and', children: next }
 }
 
-/** Return all top-level ConditionNodes from a FilterNode. */
-export function getTopLevelConditions(node: FilterNode): ConditionNode[] {
-  return getTopChildren(node).filter(isCondition)
+/** Return all top-level per-field leaves from a FilterNode. */
+export function getTopLevelConditions(node: FilterNode): FieldNode[] {
+  return getTopChildren(node).filter(isFieldNode)
 }
 
 type CanonicalNode =
   | { type: 'condition'; field: string; op: string; value: unknown }
+  | { type: 'age'; field: string; op: string; seconds: number }
   | { type: 'and' | 'or'; children: CanonicalNode[] }
   | { type: 'not'; child: CanonicalNode }
 
@@ -60,6 +69,9 @@ function canonicalize(node: FilterNode): CanonicalNode {
   if (node.type === 'condition') {
     const value = Array.isArray(node.value) ? [...node.value].sort() : node.value
     return { type: 'condition', field: node.field, op: node.op, value }
+  }
+  if (node.type === 'age') {
+    return { type: 'age', field: node.field, op: node.op, seconds: node.seconds }
   }
   if (node.type === 'not') {
     return { type: 'not', child: canonicalize(node.child) }

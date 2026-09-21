@@ -31,9 +31,10 @@ export class HostApi extends MonitoringApi {
     params: HostQueryParams = {},
     signal?: AbortSignal
   ): Promise<HostsResponse> {
+    const filter = this.resolveFilter(params.filter)
     const body: HostsRequestBody = {
       ...this.buildRequestBody(params),
-      ...(params.filter && { filter: params.filter as NonNullable<HostsRequestBody['filter']> }),
+      ...(filter && { filter: filter as NonNullable<HostsRequestBody['filter']> }),
       ...(params.fields !== undefined && { fields: params.fields })
     }
     return unwrap(

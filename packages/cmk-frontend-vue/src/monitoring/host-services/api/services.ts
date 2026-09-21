@@ -31,10 +31,11 @@ export class HostServicesApi extends MonitoringApi {
     params: HostServicesQueryParams = {},
     signal?: AbortSignal
   ): Promise<HostServicesResponse> {
+    const filter = this.resolveFilter(params.filter)
     const body: ServicesRequestBody = {
       ...this.buildRequestBody(params),
-      ...(params.filter && {
-        filter: params.filter as unknown as ServiceFilterNode
+      ...(filter && {
+        filter: filter as unknown as ServiceFilterNode
       }),
       ...(params.fields !== undefined && { fields: params.fields })
     }

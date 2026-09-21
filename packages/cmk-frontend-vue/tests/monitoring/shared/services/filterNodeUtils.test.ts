@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import type { ConditionNode, FilterNode } from '@/monitoring/shared/api/types'
+import type { AgeCondition, ConditionNode, FilterNode } from '@/monitoring/shared/api/types'
 import {
   filterNodesEqual,
   getTopLevelConditions,
@@ -21,6 +21,12 @@ const acknowledged: ConditionNode = {
   value: true
 }
 const state: ConditionNode = { type: 'condition', field: 'state', op: 'one_of', value: ['DOWN'] }
+const lastCheckAge: AgeCondition = {
+  type: 'age',
+  field: 'last_check',
+  op: 'younger_than',
+  seconds: 300
+}
 
 describe('setCondition', () => {
   it('returns the bare condition when added to an empty filter', () => {
@@ -48,6 +54,18 @@ describe('setCondition', () => {
       type: 'and',
       children: [acknowledged, updated]
     })
+  })
+
+  it('replaces an existing age bound for the same field', () => {
+    const updated: AgeCondition = { ...lastCheckAge, op: 'older_than', seconds: 600 }
+
+    expect(setCondition(lastCheckAge, 'last_check', updated)).toStrictEqual(updated)
+  })
+
+  it('removes an age bound like any other condition', () => {
+    const node: FilterNode = { type: 'and', children: [name, lastCheckAge] }
+
+    expect(setCondition(node, 'last_check', undefined)).toStrictEqual(name)
   })
 
   it('adds a new field to an existing and node', () => {
@@ -160,6 +178,10 @@ describe('filterNodesEqual', () => {
     expect(filterNodesEqual(name, { ...name, value: 'other' })).toBe(false)
     expect(filterNodesEqual(name, { ...name, op: 'matches' })).toBe(false)
     expect(filterNodesEqual(name, alias)).toBe(false)
+  })
+
+  it('distinguishes age bounds that differ in length', () => {
+    expect(filterNodesEqual(lastCheckAge, { ...lastCheckAge, seconds: 600 })).toBe(false)
   })
 
   it('ignores ordering of one_of values', () => {

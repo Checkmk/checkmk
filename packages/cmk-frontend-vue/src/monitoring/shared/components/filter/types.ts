@@ -90,6 +90,24 @@ export interface DateTimeRangeFilter<F extends FilterField = FilterField> {
   field: F
 }
 
+/**
+ * Filter that matches a timestamp field by how long ago it was, rather than by
+ * the instant itself: a number, a unit, and whether the age has to be below the
+ * value, above it, or between two of them.
+ *
+ * The v-model value is a `ColumnFilterNode<F>` of `age` bounds, which state the
+ * age rather than the instant it resolves to. `MonitoringApi` turns them into
+ * the `gte` / `lte` conditions a {@link DateTimeRangeFilter} produces as it
+ * builds each request - a younger-than age is a lower bound on the timestamp,
+ * an older-than age an upper one - so an age filter stays an age however long
+ * the table is left polling.
+ */
+export interface DurationFilter<F extends FilterField = FilterField> {
+  type: 'duration'
+  /** API field this filter targets. Used to produce the correct condition node. */
+  field: F
+}
+
 /** A single boolean field shown as a tri-state toggle button group in a {@link BooleanGroupFilter}. */
 export interface BooleanFilterGroup<F extends FilterField = FilterField> {
   /** Boolean API field this group targets (e.g. `in_downtime`, `acknowledged`). */
@@ -192,6 +210,7 @@ export type ColumnFilterDefinition<F extends FilterField = FilterField> =
   | StringInputFilter<F>
   | NumericFilter<F>
   | DateTimeRangeFilter<F>
+  | DurationFilter<F>
   | BooleanGroupFilter<F>
   | CheckboxListWithFlagsFilter<F>
   | AutocompleteChoiceFilter<F>

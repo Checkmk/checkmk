@@ -17,7 +17,7 @@ export const a11yData = [
   {
     keys: ['↑', '↓', 'Home', 'End'],
     description:
-      'While the dropdown is open, arrow keys move the active option (Home/End jump to first/last). The active option is tracked by the parent FilterDropdown and exposed via aria-activedescendant; the option rows only render the highlight. Exception: a numeric or date-time-range filter leaves its arrow keys to the input itself, since those step the value natively.'
+      'While the dropdown is open, arrow keys move the active option (Home/End jump to first/last). The active option is tracked by the parent FilterDropdown and exposed via aria-activedescendant; the option rows only render the highlight. Exception: a numeric, date-time-range or duration filter leaves its arrow keys to the input itself, since those step the value natively.'
   },
   {
     keys: ['Enter', 'Space'],
@@ -71,6 +71,7 @@ import type {
   BooleanGroupFilter,
   CheckboxListWithFlagsFilter,
   DateTimeRangeFilter,
+  DurationFilter,
   NumericFilter,
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
@@ -172,6 +173,11 @@ const lastCheckFilter = computed<DateTimeRangeFilter>(() => ({
   field: 'last_check'
 }))
 
+const lastStateChangeFilter = computed<DurationFilter>(() => ({
+  type: 'duration',
+  field: 'last_state_change'
+}))
+
 const columns = computed<ColumnDef<HostEntry>[]>(() => [
   {
     accessorKey: 'state',
@@ -225,6 +231,14 @@ const columns = computed<ColumnDef<HostEntry>[]>(() => [
     meta: { filter: lastCheckFilter.value }
   },
   {
+    accessorKey: 'last_state_change',
+    header: 'Last state change',
+    sortDescFirst: true,
+    minSize: 120,
+    maxSize: 200,
+    meta: { filter: lastStateChangeFilter.value }
+  },
+  {
     accessorKey: 'labels',
     header: 'Labels',
     enableSorting: false,
@@ -261,6 +275,9 @@ function describeNode(node: ColumnFilterNode<FilterField>): string {
   if (node.type === 'condition') {
     const value = Array.isArray(node.value) ? node.value.join(', ') : String(node.value)
     return `${node.op} ${value}`
+  }
+  if (node.type === 'age') {
+    return `${node.op} ${node.seconds}s`
   }
   return ''
 }
@@ -299,6 +316,7 @@ const rows: HostEntry[] = [
       criticality: { source: 'explicit', value: 'prod' }
     },
     last_check: 1789625643,
+    last_state_change: 1789539243,
     legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=web-server-01',
     num_relations: 0
   },
@@ -333,6 +351,7 @@ const rows: HostEntry[] = [
       criticality: { source: 'explicit', value: 'prod' }
     },
     last_check: 1789624361,
+    last_state_change: 1789620761,
     legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=db-primary-02',
     num_relations: 0
   },
@@ -356,6 +375,7 @@ const rows: HostEntry[] = [
       criticality: { source: 'explicit', value: 'test' }
     },
     last_check: 1789592712,
+    last_state_change: 1789333512,
     legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=cache-node-03',
     num_relations: 0
   }

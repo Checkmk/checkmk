@@ -5,6 +5,7 @@
  */
 import type { SortingState } from '@tanstack/vue-table'
 
+import type { ConditionNode, FilterNode } from '@/monitoring/shared/api/types'
 import { DEFAULT_BATCH_SIZE } from '@/monitoring/shared/constants'
 import type { RequestedLimit } from '@/monitoring/shared/types'
 
@@ -35,6 +36,39 @@ export abstract class MonitoringApi {
       ...(sort.length > 0 && { sort }),
       ...(searchQuery && { q: searchQuery })
     }
+  }
+
+  /**
+   * Resolve a filter's relative age bounds into the absolute timestamps the API accepts,
+   * against the clock at request time. Every request resolves anew, so a background poll
+   * keeps asking for the age the user entered rather than the window it meant on Apply.
+   */
+  protected resolveFilter(node: FilterNode | undefined): FilterNode | undefined {
+    if (node === undefined) {
+      return undefined
+    }
+    return this.resolveAges(node, Math.floor(Date.now() / 1000))
+  }
+
+  private resolveAges(node: FilterNode, reference: number): FilterNode {
+    if (node.type === 'age') {
+      return {
+        type: 'condition',
+        field: node.field,
+        op: node.op === 'older_than' ? 'lte' : 'gte',
+        value: reference - node.seconds
+      } as ConditionNode
+    }
+    if (node.type === 'not') {
+      return { type: 'not', child: this.resolveAges(node.child, reference) }
+    }
+    if (node.type === 'and' || node.type === 'or') {
+      return {
+        type: node.type,
+        children: node.children.map((child) => this.resolveAges(child, reference))
+      }
+    }
+    return node
   }
 
   /** Encode the table's sort state as the `column:direction` list the API expects. */

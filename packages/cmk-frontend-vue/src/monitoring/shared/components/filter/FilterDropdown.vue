@@ -45,6 +45,7 @@ import FilterCheckboxList from './FilterCheckboxList.vue'
 import FilterCheckboxListWithFlags from './FilterCheckboxListWithFlags.vue'
 import FilterColumnVisibility from './FilterColumnVisibility.vue'
 import FilterDateTimeRange from './FilterDateTimeRange.vue'
+import FilterDuration from './FilterDuration.vue'
 import FilterNumeric from './FilterNumeric.vue'
 import FilterStringInput from './FilterStringInput.vue'
 import FilterVisualFilter from './FilterVisualFilter.vue'
@@ -56,6 +57,7 @@ const FILTER_COMPONENTS: Record<ColumnFilterDefinition['type'], Component> = {
   'string-input': FilterStringInput,
   numeric: FilterNumeric,
   'date-time-range': FilterDateTimeRange,
+  duration: FilterDuration,
   'boolean-group': FilterBooleanGroup,
   'autocomplete-choice': FilterAutocompleteChoice,
   'column-visibility': FilterColumnVisibility,
@@ -109,6 +111,11 @@ const draft = ref<ColumnFilterValue<FilterField> | undefined>(undefined)
 const draftKey = ref(0)
 
 const isValid = ref(true)
+
+// A filter type whose input is only judged once the user commits - an age span,
+// say - exposes `validate`. Apply asks it before writing the draft back, and a
+// refusal keeps the popover open on the error it has just revealed.
+const content = ref<{ validate?: () => boolean } | null>(null)
 
 const panel = ref<HTMLElement | null>(null)
 const trigger = ref<HTMLElement | null>(null)
@@ -173,6 +180,9 @@ function toggle(): void {
 
 function apply(): void {
   if (!isValid.value) {
+    return
+  }
+  if (content.value?.validate && !content.value.validate()) {
     return
   }
   model.value = draft.value
@@ -283,7 +293,8 @@ function moveFocus(delta: number): void {
 // hijack ArrowUp/ArrowDown for row navigation there.
 const ARROW_NAV_DISABLED_TYPES = new Set<ColumnFilterDefinition['type']>([
   'numeric',
-  'date-time-range'
+  'date-time-range',
+  'duration'
 ])
 
 function registerShortcuts(): void {
@@ -398,6 +409,7 @@ onBeforeUnmount(() => {
         <component
           :is="filterComponent"
           :key="draftKey"
+          ref="content"
           v-model="draft"
           :definition="definition"
           @update:valid="isValid = $event"

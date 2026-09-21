@@ -171,6 +171,7 @@ class Crawler:
             "application/x-mkp",
             "application/x-msdos-program",
             "application/x-msi",
+            "application/x-pem-file",
             "application/x-pkg",
             "application/x-redhat-package-manager",
             "application/x-rpm",

@@ -122,5 +122,5 @@ def register(
         job_registry,
     )
     users.register(mode_registry)
-    certificate_overview.register(mode_registry)
+    certificate_overview.register(mode_registry, page_registry)
     certificate_rotation.register(automation_command_registry)

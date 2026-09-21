@@ -49,7 +49,12 @@ from cmk.gui.watolib.automations import (
     make_automation_config,
 )
 from cmk.gui.watolib.check_mk_automations import get_agent_output
-from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import (
+    folder_from_request,
+    FolderTree,
+    Host,
+    make_folder_tree,
+)
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri, makeuri_contextless
@@ -94,6 +99,7 @@ class FetchAgentOutputRequest:
     @classmethod
     def deserialize(
         cls,
+        tree: FolderTree,
         serialized: Mapping[str, object],
         *,
         default_debug: bool,
@@ -101,7 +107,7 @@ class FetchAgentOutputRequest:
     ) -> FetchAgentOutputRequest:
         host_name = serialized["host_name"]
         assert isinstance(host_name, str)
-        host = folder_tree().host(HostName(host_name))
+        host = tree.host(HostName(host_name))
         if host is None:
             raise MKGeneralException(
                 _(
@@ -156,7 +162,7 @@ class AgentOutputPage(Page, abc.ABC):
 
         self._back_url = request.get_url_input("back_url", deflt="") or None
 
-        host = folder_from_request(folder_tree(), request.var("folder"), host_name).host(
+        host = folder_from_request(make_folder_tree(config), request.var("folder"), host_name).host(
             HostName(host_name)
         )
         if not host:
@@ -312,6 +318,7 @@ class ABCAutomationFetchAgentOutput(AutomationCommand[FetchAgentOutputRequest]):
                 "request", _('The parameter "%(parameter)s" is missing.') % {"parameter": "request"}
             )
         return FetchAgentOutputRequest.deserialize(
+            make_folder_tree(config),
             ast.literal_eval(ascii_input),
             default_debug=config.debug,
             default_snmp_walk_download_timeout=int(config.snmp_walk_download_timeout),

@@ -47,7 +47,6 @@ from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import (
     folder_from_request,
     folder_preserving_link,
-    folder_tree,
     make_folder_tree,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
@@ -555,7 +554,7 @@ class PageAjaxDiagHost(AjaxPage):
         if not hostname:
             raise MKGeneralException(_("The host name is missing."))
 
-        host = folder_tree().host(hostname)
+        host = make_folder_tree(ctx.config).host(hostname)
 
         if not host:
             raise MKGeneralException(_("The given host does not exist."))

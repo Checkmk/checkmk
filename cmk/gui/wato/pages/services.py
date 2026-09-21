@@ -79,7 +79,6 @@ from cmk.gui.watolib.check_mk_automations import active_check
 from cmk.gui.watolib.hosts_and_folders import (
     folder_from_request,
     folder_preserving_link,
-    folder_tree,
     FolderTree,
     Host,
     make_folder_tree,
@@ -339,7 +338,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand[_AutomationServiceDiscover
         action = DiscoveryAction(options["action"])
         raise_errors = not options["ignore_errors"]
 
-        self._check_permissions(folder_tree(), host_name)
+        self._check_permissions(make_folder_tree(config), host_name)
 
         return _AutomationServiceDiscoveryRequest(
             host_name=host_name,
@@ -396,7 +395,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         # Make Folder() be able to detect the current folder correctly
         request.set_var("folder", api_request.folder_path)
 
-        folder = folder_tree().folder(api_request.folder_path)
+        folder = make_folder_tree(ctx.config).folder(api_request.folder_path)
         host = folder.host(api_request.host_name)
         if not host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
@@ -2207,15 +2206,15 @@ class DiscoveryPageRenderer:
 
 
 class ModeAjaxExecuteCheck(AjaxPage):
-    def _handle_http_request(self, sites: SiteConfigurations) -> None:
+    def _handle_http_request(self, tree: FolderTree, sites: SiteConfigurations) -> None:
         self._site = SiteId(request.get_ascii_input_mandatory("site"))
         if self._site not in sites:
             raise MKUserError("site", _("You called this page with an invalid site."))
 
         self._host_name = request.get_validated_type_input_mandatory(HostName, "host")
-        self._host = folder_from_request(
-            folder_tree(), request.var("folder"), self._host_name
-        ).host(self._host_name)
+        self._host = folder_from_request(tree, request.var("folder"), self._host_name).host(
+            self._host_name
+        )
         if not self._host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
         self._host.permissions.need_permission("read", user)
@@ -2227,7 +2226,7 @@ class ModeAjaxExecuteCheck(AjaxPage):
 
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        self._handle_http_request(ctx.config.sites)
+        self._handle_http_request(make_folder_tree(ctx.config), ctx.config.sites)
         check_csrf_token(session, request, i18n=_)
         try:
             active_check_result = active_check(

@@ -1505,7 +1505,7 @@ class PageAjaxPopupMoveToFolder(AjaxPage):
     def page(self, ctx: PageContext) -> PageResult:
         html.span(self._move_title())
 
-        choices = self._get_choices(folder_tree())
+        choices = self._get_choices(make_folder_tree(ctx.config))
         if not choices:
             html.write_text_permissive(_("No valid target folder."))
             return None

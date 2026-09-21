@@ -12,6 +12,7 @@ import CmkAccordion from 'cmk-ui-library/components/CmkAccordion/CmkAccordion.vu
 import CmkBreadcrumb from 'cmk-ui-library/components/CmkBreadcrumb'
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import CmkSlideInDialog from 'cmk-ui-library/components/CmkSlideInDialog.vue'
+import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useDebounceRef } from 'cmk-ui-library/lib/useDebounce'
@@ -161,24 +162,27 @@ function resetSearchAndFilters(): void {
 
 <template>
   <div class="global-settings-app">
-    <CmkBreadcrumb :items="breadcrumb" />
-    <div class="global-settings-app__toolbar">
-      <CmkSearchInput
-        v-model="query"
-        class="global-settings-app__search"
-        :placeholder="_t('Search settings…')"
-        :show-submit-button="false"
-      />
-      <div class="global-settings-app__toolbar-right">
-        <GlobalSettingsModificationFilter
-          v-model="modification"
-          :scope="scope"
-          :show-site-overrides="hasSiteOverrides"
+    <div class="global-settings-app__header">
+      <CmkBreadcrumb :items="breadcrumb" />
+      <CmkHeading>{{ title }}</CmkHeading>
+      <div class="global-settings-app__toolbar">
+        <CmkSearchInput
+          v-model="query"
+          class="global-settings-app__search"
+          :placeholder="_t('Search settings…')"
+          :show-submit-button="false"
         />
-        <ExpandCollapseButtons
-          @expand-all="openedItems = shownTopics.map((topic) => topic.headline)"
-          @collapse-all="openedItems = []"
-        />
+        <div class="global-settings-app__toolbar-right">
+          <GlobalSettingsModificationFilter
+            v-model="modification"
+            :scope="scope"
+            :show-site-overrides="hasSiteOverrides"
+          />
+          <ExpandCollapseButtons
+            @expand-all="openedItems = shownTopics.map((topic) => topic.headline)"
+            @collapse-all="openedItems = []"
+          />
+        </div>
       </div>
     </div>
     <GlobalSettingsEmptyState v-if="shownTopics.length === 0" @reset="resetSearchAndFilters" />
@@ -215,6 +219,12 @@ function resetSearchAndFilters(): void {
   flex-direction: column;
   gap: var(--dimension-6);
   padding: var(--dimension-4) var(--dimension-4) 0;
+}
+
+.global-settings-app__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-4);
 }
 
 .global-settings-app__toolbar {

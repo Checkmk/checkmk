@@ -271,11 +271,11 @@ beforeEach(() => {
 })
 
 describe('GlobalSettingsApp page header', () => {
-  test('renders the breadcrumb of the page', () => {
+  test('renders the breadcrumb and the title of the page', () => {
     render(GlobalSettingsApp, { props: data })
 
     expect(screen.getByText('Setup')).toBeInTheDocument()
-    expect(screen.getByText('Global settings')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Global settings' })).toBeInTheDocument()
   })
 })
 

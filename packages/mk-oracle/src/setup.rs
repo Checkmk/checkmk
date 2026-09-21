@@ -30,7 +30,7 @@ use clap::Parser;
 use flexi_logger::{self, Cleanup, Criterion, DeferredNow, FileSpec, LogSpecification, Record};
 use std::collections::HashSet;
 use std::env::ArgsOs;
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
@@ -742,6 +742,11 @@ pub enum RuntimeError {
         dir: PathBuf,
         reason: String,
     },
+    SwitchFailed {
+        user: String,
+        dir: PathBuf,
+        reason: String,
+    },
 }
 
 impl std::fmt::Display for RuntimeError {
@@ -754,6 +759,10 @@ impl std::fmt::Display for RuntimeError {
                 "{dir:?} - Execution is blocked because you try to load an unsafe Oracle client \
                  library as a privileged user. {reason}. Please, disable write access to the \
                  files by non-privileged users, or take ownership of them."
+            ),
+            Self::SwitchFailed { user, dir, reason } => write!(
+                f,
+                "{dir:?} belongs to {user}, but the plugin cannot run as that user: {reason}"
             ),
         }
     }
@@ -814,6 +823,65 @@ fn assess_runtime(dir: &Path, options: &Options) -> RuntimeVerdict {
             Err(reason) => RuntimeVerdict::Reject(reason),
         }
     }
+}
+
+/// Has to run right before the first connection, which is what loads the client
+/// library, and after everything that still needs root: a switch cannot be
+/// undone.
+pub fn prepare_runtime_load(config: &OracleConfig, environment: &Env) -> Result<(), RuntimeError> {
+    let ora_sql = config.ora_sql().ok_or(RuntimeError::NoConfig)?;
+    let Some(dir) = own_runtime_dir() else {
+        log::info!(
+            "{RUNTIME_PATH_ENV_VAR} names no directory: the client library comes from the \
+             system's library path"
+        );
+        return Ok(());
+    };
+    match assess_runtime(&dir, ora_sql.options()) {
+        RuntimeVerdict::Reject(reason) => Err(RuntimeError::Rejected { dir, reason }),
+        RuntimeVerdict::Load => Ok(()),
+        RuntimeVerdict::SwitchTo(user) => {
+            if let Err(e) =
+                crate::ora_sql::instance::prepare_wallet_environment(config, environment)
+            {
+                log::error!("Before running as {}: {e:#}", user.name);
+            }
+            switch_user(&user).map_err(|e| RuntimeError::SwitchFailed {
+                user: user.name.clone(),
+                dir: dir.clone(),
+                reason: e.to_string(),
+            })?;
+            log::info!(
+                "Running as {} (uid {}), the owner of {dir:?}",
+                user.name,
+                user.uid
+            );
+            Ok(())
+        }
+    }
+}
+
+/// The runtime the parent put in front of the library search path.
+fn own_runtime_dir() -> Option<PathBuf> {
+    std::env::var_os(RUNTIME_PATH_ENV_VAR).and_then(|path| first_search_dir(&path))
+}
+
+fn first_search_dir(search_path: &OsStr) -> Option<PathBuf> {
+    std::env::split_paths(search_path)
+        .next()
+        .filter(|dir| !dir.as_os_str().is_empty())
+}
+
+#[cfg(unix)]
+fn switch_user(user: &RunAsUser) -> std::io::Result<()> {
+    crate::permissions_linux::drop_privileges(user)
+}
+
+#[cfg(windows)]
+fn switch_user(_user: &RunAsUser) -> std::io::Result<()> {
+    Err(std::io::Error::other(
+        "running as another user is not supported on Windows",
+    ))
 }
 
 pub fn effective_oracle_home(
@@ -1490,6 +1558,15 @@ mod tests {
                 "{RUNTIME_PATH_ENV_VAR}=/u01/dbhome_1/lib\nORACLE_HOME=/u01/dbhome_1\nRUN_AS=oracle\n"
             )
         );
+    }
+
+    #[test]
+    fn test_first_search_dir() {
+        let runtime = PathBuf::from("/u01/dbhome_1").join(CLIENT_LIB_SUBDIR);
+        let with_old = prepend_to_search_path(runtime.clone(), Path::new("/existing/lib"));
+        assert_eq!(first_search_dir(&with_old), Some(runtime.clone()));
+        assert_eq!(first_search_dir(runtime.as_os_str()), Some(runtime));
+        assert_eq!(first_search_dir(OsStr::new("")), None);
     }
 
     #[test]

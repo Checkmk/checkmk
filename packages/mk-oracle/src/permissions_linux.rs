@@ -36,12 +36,13 @@
 //! the runtime path, its direct entries and its parent directories. The full
 //! subtree is deliberately *not* walked.
 
-use crate::setup::RuntimeVerdict;
+use crate::setup::{RunAsUser, RuntimeVerdict};
 use std::collections::HashSet;
 use std::ffi::CString;
 use std::fs::Metadata;
 use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 
 const ROOT_UID: u32 = 0;
 const ROOT_GID: u32 = 0;
@@ -332,6 +333,51 @@ fn validate_as_root(path: &Path, safe_entries: &[String]) -> Result<(), String> 
     Err(format!(
         "{path:?} is writable by a user other than root or the Oracle owner"
     ))
+}
+
+static SWITCHED_TO: OnceLock<RunAsUser> = OnceLock::new();
+
+pub fn switched_to() -> Option<&'static RunAsUser> {
+    SWITCHED_TO.get()
+}
+
+fn last_os_error(what: &str) -> std::io::Error {
+    let e = std::io::Error::last_os_error();
+    std::io::Error::new(e.kind(), format!("{what} failed: {e}"))
+}
+
+pub fn drop_privileges(user: &RunAsUser) -> std::io::Result<()> {
+    // SAFETY: `setgroups` reads `groups.len()` gids from `groups.as_ptr()`, the
+    // buffer of a live `Vec<u32>`, and `gid_t` is `u32` on Linux. `setgid` and
+    // `setuid` take plain integers and touch no memory of ours.
+    unsafe {
+        if libc::setgroups(user.groups.len() as _, user.groups.as_ptr()) != 0 {
+            return Err(last_os_error("setgroups"));
+        }
+        if libc::setgid(user.gid) != 0 {
+            return Err(last_os_error("setgid"));
+        }
+        if libc::setuid(user.uid) != 0 {
+            return Err(last_os_error("setuid"));
+        }
+        // setuid(0) succeeding would mean the saved uid is still 0
+        if user.uid != ROOT_UID && libc::setuid(ROOT_UID) == 0 {
+            return Err(std::io::Error::other(
+                "root privileges could be regained after dropping them",
+            ));
+        }
+    }
+    SWITCHED_TO
+        .set(user.clone())
+        .map_err(|_| std::io::Error::other("privileges were already dropped once"))?;
+    // SAFETY: the switch runs from `main` before the tokio runtime is built, so
+    // no other thread can read the environment while it is written.
+    unsafe {
+        std::env::set_var("HOME", &user.home);
+        std::env::set_var("USER", &user.name);
+        std::env::set_var("LOGNAME", &user.name);
+    }
+    Ok(())
 }
 
 #[cfg(test)]

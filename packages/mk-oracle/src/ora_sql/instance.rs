@@ -111,6 +111,18 @@ fn ensure_wallet_environment(
     setup_wallet_environment(None).context("Failed to setup wallet environment")
 }
 
+pub fn prepare_wallet_environment(config: &OracleConfig, environment: &Env) -> Result<()> {
+    let Some(ora_sql) = config.ora_sql() else {
+        return Ok(());
+    };
+    for cfg in std::iter::once(ora_sql).chain(ora_sql.configs().iter()) {
+        if remap_filter(environment.filter(), cfg).is_some() {
+            ensure_wallet_environment(cfg, &resolve_targets(cfg, environment))?;
+        }
+    }
+    Ok(())
+}
+
 /// Generate data as defined by config
 /// Consists from two parts: instance entries + sections for every instance
 pub async fn generate_data(

@@ -13,7 +13,7 @@ import CmkBreadcrumb from 'cmk-ui-library/components/CmkBreadcrumb'
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import CmkSlideInDialog from 'cmk-ui-library/components/CmkSlideInDialog.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useDebounceRef } from 'cmk-ui-library/lib/useDebounce'
 import { computed, onMounted, provide, ref, toRaw, watch } from 'vue'
@@ -140,7 +140,13 @@ async function toggleSetting(
   value: boolean
 ): Promise<TranslatedString | null> {
   try {
-    applyReceived(variable, await service.save(variable.name, value, '*'))
+    const result = await service.save(variable.name, value, '*')
+    if (result.type === 'invalid') {
+      // no form to annotate, and what validation message do we expect for a boolean?
+      // so there has to be something really wrong, so let's just show it completely:
+      return untranslated(JSON.stringify(result.validationMessages))
+    }
+    applyReceived(variable, result.received)
     return null
   } catch (cause: unknown) {
     return describeError(cause, _t('Could not reach the server.'))

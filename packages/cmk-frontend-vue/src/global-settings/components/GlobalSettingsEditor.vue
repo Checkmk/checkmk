@@ -38,6 +38,7 @@ const variable = computed(() => props.session.variable)
 const inSiteScope = computed(() => props.session.scope.type === 'site')
 const removable = computed(() => isExplicitIn(variable.value, props.session.scope))
 const error = computed(() => props.session.error)
+const validationMessages = computed(() => props.session.validationMessages)
 const specWithoutTopLevelHelp = computed(() => ({ ...variable.value.spec, help: '' }))
 
 const draft = ref<unknown>(structuredClone(toRaw(props.session.variable.value)))
@@ -176,6 +177,14 @@ const currentStateText = computed<TranslatedString>(() => {
       </CmkAlertBox>
 
       <CmkAlertBox
+        v-if="validationMessages.length > 0"
+        variant="error"
+        class="global-settings-editor__alert"
+      >
+        {{ _t('Could not save this setting, the errors are shown in the form.') }}
+      </CmkAlertBox>
+
+      <CmkAlertBox
         v-if="confirmResetOpen"
         variant="warning"
         :heading="resetConfirmation.heading"
@@ -230,7 +239,11 @@ const currentStateText = computed<TranslatedString>(() => {
     <div class="global-settings-editor__sections">
       <CmkCatalogPanel :title="untranslated(variable.spec.title)">
         <GlobalSettingsRow :label="_t('Current setting')" :help="untranslated(variable.spec.help)">
-          <FormEdit v-model:data="draft" :spec="specWithoutTopLevelHelp" :backend-validation="[]" />
+          <FormEdit
+            v-model:data="draft"
+            :spec="specWithoutTopLevelHelp"
+            :backend-validation="validationMessages"
+          />
         </GlobalSettingsRow>
         <GlobalSettingsRow :label="_t('Current state')">
           {{ currentStateText }}

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
 import json
 from dataclasses import asdict
 from typing import Annotated
@@ -13,9 +14,10 @@ from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import edition
 from cmk.gui.form_specs import get_visitor, RawDiskData, RawFrontendData, VisitorOptions
 from cmk.gui.global_config import get_global_config
+from cmk.gui.openapi.api_endpoints.models.form_spec import FormSpecValidationErrorsModel
 from cmk.gui.openapi.framework import ApiContext, ETag, PathParam
 from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
-from cmk.gui.openapi.utils import ProblemException
+from cmk.gui.openapi.utils import EXT, ProblemException
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.watolib import read_only
 from cmk.gui.watolib.config_domain_name import (
@@ -162,13 +164,15 @@ def to_json(form_spec: FormSpec[object], value: object) -> tuple[dict[str, objec
     return asdict(component), json_value
 
 
-def value_from_json(form_spec: FormSpec[object], json_value: object) -> object:
+def value_from_json(form_spec: FormSpec[object], varname: str, json_value: object) -> object:
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=False, mask_values=False))
     if problems := visitor.validate(RawFrontendData(json_value)):
+        errors = FormSpecValidationErrorsModel.from_messages(problems)
         raise ProblemException(
-            status=400,
-            title=f"Problem in field {'.'.join(problems[0].location)}",
-            detail=problems[0].message,
+            status=422,
+            title="Validation error.",
+            detail=f"The value of {varname!r} does not match the schema of this setting.",
+            ext=EXT(dataclasses.asdict(errors)),
         )
 
     return visitor.to_disk(RawFrontendData(json_value))

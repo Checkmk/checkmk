@@ -42,6 +42,7 @@ from ._utils import (
     to_json,
     value_from_json,
 )
+from .models.error_models import GlobalSettingValidation422
 from .models.request_models import UpdateGlobalSettingModel
 from .models.response_models import GlobalSettingModel
 
@@ -67,7 +68,7 @@ def update_global_setting_v1(
     if api_context.etag.enabled:
         api_context.etag.verify(global_setting_etag(varname, old_value, old_origin))
 
-    new_value = value_from_json(form_spec, body.value)
+    new_value = value_from_json(form_spec, varname, body.value)
     settings[varname] = new_value
     save_global_settings(settings, api_context.config.sites)
 
@@ -105,5 +106,11 @@ ENDPOINT_UPDATE_GLOBAL_SETTING = VersionedEndpoint(
     behavior=EndpointBehavior(etag="both"),
     permissions=EndpointPermissions(required=RW_PERMISSIONS),
     doc=EndpointDoc(family=GLOBAL_SETTINGS_FAMILY.name),
-    versions={APIVersion.INTERNAL: EndpointHandler(handler=update_global_setting_v1)},
+    versions={
+        APIVersion.INTERNAL: EndpointHandler(
+            handler=update_global_setting_v1,
+            error_schemas={422: GlobalSettingValidation422},
+            additional_status_codes=[422],
+        )
+    },
 )

@@ -643,7 +643,7 @@ describe('GlobalSettingsApp', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
-  test('a value the server rejects as invalid is reported in the editor and not stored', async () => {
+  function rejectSaveWithValidationError(): void {
     server.use(
       http.put(SETTING_URL, async ({ request }) => {
         requests.push({
@@ -652,11 +652,24 @@ describe('GlobalSettingsApp', () => {
           body: await request.json()
         })
         return HttpResponse.json(
-          { title: 'Problem in field ', detail: 'The value must be at least 1.' },
-          { status: 400 }
+          {
+            title: 'Validation error.',
+            status: 422,
+            detail: "The value of 'lock_on_logon_failures' does not match the schema.",
+            ext: {
+              validation_errors: [
+                { location: [], message: 'The value must be at least 1.', replacement_value: 1 }
+              ]
+            }
+          },
+          { status: 422 }
         )
       })
     )
+  }
+
+  test('a value the server rejects as invalid is reported in the editor and not stored', async () => {
+    rejectSaveWithValidationError()
     await openEditor()
     await waitFor(() => expect(screen.getByText('15')).toBeInTheDocument())
     await fireEvent.update(await screen.findByRole('spinbutton'), '0')
@@ -668,6 +681,29 @@ describe('GlobalSettingsApp', () => {
     const row = settingRow()
     expect(row).toHaveTextContent('15')
     expect(row).not.toHaveTextContent('0')
+  })
+
+  test('a rejected value annotates the offending field instead of only the top of the form', async () => {
+    rejectSaveWithValidationError()
+    await openEditor()
+    await waitFor(() => expect(screen.getByText('15')).toBeInTheDocument())
+    await fireEvent.update(await screen.findByRole('spinbutton'), '0')
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    const field = await screen.findByRole('spinbutton')
+    expect(field).toBeInvalid()
+    // The replacement value from the message is what the widget falls back to.
+    expect(field).toHaveValue(1)
+  })
+
+  test('a rejected value is not reported as a transport failure', async () => {
+    rejectSaveWithValidationError()
+    await openEditor()
+    await userEvent.click(await screen.findByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByText(/The value must be at least 1\./)).toBeInTheDocument()
+    expect(screen.queryByText('Saving failed')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled()
   })
 
   test('cancelling the editor discards the edit without saving', async () => {

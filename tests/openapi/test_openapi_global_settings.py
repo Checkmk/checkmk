@@ -29,6 +29,10 @@ from cmk.gui.customer import (
 from cmk.gui.form_specs.unstable.legacy_valuespec import LegacyValueSpec
 from cmk.gui.form_specs.unstable.single_choice_editable import SingleChoiceEditable
 from cmk.gui.mkeventd.config_domain import ConfigDomainEventConsole
+from cmk.gui.openapi._type_adapter import get_cached_type_adapter
+from cmk.gui.openapi.api_endpoints.global_settings.models.error_models import (
+    GlobalSettingValidation422,
+)
 from cmk.gui.openapi.api_endpoints.site_management.models.config_example import (
     default_config_example,
 )
@@ -37,6 +41,7 @@ from cmk.gui.openapi.endpoints.global_settings.schemas import (
     FileUploadSchema,
     IconSchema,
 )
+from cmk.gui.openapi.framework.model import json_dump_without_omitted
 from cmk.gui.type_defs import ReadOnlySpec
 from cmk.gui.valuespec import TextInput
 from cmk.gui.watolib.audit_log import AuditLogStore
@@ -366,10 +371,41 @@ def test_the_shown_value_can_be_sent_back_unchanged(clients: ClientRegistry, var
     assert clients.GlobalSetting.update(varname, shown).json["value"] == shown
 
 
-def test_update_with_a_rejected_value_400(clients: ClientRegistry) -> None:
+def test_update_with_a_rejected_value_422(clients: ClientRegistry) -> None:
     resp = clients.GlobalSetting.update(INT_VAR, "not a number", expect_ok=False)
-    resp.assert_status_code(400)
+    resp.assert_status_code(422)
     assert clients.GlobalSetting.get(INT_VAR).json["origin"] == "factory"
+
+
+def test_a_rejected_value_addresses_the_whole_field(clients: ClientRegistry) -> None:
+    resp = clients.GlobalSetting.update(INT_VAR, "not a number", expect_ok=False)
+    assert resp.json["ext"]["validation_errors"] == [
+        {"location": [], "message": "Not an integer number", "replacement_value": ""}
+    ]
+
+
+def test_a_rejected_value_matches_the_documented_error_schema(clients: ClientRegistry) -> None:
+    resp = clients.GlobalSetting.update(INT_VAR, "not a number", expect_ok=False)
+    documented = get_cached_type_adapter(GlobalSettingValidation422).validate_python(resp.json)
+    assert (
+        json.loads(json_dump_without_omitted(GlobalSettingValidation422, documented)) == resp.json
+    )
+
+
+def test_every_rejected_element_is_reported_not_just_the_first(clients: ClientRegistry) -> None:
+    resp = clients.GlobalSetting.update("log_levels", {"cmk.web": "nope"}, expect_ok=False)
+    resp.assert_status_code(422)
+
+    locations = [error["location"] for error in resp.json["ext"]["validation_errors"]]
+    assert ["cmk.web"] in locations
+    assert len(locations) > 1
+
+
+def test_site_update_with_a_rejected_value_422(clients: ClientRegistry, remote_site: str) -> None:
+    resp = clients.GlobalSetting.update_site(remote_site, INT_VAR, "not a number", expect_ok=False)
+    resp.assert_status_code(422)
+    assert resp.json["ext"]["validation_errors"][0]["message"] == "Not an integer number"
+    assert clients.GlobalSetting.get_site(remote_site, INT_VAR).json["origin"] == "factory"
 
 
 def test_delete_resets_to_the_factory_setting(clients: ClientRegistry) -> None:

@@ -125,7 +125,14 @@ class ActiveCheck:
         if self._ip_lookup_failed:
             executable = "check_always_crit"
             arguments: tuple[str, ...] = (
-                "'Failed to lookup IP address and no explicit IP address configured'",
+                # Relay hosts are resolved by the relay (Dyn DNS), so the site's lookup
+                # fallback reaching one points at an unforeseen config path.
+                (
+                    "'Unexpected Error: Unresolved DNS fallback IP 0.0.0.0 from the CMK site"
+                    " reached the Relay, a Dyn DNS was expected instead.'"
+                )
+                if self._for_relay
+                else "'Failed to lookup IP address and no explicit IP address configured'",
             )
         else:
             executable = f"check_{active_check.name}"

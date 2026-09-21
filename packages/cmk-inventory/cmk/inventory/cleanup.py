@@ -29,7 +29,7 @@ class InvCleanupParamsCombined(TypedDict):
     number_of_history_entries: int
 
 
-type InvCleanupParamsChoice = (
+type _InvCleanupParamsChoice = (
     tuple[Literal["file_age"], int]
     | tuple[Literal["number_of_history_entries"], int]
     | tuple[Literal["combined"], InvCleanupParamsCombined]
@@ -38,7 +38,7 @@ type InvCleanupParamsChoice = (
 
 class InvCleanupParamsOfHosts(TypedDict):
     regex_or_explicit: Sequence[str]
-    parameters: InvCleanupParamsChoice
+    parameters: _InvCleanupParamsChoice
 
 
 class InvCleanupParamsDefaultCombined(TypedDict):
@@ -170,7 +170,7 @@ class _ParamFileAgeNumberHistoryEntries:
 
 
 def _compute_params(
-    params: InvCleanupParamsChoice,
+    params: _InvCleanupParamsChoice,
 ) -> _CleanupParams:
     match params[0]:
         case "file_age":

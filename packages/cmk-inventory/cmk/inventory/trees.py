@@ -342,7 +342,7 @@ class MutableTree:
         key_columns: Sequence[SDKey] | None = None,
         rows: Sequence[Mapping[SDKey, SDValue]] | None = None,
     ) -> None:
-        node = self.setdefault_node(path)
+        node = self._setdefault_node(path)
         if pairs:
             for p in pairs:
                 node.attributes.add(p)
@@ -356,20 +356,18 @@ class MutableTree:
         previous_tree: ImmutableTree,
         choices: SDRetentionFilterChoices,
     ) -> None:
-        node = self.setdefault_node(choices.path)
+        node = self._setdefault_node(choices.path)
         previous_node = previous_tree.get_tree(choices.path)
         for c in choices.pairs:
             node.attributes.update(now, previous_node.attributes, choices.interval, c)
         for c in choices.columns:
             node.table.update(now, previous_node.table, choices.interval, c)
 
-    def setdefault_node(self, path: SDPath) -> MutableTree:
-        if not path:
-            return self
-
-        name = path[0]
-        node = self.nodes_by_name.setdefault(name, MutableTree(path=self.path + (name,)))
-        return node.setdefault_node(path[1:])
+    def _setdefault_node(self, path: SDPath) -> MutableTree:
+        node = self
+        for name in path:
+            node = node.nodes_by_name.setdefault(name, MutableTree(path=node.path + (name,)))
+        return node
 
     def get_attribute(self, path: SDPath, key: SDKey) -> SDValue:
         return self.get_tree(path).attributes.pairs.get(key)

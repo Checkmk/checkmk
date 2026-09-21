@@ -27,11 +27,11 @@ class SDDeltaValue:
 
 
 _SDEncodeAs = Callable[[SDValue], SDDeltaValue]
-SDDeltaCounter = Counter[Literal["new", "changed", "removed"]]
+_SDDeltaCounter = Counter[Literal["new", "changed", "removed"]]
 
 
-def _compute_delta_stats(dict_: Mapping[SDKey, SDDeltaValue]) -> SDDeltaCounter:
-    counter: SDDeltaCounter = Counter()
+def _compute_delta_stats(dict_: Mapping[SDKey, SDDeltaValue]) -> _SDDeltaCounter:
+    counter: _SDDeltaCounter = Counter()
     for delta_value in dict_.values():
         match [delta_value.old is None, delta_value.new is None]:
             case [True, False]:
@@ -56,7 +56,7 @@ class ImmutableDeltaAttributes:
     ) -> ImmutableDeltaAttributes:
         return cls(pairs={key: encode_as(value) for key, value in attributes.pairs.items()})
 
-    def get_stats(self) -> SDDeltaCounter:
+    def get_stats(self) -> _SDDeltaCounter:
         return _compute_delta_stats(self.pairs)
 
 
@@ -75,8 +75,8 @@ class ImmutableDeltaTable:
             rows=[{key: encode_as(value) for key, value in row.items()} for row in table.rows],
         )
 
-    def get_stats(self) -> SDDeltaCounter:
-        counter: SDDeltaCounter = Counter()
+    def get_stats(self) -> _SDDeltaCounter:
+        counter: _SDDeltaCounter = Counter()
         for row in self.rows:
             counter.update(_compute_delta_stats(row))
         return counter
@@ -125,8 +125,8 @@ class ImmutableDeltaTree:
         node = self.nodes_by_name.get(path[0])
         return ImmutableDeltaTree() if node is None else node.get_tree(path[1:])
 
-    def get_stats(self) -> SDDeltaCounter:
-        counter: SDDeltaCounter = Counter()
+    def get_stats(self) -> _SDDeltaCounter:
+        counter: _SDDeltaCounter = Counter()
         counter.update(self.attributes.get_stats())
         counter.update(self.table.get_stats())
         for node in self.nodes_by_name.values():

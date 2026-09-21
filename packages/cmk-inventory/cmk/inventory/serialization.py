@@ -23,12 +23,12 @@ from .trees import (
 )
 
 
-class SDRawAttributes(TypedDict, total=False):
+class _SDRawAttributes(TypedDict, total=False):
     Pairs: Mapping[SDKey, SDValue]
     Retentions: Mapping[SDKey, tuple[int, int, int, Literal["previous", "current"]]]
 
 
-class SDRawTable(TypedDict, total=False):
+class _SDRawTable(TypedDict, total=False):
     KeyColumns: Sequence[SDKey]
     Rows: Sequence[Mapping[SDKey, SDValue]]
     Retentions: Mapping[
@@ -37,23 +37,23 @@ class SDRawTable(TypedDict, total=False):
 
 
 class SDRawTree(TypedDict):
-    Attributes: SDRawAttributes
-    Table: SDRawTable
+    Attributes: _SDRawAttributes
+    Table: _SDRawTable
     Nodes: Mapping[SDNodeName, SDRawTree]
 
 
-class SDRawDeltaAttributes(TypedDict, total=False):
+class _SDRawDeltaAttributes(TypedDict, total=False):
     Pairs: Mapping[SDKey, tuple[SDValue, SDValue]]
 
 
-class SDRawDeltaTable(TypedDict, total=False):
+class _SDRawDeltaTable(TypedDict, total=False):
     KeyColumns: Sequence[SDKey]
     Rows: Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]]
 
 
 class SDRawDeltaTree(TypedDict):
-    Attributes: SDRawDeltaAttributes
-    Table: SDRawDeltaTable
+    Attributes: _SDRawDeltaAttributes
+    Table: _SDRawDeltaTable
     Nodes: Mapping[SDNodeName, SDRawDeltaTree]
 
 
@@ -70,8 +70,8 @@ def _serialize_retention_interval(
 
 def _serialize_attributes(
     pairs: Mapping[SDKey, SDValue], retentions: Mapping[SDKey, RetentionInterval]
-) -> SDRawAttributes:
-    raw_attributes: SDRawAttributes = {}
+) -> _SDRawAttributes:
+    raw_attributes: _SDRawAttributes = {}
     if pairs:
         raw_attributes["Pairs"] = pairs
     if retentions:
@@ -85,8 +85,8 @@ def _serialize_table(
     key_columns: Sequence[SDKey],
     rows_by_ident: Mapping[SDRowIdent, Mapping[SDKey, SDValue]],
     retentions: Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]],
-) -> SDRawTable:
-    raw_table: SDRawTable = {}
+) -> _SDRawTable:
+    raw_table: _SDRawTable = {}
     if rows_by_ident:
         raw_table.update(
             {
@@ -123,7 +123,7 @@ def _deserialize_retention_interval(
     )
 
 
-def _deserialize_attributes(raw_attributes: SDRawAttributes) -> ImmutableAttributes:
+def _deserialize_attributes(raw_attributes: _SDRawAttributes) -> ImmutableAttributes:
     return ImmutableAttributes(
         pairs=raw_attributes.get("Pairs", {}),
         retentions={
@@ -133,7 +133,7 @@ def _deserialize_attributes(raw_attributes: SDRawAttributes) -> ImmutableAttribu
     )
 
 
-def _deserialize_table(raw_table: SDRawTable) -> ImmutableTable:
+def _deserialize_table(raw_table: _SDRawTable) -> ImmutableTable:
     rows = raw_table.get("Rows", [])
     key_columns = raw_table.get("KeyColumns", [])
 
@@ -157,8 +157,8 @@ def _deserialize_table(raw_table: SDRawTable) -> ImmutableTable:
 def _deserialize_tree(
     *,
     path: SDPath,
-    raw_attributes: SDRawAttributes,
-    raw_table: SDRawTable,
+    raw_attributes: _SDRawAttributes,
+    raw_table: _SDRawTable,
     raw_nodes: Mapping[SDNodeName, SDRawTree],
 ) -> ImmutableTree:
     return ImmutableTree(
@@ -198,7 +198,9 @@ def _serialize_delta_value(delta_value: SDDeltaValue) -> tuple[SDValue, SDValue]
     return (delta_value.old, delta_value.new)
 
 
-def _serialize_delta_attributes(delta_attributes: ImmutableDeltaAttributes) -> SDRawDeltaAttributes:
+def _serialize_delta_attributes(
+    delta_attributes: ImmutableDeltaAttributes,
+) -> _SDRawDeltaAttributes:
     return (
         {"Pairs": {k: _serialize_delta_value(v) for k, v in delta_attributes.pairs.items()}}
         if delta_attributes.pairs
@@ -206,7 +208,7 @@ def _serialize_delta_attributes(delta_attributes: ImmutableDeltaAttributes) -> S
     )
 
 
-def _serialize_delta_table(delta_table: ImmutableDeltaTable) -> SDRawDeltaTable:
+def _serialize_delta_table(delta_table: ImmutableDeltaTable) -> _SDRawDeltaTable:
     return (
         {
             "KeyColumns": delta_table.key_columns,
@@ -235,13 +237,15 @@ def _deserialize_delta_value(raw_delta_value: tuple[SDValue, SDValue]) -> SDDelt
     return SDDeltaValue(old=raw_delta_value[0], new=raw_delta_value[1])
 
 
-def _deserialize_delta_attributes(raw_attributes: SDRawDeltaAttributes) -> ImmutableDeltaAttributes:
+def _deserialize_delta_attributes(
+    raw_attributes: _SDRawDeltaAttributes,
+) -> ImmutableDeltaAttributes:
     return ImmutableDeltaAttributes(
         pairs={k: _deserialize_delta_value(v) for k, v in raw_attributes.get("Pairs", {}).items()}
     )
 
 
-def _deserialize_delta_table(raw_table: SDRawDeltaTable) -> ImmutableDeltaTable:
+def _deserialize_delta_table(raw_table: _SDRawDeltaTable) -> ImmutableDeltaTable:
     return ImmutableDeltaTable(
         key_columns=raw_table.get("KeyColumns", []),
         rows=[

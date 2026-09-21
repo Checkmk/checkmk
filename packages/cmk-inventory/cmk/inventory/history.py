@@ -14,16 +14,11 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.resulttype import Error, OK, Result
 
+from .filtering import filter_delta_tree, SDFilterChoice
 from .paths import InventoryPaths, TreePath
 from .serialization import deserialize_delta_tree, SDRawDeltaTree, serialize_delta_tree
 from .store import load_tree_from_tree_path
-from .structured_data import (
-    compare_trees,
-    filter_delta_tree,
-    ImmutableDeltaTree,
-    ImmutableTree,
-    SDFilterChoice,
-)
+from .structured_data import compare_trees, ImmutableDeltaTree, ImmutableTree
 
 
 @dataclass(frozen=True)

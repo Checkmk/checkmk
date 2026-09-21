@@ -11,6 +11,7 @@ from typing import Literal
 import pytest
 
 from cmk.ccc.hostaddress import HostName
+from cmk.inventory.filtering import filter_tree, SDFilterChoice
 from cmk.inventory.serialization import (
     deserialize_delta_tree,
     deserialize_tree,
@@ -21,8 +22,6 @@ from cmk.inventory.serialization import (
 from cmk.inventory.store import InventoryStore, make_meta
 from cmk.inventory.structured_data import (
     compare_trees,
-    filter_delta_tree,
-    filter_tree,
     ImmutableAttributes,
     ImmutableDeltaTree,
     ImmutableTable,
@@ -34,11 +33,18 @@ from cmk.inventory.structured_data import (
     RawIntervalFromConfig,
     RetentionInterval,
     SDDeltaValue,
-    SDFilterChoice,
     SDKey,
     SDNodeName,
     SDPath,
     SDRetentionFilterChoices,
+)
+
+from .._fixtures import (
+    empty_immutable_tree,
+    empty_mutable_tree,
+    filled_immutable_tree,
+    filled_mutable_tree,
+    immutable_tree,
 )
 
 _RETENTION_PATH = (SDNodeName("path"), SDNodeName("to"), SDNodeName("node"))
@@ -161,128 +167,12 @@ def test_equality_with_non_empty_nodes(
     assert left == right
 
 
-def _make_immutable_tree(tree: MutableTree) -> ImmutableTree:
-    return deserialize_tree(serialize_tree(tree))
-
-
-def _create_empty_mut_tree() -> MutableTree:
-    root = MutableTree()
-    root.add(path=(SDNodeName("path-to-nta"), SDNodeName("nt")))
-    root.add(path=(SDNodeName("path-to-nta"), SDNodeName("na")))
-    root.add(path=(SDNodeName("path-to-nta"), SDNodeName("ta")))
-    return root
-
-
-def _create_empty_imm_tree() -> ImmutableTree:
-    return deserialize_tree(
-        {
-            "Attributes": {},
-            "Table": {},
-            "Nodes": {
-                "path-to-nta": {
-                    "Attributes": {},
-                    "Table": {},
-                    "Nodes": {
-                        "na": {"Attributes": {}, "Table": {}, "Nodes": {}},
-                        "nt": {"Attributes": {}, "Table": {}, "Nodes": {}},
-                        "ta": {"Attributes": {}, "Table": {}, "Nodes": {}},
-                    },
-                }
-            },
-        }
-    )
-
-
-def _create_filled_mut_tree() -> MutableTree:
-    root = MutableTree()
-    root.add(
-        path=(SDNodeName("path-to-nta"), SDNodeName("nt")),
-        key_columns=[SDKey("nt0")],
-        rows=[
-            {SDKey("nt0"): "NT 00", SDKey("nt1"): "NT 01"},
-            {SDKey("nt0"): "NT 10", SDKey("nt1"): "NT 11"},
-        ],
-    )
-    root.add(
-        path=(SDNodeName("path-to-nta"), SDNodeName("na")),
-        pairs=[{SDKey("na0"): "NA 0", SDKey("na1"): "NA 1"}],
-    )
-    root.add(
-        path=(SDNodeName("path-to-nta"), SDNodeName("ta")),
-        pairs=[{SDKey("ta0"): "TA 0", SDKey("ta1"): "TA 1"}],
-        key_columns=[SDKey("ta0")],
-        rows=[
-            {SDKey("ta0"): "TA 00", SDKey("ta1"): "TA 01"},
-            {SDKey("ta0"): "TA 10", SDKey("ta1"): "TA 11"},
-        ],
-    )
-    return root
-
-
-def _create_filled_imm_tree() -> ImmutableTree:
-    return _make_immutable_tree(_create_filled_mut_tree())
-
-
-def _create_filled_delta_tree() -> ImmutableDeltaTree:
-    return deserialize_delta_tree(
-        SDRawDeltaTree(
-            Attributes={},
-            Nodes={
-                SDNodeName("path-to-nta"): SDRawDeltaTree(
-                    Attributes={},
-                    Nodes={
-                        SDNodeName("na"): SDRawDeltaTree(
-                            Attributes={
-                                "Pairs": {
-                                    SDKey("na0"): (None, "NA 0"),
-                                    SDKey("na1"): (None, "NA 1"),
-                                }
-                            },
-                            Nodes={},
-                            Table={},
-                        ),
-                        SDNodeName("nt"): SDRawDeltaTree(
-                            Attributes={},
-                            Nodes={},
-                            Table={
-                                "KeyColumns": [SDKey("nt0")],
-                                "Rows": [
-                                    {SDKey("nt0"): (None, "NT 00"), SDKey("nt1"): (None, "NT 01")},
-                                    {SDKey("nt0"): (None, "NT 10"), SDKey("nt1"): (None, "NT 11")},
-                                ],
-                            },
-                        ),
-                        SDNodeName("ta"): SDRawDeltaTree(
-                            Attributes={
-                                "Pairs": {
-                                    SDKey("ta0"): (None, "TA 0"),
-                                    SDKey("ta1"): (None, "TA 1"),
-                                }
-                            },
-                            Nodes={},
-                            Table={
-                                "KeyColumns": [SDKey("ta0")],
-                                "Rows": [
-                                    {SDKey("ta0"): (None, "TA 00"), SDKey("ta1"): (None, "TA 01")},
-                                    {SDKey("ta0"): (None, "TA 10"), SDKey("ta1"): (None, "TA 11")},
-                                ],
-                            },
-                        ),
-                    },
-                    Table={},
-                )
-            },
-            Table={},
-        )
-    )
-
-
 def test_serialize_empty_mut_tree() -> None:
-    assert serialize_tree(_create_empty_mut_tree()) == {"Attributes": {}, "Table": {}, "Nodes": {}}
+    assert serialize_tree(empty_mutable_tree()) == {"Attributes": {}, "Table": {}, "Nodes": {}}
 
 
 def test_serialize_filled_mut_tree() -> None:
-    raw_tree = serialize_tree(_create_filled_mut_tree())
+    raw_tree = serialize_tree(filled_mutable_tree())
     assert not raw_tree["Attributes"]
     assert not raw_tree["Table"]
     assert not raw_tree["Nodes"][SDNodeName("path-to-nta")]["Attributes"]
@@ -380,14 +270,12 @@ def test_deserialize_filled_imm_tree() -> None:
             },
         }
     )
-    assert tree == _create_filled_mut_tree()
-    assert tree == _create_filled_imm_tree()
+    assert tree == filled_mutable_tree()
+    assert tree == filled_immutable_tree()
 
 
 def test_serialize_empty_delta_tree() -> None:
-    assert serialize_delta_tree(
-        compare_trees(_create_empty_imm_tree(), _create_empty_imm_tree())
-    ) == {
+    assert serialize_delta_tree(compare_trees(empty_immutable_tree(), empty_immutable_tree())) == {
         "Attributes": {},
         "Table": {},
         "Nodes": {},
@@ -395,9 +283,7 @@ def test_serialize_empty_delta_tree() -> None:
 
 
 def test_serialize_filled_delta_tree() -> None:
-    raw_tree = serialize_delta_tree(
-        compare_trees(_create_empty_imm_tree(), _create_filled_imm_tree())
-    )
+    raw_tree = serialize_delta_tree(compare_trees(empty_immutable_tree(), filled_immutable_tree()))
     assert not raw_tree["Attributes"]
     assert not raw_tree["Table"]
     assert not raw_tree["Nodes"][SDNodeName("path-to-nta")]["Attributes"]
@@ -512,7 +398,7 @@ def test_deserialize_filled_delta_tree() -> None:
 
 
 def test_get_tree_empty() -> None:
-    root = _create_empty_imm_tree()
+    root = empty_immutable_tree()
     assert len(root) == 0
     assert root.get_tree((SDNodeName("path-to-nta"),)).path == ("path-to-nta",)
     assert root.get_tree((SDNodeName("path-to-nta"), SDNodeName("nt"))).path == (
@@ -530,7 +416,7 @@ def test_get_tree_empty() -> None:
 
 
 def test_get_tree_not_empty() -> None:
-    root = _create_filled_imm_tree()
+    root = filled_immutable_tree()
     nta = root.get_tree((SDNodeName("path-to-nta"),))
     nt = root.get_tree((SDNodeName("path-to-nta"), SDNodeName("nt")))
     na = root.get_tree((SDNodeName("path-to-nta"), SDNodeName("na")))
@@ -570,7 +456,7 @@ def test_get_tree_not_empty() -> None:
 
 
 def test_add_or_rows() -> None:
-    root = _create_filled_mut_tree()
+    root = filled_mutable_tree()
     root.add(
         path=(SDNodeName("path-to-nta"), SDNodeName("node")),
         pairs=[{SDKey("sn0"): "SN 0", SDKey("sn1"): "SN 1"}],
@@ -584,7 +470,7 @@ def test_add_or_rows() -> None:
 
 
 def test_compare_tree_with_itself_1() -> None:
-    empty_root = _create_empty_imm_tree()
+    empty_root = empty_immutable_tree()
     delta_tree = compare_trees(empty_root, empty_root)
     stats = delta_tree.get_stats()
     assert stats["new"] == 0
@@ -593,7 +479,7 @@ def test_compare_tree_with_itself_1() -> None:
 
 
 def test_compare_tree_with_itself_2() -> None:
-    filled_root = _create_filled_imm_tree()
+    filled_root = filled_immutable_tree()
     delta_tree = compare_trees(filled_root, filled_root)
     stats = delta_tree.get_stats()
     assert stats["new"] == 0
@@ -602,7 +488,7 @@ def test_compare_tree_with_itself_2() -> None:
 
 
 def test_compare_tree_1() -> None:
-    delta_tree = compare_trees(_create_empty_imm_tree(), _create_filled_imm_tree())
+    delta_tree = compare_trees(empty_immutable_tree(), filled_immutable_tree())
     stats = delta_tree.get_stats()
     assert stats["new"] == 0
     assert stats["changed"] == 0
@@ -610,128 +496,11 @@ def test_compare_tree_1() -> None:
 
 
 def test_compare_tree_2() -> None:
-    delta_tree = compare_trees(_create_filled_imm_tree(), _create_empty_imm_tree())
+    delta_tree = compare_trees(filled_immutable_tree(), empty_immutable_tree())
     stats = delta_tree.get_stats()
     assert stats["new"] == 12
     assert stats["changed"] == 0
     assert stats["removed"] == 0
-
-
-def test_filter_delta_tree_nt() -> None:
-    filtered = filter_delta_tree(
-        _create_filled_delta_tree(),
-        [
-            SDFilterChoice(
-                path=(SDNodeName("path-to-nta"), SDNodeName("nt")),
-                pairs=[SDKey("nt1")],
-                columns=[SDKey("nt1")],
-                nodes="nothing",
-            )
-        ],
-    )
-
-    assert len(filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("na")))) == 0
-    assert len(filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("ta")))) == 0
-
-    filtered_child = filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("nt")))
-    assert len(filtered_child) == 2
-    assert filtered_child.path == ("path-to-nta", "nt")
-    assert not filtered_child.attributes.pairs
-    assert len(filtered_child.table.rows) == 2
-    for row in (
-        {"nt1": SDDeltaValue(old=None, new="NT 01")},
-        {"nt1": SDDeltaValue(old=None, new="NT 11")},
-    ):
-        assert row in filtered_child.table.rows
-
-
-def test_filter_delta_tree_na() -> None:
-    filtered = filter_delta_tree(
-        _create_filled_delta_tree(),
-        [
-            SDFilterChoice(
-                path=(SDNodeName("path-to-nta"), SDNodeName("na")),
-                pairs=[SDKey("na1")],
-                columns=[SDKey("na1")],
-                nodes="nothing",
-            )
-        ],
-    )
-
-    assert len(filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("nt")))) == 0
-    assert len(filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("ta")))) == 0
-
-    filtered_child = filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("na")))
-    assert len(filtered_child) == 1
-    assert filtered_child.path == ("path-to-nta", "na")
-    assert filtered_child.attributes.pairs == {"na1": SDDeltaValue(old=None, new="NA 1")}
-    assert filtered_child.table.rows == []
-
-
-def test_filter_delta_tree_ta() -> None:
-    filtered = filter_delta_tree(
-        _create_filled_delta_tree(),
-        [
-            SDFilterChoice(
-                path=(SDNodeName("path-to-nta"), SDNodeName("ta")),
-                pairs=[SDKey("ta1")],
-                columns=[SDKey("ta1")],
-                nodes="nothing",
-            )
-        ],
-    )
-
-    assert len(filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("nt")))) == 0
-    assert len(filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("na")))) == 0
-
-    filtered_child = filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("ta")))
-    assert len(filtered_child) == 3
-    assert filtered_child.path == ("path-to-nta", "ta")
-    assert filtered_child.attributes.pairs == {"ta1": SDDeltaValue(old=None, new="TA 1")}
-    assert len(filtered_child.table.rows) == 2
-    for row in (
-        {"ta1": SDDeltaValue(old=None, new="TA 01")},
-        {"ta1": SDDeltaValue(old=None, new="TA 11")},
-    ):
-        assert row in filtered_child.table.rows
-
-
-def test_filter_delta_tree_nta_ta() -> None:
-    filtered = filter_delta_tree(
-        _create_filled_delta_tree(),
-        [
-            SDFilterChoice(
-                path=(SDNodeName("path-to-nta"), SDNodeName("ta")),
-                pairs=[SDKey("ta0")],
-                columns=[SDKey("ta0")],
-                nodes="nothing",
-            ),
-            SDFilterChoice(
-                path=(SDNodeName("path-to-nta"), SDNodeName("ta")),
-                pairs="nothing",
-                columns=[SDKey("ta1")],
-                nodes="nothing",
-            ),
-        ],
-    )
-
-    nta = filtered.get_tree((SDNodeName("path-to-nta"),))
-    assert len(nta) == 5
-    assert not nta.attributes.pairs
-    assert nta.table.rows == []
-
-    assert len(filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("nt")))) == 0
-    assert len(filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("na")))) == 0
-
-    filtered_ta = filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("ta")))
-    assert len(filtered_ta) == 5
-    assert filtered_ta.attributes.pairs == {"ta0": SDDeltaValue(old=None, new="TA 0")}
-    assert len(filtered_ta.table.rows) == 2
-    for row in (
-        {"ta0": SDDeltaValue(old=None, new="TA 00"), "ta1": SDDeltaValue(old=None, new="TA 01")},
-        {"ta0": SDDeltaValue(old=None, new="TA 10"), "ta1": SDDeltaValue(old=None, new="TA 11")},
-    ):
-        assert row in filtered_ta.table.rows
 
 
 @pytest.mark.parametrize(
@@ -782,9 +551,7 @@ def test_difference_pairs(
     current_tree = MutableTree()
     current_tree.add(path=(), pairs=[current_pairs])
 
-    stats = compare_trees(
-        _make_immutable_tree(current_tree), _make_immutable_tree(previous_tree)
-    ).get_stats()
+    stats = compare_trees(immutable_tree(current_tree), immutable_tree(previous_tree)).get_stats()
     assert (stats["new"], stats["changed"], stats["removed"]) == result
 
 
@@ -848,9 +615,7 @@ def test_difference_rows(
     current_tree = MutableTree()
     current_tree.add(path=(), key_columns=[SDKey("id")], rows=current_rows)
 
-    delta_tree = compare_trees(
-        _make_immutable_tree(current_tree), _make_immutable_tree(previous_tree)
-    )
+    delta_tree = compare_trees(immutable_tree(current_tree), immutable_tree(previous_tree))
     if any(result):
         assert len(delta_tree) > 0
     else:
@@ -881,147 +646,8 @@ def test_difference_rows_keys(
     current_tree = MutableTree()
     current_tree.add(path=(), key_columns=[SDKey("id")], rows=[current_row])
 
-    delta_tree = compare_trees(
-        _make_immutable_tree(current_tree), _make_immutable_tree(previous_tree)
-    )
+    delta_tree = compare_trees(immutable_tree(current_tree), immutable_tree(previous_tree))
     assert {k for r in delta_tree.table.rows for k in r} == expected_keys
-
-
-def test_filter_tree_no_paths() -> None:
-    assert len(filter_tree(_create_filled_imm_tree(), [])) == 0
-
-
-def test_filter_tree_wrong_node() -> None:
-    filtered = filter_tree(
-        _create_filled_imm_tree(),
-        [
-            SDFilterChoice(
-                path=(SDNodeName("path-to-nta"), SDNodeName("ta")),
-                pairs="all",
-                columns="all",
-                nodes="all",
-            ),
-        ],
-    )
-    assert len(filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("na")))) == 0
-    assert len(filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("nt")))) == 0
-    assert len(filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("ta")))) == 6
-
-
-def test_filter_tree_paths_no_keys() -> None:
-    filtered = filter_tree(
-        _create_filled_imm_tree(),
-        [
-            SDFilterChoice(
-                path=(SDNodeName("path-to-nta"), SDNodeName("ta")),
-                pairs="all",
-                columns="all",
-                nodes="all",
-            ),
-        ],
-    )
-
-    assert (
-        filtered.get_attribute((SDNodeName("path-to-nta"), SDNodeName("ta")), SDKey("ta0"))
-        == "TA 0"
-    )
-    assert (
-        filtered.get_attribute((SDNodeName("path-to-nta"), SDNodeName("ta")), SDKey("ta1"))
-        == "TA 1"
-    )
-    assert (
-        filtered.get_attribute((SDNodeName("path-to-nta"), SDNodeName("ta")), SDKey("foo")) is None
-    )
-
-    rows = filtered.get_rows((SDNodeName("path-to-nta"), SDNodeName("ta")))
-    assert len(rows) == 2
-    for row in [
-        {"ta0": "TA 00", "ta1": "TA 01"},
-        {"ta0": "TA 10", "ta1": "TA 11"},
-    ]:
-        assert row in rows
-
-
-def test_filter_tree_paths_and_keys() -> None:
-    filtered = filter_tree(
-        _create_filled_imm_tree(),
-        [
-            SDFilterChoice(
-                path=(SDNodeName("path-to-nta"), SDNodeName("ta")),
-                pairs=[SDKey("ta1")],
-                columns=[SDKey("ta1")],
-                nodes="all",
-            ),
-        ],
-    )
-
-    assert (
-        filtered.get_attribute((SDNodeName("path-to-nta"), SDNodeName("ta")), SDKey("ta1"))
-        == "TA 1"
-    )
-    assert (
-        filtered.get_attribute((SDNodeName("path-to-nta"), SDNodeName("ta")), SDKey("foo")) is None
-    )
-
-    rows = filtered.get_rows((SDNodeName("path-to-nta"), SDNodeName("ta")))
-    assert len(rows) == 2
-    for row in [
-        {"ta1": "TA 01"},
-        {"ta1": "TA 11"},
-    ]:
-        assert row in rows
-
-
-def test_filter_tree_mixed() -> None:
-    filled_root_ = _create_filled_mut_tree()
-    filled_root_.add(
-        path=(SDNodeName("path-to"), SDNodeName("another"), SDNodeName("node1")),
-        pairs=[{SDKey("ak11"): "Another value 11", SDKey("ak12"): "Another value 12"}],
-    )
-    filled_root_.add(
-        path=(SDNodeName("path-to"), SDNodeName("another"), SDNodeName("node2")),
-        key_columns=[SDKey("ak21")],
-        rows=[
-            {
-                SDKey("ak21"): "Another value 211",
-                SDKey("ak22"): "Another value 212",
-            },
-            {
-                SDKey("ak21"): "Another value 221",
-                SDKey("ak22"): "Another value 222",
-            },
-        ],
-    )
-
-    filtered = filter_tree(
-        _make_immutable_tree(filled_root_),
-        [
-            SDFilterChoice(
-                path=(SDNodeName("path-to"), SDNodeName("another")),
-                pairs="all",
-                columns="all",
-                nodes="all",
-            ),
-            SDFilterChoice(
-                path=(SDNodeName("path-to-nta"), SDNodeName("ta")),
-                pairs=[SDKey("ta0")],
-                columns=[SDKey("ta1")],
-                nodes="all",
-            ),
-        ],
-    )
-
-    assert len(filtered) == 9
-    assert len(filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("nt")))) == 0
-    assert len(filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("na")))) == 0
-    assert (
-        len(filtered.get_tree((SDNodeName("path-to"), SDNodeName("another"), SDNodeName("node1"))))
-        == 2
-    )
-    assert (
-        len(filtered.get_tree((SDNodeName("path-to"), SDNodeName("another"), SDNodeName("node2"))))
-        == 4
-    )
 
 
 def _get_inventory_store() -> InventoryStore:
@@ -1749,7 +1375,7 @@ def test_update_attributes_from_previous() -> None:
         ]
     }
 
-    current_tree = _make_immutable_tree(current_tree_)
+    current_tree = immutable_tree(current_tree_)
     assert current_tree.attributes.pairs == {
         "a1": "A1: cur",
         "a2": "A2: only prev",
@@ -1793,7 +1419,7 @@ def test_update_from_previous_1() -> None:
         ]
     }
 
-    current_tree = _make_immutable_tree(current_tree_)
+    current_tree = immutable_tree(current_tree_)
     assert current_tree.table.key_columns == ["kc"]
     assert current_tree.table.retentions == {
         ("KC",): {
@@ -1838,7 +1464,7 @@ def test_update_from_previous_2() -> None:
         ],
     }
 
-    current_tree = _make_immutable_tree(current_tree_)
+    current_tree = immutable_tree(current_tree_)
     assert current_tree.table.key_columns == ["kc"]
     assert current_tree.table.retentions == {
         ("KC",): {

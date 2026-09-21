@@ -15,6 +15,8 @@ from dataclasses import dataclass, field
 from enum import auto, Enum
 from typing import Literal, NewType, override, Self, TypedDict
 
+from ._choices import get_filtered_dict, make_filter_func
+
 # TODO Cleanup path in utils, base, gui, find ONE place (type defs or similar)
 # TODO filter table rows?
 # TODO Check filter logic:
@@ -217,11 +219,11 @@ class _MutableAttributes:
         interval: int,
         choice: _SDRetentionFilterChoice,
     ) -> None:
-        filter_func = _make_filter_func(choice.choice)
+        filter_func = make_filter_func(choice.choice)
         retention_interval = RetentionInterval.from_config(*choice.cache_info, interval)
         compared_keys = _DictKeys.compare(
             left=set(
-                _get_filtered_dict(
+                get_filtered_dict(
                     previous.pairs,
                     _make_retentions_filter_func(
                         filter_func=filter_func,
@@ -230,7 +232,7 @@ class _MutableAttributes:
                     ),
                 )
             ),
-            right=set(_get_filtered_dict(self.pairs, filter_func)),
+            right=set(get_filtered_dict(self.pairs, filter_func)),
         )
 
         pairs: dict[SDKey, SDValue] = {}
@@ -327,14 +329,14 @@ class _MutableTable:
         interval: int,
         choice: _SDRetentionFilterChoice,
     ) -> None:
-        filter_func = _make_filter_func(choice.choice)
+        filter_func = make_filter_func(choice.choice)
         retention_interval = RetentionInterval.from_config(*choice.cache_info, interval)
         self._add_key_columns(previous.key_columns)
         previous_filtered_rows = {
             ident: filtered_row
             for ident, row in previous.rows_by_ident.items()
             if (
-                filtered_row := _get_filtered_dict(
+                filtered_row := get_filtered_dict(
                     row,
                     _make_retentions_filter_func(
                         filter_func=filter_func,
@@ -347,7 +349,7 @@ class _MutableTable:
         current_filtered_rows = {
             ident: filtered_row
             for ident, row in self.rows_by_ident.items()
-            if (filtered_row := _get_filtered_dict(row, filter_func))
+            if (filtered_row := get_filtered_dict(row, filter_func))
         }
         compared_row_idents = _DictKeys.compare(
             left=set(previous_filtered_rows),
@@ -865,12 +867,18 @@ class ImmutableDeltaTree:
 #   .--filtering-----------------------------------------------------------.
 
 
-@dataclass(frozen=True)
-class SDFilterChoice:
-    path: SDPath
-    pairs: Literal["nothing", "all"] | Sequence[SDKey]
-    columns: Literal["nothing", "all"] | Sequence[SDKey]
-    nodes: Literal["nothing", "all"] | Sequence[SDNodeName]
+def _make_retentions_filter_func(
+    *,
+    filter_func: Callable[[SDKey], bool],
+    intervals_by_key: Mapping[SDKey, RetentionInterval] | None,
+    now: int,
+) -> Callable[[SDKey], bool]:
+    return lambda k: bool(
+        filter_func(k)
+        and intervals_by_key
+        and (interval := intervals_by_key.get(k))
+        and now <= interval.keep_until
+    )
 
 
 @dataclass(frozen=True)
@@ -966,202 +974,6 @@ def make_retention_filter_choices(
                 cache_info=cache_info(columns_cache_info, path),
             )
     return list(choices_by_path.values())
-
-
-def _make_filter_func[CT: (SDKey, SDNodeName)](
-    choice: Literal["nothing", "all"] | Sequence[CT],
-) -> Callable[[CT], bool]:
-    match choice:
-        case "nothing":
-            return lambda _k: False
-        case "all":
-            return lambda _k: True
-        case _:
-            return lambda k: k in choice
-
-
-def _consolidate_filter_funcs[CT: (SDKey, SDNodeName)](
-    choices: Sequence[Literal["nothing", "all"] | Sequence[CT]],
-) -> Callable[[CT], bool]:
-    return lambda kn: any(_make_filter_func(c)(kn) for c in choices)
-
-
-def _get_filtered_dict[VT_co](
-    mapping: Mapping[SDKey, VT_co], filter_func: Callable[[SDKey], bool]
-) -> Mapping[SDKey, VT_co]:
-    return {k: v for k, v in mapping.items() if filter_func(k)}
-
-
-@dataclass(frozen=True, kw_only=True)
-class _FilterTree:
-    _filter_choices_by_name: dict[SDNodeName, _FilterTree] = field(default_factory=dict)
-    _filter_choices_pairs: list[Literal["nothing", "all"] | Sequence[SDKey]] = field(
-        default_factory=list
-    )
-    _filter_choices_columns: list[Literal["nothing", "all"] | Sequence[SDKey]] = field(
-        default_factory=list
-    )
-    _filter_choices_nodes: list[Literal["nothing", "all"] | Sequence[SDNodeName]] = field(
-        default_factory=list
-    )
-
-    @property
-    def filters_by_name(self) -> Mapping[SDNodeName, _FilterTree]:
-        return self._filter_choices_by_name
-
-    def filter_pairs[VT_co](self, pairs: Mapping[SDKey, VT_co]) -> Mapping[SDKey, VT_co]:
-        return (
-            _get_filtered_dict(pairs, _consolidate_filter_funcs(self._filter_choices_pairs))
-            if self._filter_choices_pairs
-            else pairs
-        )
-
-    def filter_row[VT_co](self, row: Mapping[SDKey, VT_co]) -> Mapping[SDKey, VT_co]:
-        return (
-            _get_filtered_dict(row, _consolidate_filter_funcs(self._filter_choices_columns))
-            if self._filter_choices_columns
-            else row
-        )
-
-    def filter_node_names(self, node_names: set[SDNodeName]) -> set[SDNodeName]:
-        filter_nodes = _consolidate_filter_funcs(self._filter_choices_nodes)
-        return {n for n in node_names if filter_nodes(n)}.union(self.filters_by_name)
-
-    def append(self, path: SDPath, filter_choice: SDFilterChoice) -> None:
-        if path:
-            self._filter_choices_by_name.setdefault(path[0], _FilterTree()).append(
-                path[1:], filter_choice
-            )
-            return
-        self._filter_choices_pairs.append(filter_choice.pairs)
-        self._filter_choices_columns.append(filter_choice.columns)
-        self._filter_choices_nodes.append(filter_choice.nodes)
-
-
-def _make_filter_tree(filters: Iterable[SDFilterChoice]) -> _FilterTree:
-    filter_tree_ = _FilterTree()
-    for f in filters:
-        filter_tree_.append(f.path, f)
-    return filter_tree_
-
-
-def _make_retentions_filter_func(
-    *,
-    filter_func: Callable[[SDKey], bool],
-    intervals_by_key: Mapping[SDKey, RetentionInterval] | None,
-    now: int,
-) -> Callable[[SDKey], bool]:
-    return lambda k: bool(
-        filter_func(k)
-        and intervals_by_key
-        and (interval := intervals_by_key.get(k))
-        and now <= interval.keep_until
-    )
-
-
-def _filter_attributes(
-    attributes: ImmutableAttributes, filter_tree_: _FilterTree
-) -> ImmutableAttributes:
-    return ImmutableAttributes(
-        pairs=filter_tree_.filter_pairs(attributes.pairs),
-        retentions=attributes.retentions,
-    )
-
-
-def _filter_table(table: ImmutableTable, filter_tree_: _FilterTree) -> ImmutableTable:
-    return ImmutableTable(
-        key_columns=table.key_columns,
-        rows_by_ident={
-            ident: filtered_row
-            for ident, row in table.rows_by_ident.items()
-            if (filtered_row := filter_tree_.filter_row(row))
-        },
-        retentions=table.retentions,
-    )
-
-
-def _filter_tree(tree: ImmutableTree, filter_tree_: _FilterTree) -> ImmutableTree:
-    return ImmutableTree(
-        path=tree.path,
-        attributes=_filter_attributes(tree.attributes, filter_tree_),
-        table=_filter_table(tree.table, filter_tree_),
-        nodes_by_name={
-            name: filtered_node
-            for name in filter_tree_.filter_node_names(set(tree.nodes_by_name))
-            if (
-                filtered_node := _filter_tree(
-                    tree.nodes_by_name.get(name, ImmutableTree(path=tree.path + (name,))),
-                    filter_tree_.filters_by_name.get(name, _FilterTree()),
-                )
-            )
-        },
-    )
-
-
-def make_filter_choices_from_api_request_paths(
-    api_request_paths: Sequence[str],
-) -> Sequence[SDFilterChoice]:
-    def _make_filter_choice(inventory_path: InventoryPath) -> SDFilterChoice:
-        if inventory_path.key:
-            return SDFilterChoice(
-                path=inventory_path.path,
-                pairs=[inventory_path.key],
-                columns=[inventory_path.key],
-                nodes="nothing",
-            )
-        return SDFilterChoice(
-            path=inventory_path.path,
-            pairs="all",
-            columns="all",
-            nodes="all",
-        )
-
-    return [
-        _make_filter_choice(parse_internal_raw_path(raw_path)) for raw_path in api_request_paths
-    ]
-
-
-def filter_tree(tree: ImmutableTree, filters: Iterable[SDFilterChoice]) -> ImmutableTree:
-    return _filter_tree(tree, _make_filter_tree(filters))
-
-
-def _filter_delta_attributes(
-    attributes: ImmutableDeltaAttributes, filter_tree_: _FilterTree
-) -> ImmutableDeltaAttributes:
-    return ImmutableDeltaAttributes(pairs=filter_tree_.filter_pairs(attributes.pairs))
-
-
-def _filter_delta_table(
-    table: ImmutableDeltaTable, filter_tree_: _FilterTree
-) -> ImmutableDeltaTable:
-    return ImmutableDeltaTable(
-        key_columns=table.key_columns,
-        rows=[filtered_row for row in table.rows if (filtered_row := filter_tree_.filter_row(row))],
-    )
-
-
-def _filter_delta_tree(tree: ImmutableDeltaTree, filter_tree_: _FilterTree) -> ImmutableDeltaTree:
-    return ImmutableDeltaTree(
-        path=tree.path,
-        attributes=_filter_delta_attributes(tree.attributes, filter_tree_),
-        table=_filter_delta_table(tree.table, filter_tree_),
-        nodes_by_name={
-            name: filtered_node
-            for name in filter_tree_.filter_node_names(set(tree.nodes_by_name))
-            if (
-                filtered_node := _filter_delta_tree(
-                    tree.nodes_by_name.get(name, ImmutableDeltaTree(path=tree.path + (name,))),
-                    filter_tree_.filters_by_name.get(name, _FilterTree()),
-                )
-            )
-        },
-    )
-
-
-def filter_delta_tree(
-    tree: ImmutableDeltaTree, filters: Iterable[SDFilterChoice]
-) -> ImmutableDeltaTree:
-    return _filter_delta_tree(tree, _make_filter_tree(filters))
 
 
 # .

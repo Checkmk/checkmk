@@ -7,9 +7,7 @@ import pytest
 
 from cmk.inventory.structured_data import (
     InventoryPath,
-    make_filter_choices_from_api_request_paths,
     parse_internal_raw_path,
-    SDFilterChoice,
     SDKey,
     SDNodeName,
     TreeSource,
@@ -131,51 +129,3 @@ def test_parse_tree_path(
     inventory_path = parse_internal_raw_path(raw_path)
     assert inventory_path == expected_path
     assert inventory_path.node_name == expected_node_name
-
-
-@pytest.mark.parametrize(
-    "entry, expected_filter_choice",
-    [
-        # Tuple format
-        (
-            ".path.to.node.",
-            SDFilterChoice(
-                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
-                pairs="all",
-                columns="all",
-                nodes="all",
-            ),
-        ),
-        (
-            ".path.to.node:",
-            SDFilterChoice(
-                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
-                pairs="all",
-                columns="all",
-                nodes="all",
-            ),
-        ),
-        (
-            ".path.to.node:*.key",
-            SDFilterChoice(
-                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
-                pairs=[SDKey("key")],
-                columns=[SDKey("key")],
-                nodes="nothing",
-            ),
-        ),
-        (
-            ".path.to.node.key",
-            SDFilterChoice(
-                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
-                pairs=[SDKey("key")],
-                columns=[SDKey("key")],
-                nodes="nothing",
-            ),
-        ),
-    ],
-)
-def test__make_filter_choices_from_api_request_paths(
-    entry: str, expected_filter_choice: SDFilterChoice
-) -> None:
-    assert make_filter_choices_from_api_request_paths([entry])[0] == expected_filter_choice

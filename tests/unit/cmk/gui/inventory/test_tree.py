@@ -21,9 +21,10 @@ from cmk.gui.inventory import (
     make_filter_choices_from_permitted_paths,
 )
 from cmk.gui.watolib.groups_io import PermittedPath
+from cmk.inventory.filtering import SDFilterChoice
 from cmk.inventory.history import HistoryStore
 from cmk.inventory.serialization import deserialize_tree
-from cmk.inventory.structured_data import ImmutableTree, SDFilterChoice, SDKey, SDNodeName
+from cmk.inventory.structured_data import ImmutableTree, SDKey, SDNodeName
 
 
 @pytest.mark.parametrize(

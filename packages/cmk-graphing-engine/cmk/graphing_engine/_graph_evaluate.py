@@ -19,7 +19,6 @@ from ._quantity import (
     EvaluationContext,
     FanOutQuantity,
     first_value,
-    QuantityProtocol,
 )
 from ._timeseries import ConsolidationFunction, TimeRange, TimeSeries
 from ._title import evaluate_title
@@ -118,8 +117,11 @@ def _evaluate_vertical_range(
     )
 
 
-def _create_id(quantity: QuantityProtocol, *, inverse: bool, seen: Counter[str]) -> str:
-    base = ("-" if inverse else "") + quantity.ident()
+def _create_id(curve: Curve, *, inverse: bool, seen: Counter[str]) -> str:
+    # A curve that names its source (a custom graph names the row it draws) is identified by it. The
+    # quantity's ident spells out the whole expression, which a row referencing rows makes
+    # exponentially long.
+    base = ("-" if inverse else "") + (curve.source_id or curve.quantity.ident())
     seen[base] += 1
     return base if seen[base] == 1 else f"{base}#{seen[base]}"
 
@@ -162,7 +164,7 @@ def _evaluate_curve(
     fanned = isinstance(curve.quantity, FanOutQuantity) and curve.quantity.aggregation_kind is None
     return [
         EvaluatedCurve(
-            id=_create_id(curve.quantity, inverse=inverse, seen=seen),
+            id=_create_id(curve, inverse=inverse, seen=seen),
             attributes=_series_curve_attributes(
                 curve.attributes, index=index, fanned=fanned, label_macros=evaluated.label_macros
             ),
@@ -250,7 +252,7 @@ def _evaluate_graph(graph: Graph, context: EvaluationContext) -> EvaluatedGraph:
     for rule in graph.rules:
         # The id has to be minted before the rule is known to be present: it counts the quantity
         # towards the graph's seen ones either way.
-        rule_id = _create_id(rule.curve.quantity, inverse=rule.inverse, seen=seen)
+        rule_id = _create_id(rule.curve, inverse=rule.inverse, seen=seen)
         if (evaluated := _evaluate_rule(rule, rule_id, context)) is not None:
             rules.append(evaluated)
     regions = tuple(

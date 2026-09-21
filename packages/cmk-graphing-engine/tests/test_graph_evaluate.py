@@ -420,6 +420,46 @@ def test_evaluate_graph_carries_the_curve_source_id() -> None:
     assert result.lines[0].curve.source_id is None
 
 
+def test_evaluate_graph_ids_a_curve_by_its_source_id() -> None:
+    metric = _metric("a")
+    graph = Graph(
+        name="g",
+        title="g",
+        kind="test",
+        lines=[
+            Line(
+                curve=Curve(quantity=metric, attributes=_attrs("a"), source_id="A"),
+                inverse=False,
+            )
+        ],
+    )
+
+    result = _evaluate_graph(
+        graph, _context({metric: _data(value=1.0)}, {metric: _time_series(1.0)})
+    )
+
+    assert [line.curve.id for line in result.lines] == ["A"]
+
+
+def test_evaluate_graph_numbers_the_fanned_curves_of_one_source() -> None:
+    fanned = _FannedQuantity(series=[("h0", 1.0), ("h1", 2.0)])
+    graph = Graph(
+        name="g",
+        title="g",
+        kind="test",
+        lines=[
+            Line(
+                curve=Curve(quantity=fanned, attributes=_attrs("q"), source_id="A"),
+                inverse=False,
+            )
+        ],
+    )
+
+    result = _evaluate_graph(graph, _context({}, {}))
+
+    assert [line.curve.id for line in result.lines] == ["A", "A#2"]
+
+
 def test_evaluate_graph_colours_a_fan_out_apart_even_at_a_single_series() -> None:
     alone = _FannedQuantity(series=[("only", 1.0)])
     several = _FannedQuantity(series=[("first", 1.0), ("second", 2.0)])

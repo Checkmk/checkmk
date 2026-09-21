@@ -60,7 +60,7 @@ const siteOverrideFilterLabel = computed(() =>
 </script>
 
 <template>
-  <CmkAccordionItem :value="value" :icon="topic.icon">
+  <CmkAccordionItem :value="value" :icon="topic.icon" class="global-settings-topic">
     <template #header>
       <div class="global-settings-topic__header">
         <span class="global-settings-topic__headline">{{ topic.headline }}</span>
@@ -105,6 +105,11 @@ const siteOverrideFilterLabel = computed(() =>
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
+.global-settings-topic :deep(.cmk-accordion-item__content-wrapper) {
+  padding: 20px 30px;
+}
+
 .global-settings-topic__header {
   display: flex;
   flex-direction: column;

@@ -1133,6 +1133,7 @@ allows = [
   "@livestatus_client",
   "@mkp_tool",
   "@plugin_apis",
+  "cmk.ai_control_plane.protocols",
   "cmk.backup",
   "cmk.bakery.shared",
   "cmk.data_backend.gui",

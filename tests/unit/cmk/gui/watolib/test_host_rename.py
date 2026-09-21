@@ -163,21 +163,18 @@ def test_rename_host(
             lambda x: gui_context(),  # noqa: ARG005
             progress_update,
         )
+        tree = folder_tree()
         if use_subfolder:
-            folder = (
-                folder_tree()
-                .root_folder()
-                .create_subfolder(
-                    "some_subfolder",
-                    "Some Subfolder",
-                    {},
-                    pprint_value=False,
-                    pending_changes=_noop_pending_changes(),
-                    acting_user=user,
-                )
+            folder = tree.root_folder().create_subfolder(
+                "some_subfolder",
+                "Some Subfolder",
+                {},
+                pprint_value=False,
+                pending_changes=_noop_pending_changes(),
+                acting_user=user,
             )
         else:
-            folder = folder_tree().root_folder()
+            folder = tree.root_folder()
         folder.create_hosts(
             hosts_to_create,
             pprint_value=False,
@@ -187,6 +184,7 @@ def test_rename_host(
 
         # WHEN
         perform_rename_hosts(
+            tree,
             renamings=[(folder, old, new) for old, new in renamings],
             job_interface=job_interface,
             custom_user_attributes=[],
@@ -218,7 +216,8 @@ def test_rename_host(
 def test_rename_host_rewrites_the_relations_pointing_at_it() -> None:
     """Both halves of a relation are stored, but only the half sitting on the counterpart names
     the renamed host - so the pass is the same as for a parent definition."""
-    folder = folder_tree().root_folder()
+    tree = folder_tree()
+    folder = tree.root_folder()
     folder.create_hosts(
         [
             (HostName("os1"), HostAttributes(), None),
@@ -240,6 +239,7 @@ def test_rename_host_rewrites_the_relations_pointing_at_it() -> None:
     )
 
     perform_rename_hosts(
+        tree,
         renamings=[(folder, HostName("os1"), HostName("os2"))],
         job_interface=BackgroundProcessInterface(
             "",
@@ -258,7 +258,7 @@ def test_rename_host_rewrites_the_relations_pointing_at_it() -> None:
         debug=False,
     )
 
-    renamed = folder_tree().root_folder().hosts()[HostName("board")]
+    renamed = tree.root_folder().hosts()[HostName("board")]
     assert renamed.attributes["relations"] == [
         {"kind": "management", "direction": "parent", "host": "os2"}
     ]

@@ -199,6 +199,9 @@ class ModeBulkRenameHost(WatoMode):
                             pprint_value=config.wato_pprint_config,
                             use_git=config.wato_use_git,
                             debug=config.debug,
+                            wato_hide_folders_without_read_permissions=config.wato_hide_folders_without_read_permissions,
+                            wato_host_attrs=config.wato_host_attrs,
+                            tags=config.tags.get_dict_format(),
                         ),
                     ),
                     InitialStatusArgs(
@@ -578,6 +581,9 @@ class ModeRenameHost(WatoMode):
                         pprint_value=config.wato_pprint_config,
                         use_git=config.wato_use_git,
                         debug=config.debug,
+                        wato_hide_folders_without_read_permissions=config.wato_hide_folders_without_read_permissions,
+                        wato_host_attrs=config.wato_host_attrs,
+                        tags=config.tags.get_dict_format(),
                     ),
                 ),
                 InitialStatusArgs(

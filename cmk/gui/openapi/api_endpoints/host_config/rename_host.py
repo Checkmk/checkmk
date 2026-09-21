@@ -106,6 +106,9 @@ def rename_host_v1(
                 custom_user_attributes=api_context.config.wato_user_attrs,
                 user_connections=api_context.config.user_connections,
                 user_permission_config=api_context.config.user_permissions().to_serializable_config(),
+                wato_hide_folders_without_read_permissions=api_context.config.wato_hide_folders_without_read_permissions,
+                wato_host_attrs=api_context.config.wato_host_attrs,
+                tags=api_context.config.tags.get_dict_format(),
             ),
         ),
         InitialStatusArgs(

@@ -66,7 +66,7 @@ from cmk.gui.valuespec import AbsoluteDate
 from cmk.gui.valuespec import Integer as IntegerVS
 from cmk.gui.wato.pages.activate_changes import render_object_ref
 from cmk.gui.watolib.audit_log import AuditLogFilterRaw, AuditLogStore, build_audit_log_filter
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, FolderTree, make_folder_tree
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.objref import ObjectRefType
 from cmk.gui.watolib.paths import wato_var_dir
@@ -420,7 +420,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
             html.hidden_fields()
 
         if self._request_data.is_ok() and self._request_data.ok.selected_filename:
-            self._show_audit_log()
+            self._show_audit_log(make_folder_tree(config))
 
     def _fs_file_selection(self) -> SingleChoiceExtended[str]:
         return SingleChoiceExtended(
@@ -456,19 +456,19 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
             reverse=True,
         )
 
-    def _show_audit_log(self) -> None:
+    def _show_audit_log(self, tree: FolderTree) -> None:
         audit = self._parse_audit_log()
 
         if not audit:
             html.show_message(_("Found no matching entry."))
 
         elif self._options["display"] == "daily":
-            self._display_daily_audit_log(audit)
+            self._display_daily_audit_log(tree, audit)
 
         else:
-            self._display_multiple_days_audit_log(audit)
+            self._display_multiple_days_audit_log(tree, audit)
 
-    def _display_daily_audit_log(self, log: list[AuditLogStore.Entry]) -> None:
+    def _display_daily_audit_log(self, tree: FolderTree, log: list[AuditLogStore.Entry]) -> None:
         log, times = self._get_next_daily_paged_log(log)
 
         self._display_page_controls(*times)
@@ -476,11 +476,13 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
         if display_options.enabled(display_options.T):
             html.h3(_("Audit log for %(date)s") % {"date": render.date(times[0])})
 
-        self._display_log(log)
+        self._display_log(tree, log)
 
         self._display_page_controls(*times)
 
-    def _display_multiple_days_audit_log(self, log: list[AuditLogStore.Entry]) -> None:
+    def _display_multiple_days_audit_log(
+        self, tree: FolderTree, log: list[AuditLogStore.Entry]
+    ) -> None:
         log = self._get_multiple_days_log_entries(log)
 
         if display_options.enabled(display_options.T):
@@ -489,9 +491,9 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
                 % {"date": render.date(self._get_start_date()), "days": self._options["display"][1]}
             )
 
-        self._display_log(log)
+        self._display_log(tree, log)
 
-    def _display_log(self, log: list[AuditLogStore.Entry]) -> None:
+    def _display_log(self, tree: FolderTree, log: list[AuditLogStore.Entry]) -> None:
         with table_element(
             css="data wato auditlog audit",
             limit=0,
@@ -516,7 +518,9 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
                     )
                 if self._show_object:
                     table.cell(
-                        _("Object"), render_object_ref(entry.object_ref) or "", css=["narrow"]
+                        _("Object"),
+                        render_object_ref(tree, entry.object_ref) or "",
+                        css=["narrow"],
                     )
 
                 text = HTML.without_escaping(

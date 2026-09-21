@@ -67,7 +67,11 @@ from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCom
 from cmk.gui.watolib.automations import MKAutomationException
 from cmk.gui.watolib.backup_snapshots import get_last_wato_snapshot_file
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain, DomainRequest, DomainRequests
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree
+from cmk.gui.watolib.hosts_and_folders import (
+    folder_preserving_link,
+    FolderTree,
+    make_folder_tree,
+)
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.pending_changes import (
@@ -320,12 +324,18 @@ class ModeRevertChanges(WatoMode):
         )
 
         _change_table(
-            list(activation_sites(config.sites)), self._changes.changes, _("Revert changes")
+            make_folder_tree(config),
+            list(activation_sites(config.sites)),
+            self._changes.changes,
+            _("Revert changes"),
         )
 
 
 def _change_table(
-    activation_site_ids: Sequence[SiteId], changes: list[tuple[str, ChangeSpec]], title: str
+    tree: FolderTree,
+    activation_site_ids: Sequence[SiteId],
+    changes: list[tuple[str, ChangeSpec]],
+    title: str,
 ) -> None:
     with table_element(
         "changes",
@@ -347,7 +357,7 @@ def _change_table(
             table.row(css=[" ".join(css)])
 
             table.cell("", css=["buttons"])
-            rendered = render_object_ref_as_icon(change["object"])
+            rendered = render_object_ref_as_icon(tree, change["object"])
             if rendered:
                 html.write_html(rendered)
 
@@ -601,6 +611,7 @@ class ModeActivateChanges(WatoMode):
 
         if self._changes.has_pending_changes():
             _change_table(
+                make_folder_tree(config),
                 list(activation_site_configs),
                 self._changes.pending_changes,
                 _("Pending changes"),
@@ -913,11 +924,11 @@ class ModeActivateChanges(WatoMode):
         )
 
 
-def render_object_ref_as_icon(object_ref: ObjectRef | None) -> HTML | None:
+def render_object_ref_as_icon(tree: FolderTree, object_ref: ObjectRef | None) -> HTML | None:
     if object_ref is None:
         return None
 
-    url, title = _get_object_reference(object_ref)
+    url, title = _get_object_reference(tree, object_ref)
     if not url:
         return None
 
@@ -938,8 +949,8 @@ def render_object_ref_as_icon(object_ref: ObjectRef | None) -> HTML | None:
     )
 
 
-def render_object_ref(object_ref: ObjectRef | None) -> str | HTML | None:
-    url, title = _get_object_reference(object_ref)
+def render_object_ref(tree: FolderTree, object_ref: ObjectRef | None) -> str | HTML | None:
+    url, title = _get_object_reference(tree, object_ref)
     if title and not url:
         return title
     if not title:
@@ -948,18 +959,19 @@ def render_object_ref(object_ref: ObjectRef | None) -> str | HTML | None:
 
 
 # TODO: Move this to some generic place
-def _get_object_reference(object_ref: ObjectRef | None) -> tuple[str | None, str | None]:
+def _get_object_reference(
+    tree: FolderTree, object_ref: ObjectRef | None
+) -> tuple[str | None, str | None]:
     if object_ref is None:
         return None, None
 
     if object_ref.object_type is ObjectRefType.Host:
-        host = folder_tree().host(HostName(object_ref.ident))
+        host = tree.host(HostName(object_ref.ident))
         if host:
             return host.edit_url(), host.name()
         return None, object_ref.ident
 
     if object_ref.object_type is ObjectRefType.Folder:
-        tree = folder_tree()
         if tree.folder_exists(object_ref.ident):
             folder = tree.folder(object_ref.ident)
             return folder.url(request), folder.title()

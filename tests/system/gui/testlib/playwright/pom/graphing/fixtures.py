@@ -450,6 +450,7 @@ _ACTION_MENU_DASHBOARD_ID: Final = "e2e_action_menu_dashboard"
 _ACTION_MENU_DASHBOARD_TITLE: Final = "E2E action menu dashboard"
 _ACTION_MENU_WIDGET_TIMERANGE: Final = {"type": "graph", "duration": 14400}
 _ACTION_MENU_WIDGET_SIZE: Final = {"width": 40, "height": 20}
+_ACTION_MENU_RENDER_OPTIONS: Final = {"show_controls": True}
 _KNOWN_GOOD_METRIC_NAME: Final = "mem_used"
 
 
@@ -504,7 +505,7 @@ def _action_menu_widget_content(
             {
                 "type": "custom_graph",
                 "timerange": _ACTION_MENU_WIDGET_TIMERANGE,
-                "graph_render_options": {},
+                "graph_render_options": _ACTION_MENU_RENDER_OPTIONS,
                 "custom_graph": saved_custom_graph,
             },
             None,

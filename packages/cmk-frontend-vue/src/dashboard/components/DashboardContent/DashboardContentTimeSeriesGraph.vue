@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { AddTo } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import CmkHtml from 'cmk-ui-library/components/CmkHtml.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
@@ -287,6 +288,28 @@ const combinationMode = computed(() => {
   return content.type === 'combined_graph' ? content.presentation : null
 })
 
+// The burger menu's add-to target: the discovery shell carries the add type and specification,
+// which the actions replay, plus the built graph they store. Null for graph kinds that offer no
+// add-to.
+const addTo = computed<AddTo | null>(() => {
+  const discovered = shell.value
+  if (
+    discovered === null ||
+    discovered.add_type === null ||
+    discovered.add_to_specification === null
+  ) {
+    return null
+  }
+  return {
+    type: discovered.add_type,
+    specification: discovered.add_to_specification,
+    internal: discovered.internal
+  }
+})
+const showBurgerMenu = computed(
+  () => (graphRenderOptions.value?.show_controls ?? false) && addTo.value !== null
+)
+
 onMounted(() => {
   if (sharedWidgetGraphs === undefined) {
     void loadGraph()
@@ -334,6 +357,8 @@ onMounted(() => {
         :show-value-axis="showValueAxis"
         :show-margin="showMargin"
         :min-value-axis-width="valueAxisWidth"
+        :show-burger-menu="showBurgerMenu"
+        :add-to="addTo"
         :fetch-graph="fetchGraph"
       />
     </div>

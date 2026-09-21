@@ -20,6 +20,7 @@ function makeShell(overrides: Partial<DiscoveredGraph> = {}): DiscoveredGraph {
     title: 'CPU utilization',
     name: 'cpu_utilization',
     add_to_specification: null,
+    add_type: null,
     y_axis: null,
     ...overrides
   }

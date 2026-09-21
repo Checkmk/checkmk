@@ -3,10 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { YAxis } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
+import type { AddTo, YAxis } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
 
 import type { GraphCombinationMode, GraphDataFetcher } from '../../composables/useGraphData'
-import type { BurgerMenuGroup } from '../../types'
 import type { TimerangeModel } from './computeEpochTimeRange'
 
 /**
@@ -20,9 +19,11 @@ export interface GraphFigureProps {
   combinationMode?: GraphCombinationMode | null
   showLegend?: boolean
   showTimestamp?: boolean
+  /** Enables the burger (action) menu; the menu only shows when `addTo` is also present. */
   showBurgerMenu?: boolean
   showPin?: boolean
-  burgerMenuGroups?: BurgerMenuGroup[]
+  /** The add-to target the burger menu is assembled for; null/undefined hides the menu. */
+  addTo?: AddTo | null
   showTimeAxis?: boolean
   showValueAxis?: boolean
   minValueAxisWidth?: number | undefined

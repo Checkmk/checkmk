@@ -64,6 +64,11 @@ vi.mock('@internationalized/date', async (importOriginal) => {
   return { ...actual, getLocalTimeZone: () => 'UTC' }
 })
 
+// Keep the burger menu off the network: the composable would otherwise GET the context menu.
+vi.mock('@/graphing/api/burgerMenu', () => ({
+  loadMenu: vi.fn().mockResolvedValue([])
+}))
+
 const UNIT: components['schemas']['ApiUnitFormat'] = {
   notation: 'decimal',
   symbol: '',
@@ -452,11 +457,18 @@ test('shows the compact legend only when requested', async () => {
   expect(document.querySelector('.graphing-graph-legend-compact')).not.toBeInTheDocument()
 })
 
-test('shows the burger menu only when requested', async () => {
-  const { unmount } = renderFigure({ showBurgerMenu: true })
+test('shows the burger menu only when requested and there is an add-to target', async () => {
+  const addTo = { type: 'pnpgraph', specification: {}, internal: '{"graphs":[]}' }
+  const first = renderFigure({ showBurgerMenu: true, addTo })
   await screen.findByTestId('time-series-graph')
   expect(document.querySelector('.graphing-graph-burger-menu')).toBeInTheDocument()
-  unmount()
+  first.unmount()
+
+  // Enabled but no add-to target: nothing to act on, so no menu.
+  const second = renderFigure({ showBurgerMenu: true, addTo: null })
+  await screen.findByTestId('time-series-graph')
+  expect(document.querySelector('.graphing-graph-burger-menu')).not.toBeInTheDocument()
+  second.unmount()
 
   renderFigure()
   await screen.findByTestId('time-series-graph')

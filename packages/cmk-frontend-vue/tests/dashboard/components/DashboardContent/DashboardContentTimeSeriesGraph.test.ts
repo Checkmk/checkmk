@@ -234,6 +234,7 @@ describe('graph widget on a shared dashboard', () => {
             title: 'My graph',
             name: 'my_graph',
             add_to_specification: null,
+            add_type: null,
             y_axis: null
           }
         ],
@@ -275,6 +276,7 @@ describe('graph widget on a shared dashboard', () => {
             title: 'My graph',
             name: 'my_graph',
             add_to_specification: null,
+            add_type: null,
             y_axis: null
           }
         ],

@@ -11,6 +11,7 @@ import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import useTimer from 'cmk-ui-library/lib/useTimer.ts'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import { useBurgerMenu } from '../../composables/useBurgerMenu'
 import { fetchGraphDataByDefinition, useGraphData } from '../../composables/useGraphData'
 import { useGraphInteraction } from '../../composables/useGraphInteraction'
 import { hasPlottableData, useGraphNotice, useNoDataNotice } from '../../composables/useGraphNotice'
@@ -40,7 +41,6 @@ const props = withDefaults(defineProps<GraphFigureProps>(), {
   showTimestamp: false,
   showBurgerMenu: false,
   showPin: false,
-  burgerMenuGroups: () => [],
   showTimeAxis: true,
   showValueAxis: true,
   showMargin: false
@@ -163,6 +163,20 @@ const {
   onCommittedTimeRange
 )
 
+// The widget owns its displayed window and draws at the fixed consolidation, so it builds the
+// burger menu itself rather than being handed pre-loaded groups.
+const {
+  showBurgerMenu: burgerMenuVisible,
+  burgerMenuGroups,
+  triggerBurgerMenuAction
+} = useBurgerMenu(
+  () => props.addTo,
+  () => props.showBurgerMenu,
+  () => requestedTimeRange.value,
+  () => DEFAULT_CONSOLIDATION_FN,
+  () => viewValueRange.value
+)
+
 watch(
   () => [props.internal, props.combinationMode, JSON.stringify(props.timerange)],
   () => {
@@ -210,7 +224,7 @@ const graphOptions = computed((): GraphOptions => {
 
 // The marker stands above the plot, in the gap below the header, which is widened to fit it.
 // With no header there is no gap and the frame clips it, so the figure reserves the room.
-const hasHeader = computed(() => props.showTimestamp || props.showBurgerMenu)
+const hasHeader = computed(() => props.showTimestamp || burgerMenuVisible.value)
 
 onMounted(() => {
   timer.start()
@@ -245,10 +259,11 @@ onBeforeUnmount(() => {
       >
         <GraphTimestamp v-if="showTimestamp && baselineTimeRange" :time-range="baselineTimeRange" />
         <GraphBurgerMenu
-          v-if="showBurgerMenu"
+          v-if="burgerMenuVisible"
           :aria-label="_t('Action menu')"
           class="graphing-graph-figure__burger-menu"
           :groups="burgerMenuGroups"
+          @do-action="triggerBurgerMenuAction"
         />
       </div>
       <div
@@ -341,7 +356,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  padding-top: var(--dimension-3);
+  padding: var(--spacing) var(--dimension-5) 0 var(--dimension-5);
   margin-bottom: var(--dimension-4);
 }
 

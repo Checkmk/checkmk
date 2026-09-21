@@ -254,9 +254,22 @@ class ApiDiscoveredGraph:
             "graph_id": "cpu_load",
         },
     )
+    add_type: str | None = api_field(
+        description=(
+            "The add-to type this graph is offered under (e.g. 'pnpgraph', 'custom_graph', "
+            "'combined_graph'), which is used to build the burger menu entries. Null for graph "
+            "kinds that offer no add-to action."
+        ),
+        example="pnpgraph",
+    )
 
     @classmethod
     def from_built(cls, built: BuiltGraph, temperature_unit: TemperatureUnit) -> Self:
+        if built.specification is None or (stored := built.specification.for_storage()) is None:
+            add_type = None
+        else:
+            add_type = stored.element_type()
+
         return cls(
             internal=json.dumps(serialize_graphs([built.graph])),
             title=built.graph.title,
@@ -265,6 +278,7 @@ class ApiDiscoveredGraph:
             add_to_specification=(
                 None if built.specification is None else built.specification.model_dump()
             ),
+            add_type=add_type,
         )
 
 

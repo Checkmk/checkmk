@@ -324,6 +324,8 @@ def _create_active_config(
         cmk.utils.password_store.pending_secrets_path_site(),
     )
 
+    config_builders = _make_config_builders(core, checker_config_writer)
+
     with (
         config_path.create(cmk.utils.paths.omd_root) as config_creation_context,
         _backup_objects_file(core_client),
@@ -348,28 +350,62 @@ def _create_active_config(
             service_depends_on=service_depends_on,
         )
 
-        snapshot_local_dir(
-            cmk.utils.paths.local_root, intermediate_config.config_creation_context.path_created
-        )
-        snapshot_trusted_cas(
-            cmk.utils.paths.trusted_ca_file,
-            intermediate_config.config_creation_context.path_created,
-        )
-
-        checker_config_writer(intermediate_config.config_creation_context.path_created)
-
-        intermediate_config.licensing_handler.persist_licensed_state(
-            get_licensed_state_file_path(cmk.utils.paths.omd_root)
-        )
-        core.build(intermediate_config)
-        cmk.utils.password_store.save(
-            {k: s.reveal() for k, s in intermediate_config.passwords.items()},
-            cmk.utils.password_store.active_secrets_path_site(
-                RELATIVE_PATH_SECRETS, config_creation_context.path_created
-            ),
-        )
+        for builder in config_builders:
+            builder.build(intermediate_config)
 
     core_client.cleanup_old_configs()
+
+
+def _make_config_builders(
+    core: MonitoringConfigBuilder,
+    checker_config_writer: Callable[[Path], None],
+) -> Sequence[MonitoringConfigBuilder]:
+    """Everything that goes into one activation, in the order it is created.
+
+    The monitoring core is one builder among others. The engine does not know what
+    any of them writes -- only that they all write into the same config directory,
+    and in which order.
+    """
+    return (
+        MonitoringConfigBuilder(
+            name="local_dir",
+            build=lambda intermediate_config: snapshot_local_dir(
+                cmk.utils.paths.local_root, intermediate_config.config_creation_context.path_created
+            ),
+        ),
+        MonitoringConfigBuilder(
+            name="trusted_cas",
+            build=lambda intermediate_config: snapshot_trusted_cas(
+                cmk.utils.paths.trusted_ca_file,
+                intermediate_config.config_creation_context.path_created,
+            ),
+        ),
+        MonitoringConfigBuilder(
+            name="checker_config",
+            build=lambda intermediate_config: checker_config_writer(
+                intermediate_config.config_creation_context.path_created
+            ),
+        ),
+        MonitoringConfigBuilder(
+            name="licensed_state",
+            build=lambda intermediate_config: (
+                intermediate_config.licensing_handler.persist_licensed_state(
+                    get_licensed_state_file_path(cmk.utils.paths.omd_root)
+                )
+            ),
+        ),
+        core,
+        MonitoringConfigBuilder(name="active_secrets", build=_save_active_secrets),
+    )
+
+
+def _save_active_secrets(intermediate_config: IntermediateMonitoringConfig) -> None:
+    cmk.utils.password_store.save(
+        {k: s.reveal() for k, s in intermediate_config.passwords.items()},
+        cmk.utils.password_store.active_secrets_path_site(
+            RELATIVE_PATH_SECRETS, intermediate_config.config_creation_context.path_created
+        ),
+    )
 
 
 def _verify_non_duplicate_hosts(duplicates: Collection[HostName]) -> None:

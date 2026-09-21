@@ -273,6 +273,7 @@ fn test_add_runtime_to_path() {
             runtime_dir: detect_runtime(ora_sql.options().use_host_client(), mk_lib, None)
                 .map(|r| r.dir),
             oracle_home: None,
+            run_as: None,
         };
         apply_runtime_env(&runtime_env, Some(mut_env_var.clone()), None)
     }
@@ -624,6 +625,7 @@ fn test_add_oracle_home_to_env() {
     let runtime_env = RuntimeEnv {
         runtime_dir: Some(home_lib.clone()),
         oracle_home: Some(home.clone()),
+        run_as: None,
     };
     apply_runtime_env(
         &runtime_env,
@@ -638,6 +640,7 @@ fn test_add_oracle_home_to_env() {
     let runtime_env = RuntimeEnv {
         runtime_dir: Some(home_lib),
         oracle_home: None,
+        run_as: None,
     };
     apply_runtime_env(
         &runtime_env,
@@ -783,20 +786,32 @@ fn test_options_use_host_client_with_env_var() {
 /// against a tree owned end to end, by `tests/system/mk_oracle`.
 #[cfg(unix)]
 mod permissions {
-    use mk_oracle::permissions_linux::{is_running_as_root, validate};
+    use mk_oracle::permissions_linux::{assess, is_running_as_root};
+    use mk_oracle::setup::RuntimeVerdict;
     use std::fs;
     use std::os::unix::fs::PermissionsExt;
+    use std::path::PathBuf;
+
+    const LIB: &str = "libclntsh.so.19.1";
+
+    fn runtime_with_lib(lib_mode: u32) -> (tempfile::TempDir, PathBuf) {
+        let tmp = tempfile::tempdir().expect("create temp dir");
+        let dir = tmp.path().join("lib");
+        fs::create_dir(&dir).unwrap();
+        fs::set_permissions(&dir, fs::Permissions::from_mode(0o755)).unwrap();
+        let lib = dir.join(LIB);
+        fs::write(&lib, b"").unwrap();
+        fs::set_permissions(&lib, fs::Permissions::from_mode(lib_mode)).unwrap();
+        (tmp, dir)
+    }
 
     #[test]
-    fn test_validate_as_non_root_accepts_a_world_writable_runtime() {
+    fn test_assess_as_non_root_loads_even_a_world_writable_runtime() {
         if is_running_as_root() {
             return; // the short-circuit under test does not apply
         }
-        let tmp = tempfile::tempdir().expect("create temp dir");
-        let lib = tmp.path().join("libclntsh.so.19.1");
-        fs::write(&lib, b"").unwrap();
-        fs::set_permissions(&lib, fs::Permissions::from_mode(0o666)).unwrap();
-        assert!(validate(tmp.path(), true, &[]).is_ok());
+        let (_tmp, dir) = runtime_with_lib(0o666);
+        assert_eq!(assess(&dir, true, &[]), RuntimeVerdict::Load);
     }
 }
 

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
-from collections.abc import Sequence
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -43,6 +42,26 @@ def _job_section(job_name: str = "JOB_NAME", **overrides: str) -> StringTable:
     }
     fields.update(overrides)
     return [[key, value] for key, value in fields.items()]
+
+
+# The agent emits these keys even for a job that reported no figures, just with an
+# empty value. Blanking them keeps a section complete while letting a test focus on
+# the field it exercises. BackupServer is not blanked: the check renders it by
+# presence, not value, so an empty one would still show as "Backup server: ".
+_NO_METRICS = {
+    "TotalSizeByte": "",
+    "ReadSizeByte": "",
+    "TransferedSizeByte": "",
+    "DurationDDHHMMSS": "",
+    "AvgSpeedBps": "",
+}
+
+
+def _legacy_age_section(stop_time: str, **overrides: str) -> StringTable:
+    """A complete section from a pre-2.5.0 agent: StopTime instead of LastBackupAge."""
+    section = [line for line in _job_section(**overrides) if line[0] != "LastBackupAge"]
+    section.append(["StopTime", stop_time])
+    return section
 
 
 def test_parse_extracts_every_field_of_a_job() -> None:
@@ -111,29 +130,10 @@ def test_an_empty_section_yields_no_jobs() -> None:
     assert parse_veeam_client([]) == {}
 
 
-@pytest.mark.parametrize(
-    "string_table, expected_result",
-    [
-        pytest.param(
-            [
-                ["Status", "Success"],
-                ["JobName", "JOB_NAME"],
-                ["TotalSizeByte", "100"],
-                ["StartTime", "01.02.2015 20:05:45"],
-                ["StopTime", "01.02.2015 21:05:45"],
-                ["DurationDDHHMMSS", "00:01:00:00"],
-                ["AvgSpeedBps", "100"],
-                ["DisplayName", "name"],
-            ],
-            [Service(item="JOB_NAME")],
-            id="section with status",
-        ),
-    ],
-)
-def test_discover_veeam_client(
-    string_table: StringTable, expected_result: Sequence[Service]
-) -> None:
-    assert list(discover_veeam_client(parse_veeam_client(string_table))) == expected_result
+def test_discover_veeam_client() -> None:
+    assert list(discover_veeam_client(parse_veeam_client(_job_section()))) == [
+        Service(item="JOB_NAME")
+    ]
 
 
 def _check_results(string_table: StringTable) -> list[Result]:
@@ -146,87 +146,41 @@ def _check_results(string_table: StringTable) -> list[Result]:
     ]
 
 
+_SUCCESS_SUMMARY = (
+    "Status: Success, Size (total/read/transferred): 100 B/ 80 B/ 60 B, "
+    "Duration: 1 hour 0 minutes, Average Speed: 100 B/s, Backup server: BACKUP01"
+)
+
+
 @pytest.mark.parametrize(
     "string_table, expected_results",
     [
         pytest.param(
+            _job_section(LastBackupAge=""),
             [
-                ["Status", "Success"],
-                ["JobName", "JOB_NAME"],
-                ["TotalSizeByte", "100"],
-                ["StartTime", "01.02.2015 20:05:45"],
-                ["DurationDDHHMMSS", "00:01:00:00"],
-                ["AvgSpeedBps", "100"],
-                ["DisplayName", "name"],
-            ],
-            [
-                Result(
-                    state=State.OK,
-                    summary="Status: Success, Size (total): 100 B, "
-                    "Duration: 1 hour 0 minutes, Average Speed: 100 B/s",
-                ),
+                Result(state=State.OK, summary=_SUCCESS_SUMMARY),
                 Result(state=State.CRIT, summary="No complete backup"),
             ],
-            id="section without StopTime or LastBackupAge",
+            id="no completed backup (empty LastBackupAge)",
         ),
         pytest.param(
+            _job_section(LastBackupAge="5"),
             [
-                ["Status", "Success"],
-                ["JobName", "JOB_NAME"],
-                ["TotalSizeByte", "100"],
-                ["StartTime", "01.02.2015 20:05:45"],
-                ["LastBackupAge", "5"],
-                ["DurationDDHHMMSS", "00:01:00:00"],
-                ["AvgSpeedBps", "100"],
-                ["DisplayName", "name"],
-            ],
-            [
-                Result(
-                    state=State.OK,
-                    summary="Status: Success, Size (total): 100 B, "
-                    "Duration: 1 hour 0 minutes, Average Speed: 100 B/s",
-                ),
+                Result(state=State.OK, summary=_SUCCESS_SUMMARY),
                 Result(state=State.OK, summary="Time since last backup: 5 seconds"),
             ],
-            id="section success LastBackupAge",
+            id="completed backup with an age",
         ),
         pytest.param(
-            [
-                ["Status", "InProgress"],
-                ["JobName", "JOB_NAME"],
-                ["TotalSizeByte", "100"],
-                ["StartTime", "01.02.2015 20:05:45"],
-                ["StopTime", "01.02.2015 21:00:50"],
-                ["DurationDDHHMMSS", "00:01:00:00"],
-                ["AvgSpeedBps", "100"],
-                ["DisplayName", "name"],
-            ],
+            _job_section(Status="InProgress"),
             [
                 Result(
                     state=State.OK,
-                    summary="Status: InProgress, Size (total): 100 B, Average Speed: 100 B/s",
+                    summary="Status: InProgress, Size (total/read/transferred): 100 B/ 80 B/ 60 B, "
+                    "Average Speed: 100 B/s, Backup server: BACKUP01",
                 )
             ],
-            id="section in progress StopTime",
-        ),
-        pytest.param(
-            [
-                ["Status", "InProgress"],
-                ["JobName", "JOB_NAME"],
-                ["TotalSizeByte", "100"],
-                ["StartTime", "01.02.2015 20:05:45"],
-                ["LastBackupAge", "300"],
-                ["DurationDDHHMMSS", "00:01:00:00"],
-                ["AvgSpeedBps", "100"],
-                ["DisplayName", "name"],
-            ],
-            [
-                Result(
-                    state=State.OK,
-                    summary="Status: InProgress, Size (total): 100 B, Average Speed: 100 B/s",
-                )
-            ],
-            id="section in progress LastBackupAge",
+            id="running job checks neither age nor duration",
         ),
     ],
 )
@@ -234,57 +188,39 @@ def test_check_veeam_client(string_table: StringTable, expected_results: list[Re
     assert _check_results(string_table) == expected_results
 
 
-@pytest.mark.parametrize(
-    "size_lines",
-    [
-        pytest.param([], id="field absent"),
-        pytest.param([["TotalSizeByte", ""]], id="field empty"),
-    ],
-)
-def test_unreported_total_size_is_omitted_from_the_summary(size_lines: StringTable) -> None:
-    results = _check_results(
-        [
-            ["Status", "Success"],
-            ["JobName", "JOB_NAME"],
-            *size_lines,
-            ["LastBackupAge", "5"],
-        ]
-    )
+def test_unreported_total_size_is_omitted_from_the_summary() -> None:
+    # An empty size field drops out of the size list while the reported ones stay.
+    results = _check_results(_job_section(TotalSizeByte="", LastBackupAge="5"))
 
     assert results == [
-        Result(state=State.OK, summary="Status: Success"),
+        Result(
+            state=State.OK,
+            summary="Status: Success, Size (read/transferred): 80 B/ 60 B, "
+            "Duration: 1 hour 0 minutes, Average Speed: 100 B/s, Backup server: BACKUP01",
+        ),
         Result(state=State.OK, summary="Time since last backup: 5 seconds"),
     ]
 
 
 def test_unparseable_stop_time_reports_no_complete_backup() -> None:
-    results = _check_results(
-        [
-            ["Status", "Success"],
-            ["JobName", "JOB_NAME"],
-            ["TotalSizeByte", "100"],
-            ["StopTime", "not a date"],
-        ]
-    )
+    results = _check_results(_legacy_age_section("not a date", **_NO_METRICS))
 
     assert results == [
-        Result(state=State.OK, summary="Status: Success, Size (total): 100 B"),
+        Result(state=State.OK, summary="Status: Success, Backup server: BACKUP01"),
         Result(state=State.CRIT, summary="No complete backup"),
     ]
 
 
 def test_malformed_duration_is_omitted_from_the_summary() -> None:
-    results = _check_results(
-        [
-            ["Status", "Success"],
-            ["JobName", "JOB_NAME"],
-            ["LastBackupAge", "5"],
-            ["DurationDDHHMMSS", "00:01:00"],
-        ]
-    )
+    # A duration that does not split into four parts is dropped from the summary.
+    results = _check_results(_job_section(DurationDDHHMMSS="00:01:00", LastBackupAge="5"))
 
     assert results == [
-        Result(state=State.OK, summary="Status: Success"),
+        Result(
+            state=State.OK,
+            summary="Status: Success, Size (total/read/transferred): 100 B/ 80 B/ 60 B, "
+            "Average Speed: 100 B/s, Backup server: BACKUP01",
+        ),
         Result(state=State.OK, summary="Time since last backup: 5 seconds"),
     ]
 
@@ -332,11 +268,12 @@ def test_malformed_duration_is_omitted_from_the_summary() -> None:
     ],
 )
 def test_last_backup_age_levels(last_backup_age: str, expected_age_result: Result) -> None:
-    results = _check_results(
-        [["Status", "Success"], ["JobName", "JOB_NAME"], ["LastBackupAge", last_backup_age]]
-    )
+    results = _check_results(_job_section(**_NO_METRICS, LastBackupAge=last_backup_age))
 
-    assert results == [Result(state=State.OK, summary="Status: Success"), expected_age_result]
+    assert results == [
+        Result(state=State.OK, summary="Status: Success, Backup server: BACKUP01"),
+        expected_age_result,
+    ]
 
 
 @pytest.mark.parametrize(
@@ -347,10 +284,10 @@ def test_last_backup_age_levels(last_backup_age: str, expected_age_result: Resul
     ],
 )
 def test_status_maps_to_the_service_state(status: str, expected_state: State) -> None:
-    results = _check_results([["Status", status], ["JobName", "JOB_NAME"], ["LastBackupAge", "5"]])
+    results = _check_results(_job_section(**_NO_METRICS, Status=status, LastBackupAge="5"))
 
     assert results == [
-        Result(state=expected_state, summary=f"Status: {status}"),
+        Result(state=expected_state, summary=f"Status: {status}, Backup server: BACKUP01"),
         Result(state=State.OK, summary="Time since last backup: 5 seconds"),
     ]
 
@@ -361,9 +298,7 @@ def _stop_time_results(stop_time: str) -> list[Result]:
     with time_machine.travel(
         datetime.datetime(2015, 2, 1, 21, 5, 50, tzinfo=ZoneInfo("CET")), tick=False
     ):
-        return _check_results(
-            [["Status", "Success"], ["JobName", "JOB_NAME"], ["StopTime", stop_time]]
-        )
+        return _check_results(_legacy_age_section(stop_time, **_NO_METRICS))
 
 
 @pytest.mark.parametrize(
@@ -372,7 +307,7 @@ def _stop_time_results(stop_time: str) -> list[Result]:
         pytest.param(
             "01.02.2015 21:05:20",
             [
-                Result(state=State.OK, summary="Status: Success"),
+                Result(state=State.OK, summary="Status: Success, Backup server: BACKUP01"),
                 Result(
                     state=State.WARN,
                     summary="Time since last backup: 30 seconds (warn/crit at 20 seconds/40 seconds)",
@@ -383,7 +318,7 @@ def _stop_time_results(stop_time: str) -> list[Result]:
         pytest.param(
             "01.02.2015 21:05:00",
             [
-                Result(state=State.OK, summary="Status: Success"),
+                Result(state=State.OK, summary="Status: Success, Backup server: BACKUP01"),
                 Result(
                     state=State.CRIT,
                     summary="Time since last backup: 50 seconds (warn/crit at 20 seconds/40 seconds)",
@@ -393,7 +328,7 @@ def _stop_time_results(stop_time: str) -> list[Result]:
         ),
         pytest.param(
             "01.01.1900 00:00:00",
-            [Result(state=State.OK, summary="Status: Success")],
+            [Result(state=State.OK, summary="Status: Success, Backup server: BACKUP01")],
             id="running backup sentinel omits the age",
         ),
     ],

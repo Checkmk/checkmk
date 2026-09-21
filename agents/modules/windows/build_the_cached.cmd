@@ -38,7 +38,10 @@ if not exist %arti_dir% powershell Write-Host "Directory `'%arti_dir%`' doesn`'t
 
 
 :: get hash of the git commit in windows manner
-for /f "tokens=*" %%a in ('git log --pretty^=format:^'%%h^' -n 1 .') do set git_hash=%%a
+:: use the full hash: %h abbreviates to whatever length is currently unambiguous,
+:: which grows with the repository's object count, so the cache key drifted
+:: between runs of the very same commit
+for /f "tokens=*" %%a in ('git log --pretty^=format:^'%%H^' -n 1 .') do set git_hash=%%a
 :: verify that git hash is not empty: may happen, that build is performed without checkout
 :: we have to build the target in any case and we will use predefined hash
 if "%git_hash%" == "" Powershell Write-Host "Git directory is ABSENT. Using PREDEFINED NAME latest as Hash" -Foreground yellow && set git_hash='latest'

@@ -22,6 +22,7 @@ export const emblemPanelConfig = {
       '': 'None',
       add: 'Add',
       api: 'API',
+      burger: 'Burger',
       disable: 'Disable',
       download: 'Download',
       downtime: 'Downtime',

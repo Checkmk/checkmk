@@ -727,6 +727,7 @@ import darkSpeedometerSvg from '~cmk-frontend/themes/modern-dark/images/speedome
 export const emblems = [
   'add',
   'api',
+  'burger',
   'disable',
   'download',
   'downtime',

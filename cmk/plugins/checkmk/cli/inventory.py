@@ -56,7 +56,7 @@ from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.cli.engine.modes import option_names, option_string
 from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 from cmk.inventory.paths import InventoryPaths
-from cmk.inventory.structured_data import InventoryStore
+from cmk.inventory.store import InventoryStore
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import ip_lookup

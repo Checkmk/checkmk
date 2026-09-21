@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import gzip
-import json
 import shutil
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
@@ -13,6 +11,7 @@ from typing import Literal
 import pytest
 
 from cmk.ccc.hostaddress import HostName
+from cmk.inventory.store import InventoryStore, make_meta
 from cmk.inventory.structured_data import (
     compare_trees,
     deserialize_delta_tree,
@@ -23,24 +22,18 @@ from cmk.inventory.structured_data import (
     ImmutableDeltaTree,
     ImmutableTable,
     ImmutableTree,
-    InventoryStore,
-    make_meta,
     make_retention_filter_choices,
     merge_trees,
     MutableTree,
-    parse_from_gzipped,
     parse_visible_raw_path,
     RawIntervalFromConfig,
     RetentionInterval,
     SDDeltaValue,
     SDFilterChoice,
     SDKey,
-    SDMeta,
-    SDMetaAndRawTree,
     SDNodeName,
     SDPath,
     SDRawDeltaTree,
-    SDRawTree,
     SDRetentionFilterChoices,
     serialize_delta_tree,
     serialize_tree,
@@ -1059,127 +1052,6 @@ def _get_inventory_store() -> InventoryStore:
 )
 def test_load_from(tree_name: HostName) -> None:
     _get_inventory_store().load_inventory_tree(host_name=tree_name)
-
-
-@pytest.mark.parametrize(
-    "do_archive",
-    [
-        pytest.param(True, id="do-archive"),
-        pytest.param(False, id="do-not-archive"),
-    ],
-)
-def test_save_inventory_tree(tmp_path: Path, do_archive: bool) -> None:
-    host_name = HostName("heute")
-    tree = MutableTree()
-    tree.add(
-        path=(SDNodeName("path-to"), SDNodeName("node")), pairs=[{SDKey("foo"): 1, SDKey("bär"): 2}]
-    )
-    inv_store = InventoryStore(tmp_path)
-    inv_store.save_inventory_tree(
-        host_name=host_name,
-        tree=tree,
-        meta=make_meta(do_archive=do_archive),
-    )
-
-    assert (tmp_path / "var/check_mk/inventory/heute.json").exists()
-    assert not (tmp_path / "var/check_mk/inventory/heute").exists()
-    assert (tmp_path / "var/check_mk/inventory/heute.json.gz").exists()
-    assert not (tmp_path / "var/check_mk/inventory/heute.gz").exists()
-
-    with (tmp_path / "var/check_mk/inventory/heute.json.gz").open("rb") as f:
-        content = f.read()
-
-    # Similiar to InventoryUpdater:
-    meta_and_raw_tree = parse_from_gzipped(content)
-    assert meta_and_raw_tree["meta"]["version"] == "1"
-    assert meta_and_raw_tree["meta"]["do_archive"] is do_archive
-
-    expected_raw_tree = serialize_tree(tree)
-    assert meta_and_raw_tree["raw_tree"]["Attributes"] == expected_raw_tree["Attributes"]
-    assert meta_and_raw_tree["raw_tree"]["Table"] == expected_raw_tree["Table"]
-    assert meta_and_raw_tree["raw_tree"]["Nodes"] == expected_raw_tree["Nodes"]
-
-
-def test_save_status_data_tree(tmp_path: Path) -> None:
-    host_name = HostName("heute")
-    tree = MutableTree()
-    tree.add(
-        path=(SDNodeName("path-to"), SDNodeName("node")), pairs=[{SDKey("foo"): 1, SDKey("bär"): 2}]
-    )
-    inv_store = InventoryStore(tmp_path)
-    inv_store.save_status_data_tree(host_name=host_name, tree=tree)
-
-    assert (tmp_path / "tmp/check_mk/status_data/heute.json").exists()
-    assert not (tmp_path / "tmp/check_mk/status_data/heute").exists()
-    assert not (tmp_path / "tmp/check_mk/status_data/heute.json.gz").exists()
-    assert not (tmp_path / "tmp/check_mk/status_data/heute.gz").exists()
-
-
-@pytest.mark.parametrize(
-    "raw, expected",
-    [
-        pytest.param(
-            {"Attributes": {}, "Table": {}, "Nodes": {}},
-            SDMetaAndRawTree(
-                meta=SDMeta(version="1", do_archive=True),
-                raw_tree=SDRawTree(Attributes={}, Table={}, Nodes={}),
-            ),
-            id="missing-version:missing-meta",
-        ),
-        pytest.param(
-            {
-                "meta_version": "0",
-                "meta_do_archive": True,
-                "Attributes": {},
-                "Table": {},
-                "Nodes": {},
-            },
-            SDMetaAndRawTree(
-                meta=SDMeta(version="1", do_archive=True),
-                raw_tree=SDRawTree(Attributes={}, Table={}, Nodes={}),
-            ),
-            id="version=0:do-archive",
-        ),
-        pytest.param(
-            {
-                "meta_version": "0",
-                "meta_do_archive": False,
-                "Attributes": {},
-                "Table": {},
-                "Nodes": {},
-            },
-            SDMetaAndRawTree(
-                meta=SDMeta(version="1", do_archive=False),
-                raw_tree=SDRawTree(Attributes={}, Table={}, Nodes={}),
-            ),
-            id="version=0:do-not-archive",
-        ),
-        pytest.param(
-            {
-                "meta": {"version": "1", "do_archive": True},
-                "raw_tree": {"Attributes": {}, "Table": {}, "Nodes": {}},
-            },
-            SDMetaAndRawTree(
-                meta=SDMeta(version="1", do_archive=True),
-                raw_tree=SDRawTree(Attributes={}, Table={}, Nodes={}),
-            ),
-            id="version=1:do-archive",
-        ),
-        pytest.param(
-            {
-                "meta": {"version": "1", "do_archive": False},
-                "raw_tree": {"Attributes": {}, "Table": {}, "Nodes": {}},
-            },
-            SDMetaAndRawTree(
-                meta=SDMeta(version="1", do_archive=False),
-                raw_tree=SDRawTree(Attributes={}, Table={}, Nodes={}),
-            ),
-            id="version=1:do-archive",
-        ),
-    ],
-)
-def test_parse_from_gzipped(raw: Mapping[str, object], expected: SDMetaAndRawTree) -> None:
-    assert parse_from_gzipped(gzip.compress(json.dumps(raw).encode())) == expected
 
 
 @pytest.mark.parametrize(

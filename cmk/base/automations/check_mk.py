@@ -195,7 +195,7 @@ from cmk.discover_plugins import (
     PluginGroup,
     plugins_local_path,
 )
-from cmk.inventory import structured_data
+from cmk.inventory import store as inventory_store
 from cmk.inventory.paths import InventoryPaths
 from cmk.licensing.handler import LicensingHandler
 from cmk.piggyback.backend import (
@@ -1666,7 +1666,7 @@ class AutomationRenameHosts:
 
         # HW/SW Inventory
         actions.extend(
-            structured_data.rename(
+            inventory_store.rename(
                 cmk.utils.paths.omd_root,
                 old_host_name=HostName(oldname),
                 new_host_name=HostName(newname),

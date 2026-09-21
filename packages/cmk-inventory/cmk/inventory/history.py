@@ -15,13 +15,13 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.resulttype import Error, OK, Result
 
 from .paths import InventoryPaths, TreePath
+from .store import load_tree_from_tree_path
 from .structured_data import (
     compare_trees,
     deserialize_delta_tree,
     filter_delta_tree,
     ImmutableDeltaTree,
     ImmutableTree,
-    load_tree_from_tree_path,
     SDFilterChoice,
     SDRawDeltaTree,
     serialize_delta_tree,

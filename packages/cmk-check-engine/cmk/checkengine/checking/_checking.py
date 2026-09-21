@@ -38,9 +38,7 @@ from cmk.checkengine.specs.checkresults import ActiveCheckResult, SubmittableSer
 from cmk.checkengine.specs.exitspec import ExitSpec
 from cmk.checkengine.submitters import Submittee, Submitter
 from cmk.checkengine.summarize import SummarizerFunction
-from cmk.inventory.structured_data import (
-    InventoryStore,
-)
+from cmk.inventory.store import InventoryStore
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.servicename import ServiceName
 from cmk.utils.timeperiod import TimeperiodName

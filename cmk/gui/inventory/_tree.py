@@ -27,13 +27,12 @@ from cmk.inventory.history import (
     HistoryStore,
     load_history,
 )
+from cmk.inventory.store import InventoryStore, parse_from_raw_status_data_tree
 from cmk.inventory.structured_data import (
     filter_tree,
     ImmutableDeltaTree,
     ImmutableTree,
-    InventoryStore,
     merge_trees,
-    parse_from_raw_status_data_tree,
     parse_visible_raw_path,
     SDFilterChoice,
     SDKey,

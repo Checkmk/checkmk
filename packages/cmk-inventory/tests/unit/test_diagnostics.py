@@ -11,7 +11,8 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.diagnostics.internal import CollectContext, CollectWarning, GeneratedContent
-from cmk.inventory.structured_data import deserialize_tree, InventoryStore, make_meta
+from cmk.inventory.store import InventoryStore, make_meta
+from cmk.inventory.structured_data import deserialize_tree
 from cmk.plugins.inventory.diagnostics.checkmk_overview import (
     diagnostics_plugin_checkmk_overview,
 )

@@ -10,7 +10,7 @@ import abc
 import multiprocessing
 import os
 import subprocess
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from pathlib import Path
 from typing import override
 
@@ -21,7 +21,7 @@ from livestatus import LocalConnection, SiteConfiguration, SiteConfigurations
 
 import cmk.gui.utils
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import get_omd_config, SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import __version__
 from cmk.crypto.password import Password
@@ -86,6 +86,7 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestLivestatusSecured)
     ac_test_registry.register(ACTestNumberOfUsers)
     ac_test_registry.register(ACTestHTTPSecured)
+    ac_test_registry.register(ACTestApacheForwardedHeaders)
     ac_test_registry.register(ACTestOldDefaultCredentials)
     ac_test_registry.register(ACTestBackupConfigured)
     ac_test_registry.register(ACTestBackupNotEncryptedConfigured)
@@ -447,11 +448,9 @@ class ACTestHTTPSecured(ACTest):
             )
             + " "
             + _(
-                "Checkmk's system Apache configuration sets the X-Forwarded-Proto/-Ssl headers "
-                "that tell the GUI about the SSL setup automatically. Only if "
-                "<tt>APACHE_FORWARDED_HEADERS</tt> is set to <tt>manual</tt> (e.g. because "
-                "another proxy or load balancer terminates TLS in front of this Apache) do you "
-                "have to set them yourself in the system Apache configuration."
+                "If your system Apache terminates TLS itself, or sits behind a proxy or load "
+                "balancer that does, the 'Apache X-Forwarded-Proto/-Ssl headers' test covers "
+                "whether the Checkmk GUI is correctly told about it."
             )
         )
 
@@ -469,6 +468,109 @@ class ACTestHTTPSecured(ACTest):
             yield ACSingleResult(
                 state=ACResultState.WARN,
                 text=_("Site is using plain HTTP. Consider enabling HTTPS."),
+                site_id=site_id,
+            )
+
+
+_APACHE_FORWARDED_HEADERS_SEARCH_DIRS = (
+    Path("/etc/apache2"),
+    Path("/etc/httpd"),
+)
+
+
+def _manual_forwarded_headers_files(search_dirs: Iterable[Path]) -> list[Path]:
+    """Best-effort scan of well-known system Apache config locations for a manually configured
+    RequestHeader for X-Forwarded-Proto/X-Forwarded-Ssl. An admin who put it somewhere else, or
+    behind a variable/include Apache can't be statically resolved, won't be caught."""
+    found = []
+    for root in search_dirs:
+        if not root.is_dir():
+            continue
+        for candidate in root.rglob("*.conf"):
+            try:
+                content = candidate.read_text()
+            except OSError:
+                continue
+            if "X-Forwarded-Proto" in content or "X-Forwarded-Ssl" in content:
+                found.append(candidate)
+    return found
+
+
+class ACTestApacheForwardedHeaders(ACTest):
+    def __init__(
+        self,
+        omd_root: Path | None = None,
+        search_dirs: Iterable[Path] | None = None,
+    ) -> None:
+        self._omd_root = omd_root or cmk.utils.paths.omd_root
+        self._search_dirs = (
+            _APACHE_FORWARDED_HEADERS_SEARCH_DIRS if search_dirs is None else list(search_dirs)
+        )
+
+    def category(self) -> str:
+        return ACTestCategories.security
+
+    def title(self) -> str:
+        return _("Apache X-Forwarded-Proto/-Ssl headers")
+
+    def help(self) -> str:
+        return (
+            _(
+                "Checkmk's OAuth and MCP endpoints need to know whether the original client "
+                "request arrived via HTTP or HTTPS. By default (<tt>APACHE_FORWARDED_HEADERS "
+                "auto</tt>), the system Apache sets the X-Forwarded-Proto and X-Forwarded-Ssl "
+                "headers for the site itself, based on what it sees on its own connection."
+            )
+            + " "
+            + _(
+                "If your system Apache sits behind another proxy or load balancer that "
+                "terminates TLS and forwards plain HTTP to it, that automatic value would be "
+                "wrong. Run <tt>omd config set APACHE_FORWARDED_HEADERS manual</tt> for the "
+                "site and set the headers yourself in the system Apache configuration instead, "
+                'e.g. <tt>RequestHeader set X-Forwarded-Proto "https"</tt>.'
+            )
+        )
+
+    def is_relevant(self) -> bool:
+        return True
+
+    def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        mode = get_omd_config(self._omd_root)["CONFIG_APACHE_FORWARDED_HEADERS"]
+        manual_files = _manual_forwarded_headers_files(self._search_dirs)
+
+        if mode == "auto":
+            if manual_files:
+                yield ACSingleResult(
+                    state=ACResultState.WARN,
+                    text=_(
+                        "Found a RequestHeader for X-Forwarded-Proto/X-Forwarded-Ssl in "
+                        "%(files)s. Checkmk already sets this header itself; remove the manual "
+                        "entry to avoid duplicate or conflicting configuration, or set "
+                        "APACHE_FORWARDED_HEADERS to 'manual' if this Apache needs it."
+                    )
+                    % {"files": ", ".join(str(path) for path in manual_files)},
+                    site_id=site_id,
+                )
+            else:
+                yield ACSingleResult(
+                    state=ACResultState.OK,
+                    text=_("X-Forwarded-Proto/-Ssl are set automatically"),
+                    site_id=site_id,
+                )
+        elif manual_files:
+            yield ACSingleResult(
+                state=ACResultState.OK,
+                text=_("X-Forwarded-Proto/-Ssl are configured manually, as configured"),
+                site_id=site_id,
+            )
+        else:
+            yield ACSingleResult(
+                state=ACResultState.WARN,
+                text=_(
+                    "APACHE_FORWARDED_HEADERS is set to 'manual', but no matching "
+                    "RequestHeader configuration was found in the usual system Apache "
+                    "locations. Is this intentional?"
+                ),
                 site_id=site_id,
             )
 

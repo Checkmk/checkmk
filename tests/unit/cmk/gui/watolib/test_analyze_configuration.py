@@ -25,6 +25,7 @@ from cmk.utils import paths
 
 def test_registered_ac_tests() -> None:
     expected_ac_tests = [
+        "ACTestApacheForwardedHeaders",
         "ACTestApacheNumberOfProcesses",
         "ACTestApacheProcessUsage",
         "ACTestAutomationUserSecret",

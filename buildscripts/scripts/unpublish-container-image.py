@@ -134,7 +134,11 @@ def delete_image_from_registry(
         previous_release_image = DockerImage(image.image_name, tag=previous_release_tag)
         branch_latest_tag = get_branch_specific_tag(previous_release_tag, "latest")
 
-        current_image_tags = registry.get_all_image_tags(image)
+        # The registry reports the tags fully qualified (e.g. "checkmk/check-mk-pro:2.3.0-latest"),
+        # the tags we want to move are bare ("2.3.0-latest").
+        current_image_tags = {
+            DockerImage.from_str(fqin).tag for fqin in registry.get_all_image_tags(image)
+        }
 
         image_is_branch_latest = branch_latest_tag in current_image_tags
         if image_is_branch_latest:
@@ -162,9 +166,7 @@ def delete_image_from_registry(
         else:
             print("Tag 'latest' does not point to this image, not moving this tag.")
 
-        branch_specific_daily_tag = get_branch_specific_tag(
-            previous_release_image.full_name(), "daily"
-        )
+        branch_specific_daily_tag = get_branch_specific_tag(previous_release_tag, "daily")
         image_is_branch_daily = branch_specific_daily_tag in current_image_tags
         if image_is_branch_daily:
             print(

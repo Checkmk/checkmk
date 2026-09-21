@@ -23,7 +23,6 @@ from cmk.gui.data_source import (
     RowTable,
 )
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request
 from cmk.gui.http import request as active_request
 from cmk.gui.i18n import _, _l, ungettext
@@ -382,13 +381,6 @@ def command_delete_crash_report_affected(
     )
 
 
-def command_delete_crash_report_render(what: str) -> None:
-    html.open_div(class_="group")
-    html.button("_delete_crash_reports", _("Delete"), cssclass="hot")
-    html.button("_cancel", _("Cancel"))
-    html.close_div()
-
-
 def command_delete_crash_report_action(
     command: Command,
     cmdtag: Literal["HOST", "SVC"],
@@ -411,7 +403,8 @@ CommandDeleteCrashReports = Command(
     permission=PermissionActionDeleteCrashReport,
     group=CommandGroupVarious,
     tables=["crash"],
-    render=command_delete_crash_report_render,
+    show_command_form=False,
+    render=lambda _unused: None,
     action=command_delete_crash_report_action,
     affected_output_cb=command_delete_crash_report_affected,
 )

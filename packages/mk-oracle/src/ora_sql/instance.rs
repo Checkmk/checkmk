@@ -84,6 +84,33 @@ impl OracleConfig {
     }
 }
 
+fn resolve_targets(ora_sql: &config::ora_sql::Config, environment: &Env) -> Vec<ClosedSpot> {
+    let all_raw = calc_all_spots(vec![ora_sql.endpoint()], ora_sql.instances());
+    let all_raw = filter_spots(all_raw, ora_sql.discovery());
+    let local_instances = get_local_instances().unwrap_or_else(|e| {
+        log::warn!("Cannot determine the local instances: {e}");
+        Vec::new()
+    });
+    filter_spots_by_oracle_home(all_raw, environment, &local_instances)
+}
+
+fn ensure_wallet_environment(
+    ora_sql: &config::ora_sql::Config,
+    targets: &[ClosedSpot],
+) -> Result<()> {
+    if ora_sql.conn().tns_admin().is_some() {
+        return Ok(());
+    }
+    let uses_wallet = ora_sql.auth().auth_type() == &AuthType::Wallet
+        || targets
+            .iter()
+            .any(|spot| spot.target().connection_auth().auth_type == AuthType::Wallet);
+    if !uses_wallet {
+        return Ok(());
+    }
+    setup_wallet_environment(None).context("Failed to setup wallet environment")
+}
+
 /// Generate data as defined by config
 /// Consists from two parts: instance entries + sections for every instance
 pub async fn generate_data(
@@ -99,30 +126,8 @@ pub async fn generate_data(
         // TODO: customize instances
         // TODO: resulting in the list of endpoints
 
-        let all_raw = calc_all_spots(vec![ora_sql.endpoint()], ora_sql.instances());
-        let all_raw = filter_spots(all_raw, ora_sql.discovery());
-        let local_instances = get_local_instances().unwrap_or_else(|e| {
-            log::warn!("Cannot determine the local instances: {e}");
-            Vec::new()
-        });
-
-        let all = filter_spots_by_oracle_home(all_raw, environment, &local_instances);
-
-        // Set up wallet environment (creates sqlnet.ora with wallet location)
-        // Only if tns_admin is NOT explicitly set in config.
-        // The auth type is asked per spot: an ASM instance may use wallet auth
-        // (`asm_type`) while the regular credentials are standard, and vice versa.
-        let tns_admin_explicitly_set = ora_sql.conn().tns_admin().is_some();
-        let uses_wallet = ora_sql.auth().auth_type() == &AuthType::Wallet
-            || all
-                .iter()
-                .any(|spot| spot.target().connection_auth().auth_type == AuthType::Wallet);
-        if uses_wallet && !tns_admin_explicitly_set {
-            if let Err(e) = setup_wallet_environment(None) {
-                log::error!("Failed to setup wallet environment: {}", e);
-                return Err(e).context("Failed to setup wallet environment");
-            }
-        }
+        let all = resolve_targets(ora_sql, environment);
+        ensure_wallet_environment(ora_sql, &all).inspect_err(|e| log::error!("{e:#}"))?;
 
         let global = if environment.disable_caching() {
             None

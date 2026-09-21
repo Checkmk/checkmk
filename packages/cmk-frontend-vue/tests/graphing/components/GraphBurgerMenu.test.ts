@@ -141,6 +141,23 @@ test('constrains the dropdown height to the remaining viewport space when scroll
   expect(dropdown).toHaveStyle({ maxHeight: '360px' })
 })
 
+test('flips the dropdown above the trigger when the room below is too cramped', async () => {
+  vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(500)
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+    top: 400,
+    bottom: 480
+  } as DOMRect)
+
+  render(GraphBurgerMenu, { props: { groups: GROUPS, scrollable: true, ariaLabel: ARIA_LABEL } })
+  await fireEvent.click(screen.getByRole('button', { name: ARIA_LABEL }))
+
+  const dropdown = screen
+    .getByText('Add to dashboard')
+    .closest('.graphing-graph-burger-menu__dropdown')
+  expect(dropdown).toHaveClass('graphing-graph-burger-menu__dropdown_flipped')
+  expect(dropdown).toHaveStyle({ maxHeight: '360px' })
+})
+
 test('does not constrain the dropdown height when scrollable is disabled', async () => {
   render(GraphBurgerMenu, { props: { groups: GROUPS, scrollable: false, ariaLabel: ARIA_LABEL } })
   await fireEvent.click(screen.getByRole('button', { name: ARIA_LABEL }))

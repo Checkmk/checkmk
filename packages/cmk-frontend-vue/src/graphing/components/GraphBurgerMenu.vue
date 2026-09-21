@@ -28,7 +28,11 @@ const emit = defineEmits<{ doAction: [onClick: BurgerMenuCallable] }>()
 const isOpen = ref(false)
 const containerRef = ref<HTMLElement | null>(null)
 const triggerRef = ref<HTMLButtonElement | null>(null)
-const dropdownMaxHeight = ref<number | null>(null)
+
+// If the available vertical space is below this min height the dropdown flips to upward rendering
+const MIN_DROPDOWN_HEIGHT = 200
+const flippedUp = ref(false)
+const dropdownMaxHeight = ref<string | undefined>(undefined)
 
 function getItemButtons(): HTMLButtonElement[] {
   return containerRef.value
@@ -100,12 +104,20 @@ function onDropdownKeydown(e: KeyboardEvent) {
 }
 
 function updateDropdownMaxHeight() {
-  if (!scrollable || !containerRef.value) {
-    dropdownMaxHeight.value = null
+  if (!containerRef.value) {
     return
   }
-  dropdownMaxHeight.value =
-    window.innerHeight - containerRef.value.getBoundingClientRect().bottom - BOTTOM_SCREEN_MARGIN
+  const anchorRect = containerRef.value.getBoundingClientRect()
+  const spaceBelow = window.innerHeight - anchorRect.bottom
+  const spaceAbove = anchorRect.top
+  flippedUp.value = spaceBelow < MIN_DROPDOWN_HEIGHT && spaceAbove > spaceBelow
+
+  if (!scrollable) {
+    dropdownMaxHeight.value = undefined
+    return
+  }
+  const available = (flippedUp.value ? spaceAbove : spaceBelow) - BOTTOM_SCREEN_MARGIN
+  dropdownMaxHeight.value = `${Math.max(MIN_DROPDOWN_HEIGHT, available)}px`
 }
 
 watch(isOpen, (open) => {
@@ -139,7 +151,10 @@ const isEmpty = computed(() => !groups?.length)
     <button
       ref="triggerRef"
       class="graphing-graph-burger-menu__trigger"
-      :class="{ 'graphing-graph-burger-menu__trigger_open': isOpen }"
+      :class="{
+        'graphing-graph-burger-menu__trigger_open': isOpen,
+        'graphing-graph-burger-menu__trigger_open_flipped': isOpen && flippedUp
+      }"
       :aria-expanded="isOpen"
       :aria-haspopup="true"
       :aria-label="ariaLabel"
@@ -156,12 +171,11 @@ const isEmpty = computed(() => !groups?.length)
     <div
       v-if="isOpen"
       class="graphing-graph-burger-menu__dropdown"
-      :class="{ 'graphing-graph-burger-menu__dropdown_scrollable': scrollable }"
-      :style="
-        scrollable && dropdownMaxHeight !== null
-          ? { maxHeight: `${dropdownMaxHeight}px` }
-          : undefined
-      "
+      :class="{
+        'graphing-graph-burger-menu__dropdown_scrollable': scrollable,
+        'graphing-graph-burger-menu__dropdown_flipped': flippedUp
+      }"
+      :style="{ maxHeight: dropdownMaxHeight }"
       role="menu"
       @keydown="onDropdownKeydown"
     >
@@ -236,6 +250,10 @@ const isEmpty = computed(() => !groups?.length)
   border-radius: var(--border-radius) var(--border-radius) 0 var(--border-radius);
 }
 
+.graphing-graph-burger-menu__trigger_open_flipped {
+  border-radius: var(--border-radius) 0 var(--border-radius) var(--border-radius);
+}
+
 .graphing-graph-burger-menu__dropdown {
   position: absolute;
   top: calc(100% - 1px);
@@ -255,8 +273,38 @@ const isEmpty = computed(() => !groups?.length)
     0 0 0 1px rgb(0 0 0 / 6%);
 }
 
+.graphing-graph-burger-menu__dropdown_flipped {
+  top: auto;
+  bottom: calc(100% - 1px);
+  border-radius: var(--border-radius) var(--border-radius) 0 var(--border-radius);
+}
+
 .graphing-graph-burger-menu__dropdown_scrollable {
   overflow-y: auto;
+}
+
+/* Placed by the layout engine to handle scroll, resize and zoom without a JS listener. */
+@supports (anchor-name: --x) and (anchor-scope: all) {
+  .graphing-graph-burger-menu {
+    anchor-name: --graphing-graph-burger-menu-anchor;
+
+    /* Confine the anchor name so each menu tethers to its own trigger, not a single shared one. */
+    anchor-scope: --graphing-graph-burger-menu-anchor;
+  }
+
+  .graphing-graph-burger-menu__dropdown {
+    position: fixed;
+    position-anchor: --graphing-graph-burger-menu-anchor;
+    inset: auto;
+    /* -1px overlaps the trigger's bottom border, matching the static top offset. */
+    inset-block-start: calc(anchor(bottom) - 1px);
+    inset-inline-end: calc(anchor(right) + var(--spacing));
+    block-size: fit-content;
+  }
+
+  .graphing-graph-burger-menu__dropdown_flipped {
+    inset-block: auto calc(anchor(top) - 1px);
+  }
 }
 
 .graphing-graph-burger-menu__group {

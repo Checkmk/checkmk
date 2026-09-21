@@ -20,16 +20,18 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.groups_io import NothingOrChoices, PermittedPath
-from cmk.inventory.structured_data import (
-    filter_tree,
+from cmk.inventory.history import (
     HistoryArchivePath,
     HistoryDeltaPath,
     HistoryEntry,
     HistoryStore,
+    load_history,
+)
+from cmk.inventory.structured_data import (
+    filter_tree,
     ImmutableDeltaTree,
     ImmutableTree,
     InventoryStore,
-    load_history,
     merge_trees,
     parse_from_raw_status_data_tree,
     parse_visible_raw_path,

@@ -15,6 +15,7 @@ py_library(
     srcs = [
         "cmk/inventory/__init__.py",
         "cmk/inventory/cleanup.py",
+        "cmk/inventory/history.py",
         "cmk/inventory/paths.py",
         "cmk/inventory/structured_data.py",
         "cmk/inventory/transformation/__init__.py",

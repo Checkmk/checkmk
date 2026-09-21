@@ -28,8 +28,8 @@ from cmk.gui.pages import PageContext
 from cmk.gui.theme import Theme
 from cmk.gui.theme.current_theme import theme as gui_theme
 from cmk.gui.utils.user_errors import user_errors
+from cmk.inventory.history import HistoryStore
 from cmk.inventory.structured_data import (
-    HistoryStore,
     ImmutableAttributes,
     ImmutableDeltaAttributes,
     ImmutableDeltaTable,

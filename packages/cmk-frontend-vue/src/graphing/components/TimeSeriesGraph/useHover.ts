@@ -162,8 +162,8 @@ export function useHover(options: HoverOptions) {
         return sampleWithoutValue
       }
       const drawnTopPixel = options.yScale(band.upper)
-      const drawnBottomPixel = options.yScale(band.lower)
-      hitDistances.push(metricHitDistance(cursorY, drawnTopPixel, drawnBottomPixel, filled))
+      const drawnBottomPixel = filled ? options.yScale(band.lower) : drawnTopPixel
+      hitDistances.push(metricHitDistance(cursorY, drawnTopPixel, drawnBottomPixel))
       const { formatter } = userSpecificUnit(metric.metadata.unit, 'celsius')
       return {
         ...sampleBase,

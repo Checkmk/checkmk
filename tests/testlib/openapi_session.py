@@ -2439,6 +2439,26 @@ class GraphAPI(BaseAPI):
             },
         )
 
+    def get_pin(self) -> int | None:
+        """The time pinned for the acting user, None while no point is pinned."""
+        response = self.session.get(
+            "domain-types/graph/actions/get_pin/invoke", api_version=APIVersion.INTERNAL
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        pin_time = response.json()["pin_time"]
+        return None if pin_time is None else int(pin_time)
+
+    def set_pin(self, pin_time: int | None) -> None:
+        """Pin `pin_time` for the acting user; None removes the pin."""
+        response = self.session.post(
+            "domain-types/graph/actions/set_pin/invoke",
+            api_version=APIVersion.INTERNAL,
+            json={"pin_time": pin_time},
+        )
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
 
 class AutocompleteAPI(BaseAPI):
     """The autocompleters backing the GUI's suggestion dropdowns."""

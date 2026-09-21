@@ -10,6 +10,7 @@
 Registered for discovery in ``tests/system/gui/conftest.py``.
 """
 
+import time
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from typing import Final, NamedTuple
@@ -155,6 +156,53 @@ def _as_admin_user(test_site: Site) -> Iterator[None]:
         yield
     finally:
         session.headers["Authorization"] = automation_auth
+
+
+class UserGraphPin:
+    """The graph pin the site stores for the user the browser logs in as.
+
+    Read and written as that user: the pin is kept per user, and the site's own session acts
+    as `AUTOMATION_USER`, whose pin the page never shows.
+    """
+
+    def __init__(self, site: Site) -> None:
+        self._site = site
+
+    def read(self) -> int | None:
+        with _as_admin_user(self._site):
+            return self._site.openapi.graph.get_pin()
+
+    def write(self, pin_time: int | None) -> None:
+        with _as_admin_user(self._site):
+            self._site.openapi.graph.set_pin(pin_time)
+
+
+@pytest.fixture(name="admin_graph_pin")
+def fixture_admin_graph_pin(test_site: Site) -> Iterator[UserGraphPin]:
+    """The user's graph pin, cleared before the test and again after it.
+
+    Cleared up front as well: a page reads the pin once, as it opens, and hides its "Add pin"
+    handle over a point that is already pinned. A pin left behind by an aborted run would
+    otherwise decide what the next test gets to click.
+    """
+    graph_pin = UserGraphPin(test_site)
+    graph_pin.write(None)
+    try:
+        yield graph_pin
+    finally:
+        graph_pin.write(None)
+
+
+# Inside every window the service page can open on: its presets all end at the present.
+_STORED_PIN_AGE_SECONDS: Final = 300
+
+
+@pytest.fixture(name="stored_graph_pin")
+def fixture_stored_graph_pin(admin_graph_pin: UserGraphPin) -> int:
+    """A pin stored for the user shortly before the present, ahead of any page being opened."""
+    pin_time = int(time.time()) - _STORED_PIN_AGE_SECONDS
+    admin_graph_pin.write(pin_time)
+    return pin_time
 
 
 @contextmanager

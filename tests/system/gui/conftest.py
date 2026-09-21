@@ -24,6 +24,7 @@ from tests.system.gui.testlib.playwright.helpers import CmkCredentials
 from tests.system.gui.testlib.playwright.plugin import PageGetter
 from tests.system.gui.testlib.playwright.pom.customize.edit_dashboard import EditDashboards
 from tests.system.gui.testlib.playwright.pom.graphing.fixtures import (
+    fixture_admin_graph_pin,
     fixture_combined_graphs_page,
     fixture_combined_graphs_page_all_services,
     fixture_custom_graph_for_editing,
@@ -41,6 +42,7 @@ from tests.system.gui.testlib.playwright.pom.graphing.fixtures import (
     fixture_scatterplot_widget,
     fixture_service_graphs,
     fixture_service_graphs_hover_popup,
+    fixture_stored_graph_pin,
 )
 from tests.system.gui.testlib.playwright.pom.login import LoginPage
 from tests.system.gui.testlib.playwright.pom.monitor.custom_dashboard import CustomDashboard
@@ -72,6 +74,7 @@ _unique_faker = Faker().unique
 # these lists only keep the imports from being flagged as unused.
 setup_fixtures = [notification_user]
 graphing_fixtures = [
+    fixture_admin_graph_pin,
     fixture_combined_graphs_page,
     fixture_combined_graphs_page_all_services,
     fixture_custom_graph_for_editing,
@@ -89,6 +92,7 @@ graphing_fixtures = [
     fixture_scatterplot_widget,
     fixture_service_graphs,
     fixture_service_graphs_hover_popup,
+    fixture_stored_graph_pin,
 ]
 
 

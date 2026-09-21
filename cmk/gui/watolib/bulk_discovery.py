@@ -44,7 +44,7 @@ from cmk.gui.i18n import _
 from cmk.gui.job_scheduler_client import StartupError
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import AnnotatedUserId
+from cmk.gui.type_defs import AnnotatedUserId, CustomHostAttrSpec
 from cmk.gui.utils.misc import gen_id
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
@@ -74,6 +74,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_tree,
     FolderTree,
     Host,
+    HostsAndFoldersConfig,
 )
 from cmk.gui.watolib.pending_changes import (
     Change,
@@ -83,6 +84,7 @@ from cmk.gui.watolib.pending_changes import (
     PendingChangesStore,
 )
 from cmk.livestatus_client import SiteConfigurations
+from cmk.ruleset_matcher.tags import TagConfig, TagConfigSpec
 from cmk.rulesets.v1 import form_specs as fs
 from cmk.rulesets.v1 import Label, Title
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
@@ -444,6 +446,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         activation_site_configs: SiteConfigurations,
         local_site: SiteId,
         acting_user: UserId | None,
+        tree: FolderTree,
     ) -> None:
         if not tasks:
             job_interface.send_result_message(
@@ -459,6 +462,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         ):
             job_interface.send_progress_update(_("Acquired lock"))
             self._do_execute(
+                tree,
                 mode,
                 do_scan,
                 ignore_errors,
@@ -474,6 +478,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
 
     def _do_execute(
         self,
+        tree: FolderTree,
         mode: DiscoverySettings,
         do_scan: DoFullScan,
         ignore_errors: IgnoreErrors,
@@ -510,7 +515,14 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         result_queue: mp.Queue[_DiscoveryTaskResult | None] = mp.Queue()
         result_processing_thread = threading.Thread(
             target=copy_request_context(self._process_discovery_results),
-            args=(result_queue, len(tasks_by_site), job_interface, pprint_value, pending_changes),
+            args=(
+                tree,
+                result_queue,
+                len(tasks_by_site),
+                job_interface,
+                pprint_value,
+                pending_changes,
+            ),
         )
 
         def run(site_tasks: list[DiscoveryTask]) -> None:
@@ -640,6 +652,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
 
     def _process_discovery_results(
         self,
+        tree: FolderTree,
         results: mp.Queue[_DiscoveryTaskResult | None],
         n_task_threads: int,
         job_interface: BackgroundProcessInterface,
@@ -661,6 +674,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
             elif result.result:
                 try:
                     self._process_discovery_result(
+                        tree,
                         result.task,
                         result.result,
                         job_interface,
@@ -676,6 +690,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
 
     def _process_discovery_result(
         self,
+        tree: FolderTree,
         task: DiscoveryTask,
         response: AutomationDiscoveryResult,
         job_interface: BackgroundProcessInterface,
@@ -686,7 +701,6 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         # The following code updates the host config. The progress from loading the Setup folder
         # until it has been saved needs to be locked.
         with store.lock_checkmk_configuration(configuration_lockfile):
-            tree = folder_tree()
             tree.invalidate_caches()
             folder = tree.folder(task.folder_path)
             hosts = folder.hosts()
@@ -795,6 +809,10 @@ def start_bulk_discovery(
     debug: bool,
     use_git: bool,
     activation_site_configs: SiteConfigurations,
+    site_configs: SiteConfigurations,
+    wato_hide_folders_without_read_permissions: bool,
+    wato_host_attrs: Sequence[CustomHostAttrSpec],
+    tags: TagConfigSpec,
     local_site: SiteId,
     acting_user: UserId | None,
 ) -> result.Result[None, AlreadyRunningError | StartupError]:
@@ -840,6 +858,10 @@ def start_bulk_discovery(
                 activation_site_configs=activation_site_configs,
                 local_site=local_site,
                 acting_user=acting_user,
+                site_configs=site_configs,
+                wato_hide_folders_without_read_permissions=wato_hide_folders_without_read_permissions,
+                wato_host_attrs=wato_host_attrs,
+                tags=tags,
             ),
         ),
         InitialStatusArgs(
@@ -863,11 +885,17 @@ class BulkDiscoveryJobArgs(BaseModel, frozen=True):
     activation_site_configs: SiteConfigurations
     local_site: SiteId
     acting_user: AnnotatedUserId | None
+    site_configs: SiteConfigurations
+    wato_hide_folders_without_read_permissions: bool
+    wato_host_attrs: Sequence[CustomHostAttrSpec]
+    tags: TagConfigSpec
 
 
 def bulk_discovery_job_entry_point(
     job_interface: BackgroundProcessInterface, args: BulkDiscoveryJobArgs
 ) -> None:
+    # The job acts on the configuration of the request that started it, so the tree is built
+    # from the values that request put into the job arguments.
     BulkDiscoveryBackgroundJob().do_execute(
         args.discovery_mode,
         args.do_full_scan,
@@ -881,6 +909,14 @@ def bulk_discovery_job_entry_point(
         activation_site_configs=args.activation_site_configs,
         local_site=args.local_site,
         acting_user=args.acting_user,
+        tree=FolderTree(
+            config=HostsAndFoldersConfig(
+                wato_hide_folders_without_read_permissions=args.wato_hide_folders_without_read_permissions,
+                wato_host_attrs=args.wato_host_attrs,
+                tags=TagConfig.from_config(args.tags),
+                sites=args.site_configs,
+            )
+        ),
     )
 
 

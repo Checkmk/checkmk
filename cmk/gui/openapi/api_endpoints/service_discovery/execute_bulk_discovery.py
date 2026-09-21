@@ -84,6 +84,10 @@ def execute_bulk_discovery_v1(
             activation_site_configs=activation_sites(api_context.config.sites),
             local_site=omd_site(),
             acting_user=user.id,
+            site_configs=api_context.config.sites,
+            wato_hide_folders_without_read_permissions=api_context.config.wato_hide_folders_without_read_permissions,
+            wato_host_attrs=api_context.config.wato_host_attrs,
+            tags=api_context.config.tags.get_dict_format(),
         )
     ).is_error():
         raise result.error

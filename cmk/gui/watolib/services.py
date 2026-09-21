@@ -69,7 +69,7 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.config_domain_name import (
     generate_hosts_to_update_settings,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import FolderTree, Host
 from cmk.gui.watolib.pending_changes import (
     Change,
     ChangeScope,
@@ -676,6 +676,7 @@ def perform_fix_all(
         tracer.span("perform_fix_all", attributes={"cmk.host_name": str(host.name())}),
     ):
         _perform_update_host_labels(
+            host.folder().tree,
             discovery_result.labels_by_host,
             automation_config=automation_config,
             debug=debug,
@@ -725,6 +726,7 @@ def perform_host_label_discovery(
     """Handle update host labels discovery action"""
     with _service_discovery_context(host, pprint_value=pprint_value):
         _perform_update_host_labels(
+            host.folder().tree,
             discovery_result.labels_by_host,
             automation_config=automation_config,
             debug=debug,
@@ -883,6 +885,7 @@ def initial_discovery_result(
 
 
 def _perform_update_host_labels(
+    tree: FolderTree,
     labels_by_nodes: Mapping[HostName, Sequence[HostLabel]],
     *,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
@@ -890,7 +893,7 @@ def _perform_update_host_labels(
     pending_changes: PendingChanges,
 ) -> None:
     for host_name, host_labels in labels_by_nodes.items():
-        if (host := folder_tree().host(host_name)) is None:
+        if (host := tree.host(host_name)) is None:
             raise ValueError(f"no such host: {host_name!r}")
 
         message = _("Updated discovered host labels of '%(host_name)s' with %(count)d labels") % {

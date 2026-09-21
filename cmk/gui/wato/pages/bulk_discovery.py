@@ -159,6 +159,10 @@ class ModeBulkDiscovery(WatoMode):
                     activation_site_configs=activation_sites(config.sites),
                     local_site=omd_site(),
                     acting_user=user.id,
+                    site_configs=config.sites,
+                    wato_hide_folders_without_read_permissions=config.wato_hide_folders_without_read_permissions,
+                    wato_host_attrs=config.wato_host_attrs,
+                    tags=config.tags.get_dict_format(),
                 )
             ).is_error():
                 raise result.error

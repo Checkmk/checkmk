@@ -60,7 +60,7 @@ export class EditorSession {
 
   async load(): Promise<void> {
     await this.runAction(_t('Loading failed'), async () => {
-      this.storeReceived(await this.service.load(this.scope, this.variable.name))
+      this.storeReceived(await this.service.load(this.variable.name))
     })
   }
 
@@ -70,9 +70,7 @@ export class EditorSession {
       return
     }
     await this.runAction(_t('Saving failed'), async () => {
-      this.storeReceived(
-        await this.service.save(this.scope, this.variable.name, value, received.etag)
-      )
+      this.storeReceived(await this.service.save(this.variable.name, value, received.etag))
       this.requestClose(this)
     })
   }
@@ -83,8 +81,8 @@ export class EditorSession {
       return
     }
     await this.runAction(_t('Resetting failed'), async () => {
-      await this.service.reset(this.scope, this.variable.name, received.etag)
-      this.storeReceived(await this.service.load(this.scope, this.variable.name))
+      await this.service.reset(this.variable.name, received.etag)
+      this.storeReceived(await this.service.load(this.variable.name))
       this.requestClose(this)
     })
   }

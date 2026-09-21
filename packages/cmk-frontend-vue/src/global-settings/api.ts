@@ -29,14 +29,9 @@ export interface ReceivedValue {
 }
 
 export interface GlobalSettingsService {
-  load(scope: GlobalSettingsScope, varname: string): Promise<ReceivedValue>
-  save(
-    scope: GlobalSettingsScope,
-    varname: string,
-    value: unknown,
-    etag: string
-  ): Promise<ReceivedValue>
-  reset(scope: GlobalSettingsScope, varname: string, etag: string): Promise<void>
+  load(varname: string): Promise<ReceivedValue>
+  save(varname: string, value: unknown, etag: string): Promise<ReceivedValue>
+  reset(varname: string, etag: string): Promise<void>
 }
 
 const CONTENT_TYPE_HEADER = { 'Content-Type': 'application/json' } as const
@@ -55,52 +50,72 @@ function toReceivedValue(result: {
   return { value: body.value, origin: body.origin, etag }
 }
 
-export const globalSettingsService: GlobalSettingsService = {
-  async load(scope, varname) {
-    if (scope.type === 'site') {
+function globalScopeService(): GlobalSettingsService {
+  return {
+    async load(varname) {
       return toReceivedValue(
-        await client.GET('/objects/site_connection/{site_id}/global_setting/{varname}', {
-          params: { path: { site_id: scope.site_id, varname } }
+        await client.GET('/objects/global_setting/{varname}', {
+          params: { path: { varname } }
         })
       )
-    }
-    return toReceivedValue(
-      await client.GET('/objects/global_setting/{varname}', { params: { path: { varname } } })
-    )
-  },
+    },
 
-  async save(scope, varname, value, etag) {
-    const header = { ...CONTENT_TYPE_HEADER, 'If-Match': etag }
-    if (scope.type === 'site') {
+    async save(varname, value, etag) {
       return toReceivedValue(
-        await client.PUT('/objects/site_connection/{site_id}/global_setting/{varname}', {
-          params: { path: { site_id: scope.site_id, varname }, header },
+        await client.PUT('/objects/global_setting/{varname}', {
+          params: { path: { varname }, header: { ...CONTENT_TYPE_HEADER, 'If-Match': etag } },
           body: { value }
         })
       )
-    }
-    return toReceivedValue(
-      await client.PUT('/objects/global_setting/{varname}', {
-        params: { path: { varname }, header },
-        body: { value }
-      })
-    )
-  },
+    },
 
-  async reset(scope, varname, etag) {
-    const header = { 'If-Match': etag }
-    if (scope.type === 'site') {
+    async reset(varname, etag) {
       unwrap(
-        await client.DELETE('/objects/site_connection/{site_id}/global_setting/{varname}', {
-          params: { path: { site_id: scope.site_id, varname }, header }
+        await client.DELETE('/objects/global_setting/{varname}', {
+          params: { path: { varname }, header: { 'If-Match': etag } }
         })
       )
-      return
     }
-    unwrap(
-      await client.DELETE('/objects/global_setting/{varname}', {
-        params: { path: { varname }, header }
-      })
-    )
+  }
+}
+
+function siteScopeService(siteId: string): GlobalSettingsService {
+  return {
+    async load(varname) {
+      return toReceivedValue(
+        await client.GET('/objects/site_connection/{site_id}/global_setting/{varname}', {
+          params: { path: { site_id: siteId, varname } }
+        })
+      )
+    },
+
+    async save(varname, value, etag) {
+      return toReceivedValue(
+        await client.PUT('/objects/site_connection/{site_id}/global_setting/{varname}', {
+          params: {
+            path: { site_id: siteId, varname },
+            header: { ...CONTENT_TYPE_HEADER, 'If-Match': etag }
+          },
+          body: { value }
+        })
+      )
+    },
+
+    async reset(varname, etag) {
+      unwrap(
+        await client.DELETE('/objects/site_connection/{site_id}/global_setting/{varname}', {
+          params: { path: { site_id: siteId, varname }, header: { 'If-Match': etag } }
+        })
+      )
+    }
+  }
+}
+
+export function createGlobalSettingsService(scope: GlobalSettingsScope): GlobalSettingsService {
+  switch (scope.type) {
+    case 'global':
+      return globalScopeService()
+    case 'site':
+      return siteScopeService(scope.site_id)
   }
 }

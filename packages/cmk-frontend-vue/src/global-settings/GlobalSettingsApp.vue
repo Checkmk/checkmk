@@ -18,7 +18,7 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useDebounceRef } from 'cmk-ui-library/lib/useDebounce'
 import { computed, onMounted, provide, ref, toRaw, watch } from 'vue'
 
-import { GLOBAL_SETTINGS_TOGGLE, globalSettingsService as service } from './api'
+import { GLOBAL_SETTINGS_TOGGLE, createGlobalSettingsService } from './api'
 import ExpandCollapseButtons from './components/ExpandCollapseButtons.vue'
 import GlobalSettingsEditor from './components/GlobalSettingsEditor.vue'
 import GlobalSettingsEmptyState from './components/GlobalSettingsEmptyState.vue'
@@ -31,6 +31,8 @@ import { applyReceived, describeError, useGlobalSettingsEditor } from './useGlob
 const { _t } = usei18n()
 
 const props = defineProps<GlobalSettingsApp>()
+
+const service = createGlobalSettingsService(props.scope)
 
 const SEARCH_URL_PARAM = 'search'
 const FILTER_URL_PARAM = 'filter'
@@ -138,7 +140,7 @@ async function toggleSetting(
   value: boolean
 ): Promise<TranslatedString | null> {
   try {
-    applyReceived(variable, await service.save(props.scope, variable.name, value, '*'))
+    applyReceived(variable, await service.save(variable.name, value, '*'))
     return null
   } catch (cause: unknown) {
     return describeError(cause, _t('Could not reach the server.'))

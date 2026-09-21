@@ -15,6 +15,7 @@ from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
     configvar_order,
 )
+from cmk.gui.watolib.passwords import password_change_effect_registry
 from cmk.utils import paths
 
 
@@ -52,6 +53,33 @@ def test_registered_config_domains() -> None:
 
     registered = sorted(config_domain_registry.keys())
     assert registered == sorted(expected_config_domains)
+
+
+def test_password_changes_reach_core_and_ai_control_plane() -> None:
+    edition = cmk_version.edition(paths.omd_root)
+    if edition not in {
+        cmk_version.Edition.PRO,
+        cmk_version.Edition.ULTIMATE,
+        cmk_version.Edition.ULTIMATEMT,
+    }:
+        pytest.skip("only Pro, Ultimate and Ultimate MT register password change effects")
+    otel = (
+        ["otel_collector"]
+        if edition in {cmk_version.Edition.ULTIMATE, cmk_version.Edition.ULTIMATEMT}
+        else []
+    )
+
+    affected = {
+        "add": [d.ident() for d in password_change_effect_registry.affected_domains_add],
+        "edit": [d.ident() for d in password_change_effect_registry.affected_domains_edit],
+        "delete": [d.ident() for d in password_change_effect_registry.affected_domains_delete],
+    }
+
+    assert affected == {
+        "add": ["check_mk", "ai-control-plane"],
+        "edit": ["check_mk", *otel, "ai-control-plane"],
+        "delete": ["check_mk", *otel, "ai-control-plane"],
+    }
 
 
 def test_registered_automation_commands() -> None:

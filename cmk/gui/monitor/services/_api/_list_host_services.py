@@ -339,6 +339,6 @@ ENDPOINT_LIST_HOST_SERVICES = VersionedEndpoint(
         )
     ),
     doc=EndpointDoc(family=MONITOR_SERVICES_FAMILY.name),
-    behavior=EndpointBehavior(skip_locking=True),
+    behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
     versions={APIVersion.INTERNAL: EndpointHandler(handler=list_services)},
 )

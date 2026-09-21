@@ -2,8 +2,11 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import json
+
 import pytest
 
+import cmk.utils.paths
 from cmk.gui.monitor.services._api._list_host_services import _handle_list_services
 from cmk.gui.monitor.services._models import (
     ServiceFilter,
@@ -13,6 +16,12 @@ from cmk.gui.monitor.services._models import (
     ServiceState,
 )
 from cmk.gui.openapi.utils import ProblemException
+from cmk.livestatus_client.testing import MockLiveStatusConnection
+from tests.testlib.unit.gui.setup_git_test_helper import (
+    init_setup_git_repo,
+    setup_git_commit_subjects,
+)
+from tests.testlib.unit.gui.web_test_app import SetConfig, WebTestAppForCMK
 
 from .testlib import get_fake_host_services_repository, KNOWN_HOSTNAME, ServiceFactory
 
@@ -164,3 +173,29 @@ def test_handle_list_services_host_not_found() -> None:
     services_repo = get_fake_host_services_repository(n_services=10)
     with pytest.raises(ProblemException, match="404"):
         _handle_list_services(services_repo, hostname="unknown-host", site_id=_SITE_ID)
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_list_host_services_does_not_commit_the_setup_git_repo(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+    set_config: SetConfig,
+) -> None:
+    config_dir = cmk.utils.paths.default_config_dir
+    init_setup_git_repo(config_dir)
+    mock_livestatus.set_sites(["NO_SITE"])
+    mock_livestatus.add_table("hosts", [{"name": "heute"}])
+    mock_livestatus.add_table("services", [])
+    mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = heute\nLimit: 1")
+    mock_livestatus.expect_query(["GET services"], match_type="loose")
+    mock_livestatus.expect_query(["GET services", "Stats: state >= 0"], match_type="loose")
+
+    with set_config(wato_use_git=True), mock_livestatus:
+        resp = aut_user_auth_wsgi_app.post(
+            "/NO_SITE/check_mk/api/internal/monitor/hosts/heute/services?site_id=NO_SITE",
+            params=json.dumps({}),
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+        )
+
+    assert resp.status_code == 200, resp.text
+    assert setup_git_commit_subjects(config_dir) == ["Initialized GIT for Checkmk"]

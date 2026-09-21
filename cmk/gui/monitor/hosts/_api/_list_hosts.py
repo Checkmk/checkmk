@@ -467,6 +467,6 @@ ENDPOINT_LIST_HOSTS = VersionedEndpoint(
         )
     ),
     doc=EndpointDoc(family=MONITOR_HOSTS_FAMILY.name),
-    behavior=EndpointBehavior(skip_locking=True),
+    behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
     versions={APIVersion.INTERNAL: EndpointHandler(handler=list_hosts)},
 )

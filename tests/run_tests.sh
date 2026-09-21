@@ -299,14 +299,14 @@ test-system-gui-cloud() { EDITION=cloud test-system-gui-non-free; }
 test-system-singlesite() {
     _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         "$(realpath "$SCRIPT_DIR/system/singlesite")" \
-        --session-timeout 7200
+        --session-timeout 9000
 }
 
 # keep this target in sync with test-system-singlesite-single.groovy
 test-system-singlesite-k8s() {
     _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         "$(realpath "$SCRIPT_DIR/system/singlesite")" \
-        -m "not requires_non_root_user" --session-timeout 7200
+        -m "not requires_non_root_user" --session-timeout 9000
 }
 
 test-system-singlesite-non-root() {

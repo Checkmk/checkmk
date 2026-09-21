@@ -390,7 +390,9 @@ class AllHostsExperimental(CmkPage):
 
     @property
     def row_limit(self) -> Locator:
-        return self.main_area.locator().get_by_role("combobox", name="Row limit")
+        # The visible "Show:" label (not "Row limit") is what gives the combobox its
+        # accessible name; see MonitoringLimitSelector.vue.
+        return self.main_area.locator().get_by_role("combobox", name="Show:")
 
     def set_row_limit(self, value: str) -> None:
         logger.info("Set the row limit to '%s'", value)

@@ -12,6 +12,13 @@ import pytest
 
 import cmk.ccc.store
 from cmk.ccc.hostaddress import HostName
+from cmk.inventory.serialization import (
+    deserialize_delta_tree,
+    deserialize_tree,
+    SDRawDeltaTree,
+    SDRawTree,
+    serialize_tree,
+)
 from cmk.inventory.store import (
     InventoryStore,
     make_meta,
@@ -22,16 +29,7 @@ from cmk.inventory.store import (
     SDMeta,
     SDMetaAndRawTree,
 )
-from cmk.inventory.structured_data import (
-    deserialize_delta_tree,
-    deserialize_tree,
-    MutableTree,
-    SDKey,
-    SDNodeName,
-    SDRawDeltaTree,
-    SDRawTree,
-    serialize_tree,
-)
+from cmk.inventory.structured_data import MutableTree, SDKey, SDNodeName
 
 from ._fixtures import gzipped_json, gzipped_repr, raw_tree
 

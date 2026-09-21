@@ -32,10 +32,13 @@ from cmk.checkengine.plugins import ParsedSectionName, SectionName
 from cmk.checkengine.sectionparser import SectionPlugin
 from cmk.checkengine.snmplib import SNMPRawData
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
-from cmk.inventory.structured_data import (
-    _MutableAttributes,
+from cmk.inventory.serialization import (
     _serialize_retention_interval,
     deserialize_tree,
+    serialize_tree,
+)
+from cmk.inventory.structured_data import (
+    _MutableAttributes,
     ImmutableAttributes,
     ImmutableTable,
     ImmutableTree,
@@ -44,7 +47,6 @@ from cmk.inventory.structured_data import (
     SDKey,
     SDNodeName,
     SDRowIdent,
-    serialize_tree,
 )
 from cmk.utils.everythingtype import EVERYTHING
 

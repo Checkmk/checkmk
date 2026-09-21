@@ -13,7 +13,7 @@ from collections import Counter
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import auto, Enum
-from typing import Literal, NewType, override, Self, TypedDict, TypeIs
+from typing import Literal, NewType, override, Self, TypedDict
 
 # TODO Cleanup path in utils, base, gui, find ONE place (type defs or similar)
 # TODO filter table rows?
@@ -36,40 +36,6 @@ SDPath = tuple[SDNodeName, ...]
 SDKey = NewType("SDKey", str)
 SDValue = int | float | str | bool | None
 SDRowIdent = tuple[SDValue, ...]
-
-
-class SDRawAttributes(TypedDict, total=False):
-    Pairs: Mapping[SDKey, SDValue]
-    Retentions: Mapping[SDKey, tuple[int, int, int, Literal["previous", "current"]]]
-
-
-class SDRawTable(TypedDict, total=False):
-    KeyColumns: Sequence[SDKey]
-    Rows: Sequence[Mapping[SDKey, SDValue]]
-    Retentions: Mapping[
-        SDRowIdent, Mapping[SDKey, tuple[int, int, int, Literal["previous", "current"]]]
-    ]
-
-
-class SDRawTree(TypedDict):
-    Attributes: SDRawAttributes
-    Table: SDRawTable
-    Nodes: Mapping[SDNodeName, SDRawTree]
-
-
-class SDRawDeltaAttributes(TypedDict, total=False):
-    Pairs: Mapping[SDKey, tuple[SDValue, SDValue]]
-
-
-class SDRawDeltaTable(TypedDict, total=False):
-    KeyColumns: Sequence[SDKey]
-    Rows: Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]]
-
-
-class SDRawDeltaTree(TypedDict):
-    Attributes: SDRawDeltaAttributes
-    Table: SDRawDeltaTable
-    Nodes: Mapping[SDNodeName, SDRawDeltaTree]
 
 
 class _RawIntervalFromConfigMandatory(TypedDict):
@@ -191,7 +157,7 @@ def parse_internal_raw_path(raw: str) -> InventoryPath:
 #   .--helper--------------------------------------------------------------.
 
 
-def _make_row_ident(key_columns: Sequence[SDKey], row: Mapping[SDKey, SDValue]) -> SDRowIdent:
+def make_row_ident(key_columns: Sequence[SDKey], row: Mapping[SDKey, SDValue]) -> SDRowIdent:
     return tuple(row[k] for k in key_columns if k in row)
 
 
@@ -352,7 +318,7 @@ class _MutableTable:
         if rows:
             self._add_key_columns(key_columns)
         for row in rows:
-            self._add_row(_make_row_ident(self.key_columns, row), row)
+            self._add_row(make_row_ident(self.key_columns, row), row)
 
     def update(
         self,
@@ -1254,7 +1220,7 @@ def _merge_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableTable
     key_columns = sorted(set(left.key_columns).intersection(right.key_columns))
     rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
     for row in list(left.rows_by_ident.values()) + list(right.rows_by_ident.values()):
-        rows_by_ident.setdefault(_make_row_ident(key_columns, row), {}).update(row)
+        rows_by_ident.setdefault(make_row_ident(key_columns, row), {}).update(row)
 
     return ImmutableTable(
         key_columns=key_columns,
@@ -1418,306 +1384,3 @@ def compare_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableDeltaTr
         table=_compare_tables(left.table, right.table),
         nodes_by_name=nodes,
     )
-
-
-# .
-#   .--de/serialization----------------------------------------------------.
-
-
-def _serialize_retention_interval(
-    retention_interval: RetentionInterval,
-) -> tuple[int, int, int, Literal["previous", "current"]]:
-    return (
-        retention_interval.cached_at,
-        retention_interval.cache_interval,
-        retention_interval.retention_interval,
-        retention_interval.source,
-    )
-
-
-def _serialize_attributes(attributes: _MutableAttributes | ImmutableAttributes) -> SDRawAttributes:
-    raw_attributes: SDRawAttributes = {}
-    if attributes.pairs:
-        raw_attributes["Pairs"] = attributes.pairs
-    if attributes.retentions:
-        raw_attributes["Retentions"] = {
-            k: _serialize_retention_interval(v) for k, v in attributes.retentions.items()
-        }
-    return raw_attributes
-
-
-def _serialize_table(table: _MutableTable | ImmutableTable) -> SDRawTable:
-    raw_table: SDRawTable = {}
-    if table.rows_by_ident:
-        raw_table.update(
-            {
-                "KeyColumns": table.key_columns,
-                "Rows": list(table.rows_by_ident.values()),
-            }
-        )
-    if table.retentions:
-        raw_table["Retentions"] = {
-            i: {k: _serialize_retention_interval(v) for k, v in ri.items()}
-            for i, ri in table.retentions.items()
-        }
-    return raw_table
-
-
-def serialize_tree(tree: MutableTree | ImmutableTree) -> SDRawTree:
-    return {
-        "Attributes": _serialize_attributes(tree.attributes),
-        "Table": _serialize_table(tree.table),
-        "Nodes": {name: serialize_tree(node) for name, node in tree.nodes_by_name.items() if node},
-    }
-
-
-def _deserialize_legacy_attributes(raw_pairs: Mapping[SDKey, SDValue]) -> ImmutableAttributes:
-    return ImmutableAttributes(pairs=raw_pairs)
-
-
-def _deserialize_legacy_table(raw_rows: Sequence[Mapping[SDKey, SDValue]]) -> ImmutableTable:
-    key_columns = sorted({k for r in raw_rows for k in r})
-    rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
-    for row in raw_rows:
-        rows_by_ident.setdefault(_make_row_ident(key_columns, row), {}).update(row)
-
-    return ImmutableTable(key_columns=key_columns, rows_by_ident=rows_by_ident)
-
-
-def _is_sd_value(value: object) -> TypeIs[SDValue]:
-    return value is None or isinstance(value, int | float | str | bool)
-
-
-def _parse_legacy_row(raw_row: Mapping[str, object]) -> Mapping[SDKey, SDValue]:
-    return {SDKey(key): value for key, value in raw_row.items() if _is_sd_value(value)}
-
-
-def _deserialize_legacy_tree(
-    path: SDPath,
-    raw_tree: Mapping[str, object],
-    raw_rows: Sequence[Mapping[SDKey, SDValue]] | None = None,
-) -> ImmutableTree:
-    raw_pairs: dict[SDKey, SDValue] = {}
-    raw_tables: dict[SDNodeName, list[Mapping[SDKey, SDValue]]] = {}
-    raw_nodes: dict[SDNodeName, dict[str, object]] = {}
-
-    for key, value in raw_tree.items():
-        if isinstance(value, dict):
-            if not value:
-                continue
-            raw_nodes.setdefault(SDNodeName(key), value)
-
-        elif isinstance(value, list):
-            if not value:
-                continue
-
-            if all(_is_sd_value(v) for v in value):
-                if w := ", ".join(str(v) for v in value if v):
-                    raw_pairs.setdefault(SDKey(key), w)
-                continue
-
-            if all(not isinstance(v, list | dict) for row in value for v in row.values()):
-                # Either we get:
-                #   [
-                #       {"column1": "value 11", "column2": "value 12",...},
-                #       {"column1": "value 11", "column2": "value 12",...},
-                #       ...
-                #   ]
-                # Or:
-                #   [
-                #       {"attr": "attr1", "table": [...], "node": {...}, "idx-node": [...]},
-                #       ...
-                #   ]
-                raw_tables.setdefault(SDNodeName(key), [_parse_legacy_row(r) for r in value])
-                continue
-
-            for idx, entry in enumerate(value):
-                raw_nodes.setdefault(SDNodeName(key), {}).setdefault(str(idx), entry)
-
-        elif _is_sd_value(value):
-            raw_pairs.setdefault(SDKey(key), value)
-
-        else:
-            raise TypeError(value)
-
-    return ImmutableTree(
-        path=path,
-        attributes=_deserialize_legacy_attributes(raw_pairs),
-        table=_deserialize_legacy_table(raw_rows) if raw_rows else ImmutableTable(),
-        nodes_by_name={
-            **{
-                name: _deserialize_legacy_tree(
-                    path + (name,),
-                    raw_node,
-                    raw_tables.get(name),
-                )
-                for name, raw_node in raw_nodes.items()
-            },
-            **{
-                name: ImmutableTree(
-                    path=path + (name,),
-                    table=_deserialize_legacy_table(raw_rows),
-                )
-                for name in set(raw_tables) - set(raw_nodes)
-                if (raw_rows := raw_tables[name])
-            },
-        },
-    )
-
-
-def _deserialize_retention_interval(
-    raw_retention_interval: tuple[int, int, int]
-    | tuple[int, int, int, Literal["previous", "current"]],
-) -> RetentionInterval:
-    return (
-        RetentionInterval(*raw_retention_interval)
-        if len(raw_retention_interval) == 4
-        else RetentionInterval(*raw_retention_interval[:3], "current")
-    )
-
-
-def _deserialize_attributes(raw_attributes: SDRawAttributes) -> ImmutableAttributes:
-    return ImmutableAttributes(
-        pairs=raw_attributes.get("Pairs", {}),
-        retentions={
-            key: _deserialize_retention_interval(raw_retention_interval)
-            for key, raw_retention_interval in raw_attributes.get("Retentions", {}).items()
-        },
-    )
-
-
-def _deserialize_table(raw_table: SDRawTable) -> ImmutableTable:
-    rows = raw_table.get("Rows", [])
-    key_columns = raw_table.get("KeyColumns", [])
-
-    rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
-    for row in rows:
-        rows_by_ident.setdefault(_make_row_ident(key_columns, row), {}).update(row)
-
-    return ImmutableTable(
-        key_columns=key_columns,
-        rows_by_ident=rows_by_ident,
-        retentions={
-            ident: {
-                key: _deserialize_retention_interval(raw_retention_interval)
-                for key, raw_retention_interval in raw_intervals_by_key.items()
-            }
-            for ident, raw_intervals_by_key in raw_table.get("Retentions", {}).items()
-        },
-    )
-
-
-def _deserialize_tree(
-    *,
-    path: SDPath,
-    raw_attributes: SDRawAttributes,
-    raw_table: SDRawTable,
-    raw_nodes: Mapping[SDNodeName, SDRawTree],
-) -> ImmutableTree:
-    return ImmutableTree(
-        path=path,
-        attributes=_deserialize_attributes(raw_attributes),
-        table=_deserialize_table(raw_table),
-        nodes_by_name={
-            name: _deserialize_tree(
-                path=path + (name,),
-                raw_attributes=raw_node["Attributes"],
-                raw_table=raw_node["Table"],
-                raw_nodes=raw_node["Nodes"],
-            )
-            for name, raw_node in raw_nodes.items()
-        },
-    )
-
-
-def deserialize_tree(raw_tree: object) -> ImmutableTree:
-    if not isinstance(raw_tree, dict):
-        raise TypeError(raw_tree)
-    try:
-        raw_attributes = raw_tree["Attributes"]
-        raw_table = raw_tree["Table"]
-        raw_nodes = raw_tree["Nodes"]
-    except KeyError:
-        return _deserialize_legacy_tree(path=(), raw_tree=raw_tree)
-    return _deserialize_tree(
-        path=(),
-        raw_attributes=raw_attributes,
-        raw_table=raw_table,
-        raw_nodes=raw_nodes,
-    )
-
-
-def _serialize_delta_value(delta_value: SDDeltaValue) -> tuple[SDValue, SDValue]:
-    return (delta_value.old, delta_value.new)
-
-
-def _serialize_delta_attributes(delta_attributes: ImmutableDeltaAttributes) -> SDRawDeltaAttributes:
-    return (
-        {"Pairs": {k: _serialize_delta_value(v) for k, v in delta_attributes.pairs.items()}}
-        if delta_attributes.pairs
-        else {}
-    )
-
-
-def _serialize_delta_table(delta_table: ImmutableDeltaTable) -> SDRawDeltaTable:
-    return (
-        {
-            "KeyColumns": delta_table.key_columns,
-            "Rows": [
-                {k: _serialize_delta_value(v) for k, v in r.items()} for r in delta_table.rows
-            ],
-        }
-        if delta_table.rows
-        else {}
-    )
-
-
-def serialize_delta_tree(delta_tree: ImmutableDeltaTree) -> SDRawDeltaTree:
-    return {
-        "Attributes": _serialize_delta_attributes(delta_tree.attributes),
-        "Table": _serialize_delta_table(delta_tree.table),
-        "Nodes": {
-            edge: serialize_delta_tree(node)
-            for edge, node in delta_tree.nodes_by_name.items()
-            if node
-        },
-    }
-
-
-def _deserialize_delta_value(raw_delta_value: tuple[SDValue, SDValue]) -> SDDeltaValue:
-    return SDDeltaValue(old=raw_delta_value[0], new=raw_delta_value[1])
-
-
-def _deserialize_delta_attributes(raw_attributes: SDRawDeltaAttributes) -> ImmutableDeltaAttributes:
-    return ImmutableDeltaAttributes(
-        pairs={k: _deserialize_delta_value(v) for k, v in raw_attributes.get("Pairs", {}).items()}
-    )
-
-
-def _deserialize_delta_table(raw_table: SDRawDeltaTable) -> ImmutableDeltaTable:
-    return ImmutableDeltaTable(
-        key_columns=raw_table.get("KeyColumns", []),
-        rows=[
-            {k: _deserialize_delta_value(v) for k, v in r.items()}
-            for r in raw_table.get("Rows", [])
-        ],
-    )
-
-
-def _deserialize_delta_tree(*, path: SDPath, raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
-    return ImmutableDeltaTree(
-        path=path,
-        attributes=_deserialize_delta_attributes(raw_attributes=raw_tree["Attributes"]),
-        table=_deserialize_delta_table(raw_table=raw_tree["Table"]),
-        nodes_by_name={
-            raw_node_name: _deserialize_delta_tree(
-                path=path + (raw_node_name,),
-                raw_tree=raw_node,
-            )
-            for raw_node_name, raw_node in raw_tree["Nodes"].items()
-        },
-    )
-
-
-def deserialize_delta_tree(raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
-    return _deserialize_delta_tree(path=(), raw_tree=raw_tree)

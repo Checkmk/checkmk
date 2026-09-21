@@ -33,13 +33,8 @@ from cmk.gui.inventory.filters import (
 )
 from cmk.gui.type_defs import Rows
 from cmk.gui.visuals.filter import Filter
-from cmk.inventory.structured_data import (
-    deserialize_tree,
-    InventoryPath,
-    SDKey,
-    SDNodeName,
-    TreeSource,
-)
+from cmk.inventory.serialization import deserialize_tree
+from cmk.inventory.structured_data import InventoryPath, SDKey, SDNodeName, TreeSource
 
 
 class FilterTableTest(NamedTuple):

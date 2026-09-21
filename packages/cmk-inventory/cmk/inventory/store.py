@@ -18,13 +18,8 @@ from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
 
 from .paths import InventoryPaths, TreePath, TreePathGz
-from .structured_data import (
-    deserialize_tree,
-    ImmutableTree,
-    MutableTree,
-    SDRawTree,
-    serialize_tree,
-)
+from .serialization import deserialize_tree, SDRawTree, serialize_tree
+from .structured_data import ImmutableTree, MutableTree
 
 
 def _transform_tree_path(tree_path: TreePath, mtime: float) -> None:

@@ -11,7 +11,8 @@ from cmk.gui.painter.v0 import JoinCell, painter_registry
 from cmk.gui.type_defs import ColumnSpec, PainterParameters
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.inventory._row_post_processor import _join_inventory_rows
-from cmk.inventory.structured_data import deserialize_tree, ImmutableTree, SDNodeName
+from cmk.inventory.serialization import deserialize_tree
+from cmk.inventory.structured_data import ImmutableTree, SDNodeName
 
 
 @pytest.mark.usefixtures("request_context")

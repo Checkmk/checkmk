@@ -8,8 +8,9 @@ import io
 from pathlib import Path
 
 import cmk.ccc.store
+from cmk.inventory.serialization import SDRawTree
 from cmk.inventory.store import make_meta, SDMetaAndRawTree
-from cmk.inventory.structured_data import SDKey, SDNodeName, SDRawTree
+from cmk.inventory.structured_data import SDKey, SDNodeName
 from cmk.inventory.transformation import transform_inventory_trees
 
 from ._logger import null_logger

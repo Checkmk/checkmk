@@ -23,17 +23,19 @@ from cmk.gui.type_defs import ColumnName, PainterParameters, Row
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.valuespec import Checkbox, Dictionary, FixedValue
 from cmk.gui.view_utils import CellSpec, CSVExportError
+from cmk.inventory.serialization import (
+    SDRawDeltaTree,
+    SDRawTree,
+    serialize_delta_tree,
+    serialize_tree,
+)
 from cmk.inventory.structured_data import (
     ImmutableAttributes,
     ImmutableDeltaTree,
     ImmutableTree,
     SDKey,
     SDPath,
-    SDRawDeltaTree,
-    SDRawTree,
     SDValue,
-    serialize_delta_tree,
-    serialize_tree,
 )
 from cmk.web.utils.html import HTML
 

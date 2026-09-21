@@ -11,11 +11,16 @@ from typing import Literal
 import pytest
 
 from cmk.ccc.hostaddress import HostName
+from cmk.inventory.serialization import (
+    deserialize_delta_tree,
+    deserialize_tree,
+    SDRawDeltaTree,
+    serialize_delta_tree,
+    serialize_tree,
+)
 from cmk.inventory.store import InventoryStore, make_meta
 from cmk.inventory.structured_data import (
     compare_trees,
-    deserialize_delta_tree,
-    deserialize_tree,
     filter_delta_tree,
     filter_tree,
     ImmutableAttributes,
@@ -33,10 +38,7 @@ from cmk.inventory.structured_data import (
     SDKey,
     SDNodeName,
     SDPath,
-    SDRawDeltaTree,
     SDRetentionFilterChoices,
-    serialize_delta_tree,
-    serialize_tree,
 )
 
 _RETENTION_PATH = (SDNodeName("path"), SDNodeName("to"), SDNodeName("node"))

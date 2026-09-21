@@ -7,8 +7,9 @@ import gzip
 import io
 import json
 
+from cmk.inventory.serialization import SDRawTree
 from cmk.inventory.store import make_meta, SDMetaAndRawTree
-from cmk.inventory.structured_data import SDKey, SDNodeName, SDRawTree
+from cmk.inventory.structured_data import SDKey, SDNodeName
 
 
 def raw_tree(value: str) -> SDRawTree:

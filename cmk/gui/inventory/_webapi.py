@@ -16,11 +16,8 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import response
 from cmk.gui.i18n import _
 from cmk.gui.pages import PageContext
-from cmk.inventory.structured_data import (
-    make_filter_choices_from_api_request_paths,
-    SDRawTree,
-    serialize_tree,
-)
+from cmk.inventory.serialization import SDRawTree, serialize_tree
+from cmk.inventory.structured_data import make_filter_choices_from_api_request_paths
 
 from . import _xml
 from ._tree import inventory_of_host

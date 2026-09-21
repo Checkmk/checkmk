@@ -16,7 +16,7 @@ apply, see generate_config_variable_tests."""
 import datetime
 import json
 import pprint
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, ClassVar
@@ -27,8 +27,9 @@ import cmk.base.default_config
 import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
-from cmk.gui import valuespec
+from cmk.gui import login, valuespec
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.form_specs import (
@@ -48,6 +49,7 @@ from cmk.gui.form_specs.unstable import (
     Labels,
     ListUniqueSelection,
     OptionalChoice,
+    PasswordStorePassword,
     TimePicker,
 )
 from cmk.gui.form_specs.unstable.legacy_converter import Tuple as FormSpecTuple
@@ -56,6 +58,8 @@ from cmk.gui.form_specs.unstable.legacy_converter.transform import (
 )
 from cmk.gui.form_specs.unstable.legacy_valuespec import LegacyValueSpec
 from cmk.gui.form_specs.unstable.list_unique_selection import UniqueSingleChoiceElement
+from cmk.gui.permissions import permission_registry
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
     ConfigVariable,
@@ -291,6 +295,8 @@ Af8EBTADAQH/MAoGCCqGSM49BAMCA0gAMEUCIFiWceF954tCCPqV2KEJ6LMNl+Zb
 W6UwWFko7ZZvNwLYAiEAyTjDYETA0XhtxzcXKyzGECbeZUHbZpYz2xJpZGuAzKw=
 -----END CERTIFICATE-----
 """
+
+_STORED_API_KEY = ("cmk_postprocessed", "stored_password", ("my_key", ""))
 
 CHECKBOX_CASES: list[Case] = [
     CasePass("enabled", True),
@@ -537,6 +543,7 @@ _FORM_SPEC_LEAVES = (
     DatePicker,
     Labels,
     MultipleChoiceExtended,
+    PasswordStorePassword,
     SimplePassword,
     SingleChoiceExtended,
     TimePicker,
@@ -691,11 +698,19 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "certificates[add]": NoSaveableDefault(),
         "remote_url": NoSaveableDefault(),
     },
+    "ai_control_plane_provider": {
+        "none": None,
+        "anthropic": {"model": NoSaveableDefault(), "credential": NoSaveableDefault()},
+        "anthropic.base_url": NoSaveableDefault(),
+        "openai": {"model": NoSaveableDefault(), "credential": NoSaveableDefault()},
+        "openai.base_url": NoSaveableDefault(),
+    },
     "auth_by_http_header": {
         "[enable]": "X-Remote-User",
     },
     "automatic_crash_report_upload": {
-        # The prefill is the logged-in user's address, and no user is logged in here.
+        # The prefill is the logged-in user's address. The suite's admin is
+        # synthetic and has no userdb record, so there is no address.
         "[enable]": "",
     },
     "builtin_icon_visibility": {
@@ -922,7 +937,7 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "mail.url_prefix.manual": UnstableDefault(),
     },
     "notification_spooler_config": {
-        "concurrency[add]": (NoSaveableDefault(), {"process_count": 1, "retries": 3}),
+        "concurrency[add]": ("mail", {"process_count": 1, "retries": 3}),
         "concurrency[add].1.timeout": 60,
         "forwarding_process_count": 1,
         "incoming": {
@@ -1171,6 +1186,7 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
     "agent_deployment_central": {},
     "agent_deployment_host_selection": {},
     "agent_deployment_remote": {},
+    "ai_control_plane_provider": ("none", None),
     "alert_handler_event_types": [],
     "apache_process_tuning": {"number_of_processes": 5},
     "auth_by_http_header": None,
@@ -1577,6 +1593,41 @@ CASES: Mapping[str, list[Case]] = {
         CasePass("with-ca", {"certificates": [CA_PEM]}),
         CaseFail("unknown-key", {"bogus": 1}),
         CaseFail("not-a-pem", {"certificates": ["not a pem"]}),
+    ],
+    "ai_control_plane_provider": [
+        CasePass("none", ("none", None)),
+        CasePass(
+            "anthropic",
+            ("anthropic", {"model": "claude-opus-5", "credential": _STORED_API_KEY}),
+        ),
+        CasePass(
+            "openai-with-base-url",
+            (
+                "openai",
+                {
+                    "model": "gpt-5",
+                    "base_url": "https://llm.corp.example/v1",
+                    "credential": _STORED_API_KEY,
+                },
+            ),
+        ),
+        CaseFail("missing-credential", ("anthropic", {"model": "claude-opus-5"})),
+        CaseFail("empty-model", ("anthropic", {"model": "", "credential": _STORED_API_KEY})),
+        CaseFail(
+            "non-http-base-url",
+            ("openai", {"model": "gpt-5", "base_url": "ftp://x", "credential": _STORED_API_KEY}),
+        ),
+        CaseFail(
+            "explicit-password",
+            (
+                "anthropic",
+                {
+                    "model": "claude-opus-5",
+                    "credential": ("cmk_postprocessed", "explicit_password", ("id", "s3cret")),
+                },
+            ),
+            exception=MKGeneralException,
+        ),
     ],
     "alert_handler_event_types": [
         CasePass("configured", ["checkresult", "statechange"]),
@@ -2253,12 +2304,11 @@ CASES: Mapping[str, list[Case]] = {
     "notification_plugin_timeout": MIN_ONE_AGE_CASES,
     "notification_spooler_config": [
         CasePass("configured", DefaultWithOverrides({"log_level": 10})),
-        CaseDirty(
-            "no-notification-scripts-in-test-environment",
+        CasePass(
+            "configured-with-concurrency",
             DefaultWithOverrides(
                 {"concurrency": [("mail", {"process_count": 2, "retries": 3, "timeout": 60})]}
             ),
-            MKUserError,
         ),
         CaseFail(
             "tls-authentication-without-tls",
@@ -2493,7 +2543,7 @@ CASES: Mapping[str, list[Case]] = {
     ],
     "reporting_time_format": choice_cases("%H:%M", "%q"),
     "reporting_use": [
-        CaseDirty("default-report-missing-in-test-environment", "default", MKUserError),
+        CasePass("default-report", "default"),
         CaseFail("not-a-string", 123),
     ],
     "reporting_view_limit": UNBOUNDED_INTEGER_CASES,
@@ -2860,10 +2910,15 @@ class ConfigVariableSuite:
         return make_global_settings_context(self.EDITION)
 
     @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
-    def fixture_empty_password_store(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Rendering the Password form spec lists the password store entries the
-        user may read, which requires a logged-in user this suite does not have."""
-        monkeypatch.setattr("cmk.gui.watolib.password_visitor.passwordstore_choices", list)
+    def fixture_logged_in_admin(self, load_config: Config) -> Iterator[None]:
+        """Rendering PasswordStorePassword lists the password store entries the user
+        may read, which needs a request context and a user holding wato.passwords."""
+        user_id = UserId("admin")
+        with login.TransactionIdContext(
+            user_id,
+            UserPermissions(load_config.roles, permission_registry, {user_id: ["admin"]}, []),
+        ):
+            yield
 
     def test_all_config_variable_defaults_round_trip_unchanged(
         self, global_settings_context: GlobalSettingsContext

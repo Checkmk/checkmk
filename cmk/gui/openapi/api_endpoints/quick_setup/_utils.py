@@ -10,6 +10,7 @@ from cmk.ccc.i18n import _
 from cmk.gui.background_job.job import AlreadyRunningError
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.api_endpoints.background_job import BACKGROUND_JOB_FAMILY
+from cmk.gui.openapi.api_endpoints.models.form_spec import FormSpecValidationMessageModel
 from cmk.gui.openapi.framework import ApiContext, RedirectException
 from cmk.gui.openapi.framework.endpoint_link import path_to_endpoint
 from cmk.gui.openapi.framework.model.response import ApiResponse
@@ -92,7 +93,17 @@ def _convert_stage_structure(structure: NextStageStructure) -> StageStructureMod
 def _convert_validation_errors(errors: ValidationErrors) -> ValidationErrorsModel:
     return ValidationErrorsModel(
         stage_index=errors.stage_index,
-        formspec_errors=cast(dict[str, object], dict(errors.formspec_errors)),
+        formspec_errors={
+            form_spec_id: [
+                FormSpecValidationMessageModel(
+                    location=list(error.location),
+                    message=error.message,
+                    replacement_value=error.replacement_value,
+                )
+                for error in form_spec_errors
+            ]
+            for form_spec_id, form_spec_errors in errors.formspec_errors.items()
+        },
         stage_errors=list(errors.stage_errors),
     )
 

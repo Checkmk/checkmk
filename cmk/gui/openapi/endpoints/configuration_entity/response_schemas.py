@@ -8,6 +8,9 @@ from cmk.gui.fields.base import BaseSchema
 from cmk.gui.openapi.restful_objects.response_schemas import DomainObject
 
 
+# When migrating these endpoints to the new framework, drop this schema and declare
+# cmk.gui.openapi.api_endpoints.models.form_spec.FormSpecValidationErrorsModel as the 422
+# error_schemas entry instead
 class ValidationMessage(BaseSchema):
     location = fields.List(
         fields.String,

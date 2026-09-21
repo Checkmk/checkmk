@@ -87,10 +87,21 @@ if [[ -z "$COMPONENT" ]]; then
     exit 1
 fi
 
-# Component ids hold only [a-z0-9_]; rejecting anything else keeps the id safe to
-# paste into the output paths below.
-if [[ ! "$COMPONENT" =~ ^[a-z0-9_]+$ ]]; then
-    echo "Error: '$COMPONENT' is not a valid component id ([a-z0-9_])." >&2
+# A component is a directory below component_owners/ holding both files, and
+# resolving ownership reads both. Matching the id against the directory rather
+# than a character class also keeps a name that names no component out of the
+# output paths below. Read in this checkout, so what it says is that the tree in
+# front of you is well-formed, not that the branch ownership comes from is.
+COMPONENT_OWNERS="$REPO_PATH/component_owners"
+if [[ ! -f "$COMPONENT_OWNERS/$COMPONENT/OWNERS_DEFINITION" ]]; then
+    echo "Error: '$COMPONENT' is not a defined component." >&2
+    echo "Run 'ls $COMPONENT_OWNERS' for the ids it defines." >&2
+    exit 1
+fi
+if [[ ! -f "$COMPONENT_OWNERS/$COMPONENT/component_info.toml" ]]; then
+    echo "Error: component '$COMPONENT' is incomplete in this checkout: it has an" >&2
+    echo "OWNERS_DEFINITION but no component_info.toml beside it, and ownership is" >&2
+    echo "read from both." >&2
     exit 1
 fi
 

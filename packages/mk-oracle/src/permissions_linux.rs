@@ -128,6 +128,14 @@ impl SafeIds {
         ids
     }
 
+    pub fn for_owner(owner: &RunAsUser, entries: &[String]) -> Self {
+        let mut ids = Self::new(entries);
+        ids.uids.insert(owner.uid);
+        ids.gids.insert(owner.gid);
+        ids.gids.extend(owner.groups.iter().copied());
+        ids
+    }
+
     /// Resolves each entry against both the passwd and the group database - the
     /// option is documented as "safe groups and/or users" and an entry such as
     /// `dba` may name either. A purely numeric entry is taken as a uid and a
@@ -290,23 +298,19 @@ pub fn assess(path: &Path, check: bool, safe_entries: &[String]) -> RuntimeVerdi
 }
 
 fn assess_tree(path: &Path, safe_entries: &[String]) -> RuntimeVerdict {
-    match validate_as_root(path, safe_entries) {
+    match validate_against(path, &SafeIds::new(safe_entries)) {
         Ok(()) => RuntimeVerdict::Load,
         Err(reason) => RuntimeVerdict::Reject(reason),
     }
 }
 
-/// Entry point for `setup::validate_permissions` on Unix.
-///
-/// A non-root caller always passes: the library is loaded with the same
-/// privileges the user already has, so there is nothing to escalate. As root,
-/// the path, its direct entries (for a directory) and its parent directories
-/// must only be writable by root, by `oracle:oinstall`, or by a user or group
-/// listed in `safe_entries`.
+/// A caller that never had root passes, there is nothing to escalate. One that
+/// gave up root for the owner of the runtime does not: it judges the file by
+/// the owner's identity instead of skipping the check.
 ///
 /// The `Err` names the checked path only; which entry of it is writable, and by
 /// whom, stays in the log the walk writes.
-pub fn validate(path: &Path, check: bool, safe_entries: &[String]) -> Result<(), String> {
+pub fn validate_file(path: &Path, check: bool, safe_entries: &[String]) -> Result<(), String> {
     if !check {
         log::info!(
             "Permission check disabled; skipping validation for {:?}",
@@ -314,20 +318,24 @@ pub fn validate(path: &Path, check: bool, safe_entries: &[String]) -> Result<(),
         );
         return Ok(());
     }
-    if !is_running_as_root() {
-        log::info!(
-            "Not running as root; skipping permission validation for {:?}",
-            path
-        );
-        return Ok(());
+    if is_running_as_root() {
+        return validate_against(path, &SafeIds::new(safe_entries));
     }
-    validate_as_root(path, safe_entries)
+    match switched_to() {
+        Some(owner) => validate_against(path, &SafeIds::for_owner(owner, safe_entries)),
+        None => {
+            log::info!(
+                "Not running as root; skipping permission validation for {:?}",
+                path
+            );
+            Ok(())
+        }
+    }
 }
 
-fn validate_as_root(path: &Path, safe_entries: &[String]) -> Result<(), String> {
-    let safe = SafeIds::new(safe_entries);
+fn validate_against(path: &Path, safe: &SafeIds) -> Result<(), String> {
     let (target, md) = resolve(path).map_err(|e| format!("Cannot resolve {path:?}: {e}"))?;
-    if validate_tree(&target, &md, &safe) {
+    if validate_tree(&target, &md, safe) {
         return Ok(());
     }
     Err(format!(
@@ -392,10 +400,21 @@ mod tests {
     /// only exist on a host with an Oracle installation.
     const ORA_UID: u32 = 54321;
     const ORA_GID: u32 = 54321;
+    const DBA_GID: u32 = 54322;
     const STRANGER: u32 = 4242;
 
     fn root_only() -> SafeIds {
         SafeIds::default()
+    }
+
+    fn oracle() -> RunAsUser {
+        RunAsUser {
+            uid: ORA_UID,
+            gid: ORA_GID,
+            groups: vec![ORA_GID, DBA_GID],
+            name: "oracle".to_string(),
+            home: PathBuf::from("/home/oracle"),
+        }
     }
 
     fn oracle_safe() -> SafeIds {
@@ -519,6 +538,15 @@ mod tests {
     }
 
     #[test]
+    fn test_safe_ids_for_owner_carry_the_owner_and_all_owner_groups() {
+        let ids = SafeIds::for_owner(&oracle(), &[]);
+        assert!(ids.uids.contains(&ORA_UID));
+        assert!(ids.gids.contains(&ORA_GID));
+        assert!(ids.gids.contains(&DBA_GID));
+        assert!(!ids.uids.contains(&STRANGER));
+    }
+
+    #[test]
     fn test_configured_entries_are_added() {
         let mut ids = SafeIds::default();
         ids.add_configured(&["root".to_string()]);
@@ -546,6 +574,6 @@ mod tests {
             assess(Path::new("/no/such/runtime"), false, &[]),
             RuntimeVerdict::Load
         );
-        assert!(validate(Path::new("/no/such/file.sql"), false, &[]).is_ok());
+        assert!(validate_file(Path::new("/no/such/file.sql"), false, &[]).is_ok());
     }
 }

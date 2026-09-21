@@ -28,11 +28,11 @@ from cmk.inventory.history import (
     HistoryStore,
     load_history,
 )
+from cmk.inventory.merging import merge_trees
 from cmk.inventory.store import InventoryStore, parse_from_raw_status_data_tree
 from cmk.inventory.structured_data import (
     ImmutableDeltaTree,
     ImmutableTree,
-    merge_trees,
     parse_visible_raw_path,
     SDKey,
     SDNodeName,

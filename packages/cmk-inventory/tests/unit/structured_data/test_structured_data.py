@@ -24,10 +24,8 @@ from cmk.inventory.structured_data import (
     compare_trees,
     ImmutableAttributes,
     ImmutableDeltaTree,
-    ImmutableTable,
     ImmutableTree,
     make_retention_filter_choices,
-    merge_trees,
     MutableTree,
     parse_visible_raw_path,
     RawIntervalFromConfig,
@@ -45,6 +43,7 @@ from .._fixtures import (
     filled_immutable_tree,
     filled_mutable_tree,
     immutable_tree,
+    inventory_store,
 )
 
 _RETENTION_PATH = (SDNodeName("path"), SDNodeName("to"), SDNodeName("node"))
@@ -650,10 +649,6 @@ def test_difference_rows_keys(
     assert {k for r in delta_tree.table.rows for k in r} == expected_keys
 
 
-def _get_inventory_store() -> InventoryStore:
-    return InventoryStore(Path(__file__).parent / "tree_test_data")
-
-
 @pytest.mark.parametrize(
     "tree_name",
     [
@@ -679,7 +674,7 @@ def _get_inventory_store() -> InventoryStore:
     ],
 )
 def test_load_from(tree_name: HostName) -> None:
-    _get_inventory_store().load_inventory_tree(host_name=tree_name)
+    inventory_store().load_inventory_tree(host_name=tree_name)
 
 
 @pytest.mark.parametrize(
@@ -700,7 +695,7 @@ def test_load_from(tree_name: HostName) -> None:
     ],
 )
 def test_load_real_tree(tree_name: HostName) -> None:
-    assert len(_get_inventory_store().load_inventory_tree(host_name=tree_name)) > 0
+    assert len(inventory_store().load_inventory_tree(host_name=tree_name)) > 0
 
 
 @pytest.mark.parametrize(
@@ -738,7 +733,7 @@ def test_load_real_tree(tree_name: HostName) -> None:
     ],
 )
 def test_real_tree_is_equal(tree_name_x: HostName, tree_name_y: HostName) -> None:
-    inv_store = _get_inventory_store()
+    inv_store = inventory_store()
     tree_x = inv_store.load_inventory_tree(host_name=tree_name_x)
     tree_y = inv_store.load_inventory_tree(host_name=tree_name_y)
 
@@ -749,7 +744,7 @@ def test_real_tree_is_equal(tree_name_x: HostName, tree_name_y: HostName) -> Non
 
 
 def test_real_tree_order() -> None:
-    inv_store = _get_inventory_store()
+    inv_store = inventory_store()
     tree_ordered = inv_store.load_inventory_tree(host_name=HostName("tree_addresses_ordered"))
     tree_unordered = inv_store.load_inventory_tree(host_name=HostName("tree_addresses_unordered"))
     assert tree_ordered == tree_unordered
@@ -773,7 +768,7 @@ def test_real_tree_order() -> None:
     ],
 )
 def test_save_and_load_real_tree(tree_name: HostName, tmp_path: Path) -> None:
-    orig_tree = _get_inventory_store().load_inventory_tree(host_name=tree_name)
+    orig_tree = inventory_store().load_inventory_tree(host_name=tree_name)
     inv_store = InventoryStore(tmp_path)
     try:
         inv_store.save_inventory_tree(
@@ -805,7 +800,7 @@ def test_save_and_load_real_tree(tree_name: HostName, tmp_path: Path) -> None:
     ],
 )
 def test_count_entries(tree_name: HostName, result: int) -> None:
-    assert len(_get_inventory_store().load_inventory_tree(host_name=tree_name)) == result
+    assert len(inventory_store().load_inventory_tree(host_name=tree_name)) == result
 
 
 @pytest.mark.parametrize(
@@ -826,7 +821,7 @@ def test_count_entries(tree_name: HostName, result: int) -> None:
     ],
 )
 def test_compare_real_tree_with_itself(tree_name: HostName) -> None:
-    tree = _get_inventory_store().load_inventory_tree(host_name=tree_name)
+    tree = inventory_store().load_inventory_tree(host_name=tree_name)
     stats = compare_trees(tree, tree).get_stats()
     assert (stats["new"], stats["changed"], stats["removed"]) == (0, 0, 0)
 
@@ -869,7 +864,7 @@ def test_compare_real_tree_with_itself(tree_name: HostName) -> None:
 def test_compare_real_trees(
     tree_name_old: HostName, tree_name_new: HostName, result: tuple[int, int, int]
 ) -> None:
-    inv_store = _get_inventory_store()
+    inv_store = inventory_store()
     old_tree = inv_store.load_inventory_tree(host_name=tree_name_old)
     new_tree = inv_store.load_inventory_tree(host_name=tree_name_new)
     stats = compare_trees(new_tree, old_tree).get_stats()
@@ -914,7 +909,7 @@ def test_compare_real_trees(
 def test_get_node(
     tree_name: HostName, edges_t: Iterable[SDNodeName], edges_f: Iterable[SDNodeName]
 ) -> None:
-    tree = _get_inventory_store().load_inventory_tree(host_name=tree_name)
+    tree = inventory_store().load_inventory_tree(host_name=tree_name)
     for edge_t in edges_t:
         assert len(tree.get_tree((edge_t,))) > 0
     for edge_f in edges_f:
@@ -933,123 +928,8 @@ def test_get_node(
     ],
 )
 def test_amount_of_nodes(tree_name: HostName, amount_of_nodes: int) -> None:
-    tree = _get_inventory_store().load_inventory_tree(host_name=tree_name)
+    tree = inventory_store().load_inventory_tree(host_name=tree_name)
     assert len(list(tree.nodes_by_name.values())) == amount_of_nodes
-
-
-@pytest.mark.parametrize(
-    "tree_name, edges, sub_children",
-    [
-        (
-            HostName("tree_old_arrays"),
-            ["hardware", "networking"],
-            [
-                ("get_attributes", ["hardware", "memory", "arrays", "0"]),
-                ("get_table", ["hardware", "memory", "arrays", "0", "devices"]),
-                ("get_table", ["hardware", "memory", "arrays", "1", "others"]),
-            ],
-        ),
-        (
-            HostName("tree_new_memory"),
-            ["hardware", "networking"],
-            [
-                ("get_attributes", ["hardware", "memory"]),
-            ],
-        ),
-        (
-            HostName("tree_new_interfaces"),
-            ["hardware", "networking", "software"],
-            [
-                ("get_table", ["hardware", "components", "backplanes"]),
-                ("get_table", ["hardware", "components", "chassis"]),
-                ("get_table", ["hardware", "components", "containers"]),
-                ("get_table", ["hardware", "components", "fans"]),
-                ("get_table", ["hardware", "components", "modules"]),
-                ("get_table", ["hardware", "components", "others"]),
-                ("get_table", ["hardware", "components", "psus"]),
-                ("get_table", ["hardware", "components", "sensors"]),
-                ("get_attributes", ["hardware", "system"]),
-                ("get_attributes", ["software", "applications", "check_mk", "cluster"]),
-                ("get_attributes", ["software", "os"]),
-            ],
-        ),
-    ],
-)
-def test_merge_trees_1(
-    tree_name: HostName, edges: Sequence[str], sub_children: Sequence[tuple[str, Sequence[str]]]
-) -> None:
-    inv_store = _get_inventory_store()
-    tree = merge_trees(
-        inv_store.load_inventory_tree(host_name=HostName("tree_old_addresses")),
-        inv_store.load_inventory_tree(host_name=tree_name),
-    )
-
-    for edge in edges:
-        assert bool(tree.get_tree((SDNodeName(edge),)))
-
-    for m_name, path in sub_children:
-        node_names = tuple(SDNodeName(p) for p in path)
-        if m_name == "get_attributes":
-            assert len(tree.get_tree(node_names).attributes) > 0
-        elif m_name == "get_table":
-            assert len(tree.get_tree(node_names).table) > 0
-
-
-def test_merge_trees_2() -> None:
-    inv_store = _get_inventory_store()
-    inventory_tree = inv_store.load_inventory_tree(host_name=HostName("tree_inv"))
-    status_data_tree = inv_store.load_inventory_tree(host_name=HostName("tree_status"))
-    tree = merge_trees(inventory_tree, status_data_tree)
-    assert "foobar" in serialize_tree(tree)["Nodes"]
-    table = tree.get_tree((SDNodeName("foobar"),)).table
-    assert len(table) == 19
-    assert len(table.rows) == 5
-
-
-def test_merge_with_empty_tables() -> None:
-    assert merge_trees(ImmutableTree(), ImmutableTree()) == ImmutableTree()
-
-
-def test_merge_with_empty_left_table() -> None:
-    assert merge_trees(
-        ImmutableTree(),
-        ImmutableTree(
-            table=ImmutableTable(
-                key_columns=[SDKey("key_column")],
-                rows_by_ident={
-                    ("Key Column",): {SDKey("key_column"): "Key Column", SDKey("value"): "Value"}
-                },
-            )
-        ),
-    ) == ImmutableTree(
-        table=ImmutableTable(
-            key_columns=[SDKey("key_column")],
-            rows_by_ident={
-                ("Key Column",): {SDKey("key_column"): "Key Column", SDKey("value"): "Value"}
-            },
-        )
-    )
-
-
-def test_merge_with_empty_right_table() -> None:
-    assert merge_trees(
-        ImmutableTree(
-            table=ImmutableTable(
-                key_columns=[SDKey("key_column")],
-                rows_by_ident={
-                    ("Key Column",): {SDKey("key_column"): "Key Column", SDKey("value"): "Value"}
-                },
-            )
-        ),
-        ImmutableTree(),
-    ) == ImmutableTree(
-        table=ImmutableTable(
-            key_columns=[SDKey("key_column")],
-            rows_by_ident={
-                ("Key Column",): {SDKey("key_column"): "Key Column", SDKey("value"): "Value"}
-            },
-        )
-    )
 
 
 @pytest.mark.parametrize(
@@ -1085,7 +965,7 @@ def test_filter_real_tree(
     filters: Sequence[SDFilterChoice],
     unavail: Sequence[tuple[str, str]],
 ) -> None:
-    tree = _get_inventory_store().load_inventory_tree(host_name=HostName("tree_new_interfaces"))
+    tree = inventory_store().load_inventory_tree(host_name=HostName("tree_new_interfaces"))
     filtered = filter_tree(tree, filters)
     assert id(tree) != id(filtered)
     assert tree != filtered
@@ -1192,7 +1072,7 @@ def test_filter_networking_tree(
     amount_if_entries: int | None,
 ) -> None:
     filtered = filter_tree(
-        _get_inventory_store().load_inventory_tree(host_name=HostName("tree_new_interfaces")),
+        inventory_store().load_inventory_tree(host_name=HostName("tree_new_interfaces")),
         filters,
     )
     assert len(filtered.get_tree((SDNodeName("networking"),))) > 0
@@ -1206,7 +1086,7 @@ def test_filter_networking_tree(
 
 def test_filter_networking_tree_empty() -> None:
     filtered = filter_tree(
-        _get_inventory_store().load_inventory_tree(host_name=HostName("tree_new_interfaces")),
+        inventory_store().load_inventory_tree(host_name=HostName("tree_new_interfaces")),
         [
             SDFilterChoice(
                 path=(SDNodeName("networking"),),

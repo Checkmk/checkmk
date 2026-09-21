@@ -6,6 +6,7 @@
 import gzip
 import io
 import json
+from pathlib import Path
 
 from cmk.inventory.serialization import (
     deserialize_delta_tree,
@@ -14,7 +15,7 @@ from cmk.inventory.serialization import (
     SDRawTree,
     serialize_tree,
 )
-from cmk.inventory.store import make_meta, SDMetaAndRawTree
+from cmk.inventory.store import InventoryStore, make_meta, SDMetaAndRawTree
 from cmk.inventory.structured_data import (
     ImmutableDeltaTree,
     ImmutableTree,
@@ -22,6 +23,10 @@ from cmk.inventory.structured_data import (
     SDKey,
     SDNodeName,
 )
+
+
+def inventory_store() -> InventoryStore:
+    return InventoryStore(Path(__file__).parent / "tree_test_data")
 
 
 def raw_tree(value: str) -> SDRawTree:

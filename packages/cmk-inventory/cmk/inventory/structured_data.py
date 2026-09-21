@@ -16,6 +16,7 @@ from enum import auto, Enum
 from typing import Literal, NewType, override, Self, TypedDict
 
 from ._choices import get_filtered_dict, make_filter_func
+from ._dict_keys import DictKeys
 
 # TODO Cleanup path in utils, base, gui, find ONE place (type defs or similar)
 # TODO filter table rows?
@@ -163,31 +164,6 @@ def make_row_ident(key_columns: Sequence[SDKey], row: Mapping[SDKey, SDValue]) -
     return tuple(row[k] for k in key_columns if k in row)
 
 
-@dataclass(frozen=True, kw_only=True)
-class _DictKeys[T]:
-    only_left: set[T]
-    both: set[T]
-    only_right: set[T]
-
-    @classmethod
-    def compare(cls, *, left: set[T], right: set[T]) -> Self:
-        """
-        Returns the set relationships of the keys between two dictionaries:
-        - relative complement of right in left
-        - intersection of both
-        - relative complement of left in right
-        """
-        return cls(
-            only_left=left - right,
-            both=left.intersection(right),
-            only_right=right - left,
-        )
-
-
-# .
-#   .--mutable tree--------------------------------------------------------.
-
-
 def _format_update_result_attrs(*, title: str, message: str) -> str:
     return f"[Attributes] {title}: {message}"
 
@@ -221,7 +197,7 @@ class _MutableAttributes:
     ) -> None:
         filter_func = make_filter_func(choice.choice)
         retention_interval = RetentionInterval.from_config(*choice.cache_info, interval)
-        compared_keys = _DictKeys.compare(
+        compared_keys = DictKeys.compare(
             left=set(
                 get_filtered_dict(
                     previous.pairs,
@@ -294,7 +270,7 @@ class _MutableTable:
         if not isinstance(other, _MutableTable | ImmutableTable):
             return NotImplemented
 
-        compared_row_idents = _DictKeys.compare(
+        compared_row_idents = DictKeys.compare(
             left=set(self.rows_by_ident),
             right=set(other.rows_by_ident),
         )
@@ -351,7 +327,7 @@ class _MutableTable:
             for ident, row in self.rows_by_ident.items()
             if (filtered_row := get_filtered_dict(row, filter_func))
         }
-        compared_row_idents = _DictKeys.compare(
+        compared_row_idents = DictKeys.compare(
             left=set(previous_filtered_rows),
             right=set(current_filtered_rows),
         )
@@ -378,7 +354,7 @@ class _MutableTable:
                 )
 
         for ident in compared_row_idents.both:
-            compared_keys = _DictKeys.compare(
+            compared_keys = DictKeys.compare(
                 left=set(previous_filtered_rows[ident]),
                 right=set(current_filtered_rows[ident]),
             )
@@ -460,7 +436,7 @@ class MutableTree:
         if self.attributes != other.attributes or self.table != other.table:
             return False
 
-        compared_node_names = _DictKeys.compare(
+        compared_node_names = DictKeys.compare(
             left=set(self.nodes_by_name),
             right=set(other.nodes_by_name),
         )
@@ -620,7 +596,7 @@ class ImmutableTable:
         if not isinstance(other, _MutableTable | ImmutableTable):
             return NotImplemented
 
-        compared_row_idents = _DictKeys.compare(
+        compared_row_idents = DictKeys.compare(
             left=set(self.rows_by_ident),
             right=set(other.rows_by_ident),
         )
@@ -679,7 +655,7 @@ class ImmutableTree:
         if self.attributes != other.attributes or self.table != other.table:
             return False
 
-        compared_node_names = _DictKeys.compare(
+        compared_node_names = DictKeys.compare(
             left=set(self.nodes_by_name),
             right=set(other.nodes_by_name),
         )
@@ -977,97 +953,6 @@ def make_retention_filter_choices(
 
 
 # .
-#   .--merging-------------------------------------------------------------.
-
-
-def _merge_attributes(left: ImmutableAttributes, right: ImmutableAttributes) -> ImmutableAttributes:
-    return ImmutableAttributes(
-        pairs={**left.pairs, **right.pairs},
-        retentions={**left.retentions, **right.retentions},
-    )
-
-
-def _merge_tables_by_same_or_empty_key_columns(
-    key_columns: Sequence[SDKey], left: ImmutableTable, right: ImmutableTable
-) -> ImmutableTable:
-    compared_row_idents = _DictKeys.compare(
-        left=set(left.rows_by_ident),
-        right=set(right.rows_by_ident),
-    )
-
-    rows_by_ident: dict[SDRowIdent, Mapping[SDKey, SDValue]] = {}
-    for ident in compared_row_idents.only_left:
-        rows_by_ident.setdefault(ident, left.rows_by_ident[ident])
-
-    for ident in compared_row_idents.both:
-        rows_by_ident.setdefault(
-            ident,
-            {
-                **left.rows_by_ident[ident],
-                **right.rows_by_ident[ident],
-            },
-        )
-
-    for ident in compared_row_idents.only_right:
-        rows_by_ident.setdefault(ident, right.rows_by_ident[ident])
-
-    return ImmutableTable(
-        key_columns=key_columns,
-        rows_by_ident=rows_by_ident,
-        retentions={**left.retentions, **right.retentions},
-    )
-
-
-def _merge_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableTable:
-    if left.key_columns and not right.key_columns:
-        return _merge_tables_by_same_or_empty_key_columns(left.key_columns, left, right)
-
-    if not left.key_columns and right.key_columns:
-        return _merge_tables_by_same_or_empty_key_columns(right.key_columns, left, right)
-
-    if left.key_columns == right.key_columns:
-        return _merge_tables_by_same_or_empty_key_columns(left.key_columns, left, right)
-
-    # Re-calculate row identifiers for legacy tables or inventory and status tables
-    key_columns = sorted(set(left.key_columns).intersection(right.key_columns))
-    rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
-    for row in list(left.rows_by_ident.values()) + list(right.rows_by_ident.values()):
-        rows_by_ident.setdefault(make_row_ident(key_columns, row), {}).update(row)
-
-    return ImmutableTable(
-        key_columns=key_columns,
-        rows_by_ident=rows_by_ident,
-        retentions={**left.retentions, **right.retentions},
-    )
-
-
-def merge_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableTree:
-    compared_node_names = _DictKeys.compare(
-        left=set(left.nodes_by_name),
-        right=set(right.nodes_by_name),
-    )
-
-    nodes_by_name: dict[SDNodeName, ImmutableTree] = {}
-    for name in compared_node_names.only_left:
-        nodes_by_name[name] = left.nodes_by_name[name]
-
-    for name in compared_node_names.both:
-        nodes_by_name[name] = merge_trees(
-            left=left.nodes_by_name[name], right=right.nodes_by_name[name]
-        )
-
-    for name in compared_node_names.only_right:
-        nodes_by_name[name] = right.nodes_by_name[name]
-
-    return ImmutableTree(
-        path=left.path,
-        attributes=_merge_attributes(left.attributes, right.attributes),
-        table=_merge_tables(left.table, right.table),
-        nodes_by_name=nodes_by_name,
-    )
-
-
-# .
 #   .--comparing-----------------------------------------------------------.
 
 
@@ -1095,7 +980,7 @@ class _DeltaDict:
           removed:      {k: (old_value, None), ...}
           identical:    {k: (value, value), ...}
         """
-        compared_keys = _DictKeys.compare(left=set(left), right=set(right))
+        compared_keys = DictKeys.compare(left=set(left), right=set(right))
         compared_dict: dict[SDKey, SDDeltaValue] = {}
 
         has_changes = False
@@ -1128,7 +1013,7 @@ def _compare_attributes(
 
 
 def _compare_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableDeltaTable:
-    compared_row_idents = _DictKeys.compare(
+    compared_row_idents = DictKeys.compare(
         left=set(left.rows_by_ident),
         right=set(right.rows_by_ident),
     )
@@ -1164,7 +1049,7 @@ def _compare_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableDel
 def compare_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableDeltaTree:
     nodes: dict[SDNodeName, ImmutableDeltaTree] = {}
 
-    compared_node_names = _DictKeys.compare(
+    compared_node_names = DictKeys.compare(
         left=set(left.nodes_by_name),
         right=set(right.nodes_by_name),
     )

@@ -15,10 +15,12 @@ py_library(
     srcs = [
         "cmk/inventory/__init__.py",
         "cmk/inventory/_choices.py",
+        "cmk/inventory/_dict_keys.py",
         "cmk/inventory/_legacy.py",
         "cmk/inventory/cleanup.py",
         "cmk/inventory/filtering.py",
         "cmk/inventory/history.py",
+        "cmk/inventory/merging.py",
         "cmk/inventory/paths.py",
         "cmk/inventory/serialization.py",
         "cmk/inventory/store.py",

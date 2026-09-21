@@ -13,21 +13,26 @@ from cmk.web.utils.urls import makeuri_contextless
 _LEGACY_VIEW_NAME = "host"
 
 
-def show_host_services_link_button(view_name: str) -> None:
-    if view_name != _LEGACY_VIEW_NAME:
-        return
-    if not (host_name := request.var("host")) or not (site_id := request.var("site")):
-        return
-    html.vue_component(
-        "cmk-monitoring-page-link-button",
-        data=asdict(
-            MonitoringPageLinkButton(
-                url=makeuri_contextless(
-                    request,
-                    [("host", host_name), ("site", site_id)],
-                    filename="monitor_host_services.py",
-                ),
-                title=_('Try the new "Services of host" view'),
-            )
-        ),
-    )
+class HostServicesLinkButton:
+    def __init__(self, teleport_target: str | None = None) -> None:
+        self._teleport_target = teleport_target
+
+    def __call__(self, view_name: str) -> None:
+        if view_name != _LEGACY_VIEW_NAME:
+            return
+        if not (host_name := request.var("host")) or not (site_id := request.var("site")):
+            return
+        html.vue_component(
+            "cmk-monitoring-page-link-button",
+            data=asdict(
+                MonitoringPageLinkButton(
+                    url=makeuri_contextless(
+                        request,
+                        [("host", host_name), ("site", site_id)],
+                        filename="monitor_host_services.py",
+                    ),
+                    title=_('Try the new "Services of host" view'),
+                    teleport_target=self._teleport_target,
+                )
+            ),
+        )

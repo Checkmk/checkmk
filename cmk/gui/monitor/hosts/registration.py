@@ -10,7 +10,7 @@ from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegist
 from cmk.gui.pages import PageRegistry
 
 from ._api._registration import register_endpoints
-from ._legacy_view_link import show_all_hosts_link_button
+from ._legacy_view_link import AllHostsLinkButton
 from ._pages._registration import register_pages
 
 
@@ -20,7 +20,8 @@ def register(
     page_registry: PageRegistry,
     command_registry: MonitorCommands,
     downtime_recurrences: DowntimeRecurrences,
+    teleport_target: str | None,
 ) -> None:
     register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
     register_pages(page_registry, command_registry, downtime_recurrences)
-    register_builtin("experimental_view_button", show_all_hosts_link_button)
+    register_builtin("experimental_view_button", AllHostsLinkButton(teleport_target))

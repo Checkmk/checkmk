@@ -186,6 +186,7 @@ def register(
     token_authenticated_page_registry: TokenAuthenticatedPageRegistry,
     builtin_pagetype_topic_registry: pagetypes.BuiltinPagetypeTopicRegistry,
     agent_bakery_enabled: bool,
+    monitoring_teleport_target: str | None = None,
 ) -> None:
     hooks.register_thread_cache_cleanup()
     notification_parameter_registry.register_form_spec_plugin = register_plugin
@@ -265,6 +266,7 @@ def register(
         page_registry,
         monitor_commands,
         downtime_recurrences,
+        monitoring_teleport_target,
     )
     monitor_services_registration.register(
         endpoint_family_registry,
@@ -273,6 +275,7 @@ def register(
         monitor_commands,
         downtime_recurrences,
         host_menus,
+        monitoring_teleport_target,
     )
     crash_reporting.register(
         page_registry,

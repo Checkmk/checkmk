@@ -16,7 +16,7 @@ from cmk.ccc import tty
 from cmk.checkengine.discovery import remove_autochecks_of_host
 from cmk.cli.engine.modes import write_stdout
 from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
-from cmk.inventory.paths import Paths as InventoryPaths
+from cmk.inventory.paths import InventoryPaths
 from cmk.piggyback import backend as piggyback_backend
 from cmk.utils import ip_lookup
 

@@ -49,7 +49,7 @@ class TreePathGz:
             raise ValueError(self.legacy)
 
 
-class Paths:
+class InventoryPaths:
     def __init__(self, omd_root: Path) -> None:
         self.inventory_dir = omd_root / "var/check_mk/inventory"
         self.status_data_dir = omd_root / "tmp/check_mk/status_data"

@@ -15,7 +15,7 @@ from cmk.gui.type_defs import Row, VisualLinkSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.icon import Icon, IconConfig
 from cmk.gui.visual_link import url_to_visual
-from cmk.inventory.paths import Paths as InventoryPaths
+from cmk.inventory.paths import InventoryPaths
 from cmk.ruleset_matcher.tags import TagID
 from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
 

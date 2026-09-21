@@ -83,7 +83,7 @@ from cmk.checkengine.submitters import get_submitter
 from cmk.checkengine.summarize import SummarizerFunction
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 from cmk.cli.internal import CLIOption
-from cmk.inventory.paths import Paths as InventoryPaths
+from cmk.inventory.paths import InventoryPaths
 from cmk.inventory.structured_data import (
     ImmutableTree,
     InventoryStore,

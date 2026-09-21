@@ -8,8 +8,7 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.hostaddress import HostName
-from cmk.inventory.paths import Paths as InventoryPaths
-from cmk.inventory.paths import TreePath, TreePathGz
+from cmk.inventory.paths import InventoryPaths, TreePath, TreePathGz
 
 
 @pytest.mark.parametrize(

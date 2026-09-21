@@ -196,7 +196,7 @@ from cmk.discover_plugins import (
     plugins_local_path,
 )
 from cmk.inventory import structured_data
-from cmk.inventory.paths import Paths as InventoryPaths
+from cmk.inventory.paths import InventoryPaths
 from cmk.licensing.handler import LicensingHandler
 from cmk.piggyback.backend import (
     get_messages_for as get_piggyback_messages_for,

@@ -33,7 +33,7 @@ from cmk.checkengine.plugins import (
     SectionName,
 )
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
-from cmk.inventory.paths import Paths as InventoryPaths
+from cmk.inventory.paths import InventoryPaths
 from cmk.inventory.structured_data import (
     ImmutableTree,
     make_retention_filter_choices,

@@ -14,8 +14,7 @@ from cmk.inventory.config import (
     InvCleanupParamsCombined,
     InvCleanupParamsOfHosts,
 )
-from cmk.inventory.paths import Paths as InventoryPaths
-from cmk.inventory.paths import TreePath, TreePathGz
+from cmk.inventory.paths import InventoryPaths, TreePath, TreePathGz
 
 from ._logger import null_logger
 

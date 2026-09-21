@@ -19,8 +19,7 @@ from .config import (
     InvCleanupParamsOfHosts,
     matches,
 )
-from .paths import Paths as InventoryPaths
-from .paths import TreePath, TreePathGz
+from .paths import InventoryPaths, TreePath, TreePathGz
 
 
 @dataclass(frozen=True, kw_only=True)

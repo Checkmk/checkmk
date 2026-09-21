@@ -30,10 +30,12 @@ from cmk.rulesets.internal.form_specs import (
     DictionaryExtended,
     ListOfStrings,
 )
+from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
     CascadingSingleChoice,
     DictElement,
+    DictGroup,
     Dictionary,
     FixedValue,
     FormSpec,
@@ -193,6 +195,57 @@ def _walk(form_spec: FormSpec[Any]) -> Iterator[FormSpec[Any]]:
             yield from _walk(form_spec.element_template)
         case _:
             pass
+
+
+def test_the_form_groups_the_top_level_by_topic() -> None:
+    titles = [
+        element.group.title
+        for element in _agent_config_mk_oracle().elements.values()
+        if isinstance(element.group, DictGroup) and element.group.title is not None
+    ]
+    # Order matters: a group appears where its first element does.
+    assert list(dict.fromkeys(titles)) == [
+        Title("Activation"),
+        Title("Instances to monitor"),
+        Title("Standard settings for all instances"),
+        Title("Monitoring options"),
+        Title("Oracle client options"),
+        Title("Plug-in behavior"),
+    ]
+
+
+def test_every_top_level_entry_sits_under_a_heading() -> None:
+    # An ungrouped element would silently jump to the top of the rule summary.
+    ungrouped = [
+        key
+        for key, element in _agent_config_mk_oracle().elements.items()
+        if not isinstance(element.group, DictGroup)
+    ]
+    assert not ungrouped
+
+
+def _database_entry() -> Dictionary:
+    instances = _agent_config_mk_oracle().elements["instances_rev2"].parameter_form
+    assert isinstance(instances, List)
+    entry = instances.element_template
+    assert isinstance(entry, Dictionary)
+    return entry
+
+
+def test_a_database_entry_marks_its_overrides_as_such() -> None:
+    entry = _database_entry()
+    for key in ("auth", "connection"):
+        group = entry.elements[key].group
+        assert isinstance(group, DictGroup)
+        assert group.title == Title("Instance-specific settings")
+
+
+def test_a_database_entry_keeps_the_piggyback_host_out_of_the_overrides() -> None:
+    # An entry that follows a group without naming one of its own renders
+    # inside that group's box, under a heading that does not describe it.
+    group = _database_entry().elements["piggyback_host"].group
+    assert isinstance(group, DictGroup)
+    assert group.title == Title("Monitoring")
 
 
 def test_every_checkbox_and_fixed_value_renders_something() -> None:

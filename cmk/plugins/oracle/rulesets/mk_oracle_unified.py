@@ -9,7 +9,9 @@ from typing import Final, Literal
 from pydantic import BaseModel
 
 from cmk.rulesets.internal.form_specs import (
+    DictGroupExtended,
     DictionaryExtended,
+    DictionaryGroupLayout,
     ListOfStrings,
     ListOfStringsLayout,
 )
@@ -26,6 +28,7 @@ from cmk.rulesets.v1.form_specs import (
     List,
     MultipleChoice,
     MultipleChoiceElement,
+    NoGroup,
     Password,
     SingleChoice,
     SingleChoiceElement,
@@ -39,6 +42,32 @@ from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 # Matches absolute paths on Unix (/...), env var references ($VAR or ${VAR}),
 # and absolute Windows paths (C:\... or C:/...).
 USE_HOST_CLIENT_PATH_RE = r"^(/|\$[\w{]|[a-zA-Z]:[/\\]).*"
+
+
+def _group(title: Title, help_text: Help | None = None) -> DictGroupExtended:
+    return DictGroupExtended(
+        title=title,
+        help_text=help_text,
+        layout=DictionaryGroupLayout.vertical,
+    )
+
+
+_ACTIVATION: Final = _group(Title("Activation"))
+_WHICH_INSTANCES: Final = _group(Title("Instances to monitor"))
+_STANDARD_SETTINGS: Final = _group(
+    Title("Standard settings for all instances"),
+    Help("Used for every monitored database unless the database overrides it below."),
+)
+_MONITORING_OPTIONS: Final = _group(Title("Monitoring options"))
+_CLIENT_OPTIONS: Final = _group(Title("Oracle client options"))
+_PLUGIN_BEHAVIOR: Final = _group(Title("Plug-in behavior"))
+_PER_INSTANCE: Final = _group(
+    Title("Instance-specific settings"),
+    Help("Override the standard settings above for this database."),
+)
+# Without a group of its own the entry below would render inside the box the
+# preceding group opened, under a heading that does not describe it.
+_PER_INSTANCE_MONITORING: Final = _group(Title("Monitoring"))
 
 
 type _AuthOptions = tuple[str, object]
@@ -455,7 +484,7 @@ def _connection_options() -> Dictionary:
     )
 
 
-def _oracle_files() -> Mapping[str, DictElement[str]]:
+def _oracle_file_paths() -> Mapping[str, DictElement[str]]:
     """The two paths the plug-in reads once per run, not once per database."""
     return {
         "tns_admin": DictElement(
@@ -474,6 +503,7 @@ def _oracle_files() -> Mapping[str, DictElement[str]]:
                 ),
             ),
             required=False,
+            group=_CLIENT_OPTIONS,
         ),
         "oracle_local_registry": DictElement(
             parameter_form=String(
@@ -495,6 +525,7 @@ def _oracle_files() -> Mapping[str, DictElement[str]]:
                 ),
             ),
             required=False,
+            group=_CLIENT_OPTIONS,
         ),
     }
 
@@ -702,10 +733,21 @@ def _use_host_client() -> CascadingSingleChoice:
     )
 
 
-def _other_settings() -> Mapping[
-    str, DictElement[bool] | DictElement[_NamedOption] | DictElement[_AuthOptions]
+def _monitoring_options() -> Mapping[
+    str,
+    DictElement[_NamedOption] | DictElement[Sequence[_NamedOption]] | DictElement[bool],
 ]:
     return {
+        "sections": DictElement(
+            parameter_form=_sections(),
+            required=False,
+            group=_MONITORING_OPTIONS,
+        ),
+        "excluded_sections": DictElement(
+            parameter_form=_excluded_sections(),
+            required=False,
+            group=_MONITORING_OPTIONS,
+        ),
         "ignore_db_name": DictElement(
             parameter_form=FixedValue(
                 title=Title("Ignore database name"),
@@ -717,26 +759,42 @@ def _other_settings() -> Mapping[
                 value=False,
             ),
             required=False,
+            group=_MONITORING_OPTIONS,
         ),
+    }
+
+
+def _oracle_client_options() -> Mapping[
+    str, DictElement[str] | DictElement[_AuthOptions] | DictElement[_NamedOption]
+]:
+    return {
         "use_host_client": DictElement(
             parameter_form=_use_host_client(),
             required=False,
+            group=_CLIENT_OPTIONS,
         ),
-        "validate_permissions": DictElement(parameter_form=_permissions(), required=False),
+        "validate_permissions": DictElement(
+            parameter_form=_permissions(),
+            required=False,
+            group=_CLIENT_OPTIONS,
+        ),
+        **_oracle_file_paths(),
     }
 
 
 def _endpoint(
-    *, is_main_entry: bool
+    *, is_main_entry: bool, group: DictGroupExtended | NoGroup = NoGroup()
 ) -> Mapping[str, DictElement[_AuthOptions] | DictElement[_NamedOption]]:
     return {
         "auth": DictElement(
             parameter_form=_auth_options(is_default_options=is_main_entry),
             required=False,
+            group=group,
         ),
         "connection": DictElement(
             parameter_form=_connection_options(),
             required=False,
+            group=group,
         ),
     }
 
@@ -762,6 +820,7 @@ def _cache_ages() -> Mapping[str, DictElement[float]]:
                 ),
             ),
             required=False,
+            group=_PLUGIN_BEHAVIOR,
         ),
         "custom_metrics_cache_age": DictElement(
             parameter_form=_cache_age(
@@ -774,6 +833,7 @@ def _cache_ages() -> Mapping[str, DictElement[float]]:
                 ),
             ),
             required=False,
+            group=_PLUGIN_BEHAVIOR,
         ),
     }
 
@@ -849,8 +909,9 @@ def _instances() -> List[_NamedOption]:
                     parameter_form=_oracle_id(),
                     required=True,
                 ),
-                **_endpoint(is_main_entry=False),
+                **_endpoint(is_main_entry=False, group=_PER_INSTANCE),
                 "piggyback_host": DictElement(
+                    group=_PER_INSTANCE_MONITORING,
                     parameter_form=String(
                         title=Title("Monitoring host this database should be mapped to"),
                         help_text=Help(
@@ -1003,9 +1064,12 @@ def _agent_config_mk_oracle() -> Dictionary:
         # key, so nothing here may be required. A new rule still opens with the
         # two entries that no Oracle configuration works without.
         default_checked=["deploy_rev2", "auth"],
+        # The order decides the headings: a group appears where its first
+        # element does.
         elements={
             "deploy_rev2": DictElement(
                 required=False,
+                group=_ACTIVATION,
                 parameter_form=SingleChoice(
                     title=Title("Deployment"),
                     prefill=DefaultValue("deploy"),
@@ -1021,26 +1085,20 @@ def _agent_config_mk_oracle() -> Dictionary:
                     ],
                 ),
             ),
-            **_endpoint(is_main_entry=True),
             "discovery": DictElement(
                 parameter_form=_discovery(),
                 required=False,
+                group=_WHICH_INSTANCES,
             ),
             "instances_rev2": DictElement(
                 parameter_form=_instances(),
                 required=False,
+                group=_WHICH_INSTANCES,
             ),
-            "sections": DictElement(
-                parameter_form=_sections(),
-                required=False,
-            ),
-            "excluded_sections": DictElement(
-                parameter_form=_excluded_sections(),
-                required=False,
-            ),
-            **_oracle_files(),
+            **_endpoint(is_main_entry=True, group=_STANDARD_SETTINGS),
+            **_monitoring_options(),
+            **_oracle_client_options(),
             **_cache_ages(),
-            **_other_settings(),
         },
         ignored_elements=_KEPT_BUT_NOT_OFFERED,
     )

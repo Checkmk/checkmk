@@ -16,7 +16,6 @@ import {
   composedValueDomain,
   createM4CacheStore
 } from '../TimeSeriesGraph/render/composeSeries'
-import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from '../consolidation'
 import {
   type BrushMode,
   clampMove,
@@ -30,20 +29,16 @@ import {
 } from './geometry'
 import { formatOverviewExtent, formatWindowPreview } from './utils'
 
-const props = withDefaults(
-  defineProps<{
-    metrics: Metric[] // coarse overview series
-    domain: TimeInterval // strip extent
-    dataDomain: TimeRange
-    window: { start: number; end: number }
-    minSpan: number | null
-    width: number // figure width (px)
-    plotLeft: number // track left inset (= renderer MARGIN.left)
-    plotWidth: number // track width (= plot width)
-    consolidationFn?: ConsolidationFn
-  }>(),
-  { consolidationFn: DEFAULT_CONSOLIDATION_FN }
-)
+const props = defineProps<{
+  metrics: Metric[] // coarse overview series
+  domain: TimeInterval // strip extent
+  dataDomain: TimeRange
+  window: { start: number; end: number }
+  minSpan: number | null
+  width: number // figure width (px)
+  plotLeft: number // track left inset (= renderer MARGIN.left)
+  plotWidth: number // track width (= plot width)
+}>()
 
 const emit = defineEmits<{
   'update:requestedTimeRange': [RequestedTimeRange, TimeRangeCommitKind]
@@ -136,10 +131,7 @@ function drawWaveform(): void {
 onMounted(drawWaveform)
 // The selection window moves over the waveform without changing it, so a drag redraws the
 // scrims below and leaves the canvas alone.
-watch(
-  () => [props.metrics, props.domain, props.dataDomain, props.plotWidth, props.consolidationFn],
-  drawWaveform
-)
+watch(() => [props.metrics, props.domain, props.dataDomain, props.plotWidth], drawWaveform)
 
 const svgRef = ref<SVGSVGElement | null>(null)
 const preview = ref<{ start: number; end: number } | null>(null)

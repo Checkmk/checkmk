@@ -294,7 +294,6 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_
           :domain="brushSnapshot.drawnDomain"
           :data-domain="brushSnapshot.data.dataTimeRange"
           :window="brushWindow"
-          :consolidation-fn="consolidationFn"
           :min-span="MIN_ZOOM_TIME_RANGE_SECONDS"
           :width="figureWidth"
           :plot-left="plotLeft"

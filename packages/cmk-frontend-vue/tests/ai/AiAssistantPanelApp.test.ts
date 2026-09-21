@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen } from '@testing-library/vue'
 
 import AiAssistantPanelApp from '@/ai/AiAssistantPanelApp.vue'
 
@@ -79,4 +79,40 @@ test('reserves no space while closed', () => {
 
   expect(screen.queryByText('AI assistant')).not.toBeInTheDocument()
   expect(mainAreaInset()).toEqual({ left: '0px', right: '0px', bottom: '0px' })
+})
+
+test('moves the panel to the clicked edge and remembers it', async () => {
+  renderOpenPanel()
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Dock to the left' }))
+
+  expect(screen.getByText('AI assistant').closest('.ai-assistant-panel-app')).toHaveClass(
+    'ai-assistant-panel-app--left'
+  )
+  expect(mainAreaInset()).toEqual({ left: '300px', right: '0px', bottom: '0px' })
+  expect(JSON.parse(localStorage.getItem(POSITION_STORAGE_KEY)!)).toBe('left')
+})
+
+test('marks the current edge as pressed', async () => {
+  renderOpenPanel()
+
+  expect(screen.getByRole('button', { name: 'Dock to the right' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  )
+  expect(screen.getByRole('button', { name: 'Dock to the bottom' })).toHaveAttribute(
+    'aria-pressed',
+    'false'
+  )
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Dock to the bottom' }))
+
+  expect(screen.getByRole('button', { name: 'Dock to the bottom' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  )
+  expect(screen.getByRole('button', { name: 'Dock to the right' })).toHaveAttribute(
+    'aria-pressed',
+    'false'
+  )
 })

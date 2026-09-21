@@ -35,6 +35,12 @@ const position = usePersistentRef<DockPosition>(
   'local'
 )
 
+const dockEdges: { position: DockPosition; label: string; rotate: number }[] = [
+  { position: 'left', label: _t('Dock to the left'), rotate: 180 },
+  { position: 'bottom', label: _t('Dock to the bottom'), rotate: 90 },
+  { position: 'right', label: _t('Dock to the right'), rotate: 0 }
+]
+
 function parseStorageValue(value: string | null): unknown {
   return value === null ? null : JSON.parse(value)
 }
@@ -99,14 +105,33 @@ if (renderPanel) {
   >
     <div class="ai-assistant-panel-app__header">
       <span>{{ _t('AI assistant') }}</span>
-      <button
-        type="button"
-        class="ai-assistant-panel-app__close"
-        :title="_t('Close')"
-        @click="open = false"
-      >
-        <CmkIcon :aria-label="_t('Close')" name="close" size="xxsmall" />
-      </button>
+      <div class="ai-assistant-panel-app__controls">
+        <button
+          v-for="edge in dockEdges"
+          :key="edge.position"
+          type="button"
+          class="ai-assistant-panel-app__dock"
+          :title="edge.label"
+          :aria-label="edge.label"
+          :aria-pressed="position === edge.position"
+          @click="position = edge.position"
+        >
+          <CmkIcon
+            name="sidebar-position"
+            size="xsmall"
+            :rotate="edge.rotate"
+            :colored="position === edge.position"
+          />
+        </button>
+        <button
+          type="button"
+          class="ai-assistant-panel-app__close"
+          :title="_t('Close')"
+          @click="open = false"
+        >
+          <CmkIcon :aria-label="_t('Close')" name="close" size="xxsmall" />
+        </button>
+      </div>
     </div>
     <div class="ai-assistant-panel-app__body">
       {{ _t('The AI assistant will live here.') }}
@@ -156,14 +181,29 @@ if (renderPanel) {
   border-bottom: 1px solid var(--ux-theme-6);
 }
 
+.ai-assistant-panel-app__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-2);
+}
+
+.ai-assistant-panel-app__dock,
 .ai-assistant-panel-app__close {
   display: flex;
   align-items: center;
-  padding: 0 var(--dimension-4);
+  padding: 0;
   border: none;
   background: none;
   color: inherit;
   cursor: pointer;
+}
+
+.ai-assistant-panel-app__dock:hover {
+  opacity: 0.7;
+}
+
+.ai-assistant-panel-app__dock[aria-pressed='true'] {
+  cursor: default;
 }
 
 .ai-assistant-panel-app__body {

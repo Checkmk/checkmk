@@ -35,7 +35,6 @@ RUN zypper ref -s && \
         git \
         gmp-devel \
         groff \
-        intltool \
         iproute2 \
         iputils \
         jq \

@@ -41,7 +41,6 @@ RUN zypper ref -s \
     gmp-devel \
     groff \
     gtk-doc \
-    intltool \
     iproute2 \
     iputils \
     jq \

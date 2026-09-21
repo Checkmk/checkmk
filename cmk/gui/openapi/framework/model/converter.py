@@ -53,7 +53,7 @@ def TypedPlainValidator[T](input_type: type[T], validator: Callable[[T], object]
 
     def _with_type_check(value: T) -> object:
         if not isinstance(value, input_type):
-            raise TypeError(f"Expected {input_type}, got {value!r}")
+            raise ValueError(f"Expected {input_type.__name__}, got {type(value).__name__}")
 
         return validator(value)
 

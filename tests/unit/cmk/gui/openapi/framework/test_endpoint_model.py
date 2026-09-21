@@ -34,8 +34,12 @@ from cmk.gui.openapi.framework.endpoint_model import (
     SignatureParametersProcessor,
 )
 from cmk.gui.openapi.framework.model import ApiOmitted
+from cmk.gui.openapi.framework.model.converter import TypedPlainValidator
 from cmk.gui.openapi.framework.model.response import TypedResponse
-from cmk.gui.openapi.utils import RestAPIRequestDataValidationException
+from cmk.gui.openapi.utils import (
+    RestAPIRequestDataValidationException,
+    RestAPIRequestGeneralException,
+)
 
 
 @dataclasses.dataclass
@@ -47,6 +51,11 @@ class _TestBody:
 @dataclasses.dataclass
 class _TestGenericBody[T]:
     value: T
+
+
+@dataclasses.dataclass
+class _TypedValidatorBody:
+    name: Annotated[str, TypedPlainValidator(str, str.upper)]
 
 
 _PATH_PARAM = PathParam(description="Path parameter", example="example")
@@ -628,3 +637,31 @@ def test_generic_body_forbids_extra_fields() -> None:
             content_type="application/json",
             api_context=_api_context(),
         )
+
+
+def _typed_validator_endpoint_handler(body: _TypedValidatorBody) -> None:
+    raise NotImplementedError
+
+
+def test_typed_plain_validator_accepts_the_declared_input_type() -> None:
+    model = EndpointModel.build(_typed_validator_endpoint_handler)
+    bound = model.validate_request_and_identify_args(
+        request_data=_request_data(body={"name": "site"}),
+        content_type="application/json",
+        api_context=_api_context(),
+    )
+    assert bound.arguments["body"] == _TypedValidatorBody(name="SITE")
+
+
+def test_typed_plain_validator_rejects_a_wrong_json_type_with_400() -> None:
+    """A wrong JSON type used to raise TypeError past pydantic, answered with a crash report."""
+    model = EndpointModel.build(_typed_validator_endpoint_handler)
+    with pytest.raises(RestAPIRequestGeneralException) as exc_info:
+        model.validate_request_and_identify_args(
+            request_data=_request_data(body={"name": 5}),
+            content_type="application/json",
+            api_context=_api_context(),
+        )
+
+    assert exc_info.value.code == 400
+    assert "name" in exc_info.value.detail

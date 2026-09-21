@@ -7,7 +7,8 @@ from dataclasses import dataclass
 from typing import Annotated, get_args
 
 import pytest
-from pydantic import AfterValidator
+from pydantic import AfterValidator, ValidationError
+from pydantic.dataclasses import dataclass as pydantic_dataclass
 from pytest_mock import MockerFixture
 
 from cmk.ccc.hostaddress import HostName
@@ -20,6 +21,7 @@ from cmk.gui.openapi.framework.model.converter import (
     HostAddressConverter,
     HostConverter,
     TagConverter,
+    TypedPlainValidator,
     UserConverter,
 )
 from cmk.gui.session_context import UserContext
@@ -39,6 +41,20 @@ def test_validators_dont_run_on_json_dump() -> None:
 
     instance = Model(field="test")
     json_dump_without_omitted(Model, instance)
+
+
+class TestTypedPlainValidator:
+    @pydantic_dataclass(slots=True)
+    class Model:
+        field: Annotated[str, TypedPlainValidator(str, str.upper)]
+
+    def test_runs_the_validator_on_the_declared_input_type(self) -> None:
+        assert self.Model(field="site").field == "SITE"
+
+    def test_reports_a_wrong_input_type_as_a_validation_error(self) -> None:
+        """A TypeError would escape pydantic, leaving the caller with a crash report."""
+        with pytest.raises(ValidationError, match="Expected str, got int"):
+            self.Model(field=5)  # type: ignore[arg-type]
 
 
 class TestHostAddressConverter:

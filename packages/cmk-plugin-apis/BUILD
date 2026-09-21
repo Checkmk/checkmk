@@ -66,6 +66,7 @@ py_library(
         "cmk/bakery/internal/_common_config.py",
         "cmk/bakery/internal/_constants.py",
         "cmk/bakery/internal/_core_bakelet.py",
+        "cmk/bakery/internal/_recipes.py",
         "cmk/bakery/internal/_types.py",
         "cmk/bakery/v1/__init__.py",
         "cmk/bakery/v1/_artifact_types.py",

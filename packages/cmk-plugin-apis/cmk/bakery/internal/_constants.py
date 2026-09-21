@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from enum import Enum, StrEnum, unique
 from typing import Final, override
 
@@ -43,3 +44,13 @@ ALL_OPSYSES: Final = (OS.LINUX, OS.SOLARIS, OS.AIX, OS.WINDOWS)
 
 
 PYTHON_MODULE_EXT: Final = ".checkmk.py"
+
+# Layout users create below ``custom/<package>`` in the site's agents directory.
+CUSTOM_FILE_SUBDIRS: Final[Mapping[LogicalPath, str]] = {
+    LogicalPath.LIB: "lib",
+    LogicalPath.BIN: "bin",
+    LogicalPath.VAR: "var",
+    LogicalPath.CONFIG: "config",
+    LogicalPath.PLUGINS: "lib/plugins",
+    LogicalPath.LOCAL: "lib/local",
+}

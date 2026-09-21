@@ -24,6 +24,7 @@ from cmk.bakery.v1 import (
 
 from ._constants import (
     AGENT_FILE_HEADER,
+    CUSTOM_FILE_SUBDIRS,
     LogicalPath,
     ScriptType,
 )
@@ -458,15 +459,6 @@ class HomeFileContainer(BaseFileContainer):
 
 _CUSTOM_BASE_PATH: Final[str] = "custom"
 
-_SEARCH_PATHS: Final[Mapping[LogicalPath, str]] = {
-    LogicalPath.LIB: "lib",
-    LogicalPath.BIN: "bin",
-    LogicalPath.VAR: "var",
-    LogicalPath.CONFIG: "config",
-    LogicalPath.PLUGINS: "lib/plugins",
-    LogicalPath.LOCAL: "lib/local",
-}
-
 
 class CustomFileContainer(BaseFileContainer):
     def __init__(
@@ -506,7 +498,7 @@ class CustomFileContainer(BaseFileContainer):
             else Path(
                 _CUSTOM_BASE_PATH,
                 self._package,
-                _SEARCH_PATHS[self.logical_path],
+                CUSTOM_FILE_SUBDIRS[self.logical_path],
                 self.content.source,
             )
         )

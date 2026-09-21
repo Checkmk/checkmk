@@ -51,6 +51,7 @@ from ._common_config import UserCreationStrategy as UserCreationStrategy
 from ._common_config import UserDeploymentConfig as UserDeploymentConfig
 from ._constants import AGENT_FILE_HEADER as AGENT_FILE_HEADER
 from ._constants import ALL_OPSYSES as ALL_OPSYSES
+from ._constants import CUSTOM_FILE_SUBDIRS as CUSTOM_FILE_SUBDIRS
 from ._constants import LogicalPath as LogicalPath
 from ._constants import PYTHON_MODULE_EXT as PYTHON_MODULE_EXT
 from ._constants import ScriptType as ScriptType
@@ -59,6 +60,11 @@ from ._core_bakelet import CoreFilesFunction as CoreFilesFunction
 from ._core_bakelet import CoreScriptletsFunction as CoreScriptletsFunction
 from ._core_bakelet import CoreYamlConfigFunction as CoreYamlConfigFunction
 from ._core_bakelet import entry_point_prefixes as entry_point_prefixes
+from ._recipes import BinaryFile as BinaryFile
+from ._recipes import CustomFile as CustomFile
+from ._recipes import PluginExecution as PluginExecution
+from ._recipes import SiteFile as SiteFile
+from ._recipes import TextFile as TextFile
 from ._types import AgentConfig as AgentConfig
 from ._types import AgentHash as AgentHash
 
@@ -74,11 +80,14 @@ __all__ = [
     "AgentInternalFileContainer",
     "AgentPathsConfig",
     "BaseFileContainer",
+    "BinaryFile",
     "CoreBakelet",
     "CoreFilesFunction",
     "CoreScriptletsFunction",
     "CoreYamlConfigFunction",
+    "CUSTOM_FILE_SUBDIRS",
     "CustomFileContainer",
+    "CustomFile",
     "CustomizeAgentPackageConfig",
     "DeploymentConfig",
     "DeploymentMode",
@@ -94,13 +103,16 @@ __all__ = [
     "PYTHON_MODULE_EXT",
     "PluginConfigContainer",
     "PluginContainer",
+    "PluginExecution",
     "RootFileContainer",
     "ScriptType",
     "ScriptletHandle",
+    "SiteFile",
     "SingleDirectoryConfig",
     "SystemBinaryContainer",
     "SystemConfigContainer",
     "TargetPathsProvider",
+    "TextFile",
     "UnixAgentPathsKeeper",
     "UnixMultipleDirectoryKeeper",
     "UnixSingleDirectoryKeeper",

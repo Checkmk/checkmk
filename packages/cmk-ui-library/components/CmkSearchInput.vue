@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -76,16 +77,18 @@ function clear(): void {
         @click="clear"
       />
     </div>
-    <button
+    <CmkButton
       v-if="showSubmitButton"
       type="button"
       class="cmk-search-input__submit"
+      :variant="query.length === 0 ? 'optional' : 'secondary'"
+      :disabled="query.length === 0"
       :aria-label="_t('Search')"
       :title="_t('Search')"
       @click="submit"
     >
       <CmkMultitoneIcon name="search" primary-color="others" size="small" aria-hidden="true" />
-    </button>
+    </CmkButton>
   </div>
 </template>
 
@@ -101,7 +104,7 @@ function clear(): void {
   flex: 1 1 auto;
   min-width: 0;
   align-items: center;
-  height: 27px;
+  height: 30px;
   padding: 0 var(--spacing);
   background-color: var(--default-form-element-bg-color);
   border: 1px solid var(--default-form-element-border-color);
@@ -111,30 +114,6 @@ function clear(): void {
 .cmk-search-input__icon {
   flex: 0 0 auto;
   margin-right: var(--dimension-3);
-}
-
-.cmk-search-input__submit {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  width: 27px;
-  height: 27px;
-  margin: 0;
-  padding: 0;
-  background-color: var(--default-form-element-bg-color);
-  border: 1px solid var(--default-form-element-border-color);
-  border-radius: var(--border-radius);
-  cursor: pointer;
-
-  &:hover {
-    border-color: var(--success);
-  }
-
-  &:focus-visible {
-    outline: revert;
-  }
 }
 
 .cmk-search-input__field {

@@ -12,13 +12,18 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from cmk.plugins.vsphere.special_agent.agent_vsphere import (
+    convert_hostname,
     ESXConnection,
     ESXSession,
+    eval_datastores,
     eval_multipath_info,
+    eval_snapshot_list,
     fetch_virtual_machines,
+    get_hostsystem_power_states,
     get_section_snapshot_summary,
+    get_vm_power_states,
 )
-from cmk.server_side_programs.v1_unstable import Storage
+from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, Storage
 
 
 def _build_id(lun_id: str) -> str:
@@ -271,3 +276,201 @@ def test_get_section_snapshot_summary(
     expected_output: Sequence[str],
 ) -> None:
     assert get_section_snapshot_summary(virtual_machines, systime) == expected_output
+
+
+def test_ipv6_addresses_are_bracketed_in_the_service_url() -> None:
+    session = ESXSession("fd00::10", 443, cert_check=False)
+
+    with patch("requests.Session.post", return_value=MagicMock()) as mock_post:
+        session.postsoap("<ns1:CurrentTime/>")
+
+    assert mock_post.call_args.args[0] == "https://[fd00::10]:443/sdk"
+
+
+def test_certificate_server_name_is_verified_with_hostname_validation() -> None:
+    session = ESXSession("10.0.0.1", 443, cert_check="vcenter.example.com")
+
+    adapter = session.get_adapter("https://10.0.0.1:443/sdk")
+
+    assert isinstance(adapter, HostnameValidationAdapter)
+
+
+def test_trace_recording_redacts_login_requests() -> None:
+    login_request = b"<ns1:Login><ns1:password>secret</ns1:password></ns1:Login>"
+
+    assert ESXConnection.filter_request_body(login_request) == b"login request filtered out"
+
+
+def test_trace_recording_keeps_other_requests() -> None:
+    request = b"<ns1:CurrentTime/>"
+
+    assert ESXConnection.filter_request_body(request) == request
+
+
+def _options(**overrides: object) -> argparse.Namespace:
+    options: dict[str, object] = {
+        "direct": False,
+        "spaces": "underscore",
+        "vm_pwr_display": "host",
+        "host_pwr_display": "host",
+        "hostname": None,
+    }
+    return argparse.Namespace(**{**options, **overrides})
+
+
+OBJECTS_HEADER = "<<<esx_vsphere_objects:sep(9)>>>"
+VMS = {"web-01": {"name": "web-01", "runtime.host": "esx01", "runtime.powerState": "poweredOn"}}
+VM_LINE = "virtualmachine\tweb-01\tesx01\tpoweredOn"
+HOST_PROPERTIES = {"host-10": {"name": ["esx01"], "runtime.powerState": ["poweredOn"]}}
+HOST_LINE = "hostsystem\tesx01\t\tpoweredOn"
+
+
+def test_vm_power_state_is_reported_on_the_queried_system_by_default() -> None:
+    section = get_vm_power_states(VMS, {}, _options())
+
+    assert section == ["<<<<>>>>", OBJECTS_HEADER, VM_LINE, "<<<<>>>>"]
+
+
+def test_vm_power_state_is_additionally_piggybacked_on_the_vm() -> None:
+    section = get_vm_power_states(VMS, {}, _options(vm_pwr_display="vm"))
+
+    assert section == [
+        "<<<<web-01>>>>",
+        OBJECTS_HEADER,
+        VM_LINE,
+        "<<<<>>>>",
+        OBJECTS_HEADER,
+        VM_LINE,
+        "<<<<>>>>",
+    ]
+
+
+def test_vm_power_state_is_additionally_piggybacked_on_the_esx_host() -> None:
+    section = get_vm_power_states(VMS, {}, _options(vm_pwr_display="esxhost"))
+
+    assert section == [
+        "<<<<esx01>>>>",
+        OBJECTS_HEADER,
+        VM_LINE,
+        "<<<<>>>>",
+        OBJECTS_HEADER,
+        VM_LINE,
+        "<<<<>>>>",
+    ]
+
+
+def test_esx_host_piggyback_of_vm_power_states_is_skipped_for_direct_queries() -> None:
+    section = get_vm_power_states(VMS, {}, _options(vm_pwr_display="esxhost", direct=True))
+
+    assert section == ["<<<<>>>>", OBJECTS_HEADER, VM_LINE, "<<<<>>>>"]
+
+
+def test_templates_are_reported_as_template_objects() -> None:
+    templates = {"tmpl-01": {**VMS["web-01"], "name": "tmpl-01", "config.template": "true"}}
+
+    section = get_vm_power_states(templates, {}, _options())
+
+    assert "template\ttmpl-01\tesx01\tpoweredOn" in section
+
+
+def test_host_power_state_is_reported_on_the_queried_system_by_default() -> None:
+    section = get_hostsystem_power_states({}, {}, HOST_PROPERTIES, _options())
+
+    assert section == ["<<<<>>>>", OBJECTS_HEADER, HOST_LINE, "<<<<>>>>"]
+
+
+def test_host_power_state_is_additionally_piggybacked_on_the_esx_host() -> None:
+    section = get_hostsystem_power_states(
+        {}, {}, HOST_PROPERTIES, _options(host_pwr_display="esxhost")
+    )
+
+    assert section == [
+        "<<<<>>>>",
+        OBJECTS_HEADER,
+        HOST_LINE,
+        "<<<<esx01>>>>",
+        OBJECTS_HEADER,
+        HOST_LINE,
+        "<<<<>>>>",
+    ]
+
+
+def test_host_power_state_is_piggybacked_on_each_vm_running_on_the_host() -> None:
+    section = get_hostsystem_power_states(VMS, {}, HOST_PROPERTIES, _options(host_pwr_display="vm"))
+
+    assert section == ["<<<<web-01>>>>", OBJECTS_HEADER, HOST_LINE, "<<<<>>>>"]
+
+
+def test_direct_queries_report_the_host_power_state_under_the_configured_name() -> None:
+    section = get_hostsystem_power_states(
+        {}, {}, HOST_PROPERTIES, _options(direct=True, hostname="esx-alias")
+    )
+
+    assert "hostsystem\tesx-alias\t\tpoweredOn" in section
+
+
+def test_configured_host_name_is_not_used_when_displaying_the_state_on_vms() -> None:
+    section = get_hostsystem_power_states(
+        VMS, {}, HOST_PROPERTIES, _options(direct=True, hostname="esx-alias", host_pwr_display="vm")
+    )
+
+    assert section == ["<<<<web-01>>>>", OBJECTS_HEADER, HOST_LINE, "<<<<>>>>"]
+
+
+def test_spaces_in_host_names_are_replaced_by_underscores() -> None:
+    assert convert_hostname("esx host 01", _options(spaces="underscore")) == "esx_host_01"
+
+
+def test_host_names_are_cut_after_the_first_space_on_request() -> None:
+    assert convert_hostname("esx host 01", _options(spaces="cut")) == "esx"
+
+
+def _snapshot_tree(name: str, snapshot_id: int, created: str) -> str:
+    return (
+        f"<name>{name}</name><description></description><id>{snapshot_id}</id>"
+        f"<createTime>{created}</createTime><state>poweredOff</state>"
+    )
+
+
+def test_snapshots_are_serialised_with_epoch_creation_times() -> None:
+    serialised = eval_snapshot_list(_snapshot_tree("Before patch", 1, "2024-03-01T10:00:00Z"), {})
+
+    assert serialised == "1 1709287200 poweredOff Before patch"
+
+
+def test_unparsable_snapshot_creation_times_fall_back_to_zero() -> None:
+    serialised = eval_snapshot_list(_snapshot_tree("Before patch", 1, "unknown"), {})
+
+    assert serialised == "1 0 poweredOff Before patch"
+
+
+def test_multiple_snapshots_are_joined_with_pipes() -> None:
+    tree = _snapshot_tree("first", 1, "2024-03-01T10:00:00Z") + _snapshot_tree(
+        "second", 2, "2024-03-02T10:00:00Z"
+    )
+
+    serialised = eval_snapshot_list(tree, {})
+
+    assert serialised == "1 1709287200 poweredOff first|2 1709373600 poweredOff second"
+
+
+def test_pipes_in_snapshot_names_are_replaced_to_keep_the_separator_unambiguous() -> None:
+    serialised = eval_snapshot_list(_snapshot_tree("before|after", 1, "2024-03-01T10:00:00Z"), {})
+
+    assert serialised == "1 1709287200 poweredOff before after"
+
+
+def test_vm_datastores_carry_the_details_of_known_datastores() -> None:
+    datastores = {
+        "datastore-20": {"name": "ds1", "summary.capacity": "100", "summary.freeSpace": "40"}
+    }
+
+    serialised = eval_datastores("<name>ds1</name><url>/vmfs/volumes/x/</url>", datastores)
+
+    assert serialised == "name ds1|capacity 100|freeSpace 40"
+
+
+def test_unknown_vm_datastores_are_reported_by_name_only() -> None:
+    serialised = eval_datastores("<name>ds9</name><url>/vmfs/volumes/x/</url>", {})
+
+    assert serialised == "name ds9"

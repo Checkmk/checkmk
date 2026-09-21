@@ -80,6 +80,14 @@ class Config(BaseModel):
         return self.omd_root / "etc/ssl/relays/ca.pem"
 
     @property
+    def agent_crl_path(self) -> Path:
+        return self.agent_ca_path.with_suffix(".crl")
+
+    @property
+    def relay_crl_path(self) -> Path:
+        return self.relay_ca_path.with_suffix(".crl")
+
+    @property
     def agents_issued_certificates_path(self) -> Path:
         return issued_certificates_file(self.omd_root / "var/log", "agents")
 

@@ -16,10 +16,14 @@ import pytest
 from fastapi.testclient import TestClient
 
 from cmk.agent_receiver.lib.config import Config
-from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_ISSUER_HEADER, INJECTED_UUID_HEADER
+from cmk.agent_receiver.lib.mtls_auth_validator import (
+    INJECTED_ISSUER_HEADER,
+    INJECTED_SERIAL_HEADER,
+    INJECTED_UUID_HEADER,
+)
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial
 from cmk.relay_protocols.monitoring_data import MonitoringData, PayloadType
-from cmk.testlib.agent_receiver.certs import relay_ca_common_name
+from cmk.testlib.agent_receiver.certs import relay_ca_common_name, UNREVOKED_SERIAL_NUMBER
 from cmk.testlib.agent_receiver.clients import (
     RelayClient,
     RelayRegistrationClient,
@@ -415,10 +419,12 @@ def raw_post(
     identity_cn: str,
     issuer_cn: str,
 ) -> httpx2.Response:
-    """Escape hatch for tests that must send raw JSON (bypass Pydantic client-side validation).
-    Sets INJECTED_UUID_HEADER and INJECTED_ISSUER_HEADER for you."""
     return http.post(
         path,
-        headers={INJECTED_UUID_HEADER: identity_cn, INJECTED_ISSUER_HEADER: issuer_cn},
+        headers={
+            INJECTED_UUID_HEADER: identity_cn,
+            INJECTED_ISSUER_HEADER: issuer_cn,
+            INJECTED_SERIAL_HEADER: UNREVOKED_SERIAL_NUMBER,
+        },
         json=json,
     )

@@ -474,3 +474,13 @@ def test_revoke_adds_the_serial_number_to_the_crl_and_records_the_revocation(
     revocation = json.loads(_agent_certificate_log(omd_root).read_text().splitlines()[-1])
     assert revocation == asdict(issued) | {"event": "revoked", "ts": revocation["ts"]}
     assert revocation["ts"] != issued.ts
+
+
+def test_revoke_certificate_that_is_not_recorded_as_issued(omd_root: Path, agent_ca: Path) -> None:
+    _run_revoke(omd_root, _site_id(), "agent-ca", 0xAB)
+
+    assert _revoked_serial_numbers(agent_ca) == [0xAB]
+    revocation = json.loads(_agent_certificate_log(omd_root).read_text().splitlines()[-1])
+    assert revocation["event"] == "revoked"
+    assert revocation["serial"] == "ab"
+    assert revocation["subject"] is None

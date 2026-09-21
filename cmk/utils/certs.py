@@ -31,6 +31,7 @@ from cmk.crypto.certificate import (
 from cmk.crypto.issued_certificates import (
     find_issued_certificate,
     issued_certificates_file,
+    IssuedCertificateEntry,
     IssuedCertificatesComponent,
 )
 from cmk.crypto.keys import is_supported_private_key_type, PrivateKey
@@ -205,20 +206,13 @@ def crl_path(ca_cert_path: Path) -> Path:
 
 
 def revoke_certificate(
-    ca_cert_path: Path, ca_key_path: Path, serial_number: int, cert_log: Path
-) -> None:
-    """Add a serial number to the revocation list of the CA that issued the certificate.
+    ca_path: Path, serial_number: int, cert_log: Path
+) -> IssuedCertificateEntry | None:
+    """Add a serial number to the revocation list of the CA that issued the certificate."""
+    issued = find_issued_certificate(cert_log, serial_number)
 
-    Pass the same path twice for the CAs that keep certificate and private key in one file.
-    """
-    if (issued := find_issued_certificate(cert_log, serial_number)) is None:
-        raise ValueError(
-            f"No certificate with serial number {serial_number_string(serial_number)} was issued "
-            f"according to '{cert_log}'."
-        )
-
-    ca = PersistedCertificateWithPrivateKey.read_files(ca_cert_path, ca_key_path)
-    path = crl_path(ca_cert_path)
+    ca = PersistedCertificateWithPrivateKey.read_files(ca_path, ca_path)
+    path = crl_path(ca_path)
     crl = (
         CertificateRevocationList.load_pem(CertificateRevocationListPEM(path.read_bytes()))
         if path.exists()
@@ -232,7 +226,12 @@ def revoke_certificate(
 
     path.write_bytes(crl.revoke(serial_number, ca).dump_pem().bytes)
     _set_certfile_permissions(path)
-    issued.revoked().append_to(cert_log)
+    (
+        issued.revoked()
+        if issued is not None
+        else IssuedCertificateEntry.revocation_of_unrecorded_certificate(serial_number)
+    ).append_to(cert_log)
+    return issued
 
 
 def write_cert_store(source_dir: Path, store_path: Path) -> None:

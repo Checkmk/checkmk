@@ -28,17 +28,21 @@ def issued_certificates_file(log_dir: Path, component: IssuedCertificatesCompone
 
 @dataclass(frozen=True)
 class IssuedCertificateEntry:
-    """One line of an issued certificates file. The field names are the keys used in the file."""
+    """One line of an issued certificates file. The field names are the keys used in the file.
+
+    Details that are unknown, for example those of a revoked certificate that was never recorded as
+    issued, are null.
+    """
 
     ts: str
     event: Literal["issued", "revoked"]
     serial: str
-    fp_sha256: str
+    fp_sha256: str | None
     issuer_ski: str | None
-    subject: str
-    san: dict[str, list[str]]
-    not_before: str
-    not_after: str
+    subject: str | None
+    san: dict[str, list[str]] | None
+    not_before: str | None
+    not_after: str | None
 
     @classmethod
     def from_certificate(
@@ -55,6 +59,20 @@ class IssuedCertificateEntry:
             san={"dns": _dns_names(certificate)},
             not_before=_format_timestamp(certificate.not_valid_before),
             not_after=_format_timestamp(certificate.not_valid_after),
+        )
+
+    @classmethod
+    def revocation_of_unrecorded_certificate(cls, serial_number: int) -> IssuedCertificateEntry:
+        return cls(
+            ts=_format_timestamp(datetime.now(tz=UTC)),
+            event="revoked",
+            serial=serial_number.to_bytes((serial_number.bit_length() + 7) // 8).hex(),
+            fp_sha256=None,
+            issuer_ski=None,
+            subject=None,
+            san=None,
+            not_before=None,
+            not_after=None,
         )
 
     def revoked(self) -> IssuedCertificateEntry:

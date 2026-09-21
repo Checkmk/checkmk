@@ -14,7 +14,11 @@ from fastapi.testclient import TestClient
 from starlette.types import Receive, Scope, Send
 
 from cmk.agent_receiver.lib.certs import serialize_to_pem
-from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_ISSUER_HEADER, INJECTED_UUID_HEADER
+from cmk.agent_receiver.lib.mtls_auth_validator import (
+    INJECTED_ISSUER_HEADER,
+    INJECTED_SERIAL_HEADER,
+    INJECTED_UUID_HEADER,
+)
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial, TaskID
 from cmk.relay_protocols.monitoring_data import MonitoringData
 from cmk.relay_protocols.tasks import (
@@ -26,7 +30,7 @@ from cmk.relay_protocols.tasks import (
     TaskListResponse,
 )
 
-from .certs import generate_csr_pair, relay_ca_common_name
+from .certs import generate_csr_pair, relay_ca_common_name, UNREVOKED_SERIAL_NUMBER
 from .relay_config_generator import RelayConfig
 from .site_mock import User
 
@@ -90,14 +94,18 @@ class RelayClient:
         # used against the in-process TestClient, which never presents a certificate.
         self._relay_issuer_cn = relay_ca_common_name(site_name)
 
+    def _identity_headers(self) -> dict[str, str]:
+        return {
+            INJECTED_UUID_HEADER: self.identity_cn,
+            INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
+            INJECTED_SERIAL_HEADER: UNREVOKED_SERIAL_NUMBER,
+        }
+
     def refresh_cert(self) -> httpx2.Response:
         csr_pair = generate_csr_pair(cn=self.relay_id)
         return self.fastAPI_client.post(
             f"/{self.site_name}/relays/{self.relay_id}/csr",
-            headers={
-                INJECTED_UUID_HEADER: self.identity_cn,
-                INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
-            },
+            headers=self._identity_headers(),
             json={
                 "csr": serialize_to_pem(csr_pair[1]),
             },
@@ -106,17 +114,11 @@ class RelayClient:
     def get_status(self) -> httpx2.Response:
         return self.fastAPI_client.get(
             f"/{self.site_name}/relays/{self.relay_id}/status",
-            headers={
-                INJECTED_UUID_HEADER: self.identity_cn,
-                INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
-            },
+            headers=self._identity_headers(),
         )
 
     def get_tasks(self, status: str | None = None) -> httpx2.Response:
-        headers = {
-            INJECTED_UUID_HEADER: self.identity_cn,
-            INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
-        }
+        headers = self._identity_headers()
         if self._serial:
             headers[HEADERS.SERIAL] = str(self._serial)
         params: dict[str, str] = {}
@@ -134,10 +136,7 @@ class RelayClient:
         return TaskListResponse.model_validate(response.json())
 
     def update_task(self, task_id: str, result_type: str, result_payload: str) -> httpx2.Response:
-        headers = {
-            INJECTED_UUID_HEADER: self.identity_cn,
-            INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
-        }
+        headers = self._identity_headers()
         if self._serial:
             headers[HEADERS.SERIAL] = str(self._serial)
         return self.fastAPI_client.patch(
@@ -150,10 +149,7 @@ class RelayClient:
         )
 
     def forward_monitoring_data(self, monitoring_data: MonitoringData) -> httpx2.Response:
-        headers = {
-            INJECTED_UUID_HEADER: self.identity_cn,
-            INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
-        }
+        headers = self._identity_headers()
         if self._serial:
             headers[HEADERS.SERIAL] = str(self._serial)
         return self.fastAPI_client.post(
@@ -165,10 +161,7 @@ class RelayClient:
     def submit_crash(self, crash_type: str, crash_id: str, archive: bytes) -> httpx2.Response:
         return self.fastAPI_client.post(
             f"/{self.site_name}/relays/{self.relay_id}/crashes/{crash_type}/{crash_id}",
-            headers={
-                INJECTED_UUID_HEADER: self.identity_cn,
-                INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
-            },
+            headers=self._identity_headers(),
             content=archive,
         )
 

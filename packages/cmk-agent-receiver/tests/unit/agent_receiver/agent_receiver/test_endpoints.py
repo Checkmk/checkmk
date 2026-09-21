@@ -32,8 +32,16 @@ from cmk.agent_receiver.agent_receiver.models import (
 from cmk.agent_receiver.agent_receiver.utils import R4R
 from cmk.agent_receiver.lib.certs import serialize_to_pem
 from cmk.agent_receiver.lib.config import get_config
-from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_ISSUER_HEADER, INJECTED_UUID_HEADER
-from cmk.testlib.agent_receiver.certs import agent_ca_common_name, generate_csr_pair
+from cmk.agent_receiver.lib.mtls_auth_validator import (
+    INJECTED_ISSUER_HEADER,
+    INJECTED_SERIAL_HEADER,
+    INJECTED_UUID_HEADER,
+)
+from cmk.testlib.agent_receiver.certs import (
+    agent_ca_common_name,
+    generate_csr_pair,
+    UNREVOKED_SERIAL_NUMBER,
+)
 
 
 @pytest.fixture(name="symlink_push_host")
@@ -584,6 +592,7 @@ def fixture_agent_data_headers(uuid: UUID4) -> dict[str, str]:
         "compression": "zlib",
         INJECTED_UUID_HEADER: str(uuid),
         INJECTED_ISSUER_HEADER: _agent_ca_common_name(),
+        INJECTED_SERIAL_HEADER: UNREVOKED_SERIAL_NUMBER,
     }
 
 
@@ -724,6 +733,7 @@ def fixture_registration_status_headers(uuid: UUID4) -> dict[str, str]:
     return {
         INJECTED_UUID_HEADER: str(uuid),
         INJECTED_ISSUER_HEADER: _agent_ca_common_name(),
+        INJECTED_SERIAL_HEADER: UNREVOKED_SERIAL_NUMBER,
     }
 
 

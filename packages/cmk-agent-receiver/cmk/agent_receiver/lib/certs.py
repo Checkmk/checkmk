@@ -13,6 +13,8 @@ from cmk.agent_receiver.lib.config import get_config
 from cmk.crypto.certificate import (
     Certificate,
     CertificatePEM,
+    CertificateRevocationList,
+    CertificateRevocationListPEM,
     CertificateSigningRequest,
     CertificateSigningRequestPEM,
     CertificateWithPrivateKey,
@@ -23,6 +25,17 @@ from cmk.crypto.x509 import SAN, SubjectAlternativeNames
 def site_root_certificate() -> Certificate:
     config = get_config()
     return Certificate.load_pem(CertificatePEM(config.site_ca_path.read_bytes()))
+
+
+def is_revoked(crl_path: Path, serial_number: int) -> bool:
+    try:
+        # Read on every call, so that a revocation takes effect without a restart.
+        crl_pem = crl_path.read_bytes()
+    except FileNotFoundError:
+        return False  # a CA that never revoked a certificate has no list
+    return CertificateRevocationList.load_pem(CertificateRevocationListPEM(crl_pem)).is_revoked(
+        serial_number
+    )
 
 
 def sign_csr(

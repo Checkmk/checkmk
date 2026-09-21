@@ -11,11 +11,12 @@ from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.lib.mtls_auth_validator import (
     ExpectedCA,
     INJECTED_ISSUER_HEADER,
+    INJECTED_SERIAL_HEADER,
     INJECTED_UUID_HEADER,
     mtls_authorization_dependency,
 )
 from cmk.agent_receiver.main import main_app
-from cmk.testlib.agent_receiver.certs import agent_ca_common_name
+from cmk.testlib.agent_receiver.certs import agent_ca_common_name, UNREVOKED_SERIAL_NUMBER
 
 
 def test_uuid_validation_route() -> None:
@@ -43,14 +44,22 @@ def test_uuid_validation_route() -> None:
 
     response = client.get(
         "/endpoint/1234",
-        headers={INJECTED_UUID_HEADER: "1234", INJECTED_ISSUER_HEADER: issuer_cn},
+        headers={
+            INJECTED_UUID_HEADER: "1234",
+            INJECTED_ISSUER_HEADER: issuer_cn,
+            INJECTED_SERIAL_HEADER: UNREVOKED_SERIAL_NUMBER,
+        },
     )
     assert response.status_code == 200
     assert response.json() == {"Hello": "World"}
 
     response = client.get(
         "/endpoint/1234",
-        headers={INJECTED_UUID_HEADER: "5678", INJECTED_ISSUER_HEADER: issuer_cn},
+        headers={
+            INJECTED_UUID_HEADER: "5678",
+            INJECTED_ISSUER_HEADER: issuer_cn,
+            INJECTED_SERIAL_HEADER: UNREVOKED_SERIAL_NUMBER,
+        },
     )
     assert response.status_code == 400
     assert response.json() == {
@@ -59,14 +68,22 @@ def test_uuid_validation_route() -> None:
 
     response = client.get(
         "/other/1234/bar",
-        headers={INJECTED_UUID_HEADER: "1234", INJECTED_ISSUER_HEADER: issuer_cn},
+        headers={
+            INJECTED_UUID_HEADER: "1234",
+            INJECTED_ISSUER_HEADER: issuer_cn,
+            INJECTED_SERIAL_HEADER: UNREVOKED_SERIAL_NUMBER,
+        },
     )
     assert response.status_code == 200
     assert response.json() == {"Hello": "World"}
 
     response = client.get(
         "/other/1234/bar",
-        headers={INJECTED_UUID_HEADER: "5678", INJECTED_ISSUER_HEADER: issuer_cn},
+        headers={
+            INJECTED_UUID_HEADER: "5678",
+            INJECTED_ISSUER_HEADER: issuer_cn,
+            INJECTED_SERIAL_HEADER: UNREVOKED_SERIAL_NUMBER,
+        },
     )
     assert response.status_code == 400
     assert response.json() == {
@@ -94,7 +111,11 @@ def test_uuid_validation_route_rejects_wrong_issuer() -> None:
 
     response = client.get(
         "/endpoint/1234",
-        headers={INJECTED_UUID_HEADER: "1234", INJECTED_ISSUER_HEADER: "some other CA"},
+        headers={
+            INJECTED_UUID_HEADER: "1234",
+            INJECTED_ISSUER_HEADER: "some other CA",
+            INJECTED_SERIAL_HEADER: UNREVOKED_SERIAL_NUMBER,
+        },
     )
     assert response.status_code == 400
     assert "not issued by the expected CA" in response.json()["detail"]

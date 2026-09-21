@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from datetime import datetime, UTC
 from ipaddress import IPv4Address
+from pathlib import Path
 
 from dateutil.relativedelta import relativedelta
 
@@ -12,8 +14,10 @@ from cmk.agent_receiver.lib.config import Config
 from cmk.crypto.certificate import (
     Certificate,
     CertificatePEM,
+    CertificateRevocationList,
     CertificateSigningRequest,
     CertificateWithPrivateKey,
+    RevokedCertificate,
 )
 from cmk.crypto.issued_certificates import issued_certificates_file
 from cmk.crypto.keys import PrivateKey
@@ -21,6 +25,11 @@ from cmk.crypto.x509 import SAN, SubjectAlternativeNames, X509Name
 
 _CERT_EXPIRY = relativedelta(days=365)
 _KEY_SIZE = 2048
+
+# The ClientCertWorker injects the serial number of the presented certificate so that
+# revoked certificates can be rejected. Clients that talk to the in-process TestClient
+# present no certificate at all, so they stand in a serial number that no CA revoked.
+UNREVOKED_SERIAL_NUMBER = "01"
 
 
 def agent_ca_common_name(site_name: str) -> str:
@@ -96,6 +105,15 @@ def set_up_site_certs(config: Config) -> None:
     agent_root_ca.cache_clear()
     relay_root_ca.cache_clear()
     get_local_site_cn.cache_clear()
+
+
+def revoke_serial_number(ca_path: Path, serial_number: int) -> None:
+    ca = CertificateWithPrivateKey.load_combined_file_content(ca_path.read_text(), passphrase=None)
+    crl = CertificateRevocationList.create(
+        issuer=ca,
+        revoked_certificates=[RevokedCertificate(serial_number, datetime.now(tz=UTC))],
+    )
+    ca_path.with_suffix(".crl").write_bytes(crl.dump_pem().bytes)
 
 
 def generate_csr_pair(

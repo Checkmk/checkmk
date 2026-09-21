@@ -12,7 +12,11 @@ from uvicorn.protocols.http.flow_control import HIGH_WATER_LIMIT, service_unavai
 from uvicorn.protocols.http.h11_impl import H11Protocol, RequestResponseCycle
 from uvicorn_worker import UvicornWorker
 
-from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_ISSUER_HEADER, INJECTED_UUID_HEADER
+from cmk.agent_receiver.lib.mtls_auth_validator import (
+    INJECTED_ISSUER_HEADER,
+    INJECTED_SERIAL_HEADER,
+    INJECTED_UUID_HEADER,
+)
 
 
 def _cn_from_rdn_sequence(rdn_sequence: object) -> str | None:
@@ -26,25 +30,32 @@ def _cn_from_rdn_sequence(rdn_sequence: object) -> str | None:
     return None
 
 
-def _extract_client_cert_names(ssl_object: SSLObject | None) -> tuple[str | None, str | None]:
-    """Return (subject CN, issuer CN) of the client's TLS certificate, if presented."""
+def _extract_client_cert_identity(
+    ssl_object: SSLObject | None,
+) -> tuple[str | None, str | None, str | None]:
+    """Return (subject CN, issuer CN, serial number) of the client's TLS certificate."""
     if ssl_object is None:
-        return None, None
+        return None, None, None
     try:
         client_cert = ssl_object.getpeercert()
     except ValueError:
-        return None, None
+        return None, None, None
     if client_cert is None:
-        return None, None
+        return None, None, None
 
     return (
         _cn_from_rdn_sequence(client_cert.get("subject")),
         _cn_from_rdn_sequence(client_cert.get("issuer")),
+        # Same untyped dict as above; "serialNumber" is always a hex string when present.
+        cast("str | None", client_cert.get("serialNumber")),
     )
 
 
 def _headers_with_verified_identity(
-    headers: list[tuple[bytes, bytes]], client_cn: str | None, issuer_cn: str | None
+    headers: list[tuple[bytes, bytes]],
+    client_cn: str | None,
+    issuer_cn: str | None,
+    serial_number: str | None,
 ) -> list[tuple[bytes, bytes]]:
     """Return request headers carrying the trusted verified-identity headers.
 
@@ -57,16 +68,19 @@ def _headers_with_verified_identity(
     """
     injected_uuid_key = INJECTED_UUID_HEADER.encode()
     injected_issuer_key = INJECTED_ISSUER_HEADER.encode()
+    injected_serial_key = INJECTED_SERIAL_HEADER.encode()
     sanitized = [
         (key, value)
         for key, value in headers
-        if key.lower() not in (injected_uuid_key, injected_issuer_key)
+        if key.lower() not in (injected_uuid_key, injected_issuer_key, injected_serial_key)
     ]
     injected: list[tuple[bytes, bytes]] = []
     if client_cn is not None:
         injected.append((injected_uuid_key, client_cn.encode()))
     if issuer_cn is not None:
         injected.append((injected_issuer_key, issuer_cn.encode()))
+    if serial_number is not None:
+        injected.append((injected_serial_key, serial_number.encode()))
     return [*injected, *sanitized]
 
 
@@ -101,10 +115,12 @@ class _ClientCertProtocol(H11Protocol):
                 # ==================================================================================
                 # OUR CUSTOM EXTENSION
 
-                client_cn, issuer_cn = _extract_client_cert_names(
+                client_cn, issuer_cn, serial_number = _extract_client_cert_identity(
                     self.transport.get_extra_info("ssl_object")
                 )
-                self.headers = _headers_with_verified_identity(headers, client_cn, issuer_cn)
+                self.headers = _headers_with_verified_identity(
+                    headers, client_cn, issuer_cn, serial_number
+                )
 
                 # ==================================================================================
                 # ==================================================================================

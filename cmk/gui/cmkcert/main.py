@@ -18,7 +18,6 @@ from pathlib import Path
 from typing import Literal
 
 import cmk.utils.paths
-from cmk import messaging
 from cmk.ccc.site import omd_site, SiteId
 from cmk.crypto.certificate import serial_number_string
 from cmk.crypto.issued_certificates import IssuedCertificatesComponent
@@ -44,7 +43,7 @@ from .cmkcert_rotate import (
 )
 
 CertificateType = Literal["site", "site-ca", "agent-ca"]
-IssuingCA = Literal["site-ca", "agent-ca", "relay-ca", "broker-ca", "customer-broker-ca"]
+IssuingCA = Literal["agent-ca", "relay-ca"]
 
 
 def _parse_serial_number(value: str) -> int:
@@ -190,13 +189,17 @@ Once no agent uses a certificate issued by the previous CA anymore, delete it fr
         description="""
 The 'revoke' mode adds the serial number of a certificate to the certificate revocation list \
 (CRL) of the CA that issued it. Each CA has its own CRL, stored next to its certificate, which is \
-created if it does not exist yet. Only certificates that are recorded as issued in the certificate \
-log of the CA in 'var/log' can be revoked, and the revocation is recorded there as well.
+created if it does not exist yet. The revocation is also recorded in the certificate log of the CA \
+in 'var/log'. Certificates that are not recorded as issued there, for example because they were \
+issued before the log was introduced, can be revoked all the same.
+
+A revoked certificate is refused the next time its owner establishes a connection. \
+Connections that are already established are not terminated.
 """,
     )
     mode_revoke.add_argument(
         "issuing_ca",
-        choices=["site-ca", "agent-ca", "relay-ca", "broker-ca", "customer-broker-ca"],
+        choices=["agent-ca", "relay-ca"],
         help="Specify the CA that issued the certificate to revoke.",
     )
     mode_revoke.add_argument(
@@ -205,15 +208,6 @@ log of the CA in 'var/log' can be revoked, and the revocation is recorded there 
         help=(
             "Serial number of the certificate to revoke, in hexadecimal notation, with or "
             "without colons (e.g. '65:2e:18:0f' or '652e180f')."
-        ),
-    )
-    mode_revoke.add_argument(
-        "--customer",
-        type=str,
-        default=None,
-        help=(
-            "'customer-broker-ca' only -- "
-            "Specify the customer whose message broker CA issued the certificate."
         ),
     )
 
@@ -309,43 +303,20 @@ def _run_rotate(
             )
 
 
-def _issuing_ca_files(
-    omd_root: Path,
-    site_id: SiteId,
-    issuing_ca: IssuingCA,
-    customer: str | None,
-) -> tuple[Path, Path]:
-    """Return the certificate and key file of the given CA, which are one combined file for some."""
+def _issuing_ca_file(omd_root: Path, site_id: SiteId, issuing_ca: IssuingCA) -> Path:
     match issuing_ca:
-        case "site-ca" | "agent-ca":
-            combined = _certificate_path(omd_root, site_id, issuing_ca)
-            return combined, combined
+        case "agent-ca":
+            return _certificate_path(omd_root, site_id, issuing_ca)
         case "relay-ca":
-            combined = RelaysCA.root_ca_path(cert_dir=cert_dir(omd_root))
-            return combined, combined
-        case "broker-ca":
-            return messaging.cacert_file(omd_root), messaging.ca_key_file(omd_root)
-        case "customer-broker-ca":
-            if customer is None:
-                raise ValueError(
-                    "Revoking a certificate of the 'customer-broker-ca' needs --customer."
-                )
-            return (
-                messaging.multisite_cacert_file(omd_root, customer),
-                messaging.multisite_ca_key_file(omd_root, customer),
-            )
+            return RelaysCA.root_ca_path(cert_dir=cert_dir(omd_root))
 
 
 def _issued_certificates_component(issuing_ca: IssuingCA) -> IssuedCertificatesComponent:
     match issuing_ca:
-        case "site-ca":
-            return "sites"
         case "agent-ca":
             return "agents"
         case "relay-ca":
             return "relays"
-        case "broker-ca" | "customer-broker-ca":
-            return "messaging"
 
 
 def _run_revoke(
@@ -353,23 +324,22 @@ def _run_revoke(
     site_id: SiteId,
     issuing_ca: IssuingCA,
     serial_number: int,
-    customer: str | None = None,
 ) -> None:
-    cert_path, key_path = _issuing_ca_files(omd_root, site_id, issuing_ca, customer)
-    for path in (cert_path, key_path):
-        if not path.exists():
-            raise ValueError(f"The '{issuing_ca}' CA is not available at '{path}'.")
+    ca_path = _issuing_ca_file(omd_root, site_id, issuing_ca)
+    if not ca_path.exists():
+        raise ValueError(f"The '{issuing_ca}' CA is not available at '{ca_path}'.")
 
-    revoke_certificate(
-        cert_path,
-        key_path,
-        serial_number,
-        issued_certificates_path(omd_root, _issued_certificates_component(issuing_ca)),
-    )
+    cert_log = issued_certificates_path(omd_root, _issued_certificates_component(issuing_ca))
+    issued = revoke_certificate(ca_path, serial_number, cert_log)
     sys.stdout.write(
         f"The certificate with serial number {serial_number_string(serial_number)} is revoked "
-        f"in '{crl_path(cert_path)}'.\n"
+        f"in '{crl_path(ca_path)}'.\n"
     )
+    if issued is None:
+        sys.stdout.write(
+            f"Note: no certificate with this serial number is recorded as issued in '{cert_log}'. "
+            "Check the serial number if you did not expect this.\n"
+        )
 
 
 def main(args: Sequence[str] | None = None) -> int:
@@ -433,19 +403,11 @@ def main(args: Sequence[str] | None = None) -> int:
             )
 
         elif parsed_args.mode == "revoke":
-            if parsed_args.issuing_ca != "customer-broker-ca" and parsed_args.customer is not None:
-                sys.stderr.write(
-                    "cmk-cert: --customer can only be used when revoking a certificate issued by "
-                    "the 'customer-broker-ca'.\n"
-                )
-                return -1
-
             _run_revoke(
                 cmk.utils.paths.omd_root,
                 SiteId(site_id),
                 parsed_args.issuing_ca,
                 parsed_args.serial_number,
-                parsed_args.customer,
             )
 
         else:

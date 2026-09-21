@@ -4,67 +4,61 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { CmkSimpleError } from 'cmk-ui-library/lib/error'
-import { provide, toRaw } from 'vue'
+import { useMswWorker } from '@ucl/_ucl/composables/useMswWorker'
+import type { GlobalSettingsOrigin } from 'cmk-shared-typing/typescript/global_settings'
+import { HttpResponse, http } from 'msw'
 
 import GlobalSettingsApp from '@/global-settings/GlobalSettingsApp.vue'
-import {
-  GLOBAL_SETTINGS_SERVICE,
-  type GlobalSettingsService,
-  type ReceivedValue
-} from '@/global-settings/api'
 
 import { globalSettingsPagePayload as data } from './globalSettingsPagePayload'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const demoSettings = new Map<string, ReceivedValue>(
-  data.topics
-    .flatMap((topic) => topic.variables)
-    .map((variable) => [
-      variable.name,
-      {
-        value: structuredClone(variable.value),
-        origin: variable.origin,
-        etag: 'demo'
-      }
-    ])
-)
-const demoDefaults = new Map<string, unknown>(
-  data.topics
-    .flatMap((topic) => topic.variables)
-    .map((variable) => [variable.name, variable.default_value])
-)
+const SETTING_PATH = '*/api/internal/objects/global_setting/:varname'
 
-const demoService: GlobalSettingsService = {
-  async load(_scope, varname) {
-    const stored = demoSettings.get(varname)
-    if (stored === undefined) {
-      throw new CmkSimpleError(`There is no setting named "${varname}".`)
-    }
-    return { ...stored, value: structuredClone(stored.value) }
-  },
-  async save(_scope, varname, value) {
-    const stored: ReceivedValue = {
-      value: structuredClone(toRaw(value)),
-      origin: 'global',
-      etag: 'demo'
-    }
-    demoSettings.set(varname, stored)
-    return { ...stored, value: structuredClone(stored.value) }
-  },
-  async reset(_scope, varname) {
-    demoSettings.set(varname, {
-      value: structuredClone(demoDefaults.get(varname)),
-      origin: 'factory',
-      etag: 'demo'
-    })
-  }
+interface StoredValue {
+  value: unknown
+  origin: GlobalSettingsOrigin
 }
 
-provide(GLOBAL_SETTINGS_SERVICE, demoService)
+const variables = data.topics.flatMap((topic) => topic.variables)
+const stored = new Map<string, StoredValue>(
+  variables.map((variable) => [
+    variable.name,
+    { value: structuredClone(variable.value), origin: variable.origin }
+  ])
+)
+const defaults = new Map<string, unknown>(
+  variables.map((variable) => [variable.name, variable.default_value])
+)
+
+function respond(varname: string): Response {
+  const value = stored.get(varname)
+  if (value === undefined) {
+    return HttpResponse.json(
+      { title: 'Not found', detail: `There is no setting named "${varname}".` },
+      { status: 404 }
+    )
+  }
+  return HttpResponse.json({ varname, ...value }, { headers: { ETag: '"demo"' } })
+}
+
+const { mockLoaded } = useMswWorker([
+  http.get(SETTING_PATH, ({ params }) => respond(params['varname'] as string)),
+  http.put(SETTING_PATH, async ({ params, request }) => {
+    const varname = params['varname'] as string
+    const body = (await request.json()) as { value: unknown }
+    stored.set(varname, { value: body.value, origin: 'global' })
+    return respond(varname)
+  }),
+  http.delete(SETTING_PATH, ({ params }) => {
+    const varname = params['varname'] as string
+    stored.set(varname, { value: structuredClone(defaults.get(varname)), origin: 'factory' })
+    return new HttpResponse(null, { status: 204 })
+  })
+])
 </script>
 
 <template>
-  <GlobalSettingsApp v-bind="data" />
+  <GlobalSettingsApp v-if="mockLoaded" v-bind="data" />
 </template>

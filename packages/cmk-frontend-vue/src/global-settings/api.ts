@@ -39,9 +39,6 @@ export interface GlobalSettingsService {
   reset(scope: GlobalSettingsScope, varname: string, etag: string): Promise<void>
 }
 
-export const GLOBAL_SETTINGS_SERVICE: InjectionKey<GlobalSettingsService> =
-  Symbol('GlobalSettingsService')
-
 const CONTENT_TYPE_HEADER = { 'Content-Type': 'application/json' } as const
 
 function toReceivedValue(result: {

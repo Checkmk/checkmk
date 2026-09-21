@@ -16,9 +16,9 @@ import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useDebounceRef } from 'cmk-ui-library/lib/useDebounce'
-import { computed, inject, onMounted, provide, ref, toRaw, watch } from 'vue'
+import { computed, onMounted, provide, ref, toRaw, watch } from 'vue'
 
-import { GLOBAL_SETTINGS_SERVICE, GLOBAL_SETTINGS_TOGGLE, globalSettingsService } from './api'
+import { GLOBAL_SETTINGS_TOGGLE, globalSettingsService as service } from './api'
 import ExpandCollapseButtons from './components/ExpandCollapseButtons.vue'
 import GlobalSettingsEditor from './components/GlobalSettingsEditor.vue'
 import GlobalSettingsEmptyState from './components/GlobalSettingsEmptyState.vue'
@@ -31,8 +31,6 @@ import { applyReceived, describeError, useGlobalSettingsEditor } from './useGlob
 const { _t } = usei18n()
 
 const props = defineProps<GlobalSettingsApp>()
-
-const service = inject(GLOBAL_SETTINGS_SERVICE, globalSettingsService)
 
 const SEARCH_URL_PARAM = 'search'
 const FILTER_URL_PARAM = 'filter'

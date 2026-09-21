@@ -12,7 +12,6 @@ from typing import cast, Literal
 from cmk.ccc.hostaddress import HostName
 from cmk.gui import forms
 from cmk.gui.config import Config
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -29,13 +28,7 @@ from cmk.gui.watolib.host_attributes import (
     sorted_host_attribute_topics,
     sorted_host_attributes_by_topic,
 )
-from cmk.gui.watolib.hosts_and_folders import (
-    Folder,
-    folder_from_request,
-    folder_tree,
-    Host,
-    SearchFolder,
-)
+from cmk.gui.watolib.hosts_and_folders import Folder, Host, SearchFolder
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.ruleset_matcher.tags import TagID
 from cmk.web.utils.html import HTML as HTML
@@ -182,15 +175,6 @@ def configure_attributes(
             container = None
 
             if attr.show_inherited_value():
-                if for_what in ["host", "cluster"]:
-                    try:
-                        host_name = request.get_ascii_input("host")
-                    except MKUserError:
-                        host_name = None
-                    url = folder_from_request(
-                        folder_tree(), request.var("folder"), host_name
-                    ).edit_url()
-
                 container = parent  # container is of type Folder
                 while container:
                     if attrname in container.attributes:

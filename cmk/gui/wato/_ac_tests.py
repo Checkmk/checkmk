@@ -44,7 +44,7 @@ from cmk.gui.watolib.analyze_configuration import (
 from cmk.gui.watolib.check_mk_automations import find_unknown_check_parameter_rule_sets
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import folder_tree, make_folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, SingleRulesetRecursively
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.livestatus_client import LocalConnection, SiteConfiguration, SiteConfigurations
@@ -1226,7 +1226,7 @@ class ACTestDeprecatedRuleSets(ACTest):
         ]
         if deprecated_rule_sets := [
             r
-            for r in AllRulesets.load_all_rulesets(folder_tree()).get_rulesets().values()
+            for r in AllRulesets.load_all_rulesets(make_folder_tree(config)).get_rulesets().values()
             if r.is_deprecated()
             and r.num_rules()
             and r.name not in unknown_check_parameter_rule_sets

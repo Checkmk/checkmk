@@ -65,8 +65,8 @@ from cmk.gui.watolib.host_attributes import ABCHostAttribute, all_host_attribute
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_from_request,
-    folder_tree,
     FolderTree,
+    make_folder_tree,
     strip_hostname_whitespace_chars,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
@@ -462,7 +462,7 @@ class ModeBulkImport(WatoMode):
 
             if request.var("_do_import"):
                 return self._import(
-                    folder_tree(),
+                    make_folder_tree(config),
                     csv_bulk_import,
                     host_attributes=all_host_attributes(
                         config.wato_host_attrs, config.tags.get_tag_groups_by_topic()

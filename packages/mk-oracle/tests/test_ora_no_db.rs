@@ -786,7 +786,7 @@ fn test_options_use_host_client_with_env_var() {
 /// against a tree owned end to end, by `tests/system/mk_oracle`.
 #[cfg(unix)]
 mod permissions {
-    use mk_oracle::permissions_linux::{assess, is_running_as_root};
+    use mk_oracle::permissions_linux::{assess, is_running_as_root, validate_file};
     use mk_oracle::setup::RuntimeVerdict;
     use std::fs;
     use std::os::unix::fs::PermissionsExt;
@@ -812,6 +812,15 @@ mod permissions {
         }
         let (_tmp, dir) = runtime_with_lib(0o666);
         assert_eq!(assess(&dir, true, &[]), RuntimeVerdict::Load);
+    }
+
+    #[test]
+    fn test_validate_file_passes_for_a_process_that_never_had_root() {
+        if is_running_as_root() {
+            return;
+        }
+        let (_tmp, dir) = runtime_with_lib(0o666);
+        assert!(validate_file(&dir.join(LIB), true, &[]).is_ok());
     }
 }
 

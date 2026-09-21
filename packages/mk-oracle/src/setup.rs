@@ -981,9 +981,9 @@ pub fn reset_env(old_path: &Path, mut_env: Option<String>) {
 /// library from it. Dispatches to the platform-specific implementation.
 ///
 /// On Unix the path, its direct entries and its parent directories must only be
-/// writable by root, by the conventional Oracle owner `oracle:oinstall`, or by a
-/// user or group listed in `safe_entries`, whenever the plugin runs as root. On
-/// Windows the path must be owned by, and its DACL must grant write access only
+/// writable by root, or by a user or group listed in `safe_entries`,
+/// whenever the plugin runs as root.
+/// On Windows the path must be owned by, and its DACL must grant write access only
 /// to, privileged SIDs (SYSTEM, built-in Administrators, Domain Admins,
 /// Enterprise Admins) or a listed safe entry, whenever the plugin runs elevated:
 /// the owner implicitly holds `WRITE_DAC`, so validating the DACL alone would let
@@ -994,7 +994,7 @@ pub fn reset_env(old_path: &Path, mut_env: Option<String>) {
 pub fn validate_permissions(p: &Path, check: bool, safe_entries: &[String]) -> Result<(), String> {
     #[cfg(unix)]
     {
-        crate::permissions_linux::validate(p, check, safe_entries)
+        crate::permissions_linux::validate_file(p, check, safe_entries)
     }
     #[cfg(windows)]
     {

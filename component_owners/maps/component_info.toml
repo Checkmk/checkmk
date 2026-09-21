@@ -1,0 +1,13 @@
+type = "Component"
+display_name = "Maps"
+has_support_component = false
+members_required = 1
+description = """
+- Checkmk Maps: editing maps and their elements, and viewing live host/service
+  states on them
+- The `cmk-maps` Vue SPA and the GUI integration backing it (permissions, WATO
+  modes, AJAX endpoints)
+- The maps site daemon that resolves maps, streams state updates, and serves
+  map images and icons
+- The maps REST API endpoints
+"""

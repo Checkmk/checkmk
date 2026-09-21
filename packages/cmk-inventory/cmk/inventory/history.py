@@ -17,6 +17,7 @@ from cmk.ccc.resulttype import Error, OK, Result
 from .delta import compare_trees, ImmutableDeltaTree
 from .filtering import filter_delta_tree, SDFilterChoice
 from .paths import (
+    collect_files,
     InventoryPaths,
     parse_archive_timestamp,
     parse_delta_cache_timestamps,
@@ -110,12 +111,7 @@ class HistoryStore:
     def _collect_paths_from_delta_cache(
         self, host_name: HostName
     ) -> Iterator[Result[HistoryDeltaPath, Path]]:
-        try:
-            file_paths = list(self.inv_paths.delta_cache_host(host_name).iterdir())
-        except FileNotFoundError:
-            return
-
-        for file_path in file_paths:
+        for file_path in collect_files(self.inv_paths.delta_cache_host(host_name)):
             try:
                 previous_timestamp, current_timestamp = parse_delta_cache_timestamps(file_path)
             except ValueError:

@@ -15,7 +15,7 @@ from typing import TypedDict
 
 import cmk.ccc.store
 from cmk.ccc.hostaddress import HostName
-from cmk.inventory.paths import InventoryPaths, TreePath, TreePathGz
+from cmk.inventory.paths import collect_files, InventoryPaths, TreePath, TreePathGz
 from cmk.inventory.store import parse_from_gzipped, save_raw_tree, save_raw_tree_gz
 
 
@@ -50,11 +50,8 @@ class _HostTreePath:
     stat: os.stat_result
 
 
-def _collect_file_paths(directory: Path) -> Sequence[Path]:
-    try:
-        return [fp for fp in directory.iterdir() if fp.name != ".last"]
-    except FileNotFoundError:
-        return []
+def _collect_tree_file_paths(directory: Path) -> Sequence[Path]:
+    return [fp for fp in collect_files(directory) if fp.name != ".last"]
 
 
 def _compute_file_path_stat(file_path: Path) -> os.stat_result | None:
@@ -79,8 +76,8 @@ def _iter_host_tree_paths_or_unknown_file_paths(
 ) -> Iterator[_HostTreePath | Path]:
     inv_paths = InventoryPaths(omd_root)
 
-    inventory_file_paths = _collect_file_paths(inv_paths.inventory_dir)
-    status_data_file_paths = _collect_file_paths(inv_paths.status_data_dir)
+    inventory_file_paths = _collect_tree_file_paths(inv_paths.inventory_dir)
+    status_data_file_paths = _collect_tree_file_paths(inv_paths.status_data_dir)
 
     for raw_host_name in all_host_names:
         host_name = HostName(raw_host_name)
@@ -97,17 +94,9 @@ def _iter_host_tree_paths_or_unknown_file_paths(
         ):
             yield path
 
-    try:
-        archive_dirs = list(inv_paths.archive_dir.iterdir())
-    except FileNotFoundError:
-        archive_dirs = []
-
-    try:
-        delta_cache_dirs = list(inv_paths.delta_cache_dir.iterdir())
-    except FileNotFoundError:
-        delta_cache_dirs = []
-
-    for host_dir in archive_dirs + delta_cache_dirs:
+    for host_dir in list(collect_files(inv_paths.archive_dir)) + list(
+        collect_files(inv_paths.delta_cache_dir)
+    ):
         try:
             file_paths = list(host_dir.iterdir())
         except FileNotFoundError, NotADirectoryError:

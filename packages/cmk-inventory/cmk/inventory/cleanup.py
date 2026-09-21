@@ -14,6 +14,7 @@ from typing import Literal, Protocol, TypedDict
 from cmk.ccc.hostaddress import HostName
 
 from .paths import (
+    collect_files,
     InventoryPaths,
     parse_archive_timestamp,
     parse_delta_cache_timestamps,
@@ -218,13 +219,6 @@ class _FilePathsOfHost:
     delta_cache_file_paths: Sequence[Path]
 
 
-def _collect_files_from_directory(directory: Path) -> Sequence[Path]:
-    try:
-        return list(directory.iterdir())
-    except FileNotFoundError:
-        return []
-
-
 def _compute_timestamp_from_file_path(file_path: Path) -> int | None:
     try:
         return int(file_path.stat().st_mtime)
@@ -280,10 +274,8 @@ def _compute_classified_file_paths(
             inventory_tree=inventory_paths.inventory_tree(h),
             inventory_tree_gz=inventory_paths.inventory_tree_gz(h),
             status_data_tree=inventory_paths.status_data_tree(h),
-            archive_file_paths=_collect_files_from_directory(inventory_paths.archive_host(h)),
-            delta_cache_file_paths=_collect_files_from_directory(
-                inventory_paths.delta_cache_host(h)
-            ),
+            archive_file_paths=collect_files(inventory_paths.archive_host(h)),
+            delta_cache_file_paths=collect_files(inventory_paths.delta_cache_host(h)),
         )
         for h in host_names
     }

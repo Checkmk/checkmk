@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -103,6 +104,13 @@ class InventoryPaths:
             path=self.delta_cache_host(host_name) / f"{previous_name}_{current}.json",
             legacy=self.delta_cache_host(host_name) / f"{previous_name}_{current}",
         )
+
+
+def collect_files(directory: Path) -> Sequence[Path]:
+    try:
+        return list(directory.iterdir())
+    except FileNotFoundError:
+        return []
 
 
 def parse_archive_timestamp(file_path: Path) -> int:

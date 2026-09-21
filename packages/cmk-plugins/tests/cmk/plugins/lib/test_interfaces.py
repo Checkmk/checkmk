@@ -1889,7 +1889,7 @@ def test_check_single_interface_packet_levels() -> None:
 def _interface_with_multicast_rates(
     *,
     speed: int,
-    in_octets: float,
+    in_octets: float | None,
     out_octets: float = 0.0,
 ) -> interfaces.InterfaceWithRatesAndAverages:
     return interfaces.InterfaceWithRatesAndAverages(
@@ -1902,7 +1902,7 @@ def _interface_with_multicast_rates(
             oper_status="1",
         ),
         interfaces.RatesWithAverages(
-            in_octets=interfaces.RateWithAverage(in_octets, None),
+            in_octets=None if in_octets is None else interfaces.RateWithAverage(in_octets, None),
             in_ucast=interfaces.RateWithAverage(180, None),
             in_mcast=interfaces.RateWithAverage(20, None),
             in_nucast=interfaces.RateWithAverage(20, None),
@@ -1932,34 +1932,73 @@ MULTICAST_MIN_TRAFFIC = 5.0
 MULTICAST_IN_CRIT = Result(state=State.CRIT, summary="Multicast in: 10% (warn/crit at 5%/8%)")
 MULTICAST_LEVELS_ON_METRIC = (10.0, 16.0)
 
+BELOW_MIN_TRAFFIC_NOTE = " (levels not applied, used bandwidth below 5%)"
+SPEED_UNKNOWN_NOTE = " (levels not applied, operating speed unknown)"
+
 
 @pytest.mark.parametrize(
-    "min_traffic, used_bandwidth_perc, expected",
+    "min_traffic, used_bandwidth, expected",
     [
-        pytest.param(None, None, (MULTICAST_PERC_LEVELS, ""), id="no minimum traffic configured"),
-        pytest.param(None, 2.5, (MULTICAST_PERC_LEVELS, ""), id="no minimum traffic, low traffic"),
-        pytest.param(5.0, 10.0, (MULTICAST_PERC_LEVELS, ""), id="minimum traffic exceeded"),
-        pytest.param(5.0, 5.0, (MULTICAST_PERC_LEVELS, ""), id="minimum traffic exactly reached"),
+        pytest.param(
+            None,
+            interfaces.UsedBandwidth(percentage=None, speed_known=False),
+            (MULTICAST_PERC_LEVELS, ""),
+            id="no minimum traffic configured",
+        ),
+        pytest.param(
+            None,
+            interfaces.UsedBandwidth(percentage=2.5, speed_known=True),
+            (MULTICAST_PERC_LEVELS, ""),
+            id="no minimum traffic, low traffic",
+        ),
         pytest.param(
             5.0,
-            2.5,
-            (None, " (levels not applied, used bandwidth below 5%)"),
+            interfaces.UsedBandwidth(percentage=10.0, speed_known=True),
+            (MULTICAST_PERC_LEVELS, ""),
+            id="minimum traffic exceeded",
+        ),
+        pytest.param(
+            5.0,
+            interfaces.UsedBandwidth(percentage=5.0, speed_known=True),
+            (MULTICAST_PERC_LEVELS, ""),
+            id="minimum traffic exactly reached",
+        ),
+        pytest.param(
+            5.0,
+            interfaces.UsedBandwidth(percentage=2.5, speed_known=True),
+            (None, BELOW_MIN_TRAFFIC_NOTE),
             id="minimum traffic not reached",
         ),
-        pytest.param(5.0, None, (MULTICAST_PERC_LEVELS, ""), id="used bandwidth unknown"),
-        pytest.param(0.0, 0.0, (MULTICAST_PERC_LEVELS, ""), id="minimum traffic of zero"),
+        pytest.param(
+            5.0,
+            interfaces.UsedBandwidth(percentage=None, speed_known=False),
+            (None, SPEED_UNKNOWN_NOTE),
+            id="operating speed unknown",
+        ),
+        pytest.param(
+            5.0,
+            interfaces.UsedBandwidth(percentage=None, speed_known=True),
+            (MULTICAST_PERC_LEVELS, ""),
+            id="speed known but traffic counters missing",
+        ),
+        pytest.param(
+            0.0,
+            interfaces.UsedBandwidth(percentage=0.0, speed_known=True),
+            (MULTICAST_PERC_LEVELS, ""),
+            id="minimum traffic of zero",
+        ),
     ],
 )
 def test_percentual_packet_levels_evaluate(
     min_traffic: float | None,
-    used_bandwidth_perc: float | None,
+    used_bandwidth: interfaces.UsedBandwidth,
     expected: tuple[tuple[float, float] | None, str],
 ) -> None:
     levels = interfaces.PercentualPacketLevels(
         levels=MULTICAST_PERC_LEVELS,
         min_traffic=min_traffic,
     )
-    assert levels.evaluate(used_bandwidth_perc) == expected
+    assert levels.evaluate(used_bandwidth) == expected
 
 
 @pytest.mark.parametrize(
@@ -2001,25 +2040,29 @@ def test_check_single_interface_rejects_unknown_packet_levels(configured: object
         pytest.param(
             ONE_GBIT,
             0.025 * ONE_GBIT_IN_BYTES_PER_SEC,
-            Result(
-                state=State.OK,
-                notice="Multicast in: 10% (levels not applied, used bandwidth below 5%)",
-            ),
+            Result(state=State.OK, notice=f"Multicast in: 10%{BELOW_MIN_TRAFFIC_NOTE}"),
             None,
             id="minimum traffic not reached: levels not applied",
         ),
         pytest.param(
             0,
             0.025 * ONE_GBIT_IN_BYTES_PER_SEC,
+            Result(state=State.OK, notice=f"Multicast in: 10%{SPEED_UNKNOWN_NOTE}"),
+            None,
+            id="unknown operating speed: levels not applied",
+        ),
+        pytest.param(
+            ONE_GBIT,
+            None,
             MULTICAST_IN_CRIT,
             MULTICAST_LEVELS_ON_METRIC,
-            id="unknown operating speed: levels applied",
+            id="speed known but no traffic counters: levels applied",
         ),
     ],
 )
 def test_check_single_interface_perc_min_traffic(
     speed: int,
-    in_octets: float,
+    in_octets: float | None,
     expected_result: Result,
     expected_levels: tuple[float, float] | None,
 ) -> None:
@@ -2042,7 +2085,7 @@ def test_check_single_interface_perc_min_traffic(
 
 MULTICAST_OUT_SUPPRESSED = Result(
     state=State.OK,
-    notice="Multicast out: 10% (levels not applied, used bandwidth below 5%)",
+    notice=f"Multicast out: 10%{BELOW_MIN_TRAFFIC_NOTE}",
 )
 
 

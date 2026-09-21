@@ -624,10 +624,11 @@ def _vs_packet_levels(
                                 "value. On interfaces with little traffic, a few packets can "
                                 "already account for a large share of the overall traffic, which "
                                 "makes percentual levels fire even though the absolute traffic "
-                                "volume is negligible. If the used bandwidth cannot be "
-                                "determined, because the operating speed of the interface is "
-                                "unknown or no traffic counters are available, the levels are "
-                                "always applied."
+                                "volume is negligible. If the operating speed of the "
+                                "interface is unknown, the used bandwidth cannot be related "
+                                "to it at all and the levels are not applied either. If only "
+                                "the traffic counters are missing, the levels are applied as "
+                                "usual."
                             ),
                             maxvalue=100.0,
                             default_value=5.0,

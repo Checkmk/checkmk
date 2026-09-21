@@ -10,6 +10,7 @@ from cmk.graphing_engine import HostName, ServiceName
 from cmk.gui.config import active_config
 from cmk.gui.openapi.framework import (
     APIVersion,
+    EndpointBehavior,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
@@ -101,5 +102,6 @@ ENDPOINT_TRANSLATE_METRIC_NAMES = VersionedEndpoint(
         )
     ),
     doc=EndpointDoc(family=GRAPH_FAMILY.name),
+    behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
     versions={APIVersion.INTERNAL: EndpointHandler(handler=translate_metric_names_v1)},
 )

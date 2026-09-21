@@ -6,6 +6,7 @@
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     APIVersion,
+    EndpointBehavior,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
@@ -69,5 +70,6 @@ ENDPOINT_COMPUTE_WIDGET_ATTRIBUTES = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(required=PERMISSIONS_DASHBOARD),
     doc=EndpointDoc(family=DASHBOARD_FAMILY.name),
+    behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
     versions={APIVersion.UNSTABLE: EndpointHandler(handler=compute_widget_attributes_v1)},
 )

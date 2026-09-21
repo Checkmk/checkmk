@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+import subprocess
 from collections.abc import Mapping, Sequence
+from pathlib import Path
 from typing import Literal
 from unittest.mock import MagicMock
 
@@ -11,6 +14,7 @@ import pytest
 
 from livestatus import MKLivestatusSocketError
 
+import cmk.utils.paths
 from cmk.graphing_engine import (
     AutoPrecision,
     ConsolidationFunction,
@@ -57,6 +61,7 @@ from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.utils.temperature_unit import TemperatureUnit
+from tests.testlib.unit.gui.web_test_app import SetConfig, WebTestAppForCMK
 
 
 @pytest.mark.parametrize(
@@ -648,3 +653,49 @@ def test_evaluated_to_response_leaves_an_rrd_metric_without_attributes() -> None
 
     [metric] = response.metrics
     assert metric.metadata.attributes == []
+
+
+def _init_setup_git_repo(config_dir: Path) -> None:
+    """Initialize a Setup GIT repo, then rewrite a tracked file to leave the tree dirty."""
+    tracked = config_dir / "multisite.d" / "wato" / "global.mk"
+    tracked.parent.mkdir(parents=True, exist_ok=True)
+    tracked.write_text("# committed\n")
+
+    def _git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=config_dir, check=True, capture_output=True)
+
+    _git("init", "-q")
+    _git("config", "user.email", "check_mk")
+    _git("config", "user.name", "check_mk")
+    _git("add", "-A")
+    _git("commit", "-q", "-m", "Initialized GIT for Checkmk")
+    tracked.write_text("# rewritten by cmk-update-config\n")
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_fetch_graph_data_does_not_commit_the_setup_git_repo(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    set_config: SetConfig,
+) -> None:
+    config_dir = cmk.utils.paths.default_config_dir
+    _init_setup_git_repo(config_dir)
+    body = json.dumps(
+        {
+            "internal": json.dumps(serialize_graphs([Graph(name="g", title="t", kind="template")])),
+            "requested_time_range": {"start": 0, "end": 60, "step": 10},
+            "consolidation_function": "avg",
+        }
+    )
+
+    with set_config(wato_use_git=True):
+        resp = aut_user_auth_wsgi_app.post(
+            "/NO_SITE/check_mk/api/internal/domain-types/graph/actions/fetch_data/invoke",
+            params=body,
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+        )
+
+    assert resp.status_code == 200, resp.text
+    log = subprocess.run(
+        ["git", "log", "--format=%s"], cwd=config_dir, check=True, capture_output=True, text=True
+    ).stdout.splitlines()
+    assert log == ["Initialized GIT for Checkmk"]

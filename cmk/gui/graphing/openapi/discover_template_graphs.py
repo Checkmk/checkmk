@@ -8,6 +8,7 @@ from cmk.gui.config import active_config
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
+    EndpointBehavior,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
@@ -103,5 +104,6 @@ ENDPOINT_DISCOVER_TEMPLATE_GRAPHS = VersionedEndpoint(
         )
     ),
     doc=EndpointDoc(family=GRAPH_FAMILY.name),
+    behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
     versions={APIVersion.INTERNAL: EndpointHandler(handler=discover_template_graphs_v1)},
 )

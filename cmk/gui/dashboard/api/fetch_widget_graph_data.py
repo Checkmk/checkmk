@@ -34,6 +34,7 @@ from cmk.gui.graphing.openapi.models import (
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
+    EndpointBehavior,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
@@ -143,6 +144,7 @@ ENDPOINT_FETCH_WIDGET_GRAPH_DATA = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(),
     doc=EndpointDoc(family=DASHBOARD_FAMILY.name),
+    behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
     versions={APIVersion.INTERNAL: EndpointHandler(handler=fetch_widget_graph_data_v1)},
     allowed_tokens={"dashboard"},
 )

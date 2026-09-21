@@ -13,6 +13,7 @@ from cmk.gui.graphing.openapi._family import GRAPH_FAMILY
 from cmk.gui.graphing.openapi.models import ApiConsolidation, ExportRequest, ExportResponse
 from cmk.gui.openapi.framework import (
     APIVersion,
+    EndpointBehavior,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
@@ -53,5 +54,6 @@ ENDPOINT_EXPORT = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(),
     doc=EndpointDoc(family=GRAPH_FAMILY.name),
+    behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
     versions={APIVersion.INTERNAL: EndpointHandler(handler=export_v1)},
 )

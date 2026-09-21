@@ -9,6 +9,7 @@ from cmk.gui.dashboard.dashlet.registry import dashlet_registry
 from cmk.gui.dashboard.type_defs import DashletConfig
 from cmk.gui.openapi.framework import (
     APIVersion,
+    EndpointBehavior,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
@@ -82,5 +83,6 @@ ENDPOINT_COMPUTE_WIDGET_TITLES = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(required=PERMISSIONS_DASHBOARD_READ),
     doc=EndpointDoc(family=DASHBOARD_FAMILY.name),
+    behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
     versions={APIVersion.INTERNAL: EndpointHandler(handler=compute_widget_titles_v1)},
 )

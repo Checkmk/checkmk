@@ -10,6 +10,7 @@ from cmk.graphing_engine import TimeRange as EngineTimeRange
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
+    EndpointBehavior,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
@@ -162,5 +163,6 @@ ENDPOINT_FETCH_GRAPH_DATA = VersionedEndpoint(
         )
     ),
     doc=EndpointDoc(family=GRAPH_FAMILY.name),
+    behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
     versions={APIVersion.INTERNAL: EndpointHandler(handler=fetch_graph_data_v1)},
 )

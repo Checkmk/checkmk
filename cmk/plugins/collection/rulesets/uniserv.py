@@ -37,17 +37,11 @@ def _migrate(value: object) -> Mapping[str, object]:
         case other:
             raise ValueError(other)
 
-    # Both elements are required. Rules written by 2.4 versions that only set one of
-    # them are invalid on disk, and the missing element can not be restored by editing
-    # the rule in the GUI, so we heal them here.
     migrated.setdefault("check_version", False)
-    match migrated.get("check_address"):
-        case ("no", None) | ("yes", dict()):
-            pass
-        case dict() as address:
-            migrated["check_address"] = ("yes", address)
-        case _:
-            migrated["check_address"] = ("no", None)
+    if "check_address" not in migrated:
+        migrated["check_address"] = ("no", None)
+    elif isinstance(address := migrated["check_address"], dict):
+        migrated["check_address"] = ("yes", address)
 
     return migrated
 

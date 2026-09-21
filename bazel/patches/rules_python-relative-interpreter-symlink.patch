@@ -1,0 +1,50 @@
+Make the interpreter repo relocatable
+
+python_repository writes a convenience symlink "python" that points at the
+interpreter.  It creates the link with rctx.symlink(), which turns the relative
+target "bin/python3" into an absolute path.  At fetch time the repo still lives
+in the output base, so the link becomes:
+
+    <output_base>/external/rules_python++python+python_3_14_...-gnu/bin/python3
+
+With --repo_contents_cache Bazel then moves the repo directory into the shared
+cache (RepoContentsCache.moveToCache) and leaves a symlink behind at the old
+path.  It does not rewrite or validate symlinks inside the repo, so the cached
+copy keeps a back-reference into the output base that fetched it.  Every other
+workspace that reuses the entry depends on that output base.  If a user deletes
+that workspace, the link dangles and all other workspaces fail with:
+
+    Error: .../_bazel_<user>/<hash> (No such file or directory)
+
+Bazel cannot recover from this, because the recorded inputs of the entry hold
+only environment variables and a repo mapping.  Nothing records the symlink
+target, so no refetch is triggered.
+
+Write a relative link instead.  It resolves from any output base, which is what
+a shared cache entry requires.  ln stores the target verbatim and resolves it
+against the directory of the link, so the absolute link path is safe here.
+
+Windows keeps rctx.symlink(), because ln is not available there.
+
+diff --git a/python/private/python_repository.bzl b/python/private/python_repository.bzl
+--- a/python/private/python_repository.bzl
++++ b/python/private/python_repository.bzl
+@@ -292,7 +292,17 @@
+         coverage_tool = render.str(coverage_tool),
+     )
+     rctx.delete("python")
+-    rctx.symlink(python_bin, "python")
++    if repo_utils.get_platforms_os_name(rctx) == "windows":
++        rctx.symlink(python_bin, "python")
++    else:
++        # rctx.symlink() absolutizes the target, which pins the repo to the
++        # output base that fetched it once the repo contents cache shares it.
++        repo_utils.execute_checked(
++            rctx,
++            op = "SymlinkPythonRelative",
++            arguments = [repo_utils.which_checked(rctx, "ln"), "-s", python_bin, str(rctx.path("python"))],
++            logger = logger,
++        )
+     rctx.file(STANDALONE_INTERPRETER_FILENAME, "# File intentionally left blank. Indicates that this is an interpreter repo created by rules_python.")
+     rctx.file("BUILD.bazel", build_content)
+ 

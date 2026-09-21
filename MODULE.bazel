@@ -229,6 +229,7 @@ single_version_override(
     patch_strip = 1,
     patches = [
         "//bazel/patches:rules_python-py_wheel-filter_out_virtual_imports.patch",
+        "//bazel/patches:rules_python-relative-interpreter-symlink.patch",
     ],
 )
 

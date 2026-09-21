@@ -13,11 +13,12 @@ import time_machine
 from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.plugins.veeam.agent_based.veeam_client import (
     check_veeam_client,
+    CheckParameters,
     discover_veeam_client,
     parse_veeam_client,
 )
 
-PARAMS = {"age": ("fixed", (20.0, 40.0))}
+PARAMS: CheckParameters = {"age": ("fixed", (20.0, 40.0))}
 
 
 def _job_section(job_name: str = "JOB_NAME", **overrides: str) -> StringTable:

@@ -3,11 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 import time
-from collections.abc import Mapping
-from typing import Any
+from typing import TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -15,6 +12,7 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    LevelsT,
     Metric,
     render,
     Result,
@@ -24,6 +22,10 @@ from cmk.agent_based.v2 import (
 )
 
 Section = dict[str, dict[str, str]]
+
+
+class CheckParameters(TypedDict):
+    age: LevelsT[float]
 
 
 def _parse_int(raw: str | None) -> int | None:
@@ -77,7 +79,7 @@ def discover_veeam_client(section: Section) -> DiscoveryResult:
     yield from (Service(item=job) for job in section)
 
 
-def _check_backup_age(data: dict[str, str], params: Mapping[str, Any]) -> CheckResult:
+def _check_backup_age(data: dict[str, str], params: CheckParameters) -> CheckResult:
     age = _parse_float(data.get("LastBackupAge"))
     if age is None:
         # StopTime is kept for compatibility with old agent versions that reported
@@ -105,7 +107,7 @@ def _check_backup_age(data: dict[str, str], params: Mapping[str, Any]) -> CheckR
     )
 
 
-def check_veeam_client(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_veeam_client(item: str, params: CheckParameters, section: Section) -> CheckResult:
     try:
         data = section[item]
     except KeyError:
@@ -180,7 +182,7 @@ check_plugin_veeam_client = CheckPlugin(
     discovery_function=discover_veeam_client,
     check_function=check_veeam_client,
     check_ruleset_name="veeam_backup",
-    check_default_parameters={
-        "age": ("fixed", (108000.0, 172800.0)),  # 30h/2d
-    },
+    check_default_parameters=CheckParameters(
+        age=("fixed", (108000.0, 172800.0)),  # 30h/2d
+    ),
 )

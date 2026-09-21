@@ -90,7 +90,10 @@ fn main() {
         } else if environment.runtime_ready() {
             log::info!("ORACLE_HOME {:?}", environment.oracle_home());
             // the parent process has already prepared the environment
-            execute(config, environment)
+            match setup::prepare_runtime_load(&config, &environment) {
+                Err(e) => report_fatal_error(e),
+                Ok(()) => execute(config, environment),
+            }
         } else {
             // Select the Oracle client and the ORACLE_HOME that goes with it,
             // export both, and re-run ourselves: the child sees

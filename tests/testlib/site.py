@@ -3251,28 +3251,32 @@ def connection(
         "Create site connection from '%(central_site_id)s' to '%(remote_site_id)s'",
         {"central_site_id": central_site.id, "remote_site_id": remote_site.id},
     )
-    central_site.openapi.sites.create(site_config)
-    if configuration_connection.get("enable_replication"):
-        # CMK-27517: login won't work when replication is disabled
-        # CMK-27518: login won't work for the community edition (even if site URL is set via UI)
-        logger.info(
-            "Establish site login '%(central_site_id)s' to '%(remote_site_id)s'",
-            {"central_site_id": central_site.id, "remote_site_id": remote_site.id},
-        )
-        central_site.openapi.sites.login(remote_site.id)
-    logger.info("Activating site setup changes")
-    central_site.openapi.changes.activate_and_wait_for_completion(
-        # this seems to be necessary to avoid sporadic CI failures
-        force_foreign_changes=True,
-    )
+    connection_created = False
     try:
+        central_site.openapi.sites.create(site_config)
+        # the connection exists now and has to be removed again, even if the
+        # login or the activation below fails
+        connection_created = True
+        if configuration_connection.get("enable_replication"):
+            # CMK-27517: login won't work when replication is disabled
+            # CMK-27518: login won't work for the community edition (even if site URL is set via UI)
+            logger.info(
+                "Establish site login '%(central_site_id)s' to '%(remote_site_id)s'",
+                {"central_site_id": central_site.id, "remote_site_id": remote_site.id},
+            )
+            central_site.openapi.sites.login(remote_site.id)
+        logger.info("Activating site setup changes")
+        central_site.openapi.changes.activate_and_wait_for_completion(
+            # this seems to be necessary to avoid sporadic CI failures
+            force_foreign_changes=True,
+        )
         logger.info(
             "Connection from '%(central_site_id)s' to '%(remote_site_id)s' established",
             {"central_site_id": central_site.id, "remote_site_id": remote_site.id},
         )
         yield
     finally:
-        if is_cleanup_enabled():
+        if connection_created and is_cleanup_enabled():
             logger.info(
                 "Remove site connection from '%(central_site_id)s' to '%(remote_site_id)s'",
                 {"central_site_id": central_site.id, "remote_site_id": remote_site.id},

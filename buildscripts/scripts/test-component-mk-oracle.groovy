@@ -35,52 +35,72 @@ void main() {
         )
     }
 
-    stage("Run mk-oracle component tests (Linux)") {
-        inside_container() {
-            withCredentials([
-                sshUserPrivateKey(
-                    credentialsId: 'jenkins-oracle-ssh-key',
-                    keyFileVariable: 'SSH_KEYFILE',
-                    usernameVariable: "SSH_USER",
-                ),
-                string(
-                    credentialsId: "CI_ORA_TEST_PASSWORD",
-                    variable: "CI_ORA_TEST_PASSWORD",
-                ),
-            ]) {
-                // SSH_USER comes from the jenkins-oracle-ssh-key credential;
-                // run pairs it with the host and DB endpoint from
-                // packages/mk-oracle/test-db-endpoints.conf and stages the
-                // test binary in a unique remote directory it creates itself.
-                sh("""
-                    ORACLE_HOME=/opt/oracle23/u01/app/oracle/dbhome1 \
-                    ${checkout_dir}/packages/mk-oracle/run --remote-host
-                """)
+    // Test output is captured per lane so the CV result table can link it
+    // (RESULT_CHECK_FILE_PATTERN in stages.yml).
+    def result_dir = "mk-oracle-component-tests";
+
+    try {
+        stage("Run mk-oracle component tests (Linux)") {
+            inside_container() {
+                withCredentials([
+                    sshUserPrivateKey(
+                        credentialsId: 'jenkins-oracle-ssh-key',
+                        keyFileVariable: 'SSH_KEYFILE',
+                        usernameVariable: "SSH_USER",
+                    ),
+                    string(
+                        credentialsId: "CI_ORA_TEST_PASSWORD",
+                        variable: "CI_ORA_TEST_PASSWORD",
+                    ),
+                ]) {
+                    // SSH_USER comes from the jenkins-oracle-ssh-key credential;
+                    // run pairs it with the host and DB endpoint from
+                    // packages/mk-oracle/test-db-endpoints.conf and stages the
+                    // test binary in a unique remote directory it creates itself.
+                    sh("""
+                        set -o pipefail
+                        mkdir -p ${checkout_dir}/${result_dir}
+                        ORACLE_HOME=/opt/oracle23/u01/app/oracle/dbhome1 \
+                        ${checkout_dir}/packages/mk-oracle/run --remote-host 2>&1 \
+                        | tee ${checkout_dir}/${result_dir}/linux.txt
+                    """)
+                }
             }
         }
-    }
 
-    stage("Run mk-oracle component tests (Solaris + AIX)") {
-        inside_container() {
-            withCredentials([
-                sshUserPrivateKey(
-                    credentialsId: 'jenkins-aix-build-ssh-key',
-                    keyFileVariable: 'SSH_KEYFILE',
-                ),
-            ]) {
-                // Runs only the no_db tests.
-                parallel(["solaris", "aix"].collectEntries { distro ->
-                    [(distro): {
-                        def distro_uc = distro.toUpperCase();
-                        sh("""
-                            . ${checkout_dir}/packages/mk-oracle/ssh-run.conf
-                            HOST_ADDRESS="jenkins@\${REMOTE_HOST_${distro_uc}}" \
-                            TEST_BINARIES=test_ora_no_db_test.${distro} \
-                            ${checkout_dir}/packages/mk-oracle/run --remote-host
-                        """)
-                    }]
-                })
+        stage("Run mk-oracle component tests (Solaris + AIX)") {
+            inside_container() {
+                withCredentials([
+                    sshUserPrivateKey(
+                        credentialsId: 'jenkins-aix-build-ssh-key',
+                        keyFileVariable: 'SSH_KEYFILE',
+                    ),
+                ]) {
+                    // Runs only the no_db tests.
+                    parallel(["solaris", "aix"].collectEntries { distro ->
+                        [(distro): {
+                            def distro_uc = distro.toUpperCase();
+                            sh("""
+                                set -o pipefail
+                                mkdir -p ${checkout_dir}/${result_dir}
+                                . ${checkout_dir}/packages/mk-oracle/ssh-run.conf
+                                HOST_ADDRESS="jenkins@\${REMOTE_HOST_${distro_uc}}" \
+                                TEST_BINARIES=test_ora_no_db_test.${distro} \
+                                ${checkout_dir}/packages/mk-oracle/run --remote-host 2>&1 \
+                                | tee ${checkout_dir}/${result_dir}/${distro}.txt
+                            """)
+                        }]
+                    })
+                }
             }
+        }
+    } finally {
+        dir("${checkout_dir}") {
+            archiveArtifacts(
+                allowEmptyArchive: true,
+                artifacts: "${result_dir}/*.txt",
+                fingerprint: true,  // mandatory to work with ci-artifacts
+            );
         }
     }
 }

@@ -101,10 +101,10 @@ still runs the network model already covered per change by
 `cv/winagt-test-build`, so a per-change stage for it would only duplicate;
 it follows once the run-on-VM model is backported.
 
-| CV stage (`stages.yml`)                                   | Triggered job                       | Notes                                                                        |
-| --------------------------------------------------------- | ----------------------------------- | ---------------------------------------------------------------------------- |
-| **System tests for mk-oracle**                            | `heavy/test-system-mk-oracle`       | junit report shown in the CV result table                                    |
-| **Linux/Solaris/AIX on-VM component tests for mk-oracle** | `builders/test-component-mk-oracle` | `EDITION=ultimatemt`, like the nightly chain (plugin is edition-independent) |
+| CV stage (`stages.yml`)                                   | Triggered job                       | Notes                                                                                                                                                                |
+| --------------------------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **System tests for mk-oracle**                            | `heavy/test-system-mk-oracle`       | junit report shown in the CV result table                                                                                                                            |
+| **Linux/Solaris/AIX on-VM component tests for mk-oracle** | `builders/test-component-mk-oracle` | `EDITION=ultimatemt`, like the nightly chain (plugin is edition-independent); per-lane test output linked in the CV result table (`mk-oracle-component-tests/*.txt`) |
 
 ## Stage 2 — post-submit heavy chain (several times a day)
 

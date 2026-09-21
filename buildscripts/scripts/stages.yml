@@ -809,7 +809,7 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_MK_ORACLE_FILES
       COMMAND: echo "Just have this line here, task is handled in test-gerrit.groovy"
       TEXT_ON_SKIP: "No mk-oracle files changed"
-
+      RESULT_CHECK_FILE_PATTERN: "mk-oracle-component-tests/*.txt"
 
     - NAME: "Package neb"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_NEB_FILES,CHANGED_LIVESTATUS_FILES

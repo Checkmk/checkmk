@@ -25,7 +25,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.sites import live
 from cmk.gui.user_sites import get_configured_site_choices
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.livestatus_client import lqencode
 from cmk.livestatus_client.expressions import And
 from cmk.livestatus_client.queries import Query, ResultRow
@@ -281,15 +281,14 @@ def dyngroup_members(object_types: str, object_filter: str) -> list[Member]:
 # ---------------------------------------------------------------------------
 
 
-def folder_choices() -> list[FolderChoice]:
+def folder_choices(tree: FolderTree) -> list[FolderChoice]:
     """Setup folders for the foldertree root-folder picker.
 
     Uses the WATO folder tree, which is already scoped to the folders the acting
     user may see — so unlike the daemon endpoint this needs no extra gate.
     """
     return [
-        FolderChoice(path=str(path), title=str(title))
-        for path, title in folder_tree().folder_choices(user)
+        FolderChoice(path=str(path), title=str(title)) for path, title in tree.folder_choices(user)
     ]
 
 

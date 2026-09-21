@@ -12,6 +12,7 @@ from typing import Annotated
 
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
+    ApiContext,
     APIVersion,
     EndpointDoc,
     EndpointHandler,
@@ -22,6 +23,7 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.restful_objects.constructors import collection_href, object_href
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.maps.gui._object_queries import (
     dyngroup_members,
     folder_choices,
@@ -167,11 +169,14 @@ def list_dyngroup_members_v1(
     return _members_response(dyngroup_members(object_types, object_filter))
 
 
-def list_folders_v1() -> MapsFoldersResponse:
+def list_folders_v1(api_context: ApiContext) -> MapsFoldersResponse:
     """Show the Setup folders"""
     user.need_permission("maps.use")
     return MapsFoldersResponse(
-        folders=[MapsFolder(path=choice.path, title=choice.title) for choice in folder_choices()]
+        folders=[
+            MapsFolder(path=choice.path, title=choice.title)
+            for choice in folder_choices(make_folder_tree(api_context.config))
+        ]
     )
 
 

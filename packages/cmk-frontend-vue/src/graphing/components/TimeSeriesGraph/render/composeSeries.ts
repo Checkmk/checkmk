@@ -20,6 +20,7 @@ export interface ComposedSeries {
   bucketsOnPlot: M4Cache[]
   paddedBuckets: M4Cache[]
   stacks: StackedSeries[]
+  stacksOnPlot: StackedSeries[]
 }
 
 /** Strips the flanking off-plot neighbours `composeSeries` pads with. */
@@ -48,11 +49,17 @@ export function composeSeries(options: {
     return metrics[i]!.render.inverse ? padded.map((bucket) => invertBucket(bucket)) : padded
   })
 
+  const stacks = computeStackedSeries(metrics, paddedBuckets, consolidation)
   return {
     bucketsOnPlot,
     paddedBuckets,
-    stacks: computeStackedSeries(metrics, paddedBuckets, consolidation)
+    stacks,
+    stacksOnPlot: stacks.map(onPlotSeries)
   }
+}
+
+function onPlotSeries(series: StackedSeries): StackedSeries {
+  return { ...series, bands: withoutOffPlotNeighbours(series.bands) }
 }
 
 export function hasMirroredMetric(metrics: Metric[]): boolean {
@@ -90,9 +97,10 @@ export function composedValueDomain(
     if (metric.render.hidden) {
       return []
     }
+    const series = composed.stacksOnPlot[i]!
     return [
-      composed.stacks[i]!.kind === 'area-stacked'
-        ? withoutOffPlotNeighbours(composed.stacks[i]!.bands).map((band) => ({
+      series.kind === 'area-stacked'
+        ? series.bands.map((band) => ({
             gap: band.gap,
             minValue: Math.min(band.lower, band.upper),
             maxValue: Math.max(band.lower, band.upper)

@@ -38,8 +38,7 @@ import {
   composeSeries,
   composedValueDomain,
   createM4CacheStore,
-  hasMirroredMetric,
-  withoutOffPlotNeighbours
+  hasMirroredMetric
 } from './render/composeSeries'
 import { drawHorizontalLines } from './render/horizontalLines'
 import { drawShadedRegions } from './render/shadedRegions'
@@ -275,10 +274,7 @@ function draw(): void {
   })
   const { paddedBuckets: inverted, stacks } = composed
 
-  recordDrawnGeometry(
-    composed.bucketsOnPlot,
-    stacks.map((series) => ({ ...series, bands: withoutOffPlotNeighbours(series.bands) }))
-  )
+  recordDrawnGeometry(composed.bucketsOnPlot, composed.stacksOnPlot)
 
   xScale
     .domain([

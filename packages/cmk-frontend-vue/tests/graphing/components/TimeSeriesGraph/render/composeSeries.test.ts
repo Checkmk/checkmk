@@ -55,6 +55,14 @@ describe('composeSeries', () => {
     expect(withoutOffPlotNeighbours(composed.paddedBuckets[0]!)).toEqual(composed.bucketsOnPlot[0])
   })
 
+  test('the on-plot stacks drop the flanking neighbours the padded stacks carry', () => {
+    const composed = compose([makeMetric([1, 2, 3], { stack: 'g1' })])
+
+    expect(composed.stacksOnPlot[0]!.bands).toEqual(
+      withoutOffPlotNeighbours(composed.stacks[0]!.bands)
+    )
+  })
+
   test('mirrors an inverse metric below the baseline', () => {
     const values = [1, 2, 3]
 
@@ -77,9 +85,7 @@ describe('composeSeries', () => {
       makeMetric([member], { stack: 'g1' })
     ])
 
-    const memberBands = withoutOffPlotNeighbours(composed.stacks[1]!.bands).filter(
-      (band) => !band.gap
-    )
+    const memberBands = composed.stacksOnPlot[1]!.bands.filter((band) => !band.gap)
     expect(memberBands.length).toBeGreaterThan(0)
     for (const band of memberBands) {
       expect(band.lower).toBe(baseline)

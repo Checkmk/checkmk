@@ -36,6 +36,7 @@
 //! the runtime path, its direct entries and its parent directories. The full
 //! subtree is deliberately *not* walked.
 
+use crate::setup::RuntimeVerdict;
 use std::collections::HashSet;
 use std::ffi::CString;
 use std::fs::Metadata;
@@ -267,6 +268,33 @@ fn validate_tree(target: &Path, md: &Metadata, safe: &SafeIds) -> bool {
         && (!md.file_type().is_dir() || validate_dir_entries(target, safe))
 }
 
+/// Without root there is nothing to escalate: the library runs with the
+/// privileges the user already has, so the runtime is loaded unchecked.
+pub fn assess(path: &Path, check: bool, safe_entries: &[String]) -> RuntimeVerdict {
+    if !check {
+        log::info!(
+            "Permission check disabled; skipping validation for {:?}",
+            path
+        );
+        return RuntimeVerdict::Load;
+    }
+    if !is_running_as_root() {
+        log::info!(
+            "Not running as root; skipping permission validation for {:?}",
+            path
+        );
+        return RuntimeVerdict::Load;
+    }
+    assess_tree(path, safe_entries)
+}
+
+fn assess_tree(path: &Path, safe_entries: &[String]) -> RuntimeVerdict {
+    match validate_as_root(path, safe_entries) {
+        Ok(()) => RuntimeVerdict::Load,
+        Err(reason) => RuntimeVerdict::Reject(reason),
+    }
+}
+
 /// Entry point for `setup::validate_permissions` on Unix.
 ///
 /// A non-root caller always passes: the library is loaded with the same
@@ -292,6 +320,10 @@ pub fn validate(path: &Path, check: bool, safe_entries: &[String]) -> Result<(),
         );
         return Ok(());
     }
+    validate_as_root(path, safe_entries)
+}
+
+fn validate_as_root(path: &Path, safe_entries: &[String]) -> Result<(), String> {
     let safe = SafeIds::new(safe_entries);
     let (target, md) = resolve(path).map_err(|e| format!("Cannot resolve {path:?}: {e}"))?;
     if validate_tree(&target, &md, &safe) {
@@ -464,6 +496,10 @@ mod tests {
         // The `check` flag is honoured before the root check, so this holds
         // whether or not the test itself runs as root. The path does not even
         // have to exist: nothing is looked at once the check is off.
-        assert!(validate(Path::new("/no/such/runtime"), false, &[]).is_ok());
+        assert_eq!(
+            assess(Path::new("/no/such/runtime"), false, &[]),
+            RuntimeVerdict::Load
+        );
+        assert!(validate(Path::new("/no/such/file.sql"), false, &[]).is_ok());
     }
 }

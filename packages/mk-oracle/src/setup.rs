@@ -707,6 +707,26 @@ pub struct RuntimeEnv {
     pub runtime_dir: Option<PathBuf>,
     /// effective ORACLE_HOME of the spawned process, if any
     pub oracle_home: Option<PathBuf>,
+    /// the user the monitoring process becomes before it loads the client
+    pub run_as: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RunAsUser {
+    pub uid: u32,
+    pub gid: u32,
+    pub groups: Vec<u32>,
+    pub name: String,
+    pub home: PathBuf,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum RuntimeVerdict {
+    Load,
+    /// The owner of the runtime. Only a Unix process running as root gets this.
+    SwitchTo(RunAsUser),
+    /// The reason the runtime must not be loaded, worded for the user.
+    Reject(String),
 }
 
 /// Why no Oracle client runtime could be prepared.
@@ -760,25 +780,40 @@ pub fn detect_runtime_env(config: &OracleConfig) -> Result<RuntimeEnv, RuntimeEr
         ora_sql.conn().grid(),
     )
     .ok_or(RuntimeError::NotFound)?;
-    if let Err(reason) = check_runtime_permissions(&client, ora_sql.options()) {
-        return Err(RuntimeError::Rejected {
-            dir: client.dir,
-            reason,
-        });
-    }
+    let run_as = match assess_runtime(&client.dir, ora_sql.options()) {
+        RuntimeVerdict::Load => None,
+        RuntimeVerdict::SwitchTo(user) => Some(user.name),
+        RuntimeVerdict::Reject(reason) => {
+            log::error!("Runtime rejected: {reason}");
+            return Err(RuntimeError::Rejected {
+                dir: client.dir,
+                reason,
+            });
+        }
+    };
     Ok(RuntimeEnv {
         oracle_home: effective_oracle_home(Some(&client), inherited),
         runtime_dir: Some(client.dir),
+        run_as,
     })
 }
 
-fn check_runtime_permissions(runtime: &ClientRuntime, options: &Options) -> Result<(), String> {
-    validate_permissions(
-        &runtime.dir,
+fn assess_runtime(dir: &Path, options: &Options) -> RuntimeVerdict {
+    let (check, safe_entries) = (
         options.permissions_check(),
         options.permissions_safe_entries(),
-    )
-    .inspect_err(|reason| log::error!("Runtime rejected: {reason}"))
+    );
+    #[cfg(unix)]
+    {
+        crate::permissions_linux::assess(dir, check, safe_entries)
+    }
+    #[cfg(windows)]
+    {
+        match crate::permissions_windows::validate(dir, check, safe_entries) {
+            Ok(()) => RuntimeVerdict::Load,
+            Err(reason) => RuntimeVerdict::Reject(reason),
+        }
+    }
 }
 
 pub fn effective_oracle_home(
@@ -860,6 +895,9 @@ pub fn format_runtime_env(runtime_env: &RuntimeEnv, current: &str) -> String {
     }
     if let Some(home) = &runtime_env.oracle_home {
         output.push_str(&format!("{ORACLE_HOME_ENV_VAR}={}\n", home.display()));
+    }
+    if let Some(user) = &runtime_env.run_as {
+        output.push_str(&format!("RUN_AS={user}\n"));
     }
     output
 }
@@ -1416,6 +1454,7 @@ mod tests {
         let runtime_env = RuntimeEnv {
             runtime_dir: Some(PathBuf::from("/runtime/lib")),
             oracle_home: Some(PathBuf::from("/oracle/home")),
+            run_as: None,
         };
         assert_eq!(
             format_runtime_env(&runtime_env, "/existing/path"),
@@ -1430,6 +1469,7 @@ mod tests {
         let runtime_env = RuntimeEnv {
             runtime_dir: Some(PathBuf::from("/runtime/lib")),
             oracle_home: None,
+            run_as: None,
         };
         assert_eq!(
             format_runtime_env(&runtime_env, ""),
@@ -1438,10 +1478,26 @@ mod tests {
     }
 
     #[test]
+    fn test_format_runtime_env_names_the_user_to_run_as() {
+        let runtime_env = RuntimeEnv {
+            runtime_dir: Some(PathBuf::from("/u01/dbhome_1/lib")),
+            oracle_home: Some(PathBuf::from("/u01/dbhome_1")),
+            run_as: Some("oracle".to_string()),
+        };
+        assert_eq!(
+            format_runtime_env(&runtime_env, ""),
+            format!(
+                "{RUNTIME_PATH_ENV_VAR}=/u01/dbhome_1/lib\nORACLE_HOME=/u01/dbhome_1\nRUN_AS=oracle\n"
+            )
+        );
+    }
+
+    #[test]
     fn test_format_runtime_env_inherited_home() {
         let runtime_env = RuntimeEnv {
             runtime_dir: Some(PathBuf::from("/runtime/lib")),
             oracle_home: Some(PathBuf::from("/inherited/home")),
+            run_as: None,
         };
         assert_eq!(
             format_runtime_env(&runtime_env, ""),

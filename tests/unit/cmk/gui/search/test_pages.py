@@ -15,6 +15,7 @@ from cmk.gui.search._pages import (
     _UNIFIED_SEARCH_LIVESTATUS_ORDER,
     PageUnifiedSearch,
 )
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.shared_typing.unified_search import (
@@ -193,6 +194,7 @@ class TestPage:
             config=config,
             request=Request(create_environ(query_string=query_string)),
             transactions=transactions,
+            session=session,
         )
 
     def test_a_monitoring_search_is_answered_as_an_api_response(

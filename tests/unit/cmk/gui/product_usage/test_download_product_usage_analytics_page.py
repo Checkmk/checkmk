@@ -15,6 +15,7 @@ from cmk.gui.http import Request
 from cmk.gui.pages import PageContext, PageRegistry
 from cmk.gui.product_usage_analytics import download
 from cmk.gui.product_usage_analytics.download import PageDownloadProductUsage
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.product_usage.schema import ProductUsagePayload
 
@@ -25,6 +26,7 @@ def fixture_page_context(request_context: Request) -> PageContext:
         config=Config(),
         request=request_context,
         transactions=transactions,
+        session=session,
     )
 
 

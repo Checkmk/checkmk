@@ -16,6 +16,7 @@ from cmk.ccc.version import Edition
 from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import Dictionary, DictionaryEntry, TextInput
 from cmk.gui.wato.pages._simple_modes import SimpleEditMode, SimpleModeType
@@ -127,7 +128,7 @@ def test_page_form_render_entry_valuespec(
 
     mode = SomeEditMode(
         test_edition,
-        PageContext(config=Config(), request=request, transactions=transactions),
+        PageContext(config=Config(), request=request, transactions=transactions, session=session),
         mode_type,
         store,
     )

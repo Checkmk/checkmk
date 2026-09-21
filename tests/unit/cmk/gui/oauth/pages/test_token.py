@@ -20,6 +20,7 @@ from cmk.gui.oauth.store.client_store import get_client_store
 from cmk.gui.oauth.token.token_store import get_token_store
 from cmk.gui.pages import PageContext
 from cmk.gui.scopes import format_scopes
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.utils.redis import disable_redis
 
@@ -77,7 +78,9 @@ class TestOAuthTokenPage:
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 200
@@ -98,7 +101,9 @@ class TestOAuthTokenPage:
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert isinstance(response.json, dict)
@@ -122,7 +127,9 @@ class TestOAuthTokenPage:
         ):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert isinstance(response.json, dict)
@@ -146,7 +153,9 @@ class TestOAuthTokenPage:
         ):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 400
@@ -161,7 +170,9 @@ class TestOAuthTokenPage:
         ):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
             assert isinstance(response.json, dict)
             first_access_token = response.json["access_token"]
@@ -171,7 +182,9 @@ class TestOAuthTokenPage:
         ):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
             assert isinstance(response.json, dict)
             second_access_token = response.json["access_token"]
@@ -182,7 +195,9 @@ class TestOAuthTokenPage:
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: False).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 404
@@ -191,7 +206,9 @@ class TestOAuthTokenPage:
         with flask_app.test_request_context(method="GET"):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 405
@@ -204,7 +221,9 @@ class TestOAuthTokenPage:
         ):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 400
@@ -220,7 +239,9 @@ class TestOAuthTokenPage:
         ):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 200
@@ -233,7 +254,9 @@ class TestOAuthTokenPage:
         ):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 400
@@ -243,7 +266,9 @@ class TestOAuthTokenPage:
         with flask_app.test_request_context(method="POST", content_type=_FORM_CONTENT_TYPE):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 400
@@ -253,7 +278,9 @@ class TestOAuthTokenPage:
         with flask_app.test_request_context(method="POST", data={"grant_type": ""}):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 400
@@ -264,7 +291,9 @@ class TestOAuthTokenPage:
         with flask_app.test_request_context(method="POST", data={"grant_type": grant_type}):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 400
@@ -276,7 +305,9 @@ class TestOAuthTokenPage:
         with flask_app.test_request_context(method="POST", data=form):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 400
@@ -289,7 +320,9 @@ class TestOAuthTokenPage:
         with flask_app.test_request_context(method="POST", data={**_VALID_FORM, param: ""}):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 400
@@ -308,7 +341,9 @@ class TestOAuthTokenPage:
         ):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 400
@@ -329,7 +364,9 @@ class TestOAuthTokenPage:
         ):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 400
@@ -348,7 +385,9 @@ class TestOAuthTokenPage:
         ):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 200
@@ -361,7 +400,9 @@ class TestOAuthTokenPage:
         ):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 400
@@ -375,7 +416,9 @@ class TestOAuthTokenPage:
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 400
@@ -391,7 +434,9 @@ class TestOAuthTokenPage:
         ):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
             assert response.status_code == 400
             assert response.json == {"error": "invalid_grant"}
@@ -399,7 +444,9 @@ class TestOAuthTokenPage:
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 400
@@ -413,7 +460,9 @@ class TestOAuthTokenPage:
         ):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 400
@@ -429,7 +478,9 @@ class TestOAuthTokenPage:
         ):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 400
@@ -446,7 +497,9 @@ class TestOAuthTokenPage:
         ):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 200
@@ -460,7 +513,9 @@ class TestOAuthTokenPage:
         ):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 400
@@ -475,7 +530,9 @@ class TestOAuthTokenPage:
         ):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 200
@@ -489,7 +546,9 @@ class TestOAuthTokenPage:
         ):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 400
@@ -504,7 +563,9 @@ class TestOAuthTokenPage:
         with flask_app.test_request_context(method="POST", data={**_VALID_FORM, param: ""}):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 200
@@ -519,7 +580,9 @@ class TestOAuthTokenPage:
         ):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 200
@@ -529,7 +592,9 @@ class TestOAuthTokenPage:
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 400
@@ -541,14 +606,18 @@ class TestOAuthTokenPage:
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
             assert response.status_code == 200
 
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 400
@@ -560,7 +629,9 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             with disable_redis():
                 OAuthTokenPage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request, transactions=transactions)
+                    PageContext(
+                        config=Config(), request=request, transactions=transactions, session=session
+                    )
                 )
 
             assert response.status_code == 500
@@ -575,7 +646,9 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             with disable_redis():
                 OAuthTokenPage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request, transactions=transactions)
+                    PageContext(
+                        config=Config(), request=request, transactions=transactions, session=session
+                    )
                 )
 
         mock_log.assert_called_once()
@@ -591,7 +664,9 @@ class TestOAuthTokenPage:
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.status_code == 500
@@ -609,7 +684,9 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             with disable_redis():
                 OAuthTokenPage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request, transactions=transactions)
+                    PageContext(
+                        config=Config(), request=request, transactions=transactions, session=session
+                    )
                 )
 
         mock_logger.exception.assert_called_once()
@@ -620,7 +697,9 @@ class TestOAuthTokenPage:
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.headers.get("Cache-Control") == "no-store"
@@ -629,7 +708,9 @@ class TestOAuthTokenPage:
         with flask_app.test_request_context(method="POST", data={"grant_type": "refresh_token"}):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request, transactions=transactions)
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                )
             )
 
             assert response.headers.get("Cache-Control") == "no-store"

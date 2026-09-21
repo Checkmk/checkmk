@@ -15,6 +15,7 @@ import cmk.gui.pages
 from cmk.gui.config import Config
 from cmk.gui.http import Request
 from cmk.gui.pages import Page, PageContext, PageEndpoint
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 
 
@@ -216,6 +217,7 @@ def test_page_registry_register_page(capsys: pytest.CaptureFixture[str]) -> None
             config=Config(),
             request=Request(create_environ()),
             transactions=transactions,
+            session=session,
         )
     )
     assert capsys.readouterr()[0] == "234"
@@ -240,6 +242,7 @@ def test_page_registry_register_page_handler(capsys: pytest.CaptureFixture[str])
             config=Config(),
             request=Request(create_environ()),
             transactions=transactions,
+            session=session,
         )
     )
     assert capsys.readouterr()[0] == "234"

@@ -28,6 +28,7 @@ from cmk.gui.sidebar._snapin._views import (
 from cmk.gui.type_defs import Visual
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 
 USER_PERMISSIONS = UserPermissions({}, {}, {}, [])
@@ -67,7 +68,7 @@ def _visual(name: str, title: str, *, topic: str = "overview") -> Visual:
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request, transactions=transactions)
+    return PageContext(config=config, request=request, transactions=transactions, session=session)
 
 
 def test_views_metadata() -> None:

@@ -14,6 +14,7 @@ from cmk.gui.oauth.store.client_store import get_client_store
 from cmk.gui.oauth.wato._registered_clients_mode import ModeRegisteredOAuthClients
 from cmk.gui.pages import PageContext
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 
 
@@ -38,7 +39,10 @@ def test_page_renders_registered_client_details(
 
     with output_funnel.plugged():
         ModeRegisteredOAuthClients(
-            test_edition, PageContext(config=Config(), request=request, transactions=transactions)
+            test_edition,
+            PageContext(
+                config=Config(), request=request, transactions=transactions, session=session
+            ),
         ).page(Config())
         written = "".join(output_funnel.drain())
 
@@ -53,7 +57,10 @@ def test_page_renders_registered_client_details(
 def test_page_renders_empty_table_without_error(test_edition: Edition) -> None:
     with output_funnel.plugged():
         ModeRegisteredOAuthClients(
-            test_edition, PageContext(config=Config(), request=request, transactions=transactions)
+            test_edition,
+            PageContext(
+                config=Config(), request=request, transactions=transactions, session=session
+            ),
         ).page(Config())
         written = "".join(output_funnel.drain())
 
@@ -80,7 +87,9 @@ class TestModeRegisteredOAuthClientsAction:
 
             ModeRegisteredOAuthClients(
                 test_edition,
-                PageContext(config=Config(), request=request, transactions=transactions),
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                ),
             ).action(Config())
 
         with get_client_store() as store:
@@ -109,7 +118,9 @@ class TestModeRegisteredOAuthClientsAction:
 
             ModeRegisteredOAuthClients(
                 test_edition,
-                PageContext(config=Config(), request=request, transactions=transactions),
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                ),
             ).action(Config())
 
         with get_client_store() as store:
@@ -134,7 +145,9 @@ class TestModeRegisteredOAuthClientsAction:
 
             ModeRegisteredOAuthClients(
                 test_edition,
-                PageContext(config=Config(), request=request, transactions=transactions),
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                ),
             ).action(Config())
 
         with get_client_store() as store:

@@ -26,6 +26,7 @@ from cmk.gui.sidebar.main_menu import (
 )
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.shared_typing.main_menu import (
     NavItem,
@@ -109,7 +110,7 @@ def _creator(monkeypatch: pytest.MonkeyPatch, items: Iterable[object]) -> MainMe
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request, transactions=transactions)
+    return PageContext(config=config, request=request, transactions=transactions, session=session)
 
 
 def test_a_menu_without_topics_and_without_a_vue_app_is_dropped(

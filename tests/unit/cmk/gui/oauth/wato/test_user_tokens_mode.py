@@ -19,6 +19,7 @@ from cmk.gui.oauth.wato._user_tokens_mode import ModeOAuthTokens
 from cmk.gui.pages import PageContext
 from cmk.gui.scopes import DEFAULT_SCOPE
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 
 _USER = UserId("cmkadmin")
@@ -59,7 +60,10 @@ def test_page_renders_token_details(monkeypatch: pytest.MonkeyPatch, test_editio
 
     with output_funnel.plugged():
         ModeOAuthTokens(
-            test_edition, PageContext(config=Config(), request=request, transactions=transactions)
+            test_edition,
+            PageContext(
+                config=Config(), request=request, transactions=transactions, session=session
+            ),
         ).page(Config())
         written = "".join(output_funnel.drain())
 
@@ -71,7 +75,10 @@ def test_page_renders_token_details(monkeypatch: pytest.MonkeyPatch, test_editio
 def test_page_renders_empty_table_without_error(test_edition: Edition) -> None:
     with output_funnel.plugged():
         ModeOAuthTokens(
-            test_edition, PageContext(config=Config(), request=request, transactions=transactions)
+            test_edition,
+            PageContext(
+                config=Config(), request=request, transactions=transactions, session=session
+            ),
         ).page(Config())
         written = "".join(output_funnel.drain())
 
@@ -97,7 +104,9 @@ class TestModeOAuthTokensAction:
 
             ModeOAuthTokens(
                 test_edition,
-                PageContext(config=Config(), request=request, transactions=transactions),
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                ),
             ).action(Config())
 
         with get_token_store() as store:
@@ -129,7 +138,9 @@ class TestModeOAuthTokensAction:
 
             ModeOAuthTokens(
                 test_edition,
-                PageContext(config=Config(), request=request, transactions=transactions),
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                ),
             ).action(Config())
 
         with get_token_store() as store:
@@ -153,7 +164,9 @@ class TestModeOAuthTokensAction:
 
             ModeOAuthTokens(
                 test_edition,
-                PageContext(config=Config(), request=request, transactions=transactions),
+                PageContext(
+                    config=Config(), request=request, transactions=transactions, session=session
+                ),
             ).action(Config())
 
         with get_token_store() as store:

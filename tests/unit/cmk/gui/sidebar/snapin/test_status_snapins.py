@@ -22,6 +22,7 @@ from cmk.gui.sidebar._snapin._performance import Performance
 from cmk.gui.sidebar._snapin._server_time import CurrentTime
 from cmk.gui.sidebar._snapin._speedometer import Speedometer
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 
 PERFORMANCE_COLUMNS = 16
@@ -62,7 +63,7 @@ class FakeLive:
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request, transactions=transactions)
+    return PageContext(config=config, request=request, transactions=transactions, session=session)
 
 
 def test_server_time_metadata() -> None:

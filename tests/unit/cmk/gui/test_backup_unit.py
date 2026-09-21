@@ -20,6 +20,7 @@ from cmk.gui.config import Config as GUIConfig
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 
 
@@ -32,7 +33,9 @@ def test_backup_key_create_web(monkeypatch: pytest.MonkeyPatch, test_edition: Ed
         assert not store_path.exists()
         mode = ModeBackupEditKey(
             test_edition,
-            PageContext(config=GUIConfig(), request=request, transactions=transactions),
+            PageContext(
+                config=GUIConfig(), request=request, transactions=transactions, session=session
+            ),
         )
 
         # First create a backup key
@@ -45,7 +48,9 @@ def test_backup_key_create_web(monkeypatch: pytest.MonkeyPatch, test_edition: Ed
         # Then test key existence
         test_mode = ModeBackupEditKey(
             test_edition,
-            PageContext(config=GUIConfig(), request=request, transactions=transactions),
+            PageContext(
+                config=GUIConfig(), request=request, transactions=transactions, session=session
+            ),
         )
         keys = test_mode.key_store.load()
         assert len(keys) == 1

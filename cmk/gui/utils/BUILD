@@ -78,6 +78,7 @@ py_library(
         "regex.py",
         "rendering.py",
         "request_context.py",
+        "session.py",
         "sort.py",
         "temperature_unit.py",
         "time.py",

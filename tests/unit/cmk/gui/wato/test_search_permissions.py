@@ -15,6 +15,7 @@ from cmk.gui.config import Config
 from cmk.gui.http import Request
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato._search_permissions import SetupPermissionsHandler
 from cmk.gui.watolib.hosts_and_folders import folder_tree
@@ -59,7 +60,9 @@ class TestPermissionHandler:
     ) -> None:
         permissions_handler = SetupPermissionsHandler(
             test_edition,
-            PageContext(config=config, request=http_request, transactions=transactions),
+            PageContext(
+                config=config, request=http_request, transactions=transactions, session=session
+            ),
         )
         for category in permissions_handler._category_permissions:  # noqa: SLF001
             assert permissions_handler.may_see_category(category)
@@ -70,7 +73,9 @@ class TestPermissionHandler:
     ) -> None:
         permissions_handler = SetupPermissionsHandler(
             test_edition,
-            PageContext(config=config, request=http_request, transactions=transactions),
+            PageContext(
+                config=config, request=http_request, transactions=transactions, session=session
+            ),
         )
         visibility_check = permissions_handler.get_visibility_check("setup")
         assert not visibility_check("wato.py?folder=&mode=service_groups")
@@ -81,7 +86,9 @@ class TestPermissionHandler:
     ) -> None:
         permissions_handler = SetupPermissionsHandler(
             test_edition,
-            PageContext(config=config, request=http_request, transactions=transactions),
+            PageContext(
+                config=config, request=http_request, transactions=transactions, session=session
+            ),
         )
         visibility_check = permissions_handler.get_visibility_check("setup")
         assert visibility_check("wato.py?folder=&mode=service_groups")
@@ -97,7 +104,8 @@ class TestPermissionHandler:
         from cmk.gui.http import request
 
         permissions_handler = SetupPermissionsHandler(
-            test_edition, PageContext(config=config, request=request, transactions=transactions)
+            test_edition,
+            PageContext(config=config, request=request, transactions=transactions, session=session),
         )
         visibility_check = permissions_handler.get_visibility_check("setup")
         assert visibility_check(created_host_url)
@@ -115,7 +123,9 @@ class TestPermissionHandler:
         # request proxy.
         permissions_handler = SetupPermissionsHandler(
             test_edition,
-            PageContext(config=config, request=http_request, transactions=transactions),
+            PageContext(
+                config=config, request=http_request, transactions=transactions, session=session
+            ),
         )
         visibility_check = permissions_handler.get_visibility_check("setup")
         assert not visibility_check(created_host_url)

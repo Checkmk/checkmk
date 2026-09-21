@@ -827,6 +827,7 @@ def test_run_omd_config_set_on_running_site(site: Site) -> None:
     p = site.omd("config", "set", "CORE", site.core_name(), check=False)
     assert p.returncode == 1
     assert "Cannot change config variables while site is running." in p.stderr
+    assert "Running daemons: " in p.stderr, "The refusal does not name the running daemons"
 
 
 def test_run_omd_config_set_unknown_variable(site: Site) -> None:

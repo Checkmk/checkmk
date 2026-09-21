@@ -62,7 +62,7 @@ from omdlib.dialog import (
 )
 from omdlib.finalize import CommandType, finalize_site_as_user, FinalizeOutcome
 from omdlib.global_options import GlobalOptions
-from omdlib.init_scripts import call_init_scripts, check_status
+from omdlib.init_scripts import all_stopped, call_init_scripts, check_status, daemon_states
 from omdlib.options import (
     Arguments,
     Command,
@@ -1472,14 +1472,15 @@ def config_set(
     config: Config,
     config_hooks: ConfigHooks,
     args: Arguments,
-    verbose: bool,
 ) -> Error | list[str]:
     if len(args) != 2:
         config_usage()
         return Error("Please specify variable name and value")
 
-    if not site.is_stopped(verbose):
-        return Error("Cannot change config variables while site is running.")
+    site_home = SitePaths.from_site_name(site.name).home
+    daemons = daemon_states(site_home)
+    if not all_stopped([state for _daemon, state in daemons]):
+        return _site_not_stopped_error(site_home, daemons)
 
     hook_name = args[0]
     value = args[1]
@@ -1494,6 +1495,21 @@ def config_set(
     if (error := config_set_value(site.name, config, hook_name, value, save=True)) is not None:
         return error
     return [hook_name]
+
+
+def _site_not_stopped_error(site_home: str, states: Sequence[tuple[str, int]]) -> Error:
+    """Name the init scripts that keep the site from being considered stopped."""
+    if running := [daemon for daemon, state in states if state == 0]:
+        return Error(
+            "Cannot change config variables while site is running. Running daemons: %s."
+            % ", ".join(running)
+        )
+    if states:
+        return Error(
+            "Cannot change config variables: No daemon is running, but all init scripts "
+            "report to be unused: %s." % ", ".join(daemon for daemon, _state in states)
+        )
+    return Error(f"Cannot change config variables: No init scripts found in {site_home}/etc/rc.d.")
 
 
 def _error_from_config_choice(choices: ConfigHookChoices, value: str) -> None | Error:
@@ -2879,7 +2895,7 @@ def main_config(
         if command == "show":
             error = config_show(config, config_hooks, args)
         elif command == "set":
-            match config_set(site, config, config_hooks, args, global_opts.verbose):
+            match config_set(site, config, config_hooks, args):
                 case Error() as config_error:
                     error = config_error
                 case hook_names:

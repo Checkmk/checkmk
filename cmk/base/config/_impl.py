@@ -112,8 +112,8 @@ from cmk.server_side_calls_backend import (
     load_active_checks,
     load_special_agents,
     NotSupportedError,
-    relay_compatible_active_checks,
     relay_compatible_plugin_families,
+    relay_supported_active_checks,
     SecretsConfig,
     SITE_SIDE_ONLY_ACTIVE_CHECKS,
     SpecialAgent,
@@ -702,6 +702,7 @@ def make_loading_result(
             discovered_host_labels_dir=discovered_host_labels_dir,
             builtin_host_labels_file=builtin_host_labels_file,
             excluded_service_ids=excluded_service_ids,
+            relay_supported_active_checks=relay_supported_active_checks(),
         ),
     )
 
@@ -1120,6 +1121,7 @@ class ConfigCache:
         discovered_host_labels_dir: Path,
         builtin_host_labels_file: Path,
         excluded_service_ids: Container[ServiceID] = frozenset(),
+        relay_supported_active_checks: Container[str] = frozenset(),
     ) -> None:
         """Hold the configuration and derive the check tables from it.
 
@@ -1131,12 +1133,18 @@ class ConfigCache:
         service name is not available without the plug-in).  Computing results
         for services the core does not know about makes nagios log warnings
         about check results it cannot assign (CMK-37190).
+
+        `relay_supported_active_checks` holds the plug-in names (the entry-point
+        names) of the active checks that may be routed to a relay; everything else
+        is rejected for relay-monitored hosts (except the site-side-only checks,
+        which stay on the site).
         """
         super().__init__()
         self._loaded_config: Final = loaded_config
         self._hosts_config = hosts_config
         self._host_tags = host_tags
         self._excluded_service_ids: Final = excluded_service_ids
+        self._relay_supported_active_checks: Final = relay_supported_active_checks
         self.__enforced_services_table: dict[
             HostName,
             Mapping[
@@ -2015,10 +2023,10 @@ class ConfigCache:
             ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
             for_relay=for_relay,
             # Experimental flag exp_relay_active_checks (CMK-38421): until the feature is GA no
-            # active check is relay-compatible, so relay-monitored hosts keep getting the
+            # active check is supported on relays, so relay-monitored hosts keep getting the
             # "not supported on relays" warning / UNKNOWN result.
             relay_supported_active_checks=(
-                relay_compatible_active_checks()
+                self._relay_supported_active_checks
                 if load_experimental_flags(
                     cmk.utils.paths.default_config_dir
                 ).exp_relay_active_checks

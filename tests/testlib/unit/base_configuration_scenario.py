@@ -69,6 +69,7 @@ class Scenario:
             discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
             builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
             excluded_service_ids=self._excluded_service_ids,
+            relay_supported_active_checks=self._relay_supported_active_checks,
         )
         return LoadingResult(
             loaded_config=loaded_config,
@@ -82,11 +83,13 @@ class Scenario:
         site_id: str = "unit",
         edition: Edition = Edition.COMMUNITY,
         excluded_service_ids: Container[ServiceID] = frozenset(),
+        relay_supported_active_checks: Container[str] = frozenset(),
     ) -> None:
         super().__init__()
 
         self._edition = edition
         self._excluded_service_ids = excluded_service_ids
+        self._relay_supported_active_checks = relay_supported_active_checks
         tag_config = cmk.ruleset_matcher.tags.sample_tag_config()
         self.tags = cmk.ruleset_matcher.tags.get_effective_tag_config(tag_config)
         self.site_id = site_id

@@ -50,7 +50,7 @@ from cmk.gui.watolib.automations import (
     MKAutomationException,
     verify_request_compatibility,
 )
-from cmk.gui.watolib.hosts_and_folders import collect_all_hosts, folder_tree
+from cmk.gui.watolib.hosts_and_folders import collect_all_hosts, make_folder_tree
 from cmk.utils.local_secrets import DistributedSetupSecret
 from cmk.utils.paths import configuration_lockfile
 
@@ -190,7 +190,7 @@ class PageAutomation(AjaxPage):
         with tracer.span(f"_execute_automation[{self._command}]"):
             # TODO: Refactor these two calls to also use the automation_command_registry
             if self._command == "checkmk-automation":
-                self._execute_cmk_automation(debug=config.debug)
+                self._execute_cmk_automation(config, debug=config.debug)
                 return
             if self._command == "push-profile":
                 self._execute_push_profile(
@@ -232,7 +232,7 @@ class PageAutomation(AjaxPage):
             )
             raise MKAutomationException(msg)
 
-    def _execute_cmk_automation(self, *, debug: bool) -> None:
+    def _execute_cmk_automation(self, config: Config, *, debug: bool) -> None:
         cmk_command = AutomationID(request.get_str_input_mandatory("automation"))
         args = watolib_utils.mk_eval(request.get_str_input_mandatory("arguments"))
         indata = watolib_utils.mk_eval(request.get_str_input_mandatory("indata"))
@@ -245,7 +245,7 @@ class PageAutomation(AjaxPage):
             stdin_data=stdin_data,
             timeout=timeout,
             debug=debug,
-            collect_all_hosts=lambda: collect_all_hosts(folder_tree()),
+            collect_all_hosts=lambda: collect_all_hosts(make_folder_tree(config)),
         )
         # Don't use write_text() here (not needed, because no HTML document is rendered)
         response.set_data(

@@ -16,6 +16,7 @@ from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, Ser
 from cmk.automations.types import AutomationID
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request, response
 from cmk.gui.wato.pages import automation
@@ -108,7 +109,9 @@ class TestPageAutomation:
                 "headers",
                 {"x-checkmk-version": cmk_version.__version__, "x-checkmk-edition": "cee"},
             )
-            automation.PageAutomation(test_edition)._execute_cmk_automation(debug=False)  # noqa: SLF001
+            automation.PageAutomation(test_edition)._execute_cmk_automation(  # noqa: SLF001
+                Config(), debug=False
+            )
             assert response.get_data() == b"((1, 2), 'this field was not sent by version N-1')"
 
     @pytest.mark.usefixtures(
@@ -128,7 +131,9 @@ class TestPageAutomation:
                 "headers",
                 {"x-checkmk-version": "2.4.0p13", "x-checkmk-edition": "cee"},
             )
-            automation.PageAutomation(test_edition)._execute_cmk_automation(debug=False)  # noqa: SLF001
+            automation.PageAutomation(test_edition)._execute_cmk_automation(  # noqa: SLF001
+                Config(), debug=False
+            )
             assert response.get_data() == b"((1, 2),)"
 
     @pytest.mark.usefixtures(

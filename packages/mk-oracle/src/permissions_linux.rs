@@ -40,7 +40,7 @@ use std::collections::HashSet;
 use std::ffi::CString;
 use std::fs::Metadata;
 use std::os::unix::fs::MetadataExt;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 const ROOT_UID: u32 = 0;
 const ROOT_GID: u32 = 0;
@@ -199,19 +199,30 @@ fn symlink_metadata_of(path: &Path) -> Option<Metadata> {
         .ok()
 }
 
-/// Checks `target` and every directory above it. `target` must be canonical, so
-/// that no component is a symlink.
-fn validate_ancestry(target: &Path, safe: &SafeIds) -> bool {
-    target.ancestors().all(|ancestor| {
-        symlink_metadata_of(ancestor).is_some_and(|md| check_entry(ancestor, &md, safe))
-    })
+/// Symlinks in `path` are resolved before the walk, so that the real file and
+/// the real directories above it are what gets checked: whoever repoints a link
+/// has to point it somewhere.
+fn resolve(path: &Path) -> std::io::Result<(PathBuf, Metadata)> {
+    let target = std::fs::canonicalize(path)?;
+    let md = std::fs::symlink_metadata(&target)?;
+    Ok((target, md))
+}
+
+/// `target` has to come from `resolve`: a symlinked directory above it would be
+/// judged by its owner alone, wherever it points.
+fn validate_path(target: &Path, md: &Metadata, safe: &SafeIds) -> bool {
+    check_entry(target, md, safe)
+        && target
+            .ancestors()
+            .skip(1)
+            .all(|dir| symlink_metadata_of(dir).is_some_and(|md| check_entry(dir, &md, safe)))
 }
 
 /// Resolves a symlink and checks where it actually points. A link that does not
 /// resolve cannot be loaded and is therefore harmless rather than a failure.
 fn validate_symlink_target(link: &Path, safe: &SafeIds) -> bool {
-    match std::fs::canonicalize(link) {
-        Ok(target) => validate_ancestry(&target, safe),
+    match resolve(link) {
+        Ok((target, md)) => validate_path(&target, &md, safe),
         Err(e) => {
             log::debug!("Symlink {:?} does not resolve ({}), ignoring it", link, e);
             true
@@ -251,26 +262,9 @@ fn validate_dir_entries(dir: &Path, safe: &SafeIds) -> bool {
     true
 }
 
-fn validate_tree(path: &Path, safe: &SafeIds) -> bool {
-    // Canonicalize first so the ancestor walk sees real directories only. This
-    // is also what makes the walk sound against a redirected symlink: whoever
-    // repoints one has to point it somewhere, and that is what gets checked.
-    let target = match std::fs::canonicalize(path) {
-        Ok(target) => target,
-        Err(e) => {
-            log::warn!("Cannot resolve {:?}: {}", path, e);
-            return false;
-        }
-    };
-    let Some(md) = symlink_metadata_of(&target) else {
-        return false;
-    };
-    if !validate_ancestry(&target, safe) {
-        return false;
-    }
-    // A file is fully covered by the ancestry walk; a directory additionally
-    // needs its entries checked, since the library we load is one of them.
-    !md.file_type().is_dir() || validate_dir_entries(&target, safe)
+fn validate_tree(target: &Path, md: &Metadata, safe: &SafeIds) -> bool {
+    validate_path(target, md, safe)
+        && (!md.file_type().is_dir() || validate_dir_entries(target, safe))
 }
 
 /// Entry point for `setup::validate_permissions` on Unix.
@@ -298,7 +292,9 @@ pub fn validate(path: &Path, check: bool, safe_entries: &[String]) -> Result<(),
         );
         return Ok(());
     }
-    if validate_tree(path, &SafeIds::new(safe_entries)) {
+    let safe = SafeIds::new(safe_entries);
+    let (target, md) = resolve(path).map_err(|e| format!("Cannot resolve {path:?}: {e}"))?;
+    if validate_tree(&target, &md, &safe) {
         return Ok(());
     }
     Err(format!(

@@ -8,12 +8,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type {
   CmkMultitoneIconColor,
   CmkMultitoneIconNames,
+  IconEmblems,
   SimpleIcons
 } from 'cmk-ui-library/components/CmkIcon/types'
 
 export interface MultitoneActionIcon {
   name: CmkMultitoneIconNames
   color: NonNullable<CmkMultitoneIconColor>
+  emblem?: IconEmblems | undefined
 }
 
 // A bare name is a themed bitmap icon, an object is an inline multitone SVG.
@@ -22,6 +24,7 @@ export type ActionIcon = SimpleIcons | MultitoneActionIcon
 
 <script setup lang="ts">
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
+import CmkIconEmblem from 'cmk-ui-library/components/CmkIcon/CmkIconEmblem.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import type { IconSizeNames } from 'cmk-ui-library/components/CmkIcon/types'
 
@@ -29,11 +32,8 @@ withDefaults(defineProps<{ icon: ActionIcon; size?: IconSizeNames }>(), { size: 
 </script>
 
 <template>
-  <CmkMultitoneIcon
-    v-if="typeof icon !== 'string'"
-    :name="icon.name"
-    :primary-color="icon.color"
-    :size="size"
-  />
+  <CmkIconEmblem v-if="typeof icon !== 'string'" :emblem="icon.emblem">
+    <CmkMultitoneIcon :name="icon.name" :primary-color="icon.color" :size="size" />
+  </CmkIconEmblem>
   <CmkIcon v-else :name="icon" :size="size" />
 </template>

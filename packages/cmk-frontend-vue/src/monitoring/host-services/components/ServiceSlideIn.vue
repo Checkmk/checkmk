@@ -198,7 +198,7 @@ const inlineActions = computed<CellAction[]>(() => {
     {
       id: 'show_service',
       label: _t('Show details of service %{name}', { name: loaded.name }),
-      icon: { name: 'services', color: 'services' },
+      icon: { name: 'services', color: 'services', emblem: 'burger' },
       url: loaded.legacy_service_status_link
     }
   ]

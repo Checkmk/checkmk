@@ -18,8 +18,7 @@ use mk_oracle::{args::Args, config, emit, setup};
 
 use clap::Parser;
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let cli = Args::parse();
     if let Some(input) = &cli.migrate_config {
         #[cfg(not(windows))]
@@ -91,7 +90,7 @@ async fn main() {
         } else if environment.runtime_ready() {
             log::info!("ORACLE_HOME {:?}", environment.oracle_home());
             // the parent process has already prepared the environment
-            execute(config, environment).await
+            execute(config, environment)
         } else {
             // Select the Oracle client and the ORACLE_HOME that goes with it,
             // export both, and re-run ourselves: the child sees
@@ -150,10 +149,14 @@ fn log_current_env_var(name: &str) {
     }
 }
 
-async fn execute(config: config::OracleConfig, environment: setup::Env) -> i32 {
+fn execute(config: config::OracleConfig, environment: setup::Env) -> i32 {
     log_current_env_var(setup::RUNTIME_PATH_ENV_VAR);
     log_current_env_var(setup::ORACLE_HOME_ENV_VAR);
-    match config.exec(&environment).await {
+    let runtime = match tokio::runtime::Runtime::new() {
+        Ok(runtime) => runtime,
+        Err(e) => return report_fatal_error(e),
+    };
+    match runtime.block_on(config.exec(&environment)) {
         Ok(output) => {
             print!("{output}");
             log::info!("Successfully executed");

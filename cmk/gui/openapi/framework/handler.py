@@ -200,88 +200,91 @@ def handle_endpoint_request(
     accept_mimetypes = parse_accept_header(request_data["headers"].get("Accept"), MIMEAccept)
     HeaderValidator.validate_accept_header(endpoint.content_type, accept_mimetypes)
 
-    # Step 4: Validate the request parameters and call the handler function
-    # NOTE: exceptions will be caught in the WSGI app (including the other validation exceptions)
-    # We probably don't want permission tracking for tokens, do we?
-    try:
-        with (
-            permission_validator.track_permissions(),
-            _optional_config_lock(endpoint.skip_locking, endpoint.method),
-        ):
-            bound_arguments = model.validate_request_and_identify_args(
-                request_data, content_type, api_context
-            )
-            with tracer.span("endpoint-body-call"):
-                try:
-                    raw_response = endpoint.handler(*bound_arguments.args, **bound_arguments.kwargs)
-                except RedirectException as exc:
-                    raw_response = Response(status=exc.status_code)
-                    raw_response.location = exc.location
-    except MKUnauthenticatedException:
-        raise
-    except MKAuthException as exc:
-        # At this point the request is already authenticated, so a failed permission check means
-        # the user lacks a permission -> forbidden (403), not unauthorized (401). Without this
-        # remap, `MKAuthException.status` (401) would end up in the response.
-        raise RestAPIForbiddenException(
-            title=http.client.responses[403],
-            detail=str(exc),
-        ) from exc
+    # Held through the GIT commit so no concurrent write lands in this request's commit.
+    with _optional_config_lock(endpoint.skip_locking, endpoint.method):
+        # Step 4: Validate the request parameters and call the handler function
+        # NOTE: exceptions will be caught in the WSGI app (including the other validation exceptions)
+        # We probably don't want permission tracking for tokens, do we?
+        try:
+            with permission_validator.track_permissions():
+                bound_arguments = model.validate_request_and_identify_args(
+                    request_data, content_type, api_context
+                )
+                with tracer.span("endpoint-body-call"):
+                    try:
+                        raw_response = endpoint.handler(
+                            *bound_arguments.args, **bound_arguments.kwargs
+                        )
+                    except RedirectException as exc:
+                        raw_response = Response(status=exc.status_code)
+                        raw_response.location = exc.location
+        except MKUnauthenticatedException:
+            raise
+        except MKAuthException as exc:
+            # At this point the request is already authenticated, so a failed permission check means
+            # the user lacks a permission -> forbidden (403), not unauthorized (401). Without this
+            # remap, `MKAuthException.status` (401) would end up in the response.
+            raise RestAPIForbiddenException(
+                title=http.client.responses[403],
+                detail=str(exc),
+            ) from exc
 
-    # Step 5: Create the response object
-    with tracer.span("create-response"):
-        if isinstance(raw_response, Response):
-            _validate_direct_response(raw_response)
-            response = raw_response
-        else:
-            response = _create_response(
-                raw_response,
-                model.response_body_type,
-                endpoint.content_type,
-                fields_filter=_identify_fields_filter(bound_arguments, model.has_request_schema),
+        # Step 5: Create the response object
+        with tracer.span("create-response"):
+            if isinstance(raw_response, Response):
+                _validate_direct_response(raw_response)
+                response = raw_response
+            else:
+                response = _create_response(
+                    raw_response,
+                    model.response_body_type,
+                    endpoint.content_type,
+                    fields_filter=_identify_fields_filter(
+                        bound_arguments, model.has_request_schema
+                    ),
+                    is_testing=is_testing,
+                )
+
+        # Step 6: Validate ETag
+        ResponseValidator.validate_etag_response(response.headers.get("ETag"), endpoint.etag)
+
+        # Step 7: Check permissions
+        if response.status_code < 400:
+            ResponseValidator.validate_permissions(
+                endpoint=endpoint.operation_id,
+                params=request_data,
+                permissions_required=endpoint.permissions_required,
+                used_permissions=permission_validator.used_permissions,
                 is_testing=is_testing,
             )
 
-    # Step 6: Validate ETag
-    ResponseValidator.validate_etag_response(response.headers.get("ETag"), endpoint.etag)
-
-    # Step 7: Check permissions
-    if response.status_code < 400:
-        ResponseValidator.validate_permissions(
-            endpoint=endpoint.operation_id,
-            params=request_data,
-            permissions_required=endpoint.permissions_required,
-            used_permissions=permission_validator.used_permissions,
-            is_testing=is_testing,
+        # Step 8: Validate response status code
+        allowed_status_codes = identify_expected_status_codes(
+            endpoint.method,
+            endpoint.doc_group,
+            endpoint.content_type,
+            endpoint.etag,
+            has_response=model.has_response_schema,
+            has_path_params=model.has_path_parameters,
+            has_query_params=model.has_query_parameters,
+            has_request_schema=model.has_request_schema,
+            additional_status_codes=endpoint.additional_status_codes,
+        )
+        ResponseValidator.validate_response_constraints(
+            response=response,
+            output_empty=not model.has_response_schema,
+            operation_id=endpoint.operation_id,
+            expected_status_codes=list(allowed_status_codes),
         )
 
-    # Step 8: Validate response status code
-    allowed_status_codes = identify_expected_status_codes(
-        endpoint.method,
-        endpoint.doc_group,
-        endpoint.content_type,
-        endpoint.etag,
-        has_response=model.has_response_schema,
-        has_path_params=model.has_path_parameters,
-        has_query_params=model.has_query_parameters,
-        has_request_schema=model.has_request_schema,
-        additional_status_codes=endpoint.additional_status_codes,
-    )
-    ResponseValidator.validate_response_constraints(
-        response=response,
-        output_empty=not model.has_response_schema,
-        operation_id=endpoint.operation_id,
-        expected_status_codes=list(allowed_status_codes),
-    )
-
-    # Step 9: Update config generation if needed
-    if (
-        endpoint.method != "get"
-        and response.status_code < 300
-        and endpoint.update_config_generation
-    ):
-        update_config_generation()
-        if wato_use_git:
-            do_git_commit()
+        # Step 9: Update config generation if needed
+        if (
+            endpoint.method != "get"
+            and response.status_code < 300
+            and endpoint.update_config_generation
+        ):
+            update_config_generation()
+            if wato_use_git:
+                do_git_commit()
 
     return response

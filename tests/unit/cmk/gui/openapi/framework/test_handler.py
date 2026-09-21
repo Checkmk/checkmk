@@ -17,6 +17,7 @@ import pytest
 from pydantic import PlainSerializer
 from werkzeug.datastructures import ETags, Headers
 
+from cmk.ccc import store
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUnauthenticatedException
 from cmk.gui.logged_in import LoggedInNobody, user
@@ -41,6 +42,7 @@ from cmk.gui.openapi.utils import (
     RestAPIResponseException,
     RestAPIWatoDisabledException,
 )
+from cmk.utils.paths import configuration_lockfile
 from cmk.web.utils.permission_verification import AllPerm, Perm
 from tests.unit.cmk.gui.openapi.framework.factories import (
     RawRequestDataFactory,
@@ -516,6 +518,48 @@ def test_handle_endpoint_request_runs_config_hooks_on_write(
     assert response.status_code == 204, response.get_data(as_text=True)
     update_config_generation.assert_called_once_with()
     assert do_git_commit.call_count == expected_git_calls
+
+
+def test_handle_endpoint_request_holds_config_lock_from_handler_through_commit(
+    permission_validator: PermissionValidator,
+) -> None:
+    lock_held: dict[str, bool] = {}
+
+    def _probe(stage: str) -> None:
+        lock_held[stage] = store.have_lock(configuration_lockfile)
+
+    @dataclass
+    class _LockProbe:
+        # Serialization runs right after the handler, so this catches a release before the commit.
+        stage: Annotated[str, PlainSerializer(lambda stage: _probe(stage) or stage)]
+
+    def handler() -> _LockProbe:
+        _probe("handler")
+        return _LockProbe(stage="serialize_response")
+
+    request_endpoint = RequestEndpointFactory.build(
+        method="post",
+        handler=handler,
+        update_config_generation=True,
+        skip_locking=False,
+    )
+    request_data = RawRequestDataFactory.build(
+        headers=Headers({"Accept": request_endpoint.content_type}),
+    )
+
+    handle_endpoint_request(
+        request_endpoint,
+        request_data,
+        _api_context(),
+        permission_validator,
+        update_config_generation=lambda: None,
+        do_git_commit=lambda: _probe("commit"),
+        wato_enabled=True,
+        wato_use_git=True,
+    )
+
+    assert lock_held == {"handler": True, "serialize_response": True, "commit": True}
+    assert not store.have_lock(configuration_lockfile)
 
 
 def test_handle_endpoint_request_skips_config_hooks_for_read(

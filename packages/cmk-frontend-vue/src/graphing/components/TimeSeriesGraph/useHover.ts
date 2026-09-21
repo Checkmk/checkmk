@@ -13,8 +13,9 @@ import { attributesOf } from '../metricAttributes'
 import { orderMetricsTopToBottom } from '../metricOrder'
 import type { M4Bucket, M4Cache } from './decimation/types'
 import { type HoverSample, type HoverState, metricHitDistance } from './interaction/hover'
-import { bucketAnchorTime, consolidatedSampleTime, selectConsolidatedValue } from './render/bucket'
-import type { StackedSeries, StackedSeriesKind } from './render/stacked'
+import { consolidatedSampleTime, selectConsolidatedValue } from './render/bucket'
+import { valueAt } from './render/polyline'
+import type { StackedColumn, StackedSeries } from './render/stacked'
 import type { Metric } from './types'
 
 const HOVER_CLEAR_DELAY_MS = 150
@@ -23,40 +24,42 @@ const CLOSEST_METRIC_REACH_PX = 24
 
 const bucketCentre = (bucket: M4Bucket): number => (bucket.startTime + bucket.endTime) / 2
 
-// The focus dot sits on what the renderer drew, which differs by kind: a line runs through its
-// samples, so min/max report the time they were sampled at, while an avg is no sample and keeps
-// the anchor; a stacked band is drawn at the anchor throughout. Gaps hold no drawn point, so
-// their column centre keeps the sequence ordered for the bisector and resolves a cursor over a
-// gap to the gap itself.
-function drawnTime(
-  bucket: M4Bucket,
-  kind: StackedSeriesKind,
-  consolidation: ConsolidationFn
-): number {
-  if (bucket.gap) {
-    return bucketCentre(bucket)
-  }
-  return kind === 'area-stacked'
-    ? bucketAnchorTime(bucket)
-    : consolidatedSampleTime(bucket, consolidation)
+// Gaps hold no drawn point; their column centre keeps the sequence ordered for the bisector and
+// resolves a cursor over a gap to the gap itself.
+function drawnTime(bucket: M4Bucket, consolidation: ConsolidationFn): number {
+  return bucket.gap ? bucketCentre(bucket) : consolidatedSampleTime(bucket, consolidation)
 }
 
-const bisectorFor = (kind: StackedSeriesKind, consolidation: ConsolidationFn) =>
-  bisector<M4Bucket, number>((bucket) => drawnTime(bucket, kind, consolidation)).center
-const bisectDrawnPoint: Record<
-  StackedSeriesKind,
-  Record<ConsolidationFn, ReturnType<typeof bisectorFor>>
-> = {
-  line: {
-    min: bisectorFor('line', 'min'),
-    max: bisectorFor('line', 'max'),
-    avg: bisectorFor('line', 'avg')
-  },
-  'area-stacked': {
-    min: bisectorFor('area-stacked', 'min'),
-    max: bisectorFor('area-stacked', 'max'),
-    avg: bisectorFor('area-stacked', 'avg')
+const bisectorFor = (consolidation: ConsolidationFn) =>
+  bisector<M4Bucket, number>((bucket) => drawnTime(bucket, consolidation)).center
+const bisectDrawnPoint: Record<ConsolidationFn, ReturnType<typeof bisectorFor>> = {
+  min: bisectorFor('min'),
+  max: bisectorFor('max'),
+  avg: bisectorFor('avg')
+}
+
+interface DrawnEdge {
+  lower: number
+  upper: number
+}
+
+function edgeAt(column: StackedColumn, time: number): DrawnEdge {
+  const lowerEdge = column.vertices.map((vertex) => ({ time: vertex.time, value: vertex.lower }))
+  const upperEdge = column.vertices.map((vertex) => ({ time: vertex.time, value: vertex.upper }))
+  return { lower: valueAt(lowerEdge, time), upper: valueAt(upperEdge, time) }
+}
+
+function drawnEdge(
+  series: StackedSeries,
+  columnIndex: number,
+  drawnValue: number,
+  time: number
+): DrawnEdge | null {
+  if (series.kind === 'line') {
+    return { lower: drawnValue, upper: drawnValue }
   }
+  const column = series.columns[columnIndex]
+  return column === undefined || column.gap ? null : edgeAt(column, time)
 }
 
 // The hover reads the buckets as fetched, while an inverse metric is drawn mirrored: what the
@@ -128,10 +131,8 @@ export function useHover(options: HoverOptions) {
     const metricsList = options.metrics()
     const samples: HoverSample[] = metricsList.map((metric, i) => {
       const buckets = drawnBuckets[i] ?? []
-      const bands = drawnStacks[i]?.bands ?? []
-      const kind: StackedSeriesKind = drawnStacks[i]?.kind ?? 'line'
+      const series: StackedSeries = drawnStacks[i] ?? { kind: 'line' }
       const consolidation = asDrawn(options.consolidation(), metric.render.inverse)
-      const filled = kind === 'area-stacked'
       const sampleBase = {
         metricName: metric.metadata.name,
         label: metric.metadata.title,
@@ -151,25 +152,27 @@ export function useHover(options: HoverOptions) {
         return sampleWithoutValue
       }
       const bucketIdx = Math.min(
-        bisectDrawnPoint[kind][consolidation](buckets, cursorTime),
+        bisectDrawnPoint[consolidation](buckets, cursorTime),
         buckets.length - 1
       )
       const bucket = buckets[bucketIdx]!
       const value = selectConsolidatedValue(bucket, consolidation)
-      const band = bands[bucketIdx]
-      if (!Number.isFinite(value) || !band) {
+      const time = drawnTime(bucket, consolidation)
+      const drawnValue = metric.render.inverse ? -value : value
+      const edge = Number.isFinite(value) ? drawnEdge(series, bucketIdx, drawnValue, time) : null
+      if (edge === null) {
         hitDistances.push(null)
         return sampleWithoutValue
       }
-      const drawnTopPixel = options.yScale(band.upper)
-      const drawnBottomPixel = filled ? options.yScale(band.lower) : drawnTopPixel
+      const drawnTopPixel = options.yScale(edge.upper)
+      const drawnBottomPixel = options.yScale(edge.lower)
       hitDistances.push(metricHitDistance(cursorY, drawnTopPixel, drawnBottomPixel))
       const { formatter } = userSpecificUnit(metric.metadata.unit, 'celsius')
       return {
         ...sampleBase,
         formattedValue: formatter.render(value),
         pixelY: drawnTopPixel,
-        snapTime: drawnTime(bucket, kind, consolidation)
+        snapTime: time
       }
     })
 

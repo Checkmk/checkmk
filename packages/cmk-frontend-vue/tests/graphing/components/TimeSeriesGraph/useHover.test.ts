@@ -10,6 +10,7 @@ import { defineComponent, h, ref } from 'vue'
 
 import type { Metric } from '@/graphing/components/TimeSeriesGraph'
 import { downsampleToColumns, m4 } from '@/graphing/components/TimeSeriesGraph/decimation/decimate'
+import type { HoverState } from '@/graphing/components/TimeSeriesGraph/interaction/hover'
 import { invertBucket } from '@/graphing/components/TimeSeriesGraph/render/bucket'
 import { computeStackedSeries } from '@/graphing/components/TimeSeriesGraph/render/stacked'
 import { useHover } from '@/graphing/components/TimeSeriesGraph/useHover'
@@ -64,6 +65,14 @@ function pointAt(x: number, y: number): { x: number; y: number; clientX: number;
   return { x, y, clientX: PLOT_CLIENT_LEFT + x, clientY: PLOT_CLIENT_TOP + y }
 }
 
+function makeScales(plotWidth = PLOT_WIDTH, valueDomain: [number, number] = [0, 100]) {
+  const xScale = scaleTime()
+    .domain([new Date(TIME_RANGE.start * 1000), new Date(TIME_RANGE.end * 1000)])
+    .range([0, plotWidth])
+  const yScale = scaleLinear().domain(valueDomain).range([PLOT_HEIGHT, 0])
+  return { xScale, yScale }
+}
+
 interface HoverOverrides {
   consolidation?: ConsolidationFn
   plotWidth?: number
@@ -78,12 +87,7 @@ function mountHover(
 ): ReturnType<typeof useHover> {
   const consolidation = overrides.consolidation ?? 'avg'
   const plotWidth = overrides.plotWidth ?? PLOT_WIDTH
-  const xScale = scaleTime()
-    .domain([new Date(TIME_RANGE.start * 1000), new Date(TIME_RANGE.end * 1000)])
-    .range([0, plotWidth])
-  const yScale = scaleLinear()
-    .domain(overrides.valueDomain ?? [0, 100])
-    .range([PLOT_HEIGHT, 0])
+  const { xScale, yScale } = makeScales(plotWidth, overrides.valueDomain)
   let api!: ReturnType<typeof useHover>
   const harness = defineComponent({
     setup() {
@@ -110,8 +114,25 @@ function mountHover(
   const drawnBuckets = buckets.map((metricBuckets, i) =>
     metrics[i]!.render.inverse ? metricBuckets.map(invertBucket) : metricBuckets
   )
-  api.recordDrawnGeometry(buckets, computeStackedSeries(metrics, drawnBuckets, consolidation))
+  api.recordDrawnGeometry(buckets, computeStackedSeries(metrics, drawnBuckets))
   return api
+}
+
+/** Moves the hover pixel by pixel across the plot's middle, collecting the state at each step. */
+function sweep(hover: ReturnType<typeof useHover>, fromX: number, toX: number): HoverState[] {
+  const states: HoverState[] = []
+  for (let x = fromX; x <= toX; x++) {
+    hover.moveHoverTo(pointAt(x, PLOT_HEIGHT / 2))
+    states.push(hover.hoverState.value!)
+  }
+  return states
+}
+
+function pixelYsOf(states: HoverState[], metricName: string): number[] {
+  return states.flatMap((state) => {
+    const { pixelY } = state.samples.find((sample) => sample.metricName === metricName)!
+    return pixelY === null ? [] : [pixelY]
+  })
 }
 
 describe('useHover — hit-test', () => {
@@ -260,45 +281,58 @@ describe('useHover — snapping to drawn points', () => {
   test('a column straddling two samples reports one of them, never the midpoint', () => {
     const hover = mountHover(
       [makeLineMetric('sloped', pointsValuedAtTheirOwnTimestamp())],
+      TIME_RANGE,
       {
-        start: 0,
-        end: 100,
-        step: 10
-      },
+        consolidation: 'max',
+        plotWidth: 97
+      }
+    )
+
+    const states = sweep(hover, 0, 97)
+
+    // Every sample is valued at its own timestamp, so a reported point is only a point of the
+    // curve when its value and the time it is reported at agree.
+    const reported = states.filter((state) => state.samples[0]!.pixelY !== null)
+    expect(reported.length).toBeGreaterThan(0)
+    for (const state of reported) {
+      expect(state.samples[0]!.formattedValue).toBe(String(state.snapTime))
+    }
+  })
+
+  test('an area dot sits where the dot of a line through the same samples sits', () => {
+    const points = pointsValuedAtTheirOwnTimestamp()
+    const hover = mountHover(
+      [makeLineMetric('as-line', points), makeStackedMetric('as-area', points, 's1')],
+      TIME_RANGE,
       { consolidation: 'max', plotWidth: 97 }
     )
 
-    for (let x = 0; x <= 97; x++) {
-      hover.moveHoverTo(pointAt(x, 50))
-      const state = hover.hoverState.value!
-      const sample = state.samples[0]!
-      if (sample.pixelY === null) {
-        continue
-      }
-      // Every sample is valued at its own timestamp, so a reported point is only a point of
-      // the curve when its value and the time it is reported at agree.
-      expect(sample.formattedValue).toBe(String(state.snapTime))
-    }
+    const states = sweep(hover, 0, 97)
+
+    const lineDots = pixelYsOf(states, 'as-line')
+    expect(lineDots.length).toBeGreaterThan(0)
+    expect(pixelYsOf(states, 'as-area')).toEqual(lineDots)
   })
 
   // An inverse metric is drawn mirrored, so the top of its curve is the bucket's minimum. The
   // hover reads the buckets as fetched, where that minimum is still the minimum.
   test('an inverse metric reports the sample its mirrored curve peaks at', () => {
+    const valueDomain: [number, number] = [-100, 100]
     const hover = mountHover(
       [makeInverseLineMetric('mirrored', pointsValuedAtTheirOwnTimestamp())],
-      { start: 0, end: 100, step: 10 },
-      { consolidation: 'max', plotWidth: 97, valueDomain: [-100, 100] }
+      TIME_RANGE,
+      { consolidation: 'max', plotWidth: 97, valueDomain }
     )
+    const { yScale } = makeScales(97, valueDomain)
 
-    for (let x = 0; x <= 97; x++) {
-      hover.moveHoverTo(pointAt(x, 50))
-      const sample = hover.hoverState.value!.samples[0]!
-      if (sample.pixelY === null) {
-        continue
-      }
-      // Every sample is valued at its own timestamp, and the dot is drawn at the negated value.
-      expect(sample.formattedValue).toBe(String(hover.hoverState.value!.snapTime))
-      expect(sample.pixelY).toBeCloseTo((100 + Number(sample.formattedValue)) / 2)
+    const states = sweep(hover, 0, 97)
+
+    const reported = states.filter((state) => state.samples[0]!.pixelY !== null)
+    expect(reported.length).toBeGreaterThan(0)
+    for (const state of reported) {
+      const sample = state.samples[0]!
+      expect(sample.formattedValue).toBe(String(state.snapTime))
+      expect(sample.pixelY).toBeCloseTo(yScale(-Number(sample.formattedValue)))
     }
   })
 

@@ -5,83 +5,91 @@
  */
 import type { ScaleLinear, ScaleTime } from 'd3-scale'
 
-import type { ConsolidationFn } from '../../consolidation'
 import type { M4Bucket } from '../decimation/types'
 import type { Metric } from '../types'
-import { bucketAnchorTime, selectConsolidatedValue } from './bucket'
+import { keptSamples } from './bucket'
+import { type TimeValuePoint, valueAt } from './polyline'
 
-export interface StackedBand {
+export interface StackedVertex {
+  time: number
   lower: number
   upper: number
+}
+
+export interface StackedColumn {
   gap: boolean
-  startTime: number
-  endTime: number
-  /** Where the band is drawn: the bucket's own anchor, which every layer of a stack agrees on. */
-  anchorTime: number
+  vertices: StackedVertex[]
 }
 
-export type StackedSeriesKind = 'line' | 'area-stacked'
-
-export interface StackedSeries {
-  kind: StackedSeriesKind
-  bands: StackedBand[]
+export interface LineSeries {
+  kind: 'line'
 }
+
+export interface AreaSeries {
+  kind: 'area-stacked'
+  columns: StackedColumn[]
+}
+
+export type StackedSeries = LineSeries | AreaSeries
+export type StackedSeriesKind = StackedSeries['kind']
+
+type EdgePerColumn = TimeValuePoint[][]
 
 export function computeStackedSeries(
   metrics: Metric[],
-  metricsBuckets: M4Bucket[][],
-  consolidation: ConsolidationFn
+  metricsBuckets: M4Bucket[][]
 ): StackedSeries[] {
-  const sums = new Map<string, number[]>()
-  const series: StackedSeries[] = []
+  const upperEdgeOfStack = new Map<string, EdgePerColumn>()
 
-  for (let i = 0; i < metrics.length; i++) {
-    const metric = metrics[i]!
-    const buckets = metricsBuckets[i]!
+  return metrics.map((metric, metricIndex) => {
     const stack = metric.render.stack
-
     if (stack === null) {
-      series.push({
-        kind: 'line',
-        bands: buckets.map((bucket) => ({
-          lower: 0,
-          upper: bucket.gap ? NaN : selectConsolidatedValue(bucket, consolidation),
-          gap: bucket.gap,
-          startTime: bucket.startTime,
-          endTime: bucket.endTime,
-          anchorTime: bucketAnchorTime(bucket)
-        }))
-      })
-      continue
+      return { kind: 'line' }
     }
+    const buckets = metricsBuckets[metricIndex]!
+    const edgeBelow = upperEdgeOfStack.get(stack) ?? buckets.map(() => [])
+    const columns = buckets.map((bucket, columnIndex) =>
+      stackColumn(keptSamples(bucket), edgeBelow[columnIndex] ?? [])
+    )
+    upperEdgeOfStack.set(
+      stack,
+      columns.map((column, columnIndex) =>
+        column.gap ? (edgeBelow[columnIndex] ?? []) : upperEdgeOf(column)
+      )
+    )
+    return { kind: 'area-stacked', columns }
+  })
+}
 
-    const sum = sums.get(stack) ?? new Array<number>(buckets.length).fill(0)
-    const bands = new Array<StackedBand>(buckets.length)
-    for (let j = 0; j < buckets.length; j++) {
-      const bucket = buckets[j]!
-      const value = bucket.gap ? 0 : selectConsolidatedValue(bucket, consolidation)
-      const lower = sum[j]!
-      const upper = lower + value
-      sum[j] = upper
-      bands[j] = {
-        lower,
-        upper,
-        gap: bucket.gap,
-        startTime: bucket.startTime,
-        endTime: bucket.endTime,
-        anchorTime: bucketAnchorTime(bucket)
-      }
-    }
-    sums.set(stack, sum)
-    series.push({ kind: 'area-stacked', bands })
+function stackColumn(samples: TimeValuePoint[], edgeBelow: TimeValuePoint[]): StackedColumn {
+  if (samples.length === 0) {
+    return { gap: true, vertices: [] }
   }
+  const lowerAt = (time: number): number => (edgeBelow.length === 0 ? 0 : valueAt(edgeBelow, time))
+  const vertices = vertexTimes(samples, edgeBelow).map((time) => {
+    const lower = lowerAt(time)
+    return { time, lower, upper: lower + valueAt(samples, time) }
+  })
+  return { gap: false, vertices }
+}
 
-  return series
+function vertexTimes(samples: TimeValuePoint[], edgeBelow: TimeValuePoint[]): number[] {
+  const firstSampleTime = samples[0]!.time
+  const lastSampleTime = samples[samples.length - 1]!.time
+  const bendsBelow = edgeBelow.filter(
+    (point) => point.time > firstSampleTime && point.time < lastSampleTime
+  )
+  const times = new Set([...samples, ...bendsBelow].map((point) => point.time))
+  return [...times].sort((earlier, later) => earlier - later)
+}
+
+function upperEdgeOf(column: StackedColumn): TimeValuePoint[] {
+  return column.vertices.map((vertex) => ({ time: vertex.time, value: vertex.upper }))
 }
 
 export function drawStackedBand(
   ctx: CanvasRenderingContext2D,
-  series: StackedSeries,
+  series: AreaSeries,
   xScale: ScaleTime<number, number>,
   yScale: ScaleLinear<number, number>,
   color: string,
@@ -89,32 +97,20 @@ export function drawStackedBand(
 ): void {
   const fillOpacity = style.fillOpacity ?? 0.45
   const strokeWidth = style.strokeWidth ?? 1
-  const bandAnchorX = (band: StackedBand): number => xScale(new Date(band.anchorTime * 1000))
+  const pixelX = (vertex: StackedVertex): number => xScale(new Date(vertex.time * 1000))
 
-  let runStart = 0
-  while (runStart < series.bands.length) {
-    if (series.bands[runStart]!.gap) {
-      runStart++
-      continue
-    }
-    let runEnd = runStart
-    while (runEnd < series.bands.length && !series.bands[runEnd]!.gap) {
-      runEnd++
-    }
-
+  for (const run of contiguousRuns(series.columns)) {
+    const vertices = run.flatMap((column) => column.vertices)
     ctx.beginPath()
-    for (let i = runStart; i < runEnd; i++) {
-      const band = series.bands[i]!
-      const pixelX = bandAnchorX(band)
-      if (i === runStart) {
-        ctx.moveTo(pixelX, yScale(band.upper))
+    vertices.forEach((vertex, index) => {
+      if (index === 0) {
+        ctx.moveTo(pixelX(vertex), yScale(vertex.upper))
       } else {
-        ctx.lineTo(pixelX, yScale(band.upper))
+        ctx.lineTo(pixelX(vertex), yScale(vertex.upper))
       }
-    }
-    for (let i = runEnd - 1; i >= runStart; i--) {
-      const band = series.bands[i]!
-      ctx.lineTo(bandAnchorX(band), yScale(band.lower))
+    })
+    for (const vertex of [...vertices].reverse()) {
+      ctx.lineTo(pixelX(vertex), yScale(vertex.lower))
     }
     ctx.closePath()
     ctx.fillStyle = colorWithAlpha(color, fillOpacity)
@@ -122,9 +118,26 @@ export function drawStackedBand(
     ctx.strokeStyle = color
     ctx.lineWidth = strokeWidth
     ctx.stroke()
-
-    runStart = runEnd
   }
+}
+
+function contiguousRuns(columns: StackedColumn[]): StackedColumn[][] {
+  const runs: StackedColumn[][] = []
+  let run: StackedColumn[] = []
+  for (const column of columns) {
+    if (column.gap) {
+      if (run.length > 0) {
+        runs.push(run)
+      }
+      run = []
+    } else {
+      run.push(column)
+    }
+  }
+  if (run.length > 0) {
+    runs.push(run)
+  }
+  return runs
 }
 
 function colorWithAlpha(color: string, alpha: number): string {

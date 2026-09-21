@@ -269,8 +269,7 @@ function draw(): void {
     metrics: props.metrics,
     cache: m4CacheStore.ensure(props.metrics, props.data_time_range ?? props.view_time_range),
     visibleTimeRange: [props.view_time_range.start, props.view_time_range.end],
-    columnCount: Math.max(1, Math.floor(plotWidth.value)),
-    consolidation: consolidationFn.value
+    columnCount: Math.max(1, Math.floor(plotWidth.value))
   })
   const { paddedBuckets: inverted, stacks } = composed
 

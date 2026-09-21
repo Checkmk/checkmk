@@ -11,6 +11,10 @@ import {
   createM4CacheStore,
   withoutOffPlotNeighbours
 } from '@/graphing/components/TimeSeriesGraph/render/composeSeries'
+import type {
+  StackedColumn,
+  StackedSeries
+} from '@/graphing/components/TimeSeriesGraph/render/stacked'
 import type { Metric, ShadedRegion, TimeRange } from '@/graphing/components/TimeSeriesGraph/types'
 
 const STEP = 10
@@ -32,22 +36,21 @@ function compose(metrics: Metric[], dataRange: TimeRange = DATA_RANGE) {
     metrics,
     cache,
     visibleTimeRange: [dataRange.start, dataRange.end],
-    columnCount: COLUMNS,
-    consolidation: 'max'
+    columnCount: COLUMNS
   })
 }
 
 const finiteValues = (values: number[]): number[] =>
   values.filter((value) => Number.isFinite(value))
 
+function columnsOf(series: StackedSeries): StackedColumn[] {
+  if (series.kind !== 'area-stacked') {
+    throw new Error('expected an area series')
+  }
+  return series.columns
+}
+
 describe('composeSeries', () => {
-  test('routes a metric with no stack group to a line and a grouped one to a stacked area', () => {
-    const composed = compose([makeMetric([1, 2, 3]), makeMetric([1, 2, 3], { stack: 'g1' })])
-
-    expect(composed.stacks[0]!.kind).toBe('line')
-    expect(composed.stacks[1]!.kind).toBe('area-stacked')
-  })
-
   test('flanks the on-plot buckets with one off-plot neighbour on each side', () => {
     const composed = compose([makeMetric([1, 2, 3])])
 
@@ -58,8 +61,8 @@ describe('composeSeries', () => {
   test('the on-plot stacks drop the flanking neighbours the padded stacks carry', () => {
     const composed = compose([makeMetric([1, 2, 3], { stack: 'g1' })])
 
-    expect(composed.stacksOnPlot[0]!.bands).toEqual(
-      withoutOffPlotNeighbours(composed.stacks[0]!.bands)
+    expect(columnsOf(composed.stacksOnPlot[0]!)).toEqual(
+      withoutOffPlotNeighbours(columnsOf(composed.stacks[0]!))
     )
   })
 
@@ -85,11 +88,11 @@ describe('composeSeries', () => {
       makeMetric([member], { stack: 'g1' })
     ])
 
-    const memberBands = composed.stacksOnPlot[1]!.bands.filter((band) => !band.gap)
-    expect(memberBands.length).toBeGreaterThan(0)
-    for (const band of memberBands) {
-      expect(band.lower).toBe(baseline)
-      expect(band.upper).toBe(baseline + member)
+    const memberVertices = columnsOf(composed.stacksOnPlot[1]!).flatMap((column) => column.vertices)
+    expect(memberVertices.length).toBeGreaterThan(0)
+    for (const vertex of memberVertices) {
+      expect(vertex.lower).toBe(baseline)
+      expect(vertex.upper).toBe(baseline + member)
     }
   })
 })

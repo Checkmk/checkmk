@@ -29,7 +29,7 @@ const drawLineSpy = vi.mocked(drawLine)
 const drawStackedBandSpy = vi.mocked(drawStackedBand)
 
 function makeSeries(kind: StackedSeriesKind): StackedSeries {
-  return { kind, bands: [] }
+  return kind === 'line' ? { kind } : { kind, columns: [] }
 }
 
 function makeMetric(name: string, color: string): Metric {

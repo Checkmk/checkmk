@@ -101,8 +101,7 @@ function drawWaveform(): void {
     metrics: props.metrics,
     cache: m4CacheStore.ensure(props.metrics, props.dataDomain),
     visibleTimeRange: [props.domain.start, props.domain.end],
-    columnCount: Math.max(1, Math.floor(props.plotWidth)),
-    consolidation: props.consolidationFn
+    columnCount: Math.max(1, Math.floor(props.plotWidth))
   })
   const [yMin, yMax] = composedValueDomain(props.metrics, composed)
 

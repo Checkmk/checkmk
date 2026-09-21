@@ -7,7 +7,10 @@ import { fireEvent, render, screen } from '@testing-library/vue'
 
 import type { HorizontalLine, Metric } from '@/graphing/components/TimeSeriesGraph'
 import type { M4Bucket } from '@/graphing/components/TimeSeriesGraph/decimation/types'
-import { computeStackedSeries } from '@/graphing/components/TimeSeriesGraph/render/stacked'
+import {
+  type StackedSeries,
+  computeStackedSeries
+} from '@/graphing/components/TimeSeriesGraph/render/stacked'
 import GraphLegend from '@/graphing/components/legend/GraphLegend.vue'
 
 // A single-sample bucket so every consolidation (min/max/avg) resolves to the same value,
@@ -307,10 +310,11 @@ test('lists a stack top-to-bottom in the same order computeStackedSeries draws i
   const metrics = [first, second, third]
   const buckets = metrics.map(() => [makeBucket(1)])
 
-  const series = computeStackedSeries(metrics, buckets, 'avg')
+  const series = computeStackedSeries(metrics, buckets)
+  const topOf = (candidate: StackedSeries): number =>
+    candidate.kind === 'area-stacked' ? candidate.columns[0]!.vertices[0]!.upper : -Infinity
   const topmostIndex = series.reduce(
-    (topIdx, current, idx) =>
-      current.bands[0]!.upper > series[topIdx]!.bands[0]!.upper ? idx : topIdx,
+    (topIdx, current, idx) => (topOf(current) > topOf(series[topIdx]!) ? idx : topIdx),
     0
   )
   const topmostTitle = metrics[topmostIndex]!.metadata.title

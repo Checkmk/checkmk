@@ -8,13 +8,12 @@
 // it lives here rather than in either of them: a metric's kind, its stacking base and the value
 // extent it forces are the render contract, and two implementations of that is what let the strip
 // drift from the plot it summarises.
-import type { ConsolidationFn } from '../../consolidation'
 import { type DomainBucket, computeYDomain } from '../axes/valueAxis'
 import { downsampleToColumns, edgeNeighbours, edgeSample, m4 } from '../decimation/decimate'
 import type { M4Cache } from '../decimation/types'
 import type { Metric, ShadedRegion, TimeRange } from '../types'
 import { invertBucket } from './bucket'
-import { type StackedSeries, computeStackedSeries } from './stacked'
+import { type AreaSeries, type StackedSeries, computeStackedSeries } from './stacked'
 
 export interface ComposedSeries {
   bucketsOnPlot: M4Cache[]
@@ -33,9 +32,8 @@ export function composeSeries(options: {
   cache: M4Cache[]
   visibleTimeRange: [number, number]
   columnCount: number
-  consolidation: ConsolidationFn
 }): ComposedSeries {
-  const { metrics, cache, visibleTimeRange, columnCount, consolidation } = options
+  const { metrics, cache, visibleTimeRange, columnCount } = options
 
   const bucketsOnPlot = cache.map((metricCache) => [
     ...downsampleToColumns(metricCache, visibleTimeRange, columnCount),
@@ -49,7 +47,7 @@ export function composeSeries(options: {
     return metrics[i]!.render.inverse ? padded.map((bucket) => invertBucket(bucket)) : padded
   })
 
-  const stacks = computeStackedSeries(metrics, paddedBuckets, consolidation)
+  const stacks = computeStackedSeries(metrics, paddedBuckets)
   return {
     bucketsOnPlot,
     paddedBuckets,
@@ -59,7 +57,9 @@ export function composeSeries(options: {
 }
 
 function onPlotSeries(series: StackedSeries): StackedSeries {
-  return { ...series, bands: withoutOffPlotNeighbours(series.bands) }
+  return series.kind === 'area-stacked'
+    ? { kind: series.kind, columns: withoutOffPlotNeighbours(series.columns) }
+    : series
 }
 
 export function hasMirroredMetric(metrics: Metric[]): boolean {
@@ -68,6 +68,16 @@ export function hasMirroredMetric(metrics: Metric[]): boolean {
 
 function mixesMirroredAndUnmirrored(metrics: Metric[]): boolean {
   return hasMirroredMetric(metrics) && metrics.some((metric) => !metric.render.inverse)
+}
+
+function areaExtent(series: AreaSeries): DomainBucket[] {
+  return series.columns.flatMap((column) =>
+    column.vertices.map((vertex) => ({
+      gap: false,
+      minValue: Math.min(vertex.lower, vertex.upper),
+      maxValue: Math.max(vertex.lower, vertex.upper)
+    }))
+  )
 }
 
 function regionBoundBuckets(regions: ShadedRegion[]): DomainBucket[][] {
@@ -100,11 +110,7 @@ export function composedValueDomain(
     const series = composed.stacksOnPlot[i]!
     return [
       series.kind === 'area-stacked'
-        ? series.bands.map((band) => ({
-            gap: band.gap,
-            minValue: Math.min(band.lower, band.upper),
-            maxValue: Math.max(band.lower, band.upper)
-          }))
+        ? areaExtent(series)
         : withoutOffPlotNeighbours(composed.paddedBuckets[i]!)
     ]
   })

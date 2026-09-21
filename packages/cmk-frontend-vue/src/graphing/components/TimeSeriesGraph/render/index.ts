@@ -30,40 +30,34 @@ export function drawData(
   options: DrawOptions,
   highlightedMetricNames: ReadonlySet<string>
 ): void {
+  const alphaFor = (metric: Metric): number =>
+    highlightedMetricNames.size > 0 && !highlightedMetricNames.has(metric.metadata.name) ? 0.4 : 1
+
   for (let i = 0; i < metrics.length; i++) {
+    const series = stacks[i]!
     // Hidden metrics (stack references) shape the stacking sums but are never painted.
-    if (metrics[i]!.render.hidden) {
+    if (metrics[i]!.render.hidden || series.kind !== 'area-stacked') {
       continue
     }
-    if (stacks[i]!.kind === 'area-stacked') {
-      ctx.globalAlpha =
-        highlightedMetricNames.size > 0 && !highlightedMetricNames.has(metrics[i]!.metadata.name)
-          ? 0.4
-          : 1
-      drawStackedBand(ctx, stacks[i]!, xScale, yScale, metrics[i]!.metadata.color, {
-        strokeWidth: options.bandStrokeWidth
-      })
-    }
+    ctx.globalAlpha = alphaFor(metrics[i]!)
+    drawStackedBand(ctx, series, xScale, yScale, metrics[i]!.metadata.color, {
+      strokeWidth: options.bandStrokeWidth
+    })
   }
   for (let i = 0; i < metrics.length; i++) {
-    if (metrics[i]!.render.hidden) {
+    if (metrics[i]!.render.hidden || stacks[i]!.kind !== 'line') {
       continue
     }
-    if (stacks[i]!.kind === 'line') {
-      ctx.globalAlpha =
-        highlightedMetricNames.size > 0 && !highlightedMetricNames.has(metrics[i]!.metadata.name)
-          ? 0.4
-          : 1
-      drawLine(
-        ctx,
-        invertedBuckets[i]!,
-        xScale,
-        yScale,
-        metrics[i]!.metadata.color,
-        options.interpolator,
-        options.lineWidth
-      )
-    }
+    ctx.globalAlpha = alphaFor(metrics[i]!)
+    drawLine(
+      ctx,
+      invertedBuckets[i]!,
+      xScale,
+      yScale,
+      metrics[i]!.metadata.color,
+      options.interpolator,
+      options.lineWidth
+    )
   }
   ctx.globalAlpha = 1
 }

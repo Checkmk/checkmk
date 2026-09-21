@@ -7,7 +7,7 @@ from collections.abc import Callable, Sequence
 from typing import TypedDict
 
 from cmk.gui.type_defs import Row
-from cmk.inventory.structured_data import SDKey, SDPath
+from cmk.inventory.trees import SDKey, SDPath
 
 from ._display_hints import AttributeDisplayHint, ColumnDisplayHintOfView
 

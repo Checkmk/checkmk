@@ -36,7 +36,7 @@ from cmk.inventory.delta import (
 )
 from cmk.inventory.history import HistoryStore
 from cmk.inventory.raw_paths import parse_internal_raw_path
-from cmk.inventory.structured_data import (
+from cmk.inventory.trees import (
     ImmutableAttributes,
     ImmutableTable,
     ImmutableTree,

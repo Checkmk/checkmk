@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from typing import Literal, override, Self, TypedDict
 
 from ._dict_keys import DictKeys
-from .structured_data import (
+from .trees import (
     ImmutableAttributes,
     ImmutableTable,
     ImmutableTree,

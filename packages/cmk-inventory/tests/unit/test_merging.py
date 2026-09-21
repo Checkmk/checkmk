@@ -10,7 +10,7 @@ import pytest
 from cmk.ccc.hostaddress import HostName
 from cmk.inventory.merging import merge_trees
 from cmk.inventory.serialization import serialize_tree
-from cmk.inventory.structured_data import ImmutableTable, ImmutableTree, SDKey, SDNodeName
+from cmk.inventory.trees import ImmutableTable, ImmutableTree, SDKey, SDNodeName
 
 from ._fixtures import inventory_store
 

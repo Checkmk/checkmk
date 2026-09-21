@@ -8,7 +8,7 @@ import pytest
 from cmk.gui.inventory.filters import FilterInvBool, FilterInvFloat, FilterInvFloatChoice
 from cmk.gui.type_defs import Rows, VisualContext
 from cmk.inventory.raw_paths import InventoryPath, TreeSource
-from cmk.inventory.structured_data import (
+from cmk.inventory.trees import (
     ImmutableAttributes,
     ImmutableTree,
     SDKey,

@@ -51,7 +51,7 @@ from cmk.gui.unit_formatter import (
 )
 from cmk.gui.unit_formatter import StrictPrecision as StrictPrecisionFormatter
 from cmk.inventory.raw_paths import InventoryPath, parse_internal_raw_path, TreeSource
-from cmk.inventory.structured_data import SDKey, SDNodeName, SDPath, SDValue
+from cmk.inventory.trees import SDKey, SDNodeName, SDPath, SDValue
 from cmk.inventory_ui.v1 import AgeNotation as AgeNotationFromAPI
 from cmk.inventory_ui.v1 import Alignment as AlignmentFromAPI
 from cmk.inventory_ui.v1 import AutoPrecision as AutoPrecisionFromAPI

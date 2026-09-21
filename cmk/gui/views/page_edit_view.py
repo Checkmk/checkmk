@@ -73,7 +73,7 @@ from cmk.gui.views.inventory import (
 )
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
-from cmk.inventory.structured_data import SDPath
+from cmk.inventory.trees import SDPath
 from cmk.web.utils.icons import DynamicIconName
 
 from .layout import layout_registry

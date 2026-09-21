@@ -24,7 +24,7 @@ from cmk.gui.visuals import get_livestatus_filter_headers
 from cmk.gui.visuals.filter import Filter
 from cmk.inventory.history import HistoryStore
 from cmk.inventory.raw_paths import InventoryPath
-from cmk.inventory.structured_data import RetentionInterval, SDValue
+from cmk.inventory.trees import RetentionInterval, SDValue
 from cmk.livestatus_client import LivestatusResponse, OnlySites
 
 

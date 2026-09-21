@@ -20,7 +20,7 @@ from cmk.gui.inventory.filters import (
     FilterInvtableVersion,
     FilterInvText,
 )
-from cmk.inventory.structured_data import SDValue
+from cmk.inventory.trees import SDValue
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIconName
 from cmk.web.utils.speaklater import LazyString

@@ -10,7 +10,7 @@ import pytest
 from cmk.ccc.hostaddress import HostName
 from cmk.inventory.delta import compare_trees, SDDeltaValue
 from cmk.inventory.serialization import deserialize_tree
-from cmk.inventory.structured_data import (
+from cmk.inventory.trees import (
     MutableTree,
     SDKey,
 )

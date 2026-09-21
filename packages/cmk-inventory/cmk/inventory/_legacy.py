@@ -6,7 +6,7 @@
 from collections.abc import Mapping, Sequence
 from typing import TypeIs
 
-from .structured_data import (
+from .trees import (
     ImmutableAttributes,
     ImmutableTable,
     ImmutableTree,

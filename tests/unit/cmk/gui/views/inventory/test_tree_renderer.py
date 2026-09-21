@@ -26,7 +26,7 @@ from cmk.gui.views.inventory._tree_renderer import (
 )
 from cmk.inventory.delta import ImmutableDeltaAttributes, ImmutableDeltaTable, SDDeltaValue
 from cmk.inventory.raw_paths import InventoryPath, TreeSource
-from cmk.inventory.structured_data import (
+from cmk.inventory.trees import (
     ImmutableAttributes,
     ImmutableTable,
     RetentionInterval,

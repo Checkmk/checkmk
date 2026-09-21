@@ -10,7 +10,7 @@ from cmk.gui.type_defs import Rows
 from cmk.gui.view import View
 from cmk.gui.views.inventory._row_post_processor import _add_inventory_data
 from cmk.gui.views.row_post_processing import post_process_rows, row_post_processor_registry
-from cmk.inventory.structured_data import ImmutableTree
+from cmk.inventory.trees import ImmutableTree
 
 
 def test_post_processor_registrations() -> None:

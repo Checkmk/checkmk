@@ -14,7 +14,7 @@ from cmk.checkengine.fetchers.ipmi import IPMICredentials
 from cmk.checkengine.snmplib import SNMPCredentials, SNMPTiming
 from cmk.checkengine.specs.exitspec import ExitSpec
 from cmk.events.notify_types import Contact, ContactName
-from cmk.inventory.structured_data import RawIntervalFromConfig
+from cmk.inventory.trees import RawIntervalFromConfig
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.matcher import RuleSpec
 from cmk.ruleset_matcher.tags import TagConfigSpec

@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.inventory.raw_paths import InventoryPath, parse_internal_raw_path, TreeSource
-from cmk.inventory.structured_data import SDKey, SDNodeName
+from cmk.inventory.trees import SDKey, SDNodeName
 
 
 @pytest.mark.parametrize(

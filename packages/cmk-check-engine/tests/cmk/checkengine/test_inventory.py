@@ -15,7 +15,7 @@ from cmk.checkengine.inventory import (
     ItemsOfInventoryPlugin,
 )
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
-from cmk.inventory.structured_data import ImmutableTree, MutableTree, SDKey, SDNodeName
+from cmk.inventory.trees import ImmutableTree, MutableTree, SDKey, SDNodeName
 
 
 @pytest.mark.parametrize(

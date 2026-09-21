@@ -42,7 +42,7 @@ from cmk.gui.visuals.filter.components import (
     TextInput,
 )
 from cmk.inventory.raw_paths import InventoryPath
-from cmk.inventory.structured_data import SDValue
+from cmk.inventory.trees import SDValue
 from cmk.inventory_ui.v1 import Comparable
 from cmk.web.utils.speaklater import LazyString
 

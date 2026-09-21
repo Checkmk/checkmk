@@ -30,7 +30,7 @@ from cmk.inventory.serialization import (
     serialize_delta_tree,
     serialize_tree,
 )
-from cmk.inventory.structured_data import ImmutableAttributes, ImmutableTree, SDKey, SDPath, SDValue
+from cmk.inventory.trees import ImmutableAttributes, ImmutableTree, SDKey, SDPath, SDValue
 from cmk.web.utils.html import HTML
 
 from ._display_hints import (

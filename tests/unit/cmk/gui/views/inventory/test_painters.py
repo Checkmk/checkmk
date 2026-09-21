@@ -7,7 +7,7 @@ from cmk.gui.type_defs import Row
 from cmk.gui.views.inventory._painters import _get_delta_tree, _get_inventory_tree
 from cmk.inventory.delta import ImmutableDeltaTree
 from cmk.inventory.serialization import deserialize_tree
-from cmk.inventory.structured_data import ImmutableTree, SDKey
+from cmk.inventory.trees import ImmutableTree, SDKey
 
 
 def _tree() -> ImmutableTree:

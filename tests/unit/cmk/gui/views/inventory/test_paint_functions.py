@@ -7,7 +7,7 @@ import pytest
 
 from cmk.gui.views.inventory._paint_functions import inv_paint_generic
 from cmk.gui.views.inventory.registry import PaintResult
-from cmk.inventory.structured_data import SDValue
+from cmk.inventory.trees import SDValue
 
 
 @pytest.mark.parametrize(

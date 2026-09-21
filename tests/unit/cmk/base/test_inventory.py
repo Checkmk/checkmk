@@ -37,7 +37,7 @@ from cmk.inventory.serialization import (
     deserialize_tree,
     serialize_tree,
 )
-from cmk.inventory.structured_data import (
+from cmk.inventory.trees import (
     _MutableAttributes,
     ImmutableAttributes,
     ImmutableTable,

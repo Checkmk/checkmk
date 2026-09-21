@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import auto, Enum
 
-from .structured_data import SDKey, SDNodeName, SDPath
+from .trees import SDKey, SDNodeName, SDPath
 
 
 class TreeSource(Enum):

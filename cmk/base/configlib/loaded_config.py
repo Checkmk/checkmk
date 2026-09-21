@@ -35,7 +35,7 @@ from cmk.events.notify_types import (
     NotificationPluginNameStr,
     NotifyPluginParamsDict,
 )
-from cmk.inventory.structured_data import RawIntervalFromConfig
+from cmk.inventory.trees import RawIntervalFromConfig
 from cmk.rrd import RRDObjectConfig
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.matcher import RuleSpec

@@ -6,7 +6,7 @@
 from collections.abc import Mapping, Sequence
 
 from ._dict_keys import DictKeys
-from .structured_data import (
+from .trees import (
     ImmutableAttributes,
     ImmutableTable,
     ImmutableTree,

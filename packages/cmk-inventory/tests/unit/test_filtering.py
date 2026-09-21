@@ -3,8 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
+from cmk.ccc.hostaddress import HostName
 from cmk.inventory.delta import SDDeltaValue
 from cmk.inventory.filtering import (
     filter_delta_tree,
@@ -12,13 +15,14 @@ from cmk.inventory.filtering import (
     make_filter_choices_from_api_request_paths,
     SDFilterChoice,
 )
-from cmk.inventory.structured_data import SDKey, SDNodeName
+from cmk.inventory.trees import SDKey, SDNodeName
 
 from ._fixtures import (
     filled_delta_tree,
     filled_immutable_tree,
     filled_mutable_tree,
     immutable_tree,
+    inventory_store,
 )
 
 
@@ -322,3 +326,172 @@ def test__make_filter_choices_from_api_request_paths(
     entry: str, expected_filter_choice: SDFilterChoice
 ) -> None:
     assert make_filter_choices_from_api_request_paths([entry])[0] == expected_filter_choice
+
+
+@pytest.mark.parametrize(
+    "filters, unavail",
+    [
+        (
+            # container                   table                    attributes
+            [
+                SDFilterChoice(
+                    path=(SDNodeName("hardware"), SDNodeName("components")),
+                    pairs="all",
+                    columns="all",
+                    nodes="all",
+                ),
+                SDFilterChoice(
+                    path=(SDNodeName("networking"), SDNodeName("interfaces")),
+                    pairs="all",
+                    columns="all",
+                    nodes="all",
+                ),
+                SDFilterChoice(
+                    path=(SDNodeName("software"), SDNodeName("os")),
+                    pairs="all",
+                    columns="all",
+                    nodes="all",
+                ),
+            ],
+            [("hardware", "system"), ("software", "applications")],
+        ),
+    ],
+)
+def test_filter_real_tree(
+    filters: Sequence[SDFilterChoice],
+    unavail: Sequence[tuple[str, str]],
+) -> None:
+    tree = inventory_store().load_inventory_tree(host_name=HostName("tree_new_interfaces"))
+    filtered = filter_tree(tree, filters)
+    assert id(tree) != id(filtered)
+    assert tree != filtered
+    for path in unavail:
+        assert len(filtered.get_tree(tuple(SDNodeName(p) for p in path))) == 0
+
+
+@pytest.mark.parametrize(
+    "filters, amount_if_entries",
+    [
+        (
+            [
+                SDFilterChoice(
+                    path=(SDNodeName("networking"),),
+                    pairs="all",
+                    columns="all",
+                    nodes="all",
+                )
+            ],
+            3178,
+        ),
+        (
+            [
+                SDFilterChoice(
+                    path=(SDNodeName("networking"),),
+                    pairs=(
+                        [
+                            SDKey("total_interfaces"),
+                            SDKey("total_ethernet_ports"),
+                            SDKey("available_ethernet_ports"),
+                        ]
+                    ),
+                    columns=(
+                        [
+                            SDKey("total_interfaces"),
+                            SDKey("total_ethernet_ports"),
+                            SDKey("available_ethernet_ports"),
+                        ]
+                    ),
+                    nodes="nothing",
+                ),
+            ],
+            None,
+        ),
+        (
+            [
+                SDFilterChoice(
+                    path=(SDNodeName("networking"), SDNodeName("interfaces")),
+                    pairs="all",
+                    columns="all",
+                    nodes="all",
+                ),
+            ],
+            3178,
+        ),
+        (
+            [
+                SDFilterChoice(
+                    path=(SDNodeName("networking"), SDNodeName("interfaces")),
+                    pairs=[SDKey("admin_status")],
+                    columns=[SDKey("admin_status")],
+                    nodes="nothing",
+                ),
+            ],
+            326,
+        ),
+        (
+            [
+                SDFilterChoice(
+                    path=(SDNodeName("networking"), SDNodeName("interfaces")),
+                    pairs=[SDKey("admin_status"), SDKey("FOOBAR")],
+                    columns=[SDKey("admin_status"), SDKey("FOOBAR")],
+                    nodes="nothing",
+                ),
+            ],
+            326,
+        ),
+        (
+            [
+                SDFilterChoice(
+                    path=(SDNodeName("networking"), SDNodeName("interfaces")),
+                    pairs=[SDKey("admin_status"), SDKey("oper_status")],
+                    columns=[SDKey("admin_status"), SDKey("oper_status")],
+                    nodes="nothing",
+                ),
+            ],
+            652,
+        ),
+        (
+            [
+                SDFilterChoice(
+                    path=(SDNodeName("networking"), SDNodeName("interfaces")),
+                    pairs=[SDKey("admin_status"), SDKey("oper_status"), SDKey("FOOBAR")],
+                    columns=[SDKey("admin_status"), SDKey("oper_status"), SDKey("FOOBAR")],
+                    nodes="nothing",
+                ),
+            ],
+            652,
+        ),
+    ],
+)
+def test_filter_networking_tree(
+    filters: Sequence[SDFilterChoice],
+    amount_if_entries: int | None,
+) -> None:
+    filtered = filter_tree(
+        inventory_store().load_inventory_tree(host_name=HostName("tree_new_interfaces")),
+        filters,
+    )
+    assert len(filtered.get_tree((SDNodeName("networking"),))) > 0
+    assert len(filtered.get_tree((SDNodeName("hardware"),))) == 0
+    assert len(filtered.get_tree((SDNodeName("software"),))) == 0
+
+    if amount_if_entries is not None:
+        interfaces = filtered.get_tree((SDNodeName("networking"), SDNodeName("interfaces")))
+        assert len(interfaces) == amount_if_entries
+
+
+def test_filter_networking_tree_empty() -> None:
+    filtered = filter_tree(
+        inventory_store().load_inventory_tree(host_name=HostName("tree_new_interfaces")),
+        [
+            SDFilterChoice(
+                path=(SDNodeName("networking"),),
+                pairs="nothing",
+                columns="nothing",
+                nodes="nothing",
+            ),
+        ],
+    )
+    assert len(filtered.get_tree((SDNodeName("networking"),))) == 0
+    assert len(filtered.get_tree((SDNodeName("hardware"),))) == 0
+    assert len(filtered.get_tree((SDNodeName("software"),))) == 0

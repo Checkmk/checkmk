@@ -8,7 +8,7 @@ from typing import Literal, TypedDict
 
 from ._legacy import deserialize_legacy_tree
 from .delta import ImmutableDeltaAttributes, ImmutableDeltaTable, ImmutableDeltaTree, SDDeltaValue
-from .structured_data import (
+from .trees import (
     ImmutableAttributes,
     ImmutableTable,
     ImmutableTree,

@@ -85,7 +85,7 @@ from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 from cmk.cli.internal import CLIOption
 from cmk.inventory.paths import InventoryPaths
 from cmk.inventory.store import InventoryStore, make_meta
-from cmk.inventory.structured_data import (
+from cmk.inventory.trees import (
     ImmutableTree,
     MutableTree,
     RawIntervalFromConfig,

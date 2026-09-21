@@ -17,7 +17,7 @@ from cmk.inventory.serialization import (
     serialize_tree,
 )
 from cmk.inventory.store import InventoryStore, make_meta, SDMetaAndRawTree
-from cmk.inventory.structured_data import ImmutableTree, MutableTree, SDKey, SDNodeName
+from cmk.inventory.trees import ImmutableTree, MutableTree, SDKey, SDNodeName
 
 
 def inventory_store() -> InventoryStore:

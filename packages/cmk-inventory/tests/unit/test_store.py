@@ -5,6 +5,7 @@
 
 import gzip
 import json
+import shutil
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -13,9 +14,7 @@ import pytest
 import cmk.ccc.store
 from cmk.ccc.hostaddress import HostName
 from cmk.inventory.serialization import (
-    deserialize_delta_tree,
     deserialize_tree,
-    SDRawDeltaTree,
     SDRawTree,
     serialize_tree,
 )
@@ -29,9 +28,9 @@ from cmk.inventory.store import (
     SDMeta,
     SDMetaAndRawTree,
 )
-from cmk.inventory.structured_data import MutableTree, SDKey, SDNodeName
+from cmk.inventory.trees import MutableTree, SDKey, SDNodeName
 
-from ._fixtures import gzipped_json, gzipped_repr, raw_tree
+from ._fixtures import gzipped_json, gzipped_repr, inventory_store, raw_tree
 
 
 def test_load_inventory_tree_legacy(tmp_path: Path) -> None:
@@ -287,26 +286,6 @@ def test_rename(tmp_path: Path) -> None:
         ).exists()
 
 
-def test_deserialize_delta_tree_with_attributes_key() -> None:
-    """Regression test for crash groups 3652/3629.
-
-    The old ImmutableDeltaTree._deserialize class method accessed raw_tree["Attributes"]
-    which raised KeyError when old cached delta tree files lacked that key.  That class
-    method was removed in favour of the standalone deserialize_delta_tree() function which
-    is the sole public entry point.  The current serialisation always produces an
-    "Attributes" key, so roundtripping through serialize/deserialize must never raise
-    KeyError.
-    """
-    raw_delta_tree = SDRawDeltaTree(
-        Attributes={"Pairs": {SDKey("k"): (None, "v")}},
-        Table={},
-        Nodes={},
-    )
-    delta_tree = deserialize_delta_tree(raw_delta_tree)
-    assert delta_tree.attributes.pairs[SDKey("k")].old is None
-    assert delta_tree.attributes.pairs[SDKey("k")].new == "v"
-
-
 @pytest.mark.parametrize(
     "do_archive",
     [
@@ -451,3 +430,63 @@ def test_parse_from_raw_status_data_tree() -> None:
 def test_parse_from_raw_status_data_tree_legacy() -> None:
     tree = raw_tree("val")
     assert parse_from_raw_status_data_tree(repr(tree).encode()) == deserialize_tree(tree)
+
+
+@pytest.mark.parametrize(
+    "tree_name",
+    [
+        HostName("tree_addresses_ordered"),
+        HostName("tree_addresses_unordered"),
+        HostName("tree_inv"),
+        HostName("tree_new_addresses"),
+        HostName("tree_new_addresses_arrays_memory"),
+        HostName("tree_new_arrays"),
+        HostName("tree_new_heute"),
+        HostName("tree_new_interfaces"),
+        HostName("tree_new_large_ora_tablespaces_fixed_len"),
+        HostName("tree_new_large_ora_tablespaces_variable_len"),
+        HostName("tree_new_memory"),
+        HostName("tree_old_addresses"),
+        HostName("tree_old_addresses_arrays_memory"),
+        HostName("tree_old_arrays"),
+        HostName("tree_old_heute"),
+        HostName("tree_old_interfaces"),
+        HostName("tree_old_large_ora_tablespaces"),
+        HostName("tree_old_memory"),
+        HostName("tree_status"),
+    ],
+)
+def test_load_from(tree_name: HostName) -> None:
+    inventory_store().load_inventory_tree(host_name=tree_name)
+
+
+@pytest.mark.parametrize(
+    "tree_name",
+    [
+        HostName("tree_old_addresses_arrays_memory"),
+        HostName("tree_old_addresses"),
+        HostName("tree_old_arrays"),
+        HostName("tree_old_interfaces"),
+        HostName("tree_old_memory"),
+        HostName("tree_old_heute"),
+        HostName("tree_new_addresses_arrays_memory"),
+        HostName("tree_new_addresses"),
+        HostName("tree_new_arrays"),
+        HostName("tree_new_interfaces"),
+        HostName("tree_new_memory"),
+        HostName("tree_new_heute"),
+    ],
+)
+def test_save_and_load_real_tree(tree_name: HostName, tmp_path: Path) -> None:
+    orig_tree = inventory_store().load_inventory_tree(host_name=tree_name)
+    inv_store = InventoryStore(tmp_path)
+    try:
+        inv_store.save_inventory_tree(
+            host_name=HostName("foo"),
+            tree=orig_tree,
+            meta=make_meta(do_archive=False),
+        )
+        loaded_tree = inv_store.load_inventory_tree(host_name=HostName("foo"))
+        assert orig_tree == loaded_tree
+    finally:
+        shutil.rmtree(str(tmp_path))

@@ -18,7 +18,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views import visual_type as views_visual_type
 from cmk.gui.views.store import multisite_builtin_views
-from cmk.inventory.structured_data import SDPath
+from cmk.inventory.trees import SDPath
 
 USER_PERMISSIONS = UserPermissions({}, {}, {}, [])
 

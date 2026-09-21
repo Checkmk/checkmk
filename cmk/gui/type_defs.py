@@ -32,7 +32,7 @@ from cmk.crypto.password_hashing import PasswordHash
 from cmk.crypto.secrets import Secret
 from cmk.events.notify_types import DisabledNotificationsOptions, EventRule
 from cmk.gui.exceptions import FinalizeRequest
-from cmk.inventory.structured_data import SDPath
+from cmk.inventory.trees import SDPath
 from cmk.ruleset_matcher.labels import Labels
 from cmk.utils.password_store import PasswordId
 from cmk.web.utils.choices import Choices, ChoiceText

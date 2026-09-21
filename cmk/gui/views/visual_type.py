@@ -33,7 +33,7 @@ from cmk.gui.views.store import get_all_views, get_permitted_views
 from cmk.gui.visuals.type import VisualType
 from cmk.inventory.delta import ImmutableDeltaTree
 from cmk.inventory.history import HistoryStore
-from cmk.inventory.structured_data import ImmutableTree, SDPath
+from cmk.inventory.trees import ImmutableTree, SDPath
 from cmk.web.utils.urls import HTTPVariable
 
 _InventoryTreeCache = dict[tuple[bool, HostName, SiteId], ImmutableTree | ImmutableDeltaTree]

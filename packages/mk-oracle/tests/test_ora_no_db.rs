@@ -775,21 +775,16 @@ fn test_options_use_host_client_with_env_var() {
     }
 }
 
-/// Public-API level checks of the permission validation.
-///
-/// Only the short-circuits are asserted here, because they are the only outcomes
-/// that do not depend on the environment. Every real decision walks the
-/// directories above the path under test, and those are not ours to control:
-/// inside Bazel's sandbox `/` itself is owned by `nobody`, so an assertion about
-/// a rejection would hold no matter what the logic did. The decision itself is
-/// covered by the pure unit tests in `src/permissions_linux.rs` and, as root
-/// against a tree owned end to end, by `tests/system/mk_oracle`.
+/// `assess_tree` skips the short-circuits of `assess`, so a tree the test owns
+/// is a runtime owned by a non-root user, the case that switches to the owner.
+/// Root-owned trees and foreign owners need root to build: the unit tests in
+/// `src/permissions_linux.rs` and `tests/system/mk_oracle` cover them.
 #[cfg(unix)]
 mod permissions {
-    use mk_oracle::permissions_linux::{assess, is_running_as_root, validate_file};
+    use mk_oracle::permissions_linux::{assess, assess_tree, is_running_as_root, validate_file};
     use mk_oracle::setup::RuntimeVerdict;
     use std::fs;
-    use std::os::unix::fs::PermissionsExt;
+    use std::os::unix::fs::{MetadataExt, PermissionsExt};
     use std::path::PathBuf;
 
     const LIB: &str = "libclntsh.so.19.1";
@@ -812,6 +807,57 @@ mod permissions {
         }
         let (_tmp, dir) = runtime_with_lib(0o666);
         assert_eq!(assess(&dir, true, &[]), RuntimeVerdict::Load);
+    }
+
+    #[test]
+    fn test_assess_tree_switches_to_the_owner_of_the_runtime() {
+        if is_running_as_root() {
+            return; // a root-owned tree is loaded as root, not switched to
+        }
+        let (_tmp, dir) = runtime_with_lib(0o644);
+        let owner_uid = fs::metadata(&dir).unwrap().uid();
+        match assess_tree(&dir, &[]) {
+            RuntimeVerdict::SwitchTo(owner) => {
+                assert_eq!(owner.uid, owner_uid);
+                assert!(owner.groups.contains(&owner.gid));
+                assert!(!owner.name.is_empty());
+            }
+            other => panic!("expected a switch to the owner, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_assess_tree_refuses_a_world_writable_library() {
+        if is_running_as_root() {
+            return;
+        }
+        let (_tmp, dir) = runtime_with_lib(0o666);
+        assert!(matches!(assess_tree(&dir, &[]), RuntimeVerdict::Reject(_)));
+    }
+
+    #[test]
+    fn test_assess_tree_refuses_a_world_writable_runtime_directory() {
+        if is_running_as_root() {
+            return;
+        }
+        let (_tmp, dir) = runtime_with_lib(0o644);
+        fs::set_permissions(&dir, fs::Permissions::from_mode(0o777)).unwrap();
+        assert!(matches!(assess_tree(&dir, &[]), RuntimeVerdict::Reject(_)));
+    }
+
+    #[test]
+    fn test_assess_tree_judges_a_symlinked_library_by_its_target() {
+        if is_running_as_root() {
+            return;
+        }
+        let (_tmp, dir) = runtime_with_lib(0o644);
+        std::os::unix::fs::symlink(LIB, dir.join("libclntsh.so")).unwrap();
+        assert!(matches!(
+            assess_tree(&dir, &[]),
+            RuntimeVerdict::SwitchTo(_)
+        ));
+        fs::set_permissions(dir.join(LIB), fs::Permissions::from_mode(0o666)).unwrap();
+        assert!(matches!(assess_tree(&dir, &[]), RuntimeVerdict::Reject(_)));
     }
 
     #[test]

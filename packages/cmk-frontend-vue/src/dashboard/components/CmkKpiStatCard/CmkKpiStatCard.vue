@@ -875,6 +875,7 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
 
 .db-cmk-kpi-stat-card__range--maximum {
   top: var(--spacing);
+  z-index: 2;
 }
 
 .db-cmk-kpi-stat-card__range--minimum {

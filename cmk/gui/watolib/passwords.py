@@ -12,12 +12,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.utils.password_store import PasswordConfig
 
-from .config_domain_name import (
-    ConfigDomainName,
-    CORE,
-    PasswordChange,
-    SerializedSettings,
-)
+from .config_domain_name import ConfigDomainName, PasswordChange, SerializedSettings
 from .groups_io import load_contact_group_information
 from .password_store import PasswordStore
 from .pending_changes import Change, ChangeScope, PendingChanges
@@ -41,14 +36,6 @@ class PasswordChangeEffectRegistry:
 
 
 password_change_effect_registry = PasswordChangeEffectRegistry()
-
-
-def register_password_change_effect() -> None:
-    password_change_effect_registry.register(
-        affected_domains_add=[CORE],
-        affected_domains_edit=[CORE],
-        affected_domains_delete=[CORE],
-    )
 
 
 def contact_group_choices(only_own: bool = False) -> list[tuple[str, str]]:

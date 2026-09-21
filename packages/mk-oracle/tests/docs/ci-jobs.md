@@ -98,11 +98,11 @@ Rust-workspace trigger). Previously these ran only post-submit or via manual
 `start: <job>` comments. The stages reuse the existing job definitions
 unchanged — see the stage 2 / stage 3 tables for what they run:
 
-| CV stage (`stages.yml`)                                   | Triggered job                       | Notes                                                                        |
-| --------------------------------------------------------- | ----------------------------------- | ---------------------------------------------------------------------------- |
-| **System tests for mk-oracle**                            | `heavy/test-system-mk-oracle`       | junit report shown in the CV result table                                    |
-| **Windows on-VM component tests for mk-oracle**           | `heavy/winagt-test-mk-oracle`       |                                                                              |
-| **Linux/Solaris/AIX on-VM component tests for mk-oracle** | `builders/test-component-mk-oracle` | `EDITION=ultimatemt`, like the nightly chain (plugin is edition-independent) |
+| CV stage (`stages.yml`)                                   | Triggered job                       | Notes                                                                                                                                                                |
+| --------------------------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **System tests for mk-oracle**                            | `heavy/test-system-mk-oracle`       | junit report shown in the CV result table                                                                                                                            |
+| **Windows on-VM component tests for mk-oracle**           | `heavy/winagt-test-mk-oracle`       | test output linked in the CV result table (`mk-oracle-win.txt`)                                                                                                      |
+| **Linux/Solaris/AIX on-VM component tests for mk-oracle** | `builders/test-component-mk-oracle` | `EDITION=ultimatemt`, like the nightly chain (plugin is edition-independent); per-lane test output linked in the CV result table (`mk-oracle-component-tests/*.txt`) |
 
 ## Stage 2 — post-submit heavy chain (several times a day)
 

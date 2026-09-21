@@ -90,7 +90,6 @@ from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_from_request,
     folder_preserving_link,
-    folder_tree,
     FolderTree,
     Host,
     host_action_menu_registry,
@@ -199,7 +198,7 @@ def wato_folder_choices_autocompleter(config: Config, value: str, params: dict) 
     validate_regex(value, varname=None)
     match_pattern = re.compile(value, re.IGNORECASE)
     matching_folders: list[Choice] = []
-    for path, name in folder_tree().folder_choices_fulltitle(user):
+    for path, name in make_folder_tree(config).folder_choices_fulltitle(user):
         if match_pattern.search(name) is not None:
             # select2 omits empty strings ("") as option therefore the path of the Main folder is
             # replaced by a placeholder

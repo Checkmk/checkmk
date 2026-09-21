@@ -26,7 +26,8 @@ def test_registers_maps_section() -> None:
 
 def test_does_not_register_per_map_section() -> None:
     # The per-instance ``map.<name>`` section is declared by
-    # ``pagetypes.declare(MapPage)``; registering it here too would raise.
+    # ``MapPage.declare_overriding_permissions()``; registering it here too
+    # would raise.
     section_registry, _perms = _register()
     assert "map" not in section_registry
 
@@ -47,7 +48,7 @@ def test_configure_permission_is_admin_only() -> None:
 
 
 def test_pagetype_declares_the_publish_permission_set(load_plugins: None) -> None:  # noqa: ARG001
-    """``pagetypes.declare(MapPage)`` is what gives maps the publish model.
+    """``MapPage.declare_overriding_permissions()`` is what gives maps the publish model.
 
     Pinned here because the SPA's visibility form and the REST API's
     ``_authorized_public`` are written against exactly this set — losing one of

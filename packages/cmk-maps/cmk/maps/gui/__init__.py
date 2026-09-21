@@ -10,7 +10,6 @@ session-authenticated endpoints backing the SPA.
 """
 
 import cmk.utils.paths
-from cmk.gui import pagetypes
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.permissions import (
     PermissionRegistry,
@@ -65,9 +64,10 @@ def register(
     mode_registry: ModeRegistry,
 ) -> None:
     _permissions.register(permission_section_registry, permission_registry)
-    # No page_handlers on MapPage, so declare() registers no generic pagetype
-    # list/edit pages: that UI stays maps-own (the SPA via maps.py).
-    pagetypes.declare(MapPage)
+    # Not pagetypes.declare(): the registry it fills also drives the Customize
+    # menu, whose entry would link to the not-yet-merged maps.py. Swap back once
+    # that page exists.
+    MapPage.declare_overriding_permissions()
     page_registry.register(PageEndpoint("ajax_maps_ticket", AjaxMapsTicket()))
     # Map CRUD is the official REST API (cmk.maps.rest_api) and every read-only
     # SPA lookup is an internal REST endpoint, so only these remain AjaxPages:

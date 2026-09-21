@@ -16,8 +16,8 @@ from cmk.gui.permissions import (
 PERMISSION_SECTION_MAPS = PermissionSection(name="maps", title=_("Checkmk Maps"))
 
 # The per-map permission section ("map", holding ``map.<name>`` for published and
-# built-in maps) is declared by ``pagetypes.declare(MapPage)`` itself
-# (declare_overriding_permissions), so it must NOT be registered here as well.
+# built-in maps) is declared by ``MapPage.declare_overriding_permissions()``, so
+# it must NOT be registered here as well.
 
 PermissionUse = Permission(
     section=PERMISSION_SECTION_MAPS,

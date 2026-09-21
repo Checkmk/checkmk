@@ -30,6 +30,17 @@ def _last_present[T](values: Iterable[T | None]) -> T | None:
 class EvaluationContext:
     time_range: TimeRange
     fetched: Mapping[MetricProtocol, Sequence[FetchedData]] = field(default_factory=dict)
+    _results: dict[QuantityProtocol, Sequence[EvaluatedQuantity]] = field(
+        default_factory=dict, init=False, compare=False, repr=False
+    )
+
+    def evaluate(self, quantity: QuantityProtocol) -> Sequence[EvaluatedQuantity]:
+        """The quantity's results, evaluated at most once per context."""
+        if (results := self._results.get(quantity)) is not None:
+            return results
+        results = quantity.evaluate(self)
+        self._results[quantity] = results
+        return results
 
     def fetched_of(self, metric: MetricProtocol) -> Sequence[FetchedData]:
         return self.fetched.get(metric, ())

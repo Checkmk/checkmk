@@ -65,7 +65,7 @@ def evaluate_title(
     for raw in _TITLE_EXPRESSION_PATTERN.findall(title):
         if service is None or (quantity := _title_quantity(raw, service)) is None:
             return _fallback_title(title)
-        value = first_value(quantity.evaluate(context))
+        value = first_value(context.evaluate(quantity))
         if value is None:
             return _fallback_title(title)
         title = title.replace(raw, str(int(value)), 1)

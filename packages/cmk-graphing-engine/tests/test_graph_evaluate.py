@@ -655,3 +655,50 @@ def test_evaluate_graph_leaves_an_rrd_curve_without_attributes() -> None:
     )
 
     assert [line.curve.series_attributes for line in result.lines] == [{}]
+
+
+# --- repeated references ------------------------------------------------------------------------
+
+
+@dataclass(eq=False)
+class _CountingQuantity:
+    """Counts how often the evaluation asked it for its results."""
+
+    evaluations: int = 0
+
+    def kind(self) -> str:
+        return "counting"
+
+    def ident(self) -> str:
+        return f"{self.kind()}(test)"
+
+    def metrics(self) -> Iterable[MetricProtocol]:
+        return ()
+
+    def evaluate(self, _context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
+        self.evaluations += 1
+        return [EvaluatedQuantity(value=1.0, time_series=_time_series(1.0, 1.0, 1.0))]
+
+    def attributes(
+        self,
+        _localizer: Callable[[str], str],
+        _registered_metrics: Mapping[str, metrics_v1.Metric],
+    ) -> CurveAttributes | None:
+        return None
+
+
+def test_evaluate_graph_evaluates_a_quantity_of_two_curves_once() -> None:
+    shared = _CountingQuantity()
+    graph = Graph(
+        name="g",
+        title="g",
+        kind="test",
+        lines=[
+            Line(curve=_curve(shared, "shared"), inverse=False),
+            Line(curve=_curve(Sum((shared, Constant(1.0))), "derived"), inverse=False),
+        ],
+    )
+
+    _evaluate_graph(graph, _context({}, {}))
+
+    assert shared.evaluations == 1

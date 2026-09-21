@@ -95,7 +95,7 @@ def _evaluate_bound(bound: Bound | None, context: EvaluationContext) -> float | 
         return None
     if isinstance(bound, int | float):
         return float(bound)
-    return first_value(bound.evaluate(context))
+    return first_value(context.evaluate(bound))
 
 
 def _evaluate_vertical_range(
@@ -158,7 +158,7 @@ def _series_curve_attributes(
 def _evaluate_curve(
     curve: Curve, *, inverse: bool, seen: Counter[str], context: EvaluationContext
 ) -> Sequence[EvaluatedCurve]:
-    results = curve.quantity.evaluate(context)
+    results = context.evaluate(curve.quantity)
     fanned = isinstance(curve.quantity, FanOutQuantity) and curve.quantity.aggregation_kind is None
     return [
         EvaluatedCurve(
@@ -186,7 +186,7 @@ def _evaluate_bound_series(
 ) -> tuple[TimeSeries | None, bool]:
     if bound is None:
         return None, True
-    results = bound.quantity.evaluate(context)
+    results = context.evaluate(bound.quantity)
     if not results:
         return None, False
     return results[0].time_series, True
@@ -203,7 +203,7 @@ def _evaluate_region(
 
 
 def _evaluate_rule(rule: Rule, rule_id: str, context: EvaluationContext) -> EvaluatedRule | None:
-    value = first_value(rule.curve.quantity.evaluate(context))
+    value = first_value(context.evaluate(rule.curve.quantity))
     if value is None:
         return None
     return EvaluatedRule(

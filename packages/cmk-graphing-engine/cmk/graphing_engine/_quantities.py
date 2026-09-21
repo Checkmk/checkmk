@@ -117,7 +117,7 @@ def _evaluate_operation(
     operands: Sequence[QuantityProtocol],
     context: EvaluationContext,
 ) -> Sequence[EvaluatedQuantity]:
-    if (collapsed := _collapse_operands([o.evaluate(context) for o in operands])) is None:
+    if (collapsed := _collapse_operands([context.evaluate(o) for o in operands])) is None:
         return []
     return [_apply_to_operands(operator, collapsed, context)]
 

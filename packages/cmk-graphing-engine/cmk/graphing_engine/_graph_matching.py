@@ -23,7 +23,7 @@ from ._graph_from_api import (
 )
 from ._naming import MetricName, Service
 from ._quantities import rrd_metric_of, RRDMetric, ScalarOf
-from ._quantity import QuantityProtocol
+from ._quantity import fetch_leaves, QuantityProtocol
 from ._quantity_from_api import build_curve
 
 _METRIC_PREFIX = "METRIC_"
@@ -86,7 +86,7 @@ def _add_predictive_lines(
 ) -> tuple[Graph, set[MetricName]]:
     inverse_by_metric: dict[MetricName, bool] = {}
     for quantity, inverse in _drawn_quantities(graph):
-        for metric in quantity.metrics():
+        for metric in fetch_leaves(quantity):
             if isinstance(metric, RRDMetric):
                 inverse_by_metric.setdefault(metric.metric_name, inverse)
 

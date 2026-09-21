@@ -6,7 +6,7 @@
 """The open quantity protocol: a custom quantity kind defined entirely outside the engine
 is evaluated by the engine without any change to its code."""
 
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 
 import pytest
@@ -14,12 +14,14 @@ import pytest
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing_engine import (
     AutoPrecision,
+    Constant,
     Curve,
     CurveAttributes,
     DecimalNotation,
     EvaluatedCurve,
     EvaluatedQuantity,
     EvaluationContext,
+    fetch_leaves,
     FetchedData,
     Graph,
     HostName,
@@ -63,8 +65,8 @@ class Negated:
     def ident(self) -> str:
         return f"negated({self.operand.ident()})"
 
-    def metrics(self) -> Iterable[MetricProtocol]:
-        yield from self.operand.metrics()
+    def children(self) -> Sequence[QuantityProtocol]:
+        return (self.operand,)
 
     def attributes(
         self,
@@ -100,7 +102,7 @@ class _FanOut:
     def ident(self) -> str:
         return "fan_out"
 
-    def metrics(self) -> Iterable[MetricProtocol]:
+    def children(self) -> Sequence[QuantityProtocol]:
         return ()
 
     def attributes(
@@ -167,7 +169,7 @@ def test_custom_quantity_is_accepted_as_a_quantity() -> None:
     # Static structural conformance: a Negated is usable wherever a QuantityProtocol is expected.
     a = _metric("a")
     quantity: QuantityProtocol = Negated(operand=a)
-    assert list(quantity.metrics()) == [a]
+    assert list(fetch_leaves(quantity)) == [a]
 
 
 def test_engine_evaluates_a_custom_quantity_without_engine_changes() -> None:
@@ -215,3 +217,48 @@ def test_a_metric_leaf_is_a_quantity() -> None:
 
     metric = _metric("a")
     assert _as_quantity(_as_metric(metric)) is metric
+
+
+# --- walking the quantity graph -----------------------------------------------------------------
+
+
+@dataclass(eq=False)
+class _CountingOperation:
+    """Counts how often a walk asked it what it is computed from."""
+
+    operand: QuantityProtocol
+    walks: int = 0
+
+    def kind(self) -> str:
+        return "counting"
+
+    def ident(self) -> str:
+        return f"{self.kind()}({self.operand.ident()})"
+
+    def children(self) -> Sequence[QuantityProtocol]:
+        self.walks += 1
+        return (self.operand,)
+
+    def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
+        return self.operand.evaluate(context)
+
+    def attributes(
+        self,
+        _localizer: Callable[[str], str],
+        _registered_metrics: Mapping[str, metrics_v1.Metric],
+    ) -> CurveAttributes | None:
+        return None
+
+
+def test_a_quantity_two_branches_share_is_walked_once() -> None:
+    metric = _metric("a")
+    shared = _CountingOperation(metric)
+    root = Sum(
+        summands=(
+            Sum(summands=(shared, Constant(1.0))),
+            Sum(summands=(shared, Constant(2.0))),
+        )
+    )
+
+    assert list(fetch_leaves(root)) == [metric]
+    assert shared.walks == 1

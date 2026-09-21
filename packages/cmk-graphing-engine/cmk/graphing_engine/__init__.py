@@ -74,6 +74,7 @@ from ._quantity import (
     EvaluatedQuantity,
     EvaluationContext,
     FanOutQuantity,
+    fetch_leaves,
     MetricProtocol,
     QuantityProtocol,
 )
@@ -128,6 +129,7 @@ __all__ = [
     "EvaluatedVerticalRange",
     "EvaluationContext",
     "FanOutQuantity",
+    "fetch_leaves",
     "FetchDataProtocol",
     "FetchMetricNamesProtocol",
     "FetchedData",

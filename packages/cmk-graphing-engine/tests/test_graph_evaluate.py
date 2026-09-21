@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 
 from cmk.graphing.v1 import metrics as metrics_v1
@@ -24,7 +24,6 @@ from cmk.graphing_engine import (
     FixedRange,
     Graph,
     Line,
-    MetricProtocol,
     MinimalRange,
     PerformanceData,
     QuantityProtocol,
@@ -376,7 +375,7 @@ class _FannedQuantity:
     def ident(self) -> str:
         return f"{self.kind()}(test)"
 
-    def metrics(self) -> Iterable[MetricProtocol]:
+    def children(self) -> Sequence[QuantityProtocol]:
         return ()
 
     def evaluate(self, _context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
@@ -672,7 +671,7 @@ class _CountingQuantity:
     def ident(self) -> str:
         return f"{self.kind()}(test)"
 
-    def metrics(self) -> Iterable[MetricProtocol]:
+    def children(self) -> Sequence[QuantityProtocol]:
         return ()
 
     def evaluate(self, _context: EvaluationContext) -> Sequence[EvaluatedQuantity]:

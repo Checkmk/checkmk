@@ -74,7 +74,9 @@ class QuantityProtocol(Hashable, Protocol):
 
     def ident(self) -> str: ...
 
-    def metrics(self) -> Iterable[MetricProtocol]: ...
+    # The quantities this one is computed from, empty for a leaf. A quantity that several parents
+    # share is one node of a graph: a walk over it has to see it once, not once per path.
+    def children(self) -> Sequence[QuantityProtocol]: ...
 
     # A quantity evaluates to a sequence of curves: empty when absent, one for an ordinary quantity,
     # and several when a fan-out leaf (e.g. a query matching many services) expands into one curve
@@ -97,12 +99,30 @@ class FanOutQuantity(Protocol):
     def aggregation_kind(self) -> object | None: ...
 
 
-# The leaves a graph fetches data for: the keys of EvaluationContext.fetched and the elements
-# QuantityProtocol.metrics() yields. A metric is a quantity that draws itself, identified by its
-# metric_name - that is what sets it apart from an expression node.
+# The leaves a graph fetches data for: the keys of EvaluationContext.fetched and what a walk over
+# a quantity collects. A metric is a quantity that draws itself, identified by its metric_name -
+# that is what sets it apart from an expression node, which names children instead.
+@runtime_checkable
 class MetricProtocol(QuantityProtocol, Protocol):
     @property
     def metric_name(self) -> MetricName: ...
+
+
+def fetch_leaves(quantity: QuantityProtocol) -> Sequence[MetricProtocol]:
+    """The fetch leaves the quantity reaches, each once, in the order they first appear."""
+    leaves: list[MetricProtocol] = []
+    walked: set[QuantityProtocol] = set()
+    stack = [quantity]
+    while stack:
+        node = stack.pop()
+        if node in walked:
+            continue
+        walked.add(node)
+        if children := node.children():
+            stack.extend(reversed(children))
+        elif isinstance(node, MetricProtocol):
+            leaves.append(node)
+    return leaves
 
 
 # What a drawable is bounded by: a plain number, or a quantity to be evaluated.

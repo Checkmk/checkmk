@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""What the engine's own quantities evaluate to: a value and a time series per quantity kind."""
+"""What the engine's own quantities evaluate to: a value and a time series per quantity kind,
+and the fetch leaves they name."""
 
 from collections.abc import Mapping
 
@@ -13,6 +14,7 @@ from cmk.graphing_engine import (
     Constant,
     Difference,
     EvaluationContext,
+    fetch_leaves,
     Fraction,
     PerformanceData,
     Product,
@@ -225,3 +227,11 @@ def test_evaluate_time_series_of_a_fraction_guards_zero_and_gaps() -> None:
     time_series = {a: _time_series(10.0, 6.0, 4.0), b: _time_series(2.0, 0.0, None)}
     result = _evaluate_time_series(Fraction(dividend=a, divisor=b), metric_data, time_series, _TR)
     assert result == _time_series(5.0, None, None)
+
+
+# --- fetch leaves -------------------------------------------------------------------------------
+
+
+def test_an_operation_yields_each_fetch_leaf_once() -> None:
+    a = _metric("a")
+    assert list(fetch_leaves(Sum(summands=(a, a)))) == [a]

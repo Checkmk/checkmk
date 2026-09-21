@@ -12,6 +12,7 @@ from ._naming import Service
 from ._quantities import rrd_metric_of, RRDMetric, ScalarOf
 from ._quantity import (
     EvaluationContext,
+    fetch_leaves,
     first_value,
     MetricProtocol,
     QuantityProtocol,
@@ -49,7 +50,7 @@ def title_metrics(title: str, drawn_metrics: Iterable[MetricProtocol]) -> Iterat
         return
     for raw in _TITLE_EXPRESSION_PATTERN.findall(title):
         if (quantity := _title_quantity(raw, service)) is not None:
-            yield from quantity.metrics()
+            yield from fetch_leaves(quantity)
 
 
 def _fallback_title(title: str) -> str:

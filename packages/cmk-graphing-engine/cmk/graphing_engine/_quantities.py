@@ -5,7 +5,7 @@
 
 import enum
 import itertools
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import assert_never
 
@@ -25,7 +25,6 @@ from ._operations import (
 from ._quantity import (
     EvaluatedQuantity,
     EvaluationContext,
-    MetricProtocol,
     QuantityProtocol,
 )
 from ._timeseries import ConsolidationFunction, constant_time_series, TimeSeries
@@ -107,11 +106,6 @@ def _operation_ident(kind: str, operands: Sequence[QuantityProtocol]) -> str:
     return f"{kind}({','.join(operand.ident() for operand in operands)})"
 
 
-def _operation_metrics(operands: Sequence[QuantityProtocol]) -> Iterable[MetricProtocol]:
-    for operand in operands:
-        yield from operand.metrics()
-
-
 def _evaluate_operation(
     operator: Operator,
     operands: Sequence[QuantityProtocol],
@@ -133,7 +127,7 @@ class Constant:
     def ident(self) -> str:
         return f"{self.kind()}({self.value})"
 
-    def metrics(self) -> Iterable[MetricProtocol]:
+    def children(self) -> Sequence[QuantityProtocol]:
         return ()
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
@@ -175,8 +169,8 @@ class RRDMetric:
             service_name=self.service_name,
         )
 
-    def metrics(self) -> Iterable[MetricProtocol]:
-        yield self
+    def children(self) -> Sequence[QuantityProtocol]:
+        return ()
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
         data = context.data_of(self)
@@ -232,8 +226,8 @@ class PredictionMetric:
             f",{self.period},{self.valid_from},{self.valid_until},{self.curve_kind})"
         )
 
-    def metrics(self) -> Iterable[MetricProtocol]:
-        yield self
+    def children(self) -> Sequence[QuantityProtocol]:
+        return ()
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
         if (time_series := context.time_series_of(self)) is None:
@@ -276,8 +270,8 @@ class ScalarOf:
     def ident(self) -> str:
         return f"{self.kind()}({self.scalar_kind},{self.metric.ident()})"
 
-    def metrics(self) -> Iterable[MetricProtocol]:
-        yield self.metric
+    def children(self) -> Sequence[QuantityProtocol]:
+        return (self.metric,)
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
         if (data := context.data_of(self.metric)) is None:
@@ -332,8 +326,8 @@ class Sum:
     def ident(self) -> str:
         return _operation_ident(self.kind(), self.summands)
 
-    def metrics(self) -> Iterable[MetricProtocol]:
-        return _operation_metrics(self.summands)
+    def children(self) -> Sequence[QuantityProtocol]:
+        return self.summands
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
         return _evaluate_operation(op_sum, self.summands, context)
@@ -357,8 +351,8 @@ class Product:
     def ident(self) -> str:
         return _operation_ident(self.kind(), self.factors)
 
-    def metrics(self) -> Iterable[MetricProtocol]:
-        return _operation_metrics(self.factors)
+    def children(self) -> Sequence[QuantityProtocol]:
+        return self.factors
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
         return _evaluate_operation(op_product, self.factors, context)
@@ -383,8 +377,8 @@ class Difference:
     def ident(self) -> str:
         return _operation_ident(self.kind(), (self.minuend, self.subtrahend))
 
-    def metrics(self) -> Iterable[MetricProtocol]:
-        return _operation_metrics((self.minuend, self.subtrahend))
+    def children(self) -> Sequence[QuantityProtocol]:
+        return (self.minuend, self.subtrahend)
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
         return _evaluate_operation(op_difference, (self.minuend, self.subtrahend), context)
@@ -409,8 +403,8 @@ class Fraction:
     def ident(self) -> str:
         return _operation_ident(self.kind(), (self.dividend, self.divisor))
 
-    def metrics(self) -> Iterable[MetricProtocol]:
-        return _operation_metrics((self.dividend, self.divisor))
+    def children(self) -> Sequence[QuantityProtocol]:
+        return (self.dividend, self.divisor)
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
         return _evaluate_operation(op_fraction, (self.dividend, self.divisor), context)

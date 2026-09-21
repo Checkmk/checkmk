@@ -62,6 +62,7 @@ from ._core_bakelet import CoreYamlConfigFunction as CoreYamlConfigFunction
 from ._core_bakelet import entry_point_prefixes as entry_point_prefixes
 from ._recipes import BinaryFile as BinaryFile
 from ._recipes import CustomFile as CustomFile
+from ._recipes import HashDependency as HashDependency
 from ._recipes import PluginExecution as PluginExecution
 from ._recipes import SiteFile as SiteFile
 from ._recipes import TextFile as TextFile
@@ -96,6 +97,7 @@ __all__ = [
     "FileFromSite",
     "GeneratedBinaryFile",
     "GeneratedTextFile",
+    "HashDependency",
     "HomeFileContainer",
     "IntervalConfig",
     "LibFileContainer",

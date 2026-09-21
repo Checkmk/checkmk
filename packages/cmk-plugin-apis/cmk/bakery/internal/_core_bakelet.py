@@ -36,7 +36,7 @@ from ._artifacts import (
     YamlItems,
     YamlPluginSettings,
 )
-from ._recipes import BinaryFile, CustomFile, SiteFile, TextFile
+from ._recipes import BinaryFile, CustomFile, HashDependency, SiteFile, TextFile
 from ._types import AgentConfig, AgentHash
 
 
@@ -52,6 +52,7 @@ class CoreFilesFunction(Protocol):
         | TextFile
         | BinaryFile
         | CustomFile
+        | HashDependency
         | PluginContainer
         | SystemBinaryContainer
         | PluginConfigContainer

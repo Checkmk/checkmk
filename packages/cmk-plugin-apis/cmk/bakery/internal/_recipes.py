@@ -79,3 +79,14 @@ class CustomFile:
     source: Path
     package: str
     location: LogicalPath
+
+
+@dataclass(frozen=True, kw_only=True)
+class HashDependency:
+    """A file that deploys nothing but whose stat enters the agent hash.
+
+    A change to the file then forces a rebake, for content the bakelet reads
+    itself and hands over as generated content.
+    """
+
+    path: Path

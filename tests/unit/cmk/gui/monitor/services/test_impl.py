@@ -30,7 +30,7 @@ _UNKNOWN_HOSTNAME = "foo-server-01"
 _SERVICES_COLUMNS = (
     "description host_name state has_been_checked plugin_output acknowledged "
     "scheduled_downtime_depth notifications_enabled comments modified_attributes_list active_checks_enabled accept_passive_checks in_notification_period in_service_period in_check_period in_passive_check_period is_flapping staleness last_check "
-    "last_state_change perf_data check_command"
+    "last_state_change perf_data check_command check_type cached_at cache_interval"
 )
 _DEFAULT_ORDER_BY = "OrderBy: description asc natural"
 
@@ -350,6 +350,9 @@ def test_fetch_derives_stale_from_the_staleness_threshold(
         "last_state_change": 0,
         "perf_data": "",
         "check_command": "check_cpu",
+        "check_type": 0,
+        "cached_at": 0,
+        "cache_interval": 0,
     }
     with expect_single_query("GET services", tables={"services": [row]}) as live:
         repo = LiveStatusHostServicesRepository(connection=live)
@@ -401,6 +404,9 @@ def test_fetch_counts_only_a_modified_setting_as_manually_disabled(
         "last_state_change": 0,
         "perf_data": "",
         "check_command": "check_cpu",
+        "check_type": 0,
+        "cached_at": 0,
+        "cache_interval": 0,
     }
     with expect_single_query("GET services", tables={"services": [row]}) as live:
         services = LiveStatusHostServicesRepository(connection=live).fetch(
@@ -412,7 +418,7 @@ def test_fetch_counts_only_a_modified_setting_as_manually_disabled(
             fields=frozenset(),
         )
 
-    assert [service.active_checks_disabled for service in services] == [expected]
+    assert [service.active_checks_manually_disabled for service in services] == [expected]
 
 
 @pytest.mark.parametrize(
@@ -451,6 +457,9 @@ def test_fetch_counts_a_service_as_checked_only_inside_both_check_periods(
         "last_state_change": 0,
         "perf_data": "",
         "check_command": "check_cpu",
+        "check_type": 0,
+        "cached_at": 0,
+        "cache_interval": 0,
     }
     with expect_single_query("GET services", tables={"services": [row]}) as live:
         services = LiveStatusHostServicesRepository(connection=live).fetch(

@@ -92,30 +92,27 @@ const rowActionButtons: CellAction[] = (props.row_actions ?? []).map((action) =>
 
 const actionMenuApi = new ServiceActionMenuApi()
 
-// Command entries the row dropdown runs immediately with their default values, acting on that
-// single service. Only actions that are safe without user input belong here — form-based ones
-// (acknowledge, downtime) carry essential input and go through the action pane instead. They
-// carry no url, so ActionsCell emits `select`.
+// Actions the action bar runs immediately with their default values when exactly one service is
+// selected. Only actions that are safe without user input belong here — form-based ones
+// (acknowledge, downtime) carry essential input and go through the action pane instead.
 const IMMEDIATE_ROW_COMMAND_IDS: readonly string[] = [RESCHEDULE_ACTION_ID]
 
-const rowCommands: CellAction[] = serviceActions.filter((action) =>
-  IMMEDIATE_ROW_COMMAND_IDS.includes(action.id)
-)
+// What rescheduling a single service means differs per service - its label, its icon and even
+// which service the command acts on - so the row builds that entry from what the backend says
+// about the service it shows. All the page knows is whether the user may reschedule at all.
+const mayReschedule = serviceActions.some((action) => action.id === RESCHEDULE_ACTION_ID)
 
-// The immediate commands followed by the fetched legacy action-menu links (graphs, log file
-// viewer, custom actions, ...), read when the menu is opened.
+// The legacy action-menu links (graphs, log file viewer, custom actions, ...), read when the
+// menu is opened.
 async function loadActionMenu(service: string): Promise<CellAction[]> {
   const items = await actionMenuApi.fetchActionMenu(host, service)
-  return [
-    ...rowCommands,
-    ...items.map((item) => ({
-      id: `${item.title}|${item.url}`,
-      label: item.title as TranslatedString,
-      icon: item.icon_name as SimpleIcons,
-      url: item.url,
-      target: item.target
-    }))
-  ]
+  return items.map((item) => ({
+    id: `${item.title}|${item.url}`,
+    label: item.title as TranslatedString,
+    icon: item.icon_name as SimpleIcons,
+    url: item.url,
+    target: item.target
+  }))
 }
 
 // Checkboxes only make sense where the selection can be acted on, so the permitted-action list
@@ -299,6 +296,15 @@ function serviceRef(row: HostServiceEntry): string {
   return row.name
 }
 
+// As in the slide-in: a byproduct of the agent-based check reschedules the host's "Check_MK"
+// service, and a service that cannot be rescheduled at all is left out.
+function serviceActionTargets(rows: HostServiceEntry[], actionId: string): string[] {
+  if (actionId !== RESCHEDULE_ACTION_ID) {
+    return rows.map(serviceRef)
+  }
+  return [...new Set(rows.flatMap((row) => row.reschedule?.target ?? []))]
+}
+
 function serviceSelectionLabel(count: number): TranslatedString {
   return _tn('Selected service: %{count}', 'Selected services: %{count}', count, { count })
 }
@@ -364,6 +370,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :column-pinning="columnPinning"
         :get-row-key="rowKey"
         :get-action-target="serviceRef"
+        :get-action-targets="serviceActionTargets"
         :immediate-action-ids="IMMEDIATE_ROW_COMMAND_IDS"
         :selection-label="serviceSelectionLabel"
         :actions-label="_t('Actions for selected services')"
@@ -375,6 +382,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
             :row="row"
             :table-row="tableRow"
             :row-actions="rowActionButtons"
+            :may-reschedule="mayReschedule"
             :load-action-menu="loadActionMenu"
             :display-options="displayOptions"
             :ai-explain="aiExplain && hostServicesService.hostEntry.value !== null"

@@ -46,6 +46,11 @@ const props = withDefaults(
     /** Maps a row to the reference the actions act on. */
     getActionTarget: (row: T) => Target
     /**
+     * Maps the selected rows to what a given action acts on, for pages where that is not simply
+     * one target per row. Defaults to `getActionTarget` on each row.
+     */
+    getActionTargets?: ((rows: T[], actionId: string) => Target[]) | undefined
+    /**
      * Actions that skip the form and run straight away on a single selected row,
      * because their default values need no input.
      */
@@ -78,11 +83,12 @@ const {
   applyFeedback
 } = useMonitoringActions(rowSelection, selectableKeys)
 
-const selectedTargets = computed<Target[]>(() =>
-  props.service.items.value
-    .filter((row) => rowSelection.value[props.getRowKey(row)])
-    .map((row) => props.getActionTarget(row))
-)
+function targetsFor(actionId: string): Target[] {
+  const rows = props.service.items.value.filter((row) => rowSelection.value[props.getRowKey(row)])
+  return props.getActionTargets
+    ? props.getActionTargets(rows, actionId)
+    : rows.map((row) => props.getActionTarget(row))
+}
 
 const isNarrowed = computed(
   () =>
@@ -96,13 +102,21 @@ function onFeedback(result: ActionFeedbackResult): void {
 
 async function onBulkAction(action: CellAction): Promise<void> {
   const registered = props.actions[action.id]
-  if (!registered || selectedTargets.value.length === 0) {
+  if (!registered || selectedCount.value === 0) {
     return
   }
-  if (props.immediateActionIds.includes(action.id) && selectedTargets.value.length === 1) {
+  const targets = targetsFor(action.id)
+  if (targets.length === 0) {
+    applyFeedback({
+      variant: 'error',
+      message: _t('This action cannot be performed on any of the selected rows.')
+    })
+    return
+  }
+  if (props.immediateActionIds.includes(action.id) && selectedCount.value === 1) {
     runningActionId.value = action.id
     try {
-      onFeedback(await registered.perform(selectedTargets.value, registered.defaultValues()))
+      onFeedback(await registered.perform(targets, registered.defaultValues()))
     } finally {
       runningActionId.value = null
     }
@@ -224,7 +238,7 @@ function onRightPaneCollapse(collapsed: boolean): void {
         v-if="activeAction"
         :action-id="activeAction"
         :actions="actions"
-        :targets="selectedTargets"
+        :targets="targetsFor(activeAction)"
         :show-close="true"
         :counts-label="countsLabel"
         @feedback="onFeedback"

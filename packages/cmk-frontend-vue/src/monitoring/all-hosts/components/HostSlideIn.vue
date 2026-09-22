@@ -163,7 +163,7 @@ const {
   perform
 } = useSlideInActions<HostRef>(
   () => props.actions,
-  targets,
+  () => targets.value,
   () => props.host,
   onActionPerformed
 )

@@ -11,8 +11,10 @@ export const SERVICE_GRAPHS_TAB_ID = 'service_graphs'
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
+import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import CmkSlideInTabbed, { type SlideInTab } from 'cmk-ui-library/components/CmkSlideInTabbed'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, markRaw, onUnmounted, ref, watch } from 'vue'
 
 import TableSkeleton from '@/loading-transition/TableSkeleton.vue'
@@ -25,6 +27,7 @@ import ActionFeedback, {
   type ActionFeedback as ActionFeedbackResult
 } from '@/monitoring/shared/components/action/ActionFeedback.vue'
 import MonitoringActionPane from '@/monitoring/shared/components/action/MonitoringActionPane.vue'
+import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionButtons.vue'
 import SlideInActions from '@/monitoring/shared/components/slide-in/SlideInActions.vue'
@@ -84,11 +87,37 @@ const open = computed(() => props.service !== null)
 const overview = ref<ServiceOverview | null>(null)
 
 // Only the actions the user may run and that this page actually implements reach the buttons.
+// Rescheduling is the one action that is not offered on every service: what it does, and whether
+// it can be done at all, is decided per service by the backend. A service it cannot be done for
+// gets no button here - the row's action menu is where the refusal is spelled out.
 const slideInActions = computed(() =>
-  props.permittedActions.filter((action) => action.id in props.actions)
+  props.permittedActions
+    .filter((action) => action.id in props.actions)
+    .flatMap((action) => {
+      if (action.id !== RESCHEDULE_ACTION_ID) {
+        return [action]
+      }
+      const offer = props.service?.reschedule
+      if (offer === undefined || offer.target === undefined) {
+        return []
+      }
+      return [
+        {
+          ...action,
+          label: offer.label as TranslatedString,
+          icon: offer.icon_name as SimpleIcons
+        }
+      ]
+    })
 )
 
 const targets = computed<string[]>(() => (props.service ? [props.service.name] : []))
+
+// A byproduct of the agent-based check reschedules the service that fetches the data, not itself.
+function actionTargets(actionId: string): string[] {
+  const redirect = actionId === RESCHEDULE_ACTION_ID ? props.service?.reschedule?.target : undefined
+  return redirect === undefined ? targets.value : [redirect]
+}
 
 const displayService = computed<ServiceHeaderSubject | null>(() => {
   if (!props.service) {
@@ -154,7 +183,7 @@ const {
   applyFeedback
 } = useSlideInActions<string>(
   () => props.actions,
-  targets,
+  actionTargets,
   () => props.service,
   onActionPerformed
 )

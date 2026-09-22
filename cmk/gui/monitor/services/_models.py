@@ -46,6 +46,15 @@ class ServiceState(enum.IntEnum):
     PENDING = 4
 
 
+class CheckType(enum.IntEnum):
+    """How a service's check result comes about, as livestatus reports it."""
+
+    ACTIVE = 0
+    PASSIVE = 1
+    # An object this site only knows about because a remote site told it; not actionable here.
+    SHADOW = 2
+
+
 class HostState(enum.IntEnum):
     UP = 0
     DOWN = 1
@@ -76,7 +85,7 @@ class Service:
     in_downtime: bool
     notifications_enabled: bool
     num_comments: int
-    active_checks_disabled: bool
+    active_checks_manually_disabled: bool
     passive_checks_disabled: bool
     in_notification_period: bool
     in_service_period: bool
@@ -88,6 +97,14 @@ class Service:
     last_state_change: UnixTimestamp
     perf_data: str
     check_command: str
+    # The raw livestatus column, unlike ``active_checks_manually_disabled`` above, which says only
+    # whether active checks were switched off by hand.
+    active_checks_enabled: bool
+    check_type: CheckType
+    # When the result was cut from cached agent data, and how long that cache is meant to last.
+    # ``None`` says the service is not fed from a cache at all, which leaves the interval at 0.
+    cached_at: UnixTimestamp | None
+    cache_interval: int
     labels: dict[str, ServiceLabelValue] | None
     tags: dict[str, str] | None
     contacts: list[str] | None

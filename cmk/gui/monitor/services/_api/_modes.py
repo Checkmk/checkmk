@@ -109,7 +109,7 @@ def build_service_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
                 title=_comment_title(service.num_comments),
             )
         )
-    if service.active_checks_disabled:
+    if service.active_checks_manually_disabled:
         modes.append(
             ServiceModeInfo(
                 icon_name="disabled",
@@ -201,7 +201,7 @@ def build_service_modes_by_id(
                 title=_comment_title(service.num_comments),
             )
         )
-    if service.active_checks_disabled:
+    if service.active_checks_manually_disabled:
         modes.append(
             ServiceModeInfo(
                 icon_name="disabled",

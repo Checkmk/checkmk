@@ -5,12 +5,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { Row } from '@tanstack/vue-table'
+import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, inject } from 'vue'
 
 import { AI_EXPLAIN_ACTION_ID } from '@/monitoring/host-services/aiExplain'
 import type { HostServiceEntry } from '@/monitoring/shared/api/types'
 import { COLUMN_LAYOUT_KEY } from '@/monitoring/shared/components/MonitoringTableContext'
+import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import ActionsCell, { type CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import CheckboxCell from '@/monitoring/shared/components/cell/CheckboxCell.vue'
 import IconCell from '@/monitoring/shared/components/cell/IconCell.vue'
@@ -29,12 +32,14 @@ const props = withDefaults(
     tableRow: Row<HostServiceEntry>
     // Always-visible inline buttons; their url may contain a {service} placeholder resolved per row.
     rowActions?: CellAction[]
+    /** Whether the user may reschedule at all; what a reschedule does is per service. */
+    mayReschedule?: boolean
     /** Lazy loader for the entries of this service's action menu. */
     loadActionMenu?: ((service: string) => Promise<CellAction[]>) | undefined
     displayOptions: DisplayOptions
     aiExplain?: boolean
   }>(),
-  { rowActions: () => [], loadActionMenu: undefined, aiExplain: false }
+  { rowActions: () => [], mayReschedule: false, loadActionMenu: undefined, aiExplain: false }
 )
 
 const { _t } = usei18n()
@@ -71,12 +76,37 @@ function onActionSelect(action: CellAction): void {
     emit('explain', props.row)
     return
   }
-  emit('command', { id: action.id, target: props.row.name })
+  // A service whose check is a byproduct of the agent-based check has nothing of its own to run,
+  // so its reschedule targets the service that fetches the data - see the backend's offer.
+  const target = action.id === RESCHEDULE_ACTION_ID ? props.row.reschedule?.target : props.row.name
+  emit('command', { id: action.id, target: target ?? props.row.name })
 }
+
+// A blocked offer carries no target: the entry is shown, greyed out, with the refusal as its
+// tooltip. No offer at all means the service cannot be rescheduled and says nothing about it.
+const rescheduleAction = computed<CellAction | null>(() => {
+  const offer = props.row.reschedule
+  if (!props.mayReschedule || offer === undefined) {
+    return null
+  }
+  return {
+    id: RESCHEDULE_ACTION_ID,
+    label: offer.label as TranslatedString,
+    tooltip: offer.tooltip as TranslatedString,
+    icon: offer.icon_name as SimpleIcons,
+    disabled: offer.target === undefined
+  }
+})
 
 const actionMenuLoader = computed<(() => Promise<CellAction[]>) | undefined>(() => {
   const load = props.loadActionMenu
-  return load === undefined ? undefined : () => load(props.row.name)
+  if (load === undefined && rescheduleAction.value === null) {
+    return undefined
+  }
+  return async () => {
+    const items = load === undefined ? [] : await load(props.row.name)
+    return rescheduleAction.value === null ? items : [rescheduleAction.value, ...items]
+  }
 })
 
 const lastCheck = computed(() =>

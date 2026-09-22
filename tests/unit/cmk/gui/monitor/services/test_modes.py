@@ -38,7 +38,7 @@ _NO_MODES = {
     "acknowledged": False,
     "notifications_enabled": True,
     "num_comments": 0,
-    "active_checks_disabled": False,
+    "active_checks_manually_disabled": False,
     "passive_checks_disabled": False,
     "in_notification_period": True,
     "in_service_period": True,
@@ -89,8 +89,8 @@ def test_build_service_modes_by_id_comments() -> None:
     assert modes[0].title == "This service has 1 comment"
 
 
-def test_build_service_modes_by_id_active_checks_disabled() -> None:
-    service = ServiceFactory.build(**_NO_MODES | {"active_checks_disabled": True})
+def test_build_service_modes_by_id_active_checks_manually_disabled() -> None:
+    service = ServiceFactory.build(**_NO_MODES | {"active_checks_manually_disabled": True})
 
     assert [
         mode.icon_name
@@ -147,7 +147,7 @@ def test_build_service_modes_by_id_all_modes() -> None:
         acknowledged=True,
         notifications_enabled=False,
         num_comments=3,
-        active_checks_disabled=True,
+        active_checks_manually_disabled=True,
         passive_checks_disabled=True,
         in_notification_period=False,
         in_service_period=False,
@@ -181,7 +181,7 @@ def test_build_service_modes_all_modes() -> None:
         acknowledged=True,
         notifications_enabled=False,
         num_comments=3,
-        active_checks_disabled=True,
+        active_checks_manually_disabled=True,
         passive_checks_disabled=True,
         in_notification_period=False,
         in_service_period=False,
@@ -265,7 +265,7 @@ def test_build_service_modes_by_id_state_icons_link_nowhere() -> None:
         | {
             "acknowledged": True,
             "notifications_enabled": False,
-            "active_checks_disabled": True,
+            "active_checks_manually_disabled": True,
             "passive_checks_disabled": True,
             "in_notification_period": False,
             "in_service_period": False,

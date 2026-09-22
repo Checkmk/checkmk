@@ -20,6 +20,15 @@ const ZERO_WIDTH_SPACE = String.fromCharCode(0x200b)
 // a fixture's timestamp happens to be relative to the real clock the test runs under.
 const DISPLAY_OPTIONS: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'abs' }
 
+function reschedulesItself(name: string) {
+  return {
+    label: 'Reschedule check',
+    tooltip: 'Reschedule check',
+    icon_name: 'reload',
+    target: name
+  }
+}
+
 function makeService(overrides: Partial<HostServiceEntry> = {}): HostServiceEntry {
   return {
     name: 'CPU load',
@@ -396,4 +405,97 @@ test('checkbox calls toggleSelected on tableRow when clicked', async () => {
   await fireEvent.click(checkbox)
 
   expect(toggleSelected).toHaveBeenCalledWith(true)
+})
+
+test('offers the reschedule the backend decided on, ahead of the menu links', async () => {
+  mountRow(
+    makeService({ name: 'Memory', reschedule: reschedulesItself('Memory') }),
+    makeTableRow(),
+    {
+      mayReschedule: true,
+      loadActionMenu: async () => [
+        {
+          id: 'graphs',
+          label: 'Graphs' as TranslatedString,
+          icon: 'graph' as const,
+          url: 'view.py'
+        }
+      ]
+    }
+  )
+
+  await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+
+  const items = await screen.findAllByRole('menuitem')
+  expect(items.map((item) => item.textContent?.trim())).toEqual(['Reschedule check', 'Graphs'])
+})
+
+test('reschedules the Check_MK service for a service that is a byproduct of it', async () => {
+  const onCommand = vi.fn()
+  mountRow(
+    makeService({
+      name: 'Check_MK Agent',
+      reschedule: {
+        label: "Reschedule 'Check_MK' service",
+        tooltip: "Reschedule 'Check_MK' service",
+        icon_name: 'reload-cmk',
+        target: 'Check_MK'
+      }
+    }),
+    makeTableRow(),
+    { mayReschedule: true, onCommand }
+  )
+
+  await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+  await userEvent.click(await screen.findByRole('menuitem', { name: /Reschedule 'Check_MK'/ }))
+
+  expect(onCommand).toHaveBeenCalledWith({ id: 'reschedule', target: 'Check_MK' })
+})
+
+test('shows a reschedule that cannot be run greyed out, with the reason on hover', async () => {
+  const onCommand = vi.fn()
+  mountRow(
+    makeService({
+      name: 'CPU load',
+      reschedule: {
+        label: 'Reschedule check',
+        tooltip: 'This service is based on cached agent data and cannot be rescheduled.',
+        icon_name: 'cannot-reschedule'
+      }
+    }),
+    makeTableRow(),
+    { mayReschedule: true, onCommand }
+  )
+
+  await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+  const item = await screen.findByRole('menuitem', { name: /Reschedule check/ })
+
+  expect(item).toHaveAttribute(
+    'title',
+    'This service is based on cached agent data and cannot be rescheduled.'
+  )
+  await userEvent.click(item)
+  expect(onCommand).not.toHaveBeenCalled()
+})
+
+test('leaves the reschedule out for a service the backend offers none for', async () => {
+  mountRow(makeService({ name: 'CPU load' }), makeTableRow(), {
+    mayReschedule: true,
+    loadActionMenu: async () => [
+      { id: 'graphs', label: 'Graphs' as TranslatedString, icon: 'graph' as const, url: 'view.py' }
+    ]
+  })
+
+  await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+
+  expect(await screen.findByRole('menuitem', { name: 'Graphs' })).toBeInTheDocument()
+  expect(screen.queryByRole('menuitem', { name: /Reschedule/ })).not.toBeInTheDocument()
+})
+
+test('leaves the reschedule out for a user who may not reschedule', () => {
+  mountRow(makeService({ reschedule: reschedulesItself('CPU load') }), makeTableRow(), {
+    mayReschedule: false
+  })
+
+  expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument()
 })

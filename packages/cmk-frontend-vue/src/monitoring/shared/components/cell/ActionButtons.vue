@@ -26,6 +26,8 @@ export interface CellAction {
   id: string
   label: TranslatedString
   icon: ActionIconSpec
+  /** Hover text; the label is used when none is given. */
+  tooltip?: TranslatedString | undefined
   disabled?: boolean | undefined
   // When set, the action is a link and is rendered as a native anchor; otherwise it is a button
   // that emits `select` for the parent to handle.
@@ -98,7 +100,7 @@ function select(action: CellAction): void {
       size="iconOnly"
       :href="action.url"
       :target="action.url ? (action.target ?? '_top') : undefined"
-      :title="action.label"
+      :title="action.tooltip ?? action.label"
       :aria-label="action.label"
       :disabled="action.disabled"
       @click="select(action)"
@@ -129,7 +131,11 @@ function select(action: CellAction): void {
               as-child
               class="monitoring-action-buttons__menu-item"
             >
-              <a :href="action.url" :target="action.target ?? '_top'">
+              <a
+                :href="action.url"
+                :target="action.target ?? '_top'"
+                :title="action.tooltip ?? action.label"
+              >
                 <ActionIcon :icon="action.icon" />
                 <span class="monitoring-action-buttons__menu-label">{{ action.label }}</span>
               </a>
@@ -137,6 +143,7 @@ function select(action: CellAction): void {
             <DropdownMenuItem
               v-else
               class="monitoring-action-buttons__menu-item"
+              :title="action.tooltip ?? action.label"
               :disabled="action.disabled === true"
               @select="select(action)"
             >
@@ -181,7 +188,11 @@ function select(action: CellAction): void {
                 as-child
                 class="monitoring-action-buttons__menu-item"
               >
-                <a :href="action.url" :target="action.target ?? '_top'">
+                <a
+                  :href="action.url"
+                  :target="action.target ?? '_top'"
+                  :title="action.tooltip ?? action.label"
+                >
                   <ActionIcon :icon="action.icon" />
                   <span class="monitoring-action-buttons__menu-label">{{ action.label }}</span>
                 </a>
@@ -189,6 +200,7 @@ function select(action: CellAction): void {
               <DropdownMenuItem
                 v-else
                 class="monitoring-action-buttons__menu-item"
+                :title="action.tooltip ?? action.label"
                 :disabled="action.disabled === true"
                 @select="select(action)"
               >

@@ -161,6 +161,9 @@ class TestMonitorHostServicesFilters:
                     "label_sources": {},
                     "tags": {},
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "host_name": _HOSTNAME,
                     "state": 1,
                     "has_been_checked": 1,
@@ -253,6 +256,12 @@ class TestMonitorHostServicesFilters:
                 "summary": "WARN - load average: 3.10, 2.05, 1.01",
                 "last_check": 1783942740,
                 "last_state_change": 1783942740,
+                "reschedule": {
+                    "label": "Reschedule 'Check_MK' service",
+                    "tooltip": "Reschedule 'Check_MK' service",
+                    "icon_name": "reload-cmk",
+                    "target": "Check_MK",
+                },
             }
         ]
 
@@ -273,6 +282,9 @@ class TestMonitorHostServicesFilters:
                     "label_sources": {},
                     "tags": {},
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "host_name": _HOSTNAME,
                     "state": 1,
                     "has_been_checked": 1,
@@ -362,6 +374,12 @@ class TestMonitorHostServicesFilters:
                 "summary": "WARN - load average: 3.10, 2.05, 1.01",
                 "last_check": 1783942740,
                 "last_state_change": 1783942740,
+                "reschedule": {
+                    "label": "Reschedule 'Check_MK' service",
+                    "tooltip": "Reschedule 'Check_MK' service",
+                    "icon_name": "reload-cmk",
+                    "target": "Check_MK",
+                },
             }
         ]
 
@@ -407,6 +425,9 @@ class TestMonitorHostServices:
                     "label_sources": {},
                     "tags": {},
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "host_name": _HOSTNAME,
                     "state": 0,
                     "has_been_checked": 1,
@@ -472,6 +493,12 @@ class TestMonitorHostServices:
                     "summary": "OK - load average: 0.10, 0.05, 0.01",
                     "last_check": 1783942710,
                     "last_state_change": 1783942740,
+                    "reschedule": {
+                        "label": "Reschedule 'Check_MK' service",
+                        "tooltip": "Reschedule 'Check_MK' service",
+                        "icon_name": "reload-cmk",
+                        "target": "Check_MK",
+                    },
                 }
             ],
             "meta": {
@@ -515,6 +542,9 @@ class TestMonitorHostServices:
                     "last_state_change": time.time(),
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "labels": {"cmk/check_plugin": "cpu_load", "owner": "platform"},
                     "label_sources": {"cmk/check_plugin": "discovered", "owner": "explicit"},
                     "tags": {},
@@ -565,6 +595,9 @@ class TestMonitorHostServices:
                     "last_state_change": time.time(),
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "labels": {},
                     "label_sources": {},
                     "tags": {"criticality": "prod", "networking": "lan"},
@@ -615,6 +648,9 @@ class TestMonitorHostServices:
                     "last_state_change": time.time(),
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "labels": {"cmk/check_plugin": "cpu_load"},
                     "label_sources": {"cmk/check_plugin": "discovered"},
                     "tags": {"criticality": "prod"},
@@ -662,6 +698,9 @@ class TestMonitorHostServices:
                     "last_state_change": time.time(),
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "labels": {"cmk/check_plugin": "cpu_load"},
                     "label_sources": {"cmk/check_plugin": "discovered"},
                     "tags": {"criticality": "prod"},
@@ -709,6 +748,9 @@ class TestMonitorHostServices:
                     "last_state_change": time.time(),
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "labels": {},
                     "label_sources": {},
                     "tags": {},
@@ -757,6 +799,9 @@ class TestMonitorHostServices:
                     "last_state_change": time.time(),
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "labels": {},
                     "label_sources": {},
                     "tags": {},
@@ -805,6 +850,9 @@ class TestMonitorHostServices:
                     "last_state_change": time.time(),
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "labels": {},
                     "label_sources": {},
                     "tags": {},
@@ -854,6 +902,9 @@ class TestMonitorHostServices:
                     "last_state_change": time.time(),
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "labels": {},
                     "label_sources": {},
                     "tags": {},
@@ -907,6 +958,9 @@ class TestMonitorHostServices:
                     "label_sources": {},
                     "tags": {},
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                 }
             ],
         )
@@ -957,6 +1011,9 @@ class TestMonitorHostServices:
                     "label_sources": {},
                     "tags": {},
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                 }
             ],
         )
@@ -1005,6 +1062,9 @@ class TestMonitorHostServices:
                     "label_sources": {},
                     "tags": {},
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                 }
             ],
         )
@@ -1033,6 +1093,9 @@ class TestMonitorHostServices:
                     "label_sources": {},
                     "tags": {},
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "host_name": _HOSTNAME,
                     "state": 0,
                     "has_been_checked": 0,
@@ -1170,6 +1233,9 @@ class TestMonitorHostServices:
                     "label_sources": {},
                     "tags": {},
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "host_name": _HOSTNAME,
                     "state": 0,
                     "has_been_checked": 1,
@@ -1249,6 +1315,9 @@ class TestMonitorHostServicessLimitPermissions:
                     "label_sources": {},
                     "tags": {},
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "host_name": _HOSTNAME,
                     "state": 0,
                     "has_been_checked": 1,
@@ -1328,6 +1397,9 @@ class TestMonitorHostServicessLimitPermissions:
                     "label_sources": {},
                     "tags": {},
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "host_name": _HOSTNAME,
                     "state": 0,
                     "has_been_checked": 1,
@@ -1400,6 +1472,9 @@ class TestMonitorServiceOverview:
                     "description": _SERVICE_DESCRIPTION,
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "host_name": _HOSTNAME,
                     "state": 1,
                     "has_been_checked": 1,
@@ -1517,6 +1592,9 @@ class TestMonitorServiceOverview:
                     "description": _SERVICE_DESCRIPTION,
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "host_name": _HOSTNAME,
                     "state": 2,
                     "has_been_checked": 1,
@@ -1585,6 +1663,9 @@ class TestMonitorServiceOverview:
                     "description": _SERVICE_DESCRIPTION,
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "host_name": _HOSTNAME,
                     "state": 0,
                     "has_been_checked": 1,
@@ -1652,6 +1733,9 @@ class TestMonitorServiceOverview:
                     "description": _SERVICE_DESCRIPTION,
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "host_name": _HOSTNAME,
                     "state": 0,
                     "has_been_checked": 0,
@@ -1720,6 +1804,9 @@ class TestMonitorServiceOverview:
                     "description": _SERVICE_DESCRIPTION,
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "host_name": _HOSTNAME,
                     "state": 1,
                     "has_been_checked": 1,
@@ -1973,14 +2060,14 @@ _SERVICE_OVERVIEW_COLUMNS = (
     "host_has_been_checked host_acknowledged host_scheduled_downtime_depth contact_groups "
     "long_plugin_output "
     "current_attempt max_check_attempts next_check tags labels label_sources perf_data "
-    "check_command"
+    "check_command check_type cached_at cache_interval"
 )
 _LIMIT = 1000
 _SERVICES_COLUMNS = (
     "description host_name state has_been_checked plugin_output acknowledged "
     "scheduled_downtime_depth "
     "notifications_enabled comments modified_attributes_list active_checks_enabled accept_passive_checks in_notification_period in_service_period in_check_period in_passive_check_period is_flapping staleness last_check last_state_change perf_data "
-    "check_command"
+    "check_command check_type cached_at cache_interval"
 )
 _DEFAULT_ORDER_BY = "OrderBy: description asc natural"
 

@@ -28,6 +28,7 @@ from cmk.livestatus_client.types import Column
 
 from ._exceptions import ServiceNotFoundError
 from ._models import (
+    CheckType,
     HostState,
     RescheduleTarget,
     Service,
@@ -89,6 +90,9 @@ class LiveStatusHostServicesRepository:
                 Services.last_state_change,
                 Services.perf_data,
                 Services.check_command,
+                Services.check_type,
+                Services.cached_at,
+                Services.cache_interval,
                 *(
                     column
                     for field, columns in _OPTIONAL_COLUMNS.items()
@@ -114,7 +118,9 @@ class LiveStatusHostServicesRepository:
                         in_downtime=row["scheduled_downtime_depth"] > 0,
                         notifications_enabled=bool(row["notifications_enabled"]),
                         num_comments=len(row["comments"]),
-                        active_checks_disabled=_manually_disabled(row, "active_checks_enabled"),
+                        active_checks_manually_disabled=_manually_disabled(
+                            row, "active_checks_enabled"
+                        ),
                         passive_checks_disabled=_manually_disabled(
                             row, "passive_checks_enabled", column="accept_passive_checks"
                         ),
@@ -128,6 +134,10 @@ class LiveStatusHostServicesRepository:
                         last_state_change=int(row["last_state_change"]),
                         perf_data=row["perf_data"],
                         check_command=row["check_command"],
+                        active_checks_enabled=bool(row["active_checks_enabled"]),
+                        check_type=CheckType(row["check_type"]),
+                        cached_at=int(row["cached_at"]) or None,
+                        cache_interval=int(row["cache_interval"]),
                         labels=(
                             ServiceLabelValue.by_label(row["labels"], row["label_sources"])
                             if "labels" in row
@@ -182,6 +192,9 @@ class LiveStatusHostServicesRepository:
                 Services.label_sources,
                 Services.perf_data,
                 Services.check_command,
+                Services.check_type,
+                Services.cached_at,
+                Services.cache_interval,
             ],
             And(Services.host_name == hostname, Services.description == service_name),
         )
@@ -204,12 +217,16 @@ class LiveStatusHostServicesRepository:
             last_state_change=int(row["last_state_change"]),
             perf_data=row["perf_data"],
             check_command=row["check_command"],
+            active_checks_enabled=bool(row["active_checks_enabled"]),
+            check_type=CheckType(row["check_type"]),
+            cached_at=int(row["cached_at"]) or None,
+            cache_interval=int(row["cache_interval"]),
             labels=ServiceLabelValue.by_label(row["labels"], row["label_sources"]),
             acknowledged=bool(row["acknowledged"]),
             in_downtime=row["scheduled_downtime_depth"] > 0,
             notifications_enabled=bool(row["notifications_enabled"]),
             num_comments=len(row["comments"]),
-            active_checks_disabled=_manually_disabled(row, "active_checks_enabled"),
+            active_checks_manually_disabled=_manually_disabled(row, "active_checks_enabled"),
             passive_checks_disabled=_manually_disabled(
                 row, "passive_checks_enabled", column="accept_passive_checks"
             ),

@@ -45,6 +45,7 @@ from ._family import MONITOR_SERVICES_FAMILY
 from ._filters import parse_as_livestatus_filter, ServiceFilterNode
 from ._modes import build_service_modes_by_id, ServiceModeInfo
 from ._perfometer import ServicePerfometer
+from ._reschedule_offer import build_reschedule_offer, ServiceRescheduleOffer
 from ._validators import parse_service_search_query, parse_service_sort_options
 
 # View-local limits, deliberately not coupled to the global soft/hard query limit settings so they
@@ -127,6 +128,12 @@ class HostServiceEntry:
         ),
         default_factory=ApiOmitted,
     )
+    reschedule: ServiceRescheduleOffer | ApiOmitted = api_field(
+        description=(
+            "What rescheduling this service does. Omitted for users who may not reschedule."
+        ),
+        default_factory=ApiOmitted,
+    )
 
     @classmethod
     def from_domain(cls, service: Service, *, hostname: str, site_id: str) -> Self:
@@ -153,6 +160,7 @@ class HostServiceEntry:
                 service_name=service.name,
             )
             or ApiOmitted(),
+            reschedule=build_reschedule_offer(service) or ApiOmitted(),
         )
 
 
@@ -333,6 +341,7 @@ ENDPOINT_LIST_HOST_SERVICES = VersionedEndpoint(
                     permissions.OkayToIgnorePerm("mkeventd.seeall"),
                     permissions.OkayToIgnorePerm("general.ignore_hard_limit"),
                     permissions.OkayToIgnorePerm("general.see_crash_reports"),
+                    permissions.OkayToIgnorePerm("action.reschedule"),
                 ]
             )
         )

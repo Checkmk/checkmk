@@ -58,6 +58,12 @@ function makeService(overrides: Partial<HostServiceEntry> = {}): HostServiceEntr
     summary: 'OK - load average: 0.10, 0.05, 0.01',
     last_check: 1783942710,
     last_state_change: 1783942740,
+    reschedule: {
+      label: 'Reschedule check',
+      tooltip: 'Reschedule check',
+      icon_name: 'reload',
+      target: 'CPU load'
+    },
     ...overrides
   }
 }
@@ -625,5 +631,71 @@ describe('ServiceSlideIn', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Close' }))
 
     expect(emitted()['close']).toHaveLength(1)
+  })
+
+  it('reschedules the Check_MK service for a service that is a byproduct of it', async () => {
+    const perform = vi.fn(async () => SUCCESS)
+    render(ServiceSlideIn, {
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        service: makeService({
+          name: 'Check_MK Agent',
+          reschedule: {
+            label: "Reschedule 'Check_MK' service",
+            tooltip: "Reschedule 'Check_MK' service",
+            icon_name: 'reload-cmk',
+            target: 'Check_MK'
+          }
+        }),
+        host: HOST,
+        actions: makeActionRegistry(perform),
+        permittedActions: PERMITTED_ACTIONS
+      }
+    })
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: "Reschedule 'Check_MK' service" })
+    )
+
+    expect(perform).toHaveBeenCalledWith(['Check_MK'])
+  })
+
+  it('offers no reschedule button for a service that cannot be rescheduled', async () => {
+    render(ServiceSlideIn, {
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        service: makeService({
+          reschedule: {
+            label: 'Reschedule check',
+            tooltip: 'This service is based on cached agent data and cannot be rescheduled.',
+            icon_name: 'cannot-reschedule'
+          }
+        }),
+        host: HOST,
+        actions: makeActionRegistry(),
+        permittedActions: PERMITTED_ACTIONS
+      }
+    })
+    await screen.findByText('Service details')
+
+    expect(screen.getByRole('button', { name: 'Acknowledge problem' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Reschedule/ })).not.toBeInTheDocument()
+  })
+
+  it('offers no reschedule button without a reschedule offer', async () => {
+    const unoffered = makeService()
+    delete unoffered.reschedule
+    render(ServiceSlideIn, {
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        service: unoffered,
+        host: HOST,
+        actions: makeActionRegistry(),
+        permittedActions: PERMITTED_ACTIONS
+      }
+    })
+    await screen.findByText('Service details')
+
+    expect(screen.queryByRole('button', { name: /Reschedule/ })).not.toBeInTheDocument()
   })
 })

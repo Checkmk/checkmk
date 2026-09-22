@@ -6,6 +6,7 @@
 # mypy: disable-error-code="comparison-overlap"
 
 from collections.abc import Sequence
+from typing import override
 
 import pytest
 from pytest import MonkeyPatch
@@ -454,3 +455,70 @@ def test_validate_datatype_timeperiod_valuespec_inner() -> None:
     value_spec = TimeperiodValuespec(Dictionary(elements=[]))
     with pytest.raises(MKUserError):
         value_spec.validate_datatype(["not", "a", "string"], "")  # type: ignore[arg-type]
+
+
+def test_match_item_generator_rules_follows_a_language_switch(monkeypatch: MonkeyPatch) -> None:
+    language = "en"
+    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "get_current_language", lambda: language)
+
+    class SomeRulespecGroup(RulespecGroup):
+        @property
+        @override
+        def name(self) -> str:
+            return "rulespec_group"
+
+        @property
+        @override
+        def title(self) -> str:
+            return "Rulespec Group"
+
+        @property
+        @override
+        def help(self) -> str:
+            return ""
+
+    class SomeRulespecSubGroup(RulespecSubGroup):
+        @property
+        @override
+        def main_group(self) -> type[RulespecGroup]:
+            return SomeRulespecGroup
+
+        @property
+        @override
+        def sub_group_name(self) -> str:
+            return "sub_group"
+
+        @property
+        @override
+        def title(self) -> str:
+            return "Rulespec Sub Group"
+
+    rulespec_group_reg = RulespecGroupRegistry()
+    rulespec_group_reg.register(SomeRulespecGroup)
+    rulespec_group_reg.register(SomeRulespecSubGroup)
+
+    rulespec_reg = RulespecRegistry(rulespec_group_reg)
+    rulespec_reg.register(
+        HostRulespec(
+            name="some_nested_host_rulespec",
+            group=SomeRulespecSubGroup,
+            valuespec=TextInput,
+            title=lambda: f"Title {language}",
+        )
+    )
+
+    match_item_generator = MatchItemGeneratorRules(
+        "rules",
+        rulespec_group_reg,
+        rulespec_reg,
+    )
+
+    def titles() -> list[str]:
+        return [
+            item.title
+            for item in match_item_generator.generate_match_items(UserPermissions({}, {}, {}, []))
+        ]
+
+    assert titles() == ["Title en"]
+    language = "de"
+    assert titles() == ["Title de"]

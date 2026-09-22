@@ -812,7 +812,10 @@ class Site:
 
     @contextmanager
     def copy_file(self, source_path: str | Path, target_path: str | Path) -> Iterator[Path]:
-        """Copies a file from the same directory as the caller to the site.
+        """Temporarily copies a file from the same directory as the caller to the site.
+
+        The copy only lives as long as the context: it is deleted from the site again when
+        the `with` block exits, also on error.
 
         If absolute paths are passed, those will override the default source and target paths.
 
@@ -824,7 +827,7 @@ class Site:
         source_path = caller_file.parent / source_path
         target_path = self.path(target_path)
         self.makedirs(target_path.parent)
-        self.write_file(target_path, source_path.read_text())
+        copy(source_path, target_path, owner=self.id)
         try:
             yield target_path
         finally:

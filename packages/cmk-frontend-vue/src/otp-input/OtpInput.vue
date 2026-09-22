@@ -7,8 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { ref, watch } from 'vue'
 
-/** Digits a one-time code is made of. Both the grouping gap and the model length follow it. */
-const DIGIT_COUNT = 6
+import { DIGIT_COUNT } from './otpInput'
+
 /** Index the wider gap sits after, splitting the code into two even halves. */
 const GROUP_SPLIT_INDEX = DIGIT_COUNT / 2 - 1
 

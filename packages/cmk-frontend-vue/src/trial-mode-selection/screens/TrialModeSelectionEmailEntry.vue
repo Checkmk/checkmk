@@ -20,7 +20,7 @@ import TrialModeSelectionScreenHeading from '../components/TrialModeSelectionScr
 import TrialModeSelectionStepIndicator from '../components/TrialModeSelectionStepIndicator.vue'
 import { LEGAL_LINKS } from '../legalLinks'
 
-const email = ref('')
+const email = defineModel<string>('email', { required: true })
 // NOTE: placeholder that will be replaced with CMK-39398, nothing subscribes yet.
 const newsletterOptIn = ref(false)
 

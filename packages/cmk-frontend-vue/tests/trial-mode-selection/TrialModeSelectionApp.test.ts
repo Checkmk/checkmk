@@ -3,9 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import userEvent from '@testing-library/user-event'
+import userEvent, { type UserEvent } from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import TrialModeSelectionApp from '@/trial-mode-selection/TrialModeSelectionApp.vue'
 
@@ -16,6 +16,8 @@ vi.mock('cmk-ui-library/lib/ajax', () => ({
 }))
 
 const mockLocationAssign = vi.fn()
+
+let user: UserEvent
 
 function renderApp() {
   return render(TrialModeSelectionApp, {
@@ -34,11 +36,30 @@ function renderApp() {
 }
 
 async function startTrial() {
-  await userEvent.click(screen.getByText('Start a trial'))
+  await user.click(screen.getByText('Start a trial'))
 }
 
 async function goToLicenseVerification() {
-  await userEvent.click(screen.getByText("I'm an existing customer"))
+  await user.click(screen.getByText("I'm an existing customer"))
+}
+
+async function reachCodeStep() {
+  await startTrial()
+  await user.type(screen.getByLabelText('Email address'), 'jane.doe@example.com')
+  await user.click(screen.getByRole('button', { name: 'Send code' }))
+}
+
+function codeDigits(): HTMLInputElement[] {
+  return screen.getAllByRole('textbox') as HTMLInputElement[]
+}
+
+/** Fills the last box first, so the code ends up complete without ever auto-submitting. */
+async function typeCodeOutOfOrder() {
+  const digits = codeDigits()
+  await user.type(digits[5]!, '2')
+  for (const [index, digit] of ['4', '2', '4', '2', '4'].entries()) {
+    await user.type(digits[index]!, digit)
+  }
 }
 
 function expectCustomerSelectionSaved(verificationMode?: 'online' | 'offline') {
@@ -51,6 +72,7 @@ function expectCustomerSelectionSaved(verificationMode?: 'online' | 'offline') {
 
 describe('TrialModeSelectionApp', () => {
   beforeEach(() => {
+    user = userEvent.setup()
     mockCmkAjax.mockClear()
     mockCmkAjax.mockResolvedValue({})
     mockLocationAssign.mockClear()
@@ -92,7 +114,7 @@ describe('TrialModeSelectionApp', () => {
       expect(screen.getByText('Verify your license')).toHaveFocus()
     })
 
-    await userEvent.click(screen.getByRole('button', { name: 'Back' }))
+    await user.click(screen.getByRole('button', { name: 'Back' }))
     await waitFor(() => {
       expect(screen.getByText('Welcome to your new Checkmk site')).toHaveFocus()
     })
@@ -124,7 +146,7 @@ describe('TrialModeSelectionApp', () => {
       renderApp()
       await goToLicenseVerification()
 
-      await userEvent.click(screen.getByText('Verify online'))
+      await user.click(screen.getByText('Verify online'))
 
       await waitFor(() => {
         expectCustomerSelectionSaved('online')
@@ -138,7 +160,7 @@ describe('TrialModeSelectionApp', () => {
       renderApp()
       await goToLicenseVerification()
 
-      await userEvent.click(screen.getByText('Verify offline'))
+      await user.click(screen.getByText('Verify offline'))
 
       await waitFor(() => {
         expectCustomerSelectionSaved('offline')
@@ -152,7 +174,7 @@ describe('TrialModeSelectionApp', () => {
       renderApp()
       await goToLicenseVerification()
 
-      await userEvent.click(screen.getByRole('button', { name: 'Verify later' }))
+      await user.click(screen.getByRole('button', { name: 'Verify later' }))
 
       await waitFor(() => {
         expectCustomerSelectionSaved()
@@ -164,7 +186,7 @@ describe('TrialModeSelectionApp', () => {
       renderApp()
       await goToLicenseVerification()
 
-      await userEvent.click(screen.getByRole('button', { name: 'Back' }))
+      await user.click(screen.getByRole('button', { name: 'Back' }))
 
       expect(screen.getByText('Welcome to your new Checkmk site')).toBeInTheDocument()
       expect(screen.queryByText('Verify online')).not.toBeInTheDocument()
@@ -176,7 +198,7 @@ describe('TrialModeSelectionApp', () => {
       renderApp()
       await goToLicenseVerification()
 
-      await userEvent.click(screen.getByText('Verify online'))
+      await user.click(screen.getByText('Verify online'))
       await waitFor(() => {
         expect(mockCmkAjax).toHaveBeenCalledTimes(1)
       })
@@ -192,12 +214,12 @@ describe('TrialModeSelectionApp', () => {
       renderApp()
       await goToLicenseVerification()
 
-      await userEvent.click(screen.getByText('Verify online'))
+      await user.click(screen.getByText('Verify online'))
       await waitFor(() => {
         expect(mockCmkAjax).toHaveBeenCalledTimes(1)
       })
 
-      await userEvent.click(screen.getByText('Verify offline'))
+      await user.click(screen.getByText('Verify offline'))
 
       expect(mockCmkAjax).toHaveBeenCalledTimes(1)
       expectCustomerSelectionSaved('online')
@@ -209,7 +231,7 @@ describe('TrialModeSelectionApp', () => {
       await goToLicenseVerification()
       mockCmkAjax.mockRejectedValue(new Error('nope'))
 
-      await userEvent.click(screen.getByText('Verify online'))
+      await user.click(screen.getByText('Verify online'))
 
       await waitFor(() => {
         expect(
@@ -226,7 +248,7 @@ describe('TrialModeSelectionApp', () => {
       renderApp()
       await startTrial()
 
-      await userEvent.click(screen.getByRole('button', { name: 'Back' }))
+      await user.click(screen.getByRole('button', { name: 'Back' }))
 
       expect(screen.getByText('Welcome to your new Checkmk site')).toBeInTheDocument()
       expect(mockCmkAjax).not.toHaveBeenCalled()
@@ -236,8 +258,8 @@ describe('TrialModeSelectionApp', () => {
       renderApp()
       await startTrial()
 
-      await userEvent.type(screen.getByLabelText('Email address'), 'jane.doe@example')
-      await userEvent.click(screen.getByRole('button', { name: 'Send code' }))
+      await user.type(screen.getByLabelText('Email address'), 'jane.doe@example')
+      await user.click(screen.getByRole('button', { name: 'Send code' }))
 
       expect(screen.getByText('Enter a valid email address.')).toBeInTheDocument()
       expect(screen.getByText('Verify your email address')).toBeInTheDocument()
@@ -247,10 +269,10 @@ describe('TrialModeSelectionApp', () => {
       renderApp()
       await startTrial()
 
-      await userEvent.click(screen.getByRole('button', { name: 'Send code' }))
+      await user.click(screen.getByRole('button', { name: 'Send code' }))
       expect(screen.getByText('Enter a valid email address.')).toBeInTheDocument()
 
-      await userEvent.type(screen.getByLabelText('Email address'), 'j')
+      await user.type(screen.getByLabelText('Email address'), 'j')
 
       expect(screen.queryByText('Enter a valid email address.')).not.toBeInTheDocument()
     })
@@ -259,23 +281,25 @@ describe('TrialModeSelectionApp', () => {
       renderApp()
       await startTrial()
 
-      await userEvent.type(screen.getByLabelText('Email address'), 'jane.doe@example.com{Enter}')
+      await user.type(screen.getByLabelText('Email address'), 'jane.doe@example.com{Enter}')
 
-      expect(screen.queryByText('Enter a valid email address.')).not.toBeInTheDocument()
-      // The code step arrives with CMK-37568's next change, so a valid address stays put
-      // here rather than navigating to a screen that has nothing to render.
-      expect(screen.getByText('Verify your email address')).toBeInTheDocument()
+      expect(screen.getByText('Enter your verification code')).toBeInTheDocument()
+      // Nothing leaves the site until CMK-37828 wires the send up.
       expect(mockCmkAjax).not.toHaveBeenCalled()
     })
 
-    it('trims the whitespace around the address', async () => {
+    it('sends the code to the address without the whitespace around it', async () => {
       renderApp()
       await startTrial()
 
-      await userEvent.type(screen.getByLabelText('Email address'), '  jane.doe@example.com  ')
-      await userEvent.click(screen.getByRole('button', { name: 'Send code' }))
+      await user.type(screen.getByLabelText('Email address'), '  jane.doe@example.com  ')
+      await user.click(screen.getByRole('button', { name: 'Send code' }))
 
-      expect(screen.getByLabelText('Email address')).toHaveValue('jane.doe@example.com')
+      expect(
+        screen.getByText(
+          'We sent a 6-digit code to jane.doe@example.com. It expires after 24 hours.'
+        )
+      ).toBeInTheDocument()
     })
 
     it('leaves the newsletter opt-in off, and does not toggle it from its own link', async () => {
@@ -291,9 +315,172 @@ describe('TrialModeSelectionApp', () => {
       const optInLink = screen.getByRole('link', {
         name: 'unsubscribe from the newsletter by email'
       })
-      await userEvent.click(optInLink)
+      await user.click(optInLink)
 
       expect(optIn).toHaveAttribute('aria-checked', 'false')
+    })
+  })
+
+  describe('code step', () => {
+    it('names the address the code went to', async () => {
+      renderApp()
+      await reachCodeStep()
+
+      expect(
+        screen.getByText(
+          'We sent a 6-digit code to jane.doe@example.com. It expires after 24 hours.'
+        )
+      ).toBeInTheDocument()
+    })
+
+    it('advances on the sixth digit without a click on Verify', async () => {
+      renderApp()
+      await reachCodeStep()
+
+      await user.type(codeDigits()[0]!, '424242')
+
+      expect(screen.queryByText('Enter your verification code')).not.toBeInTheDocument()
+    })
+
+    it('keeps Verify out of reach until the code is complete', async () => {
+      renderApp()
+      await reachCodeStep()
+
+      expect(screen.getByRole('button', { name: 'Verify' })).toBeDisabled()
+
+      await user.type(codeDigits()[0]!, '42424')
+
+      expect(screen.getByRole('button', { name: 'Verify' })).toBeDisabled()
+    })
+
+    // The boxes submit themselves only when the last one is the box being filled, so a
+    // code finished anywhere else is what Verify and Enter are there for.
+    it('waits for Verify when the code is completed out of order', async () => {
+      renderApp()
+      await reachCodeStep()
+
+      await typeCodeOutOfOrder()
+
+      expect(screen.getByText('Enter your verification code')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Verify' })).toBeEnabled()
+    })
+
+    it('verifies on Enter when the code is completed out of order', async () => {
+      renderApp()
+      await reachCodeStep()
+      await typeCodeOutOfOrder()
+
+      await user.type(screen.getByRole('textbox', { name: 'Digit 6 of 6' }), '{Enter}')
+
+      expect(screen.queryByText('Enter your verification code')).not.toBeInTheDocument()
+    })
+
+    it('puts the cursor in the first box, so the code can be typed straight away', async () => {
+      renderApp()
+      await reachCodeStep()
+
+      await waitFor(() => {
+        expect(screen.getByRole('textbox', { name: 'Digit 1 of 6' })).toHaveFocus()
+      })
+    })
+
+    it('returns to the address on Back, with it still filled in', async () => {
+      renderApp()
+      await reachCodeStep()
+
+      await user.click(screen.getByRole('button', { name: 'Back' }))
+
+      expect(screen.getByLabelText('Email address')).toHaveValue('jane.doe@example.com')
+    })
+  })
+
+  describe('resend cooldown', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+      // Handing user-event the fake clock rather than letting real elapsed time drive it:
+      // the countdown then only moves where a test advances it, which is what makes the
+      // exact seconds below exact rather than a race against how loaded the machine is.
+      user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    function resendButton(): HTMLElement {
+      return screen.getByRole('button', { name: /Resend code/ })
+    }
+
+    it('starts counting down from the first send, not from the first resend', async () => {
+      renderApp()
+      await reachCodeStep()
+
+      expect(resendButton()).toHaveTextContent('Resend code (1:00)')
+      expect(resendButton()).toBeDisabled()
+
+      await vi.advanceTimersByTimeAsync(13_000)
+
+      expect(resendButton()).toHaveTextContent('Resend code (0:47)')
+    })
+
+    it('re-enables the button when the countdown reaches zero', async () => {
+      renderApp()
+      await reachCodeStep()
+
+      await vi.advanceTimersByTimeAsync(60_000)
+
+      expect(resendButton()).toHaveTextContent(/^Resend code$/)
+      expect(resendButton()).toBeEnabled()
+    })
+
+    it('does not buy a fresh cooldown by stepping back and forward again', async () => {
+      renderApp()
+      await reachCodeStep()
+
+      await vi.advanceTimersByTimeAsync(20_000)
+      await user.click(screen.getByRole('button', { name: 'Back' }))
+      await user.click(screen.getByRole('button', { name: 'Send code' }))
+
+      // Going back never consumes a send, so it must not grant a new cooldown either.
+      expect(resendButton()).toHaveTextContent('Resend code (0:40)')
+    })
+
+    it('starts a fresh cooldown for an address no code has gone to yet', async () => {
+      renderApp()
+      await reachCodeStep()
+
+      await vi.advanceTimersByTimeAsync(20_000)
+      await user.click(screen.getByRole('button', { name: 'Back' }))
+      await user.clear(screen.getByLabelText('Email address'))
+      await user.type(screen.getByLabelText('Email address'), 'john.doe@example.com')
+      await user.click(screen.getByRole('button', { name: 'Send code' }))
+
+      // A different address is a different rate-limit key, so it is owed its own cooldown.
+      expect(resendButton()).toHaveTextContent('Resend code (1:00)')
+    })
+
+    it('starts the cooldown over on a resend', async () => {
+      renderApp()
+      await reachCodeStep()
+
+      await vi.advanceTimersByTimeAsync(60_000)
+      await user.click(resendButton())
+
+      expect(resendButton()).toHaveTextContent('Resend code (1:00)')
+    })
+
+    it('empties the boxes on a resend, the previous code being dead', async () => {
+      renderApp()
+      await reachCodeStep()
+
+      const digits = () => codeDigits().map((input) => input.value)
+      await user.type(codeDigits()[0]!, '42424')
+      expect(digits()).toEqual(['4', '2', '4', '2', '4', ''])
+
+      await vi.advanceTimersByTimeAsync(60_000)
+      await user.click(resendButton())
+
+      expect(digits()).toEqual(['', '', '', '', '', ''])
     })
   })
 })

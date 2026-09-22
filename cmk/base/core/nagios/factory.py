@@ -15,7 +15,6 @@ from cmk.monitoring_config.internal import MonitoringConfigBuilder
 from cmk.ruleset_matcher.labels import LabelManager
 from cmk.ruleset_matcher.matcher import RulesetMatcher
 from cmk.utils import paths
-from cmk.utils.timeperiod import get_all_timeperiods
 
 
 def create_core(
@@ -34,7 +33,6 @@ def create_core(
             return (
                 make_nagios_config_builder(
                     paths.nagios_objects_file,
-                    get_all_timeperiods(loaded_config.timeperiods),
                 ),
                 NagiosClient(
                     objects_file=paths.nagios_objects_file,

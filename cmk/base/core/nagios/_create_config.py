@@ -73,7 +73,7 @@ from cmk.utils import config_warnings, ip_lookup, password_store
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.servicename import ServiceName
-from cmk.utils.timeperiod import TimeperiodSpecs
+from cmk.utils.timeperiod import get_all_timeperiods, TimeperiodSpecs
 
 from ._precompile_host_checks import precompile_hostchecks, PrecompileMode
 
@@ -173,7 +173,6 @@ class NagiosCoreConfig:
 
 def make_nagios_config_builder(
     objects_file: Path,
-    timeperiods: TimeperiodSpecs,
 ) -> MonitoringConfigBuilder:
     """Create the monitoring config builder of the Nagios core.
 
@@ -188,7 +187,7 @@ def make_nagios_config_builder(
             config_cache=intermediate_config.config_cache,
             core_objects_config=intermediate_config.core_objects_config,
             nagios_core_config=nagios_core_config,
-            timeperiods=timeperiods,
+            timeperiods=get_all_timeperiods(intermediate_config.loaded_config.timeperiods),
             objects_file=objects_file,
             hosts_config=intermediate_config.hosts_config,
             host_tags=intermediate_config.host_tags,

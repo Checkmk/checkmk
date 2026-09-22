@@ -125,6 +125,7 @@ class HTMLGenerator(HTMLWriter):
         self._header_sent = False
         self._body_classes = ["main"]
         self._main_navigation_open = False
+        self._inject_profiling_code = False
         self.have_help = False
 
         # Forms
@@ -271,7 +272,10 @@ class HTMLGenerator(HTMLWriter):
 
         self.open_head()
         if inject_js_profiling_code or self.request.has_var("inject_js_profiling_code"):
-            self._inject_profiling_code()
+            self._inject_profiling_code = True
+            self.javascript_file(
+                HTMLGenerator._append_cache_busting_query("js/tracking_entry_min.js")
+            )
 
         self.default_html_headers()
         self.title(title)
@@ -306,7 +310,6 @@ class HTMLGenerator(HTMLWriter):
         self.set_csrf_token_meta()
 
         if self.browser_reload != 0.0:
-            # Picked up by packages/cmk-frontend/src/js/index.ts on page load
             self.meta(name="cmk-browser-reload", content=str(self.browser_reload))
 
         self.close_head()
@@ -339,24 +342,14 @@ class HTMLGenerator(HTMLWriter):
                 injected.add(stylesheet)
                 self.stylesheet(f"cmk-frontend-vue/{stylesheet}")
 
-    def _inject_profiling_code(self) -> None:
-        self.javascript("const startTime = Date.now();")
-        # A lambda, so it will get evaluated at the end of the request, not the beginning.
-        self.final_javascript(
-            lambda: (
-                f"""
-                const generationDuration = {round((time.monotonic() - self.request.started) * 1000, 0)};
-                const currentUrl = window.location.pathname + window.location.search;
-                document.addEventListener(
-                    'DOMContentLoaded',
-                    function() {{
-                        activate_tracking(currentUrl, startTime, generationDuration);
-                    }}
-                );
-            """
-            )
+    def _write_profiling_data(self) -> None:
+        self.js_entrypoint(
+            json.dumps(
+                {"generation_duration": round((time.monotonic() - self.request.started) * 1000, 0)}
+            ),
+            type_="application/json",
+            id_="cmk_tracking_data",
         )
-        self.javascript_file(HTMLGenerator._append_cache_busting_query("js/tracking_entry_min.js"))
 
     def set_csrf_token_meta(self) -> None:
         # session is LocalProxy, only on access it is None, so we cannot test on 'is None'
@@ -467,7 +460,8 @@ class HTMLGenerator(HTMLWriter):
     def body_end(self) -> None:
         if self.have_help:
             enable_page_menu_entry(self, "inline_help")
-        self.write_final_javascript()
+        if self._inject_profiling_code:
+            self._write_profiling_data()
         if self._main_navigation_open:
             hooks.call("content-area-ended")
             self.close_div()  # #content_area

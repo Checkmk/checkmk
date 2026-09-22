@@ -84,7 +84,6 @@ def mobile_html_head(title: str) -> None:
 
 
 def mobile_html_foot() -> None:
-    html.write_final_javascript()
     html.close_body()
     html.close_html()
 

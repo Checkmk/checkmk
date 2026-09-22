@@ -48,8 +48,6 @@ from .tag_rendering import (
     render_start_tag,
 )
 
-FinalJavaScript = typing.Callable[[], str] | str
-
 TSFunctionArguments = Mapping[str, object]
 
 # See packages/cmk-frontend/src/js/modules/callable_functions.ts:callable_functions
@@ -186,12 +184,6 @@ class ClickAction:
         return attrs
 
 
-def maybecall(entry: FinalJavaScript) -> str:
-    if callable(entry):
-        return entry()
-    return entry
-
-
 def _dump_standard_compliant_json(data: object) -> str:
     # default json.dumps produces non standard compliant output: NaN, Infinity, -Infinity are not
     # part of the JSON spec. in case you still serialize such a value with pythons default
@@ -243,7 +235,6 @@ class HTMLWriter:
         self.render_headfoot = True
         self.link_target: str | None = None
         self.browser_reload = 0.0
-        self._final_javascript: list[FinalJavaScript] = []
 
     def write_text_permissive(self, text: HTMLContent) -> None:
         """Write text. Highlighting tags such as h2|b|tt|i|br|pre|a|sup|p|li|ul|ol are not escaped."""
@@ -313,18 +304,8 @@ class HTMLWriter:
     def render_javascript(code: str, **attrs: HTMLTagAttributeValue) -> HTML:
         return HtmlBuilder.render_javascript(code, **attrs)
 
-    def final_javascript(self, code: FinalJavaScript) -> None:
-        self._final_javascript.append(code)
-
-    def final_javascript_code(self) -> str:
-        return "\n".join(maybecall(entry) for entry in self._final_javascript)
-
-    def write_final_javascript(self) -> None:
-        if not self._final_javascript:
-            return
-        self.javascript(self.final_javascript_code())
-
     def javascript(self, code: str, **attrs: HTMLTagAttributeValue) -> None:
+        """Blocked by the strict CSP, use call_ts_function() instead"""
         self.write_html(HTMLWriter.render_javascript(code, **attrs))
 
     def js_entrypoint(self, data: str, *, type_: str, **attrs: HTMLTagAttributeValue) -> None:

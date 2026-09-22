@@ -25,10 +25,12 @@ import { type WritableComputedRef, computed } from 'vue'
 
 import type { ViewChoices } from '@/maps/services/MapService'
 import { useMaps, useNavigation } from '@/maps/services/context'
-import type { MapConfig, ServiceLayout } from '@/maps/types/api'
+import type { FolderTreeView, MapConfig, ServiceLayout } from '@/maps/types/api'
 
 /** What a flow map shows of a host's services when nothing has been chosen. */
 const SERVICE_LAYOUT_DEFAULT: ServiceLayout = 'off'
+/** Which of its two drawings a folder tree opens on. */
+const FOLDER_VIEW_DEFAULT: FolderTreeView['default_view'] = 'map'
 
 export interface MapViewState {
   /** Merge a patch into the map's view and schedule a save. */
@@ -37,6 +39,8 @@ export interface MapViewState {
   problemsOnly: WritableComputedRef<boolean>
   /** Which of a host's services a flow map shows, and in what shape. */
   serviceLayout: WritableComputedRef<ServiceLayout>
+  /** Whether a folder tree is drawn as a treemap or as a list. */
+  folderView: WritableComputedRef<FolderTreeView['default_view']>
 }
 
 export function useMapViewState(): MapViewState {
@@ -102,6 +106,16 @@ export function useMapViewState(): MapViewState {
       },
       set: (value) => {
         choose({ service_layout: value })
+      }
+    }),
+    folderView: computed({
+      get: () => {
+        const view = maps.currentMap.value?.view
+        const stored = view?.type === 'foldertree' ? view.default_view : undefined
+        return chosen()?.default_view ?? stored ?? FOLDER_VIEW_DEFAULT
+      },
+      set: (value) => {
+        choose({ default_view: value })
       }
     })
   }

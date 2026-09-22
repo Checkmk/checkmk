@@ -39,6 +39,7 @@ const stubs = {
   // there is no component name to stub them by.
   'world-map-view': rendererStub('renderer-worldmap'),
   'radar-map-view': rendererStub('renderer-radar'),
+  'folder-tree-map-view': rendererStub('renderer-foldertree'),
   'flow-map-view': rendererStub('renderer-flow'),
   MapCanvas: rendererStub('renderer-static'),
   MapSearch: true,
@@ -82,6 +83,7 @@ function renderMap() {
 const allRendererTestIds = [
   'renderer-worldmap',
   'renderer-radar',
+  'renderer-foldertree',
   'renderer-flow',
   'renderer-static'
 ]
@@ -135,27 +137,31 @@ describe('MapView – map-type dispatch', () => {
     await expectOnlyRenderer('renderer-radar')
   })
 
+  it('renders the FolderTreeMapView for a foldertree view', async () => {
+    opensMap(newMapView('foldertree'))
+    renderMap()
+    await expectOnlyRenderer('renderer-foldertree')
+  })
+
   it('renders the FlowMapView for a flow view', async () => {
     opensMap(newMapView('flow'))
     renderMap()
     await expectOnlyRenderer('renderer-flow')
   })
 
-  // The remaining map types draw themselves, and each arrives with its own
-  // commit; until then the map area says so rather than drawing them wrong.
-  it.each(['foldertree', 'presentation'])(
-    'stands in for a %s view it cannot draw yet',
-    async (mapType) => {
-      opensMap(newMapView(mapType))
-      renderMap()
-      await waitFor(() =>
-        expect(screen.getByText('This map type cannot be shown yet')).toBeInTheDocument()
-      )
-      for (const testid of allRendererTestIds) {
-        expect(screen.queryByTestId(testid)).toBeNull()
-      }
+  // The presentation map draws itself, and arrives with the commit that
+  // follows this one; until then the map area says so rather than drawing it
+  // wrong.
+  it('stands in for a presentation view it cannot draw yet', async () => {
+    opensMap(newMapView('presentation'))
+    renderMap()
+    await waitFor(() =>
+      expect(screen.getByText('This map type cannot be shown yet')).toBeInTheDocument()
+    )
+    for (const testid of allRendererTestIds) {
+      expect(screen.queryByTestId(testid)).toBeNull()
     }
-  )
+  })
 
   it('dispatches on the view type alone, connection or not', async () => {
     // What a flow map without a connection says is its own view's business.

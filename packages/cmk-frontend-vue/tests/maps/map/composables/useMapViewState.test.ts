@@ -95,6 +95,21 @@ describe('useMapViewState — a read-only map', () => {
   })
 })
 
+describe('useMapViewState — a read-only folder tree', () => {
+  /** The drawing switch is the control an operator reaches for first, and every
+   *  built-in map is read-only. */
+  it('shows the drawing the operator chose', () => {
+    const config = { ...aMap('readonly-drawing', true), view: { type: 'foldertree' } } as MapConfig
+    const services = openMap(config)
+
+    const state = runWithServices(services, () => useMapViewState())
+    state.folderView.value = 'list'
+
+    expect(state.folderView.value).toBe('list')
+    expect(config.view).toEqual({ type: 'foldertree' })
+  })
+})
+
 describe('useMapViewState — the settings preview', () => {
   it('neither saves the choice nor holds it, because the map is thrown away with the dialog', () => {
     const config = aMap('preview-map', false)

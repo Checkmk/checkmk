@@ -799,13 +799,29 @@ class Site:
         )
 
     def file_timestamp_ms(self, rel_path: str | Path) -> int:
-        """Return the last modification time of a file, in milliseconds."""
+        """Return the last modification time of a file, in milliseconds.
+
+        Read it through python: ubuntu-26.04 ships the uutils coreutils, whose `date`
+        ignores the field width of `+%s%3N` and returns nanoseconds, and whose `stat`
+        ignores the precision of `%.3Y`. Callers then compared nanoseconds against
+        milliseconds and waited out their timeout (CMK-35803).
+
+        2.4 CI tests should not run on ubuntu 26, so this is only for hygiene and to keep
+        the code aligned.
+        """
         try:
-            stdout = self.check_output(["date", "-r", self.path(rel_path).as_posix(), r"+%s%3N"])
+            stdout = self.check_output(
+                [
+                    "python3",
+                    "-c",
+                    "import os, sys; print(os.stat(sys.argv[1]).st_mtime_ns // 1000000)",
+                    self.path(rel_path).as_posix(),
+                ]
+            )
         except subprocess.CalledProcessError as excp:
             excp.add_note(f"Failed to read file '{rel_path}'!")
             raise excp
-        return int(stdout.strip())
+        return int(stdout)
 
     def inode(self, rel_path: str | Path) -> int:
         return int(self.check_output(["stat", "-c", "%i", self.path(rel_path).as_posix()]).rstrip())

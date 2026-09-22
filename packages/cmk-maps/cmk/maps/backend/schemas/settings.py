@@ -22,7 +22,7 @@ class SystemSettings(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     # Backend log verbosity and SSE poll cadence. Each is an individual Checkmk
-    # global setting (Setup → Global settings → "Checkmk Maps"); the daemon reads
+    # global setting (Customize → Maps → "Connections & daemon"); the daemon reads
     # the effective value. ``None`` means "not set in WATO" → the daemon uses its
     # env-seeded default (``core/config.py`` ``Settings``).
     log_level: LogLevel | None = None

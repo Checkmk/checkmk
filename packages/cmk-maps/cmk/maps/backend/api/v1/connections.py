@@ -79,8 +79,8 @@ async def list_backends(
     return [to_list_entry(b, full=full) for b in connection_service.load_all()]
 
 
-# Connection CRUD lives in Checkmk global settings (Setup → Global settings →
-# "Maps" → Connections, ConfigDomainMaps). This service is read-only: it lists
+# Connection CRUD lives in Checkmk's own settings (Customize → Maps →
+# "Connections & daemon", ConfigDomainMaps). This service is read-only: it lists
 # connections (above) and runs live *read* queries against them (below).
 #
 # Commands (acknowledge, downtime, reschedule, …) are intentionally NOT served

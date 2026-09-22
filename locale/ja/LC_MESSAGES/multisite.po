@@ -1833,6 +1833,15 @@ msgstr ""
 "ントリツリーから保持することができます。<br>選択された単一の値または列に対応"
 "する項目のみが追加されます。"
 
+msgid "<h2>Before you deploy</h2>"
+msgstr ""
+
+msgid "<h2>Deploy with Helm</h2>"
+msgstr ""
+
+msgid "<h2>Download the deployment files</h2>"
+msgstr ""
+
 #, python-format
 msgid "<i>%(count)d more contact groups</i><br>"
 msgstr "<i>%(count)d以上の連絡先グループ</i><br>"
@@ -2414,6 +2423,12 @@ msgid "A Relay with alias '%(new_alias)s' already exists."
 msgstr "エイリアス「%(new_alias)s」を持つリレーはすでに存在します。"
 
 msgid ""
+"A Secret in the deployment namespace containing tls.crt and tls.key. Its "
+"certificate must cover the hostname used by Checkmk. Without this, the pull "
+"endpoint serves HTTP: use a trusted network or external TLS termination."
+msgstr ""
+
+msgid ""
 "A TNS alias as defined in the <tt>tnsnames.ora</tt> file. Requires a "
 "properly configured <tt>tnsnames.ora</tt> file accessible via the TNS_ADMIN "
 "directory path."
@@ -2463,6 +2478,14 @@ msgid ""
 "A complete list of all host problems, optimized for usage in the dashboard"
 msgstr ""
 "ダッシュボード使用のために最適化された、すべてのホストの問題の完全なリスト"
+
+#, fuzzy
+msgid ""
+"A configuration with this Helm release name already exists. Choose another "
+"name."
+msgstr ""
+"%sという名前のホストが%sフォルダに既に存在します。別のホスト名を選択してくだ"
+"さい。"
 
 #, python-format
 msgid "A connection error occurred: %(e)s"
@@ -2701,6 +2724,10 @@ msgstr ""
 #, no-python-format
 msgid "A provisioning of over 100% means over provisioning."
 msgstr "100%を超えるプロビジョニングは、過剰なプロビジョニングを意味します。"
+
+msgid ""
+"A pull mode base URL and shared secret are required to test the connection."
+msgstr ""
 
 msgid "A regular expression is required"
 msgstr "正規表現が必要"
@@ -4743,6 +4770,10 @@ msgstr "レスポンダーの追加"
 msgid "Add restriction"
 msgstr "制限の追加"
 
+#, fuzzy
+msgid "Add role pattern"
+msgstr "新しいパターンを追加する"
+
 msgid "Add role rule"
 msgstr "役割ルールを追加する"
 
@@ -5353,6 +5384,25 @@ msgstr ""
 "クする必要があります。自動更新を行うすべてのホストに、プラグインを含むそのよ"
 "うなベイク済エージェントをインストールする必要があります。これは手動で行う必"
 "要があります(１度だけ)。"
+
+msgid "After deploying the agent, continue to enter the pull mode base URL."
+msgstr ""
+
+msgid ""
+"After deploying the agent, enter its URL as reachable from the monitoring "
+"site. Checkmk appends /pull/sections automatically. For a private CA, add "
+"the CA to Trusted certificate authorities for SSL in global settings."
+msgstr ""
+
+msgid ""
+"After deploying the agent, enter its address as reachable from the Checkmk "
+"site"
+msgstr ""
+
+msgid ""
+"After successful registration, delete <tt>push-registration-secret.yaml</tt> "
+"and its Kubernetes Secret. Remove the manifest from your deployment workflow."
+msgstr ""
 
 msgid ""
 "After the configured time active host- and service checks are being "
@@ -6655,11 +6705,11 @@ msgstr ""
 "ユーザが他のユーザのスケジュールされたレポートを変更したり、レポートの宛先と"
 "して任意の電子メールアドレスを指定することを許可する。"
 
+#, fuzzy
 msgid ""
-"Allows querying the metric backend (OpenTelemetry) from the custom graph "
-"editor. When disabled, only RRD-based metrics are available in the custom "
-"graph editor, and graphs containing metric backend queries cannot be "
-"displayed."
+"Allows querying telemetry metrics from the custom graph editor. When "
+"disabled, only RRD-based metrics are available in the custom graph editor, "
+"and graphs containing telemetry metrics queries cannot be displayed."
 msgstr ""
 "カスタムグラフエディタからメトリクスバックエンド（OpenTelemetry）へのクエリを"
 "実行できるようにします。無効にしている場合、カスタムグラフエディタではRRDベー"
@@ -6833,6 +6883,12 @@ msgstr ""
 "します。これまで、このオプションはGUIの表示にのみ影響し、<i>通知</i>には影響"
 "しませんでした。新しいルールではこのオプションが自動的に有効になりますが、既"
 "存のルールではデフォルトで無効になっています。"
+
+msgid ""
+"Also used as the Helm release name, converted to lowercase with underscores "
+"replaced by hyphens. For example, kubernetes_config_1 becomes kubernetes-"
+"config-1. The release name must be at most 53 characters long."
+msgstr ""
 
 msgid "Altered"
 msgstr "アラートされた"
@@ -13186,6 +13242,10 @@ msgstr "Checkmkコアファイルとcmcdumpの出力"
 msgid "Checkmk dashboard"
 msgstr "Checkmk ダッシュボード"
 
+#, fuzzy
+msgid "Checkmk data backend"
+msgstr "Checkmk メトリックバックエンド"
+
 msgid "Checkmk edition"
 msgstr "Checkmkエディション"
 
@@ -13207,14 +13267,15 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Checkmkヘルパーの使用量"
 
+#, fuzzy
+msgid "Checkmk host name"
+msgstr "Checkmkの状態"
+
 msgid "Checkmk licensing files"
 msgstr "Checkmkライセンスファイル"
 
 msgid "Checkmk log files"
 msgstr "Checkmkログファイル"
-
-msgid "Checkmk metric backend"
-msgstr "Checkmk メトリックバックエンド"
 
 msgid ""
 "Checkmk metrics are created from OpenTelemetry datapoints. Configure them "
@@ -13578,6 +13639,11 @@ msgstr ""
 msgid "Choose condition"
 msgstr "条件選択"
 
+msgid ""
+"Choose how the Kubernetes agent connects to Checkmk, then generate the "
+"deployment files."
+msgstr ""
+
 msgid "Choose if this rule applies to plug-ins or local checks"
 msgstr ""
 "このルールをプラグインまたはローカルチェックに適用するかどうかを選択します"
@@ -13643,6 +13709,10 @@ msgstr ""
 "現在のポートがそれぞれのインターフェイスのホームポートでない場合の動作を選択"
 "します。デフォルトは\"チェック アンド ディスプレイ\"です。この機能は現在、"
 "チェックnetapp_api_ifでのみサポートされています。"
+
+#, fuzzy
+msgid "Choose the connection mode and prepare the deployment files"
+msgstr "新しい接続を作成するには、この接続のクローンを作成します"
 
 msgid "Choose the connector, the user(s) should be migrated to."
 msgstr "ユーザーを移行するコネクタを選択します。"
@@ -14384,6 +14454,10 @@ msgstr "クラスターの使用率"
 msgid "Cluster, indices and shard statistics"
 msgstr "クラスター、インデックス、シャードの統計"
 
+#, fuzzy
+msgid "Cluster-level aggregation exclusions"
+msgstr "クローン集約 %(clone)s"
+
 msgid "Clustered"
 msgstr "クラスター化"
 
@@ -14801,6 +14875,11 @@ msgstr "完了"
 msgid "Complete the restore"
 msgstr "復元を完了します"
 
+msgid ""
+"Complete this setup and <b>activate the changes</b> so the agent can "
+"register."
+msgstr ""
+
 msgid "Complete tree"
 msgstr "完全なツリー"
 
@@ -15044,6 +15123,10 @@ msgstr "ホスト設定"
 msgid "Configure Google Cloud Platform (GCP) monitoring in Checkmk"
 msgstr "CheckmkでGoogle Cloud Platform (GCP)監視を設定する"
 
+#, fuzzy
+msgid "Configure Kubernetes monitoring using the in-cluster agent"
+msgstr "アラートマネージャ ルールの監視状態を設定します。"
+
 msgid "Configure Microsoft Azure (deprecated) monitoring in Checkmk"
 msgstr "CheckmkでMicrosoft Azure(非推奨)監視を構成する"
 
@@ -15153,8 +15236,9 @@ msgstr "ホストと権限を設定"
 msgid "Configure host and regions"
 msgstr "ホストとリージョンを設定"
 
+#, fuzzy
 msgid ""
-"Configure how Checkmk fetches metrics from the metric backend for a host and "
+"Configure how Checkmk fetches metrics from the data backend for a host and "
 "creates services from them"
 msgstr ""
 "Checkmkがホストのメトリックバックエンドからメトリックを取得し、それらからサー"
@@ -15227,6 +15311,10 @@ msgid ""
 msgstr ""
 "ルールがトリガーされたときに実行可能なアクションと、ユーザーによる手動アク"
 "ションを設定します。"
+
+#, fuzzy
+msgid "Configure the Checkmk host"
+msgstr "ホスト設定"
 
 msgid ""
 "Configure the DNS domain name of your Active Directory domain here, Checkmk "
@@ -15482,6 +15570,10 @@ msgstr ""
 msgid "Configure your ServiceNow URL here (e.g. https://myservicenow.com)."
 msgstr "ここでServiceNow URLを構成します(例 https://myservicenow.com)。"
 
+#, fuzzy
+msgid "Configure your cluster for Checkmk monitoring"
+msgstr "監視状態をCheckmkの監視状態にマッピングする"
+
 #, python-format
 msgid "Configure your preferred way of license usage submission in %(link)s"
 msgstr "ライセンス使用状況の送信方法を %(link)s で設定します"
@@ -15660,6 +15752,10 @@ msgstr "タグの変更を確認する"
 
 msgid "Confirmed renewal"
 msgstr "更新の確認"
+
+#, fuzzy
+msgid "Connect Checkmk to the Kubernetes agent"
+msgstr "リモートサイトに接続する"
 
 msgid "Connect Checkmk with your InfluxDB to send metrics."
 msgstr "CheckmkとInfluxDBを接続し、メトリックスを送信します。"
@@ -17224,6 +17320,10 @@ msgstr "次のインターフェイスグループを作成します"
 msgid "Create topic"
 msgstr "トピックを作成する"
 
+#, fuzzy
+msgid "Create underlying configurations"
+msgstr "接続済みリレー構成"
+
 msgid "Create users only on login"
 msgstr "ログイン時にのみユーザーを作成する"
 
@@ -17245,6 +17345,10 @@ msgstr ""
 
 msgid "Created"
 msgstr "作成した"
+
+#, fuzzy, python-format
+msgid "Created Kubernetes configuration %(name)s"
+msgstr "新しい期 %(name)sを作成しました"
 
 #, python-brace-format
 msgid "Created Quick Setup {bundle_id}"
@@ -18497,6 +18601,31 @@ msgid ""
 msgstr ""
 "dg_broker_start=falseのData-Guardは、プライマリのSwitchoverstateを監視するた"
 "めにBrokerstateを無視する必要があります。"
+
+#, fuzzy
+msgid "Data backend"
+msgstr "データベース"
+
+#, fuzzy
+msgid "Data backend configuration"
+msgstr "Varnishバックエンド接続"
+
+#. weblate-flags: read-only, domain-specific
+#, fuzzy
+msgid "Data backend is disabled, auto-completion is not available."
+msgstr ""
+"メトリックバックエンドは無効化されており、オートコンプリート機能は利用できま"
+"せん。"
+
+#. weblate-flags: read-only, domain-specific
+#, fuzzy
+msgid "Data backend is not reachable, auto-completion is not available."
+msgstr ""
+"メトリックバックエンドに接続できません。オートコンプリートも利用できません。"
+
+#, fuzzy, python-format
+msgid "Data backend of site %(site_id)s is disabled"
+msgstr "サイト%sのメトリクスバックエンドは無効になっています"
 
 #, fuzzy
 msgid "Data belonging to this host"
@@ -20160,6 +20289,10 @@ msgstr ""
 msgid "Deploy the Jolokia plug-in"
 msgstr "Jolokiaプラグインをデプロイする"
 
+#, fuzzy
+msgid "Deploy the Kubernetes agent"
+msgstr "netstatプラグインをデプロイする"
+
 msgid "Deploy the MegaRAID plug-in"
 msgstr "MegaRAIDプラグインをデプロイする"
 
@@ -20269,6 +20402,10 @@ msgstr "プラグインをデプロイし、同期実行する"
 
 msgid "Deployment"
 msgstr "デプロイ"
+
+#, fuzzy
+msgid "Deployment namespace"
+msgstr "デプロイメントタイプ"
 
 msgid "Deployment problems"
 msgstr "デプロイする問題"
@@ -22126,6 +22263,11 @@ msgstr "エージェントの署名キーをダウンロードする"
 
 msgid "Download backup key"
 msgstr "バックアップキーをダウンロードする"
+
+msgid ""
+"Download both files below and save them in the same directory. "
+"Alternatively, use them with your existing deployment workflow."
+msgstr ""
 
 msgid "Download file name"
 msgstr "ファイル名をダウンロード"
@@ -24018,6 +24160,10 @@ msgstr ".rpmと.debのバージョンを常に増やすようにする。"
 msgid "Enter"
 msgstr "入る"
 
+msgid ""
+"Enter a base URL without credentials, whitespace, a query or a fragment."
+msgstr ""
+
 msgid "Enter a comment to acknowledge problems"
 msgstr "問題の承認コメントを入力"
 
@@ -24050,6 +24196,10 @@ msgid "Enter a valid URL starting with https://"
 msgstr "URLはhttps://で開始する必要があります"
 
 msgid "Enter a valid port number (example: 1234)."
+msgstr "有効なポート番号を入力してください（例：1234）。"
+
+#, fuzzy
+msgid "Enter a valid pull mode base URL."
 msgstr "有効なポート番号を入力してください（例：1234）。"
 
 msgid "Enter address"
@@ -24157,6 +24307,11 @@ msgid ""
 msgstr ""
 "クラスタノードのホスト名を入力します。これらのホストはセットアップに存在する"
 "必要があります。"
+
+msgid ""
+"Enter the hostname or IP address reachable from the cluster, without a "
+"scheme or port."
+msgstr ""
 
 msgid ""
 "Enter the name of the sensor. In single mode, this can be read off from the "
@@ -24934,6 +25089,12 @@ msgstr "名前空間の一致を除外する"
 msgid "Exclude nodes based on their role"
 msgstr "役割に応じたノードの除外"
 
+msgid ""
+"Exclude nodes whose role, taken from a node-role.kubernetes.io/ label, "
+"matches a pattern from cluster-level resource aggregations. Clear the list "
+"to include all nodes."
+msgstr ""
+
 msgid "Exclude pattern"
 msgstr "パターンを除外する"
 
@@ -25099,6 +25260,9 @@ msgstr "遺言執行者"
 
 msgid "Exemptions for piggybacked hosts (VMs, ...)"
 msgstr "ピギーバックホスト(VM、...)の例外"
+
+msgid "Existing TLS Secret"
+msgstr ""
 
 msgid "Exists"
 msgstr "存在する"
@@ -25319,6 +25483,10 @@ msgstr "明示的なホストラベル"
 
 msgid "Explicit host matching"
 msgstr "明示的なホストマッチング"
+
+#, fuzzy
+msgid "Explicit host name"
+msgstr "明示的なホストラベル"
 
 msgid "Explicit hosts"
 msgstr "明示的なホスト"
@@ -25896,7 +26064,7 @@ msgstr ""
 
 #, fuzzy, python-format
 msgid ""
-"Failed to query metric backend of site %(site_id)s. Check the web log for "
+"Failed to query telemetry metrics of site %(site_id)s. Check the web log for "
 "details."
 msgstr "テスト %s の実行に失敗しました: 詳細はweb.logを参照してください。"
 
@@ -25974,9 +26142,9 @@ msgid "Failed to synchronize with site: %(response)s"
 msgstr "サイトとの同期に失敗しました: %(response)s"
 
 #. weblate-flags: read-only, domain-specific
-#, python-brace-format
+#, fuzzy, python-brace-format
 msgid ""
-"Failed to upgrade the metric backend schema for the feature {feature}. The "
+"Failed to upgrade the data backend schema for the feature {feature}. The "
 "service is still running and other features are unaffected. The feature was "
 "rolled back to its previous schema revision. Please check the web and ui-job-"
 "scheduler logs for details."
@@ -27077,6 +27245,11 @@ msgstr ""
 "要があります。これを行うには、まず検証リクエストをダウンロードする必要があり"
 "ます。"
 
+msgid ""
+"For reproducible GitOps deployments, replace the range with an <b>exact "
+"released chart version</b> within it."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "For running Checkmk based checks, the Checkmk Micro Core keeps a pool of "
@@ -27976,6 +28149,10 @@ msgstr "バックアップコードを作成する"
 
 msgid "Generate core config parallelized"
 msgstr "並列化されたコア構成を生成する"
+
+#, fuzzy
+msgid "Generate deployment files"
+msgstr "Kubernetesデプロイメント"
 
 msgid "Generate event"
 msgstr "イベントを生成する"
@@ -29054,6 +29231,17 @@ msgstr "ハートビートツールがないか、インストールされてい
 
 msgid "Height"
 msgstr "高さ"
+
+msgid ""
+"Helm and kubectl are required to run these commands. Run them from the "
+"directory containing the downloaded files."
+msgstr ""
+
+#, python-format
+msgid ""
+"Helm selects the latest stable chart release matching <b>%(version_range)s</"
+"b> when you run the command."
+msgstr ""
 
 msgid "Help"
 msgstr "ヘルプ"
@@ -32012,6 +32200,9 @@ msgid ""
 msgstr ""
 "カスタムメトリックのキャッシュファイルが許容される最大経過時間（秒単位）。"
 
+msgid "How should the Kubernetes agent connect to Checkmk?"
+msgstr ""
+
 msgid ""
 "How the disks are named depends on the type of hardware being used. Please "
 "look at already discovered checks for examples."
@@ -33911,8 +34102,8 @@ msgstr ""
 msgid ""
 "If you enable the OpenTelemetry data, the data collected from the "
 "OpenTelemetry Collector or the Prometheus scraper will be used for this host "
-"if it matches the configured filters. You must also enable the metric "
-"backend under Global Settings > Site Management."
+"if it matches the configured filters. You must also enable the data backend "
+"under Global Settings > Site Management."
 msgstr ""
 "OpenTelemetryデータを有効化すると、OpenTelemetryコレクターまたはPrometheusス"
 "クレイパーから収集されたデータが、リソース属性キーと一致する場合にこのホスト"
@@ -34680,6 +34871,10 @@ msgstr "iCalendarファイルをインポートする"
 
 msgid "Import iCalendar File to create a time period"
 msgstr "iCalendarファイルをインポートしてtime periodを作成します"
+
+#, fuzzy
+msgid "Import matching annotation keys"
+msgstr "有効なアノテーションをすべてインポートする"
 
 msgid "Import state from Nagios core"
 msgstr "Nagiosコアから状態をインポートします"
@@ -37348,6 +37543,11 @@ msgstr "カスペルスキーアンチウイルス(Linux)"
 msgid "Kaspersky Anti-Virus time settings"
 msgstr "カスペルスキーアンチウイルス時間設定"
 
+msgid ""
+"Keep <tt>cmk-signed-push-cert</tt>, the agent's persistent certificate "
+"Secret."
+msgstr ""
+
 msgid "Keep comment after acknowledgment expires (persistent comment)"
 msgstr "承認が切れた後もコメントを保持する（永続的コメント）"
 
@@ -37506,6 +37706,10 @@ msgstr "Kubernetes デプロイ条件"
 
 msgid "Kubernetes deployments"
 msgstr "Kubernetesデプロイメント"
+
+#, fuzzy
+msgid "Kubernetes kinds to monitor"
+msgstr "Kubernetesノードコンテナー"
 
 msgid "Kubernetes memory resource utilization"
 msgstr "Kubernetesメモリー使用率"
@@ -40238,6 +40442,10 @@ msgstr "最長の出力リスト"
 msgid "Look for keys"
 msgstr "キーを探す"
 
+msgid ""
+"Look-around assertions and backreferences are not supported by the agent."
+msgstr ""
+
 msgid "Looking back"
 msgstr "振り返ってください"
 
@@ -42907,38 +43115,6 @@ msgstr "プロービングの方法"
 msgid "Metric"
 msgstr "メトリック"
 
-#. weblate-flags: read-only, domain-specific
-msgid "Metric Backend"
-msgstr "メトリックバックエンド"
-
-#, fuzzy
-msgid "Metric backend"
-msgstr "メトリックバックエンド"
-
-msgid "Metric backend (custom query)"
-msgstr "メトリックバックエンド（カスタムクエリ）"
-
-#, fuzzy
-msgid "Metric backend configuration"
-msgstr "Varnishバックエンド接続"
-
-#. weblate-flags: read-only, domain-specific
-#, fuzzy
-msgid "Metric backend is disabled, auto-completion is not available."
-msgstr ""
-"メトリックバックエンドは無効化されており、オートコンプリート機能は利用できま"
-"せん。"
-
-#. weblate-flags: read-only, domain-specific
-#, fuzzy
-msgid "Metric backend is not reachable, auto-completion is not available."
-msgstr ""
-"メトリックバックエンドに接続できません。オートコンプリートも利用できません。"
-
-#, fuzzy, python-format
-msgid "Metric backend of site %(site_id)s is disabled"
-msgstr "サイト%sのメトリクスバックエンドは無効になっています"
-
 #, fuzzy
 msgid "Metric configuration"
 msgstr "メトリック設定"
@@ -44975,6 +45151,10 @@ msgstr "名前空間の問題"
 msgid "Namespaces"
 msgstr "名前空間"
 
+#, fuzzy
+msgid "Namespaces to monitor"
+msgstr "監視するインスタンス"
+
 msgid "Naming for outlets at discovery"
 msgstr "発見時のアウトレットのネーミング"
 
@@ -46184,6 +46364,10 @@ msgstr "ノードシステム"
 
 msgid "Node utilization"
 msgstr "ノードの使用率"
+
+#, fuzzy
+msgid "NodePort"
+msgstr "ノード"
 
 msgid "Nodes"
 msgstr "ノード"
@@ -50206,6 +50390,9 @@ msgstr "最後のビルド結果に基づいてチェック状態をオーバー
 msgid "Override managed plan settings"
 msgstr "管理されたプランの設定を上書きする"
 
+msgid "Override push receiver hostname"
+msgstr ""
+
 msgid "Override unit of sensor"
 msgstr "センサーのオーバーライドユニット"
 
@@ -53968,6 +54155,12 @@ msgstr "プロキシサーバー名またはIPアドレス"
 msgid "Proxy settings"
 msgstr "プロキシ設定"
 
+msgid ""
+"Proxy used to reach Microsoft, both for the authorization performed here and "
+"for the recurring API calls of the services using this connection. Without "
+"this option the proxy settings of the process environment are used."
+msgstr ""
+
 msgid "Public"
 msgstr "公衆"
 
@@ -54042,6 +54235,17 @@ msgstr "公開されたメッセージ"
 msgid "Publisher"
 msgstr "パブリッシャー"
 
+msgid "Pull"
+msgstr ""
+
+#, fuzzy
+msgid "Pull mode base URL"
+msgstr "リモートサイトのURL"
+
+#, fuzzy
+msgid "Pull service exposure"
+msgstr "すべてのサービス"
+
 msgid "Pull: Checkmk server contacts the agent"
 msgstr "プル：Checkmkサーバーからエージェントへの連絡"
 
@@ -54066,8 +54270,16 @@ msgstr "純粋なストレージFlashArray"
 msgid "Purpose"
 msgstr "目的"
 
+#, fuzzy
+msgid "Push"
+msgstr "Pushover"
+
 msgid "Push configuration to this site"
 msgstr "このサイトに設定をプッシュする"
+
+#, fuzzy
+msgid "Push mode"
+msgstr "Pushover"
 
 msgid "Push notification parameters"
 msgstr "プッシュ通知のパラメーター"
@@ -54214,14 +54426,16 @@ msgstr "クエリのタイムアウト"
 msgid "Query elasticsearch logs"
 msgstr "Elasticsearchログをクエリする"
 
-#. weblate-flags: read-only, domain-specific
-msgid "Query metric backend from custom graph editor"
-msgstr "カスタムグラフエディタからのメトリックバックエンドへのクエリ"
-
 msgid "Query or SQL statement"
 msgstr "クエリまたはSQLステートメント"
 
-msgid "Query the metric backend"
+#. weblate-flags: read-only, domain-specific
+#, fuzzy
+msgid "Query telemetry metrics from custom graph editor"
+msgstr "カスタムグラフエディタからのメトリックバックエンドへのクエリ"
+
+#, fuzzy
+msgid "Query the data backend"
 msgstr "メトリックバックエンドへのクエリ"
 
 msgid "Query time limit"
@@ -55863,6 +56077,9 @@ msgstr "削除する"
 msgid "Remove %(what_s)s from extensions"
 msgstr "お気に入りから%(what_s)sを削除"
 
+msgid "Remove /pull/sections from the URL; Checkmk appends it automatically."
+msgstr ""
+
 msgid "Remove TLS registration"
 msgstr "TLSの登録を解除する"
 
@@ -57149,6 +57366,10 @@ msgstr "保存期間"
 
 msgid "Retention period:"
 msgstr "保存期間："
+
+#, fuzzy
+msgid "Retrieve Kubernetes agent sections"
+msgstr "Kubernetes Daemonsets"
 
 msgid "Retrieve information"
 msgstr "情報を取得する"
@@ -58720,7 +58941,7 @@ msgid "Scheduling report in background failed: %(e)s"
 msgstr "バックグラウンドでのレポートのスケジュールに失敗しました: %(e)s"
 
 #, fuzzy
-msgid "Schema, revision and footprint of the metric backend database"
+msgid "Schema, revision and footprint of the data backend database"
 msgstr ""
 "メトリックバックエンドデータベースのスキーマ、リビジョン、およびフットプリン"
 "ト"
@@ -59511,6 +59732,10 @@ msgstr ""
 msgid "Select the contact group that can edit this OAuth2 connection."
 msgstr "この OAuth2 接続を編集できる連絡先グループを選択してください。"
 
+msgid ""
+"Select the folder for the source host. Create a new folder first if needed."
+msgstr ""
+
 #, python-format
 msgid ""
 "Select the host event types and transitions this rule should handle."
@@ -59651,6 +59876,11 @@ msgstr "選択した %(title_plural)s が削除されました。"
 
 msgid "Selected credential has been deleted"
 msgstr "選択した資格情報は削除されました"
+
+msgid ""
+"Selected kinds become Checkmk hosts. Individual resources can override this "
+"choice using the checkmk.com/promote-to-host annotation."
+msgstr ""
 
 msgid "Selected options"
 msgstr "オプション選択"
@@ -62402,6 +62632,11 @@ msgstr "コアのサイズ"
 msgid "Size of crashes"
 msgstr "クラッシュの規模"
 
+#. weblate-flags: read-only, domain-specific
+#, fuzzy
+msgid "Size of data backend"
+msgstr "メトリックバックエンドのサイズ"
+
 msgid "Size of deferred mail queue"
 msgstr "遅延メールキューのサイズ"
 
@@ -62425,11 +62660,6 @@ msgstr "ログファイルのサイズ"
 
 msgid "Size of mails in queues"
 msgstr "キュー内のメールのサイズ"
-
-#. weblate-flags: read-only, domain-specific
-#, fuzzy
-msgid "Size of metric backend"
-msgstr "メトリックバックエンドのサイズ"
 
 msgid "Size of processes"
 msgstr "プロセスのサイズ"
@@ -62509,6 +62739,10 @@ msgid "Skipped %(mib_file_name)s: %(e)s"
 msgstr "スキップされた%(mib_file_name)s: %(e)s"
 
 msgid "Skipped the configuration test."
+msgstr "コンフィギュレーションテストをスキップしました。"
+
+#, fuzzy
+msgid "Skipped the connection test."
 msgstr "コンフィギュレーションテストをスキップしました。"
 
 msgid ""
@@ -62967,18 +63201,18 @@ msgid "Someone before 1.6"
 msgstr "1.6より前の誰か"
 
 #. weblate-flags: read-only, domain-specific
-#, python-brace-format
+#, fuzzy, python-brace-format
 msgid ""
-"Something went wrong trying to enable the metric backend. Details can be "
-"found in the log file: {_CH_ERROR_LOG}"
+"Something went wrong trying to enable the data backend. Details can be found "
+"in the log file: {_CH_ERROR_LOG}"
 msgstr ""
 "メトリック・バックエンドの有効化中に問題が発生しました。詳細はログファイル を"
 "ご覧ください：{_CH_ERROR_LOG}"
 
 #. weblate-flags: read-only, domain-specific
-#, python-brace-format
+#, fuzzy, python-brace-format
 msgid ""
-"Something went wrong trying to stop the metric backend. Details can be found "
+"Something went wrong trying to stop the data backend. Details can be found "
 "in the log file: {_CH_ERROR_LOG}"
 msgstr ""
 "メトリックバックエンドの停止中に問題が発生しました。詳細はログファイル をご覧"
@@ -65729,6 +65963,10 @@ msgstr "リモートサイト %(site_alias)s に正常にログインしまし�
 msgid "Successfully pinged IP address"
 msgstr "IPアドレスへのping成功"
 
+#, fuzzy
+msgid "Successfully retrieved Kubernetes agent sections."
+msgstr "クリップボードへのコピーに成功しました。"
+
 #, python-format
 msgid "Successfully sent %(count)d commands."
 msgstr "%(count)dコマンドを正常に送信しました。"
@@ -66759,6 +66997,15 @@ msgstr ""
 "Telemetryデータは、Prometheusスクレイパーを通じて収集されます。データ収集を変"
 "更するには、スクレイパーの設定を調整してください。"
 
+#. weblate-flags: read-only, domain-specific
+#, fuzzy
+msgid "Telemetry metrics"
+msgstr "OpenTelemetryメトリック名"
+
+#, fuzzy
+msgid "Telemetry metrics (custom query)"
+msgstr "Oracleインスタンス"
+
 msgid ""
 "Tell the Jolokia plug-in to stop waiting for a response from each configured "
 "instance after the provided number of seconds have passed. This time limit "
@@ -66963,6 +67210,10 @@ msgstr "テスト"
 
 msgid "Testing notifications"
 msgstr "テスト通知"
+
+#, fuzzy
+msgid "Testing the connection to the Kubernetes agent..."
+msgstr "CheckmkおよびSNMPエージェントへの接続に関する設定"
 
 msgid "Tests"
 msgstr "テスト"
@@ -67881,6 +68132,11 @@ msgstr ""
 "釈されます(0はOK、1はWARN、2はCRIT)。または、最初の列を数値として解釈し、この"
 "数値のレベルを定義することもできます。また、2番目の列はチェック出力として使用"
 "されます。3番目の列はオプションであり、メトリックを含めることができます。"
+
+msgid ""
+"The Secret file contains credentials. <b>Do not commit it unencrypted to Git."
+"</b> Use your organization's secret-management workflow."
+msgstr ""
 
 msgid ""
 "The Setup configuration can be set to read only mode for all users that are "
@@ -68803,6 +69059,13 @@ msgid ""
 msgstr ""
 "接続IDは、文字、数字、およびアンダースコアのみで設定する必要があります。"
 
+#, python-format
+msgid ""
+"The connection test failed on monitoring site %(site)s. Check var/log/"
+"automation-helper/automation-helper.log on that site for the underlying "
+"error, then retry or skip the test."
+msgstr ""
+
 msgid ""
 "The connection to AWS was successful, but no services were found. If this is "
 "unintentional, please verify your configuration."
@@ -69004,6 +69267,24 @@ msgstr ""
 "ダッシュボード'%(dashboard_name)s' は存在しません、または閲覧許可がありませ"
 "ん。"
 
+#. weblate-flags: read-only, domain-specific
+#, fuzzy
+msgid ""
+"The data backend database schema is in an unexpected state: revision "
+"{current_revision_id!r} is applied, but the expected revision is "
+"{head_revision_id!r}. Activation has been blocked to prevent unintended "
+"schema upgrades. To resolve this, upgrade the schema manually as the site "
+"user: `cmk-data-backend-schema-manager upgrade --config default HEAD` If the "
+"upgrade fails, please contact Checkmk support."
+msgstr ""
+"メトリックバックエンドのデータベーススキーマが予期しない状態になっています："
+"リビジョン {current_revision_id!r} が適用されていますが、期待されるリビジョン"
+"は {head_revision_id!r} です。 意図しないスキーマのアップグレードを防ぐため、"
+"アクティベーションがブロックされています。これを解決するには、サイトユーザー"
+"として手動でスキーマをアップグレードしてください：`cmk-metric-backend-schema-"
+"manager upgrade --config default HEAD`アップグレードに失敗した場合は、Checkmk"
+"サポートまでご連絡ください。"
+
 msgid ""
 "The data for the background checks is recomputed at most in this interval."
 msgstr "バックグラウンドチェックのデータは、最大でこの間隔で再計算されます。"
@@ -69125,10 +69406,11 @@ msgstr ""
 "%(rule_singular_plural)s において特定のユーザーとしてのみ使用されています。影"
 "響を受ける %(affected_rules)s を調整してください。"
 
+#, fuzzy
 msgid ""
 "The delta-to-cumulative processor converts timezones into cumulative "
 "aggregation temporality. This is necessary for compatibility reasons with "
-"the Checkmk metric backend, which only supports cumulative metrics. If your "
+"the Checkmk data backend, which only supports cumulative metrics. If your "
 "Collector receives metrics in delta aggregation temporality, you can "
 "configure this processor to be able to use these metrics in Checkmk. If your "
 "Collector only receives cumulative metrics or if you are unsure about the "
@@ -69252,6 +69534,11 @@ msgstr "エンブレムタイプは %(type)sですが、strである必要があ
 
 msgid "The end date must be after the start date"
 msgstr "終了日は開始日より後でなければなりません"
+
+msgid ""
+"The endpoint responded, but returned no Kubernetes agent sections. Check the "
+"pull mode base URL and allow the agent time to collect data."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -70115,7 +70402,8 @@ msgstr "値を考慮し始めるべきレイテンシー範囲。"
 msgid "The latest crash dumps of each type as found in var/check_mk/crashes"
 msgstr "var/checkmk/crashes にある各タイプの最新のクラッシュダンプを返す"
 
-msgid "The latest licensed active time series count of the metric backend"
+#, fuzzy
+msgid "The latest licensed active time series count of the data backend"
 msgstr "メトリックバックエンドの、認可済みアクティブな時系列データ数"
 
 msgid ""
@@ -70340,8 +70628,9 @@ msgid "The maximum allowed value is %(max_value)s."
 msgstr "最大許容値は %sです。"
 
 #. weblate-flags: read-only, domain-specific
+#, fuzzy
 msgid ""
-"The maximum amount of memory that the metric backend is allowed to use, "
+"The maximum amount of memory that the data backend is allowed to use, "
 "expressed as a fraction of the total available memory. Allows limiting the "
 "memory usage on low-memory systems."
 msgstr ""
@@ -70476,29 +70765,6 @@ msgstr ""
 
 msgid "The message has successfully been sent..."
 msgstr "メッセージの送信に成功しました…"
-
-#. weblate-flags: read-only, domain-specific
-#, fuzzy
-msgid ""
-"The metric backend database schema is in an unexpected state: revision "
-"{current_revision_id!r} is applied, but the expected revision is "
-"{head_revision_id!r}. Activation has been blocked to prevent unintended "
-"schema upgrades. To resolve this, upgrade the schema manually as the site "
-"user: `cmk-data-backend-schema-manager upgrade --config default HEAD` If the "
-"upgrade fails, please contact Checkmk support."
-msgstr ""
-"メトリックバックエンドのデータベーススキーマが予期しない状態になっています："
-"リビジョン {current_revision_id!r} が適用されていますが、期待されるリビジョン"
-"は {head_revision_id!r} です。 意図しないスキーマのアップグレードを防ぐため、"
-"アクティベーションがブロックされています。これを解決するには、サイトユーザー"
-"として手動でスキーマをアップグレードしてください：`cmk-metric-backend-schema-"
-"manager upgrade --config default HEAD`アップグレードに失敗した場合は、Checkmk"
-"サポートまでご連絡ください。"
-
-#. weblate-flags: read-only, domain-specific
-msgid "The metric backend snapin shows the number of custom metrics"
-msgstr ""
-"メトリクスバックエンドスナップインには、カスタムメトリクスの数が表示されます"
 
 msgid ""
 "The metric label is displayed alongside the queried value in the status "
@@ -70749,6 +71015,10 @@ msgstr "サービス名で使用される名前"
 
 msgid "The name will be used in the service name"
 msgstr "この名前はサービス名で使用されます"
+
+#, fuzzy
+msgid "The namespace in which the Kubernetes agent will be deployed."
+msgstr "エージェントがデプロイされるシステムのアーキテクチャ"
 
 #, python-format
 msgid ""
@@ -71012,6 +71282,9 @@ msgstr ""
 "カウンタベースからの相対的な情報のオフセットです。Windows シェルで 'lodctr /"
 "s:counters.txt' コマンドを実行すると、利用可能なカウンターの詳細なリストが得"
 "られます。"
+
+msgid "The one-time registration token expires after <b>one hour</b>."
+msgstr ""
 
 msgid "The operating system packages installed on the Checkmk server"
 msgstr "CheckmkサーバーにインストールされているOSパッケージ"
@@ -71355,8 +71628,9 @@ msgid "The port must be a number between 1 and 65535."
 msgstr "ポートは0から65535の間でなければならない。"
 
 #. weblate-flags: read-only, domain-specific
+#, fuzzy
 msgid ""
-"The port on which the metric backend listens to incoming data. This setting "
+"The port on which the data backend listens to incoming data. This setting "
 "also defines where the site's OpenTelemetry Collector sends its data."
 msgstr ""
 "メトリックバックエンドが受信データを待機するポート。この設定は、サイトの"
@@ -71372,7 +71646,8 @@ msgid "The port the DBMS listens to"
 msgstr "DBMSがリッスンするポート"
 
 #. weblate-flags: read-only, domain-specific
-msgid "The port to query data from the metric backend."
+#, fuzzy
+msgid "The port to query data from the data backend."
 msgstr "メトリックバックエンドからデータをクエリするためのポート。"
 
 msgid ""
@@ -71864,6 +72139,10 @@ msgstr ""
 "体を再調整（キーワードのタイムアウトを減らすなど）する必要があることを意味し"
 "ます。 "
 
+#, fuzzy
+msgid "The same shared secret will be saved in the Checkmk password store."
+msgstr "サービス名で使用される名前"
+
 msgid "The schedule you are trying to clone does not exist."
 msgstr "クローンしようとしているスケジュールが存在しない。"
 
@@ -71940,6 +72219,11 @@ msgstr "選択したホストには明示的な属性がありません"
 
 msgid "The selected icon does not exist."
 msgstr "選択したアイコンは存在しません。"
+
+msgid ""
+"The selected monitoring site does not support push mode. Use pull mode "
+"instead."
+msgstr ""
 
 msgid "The selected options do not match any hosts, nothing to do."
 msgstr ""
@@ -72194,6 +72478,13 @@ msgstr ""
 msgid "The source host"
 msgstr "ソースホスト"
 
+#, fuzzy
+msgid ""
+"The source host already exists. Choose another host name or remove the old "
+"source host first."
+msgstr ""
+"ソースの詳細は、照会されたホストまたはソースホストのいずれかに表示できます。"
+
 msgid ""
 "The special agent will use this host name for the TLS certificate "
 "validation. If omitted, the Checkmk host name of the host will be used"
@@ -72379,6 +72670,12 @@ msgid ""
 msgstr ""
 "SIGNL4チームのチームシークレット。これがwebhook URLの最後の部分です URL: "
 "https://connect.signl4.com/webhook/[TEAM_SECRET]"
+
+#. weblate-flags: read-only, domain-specific
+#, fuzzy
+msgid "The telemetry metrics snapin shows the number of custom metrics"
+msgstr ""
+"メトリクスバックエンドスナップインには、カスタムメトリクスの数が表示されます"
 
 msgid "The temporary file system is mounted"
 msgstr "一時ファイルシステムがマウントされました"
@@ -73507,6 +73804,9 @@ msgstr "このBIルールは存在しません"
 
 msgid "This BI rule does not exist."
 msgstr "このBIルールは存在しません。"
+
+msgid "This Checkmk edition supports pull mode only."
+msgstr ""
 
 msgid "This ID already exists."
 msgstr "このIDはすでに存在します。"
@@ -74724,6 +75024,11 @@ msgid ""
 msgstr ""
 "これは、<tt>mk-remote-alert-handler </tt>が準備されているユーザーと一致する必"
 "要があります。"
+
+msgid ""
+"This name becomes part of the generated Kubernetes host names. Keep it "
+"stable to retain their monitoring history."
+msgstr ""
 
 msgid "This name corresponds to the cooling device to be monitored."
 msgstr "この名前は、監視対象の冷却装置に対応しています。"
@@ -84166,6 +84471,10 @@ msgstr ""
 "SSL証明書に問題がある場合はホスト名として代替フィールドを使用します(例: ホス"
 "トエイリアス)"
 
+#, fuzzy
+msgid "Use an explicit host name"
+msgstr "明示的な名前を使用する"
+
 msgid "Use any network address"
 msgstr "ネットワークアドレスを使用"
 
@@ -84325,6 +84634,14 @@ msgstr ""
 msgid "Use local FQDN"
 msgstr "ローカルFQDNを使用する"
 
+#, fuzzy
+msgid ""
+"Use lowercase letters, numbers and hyphens, starting and ending with a "
+"letter or number."
+msgstr ""
+"メトリック名は、文字、数字、およびアンダースコアのみで構成され、アルファベッ"
+"ト、または数字で始まる必要があります。"
+
 msgid "Use macro to determine port number"
 msgstr "マクロを使用してポート番号を決定する"
 
@@ -84372,6 +84689,14 @@ msgstr "新しいサービス名を使用する"
 #, fuzzy
 msgid "Use only letters, digits, underscore and hyphen."
 msgstr "ここでは、小文字、数字、およびアンダースコアのみを使用してください。"
+
+#, fuzzy
+msgid ""
+"Use only letters, numbers, dots, hyphens and underscores, starting with a "
+"letter, number or underscore."
+msgstr ""
+"識別子は、文字、数字、ダッシュ、アンダースコアのみで構成され、文字またはアン"
+"ダースコアで始まる必要があります。"
 
 msgid "Use only lower case letters, digits, and underscores here."
 msgstr "ここでは、小文字、数字、およびアンダースコアのみを使用してください。"
@@ -84495,6 +84820,10 @@ msgstr "チェックプラグインのカタログを使用します。"
 #, fuzzy
 msgid "Use the certificate store of the monitored host"
 msgstr "メトリックのデフォルトの色を使用します。"
+
+#, fuzzy
+msgid "Use the cluster name as the host name"
+msgstr "Checkmkユーザー名をntopngユーザー名として使用します"
 
 msgid "Use the credentials of an automation user"
 msgstr "automationユーザーの認証情報を使用する"
@@ -87489,6 +87818,15 @@ msgstr ""
 "す。拡張子は常に <tt>pdf</tt>である必要があります。"
 
 msgid ""
+"When disabled, all namespaces are monitored. Filters apply to namespaced "
+"resources; cluster and node hosts and their rollups are unaffected."
+msgstr ""
+
+#, fuzzy
+msgid "When disabled, no annotations are imported as host labels."
+msgstr "インポートした注釈をポストラベルとして設定する"
+
+msgid ""
 "When disabled, the plug-in is deployed without its configuration file. The "
 "file <tt>/etc/check_mk/filestats.cfg</tt> must then be created and "
 "maintained manually."
@@ -87700,6 +88038,11 @@ msgstr ""
 "グループを監視するサービスの出力にグループメンバーをリストアップするとき、こ"
 "のオプションはcheckmkにインターフェイスの説明、エイリアス、またはポート番号の"
 "いずれかを使用させるようにします。"
+
+msgid ""
+"When migrating, record the old source host name and delete that host before "
+"running this setup. Reuse its name to retain monitoring history."
+msgstr ""
 
 msgid ""
 "When monitoring the performance of a monitoring site (i.e. its core) then "
@@ -88723,11 +89066,11 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"With the <b>OpenTelemetry data - metric backend</b> connector type, hosts "
-"will be dynamically created using the data collected from the "
-"<b>OpenTelemetry Collector</b> or the <b>Prometheus scraper</b>. You must "
-"also enable the metric backend under <a href='global_settings.py?"
-"varname=metric_backend'>Global Settings > Site Management.</a>"
+"With the <b>Telemetry metrics</b> connector type, hosts will be dynamically "
+"created using the data collected from the <b>OpenTelemetry Collector</b> or "
+"the <b>Prometheus scraper</b>. You must also enable the data backend under "
+"<a href='global_settings.py?varname=data_backend'>Global Settings > Site "
+"Management.</a>"
 msgstr ""
 "<b>OpenTelemetry データ - メトリックバックエンド</b>コネクタタイプを使用する"
 "と、<b>OpenTelemetry Collector</b> または <b>Prometheus scraper</b>から収集さ"
@@ -89609,7 +89952,7 @@ msgstr ""
 "管理者だけです。"
 
 #, fuzzy
-msgid "You are not permitted to query the metric backend."
+msgid "You are not permitted to query the data backend."
 msgstr "このアクションを実行することは許可されていません。"
 
 msgid "You are not permitted to view this page"
@@ -90782,7 +91125,9 @@ msgid "You do not have write permission for this folder."
 msgstr "このフォルダへの書き込み権限がありません。"
 
 #. weblate-flags: read-only, domain-specific
-msgid "You don't have permission to access graphs with metric backend queries."
+#, fuzzy
+msgid ""
+"You don't have permission to access graphs with telemetry metrics queries."
 msgstr ""
 "メトリックバックエンドクエリを使用したグラフにアクセスする権限がありません。"
 
@@ -98514,7 +98859,7 @@ msgid "Could not create the Telemetry hosts folder"
 msgstr "OpenTelemetry Collector を有効にする"
 
 #, fuzzy
-msgid "Could not create the metric backend connector"
+msgid "Could not create the telemetry metrics connector"
 msgstr "OpenTelemetry Collector を有効にする"
 
 #, fuzzy
@@ -98530,11 +98875,11 @@ msgid "Could not enable the OpenTelemetry Collector"
 msgstr "OpenTelemetry Collector を有効にする"
 
 #, fuzzy
-msgid "Metric backend connection"
+msgid "Data backend connection"
 msgstr "Varnishバックエンド接続"
 
 #, fuzzy
-msgid "Could not enable the metric backend"
+msgid "Could not enable the data backend"
 msgstr "OpenTelemetry Collector を有効にする"
 
 #, fuzzy
@@ -98799,6 +99144,54 @@ msgstr "選択したホスト上"
 #, fuzzy
 msgid "PENDING"
 msgstr "PEND"
+
+#, fuzzy
+msgid "Shows hosts with at least one service."
+msgstr "少なくとも1つのサービスを追加してください。"
+
+#, fuzzy
+msgid "Shows hosts with no services."
+msgstr "古いホストとサービスを表示する"
+
+#, fuzzy
+msgid "Shows hosts with at least one service in OK."
+msgstr "少なくとも1つのサービス項目を追加してください。"
+
+#, fuzzy
+msgid "Shows hosts with no service in OK."
+msgstr "古いホストとサービスを表示する"
+
+#, fuzzy
+msgid "Shows hosts with at least one service in WARN."
+msgstr "少なくとも1つのサービス項目を追加してください。"
+
+#, fuzzy
+msgid "Shows hosts with no service in WARN."
+msgstr "古いホストとサービスを表示する"
+
+#, fuzzy
+msgid "Shows hosts with at least one service in CRIT."
+msgstr "少なくとも1つのサービス項目を追加してください。"
+
+#, fuzzy
+msgid "Shows hosts with no service in CRIT."
+msgstr "古いホストとサービスを表示する"
+
+#, fuzzy
+msgid "Shows hosts with at least one service in UNKNOWN."
+msgstr "少なくとも1つのサービス項目を追加してください。"
+
+#, fuzzy
+msgid "Shows hosts with no service in UNKNOWN."
+msgstr "古いホストとサービスを表示する"
+
+#, fuzzy
+msgid "Shows hosts with at least one pending service."
+msgstr "少なくとも1つのサービスを追加してください。"
+
+#, fuzzy
+msgid "Shows hosts with no pending service."
+msgstr "古いホストとサービスを表示する"
 
 #, fuzzy
 msgid "Has comments"
@@ -99248,15 +99641,45 @@ msgid "Clear"
 msgstr "クリア"
 
 #, fuzzy
-msgid "Value range"
-msgstr "日付範囲"
+msgid "More than"
+msgstr "その他のオプション"
 
-msgid "Any (>0)"
-msgstr "任意（>0）"
+msgid "Less than"
+msgstr ""
 
 #, fuzzy
-msgid "None (=0)"
-msgstr "なし（リニア）"
+msgid "Between"
+msgstr "間"
+
+#, fuzzy
+msgid "Enter an age of zero or more."
+msgstr "ジョブの名前を入力してください。"
+
+#, fuzzy
+msgid "Enter a younger bound that does not exceed the older one."
+msgstr "下限値は上限値より小さくなければなりません。"
+
+#, fuzzy
+msgid "Younger bound"
+msgstr "レンダリングの背景"
+
+#, fuzzy
+msgid "Older bound"
+msgstr "レンダリングの背景"
+
+#, fuzzy
+msgid "At least one"
+msgstr "少なくとも"
+
+msgid "Shows rows with a value above 0."
+msgstr ""
+
+msgid "Shows rows with a value of 0."
+msgstr ""
+
+#, fuzzy
+msgid "Value range"
+msgstr "日付範囲"
 
 #, fuzzy
 msgid "Contains ..."
@@ -101165,6 +101588,23 @@ msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
 
+#~ msgid "Metric Backend"
+#~ msgstr "メトリックバックエンド"
+
+#, fuzzy
+#~ msgid "Metric backend"
+#~ msgstr "メトリックバックエンド"
+
+#~ msgid "Metric backend (custom query)"
+#~ msgstr "メトリックバックエンド（カスタムクエリ）"
+
+#~ msgid "Any (>0)"
+#~ msgstr "任意（>0）"
+
+#, fuzzy
+#~ msgid "None (=0)"
+#~ msgstr "なし（リニア）"
+
 #~ msgid "Bulk discovery successful"
 #~ msgstr "一括検出に成功"
 
@@ -102169,10 +102609,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Color picker"
 #~ msgstr "色付け"
-
-#, fuzzy
-#~ msgid "Help: Metrics backend (custom query)"
-#~ msgstr "Oracleインスタンス"
 
 #, fuzzy
 #~ msgid "Inline help: Metrics backend (custom query)"
@@ -104948,9 +105384,6 @@ msgstr ""
 #~ msgid "Deploy plug-in for MS Exchange database latency"
 #~ msgstr "MS Exchangeデータベースレイテンシーのプラグインをデプロイする"
 
-#~ msgid "Deploy the netstat plug-in"
-#~ msgstr "netstatプラグインをデプロイする"
-
 #~ msgid "Do not deploy LVM plug-in"
 #~ msgstr "LVMプラグインをデプロイしないでください"
 
@@ -106477,14 +106910,6 @@ msgstr ""
 #~ msgid "Missing needed custom_graph parameter."
 #~ msgstr "必要なcustom_graphパラメーターがありません。"
 
-#, fuzzy
-#~ msgid ""
-#~ "Unique ID must only contain lowercase letters, numbers, and underscores, "
-#~ "and must start with a letter."
-#~ msgstr ""
-#~ "メトリック名は、文字、数字、およびアンダースコアのみで構成され、アルファ"
-#~ "ベット、または数字で始まる必要があります。"
-
 #~ msgid "Exporter"
 #~ msgstr "エクスポーター"
 
@@ -107020,9 +107445,6 @@ msgstr ""
 #~ msgid "Kubernetes Daemonset"
 #~ msgstr "Kubernetes Daemonset"
 
-#~ msgid "Kubernetes Daemonsets"
-#~ msgstr "Kubernetes Daemonsets"
-
 #~ msgid "Kubernetes Node"
 #~ msgstr "Kubernetesノード"
 
@@ -107198,9 +107620,6 @@ msgstr ""
 #~ "表示するビュースナップインのように、コンテンツを認識して動的にタイトルを設"
 #~ "定する要素もあります。 他のタイトルを使用する場合は、ここで設定してくださ"
 #~ "い。"
-
-#~ msgid "Render background"
-#~ msgstr "レンダリングの背景"
 
 #~ msgid "Render gray background color behind the elements content."
 #~ msgstr ""
@@ -109707,10 +110126,6 @@ msgstr ""
 #~ msgid "Cached times for single sections"
 #~ msgstr "1秒あたりのキャッシュミス"
 
-#, fuzzy
-#~ msgid "Connect to the remote site"
-#~ msgstr "リモートサイトに接続する"
-
 #~ msgid "Connection to the REST API"
 #~ msgstr "REST APIへの接続"
 
@@ -109852,9 +110267,6 @@ msgstr ""
 #~ "privileges on the remote site."
 #~ msgstr ""
 #~ "自動化ユーザーの個々の資格情報に、リモートサイトの管理者権限を提供します。"
-
-#~ msgid "Remote site URL"
-#~ msgstr "リモートサイトのURL"
 
 #~ msgid ""
 #~ "Site base URL for accessing the REST API to e.g. create hosts (e.g. "

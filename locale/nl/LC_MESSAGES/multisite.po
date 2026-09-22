@@ -1867,6 +1867,15 @@ msgstr ""
 "<br>Alleen items die overeenstemmen met gekozen afzonderlijke waarden of "
 "kolommen worden toegevoegd."
 
+msgid "<h2>Before you deploy</h2>"
+msgstr ""
+
+msgid "<h2>Deploy with Helm</h2>"
+msgstr ""
+
+msgid "<h2>Download the deployment files</h2>"
+msgstr ""
+
 #, python-format
 msgid "<i>%(count)d more contact groups</i><br>"
 msgstr "<i>%(count)d meer contactgroepen</i><br>"
@@ -2451,6 +2460,12 @@ msgid "A Relay with alias '%(new_alias)s' already exists."
 msgstr "Een regelpakket met deze ID bestaat al."
 
 msgid ""
+"A Secret in the deployment namespace containing tls.crt and tls.key. Its "
+"certificate must cover the hostname used by Checkmk. Without this, the pull "
+"endpoint serves HTTP: use a trusted network or external TLS termination."
+msgstr ""
+
+msgid ""
 "A TNS alias as defined in the <tt>tnsnames.ora</tt> file. Requires a "
 "properly configured <tt>tnsnames.ora</tt> file accessible via the TNS_ADMIN "
 "directory path."
@@ -2502,6 +2517,14 @@ msgid ""
 msgstr ""
 "Een volledige lijst van alle hostproblemen, geoptimaliseerd voor gebruik in "
 "het dashboard"
+
+#, fuzzy
+msgid ""
+"A configuration with this Helm release name already exists. Choose another "
+"name."
+msgstr ""
+"Een host met de naam <b><tt>%s</tt></b> bestaat al in de map <a "
+"href=\"%s\">%s</a>."
 
 #, fuzzy, python-format
 msgid "A connection error occurred: %(e)s"
@@ -2751,6 +2774,10 @@ msgstr ""
 #, no-python-format
 msgid "A provisioning of over 100% means over provisioning."
 msgstr "Een bevoorrading van meer dan 100% betekent overbevoorrading."
+
+msgid ""
+"A pull mode base URL and shared secret are required to test the connection."
+msgstr ""
 
 #, fuzzy
 msgid "A regular expression is required"
@@ -5023,6 +5050,10 @@ msgstr "Map toevoegen"
 msgid "Add restriction"
 msgstr "Beperking van de locatie"
 
+#, fuzzy
+msgid "Add role pattern"
+msgstr "Nieuw patroon toevoegen"
+
 msgid "Add role rule"
 msgstr "Rolregel toevoegen"
 
@@ -5667,6 +5698,25 @@ msgstr ""
 "agents bakken. Op alle hosts die automatische updates moeten doen, moet je "
 "zo'n gebakken agent installeren die de plugin bevat. Dit moet handmatig "
 "gedaan worden (voor de laatste keer)."
+
+msgid "After deploying the agent, continue to enter the pull mode base URL."
+msgstr ""
+
+msgid ""
+"After deploying the agent, enter its URL as reachable from the monitoring "
+"site. Checkmk appends /pull/sections automatically. For a private CA, add "
+"the CA to Trusted certificate authorities for SSL in global settings."
+msgstr ""
+
+msgid ""
+"After deploying the agent, enter its address as reachable from the Checkmk "
+"site"
+msgstr ""
+
+msgid ""
+"After successful registration, delete <tt>push-registration-secret.yaml</tt> "
+"and its Kubernetes Secret. Remove the manifest from your deployment workflow."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -7078,10 +7128,9 @@ msgstr ""
 "en ook willekeurige e-mailadressen opgeven als rapportbestemming."
 
 msgid ""
-"Allows querying the metric backend (OpenTelemetry) from the custom graph "
-"editor. When disabled, only RRD-based metrics are available in the custom "
-"graph editor, and graphs containing metric backend queries cannot be "
-"displayed."
+"Allows querying telemetry metrics from the custom graph editor. When "
+"disabled, only RRD-based metrics are available in the custom graph editor, "
+"and graphs containing telemetry metrics queries cannot be displayed."
 msgstr ""
 
 #, fuzzy
@@ -7275,6 +7324,12 @@ msgstr ""
 "zichtbaarheid in de GUI en <i>niet</i> op de meldingen. Nieuwe regels zullen "
 "deze optie automatisch aanzetten, bestaande regels hebben dit standaard "
 "uitgeschakeld."
+
+msgid ""
+"Also used as the Helm release name, converted to lowercase with underscores "
+"replaced by hyphens. For example, kubernetes_config_1 becomes kubernetes-"
+"config-1. The release name must be at most 53 characters long."
+msgstr ""
 
 msgid "Altered"
 msgstr "Altered"
@@ -14301,6 +14356,10 @@ msgid "Checkmk dashboard"
 msgstr "Checkmk dashboard"
 
 #, fuzzy
+msgid "Checkmk data backend"
+msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
 msgid "Checkmk edition"
 msgstr "Checkmk editie: %s"
 
@@ -14322,16 +14381,16 @@ msgid "Checkmk helper usage"
 msgstr "Checkmk helper gebruik"
 
 #, fuzzy
+msgid "Checkmk host name"
+msgstr "Checkmk staat"
+
+#, fuzzy
 msgid "Checkmk licensing files"
 msgstr "Checkmk Licentiebestanden"
 
 #, fuzzy
 msgid "Checkmk log files"
 msgstr "Checkmk logbestanden"
-
-#, fuzzy
-msgid "Checkmk metric backend"
-msgstr "Configuratie toestand toevoegen"
 
 msgid ""
 "Checkmk metrics are created from OpenTelemetry datapoints. Configure them "
@@ -14750,6 +14809,11 @@ msgstr ""
 msgid "Choose condition"
 msgstr "Geen voorwaarden"
 
+msgid ""
+"Choose how the Kubernetes agent connects to Checkmk, then generate the "
+"deployment files."
+msgstr ""
+
 #, fuzzy
 msgid "Choose if this rule applies to plug-ins or local checks"
 msgstr "Kies of deze regel van toepassing is op plugins of lokale controles"
@@ -14820,6 +14884,10 @@ msgstr ""
 "betreffende interface. De standaardinstelling is \"Controleren en "
 "weergeven\". Deze functie wordt momenteel alleen ondersteund door de "
 "controle netapp_api_if."
+
+#, fuzzy
+msgid "Choose the connection mode and prepare the deployment files"
+msgstr "Kloon deze verbinding om een nieuwe te maken"
 
 msgid "Choose the connector, the user(s) should be migrated to."
 msgstr "Kies de connector waarnaar de gebruiker(s) moeten worden gemigreerd."
@@ -15626,6 +15694,10 @@ msgstr "Cluster gebruik"
 msgid "Cluster, indices and shard statistics"
 msgstr "Cluster-, index- en scherfstatistieken"
 
+#, fuzzy
+msgid "Cluster-level aggregation exclusions"
+msgstr "Kloon Aggregatie %s"
+
 msgid "Clustered"
 msgstr "Geclusterd"
 
@@ -16078,6 +16150,11 @@ msgstr "volledig"
 msgid "Complete the restore"
 msgstr "Voltooi de restauratie"
 
+msgid ""
+"Complete this setup and <b>activate the changes</b> so the agent can "
+"register."
+msgstr ""
+
 msgid "Complete tree"
 msgstr "Volledige boom"
 
@@ -16334,6 +16411,10 @@ msgid "Configure Google Cloud Platform (GCP) monitoring in Checkmk"
 msgstr "Toezicht op Amazon Web Services (AWS)"
 
 #, fuzzy
+msgid "Configure Kubernetes monitoring using the in-cluster agent"
+msgstr "Configureer de bewakingstoestand voor Alertmanager regels."
+
+#, fuzzy
 msgid "Configure Microsoft Azure (deprecated) monitoring in Checkmk"
 msgstr "Toezicht op Amazon Web Services (AWS)"
 
@@ -16461,7 +16542,7 @@ msgid "Configure host and regions"
 msgstr "Configuratie"
 
 msgid ""
-"Configure how Checkmk fetches metrics from the metric backend for a host and "
+"Configure how Checkmk fetches metrics from the data backend for a host and "
 "creates services from them"
 msgstr ""
 
@@ -16537,6 +16618,10 @@ msgid ""
 msgstr ""
 "Configureer de mogelijke acties die kunnen worden uitgevoerd wanneer een "
 "regel triggert en ook manueel door een gebruiker."
+
+#, fuzzy
+msgid "Configure the Checkmk host"
+msgstr "Configureer"
 
 #, fuzzy
 msgid ""
@@ -16807,6 +16892,10 @@ msgstr ""
 msgid "Configure your ServiceNow URL here (e.g. https://myservicenow.com)."
 msgstr "Configureer hier uw ServiceNow URL (bijv. https://myservicenow.com)."
 
+#, fuzzy
+msgid "Configure your cluster for Checkmk monitoring"
+msgstr "Monitor toestanden toewijzen aan Checkmk monitor toestanden"
+
 #, python-format
 msgid "Configure your preferred way of license usage submission in %(link)s"
 msgstr ""
@@ -16987,6 +17076,10 @@ msgstr "Bevestig tag wijzigingen"
 
 msgid "Confirmed renewal"
 msgstr "Bevestigde verlenging"
+
+#, fuzzy
+msgid "Connect Checkmk to the Kubernetes agent"
+msgstr "Verbinding maken met externe sites"
 
 msgid "Connect Checkmk with your InfluxDB to send metrics."
 msgstr "Verbind Checkmk met uw InfluxDB om metrieken te versturen."
@@ -18661,6 +18754,10 @@ msgstr "Maak de volgende interface groepen"
 msgid "Create topic"
 msgstr "Onderwerp maken"
 
+#, fuzzy
+msgid "Create underlying configurations"
+msgstr "RRA-configuratie"
+
 msgid "Create users only on login"
 msgstr "Gebruikers alleen aanmaken bij inloggen"
 
@@ -18683,6 +18780,10 @@ msgstr ""
 
 msgid "Created"
 msgstr "Gemaakt"
+
+#, fuzzy, python-format
+msgid "Created Kubernetes configuration %(name)s"
+msgstr "Nieuwe tijdsperiode aangemaakt %(name)s"
 
 #, python-brace-format
 msgid "Created Quick Setup {bundle_id}"
@@ -20030,6 +20131,28 @@ msgid ""
 msgstr ""
 "Data-Guards met dg_broker_start=false heeft Negeer Brokerstate nodig om de "
 "Switchoverstate op Primary te bewaken."
+
+#, fuzzy
+msgid "Data backend"
+msgstr "Database"
+
+#, fuzzy
+msgid "Data backend configuration"
+msgstr "Varnish Backend Verbindingen"
+
+#. weblate-flags: read-only, domain-specific
+#, fuzzy
+msgid "Data backend is disabled, auto-completion is not available."
+msgstr "Oracle gevallen"
+
+#. weblate-flags: read-only, domain-specific
+#, fuzzy
+msgid "Data backend is not reachable, auto-completion is not available."
+msgstr "Oracle gevallen"
+
+#, fuzzy, python-format
+msgid "Data backend of site %(site_id)s is disabled"
+msgstr "Oracle gevallen"
 
 #, fuzzy
 msgid "Data belonging to this host"
@@ -21783,6 +21906,10 @@ msgid "Deploy the Jolokia plug-in"
 msgstr "Implementeer de Jolokia plugin"
 
 #, fuzzy
+msgid "Deploy the Kubernetes agent"
+msgstr "Implementeer de netstat plugin"
+
+#, fuzzy
 msgid "Deploy the MegaRAID plug-in"
 msgstr "Inzet MegaRAID plugin"
 
@@ -21900,6 +22027,10 @@ msgid "Deploy the plug-ins and run them synchronously"
 msgstr "MTR plugin asynchroon implementeren"
 
 msgid "Deployment"
+msgstr "Inzet"
+
+#, fuzzy
+msgid "Deployment namespace"
 msgstr "Inzet"
 
 msgid "Deployment problems"
@@ -23935,6 +24066,11 @@ msgstr "De handtekeningsleutel van de agent downloaden"
 msgid "Download backup key"
 msgstr "Back-up sleutel downloaden"
 
+msgid ""
+"Download both files below and save them in the same directory. "
+"Alternatively, use them with your existing deployment workflow."
+msgstr ""
+
 #, fuzzy
 msgid "Download file name"
 msgstr "Bestandsnaam downloaden"
@@ -25885,6 +26021,10 @@ msgstr ""
 msgid "Enter"
 msgstr "Ga naar"
 
+msgid ""
+"Enter a base URL without credentials, whitespace, a query or a fragment."
+msgstr ""
+
 #, fuzzy
 msgid "Enter a comment to acknowledge problems"
 msgstr "Erken problemen"
@@ -25918,6 +26058,9 @@ msgid "Enter a valid URL starting with https://"
 msgstr "De URL moet beginnen met <tt>https</tt>."
 
 msgid "Enter a valid port number (example: 1234)."
+msgstr ""
+
+msgid "Enter a valid pull mode base URL."
 msgstr ""
 
 msgid "Enter address"
@@ -26026,6 +26169,11 @@ msgid ""
 msgstr ""
 "Voer de hostnamen van de clusterknooppunten in. Deze hosts moeten aanwezig "
 "zijn in Setup."
+
+msgid ""
+"Enter the hostname or IP address reachable from the cluster, without a "
+"scheme or port."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -26839,6 +26987,12 @@ msgstr "Sluit namespaces uit die overeenkomen met"
 msgid "Exclude nodes based on their role"
 msgstr "Knooppunten uitsluiten op basis van hun rol"
 
+msgid ""
+"Exclude nodes whose role, taken from a node-role.kubernetes.io/ label, "
+"matches a pattern from cluster-level resource aggregations. Clear the list "
+"to include all nodes."
+msgstr ""
+
 #, fuzzy
 msgid "Exclude pattern"
 msgstr "Patroon uitsluiten"
@@ -27016,6 +27170,9 @@ msgstr "Executeurs"
 #, fuzzy
 msgid "Exemptions for piggybacked hosts (VMs, ...)"
 msgstr "Uitzonderingen voor piggybacked hosts (VM's, ...)"
+
+msgid "Existing TLS Secret"
+msgstr ""
 
 msgid "Exists"
 msgstr "Bestaat"
@@ -27250,6 +27407,10 @@ msgstr "expliciete host labels"
 #, fuzzy
 msgid "Explicit host matching"
 msgstr "Expliciete %s mapping"
+
+#, fuzzy
+msgid "Explicit host name"
+msgstr "expliciete host labels"
 
 msgid "Explicit hosts"
 msgstr "Expliciete gastheren"
@@ -27864,7 +28025,7 @@ msgstr ""
 
 #, fuzzy, python-format
 msgid ""
-"Failed to query metric backend of site %(site_id)s. Check the web log for "
+"Failed to query telemetry metrics of site %(site_id)s. Check the web log for "
 "details."
 msgstr "Mislukt bij het uitvoeren van de test %s: %s"
 
@@ -27942,7 +28103,7 @@ msgstr "Synchronisatie met site mislukt: %(response)s"
 #. weblate-flags: read-only, domain-specific
 #, python-brace-format
 msgid ""
-"Failed to upgrade the metric backend schema for the feature {feature}. The "
+"Failed to upgrade the data backend schema for the feature {feature}. The "
 "service is still running and other features are unaffected. The feature was "
 "rolled back to its previous schema revision. Please check the web and ui-job-"
 "scheduler logs for details."
@@ -29124,6 +29285,11 @@ msgstr ""
 "Voor offline verificatie moeten wij uw abonnement verifiëren in het "
 "klantenportaal. Hiervoor moet u eerst een verificatieverzoek downloaden."
 
+msgid ""
+"For reproducible GitOps deployments, replace the range with an <b>exact "
+"released chart version</b> within it."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "For running Checkmk based checks, the Checkmk Micro Core keeps a pool of "
@@ -30045,6 +30211,10 @@ msgstr "Back-upcodes opnieuw genereren"
 
 msgid "Generate core config parallelized"
 msgstr "Genereer kernconfiguratie parallel"
+
+#, fuzzy
+msgid "Generate deployment files"
+msgstr "Kubernetes-implementatie"
 
 msgid "Generate event"
 msgstr "Gebeurtenis genereren"
@@ -31191,6 +31361,17 @@ msgstr "Heartbeat tools ontbreken of zijn niet geïnstalleerd"
 
 msgid "Height"
 msgstr "Hoogte"
+
+msgid ""
+"Helm and kubectl are required to run these commands. Run them from the "
+"directory containing the downloaded files."
+msgstr ""
+
+#, python-format
+msgid ""
+"Helm selects the latest stable chart release matching <b>%(version_range)s</"
+"b> when you run the command."
+msgstr ""
 
 msgid "Help"
 msgstr "Help"
@@ -34540,6 +34721,9 @@ msgid ""
 "How old (in seconds) the cache file for custom metrics is allowed to be."
 msgstr ""
 
+msgid "How should the Kubernetes agent connect to Checkmk?"
+msgstr ""
+
 msgid ""
 "How the disks are named depends on the type of hardware being used. Please "
 "look at already discovered checks for examples."
@@ -36501,8 +36685,8 @@ msgstr ""
 msgid ""
 "If you enable the OpenTelemetry data, the data collected from the "
 "OpenTelemetry Collector or the Prometheus scraper will be used for this host "
-"if it matches the configured filters. You must also enable the metric "
-"backend under Global Settings > Site Management."
+"if it matches the configured filters. You must also enable the data backend "
+"under Global Settings > Site Management."
 msgstr ""
 
 #, fuzzy
@@ -37307,6 +37491,10 @@ msgstr "Importeer iCalendar bestand"
 
 msgid "Import iCalendar File to create a time period"
 msgstr "Importeer iCalendar bestand om een tijdsperiode aan te maken"
+
+#, fuzzy
+msgid "Import matching annotation keys"
+msgstr "Alle geldige annotaties importeren"
 
 msgid "Import state from Nagios core"
 msgstr "Importeer toestand van Nagios core"
@@ -40141,6 +40329,11 @@ msgstr "Kaspersky Anti-Virus (Linux)"
 msgid "Kaspersky Anti-Virus time settings"
 msgstr "Kaspersky Anti-Virus Tijd Instellingen"
 
+msgid ""
+"Keep <tt>cmk-signed-push-cert</tt>, the agent's persistent certificate "
+"Secret."
+msgstr ""
+
 msgid "Keep comment after acknowledgment expires (persistent comment)"
 msgstr ""
 
@@ -40310,6 +40503,10 @@ msgstr "Kubernetes implementatie voorwaarden"
 #, fuzzy
 msgid "Kubernetes deployments"
 msgstr "Kubernetes-implementatie"
+
+#, fuzzy
+msgid "Kubernetes kinds to monitor"
+msgstr "Kubernetes pod voorwaarden"
 
 msgid "Kubernetes memory resource utilization"
 msgstr "Kubernetes geheugen gebruik"
@@ -43218,6 +43415,10 @@ msgstr "Langste uitvoerlijst"
 msgid "Look for keys"
 msgstr "Zoek naar sleutels"
 
+msgid ""
+"Look-around assertions and backreferences are not supported by the agent."
+msgstr ""
+
 msgid "Looking back"
 msgstr "Terugkijken"
 
@@ -46058,37 +46259,6 @@ msgstr "Methode van sonderen"
 msgid "Metric"
 msgstr "Metrisch"
 
-#. weblate-flags: read-only, domain-specific
-#, fuzzy
-msgid "Metric Backend"
-msgstr "Oracle gevallen"
-
-#, fuzzy
-msgid "Metric backend"
-msgstr "Oracle gevallen"
-
-#, fuzzy
-msgid "Metric backend (custom query)"
-msgstr "Oracle gevallen"
-
-#, fuzzy
-msgid "Metric backend configuration"
-msgstr "Varnish Backend Verbindingen"
-
-#. weblate-flags: read-only, domain-specific
-#, fuzzy
-msgid "Metric backend is disabled, auto-completion is not available."
-msgstr "Oracle gevallen"
-
-#. weblate-flags: read-only, domain-specific
-#, fuzzy
-msgid "Metric backend is not reachable, auto-completion is not available."
-msgstr "Oracle gevallen"
-
-#, fuzzy, python-format
-msgid "Metric backend of site %(site_id)s is disabled"
-msgstr "Oracle gevallen"
-
 #, fuzzy
 msgid "Metric configuration"
 msgstr "Host configuratie"
@@ -48298,6 +48468,10 @@ msgid "Namespaces"
 msgstr "Namespaces"
 
 #, fuzzy
+msgid "Namespaces to monitor"
+msgstr "Instanties om te controleren"
+
+#, fuzzy
 msgid "Naming for outlets at discovery"
 msgstr "Netapp poort ontdekking"
 
@@ -49617,6 +49791,10 @@ msgstr "Toestand knooppunt"
 
 msgid "Node utilization"
 msgstr "Gebruik knooppunten"
+
+#, fuzzy
+msgid "NodePort"
+msgstr "Knooppunt"
 
 msgid "Nodes"
 msgstr "Knooppunten"
@@ -54030,6 +54208,9 @@ msgstr "Overschrijven controle status gebaseerd op laatste build resultaat"
 msgid "Override managed plan settings"
 msgstr "Overbruggingseenheid van sensor"
 
+msgid "Override push receiver hostname"
+msgstr ""
+
 msgid "Override unit of sensor"
 msgstr "Overbruggingseenheid van sensor"
 
@@ -58027,6 +58208,12 @@ msgstr "DNS-hostnaam of IP-adres"
 msgid "Proxy settings"
 msgstr "Proxy-instellingen"
 
+msgid ""
+"Proxy used to reach Microsoft, both for the authorization performed here and "
+"for the recurring API calls of the services using this connection. Without "
+"this option the proxy settings of the process environment are used."
+msgstr ""
+
 msgid "Public"
 msgstr "Publiek"
 
@@ -58105,6 +58292,17 @@ msgstr "Gepubliceerde berichten"
 msgid "Publisher"
 msgstr "Uitgever"
 
+msgid "Pull"
+msgstr ""
+
+#, fuzzy
+msgid "Pull mode base URL"
+msgstr "Externe site URL"
+
+#, fuzzy
+msgid "Pull service exposure"
+msgstr "Alle diensten"
+
 msgid "Pull: Checkmk server contacts the agent"
 msgstr "Pull: Checkmk server neemt contact op met de agent"
 
@@ -58131,8 +58329,16 @@ msgstr "Azure Opslag"
 msgid "Purpose"
 msgstr ""
 
+#, fuzzy
+msgid "Push"
+msgstr "Pushover"
+
 msgid "Push configuration to this site"
 msgstr "Push configuratie naar deze site"
+
+#, fuzzy
+msgid "Push mode"
+msgstr "Pushover"
 
 #, fuzzy
 msgid "Push notification parameters"
@@ -58280,16 +58486,16 @@ msgstr "Time-out zoekopdracht"
 msgid "Query elasticsearch logs"
 msgstr "Zoeken in elasticsearch logs"
 
-#. weblate-flags: read-only, domain-specific
-#, fuzzy
-msgid "Query metric backend from custom graph editor"
-msgstr "Oracle gevallen"
-
 msgid "Query or SQL statement"
 msgstr "Query of SQL verklaring"
 
+#. weblate-flags: read-only, domain-specific
 #, fuzzy
-msgid "Query the metric backend"
+msgid "Query telemetry metrics from custom graph editor"
+msgstr "Oracle gevallen"
+
+#, fuzzy
+msgid "Query the data backend"
 msgstr "Configuratie toestand toevoegen"
 
 #, fuzzy
@@ -60061,6 +60267,9 @@ msgstr "Verwijder"
 msgid "Remove %(what_s)s from extensions"
 msgstr "Verwijder %(what_s)s van extensies"
 
+msgid "Remove /pull/sections from the URL; Checkmk appends it automatically."
+msgstr ""
+
 msgid "Remove TLS registration"
 msgstr "TLS-registratie verwijderen"
 
@@ -61398,6 +61607,10 @@ msgstr "Bewaartermijn"
 #, fuzzy
 msgid "Retention period:"
 msgstr "Bewaartermijn"
+
+#, fuzzy
+msgid "Retrieve Kubernetes agent sections"
+msgstr "Kubernetes Daemonsets"
 
 #, fuzzy
 msgid "Retrieve information"
@@ -63079,7 +63292,7 @@ msgstr "Uitvaltijden plannen"
 msgid "Scheduling report in background failed: %(e)s"
 msgstr "Schema rapport op achtergrond mislukt: %(e)s"
 
-msgid "Schema, revision and footprint of the metric backend database"
+msgid "Schema, revision and footprint of the data backend database"
 msgstr ""
 
 #, fuzzy
@@ -63870,6 +64083,10 @@ msgstr ""
 msgid "Select the contact group that can edit this OAuth2 connection."
 msgstr "Aansluiting toevoegen"
 
+msgid ""
+"Select the folder for the source host. Create a new folder first if needed."
+msgstr ""
+
 #, python-format
 msgid ""
 "Select the host event types and transitions this rule should handle."
@@ -64002,6 +64219,11 @@ msgstr "De geselecteerde %s zijn verwijderd."
 #, fuzzy
 msgid "Selected credential has been deleted"
 msgstr "Credential is verwijderd"
+
+msgid ""
+"Selected kinds become Checkmk hosts. Individual resources can override this "
+"choice using the checkmk.com/promote-to-host annotation."
+msgstr ""
 
 #, fuzzy
 msgid "Selected options"
@@ -66912,6 +67134,11 @@ msgstr "Grootte van de logbestanden"
 msgid "Size of crashes"
 msgstr "Grootte van de logbestanden"
 
+#. weblate-flags: read-only, domain-specific
+#, fuzzy
+msgid "Size of data backend"
+msgstr "Configuratie toestand toevoegen"
+
 msgid "Size of deferred mail queue"
 msgstr "Grootte van uitgestelde mail wachtrij"
 
@@ -66938,11 +67165,6 @@ msgstr "Grootte van de logbestanden"
 
 msgid "Size of mails in queues"
 msgstr "Grootte van mails in wachtrijen"
-
-#. weblate-flags: read-only, domain-specific
-#, fuzzy
-msgid "Size of metric backend"
-msgstr "Configuratie toestand toevoegen"
 
 msgid "Size of processes"
 msgstr "Omvang van de processen"
@@ -67034,6 +67256,10 @@ msgstr "Overgeslagen %(mib_file_name)s: %(e)s"
 
 #, fuzzy
 msgid "Skipped the configuration test."
+msgstr "Standaard configuratie"
+
+#, fuzzy
+msgid "Skipped the connection test."
 msgstr "Standaard configuratie"
 
 msgid ""
@@ -67499,14 +67725,14 @@ msgstr "Iemand voor 1.6"
 #. weblate-flags: read-only, domain-specific
 #, python-brace-format
 msgid ""
-"Something went wrong trying to enable the metric backend. Details can be "
-"found in the log file: {_CH_ERROR_LOG}"
+"Something went wrong trying to enable the data backend. Details can be found "
+"in the log file: {_CH_ERROR_LOG}"
 msgstr ""
 
 #. weblate-flags: read-only, domain-specific
 #, python-brace-format
 msgid ""
-"Something went wrong trying to stop the metric backend. Details can be found "
+"Something went wrong trying to stop the data backend. Details can be found "
 "in the log file: {_CH_ERROR_LOG}"
 msgstr ""
 
@@ -70391,6 +70617,10 @@ msgstr "Succesvol ingelogd op externe site %(site_alias)s."
 msgid "Successfully pinged IP address"
 msgstr "IP adressen van %d hosts succesvol bijgewerkt."
 
+#, fuzzy
+msgid "Successfully retrieved Kubernetes agent sections."
+msgstr "Wachtwoord succesvol gewijzigd."
+
 #, python-format
 msgid "Successfully sent %(count)d commands."
 msgstr "Met succes %(count)d commando's verzonden."
@@ -71499,6 +71729,15 @@ msgid ""
 "scraper configuration to modify data collection."
 msgstr ""
 
+#. weblate-flags: read-only, domain-specific
+#, fuzzy
+msgid "Telemetry metrics"
+msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
+msgid "Telemetry metrics (custom query)"
+msgstr "Oracle gevallen"
+
 #, fuzzy
 msgid ""
 "Tell the Jolokia plug-in to stop waiting for a response from each configured "
@@ -71737,6 +71976,10 @@ msgstr "Test"
 #, fuzzy
 msgid "Testing notifications"
 msgstr "laatste mededeling"
+
+#, fuzzy
+msgid "Testing the connection to the Kubernetes agent..."
+msgstr "Instellingen betreffende de verbinding met de Checkmk en SNMP agents"
 
 #, fuzzy
 msgid "Tests"
@@ -72678,6 +72921,11 @@ msgstr ""
 "bevatten."
 
 msgid ""
+"The Secret file contains credentials. <b>Do not commit it unencrypted to Git."
+"</b> Use your organization's secret-management workflow."
+msgstr ""
+
+msgid ""
 "The Setup configuration can be set to read only mode for all users that are "
 "not permitted to ignore the read only mode. All users that are permitted to "
 "set the read only can disable it again when another permitted user enabled "
@@ -73605,6 +73853,13 @@ msgid ""
 "The connection id must consist only of letters, digit and the underscore."
 msgstr "De site-id mag alleen bestaan uit letters, cijfers en de underscore."
 
+#, python-format
+msgid ""
+"The connection test failed on monitoring site %(site)s. Check var/log/"
+"automation-helper/automation-helper.log on that site for the underlying "
+"error, then retry or skip the test."
+msgstr ""
+
 msgid ""
 "The connection to AWS was successful, but no services were found. If this is "
 "unintentional, please verify your configuration."
@@ -73806,6 +74061,16 @@ msgstr ""
 "De %s is alleen voor jou zichtbaar omdat je'geen toestemming hebt om hem te "
 "delen."
 
+#. weblate-flags: read-only, domain-specific
+msgid ""
+"The data backend database schema is in an unexpected state: revision "
+"{current_revision_id!r} is applied, but the expected revision is "
+"{head_revision_id!r}. Activation has been blocked to prevent unintended "
+"schema upgrades. To resolve this, upgrade the schema manually as the site "
+"user: `cmk-data-backend-schema-manager upgrade --config default HEAD` If the "
+"upgrade fails, please contact Checkmk support."
+msgstr ""
+
 msgid ""
 "The data for the background checks is recomputed at most in this interval."
 msgstr ""
@@ -73927,7 +74192,7 @@ msgstr ""
 msgid ""
 "The delta-to-cumulative processor converts timezones into cumulative "
 "aggregation temporality. This is necessary for compatibility reasons with "
-"the Checkmk metric backend, which only supports cumulative metrics. If your "
+"the Checkmk data backend, which only supports cumulative metrics. If your "
 "Collector receives metrics in delta aggregation temporality, you can "
 "configure this processor to be able to use these metrics in Checkmk. If your "
 "Collector only receives cumulative metrics or if you are unsure about the "
@@ -74040,6 +74305,11 @@ msgstr "Het embleemtype is %(type)s, maar moet str zijn"
 
 msgid "The end date must be after the start date"
 msgstr "De einddatum moet na de begindatum liggen"
+
+msgid ""
+"The endpoint responded, but returned no Kubernetes agent sections. Check the "
+"pull mode base URL and allow the agent time to collect data."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -74892,7 +75162,7 @@ msgstr ""
 msgid "The latest crash dumps of each type as found in var/check_mk/crashes"
 msgstr ""
 
-msgid "The latest licensed active time series count of the metric backend"
+msgid "The latest licensed active time series count of the data backend"
 msgstr ""
 
 msgid ""
@@ -75124,7 +75394,7 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 
 #. weblate-flags: read-only, domain-specific
 msgid ""
-"The maximum amount of memory that the metric backend is allowed to use, "
+"The maximum amount of memory that the data backend is allowed to use, "
 "expressed as a fraction of the total available memory. Allows limiting the "
 "memory usage on low-memory systems."
 msgstr ""
@@ -75251,20 +75521,6 @@ msgstr ""
 
 msgid "The message has successfully been sent..."
 msgstr "Het bericht is succesvol verzonden..."
-
-#. weblate-flags: read-only, domain-specific
-msgid ""
-"The metric backend database schema is in an unexpected state: revision "
-"{current_revision_id!r} is applied, but the expected revision is "
-"{head_revision_id!r}. Activation has been blocked to prevent unintended "
-"schema upgrades. To resolve this, upgrade the schema manually as the site "
-"user: `cmk-data-backend-schema-manager upgrade --config default HEAD` If the "
-"upgrade fails, please contact Checkmk support."
-msgstr ""
-
-#. weblate-flags: read-only, domain-specific
-msgid "The metric backend snapin shows the number of custom metrics"
-msgstr ""
 
 msgid ""
 "The metric label is displayed alongside the queried value in the status "
@@ -75500,6 +75756,9 @@ msgstr "De naam die zal worden gebruikt in de beschrijving van de dienst"
 #, fuzzy
 msgid "The name will be used in the service name"
 msgstr "De naam zal worden gebruikt in de beschrijving van de dienst"
+
+msgid "The namespace in which the Kubernetes agent will be deployed."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -75776,6 +76035,9 @@ msgstr ""
 "De offset van de informatie ten opzichte van de tellerbasis. U kunt een "
 "gedetailleerde lijst van beschikbare tellers krijgen in een windows shell "
 "met het commando 'lodctr /s:counters.txt'."
+
+msgid "The one-time registration token expires after <b>one hour</b>."
+msgstr ""
 
 msgid "The operating system packages installed on the Checkmk server"
 msgstr ""
@@ -76126,7 +76388,7 @@ msgstr "De waarde voor %s moet tussen %d en %d liggen"
 
 #. weblate-flags: read-only, domain-specific
 msgid ""
-"The port on which the metric backend listens to incoming data. This setting "
+"The port on which the data backend listens to incoming data. This setting "
 "also defines where the site's OpenTelemetry Collector sends its data."
 msgstr ""
 
@@ -76142,7 +76404,7 @@ msgstr "De poort waarnaar de DBMS luistert"
 
 #. weblate-flags: read-only, domain-specific
 #, fuzzy
-msgid "The port to query data from the metric backend."
+msgid "The port to query data from the data backend."
 msgstr "Configuratie toestand toevoegen"
 
 msgid ""
@@ -76622,6 +76884,10 @@ msgid ""
 "timeouts). "
 msgstr ""
 
+#, fuzzy
+msgid "The same shared secret will be saved in the Checkmk password store."
+msgstr "De naam die zal worden gebruikt in de beschrijving van de dienst"
+
 msgid "The schedule you are trying to clone does not exist."
 msgstr "Het schema dat u probeert te klonen bestaat niet."
 
@@ -76696,6 +76962,11 @@ msgstr "De geselecteerde hosts hebben geen expliciete attributen"
 
 msgid "The selected icon does not exist."
 msgstr "Het geselecteerde pictogram bestaat niet."
+
+msgid ""
+"The selected monitoring site does not support push mode. Use pull mode "
+"instead."
+msgstr ""
 
 msgid "The selected options do not match any hosts, nothing to do."
 msgstr ""
@@ -76944,6 +77215,14 @@ msgstr ""
 msgid "The source host"
 msgstr "De bronhost"
 
+#, fuzzy
+msgid ""
+"The source host already exists. Choose another host name or remove the old "
+"source host first."
+msgstr ""
+"De brondetails kunnen zowel op de opgevraagde host als op de bronhost worden "
+"weergegeven."
+
 msgid ""
 "The special agent will use this host name for the TLS certificate "
 "validation. If omitted, the Checkmk host name of the host will be used"
@@ -77132,6 +77411,10 @@ msgid ""
 msgstr ""
 "Het teamgeheim van uw SIGNL4 team. Dat is het laatste deel van uw webhook "
 "URL: https://connect.signl4.com/webhook/[TEAM_SECRET]"
+
+#. weblate-flags: read-only, domain-specific
+msgid "The telemetry metrics snapin shows the number of custom metrics"
+msgstr ""
 
 #, fuzzy
 msgid "The temporary file system is mounted"
@@ -78273,6 +78556,9 @@ msgstr "Deze BI regel bestaat niet"
 
 msgid "This BI rule does not exist."
 msgstr "Deze BI-regel bestaat niet."
+
+msgid "This Checkmk edition supports pull mode only."
+msgstr ""
 
 msgid "This ID already exists."
 msgstr "Deze ID bestaat al."
@@ -79518,6 +79804,11 @@ msgid ""
 msgstr ""
 "Dit moet overeenkomen met de gebruiker waar <tt>mk-remote-alert-handler</tt> "
 "voor is voorbereid."
+
+msgid ""
+"This name becomes part of the generated Kubernetes host names. Keep it "
+"stable to retain their monitoring history."
+msgstr ""
 
 msgid "This name corresponds to the cooling device to be monitored."
 msgstr "Deze naam komt overeen met het koelapparaat dat moet worden bewaakt."
@@ -89865,6 +90156,10 @@ msgstr ""
 "Problemen (bv. de Hostalias )"
 
 #, fuzzy
+msgid "Use an explicit host name"
+msgstr "Gebruik expliciete namen"
+
+#, fuzzy
 msgid "Use any network address"
 msgstr "Netwerkadres"
 
@@ -90032,6 +90327,14 @@ msgid "Use local FQDN"
 msgstr "Gebruik lokale FQDN"
 
 #, fuzzy
+msgid ""
+"Use lowercase letters, numbers and hyphens, starting and ending with a "
+"letter or number."
+msgstr ""
+"Metrieknamen mogen alleen uit letters, cijfers en underscores bestaan en "
+"moeten met een letter beginnen."
+
+#, fuzzy
 msgid "Use macro to determine port number"
 msgstr "Gebruik smalle weergave voor dit nummer"
 
@@ -90082,6 +90385,14 @@ msgstr "Naam van de dienst"
 #, fuzzy
 msgid "Use only letters, digits, underscore and hyphen."
 msgstr "Gebruik hier alleen kleine letters, cijfers en underscores."
+
+#, fuzzy
+msgid ""
+"Use only letters, numbers, dots, hyphens and underscores, starting with a "
+"letter, number or underscore."
+msgstr ""
+"Een identifier mag alleen uit letters, cijfers, streepjes en underscore "
+"bestaan en moet met een letter of underscore beginnen."
 
 msgid "Use only lower case letters, digits, and underscores here."
 msgstr "Gebruik hier alleen kleine letters, cijfers en underscores."
@@ -90211,6 +90522,10 @@ msgstr "Gebruik de catalogus van controle plugins."
 #, fuzzy
 msgid "Use the certificate store of the monitored host"
 msgstr "Gebruik de standaard kleur van de metriek."
+
+#, fuzzy
+msgid "Use the cluster name as the host name"
+msgstr "Gebruik de Checkmk gebruikersnaam als ntopng gebruikersnaam"
 
 #, fuzzy
 msgid "Use the credentials of an automation user"
@@ -93476,6 +93791,15 @@ msgstr ""
 "op te slaan met deze bestandsnaam. De extensie moet altijd <tt>pdf</tt> zijn."
 
 msgid ""
+"When disabled, all namespaces are monitored. Filters apply to namespaced "
+"resources; cluster and node hosts and their rollups are unaffected."
+msgstr ""
+
+#, fuzzy
+msgid "When disabled, no annotations are imported as host labels."
+msgstr "Gebruik poortnaam als dienstnaam"
+
+msgid ""
 "When disabled, the plug-in is deployed without its configuration file. The "
 "file <tt>/etc/check_mk/filestats.cfg</tt> must then be created and "
 "maintained manually."
@@ -93684,6 +94008,11 @@ msgstr ""
 "Bij het opsommen van de groepsleden in de uitvoer van de dienst die de groep "
 "bewaakt, zorgt deze optie ervoor dat checkmk ofwel de interfacebeschrijving, "
 "de alias of het poortnummer gebruikt."
+
+msgid ""
+"When migrating, record the old source host name and delete that host before "
+"running this setup. Reuse its name to retain monitoring history."
+msgstr ""
 
 msgid ""
 "When monitoring the performance of a monitoring site (i.e. its core) then "
@@ -94759,11 +95088,11 @@ msgid ""
 msgstr ""
 
 msgid ""
-"With the <b>OpenTelemetry data - metric backend</b> connector type, hosts "
-"will be dynamically created using the data collected from the "
-"<b>OpenTelemetry Collector</b> or the <b>Prometheus scraper</b>. You must "
-"also enable the metric backend under <a href='global_settings.py?"
-"varname=metric_backend'>Global Settings > Site Management.</a>"
+"With the <b>Telemetry metrics</b> connector type, hosts will be dynamically "
+"created using the data collected from the <b>OpenTelemetry Collector</b> or "
+"the <b>Prometheus scraper</b>. You must also enable the data backend under "
+"<a href='global_settings.py?varname=data_backend'>Global Settings > Site "
+"Management.</a>"
 msgstr ""
 
 msgid ""
@@ -95680,7 +96009,7 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "You are not permitted to query the metric backend."
+msgid "You are not permitted to query the data backend."
 msgstr "Het is u niet toegestaan deze actie uit te voeren."
 
 msgid "You are not permitted to view this page"
@@ -96922,7 +97251,8 @@ msgstr "U heeft niet de rechten om deze %s te bewerken"
 
 #. weblate-flags: read-only, domain-specific
 #, fuzzy
-msgid "You don't have permission to access graphs with metric backend queries."
+msgid ""
+"You don't have permission to access graphs with telemetry metrics queries."
 msgstr "U heeft niet de rechten om deze %s te bewerken"
 
 #, fuzzy, python-format
@@ -104924,7 +105254,7 @@ msgid "Could not create the Telemetry hosts folder"
 msgstr "Configuratie toestand toevoegen"
 
 #, fuzzy
-msgid "Could not create the metric backend connector"
+msgid "Could not create the telemetry metrics connector"
 msgstr "Configuratie toestand toevoegen"
 
 #, fuzzy
@@ -104940,11 +105270,11 @@ msgid "Could not enable the OpenTelemetry Collector"
 msgstr "Configuratie toestand toevoegen"
 
 #, fuzzy
-msgid "Metric backend connection"
+msgid "Data backend connection"
 msgstr "Varnish Backend Verbindingen"
 
 #, fuzzy
-msgid "Could not enable the metric backend"
+msgid "Could not enable the data backend"
 msgstr "Configuratie toestand toevoegen"
 
 #, fuzzy
@@ -105198,6 +105528,54 @@ msgstr "Op geselecteerde hosts"
 #, fuzzy
 msgid "PENDING"
 msgstr "PEND"
+
+#, fuzzy
+msgid "Shows hosts with at least one service."
+msgstr "Voeg ten minste één kindknooppunt toe."
+
+#, fuzzy
+msgid "Shows hosts with no services."
+msgstr "Toon verouderde hosts en diensten"
+
+#, fuzzy
+msgid "Shows hosts with at least one service in OK."
+msgstr "Voeg ten minste één kindknooppunt toe."
+
+#, fuzzy
+msgid "Shows hosts with no service in OK."
+msgstr "Toon verouderde hosts en diensten"
+
+#, fuzzy
+msgid "Shows hosts with at least one service in WARN."
+msgstr "Voeg ten minste één kindknooppunt toe."
+
+#, fuzzy
+msgid "Shows hosts with no service in WARN."
+msgstr "Toon verouderde hosts en diensten"
+
+#, fuzzy
+msgid "Shows hosts with at least one service in CRIT."
+msgstr "Voeg ten minste één kindknooppunt toe."
+
+#, fuzzy
+msgid "Shows hosts with no service in CRIT."
+msgstr "Toon verouderde hosts en diensten"
+
+#, fuzzy
+msgid "Shows hosts with at least one service in UNKNOWN."
+msgstr "Voeg ten minste één kindknooppunt toe."
+
+#, fuzzy
+msgid "Shows hosts with no service in UNKNOWN."
+msgstr "Toon verouderde hosts en diensten"
+
+#, fuzzy
+msgid "Shows hosts with at least one pending service."
+msgstr "Voeg ten minste één kindknooppunt toe."
+
+#, fuzzy
+msgid "Shows hosts with no pending service."
+msgstr "Toon verouderde hosts en diensten"
 
 #, fuzzy
 msgid "Has comments"
@@ -105660,15 +106038,43 @@ msgid "Clear"
 msgstr "Status 'bevestigd'"
 
 #, fuzzy
-msgid "Value range"
-msgstr "Datumbereik"
+msgid "More than"
+msgstr "Montagemogelijkheden"
 
-msgid "Any (>0)"
+msgid "Less than"
+msgstr ""
+
+msgid "Between"
+msgstr ""
+
+msgid "Enter an age of zero or more."
 msgstr ""
 
 #, fuzzy
-msgid "None (=0)"
-msgstr "Geen (lineair)"
+msgid "Enter a younger bound that does not exceed the older one."
+msgstr "Het cluster moet ten minste één knooppunt hebben"
+
+#, fuzzy
+msgid "Younger bound"
+msgstr "Achtergrond weergeven"
+
+#, fuzzy
+msgid "Older bound"
+msgstr "Achtergrond weergeven"
+
+#, fuzzy
+msgid "At least one"
+msgstr "Tenminste"
+
+msgid "Shows rows with a value above 0."
+msgstr ""
+
+msgid "Shows rows with a value of 0."
+msgstr ""
+
+#, fuzzy
+msgid "Value range"
+msgstr "Datumbereik"
 
 #, fuzzy
 msgid "Contains ..."
@@ -107444,6 +107850,22 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Metric Backend"
+#~ msgstr "Oracle gevallen"
+
+#, fuzzy
+#~ msgid "Metric backend"
+#~ msgstr "Oracle gevallen"
+
+#, fuzzy
+#~ msgid "Metric backend (custom query)"
+#~ msgstr "Oracle gevallen"
+
+#, fuzzy
+#~ msgid "None (=0)"
+#~ msgstr "Geen (lineair)"
+
 #~ msgid "Bulk discovery successful"
 #~ msgstr "Bulk ontdekking succesvol"
 
@@ -108290,10 +108712,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Color picker"
 #~ msgstr "Colorize"
-
-#, fuzzy
-#~ msgid "Help: Metrics backend (custom query)"
-#~ msgstr "Oracle gevallen"
 
 #, fuzzy
 #~ msgid "Inline help: Metrics backend (custom query)"
@@ -110910,10 +111328,6 @@ msgstr ""
 #~ msgstr "Inzet plugin voor MS Exchange database latency"
 
 #, fuzzy
-#~ msgid "Deploy the netstat plug-in"
-#~ msgstr "Implementeer de netstat plugin"
-
-#, fuzzy
 #~ msgid "Do not deploy LVM plug-in"
 #~ msgstr "LVM plugin niet implementeren"
 
@@ -112334,14 +112748,6 @@ msgstr ""
 #~ msgid "Missing needed custom_graph parameter."
 #~ msgstr "Ontbrekende benodigde custom_graph parameter."
 
-#, fuzzy
-#~ msgid ""
-#~ "Unique ID must only contain lowercase letters, numbers, and underscores, "
-#~ "and must start with a letter."
-#~ msgstr ""
-#~ "Metrieknamen mogen alleen uit letters, cijfers en underscores bestaan en "
-#~ "moeten met een letter beginnen."
-
 #~ msgid "Exporter"
 #~ msgstr "Exporteur"
 
@@ -112847,9 +113253,6 @@ msgstr ""
 #~ msgid "Kubernetes Daemonset"
 #~ msgstr "Kubernetes DaemonSet"
 
-#~ msgid "Kubernetes Daemonsets"
-#~ msgstr "Kubernetes Daemonsets"
-
 #~ msgid "Kubernetes Node"
 #~ msgstr "Kubernetes Knooppunt"
 
@@ -113032,9 +113435,6 @@ msgstr ""
 #~ "zijn zich bewust van hun inhoud en stellen de titel dynamisch in, zoals "
 #~ "de view snapin, die de titel van de view weergeeft. Als u een andere "
 #~ "titel wilt gebruiken, stel die dan hier in."
-
-#~ msgid "Render background"
-#~ msgstr "Achtergrond weergeven"
 
 #~ msgid "Render gray background color behind the elements content."
 #~ msgstr "Render grijze achtergrond kleur achter de elementen inhoud."
@@ -115445,10 +115845,6 @@ msgstr ""
 #~ msgid "Cached times for single sections"
 #~ msgstr "Cache missers per seconde"
 
-#, fuzzy
-#~ msgid "Connect to the remote site"
-#~ msgstr "Verbinding maken met externe sites"
-
 #~ msgid "Connection to the REST API"
 #~ msgstr "Verbinding met de REST API"
 
@@ -115589,9 +115985,6 @@ msgstr ""
 #~ msgstr ""
 #~ "Geef de individuele credentials van een automatiseringsgebruiker met "
 #~ "beheerdersbevoegdheden op de externe site."
-
-#~ msgid "Remote site URL"
-#~ msgstr "Externe site URL"
 
 #~ msgid ""
 #~ "Site base URL for accessing the REST API to e.g. create hosts (e.g. "

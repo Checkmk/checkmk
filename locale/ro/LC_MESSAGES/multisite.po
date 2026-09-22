@@ -1888,6 +1888,15 @@ msgstr ""
 "curentă a agentului nu furnizează date noi pentru aceste intrări.<br>Se "
 "adaugă numai intrările care corespund valorilor unice sau coloanelor alese."
 
+msgid "<h2>Before you deploy</h2>"
+msgstr ""
+
+msgid "<h2>Deploy with Helm</h2>"
+msgstr ""
+
+msgid "<h2>Download the deployment files</h2>"
+msgstr ""
+
 #, python-format
 msgid "<i>%(count)d more contact groups</i><br>"
 msgstr "<i>%(count)d mai multe grupuri de contact</i><br>"
@@ -2481,6 +2490,12 @@ msgid "A Relay with alias '%(new_alias)s' already exists."
 msgstr "Există deja un pachet de reguli cu acest ID."
 
 msgid ""
+"A Secret in the deployment namespace containing tls.crt and tls.key. Its "
+"certificate must cover the hostname used by Checkmk. Without this, the pull "
+"endpoint serves HTTP: use a trusted network or external TLS termination."
+msgstr ""
+
+msgid ""
 "A TNS alias as defined in the <tt>tnsnames.ora</tt> file. Requires a "
 "properly configured <tt>tnsnames.ora</tt> file accessible via the TNS_ADMIN "
 "directory path."
@@ -2534,6 +2549,14 @@ msgid ""
 msgstr ""
 "O listă completă a tuturor problemelor gazdelor, optimizată pentru "
 "utilizarea în tabloul de bord"
+
+#, fuzzy
+msgid ""
+"A configuration with this Helm release name already exists. Choose another "
+"name."
+msgstr ""
+"O gazdă cu numele <b><tt>%s</tt></b> există deja în folderul <a "
+"href=\"%s\">%s</a>."
 
 #, fuzzy, python-format
 msgid "A connection error occurred: %(e)s"
@@ -2785,6 +2808,10 @@ msgstr ""
 #, no-python-format
 msgid "A provisioning of over 100% means over provisioning."
 msgstr "O dotare de peste 100% înseamnă o dotare excesivă."
+
+msgid ""
+"A pull mode base URL and shared secret are required to test the connection."
+msgstr ""
 
 #, fuzzy
 msgid "A regular expression is required"
@@ -5049,6 +5076,10 @@ msgstr "Adăugați un dosar"
 msgid "Add restriction"
 msgstr "Restricție de amplasare"
 
+#, fuzzy
+msgid "Add role pattern"
+msgstr "Adăugați un nou model"
+
 msgid "Add role rule"
 msgstr "Adaugă o regulă de rol"
 
@@ -5688,6 +5719,25 @@ msgstr ""
 "trebuie să coaceți agenții. Pe toate gazdele care ar trebui să efectueze "
 "actualizări automate trebuie să instalați un astfel de agent copt care "
 "conține pluginul. Acest lucru trebuie făcut manual (pentru ultima dată)."
+
+msgid "After deploying the agent, continue to enter the pull mode base URL."
+msgstr ""
+
+msgid ""
+"After deploying the agent, enter its URL as reachable from the monitoring "
+"site. Checkmk appends /pull/sections automatically. For a private CA, add "
+"the CA to Trusted certificate authorities for SSL in global settings."
+msgstr ""
+
+msgid ""
+"After deploying the agent, enter its address as reachable from the Checkmk "
+"site"
+msgstr ""
+
+msgid ""
+"After successful registration, delete <tt>push-registration-secret.yaml</tt> "
+"and its Kubernetes Secret. Remove the manifest from your deployment workflow."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -7115,10 +7165,9 @@ msgstr ""
 "destinație a rapoartelor."
 
 msgid ""
-"Allows querying the metric backend (OpenTelemetry) from the custom graph "
-"editor. When disabled, only RRD-based metrics are available in the custom "
-"graph editor, and graphs containing metric backend queries cannot be "
-"displayed."
+"Allows querying telemetry metrics from the custom graph editor. When "
+"disabled, only RRD-based metrics are available in the custom graph editor, "
+"and graphs containing telemetry metrics queries cannot be displayed."
 msgstr ""
 
 #, fuzzy
@@ -7302,6 +7351,12 @@ msgstr ""
 "afectat doar vizibilitatea în GUI și notificările <i>nu</i>. Regulile noi "
 "vor activa această opțiune în mod automat, regulile existente au această "
 "opțiune dezactivată în mod implicit."
+
+msgid ""
+"Also used as the Helm release name, converted to lowercase with underscores "
+"replaced by hyphens. For example, kubernetes_config_1 becomes kubernetes-"
+"config-1. The release name must be at most 53 characters long."
+msgstr ""
 
 msgid "Altered"
 msgstr "Alterat"
@@ -14369,6 +14424,10 @@ msgstr "Fișiere Checkmk Core"
 msgid "Checkmk dashboard"
 msgstr "Tabloul de bord Checkmk"
 
+#, fuzzy
+msgid "Checkmk data backend"
+msgstr "Configurația stilului selectat"
+
 msgid "Checkmk edition"
 msgstr "Ediția Checkmk"
 
@@ -14390,16 +14449,16 @@ msgid "Checkmk helper usage"
 msgstr "Utilizarea ajutorului Checkmk"
 
 #, fuzzy
+msgid "Checkmk host name"
+msgstr "Verificați starea Checkmk"
+
+#, fuzzy
 msgid "Checkmk licensing files"
 msgstr "Checkmk Fișiere de licențiere"
 
 #, fuzzy
 msgid "Checkmk log files"
 msgstr "Checkmk Fișiere jurnal"
-
-#, fuzzy
-msgid "Checkmk metric backend"
-msgstr "Configurația stilului selectat"
 
 msgid ""
 "Checkmk metrics are created from OpenTelemetry datapoints. Configure them "
@@ -14819,6 +14878,11 @@ msgstr ""
 msgid "Choose condition"
 msgstr "Fără condiții"
 
+msgid ""
+"Choose how the Kubernetes agent connects to Checkmk, then generate the "
+"deployment files."
+msgstr ""
+
 #, fuzzy
 msgid "Choose if this rule applies to plug-ins or local checks"
 msgstr ""
@@ -14891,6 +14955,10 @@ msgstr ""
 "origine al interfeței respective. Valoarea implicită este \"Check and "
 "Display\". Această caracteristică este în prezent susținută doar de check "
 "netapp_api_if."
+
+#, fuzzy
+msgid "Choose the connection mode and prepare the deployment files"
+msgstr "Clonarea acestei conexiuni pentru a crea una nouă"
 
 msgid "Choose the connector, the user(s) should be migrated to."
 msgstr ""
@@ -15708,6 +15776,10 @@ msgstr "Utilizarea clusterelor"
 msgid "Cluster, indices and shard statistics"
 msgstr "Statisticile privind clusterele, indicii și fragmentele"
 
+#, fuzzy
+msgid "Cluster-level aggregation exclusions"
+msgstr "Agregare clonă %s"
+
 msgid "Clustered"
 msgstr "Clusterizat"
 
@@ -16153,6 +16225,11 @@ msgstr "Complet"
 msgid "Complete the restore"
 msgstr "Finalizați restaurarea"
 
+msgid ""
+"Complete this setup and <b>activate the changes</b> so the agent can "
+"register."
+msgstr ""
+
 msgid "Complete tree"
 msgstr "Arbore complet"
 
@@ -16410,6 +16487,10 @@ msgid "Configure Google Cloud Platform (GCP) monitoring in Checkmk"
 msgstr "Monitorizarea serviciilor web Amazon (AWS)"
 
 #, fuzzy
+msgid "Configure Kubernetes monitoring using the in-cluster agent"
+msgstr "Configurați starea de monitorizare pentru regulile Alertmanager."
+
+#, fuzzy
 msgid "Configure Microsoft Azure (deprecated) monitoring in Checkmk"
 msgstr "Monitorizarea serviciilor web Amazon (AWS)"
 
@@ -16537,7 +16618,7 @@ msgid "Configure host and regions"
 msgstr "Configurație"
 
 msgid ""
-"Configure how Checkmk fetches metrics from the metric backend for a host and "
+"Configure how Checkmk fetches metrics from the data backend for a host and "
 "creates services from them"
 msgstr ""
 
@@ -16611,6 +16692,10 @@ msgid ""
 msgstr ""
 "Configurați acțiunile posibile care pot fi efectuate atunci când se "
 "declanșează o regulă și, de asemenea, manual de către un utilizator."
+
+#, fuzzy
+msgid "Configure the Checkmk host"
+msgstr "Configurați"
 
 #, fuzzy
 msgid ""
@@ -16882,6 +16967,10 @@ msgid "Configure your ServiceNow URL here (e.g. https://myservicenow.com)."
 msgstr ""
 "Configurați aici URL-ul ServiceNow (de exemplu, https://myservicenow.com)."
 
+#, fuzzy
+msgid "Configure your cluster for Checkmk monitoring"
+msgstr "Maparea stărilor de monitorizare cu stările de monitorizare Checkmk"
+
 #, python-format
 msgid "Configure your preferred way of license usage submission in %(link)s"
 msgstr ""
@@ -17066,6 +17155,10 @@ msgstr "Confirmarea modificărilor de etichete"
 
 msgid "Confirmed renewal"
 msgstr "Reînnoire confirmată"
+
+#, fuzzy
+msgid "Connect Checkmk to the Kubernetes agent"
+msgstr "Conectarea la site-uri la distanță"
 
 msgid "Connect Checkmk with your InfluxDB to send metrics."
 msgstr "Conectați Checkmk cu InfluxDB pentru a trimite măsurători."
@@ -18739,6 +18832,10 @@ msgstr "Creați următoarele grupuri de interfețe"
 msgid "Create topic"
 msgstr "Creați un subiect"
 
+#, fuzzy
+msgid "Create underlying configurations"
+msgstr "Configurația RRA"
+
 msgid "Create users only on login"
 msgstr "Creați utilizatori numai la conectare"
 
@@ -18761,6 +18858,10 @@ msgstr ""
 
 msgid "Created"
 msgstr "Creat"
+
+#, fuzzy, python-format
+msgid "Created Kubernetes configuration %(name)s"
+msgstr "A creat o nouă perioadă de timp %(name)s."
 
 #, python-brace-format
 msgid "Created Quick Setup {bundle_id}"
@@ -20107,6 +20208,28 @@ msgid ""
 msgstr ""
 "Data-Guards cu dg_broker_start=false are nevoie de Ignore Brokerstate pentru "
 "a monitoriza Switchoverstate pe primar."
+
+#, fuzzy
+msgid "Data backend"
+msgstr "Baza de date"
+
+#, fuzzy
+msgid "Data backend configuration"
+msgstr "Conexiuni Varnish Backend"
+
+#. weblate-flags: read-only, domain-specific
+#, fuzzy
+msgid "Data backend is disabled, auto-completion is not available."
+msgstr "Instanțe Oracle"
+
+#. weblate-flags: read-only, domain-specific
+#, fuzzy
+msgid "Data backend is not reachable, auto-completion is not available."
+msgstr "Instanțe Oracle"
+
+#, fuzzy, python-format
+msgid "Data backend of site %(site_id)s is disabled"
+msgstr "Instanțe Oracle"
 
 #, fuzzy
 msgid "Data belonging to this host"
@@ -21873,6 +21996,10 @@ msgid "Deploy the Jolokia plug-in"
 msgstr "Implementați plugin-ul Jolokia"
 
 #, fuzzy
+msgid "Deploy the Kubernetes agent"
+msgstr "Implementați plugin-ul netstat"
+
+#, fuzzy
 msgid "Deploy the MegaRAID plug-in"
 msgstr "Implementarea pluginului MegaRAID"
 
@@ -21992,6 +22119,10 @@ msgid "Deploy the plug-ins and run them synchronously"
 msgstr "Implementarea pluginului MTR în mod asincron"
 
 msgid "Deployment"
+msgstr "Desfășurare"
+
+#, fuzzy
+msgid "Deployment namespace"
 msgstr "Desfășurare"
 
 msgid "Deployment problems"
@@ -24033,6 +24164,11 @@ msgstr "Descărcați cheia de semnătură a agentului"
 msgid "Download backup key"
 msgstr "Descărcați cheia de rezervă"
 
+msgid ""
+"Download both files below and save them in the same directory. "
+"Alternatively, use them with your existing deployment workflow."
+msgstr ""
+
 #, fuzzy
 msgid "Download file name"
 msgstr "Descărcați numele fișierului"
@@ -25996,6 +26132,10 @@ msgstr "Asigurați versiuni .rpm și .deb în continuă creștere."
 msgid "Enter"
 msgstr "Introduceți"
 
+msgid ""
+"Enter a base URL without credentials, whitespace, a query or a fragment."
+msgstr ""
+
 msgid "Enter a comment to acknowledge problems"
 msgstr "Introduceți un comentariu pentru a recunoaște problemele"
 
@@ -26027,6 +26167,9 @@ msgid "Enter a valid URL starting with https://"
 msgstr "URL-ul trebuie să înceapă cu <tt>https</tt>."
 
 msgid "Enter a valid port number (example: 1234)."
+msgstr ""
+
+msgid "Enter a valid pull mode base URL."
 msgstr ""
 
 msgid "Enter address"
@@ -26145,6 +26288,11 @@ msgid ""
 msgstr ""
 "Introduceți numele de gazdă ale nodurilor de cluster. Aceste gazde trebuie "
 "să fie prezente în Setup."
+
+msgid ""
+"Enter the hostname or IP address reachable from the cluster, without a "
+"scheme or port."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -26963,6 +27111,12 @@ msgstr "Excludeți spațiile de nume care corespund"
 msgid "Exclude nodes based on their role"
 msgstr "Excludeți nodurile pe baza rolului lor"
 
+msgid ""
+"Exclude nodes whose role, taken from a node-role.kubernetes.io/ label, "
+"matches a pattern from cluster-level resource aggregations. Clear the list "
+"to include all nodes."
+msgstr ""
+
 #, fuzzy
 msgid "Exclude pattern"
 msgstr "Excludeți modelul"
@@ -27141,6 +27295,9 @@ msgstr "Executori testamentari"
 #, fuzzy
 msgid "Exemptions for piggybacked hosts (VMs, ...)"
 msgstr "Excepții pentru gazdele cu suport de tip piggyback (VM, ...)"
+
+msgid "Existing TLS Secret"
+msgstr ""
 
 msgid "Exists"
 msgstr "Există"
@@ -27373,6 +27530,10 @@ msgstr "etichete gazdă explicite"
 #, fuzzy
 msgid "Explicit host matching"
 msgstr "Explicit %s mapping"
+
+#, fuzzy
+msgid "Explicit host name"
+msgstr "etichete gazdă explicite"
 
 msgid "Explicit hosts"
 msgstr "Gazde explicite"
@@ -27995,7 +28156,7 @@ msgstr ""
 
 #, fuzzy, python-format
 msgid ""
-"Failed to query metric backend of site %(site_id)s. Check the web log for "
+"Failed to query telemetry metrics of site %(site_id)s. Check the web log for "
 "details."
 msgstr "Nu a reușit să execute testul %s: %s."
 
@@ -28076,7 +28237,7 @@ msgstr "Nu s-a reușit sincronizarea cu site-ul: %(response)s."
 #. weblate-flags: read-only, domain-specific
 #, python-brace-format
 msgid ""
-"Failed to upgrade the metric backend schema for the feature {feature}. The "
+"Failed to upgrade the data backend schema for the feature {feature}. The "
 "service is still running and other features are unaffected. The feature was "
 "rolled back to its previous schema revision. Please check the web and ui-job-"
 "scheduler logs for details."
@@ -29251,6 +29412,11 @@ msgstr ""
 "clienților. Pentru a face acest lucru, trebuie mai întâi să descărcați o "
 "cerere de verificare."
 
+msgid ""
+"For reproducible GitOps deployments, replace the range with an <b>exact "
+"released chart version</b> within it."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "For running Checkmk based checks, the Checkmk Micro Core keeps a pool of "
@@ -30168,6 +30334,10 @@ msgstr "Generarea codurilor de rezervă"
 
 msgid "Generate core config parallelized"
 msgstr "Generați configurația nucleului paralelizat"
+
+#, fuzzy
+msgid "Generate deployment files"
+msgstr "Implementări Kubernetes"
 
 msgid "Generate event"
 msgstr "Generarea evenimentului"
@@ -31302,6 +31472,17 @@ msgstr "Instrumentele Heartbeat lipsesc sau nu sunt instalate"
 
 msgid "Height"
 msgstr "Înălțime"
+
+msgid ""
+"Helm and kubectl are required to run these commands. Run them from the "
+"directory containing the downloaded files."
+msgstr ""
+
+#, python-format
+msgid ""
+"Helm selects the latest stable chart release matching <b>%(version_range)s</"
+"b> when you run the command."
+msgstr ""
 
 msgid "Help"
 msgstr "Ajutor"
@@ -34661,6 +34842,9 @@ msgid ""
 "How old (in seconds) the cache file for custom metrics is allowed to be."
 msgstr ""
 
+msgid "How should the Kubernetes agent connect to Checkmk?"
+msgstr ""
+
 msgid ""
 "How the disks are named depends on the type of hardware being used. Please "
 "look at already discovered checks for examples."
@@ -36630,8 +36814,8 @@ msgstr ""
 msgid ""
 "If you enable the OpenTelemetry data, the data collected from the "
 "OpenTelemetry Collector or the Prometheus scraper will be used for this host "
-"if it matches the configured filters. You must also enable the metric "
-"backend under Global Settings > Site Management."
+"if it matches the configured filters. You must also enable the data backend "
+"under Global Settings > Site Management."
 msgstr ""
 
 #, fuzzy
@@ -37455,6 +37639,10 @@ msgstr "Importați fișierul iCalendar"
 
 msgid "Import iCalendar File to create a time period"
 msgstr "Importați un fișier iCalendar pentru a crea o perioadă de timp"
+
+#, fuzzy
+msgid "Import matching annotation keys"
+msgstr "Importați toate adnotările valide"
 
 msgid "Import state from Nagios core"
 msgstr "Importați starea din nucleul Nagios"
@@ -40312,6 +40500,11 @@ msgstr "Kaspersky Anti-Virus (Linux)"
 msgid "Kaspersky Anti-Virus time settings"
 msgstr "Kaspersky Anti-Virus Setări de timp"
 
+msgid ""
+"Keep <tt>cmk-signed-push-cert</tt>, the agent's persistent certificate "
+"Secret."
+msgstr ""
+
 msgid "Keep comment after acknowledgment expires (persistent comment)"
 msgstr ""
 "Păstrați comentariul după expirarea confirmării (comentariu persistent)"
@@ -40482,6 +40675,10 @@ msgstr "Condiții de implementare Kubernetes"
 #, fuzzy
 msgid "Kubernetes deployments"
 msgstr "Implementări Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes kinds to monitor"
+msgstr "Condițiile podurilor Kubernetes"
 
 msgid "Kubernetes memory resource utilization"
 msgstr "Utilizarea resurselor de memorie Kubernetes"
@@ -43363,6 +43560,10 @@ msgstr "Cea mai lungă listă de ieșire"
 msgid "Look for keys"
 msgstr "Căutați cheile"
 
+msgid ""
+"Look-around assertions and backreferences are not supported by the agent."
+msgstr ""
+
 msgid "Looking back"
 msgstr "Privind înapoi"
 
@@ -46214,37 +46415,6 @@ msgstr "Metoda de sondare"
 msgid "Metric"
 msgstr "Metric"
 
-#. weblate-flags: read-only, domain-specific
-#, fuzzy
-msgid "Metric Backend"
-msgstr "Instanțe Oracle"
-
-#, fuzzy
-msgid "Metric backend"
-msgstr "Instanțe Oracle"
-
-#, fuzzy
-msgid "Metric backend (custom query)"
-msgstr "Instanțe Oracle"
-
-#, fuzzy
-msgid "Metric backend configuration"
-msgstr "Conexiuni Varnish Backend"
-
-#. weblate-flags: read-only, domain-specific
-#, fuzzy
-msgid "Metric backend is disabled, auto-completion is not available."
-msgstr "Instanțe Oracle"
-
-#. weblate-flags: read-only, domain-specific
-#, fuzzy
-msgid "Metric backend is not reachable, auto-completion is not available."
-msgstr "Instanțe Oracle"
-
-#, fuzzy, python-format
-msgid "Metric backend of site %(site_id)s is disabled"
-msgstr "Instanțe Oracle"
-
 #, fuzzy
 msgid "Metric configuration"
 msgstr "Configurație gazdă"
@@ -48480,6 +48650,10 @@ msgid "Namespaces"
 msgstr "Spații de nume"
 
 #, fuzzy
+msgid "Namespaces to monitor"
+msgstr "Instanțe de monitorizat"
+
+#, fuzzy
 msgid "Naming for outlets at discovery"
 msgstr "Descoperirea portului Netapp"
 
@@ -49787,6 +49961,10 @@ msgstr "Sistem de noduri"
 
 msgid "Node utilization"
 msgstr "Utilizarea nodurilor"
+
+#, fuzzy
+msgid "NodePort"
+msgstr "Nod"
 
 msgid "Nodes"
 msgstr "Noduri"
@@ -54209,6 +54387,9 @@ msgstr ""
 msgid "Override managed plan settings"
 msgstr "Unitatea de suprascriere a senzorului"
 
+msgid "Override push receiver hostname"
+msgstr ""
+
 msgid "Override unit of sensor"
 msgstr "Unitatea de suprascriere a senzorului"
 
@@ -58211,6 +58392,12 @@ msgstr "Numele de gazdă DNS sau adresa IP"
 msgid "Proxy settings"
 msgstr "Setări Proxy"
 
+msgid ""
+"Proxy used to reach Microsoft, both for the authorization performed here and "
+"for the recurring API calls of the services using this connection. Without "
+"this option the proxy settings of the process environment are used."
+msgstr ""
+
 msgid "Public"
 msgstr "Public"
 
@@ -58287,6 +58474,17 @@ msgstr "Mesaje publicate"
 msgid "Publisher"
 msgstr "Editor"
 
+msgid "Pull"
+msgstr ""
+
+#, fuzzy
+msgid "Pull mode base URL"
+msgstr "URL-ul site-ului la distanță"
+
+#, fuzzy
+msgid "Pull service exposure"
+msgstr "Toate serviciile"
+
 msgid "Pull: Checkmk server contacts the agent"
 msgstr "Pull: serverul Checkmk contactează agentul"
 
@@ -58311,8 +58509,16 @@ msgstr "Pure Storage FlashArray"
 msgid "Purpose"
 msgstr ""
 
+#, fuzzy
+msgid "Push"
+msgstr "Pushover"
+
 msgid "Push configuration to this site"
 msgstr "Configurație push către acest site"
+
+#, fuzzy
+msgid "Push mode"
+msgstr "Pushover"
 
 #, fuzzy
 msgid "Push notification parameters"
@@ -58469,16 +58675,16 @@ msgstr "Timeout de interogare"
 msgid "Query elasticsearch logs"
 msgstr "Interogarea jurnalelor elasticsearch"
 
-#. weblate-flags: read-only, domain-specific
-#, fuzzy
-msgid "Query metric backend from custom graph editor"
-msgstr "Instanțe Oracle"
-
 msgid "Query or SQL statement"
 msgstr "Interogare sau instrucțiune SQL"
 
+#. weblate-flags: read-only, domain-specific
 #, fuzzy
-msgid "Query the metric backend"
+msgid "Query telemetry metrics from custom graph editor"
+msgstr "Instanțe Oracle"
+
+#, fuzzy
+msgid "Query the data backend"
 msgstr "Configurația stilului selectat"
 
 #, fuzzy
@@ -60246,6 +60452,9 @@ msgstr "Eliminați"
 msgid "Remove %(what_s)s from extensions"
 msgstr "Eliminați %(what_s)s din extensii"
 
+msgid "Remove /pull/sections from the URL; Checkmk appends it automatically."
+msgstr ""
+
 msgid "Remove TLS registration"
 msgstr "Îndepărtați înregistrarea TLS"
 
@@ -61590,6 +61799,10 @@ msgstr "Perioada de păstrare"
 #, fuzzy
 msgid "Retention period:"
 msgstr "Perioada de păstrare"
+
+#, fuzzy
+msgid "Retrieve Kubernetes agent sections"
+msgstr "Seturi de daemonset-uri Kubernetes"
 
 #, fuzzy
 msgid "Retrieve information"
@@ -63272,7 +63485,7 @@ msgstr "Programați o perioadă de pauză?"
 msgid "Scheduling report in background failed: %(e)s"
 msgstr "Programarea raportului în fundal a eșuat: %(e)s."
 
-msgid "Schema, revision and footprint of the metric backend database"
+msgid "Schema, revision and footprint of the data backend database"
 msgstr ""
 
 #, fuzzy
@@ -64089,6 +64302,10 @@ msgstr ""
 msgid "Select the contact group that can edit this OAuth2 connection."
 msgstr "Adăugați o conexiune"
 
+msgid ""
+"Select the folder for the source host. Create a new folder first if needed."
+msgstr ""
+
 #, python-format
 msgid ""
 "Select the host event types and transitions this rule should handle."
@@ -64222,6 +64439,11 @@ msgstr "Site-urile %s selectate au fost șterse."
 
 msgid "Selected credential has been deleted"
 msgstr "Acreditivul selectat a fost șters"
+
+msgid ""
+"Selected kinds become Checkmk hosts. Individual resources can override this "
+"choice using the checkmk.com/promote-to-host annotation."
+msgstr ""
 
 #, fuzzy
 msgid "Selected options"
@@ -67174,6 +67396,11 @@ msgstr "Dimensiunea fișierelor jurnal"
 msgid "Size of crashes"
 msgstr "Dimensiunea fișierelor jurnal"
 
+#. weblate-flags: read-only, domain-specific
+#, fuzzy
+msgid "Size of data backend"
+msgstr "Configurația stilului selectat"
+
 msgid "Size of deferred mail queue"
 msgstr "Dimensiunea cozii de așteptare a corespondenței amânate"
 
@@ -67200,11 +67427,6 @@ msgstr "Dimensiunea fișierelor jurnal"
 
 msgid "Size of mails in queues"
 msgstr "Dimensiunea mesajelor poștale din cozile de așteptare"
-
-#. weblate-flags: read-only, domain-specific
-#, fuzzy
-msgid "Size of metric backend"
-msgstr "Configurația stilului selectat"
 
 msgid "Size of processes"
 msgstr "Dimensiunea proceselor"
@@ -67300,6 +67522,10 @@ msgstr "A sărit %(mib_file_name)s: %(e)s"
 
 #, fuzzy
 msgid "Skipped the configuration test."
+msgstr "Configurație implicită"
+
+#, fuzzy
+msgid "Skipped the connection test."
 msgstr "Configurație implicită"
 
 msgid ""
@@ -67767,14 +67993,14 @@ msgstr "Cineva înainte de 1.6"
 #. weblate-flags: read-only, domain-specific
 #, python-brace-format
 msgid ""
-"Something went wrong trying to enable the metric backend. Details can be "
-"found in the log file: {_CH_ERROR_LOG}"
+"Something went wrong trying to enable the data backend. Details can be found "
+"in the log file: {_CH_ERROR_LOG}"
 msgstr ""
 
 #. weblate-flags: read-only, domain-specific
 #, python-brace-format
 msgid ""
-"Something went wrong trying to stop the metric backend. Details can be found "
+"Something went wrong trying to stop the data backend. Details can be found "
 "in the log file: {_CH_ERROR_LOG}"
 msgstr ""
 
@@ -70693,6 +70919,10 @@ msgstr "Conectat cu succes la site-ul la distanță %(site_alias)s."
 msgid "Successfully pinged IP address"
 msgstr "Ați actualizat cu succes adresele IP ale gazdelor %d."
 
+#, fuzzy
+msgid "Successfully retrieved Kubernetes agent sections."
+msgstr "Copiat cu succes în clipboard."
+
 #, python-format
 msgid "Successfully sent %(count)d commands."
 msgstr "A trimis cu succes comenzile %(count)d."
@@ -71788,6 +72018,15 @@ msgid ""
 "scraper configuration to modify data collection."
 msgstr ""
 
+#. weblate-flags: read-only, domain-specific
+#, fuzzy
+msgid "Telemetry metrics"
+msgstr "Configurația stilului selectat"
+
+#, fuzzy
+msgid "Telemetry metrics (custom query)"
+msgstr "Instanțe Oracle"
+
 #, fuzzy
 msgid ""
 "Tell the Jolokia plug-in to stop waiting for a response from each configured "
@@ -72021,6 +72260,10 @@ msgstr "Testare"
 #, fuzzy
 msgid "Testing notifications"
 msgstr "Notificări de testare"
+
+#, fuzzy
+msgid "Testing the connection to the Kubernetes agent..."
+msgstr "Setări privind conexiunea cu agenții Checkmk și SNMP"
 
 #, fuzzy
 msgid "Tests"
@@ -72963,6 +73206,11 @@ msgstr ""
 "performanță."
 
 msgid ""
+"The Secret file contains credentials. <b>Do not commit it unencrypted to Git."
+"</b> Use your organization's secret-management workflow."
+msgstr ""
+
+msgid ""
 "The Setup configuration can be set to read only mode for all users that are "
 "not permitted to ignore the read only mode. All users that are permitted to "
 "set the read only can disable it again when another permitted user enabled "
@@ -73890,6 +74138,13 @@ msgid ""
 msgstr ""
 "ID-ul site-ului trebuie să fie format numai din litere, cifre și subliniere."
 
+#, python-format
+msgid ""
+"The connection test failed on monitoring site %(site)s. Check var/log/"
+"automation-helper/automation-helper.log on that site for the underlying "
+"error, then retry or skip the test."
+msgstr ""
+
 msgid ""
 "The connection to AWS was successful, but no services were found. If this is "
 "unintentional, please verify your configuration."
@@ -74091,6 +74346,16 @@ msgstr ""
 "%s este vizibil doar pentru dvs. deoarece nu aveți permisiunea de a-l "
 "partaja."
 
+#. weblate-flags: read-only, domain-specific
+msgid ""
+"The data backend database schema is in an unexpected state: revision "
+"{current_revision_id!r} is applied, but the expected revision is "
+"{head_revision_id!r}. Activation has been blocked to prevent unintended "
+"schema upgrades. To resolve this, upgrade the schema manually as the site "
+"user: `cmk-data-backend-schema-manager upgrade --config default HEAD` If the "
+"upgrade fails, please contact Checkmk support."
+msgstr ""
+
 msgid ""
 "The data for the background checks is recomputed at most in this interval."
 msgstr ""
@@ -74212,7 +74477,7 @@ msgstr ""
 msgid ""
 "The delta-to-cumulative processor converts timezones into cumulative "
 "aggregation temporality. This is necessary for compatibility reasons with "
-"the Checkmk metric backend, which only supports cumulative metrics. If your "
+"the Checkmk data backend, which only supports cumulative metrics. If your "
 "Collector receives metrics in delta aggregation temporality, you can "
 "configure this processor to be able to use these metrics in Checkmk. If your "
 "Collector only receives cumulative metrics or if you are unsure about the "
@@ -74325,6 +74590,11 @@ msgstr "Tipul emblemei este %(type)s, dar ar trebui să fie str"
 
 msgid "The end date must be after the start date"
 msgstr "Data de sfârșit trebuie să fie ulterioară datei de început"
+
+msgid ""
+"The endpoint responded, but returned no Kubernetes agent sections. Check the "
+"pull mode base URL and allow the agent time to collect data."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -75185,7 +75455,7 @@ msgstr ""
 "Returnează cele mai recente descărcări de accident de fiecare tip, așa cum "
 "se găsesc în var/checkmk/crashes"
 
-msgid "The latest licensed active time series count of the metric backend"
+msgid "The latest licensed active time series count of the data backend"
 msgstr ""
 
 msgid ""
@@ -75420,7 +75690,7 @@ msgstr "Valoarea maximă admisă este %s."
 
 #. weblate-flags: read-only, domain-specific
 msgid ""
-"The maximum amount of memory that the metric backend is allowed to use, "
+"The maximum amount of memory that the data backend is allowed to use, "
 "expressed as a fraction of the total available memory. Allows limiting the "
 "memory usage on low-memory systems."
 msgstr ""
@@ -75547,20 +75817,6 @@ msgstr ""
 
 msgid "The message has successfully been sent..."
 msgstr "Mesajul a fost trimis cu succes..."
-
-#. weblate-flags: read-only, domain-specific
-msgid ""
-"The metric backend database schema is in an unexpected state: revision "
-"{current_revision_id!r} is applied, but the expected revision is "
-"{head_revision_id!r}. Activation has been blocked to prevent unintended "
-"schema upgrades. To resolve this, upgrade the schema manually as the site "
-"user: `cmk-data-backend-schema-manager upgrade --config default HEAD` If the "
-"upgrade fails, please contact Checkmk support."
-msgstr ""
-
-#. weblate-flags: read-only, domain-specific
-msgid "The metric backend snapin shows the number of custom metrics"
-msgstr ""
 
 msgid ""
 "The metric label is displayed alongside the queried value in the status "
@@ -75813,6 +76069,9 @@ msgstr "Numele care va fi utilizat în descrierea serviciului"
 #, fuzzy
 msgid "The name will be used in the service name"
 msgstr "Numele va fi folosit în descrierea serviciului"
+
+msgid "The namespace in which the Kubernetes agent will be deployed."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -76092,6 +76351,9 @@ msgstr ""
 "Decalajul informației în raport cu baza de contorizare. Puteți obține o "
 "listă detaliată a contoarelor disponibile într-un shell Windows cu comanda "
 "'lodctr /s:counters.txt'."
+
+msgid "The one-time registration token expires after <b>one hour</b>."
+msgstr ""
 
 msgid "The operating system packages installed on the Checkmk server"
 msgstr ""
@@ -76430,7 +76692,7 @@ msgstr "Valoarea pentru %s trebuie să fie cuprinsă între %d și %d."
 
 #. weblate-flags: read-only, domain-specific
 msgid ""
-"The port on which the metric backend listens to incoming data. This setting "
+"The port on which the data backend listens to incoming data. This setting "
 "also defines where the site's OpenTelemetry Collector sends its data."
 msgstr ""
 
@@ -76446,7 +76708,7 @@ msgstr "Portul la care ascultă SGBD"
 
 #. weblate-flags: read-only, domain-specific
 #, fuzzy
-msgid "The port to query data from the metric backend."
+msgid "The port to query data from the data backend."
 msgstr "Configurația stilului selectat"
 
 msgid ""
@@ -76928,6 +77190,10 @@ msgid ""
 "timeouts). "
 msgstr ""
 
+#, fuzzy
+msgid "The same shared secret will be saved in the Checkmk password store."
+msgstr "Numele care va fi utilizat în descrierea serviciului"
+
 msgid "The schedule you are trying to clone does not exist."
 msgstr "Programul pe care încercați să îl clonați nu există."
 
@@ -77007,6 +77273,11 @@ msgstr "Gazdele selectate nu au atribute explicite"
 
 msgid "The selected icon does not exist."
 msgstr "Pictograma selectată nu există."
+
+msgid ""
+"The selected monitoring site does not support push mode. Use pull mode "
+"instead."
+msgstr ""
 
 msgid "The selected options do not match any hosts, nothing to do."
 msgstr ""
@@ -77254,6 +77525,13 @@ msgstr ""
 msgid "The source host"
 msgstr "Gazda sursă"
 
+#, fuzzy
+msgid ""
+"The source host already exists. Choose another host name or remove the old "
+"source host first."
+msgstr ""
+"Detaliile sursei pot fi afișate fie pe gazda interogată, fie pe gazda sursă."
+
 msgid ""
 "The special agent will use this host name for the TLS certificate "
 "validation. If omitted, the Checkmk host name of the host will be used"
@@ -77443,6 +77721,10 @@ msgid ""
 msgstr ""
 "Secretul echipei SIGNL4. Aceasta este ultima parte din URL-ul webhook-ului: "
 "https://connect.signl4.com/webhook/[TEAM_SECRET]"
+
+#. weblate-flags: read-only, domain-specific
+msgid "The telemetry metrics snapin shows the number of custom metrics"
+msgstr ""
 
 #, fuzzy
 msgid "The temporary file system is mounted"
@@ -78595,6 +78877,9 @@ msgstr "Această regulă BI nu există"
 
 msgid "This BI rule does not exist."
 msgstr "Această regulă BI nu există."
+
+msgid "This Checkmk edition supports pull mode only."
+msgstr ""
 
 msgid "This ID already exists."
 msgstr "Acest ID există deja."
@@ -79850,6 +80135,11 @@ msgid ""
 msgstr ""
 "Acesta trebuie să se potrivească cu utilizatorul pentru care este pregătit "
 "<tt>mk-remote-alert-handler</tt>."
+
+msgid ""
+"This name becomes part of the generated Kubernetes host names. Keep it "
+"stable to retain their monitoring history."
+msgstr ""
 
 msgid "This name corresponds to the cooling device to be monitored."
 msgstr ""
@@ -90198,6 +90488,10 @@ msgstr ""
 "Utilizați un câmp alternativ ca nume de gazdă în cazul în care există "
 "probleme cu certificatul SSL (de exemplu, Hostalias)."
 
+#, fuzzy
+msgid "Use an explicit host name"
+msgstr "Utilizați nume explicite"
+
 msgid "Use any network address"
 msgstr "Utilizați orice adresă de rețea"
 
@@ -90364,6 +90658,14 @@ msgid "Use local FQDN"
 msgstr "Utilizați FQDN local"
 
 #, fuzzy
+msgid ""
+"Use lowercase letters, numbers and hyphens, starting and ending with a "
+"letter or number."
+msgstr ""
+"Denumirile metrice trebuie să fie formate numai din litere, cifre și "
+"caractere de subliniere și trebuie să înceapă cu o literă."
+
+#, fuzzy
 msgid "Use macro to determine port number"
 msgstr "Utilizați o redare îngustă pentru acest număr"
 
@@ -90415,6 +90717,15 @@ msgstr "Denumirea serviciului"
 #, fuzzy
 msgid "Use only letters, digits, underscore and hyphen."
 msgstr "Folosiți aici numai litere mici, cifre și caractere de subliniere."
+
+#, fuzzy
+msgid ""
+"Use only letters, numbers, dots, hyphens and underscores, starting with a "
+"letter, number or underscore."
+msgstr ""
+"Un identificator trebuie să fie format numai din litere, cifre, liniuțe și "
+"caractere de subsol și trebuie să înceapă cu o literă sau un caracter de "
+"subsol."
 
 msgid "Use only lower case letters, digits, and underscores here."
 msgstr "Folosiți aici numai litere mici, cifre și caractere de subliniere."
@@ -90547,6 +90858,10 @@ msgstr "Utilizați catalogul de pluginuri de verificare."
 #, fuzzy
 msgid "Use the certificate store of the monitored host"
 msgstr "Utilizați culoarea implicită a metricii."
+
+#, fuzzy
+msgid "Use the cluster name as the host name"
+msgstr "Utilizați numele de utilizator Checkmk ca nume de utilizator ntopng"
 
 #, fuzzy
 msgid "Use the credentials of an automation user"
@@ -93818,6 +94133,15 @@ msgstr ""
 "cu acest nume de fișier. Extensia trebuie să fie întotdeauna <tt>pdf</tt>."
 
 msgid ""
+"When disabled, all namespaces are monitored. Filters apply to namespaced "
+"resources; cluster and node hosts and their rollups are unaffected."
+msgstr ""
+
+#, fuzzy
+msgid "When disabled, no annotations are imported as host labels."
+msgstr "Utilizați numele portului ca nume de serviciu"
+
+msgid ""
 "When disabled, the plug-in is deployed without its configuration file. The "
 "file <tt>/etc/check_mk/filestats.cfg</tt> must then be created and "
 "maintained manually."
@@ -94031,6 +94355,11 @@ msgstr ""
 "Atunci când enumeră membrii grupului în rezultatul serviciului care "
 "monitorizează grupul, această opțiune face ca checkmk să utilizeze fie "
 "descrierea interfeței, fie aliasul sau numărul de port."
+
+msgid ""
+"When migrating, record the old source host name and delete that host before "
+"running this setup. Reuse its name to retain monitoring history."
+msgstr ""
 
 msgid ""
 "When monitoring the performance of a monitoring site (i.e. its core) then "
@@ -95105,11 +95434,11 @@ msgid ""
 msgstr ""
 
 msgid ""
-"With the <b>OpenTelemetry data - metric backend</b> connector type, hosts "
-"will be dynamically created using the data collected from the "
-"<b>OpenTelemetry Collector</b> or the <b>Prometheus scraper</b>. You must "
-"also enable the metric backend under <a href='global_settings.py?"
-"varname=metric_backend'>Global Settings > Site Management.</a>"
+"With the <b>Telemetry metrics</b> connector type, hosts will be dynamically "
+"created using the data collected from the <b>OpenTelemetry Collector</b> or "
+"the <b>Prometheus scraper</b>. You must also enable the data backend under "
+"<a href='global_settings.py?varname=data_backend'>Global Settings > Site "
+"Management.</a>"
 msgstr ""
 
 #, fuzzy
@@ -96026,7 +96355,7 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "You are not permitted to query the metric backend."
+msgid "You are not permitted to query the data backend."
 msgstr "Nu vă este permis să efectuați această acțiune."
 
 msgid "You are not permitted to view this page"
@@ -97259,7 +97588,8 @@ msgstr "Nu aveți permisiunile necesare pentru a edita acest %s"
 
 #. weblate-flags: read-only, domain-specific
 #, fuzzy
-msgid "You don't have permission to access graphs with metric backend queries."
+msgid ""
+"You don't have permission to access graphs with telemetry metrics queries."
 msgstr "Nu aveți permisiunile necesare pentru a edita acest %s"
 
 #, fuzzy, python-format
@@ -105308,7 +105638,7 @@ msgid "Could not create the Telemetry hosts folder"
 msgstr "Configurația stilului selectat"
 
 #, fuzzy
-msgid "Could not create the metric backend connector"
+msgid "Could not create the telemetry metrics connector"
 msgstr "Configurația stilului selectat"
 
 #, fuzzy
@@ -105324,11 +105654,11 @@ msgid "Could not enable the OpenTelemetry Collector"
 msgstr "Configurația stilului selectat"
 
 #, fuzzy
-msgid "Metric backend connection"
+msgid "Data backend connection"
 msgstr "Conexiuni Varnish Backend"
 
 #, fuzzy
-msgid "Could not enable the metric backend"
+msgid "Could not enable the data backend"
 msgstr "Configurația stilului selectat"
 
 #, fuzzy
@@ -105587,6 +105917,54 @@ msgstr "Pe gazdele selectate"
 #, fuzzy
 msgid "PENDING"
 msgstr "PEND"
+
+#, fuzzy
+msgid "Shows hosts with at least one service."
+msgstr "Vă rugăm să adăugați cel puțin un nod copil."
+
+#, fuzzy
+msgid "Shows hosts with no services."
+msgstr "Afișați gazdele și serviciile expirate"
+
+#, fuzzy
+msgid "Shows hosts with at least one service in OK."
+msgstr "Vă rugăm să adăugați cel puțin un nod copil."
+
+#, fuzzy
+msgid "Shows hosts with no service in OK."
+msgstr "Afișați gazdele și serviciile expirate"
+
+#, fuzzy
+msgid "Shows hosts with at least one service in WARN."
+msgstr "Vă rugăm să adăugați cel puțin un nod copil."
+
+#, fuzzy
+msgid "Shows hosts with no service in WARN."
+msgstr "Afișați gazdele și serviciile expirate"
+
+#, fuzzy
+msgid "Shows hosts with at least one service in CRIT."
+msgstr "Vă rugăm să adăugați cel puțin un nod copil."
+
+#, fuzzy
+msgid "Shows hosts with no service in CRIT."
+msgstr "Afișați gazdele și serviciile expirate"
+
+#, fuzzy
+msgid "Shows hosts with at least one service in UNKNOWN."
+msgstr "Vă rugăm să adăugați cel puțin un nod copil."
+
+#, fuzzy
+msgid "Shows hosts with no service in UNKNOWN."
+msgstr "Afișați gazdele și serviciile expirate"
+
+#, fuzzy
+msgid "Shows hosts with at least one pending service."
+msgstr "Vă rugăm să adăugați cel puțin un nod copil."
+
+#, fuzzy
+msgid "Shows hosts with no pending service."
+msgstr "Afișați gazdele și serviciile expirate"
 
 #, fuzzy
 msgid "Has comments"
@@ -106071,15 +106449,43 @@ msgid "Clear"
 msgstr "Starea \"Liber"
 
 #, fuzzy
-msgid "Value range"
-msgstr "Intervalul de date"
+msgid "More than"
+msgstr "Mai multe opțiuni"
 
-msgid "Any (>0)"
+msgid "Less than"
+msgstr ""
+
+msgid "Between"
+msgstr ""
+
+msgid "Enter an age of zero or more."
 msgstr ""
 
 #, fuzzy
-msgid "None (=0)"
-msgstr "Nici unul (liniar)"
+msgid "Enter a younger bound that does not exceed the older one."
+msgstr "Clusterul trebuie să aibă cel puțin un nod"
+
+#, fuzzy
+msgid "Younger bound"
+msgstr "Redarea fundalului"
+
+#, fuzzy
+msgid "Older bound"
+msgstr "Redarea fundalului"
+
+#, fuzzy
+msgid "At least one"
+msgstr "Cel puțin"
+
+msgid "Shows rows with a value above 0."
+msgstr ""
+
+msgid "Shows rows with a value of 0."
+msgstr ""
+
+#, fuzzy
+msgid "Value range"
+msgstr "Intervalul de date"
 
 #, fuzzy
 msgid "Contains ..."
@@ -107865,6 +108271,22 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Metric Backend"
+#~ msgstr "Instanțe Oracle"
+
+#, fuzzy
+#~ msgid "Metric backend"
+#~ msgstr "Instanțe Oracle"
+
+#, fuzzy
+#~ msgid "Metric backend (custom query)"
+#~ msgstr "Instanțe Oracle"
+
+#, fuzzy
+#~ msgid "None (=0)"
+#~ msgstr "Nici unul (liniar)"
+
 #~ msgid "Bulk discovery successful"
 #~ msgstr "Descoperire în masă reușită"
 
@@ -108716,10 +109138,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Color picker"
 #~ msgstr "Colorează"
-
-#, fuzzy
-#~ msgid "Help: Metrics backend (custom query)"
-#~ msgstr "Instanțe Oracle"
 
 #, fuzzy
 #~ msgid "Inline help: Metrics backend (custom query)"
@@ -111416,10 +111834,6 @@ msgstr ""
 #~ msgstr "Implementarea plugin-ului pentru latența bazei de date MS Exchange"
 
 #, fuzzy
-#~ msgid "Deploy the netstat plug-in"
-#~ msgstr "Implementați plugin-ul netstat"
-
-#, fuzzy
 #~ msgid "Do not deploy LVM plug-in"
 #~ msgstr "Nu implementați pluginul LVM"
 
@@ -112882,14 +113296,6 @@ msgstr ""
 #~ msgid "Missing needed custom_graph parameter."
 #~ msgstr "Lipsește parametrul necesar custom_graph."
 
-#, fuzzy
-#~ msgid ""
-#~ "Unique ID must only contain lowercase letters, numbers, and underscores, "
-#~ "and must start with a letter."
-#~ msgstr ""
-#~ "Denumirile metrice trebuie să fie formate numai din litere, cifre și "
-#~ "caractere de subliniere și trebuie să înceapă cu o literă."
-
 #~ msgid "Exporter"
 #~ msgstr "Exportator"
 
@@ -113410,9 +113816,6 @@ msgstr ""
 #~ msgid "Kubernetes Daemonset"
 #~ msgstr "Kubernetes Daemonset"
 
-#~ msgid "Kubernetes Daemonsets"
-#~ msgstr "Seturi de daemonset-uri Kubernetes"
-
 #~ msgid "Kubernetes Node"
 #~ msgstr "Nodul Kubernetes"
 
@@ -113597,9 +114000,6 @@ msgstr ""
 #~ "conștiente de conținutul lor și își stabilesc titlul în mod dinamic, cum "
 #~ "ar fi snapin-ul de vizualizare, care afișează titlul vizualizării. Dacă "
 #~ "doriți să utilizați un alt titlu, setați-l aici."
-
-#~ msgid "Render background"
-#~ msgstr "Redarea fundalului"
 
 #~ msgid "Render gray background color behind the elements content."
 #~ msgstr "Redă culoarea de fundal gri în spatele conținutului elementelor."
@@ -116061,10 +116461,6 @@ msgstr ""
 #~ msgid "Cached times for single sections"
 #~ msgstr "Ratarea memoriei cache pe secundă"
 
-#, fuzzy
-#~ msgid "Connect to the remote site"
-#~ msgstr "Conectarea la site-uri la distanță"
-
 #~ msgid "Connection to the REST API"
 #~ msgstr "Conexiune la API REST"
 
@@ -116213,9 +116609,6 @@ msgstr ""
 #~ msgstr ""
 #~ "Furnizați acreditările individuale ale unui utilizator de automatizare cu "
 #~ "privilegii administrative pe site-ul la distanță."
-
-#~ msgid "Remote site URL"
-#~ msgstr "URL-ul site-ului la distanță"
 
 #~ msgid ""
 #~ "Site base URL for accessing the REST API to e.g. create hosts (e.g. "

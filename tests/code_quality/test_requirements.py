@@ -517,6 +517,14 @@ def test_runtime_requirements_are_a_strict_subset_of_all_requirements() -> None:
     )
 
 
+def constraints_files() -> list[Path]:
+    """Return all constraints files: the shared one plus any platform specific ones."""
+    return [
+        repo_path() / "constraints.txt",
+        repo_path() / "agents/modules/windows/constraints-windows.txt",
+    ]
+
+
 @pytest.mark.skipif(
     branch_from_env(env_var="GERRIT_BRANCH", fallback=current_base_branch_name) != "master",
     reason="every package should be pinned on release branches",
@@ -524,12 +532,14 @@ def test_runtime_requirements_are_a_strict_subset_of_all_requirements() -> None:
 def test_constraints() -> None:
     """Make sure all constraints have a ticket to be removed"""
     offenses = []
-    with (repo_path() / "constraints.txt").open() as constraint_file:
-        req = requirements.parse(constraint_file)
-        for r in req:
-            if re.search(r"\bCMK-\d{5}\b", r.line):
-                continue
-            offenses.append(f"Constraint for {r.name} has no ticket to be removed")
+    for path in constraints_files():
+        with path.open() as constraint_file:
+            for r in requirements.parse(constraint_file):
+                if re.search(r"\bCMK-\d{5}\b", r.line):
+                    continue
+                offenses.append(
+                    f"Constraint for {r.name} in {path.name} has no ticket to be removed"
+                )
     assert not offenses, "\n".join(offenses)
 
 

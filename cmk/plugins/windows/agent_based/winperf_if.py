@@ -394,6 +394,7 @@ def parse_winperf_if_get_netadapter(string_table: StringTable) -> SectionExtende
             guid=line[6],
         )
         for line in string_table
+        if len(line) >= 7
     ]
 
 

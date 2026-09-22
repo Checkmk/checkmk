@@ -57,7 +57,8 @@ const persistent = ref(false)
 const { range, isValid, asIso } = useDowntimeWindow()
 
 const hosts = computed(() => folderHosts(props.folder, recursive.value))
-// Checkmk refuses to acknowledge a host that has no problem.
+// Checkmk refuses to acknowledge a host that has no problem, and a tile that is
+// red for a failing service belongs to a host that may well be UP.
 const targets = computed<CommandTarget[]>(() =>
   hosts.value
     .filter(({ state }) => mode.value === 'downtime' || isProblemState(state))

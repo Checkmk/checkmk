@@ -58,11 +58,15 @@ describe('FolderBulkActionModal', () => {
     await waitFor(() => expect(commands.acknowledgeHost).toHaveBeenCalledTimes(2))
   })
 
-  it('leaves out the hosts without a problem', async () => {
-    // Checkmk refuses to acknowledge a host that has none.
+  it('leaves out the hosts without a problem, judged by their own state', async () => {
+    // Checkmk refuses to acknowledge a host that has none, and a tile that is red
+    // for a failing service can belong to a host that is UP.
     const user = userEvent.setup()
     const commands = await renderModal(
-      aRack(aHost('web01', { state: 'DOWN' }), aHost('db01', { state: 'UP' }))
+      aRack(
+        aHost('web01', { state: 'DOWN' }),
+        aHost('db01', { state: 'CRITICAL', own_state: 'UP' })
+      )
     )
 
     await screen.findByText('1 host without a problem left out.')

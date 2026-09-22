@@ -1066,6 +1066,7 @@ def _build_folder_tree(data: FolderTreeData, fv: FolderTreeView) -> FolderTreeNo
                 last_state_change=h.get("last_state_change"),
                 site_id=h.get("site_id"),
                 services_summary=summary,
+                own_state=h["state"] if combined != h["state"] else None,
             )
         )
 
@@ -1461,6 +1462,7 @@ def _ft_field_sig(node: FolderTreeNode) -> int:
             node.title,  # a WATO folder rename keeps the path but changes the title
             node.site_id,
             node.state,
+            node.own_state,
             node.is_empty,
             node.host_count,
             node.problem_count,
@@ -1492,6 +1494,7 @@ def _ft_patch(node: FolderTreeNode, include_order: bool) -> FolderTreeNodePatch:
         stale=node.stale,
         last_state_change=node.last_state_change,
         services_summary=node.services_summary,
+        own_state=node.own_state,
         children_order=[c.path for c in node.children] if include_order else None,
     )
 

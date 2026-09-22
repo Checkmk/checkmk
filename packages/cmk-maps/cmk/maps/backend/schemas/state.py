@@ -158,6 +158,12 @@ class FolderTreeNode(BaseModel):
     # Per-host service-state counts, host leaves only — feeds the hover/drawer
     # service pills.
     services_summary: ServicesSummary | None = None
+    # A host leaf's *own* state, where it differs from the roll-up in ``state``.
+    # The tree colours a host by the worst of itself and its services, but a
+    # drawer opened on that host must say UP, not the CRITICAL of a service it
+    # merely carries. Only sent when the two differ, so the common case costs
+    # nothing on a 100k-host tree.
+    own_state: str | None = None
     children: list[FolderTreeNode] = []
 
 
@@ -182,6 +188,7 @@ class FolderTreeNodePatch(BaseModel):
     stale: bool = False
     last_state_change: float | None = None
     services_summary: ServicesSummary | None = None
+    own_state: str | None = None
     children_order: list[str] | None = None
 
 

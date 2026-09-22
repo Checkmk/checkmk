@@ -36,7 +36,12 @@ export function folderNodeToState(node: FolderTreeNode, host: string | null): Ob
   return newObjectState({
     object_id: monitoringObjectId(target.host, target.service),
     type: target.service === null ? 'host' : 'service',
-    state: node.state,
+    // ``node.state`` is what colours the tile: the worst of the host and its
+    // services. That is the tree's business, not this object's -- a host whose
+    // service is CRITICAL is still UP, and a drawer that says otherwise reports
+    // a state the host never had. The daemon sends ``own_state`` only where the
+    // two differ; a service leaf has no roll-up and never carries one.
+    state: node.own_state ?? node.state,
     output: node.output,
     acknowledged: node.acknowledged,
     in_downtime: node.in_downtime,
@@ -51,7 +56,7 @@ export function folderNodeToState(node: FolderTreeNode, host: string | null): Ob
 export interface FolderHost {
   host: string
   site: string | null
-  /** The state the tree knows the host by. */
+  /** The host's own state, not the roll-up that colours its tile. */
   state: string
 }
 
@@ -65,7 +70,7 @@ export function folderHosts(node: FolderTreeNode, includeSubfolders: boolean): F
           found.set(child.title, {
             host: child.title,
             site: child.site_id ?? null,
-            state: child.state
+            state: child.own_state ?? child.state
           })
         }
       } else if (includeSubfolders && child.kind === 'folder') {

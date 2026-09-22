@@ -701,6 +701,7 @@ export class MapStatesService {
       node.stale = patch.stale
       node.last_state_change = patch.last_state_change ?? null
       node.services_summary = patch.services_summary ?? null
+      node.own_state = patch.own_state ?? null
       if (patch.children_order) {
         const byPath = new Map(node.children.map((c) => [c.path, c]))
         node.children = patch.children_order

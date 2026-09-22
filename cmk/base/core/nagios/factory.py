@@ -31,9 +31,7 @@ def create_core(
             from cmk.base.core.nagios import make_nagios_config_builder
 
             return (
-                make_nagios_config_builder(
-                    paths.nagios_objects_file,
-                ),
+                make_nagios_config_builder(),
                 NagiosClient(
                     objects_file=paths.nagios_objects_file,
                     init_script=paths.nagios_startscript,

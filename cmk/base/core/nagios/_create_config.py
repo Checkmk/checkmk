@@ -69,7 +69,7 @@ from cmk.password_store.v1 import Secret
 from cmk.ruleset_matcher.labels import LabelManager, Labels
 from cmk.ruleset_matcher.tags import HostTags
 from cmk.server_side_calls_backend import ActiveServiceData
-from cmk.utils import config_warnings, ip_lookup, password_store
+from cmk.utils import config_warnings, ip_lookup, password_store, paths
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.servicename import ServiceName
@@ -171,9 +171,7 @@ class NagiosCoreConfig:
         )
 
 
-def make_nagios_config_builder(
-    objects_file: Path,
-) -> MonitoringConfigBuilder:
+def make_nagios_config_builder() -> MonitoringConfigBuilder:
     """Create the monitoring config builder of the Nagios core.
 
     This is the only place where the Nagios core configuration is wired together;
@@ -188,7 +186,7 @@ def make_nagios_config_builder(
             core_objects_config=intermediate_config.core_objects_config,
             nagios_core_config=nagios_core_config,
             timeperiods=get_all_timeperiods(intermediate_config.loaded_config.timeperiods),
-            objects_file=objects_file,
+            objects_file=paths.nagios_objects_file,
             hosts_config=intermediate_config.hosts_config,
             host_tags=intermediate_config.host_tags,
             final_service_name_config=intermediate_config.final_service_name_config,

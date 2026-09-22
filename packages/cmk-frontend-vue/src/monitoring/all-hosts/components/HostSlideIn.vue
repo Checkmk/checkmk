@@ -26,6 +26,7 @@ import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell
 import SlideInActions from '@/monitoring/shared/components/slide-in/SlideInActions.vue'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 import { useSlideInActions } from '@/monitoring/shared/services/useSlideInActions'
+import type { DisplayOptions } from '@/monitoring/shared/types'
 
 import HostOverviewSkeleton from './slide-in/HostOverviewSkeleton.vue'
 import HostOverviewTab from './slide-in/HostOverviewTab.vue'
@@ -44,6 +45,7 @@ const props = withDefaults(
     activeTabId?: string | undefined
     /** Counts how often the reader asked for the relations; 0 means they did not. */
     revealRelationsRequest?: number
+    displayOptions: DisplayOptions
   }>(),
   {
     rowActions: () => [],
@@ -206,7 +208,10 @@ const tabs = computed<SlideInTab[]>(() => {
       title: _t('Overview'),
       component: markRaw(HostOverviewTab),
       skeleton: markRaw(HostOverviewSkeleton),
-      props: { revealRelationsRequest: props.revealRelationsRequest },
+      props: {
+        revealRelationsRequest: props.revealRelationsRequest,
+        displayOptions: props.displayOptions
+      },
       load: () => loadOverview({ site_id: host.site_id, name: host.name })
     },
     {

@@ -13,9 +13,9 @@ import ServiceSummaryBar from '@/monitoring/shared/components/ServiceSummaryBar.
 import OverviewChips from '@/monitoring/shared/components/slide-in/OverviewChips.vue'
 import OverviewDetailList from '@/monitoring/shared/components/slide-in/OverviewDetailList.vue'
 import OverviewLabels from '@/monitoring/shared/components/slide-in/OverviewLabels.vue'
-import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
+import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { toNameItems, toTagItems } from '@/monitoring/shared/labels'
-import { useTimeSince } from '@/monitoring/shared/useTimeSince'
+import type { DisplayOptions } from '@/monitoring/shared/types'
 
 import HostRelationsSection from './HostRelationsSection.vue'
 
@@ -24,6 +24,7 @@ const props = withDefaults(
     data: HostOverview
     /** Counts how often the reader asked for the relations; 0 means they did not. */
     revealRelationsRequest?: number
+    displayOptions: DisplayOptions
   }>(),
   { revealRelationsRequest: 0 }
 )
@@ -35,7 +36,12 @@ const hostRef = computed<HostRef>(() => ({ site_id: props.data.site_id, name: pr
 const tagChips = computed(() => toTagItems(props.data.tags))
 const contactGroupChips = computed(() => toNameItems(props.data.contact_groups))
 
-const timeSince = useTimeSince()
+const lastCheck = computed(() =>
+  formatDisplayTimestamp(props.data.last_check, props.displayOptions)
+)
+const age = computed(() =>
+  formatDisplayTimestamp(props.data.last_state_change, props.displayOptions)
+)
 </script>
 
 <template>
@@ -78,10 +84,10 @@ const timeSince = useTimeSince()
 
     <OverviewDetailList>
       <dt>{{ _t('Last check') }}</dt>
-      <dd>{{ formatTimestamp(data.last_check) }}</dd>
+      <dd>{{ lastCheck }}</dd>
 
       <dt>{{ _t('Age') }}</dt>
-      <dd>{{ timeSince(data.last_state_change) }}</dd>
+      <dd>{{ age }}</dd>
     </OverviewDetailList>
 
     <OverviewDetailList align="start">

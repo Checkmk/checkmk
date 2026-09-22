@@ -5,7 +5,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts" generic="T, Target">
 import type { ColumnDef, ColumnPinningState, RowSelectionState } from '@tanstack/vue-table'
+import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
+import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkSplitPane from 'cmk-ui-library/components/CmkSplitPane.vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref } from 'vue'
 
@@ -55,8 +58,11 @@ const emit = defineEmits<{
   (event: 'performed', result: ActionFeedbackResult): void
 }>()
 
+const { _t } = usei18n()
+
 const rowSelection = ref<RowSelectionState>({})
 const runningActionId = ref<string | null>(null)
+const displayOptionsOpen = ref(false)
 
 const selectableKeys = computed<string[]>(() =>
   props.service.items.value.map((row) => props.getRowKey(row))
@@ -102,7 +108,17 @@ async function onBulkAction(action: CellAction): Promise<void> {
     }
     return
   }
+  displayOptionsOpen.value = false
   openAction(action.id)
+}
+
+function toggleDisplayOptions(): void {
+  if (displayOptionsOpen.value) {
+    displayOptionsOpen.value = false
+    return
+  }
+  closeAction()
+  displayOptionsOpen.value = true
 }
 
 async function onRowCommand(payload: { id: string; target: Target }): Promise<void> {
@@ -118,13 +134,14 @@ async function onRowCommand(payload: { id: string; target: Target }): Promise<vo
 function onRightPaneCollapse(collapsed: boolean): void {
   if (collapsed) {
     closeAction()
+    displayOptionsOpen.value = false
   }
 }
 </script>
 
 <template>
   <CmkSplitPane
-    :collapsed="!activeAction"
+    :collapsed="!activeAction && !displayOptionsOpen"
     :right-min-size="30"
     :right-max-size="50"
     :collapsible-on-resize="false"
@@ -159,6 +176,15 @@ function onRightPaneCollapse(collapsed: boolean): void {
             <MonitoringTotalCount :total="service.total.value" />
             <MonitoringLimitSelector />
             <ColumnPicker />
+            <CmkButton
+              variant="optional"
+              size="iconOnly"
+              :title="_t('Modify display options')"
+              :aria-label="_t('Modify display options')"
+              @click="toggleDisplayOptions"
+            >
+              <CmkMultitoneIcon name="setup" primary-color="font" size="small" />
+            </CmkButton>
           </div>
         </div>
         <MonitoringTable
@@ -198,6 +224,11 @@ function onRightPaneCollapse(collapsed: boolean): void {
         :counts-label="countsLabel"
         @feedback="onFeedback"
         @cancel="closeAction"
+      />
+      <slot
+        v-else-if="displayOptionsOpen"
+        name="display-options"
+        :close="() => (displayOptionsOpen = false)"
       />
     </template>
   </CmkSplitPane>

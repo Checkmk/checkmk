@@ -48,6 +48,7 @@ import { computed, ref } from 'vue'
 import HostRow from '@/monitoring/all-hosts/components/HostRow.vue'
 import type { HostEntry } from '@/monitoring/shared/api/types'
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
+import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -250,7 +251,11 @@ const pinningActive = computed(
             :get-row-key="(row) => `${row.site_id}/${row.name}`"
           >
             <template #row="{ row, tableRow }">
-              <HostRow :row="row" :table-row="tableRow" />
+              <HostRow
+                :row="row"
+                :table-row="tableRow"
+                :display-options="DEFAULT_DISPLAY_OPTIONS"
+              />
             </template>
           </MonitoringTable>
         </div>

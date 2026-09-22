@@ -20,6 +20,9 @@ import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/acti
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
+import type { DisplayOptions } from '@/monitoring/shared/types'
+
+const DISPLAY_OPTIONS: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'abs' }
 
 const HOST: HostRef = { site_id: 'local', name: 'web-server-01' }
 
@@ -107,20 +110,30 @@ describe('ServiceSlideIn', () => {
   })
 
   it('stays closed while no service is selected', () => {
-    render(ServiceSlideIn, { props: { service: null, host: HOST } })
+    render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: null, host: HOST }
+    })
 
     expect(screen.queryByText('Service details')).not.toBeInTheDocument()
   })
 
   it('shows the overview of the selected service once it is loaded', async () => {
-    render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+    render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
+    })
 
     expect(await screen.findByText('Service details')).toBeInTheDocument()
     expect(await screen.findByText('CPU load')).toBeInTheDocument()
   })
 
   it('requests the overview for the selected service of this host', async () => {
-    render(ServiceSlideIn, { props: { service: makeService({ name: 'Memory' }), host: HOST } })
+    render(ServiceSlideIn, {
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        service: makeService({ name: 'Memory' }),
+        host: HOST
+      }
+    })
 
     await screen.findByText('Service details')
 
@@ -134,7 +147,7 @@ describe('ServiceSlideIn', () => {
 
   it('reloads the overview when another service is picked while the panel is open', async () => {
     const { rerender } = render(ServiceSlideIn, {
-      props: { service: makeService(), host: HOST }
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
     })
     await screen.findByText('Service details')
 
@@ -162,7 +175,9 @@ describe('ServiceSlideIn', () => {
       error: undefined,
       response: new Response()
     } as never)
-    render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+    render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
+    })
 
     expect(await screen.findByRole('link', { name: 'Problem acknowledged' })).toBeInTheDocument()
   })
@@ -194,7 +209,7 @@ describe('ServiceSlideIn', () => {
       } as never)
 
     const { rerender } = render(ServiceSlideIn, {
-      props: { service: makeService(), host: HOST }
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
     })
     // The tab body loads once it is mounted, so there is a request to go stale
     // only after the panel is on screen.
@@ -236,7 +251,8 @@ describe('ServiceSlideIn', () => {
         service: makeService(),
         host: HOST,
         actions: makeActionRegistry(),
-        permittedActions: PERMITTED_ACTIONS
+        permittedActions: PERMITTED_ACTIONS,
+        displayOptions: DISPLAY_OPTIONS
       }
     })
     await vi.advanceTimersByTimeAsync(0)
@@ -298,7 +314,8 @@ describe('ServiceSlideIn', () => {
         host: HOST,
         actions: makeActionRegistry(),
         permittedActions: PERMITTED_ACTIONS,
-        activeTabId: 'history'
+        activeTabId: 'history',
+        displayOptions: DISPLAY_OPTIONS
       }
     })
     await vi.advanceTimersByTimeAsync(0)
@@ -311,7 +328,9 @@ describe('ServiceSlideIn', () => {
   })
 
   it('offers the service details and parameters as icon buttons in the header', async () => {
-    render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+    render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
+    })
 
     expect(
       await screen.findByRole('link', { name: 'Show details of service CPU load' })
@@ -328,6 +347,7 @@ describe('ServiceSlideIn', () => {
   it('offers the actions the user may run on the service', async () => {
     render(ServiceSlideIn, {
       props: {
+        displayOptions: DISPLAY_OPTIONS,
         service: makeService(),
         host: HOST,
         actions: makeActionRegistry(),
@@ -341,7 +361,12 @@ describe('ServiceSlideIn', () => {
 
   it('shows no action buttons to a user who may run none of them', async () => {
     render(ServiceSlideIn, {
-      props: { service: makeService(), host: HOST, actions: makeActionRegistry() }
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        service: makeService(),
+        host: HOST,
+        actions: makeActionRegistry()
+      }
     })
     await screen.findByText('Service details')
 
@@ -352,6 +377,7 @@ describe('ServiceSlideIn', () => {
   it('leaves out a permitted action this page cannot perform', async () => {
     render(ServiceSlideIn, {
       props: {
+        displayOptions: DISPLAY_OPTIONS,
         service: makeService(),
         host: HOST,
         actions: makeActionRegistry(),
@@ -377,6 +403,7 @@ describe('ServiceSlideIn', () => {
     const performed: string[][] = []
     render(ServiceSlideIn, {
       props: {
+        displayOptions: DISPLAY_OPTIONS,
         service: makeService(),
         host: HOST,
         actions: makeActionRegistry(async (targets) => {
@@ -397,6 +424,7 @@ describe('ServiceSlideIn', () => {
     const performed: string[][] = []
     render(ServiceSlideIn, {
       props: {
+        displayOptions: DISPLAY_OPTIONS,
         service: makeService(),
         host: HOST,
         actions: makeActionRegistry(async (targets) => {
@@ -421,7 +449,9 @@ describe('ServiceSlideIn', () => {
       error: undefined,
       response: new Response()
     } as never)
-    render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+    render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
+    })
 
     await screen.findByRole('link', { name: 'Show details of service CPU load' })
 
@@ -431,7 +461,9 @@ describe('ServiceSlideIn', () => {
   })
 
   it('offers no AI explanation outside the cloud edition', async () => {
-    render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+    render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
+    })
     await screen.findByText('Service details')
 
     expect(screen.queryByTestId('service-ai-explain-button')).not.toBeInTheDocument()
@@ -444,7 +476,12 @@ describe('ServiceSlideIn', () => {
     }
     document.addEventListener('cmk-ai-explain-button', listener)
     render(ServiceSlideIn, {
-      props: { service: makeService(), host: HOST, aiExplain: true }
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        service: makeService(),
+        host: HOST,
+        aiExplain: true
+      }
     })
 
     await userEvent.click(await screen.findByTestId('service-ai-explain-button'))
@@ -463,14 +500,21 @@ describe('ServiceSlideIn', () => {
   it('waits for the overview before offering the AI explanation', () => {
     vi.spyOn(client, 'GET').mockReturnValue(new Promise(() => {}) as never)
     render(ServiceSlideIn, {
-      props: { service: makeService(), host: HOST, aiExplain: true }
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        service: makeService(),
+        host: HOST,
+        aiExplain: true
+      }
     })
 
     expect(screen.queryByTestId('service-ai-explain-button')).not.toBeInTheDocument()
   })
 
   it('offers no action menu to a page that provides no loader for it', async () => {
-    render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+    render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
+    })
     await screen.findByText('Service details')
 
     expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument()
@@ -486,7 +530,12 @@ describe('ServiceSlideIn', () => {
       }
     ])
     render(ServiceSlideIn, {
-      props: { service: makeService({ name: 'Memory' }), host: HOST, loadActionMenu }
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        service: makeService({ name: 'Memory' }),
+        host: HOST,
+        loadActionMenu
+      }
     })
     await screen.findByText('Service details')
     expect(loadActionMenu).not.toHaveBeenCalled()
@@ -501,7 +550,9 @@ describe('ServiceSlideIn', () => {
   })
 
   it('offers a History tab next to Overview, with Overview still shown first', async () => {
-    render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+    render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
+    })
     await screen.findByText('Service details')
 
     const tabs = screen.getAllByRole('tab').map((tab) => tab.textContent?.trim())
@@ -513,6 +564,7 @@ describe('ServiceSlideIn', () => {
   it('opens on the graphs, for a reader who came from the Perf-O-Meter', async () => {
     render(ServiceSlideIn, {
       props: {
+        displayOptions: DISPLAY_OPTIONS,
         service: makeService(),
         host: HOST,
         activeTabId: SERVICE_GRAPHS_TAB_ID
@@ -547,7 +599,9 @@ describe('ServiceSlideIn', () => {
             }
           : { data: makeOverview(), error: undefined, response: new Response() }
       )) as never)
-    render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+    render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
+    })
     await screen.findByText('Service details')
 
     await userEvent.click(screen.getByRole('tab', { name: 'History' }))
@@ -562,7 +616,9 @@ describe('ServiceSlideIn', () => {
   })
 
   it('emits close when the close button is used', async () => {
-    const { emitted } = render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+    const { emitted } = render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
+    })
     await screen.findByText('Service details')
 
     await userEvent.click(screen.getByRole('button', { name: 'Close' }))

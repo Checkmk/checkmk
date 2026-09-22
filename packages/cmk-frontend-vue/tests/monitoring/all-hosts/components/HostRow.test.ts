@@ -12,6 +12,11 @@ import HostRow from '@/monitoring/all-hosts/components/HostRow.vue'
 import type { HostEntry } from '@/monitoring/shared/api/types'
 import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { columnId } from '@/monitoring/shared/tableState/schema'
+import type { DisplayOptions } from '@/monitoring/shared/types'
+
+// 'abs' keeps assertions comparable to plain `formatTimestamp`, independent of how old
+// a fixture's timestamp happens to be relative to the real clock the test runs under.
+const DISPLAY_OPTIONS: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'abs' }
 
 function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
   return {
@@ -50,7 +55,9 @@ function mountRow(row: HostEntry, tableRow: Row<HostEntry> = makeTableRow()) {
     defineComponent({
       components: { HostRow },
       render() {
-        return h('table', [h('tbody', [h('tr', [h(HostRow, { row, tableRow })])])])
+        return h('table', [
+          h('tbody', [h('tr', [h(HostRow, { row, tableRow, displayOptions: DISPLAY_OPTIONS })])])
+        ])
       }
     })
   )
@@ -81,7 +88,16 @@ test('emits open with the host when the name cell button is clicked', async () =
       components: { HostRow },
       render() {
         return h('table', [
-          h('tbody', [h('tr', [h(HostRow, { row: host, tableRow: makeTableRow(), onOpen })])])
+          h('tbody', [
+            h('tr', [
+              h(HostRow, {
+                row: host,
+                tableRow: makeTableRow(),
+                displayOptions: DISPLAY_OPTIONS,
+                onOpen
+              })
+            ])
+          ])
         ])
       }
     })
@@ -313,7 +329,16 @@ test('emits open asking for the relations when the relation count is clicked', a
       components: { HostRow },
       render() {
         return h('table', [
-          h('tbody', [h('tr', [h(HostRow, { row: host, tableRow: makeTableRow(), onOpen })])])
+          h('tbody', [
+            h('tr', [
+              h(HostRow, {
+                row: host,
+                tableRow: makeTableRow(),
+                displayOptions: DISPLAY_OPTIONS,
+                onOpen
+              })
+            ])
+          ])
         ])
       }
     })

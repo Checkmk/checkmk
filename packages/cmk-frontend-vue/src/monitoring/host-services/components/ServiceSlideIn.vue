@@ -30,6 +30,7 @@ import type { CellAction } from '@/monitoring/shared/components/cell/ActionButto
 import SlideInActions from '@/monitoring/shared/components/slide-in/SlideInActions.vue'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 import { useSlideInActions } from '@/monitoring/shared/services/useSlideInActions'
+import type { DisplayOptions } from '@/monitoring/shared/types'
 
 import ServiceAiExplainButton from './slide-in/ServiceAiExplainButton.vue'
 import ServiceGraphsSkeleton from './slide-in/ServiceGraphsSkeleton.vue'
@@ -54,6 +55,7 @@ const props = withDefaults(
     loadActionMenu?: ((service: string) => Promise<CellAction[]>) | undefined
     /** The tab on show, as a `v-model:activeTabId`; forwarded to the panel. */
     activeTabId?: string | undefined
+    displayOptions: DisplayOptions
   }>(),
   {
     aiExplain: false,
@@ -233,6 +235,7 @@ const tabs = computed<SlideInTab[]>(() => {
       title: _t('Overview'),
       component: markRaw(ServiceOverviewTab),
       skeleton: markRaw(ServiceOverviewSkeleton),
+      props: { displayOptions: props.displayOptions },
       load: () => loadOverview(service.name)
     },
     {

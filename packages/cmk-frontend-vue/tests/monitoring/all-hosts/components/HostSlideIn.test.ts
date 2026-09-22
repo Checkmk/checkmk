@@ -19,6 +19,9 @@ import type { MonitoringActionRegistry } from '@/monitoring/shared/components/ac
 import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
+import type { DisplayOptions } from '@/monitoring/shared/types'
+
+const DISPLAY_OPTIONS: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'abs' }
 
 const RUNNING_CLASS = 'cmk-button--running'
 const RESCHEDULE_LABEL = 'Reschedule check'
@@ -114,7 +117,13 @@ function renderSlideIn(
   permittedActions: CellAction[] = PERMITTED_ACTIONS
 ) {
   return render(HostSlideIn, {
-    props: { host, actions, permittedActions, loadActionMenu: async () => [] }
+    props: {
+      host,
+      actions,
+      permittedActions,
+      loadActionMenu: async () => [],
+      displayOptions: DISPLAY_OPTIONS
+    }
   })
 }
 
@@ -267,7 +276,8 @@ describe('HostSlideIn', () => {
         actions: makeRegistry(vi.fn().mockResolvedValue(SUCCESS)),
         permittedActions: PERMITTED_ACTIONS,
         loadActionMenu: async () => [],
-        activeTabId: 'history'
+        activeTabId: 'history',
+        displayOptions: DISPLAY_OPTIONS
       }
     })
     await vi.advanceTimersByTimeAsync(0)

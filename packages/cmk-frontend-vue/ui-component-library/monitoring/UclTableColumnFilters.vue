@@ -77,6 +77,7 @@ import type {
 } from '@/monitoring/shared/components/filter/types'
 import { FILLED_MODE_COLUMN_WIDTH, MODE_COLUMN_ID } from '@/monitoring/shared/components/modeColumn'
 import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
+import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -430,7 +431,11 @@ const sortedRows = computed<HostEntry[]>(() => {
             @update:filter-state="filterState = $event"
           >
             <template #row="{ row, tableRow }">
-              <HostRow :row="row" :table-row="tableRow" />
+              <HostRow
+                :row="row"
+                :table-row="tableRow"
+                :display-options="DEFAULT_DISPLAY_OPTIONS"
+              />
             </template>
           </MonitoringTable>
         </div>

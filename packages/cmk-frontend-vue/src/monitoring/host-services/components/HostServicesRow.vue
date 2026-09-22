@@ -18,8 +18,9 @@ import PerfometerCell from '@/monitoring/shared/components/cell/PerfometerCell.v
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
 import { MODE_COLUMN_ID, MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
-import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
+import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { toLabelItems, toNameItems, toTagItems } from '@/monitoring/shared/labels'
+import type { DisplayOptions } from '@/monitoring/shared/types'
 
 const props = withDefaults(
   defineProps<{
@@ -29,6 +30,7 @@ const props = withDefaults(
     rowActions?: CellAction[]
     /** Lazy loader for the entries of this service's action menu. */
     loadActionMenu?: ((service: string) => Promise<CellAction[]>) | undefined
+    displayOptions: DisplayOptions
   }>(),
   { rowActions: () => [], loadActionMenu: undefined }
 )
@@ -68,9 +70,13 @@ const actionMenuLoader = computed<(() => Promise<CellAction[]>) | undefined>(() 
 })
 
 const lastCheck = computed(() =>
-  props.row.last_check === null ? '–' : formatTimestamp(props.row.last_check)
+  props.row.last_check === null
+    ? '–'
+    : formatDisplayTimestamp(props.row.last_check, props.displayOptions)
 )
-const lastStateChange = computed(() => formatTimestamp(props.row.last_state_change))
+const lastStateChange = computed(() =>
+  formatDisplayTimestamp(props.row.last_state_change, props.displayOptions)
+)
 const labels = computed(() => toLabelItems(props.row.labels ?? {}))
 const tags = computed(() => toTagItems(props.row.tags ?? {}))
 const contacts = computed(() => toNameItems(props.row.contacts ?? []))

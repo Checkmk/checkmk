@@ -10,14 +10,17 @@ import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
+import usePersistentRef from 'cmk-ui-library/lib/usePersistentRef'
 import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
 
 import { HostApi } from '@/monitoring/shared/api/hosts'
 import type { HostEntry, HostRef, HostState } from '@/monitoring/shared/api/types'
+import DisplayOptionsPane from '@/monitoring/shared/components/DisplayOptionsPane.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
 import { ACTION_REFRESH_DELAY_MS, HOST_LIMIT_TIERS } from '@/monitoring/shared/constants'
+import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 
 import MonitoringHeaderActions from '../shared/components/MonitoringHeaderActions.vue'
 import MonitoringLegacyViewButton from '../shared/components/MonitoringLegacyViewButton.vue'
@@ -31,7 +34,11 @@ import { downtimePresets } from '../shared/components/action/actions/scheduleDow
 import { createActionRegistry } from '../shared/components/action/registry'
 import { buildFilterUrlSchema } from '../shared/filterState/schema'
 import { filterStateWriter, readFilterUrlState } from '../shared/filterState/urlState'
-import { buildColumnStorageKey } from '../shared/services/MonitoringService'
+import {
+  buildColumnStorageKey,
+  buildDisplayOptionsStorageKey,
+  sanitizeDisplayOptions
+} from '../shared/services/MonitoringService'
 import { buildTableStateSchema } from '../shared/tableState/schema'
 import { readTableStateFromUrl, tableStateWriter } from '../shared/tableState/urlState'
 import {
@@ -177,6 +184,17 @@ const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
 
 const modeColumnSize = useModeColumnWidth(() => hostService.items.value)
 const tableColumns = computed(() => sizeModeColumn(columns, modeColumnSize.value))
+
+const displayOptions = usePersistentRef(
+  buildDisplayOptionsStorageKey({
+    view: 'all-hosts',
+    site: props.site,
+    userId: props.user_id,
+    edition: props.edition
+  }),
+  DEFAULT_DISPLAY_OPTIONS,
+  sanitizeDisplayOptions
+)
 
 const toolbar = useTemplateRef<{ focus: () => void }>('toolbar')
 
@@ -339,12 +357,26 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
             :table-row="tableRow"
             :row-actions="rowActionButtons"
             :load-action-menu="loadActionMenu"
+            :display-options="displayOptions"
             @open="openSlideIn"
             @command="onCommand"
           />
         </template>
+        <template #display-options="{ close }">
+          <DisplayOptionsPane
+            :model-value="displayOptions"
+            @submit="
+              (value) => {
+                displayOptions = value
+                close()
+              }
+            "
+            @cancel="close"
+          />
+        </template>
       </MonitoringSplitPane>
       <HostSlideIn
+        :display-options="displayOptions"
         :active-tab-id="slideInTabId"
         :host="slideInHost"
         :reveal-relations-request="revealRelationsRequest"

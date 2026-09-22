@@ -11,8 +11,13 @@ import { defineComponent, h } from 'vue'
 
 import HostServicesRow from '@/monitoring/host-services/components/HostServicesRow.vue'
 import type { HostServiceEntry } from '@/monitoring/shared/api/types'
+import type { DisplayOptions } from '@/monitoring/shared/types'
 
 const ZERO_WIDTH_SPACE = String.fromCharCode(0x200b)
+
+// 'abs' keeps assertions comparable to plain `formatTimestamp`, independent of how old
+// a fixture's timestamp happens to be relative to the real clock the test runs under.
+const DISPLAY_OPTIONS: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'abs' }
 
 function makeService(overrides: Partial<HostServiceEntry> = {}): HostServiceEntry {
   return {
@@ -45,7 +50,11 @@ function mountRow(
       components: { HostServicesRow },
       render() {
         return h('table', [
-          h('tbody', [h('tr', [h(HostServicesRow, { row, tableRow, ...extraProps })])])
+          h('tbody', [
+            h('tr', [
+              h(HostServicesRow, { row, tableRow, displayOptions: DISPLAY_OPTIONS, ...extraProps })
+            ])
+          ])
         ])
       }
     })
@@ -162,6 +171,7 @@ test('emits a picked command with the service it acts on', async () => {
               h(HostServicesRow, {
                 row: makeService({ name: 'Memory' }),
                 tableRow: makeTableRow(),
+                displayOptions: DISPLAY_OPTIONS,
                 loadActionMenu: async () => [command],
                 onCommand
               })

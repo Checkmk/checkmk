@@ -14,7 +14,9 @@ import {
   MonitoringService,
   type MonitoringServiceOptions,
   type PagedResponse,
-  buildColumnStorageKey
+  buildColumnStorageKey,
+  buildDisplayOptionsStorageKey,
+  sanitizeDisplayOptions
 } from '@/monitoring/shared/services/MonitoringService'
 import type { TableStateSchema } from '@/monitoring/shared/tableState/types'
 
@@ -1438,6 +1440,40 @@ describe('MonitoringService', () => {
       resolveFetch(makeResponse([], 0, 0))
       await vi.advanceTimersByTimeAsync(0)
       service.stopPolling()
+    })
+  })
+})
+
+describe('display options storage', () => {
+  it('keys a choice by view, site, user and edition', () => {
+    expect(
+      buildDisplayOptionsStorageKey({
+        view: 'all-hosts',
+        site: 'heute',
+        userId: 'harri',
+        edition: 'community'
+      })
+    ).toBe('monitoring-all-hosts-display-options-heute-harri-community')
+  })
+
+  it('restores a stored choice', () => {
+    expect(sanitizeDisplayOptions({ dateFormat: '%d.%m.%Y', timestampFormat: 'abs' })).toEqual({
+      dateFormat: '%d.%m.%Y',
+      timestampFormat: 'abs'
+    })
+  })
+
+  it('falls back to the default date format when storage holds one that is no longer offered', () => {
+    expect(sanitizeDisplayOptions({ dateFormat: 'yyyy/mm/dd', timestampFormat: 'abs' })).toEqual({
+      dateFormat: '%Y-%m-%d',
+      timestampFormat: 'abs'
+    })
+  })
+
+  it('falls back to the defaults when storage holds something unusable', () => {
+    expect(sanitizeDisplayOptions(['abs'])).toEqual({
+      dateFormat: '%Y-%m-%d',
+      timestampFormat: 'mixed'
     })
   })
 })

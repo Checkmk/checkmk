@@ -19,9 +19,10 @@ import NumberCell from '@/monitoring/shared/components/cell/NumberCell.vue'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
 import { MODE_COLUMN_ID, MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
-import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
+import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { hostServicesPageUrl } from '@/monitoring/shared/hostServicesPageUrl'
 import { toLabelItems, toNameItems, toTagItems } from '@/monitoring/shared/labels'
+import type { DisplayOptions } from '@/monitoring/shared/types'
 
 const props = withDefaults(
   defineProps<{
@@ -31,6 +32,7 @@ const props = withDefaults(
     rowActions?: CellAction[]
     // Lazy loader for the overflow menu entries of this host.
     loadActionMenu?: ((host: HostRef) => Promise<CellAction[]>) | undefined
+    displayOptions: DisplayOptions
   }>(),
   { rowActions: () => [], loadActionMenu: undefined }
 )
@@ -93,12 +95,14 @@ const contacts = computed(() => toNameItems(props.row.contacts ?? []))
 const contactGroups = computed(() => toNameItems(props.row.contact_groups ?? []))
 
 const lastCheck = computed(() =>
-  props.row.last_check === undefined ? undefined : formatTimestamp(props.row.last_check)
+  props.row.last_check === undefined
+    ? undefined
+    : formatDisplayTimestamp(props.row.last_check, props.displayOptions)
 )
 const lastStateChange = computed(() =>
   props.row.last_state_change === undefined
     ? undefined
-    : formatTimestamp(props.row.last_state_change)
+    : formatDisplayTimestamp(props.row.last_state_change, props.displayOptions)
 )
 </script>
 

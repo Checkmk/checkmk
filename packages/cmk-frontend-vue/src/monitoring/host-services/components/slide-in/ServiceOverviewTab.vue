@@ -18,15 +18,13 @@ import { MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
 import OverviewChips from '@/monitoring/shared/components/slide-in/OverviewChips.vue'
 import OverviewDetailList from '@/monitoring/shared/components/slide-in/OverviewDetailList.vue'
 import OverviewLabels from '@/monitoring/shared/components/slide-in/OverviewLabels.vue'
-import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
+import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { toNameItems, toTagItems } from '@/monitoring/shared/labels'
-import { useTimeSince } from '@/monitoring/shared/useTimeSince'
+import type { DisplayOptions } from '@/monitoring/shared/types'
 
-const props = defineProps<{ data: ServiceOverview }>()
+const props = defineProps<{ data: ServiceOverview; displayOptions: DisplayOptions }>()
 
 const { _t } = usei18n()
-
-const timeSince = useTimeSince()
 
 const checkAttempt = computed(
   () => `${props.data.current_attempt}/${props.data.max_check_attempts}`
@@ -36,11 +34,19 @@ const tagChips = computed(() => toTagItems(props.data.tags))
 const contactGroupChips = computed(() => toNameItems(props.data.contact_groups))
 
 const lastCheck = computed(() =>
-  props.data.last_check === null ? '–' : formatTimestamp(props.data.last_check)
+  props.data.last_check === null
+    ? '–'
+    : formatDisplayTimestamp(props.data.last_check, props.displayOptions)
+)
+
+const stateAge = computed(() =>
+  formatDisplayTimestamp(props.data.last_state_change, props.displayOptions)
 )
 
 const nextCheck = computed(() =>
-  props.data.next_check === null ? '–' : formatTimestamp(props.data.next_check)
+  props.data.next_check === null
+    ? '–'
+    : formatDisplayTimestamp(props.data.next_check, props.displayOptions)
 )
 </script>
 
@@ -97,7 +103,7 @@ const nextCheck = computed(() =>
       <dd>{{ lastCheck }}</dd>
 
       <dt>{{ _t('State age:') }}</dt>
-      <dd>{{ timeSince(data.last_state_change) }}</dd>
+      <dd>{{ stateAge }}</dd>
 
       <dt>{{ _t('Current check attempt:') }}</dt>
       <dd>{{ checkAttempt }}</dd>

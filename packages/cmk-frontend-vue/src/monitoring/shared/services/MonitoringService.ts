@@ -37,7 +37,13 @@ import {
   computeDefaultVisibility
 } from '@/monitoring/shared/tableState/schema'
 import type { TableState, TableStateSchema } from '@/monitoring/shared/tableState/types'
-import type { RequestedLimit } from '@/monitoring/shared/types'
+import {
+  DEFAULT_DISPLAY_OPTIONS,
+  type DateFormatId,
+  type DisplayOptions,
+  type RequestedLimit,
+  type TimestampFormatId
+} from '@/monitoring/shared/types'
 
 import { FilterStore, type QuickFilter, type QuickFilterConfig } from './FilterStore'
 import { useColumnFilterBridge } from './useColumnFilterBridge'
@@ -120,6 +126,50 @@ export interface ColumnStorageScope {
  */
 export function buildColumnStorageKey({ view, site, userId, edition }: ColumnStorageScope): string {
   return `monitoring-${view}-columns-${site}-${userId}-${edition}`
+}
+
+const DATE_FORMAT_IDS: readonly DateFormatId[] = [
+  '%Y-%m-%d',
+  '%d.%m.%Y',
+  '%m/%d/%Y',
+  '%d.%m.',
+  '%m/%d'
+]
+const TIMESTAMP_FORMAT_IDS: readonly TimestampFormatId[] = ['mixed', 'abs', 'rel', 'both', 'epoch']
+
+/**
+ * Key a view's "Modify display options" choice is stored under. Same shape as
+ * {@link buildColumnStorageKey}: per view/site/user/edition, so e.g. "Services of host"
+ * and "All hosts" don't affect each other.
+ */
+export function buildDisplayOptionsStorageKey({
+  view,
+  site,
+  userId,
+  edition
+}: ColumnStorageScope): string {
+  return `monitoring-${view}-display-options-${site}-${userId}-${edition}`
+}
+
+/**
+ * Rebuilds display options from what browser storage holds, falling back to the
+ * default for anything that isn't one of the offered choices - e.g. storage predating
+ * a since-removed format, or corrupted content.
+ */
+export function sanitizeDisplayOptions(stored: unknown): DisplayOptions {
+  if (stored === null || typeof stored !== 'object') {
+    return DEFAULT_DISPLAY_OPTIONS
+  }
+  const entries = stored as Record<string, unknown>
+  const dateFormat = DATE_FORMAT_IDS.includes(entries['dateFormat'] as DateFormatId)
+    ? (entries['dateFormat'] as DateFormatId)
+    : DEFAULT_DISPLAY_OPTIONS.dateFormat
+  const timestampFormat = TIMESTAMP_FORMAT_IDS.includes(
+    entries['timestampFormat'] as TimestampFormatId
+  )
+    ? (entries['timestampFormat'] as TimestampFormatId)
+    : DEFAULT_DISPLAY_OPTIONS.timestampFormat
+  return { dateFormat, timestampFormat }
 }
 
 /**

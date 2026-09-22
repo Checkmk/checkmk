@@ -7,6 +7,9 @@ import { render, screen } from '@testing-library/vue'
 
 import HostOverviewTab from '@/monitoring/all-hosts/components/slide-in/HostOverviewTab.vue'
 import type { HostOverview } from '@/monitoring/shared/api/types'
+import type { DisplayOptions } from '@/monitoring/shared/types'
+
+const DISPLAY_OPTIONS: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'abs' }
 
 function makeData(overrides: Partial<HostOverview> = {}): HostOverview {
   return {
@@ -47,7 +50,7 @@ const RELATION: HostOverview['relations'][number] = {
 }
 
 test('summarizes the services of the host being shown', async () => {
-  render(HostOverviewTab, { props: { data: makeData() } })
+  render(HostOverviewTab, { props: { data: makeData(), displayOptions: DISPLAY_OPTIONS } })
 
   // Only that the host's own counts reach the bar; what it makes of them is its own business.
   const bar = await screen.findByRole('img')
@@ -55,7 +58,9 @@ test('summarizes the services of the host being shown', async () => {
 })
 
 test('leads the counts of a relation to the related host, not to the one being shown', () => {
-  render(HostOverviewTab, { props: { data: makeData({ relations: [RELATION] }) } })
+  render(HostOverviewTab, {
+    props: { data: makeData({ relations: [RELATION] }), displayOptions: DISPLAY_OPTIONS }
+  })
 
   expect(screen.getByRole('link', { name: 'All services: 15' }).getAttribute('href')).toContain(
     'host=web-1'

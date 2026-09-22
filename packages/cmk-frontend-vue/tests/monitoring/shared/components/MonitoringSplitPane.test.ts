@@ -116,7 +116,8 @@ async function mountPaneWithLoadedRows(perform: MonitoringAction['perform']) {
                   })
                 ]),
                 h('td', ROW.name)
-              ]
+              ],
+              'display-options': () => h('div', 'Display options marker')
             }
           )
       }
@@ -204,5 +205,37 @@ describe('MonitoringSplitPane', () => {
     await userEvent.click(screen.getByRole('button', { name: RESCHEDULE_LABEL }))
 
     expect(perform).not.toHaveBeenCalled()
+  })
+
+  it('opens the display-options slot when the setup button is clicked', async () => {
+    await mountPaneWithLoadedRows(vi.fn())
+
+    await userEvent.click(screen.getByRole('button', { name: 'Modify display options' }))
+
+    expect(screen.getByText('Display options marker')).toBeInTheDocument()
+  })
+
+  it('closes the display-options pane when a bulk action is opened', async () => {
+    await mountPaneWithLoadedRows(vi.fn())
+    await selectTheOnlyRow()
+    await userEvent.click(screen.getByRole('button', { name: 'Modify display options' }))
+    expect(screen.getByText('Display options marker')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: ACK_LABEL }))
+
+    expect(screen.queryByText('Display options marker')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeInTheDocument()
+  })
+
+  it('closes the bulk action pane when the setup button is opened', async () => {
+    await mountPaneWithLoadedRows(vi.fn())
+    await selectTheOnlyRow()
+    await userEvent.click(screen.getByRole('button', { name: ACK_LABEL }))
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Modify display options' }))
+
+    expect(screen.queryByRole('button', { name: 'Submit' })).not.toBeInTheDocument()
+    expect(screen.getByText('Display options marker')).toBeInTheDocument()
   })
 })

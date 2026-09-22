@@ -1995,13 +1995,9 @@ class ModeTestNotifications(ModeNotifications):
         # TODO temp. solution to provide flashed message after quick setup
         if message := request.var("result"):
             # TODO Add notification rule number
-            html.javascript(
-                "cmk.wato.message(%s, %s, %s)"
-                % (
-                    json.dumps(message),
-                    json.dumps("success"),
-                    json.dumps("result"),
-                )
+            html.call_ts_function(
+                function_name="wato_message",
+                arguments={"message": message, "message_type": "success", "del_var": "result"},
             )
 
         self._render_test_notifications()
@@ -2297,9 +2293,10 @@ class ModeTestNotifications(ModeNotifications):
             cssclass="hot",
             form="form_test_notifications",
         )
-        html.javascript("""
-        document.getElementById('_test_host_notifications').addEventListener('click', cmk.utils.setButtonLoadingState);
-        """)
+        html.call_ts_function(
+            function_name="set_button_loading_state_on_click",
+            arguments={"button_id": "_test_host_notifications"},
+        )
         html.buttonlink(
             makeuri_contextless(request, [("mode", "test_notifications")], filename="wato.py"),
             _("Reset"),
@@ -2728,16 +2725,27 @@ class ModeTestNotifications(ModeNotifications):
             request.has_var("_test_service_notifications")
             or test_type == NotificationTestType.service
         ):
-            html.final_javascript(
-                'cmk.wato.toggle_test_notification_visibility("test_on_service", "test_on_host");'
+            html.call_ts_function(
+                function_name="toggle_test_notification_visibility",
+                arguments={"source": "test_on_service", "target": "test_on_host"},
             )
         elif request.has_var("_test_host_notifications") or test_type == NotificationTestType.host:
-            html.final_javascript(
-                'cmk.wato.toggle_test_notification_visibility("test_on_service", "test_on_host", true);'
+            html.call_ts_function(
+                function_name="toggle_test_notification_visibility",
+                arguments={
+                    "source": "test_on_service",
+                    "target": "test_on_host",
+                    "hide_options": True,
+                },
             )
         else:
-            html.final_javascript(
-                'cmk.wato.toggle_test_notification_visibility("test_on_host", "test_on_service", true);'
+            html.call_ts_function(
+                function_name="toggle_test_notification_visibility",
+                arguments={
+                    "source": "test_on_host",
+                    "target": "test_on_service",
+                    "hide_options": True,
+                },
             )
 
     def _save_test_notification_display_options(self) -> None:
@@ -4762,13 +4770,9 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
         # TODO temp. solution to provide flashed message after quick setup
         if message := request.var("result"):
             # TODO Add notification rule number
-            html.javascript(
-                "cmk.wato.message(%s, %s, %s)"
-                % (
-                    json.dumps(message),
-                    json.dumps("success"),
-                    json.dumps("result"),
-                )
+            html.call_ts_function(
+                function_name="wato_message",
+                arguments={"message": message, "message_type": "success", "del_var": "result"},
             )
 
         search = request.get_str_input("search", "")

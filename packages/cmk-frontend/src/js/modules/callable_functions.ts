@@ -6,18 +6,23 @@
 /* eslint-disable import-x/no-namespace -- Lazily resolved to avoid import cycles */
 import { select } from 'd3'
 
+import * as activation from '@/modules/activation'
+import * as background_job from '@/modules/background_job'
 import * as bi from '@/modules/bi'
 import * as forms from '@/modules/forms'
+import * as host_diagnose from '@/modules/host_diagnose'
 import { insert_before } from '@/modules/layout'
 import * as nodevis from '@/modules/nodevis/main'
 import * as nodevis_utils from '@/modules/nodevis/utils'
 import * as page_menu from '@/modules/page_menu'
 import { render_qr_code } from '@/modules/qrcode_rendering'
 import * as selection from '@/modules/selection'
-import { lock_and_redirect } from '@/modules/sites'
+import * as service_discovery from '@/modules/service_discovery'
+import * as sites from '@/modules/sites'
 import { render_stats_table } from '@/modules/tracking_display'
 import * as utils from '@/modules/utils'
 import * as valuespecs from '@/modules/valuespecs'
+import * as wato from '@/modules/wato'
 
 import { type CallableFunction, register_callable_functions } from './ts_function_dispatcher'
 
@@ -27,7 +32,7 @@ const callable_functions: { [name: string]: CallableFunction } = {
   render_stats_table: render_stats_table,
   render_qr_code: render_qr_code,
   insert_before: insert_before,
-  lock_and_redirect: lock_and_redirect,
+  lock_and_redirect: sites.lock_and_redirect,
   confirm_on_form_leave: (node, options) => forms.confirm_on_form_leave(node, options),
 
   // utils
@@ -118,7 +123,51 @@ const callable_functions: { [name: string]: CallableFunction } = {
   },
   nodevis_create_example: (_node, options) => {
     new nodevis.example_generator(options.varprefix).create_example(options.value)
-  }
+  },
+
+  // wato
+  background_job_start: (_node, options) =>
+    background_job.start(options.update_url, options.job_id),
+  prepare_edit_dialog: (_node, options) => {
+    wato.prepare_edit_dialog(options.dialog_properties)
+    wato.fix_visibility()
+  },
+  show_element_on_click: (_node, options) =>
+    utils.show_element_on_click(options.trigger_id, options.target_id),
+  host_diagnose_start_test: (_node, options) =>
+    host_diagnose.start_test(options.ident, options.hostname, options.transid),
+  update_site_activation_state: (_node, options) =>
+    activation.update_site_activation_state(options.site_state),
+  service_discovery_start: (_node, options) =>
+    service_discovery.start(
+      options.host_name,
+      options.folder_path,
+      options.discovery_options,
+      options.transid,
+      options.request_vars ?? null
+    ),
+  register_delayed_active_check: (_node, options) =>
+    service_discovery.register_delayed_active_check(
+      options.site,
+      options.folder_path,
+      options.hostname,
+      options.checktype,
+      options.item,
+      options.divid
+    ),
+  fetch_site_status: () => sites.fetch_site_status(),
+  wato_message: (_node, options) =>
+    wato.message(options.message, options.message_type, options.del_var),
+  set_button_loading_state_on_click: (_node, options) =>
+    document
+      .getElementById(options.button_id)
+      ?.addEventListener('click', utils.setButtonLoadingState),
+  toggle_test_notification_visibility: (_node, options) =>
+    wato.toggle_test_notification_visibility(
+      options.source,
+      options.target,
+      options.hide_options ?? false
+    )
 }
 
 register_callable_functions(callable_functions)

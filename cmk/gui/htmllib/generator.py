@@ -101,6 +101,18 @@ KnownTSFunction = typing.Literal[
     "bi_rule_preview",
     "bi_aggregation_preview",
     "nodevis_create_example",
+    # wato
+    "background_job_start",
+    "prepare_edit_dialog",
+    "show_element_on_click",
+    "host_diagnose_start_test",
+    "update_site_activation_state",
+    "service_discovery_start",
+    "register_delayed_active_check",
+    "fetch_site_status",
+    "wato_message",
+    "set_button_loading_state_on_click",
+    "toggle_test_notification_visibility",
 ]
 
 

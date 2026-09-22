@@ -1519,7 +1519,7 @@ class ModeDistributedMonitoring(WatoMode):
                     self._show_buttons_connection(table, conn_id)
                     self._show_basic_settings_connection(table, conn_id, connection)
 
-        html.javascript("cmk.sites.fetch_site_status();")
+        html.call_ts_function(function_name="fetch_site_status")
 
     def _build_url_for_folder(self, folder: Folder) -> str:
         url = makeuri_contextless(request, [("folder", folder.path()), ("mode", "folder")])

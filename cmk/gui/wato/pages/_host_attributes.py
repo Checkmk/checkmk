@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-import json
 from collections.abc import Mapping, Sequence
 from typing import cast, Literal
 
@@ -417,9 +416,8 @@ def configure_attributes(
         "user_roles": user.role_ids,
         "hide_attributes": hide_attributes,
     }
-    html.javascript(
-        "cmk.wato.prepare_edit_dialog(%s);"
-        "cmk.wato.fix_visibility();" % json.dumps(dialog_properties)
+    html.call_ts_function(
+        function_name="prepare_edit_dialog", arguments={"dialog_properties": dialog_properties}
     )
 
 

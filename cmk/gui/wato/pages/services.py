@@ -273,13 +273,13 @@ class ModeDiscovery(WatoMode):
         self._async_progress_msg_container()
         self._container("service", True)
 
-        html.javascript(
-            "cmk.service_discovery.start(%s, %s, %s)"
-            % (
-                json.dumps(self._host.name()),
-                json.dumps(self._host.folder().path()),
-                json.dumps(self._options._asdict()),
-            )
+        html.call_ts_function(
+            function_name="service_discovery_start",
+            arguments={
+                "host_name": self._host.name(),
+                "folder_path": self._host.folder().path(),
+                "discovery_options": self._options._asdict(),
+            },
         )
 
     def _container(self, name: str, hidden: bool = False) -> None:
@@ -1617,16 +1617,16 @@ class DiscoveryPageRenderer:
             html.render_static_icon(StaticIcon(IconNames.reload), css_classes=["reloading"]),
             id_=div_id,
         )
-        html.javascript(
-            "cmk.service_discovery.register_delayed_active_check(%s, %s, %s, %s, %s, %s);"
-            % (
-                json.dumps(self._host.site_id() or ""),
-                json.dumps(self._host.folder().path()),
-                json.dumps(self._host.name()),
-                json.dumps(entry.check_plugin_name),
-                json.dumps(entry.item),
-                json.dumps(div_id),
-            )
+        html.call_ts_function(
+            function_name="register_delayed_active_check",
+            arguments={
+                "site": self._host.site_id() or "",
+                "folder_path": self._host.folder().path(),
+                "hostname": self._host.name(),
+                "checktype": entry.check_plugin_name,
+                "item": entry.item,
+                "divid": div_id,
+            },
         )
 
     def _show_check_parameters(self, entry: CheckPreviewEntry, *, debug: bool) -> None:

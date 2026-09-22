@@ -10,7 +10,6 @@ remote sites in distributed Setup."""
 
 import ast
 import enum
-import json
 from collections.abc import Collection, Iterator, Sequence
 from pathlib import Path
 from typing import Literal, NamedTuple, override
@@ -897,8 +896,9 @@ class ModeActivateChanges(WatoMode):
         elif need_action and last_state["_state"] == activate_changes.STATE_SUCCESS:
             html.write_text_permissive(_("Activation needed"))
         else:
-            html.javascript(
-                "cmk.activation.update_site_activation_state(%s);" % json.dumps(last_state)
+            html.call_ts_function(
+                function_name="update_site_activation_state",
+                arguments={"site_state": last_state},
             )
 
     def _can_activate_all(self, site_id: SiteId) -> bool:

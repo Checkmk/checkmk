@@ -727,6 +727,13 @@ export function main_content_scroll_element(): HTMLElement | null {
   return document.getElementById('main_page_content')
 }
 
+export function show_element_on_click(trigger_id: string, target_id: string) {
+  document.getElementById(trigger_id)?.addEventListener('click', () => {
+    const target = document.getElementById(target_id)
+    if (target) target.style.display = 'block'
+  })
+}
+
 export function setButtonLoadingState(event: Event) {
   const target = event.target as HTMLInputElement
   target.classList.add('shimmer-input-button')

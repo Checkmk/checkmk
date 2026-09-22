@@ -414,6 +414,18 @@ export function switch_site(url: string) {
   })
 }
 
+export function virtual_host_tree_changed(field: HTMLSelectElement) {
+  call_ajax('sidebar_ajax_tag_tree.py?tree_id=' + encodeURIComponent(field.value), {
+    response_handler: () => refresh_single_snapin('tag_tree')
+  })
+}
+
+export function virtual_host_tree_enter(path: string) {
+  call_ajax('sidebar_ajax_tag_tree_enter.py?path=' + encodeURIComponent(path), {
+    response_handler: () => refresh_single_snapin('tag_tree')
+  })
+}
+
 export function refresh_single_snapin(name: string) {
   const event = new CustomEvent('sidebar-update-snapin-content', {
     detail: {

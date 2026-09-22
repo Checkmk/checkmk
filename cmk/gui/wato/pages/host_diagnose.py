@@ -7,7 +7,6 @@
 
 """Verify or find out a hosts agent related configuration"""
 
-import json
 from collections.abc import Collection
 from typing import NotRequired, override, TypedDict
 
@@ -336,7 +335,10 @@ class ModeDiagHost(WatoMode):
             # When clicking "Save & Test" on the "Edit host" page, this will be set
             # to immediately execute the tests using the just saved settings
             if request.has_var("_start_on_load"):
-                html.final_javascript("cmk.page_menu.form_submit('diag_host', '_save');")
+                html.call_ts_function(
+                    function_name="form_submit",
+                    arguments={"form_name": "diag_host", "button_name": "_save"},
+                )
 
             html.hidden_fields()
 
@@ -390,13 +392,13 @@ class ModeDiagHost(WatoMode):
 
             html.close_tr()
             html.close_table()
-            html.javascript(
-                "cmk.host_diagnose.start_test(%s, %s, %s)"
-                % (
-                    json.dumps(ident),
-                    json.dumps(self._hostname),
-                    json.dumps(transactions.fresh_transid()),
-                )
+            html.call_ts_function(
+                function_name="host_diagnose_start_test",
+                arguments={
+                    "ident": ident,
+                    "hostname": self._hostname,
+                    "transid": transactions.fresh_transid(),
+                },
             )
 
 

@@ -186,12 +186,12 @@ class UpdateDnsCacheLoadingContainer:
 
     @classmethod
     def include_catch_link_script(cls) -> None:
-        html.javascript(
-            f"""
-        document.getElementById('menu_suggestion_{cls.a_tag_id}').addEventListener('click', function (event) {{
-            document.getElementById('{cls.div_load_container_id}').style.display = 'block';
-        }});
-        """
+        html.call_ts_function(
+            function_name="show_element_on_click",
+            arguments={
+                "trigger_id": f"menu_suggestion_{cls.a_tag_id}",
+                "target_id": cls.div_load_container_id,
+            },
         )
 
 

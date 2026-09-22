@@ -94,7 +94,10 @@ def _match_service(service: WinService, settings: WindowsServiceDiscoveryParams)
         return False
 
     def _check_pattern(pattern: str) -> bool:
-        expr = re.compile(pattern)
+        try:
+            expr = re.compile(pattern)
+        except re.error:
+            return False
         return bool(expr.match(service.name) or expr.match(service.description))
 
     state = settings.get("state")

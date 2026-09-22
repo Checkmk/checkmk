@@ -380,10 +380,6 @@ def test_check_services_summary(params: Mapping[str, object], yielded_results: C
     assert yielded_results == list(services.check_services_summary(params, PARSED_AUTO))
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash report c987e23c-af11-11f0-8f80-0050569f1bde: re.error: nothing to repeat at position 0",
-)
 def test_discovery_windows_services_with_unusable_pattern() -> None:
     # A rule holding a glob where a regular expression belongs, e.g. "*SQL*".
     # Observed on 2.4.0, where it aborted the discovery of the whole host.

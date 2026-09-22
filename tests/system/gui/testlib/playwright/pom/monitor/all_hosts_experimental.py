@@ -174,9 +174,11 @@ class AllHostsExperimental(CmkPage):
         """The "Return to classic view" control rendered by the app.
 
         It is a button that assigns `window.location`, not a link, and it is
-        teleported into the page title bar — outside the app root.
+        teleported into the page title bar — outside the app root, but still
+        inside the main area, which a site serving its content in the main
+        iframe keeps out of the top-level document.
         """
-        return self.page.locator("button.monitoring-legacy-view-button")
+        return self.main_area.locator("button.monitoring-legacy-view-button")
 
     @property
     def availability_menu_entry(self) -> Locator:

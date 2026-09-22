@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Config domain for the Checkmk Maps backend daemon.
 
-Maps settings are edited as native Checkmk global settings (Setup → Global
-settings → "Checkmk Maps"), but — like every other Checkmk daemon configured via
+Maps settings are edited as native Checkmk global settings (Customize → Maps →
+the "Maps" page menu), but — like every other Checkmk daemon configured via
 WATO (liveproxyd, dcd, mkeventd) — they belong to the daemon's *own* config
 domain, not to the GUI domain. WATO writes them to ``etc/check_mk/maps.d/wato/``
 (``global.mk`` + per-site ``sitespecific.mk``); the daemon reads that directory
@@ -116,7 +116,7 @@ class ConfigDomainMaps(ABCConfigDomain):
     # otherwise never reach remote sites (their daemon would read stale config).
     needs_sync = True
     needs_activation = False
-    in_global_settings = True
+    in_global_settings = False
 
     @override
     @classmethod

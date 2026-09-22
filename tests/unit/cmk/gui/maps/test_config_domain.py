@@ -30,10 +30,14 @@ def test_daemon_domain_requests_sync_so_remote_daemons_get_config() -> None:
     # ships maps.d/wato to remotes and their daemon reads stale config.
     domain = ConfigDomainMaps()
     assert domain.needs_sync is True
-    assert domain.in_global_settings is True
     # The daemon re-reads its config dir per request, so there is no reload to
     # trigger on activation.
     assert domain.needs_activation is False
+
+
+def test_settings_are_not_listed_in_the_central_global_settings() -> None:
+    # Maps owns its settings pages (the two curated modes), like dcd.
+    assert ConfigDomainMaps.in_global_settings is False
 
 
 def test_domain_ident() -> None:

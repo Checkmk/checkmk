@@ -6,25 +6,27 @@
 # ``connections_list_spec`` returns a ``List[Any]``: a list's element type is known
 # only to the element spec it wraps, so the builder below has to name it too.
 # mypy: disable-error-code="explicit-any"
-"""Maps admin settings as native Checkmk global settings.
+"""Maps admin settings as native Checkmk config variables.
 
-The settings appear under *Setup → Global settings* in two "Maps" groups and are
-*also* reachable module-near (the map list's administration menu) through
-two curated modes (see :mod:`cmk.maps.gui._settings_modes`) — same variables,
-same form specs, one ``global.mk`` per domain, two entry points (the DCD
-pattern).
+Like DCD, Maps owns its settings pages: :class:`ConfigDomainMaps` sets
+``in_global_settings = False``, so *Setup → Global settings* does not list these
+variables and the two curated modes (see :mod:`cmk.maps.gui._settings_modes`) are
+the one entry point for the central values. Registering them as ``ConfigVariable``
+nonetheless is what makes them per-site overridable (the site-specific settings
+page lists every domain), REST-API-editable and part of the domain's
+load/save round-trip.
 
 All Maps settings live in the feature's own :class:`ConfigDomainMaps` (like every
-standalone Checkmk daemon package). Two display groups split them along the "read
-by the daemon?" seam — the daemon consumes only the second group:
+standalone Checkmk daemon package), in one display group. The curated modes split
+them along the "read by the daemon?" seam:
 
-- "Maps: map & object defaults" (GUI-only, never read by the daemon):
+- map/object authoring defaults (GUI-only, never read by the daemon):
   ``maps_map_defaults`` / ``maps_object_defaults`` — cohesive ``Dictionary``
   form specs consumed as a whole to seed a new map/object.
-- "Maps: connections & daemon" (read + replicated to the daemon):
-  ``maps_connections`` plus the two runtime knobs ``maps_log_level`` /
-  ``maps_state_refresh_interval`` (individual scalars so each is independently
-  searchable, resettable and site-overridable — the idiomatic Checkmk shape).
+- connections + daemon (read + replicated to the daemon): ``maps_connections``
+  plus the two runtime knobs ``maps_log_level`` / ``maps_state_refresh_interval``
+  (individual scalars so each is independently resettable and site-overridable —
+  the idiomatic Checkmk shape).
 
 The form-spec builders are context-free so the curated ``_settings_modes`` can
 reuse them verbatim; the ``ConfigVariable`` wrappers ignore the render-time
@@ -67,17 +69,16 @@ from cmk.rulesets.v1.form_specs import (
     SingleChoiceElement,
 )
 from cmk.rulesets.v1.form_specs.validators import NumberInRange
+from cmk.web.utils.icons import IconNames
 
-# Two groups along the config-domain seam (prefixed titles so they cluster in the
-# central list, like "Event Console: generic"). The curated module-near modes
-# scope to exactly one of these each.
-ConfigVariableGroupMapsAuthoring = ConfigVariableGroup(
-    title=_l("Maps: map & object defaults"),
+ConfigVariableGroupMaps = ConfigVariableGroup(
+    title=_l("Maps"),
     sort_index=60,
-)
-ConfigVariableGroupMapsDaemon = ConfigVariableGroup(
-    title=_l("Maps: connections & daemon"),
-    sort_index=61,
+    icon=IconNames.topic_visualization,
+    description=_l(
+        "Configures Checkmk Maps: monitoring connections, the backend daemon "
+        "and the defaults for new maps and map objects"
+    ),
 )
 
 
@@ -127,7 +128,7 @@ def state_refresh_interval_form_spec() -> Integer:
 
 
 ConfigVariableMapsConnections = ConfigVariable(
-    group=ConfigVariableGroupMapsDaemon,
+    group=ConfigVariableGroupMaps,
     primary_domain=ConfigDomainMaps,
     ident=CONFIG_VAR_CONNECTIONS,
     form_spec=lambda context: connections_form_spec(),  # noqa: ARG005
@@ -138,28 +139,28 @@ ConfigVariableMapsConnections = ConfigVariable(
 # settings in its own config domain rather than the shared GUI domain, so the
 # feature stays self-contained. The daemon simply ignores these keys in maps.d.
 ConfigVariableMapsMapDefaults = ConfigVariable(
-    group=ConfigVariableGroupMapsAuthoring,
+    group=ConfigVariableGroupMaps,
     primary_domain=ConfigDomainMaps,
     ident=CONFIG_VAR_MAP_DEFAULTS,
     form_spec=lambda context: map_defaults_form_spec(),  # noqa: ARG005
 )
 
 ConfigVariableMapsObjectDefaults = ConfigVariable(
-    group=ConfigVariableGroupMapsAuthoring,
+    group=ConfigVariableGroupMaps,
     primary_domain=ConfigDomainMaps,
     ident=CONFIG_VAR_OBJECT_DEFAULTS,
     form_spec=lambda context: object_defaults_form_spec(),  # noqa: ARG005
 )
 
 ConfigVariableMapsLogLevel = ConfigVariable(
-    group=ConfigVariableGroupMapsDaemon,
+    group=ConfigVariableGroupMaps,
     primary_domain=ConfigDomainMaps,
     ident=CONFIG_VAR_LOG_LEVEL,
     form_spec=lambda context: log_level_form_spec(),  # noqa: ARG005
 )
 
 ConfigVariableMapsStateRefreshInterval = ConfigVariable(
-    group=ConfigVariableGroupMapsDaemon,
+    group=ConfigVariableGroupMaps,
     primary_domain=ConfigDomainMaps,
     ident=CONFIG_VAR_STATE_REFRESH_INTERVAL,
     form_spec=lambda context: state_refresh_interval_form_spec(),  # noqa: ARG005
@@ -170,8 +171,7 @@ def register(
     config_variable_group_registry: ConfigVariableGroupRegistry,
     config_variable_registry: ConfigVariableRegistry,
 ) -> None:
-    config_variable_group_registry.register(ConfigVariableGroupMapsAuthoring)
-    config_variable_group_registry.register(ConfigVariableGroupMapsDaemon)
+    config_variable_group_registry.register(ConfigVariableGroupMaps)
     config_variable_registry.register(ConfigVariableMapsConnections)
     config_variable_registry.register(ConfigVariableMapsMapDefaults)
     config_variable_registry.register(ConfigVariableMapsObjectDefaults)

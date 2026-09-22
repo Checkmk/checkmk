@@ -2,11 +2,10 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Tests for the Maps global-settings registration.
+"""Tests for the Maps config-variable registration.
 
-Pins the two-group split along the "read by the daemon?" seam (daemon-read +
-replicated knobs vs. GUI-only authoring defaults) and that every variable maps to
-the feature's own config domain.
+Pins the one display group and that every variable maps to the feature's own
+config domain.
 """
 
 from cmk.gui.watolib.config_domain_name import (
@@ -31,12 +30,9 @@ def _register() -> tuple[ConfigVariableGroupRegistry, ConfigVariableRegistry]:
     return group_registry, variable_registry
 
 
-def test_registers_two_groups_along_the_domain_seam() -> None:
+def test_registers_one_group() -> None:
     group_registry, _vars = _register()
-    assert sorted(group_registry.keys()) == [
-        "Maps: connections & daemon",
-        "Maps: map & object defaults",
-    ]
+    assert sorted(group_registry.keys()) == ["Maps"]
 
 
 def test_registers_the_five_variables() -> None:

@@ -9,8 +9,8 @@
 """FormSpec for the Maps connections global setting.
 
 :func:`connections_list_spec` builds the ``maps_connections`` global (a list of
-connections, edited in Setup → Global settings → "Maps"); add/remove is the
-list's own UI. ``type`` is a CascadingSingleChoice mirroring the backend
+connections, edited under Customize → Maps → "Connections & daemon"); add/remove
+is the list's own UI. ``type`` is a CascadingSingleChoice mirroring the backend
 ``ConnectionConfig`` discriminator (currently only ``livestatus``). The
 ``automation_secret`` rides the Checkmk password store.
 """

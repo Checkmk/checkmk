@@ -21,8 +21,9 @@ stored values to :func:`render_form_schema` and its edited values back to
 arrangement notification parameters and the quick setup use.
 
 The connections, map/object defaults and logging/integration settings are
-*not* served here — they are native Checkmk global settings (Setup → Global
-settings → "Maps"), edited in WATO; see ``cmk.maps.gui._config_variables``.
+*not* served here — they are native Checkmk config variables, edited in WATO
+under Customize → Maps → the "Maps" page menu; see
+``cmk.maps.gui._config_variables``.
 What remains here is the per-map map metadata / flow-view editor the SPA
 renders inline.
 """

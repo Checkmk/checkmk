@@ -95,15 +95,15 @@ def test_forms_share_one_file_without_clobbering(
     assert stored["maps_map_defaults"] == {"default_backend_id": "cmk_x"}
 
 
-def test_curated_form_and_wato_global_settings_do_not_clobber_each_other(
+def test_curated_form_and_domain_save_do_not_clobber_each_other(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The one ``global.mk`` has two writers; both must survive the other.
 
-    Setup → Global settings writes through ``ABCConfigDomain.save``, the curated
-    form through ``WatoMultiConfigFile`` — different code paths onto the same file,
-    so the serialization has to be mutually readable and each writer has to carry
-    the other's keys over.
+    The site-specific settings page and the REST API write through
+    ``ABCConfigDomain.save``, the curated form through ``WatoMultiConfigFile`` —
+    different code paths onto the same file, so the serialization has to be
+    mutually readable and each writer has to carry the other's keys over.
     """
     monkeypatch.setattr(ConfigDomainMaps, "config_dir", lambda self: tmp_path)  # noqa: ARG005
     domain = ConfigDomainMaps()
@@ -112,8 +112,7 @@ def test_curated_form_and_wato_global_settings_do_not_clobber_each_other(
     MapsConfigFile().validate_and_save(
         {"maps_map_defaults": {"default_backend_id": "cmk_x"}}, pprint_value=True
     )
-    # 2) A WATO global-settings save round-trips the domain (load, change, save) —
-    #    exactly what ModeEditGlobalSetting.action does.
+    # 2) A WATO settings save round-trips the domain (load, change, save).
     settings = dict(domain.load())
     assert settings["maps_map_defaults"] == {"default_backend_id": "cmk_x"}, "not readable by WATO"
     settings["maps_log_level"] = "DEBUG"

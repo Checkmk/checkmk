@@ -4,24 +4,25 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module-near curated settings pages for Checkmk Maps.
 
-The same admin settings that Setup → Global settings exposes per-variable are
-*also* reachable right next to the module (Customize → Maps → the "Maps" page
-menu), grouped into two curated forms — the DCD pattern
-(``dcd_global_settings``): same variables, same form specs, two entry points.
+The admin settings live right next to the module (Customize → Maps → the "Maps"
+page menu), grouped into two curated forms — the DCD pattern
+(``dcd_global_settings``). Setup → Global settings does not list them:
+:class:`ConfigDomainMaps` sets ``in_global_settings = False``, so these forms own
+the central values.
 
 All Maps settings live in the feature's own :class:`ConfigDomainMaps`
 (``maps.d/wato/global.mk``), so both forms persist to the same file; each writes
 its own keys, merged over the current content so the other form's keys survive.
 
-That file has a second writer — Setup → Global settings, through the
-``ConfigVariable``s of :mod:`cmk.maps.gui._config_variables`. The two interleave
-safely and in both directions: :class:`WatoMultiConfigFile` and
+That file has other writers — the site-specific settings page and the REST API,
+through the ``ConfigVariable``s of :mod:`cmk.maps.gui._config_variables`. They
+interleave safely and in both directions: :class:`WatoMultiConfigFile` and
 :meth:`ABCConfigDomain.save` use the same ``<varname> = <repr>`` format, this mode
 merges over the file's current content, and WATO's own save round-trips the whole
 domain (it re-saves what ``load_configuration_settings`` just read). Like DCD's
 ``dcd_global_settings``, the curated forms show the *central* values only —
-per-site overrides (``sitespecific.mk``) stay with the standard global-settings
-UI that owns them.
+per-site overrides (``sitespecific.mk``) stay with the site-specific settings UI
+that owns them.
 
 The two forms split the settings along the "read by the daemon?" seam:
 

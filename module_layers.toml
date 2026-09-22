@@ -1556,6 +1556,17 @@ allows = [
   "cmk.validate_config",
 ]
 
+[components."cmk.update_config.nonfree.pro"]
+allows = [
+  "@ccc",
+  "@data_backend",
+  "cmk.dcd.gui",
+  "cmk.gui",
+  "cmk.licensing",
+  "cmk.update_config",
+  "cmk.utils",
+]
+
 [components."cmk.update_config.nonfree.ultimate"]
 allows = [
   "@ccc",

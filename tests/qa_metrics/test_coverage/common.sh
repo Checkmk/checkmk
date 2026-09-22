@@ -109,10 +109,6 @@ instrumentation_filter() {
 #     match a tag like no-requirements.
 #   * omd/dependency_management:test_licenses: its SBOM data dep builds the Rust
 #     agent controller, which fails to link under instrumentation.
-#   * omd/dependency_management:test_manual_dep_manifest: passes under `bazel
-#     test` but not under `bazel coverage`, a second coverage.py Collector being
-#     created while pytest imports the module, so the runner's cov.stop() finds
-#     the wrong one on the stack.
 #   * from tests/, only what our test classification calls "package tests":
 #     openapi, agent-plugin-unit and unit. Everything else crosses package
 #     boundaries.
@@ -123,7 +119,6 @@ let t = $all
     except attr("srcs", "-doctest-runner\.py", $all)
     except attr("tags", "[\[ ]requirements[,\]]", $all)
     except //omd/dependency_management:test_licenses
-    except //omd/dependency_management:test_manual_dep_manifest
     except (//tests/... except (//tests/openapi/... + //tests/agent-plugin-unit/... + //tests/unit/...))
 in
 EOF

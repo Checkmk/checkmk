@@ -28,6 +28,7 @@ from cmk.plugins.oracle import constants
 from cmk.plugins.oracle.agent_based.liboracle import (
     Error,
     InstancePerformance,
+    is_instance_name,
     Ok,
     SectionPerformance,
 )
@@ -89,8 +90,8 @@ def discover_oracle_performance(
     }
     yield from (
         Service(item=item, parameters=discovered_params.copy())
-        for item, result in section.items()
-        if isinstance(result, Ok)
+        for item in section
+        if is_instance_name(item)
     )
 
 
@@ -211,7 +212,7 @@ def discover_oracle_performance_subcheck(
     def inventory_func(params: Mapping[str, Any], section: SectionPerformance) -> DiscoveryResult:
         if params.get(subcheck_settings_name) is None:
             return
-        yield from (Service(item=sid) for sid, result in section.items() if isinstance(result, Ok))
+        yield from (Service(item=sid) for sid in section if is_instance_name(sid))
 
     return inventory_func
 

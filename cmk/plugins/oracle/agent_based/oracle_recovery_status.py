@@ -39,7 +39,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .liboracle import Error, Ok, oracle_handle_ora_errors, Parsed
+from .liboracle import Error, is_instance_name, Ok, oracle_handle_ora_errors, Parsed
 
 # The first column is the database name, or the instance name when the
 # agent runs with IGNORE_DB_NAME. Either way it is the item.
@@ -67,7 +67,7 @@ def parse_oracle_recovery_status(string_table: StringTable) -> Section:
 
 
 def discover_oracle_recovery_status(section: Section) -> DiscoveryResult:
-    yield from (Service(item=name) for name, result in section.items() if isinstance(result, Ok))
+    yield from (Service(item=name) for name in section if is_instance_name(name))
 
 
 def check_oracle_recovery_status(

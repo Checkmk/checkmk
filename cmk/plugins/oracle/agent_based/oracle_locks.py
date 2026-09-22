@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .liboracle import Error, Ok, oracle_handle_ora_errors, Parsed
+from .liboracle import Error, is_instance_name, Ok, oracle_handle_ora_errors, Parsed
 
 # <<<oracle_locks>>>
 # TUX12C|273|2985|ora12c.local|sqlplus@ora12c.local (TNS V1-V3)|46148|oracle|633|NULL|NULL
@@ -53,8 +53,11 @@ def parse_oracle_locks(string_table: StringTable) -> Section:
 
 def discover_oracle_locks(section: Section) -> DiscoveryResult:
     for sid, result in section.items():
-        if isinstance(result, Ok):
-            yield from (Service(item=sid) for line in result.value if len(line) >= 10)
+        if not is_instance_name(sid):
+            continue
+        # A lock row has 10 fields (locks_old) or 18 (locks). Shorter rows hold no lock.
+        if isinstance(result, Error) or any(len(line) >= 10 for line in result.value):
+            yield Service(item=sid)
 
 
 def check_oracle_locks(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:

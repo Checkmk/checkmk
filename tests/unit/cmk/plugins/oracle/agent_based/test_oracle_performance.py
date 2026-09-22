@@ -409,10 +409,14 @@ def test_check_oracle_performance_waitclasses(
 _FAILURE = [["TWH", "FAILURE", "ORA-00942: table or view does not exist"]]
 
 
-def test_discover_skips_failure_row() -> None:
+def test_discover_failure_row() -> None:
     section = parse_oracle_performance(_FAILURE)
-    assert not list(opc.discover_oracle_performance({}, section))
-    assert not list(opc.discover_oracle_performance_subcheck("dbtime")({"dbtime": []}, section))
+    assert list(opc.discover_oracle_performance({}, section)) == [
+        Service(item="TWH", parameters={"check_dbtime": True, "check_memory": True})
+    ]
+    assert list(opc.discover_oracle_performance_subcheck("dbtime")({"dbtime": []}, section)) == [
+        Service(item="TWH")
+    ]
 
 
 def test_check_surfaces_failure() -> None:

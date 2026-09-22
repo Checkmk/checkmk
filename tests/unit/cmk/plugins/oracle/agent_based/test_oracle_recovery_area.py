@@ -29,8 +29,8 @@ _AGENT_OUTPUT = [
 ]
 
 
-def test_discover_oracle_recovery_area_skips_failure_row() -> None:
-    assert not list(
+def test_discover_oracle_recovery_area_failure_row() -> None:
+    assert [Service(item="AIMDWHD1")] == list(
         check_plugin_oracle_recovery_area.discovery_function(
             parse_oracle_recovery_area(
                 [

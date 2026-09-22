@@ -27,8 +27,8 @@ def test_discover_oracle_sessions_normal() -> None:
     assert list(discover_oracle_sessions(parse_oracle_sessions(_NORMAL))) == [Service(item="orcl")]
 
 
-def test_discover_oracle_sessions_skips_failure_only() -> None:
-    assert not list(discover_oracle_sessions(parse_oracle_sessions(_FAILURE)))
+def test_discover_oracle_sessions_failure_row() -> None:
+    assert list(discover_oracle_sessions(parse_oracle_sessions(_FAILURE))) == [Service(item="orcl")]
 
 
 def test_check_oracle_sessions_normal() -> None:

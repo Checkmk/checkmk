@@ -22,7 +22,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .liboracle import Error, Ok, oracle_handle_ora_errors, Parsed
+from .liboracle import Error, is_instance_name, Ok, oracle_handle_ora_errors, Parsed
 
 # In cooperation with Thorsten Bruhns from OPITZ Consulting
 
@@ -74,7 +74,7 @@ agent_section_oracle_processes = AgentSection(
 
 
 def discover_oracle_processes(section: Section) -> DiscoveryResult:
-    yield from (Service(item=sid) for sid, result in section.items() if isinstance(result, Ok))
+    yield from (Service(item=sid) for sid in section if is_instance_name(sid))
 
 
 def check_oracle_processes(

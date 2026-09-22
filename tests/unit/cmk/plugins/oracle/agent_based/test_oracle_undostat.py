@@ -21,8 +21,8 @@ def test_discover_normal() -> None:
     assert list(discover_oracle_undostat(parse_oracle_undostat(_DATA))) == [Service(item="TUX2")]
 
 
-def test_discover_skips_failure_row() -> None:
-    assert not list(discover_oracle_undostat(parse_oracle_undostat(_FAILURE)))
+def test_discover_failure_row() -> None:
+    assert list(discover_oracle_undostat(parse_oracle_undostat(_FAILURE))) == [Service(item="TUX2")]
 
 
 def test_check_normal() -> None:

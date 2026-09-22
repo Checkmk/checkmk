@@ -211,6 +211,15 @@ def oracle_handle_ora_errors(line: Sequence[str]) -> str | Literal[False] | None
 
 
 def _oracle_handle_legacy_ora_errors(line: Sequence[str]) -> str | Literal[False] | None:
-    if line[0].startswith("ORA-"):
+    if _is_error_field(line[0]):
         return 'Found error in agent output "%s"' % " ".join(line)
     return None
+
+
+# A legacy error line without an instance name is keyed by its Oracle message code.
+def is_instance_name(key: str) -> bool:
+    return not _is_error_field(key)
+
+
+def _is_error_field(field: str) -> bool:
+    return field.startswith("ORA-")

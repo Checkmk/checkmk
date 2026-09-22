@@ -29,7 +29,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .liboracle import Error, Ok, oracle_handle_ora_errors, Parsed
+from .liboracle import Error, is_instance_name, Ok, oracle_handle_ora_errors, Parsed
 
 type _Metrics = dict[str, int]
 type Section = Mapping[str, Parsed[_Metrics]]
@@ -60,7 +60,9 @@ def parse_oracle_sessions(string_table: StringTable) -> Section:
 
 def discover_oracle_sessions(section: Section) -> DiscoveryResult:
     for sid, result in section.items():
-        if isinstance(result, Ok) and result.value:
+        if not is_instance_name(sid):
+            continue
+        if isinstance(result, Error) or result.value:
             yield Service(item=sid)
 
 

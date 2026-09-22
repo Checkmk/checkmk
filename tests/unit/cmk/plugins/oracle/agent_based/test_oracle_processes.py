@@ -42,8 +42,16 @@ def test_discover_nothing_from_an_empty_section() -> None:
     assert not list(discover_oracle_processes({}))
 
 
-def test_discover_skips_failure_row() -> None:
-    assert not list(discover_oracle_processes(parse_oracle_processes(_FAILURE)))
+def test_discover_failure_row() -> None:
+    assert list(discover_oracle_processes(parse_oracle_processes(_FAILURE))) == [
+        Service(item="FREE")
+    ]
+
+
+def test_discover_nothing_from_an_error_line_without_instance() -> None:
+    # A connect warning of legacy mk_oracle, split at whitespace.
+    string_table = [["ORA-28002:", "the", "password", "will", "expire", "within", "7", "days"]]
+    assert not list(discover_oracle_processes(parse_oracle_processes(string_table)))
 
 
 @pytest.mark.parametrize(

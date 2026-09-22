@@ -29,7 +29,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .liboracle import Error, Ok, oracle_handle_ora_errors, Parsed
+from .liboracle import Error, is_instance_name, Ok, oracle_handle_ora_errors, Parsed
 
 type _SessionRows = list[Sequence[str]]
 type Section = Mapping[str, Parsed[_SessionRows]]
@@ -57,9 +57,7 @@ def parse_oracle_longactivesessions(string_table: StringTable) -> Section:
 
 
 def discover_oracle_longactivesessions(section: Section) -> DiscoveryResult:
-    for sid, result in section.items():
-        if isinstance(result, Ok):
-            yield from (Service(item=sid) for _line in result.value)
+    yield from (Service(item=sid) for sid in section if is_instance_name(sid))
 
 
 def check_oracle_longactivesessions(

@@ -22,7 +22,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .liboracle import Error, Ok, oracle_handle_ora_errors, Parsed
+from .liboracle import Error, is_instance_name, Ok, oracle_handle_ora_errors, Parsed
 
 # <<<oracle_logswitches>>>
 # pengt  15
@@ -54,7 +54,7 @@ def parse_oracle_logswitches(string_table: StringTable) -> Section:
 
 
 def discover_oracle_logswitches(section: Section) -> DiscoveryResult:
-    yield from (Service(item=sid) for sid, result in section.items() if isinstance(result, Ok))
+    yield from (Service(item=sid) for sid in section if is_instance_name(sid))
 
 
 def check_oracle_logswitches(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:

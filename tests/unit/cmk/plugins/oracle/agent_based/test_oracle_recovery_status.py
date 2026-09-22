@@ -82,8 +82,10 @@ def test_discover_normal() -> None:
     assert list(discover_oracle_recovery_status(section)) == [Service(item="ORCL")]
 
 
-def test_discover_skips_failure_row() -> None:
-    assert not list(discover_oracle_recovery_status(parse_oracle_recovery_status(_FAILURE)))
+def test_discover_failure_row() -> None:
+    assert list(discover_oracle_recovery_status(parse_oracle_recovery_status(_FAILURE))) == [
+        Service(item="ORCL")
+    ]
 
 
 def test_check_missing_goes_stale() -> None:

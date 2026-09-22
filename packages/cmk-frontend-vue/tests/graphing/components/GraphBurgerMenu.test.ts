@@ -6,6 +6,7 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 
 import GraphBurgerMenu from '@/graphing/components/GraphBurgerMenu.vue'
+import { BOTTOM_SCREEN_MARGIN } from '@/graphing/components/constants'
 import type { BurgerMenuGroup } from '@/graphing/types'
 
 const GROUPS: BurgerMenuGroup[] = [
@@ -156,6 +157,26 @@ test('flips the dropdown above the trigger when the room below is too cramped', 
     .closest('.graphing-graph-burger-menu__dropdown')
   expect(dropdown).toHaveClass('graphing-graph-burger-menu__dropdown_flipped')
   expect(dropdown).toHaveStyle({ maxHeight: '360px' })
+})
+
+test('keeps the dropdown inside the space below when neither side has room', async () => {
+  const viewportHeight = 500
+  const triggerBottom = 350
+  const spaceBelow = viewportHeight - triggerBottom
+  vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(viewportHeight)
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+    top: 100,
+    bottom: triggerBottom
+  } as DOMRect)
+
+  render(GraphBurgerMenu, { props: { groups: GROUPS, scrollable: true, ariaLabel: ARIA_LABEL } })
+  await fireEvent.click(screen.getByRole('button', { name: ARIA_LABEL }))
+
+  const dropdown = screen
+    .getByText('Add to dashboard')
+    .closest('.graphing-graph-burger-menu__dropdown')
+  expect(dropdown).not.toHaveClass('graphing-graph-burger-menu__dropdown_flipped')
+  expect(dropdown).toHaveStyle({ maxHeight: `${spaceBelow - BOTTOM_SCREEN_MARGIN}px` })
 })
 
 test('does not constrain the dropdown height when scrollable is disabled', async () => {

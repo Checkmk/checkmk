@@ -29,8 +29,6 @@ const isOpen = ref(false)
 const containerRef = ref<HTMLElement | null>(null)
 const triggerRef = ref<HTMLButtonElement | null>(null)
 
-// If the available vertical space is below this min height the dropdown flips to upward rendering
-const MIN_DROPDOWN_HEIGHT = 200
 const flippedUp = ref(false)
 const dropdownMaxHeight = ref<string | undefined>(undefined)
 
@@ -110,14 +108,14 @@ function updateDropdownMaxHeight() {
   const anchorRect = containerRef.value.getBoundingClientRect()
   const spaceBelow = window.innerHeight - anchorRect.bottom
   const spaceAbove = anchorRect.top
-  flippedUp.value = spaceBelow < MIN_DROPDOWN_HEIGHT && spaceAbove > spaceBelow
+  flippedUp.value = spaceBelow < 200 && spaceAbove > spaceBelow
 
   if (!scrollable) {
     dropdownMaxHeight.value = undefined
     return
   }
   const available = (flippedUp.value ? spaceAbove : spaceBelow) - BOTTOM_SCREEN_MARGIN
-  dropdownMaxHeight.value = `${Math.max(MIN_DROPDOWN_HEIGHT, available)}px`
+  dropdownMaxHeight.value = `${Math.max(0, available)}px`
 }
 
 watch(isOpen, (open) => {

@@ -136,6 +136,7 @@ from ._connection import (
     UnixSocketDetails,
     UnixSocketInfo,
 )
+from .expressions import LqUnsafeValueError
 
 __all__ = [
     # Client
@@ -243,6 +244,7 @@ __all__ = [
     "MKLivestatusNotFoundError",
     "MKLivestatusPayloadTooLargeError",
     "MKLivestatusQueryError",
+    "LqUnsafeValueError",
     "MKLivestatusSocketClosed",
     "MKLivestatusSocketError",
     "MKLivestatusTableNotFoundError",

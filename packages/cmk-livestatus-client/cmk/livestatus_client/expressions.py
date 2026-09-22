@@ -18,7 +18,17 @@ import abc
 from dataclasses import dataclass
 from typing import override, Self
 
+from cmk.livestatus_client._connection import MKLivestatusQueryError
+
 Primitives = str | int | bool | float | list[str] | tuple[str, ...]
+
+
+class LqUnsafeValueError(MKLivestatusQueryError, ValueError):
+    """A value cannot be safely embedded in a Livestatus query.
+
+    Subclasses `ValueError` for backwards compatibility and `MKLivestatusQueryError` so callers
+    handling the livestatus exception family can treat it uniformly.
+    """
 
 
 # Why dataclass and frozen: to make it immutable and hashable, so it can be used as a key in a dict or stored in a set.
@@ -39,7 +49,7 @@ class LqSafe:
         >>> LqSafe("string\\nwith\\nnewlines")
         Traceback (most recent call last):
             ...
-        ValueError: Invalid Livestatus Query string: 'string\\nwith\\nnewlines'
+        cmk.livestatus_client.expressions.LqUnsafeValueError: Invalid Livestatus Query string: 'string\\nwith\\nnewlines'
 
         >>> LqSafe("tab\\ttabs are ok")
         LqSafe(value='tab\\ttabs are ok')
@@ -55,7 +65,7 @@ class LqSafe:
             text: The input value to convert and validate
 
         Raises:
-            ValueError: If the string representation contains newline characters
+            LqUnsafeValueError: If the string representation contains newline characters
         """
         if isinstance(text, tuple | list):
             str_value = " ".join(str(item) for item in text)
@@ -63,7 +73,7 @@ class LqSafe:
             str_value = str(text)
 
         if any(char in str_value for char in self.INVALID_CHARS):
-            raise ValueError(f"Invalid Livestatus Query string: {str_value!r}")
+            raise LqUnsafeValueError(f"Invalid Livestatus Query string: {str_value!r}")
 
         object.__setattr__(self, "value", str_value)
 

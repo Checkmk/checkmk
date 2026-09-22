@@ -14,6 +14,7 @@ from .expressions import (
     BoolExpression,
     ListExpression,
     LqSafe,
+    LqUnsafeValueError,
     Not,
     NothingExpression,
     Primitives,
@@ -233,12 +234,12 @@ class DynamicColumn:
         >>> Services.prediction_file.dynamic('file', 'foo\\nbar')
         Traceback (most recent call last):
         ...
-        ValueError: Invalid Livestatus Query string: 'foo\\nbar'
+        cmk.livestatus_client.expressions.LqUnsafeValueError: Invalid Livestatus Query string: 'foo\\nbar'
 
         >>> Services.prediction_file.dynamic('file', 'foo bar')
         Traceback (most recent call last):
         ...
-        ValueError: Invalid dynamic column parameter (contains whitespace): 'foo bar'
+        cmk.livestatus_client.expressions.LqUnsafeValueError: Invalid dynamic column parameter (contains whitespace): 'foo bar'
     """
 
     def __init__(
@@ -304,9 +305,10 @@ class DynamicColumn:
             A `Column` named `<name>:<column_title>:<argument>[:<argument>...]`.
 
         Raises:
-            ValueError: If a parameter would break the query, i.e. it contains
-                whitespace (column names are whitespace-separated in the
-                `Columns:` header) or the title contains a colon.
+            LqUnsafeValueError: If a parameter would break the query, i.e. it contains
+                a newline or whitespace (column names are whitespace-separated in the
+                `Columns:` header).
+            ValueError: If no argument is given or the title is empty or contains a colon.
         """
         if not arguments:
             raise ValueError(f"Dynamic column {self.name!r} requires at least one argument")
@@ -316,7 +318,7 @@ class DynamicColumn:
             raise ValueError(f"Invalid dynamic column title: {title!r}")
         for part in (title, *args):
             if any(char.isspace() for char in part):
-                raise ValueError(
+                raise LqUnsafeValueError(
                     f"Invalid dynamic column parameter (contains whitespace): {part!r}"
                 )
         column = Column(":".join([self.name, title, *args]), self.type, self.__doc__)

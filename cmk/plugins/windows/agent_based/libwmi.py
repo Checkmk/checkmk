@@ -19,7 +19,9 @@ from cmk.agent_based.v2 import (
     get_rate,
     get_value_store,
     LevelsT,
+    Result,
     Service,
+    State,
     StringTable,
 )
 
@@ -42,6 +44,10 @@ from cmk.agent_based.v2 import (
 #   |                     |_|   \__,_|_|  |___/\___|                       |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+
+class WMIInvalidFrequencyError(Exception):
+    pass
 
 
 class WMIQueryTimeoutError(Exception):
@@ -348,7 +354,9 @@ def get_wmi_time(table: WMITable, row: str | int, *, raise_on_timeout: bool = Fa
     assert timestamp is not None
     if not frequency:
         frequency = 1
-    return float(timestamp) / float(frequency)
+    if not (ticks_per_second := float(frequency)):
+        raise WMIInvalidFrequencyError(f"the host reported a counter frequency of {frequency}")
+    return float(timestamp) / ticks_per_second
 
 
 def discover_wmi_table_instances(
@@ -534,10 +542,16 @@ def check_wmi_raw_persec(
     except KeyError:
         return
 
+    try:
+        sample_time = get_wmi_time(table, row)
+    except WMIInvalidFrequencyError as exc:
+        yield Result(state=State.UNKNOWN, summary=f"{label}: cannot compute a rate, {exc}")
+        return
+
     rate = get_rate(
         get_value_store(),
         f"{column}_{table.name}",
-        get_wmi_time(table, row),
+        sample_time,
         int(value),
         raise_overflow=True,
     )

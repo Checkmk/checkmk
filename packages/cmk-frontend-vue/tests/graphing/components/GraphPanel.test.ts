@@ -1251,7 +1251,7 @@ test('keeps the all-hidden message when data arrived but nothing is shown', () =
   expect(screen.getByTestId('time-series-graph')).toBeInTheDocument()
 })
 
-test('a window that returned no data reuses the all-hidden message', () => {
+test('a window that returned no metrics does not blame hiding for the empty frame', () => {
   render(GraphPanel, {
     props: {
       metrics: [],
@@ -1263,9 +1263,48 @@ test('a window that returned no data reuses the all-hidden message', () => {
     }
   })
 
-  // Pins today's wording: nothing was hidden, there was nothing to show. Change both together.
+  // Nothing was hidden; the host states why the frame is empty.
+  expect(screen.queryByText('All metrics are hidden')).not.toBeInTheDocument()
+})
+
+test('leaves an all-null panel to its host even when every metric is hidden', () => {
+  render(GraphPanel, {
+    props: {
+      metrics: [
+        { ...CPU, data_points: [null, null, null] },
+        { ...MEM, data_points: [null, null, null] }
+      ],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      panelKey: 0,
+      figureWidth: FIGURE_WIDTH,
+      interaction: INTERACTION_NONE,
+      hiddenMetricNames: ['cpu', 'mem'],
+      showLegend: true
+    }
+  })
+
+  // Hiding curves that hold nothing explains nothing; the host states the emptiness instead.
+  expect(screen.queryByText('All metrics are hidden')).not.toBeInTheDocument()
+})
+
+test('keeps the all-hidden message up while a refetch is out', () => {
+  render(GraphPanel, {
+    props: {
+      metrics: [CPU, MEM],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      awaitingData: true,
+      panelKey: 0,
+      figureWidth: FIGURE_WIDTH,
+      interaction: INTERACTION_NONE,
+      hiddenMetricNames: ['cpu', 'mem'],
+      showLegend: true
+    }
+  })
+
+  // Hiding is the user's own choice about metrics still on screen, so a fetch does not unsay it.
   expect(screen.getByText('All metrics are hidden')).toBeInTheDocument()
-  expect(screen.getByTestId('time-series-graph')).toBeInTheDocument()
 })
 
 test('forwards a provided y-axis, explicit range included, into the renderer options', () => {

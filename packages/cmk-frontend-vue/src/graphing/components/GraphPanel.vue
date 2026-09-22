@@ -11,6 +11,7 @@ import { type Ref, computed, onMounted, ref, watch } from 'vue'
 
 import { loadMenu } from '../api/burgerMenu'
 import { useGraphInteraction } from '../composables/useGraphInteraction'
+import { hasPlottableData } from '../composables/useGraphNotice'
 import { useGraphVisibility } from '../composables/useGraphVisibility'
 import type {
   BurgerMenuCallable,
@@ -311,7 +312,7 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_
             @update:plot-left="plotLeft = $event"
           />
           <CmkAlertBox
-            v-if="dataTimeRange && !anyMetricShown"
+            v-if="dataTimeRange && hasPlottableData(metrics) && !anyMetricShown"
             class="graphing-graph-panel__empty-state"
             variant="info"
           >
@@ -390,6 +391,7 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_
 }
 
 .graphing-graph-panel__empty-state {
+  pointer-events: none;
   position: absolute;
   top: 50%;
   left: 50%;

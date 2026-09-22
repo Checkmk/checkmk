@@ -20,7 +20,7 @@ import { type ComponentPublicInstance, computed, onMounted, ref, watch } from 'v
 import { useGlobalRefresh } from '../GlobalTimePicker/globalTimeState'
 import { useBrushSnapshot } from '../composables/useBrushSnapshot'
 import { type GraphCombinationMode, useGraphData } from '../composables/useGraphData'
-import { useGraphNotice } from '../composables/useGraphNotice'
+import { hasPlottableData, useGraphNotice, useNoDataNotice } from '../composables/useGraphNotice'
 import { useLocalTimeRange } from '../composables/useLocalTimeRange'
 import { useRequestedTimeRange } from '../composables/useRequestedTimeRange'
 import type {
@@ -243,6 +243,25 @@ const notice = useGraphNotice({
   warnings: () => warnings.value
 })
 
+const noDataNotice = useNoDataNotice()
+
+// One pill per panel: the group's own notice outranks a panel's emptiness, and a panel awaiting
+// data is still showing the answer to the request before this one.
+const panelNotices = computed(() =>
+  slots.value.map(
+    (slot) =>
+      notice.value ??
+      (slot.graph !== null && !slot.isAwaitingData && !hasPlottableData(slot.graph.metrics)
+        ? noDataNotice
+        : null)
+  )
+)
+
+// Repeated over every panel, so the group states it once instead.
+const announcedNotice = computed(
+  () => notice.value ?? panelNotices.value.find((panelNotice) => panelNotice !== null) ?? null
+)
+
 // The overview feeds the brush below the plot, so a retry has to refresh it too.
 function onRetry(): void {
   reload()
@@ -261,9 +280,9 @@ function onRetry(): void {
          announces it once here. -->
     <CmkVisuallyHidden v-if="showSkeletons" :text="_t('Loading graphs…')" live="polite" />
     <CmkVisuallyHidden
-      v-else-if="notice"
-      :text="notice.message"
-      :live="notice.variant === 'error' ? 'assertive' : 'polite'"
+      v-else-if="announcedNotice"
+      :text="announcedNotice.message"
+      :live="announcedNotice.variant === 'error' ? 'assertive' : 'polite'"
     />
     <!-- A slot with neither yet is a first load still inside the delay, and stays blank. -->
     <template v-for="panelSlot in slots" :key="panelSlot.index">
@@ -313,8 +332,8 @@ function onRetry(): void {
           @inspect="pauseRefresh"
         />
         <GraphNotice
-          v-if="notice"
-          v-bind="notice"
+          v-if="panelNotices[panelSlot.index]"
+          v-bind="panelNotices[panelSlot.index]!"
           silent
           class="graphing-graph-group__notice"
           @retry="onRetry"

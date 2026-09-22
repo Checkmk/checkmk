@@ -8,6 +8,7 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { type ComputedRef, computed } from 'vue'
 
 import type { GraphNoticeVariant } from '../components/GraphNotice.vue'
+import type { Metric } from '../components/TimeSeriesGraph/types'
 
 /** The GraphNotice props a surface binds when it has something to state over its graph. */
 export interface GraphNoticeDescriptor {
@@ -57,4 +58,33 @@ export function useGraphNotice(source: {
     }
     return null
   })
+}
+
+/**
+ * Whether any metric holds a point to draw.
+ *
+ * A metric whose RRD holds no series is still returned, with every point null, so an empty
+ * `metrics` list is not the only shape that means nothing to draw. Backend-hidden metrics are
+ * skipped: they shape the stacking sums but the renderer never paints them.
+ */
+export function hasPlottableData(metrics: readonly Metric[]): boolean {
+  return metrics.some(
+    (metric) => !metric.render.hidden && metric.data_points.some((point) => point !== null)
+  )
+}
+
+/**
+ * What to state over a graph that resolved nothing to draw.
+ *
+ * The surface decides when to show it, because only the surface knows what else it is already
+ * stating and whether the metrics it holds still answer the request in flight.
+ */
+export function useNoDataNotice(): GraphNoticeDescriptor {
+  const { _t } = usei18n()
+
+  return {
+    variant: 'info',
+    message: _t('No data available'),
+    description: _t('There is no data to display in this time range')
+  }
 }

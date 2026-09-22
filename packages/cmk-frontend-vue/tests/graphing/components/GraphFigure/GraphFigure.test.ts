@@ -274,6 +274,86 @@ test('a provided fetchGraph replaces the default fetch', async () => {
   )
 })
 
+test('a figure whose points are all null states that there is no data', async () => {
+  const fetchGraph = vi.fn().mockResolvedValue({
+    title: FETCHED.title,
+    metrics: [{ ...FETCHED.metrics[0], data_points: [null, null, null] }],
+    timeRange: FETCHED.time_range,
+    horizontalLines: []
+  })
+
+  renderFigure({ fetchGraph })
+
+  expect(await screen.findByText('No data available')).toBeInTheDocument()
+})
+
+test('a pan away from an empty range waits for the new data before calling it empty', async () => {
+  const empty = {
+    title: FETCHED.title,
+    metrics: [{ ...FETCHED.metrics[0], data_points: [null, null, null] }],
+    timeRange: FETCHED.time_range,
+    horizontalLines: []
+  }
+  let resolveSecond: (value: unknown) => void = () => {}
+  const fetchGraph = vi
+    .fn()
+    .mockResolvedValueOnce(empty)
+    .mockImplementationOnce(() => new Promise((resolve) => (resolveSecond = resolve)))
+
+  renderFigure({ fetchGraph })
+  expect(await screen.findByText('No data available')).toBeInTheDocument()
+
+  await fireEvent.click(screen.getByTestId('emit-pan'))
+  await waitFor(() => expect(fetchGraph).toHaveBeenCalledTimes(2))
+
+  expect(screen.queryByText('No data available')).not.toBeInTheDocument()
+
+  // Suppressed only while the request is open: an empty answer states it again.
+  resolveSecond(empty)
+  expect(await screen.findByText('No data available')).toBeInTheDocument()
+})
+
+test.each([
+  ['internal', { internal: '{"graphs": ["other"]}' }],
+  ['combinationMode', { combinationMode: 'stacked' }]
+])('a pending refetch after a %s change does not call the new graph empty', async (_name, next) => {
+  const empty = {
+    title: FETCHED.title,
+    metrics: [{ ...FETCHED.metrics[0], data_points: [null, null, null] }],
+    timeRange: FETCHED.time_range,
+    horizontalLines: []
+  }
+  // A prop change drives both the definition watch and the range watch, so the count is not fixed;
+  // every request after the first stays open.
+  const fetchGraph = vi
+    .fn()
+    .mockResolvedValueOnce(empty)
+    .mockImplementation(() => new Promise(() => {}))
+
+  const { rerender } = renderFigure({ fetchGraph })
+  expect(await screen.findByText('No data available')).toBeInTheDocument()
+
+  // Same time range, different request: the stale response does not describe it.
+  await rerender({
+    internal: '{"graphs": []}',
+    timerange: { type: 'age', hours: 4 },
+    fetchGraph,
+    ...next
+  })
+  await waitFor(() => expect(fetchGraph.mock.calls.length).toBeGreaterThan(1))
+
+  expect(screen.queryByText('No data available')).not.toBeInTheDocument()
+})
+
+test('a failed fetch outranks the no-data message', async () => {
+  const fetchGraph = vi.fn().mockRejectedValue(new Error('livestatus is down'))
+
+  renderFigure({ fetchGraph })
+
+  expect(await screen.findByText('Graph data could not be loaded.')).toBeInTheDocument()
+  expect(screen.queryByText('No data available')).not.toBeInTheDocument()
+})
+
 test('a pan fetches the panned window', async () => {
   renderFigure()
   await screen.findByTestId('time-series-graph')

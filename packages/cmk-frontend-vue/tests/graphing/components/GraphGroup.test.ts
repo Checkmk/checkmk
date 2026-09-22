@@ -381,6 +381,75 @@ test('a refetch failing after its skeletons are up replaces them with the error'
   expect(within(notice()!).getByText('gone')).toBeInTheDocument()
 })
 
+// The shape an unpopulated RRD resolves to: the metric is returned, every point is null.
+const FETCHED_WITHOUT_DATA = {
+  ...FETCHED,
+  metrics: [{ ...FETCHED.metrics[0], data_points: [null, null, null] }],
+  shaded_regions: []
+}
+
+const resolvesWith = (payload: unknown) =>
+  postSpy.mockResolvedValue({
+    data: payload,
+    error: undefined,
+    response: new Response('{}', { status: 200 })
+  } as never)
+
+test('a panel whose points are all null states that there is no data', async () => {
+  vi.useFakeTimers()
+  resolvesWith(FETCHED_WITHOUT_DATA)
+
+  renderGroup()
+  await vi.advanceTimersByTimeAsync(0)
+
+  expect(panels()).toHaveLength(1)
+  expect(within(notice()!).getByText('No data available')).toBeInTheDocument()
+})
+
+test('a populated stack reference does not make an otherwise empty panel drawable', async () => {
+  vi.useFakeTimers()
+  resolvesWith({
+    ...FETCHED_WITHOUT_DATA,
+    metrics: [
+      // Structural: it shapes the stacking sums, but the renderer never paints it.
+      {
+        ...FETCHED.metrics[0],
+        metadata: { ...FETCHED.metrics[0]!.metadata, name: 'base' },
+        render: { stack: 'area', inverse: false, hidden: true },
+        data_points: [1, 2, 3]
+      },
+      { ...FETCHED.metrics[0], data_points: [null, null, null] }
+    ]
+  })
+
+  renderGroup()
+  await vi.advanceTimersByTimeAsync(0)
+
+  expect(within(notice()!).getByText('No data available')).toBeInTheDocument()
+})
+
+test('a fetch failure over an empty panel states the failure alone', async () => {
+  vi.useFakeTimers()
+  resolvesWith(FETCHED_WITHOUT_DATA)
+  renderGroup()
+  await vi.advanceTimersByTimeAsync(0)
+  expect(within(notice()!).getByText('No data available')).toBeInTheDocument()
+
+  let fail!: (reason: Error) => void
+  postSpy.mockReturnValue(
+    new Promise((_resolve, reject) => {
+      fail = reject
+    })
+  )
+  await fireEvent.click(screen.getByText('pan'))
+  fail(new Error('gone'))
+  await vi.advanceTimersByTimeAsync(1_000)
+
+  // One pill, not the failure stacked on top of the emptiness it superseded.
+  expect(notices()).toHaveLength(1)
+  expect(screen.queryByText('No data available')).not.toBeInTheDocument()
+})
+
 test('an error arriving after the skeletons are up replaces them', async () => {
   vi.useFakeTimers()
   let fail!: (reason: Error) => void

@@ -13,7 +13,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { fetchGraphDataByDefinition, useGraphData } from '../../composables/useGraphData'
 import { useGraphInteraction } from '../../composables/useGraphInteraction'
-import { useGraphNotice } from '../../composables/useGraphNotice'
+import { hasPlottableData, useGraphNotice, useNoDataNotice } from '../../composables/useGraphNotice'
 import { useGraphVisibility } from '../../composables/useGraphVisibility'
 import type { RequestedTimeRange } from '../../types.ts'
 import { drawnTimeRange } from '../../utils/timeRange'
@@ -96,6 +96,17 @@ const notice = useGraphNotice({
   partialErrors: () => partialErrors.value,
   warnings: () => warnings.value
 })
+
+const noDataNotice = useNoDataNotice()
+
+// A refetch keeps the previous graph, whose emptiness answered the request before it.
+const displayedNotice = computed(
+  () =>
+    notice.value ??
+    (graph.value !== null && !isLoading.value && !hasPlottableData(graph.value.metrics)
+      ? noDataNotice
+      : null)
+)
 
 const refresh = () => {
   requestedTimeRange.value = computeEpochTimeRange(props.timerange)
@@ -289,8 +300,8 @@ onBeforeUnmount(() => {
     <!-- A sibling of the graph rather than a branch beside it, so a failed refetch states itself
          over the data it was going to replace. -->
     <GraphNotice
-      v-if="notice"
-      v-bind="notice"
+      v-if="displayedNotice"
+      v-bind="displayedNotice"
       class="graphing-graph-figure__notice"
       @retry="onRetry"
     />

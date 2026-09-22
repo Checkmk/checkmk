@@ -27,7 +27,12 @@ import {
 import type { ConsolidationFn } from '../../components/consolidation'
 import GraphLegend from '../../components/legend/GraphLegend.vue'
 import { useBrushSnapshot } from '../../composables/useBrushSnapshot'
-import { type GraphNoticeDescriptor, useGraphNotice } from '../../composables/useGraphNotice'
+import {
+  type GraphNoticeDescriptor,
+  hasPlottableData,
+  useGraphNotice,
+  useNoDataNotice
+} from '../../composables/useGraphNotice'
 import { useRequestedTimeRange } from '../../composables/useRequestedTimeRange'
 import type { PanelKey, RequestedTimeRange, TimeRange, TimeRangeCommitKind } from '../../types'
 import type { CustomGraphMetric, CustomGraphOptions } from '../api'
@@ -167,6 +172,8 @@ const fetchNotice = useGraphNotice({
   warnings: () => data.warnings.value
 })
 
+const noDataNotice = useNoDataNotice()
+
 // A graph nobody has added a source to yet: the preview draws an empty frame, and this says what
 // to do with it.
 const emptyStateNotice = computed<GraphNoticeDescriptor | null>(() =>
@@ -180,8 +187,15 @@ const emptyStateNotice = computed<GraphNoticeDescriptor | null>(() =>
 )
 
 // A failed fetch outranks the empty state. The two barely overlap - with no rows there is no fetch
-// to fail - but which wins should be stated rather than left to that coincidence.
-const previewNotice = computed(() => fetchNotice.value ?? emptyStateNotice.value)
+// to fail - but which wins should be stated rather than left to that coincidence. Emptiness comes
+// last, and reads the fetched series rather than the drawn ones: a source the user switched off is
+// not the backend having nothing to say.
+const previewNotice = computed(
+  () =>
+    fetchNotice.value ??
+    emptyStateNotice.value ??
+    (data.isLoading.value || hasPlottableData(data.metrics.value) ? null : noDataNotice)
+)
 
 const { pauseRefresh } = useGlobalRefresh()
 watch(

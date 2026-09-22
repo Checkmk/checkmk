@@ -278,6 +278,24 @@ function renderBody(
   }
 }
 
+test('a preview whose fetch resolved no series states that there is no data', async () => {
+  const response = fetchDataResponse() as {
+    data: { metrics: { data_points: unknown }[] } & Record<string, unknown>
+  }
+  const withoutPoints = response.data.metrics.map((series) => ({
+    ...series,
+    data_points: [null, null, null]
+  }))
+  vi.spyOn(client, 'POST').mockResolvedValue({
+    ...response,
+    data: { ...response.data, metrics: withoutPoints }
+  })
+
+  renderBody('view')
+
+  expect(await screen.findByText('No data available')).toBeInTheDocument()
+})
+
 test('hiding a metric in the detached view-mode legend removes it from the preview', async () => {
   renderBody('view')
 

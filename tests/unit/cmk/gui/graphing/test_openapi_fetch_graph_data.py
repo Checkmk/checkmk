@@ -374,6 +374,69 @@ def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
     )
 
 
+def test_evaluated_to_response_keeps_a_metric_whose_rrd_holds_no_series() -> None:
+    """A metric with performance data but no time series serializes with null-valued points.
+
+    Dropping it instead would be indistinguishable from a graph with fewer metrics.
+    """
+    unit = Unit(notation=DecimalNotation("X"), precision=AutoPrecision(2))
+    metric = RRDMetric(
+        host_name=HostName("h"), service_name=ServiceName("svc"), metric_name=MetricName("m")
+    )
+    graph = Graph(
+        name="g",
+        title="My Graph",
+        kind="template",
+        lines=[
+            Line(
+                curve=Curve(
+                    quantity=metric,
+                    attributes=CurveAttributes(title="Line", unit=unit, color="#0000ff"),
+                ),
+                inverse=False,
+            )
+        ],
+    )
+    time_range = TimeRange(start=0, end=30, step=10)
+
+    class _FetchData:
+        diagnostics = FetchDiagnostics()
+
+        def __call__(
+            self,
+            metrics: Sequence[MetricProtocol],
+            *,
+            consolidation_function: ConsolidationFunction,  # noqa: ARG002
+            time_range: TimeRange,  # noqa: ARG002
+        ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
+            return {
+                rrd_metric: [
+                    FetchedData(
+                        performance_data=PerformanceData(value=5.0),
+                        time_series=None,
+                    )
+                ]
+                for rrd_metric in metrics
+                if isinstance(rrd_metric, RRDMetric)
+            }
+
+    [evaluated] = _EvaluateTemplateGraphs(
+        CommonGraphOptions(
+            consolidation_function=ConsolidationFunction.AVERAGE, time_range=time_range
+        ),
+        _FetchData(),
+    )(graph).graphs
+    response = evaluated_to_response(
+        evaluated,
+        fallback_time_range=time_range,
+        diagnostics=FetchDiagnostics(),
+        temperature_unit=TemperatureUnit.CELSIUS,
+    )
+
+    [line] = response.metrics
+    assert line.data_points == [None, None, None]
+
+
 def test_evaluated_to_response_converts_the_values_to_the_users_temperature_unit() -> None:
     unit = Unit(notation=DecimalNotation("°C"), precision=AutoPrecision(2))
     metric = RRDMetric(

@@ -5,14 +5,19 @@
  */
 import { fireEvent, screen } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { vi } from 'vitest'
 
 import { renderForm } from '../cmk-form-helper'
 
+const initCallableTsFunctions = vi.fn()
+
 beforeEach(() => {
+  initCallableTsFunctions.mockClear()
   // @ts-expect-error comes from different javascript file
   window['cmk'] = {
     forms: { enable_dynamic_form_elements: () => {} },
-    valuespecs: { initialize_autocompleters: () => {} }
+    valuespecs: { initialize_autocompleters: () => {} },
+    ts_function_dispatcher: { init_callable_ts_functions: initCallableTsFunctions }
   }
 })
 
@@ -80,4 +85,17 @@ test('FormLegacyValueSpec toggling works', async () => {
 
   await selectChoice('Use custom certificate')
   expect(legacyInputs(container)).toHaveLength(1)
+})
+
+test('FormLegacyValueSpec dispatches callable TS functions of the legacy HTML', async () => {
+  const { container } = await renderForm({
+    spec,
+    data: ['builtin', true],
+    backendValidation: []
+  })
+
+  await selectChoice('Use custom certificate')
+
+  const legacyForm = container.querySelector('.legacy_valuespec')
+  expect(initCallableTsFunctions).toHaveBeenCalledWith(legacyForm)
 })

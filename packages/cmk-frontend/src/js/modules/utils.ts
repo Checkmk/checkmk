@@ -7,6 +7,7 @@ import Swal from 'sweetalert2'
 
 import { call_ajax } from './ajax'
 import { get_selection_id, is_selection_enabled } from './selection'
+import { init_callable_ts_functions } from './ts_function_dispatcher'
 
 export type Nullable<T> = null | T
 
@@ -59,6 +60,7 @@ export function execute_javascript_by_object(obj: HTMLElement) {
       }
     }
   }
+  init_callable_ts_functions(obj)
 }
 
 // Whether or not the current browser window/tab is visible to the user

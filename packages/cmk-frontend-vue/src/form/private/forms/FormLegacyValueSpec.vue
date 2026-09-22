@@ -97,6 +97,8 @@ onMounted(() => {
 
   nextTick(() => {
     executeInlineScripts()
+    // @ts-expect-error comes from different javascript file
+    window['cmk'].ts_function_dispatcher.init_callable_ts_functions(legacyDOM.value!)
   }).catch((error) => {
     console.error('Error while evaluating scripts in legacy valuespec', error)
   })

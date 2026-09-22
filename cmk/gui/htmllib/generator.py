@@ -50,8 +50,10 @@ from .tag_rendering import (
 
 FinalJavaScript = typing.Callable[[], str] | str
 
+TSFunctionArguments = Mapping[str, object]
 
-# See packages/cmk-frontend/src/js/index.ts:callable_functions
+# See packages/cmk-frontend/src/js/modules/callable_functions.ts:callable_functions
+# The values of this Literal and the available keys in the TS dictionary MUST MATCH.
 KnownTSFunction = typing.Literal[
     "render_qr_code",
     "render_stats_table",
@@ -728,10 +730,12 @@ class HTMLWriter:
     def call_ts_function(
         self,
         *,
-        container: str,
+        container: str = "div",
         function_name: KnownTSFunction,
-        arguments: dict[str, str] | None = None,
+        arguments: TSFunctionArguments | None = None,
     ) -> None:
+        """CSP-compatible replacement for an inline script, dispatched by
+        packages/cmk-frontend/src/js/modules/ts_function_dispatcher.ts"""
         self.open_ts_container(
             container=container, function_name=function_name, arguments=arguments
         )
@@ -742,11 +746,13 @@ class HTMLWriter:
         *,
         container: str,
         function_name: KnownTSFunction,
-        arguments: dict[str, str] | None = None,
+        arguments: TSFunctionArguments | None = None,
         **kwargs: Any,
     ) -> None:
         json_arguments: str
-        json_arguments = "{}" if arguments is None else _dump_standard_compliant_json(arguments)
+        json_arguments = (
+            "{}" if arguments is None else _dump_standard_compliant_json(dict(arguments))
+        )
         self.write_html(
             render_start_tag(
                 container,

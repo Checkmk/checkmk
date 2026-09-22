@@ -9,8 +9,8 @@ import { render_qr_code } from '@/modules/qrcode_rendering'
 import { lock_and_redirect } from '@/modules/sites'
 import { render_stats_table } from '@/modules/tracking_display'
 
-type CallableFunctionArguments = { [key: string]: string }
-type CallableFunction = (node: HTMLElement, options: CallableFunctionArguments) => Promise<void>
+import { type CallableFunction, register_callable_functions } from './ts_function_dispatcher'
+
 // See cmk.gui.htmllib.generator:KnownTSFunction
 // The type on the Python side and the available keys in this dictionary MUST MATCH.
 const callable_functions: { [name: string]: CallableFunction } = {
@@ -21,19 +21,4 @@ const callable_functions: { [name: string]: CallableFunction } = {
   confirm_on_form_leave: confirm_on_form_leave
 }
 
-export function init_callable_ts_functions(element: Element | Document) {
-  // See cmk.gui.htmllib.generator:HTMLWriter.call_ts_function
-  element.querySelectorAll<HTMLElement>('*[data-cmk_call_ts_function]').forEach((container, _) => {
-    const data = container.dataset
-    const function_name: string = data.cmk_call_ts_function!
-    let args: CallableFunctionArguments // arguments is a restricted name in JavaScript
-    if (data.cmk_call_ts_arguments) {
-      args = JSON.parse(data.cmk_call_ts_arguments)
-    } else {
-      args = {}
-    }
-    const ts_function = callable_functions[function_name]
-    // The function has the responsibility to take the container and do it's thing with it.
-    ts_function(container, args)
-  })
-}
+register_callable_functions(callable_functions)

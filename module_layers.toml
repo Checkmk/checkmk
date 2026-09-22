@@ -61,7 +61,6 @@ plugin_apis = [
   "cmk.bakery.internal",
   "cmk.bakery.v1",
   "cmk.bakery.v2",
-  "cmk.bakery.v2_unstable",
   "cmk.cli.internal",
   "cmk.dcd_connector_parameters.internal",
   "cmk.dcd_connectors.internal",
@@ -69,10 +68,8 @@ plugin_apis = [
   "cmk.graphing.v1",
   "cmk.graphing.v2_unstable",
   "cmk.inventory_ui.v1",
-  "cmk.inventory_ui.v1_unstable",
   "cmk.licensing.internal",
   "cmk.password_store.v1",
-  "cmk.password_store.v1_unstable",
   "cmk.post_rename_site.internal",
   "cmk.rulesets.internal",
   "cmk.rulesets.internal.form_specs",
@@ -81,7 +78,6 @@ plugin_apis = [
   "cmk.server_side_calls.internal",
   "cmk.server_side_calls.v1",
   "cmk.server_side_programs.v1",
-  "cmk.server_side_programs.v1_unstable",
 ]
 
 relay_protocols = ["cmk.relay_protocols"]
@@ -429,7 +425,7 @@ allows = [
 ]
 
 [components."cmk.bakery.internal"]
-allows = ["cmk.bakery.v1", "cmk.bakery.v2_unstable"]
+allows = ["cmk.bakery.v1", "cmk.bakery.v2"]
 
 [components."cmk.bakery.shared"]
 allows = ["@ccc", "@crypto", "@plugin_apis"]

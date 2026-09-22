@@ -14,7 +14,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from cmk.bakery.v2_unstable import OS
+from cmk.bakery.v2 import OS
 
 from ._constants import LogicalPath
 

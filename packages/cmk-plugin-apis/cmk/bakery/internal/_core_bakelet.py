@@ -9,7 +9,7 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from typing import Any, Never, Protocol
 
-from cmk.bakery.v2_unstable import (
+from cmk.bakery.v2 import (
     Plugin,
     PluginConfig,
     Scriptlet,

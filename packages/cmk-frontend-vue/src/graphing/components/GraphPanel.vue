@@ -349,6 +349,7 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_
         :hidden-metric-names="hiddenMetricNames"
         :hidden-line-names="hiddenLineNames"
         :value-resolution="valueResolution"
+        :axis-unit="effectiveYAxis?.unit ?? null"
         @update:hidden-metric-names="hiddenMetricNames = $event"
         @update:hidden-line-names="hiddenLineNames = $event"
         @hover-metrics="highlightedMetricNames = $event"

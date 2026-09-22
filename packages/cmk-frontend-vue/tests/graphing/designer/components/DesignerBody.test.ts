@@ -13,6 +13,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { defineComponent, h, nextTick, ref } from 'vue'
 
 import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/globalTimeState'
+import type { UnitFormat } from '@/graphing/components/TimeSeriesGraph'
 import type { CustomGraphObject } from '@/graphing/designer/api'
 import DesignerBody from '@/graphing/designer/components/DesignerBody.vue'
 import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
@@ -170,23 +171,30 @@ function graphObject(dataSources: unknown[] = [rrdSource('A'), rrdSource('B')]):
   } as unknown as CustomGraphObject
 }
 
+const siUnit = (symbol: string): UnitFormat => ({
+  notation: 'si',
+  symbol,
+  precision: { type: 'auto', digits: 2 }
+})
+
 function metric(
   sourceId: string,
   name: string,
   title: string,
-  dataPoints: number[] = [1, 2]
+  dataPoints: number[] = [1, 2],
+  unit: UnitFormat = {
+    notation: 'decimal',
+    symbol: '',
+    precision: { type: 'auto', digits: 2 },
+    convertible: false
+  }
 ): unknown {
   return {
     source_id: sourceId,
     metadata: {
       name,
       title,
-      unit: {
-        notation: 'decimal',
-        symbol: '',
-        precision: { type: 'auto', digits: 2 },
-        convertible: false
-      },
+      unit,
       color: '#28a2f3'
     },
     render: { stack: null, inverse: false, hidden: false },
@@ -875,4 +883,26 @@ test('the edit action on a calculation row opens the slideout on that calculatio
 
   expect(await screen.findByRole('button', { name: 'Calculate & update' })).toBeInTheDocument()
   expect(screen.getByLabelText('Formula input')).toHaveValue('A - B')
+})
+
+test('hiding the first source re-labels the table in the unit the preview axis moves to', async () => {
+  vi.spyOn(client, 'POST').mockResolvedValue(
+    fetchDataResponse([
+      metric('A', 'metric-a', 'CPU', [1, 2], siUnit('B')),
+      metric('B', 'metric-b', 'Memory', [1, 2], siUnit('W'))
+    ]) as never
+  )
+  renderBody('edit')
+  await userEvent.click(await screen.findByRole('tab', { name: 'Graph appearance' }))
+  const table = screen.getByRole('tabpanel')
+  await waitFor(() => expect(drawnTitles()).toBe('CPU,Memory'))
+  // With no unit configured the axis takes the first drawn metric's, and the table follows it.
+  expect(screen.getByTestId('axis-unit').textContent).toBe('B')
+  expect(statsOfRow('Memory', table)).toEqual(['1 B', '1.5 B', '2 B', '2 B'])
+
+  const [hideCpu] = within(table).getAllByRole('button', { name: 'Toggle visibility' })
+  await fireEvent.click(hideCpu!)
+
+  await waitFor(() => expect(screen.getByTestId('axis-unit').textContent).toBe('W'))
+  expect(statsOfRow('Memory', table)).toEqual(['1 W', '1.5 W', '2 W', '2 W'])
 })

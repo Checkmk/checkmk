@@ -79,6 +79,7 @@ interface HoverOverrides {
   /** Widen to cover the mirrored half of the plot when a metric is inverse. */
   valueDomain?: [number, number]
   valueResolution?: number | null
+  axisUnit?: Metric['metadata']['unit'] | null
 }
 
 function mountHover(
@@ -96,6 +97,7 @@ function mountHover(
         metrics: () => metrics,
         consolidation: () => consolidation,
         valueResolution: () => overrides.valueResolution ?? null,
+        axisUnit: () => overrides.axisUnit ?? null,
         plotWidth: ref(plotWidth),
         plotHeight: ref(PLOT_HEIGHT),
         xScale,
@@ -475,5 +477,30 @@ describe('useHover — clearing', () => {
 
     vi.advanceTimersByTime(1000)
     expect(hover.hoverState.value).not.toBeNull()
+  })
+})
+
+describe('useHover — value formatting', () => {
+  test('a sample renders in the axis unit the graph names', () => {
+    // What "Settings > Unit > Custom > Notation: IEC" enforces on a byte graph.
+    const iecBytes: Metric['metadata']['unit'] = {
+      notation: 'iec',
+      symbol: 'B',
+      precision: { type: 'auto', digits: 2 },
+      convertible: false
+    }
+    const mebibytes32 = 33_554_432
+    const hover = mountHover(
+      [makeLineMetric('mem_used', constantPoints(mebibytes32))],
+      TIME_RANGE,
+      {
+        axisUnit: iecBytes,
+        valueDomain: [0, 2 * mebibytes32]
+      }
+    )
+
+    hover.moveHoverTo(pointAt(PLOT_WIDTH / 2, PLOT_HEIGHT / 2))
+
+    expect(hover.hoverState.value!.samples[0]!.formattedValue).toBe('32 MiB')
   })
 })

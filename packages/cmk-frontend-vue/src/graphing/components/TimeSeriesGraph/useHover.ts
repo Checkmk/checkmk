@@ -15,7 +15,7 @@ import { type HoverSample, type HoverState, metricHitDistance } from './interact
 import { consolidatedSampleTime, selectConsolidatedValue } from './render/bucket'
 import { valueAt } from './render/polyline'
 import type { StackedColumn, StackedSeries } from './render/stacked'
-import type { Metric } from './types'
+import type { Metric, UnitFormat } from './types'
 import { valueRenderer } from './valueRenderer'
 
 const HOVER_CLEAR_DELAY_MS = 150
@@ -88,6 +88,7 @@ export interface HoverOptions {
   metrics: () => Metric[]
   consolidation: () => ConsolidationFn
   valueResolution: () => number | null
+  axisUnit: () => UnitFormat | null
   plotWidth: Ref<number>
   plotHeight: Ref<number>
   xScale: ScaleTime<number, number>
@@ -168,7 +169,10 @@ export function useHover(options: HoverOptions) {
       const drawnTopPixel = options.yScale(edge.upper)
       const drawnBottomPixel = options.yScale(edge.lower)
       hitDistances.push(metricHitDistance(cursorY, drawnTopPixel, drawnBottomPixel))
-      const renderValue = valueRenderer(metric.metadata.unit, options.valueResolution())
+      const renderValue = valueRenderer(
+        options.axisUnit() ?? metric.metadata.unit,
+        options.valueResolution()
+      )
       return {
         ...sampleBase,
         formattedValue: renderValue(value),

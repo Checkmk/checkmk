@@ -479,3 +479,32 @@ test('expanding one entry leaves the others collapsed', async () => {
 
   expect(screen.getAllByText('host.arch')).toHaveLength(1)
 })
+
+/** What "Settings > Unit > Custom > Notation: IEC" enforces on a byte graph. */
+const IEC_BYTES: Metric['metadata']['unit'] = {
+  notation: 'iec',
+  symbol: 'B',
+  precision: { type: 'auto', digits: 2 },
+  convertible: false
+}
+
+/** Reads '32 MiB' in IEC. */
+const MEBIBYTES_32 = 33_554_432
+
+test('metric stats render in the axis unit the graph names', () => {
+  const used = makeMetric('mem_used', 'Used', [MEBIBYTES_32])
+
+  render(GraphLegend, { props: { metrics: [used], axisUnit: IEC_BYTES } })
+
+  expect(screen.getByText('Used').closest('tr')!).toHaveTextContent('32 MiB')
+})
+
+test('a horizontal line renders in the axis unit the graph names', () => {
+  const line: HorizontalLine = { ...WARN_LINE, value: MEBIBYTES_32 }
+
+  render(GraphLegend, {
+    props: { metrics: [CPU], horizontalLines: [line], axisUnit: IEC_BYTES }
+  })
+
+  expect(screen.getByText('Warning').closest('tr')!).toHaveTextContent('32 MiB')
+})

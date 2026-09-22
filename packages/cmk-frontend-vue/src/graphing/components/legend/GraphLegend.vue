@@ -11,7 +11,7 @@ import useId from 'cmk-ui-library/lib/useId'
 import { computed, ref } from 'vue'
 
 import MetricAttributesTable from '../MetricAttributesTable.vue'
-import type { HorizontalLine, Metric, ShadedRegion } from '../TimeSeriesGraph'
+import type { HorizontalLine, Metric, ShadedRegion, UnitFormat } from '../TimeSeriesGraph'
 import {
   CONSOLIDATION_FUNCTIONS,
   type ConsolidationFn,
@@ -44,6 +44,8 @@ const props = withDefaults(
     hiddenLineNames?: string[]
     fillHeight?: boolean
     valueResolution?: number | null
+    /** The unit the graph labels its value axis in; null leaves each metric in its own unit. */
+    axisUnit?: UnitFormat | null
   }>(),
   {
     horizontalLines: () => [],
@@ -52,7 +54,8 @@ const props = withDefaults(
     hiddenMetricNames: () => [],
     hiddenLineNames: () => [],
     fillHeight: false,
-    valueResolution: null
+    valueResolution: null,
+    axisUnit: null
   }
 )
 
@@ -109,7 +112,7 @@ function toggleAll() {
 const metricStats = computed((): Map<string, MetricStats> => {
   const map = new Map<string, MetricStats>()
   for (const m of props.metrics) {
-    map.set(m.metadata.name, computeMetricStats(m, props.valueResolution))
+    map.set(m.metadata.name, computeMetricStats(m, props.valueResolution, props.axisUnit))
   }
   return map
 })
@@ -269,7 +272,7 @@ function toggleLine(name: string) {
             <td></td>
             <td></td>
             <td class="graphing-graph-legend__stat">
-              {{ horizontalLineValue(line, valueResolution) }}
+              {{ horizontalLineValue(line, valueResolution, axisUnit) }}
             </td>
           </tr>
           <tr

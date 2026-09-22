@@ -19,7 +19,7 @@ import SwitchCell from '@/monitoring/shared/components/cell/SwitchCell.vue'
 import VisibilityCell from '@/monitoring/shared/components/cell/VisibilityCell.vue'
 
 import MetricAttributesTable from '../../components/MetricAttributesTable.vue'
-import type { Metric } from '../../components/TimeSeriesGraph'
+import type { Metric, UnitFormat } from '../../components/TimeSeriesGraph'
 import { type MetricStats, metricStats } from '../../components/legend/legendUtils'
 import { attributesOf, hasAttributes } from '../../components/metricAttributes'
 import { orderMetricsTopToBottom } from '../../components/metricOrder'
@@ -34,7 +34,8 @@ const {
   store,
   metricsBySource,
   resolvedTitles,
-  valueResolution = null
+  valueResolution = null,
+  axisUnit = null
 } = defineProps<{
   store: GraphItemsStore
   /** Fetched series per data-source row, for the live-data columns. */
@@ -43,6 +44,8 @@ const {
   resolvedTitles: ReadonlyMap<ItemId, string>
   /** Value-axis resolution of the preview graph; stats print at least this precisely. */
   valueResolution?: number | null
+  /** The unit the preview labels its value axis in; null leaves each series in its own unit. */
+  axisUnit?: UnitFormat | null
 }>()
 
 const emit = defineEmits<{
@@ -101,7 +104,7 @@ const statsBySource = computed(() => {
   const stats = new Map<ItemId, MetricStats>()
   for (const [id, series] of metricsBySource) {
     if (series.length === 1) {
-      stats.set(id, metricStats(series[0]!, valueResolution))
+      stats.set(id, metricStats(series[0]!, valueResolution, axisUnit))
     }
   }
   return stats
@@ -115,7 +118,7 @@ const linesBySource = computed(() => {
       id,
       orderMetricsTopToBottom([...series]).map((metric) => ({
         metric,
-        stats: metricStats(metric, valueResolution)
+        stats: metricStats(metric, valueResolution, axisUnit)
       }))
     )
   }

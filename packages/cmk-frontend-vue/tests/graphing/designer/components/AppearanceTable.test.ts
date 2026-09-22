@@ -53,14 +53,15 @@ function renderTable(
   seed: DesignerItem[],
   metricsBySource: Map<ItemId, Metric[]>,
   resolvedTitles: Map<ItemId, string> = new Map(),
-  valueResolution: number | null = null
+  valueResolution: number | null = null,
+  axisUnit: Metric['metadata']['unit'] | null = null
 ) {
   const store = useGraphItems(PALETTE)
   store.replaceAll(seed)
   return {
     store,
     ...render(AppearanceTable, {
-      props: { store, metricsBySource, resolvedTitles, valueResolution }
+      props: { store, metricsBySource, resolvedTitles, valueResolution, axisUnit }
     })
   }
 }
@@ -360,4 +361,24 @@ test('hovering the attribute table keeps its own series highlighted', async () =
   await fireEvent.mouseEnter(attributesRow)
 
   expect(emitted()['hoverMetrics']).toEqual([[['line one']]])
+})
+
+test('stats render in the axis unit the preview labels its value axis in', () => {
+  // What "Settings > Unit > Custom > Notation: SI" enforces; the rows' own unit is decimal.
+  const siBytes: Metric['metadata']['unit'] = {
+    notation: 'si',
+    symbol: 'B',
+    precision: { type: 'auto', digits: 2 },
+    convertible: false
+  }
+
+  renderTable(
+    [rrdMetricItem('A', { title: 'Used' })],
+    new Map([['A', [metric('a', [33_554_432])]]]),
+    new Map(),
+    null,
+    siBytes
+  )
+
+  expect(statsOf(rowOf('Used'))).toEqual(['33.55 MB', '33.55 MB', '33.55 MB', '33.55 MB'])
 })

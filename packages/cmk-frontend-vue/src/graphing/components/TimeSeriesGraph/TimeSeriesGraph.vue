@@ -206,6 +206,7 @@ const {
   metrics: () => props.metrics,
   consolidation: () => consolidationFn.value,
   valueResolution: () => valueResolution.value,
+  axisUnit: () => props.options.y_axis?.unit ?? null,
   plotWidth,
   plotHeight,
   xScale,

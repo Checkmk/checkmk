@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { HorizontalLine, Metric } from '../TimeSeriesGraph'
+import type { HorizontalLine, Metric, UnitFormat } from '../TimeSeriesGraph'
 import { valueRenderer } from '../TimeSeriesGraph/valueRenderer'
 
 export interface MetricStats {
@@ -13,8 +13,13 @@ export interface MetricStats {
   last: string
 }
 
-export function metricStats(metric: Metric, valueResolution: number | null = null): MetricStats {
-  const fmt = valueRenderer(metric.metadata.unit, valueResolution)
+/** `axisUnit` overrides the metric's own unit, so the legend cannot contradict the axis. */
+export function metricStats(
+  metric: Metric,
+  valueResolution: number | null = null,
+  axisUnit: UnitFormat | null = null
+): MetricStats {
+  const fmt = valueRenderer(axisUnit ?? metric.metadata.unit, valueResolution)
   const points = metric.data_points
   if (points.length === 0) {
     return { min: 'n/a', avg: 'n/a', max: 'n/a', last: 'n/a' }
@@ -47,9 +52,10 @@ export function metricStats(metric: Metric, valueResolution: number | null = nul
 
 export function horizontalLineValue(
   line: HorizontalLine,
-  valueResolution: number | null = null
+  valueResolution: number | null = null,
+  axisUnit: UnitFormat | null = null
 ): string {
-  return valueRenderer(line.unit, valueResolution)(line.value)
+  return valueRenderer(axisUnit ?? line.unit, valueResolution)(line.value)
 }
 
 export function withNameToggled(hiddenNames: string[], name: string): string[] {

@@ -24,6 +24,7 @@ import {
   clippedToNavigableTime,
   navigableBounds
 } from '../../components/TimeSeriesGraph/interaction/timeBounds'
+import { deriveYAxis } from '../../components/TimeSeriesGraph/yAxis'
 import type { ConsolidationFn } from '../../components/consolidation'
 import GraphLegend from '../../components/legend/GraphLegend.vue'
 import { useBrushSnapshot } from '../../composables/useBrushSnapshot'
@@ -265,6 +266,10 @@ const yAxis = computed<YAxis | null>(() => {
   }
 })
 
+// The same derivation GraphPanel runs on the props below, so the table and the legend print in
+// whatever the preview ends up labelling its axis in.
+const axisUnit = computed(() => deriveYAxis(drawnMetrics.value, yAxis.value)?.unit ?? null)
+
 const addTo = computed<AddTo | null>(() =>
   data.internal.value === null
     ? null
@@ -337,6 +342,7 @@ const addTo = computed<AddTo | null>(() =>
         :horizontal-lines="data.horizontalLines.value"
         :consolidation-fn="consolidationFn"
         :value-resolution="valueResolution"
+        :axis-unit="axisUnit"
         @hover-metrics="highlightedMetricNames = $event"
       />
 
@@ -370,6 +376,7 @@ const addTo = computed<AddTo | null>(() =>
               :metrics-by-source="data.metricsBySource.value"
               :resolved-titles="data.resolvedTitles.value"
               :value-resolution="valueResolution"
+              :axis-unit="axisUnit"
               @hover-metrics="highlightedMetricNames = $event"
             />
           </CmkTabContent>

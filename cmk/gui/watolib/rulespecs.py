@@ -28,7 +28,12 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _, localize_or_none, translate_to_current_language
+from cmk.gui.i18n import (
+    _,
+    get_current_language,
+    localize_or_none,
+    translate_to_current_language,
+)
 from cmk.gui.log import logger
 from cmk.gui.valuespec import (
     DEF_VALUE,
@@ -491,12 +496,10 @@ class Rulespec:
 
     @property
     def title(self) -> str | None:
-        return self._localized_title()
+        return self._localized_title(get_current_language())
 
-    # Request-scoped so a cached title can never outlive the language it was
-    # localized for.
     @request_memoize(maxsize=None)
-    def _localized_title(self) -> str | None:
+    def _localized_title(self, _language: str) -> str | None:
         if self._title:
             plain_title: str | None = self._title()
         else:

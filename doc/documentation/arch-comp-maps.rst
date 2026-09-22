@@ -98,6 +98,8 @@ Requirements overview
   of pagetypes.
 * Maps behave like other Checkmk pagetypes: per-user storage, built-in maps,
   publishing, and replication with Activate Changes.
+* Boards of the earlier OrbVis extension must survive an update (see
+  `Update from OrbVis`_).
 
 Architecture
 ============
@@ -445,7 +447,7 @@ Static files
 `Unauthenticated surface`_ for who can fetch them.
 
 * **Images** are the shared image library: the vendored Tabler icons plus icons
-  uploaded by users with ``maps.configure``.
+  uploaded by users with ``maps.configure`` or copied by the OrbVis migration.
 * **Backgrounds** belong to one map each. The file name is
   ``<sha256(owner)[:16]>__<map>.<random token><suffix>``. The token
   (``secrets.token_urlsafe(16)``) makes the URL unguessable, so the URL itself
@@ -896,11 +898,14 @@ Stored data and secrets
        profiles on the next Activate Changes (saving a map creates no pending
        change).
    * - ``var/maps/images/``
-     - GUI
+     - GUI, update
      - Image library. Not replicated.
    * - ``var/maps/backgrounds/``
-     - GUI
+     - GUI, update
      - Map backgrounds (capability URLs). Not replicated.
+   * - ``var/maps/legacy_maps_migration.mk``
+     - update
+     - Outcome per OrbVis board, and the name each copied OrbVis icon got.
    * - ``etc/check_mk/maps.d/wato/global.mk``, ``sitespecific.mk``
      - Setup
      - Maps settings, including connections. An automation secret entered as
@@ -1152,6 +1157,53 @@ deploys the wheel, so a developer deploy does not leave a stale daemon behind.
 Changes to the skel files (Apache drop-in, init script) are not deployed by the
 wheel.
 
+Update from OrbVis
+------------------
+
+On update, ``cmk.update_config.plugins.actions.maps`` (action
+``migrate_legacy_maps``) imports the boards of an OrbVis installation into
+the pagetype store. The action owns the update side (owner, roles, outcome
+record); reading and translating the OrbVis files is
+``cmk.maps.gui.legacy_maps``:
+
+* Source: ``var/orbvis/boards/<name>.json`` (one global namespace, no owner),
+  icons from ``var/orbvis/images``, backgrounds from
+  ``var/orbvis/boards/backgrounds``.
+* Each board becomes a published map owned by an administrator: ``cmkadmin``
+  if it holds the built-in ``admin`` role (locked or not, as visibility and
+  editing follow the owner's roles), else the first (by name) non-automation
+  user with that role, unlocked users preferred, with a warning that deleting
+  that user removes the maps (pagetypes cannot change an owner). Without such a
+  user the migration is postponed with a warning.
+* Roles that could see a board in OrbVis (``orbvis.use`` and
+  ``orbvis.view_all`` or ``orbvis.view_<board>``) get the same answer for the
+  map's ``map.<name>`` permission.
+* Icons and backgrounds are copied into ``var/maps`` after the same file-name
+  and content (magic bytes) checks as uploads, but without the upload size
+  limits. An icon never overwrites a different existing file; on a name clash
+  it is stored as ``<name>-2`` and so on. The icon library is copied with the
+  first board that migrates, each icon once: the name it got is recorded, so an
+  icon deleted or replaced in Maps afterwards stays that way. A board migrated
+  later refers to the recorded name and, if the file is gone, keeps the
+  reference without the image, like a map whose image was force-deleted.
+* Connections (``var/orbvis/connections.json``) are not migrated. A board's or
+  object's connection to this site's Livestatus socket, or to an ID OrbVis did
+  not know, becomes the site's own ``cmk_<site>``. Any other connection keeps
+  its ID and is logged with a warning, so a connection of that ID can be added
+  in the Maps settings.
+* Every board is validated against the REST model before it is stored. A board
+  named like a built-in map or another user's map becomes ``<name>_legacy``,
+  since a map name carries one ``map.<name>`` permission for all owners. A board
+  that does not validate, or whose name is taken, is logged with a warning and
+  can be brought over with *Import map…*.
+* OrbVis's demo boards are not migrated. They are the only read-only boards:
+  OrbVis seeded them itself and refused edits to them.
+* The OrbVis files are left alone. The outcome per board and per icon is
+  recorded in ``var/maps/legacy_maps_migration.mk``, so a re-run only looks at
+  new boards and icons. A board that could not be migrated is not recorded:
+  every update tries it again and says so, until its file is fixed or removed.
+  An icon that could not be copied is tried again in the same way.
+
 Touchpoints in the core
 =======================
 
@@ -1179,6 +1231,8 @@ core, each generic rather than Maps-specific:
   editor (``central_settings``, ``render_settings_page``).
 * GUI hooks: ``sites-saved`` writes ``sitespecs.mk``, ``pre-activate-changes``
   writes ``sitespecs.mk`` and ``folder_perms.mk``.
+* ``cmk.update_config``: the OrbVis migration, which also writes role
+  permissions.
 
 Risks and technical debts
 =========================

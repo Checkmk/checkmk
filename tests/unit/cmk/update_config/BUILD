@@ -30,6 +30,9 @@ py_cmk_test(
         "--random-order-bucket=global",
     ],
     env = {"EDITION": "community"},
+    tags = [
+        "deballast-keep=//packages/cmk-maps:registration",  # FIXME: test exercises feature specific code
+    ],
     use_project_pytest_config = True,
     visibility = ["//visibility:private"],
     deps = [
@@ -37,6 +40,7 @@ py_cmk_test(
         "//cmk/update_config",
         "//packages/cmk-backup:utils",
         "//packages/cmk-ccc:store",
+        "//packages/cmk-maps:registration",
         "//packages/cmk-plugins/cmk/plugins/lib",
         "//packages/cmk-werks:site",
         "//packages/cmk-wsgi",

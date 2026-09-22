@@ -219,6 +219,30 @@ def upload_image(filename: str, content_type: str, contents: bytes) -> ImageList
     return ImageListEntry(name=target_name, url=f"images/{target_name}", builtin=False)
 
 
+def import_icon(name: str, contents: bytes) -> str:
+    """Add an already vetted icon to the image library; returns the name it has there.
+
+    An icon identical to the built-in of its name, or to the file already under it, is
+    reused. A different file is never replaced, and a built-in's name never taken,
+    seeded yet or not: the icon gets a free variant of the name instead.
+    """
+    if _is_builtin(name) and (_BUILTIN_DIR / name).read_bytes() == contents:
+        return name
+    images_dir = _images_dir()
+    stem, suffix = Path(name).stem, Path(name).suffix
+    candidate, n = name, 1
+    while True:
+        target = images_dir / candidate
+        if not _is_builtin(candidate):
+            if not target.exists():
+                store.save_bytes_to_file(target, contents)
+                return candidate
+            if target.read_bytes() == contents:
+                return candidate
+        n += 1
+        candidate = f"{stem}-{n}{suffix}"
+
+
 def delete_image(name: str, force: bool) -> list[ImageUsageEntry]:
     """Delete a user-uploaded image, unless it is still in use.
 
@@ -325,6 +349,15 @@ def upload_background(map_name: str, filename: str, content_type: str, contents:
         max_bytes=MAX_BACKGROUND_BYTES,
         too_large=_("Background image must not exceed 10 MB."),
     )
+    return store_background(owner, map_name, suffix, contents)
+
+
+def store_background(owner: str, map_name: str, suffix: str, contents: bytes) -> str:
+    """Store already vetted ``contents`` as the background of ``owner``'s map.
+
+    Returns the filename the map's ``background_image`` refers to. ``map_name`` must
+    be a valid map name (see :func:`_bg_stem`).
+    """
     bg_dir = _backgrounds_dir()
     stem = _bg_stem(owner, map_name)
     stored = f"{stem}.{secrets.token_urlsafe(16)}{suffix}"

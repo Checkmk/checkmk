@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.maps.shared.geo import resolve_host_coords
+from cmk.maps.shared.geo import bounded_view, resolve_host_coords
 
 
 def test_prefers_maps_labels() -> None:
@@ -60,3 +60,20 @@ def test_falls_back_when_label_is_out_of_range() -> None:
     assert resolve_host_coords(
         {"maps_lat": "95", "maps_lng": "10"}, {"LAT": "48.1", "LONG": "11.5"}
     ) == (48.1, 11.5)
+
+
+@pytest.mark.parametrize(
+    ("view", "expected"),
+    [
+        pytest.param((51.0, 10.0, 5), (51.0, 10.0, 5), id="within limits"),
+        pytest.param((10.0, 190.0, 5), (10.0, -170.0, 5), id="east of antimeridian"),
+        pytest.param((10.0, -540.0, 5), (10.0, -180.0, 5), id="wrapped twice"),
+        pytest.param((95.0, 10.0, 5), (90.0, 10.0, 5), id="past the pole"),
+        pytest.param((51.0, 10.0, 19), (51.0, 10.0, 18), id="past the deepest zoom"),
+        pytest.param((51.0, 10.0, -1), (51.0, 10.0, 0), id="below the widest zoom"),
+    ],
+)
+def test_a_view_is_brought_within_the_limits(
+    view: tuple[float, float, int], expected: tuple[float, float, int]
+) -> None:
+    assert bounded_view(*view) == expected

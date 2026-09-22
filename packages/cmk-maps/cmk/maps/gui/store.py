@@ -77,7 +77,7 @@ def get_own_map(owner: UserId, name: MapName) -> MapPage | None:
     return instances.instance(key) if instances.has_instance(key) else None
 
 
-def _user_maps_path(owner: UserId) -> Path:
+def user_maps_path(owner: UserId) -> Path:
     return cmk.utils.paths.profile_dir / owner / f"user_{MapPage.type_name()}s.mk"
 
 
@@ -121,7 +121,7 @@ def create_map(
     creating it.
     """
     page = MapPage(map_config_from_spec(owner, name, map_spec, public, hidden))
-    with store.locked(_user_maps_path(owner)):
+    with store.locked(user_maps_path(owner)):
         instances = _own_instances(owner)
         if instances.has_instance((owner, name)):
             return False
@@ -150,7 +150,7 @@ def save_map(
     re-reading the file.
     """
     page = MapPage(map_config_from_spec(owner, name, map_spec, public, hidden))
-    with store.locked(_user_maps_path(owner)):
+    with store.locked(user_maps_path(owner)):
         instances = _own_instances(owner)
         instances.add_instance((owner, name), page)
         MapPage.save_user_instances(instances, _user_permissions(), owner)
@@ -164,7 +164,7 @@ def delete_map(owner: UserId, name: MapName) -> None:
     set would resurrect maps deleted, or drop maps saved, since this request
     loaded — and this request's memoized set is kept in sync as well.
     """
-    with store.locked(_user_maps_path(owner)):
+    with store.locked(user_maps_path(owner)):
         instances = _own_instances(owner)
         if not instances.has_instance((owner, name)):
             return

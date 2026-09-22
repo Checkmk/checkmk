@@ -153,12 +153,12 @@ def coerce_color(value: object) -> object:
     if not isinstance(value, str):
         return None
     try:
-        return validate_color(_rgb_to_hex(value))
+        return validate_color(rgb_to_hex(value))
     except ValueError:
         return None
 
 
-def _rgb_to_hex(value: str) -> str:
+def rgb_to_hex(value: str) -> str:
     """``rgb(...)``/``rgba(...)`` as the hex color it names; any other value as is."""
     if (match := _RGB_RE.fullmatch(value.strip())) is None:
         return value

@@ -28,12 +28,10 @@ def brocade_mlx_fan_combine_item(id_, descr):
 
 
 def discover_brocade_mlx_fan(section: StringTable) -> DiscoveryResult:
-    inventory = []
     for fan_id, fan_descr, fan_state in section:
         # Only add Fans who are present
-        if fan_state != "1":
-            inventory.append((brocade_mlx_fan_combine_item(fan_id, fan_descr), None))
-    yield from [Service(item=item, parameters=parameters) for (item, parameters) in inventory]
+        if fan_state != "1" and (item := brocade_mlx_fan_combine_item(fan_id, fan_descr)):
+            yield Service(item=item)
 
 
 def check_brocade_mlx_fan(item: str, section: StringTable) -> CheckResult:

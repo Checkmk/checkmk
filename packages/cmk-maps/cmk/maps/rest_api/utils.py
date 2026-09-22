@@ -14,7 +14,7 @@ from collections.abc import Callable, Mapping
 
 from pydantic import TypeAdapter, ValidationError
 
-from cmk.gui.openapi.framework import ETag
+from cmk.gui.openapi.framework import EndpointBehavior, ETag
 from cmk.gui.openapi.framework.model import json_dump_without_omitted
 from cmk.gui.openapi.framework.model.base_models import LinkModel
 from cmk.gui.openapi.restful_objects.constructors import object_href
@@ -39,29 +39,36 @@ from cmk.maps.rest_api.models.response_models import (
 from cmk.maps.shared.map_payload import ClickAction, RenderMode
 from cmk.web.utils import permission_verification as permissions
 
-# Maps are pagetypes, so read *and* write touch the generic pagetype permissions:
-# every serialization stamps ``can_edit``/``can_delete`` — ``may_edit`` checks
-# ``general.edit_map`` (own) / ``general.edit_foreign_map`` (foreign) and
-# ``may_delete`` checks ``general.edit_map`` (own) / ``general.delete_foreign_map``
-# (foreign) — while visibility resolution checks ``general.see_user_map`` /
-# ``general.force_map`` and writes additionally go through the publish gates. Each is
-# checked with ``user.may`` and branched on (not a hard requirement beyond
-# ``maps.use``), so all are declared ``Optional``. The framework's permission tracker
-# raises as soon as a *checked* permission is not declared here (even a foreign map
-# merely serialized in a list), so every branch above must be represented.
-_PAGETYPE_PERMISSIONS = [
+# Resolving which maps the user may see checks for the other users' maps
+# (``general.see_user_map``), for the user's own (``general.edit_map``), the
+# forced ones (``general.force_map``) and the per-instance ``map.<name>`` grant
+# that built-in and published maps register. Each is branched on rather than
+# required, so all are declared ``Optional``.
+MAP_VISIBILITY_PERMISSIONS: list[permissions.BasePerm] = [
+    permissions.Optional(permissions.Perm("general.see_user_map")),
     permissions.Optional(permissions.Perm("general.edit_map")),
+    permissions.Optional(permissions.Perm("general.force_map")),
+    permissions.PrefixPerm("map"),
+]
+# ``may_edit`` adds ``general.edit_foreign_map`` for a foreign map.
+MAP_EDIT_PERMISSIONS: list[permissions.BasePerm] = [
     permissions.Optional(permissions.Perm("general.edit_foreign_map")),
+]
+
+# Maps are pagetypes, so read *and* write touch the generic pagetype permissions:
+# every serialization stamps ``can_edit``/``can_delete`` (``may_delete`` adds
+# ``general.delete_foreign_map``), and writes additionally go through the publish
+# gates. The framework's permission tracker raises as soon as a *checked*
+# permission is not declared here (even a foreign map merely serialized in a
+# list), so every branch must be represented.
+_PAGETYPE_PERMISSIONS: list[permissions.BasePerm] = [
+    *MAP_EDIT_PERMISSIONS,
     permissions.Optional(permissions.Perm("general.delete_foreign_map")),
     permissions.Optional(permissions.Perm("general.publish_map")),
     permissions.Optional(permissions.Perm("general.publish_to_groups_map")),
     permissions.Optional(permissions.Perm("general.publish_to_foreign_groups_map")),
     permissions.Optional(permissions.Perm("general.publish_to_sites_map")),
-    permissions.Optional(permissions.Perm("general.see_user_map")),
-    permissions.Optional(permissions.Perm("general.force_map")),
-    # Built-in and published maps each register a per-instance ``map.<name>``
-    # permission that visibility resolution checks while listing/showing.
-    permissions.PrefixPerm("map"),
+    *MAP_VISIBILITY_PERMISSIONS,
 ]
 PERMISSIONS = permissions.AllPerm([permissions.Perm("maps.use"), *_PAGETYPE_PERMISSIONS])
 RW_PERMISSIONS = PERMISSIONS
@@ -69,6 +76,20 @@ RW_PERMISSIONS = PERMISSIONS
 CONFIGURE_PERMISSIONS = permissions.AllPerm(
     [permissions.Perm("maps.use"), permissions.Perm("maps.configure"), *_PAGETYPE_PERMISSIONS]
 )
+
+# ``sites.live()`` widens the connection's scope with each of these, so every
+# endpoint opening one checks them. The two component permissions are absent
+# from editions without the component.
+LIVESTATUS_PERMISSIONS: list[permissions.BasePerm] = [
+    permissions.Optional(permissions.Perm("general.see_all")),
+    permissions.Optional(permissions.OkayToIgnorePerm("bi.see_all")),
+    permissions.Optional(permissions.OkayToIgnorePerm("mkeventd.seeall")),
+]
+
+# For every endpoint that touches no configuration file: a read, a livestatus
+# command, or a write under ``var/maps``. None of them belongs behind the Setup
+# lock, and none of them is a pending change.
+NO_CONFIG_CHANGE = EndpointBehavior(skip_locking=True, update_config_generation=False)
 
 _MAP_ADAPTER: TypeAdapter[MapConfig] = TypeAdapter(MapConfig)
 # The light list projection parses only the (small) ``view`` block, not the

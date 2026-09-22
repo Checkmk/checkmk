@@ -11,7 +11,6 @@ compile/compute pipeline (this layer may not import ``cmk.bi``).
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     APIVersion,
-    EndpointBehavior,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
@@ -38,9 +37,7 @@ from cmk.maps.rest_api.internal.models.response_models import (
     MapsAggregationStatesResponse,
     MapsAggregationTreeResponse,
 )
-from cmk.maps.rest_api.utils import PERMISSIONS
-
-_READ_ONLY = EndpointBehavior(skip_locking=True, update_config_generation=False)
+from cmk.maps.rest_api.utils import NO_CONFIG_CHANGE, PERMISSIONS
 
 
 def _to_wire(node: AggregationNode) -> MapsAggregationNode:
@@ -109,7 +106,7 @@ ENDPOINT_LIST_AGGREGATIONS = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(required=PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
-    behavior=_READ_ONLY,
+    behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=list_aggregations_v1)},
 )
 
@@ -123,7 +120,7 @@ ENDPOINT_SHOW_AGGREGATION_TREE = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(required=PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
-    behavior=_READ_ONLY,
+    behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=show_aggregation_tree_v1)},
 )
 
@@ -135,6 +132,6 @@ ENDPOINT_SHOW_AGGREGATION_STATES = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(required=PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
-    behavior=_READ_ONLY,
+    behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=show_aggregation_states_v1)},
 )

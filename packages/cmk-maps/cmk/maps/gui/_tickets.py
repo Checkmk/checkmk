@@ -21,6 +21,7 @@ from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.watolib.groups_io import load_group_information
 from cmk.maps.shared.ticket import (
     Choice,
+    CommandVerb,
     encode_ticket,
     MapClaim,
     sign_config,
@@ -43,10 +44,11 @@ TICKET_TTL_SECONDS = 300
 # from a shorter window.
 STREAM_TICKET_TTL_SECONDS = TICKET_TTL_SECONDS
 
-# Host/service command verb -> the Checkmk permission that authorises it. Single
-# source of truth: drives the GUI command RBAC (cmk.maps.gui._commands._ACTIONS)
-# and the verb set baked into the ticket's ``commands`` capability (see below).
-COMMAND_ACTION_PERMISSIONS: dict[str, str] = {
+# Host/service command verb -> the Checkmk permission that authorises it, on top
+# of ``general.act``. Single source of truth: drives the GUI command RBAC
+# (cmk.maps.gui._commands), the verb set baked into the ticket's ``commands``
+# capability (see below) and the permissions the command endpoint declares.
+COMMAND_ACTION_PERMISSIONS: dict[CommandVerb, str] = {
     "acknowledge": "action.acknowledge",
     "remove_acknowledgement": "action.acknowledge",
     "force_check": "action.reschedule",
@@ -89,6 +91,13 @@ def _publishable_sites(user: LoggedInUser) -> list[Choice]:
     return [Choice(id=str(sid), alias=alias) for sid, alias in get_configured_site_choices()]
 
 
+def _granted_commands(user: LoggedInUser) -> list[CommandVerb]:
+    """The verbs the user may send; none without the views' command gate."""
+    if not user.may("general.act"):
+        return []
+    return sorted(verb for verb, perm in COMMAND_ACTION_PERMISSIONS.items() if user.may(perm))
+
+
 def gather_capabilities(user: LoggedInUser) -> TicketCapabilities:
     """Resolve the user's Maps capabilities once, for baking into a ticket."""
     return TicketCapabilities(
@@ -115,9 +124,7 @@ def gather_capabilities(user: LoggedInUser) -> TicketCapabilities:
         all_contact_groups=_publishable_contact_groups(user),
         # Sites the Access editor can offer when sharing to specific sites.
         all_sites=_publishable_sites(user),
-        commands=sorted(
-            verb for verb, perm in COMMAND_ACTION_PERMISSIONS.items() if user.may(perm)
-        ),
+        commands=_granted_commands(user),
     )
 
 

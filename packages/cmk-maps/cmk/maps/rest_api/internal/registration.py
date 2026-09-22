@@ -9,8 +9,23 @@ from cmk.maps.rest_api.internal.aggregations import (
     ENDPOINT_SHOW_AGGREGATION_STATES,
     ENDPOINT_SHOW_AGGREGATION_TREE,
 )
+from cmk.maps.rest_api.internal.backgrounds import (
+    ENDPOINT_DELETE_BACKGROUND,
+    ENDPOINT_UPLOAD_BACKGROUND,
+)
+from cmk.maps.rest_api.internal.cfg_import import ENDPOINT_PARSE_CFG
+from cmk.maps.rest_api.internal.commands import ENDPOINT_RUN_COMMAND
 from cmk.maps.rest_api.internal.endpoint_family import MAPS_INTERNAL_FAMILY
-from cmk.maps.rest_api.internal.images import ENDPOINT_LIST_IMAGES, ENDPOINT_SHOW_IMAGE_USAGE
+from cmk.maps.rest_api.internal.form_schemas import (
+    ENDPOINT_PARSE_FORM,
+    ENDPOINT_SHOW_FORM_SCHEMA,
+)
+from cmk.maps.rest_api.internal.images import (
+    ENDPOINT_DELETE_IMAGE,
+    ENDPOINT_LIST_IMAGES,
+    ENDPOINT_SHOW_IMAGE_USAGE,
+    ENDPOINT_UPLOAD_IMAGE,
+)
 from cmk.maps.rest_api.internal.metrics import ENDPOINT_SHOW_METRIC_INFO
 from cmk.maps.rest_api.internal.object_lookups import (
     ENDPOINT_LIST_DYNGROUP_MEMBERS,
@@ -22,6 +37,7 @@ from cmk.maps.rest_api.internal.object_lookups import (
     ENDPOINT_SHOW_PERF_METRICS,
 )
 from cmk.maps.rest_api.internal.settings import ENDPOINT_SHOW_AUTHORING_SETTINGS
+from cmk.maps.rest_api.internal.tickets import ENDPOINT_SHOW_TICKET
 
 
 def register(
@@ -43,3 +59,12 @@ def register(
     versioned_endpoint_registry.register(ENDPOINT_LIST_IMAGES)
     versioned_endpoint_registry.register(ENDPOINT_SHOW_IMAGE_USAGE)
     versioned_endpoint_registry.register(ENDPOINT_SHOW_AUTHORING_SETTINGS)
+    versioned_endpoint_registry.register(ENDPOINT_UPLOAD_IMAGE)
+    versioned_endpoint_registry.register(ENDPOINT_DELETE_IMAGE)
+    versioned_endpoint_registry.register(ENDPOINT_UPLOAD_BACKGROUND)
+    versioned_endpoint_registry.register(ENDPOINT_DELETE_BACKGROUND)
+    versioned_endpoint_registry.register(ENDPOINT_SHOW_TICKET)
+    versioned_endpoint_registry.register(ENDPOINT_RUN_COMMAND)
+    versioned_endpoint_registry.register(ENDPOINT_SHOW_FORM_SCHEMA)
+    versioned_endpoint_registry.register(ENDPOINT_PARSE_FORM)
+    versioned_endpoint_registry.register(ENDPOINT_PARSE_CFG)

@@ -30,12 +30,29 @@ import hmac
 import json
 import time
 from collections.abc import Callable, Mapping
-from typing import NotRequired, TypedDict
+from typing import Literal, NotRequired, TypedDict
 
 # A function that HMACs a message with the site-internal secret. Both sides pass
 # ``SiteInternalSecret().secret.hmac``; taking it as a parameter keeps this
 # module free of secret loading/caching.
 HmacFn = Callable[[bytes], bytes]
+
+
+# The monitoring commands a ticket can grant. Named here because both ends read
+# them: the GUI maps each to the Checkmk permission gating it
+# (``COMMAND_ACTION_PERMISSIONS``), the REST model puts the alternatives into the
+# generated OpenAPI, and the SPA shows a button only for a verb it was granted.
+type CommandVerb = Literal[
+    "acknowledge",
+    "remove_acknowledgement",
+    "force_check",
+    "schedule_downtime",
+    "add_comment",
+    "enable_notifications",
+    "disable_notifications",
+    "enable_checks",
+    "disable_checks",
+]
 
 
 class Choice(TypedDict):
@@ -86,7 +103,7 @@ class TicketCapabilities(StreamCapabilities):
     publish_to_sites: bool
     all_contact_groups: list[Choice]
     all_sites: list[Choice]
-    commands: list[str]
+    commands: list[CommandVerb]
 
 
 class StreamTicketClaims(TypedDict):

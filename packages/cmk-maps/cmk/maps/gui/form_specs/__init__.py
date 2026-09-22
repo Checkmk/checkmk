@@ -6,7 +6,7 @@
 
 Rendering FormSpecs needs the full GUI context (visitor registry, request +
 authenticated-user context for e.g. the password store), so the specs live in
-``cmk.maps.gui`` and are serialised by the GUI AjaxPages — not by the
+``cmk.maps.gui`` and are serialised in the GUI process — not by the
 ``cmk.maps.backend`` daemon, which is a Flask-free FastAPI service. The daemon
 keeps the data CRUD + the flat form-dict mappers (which depend on its own
 schemas); these spec builders are GUI-side and dependency-free of the daemon.

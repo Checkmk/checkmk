@@ -29,7 +29,7 @@ from cmk.gui.logged_in import user as global_user
 from cmk.maps.backend.core import auth
 from cmk.maps.gui import _tickets
 from cmk.maps.shared import ticket as maps_ticket
-from cmk.maps.shared.ticket import MapClaim, TicketCapabilities
+from cmk.maps.shared.ticket import CommandVerb, MapClaim, TicketCapabilities
 
 _KEY = b"0123456789abcdef0123456789abcdef"
 
@@ -41,7 +41,7 @@ def _caps(
     see_all: bool = False,
     folder_see_all: bool = False,
     contact_groups: list[str] | None = None,
-    commands: list[str] | None = None,
+    commands: list[CommandVerb] | None = None,
 ) -> TicketCapabilities:
     """A zero-grant capability set, with only what the calling test pins set."""
     return TicketCapabilities(

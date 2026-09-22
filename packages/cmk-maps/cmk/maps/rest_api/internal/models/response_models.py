@@ -14,6 +14,7 @@ from typing import Literal
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.maps.gui._settings import MapListView, RenderMode
 from cmk.maps.shared.map_payload import LineStyle
+from cmk.maps.shared.ticket import CommandVerb
 
 # Mirrors the ``UnitFormat`` enums in cmk-shared-typing, so the generated
 # TypeScript lines up with the SPA's own unit-format types instead of widening
@@ -431,3 +432,145 @@ class MapsAuthoringSettingsResponse:
         description="The site's effective authoring defaults."
     )
     tiles: MapsTileSource = api_field(description="The effective tile source for geo maps.")
+
+
+@api_model
+class MapsChoice:
+    """One selectable entry (a contact group, a site) with its display name."""
+
+    id: str = api_field(description="The entry's id.", example="all")
+    alias: str = api_field(description="The entry's display name.", example="Everything")
+
+
+@api_model
+class MapsTicketCapabilities:
+    """What the ticket's holder may do, resolved once by the GUI.
+
+    The daemon reads the same set out of the signed ticket, so the SPA and the
+    daemon never disagree about a caller's rights.
+    """
+
+    may_edit: bool = api_field(description="May create and edit own maps.")
+    configure: bool = api_field(description="May administer Maps (images, settings).")
+    see_all: bool = api_field(description="Bypasses the Livestatus contact-group scope.")
+    folder_see_all: bool = api_field(description="Bypasses the Setup-folder read scope.")
+    contact_groups: list[str] = api_field(
+        description="The caller's contact groups.", example=["all"]
+    )
+    publish_all: bool = api_field(description="May publish a map to all users.")
+    publish_to_groups: bool = api_field(description="May publish a map to contact groups.")
+    publish_to_foreign_groups: bool = api_field(
+        description="May publish a map to contact groups the caller is not in."
+    )
+    publish_to_sites: bool = api_field(description="May publish a map to specific sites.")
+    all_contact_groups: list[MapsChoice] = api_field(
+        description="Contact groups the access editor may offer.", example=[]
+    )
+    all_sites: list[MapsChoice] = api_field(
+        description="Sites the access editor may offer.", example=[]
+    )
+    commands: list[CommandVerb] = api_field(
+        description="The monitoring commands the caller may issue.", example=["acknowledge"]
+    )
+
+
+@api_model
+class MapsTicketResponse:
+    ticket: str = api_field(
+        description="The signed, short-lived credential the daemon accepts.", example="eyJ0…"
+    )
+    stream_token: str | ApiOmitted = api_field(
+        description=(
+            "Reduced-capability, map-bound token for the event-stream URL. Present "
+            "only for a map-scoped ticket -- the map list opens no stream."
+        ),
+        default_factory=ApiOmitted,
+        example="eyJ0…",
+    )
+    user_id: str = api_field(description="The logged-in Checkmk user.", example="cmkadmin")
+    language: str | None = api_field(
+        description="The user's language, null when they follow the site default.",
+        example="en",
+    )
+    capabilities: MapsTicketCapabilities = api_field(
+        description="What this ticket grants, resolved from the user's permissions."
+    )
+
+
+@api_model
+class MapsFormSchemaResponse:
+    """A FormSpec rendered for the SPA, with its values in the form's own shape.
+
+    ``data`` is not what is stored: a single-choice field carries an opaque id
+    per element, and only the form spec's visitor knows which stored value each
+    one stands for. The SPA hands its stored values in and gets them back
+    encoded, rather than building the bag itself.
+    """
+
+    schema_: dict[str, object] = api_field(
+        description="The form spec's component tree, as ``FormEdit`` consumes it.",
+        serialization_alias="schema",
+        example={},
+    )
+    data: dict[str, object] = api_field(
+        description="The values to prefill the form with, in the form's own shape.",
+        example={},
+    )
+
+
+@api_model
+class MapsValidationMessage:
+    location: list[str] = api_field(
+        description="Path of the field the message belongs to.", example=["alias"]
+    )
+    message: str = api_field(
+        description="What the form spec objected to.", example="The value must not be empty."
+    )
+    replacement_value: object = api_field(
+        description="The value the form falls back to.", example=""
+    )
+
+
+@api_model
+class MapsFormParseResponse:
+    """The edited bag as it is stored, or what the form spec objected to.
+
+    Validation messages are an answer rather than an error status: the dialog
+    renders each one on the field that carries it, which a problem response
+    could not address.
+    """
+
+    data: dict[str, object] | ApiOmitted = api_field(
+        description="The values as they are stored. Absent when the form was rejected.",
+        default_factory=ApiOmitted,
+        example={},
+    )
+    validation: list[MapsValidationMessage] | ApiOmitted = api_field(
+        description="What the form spec rejected. Absent when the values were accepted.",
+        default_factory=ApiOmitted,
+        example=[],
+    )
+
+
+@api_model
+class MapsBackgroundResponse:
+    filename: str = api_field(
+        description=(
+            "The stored background's file name, to be adopted as the map's "
+            "``background_image``. It carries an unguessable token, so the "
+            "statically served URL is a capability rather than a guessable path."
+        ),
+        example="6f1b…__datacenter.Zm9v.png",
+    )
+
+
+@api_model
+class MapsCfgImportResponse:
+    map_config: dict[str, object] = api_field(
+        description="The parsed map, as a draft the editor shows before it is saved.",
+        serialization_alias="map",
+        example={},
+    )
+    warnings: list[str] = api_field(
+        description="What the importer had to guess, in the operator's words.", example=[]
+    )

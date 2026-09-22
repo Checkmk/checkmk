@@ -30,26 +30,17 @@ from cmk.gui.watolib.sample_config import SampleConfigGeneratorRegistry
 from cmk.maps.gui import (
     _config_variables,
     _folders,
+    _main_menu,
     _permissions,
     _settings_modes,
     _sites,
 )
-from cmk.maps.gui._cfg_import import AjaxMapsParseCfg
-from cmk.maps.gui._commands import AjaxMapsCommand
 from cmk.maps.gui._config_domain import ConfigDomainMaps
-from cmk.maps.gui._form_schemas import AjaxMapsFormParse, AjaxMapsFormSchema
-from cmk.maps.gui._images import (
-    AjaxMapsBackgroundDelete,
-    AjaxMapsBackgroundUpload,
-    AjaxMapsImageDelete,
-    AjaxMapsImageUpload,
-)
-from cmk.maps.gui._main_menu import monitor_menu_topics
-from cmk.maps.gui._pages import AjaxMapsTicket
+from cmk.maps.gui._pages import ShowMapsPage
 from cmk.maps.gui._sample_config import SampleConfigGeneratorMapsConnections
 from cmk.maps.gui.pagetype import MapPage
 
-__all__ = ["register", "monitor_menu_topics"]
+__all__ = ["register"]
 
 
 def register(
@@ -68,20 +59,11 @@ def register(
     # menu, whose entry would link to the not-yet-merged maps.py. Swap back once
     # that page exists.
     MapPage.declare_overriding_permissions()
-    page_registry.register(PageEndpoint("ajax_maps_ticket", AjaxMapsTicket()))
-    # Map CRUD is the official REST API (cmk.maps.rest_api) and every read-only
-    # SPA lookup is an internal REST endpoint, so only these remain AjaxPages:
-    # the two uploads (the versioned framework has no multipart support) plus the
-    # endpoints whose request context is the point — .cfg parsing, commands, form
-    # schemas, and the page that mounts the SPA.
-    page_registry.register(PageEndpoint("ajax_maps_parse_cfg", AjaxMapsParseCfg()))
-    page_registry.register(PageEndpoint("ajax_maps_image_upload", AjaxMapsImageUpload()))
-    page_registry.register(PageEndpoint("ajax_maps_image_delete", AjaxMapsImageDelete()))
-    page_registry.register(PageEndpoint("ajax_maps_background_upload", AjaxMapsBackgroundUpload()))
-    page_registry.register(PageEndpoint("ajax_maps_background_delete", AjaxMapsBackgroundDelete()))
-    page_registry.register(PageEndpoint("ajax_maps_command", AjaxMapsCommand()))
-    page_registry.register(PageEndpoint("ajax_maps_form_schema", AjaxMapsFormSchema()))
-    page_registry.register(PageEndpoint("ajax_maps_form_parse", AjaxMapsFormParse()))
+    # The one page Maps registers: everything the SPA calls is a REST endpoint
+    # (map CRUD the official ``cmk.maps.rest_api``, everything else the internal
+    # family in ``cmk.maps.rest_api.internal``), reached through the generated,
+    # typed client.
+    page_registry.register(PageEndpoint("maps", ShowMapsPage()))
     maps_domain = ConfigDomainMaps()
     config_domain_registry.register(maps_domain)
     _config_variables.register(config_variable_group_registry, config_variable_registry)
@@ -100,3 +82,6 @@ def register(
     # the Livestatus site specs and the SETUP-folder skeleton.
     _sites.register()
     _folders.register()
+    # Contributes the viewable maps to the Monitor menu through a registry, so
+    # cmk.gui's menu builders need no Maps import.
+    _main_menu.register()

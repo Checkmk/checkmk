@@ -21,7 +21,6 @@ from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
-    EndpointBehavior,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
@@ -44,7 +43,7 @@ from cmk.maps.rest_api.internal.models.response_models import (
     MapsPerfometerSegment,
     MapsPerfometerSide,
 )
-from cmk.maps.rest_api.utils import PERMISSIONS
+from cmk.maps.rest_api.utils import NO_CONFIG_CHANGE, PERMISSIONS
 
 
 def show_metric_info_v1(
@@ -143,6 +142,6 @@ ENDPOINT_SHOW_METRIC_INFO = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(required=PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
-    behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
+    behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=show_metric_info_v1)},
 )

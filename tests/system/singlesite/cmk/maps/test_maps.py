@@ -38,9 +38,14 @@ def _maps_url(site: Site, path: str) -> str:
     return site.url_for_path(f"/{site.id}/check_mk/maps{path}")
 
 
-def _maps_ticket(web: CMKWebSession) -> str:
+def _ticket_path(site: Site) -> str:
+    """The internal REST endpoint that mints a daemon ticket for the session."""
+    return f"/{site.id}/check_mk/api/internal/domain-types/maps_ticket/collections/all"
+
+
+def _maps_ticket(site: Site, web: CMKWebSession) -> str:
     """Mint a signed daemon ticket from the logged-in GUI session."""
-    ticket = web.get("ajax_maps_ticket.py").json()["result"]["ticket"]
+    ticket = web.get(_ticket_path(site)).json()["ticket"]
     assert ticket
     return str(ticket)
 
@@ -49,7 +54,7 @@ def _first_connection_id(site: Site, web: CMKWebSession) -> str:
     """The id of the site's (built-in) local Livestatus connection."""
     response = requests.get(
         _maps_url(site, "/api/v1/connections"),
-        headers={"X-Maps-Ticket": _maps_ticket(web)},
+        headers={"X-Maps-Ticket": _maps_ticket(site, web)},
         timeout=_TIMEOUT,
     )
     response.raise_for_status()
@@ -61,7 +66,7 @@ def _first_connection_id(site: Site, web: CMKWebSession) -> str:
 def _topology_nodes(site: Site, web: CMKWebSession, connection_id: str) -> list[dict[str, object]]:
     response = requests.get(
         _maps_url(site, f"/api/v1/connections/{connection_id}/topology"),
-        headers={"X-Maps-Ticket": _maps_ticket(web)},
+        headers={"X-Maps-Ticket": _maps_ticket(site, web)},
         timeout=_TIMEOUT,
     )
     response.raise_for_status()
@@ -133,8 +138,7 @@ def test_maps_api_rejects_request_without_ticket(site: Site, maps_on: None) -> N
 
 
 def test_maps_ticket_handshake_end_to_end(site: Site, web: CMKWebSession, maps_on: None) -> None:
-    ticket_page = web.get("ajax_maps_ticket.py")
-    ticket = ticket_page.json()["result"]["ticket"]
+    ticket = web.get(_ticket_path(site)).json()["ticket"]
     assert ticket
 
     response = requests.get(
@@ -191,7 +195,7 @@ def test_maps_daemon_object_details_for_host(
     response = requests.get(
         _maps_url(site, f"/api/v1/connections/{connection_id}/object-details"),
         params={"type": "host", "host": monitored_host},
-        headers={"X-Maps-Ticket": _maps_ticket(web)},
+        headers={"X-Maps-Ticket": _maps_ticket(site, web)},
         timeout=_TIMEOUT,
     )
     assert response.status_code == 200
@@ -211,7 +215,7 @@ def test_maps_daemon_metric_history_through_proxy(
     response = requests.get(
         _maps_url(site, f"/api/v1/connections/{connection_id}/metric-history"),
         params={"host": monitored_host, "service": "PING", "minutes": "60"},
-        headers={"X-Maps-Ticket": _maps_ticket(web)},
+        headers={"X-Maps-Ticket": _maps_ticket(site, web)},
         timeout=_TIMEOUT,
     )
     assert response.status_code == 200
@@ -289,3 +293,19 @@ def test_maps_rest_builtin_map_delete_rejected(site: Site) -> None:
         "objects/map/all_hosts", api_version=APIVersion.UNSTABLE, headers={"If-Match": "*"}
     )
     assert response.status_code == 403
+
+
+def test_maps_csp_allows_openstreetmap_tiles(site: Site, web: CMKWebSession) -> None:
+    # A geo map renders OpenStreetMap tiles from the *bare* host
+    # (WorldMapCanvas' DEFAULT_TILE_URL is https://tile.openstreetmap.org/...).
+    # A wildcard `*.tile.openstreetmap.org` does NOT match that bare host, so the
+    # OMD apache CSP img-src must list it explicitly — otherwise every tile is
+    # blocked and the map renders blank. Guards the exact host the frontend uses.
+    response = web.get("maps.py")
+    csp = response.headers["Content-Security-Policy"]
+    img_src = next(
+        directive.strip() for directive in csp.split(";") if directive.strip().startswith("img-src")
+    )
+    assert "https://tile.openstreetmap.org/" in img_src, (
+        f"img-src does not allow tiles: {img_src!r}"
+    )

@@ -14,7 +14,6 @@ optionality would reach every consumer of the values.
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     APIVersion,
-    EndpointBehavior,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
@@ -29,9 +28,7 @@ from cmk.maps.rest_api.internal.models.response_models import (
     MapsAuthoringSettingsResponse,
     MapsTileSource,
 )
-from cmk.maps.rest_api.utils import PERMISSIONS
-
-_READ_ONLY = EndpointBehavior(skip_locking=True, update_config_generation=False)
+from cmk.maps.rest_api.utils import NO_CONFIG_CHANGE, PERMISSIONS
 
 
 def show_authoring_settings_v1() -> MapsAuthoringSettingsResponse:
@@ -54,6 +51,6 @@ ENDPOINT_SHOW_AUTHORING_SETTINGS = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(required=PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
-    behavior=_READ_ONLY,
+    behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=show_authoring_settings_v1)},
 )

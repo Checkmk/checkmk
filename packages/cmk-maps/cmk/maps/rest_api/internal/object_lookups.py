@@ -13,7 +13,6 @@ from typing import Annotated
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     APIVersion,
-    EndpointBehavior,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
@@ -46,11 +45,7 @@ from cmk.maps.rest_api.internal.models.response_models import (
     MapsSite,
     MapsSitesResponse,
 )
-from cmk.maps.rest_api.utils import PERMISSIONS
-
-# These reads never write and never touch the configuration, so they must not
-# take the Setup lock or bump the config generation.
-_READ_ONLY = EndpointBehavior(skip_locking=True, update_config_generation=False)
+from cmk.maps.rest_api.utils import NO_CONFIG_CHANGE, PERMISSIONS
 
 
 def _members_response(members: list[Member]) -> MapsMembersResponse:
@@ -187,7 +182,7 @@ ENDPOINT_SHOW_HOST_GEO = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(required=PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
-    behavior=_READ_ONLY,
+    behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=show_host_geo_v1)},
 )
 
@@ -199,7 +194,7 @@ ENDPOINT_SHOW_PERF_METRICS = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(required=PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
-    behavior=_READ_ONLY,
+    behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=show_perf_metrics_v1)},
 )
 
@@ -211,7 +206,7 @@ ENDPOINT_LIST_OBJECTS = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(required=PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
-    behavior=_READ_ONLY,
+    behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=list_objects_v1)},
 )
 
@@ -225,7 +220,7 @@ ENDPOINT_LIST_GROUP_MEMBERS = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(required=PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
-    behavior=_READ_ONLY,
+    behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=list_group_members_v1)},
 )
 
@@ -237,7 +232,7 @@ ENDPOINT_LIST_DYNGROUP_MEMBERS = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(required=PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
-    behavior=_READ_ONLY,
+    behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=list_dyngroup_members_v1)},
 )
 
@@ -249,7 +244,7 @@ ENDPOINT_LIST_FOLDERS = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(required=PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
-    behavior=_READ_ONLY,
+    behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=list_folders_v1)},
 )
 
@@ -261,6 +256,6 @@ ENDPOINT_LIST_SITES = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(required=PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
-    behavior=_READ_ONLY,
+    behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=list_sites_v1)},
 )

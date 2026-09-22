@@ -5,9 +5,9 @@
 """Parse legacy NagVis ``.cfg`` map content into a Checkmk Maps map dict.
 
 This is stateless format knowledge (pure text → dict), so it lives GUI-side with
-the rest of map authoring — the daemon owns only live state, not import. The
-:class:`AjaxMapsParseCfg` endpoint below wraps the parser for the SPA's import
-flow.
+the rest of map authoring — the daemon owns only live state, not import.
+:func:`parse_cfg_upload` below wraps the parser for the SPA's import flow; the
+endpoint serving it is in :mod:`cmk.maps.rest_api.internal.cfg_import`.
 """
 
 import contextlib
@@ -17,12 +17,10 @@ from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import get_args, Literal, override, TypedDict
+from typing import get_args, Literal, TypedDict
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, ungettext
-from cmk.gui.logged_in import user
-from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.maps.gui._settings import connection_choices
 from cmk.maps.shared.map_payload import (
     FlowView,
@@ -39,12 +37,11 @@ from cmk.maps.shared.map_payload import (
     WorldmapView,
 )
 from cmk.maps.shared.validators import coerce_color
-from cmk.web.utils.csrf_token import check_csrf_token
 
 # A NagVis .cfg is a small text file; cap the upload before the whole-file regex
 # scan + multi-pass reference resolver run over it, mirroring the icon/background
 # upload caps. Real exported maps are well under this.
-_MAX_CFG_BYTES = 5 * 1024 * 1024  # 5 MB
+MAX_CFG_BYTES = 5 * 1024 * 1024  # 5 MB
 
 # The byte cap alone does not bound the result: one ~25-byte `define` block
 # becomes a full map object in the JSON response, so a 5 MB file of tiny blocks
@@ -1051,37 +1048,27 @@ def resolve_connection_ids(map_cfg: MapPayload, configured: Sequence[str]) -> li
     return warnings
 
 
-class AjaxMapsParseCfg(AjaxPage):
+def parse_cfg_upload(filename: str, contents: bytes) -> tuple[MapPayload, list[str]]:
     """Parse an uploaded legacy NagVis ``.cfg`` into a map dict (no persistence).
 
-    The SPA's import flow POSTs the file here; the returned map is a draft the
-    editor shows before the user saves it through the Maps REST API. Parsing is
-    stateless format knowledge, so this needs no daemon round-trip.
+    The returned map is a draft the editor shows before the user saves it through
+    the Maps REST API. Parsing is stateless format knowledge, so this needs no
+    daemon round-trip.
 
-    Answers ``{"map": ..., "warnings": [...]}``: connection ids are remapped onto
-    the configured local connections (as the legacy import did), and every such
-    guess is named in ``warnings`` so the operator can correct the map instead of
-    wondering why an object stays PENDING.
+    Connection ids are remapped onto the configured local connections (as the
+    legacy import did), and every such guess is named in the warnings so the
+    operator can correct the map instead of wondering why an object stays
+    PENDING.
     """
-
-    @override
-    def page(self, ctx: PageContext) -> PageResult:
-        user.need_permission("maps.use")
-        if not user.may("general.edit_map"):
-            raise MKUserError(None, _("You are not allowed to create or edit maps."))
-        # State-changing upload from the SPA — CSRF-guarded like the other
-        # session-authenticated GUI upload endpoints.
-        check_csrf_token(ctx.session, ctx.request, i18n=_)
-        filename, _mimetype, content_bytes = ctx.request.uploaded_file("file")
-        if not filename or not filename.lower().endswith(".cfg"):
-            raise MKUserError("file", _("Only .cfg files are accepted."))
-        if len(content_bytes) > _MAX_CFG_BYTES:
-            raise MKUserError(
-                "file",
-                _("The uploaded file is too large (maximum %(limit)d MB).")
-                % {"limit": _MAX_CFG_BYTES // (1024 * 1024)},
-            )
-        content = content_bytes.decode("utf-8", errors="replace")
-        map_cfg = cfg_to_map(content, map_name_from_filename(filename))
-        warnings = resolve_connection_ids(map_cfg, _configured_connection_ids())
-        return {"map": map_cfg, "warnings": warnings}
+    if not filename or not filename.lower().endswith(".cfg"):
+        raise MKUserError("filename", _("Only .cfg files are accepted."))
+    if len(contents) > MAX_CFG_BYTES:
+        raise MKUserError(
+            "content",
+            _("The uploaded file is too large (maximum %(limit)d MB).")
+            % {"limit": MAX_CFG_BYTES // (1024 * 1024)},
+        )
+    map_cfg = cfg_to_map(
+        contents.decode("utf-8", errors="replace"), map_name_from_filename(filename)
+    )
+    return map_cfg, resolve_connection_ids(map_cfg, _configured_connection_ids())

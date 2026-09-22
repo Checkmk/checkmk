@@ -16,17 +16,15 @@ the old daemon endpoint they never disclose maps outside the caller's scope.
 
 import hashlib
 import secrets
+from collections.abc import Container
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import override, TypedDict
 
 import cmk.utils.paths
 from cmk.ccc import store
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
-from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.maps.gui._image_security import (
     BACKGROUND_MIME_TYPES,
     BACKGROUND_SUFFIXES,
@@ -37,10 +35,9 @@ from cmk.maps.gui._image_security import (
     safe_image_stem,
 )
 from cmk.maps.gui.store import get_permitted_map, get_permitted_maps, is_valid_map_name
-from cmk.web.utils.csrf_token import check_csrf_token
 
-_MAX_ICON_BYTES = 2 * 1024 * 1024  # 2 MB
-_MAX_BACKGROUND_BYTES = 10 * 1024 * 1024  # 10 MB
+MAX_ICON_BYTES = 2 * 1024 * 1024
+MAX_BACKGROUND_BYTES = 10 * 1024 * 1024
 _BUILTIN_DIR = Path(__file__).resolve().parent / "builtin_icons"
 
 
@@ -171,95 +168,84 @@ def image_list() -> list[ImageListEntry]:
     ]
 
 
-class AjaxMapsImageUpload(AjaxPage):
-    """Upload an icon into the site-wide image library (operator task)."""
+def _accepted_suffix(
+    filename: str,
+    content_type: str,
+    contents: bytes,
+    *,
+    mime_types: Container[str],
+    suffixes: Container[str],
+    max_bytes: int,
+    too_large: str,
+    allow_gif: bool = True,
+) -> str:
+    """Refuse an upload that is not a supported image, and name its suffix.
 
-    @override
-    def page(self, ctx: PageContext) -> PageResult:
-        user.need_permission("maps.configure")
-        check_csrf_token(ctx.session, ctx.request, i18n=_)
-        filename, content_type, contents = ctx.request.uploaded_file("file")
-        if content_type not in ICON_MIME_TYPES:
-            raise MKUserError("file", _("Unsupported image type."))
-        if len(contents) > _MAX_ICON_BYTES:
-            raise MKUserError("file", _("Image file too large (max 2 MB)."))
-        # GIF stays out of icons (no animated icons) even if the client fakes the
-        # Content-Type — the magic-byte check enforces it too.
-        if not is_valid_image(contents, allow_gif=False):
-            raise MKUserError("file", _("File content does not match a supported image format."))
-
-        raw_suffix = Path(filename or "").suffix.lower()
-        suffix = raw_suffix if raw_suffix in ICON_SUFFIXES else ".png"
-        stem = safe_image_stem(filename)
-        target_name = stem + suffix
-        if _is_builtin(target_name):
-            # A built-in icon is referenced across maps; silently replacing it
-            # would change every map at once (delete protects them too).
-            raise MKUserError("file", _("Built-in images cannot be overwritten."))
-
-        d = _images_dir()
-        store.save_bytes_to_file(d / target_name, contents)
-        return {"name": target_name, "url": f"images/{target_name}", "builtin": False}
-
-
-class _ImageUsage(TypedDict):
-    """One map that references an image, mirroring ``MapsImageUsage``."""
-
-    map: str
-    alias: str | None
-    object_ids: list[str]
-    is_background: bool
-
-
-def _usage_payload(usage: list[ImageUsageEntry]) -> list[_ImageUsage]:
-    """The usage list in the wire shape, matching the internal REST endpoint's."""
-    return [
-        {
-            "map": entry.map_name,
-            "alias": entry.alias,
-            "object_ids": entry.object_ids,
-            "is_background": entry.is_background,
-        }
-        for entry in usage
-    ]
-
-
-class AjaxMapsImageDelete(AjaxPage):
-    """Delete a user-uploaded image.
-
-    Returns the blocking ``usage`` list when the image is still referenced and
-    ``force`` was not set (empty list means the file was deleted) — the SPA shows
-    the in-use warning and re-sends with ``force`` on confirmation.
+    ``content_type`` is only what the browser claimed; the magic-byte check is
+    what actually decides, so a faked header buys nothing. An unsupported (or
+    absent) suffix falls back to ``.png`` rather than being refused — the
+    content has already been vouched for.
     """
+    if content_type not in mime_types:
+        raise MKUserError("content_type", _("Unsupported image type."))
+    if len(contents) > max_bytes:
+        raise MKUserError("content", too_large)
+    if not is_valid_image(contents, allow_gif=allow_gif):
+        raise MKUserError("content", _("File content does not match a supported image format."))
+    suffix = Path(filename or "").suffix.lower()
+    return suffix if suffix in suffixes else ".png"
 
-    @override
-    def page(self, ctx: PageContext) -> PageResult:
-        user.need_permission("maps.configure")
-        check_csrf_token(ctx.session, ctx.request, i18n=_)
-        name = ctx.request.get_ascii_input_mandatory("name")
-        force = ctx.request.get_ascii_input("force") == "true"
-        require_valid_image_name(name)
-        if _is_builtin(name):
-            raise MKUserError("name", _("Built-in images cannot be deleted."))
-        d = _images_dir().resolve()
-        # Resolve strictly + compare via is_relative_to so a symlink pointing
-        # outside the images dir is caught (str.startswith could be tricked).
-        try:
-            path = (d / name).resolve(strict=True)
-        except OSError, RuntimeError:
-            raise MKUserError("name", _("Image '%(name)s' not found.") % {"name": name}) from None
-        if not path.is_relative_to(d):
-            raise MKUserError("name", _("Invalid filename."))
-        if not force:
-            usage = find_image_usage(name)
-            if usage:
-                return {"usage": _usage_payload(usage)}
-        path.unlink()
-        return {"usage": []}
+
+def upload_image(filename: str, content_type: str, contents: bytes) -> ImageListEntry:
+    """Store an icon in the site-wide image library (operator task)."""
+    # GIF stays out of icons: no animated icons.
+    suffix = _accepted_suffix(
+        filename,
+        content_type,
+        contents,
+        mime_types=ICON_MIME_TYPES,
+        suffixes=ICON_SUFFIXES,
+        max_bytes=MAX_ICON_BYTES,
+        too_large=_("Image file too large (max 2 MB)."),
+        allow_gif=False,
+    )
+    target_name = safe_image_stem(filename) + suffix
+    if _is_builtin(target_name):
+        # A built-in icon is referenced across maps; silently replacing it
+        # would change every map at once (delete protects them too).
+        raise MKUserError("filename", _("Built-in images cannot be overwritten."))
+
+    store.save_bytes_to_file(_images_dir() / target_name, contents)
+    return ImageListEntry(name=target_name, url=f"images/{target_name}", builtin=False)
+
+
+def delete_image(name: str, force: bool) -> list[ImageUsageEntry]:
+    """Delete a user-uploaded image, unless it is still in use.
+
+    Returns the blocking usage when the image is referenced and ``force`` was not
+    set (an empty list means the file is gone) — the SPA shows the in-use warning
+    and asks again with ``force``.
+    """
+    require_valid_image_name(name)
+    if _is_builtin(name):
+        raise MKUserError("name", _("Built-in images cannot be deleted."))
+    d = _images_dir().resolve()
+    # Resolve strictly + compare via is_relative_to so a symlink pointing
+    # outside the images dir is caught (str.startswith could be tricked).
+    try:
+        path = (d / name).resolve(strict=True)
+    except OSError, RuntimeError:
+        raise MKUserError("name", _("Image '%(name)s' not found.") % {"name": name}) from None
+    if not path.is_relative_to(d):
+        raise MKUserError("name", _("Invalid filename."))
+    if not force and (usage := find_image_usage(name)):
+        return usage
+    path.unlink()
+    return []
 
 
 # ---------------------------------------------------------------------------
-# Map background endpoints
+# Map backgrounds
 # ---------------------------------------------------------------------------
 
 
@@ -281,7 +267,7 @@ def _bg_stem(owner: str, name: str) -> str:
     background path resolves through (``[A-Za-z0-9_-]``, so it carries neither a
     ``.`` nor a glob metacharacter the ``{stem}.*`` glob could reach across). The
     served filename adds an unguessable token so the URL is a capability (see
-    :class:`AjaxMapsBackgroundUpload`)."""
+    :func:`upload_background`)."""
     owner_key = hashlib.sha256(owner.encode("utf-8")).hexdigest()[:16]
     return f"{owner_key}__{name}"
 
@@ -311,7 +297,7 @@ def _editable_map_owner(name: str) -> str:
     return str(page.config.owner)
 
 
-class AjaxMapsBackgroundUpload(AjaxPage):
+def upload_background(map_name: str, filename: str, content_type: str, contents: bytes) -> str:
     """Store a map's background image; returns the stored filename to adopt.
 
     Only the image file is stored here — the map's ``background_image`` field is
@@ -319,58 +305,45 @@ class AjaxMapsBackgroundUpload(AjaxPage):
     the (Apache-served, static) URL is a capability rather than an enumerable
     ``{owner}__{name}`` path.
 
-    The permission split against the image *library* endpoints is deliberate, not
-    an oversight: the library is site-wide shared state, so writing it needs
+    The permission split against the image *library* is deliberate, not an
+    oversight: the library is site-wide shared state, so writing it needs
     ``maps.configure`` (an admin task), while a background belongs to exactly one
     map, so ``maps.use`` plus that map's own edit right (``_editable_map_owner``)
     is the matching authorization — the same right that lets the user change any
     other field of the map.
 
     There is deliberately no byte quota: the write is bounded per map (one
-    background, ``_MAX_BACKGROUND_BYTES``, older variants unlinked), so total
+    background, ``MAX_BACKGROUND_BYTES``, older variants unlinked), so total
     usage is bounded by how many maps the user may create — the same bound the
     pagetype store itself has.
     """
+    owner = _editable_map_owner(map_name)
+    suffix = _accepted_suffix(
+        filename,
+        content_type,
+        contents,
+        mime_types=BACKGROUND_MIME_TYPES,
+        suffixes=BACKGROUND_SUFFIXES,
+        max_bytes=MAX_BACKGROUND_BYTES,
+        too_large=_("Background image must not exceed 10 MB."),
+    )
+    bg_dir = _backgrounds_dir()
+    stem = _bg_stem(owner, map_name)
+    stored = f"{stem}.{secrets.token_urlsafe(16)}{suffix}"
+    dest = bg_dir / stored
 
-    @override
-    def page(self, ctx: PageContext) -> PageResult:
-        user.need_permission("maps.use")
-        check_csrf_token(ctx.session, ctx.request, i18n=_)
-        name = ctx.request.get_ascii_input_mandatory("name")
-        owner = _editable_map_owner(name)
-        filename, content_type, contents = ctx.request.uploaded_file("file")
-        if content_type not in BACKGROUND_MIME_TYPES:
-            raise MKUserError("file", _("Unsupported image type."))
-        if len(contents) > _MAX_BACKGROUND_BYTES:
-            raise MKUserError("file", _("Background image must not exceed 10 MB."))
-        if not is_valid_image(contents):
-            raise MKUserError("file", _("File content does not match a supported image format."))
-
-        raw_suffix = Path(filename or "").suffix.lower()
-        suffix = raw_suffix if raw_suffix in BACKGROUND_SUFFIXES else ".png"
-        bg_dir = _backgrounds_dir()
-        stem = _bg_stem(owner, name)
-        stored = f"{stem}.{secrets.token_urlsafe(16)}{suffix}"
-        dest = bg_dir / stored
-
-        store.save_bytes_to_file(dest, contents)
-        # Map config holds only one filename; drop other-format siblings.
-        for stale in bg_dir.glob(f"{stem}.*"):
-            if stale.resolve() != dest.resolve():
-                stale.unlink(missing_ok=True)
-        return {"filename": stored}
+    store.save_bytes_to_file(dest, contents)
+    # Map config holds only one filename; drop other-format siblings.
+    written = dest.resolve()
+    for stale in bg_dir.glob(f"{stem}.*"):
+        if stale.resolve() != written:
+            stale.unlink(missing_ok=True)
+    return stored
 
 
-class AjaxMapsBackgroundDelete(AjaxPage):
+def delete_background(map_name: str) -> None:
     """Remove a map's background image files (the GUI clears the field on save)."""
-
-    @override
-    def page(self, ctx: PageContext) -> PageResult:
-        user.need_permission("maps.use")
-        check_csrf_token(ctx.session, ctx.request, i18n=_)
-        name = ctx.request.get_ascii_input_mandatory("name")
-        owner = _editable_map_owner(name)
-        bg_dir = _backgrounds_dir()
-        for f in bg_dir.glob(f"{_bg_stem(owner, name)}.*"):
-            f.unlink(missing_ok=True)
-        return {}
+    owner = _editable_map_owner(map_name)
+    bg_dir = _backgrounds_dir()
+    for f in bg_dir.glob(f"{_bg_stem(owner, map_name)}.*"):
+        f.unlink(missing_ok=True)

@@ -97,11 +97,16 @@ Checkmk REST endpoints, not maps-private plumbing:
   Checkmk object): list, show, create, update, delete against the pagetype
   store, with the pagetype permission model (own / foreign / built-in) applied
   by name and ETag concurrency,
-* **monitoring-object lookups** — the internal family
+* **everything else the SPA asks Checkmk for** — the internal family
   (``APIVersion.INTERNAL``, doc group *Checkmk Internal*, not part of the public
-  API because the shapes track what the SPA renders): objects, folders, sites,
-  host-group and dynamic-group members, host geo coordinates, available perf
-  metrics, the image library plus per-image usage, authoring defaults,
+  API because the shapes track what the SPA renders): the ticket handshake (see
+  `Interfaces`_), monitoring-object lookups (objects, folders, sites, host-group
+  and dynamic-group members, host geo coordinates, available perf metrics), the
+  image library with its uploads and per-image usage, a map's background image,
+  the authoring defaults, the ``FormSpec`` schemas for the authoring dialogs and
+  the translation of their values, the NagVis ``.cfg`` import, and the
+  monitoring commands Checkmk's REST API does not offer (rescheduling a check,
+  switching notifications and active checks),
 * **metric display semantics** —
   ``/domain-types/maps_metric_info/actions/resolve/invoke``: Perf-O-Meter
   rendering, registered units and titles, applicable graph groups — computed
@@ -113,23 +118,20 @@ Checkmk REST endpoints, not maps-private plumbing:
   ``cmk.gui.bi.bi_manager.BIManager`` (compiler + computer). The daemon does
   not touch BI at all; it skips ``aggregation`` objects in the state stream.
 
-What is left are the endpoints the versioned framework cannot serve, and those
-stay AjaxPages on the GUI session (cookie + CSRF, Checkmk's
-``{result_code, result}`` envelope):
+``maps.py`` is the one page Maps registers: it mounts the SPA and hands it the
+Checkmk URLs the app links out to. Everything else is a REST endpoint reached
+through the generated, typed client — there is no AjaxPage leg.
 
-* ``maps.py`` — the page that mounts the SPA,
-* ``ajax_maps_ticket`` — the ticket handshake (see `Interfaces`_),
-* ``ajax_maps_image_upload`` / ``_delete`` and
-  ``ajax_maps_background_upload`` / ``_delete`` — file uploads
-  (``multipart/form-data``), which the versioned framework does not support,
-* ``ajax_maps_parse_cfg`` — NagVis ``.cfg`` import,
-* ``ajax_maps_command`` — per-object monitoring commands, fired through
-  ``cmk.gui.livestatus_utils.commands`` in a full Checkmk request, with real
-  permissions and explicit site scoping. Group bulk actions and the downtime
-  list do *not* go here: they address a whole group in one call and therefore
-  use the stable public REST API (``api/1.0``, ``domain-types/downtime`` and
-  ``domain-types/acknowledge``) directly,
-* ``ajax_maps_form_schema`` — ``FormSpec`` schemas for the authoring dialogs.
+Two consequences of that are worth naming. Uploads (icons, map backgrounds, a
+NagVis ``.cfg``) carry their file base64-encoded in the JSON body, because
+nothing in the tree drives the framework's seam for other request media types
+yet and every Maps upload is small and capped. And the monitoring commands go
+to Checkmk's own REST API (``api/1.0``: ``domain-types/acknowledge``,
+``domain-types/downtime`` and ``domain-types/comment``), for one object as for a
+whole group. Only the verbs without such an endpoint stay with Maps: they run in
+a full Checkmk request through Checkmk's command layer, with real permissions,
+the target's visibility checked and explicit site scoping. They belong into the
+Monitor endpoint family, whose reschedule does not check that visibility yet.
 
 The daemon consequently needs no ``cmk.gui`` imports at all, and no write path
 into monitoring: commands ride the GUI session, never the maps ticket.
@@ -152,7 +154,7 @@ White-box overall system
 
     spa ..> apache
     apache ..> rest : /<site>/check_mk/api/internal/...\n(session auth)
-    apache ..> gui : /<site>/check_mk/maps.py,\najax_maps_*.py (session auth)
+    apache ..> gui : /<site>/check_mk/maps.py\n(session auth)
     apache ..> sock : /<site>/check_mk/maps/api\n(ticket auth)
     apache ..> files : /<site>/check_mk/maps/{images,maps}\n(static Alias)
     rest ..> gui : data providers
@@ -168,13 +170,14 @@ Interfaces
   ``lib/rest-api-client`` — session cookie + CSRF like every other GUI page. The
   internal version is the highest one and inherits every lower version's
   endpoints, so this one root reaches both families. Domain types ``map``
-  (public) and ``maps_aggregation``, ``maps_folder``,
-  ``maps_host_geo``, ``maps_image``, ``maps_member``, ``maps_metric_info``,
-  ``maps_object``, ``maps_perf_metrics``, ``maps_settings``, ``maps_site``
-  (internal). The SPA's types for them come from the GUI's generated OpenAPI
-  types, not from hand-written mirrors.
-* **SPA → GUI AjaxPages**: ``/<site>/check_mk/ajax_maps_*.py`` — the eight
-  pages listed above, same session and CSRF.
+  (public) and ``maps_aggregation``, ``maps_command``, ``maps_folder``,
+  ``maps_form``, ``maps_host_geo``, ``maps_image``, ``maps_member``,
+  ``maps_metric_info``, ``maps_object``, ``maps_perf_metrics``,
+  ``maps_settings``, ``maps_site``, ``maps_ticket`` (internal). The SPA's types
+  for them come from the GUI's generated OpenAPI types, not from hand-written
+  mirrors.
+* **SPA → GUI page**: ``/<site>/check_mk/maps.py`` — the page that mounts the
+  SPA, and the only GUI page Maps registers.
 * **SPA → static files**: ``/<site>/check_mk/maps/images`` and
   ``/<site>/check_mk/maps/maps/backgrounds`` are plain Apache ``Alias`` es onto
   GUI-owned files under ``var/maps/`` (``cmk.maps.gui._images``) — the daemon
@@ -344,10 +347,10 @@ Risks and technical debts
   A ``jti`` + server-seen cache, or moving the stream off ``EventSource`` so the
   token can travel in a header, would close the residual window if a threat model
   requires it.
-* The SPA reaches three server surfaces (REST API, GUI AjaxPages, daemon)
-  rather than one. Two of them are unavoidable — the daemon is a separate
-  process — but the AjaxPage leg exists only because the versioned REST
-  framework has no multipart support and because a few endpoints want the
-  Checkmk request context directly. It shrinks as the framework grows.
+* Uploads (icons, map backgrounds, a NagVis ``.cfg``) carry their file
+  base64-encoded in a JSON body. The versioned framework has a seam for other
+  request media types, but nothing in the tree drives it yet; every Maps upload
+  is small and capped, so the ~33% encoding overhead buys the typed JSON model.
+  Worth revisiting once the framework grows a multipart path.
 * ``cmk.bi`` is still on the daemon's ``module_layers.toml`` allow-list although
   the daemon no longer imports it; BI moved GUI-side.

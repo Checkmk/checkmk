@@ -12,6 +12,7 @@ delete operations and other actions.
 """
 
 import abc
+import base64
 import dataclasses
 import datetime
 import json
@@ -2208,6 +2209,107 @@ class MapsClient(RestApiClient):
         return self.request(
             "get",
             url="/domain-types/maps_settings/collections/all",
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    # The endpoints below are internal too: they back the Maps SPA only.
+
+    def get_ticket(self, name: str | None = None, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url="/domain-types/maps_ticket/collections/all",
+            query_params=None if name is None else {"name": name},
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def run_command(self, body: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url="/domain-types/maps_command/actions/run/invoke",
+            body=body,
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def get_form_schema(
+        self, spec: str, data: dict[str, Any] | None = None, expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/maps_form/{spec}/actions/schema/invoke",
+            body={} if data is None else {"data": data},
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def parse_form(self, spec: str, data: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/maps_form/{spec}/actions/parse/invoke",
+            body={"data": data},
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def upload_image(
+        self, filename: str, content_type: str, content: bytes, expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "post",
+            url="/domain-types/maps_image/collections/all",
+            body={
+                "filename": filename,
+                "content_type": content_type,
+                "content": base64.b64encode(content).decode("ascii"),
+            },
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def delete_image(self, name: str, force: bool = False, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/maps_image/{name}",
+            query_params={"force": "true" if force else "false"},
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def upload_background(
+        self,
+        name: str,
+        filename: str,
+        content_type: str,
+        content: bytes,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/map/{name}/actions/upload-background/invoke",
+            body={
+                "filename": filename,
+                "content_type": content_type,
+                "content": base64.b64encode(content).decode("ascii"),
+            },
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def delete_background(self, name: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/map/{name}/actions/delete-background/invoke",
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def parse_cfg(self, filename: str, content: bytes, expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url="/domain-types/map/actions/parse-cfg/invoke",
+            body={"filename": filename, "content": base64.b64encode(content).decode("ascii")},
             expect_ok=expect_ok,
             api_version=APIVersion.INTERNAL,
         )

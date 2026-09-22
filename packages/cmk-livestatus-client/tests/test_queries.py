@@ -29,3 +29,12 @@ def test_extra_headers_drop_blank_lines() -> None:
     query = Query([Hosts.name], extra_headers=["", "Limit: 1"])
 
     assert query.extra_headers == ["Limit: 1"]
+
+
+def test_filter_keeps_extra_headers() -> None:
+    query = Query([Hosts.name], extra_headers=["Limit: 5"])
+
+    filtered = query.filter(Hosts.name == "myhost")
+
+    assert filtered.extra_headers == ["Limit: 5"]
+    assert filtered.compile() == "GET hosts\nColumns: name\nFilter: name = myhost\nLimit: 5"

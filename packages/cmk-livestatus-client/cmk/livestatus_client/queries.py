@@ -250,7 +250,11 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: \\nAnd: 3'
         """Apply additional filters to an existing query.
 
         This will return a new `Query` instance. The original one is left untouched."""
-        return Query(self.columns, And(self.filter_expr, filter_expr))
+        return Query(
+            self.columns,
+            And(self.filter_expr, filter_expr),
+            extra_headers=self.extra_headers,
+        )
 
     @override
     def __str__(self) -> str:

@@ -181,6 +181,20 @@ class AllHostsExperimental(CmkPage):
         return self.main_area.locator("button.monitoring-legacy-view-button")
 
     @property
+    def page_menu_shortcuts(self) -> Locator:
+        """The shortcut area of the page menu bar.
+
+        Where the cloud edition teleports the header widgets, because its licensing
+        banner covers the title bar the other editions use.
+        """
+        return self.main_area.locator("#page_menu_bar .shortcuts")
+
+    @property
+    def return_to_classic_view_in_page_menu(self) -> Locator:
+        """The "Return to classic view" button as mounted inside the shortcut area."""
+        return self.page_menu_shortcuts.locator("button.monitoring-legacy-view-button")
+
+    @property
     def availability_menu_entry(self) -> Locator:
         """The "Availability" entry of the server-rendered page menu."""
         return self.main_area.locator("#menu_entry_availability")

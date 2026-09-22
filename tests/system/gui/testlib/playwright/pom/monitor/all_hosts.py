@@ -63,6 +63,11 @@ class AllHosts(CmkPage):
         """
         return self.main_area.locator("#page_menu_bar .shortcuts")
 
+    @property
+    def try_the_new_view_in_page_menu(self) -> Locator:
+        """The switch button as mounted inside the page menu bar's shortcut area."""
+        return self.page_menu_shortcuts.locator("button.monitoring-page-link-button")
+
     def get_host_link(self, host_name: str) -> Locator:
         """Get the link to a host in the 'All hosts' view.
 

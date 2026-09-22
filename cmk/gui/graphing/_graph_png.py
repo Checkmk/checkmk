@@ -251,15 +251,13 @@ def _plot_metrics(ax: Axes, graph: EvaluatedGraph) -> None:
     ax.margins(y=0)
 
     if timestamps:
-        # Clip the x-axis to the first timestamp where any curve has real data, so that
-        # leading None-only periods (e.g. newly created hosts) don't pad the left side.
-        first_real: int | None = None
-        for curve, _sign in _all_curves_with_sign(graph):
-            has_value = [v is not None for v in curve.time_series.values]
-            if any(has_value) and (first_real is None or has_value.index(True) < first_real):
-                first_real = has_value.index(True)
-        if first_real is not None:
-            ax.set_xlim(timestamps[first_real], timestamps[-1])
+        # Always span the full requested time_range - the same one _graph_time_caption reads
+        # for the title - rather than trimming to the first real data point. A graph mostly
+        # made of a leading None-only period (e.g. a newly created host, or any range wider
+        # than the data's actual history) must render as mostly empty, matching what Vue's
+        # on-screen renderer already shows, instead of silently zooming into the tail end while
+        # the title still claims the full range.
+        ax.set_xlim(timestamps[0], timestamps[-1])
 
 
 def _drawn_vertical_extent(graph: EvaluatedGraph) -> tuple[float | None, float | None]:

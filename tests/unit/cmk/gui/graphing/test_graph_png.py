@@ -30,6 +30,7 @@ from cmk.gui.graphing._graph_png import (
     _graph_scalars,
     _mirrored_y_labels,
     _notation_formatter,
+    _plot_metrics,
     _plot_stack,
     _rules_in_range,
     _stack_extents,
@@ -371,6 +372,55 @@ def test_values_pads_a_shorter_curve_with_nan_to_match_length() -> None:
 
     assert padded.tolist()[:2] == [1.0, 2.0]
     assert np.isnan(padded[2:]).all()
+
+
+def test_plot_metrics_spans_the_full_time_range_despite_a_long_leading_gap() -> None:
+    """Regression test for CMK-38506: a graph whose real data only starts near the end of a
+    long requested range (e.g. a short-lived host inside a 400-day export) must still plot the
+    x-axis across the *entire* requested time_range, matching what _graph_time_caption's title
+    says and what Vue's on-screen renderer already shows - not zoom into the tail end where the
+    real data happens to live."""
+    time_range = TimeRange(start=0, end=720, step=60)
+    curve = EvaluatedCurve(
+        id="m",
+        attributes=CurveAttributes(title="m", unit=_UNIT, color="#000000"),
+        value=None,
+        time_series=TimeSeries(time_range=time_range, values=[None] * 10 + [5.0, 6.0]),
+    )
+    graph = EvaluatedGraph(
+        name="g",
+        title="Graph",
+        vertical_range=None,
+        stacks=[EvaluatedStack(members=[curve], inverse=False)],
+        lines=[],
+    )
+
+    fig = Figure()
+    ax = fig.add_subplot(1, 1, 1)
+    _plot_metrics(ax, graph)
+
+    assert ax.get_xlim() == (time_range.start, time_range.end - time_range.step)
+
+
+def test_plot_metrics_spans_the_full_time_range_for_an_entirely_empty_curve() -> None:
+    """A curve with no real values at all (e.g. a graph requested for a period entirely before
+    the host existed) must still get an x-axis spanning the full requested range (here
+    _TIME_RANGE, which _curve() attaches to every curve it builds), not an untouched/default
+    matplotlib axis."""
+    curve = _curve("m", [None, None, None])
+    graph = EvaluatedGraph(
+        name="g",
+        title="Graph",
+        vertical_range=None,
+        stacks=[EvaluatedStack(members=[curve], inverse=False)],
+        lines=[],
+    )
+
+    fig = Figure()
+    ax = fig.add_subplot(1, 1, 1)
+    _plot_metrics(ax, graph)
+
+    assert ax.get_xlim() == (_TIME_RANGE.start, _TIME_RANGE.end - _TIME_RANGE.step)
 
 
 def test_stack_extents_pads_a_shorter_member_to_the_longest_curve() -> None:

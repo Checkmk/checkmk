@@ -12,6 +12,7 @@ import usei18n from '@/lib/i18n'
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
+import TrialModeSelectionCodeEntry from './screens/TrialModeSelectionCodeEntry.vue'
 import TrialModeSelectionEmailEntry from './screens/TrialModeSelectionEmailEntry.vue'
 import TrialModeSelectionEntryChoice from './screens/TrialModeSelectionEntryChoice.vue'
 import TrialModeSelectionLicenseVerification from './screens/TrialModeSelectionLicenseVerification.vue'
@@ -21,7 +22,18 @@ const { _t } = usei18n()
 
 const props = defineProps<TrialModeSelectionProps>()
 
-const { screen, saving, saveFailed, goTo, verifyNow, verifyLater } = useTrialModeSelection(props)
+const {
+  screen,
+  email,
+  saving,
+  saveFailed,
+  resendCooldown,
+  sendCode,
+  resendCode,
+  goTo,
+  verifyNow,
+  verifyLater
+} = useTrialModeSelection(props)
 </script>
 
 <template>
@@ -46,12 +58,21 @@ const { screen, saving, saveFailed, goTo, verifyNow, verifyLater } = useTrialMod
       @verify-later="verifyLater"
     />
 
-    <!-- No listener on @send-code yet: the code step arrives with the next change, and
-         navigating to a screen that has no component would strand the dialog. -->
     <TrialModeSelectionEmailEntry
       v-else-if="screen === 'email'"
+      v-model:email="email"
       :trial-length-days="props.trial_length_days"
       @back="goTo('choice')"
+      @send-code="sendCode"
+    />
+
+    <TrialModeSelectionCodeEntry
+      v-else-if="screen === 'code'"
+      :email="email"
+      :resend-cooldown="resendCooldown"
+      @back="goTo('email')"
+      @resend="resendCode"
+      @verified="goTo('success')"
     />
 
     <CmkParagraph class="trial-mode-selection-app__footer">

@@ -119,6 +119,10 @@ For a **patch bump** (same `major.minor`, e.g. 3.13.14 → 3.13.15):
 - regenerate `MODULE.bazel.lock` with `bazel mod deps --lockfile_mode=update`;
   the extension's URLs and hashes are recorded there, so until it is refreshed
   every build fails with "MODULE.bazel.lock is no longer up-to-date",
+- upload the five MSIs to the upstream mirror as
+  `python-<version>-amd64-<feature>.msi` — the fallback URL is built from
+  `PYTHON_VERSION_WINDOWS`, but nothing populates the mirror automatically, so
+  until they are uploaded the fallback 404s and only python.org serves them,
 - optionally bump the `x86_64-pc-windows-msvc`
   `single_version_platform_override` (version + url + sha256) in
   `bazel/module/py.MODULE.bazel` — python-build-standalone releases can lag

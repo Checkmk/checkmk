@@ -135,8 +135,8 @@ py_library(
     deps = [
         "//cmk/base/config",
         "//cmk/base/configlib",
-        "//cmk/base/core",
         "//cmk/core_client",
+        "//cmk/monitoring_config/internal",
         "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine:fetchers",
         "//packages/cmk-check-engine:snmplib",

@@ -17,6 +17,7 @@ py_library(
         "//cmk/base/config",
         "//cmk/base/configlib",
         "//cmk/core_client",
+        "//cmk/monitoring_config/internal",
         "//cmk/utils",
         "//packages/cmk-ccc:config-path",
         "//packages/cmk-ccc:debug",

@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
 from socket import AddressFamily
-from typing import assert_never, Final, IO, Literal, override, Protocol, Self
+from typing import assert_never, Final, IO, Literal, Protocol, Self
 
 from cmk.base import config
 from cmk.base.config import (
@@ -29,7 +29,6 @@ from cmk.base.config import (
 )
 from cmk.base.configlib.loaded_config import CustomCheck
 from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
-from cmk.base.core.interface import IntermediateMonitoringConfig, MonitoringCore
 from cmk.base.core.shared import (
     AbstractServiceID,
     autodetect_plugin,
@@ -65,6 +64,7 @@ from cmk.events.notify import (
 )
 from cmk.events.notify_types import Contact, ContactName
 from cmk.licensing.handler import LicensingHandler
+from cmk.monitoring_config.internal import IntermediateMonitoringConfig, MonitoringConfigBuilder
 from cmk.password_store.v1 import Secret
 from cmk.ruleset_matcher.labels import LabelManager, Labels
 from cmk.ruleset_matcher.tags import HostTags
@@ -171,157 +171,164 @@ class NagiosCoreConfig:
         )
 
 
-class NagiosCore(MonitoringCore):
-    def __init__(
-        self,
-        objects_file: Path,
-        timeperiods: TimeperiodSpecs,
-        nagios_core_config: NagiosCoreConfig,
-    ) -> None:
-        self.objects_file: Final = objects_file
-        self.timeperiods: Final = timeperiods
-        self.nagios_core_config: Final = nagios_core_config
+def make_nagios_config_builder(
+    objects_file: Path,
+    timeperiods: TimeperiodSpecs,
+    nagios_core_config: NagiosCoreConfig,
+) -> MonitoringConfigBuilder:
+    """Create the monitoring config builder of the Nagios core.
 
-    @classmethod
-    @override
-    def name(cls) -> Literal["nagios"]:
-        return "nagios"
+    This is the only place where the Nagios core configuration is wired together;
+    everything below is reached through the returned builder.
+    """
 
-    @override
-    def create_monitoring_config(self, intermediate_config: IntermediateMonitoringConfig) -> None:
-        self._config_cache = intermediate_config.config_cache
-        self._core_objects_config = intermediate_config.core_objects_config
-        self._create_core_config(
+    def build(intermediate_config: IntermediateMonitoringConfig) -> None:
+        _create_core_config(
             intermediate_config.config_creation_context.path_created,
-            intermediate_config.hosts_config,
-            intermediate_config.host_tags,
-            intermediate_config.final_service_name_config,
-            intermediate_config.passive_service_name_config,
-            intermediate_config.enforced_services_table,
-            intermediate_config.plugins.check_plugins,
-            intermediate_config.licensing_handler,
-            intermediate_config.passwords,
-            intermediate_config.get_ip_stack_config,
-            intermediate_config.default_address_family,
-            intermediate_config.ip_address_of,
-            intermediate_config.service_depends_on,
+            config_cache=intermediate_config.config_cache,
+            core_objects_config=intermediate_config.core_objects_config,
+            nagios_core_config=nagios_core_config,
+            timeperiods=timeperiods,
+            objects_file=objects_file,
+            hosts_config=intermediate_config.hosts_config,
+            host_tags=intermediate_config.host_tags,
+            final_service_name_config=intermediate_config.final_service_name_config,
+            passive_service_name_config=intermediate_config.passive_service_name_config,
+            enforced_services_table=intermediate_config.enforced_services_table,
+            plugins=intermediate_config.plugins.check_plugins,
+            licensing_handler=intermediate_config.licensing_handler,
+            passwords=intermediate_config.passwords,
+            get_ip_stack_config=intermediate_config.get_ip_stack_config,
+            default_address_family=intermediate_config.default_address_family,
+            ip_address_of=intermediate_config.ip_address_of,
+            service_depends_on=intermediate_config.service_depends_on,
         )
         store.save_text_to_file(
             plugin_index.make_index_file(intermediate_config.config_creation_context.path_created),
             plugin_index.create_plugin_index(intermediate_config.plugins),
         )
-        self._precompile_hostchecks(
+        _precompile_hostchecks(
             intermediate_config.config_creation_context.path_created,
-            intermediate_config.hosts_config,
-            intermediate_config.passive_service_name_config,
-            intermediate_config.enforced_services_table,
-            intermediate_config.plugins,
-            intermediate_config.get_ip_stack_config,
-            intermediate_config.ip_address_of,
+            config_cache=intermediate_config.config_cache,
+            hosts_config=intermediate_config.hosts_config,
+            passive_service_name_config=intermediate_config.passive_service_name_config,
+            enforced_services_table=intermediate_config.enforced_services_table,
+            plugins=intermediate_config.plugins,
+            get_ip_stack_config=intermediate_config.get_ip_stack_config,
+            ip_address_of=intermediate_config.ip_address_of,
             precompile_mode=(
                 PrecompileMode.DELAYED
-                if self.nagios_core_config.delay_precompile
+                if nagios_core_config.delay_precompile
                 else PrecompileMode.INSTANT
             ),
         )
 
-    def _create_core_config(
-        self,
-        config_path: Path,
-        hosts_config: Hosts,
-        host_tags: HostTags,
-        final_service_name_config: Callable[
-            [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
-        ],
-        passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
-        enforced_services_table: Callable[
-            [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
-        ],
-        plugins: Mapping[CheckPluginName, CheckPlugin],
-        licensing_handler: LicensingHandler,
-        passwords: Mapping[str, Secret[str]],
-        get_ip_stack_config: Callable[[HostName], IPStackConfig],
-        default_address_family: Callable[
-            [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
-        ],
-        ip_address_of: ip_lookup.IPLookup,
-        service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
-    ) -> None:
-        """Tries to create a new Checkmk object configuration file for the Nagios core
+    return MonitoringConfigBuilder(name="nagios", build=build)
 
-        During create_config() exceptions may be raised which are caused by configuration issues.
-        Don't produce a half written object file. Simply throw away everything and keep the old file.
 
-        The user can then start the site with the old configuration and fix the configuration issue
-        while the monitoring is running.
-        """
+def _create_core_config(
+    config_path: Path,
+    *,
+    config_cache: ConfigCache,
+    core_objects_config: CoreObjectsConfig,
+    nagios_core_config: NagiosCoreConfig,
+    timeperiods: TimeperiodSpecs,
+    objects_file: Path,
+    hosts_config: Hosts,
+    host_tags: HostTags,
+    final_service_name_config: Callable[
+        [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
+    ],
+    passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
+    enforced_services_table: Callable[
+        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+    ],
+    plugins: Mapping[CheckPluginName, CheckPlugin],
+    licensing_handler: LicensingHandler,
+    passwords: Mapping[str, Secret[str]],
+    get_ip_stack_config: Callable[[HostName], IPStackConfig],
+    default_address_family: Callable[
+        [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+    ],
+    ip_address_of: ip_lookup.IPLookup,
+    service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
+) -> None:
+    """Tries to create a new Checkmk object configuration file for the Nagios core
 
-        config_buffer = StringIO()
-        notify_host_files = create_config(
-            outfile=config_buffer,
-            hosts_config=hosts_config,
-            host_tags=host_tags,
-            config_cache=self._config_cache,
-            core_objects_config=self._core_objects_config,
-            nagios_core_config=self.nagios_core_config,
-            final_service_name_config=final_service_name_config,
-            passive_service_name_config=passive_service_name_config,
-            enforced_services_table=enforced_services_table,
-            plugins=plugins,
-            hostnames=sorted(
-                {
-                    hn
-                    for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
-                    if self._config_cache.is_active(hn) and self._config_cache.is_online(hn)
-                }
-            ),
-            licensing_handler=licensing_handler,
-            passwords=passwords,
-            get_ip_stack_config=get_ip_stack_config,
-            default_address_family=default_address_family,
-            ip_address_of=ip_address_of,
-            service_depends_on=service_depends_on,
-            timeperiods=self.timeperiods,
-            get_relay_id=lambda host_name: config.get_relay_id(
-                self._config_cache.label_manager.labels_of_host(host_name)
-            ),
-        )
+    During create_config() exceptions may be raised which are caused by configuration issues.
+    Don't produce a half written object file. Simply throw away everything and keep the old file.
 
-        store.save_text_to_file(self.objects_file, config_buffer.getvalue())
-        for host, content in notify_host_files.items():
-            store.save_bytes_to_file(make_notify_host_file_path(config_path, host), content)
+    The user can then start the site with the old configuration and fix the configuration issue
+    while the monitoring is running.
+    """
 
-    def _precompile_hostchecks(
-        self,
-        config_path: Path,
-        hosts_config: Hosts,
-        passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
-        enforced_services_table: Callable[
-            [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
-        ],
-        plugins: AgentBasedPlugins,
-        get_ip_stack_config: Callable[[HostName], IPStackConfig],
-        ip_address_of: ip_lookup.IPLookup,
-        *,
-        precompile_mode: PrecompileMode,
-    ) -> None:
-        with suppress(IOError):
-            sys.stdout.write("Precompiling host checks...")
-            sys.stdout.flush()
-        precompile_hostchecks(
-            config_path,
-            hosts_config,
-            self._config_cache,
-            passive_service_name_config,
-            enforced_services_table,
-            plugins,
-            get_ip_stack_config,
-            ip_address_of,
-            precompile_mode=precompile_mode,
-        )
-        with suppress(IOError):
-            sys.stdout.write(tty.ok + "\n")
-            sys.stdout.flush()
+    config_buffer = StringIO()
+    notify_host_files = create_config(
+        outfile=config_buffer,
+        hosts_config=hosts_config,
+        host_tags=host_tags,
+        config_cache=config_cache,
+        core_objects_config=core_objects_config,
+        nagios_core_config=nagios_core_config,
+        final_service_name_config=final_service_name_config,
+        passive_service_name_config=passive_service_name_config,
+        enforced_services_table=enforced_services_table,
+        plugins=plugins,
+        hostnames=sorted(
+            {
+                hn
+                for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
+                if config_cache.is_active(hn) and config_cache.is_online(hn)
+            }
+        ),
+        licensing_handler=licensing_handler,
+        passwords=passwords,
+        get_ip_stack_config=get_ip_stack_config,
+        default_address_family=default_address_family,
+        ip_address_of=ip_address_of,
+        service_depends_on=service_depends_on,
+        timeperiods=timeperiods,
+        get_relay_id=lambda host_name: config.get_relay_id(
+            config_cache.label_manager.labels_of_host(host_name)
+        ),
+    )
+
+    store.save_text_to_file(objects_file, config_buffer.getvalue())
+    for host, content in notify_host_files.items():
+        store.save_bytes_to_file(make_notify_host_file_path(config_path, host), content)
+
+
+def _precompile_hostchecks(
+    config_path: Path,
+    *,
+    config_cache: ConfigCache,
+    hosts_config: Hosts,
+    passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
+    enforced_services_table: Callable[
+        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+    ],
+    plugins: AgentBasedPlugins,
+    get_ip_stack_config: Callable[[HostName], IPStackConfig],
+    ip_address_of: ip_lookup.IPLookup,
+    precompile_mode: PrecompileMode,
+) -> None:
+    with suppress(IOError):
+        sys.stdout.write("Precompiling host checks...")
+        sys.stdout.flush()
+    precompile_hostchecks(
+        config_path,
+        hosts_config,
+        config_cache,
+        passive_service_name_config,
+        enforced_services_table,
+        plugins,
+        get_ip_stack_config,
+        ip_address_of,
+        precompile_mode=precompile_mode,
+    )
+    with suppress(IOError):
+        sys.stdout.write(tty.ok + "\n")
+        sys.stdout.flush()
 
 
 #   .--Create config-------------------------------------------------------.

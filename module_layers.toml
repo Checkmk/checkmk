@@ -499,6 +499,7 @@ allows = [
   "@ccc",
   "@plugin_apis",
   "@relay_protocols",
+  "cmk.monitoring_config",
   "cmk.base.config",
   "cmk.base.configlib",
   "cmk.base.core",
@@ -603,6 +604,7 @@ allows = ["cmk.bakery", "cmk.base.api.bakery", "cmk.utils"]
 allows = [
   "cmk.cli.engine",
   "cmk.diagnostics.engine",
+  "cmk.monitoring_config",
   "@ccc",
   "@livestatus_client",
   "@plugin_apis",
@@ -1519,6 +1521,17 @@ allows = []
 
 [components."cmk.licensing.internal"]
 allows = []
+
+[components."cmk.monitoring_config.internal"]
+allows = [
+  "@ccc",
+  "@plugin_apis",
+  "cmk.base.config",
+  "cmk.checkengine",
+  "cmk.licensing",
+  "cmk.ruleset_matcher",
+  "cmk.utils",
+]
 
 [components."cmk.checkengine.snmp_backends"]
 allows = ["@ccc", "cmk.checkengine.snmplib"]

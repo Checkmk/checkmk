@@ -23,6 +23,7 @@ py_library(
         "//cmk/base/core",
         "//cmk/base/errorhandling",
         "//cmk/core_client",
+        "//cmk/monitoring_config/internal",
         "//cmk/piggyback:backend",
         "//cmk/server_side_calls_backend",
         "//cmk/utils",

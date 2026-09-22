@@ -117,7 +117,7 @@ from cmk.base.configlib.servicename import (
     PassiveServiceNameConfig,
 )
 from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
-from cmk.base.core.interface import do_reload, do_restart, MonitoringCore
+from cmk.base.core.interface import do_reload, do_restart
 from cmk.base.core.shared import autodetect_plugin, get_service_attributes
 from cmk.base.errorhandling import create_section_crash_dump
 from cmk.base.parent_scan import ScanConfig
@@ -199,6 +199,7 @@ from cmk.discover_plugins import (
 from cmk.inventory import store as inventory_store
 from cmk.inventory.paths import InventoryPaths
 from cmk.licensing.handler import LicensingHandler
+from cmk.monitoring_config.internal import MonitoringConfigBuilder
 from cmk.piggyback.backend import (
     get_messages_for as get_piggyback_messages_for,
 )
@@ -2554,7 +2555,7 @@ class AutomationReload(AutomationRestart):
 class RestartContext:
     """Parameter bundle for :func:`_execute_silently`."""
 
-    monitoring_core: MonitoringCore
+    monitoring_core: MonitoringConfigBuilder
     core_client: CoreClient
     env: AutomationEnvironment
     hosts_config: Hosts

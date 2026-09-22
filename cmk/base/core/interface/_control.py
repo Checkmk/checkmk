@@ -28,13 +28,13 @@ from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
 from cmk.core_client import CoreAction, CoreClient
 from cmk.licensing.basics.paths import get_licensed_state_file_path
 from cmk.licensing.handler import LicensingHandler
+from cmk.monitoring_config.internal import IntermediateMonitoringConfig, MonitoringConfigBuilder
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.tags import HostTags
 from cmk.utils import config_warnings, ip_lookup
 from cmk.utils.log import console
 from cmk.utils.servicename import ServiceName
 
-from ._base_core import IntermediateMonitoringConfig, MonitoringCore
 from ._snapshot_local_dir import snapshot_local_dir
 from ._snapshot_trusted_cas import snapshot_trusted_cas
 
@@ -62,7 +62,7 @@ def do_reload(
     ],
     ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     ip_address_of_mgmt: ip_lookup.IPLookupOptional,
-    core: MonitoringCore,
+    core: MonitoringConfigBuilder,
     core_client: CoreClient,
     plugins: AgentBasedPlugins,
     *,
@@ -118,7 +118,7 @@ def do_restart(
     ],
     ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     ip_address_of_mgmt: ip_lookup.IPLookupOptional,
-    core: MonitoringCore,
+    core: MonitoringConfigBuilder,
     core_client: CoreClient,
     plugins: AgentBasedPlugins,
     *,
@@ -166,7 +166,7 @@ def do_restart(
 
 
 def do_create_config(
-    core: MonitoringCore,
+    core: MonitoringConfigBuilder,
     core_client: CoreClient,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
@@ -201,7 +201,7 @@ def do_create_config(
     """
     with suppress(IOError):
         sys.stdout.write(
-            "Generating configuration for core (type %s)...\n" % core.name(),
+            "Generating configuration for core (type %s)...\n" % core.name,
         )
         sys.stdout.flush()
 
@@ -209,7 +209,7 @@ def do_create_config(
         with tracer.span(
             "create_core_config",
             attributes={
-                "cmk.core_config.core": core.name(),
+                "cmk.core_config.core": core.name,
                 "cmk.core_config.core_config.hosts_to_update": repr(hosts_to_update),
             },
         ):
@@ -286,7 +286,7 @@ def _backup_objects_file(core_client: CoreClient) -> Iterator[None]:
 # we create below to indicate that the configuration is ready to be used.
 # Everything that should be in it must be created before creating that link.
 def _create_active_config(
-    core: MonitoringCore,
+    core: MonitoringConfigBuilder,
     core_client: CoreClient,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
@@ -337,7 +337,7 @@ def _create_active_config(
         licensing_handler.persist_licensed_state(
             get_licensed_state_file_path(cmk.utils.paths.omd_root)
         )
-        core.create_monitoring_config(
+        core.build(
             IntermediateMonitoringConfig(
                 config_creation_context=config_creation_context,
                 passwords=passwords,

@@ -4,13 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import abc
 import socket
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
-from cmk import trace
 from cmk.base.config import ConfigCache, CoreObjectsConfig
 from cmk.ccc.config_path import ConfigCreationContext
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
@@ -22,8 +20,6 @@ from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.tags import HostTags
 from cmk.utils import ip_lookup
 from cmk.utils.servicename import ServiceName
-
-tracer = trace.get_tracer()
 
 
 @dataclass(frozen=True, kw_only=True, eq=False)
@@ -81,12 +77,9 @@ class IntermediateMonitoringConfig:
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]]
 
 
-class MonitoringCore(abc.ABC):
-    @classmethod
-    @abc.abstractmethod
-    def name(cls) -> Literal["nagios", "cmc"]:
-        raise NotImplementedError
+@dataclass(frozen=True, kw_only=True, eq=False)
+class MonitoringConfigBuilder:
+    """Build a subsytems monitoring configuration from the intermediate config"""
 
-    @abc.abstractmethod
-    def create_monitoring_config(self, intermediate_config: IntermediateMonitoringConfig) -> None:
-        raise NotImplementedError
+    name: str
+    build: Callable[[IntermediateMonitoringConfig], None]

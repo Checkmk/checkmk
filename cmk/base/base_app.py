@@ -7,13 +7,13 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from cmk.base.configlib.loaded_config import BaseConfig
-from cmk.base.core.interface import MonitoringCore
 from cmk.ccc.version import Edition
 from cmk.checkengine.fetcher_utils.trigger import FetcherTriggerFactory
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.checkengine.snmplib import SNMPPluginStore
 from cmk.core_client import CoreClient
 from cmk.licensing.handler import LicensingHandler
+from cmk.monitoring_config.internal import MonitoringConfigBuilder
 from cmk.ruleset_matcher.labels import LabelManager
 from cmk.ruleset_matcher.matcher import RulesetMatcher
 
@@ -38,7 +38,7 @@ class CheckmkBaseApp:
             ConfigCache,
             AgentBasedPlugins,
         ],
-        tuple[MonitoringCore, CoreClient],
+        tuple[MonitoringConfigBuilder, CoreClient],
     ]
     licensing_handler_factory: Callable[[], LicensingHandler]
     make_fetcher_trigger: FetcherTriggerFactory

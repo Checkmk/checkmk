@@ -7,11 +7,11 @@ from typing import assert_never
 
 from cmk.base.config import ConfigCache
 from cmk.base.configlib.loaded_config import BaseConfig
-from cmk.base.core.interface import MonitoringCore
 from cmk.ccc.version import Edition
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.checkengine.snmplib import SNMPPluginStore
 from cmk.core_client import CoreClient, NagiosClient
+from cmk.monitoring_config.internal import MonitoringConfigBuilder
 from cmk.ruleset_matcher.labels import LabelManager
 from cmk.ruleset_matcher.matcher import RulesetMatcher
 from cmk.utils import paths
@@ -26,14 +26,14 @@ def create_core(
     snmp_plugin_store: SNMPPluginStore,  # noqa: ARG001
     config_cache: ConfigCache,  # noqa: ARG001
     plugins: AgentBasedPlugins,  # noqa: ARG001
-) -> tuple[MonitoringCore, CoreClient]:
+) -> tuple[MonitoringConfigBuilder, CoreClient]:
     match loaded_config.monitoring_core:
         case "nagios":
-            from cmk.base.core.nagios import NagiosCore
+            from cmk.base.core.nagios import make_nagios_config_builder
             from cmk.base.core.nagios._create_config import NagiosCoreConfig
 
             return (
-                NagiosCore(
+                make_nagios_config_builder(
                     paths.nagios_objects_file,
                     get_all_timeperiods(loaded_config.timeperiods),
                     NagiosCoreConfig.from_raw_config(loaded_config),

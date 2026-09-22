@@ -188,6 +188,8 @@ def datafiles_online_stats(
 # Classify one agent line: the error message for an error row, False for noise
 # the check should skip, None for data. The check decides the monitoring state.
 def oracle_handle_ora_errors(line: Sequence[str]) -> str | Literal[False] | None:
+    if not line:
+        return False
     if len(line) == 1:
         return None
 

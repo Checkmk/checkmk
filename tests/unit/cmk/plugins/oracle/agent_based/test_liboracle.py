@@ -59,6 +59,10 @@ def test_legacy_error_row_starting_with_ora() -> None:
     )
 
 
+def test_empty_row_is_noise() -> None:
+    assert oracle_handle_ora_errors([]) is False
+
+
 def test_single_field_row() -> None:
     line = ["single-field-row"]
     assert oracle_handle_ora_errors(line) is None

@@ -28,6 +28,8 @@ from cmk.plugins.lib.df import (
     TREND_DEFAULT_PARAMS,
 )
 
+from .liboracle import Error, Ok, oracle_handle_ora_errors, Parsed
+
 # future todos in checkcode
 # - RAC: 1 of 3 nodes has a DISMOUNTED DG. This is not a CRIT!
 
@@ -82,7 +84,10 @@ class Diskgroup(NamedTuple):
 
 
 class Section(NamedTuple):
-    diskgroups: Mapping[str, Diskgroup]
+    # Diskgroups are keyed by their name. An error row carries the ASM
+    # instance name, "+ASM", so it is keyed by that. oracle_instance reports
+    # the error entries, this check only reads the Ok entries.
+    diskgroups: Mapping[str, Parsed[Diskgroup]]
     found_deprecated_agent_output: bool = False
 
 
@@ -107,9 +112,19 @@ def parse_oracle_asm_diskgroup(
     string_table: StringTable,
 ) -> Section:
     tmp_section: dict[str, Diskgroup] = {}
+    errors: dict[str, str] = {}
     found_deprecated_agent_output = False
 
     for line in string_table:
+        match oracle_handle_ora_errors(line):
+            case str() as message:
+                errors.setdefault(line[0], message)
+                continue
+            case False:
+                continue
+            case None:
+                pass
+
         # Filuregroups are usually REGULAR.
         # Other types are possible from Version 11.2 onwards
         fg_type = "REGULAR"
@@ -249,8 +264,13 @@ def parse_oracle_asm_diskgroup(
                     fail_groups=failgroups,
                 ),
             )
+    diskgroups: dict[str, Parsed[Diskgroup]] = {
+        name: Ok(diskgroup) for name, diskgroup in tmp_section.items() if name not in errors
+    }
+    for name, message in errors.items():
+        diskgroups[name] = Error(message)
     return Section(
-        found_deprecated_agent_output=found_deprecated_agent_output, diskgroups={**tmp_section}
+        found_deprecated_agent_output=found_deprecated_agent_output, diskgroups=diskgroups
     )
 
 
@@ -261,8 +281,8 @@ agent_section_oracle_asm_diskgroup = AgentSection(
 
 
 def discovery_oracle_asm_diskgroup(section: Section) -> DiscoveryResult:
-    for asm_diskgroup_name, attrs in section.diskgroups.items():
-        if attrs.dgstate in ["MOUNTED", "DISMOUNTED"]:
+    for asm_diskgroup_name, result in section.diskgroups.items():
+        if isinstance(result, Ok) and result.value.dgstate in ["MOUNTED", "DISMOUNTED"]:
             yield Service(item=asm_diskgroup_name)
 
 
@@ -271,14 +291,18 @@ def check_oracle_asm_diskgroup(
     params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
-    if item not in section.diskgroups:
+    result = section.diskgroups.get(item)
+    if result is None:
         # In case of missing information we assume that the ASM-Instance is
         # checked at a later time.
         # This reduce false notifications for not running ASM-Instances
         yield IgnoreResults("Diskgroup %s not found" % item)
         return
+    if isinstance(result, Error):
+        yield Result(state=State.UNKNOWN, summary=result.message)
+        return
 
-    data = section.diskgroups[item]
+    data = result.value
 
     if section.found_deprecated_agent_output:
         yield Result(

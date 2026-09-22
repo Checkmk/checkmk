@@ -14,6 +14,7 @@ from cmk.agent_based.v2 import get_rate, get_value_store
 from cmk.plugins.windows.agent_based.libwmi import (
     get_wmi_time,
     required_tables_missing,
+    WMIInvalidFrequencyError,
     WMISection,
     WMITable,
 )
@@ -156,10 +157,16 @@ def wmi_yield_raw_persec(
     except KeyError:
         return
 
+    try:
+        sample_time = get_wmi_time(table, row)
+    except WMIInvalidFrequencyError as exc:
+        yield 3, f"{infoname}: cannot compute a rate, {exc}"
+        return
+
     value_per_sec = get_rate(
         get_value_store(),
         f"{column}_{table.name}",
-        get_wmi_time(table, row),
+        sample_time,
         int(value),
         raise_overflow=True,
     )

@@ -288,7 +288,7 @@ test('the display name falls back to the stored title of an unresolved row', () 
   expect(screen.getByText('Raw title')).toBeInTheDocument()
 })
 
-test('a metric_backend row explains its automatic colors instead of offering a picker', () => {
+test('a telemetry_metrics row explains its automatic colors instead of offering a picker', () => {
   renderTable([telemetryMetricsItem('A')])
 
   const row = screen.getByRole('checkbox', { name: 'Select row' }).closest('tr')!

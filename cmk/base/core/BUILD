@@ -26,6 +26,7 @@ py_library(
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:tty",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-check-engine:checker-helper-config",
         "//packages/cmk-check-engine:checker-plugin",
         "//packages/cmk-check-engine:fetchers",
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",

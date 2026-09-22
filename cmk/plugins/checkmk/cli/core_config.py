@@ -7,7 +7,6 @@
 import itertools
 import sys
 from collections.abc import Callable
-from dataclasses import fields
 from pathlib import Path
 
 import cmk.ccc.debug
@@ -21,7 +20,6 @@ from cmk.base.core import interface as core_interface
 from cmk.base.modes.check_mk import forced_ip_lookup, host_addresses, load_checks, set_fake_dns
 from cmk.ccc import tty
 from cmk.ccc.store import activation_lock
-from cmk.checkengine.checker_helper_config import make_packed_config_writer
 from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import load_secrets_file
@@ -190,7 +188,6 @@ def _mode_update(
     plugins = load_checks()
     loading_result = config.load(validate_hosts=True)
     loaded_config = loading_result.loaded_config
-    raw_config = {f.name: getattr(loaded_config, f.name) for f in fields(loaded_config)}
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
     core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
@@ -254,12 +251,6 @@ def _mode_update(
                     )
                 ),
                 notify_relay=_make_configured_notify_relay(bool(loaded_config.relays)),
-                checker_config_writer=make_packed_config_writer(
-                    raw_config,
-                    hosts_config,
-                    is_online=loading_result.config_cache.is_online,
-                    is_active=loading_result.config_cache.is_active,
-                ),
                 licensing_handler_factory=app.licensing_handler_factory,
                 edition=app.edition,
                 loaded_config=loaded_config,
@@ -313,7 +304,6 @@ def _mode_restart(
     plugins = load_checks()
     loading_result = config.load(validate_hosts=True)
     loaded_config = loading_result.loaded_config
-    raw_config = {f.name: getattr(loaded_config, f.name) for f in fields(loaded_config)}
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
     core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
@@ -375,12 +365,6 @@ def _mode_restart(
             )
         ),
         notify_relay=_make_configured_notify_relay(bool(loaded_config.relays)),
-        checker_config_writer=make_packed_config_writer(
-            raw_config,
-            hosts_config,
-            is_online=loading_result.config_cache.is_online,
-            is_active=loading_result.config_cache.is_active,
-        ),
         licensing_handler_factory=app.licensing_handler_factory,
         edition=app.edition,
         loaded_config=loaded_config,
@@ -429,7 +413,6 @@ def _mode_reload(
     plugins = load_checks()
     loading_result = config.load(validate_hosts=True)
     loaded_config = loading_result.loaded_config
-    raw_config = {f.name: getattr(loaded_config, f.name) for f in fields(loaded_config)}
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
     core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
@@ -491,12 +474,6 @@ def _mode_reload(
             ),
         ),
         notify_relay=_make_configured_notify_relay(bool(loaded_config.relays)),
-        checker_config_writer=make_packed_config_writer(
-            raw_config,
-            hosts_config,
-            is_online=loading_result.config_cache.is_online,
-            is_active=loading_result.config_cache.is_active,
-        ),
         licensing_handler_factory=app.licensing_handler_factory,
         edition=app.edition,
         loaded_config=loaded_config,

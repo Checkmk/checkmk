@@ -24,7 +24,7 @@ import time
 import uuid
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import redirect_stderr, redirect_stdout, suppress
-from dataclasses import asdict, dataclass, fields
+from dataclasses import asdict, dataclass
 from itertools import chain, islice
 from pathlib import Path
 from typing import Literal, override, TYPE_CHECKING
@@ -126,7 +126,6 @@ from cmk.ccc.timeout import Timeout
 from cmk.ccc.version import edition_supports_nagvis
 from cmk.checkengine import agent_protocol
 from cmk.checkengine.auto_queue import AutoQueue
-from cmk.checkengine.checker_helper_config import make_packed_config_writer
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.checking import compute_check_parameters, ServiceConfigurer
 from cmk.checkengine.discovery import (
@@ -1340,12 +1339,6 @@ def _execute_autodiscovery(
     core_objects_config = config.CoreObjectsConfig(
         env.loaded_config, env.ruleset_matcher, env.label_manager
     )
-    checker_config_writer = make_packed_config_writer(
-        {f.name: getattr(env.loaded_config, f.name) for f in fields(env.loaded_config)},
-        hosts_config,
-        is_online=env.config_cache.is_online,
-        is_active=env.config_cache.is_active,
-    )
 
     if env.loaded_config.monitoring_core == "cmc":
         do_reload(
@@ -1375,7 +1368,6 @@ def _execute_autodiscovery(
                 ),
             ),
             notify_relay=notify_relay,
-            checker_config_writer=checker_config_writer,
             licensing_handler_factory=app.licensing_handler_factory,
             edition=app.edition,
             loaded_config=env.loaded_config,
@@ -1408,7 +1400,6 @@ def _execute_autodiscovery(
                 ),
             ),
             notify_relay=notify_relay,
-            checker_config_writer=checker_config_writer,
             licensing_handler_factory=app.licensing_handler_factory,
             edition=app.edition,
             loaded_config=env.loaded_config,
@@ -2586,13 +2577,6 @@ def _execute_silently(
     )
     hosts_config = rctx.hosts_config
 
-    checker_config_writer = make_packed_config_writer(
-        {f.name: getattr(env.loaded_config, f.name) for f in fields(env.loaded_config)},
-        hosts_config,
-        is_online=config_cache.is_online,
-        is_active=config_cache.is_active,
-    )
-
     try:
         do_restart(
             config_cache,
@@ -2619,7 +2603,6 @@ def _execute_silently(
                 )
             ),
             notify_relay=rctx.notify_relay,
-            checker_config_writer=checker_config_writer,
             licensing_handler_factory=rctx.licensing_handler_factory,
             edition=env.app.edition,
             loaded_config=env.loaded_config,

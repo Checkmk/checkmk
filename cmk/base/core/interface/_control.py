@@ -10,7 +10,7 @@ import socket
 import sys
 from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
-from pathlib import Path
+from dataclasses import fields
 from typing import Literal
 
 import cmk.ccc.debug
@@ -25,6 +25,7 @@ from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.store import activation_lock
 from cmk.ccc.version import Edition
+from cmk.checkengine.checker_helper_config import make_packed_config_writer
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.fetcher_utils.trigger import FetcherTriggerFactory
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
@@ -74,7 +75,6 @@ def do_reload(
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
     notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
-    checker_config_writer: Callable[[Path], None],
     licensing_handler_factory: Callable[[], LicensingHandler],
     edition: Edition,
     loaded_config: BaseConfig,
@@ -101,7 +101,6 @@ def do_reload(
         locking_mode=locking_mode,
         duplicates=duplicates,
         notify_relay=notify_relay,
-        checker_config_writer=checker_config_writer,
         licensing_handler_factory=licensing_handler_factory,
         edition=edition,
         loaded_config=loaded_config,
@@ -137,7 +136,6 @@ def do_restart(
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
     notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
-    checker_config_writer: Callable[[Path], None],
     licensing_handler_factory: Callable[[], LicensingHandler],
     edition: Edition,
     loaded_config: BaseConfig,
@@ -166,7 +164,6 @@ def do_restart(
                 service_depends_on=service_depends_on,
                 duplicates=duplicates,
                 notify_relay=notify_relay,
-                checker_config_writer=checker_config_writer,
                 licensing_handler_factory=licensing_handler_factory,
                 edition=edition,
                 loaded_config=loaded_config,
@@ -206,7 +203,6 @@ def do_create_config(
     *,
     duplicates: Collection[HostName],
     notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
-    checker_config_writer: Callable[[Path], None],
     licensing_handler_factory: Callable[[], LicensingHandler],
     edition: Edition,
     loaded_config: BaseConfig,
@@ -249,7 +245,6 @@ def do_create_config(
                 hosts_to_update=hosts_to_update,
                 service_depends_on=service_depends_on,
                 duplicates=duplicates,
-                checker_config_writer=checker_config_writer,
                 licensing_handler_factory=licensing_handler_factory,
                 edition=edition,
                 loaded_config=loaded_config,
@@ -331,7 +326,6 @@ def _create_active_config(
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     *,
     duplicates: Collection[HostName],
-    checker_config_writer: Callable[[Path], None],
     licensing_handler_factory: Callable[[], LicensingHandler],
     edition: Edition,
     loaded_config: BaseConfig,
@@ -348,7 +342,7 @@ def _create_active_config(
         cmk.utils.password_store.pending_secrets_path_site(),
     )
 
-    config_builders = _make_config_builders(core, checker_config_writer)
+    config_builders = _make_config_builders(core)
 
     with (
         config_path.create(cmk.utils.paths.omd_root) as config_creation_context,
@@ -385,7 +379,6 @@ def _create_active_config(
 
 def _make_config_builders(
     core: MonitoringConfigBuilder,
-    checker_config_writer: Callable[[Path], None],
 ) -> Sequence[MonitoringConfigBuilder]:
     """Everything that goes into one activation, in the order it is created.
 
@@ -407,12 +400,7 @@ def _make_config_builders(
                 intermediate_config.config_creation_context.path_created,
             ),
         ),
-        MonitoringConfigBuilder(
-            name="checker_config",
-            build=lambda intermediate_config: checker_config_writer(
-                intermediate_config.config_creation_context.path_created
-            ),
-        ),
+        MonitoringConfigBuilder(name="checker_config", build=_write_checker_config),
         MonitoringConfigBuilder(
             name="licensed_state",
             build=lambda intermediate_config: (
@@ -424,6 +412,18 @@ def _make_config_builders(
         core,
         MonitoringConfigBuilder(name="active_secrets", build=_save_active_secrets),
     )
+
+
+def _write_checker_config(intermediate_config: IntermediateMonitoringConfig) -> None:
+    make_packed_config_writer(
+        {
+            f.name: getattr(intermediate_config.loaded_config, f.name)
+            for f in fields(intermediate_config.loaded_config)
+        },
+        intermediate_config.hosts_config,
+        is_online=intermediate_config.config_cache.is_online,
+        is_active=intermediate_config.config_cache.is_active,
+    )(intermediate_config.config_creation_context.path_created)
 
 
 def _save_active_secrets(intermediate_config: IntermediateMonitoringConfig) -> None:

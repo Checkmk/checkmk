@@ -403,7 +403,8 @@ export function buildHostColumns({
       meta: {
         justify: 'right',
         filter: warnServicesFilter,
-        headerTitle: _t('Number of services in warning state')
+        headerTitle: _t('Number of services in warning state'),
+        pickerLabel: _t('Warning (Wa)')
       },
       minSize: 70,
       maxSize: 70
@@ -415,7 +416,8 @@ export function buildHostColumns({
       meta: {
         justify: 'right',
         filter: critServicesFilter,
-        headerTitle: _t('Number of services in critical state')
+        headerTitle: _t('Number of services in critical state'),
+        pickerLabel: _t('Critical (Cr)')
       },
       minSize: 70,
       maxSize: 70
@@ -427,7 +429,8 @@ export function buildHostColumns({
       meta: {
         justify: 'right',
         filter: unknownServicesFilter,
-        headerTitle: _t('Number of services in unknown state')
+        headerTitle: _t('Number of services in unknown state'),
+        pickerLabel: _t('Unknown (Un)')
       },
       minSize: 70,
       maxSize: 70
@@ -439,7 +442,8 @@ export function buildHostColumns({
       meta: {
         justify: 'right',
         filter: pendingServicesFilter,
-        headerTitle: _t('Number of services in pending state')
+        headerTitle: _t('Number of services in pending state'),
+        pickerLabel: _t('Pending (Pd)')
       },
       minSize: 70,
       maxSize: 70

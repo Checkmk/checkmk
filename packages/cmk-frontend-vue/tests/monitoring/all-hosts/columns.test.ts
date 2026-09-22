@@ -81,7 +81,7 @@ test('no pinned column is offered in the picker', () => {
   }
 })
 
-test('the optional columns are offered in the picker, labelled by their header', () => {
+test('the optional columns are offered in the picker, abbreviated headers spelled out', () => {
   const offered = makeService().toggleableColumns
 
   expect(offered).toEqual([
@@ -91,10 +91,10 @@ test('the optional columns are offered in the picker, labelled by their header',
     { id: 'site_id', label: 'Site' },
     { id: 'num_services', label: 'All services' },
     { id: 'num_services_ok', label: 'OK' },
-    { id: 'num_services_warn', label: 'Wa' },
-    { id: 'num_services_crit', label: 'Cr' },
-    { id: 'num_services_unknown', label: 'Un' },
-    { id: 'num_services_pending', label: 'Pd' },
+    { id: 'num_services_warn', label: 'Warning (Wa)' },
+    { id: 'num_services_crit', label: 'Critical (Cr)' },
+    { id: 'num_services_unknown', label: 'Unknown (Un)' },
+    { id: 'num_services_pending', label: 'Pending (Pd)' },
     { id: 'last_check', label: 'Last check' },
     { id: 'last_state_change', label: 'Last state change' },
     { id: 'labels', label: 'Labels' },

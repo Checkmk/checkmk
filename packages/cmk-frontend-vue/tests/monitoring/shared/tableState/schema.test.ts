@@ -4,9 +4,14 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { ColumnDef } from '@tanstack/vue-table'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { describe, expect, it } from 'vitest'
 
-import { buildOfferedLimits, buildTableStateSchema } from '@/monitoring/shared/tableState/schema'
+import {
+  buildOfferedLimits,
+  buildTableStateSchema,
+  buildToggleableColumns
+} from '@/monitoring/shared/tableState/schema'
 
 interface Row {
   name: string
@@ -56,6 +61,22 @@ describe('buildTableStateSchema', () => {
   it('appends null when the user may remove the limit', () => {
     const schema = buildTableStateSchema({ columns, limitTiers: [1000], mayRemoveLimit: true })
     expect(schema.offeredLimits).toEqual([1000, null])
+  })
+})
+
+describe('buildToggleableColumns', () => {
+  it('labels a column by its header', () => {
+    expect(buildToggleableColumns(columns)).toEqual([
+      { id: 'alias', label: 'Alias' },
+      { id: 'site_id', label: 'Site' }
+    ])
+  })
+
+  it('prefers meta.pickerLabel over an abbreviated header', () => {
+    const abbreviated: ColumnDef<Row>[] = [
+      { accessorKey: 'site_id', header: 'Si', meta: { pickerLabel: untranslated('Site (Si)') } }
+    ]
+    expect(buildToggleableColumns(abbreviated)).toEqual([{ id: 'site_id', label: 'Site (Si)' }])
   })
 })
 

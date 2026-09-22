@@ -28,6 +28,9 @@ export function columnId<T>(column: ColumnDef<T>): string | undefined {
 }
 
 function columnLabel<T>(column: ColumnDef<T>, id: string): string {
+  if (column.meta?.pickerLabel !== undefined) {
+    return column.meta.pickerLabel.toString()
+  }
   if (typeof column.header === 'string' && column.header !== '') {
     return column.header
   }

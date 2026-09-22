@@ -19,6 +19,7 @@ declare module '@tanstack/vue-table' {
     headerTitle?: TranslatedString
     /** Markup-capable help shown via CmkHelpText next to the header label. */
     headerHelp?: TranslatedString
+    pickerLabel?: TranslatedString
     justify?: ColumnJustify
     filter?: ColumnFilterDefinition
     selectColumn?: boolean

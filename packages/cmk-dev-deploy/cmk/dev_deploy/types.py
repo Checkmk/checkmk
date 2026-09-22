@@ -287,6 +287,7 @@ class Service(StrEnum):
     DCD = "dcd"
     MCP_SERVER = "mcp-server"
     AI_CONTROL_PLANE = "ai-control-plane"
+    MAPS = "maps"
 
 
 @dataclass(frozen=True)

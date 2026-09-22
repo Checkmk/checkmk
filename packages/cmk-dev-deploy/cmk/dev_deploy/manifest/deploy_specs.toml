@@ -189,6 +189,16 @@ name = "deploy_svc_cmk_agent_receiver"
 package_target = "//packages/cmk-agent-receiver:wheel"
 services = ["agent-receiver:restart"]
 
+# The maps wheel carries both the standalone daemon (cmk.maps.backend, run by
+# etc/init.d/maps) and the apache-served GUI/REST code (cmk.maps.gui,
+# cmk.maps.rest_api -- loaded via cmk.gui.main_modules in every edition), so
+# both have to be told about a new wheel.  Explicit entries replace the
+# wheel-convention default, hence apache:reload is repeated here.
+[[service]]
+name = "deploy_svc_cmk_maps"
+package_target = "//packages/cmk-maps:wheel"
+services = ["maps:restart", "apache:reload"]
+
 [[service]]
 name = "deploy_svc_cmk_ec"
 package_target = "//packages/cmk-ec:wheel"

@@ -52,6 +52,7 @@ SERVICE_RESTART_ORDER: tuple[Service, ...] = (
     Service.AGENT_RECEIVER,
     Service.MCP_SERVER,
     Service.AI_CONTROL_PLANE,
+    Service.MAPS,
     Service.NAGIOS,
     Service.CMC,
 )

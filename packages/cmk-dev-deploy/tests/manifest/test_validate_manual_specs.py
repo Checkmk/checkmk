@@ -109,6 +109,26 @@ def test_cmk_ai_control_plane_wheel_restarts_the_ai_control_plane_daemon() -> No
     assert Service("ai-control-plane") is Service.AI_CONTROL_PLANE
 
 
+def test_cmk_maps_wheel_restarts_the_daemon_and_reloads_apache() -> None:
+    """Deploying the cmk-maps wheel must hit both consumers of that wheel.
+
+    It carries the standalone daemon (cmk.maps.backend, imported once at
+    startup) *and* the GUI/REST code apache serves (cmk.maps.gui,
+    cmk.maps.rest_api).  Since explicit entries replace the wheel-convention
+    default, dropping apache:reload here would leave apache on stale Maps code.
+    """
+    manual = _load_specs_from_toml(specs_path(), is_nonfree_checkout=False)
+    maps = next(
+        (s for s in manual["service_specs"] if s["package_target"] == "//packages/cmk-maps:wheel"),
+        None,
+    )
+
+    assert maps is not None, "no [[service]] entry for the cmk-maps wheel"
+    assert maps["services"] == ["maps:restart", "apache:reload"]
+    assert Service("maps") is Service.MAPS
+    assert maps["source_prefix"] == "packages/cmk-maps"
+
+
 def test_frontend_vue_dist_reloads_apache() -> None:
     """Deploying the cmk-frontend-vue dist must reload apache.
 

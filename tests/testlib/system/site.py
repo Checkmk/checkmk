@@ -2216,7 +2216,10 @@ class Site:
 
     @tracer.instrument("Site.activate_changes_and_wait_for_core_reload")
     def activate_changes_and_wait_for_core_reload(
-        self, allow_foreign_changes: bool = False, reload_core_on_sites: Sequence[Site] = ()
+        self,
+        allow_foreign_changes: bool = False,
+        reload_core_on_sites: Sequence[Site] = (),
+        strict: bool = True,
     ) -> None:
         """Activate the pending changes and wait until the cores have reloaded.
 
@@ -2224,6 +2227,8 @@ class Site:
         which is all a single site needs. In a distributed setup, list every site that
         gets changes: one activation covers them all, so calling this again for the
         other site finds nothing pending and waits for nothing.
+
+        `strict` asserts having no pending changes after the activation.
         """
         logger.info("Activate changes and wait for reload...")
         self.ensure_running()
@@ -2240,7 +2245,7 @@ class Site:
                 self._log_replication_state(site)
 
             changed = self.openapi.changes.activate_and_wait_for_completion(
-                force_foreign_changes=allow_foreign_changes
+                force_foreign_changes=allow_foreign_changes, strict=strict
             )
             if changed:
                 for site, old_t in program_starts:

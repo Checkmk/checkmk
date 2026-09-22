@@ -27,7 +27,7 @@ check_info = {}
 
 def parse_ucd_cpu_util(string_table):
     if not string_table:
-        return {}
+        return None
 
     (
         error,

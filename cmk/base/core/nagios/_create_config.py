@@ -174,7 +174,6 @@ class NagiosCoreConfig:
 def make_nagios_config_builder(
     objects_file: Path,
     timeperiods: TimeperiodSpecs,
-    nagios_core_config: NagiosCoreConfig,
 ) -> MonitoringConfigBuilder:
     """Create the monitoring config builder of the Nagios core.
 
@@ -183,6 +182,7 @@ def make_nagios_config_builder(
     """
 
     def build(intermediate_config: IntermediateMonitoringConfig) -> None:
+        nagios_core_config = NagiosCoreConfig.from_raw_config(intermediate_config.loaded_config)
         _create_core_config(
             intermediate_config.config_creation_context.path_created,
             config_cache=intermediate_config.config_cache,

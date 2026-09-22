@@ -30,13 +30,11 @@ def create_core(
     match loaded_config.monitoring_core:
         case "nagios":
             from cmk.base.core.nagios import make_nagios_config_builder
-            from cmk.base.core.nagios._create_config import NagiosCoreConfig
 
             return (
                 make_nagios_config_builder(
                     paths.nagios_objects_file,
                     get_all_timeperiods(loaded_config.timeperiods),
-                    NagiosCoreConfig.from_raw_config(loaded_config),
                 ),
                 NagiosClient(
                     objects_file=paths.nagios_objects_file,

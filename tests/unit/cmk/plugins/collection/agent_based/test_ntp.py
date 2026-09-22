@@ -16,6 +16,7 @@ from cmk.plugins.collection.agent_based.ntp import (
     _ntp_fmt_time,
     check_ntp,
     check_ntp_summary,
+    DEFAULT_PARAMETERS,
     discover_ntp,
     discover_ntp_summary,
     parse_ntp,
@@ -101,6 +102,19 @@ def test_check_ntp() -> None:
     assert list(check_ntp("42.202.61.100", {}, section)) == [
         Result(state=State.UNKNOWN, summary="Peer 42.202.61.100 is unreachable")
     ]
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="Crash report 4275: ValueError: 'summary' must be non-empty str or None",
+)
+def test_check_ntp_falsetick_peer() -> None:
+    # Statecode "x" means the peer was rejected as a falseticker. The CRIT
+    # result for it was yielded with an empty summary, which Result rejects.
+    section: Section = {"10.0.0.1": Peer("x", "10.0.0.1", "10.0.0.9", 3, 64, "377", 1.5, 0.5)}
+    assert list(check_ntp("10.0.0.1", DEFAULT_PARAMETERS, section))[-1] == Result(
+        state=State.CRIT, summary="State: falsetick"
+    )
 
 
 @pytest.mark.usefixtures("empty_value_store")

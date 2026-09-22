@@ -264,6 +264,12 @@ class AddHost(CmkPage):
         )
 
     @property
+    def install_and_register_agent_button(self) -> Locator:
+        return self.main_area.locator("button.agent-test-button").filter(
+            has_text="Install & register agent"
+        )
+
+    @property
     def snmp_checkbox(self) -> Locator:
         return self.main_area.locator().get_by_role("cell", name="SNMP").locator("label")
 

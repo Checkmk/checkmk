@@ -12,6 +12,7 @@ import { FormApp } from '@/form'
 import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/dispatch'
 
 import '@/assets/variables.css'
+import MapsApp from '@/maps/MapsApp.vue'
 import ModeHostApp from '@/mode-host/ModeHostApp.vue'
 import NotificationParametersOverviewApp from '@/notification/NotificationParametersOverviewApp.vue'
 import { registerCustomQueryFormComponents } from '@/telemetry-metrics-custom-query/registerFormComponents'
@@ -61,6 +62,7 @@ registerCustomQueryFormComponents()
 registerOAuth2ConnectionFormComponents()
 registerTelemetryMetricsFormComponents()
 
+defineCmkComponent('cmk-maps', MapsApp, { appprops: { fullPage: true } })
 defineCmkComponent('cmk-form-spec', FormApp)
 defineCmkComponent('cmk-quick-setup', QuickSetup)
 defineCmkComponent('cmk-dashboard', Dashboard)

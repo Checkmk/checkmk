@@ -72,6 +72,7 @@ SYSTEM TESTS (local / -docker variant available for each)
   test-system-update-cross-edition-community-to-pro
   test-system-plugins                     Run plugin system tests
   test-system-plugins-piggyback           Run piggyback plugin system tests
+  test-system-maps                        Run system tests for Checkmk Maps (pro edition)
   test-system-gui-crawl                   Run GUI crawl tests
   test-system-gui-crawl-xss               Run XSS crawl tests
   test-system-gui                         Run full GUI system tests (pro edition)
@@ -252,6 +253,16 @@ test-performance-all() {
 
 test-performance-all-docker() {
     RESULT_PATH="$(realpath "$SCRIPT_DIR/..")" $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" "test-performance-all"
+}
+
+test-system-maps() {
+    prepare-playwright
+    _pytest --cmk-edition pro \
+        --screenshot=only-on-failure \
+        --output="${RESULT_PATH:-/tmp}/" \
+        --tracing=retain-on-failure \
+        "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
+        "$(realpath "$SCRIPT_DIR/system/maps")"
 }
 
 test-system-gui-crawl() {

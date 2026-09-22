@@ -1,7 +1,12 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 
-package(default_visibility = [":__subpackages__"])
+# The maps suite still builds on this one's browser fixtures and page-object
+# base; see tests/system/README-test-suite-organization.md.
+package(default_visibility = [
+    ":__subpackages__",
+    "//tests/system/maps:__subpackages__",
+])
 
 py_library(
     name = "gui",

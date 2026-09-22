@@ -214,7 +214,7 @@ function hostRef(row: HostEntry): HostRef {
 }
 
 function hostSelectionLabel(count: number): TranslatedString {
-  return _tn('%{count} host selected', '%{count} hosts selected', count, { count })
+  return _tn('Selected host: %{count}', 'Selected hosts: %{count}', count, { count })
 }
 
 function hostCountsLabel(selected: number, total: number): TranslatedString {

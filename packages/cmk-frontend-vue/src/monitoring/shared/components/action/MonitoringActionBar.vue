@@ -15,7 +15,7 @@ import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell
 const props = defineProps<{
   selectedCount: number
   actions: CellAction[]
-  /** How the rows the actions act on are named, e.g. "3 hosts selected". */
+  /** How the rows the actions act on are named, e.g. "Selected hosts: 3". */
   selectionLabel: TranslatedString
   /** Names the toolbar for screen readers, e.g. "Actions for selected hosts". */
   label: TranslatedString
@@ -82,7 +82,6 @@ function select(action: CellAction): void {
 
 .monitoring-action-bar__selection {
   flex: 0 0 auto;
-  font-weight: var(--font-weight-bold);
 }
 
 .monitoring-action-bar__action {

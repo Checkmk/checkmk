@@ -259,7 +259,7 @@ function serviceRef(row: HostServiceEntry): string {
 }
 
 function serviceSelectionLabel(count: number): TranslatedString {
-  return _tn('%{count} service selected', '%{count} services selected', count, { count })
+  return _tn('Selected service: %{count}', 'Selected services: %{count}', count, { count })
 }
 
 function serviceCountsLabel(selected: number, total: number): TranslatedString {

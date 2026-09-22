@@ -31,7 +31,7 @@ const props = withDefaults(
     actions: MonitoringActionRegistry<Target>
     /** Entries offered by the action bar, acting on the current row selection. */
     bulkActions?: CellAction[]
-    /** Names the rows the actions act on, e.g. "3 hosts selected". */
+    /** Names the rows the actions act on, e.g. "Selected hosts: 3". */
     selectionLabel: (count: number) => TranslatedString
     /** Names the action bar for screen readers, e.g. "Actions for selected hosts". */
     actionsLabel: TranslatedString

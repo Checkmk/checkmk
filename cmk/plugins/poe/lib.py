@@ -19,11 +19,18 @@ class PoeStatus(int, enum.Enum):
     FAULTY = 3
 
 
+def poe_status_from_device(raw: int) -> PoeStatus | int:
+    try:
+        return PoeStatus(raw)
+    except ValueError:
+        return raw
+
+
 # PoE data
 class PoeValues(NamedTuple):
     poe_max: float
     poe_used: float
-    poe_status: PoeStatus
+    poe_status: PoeStatus | int
     poe_status_detail: str | None
 
 

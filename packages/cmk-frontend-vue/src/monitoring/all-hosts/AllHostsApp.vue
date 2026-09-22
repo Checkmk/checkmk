@@ -20,6 +20,11 @@ import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTab
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
 import { ACTION_REFRESH_DELAY_MS, HOST_LIMIT_TIERS } from '@/monitoring/shared/constants'
+import {
+  displayOptionsWriter,
+  readDisplayOptionsFromUrl,
+  seedDisplayOptions
+} from '@/monitoring/shared/displayOptionsState/urlState'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 
 import MonitoringHeaderActions from '../shared/components/MonitoringHeaderActions.vue'
@@ -185,6 +190,7 @@ const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
 const modeColumnSize = useModeColumnWidth(() => hostService.items.value)
 const tableColumns = computed(() => sizeModeColumn(columns, modeColumnSize.value))
 
+const initialDisplayOptions = readDisplayOptionsFromUrl(window.location.search)
 const displayOptions = usePersistentRef(
   buildDisplayOptionsStorageKey({
     view: 'all-hosts',
@@ -193,7 +199,7 @@ const displayOptions = usePersistentRef(
     edition: props.edition
   }),
   DEFAULT_DISPLAY_OPTIONS,
-  sanitizeDisplayOptions
+  (stored) => seedDisplayOptions(initialDisplayOptions, sanitizeDisplayOptions(stored))
 )
 
 const toolbar = useTemplateRef<{ focus: () => void }>('toolbar')
@@ -300,6 +306,7 @@ const HOST_SLIDE_IN: SlideInUrlDescriptor<HostEntry, HostRef> = {
 useUrlSync([
   tableStateWriter(hostService, schema),
   filterStateWriter(hostService),
+  displayOptionsWriter(displayOptions),
   slideInWriter({
     descriptor: HOST_SLIDE_IN,
     service: hostService,

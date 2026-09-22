@@ -21,6 +21,11 @@ import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTab
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
+import {
+  displayOptionsWriter,
+  readDisplayOptionsFromUrl,
+  seedDisplayOptions
+} from '@/monitoring/shared/displayOptionsState/urlState'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 
 import MonitoringHeaderActions from '../shared/components/MonitoringHeaderActions.vue'
@@ -179,6 +184,7 @@ const tableColumns = computed(() =>
   )
 )
 
+const initialDisplayOptions = readDisplayOptionsFromUrl(window.location.search)
 const displayOptions = usePersistentRef(
   buildDisplayOptionsStorageKey({
     view: 'host-services',
@@ -187,7 +193,7 @@ const displayOptions = usePersistentRef(
     edition: props.edition
   }),
   DEFAULT_DISPLAY_OPTIONS,
-  sanitizeDisplayOptions
+  (stored) => seedDisplayOptions(initialDisplayOptions, sanitizeDisplayOptions(stored))
 )
 
 const actionRegistry = createActionRegistry<string>([
@@ -271,6 +277,7 @@ const SERVICE_SLIDE_IN: SlideInUrlDescriptor<HostServiceEntry, string> = {
 useUrlSync([
   tableStateWriter(hostServicesService, schema),
   filterStateWriter(hostServicesService),
+  displayOptionsWriter(displayOptions),
   slideInWriter({
     descriptor: SERVICE_SLIDE_IN,
     service: hostServicesService,

@@ -123,6 +123,15 @@ KnownTSFunction = typing.Literal[
     # misc
     "submit_crash_report",
     "enable_submit_buttons_on_nonempty_input",
+    # backup
+    "refresh_backup_job_details",
+    # figures / ntop / licensing
+    "show_figure",
+    "show_ntop_table_figure",
+    "show_ntop_host_details",
+    "show_ntop_interface_quickstats",
+    "render_license_usage_graph",
+    "replace_error_msg_with_confirm_dialog",
     # dashboard
     "ignore_public_dashboard_clicks",
     "redirect_shared_dashboard",

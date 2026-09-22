@@ -8,13 +8,18 @@ import { select } from 'd3'
 
 import * as activation from '@/modules/activation'
 import * as background_job from '@/modules/background_job'
+import * as backup from '@/modules/backup'
 import * as bi from '@/modules/bi'
 import * as dashboard from '@/modules/dashboard'
+import { figure_registry } from '@/modules/figures/cmk_figures'
 import * as forms from '@/modules/forms'
 import * as host_diagnose from '@/modules/host_diagnose'
 import { insert_before } from '@/modules/layout'
+import * as license_usage_timeseries_graph from '@/modules/license_usage/license_usage_timeseries_graph'
 import * as nodevis from '@/modules/nodevis/main'
 import * as nodevis_utils from '@/modules/nodevis/utils'
+import * as ntop_host_details from '@/modules/ntop/ntop_host_details'
+import * as ntop_utils from '@/modules/ntop/ntop_utils'
 import * as page_menu from '@/modules/page_menu'
 import { render_qr_code } from '@/modules/qrcode_rendering'
 import * as quicksearch from '@/modules/quicksearch'
@@ -29,6 +34,14 @@ import * as valuespecs from '@/modules/valuespecs'
 import * as wato from '@/modules/wato'
 
 import { type CallableFunction, register_callable_functions } from './ts_function_dispatcher'
+
+const license_usage_graphs: Record<string, (num_graphs: number, aggregation: any) => void> = {
+  services: license_usage_timeseries_graph.render_services_usage_graph,
+  tests: license_usage_timeseries_graph.render_tests_usage_graph,
+  free_tests: license_usage_timeseries_graph.render_free_tests_usage_graph,
+  metric_series: license_usage_timeseries_graph.render_metric_series_usage_graph,
+  free_metric_series: license_usage_timeseries_graph.render_free_metric_series_usage_graph
+}
 
 // See cmk.gui.htmllib.generator:KnownTSFunction
 // The type on the Python side and the available keys in this dictionary MUST MATCH.
@@ -165,7 +178,50 @@ const callable_functions: { [name: string]: CallableFunction } = {
       options.button_ids
     ),
 
+  // backup
+  refresh_backup_job_details: (_node, options) =>
+    backup.refresh_job_details(options.url, options.ident, options.is_site),
+
+  // figures
+  show_figure: (_node, options) => {
+    const figure = new (figure_registry.get_figure(options.figure_ident))(
+      `#${options.div_id}`,
+      null
+    )
+    figure.set_widget_content(options.widget_content)
+    figure.initialize()
+    figure.process_data(options.data)
+  },
+  show_ntop_table_figure: (_node, options) => {
+    const figure = new (figure_registry.get_figure('table'))(`#${options.div_id}`)
+    figure.set_post_url_and_body(options.post_url, options.post_body)
+    figure.initialize()
+    figure.scheduler.force_update()
+  },
+
+  // ntop
+  show_ntop_host_details: (_node, options) => {
+    const tabs = new ntop_host_details.HostTabs(`#${options.div_id}`)
+    tabs.set_current_ntophost(options.host_address)
+    tabs.initialize(options.tab, options.ifid, options.vlanid)
+  },
+  show_ntop_interface_quickstats: (_node, options) => {
+    const table = new ntop_utils.interface_table(`#${options.div_id}`)
+    table.set_host_address(options.host_address)
+    table.set_ifid(options.ifid)
+    table.set_vlanid(options.vlanid)
+    table.set_post_url_and_body(options.post_url)
+    table.initialize()
+    table.scheduler.set_update_interval(2)
+    table.scheduler.force_update()
+  },
+
+  // licensing
+  render_license_usage_graph: (_node, options) =>
+    license_usage_graphs[options.graph](options.num_graphs, options.aggregation),
+
   // wato
+  replace_error_msg_with_confirm_dialog: () => forms.replace_error_msg_with_confirm_dialog(),
   background_job_start: (_node, options) =>
     background_job.start(options.update_url, options.job_id),
   prepare_edit_dialog: (_node, options) => {

@@ -1085,8 +1085,9 @@ def job_page(job: MKBackupJob, ident: str) -> None:
     show_job_details(job)
     html.close_div()
     update_url = f"ajax_backup_job_state.py?job={ident}"
-    html.javascript(
-        "cmk.backup.refresh_job_details('{}', '{}', {})".format(update_url, ident, "true")
+    html.call_ts_function(
+        function_name="refresh_backup_job_details",
+        arguments={"url": update_url, "ident": ident, "is_site": True},
     )
 
 

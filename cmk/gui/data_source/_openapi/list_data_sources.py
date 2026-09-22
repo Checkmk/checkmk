@@ -55,7 +55,7 @@ def list_data_sources_v1() -> DataSourceCollectionModel:
         data_source_model = DataSourceModel(
             id=data_source_id,
             domainType="constant",
-            title=data_source.title,
+            title=str(data_source.title),  # plugins may ignore the str contract
             extensions=DataSourceExtensions(infos=list(data_source.infos)),
             links=[],
         )

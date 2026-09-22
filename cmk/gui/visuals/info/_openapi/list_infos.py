@@ -59,7 +59,7 @@ def list_infos_v1() -> VisualInfoCollectionModel:
         data_source_model = VisualInfoModel(
             id=info_id,
             domainType="constant",
-            title=info.title,
+            title=str(info.title),  # plugins may ignore the str contract
             extensions=VisualInfoExtensions(
                 sort_index=info.sort_index,
                 single_filter=[

@@ -5,13 +5,14 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any, Literal
 
 from pydantic import BaseModel
 
 from cmk.bakery.v2 import BakeryPlugin, OS, Plugin, PluginConfig
+from cmk.plugins.mtr.lib.config import section_names
 
 
 class _Config(BaseModel):
@@ -32,7 +33,7 @@ def get_mtr_files(conf: _Config) -> Iterable[Plugin | PluginConfig]:
     )
 
 
-def _get_mtr_config(mtr_settings: Iterable[Mapping[str, Any]]) -> Iterable[str]:
+def _get_mtr_config(mtr_settings: Sequence[Mapping[str, Any]]) -> Iterable[str]:
     yield from [
         "# [DEFAULTS]",
         "# type=icmp    # icmp, tcp or udp",
@@ -51,8 +52,8 @@ def _get_mtr_config(mtr_settings: Iterable[Mapping[str, Any]]) -> Iterable[str]:
         "",
     ]
 
-    for address_conf in mtr_settings:
-        yield "[%s]" % address_conf["hostname"]
+    for section_name, address_conf in zip(section_names(mtr_settings), mtr_settings):
+        yield "[%s]" % section_name
         for what in [
             "type",
             "count",

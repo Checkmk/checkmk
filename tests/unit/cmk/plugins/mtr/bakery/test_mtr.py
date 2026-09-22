@@ -84,3 +84,28 @@ def test_mtr_files_with_options() -> None:
     assert "port = 443" in lines
     assert "dns = 1" in lines
     assert "force_ipv4 = True" in lines
+
+
+def test_same_host_twice_gets_distinct_sections() -> None:
+    # The differing IP version is what keeps the two sections - and thus the two
+    # services - apart, while the agent plug-in traces the address in front.
+    conf = bakery_plugin_mtr.parameter_parser(
+        {
+            "deployment": ("cached", 300.0),
+            "mtr_config": [
+                {"hostname": "foo.example.com", "dns": False, "enforce_what": "ipv4"},
+                {"hostname": "foo.example.com", "dns": False, "enforce_what": "ipv6"},
+            ],
+        }
+    )
+    (plugin_config,) = (
+        f for f in bakery_plugin_mtr.files_function(conf) if isinstance(f, PluginConfig)
+    )
+    assert list(plugin_config.lines)[-6:] == [
+        "[foo.example.com (IPv4)]",
+        "force_ipv4 = True",
+        "",
+        "[foo.example.com (IPv6)]",
+        "force_ipv6 = True",
+        "",
+    ]

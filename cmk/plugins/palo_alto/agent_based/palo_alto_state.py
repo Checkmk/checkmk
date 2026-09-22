@@ -79,31 +79,40 @@ def _uniform_format(name: str) -> str:
     return name.lower().replace("-", "_")
 
 
+def _state_and_summary(
+    params: Mapping[str, int],
+    key_prefix: str,
+    label: str,
+    reported: str,
+) -> tuple[State, str]:
+    if (configured := params.get(f"{key_prefix}_{_uniform_format(reported)}")) is None:
+        return State.UNKNOWN, f"{label}: {reported} (no monitoring state defined for this value)"
+    return State(configured), f"{label}: {reported}"
+
+
 def check(
     params: Mapping[str, int],
     section: SectionPaloAlto,
 ) -> CheckResult:
     yield Result(state=State.OK, summary=f"Firmware Version: {section.firmware_version}")
-    yield Result(
-        state=State(params[f"mode_{_uniform_format(section.ha_mode)}"]),
-        summary=f"HA mode: {section.ha_mode}",
+
+    mode_state, mode_summary = _state_and_summary(params, "mode", "HA mode", section.ha_mode)
+    yield Result(state=mode_state, summary=mode_summary)
+
+    if section.ha_mode == "disabled":
+        yield Result(state=State.OK, summary=f"HA local state: {section.ha_local_state}")
+        yield Result(state=State.OK, notice=f"HA peer state: {section.ha_peer_state}")
+        return
+
+    local_state, local_summary = _state_and_summary(
+        params, "ha_local_state", "HA local state", section.ha_local_state
     )
-    yield Result(
-        state=(
-            State.OK
-            if section.ha_mode == "disabled"
-            else State(params[f"ha_local_state_{_uniform_format(section.ha_local_state)}"])
-        ),
-        summary=f"HA local state: {section.ha_local_state}",
+    yield Result(state=local_state, summary=local_summary)
+
+    peer_state, peer_summary = _state_and_summary(
+        params, "ha_peer_state", "HA peer state", section.ha_peer_state
     )
-    yield Result(
-        state=(
-            State.OK
-            if section.ha_mode == "disabled"
-            else State(params[f"ha_peer_state_{_uniform_format(section.ha_peer_state)}"])
-        ),
-        notice=f"HA peer state: {section.ha_peer_state}",
-    )
+    yield Result(state=peer_state, notice=peer_summary)
 
 
 check_plugin_palo_alto = CheckPlugin(

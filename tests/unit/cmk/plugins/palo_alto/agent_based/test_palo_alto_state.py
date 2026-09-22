@@ -101,10 +101,6 @@ def test_check(section: SectionPaloAlto, expected_result: Sequence[Result]) -> N
     assert list(check(_STATE_MAPPING_DEFAULT, section)) == expected_result
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash report 498526ac-a151-11f1-8fd9-00155d0229c7: KeyError: 'ha_local_state_initial'",
-)
 def test_check_unmapped_state_is_unknown() -> None:
     """Sometimes a PAN-OS update ships a previously unknown state we have no mapping for.
     Insted of generating a crash report we should map unknown states to State.UNKNOWN.

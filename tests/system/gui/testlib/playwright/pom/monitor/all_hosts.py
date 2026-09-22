@@ -38,6 +38,26 @@ class AllHosts(CmkPage):
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 
+    @property
+    def try_the_new_view(self) -> Locator:
+        """The button offering the Vue "All hosts" page.
+
+        Rendered by the `cmk-monitoring-page-link-button` web component and
+        teleported out of the app root, so it is looked up from the main area
+        rather than from the app, and never from the page: a site still serving
+        its content in the main iframe keeps it out of the top-level document.
+        """
+        return self.main_area.locator("button.monitoring-page-link-button")
+
+    @property
+    def page_menu_shortcuts(self) -> Locator:
+        """The shortcut area of the page menu bar.
+
+        Where the cloud edition teleports the switch button, because its licensing
+        banner covers the page state area the other editions use.
+        """
+        return self.main_area.locator("#page_menu_bar .shortcuts")
+
     def get_host_link(self, host_name: str) -> Locator:
         """Get the link to a host in the 'All hosts' view.
 

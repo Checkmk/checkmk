@@ -399,11 +399,13 @@ def setup_host(
     )
 
     try:
-        site.openapi.changes.activate_and_wait_for_completion(strict=False)
+        # wait here too, or the wait below may take this reload for the one it waits for
+        site.activate_changes_and_wait_for_core_reload(strict=False)
 
         logger.info("Running service discovery...")
         site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
-        site.openapi.changes.activate_and_wait_for_completion()
+        # a forced check sent while the core is still reloading can get lost
+        site.activate_changes_and_wait_for_core_reload()
 
         logger.info("Scheduling checks & checking for pending services...")
         pending_checks = []

@@ -95,7 +95,7 @@ def register() -> None:
 # defaults, log level, refresh interval) are native Checkmk global settings under
 # the two "Maps" groups in Setup → Global settings (all owned by the feature's own
 # ConfigDomainMaps, like liveproxyd/dcd). Those same globals are ALSO reachable
-# module-near — Customize → Maps → the "Maps" page menu links two curated views
+# module-near — the map list's own administration menu links two curated views
 # (map/object defaults vs connections/daemon), mirroring DCD's "Host manager
 # settings"; see cmk.maps.gui._settings_modes. The image library and the API docs
 # are authoring/runtime surfaces of the SPA and the daemon, not Setup config.

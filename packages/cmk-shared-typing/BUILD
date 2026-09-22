@@ -37,6 +37,7 @@ SOURCES_COMMON = [
     "global_time_picker.json",
     "loading_transition.json",
     "main_menu.json",
+    "maps.json",
     "mode_create_otel_conf.json",
     "mode_custom_services.json",
     "mode_host.json",

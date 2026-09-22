@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "maps_app",
+  "description": "What maps.py hands the mounted Maps app. Only wiring, no data: everything the app shows it fetches.",
+  "properties": {
+    "links": { "$ref": "#/$defs/maps_page_links" },
+    "breadcrumb_root": {
+      "description": "The main menu levels Maps hangs under; the app puts its own levels behind them.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/maps_breadcrumb_item" }
+    }
+  },
+  "required": ["links", "breadcrumb_root"],
+  "$defs": {
+    "maps_page_links": {
+      "title": "MapsPageLinks",
+      "description": "The Checkmk pages the app links out to.",
+      "type": "object",
+      "properties": {
+        "authoring_settings": {
+          "description": "Setup form for the map and object defaults.",
+          "type": "string"
+        },
+        "daemon_settings": {
+          "description": "Setup form for the connections and the daemon.",
+          "type": "string"
+        }
+      },
+      "required": ["authoring_settings", "daemon_settings"]
+    },
+    "maps_breadcrumb_item": {
+      "title": "MapsBreadcrumbItem",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "link": { "type": ["string", "null"] }
+      },
+      "required": ["title", "link"]
+    }
+  }
+}

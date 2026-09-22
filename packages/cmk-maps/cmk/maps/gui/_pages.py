@@ -10,9 +10,10 @@ session-authenticated ticket handshake the daemon needs — a signed ticket plus
 the caller's resolved capabilities for show/hide decisions in the UI.
 """
 
+from dataclasses import asdict
 from typing import NotRequired, override, TypedDict
 
-from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
+from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
@@ -20,14 +21,6 @@ from cmk.gui.http import Request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
-from cmk.gui.page_menu import (
-    make_javascript_link,
-    make_simple_link,
-    PageMenu,
-    PageMenuDropdown,
-    PageMenuEntry,
-    PageMenuTopic,
-)
 from cmk.gui.pages import AjaxPage, Page, PageContext, PageResult
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import VisualPublic
@@ -44,7 +37,7 @@ from cmk.maps.gui._tickets import (
 )
 from cmk.maps.gui.store import get_permitted_map
 from cmk.maps.shared.ticket import MapClaim, TicketCapabilities
-from cmk.web.utils.icons import DynamicIconName
+from cmk.shared_typing.maps import MapsApp, MapsBreadcrumbItem, MapsPageLinks
 
 
 class TicketResponse(TypedDict):
@@ -90,102 +83,6 @@ def _ticket_response(request: Request) -> TicketResponse:
     return response
 
 
-def _home_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
-    """Page menu for the Maps home listing.
-
-    The list-affecting controls live in the Checkmk chrome (like the dashboards
-    list), not in the SPA toolbar. ``Add map`` and the card/table switch act on
-    the mounted SPA via the ``window._cmkMapsHome`` bridge it registers on mount;
-    ``Images`` is a plain navigation the SPA resolves from ``?mode=icons``. The
-    switch mirrors the inline-help toggle: it sits in "Display", its title names
-    the view it leads to and its ``toggle_on/off`` icon carries the current one,
-    flipped client side because the SPA is what persists the view.
-
-    Creating a map, importing one and switching the list view are the suggested
-    actions; the image library and the two settings views are not, so they stay
-    in their dropdown.
-    """
-    maps_entries: list[PageMenuEntry] = []
-    if user.may("general.edit_map"):
-        maps_entries.append(
-            PageMenuEntry(
-                title=_("Add map"),
-                icon_name=DynamicIconName("new"),
-                item=make_javascript_link("window._cmkMapsHome && window._cmkMapsHome.newMap()"),
-                is_shortcut=True,
-                is_suggested=True,
-                name="maps_new",
-            )
-        )
-        maps_entries.append(
-            PageMenuEntry(
-                title=_("Import"),
-                icon_name=DynamicIconName("insert"),
-                item=make_javascript_link("window._cmkMapsHome && window._cmkMapsHome.importMap()"),
-                is_shortcut=True,
-                is_suggested=True,
-                name="maps_import",
-            )
-        )
-    if user.may("maps.configure"):
-        maps_entries.append(
-            PageMenuEntry(
-                title=_("Images"),
-                icon_name=DynamicIconName("upload"),
-                item=make_simple_link("maps.py?mode=icons"),
-                name="maps_images",
-            )
-        )
-        # The Maps globals also live in Setup → Global settings; these shortcuts
-        # bring the two curated views right next to the module (the DCD pattern).
-        maps_entries.append(
-            PageMenuEntry(
-                title=_("Map & object defaults"),
-                icon_name=DynamicIconName("painteroptions"),
-                item=make_simple_link(ModeMapsAuthoringSettings.mode_url()),
-                name="maps_authoring_settings",
-            )
-        )
-        maps_entries.append(
-            PageMenuEntry(
-                title=_("Connections & daemon"),
-                icon_name=DynamicIconName("configuration"),
-                item=make_simple_link(ModeMapsDaemonSettings.mode_url()),
-                name="maps_daemon_settings",
-            )
-        )
-    menu = PageMenu(
-        dropdowns=[
-            PageMenuDropdown(
-                name="maps",
-                title=_("Maps"),
-                topics=[PageMenuTopic(title=_("Maps"), entries=maps_entries)],
-            ),
-        ],
-        breadcrumb=breadcrumb,
-    )
-    # ``PageMenu`` always adds the standard "Display" dropdown; extend it with the
-    # card/table switch instead of declaring a second (colliding) one.
-    menu["display"].topics.append(
-        PageMenuTopic(
-            title=_("View"),
-            entries=[
-                PageMenuEntry(
-                    title=_("Table view"),
-                    icon_name=DynamicIconName("toggle_off"),
-                    item=make_javascript_link(
-                        "window._cmkMapsHome && window._cmkMapsHome.toggleView()"
-                    ),
-                    is_shortcut=True,
-                    is_suggested=True,
-                    name="maps_view_toggle",
-                ),
-            ],
-        )
-    )
-    return menu
-
-
 class ShowMapsPage(Page):
     """Render the Checkmk chrome and mount the Maps SPA inline (no iframe).
 
@@ -211,28 +108,17 @@ class ShowMapsPage(Page):
         # Preview (settings live-preview iframe) and kiosk (NOC wall) render the
         # map chromeless: no Checkmk main navigation, just the SPA.
         chromeless = ctx.request.has_var("preview") or ctx.request.has_var("kiosk")
-        # A direct map/admin entry (``?name=<map>`` / ``?mode=<tab>``, mirroring
-        # the SPA's own URL parsing) opens a view that hides the native heading +
-        # page menu. Those ship unconditionally (the home listing needs them and
-        # the client-routed SPA can't re-render server chrome), so set the matching
-        # body class up front: a render-blocking CSS rule (MapsApp.vue) then hides
-        # the chrome before the first paint instead of it flashing until the SPA
-        # bundle mounts and toggles it. The home listing keeps the class off.
-        name = ctx.request.get_ascii_input("name")
-        initial_home = name is None and not ctx.request.has_var("mode")
-        if not chromeless and not initial_home:
-            html.add_body_css_class("maps-app--embedded")
-        breadcrumb = (
-            Breadcrumb()
-            if chromeless
-            else make_simple_page_breadcrumb(main_menu_registry.menu_customize(), _("Maps"))
-        )
+        # No heading and no page menu, like the dashboard page: the SPA routes
+        # between the map list, a map and the image library client side, and
+        # server chrome cannot follow that. So it renders its own title and the
+        # actions over the list, and nothing here has to be hidden again once the
+        # bundle mounts.
         make_header(
             html,
             title=_("Maps"),
-            breadcrumb=breadcrumb,
-            page_menu=None if chromeless else _home_page_menu(breadcrumb),
-            show_top_heading=not chromeless,
+            breadcrumb=Breadcrumb(),
+            page_menu=None,
+            show_top_heading=False,
             show_main_navigation=not chromeless,
             enable_main_page_scrollbar=False,
             debug=ctx.config.debug,
@@ -250,15 +136,39 @@ class ShowMapsPage(Page):
         # ``#main_page_content.vue-scrolling > *`` from stretching stray nodes
         # and pushing the mount point off-screen; the SPA fills the wrapper.
         html.open_div(class_="maps-app--embed")
-        # No props: the SPA fetches everything it needs (the ticket from
+        # No data props: the SPA fetches everything it shows (the ticket from
         # AjaxMapsTicket, the map and the listing from the Maps REST API, the
         # authoring defaults from the internal settings endpoint). Hydrating any
         # of it would be a second data-assembly path to keep in step with those,
         # and its optionality would reach every consumer of the values. It also
         # turns a forbidden or unknown ``?name=`` into a plain REST 403/404 the
         # SPA can render, rather than a silently absent prop.
+        #
+        # ``links`` is not data but wiring: the two curated settings forms have
+        # no other entry point (Maps has no Setup tile) and their mode names
+        # belong here, not to a TypeScript constant that a rename would leave
+        # pointing nowhere. The dashboard page hands its own out the same way.
+        #
+        # ``breadcrumb_root`` is the same kind of wiring: the levels above the SPA
+        # (the main menu Maps hangs under), so the app can put its own levels
+        # behind them without naming a Checkmk menu in TypeScript. The settings
+        # modes root their breadcrumb the same way.
         html.open_div(id_="app")
-        html.vue_component("cmk-maps", data={})
+        html.vue_component(
+            "cmk-maps",
+            data=asdict(
+                MapsApp(
+                    links=MapsPageLinks(
+                        authoring_settings=ModeMapsAuthoringSettings.mode_url(),
+                        daemon_settings=ModeMapsDaemonSettings.mode_url(),
+                    ),
+                    breadcrumb_root=[
+                        MapsBreadcrumbItem(title=str(item.title), link=item.url)
+                        for item in make_main_menu_breadcrumb(main_menu_registry.menu_customize())
+                    ],
+                )
+            ),
+        )
         html.close_div()
         html.close_div()
         html.footer()

@@ -1,3 +1,5 @@
+per-file maps.json=file:/component_owners/maps/OWNERS_DEFINITION
+per-file maps.json=set noparent
 per-file notifications.json=file:/component_owners/notifications/OWNERS_DEFINITION
 per-file notifications.json=set noparent
 per-file welcome.json=file:/component_owners/getting_started/OWNERS_DEFINITION

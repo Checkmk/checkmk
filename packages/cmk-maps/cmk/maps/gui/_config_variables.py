@@ -9,7 +9,7 @@
 """Maps admin settings as native Checkmk global settings.
 
 The settings appear under *Setup → Global settings* in two "Maps" groups and are
-*also* reachable module-near (Customize → Maps → the "Maps" page menu) through
+*also* reachable module-near (the map list's administration menu) through
 two curated modes (see :mod:`cmk.maps.gui._settings_modes`) — same variables,
 same form specs, one ``global.mk`` per domain, two entry points (the DCD
 pattern).

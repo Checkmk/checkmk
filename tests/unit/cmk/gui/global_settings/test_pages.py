@@ -106,6 +106,12 @@ def _add_remote_site(
     SitesConfigFile().save(sites, pprint_value=False)
 
 
+def _override_in_the_sites_file(site_id: SiteId, overrides: Mapping[str, object]) -> None:
+    sites = site_management_registry["site_management"].load_sites()
+    sites[site_id]["globals"] = dict(overrides)
+    SitesConfigFile().save(sites, pprint_value=False)
+
+
 @pytest.mark.usefixtures("factory_defaults", "with_admin_login")
 def test_a_registered_group_with_a_visible_variable_becomes_a_topic(load_config: Config) -> None:
     with registered(ConfigVariableGroup(title=_l("Test group"), sort_index=1), "test_var_a"):
@@ -298,6 +304,74 @@ def test_a_site_without_replication_offers_no_site_specific_settings(load_config
     _add_remote_site(UNREPLICATED_SITE, "Unreplicated site", replicated=False)
 
     with pytest.raises(MKUserError, match="not the central site nor a replication remote site"):
+        site_specific_settings(load_config, UNREPLICATED_SITE)
+
+
+@pytest.mark.usefixtures("test_variables", "patch_omd_site", "remote_site", "with_admin_login")
+def test_a_remote_site_shows_the_override_the_central_site_pushed(load_config: Config) -> None:
+    ConfigDomainGUI().save_site_globals({"test_var_a": 5})
+
+    variable = shown_variables(site_specific_settings(load_config, omd_site()))["test_var_a"]
+
+    assert variable.current == shared.SiteScopeValue(
+        value=5,
+        explicit=True,
+        global_layer=shared.GlobalLayerValue(value=1, explicit=False),
+    )
+
+
+@pytest.mark.usefixtures("test_variables", "patch_omd_site", "remote_site", "with_admin_login")
+def test_a_remote_site_ignores_an_override_in_its_own_sites_file(load_config: Config) -> None:
+    _override_in_the_sites_file(omd_site(), {"test_var_a": 5})
+
+    variable = shown_variables(site_specific_settings(load_config, omd_site()))["test_var_a"]
+
+    assert variable.current == shared.SiteScopeValue(
+        value=1,
+        explicit=False,
+        global_layer=shared.GlobalLayerValue(value=1, explicit=False),
+    )
+
+
+@pytest.mark.usefixtures("factory_defaults", "patch_omd_site", "remote_site", "with_admin_login")
+def test_a_remote_site_marks_its_scope_as_managed_by_the_central_site(load_config: Config) -> None:
+    data = site_specific_settings(load_config, omd_site())
+
+    assert data.scope == shared.GlobalSettingsScopeSite(
+        site_id=omd_site(), managed_by_central_site=True
+    )
+
+
+@pytest.mark.usefixtures("factory_defaults", "patch_omd_site", "remote_site", "with_admin_login")
+def test_a_remote_site_marks_the_global_scope_as_managed_by_the_central_site(
+    load_config: Config,
+) -> None:
+    data = global_settings(load_config)
+
+    assert data.scope == shared.GlobalSettingsScopeGlobal(managed_by_central_site=True)
+
+
+@pytest.mark.usefixtures("factory_defaults", "distributed_setup", "with_admin_login")
+def test_the_central_site_does_not_mark_the_global_scope_as_pushed(load_config: Config) -> None:
+    data = global_settings(load_config)
+
+    assert data.scope == shared.GlobalSettingsScopeGlobal(managed_by_central_site=False)
+
+
+@pytest.mark.usefixtures("factory_defaults", "distributed_setup", "with_admin_login")
+def test_the_central_site_does_not_mark_a_site_scope_as_pushed(load_config: Config) -> None:
+    data = site_specific_settings(load_config, REMOTE_SITE)
+
+    assert data.scope == shared.GlobalSettingsScopeSite(
+        site_id=REMOTE_SITE, managed_by_central_site=False
+    )
+
+
+@pytest.mark.usefixtures("factory_defaults", "patch_omd_site", "remote_site", "with_admin_login")
+def test_a_remote_site_offers_no_settings_of_another_connection(load_config: Config) -> None:
+    _add_remote_site(UNREPLICATED_SITE, "Unreplicated site", replicated=False)
+
+    with pytest.raises(MKUserError, match="managed on the central site"):
         site_specific_settings(load_config, UNREPLICATED_SITE)
 
 

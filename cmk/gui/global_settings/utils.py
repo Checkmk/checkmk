@@ -15,6 +15,7 @@ from cmk.gui.global_config import get_global_config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.main_navigation import MainNavigation
+from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.watolib import read_only
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
@@ -34,7 +35,11 @@ from cmk.gui.watolib.global_settings import (
 )
 from cmk.gui.watolib.mode import ensure_static_permissions
 from cmk.gui.watolib.setup_access import ensure_provider_site, ensure_setup_enabled
-from cmk.gui.watolib.sites import load_site_globals, site_management_registry
+from cmk.gui.watolib.sites import (
+    load_site_globals,
+    site_globals_are_pushed,
+    site_management_registry,
+)
 from cmk.livestatus_client import SiteConfigurations
 from cmk.shared_typing.global_settings import (
     Components,
@@ -69,6 +74,7 @@ class _SiteScope:
     site_id: SiteId
     global_settings: Mapping[str, object]
     site_settings: Mapping[str, object]
+    managed_by_central_site: bool
 
 
 type _Scope = _GlobalScope | _SiteScope
@@ -115,6 +121,7 @@ def site_settings(
             site_id=site_id,
             global_settings=load_configuration_settings(),
             site_settings=load_site_globals(sites, site_id),
+            managed_by_central_site=site_globals_are_pushed(sites, sites[site_id]),
         ),
         lambda _config_variable: True,
     )
@@ -142,9 +149,14 @@ def _app_data(
         title=title,
         breadcrumb=_breadcrumb_items(breadcrumb),
         scope=(
-            GlobalSettingsScopeGlobal()
+            GlobalSettingsScopeGlobal(
+                managed_by_central_site=is_distributed_setup_remote_site(scope.sites)
+            )
             if isinstance(scope, _GlobalScope)
-            else GlobalSettingsScopeSite(site_id=scope.site_id)
+            else GlobalSettingsScopeSite(
+                site_id=scope.site_id,
+                managed_by_central_site=scope.managed_by_central_site,
+            )
         ),
         topics=list(_topics(config, scope, shows)),
     )

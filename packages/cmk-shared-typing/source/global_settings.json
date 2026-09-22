@@ -38,9 +38,13 @@
         "type": {
           "type": "string",
           "const": "global"
+        },
+        "managed_by_central_site": {
+          "description": "Whether the page runs on a remote site, where the global settings are the ones the central site pushes.",
+          "type": "boolean"
         }
       },
-      "required": ["type"]
+      "required": ["type", "managed_by_central_site"]
     },
     "global_settings_scope_site": {
       "type": "object",
@@ -52,9 +56,13 @@
         },
         "site_id": {
           "type": "string"
+        },
+        "managed_by_central_site": {
+          "description": "Whether the page runs on a remote site for that site itself, where the overrides are the ones the central site pushes.",
+          "type": "boolean"
         }
       },
-      "required": ["type", "site_id"]
+      "required": ["type", "site_id", "managed_by_central_site"]
     },
     "global_settings_topic": {
       "type": "object",

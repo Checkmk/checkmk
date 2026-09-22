@@ -9,6 +9,7 @@ import type {
   GlobalSettingsVariable
 } from 'cmk-shared-typing/typescript/global_settings'
 import CmkAccordion from 'cmk-ui-library/components/CmkAccordion/CmkAccordion.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkBreadcrumb from 'cmk-ui-library/components/CmkBreadcrumb'
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import CmkSlideInDialog from 'cmk-ui-library/components/CmkSlideInDialog.vue'
@@ -196,6 +197,19 @@ function reloadPage(): void {
           @collapse-all="openedItems = []"
         />
       </div>
+      <CmkAlert
+        v-if="scope.managed_by_central_site"
+        variant="warning"
+        :text="
+          inSiteScope
+            ? _t(
+                'This site is managed centrally. The overrides shown here are pushed by the managing site. A change made here takes effect after activation on this site and lasts until the managing site activates changes the next time.'
+              )
+            : _t(
+                'This site is managed centrally. The global settings shown here are pushed by the managing site. A change made here takes effect after activation on this site and lasts until the managing site activates changes the next time.'
+              )
+        "
+      />
     </div>
     <GlobalSettingsEmptyState v-if="shownTopics.length === 0" @reset="resetSearchAndFilters" />
     <CmkAccordion v-else v-model="openedItems" :min-open="0" :max-open="0">

@@ -12,7 +12,8 @@ export const globalSettingsPagePayload = {
     { title: 'Global settings', link: null }
   ],
   scope: {
-    type: 'global'
+    type: 'global',
+    managed_by_central_site: false
   },
   topics: [
     {

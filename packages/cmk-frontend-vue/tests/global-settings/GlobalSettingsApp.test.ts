@@ -32,6 +32,8 @@ const global = (
 const site = (value: unknown, explicit: boolean, globalLayer: GlobalLayerValue) =>
   ({ type: 'site', value, explicit, global_layer: globalLayer }) as const
 
+const siteScope = { type: 'site', site_id: 'remote_1', managed_by_central_site: false } as const
+
 const SETTING_URL = `${location.protocol}//${location.host}/api/internal/objects/global_setting/lock_on_logon_failures`
 const BOOLEAN_SETTING_URL = `${location.protocol}//${location.host}/api/internal/objects/global_setting/site_piggyback_hub`
 const SITE_SETTING_URL = `${location.protocol}//${location.host}/api/internal/objects/site_connection/remote_1/global_setting/lock_on_logon_failures`
@@ -42,7 +44,7 @@ const data: GlobalSettingsAppData = {
     { title: 'Setup', link: null },
     { title: 'Global settings', link: null }
   ],
-  scope: { type: 'global' },
+  scope: { type: 'global', managed_by_central_site: false },
   topics: [
     {
       icon: 'users',
@@ -232,7 +234,7 @@ async function openSiteEditor(origin: GlobalSettingsOrigin): Promise<HTMLElement
     )
   )
   render(GlobalSettingsApp, {
-    props: { ...data, scope: { type: 'site', site_id: 'remote_1' }, topics: [siteMixedTopic] }
+    props: { ...data, scope: siteScope, topics: [siteMixedTopic] }
   })
   await userEvent.click(
     screen.getByRole('button', { name: 'Toggle accordion item Resettable settings' })
@@ -293,6 +295,50 @@ describe('GlobalSettingsApp page header', () => {
 
     expect(screen.getByText('Setup')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Global settings' })).toBeInTheDocument()
+  })
+})
+
+describe('GlobalSettingsApp pushed settings notice', () => {
+  test('global settings the central site pushes say so', () => {
+    render(GlobalSettingsApp, {
+      props: { ...data, scope: { type: 'global', managed_by_central_site: true } }
+    })
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'The global settings shown here are pushed by the managing site.'
+    )
+  })
+
+  test('global settings the site keeps itself show no such notice', () => {
+    render(GlobalSettingsApp, { props: data })
+
+    expect(
+      screen.queryByText(/The global settings shown here are pushed by the managing site\./)
+    ).not.toBeInTheDocument()
+  })
+
+  test('a site whose overrides the central site pushes says so', () => {
+    render(GlobalSettingsApp, {
+      props: {
+        ...data,
+        scope: { ...siteScope, managed_by_central_site: true },
+        topics: [siteInheritedTopic]
+      }
+    })
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'The overrides shown here are pushed by the managing site.'
+    )
+  })
+
+  test('a site that keeps its own overrides shows no such notice', () => {
+    render(GlobalSettingsApp, {
+      props: { ...data, scope: siteScope, topics: [siteInheritedTopic] }
+    })
+
+    expect(
+      screen.queryByText(/The overrides shown here are pushed by the managing site\./)
+    ).not.toBeInTheDocument()
   })
 })
 
@@ -803,7 +849,7 @@ describe('GlobalSettingsApp', () => {
     render(GlobalSettingsApp, {
       props: {
         ...data,
-        scope: { type: 'site', site_id: 'remote_1' },
+        scope: siteScope,
         topics: [withSiteValues(data.topics[0]!)]
       }
     })
@@ -829,7 +875,7 @@ describe('GlobalSettingsApp', () => {
 
   test('a site page counts a value modified in the global settings as modified', () => {
     render(GlobalSettingsApp, {
-      props: { ...data, scope: { type: 'site', site_id: 'remote_1' }, topics: [siteInheritedTopic] }
+      props: { ...data, scope: siteScope, topics: [siteInheritedTopic] }
     })
 
     expect(screen.getByText('2 modified')).toBeInTheDocument()
@@ -838,7 +884,7 @@ describe('GlobalSettingsApp', () => {
 
   test('a site page tags the values it overrides itself apart from the modified ones', () => {
     render(GlobalSettingsApp, {
-      props: { ...data, scope: { type: 'site', site_id: 'remote_1' }, topics: [siteMixedTopic] }
+      props: { ...data, scope: siteScope, topics: [siteMixedTopic] }
     })
 
     expect(screen.getByText('2 modified')).toBeInTheDocument()
@@ -902,7 +948,7 @@ describe('GlobalSettingsApp', () => {
       })
     )
     render(GlobalSettingsApp, {
-      props: { ...data, scope: { type: 'site', site_id: 'remote_1' }, topics: [booleanTopic] }
+      props: { ...data, scope: siteScope, topics: [booleanTopic] }
     })
     await userEvent.click(
       screen.getByRole('button', { name: 'Toggle accordion item Distributed monitoring' })
@@ -1320,7 +1366,7 @@ describe('GlobalSettingsApp search', () => {
     test('site overrides only hides everything the site does not override itself', async () => {
       const user = setup({
         ...searchData,
-        scope: { type: 'site', site_id: 'remote_1' },
+        scope: siteScope,
         topics: [siteMixedTopic]
       })
       await filterBy(user, 'Site overrides only')

@@ -23,7 +23,10 @@ from cmk.gui.i18n import _
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.search.matchers import MatchItemGeneratorRegistry
-from cmk.gui.site_config import has_distributed_setup_remote_sites
+from cmk.gui.site_config import (
+    has_distributed_setup_remote_sites,
+    is_distributed_setup_remote_site,
+)
 from cmk.gui.wato import MainModuleTopicGeneral
 from cmk.gui.watolib.config_domain_name import ConfigVariable
 from cmk.gui.watolib.sites import (
@@ -85,6 +88,8 @@ def site_specific_settings(config: Config, site_id: SiteId) -> GlobalSettingsApp
 
 
 def _not_editable_message(sites: SiteConfigurations) -> str:
+    if is_distributed_setup_remote_site(sites):
+        return _("The site-specific settings of other sites are managed on the central site.")
     if not has_distributed_setup_remote_sites(sites):
         return _("You cannot configure site-specific settings in non-distributed setups.")
     return _(

@@ -14,6 +14,7 @@ instead, a few at a time so a wide aggregation does not arrive as a burst.
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
+import CmkTimeRangePicker from 'cmk-ui-library/components/date-time/CmkTimeRangePicker.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
@@ -21,16 +22,15 @@ import { computed, ref } from 'vue'
 import type { DowntimeOptions } from '@/maps/api/commands'
 import { useMapsApis, useStates } from '@/maps/services/context'
 import MapsModal from '@/maps/shared/components/MapsModal.vue'
-import type { MapElement } from '@/maps/types/api'
+import type { CommandTarget, MapElement } from '@/maps/types/api'
 import { flattenAggregationLeaves } from '@/maps/utils/aggregationTree'
 import { objectDisplayName } from '@/maps/utils/dropdownOptions'
 
 import CommandFeedback from './CommandFeedback.vue'
 import { describeGroupCommandError, messageOf } from './commandErrors'
+import { fanOutCommand } from './fanOutCommand'
 import { useCommandSubmit } from './useCommandSubmit'
-
-/** How many of an aggregation's leaves are put into downtime at once. */
-const LEAF_CONCURRENCY = 5
+import { useDowntimeWindow } from './useDowntimeWindow'
 
 const { commands } = useMapsApis()
 const statesStore = useStates()
@@ -44,14 +44,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{ close: [] }>()
 
-function toLocalDatetimeString(date: Date): string {
-  const pad = (value: number) => String(value).padStart(2, '0')
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
-}
-
-const now = new Date()
-const startTime = ref(toLocalDatetimeString(now))
-const endTime = ref(toLocalDatetimeString(new Date(now.getTime() + 3600_000)))
+const { range, isValid: timesValid, asIso } = useDowntimeWindow()
 const comment = ref('')
 
 const displayName = computed(() => objectDisplayName(props.object, _t))
@@ -64,20 +57,8 @@ const groupTypeLabel = computed(() =>
   props.object.type === 'hostgroup' ? _t('host group') : _t('service group')
 )
 
-/** A downtime needs a window: both ends parseable, and the end after the start. */
-const timesValid = computed(() => {
-  const start = Date.parse(startTime.value)
-  const end = Date.parse(endTime.value)
-  return Number.isFinite(start) && Number.isFinite(end) && end > start
-})
-
-interface DowntimeTarget {
-  host: string
-  service: string | null
-}
-
 /** The real hosts and services below an aggregation -- what downtime applies to. */
-function aggregationTargets(): DowntimeTarget[] {
+function aggregationTargets(): CommandTarget[] {
   const tree = statesStore.getState(props.object.id)?.tree
   if (!tree) {
     return []
@@ -86,44 +67,34 @@ function aggregationTargets(): DowntimeTarget[] {
     .filter((leaf) => !!leaf.host_name)
     .map((leaf) => ({
       host: leaf.host_name as string,
-      service: leaf.service_description ?? null
+      service: leaf.service_description ?? null,
+      site: null
     }))
 }
 
 /**
- * Puts every leaf into downtime, a few at a time. One leaf failing does not
- * abort the rest -- the operator wants the window on as much of the
- * aggregation as can take it -- but the count of failures is reported.
+ * Puts every leaf into downtime. One leaf failing does not abort the rest --
+ * the operator wants the window on as much of the aggregation as can take it --
+ * but the count of failures is reported.
  */
 async function downtimeAggregationLeaves(options: DowntimeOptions): Promise<void> {
   const targets = aggregationTargets()
   if (!targets.length) {
     throw new Error(_t('This aggregation has no hosts or services to put into downtime.'))
   }
-  const queue = [...targets]
-  const failed: string[] = []
-  const worker = async (): Promise<void> => {
-    for (let target = queue.shift(); target; target = queue.shift()) {
-      try {
-        if (target.service) {
-          await commands.downtimeService(target.host, target.service, options)
-        } else {
-          await commands.downtimeHost(target.host, options)
-        }
-      } catch (caught) {
-        failed.push(target.service ? `${target.host}/${target.service}` : target.host)
-        console.warn('[Maps] bulk-downtime failed for', target, caught)
-      }
-    }
-  }
-  await Promise.all(
-    Array.from({ length: Math.min(LEAF_CONCURRENCY, queue.length) }, () => worker())
+  const result = await fanOutCommand(
+    targets,
+    (target) =>
+      target.service
+        ? commands.downtimeService(target.host, target.service, options)
+        : commands.downtimeHost(target.host, options),
+    { what: 'downtime' }
   )
-  if (failed.length) {
+  if (result.failed.length) {
     throw new Error(
       _t('%{failed}/%{total} failed to schedule downtime', {
-        failed: failed.length,
-        total: targets.length
+        failed: result.failed.length,
+        total: result.total
       })
     )
   }
@@ -140,8 +111,7 @@ const { submitting, succeeded, error, blocked, submit, reject } = useCommandSubm
     ),
   onDone: () => emit('close'),
   send: async () => {
-    const start = new Date(Date.parse(startTime.value)).toISOString()
-    const end = new Date(Date.parse(endTime.value)).toISOString()
+    const { start, end } = asIso()
     const options: DowntimeOptions = { startTime: start, endTime: end, comment: comment.value }
     if (isAggregation.value) {
       await downtimeAggregationLeaves(options)
@@ -201,13 +171,9 @@ function onSubmit(): void {
     </p>
 
     <div class="maps-downtime-modal__fields">
-      <div>
-        <label class="maps-downtime-modal__label">{{ _t('Start') }}</label>
-        <input v-model="startTime" type="datetime-local" class="maps-downtime-modal__input" />
-      </div>
-      <div>
-        <label class="maps-downtime-modal__label">{{ _t('End') }}</label>
-        <input v-model="endTime" type="datetime-local" class="maps-downtime-modal__input" />
+      <div class="maps-downtime-modal__cmk-field">
+        <CmkLabel>{{ _t('Downtime period') }}</CmkLabel>
+        <CmkTimeRangePicker v-model="range" :label="_t('Downtime period')" />
       </div>
       <div class="maps-downtime-modal__cmk-field">
         <CmkLabel>{{ _t('Comment') }}</CmkLabel>
@@ -261,31 +227,5 @@ function onSubmit(): void {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-2);
-}
-
-.maps-downtime-modal__label {
-  display: block;
-  font-size: var(--font-size-normal);
-  font-weight: 500;
-  color: var(--font-color-dimmed);
-  margin-bottom: var(--dimension-3);
-}
-
-/* A native datetime input, styled to sit with the form controls around it --
-   the design system has no date/time field yet. */
-.maps-downtime-modal__input {
-  width: 100%;
-  padding: var(--dimension-4) var(--dimension-5);
-  background: var(--default-form-element-bg-color);
-  border: 1px solid var(--default-form-element-border-color);
-  border-radius: var(--border-radius);
-  font-size: var(--font-size-large);
-  color: var(--font-color);
-}
-
-.maps-downtime-modal__input:focus {
-  outline: none;
-  border-color: var(--color-corporate-green-50);
-  box-shadow: 0 0 0 2px var(--color-corporate-green-50);
 }
 </style>

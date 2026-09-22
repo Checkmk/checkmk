@@ -3,53 +3,53 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
+<!--
+Acknowledge several problems at once: the contributing leaves of a BI
+aggregation, or the nodes an operator picked on a flow map.
+
+Neither is a Checkmk host or service group, so there is no single command for
+them and each is acknowledged in turn. What they were picked from goes into the
+comment, so the audit log traces every entry back to where it was asked for.
+-->
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
-import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
-import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
+import { onMounted, ref } from 'vue'
 
 import type { AcknowledgeOptions } from '@/maps/api/commands'
 import { useMapsApis } from '@/maps/services/context'
 import MapsModal from '@/maps/shared/components/MapsModal.vue'
-import type { BulkAckTarget } from '@/maps/types/api'
+import type { CommandTarget } from '@/maps/types/api'
 
 import CommandFeedback from './CommandFeedback.vue'
+import CommandTargetList from './CommandTargetList.vue'
+import { useBulkCommandSubmit } from './useBulkCommandSubmit'
 
 const { commands } = useMapsApis()
 
 const props = defineProps<{
-  /** Aggregation that originated the bulk-ack — embedded in the comment
-   * trailer so audit logs show "Bulk-ack: <agg> — <user comment>". */
-  aggregationId: string
-  targets: BulkAckTarget[]
-  checkmkUrl: string
+  /**
+   * What the operator picked these from — an aggregation, a map. It rides along
+   * in the comment, so the audit log says where the acknowledgement came from.
+   */
+  origin: string
+  targets: CommandTarget[]
+  /** How many were picked but have no problem to acknowledge, and are left out. */
+  skipped?: number
 }>()
 
-const emit = defineEmits<{ close: [] }>()
+// Whether the operator's selection was actually commanded: the caller keeps it
+// intact when it was not, so a cancelled dialog does not cost them the picking.
+const emit = defineEmits<{ close: [sent: boolean] }>()
 
 const { _t } = usei18n()
-const comment = ref(`Bulk-ack: ${props.aggregationId}`)
+const comment = ref(`Bulk-ack: ${props.origin}`)
 const sticky = ref(true)
 const notify = ref(true)
 const persistent = ref(false)
-const submitting = ref(false)
-const progress = ref(0)
-const successCount = ref(0)
-const error = ref<TranslatedString>(untranslated(''))
 const commentEl = ref<HTMLInputElement | null>(null)
-// True during the ~1.2s window between a fully successful run and auto-close, so
-// a second click can't re-run the whole fan-out (a partial failure keeps the
-// modal open with closing=false, leaving a retry possible).
-const closing = ref(false)
-let closeTimer: number | null = null
-onBeforeUnmount(() => {
-  if (closeTimer !== null) {
-    window.clearTimeout(closeTimer)
-  }
-})
 
 function options(): AcknowledgeOptions {
   return {
@@ -62,57 +62,19 @@ function options(): AcknowledgeOptions {
 
 onMounted(() => commentEl.value?.focus())
 
-async function submit() {
-  if (!comment.value.trim() || submitting.value || closing.value) {
-    return
-  }
-  submitting.value = true
-  error.value = untranslated('')
-  progress.value = 0
-  successCount.value = 0
-  const failures: string[] = []
+const { submitting, progress, succeeded, pending, error, blocked, submit } = useBulkCommandSubmit({
+  what: 'bulk-ack',
+  targets: () => props.targets,
+  onDone: () => emit('close', true),
+  send: (target) =>
+    target.service
+      ? commands.acknowledgeService(target.host, target.service, options())
+      : commands.acknowledgeHost(target.host, options())
+})
 
-  // Bounded parallelism: each leaf hits the same Checkmk site so we cap
-  // concurrency to keep the GUI responsive without queueing up many
-  // simultaneous COMMAND-pipe writes (livestatus serialises them
-  // anyway). Five matches CMK's own bulk-action UI default.
-  const CONCURRENCY = 5
-  const queue = [...props.targets]
-  const ackOne = async (tgt: BulkAckTarget): Promise<void> => {
-    try {
-      if (tgt.service) {
-        await commands.acknowledgeService(tgt.host, tgt.service, options())
-      } else {
-        await commands.acknowledgeHost(tgt.host, options())
-      }
-      successCount.value += 1
-    } catch (e) {
-      failures.push(tgt.service ? `${tgt.host}/${tgt.service}` : tgt.host)
-      console.warn('[Maps] bulk-ack failed for', tgt, e)
-    } finally {
-      progress.value += 1
-    }
-  }
-  const workers = Array.from({ length: Math.min(CONCURRENCY, queue.length) }, async () => {
-    for (;;) {
-      const next = queue.shift()
-      if (!next) {
-        return
-      }
-      await ackOne(next)
-    }
-  })
-  await Promise.all(workers)
-  submitting.value = false
-  if (failures.length) {
-    error.value = _t('%{failed} of %{total} failed: %{sample}', {
-      failed: failures.length,
-      total: props.targets.length,
-      sample: failures.slice(0, 3).join(', ')
-    })
-  } else {
-    closing.value = true
-    closeTimer = window.setTimeout(() => emit('close'), 1200)
+function onSubmit(): void {
+  if (comment.value.trim()) {
+    void submit()
   }
 }
 </script>
@@ -120,32 +82,19 @@ async function submit() {
 <template>
   <MapsModal
     :open="true"
-    :title="_t('Acknowledge contributing leaves')"
+    :title="_t('Acknowledge several problems')"
     closable
-    @close="$emit('close')"
+    @close="emit('close', succeeded > 0)"
   >
     <p class="maps-bulk-ack-modal__subtitle">
-      {{
-        _t('%{count} leaves from aggregation "%{aggregation}"', {
-          aggregation: aggregationId,
-          count: targets.length
-        })
-      }}
+      {{ _t('%{count} from "%{origin}"', { origin, count: targets.length }) }}
     </p>
 
-    <ul class="maps-bulk-ack-modal__list">
-      <li
-        v-for="target in targets"
-        :key="`${target.host};${target.service ?? ''}`"
-        class="maps-bulk-ack-modal__item"
-        :title="target.service ? `${target.host} / ${target.service}` : target.host"
-      >
-        {{ target.host
-        }}<span v-if="target.service" class="maps-bulk-ack-modal__service">
-          / {{ target.service }}</span
-        >
-      </li>
-    </ul>
+    <p v-if="skipped" class="maps-bulk-ack-modal__skipped">
+      {{ _t('%{count} without a problem left out', { count: skipped }) }}
+    </p>
+
+    <CommandTargetList :targets="targets" />
 
     <div class="maps-bulk-ack-modal__fields">
       <div>
@@ -164,26 +113,22 @@ async function submit() {
 
     <CommandFeedback
       :error="error"
-      :succeeded="successCount > 0"
-      :succeeded-text="_t('%{count} leaves acknowledged', { count: successCount })"
+      :succeeded="succeeded > 0"
+      :succeeded-text="_t('%{count} acknowledged', { count: succeeded })"
     />
 
     <template #footer>
-      <CmkButton variant="secondary" @click="$emit('close')">
+      <CmkButton variant="secondary" @click="emit('close', succeeded > 0)">
         {{ _t('Cancel') }}
       </CmkButton>
-      <CmkButton
-        variant="primary"
-        :disabled="submitting || closing || !comment.trim()"
-        @click="submit"
-      >
+      <CmkButton variant="primary" :disabled="blocked || !comment.trim()" @click="onSubmit">
         {{
           submitting
             ? _t('Acknowledging %{current}/%{total}…', {
                 current: progress,
-                total: targets.length
+                total: pending
               })
-            : _t('Acknowledge %{count} leaves', { count: targets.length })
+            : _t('Acknowledge %{count}', { count: pending })
         }}
       </CmkButton>
     </template>
@@ -192,37 +137,15 @@ async function submit() {
 
 <style scoped>
 .maps-bulk-ack-modal__subtitle {
-  font-size: var(--font-size-normal);
-  color: var(--font-color-dimmed);
   margin: calc(-1 * var(--dimension-4)) 0 var(--dimension-5);
-}
-
-.maps-bulk-ack-modal__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  max-height: 160px;
-  overflow-y: auto;
-  border: 1px solid var(--default-border-color);
-  border-radius: var(--border-radius);
+  color: var(--font-color-dimmed);
   font-size: var(--font-size-normal);
 }
 
-.maps-bulk-ack-modal__item {
-  padding: var(--dimension-3) var(--dimension-5);
-  font-family: monospace;
-  color: var(--font-color);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.maps-bulk-ack-modal__list > .maps-bulk-ack-modal__item + .maps-bulk-ack-modal__item {
-  border-top: 1px solid var(--default-border-color);
-}
-
-.maps-bulk-ack-modal__service {
+.maps-bulk-ack-modal__skipped {
+  margin: 0 0 var(--dimension-4);
   color: var(--font-color-dimmed);
+  font-size: var(--font-size-normal);
 }
 
 .maps-bulk-ack-modal__fields {
@@ -234,9 +157,9 @@ async function submit() {
 
 .maps-bulk-ack-modal__label {
   display: block;
+  margin-bottom: var(--dimension-3);
+  color: var(--font-color-dimmed);
   font-size: var(--font-size-normal);
   font-weight: 500;
-  color: var(--font-color-dimmed);
-  margin-bottom: var(--dimension-3);
 }
 </style>

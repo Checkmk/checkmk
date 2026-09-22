@@ -26,7 +26,7 @@ import type { CommandVerb } from '@/maps/api/ticket'
 import { useMetricInfo } from '@/maps/map/composables/useMetricInfo'
 import { metricTitlesOf, metricUnitsOf } from '@/maps/map/composables/useMetricUnits'
 import { useAuth } from '@/maps/services/context'
-import type { BulkAckTarget, MapElement, ObjectState } from '@/maps/types/api'
+import type { CommandTarget, MapElement, ObjectState } from '@/maps/types/api'
 import { objectTypeLabel } from '@/maps/utils/dropdownOptions'
 import { buildCheckmkUrl, stripCheckmkBase, summarySubject } from '@/maps/utils/mapNavigation'
 import { getEffectiveObjectType, getMapElementName } from '@/maps/utils/naming'
@@ -92,7 +92,7 @@ const emit = defineEmits<{
     seed?: Omit<ObjectState, 'object_id'> | null
   ]
   /** Acknowledge the real hosts/services contributing to an aggregation. */
-  'bulk-acknowledge': [targets: BulkAckTarget[]]
+  'bulk-acknowledge': [targets: CommandTarget[]]
 }>()
 
 const { _t } = usei18n()

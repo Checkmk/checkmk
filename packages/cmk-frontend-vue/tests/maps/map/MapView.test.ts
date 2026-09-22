@@ -30,20 +30,22 @@ class FakeEventSource {
   }
 }
 
-// The map type's own view is the observable output of the dispatch under test:
-// a recognisable stub says which one got drawn. The chrome around it is
-// irrelevant here and auto-stubbed away -- including the editing surfaces,
-// which teleport to the app root the test page does not have.
+// The per-type renderers are the observable output of the dispatch under test:
+// each gets a recognisable stub so a test can assert exactly one is mounted. The
+// overlay/modal children are irrelevant to dispatch and auto-stubbed away.
+const rendererStub = (testid: string) => ({ template: `<div data-testid="${testid}" />` })
 const stubs = {
   // Keyed by the tag the view uses: the per-type views are async components, so
   // there is no component name to stub them by.
-  MapCanvas: { template: `<div data-testid="renderer-static" />` },
-  'world-map-view': { template: `<div data-testid="renderer-worldmap" />` },
+  'world-map-view': rendererStub('renderer-worldmap'),
+  'flow-map-view': rendererStub('renderer-flow'),
+  MapCanvas: rendererStub('renderer-static'),
   MapSearch: true,
   ProblemsOnlyToggle: true,
   DetailDrawer: true,
   MapsLink: true,
   CmkLoading: true,
+  CmkButton: true,
   teleport: true
 }
 
@@ -76,17 +78,17 @@ function renderMap() {
   })
 }
 
-beforeEach(() => {
-  vi.clearAllMocks()
-  services = fakeMapsServices()
-  vi.stubGlobal('EventSource', FakeEventSource)
-  // Point navigation at a map so the shell fetches and renders one.
-  services.nav.replace({ view: 'map', name: 'map1' })
-})
+const allRendererTestIds = ['renderer-worldmap', 'renderer-flow', 'renderer-static']
 
-afterEach(() => {
-  vi.unstubAllGlobals()
-})
+// Assert the named renderer is the only one on screen.
+async function expectOnlyRenderer(testid: string) {
+  await waitFor(() => expect(screen.getByTestId(testid)).toBeInTheDocument())
+  for (const other of allRendererTestIds) {
+    if (other !== testid) {
+      expect(screen.queryByTestId(other)).toBeNull()
+    }
+  }
+}
 
 // The static map is the one view this file lets render for real: the others are
 // stubbed at their tag, but the error placeholder and the "map not found" state
@@ -97,22 +99,39 @@ beforeAll(async () => {
 })
 
 describe('MapView – map-type dispatch', () => {
-  it('draws the canvas for a static view', async () => {
-    opensMap(newMapView('static'))
-    renderMap()
-    await waitFor(() => expect(screen.getByTestId('renderer-static')).toBeInTheDocument())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    services = fakeMapsServices()
+    vi.stubGlobal('EventSource', FakeEventSource)
+    // Point navigation at a map so the shell fetches and renders one.
+    services.nav.replace({ view: 'map', name: 'map1' })
   })
 
-  it('draws the geo map for a worldmap view', async () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('renders the static MapCanvas for a static view', async () => {
+    opensMap(newMapView('static'))
+    renderMap()
+    await expectOnlyRenderer('renderer-static')
+  })
+
+  it('renders the WorldMapView for a worldmap view', async () => {
     opensMap(newMapView('worldmap'))
     renderMap()
-    await waitFor(() => expect(screen.getByTestId('renderer-worldmap')).toBeInTheDocument())
-    expect(screen.queryByTestId('renderer-static')).toBeNull()
+    await expectOnlyRenderer('renderer-worldmap')
+  })
+
+  it('renders the FlowMapView for a flow view', async () => {
+    opensMap(newMapView('flow'))
+    renderMap()
+    await expectOnlyRenderer('renderer-flow')
   })
 
   // The remaining map types draw themselves, and each arrives with its own
   // commit; until then the map area says so rather than drawing them wrong.
-  it.each(['radar', 'foldertree', 'flow', 'presentation'])(
+  it.each(['radar', 'foldertree', 'presentation'])(
     'stands in for a %s view it cannot draw yet',
     async (mapType) => {
       opensMap(newMapView(mapType))
@@ -120,14 +139,33 @@ describe('MapView – map-type dispatch', () => {
       await waitFor(() =>
         expect(screen.getByText('This map type cannot be shown yet')).toBeInTheDocument()
       )
-      expect(screen.queryByTestId('renderer-static')).toBeNull()
-      expect(screen.queryByTestId('renderer-worldmap')).toBeNull()
+      for (const testid of allRendererTestIds) {
+        expect(screen.queryByTestId(testid)).toBeNull()
+      }
     }
   )
+
+  it('dispatches on the view type alone, connection or not', async () => {
+    // What a flow map without a connection says is its own view's business.
+    opensMap(newMapView('flow'), { connection_id: '' })
+    renderMap()
+    await expectOnlyRenderer('renderer-flow')
+  })
 })
 
 describe('MapView – loading / error / read-only states', () => {
-  it('shows the loading spinner and no canvas while the map fetch is in flight', async () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    services = fakeMapsServices()
+    vi.stubGlobal('EventSource', FakeEventSource)
+    services.nav.replace({ view: 'map', name: 'map1' })
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('shows the loading spinner and no renderer while the map fetch is in flight', async () => {
     // A fetch that never settles keeps the store's loading flag set.
     vi.mocked(services.apis.mapConfig.get).mockReturnValue(new Promise<SignedMap>(() => {}))
     renderMap()

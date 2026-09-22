@@ -4,11 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <!--
-Zoom and fit for a geo map.
+Zoom and fit, for a map the operator can move around in.
 
-The map's own controls rather than Leaflet's: Leaflet draws its controls white
+The map's own controls rather than the drawing library's: those come out white
 whatever the theme, which left the glyphs on them invisible in Checkmk's own
-colours, and the "fit all objects" button had no place in them anyway.
+colours, and the "fit all objects" button had no place in them anyway. Every
+such map gets the same three in the same corner.
 -->
 <script setup lang="ts">
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
@@ -16,7 +17,7 @@ import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 const { _t } = usei18n()
 
 defineProps<{
-  /** Whether any object has a place on the map to fit the viewport to. */
+  /** Whether there is anything on the map to fit the viewport to. */
   canFit: boolean
 }>()
 
@@ -24,10 +25,10 @@ defineEmits<{ 'zoom-in': []; 'zoom-out': []; fit: [] }>()
 </script>
 
 <template>
-  <div class="maps-world-map-controls">
+  <div class="maps-map-zoom-controls">
     <button
       type="button"
-      class="maps-world-map-controls__button"
+      class="maps-map-zoom-controls__button"
       :title="_t('Zoom in')"
       :aria-label="_t('Zoom in')"
       @click="$emit('zoom-in')"
@@ -36,7 +37,7 @@ defineEmits<{ 'zoom-in': []; 'zoom-out': []; fit: [] }>()
     </button>
     <button
       type="button"
-      class="maps-world-map-controls__button"
+      class="maps-map-zoom-controls__button"
       :title="_t('Zoom out')"
       :aria-label="_t('Zoom out')"
       @click="$emit('zoom-out')"
@@ -46,13 +47,13 @@ defineEmits<{ 'zoom-in': []; 'zoom-out': []; fit: [] }>()
     <button
       v-if="canFit"
       type="button"
-      class="maps-world-map-controls__button"
+      class="maps-map-zoom-controls__button"
       :title="_t('Fit all objects')"
       :aria-label="_t('Fit all objects')"
       @click="$emit('fit')"
     >
       <svg
-        class="maps-world-map-controls__icon"
+        class="maps-map-zoom-controls__icon"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -69,7 +70,7 @@ defineEmits<{ 'zoom-in': []; 'zoom-out': []; fit: [] }>()
 </template>
 
 <style scoped>
-.maps-world-map-controls {
+.maps-map-zoom-controls {
   position: absolute;
   top: var(--dimension-5);
   left: var(--dimension-5);
@@ -84,7 +85,7 @@ defineEmits<{ 'zoom-in': []; 'zoom-out': []; fit: [] }>()
   box-shadow: var(--maps-map-view-badge-shadow);
 }
 
-.maps-world-map-controls__button {
+.maps-map-zoom-controls__button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -101,15 +102,15 @@ defineEmits<{ 'zoom-in': []; 'zoom-out': []; fit: [] }>()
   backdrop-filter: blur(6px);
 }
 
-.maps-world-map-controls__button + .maps-world-map-controls__button {
+.maps-map-zoom-controls__button + .maps-map-zoom-controls__button {
   border-top: 1px solid var(--default-border-color);
 }
 
-.maps-world-map-controls__button:hover {
+.maps-map-zoom-controls__button:hover {
   color: var(--color-corporate-green-50);
 }
 
-.maps-world-map-controls__icon {
+.maps-map-zoom-controls__icon {
   width: var(--dimension-5);
   height: var(--dimension-5);
 }

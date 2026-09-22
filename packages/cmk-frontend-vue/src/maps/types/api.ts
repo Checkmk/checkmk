@@ -115,12 +115,15 @@ export type FolderHostService = Daemon['FolderHostService']
 export type FolderServiceMatch = Daemon['FolderServiceMatch']
 export type FolderServiceSearchResult = Daemon['FolderServiceSearchResult']
 
-// Bulk-ack target shape shared by DetailDrawer (emits) → MapView
-// (handler) → BulkAckModal (props). One declaration so a future field
-// (e.g. site_id for federated targets) lands in one place.
-export interface BulkAckTarget {
+// What a monitoring command is sent about, when it is sent about several
+// things at once: the leaves of an aggregation, or the nodes an operator picked
+// on a flow map. One declaration so a future field (a site id, for federated
+// targets) lands in one place.
+export interface CommandTarget {
   host: string
   service: string | null
+  /** Which site to send it to, where that is known. Federated setups need it. */
+  site: string | null
 }
 
 export type HostState = 'UP' | 'DOWN' | 'UNREACHABLE' | 'PENDING'

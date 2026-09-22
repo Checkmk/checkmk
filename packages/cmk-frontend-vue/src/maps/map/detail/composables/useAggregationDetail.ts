@@ -8,7 +8,7 @@ import { computed, ref, watch } from 'vue'
 
 import type { SummaryChip } from '@/maps/map/detail/composables/useSummaryChips'
 import { useMapsApis } from '@/maps/services/context'
-import type { AggregationNode, BulkAckTarget, MapElement, ObjectState } from '@/maps/types/api'
+import type { AggregationNode, CommandTarget, MapElement, ObjectState } from '@/maps/types/api'
 import {
   BI_STATE_FULL_LABEL,
   BI_STATE_LABEL as BI_STATE_LABEL_MAP,
@@ -115,7 +115,7 @@ interface AggregationDetailOptions {
     service: string | null,
     seed: Omit<ObjectState, 'object_id'> | null
   ) => void
-  onBulkAcknowledge: (targets: BulkAckTarget[]) => void
+  onBulkAcknowledge: (targets: CommandTarget[]) => void
 }
 
 /**
@@ -311,9 +311,12 @@ export function useAggregationDetail(options: AggregationDetailOptions) {
       return
     }
     onBulkAcknowledge(
+      // A BI leaf names a host and a service, and nothing about where they
+      // are monitored, so the command goes to whichever site answers for them.
       aggregationProblemLeaves.value.map((l) => ({
         host: l.hostName as string,
-        service: l.serviceDescription ?? null
+        service: l.serviceDescription ?? null,
+        site: null
       }))
     )
   }

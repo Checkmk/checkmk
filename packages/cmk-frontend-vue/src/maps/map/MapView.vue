@@ -15,8 +15,8 @@ lifecycle is keyed on the name (``useMapLifecycle``) and not on mount.
 This is also where the map's own design values are declared, on the view root,
 so every painter below inherits one set of them.
 
-Static and geo maps are drawn so far; the other map types arrive in the commits
-that follow this one.
+Static, geo and flow maps are drawn so far; the other map types arrive in the
+commits that follow this one.
 -->
 <script setup lang="ts">
 import CmkBreadcrumb, { type BreadcrumbItem } from 'cmk-ui-library/components/CmkBreadcrumb'
@@ -32,14 +32,12 @@ import {
   watch
 } from 'vue'
 
-import AckModal from '@/maps/map/commands/AckModal.vue'
 import BulkAckModal from '@/maps/map/commands/BulkAckModal.vue'
-import CommentModal from '@/maps/map/commands/CommentModal.vue'
-import DowntimeModal from '@/maps/map/commands/DowntimeModal.vue'
-import RemoveDowntimeModal from '@/maps/map/commands/RemoveDowntimeModal.vue'
+import ObjectCommandModals from '@/maps/map/commands/ObjectCommandModals.vue'
 import { useObjectActions } from '@/maps/map/commands/useObjectActions'
 import MapKioskExit from '@/maps/map/components/MapKioskExit.vue'
 import MapPlaceholder from '@/maps/map/components/MapPlaceholder.vue'
+import MapProblemsPill, { type ProblemCounts } from '@/maps/map/components/MapProblemsPill.vue'
 import MapViewTopbar from '@/maps/map/components/MapViewTopbar.vue'
 import { useMapEditor } from '@/maps/map/composables/useMapEditor'
 import { useMapFullscreen } from '@/maps/map/composables/useMapFullscreen'
@@ -71,16 +69,17 @@ import {
 } from '@/maps/services/context'
 import MapsConfirmDialog from '@/maps/shared/components/MapsConfirmDialog.vue'
 import { errorText } from '@/maps/shared/errorText'
-import type { BulkAckTarget, MapElement, MapRead, ObjectState } from '@/maps/types/api'
+import type { CommandTarget, MapElement, MapRead, ObjectState } from '@/maps/types/api'
+import type { AnchorRect } from '@/maps/utils/anchorRect'
 import { resolveCheckmkUrl } from '@/maps/utils/deploymentBase'
-import { objectDisplayName, objectTypeLabel } from '@/maps/utils/dropdownOptions'
+import { objectDeleteTitle, objectDisplayName } from '@/maps/utils/dropdownOptions'
 import { buildCheckmkUrl, openUrl } from '@/maps/utils/mapNavigation'
 import { newMapElement } from '@/maps/utils/model'
-import { getEffectiveObjectType, getMapElementIdentifier } from '@/maps/utils/naming'
 
-// Lazy, one chunk per map type: leaflet rides with the geo map, so opening a
-// static map does not download it. The type import beside it is erased at
-// build, so it pulls nothing in.
+// Lazy, one chunk per map type: leaflet rides with the geo map and d3 with the
+// flow map, so opening a static map downloads neither. The type imports beside
+// them are erased at build, so they pull nothing in.
+const flowMapView = defineAsyncComponent(() => import('@/maps/map/flow/FlowMapView.vue'))
 const staticMapView = defineAsyncComponent(() => import('@/maps/map/static/StaticMapView.vue'))
 const worldMapView = defineAsyncComponent(() => import('@/maps/map/worldmap/WorldMapView.vue'))
 
@@ -101,22 +100,12 @@ const isPreview = computed(() => nav.state.preview)
 const { openKioskInNewTab, exitFullscreen } = useMapFullscreen(mapName, isKiosk)
 
 const mapConfig = computed(() => mapsStore.currentMap.value)
-
 // Whether the current user may edit *this* map: the per-map pagetype
 // capability the backend stamps on the map-list entry (built-ins and
-// unauthorized foreign maps are read-only -- admin rights ride in via the
+// unauthorized foreign maps are read-only — admin rights ride in via the
 // "edit foreign maps" permission, not via configure/admin status).
 const mapListEntry = computed(() => mapsStore.maps.value.find((b) => b.name === mapName.value))
 const canEdit = computed(() => mapListEntry.value?.can_edit === true)
-
-// Every other map type draws itself; until its own commit lands, saying so
-// beats rendering it as something it is not.
-const isStatic = computed(() => (mapConfig.value?.view.type ?? 'static') === 'static')
-
-// Several hosts at one place can be merged into a single icon, which is a
-// geo-map affordance: on a hand-arranged map the operator moves them apart.
-const isWorldmap = computed(() => mapConfig.value?.view.type === 'worldmap')
-
 /**
  * The open map as the settings form wants it: the daemon config, plus the
  * envelope only the map-list entry carries — ownership, sharing and the right
@@ -142,16 +131,17 @@ const mapConfigAsRead = computed<MapRead | null>(() => {
     object_count: objects.length
   }
 })
+// Every map type not drawn yet says so; until its own commit lands, that beats
+// rendering it as something it is not.
+const isStatic = computed(() => (mapConfig.value?.view.type ?? 'static') === 'static')
+const isWorldmap = computed(() => mapConfig.value?.view.type === 'worldmap')
+const isFlowmap = computed(() => mapConfig.value?.view.type === 'flow')
 
-// Top-right search bar over the map's objects. Reset on a map switch, so a
-// needle typed on the previous map does not hide the new one's objects.
+// The map's search, wherever the map type offers one.
 const mapFilterNeedle = ref('')
 watch(mapName, () => {
   mapFilterNeedle.value = ''
 })
-
-const { problemsOnly } = useMapViewState()
-
 const isLoading = computed(
   () => mapsStore.loading.value || (statesStore.initialLoad.value && !mapsStore.error.value)
 )
@@ -176,38 +166,6 @@ const root = useTemplateRef<HTMLElement>('root')
 provideMapPalette(root)
 
 const worldmapViewRef = useTemplateRef<InstanceType<typeof WorldMapViewType>>('worldMapViewRef')
-
-// ---- Editing: the tools over the map, and the surfaces they open ----
-
-type AnchorRect = { left: number; top: number; right: number; bottom: number }
-
-const propsModalObject = ref<MapElement | null>(null)
-/**
- * The box the properties card sits beside, or ``null`` when it was reached
- * from somewhere with nothing to sit next to and opens as a centered dialog.
- *
- * It stays live rather than being snapshotted at open time:
- * ``selectedObjectAnchor`` follows the object as the canvas re-lays out under
- * the open card (a window resize moves every object), and a stale box would
- * place the card beside where the object used to be. The box the card was
- * opened on carries a frame in which the object is momentarily unmeasurable,
- * so the card never flips to a centered dialog under the operator.
- */
-const openedOnAnchor = ref<AnchorRect | null>(null)
-const propsModalAnchor = computed<AnchorRect | null>(() =>
-  openedOnAnchor.value ? (selectedObjectAnchor.value ?? openedOnAnchor.value) : null
-)
-const deleteTargetObject = ref<MapElement | null>(null)
-const bulkDeleteOpen = ref(false)
-const bundleDialogOpen = ref(false)
-const showSettings = ref(false)
-
-const selectedObject = computed<MapElement | null>(() => {
-  if (!editor.selectedObjectId.value || !mapConfig.value) {
-    return null
-  }
-  return mapConfig.value.objects.find((o) => o.id === editor.selectedObjectId.value) ?? null
-})
 
 // Which element the action bar hangs off. The selection is an id -- it is made
 // by click, by marquee, by keyboard and by placing a new object -- so the node
@@ -248,6 +206,31 @@ const actionBarStyle = computed(() => {
   }
 })
 
+// The editing controls are for whoever may change *this* map, and only while
+// the view is not doing something else: a kiosk screen, a live preview, or
+// triage in the detail drawer. A flow map derives its content, so there is
+// nothing on it to arrange.
+const showsEditTools = computed(
+  () =>
+    canEdit.value &&
+    !isKiosk.value &&
+    !isPreview.value &&
+    !!mapConfig.value &&
+    !mapConfig.value.readonly &&
+    (isStatic.value || isWorldmap.value) &&
+    !drawerObject.value
+)
+
+// The toolbar belongs to a settled selection: not behind the properties card
+// it opens, and not while another object is being placed.
+const showsActionBar = computed(
+  () =>
+    editor.editMode.value &&
+    !!editor.selectedObjectId.value &&
+    !propsModalObject.value &&
+    !editor.draft.type
+)
+
 // The edit tools keep their place under an open dialog, but not the keyboard:
 // every one of these covers the map with a backdrop, so a key pressed in one
 // belongs to it and not to the object behind it.
@@ -273,47 +256,25 @@ const selectedObjectAnchor = computed<AnchorRect | null>(() => {
   }
 })
 
-// The editing controls are for whoever may change *this* map, and only while
-// the view is not doing something else: a kiosk screen, a live preview, or
-// triage in the detail drawer.
-const showsEditTools = computed(
-  () =>
-    canEdit.value &&
-    !isKiosk.value &&
-    !isPreview.value &&
-    !!mapConfig.value &&
-    !mapConfig.value.readonly &&
-    (isStatic.value || isWorldmap.value) &&
-    !detailDrawerObject.value
-)
+const propsModalObject = ref<MapElement | null>(null)
 
-// The toolbar belongs to a settled selection: not behind the properties card
-// it opens, and not while another object is being placed.
-const showsActionBar = computed(
-  () =>
-    editor.editMode.value &&
-    !!editor.selectedObjectId.value &&
-    !propsModalObject.value &&
-    !editor.draft.type
+/**
+ * The box the properties card sits beside, or ``null`` when it was reached
+ * from somewhere with nothing to sit next to and opens as a centered dialog.
+ *
+ * It stays live rather than being snapshotted at open time:
+ * ``selectedObjectAnchor`` follows the object as the canvas re-lays out under
+ * the open card (a window resize moves every object), and a stale box would
+ * place the card beside where the object used to be. The box the card was
+ * opened on carries a frame in which the object is momentarily unmeasurable,
+ * so the card never flips to a centered dialog under the operator.
+ */
+const openedOnAnchor = ref<AnchorRect | null>(null)
+const propsModalAnchor = computed<AnchorRect | null>(() =>
+  openedOnAnchor.value ? (selectedObjectAnchor.value ?? openedOnAnchor.value) : null
 )
-
-const selectedHostCount = computed(() => {
-  const ids = new Set(editor.selectedIds.value)
-  return (mapConfig.value?.objects ?? []).filter(
-    (o) =>
-      ids.has(o.id) &&
-      o.type === 'host' &&
-      o.host_name &&
-      o.lat !== null &&
-      o.lat !== undefined &&
-      o.lng !== null &&
-      o.lng !== undefined
-  ).length
-})
-const canBundle = computed(() => isWorldmap.value && selectedHostCount.value >= 2)
-const selectedIsBundle = computed(
-  () => editor.selectedCount.value <= 1 && !!selectedObject.value?.bundle_kind
-)
+const deleteTargetObject = ref<MapElement | null>(null)
+const bulkDeleteOpen = ref(false)
 
 /** One place for what the selected object's toolbar can trigger. */
 function onObjectAction(action: MapObjectAction): void {
@@ -349,9 +310,24 @@ function onObjectAction(action: MapObjectAction): void {
   }
 }
 
-function onToggleEditMode() {
-  editor.toggleEditMode()
+/** Deleting several objects at once is confirmed as a group, not one by one. */
+function deleteSelection() {
+  if (editor.selectedCount.value > 1) {
+    bulkDeleteOpen.value = true
+  } else {
+    deleteTargetObject.value = selectedObject.value
+  }
 }
+
+async function confirmBulkDelete() {
+  bulkDeleteOpen.value = false
+  await editor.deleteAllSelected()
+}
+
+const deleteDialogTitle = computed(() => {
+  const obj = deleteTargetObject.value
+  return obj ? objectDeleteTitle(obj, _t) : _t('Delete object')
+})
 
 function openPropsModal(obj: MapElement, anchor?: AnchorRect | null) {
   editor.selectObject(obj.id)
@@ -414,7 +390,7 @@ async function onPropsModalSave(updates: Record<string, unknown>) {
     toast.error(errorText(e, _t('Save failed')))
   } finally {
     // Always close the modal so its local "saving" state resets even if
-    // the backend rejected the update -- otherwise the Save button stays
+    // the backend rejected the update — otherwise the Save button stays
     // stuck on "Saving…" with no feedback.
     _closePropsModal()
   }
@@ -447,17 +423,12 @@ function onPropsModalDetach() {
   }
 }
 
-function onObjectDelete(obj: MapElement) {
-  deleteTargetObject.value = obj
+function onToggleEditMode() {
+  editor.toggleEditMode()
 }
 
-/** Deleting several objects at once is confirmed as a group, not one by one. */
-function deleteSelection() {
-  if (editor.selectedCount.value > 1) {
-    bulkDeleteOpen.value = true
-  } else {
-    deleteTargetObject.value = selectedObject.value
-  }
+function onObjectDelete(obj: MapElement) {
+  deleteTargetObject.value = obj
 }
 
 async function confirmObjectDelete() {
@@ -468,88 +439,38 @@ async function confirmObjectDelete() {
   }
 }
 
-async function confirmBulkDelete() {
-  bulkDeleteOpen.value = false
-  await editor.deleteAllSelected()
-}
-
-const deleteDialogTitle = computed(() => {
-  const obj = deleteTargetObject.value
-  if (!obj) {
-    return _t('Delete object')
+const selectedObject = computed<MapElement | null>(() => {
+  if (!editor.selectedObjectId.value || !mapConfig.value) {
+    return null
   }
-  // The bound object decides what a line or a graph is called, then the table
-  // turns that into something worth reading in a dialog.
-  const type = objectTypeLabel(getEffectiveObjectType(obj), _t)
-  const name = obj.label?.text || getMapElementIdentifier(obj)
-  if (!name || name === obj.id) {
-    return _t('Delete %{type}?', { type })
-  }
-  return _t('Delete %{type} "%{name}"?', { type, name })
+  return mapConfig.value.objects.find((o) => o.id === editor.selectedObjectId.value) ?? null
 })
 
+const selectedHostCount = computed(() => {
+  const ids = new Set(editor.selectedIds.value)
+  return (mapConfig.value?.objects ?? []).filter(
+    (o) =>
+      ids.has(o.id) &&
+      o.type === 'host' &&
+      o.host_name &&
+      o.lat !== null &&
+      o.lat !== undefined &&
+      o.lng !== null &&
+      o.lng !== undefined
+  ).length
+})
+const canBundle = computed(() => isWorldmap.value && selectedHostCount.value >= 2)
+const selectedIsBundle = computed(
+  () => editor.selectedCount.value <= 1 && !!selectedObject.value?.bundle_kind
+)
+
+const bundleDialogOpen = ref(false)
 function onBundleConfirm(payload: { name: string; kind: 'static' | 'location' }) {
   bundleDialogOpen.value = false
   void editor.bundleSelected(payload.name, payload.kind)
 }
 
-/**
- * A host dropped onto a geo map goes where the host is, if monitoring knows:
- * asking the operator to find a site on the globe by hand would be absurd.
- */
-async function onStartPlacing() {
-  const draft = editor.draft
-  if (isWorldmap.value && mapConfig.value?.connection_id && draft.host_name) {
-    try {
-      const geo = await objects.fetchHostGeo(draft.host_name)
-      if (geo) {
-        editor.startPlacing()
-        await editor.placeAtLatLng(geo.lat, geo.lng)
-        onObjectPlaced()
-        return
-      }
-    } catch {
-      // Geo lookup failed (host unknown to the site, or the connection is
-      // down); fall through to plain placing so the object can still be
-      // dropped by hand.
-    }
-  }
-  editor.startPlacing()
-}
-const settingsWorldmapView = ref<WorldmapViewport | null>(null)
-// The geo map's own size, so the settings preview can mirror what it shows.
-const settingsParentMapSize = ref<{ width: number; height: number } | null>(null)
-
-// The picker runs on the map itself: the geo map's view shows the banner and
-// answers with the viewport the operator arrived at.
-async function onSettingsPickWorldmapView(done: (at: WorldmapViewport | null) => void) {
-  done((await worldmapViewRef.value?.pickViewport()) ?? null)
-}
-
-function onSettingsWorldmapViewChange(at: WorldmapViewport) {
-  worldmapViewRef.value?.setViewport(at)
-}
-
-function openSettings() {
-  if (!mapConfig.value) {
-    return
-  }
-  settingsWorldmapView.value = null
-  settingsParentMapSize.value = isWorldmap.value
-    ? (worldmapViewRef.value?.getContainerSize() ?? null)
-    : null
-  showSettings.value = true
-}
-
-async function onSettingsUpdated() {
-  // Settings save may have changed the connection or filter; refresh
-  // monitoring states so the canvas reflects the new scope.
-  stopRotation()
-  scheduleRotation(mapsStore.currentMap.value?.rotation_interval ?? 0)
-  await statesStore.refreshWithIndicator()
-}
-
-// ---- The object slide-in, and the commands sent from it ----
+// ---- Detail drawer (shared across the static and geo maps) ----
 
 const detailDrawerObject = ref<MapElement | null>(null)
 // Drilldown targets (BI aggregation leaves) never enter the SSE states store,
@@ -570,8 +491,8 @@ const detailDrawerState = computed(() => {
   }
   return undefined
 })
-
 const detailActions = useObjectActions(() => checkmkUrl.value)
+const drawerCommands = detailActions.drawerHandlers(() => detailDrawerObject.value)
 
 function openDetail(obj: MapElement) {
   // A line is a visual relation between two endpoints, but in monitoring
@@ -587,11 +508,6 @@ function openDetail(obj: MapElement) {
   } else {
     detailDrawerObject.value = obj
   }
-}
-
-function closeDetail() {
-  detailDrawerObject.value = null
-  drawerSeedState.value = null
 }
 
 // All host MapElements on this map, keyed by hostname so the Drawer's
@@ -611,7 +527,7 @@ function onSelectHost(
   // Prefer a real map-object so toolbar actions (ack/downtime) bind to the
   // operator's curated entry. Fall back to a synthesised object so members
   // discovered via the hostgroup drawer (often not placed on the map)
-  // still open in the same slidein -- the parent state cycle lifts onto the
+  // still open in the same slidein — the parent state cycle lifts onto the
   // standard host/service-detail-fetch watch automatically.
   const objs = mapConfig.value?.objects ?? []
   const real = objs.find((o) => {
@@ -644,38 +560,21 @@ function onSelectHost(
   })
 }
 
-function onDetailAck() {
-  detailActions.handlers.acknowledge(detailDrawerObject.value)
-}
-function onDetailRemoveAck() {
-  void detailActions.handlers.removeAck(detailDrawerObject.value)
-}
-function onDetailDowntime() {
-  detailActions.handlers.scheduleDowntime(detailDrawerObject.value)
-}
-function onDetailRemoveDowntime() {
-  void detailActions.handlers.removeDowntime(detailDrawerObject.value)
-}
-function onDetailForceCheck() {
-  void detailActions.handlers.forceCheck(detailDrawerObject.value)
-}
-function onDetailAddComment() {
-  detailActions.handlers.addComment(detailDrawerObject.value)
-}
-function onDetailToggleNotifications(enable: boolean) {
-  void detailActions.handlers.toggleNotifications(detailDrawerObject.value, enable)
+function closeDetail() {
+  detailDrawerObject.value = null
+  drawerSeedState.value = null
 }
 
 /**
  * Bulk-acknowledge contributing leaves of a BI aggregation. Opens the
- * BulkAckModal -- that previews the targets, lets the operator review/edit
+ * BulkAckModal — that previews the targets, lets the operator review/edit
  * the comment (pre-filled with "Bulk-ack: <aggregation_id>" so audit logs
  * trace back to the originating aggregation), and runs the per-leaf ack
- * loop with progress feedback. Firing N acks straight off a click would be
- * risky for a misclick, since they have no atomic undo.
+ * loop with progress feedback: N acks have no atomic undo, so a misclick must
+ * not fire them.
  */
-function onDetailBulkAcknowledge(targets: BulkAckTarget[]) {
-  if (!checkmkUrl.value || !targets.length) {
+function onDetailBulkAcknowledge(targets: CommandTarget[]) {
+  if (!targets.length) {
     return
   }
   const obj = detailDrawerObject.value
@@ -685,35 +584,13 @@ function onDetailBulkAcknowledge(targets: BulkAckTarget[]) {
 
 const bulkAckModal = ref<{
   aggregationId: string
-  targets: BulkAckTarget[]
+  targets: CommandTarget[]
 } | null>(null)
 
-// A bulk ack's effect shows up in monitoring a moment later, so closing it
-// asks the state stream for a fresh picture -- the same thing the
-// single-object modals do via ``useObjectActions``.
-function closeBulkAckModal() {
-  bulkAckModal.value = null
-  statesStore.refreshAfterCommand()
-}
-
-// The map itself stays the breadcrumb's last level until the slide-in is
-// open: then the map name links back to the bare map.
-const breadcrumbItems = computed<BreadcrumbItem[]>(() => {
-  const mapTitle = mapConfig.value?.alias || mapName.value
-  const items: BreadcrumbItem[] = [{ title: _t('Maps'), link: nav.href({ view: 'home' }) }]
-  if (detailDrawerObject.value) {
-    items.push({ title: mapTitle, link: nav.href({ view: 'map', name: mapName.value }) })
-    items.push({ title: objectDisplayName(detailDrawerObject.value, _t), link: null })
-  } else {
-    items.push({ title: mapTitle, link: null })
-  }
-  return items
-})
-
 /**
- * What a click on an object leads to. The object's own link wins, a map object
- * navigates, Ctrl+Click leaves for Checkmk -- and a plain click opens the
- * object's slide-in.
+ * What a click on an object leads to. In edit mode it selects; otherwise the
+ * object's own link wins, a map object navigates, Ctrl+Click leaves for
+ * Checkmk -- and a plain click opens the object's slide-in.
  */
 function onObjectClick(obj: MapElement, event?: MouseEvent) {
   if (editor.editMode.value) {
@@ -765,6 +642,103 @@ function objectHasMonitoringTarget(obj: MapElement): boolean {
   }
 }
 
+/**
+ * A host dropped onto a geo map goes where the host is, if monitoring knows:
+ * asking the operator to find a site on the globe by hand would be absurd.
+ */
+async function onStartPlacing() {
+  const draft = editor.draft
+  if (isWorldmap.value && mapConfig.value?.connection_id && draft.host_name) {
+    try {
+      const geo = await objects.fetchHostGeo(draft.host_name)
+      if (geo) {
+        editor.startPlacing()
+        await editor.placeAtLatLng(geo.lat, geo.lng)
+        onObjectPlaced()
+        return
+      }
+    } catch {
+      // Geo lookup failed (host unknown to the site or connection down); fall
+      // through to plain placing so the operator can still drop the object.
+    }
+  }
+  editor.startPlacing()
+}
+
+const FLOW_PROBLEMS_DEFAULT: ProblemCounts = {
+  critical: 0,
+  warning: 0,
+  hostsWithProblems: 0,
+  total: 0
+}
+const flowProblems = ref<ProblemCounts>({ ...FLOW_PROBLEMS_DEFAULT })
+const flowDrawerObject = ref<MapElement | null>(null)
+// Only the flow map itself reports its slide-in closing, so if it goes away
+// with one open — a rotation to another map type — nothing would ever clear
+// this, and the dimmed topbar and its breadcrumb would outlive the node.
+watch(isFlowmap, (flow) => {
+  if (!flow) {
+    flowDrawerObject.value = null
+  }
+})
+const drawerObject = computed<MapElement | null>(
+  () => detailDrawerObject.value ?? flowDrawerObject.value
+)
+// The map itself stays the breadcrumb's last level until a slide-in is open:
+// then the map name links back to the bare map.
+const breadcrumbItems = computed<BreadcrumbItem[]>(() => {
+  const mapTitle = mapConfig.value?.alias || mapName.value
+  const items: BreadcrumbItem[] = [{ title: _t('Maps'), link: nav.href({ view: 'home' }) }]
+  if (drawerObject.value) {
+    items.push({ title: mapTitle, link: nav.href({ view: 'map', name: mapName.value }) })
+    items.push({ title: objectDisplayName(drawerObject.value, _t), link: null })
+  } else {
+    items.push({ title: mapTitle, link: null })
+  }
+  return items
+})
+
+// The map types that show it read this from the same place, so a flow map and
+// a folder tree are not passed it.
+const { problemsOnly } = useMapViewState()
+
+watch(mapName, () => {
+  flowProblems.value = { ...FLOW_PROBLEMS_DEFAULT }
+})
+const showSettings = ref(false)
+const settingsWorldmapView = ref<WorldmapViewport | null>(null)
+const settingsParentMapSize = ref<{ width: number; height: number } | null>(null)
+
+// The picker runs on the map itself: the geo map's view shows the banner and
+// answers with the viewport the operator arrived at.
+async function onSettingsPickWorldmapView(done: (at: WorldmapViewport | null) => void) {
+  done((await worldmapViewRef.value?.pickViewport()) ?? null)
+}
+
+function onSettingsWorldmapViewChange(at: WorldmapViewport) {
+  worldmapViewRef.value?.setViewport(at)
+}
+
+function openSettings() {
+  if (!mapConfig.value) {
+    return
+  }
+  settingsWorldmapView.value = null
+  settingsParentMapSize.value = isWorldmap.value
+    ? (worldmapViewRef.value?.getContainerSize() ?? null)
+    : null
+  showSettings.value = true
+}
+
+async function onSettingsUpdated() {
+  // Settings save may have changed the connection or filter; refresh
+  // monitoring states so the canvas reflects the new scope. Flipping
+  // ``initialLoad`` gives radar / flow maps a spinner in the gap.
+  stopRotation()
+  scheduleRotation(mapsStore.currentMap.value?.rotation_interval ?? 0)
+  await statesStore.refreshWithIndicator()
+}
+
 useMapLifecycle({
   mapName: () => mapName.value,
   onMapChanged: () => editor.resetForNewMap(),
@@ -783,6 +757,17 @@ onMounted(() => {
     void mapsStore.fetchMaps()
   }
 })
+
+// A bulk ack's effect shows up in monitoring a moment later, so closing it
+// asks the state stream for a fresh picture -- the same thing the
+// single-object modals do via ``useObjectActions``. A dialog the operator
+// dismissed without sending anything has nothing to show.
+function closeBulkAckModal(sent: boolean): void {
+  bulkAckModal.value = null
+  if (sent) {
+    statesStore.refreshAfterCommand()
+  }
+}
 </script>
 
 <template>
@@ -795,7 +780,7 @@ onMounted(() => {
       :rotation-seconds="mapConfig && mapConfig.rotation_interval > 0 ? rotationCountdown : 0"
       :rotation-paused="rotationPaused"
       :can-configure="canEdit && !mapConfig?.readonly"
-      :dimmed="!!detailDrawerObject"
+      :dimmed="!!drawerObject"
       @toggle-rotation="toggleRotationPause"
       @open-full-screen="openKioskInNewTab"
       @open-settings="openSettings"
@@ -803,18 +788,20 @@ onMounted(() => {
       <template #breadcrumb>
         <CmkBreadcrumb :items="breadcrumbItems" />
       </template>
+      <template #status>
+        <MapProblemsPill v-if="isFlowmap && flowProblems.total > 0" :problems="flowProblems" />
+      </template>
     </MapViewTopbar>
 
     <MapKioskExit v-if="isKiosk" @exit="exitFullscreen" />
 
-    <!-- The map area. The slide-ins that open over a map sit inside it, so
-         they stay under the topbar. -->
+    <!-- Map area + optional edit panel. The detail drawer opens over it, so it
+         stays under the topbar. -->
     <div class="maps-map-view__shell">
       <div v-if="isLoading" class="maps-map-view__loading">
         <CmkLoading />
         <span>{{ _t('Loading map…') }}</span>
       </div>
-
       <world-map-view
         v-if="isWorldmap"
         ref="worldMapViewRef"
@@ -833,11 +820,25 @@ onMounted(() => {
         @view-changed="geoViewTick++"
         @save-viewport="onSaveWorldmapViewport"
       />
+
+      <flow-map-view
+        v-else-if="isFlowmap"
+        v-model:filter-needle="mapFilterNeedle"
+        :config="mapConfig"
+        :error="mapsStore.error.value"
+        :kiosk="isKiosk"
+        :preview="isPreview"
+        :checkmk-url="checkmkUrl"
+        @update:problems="flowProblems = $event"
+        @drawer-object="flowDrawerObject = $event"
+      />
+
       <MapPlaceholder
         v-else-if="!isStatic"
         :message="_t('This map type cannot be shown yet')"
         variant="empty"
       />
+
       <static-map-view
         v-else
         v-model:filter-needle="mapFilterNeedle"
@@ -856,57 +857,28 @@ onMounted(() => {
         @placed="onObjectPlaced"
       />
 
+      <!-- Shared detail drawer for the static and geo maps -->
       <DetailDrawer
+        v-if="!isFlowmap"
         :object="detailDrawerObject"
         :state="detailDrawerState"
         :checkmk-url="checkmkUrl"
         :connection-id="detailDrawerObject?.connection_id ?? mapConfig?.connection_id ?? null"
         :selectable-hosts="selectableHostNames"
         :unattended="isKiosk || isPreview"
+        v-on="drawerCommands"
         @close="closeDetail"
-        @acknowledge="onDetailAck"
-        @remove-ack="onDetailRemoveAck"
-        @schedule-downtime="onDetailDowntime"
-        @remove-downtime="onDetailRemoveDowntime"
-        @force-check="onDetailForceCheck"
-        @add-comment="onDetailAddComment"
-        @enable-notifications="onDetailToggleNotifications(true)"
-        @disable-notifications="onDetailToggleNotifications(false)"
         @select-host="onSelectHost"
         @bulk-acknowledge="onDetailBulkAcknowledge"
       />
     </div>
 
-    <AckModal
-      v-if="detailActions.ackModalObject.value && checkmkUrl"
-      :object="detailActions.ackModalObject.value"
-      :checkmk-url="checkmkUrl"
-      @close="detailActions.closeAckModal"
-    />
-    <DowntimeModal
-      v-if="detailActions.downtimeModalObject.value && checkmkUrl"
-      :object="detailActions.downtimeModalObject.value"
-      :checkmk-url="checkmkUrl"
-      @close="detailActions.closeDowntimeModal"
-    />
-    <CommentModal
-      v-if="detailActions.commentModalObject.value && checkmkUrl"
-      :object="detailActions.commentModalObject.value"
-      :checkmk-url="checkmkUrl"
-      @close="detailActions.commentModalObject.value = null"
-    />
-    <RemoveDowntimeModal
-      v-if="detailActions.removeDowntimeModal.visible && checkmkUrl"
-      :downtimes="detailActions.removeDowntimeModal.downtimes"
-      :checkmk-url="checkmkUrl"
-      :object-name="detailActions.removeDowntimeModal.objectName"
-      @close="detailActions.closeRemoveDowntimeModal"
-    />
+    <ObjectCommandModals :actions="detailActions" :checkmk-url="checkmkUrl" />
+
     <BulkAckModal
-      v-if="bulkAckModal && checkmkUrl"
-      :aggregation-id="bulkAckModal.aggregationId"
+      v-if="bulkAckModal"
+      :origin="bulkAckModal.aggregationId"
       :targets="bulkAckModal.targets"
-      :checkmk-url="checkmkUrl"
       @close="closeBulkAckModal"
     />
 
@@ -921,7 +893,7 @@ onMounted(() => {
         :keyboard-active="editKeyboardActive"
         :offers-add-object="true"
         :offers-grid="!isWorldmap"
-        @start-placing="void onStartPlacing()"
+        @start-placing="onStartPlacing()"
         @toggle-edit-mode="onToggleEditMode"
         @delete-selection="onObjectAction('delete')"
         @duplicate-selection="onObjectAction('duplicate')"
@@ -949,6 +921,7 @@ onMounted(() => {
 
     <MapsConfirmDialog
       :open="!!deleteTargetObject"
+      variant="error"
       :title="deleteDialogTitle"
       :message="_t('This cannot be undone.')"
       :confirm-label="_t('Delete')"
@@ -958,6 +931,7 @@ onMounted(() => {
 
     <MapsConfirmDialog
       :open="bulkDeleteOpen"
+      variant="error"
       :title="_t('Delete %{n} objects?', { n: editor.selectedCount.value })"
       :message="_t('This cannot be undone.')"
       :confirm-label="_t('Delete')"
@@ -1090,20 +1064,6 @@ body[data-theme='facelift'] .maps-map-view {
   overflow: hidden;
 }
 
-.maps-map-view__bar-enter-from,
-.maps-map-view__bar-leave-to {
-  opacity: 0;
-  transform: translateY(4px) scale(0.95);
-}
-
-.maps-map-view__bar-enter-active {
-  transition: all 0.15s cubic-bezier(0, 0, 0.2, 1);
-}
-
-.maps-map-view__bar-leave-active {
-  transition: all 0.1s cubic-bezier(0.4, 0, 1, 1);
-}
-
 .maps-map-view__loading {
   position: absolute;
   inset: 0;
@@ -1117,5 +1077,19 @@ body[data-theme='facelift'] .maps-map-view {
   line-height: 20px;
   color: var(--font-color-dimmed);
   background: var(--ux-theme-1);
+}
+
+.maps-map-view__bar-enter-from,
+.maps-map-view__bar-leave-to {
+  opacity: 0;
+  transform: translateY(4px) scale(0.95);
+}
+
+.maps-map-view__bar-enter-active {
+  transition: all 0.15s cubic-bezier(0, 0, 0.2, 1);
+}
+
+.maps-map-view__bar-leave-active {
+  transition: all 0.1s cubic-bezier(0.4, 0, 1, 1);
 }
 </style>

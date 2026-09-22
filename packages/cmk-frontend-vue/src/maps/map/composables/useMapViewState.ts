@@ -25,13 +25,18 @@ import { type WritableComputedRef, computed } from 'vue'
 
 import type { ViewChoices } from '@/maps/services/MapService'
 import { useMaps, useNavigation } from '@/maps/services/context'
-import type { MapConfig } from '@/maps/types/api'
+import type { MapConfig, ServiceLayout } from '@/maps/types/api'
+
+/** What a flow map shows of a host's services when nothing has been chosen. */
+const SERVICE_LAYOUT_DEFAULT: ServiceLayout = 'off'
 
 export interface MapViewState {
   /** Merge a patch into the map's view and schedule a save. */
   persist: (patch: Record<string, unknown>) => void
   /** Whether the map is currently showing only objects with problems. */
   problemsOnly: WritableComputedRef<boolean>
+  /** Which of a host's services a flow map shows, and in what shape. */
+  serviceLayout: WritableComputedRef<ServiceLayout>
 }
 
 export function useMapViewState(): MapViewState {
@@ -87,6 +92,16 @@ export function useMapViewState(): MapViewState {
       },
       set: (value) => {
         choose({ problems_only: value })
+      }
+    }),
+    serviceLayout: computed({
+      get: () => {
+        const view = maps.currentMap.value?.view
+        const stored = view?.type === 'flow' ? view.service_layout : undefined
+        return chosen()?.service_layout ?? stored ?? SERVICE_LAYOUT_DEFAULT
+      },
+      set: (value) => {
+        choose({ service_layout: value })
       }
     })
   }

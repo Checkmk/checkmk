@@ -162,7 +162,7 @@ const pan = useCanvasPan({
 
 const menus = useMapObjectMenus({
   config: () => props.config,
-  states: () => props.states,
+  stateOf: (objectId) => props.states[objectId],
   preview: () => props.preview === true
 })
 

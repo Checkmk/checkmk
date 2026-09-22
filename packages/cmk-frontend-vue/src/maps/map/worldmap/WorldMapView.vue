@@ -21,6 +21,7 @@ import { computed, onUnmounted, ref, useTemplateRef } from 'vue'
 
 import MapPlaceholder from '@/maps/map/components/MapPlaceholder.vue'
 import MapSearch from '@/maps/map/components/MapSearch.vue'
+import MapZoomControls from '@/maps/map/components/MapZoomControls.vue'
 import ProblemsOnlyToggle from '@/maps/map/components/ProblemsOnlyToggle.vue'
 import type { MapEditor } from '@/maps/map/composables/useMapEditor'
 import type { LineEndpoint } from '@/maps/map/worldmap/composables/useWorldmapLines'
@@ -30,7 +31,6 @@ import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
 import type { AnchorRect } from '@/maps/utils/anchorRect'
 
 import WorldMapCanvas from './components/WorldMapCanvas.vue'
-import WorldMapControls from './components/WorldMapControls.vue'
 
 const { _t } = usei18n()
 
@@ -200,7 +200,7 @@ defineExpose({
         </template>
       </MapSearch>
 
-      <WorldMapControls
+      <MapZoomControls
         v-if="!preview"
         :can-fit="canFit"
         @zoom-in="canvas?.zoomIn()"

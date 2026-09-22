@@ -36,7 +36,7 @@ export interface MapObjectMenus {
   contextState: ComputedRef<{ state?: ObjectState }>
   hoverTemplate: ComputedRef<string | null>
   contextTemplate: ComputedRef<string | null>
-  openHover: (object: MapElement, event: MouseEvent, options?: HoverOpenOptions) => void
+  openHover: (object: MapElement, event: MouseEvent | null, options?: HoverOpenOptions) => void
   /** A synthesised object — a BI subtree node — carries its own state. */
   openSubtreeHover: (object: MapElement, state: ObjectState, event: MouseEvent) => void
   openContext: (object: MapElement, event: MouseEvent) => void
@@ -44,13 +44,19 @@ export interface MapObjectMenus {
 }
 
 export function useMapObjectMenus(source: {
-  config: () => MapConfig
-  states: () => Record<string, ObjectState>
+  /** ``null`` while the page has no map loaded. */
+  config: () => MapConfig | null
+  /**
+   * The live state of an object, where the map has one for it. A map whose
+   * objects are placed reads the states store; a map drawn from a live query
+   * has to derive it, which is why this is the map type's to answer.
+   */
+  stateOf: (objectId: string) => ObjectState | undefined
   /** The settings preview is not interactive. */
   preview: () => boolean
 }): MapObjectMenus {
   const settings = useSettings()
-  const hover = useObjectHoverMenu({ resolveState: (object) => source.states()[object.id] })
+  const hover = useObjectHoverMenu({ resolveState: (object) => source.stateOf(object.id) })
   const context = reactive({
     visible: false,
     object: null as MapElement | null,
@@ -69,20 +75,20 @@ export function useMapObjectMenus(source: {
     // An optional prop rejects an explicit undefined under
     // exactOptionalPropertyTypes, so the state is spread in only when present.
     contextState: computed(() => {
-      const state = context.object ? source.states()[context.object.id] : undefined
+      const state = context.object ? source.stateOf(context.object.id) : undefined
       return state !== undefined ? { state } : {}
     }),
     hoverTemplate: computed(() =>
       resolveTemplate(
         hover.hover.object?.hover_template,
-        source.config().hover_template,
+        source.config()?.hover_template,
         settings.settings.value.hover_template
       )
     ),
     contextTemplate: computed(() =>
       resolveTemplate(
         context.object?.context_template,
-        source.config().context_template,
+        source.config()?.context_template,
         settings.settings.value.context_template
       )
     ),
@@ -98,7 +104,7 @@ export function useMapObjectMenus(source: {
     },
     openContext: (object, event) => {
       // An object the operator may not see has nothing to offer them.
-      if (source.states()[object.id]?.state === 'NO_PERMISSION') {
+      if (source.stateOf(object.id)?.state === 'NO_PERMISSION') {
         return
       }
       context.object = object

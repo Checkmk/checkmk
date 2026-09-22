@@ -17,6 +17,21 @@ interface DispatchOptions {
   successText?: TranslatedString
 }
 
+/**
+ * The commands the object slide-in offers, named as it emits them, so a view can
+ * bind the lot with ``v-on`` instead of writing seven forwarders.
+ */
+export interface DrawerCommandHandlers {
+  acknowledge: () => void
+  'remove-ack': () => void
+  'schedule-downtime': () => void
+  'remove-downtime': () => void
+  'force-check': () => void
+  'add-comment': () => void
+  'enable-notifications': () => void
+  'disable-notifications': () => void
+}
+
 export interface UseObjectActions {
   ackModalObject: Ref<MapElement | null>
   downtimeModalObject: Ref<MapElement | null>
@@ -24,7 +39,10 @@ export interface UseObjectActions {
   removeDowntimeModal: { visible: boolean; downtimes: DowntimeEntry[]; objectName: string }
   closeAckModal(): void
   closeDowntimeModal(): void
+  closeCommentModal(): void
   closeRemoveDowntimeModal(): void
+  /** The slide-in's commands, bound to whatever it currently has open. */
+  drawerHandlers(object: () => MapElement | null): DrawerCommandHandlers
   handlers: {
     acknowledge(obj: MapElement | null): void
     removeAck(obj: MapElement | null): Promise<void>
@@ -208,6 +226,12 @@ export function useObjectActions(
     statesStore.refreshAfterCommand()
   }
 
+  // No refresh: a comment changes nothing the map draws, unlike an
+  // acknowledgement or a downtime.
+  function closeCommentModal(): void {
+    commentModalObject.value = null
+  }
+
   function closeRemoveDowntimeModal(): void {
     removeDowntimeModal.visible = false
     statesStore.refreshAfterCommand()
@@ -220,7 +244,18 @@ export function useObjectActions(
     removeDowntimeModal,
     closeAckModal,
     closeDowntimeModal,
+    closeCommentModal,
     closeRemoveDowntimeModal,
+    drawerHandlers: (object) => ({
+      acknowledge: () => acknowledge(object()),
+      'remove-ack': () => void removeAck(object()),
+      'schedule-downtime': () => scheduleDowntime(object()),
+      'remove-downtime': () => void removeDowntime(object()),
+      'force-check': () => void forceCheck(object()),
+      'add-comment': () => addComment(object()),
+      'enable-notifications': () => void toggleNotifications(object(), true),
+      'disable-notifications': () => void toggleNotifications(object(), false)
+    }),
     handlers: {
       acknowledge,
       removeAck,

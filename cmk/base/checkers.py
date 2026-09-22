@@ -709,6 +709,7 @@ def _make_rrd_data_getter(
             else (
                 livestatus.MKLivestatusSocketError,
                 livestatus.MKLivestatusNotFoundError,
+                livestatus.LqUnsafeValueError,
             )
         ) as e:
             logger.warning("Cannot get historic metrics via Livestatus: %(error)s", {"error": e})

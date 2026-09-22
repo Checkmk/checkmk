@@ -5,22 +5,14 @@ license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state of multipath devices on Linux
- hosts by comparing the number of active paths with the number
- of paths that was recorded when the service was discovered.
+ hosts. For each multipath device at time of inventory the number
+ of paths is put into the check parameters. If later the number
+ of paths is less then expected, the check goes critical. So it
+ does if any of the paths is broken.
 
- Without a rule, the check goes {WARN} if fewer paths are active
- than recorded, for example because a path is broken or has
- disappeared from the multipath output entirely. It also goes
- {WARN} if more paths than recorded are present. A rediscovery
- updates the recorded number.
-
- With the ruleset "Linux and Solaris Multipath Count" you can
- instead configure an expected number of active paths, in which
- case the check goes {CRIT} if fewer paths are active and {WARN}
- if more, or lower levels for the percentage of active paths.
-
- Paths that are listed but not active are named in the service
- output. If the device has no paths at all, the check goes {CRIT}.
+ If the number of paths is higher than expected, the check goes
+ warning. A re-discovery of the check might be necessary in that
+ case.
 
  This check is based on the output of the command {multipath -l} as
  sent by the Linux agent. It correctly deals with various subtle
@@ -28,10 +20,9 @@ description:
 
 item:
  The UUID of the multipath device, e.g. {"360a980004334644d654a364469555a76"}.
- Via {inventory_multipath_rules} you can specify whether an alias should be used
+ Via {inventory_multipath_rules} you can specify wether an alias should be used
  as item instead of the UUID. If the multipath device has an alias the alias will
  be used as item.
 
 discovery:
- One service is created for each multipath device. The number of
- paths at that time is recorded with the service.
+ One service is created for each multipath device.

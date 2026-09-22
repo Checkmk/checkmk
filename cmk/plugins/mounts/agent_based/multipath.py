@@ -162,8 +162,7 @@ agent_section_multipath = AgentSection(
 def discover_multipath(params: Mapping[str, Any], section: multipath.Section) -> DiscoveryResult:
     for uuid, group in section.items():
         yield Service(
-            item=group.alias if group.alias is not None and params.get("use_alias") else uuid,
-            parameters={"discovered_paths": group.numpaths},
+            item=group.alias if group.alias is not None and params.get("use_alias") else uuid
         )
 
 
@@ -216,11 +215,8 @@ def check_multipath(
     state = State.OK
     infotext = f"{num_active} of {num_paths}"
     if not isinstance(levels, tuple):
-        # Services discovered without a stored count fall back to the current total.
         target_levels, alert_level = (
-            (levels, State.CRIT)
-            if levels is not None
-            else (params.get("discovered_paths", num_paths), State.WARN)
+            (levels, State.CRIT) if levels is not None else (num_paths, State.WARN)
         )
         infotext += f" (expected: {target_levels})"
         if num_active < target_levels:

@@ -176,8 +176,6 @@ export function createStatusBar(
       { pattern: 'packages/cmk-shared-typing/source/**', events: ['change', 'create', 'delete'] },
       { pattern: 'packages/cmk-frontend/src/**', events: ['change', 'create', 'delete'] },
       { pattern: 'requirements.txt', events: ['change'] },
-      { pattern: 'omd/requirements.txt', events: ['change'] },
-      { pattern: 'omd/requirements_lock.txt', events: ['change'] },
       { pattern: 'omd/non-free/relay/requirements.txt', events: ['change'] },
       { pattern: 'pnpm-lock.yaml', events: ['change'] },
       { pattern: '.git/HEAD', events: ['change'], delay: 500, branchSwitch: true }

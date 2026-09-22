@@ -120,7 +120,7 @@ The extension monitors build targets and shows their status in the status bar:
 | node_modules       | `node_modules/` missing or out of sync with `pnpm-lock.yaml`                   |
 | mypy config        | `.vscode/.mypy.ini` missing                                                    |
 
-**Auto-refresh triggers:** extension activation, after CMK build tasks complete, source file changes in `packages/cmk-shared-typing/source/`, `packages/cmk-frontend/src/`, the pinned requirements files (`requirements.txt`, `omd/requirements.txt`, `omd/requirements_lock.txt`, `omd/non-free/relay/requirements.txt`), `pnpm-lock.yaml`, and git branch switches (`.git/HEAD`).
+**Auto-refresh triggers:** extension activation, after CMK build tasks complete, source file changes in `packages/cmk-shared-typing/source/`, `packages/cmk-frontend/src/`, the pinned requirements files (`requirements.txt`, `omd/non-free/relay/requirements.txt`), `pnpm-lock.yaml`, and git branch switches (`.git/HEAD`).
 
 Click the status bar item to see stale targets and build commands in a QuickPick. When stale targets exist, a warning banner also appears at the top of the Environment sidebar section with a **Build All Stale** button.
 

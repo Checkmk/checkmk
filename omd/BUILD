@@ -3,8 +3,6 @@ load("@rules_gzip//gzip/compress:defs.bzl", "gzip_compress")
 load("@rules_pkg//pkg:deb.bzl", "pkg_deb")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("@rules_uv//uv:pip.bzl", "pip_compile")
-load("@rules_uv//uv:venv.bzl", "create_venv")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 load("//bazel/rules:git_hash_file.bzl", "git_hash_file")
 load("//bazel/rules:md5sums_from_archive.bzl", "md5sums_from_archive")
@@ -337,19 +335,6 @@ edition_skel_permissions = select({
         "//packages/cmk-agent-receiver:skel.permissions",
     ],
 })
-
-pip_compile(
-    name = "requirements_lock",
-    requirements_in = ":requirements.txt",
-    requirements_txt = ":requirements_lock.txt",
-    tags = ["manual"],
-)
-
-create_venv(
-    name = "venv",
-    destination_folder = "omd/.venv",
-    requirements_txt = ":requirements_lock.txt",
-)
 
 file_from_flag(
     name = "omd_root_dir",
@@ -1264,11 +1249,4 @@ sh_test(
         "//tests/packaging/package_validator:system_dependencies_cma",
     ],
     tags = ["manual"],
-)
-
-sh_library(
-    name = "omd_sh",
-    srcs = [
-        "run-binreplace",
-    ],
 )

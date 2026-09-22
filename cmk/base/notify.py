@@ -125,7 +125,7 @@ Event = str
 
 
 Contacts = list[Contact]
-ConfigContacts = dict[ContactName, Contact]
+ConfigContacts = Mapping[ContactName, Contact]
 ContactNames = frozenset[ContactName]  # Must be hasable
 
 

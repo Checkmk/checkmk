@@ -209,7 +209,7 @@ class BaseConfig:  # type: ignore[explicit-any]
     delay_precompile: bool
     default_host_group: str
     extra_nagios_conf: str
-    contacts: dict[ContactName, Contact]
+    contacts: Mapping[ContactName, Contact]
     define_contactgroups: Mapping[str, str]
     define_hostgroups: Mapping[str, str]
     define_servicegroups: Mapping[str, str]

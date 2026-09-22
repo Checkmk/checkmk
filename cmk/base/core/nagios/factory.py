@@ -41,27 +41,7 @@ def create_core(
                     cleanup_base=paths.omd_root,
                 ),
                 get_all_timeperiods(loaded_config.timeperiods),
-                NagiosCoreConfig(
-                    delay_precompile=loaded_config.delay_precompile,
-                    host_template=loaded_config.host_template,
-                    cluster_template=loaded_config.cluster_template,
-                    pingonly_template=loaded_config.pingonly_template,
-                    active_service_template=loaded_config.active_service_template,
-                    passive_service_template_perf=loaded_config.passive_service_template_perf,
-                    inventory_check_template=loaded_config.inventory_check_template,
-                    service_dependency_template=loaded_config.service_dependency_template,
-                    generate_hostconf=loaded_config.generate_hostconf,
-                    generate_dummy_commands=loaded_config.generate_dummy_commands,
-                    dummy_check_commandline=loaded_config.dummy_check_commandline,
-                    default_host_group=loaded_config.default_host_group,
-                    extra_nagios_conf=loaded_config.extra_nagios_conf,
-                    contacts=loaded_config.contacts,
-                    define_contactgroups=loaded_config.define_contactgroups,
-                    define_hostgroups=loaded_config.define_hostgroups,
-                    define_servicegroups=loaded_config.define_servicegroups,
-                    contactgroup_members=loaded_config.contactgroup_members,
-                    simulation_mode=loaded_config.simulation_mode,
-                ),
+                NagiosCoreConfig.from_raw_config(loaded_config),
             )
         case "cmc":
             raise RuntimeError("The Microcore is not available in this edition")

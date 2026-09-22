@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
 from socket import AddressFamily
-from typing import assert_never, Final, IO, Literal, override
+from typing import assert_never, Final, IO, Literal, override, Protocol, Self
 
 from cmk.base import config
 from cmk.base.config import (
@@ -64,7 +64,7 @@ from cmk.events.notify import (
     NotificationHostConfig,
     NotifyHostFiles,
 )
-from cmk.events.notify_types import Contact
+from cmk.events.notify_types import Contact, ContactName
 from cmk.licensing.handler import LicensingHandler
 from cmk.password_store.v1 import Secret
 from cmk.ruleset_matcher.labels import LabelManager, Labels
@@ -80,6 +80,49 @@ from ._precompile_host_checks import precompile_hostchecks, PrecompileMode
 
 _ContactgroupName = str
 ObjectSpec = dict[str, object]
+
+
+# someday: dumb this down to Mapping[str, object] and add actual parsing when creating
+# NagiosCoreConfig instances.
+class _RawConfigP(Protocol):
+    @property
+    def delay_precompile(self) -> bool: ...
+    @property
+    def host_template(self) -> str: ...
+    @property
+    def cluster_template(self) -> str: ...
+    @property
+    def pingonly_template(self) -> str: ...
+    @property
+    def active_service_template(self) -> str: ...
+    @property
+    def passive_service_template_perf(self) -> str: ...
+    @property
+    def inventory_check_template(self) -> str: ...
+    @property
+    def service_dependency_template(self) -> str: ...
+    @property
+    def generate_hostconf(self) -> bool: ...
+    @property
+    def generate_dummy_commands(self) -> bool: ...
+    @property
+    def dummy_check_commandline(self) -> str: ...
+    @property
+    def default_host_group(self) -> str: ...
+    @property
+    def extra_nagios_conf(self) -> str: ...
+    @property
+    def contacts(self) -> Mapping[ContactName, Contact]: ...
+    @property
+    def define_contactgroups(self) -> Mapping[str, str]: ...
+    @property
+    def define_hostgroups(self) -> Mapping[str, str]: ...
+    @property
+    def define_servicegroups(self) -> Mapping[str, str]: ...
+    @property
+    def contactgroup_members(self) -> Mapping[str, Sequence[str]]: ...
+    @property
+    def simulation_mode(self) -> bool: ...
 
 
 @dataclass(frozen=True)
@@ -103,6 +146,30 @@ class NagiosCoreConfig:
     define_servicegroups: Mapping[str, str]
     contactgroup_members: Mapping[str, Sequence[str]]
     simulation_mode: bool
+
+    @classmethod
+    def from_raw_config(cls, raw: _RawConfigP) -> Self:
+        return cls(
+            delay_precompile=raw.delay_precompile,
+            host_template=raw.host_template,
+            cluster_template=raw.cluster_template,
+            pingonly_template=raw.pingonly_template,
+            active_service_template=raw.active_service_template,
+            passive_service_template_perf=raw.passive_service_template_perf,
+            inventory_check_template=raw.inventory_check_template,
+            service_dependency_template=raw.service_dependency_template,
+            generate_hostconf=raw.generate_hostconf,
+            generate_dummy_commands=raw.generate_dummy_commands,
+            dummy_check_commandline=raw.dummy_check_commandline,
+            default_host_group=raw.default_host_group,
+            extra_nagios_conf=raw.extra_nagios_conf,
+            contacts=raw.contacts,
+            define_contactgroups=raw.define_contactgroups,
+            define_hostgroups=raw.define_hostgroups,
+            define_servicegroups=raw.define_servicegroups,
+            contactgroup_members=raw.contactgroup_members,
+            simulation_mode=raw.simulation_mode,
+        )
 
 
 class NagiosCore(MonitoringCore):

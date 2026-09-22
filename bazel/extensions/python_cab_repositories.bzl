@@ -35,10 +35,18 @@ def _repos_impl(_mctx):
             name = "python_msi_" + feature,
             downloaded_file_path = feature + ".msi",
             sha256 = sha256,
-            url = "https://www.python.org/ftp/python/{version}/amd64/{feature}.msi".format(
-                feature = feature,
-                version = PYTHON_VERSION_WINDOWS,
-            ),
+            urls = [
+                "https://www.python.org/ftp/python/{version}/amd64/{feature}.msi".format(
+                    feature = feature,
+                    version = PYTHON_VERSION_WINDOWS,
+                ),
+                # The per-feature MSIs are all called <feature>.msi upstream, and the
+                # mirror is flat, so the copy there carries the version in its name.
+                UPSTREAM_MIRROR_URL + "python-{version}-amd64-{feature}.msi".format(
+                    feature = feature,
+                    version = PYTHON_VERSION_WINDOWS,
+                ),
+            ],
         )
 
 repos = module_extension(

@@ -438,7 +438,7 @@
     },
     "//bazel/extensions:python_cab_repositories.bzl%repos": {
       "general": {
-        "bzlTransitiveDigest": "+cWls9colC+ynCDTUJ6sb0m5snR1200GgEek5sxgEis=",
+        "bzlTransitiveDigest": "nizwYQMxpn6tXSwqkIfQd19aSUpjvGUsf2zMirfic6U=",
         "usagesDigest": "5qODU8+VF+agVVzVA8XavgFFOS1icLm99ZVCsrtfzMQ=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -461,7 +461,10 @@
             "attributes": {
               "downloaded_file_path": "core.msi",
               "sha256": "3dfcfe7b42e6f2d683be427af62369761c7e6627aff6a8da2f439a9d11e62cdf",
-              "url": "https://www.python.org/ftp/python/3.14.7/amd64/core.msi"
+              "urls": [
+                "https://www.python.org/ftp/python/3.14.7/amd64/core.msi",
+                "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.14.7-amd64-core.msi"
+              ]
             }
           },
           "python_msi_exe": {
@@ -469,7 +472,10 @@
             "attributes": {
               "downloaded_file_path": "exe.msi",
               "sha256": "63035cb1fc01ec085c0f18e73f8c1b000ca148378f4f4b1db11f3baabcc8cf3a",
-              "url": "https://www.python.org/ftp/python/3.14.7/amd64/exe.msi"
+              "urls": [
+                "https://www.python.org/ftp/python/3.14.7/amd64/exe.msi",
+                "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.14.7-amd64-exe.msi"
+              ]
             }
           },
           "python_msi_lib": {
@@ -477,7 +483,10 @@
             "attributes": {
               "downloaded_file_path": "lib.msi",
               "sha256": "d68a92dcc61addb49e4678f60af2838d7675991341c9bf0facd2c5e7283841c3",
-              "url": "https://www.python.org/ftp/python/3.14.7/amd64/lib.msi"
+              "urls": [
+                "https://www.python.org/ftp/python/3.14.7/amd64/lib.msi",
+                "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.14.7-amd64-lib.msi"
+              ]
             }
           },
           "python_msi_pip": {
@@ -485,7 +494,10 @@
             "attributes": {
               "downloaded_file_path": "pip.msi",
               "sha256": "b9c87eee34ab2ded2702b1fb26ea031b07ffbb665617336b2a70508e660153eb",
-              "url": "https://www.python.org/ftp/python/3.14.7/amd64/pip.msi"
+              "urls": [
+                "https://www.python.org/ftp/python/3.14.7/amd64/pip.msi",
+                "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.14.7-amd64-pip.msi"
+              ]
             }
           },
           "python_msi_ucrt": {
@@ -493,7 +505,10 @@
             "attributes": {
               "downloaded_file_path": "ucrt.msi",
               "sha256": "c35e76105318b7472c6028e8d4a2f9b8ec1a3ef02897b4e49350c8adb84a2105",
-              "url": "https://www.python.org/ftp/python/3.14.7/amd64/ucrt.msi"
+              "urls": [
+                "https://www.python.org/ftp/python/3.14.7/amd64/ucrt.msi",
+                "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.14.7-amd64-ucrt.msi"
+              ]
             }
           }
         },

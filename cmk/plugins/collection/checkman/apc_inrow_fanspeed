@@ -8,7 +8,10 @@ description:
 
   The output in only informational and always {OK}.
 
- This check uses the PowerNet-MIB.
+ This check uses the PowerNet-MIB. It reads the airIRRC objects of older
+ InRow units as well as the generic cooling unit status table of newer
+ units (e.g. InRow ACRC301S), which do not provide the airIRRC objects
+ anymore.
 
 discovery:
  One service is created.

@@ -8,7 +8,7 @@ import abc
 import socket
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Final, Literal
+from typing import Literal
 
 from cmk import trace
 from cmk.base.config import ConfigCache, CoreObjectsConfig
@@ -16,7 +16,6 @@ from cmk.ccc.config_path import ConfigCreationContext
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
-from cmk.core_client import CoreClient
 from cmk.licensing.handler import LicensingHandler
 from cmk.password_store.v1 import Secret
 from cmk.ruleset_matcher.labels import Labels
@@ -67,9 +66,6 @@ class MonitoringConfigRequest:
 
 
 class MonitoringCore(abc.ABC):
-    def __init__(self, core_client: CoreClient) -> None:
-        self.core_client: Final = core_client
-
     @classmethod
     @abc.abstractmethod
     def name(cls) -> Literal["nagios", "cmc"]:

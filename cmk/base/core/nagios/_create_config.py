@@ -56,7 +56,6 @@ from cmk.checkengine.plugins import (
     CheckPluginName,
     ServiceID,
 )
-from cmk.core_client import NagiosClient
 from cmk.events.notify import (
     build_descendants_map,
     create_notify_host_files,
@@ -175,11 +174,11 @@ class NagiosCoreConfig:
 class NagiosCore(MonitoringCore):
     def __init__(
         self,
-        core_client: NagiosClient,
+        objects_file: Path,
         timeperiods: TimeperiodSpecs,
         nagios_core_config: NagiosCoreConfig,
     ) -> None:
-        super().__init__(core_client)
+        self.objects_file: Final = objects_file
         self.timeperiods: Final = timeperiods
         self.nagios_core_config: Final = nagios_core_config
 
@@ -288,7 +287,7 @@ class NagiosCore(MonitoringCore):
             ),
         )
 
-        store.save_text_to_file(self.core_client.objects_file(), config_buffer.getvalue())
+        store.save_text_to_file(self.objects_file, config_buffer.getvalue())
         for host, content in notify_host_files.items():
             store.save_bytes_to_file(make_notify_host_file_path(config_path, host), content)
 

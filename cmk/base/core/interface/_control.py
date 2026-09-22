@@ -63,6 +63,7 @@ def do_reload(
     ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     ip_address_of_mgmt: ip_lookup.IPLookupOptional,
     core: MonitoringCore,
+    core_client: CoreClient,
     plugins: AgentBasedPlugins,
     *,
     hosts_to_update: set[HostName] | None,
@@ -86,6 +87,7 @@ def do_reload(
         ip_address_of,
         ip_address_of_mgmt,
         core,
+        core_client,
         plugins,
         action=CoreAction.RELOAD,
         hosts_to_update=hosts_to_update,
@@ -117,6 +119,7 @@ def do_restart(
     ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     ip_address_of_mgmt: ip_lookup.IPLookupOptional,
     core: MonitoringCore,
+    core_client: CoreClient,
     plugins: AgentBasedPlugins,
     *,
     action: CoreAction = CoreAction.RESTART,
@@ -134,6 +137,7 @@ def do_restart(
         ):
             do_create_config(
                 core=core,
+                core_client=core_client,
                 config_cache=config_cache,
                 core_objects_config=core_objects_config,
                 hosts_config=host_config,
@@ -153,7 +157,7 @@ def do_restart(
                 checker_config_writer=checker_config_writer,
                 licensing_handler_factory=licensing_handler_factory,
             )
-            core.core_client.run(action, log=_print)
+            core_client.run(action, log=_print)
 
     except Exception as e:
         if cmk.ccc.debug.enabled():
@@ -163,6 +167,7 @@ def do_restart(
 
 def do_create_config(
     core: MonitoringCore,
+    core_client: CoreClient,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
     hosts_config: Hosts,
@@ -210,6 +215,7 @@ def do_create_config(
         ):
             _create_active_config(
                 core,
+                core_client,
                 config_cache,
                 core_objects_config,
                 hosts_config,
@@ -281,6 +287,7 @@ def _backup_objects_file(core_client: CoreClient) -> Iterator[None]:
 # Everything that should be in it must be created before creating that link.
 def _create_active_config(
     core: MonitoringCore,
+    core_client: CoreClient,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
     hosts_config: Hosts,
@@ -319,7 +326,7 @@ def _create_active_config(
 
     with (
         config_path.create(cmk.utils.paths.omd_root) as config_creation_context,
-        _backup_objects_file(core.core_client),
+        _backup_objects_file(core_client),
     ):
         snapshot_local_dir(cmk.utils.paths.local_root, config_creation_context.path_created)
         snapshot_trusted_cas(cmk.utils.paths.trusted_ca_file, config_creation_context.path_created)
@@ -358,7 +365,7 @@ def _create_active_config(
             ),
         )
 
-    core.core_client.cleanup_old_configs()
+    core_client.cleanup_old_configs()
 
 
 def _verify_non_duplicate_hosts(duplicates: Collection[HostName]) -> None:

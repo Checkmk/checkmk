@@ -11,7 +11,7 @@ from cmk.base.core.interface import MonitoringCore
 from cmk.ccc.version import Edition
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.checkengine.snmplib import SNMPPluginStore
-from cmk.core_client import NagiosClient
+from cmk.core_client import CoreClient, NagiosClient
 from cmk.ruleset_matcher.labels import LabelManager
 from cmk.ruleset_matcher.matcher import RulesetMatcher
 from cmk.utils import paths
@@ -26,13 +26,18 @@ def create_core(
     snmp_plugin_store: SNMPPluginStore,  # noqa: ARG001
     config_cache: ConfigCache,  # noqa: ARG001
     plugins: AgentBasedPlugins,  # noqa: ARG001
-) -> MonitoringCore:
+) -> tuple[MonitoringCore, CoreClient]:
     match loaded_config.monitoring_core:
         case "nagios":
             from cmk.base.core.nagios import NagiosCore
             from cmk.base.core.nagios._create_config import NagiosCoreConfig
 
-            return NagiosCore(
+            return (
+                NagiosCore(
+                    paths.nagios_objects_file,
+                    get_all_timeperiods(loaded_config.timeperiods),
+                    NagiosCoreConfig.from_raw_config(loaded_config),
+                ),
                 NagiosClient(
                     objects_file=paths.nagios_objects_file,
                     init_script=paths.nagios_startscript,
@@ -40,8 +45,6 @@ def create_core(
                     binary_file=paths.nagios_binary,
                     cleanup_base=paths.omd_root,
                 ),
-                get_all_timeperiods(loaded_config.timeperiods),
-                NagiosCoreConfig.from_raw_config(loaded_config),
             )
         case "cmc":
             raise RuntimeError("The Microcore is not available in this edition")

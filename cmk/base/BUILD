@@ -136,6 +136,7 @@ py_library(
         "//cmk/base/config",
         "//cmk/base/configlib",
         "//cmk/base/core",
+        "//cmk/core_client",
         "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine:fetchers",
         "//packages/cmk-check-engine:snmplib",

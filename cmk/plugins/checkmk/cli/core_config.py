@@ -223,16 +223,19 @@ def _mode_update(
             main_mk_file=cmk.utils.paths.default_config_dir / "main.mk",
             mode=loaded_config.restart_locking,
         ):
+            core, core_client = app.create_core(
+                app.edition,
+                ruleset_matcher,
+                label_manager,
+                loaded_config,
+                make_plugin_store(plugins),
+                loading_result.config_cache,
+                plugins,
+            )
+
             core_interface.do_create_config(
-                core=app.create_core(
-                    app.edition,
-                    ruleset_matcher,
-                    label_manager,
-                    loaded_config,
-                    make_plugin_store(plugins),
-                    loading_result.config_cache,
-                    plugins,
-                ),
+                core=core,
+                core_client=core_client,
                 hosts_config=hosts_config,
                 host_tags=loading_result.host_tags,
                 config_cache=loading_result.config_cache,
@@ -337,6 +340,16 @@ def _mode_restart(
         final_service_name_config
     )
 
+    core, core_client = app.create_core(
+        app.edition,
+        ruleset_matcher,
+        label_manager,
+        loaded_config,
+        make_plugin_store(plugins),
+        loading_result.config_cache,
+        plugins,
+    )
+
     core_interface.do_restart(
         loading_result.config_cache,
         core_objects_config,
@@ -358,15 +371,8 @@ def _mode_restart(
         ip_lookup_config.default_address_family,
         ip_address_of,
         ip_address_of_mgmt,
-        app.create_core(
-            app.edition,
-            ruleset_matcher,
-            label_manager,
-            loaded_config,
-            make_plugin_store(plugins),
-            loading_result.config_cache,
-            plugins,
-        ),
+        core,
+        core_client,
         plugins,
         hosts_to_update=set(args) if args else None,
         locking_mode=loaded_config.restart_locking,
@@ -455,6 +461,16 @@ def _mode_reload(
         final_service_name_config
     )
 
+    core, core_client = app.create_core(
+        app.edition,
+        ruleset_matcher,
+        label_manager,
+        loaded_config,
+        make_plugin_store(plugins),
+        loading_result.config_cache,
+        plugins,
+    )
+
     core_interface.do_reload(
         loading_result.config_cache,
         core_objects_config,
@@ -476,15 +492,8 @@ def _mode_reload(
         ip_lookup_config.default_address_family,
         ip_address_of,
         ip_address_of_mgmt,
-        app.create_core(
-            app.edition,
-            ruleset_matcher,
-            label_manager,
-            loaded_config,
-            make_plugin_store(plugins),
-            loading_result.config_cache,
-            plugins,
-        ),
+        core,
+        core_client,
         plugins,
         hosts_to_update=set(args) if args else None,
         locking_mode=loaded_config.restart_locking,

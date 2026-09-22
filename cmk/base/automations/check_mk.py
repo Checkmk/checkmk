@@ -188,7 +188,7 @@ from cmk.checkengine.specs.parameters import TimespecificParameters
 from cmk.checkengine.submitters import ServiceDetails
 from cmk.checkengine.summarize import summarize
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
-from cmk.core_client import CoreAction
+from cmk.core_client import CoreAction, CoreClient
 from cmk.discover_plugins import (
     addons_plugins_local_path,
     discover_families,
@@ -1321,7 +1321,7 @@ def _execute_autodiscovery(
     ip_address_of = env.ip_address_of(on_failure=IPLookupFailureMode.COLLECT)
     ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(env.ip_lookup_config)
 
-    core = app.create_core(
+    core, core_client = app.create_core(
         app.edition,
         env.ruleset_matcher,
         env.label_manager,
@@ -1357,6 +1357,7 @@ def _execute_autodiscovery(
             ip_address_of,
             ip_address_of_mgmt,
             core,
+            core_client,
             env.plugins,
             locking_mode=env.loaded_config.restart_locking,
             hosts_to_update=None,
@@ -1387,6 +1388,7 @@ def _execute_autodiscovery(
             ip_address_of,
             ip_address_of_mgmt,
             core,
+            core_client,
             env.plugins,
             service_depends_on=config.ServiceDependsOn(
                 tag_list=env.host_tags.tag_list,
@@ -1556,7 +1558,7 @@ class AutomationRenameHosts:
             if self._finished_history_files[(oldname, newname)]:
                 actions.append("history")
 
-        core = app.create_core(
+        core, core_client = app.create_core(
             app.edition,
             env.ruleset_matcher,
             env.label_manager,
@@ -1568,9 +1570,9 @@ class AutomationRenameHosts:
         # At this place WATO already has changed it's configuration. All further
         # data might be changed by the still running core. So we need to stop
         # it now.
-        core_was_running = core.core_client.is_running()
+        core_was_running = core_client.is_running()
         if core_was_running:
-            core.core_client.run(CoreAction.STOP, log=lambda x: None)  # noqa: ARG005
+            core_client.run(CoreAction.STOP, log=lambda x: None)  # noqa: ARG005
 
         try:
             for oldname, newname in renamings:
@@ -1590,6 +1592,7 @@ class AutomationRenameHosts:
                 _execute_silently(
                     RestartContext(
                         monitoring_core=core,
+                        core_client=core_client,
                         env=env,
                         hosts_config=hosts_config,
                         ip_address_of=ip_address_of,
@@ -2489,16 +2492,18 @@ class AutomationRestart:
         # here, preserving compatibility with shadow-host handling.
         hosts_config = config.make_hosts_config(env.loaded_config)
 
+        monitoring_core, core_client = app.create_core(
+            app.edition,
+            env.ruleset_matcher,
+            env.label_manager,
+            env.loaded_config,
+            make_plugin_store(env.plugins),
+            env.config_cache,
+            env.plugins,
+        )
         rctx = RestartContext(
-            monitoring_core=app.create_core(
-                app.edition,
-                env.ruleset_matcher,
-                env.label_manager,
-                env.loaded_config,
-                make_plugin_store(env.plugins),
-                env.config_cache,
-                env.plugins,
-            ),
+            monitoring_core=monitoring_core,
+            core_client=core_client,
             env=env,
             hosts_config=hosts_config,
             ip_address_of=env.ip_address_of(on_failure=IPLookupFailureMode.COLLECT),
@@ -2576,6 +2581,7 @@ class RestartContext:
     """Parameter bundle for :func:`_execute_silently`."""
 
     monitoring_core: MonitoringCore
+    core_client: CoreClient
     env: AutomationEnvironment
     hosts_config: Hosts
     ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts]
@@ -2619,6 +2625,7 @@ def _execute_silently(
             rctx.ip_address_of,
             rctx.ip_address_of_mgmt,
             rctx.monitoring_core,
+            rctx.core_client,
             env.plugins,
             action=action,
             hosts_to_update=hosts_to_update,

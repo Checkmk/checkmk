@@ -97,10 +97,6 @@ def test_check_ntp() -> None:
     ]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash report 4275: ValueError: 'summary' must be non-empty str or None",
-)
 def test_check_ntp_falsetick_peer() -> None:
     # Statecode "x" means the peer was rejected as a falseticker. The CRIT
     # result for it was yielded with an empty summary, which Result rejects.

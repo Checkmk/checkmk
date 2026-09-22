@@ -7,8 +7,6 @@ from collections.abc import Iterator, MutableMapping
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 
-import pytest
-
 from cmk.base.check_legacy_includes.wmi import wmi_yield_raw_persec
 
 from cmk.agent_based.v1.value_store import set_value_store_manager
@@ -45,10 +43,6 @@ def _table_with_zero_frequency() -> WMITable:
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash report 3b8c104a-a695-11f0-8047-005056ac592e: ZeroDivisionError: float division by zero",
-)
 def test_wmi_yield_raw_persec_reports_unusable_frequency() -> None:
     with _value_store():
         results = list(

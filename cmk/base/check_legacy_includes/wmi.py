@@ -8,7 +8,13 @@ from math import ceil
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckResult
 from cmk.agent_based.v2 import get_rate, get_value_store, IgnoreResultsError, render, StringTable
-from cmk.plugins.lib.wmi import get_wmi_time, required_tables_missing, WMISection, WMITable
+from cmk.plugins.lib.wmi import (
+    get_wmi_time,
+    required_tables_missing,
+    WMIInvalidFrequencyError,
+    WMISection,
+    WMITable,
+)
 from cmk.plugins.lib.wmi import parse_wmi_table as parse_wmi_table_migrated
 
 # This set of functions are used for checks that handle "generic" windows
@@ -188,10 +194,16 @@ def wmi_yield_raw_persec(
     except KeyError:
         return
 
+    try:
+        sample_time = get_wmi_time(table, row)
+    except WMIInvalidFrequencyError as exc:
+        yield 3, f"{infoname}: cannot compute a rate, {exc}"
+        return
+
     value_per_sec = get_rate(
         get_value_store(),
         f"{column}_{table.name}",
-        get_wmi_time(table, row),
+        sample_time,
         int(value),
         raise_overflow=True,
     )

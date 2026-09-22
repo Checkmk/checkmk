@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 from collections.abc import Mapping
 from contextlib import suppress
+from datetime import datetime, timedelta, timezone
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -14,6 +14,35 @@ from cmk.agent_based.v2 import (
     InventoryResult,
     StringTable,
 )
+
+
+def _parse_release_date_as_unix_seconds(value: str) -> int:
+    """Seconds since the epoch of a CIM_DATETIME, honouring its UTC offset.
+
+    The timestamp is not local time, so it must not be read as such: a BIOS released at
+    `20061201000000.000000+000` is 2006-12-01 00:00:00 UTC on every monitoring server,
+    whatever timezone the server itself runs in.
+
+    `yyyymmddHHMMSS.mmmmmmsooo` is a fixed width contract, and anything else is rejected
+    rather than guessed at. A firmware reports what it does not know as `*`, and since
+    the fields run from most to least significant, only trailing ones can be unspecified:
+    dropping them and padding with zeros reads Microsoft's own `19980416******.000000+***`
+    as midnight UTC on that day, while a `*` with a digit behind it stays rejected instead
+    of being resolved into a date nobody reported. Microseconds say nothing about a
+    release date, so they are not parsed.
+    """
+    if len(value) != 25 or value[14] != "." or value[21] not in "+-":
+        raise ValueError(f"Invalid CIM_DATETIME: {value!r}")
+
+    date_time = value[:14].rstrip("*").ljust(14, "0")
+    # Three digits, so the timedelta below cannot overflow however absurd they are.
+    offset_minutes = 0 if value[22:] == "***" else int(value[21:])
+
+    return int(
+        datetime.strptime(date_time, "%Y%m%d%H%M%S")
+        .replace(tzinfo=timezone(timedelta(minutes=offset_minutes)))
+        .timestamp()
+    )
 
 
 def parse_win_bios(string_table: StringTable) -> Mapping[str, int | str]:
@@ -32,11 +61,9 @@ def parse_win_bios(string_table: StringTable) -> Mapping[str, int | str]:
         elif varname == "SMBIOSMinorVersion":
             section["minor_version"] = value
         elif varname == "ReleaseDate":
-            # The ReleaseDate property indicates the release date of the
-            # Win32 BIOS in the Coordinated Universal Time (UTC) format
-            # of YYYYMMDDHHMMSS.MMMMMM(+-)OOO.
-            date = value.replace("*", "0").split(".", maxsplit=1)[0]
-            section["date"] = int(time.mktime(time.strptime(date, "%Y%m%d%H%M%S")))
+            # Firmware that does not populate the date at all reports an empty value.
+            if value:
+                section["date"] = _parse_release_date_as_unix_seconds(value)
         elif varname == "Manufacturer":
             section["vendor"] = value
         elif varname == "Name":

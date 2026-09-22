@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import json
 import re
 from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
 from dataclasses import dataclass
@@ -370,8 +369,9 @@ class ValuesWithUnits(CascadingDropdown):
         root_prefix = varprefix[: varprefix.find(self._vs_name)]
         metric_ref_prefix = root_prefix + self._metric_vs_name
         # This will load an event listener between the unit and the metric valuespec
-        html.javascript(
-            f"cmk.valuespecs.update_unit_selector({json.dumps(varprefix)}, {json.dumps(metric_ref_prefix)})"
+        html.call_ts_function(
+            function_name="update_unit_selector",
+            arguments={"varprefix": varprefix, "metric_ref_prefix": metric_ref_prefix},
         )
 
 

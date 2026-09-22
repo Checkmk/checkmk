@@ -87,6 +87,20 @@ KnownTSFunction = typing.Literal[
     "set_selection_enabled",
     "init_rowselect",
     "update_bulk_moveto",
+    # valuespecs
+    "list_of_strings_init",
+    "listof_update_indices",
+    "listofmultiple_init",
+    "add_cascading_sub_valuespec_parameters",
+    "update_unit_selector",
+    "init_on_change_validation",
+    "remove_label_filter_hidden_fields",
+    "render_input_range",
+    # bi
+    "bi_set_rule_argument_lookup",
+    "bi_rule_preview",
+    "bi_aggregation_preview",
+    "nodevis_create_example",
 ]
 
 

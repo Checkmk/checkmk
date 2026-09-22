@@ -2258,13 +2258,13 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
             html.close_div()
         html.close_div()
         html.div("", style="clear:left;")
-        html.javascript(
-            "cmk.valuespecs.list_of_strings_init(%s, %s, %s);"
-            % (
-                json.dumps(varprefix),
-                json.dumps(self._split_on_paste),
-                json.dumps(self._split_separators),
-            )
+        html.call_ts_function(
+            function_name="list_of_strings_init",
+            arguments={
+                "varprefix": varprefix,
+                "split_on_paste": self._split_on_paste,
+                "split_separators": self._split_separators,
+            },
         )
 
     @override
@@ -2478,9 +2478,8 @@ class ListOf[T](ValueSpec[ListOfModel[T]]):
         html.close_div()
 
         if count:
-            html.javascript(
-                "cmk.valuespecs.listof_update_indices(%s)" % json.dumps(varprefix),
-                data_cmk_execute_after_replace="",
+            html.call_ts_function(
+                function_name="listof_update_indices", arguments={"varprefix": varprefix}
             )
 
     def _show_entries(self, varprefix: str, value: ListOfModel[T]) -> None:
@@ -2847,7 +2846,9 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
             style="width: %dex" % self._size if self._size is not None else None,
             class_=["vlof_filter"] if self._delete_style == "filter" else [],
         )
-        html.javascript("cmk.valuespecs.listofmultiple_init(%s);" % json.dumps(varprefix))
+        html.call_ts_function(
+            function_name="listofmultiple_init", arguments={"varprefix": varprefix}
+        )
         html.jsbutton(
             varprefix + "_add",
             self._add_label,
@@ -3995,17 +3996,15 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         }
         request_vars.update(self._render_sub_vs_request_vars)
 
-        html.javascript(
-            "cmk.valuespecs.add_cascading_sub_valuespec_parameters(%s, %s);"
-            % (
-                json.dumps(varprefix),
-                json.dumps(
-                    {
-                        "page_name": self._render_sub_vs_page_name,
-                        "request_vars": request_vars,
-                    }
-                ),
-            )
+        html.call_ts_function(
+            function_name="add_cascading_sub_valuespec_parameters",
+            arguments={
+                "varprefix": varprefix,
+                "parameters": {
+                    "page_name": self._render_sub_vs_page_name,
+                    "request_vars": request_vars,
+                },
+            },
         )
 
     def _choice_from_value_raise(self, message: str, varprefix: str | None) -> Exception:
@@ -8112,7 +8111,9 @@ class LabelGroups(LabelGroup):
             value = self.from_html_vars(varprefix)
         value = self._add_empty_row_to_groups(value)
         super().render_input(varprefix, value)
-        html.final_javascript(f"cmk.forms.remove_label_filter_hidden_fields('{varprefix}');")
+        html.call_ts_function(
+            function_name="remove_label_filter_hidden_fields", arguments={"varprefix": varprefix}
+        )
 
     def _add_empty_row_to_groups(
         self, value: ListOfAndOrNotDropdownValue

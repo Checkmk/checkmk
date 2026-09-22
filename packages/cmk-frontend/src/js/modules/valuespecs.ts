@@ -19,6 +19,7 @@ import {
   format_select2_item
 } from './forms'
 import { close_popup } from './popup_menu'
+import { init_callable_ts_functions } from './ts_function_dispatcher'
 import type { Nullable } from './utils'
 import {
   add_class,
@@ -1223,7 +1224,9 @@ export function visual_filter_list_reset(
       const response = JSON.parse(ajax_response)
       const filters_html = response.result.filters_html
       const filter_list = document.getElementById(varprefix + '_popup_filter_list_selected')!
-      set_inner_html_and_execute_scripts(filter_list, filters_html)
+      /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
+      filter_list.innerHTML = filters_html
+      init_callable_ts_functions(filter_list)
       listofmultiple_disable_selected_options(varprefix)
       enable_dynamic_form_elements()
     }
@@ -1232,25 +1235,6 @@ export function visual_filter_list_reset(
   // Disable the reset button
   const reset_button = document.getElementById(varprefix + '_reset') as HTMLButtonElement
   reset_button.disabled = true
-}
-
-function set_inner_html_and_execute_scripts(elm: HTMLElement, html: string) {
-  /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
-  elm.innerHTML = html
-
-  for (const original_script of elm.getElementsByTagName('script')) {
-    if (!original_script.hasAttribute('data-cmk_execute_after_replace')) continue
-
-    const new_script: HTMLScriptElement = document.createElement('script')
-
-    for (const attr of original_script.attributes) {
-      new_script.setAttribute(attr.name, attr.value)
-    }
-
-    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
-    new_script.innerHTML = original_script.innerHTML
-    original_script.parentNode!.replaceChild(new_script, original_script)
-  }
 }
 
 export function update_unit_selector(selectbox: string, metric_prefix: string) {

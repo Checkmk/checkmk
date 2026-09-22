@@ -142,13 +142,18 @@ export function toggle_assumption(link: HTMLElement, site: string, host: string,
   call_ajax(url)
 }
 
+let bi_rule_argument_lookup: Record<string, string[]> = {}
+
+export function set_rule_argument_lookup(lookup: Record<string, string[]>) {
+  bi_rule_argument_lookup = lookup
+  update_argument_hints()
+}
+
 export function update_argument_hints() {
   selectAll<HTMLSelectElement, unknown>("select[onchange='cmk.bi.update_argument_hints();']").each(
     (_d, idx, nodes) => {
       const node = select(nodes[idx])
-      const rule_arguments =
-        //@ts-ignore
-        window['bi_rule_argument_lookup'][node.property('value')]
+      const rule_arguments = bi_rule_argument_lookup[node.property('value')]
       const rule_body = node.select(function () {
         // @ts-ignore
         return this.closest('tbody')

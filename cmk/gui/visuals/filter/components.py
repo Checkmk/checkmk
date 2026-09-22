@@ -111,8 +111,9 @@ class DynamicDropdown(BaseComponent):
         )
 
         if self.has_validation:
-            html.javascript(
-                f"cmk.valuespecs.init_on_change_validation('{self.id}', '{filter_id}');"
+            html.call_ts_function(
+                function_name="init_on_change_validation",
+                arguments={"varname": self.id, "filter_ident": filter_id},
             )
 
     @override
@@ -292,23 +293,20 @@ class Slider(BaseComponent):
         html.open_table()
         html.tr("", id_=self.id, css=["range_input"])
         html.close_table()
-        html.javascript(
-            "cmk.nodevis.utils.render_input_range(cmk.d3.select(%s), %s, %s)"
-            % (
-                json.dumps(f"#{self.id}"),
-                json.dumps(
-                    {
-                        "id": self.id,
-                        "title": "",
-                        "step": self.step,
-                        "min": self.min_value,
-                        "max": self.max_value,
-                        "default_value": self.default_value,
-                    },
-                ),
-                json.dumps(actual_value),
-            ),
-            data_cmk_execute_after_replace="",
+        html.call_ts_function(
+            function_name="render_input_range",
+            arguments={
+                "selector": f"#{self.id}",
+                "range_options": {
+                    "id": self.id,
+                    "title": "",
+                    "step": self.step,
+                    "min": self.min_value,
+                    "max": self.max_value,
+                    "default_value": self.default_value,
+                },
+                "value": actual_value,
+            },
         )
 
     @override

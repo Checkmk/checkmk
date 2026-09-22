@@ -313,11 +313,8 @@ class ABCBIMode(WatoMode):
         for bi_rule in allowed_rules.values():
             lookup[DropdownChoice.option_id(bi_rule.id)] = bi_rule.params.arguments
 
-        html.javascript(
-            """var bi_rule_argument_lookup = %s;
-        cmk.bi.update_argument_hints();
-"""
-            % json.dumps(lookup)
+        html.call_ts_function(
+            function_name="bi_set_rule_argument_lookup", arguments={"lookup": lookup}
         )
 
     def _allowed_rules(self) -> dict[str, BIRule]:
@@ -929,7 +926,9 @@ class ModeBIRules(ABCBIMode):
         target_pack_id = None
         if request.has_var("bulk_moveto"):
             target_pack_id = request.get_str_input_mandatory("bulk_moveto", "")
-            html.javascript("cmk.selection.update_bulk_moveto(%s)" % json.dumps(target_pack_id))
+            html.call_ts_function(
+                function_name="update_bulk_moveto", arguments={"value": target_pack_id}
+            )
 
         if target_pack_id is None:
             raise MKUserError(None, _("This BI pack does not exist."))
@@ -1006,9 +1005,9 @@ class ModeBIRules(ABCBIMode):
                 return HTML.empty()
 
             if request.has_var("bulk_moveto"):
-                html.javascript(
-                    "cmk.selection.update_bulk_moveto(%s)"
-                    % json.dumps(request.var("bulk_moveto", ""))
+                html.call_ts_function(
+                    function_name="update_bulk_moveto",
+                    arguments={"value": request.var("bulk_moveto", "")},
                 )
 
             html.dropdown(
@@ -1645,15 +1644,19 @@ class BIRuleForm(Dictionary):
     @override
     def render_input(self, varprefix: str, value: Any) -> None:
         super().render_input(varprefix, value)
-        html.javascript("new cmk.bi.BIRulePreview('#form_birule', %s)" % json.dumps(varprefix))
+        html.call_ts_function(
+            function_name="bi_rule_preview",
+            arguments={"root_node": "#form_birule", "varprefix": varprefix},
+        )
 
 
 class BIAggregationForm(Dictionary):
     @override
     def render_input(self, varprefix: str, value: Any) -> None:
         super().render_input(varprefix, value)
-        html.javascript(
-            "new cmk.bi.BIAggregationPreview('#form_biaggr', %s)" % json.dumps(varprefix)
+        html.call_ts_function(
+            function_name="bi_aggregation_preview",
+            arguments={"root_node": "#form_biaggr", "varprefix": varprefix},
         )
 
 
@@ -1764,9 +1767,9 @@ class NodeVisualizationLayoutStyle(ValueSpec[dict[str, Any]]):
     @override
     def render_input(self, varprefix: str, value: dict[str, Any]) -> None:
         html.div("", id_=varprefix)
-        html.javascript(
-            "let example = new cmk.nodevis.example_generator(%s);"
-            "example.create_example(%s)" % (json.dumps(varprefix), json.dumps(value))
+        html.call_ts_function(
+            function_name="nodevis_create_example",
+            arguments={"varprefix": varprefix, "value": value},
         )
 
     @override
@@ -2310,7 +2313,7 @@ class BIModeAggregations(ABCBIMode):
         target = None
         if request.has_var("bulk_moveto"):
             target = request.var("bulk_moveto", "")
-            html.javascript("cmk.selection.update_bulk_moveto(%s)" % json.dumps(target))
+            html.call_ts_function(function_name="update_bulk_moveto", arguments={"value": target})
 
         target_pack = None
         if target in self._bi_packs.get_packs():
@@ -2439,9 +2442,9 @@ class BIModeAggregations(ABCBIMode):
                 return HTML.empty()
 
             if request.has_var("bulk_moveto"):
-                html.javascript(
-                    "cmk.selection.update_bulk_moveto(%s)"
-                    % json.dumps(request.var("bulk_moveto", ""))
+                html.call_ts_function(
+                    function_name="update_bulk_moveto",
+                    arguments={"value": request.var("bulk_moveto", "")},
                 )
 
             html.dropdown(

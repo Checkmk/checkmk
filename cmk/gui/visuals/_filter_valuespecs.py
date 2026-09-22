@@ -328,8 +328,9 @@ class VisualFilterListWithAddPopup(VisualFilterList):
             html.close_div()
         html.close_div()
         filters_applied = request.get_ascii_input("filled_in") == "filter"
-        html.javascript(
-            f"cmk.valuespecs.listofmultiple_init({json.dumps(varprefix)}, {json.dumps(filters_applied)});"
+        html.call_ts_function(
+            function_name="listofmultiple_init",
+            arguments={"varprefix": varprefix, "was_submitted": filters_applied},
         )
 
 

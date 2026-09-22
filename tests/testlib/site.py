@@ -1919,8 +1919,18 @@ class Site:
 
     @tracer.instrument("Site.activate_changes_and_wait_for_core_reload")
     def activate_changes_and_wait_for_core_reload(
-        self, allow_foreign_changes: bool = False, remote_site: Site | None = None
+        self,
+        allow_foreign_changes: bool = False,
+        remote_site: Site | None = None,
+        strict: bool = True,
     ) -> None:
+        """Activate changes and wait until the monitoring core has reloaded its configuration.
+
+        Args:
+            allow_foreign_changes: Also activate changes made by other users.
+            remote_site: The site to wait for the core reload on. Defaults to this site.
+            strict: Assert having no pending changes after the activation.
+        """
         logger.info("Activate changes and wait for reload...")
         self.ensure_running()
         try:
@@ -1949,7 +1959,7 @@ class Site:
                         )
 
             changed = self.openapi.changes.activate_and_wait_for_completion(
-                force_foreign_changes=allow_foreign_changes
+                force_foreign_changes=allow_foreign_changes, strict=strict
             )
             if changed:
                 logger.info("Waiting for core reloads of: %s", site.id)

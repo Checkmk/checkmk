@@ -25,5 +25,7 @@ def register(
     teleport_target: str | None,
 ) -> None:
     register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
-    register_pages(page_registry, command_registry, downtime_recurrences, host_menus)
+    register_pages(
+        page_registry, command_registry, downtime_recurrences, host_menus, teleport_target
+    )
     register_builtin("experimental_view_button", HostServicesLinkButton(teleport_target))

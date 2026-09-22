@@ -86,10 +86,12 @@ class MonitorHostServicesPage(Page):
         commands: MonitorCommands,
         recurrences: DowntimeRecurrences,
         host_menus: HostMenus,
+        teleport_target: str | None = None,
     ) -> None:
         self._commands = commands
         self._recurrences = recurrences
         self._host_menus = host_menus
+        self._teleport_target = teleport_target
 
     def _permitted_actions(self) -> list[MonitoringAction]:
         return [
@@ -146,6 +148,7 @@ class MonitorHostServicesPage(Page):
                     host_url=host_url,
                     user_id=str(user.id),
                     edition=Edition(edition(paths.omd_root).short),
+                    header_teleport_target=self._teleport_target,
                     ai_explain=ai_explain.is_enabled(),
                     actions=self._permitted_actions(),
                     downtime_recurrences=[

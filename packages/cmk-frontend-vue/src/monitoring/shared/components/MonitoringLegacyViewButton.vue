@@ -8,7 +8,11 @@ import type { MonitoringPageLinkButton } from 'cmk-shared-typing/typescript/moni
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 
+import { useTeleportPlacement } from '@/monitoring/shared/components/teleportPlacement'
+
 const props = defineProps<MonitoringPageLinkButton>()
+
+const { target, isDefault } = useTeleportPlacement('.titlebar', () => props.teleport_target)
 
 function navigate(): void {
   window.location.href = props.url
@@ -16,8 +20,17 @@ function navigate(): void {
 </script>
 
 <template>
-  <Teleport defer to=".titlebar">
-    <CmkButton class="monitoring-legacy-view-button" @click="navigate">
+  <Teleport defer :to="target">
+    <CmkButton
+      class="monitoring-legacy-view-button"
+      :class="
+        isDefault
+          ? 'monitoring-legacy-view-button--titlebar'
+          : 'monitoring-legacy-view-button--inline'
+      "
+      :size="isDefault ? 'medium' : 'small'"
+      @click="navigate"
+    >
       <CmkIcon name="back" class="monitoring-legacy-view-button__icon" />
       {{ title }}
     </CmkButton>
@@ -26,9 +39,17 @@ function navigate(): void {
 
 <style scoped>
 .monitoring-legacy-view-button {
-  right: var(--dimension-4);
   white-space: nowrap;
+}
+
+.monitoring-legacy-view-button--titlebar {
+  right: var(--dimension-4);
   align-self: center;
+}
+
+.monitoring-legacy-view-button--inline {
+  margin-left: var(--dimension-4);
+  vertical-align: middle;
 }
 
 .monitoring-legacy-view-button__icon {

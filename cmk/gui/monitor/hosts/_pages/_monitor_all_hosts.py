@@ -118,9 +118,15 @@ def monitor_all_hosts_visual_spec() -> Visual:
 
 
 class MonitorAllHostsPage(Page):
-    def __init__(self, commands: MonitorCommands, recurrences: DowntimeRecurrences) -> None:
+    def __init__(
+        self,
+        commands: MonitorCommands,
+        recurrences: DowntimeRecurrences,
+        teleport_target: str | None = None,
+    ) -> None:
         self._commands = commands
         self._recurrences = recurrences
+        self._teleport_target = teleport_target
 
     @override
     def page(self, ctx: PageContext) -> None:
@@ -161,6 +167,7 @@ class MonitorAllHostsPage(Page):
                         for site_id, alias in sorted_sites(ctx.config.sites)
                     ],
                     edition=Edition(edition(paths.omd_root).short),
+                    header_teleport_target=self._teleport_target,
                     actions=[
                         MonitoringAction(
                             ident=command.ident, title=str(command.title), icon=command.icon

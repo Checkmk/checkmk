@@ -304,11 +304,15 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
 
 <template>
   <CmkErrorBoundary>
-    <MonitoringSurveyLink url="https://survey.checkmk.com/index.php/815511?lang=en" />
+    <MonitoringSurveyLink
+      url="https://survey.checkmk.com/index.php/815511?lang=en"
+      :teleport-target="header_teleport_target"
+    />
     <MonitoringLegacyViewButton
       v-if="legacy_view_button"
       :title="legacy_view_button.title"
       :url="legacy_view_button.url"
+      :teleport_target="header_teleport_target ?? null"
     />
     <div class="monitoring-all-hosts-app">
       <MonitoringToolbar

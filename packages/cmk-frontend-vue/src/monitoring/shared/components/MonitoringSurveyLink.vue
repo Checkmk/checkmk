@@ -8,14 +8,23 @@ import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkLink from 'cmk-ui-library/components/CmkLink.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
+import { useTeleportPlacement } from '@/monitoring/shared/components/teleportPlacement'
+
 const { _t } = usei18n()
 
-defineProps<{ url: string }>()
+const props = defineProps<{ url: string; teleportTarget?: string | null | undefined }>()
+
+const { target, isDefault } = useTeleportPlacement('.titlebar', () => props.teleportTarget)
 </script>
 
 <template>
-  <Teleport defer to=".titlebar">
-    <CmkLink :href="url" target="_blank" class="monitoring-survey-link">
+  <Teleport defer :to="target">
+    <CmkLink
+      :href="url"
+      target="_blank"
+      class="monitoring-survey-link"
+      :class="isDefault ? 'monitoring-survey-link--titlebar' : 'monitoring-survey-link--inline'"
+    >
       <CmkIcon name="comment" class="monitoring-survey-link__icon" />
       {{ _t('Give feedback on the new view') }}
     </CmkLink>
@@ -23,10 +32,15 @@ defineProps<{ url: string }>()
 </template>
 
 <style scoped>
-.monitoring-survey-link {
+.monitoring-survey-link--titlebar {
   margin-right: var(--dimension-6);
   place-content: center flex-end;
   align-items: center;
+}
+
+.monitoring-survey-link--inline {
+  margin-left: var(--dimension-4);
+  vertical-align: middle;
 }
 
 .monitoring-survey-link__icon {

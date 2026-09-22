@@ -8,14 +8,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type MonitoringPageLinkButton } from 'cmk-shared-typing/typescript/monitoring/page_link_button'
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
-import { computed } from 'vue'
 
-const DEFAULT_TELEPORT_TARGET = '.page_state'
+import { useTeleportPlacement } from '@/monitoring/shared/components/teleportPlacement'
 
 const props = defineProps<MonitoringPageLinkButton>()
 
-const teleportTarget = computed(() => props.teleport_target ?? DEFAULT_TELEPORT_TARGET)
-const inPageState = computed(() => teleportTarget.value === DEFAULT_TELEPORT_TARGET)
+const { target, isDefault } = useTeleportPlacement('.page_state', () => props.teleport_target)
 
 function navigate(): void {
   window.location.href = props.url
@@ -23,15 +21,15 @@ function navigate(): void {
 </script>
 
 <template>
-  <Teleport defer :to="teleportTarget">
+  <Teleport defer :to="target">
     <CmkButton
       class="monitoring-page-link-button"
       :class="
-        inPageState
+        isDefault
           ? 'monitoring-page-link-button--page-state'
           : 'monitoring-page-link-button--inline'
       "
-      :size="inPageState ? 'medium' : 'small'"
+      :size="isDefault ? 'medium' : 'small'"
       @click="navigate"
     >
       <CmkMultitoneIcon

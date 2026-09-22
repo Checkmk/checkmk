@@ -27,6 +27,9 @@
       "default": []
     },
     "legacy_view_button": { "$ref": "page_link_button.json" },
+    "header_teleport_target": {
+      "type": ["string", "null"]
+    },
     "acknowledge_presets_url": {
       "type": ["string", "null"]
     },

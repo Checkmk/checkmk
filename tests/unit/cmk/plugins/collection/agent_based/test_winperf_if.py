@@ -1303,10 +1303,6 @@ def test_parse_winperf_if_get_netadapter() -> None:
     ]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash report a1d172f2-81f8-11f1-be9f-0050568dce13: IndexError: list index out of range",
-)
 def test_parse_winperf_if_get_netadapter_ignores_truncated_line() -> None:
     # The Windows agent appends an error line of its own to the section when the
     # script host fails, e.g.

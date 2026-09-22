@@ -6,11 +6,17 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import { type MonitoringPageLinkButton } from 'cmk-shared-typing/typescript/monitoring/page_link_button'
+import { computed } from 'vue'
 
 import CmkButton from '@/components/CmkButton/CmkButton.vue'
 import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 
+const DEFAULT_TELEPORT_TARGET = '.page_state'
+
 const props = defineProps<MonitoringPageLinkButton>()
+
+const teleportTarget = computed(() => props.teleport_target ?? DEFAULT_TELEPORT_TARGET)
+const inPageState = computed(() => teleportTarget.value === DEFAULT_TELEPORT_TARGET)
 
 function navigate(): void {
   window.location.href = props.url
@@ -18,8 +24,17 @@ function navigate(): void {
 </script>
 
 <template>
-  <Teleport defer to=".page_state">
-    <CmkButton class="monitoring-page-link-button" @click="navigate">
+  <Teleport defer :to="teleportTarget">
+    <CmkButton
+      class="monitoring-page-link-button"
+      :class="
+        inPageState
+          ? 'monitoring-page-link-button--page-state'
+          : 'monitoring-page-link-button--inline'
+      "
+      :size="inPageState ? 'medium' : 'small'"
+      @click="navigate"
+    >
       <CmkMultitoneIcon
         name="experiment"
         primary-color="font"
@@ -34,9 +49,17 @@ function navigate(): void {
 
 <style scoped>
 .monitoring-page-link-button {
+  white-space: nowrap;
+}
+
+.monitoring-page-link-button--page-state {
   position: absolute;
   right: 50px;
-  white-space: nowrap;
+}
+
+.monitoring-page-link-button--inline {
+  margin-left: var(--dimension-4);
+  vertical-align: middle;
 }
 
 .monitoring-page-link-button__icon {

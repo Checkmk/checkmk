@@ -166,6 +166,7 @@ def register(
     help_developer_entries: Callable[[], MainMenuTopicEntries],
     help_about_checkmk_entries: Callable[[], MainMenuTopicEntries],
     token_authenticated_page_registry: TokenAuthenticatedPageRegistry,
+    monitoring_teleport_target: str | None = None,
     *,
     ignore_duplicate_endpoints: bool = False,
 ) -> None:
@@ -241,6 +242,7 @@ def register(
         versioned_endpoint_registry,
         page_registry,
         command_registry,
+        monitoring_teleport_target,
         ignore_duplicate_endpoints=ignore_duplicate_endpoints,
     )
     watolib_registration.register(

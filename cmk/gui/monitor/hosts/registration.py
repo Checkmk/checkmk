@@ -10,7 +10,7 @@ from cmk.gui.pages import PageRegistry
 from cmk.gui.views.command.registry import CommandRegistry
 
 from ._api._registration import register_endpoints
-from ._legacy_view_link import show_all_hosts_link_button
+from ._legacy_view_link import AllHostsLinkButton
 from ._pages._registration import register_pages
 
 
@@ -19,6 +19,7 @@ def register(
     versioned_endpoint_registry: VersionedEndpointRegistry,
     page_registry: PageRegistry,
     command_registry: CommandRegistry,
+    teleport_target: str | None,
     *,
     ignore_duplicate_endpoints: bool = False,
 ) -> None:
@@ -28,4 +29,4 @@ def register(
         ignore_duplicate_endpoints=ignore_duplicate_endpoints,
     )
     register_pages(page_registry, command_registry)
-    register_builtin("experimental_view_button", show_all_hosts_link_button)
+    register_builtin("experimental_view_button", AllHostsLinkButton(teleport_target))

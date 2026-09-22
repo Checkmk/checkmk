@@ -13,15 +13,20 @@ from cmk.shared_typing.monitoring.page_link_button import MonitoringPageLinkButt
 _LEGACY_VIEW_NAME = "allhosts"
 
 
-def show_all_hosts_link_button(view_name: str) -> None:
-    if view_name != _LEGACY_VIEW_NAME:
-        return
-    html.vue_component(
-        "cmk-monitoring-page-link-button",
-        data=asdict(
-            MonitoringPageLinkButton(
-                url=makeuri_contextless(request, [], filename="monitor_all_hosts.py"),
-                title=_('Try the new "All hosts" view'),
-            )
-        ),
-    )
+class AllHostsLinkButton:
+    def __init__(self, teleport_target: str | None = None) -> None:
+        self._teleport_target = teleport_target
+
+    def __call__(self, view_name: str) -> None:
+        if view_name != _LEGACY_VIEW_NAME:
+            return
+        html.vue_component(
+            "cmk-monitoring-page-link-button",
+            data=asdict(
+                MonitoringPageLinkButton(
+                    url=makeuri_contextless(request, [], filename="monitor_all_hosts.py"),
+                    title=_('Try the new "All hosts" view'),
+                    teleport_target=self._teleport_target,
+                )
+            ),
+        )

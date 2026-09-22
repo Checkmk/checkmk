@@ -72,6 +72,12 @@ def prepare_reserved_ids(home: Path, ids: list[int]) -> Path:
     return stash_file
 
 
+def read_log(home: Path) -> list[str]:
+    # every line is "<timestamp, logger and level> <the entry itself>"
+    log_file = home / ".local/state/cmk-werks/werk-ids.log"
+    return [line.split("[INFO] ", 1)[1] for line in log_file.read_text().splitlines()]
+
+
 def create_werk(*, title: str) -> None:
     change = Path(f"some_change{title}")
     change.write_text("smth")
@@ -111,6 +117,22 @@ def test_reserve_ids_and_create_werk(tmp_path: Path) -> None:
     assert remaining == [11112, 11113]
 
 
+def test_create_werk_logs_the_consumed_id(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    prepare_reserved_ids(home, [11111, 11112])
+
+    repo_path = tmp_path / "repo"
+    initialize_werks_project(repo_path, first_free=11_111)
+
+    with mock.patch.dict(os.environ, {"HOME": str(home), "EDITOR": "true"}):
+        os.chdir(repo_path)
+        create_werk(title="some_title")
+
+    werk_file = (repo_path / ".werks/11111.md").resolve()
+    assert read_log(home)[-1] == f"launcher:bazel, action:new, werk ID:11111, werk file:{werk_file}"
+
+
 def test_delete_werk_returns_the_id_to_the_stash(tmp_path: Path) -> None:
     home = tmp_path / "home"
     home.mkdir()
@@ -125,6 +147,22 @@ def test_delete_werk_returns_the_id_to_the_stash(tmp_path: Path) -> None:
         subprocess.run(["python", "-m", "cmk.werks", "delete", "11111"], check=False)
 
     assert json.loads(stash_file.read_text())["ids"] == [11111, 11112]
+
+
+def test_delete_werk_logs_the_returned_id(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    prepare_reserved_ids(home, [11111, 11112])
+
+    repo_path = tmp_path / "repo"
+    initialize_werks_project(repo_path, first_free=11_111)
+
+    with mock.patch.dict(os.environ, {"HOME": str(home), "EDITOR": "true"}):
+        os.chdir(repo_path)
+        create_werk(title="some_title")
+        subprocess.run(["python", "-m", "cmk.werks", "delete", "11111"], check=False)
+
+    assert read_log(home)[-1] == "launcher:bazel, action:delete, werk ID:11111"
 
 
 def test_commit_config(tmp_path: Path) -> None:

@@ -9,6 +9,7 @@ import ast
 import datetime
 import getpass
 import json
+import logging
 from dataclasses import dataclass, field
 import fcntl
 import os
@@ -34,6 +35,7 @@ from . import parse_werk
 from .config import Config, load_config, try_load_current_version_from_defines_make
 from .convert import werkv1_metadata_to_werkv2_metadata
 from .format import format_as_werk_v1, format_as_werk_v2
+from .id_log import get_werk_id_logger
 from .models import EditionV3
 from .parse import parse_werk_v3, WERK_V3_START, WerkV2ParseResult, WerkV3ParseResult
 from .utils import edition_v3_to_v2
@@ -123,6 +125,7 @@ class Paths:
     legacy_stash_file: Path
     stash_file: Path
     secret_file: Path
+    log_file: Path
 
     @property
     def active_stash_file(self) -> Path:
@@ -130,10 +133,12 @@ class Paths:
 
 
 def make_paths_object(home: Path) -> Paths:
+    state_dir = home / ".local/state/cmk-werks"
     return Paths(
         legacy_stash_file=home / ".cmk-werk-ids",
-        stash_file=home / ".local/state/cmk-werks/reserved-ids",
+        stash_file=state_dir / "reserved-ids",
         secret_file=home / ".config/cmk-werks/secret",
+        log_file=state_dir / "werk-ids.log",
     )
 
 
@@ -560,6 +565,11 @@ def add_comment(werk: Werk, title: str, comment: str) -> None:
 {comment}"""
 
 
+def _launcher() -> str:
+    # Bazel runs the tool out of a runfiles tree; the venv entry point does not.
+    return "bazel" if "RUNFILES_DIR" in os.environ else "venv"
+
+
 def list_werk(werk: Werk) -> None:
     if werk_is_modified(werk.id):
         bold = TTY_BOLD + TTY_CYAN + "(*) "
@@ -883,7 +893,7 @@ def _read_legacy_stash_file(paths: Paths) -> Sequence[int]:
     return [int(id_) for id_ in raw_cmk_werk_ids]
 
 
-def migrate_werk_ids_file(paths: Paths) -> None:
+def migrate_werk_ids_file(paths: Paths, log: logging.Logger, launcher: str) -> None:
     assert paths.secret_file.exists()
 
     stash = (
@@ -891,10 +901,19 @@ def migrate_werk_ids_file(paths: Paths) -> None:
         if paths.stash_file.exists()
         else Stash()
     )
-    stash.add_ids([WerkId(id_) for id_ in _read_legacy_stash_file(paths)])
+    migrated = [WerkId(id_) for id_ in _read_legacy_stash_file(paths)]
+    stash.add_ids(migrated)
 
     dump_stash_to_file(paths, stash)
     paths.legacy_stash_file.unlink(missing_ok=True)
+    if migrated:
+        log.info(
+            "launcher:%(launcher)s, action:migrate, werk IDs:%(werk_ids)s",
+            {
+                "launcher": launcher,
+                "werk_ids": " ".join(str(werk_id) for werk_id in migrated),
+            },
+        )
 
 
 def load_stash_from_file(paths: Paths) -> Stash:
@@ -1029,7 +1048,9 @@ def _ensure_stash_file_writable(paths: Paths) -> None:
         )
 
 
-def load_or_update_stash(paths: Paths, werk_ids_client: WerkIDsClient) -> Stash:
+def load_or_update_stash(
+    paths: Paths, werk_ids_client: WerkIDsClient, log: logging.Logger, launcher: str
+) -> Stash:
     stash = load_stash_from_file(paths)
 
     if not paths.secret_file.exists():
@@ -1041,8 +1062,16 @@ def load_or_update_stash(paths: Paths, werk_ids_client: WerkIDsClient) -> Stash:
     if reserved_werk_ids := werk_ids_client.reserve_werk_ids(
         paths.secret_file, local_werk_ids_count
     ):
-        stash.add_ids([WerkId(raw_id) for raw_id in reserved_werk_ids])
+        reserved = [WerkId(raw_id) for raw_id in reserved_werk_ids]
+        stash.add_ids(reserved)
         dump_stash_to_file(paths, stash)
+        log.info(
+            "launcher:%(launcher)s, action:reserve, werk IDs:%(werk_ids)s",
+            {
+                "launcher": launcher,
+                "werk_ids": " ".join(str(werk_id) for werk_id in reserved),
+            },
+        )
         return load_stash_from_file(paths)
 
     if not local_werk_ids_count:
@@ -1060,7 +1089,10 @@ def main_new(args: argparse.Namespace) -> None:
     sys.stdout.write(TTY_GREEN + WERK_NOTES + TTY_NORMAL)
 
     paths = make_paths_object(Path.home())
-    stash = load_or_update_stash(paths, WerkIDsClient(get_config().werk_ids_server_url))
+    log = get_werk_id_logger(paths.log_file)
+    stash = load_or_update_stash(
+        paths, WerkIDsClient(get_config().werk_ids_server_url), log, _launcher()
+    )
     werk_id = stash.pick_id()
 
     metadata: WerkMetadata = {}
@@ -1097,6 +1129,14 @@ def main_new(args: argparse.Namespace) -> None:
 
     stash.free_id(werk_id)
     dump_stash_to_file(paths, stash)
+    log.info(
+        "launcher:%(launcher)s, action:new, werk ID:%(werk_id)s, werk file:%(werk_file)s",
+        {
+            "launcher": _launcher(),
+            "werk_id": werk_id,
+            "werk_file": werk_path.resolve(),
+        },
+    )
 
     sys.stdout.write(f"Werk {format_werk_id(werk_id)} saved.\n")
 
@@ -1118,13 +1158,14 @@ def main_init() -> None:
         return
 
     paths = make_paths_object(Path.home())
+    log = get_werk_id_logger(paths.log_file)
 
     if paths.secret_file.exists() and werk_ids_client.test_connection(paths.secret_file):
         sys.stdout.write("Everything is fine.\n")
         # The secret is already valid, so migrate any leftover legacy file (e.g. when
         # both a legacy and a new stash file are present) instead of leaving it behind.
         if paths.legacy_stash_file.exists():
-            migrate_werk_ids_file(paths)
+            migrate_werk_ids_file(paths, log, _launcher())
         return
 
     while True:
@@ -1134,7 +1175,7 @@ def main_init() -> None:
         # Only migrate the legacy file once the secret is confirmed correct. A wrong
         # secret leaves the legacy stash untouched, so it stays usable for 'werk create'.
         if werk_ids_client.test_connection(paths.secret_file):
-            migrate_werk_ids_file(paths)
+            migrate_werk_ids_file(paths, log, _launcher())
             break
 
     sys.stdout.write(
@@ -1155,7 +1196,7 @@ def main_url(args: argparse.Namespace) -> None:
 
 def main_delete(args: argparse.Namespace) -> None:
     paths = make_paths_object(Path.home())
-
+    log = get_werk_id_logger(paths.log_file)
     for werk_id in [WerkId(i) for i in args.id]:
         if not werk_exists(werk_id):
             bail_out(f"There is no werk {format_werk_id(werk_id)}.")
@@ -1171,6 +1212,13 @@ def main_delete(args: argparse.Namespace) -> None:
         stash = load_stash_from_file(paths)
         stash.add_ids([werk_id])
         dump_stash_to_file(paths, stash)
+        log.info(
+            "launcher:%(launcher)s, action:delete, werk ID:%(werk_id)s",
+            {
+                "launcher": _launcher(),
+                "werk_id": werk_id,
+            },
+        )
         sys.stdout.write(f"You lucky bastard now own the Werk ID {format_werk_id(werk_id)}.\n")
 
 
@@ -1276,16 +1324,24 @@ def edit_werk(werk_path: Path, custom_files: list[str] | None = None, commit: bo
 
 
 def main_pick(args: argparse.Namespace) -> None:
+    paths = make_paths_object(Path.home())
+    log = get_werk_id_logger(paths.log_file)
     for commit_id in args.commit:
-        werk_cherry_pick(commit_id, args.no_commit, get_werk_file_version())
+        werk_cherry_pick(commit_id, args.no_commit, get_werk_file_version(), log)
 
 
 class WerkToPick(NamedTuple):
+    id: WerkId
     source: Path
     destination: Path
 
 
-def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion) -> None:
+def werk_cherry_pick(
+    commit_id: str,
+    no_commit: bool,
+    werk_version: WerkVersion,
+    log: logging.Logger,
+) -> None:
     # First get the werk_id
     try:
         result = subprocess.run(
@@ -1301,11 +1357,11 @@ def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion)
         filename = Path(line.decode("utf-8"))
         if filename.parent.name == ".werks" and filename.name.removesuffix(".md").isdigit():
             # we os.chdir into the werks folder, so now we can not use the git paths as is
+            werk_id = WerkId(int(filename.name.removesuffix(".md")))
             found_werk_path = WerkToPick(
+                id=werk_id,
                 source=Path(filename.name),
-                destination=get_werk_filename(
-                    WerkId(int(filename.name.removesuffix(".md"))), werk_version
-                ),
+                destination=get_werk_filename(werk_id, werk_version),
             )
 
     if found_werk_path is not None:
@@ -1340,6 +1396,14 @@ def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion)
         # Change the werk's version before checking the pick return code.
         # Otherwise the dev may forget to change the version
         change_werk_version(found_werk_path.destination, get_config().current_version, werk_version)
+        log.info(
+            "launcher:%(launcher)s, action:pick, werk ID:%(werk_id)s, werk file:%(werk_file)s",
+            {
+                "launcher": _launcher(),
+                "werk_id": found_werk_path.id,
+                "werk_file": found_werk_path.destination.resolve(),
+            },
+        )
         sys.stdout.write(
             f"Changed version of werk {found_werk_path.destination} "
             f"to {get_config().current_version}.\n"

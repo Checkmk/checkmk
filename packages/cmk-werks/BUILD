@@ -21,6 +21,7 @@ py_library(
         "cmk/werks/convert.py",
         "cmk/werks/error.py",
         "cmk/werks/format.py",
+        "cmk/werks/id_log.py",
         "cmk/werks/load.py",
         "cmk/werks/markup.py",
         "cmk/werks/models.py",

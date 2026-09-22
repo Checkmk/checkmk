@@ -32,7 +32,7 @@ from cmk.agent_based.v2 import (
     TableRow,
 )
 
-from .liboracle import Error, is_instance_name, Ok, oracle_handle_ora_errors, Parsed
+from .liboracle import classify_line, Error, is_instance_name, Ok, Parsed
 
 type _RecoveryRows = list[Sequence[str]]
 type Section = Mapping[str, Parsed[_RecoveryRows]]
@@ -42,7 +42,7 @@ def parse_oracle_recovery_area(string_table: StringTable) -> Section:
     rows_by_sid: dict[str, _RecoveryRows] = {}
     errors: dict[str, str] = {}
     for line in string_table:
-        match oracle_handle_ora_errors(line):
+        match classify_line(line):
             case str() as message:
                 errors.setdefault(line[0], message)
             case False:

@@ -22,7 +22,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .liboracle import Error, Ok, oracle_handle_ora_errors, Parsed
+from .liboracle import classify_line, Error, Ok, Parsed
 
 # actual format
 # <<<oracle_rman>>>
@@ -63,7 +63,7 @@ def parse_oracle_rman(string_table: StringTable) -> Section:
     errors: dict[str, str] = {}
 
     for line in string_table:
-        match oracle_handle_ora_errors(line):
+        match classify_line(line):
             case str() as message:
                 errors.setdefault(line[0], message)
             case False:

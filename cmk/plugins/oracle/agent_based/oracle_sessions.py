@@ -29,7 +29,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .liboracle import Error, is_instance_name, Ok, oracle_handle_ora_errors, Parsed
+from .liboracle import classify_line, Error, is_instance_name, Ok, Parsed
 
 type _Metrics = dict[str, int]
 type Section = Mapping[str, Parsed[_Metrics]]
@@ -40,7 +40,7 @@ def parse_oracle_sessions(string_table: StringTable) -> Section:
     metrics_by_sid: dict[str, _Metrics] = {}
     errors: dict[str, str] = {}
     for line in string_table:
-        match oracle_handle_ora_errors(line):
+        match classify_line(line):
             case str() as message:
                 errors.setdefault(line[0], message)
             case False:

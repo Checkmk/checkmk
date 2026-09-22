@@ -28,7 +28,7 @@ from cmk.plugins.lib.df import (
     TREND_DEFAULT_PARAMS,
 )
 
-from .liboracle import Error, Ok, oracle_handle_ora_errors, Parsed
+from .liboracle import classify_line, Error, Ok, Parsed
 
 # future todos in checkcode
 # - RAC: 1 of 3 nodes has a DISMOUNTED DG. This is not a CRIT!
@@ -116,7 +116,7 @@ def parse_oracle_asm_diskgroup(
     found_deprecated_agent_output = False
 
     for line in string_table:
-        match oracle_handle_ora_errors(line):
+        match classify_line(line):
             case str() as message:
                 errors.setdefault(line[0], message)
                 continue

@@ -49,7 +49,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .liboracle import Error, Ok, oracle_handle_ora_errors, Parsed
+from .liboracle import classify_line, Error, Ok, Parsed
 
 type _JobRows = list[Sequence[str]]
 type Section = Mapping[str, Parsed[_JobRows]]
@@ -62,7 +62,7 @@ def parse_oracle_jobs(string_table: StringTable) -> Section:
         if len(line) < 2 or line[1].startswith(" Debug "):
             # ignore wrong/corrupted lines
             continue
-        match oracle_handle_ora_errors(line):
+        match classify_line(line):
             case str() as message:
                 errors.setdefault(line[0], message)
             case False:

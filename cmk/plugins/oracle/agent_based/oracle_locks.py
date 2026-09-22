@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .liboracle import Error, is_instance_name, Ok, oracle_handle_ora_errors, Parsed
+from .liboracle import classify_line, Error, is_instance_name, Ok, Parsed
 
 # <<<oracle_locks>>>
 # TUX12C|273|2985|ora12c.local|sqlplus@ora12c.local (TNS V1-V3)|46148|oracle|633|NULL|NULL
@@ -35,7 +35,7 @@ def parse_oracle_locks(string_table: StringTable) -> Section:
     rows_by_sid: dict[str, _LockRows] = {}
     errors: dict[str, str] = {}
     for line in string_table:
-        match oracle_handle_ora_errors(line):
+        match classify_line(line):
             case str() as message:
                 errors.setdefault(line[0], message)
             case False:

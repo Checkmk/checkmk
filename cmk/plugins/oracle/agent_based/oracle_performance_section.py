@@ -9,10 +9,10 @@ from typing import Any
 
 from cmk.agent_based.v2 import AgentSection, StringTable
 from cmk.plugins.oracle.agent_based.liboracle import (
+    classify_line,
     Error,
     InstancePerformance,
     Ok,
-    oracle_handle_ora_errors,
     Parsed,
     SectionPerformance,
 )
@@ -28,7 +28,7 @@ def parse_oracle_performance(string_table: StringTable) -> SectionPerformance:
     counters_by_sid: dict[str, dict[str, dict[str, Any]]] = {}
     errors: dict[str, str] = {}
     for line in string_table:
-        match oracle_handle_ora_errors(line):
+        match classify_line(line):
             case str() as message:
                 errors.setdefault(line[0], message)
             case False:

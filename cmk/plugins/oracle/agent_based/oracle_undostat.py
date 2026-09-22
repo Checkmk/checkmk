@@ -30,7 +30,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .liboracle import Error, is_instance_name, Ok, oracle_handle_ora_errors, Parsed
+from .liboracle import classify_line, Error, is_instance_name, Ok, Parsed
 
 type Section = Mapping[str, Parsed[Sequence[int]]]
 
@@ -39,7 +39,7 @@ def parse_oracle_undostat(string_table: StringTable) -> Section:
     stats: dict[str, Sequence[int]] = {}
     errors: dict[str, str] = {}
     for line in string_table:
-        match oracle_handle_ora_errors(line):
+        match classify_line(line):
             case str() as message:
                 errors.setdefault(line[0], message)
             case False:

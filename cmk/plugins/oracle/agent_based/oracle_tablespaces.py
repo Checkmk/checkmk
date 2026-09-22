@@ -29,7 +29,7 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.lib import db
 from cmk.plugins.oracle.agent_based import liboracle as oracle
-from cmk.plugins.oracle.agent_based.liboracle import Error, Ok, oracle_handle_ora_errors, Parsed
+from cmk.plugins.oracle.agent_based.liboracle import classify_line, Error, Ok, Parsed
 
 # no used space check for Tablsspaces with CONTENTS in ('TEMPORARY','UNDO')
 # It is impossible to check the used space in UNDO and TEMPORARY Tablespaces
@@ -80,7 +80,7 @@ def parse_oracle_tablespaces(string_table: StringTable) -> Section:
     errors: dict[str, str] = {}
 
     for line in string_table:
-        match oracle_handle_ora_errors(line):
+        match classify_line(line):
             case str() as message:
                 errors.setdefault(line[0], message)
                 continue

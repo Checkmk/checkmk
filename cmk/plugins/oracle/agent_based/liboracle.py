@@ -187,13 +187,13 @@ def datafiles_online_stats(
 
 # Classify one agent line: the error message for an error row, False for noise
 # the check should skip, None for data. The check decides the monitoring state.
-def oracle_handle_ora_errors(line: Sequence[str]) -> str | Literal[False] | None:
+def classify_line(line: Sequence[str]) -> str | Literal[False] | None:
     if not line:
         return False
     if len(line) == 1:
         return None
 
-    legacy_error = _oracle_handle_legacy_ora_errors(line)
+    legacy_error = _classify_legacy_line(line)
     if legacy_error is not None:
         return legacy_error
 
@@ -210,7 +210,7 @@ def oracle_handle_ora_errors(line: Sequence[str]) -> str | Literal[False] | None
     return None
 
 
-def _oracle_handle_legacy_ora_errors(line: Sequence[str]) -> str | Literal[False] | None:
+def _classify_legacy_line(line: Sequence[str]) -> str | Literal[False] | None:
     if _is_error_field(line[0]):
         return 'Found error in agent output "%s"' % " ".join(line)
     return None

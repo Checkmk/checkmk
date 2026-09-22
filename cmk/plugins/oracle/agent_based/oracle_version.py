@@ -14,7 +14,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .liboracle import oracle_handle_ora_errors
+from .liboracle import classify_line
 
 # <<<oracle_version>>>
 # XE Oracle Database 11g Express Edition Release 11.2.0.2.0 - 64bit Production
@@ -22,16 +22,14 @@ from .liboracle import oracle_handle_ora_errors
 
 def discover_oracle_version(section: StringTable) -> DiscoveryResult:
     yield from [
-        Service(item=line[0])
-        for line in section
-        if len(line) >= 2 and oracle_handle_ora_errors(line) is None
+        Service(item=line[0]) for line in section if len(line) >= 2 and classify_line(line) is None
     ]
 
 
 def check_oracle_version(item: str, section: StringTable) -> CheckResult:
     for line in section:
         if line[0] == item:
-            err = oracle_handle_ora_errors(line)
+            err = classify_line(line)
             if err is False:
                 continue
             if isinstance(err, str):

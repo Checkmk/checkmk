@@ -39,7 +39,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .liboracle import Error, is_instance_name, Ok, oracle_handle_ora_errors, Parsed
+from .liboracle import classify_line, Error, is_instance_name, Ok, Parsed
 
 # The first column is the database name, or the instance name when the
 # agent runs with IGNORE_DB_NAME. Either way it is the item.
@@ -50,7 +50,7 @@ def parse_oracle_recovery_status(string_table: StringTable) -> Section:
     rows_by_name: dict[str, list[Sequence[str]]] = {}
     errors: dict[str, str] = {}
     for line in string_table:
-        match oracle_handle_ora_errors(line):
+        match classify_line(line):
             case str() as message:
                 errors.setdefault(line[0], message)
             case False:

@@ -36,7 +36,7 @@ from cmk.agent_based.v2 import (
     TableRow,
 )
 
-from .liboracle import Error, Ok, oracle_handle_ora_errors, Parsed
+from .liboracle import classify_line, Error, Ok, Parsed
 
 # Data rows are keyed by "<db name>.<db unique name>", the item. An error row
 # carries only the instance name, so it is keyed by that. The two never
@@ -49,7 +49,7 @@ def parse_oracle_dataguard_stats(string_table: StringTable) -> Section:
     parsed: dict[str, dict[str, Any]] = {}
     errors: dict[str, str] = {}
     for line in string_table:
-        match oracle_handle_ora_errors(line):
+        match classify_line(line):
             case str() as message:
                 errors.setdefault(line[0], message)
                 continue

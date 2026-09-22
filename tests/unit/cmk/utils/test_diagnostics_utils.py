@@ -307,6 +307,7 @@ def test_diagnostics_get_checkmk_file_info_by_name(
 @pytest.mark.parametrize(
     "rel_filepath, sensitivity",
     [
+        ("ai_control_plane.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
         ("apache.conf", diagnostics.CheckmkFileSensitivity.insensitive),
         ("apache.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
         ("conf.d/microcore.mk", diagnostics.CheckmkFileSensitivity.insensitive),
@@ -376,6 +377,12 @@ def test_diagnostics_file_info_of_comp_notifications(
     assert (
         diagnostics.get_checkmk_file_info(rel_filepath, None).sensitivity.value == sensitivity.value
     )
+
+
+def test_ai_control_plane_settings_are_named_in_the_classification() -> None:
+    info = diagnostics.get_checkmk_file_info("ai_control_plane.d/wato/global.mk")
+
+    assert "AI control plane" in info.description
 
 
 @pytest.mark.parametrize(

@@ -777,6 +777,15 @@ CheckmkFileInfoByNameMap: dict[str, CheckmkFileInfo] = {
 
 CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
     # config files
+    "ai_control_plane.d/wato/global.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description=(
+            "Contains the LLM provider settings of the AI control plane: provider, model, "
+            "base URL and the password store reference of the API key."
+        ),
+        encryption=CheckmkFileEncryption.none,
+    ),
     "apache.conf": CheckmkFileInfo(
         components=[],
         sensitivity=CheckmkFileSensitivity.insensitive,

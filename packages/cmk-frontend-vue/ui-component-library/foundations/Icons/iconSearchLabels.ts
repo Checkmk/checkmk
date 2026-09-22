@@ -141,6 +141,7 @@ export const iconSearchLabels: Record<string, string[]> = {
   cleanup: ['clear', 'tidy', 'remove', 'sweep', 'broom'],
   clear: ['remove', 'erase', 'empty', 'trash'],
   clipboard: ['copy', 'paste', 'board'],
+  columns: ['table columns', 'layout', 'show hide columns'],
   clock: ['time', 'watch', 'schedule'],
   clone: ['duplicate', 'copy', 'replicate'],
   close: ['x', 'cross', 'dismiss', 'shut'],

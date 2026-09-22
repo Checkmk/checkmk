@@ -5,7 +5,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { VisibilityState } from '@tanstack/vue-table'
+import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
+import ArrowDown from 'cmk-ui-library/components/graphics/ArrowDown.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { inject, ref, watch } from 'vue'
 
@@ -46,8 +48,9 @@ watch(model, (value) => {
     :clear-label="_t('Back to default')"
   >
     <template #trigger="{ toggle, isOpen, panelId }">
-      <button
-        type="button"
+      <CmkButton
+        variant="optional"
+        size="small"
         class="monitoring-column-picker__trigger"
         :class="{ 'monitoring-column-picker__trigger--active': isOpen }"
         :title="_t('Show or hide columns')"
@@ -57,29 +60,33 @@ watch(model, (value) => {
         @click="toggle"
       >
         <CmkMultitoneIcon
-          name="setup"
-          :primary-color="{ custom: 'var(--success)' }"
+          name="columns"
+          :primary-color="{ custom: 'var(--color-light-blue-20)' }"
+          :secondary-color="{ custom: 'var(--color-corporate-green-70)' }"
           aria-hidden="true"
         />
-      </button>
+        <ArrowDown
+          class="monitoring-column-picker__dropdown-icon"
+          :class="{ 'monitoring-column-picker__dropdown-icon--rotated': isOpen }"
+          aria-hidden="true"
+        />
+      </CmkButton>
     </template>
   </FilterDropdown>
 </template>
 
 <style scoped>
 .monitoring-column-picker__trigger {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  background-color: transparent;
-  padding: 0;
-  color: inherit;
-  cursor: pointer;
+  gap: var(--dimension-2);
+  padding: 0 var(--dimension-3, 4px);
+}
 
-  &:focus-visible {
-    outline: 1px solid var(--success);
-    outline-offset: 2px;
+.monitoring-column-picker__dropdown-icon {
+  width: 8px;
+  height: 8px;
+
+  &.monitoring-column-picker__dropdown-icon--rotated {
+    transform: rotate(180deg);
   }
 }
 </style>

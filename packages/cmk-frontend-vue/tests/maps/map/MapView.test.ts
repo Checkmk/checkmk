@@ -5,7 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 
 import type { SignedMap } from '@/maps/api/mapConfig'
@@ -30,12 +30,15 @@ class FakeEventSource {
   }
 }
 
-// The canvas is the observable output of the dispatch under test: a recognisable
-// stub says whether the map got drawn. The chrome around it is irrelevant here
-// and auto-stubbed away -- including the editing surfaces, which teleport to the
-// app root the test page does not have.
+// The map type's own view is the observable output of the dispatch under test:
+// a recognisable stub says which one got drawn. The chrome around it is
+// irrelevant here and auto-stubbed away -- including the editing surfaces,
+// which teleport to the app root the test page does not have.
 const stubs = {
+  // Keyed by the tag the view uses: the per-type views are async components, so
+  // there is no component name to stub them by.
   MapCanvas: { template: `<div data-testid="renderer-static" />` },
+  'world-map-view': { template: `<div data-testid="renderer-worldmap" />` },
   MapSearch: true,
   ProblemsOnlyToggle: true,
   DetailDrawer: true,
@@ -85,6 +88,14 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
+// The static map is the one view this file lets render for real: the others are
+// stubbed at their tag, but the error placeholder and the "map not found" state
+// come from inside ``StaticMapView``. Its chunk is loaded up front so the
+// dynamic import is not on the clock of every ``waitFor`` below.
+beforeAll(async () => {
+  await import('@/maps/map/static/StaticMapView.vue')
+})
+
 describe('MapView – map-type dispatch', () => {
   it('draws the canvas for a static view', async () => {
     opensMap(newMapView('static'))
@@ -92,10 +103,16 @@ describe('MapView – map-type dispatch', () => {
     await waitFor(() => expect(screen.getByTestId('renderer-static')).toBeInTheDocument())
   })
 
-  // The other map types draw themselves, and each arrives with its own commit;
-  // until then the map area says so rather than rendering a worldmap as a
-  // static one.
-  it.each(['worldmap', 'radar', 'foldertree', 'flow', 'presentation'])(
+  it('draws the geo map for a worldmap view', async () => {
+    opensMap(newMapView('worldmap'))
+    renderMap()
+    await waitFor(() => expect(screen.getByTestId('renderer-worldmap')).toBeInTheDocument())
+    expect(screen.queryByTestId('renderer-static')).toBeNull()
+  })
+
+  // The remaining map types draw themselves, and each arrives with its own
+  // commit; until then the map area says so rather than drawing them wrong.
+  it.each(['radar', 'foldertree', 'flow', 'presentation'])(
     'stands in for a %s view it cannot draw yet',
     async (mapType) => {
       opensMap(newMapView(mapType))
@@ -104,6 +121,7 @@ describe('MapView – map-type dispatch', () => {
         expect(screen.getByText('This map type cannot be shown yet')).toBeInTheDocument()
       )
       expect(screen.queryByTestId('renderer-static')).toBeNull()
+      expect(screen.queryByTestId('renderer-worldmap')).toBeNull()
     }
   )
 })

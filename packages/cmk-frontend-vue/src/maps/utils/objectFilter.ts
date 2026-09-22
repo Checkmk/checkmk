@@ -107,7 +107,14 @@ function mapElementFieldValue(obj: MapElement, field: FilterField): string[] {
 }
 
 export function objectMatchesFilter(obj: MapElement, query: string): boolean {
-  const terms = parseFilterTerms(query)
+  return objectMatchesTerms(obj, parseFilterTerms(query))
+}
+
+/**
+ * Matching against already-parsed terms, for a renderer that tests many objects
+ * against one query — parsing it per object is the same work over and over.
+ */
+export function objectMatchesTerms(obj: MapElement, terms: FilterTerm[]): boolean {
   return matchesFilterTerms(terms, (field) => mapElementFieldValue(obj, field))
 }
 
@@ -115,6 +122,11 @@ export function objectMatchesFilter(obj: MapElement, query: string): boolean {
 // a busy map; renderers also raise matches above dimmed neighbours.
 export const DIMMED_OPACITY = 0.15
 export const DIMMED_FILTER = 'grayscale(1)'
+
+/** How every renderer draws an object the map's filter left out. */
+export function dimmedStyle(dimmed: boolean): { opacity?: string; filter?: string } {
+  return dimmed ? { opacity: String(DIMMED_OPACITY), filter: DIMMED_FILTER } : {}
+}
 
 // "Problems only" map toggle: stateful objects must currently be in a
 // problem state to stay visible; decorative types (image, textbox, …) and an

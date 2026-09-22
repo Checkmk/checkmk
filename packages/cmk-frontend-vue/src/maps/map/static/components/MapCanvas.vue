@@ -19,6 +19,7 @@ import { computed, provide, useTemplateRef } from 'vue'
 
 import ContextMenu from '@/maps/map/components/ContextMenu.vue'
 import HoverMenu from '@/maps/map/components/HoverMenu.vue'
+import MapMarqueeBox from '@/maps/map/components/MapMarqueeBox.vue'
 import MapZoomResetPill from '@/maps/map/components/MapZoomResetPill.vue'
 import { useMapObjectMenus } from '@/maps/map/composables/useMapObjectMenus'
 import { useObjectResize } from '@/maps/map/composables/useObjectResize'
@@ -359,16 +360,7 @@ defineExpose({
       :height="extents.height.value"
     />
 
-    <div
-      v-if="marquee.visible.value"
-      class="maps-map-canvas__marquee"
-      :style="{
-        left: `${marquee.rect.value.left}px`,
-        top: `${marquee.rect.value.top}px`,
-        width: `${marquee.rect.value.width}px`,
-        height: `${marquee.rect.value.height}px`
-      }"
-    />
+    <MapMarqueeBox v-if="marquee.visible.value" :rect="marquee.rect.value" :layer="90" />
 
     <!-- One layer per distinct stacking order, so lines interleave with the
          objects instead of all sitting in a single backdrop. The layer is
@@ -496,14 +488,6 @@ defineExpose({
   inset: 0;
   width: 100%;
   height: 100%;
-  pointer-events: none;
-}
-
-.maps-map-canvas__marquee {
-  position: absolute;
-  z-index: 90;
-  background: color-mix(in srgb, var(--color-corporate-green-50) 12%, transparent);
-  border: 1px solid var(--color-corporate-green-50);
   pointer-events: none;
 }
 </style>

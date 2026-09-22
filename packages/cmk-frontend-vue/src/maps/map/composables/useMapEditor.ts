@@ -710,6 +710,23 @@ export function useMapEditor() {
     mapsStore.scheduleSave()
   }
 
+  /**
+   * Persists a sized object's new footprint. Which fields carry it depends on
+   * what the object is, which is the editor's business rather than the canvas's.
+   */
+  async function saveObjectFootprint(id: string, width: number, height: number) {
+    const obj = mapsStore.currentMap.value?.objects.find((o) => o.id === id)
+    if (!obj) {
+      return
+    }
+    await updateObjectProperties(
+      id,
+      obj.type === 'textbox'
+        ? { textbox_width: width, textbox_height: height }
+        : { graph_width: width, graph_height: height }
+    )
+  }
+
   // Group drag on geo maps: persist each moved object's lat/lng.
   async function saveLatLngs(moves: { id: string; lat: number; lng: number }[]) {
     const objects = mapsStore.currentMap.value?.objects ?? []
@@ -900,6 +917,7 @@ export function useMapEditor() {
     placeAt,
     placeAtLatLng,
     moveObjectToLatLng,
+    saveObjectFootprint,
     saveLatLngs,
     duplicateSelected,
     bundleSelected,

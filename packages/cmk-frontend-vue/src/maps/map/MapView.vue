@@ -15,14 +15,22 @@ lifecycle is keyed on the name (``useMapLifecycle``) and not on mount.
 This is also where the map's own design values are declared, on the view root,
 so every painter below inherits one set of them.
 
-Only static maps are drawn so far; the other map types arrive in the commits
+Static and geo maps are drawn so far; the other map types arrive in the commits
 that follow this one.
 -->
 <script setup lang="ts">
 import CmkBreadcrumb, { type BreadcrumbItem } from 'cmk-ui-library/components/CmkBreadcrumb'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  nextTick,
+  onMounted,
+  ref,
+  useTemplateRef,
+  watch
+} from 'vue'
 
 import AckModal from '@/maps/map/commands/AckModal.vue'
 import BulkAckModal from '@/maps/map/commands/BulkAckModal.vue'
@@ -49,11 +57,13 @@ import MapObjectActionBar, {
 import { useElementRect } from '@/maps/map/edit/composables/useElementRect'
 import ObjectPropertiesModal from '@/maps/map/edit/properties/ObjectPropertiesModal.vue'
 import MapSettingsModal from '@/maps/map/edit/settings/MapSettingsModal.vue'
-import StaticMapView from '@/maps/map/static/StaticMapView.vue'
+import type WorldMapViewType from '@/maps/map/worldmap/WorldMapView.vue'
+import type { WorldmapViewport } from '@/maps/map/worldmap/geo'
 import {
   useAuth,
   useConnections,
   useMaps,
+  useMapsApis,
   useNavigation,
   useSettings,
   useStates,
@@ -68,10 +78,17 @@ import { buildCheckmkUrl, openUrl } from '@/maps/utils/mapNavigation'
 import { newMapElement } from '@/maps/utils/model'
 import { getEffectiveObjectType, getMapElementIdentifier } from '@/maps/utils/naming'
 
+// Lazy, one chunk per map type: leaflet rides with the geo map, so opening a
+// static map does not download it. The type import beside it is erased at
+// build, so it pulls nothing in.
+const staticMapView = defineAsyncComponent(() => import('@/maps/map/static/StaticMapView.vue'))
+const worldMapView = defineAsyncComponent(() => import('@/maps/map/worldmap/WorldMapView.vue'))
+
 const { _t } = usei18n()
 const toast = useToast()
 const nav = useNavigation()
 const auth = useAuth()
+const { objects } = useMapsApis()
 const mapsStore = useMaps()
 const statesStore = useStates()
 const connectionsStore = useConnections()
@@ -158,6 +175,8 @@ const { rotationCountdown, rotationPaused, stopRotation, scheduleRotation, toggl
 const root = useTemplateRef<HTMLElement>('root')
 provideMapPalette(root)
 
+const worldmapViewRef = useTemplateRef<InstanceType<typeof WorldMapViewType>>('worldMapViewRef')
+
 // ---- Editing: the tools over the map, and the surfaces they open ----
 
 type AnchorRect = { left: number; top: number; right: number; bottom: number }
@@ -190,17 +209,22 @@ const selectedObject = computed<MapElement | null>(() => {
   return mapConfig.value.objects.find((o) => o.id === editor.selectedObjectId.value) ?? null
 })
 
-// The selection's own DOM node, so the toolbar can be placed against it. The
-// canvas owns the node, so it is looked up by id rather than passed up.
+// Which element the action bar hangs off. The selection is an id -- it is made
+// by click, by marquee, by keyboard and by placing a new object -- so the node
+// is looked up inside this view, the way the canvas' own gestures do
+// (``useCanvasLineAnchors``), rather than reached for across the document.
 const selectedObjectEl = ref<HTMLElement | null>(null)
-const selectedRect = useElementRect(selectedObjectEl)
+// Bumped on every geo-map pan/zoom so the action bar re-anchors to the marker:
+// panning moves the whole marker pane, which no marker's own element sees.
+const geoViewTick = ref(0)
+const selectedRect = useElementRect(selectedObjectEl, () => geoViewTick.value)
 
 watch(
-  () => editor.selectedObjectId.value,
-  async (id) => {
+  [() => editor.selectedObjectId.value, () => geoViewTick.value],
+  async ([id]) => {
     await nextTick()
     selectedObjectEl.value = id
-      ? (document.querySelector(`[data-object-id="${CSS.escape(id)}"]`) as HTMLElement | null)
+      ? (root.value?.querySelector<HTMLElement>(`[data-object-id="${CSS.escape(id)}"]`) ?? null)
       : null
   },
   { immediate: true }
@@ -259,7 +283,7 @@ const showsEditTools = computed(
     !isPreview.value &&
     !!mapConfig.value &&
     !mapConfig.value.readonly &&
-    isStatic.value &&
+    (isStatic.value || isWorldmap.value) &&
     !detailDrawerObject.value
 )
 
@@ -335,9 +359,47 @@ function openPropsModal(obj: MapElement, anchor?: AnchorRect | null) {
   propsModalObject.value = obj
 }
 
+/**
+ * The object a click on the canvas just created, until its properties are saved.
+ *
+ * Placing writes the object straight away -- the map has to show it somewhere to
+ * let the operator judge the spot. The properties modal that opens on top of it
+ * is therefore an *undo* point, not a create form: dismissing it has to take the
+ * object back out, or "Cancel" would leave behind exactly what it says it did
+ * not do, and the only way back would be to find the thing and delete it.
+ */
+const justPlacedId = ref<string | null>(null)
+
+function onObjectPlaced() {
+  const obj = selectedObject.value
+  if (!obj) {
+    return
+  }
+  justPlacedId.value = obj.id
+  openPropsModal(obj)
+}
+
+// The viewport the geo map opens on is part of the map's settings, so picking
+// it here opens the settings slide-in with the picked viewport in hand.
+function onSaveWorldmapViewport(at: WorldmapViewport) {
+  settingsWorldmapView.value = { ...at }
+  settingsParentMapSize.value = worldmapViewRef.value?.getContainerSize() ?? null
+  showSettings.value = true
+}
+
 function _closePropsModal() {
   propsModalObject.value = null
   openedOnAnchor.value = null
+  justPlacedId.value = null
+}
+
+/** Dismissing the modal: an object that only exists because of it goes with it. */
+async function onPropsModalClose() {
+  const placed = justPlacedId.value === null ? null : propsModalObject.value
+  _closePropsModal()
+  if (placed) {
+    await deleteObject(placed)
+  }
 }
 
 async function onPropsModalSave(updates: Record<string, unknown>) {
@@ -346,6 +408,7 @@ async function onPropsModalSave(updates: Record<string, unknown>) {
     return
   }
   try {
+    justPlacedId.value = null
     await editor.updateObjectProperties(propsModalObject.value.id, updates)
   } catch (e) {
     toast.error(errorText(e, _t('Save failed')))
@@ -430,10 +493,52 @@ function onBundleConfirm(payload: { name: string; kind: 'static' | 'location' })
   void editor.bundleSelected(payload.name, payload.kind)
 }
 
-function openSettings() {
-  if (mapConfig.value) {
-    showSettings.value = true
+/**
+ * A host dropped onto a geo map goes where the host is, if monitoring knows:
+ * asking the operator to find a site on the globe by hand would be absurd.
+ */
+async function onStartPlacing() {
+  const draft = editor.draft
+  if (isWorldmap.value && mapConfig.value?.connection_id && draft.host_name) {
+    try {
+      const geo = await objects.fetchHostGeo(draft.host_name)
+      if (geo) {
+        editor.startPlacing()
+        await editor.placeAtLatLng(geo.lat, geo.lng)
+        onObjectPlaced()
+        return
+      }
+    } catch {
+      // Geo lookup failed (host unknown to the site, or the connection is
+      // down); fall through to plain placing so the object can still be
+      // dropped by hand.
+    }
   }
+  editor.startPlacing()
+}
+const settingsWorldmapView = ref<WorldmapViewport | null>(null)
+// The geo map's own size, so the settings preview can mirror what it shows.
+const settingsParentMapSize = ref<{ width: number; height: number } | null>(null)
+
+// The picker runs on the map itself: the geo map's view shows the banner and
+// answers with the viewport the operator arrived at.
+async function onSettingsPickWorldmapView(done: (at: WorldmapViewport | null) => void) {
+  done((await worldmapViewRef.value?.pickViewport()) ?? null)
+}
+
+function onSettingsWorldmapViewChange(at: WorldmapViewport) {
+  worldmapViewRef.value?.setViewport(at)
+}
+
+function openSettings() {
+  if (!mapConfig.value) {
+    return
+  }
+  settingsWorldmapView.value = null
+  settingsParentMapSize.value = isWorldmap.value
+    ? (worldmapViewRef.value?.getContainerSize() ?? null)
+    : null
+  showSettings.value = true
 }
 
 async function onSettingsUpdated() {
@@ -710,12 +815,30 @@ onMounted(() => {
         <span>{{ _t('Loading map…') }}</span>
       </div>
 
+      <world-map-view
+        v-if="isWorldmap"
+        ref="worldMapViewRef"
+        v-model:filter-needle="mapFilterNeedle"
+        v-model:problems-only="problemsOnly"
+        :config="mapConfig"
+        :states="statesStore.states.value"
+        :editor="editor"
+        :error="mapsStore.error.value"
+        :preview="isPreview"
+        :checkmk-url="checkmkUrl"
+        @object-click="onObjectClick"
+        @object-properties="openPropsModal"
+        @object-delete="onObjectDelete"
+        @placed="onObjectPlaced"
+        @view-changed="geoViewTick++"
+        @save-viewport="onSaveWorldmapViewport"
+      />
       <MapPlaceholder
-        v-if="!isStatic"
+        v-else-if="!isStatic"
         :message="_t('This map type cannot be shown yet')"
         variant="empty"
       />
-      <StaticMapView
+      <static-map-view
         v-else
         v-model:filter-needle="mapFilterNeedle"
         v-model:problems-only="problemsOnly"
@@ -730,7 +853,7 @@ onMounted(() => {
         @object-click="onObjectClick"
         @object-properties="openPropsModal"
         @object-delete="onObjectDelete"
-        @placed="selectedObject && openPropsModal(selectedObject)"
+        @placed="onObjectPlaced"
       />
 
       <DetailDrawer
@@ -797,8 +920,8 @@ onMounted(() => {
         :connection-id="mapConfig?.connection_id ?? ''"
         :keyboard-active="editKeyboardActive"
         :offers-add-object="true"
-        :offers-grid="true"
-        @start-placing="editor.startPlacing()"
+        :offers-grid="!isWorldmap"
+        @start-placing="void onStartPlacing()"
         @toggle-edit-mode="onToggleEditMode"
         @delete-selection="onObjectAction('delete')"
         @duplicate-selection="onObjectAction('duplicate')"
@@ -860,20 +983,22 @@ onMounted(() => {
         :map-default-z="mapConfig?.default_z ?? 1"
         :checkmk-url="checkmkUrl"
         :anchor-rect="propsModalAnchor"
-        @close="_closePropsModal()"
+        @close="onPropsModalClose"
         @save="onPropsModalSave"
         @delete="onPropsModalDelete"
         @detach="onPropsModalDetach"
       />
     </Teleport>
 
-    <!-- The settings form also offers to adopt a worldmap's current viewport as
-         the map's default; that hand-off arrives with the worldmap itself. -->
     <MapSettingsModal
       v-if="showSettings && mapConfigAsRead"
       :map="mapConfigAsRead"
+      :worldmap-view="settingsWorldmapView"
+      :parent-map-size="settingsParentMapSize"
       @close="showSettings = false"
       @updated="onSettingsUpdated"
+      @pick-worldmap-view="onSettingsPickWorldmapView"
+      @worldmap-view-change="onSettingsWorldmapViewChange"
     />
   </div>
 </template>

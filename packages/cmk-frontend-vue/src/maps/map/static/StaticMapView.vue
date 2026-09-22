@@ -127,18 +127,11 @@ function onLineDragStart(
 /** A resize writes the new footprint straight to the object it belongs to. */
 async function onResizeEnd(id: string, width: number, height: number): Promise<void> {
   const object = props.config?.objects.find((candidate) => candidate.id === id)
-  if (!object) {
-    return
+  await props.editor.saveObjectFootprint(id, width, height)
+  // A graph is the one sized object that can grow the canvas.
+  if (object && object.type !== 'textbox') {
+    void lockCanvasSize()
   }
-  if (object.type === 'textbox') {
-    await props.editor.updateObjectProperties(id, {
-      textbox_width: width,
-      textbox_height: height
-    })
-    return
-  }
-  await props.editor.updateObjectProperties(id, { graph_width: width, graph_height: height })
-  void lockCanvasSize()
 }
 
 /**

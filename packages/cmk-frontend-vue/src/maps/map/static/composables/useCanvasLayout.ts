@@ -14,12 +14,7 @@
 import { type ComputedRef, computed } from 'vue'
 
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
-import {
-  DIMMED_FILTER,
-  DIMMED_OPACITY,
-  objectMatchesFilter,
-  passesProblemFilter
-} from '@/maps/utils/objectFilter'
+import { dimmedStyle, objectMatchesFilter, passesProblemFilter } from '@/maps/utils/objectFilter'
 
 /** Stacking order of the object under the pointer, above everything placed. */
 const DRAGGED_Z = 100
@@ -105,10 +100,8 @@ export function useCanvasLayout(source: {
   /** Everything filtered out fades rather than vanishing, so the map's shape
    *  stays readable and the operator keeps their bearings. */
   function dimming(object: MapElement): Record<string, string | undefined> {
-    const shown = matches(object)
     return {
-      opacity: shown ? undefined : String(DIMMED_OPACITY),
-      filter: shown ? undefined : DIMMED_FILTER,
+      ...dimmedStyle(!matches(object)),
       transition: 'opacity 120ms ease, filter 120ms ease'
     }
   }

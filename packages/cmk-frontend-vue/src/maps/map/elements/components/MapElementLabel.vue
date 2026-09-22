@@ -21,9 +21,10 @@ const props = defineProps<{
   text: string
   /**
    * ``stacked`` sits in the object's flex column, ``caption`` is pinned below a
-   * sized object (a graph or a text box).
+   * sized object (a graph or a text box), and ``plain`` is placed by whoever
+   * renders it — a geo map's line label sits on a Leaflet marker.
    */
-  placement: 'stacked' | 'caption'
+  placement: 'stacked' | 'caption' | 'plain'
   /** The NagVis-compatible renderer, which pins the label absolutely. */
   classic?: boolean
 }>()
@@ -119,10 +120,14 @@ const configuredStyle = computed(() => {
   text-shadow: none;
 }
 
-.maps-map-element-label--stacked.maps-map-element-label--boxed {
-  margin-top: 6px;
+.maps-map-element-label--stacked.maps-map-element-label--boxed,
+.maps-map-element-label--plain.maps-map-element-label--boxed {
   padding: var(--dimension-2) 6px;
   border-radius: var(--border-radius);
+}
+
+.maps-map-element-label--stacked.maps-map-element-label--boxed {
+  margin-top: 6px;
 }
 
 .maps-map-element-label--caption {

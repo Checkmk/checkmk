@@ -112,6 +112,7 @@ from cmk.gui.watolib.site_management import (
 from cmk.gui.watolib.sites import (
     is_livestatus_encrypted,
     ldap_connections_are_configurable,
+    load_site_globals,
     PingResult,
     ReplicationStatus,
     ReplicationStatusFetcher,
@@ -1591,13 +1592,16 @@ class ModeDistributedMonitoring(WatoMode):
                 request, [("site", site_id)], filename="site_specific_settings.py"
             )
 
-            has_site_globals = bool(site.get("globals"))
+            # the settings pushed to a remote site also carry variables no page shows
+            overrides = [
+                varname
+                for varname in load_site_globals(site_configs, site_id)
+                if varname in config_variable_registry
+            ]
             title = _("Site-specific global configuration")
-            if has_site_globals:
+            if overrides:
                 icon = StaticIcon(IconNames.site_globals_modified)
-                title += " (%s)" % (
-                    _("%(count)d specific settings") % {"count": len(site.get("globals", {}))}
-                )
+                title += " (%s)" % (_("%(count)d specific settings") % {"count": len(overrides)})
             else:
                 icon = StaticIcon(IconNames.site_globals)
 

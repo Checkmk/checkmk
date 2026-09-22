@@ -821,9 +821,22 @@ class Site:
         return self.root / rel_path
 
     def file_timestamp_ms(self, rel_path: str | Path) -> int:
-        """Return the last modification time of a file, in milliseconds."""
+        """Return the last modification time of a file, in milliseconds.
+
+        Read it through python: ubuntu-26.04 ships the uutils coreutils, whose `date`
+        ignores the field width of `+%s%3N` and returns nanoseconds, and whose `stat`
+        ignores the precision of `%.3Y`. Callers then compared nanoseconds against
+        milliseconds and waited out their timeout (CMK-35803).
+        """
         try:
-            stdout = self.check_output(["date", "-r", self.path(rel_path).as_posix(), r"+%s%3N"])
+            stdout = self.check_output(
+                [
+                    "python3",
+                    "-c",
+                    "import os, sys; print(os.stat(sys.argv[1]).st_mtime_ns // 1000000)",
+                    self.path(rel_path).as_posix(),
+                ]
+            )
         except subprocess.CalledProcessError as excp:
             excp.add_note(f"Failed to read file '{rel_path}'!")
             raise excp

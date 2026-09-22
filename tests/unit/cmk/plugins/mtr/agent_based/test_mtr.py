@@ -746,3 +746,44 @@ def test_check_mtr(
         )
         == check_result
     )
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="Crash report 93576394-98a5-11f1-9f0a-bc24110a1d08: IndexError: list index out of range",
+)
+def test_parse_mtr_ignores_agent_error_output() -> None:
+    # The mtr agent plugin writes a "**ERROR**" banner followed by a line
+    # holding the raw output it choked on. Only the banner was recognised, so
+    # the continuation line reached the target parsing and had no third column.
+    assert parse_mtr(
+        [
+            ["**ERROR** (BUG) Status has less than 2 parts:"],
+            ["['\\n']"],
+            [
+                "www.google.com",
+                "1550068434",
+                "1",
+                "1.2.3.4",
+                "0.0%",
+                "10",
+                "1.4",
+                "1.6",
+                "1.4",
+                "2.2",
+                "0.0",
+            ],
+        ]
+    ) == {
+        "www.google.com": [
+            Hop(
+                name="1.2.3.4",
+                pl=0.0,
+                response_time=0.0014,
+                rta=0.0016,
+                rtmin=0.0014,
+                rtmax=0.0022,
+                rtstddev=0.0,
+            )
+        ]
+    }

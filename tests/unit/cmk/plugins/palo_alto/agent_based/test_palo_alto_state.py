@@ -39,6 +39,12 @@ _Section4 = SectionPaloAlto(
     ha_peer_state="initial",
     ha_mode="active-passive",
 )
+_SectionUnmappedState = SectionPaloAlto(
+    firmware_version="5.0.6",
+    ha_local_state="future_state",
+    ha_peer_state="future_state",
+    ha_mode="active-passive",
+)
 
 
 def test_parse() -> None:
@@ -93,3 +99,27 @@ def test_parse() -> None:
 )
 def test_check(section: SectionPaloAlto, expected_result: Sequence[Result]) -> None:
     assert list(check(_STATE_MAPPING_DEFAULT, section)) == expected_result
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="Crash report 498526ac-a151-11f1-8fd9-00155d0229c7: KeyError: 'ha_local_state_initial'",
+)
+def test_check_unmapped_state_is_unknown() -> None:
+    """Sometimes a PAN-OS update ships a previously unknown state we have no mapping for.
+    Insted of generating a crash report we should map unknown states to State.UNKNOWN.
+
+    This avoid future crash reports and makes unknown state visible to users.
+    """
+    assert list(check(_STATE_MAPPING_DEFAULT, _SectionUnmappedState)) == [
+        Result(state=State.OK, summary="Firmware Version: 5.0.6"),
+        Result(state=State.OK, summary="HA mode: active-passive"),
+        Result(
+            state=State.UNKNOWN,
+            summary="HA local state: future_state (no monitoring state defined for this value)",
+        ),
+        Result(
+            state=State.UNKNOWN,
+            notice="HA peer state: future_state (no monitoring state defined for this value)",
+        ),
+    ]

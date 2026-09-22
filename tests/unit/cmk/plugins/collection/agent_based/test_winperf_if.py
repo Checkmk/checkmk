@@ -1303,6 +1303,41 @@ def test_parse_winperf_if_get_netadapter() -> None:
     ]
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="Crash report a1d172f2-81f8-11f1-be9f-0050568dce13: IndexError: list index out of range",
+)
+def test_parse_winperf_if_get_netadapter_ignores_truncated_line() -> None:
+    # The Windows agent appends an error line of its own to the section when the
+    # script host fails, e.g.
+    #   CScript Error: Execution of the Windows Script Host failed. (0x8007000E)
+    # That line has a single column, while an adapter row has seven.
+    assert parse_winperf_if_get_netadapter(
+        [
+            [
+                "Intel(R) PRO/1000 MT Desktop Adapter_",
+                "Ethernet",
+                "999",
+                "1",
+                "Up",
+                "7e-e6-cc-09-c3-c8",
+                "{570809B4-FDEF-4479-9DEE-1E263EA4166F}",
+            ],
+            ["CScript Error: Execution of the Windows Script Host failed. (0x8007000E)"],
+        ]
+    ) == [
+        AdditionalIfData(
+            name="Intel(R) PRO/1000 MT Desktop Adapter",
+            alias="Ethernet",
+            speed=999,
+            oper_status="1",
+            oper_status_name="Up",
+            mac_address="7e:e6:cc:09:c3:c8",
+            guid="{570809B4-FDEF-4479-9DEE-1E263EA4166F}",
+        ),
+    ]
+
+
 def test_parse_winperf_if_dhcp() -> None:
     assert parse_winperf_if_dhcp(
         [

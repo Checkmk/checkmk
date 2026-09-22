@@ -133,14 +133,11 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/base/config",
         "//cmk/base/configlib",
         "//cmk/core_client",
         "//cmk/monitoring_config/internal",
         "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine:fetchers",
-        "//packages/cmk-check-engine:snmplib",
-        "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-licensing",
     ],
 )

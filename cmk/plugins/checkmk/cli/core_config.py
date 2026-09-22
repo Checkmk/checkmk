@@ -22,7 +22,6 @@ from cmk.base.modes.check_mk import forced_ip_lookup, host_addresses, load_check
 from cmk.ccc import tty
 from cmk.ccc.store import activation_lock
 from cmk.checkengine.checker_helper_config import make_packed_config_writer
-from cmk.checkengine.plugins import make_plugin_store
 from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import load_secrets_file
@@ -223,16 +222,7 @@ def _mode_update(
             main_mk_file=cmk.utils.paths.default_config_dir / "main.mk",
             mode=loaded_config.restart_locking,
         ):
-            core, core_client = app.create_core(
-                app.edition,
-                ruleset_matcher,
-                label_manager,
-                loaded_config,
-                loading_result.hosts_config,
-                make_plugin_store(plugins),
-                loading_result.config_cache,
-                plugins,
-            )
+            core, core_client = app.create_core(loaded_config)
 
             core_interface.do_create_config(
                 core=core,
@@ -344,16 +334,7 @@ def _mode_restart(
         final_service_name_config
     )
 
-    core, core_client = app.create_core(
-        app.edition,
-        ruleset_matcher,
-        label_manager,
-        loaded_config,
-        loading_result.hosts_config,
-        make_plugin_store(plugins),
-        loading_result.config_cache,
-        plugins,
-    )
+    core, core_client = app.create_core(loaded_config)
 
     core_interface.do_restart(
         loading_result.config_cache,
@@ -469,16 +450,7 @@ def _mode_reload(
         final_service_name_config
     )
 
-    core, core_client = app.create_core(
-        app.edition,
-        ruleset_matcher,
-        label_manager,
-        loaded_config,
-        loading_result.hosts_config,
-        make_plugin_store(plugins),
-        loading_result.config_cache,
-        plugins,
-    )
+    core, core_client = app.create_core(loaded_config)
 
     core_interface.do_reload(
         loading_result.config_cache,

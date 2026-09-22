@@ -164,7 +164,6 @@ from cmk.checkengine.plugins import (
     AutocheckEntry,
     CheckPlugin,
     CheckPluginName,
-    make_plugin_store,
     SectionName,
     ServiceID,
 )
@@ -1330,16 +1329,7 @@ def _execute_autodiscovery(
     ip_address_of = env.ip_address_of(on_failure=IPLookupFailureMode.COLLECT)
     ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(env.ip_lookup_config)
 
-    core, core_client = app.create_core(
-        app.edition,
-        env.ruleset_matcher,
-        env.label_manager,
-        env.loaded_config,
-        env.hosts_config,
-        make_plugin_store(env.plugins),
-        env.config_cache,
-        env.plugins,
-    )
+    core, core_client = app.create_core(env.loaded_config)
 
     hosts_config = env.hosts_config
     notify_relay = _make_configured_notify_relay(bool(env.loaded_config.relays))
@@ -1570,16 +1560,7 @@ class AutomationRenameHosts:
             if self._finished_history_files[(oldname, newname)]:
                 actions.append("history")
 
-        core, core_client = state.app.create_core(
-            state.app.edition,
-            env.ruleset_matcher,
-            env.label_manager,
-            env.loaded_config,
-            env.hosts_config,
-            make_plugin_store(env.plugins),
-            env.config_cache,
-            env.plugins,
-        )
+        core, core_client = state.app.create_core(env.loaded_config)
         # At this place WATO already has changed it's configuration. All further
         # data might be changed by the still running core. So we need to stop
         # it now.
@@ -2499,16 +2480,7 @@ class AutomationRestart:
         env = AutomationEnvironment.create(state.app, state.loading_result)
         hosts_config = env.hosts_config
 
-        monitoring_core, core_client = state.app.create_core(
-            state.app.edition,
-            env.ruleset_matcher,
-            env.label_manager,
-            env.loaded_config,
-            env.hosts_config,
-            make_plugin_store(env.plugins),
-            env.config_cache,
-            env.plugins,
-        )
+        monitoring_core, core_client = state.app.create_core(env.loaded_config)
         rctx = RestartContext(
             monitoring_core=monitoring_core,
             core_client=core_client,

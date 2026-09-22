@@ -3172,6 +3172,37 @@ def test_collect_passwords_for_hosts_skips_rules_of_other_hosts(monkeypatch: Mon
     assert config_cache.collect_passwords([HostName("relay-host")]) == {"uuid-mine": Secret("mine")}
 
 
+def test_collect_passwords_for_a_cluster_includes_the_secrets_of_its_nodes(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("node"))
+    ts.add_cluster(HostName("cluster"), nodes=[HostName("node")])
+    ts.set_ruleset_bundle(
+        "special_agents",
+        {
+            "some_special_agent": [
+                {
+                    "id": "01",
+                    "condition": {"host_name": ["node"]},
+                    "value": {
+                        "secret": (
+                            "cmk_postprocessed",
+                            "explicit_password",
+                            ("uuid-of-node", "p4ssw0rd!"),
+                        )
+                    },
+                }
+            ],
+        },
+    )
+    config_cache = ts.apply(monkeypatch).config_cache
+
+    assert config_cache.collect_passwords([HostName("cluster")]) == {
+        "uuid-of-node": Secret("p4ssw0rd!")
+    }
+
+
 def test_collect_passwords_for_hosts_keeps_only_referenced_stored_passwords(
     monkeypatch: MonkeyPatch,
 ) -> None:

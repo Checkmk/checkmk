@@ -2187,12 +2187,12 @@ class ConfigCache:
         against a configuration newer than this collection need that superset, because
         rules may start to apply before the passwords are written again (werk 17199).
 
-        With `hosts` only the secrets referenced by the given hosts' configuration are
-        returned. This is only safe for consumers using the very configuration these
-        passwords were computed from, such as the per relay secrets shipped along with
-        a relay's configuration.
+        With `hosts` only the secrets referenced by the configuration of those hosts are
+        returned, the nodes of a cluster included, since fetching a cluster means fetching
+        its nodes. This is only safe for consumers using the very configuration these
+        passwords were computed from, such as the per relay secrets shipped along with a
+        relay's configuration.
         """
-
         if hosts is None:
 
             def _compose_ssc_rules(
@@ -2201,6 +2201,11 @@ class ConfigCache:
                 return [(name, [r["value"] for r in ruleset]) for name, ruleset in ssc_config]
 
         else:
+            fetched_hosts = {
+                h
+                for host_name in hosts
+                for h in (host_name, *self._hosts_config.clusters.get(host_name, ()))
+            }
 
             def _compose_ssc_rules(
                 ssc_config: Iterable[tuple[str, Sequence[RuleSpec[Mapping[str, object]]]]],
@@ -2210,7 +2215,7 @@ class ConfigCache:
                         name,
                         [
                             value
-                            for host_name in hosts
+                            for host_name in fetched_hosts
                             for value in self.ruleset_matcher.get_host_values_all(
                                 host_name, ruleset, self.label_manager.labels_of_host
                             )

@@ -406,13 +406,11 @@ def _automation_service_discovery(
             path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
                 cmk.utils.paths.relative_tmp_dir
             ),
-            secrets=(
-                secrets := load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
-            ),
+            secrets=config_cache.collect_passwords(hostnames),
         ),
         secrets_config_site=StoredSecrets(
-            path=cmk.utils.password_store.pending_secrets_path_site(),
-            secrets=secrets,
+            path=(site_secrets_path := cmk.utils.password_store.pending_secrets_path_site()),
+            secrets=load_secrets_file(site_secrets_path),
         ),
     )
     # sort clusters last, to have them operate with the new nodes host labels.
@@ -588,13 +586,11 @@ def _automation_discovery_preview(
             path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
                 cmk.utils.paths.relative_tmp_dir
             ),
-            secrets=(
-                secrets := load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
-            ),
+            secrets=config_cache.collect_passwords([host_name]),
         )
         secrets_config_site = StoredSecrets(
-            path=cmk.utils.password_store.pending_secrets_path_site(),
-            secrets=secrets,
+            path=(site_secrets_path := cmk.utils.password_store.pending_secrets_path_site()),
+            secrets=load_secrets_file(site_secrets_path),
         )
 
         fetcher = CMKFetcher(
@@ -3374,17 +3370,18 @@ class AutomationDiagHost:
         state, output = 0, ""
         host_labels = label_manager.labels_of_host(host_name)
         host_relay_id = config.get_relay_id(host_labels)
+        site_secrets_path = cmk.utils.password_store.pending_secrets_path_site()
         secrets_config = (
             AdHocSecrets(
                 path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
                     cmk.utils.paths.relative_tmp_dir
                 ),
-                secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
+                secrets=config_cache.collect_passwords([host_name]),
             )
             if host_relay_id
             else StoredSecrets(
-                path=cmk.utils.password_store.pending_secrets_path_site(),
-                secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
+                path=site_secrets_path,
+                secrets=load_secrets_file(site_secrets_path),
             )
         )
 

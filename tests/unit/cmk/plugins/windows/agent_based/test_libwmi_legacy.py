@@ -3,16 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-
 from cmk.plugins.windows.agent_based.libwmi_legacy import get_levels_quadruple
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason='Crash report a62f3a06-80f5-11ef-a641-1d0a79c34b0f: TypeError: can only concatenate list (not "tuple") to list',
-)
 def test_get_levels_quadruple_with_levels_stored_as_list() -> None:
     # Levels reach the check as lists rather than tuples depending on how the
     # rule was written; only "upper" is configured here, as in the crash report.
-    assert get_levels_quadruple({"upper": [10.0, 15.0]}) == (10.0, 15.0, None, None)  # type: ignore[dict-item]
+    assert get_levels_quadruple({"upper": [10.0, 15.0]}) == (10.0, 15.0, None, None)

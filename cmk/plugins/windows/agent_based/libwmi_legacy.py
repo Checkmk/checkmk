@@ -6,7 +6,7 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from math import ceil
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckResult
@@ -125,13 +125,15 @@ def inventory_wmi_table_total(
 
 # to make wato rules simpler, levels are allowed to be passed as tuples if the level
 # specifies the upper limit
-def get_levels_quadruple(params: tuple | dict[str, tuple] | None) -> tuple | None:
+def get_levels_quadruple(
+    params: tuple | Mapping[str, Sequence[float | None]] | None,
+) -> tuple | None:
     if params is None:
         return (None, None, None, None)
-    if isinstance(params, tuple):
+    if not isinstance(params, Mapping):
         return (params[0], params[1], None, None)
-    upper = params.get("upper") or (None, None)
-    lower = params.get("lower") or (None, None)
+    upper = tuple(params.get("upper") or (None, None))
+    lower = tuple(params.get("lower") or (None, None))
     return upper + lower
 
 

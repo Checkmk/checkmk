@@ -49,7 +49,7 @@ def parse_mtr(string_table: StringTable) -> Section:
             for hopnum in range(hopcount)
         ]
         for line in string_table
-        if line and not line[0].startswith("**ERROR**")
+        if len(line) > 2 and not line[0].startswith("**ERROR**")
         for hostname, hopcount, rest in [(line[0], int(float(line[2])), line[3:])]
     }
 

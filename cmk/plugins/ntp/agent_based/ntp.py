@@ -191,7 +191,7 @@ def check_ntp(
 
     state = NTP_STATE_CODES.get(peer.statecode, "unknown")
     if state == "falsetick":
-        yield Result(state=State.CRIT, summary="")
+        yield Result(state=State.CRIT, summary=f"State: {state}")
     else:
         yield Result(state=State.OK, notice=f"State: {state}")
 

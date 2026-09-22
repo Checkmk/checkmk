@@ -125,6 +125,7 @@ export function useHostServicesColumns({
   const labelsFilter: AutocompleteChoiceFilter<'labels'> = {
     type: 'autocomplete-choice',
     field: 'labels',
+    op: 'all_of',
     suggest: labelAutocompleter('service'),
     keyValue: true,
     wildcardOption: true,
@@ -134,6 +135,7 @@ export function useHostServicesColumns({
   const tagsFilter: AutocompleteChoiceFilter<'tags'> = {
     type: 'autocomplete-choice',
     field: 'tags',
+    op: 'all_of',
     suggest: tagAutocompleter(),
     keyValue: true,
     wildcardOption: true,
@@ -148,6 +150,7 @@ export function useHostServicesColumns({
   const contactGroupsFilter: AutocompleteChoiceFilter<'contact_groups'> = {
     type: 'autocomplete-choice',
     field: 'contact_groups',
+    op: 'one_of',
     suggest: autocompleter('allgroups', { group_type: 'contact' }),
     wildcardOption: true,
     maxSelected: MAX_FILTER_CHOICES

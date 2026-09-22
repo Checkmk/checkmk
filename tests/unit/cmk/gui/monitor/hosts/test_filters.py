@@ -330,19 +330,19 @@ def test_query_builder_state_choice_mixes_pending_and_real_states() -> None:
     assert value == expected
 
 
-def test_query_builder_label_choice_single_no_or() -> None:
+def test_query_builder_label_choice_single_no_and() -> None:
     condition = LabelChoiceCondition(
-        type="condition", field="labels", op="one_of", value=["cmk/os_family:linux"]
+        type="condition", field="labels", op="all_of", value=["cmk/os_family:linux"]
     )
 
     assert parse_as_livestatus_filter(condition) == "Filter: labels = 'cmk/os_family' 'linux'"
 
 
-def test_query_builder_label_choice_multiple_with_or() -> None:
+def test_query_builder_label_choice_multiple_with_and() -> None:
     condition = LabelChoiceCondition(
         type="condition",
         field="tags",
-        op="one_of",
+        op="all_of",
         value=["criticality:prod", "networking:core"],
     )
 
@@ -350,7 +350,7 @@ def test_query_builder_label_choice_multiple_with_or() -> None:
         [
             "Filter: tags = 'criticality' 'prod'",
             "Filter: tags = 'networking' 'core'",
-            "Or: 2",
+            "And: 2",
         ]
     )
 
@@ -366,7 +366,7 @@ def test_label_choice_condition_rejects_a_newline(
     payload = {
         "type": "condition",
         "field": "labels",
-        "op": "one_of",
+        "op": "all_of",
         "value": ["key:va\nlue"],
     }
 
@@ -378,7 +378,7 @@ def test_label_choice_condition_rejects_a_newline(
 
 def test_query_builder_label_choice_splits_on_the_first_colon_only() -> None:
     condition = LabelChoiceCondition(
-        type="condition", field="labels", op="one_of", value=["url:https://example.com"]
+        type="condition", field="labels", op="all_of", value=["url:https://example.com"]
     )
 
     assert parse_as_livestatus_filter(condition) == "Filter: labels = 'url' 'https://example.com'"
@@ -386,7 +386,7 @@ def test_query_builder_label_choice_splits_on_the_first_colon_only() -> None:
 
 def test_query_builder_label_choice_value_prefix_matches_by_regex() -> None:
     condition = LabelChoiceCondition(
-        type="condition", field="labels", op="one_of", value=["cmk/os_family:lin*"]
+        type="condition", field="labels", op="all_of", value=["cmk/os_family:lin*"]
     )
 
     assert parse_as_livestatus_filter(condition) == "Filter: labels ~ 'cmk/os_family' '^lin'"
@@ -394,21 +394,21 @@ def test_query_builder_label_choice_value_prefix_matches_by_regex() -> None:
 
 def test_query_builder_label_choice_key_prefix_matches_the_names_column() -> None:
     condition = LabelChoiceCondition(
-        type="condition", field="labels", op="one_of", value=["cmk/os*"]
+        type="condition", field="labels", op="all_of", value=["cmk/os*"]
     )
 
     assert parse_as_livestatus_filter(condition) == "Filter: label_names ~ ^cmk/os"
 
 
 def test_query_builder_tag_key_prefix_matches_its_own_names_column() -> None:
-    condition = LabelChoiceCondition(type="condition", field="tags", op="one_of", value=["crit*"])
+    condition = LabelChoiceCondition(type="condition", field="tags", op="all_of", value=["crit*"])
 
     assert parse_as_livestatus_filter(condition) == "Filter: tag_names ~ ^crit"
 
 
 def test_query_builder_label_choice_prefix_is_a_literal_not_a_pattern() -> None:
     condition = LabelChoiceCondition(
-        type="condition", field="labels", op="one_of", value=["cmk/os_family:a.b*"]
+        type="condition", field="labels", op="all_of", value=["cmk/os_family:a.b*"]
     )
 
     assert parse_as_livestatus_filter(condition) == "Filter: labels ~ 'cmk/os_family' '^a\\.b'"

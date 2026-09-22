@@ -116,7 +116,7 @@ class TestMonitorHostServicesQueryParamValidation:
                 {
                     "type": "condition",
                     "field": "labels",
-                    "op": "one_of",
+                    "op": "all_of",
                     "value": ["key:val\nue"],
                 },
                 id="newline in label choice value",

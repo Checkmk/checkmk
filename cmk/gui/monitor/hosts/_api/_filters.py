@@ -184,7 +184,9 @@ class LabelChoiceCondition:
         description="Node type discriminator", example="condition"
     )
     field: LabelField = api_field(description="Key/value host field to filter on", example="labels")
-    op: Literal["one_of"] = api_field(description="Set membership operation", example="one_of")
+    op: Literal["one_of", "all_of"] = api_field(
+        description="Set membership operation", example="all_of"
+    )
     value: Annotated[
         list[Annotated[str, StringConstraints(pattern=_NO_NEWLINES_REGEX)]],
         MinLen(1),
@@ -192,8 +194,9 @@ class LabelChoiceCondition:
         AfterValidator(validate_label_pairs),
     ] = api_field(
         description=(
-            "Pairs to match, each written as 'key:value'. A host matches when it carries any "
-            "one of them. The first colon separates the two halves, so a value may contain "
+            "Pairs to match, each written as 'key:value'. With 'all_of' a host matches only "
+            "when it carries every pair, with 'one_of' when it carries any one of them. The "
+            "first colon separates the two halves, so a value may contain "
             "colons. A trailing '*' matches by prefix: 'key:va*' takes every value of that key "
             "starting with 'va', 'ke*' every key starting with 'ke', whatever its value."
         ),
@@ -484,8 +487,11 @@ def _accumulate_filters(
         case LabelChoiceCondition():
             filters.extend(_label_choice_filters(node.field, node.value))
 
-            if len(node.value) > 1:
-                filters.append(f"Or: {len(node.value)}")
+            match node.op:
+                case "one_of" if len(node.value) > 1:
+                    filters.append(f"Or: {len(node.value)}")
+                case "all_of" if len(node.value) > 1:
+                    filters.append(f"And: {len(node.value)}")
 
         case NameChoiceCondition():
             filters.extend(_name_choice_filters(node.field, node.value))

@@ -5,7 +5,11 @@
  */
 import type { ConfiguredValues } from 'cmk-ui-library/components/filter'
 
-import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
+import type {
+  ColumnFilterNode,
+  FieldConditionMap,
+  FilterField
+} from '@/monitoring/shared/api/types'
 
 /** What a column is sorted by, in the shape TanStack Table reports and takes. */
 export type SortDirection = false | 'asc' | 'desc'
@@ -158,13 +162,21 @@ export interface CheckboxListWithFlagsFilter<
 
 /**
  * Filter over the values of a field only the server knows, picked as chips
- * against one of the registered autocompleters. Its value is a single `one_of`
- * condition, which is what the label, tag and contact-group conditions accept.
+ * against one of the registered autocompleters. Its value is a single
+ * set-membership condition, which is what the label, tag and contact-group
+ * conditions accept.
  */
 export interface AutocompleteChoiceFilter<F extends FilterField = FilterField> {
   type: 'autocomplete-choice'
   /** API field this filter targets. Used to produce the correct condition node. */
   field: F
+  /**
+   * How the picks combine: `all_of` for the key/value fields, where an entry
+   * carries every label or tag it is tagged with and demanding all of them is
+   * what narrows the list; `one_of` for the name lists, where the picks are
+   * alternatives.
+   */
+  op: Extract<FieldConditionMap[F], { op: unknown }>['op']
   /** Suggestions for what has been typed so far. */
   suggest: (query: string) => Promise<string[]>
   /** Ask `suggest` with an empty query on focus, to seed the list. */

@@ -7,8 +7,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 Funnel content for the "autocomplete-choice" filter type: the values of a field
 that are known only to the server, picked as chips against its autocompleter.
 
-The committed value is a single `one_of` condition carrying every pick, which is
-what the API's label, tag and contact-group conditions accept.
+The committed value is a single set-membership condition carrying every pick,
+which is what the API's label, tag and contact-group conditions accept. The
+definition says whether the picks combine as `all_of` or as `one_of`.
 -->
 <script setup lang="ts" generic="F extends FilterField">
 import CmkChipAutocomplete from 'cmk-ui-library/components/CmkChipAutocomplete.vue'
@@ -37,7 +38,7 @@ const selected = computed<string[]>({
     model.value = {
       type: 'condition',
       field: props.definition.field,
-      op: 'one_of',
+      op: props.definition.op,
       value: values
     } as ColumnFilterNode<F>
   }

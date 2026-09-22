@@ -242,10 +242,6 @@ def test_check_pse_poe(
     assert list(check_pse_poe(item, params, section)) == expected
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash report 4216: ValueError: 0 is not a valid PoeStatus",
-)
 def test_check_pse_poe_with_unknown_operational_status() -> None:
     # A PSE reporting an operational status outside on(1)/off(2)/faulty(3).
     # check_poe_data already has a path for this; the section parser never let

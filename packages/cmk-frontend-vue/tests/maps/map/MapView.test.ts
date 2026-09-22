@@ -41,6 +41,7 @@ const stubs = {
   'radar-map-view': rendererStub('renderer-radar'),
   'folder-tree-map-view': rendererStub('renderer-foldertree'),
   'flow-map-view': rendererStub('renderer-flow'),
+  'presentation-map-view': rendererStub('renderer-presentation'),
   MapCanvas: rendererStub('renderer-static'),
   MapSearch: true,
   ProblemsOnlyToggle: true,
@@ -85,6 +86,7 @@ const allRendererTestIds = [
   'renderer-radar',
   'renderer-foldertree',
   'renderer-flow',
+  'renderer-presentation',
   'renderer-static'
 ]
 
@@ -149,18 +151,10 @@ describe('MapView – map-type dispatch', () => {
     await expectOnlyRenderer('renderer-flow')
   })
 
-  // The presentation map draws itself, and arrives with the commit that
-  // follows this one; until then the map area says so rather than drawing it
-  // wrong.
-  it('stands in for a presentation view it cannot draw yet', async () => {
+  it('renders the PresentationMapView for a presentation view', async () => {
     opensMap(newMapView('presentation'))
     renderMap()
-    await waitFor(() =>
-      expect(screen.getByText('This map type cannot be shown yet')).toBeInTheDocument()
-    )
-    for (const testid of allRendererTestIds) {
-      expect(screen.queryByTestId(testid)).toBeNull()
-    }
+    await expectOnlyRenderer('renderer-presentation')
   })
 
   it('dispatches on the view type alone, connection or not', async () => {

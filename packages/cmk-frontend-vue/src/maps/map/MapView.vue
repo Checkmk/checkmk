@@ -14,9 +14,6 @@ lifecycle is keyed on the name (``useMapLifecycle``) and not on mount.
 
 This is also where the map's own design values are declared, on the view root,
 so every painter below inherits one set of them.
-
-Static, geo, flow, radar and folder-tree maps are drawn so far; the presentation
-map arrives in the commit that follows this one.
 -->
 <script setup lang="ts">
 import CmkBreadcrumb, { type BreadcrumbItem } from 'cmk-ui-library/components/CmkBreadcrumb'
@@ -36,7 +33,6 @@ import BulkAckModal from '@/maps/map/commands/BulkAckModal.vue'
 import ObjectCommandModals from '@/maps/map/commands/ObjectCommandModals.vue'
 import { useObjectActions } from '@/maps/map/commands/useObjectActions'
 import MapKioskExit from '@/maps/map/components/MapKioskExit.vue'
-import MapPlaceholder from '@/maps/map/components/MapPlaceholder.vue'
 import MapProblemsPill, { type ProblemCounts } from '@/maps/map/components/MapProblemsPill.vue'
 import MapViewTopbar from '@/maps/map/components/MapViewTopbar.vue'
 import { useMapEditor } from '@/maps/map/composables/useMapEditor'
@@ -83,6 +79,9 @@ const flowMapView = defineAsyncComponent(() => import('@/maps/map/flow/FlowMapVi
 const folderTreeMapView = defineAsyncComponent(
   () => import('@/maps/map/foldertree/FolderTreeMapView.vue')
 )
+const presentationMapView = defineAsyncComponent(
+  () => import('@/maps/map/presentation/PresentationMapView.vue')
+)
 const radarMapView = defineAsyncComponent(() => import('@/maps/map/radar/RadarMapView.vue'))
 const staticMapView = defineAsyncComponent(() => import('@/maps/map/static/StaticMapView.vue'))
 const worldMapView = defineAsyncComponent(() => import('@/maps/map/worldmap/WorldMapView.vue'))
@@ -104,10 +103,8 @@ const isPreview = computed(() => nav.state.preview)
 const { openKioskInNewTab, exitFullscreen } = useMapFullscreen(mapName, isKiosk)
 
 const mapConfig = computed(() => mapsStore.currentMap.value)
-// Whether the current user may edit *this* map: the per-map pagetype
-// capability the backend stamps on the map-list entry (built-ins and
-// unauthorized foreign maps are read-only — admin rights ride in via the
-// "edit foreign maps" permission, not via configure/admin status).
+// The per-map pagetype capability the backend stamps on the map-list entry:
+// admin rights ride in via "edit foreign maps", not via configure/admin status.
 const mapListEntry = computed(() => mapsStore.maps.value.find((b) => b.name === mapName.value))
 const canEdit = computed(() => mapListEntry.value?.can_edit === true)
 /**
@@ -135,15 +132,14 @@ const mapConfigAsRead = computed<MapRead | null>(() => {
     object_count: objects.length
   }
 })
-// Every map type not drawn yet says so; until its own commit lands, that beats
-// rendering it as something it is not.
-const isStatic = computed(() => (mapConfig.value?.view.type ?? 'static') === 'static')
 const isWorldmap = computed(() => mapConfig.value?.view.type === 'worldmap')
 const isFlowmap = computed(() => mapConfig.value?.view.type === 'flow')
 const isRadar = computed(() => mapConfig.value?.view.type === 'radar')
 const isFolderTree = computed(() => mapConfig.value?.view.type === 'foldertree')
+const isPresentation = computed(() => mapConfig.value?.view.type === 'presentation')
+// Content comes from a live query, so there is nothing on it to arrange.
+const derivesItsContent = computed(() => isFlowmap.value || isRadar.value || isFolderTree.value)
 
-// The map's search, wherever the map type offers one.
 const mapFilterNeedle = ref('')
 watch(mapName, () => {
   mapFilterNeedle.value = ''
@@ -165,9 +161,7 @@ const editor = useMapEditor()
 const { rotationCountdown, rotationPaused, stopRotation, scheduleRotation, toggleRotationPause } =
   useMapRotation(mapName, editor.editMode)
 
-// The map's own design values, and the resolved palette every painter that
-// works outside CSS reads. Declared on the view root so everything below
-// inherits them.
+// Declared on the view root so everything below inherits the palette.
 const root = useTemplateRef<HTMLElement>('root')
 provideMapPalette(root)
 
@@ -194,8 +188,7 @@ watch(
   { immediate: true }
 )
 
-// Above the object where there is room for it, below it otherwise -- the
-// toolbar must not cover what is being edited.
+// The toolbar must not cover what is being edited.
 const actionBarStyle = computed(() => {
   const { top, left, width, bottom } = selectedRect
   if (!selectedObjectEl.value || width === 0) {
@@ -214,8 +207,7 @@ const actionBarStyle = computed(() => {
 
 // The editing controls are for whoever may change *this* map, and only while
 // the view is not doing something else: a kiosk screen, a live preview, or
-// triage in the detail drawer. Flow, radar and folder-tree maps derive their
-// content, so there is nothing on them to arrange.
+// triage in the detail drawer.
 const showsEditTools = computed(
   () =>
     canEdit.value &&
@@ -223,7 +215,7 @@ const showsEditTools = computed(
     !isPreview.value &&
     !!mapConfig.value &&
     !mapConfig.value.readonly &&
-    (isStatic.value || isWorldmap.value) &&
+    !derivesItsContent.value &&
     !drawerObject.value
 )
 
@@ -268,12 +260,9 @@ const propsModalObject = ref<MapElement | null>(null)
  * The box the properties card sits beside, or ``null`` when it was reached
  * from somewhere with nothing to sit next to and opens as a centered dialog.
  *
- * It stays live rather than being snapshotted at open time:
- * ``selectedObjectAnchor`` follows the object as the canvas re-lays out under
- * the open card (a window resize moves every object), and a stale box would
- * place the card beside where the object used to be. The box the card was
- * opened on carries a frame in which the object is momentarily unmeasurable,
- * so the card never flips to a centered dialog under the operator.
+ * Live rather than snapshotted at open time: the canvas re-lays out under the
+ * open card (a window resize moves every object), and a stale box would place
+ * the card beside where the object used to be.
  */
 const openedOnAnchor = ref<AnchorRect | null>(null)
 const propsModalAnchor = computed<AnchorRect | null>(() =>
@@ -870,10 +859,14 @@ function closeBulkAckModal(sent: boolean): void {
         @drawer-object="flowDrawerObject = $event"
       />
 
-      <MapPlaceholder
-        v-else-if="!isStatic"
-        :message="_t('This map type cannot be shown yet')"
-        variant="empty"
+      <presentation-map-view
+        v-else-if="isPresentation"
+        :config="mapConfig"
+        :edit-mode="editor.editMode.value"
+        :kiosk="isKiosk"
+        :preview="isPreview"
+        :checkmk-url="checkmkUrl"
+        @object-click="onObjectClick"
       />
 
       <static-map-view
@@ -928,8 +921,8 @@ function closeBulkAckModal(sent: boolean): void {
         :editor="editor"
         :connection-id="mapConfig?.connection_id ?? ''"
         :keyboard-active="editKeyboardActive"
-        :offers-add-object="true"
-        :offers-grid="!isWorldmap"
+        :offers-add-object="!isPresentation"
+        :offers-grid="!isWorldmap && !isPresentation"
         @start-placing="onStartPlacing()"
         @toggle-edit-mode="onToggleEditMode"
         @delete-selection="onObjectAction('delete')"

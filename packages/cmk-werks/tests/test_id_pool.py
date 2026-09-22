@@ -27,6 +27,10 @@ from cmk.werks.tool.cli.id_pool import (
 from cmk.werks.tool.cli.stash import Stash
 from cmk.werks.tool.cli.werk import WerkId
 
+from ._logger import null_logger
+
+_LAUNCHED_FROM = "venv"
+
 
 def _write_secret(paths: Paths) -> None:
     paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
@@ -138,6 +142,7 @@ def test_paths_object(tmp_path: Path) -> None:
     paths = make_paths_object(tmp_path)
     assert paths.legacy_stash_file == tmp_path / ".cmk-werk-ids"
     assert paths.stash_file == tmp_path / ".local/state/cmk-werks/reserved-ids"
+    assert paths.log_file == tmp_path / ".local/state/cmk-werks/werk-ids.log"
     assert paths.secret_file == tmp_path / ".config/cmk-werks/secret"
 
 
@@ -224,13 +229,23 @@ def test_load_or_update_stash_no_secret_skips_server(tmp_path: Path) -> None:
     )
 
     with pytest.raises(SystemExit):
-        load_or_update_stash(paths, FakeWerkIDsClient("http://werk-ids.test"))
+        load_or_update_stash(
+            paths,
+            FakeWerkIDsClient("http://werk-ids.test"),
+            null_logger(),
+            _LAUNCHED_FROM,
+        )
 
 
 def test_load_or_update_stash_reserves_ids_from_server(tmp_path: Path) -> None:
     paths = _prepare_stash(tmp_path, Stash(ids=[10, 20]))
 
-    stash = load_or_update_stash(paths, FakeWerkIDsClient("http://werk-ids.test"))
+    stash = load_or_update_stash(
+        paths,
+        FakeWerkIDsClient("http://werk-ids.test"),
+        null_logger(),
+        _LAUNCHED_FROM,
+    )
 
     assert isinstance(stash, Stash)
     assert stash.ids == [10, 20, 30, 40]
@@ -239,7 +254,12 @@ def test_load_or_update_stash_reserves_ids_from_server(tmp_path: Path) -> None:
 def test_load_or_update_stash_uses_local_ids_when_server_empty(tmp_path: Path) -> None:
     paths = _prepare_stash(tmp_path, Stash(ids=[10, 20]))
 
-    stash = load_or_update_stash(paths, FakeEmptyServerClient("http://werk-ids.test"))
+    stash = load_or_update_stash(
+        paths,
+        FakeEmptyServerClient("http://werk-ids.test"),
+        null_logger(),
+        _LAUNCHED_FROM,
+    )
 
     assert isinstance(stash, Stash)
     assert stash.ids == [10, 20]
@@ -249,7 +269,12 @@ def test_load_or_update_stash_no_ids_anywhere_bails_out(tmp_path: Path) -> None:
     paths = _prepare_stash(tmp_path, Stash(ids=[]))
 
     with pytest.raises(SystemExit):
-        load_or_update_stash(paths, FakeEmptyServerClient("http://werk-ids.test"))
+        load_or_update_stash(
+            paths,
+            FakeEmptyServerClient("http://werk-ids.test"),
+            null_logger(),
+            _LAUNCHED_FROM,
+        )
 
 
 def test_load_or_update_stash_unwritable_stash_location_skips_server(
@@ -262,7 +287,12 @@ def test_load_or_update_stash_unwritable_stash_location_skips_server(
     _make_stash_location_unwritable(paths)
 
     with pytest.raises(SystemExit):
-        load_or_update_stash(paths, FakeForbiddenServerClient("http://werk-ids.test"))
+        load_or_update_stash(
+            paths,
+            FakeForbiddenServerClient("http://werk-ids.test"),
+            null_logger(),
+            _LAUNCHED_FROM,
+        )
 
     assert str(paths.stash_file) in capsys.readouterr().err
 
@@ -328,7 +358,7 @@ def test_load_stash_from_file_bails_when_both_files_exist(tmp_path: Path) -> Non
 def test_migrate_no_legacy_file_writes_empty_stash(tmp_path: Path) -> None:
     paths = make_paths_object(tmp_path)
     _write_secret(paths)
-    migrate_werk_ids_file(paths)
+    migrate_werk_ids_file(paths, null_logger(), _LAUNCHED_FROM)
     assert paths.stash_file.exists()
     assert Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8")).ids == []
 
@@ -337,7 +367,7 @@ def test_migrate_empty_legacy_file_writes_empty_stash(tmp_path: Path) -> None:
     paths = make_paths_object(tmp_path)
     _write_secret(paths)
     paths.legacy_stash_file.write_text("", encoding="utf-8")
-    migrate_werk_ids_file(paths)
+    migrate_werk_ids_file(paths, null_logger(), _LAUNCHED_FROM)
     assert paths.stash_file.exists()
     assert Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8")).ids == []
     assert not paths.legacy_stash_file.exists()
@@ -351,7 +381,7 @@ def test_migrate_json_legacy_file(tmp_path: Path) -> None:
     legacy_json = '{"__version__": "2", "ids_by_project": {"cmk": [10, 11], "cloudmk": [1000]}}'
     paths.legacy_stash_file.write_text(legacy_json, encoding="utf-8")
 
-    migrate_werk_ids_file(paths)
+    migrate_werk_ids_file(paths, null_logger(), _LAUNCHED_FROM)
 
     assert paths.stash_file.exists()
     new_stash = Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8"))
@@ -364,7 +394,7 @@ def test_migrate_list_legacy_file(tmp_path: Path) -> None:
     _write_secret(paths)
     paths.legacy_stash_file.write_text("[42, 43]", encoding="utf-8")
 
-    migrate_werk_ids_file(paths)
+    migrate_werk_ids_file(paths, null_logger(), _LAUNCHED_FROM)
 
     new_stash = Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8"))
     assert sorted(new_stash.ids) == [42, 43]
@@ -381,7 +411,7 @@ def test_migrate_werk_ids_file_merges_both_files(tmp_path: Path) -> None:
         '{"__version__": "2", "ids_by_project": {"cmk": [2]}}', encoding="utf-8"
     )
 
-    migrate_werk_ids_file(paths)
+    migrate_werk_ids_file(paths, null_logger(), _LAUNCHED_FROM)
 
     new_stash = Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8"))
     assert sorted(new_stash.ids) == [1, 2]
@@ -399,7 +429,7 @@ def test_migrate_werk_ids_file_deduplicates_overlapping_ids(tmp_path: Path) -> N
         encoding="utf-8",
     )
 
-    migrate_werk_ids_file(paths)
+    migrate_werk_ids_file(paths, null_logger(), _LAUNCHED_FROM)
 
     new_stash = Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8"))
     assert sorted(new_stash.ids) == [1, 2, 3]
@@ -417,10 +447,10 @@ def test_migrate_werk_ids_file_is_idempotent(tmp_path: Path) -> None:
         '{"__version__": "2", "ids_by_project": {"cmk": [2]}}', encoding="utf-8"
     )
 
-    migrate_werk_ids_file(paths)
+    migrate_werk_ids_file(paths, null_logger(), _LAUNCHED_FROM)
     after_first = paths.stash_file.read_text(encoding="utf-8")
 
-    migrate_werk_ids_file(paths)
+    migrate_werk_ids_file(paths, null_logger(), _LAUNCHED_FROM)
     after_second = paths.stash_file.read_text(encoding="utf-8")
 
     assert after_first == after_second

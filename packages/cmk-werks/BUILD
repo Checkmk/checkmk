@@ -32,6 +32,7 @@ py_library(
         "cmk/werks/tool/__init__.py",
         "cmk/werks/tool/__main__.py",
         "cmk/werks/tool/cli/__init__.py",
+        "cmk/werks/tool/cli/id_log.py",
         "cmk/werks/tool/cli/id_pool.py",
         "cmk/werks/tool/cli/in_out_elements.py",
         "cmk/werks/tool/cli/stash.py",
@@ -61,6 +62,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:version",
         requirement("gitpython"),
         requirement("lxml"),

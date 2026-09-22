@@ -434,6 +434,7 @@ def _status(
     secret: FileInfo | None = None,
     reserved_ids: StashInfo | None = None,
     legacy_stash: StashInfo | None = None,
+    log: FileInfo | None = None,
     problems: Sequence[Problem] = (),
 ) -> Status:
     return Status(
@@ -444,6 +445,7 @@ def _status(
         or StashInfo(path=Path("/h/reserved"), exists=True, mode="0600", count=3, next_id=20_251),
         legacy_stash=legacy_stash
         or StashInfo(path=Path("/h/legacy"), exists=False, mode=None, count=0, next_id=None),
+        log=log or FileInfo(path=Path("/h/werk-ids.log"), exists=True, mode="0644"),
         problems=list(problems),
     )
 
@@ -475,6 +477,20 @@ def test_render_lists_every_item_with_its_mode() -> None:
     assert "/h/secret" in output
     assert "0600" in output
     assert "3 reserved, next 20251" in output
+
+
+def test_render_shows_where_the_log_is() -> None:
+    output = _rendered(_NO_HOME, _status())
+
+    assert "/h/werk-ids.log" in output
+
+
+def test_render_marks_a_log_that_is_not_there_yet_as_absent() -> None:
+    output = _rendered(
+        _NO_HOME, _status(log=FileInfo(path=Path("/h/werk-ids.log"), exists=False, mode=None))
+    )
+
+    assert "- log" in " ".join(output.split())
 
 
 def test_render_explains_the_setup_state() -> None:
@@ -669,6 +685,7 @@ def test_json_keeps_a_fixed_shape() -> None:
         "secret",
         "reserved_ids",
         "legacy_stash",
+        "log",
         "problems",
     }
     assert document["legacy_stash"] == {

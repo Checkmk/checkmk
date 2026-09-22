@@ -654,6 +654,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.shared_typing.vue_formspec_components",
         "cmk.utils.nonfree.pro",
         "cmk.utils.mrpe_config",
+        "cmk.utils.mtr_config",
         "cmk.utils.paths",
         "cmk.utils.render",
         "cmk.utils.rulesets",

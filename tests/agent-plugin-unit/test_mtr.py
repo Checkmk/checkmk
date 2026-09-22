@@ -172,3 +172,19 @@ def test_error_survives_a_status_file_round_trip(tmpdir: object, monkeypatch: Mo
     assert restored["broken.example.com"]["error"] == "mtr: boom"
     assert "error" not in restored["fine.example.com"]
     assert restored["fine.example.com"]["hops"] == status["fine.example.com"]["hops"]
+
+
+@pytest.mark.parametrize(
+    "host, expected_result",
+    [
+        pytest.param("www.google.com", "www.google.com", id="plain host name"),
+        pytest.param("192.168.1.1", "192.168.1.1", id="IPv4 address"),
+        pytest.param("2001:db8::1", "2001:db8::1", id="IPv6 address"),
+        pytest.param("foo.example.com (IPv6)", "foo.example.com", id="with derived suffix"),
+        pytest.param(
+            "2001:db8::1 (TCP port 8080)", "2001:db8::1", id="suffix built from several settings"
+        ),
+    ],
+)
+def test_mtr_target(host: str, expected_result: str) -> None:
+    assert mtr.mtr_target(host) == expected_result

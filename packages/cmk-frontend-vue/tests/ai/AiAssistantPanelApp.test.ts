@@ -116,3 +116,13 @@ test('marks the current edge as pressed', async () => {
     'false'
   )
 })
+
+test('closes on Escape and releases the space', async () => {
+  renderOpenPanel()
+
+  await fireEvent.keyDown(window, { key: 'Escape' })
+
+  expect(screen.queryByText('AI assistant')).not.toBeInTheDocument()
+  expect(mainAreaInset()).toEqual({ left: '0px', right: '0px', bottom: '0px' })
+  expect(JSON.parse(sessionStorage.getItem(OPEN_STORAGE_KEY)!)).toBe(false)
+})

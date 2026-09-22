@@ -71,6 +71,12 @@ function onStorage(event: StorageEvent): void {
   }
 }
 
+function onKeydown(event: KeyboardEvent): void {
+  if (event.key === 'Escape') {
+    open.value = false
+  }
+}
+
 /* Shrinks `#ai-panel-container`, so that the panel does not overlay the page */
 function updateMainAreaInset(isOpen: boolean): void {
   const size = isOpen ? PANEL_SIZE : '0px'
@@ -87,11 +93,13 @@ if (renderPanel) {
 
   onMounted(() => {
     window.addEventListener('storage', onStorage)
+    window.addEventListener('keydown', onKeydown)
     updateMainAreaInset(open.value)
   })
 
   onBeforeUnmount(() => {
     window.removeEventListener('storage', onStorage)
+    window.removeEventListener('keydown', onKeydown)
     updateMainAreaInset(false)
   })
 }

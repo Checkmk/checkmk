@@ -28,11 +28,22 @@ export function toggle() {
   updateTriggerState(open)
 }
 
+export function close() {
+  if (!isOpen()) return
+  sessionStorage.setItem(OPEN_STORAGE_KEY, JSON.stringify(false))
+  updateTriggerState(false)
+}
+
 export function initialize() {
   updateTriggerState(isOpen())
   window.addEventListener('storage', (event: StorageEvent) => {
     if (event.key === OPEN_STORAGE_KEY) {
       updateTriggerState(event.newValue === 'true')
+    }
+  })
+  window.addEventListener('keydown', (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      close()
     }
   })
 }

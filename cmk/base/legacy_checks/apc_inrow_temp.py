@@ -6,11 +6,18 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from collections.abc import Mapping, Sequence
+
 from cmk.base.check_legacy_includes.temperature import check_temperature
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.apc import DETECT
+from cmk.plugins.lib.apc_cooling_unit import (
+    COOLING_UNIT_EXTENDED_ANALOG,
+    COOLING_UNIT_STATUS_ANALOG,
+    parse_analog_readings,
+)
 
 check_info = {}
 
@@ -21,15 +28,24 @@ check_info = {}
 # .1.3.6.1.4.1.318.1.1.13.3.2.2.2.26.0 154 --> PowerNet-MIB::airIRRCUnitStatusLeavingFluidTemperatureMetric.0
 
 
-def parse_apc_inrow_temp(string_table):
+def parse_apc_inrow_temp(string_table: Sequence[StringTable]) -> Mapping[str, float]:
+    air_irrc, *cooling_unit_tables = string_table
     parsed = {}
-    if string_table:
+    if air_irrc:
         for what, what_item in zip(
-            string_table[0],
+            air_irrc[0],
             ["Rack Inlet", "Supply Air", "Return Air", "Entering Fluid", "Leaving Fluid"],
         ):
             if what not in ["", "-1"]:
                 parsed.setdefault(what_item, float(what) / 10)
+    if parsed:
+        return parsed
+
+    for table in cooling_unit_tables:
+        for reading in parse_analog_readings(table):
+            # Every temperature is published twice, in Fahrenheit and in Celsius.
+            if reading.units == "C":
+                parsed[reading.description.replace(" Temperature", "")] = reading.value
 
     return parsed
 
@@ -48,10 +64,14 @@ def check_apc_inrow_temp(item, params, parsed):
 check_info["apc_inrow_temp"] = LegacyCheckDefinition(
     name="apc_inrow_temp",
     detect=DETECT,
-    fetch=SNMPTree(
-        base=".1.3.6.1.4.1.318.1.1.13.3.2.2.2",
-        oids=["7", "9", "11", "24", "26"],
-    ),
+    fetch=[
+        SNMPTree(
+            base=".1.3.6.1.4.1.318.1.1.13.3.2.2.2",
+            oids=["7", "9", "11", "24", "26"],
+        ),
+        COOLING_UNIT_STATUS_ANALOG,
+        COOLING_UNIT_EXTENDED_ANALOG,
+    ],
     parse_function=parse_apc_inrow_temp,
     service_name="Temperature %s",
     discovery_function=inventory_apc_inrow_temp,

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -11,49 +12,48 @@ from cmk.agent_based.v2 import (
     Metric,
     Result,
     Service,
-    SimpleSNMPSection,
+    SNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
 from cmk.plugins.lib.apc import DETECT
+from cmk.plugins.lib.apc_cooling_unit import COOLING_UNIT_STATUS_ANALOG, parse_analog_readings
 
 
-def savefloat(f: str) -> float:
-    """Tries to cast a string to an float and return it. In case this fails,
-    it returns 0.0.
+def parse_apc_inrow_fanspeed(string_table: Sequence[StringTable]) -> float | None:
+    air_irrc, cooling_unit = string_table
+    if air_irrc:
+        try:
+            return float(air_irrc[0][0]) / 10
+        except ValueError:
+            return None
 
-    Advice: Please don't use this function in new code. It is understood as
-    bad style these days, because in case you get 0.0 back from this function,
-    you can not know whether it is really 0.0 or something went wrong."""
-    try:
-        return float(f)
-    except (TypeError, ValueError):
-        return 0.0
-
-
-def inventory_apc_inrow_fanspeed(section: StringTable) -> DiscoveryResult:
-    if section:
-        yield Service()
+    for reading in parse_analog_readings(cooling_unit):
+        if reading.description == "Fan Speed" and reading.units == "%":
+            return reading.value
+    return None
 
 
-def check_apc_inrow_fanspeed(section: StringTable) -> CheckResult:
-    value = savefloat(section[0][0]) / 10
-    yield Result(state=State.OK, summary="Current: %.2f%%" % value)
-    yield Metric("fan_perc", value)
+def check_apc_inrow_fanspeed(section: float) -> CheckResult:
+    yield Result(state=State.OK, summary="Current: %.2f%%" % section)
+    yield Metric("fan_perc", section)
 
 
-def parse_apc_inrow_fanspeed(string_table: StringTable) -> StringTable:
-    return string_table
+def inventory_apc_inrow_fanspeed(section: float) -> DiscoveryResult:
+    yield Service()
 
 
-snmp_section_apc_inrow_fanspeed = SimpleSNMPSection(
+snmp_section_apc_inrow_fanspeed = SNMPSection(
     name="apc_inrow_fanspeed",
     detect=DETECT,
-    fetch=SNMPTree(
-        base=".1.3.6.1.4.1.318.1.1.13.3.2.2.2",
-        oids=["16"],
-    ),
+    fetch=[
+        SNMPTree(
+            base=".1.3.6.1.4.1.318.1.1.13.3.2.2.2",
+            oids=["16"],  # airIRRCUnitStatusFanSpeed, in tenths of a percent
+        ),
+        COOLING_UNIT_STATUS_ANALOG,
+    ],
     parse_function=parse_apc_inrow_fanspeed,
 )
 

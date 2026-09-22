@@ -23,7 +23,7 @@ const GRAPH_OPTIONS: ApiGraphOptions = {
   omit_zero_metrics: false
 }
 const RANGE: RequestedTimeRange = { start: 0, end: 3600 }
-const REQUEST_REACHING_PAST_THE_DRAWN_WINDOW = { start: -120, end: 3660, step: 60 }
+const REQUESTED_WINDOW = { ...RANGE, step: 60 }
 const OVERVIEW_DOMAIN: TimeInterval = { start: -10_800, end: 14_400 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -113,7 +113,7 @@ test('fetches immediately on mount and exposes the mapped response', async () =>
   const [path, options] = postSpy.mock.calls[0]!
   expect(path).toBe(FETCH_PATH)
   expect(options.body.consolidation_function).toBe('max')
-  expect(options.body.requested_time_range).toEqual(REQUEST_REACHING_PAST_THE_DRAWN_WINDOW)
+  expect(options.body.requested_time_range).toEqual(REQUESTED_WINDOW)
   expect(options.body.content.data_sources.map((source: { id: string }) => source.id)).toEqual([
     'A'
   ])

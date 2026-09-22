@@ -5,38 +5,8 @@
  */
 import { describe, expect, test } from 'vitest'
 
-import { timestampAt } from '@/graphing/components/TimeSeriesGraph/axes/timeAxis'
 import { MIN_ZOOM_SAMPLES, MIN_ZOOM_TIME_RANGE_SECONDS } from '@/graphing/components/constants'
-import { drawnTimeRange, minZoomSpan, withEdgeNeighbours } from '@/graphing/utils/timeRange'
-
-describe('withEdgeNeighbours', () => {
-  const WINDOW = { start: 1_000_020, end: 1_000_620, step: 60 }
-
-  test('asks for a sample past the end of the window it will be drawn over', () => {
-    const window = WINDOW
-
-    const fetched = withEdgeNeighbours(window)
-
-    expect(fetched.end).toBeGreaterThan(window.end)
-  })
-
-  test('asks far enough back that its first sample falls before the window starts', () => {
-    const window = WINDOW
-    const firstValueIndex = 0
-
-    const fetched = withEdgeNeighbours(window)
-
-    expect(timestampAt(fetched, firstValueIndex)).toBeLessThan(window.start)
-  })
-
-  test('leaves the resolution the window resolved untouched', () => {
-    const window = WINDOW
-
-    const fetched = withEdgeNeighbours(window)
-
-    expect(fetched.step).toBe(window.step)
-  })
-})
+import { drawnTimeRange, minZoomSpan } from '@/graphing/utils/timeRange'
 
 describe('drawnTimeRange', () => {
   const STEP = 60

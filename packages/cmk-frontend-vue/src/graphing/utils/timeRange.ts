@@ -4,12 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { TimeRange } from '../components/TimeSeriesGraph'
-import {
-  LEADING_NEIGHBOUR_STEPS,
-  MIN_ZOOM_SAMPLES,
-  MIN_ZOOM_TIME_RANGE_SECONDS,
-  TRAILING_NEIGHBOUR_STEPS
-} from '../components/constants'
+import { MIN_ZOOM_SAMPLES, MIN_ZOOM_TIME_RANGE_SECONDS } from '../components/constants'
 import type { RequestedTimeRange } from '../types'
 
 export function sameRequestedTimeRange(a: RequestedTimeRange, b: RequestedTimeRange): boolean {
@@ -22,14 +17,6 @@ function snapDownToGrid(time: number, step: number): number {
 
 function hasUsableStep(range: TimeRange): boolean {
   return Number.isFinite(range.step) && range.step > 0
-}
-
-export function withEdgeNeighbours(window: TimeRange): TimeRange {
-  return {
-    start: window.start - LEADING_NEIGHBOUR_STEPS * window.step,
-    end: window.end + TRAILING_NEIGHBOUR_STEPS * window.step,
-    step: window.step
-  }
 }
 
 // Whether the user's window is shorter than the interval between two values the backend served.

@@ -14,12 +14,7 @@ import {
   resetGlobalTimeState,
   useGlobalRefresh
 } from '@/graphing/GlobalTimePicker/globalTimeState'
-import { timestampAt } from '@/graphing/components/TimeSeriesGraph/axes/timeAxis'
-import {
-  type GraphDataFetcher,
-  type GraphFetchParams,
-  useGraphData
-} from '@/graphing/composables/useGraphData'
+import { type GraphDataFetcher, useGraphData } from '@/graphing/composables/useGraphData'
 import type { RequestedTimeRange } from '@/graphing/types'
 
 const UNIT: components['schemas']['ApiUnitFormat'] = {
@@ -147,25 +142,16 @@ describe('useGraphData — requested resolution', () => {
     fetchFor(fourHundredDays, 750)
 
     const { start, end } = await requestedTimeRange()
-    expect(start).toBeLessThanOrEqual(fourHundredDays.start)
-    expect(end).toBeGreaterThanOrEqual(fourHundredDays.end)
+    expect({ start, end }).toEqual(fourHundredDays)
   })
 
-  test('asks for a sample past the end of the window it will draw', async () => {
+  test('asks for exactly the window it will draw, leaving its edge neighbours to the backend', async () => {
     const window = { start: 10_000, end: 20_000 }
 
     fetchFor(window, 750)
 
-    expect((await requestedTimeRange()).end).toBeGreaterThan(window.end)
-  })
-
-  test('asks far enough back that the first sample falls before the window starts', async () => {
-    const window = { start: 10_000, end: 20_000 }
-    const firstValueIndex = 0
-
-    fetchFor(window, 750)
-
-    expect(timestampAt(await requestedTimeRange(), firstValueIndex)).toBeLessThan(window.start)
+    const { start, end } = await requestedTimeRange()
+    expect({ start, end }).toEqual(window)
   })
 })
 
@@ -193,12 +179,10 @@ function renderWithFetcher(
 
 // The brush pairs its overview data with the strip extent that data covers, and neither end of
 // that pairing survives the round trip on its own.
-test('a resolved graph reports the range it was asked for, not the window it was fetched with', async () => {
+test('a resolved graph reports the range it was asked for, not the one it was answered with', async () => {
   const asked = { start: 10_000, end: 20_000 }
-  const fetchWindows: GraphFetchParams['fetchWindow'][] = []
 
-  const { graphs } = renderWithFetcher(async (_definition, params) => {
-    fetchWindows.push(params.fetchWindow)
+  const { graphs } = renderWithFetcher(async () => {
     return {
       title: 'CPU',
       metrics: [],
@@ -213,10 +197,6 @@ test('a resolved graph reports the range it was asked for, not the window it was
 
   await waitFor(() => expect(graphs.value).toHaveLength(1))
   expect(graphs.value[0]!.requestedTimeRange).toEqual(asked)
-  // Unrecoverable from either side of the round trip: the request is widened by its edge
-  // neighbours, and the response above lands somewhere else again.
-  expect(fetchWindows[0]!.start).toBeLessThan(asked.start)
-  expect(fetchWindows[0]!.end).toBeGreaterThan(asked.end)
 })
 
 test('a fetcher that reports no diagnostics fields leaves them empty', async () => {

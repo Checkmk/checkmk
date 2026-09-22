@@ -16,7 +16,6 @@ import {
 } from '../components/TimeSeriesGraph/interaction/timeBounds'
 import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from '../components/consolidation'
 import type { RequestedTimeRange } from '../types'
-import { withEdgeNeighbours } from '../utils/timeRange'
 
 // The fetch endpoint only needs the self-contained definition (the graph kind is embedded in
 // `internal`); a caller holding a full render shell additionally contributes its header title to
@@ -121,8 +120,6 @@ function computeStep(start: number, end: number, canvasWidth: number): number {
 // (see build_template_graphs -> to_cmk_time_series_graph in cmk/gui/views/graph.py). This
 // composable only re-fetches evaluated data for those definitions as the requested range changes.
 export interface GraphDataOptions {
-  /** Supplied by callers whose requested range is derived rather than chosen by the user, so the
-   *  neighbour steps a fetch adds may not reach outside the navigable axis. */
   getFetchBounds?: () => NavigableBounds
   fetchGraph?: GraphDataFetcher
 }
@@ -194,10 +191,10 @@ export function useGraphData(
     const step = computeStep(range.start, range.end, getCanvasWidth())
     lastRequestedStep = step
     const requestedTimeRange = { start: range.start, end: range.end }
-    const padded = withEdgeNeighbours({ ...requestedTimeRange, step })
+    const window = { ...requestedTimeRange, step }
     const bounds = options.getFetchBounds?.()
     return {
-      fetchWindow: bounds === undefined ? padded : clippedToNavigableTime(padded, bounds),
+      fetchWindow: bounds === undefined ? window : clippedToNavigableTime(window, bounds),
       requestedTimeRange
     }
   }

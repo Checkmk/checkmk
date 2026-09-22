@@ -15,7 +15,7 @@ import {
 import type { ConsolidationFn } from '../../components/consolidation'
 import { CANVAS_MARGIN_HORIZONTAL } from '../../components/constants'
 import type { RequestedTimeRange, TimeInterval } from '../../types'
-import { drawnTimeRange, withEdgeNeighbours } from '../../utils/timeRange'
+import { drawnTimeRange } from '../../utils/timeRange'
 import {
   type CustomGraphMetric,
   type FetchCustomGraphDataRequest,
@@ -193,7 +193,7 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
       const [main, overviewResponse] = await Promise.all([
         fetchCustomGraphData({
           content,
-          requested_time_range: withEdgeNeighbours({ start: range.start, end: range.end, step }),
+          requested_time_range: { start: range.start, end: range.end, step },
           consolidation_function: consolidationFunction
         }),
         overviewBody === null || overviewIsCurrent ? null : fetchCustomGraphData(overviewBody)

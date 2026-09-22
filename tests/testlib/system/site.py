@@ -53,6 +53,7 @@ from tests.testlib.common.repo import current_branch_name, repo_path
 from tests.testlib.common.utils import wait_until
 from tests.testlib.common.utils2 import (
     check_output,
+    copy,
     execute,
     get_processes_by_cmdline,
     is_cleanup_enabled,
@@ -1930,9 +1931,9 @@ class Site:
 
         logger.info("Saving to %(result_dir)s", {"result_dir": self.result_dir})
         if self.path("junit.xml").exists():
-            run(["cp", self.path("junit.xml").as_posix(), self.result_dir.as_posix()], sudo=True)
+            copy(self.path("junit.xml"), self.result_dir, check=False)
 
-        run(["cp", "-rL", self.path("var/log").as_posix(), self.result_dir.as_posix()], sudo=True)
+        copy(self.path("var/log"), self.result_dir, recursive=True, dereference=True, check=False)
 
         # Rename apache logs to get better handling by the browser when opening a log file
         for log_name in ("access_log", "error_log"):
@@ -1947,44 +1948,20 @@ class Site:
                     sudo=True,
                 )
 
-        for nagios_log_path in glob.glob(self.path("var/nagios/*.log").as_posix()):
-            run(["cp", nagios_log_path, (self.result_dir / "log").as_posix()], sudo=True)
+        copy(self.path("var/nagios").glob("*.log"), self.result_dir / "log", check=False)
 
         core_dir = self.result_dir / self.core_name()
         makedirs(core_dir, sudo=True)
 
-        run(
-            [
-                "cp",
-                self.core_history_log().as_posix(),
-                (core_dir / "history").as_posix(),
-            ],
-            sudo=True,
-        )
+        copy(self.core_history_log(), core_dir / "history", check=False)
 
         if self.file_exists("var/check_mk/core/core"):
-            run(
-                [
-                    "cp",
-                    self.path("var/check_mk/core/core").as_posix(),
-                    (core_dir / "core_dump").as_posix(),
-                ],
-                sudo=True,
-            )
+            copy(self.path("var/check_mk/core/core"), core_dir / "core_dump", check=False)
 
-        run(
-            ["cp", "-r", self.crash_report_dir.as_posix(), self.crash_archive_dir.as_posix()],
-            sudo=True,
-        )
+        copy(self.crash_report_dir, self.crash_archive_dir, recursive=True, check=False)
 
-        run(
-            [
-                "cp",
-                "-r",
-                self.path("var/check_mk/background_jobs").as_posix(),
-                self.result_dir.as_posix(),
-            ],
-            sudo=True,
+        copy(
+            self.path("var/check_mk/background_jobs"), self.result_dir, recursive=True, check=False
         )
 
         # Change ownership of all copied files to the user that executes the test

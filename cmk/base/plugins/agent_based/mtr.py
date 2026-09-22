@@ -23,25 +23,44 @@ class Hop(NamedTuple):
     rtstddev: float
 
 
-Section = Mapping[str, Sequence[Hop]]
+class MtrResult(NamedTuple):
+    hops: Sequence[Hop]
+    # What mtr wrote instead of a report, if the agent plug-in caught it
+    error: str | None = None
+
+
+Section = Mapping[str, MtrResult]
+
+# Sits behind the hops, so agents and check plug-ins of different ages ignore
+# whichever end of this they do not know about
+_ERROR_MARKER = "**ERROR**"
+
+
+def _error(trailer: Sequence[str]) -> str | None:
+    if len(trailer) >= 2 and trailer[0] == _ERROR_MARKER:
+        return trailer[1]
+    return None
 
 
 def parse_mtr(string_table: StringTable) -> Section:
     return {
-        hostname: [
-            Hop(
-                name=rest[0 + 8 * hopnum],
-                pl=float(rest[1 + 8 * hopnum].replace("%", "").rstrip()),
-                response_time=float(rest[3 + 8 * hopnum]) / 1000,
-                rta=float(rest[4 + 8 * hopnum]) / 1000,
-                rtmin=float(rest[5 + 8 * hopnum]) / 1000,
-                rtmax=float(rest[6 + 8 * hopnum]) / 1000,
-                rtstddev=float(rest[7 + 8 * hopnum]) / 1000,
-            )
-            for hopnum in range(hopcount)
-        ]
+        hostname: MtrResult(
+            hops=[
+                Hop(
+                    name=rest[0 + 8 * hopnum],
+                    pl=float(rest[1 + 8 * hopnum].replace("%", "").rstrip()),
+                    response_time=float(rest[3 + 8 * hopnum]) / 1000,
+                    rta=float(rest[4 + 8 * hopnum]) / 1000,
+                    rtmin=float(rest[5 + 8 * hopnum]) / 1000,
+                    rtmax=float(rest[6 + 8 * hopnum]) / 1000,
+                    rtstddev=float(rest[7 + 8 * hopnum]) / 1000,
+                )
+                for hopnum in range(hopcount)
+            ],
+            error=_error(rest[8 * hopcount :]),
+        )
         for line in string_table
-        if line and not line[0].startswith("**ERROR**")
+        if line and not line[0].startswith(_ERROR_MARKER)
         for hostname, hopcount, rest in [(line[0], int(float(line[2])), line[3:])]
     }
 
@@ -114,15 +133,25 @@ def check_mtr(
     params: CheckParams,
     section: Section,
 ) -> CheckResult:
-    if (hops := section.get(item)) is None:
+    if (result := section.get(item)) is None:
         return
 
-    if not hops:
+    if not (hops := result.hops):
         yield Result(
             state=State.UNKNOWN,
-            summary="Insufficient data: No hop information available",
+            summary=(
+                "mtr failed: %s" % result.error
+                if result.error
+                else "Insufficient data: No hop information available"
+            ),
         )
         return
+
+    if result.error:
+        yield Result(
+            state=State.OK,
+            notice="Data is from the last successful run, the latest one failed: %s" % result.error,
+        )
 
     yield Result(
         state=State.OK,

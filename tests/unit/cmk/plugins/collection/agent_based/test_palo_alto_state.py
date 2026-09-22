@@ -98,3 +98,26 @@ def test_discover() -> None:
 )
 def test_check(section: SectionPaloAlto, expected_result: Sequence[Result]) -> None:
     assert list(check(_STATE_MAPPING_DEFAULT, section)) == expected_result
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="Crash report 498526ac-a151-11f1-8fd9-00155d0229c7: KeyError: 'ha_local_state_initial'",
+)
+def test_check_state_missing_from_mapping() -> None:
+    # A device reporting an HA state the mapping does not cover. Observed with a
+    # rule saved before "initial" was added to the ruleset, and reproducible
+    # whenever PAN-OS reports a state Checkmk does not know yet.
+    mapping = {k: v for k, v in _STATE_MAPPING_DEFAULT.items() if not k.endswith("_initial")}
+    assert list(check(mapping, _Section4)) == [
+        Result(state=State.OK, summary="Firmware Version: 5.0.6"),
+        Result(state=State.OK, summary="HA mode: active-passive"),
+        Result(
+            state=State.UNKNOWN,
+            summary="HA local state: initial (no monitoring state defined for this value)",
+        ),
+        Result(
+            state=State.UNKNOWN,
+            notice="HA peer state: initial (no monitoring state defined for this value)",
+        ),
+    ]

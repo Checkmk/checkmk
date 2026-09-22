@@ -2,7 +2,11 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.base.check_legacy_includes.wmi import parse_wmi_table, WMITableLegacy
+from cmk.base.check_legacy_includes.wmi import (
+    get_levels_quadruple,
+    parse_wmi_table,
+    WMITableLegacy,
+)
 
 
 def test_parse_wmi_table() -> None:
@@ -417,3 +421,9 @@ def test_parse_wmi_table() -> None:
             ],
         ),
     }
+
+
+def test_get_levels_quadruple_with_levels_stored_as_list() -> None:
+    # Levels reach the check as lists rather than tuples depending on how the
+    # rule was written; only "upper" is configured here, as in the crash report.
+    assert get_levels_quadruple({"upper": [10.0, 15.0]}) == (10.0, 15.0, None, None)

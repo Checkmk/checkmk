@@ -6,7 +6,7 @@
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
-import { addToContainer, addToVisual } from '@/graphing/api/burgerMenu'
+import { addToContainer, addToVisual, graphExport } from '@/graphing/api/burgerMenu'
 
 function stubLocation(): { restore: () => void } {
   const original = window.location
@@ -95,5 +95,62 @@ describe('addToVisual', () => {
       addToVisual('dashboards', 'my_dashboard', { graph_type: 'template' })
     ).rejects.toThrow()
     expect(window.location.href).toBe('')
+  })
+})
+
+describe('graphExport', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let postSpy: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let openSpy: any
+
+  beforeEach(() => {
+    postSpy = vi.spyOn(client, 'POST').mockResolvedValue({
+      data: { download_url: 'graph_image.py?request=%7B%7D' },
+      error: undefined,
+      response: new Response(null, { status: 200 })
+    } as never)
+    openSpy = vi.spyOn(window, 'open').mockReturnValue(null)
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  test('sends the displayed value range as y_range_min/y_range_max', async () => {
+    await graphExport(
+      'graph_image',
+      { graph_type: 'template' },
+      {
+        internal: '{}',
+        timeStart: 100,
+        timeEnd: 200,
+        consolidationFunction: 'max',
+        valueRange: { min: 2, max: 8 }
+      }
+    )
+
+    expect(postSpy).toHaveBeenCalledWith(
+      '/domain-types/graph/actions/export/invoke',
+      expect.objectContaining({ body: expect.objectContaining({ y_range_min: 2, y_range_max: 8 }) })
+    )
+    expect(openSpy).toHaveBeenCalledWith('graph_image.py?request=%7B%7D', '_blank', 'noopener')
+  })
+
+  test('omits y_range_min/y_range_max when the graph has no explicit value range', async () => {
+    await graphExport(
+      'graph_image',
+      { graph_type: 'template' },
+      {
+        internal: '{}',
+        timeStart: 100,
+        timeEnd: 200,
+        consolidationFunction: 'max'
+      }
+    )
+
+    const [, options] = postSpy.mock.calls[0]
+    expect(options.body).not.toHaveProperty('y_range_min')
+    expect(options.body).not.toHaveProperty('y_range_max')
   })
 })

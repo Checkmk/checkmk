@@ -213,7 +213,8 @@ const triggerBurgerMenuAction = async (onClick: BurgerMenuCallable) => {
     internal: target.internal,
     timeStart: props.requestedTimeRange.start,
     timeEnd: props.requestedTimeRange.end,
-    consolidationFunction: consolidationFn.value
+    consolidationFunction: consolidationFn.value,
+    valueRange: viewValueRange.value ?? undefined
   })
 }
 

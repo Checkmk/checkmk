@@ -700,6 +700,31 @@ test('a do-action from the header runs the callback with the graph the backends 
   })
 })
 
+test('after a value-zoom, the burger menu action includes the shown Y-axis range', async () => {
+  const onClick: BurgerMenuCallable = vi.fn()
+  vi.mocked(loadMenu).mockResolvedValue([
+    { heading: 'Export', actions: [{ label: 'Export', ariaLabel: 'Export', onClick }] }
+  ])
+
+  render(GraphPanel, {
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      panelKey: 0,
+      figureWidth: FIGURE_WIDTH,
+      addTo: { type: 'test', specification: {}, internal: '{"graphs":[]}' },
+      interaction: { ...INTERACTION_NONE, burger: 'enabled' }
+    }
+  })
+
+  await fireEvent.click(screen.getByTestId('emit-value-zoom'))
+  await fireEvent.click(screen.getByRole('button', { name: 'Action menu' }))
+  await fireEvent.click(await screen.findByRole('menuitem', { name: 'Export' }))
+
+  expect(onClick).toHaveBeenCalledWith(expect.objectContaining({ valueRange: { min: 0, max: 10 } }))
+})
+
 async function selectConsolidationFromHeaderDropdown(label: string): Promise<void> {
   const user = userEvent.setup()
   await user.click(screen.getByRole('combobox', { name: 'Graph values' }))

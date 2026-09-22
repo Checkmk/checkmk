@@ -81,7 +81,12 @@ export const graphExport = async (
         target: page,
         consolidation_function: displayed.consolidationFunction,
         time_start: displayed.timeStart,
-        time_end: displayed.timeEnd
+        time_end: displayed.timeEnd,
+        // y_range_min/y_range_max are omittable, not nullable: an absent range must be a missing
+        // key, never an explicit `null`.
+        ...(displayed.valueRange
+          ? { y_range_min: displayed.valueRange.min, y_range_max: displayed.valueRange.max }
+          : {})
       }
     })
   )

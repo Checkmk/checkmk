@@ -44,7 +44,7 @@ from typing import NotRequired, override, TypedDict
 from cmk.ccc.site import omd_site
 from cmk.ccc.version import Edition
 from cmk.gui import forms
-from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -148,12 +148,16 @@ class _ABCMapsSettingsMode(WatoMode[None]):
 
     @override
     def breadcrumb(self) -> Breadcrumb:
-        # These are WATO modes but the module lives under Customize (no Setup
-        # tile), so root the breadcrumb there and link "Maps" back to the SPA.
-        breadcrumb = make_main_menu_breadcrumb(main_menu_registry.menu_customize())
-        breadcrumb.append(BreadcrumbItem(title=_("Maps"), url=_MAPS_HOME_URL, id="maps"))
-        breadcrumb.append(self._breadcrumb_item())
-        return breadcrumb
+        # Only the levels below the main menu: cmk.gui.wato.page_handler prepends
+        # ``make_main_menu_breadcrumb(mode.main_menu())`` itself, and
+        # :meth:`main_menu` already roots these modes under Customize rather than
+        # Setup (the module has no Setup tile). "Maps" links back to the SPA.
+        return Breadcrumb(
+            [
+                BreadcrumbItem(title=_("Maps"), url=_MAPS_HOME_URL, id="maps"),
+                self._breadcrumb_item(),
+            ]
+        )
 
     @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:

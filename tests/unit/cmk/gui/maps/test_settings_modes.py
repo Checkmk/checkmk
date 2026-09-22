@@ -32,6 +32,7 @@ from cmk.maps.gui._config_domain import (
     ConfigDomainMaps,
 )
 from cmk.maps.gui._settings_modes import (
+    _ABCMapsSettingsMode,
     MapsConfigFile,
     ModeMapsAuthoringSettings,
     ModeMapsDaemonSettings,
@@ -47,6 +48,28 @@ def test_registers_both_curated_modes() -> None:
 def test_both_modes_require_configure_permission() -> None:
     assert ModeMapsAuthoringSettings.static_permissions() == ["maps.configure"]
     assert ModeMapsDaemonSettings.static_permissions() == ["maps.configure"]
+
+
+@pytest.mark.parametrize("mode_class", [ModeMapsAuthoringSettings, ModeMapsDaemonSettings])
+def test_breadcrumb_leaves_the_main_menu_level_to_the_page_handler(
+    request_context: None,  # noqa: ARG001
+    mode_class: type[_ABCMapsSettingsMode],
+) -> None:
+    """The mode contributes only the levels below the main menu.
+
+    ``cmk.gui.wato.page_handler`` renders
+    ``make_main_menu_breadcrumb(mode.main_menu()) + mode.breadcrumb()``, so a mode
+    that roots its own breadcrumb at the main menu renders it twice
+    ("Customize > Customize > Maps > …").
+    """
+    mode = mode_class(
+        Edition.COMMUNITY,
+        PageContext(config=Config(), request=request, transactions=transactions, session=session),
+    )
+
+    titles = [item.title for item in mode.breadcrumb()]
+
+    assert titles == ["Maps", mode.title()]
 
 
 def test_config_file_targets_the_feature_domain_global_mk() -> None:

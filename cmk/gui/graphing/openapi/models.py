@@ -145,8 +145,8 @@ class ApiShadedRegion:
 class ApiMetric:
     metadata: ApiMetricMetadata = api_field(description="The metric metadata.")
     render: ApiMetricRender = api_field(description="The metric rendering options.")
-    data_points: list[float | None] | None = api_field(
-        description="The data points. None when unfetched; an array (possibly with nulls) otherwise.",
+    data_points: list[float | None] = api_field(
+        description="The data points, null where the series holds no value at that step.",
         example=[1.0, 2.5, None, 3.0],
     )
 

@@ -80,10 +80,9 @@ describe('m4', () => {
     expect(buckets[1]!.gap).toBe(true)
   })
 
-  test('returns an empty array for null, empty, or non-positive bucketCount', () => {
+  test('returns an empty array for empty values or a non-positive bucketCount', () => {
     const timeRange = { start: 0, end: 2, step: 1 }
 
-    expect(m4(null, timeRange, 4)).toEqual([])
     expect(m4([], timeRange, 4)).toEqual([])
     expect(m4([10, 20], timeRange, 0)).toEqual([])
   })

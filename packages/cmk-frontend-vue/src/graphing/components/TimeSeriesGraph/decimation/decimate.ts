@@ -53,12 +53,8 @@ function assembleBucket(startTime: number, endTime: number, acc: BucketAccumulat
   }
 }
 
-export function m4(
-  values: (number | null)[] | null,
-  timeRange: TimeRange,
-  bucketCount: number
-): M4Cache {
-  if (!values || values.length === 0 || bucketCount <= 0) {
+export function m4(values: (number | null)[], timeRange: TimeRange, bucketCount: number): M4Cache {
+  if (values.length === 0 || bucketCount <= 0) {
     return []
   }
   const total = values.length

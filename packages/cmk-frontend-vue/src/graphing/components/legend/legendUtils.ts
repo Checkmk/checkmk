@@ -19,7 +19,7 @@ export function metricStats(metric: Metric): MetricStats {
   const { formatter } = userSpecificUnit(metric.metadata.unit, 'celsius')
   const fmt = (value: number): string => formatter.render(value)
   const points = metric.data_points
-  if (!points || points.length === 0) {
+  if (points.length === 0) {
     return { min: 'n/a', avg: 'n/a', max: 'n/a', last: 'n/a' }
   }
   let min = Infinity

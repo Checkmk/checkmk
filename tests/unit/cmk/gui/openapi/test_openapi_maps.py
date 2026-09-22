@@ -377,7 +377,8 @@ def test_authoring_settings_are_served_to_the_spa(clients: ClientRegistry) -> No
     # The editor's defaults are GUI-owned globals; the SPA fetches them here
     # rather than receiving them as page props, so this endpoint is on its boot
     # path and its absence would leave the editor without defaults.
-    settings = clients.Maps.get_authoring_settings().json["settings"]
+    read = clients.Maps.get_authoring_settings().json
+    settings = read["settings"]
     # Spot-check across the two FormSpec globals this flattens: object appearance
     # from one, new-map defaults from the other.
     assert settings["icon_size"] == 30
@@ -386,3 +387,7 @@ def test_authoring_settings_are_served_to_the_spa(clients: ClientRegistry) -> No
     assert settings["default_render_mode"] == "default"
     # Site-aware: resolved from the local site's seeded connection, not a constant.
     assert settings["default_backend_id"].startswith("cmk_")
+    # The geo maps' tile source rides along: the SPA draws no tiles of its own
+    # choosing, and the page policy allows exactly what is named here.
+    assert read["tiles"]["default_url"] == "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+    assert "https://tile.openstreetmap.org/" in read["tiles"]["allowed_sources"]

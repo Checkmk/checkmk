@@ -405,7 +405,29 @@ class MapsAuthoringSettings:
 
 
 @api_model
+class MapsTileSource:
+    """Where a geo map's tiles come from, and which servers the page allows.
+
+    The browser fetches tiles straight from the tile server, so the maps page's
+    content security policy decides which ones a geo map can reach. Both values
+    are derived from the site's configuration, so the SPA does not mirror the
+    policy or the built-in default in its own code.
+    """
+
+    default_url: str = api_field(
+        description="Tile template a worldmap is drawn with when it sets none of its own.",
+        example="https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+    )
+    allowed_sources: list[str] = api_field(
+        description="The tile servers the maps page allows the browser to fetch from. "
+        "A map pointing anywhere else renders an empty canvas.",
+        example=["https://tile.openstreetmap.org/"],
+    )
+
+
+@api_model
 class MapsAuthoringSettingsResponse:
     settings: MapsAuthoringSettings = api_field(
         description="The site's effective authoring defaults."
     )
+    tiles: MapsTileSource = api_field(description="The effective tile source for geo maps.")

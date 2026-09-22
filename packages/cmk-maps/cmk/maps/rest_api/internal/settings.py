@@ -22,11 +22,12 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.restful_objects.constructors import collection_href
-from cmk.maps.gui._settings import map_object_defaults
+from cmk.maps.gui._settings import default_tile_template, map_object_defaults, tile_csp_sources
 from cmk.maps.rest_api.internal.endpoint_family import MAPS_INTERNAL_FAMILY
 from cmk.maps.rest_api.internal.models.response_models import (
     MapsAuthoringSettings,
     MapsAuthoringSettingsResponse,
+    MapsTileSource,
 )
 from cmk.maps.rest_api.utils import PERMISSIONS
 
@@ -36,7 +37,13 @@ _READ_ONLY = EndpointBehavior(skip_locking=True, update_config_generation=False)
 def show_authoring_settings_v1() -> MapsAuthoringSettingsResponse:
     """Show the map and object authoring defaults"""
     user.need_permission("maps.use")
-    return MapsAuthoringSettingsResponse(settings=MapsAuthoringSettings(**map_object_defaults()))
+    return MapsAuthoringSettingsResponse(
+        settings=MapsAuthoringSettings(**map_object_defaults()),
+        tiles=MapsTileSource(
+            default_url=default_tile_template(),
+            allowed_sources=tile_csp_sources(),
+        ),
+    )
 
 
 ENDPOINT_SHOW_AUTHORING_SETTINGS = VersionedEndpoint(

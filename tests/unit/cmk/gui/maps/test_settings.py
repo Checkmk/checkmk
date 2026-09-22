@@ -121,7 +121,10 @@ def test_tile_csp_sources_allows_openstreetmap_without_configuration(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     _with_tile_url(monkeypatch, None)
-    assert _settings.tile_csp_sources() == ["https://tile.openstreetmap.org/"]
+    assert _settings.tile_csp_sources() == [
+        "https://tile.openstreetmap.org/",
+        "https://*.tile.openstreetmap.org/",
+    ]
 
 
 @pytest.mark.parametrize(
@@ -144,7 +147,11 @@ def test_tile_csp_sources_adds_the_configured_server(
     monkeypatch: pytest.MonkeyPatch, tile_url: str, expected: str
 ) -> None:
     _with_tile_url(monkeypatch, tile_url)
-    assert _settings.tile_csp_sources() == ["https://tile.openstreetmap.org/", expected]
+    assert _settings.tile_csp_sources() == [
+        "https://tile.openstreetmap.org/",
+        "https://*.tile.openstreetmap.org/",
+        expected,
+    ]
 
 
 @pytest.mark.parametrize(
@@ -161,7 +168,27 @@ def test_tile_csp_sources_drops_an_unusable_global(
     monkeypatch: pytest.MonkeyPatch, tile_url: str
 ) -> None:
     _with_tile_url(monkeypatch, tile_url)
-    assert _settings.tile_csp_sources() == ["https://tile.openstreetmap.org/"]
+    assert _settings.tile_csp_sources() == [
+        "https://tile.openstreetmap.org/",
+        "https://*.tile.openstreetmap.org/",
+    ]
+
+
+def test_default_tile_template_is_openstreetmap_without_configuration(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _with_tile_url(monkeypatch, None)
+    assert _settings.default_tile_template() == "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+
+
+# A map created before the site pointed its tiles somewhere else must not keep
+# fetching from openstreetmap.org -- on an air-gapped site that is the one
+# request that must not leave.
+def test_default_tile_template_prefers_the_configured_server(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _with_tile_url(monkeypatch, "https://tiles.internal/{z}/{x}/{y}.png")
+    assert _settings.default_tile_template() == "https://tiles.internal/{z}/{x}/{y}.png"
 
 
 def test_connection_choices_maps_id_and_label(monkeypatch: pytest.MonkeyPatch) -> None:

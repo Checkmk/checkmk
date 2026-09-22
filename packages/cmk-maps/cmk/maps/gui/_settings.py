@@ -253,10 +253,13 @@ def map_object_defaults() -> AuthoringDefaults:
     return _flatten(map_form, object_form)
 
 
-# The SPA's built-in tile server. The legacy site-wide policy already carries the
+# The SPA's built-in tile server, as Leaflet's template and as the two CSP sources
+# it can be reached under. The legacy site-wide policy already carries the
 # ``*.tile.openstreetmap.org`` wildcard (NagVis' worldmap, werk 7825), but not the
-# bare host the SPA defaults to.
-_OSM_TILE_SOURCE = "https://tile.openstreetmap.org/"
+# bare host the SPA defaults to; both are named here so one list answers "may the
+# browser load these tiles" for the page policy and for the SPA alike.
+_OSM_TILE_TEMPLATE = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+_OSM_TILE_SOURCES = ["https://tile.openstreetmap.org/", "https://*.tile.openstreetmap.org/"]
 
 # A CSP source expression has to be a bare scheme://host[:port]; ``add_csp_source``
 # rejects anything else, and an unusable global must not take the page down with it.
@@ -283,11 +286,21 @@ def tile_csp_sources() -> list[str]:
     configured server in here a site pointing its maps at an internal tile
     service just renders an empty canvas.
     """
-    sources = [_OSM_TILE_SOURCE]
+    sources = list(_OSM_TILE_SOURCES)
     configured = map_object_defaults()["default_tile_url"]
     if configured and (source := _csp_source(configured)) and source not in sources:
         sources.append(source)
     return sources
+
+
+def default_tile_template() -> str:
+    """The tile template a worldmap that sets none of its own is drawn with.
+
+    The site's configured server where there is one: a map created before it was
+    configured must not keep fetching from openstreetmap.org on an air-gapped
+    installation.
+    """
+    return map_object_defaults()["default_tile_url"] or _OSM_TILE_TEMPLATE
 
 
 def connection_choices() -> list[tuple[str, str]]:

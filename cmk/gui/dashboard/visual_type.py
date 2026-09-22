@@ -121,7 +121,10 @@ class VisualTypeDashboards(VisualType):
             # Exceptions do not work here.
             return
 
-        if add_type in ("pnpgraph", "custom_graph", "combined_graph") and context is None:
+        if (
+            add_type in ("pnpgraph", "custom_graph", "combined_graph", "single_timeseries")
+            and context is None
+        ):
             # Checkmk Community graphs are added correctly by htdocs/js/checkmk.js create_pnp_graph().
             # Commercial editions graphs:
             #
@@ -174,7 +177,7 @@ class VisualTypeDashboards(VisualType):
 
         # We don't know if what we get as parameters actually fits a DashletConfig.
         dashlet_spec.update(parameters)  # type: ignore[typeddict-item]
-        if add_type in ["pnpgraph", "custom_graph"]:
+        if add_type in ["pnpgraph", "custom_graph", "single_timeseries"]:
             dashlet_spec = cast(ABCGraphDashletConfig, dashlet_spec)
 
             # The "add to visual" popup does not provide a timerange information,

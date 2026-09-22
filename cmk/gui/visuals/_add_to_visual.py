@@ -112,7 +112,7 @@ def page_menu_dropdown_add_to_visual(
         )
 
     if (
-        add_type in ("pnpgraph", "custom_graph", "combined_graph")
+        add_type in ("pnpgraph", "custom_graph", "combined_graph", "single_timeseries")
         and cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY
     ):
         visual_topics.append(

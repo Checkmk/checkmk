@@ -515,7 +515,7 @@ def _action_menu_widget_content(
             {
                 "type": "single_timeseries",
                 "timerange": _ACTION_MENU_WIDGET_TIMERANGE,
-                "graph_render_options": {},
+                "graph_render_options": _ACTION_MENU_RENDER_OPTIONS,
                 "metric": metric_name,
                 "color": "default_metric",
             },
@@ -526,7 +526,7 @@ def _action_menu_widget_content(
             {
                 "type": "problem_graph",
                 "timerange": _ACTION_MENU_WIDGET_TIMERANGE,
-                "graph_render_options": {},
+                "graph_render_options": (),
             },
             None,
         )

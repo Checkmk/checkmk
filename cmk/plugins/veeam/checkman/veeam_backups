@@ -1,0 +1,23 @@
+title: Veeam: Backup (special agent, per machine)
+agents: special
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors, on the protected machine's own host, the result of its
+ last backup as reported by the Veeam Backup & Replication REST API, collected
+ via the Veeam special agent. It reports the same information as the
+ {VEEAM Client} service from the Veeam agent plug-in.
+
+ This check is {OK} if the result of the last run is Success. It is {WARN}
+ if the result is Warning. It is {CRIT} if the result is Failed.
+
+ While a backup is running, its age and duration are not evaluated. Size,
+ speed and duration metrics use the same metric names as the {VEEAM Client}
+ service, so existing graphs and thresholds carry over.
+
+discovery:
+ One service is created for each backup job that has processed this machine.
+
+item:
+ The name of the backup job.

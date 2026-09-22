@@ -100,7 +100,10 @@ def _add_matching_services(
 ) -> DiscoveryResult:
     if pattern:
         # First match name or description (optional since rule based config option available)
-        expr = re.compile(pattern)
+        try:
+            expr = re.compile(pattern)
+        except re.error:
+            return
         if not (expr.match(service.name) or expr.match(service.description)):
             return
 

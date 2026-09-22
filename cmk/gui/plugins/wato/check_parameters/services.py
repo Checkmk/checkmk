@@ -17,6 +17,7 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
     MonitoringState,
+    RegExp,
     TextInput,
     Tuple,
 )
@@ -31,6 +32,7 @@ def _valuespec_inventory_services_rules():
                 "services",
                 ListOfStrings(
                     title=_("Services (Regular Expressions)"),
+                    valuespec=RegExp(mode=RegExp.prefix, size=49),
                     size=49,
                     help=_(
                         "Regular expressions matching the beginning of the internal name "

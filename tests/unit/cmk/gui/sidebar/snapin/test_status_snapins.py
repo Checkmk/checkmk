@@ -94,7 +94,7 @@ def test_speedometer_renders_a_canvas_over_the_dial(load_config: Config) -> None
 
     assert 'id="speedometerbg"' in rendered
     assert "<canvas" in rendered
-    assert "cmk.sidebar.speedometer_show_speed(0, 0, 0);" in rendered
+    assert 'data-cmk_call_ts_function="speedometer_show_speed"' in rendered
 
 
 def _ajax_speedometer(

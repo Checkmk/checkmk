@@ -73,7 +73,7 @@ class QuicksearchSnapin(SidebarSnapin):
         )
         html.close_div()
         html.div("", id_="mk_side_clear")
-        html.javascript(f"cmk.quicksearch.register_search_field('{id_}');")
+        html.call_ts_function(function_name="register_search_field", arguments={"field": id_})
 
     @override
     def page_handlers(self) -> PageHandlers:

@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="no-any-return"
 
+import json
 import time
 from collections.abc import Iterable, Sequence
 from datetime import datetime
@@ -982,8 +983,9 @@ def command_acknowledge_render(what: str) -> None:  # noqa: ARG001
         oninput=f"cmk.forms.enable_submit_buttons_on_nonempty_input(this, ['{submit_id}']);",
     )
     if request.get_str_input("_ack_comment"):
-        html.final_javascript(
-            f"cmk.forms.enable_submit_buttons_on_nonempty_input(document.getElementById('ack_comment'), ['{submit_id}']);"
+        html.call_ts_function(
+            function_name="enable_submit_buttons_on_nonempty_input",
+            arguments={"input_id": "ack_comment", "button_ids": [submit_id]},
         )
 
     html.close_div()
@@ -1564,8 +1566,12 @@ class CommandScheduleDowntimesForm:
             oninput="cmk.forms.enable_submit_buttons_on_nonempty_input(this, ['_down_host', '_down_service']);",
         )
         if request.get_str_input("_down_comment"):
-            html.final_javascript(
-                "cmk.forms.enable_submit_buttons_on_nonempty_input(document.getElementById('down_comment'), ['_down_host', '_down_service']);"
+            html.call_ts_function(
+                function_name="enable_submit_buttons_on_nonempty_input",
+                arguments={
+                    "input_id": "down_comment",
+                    "button_ids": ["_down_host", "_down_service"],
+                },
             )
         html.close_div()
 
@@ -1654,11 +1660,10 @@ class CommandScheduleDowntimesForm:
                 continue
             if is_first_rendered:
                 is_first_rendered = False
-                html.final_javascript(
-                    f'cmk.utils.update_time("date__down_to_date","{time.strftime("%Y-%m-%d", local_end_time)}");'
-                )
-                html.final_javascript(
-                    f'cmk.utils.update_time("time__down_to_time","{time.strftime("%H:%M", local_end_time)}");'
+                duration_options += self._render_update_time(
+                    "date__down_to_date", time.strftime("%Y-%m-%d", local_end_time)
+                ) + self._render_update_time(
+                    "time__down_to_time", time.strftime("%H:%M", local_end_time)
                 )
                 css_class += ["active"]
 
@@ -1672,6 +1677,14 @@ class CommandScheduleDowntimesForm:
                 submit="_set_date_and_time",
             )
         return duration_options
+
+    @staticmethod
+    def _render_update_time(target: str, value: str) -> HTML:
+        return HTMLWriter.render_div(
+            "",
+            data_cmk_call_ts_function="update_time",
+            data_cmk_call_ts_arguments=json.dumps({"target": target, "time": value}),
+        )
 
     def _get_presets_url(self) -> str:
         return makeuri_contextless(

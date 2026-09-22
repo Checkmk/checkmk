@@ -539,30 +539,12 @@ def _show_filter_form(
         html.hidden_field("search", "Search")
         html.hidden_field("page", "data")
         html.form_has_submit_button = True  # a.results_button functions as a submit button
-    html.final_javascript(
-        """
-        const filter_form = document.getElementById("form_filter");
-        const results_button = document.getElementsByClassName("results_button")[0];
-
-        cmk.forms.enable_select2_dropdowns(filter_form);
-        results_button.onclick = function(event) {
-            event.preventDefault();
-            filter_form.submit();
-        };
-        """
-    )
+    html.call_ts_function(function_name="mobile_filter_form_init")
 
 
 def _show_command_form(datasource: ABCDataSource, rows: Rows) -> None:  # noqa: ARG001
     what = datasource.infos[0]
-    html.javascript(
-        """
-    $(document).ready(function() {
-      $('.command_group').has('x').trigger('expand');
-      $('x').children().css('background-color', '#f84');
-    });
-    """
-    )
+    html.call_ts_function(function_name="mobile_command_form_init")
 
     one_shown = False
     html.open_div(**{"data-role": "collapsible-set"})

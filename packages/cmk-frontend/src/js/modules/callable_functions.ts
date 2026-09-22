@@ -9,6 +9,7 @@ import { select } from 'd3'
 import * as activation from '@/modules/activation'
 import * as background_job from '@/modules/background_job'
 import * as bi from '@/modules/bi'
+import * as dashboard from '@/modules/dashboard'
 import * as forms from '@/modules/forms'
 import * as host_diagnose from '@/modules/host_diagnose'
 import { insert_before } from '@/modules/layout'
@@ -16,10 +17,13 @@ import * as nodevis from '@/modules/nodevis/main'
 import * as nodevis_utils from '@/modules/nodevis/utils'
 import * as page_menu from '@/modules/page_menu'
 import { render_qr_code } from '@/modules/qrcode_rendering'
+import * as quicksearch from '@/modules/quicksearch'
 import * as selection from '@/modules/selection'
 import * as service_discovery from '@/modules/service_discovery'
+import * as sidebar from '@/modules/sidebar'
 import * as sites from '@/modules/sites'
 import { render_stats_table } from '@/modules/tracking_display'
+import * as transfer from '@/modules/transfer'
 import * as utils from '@/modules/utils'
 import * as valuespecs from '@/modules/valuespecs'
 import * as wato from '@/modules/wato'
@@ -34,6 +38,12 @@ const callable_functions: { [name: string]: CallableFunction } = {
   insert_before: insert_before,
   lock_and_redirect: sites.lock_and_redirect,
   confirm_on_form_leave: (node, options) => forms.confirm_on_form_leave(node, options),
+
+  // dashboard
+  ignore_public_dashboard_clicks: () => dashboard.ignore_public_dashboard_clicks(),
+  redirect_shared_dashboard: (_node, options) =>
+    dashboard.redirect_shared_dashboard(options.search_name, options.target_url),
+  post_message_to_parent: (_node, options) => window.parent.postMessage(options.message),
 
   // utils
   set_focus_by_name: (_node, options) =>
@@ -124,6 +134,36 @@ const callable_functions: { [name: string]: CallableFunction } = {
   nodevis_create_example: (_node, options) => {
     new nodevis.example_generator(options.varprefix).create_example(options.value)
   },
+
+  // nodevis
+  show_bi_aggregation: (_node, options) =>
+    nodevis.show_bi_aggregation(options.div_id, options.aggr_name, options.layout_id),
+  show_topology: (_node, options) =>
+    nodevis.show_topology(
+      options.div_id,
+      options.topology_type,
+      options.translations,
+      options.data
+    ),
+
+  // sidebar
+  register_search_field: (_node, options) => quicksearch.register_search_field(options.field),
+  fetch_nagvis_snapin_contents: () => sidebar.fetch_nagvis_snapin_contents(),
+  speedometer_show_speed: (_node, options) =>
+    sidebar.speedometer_show_speed(
+      options.last_perc,
+      options.program_start,
+      options.scheduled_rate
+    ),
+
+  // misc
+  submit_crash_report: (_node, options) =>
+    transfer.submit_crash_report(options.url, options.post_data),
+  enable_submit_buttons_on_nonempty_input: (_node, options) =>
+    forms.enable_submit_buttons_on_nonempty_input(
+      document.getElementById(options.input_id) as HTMLInputElement,
+      options.button_ids
+    ),
 
   // wato
   background_job_start: (_node, options) =>

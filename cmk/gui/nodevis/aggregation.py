@@ -343,10 +343,9 @@ def _bi_map(ctx: PageContext) -> None:
 
     div_id = "node_visualization"
     html.div("", id=div_id)
-    html.javascript("node_instance = new cmk.nodevis.BIVisualization(%s);" % json.dumps(div_id))
-
-    html.javascript(
-        f"node_instance.show_aggregations({json.dumps([aggr_name])}, {json.dumps(layout_id)})"
+    html.call_ts_function(
+        function_name="show_bi_aggregation",
+        arguments={"div_id": div_id, "aggr_name": aggr_name, "layout_id": layout_id},
     )
 
 

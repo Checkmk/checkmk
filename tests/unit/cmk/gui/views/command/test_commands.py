@@ -9,7 +9,6 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.views.command import commands
 from cmk.gui.views.command.commands import (
@@ -262,8 +261,8 @@ class TestDowntimeDurationPresets:
 
         assert 'id="_downrange__7200"' in duration_options
         assert 'class="button duration active"' in duration_options
-        assert "date__down_to_date" in html.final_javascript_code()
-        assert "time__down_to_time" in html.final_javascript_code()
+        assert "date__down_to_date" in duration_options
+        assert "time__down_to_time" in duration_options
 
 
 class TestDowntimeSpecsForHosts:

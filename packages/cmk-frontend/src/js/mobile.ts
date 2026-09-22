@@ -48,7 +48,37 @@ $(document).ready(function () {
 // See cmk.gui.htmllib.generator:KnownTSFunction
 register_callable_functions({
   confirm_dialog_form_submit: (_node, options) =>
-    forms.confirm_dialog_form_submit(options.dialog_options, options.form_id, options.cancel_url)
+    forms.confirm_dialog_form_submit(options.dialog_options, options.form_id, options.cancel_url),
+  enable_submit_buttons_on_nonempty_input: (_node, options) =>
+    forms.enable_submit_buttons_on_nonempty_input(
+      document.getElementById(options.input_id) as HTMLInputElement,
+      options.button_ids
+    ),
+  mobile_disable_ajax_links: (_node, options) => {
+    $(options.selector).attr('data-ajax', 'false')
+  },
+  mobile_dataset_table_init: () => {
+    $('table.dataset > tbody > tr.data > td')
+      .addClass('ui-shadow')
+      .not('.state')
+      .addClass('nonstatus')
+    $('table.dataset > tbody > tr.data a').attr('data-ajax', 'false')
+  },
+  mobile_filter_form_init: () => {
+    const filter_form = document.getElementById('form_filter') as HTMLFormElement
+    const results_button = document.getElementsByClassName('results_button')[0] as HTMLElement
+    forms.enable_select2_dropdowns(filter_form)
+    results_button.onclick = (event) => {
+      event.preventDefault()
+      filter_form.submit()
+    }
+  },
+  mobile_command_form_init: () => {
+    $(document).ready(function () {
+      $('.command_group').has('x').trigger('expand')
+      $('x').children().css('background-color', '#f84')
+    })
+  }
 })
 
 $(document).ready(function () {

@@ -251,8 +251,6 @@ class _RequestVars:
 
 
 class ABCTopologyPage(Page):
-    _instance_name = "node_instance"
-
     @classmethod
     @abc.abstractmethod
     def visual_spec(cls) -> Visual:
@@ -339,14 +337,15 @@ class ABCTopologyPage(Page):
             site_id=site_id,
             query_hash=query_hash,
         )
-        html.javascript(
-            f"{self._instance_name} = new cmk.nodevis.TopologyVisualization({json.dumps(div_id)},"
-            f"{json.dumps(topology_configuration.type)},"
-            f"{json.dumps(frontend_texts.get_texts())}"
-            f");"
+        html.call_ts_function(
+            function_name="show_topology",
+            arguments={
+                "div_id": div_id,
+                "topology_type": topology_configuration.type,
+                "translations": frontend_texts.get_texts(),
+                "data": result,
+            },
         )
-
-        html.javascript(f"{self._instance_name}.show_topology({json.dumps(result)})")
 
     @classmethod
     @abc.abstractmethod

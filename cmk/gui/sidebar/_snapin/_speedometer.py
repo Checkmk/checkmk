@@ -47,7 +47,10 @@ class Speedometer(SidebarSnapin):
         html.canvas("", width=str(snapin_width), height="146", id_="speedometer")
         html.close_div()
 
-        html.javascript("cmk.sidebar.speedometer_show_speed(0, 0, 0);")
+        html.call_ts_function(
+            function_name="speedometer_show_speed",
+            arguments={"last_perc": 0, "program_start": 0, "scheduled_rate": 0},
+        )
 
     @classmethod
     @override

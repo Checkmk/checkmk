@@ -1192,6 +1192,22 @@ function toggle_slim_controls(controls_obj: HTMLElement, width: number, height: 
   }
 }
 
+export function redirect_shared_dashboard(search_name: string, target_url: string): void {
+  let win: Window = window
+  try {
+    while (win.parent && win.parent !== win) {
+      if (win.parent.location?.href.includes(search_name)) {
+        win.parent.location.href = target_url
+        return
+      }
+      win = win.parent
+    }
+  } catch (e) {
+    // cross-origin frame
+  }
+  window.location.href = target_url
+}
+
 export function ignore_public_dashboard_clicks(): void {
   const suppress = (e: MouseEvent) => {
     const a = (e.target as Element | null)?.closest('a[href]')

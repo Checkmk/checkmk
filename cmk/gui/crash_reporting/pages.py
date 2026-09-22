@@ -386,8 +386,9 @@ class PageCrash(Page):
                 % {"report_url": report_url, "crash_report_target": crash_report_target}
             )
             html.close_div()
-            html.javascript(
-                f"cmk.transfer.submit_crash_report({json.dumps(crash_report_url)}, {json.dumps(url_encoded_params)});"
+            html.call_ts_function(
+                function_name="submit_crash_report",
+                arguments={"url": crash_report_url, "post_data": url_encoded_params},
             )
         except MKUserError as e:
             user_errors.add(e)

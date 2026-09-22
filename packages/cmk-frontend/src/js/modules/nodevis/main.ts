@@ -438,6 +438,24 @@ export class TopologyVisualization extends NodeVisualization {
 
 export const example_generator = LayoutStyleExampleGenerator
 
+// window.node_instance is referenced by cmk.gui.nodevis.utils
+export function show_bi_aggregation(div_id: string, aggr_name: string, layout_id: string) {
+  const instance = new BIVisualization(div_id)
+  ;(window as any).node_instance = instance
+  instance.show_aggregations([aggr_name], layout_id)
+}
+
+export function show_topology(
+  div_id: string,
+  topology_type: string,
+  translations: Record<TranslationKey, string>,
+  data: TopologyBackendResponse
+) {
+  const instance = new TopologyVisualization(div_id, topology_type, translations)
+  ;(window as any).node_instance = instance
+  instance.show_topology(data)
+}
+
 export const registries = {
   layout_style_class_registry: layout_style_class_registry,
   node_type_class_registry: node_type_class_registry,

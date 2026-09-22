@@ -963,7 +963,9 @@ def render_mobile_table(
             cell.paint(row, link_renderer, user=user, writer=html, colspan=colspan)
         html.close_tr()
     html.close_table()
-    html.javascript('$("table.mobile a").attr("data-ajax", "false");')
+    html.call_ts_function(
+        function_name="mobile_disable_ajax_links", arguments={"selector": "table.mobile a"}
+    )
 
 
 class LayoutMobileTable(Layout):
@@ -1051,7 +1053,9 @@ def render_mobile_list(
 
         html.close_li()
     html.close_ul()
-    html.javascript('$("ul.mobilelist a").attr("data-ajax", "false");')
+    html.call_ts_function(
+        function_name="mobile_disable_ajax_links", arguments={"selector": "ul.mobilelist a"}
+    )
 
 
 class LayoutMobileList(Layout):
@@ -1120,10 +1124,7 @@ def render_mobile_dataset(
             html.close_tr()
 
         html.close_table()
-    html.javascript(
-        '$("table.dataset > tbody > tr.data > td").addClass("ui-shadow").not(".state").addClass("nonstatus");\n'
-        '$("table.dataset > tbody > tr.data a").attr("data-ajax", "false");\n'
-    )
+    html.call_ts_function(function_name="mobile_dataset_table_init")
 
 
 class LayoutMobileDataset(Layout):

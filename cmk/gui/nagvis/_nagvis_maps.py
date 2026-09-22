@@ -65,7 +65,7 @@ class NagVisMaps(SidebarSnapin):
     @override
     def show(self, config: Config) -> None:
         html.div(_("Loading maps..."), class_="loading")
-        html.javascript("cmk.sidebar.fetch_nagvis_snapin_contents()")
+        html.call_ts_function(function_name="fetch_nagvis_snapin_contents")
 
     @override
     def page_handlers(self) -> PageHandlers:

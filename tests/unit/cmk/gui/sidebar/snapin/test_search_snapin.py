@@ -74,7 +74,8 @@ def test_show_renders_and_registers_the_search_field(load_config: Config) -> Non
         rendered = output_funnel.drain()
 
     assert 'id="mk_side_search_field"' in rendered
-    assert "cmk.quicksearch.register_search_field('mk_side_search_field');" in rendered
+    assert 'data-cmk_call_ts_function="register_search_field"' in rendered
+    assert "mk_side_search_field" in rendered
     assert "cmk.quicksearch.on_search_click();" in rendered
 
 

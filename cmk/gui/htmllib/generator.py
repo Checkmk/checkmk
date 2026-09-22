@@ -113,6 +113,25 @@ KnownTSFunction = typing.Literal[
     "wato_message",
     "set_button_loading_state_on_click",
     "toggle_test_notification_visibility",
+    # nodevis
+    "show_bi_aggregation",
+    "show_topology",
+    # sidebar
+    "register_search_field",
+    "fetch_nagvis_snapin_contents",
+    "speedometer_show_speed",
+    # misc
+    "submit_crash_report",
+    "enable_submit_buttons_on_nonempty_input",
+    # dashboard
+    "ignore_public_dashboard_clicks",
+    "redirect_shared_dashboard",
+    "post_message_to_parent",
+    # mobile (packages/cmk-frontend/src/js/mobile.ts)
+    "mobile_disable_ajax_links",
+    "mobile_dataset_table_init",
+    "mobile_filter_form_init",
+    "mobile_command_form_init",
 ]
 
 

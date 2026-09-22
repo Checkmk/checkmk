@@ -266,7 +266,7 @@ class ViewWidgetIFramePageHelper:
                 html.close_div()
             html.close_div()
             if is_public:
-                html.javascript("cmk.dashboard.ignore_public_dashboard_clicks();")
+                html.call_ts_function(function_name="ignore_public_dashboard_clicks")
 
     @staticmethod
     def _public_dashboard_row_limit_warning(limit: int | None, _user_config: LoggedInUser) -> None:
@@ -573,28 +573,9 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
         # until we find the right page (shared_dashboard.py), falling back to the current window.
         search_name = f"{SharedDashboardPageComponents.page_name}.py"
         target_url = get_shared_dashboard_url(token.token_id)
-        # we cannot use &, as that will currently be escaped by the html.javascript function
-        # thankfully we can convert it using de morgans law: A && B -> !(!A || !B)
-        html.javascript(
-            f"""
-            let win = window;
-            let found = false;
-            try {{
-                while (!(!win.parent || win.parent === win)) {{
-                    if (!(!win.parent.location || !win.parent.location.href.includes({search_name!r}))) {{
-                        win.parent.location.href = {target_url!r};
-                        found = true;
-                        break;
-                    }}
-                    win = win.parent;
-                }}
-            }} catch (e) {{
-                // Cross-origin access error, stop walking up
-            }}
-            if (!found) {{
-                window.location.href = {target_url!r};
-            }}
-            """
+        html.call_ts_function(
+            function_name="redirect_shared_dashboard",
+            arguments={"search_name": search_name, "target_url": target_url},
         )
         return None
 
@@ -723,7 +704,9 @@ class ViewWidgetEditPage(Page):
         message: ConfigurationErrorMessage | ValidationErrorMessage | SaveCompletedMessage,
     ) -> None:
         serialized = dataclasses.asdict(message)
-        html.javascript(f"window.parent.postMessage({serialized!r})")
+        html.call_ts_function(
+            function_name="post_message_to_parent", arguments={"message": serialized}
+        )
 
     @staticmethod
     def _save(

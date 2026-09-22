@@ -66,7 +66,8 @@ const hint = computed(() => {
 
 .monitoring-empty-state__hint {
   margin: 0;
-  color: var(--font-color-dimmed);
-  font-size: var(--font-size-small);
+  color: var(--font-color-secondary);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-default);
 }
 </style>

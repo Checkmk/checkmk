@@ -33,7 +33,6 @@ from ._family import GLOBAL_SETTINGS_FAMILY
 from ._utils import (
     ensure_changes_allowed,
     ensure_setup_access,
-    form_spec_of,
     global_setting_etag,
     global_settings_context_of,
     GlobalSettingVarName,
@@ -61,7 +60,7 @@ def update_global_setting_v1(
     need_write_permission(config_variable)
     ensure_changes_allowed(api_context)
     context = global_settings_context_of(omd_site(), api_context)
-    form_spec = form_spec_of(config_variable, omd_site(), api_context)
+    form_spec = config_variable.value_model(context)
 
     settings = dict(load_configuration_settings())
     old_value, old_origin = effective_value(settings, varname)

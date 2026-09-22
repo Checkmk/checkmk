@@ -25,7 +25,7 @@ from cmk.gui.watolib.sites import load_site_globals
 from ._family import GLOBAL_SETTINGS_FAMILY
 from ._utils import (
     ensure_setup_access,
-    form_spec_of,
+    global_settings_context_of,
     GlobalSettingVarName,
     load_configured_sites,
     site_global_setting_etag,
@@ -54,7 +54,8 @@ def show_site_global_setting_v1(
         varname,
         global_settings=load_configuration_settings(),
     )
-    spec, json_value = to_json(form_spec_of(config_variable, site_id, api_context), value)
+    form_spec = config_variable.value_model(global_settings_context_of(site_id, api_context))
+    spec, json_value = to_json(form_spec, value)
     return ApiResponse(
         body=SiteGlobalSettingModel(
             site_id=site_id, varname=varname, value=json_value, spec=spec, origin=origin

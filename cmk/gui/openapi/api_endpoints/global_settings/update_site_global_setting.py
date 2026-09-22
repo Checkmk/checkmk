@@ -31,7 +31,6 @@ from ._family import GLOBAL_SETTINGS_FAMILY
 from ._utils import (
     ensure_changes_allowed,
     ensure_setup_access,
-    form_spec_of,
     global_settings_context_of,
     GlobalSettingVarName,
     load_configured_sites,
@@ -62,7 +61,8 @@ def update_site_global_setting_v1(
     config_variable = config_variable_registry[varname]
     need_site_write_permission(config_variable)
     ensure_changes_allowed(api_context)
-    form_spec = form_spec_of(config_variable, site_id, api_context)
+    context = global_settings_context_of(site_id, api_context)
+    form_spec = config_variable.value_model(context)
 
     sites = load_configured_sites()
     site_globals = load_site_globals(sites, site_id)
@@ -86,7 +86,7 @@ def update_site_global_setting_v1(
         pending_changes=make_pending_changes(api_context),
         diff_text=global_settings_diff_text(
             config_variable,
-            global_settings_context_of(site_id, api_context),
+            context,
             {varname: old_value} if old_origin is GlobalSettingsOrigin.site else {},
             {varname: new_value},
         ),

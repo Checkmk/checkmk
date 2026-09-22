@@ -25,8 +25,8 @@ from cmk.gui.watolib.global_settings import (
 from ._family import GLOBAL_SETTINGS_FAMILY
 from ._utils import (
     ensure_setup_access,
-    form_spec_of,
     global_setting_etag,
+    global_settings_context_of,
     GlobalSettingVarName,
     RO_PERMISSIONS,
     to_json,
@@ -46,7 +46,8 @@ def show_global_setting_v1(
     config_variable = config_variable_registry[varname]
     need_read_permission(config_variable)
     value, origin = effective_value(load_configuration_settings(), varname)
-    spec, json_value = to_json(form_spec_of(config_variable, omd_site(), api_context), value)
+    form_spec = config_variable.value_model(global_settings_context_of(omd_site(), api_context))
+    spec, json_value = to_json(form_spec, value)
     return ApiResponse(
         body=GlobalSettingModel(varname=varname, value=json_value, spec=spec, origin=origin),
         status_code=200,

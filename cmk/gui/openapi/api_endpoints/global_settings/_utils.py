@@ -23,7 +23,6 @@ from cmk.gui.watolib import read_only
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,
-    ConfigVariable,
     GlobalSettingsContext,
 )
 from cmk.gui.watolib.global_settings import (
@@ -148,12 +147,6 @@ def global_settings_context_of(site_id: SiteId, api_context: ApiContext) -> Glob
         sites=api_context.config.sites,
         graph_timeranges=api_context.config.graph_timeranges,
     )
-
-
-def form_spec_of(
-    config_variable: ConfigVariable, site_id: SiteId, api_context: ApiContext
-) -> FormSpec[object]:
-    return config_variable.value_model(global_settings_context_of(site_id, api_context))
 
 
 def to_json(form_spec: FormSpec[object], value: object) -> tuple[dict[str, object], object]:

@@ -100,10 +100,6 @@ def test_check(section: SectionPaloAlto, expected_result: Sequence[Result]) -> N
     assert list(check(_STATE_MAPPING_DEFAULT, section)) == expected_result
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash report 498526ac-a151-11f1-8fd9-00155d0229c7: KeyError: 'ha_local_state_initial'",
-)
 def test_check_state_missing_from_mapping() -> None:
     # A device reporting an HA state the mapping does not cover. Observed with a
     # rule saved before "initial" was added to the ruleset, and reproducible

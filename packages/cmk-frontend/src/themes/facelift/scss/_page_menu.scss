@@ -761,6 +761,28 @@ div#page_menu_popups {
     div.confirm_block {
       margin-top: 0.5 * $spacing;
     }
+
+    div.confirm_warning_note {
+      display: flex;
+      gap: 2 * $spacing;
+      // The sign belongs to the first line of what it warns about, not to the middle of a list.
+      align-items: flex-start;
+      // No bottom margin: what follows is separated by the line breaks between the notes.
+      margin: 1.5 * $spacing 0 0;
+      padding-left: $spacing;
+
+      // A quarter of the icon is transparent padding, so the box is larger than the sign drawn
+      // in it and starts higher than the text it is aligned with.
+      img.icon {
+        width: 8 * $spacing;
+        height: 8 * $spacing;
+        margin-top: -$spacing;
+      }
+
+      ul {
+        margin: 0.5 * $spacing 0 2 * $spacing;
+      }
+    }
   }
 
   .confirm_actions {

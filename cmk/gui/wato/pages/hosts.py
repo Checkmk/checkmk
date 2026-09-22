@@ -108,6 +108,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_tree,
     FolderTree,
     Host,
+    host_url_resolver,
     make_folder_tree,
     strip_hostname_whitespace_chars,
     validate_all_hosts,
@@ -933,7 +934,9 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
                         url=makeactionuri(request, transactions.get(), [("delete", "1")]),
                         title=_("Delete host"),
                         suffix=host.name(),
-                        message=relations_deletion_note(host),
+                        message=relations_deletion_note(
+                            host, host_url_resolver(host.folder().tree, user)
+                        ),
                     )
                 ),
             )

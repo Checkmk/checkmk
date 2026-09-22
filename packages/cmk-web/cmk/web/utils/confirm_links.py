@@ -8,6 +8,7 @@ import json
 from collections.abc import Callable
 
 from cmk.web.utils.escaping import escape_text
+from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import quote_plus
 
 
@@ -17,7 +18,7 @@ def make_confirm_link(
     title: str,
     i18n: Callable[[str], str],
     suffix: str | None = None,
-    message: str | None = None,
+    message: str | HTML | None = None,
     confirm_button: str | None = None,
     cancel_button: str | None = None,
 ) -> str:
@@ -36,7 +37,7 @@ def make_confirm_delete_link(
     title: str,
     i18n: Callable[[str], str],
     suffix: str | None = None,
-    message: str | None = None,
+    message: str | HTML | None = None,
     confirm_button: str | None = None,
     cancel_button: str | None = None,
     warning: bool = False,
@@ -63,11 +64,14 @@ def _make_customized_confirm_link(
     title: str,
     confirm_button: str,
     cancel_button: str,
-    message: str | None = None,
+    message: str | HTML | None = None,
     icon: str | None = None,
     custom_class_options: dict[str, str] | None = None,
     post_confirm_waiting_text: str | None = None,
 ) -> str:
+    """Build the dialog link. A ``str`` message keeps the simple formatting tags that
+    ``escape_text`` allows and loses only its links; an ``HTML`` one is written as it is, so
+    whoever builds it owns its escaping."""
     return "javascript:cmk.forms.confirm_link({}, {}, {}, {}),cmk.popup_menu.close_popup()".format(
         json.dumps(quote_plus(url)),
         json.dumps(escape_text(message, escape_links=True)),

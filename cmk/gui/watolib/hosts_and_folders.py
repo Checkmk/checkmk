@@ -76,7 +76,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
-from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.logged_in import LoggedInSuperUser, LoggedInUser
 from cmk.gui.page_menu import confirmed_form_submit_options
 from cmk.gui.pages import PageContext
 from cmk.gui.session_context import get_session_csrf_token
@@ -1351,6 +1351,22 @@ def counterpart_resolver(folder: Folder) -> Callable[[HostName], Host | None]:
     return resolve
 
 
+def host_url_resolver(tree: FolderTree, user: LoggedInUser) -> Callable[[HostName], str | None]:
+    """Look a host named elsewhere up and say where its properties are, or ``None``.
+
+    Resolved through the lookup cache alone: a caller naming hosts once per row of a folder must
+    not risk a recursive scan of the whole tree per name. A name the cache has not caught up with
+    stays unlinked rather than holding the page up.
+    """
+
+    def url(host_name: HostName) -> str | None:
+        if (host := tree.host_cached(host_name)) is None:
+            return None
+        return host.edit_url() if host.permissions.may("read", user) else None
+
+    return url
+
+
 @contextmanager
 def _refusal_of(
     counterpart: HostName, about: HostName, *, optional: bool = False, dropping: bool = False
@@ -1449,18 +1465,22 @@ def _drop_relations_to(
     *,
     pprint_value: bool,
     pending_changes: PendingChanges,
-    acting_user: LoggedInUser,
     deleted_with_it: Container[HostName] = (),
     skip_folder_paths: Container[PathWithoutSlash] = (),
 ) -> Sequence[Host]:
     """Remove the other half of every relation of a host that is going away.
 
-    A host's own links name every host that has to be told. Best effort, unlike
-    :func:`apply_relation_mirror`: a counterpart in a locked folder or one the user may not edit
-    keeps its row - in memory as well as on disk - which
+    A host's own links name every host that has to be told. Unlike :func:`apply_relation_mirror`,
+    this does not ask whether the user may edit the counterpart: deleting a host must neither
+    fail over a relation - least of all once the host's files are already gone - nor leave a row
+    naming a host that no longer exists. The cleanup therefore acts as the system, which is what
+    makes a user able to delete their own host while its counterpart sits where they may not
+    write.
+
+    A lock is still a lock: a counterpart in a locked folder, or one held by Quick setup, keeps
+    its row - in memory as well as on disk - which
     :func:`cmk.gui.watolib.builtin_attributes.validate_host_relations` reports and the export
-    drops. Deleting a host must not fail over a relation - least of all once the host's files are
-    already gone.
+    drops.
 
     Returns the counterparts that exist, whether or not their row could be removed: the relation
     is gone from this side either way, so their cores have to be refreshed.
@@ -1469,6 +1489,9 @@ def _drop_relations_to(
     their row dies with their file and nothing has to be logged or activated about them. Folders
     in ``skip_folder_paths`` are mutated but not written; the caller saves them.
     """
+    # Not the user deleting the host: they are allowed to do that, so the row naming what they
+    # deleted has to go even where they could not have written it themselves.
+    cleanup_user = LoggedInSuperUser()
     counterparts: list[Host] = []
     for name in dict.fromkeys(link["host"] for link in links):
         if name in deleted_with_it:
@@ -1482,11 +1505,13 @@ def _drop_relations_to(
             folder = counterpart.folder()
             writes_folder = folder.path() not in skip_folder_paths
             if writes_folder:
-                need_writable_folders([folder], acting_user=acting_user)
-            if (edit := counterpart.set_relations_about(gone, (), acting_user=acting_user)) is None:
+                need_writable_folders([folder], acting_user=cleanup_user)
+            if (
+                edit := counterpart.set_relations_about(gone, (), acting_user=cleanup_user)
+            ) is None:
                 continue
             if writes_folder:
-                folder.save_hosts(pprint_value=pprint_value, acting_user=acting_user)
+                folder.save_hosts(pprint_value=pprint_value, acting_user=cleanup_user)
             counterpart.add_relation_mirror_change(edit, gone, pending_changes=pending_changes)
     return counterparts
 
@@ -2982,7 +3007,6 @@ class Folder:
                     relations_or_empty(host.attributes.get("relations", [])),
                     pprint_value=pprint_value,
                     pending_changes=pending_changes,
-                    acting_user=acting_user,
                     # A pair inside the subtree needs nothing done to it: both halves are removed
                     # wholesale in a moment, so a row dropped here would only be logged and
                     # activated for a host that is gone by then.
@@ -3362,17 +3386,14 @@ class Folder:
         deleted = frozenset(host_names)
         for host_name in host_names:
             host = self.hosts()[host_name]
-            # A deleted host takes the other half of its relations with it. Best effort on
-            # purpose: a counterpart the user may not edit keeps its row, which
-            # validate_host_relations() reports and the export drops - a delete must not fail
-            # over a relation, least of all after step 2 already removed the host's files.
+            # A deleted host takes the other half of its relations with it, whether or not the
+            # user may write where the counterpart lives - see _drop_relations_to().
             counterparts = _drop_relations_to(
                 counterpart_resolver(self),
                 host_name,
                 relations_or_empty(host.attributes.get("relations", [])),
                 pprint_value=pprint_value,
                 pending_changes=pending_changes,
-                acting_user=acting_user,
                 # A pair deleted in the same call needs nothing done to it, and the counterparts
                 # that stay live in a folder that is written once, after every host is gone.
                 deleted_with_it=deleted,

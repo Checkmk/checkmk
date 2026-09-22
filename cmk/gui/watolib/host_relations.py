@@ -19,7 +19,7 @@ same pass, so a half whose counterpart row was lost still materializes on both s
 """
 
 from collections import defaultdict
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from functools import partial
 from typing import Literal, Protocol
@@ -32,7 +32,9 @@ from cmk.gui.form_specs.unstable import CascadingSingleChoiceExtended, not_empty
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
-from cmk.gui.i18n import _
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import HTMLGenerator
+from cmk.gui.i18n import _, ungettext
 from cmk.gui.log import logger
 from cmk.gui.utils.host_relation_kinds import (
     DirectedRelationKind,
@@ -59,6 +61,8 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 from cmk.shared_typing.vue_formspec_components import CascadingSingleChoiceLayout
+from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
 
 _LOGGER = logger.getChild("host_relations")
 
@@ -369,17 +373,51 @@ def resolve_all_relations(all_hosts: Mapping[HostName, RelatedHost]) -> Resolved
     return {owner: list(relations) for owner, relations in resolved.items()}
 
 
-def relations_deletion_note(host: RelatedHost) -> str | None:
-    """Extra confirmation text for deleting ``host``, or ``None`` if it has no relations."""
+#: Related hosts the deletion dialog names one by one before it only counts them - a longer list
+#: pushes the buttons of the dialog out of sight.
+MAX_LISTED_RELATED_HOSTS = 10
+
+
+def relations_deletion_note(
+    host: RelatedHost, host_url: Callable[[HostName], str | None]
+) -> HTML | None:
+    """Extra confirmation text for deleting ``host``, or ``None`` if it has no relations.
+
+    ``host_url`` says where the name of a related host links to, and ``None`` leaves it as plain
+    text - for a host the user may not see, or one that its counterpart still names although it
+    no longer exists.
+    """
     if not (
         related := referenced_host_names(relations_or_empty(host.attributes.get("relations", [])))
     ):
         return None
-    return (
-        _("This host has related hosts: %(count)d") % {"count": len(related)}
-        + "<br>"
-        + _(
-            "The relations of this host will be deleted, and removed from the related hosts "
-            "wherever they can be written."
+    listed = sorted(related)[:MAX_LISTED_RELATED_HOSTS]
+    items = [
+        HTMLWriter.render_li(
+            HTMLWriter.render_a(name, href=url)
+            if (url := host_url(name)) is not None
+            else HTML.with_escaping(name)
         )
+        for name in listed
+    ]
+    if unlisted := len(related) - len(listed):
+        items.append(HTMLWriter.render_li(_("and %(count)d more") % {"count": unlisted}))
+    heading = ungettext(
+        "This host has %(count)d related host:",
+        "This host has %(count)d related hosts:",
+        len(related),
+    ) % {"count": len(related)}
+    footer = _(
+        "Deleting %(host)s removes these relations. The related hosts themselves are not deleted."
+    ) % {"host": host.name()}
+    # No size: the theme sizes this icon, because its "img.icon.png" rule beats every size class
+    # the component renders.
+    return HTMLWriter.render_div(
+        HTMLGenerator.render_static_icon(StaticIcon(IconNames.warning))
+        + HTMLWriter.render_div(
+            HTML.with_escaping(heading)
+            + HTMLWriter.render_ul(HTML.empty().join(items))
+            + HTML.with_escaping(footer)
+        ),
+        class_="confirm_warning_note",
     )

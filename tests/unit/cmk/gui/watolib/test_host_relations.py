@@ -27,6 +27,7 @@ from cmk.gui.utils.host_relations import (
 )
 from cmk.gui.watolib.host_relations import (
     host_relations_form_spec,
+    MAX_LISTED_RELATED_HOSTS,
     RelatedHost,
     relation_conflicts,
     RelationConflict,
@@ -290,37 +291,102 @@ def test_resolve_all_relations_skips_self_and_unknown_hosts() -> None:
     assert HostName("ghost") not in resolved
 
 
-def test_relations_deletion_note_counts_the_related_hosts() -> None:
-    host = FakeHost(
-        "mgmt",
-        [
-            {"kind": "management", "direction": "child", "host": "h1"},
-            {"kind": "management", "direction": "child", "host": "h2"},
-        ],
-    )
-    assert relations_deletion_note(host) == (
-        "This host has related hosts: 2<br>"
-        "The relations of this host will be deleted, and removed from the related hosts "
-        "wherever they can be written."
-    )
+def _relation_to(host_name: str, direction: str = "child") -> dict[str, str]:
+    return {"kind": "management", "direction": direction, "host": host_name}
+
+
+def _edit_url(host_name: HostName) -> str:
+    return f"wato.py?mode=edit_host&host={host_name}"
+
+
+@pytest.mark.parametrize(
+    "host_names, expected",
+    [
+        (["h1"], "This host has 1 related host:"),
+        (["h1", "h2"], "This host has 2 related hosts:"),
+    ],
+)
+def test_relations_deletion_note_counts_the_related_hosts(
+    host_names: list[str], expected: str
+) -> None:
+    host = FakeHost("mgmt", [_relation_to(name) for name in host_names])
+    note = relations_deletion_note(host, _edit_url)
+    assert note is not None
+    assert expected in str(note)
+
+
+def test_relations_deletion_note_links_every_related_host_by_name() -> None:
+    host = FakeHost("mgmt", [_relation_to("h2"), _relation_to("h1")])
+    note = relations_deletion_note(host, _edit_url)
+    assert note is not None
+    assert (
+        "<ul>"
+        '<li><a href="wato.py?mode=edit_host&host=h1">h1</a></li>'
+        '<li><a href="wato.py?mode=edit_host&host=h2">h2</a></li>'
+        "</ul>"
+    ) in str(note)
+
+
+def test_relations_deletion_note_warns_with_an_icon() -> None:
+    host = FakeHost("mgmt", [_relation_to("h1")])
+    note = relations_deletion_note(host, _edit_url)
+    assert note is not None
+    assert "confirm_warning_note" in str(note)
+    assert "cmk-static-icon" in str(note)
+
+
+def test_relations_deletion_note_leaves_a_host_without_a_url_unlinked() -> None:
+    host = FakeHost("mgmt", [_relation_to("hidden")])
+    note = relations_deletion_note(host, lambda _host_name: None)
+    assert note is not None
+    assert "<li>hidden</li>" in str(note)
+
+
+def test_relations_deletion_note_is_absent_for_an_unusable_related_host_name() -> None:
+    """A name that cannot be a host name makes the whole value unreadable, markup or not."""
+    host = FakeHost("mgmt", [_relation_to("<script>alert(1)</script>")])
+    assert relations_deletion_note(host, lambda _host_name: None) is None
+
+
+def test_relations_deletion_note_names_the_host_being_deleted() -> None:
+    host = FakeHost("mgmt", [_relation_to("h1")])
+    note = relations_deletion_note(host, _edit_url)
+    assert note is not None
+    assert (
+        "Deleting mgmt removes these relations. The related hosts themselves are not deleted."
+    ) in str(note)
 
 
 def test_relations_deletion_note_counts_each_related_host_once() -> None:
-    host = FakeHost(
-        "mgmt",
-        [
-            {"kind": "management", "direction": "child", "host": "h1"},
-            {"kind": "management", "direction": "parent", "host": "h1"},
-        ],
-    )
-    note = relations_deletion_note(host)
+    host = FakeHost("mgmt", [_relation_to("h1"), _relation_to("h1", "parent")])
+    note = relations_deletion_note(host, _edit_url)
     assert note is not None
-    assert note.startswith("This host has related hosts: 1")
+    assert "This host has 1 related host:" in str(note)
+
+
+def test_relations_deletion_note_lists_the_last_host_that_still_fits() -> None:
+    listed = MAX_LISTED_RELATED_HOSTS
+    host = FakeHost("mgmt", [_relation_to(f"h{index:03d}") for index in range(listed)])
+    note = relations_deletion_note(host, _edit_url)
+    assert note is not None
+    assert str(note).count("<li>") == listed
+    assert "more</li>" not in str(note)
+
+
+def test_relations_deletion_note_counts_the_hosts_it_does_not_list() -> None:
+    listed = MAX_LISTED_RELATED_HOSTS
+    host = FakeHost("mgmt", [_relation_to(f"h{index:03d}") for index in range(listed + 3)])
+    note = relations_deletion_note(host, _edit_url)
+    assert note is not None
+    assert f"This host has {listed + 3} related hosts:" in str(note)
+    assert str(note).count("<li>") == listed + 1
+    assert "<li>and 3 more</li>" in str(note)
+    assert f"h{listed:03d}" not in str(note)
 
 
 @pytest.mark.parametrize("relations", [None, [], "not a list"])
 def test_relations_deletion_note_is_absent_without_own_relations(relations: object) -> None:
-    assert relations_deletion_note(FakeHost("h1", relations)) is None
+    assert relations_deletion_note(FakeHost("h1", relations), _edit_url) is None
 
 
 @pytest.mark.parametrize(

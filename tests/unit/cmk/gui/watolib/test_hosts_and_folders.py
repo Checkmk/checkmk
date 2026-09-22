@@ -2012,17 +2012,14 @@ def test_delete_hosts_removes_the_relation_from_the_counterpart(
     }
 
 
-def test_delete_hosts_keeps_a_row_it_may_not_remove(
+def test_delete_hosts_removes_a_row_the_user_may_not_write(
     tree: FolderTree, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A delete must never fail over a relation, least of all after the host's files are gone.
-    The leftover row is reported by validate_host_relations() and dropped by the export - and it
-    has to survive in memory as well, or whoever saves that folder next writes the very removal
-    that was refused here."""
+    """Deleting one's own host is allowed, so the row naming it goes even where the user could
+    not have written it: the cleanup acts as the system, leaving no reference to a host that is
+    gone."""
     monkeypatch.setattr(hosts_and_folders.Folder, "_delete_host_files", lambda *_a, **_kw: None)
     _parent, own, other = _pair_split_over_two_folders(tree)
-    hosts_mk = Path(other.filesystem_path()) / "hosts.mk"
-    stored = hosts_mk.read_text()
 
     own.delete_hosts(
         [HostName("os1")],
@@ -2033,8 +2030,31 @@ def test_delete_hosts_keeps_a_row_it_may_not_remove(
         acting_user=_user_of_one_contact_group("cg"),
     )
 
-    board = other.hosts()[HostName("board")]
-    assert board.attributes["relations"] == [
+    assert "relations" not in other.hosts()[HostName("board")].attributes
+    assert _relations_of(tree, HostName("board")) == []
+
+
+def test_delete_hosts_keeps_a_row_in_a_locked_folder(
+    tree: FolderTree, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A lock is not a permission: a "hosts.mk" that is not Setup's to write keeps its row, which
+    validate_host_relations() reports and the export drops."""
+    monkeypatch.setattr(hosts_and_folders.Folder, "_delete_host_files", lambda *_a, **_kw: None)
+    _parent, own, other = _pair_split_over_two_folders(tree)
+    monkeypatch.setattr(hosts_and_folders.Folder, "locked_hosts", lambda self: self is not own)
+    hosts_mk = Path(other.filesystem_path()) / "hosts.mk"
+    stored = hosts_mk.read_text()
+
+    own.delete_hosts(
+        [HostName("os1")],
+        automation=lambda *_args, **_kwargs: DeleteHostsResult(),
+        pprint_value=False,
+        debug=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+
+    assert other.hosts()[HostName("board")].attributes["relations"] == [
         {"kind": "management", "direction": "parent", "host": "os1"}
     ]
     assert hosts_mk.read_text() == stored
@@ -2084,12 +2104,9 @@ def test_delete_subfolder_removes_the_relation_from_a_counterpart_outside_it(
     }
 
 
-def test_delete_subfolder_keeps_a_row_it_may_not_remove(tree: FolderTree) -> None:
-    """Deleting a folder must not fail over a relation either - and the counterpart whose folder
-    the user may not write keeps its row here too."""
+def test_delete_subfolder_removes_a_row_the_user_may_not_write(tree: FolderTree) -> None:
+    """Deleting a folder cleans up after its hosts the same way, wherever the counterparts are."""
     parent, _own, other = _pair_split_over_two_folders(tree)
-    hosts_mk = Path(other.filesystem_path()) / "hosts.mk"
-    stored = hosts_mk.read_text()
 
     parent.delete_subfolder(
         "own",
@@ -2098,11 +2115,8 @@ def test_delete_subfolder_keeps_a_row_it_may_not_remove(tree: FolderTree) -> Non
         acting_user=_user_of_one_contact_group("cg"),
     )
 
-    board = other.hosts()[HostName("board")]
-    assert board.attributes["relations"] == [
-        {"kind": "management", "direction": "parent", "host": "os1"}
-    ]
-    assert hosts_mk.read_text() == stored
+    assert other.hosts()[HostName("board")].attributes.get("relations", []) == []
+    assert _relations_of(tree, HostName("board")) == []
 
 
 def test_edit_accepts_a_link_to_a_host_that_is_gone(tree: FolderTree) -> None:

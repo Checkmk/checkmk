@@ -48,6 +48,38 @@ STRING_TABLE: Final = [
 ]
 
 
+def _agent_output(text: str) -> list[list[str]]:
+    return [line.split() for line in text.splitlines()]
+
+
+SIX_PATHS: Final = _agent_output(
+    """\
+data01 (360000970000297700123533030303734) dm-7 EMC,SYMMETRIX
+size=8.0T features='1 queue_if_no_path' hwhandler='0' wp=rw
+`-+- policy='service-time 0' prio=0 status=active
+  |- 5:0:9:123  sdax 67:16  active undef running
+  |- 5:0:0:123  sdao 66:128 active undef running
+  |- 5:0:5:123  sdbe 67:128 active undef running
+  |- 4:0:0:123  sdg  8:96   active undef running
+  |- 4:0:5:123  sdt  65:48  active undef running
+  `- 4:0:12:123 sdag 66:0   active undef running
+"""
+)
+
+# The same device after three paths vanished from the output entirely
+# (as opposed to still being listed with a non-active state).
+THREE_PATHS: Final = _agent_output(
+    """\
+data01 (360000970000297700123533030303734) dm-7 EMC,SYMMETRIX
+size=8.0T features='1 queue_if_no_path' hwhandler='0' wp=rw
+`-+- policy='service-time 0' prio=0 status=active
+  |- 4:0:0:123  sdg  8:96   active undef running
+  |- 4:0:5:123  sdt  65:48  active undef running
+  `- 4:0:12:123 sdag 66:0   active undef running
+"""
+)
+
+
 @pytest.fixture(name="section", scope="module")
 def _get_section() -> Section:
     return parse_multipath(STRING_TABLE)
@@ -124,12 +156,38 @@ def test_parse_multipath_groups(
     assert section[item] == expected
 
 
-def test_discovery(section: Section) -> None:
+def test_discovery_stores_current_path_count(section: Section) -> None:
     assert sorted(discover_multipath({"use_alias": False}, section)) == [
-        Service(item="3600601604d40310047cf93ce66f7e111"),
-        Service(item="broken_paths"),
-        Service(item="prefix.3600601604d403100912ab0b365f7e111"),
+        Service(item="3600601604d40310047cf93ce66f7e111", parameters={"discovered_paths": 4}),
+        Service(item="broken_paths", parameters={"discovered_paths": 2}),
+        Service(
+            item="prefix.3600601604d403100912ab0b365f7e111", parameters={"discovered_paths": 1}
+        ),
     ]
+
+
+def test_check_paths_vanished_since_discovery_is_warn() -> None:
+    item = "360000970000297700123533030303734"
+    (service,) = discover_multipath({"use_alias": False}, parse_multipath(SIX_PATHS))
+
+    results = list(check_multipath(item, service.parameters, parse_multipath(THREE_PATHS)))
+
+    assert results == [
+        Result(state=State.OK, summary="(data01): Paths active: 100.00%"),
+        Result(state=State.WARN, summary="3 of 3 (expected: 6)"),
+    ]
+
+
+def test_check_configured_path_count_takes_precedence_over_discovered_count() -> None:
+    results = list(
+        check_multipath(
+            "360000970000297700123533030303734",
+            {"discovered_paths": 6, "levels": 3},
+            parse_multipath(THREE_PATHS),
+        )
+    )
+
+    assert Result(state=State.OK, summary="3 of 3 (expected: 3)") in results
 
 
 def test_check_percent_levels(section: Section) -> None:

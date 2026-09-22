@@ -141,23 +141,23 @@ class HTMLGenerator(HTMLWriter):
         return bool(self.request.var("screenshotmode", "1" if default else ""))
 
     def set_focus(self, varname: str) -> None:
-        self.final_javascript(
-            f"cmk.utils.set_focus_by_name({json.dumps(self.form_name)}, {json.dumps(varname)})"
+        self.call_ts_function(
+            function_name="set_focus_by_name",
+            arguments={"form_name": self.form_name, "field_name": varname},
         )
 
     def set_focus_by_id(self, dom_id: str) -> None:
-        self.final_javascript("cmk.utils.set_focus_by_id(%s)" % (json.dumps(dom_id)))
+        self.call_ts_function(function_name="set_focus_by_id", arguments={"dom_id": dom_id})
 
     def immediate_browser_redirect(self, secs: float, url: str) -> None:
-        self.javascript(f"cmk.utils.set_reload({secs}, '{url}');")
+        self.call_ts_function(function_name="set_reload", arguments={"secs": secs, "url": url})
 
     def add_body_css_class(self, cls: str) -> None:
         self._body_classes.append(cls)
 
     def reload_whole_page(self, url: str | None = None) -> None:
         if not self.request.has_var("_ajaxid"):
-            return self.final_javascript("cmk.utils.reload_whole_page(%s)" % json.dumps(url))
-        return None
+            self.call_ts_function(function_name="reload_whole_page", arguments={"url": url})
 
     def show_localization_hint(self) -> None:
         url = "global_settings.py?varname=user_localizations"
@@ -306,7 +306,8 @@ class HTMLGenerator(HTMLWriter):
         self.set_csrf_token_meta()
 
         if self.browser_reload != 0.0:
-            self.javascript(f"cmk.utils.set_reload({self.browser_reload})")
+            # Picked up by packages/cmk-frontend/src/js/index.ts on page load
+            self.meta(name="cmk-browser-reload", content=str(self.browser_reload))
 
         self.close_head()
 

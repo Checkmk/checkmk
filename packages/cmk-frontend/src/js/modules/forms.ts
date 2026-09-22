@@ -366,6 +366,20 @@ export function textinput_enter_submit(event: KeyboardEvent, submit: string): bo
   }
 }
 
+export function confirm_dialog_form_submit(
+  dialog_options: any,
+  form_id: string,
+  cancel_url: string,
+  deny_handler: null | (() => void) = null
+) {
+  confirm_dialog(
+    dialog_options,
+    () => (document.getElementById(form_id) as HTMLFormElement).submit(),
+    () => (location.href = cancel_url),
+    deny_handler
+  )
+}
+
 // Helper function to display nice popup confirm dialogs
 export function confirm_dialog(
   optional_args: any,

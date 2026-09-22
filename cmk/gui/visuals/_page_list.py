@@ -5,7 +5,6 @@
 
 """Show a list of all visuals of a given type with actions to delete/clone/edit"""
 
-import json
 from collections.abc import Callable, Iterable
 
 from cmk.ccc.user import UserId
@@ -161,7 +160,9 @@ def page_list(
                 config=config,
             )
             flash(_("Your %(title)s has been deleted.") % {"title": visual_type.title})
-            html.final_javascript("cmk.utils.navigate_to_page(%s)" % json.dumps(html.request.path))
+            html.call_ts_function(
+                function_name="navigate_to_page", arguments={"url": html.request.path}
+            )
         except MKUserError as e:
             html.user_error(e)
 

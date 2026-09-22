@@ -1147,7 +1147,9 @@ class ListPage[T: Overridable](Page):
                 else:
                     self._show_table(instances, scope_instances, user_permissions, deletable=False)
 
-        html.javascript("cmk.page_menu.check_menu_entry_by_checkboxes('delete')")
+        html.call_ts_function(
+            function_name="check_menu_entry_by_checkboxes", arguments={"id": "delete"}
+        )
         html.footer()
 
     @classmethod

@@ -60,6 +60,33 @@ KnownTSFunction = typing.Literal[
     "insert_before",
     "lock_and_redirect",
     "confirm_on_form_leave",
+    # utils
+    "set_focus_by_name",
+    "set_focus_by_id",
+    "set_reload",
+    "reload_whole_page",
+    "navigate_to_page",
+    "update_row_info",
+    "set_inpage_search_result_info",
+    "update_time",
+    "fade_out_element",
+    # page_menu
+    "enable_menu_entry",
+    "enable_menu_entries",
+    "check_menu_entry_by_checkboxes",
+    "toggle_navigation_page_menu_entry",
+    "inpage_search_init",
+    "open_popup",
+    "form_submit",
+    "fetch_hot_menu_entries",
+    "init_filter_form",
+    # forms
+    "confirm_dialog_redirect",
+    "confirm_dialog_form_submit",
+    # selection
+    "set_selection_enabled",
+    "init_rowselect",
+    "update_bulk_moveto",
 ]
 
 

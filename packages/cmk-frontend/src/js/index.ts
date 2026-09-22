@@ -65,6 +65,10 @@ ai_assistant.reserve_panel_space_before_first_paint()
 
 $(() => {
   utils.update_header_timer()
+  const browser_reload = document.querySelector<HTMLMetaElement>('meta[name="cmk-browser-reload"]')
+  if (browser_reload) {
+    utils.set_reload(parseFloat(browser_reload.content))
+  }
   forms.enable_dynamic_form_elements()
   visibility_detection.initialize()
   // TODO: only register when needed?

@@ -35,7 +35,7 @@ class CommandConfirmDialogOptions:
     confirm_button: LazyString
     cancel_button: LazyString
     deny_button: LazyString | None = None
-    deny_js_function: str | None = None
+    deny_popup_id: str | None = None
 
 
 CommandActionResult = (
@@ -63,7 +63,7 @@ class Command:
         confirm_dialog_icon_class: Callable[[], Literal["question", "warning"]] | None = None,
         cancel_button: LazyString = _l("Cancel"),
         deny_button: LazyString | None = None,
-        deny_js_function: str | None = None,
+        deny_popup_id: str | None = None,
         affected_output_cb: Callable[[int, Literal["HOST", "SVC"]], HTML] | None = None,
         icon_name: DynamicIconName = DynamicIconName("commands"),
         is_show_more: bool = False,
@@ -81,7 +81,7 @@ class Command:
         self._confirm_title = confirm_title
         self.cancel_button = cancel_button
         self.deny_button = deny_button
-        self.deny_js_function = deny_js_function
+        self.deny_popup_id = deny_popup_id
         self.permission = permission
         self.tables = tables
         self.render = render
@@ -136,7 +136,7 @@ class Command:
             self.confirm_button() if callable(self.confirm_button) else self.confirm_button,
             self.cancel_button,
             self.deny_button,
-            self.deny_js_function,
+            self.deny_popup_id,
         )
 
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:

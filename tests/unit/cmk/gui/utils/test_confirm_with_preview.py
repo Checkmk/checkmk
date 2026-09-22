@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import json
+from html import unescape
+
 import pytest
 
 from cmk.gui.http import request
@@ -69,10 +72,11 @@ def test_command_confirm_dialog_cancel_leaves_action_mode() -> None:
         )
         output = output_funnel.drain()
 
-    marker = 'location.href = "'
-    start = output.index(marker) + len(marker)
-    cancel_url = output[start : output.index('"', start)]
-    assert cancel_url == "index.py?show_checkboxes=1\\u0026view_name=crash_reports"
+    # The cancel redirect is now dispatched via the confirm_dialog_form_submit TS function
+    # (CMK-36961, CSP-compliant) instead of an inline location.href, so the cancel URL is
+    # carried in the data-cmk_call_ts_arguments JSON.
+    args = _extract_ts_arguments(output, "confirm_dialog_form_submit")
+    assert args["cancel_url"] == "index.py?show_checkboxes=1&view_name=crash_reports"
 
 
 def _extract_form_action(output: str) -> str:
@@ -80,3 +84,13 @@ def _extract_form_action(output: str) -> str:
     start = output.index(marker) + len(marker)
     end = output.index('"', start)
     return output[start:end]
+
+
+def _extract_ts_arguments(output: str, function_name: str) -> dict[str, object]:
+    fn_pos = output.index(f'data-cmk_call_ts_function="{function_name}"')
+    marker = 'data-cmk_call_ts_arguments="'
+    start = output.index(marker, fn_pos) + len(marker)
+    end = output.index('"', start)
+    arguments = json.loads(unescape(output[start:end]))
+    assert isinstance(arguments, dict)
+    return arguments

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import time
 from collections.abc import Iterator, Sequence
 from typing import cast
@@ -342,8 +341,8 @@ def show_availability_page(
     if user_errors:
         form_name = request.get_ascii_input_mandatory("filled_in")
         if form_name in ("avoptions_display", "avoptions_computation"):
-            html.final_javascript(
-                "cmk.page_menu.open_popup(%s);" % json.dumps("popup_" + form_name)
+            html.call_ts_function(
+                function_name="open_popup", arguments={"popup_id": "popup_" + form_name}
             )
 
     if missing_single_infos:

@@ -399,6 +399,19 @@ export function acknowledge_user_message(msg_id: string) {
   })
 }
 
+export function fade_out_element(element_id: string, delay_ms: number, selector?: string) {
+  setTimeout(() => {
+    const element = document.getElementById(element_id)
+    if (!element) return
+    const target = selector ? element.querySelector<HTMLElement>(selector) : element
+    if (target) {
+      target.style.transition = 'opacity 1s ease-in'
+      target.style.opacity = '0'
+    }
+    setTimeout(() => element.remove(), 1000)
+  }, delay_ms)
+}
+
 export function update_time(target: string, time: string) {
   const container = document.getElementById(target) as HTMLInputElement
   if (container) {

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import json
 from typing import Literal
 
 from cmk.gui.htmllib.html import html
@@ -74,7 +73,7 @@ def command_confirm_dialog(
     confirm_button: LazyString = _l("Confirm"),
     cancel_button: LazyString = _l("Cancel"),
     deny_button: LazyString | None = None,
-    deny_js_function: str | None = None,
+    deny_popup_id: str | None = None,
 ) -> bool | None:
     if any(request.has_var(varname) for _title, varname in confirm_options):
         return True if transactions.check_transaction(request) else None
@@ -106,32 +105,31 @@ def command_confirm_dialog(
     )
     deny_button_config = (
         {}
-        if deny_button is None and deny_js_function is None
+        if deny_button is None and deny_popup_id is None
         else {
             "denyButtonText": str(deny_button or _l("Deny")),
             "showDenyButton": True,
         }
     )
-    html.javascript(
-        "cmk.forms.confirm_dialog(%s, function() {const form = document.getElementById('form_confirm');form.submit()}, %s, %s)"
-        % (
-            json.dumps(
-                {
-                    "title": command_title,
-                    "html": str(command_html),
-                    "confirmButtonText": str(confirm_button),
-                    "cancelButtonText": str(cancel_button),
-                    "icon": icon_class,
-                    "customClass": {
-                        "confirmButton": "confirm_%s" % icon_class,
-                        "icon": "confirm_icon confirm_%s" % icon_class,
-                    },
-                    **deny_button_config,
-                }
-            ),
-            f"function() {{location.href = {json.dumps(cancel_url)}}}",
-            deny_js_function if deny_js_function is not None else "null",
-        )
+    html.call_ts_function(
+        function_name="confirm_dialog_form_submit",
+        arguments={
+            "dialog_options": {
+                "title": command_title,
+                "html": str(command_html),
+                "confirmButtonText": str(confirm_button),
+                "cancelButtonText": str(cancel_button),
+                "icon": icon_class,
+                "customClass": {
+                    "confirmButton": "confirm_%s" % icon_class,
+                    "icon": "confirm_icon confirm_%s" % icon_class,
+                },
+                **deny_button_config,
+            },
+            "form_id": "form_confirm",
+            "cancel_url": cancel_url,
+            "deny_popup_id": deny_popup_id,
+        },
     )
 
     if mobile:

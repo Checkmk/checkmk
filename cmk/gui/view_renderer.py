@@ -6,7 +6,6 @@
 import abc
 import collections
 import contextlib
-import json
 import re
 from collections.abc import Callable, Iterator, Sequence
 from typing import Final, override
@@ -248,15 +247,18 @@ class GUIViewRenderer(ABCViewRenderer):
         # enable_commands = painter_options.painter_option_form_enabled()
         # enable_checkboxes = view.layout.can_display_checkboxes and not checkboxes_enforced
         # selection_enabled = enable_checkboxes if enable_commands else checkboxes_enforced
-        html.javascript(
-            "cmk.selection.set_selection_enabled(%s);" % json.dumps(self.view.checkboxes_displayed)
+        html.call_ts_function(
+            function_name="set_selection_enabled",
+            arguments={"enabled": self.view.checkboxes_displayed},
         )
 
         layout = self.view.layout
 
         # Display the filter form on page rendering in some cases
         if self._should_show_filter_form():
-            html.final_javascript("cmk.page_menu.open_popup('popup_filters');")
+            html.call_ts_function(
+                function_name="open_popup", arguments={"popup_id": "popup_filters"}
+            )
 
         # Actions
         if command_form:
@@ -385,7 +387,7 @@ class GUIViewRenderer(ABCViewRenderer):
                     ),
                 )
                 row_info = "%d/%s" % (len(selected), row_info)
-            html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
+            html.call_ts_function(function_name="update_row_info", arguments={"text": row_info})
 
             # The number of rows might have changed to enable/disable actions and checkboxes
             if self._show_buttons:

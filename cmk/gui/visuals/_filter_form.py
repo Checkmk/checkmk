@@ -68,10 +68,9 @@ def show_filter_form(
     # The filter popup is shown automatically when it has been submitted before on page reload. To
     # know that the user closed the popup after filtering, we have to hook into the close_popup
     # function.
-    html.final_javascript(
-        "cmk.page_menu.register_on_open_handler('popup_filters', cmk.page_menu.on_filter_popup_open);"
-        "cmk.page_menu.register_on_close_handler('popup_filters', cmk.page_menu.on_filter_popup_close);"
-        f"cmk.forms.add_filter_form_error_listener('{filter_list_selected_id}');"
+    html.call_ts_function(
+        function_name="init_filter_form",
+        arguments={"filter_list_selected_id": filter_list_selected_id},
     )
 
 

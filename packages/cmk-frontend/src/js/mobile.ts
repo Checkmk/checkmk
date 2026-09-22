@@ -5,7 +5,10 @@
  */
 /* eslint-disable import-x/no-namespace -- Needed for exports */
 import * as forms from './modules/forms'
-import { init_callable_ts_functions } from './modules/ts_function_dispatcher'
+import {
+  init_callable_ts_functions,
+  register_callable_functions
+} from './modules/ts_function_dispatcher'
 
 // NOTE: We use an up-to-date version of jQuery from the package-lock.json together
 // with a patched version of jQuery mobile to make it compatible with jQuery:
@@ -40,6 +43,12 @@ $(document).ready(function () {
     event.preventDefault()
     window.location.href = $(this).attr('href') as string
   })
+})
+
+// See cmk.gui.htmllib.generator:KnownTSFunction
+register_callable_functions({
+  confirm_dialog_form_submit: (_node, options) =>
+    forms.confirm_dialog_form_submit(options.dialog_options, options.form_id, options.cancel_url)
 })
 
 $(document).ready(function () {

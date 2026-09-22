@@ -8,7 +8,7 @@ import $ from 'jquery'
 
 import { call_ajax } from './ajax'
 import { persist_tree_state } from './foldable_container'
-import { confirm_dialog } from './forms'
+import { add_filter_form_error_listener, confirm_dialog } from './forms'
 import { close_popup as popup_menu_close_popup } from './popup_menu'
 import {
   add_class,
@@ -260,6 +260,12 @@ export function on_filter_popup_open() {
 
 export function on_filter_popup_close() {
   update_url_parameter('_show_filter_form', '0')
+}
+
+export function init_filter_form(filter_list_selected_id: string) {
+  register_on_open_handler('popup_filters', on_filter_popup_open)
+  register_on_close_handler('popup_filters', on_filter_popup_close)
+  add_filter_form_error_listener(filter_list_selected_id)
 }
 
 // Scroll to the top after adding new filters

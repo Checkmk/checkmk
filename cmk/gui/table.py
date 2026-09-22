@@ -478,7 +478,7 @@ class Table:
                 if len(rows) == 1
                 else _("%(num_rows_unlimited)d rows") % {"num_rows_unlimited": num_rows_unlimited}
             )
-            html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
+            html.call_ts_function(function_name="update_row_info", arguments={"text": row_info})
 
         if request.var("search") is not None:
             set_inpage_search_result_info(len(rows))
@@ -628,23 +628,12 @@ class Table:
             html.render_div(None, class_="icon") + HTML.with_escaping(self.action_message),
             class_=f"action_message action_message_{self.action_message_type}",
         )
+        html.call_ts_function(
+            function_name="fade_out_element",
+            arguments={"element_id": message_id, "delay_ms": 5000, "selector": ".action_message"},
+        )
         html.close_th()
         html.close_tr()
-        html.javascript(
-            f"""
-            setTimeout(function() {{
-                const msgRow = document.getElementById({json.dumps(message_id)});
-                if (msgRow) {{
-                    const msgDiv = msgRow.querySelector('.action_message');
-                    if (msgDiv) {{
-                        msgDiv.style.transition = "opacity 1s ease-in";
-                        msgDiv.style.opacity = "0";
-                    }}
-                    setTimeout(function() {{ msgRow?.remove(); }}, 1000);
-                }}
-            }}, 5000);
-            """
-        )
 
     def _render_headers(
         self, actions_enabled: bool, actions_visible: bool, empty_columns: list[bool]
@@ -794,7 +783,9 @@ def init_rowselect(selection_key: str) -> None:
         "selection_id": selection_id,
         "selected_rows": selected,
     }
-    html.javascript("cmk.selection.init_rowselect(%s);" % (json.dumps(selection_properties)))
+    html.call_ts_function(
+        function_name="init_rowselect", arguments={"properties": selection_properties}
+    )
 
 
 def show_row_count(
@@ -807,6 +798,6 @@ def show_row_count(
     Needs empty div "row_id" set before the table.
     """
     row_info = "%d %s" % (row_count, row_info)
-    html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
+    html.call_ts_function(function_name="update_row_info", arguments={"text": row_info})
     if selection_id is not None:
         init_rowselect(selection_id)

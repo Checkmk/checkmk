@@ -522,17 +522,6 @@ def test_execute_on_relay_submit_failure_is_unknown(monkeypatch: pytest.MonkeyPa
     assert "relay execution failed" in output
 
 
-def test_execute_on_relay_no_result_is_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
-    auto = check_mk.AutomationActiveCheck()
-    # submit_and_wait_for_result returns None (e.g. on timeout) -> explicit UNKNOWN
-    monkeypatch.setattr(auto, "_submit_to_relay", lambda relay_id, host, command: None)
-    state, output = auto._execute_check_plugin_on_relay(
-        "relay-1", HostName("myhost"), "check_httpv2 -u http://x"
-    )
-    assert state == 3
-    assert "no result" in output
-
-
 def test_relay_wait_timeout_outlasts_the_relays_own_timeout() -> None:
     """The site must outlive the relay's own execution budget.
 

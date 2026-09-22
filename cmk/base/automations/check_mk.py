@@ -28,7 +28,7 @@ from contextlib import redirect_stderr, redirect_stdout, suppress
 from dataclasses import asdict, dataclass
 from itertools import chain, islice
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, TYPE_CHECKING
 
 import livestatus
 
@@ -191,7 +191,7 @@ from cmk.piggyback.backend import (
 from cmk.piggyback.backend import (
     move_for_host_rename as move_piggyback_for_host_rename,
 )
-from cmk.relay_protocols.tasks import AdHocActiveCheckTask
+from cmk.relay_protocols.tasks import AdHocActiveCheckTask, ResultType
 from cmk.server_side_calls_backend import (
     config_processing,
     ExecutableFinder,
@@ -250,6 +250,12 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RulesetName,
 )
 from cmk.utils.servicename import Item, ServiceName
+
+if TYPE_CHECKING:
+    # Lives in an enterprise package this module can only import lazily at runtime.
+    from cmk.relay_fetcher_trigger.relay_client import (  # type: ignore[import-not-found, unused-ignore]
+        TaskResult,
+    )
 
 HistoryFile = str
 HistoryFilePair = tuple[HistoryFile, HistoryFile]
@@ -4032,7 +4038,9 @@ class AutomationActiveCheck:
         self, relay_id: str, host: HostName, command_line: str
     ) -> tuple[ServiceState, ServiceDetails]:
         try:
-            payload = self._submit_to_relay(relay_id, host, command_line)
+            task_result = self._submit_to_relay(relay_id, host, command_line)
+            if task_result.result_type is not ResultType.OK:
+                return 3, f"UNKNOWN - relay execution failed: {task_result.describe_error()}"
         except ImportError:
             return 3, "UNKNOWN - relay client is not available on this site"
         except Exception as e:  # any relay failure -> explicit UNKNOWN
@@ -4040,7 +4048,7 @@ class AutomationActiveCheck:
                 raise
             return 3, f"UNKNOWN - relay execution failed: {e}"
 
-        if payload is None:
+        if task_result.payload is None:
             return 3, "UNKNOWN - relay returned no result"
 
         # The relay runs ad-hoc active checks using the checkhelper runner
@@ -4049,22 +4057,21 @@ class AutomationActiveCheck:
             CheckhelperFrame,
         )
 
-        frame = CheckhelperFrame.parse(payload)
+        frame = CheckhelperFrame.parse(task_result.payload)
         return normalize_active_check_result(
             frame.exit_code, frame.raw_output
         )  # normalize the actual active check result
 
-    def _submit_to_relay(self, relay_id: str, host: HostName, command: str) -> str | None:
+    def _submit_to_relay(self, relay_id: str, host: HostName, command: str) -> "TaskResult":
         from cmk.relay_fetcher_trigger.relay_client import (  # type: ignore[import-not-found, unused-ignore]
             Client,
         )
 
         client = Client.from_omd_config(cmk.utils.paths.omd_root)
         task = AdHocActiveCheckTask(host=host, command=command)
-        payload: str | None = client.submit_and_wait_for_result(
+        return client.submit_and_wait_for_result(  # type: ignore[no-any-return, unused-ignore]
             relay_id, task, timeout=_relay_wait_timeout(task)
         )
-        return payload
 
 
 def automation_update_passwords_merged_file(

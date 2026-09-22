@@ -748,10 +748,6 @@ def test_check_mtr(
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash report 93576394-98a5-11f1-9f0a-bc24110a1d08: IndexError: list index out of range",
-)
 def test_parse_mtr_ignores_agent_error_output() -> None:
     # The mtr agent plugin writes a "**ERROR**" banner followed by a line
     # holding the raw output it choked on. Only the banner was recognised, so

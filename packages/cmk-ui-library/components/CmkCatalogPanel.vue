@@ -6,10 +6,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
 import CmkCollapsible from 'cmk-ui-library/components/CmkCollapsible'
-import CmkIcon from 'cmk-ui-library/components/CmkIcon'
+import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { ref, useId } from 'vue'
+import { computed, ref, useId } from 'vue'
 
 const { _t } = usei18n()
 
@@ -28,14 +28,22 @@ const propsCva = cva('cmk-catalog-panel', {
 const {
   title,
   open: initialOpen = true,
-  variant = 'default'
+  variant = 'default',
+  collapsible = true
 } = defineProps<{
   title: TranslatedString
   open?: boolean
   variant?: NonNullable<VariantProps<typeof propsCva>['variant']>
+  collapsible?: boolean
 }>()
 
-const open = ref(initialOpen)
+const expanded = ref(initialOpen)
+
+const open = computed(() => !collapsible || expanded.value)
+
+function toggle(): void {
+  expanded.value = !expanded.value
+}
 
 const label = _t('Toggle %{ title }', { title })
 
@@ -45,22 +53,28 @@ const id = useId()
 <template>
   <div :class="propsCva({ variant })">
     <button
+      v-if="collapsible"
       type="button"
       class="cmk-catalog-panel__header"
       :class="{ 'cmk-catalog-panel__header--closed': !open }"
       :title="label"
       :aria-label="label"
       :aria-controls="id"
-      @click.prevent="open = !open"
+      :aria-expanded="open"
+      @click.prevent="toggle"
     >
-      <CmkIcon
+      <CmkMultitoneIcon
         class="cmk-catalog-panel__icon"
         :class="{ 'cmk-catalog-panel__icon--open': open }"
-        name="tree-closed"
+        name="chevron-right"
+        primary-color="font"
         size="xxsmall"
       />
       <slot name="header">{{ title }}</slot>
     </button>
+    <div v-else class="cmk-catalog-panel__header cmk-catalog-panel__header--static">
+      <slot name="header">{{ title }}</slot>
+    </div>
     <CmkCollapsible :content-id="id" :open="open">
       <div class="cmk-catalog-panel__content">
         <slot />
@@ -79,8 +93,11 @@ const id = useId()
 }
 
 .cmk-catalog-panel__header {
+  --cmk-catalog-panel-header-bg: var(--ux-theme-3);
+  --cmk-catalog-panel-header-bg-hover: var(--ux-theme-5);
+
   width: 100%;
-  background: var(--ux-theme-3);
+  background: var(--cmk-catalog-panel-header-bg);
   padding: 4px 10px 3px 9px;
   margin: 0;
   font-weight: 700;
@@ -96,7 +113,7 @@ const id = useId()
   }
 
   &:hover {
-    background: var(--ux-theme-5);
+    background: var(--cmk-catalog-panel-header-bg-hover);
   }
 
   &:focus-visible {
@@ -115,6 +132,12 @@ const id = useId()
       transform: rotate(90deg);
     }
   }
+}
+
+.cmk-catalog-panel__header--static {
+  --cmk-catalog-panel-header-bg-hover: var(--cmk-catalog-panel-header-bg);
+
+  cursor: default;
 }
 
 .cmk-catalog-panel__content {

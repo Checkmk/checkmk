@@ -38,7 +38,13 @@ export const panelConfig = {
     }),
     initialState: 'default' as CatalogPanelVariant
   },
-  open: { type: 'boolean' as const, title: 'Open', initialState: true }
+  open: { type: 'boolean' as const, title: 'Open', initialState: true },
+  collapsible: {
+    type: 'boolean' as const,
+    title: 'Collapsible',
+    initialState: true,
+    help: 'When disabled the header loses its arrow and the content stays open.'
+  }
 } satisfies PanelConfigFor<typeof CmkCatalogPanel>
 </script>
 
@@ -72,6 +78,7 @@ const propState = new PanelStateCreator<typeof CmkCatalogPanel>().createRef(pane
         :title="propState.title"
         :variant="propState.variant ?? 'default'"
         :open="propState.open"
+        :collapsible="propState.collapsible"
       >
         This is the collapsible content inside the panel.
       </CmkCatalogPanel>

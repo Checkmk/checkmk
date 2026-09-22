@@ -35,6 +35,7 @@ import UclCmkAccordionStepPanel from './content-organization/CmkAccordionStepPan
 import UclCmkCatalogPanel from './content-organization/CmkCatalogPanel/UclCmkCatalogPanel.vue'
 import UclCmkCollapsible from './content-organization/CmkCollapsible/UclCmkCollapsible.vue'
 import UclCmkFlyout from './content-organization/CmkFlyout/UclCmkFlyout.vue'
+import UclCmkResizeHandle from './content-organization/CmkResizeHandle/UclCmkResizeHandle.vue'
 import UclCmkScrollContainer from './content-organization/CmkScrollContainer/UclCmkScrollContainer.vue'
 import UclCmkSlideIn from './content-organization/CmkSlideIn/UclCmkSlideIn.vue'
 import UclCmkSlideInDialog from './content-organization/CmkSlideInDialog/UclCmkSlideInDialog.vue'
@@ -121,6 +122,7 @@ const contentOrganizationPages = [
   new Page('CmkCatalogPanel', UclCmkCatalogPanel),
   new Page('CmkCollapsible', UclCmkCollapsible),
   new Page('CmkFlyout', UclCmkFlyout),
+  new Page('CmkResizeHandle', UclCmkResizeHandle),
   new Page('CmkScrollContainer', UclCmkScrollContainer),
   new Page('CmkSlideIn', UclCmkSlideIn),
   new Page('CmkSlideInDialog', UclCmkSlideInDialog),

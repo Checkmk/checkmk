@@ -38,6 +38,46 @@ export function newMapElement(
   }
 }
 
+/**
+ * How the daemon names a service: the host it runs on, then the service.
+ *
+ * The maps that derive their content -- a radar map from the state stream, a
+ * folder tree from the SETUP hierarchy -- have to read that grammar and write
+ * it, so it is spelled out once here rather than in each of them.
+ */
+const SERVICE_SEPARATOR = ';'
+
+/** The object id of a host, or of one of its services. */
+export function monitoringObjectId(host: string, service: string | null): string {
+  return service === null ? host : `${host}${SERVICE_SEPARATOR}${service}`
+}
+
+/** The host and service an object id names. */
+export function splitMonitoringObjectId(objectId: string): {
+  host: string
+  service: string | null
+} {
+  const separator = objectId.indexOf(SERVICE_SEPARATOR)
+  if (separator < 0) {
+    return { host: objectId, service: null }
+  }
+  return { host: objectId.slice(0, separator), service: objectId.slice(separator + 1) }
+}
+
+/**
+ * A monitored host or service as a map object, for the maps that have none
+ * placed on them: what a click on it leads to is then the same everywhere.
+ */
+export function newMonitoringElement(host: string, service: string | null): MapElement {
+  return newMapElement({
+    id: monitoringObjectId(host, service),
+    type: service === null ? 'host' : 'service',
+    host_name: host,
+    ...(service === null ? {} : { service_description: service }),
+    z: 0
+  })
+}
+
 /** A monitoring state with the defaults the daemon would have sent. */
 export function newObjectState(
   fields: Partial<ObjectState> & Pick<ObjectState, 'object_id' | 'type' | 'state'>

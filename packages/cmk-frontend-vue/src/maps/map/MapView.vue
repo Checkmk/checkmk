@@ -15,8 +15,8 @@ lifecycle is keyed on the name (``useMapLifecycle``) and not on mount.
 This is also where the map's own design values are declared, on the view root,
 so every painter below inherits one set of them.
 
-Static, geo and flow maps are drawn so far; the other map types arrive in the
-commits that follow this one.
+Static, geo, flow and radar maps are drawn so far; the other map types arrive
+in the commits that follow this one.
 -->
 <script setup lang="ts">
 import CmkBreadcrumb, { type BreadcrumbItem } from 'cmk-ui-library/components/CmkBreadcrumb'
@@ -74,12 +74,13 @@ import type { AnchorRect } from '@/maps/utils/anchorRect'
 import { resolveCheckmkUrl } from '@/maps/utils/deploymentBase'
 import { objectDeleteTitle, objectDisplayName } from '@/maps/utils/dropdownOptions'
 import { buildCheckmkUrl, openUrl } from '@/maps/utils/mapNavigation'
-import { newMapElement } from '@/maps/utils/model'
+import { monitoringObjectId, newMapElement } from '@/maps/utils/model'
 
 // Lazy, one chunk per map type: leaflet rides with the geo map and d3 with the
 // flow map, so opening a static map downloads neither. The type imports beside
 // them are erased at build, so they pull nothing in.
 const flowMapView = defineAsyncComponent(() => import('@/maps/map/flow/FlowMapView.vue'))
+const radarMapView = defineAsyncComponent(() => import('@/maps/map/radar/RadarMapView.vue'))
 const staticMapView = defineAsyncComponent(() => import('@/maps/map/static/StaticMapView.vue'))
 const worldMapView = defineAsyncComponent(() => import('@/maps/map/worldmap/WorldMapView.vue'))
 
@@ -136,6 +137,7 @@ const mapConfigAsRead = computed<MapRead | null>(() => {
 const isStatic = computed(() => (mapConfig.value?.view.type ?? 'static') === 'static')
 const isWorldmap = computed(() => mapConfig.value?.view.type === 'worldmap')
 const isFlowmap = computed(() => mapConfig.value?.view.type === 'flow')
+const isRadar = computed(() => mapConfig.value?.view.type === 'radar')
 
 // The map's search, wherever the map type offers one.
 const mapFilterNeedle = ref('')
@@ -208,8 +210,8 @@ const actionBarStyle = computed(() => {
 
 // The editing controls are for whoever may change *this* map, and only while
 // the view is not doing something else: a kiosk screen, a live preview, or
-// triage in the detail drawer. A flow map derives its content, so there is
-// nothing on it to arrange.
+// triage in the detail drawer. Flow and radar maps derive their content, so
+// there is nothing on them to arrange.
 const showsEditTools = computed(
   () =>
     canEdit.value &&
@@ -543,9 +545,7 @@ function onSelectHost(
     detailDrawerObject.value = real
     return
   }
-  const transientId = serviceDescription
-    ? `transient:${hostName};${serviceDescription}`
-    : `transient:${hostName}`
+  const transientId = `transient:${monitoringObjectId(hostName, serviceDescription ?? null)}`
   // Transient objects have no SSE state entry; a caller-provided seed (e.g.
   // a BI leaf's node state) keeps the drawer's status pane populated.
   if (seed) {
@@ -821,6 +821,16 @@ function closeBulkAckModal(sent: boolean): void {
         @save-viewport="onSaveWorldmapViewport"
       />
 
+      <radar-map-view
+        v-else-if="isRadar"
+        v-model:filter-needle="mapFilterNeedle"
+        v-model:problems-only="problemsOnly"
+        :config="mapConfig"
+        :error="mapsStore.error.value"
+        :preview="isPreview"
+        @object-click="onObjectClick"
+      />
+
       <flow-map-view
         v-else-if="isFlowmap"
         v-model:filter-needle="mapFilterNeedle"
@@ -857,7 +867,7 @@ function closeBulkAckModal(sent: boolean): void {
         @placed="onObjectPlaced"
       />
 
-      <!-- Shared detail drawer for the static and geo maps -->
+      <!-- Shared detail drawer for static / worldmap / radar maps -->
       <DetailDrawer
         v-if="!isFlowmap"
         :object="detailDrawerObject"

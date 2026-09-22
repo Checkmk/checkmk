@@ -38,6 +38,7 @@ const stubs = {
   // Keyed by the tag the view uses: the per-type views are async components, so
   // there is no component name to stub them by.
   'world-map-view': rendererStub('renderer-worldmap'),
+  'radar-map-view': rendererStub('renderer-radar'),
   'flow-map-view': rendererStub('renderer-flow'),
   MapCanvas: rendererStub('renderer-static'),
   MapSearch: true,
@@ -78,7 +79,12 @@ function renderMap() {
   })
 }
 
-const allRendererTestIds = ['renderer-worldmap', 'renderer-flow', 'renderer-static']
+const allRendererTestIds = [
+  'renderer-worldmap',
+  'renderer-radar',
+  'renderer-flow',
+  'renderer-static'
+]
 
 // Assert the named renderer is the only one on screen.
 async function expectOnlyRenderer(testid: string) {
@@ -123,6 +129,12 @@ describe('MapView – map-type dispatch', () => {
     await expectOnlyRenderer('renderer-worldmap')
   })
 
+  it('renders the RadarMapView for a radar view', async () => {
+    opensMap(newMapView('radar'))
+    renderMap()
+    await expectOnlyRenderer('renderer-radar')
+  })
+
   it('renders the FlowMapView for a flow view', async () => {
     opensMap(newMapView('flow'))
     renderMap()
@@ -131,7 +143,7 @@ describe('MapView – map-type dispatch', () => {
 
   // The remaining map types draw themselves, and each arrives with its own
   // commit; until then the map area says so rather than drawing them wrong.
-  it.each(['radar', 'foldertree', 'presentation'])(
+  it.each(['foldertree', 'presentation'])(
     'stands in for a %s view it cannot draw yet',
     async (mapType) => {
       opensMap(newMapView(mapType))

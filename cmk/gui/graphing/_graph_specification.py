@@ -98,6 +98,8 @@ class GraphExportRequest(BaseModel, frozen=True):
     consolidation_function: GraphConsolidationFunction = "max"
     time_start: int | None = None
     time_end: int | None = None
+    y_range_min: float | None = None
+    y_range_max: float | None = None
 
     @field_validator("specification", mode="before")
     @classmethod

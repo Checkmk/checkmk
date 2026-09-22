@@ -1372,18 +1372,27 @@ class GraphClient(RestApiClient):
         consolidation_function: str = "max",
         time_start: int | None = None,
         time_end: int | None = None,
+        y_range_min: float | None = None,
+        y_range_max: float | None = None,
         expect_ok: bool = True,
     ) -> Response:
+        # y_range_min/y_range_max are omittable, not nullable: the schema has no `None` variant, so
+        # an absent bound must be a missing key, never an explicit `null`.
+        body: dict[str, Any] = {
+            "specification": specification,
+            "target": target,
+            "consolidation_function": consolidation_function,
+            "time_start": time_start,
+            "time_end": time_end,
+        }
+        if y_range_min is not None:
+            body["y_range_min"] = y_range_min
+        if y_range_max is not None:
+            body["y_range_max"] = y_range_max
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/actions/export/invoke",
-            body={
-                "specification": specification,
-                "target": target,
-                "consolidation_function": consolidation_function,
-                "time_start": time_start,
-                "time_end": time_end,
-            },
+            body=body,
             expect_ok=expect_ok,
         )
 

@@ -20,6 +20,7 @@ from cmk.gui.openapi.framework import (
     EndpointPermissions,
     VersionedEndpoint,
 )
+from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 
 # The legacy pages spell the average out, the API abbreviates it. The translation belongs here, next
@@ -41,6 +42,8 @@ def export_v1(body: ExportRequest) -> ExportResponse:
         consolidation_function=_LEGACY_CONSOLIDATION[body.consolidation_function],
         time_start=body.time_start,
         time_end=body.time_end,
+        y_range_min=ApiOmitted.to_optional(body.y_range_min),
+        y_range_max=ApiOmitted.to_optional(body.y_range_max),
     )
     query = urlencode({"request": json.dumps(export_request.model_dump())})
     return ExportResponse(download_url=f"{body.target}.py?{query}")

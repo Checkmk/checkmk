@@ -43,7 +43,51 @@ def test_export_prepares_the_download_of_the_displayed_graph(clients: ClientRegi
         "consolidation_function": "average",
         "time_start": 1781524800,
         "time_end": 1781528400,
+        "y_range_min": None,
+        "y_range_max": None,
     }
+
+
+def test_export_forwards_an_explicit_y_axis_range(clients: ClientRegistry) -> None:
+    # An explicit Y-axis range (e.g. from a zoomed-in graph) is passed through untouched, so the
+    # rendered image can pin its axis instead of inferring it from the data.
+    request = _export_request_of(
+        clients.Graph.export(
+            specification=_TEMPLATE_SPEC,
+            target="graph_image",
+            y_range_min=2.0,
+            y_range_max=8.0,
+        ).json["download_url"]
+    )
+
+    assert request["y_range_min"] == 2.0
+    assert request["y_range_max"] == 8.0
+
+
+def test_export_rejects_an_inverted_y_axis_range(clients: ClientRegistry) -> None:
+    response = clients.Graph.export(
+        specification=_TEMPLATE_SPEC,
+        target="graph_image",
+        y_range_min=8.0,
+        y_range_max=2.0,
+        expect_ok=False,
+    )
+
+    response.assert_status_code(400)
+    assert "y_range_min" in response.json["fields"]["body"]["msg"]
+
+
+def test_export_rejects_an_equal_y_axis_range(clients: ClientRegistry) -> None:
+    response = clients.Graph.export(
+        specification=_TEMPLATE_SPEC,
+        target="graph_image",
+        y_range_min=5.0,
+        y_range_max=5.0,
+        expect_ok=False,
+    )
+
+    response.assert_status_code(400)
+    assert "y_range_min" in response.json["fields"]["body"]["msg"]
 
 
 def test_export_without_a_range_leaves_the_defaults_to_the_export_page(

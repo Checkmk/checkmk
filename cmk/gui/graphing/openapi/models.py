@@ -8,7 +8,7 @@ from collections.abc import Callable, Mapping
 from typing import Annotated, Literal, Self
 
 from annotated_types import Interval
-from pydantic import Json
+from pydantic import Json, model_validator
 
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel
@@ -520,6 +520,26 @@ class ExportRequest:
         example=1781528400,
         default=None,
     )
+    y_range_min: float | ApiOmitted = api_field(
+        description=("Lower bound of the Y axis. Inferred from the displayed data when omitted."),
+        example=0.0,
+        default_factory=ApiOmitted,
+    )
+    y_range_max: float | ApiOmitted = api_field(
+        description=("Upper bound of the Y axis. Inferred from the displayed data when omitted."),
+        example=100.0,
+        default_factory=ApiOmitted,
+    )
+
+    @model_validator(mode="after")
+    def _reject_inverted_y_range(self) -> Self:
+        if (
+            not isinstance(self.y_range_min, ApiOmitted)
+            and not isinstance(self.y_range_max, ApiOmitted)
+            and self.y_range_min >= self.y_range_max
+        ):
+            raise ValueError("'y_range_min' must not be greater or equal than 'y_range_max'.")
+        return self
 
 
 @api_model

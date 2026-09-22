@@ -36,12 +36,27 @@ from cmk.agent_based.v2 import (
     TableRow,
 )
 
-Section = Mapping[str, Mapping[str, Any]]
+from .liboracle import Error, Ok, oracle_handle_ora_errors, Parsed
+
+# Data rows are keyed by "<db name>.<db unique name>", the item. An error row
+# carries only the instance name, so it is keyed by that. The two never
+# collide: an item has a dot, an instance name has none. oracle_instance
+# reports the error entries, this check only reads the Ok entries.
+type Section = Mapping[str, Parsed[Mapping[str, Any]]]
 
 
 def parse_oracle_dataguard_stats(string_table: StringTable) -> Section:
     parsed: dict[str, dict[str, Any]] = {}
+    errors: dict[str, str] = {}
     for line in string_table:
+        match oracle_handle_ora_errors(line):
+            case str() as message:
+                errors.setdefault(line[0], message)
+                continue
+            case False:
+                continue
+            case None:
+                pass
         instance = {}
         if len(line) >= 5:
             db_name, db_unique_name, database_role, dgstat_parm, dgstat_value = line[:5]
@@ -86,7 +101,12 @@ def parse_oracle_dataguard_stats(string_table: StringTable) -> Section:
                 }
             )
 
-    return parsed
+    section: dict[str, Parsed[Mapping[str, Any]]] = {
+        item: Ok(data) for item, data in parsed.items() if item not in errors
+    }
+    for name, message in errors.items():
+        section[name] = Error(message)
+    return section
 
 
 agent_section_oracle_dataguard_stats = AgentSection(
@@ -95,9 +115,8 @@ agent_section_oracle_dataguard_stats = AgentSection(
 )
 
 
-def discover_oracle_dataguard_stats(section: Any) -> DiscoveryResult:
-    for instance in section:
-        yield Service(item=instance)
+def discover_oracle_dataguard_stats(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item, result in section.items() if isinstance(result, Ok))
 
 
 def _get_seconds(timestamp: str) -> int | None:
@@ -112,15 +131,22 @@ def _get_seconds(timestamp: str) -> int | None:
     return sec + 60 * min_ + 3600 * h + 86400 * days
 
 
-def check_oracle_dataguard_stats(item: str, params: Mapping[str, Any], section: Any) -> CheckResult:
-    try:
-        dgdata = section[item]
-    except KeyError:
-        # In case of missing information we assume that the login into
-        # the database has failed and we simply skip this check. It won't
-        # switch to UNKNOWN, but will get stale.
-        raise IgnoreResultsError("Dataguard disabled or Instance not running")
+def check_oracle_dataguard_stats(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    match section.get(item):
+        case None:
+            # In case of missing information we assume that the login into
+            # the database has failed and we simply skip this check. It won't
+            # switch to UNKNOWN, but will get stale.
+            raise IgnoreResultsError("Dataguard disabled or Instance not running")
+        case Error(message):
+            yield Result(state=State.UNKNOWN, summary=message)
+        case Ok(dgdata):
+            yield from _check_dataguard_stats(params, dgdata)
 
+
+def _check_dataguard_stats(params: Mapping[str, Any], dgdata: Mapping[str, Any]) -> CheckResult:
     yield Result(state=State.OK, summary="Database Role %s" % (dgdata["database_role"].lower()))
 
     if "protection_mode" in dgdata:
@@ -271,7 +297,10 @@ check_plugin_oracle_dataguard_stats = CheckPlugin(
 
 
 def inventorize_oracle_dataguard_stats(section: Section) -> InventoryResult:
-    for inst, data in section.items():
+    for inst, result in section.items():
+        if not isinstance(result, Ok):
+            continue
+        data = result.value
         try:
             db_name, db_unique_name = inst.split(".", 1)
         except ValueError:

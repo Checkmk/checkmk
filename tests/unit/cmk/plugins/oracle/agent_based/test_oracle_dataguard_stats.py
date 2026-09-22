@@ -17,6 +17,7 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
+from cmk.plugins.oracle.agent_based.liboracle import Error
 from cmk.plugins.oracle.agent_based.oracle_dataguard_stats import (
     check_plugin_oracle_dataguard_stats,
     inventorize_oracle_dataguard_stats,
@@ -183,3 +184,23 @@ def test_inventorize_oracle_dataguard_stats(
         list(inventorize_oracle_dataguard_stats(parse_oracle_dataguard_stats(string_table)))
         == expected_result
     )
+
+
+_FAILURE = [["TESTDB", "FAILURE", "ORA-00942: table or view does not exist"]]
+
+
+def test_failure_row_is_kept_under_the_instance_name() -> None:
+    assert parse_oracle_dataguard_stats(_FAILURE) == {
+        "TESTDB": Error("ORA-00942: table or view does not exist")
+    }
+
+
+def test_discover_skips_failure_row() -> None:
+    section = parse_oracle_dataguard_stats(_AGENT_OUTPUT + _FAILURE)
+    assert "TESTDB" not in {
+        s.item for s in check_plugin_oracle_dataguard_stats.discovery_function(section)
+    }
+
+
+def test_inventory_skips_failure_row() -> None:
+    assert not list(inventorize_oracle_dataguard_stats(parse_oracle_dataguard_stats(_FAILURE)))

@@ -4,6 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from collections.abc import Iterator, Mapping
+from dataclasses import dataclass
+from datetime import datetime
+from enum import StrEnum
 from typing import TypedDict
 
 from cmk.agent_based.v2 import (
@@ -21,7 +25,56 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-Section = dict[str, dict[str, str]]
+SENTINEL_STOPTIME_RUNNING = -1.0
+
+
+class Status(StrEnum):
+    SUCCESS = "Success"
+    WARNING = "Warning"
+    FAILED = "Failed"
+    IN_PROGRESS = "InProgress"
+    PENDING = "Pending"
+
+    @classmethod
+    def from_str(cls, v: str) -> Status | None:
+        try:
+            return cls(v)
+        except ValueError:
+            return None
+
+    def as_state(self) -> State:
+        match self:
+            case self.WARNING:
+                return State.WARN
+            case self.FAILED:
+                return State.CRIT
+            case _:
+                return State.OK
+
+    def is_running(self) -> bool:
+        return self in [self.IN_PROGRESS, self.PENDING]
+
+
+@dataclass
+class VeeamClient:
+    job_name: str
+    raw_status: str | None
+    total_size_byte: int | None
+    read_size_byte: int | None
+    transferred_size_byte: int | None
+    start_time: datetime | None
+    last_backup_age: float | None
+    duration: int | None
+    avg_speed_bps: int | None
+    display_name: str | None
+    backup_server: str | None
+
+    @property
+    def status(self) -> Status | None:
+        return Status.from_str(self.raw_status) if self.raw_status is not None else None
+
+
+Section = dict[str, VeeamClient]
 
 
 class CheckParameters(TypedDict):
@@ -57,21 +110,98 @@ def _parse_duration(raw: str | None) -> int | None:
     return seconds + minutes * 60 + hours * 3600 + days * 86400
 
 
-def parse_veeam_client(string_table: StringTable) -> Section:
-    data: Section = {}
-    last_status: str | bool = False
-    last_found: str = ""
+def _parse_datetime(raw: str | None) -> datetime | None:
+    if not raw:
+        return None
+    return datetime.strptime(raw, "%d.%m.%Y %H:%M:%S")
+
+
+def _parse_stop_time(raw: str | None) -> float | None:
+    if raw == "01.01.1900 00:00:00":
+        # Backward compatible hack
+        return SENTINEL_STOPTIME_RUNNING
+    if raw is None:
+        return None
+    try:
+        return time.time() - time.mktime(time.strptime(raw, "%d.%m.%Y %H:%M:%S"))
+    except ValueError:
+        return None
+
+
+_KEY_MAPPING: Mapping[str, str] = {
+    "Status": "status",
+    "JobName": "job_name",
+    "TotalSizeByte": "total_size_byte",
+    "ReadSizeByte": "read_size_byte",
+    "TransferedSizeByte": "transferred_size_byte",
+    "StartTime": "start_time",
+    "StopTime": "StopTime",
+    "LastBackupAge": "last_backup_age",
+    "DurationDDHHMMSS": "duration",
+    "AvgSpeedBps": "avg_speed_bps",
+    "DisplayName": "display_name",
+    "BackupServer": "backup_server",
+}
+
+
+def _normalize_line(line: list[str]) -> tuple[str, str | None] | None:
+    try:
+        key = _KEY_MAPPING[line[0]]
+    except KeyError:
+        return None
+    return key, line[1] if len(line) == 2 else None
+
+
+def _iter_records(string_table: StringTable) -> Iterator[list[list[str]]]:
+    # The agent emits one record per job, always starting with a "Status" line.
+    # Splitting on that boundary - instead of assuming a fixed number of lines -
+    # keeps the parser working when the set of emitted keys changes between agent
+    # versions (e.g. StopTime was replaced by LastBackupAge in 2.5.0).
+    record: list[list[str]] | None = None
     for line in string_table:
         if line[0] == "Status":
-            # Prevent empty entries
-            last_status = line[1] if len(line) == 2 else False
-        elif line[0] == "JobName":
-            if last_status:
-                last_found = line[1]
-                data[last_found] = {}
-                data[last_found]["Status"] = str(last_status)
-        elif last_status and len(line) == 2:
-            data[last_found][line[0]] = line[1]
+            if record is not None:
+                yield record
+            record = []
+        if record is not None:
+            record.append(line)
+    if record is not None:
+        yield record
+
+
+def parse_veeam_client(string_table: StringTable) -> Section:
+    data: Section = {}
+    for record in _iter_records(string_table):
+        chunk_data = dict(
+            pair for pair in (_normalize_line(line) for line in record) if pair is not None
+        )
+        # StopTime is kept for compatibility with old agent versions that reported
+        # StopTime instead of LastBackupAge.
+        last_backup_age = _parse_float(chunk_data.get("last_backup_age"))
+        try:
+            age_from_stop_time = _parse_stop_time(chunk_data.pop("StopTime"))
+        except KeyError:
+            pass
+        else:
+            if last_backup_age is None:
+                last_backup_age = age_from_stop_time
+
+        assert chunk_data["job_name"] is not None
+        # We use .get() for keys that were added to the agent output for backward compatibility
+        client = VeeamClient(
+            raw_status=chunk_data["status"],
+            job_name=chunk_data["job_name"],
+            total_size_byte=_parse_int(chunk_data["total_size_byte"]),
+            read_size_byte=_parse_int(chunk_data.get("read_size_byte")),
+            transferred_size_byte=_parse_int(chunk_data.get("transferred_size_byte")),
+            start_time=_parse_datetime(chunk_data["start_time"]),
+            last_backup_age=last_backup_age,
+            duration=_parse_duration(chunk_data["duration"]),
+            avg_speed_bps=_parse_int(chunk_data["avg_speed_bps"]),
+            display_name=chunk_data["display_name"],
+            backup_server=chunk_data.get("backup_server"),
+        )
+        data[client.job_name] = client
     return data
 
 
@@ -79,28 +209,16 @@ def discover_veeam_client(section: Section) -> DiscoveryResult:
     yield from (Service(item=job) for job in section)
 
 
-def _check_backup_age(data: dict[str, str], params: CheckParameters) -> CheckResult:
-    age = _parse_float(data.get("LastBackupAge"))
-    if age is None:
-        # StopTime is kept for compatibility with old agent versions that reported
-        # StopTime instead of LastBackupAge.
-        if (stop_time := data.get("StopTime")) is None:
-            yield Result(state=State.CRIT, summary="No complete backup")
-            return
-
-        # While a backup is running the stop time is not meaningful.
-        if stop_time == "01.01.1900 00:00:00":
-            return
-
-        try:
-            stop_time_epoch = time.mktime(time.strptime(stop_time, "%d.%m.%Y %H:%M:%S"))
-        except ValueError:
-            yield Result(state=State.CRIT, summary="No complete backup")
-            return
-        age = time.time() - stop_time_epoch
+def _check_backup_age(data: VeeamClient, params: CheckParameters) -> CheckResult:
+    if data.last_backup_age is None:
+        yield Result(state=State.CRIT, summary="No complete backup")
+        return
+    elif data.last_backup_age is SENTINEL_STOPTIME_RUNNING:
+        # Backward compatible StopTime hack
+        return
 
     yield from check_levels(
-        age,
+        data.last_backup_age,
         levels_upper=params["age"],
         render_func=render.timespan,
         label="Time since last backup",
@@ -116,17 +234,8 @@ def check_veeam_client(item: str, params: CheckParameters, section: Section) -> 
 
     infotexts = []
 
-    state = State.OK
-    # Append current Status to Output
-    if data["Status"] == "Warning":
-        state = State.WARN
-    elif data["Status"] == "Failed":
-        state = State.CRIT
-    infotexts.append(f"Status: {data['Status']}")
-
-    # Only output the Job name
-    if data.get("JobName"):
-        infotexts.append(f"Job: {data['JobName']}")
+    state = data.status.as_state() if data.status else State.UNKNOWN
+    infotexts.append(f"Status: {data.raw_status}")
 
     size_info = []
     size_legend = []
@@ -134,11 +243,12 @@ def check_veeam_client(item: str, params: CheckParameters, section: Section) -> 
 
     # Output the sizes that Veeam reported
     for key, metric_name, legend in (
-        ("TotalSizeByte", "totalsize", "total"),
-        ("ReadSizeByte", "readsize", "read"),
-        ("TransferedSizeByte", "transferredsize", "transferred"),
+        ("total_size_byte", "totalsize", "total"),
+        ("read_size_byte", "readsize", "read"),
+        ("transferred_size_byte", "transferredsize", "transferred"),
     ):
-        if (size_byte := _parse_int(data.get(key))) is None:
+        size_byte: int | None
+        if (size_byte := getattr(data, key, None)) is None:
             continue
         metrics.append(Metric(metric_name, size_byte))
         size_info.append(render.bytes(size_byte))
@@ -148,20 +258,20 @@ def check_veeam_client(item: str, params: CheckParameters, section: Section) -> 
         infotexts.append("Size ({}): {}".format("/".join(size_legend), "/ ".join(size_info)))
 
     # LastBackupAge and StopTime are only meaningful when the job is not running.
-    check_age = data["Status"] not in ["InProgress", "Pending"]
+    check_age = data.status and not data.status.is_running()
 
     # Information may be missing
-    if check_age and (duration := _parse_duration(data.get("DurationDDHHMMSS"))) is not None:
-        infotexts.append(f"Duration: {render.timespan(duration)}")
-        metrics.append(Metric("duration", duration))
+    if check_age and data.duration is not None:
+        infotexts.append(f"Duration: {render.timespan(data.duration)}")
+        metrics.append(Metric("duration", data.duration))
 
-    if (avg_speed_bps := _parse_int(data.get("AvgSpeedBps"))) is not None:
-        metrics.append(Metric("avgspeed", avg_speed_bps))
-        infotexts.append(f"Average Speed: {render.iobandwidth(avg_speed_bps)}")
+    if data.avg_speed_bps is not None:
+        metrics.append(Metric("avgspeed", data.avg_speed_bps))
+        infotexts.append(f"Average Speed: {render.iobandwidth(data.avg_speed_bps)}")
 
     # Append backup server if available
-    if "BackupServer" in data:
-        infotexts.append(f"Backup server: {data['BackupServer']}")
+    if data.backup_server:
+        infotexts.append(f"Backup server: {data.backup_server}")
 
     yield Result(state=state, summary=", ".join(infotexts))
 

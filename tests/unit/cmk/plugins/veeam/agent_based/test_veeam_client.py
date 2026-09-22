@@ -15,6 +15,8 @@ from cmk.plugins.veeam.agent_based.veeam_client import (
     CheckParameters,
     discover_veeam_client,
     parse_veeam_client,
+    Status,
+    VeeamClient,
 )
 
 PARAMS: CheckParameters = {"age": ("fixed", (20.0, 40.0))}
@@ -66,18 +68,19 @@ def _legacy_age_section(stop_time: str, **overrides: str) -> StringTable:
 
 def test_parse_extracts_every_field_of_a_job() -> None:
     assert parse_veeam_client(_job_section()) == {
-        "JOB_NAME": {
-            "Status": "Success",
-            "TotalSizeByte": "100",
-            "ReadSizeByte": "80",
-            "TransferedSizeByte": "60",
-            "StartTime": "01.02.2015 20:05:45",
-            "LastBackupAge": "3600.0",
-            "DurationDDHHMMSS": "00:01:00:00",
-            "AvgSpeedBps": "100",
-            "DisplayName": "name",
-            "BackupServer": "BACKUP01",
-        }
+        "JOB_NAME": VeeamClient(
+            raw_status="Success",
+            job_name="JOB_NAME",
+            total_size_byte=100,
+            read_size_byte=80,
+            transferred_size_byte=60,
+            start_time=datetime.datetime(2015, 2, 1, 20, 5, 45),
+            last_backup_age=3600.0,
+            duration=3600,
+            avg_speed_bps=100,
+            display_name="name",
+            backup_server="BACKUP01",
+        )
     }
 
 
@@ -88,24 +91,36 @@ def test_multiple_jobs_are_parsed_independently() -> None:
     )
 
     assert set(parsed) == {"FIRST", "SECOND"}
-    assert (parsed["FIRST"]["Status"], parsed["FIRST"]["TotalSizeByte"]) == ("Success", "100")
-    assert (parsed["SECOND"]["Status"], parsed["SECOND"]["TotalSizeByte"]) == ("Failed", "200")
+    assert (parsed["FIRST"].status, parsed["FIRST"].total_size_byte) == (Status.SUCCESS, 100)
+    assert (parsed["SECOND"].status, parsed["SECOND"].total_size_byte) == (Status.FAILED, 200)
 
 
 @pytest.mark.parametrize(
-    "status_line",
+    ["status_line", "expected_raw_status"],
     [
-        pytest.param(["Status"], id="status key without a value"),
-        pytest.param(["Status", ""], id="status with an empty value"),
+        pytest.param(["Status"], None, id="status key without a value"),
+        pytest.param(["Status", ""], "", id="status with an empty value"),
     ],
 )
-def test_a_job_without_a_status_value_is_dropped(status_line: list[str]) -> None:
-    # An empty status makes the whole job disappear rather than yielding an
-    # entry with a blank status. The rest of the block is complete, so only the
-    # broken status line matters.
+def test_a_job_without_a_status(status_line: list[str], expected_raw_status: str | None) -> None:
     section = [status_line, *_job_section()[1:]]
-
-    assert parse_veeam_client(section) == {}
+    client = parse_veeam_client(section)
+    assert client == {
+        "JOB_NAME": VeeamClient(
+            raw_status=expected_raw_status,
+            job_name="JOB_NAME",
+            total_size_byte=100,
+            read_size_byte=80,
+            transferred_size_byte=60,
+            start_time=datetime.datetime(2015, 2, 1, 20, 5, 45),
+            last_backup_age=3600.0,
+            duration=3600,
+            avg_speed_bps=100,
+            display_name="name",
+            backup_server="BACKUP01",
+        )
+    }
+    assert client["JOB_NAME"].status is None
 
 
 def test_stray_lines_do_not_corrupt_a_job() -> None:
@@ -123,7 +138,7 @@ def test_an_empty_field_value_is_preserved() -> None:
     # parser keeps it verbatim.
     parsed = parse_veeam_client(_job_section(AvgSpeedBps=""))
 
-    assert parsed["JOB_NAME"]["AvgSpeedBps"] == ""
+    assert parsed["JOB_NAME"].avg_speed_bps is None
 
 
 def test_an_empty_section_yields_no_jobs() -> None:

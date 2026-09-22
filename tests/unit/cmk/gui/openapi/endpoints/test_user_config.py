@@ -3,33 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator
 from http import HTTPStatus
 
 import pytest
 from pytest_mock import MockerFixture
 
 import cmk.ccc.resulttype as result
-import cmk.utils.paths
 from cmk.gui.background_job.job import AlreadyRunningError
 from cmk.gui.userdb.user_sync_job import UserSyncBackgroundJob
 from tests.testlib.unit.rest_api_client import ClientRegistry
-
-
-@pytest.fixture(name="remote_site")
-def fixture_remote_site() -> Iterator[None]:
-    """Make the test believe it's running on a remote site."""
-    cmk.utils.paths.check_mk_config_dir.mkdir(parents=True, exist_ok=True)
-    distr_wato_mk = cmk.utils.paths.check_mk_config_dir / "distributed_wato.mk"
-    previous = distr_wato_mk.read_bytes() if distr_wato_mk.exists() else None
-    distr_wato_mk.write_text("is_distributed_setup_remote_site = True\n")
-    try:
-        yield
-    finally:
-        if previous is None:
-            distr_wato_mk.unlink(missing_ok=True)
-        else:
-            distr_wato_mk.write_bytes(previous)
 
 
 @pytest.fixture(name="existing_user")

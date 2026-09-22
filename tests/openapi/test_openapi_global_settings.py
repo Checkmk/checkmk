@@ -58,9 +58,11 @@ from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupUserInterface
 from cmk.gui.watolib.piggyback_hub import CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
 from cmk.gui.watolib.site_changes import SiteChanges
+from cmk.gui.watolib.sites import SitesConfigFile
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import BooleanChoice, FormSpec, Password
 from cmk.shared_typing.configuration_entity import ConfigEntityType
+from tests.testlib.unit.gui.distributed_setup import running_on_a_remote_site
 from tests.testlib.unit.gui.web_test_app import SetConfig
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
@@ -110,6 +112,14 @@ def _create_remote_site(clients: ClientRegistry, site_id: str, replicate_ec: boo
     return site_id
 
 
+def _create_site_connection_without_replication(clients: ClientRegistry, site_id: str) -> str:
+    config = default_config_example()
+    config["basic_settings"]["site_id"] = site_id
+    config["configuration_connection"]["enable_replication"] = False
+    clients.SiteManagement.create(site_config=config)
+    return site_id
+
+
 @pytest.fixture(name="remote_site")
 def fixture_remote_site(clients: ClientRegistry) -> str:
     """The site scope needs a distributed setup, see the negative test below."""
@@ -119,6 +129,12 @@ def fixture_remote_site(clients: ClientRegistry) -> str:
 @pytest.fixture(name="site_without_event_console")
 def fixture_site_without_event_console(clients: ClientRegistry) -> str:
     return _create_remote_site(clients, "site_without_ec", replicate_ec=False)
+
+
+@pytest.fixture(name="on_a_remote_site")
+def fixture_on_a_remote_site() -> Iterator[None]:
+    with running_on_a_remote_site():
+        yield
 
 
 @pytest.fixture(name="user_without_global_permission")
@@ -843,8 +859,9 @@ def test_the_site_etag_returned_by_an_update_is_still_valid(
 
 
 def test_site_scope_is_unavailable_without_a_distributed_setup(clients: ClientRegistry) -> None:
-    """site_globals_editable() only accepts a site that already carries overrides, and here
-    nothing can create the first one. The GUI refuses the same sites."""
+    """Outside a distributed setup site_globals_editable() only accepts a site that already
+    carries overrides, and here nothing can create the first one. The GUI refuses the same
+    sites."""
     clients.GlobalSetting.get_site(LOCAL_SITE, INT_VAR, expect_ok=False).assert_status_code(
         HTTPStatus.NOT_FOUND
     )
@@ -852,6 +869,57 @@ def test_site_scope_is_unavailable_without_a_distributed_setup(clients: ClientRe
         HTTPStatus.NOT_FOUND
     )
     clients.GlobalSetting.delete_site(LOCAL_SITE, INT_VAR, expect_ok=False).assert_status_code(
+        HTTPStatus.NOT_FOUND
+    )
+
+
+@pytest.mark.usefixtures("on_a_remote_site")
+def test_a_remote_site_shows_the_setting_the_central_site_pushed(clients: ClientRegistry) -> None:
+    ConfigDomainGUI().save_site_globals({INT_VAR: 7})
+
+    assert clients.GlobalSetting.get_site(LOCAL_SITE, INT_VAR).json == {
+        "site_id": LOCAL_SITE,
+        "varname": INT_VAR,
+        "value": 7,
+        "spec": ANY,
+        "origin": "site",
+    }
+
+
+@pytest.mark.usefixtures("on_a_remote_site")
+def test_an_update_on_a_remote_site_keeps_the_pushed_settings_it_does_not_touch(
+    clients: ClientRegistry,
+) -> None:
+    ConfigDomainGUI().save_site_globals({INT_VAR: 7, "wato_enabled": True})
+
+    clients.GlobalSetting.update_site(LOCAL_SITE, INT_VAR, 8)
+
+    assert get_config_domain(GUI).load_site_globals() == {INT_VAR: 8, "wato_enabled": True}
+
+
+@pytest.mark.usefixtures("on_a_remote_site")
+def test_an_update_on_a_remote_site_leaves_the_sites_file_alone(clients: ClientRegistry) -> None:
+    clients.GlobalSetting.update_site(LOCAL_SITE, INT_VAR, 8)
+
+    assert "globals" not in SitesConfigFile().load_for_reading()[SiteId(LOCAL_SITE)]
+
+
+@pytest.mark.usefixtures("on_a_remote_site")
+def test_a_delete_on_a_remote_site_removes_only_that_setting(clients: ClientRegistry) -> None:
+    ConfigDomainGUI().save_site_globals({INT_VAR: 7, "wato_enabled": True})
+
+    clients.GlobalSetting.delete_site(LOCAL_SITE, INT_VAR).assert_status_code(HTTPStatus.NO_CONTENT)
+
+    assert get_config_domain(GUI).load_site_globals() == {"wato_enabled": True}
+
+
+@pytest.mark.usefixtures("on_a_remote_site")
+def test_a_remote_site_refuses_the_settings_of_another_connection(
+    clients: ClientRegistry,
+) -> None:
+    site_id = _create_site_connection_without_replication(clients, "site_id_2")
+
+    clients.GlobalSetting.get_site(site_id, INT_VAR, expect_ok=False).assert_status_code(
         HTTPStatus.NOT_FOUND
     )
 
@@ -1004,5 +1072,19 @@ def test_a_change_of_another_setting_logs_no_certificate_event(
 
     with caplog.at_level(logging.INFO, logger="cmk_security"):
         clients.GlobalSetting.update(INT_VAR, 7)
+
+    assert _trust_changes(caplog) == []
+
+
+@pytest.mark.usefixtures("on_a_remote_site")
+def test_an_update_on_a_remote_site_logs_no_event_for_an_already_trusted_ca(
+    clients: ClientRegistry, caplog: pytest.LogCaptureFixture
+) -> None:
+    get_config_domain(CA_CERTIFICATES).save_site_globals(
+        {"trusted_certificate_authorities": _trusted_cas_value(_self_signed_ca_pem())}
+    )
+
+    with caplog.at_level(logging.INFO, logger="cmk_security"):
+        clients.GlobalSetting.update_site(LOCAL_SITE, INT_VAR, 8)
 
     assert _trust_changes(caplog) == []

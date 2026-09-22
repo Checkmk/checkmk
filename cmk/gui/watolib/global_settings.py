@@ -214,7 +214,10 @@ def _settings_change(
 
 
 def site_global_settings_change(
-    sites: SiteConfigurations, site_id: SiteId, site_globals: GlobalSettings
+    sites: SiteConfigurations,
+    site_id: SiteId,
+    before: GlobalSettings,
+    after: GlobalSettings,
 ) -> AbstractContextManager[None]:
     """Wraps the write of the overrides a site is about to get.
 
@@ -222,12 +225,14 @@ def site_global_settings_change(
     """
     defaults = ABCConfigDomain.get_all_default_globals()
     global_settings = load_configuration_settings()
-    site_globals_before = _site_globals_of(sites)
+    site_globals = _site_globals_of(sites)
     return _settings_change(
         sites,
-        before=finalize_all_settings_per_site(defaults, global_settings, site_globals_before),
+        before=finalize_all_settings_per_site(
+            defaults, global_settings, {**site_globals, site_id: before}
+        ),
         after=finalize_all_settings_per_site(
-            defaults, global_settings, {**site_globals_before, site_id: site_globals}
+            defaults, global_settings, {**site_globals, site_id: after}
         ),
     )
 

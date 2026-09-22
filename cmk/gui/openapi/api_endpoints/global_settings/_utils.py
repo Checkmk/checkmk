@@ -89,7 +89,8 @@ def _editable_global_setting(varname: str) -> str:
 
 def _site_globals_editable(value: str) -> SiteId:
     """On a non-distributed setup this only accepts sites that already carry overrides,
-    which nothing can create."""
+    which nothing can create. On a remote it accepts the local site only, the one whose
+    overrides that site runs with."""
     site_id = SiteIdConverter.should_be_configurable(value)
     all_sites = load_configured_sites()
     if site_id not in all_sites or not site_globals_editable(all_sites, all_sites[site_id]):

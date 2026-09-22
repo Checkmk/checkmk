@@ -84,6 +84,7 @@ from cmk.gui.watolib.config_sync import (
 )
 from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
+    load_site_global_settings,
     save_site_global_settings_raw,
     site_global_settings_change,
 )
@@ -1134,11 +1135,15 @@ def is_livestatus_encrypted(site: SiteConfiguration) -> bool:
     )
 
 
+def site_globals_are_pushed(all_sites: SiteConfigurations, site: SiteConfiguration) -> bool:
+    """On a remote the local site runs with the overrides the central site pushes."""
+    return is_distributed_setup_remote_site(all_sites) and site_is_local(site)
+
+
 def site_globals_editable(all_sites: SiteConfigurations, site: SiteConfiguration) -> bool:
-    # Site is a remote site of another site. Allow to edit probably pushed site
-    # specific globals when remote Setup is enabled
+    # On a remote the overrides of the other connections are managed on the central site
     if is_distributed_setup_remote_site(all_sites):
-        return True
+        return site_is_local(site)
 
     # Local site: Don't enable site specific locals when no remote sites configured
     if not has_distributed_setup_remote_sites(all_sites):
@@ -1149,7 +1154,14 @@ def site_globals_editable(all_sites: SiteConfigurations, site: SiteConfiguration
 
 
 def load_site_globals(sites: SiteConfigurations, site_id: SiteId) -> dict[str, object]:
-    """The site's own overrides, as a copy that writers may mutate before saving."""
+    """The site's own overrides, as a copy that writers may mutate before saving.
+
+    They come from the sites file, except on a remote, where the local site reads the
+    site-specific config files the central site pushes.
+    """
+    if site_globals_are_pushed(sites, sites[site_id]):
+        return dict(load_site_global_settings())
+
     return dict(sites[site_id].get("globals", {}))
 
 
@@ -1167,9 +1179,16 @@ def save_site_globals(
     """Writes the overrides with the config domains in the loop, see save_global_settings().
 
     They go to the sites file and, for the local site, also to its own site-specific
-    config files, which are what the running site reads.
+    config files, which are what the running site reads. On a remote the local site only
+    writes those, so that the two sources cannot drift apart.
     """
-    with site_global_settings_change(sites, site_id, site_globals):
+    with site_global_settings_change(
+        sites, site_id, load_site_globals(sites, site_id), site_globals
+    ):
+        if site_globals_are_pushed(sites, sites[site_id]):
+            save_site_global_settings_raw(site_globals)
+            return
+
         sites[site_id]["globals"] = site_globals
         site_management_registry["site_management"].save_sites(
             tree,

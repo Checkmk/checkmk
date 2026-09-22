@@ -239,3 +239,23 @@ def test_check_pse_poe(
     item: str, params: Mapping[str, object], section: Section, expected: CheckResult
 ) -> None:
     assert list(check_pse_poe(item, params, section)) == expected
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="Crash report 4216: ValueError: 0 is not a valid PoeStatus",
+)
+def test_check_pse_poe_with_unknown_operational_status() -> None:
+    # A PSE reporting an operational status outside on(1)/off(2)/faulty(3).
+    # check_poe_data already has a path for this; the section parser never let
+    # the value reach it.
+    section = parse_pse_poe([["1", "50", "0", "20"]])
+    assert list(check_pse_poe("1", {}, section)) == [
+        Result(
+            state=State.UNKNOWN,
+            summary=(
+                "Device returned faulty data: nominal power: 50, "
+                "power consumption: 20, operational status: 0"
+            ),
+        )
+    ]

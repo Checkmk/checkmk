@@ -201,7 +201,6 @@ function resetSearchAndFilters(): void {
     </CmkAccordion>
     <CmkSlideInDialog
       :open="session !== null"
-      size="large"
       :header="{
         title: inSiteScope ? _t('Edit site-specific setting') : _t('Edit global setting'),
         closeButton: true

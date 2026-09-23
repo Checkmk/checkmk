@@ -26,12 +26,24 @@ from cmk.checkengine.filecache import FileCacheOptions, MaxAge
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.checkengine.source_abc import Source
 from cmk.checkengine.source_builder import SourceBuilder
-from cmk.checkengine.sources._sources import SpecialAgentSource
+from cmk.checkengine.sources._sources import (
+    MissingIPSource,
+    PiggybackSource,
+    ProgramSource,
+    SpecialAgentSource,
+)
 from cmk.ruleset_matcher.matcher import RuleSpec
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.server_side_calls_backend import SpecialAgentCommandLine
 from cmk.utils.ip_lookup import IPStackConfig
 from tests.testlib.unit.base_configuration_scenario import Scenario
+
+
+class _Default:
+    """Distinguishes "caller said nothing" from "caller said None"."""
+
+
+_DEFAULT = _Default()
 
 
 @dataclass(frozen=True)
@@ -56,18 +68,24 @@ def _make_sources(
     *,
     tmp_path: Path,
     special_agent_command_lines: Sequence[tuple[str, SpecialAgentCommandLine]] | None = None,
+    host_address: HostAddress | None | _Default = _DEFAULT,
+    ip_stack_config: IPStackConfig = IPStackConfig.IPv4,
 ) -> Sequence[Source]:
     # Too many arguments to this function.  Let's wrap it to make it easier
     # to test.
     ipaddress = HostAddress("127.0.0.1")
+    # Only the address the sources are built for varies; everything else keeps
+    # the resolvable one so a test changes one thing at a time.  None is a
+    # meaningful value here ("no address at all"), hence the sentinel.
+    host_address = ipaddress if isinstance(host_address, _Default) else host_address
     ip_family: Literal[socket.AddressFamily.AF_INET] = socket.AddressFamily.AF_INET
     config_cache = loading_result.config_cache
     return SourceBuilder(
         AgentBasedPlugins.empty(),
         hostname,
         ip_family,
-        ipaddress,
-        IPStackConfig.IPv4,
+        host_address,
+        ip_stack_config,
         source_config=config_cache.make_source_config(
             config_cache.make_service_configurer({}, lambda *a: ""),  # noqa: ARG005
             ip_lookup=lambda *a: ipaddress,  # noqa: ARG005
@@ -324,3 +342,134 @@ def test_special_agent_multiple_agents_keep_distinct_idents(
         source.source_info().ident for source in sources if isinstance(source, SpecialAgentSource)
     )
     assert idents == ["special_agent_a_0", "special_agent_a_1", "special_agent_b"]
+
+
+@pytest.mark.parametrize("fallback", (HostAddress("0.0.0.0"), HostAddress("::")))
+def test_agent_host_with_fallback_address_has_no_tcp_source(
+    fallback: HostAddress, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """0.0.0.0 and :: mean "no address", so the agent must not be fetched.
+
+    Without this the TCP fetcher would connect to the local system instead of
+    the host, because Linux routes the unspecified address there.
+    """
+    hostname = HostName("agent-host")
+
+    ts = Scenario()
+    ts.add_host(hostname)
+    loading_result = ts.apply(monkeypatch)
+    assert [
+        type(source)
+        for source in _make_sources(
+            hostname, loading_result, tmp_path=tmp_path, host_address=fallback
+        )
+    ] == [MissingIPSource, PiggybackSource]
+
+
+@pytest.mark.parametrize("fallback", (HostAddress("0.0.0.0"), HostAddress("::")))
+def test_special_agent_with_fallback_address_reports_missing_ip(
+    fallback: HostAddress, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A special agent may use $HOSTADDRESS$, and we cannot tell whether it does.
+
+    The refusal keeps the agent's own ident so it stays visible per agent
+    instead of the source silently disappearing.
+    """
+    hostname = HostName("agent-host")
+
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.set_ruleset_bundle(
+        "special_agents",
+        {
+            "jolokia": [_dummy_rule_spec(hostname, {})],
+            "mqtt": [_dummy_rule_spec(hostname, {})],
+        },
+    )
+    loading_result = ts.apply(monkeypatch)
+    sources = _make_sources(hostname, loading_result, tmp_path=tmp_path, host_address=fallback)
+    assert sorted(
+        source.source_info().ident for source in sources if isinstance(source, MissingIPSource)
+    ) == ["special_jolokia", "special_mqtt"]
+
+
+def test_no_ip_host_with_special_agent_still_runs_it(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A NO_IP host is configured to have no address at all.
+
+    Its address-independent special agents are legitimate and must keep
+    running -- unlike a host that asked for an IP family and has no usable
+    address.
+    """
+    hostname = HostName("no-ip-host")
+    tags = {TagGroupID("agent"): TagID("special-agents")}
+
+    ts = Scenario()
+    ts.add_host(hostname, tags=tags)
+    loading_result = ts.apply(monkeypatch)
+
+    sources = _make_sources(
+        hostname,
+        loading_result,
+        tmp_path=tmp_path,
+        host_address=None,
+        ip_stack_config=IPStackConfig.NO_IP,
+        special_agent_command_lines=[("my_agent", SpecialAgentCommandLine("--go"))],
+    )
+    assert [
+        source.fetcher().cmdline for source in sources if isinstance(source, SpecialAgentSource)
+    ] == ["--go"]
+
+
+@pytest.mark.parametrize(
+    "program",
+    (
+        "/bin/get_data --host $HOSTADDRESS$",
+        "/bin/get_data --host $_HOSTADDRESS_4$",
+        "/bin/get_data --host $HOST_ADDRESS_6$",
+        "/bin/get_data --host <IP>",
+    ),
+)
+def test_datasource_program_using_the_address_is_refused(
+    program: str, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Expanding these would run the program against the local system."""
+    hostname = HostName("program-host")
+
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.set_ruleset("datasource_programs", [_dummy_rule_spec(hostname, program)])
+    loading_result = ts.apply(monkeypatch)
+    assert [
+        type(source)
+        for source in _make_sources(
+            hostname,
+            loading_result,
+            tmp_path=tmp_path,
+            host_address=HostAddress("0.0.0.0"),
+        )
+    ] == [MissingIPSource, PiggybackSource]
+
+
+def test_datasource_program_not_using_the_address_still_runs(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The command line is the user's own, and this one cannot reach the host
+    through the unspecified address because it never mentions it."""
+    hostname = HostName("program-host")
+
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.set_ruleset("datasource_programs", [_dummy_rule_spec(hostname, "/bin/cat /var/lib/dump")])
+    loading_result = ts.apply(monkeypatch)
+    assert [
+        source.fetcher().cmdline
+        for source in _make_sources(
+            hostname,
+            loading_result,
+            tmp_path=tmp_path,
+            host_address=HostAddress("0.0.0.0"),
+        )
+        if isinstance(source, ProgramSource)
+    ] == ["/bin/cat /var/lib/dump"]

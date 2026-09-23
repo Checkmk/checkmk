@@ -158,3 +158,13 @@ test('formats byte columns as human-readable SI values', () => {
   // Scaled to GB / MB (the SI formatter trims trailing zeros: 90.4, not 90.40).
   expect(barValues).toEqual(['90.4 GB', '552.63 MB'])
 })
+
+test('offers the full text of truncatable cells as a tooltip, but not of figures', () => {
+  const host = 'node_webshop_i-020818453318b7c7.eu-central-1.compute.internal'
+  const { getByRole, queryByTitle } = renderTable([
+    { host: { value: host, href: 'view.py' }, ingress: 1e9, volume: 5e9 }
+  ])
+
+  expect(getByRole('link')).toHaveAttribute('title', host)
+  expect(queryByTitle('1 GB')).toBeNull()
+})

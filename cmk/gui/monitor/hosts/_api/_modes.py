@@ -6,14 +6,14 @@ from cmk.gui.i18n import _, ungettext
 from cmk.gui.openapi.framework.model import api_field, api_model
 
 from .._models import Host
-from ._urls import host_panel_link, host_view_link
+from ._urls import host_view_link
 
 
 @api_model
 class ModeInfo:
     icon_name: str = api_field(description="Icon to render for this mode", example="downtime")
     link: str = api_field(
-        description="URL the mode icon links to",
+        description="URL the mode icon links to, empty for a mode without a view of its own",
         example="view.py?view_name=downtimes_of_host&host=web-server-01",
     )
     title: str = api_field(
@@ -35,7 +35,7 @@ def build_host_modes(host: Host) -> list[ModeInfo]:
         modes.append(
             ModeInfo(
                 icon_name="ack",
-                link=host_panel_link(host),
+                link="",
                 title=_("Problem acknowledged"),
             )
         )
@@ -43,7 +43,7 @@ def build_host_modes(host: Host) -> list[ModeInfo]:
         modes.append(
             ModeInfo(
                 icon_name="notif-disabled",
-                link=host_panel_link(host),
+                link="",
                 title=_("Notifications are disabled for this host"),
             )
         )
@@ -64,7 +64,7 @@ def build_host_modes(host: Host) -> list[ModeInfo]:
         modes.append(
             ModeInfo(
                 icon_name="disabled",
-                link=host_panel_link(host),
+                link="",
                 title=_("Active checks have been manually disabled for this host"),
             )
         )
@@ -72,7 +72,7 @@ def build_host_modes(host: Host) -> list[ModeInfo]:
         modes.append(
             ModeInfo(
                 icon_name="npassive",
-                link=host_panel_link(host),
+                link="",
                 title=_("Passive checks have been manually disabled for this host"),
             )
         )
@@ -80,7 +80,7 @@ def build_host_modes(host: Host) -> list[ModeInfo]:
         modes.append(
             ModeInfo(
                 icon_name="outofnot",
-                link=host_panel_link(host),
+                link="",
                 title=_("Out of notification period"),
             )
         )
@@ -88,7 +88,7 @@ def build_host_modes(host: Host) -> list[ModeInfo]:
         modes.append(
             ModeInfo(
                 icon_name="outof-serviceperiod",
-                link=host_panel_link(host),
+                link="",
                 title=_("Out of service period"),
             )
         )
@@ -96,7 +96,7 @@ def build_host_modes(host: Host) -> list[ModeInfo]:
         modes.append(
             ModeInfo(
                 icon_name="pause",
-                link=host_panel_link(host),
+                link="",
                 title=_("This host is currently not being checked"),
             )
         )

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from collections.abc import Iterator
 
 import pytest
 
@@ -17,16 +16,9 @@ from tests.testlib.unit.gui.setup_git_test_helper import (
 )
 from tests.testlib.unit.gui.web_test_app import SetConfig, WebTestAppForCMK
 
-from .testlib import get_fake_host_repository, HostFactory, login_with
+from .testlib import get_fake_host_repository, HostFactory
 
-
-@pytest.fixture(name="may_see_all_hosts")
-def _may_see_all_hosts() -> Iterator[None]:
-    with login_with({"view.allhosts": True}):
-        yield
-
-
-pytestmark = pytest.mark.usefixtures("request_context", "may_see_all_hosts")
+pytestmark = pytest.mark.usefixtures("request_context")
 
 
 def test_handle_list_hosts_limit_handling() -> None:

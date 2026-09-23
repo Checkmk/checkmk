@@ -9,10 +9,7 @@ from cmk.gui.openapi.framework.model import api_field, api_model
 from .._models import Service, ServiceOverview
 from ._urls import (
     crash_report_link,
-    host_panel_link,
     host_view_link,
-    service_panel_link,
-    service_panel_link_by_id,
     service_view_link,
     service_view_link_by_id,
 )
@@ -26,7 +23,7 @@ from ._urls import (
 class ServiceModeInfo:
     icon_name: str = api_field(description="Icon to render for this mode", example="downtime")
     link: str = api_field(
-        description="URL the mode icon links to",
+        description="URL the mode icon links to, empty for a mode without a view of its own",
         example="view.py?view_name=downtimes_of_service&host=web-server-01&service=CPU+load",
     )
     title: str = api_field(
@@ -92,7 +89,7 @@ def build_service_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
         modes.append(
             ServiceModeInfo(
                 icon_name="ack",
-                link=service_panel_link(service),
+                link="",
                 title=_("Problem acknowledged"),
             )
         )
@@ -100,7 +97,7 @@ def build_service_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
         modes.append(
             ServiceModeInfo(
                 icon_name="notif-disabled",
-                link=service_panel_link(service),
+                link="",
                 title=_("Notifications are disabled for this service"),
             )
         )
@@ -116,7 +113,7 @@ def build_service_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
         modes.append(
             ServiceModeInfo(
                 icon_name="disabled",
-                link=service_panel_link(service),
+                link="",
                 title=_("Active checks have been manually disabled for this service"),
             )
         )
@@ -124,7 +121,7 @@ def build_service_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
         modes.append(
             ServiceModeInfo(
                 icon_name="npassive",
-                link=service_panel_link(service),
+                link="",
                 title=_("Passive checks have been manually disabled for this service"),
             )
         )
@@ -132,7 +129,7 @@ def build_service_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
         modes.append(
             ServiceModeInfo(
                 icon_name="outofnot",
-                link=service_panel_link(service),
+                link="",
                 title=_("Out of notification period"),
             )
         )
@@ -140,7 +137,7 @@ def build_service_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
         modes.append(
             ServiceModeInfo(
                 icon_name="outof-serviceperiod",
-                link=service_panel_link(service),
+                link="",
                 title=_("Out of service period"),
             )
         )
@@ -148,7 +145,7 @@ def build_service_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
         modes.append(
             ServiceModeInfo(
                 icon_name="pause",
-                link=service_panel_link(service),
+                link="",
                 title=_("This service is currently not being checked"),
             )
         )
@@ -179,9 +176,7 @@ def build_service_modes_by_id(
         modes.append(
             ServiceModeInfo(
                 icon_name="ack",
-                link=service_panel_link_by_id(
-                    site_id=site_id, hostname=hostname, service_name=service.name
-                ),
+                link="",
                 title=_("Problem acknowledged"),
             )
         )
@@ -189,9 +184,7 @@ def build_service_modes_by_id(
         modes.append(
             ServiceModeInfo(
                 icon_name="notif-disabled",
-                link=service_panel_link_by_id(
-                    site_id=site_id, hostname=hostname, service_name=service.name
-                ),
+                link="",
                 title=_("Notifications are disabled for this service"),
             )
         )
@@ -212,9 +205,7 @@ def build_service_modes_by_id(
         modes.append(
             ServiceModeInfo(
                 icon_name="disabled",
-                link=service_panel_link_by_id(
-                    site_id=site_id, hostname=hostname, service_name=service.name
-                ),
+                link="",
                 title=_("Active checks have been manually disabled for this service"),
             )
         )
@@ -222,9 +213,7 @@ def build_service_modes_by_id(
         modes.append(
             ServiceModeInfo(
                 icon_name="npassive",
-                link=service_panel_link_by_id(
-                    site_id=site_id, hostname=hostname, service_name=service.name
-                ),
+                link="",
                 title=_("Passive checks have been manually disabled for this service"),
             )
         )
@@ -232,9 +221,7 @@ def build_service_modes_by_id(
         modes.append(
             ServiceModeInfo(
                 icon_name="outofnot",
-                link=service_panel_link_by_id(
-                    site_id=site_id, hostname=hostname, service_name=service.name
-                ),
+                link="",
                 title=_("Out of notification period"),
             )
         )
@@ -242,9 +229,7 @@ def build_service_modes_by_id(
         modes.append(
             ServiceModeInfo(
                 icon_name="outof-serviceperiod",
-                link=service_panel_link_by_id(
-                    site_id=site_id, hostname=hostname, service_name=service.name
-                ),
+                link="",
                 title=_("Out of service period"),
             )
         )
@@ -252,9 +237,7 @@ def build_service_modes_by_id(
         modes.append(
             ServiceModeInfo(
                 icon_name="pause",
-                link=service_panel_link_by_id(
-                    site_id=site_id, hostname=hostname, service_name=service.name
-                ),
+                link="",
                 title=_("This service is currently not being checked"),
             )
         )
@@ -278,7 +261,7 @@ def build_host_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
         modes.append(
             ServiceModeInfo(
                 icon_name="ack",
-                link=host_panel_link(service),
+                link="",
                 title=_("Host problem acknowledged"),
             )
         )

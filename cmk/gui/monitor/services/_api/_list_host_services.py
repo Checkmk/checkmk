@@ -333,7 +333,6 @@ ENDPOINT_LIST_HOST_SERVICES = VersionedEndpoint(
                     permissions.OkayToIgnorePerm("mkeventd.seeall"),
                     permissions.OkayToIgnorePerm("general.ignore_hard_limit"),
                     permissions.OkayToIgnorePerm("general.see_crash_reports"),
-                    permissions.OkayToIgnorePerm("view.host"),
                 ]
             )
         )

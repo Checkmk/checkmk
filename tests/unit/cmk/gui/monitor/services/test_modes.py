@@ -15,26 +15,16 @@ from cmk.gui.monitor.services._models import ServiceState
 
 from .testlib import login_with, ServiceFactory, ServiceOverviewFactory
 
-_ALL_HOSTS_PERMISSION = "view.allhosts"
-
-_HOST_SERVICES_PERMISSION = "view.host"
-
 _CRASH_REPORTS_PERMISSION = "general.see_crash_reports"
 
 
-@pytest.fixture(name="may_see_the_listings")
-def _may_see_the_listings() -> Iterator[None]:
-    with login_with(
-        {
-            _ALL_HOSTS_PERMISSION: True,
-            _HOST_SERVICES_PERMISSION: True,
-            _CRASH_REPORTS_PERMISSION: True,
-        }
-    ):
+@pytest.fixture(name="may_see_crash_reports")
+def _may_see_crash_reports() -> Iterator[None]:
+    with login_with({_CRASH_REPORTS_PERMISSION: True}):
         yield
 
 
-pytestmark = pytest.mark.usefixtures("request_context", "may_see_the_listings")
+pytestmark = pytest.mark.usefixtures("request_context", "may_see_crash_reports")
 
 
 _HOSTNAME = "web-server-01"
@@ -269,11 +259,10 @@ def test_build_service_modes_by_id_an_unknown_service_did_not_crash() -> None:
     assert build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID) == []
 
 
-def test_build_service_modes_by_id_state_icons_open_the_service_panel() -> None:
+def test_build_service_modes_by_id_state_icons_link_nowhere() -> None:
     service = ServiceFactory.build(
         **_NO_MODES
         | {
-            "name": "CPU load",
             "acknowledged": True,
             "notifications_enabled": False,
             "active_checks_disabled": True,
@@ -286,46 +275,10 @@ def test_build_service_modes_by_id_state_icons_open_the_service_panel() -> None:
 
     modes = build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID)
 
-    assert {mode.link for mode in modes} == {
-        "monitor_host_services.py?host=web-server-01&site=local#service=CPU+load"
-    }
+    assert {mode.link for mode in modes} == {""}
 
 
-def test_build_service_modes_by_id_state_icons_fall_back_without_the_listing_permission() -> None:
-    service = ServiceFactory.build(**_NO_MODES | {"name": "CPU load", "acknowledged": True})
+def test_build_host_modes_acknowledged_links_nowhere() -> None:
+    service = ServiceOverviewFactory.build(host_in_downtime=False, host_acknowledged=True)
 
-    with login_with({_HOST_SERVICES_PERMISSION: False}):
-        modes = build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID)
-
-    assert [mode.link for mode in modes] == [
-        "view.py?view_name=service&site=local&host=web-server-01&service=CPU+load"
-    ]
-
-
-def test_build_host_modes_acknowledged_opens_the_host_panel() -> None:
-    service = ServiceOverviewFactory.build(
-        host_name=_HOSTNAME,
-        site_id=_SITE_ID,
-        host_in_downtime=False,
-        host_acknowledged=True,
-    )
-
-    assert [mode.link for mode in build_host_modes(service)] == [
-        "monitor_all_hosts.py#host=web-server-01&site=local"
-    ]
-
-
-def test_build_host_modes_fall_back_without_the_all_hosts_permission() -> None:
-    service = ServiceOverviewFactory.build(
-        host_name=_HOSTNAME,
-        site_id=_SITE_ID,
-        host_in_downtime=False,
-        host_acknowledged=True,
-    )
-
-    with login_with({_ALL_HOSTS_PERMISSION: False}):
-        modes = build_host_modes(service)
-
-    assert [mode.link for mode in modes] == [
-        "view.py?view_name=hoststatus&site=local&host=web-server-01"
-    ]
+    assert [mode.link for mode in build_host_modes(service)] == [""]

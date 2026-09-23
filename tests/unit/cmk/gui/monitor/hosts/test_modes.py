@@ -2,25 +2,9 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Iterator
-
-import pytest
-
 from cmk.gui.monitor.hosts._api._modes import build_host_modes
 
-from .testlib import HostFactory, login_with
-
-_ALL_HOSTS_PERMISSION = "view.allhosts"
-
-
-@pytest.fixture(name="may_see_all_hosts")
-def _may_see_all_hosts() -> Iterator[None]:
-    with login_with({_ALL_HOSTS_PERMISSION: True}):
-        yield
-
-
-pytestmark = pytest.mark.usefixtures("request_context", "may_see_all_hosts")
-
+from .testlib import HostFactory
 
 # The factory randomises every field, so a test that asserts on one mode has to pin all the
 # others to the value that keeps their icon away.
@@ -127,10 +111,8 @@ def test_build_host_modes_all_modes() -> None:
     ]
 
 
-def test_build_host_modes_state_icons_open_the_host_panel() -> None:
+def test_build_host_modes_state_icons_link_nowhere() -> None:
     host = HostFactory.build(
-        name="web-server-01",
-        site_id="local",
         in_downtime=False,
         num_comments=0,
         acknowledged=True,
@@ -142,19 +124,4 @@ def test_build_host_modes_state_icons_open_the_host_panel() -> None:
         in_check_period=False,
     )
 
-    assert {mode.link for mode in build_host_modes(host)} == {
-        "monitor_all_hosts.py#host=web-server-01&site=local"
-    }
-
-
-def test_build_host_modes_state_icons_fall_back_without_the_listing_permission() -> None:
-    host = HostFactory.build(
-        **_NO_MODES | {"name": "web-server-01", "site_id": "local", "acknowledged": True}
-    )
-
-    with login_with({_ALL_HOSTS_PERMISSION: False}):
-        modes = build_host_modes(host)
-
-    assert [mode.link for mode in modes] == [
-        "view.py?view_name=hoststatus&site=local&host=web-server-01"
-    ]
+    assert {mode.link for mode in build_host_modes(host)} == {""}

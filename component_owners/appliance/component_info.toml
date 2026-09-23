@@ -1,0 +1,11 @@
+display_name = "Appliance"
+type = "Component"
+tier = 3
+members_required = 2
+has_support_component = true
+description = """
+Functionality used by the Checkmk Appliance
+"""
+external_code_location = [
+  "https://review.lan.tribe29.com/gitweb?p=cma.git;a=summary",
+]

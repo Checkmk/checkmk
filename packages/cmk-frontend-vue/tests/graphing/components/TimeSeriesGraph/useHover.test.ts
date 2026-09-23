@@ -122,8 +122,11 @@ function mountHover(
   return api
 }
 
-/** Moves the hover pixel by pixel across the plot's middle, collecting the state at each step. */
-function sweep(hover: ReturnType<typeof useHover>, fromX: number, toX: number): HoverState[] {
+function hoverStatesAcrossPlotMiddle(
+  hover: ReturnType<typeof useHover>,
+  fromX: number,
+  toX: number
+): HoverState[] {
   const states: HoverState[] = []
   for (let x = fromX; x <= toX; x++) {
     hover.moveHoverTo(pointAt(x, PLOT_HEIGHT / 2))
@@ -319,7 +322,7 @@ describe('useHover — snapping to drawn points', () => {
       }
     )
 
-    const states = sweep(hover, 0, 97)
+    const states = hoverStatesAcrossPlotMiddle(hover, 0, 97)
 
     // Every sample is valued at its own timestamp, so a reported point is only a point of the
     // curve when its value and the time it is reported at agree.
@@ -338,7 +341,7 @@ describe('useHover — snapping to drawn points', () => {
       { consolidation: 'max', plotWidth: 97 }
     )
 
-    const states = sweep(hover, 0, 97)
+    const states = hoverStatesAcrossPlotMiddle(hover, 0, 97)
 
     const lineDots = drawnPointsOf(states, 'as-line')
     expect(lineDots.length).toBeGreaterThan(0)
@@ -356,7 +359,7 @@ describe('useHover — snapping to drawn points', () => {
     )
     const { yScale } = makeScales(97, valueDomain)
 
-    const states = sweep(hover, 0, 97)
+    const states = hoverStatesAcrossPlotMiddle(hover, 0, 97)
 
     const reported = states.filter((state) => state.samples[0]!.drawnPoint !== null)
     expect(reported.length).toBeGreaterThan(0)
@@ -412,7 +415,7 @@ describe('useHover — one time for every metric', () => {
     const { xScale, yScale } = makeScales(PLOT_WIDTH_DENSE)
     const timeAtPixel = (x: number): number => xScale.invert(x).getTime() / 1000
 
-    const states = sweep(hover, 0, PLOT_WIDTH_DENSE)
+    const states = hoverStatesAcrossPlotMiddle(hover, 0, PLOT_WIDTH_DENSE)
 
     const risingDots = drawnPointsOf(states, 'rising')
     expect(risingDots.length).toBeGreaterThan(0)
@@ -427,7 +430,7 @@ describe('useHover — one time for every metric', () => {
   test('the tooltip time applies to every value it lists', () => {
     const hover = mountMetricsWhoseColumnMaximaFallOnDifferentSamples()
 
-    const states = sweep(hover, 0, PLOT_WIDTH_DENSE)
+    const states = hoverStatesAcrossPlotMiddle(hover, 0, PLOT_WIDTH_DENSE)
 
     for (const state of states) {
       const listedTimes = state.samples.map((sample) => sample.snapTime)

@@ -13,7 +13,7 @@ import { orderMetricsTopToBottom } from '../metricOrder'
 import type { M4Bucket, M4Cache } from './decimation/types'
 import { type HoverSample, type HoverState, metricHitDistance } from './interaction/hover'
 import { consolidatedSampleTime, keptSamples, selectConsolidatedValue } from './render/bucket'
-import { type TimeValuePoint, valueAt } from './render/polyline'
+import { type TimeValuePoint, clampedValueAt } from './render/polyline'
 import type { StackedColumn, StackedSeries } from './render/stacked'
 import type { Metric, UnitFormat } from './types'
 import { valueRenderer } from './valueRenderer'
@@ -51,7 +51,7 @@ interface DrawnEdge {
 function edgeAt(column: StackedColumn, time: number): DrawnEdge {
   const lowerEdge = column.vertices.map((vertex) => ({ time: vertex.time, value: vertex.lower }))
   const upperEdge = column.vertices.map((vertex) => ({ time: vertex.time, value: vertex.upper }))
-  return { lower: valueAt(lowerEdge, time), upper: valueAt(upperEdge, time) }
+  return { lower: clampedValueAt(lowerEdge, time), upper: clampedValueAt(upperEdge, time) }
 }
 
 function drawnEdge(

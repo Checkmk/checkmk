@@ -8,10 +8,12 @@ export interface TimeValuePoint {
   value: number
 }
 
-/** Reads a polyline sorted by time at `time`; flat beyond either end. */
-export function valueAt(polyline: readonly TimeValuePoint[], time: number): number {
-  const first = polyline[0]
-  const last = polyline[polyline.length - 1]
+export function clampedValueAt(
+  polylineSortedByTime: readonly TimeValuePoint[],
+  time: number
+): number {
+  const first = polylineSortedByTime[0]
+  const last = polylineSortedByTime[polylineSortedByTime.length - 1]
   if (first === undefined || last === undefined) {
     return NaN
   }
@@ -21,9 +23,9 @@ export function valueAt(polyline: readonly TimeValuePoint[], time: number): numb
   if (time >= last.time) {
     return last.value
   }
-  const nextIndex = polyline.findIndex((point) => point.time > time)
-  const next = polyline[nextIndex]!
-  const previous = polyline[nextIndex - 1]!
+  const nextIndex = polylineSortedByTime.findIndex((point) => point.time > time)
+  const next = polylineSortedByTime[nextIndex]!
+  const previous = polylineSortedByTime[nextIndex - 1]!
   const fraction = (time - previous.time) / (next.time - previous.time)
   return previous.value + fraction * (next.value - previous.value)
 }

@@ -27,7 +27,6 @@ export interface HoverState {
   samples: HoverSample[]
 }
 
-/** Zero inside the drawn edge, else the distance to its nearer side; a line's edge has no height. */
 export function metricHitDistance(
   cursorY: number,
   drawnTopPixel: number,
@@ -35,11 +34,7 @@ export function metricHitDistance(
 ): number {
   const edgeTop = Math.min(drawnTopPixel, drawnBottomPixel)
   const edgeBottom = Math.max(drawnTopPixel, drawnBottomPixel)
-  if (cursorY < edgeTop) {
-    return edgeTop - cursorY
-  }
-  if (cursorY > edgeBottom) {
-    return cursorY - edgeBottom
-  }
-  return 0
+  const distanceAboveEdge = edgeTop - cursorY
+  const distanceBelowEdge = cursorY - edgeBottom
+  return Math.max(0, distanceAboveEdge, distanceBelowEdge)
 }

@@ -8,7 +8,7 @@ import type { ScaleLinear, ScaleTime } from 'd3-scale'
 import type { M4Bucket } from '../decimation/types'
 import type { Metric } from '../types'
 import { keptSamples } from './bucket'
-import { type TimeValuePoint, valueAt } from './polyline'
+import { type TimeValuePoint, clampedValueAt } from './polyline'
 
 export interface StackedVertex {
   time: number
@@ -65,10 +65,11 @@ function stackColumn(samples: TimeValuePoint[], edgeBelow: TimeValuePoint[]): St
   if (samples.length === 0) {
     return { gap: true, vertices: [] }
   }
-  const lowerAt = (time: number): number => (edgeBelow.length === 0 ? 0 : valueAt(edgeBelow, time))
+  const lowerAt = (time: number): number =>
+    edgeBelow.length === 0 ? 0 : clampedValueAt(edgeBelow, time)
   const vertices = vertexTimes(samples, edgeBelow).map((time) => {
     const lower = lowerAt(time)
-    return { time, lower, upper: lower + valueAt(samples, time) }
+    return { time, lower, upper: lower + clampedValueAt(samples, time) }
   })
   return { gap: false, vertices }
 }

@@ -9,7 +9,10 @@ import { describe, expect, test, vi } from 'vitest'
 import { m4 } from '@/graphing/components/TimeSeriesGraph/decimation/decimate'
 import type { M4Bucket } from '@/graphing/components/TimeSeriesGraph/decimation/types'
 import { keptSamples } from '@/graphing/components/TimeSeriesGraph/render/bucket'
-import { type TimeValuePoint, valueAt } from '@/graphing/components/TimeSeriesGraph/render/polyline'
+import {
+  type TimeValuePoint,
+  clampedValueAt
+} from '@/graphing/components/TimeSeriesGraph/render/polyline'
 import {
   type AreaSeries,
   type StackedColumn,
@@ -22,9 +25,7 @@ import type { Metric } from '@/graphing/components/TimeSeriesGraph/types'
 
 const STEP = 10
 
-// One bucket over all the values, the way the decimation builds it: the values are sampled at
-// 10, 20, 30, ... and the bucket keeps the first, the last and the extremes among them.
-function bucketOf(...values: (number | null)[]): M4Bucket {
+function decimatedIntoOneBucket(...values: (number | null)[]): M4Bucket {
   const [bucket] = m4(values, { start: 0, end: values.length * STEP, step: STEP }, 1)
   return bucket!
 }
@@ -48,7 +49,7 @@ const upperEdgeOf = (column: StackedColumn): TimeValuePoint[] =>
 
 describe('computeStackedSeries', () => {
   test('an unstacked metric is drawn as a line', () => {
-    const [series] = computeStackedSeries([makeMetric(null)], [[bucketOf(5)]])
+    const [series] = computeStackedSeries([makeMetric(null)], [[decimatedIntoOneBucket(5)]])
 
     expect(series!.kind).toBe('line')
   })
@@ -56,13 +57,13 @@ describe('computeStackedSeries', () => {
   test('a lone area rests on the zero baseline', () => {
     const value = 5
 
-    const [area] = computeStackedSeries([makeMetric('g1')], [[bucketOf(value)]])
+    const [area] = computeStackedSeries([makeMetric('g1')], [[decimatedIntoOneBucket(value)]])
 
     expect(firstColumn(area).vertices).toEqual([{ time: STEP, lower: 0, upper: value }])
   })
 
   test('an area passes through every sample the bucket kept, each at its own time', () => {
-    const bucket = bucketOf(1, 9, 1)
+    const bucket = decimatedIntoOneBucket(1, 9, 1)
 
     const [area] = computeStackedSeries([makeMetric('g1')], [[bucket]])
 
@@ -73,7 +74,10 @@ describe('computeStackedSeries', () => {
     const layerValue = 4
     const metrics = [makeMetric('g1'), makeMetric('g1')]
 
-    const [base, layer] = computeStackedSeries(metrics, [[bucketOf(2)], [bucketOf(layerValue)]])
+    const [base, layer] = computeStackedSeries(metrics, [
+      [decimatedIntoOneBucket(2)],
+      [decimatedIntoOneBucket(layerValue)]
+    ])
 
     const [baseVertex] = firstColumn(base).vertices
     const [layerVertex] = firstColumn(layer).vertices
@@ -84,7 +88,11 @@ describe('computeStackedSeries', () => {
   test('a metric in one group is unaffected by the running sum of another group', () => {
     const metrics = [makeMetric('g1'), makeMetric('g1'), makeMetric('g2')]
 
-    const series = computeStackedSeries(metrics, [[bucketOf(2)], [bucketOf(4)], [bucketOf(7)]])
+    const series = computeStackedSeries(metrics, [
+      [decimatedIntoOneBucket(2)],
+      [decimatedIntoOneBucket(4)],
+      [decimatedIntoOneBucket(7)]
+    ])
 
     expect(firstColumn(series[2]).vertices[0]!.lower).toBe(0)
   })
@@ -93,9 +101,9 @@ describe('computeStackedSeries', () => {
     const metrics = [makeMetric('g1'), makeMetric(null), makeMetric('g1')]
 
     const [base, , top] = computeStackedSeries(metrics, [
-      [bucketOf(2)],
-      [bucketOf(99)],
-      [bucketOf(3)]
+      [decimatedIntoOneBucket(2)],
+      [decimatedIntoOneBucket(99)],
+      [decimatedIntoOneBucket(3)]
     ])
 
     expect(firstColumn(top).vertices[0]!.lower).toBe(firstColumn(base).vertices[0]!.upper)
@@ -103,36 +111,39 @@ describe('computeStackedSeries', () => {
 
   test('a layer rests on the layer below at every sample even when they peak on different samples', () => {
     const metrics = [makeMetric('g1'), makeMetric('g1')]
-    const rising = bucketOf(3, 7)
-    const falling = bucketOf(7, 3)
+    const rising = decimatedIntoOneBucket(3, 7)
+    const falling = decimatedIntoOneBucket(7, 3)
 
     const [base, top] = computeStackedSeries(metrics, [[rising], [falling]])
 
     const topColumn = firstColumn(top)
     expect(topColumn.vertices.length).toBeGreaterThan(1)
     for (const vertex of topColumn.vertices) {
-      expect(vertex.lower).toBe(valueAt(upperEdgeOf(firstColumn(base)), vertex.time))
+      expect(vertex.lower).toBe(clampedValueAt(upperEdgeOf(firstColumn(base)), vertex.time))
     }
   })
 
   test('a layer bends wherever the layer below bends, so the stack stays closed', () => {
     const metrics = [makeMetric('g1'), makeMetric('g1')]
-    const peaking = bucketOf(1, 9, 1)
-    const flat = bucketOf(2, 2, 2)
+    const peaking = decimatedIntoOneBucket(1, 9, 1)
+    const flat = decimatedIntoOneBucket(2, 2, 2)
 
     const [base, top] = computeStackedSeries(metrics, [[peaking], [flat]])
 
     const bendsBelow = timesOf(firstColumn(base))
     expect(timesOf(firstColumn(top))).toEqual(expect.arrayContaining(bendsBelow))
     for (const vertex of firstColumn(top).vertices) {
-      expect(vertex.lower).toBe(valueAt(upperEdgeOf(firstColumn(base)), vertex.time))
+      expect(vertex.lower).toBe(clampedValueAt(upperEdgeOf(firstColumn(base)), vertex.time))
     }
   })
 
   test('a gap in the base does not raise the layer above it', () => {
     const metrics = [makeMetric('g1'), makeMetric('g1')]
 
-    const [, layer] = computeStackedSeries(metrics, [[bucketOf(null)], [bucketOf(4)]])
+    const [, layer] = computeStackedSeries(metrics, [
+      [decimatedIntoOneBucket(null)],
+      [decimatedIntoOneBucket(4)]
+    ])
 
     expect(firstColumn(layer).vertices[0]!.lower).toBe(0)
   })
@@ -141,9 +152,9 @@ describe('computeStackedSeries', () => {
     const metrics = [makeMetric('g1'), makeMetric('g1'), makeMetric('g1')]
 
     const [base, , top] = computeStackedSeries(metrics, [
-      [bucketOf(2)],
-      [bucketOf(null)],
-      [bucketOf(3)]
+      [decimatedIntoOneBucket(2)],
+      [decimatedIntoOneBucket(null)],
+      [decimatedIntoOneBucket(3)]
     ])
 
     expect(firstColumn(top).vertices[0]!.lower).toBe(firstColumn(base).vertices[0]!.upper)

@@ -970,7 +970,7 @@ class FilterInvHasSoftwarePackage(Filter):
         html.write_text_permissive(_("Max.&nbsp;Vers.: "))
         html.text_input(
             varname=self._varprefix + "version_to",
-            default_value=value.get(self._varprefix + "version_from", ""),
+            default_value=value.get(self._varprefix + "version_to", ""),
             size=9,
         )
         html.close_span()

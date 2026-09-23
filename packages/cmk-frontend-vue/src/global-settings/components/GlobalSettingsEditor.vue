@@ -165,47 +165,65 @@ const currentStateText = computed<TranslatedString>(() => {
       </CmkButton>
     </div>
 
-    <CmkAlertBox v-if="error !== null" variant="error" :heading="error.heading">
-      <span class="global-settings-editor__error">{{ error.message }}</span>
-    </CmkAlertBox>
+    <div class="global-settings-editor__alerts">
+      <CmkAlertBox
+        v-if="error !== null"
+        variant="error"
+        :heading="error.heading"
+        class="global-settings-editor__alert"
+      >
+        <span class="global-settings-editor__error">{{ error.message }}</span>
+      </CmkAlertBox>
 
-    <CmkAlertBox
-      v-if="confirmResetOpen"
-      variant="warning"
-      :heading="resetConfirmation.heading"
-      :main-button="{ title: resetConfirmation.confirm, onclick: confirmReset }"
-      :optional-button="{
-        title: _t('Cancel'),
-        icon: 'cancel',
-        onclick: () => (confirmResetOpen = false)
-      }"
-    >
-      {{ resetConfirmation.body }}
-    </CmkAlertBox>
+      <CmkAlertBox
+        v-if="confirmResetOpen"
+        variant="warning"
+        :heading="resetConfirmation.heading"
+        :main-button="{ title: resetConfirmation.confirm, onclick: confirmReset }"
+        :optional-button="{
+          title: _t('Cancel'),
+          icon: 'cancel',
+          onclick: () => (confirmResetOpen = false)
+        }"
+        class="global-settings-editor__alert"
+      >
+        {{ resetConfirmation.body }}
+      </CmkAlertBox>
 
-    <CmkAlertBox v-if="isExplicitDefault" variant="info" dismissible>
-      {{
-        _t(
-          'This setting uses an explicit value and overrides the factory and Global settings value.'
-        )
-      }}
-    </CmkAlertBox>
+      <CmkAlertBox
+        v-if="isExplicitDefault"
+        variant="info"
+        dismissible
+        class="global-settings-editor__alert"
+      >
+        {{
+          _t(
+            'This setting uses an explicit value and overrides the factory and Global settings value.'
+          )
+        }}
+      </CmkAlertBox>
 
-    <CmkAlertBox v-for="(hint, index) in variable.hints" :key="index" v-bind="hintAlertProps(hint)">
-      <span class="global-settings-editor__hint">
-        <CmkHtml :html="hint.text" />
-        <template v-if="hint.copyable !== null">
-          <code>{{ hint.copyable }}</code>
-          <CmkCopy :text="hint.copyable">
-            <CmkButton
-              size="iconOnly"
-              :icon="{ name: 'view-copy' }"
-              :aria-label="_t('Copy to clipboard')"
-            />
-          </CmkCopy>
-        </template>
-      </span>
-    </CmkAlertBox>
+      <CmkAlertBox
+        v-for="(hint, index) in variable.hints"
+        :key="index"
+        v-bind="hintAlertProps(hint)"
+        class="global-settings-editor__alert"
+      >
+        <span class="global-settings-editor__hint">
+          <CmkHtml :html="hint.text" />
+          <template v-if="hint.copyable !== null">
+            <code>{{ hint.copyable }}</code>
+            <CmkCopy :text="hint.copyable">
+              <CmkButton
+                size="iconOnly"
+                :icon="{ name: 'view-copy' }"
+                :aria-label="_t('Copy to clipboard')"
+              />
+            </CmkCopy>
+          </template>
+        </span>
+      </CmkAlertBox>
+    </div>
 
     <FormHelp :help="variable.spec.help" />
 
@@ -279,6 +297,22 @@ const currentStateText = computed<TranslatedString>(() => {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.global-settings-editor__alerts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-5);
+
+  /* Alerts that are not shown leave only comment nodes behind. */
+  &:empty {
+    display: none;
+  }
+
+  /* Nested to outweigh the alert box's own margin. */
+  .global-settings-editor__alert {
+    margin: 0;
+  }
 }
 
 .global-settings-editor__error {

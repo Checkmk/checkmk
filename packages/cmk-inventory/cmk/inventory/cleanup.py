@@ -377,7 +377,9 @@ def _compute_classified_history_files(
 ) -> _ClassifiedHistoryFiles:
     inventory_tree_ts = _compute_timestamp_from_tree_path(inventory_tree)
     archive_file_paths_by_ts = {
-        ts: fp for fp in archive_file_paths if (ts := _compute_timestamp_from_archive_file_name(fp))
+        ts: fp
+        for fp in archive_file_paths
+        if (ts := _compute_timestamp_from_archive_file_name(fp)) is not None
     }
 
     delta_cache_from_inventory_tree: Path | None = None

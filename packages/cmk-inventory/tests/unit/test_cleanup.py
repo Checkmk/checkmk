@@ -1507,3 +1507,26 @@ def test_abandoned_file_age_remaining_files_not_too_old(tmp_path: Path) -> None:
     assert unknown_files_no_history.inventory_tree.path.exists()
     assert unknown_files_no_history.inventory_tree_gz.path.exists()
     assert unknown_files_no_history.status_data_tree.path.exists()
+
+
+def test_file_age_removes_an_archive_file_dated_at_the_epoch(tmp_path: Path) -> None:
+    archive_tree = InventoryPaths(tmp_path).archive_tree(HostName("hostname"), 0)
+    archive_tree.path.parent.mkdir(parents=True, exist_ok=True)
+    archive_tree.path.touch()
+
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[
+                InvCleanupParamsOfHosts(
+                    regex_or_explicit=["hostname"],
+                    parameters=("file_age", 3),
+                )
+            ],
+            default=None,
+            abandoned_file_age=1,
+        ),
+        host_names=[HostName("hostname")],
+        now=101,
+        logger=null_logger(),
+    )
+    assert not archive_tree.path.exists()

@@ -284,13 +284,14 @@ const currentStateText = computed<TranslatedString>(() => {
 .global-settings-editor {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--dimension-6);
   padding-bottom: 20px;
 }
 
 .global-settings-editor__actions {
   display: flex;
   gap: 8px;
+  margin-bottom: var(--dimension-6);
 }
 
 .global-settings-editor__sections {

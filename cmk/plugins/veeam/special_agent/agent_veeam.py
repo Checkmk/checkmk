@@ -35,8 +35,6 @@ the section name; which API path(s) to call is baked into the strategy itself.""
 type Section = tuple[str, FetchStrategy]
 """The agent section name and how to fetch it."""
 
-SECTIONS: Sequence[Section] = ()
-
 
 class FatalError(Exception):
     """An error that makes the whole run pointless."""
@@ -279,6 +277,9 @@ def write_sections(client: VeeamClient, sections: Sequence[Section]) -> None:
             sys.stderr.write(f"Section {name}: {exc}\n")
             continue
         sys.stdout.write(output)
+
+
+SECTIONS: Sequence[Section] = (("veeam_backup_jobs", fetch_list("/api/v1/jobs/states")),)
 
 
 def main(argv: Sequence[str] | None = None) -> int:

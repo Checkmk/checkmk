@@ -19,7 +19,7 @@ const isCompleted = computed(() => props.index < props.currentStage)
 <template>
   <CmkWizardStep :index="index" :is-completed="() => isCompleted">
     <template #header>
-      <QuickSetupStageHeader :title="title" :sub_title="sub_title" :is-completed="isCompleted" />
+      <QuickSetupStageHeader :title="title" :sub-title="sub_title" :is-completed="isCompleted" />
     </template>
     <template #content>
       <QuickSetupStageContent

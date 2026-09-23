@@ -24,7 +24,7 @@ from cmk.maps.backend.api.v1.types import MapName
 from cmk.maps.backend.connections.base import ServiceMatchRow, ServiceRow
 from cmk.maps.backend.core.auth import Principal
 from cmk.maps.backend.core.config import settings
-from cmk.maps.backend.core.ratelimit import client_key, ws_connect_limiter
+from cmk.maps.backend.core.ratelimit import ws_connect_limiter
 from cmk.maps.backend.core.sse import manager, Subscriber
 from cmk.maps.backend.integrations.checkmk import resolve_folder_scope
 from cmk.maps.backend.schemas.map import FlowView, FolderTreeView, MapConfig, RadarView
@@ -532,21 +532,16 @@ async def sse_map_states(
     headers). The frontend obtains a short-lived stream ticket from the GUI and
     passes it here; the daemon validates it against the site-internal secret.
     """
-    client_ip = client_key(
-        request.headers.get("x-forwarded-for"),
-        request.client.host if request.client else "unknown",
-    )
-    if ws_connect_limiter.is_blocked(client_ip):
-        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Rate limited")
-
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     user = principal_from_token(token)
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-    # Count only authenticated connects: recording before validation would let an
-    # unauthenticated caller fill (and, with a spoofed key, poison) the buckets.
-    ws_connect_limiter.record(client_ip)
+    # Keyed by the ticket identity: behind the site's proxies every client
+    # arrives from the same address, so an IP key would share one budget site-wide.
+    if ws_connect_limiter.is_blocked(user.name):
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Rate limited")
+    ws_connect_limiter.record(user.name)
 
     # Owner = the map's REAL owner from the signed ticket (map_key_owner), never
     # a client value — so all viewers of a published map share one broadcast loop,

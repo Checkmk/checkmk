@@ -8,8 +8,7 @@
 """Unit tests for the in-memory sliding-window rate limiter.
 
 The limiter is the daemon's own DoS defense for the SSE handshake, so
-its window arithmetic, memory pruning and — most importantly — the
-``X-Forwarded-For`` client-identity derivation are pinned here rather than only
+its window arithmetic and memory pruning are pinned here rather than only
 being exercised indirectly through the route.
 """
 
@@ -19,7 +18,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from cmk.maps.backend.core.ratelimit import client_key, RateLimiter, ws_connect_limiter
+from cmk.maps.backend.core.ratelimit import RateLimiter, ws_connect_limiter
 
 
 class _Clock:
@@ -122,23 +121,3 @@ def test_ws_connect_limiter_is_thirty_per_minute(clock: _Clock) -> None:
     # The module-level limiter guarding the SSE handshake.
     assert ws_connect_limiter._max == 30  # noqa: SLF001
     assert ws_connect_limiter._window == 60  # noqa: SLF001
-
-
-@pytest.mark.parametrize(
-    ("forwarded_for", "fallback", "expected"),
-    [
-        pytest.param(None, "sock", "sock", id="no-header-uses-fallback"),
-        pytest.param("", "sock", "sock", id="empty-header-uses-fallback"),
-        pytest.param("1.2.3.4", "sock", "1.2.3.4", id="single-entry"),
-        # Apache appends the real peer, so the RIGHT-most entry is the only
-        # trustworthy one; a spoofed left-most entry must be ignored.
-        pytest.param("9.9.9.9, 1.2.3.4", "sock", "1.2.3.4", id="rightmost-of-two"),
-        pytest.param("evil, evil, 5.6.7.8", "sock", "5.6.7.8", id="rightmost-of-many"),
-        pytest.param("1.2.3.4 , 5.6.7.8 ", "sock", "5.6.7.8", id="whitespace-trimmed"),
-        pytest.param("1.2.3.4,", "sock", "sock", id="trailing-comma-falls-back"),
-    ],
-)
-def test_client_key_uses_rightmost_forwarded_for(
-    forwarded_for: str | None, fallback: str, expected: str
-) -> None:
-    assert client_key(forwarded_for, fallback) == expected

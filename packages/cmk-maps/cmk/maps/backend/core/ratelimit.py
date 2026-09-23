@@ -12,7 +12,7 @@ from threading import Lock
 
 
 class RateLimiter:
-    """Sliding-window rate limiter keyed by arbitrary string (e.g. client IP).
+    """Sliding-window rate limiter keyed by arbitrary string (e.g. user name).
 
     Thread-safe; suitable for single-process deployments.
     """
@@ -65,39 +65,14 @@ class RateLimiter:
             return max(0.0, q[0] + self._window - now)
 
 
-def client_key(forwarded_for: str | None, fallback: str) -> str:
-    """Derive the real client identity for rate-limiting behind the site proxy.
-
-    The daemon is reachable only through the site Apache (over a Unix socket, so
-    ``request.client.host`` is an empty/loopback peer and useless as a key).
-    Apache *appends* the connecting client to ``X-Forwarded-For``, so the only
-    trustworthy entry is the RIGHT-most one — everything to its left is
-    client-supplied and forgeable (a spoofed left-most entry would otherwise let
-    an attacker rotate buckets to bypass the limit, or pin a victim IP to a
-    permanent 429). Fall back to the socket peer when no header is present.
-
-    Known limitation: this assumes the site Apache is the only trusted proxy. If
-    an *additional* reverse proxy / load balancer sits in front of it, that hop's
-    address becomes the right-most entry and every user collapses onto one bucket
-    (a site-wide 429). Such a deployment must strip/normalise ``X-Forwarded-For``
-    at its edge; per-user limiting for authenticated endpoints keys on the ticket
-    identity instead (see ``rest_read_limiter``) and is unaffected.
-    """
-    if forwarded_for:
-        last = forwarded_for.rsplit(",", 1)[-1].strip()
-        if last:
-            return last
-    return fallback
-
-
-# 30 stream handshakes per minute per IP — covers typical reconnect storms
-# (tab restore, laptop wake) but blocks scripted connection floods.
+# 30 stream handshakes per minute per authenticated user — covers typical
+# reconnect storms (tab restore, laptop wake, hidden tabs resuming) but blocks
+# scripted connection floods.
 ws_connect_limiter = RateLimiter(max_calls=30, window_seconds=60)
 
 # Per-authenticated-user budget for the expensive Livestatus readers (topology,
 # metric-history, object-details, folder search/host-services, map states).
-# Keyed by the ticket identity (not IP), so it can't be defeated by rotating a
-# forged X-Forwarded-For and one user's flood can't lock out another. 240/min
+# Keyed by the ticket identity, so one user's flood can't lock out another. 240/min
 # (4/s sustained) is far above any real UI's paint+hover+search cadence and only
 # trips on a scripted load loop driving repeated full-topology / bulk fetches.
 rest_read_limiter = RateLimiter(max_calls=240, window_seconds=60)

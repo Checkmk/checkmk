@@ -21,6 +21,7 @@ import asyncio
 import hashlib
 import hmac
 import json
+import time
 from collections.abc import Iterator
 from unittest.mock import MagicMock
 
@@ -37,10 +38,18 @@ from cmk.maps.backend.schemas.map import MapConfig
 from cmk.maps.backend.schemas.state import MapStates, ObjectState, ObjectTiming
 from cmk.maps.backend.services import map_service, settings_service, state_service
 from cmk.maps.backend.services.settings_service import get_daemon_runtime
+from cmk.maps.shared.ticket import (
+    encode_ticket,
+    MapClaim,
+    STREAM_TICKET_AUDIENCE,
+    StreamCapabilities,
+)
 
 pytestmark = pytest.mark.usefixtures("_shared_secret", "_clear_stream_state")
 
 _KEY = b"0123456789abcdef0123456789abcdef"
+_STREAM_CAPS = StreamCapabilities(see_all=False, folder_see_all=False, contact_groups=[])
+_MAP_CLAIM = MapClaim(owner="alice", name="b1")
 
 
 class _FakeSecret:
@@ -274,11 +283,25 @@ def test_sse_endpoint_rejects_invalid_token(client: TestClient) -> None:
     assert resp.status_code == 401
 
 
-def test_sse_endpoint_rejects_when_rate_limited(
-    client: TestClient, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    # A blocked client is turned away with 429 before the token is even inspected,
-    # so an unauthenticated flood can't reach the auth path.
-    monkeypatch.setattr(ws_connect_limiter, "is_blocked", lambda _key: True)
-    resp = client.get("/api/v1/sse/maps/b1?token=whatever")
-    assert resp.status_code == 429
+def _stream_token(user: str) -> str:
+    return encode_ticket(
+        {"sub": user, "exp": int(time.time()) + 300, "caps": _STREAM_CAPS, "map": _MAP_CLAIM},
+        _FakeSecret().hmac,
+        audience=STREAM_TICKET_AUDIENCE,
+    )
+
+
+def test_sse_connect_limit_is_per_user(client: TestClient) -> None:
+    # Every client reaches the daemon from the same proxy address, so the budget
+    # has to follow the user: one user's reconnect storm must not lock out others.
+    alice, bob = _stream_token("alice"), _stream_token("bob")
+    for _ in range(ws_connect_limiter._max):  # noqa: SLF001
+        assert client.get(f"/api/v1/sse/maps/b1?token={alice}").status_code == 404
+    assert client.get(f"/api/v1/sse/maps/b1?token={alice}").status_code == 429
+    assert client.get(f"/api/v1/sse/maps/b1?token={bob}").status_code == 404
+
+
+def test_sse_invalid_tokens_do_not_count_toward_the_limit(client: TestClient) -> None:
+    for _ in range(ws_connect_limiter._max):  # noqa: SLF001
+        assert client.get("/api/v1/sse/maps/b1?token=forged").status_code == 401
+    assert client.get(f"/api/v1/sse/maps/b1?token={_stream_token('alice')}").status_code == 404

@@ -351,7 +351,7 @@ function selectOverflow(id: string | null): void {
       </label>
     </div>
 
-    <CmkCatalogPanel :title="_t('Duration')" :collapsible="false">
+    <CmkCatalogPanel :title="_t('Duration')" :open="true">
       <div class="monitoring-schedule-downtime-form__section-body">
         <span class="monitoring-schedule-downtime-form__label">
           {{ _t('Duration') }}<CmkLabelRequired :show="true" space="before" />

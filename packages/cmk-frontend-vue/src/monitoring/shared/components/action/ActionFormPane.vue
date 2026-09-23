@@ -74,9 +74,7 @@ function cancel(): void {
         <CmkButton variant="primary" size="medium" :disabled="!isValid" @click="submit">
           {{ submitLabel ?? _t('Apply') }}
         </CmkButton>
-        <CmkButton size="medium" :icon="{ name: 'cancel' }" @click="cancel">
-          {{ _t('Cancel') }}
-        </CmkButton>
+        <CmkButton size="medium" @click="cancel">{{ _t('Cancel') }}</CmkButton>
       </div>
 
       <div class="monitoring-action-form-pane__body">
@@ -102,7 +100,7 @@ function cancel(): void {
   height: 100%;
   min-height: 0;
   box-sizing: border-box;
-  padding: var(--dimension-10);
+  padding: var(--spacing);
   gap: var(--spacing);
 }
 

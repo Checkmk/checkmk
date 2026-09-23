@@ -116,6 +116,9 @@ For a **patch bump** (same `major.minor`, e.g. 3.13.14 → 3.13.15):
 
 - paste the printed `_MSI_SHA256` map over the one in
   `bazel/extensions/python_cab_repositories.bzl`,
+- regenerate `MODULE.bazel.lock` with `bazel mod deps --lockfile_mode=update`;
+  the extension's URLs and hashes are recorded there, so until it is refreshed
+  every build fails with "MODULE.bazel.lock is no longer up-to-date",
 - upload the five MSIs to the upstream mirror as
   `python-<version>-amd64-<feature>.msi` — the fallback URL is built from
   `PYTHON_VERSION_WINDOWS`, but nothing populates the mirror automatically, so

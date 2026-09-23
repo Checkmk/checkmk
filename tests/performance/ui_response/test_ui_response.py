@@ -92,6 +92,11 @@ def _monitored_host(perftest: PerformanceTest) -> Iterator[str]:
             "host_parameters",
             "wato.py?folder={folder}&host={host}&mode=object_parameters",
         ),
+        # The settings page, which unlike the two below needs no selector: its content is
+        # inlined into the document rather than fetched after it, and the module bundle that
+        # renders it runs before `domcontentloaded` - synchronously, with no async component
+        # and no lazy chunk - so the app is up by the time that event fires.
+        CmkPageUrl("global_settings", "global_settings.py"),
         # The two experimental monitoring pages. Both are Vue apps whose table arrives in a
         # request made after the document completes, so both name the row selector that says
         # the table is actually up — without it they would be timed to their own shell.

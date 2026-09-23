@@ -44,6 +44,10 @@ def _time_range_of(options: Mapping[str, object]) -> TimeRange:
     return ensure_type(options["time_range"], TimeRange)
 
 
+def edge_neighbours_at_served_step_of(options: Mapping[str, object]) -> bool:
+    return ensure_type(options.get("edge_neighbours_at_served_step", False), bool)
+
+
 @dataclass(frozen=True, kw_only=True)
 class CommonGraphOptions:
     consolidation_function: ConsolidationFunction

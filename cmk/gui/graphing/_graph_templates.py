@@ -36,6 +36,7 @@ from ._graph_choices import GraphPluginChoice
 from ._graph_codec import GraphCodec
 from ._graph_dispatch import (
     CommonGraphOptions,
+    edge_neighbours_at_served_step_of,
     EvaluatedGraphs,
     FetchDataWithDiagnosticsProtocol,
     GraphDispatcher,
@@ -199,6 +200,7 @@ class _EvaluateTemplateGraphs:
             RRDFetchData(
                 debug=active_config.debug,
                 registered_translations=registered_translations(),
+                edge_neighbours_at_served_step=edge_neighbours_at_served_step_of(options),
             ),
         )
 

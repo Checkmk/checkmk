@@ -40,7 +40,7 @@ from .models import (
 )
 
 
-def _fetch_options(
+def graph_fetch_options(
     time_range: EngineTimeRange,
     consolidation_function: ApiConsolidation,
     combination_mode: ApiCombinationMode | None,
@@ -48,6 +48,7 @@ def _fetch_options(
     options: dict[str, object] = {
         "consolidation_function": api_consolidation_to_engine(consolidation_function),
         "time_range": time_range,
+        "edge_neighbours_at_served_step": True,
         "destination": None,
     }
     if combination_mode is not None:
@@ -102,7 +103,7 @@ def evaluate_graph_to_response(
 ) -> GraphFetchResponse:
     """Evaluate the serialized definition of exactly one graph into its fetched data."""
     time_range = api_time_range_to_engine(requested_time_range)
-    options = _fetch_options(time_range, consolidation_function, combination_mode)
+    options = graph_fetch_options(time_range, consolidation_function, combination_mode)
     return _single_graph_response(
         _evaluated_or_problem(lambda: evaluate_graphs(internal, options)),
         fallback_time_range=time_range,
@@ -124,7 +125,7 @@ def evaluate_built_graph_to_response(
     it resolves the data exactly as the serialized entry point does, without a wire form in between.
     """
     time_range = api_time_range_to_engine(requested_time_range)
-    options = _fetch_options(time_range, consolidation_function, combination_mode)
+    options = graph_fetch_options(time_range, consolidation_function, combination_mode)
     return _single_graph_response(
         _evaluated_or_problem(lambda: evaluate_built_graphs([graph], options)),
         fallback_time_range=time_range,

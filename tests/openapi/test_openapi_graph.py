@@ -28,6 +28,11 @@ from cmk.gui.graphing._graph_dispatch import serialize_graphs
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
+_COARSEST_ARCHIVE_STEP = 6 * 60 * 60
+_RRD_RANGE_WITH_EDGE_NEIGHBOURS = (
+    f"{0 - 2 * _COARSEST_ARCHIVE_STEP}:{60 + _COARSEST_ARCHIVE_STEP}:10"
+)
+
 
 def _comprehensive_graph() -> Graph:
     # A graph exercising every serializable node type (FixedRange, Stack, Line, Rule, Sum, Constant,
@@ -112,7 +117,7 @@ def test_fetch_graph_data_comprehensive_graph(
         "GET services\nColumns: host_name description perf_data check_command\nFilter: host_name = h\nFilter: description = s\nAnd: 2"
     )
     mock_livestatus.expect_query(
-        "GET services\nColumns: host_name description rrddata:m:m.average:0:60:10\nFilter: host_name = h\nFilter: description = s\nAnd: 2"
+        f"GET services\nColumns: host_name description rrddata:m:m.average:{_RRD_RANGE_WITH_EDGE_NEIGHBOURS}\nFilter: host_name = h\nFilter: description = s\nAnd: 2"
     )
     with mock_livestatus():
         resp = clients.Graph.fetch_data(

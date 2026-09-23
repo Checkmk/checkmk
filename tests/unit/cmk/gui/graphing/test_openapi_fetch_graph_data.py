@@ -43,6 +43,7 @@ from cmk.graphing_engine import (
 )
 from cmk.gui.graphing import (
     CommonGraphOptions,
+    edge_neighbours_at_served_step_of,
     EvaluatedGraphs,
     FetchDiagnostics,
     QueryLimitReached,
@@ -279,6 +280,25 @@ def test_fetch_graph_data_passes_combination_mode_into_options(
         ),
     )
     assert captured["options"]["combination_mode"] == "stacked"
+
+
+@pytest.mark.usefixtures("load_config")
+def test_fetch_graph_data_asks_each_rrd_for_the_neighbours_of_the_archive_serving_it(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, Mapping[str, object]] = {}
+    _capture_request(monkeypatch, captured)
+
+    fetch_graph_data_v1(
+        _api_context(),
+        GraphFetchRequest(
+            internal=serialize_graphs([Graph(name="g", title="t", kind="template")]),
+            requested_time_range=ApiTimeRange(start=100, end=160, step=10),
+            consolidation_function="avg",
+        ),
+    )
+
+    assert edge_neighbours_at_served_step_of(captured["options"])
 
 
 @pytest.mark.usefixtures("load_config")

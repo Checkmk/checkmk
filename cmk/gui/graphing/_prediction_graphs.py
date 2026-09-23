@@ -32,6 +32,7 @@ from cmk.gui.i18n import _, translate_to_current_language
 from ._graph_codec import GraphCodec
 from ._graph_dispatch import (
     CommonGraphOptions,
+    edge_neighbours_at_served_step_of,
     EvaluatedGraphs,
     FetchDataWithDiagnosticsProtocol,
     GraphDispatcher,
@@ -204,6 +205,7 @@ class _EvaluatePrediction:
             PredictionFetchData(
                 debug=active_config.debug,
                 registered_translations=registered_translations(),
+                edge_neighbours_at_served_step=edge_neighbours_at_served_step_of(options),
             ),
         )
 

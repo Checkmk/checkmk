@@ -183,7 +183,12 @@ function onRightPaneCollapse(collapsed: boolean): void {
               :aria-label="_t('Modify display options')"
               @click="toggleDisplayOptions"
             >
-              <CmkMultitoneIcon name="setup" primary-color="font" size="small" />
+              <CmkMultitoneIcon
+                name="display-options"
+                primary-color="font"
+                :secondary-color="{ custom: 'var(--font-color-dimmed)' }"
+                size="small"
+              />
             </CmkButton>
           </div>
         </div>
@@ -272,15 +277,30 @@ function onRightPaneCollapse(collapsed: boolean): void {
 }
 
 .monitoring-split-pane__table-toolbar-end {
+  --table-toolbar-separator-gap: var(--dimension-4);
+
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  gap: var(--spacing);
+  gap: calc(var(--table-toolbar-separator-gap) * 2);
   margin-left: auto;
 }
 
-.monitoring-split-pane__table-toolbar-end > :not(:first-child) {
+.monitoring-split-pane__table-toolbar-end > :last-child {
+  margin-left: calc(var(--dimension-3) - var(--table-toolbar-separator-gap) * 2);
+}
+
+.monitoring-split-pane__table-toolbar-end > :not(:first-child, :last-child) {
+  position: relative;
+}
+
+.monitoring-split-pane__table-toolbar-end > :not(:first-child, :last-child)::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: calc(var(--table-toolbar-separator-gap) * -1);
+  height: var(--dimension-7);
+  transform: translateY(-50%);
   border-left: 1px solid var(--font-color-dimmed);
-  padding-left: var(--spacing);
 }
 </style>

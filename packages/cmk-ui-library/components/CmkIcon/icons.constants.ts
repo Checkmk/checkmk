@@ -795,7 +795,7 @@ export const oneColorIcons = [
   'dash',
   'dashlet-resize'
 ] as const
-export const twoColorIcons = ['aggr', 'experiment', 'columns'] as const
+export const twoColorIcons = ['aggr', 'experiment', 'columns', 'display-options'] as const
 
 export const iconSizes: Record<IconSizes, number> = {
   xxsmall: 8,

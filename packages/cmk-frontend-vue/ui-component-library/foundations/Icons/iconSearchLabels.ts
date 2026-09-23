@@ -221,6 +221,7 @@ export const iconSearchLabels: Record<string, string[]> = {
   'disable-test': ['turn off trial', 'deactivate'],
   disabled: ['off', 'inactive', 'greyed', 'turned off'],
   'disabled-service': ['off check', 'inactive monitored'],
+  'display-options': ['view options', 'gear', 'cog', 'column settings'],
   'dissolve-operation': ['undo merge', 'break apart', 'ungroup'],
   docker: ['container', 'containerization'],
   down: ['arrow down', 'offline', 'red', 'host down'],

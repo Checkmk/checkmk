@@ -93,7 +93,7 @@ class FilterInvFloatChoice:
 _MaybeBounds = tuple[int | float | None, int | float | None]
 
 
-def _request_vars(ident: str) -> list[str]:
+def _request_vars(ident: str) -> Sequence[str]:
     return [f"{ident}_from", f"{ident}_until"]
 
 
@@ -390,7 +390,7 @@ class _FilterTextRange(Filter):
         self._until_label = until_label
         self.query_filter = query_filters.Query(
             ident=ident,
-            request_vars=_request_vars(ident),
+            request_vars=list(_request_vars(ident)),
             rows_filter=rows_filter,
         )
         super().__init__(
@@ -727,7 +727,7 @@ class FilterInvtableVersion(_FilterTextRange):
             title=title,
             from_label=_("Min.&nbsp;Version:"),
             until_label=_("Max.&nbsp;Version:"),
-            rows_filter=partial(query_filters.version_in_range, ident, _request_vars(ident)),
+            rows_filter=partial(query_filters.version_in_range, ident, list(_request_vars(ident))),
         )
 
 

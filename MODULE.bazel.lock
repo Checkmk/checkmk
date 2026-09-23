@@ -835,7 +835,7 @@
     },
     "@@aspect_rules_py~//py:extensions.bzl%py_tools": {
       "general": {
-        "bzlTransitiveDigest": "xsX4fO2nVTjALlAQjBDh5daLm8uXQOe7jdQYMrA1oWE=",
+        "bzlTransitiveDigest": "WIWs34p7png0O21rqH8ysGUepqZsNxQtLKFwybQDIMg=",
         "usagesDigest": "W2xVSpnr5ZXRpb3oQpD/AywWR0M90c4vSEqsgynhGXU=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},

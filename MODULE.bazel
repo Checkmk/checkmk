@@ -7,11 +7,12 @@ bazel_dep(name = "googletest", version = "1.17.0")
 # Hedron's Compile Commands Extractor for Bazel
 # https://github.com/hedronvision/bazel-compile-commands-extractor
 bazel_dep(name = "hedron_compile_commands", dev_dependency = True)
-git_override(
+archive_override(
     module_name = "hedron_compile_commands",
     # No tags, no releases.  Let's go with today's head.
-    commit = "1e08f8e0507b6b6b1f4416a9a22cf5c28beaba93",
-    remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
+    integrity = "sha256-BEsUixEeF87mHYw6ru1CBp9zJUYDgjQK/KSRn4JlCUw=",
+    strip_prefix = "bazel-compile-commands-extractor-1e08f8e0507b6b6b1f4416a9a22cf5c28beaba93",
+    urls = ["https://github.com/hedronvision/bazel-compile-commands-extractor/archive/1e08f8e0507b6b6b1f4416a9a22cf5c28beaba93.tar.gz"],
 )
 
 bazel_dep(name = "rules_cc", version = "0.1.1")
@@ -59,19 +60,23 @@ python.toolchain(
 bazel_dep(name = "rules_mypy", version = "0.17.0")
 
 # Remove the override when upgrading to 0.18.
-git_override(
+# archive_override instead of git_override so the fetch goes through Bazel's
+# downloader and thus bazel_downloader.cfg (internal mirror), not straight to github.
+archive_override(
     module_name = "rules_mypy",
-    commit = "c477d2a124ce4a0ee60a9e5df6be0dd92acba6d8",
-    remote = "https://github.com/theoremlp/rules_mypy",
+    integrity = "sha256-qYRRokb5NH2aE2IQY8jp2LTf/GZBoGuNqAALC9Ge2K0=",
+    strip_prefix = "rules_mypy-c477d2a124ce4a0ee60a9e5df6be0dd92acba6d8",
+    urls = ["https://github.com/bazel-contrib/rules_mypy/archive/c477d2a124ce4a0ee60a9e5df6be0dd92acba6d8.tar.gz"],
 )
 
 bazel_dep(name = "aspect_rules_py", version = "0.7.4")
 
 # TODO (TBC): Switch back to upstream as soon as https://github.com/aspect-build/rules_py/pull/428 is merged
-git_override(
+archive_override(
     module_name = "aspect_rules_py",
-    commit = "6a3242d016798c6892a848939e36cc7bff99d6c8",
-    remote = "https://github.com/TimotheusBachinger/rules_py",
+    integrity = "sha256-nuyonYxBPa5PkJAuoEyMI3y3YxKUaTNfG/E/IeDu1JI=",
+    strip_prefix = "rules_py-6a3242d016798c6892a848939e36cc7bff99d6c8",
+    urls = ["https://github.com/TimotheusBachinger/rules_py/archive/6a3242d016798c6892a848939e36cc7bff99d6c8.tar.gz"],
 )
 
 bazel_dep(name = "aspect_rules_lint", version = "1.0.2")

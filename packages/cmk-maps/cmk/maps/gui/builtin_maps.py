@@ -48,10 +48,6 @@ def _builtin_map(name: MapName, alias: str, view: MapView, sort_order: int) -> M
         "icon_size": None,
         "view": view,
         "objects": [],
-        # Shipped reference maps: viewable by all, edited by cloning (like
-        # built-in views/dashboards), never mutated in place.
-        "readonly": True,
-        "show_in_lists": True,
         "sort_order": sort_order,
         "version": 1,
         "render_mode": "default",
@@ -60,7 +56,9 @@ def _builtin_map(name: MapName, alias: str, view: MapView, sort_order: int) -> M
         "rotation_interval": 0,
     }
     # Built-in pagetypes are published to everyone (owner stays UserId.builtin()).
-    return map_config_from_spec(UserId.builtin(), name, map_spec, public=True)
+    # They are starting points, not something every user wants in the Monitor
+    # menu; a clone can opt in.
+    return map_config_from_spec(UserId.builtin(), name, map_spec, public=True, hidden=True)
 
 
 def _text_element(

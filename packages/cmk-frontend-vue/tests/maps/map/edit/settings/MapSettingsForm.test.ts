@@ -268,8 +268,8 @@ describe('MapSettingsForm – save', () => {
     expect(saveMapMetadata).toHaveBeenCalledWith(
       'net-overview',
       expect.objectContaining({ alias: 'Edited alias' }),
-      // Private map → visibility argument is `false`.
-      false
+      // The envelope: a private map, linked from the Monitor menu.
+      { public: false, hide_in_monitor_menu: false }
     )
     expect(emitted().updated).toHaveLength(1)
   })
@@ -292,7 +292,7 @@ describe('MapSettingsForm – save', () => {
     expect(saveMapMetadata).toHaveBeenCalledWith(
       'net-overview',
       expect.objectContaining({ render_mode: 'nagvis_classic' }),
-      false
+      { public: false, hide_in_monitor_menu: false }
     )
   })
 
@@ -344,5 +344,23 @@ describe('MapSettingsForm – tabs', () => {
 
     expect(await screen.findByText(/Control who can see this map/)).toBeInTheDocument()
     expect(screen.getByText('Visibility')).toBeInTheDocument()
+  })
+
+  it('saves the Monitor menu choice made on the Access tab', async () => {
+    const user = userEvent.setup()
+    await renderReady(makeMap({ hide_in_monitor_menu: true }))
+
+    await user.click(screen.getByRole('tab', { name: 'Access' }))
+    const hide = await screen.findByRole('checkbox', { name: 'Hide this map in the Monitor menu' })
+    expect(hide).toBeChecked()
+    await user.click(hide)
+    await waitFor(() => expect(footerButton('Save')).toBeEnabled())
+    await user.click(footerButton('Save'))
+
+    await waitFor(() => expect(saveMapMetadata).toHaveBeenCalledTimes(1))
+    expect(saveMapMetadata).toHaveBeenCalledWith('net-overview', expect.anything(), {
+      public: false,
+      hide_in_monitor_menu: false
+    })
   })
 })

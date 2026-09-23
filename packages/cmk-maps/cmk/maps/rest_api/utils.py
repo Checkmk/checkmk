@@ -279,12 +279,12 @@ def spec_from_map(map_cfg: MapConfig) -> dict[str, object]:
     return nested
 
 
-def visibility_from_public(public: VisualPublic | None) -> MapVisibility:
+def visibility_from_public(public: VisualPublic | None, hidden: bool) -> MapVisibility:
     if public is True:
-        return MapVisibility(publish="all")
+        return MapVisibility(publish="all", hide_in_monitor_menu=hidden)
     if isinstance(public, tuple) and public[0] in ("contact_groups", "sites"):
-        return MapVisibility(publish=public[0], groups=list(public[1]))
-    return MapVisibility(publish="private")
+        return MapVisibility(publish=public[0], groups=list(public[1]), hide_in_monitor_menu=hidden)
+    return MapVisibility(publish="private", hide_in_monitor_menu=hidden)
 
 
 def validate_visibility(visibility: MapVisibility) -> None:
@@ -412,7 +412,7 @@ def serialize_map(page: MapPage, *, can_edit: bool, can_delete: bool) -> MapObje
         title=cfg.title or cfg.name,
         extensions=MapExtensions(
             owner=str(cfg.owner),
-            visibility=visibility_from_public(cfg.public),
+            visibility=visibility_from_public(cfg.public, cfg.hidden),
             is_builtin=page.is_builtin(),
             can_edit=can_edit,
             can_delete=can_delete,
@@ -444,9 +444,7 @@ def serialize_map_list_entry(page: MapPage, *, can_edit: bool, can_delete: bool)
         rotation_interval=_int(payload.get("rotation_interval"), 0),
         sort_order=_int(payload.get("sort_order"), 0),
         version=_int(payload.get("version"), 0),
-        show_in_lists=bool(payload.get("show_in_lists", True)),
         render_mode=_render_mode(payload.get("render_mode")),
-        readonly=bool(payload.get("readonly", False)),
         hover_template=_opt_str(payload.get("hover_template")),
         context_template=_opt_str(payload.get("context_template")),
         default_z=_int(payload.get("default_z"), 1),
@@ -457,7 +455,7 @@ def serialize_map_list_entry(page: MapPage, *, can_edit: bool, can_delete: bool)
         title=cfg.title or cfg.name,
         extensions=MapListExtensions(
             owner=str(cfg.owner),
-            visibility=visibility_from_public(cfg.public),
+            visibility=visibility_from_public(cfg.public, cfg.hidden),
             is_builtin=page.is_builtin(),
             can_edit=can_edit,
             can_delete=can_delete,

@@ -23,13 +23,12 @@ const { _t } = usei18n()
 
 defineProps<{
   connected: boolean
-  readonly?: boolean
+  /** Whether this operator may edit the map: open its settings, or else see it marked read-only. */
+  canEdit?: boolean
   editing?: boolean
   /** Seconds until the next map in a rotation, or 0 when none is running. */
   rotationSeconds?: number
   rotationPaused?: boolean
-  /** Whether this operator may open the map's settings. */
-  canConfigure?: boolean
   /** Something is being investigated, so the chrome steps back. */
   dimmed?: boolean
 }>()
@@ -54,7 +53,7 @@ defineEmits<{
       <slot name="status" />
 
       <MapLiveIndicator :connected="connected" />
-      <MapModeBadges :readonly="readonly" :editing="editing" />
+      <MapModeBadges :readonly="!canEdit" :editing="editing" />
       <MapRotationPill
         v-if="(rotationSeconds ?? 0) > 0"
         :seconds="rotationSeconds ?? 0"
@@ -74,7 +73,7 @@ defineEmits<{
       />
 
       <CmkIconButton
-        v-if="canConfigure"
+        v-if="canEdit"
         class="maps-map-view-topbar__button"
         name="configuration"
         size="small"

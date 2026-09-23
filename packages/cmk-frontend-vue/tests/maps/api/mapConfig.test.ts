@@ -51,7 +51,11 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
               title: 'Map One',
               extensions: {
                 owner: 'alice',
-                visibility: { publish: 'contact_groups', groups: ['ops'] },
+                visibility: {
+                  publish: 'contact_groups',
+                  groups: ['ops'],
+                  hide_in_monitor_menu: true
+                },
                 is_builtin: false,
                 can_edit: true,
                 can_delete: false,
@@ -85,10 +89,10 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
       can_edit: true,
       can_delete: false,
       public: ['contact_groups', ['ops']],
+      hide_in_monitor_menu: true,
       // Sparse summary fields fall back to their MapRead defaults.
       icon_size: null,
-      rotation_interval: 0,
-      show_in_lists: true
+      rotation_interval: 0
     })
   })
 
@@ -101,7 +105,7 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
           title: 'Map One',
           extensions: {
             owner: 'alice',
-            visibility: { publish: 'private' },
+            visibility: { publish: 'private', hide_in_monitor_menu: false },
             is_builtin: false,
             can_edit: true,
             can_delete: true,
@@ -136,12 +140,12 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
       })
     )
 
-    await api.create(staticMap, true)
+    await api.create(staticMap, { public: true, hide_in_monitor_menu: true })
 
     expect(seen[0]!.method).toBe('POST')
     expect(JSON.parse(seen[0]!.body)).toEqual({
       config: staticMap,
-      visibility: { publish: 'all' }
+      visibility: { publish: 'all', hide_in_monitor_menu: true }
     })
   })
 
@@ -159,7 +163,9 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
       )
     )
 
-    await expect(api.create(staticMap, true)).rejects.toMatchObject({
+    await expect(
+      api.create(staticMap, { public: true, hide_in_monitor_menu: false })
+    ).rejects.toMatchObject({
       name: 'CmkApiError',
       statusCode: 409
     })

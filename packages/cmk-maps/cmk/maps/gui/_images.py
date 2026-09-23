@@ -292,8 +292,6 @@ def _editable_map_owner(name: str) -> str:
         raise MKUserError("name", _("Unknown map: %(name)s") % {"name": name})
     if not page.may_edit():
         raise MKUserError("name", _("You are not allowed to edit this map."))
-    if page.config.map_spec.get("readonly"):
-        raise MKUserError("name", _("This map is read-only."))
     return str(page.config.owner)
 
 

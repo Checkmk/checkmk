@@ -251,7 +251,6 @@ class MapObject(TypedDict):
 class MapPayload(TypedDict):
     name: str
     alias: str
-    readonly: bool
     connection_id: str
     icon_size: int | None
     rotation_interval: int
@@ -265,5 +264,4 @@ class MapPayload(TypedDict):
     context_template: NotRequired[str | None]
     background_image: NotRequired[str | None]
     background_color: NotRequired[str]
-    show_in_lists: NotRequired[bool]
     version: NotRequired[int]

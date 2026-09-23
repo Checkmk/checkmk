@@ -18,7 +18,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.sidebar import monitor_menu_topic_registry, MonitorMenuTopicContributor
 from cmk.gui.utils.roles import UserPermissions
-from cmk.maps.gui.store import get_listable_maps
+from cmk.maps.gui.store import get_menu_maps
 from cmk.shared_typing.main_menu import DefaultIcon, NavItemTopic, NavItemTopicEntry
 from cmk.web.utils.icons import IconNames
 from cmk.web.utils.urls import makeuri_contextless
@@ -37,10 +37,7 @@ def _iter_maps(user_permissions: UserPermissions) -> list[tuple[str, str]]:
     daemon's legacy on-disk files.
     """
     return sorted(
-        (
-            (page.name(), page.title() or page.name())
-            for page in get_listable_maps(user_permissions)
-        ),
+        ((page.name(), page.title() or page.name()) for page in get_menu_maps(user_permissions)),
         key=lambda the_map: the_map[1].lower(),
     )
 

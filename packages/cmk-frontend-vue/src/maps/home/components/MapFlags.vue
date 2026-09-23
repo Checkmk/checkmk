@@ -4,9 +4,9 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <!--
-The map-management flags an administrator sees on a listed map: hidden from
-regular users, demo (read-only), and rotation. Shown by both the card grid and
-the table, so they are described once.
+The map-management flags shown on a listed map: kept out of the Monitor menu,
+and rotation. Shown by both the card grid and the table, so they are described
+once.
 
 A card has room for a chip and reads as a tile; a table row does not, and a
 chip there would put colour on a fact that carries no state. Hence the two
@@ -22,7 +22,7 @@ import { computed } from 'vue'
 import type { MapRead } from '@/maps/types/api'
 
 interface Flag {
-  id: 'hidden' | 'readonly' | 'rotation'
+  id: 'not-in-menu' | 'rotation'
   label: TranslatedString
   title: string
   color: ChipColor
@@ -36,19 +36,11 @@ const { _t } = usei18n()
 
 const flags = computed<Flag[]>(() => {
   const present: Flag[] = []
-  if (props.map.show_in_lists === false) {
+  if (props.map.hide_in_monitor_menu) {
     present.push({
-      id: 'hidden',
-      label: _t('Hidden'),
-      title: _t('Hidden from regular users'),
-      color: 'others'
-    })
-  }
-  if (props.map.readonly) {
-    present.push({
-      id: 'readonly',
-      label: _t('Read-only'),
-      title: _t('Demo map — cannot be edited'),
+      id: 'not-in-menu',
+      label: _t('Not in menu'),
+      title: _t('Not shown in the Monitor menu'),
       color: 'others'
     })
   }

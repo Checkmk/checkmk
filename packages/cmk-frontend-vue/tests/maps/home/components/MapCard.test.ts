@@ -77,9 +77,9 @@ describe('MapCard', () => {
   })
 
   it('shows an administrator the connection and the management flags', async () => {
-    await renderCard(listed({ show_in_lists: false, rotation_interval: 30 }))
+    await renderCard(listed({ hide_in_monitor_menu: true, rotation_interval: 30 }))
     expect(screen.getByText('live_1')).toBeInTheDocument()
-    expect(screen.getByRole('group', { name: 'Map flags' })).toHaveTextContent('Hidden')
+    expect(screen.getByRole('group', { name: 'Map flags' })).toHaveTextContent('Not in menu')
     expect(screen.getByTitle('Rotates every 30 seconds')).toBeInTheDocument()
   })
 
@@ -89,9 +89,9 @@ describe('MapCard', () => {
   })
 
   it("keeps connection and flags out of a plain reader's card", async () => {
-    await renderCard(listed({ show_in_lists: false }), READER)
+    await renderCard(listed({ hide_in_monitor_menu: true }), READER)
     expect(screen.queryByText('live_1')).not.toBeInTheDocument()
-    expect(screen.queryByText('Hidden')).not.toBeInTheDocument()
+    expect(screen.queryByText('Not in menu')).not.toBeInTheDocument()
   })
 
   it('leaves the connection out where the installation has only one', async () => {

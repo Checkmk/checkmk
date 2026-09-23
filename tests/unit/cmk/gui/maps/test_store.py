@@ -111,7 +111,6 @@ def test_map_config_from_spec_derives_light_fields() -> None:
     map_spec = {
         "alias": "Network overview",
         "connection_id": "cmk_heute",
-        "show_in_lists": True,
         "objects": [{"id": "o1"}, {"id": "o2"}, {"id": "o3"}],
         "view": {"type": "worldmap"},
     }
@@ -166,23 +165,21 @@ def test_delete_map_round_trip(
     assert not MapPage.load(_user_permissions()).has_instance((owner, "map1"))
 
 
-def test_hidden_map_is_kept_out_of_the_listings_but_stays_permitted(
+def test_map_hidden_from_the_menu_stays_permitted(
     request_context: None,  # noqa: ARG001
     with_admin_login: UserId,
 ) -> None:
-    """``show_in_lists`` off means "not offered in lists", not "not accessible".
+    """Hidden from the Monitor menu means "not linked there", not "not accessible".
 
-    The listing paths (Monitor menu, the SPA's map collection) go through
-    ``get_listable_maps``; the image usage scan deliberately keeps using
-    ``get_permitted_maps``, because a hidden map still references its images and
-    deleting one out from under it would leave a dangling reference.
+    Only the menu goes through ``get_menu_maps``; the maps overview and the
+    image usage scan see every permitted map.
     """
     owner = with_admin_login
     store.save_map(owner, "shown", _map("shown"), public=False)
-    store.save_map(owner, "hidden", {**_map("hidden"), "show_in_lists": False}, public=False)
+    store.save_map(owner, "hidden", _map("hidden"), public=False, hidden=True)
 
-    assert "hidden" not in {page.name() for page in store.get_listable_maps()}
-    assert "shown" in {page.name() for page in store.get_listable_maps()}
+    assert "hidden" not in {page.name() for page in store.get_menu_maps()}
+    assert "shown" in {page.name() for page in store.get_menu_maps()}
     assert "hidden" in {page.name() for page in store.get_permitted_maps()}
     # Still reachable by direct link.
     assert store.get_permitted_map("hidden") is not None

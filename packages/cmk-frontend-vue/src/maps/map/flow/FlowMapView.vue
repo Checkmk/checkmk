@@ -70,6 +70,8 @@ const props = defineProps<{
   config: MapConfig | null
   /** Why the map could not be loaded, if it could not. */
   error: string | null
+  /** Whether this user may save the map; one they may not still drags. */
+  canEdit: boolean
   kiosk: boolean
   /** The settings preview is not interactive. */
   preview: boolean
@@ -95,8 +97,8 @@ const canvas = useTemplateRef<InstanceType<typeof FlowCanvas>>('canvas')
 
 const connectionId = computed(() => props.config?.connection_id ?? '')
 const flowView = computed(() => (props.config?.view.type === 'flow' ? props.config.view : null))
-/** A readonly map — a bundled demo — still drags; it just remembers nothing. */
-const readonly = computed(() => props.kiosk || props.preview || (props.config?.readonly ?? false))
+/** A map this user may not save still drags; it just remembers nothing. */
+const readonly = computed(() => props.kiosk || props.preview || !props.canEdit)
 /** A surface nobody is operating: a kiosk wall, the settings live preview. */
 const unattended = computed(() => props.kiosk || props.preview)
 

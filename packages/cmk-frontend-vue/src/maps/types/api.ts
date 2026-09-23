@@ -179,8 +179,7 @@ export interface MapRead {
   version?: number
   sort_order: number
   click_action: ClickAction
-  readonly?: boolean
-  show_in_lists?: boolean
+  hide_in_monitor_menu?: boolean
   hover_template?: string | null
   context_template?: string | null
   render_mode?: RenderMode
@@ -198,6 +197,16 @@ export interface MapRead {
 }
 
 export type MapPublic = boolean | ['contact_groups' | 'sites', string[]]
+
+/**
+ * What the pagetype keeps beside the map: who may see it and whether the
+ * Monitor menu links it. Sent whole or not at all — left out, it stays as
+ * stored on update.
+ */
+export interface MapEnvelope {
+  public: MapPublic
+  hide_in_monitor_menu: boolean
+}
 
 export interface MapBulkDeleteFailure {
   name: string

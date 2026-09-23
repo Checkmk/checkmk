@@ -26,7 +26,6 @@ _STORED_METADATA = {
     "render_mode": "nagvis_classic",
     "rotation_interval": ("off", None),
     "click_action": True,
-    "show_in_lists": True,
 }
 
 

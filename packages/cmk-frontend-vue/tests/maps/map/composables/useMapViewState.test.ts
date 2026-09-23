@@ -9,20 +9,21 @@ import { useMapViewState } from '@/maps/map/composables/useMapViewState'
 import type { MapsServices } from '@/maps/services/context'
 import type { MapConfig } from '@/maps/types/api'
 
+import { aListedMap } from '../../support/fixtures'
 import { fakeMapsServices, runWithServices } from '../../support/services'
 
 /** The choices are held on the map service, so each case gets a fresh set. */
-function aMap(name: string, readonly: boolean): MapConfig {
+function aMap(name: string): MapConfig {
   return {
     name,
     alias: name,
-    readonly,
     view: { type: 'static' }
   } as MapConfig
 }
 
-function openMap(config: MapConfig, preview = false): MapsServices {
+function openMap(config: MapConfig, canEdit: boolean, preview = false): MapsServices {
   const services = fakeMapsServices()
+  services.maps.maps.value = [aListedMap({ name: config.name, can_edit: canEdit })]
   services.maps.currentMap.value = config
   services.nav.state.preview = preview
   return services
@@ -38,8 +39,8 @@ afterEach(() => {
 
 describe('useMapViewState — a map that can be saved', () => {
   it('writes the chosen filter into the map and saves it', () => {
-    const config = aMap('writable-saves', false)
-    const services = openMap(config)
+    const config = aMap('writable-saves')
+    const services = openMap(config, true)
 
     const state = runWithServices(services, () => useMapViewState())
     state.problemsOnly.value = true
@@ -50,9 +51,9 @@ describe('useMapViewState — a map that can be saved', () => {
   })
 })
 
-describe('useMapViewState — a read-only map', () => {
+describe('useMapViewState — a map the user may not edit', () => {
   it('shows the problems filter the operator switched on', () => {
-    const services = openMap(aMap('readonly-problems', true))
+    const services = openMap(aMap('held-problems'), false)
 
     const state = runWithServices(services, () => useMapViewState())
     state.problemsOnly.value = true
@@ -61,8 +62,8 @@ describe('useMapViewState — a read-only map', () => {
   })
 
   it('leaves the stored map untouched', () => {
-    const config = aMap('readonly-unwritten', true)
-    const services = openMap(config)
+    const config = aMap('held-unwritten')
+    const services = openMap(config, false)
 
     const state = runWithServices(services, () => useMapViewState())
     state.problemsOnly.value = true
@@ -73,7 +74,7 @@ describe('useMapViewState — a read-only map', () => {
   })
 
   it('agrees with a second holder of the state on the same map', () => {
-    const services = openMap(aMap('readonly-two-holders', true))
+    const services = openMap(aMap('held-two-holders'), false)
 
     const { drawing, shell } = runWithServices(services, () => ({
       drawing: useMapViewState(),
@@ -85,22 +86,22 @@ describe('useMapViewState — a read-only map', () => {
   })
 
   it('does not carry the choice over to the next map', () => {
-    const services = openMap(aMap('readonly-first', true))
+    const services = openMap(aMap('held-first'), false)
 
     const state = runWithServices(services, () => useMapViewState())
     state.problemsOnly.value = true
-    services.maps.currentMap.value = aMap('readonly-second', true)
+    services.maps.currentMap.value = aMap('held-second')
 
     expect(state.problemsOnly.value).toBe(false)
   })
 })
 
-describe('useMapViewState — a read-only folder tree', () => {
+describe('useMapViewState — a folder tree the user may not edit', () => {
   /** The drawing switch is the control an operator reaches for first, and every
-   *  built-in map is read-only. */
+   *  built-in map is one the user may not edit. */
   it('shows the drawing the operator chose', () => {
-    const config = { ...aMap('readonly-drawing', true), view: { type: 'foldertree' } } as MapConfig
-    const services = openMap(config)
+    const config = { ...aMap('held-drawing'), view: { type: 'foldertree' } } as MapConfig
+    const services = openMap(config, false)
 
     const state = runWithServices(services, () => useMapViewState())
     state.folderView.value = 'list'
@@ -112,8 +113,8 @@ describe('useMapViewState — a read-only folder tree', () => {
 
 describe('useMapViewState — the settings preview', () => {
   it('neither saves the choice nor holds it, because the map is thrown away with the dialog', () => {
-    const config = aMap('preview-map', false)
-    const services = openMap(config, true)
+    const config = aMap('preview-map')
+    const services = openMap(config, true, true)
 
     const state = runWithServices(services, () => useMapViewState())
     state.problemsOnly.value = true

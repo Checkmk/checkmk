@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <!--
 Who can see the map: only its owner, everyone, or the members of the contact
-groups or sites picked here.
+groups or sites picked here; and whether the Monitor menu links it.
 -->
 <script setup lang="ts">
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
@@ -23,7 +23,11 @@ const { _t } = usei18n()
 <template>
   <div class="maps-map-access-tab">
     <p class="maps-map-access-tab__intro">
-      {{ _t('Control who can see this map. You can always see your own maps.') }}
+      {{
+        _t(
+          'Control who can see this map and whether it is listed in the Monitor menu. You can always see your own maps.'
+        )
+      }}
     </p>
 
     <div class="maps-map-access-tab__field">
@@ -75,6 +79,15 @@ const { _t } = usei18n()
           <span>{{ site.alias }}</span>
         </label>
       </div>
+    </div>
+
+    <div class="maps-map-access-tab__field">
+      <CmkLabel>{{ _t('Monitor menu') }}</CmkLabel>
+      <CmkCheckbox
+        :model-value="access.hideInMonitorMenu.value"
+        :label="_t('Hide this map in the Monitor menu')"
+        @update:model-value="access.setHideInMonitorMenu"
+      />
     </div>
 
     <p v-if="access.cannotShare.value" class="maps-map-access-tab__note">

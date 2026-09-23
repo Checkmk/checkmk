@@ -63,12 +63,11 @@ const sampleMaps: MapRead[] = [
     rotation_interval: 0,
     sort_order: 0,
     version: 0,
-    show_in_lists: true,
+    hide_in_monitor_menu: false,
     render_mode: 'default',
     background_image: null,
     background_color: null,
     click_action: 'link',
-    readonly: false,
     hover_template: null,
     context_template: null,
     default_z: 1,
@@ -91,7 +90,7 @@ const listResponse = {
       title: 'Map 1',
       extensions: {
         owner: 'alice',
-        visibility: { publish: 'private' },
+        visibility: { publish: 'private', hide_in_monitor_menu: false },
         is_builtin: false,
         can_edit: true,
         can_delete: true,
@@ -128,7 +127,7 @@ const mapObjectResponse = {
   title: 'Map 1',
   extensions: {
     owner: '',
-    visibility: { publish: 'private' },
+    visibility: { publish: 'private', hide_in_monitor_menu: false },
     is_builtin: false,
     can_edit: true,
     can_delete: true,
@@ -252,6 +251,18 @@ describe('MapService', () => {
     expect(saveRequests).toHaveLength(1)
     expect(saveRequests[0]!.config.name).toBe('map1')
     expect(saveRequests[0]!.config.alias).toBe('edited')
+  })
+
+  it('cloneMap() keeps the clone out of the Monitor menu where its source is', async () => {
+    const store = newService()
+    await store.fetchMaps()
+    store.maps.value[0]!.hide_in_monitor_menu = true
+
+    await store.cloneMap('map1', 'map1_copy')
+
+    expect(saveRequests).toHaveLength(1)
+    expect(saveRequests[0]!.config.name).toBe('map1_copy')
+    expect(saveRequests[0]!.visibility).toEqual({ publish: 'private', hide_in_monitor_menu: true })
   })
 
   it('fetchMap() staleness guard: a slower earlier load never overwrites a newer map', async () => {

@@ -30,6 +30,7 @@ import PresentationCanvas from './components/PresentationCanvas.vue'
 
 const props = defineProps<{
   config: MapConfig | null
+  canEdit: boolean
   editMode: boolean
   kiosk: boolean
   /** The settings preview is not interactive. */
@@ -70,7 +71,7 @@ function onObjectClick(object: MapElement, event?: MouseEvent): void {
       :config="config"
       :states="statesStore.states.value"
       :edit-mode="editMode"
-      :readonly="config.readonly ?? false"
+      :readonly="!canEdit"
       :preview="preview"
       :kiosk="kiosk"
       @object-hover="(obj, e) => menus.openHover(obj, e)"

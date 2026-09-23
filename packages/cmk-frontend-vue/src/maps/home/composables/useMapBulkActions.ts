@@ -26,7 +26,7 @@ interface MapBulkActionsOptions {
  * when switching to cards view (the checkboxes only render in the table). Bulk
  * delete keeps the still-selected set on partial failure so the operator can
  * retry; bulk edit collapses to the single-map settings modal when exactly one
- * editable map is selected. Read-only maps are filtered out of edits.
+ * editable map is selected. Maps the user may not edit are filtered out of edits.
  */
 export function useMapBulkActions(options: MapBulkActionsOptions) {
   const { filteredMaps, viewMode, openSettings } = options
@@ -130,7 +130,7 @@ export function useMapBulkActions(options: MapBulkActionsOptions) {
   }
 
   const editableSelectedNames = computed(() => {
-    const writable = new Set(mapsStore.maps.value.filter((b) => !b.readonly).map((b) => b.name))
+    const writable = new Set(mapsStore.maps.value.filter((b) => b.can_edit).map((b) => b.name))
     return selectedNames.value.filter((n) => writable.has(n))
   })
 

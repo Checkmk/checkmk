@@ -292,10 +292,12 @@ function resetChanges(): void {
     mode: typeof access.mode.value
     groups: string[]
     sites: string[]
+    hideInMonitorMenu: boolean
   }
   access.mode.value = restored.mode
   access.groups.value = restored.groups
   access.sites.value = restored.sites
+  access.hideInMonitorMenu.value = restored.hideInMonitorMenu
   background.reset()
   saveAttempted.value = false
   formBackendValidation.value = []
@@ -421,8 +423,8 @@ async function save(): Promise<void> {
         // is a valid variant by construction.
         ...(mapType.value === 'presentation' ? {} : { view: view as unknown as MapView })
       },
-      // Visibility lives in the visual envelope rather than the map itself, so
-      // it is sent explicitly.
+      // Visibility and the Monitor menu live in the pagetype envelope rather
+      // than the map itself, so they are sent explicitly.
       access.desired()
     )
 

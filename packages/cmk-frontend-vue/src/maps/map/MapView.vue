@@ -103,10 +103,8 @@ const isPreview = computed(() => nav.state.preview)
 const { openKioskInNewTab, exitFullscreen } = useMapFullscreen(mapName, isKiosk)
 
 const mapConfig = computed(() => mapsStore.currentMap.value)
-// The per-map pagetype capability the backend stamps on the map-list entry:
-// admin rights ride in via "edit foreign maps", not via configure/admin status.
 const mapListEntry = computed(() => mapsStore.maps.value.find((b) => b.name === mapName.value))
-const canEdit = computed(() => mapListEntry.value?.can_edit === true)
+const canEdit = computed(() => mapsStore.mayEdit(mapName.value))
 /**
  * The open map as the settings form wants it: the daemon config, plus the
  * envelope only the map-list entry carries — ownership, sharing and the right
@@ -214,7 +212,6 @@ const showsEditTools = computed(
     !isKiosk.value &&
     !isPreview.value &&
     !!mapConfig.value &&
-    !mapConfig.value.readonly &&
     !derivesItsContent.value &&
     !drawerObject.value
 )
@@ -780,11 +777,10 @@ function closeBulkAckModal(sent: boolean): void {
     <MapViewTopbar
       v-if="!isKiosk && !isPreview"
       :connected="statesStore.connected.value"
-      :readonly="mapConfig?.readonly === true"
+      :can-edit="canEdit"
       :editing="editor.editMode.value"
       :rotation-seconds="mapConfig && mapConfig.rotation_interval > 0 ? rotationCountdown : 0"
       :rotation-paused="rotationPaused"
-      :can-configure="canEdit && !mapConfig?.readonly"
       :dimmed="!!drawerObject"
       @toggle-rotation="toggleRotationPause"
       @open-full-screen="openKioskInNewTab"
@@ -852,6 +848,7 @@ function closeBulkAckModal(sent: boolean): void {
         v-model:filter-needle="mapFilterNeedle"
         :config="mapConfig"
         :error="mapsStore.error.value"
+        :can-edit="canEdit"
         :kiosk="isKiosk"
         :preview="isPreview"
         :checkmk-url="checkmkUrl"
@@ -862,6 +859,7 @@ function closeBulkAckModal(sent: boolean): void {
       <presentation-map-view
         v-else-if="isPresentation"
         :config="mapConfig"
+        :can-edit="canEdit"
         :edit-mode="editor.editMode.value"
         :kiosk="isKiosk"
         :preview="isPreview"

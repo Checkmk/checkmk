@@ -17,7 +17,7 @@ from cmk.maps.rest_api.models.map import MapConfig, MapListEntry
 
 @api_model
 class MapVisibility:
-    """A map's sharing scope (the pagetype ``public`` envelope, not the map)."""
+    """Who sees a map and where it is linked (the pagetype envelope, not the map)."""
 
     publish: Literal["private", "all", "contact_groups", "sites"] = api_field(
         description="Who may see this map: only the owner (private), everyone (all), "
@@ -28,6 +28,7 @@ class MapVisibility:
         "(only for publish=contact_groups/sites).",
         default_factory=ApiOmitted,
     )
+    hide_in_monitor_menu: bool = api_field(description="Hide this map in the `Monitor` menu.")
 
 
 @api_model

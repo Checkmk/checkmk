@@ -24,52 +24,62 @@ def _user_permissions() -> UserPermissions:
     return UserPermissions.from_config(active_config, permission_registry)
 
 
-def test_admin_gets_a_maps_topic_with_the_builtin_maps(
+def _save_map(owner: UserId, name: str, alias: str, *, hide_in_monitor_menu: bool = False) -> None:
+    save_map(
+        owner,
+        name,
+        {
+            "name": name,
+            "alias": alias,
+            "connection_id": "cmk_heute",
+            "objects": [],
+            "view": {"type": "flow"},
+        },
+        public=False,
+        hidden=hide_in_monitor_menu,
+    )
+
+
+def test_builtin_maps_get_no_monitor_entry(
     request_context: None,
     with_admin_login: UserId,
 ) -> None:
+    assert monitor_menu_topics(_user_permissions()) == []
+
+
+def test_admin_gets_a_maps_topic_with_their_maps(
+    request_context: None,
+    with_admin_login: UserId,
+) -> None:
+    _save_map(with_admin_login, "own_map", "Own map")
+
     topics = monitor_menu_topics(_user_permissions())
     assert len(topics) == 1
     topic = topics[0]
     assert topic.id == "maps"
-    entry_ids = {entry.id for entry in topic.entries}
-    # Every shipped built-in the admin may see becomes a Monitor entry.
-    assert "maps_map_all_hosts" in entry_ids
-    assert "maps_map_noc_wall" in entry_ids
+    assert {entry.id for entry in topic.entries} == {"maps_map_own_map"}
 
 
 def test_entries_are_sorted_by_title(
     request_context: None,
     with_admin_login: UserId,
 ) -> None:
+    _save_map(with_admin_login, "map_b", "beta")
+    _save_map(with_admin_login, "map_a", "Alpha")
+
     entries = monitor_menu_topics(_user_permissions())[0].entries
-    titles = [entry.title for entry in entries]
-    assert titles == sorted(titles, key=str.lower)
+    assert [entry.title for entry in entries] == ["Alpha", "beta"]
 
 
-def test_hidden_map_gets_no_monitor_entry(
+def test_map_hidden_from_the_menu_gets_no_monitor_entry(
     request_context: None,
     with_admin_login: UserId,
 ) -> None:
-    # "Show this map in the maps list" off keeps the map out of the navigation;
-    # it stays reachable by direct link.
-    save_map(
-        with_admin_login,
-        "hidden_map",
-        {
-            "name": "hidden_map",
-            "alias": "Hidden map",
-            "connection_id": "cmk_heute",
-            "objects": [],
-            "view": {"type": "flow"},
-            "show_in_lists": False,
-        },
-        public=False,
-    )
+    _save_map(with_admin_login, "shown_map", "Shown map")
+    _save_map(with_admin_login, "hidden_map", "Hidden map", hide_in_monitor_menu=True)
 
     entry_ids = {entry.id for entry in monitor_menu_topics(_user_permissions())[0].entries}
-    assert "maps_map_hidden_map" not in entry_ids
-    assert "maps_map_all_hosts" in entry_ids  # the shipped built-ins are unaffected
+    assert entry_ids == {"maps_map_shown_map"}
 
 
 def test_maps_topics_are_discovered_only_through_the_registry(
@@ -79,6 +89,7 @@ def test_maps_topics_are_discovered_only_through_the_registry(
     # The decoupling contract: cmk.gui core surfaces Maps' Monitor topics via the
     # registry, never via an import. A contributor's topics show up in the merged
     # list the core menu builders consume.
+    _save_map(with_admin_login, "own_map", "Own map")
     monitor_menu_topic_registry.register(
         MonitorMenuTopicContributor(ident="maps_test", topics=monitor_menu_topics)
     )

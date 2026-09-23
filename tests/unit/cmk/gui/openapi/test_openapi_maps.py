@@ -194,6 +194,38 @@ def test_new_map_is_private_by_default(clients: ClientRegistry) -> None:
     assert clients.Maps.get("map1").json["extensions"]["visibility"]["publish"] == "private"
 
 
+def test_new_map_is_in_the_monitor_menu_by_default(clients: ClientRegistry) -> None:
+    clients.Maps.create(config=_STATIC_MAP)
+    visibility = clients.Maps.get("map1").json["extensions"]["visibility"]
+    assert visibility["hide_in_monitor_menu"] is False
+
+
+def test_map_created_out_of_the_monitor_menu_is_listed_as_such(clients: ClientRegistry) -> None:
+    clients.Maps.create(
+        config=_STATIC_MAP, visibility={"publish": "private", "hide_in_monitor_menu": True}
+    )
+
+    assert clients.Maps.get("map1").json["extensions"]["visibility"]["hide_in_monitor_menu"]
+    listed = {entry["id"]: entry for entry in clients.Maps.get_all().json["value"]}
+    assert listed["map1"]["extensions"]["visibility"]["hide_in_monitor_menu"] is True
+
+
+def test_update_keeps_the_menu_choice_unless_the_visibility_is_sent(
+    clients: ClientRegistry,
+) -> None:
+    clients.Maps.create(
+        config=_STATIC_MAP, visibility={"publish": "private", "hide_in_monitor_menu": True}
+    )
+
+    kept = clients.Maps.edit("map1", config={**_STATIC_MAP, "alias": "Renamed"})
+    assert kept.json["extensions"]["visibility"]["hide_in_monitor_menu"] is True
+
+    shown = clients.Maps.edit(
+        "map1", config=_STATIC_MAP, visibility={"publish": "private", "hide_in_monitor_menu": False}
+    )
+    assert shown.json["extensions"]["visibility"]["hide_in_monitor_menu"] is False
+
+
 @pytest.mark.parametrize(
     "name",
     ["all_hosts", "service_problems", "infrastructure", "monitoring_folders", "noc_wall"],
@@ -204,6 +236,7 @@ def test_builtin_maps_serialize_through_the_rest_model(clients: ClientRegistry, 
     # that omits a structural field the daemon would otherwise default).
     shown = clients.Maps.get(name)
     assert shown.json["extensions"]["is_builtin"] is True
+    assert shown.json["extensions"]["visibility"]["hide_in_monitor_menu"] is True
     assert shown.json["extensions"]["config"]["name"] == name
 
 
@@ -219,6 +252,8 @@ def test_customizing_a_builtin_creates_an_own_override(clients: ClientRegistry) 
     )
     assert updated.json["extensions"]["config"]["alias"] == "My Hosts"
     assert updated.json["extensions"]["is_builtin"] is False
+    # The override starts from the built-in's place outside the Monitor menu.
+    assert updated.json["extensions"]["visibility"]["hide_in_monitor_menu"] is True
 
     reread = clients.Maps.get("all_hosts")
     assert reread.json["extensions"]["config"]["alias"] == "My Hosts"
@@ -245,10 +280,14 @@ def test_publish_without_targets_returns_400(clients: ClientRegistry, scope: str
     # Sharing to groups/sites with no targets would clamp silently to private;
     # it must be an explicit 400 instead.
     clients.Maps.create(
-        config=_STATIC_MAP, visibility={"publish": scope}, expect_ok=False
+        config=_STATIC_MAP,
+        visibility={"publish": scope, "hide_in_monitor_menu": False},
+        expect_ok=False,
     ).assert_status_code(400)
     clients.Maps.create(
-        config=_STATIC_MAP, visibility={"publish": scope, "groups": []}, expect_ok=False
+        config=_STATIC_MAP,
+        visibility={"publish": scope, "groups": [], "hide_in_monitor_menu": False},
+        expect_ok=False,
     ).assert_status_code(400)
 
 
@@ -293,14 +332,18 @@ def fixture_map_owned_by_user(
 ) -> str:
     """A published map owned by a non-admin user — foreign from the admin's POV."""
     with _acting_as(clients, with_automation_user_not_admin, with_automation_user):
-        clients.Maps.create(config=_map("umap"), visibility={"publish": "all"})
+        clients.Maps.create(
+            config=_map("umap"), visibility={"publish": "all", "hide_in_monitor_menu": False}
+        )
     return "umap"
 
 
 @pytest.fixture(name="admin_shared_map")
 def fixture_admin_shared_map(clients: ClientRegistry) -> str:
     """A published map owned by the admin — foreign from a normal user's POV."""
-    clients.Maps.create(config=_map("shared"), visibility={"publish": "all"})
+    clients.Maps.create(
+        config=_map("shared"), visibility={"publish": "all", "hide_in_monitor_menu": False}
+    )
     return "shared"
 
 

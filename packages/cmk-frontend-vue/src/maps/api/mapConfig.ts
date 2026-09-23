@@ -15,7 +15,7 @@ import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
 import { uploadedFile } from '@/maps/api/upload'
 import { mapListObjectToRead, mapRequestBody } from '@/maps/api/wire'
-import type { CfgImport, MapConfig, MapPublic, MapRead } from '@/maps/types/api'
+import type { CfgImport, MapConfig, MapEnvelope, MapRead } from '@/maps/types/api'
 
 /**
  * A map as the daemon must receive it: the exact bytes the GUI signed, so a
@@ -66,11 +66,11 @@ export function decodeSignedMap(raw: RawSignedMap): SignedMap {
 
 export class MapConfigApi {
   /** Creates a map owned by the session user. Visibility is clamped server-side. */
-  public async create(map: MapConfig, visibility?: MapPublic): Promise<void> {
+  public async create(map: MapConfig, envelope?: MapEnvelope): Promise<void> {
     unwrap(
       await client.POST('/domain-types/map/collections/all', {
         params: { header: { 'Content-Type': 'application/json' } },
-        body: mapRequestBody(map, visibility)
+        body: mapRequestBody(map, envelope)
       })
     )
   }
@@ -80,19 +80,20 @@ export class MapConfigApi {
    *
    * The server resolves it by name and applies the permission model — an own map
    * is updated, a foreign one edited in place, a built-in customized into an own
-   * override — so no owner travels with the request. Omitting ``visibility``
-   * preserves the stored sharing scope, which is what a routine autosave wants.
+   * override — so no owner travels with the request. Omitting the envelope
+   * preserves the stored sharing scope and Monitor menu choice, which is what a
+   * routine autosave wants.
    * ``If-Match: *`` opts out of optimistic locking: the SPA is the only editing
    * surface and carries the map's own ``version``.
    */
-  public async update(map: MapConfig, visibility?: MapPublic): Promise<void> {
+  public async update(map: MapConfig, envelope?: MapEnvelope): Promise<void> {
     unwrap(
       await client.PUT('/objects/map/{name}', {
         params: {
           path: { name: map.name },
           header: { 'If-Match': '*', 'Content-Type': 'application/json' }
         },
-        body: mapRequestBody(map, visibility)
+        body: mapRequestBody(map, envelope)
       })
     )
   }

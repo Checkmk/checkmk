@@ -69,8 +69,7 @@ class MapRead(TypedDict):
     version: int
     sort_order: int
     click_action: str
-    readonly: bool
-    show_in_lists: bool
+    hide_in_monitor_menu: bool
     hover_template: str | None
     context_template: str | None
     render_mode: str
@@ -85,7 +84,11 @@ class MapRead(TypedDict):
 
 
 def map_config_from_spec(
-    owner: UserId, name: MapName, map_spec: MapSpec, public: VisualPublic | None = False
+    owner: UserId,
+    name: MapName,
+    map_spec: MapSpec,
+    public: VisualPublic | None = False,
+    hidden: bool = False,
 ) -> MapConfig:
     """Wrap a map payload in the pagetype envelope owned by ``owner``.
 
@@ -96,7 +99,8 @@ def map_config_from_spec(
     ``public`` is a parameter rather than a post-construction assignment so a
     caller cannot forget it: the private default is only right for a caller that
     has no visibility to carry, and silently un-publishing a shipped built-in map
-    would be invisible until someone missed it in the list.
+    would be invisible until someone missed it in the list. ``hidden`` (left out
+    of the Monitor menu) is envelope state for the same reason, not payload.
     """
     view = map_spec.get("view")
     view_dict = view if isinstance(view, dict) else {}
@@ -114,7 +118,7 @@ def map_config_from_spec(
         name=name,
         title=str(map_spec.get("alias") or name),
         description="",
-        hidden=not bool(map_spec.get("show_in_lists", True)),
+        hidden=hidden,
         public=public,
         map_type=str(view_dict.get("type", "static")),
         connection_id=str(map_spec.get("connection_id", "")),

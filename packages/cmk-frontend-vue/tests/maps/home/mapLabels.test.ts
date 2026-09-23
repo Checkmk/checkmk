@@ -24,10 +24,14 @@ describe('hasDynamicContent', () => {
   })
 
   it('does not treat a built-in map as dynamic', () => {
-    // read-only says the definition cannot be edited, which is a different
-    // question: the shipped NOC wall is a presentation map with hand-placed
-    // elements, and it has a count to show like any other.
-    const builtin = aListedMap({ view: newMapView('presentation'), readonly: true })
+    // Not editable is a different question: the shipped NOC wall is a
+    // presentation map with hand-placed elements, and it has a count to show
+    // like any other.
+    const builtin = aListedMap({
+      view: newMapView('presentation'),
+      is_builtin: true,
+      can_edit: false
+    })
 
     expect(hasDynamicContent(builtin)).toBe(false)
   })

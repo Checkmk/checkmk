@@ -13,7 +13,7 @@ import { aListedMap } from '../../support/fixtures'
 import { fakeMapsServices, runWithServices } from '../../support/services'
 
 function map(name: string, over: Partial<MapRead> = {}): MapRead {
-  return aListedMap({ name, alias: name, ...over })
+  return aListedMap({ name, alias: name, can_edit: true, ...over })
 }
 
 /**
@@ -114,14 +114,14 @@ describe('useMapBulkActions — bulk delete', () => {
 })
 
 describe('useMapBulkActions — bulk edit', () => {
-  it('excludes read-only maps from the editable set', () => {
-    const { api } = setup([map('rw'), map('ro', { readonly: true })])
+  it('excludes maps the user may not edit from the editable set', () => {
+    const { api } = setup([map('rw'), map('ro', { can_edit: false })])
     api.toggleSelectAllFiltered(true)
     expect(api.editableSelectedNames.value).toEqual(['rw'])
   })
 
-  it('errors when every selected map is read-only', () => {
-    const { api, toast } = setup([map('ro', { readonly: true })])
+  it('errors when the user may edit none of the selected maps', () => {
+    const { api, toast } = setup([map('ro', { can_edit: false })])
     api.toggleSelectAllFiltered(true)
     api.openBulkEdit()
     expect(toast.error).toHaveBeenCalled()
@@ -144,7 +144,7 @@ describe('useMapBulkActions — bulk edit', () => {
   })
 
   it('applies edits only to editable targets', async () => {
-    const { api, store, toast } = setup([map('rw'), map('ro', { readonly: true })])
+    const { api, store, toast } = setup([map('rw'), map('ro', { can_edit: false })])
     store.bulkEditMaps.mockResolvedValueOnce({ updated: ['rw'], failed: [] })
     api.toggleSelectAllFiltered(true)
     await api.doBulkEdit({ icon_size: 40 })

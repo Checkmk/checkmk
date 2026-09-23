@@ -14,7 +14,7 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.framework.model.base_models import LinkModel
 from cmk.gui.openapi.restful_objects.constructors import collection_href
-from cmk.maps.gui.store import get_listable_maps
+from cmk.maps.gui.store import get_permitted_maps
 from cmk.maps.rest_api.endpoint_family import MAPS_FAMILY
 from cmk.maps.rest_api.models.response_models import MapCollection
 from cmk.maps.rest_api.utils import PERMISSIONS, serialize_map_list_entry
@@ -28,7 +28,7 @@ def list_maps_v1() -> MapCollection:
         domainType="map",
         value=[
             serialize_map_list_entry(page, can_edit=page.may_edit(), can_delete=page.may_delete())
-            for page in get_listable_maps()
+            for page in get_permitted_maps()
         ],
         links=[LinkModel.create("self", collection_href("map"))],
     )

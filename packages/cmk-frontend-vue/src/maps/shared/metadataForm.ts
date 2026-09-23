@@ -33,7 +33,6 @@ const METADATA_READERS: Record<string, (value: unknown) => Partial<MapConfig>> =
   click_action: (value) => ({ click_action: value === false ? 'none' : 'link' }),
   render_mode: (value) => ({ render_mode: (value as RenderMode | undefined) ?? 'default' }),
   default_z: (value) => ({ default_z: (value as number | undefined) ?? 1 }),
-  show_in_lists: (value) => ({ show_in_lists: value !== false }),
   hover_template: (value) => ({ hover_template: ((value as string) ?? '') || null }),
   context_template: (value) => ({ context_template: ((value as string) ?? '') || null })
 }

@@ -8,7 +8,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { type ComputedRef, type Ref, computed, ref } from 'vue'
 
 import { useAuth } from '@/maps/services/context'
-import type { MapPublic, MapRead } from '@/maps/types/api'
+import type { MapEnvelope, MapPublic, MapRead } from '@/maps/types/api'
 
 /** Who a map is shared with, as the form offers it. */
 export type PublicMode = 'private' | 'all' | 'groups' | 'sites'
@@ -17,16 +17,18 @@ export interface MapAccess {
   mode: Ref<PublicMode>
   groups: Ref<string[]>
   sites: Ref<string[]>
+  hideInMonitorMenu: Ref<boolean>
   modeOptions: ComputedRef<Suggestions>
   groupChoices: ComputedRef<{ id: string; alias: string }[]>
   siteChoices: ComputedRef<{ id: string; alias: string }[]>
   /** True when this user may not share maps at all. */
   cannotShare: ComputedRef<boolean>
   setMode: (mode: PublicMode) => void
+  setHideInMonitorMenu: (hide: boolean) => void
   toggleGroup: (id: string) => void
   toggleSite: (id: string) => void
-  /** The ``public`` value to save. */
-  desired: () => MapPublic
+  /** The envelope to save: the ``public`` value and the Monitor menu choice. */
+  desired: () => MapEnvelope
   /** Stable text for dirty-tracking; see ``snapshot`` below. */
   snapshot: () => string
 }
@@ -47,7 +49,7 @@ function listOf(value: MapRead['public'], kind: 'contact_groups' | 'sites'): str
 
 /**
  * Who may see a map: only its owner, everyone, or the members of named contact
- * groups or sites.
+ * groups or sites; and whether the Monitor menu links it.
  *
  * This is the visuals visibility model — a map is a Checkmk visual, so it is
  * shared the way a dashboard is rather than through a permission grid of its
@@ -63,6 +65,7 @@ export function useMapAccess(map: () => MapRead): MapAccess {
   const mode = ref<PublicMode>(publicModeOf(map().public))
   const groups = ref<string[]>(listOf(map().public, 'contact_groups'))
   const sites = ref<string[]>(listOf(map().public, 'sites'))
+  const hideInMonitorMenu = ref<boolean>(map().hide_in_monitor_menu === true)
 
   // A map already scoped to sites keeps the option even for a user who could
   // not have chosen it, so an existing value stays visible and editable.
@@ -103,7 +106,7 @@ export function useMapAccess(map: () => MapRead): MapAccess {
     }
   }
 
-  function desired(): MapPublic {
+  function desiredPublic(): MapPublic {
     switch (mode.value) {
       case 'all':
         return true
@@ -116,6 +119,10 @@ export function useMapAccess(map: () => MapRead): MapAccess {
     }
   }
 
+  function desired(): MapEnvelope {
+    return { public: desiredPublic(), hide_in_monitor_menu: hideInMonitorMenu.value }
+  }
+
   /**
    * Only the list the current mode uses counts, and its order does not: a
    * selection left behind in an inactive mode would otherwise keep the form
@@ -125,7 +132,8 @@ export function useMapAccess(map: () => MapRead): MapAccess {
     return JSON.stringify({
       mode: mode.value,
       groups: mode.value === 'groups' ? [...groups.value].sort() : [],
-      sites: mode.value === 'sites' ? [...sites.value].sort() : []
+      sites: mode.value === 'sites' ? [...sites.value].sort() : [],
+      hideInMonitorMenu: hideInMonitorMenu.value
     })
   }
 
@@ -133,9 +141,13 @@ export function useMapAccess(map: () => MapRead): MapAccess {
     mode,
     groups,
     sites,
+    hideInMonitorMenu,
     modeOptions,
     setMode: (picked) => {
       mode.value = picked
+    },
+    setHideInMonitorMenu: (hide) => {
+      hideInMonitorMenu.value = hide
     },
     groupChoices,
     siteChoices,

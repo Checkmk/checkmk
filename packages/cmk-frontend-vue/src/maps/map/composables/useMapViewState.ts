@@ -12,9 +12,9 @@
  * while reading a map, so they are saved on the store's own debounce rather
  * than through the settings dialog.
  *
- * A read-only map -- every built-in one -- takes no writes, but the change
- * still has to take effect: read-only means "this map is not rewritten", not
- * "the operator may not choose what to look at". There the choice is kept for
+ * A map the user may not edit -- every built-in one -- takes no writes, but the
+ * change still has to take effect: not editable means "this map is not
+ * rewritten", not "the operator may not choose what to look at". There the choice is kept for
  * the session instead, per map, so it holds while the map is read (a rotation
  * coming back to it included) without following the operator to the next map.
  *
@@ -53,7 +53,7 @@ export function useMapViewState(): MapViewState {
 
   function persist(patch: ViewChoices | Record<string, unknown>): void {
     const config = maps.currentMap.value
-    if (!config || config.readonly || nav.state.preview) {
+    if (!config || !maps.mayEdit(config.name) || nav.state.preview) {
       return
     }
     config.view = { ...config.view, ...patch }
@@ -61,14 +61,14 @@ export function useMapViewState(): MapViewState {
   }
 
   /**
-   * The map on screen if its view can only be held for the session -- a
-   * read-only map. The settings preview is left out: it renders a
+   * The map on screen if its view can only be held for the session -- one the
+   * user may not edit. The settings preview is left out: it renders a
    * configuration that is thrown away with the dialog, so nothing about it
    * should outlive it.
    */
   function heldMap(): MapConfig | null {
     const config = maps.currentMap.value
-    return config !== null && config.readonly === true && !nav.state.preview ? config : null
+    return config !== null && !maps.mayEdit(config.name) && !nav.state.preview ? config : null
   }
 
   /** The choices held for the map on screen, where they are held at all. */

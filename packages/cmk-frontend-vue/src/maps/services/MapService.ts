@@ -14,7 +14,7 @@ import type {
   MapBulkDeleteResult,
   MapBulkEditResult,
   MapConfig,
-  MapPublic,
+  MapEnvelope,
   MapRead,
   RenderMode,
   ServiceLayout
@@ -151,6 +151,14 @@ export class MapService {
   }
 
   /** One map's stored config, without the auto-source merge {@link fetchMap} does. */
+  /**
+   * The per-map pagetype capability the backend stamps on the map-list entry:
+   * admin rights ride in via "edit foreign maps", not via configure/admin status.
+   */
+  public mayEdit(name: string): boolean {
+    return this.maps.value.find((entry) => entry.name === name)?.can_edit === true
+  }
+
   public async getMap(name: string): Promise<MapConfig> {
     return (await this.api.get(name)).config
   }
@@ -213,8 +221,6 @@ export class MapService {
       click_action: 'link',
       render_mode: renderMode,
       default_z: 1,
-      show_in_lists: true,
-      readonly: false,
       version: 0,
       view: newMapView(mapType),
       objects: []
@@ -236,8 +242,7 @@ export class MapService {
       rotation_interval: cfg.rotation_interval,
       sort_order: cfg.sort_order,
       click_action: cfg.click_action,
-      readonly: cfg.readonly,
-      show_in_lists: true,
+      hide_in_monitor_menu: false,
       hover_template: cfg.hover_template ?? null,
       context_template: cfg.context_template ?? null,
       render_mode: cfg.render_mode,
@@ -261,12 +266,12 @@ export class MapService {
   public async saveMapMetadata(
     name: string,
     updates: Partial<MapConfig>,
-    visibility?: MapPublic
+    envelope?: MapEnvelope
   ): Promise<MapConfig> {
     const base =
       this.currentMap.value?.name === name ? this.currentMap.value : await this.getMap(name)
     const merged: MapConfig = { ...base, ...updates }
-    await this.api.update(merged, visibility)
+    await this.api.update(merged, envelope)
     if (this.currentMap.value?.name === name) {
       this.currentMap.value = merged
     }
@@ -278,15 +283,15 @@ export class MapService {
       row.rotation_interval = merged.rotation_interval
       row.click_action = merged.click_action
       row.render_mode = merged.render_mode
-      row.show_in_lists = merged.show_in_lists
       row.background_image = merged.background_image ?? null
       row.background_color = merged.background_color ?? null
       row.hover_template = merged.hover_template ?? null
       row.context_template = merged.context_template ?? null
       row.view = merged.view
       row.view_type = merged.view.type
-      if (visibility !== undefined) {
-        row.public = visibility
+      if (envelope !== undefined) {
+        row.public = envelope.public
+        row.hide_in_monitor_menu = envelope.hide_in_monitor_menu
       }
     }
     return merged
@@ -305,7 +310,12 @@ export class MapService {
 
   public async cloneMap(srcName: string, newName: string, alias?: string): Promise<void> {
     const src = await this.getMap(srcName)
-    await this.api.create({ ...src, name: newName, ...(alias ? { alias } : {}) })
+    // A clone starts private, and out of the Monitor menu where its source is.
+    const hidden = this.maps.value.find((m) => m.name === srcName)?.hide_in_monitor_menu
+    await this.api.create(
+      { ...src, name: newName, ...(alias ? { alias } : {}) },
+      { public: false, hide_in_monitor_menu: hidden ?? false }
+    )
     await this.fetchMaps()
   }
 

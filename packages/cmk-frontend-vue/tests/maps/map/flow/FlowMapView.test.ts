@@ -62,6 +62,7 @@ function flowMap() {
 const baseProps = {
   config: flowMap(),
   error: null,
+  canEdit: true,
   kiosk: false,
   preview: false,
   checkmkUrl: null,

@@ -56,8 +56,6 @@ export function aMap(overrides: Partial<MapConfig> = {}): MapConfig {
     click_action: 'link',
     render_mode: 'default',
     default_z: 1,
-    show_in_lists: true,
-    readonly: false,
     version: 0,
     view: newMapView('static'),
     objects: [],
@@ -83,8 +81,7 @@ export function aListedMap(overrides: Partial<MapRead> = {}): MapRead {
     sort_order: 0,
     click_action: 'link',
     render_mode: 'default',
-    show_in_lists: true,
-    readonly: false,
+    hide_in_monitor_menu: false,
     owner: 'me',
     ...overrides
   }

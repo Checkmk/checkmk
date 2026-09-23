@@ -20,6 +20,7 @@ import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import type {
   MapConfig,
   MapElement,
+  MapEnvelope,
   MapPublic,
   MapRead,
   MapView,
@@ -230,16 +231,19 @@ export function toWireConfig(map: MapConfig): MapConfigWire {
   }
 }
 
-// The map's sharing scope crosses the wire as a {publish, groups?} object; the
-// SPA models it as the visuals ``MapPublic`` (false | true | [scope, names]).
-export function publicToVisibility(p: MapPublic): MapVisibilityWire {
+// The map's envelope crosses the wire as a {publish, groups?, hide_in_monitor_menu}
+// object; the SPA models the sharing part as the visuals ``MapPublic``
+// (false | true | [scope, names]).
+export function envelopeToVisibility(envelope: MapEnvelope): MapVisibilityWire {
+  const hide = { hide_in_monitor_menu: envelope.hide_in_monitor_menu }
+  const p = envelope.public
   if (p === true) {
-    return { publish: 'all' }
+    return { publish: 'all', ...hide }
   }
   if (Array.isArray(p)) {
-    return { publish: p[0], groups: p[1] }
+    return { publish: p[0], groups: p[1], ...hide }
   }
-  return { publish: 'private' }
+  return { publish: 'private', ...hide }
 }
 
 export function visibilityToPublic(v: MapVisibilityWire): MapPublic {
@@ -291,12 +295,11 @@ export function mapListObjectToRead(obj: MapListObjectWire): MapRead {
     rotation_interval: s.rotation_interval ?? 0,
     sort_order: s.sort_order ?? 0,
     version: s.version ?? 0,
-    show_in_lists: s.show_in_lists ?? true,
+    hide_in_monitor_menu: ext.visibility.hide_in_monitor_menu,
     render_mode: s.render_mode ?? 'default',
     background_image: s.background_image ?? null,
     background_color: s.background_color ?? null,
     click_action: s.click_action,
-    readonly: s.readonly ?? false,
     hover_template: s.hover_template ?? null,
     context_template: s.context_template ?? null,
     default_z: s.default_z ?? 1,
@@ -310,10 +313,10 @@ export function mapListObjectToRead(obj: MapListObjectWire): MapRead {
 
 export function mapRequestBody(
   map: MapConfig,
-  visibility?: MapPublic
+  envelope?: MapEnvelope
 ): { config: MapConfigWire; visibility?: MapVisibilityWire } {
-  return visibility !== undefined
-    ? { config: toWireConfig(map), visibility: publicToVisibility(visibility) }
+  return envelope !== undefined
+    ? { config: toWireConfig(map), visibility: envelopeToVisibility(envelope) }
     : { config: toWireConfig(map) }
 }
 

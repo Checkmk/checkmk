@@ -56,13 +56,11 @@ def get_permitted_maps(user_permissions: UserPermissions | None = None) -> list[
     return _instances().pages(user_permissions or _user_permissions())
 
 
-def get_listable_maps(user_permissions: UserPermissions | None = None) -> list[MapPage]:
-    """The maps to offer in lists and menus: permitted and not marked hidden.
+def get_menu_maps(user_permissions: UserPermissions | None = None) -> list[MapPage]:
+    """The maps to offer in the Monitor menu: permitted and not hidden from it.
 
-    A map with ``show_in_lists`` unset stays fully usable by direct link, it is
-    only kept out of the listings — so the filter belongs on the listing paths
-    and not in :func:`get_permitted_maps`, whose other caller (the image usage
-    scan) has to see every map that references an image.
+    A map hidden from the menu stays in the maps overview and usable by direct
+    link, so the filter belongs here and not in :func:`get_permitted_maps`.
     """
     return [page for page in get_permitted_maps(user_permissions) if not page.is_hidden()]
 
@@ -103,7 +101,11 @@ def _own_instances(owner: UserId) -> pagetypes.OverridableInstances[MapPage]:
 
 
 def create_map(
-    owner: UserId, name: MapName, map_spec: MapSpec, public: VisualPublic | None
+    owner: UserId,
+    name: MapName,
+    map_spec: MapSpec,
+    public: VisualPublic | None,
+    hidden: bool = False,
 ) -> bool:
     """Atomically create ``owner``'s map ``name``; return ``False`` if it already exists.
 
@@ -118,7 +120,7 @@ def create_map(
     :func:`save_map` does it: the REST endpoint reads the map back right after
     creating it.
     """
-    page = MapPage(map_config_from_spec(owner, name, map_spec, public))
+    page = MapPage(map_config_from_spec(owner, name, map_spec, public, hidden))
     with store.locked(_user_maps_path(owner)):
         instances = _own_instances(owner)
         if instances.has_instance((owner, name)):
@@ -129,8 +131,14 @@ def create_map(
     return True
 
 
-def save_map(owner: UserId, name: MapName, map_spec: MapSpec, public: VisualPublic | None) -> None:
-    """Persist ``map_spec`` as ``owner``'s map ``name`` with the given visibility.
+def save_map(
+    owner: UserId,
+    name: MapName,
+    map_spec: MapSpec,
+    public: VisualPublic | None,
+    hidden: bool = False,
+) -> None:
+    """Persist ``map_spec`` as ``owner``'s map ``name`` with the given envelope.
 
     Locked and reloaded inside the lock for the same reason as :func:`create_map`:
     ``save_user_instances`` rewrites the owner's *whole* ``user_maps.mk`` from the
@@ -141,7 +149,7 @@ def save_map(owner: UserId, name: MapName, map_spec: MapSpec, public: VisualPubl
     (the REST update endpoint renders the saved map) sees the new state without
     re-reading the file.
     """
-    page = MapPage(map_config_from_spec(owner, name, map_spec, public))
+    page = MapPage(map_config_from_spec(owner, name, map_spec, public, hidden))
     with store.locked(_user_maps_path(owner)):
         instances = _own_instances(owner)
         instances.add_instance((owner, name), page)
@@ -206,8 +214,7 @@ def map_to_read(page: MapPage, can_edit: bool, can_delete: bool) -> MapRead:
         version=_int(payload.get("version"), 0),
         sort_order=_int(payload.get("sort_order"), 0),
         click_action=str(payload.get("click_action") or "link"),
-        readonly=bool(payload.get("readonly", False)),
-        show_in_lists=bool(payload.get("show_in_lists", True)),
+        hide_in_monitor_menu=cfg.hidden,
         hover_template=_opt_str(payload.get("hover_template")),
         context_template=_opt_str(payload.get("context_template")),
         render_mode=str(payload.get("render_mode") or "default"),

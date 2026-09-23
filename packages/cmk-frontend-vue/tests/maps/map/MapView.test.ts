@@ -12,7 +12,7 @@ import type { SignedMap } from '@/maps/api/mapConfig'
 import MapViewComponent from '@/maps/map/MapView.vue'
 import type { MapConfig, MapRead, MapView } from '@/maps/types/api'
 
-import { aMap, newMapView } from '../support/fixtures'
+import { aListedMap, aMap, newMapView } from '../support/fixtures'
 import { fakeMapsServices, provideServices } from '../support/services'
 
 // connectToMap opens an EventSource; jsdom has none. A minimal stand-in keeps the
@@ -193,15 +193,17 @@ describe('MapView – loading / error / read-only states', () => {
     expect(screen.queryByText('Loading map…')).toBeNull()
   })
 
-  it('shows the Read-only badge for a read-only map', async () => {
-    opensMap(newMapView('static'), { readonly: true })
+  it('shows the Read-only badge for a map the user may not edit', async () => {
+    opensMap(newMapView('static'))
+    services.maps.maps.value = [aListedMap({ name: 'map1', can_edit: false })]
     renderMap()
     await waitFor(() => expect(screen.getByTestId('renderer-static')).toBeInTheDocument())
     expect(screen.getByText('Read-only')).toBeInTheDocument()
   })
 
-  it('omits the Read-only badge for an editable map', async () => {
-    opensMap(newMapView('static'), { readonly: false })
+  it('omits the Read-only badge for a map the user may edit', async () => {
+    opensMap(newMapView('static'))
+    services.maps.maps.value = [aListedMap({ name: 'map1', can_edit: true })]
     renderMap()
     await waitFor(() => expect(screen.getByTestId('renderer-static')).toBeInTheDocument())
     expect(screen.queryByText('Read-only')).toBeNull()

@@ -349,8 +349,6 @@ class MapConfig(BaseModel):
     # is_valid_map_name so a GUI-saved map always round-trips.
     name: str = Field(..., min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9_\-]+$")
     alias: str = ""
-    readonly: bool = False
-    show_in_lists: bool = True
     connection_id: str = "live_1"
     icon_size: int | None = None
     rotation_interval: int = 0
@@ -412,7 +410,6 @@ class MapUpdate(BaseModel):
     hover_template: str | None = None
     context_template: str | None = None
     rotation_interval: int | None = None
-    show_in_lists: bool | None = None
     render_mode: RenderMode | None = None
     default_z: int | None = None
     canvas_width: int | None = None
@@ -440,8 +437,6 @@ class MapRead(BaseModel):
     version: int = 0
     sort_order: int = 0
     click_action: ClickAction = "link"
-    readonly: bool = False
-    show_in_lists: bool = True
     hover_template: str | None = None
     context_template: str | None = None
     render_mode: RenderMode = "default"

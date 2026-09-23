@@ -430,8 +430,8 @@ function dragBehaviour() {
       if (typeof node.fy === 'number') {
         node.y = node.fy
       }
-      // A readonly map — a bundled demo — lets anyone rearrange it as a
-      // playground, and remembers none of it.
+      // A map the user may not save lets them rearrange it as a playground,
+      // and remembers none of it.
       if (!props.readonly && (node.nodeType === 'host' || node.nodeType === 'site')) {
         scheduleSave()
       }

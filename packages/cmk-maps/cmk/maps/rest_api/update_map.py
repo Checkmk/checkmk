@@ -101,8 +101,15 @@ def update_map_v1(
         public = existing_own.config.public
     else:
         public = False
+    # Kept the same way; a new own override stays out of the Monitor menu where
+    # the instance it overrides is, so customizing a built-in does not add it.
+    hidden = (
+        (existing_own or page).config.hidden
+        if isinstance(body.visibility, ApiOmitted)
+        else body.visibility.hide_in_monitor_menu
+    )
     try:
-        save_map(target_owner, name, spec_from_map(body.config), public)
+        save_map(target_owner, name, spec_from_map(body.config), public, hidden)
     except MKGeneralException as exc:
         # A failed store write (disk full, unwritable profile) would otherwise
         # surface as an uncaught 500 with a crash report; answer a clean error.

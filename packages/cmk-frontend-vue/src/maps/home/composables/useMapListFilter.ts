@@ -48,14 +48,6 @@ export function useMapListFilter(): {
   const searchQuery = ref('')
   const chosenScope = ref<MapScope>('all')
 
-  // A map hidden from lists stays visible to an administrator, who is the one
-  // who can unhide it.
-  const visibleMaps = computed(() =>
-    auth.isAdmin.value
-      ? maps.maps.value
-      : maps.maps.value.filter((map) => map.show_in_lists !== false)
-  )
-
   /**
    * The list in its display order, each map with the owner kind the filter and
    * the ordering both need. Ordering does not depend on the query, so it is
@@ -67,7 +59,7 @@ export function useMapListFilter(): {
     const buckets = new Map<MapOwnerKind, { map: MapRead; kind: MapOwnerKind }[]>(
       OWNER_ORDER.map((kind) => [kind, []])
     )
-    for (const map of visibleMaps.value) {
+    for (const map of maps.maps.value) {
       const kind = mapOwnerKind(map, userId)
       buckets.get(kind)?.push({ map, kind })
     }

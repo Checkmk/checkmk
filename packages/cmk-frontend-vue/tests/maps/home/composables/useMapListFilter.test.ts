@@ -10,12 +10,7 @@ import { useMapListFilter } from '@/maps/home/composables/useMapListFilter'
 import type { MapRead } from '@/maps/types/api'
 
 import { aListedMap } from '../../support/fixtures'
-import {
-  aTicket,
-  fakeMapsServices,
-  fullCapabilities,
-  runWithServices
-} from '../../support/services'
+import { aTicket, fakeMapsServices, runWithServices } from '../../support/services'
 
 function listed(name: string, over: Partial<MapRead> = {}): MapRead {
   return aListedMap({ name, alias: name, ...over })
@@ -24,11 +19,8 @@ function listed(name: string, over: Partial<MapRead> = {}): MapRead {
 let services: ReturnType<typeof fakeMapsServices>
 
 /** The list only knows the user once the session is there. */
-async function setup(maps: MapRead[], isAdmin = true) {
-  services = fakeMapsServices(
-    {},
-    aTicket({ user_id: 'me', capabilities: fullCapabilities({ configure: isAdmin }) })
-  )
+async function setup(maps: MapRead[]) {
+  services = fakeMapsServices({}, aTicket({ user_id: 'me' }))
   await services.auth.init(null)
   services.maps.maps.value = maps
   return runWithServices(services, () => useMapListFilter())
@@ -48,17 +40,12 @@ describe('useMapListFilter — what is listed', () => {
     expect(filter.displayedMaps.value.map((map) => map.name)).toEqual(['mine', 'theirs', 'builtin'])
   })
 
-  it('hides a map flagged as hidden from a non-administrator', async () => {
-    const filter = await setup(
-      [listed('visible'), listed('hidden', { show_in_lists: false })],
-      false
-    )
-    expect(filter.displayedMaps.value.map((map) => map.name)).toEqual(['visible'])
-  })
-
-  it('shows the hidden map to an administrator, who can unhide it', async () => {
-    const filter = await setup([listed('visible'), listed('hidden', { show_in_lists: false })])
-    expect(filter.displayedMaps.value.map((map) => map.name)).toEqual(['visible', 'hidden'])
+  it('lists a map hidden from the Monitor menu too', async () => {
+    const filter = await setup([
+      listed('shown'),
+      listed('not-in-menu', { hide_in_monitor_menu: true })
+    ])
+    expect(filter.displayedMaps.value.map((map) => map.name)).toEqual(['shown', 'not-in-menu'])
   })
 
   it('searches name and display name', async () => {

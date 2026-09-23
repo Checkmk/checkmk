@@ -209,20 +209,6 @@ def map_metadata_spec(
                     prefill=DefaultValue(True),
                 ),
             ),
-            "show_in_lists": DictElement(
-                required=True,
-                group=_BEHAVIOR,
-                parameter_form=BooleanChoice(
-                    title=Title("Visibility"),
-                    label=Label("Show this map in the maps list"),
-                    help_text=Help(
-                        "When unchecked, the map is hidden from regular users "
-                        "in the maps list and dashboard. Direct links continue "
-                        "to work for users who already have view permission."
-                    ),
-                    prefill=DefaultValue(True),
-                ),
-            ),
             "hover_template": DictElement(
                 group=_TEMPLATES,
                 parameter_form=String(
@@ -270,7 +256,6 @@ METADATA_FIELDS = (
     "render_mode",
     "rotation_interval",
     "click_action",
-    "show_in_lists",
     "hover_template",
     "context_template",
 )

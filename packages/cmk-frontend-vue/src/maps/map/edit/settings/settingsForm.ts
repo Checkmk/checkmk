@@ -50,7 +50,6 @@ export interface SettingsForm {
   icon_size: number | null
   rotation_interval: number | null
   click_action: 'link' | 'none'
-  show_in_lists: boolean
   hover_template: string
   context_template: string
 }
@@ -84,7 +83,6 @@ export function formFromMap(
     icon_size: map.icon_size,
     rotation_interval: map.rotation_interval,
     click_action: map.click_action ?? 'link',
-    show_in_lists: map.show_in_lists !== false,
     map_type: map.view.type,
     worldmap_auto_source: worldmap?.auto_source ?? '',
     worldmap_auto_filter_value: worldmap?.auto_filter_value ?? '',
@@ -235,8 +233,7 @@ export function metadataFormData(map: MapRead): Record<string, unknown> {
     rotation_interval: rotation > 0 ? ['every', rotation] : ['off', null],
     click_action: map.click_action !== 'none',
     render_mode: map.render_mode ?? 'default',
-    default_z: map.default_z ?? 1,
-    show_in_lists: map.show_in_lists !== false
+    default_z: map.default_z ?? 1
   }
   if (map.icon_size !== null) {
     data.icon_size = map.icon_size

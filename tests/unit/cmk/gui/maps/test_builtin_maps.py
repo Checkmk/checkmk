@@ -30,10 +30,12 @@ def test_ships_the_expected_builtin_maps(request_context: None) -> None:  # noqa
     assert set(builtin_map_configs()) == _EXPECTED_BUILTINS
 
 
-def test_builtin_maps_are_public_and_readonly(request_context: None) -> None:  # noqa: ARG001
+def test_builtin_maps_are_public_and_kept_out_of_the_monitor_menu(
+    request_context: None,  # noqa: ARG001
+) -> None:
     for cfg in builtin_map_configs().values():
         assert cfg.public is True
-        assert cfg.map_spec["readonly"] is True
+        assert cfg.hidden is True
 
 
 @pytest.mark.parametrize("name", sorted(_EXPECTED_BUILTINS))

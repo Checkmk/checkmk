@@ -59,14 +59,20 @@ def create_map_v1(api_context: ApiContext, body: MapRequest) -> ApiResponse[MapO
     if not isinstance(body.visibility, ApiOmitted):
         validate_visibility(body.visibility)
         requested = public_request_from_visibility(body.visibility)
+        hidden = body.visibility.hide_in_monitor_menu
     else:
         requested = False
+        hidden = False
     try:
         # Atomic create: the store serializes the existence check and the write under
         # a file lock, so two concurrent POSTs of the same name can't both pass and
         # have the second silently overwrite the first.
         created = create_map(
-            user_id, name, spec_from_map(body.config), _authorized_public(requested)
+            user_id,
+            name,
+            spec_from_map(body.config),
+            _authorized_public(requested),
+            hidden,
         )
     except MKGeneralException as exc:
         # A failed store write (disk full, unwritable profile) would otherwise

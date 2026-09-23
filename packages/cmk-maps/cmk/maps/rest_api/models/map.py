@@ -877,12 +877,6 @@ class MapConfig:
             }
         ],
     )
-    readonly: bool | ApiOmitted = api_field(
-        description="Whether editing is disabled.", example=False, default_factory=ApiOmitted
-    )
-    show_in_lists: bool | ApiOmitted = api_field(
-        description="Show the map in listings.", example=True, default_factory=ApiOmitted
-    )
     hover_template: str | None | ApiOmitted = api_field(
         description="Map-wide hover template.",
         example="{{ host_name }}",
@@ -960,14 +954,8 @@ class MapListEntry:
     version: int | ApiOmitted = api_field(
         description="Map version.", example=1, default_factory=ApiOmitted
     )
-    show_in_lists: bool | ApiOmitted = api_field(
-        description="Show the map in listings.", example=True, default_factory=ApiOmitted
-    )
     render_mode: RenderMode | ApiOmitted = api_field(
         description="Rendering mode.", example="default", default_factory=ApiOmitted
-    )
-    readonly: bool | ApiOmitted = api_field(
-        description="Whether editing is disabled.", example=False, default_factory=ApiOmitted
     )
     hover_template: str | None | ApiOmitted = api_field(
         description="Map-wide hover template.",

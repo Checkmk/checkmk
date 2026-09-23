@@ -877,7 +877,6 @@ def cfg_to_map(content: str, map_name: str) -> MapPayload:
     map_cfg: MapPayload = {
         "name": map_name,
         "alias": map_name,
-        "readonly": False,
         "connection_id": "live_1",
         "icon_size": 22,
         "rotation_interval": 0,

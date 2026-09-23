@@ -70,7 +70,6 @@ const modified = computed(() => isModified(props.variable))
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  width: 100%;
   padding: 4px 12px;
   border-radius: 2px;
   color: var(--global-settings-variable-color);

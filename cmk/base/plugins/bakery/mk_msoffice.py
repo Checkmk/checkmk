@@ -6,21 +6,31 @@
 from collections.abc import Mapping
 from json import dumps
 from pathlib import Path
+from typing import Literal
+
+from pydantic import BaseModel
 
 from cmk.utils.password_store import lookup_for_bakery
 
 from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
 
 
+class _Config(BaseModel):
+    client_id: str
+    tenant_id: str
+    client_secret: tuple[Literal["password", "store"], str]
+
+
 def get_mk_msoffice_files(conf: Mapping[str, object]) -> FileGenerator:
+    config = _Config.model_validate(conf)
     yield Plugin(base_os=OS.WINDOWS, source=Path("mk_msoffice.ps1"))
     yield PluginConfig(
         base_os=OS.WINDOWS,
         lines=dumps(
             {
-                "ClientId": conf["client_id"],
-                "TenantId": conf["tenant_id"],
-                "ClientSecret": _client_secret(conf["client_secret"]),
+                "ClientId": config.client_id,
+                "TenantId": config.tenant_id,
+                "ClientSecret": _client_secret(config.client_secret),
             },
             indent=4,
         ).splitlines(),
@@ -29,14 +39,9 @@ def get_mk_msoffice_files(conf: Mapping[str, object]) -> FileGenerator:
     )
 
 
-def _client_secret(value: object) -> str:
-    match value:
-        case ("password", str(secret)):
-            return secret
-        case ("store", str(pwd_id)):
-            return lookup_for_bakery(pwd_id)
-        case other:
-            raise ValueError(f"Invalid password type: {other!r}")
+def _client_secret(value: tuple[Literal["password", "store"], str]) -> str:
+    kind, secret_or_id = value
+    return lookup_for_bakery(secret_or_id) if kind == "store" else secret_or_id
 
 
 register.bakery_plugin(

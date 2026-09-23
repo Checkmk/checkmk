@@ -101,6 +101,16 @@ test('a column offers no sort directions unless it sorts', async () => {
   expect(screen.queryByRole('button', { name: 'Sort ascending' })).not.toBeInTheDocument()
 })
 
+test('opening the panel focuses the filter rather than the sort directions', async () => {
+  const user = userEvent.setup()
+  renderDropdown(undefined, true)
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  await nextTick()
+
+  expect(screen.getByRole('checkbox', { name: 'Select all' })).toHaveFocus()
+})
+
 test('toggling an option does not commit to the model before Apply', async () => {
   const user = userEvent.setup()
   const { model } = renderDropdown()

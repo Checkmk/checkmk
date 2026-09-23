@@ -118,6 +118,7 @@ const isValid = ref(true)
 const content = ref<{ validate?: () => boolean } | null>(null)
 
 const panel = ref<HTMLElement | null>(null)
+const body = ref<HTMLElement | null>(null)
 const trigger = ref<HTMLElement | null>(null)
 
 // A filter component may mount floating content of its own (a CmkDropdown's
@@ -154,7 +155,7 @@ function open(): void {
   document.addEventListener('pointerdown', onPointerDown, true)
   void nextTick(() => {
     positionPanel()
-    focusRow(0)
+    focusFilter()
   })
 }
 
@@ -273,6 +274,15 @@ function focusRow(index: number): void {
   }
   const clamped = Math.min(items.length - 1, Math.max(0, index))
   items[clamped]?.focus()
+}
+
+function focusFilter(): void {
+  const first = body.value?.querySelector<HTMLElement>('input, button')
+  if (first) {
+    first.focus()
+  } else {
+    focusRow(0)
+  }
 }
 
 function moveFocus(delta: number): void {
@@ -406,14 +416,16 @@ onBeforeUnmount(() => {
           </CmkButton>
         </div>
 
-        <component
-          :is="filterComponent"
-          :key="draftKey"
-          ref="content"
-          v-model="draft"
-          :definition="definition"
-          @update:valid="isValid = $event"
-        />
+        <div ref="body">
+          <component
+            :is="filterComponent"
+            :key="draftKey"
+            ref="content"
+            v-model="draft"
+            :definition="definition"
+            @update:valid="isValid = $event"
+          />
+        </div>
       </div>
 
       <div class="monitoring-filter-dropdown__footer">

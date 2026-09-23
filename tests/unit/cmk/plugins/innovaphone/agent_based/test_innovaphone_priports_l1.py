@@ -101,3 +101,18 @@ def test_check_innovaphone_priports_l1_no_signal_loss(monkeypatch: pytest.Monkey
 def test_check_innovaphone_priports_l1_item_not_found() -> None:
     """Test check function with non-existent item"""
     assert not list(innovaphone_priports_l1.check_innovaphone_priports_l1("NonExistent", {}, {}))
+
+
+@pytest.mark.xfail(strict=True, reason="Crash report 4e70a284: KeyError 0")
+@time_machine.travel(60.0)
+def test_check_innovaphone_priports_l1_unknown_state(monkeypatch: pytest.MonkeyPatch) -> None:
+    # The device reported a port state that is neither Down (1) nor UP (2)
+    section = innovaphone_priports_l1.parse_innovaphone_priports_l1([["0", "0", "0", "0"]])
+    value_store = {"innovaphone_priports_l1.0": (50.0, 0)}
+    monkeypatch.setattr(innovaphone_priports_l1, "get_value_store", lambda: value_store)
+
+    assert list(
+        innovaphone_priports_l1.check_innovaphone_priports_l1("0", {"err_slip_count": 0}, section)
+    ) == [
+        Result(state=State.UNKNOWN, summary="Current state is unknown (0)"),
+    ]

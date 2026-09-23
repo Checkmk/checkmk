@@ -3,9 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
+from collections.abc import Mapping, Sequence
+
 import pytest
 
-from cmk.gui.inventory.filters import FilterInvBool, FilterInvFloat, FilterInvFloatChoice
+from cmk.gui.inventory.filters import (
+    _find_package,
+    FilterInvBool,
+    FilterInvFloat,
+    FilterInvFloatChoice,
+)
 from cmk.gui.type_defs import Rows, VisualContext
 from cmk.inventory.raw_paths import InventoryPath, TreeSource
 from cmk.inventory.trees import (
@@ -260,3 +268,54 @@ def test_filter_inv_bool(context: VisualContext, rows: Rows, expected_rows: Rows
         ).filter_table(context, rows)
         == expected_rows
     )
+
+
+_PACKAGE_A = {"name": "package-a", "version": "2.0"}
+
+
+@pytest.mark.parametrize(
+    "packages, name, from_version, to_version, expected",
+    [
+        pytest.param([_PACKAGE_A], "package-a", "", "", True, id="name-without-bounds"),
+        pytest.param([_PACKAGE_A], "package-b", "", "", False, id="another-name"),
+        pytest.param([], "package-a", "", "", False, id="no-packages"),
+        pytest.param([_PACKAGE_A], "package-a", "2.0", "2.0", True, id="the-exact-version"),
+        pytest.param([_PACKAGE_A], "package-a", "3.0", "3.0", False, id="another-exact-version"),
+        pytest.param([_PACKAGE_A], "package-a", "1.0", "", True, id="above-the-lower-bound"),
+        pytest.param([_PACKAGE_A], "package-a", "3.0", "", False, id="below-the-lower-bound"),
+        pytest.param([_PACKAGE_A], "package-a", "", "3.0", True, id="below-the-upper-bound"),
+        pytest.param([_PACKAGE_A], "package-a", "", "1.0", False, id="above-the-upper-bound"),
+        pytest.param([_PACKAGE_A], "package-a", "1.0", "3.0", True, id="between-the-bounds"),
+        pytest.param([_PACKAGE_A], "package-a", "3.0", "4.0", False, id="beneath-the-bounds"),
+        pytest.param(
+            [_PACKAGE_A], re.compile("^package"), "", "", True, id="a-regex-matching-the-name"
+        ),
+        pytest.param(
+            [_PACKAGE_A], re.compile("^other"), "", "", False, id="a-regex-matching-no-name"
+        ),
+        pytest.param(
+            [{"name": "package-a", "version": "1.0"}],
+            "package-a",
+            "1.00",
+            "",
+            True,
+            id="the-lower-bound-spelled-with-another-zero",
+        ),
+        pytest.param(
+            [{"name": "package-a", "version": "1.0"}],
+            "package-a",
+            "",
+            "1.00",
+            True,
+            id="the-upper-bound-spelled-with-another-zero",
+        ),
+    ],
+)
+def test_find_package(
+    packages: Sequence[Mapping[str, SDValue]],
+    name: str | re.Pattern[str],
+    from_version: str,
+    to_version: str,
+    expected: bool,
+) -> None:
+    assert _find_package(packages, name, from_version, to_version) is expected

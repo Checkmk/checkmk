@@ -847,6 +847,39 @@ class FilterHasInv(FilterOption):
         return self.query_filter.selection_value(value) != self.query_filter.ignore
 
 
+def _version_is_lower(a: str | None, b: str | None) -> bool:
+    return cmp_version(a, b) == -1
+
+
+def _version_is_higher(a: str | None, b: str | None) -> bool:
+    return cmp_version(a, b) == 1
+
+
+def _find_package(
+    packages: Sequence[Mapping[str, SDValue]],
+    name: str | re.Pattern[str],
+    from_version: str,
+    to_version: str,
+) -> bool:
+    for package in packages:
+        if isinstance(name, str):
+            if package["name"] != name:
+                continue
+        elif not name.search(str(package["name"])):
+            continue
+        if not from_version and not to_version:
+            return True  # version not relevant
+        version = package["version"]
+        if from_version == to_version and from_version != version:
+            continue
+        if from_version and _version_is_lower(str(version), from_version):
+            continue
+        if to_version and _version_is_higher(str(version), to_version):
+            continue
+        return True
+    return False
+
+
 class FilterInvHasSoftwarePackage(Filter):
     def __init__(self) -> None:
         self._varprefix = "invswpac_host_"
@@ -967,38 +1000,7 @@ class FilterInvHasSoftwarePackage(Filter):
         new_rows = []
         for row in rows:
             packages = row["host_inventory"].get_rows(("software", "packages"))
-            is_in = self.find_package(packages, name, from_version, to_version)
+            is_in = _find_package(packages, name, from_version, to_version)
             if is_in != negate:
                 new_rows.append(row)
         return new_rows
-
-    def find_package(
-        self,
-        packages: Sequence[Mapping[str, SDValue]],
-        name: str | re.Pattern[str],
-        from_version: str,
-        to_version: str,
-    ) -> bool:
-        for package in packages:
-            if isinstance(name, str):
-                if package["name"] != name:
-                    continue
-            elif not name.search(str(package["name"])):
-                continue
-            if not from_version and not to_version:
-                return True  # version not relevant
-            version = package["version"]
-            if from_version == to_version and from_version != version:
-                continue
-            if from_version and self.version_is_lower(str(version), from_version):
-                continue
-            if to_version and self.version_is_higher(str(version), to_version):
-                continue
-            return True
-        return False
-
-    def version_is_lower(self, a: str | None, b: str | None) -> bool:
-        return a != b and not self.version_is_higher(a, b)
-
-    def version_is_higher(self, a: str | None, b: str | None) -> bool:
-        return cmp_version(a, b) == 1

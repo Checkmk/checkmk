@@ -258,11 +258,14 @@ const alertIconColor = computed(() => {
   }
 
   .cmk-alert__body {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
     font-size: var(--font-size-normal);
     line-height: normal;
-    white-space: nowrap;
+    white-space: normal;
     overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   .cmk-alert__close {

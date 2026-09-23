@@ -27,7 +27,8 @@ function renderApp() {
       user_name: 'cmkadmin',
       edition_title: 'Checkmk Ultimate',
       // 2026-08-13 12:00:00 UTC
-      trial_end_timestamp: 1786622400
+      trial_end_timestamp: 1786622400,
+      trial_length_days: 30
     }
   })
 }

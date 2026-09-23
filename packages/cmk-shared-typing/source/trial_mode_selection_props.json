@@ -12,6 +12,10 @@
     "trial_end_timestamp": {
       "type": "number",
       "description": "Unix timestamp in seconds."
+    },
+    "trial_length_days": {
+      "type": "number",
+      "description": "Days a trial runs for."
     }
   },
   "required": [
@@ -21,6 +25,7 @@
     "verify_offline_url",
     "user_name",
     "edition_title",
-    "trial_end_timestamp"
+    "trial_end_timestamp",
+    "trial_length_days"
   ]
 }

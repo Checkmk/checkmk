@@ -676,6 +676,31 @@ def test_filters_display_with_empty_request(live: MockLiveStatusConnection) -> N
                 filt.display(dict.fromkeys(filt.htmlvars, ""))
 
 
+# fmt: off
+@pytest.mark.parametrize(
+    "ident, expected_line_breaks",
+    [
+        pytest.param("log_state", 1, id="host and service states on separate rows"),
+        pytest.param("hostsgroups_having_problems", 1, id="service and host problems on separate rows"),
+        pytest.param("host_address", 1, id="match options below the address"),
+        pytest.param("aggr_assumed_state", 1, id="unset assumed state below the states"),
+        pytest.param("host_auxtags", 2, id="one row per aux tag"),
+        pytest.param("aggr_state", 0, id="hidden component adds no row"),
+        pytest.param("aggregation_types", 0, id="horizontal group stays on one row"),
+    ],
+)
+# fmt: on
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_filter_display_puts_top_level_components_on_separate_rows(
+    ident: str, expected_line_breaks: int
+) -> None:
+    with output_funnel.plugged():
+        filter_registry[ident].display({})
+        html_output = output_funnel.drain()
+
+    assert html_output.count("<br") == expected_line_breaks
+
+
 def _set_expected_queries(filt_ident: str, live: MockLiveStatusConnection) -> None:
     if filt_ident in ["hostgroups"]:
         live.expect_query("GET hostgroups\nCache: reload\nColumns: name alias\n")

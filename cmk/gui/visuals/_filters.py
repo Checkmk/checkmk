@@ -1433,6 +1433,8 @@ class _FilterHostAuxTags(Filter):
         # keep this in sync with components(), remove once all filter menus are switched to vue
         # this special styling is not supported by the current components
         for num in range(self.query_filter.count):
+            if num:
+                html.br()
             varname = "%s_%d" % (self.query_filter.var_prefix, num)
             negate_varname = varname + "_neg"
             html.dropdown(
@@ -1610,12 +1612,16 @@ class CustomAttributeFilter(Filter):
 
     @override
     def components(self) -> Iterable[FilterComponent]:
-        yield Dropdown(
-            id=self.name_varname(self.ident),
-            choices=self._options(),
-        )
-        yield TextInput(
-            id=self.value_varname(self.ident),
+        yield HorizontalGroup(
+            components=[
+                Dropdown(
+                    id=self.name_varname(self.ident),
+                    choices=self._options(),
+                ),
+                TextInput(
+                    id=self.value_varname(self.ident),
+                ),
+            ]
         )
 
     def _options(self) -> ChoiceMapping:

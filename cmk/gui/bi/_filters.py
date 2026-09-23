@@ -217,15 +217,19 @@ class _BIFrozenAggregations(Filter):
 
     @override
     def components(self) -> Iterable[FilterComponent]:
-        yield Checkbox(
-            id=self.htmlvars[0],
-            label=_("Show frozen"),
-            default_value=True,
-        )
-        yield Checkbox(
-            id=self.htmlvars[1],
-            label=_("Show dynamic"),
-            default_value=True,
+        yield HorizontalGroup(
+            components=[
+                Checkbox(
+                    id=self.htmlvars[0],
+                    label=_("Show frozen"),
+                    default_value=True,
+                ),
+                Checkbox(
+                    id=self.htmlvars[1],
+                    label=_("Show dynamic"),
+                    default_value=True,
+                ),
+            ]
         )
 
     @override

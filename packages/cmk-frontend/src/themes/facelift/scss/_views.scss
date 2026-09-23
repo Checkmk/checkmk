@@ -71,17 +71,14 @@ div.floatfilter {
       &#optservice_group {
         width: 237px;
       }
+
+      &.neg + .select2-container {
+        min-width: 237px;
+      }
     }
 
-    .multigroup {
-      table {
-        margin-top: -3px;
-      }
-
-      select {
-        width: 150px;
-        height: 66px;
-      }
+    select.select2-enable:not(.op, .neg) + .select2-container {
+      min-width: 150px;
     }
 
     .filtertime select {
@@ -120,7 +117,8 @@ div.floatfilter {
       }
     }
 
-    input.neg[type='text'] {
+    input.neg[type='text'],
+    > input[type='text']:has(+ nobr) {
       position: relative;
       top: -1px;
       width: 237px;
@@ -185,6 +183,10 @@ div.floatfilter {
     width: 300px;
     border-spacing: 0 3px;
 
+    & ~ br {
+      display: none;
+    }
+
     a.control {
       padding: 0 6px;
     }
@@ -199,16 +201,6 @@ div.floatfilter {
   &.invswpac_version,
   &.invswpac_package_version {
     input.text {
-      margin-left: 4px;
-    }
-  }
-
-  div.service_level {
-    display: block;
-    float: left;
-    margin: 0 8px 2px 0;
-
-    .select2-container {
       margin-left: 4px;
     }
   }
@@ -389,11 +381,6 @@ table.nform table.valuespec_listof {
 
     .valuespec_tuple {
       border-spacing: 8px;
-    }
-
-    .content nobr {
-      display: inline-block;
-      margin-top: 8px;
     }
   }
 

@@ -16,13 +16,7 @@ from cmk.server_side_calls.v1 import (
     SpecialAgentConfig,
 )
 
-
-class CertVerification(BaseModel):
-    cert_server_name: str | None = None
-
-
 type Connection = tuple[Literal["ip_address", "host_name", "custom_address"], str | None]
-type TlsVerification = tuple[Literal["secure"], CertVerification] | tuple[Literal["insecure"], None]
 
 
 class Params(BaseModel):
@@ -30,7 +24,7 @@ class Params(BaseModel):
     port: int
     user: str
     password: Secret
-    cert_verification: TlsVerification
+    disable_cert_verification: bool
 
 
 def _connection_address(connection: Connection, host_config: HostConfig) -> str:
@@ -45,17 +39,12 @@ def _connection_address(connection: Connection, host_config: HostConfig) -> str:
             raise ValueError(f"Invalid connection configuration: {connection!r}")
 
 
-def _tls_arguments(cert_verification: TlsVerification, host_config: HostConfig) -> list[str]:
-    match cert_verification:
-        case ("secure", CertVerification() as verification):
-            return [
-                "--cert-server-name",
-                verification.cert_server_name or host_config.name,
-            ]
-        case ("insecure", _):
-            return ["--disable-cert-verification"]
-        case _:
-            raise ValueError(f"Invalid TLS configuration: {cert_verification!r}")
+def _tls_arguments(disable_cert_verification: bool, host_config: HostConfig) -> list[str]:
+    if disable_cert_verification:
+        return ["--disable-cert-verification"]
+    # We may be talking to an IP address while the certificate is issued for a host
+    # name, so validation is pinned to the Checkmk host name.
+    return ["--cert-server-name", host_config.name]
 
 
 def commands_function(params: Params, host_config: HostConfig) -> Iterable[SpecialAgentCommand]:
@@ -66,7 +55,7 @@ def commands_function(params: Params, host_config: HostConfig) -> Iterable[Speci
         params.password,
         "--port",
         str(params.port),
-        *_tls_arguments(params.cert_verification, host_config),
+        *_tls_arguments(params.disable_cert_verification, host_config),
         _connection_address(params.connection, host_config),
     ]
 

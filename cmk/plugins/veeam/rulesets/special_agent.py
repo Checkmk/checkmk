@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
+    BooleanChoice,
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
     DefaultValue,
@@ -91,40 +92,17 @@ def _parameter_form() -> Dictionary:
                     migrate=migrate_to_password,
                 ),
             ),
-            "cert_verification": DictElement(
+            "disable_cert_verification": DictElement(
                 required=True,
-                parameter_form=CascadingSingleChoice(
-                    title=Title("TLS certificate validation"),
-                    elements=[
-                        CascadingSingleChoiceElement(
-                            name="secure",
-                            title=Title("Verify the server certificate"),
-                            parameter_form=Dictionary(
-                                elements={
-                                    "cert_server_name": DictElement(
-                                        required=False,
-                                        parameter_form=String(
-                                            title=Title("TLS certificate host name"),
-                                            custom_validate=(
-                                                validators.LengthInRange(min_value=1),
-                                            ),
-                                            help_text=Help(
-                                                "The host name the server certificate is "
-                                                "validated against. If omitted, the "
-                                                "Checkmk host name is used."
-                                            ),
-                                        ),
-                                    ),
-                                }
-                            ),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="insecure",
-                            title=Title("Do not verify the server certificate (unsafe)"),
-                            parameter_form=FixedValue(value=None),
-                        ),
-                    ],
-                    prefill=DefaultValue("secure"),
+                parameter_form=BooleanChoice(
+                    title=Title("Skip TLS certificate validation"),
+                    label=Label("Do not verify the server certificate (unsafe)"),
+                    help_text=Help(
+                        "By default the server's TLS certificate is validated against the "
+                        "Checkmk host name. Enable this to connect without verifying the "
+                        "certificate, for example when the backup server presents a "
+                        "self-signed certificate."
+                    ),
                 ),
             ),
         },

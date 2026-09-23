@@ -23,7 +23,7 @@ BASE_RULE = {
     "port": 9419,
     "user": "monitoring",
     "password": PASSWORD,
-    "cert_verification": ("secure", {}),
+    "disable_cert_verification": False,
 }
 
 
@@ -58,18 +58,19 @@ def test_every_connection_choice_is_accepted(connection: tuple[str, str | None])
 
 @pytest.mark.usefixtures("_register_form_spec_visitors")
 @pytest.mark.parametrize(
-    "cert_verification",
+    "disable_cert_verification",
     [
-        pytest.param(("secure", {}), id="verify against the host name"),
-        pytest.param(
-            ("secure", {"cert_server_name": "cert.example.com"}), id="verify against a given name"
-        ),
-        pytest.param(("insecure", None), id="do not verify"),
+        pytest.param(False, id="verify the certificate"),
+        pytest.param(True, id="skip verification"),
     ],
 )
-def test_every_certificate_choice_is_accepted(cert_verification: tuple[str, object]) -> None:
+def test_both_certificate_choices_are_accepted(disable_cert_verification: bool) -> None:
     _validate(
-        {**BASE_RULE, "connection": ("ip_address", None), "cert_verification": cert_verification}
+        {
+            **BASE_RULE,
+            "connection": ("ip_address", None),
+            "disable_cert_verification": disable_cert_verification,
+        }
     )
 
 

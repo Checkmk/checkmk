@@ -16,7 +16,7 @@ BASE_PARAMS = {
     "port": 9419,
     "user": "monitoring",
     "password": Secret(1),
-    "cert_verification": ("secure", {}),
+    "disable_cert_verification": False,
 }
 
 
@@ -70,24 +70,12 @@ def test_certificate_is_verified_against_the_host_name_by_default() -> None:
     ]
 
 
-def test_configured_certificate_host_name_overrides_the_host_name() -> None:
+def test_skipping_verification_disables_certificate_verification() -> None:
     arguments = _arguments(
         {
             **BASE_PARAMS,
             "connection": ("ip_address", None),
-            "cert_verification": ("secure", {"cert_server_name": "cert.example.com"}),
-        }
-    )
-
-    assert "cert.example.com" in arguments
-
-
-def test_insecure_choice_disables_certificate_verification() -> None:
-    arguments = _arguments(
-        {
-            **BASE_PARAMS,
-            "connection": ("ip_address", None),
-            "cert_verification": ("insecure", None),
+            "disable_cert_verification": True,
         }
     )
 

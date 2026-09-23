@@ -476,7 +476,56 @@ filter_tests = [
             ("hst_service_level_lower", "10"),
             ("hst_service_level_upper", "20"),
         ],
-        expected_filters=("Filter: host_custom_variable_names >= EC_SL\n"),
+        expected_filters=(
+            "Filter: host_custom_variables = EC_SL 10\n"
+            "Filter: host_custom_variables = EC_SL 20\n"
+            "Or: 2\n"
+        ),
+    ),
+    FilterTest(
+        ident="hst_service_level",
+        request_vars=[("hst_service_level_lower", "30")],
+        expected_filters=("Filter: host_custom_variables = EC_SL 30\n"),
+    ),
+    FilterTest(
+        ident="hst_service_level",
+        request_vars=[("hst_service_level_upper", "0")],
+        expected_filters=("Filter: host_custom_variables = EC_SL 0\n"),
+    ),
+    FilterTest(
+        ident="hst_service_level",
+        request_vars=[
+            ("hst_service_level_lower", "30"),
+            ("hst_service_level_upper", "10"),
+        ],
+        expected_filters=("Or: 0\n"),
+    ),
+    FilterTest(
+        ident="hst_service_level",
+        request_vars=[("hst_service_level_lower", "not-a-number")],
+        expected_filters="",
+    ),
+    FilterTest(
+        ident="hst_service_level",
+        request_vars=[
+            ("hst_service_level_lower", "not-a-number"),
+            ("hst_service_level_upper", "20"),
+        ],
+        expected_filters="",
+    ),
+    FilterTest(
+        ident="svc_service_level",
+        request_vars=[
+            ("svc_service_level_lower", "0"),
+            ("svc_service_level_upper", "30"),
+        ],
+        expected_filters=(
+            "Filter: service_custom_variables = EC_SL 0\n"
+            "Filter: service_custom_variables = EC_SL 10\n"
+            "Filter: service_custom_variables = EC_SL 20\n"
+            "Filter: service_custom_variables = EC_SL 30\n"
+            "Or: 4\n"
+        ),
     ),
     FilterTest(
         ident="log_class",

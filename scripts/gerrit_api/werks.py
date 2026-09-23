@@ -120,7 +120,7 @@ def werk_details(client: GerritClient, change: ChangeDetails) -> WerkDetails:
             if re.findall(r"\d{4,6}.md$", file):
                 return file
         raise FileNotFoundError(
-            f"Change\n'{change.change_id}:{change.subject}'\n, doesn't include a Werk!"
+            f"Change '{change.change_id}:{change.subject}', doesn't include a Werk!"
         )
 
     raw = client.changes_api.get_content_from_file(change, file := _werk_file(client, change))

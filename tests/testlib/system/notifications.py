@@ -9,8 +9,6 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from typing import NamedTuple
 
-from cmk.livestatus_client import MKLivestatusException
-from tests.testlib.common.utils import wait_until
 from tests.testlib.common.utils2 import is_cleanup_enabled
 from tests.testlib.system.site import Site
 
@@ -30,20 +28,6 @@ class NotificationTarget(NamedTuple):
 
     host_name: str
     service_name: str
-
-
-def _is_service_monitored(site: Site, host_name: str, service_name: str) -> bool:
-    try:
-        return bool(
-            site.live.query(
-                "GET services\nColumns: description\n"
-                f"Filter: host_name = {host_name}\n"
-                f"Filter: service_description = {service_name}\n"
-            )
-        )
-    except MKLivestatusException:
-        # The socket can vanish for a moment while the core re-reads its config.
-        return False
 
 
 @contextmanager
@@ -81,14 +65,8 @@ def create_notification_host(site: Site, host_name: str) -> Generator[Notificati
     site.stop_active_services()
     try:
         with create_host(site, host_name):
-            # The core learns about the host only once it has re-read its config, which
-            # happens asynchronously after the activation.
-            wait_until(
-                lambda: _is_service_monitored(site, host_name, _SEEDED_SERVICE),
-                timeout=60,
-                interval=1,
-                condition_name=f"service '{_SEEDED_SERVICE}' of host '{host_name}' is monitored",
-            )
+            # `send_service_check_result` waits for the core to have re-read its config,
+            # so the seeded service is there by the time the result is submitted.
             site.send_service_check_result(
                 host_name, _SEEDED_SERVICE, 0, "FAKE OK", expected_state=0
             )

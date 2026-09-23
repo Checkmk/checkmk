@@ -63,13 +63,6 @@ def test_automatic_host_removal(
                 force_foreign_changes=True
             )
 
-            # The cores may still be reloading the new configuration shortly after the
-            # activation completed. Wait until the new hosts are actually visible in
-            # livestatus before sending check results (CMK-37736).
-            logger.info("Waiting for the Check_MK services to appear in livestatus")
-            _wait_for_service_in_livestatus(central_site, hostname_central, "Check_MK")
-            _wait_for_service_in_livestatus(remote_site, hostname_remote, "Check_MK")
-
             central_site.send_service_check_result(hostname_central, "Check_MK", 2, "FAKE CRIT")
             remote_site.send_service_check_result(hostname_remote, "Check_MK", 2, "FAKE CRIT")
 
@@ -101,21 +94,6 @@ def test_automatic_host_removal(
             central_site.openapi.changes.activate_and_wait_for_completion(
                 force_foreign_changes=True
             )
-
-
-def _wait_for_service_in_livestatus(site: Site, hostname: str, service_description: str) -> None:
-    wait_until(
-        lambda: (
-            site.live.query(
-                "GET services\nColumns: description\n"
-                f"Filter: host_name = {hostname}\n"
-                f"Filter: description = {service_description}\n"
-            )
-            != []
-        ),
-        timeout=60,
-        interval=2,
-    )
 
 
 @contextmanager

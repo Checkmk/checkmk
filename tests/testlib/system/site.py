@@ -104,6 +104,8 @@ class CMKCoreType(StrEnum):
 
 NO_TRACING = TracingConfig(collect_traces=False, otlp_endpoint="", extra_resource_attributes={})
 
+_LIVESTATUS_OBJECT_TIMEOUT = 60
+
 # The JSON of the REST API inventory endpoint. The whole host tree is validated, so the values
 # must cover everything the inventory serialiser can emit, not only what a test reads.
 _InventoryValue = int | float | str | bool | None
@@ -307,6 +309,48 @@ class Site:
         self.omd("restart", "core")
         self.wait_for_core_reloaded(before_restart)
 
+    def wait_for_host_in_livestatus(
+        self, hostname: str, timeout: float = _LIVESTATUS_OBJECT_TIMEOUT
+    ) -> None:
+        """Wait until the monitoring core knows the host."""
+        self._wait_for_object_in_livestatus(
+            f"GET hosts\nColumns: name\nFilter: name = {hostname}\n",
+            f"host '{hostname}' is monitored",
+            timeout,
+        )
+
+    def wait_for_service_in_livestatus(
+        self, hostname: str, service_description: str, timeout: float = _LIVESTATUS_OBJECT_TIMEOUT
+    ) -> None:
+        """Wait until the monitoring core knows the service."""
+        self._wait_for_object_in_livestatus(
+            "GET services\nColumns: description\n"
+            f"Filter: host_name = {hostname}\n"
+            f"Filter: description = {service_description}\n",
+            f"service '{service_description}' of host '{hostname}' is monitored",
+            timeout,
+        )
+
+    def _wait_for_object_in_livestatus(
+        self, query: str, condition_name: str, timeout: float
+    ) -> None:
+        """Wait until a livestatus query matches an object.
+
+        Activating changes returns before the core has finished re-reading its
+        configuration, so an object can be missing from livestatus for a moment after
+        the activation completed. Livestatus cannot be asked to wait for this itself:
+        its `WaitObject` header rejects a primary key the core does not know yet.
+        """
+
+        def _is_monitored() -> bool:
+            try:
+                return bool(self.live.query(query))
+            except MKLivestatusException:
+                # The socket vanishes for a moment while the core re-reads its config.
+                return False
+
+        wait_until(_is_monitored, timeout=timeout, interval=1, condition_name=condition_name)
+
     @tracer.instrument("Site.send_host_check_result")
     def send_host_check_result(
         self,
@@ -318,6 +362,7 @@ class Site:
     ) -> None:
         if expected_state is None:
             expected_state = state
+        self.wait_for_host_in_livestatus(hostname)
         last_check_before = self._last_host_check(hostname)
         command_timestamp = self._command_timestamp(last_check_before)
         self.live.command(
@@ -343,6 +388,7 @@ class Site:
     ) -> None:
         if expected_state is None:
             expected_state = state
+        self.wait_for_service_in_livestatus(hostname, service_description)
         last_check_before = self._last_service_check(hostname, service_description)
         command_timestamp = self._command_timestamp(last_check_before)
         self.live.command(
@@ -370,6 +416,7 @@ class Site:
             "%(hostname)s;%(service_description)s schedule check",
             {"hostname": hostname, "service_description": service_description},
         )
+        self.wait_for_service_in_livestatus(hostname, service_description)
         last_check_before = self._last_service_check(hostname, service_description)
         logger.debug(
             "%(hostname)s;%(service_description)s last check before %(last_check_before)r",
@@ -474,6 +521,7 @@ class Site:
         max_count: int = 10,
     ) -> None:
         """Wait for the update of the provided service util no pending services are found"""
+        self.wait_for_service_in_livestatus(hostname, service_description)
         count = 0
         while (
             len(pending_services := self.get_host_services(hostname, pending=True)) > 0

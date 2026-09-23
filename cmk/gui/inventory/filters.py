@@ -91,6 +91,10 @@ class FilterInvFloatChoice:
 _MaybeBounds = tuple[int | float | None, int | float | None]
 
 
+def _request_vars(ident: str) -> list[str]:
+    return [f"{ident}_from", f"{ident}_until"]
+
+
 class _FilterNumberRange(Filter):
     """Filter for choosing a range in which a certain integer lies"""
 
@@ -353,20 +357,19 @@ def _filter_with_sort_key(
     return True
 
 
-def _filter_rows_text_with_sort_key(
+def _filter_rows_with_sort_key(
     ident: str,
-    request_vars: list[str],
-    inventory_path: InventoryPath,
+    value_of: Callable[[Row], SDValue],
     sort_key: Callable[[str], Comparable],
     context: VisualContext,
     rows: Rows,
 ) -> Rows:
-    from_value, until_value = (context.get(ident, {}).get(v) for v in request_vars)
+    from_value, until_value = (context.get(ident, {}).get(v) for v in _request_vars(ident))
     return [
         r
         for r in rows
         if _filter_with_sort_key(
-            value=r["host_inventory"].get_attribute(inventory_path.path, inventory_path.key),
+            value=value_of(r),
             from_value=from_value,
             until_value=until_value,
             sort_key=sort_key,
@@ -374,29 +377,32 @@ def _filter_rows_text_with_sort_key(
     ]
 
 
-class FilterInvTextWithSortKey(Filter):
+class _FilterTextRange(Filter):
+    """Filter for choosing a range two sortable texts lie in"""
+
     def __init__(
         self,
         *,
+        inv_info: str,
         ident: str,
         title: str | LazyString,
-        inventory_path: InventoryPath,
-        sort_key: Callable[[str], Comparable],
-        is_show_more: bool = True,
+        from_label: str,
+        until_label: str,
+        rows_filter: Callable[[VisualContext, Rows], Rows],
+        is_show_more: bool = False,
     ) -> None:
-        request_vars = [ident + "_from", ident + "_until"]
+        self._from_label = from_label
+        self._until_label = until_label
         self.query_filter = query_filters.Query(
             ident=ident,
-            request_vars=request_vars,
-            rows_filter=partial(
-                _filter_rows_text_with_sort_key, ident, request_vars, inventory_path, sort_key
-            ),
+            request_vars=_request_vars(ident),
+            rows_filter=rows_filter,
         )
         super().__init__(
             ident=self.query_filter.ident,
             title=title,
             sort_index=800,
-            info="host",
+            info=inv_info,
             htmlvars=self.query_filter.request_vars,
             link_columns=[],
             is_show_more=is_show_more,
@@ -407,31 +413,56 @@ class FilterInvTextWithSortKey(Filter):
     def display(self, value: FilterHTTPVariables) -> None:
         # keep this in sync with components(), remove once all filter menus are switched to vue
         # this special styling is not supported by the current components
-        html.write_text_permissive(_("From:") + "&nbsp;")
+        html.write_text_permissive(self._from_label)
         html.text_input(
-            varname=self.htmlvars[0],
-            default_value=value.get(self.htmlvars[0], ""),
-            style="width: 80px;",
+            varname=self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""), size=7
         )
-        html.write_text_permissive(" &nbsp; " + _("To:") + "&nbsp;")
+        html.write_text_permissive(" &nbsp; ")
+        html.write_text_permissive(self._until_label)
         html.text_input(
-            varname=self.htmlvars[1],
-            default_value=value.get(self.htmlvars[1], ""),
-            style="width: 80px;",
+            varname=self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), size=7
         )
 
     @override
     def components(self) -> Iterable[FilterComponent]:
         yield HorizontalGroup(
             components=[
-                TextInput(id=self.query_filter.request_vars[0], label=_("From:")),
-                TextInput(id=self.query_filter.request_vars[1], label=_("To:")),
+                TextInput(id=self.htmlvars[0], label=self._from_label),
+                TextInput(id=self.htmlvars[1], label=self._until_label),
             ]
         )
 
     @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         return self.query_filter.filter_table(context, rows)
+
+
+class FilterInvTextWithSortKey(_FilterTextRange):
+    def __init__(
+        self,
+        *,
+        ident: str,
+        title: str | LazyString,
+        inventory_path: InventoryPath,
+        sort_key: Callable[[str], Comparable],
+        is_show_more: bool = True,
+    ) -> None:
+        super().__init__(
+            inv_info="host",
+            ident=ident,
+            title=title,
+            from_label=_("From:"),
+            until_label=_("To:"),
+            rows_filter=partial(
+                _filter_rows_with_sort_key,
+                ident,
+                lambda row: row["host_inventory"].get_attribute(
+                    inventory_path.path, inventory_path.key
+                ),
+                sort_key,
+            ),
+            is_show_more=is_show_more,
+        )
 
     @override
     def need_inventory(self, value: FilterHTTPVariables) -> bool:
@@ -552,27 +583,7 @@ class FilterInvtableText(InputTextFilter):
         )
 
 
-def _filter_rows_table_text_with_sort_key(
-    ident: str,
-    request_vars: list[str],
-    sort_key: Callable[[str], Comparable],
-    context: VisualContext,
-    rows: Rows,
-) -> Rows:
-    from_value, until_value = (context.get(ident, {}).get(v) for v in request_vars)
-    return [
-        r
-        for r in rows
-        if _filter_with_sort_key(
-            value=r.get(ident),
-            from_value=from_value,
-            until_value=until_value,
-            sort_key=sort_key,
-        )
-    ]
-
-
-class FilterInvtableTextWithSortKey(Filter):
+class FilterInvtableTextWithSortKey(_FilterTextRange):
     def __init__(
         self,
         *,
@@ -581,50 +592,16 @@ class FilterInvtableTextWithSortKey(Filter):
         title: str,
         sort_key: Callable[[str], Comparable],
     ) -> None:
-        request_vars = [ident + "_from", ident + "_until"]
-        self.query_filter = query_filters.Query(
+        super().__init__(
+            inv_info=inv_info,
             ident=ident,
-            request_vars=request_vars,
+            title=title,
+            from_label=_("From:"),
+            until_label=_("To:"),
             rows_filter=partial(
-                _filter_rows_table_text_with_sort_key, ident, request_vars, sort_key
+                _filter_rows_with_sort_key, ident, lambda row: row.get(ident), sort_key
             ),
         )
-        super().__init__(
-            ident=self.query_filter.ident,
-            title=title,
-            sort_index=800,
-            info=inv_info,
-            htmlvars=self.query_filter.request_vars,
-            link_columns=[],
-            group=FilterGroup.INVENTORY,
-        )
-
-    @override
-    def display(self, value: FilterHTTPVariables) -> None:
-        # keep this in sync with components(), remove once all filter menus are switched to vue
-        # this special styling is not supported by the current components
-        html.write_text_permissive(_("From:"))
-        html.text_input(
-            varname=self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""), size=7
-        )
-        html.write_text_permissive(" &nbsp; ")
-        html.write_text_permissive(_("To:"))
-        html.text_input(
-            varname=self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), size=7
-        )
-
-    @override
-    def components(self) -> Iterable[FilterComponent]:
-        yield HorizontalGroup(
-            components=[
-                TextInput(id=self.htmlvars[0], label=_("From:")),
-                TextInput(id=self.htmlvars[1], label=_("To:")),
-            ]
-        )
-
-    @override
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        return self.query_filter.filter_table(context, rows)
 
 
 class FilterInvtableDualChoice(Filter):
@@ -751,56 +728,16 @@ class FilterInvtableTimestampAsAge(FilterNumberRange):
         )
 
 
-class FilterInvtableVersion(Filter):
+class FilterInvtableVersion(_FilterTextRange):
     def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
-        request_vars = [ident + "_from", ident + "_until"]
-        self.query_filter = query_filters.Query(
-            ident=ident,
-            request_vars=request_vars,
-            rows_filter=partial(query_filters.version_in_range, ident, request_vars),
-        )
         super().__init__(
-            ident=self.query_filter.ident,
+            inv_info=inv_info,
+            ident=ident,
             title=title,
-            sort_index=800,
-            info=inv_info,
-            htmlvars=self.query_filter.request_vars,
-            link_columns=[],
-            group=FilterGroup.INVENTORY,
+            from_label=_("Min.&nbsp;Version:"),
+            until_label=_("Max.&nbsp;Version:"),
+            rows_filter=partial(query_filters.version_in_range, ident, _request_vars(ident)),
         )
-
-    @override
-    def display(self, value: FilterHTTPVariables) -> None:
-        # keep this in sync with components(), remove once all filter menus are switched to vue
-        # this special styling is not supported by the current components
-        html.write_text_permissive(_("Min.&nbsp;Version:"))
-        html.text_input(
-            varname=self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""), size=7
-        )
-        html.write_text_permissive(" &nbsp; ")
-        html.write_text_permissive(_("Max.&nbsp;Version:"))
-        html.text_input(
-            varname=self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), size=7
-        )
-
-    @override
-    def components(self) -> Iterable[FilterComponent]:
-        yield HorizontalGroup(
-            components=[
-                TextInput(
-                    id=self.htmlvars[0],
-                    label=_("Min.&nbsp;Version:"),
-                ),
-                TextInput(
-                    id=self.htmlvars[1],
-                    label=_("Max.&nbsp;Version:"),
-                ),
-            ]
-        )
-
-    @override
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        return self.query_filter.filter_table(context, rows)
 
 
 class FilterInvtableOperStatus(CheckboxRowFilter):

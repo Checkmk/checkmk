@@ -166,23 +166,23 @@ function resetSearchAndFilters(): void {
       <CmkBreadcrumb :items="breadcrumb" />
       <CmkHeading>{{ title }}</CmkHeading>
       <div class="global-settings-app__toolbar">
-        <CmkSearchInput
-          v-model="query"
-          class="global-settings-app__search"
-          :placeholder="_t('Search settings…')"
-          :show-submit-button="false"
-        />
-        <div class="global-settings-app__toolbar-right">
+        <div class="global-settings-app__search-and-filter">
+          <CmkSearchInput
+            v-model="query"
+            class="global-settings-app__search"
+            :placeholder="_t('Search settings…')"
+            :show-submit-button="false"
+          />
           <GlobalSettingsModificationFilter
             v-model="modification"
             :scope="scope"
             :show-site-overrides="hasSiteOverrides"
           />
-          <ExpandCollapseButtons
-            @expand-all="openedItems = shownTopics.map((topic) => topic.headline)"
-            @collapse-all="openedItems = []"
-          />
         </div>
+        <ExpandCollapseButtons
+          @expand-all="openedItems = shownTopics.map((topic) => topic.headline)"
+          @collapse-all="openedItems = []"
+        />
       </div>
     </div>
     <GlobalSettingsEmptyState v-if="shownTopics.length === 0" @reset="resetSearchAndFilters" />
@@ -235,17 +235,17 @@ function resetSearchAndFilters(): void {
   gap: var(--dimension-6);
 }
 
+/* The filter chips wrap below the search field once the toolbar runs out of width. */
+.global-settings-app__search-and-filter {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--dimension-4) var(--dimension-6);
+}
+
 .global-settings-app__search {
   flex: 1 1 320px;
   max-width: 400px;
-}
-
-/* Wraps below the search field when the toolbar runs out of width, and the two
-button groups stack once even that is too narrow. */
-.global-settings-app__toolbar-right {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 16px;
 }
 </style>

@@ -1135,7 +1135,7 @@ describe('GlobalSettingsApp search', () => {
 
   describe('modification filter', () => {
     async function filterBy(user: ReturnType<typeof setup>, label: string) {
-      await user.click(screen.getByRole('button', { name: `Toggle ${label}` }))
+      await user.click(screen.getByRole('button', { name: label }))
     }
 
     const mixedTopic: GlobalSettingsTopic = {
@@ -1155,9 +1155,7 @@ describe('GlobalSettingsApp search', () => {
     test('the site override filter stays away while nothing is overridden', () => {
       setup()
 
-      expect(
-        screen.queryByRole('button', { name: 'Toggle Site overrides only' })
-      ).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Site overrides only' })).not.toBeInTheDocument()
     })
 
     test('a site override filter in the URL is ignored while nothing is overridden', () => {
@@ -1235,7 +1233,7 @@ describe('GlobalSettingsApp search', () => {
 
       await user.click(within(topic('User management')).getByRole('button', { name: '1 modified' }))
 
-      expect(screen.getByRole('button', { name: 'Toggle Modified only' })).toHaveAttribute(
+      expect(screen.getByRole('button', { name: 'Modified only' })).toHaveAttribute(
         'aria-pressed',
         'true'
       )
@@ -1276,7 +1274,7 @@ describe('GlobalSettingsApp search', () => {
       await vi.advanceTimersByTimeAsync(200)
 
       expect(screen.getByRole('searchbox')).toHaveValue('')
-      expect(screen.getByRole('button', { name: 'Toggle All settings' })).toHaveAttribute(
+      expect(screen.getByRole('button', { name: 'All settings' })).toHaveAttribute(
         'aria-pressed',
         'true'
       )

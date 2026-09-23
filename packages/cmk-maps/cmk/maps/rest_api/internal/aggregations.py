@@ -37,7 +37,12 @@ from cmk.maps.rest_api.internal.models.response_models import (
     MapsAggregationStatesResponse,
     MapsAggregationTreeResponse,
 )
-from cmk.maps.rest_api.utils import NO_CONFIG_CHANGE, PERMISSIONS
+from cmk.maps.rest_api.utils import LIVESTATUS_PERMISSIONS, NO_CONFIG_CHANGE
+from cmk.web.utils import permission_verification as permissions
+
+_AGGREGATION_PERMISSIONS = permissions.AllPerm(
+    [permissions.Perm("maps.use"), *LIVESTATUS_PERMISSIONS]
+)
 
 
 def _to_wire(node: AggregationNode) -> MapsAggregationNode:
@@ -104,7 +109,7 @@ ENDPOINT_LIST_AGGREGATIONS = VersionedEndpoint(
         link_relation="cmk/list_maps_aggregations",
         method="get",
     ),
-    permissions=EndpointPermissions(required=PERMISSIONS),
+    permissions=EndpointPermissions(required=_AGGREGATION_PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
     behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=list_aggregations_v1)},
@@ -118,7 +123,7 @@ ENDPOINT_SHOW_AGGREGATION_TREE = VersionedEndpoint(
         link_relation="cmk/show_maps_aggregation_tree",
         method="post",
     ),
-    permissions=EndpointPermissions(required=PERMISSIONS),
+    permissions=EndpointPermissions(required=_AGGREGATION_PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
     behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=show_aggregation_tree_v1)},
@@ -130,7 +135,7 @@ ENDPOINT_SHOW_AGGREGATION_STATES = VersionedEndpoint(
         link_relation="cmk/show_maps_aggregation_states",
         method="post",
     ),
-    permissions=EndpointPermissions(required=PERMISSIONS),
+    permissions=EndpointPermissions(required=_AGGREGATION_PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
     behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=show_aggregation_states_v1)},

@@ -43,7 +43,13 @@ from cmk.maps.rest_api.internal.models.response_models import (
     MapsPerfometerSegment,
     MapsPerfometerSide,
 )
-from cmk.maps.rest_api.utils import NO_CONFIG_CHANGE, PERMISSIONS
+from cmk.maps.rest_api.utils import LIVESTATUS_PERMISSIONS, NO_CONFIG_CHANGE
+from cmk.web.utils import permission_verification as permissions
+
+# Only resolving the graphs reads the object, over livestatus.
+_METRIC_INFO_PERMISSIONS = permissions.AllPerm(
+    [permissions.Perm("maps.use"), *LIVESTATUS_PERMISSIONS]
+)
 
 
 def show_metric_info_v1(
@@ -140,7 +146,7 @@ ENDPOINT_SHOW_METRIC_INFO = VersionedEndpoint(
         link_relation="cmk/show_maps_metric_info",
         method="post",
     ),
-    permissions=EndpointPermissions(required=PERMISSIONS),
+    permissions=EndpointPermissions(required=_METRIC_INFO_PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
     behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=show_metric_info_v1)},

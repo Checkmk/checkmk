@@ -47,19 +47,14 @@ from cmk.maps.rest_api.internal.models.response_models import (
     MapsImageUsage,
     MapsImageUsageResponse,
 )
-from cmk.maps.rest_api.utils import (
-    CONFIGURE_PERMISSIONS,
-    MAP_VISIBILITY_PERMISSIONS,
-    NO_CONFIG_CHANGE,
-    PERMISSIONS,
-)
+from cmk.maps.rest_api.utils import MAP_VISIBILITY_PERMISSIONS, NO_CONFIG_CHANGE
 from cmk.web.utils import permission_verification as permissions
 
 _UPLOAD_PERMISSIONS = permissions.AllPerm(
     [permissions.Perm("maps.use"), permissions.Perm("maps.configure")]
 )
-# Deleting an image first scans the maps the user may see for its use.
-_DELETE_PERMISSIONS = permissions.AllPerm(
+# Showing an image's use, and deleting it, scans the maps the user may see.
+_USAGE_PERMISSIONS = permissions.AllPerm(
     [permissions.Perm("maps.use"), permissions.Perm("maps.configure"), *MAP_VISIBILITY_PERMISSIONS]
 )
 
@@ -95,6 +90,7 @@ def show_image_usage_v1(
     ],
 ) -> MapsImageUsageResponse:
     """Show which maps use an image"""
+    user.need_permission("maps.use")
     user.need_permission("maps.configure")
     require_valid_image_name(name)
     return MapsImageUsageResponse(usage=[_usage(entry) for entry in find_image_usage(name)])
@@ -144,7 +140,7 @@ ENDPOINT_LIST_IMAGES = VersionedEndpoint(
         link_relation="cmk/list_maps_images",
         method="get",
     ),
-    permissions=EndpointPermissions(required=PERMISSIONS),
+    permissions=EndpointPermissions(required=permissions.Perm("maps.use")),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
     behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=list_images_v1)},
@@ -156,7 +152,7 @@ ENDPOINT_SHOW_IMAGE_USAGE = VersionedEndpoint(
         link_relation="cmk/show_maps_image_usage",
         method="get",
     ),
-    permissions=EndpointPermissions(required=CONFIGURE_PERMISSIONS),
+    permissions=EndpointPermissions(required=_USAGE_PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
     behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=show_image_usage_v1)},
@@ -184,7 +180,7 @@ ENDPOINT_DELETE_IMAGE = VersionedEndpoint(
         method="delete",
         content_type=None,
     ),
-    permissions=EndpointPermissions(required=_DELETE_PERMISSIONS),
+    permissions=EndpointPermissions(required=_USAGE_PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
     behavior=NO_CONFIG_CHANGE,
     versions={

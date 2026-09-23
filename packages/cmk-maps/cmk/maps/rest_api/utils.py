@@ -72,10 +72,6 @@ _PAGETYPE_PERMISSIONS: list[permissions.BasePerm] = [
 ]
 PERMISSIONS = permissions.AllPerm([permissions.Perm("maps.use"), *_PAGETYPE_PERMISSIONS])
 RW_PERMISSIONS = PERMISSIONS
-# For the endpoints whose handler additionally requires the administration grant.
-CONFIGURE_PERMISSIONS = permissions.AllPerm(
-    [permissions.Perm("maps.use"), permissions.Perm("maps.configure"), *_PAGETYPE_PERMISSIONS]
-)
 
 # ``sites.live()`` widens the connection's scope with each of these, so every
 # endpoint opening one checks them. The two component permissions are absent

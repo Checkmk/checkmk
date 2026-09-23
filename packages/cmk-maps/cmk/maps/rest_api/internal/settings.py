@@ -28,7 +28,8 @@ from cmk.maps.rest_api.internal.models.response_models import (
     MapsAuthoringSettingsResponse,
     MapsTileSource,
 )
-from cmk.maps.rest_api.utils import NO_CONFIG_CHANGE, PERMISSIONS
+from cmk.maps.rest_api.utils import NO_CONFIG_CHANGE
+from cmk.web.utils import permission_verification as permissions
 
 
 def show_authoring_settings_v1() -> MapsAuthoringSettingsResponse:
@@ -49,7 +50,7 @@ ENDPOINT_SHOW_AUTHORING_SETTINGS = VersionedEndpoint(
         link_relation="cmk/show_maps_authoring_settings",
         method="get",
     ),
-    permissions=EndpointPermissions(required=PERMISSIONS),
+    permissions=EndpointPermissions(required=permissions.Perm("maps.use")),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
     behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=show_authoring_settings_v1)},

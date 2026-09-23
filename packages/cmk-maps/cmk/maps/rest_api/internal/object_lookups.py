@@ -45,7 +45,16 @@ from cmk.maps.rest_api.internal.models.response_models import (
     MapsSite,
     MapsSitesResponse,
 )
-from cmk.maps.rest_api.utils import NO_CONFIG_CHANGE, PERMISSIONS
+from cmk.maps.rest_api.utils import LIVESTATUS_PERMISSIONS, NO_CONFIG_CHANGE
+from cmk.web.utils import permission_verification as permissions
+
+_LIVESTATUS_LOOKUP_PERMISSIONS = permissions.AllPerm(
+    [permissions.Perm("maps.use"), *LIVESTATUS_PERMISSIONS]
+)
+# The folder list widens to every folder with ``wato.see_all_folders``.
+_FOLDER_PERMISSIONS = permissions.AllPerm(
+    [permissions.Perm("maps.use"), permissions.Optional(permissions.Perm("wato.see_all_folders"))]
+)
 
 
 def _members_response(members: list[Member]) -> MapsMembersResponse:
@@ -180,7 +189,7 @@ ENDPOINT_SHOW_HOST_GEO = VersionedEndpoint(
         link_relation="cmk/show_maps_host_geo",
         method="get",
     ),
-    permissions=EndpointPermissions(required=PERMISSIONS),
+    permissions=EndpointPermissions(required=_LIVESTATUS_LOOKUP_PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
     behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=show_host_geo_v1)},
@@ -192,7 +201,7 @@ ENDPOINT_SHOW_PERF_METRICS = VersionedEndpoint(
         link_relation="cmk/show_maps_perf_metrics",
         method="get",
     ),
-    permissions=EndpointPermissions(required=PERMISSIONS),
+    permissions=EndpointPermissions(required=_LIVESTATUS_LOOKUP_PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
     behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=show_perf_metrics_v1)},
@@ -204,7 +213,7 @@ ENDPOINT_LIST_OBJECTS = VersionedEndpoint(
         link_relation="cmk/list_maps_objects",
         method="get",
     ),
-    permissions=EndpointPermissions(required=PERMISSIONS),
+    permissions=EndpointPermissions(required=_LIVESTATUS_LOOKUP_PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
     behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=list_objects_v1)},
@@ -218,7 +227,7 @@ ENDPOINT_LIST_GROUP_MEMBERS = VersionedEndpoint(
         link_relation="cmk/list_maps_group_members",
         method="get",
     ),
-    permissions=EndpointPermissions(required=PERMISSIONS),
+    permissions=EndpointPermissions(required=_LIVESTATUS_LOOKUP_PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
     behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=list_group_members_v1)},
@@ -230,7 +239,7 @@ ENDPOINT_LIST_DYNGROUP_MEMBERS = VersionedEndpoint(
         link_relation="cmk/list_maps_dyngroup_members",
         method="get",
     ),
-    permissions=EndpointPermissions(required=PERMISSIONS),
+    permissions=EndpointPermissions(required=_LIVESTATUS_LOOKUP_PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
     behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=list_dyngroup_members_v1)},
@@ -242,7 +251,7 @@ ENDPOINT_LIST_FOLDERS = VersionedEndpoint(
         link_relation="cmk/list_maps_folders",
         method="get",
     ),
-    permissions=EndpointPermissions(required=PERMISSIONS),
+    permissions=EndpointPermissions(required=_FOLDER_PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
     behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=list_folders_v1)},
@@ -254,7 +263,7 @@ ENDPOINT_LIST_SITES = VersionedEndpoint(
         link_relation="cmk/list_maps_sites",
         method="get",
     ),
-    permissions=EndpointPermissions(required=PERMISSIONS),
+    permissions=EndpointPermissions(required=permissions.Perm("maps.use")),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
     behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=list_sites_v1)},

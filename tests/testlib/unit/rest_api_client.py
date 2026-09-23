@@ -2215,6 +2215,96 @@ class MapsClient(RestApiClient):
 
     # The endpoints below are internal too: they back the Maps SPA only.
 
+    def _internal_get(
+        self, url: str, query_params: Mapping[str, str] | None, expect_ok: bool
+    ) -> Response:
+        return self.request(
+            "get",
+            url=url,
+            query_params=query_params,
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def _internal_post(self, url: str, body: dict[str, Any], expect_ok: bool) -> Response:
+        return self.request(
+            "post", url=url, body=body, expect_ok=expect_ok, api_version=APIVersion.INTERNAL
+        )
+
+    def get_host_geo(self, host_name: str, expect_ok: bool = True) -> Response:
+        return self._internal_get(f"/objects/maps_host_geo/{host_name}", None, expect_ok)
+
+    def get_perf_metrics(
+        self, host_name: str, service_description: str | None = None, expect_ok: bool = True
+    ) -> Response:
+        query = {"host_name": host_name}
+        if service_description is not None:
+            query["service_description"] = service_description
+        return self._internal_get(
+            "/domain-types/maps_perf_metrics/collections/all", query, expect_ok
+        )
+
+    def get_objects(self, object_type: str, expect_ok: bool = True) -> Response:
+        return self._internal_get(
+            "/domain-types/maps_object/collections/all", {"object_type": object_type}, expect_ok
+        )
+
+    def get_group_members(
+        self, group_type: str, group_name: str, expect_ok: bool = True
+    ) -> Response:
+        return self._internal_get(
+            "/domain-types/maps_member/collections/group",
+            {"group_type": group_type, "group_name": group_name},
+            expect_ok,
+        )
+
+    def get_dyngroup_members(
+        self, object_filter: str, object_types: str = "host", expect_ok: bool = True
+    ) -> Response:
+        return self._internal_get(
+            "/domain-types/maps_member/collections/dyngroup",
+            {"object_filter": object_filter, "object_types": object_types},
+            expect_ok,
+        )
+
+    def get_folders(self, expect_ok: bool = True) -> Response:
+        return self._internal_get("/domain-types/maps_folder/collections/all", None, expect_ok)
+
+    def get_sites(self, expect_ok: bool = True) -> Response:
+        return self._internal_get("/domain-types/maps_site/collections/all", None, expect_ok)
+
+    def resolve_metric_info(self, body: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self._internal_post(
+            "/domain-types/maps_metric_info/actions/resolve/invoke", body, expect_ok
+        )
+
+    def get_aggregations(self, expect_ok: bool = True) -> Response:
+        return self._internal_get("/domain-types/maps_aggregation/collections/all", None, expect_ok)
+
+    def get_aggregation_tree(self, aggregation_id: str, expect_ok: bool = True) -> Response:
+        return self._internal_post(
+            "/domain-types/maps_aggregation/actions/show-tree/invoke",
+            {"aggregation_id": aggregation_id},
+            expect_ok,
+        )
+
+    def get_aggregation_states(
+        self, aggregation_ids: list[str], expect_ok: bool = True
+    ) -> Response:
+        return self._internal_post(
+            "/domain-types/maps_aggregation/actions/show-states/invoke",
+            {"aggregation_ids": aggregation_ids},
+            expect_ok,
+        )
+
+    def get_images(self, expect_ok: bool = True) -> Response:
+        return self._internal_get("/domain-types/maps_image/collections/all", None, expect_ok)
+
+    def get_image_usage(self, name: str, expect_ok: bool = True) -> Response:
+        return self._internal_get(
+            f"/objects/maps_image/{name}/actions/usage/invoke", None, expect_ok
+        )
+
     def get_ticket(self, name: str | None = None, expect_ok: bool = True) -> Response:
         return self.request(
             "get",

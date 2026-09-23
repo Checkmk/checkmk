@@ -23,6 +23,8 @@ const DEFAULT_GEO_VIEW = { lat: 51.0, lng: 10.0, zoom: 5 }
  */
 export interface SettingsForm {
   map_type: MapRead['view']['type']
+  /** Every map type but a presentation filters on problems; the map toggles it too. */
+  problems_only: boolean
   worldmap_auto_source: '' | 'all_hosts' | 'hostgroup' | 'servicegroup'
   worldmap_auto_filter_value: string
   worldmap_lat: number
@@ -37,7 +39,6 @@ export interface SettingsForm {
   ft_default_expand_depth: number
   ft_show_services: boolean
   ft_show_empty_folders: boolean
-  ft_problems_only: boolean
   ft_problems_severity: 'any' | 'critical'
   ft_only_hard_states: boolean
   /** Comma-joined, which is the wire shape; the picker works on an id array. */
@@ -84,6 +85,7 @@ export function formFromMap(
     rotation_interval: map.rotation_interval,
     click_action: map.click_action ?? 'link',
     map_type: map.view.type,
+    problems_only: map.view.type === 'presentation' ? false : (map.view.problems_only ?? false),
     worldmap_auto_source: worldmap?.auto_source ?? '',
     worldmap_auto_filter_value: worldmap?.auto_filter_value ?? '',
     worldmap_lat: geo.lat,
@@ -98,7 +100,6 @@ export function formFromMap(
     ft_default_expand_depth: folderTree?.default_expand_depth ?? 1,
     ft_show_services: folderTree?.show_services ?? false,
     ft_show_empty_folders: folderTree?.show_empty_folders ?? true,
-    ft_problems_only: folderTree?.problems_only ?? false,
     ft_problems_severity: folderTree?.problems_severity ?? 'any',
     ft_only_hard_states: folderTree?.only_hard_states ?? false,
     ft_sites: (folderTree?.sites ?? []).join(', '),
@@ -145,6 +146,8 @@ export function viewFromForm(
   flowView: Record<string, unknown>
 ): Record<string, unknown> {
   switch (form.map_type) {
+    case 'static':
+      return { type: 'static', problems_only: form.problems_only }
     case 'worldmap':
       return {
         type: 'worldmap',
@@ -154,13 +157,15 @@ export function viewFromForm(
         auto_source: form.worldmap_auto_source || null,
         auto_filter_value: form.worldmap_auto_filter_value,
         tile_url: form.worldmap_tile_url || null,
-        tile_saturate: form.worldmap_tile_saturate ?? null
+        tile_saturate: form.worldmap_tile_saturate ?? null,
+        problems_only: form.problems_only
       }
     case 'radar':
       return {
         type: 'radar',
         filter: form.radar_filter,
-        filter_value: form.radar_filter_value
+        filter_value: form.radar_filter_value,
+        problems_only: form.problems_only
       }
     case 'flow':
       return {
@@ -169,7 +174,9 @@ export function viewFromForm(
         child_layers: (flowView.child_layers as number | null | undefined) ?? null,
         parent_layers: (flowView.parent_layers as number | null | undefined) ?? null,
         top_affected_hosts: (flowView.top_affected_hosts as number | null | undefined) ?? null,
-        max_services_per_host: (flowView.max_services_per_host as number | null | undefined) ?? null
+        max_services_per_host:
+          (flowView.max_services_per_host as number | null | undefined) ?? null,
+        problems_only: form.problems_only
       }
     case 'foldertree':
       return {
@@ -179,7 +186,7 @@ export function viewFromForm(
         default_expand_depth: form.ft_default_expand_depth,
         show_services: form.ft_show_services,
         show_empty_folders: form.ft_show_empty_folders,
-        problems_only: form.ft_problems_only,
+        problems_only: form.problems_only,
         problems_severity: form.ft_problems_severity,
         only_hard_states: form.ft_only_hard_states,
         sites: form.ft_sites

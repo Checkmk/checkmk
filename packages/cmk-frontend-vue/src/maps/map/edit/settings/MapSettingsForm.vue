@@ -34,6 +34,7 @@ import type { FormSchemaName } from '@/maps/api/formSchemas'
 import FolderTreeSettings from '@/maps/map/edit/settings/components/FolderTreeSettings.vue'
 import MapAccessTab from '@/maps/map/edit/settings/components/MapAccessTab.vue'
 import MapSettingsPreview from '@/maps/map/edit/settings/components/MapSettingsPreview.vue'
+import ProblemsOnlySettings from '@/maps/map/edit/settings/components/ProblemsOnlySettings.vue'
 import RadarSettings from '@/maps/map/edit/settings/components/RadarSettings.vue'
 import StaticMapSettings from '@/maps/map/edit/settings/components/StaticMapSettings.vue'
 import WorldmapSettings from '@/maps/map/edit/settings/components/WorldmapSettings.vue'
@@ -650,6 +651,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
                     :save-attempted="saveAttempted"
                   />
                   <FolderTreeSettings v-else-if="mapType === 'foldertree'" v-model:form="form" />
+                  <!-- A folder tree carries the filter in its own block, next to
+                     the severity it narrows to. -->
+                  <ProblemsOnlySettings
+                    v-if="mapType !== 'foldertree' && mapType !== 'presentation'"
+                    v-model:form="form"
+                  />
 
                   <CmkAlertBox v-if="errorMessages.length" variant="error">
                     <div v-for="message in errorMessages" :key="message">{{ message }}</div>

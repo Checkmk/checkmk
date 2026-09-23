@@ -137,11 +137,11 @@ const pickedSites = computed<string[]>({
         <span>{{ _t('Expand hosts to their services') }}</span>
       </label>
       <label class="maps-folder-tree-settings__toggle">
-        <CmkSwitch v-model="form.ft_problems_only" @click.stop />
+        <CmkSwitch v-model="form.problems_only" @click.stop />
         <span>{{ _t('Show only folders/hosts with problems') }}</span>
       </label>
       <EditField
-        v-if="form.ft_problems_only"
+        v-if="form.problems_only"
         :label="_t('Problem severity')"
         :help="
           _t(

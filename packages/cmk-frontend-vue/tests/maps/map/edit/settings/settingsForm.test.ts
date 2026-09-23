@@ -89,7 +89,8 @@ describe('viewFromForm', () => {
       auto_source: null,
       auto_filter_value: '',
       tile_url: null,
-      tile_saturate: null
+      tile_saturate: null,
+      problems_only: false
     })
   })
 
@@ -112,9 +113,22 @@ describe('viewFromForm', () => {
     })
   })
 
-  it('names nothing but the type for a map without view fields', () => {
-    expect(viewFromForm(formFromMap(aMapRead(), null), {})).toEqual({ type: 'static' })
+  it('gives a static map nothing but its problems filter', () => {
+    expect(viewFromForm(formFromMap(aMapRead(), null), {})).toEqual({
+      type: 'static',
+      problems_only: false
+    })
   })
+
+  it.each(['static', 'worldmap', 'radar', 'flow', 'foldertree'] as const)(
+    'keeps the problems filter of a %s map',
+    (type) => {
+      const view = { ...newMapView(type), problems_only: true } as MapView
+      const form = formFromMap(aMapRead({ view_type: type, view }), null)
+      expect(form.problems_only).toBe(true)
+      expect(viewFromForm(form, {})).toMatchObject({ type, problems_only: true })
+    }
+  )
 })
 
 describe('flowViewData', () => {

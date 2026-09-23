@@ -314,6 +314,25 @@ describe('MapSettingsForm – save', () => {
     )
     expect(saveMapMetadata).not.toHaveBeenCalled()
   })
+
+  it('saves the problems filter the settings show', async () => {
+    const radar = { type: 'radar', filter: 'all_services', filter_value: '' } as const
+    const user = userEvent.setup()
+    await renderReady(makeMap({ view_type: 'radar', view: { ...radar, problems_only: true } }))
+
+    const problemsOnly = screen.getByRole('switch')
+    expect(problemsOnly).toHaveAttribute('aria-checked', 'true')
+    await user.click(problemsOnly)
+    await waitFor(() => expect(footerButton('Save')).toBeEnabled())
+    await user.click(footerButton('Save'))
+
+    await waitFor(() => expect(saveMapMetadata).toHaveBeenCalledTimes(1))
+    expect(saveMapMetadata).toHaveBeenCalledWith(
+      'net-overview',
+      expect.objectContaining({ view: { ...radar, problems_only: false } }),
+      { public: false, hide_in_monitor_menu: false }
+    )
+  })
 })
 
 describe('MapSettingsForm – delete flow', () => {

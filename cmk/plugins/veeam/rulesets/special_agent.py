@@ -79,7 +79,7 @@ def _parameter_form() -> Dictionary:
             "user": DictElement(
                 required=True,
                 parameter_form=String(
-                    title=Title("User name"),
+                    title=Title("Username"),
                     custom_validate=(validators.LengthInRange(min_value=1),),
                 ),
             ),

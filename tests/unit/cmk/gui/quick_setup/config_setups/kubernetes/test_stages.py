@@ -38,7 +38,8 @@ pytestmark = pytest.mark.usefixtures("with_admin_login")
         pytest.param(0, None, id="cluster-is-first"),
         pytest.param(1, "Back", id="host-to-cluster"),
         pytest.param(2, "Back", id="deployment-to-host"),
-        pytest.param(3, "Back", id="pull-url-to-deployment"),
+        pytest.param(3, "Back", id="pull-deploy-to-deployment"),
+        pytest.param(4, "Back", id="pull-url-to-pull-deploy"),
     ],
 )
 def test_stage_responses_offer_back_navigation_after_first_stage(
@@ -130,7 +131,7 @@ def test_registered_final_url_stage_follows_connection_mode(mode: str, expected:
         forms,
     )
 
-    assert applicable == [True, True, True, expected]
+    assert applicable == [True, True, True, expected, expected]
 
 
 def test_switching_to_push_discards_a_previous_pull_url() -> None:
@@ -149,6 +150,7 @@ def test_switching_to_push_discards_a_previous_pull_url() -> None:
             RawFormData({}),
             RawFormData({}),
             RawFormData({CONNECTION: push_defaults}),
+            RawFormData({}),
             RawFormData({PULL_URL: {"base_url": "https://previous-agent"}}),
         ],
         forms,
@@ -157,7 +159,13 @@ def test_switching_to_push_discards_a_previous_pull_url() -> None:
     assert filtered[-1] == {}
 
 
-def test_initial_guided_setup_does_not_show_the_pull_url_stage() -> None:
+def test_initial_guided_setup_does_not_show_the_pull_stages() -> None:
     overview = quick_setup_guided_mode(quick_setup_kubernetes, None)
 
-    assert [stage.is_applicable for stage in overview.overviews] == [True, True, True, False]
+    assert [stage.is_applicable for stage in overview.overviews] == [
+        True,
+        True,
+        True,
+        False,
+        False,
+    ]

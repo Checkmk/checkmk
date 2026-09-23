@@ -7,6 +7,8 @@ import pytest
 
 from cmk.ccc.site import SiteId
 from cmk.gui.quick_setup.config_setups.kubernetes.settings import (
+    ADVANCED,
+    CLUSTER,
     CONNECTION,
     HOST,
     PULL_URL,
@@ -31,6 +33,22 @@ def test_monitoring_settings_preserve_filters_and_derive_host_name(data: ParsedF
     assert settings.monitoring.annotations == ("pattern", "^example")
     assert settings.monitoring.excluded_node_roles == ()
     assert settings.release_name == "kubernetes-config-1"
+
+
+def test_unchecked_filters_monitor_all_namespaces_without_annotations(
+    data: ParsedFormData,
+) -> None:
+    settings = read_common_settings(
+        {
+            **data,
+            CLUSTER: {**data[CLUSTER], "namespaces": None},
+            ADVANCED: {**data[ADVANCED], "annotations": None},
+        },
+        default_site=SiteId("site"),
+    )
+
+    assert settings.monitoring.namespaces == ("include", ())
+    assert settings.monitoring.annotations == "none"
 
 
 def test_explicit_host_name_overrides_cluster_name(data: ParsedFormData) -> None:

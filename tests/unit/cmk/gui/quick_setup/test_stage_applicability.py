@@ -166,18 +166,18 @@ def test_cascading_conditions(raw_form_data: Sequence[RawFormData], expected: li
         pytest.param(
             [
                 RawFormData({FormSpecId("mode"): {"value": "pull"}}),
-                RawFormData({FormSpecId("pull"): {"value": "https://rustik"}}),
+                RawFormData({FormSpecId("pull"): {"value": "https://agent"}}),
             ],
             [
                 RawFormData({FormSpecId("mode"): {"value": "pull"}}),
-                RawFormData({FormSpecId("pull"): {"value": "https://rustik"}}),
+                RawFormData({FormSpecId("pull"): {"value": "https://agent"}}),
             ],
             id="the form data of a shown stage is kept",
         ),
         pytest.param(
             [
                 RawFormData({FormSpecId("mode"): {"value": "push"}}),
-                RawFormData({FormSpecId("pull"): {"value": "https://rustik"}}),
+                RawFormData({FormSpecId("pull"): {"value": "https://agent"}}),
             ],
             [RawFormData({FormSpecId("mode"): {"value": "push"}}), RawFormData({})],
             id="the form data of a hidden stage is blanked",
@@ -239,7 +239,7 @@ def test_submitted_form_data_without_a_stage_is_kept() -> None:
     stages = [_stage("mode"), _stage("pull", _value_is("mode", "pull"))]
     raw_form_data = [
         RawFormData({FormSpecId("mode"): {"value": "pull"}}),
-        RawFormData({FormSpecId("pull"): {"value": "https://rustik"}}),
+        RawFormData({FormSpecId("pull"): {"value": "https://agent"}}),
         RawFormData({FormSpecId("beyond"): {"value": "extra"}}),
     ]
 

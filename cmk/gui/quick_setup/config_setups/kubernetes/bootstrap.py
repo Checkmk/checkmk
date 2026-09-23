@@ -127,10 +127,10 @@ def push_receiver_url(
     port: int,
     override_host: str | None = None,
 ) -> str:
-    """Use the selected site's URL hostname, falling back to the browser's hostname."""
+    """Use the selected site's URL host name, falling back to the browser's host name."""
     host = override_host or urlsplit(site_url).hostname or browser_host
     if not host:
-        raise ValueError("Cannot determine the push receiver hostname")
+        raise ValueError("Cannot determine the push receiver host name")
     if ":" in host and not host.startswith("["):
         host = f"[{host}]"
     return f"https://{host}:{port}/{site_id}"

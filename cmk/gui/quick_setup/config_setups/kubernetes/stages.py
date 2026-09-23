@@ -92,12 +92,6 @@ def prepare_deployment() -> QuickSetupStage:
         prev_button_label=_("Back"),
         sub_title=_("Choose the connection mode and prepare the deployment files"),
         configure_components=[
-            Text(
-                text=_(
-                    "Choose how the Kubernetes agent connects to Checkmk, "
-                    "then generate the deployment files."
-                )
-            ),
             FormSpecWrapper(
                 id=CONNECTION,
                 form_spec=connection_configuration(
@@ -126,6 +120,26 @@ def uses_pull_mode(data: ParsedFormData) -> bool:
             return True
         case _:
             return False
+
+
+@applicable_if(uses_pull_mode)
+def deploy_pull_agent() -> QuickSetupStage:
+    # Keeps the pull URL stage closed until the user has deployed the files from the recap above.
+    return QuickSetupStage(
+        title=_("Deploy the Kubernetes agent to your cluster"),
+        prev_button_label=_("Back"),
+        configure_components=[
+            Text(text=_("Save the files and run the commands above, then continue."))
+        ],
+        actions=[
+            QuickSetupStageAction(
+                id=ActionId("continue"),
+                custom_validators=[],
+                recap=[],
+                next_button_label=_("Next"),
+            )
+        ],
+    )
 
 
 @applicable_if(uses_pull_mode)
@@ -180,7 +194,13 @@ def completion_action() -> QuickSetupAction:
 quick_setup_kubernetes = QuickSetup(
     title=_("Kubernetes"),
     id=QUICK_SETUP_ID,
-    stages=[configure_cluster, configure_host, prepare_deployment, configure_pull_url],
+    stages=[
+        configure_cluster,
+        configure_host,
+        prepare_deployment,
+        deploy_pull_agent,
+        configure_pull_url,
+    ],
     actions=[completion_action()],
     allow_push_agent=True,
 )

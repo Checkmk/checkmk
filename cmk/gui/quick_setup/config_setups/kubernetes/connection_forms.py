@@ -32,6 +32,11 @@ def host_configuration() -> Dictionary:
                 parameter_form=CascadingSingleChoice(
                     title=Title("Checkmk host name"),
                     prefill=DefaultValue("cluster_name"),
+                    help_text=Help(
+                        "For a new setup, use the cluster name. When migrating, record the old "
+                        "source host name and delete that host before running this setup, then "
+                        "enter it as an explicit host name to retain monitoring history."
+                    ),
                     elements=[
                         CascadingSingleChoiceElement(
                             name="cluster_name",
@@ -52,10 +57,6 @@ def host_configuration() -> Dictionary:
                                             "starting with a letter, number or underscore."
                                         ),
                                     ),
-                                ),
-                                help_text=Help(
-                                    "When migrating, record the old source host name and delete that host "
-                                    "before running this setup. Reuse its name to retain monitoring history."
                                 ),
                             ),
                         ),
@@ -87,7 +88,7 @@ def connection_configuration(
         elements=[
             CascadingSingleChoiceElement(
                 name="push",
-                title=Title("Push"),
+                title=Title("Push mode"),
                 parameter_form=Dictionary(
                     elements={
                         "receiver_host": DictElement(
@@ -99,10 +100,10 @@ def connection_configuration(
                         ),
                         "receiver_host_override": DictElement(
                             parameter_form=String(
-                                title=Title("Override push receiver hostname"),
+                                title=Title("Override push receiver host name"),
                                 custom_validate=(HostAddress(),),
                                 help_text=Help(
-                                    "Enter the hostname or IP address reachable from the cluster, without a scheme or port."
+                                    "Enter the host name or IP address reachable from the cluster, without a scheme or port."
                                 ),
                             )
                         ),
@@ -111,7 +112,7 @@ def connection_configuration(
             ),
             CascadingSingleChoiceElement(
                 name="pull",
-                title=Title("Pull"),
+                title=Title("Pull mode"),
                 parameter_form=Dictionary(
                     elements={
                         "shared_secret": DictElement(
@@ -150,7 +151,7 @@ def connection_configuration(
                                 custom_validate=(validators.LengthInRange(min_value=1),),
                                 help_text=Help(
                                     "A Secret in the deployment namespace containing tls.crt and tls.key. "
-                                    "Its certificate must cover the hostname used by Checkmk. Without this, "
+                                    "Its certificate must cover the host name used by Checkmk. Without this, "
                                     "the pull endpoint serves HTTP: use a trusted network or external TLS termination."
                                 ),
                             )

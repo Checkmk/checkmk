@@ -68,6 +68,7 @@ def deployment_widgets(
                 )
             ),
         ]
+    first_file, second_file = bundle.files
     return [
         Text(text=_("<h2>Before you deploy</h2>")),
         ListOfWidgets(
@@ -85,9 +86,13 @@ def deployment_widgets(
         Text(text=_("<h2>Download the deployment files</h2>")),
         Text(
             text=_(
-                "Download both files below and save them in the same directory. "
-                "Alternatively, use them with your existing deployment workflow."
+                "Download both files below (%(first)s and %(second)s) and save them in the same "
+                "directory. Alternatively, use them with your existing deployment workflow."
             )
+            % {
+                "first": f"<tt>{escape(first_file)}</tt>",
+                "second": f"<tt>{escape(second_file)}</tt>",
+            }
         ),
         *[
             Code(title=filename, code=contents, download_filename=filename)

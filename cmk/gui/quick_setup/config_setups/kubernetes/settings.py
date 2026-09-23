@@ -71,7 +71,11 @@ def read_common_settings(data: ParsedFormData, *, default_site: SiteId) -> Commo
             "Use a configuration name that becomes a valid Helm release name of at most 53 characters"
         )
 
-    namespace_mode, patterns = cluster.get("namespaces", ("include", []))
+    namespace_filter: tuple[Literal["include", "exclude"], list[str]] = cluster["namespaces"] or (
+        "include",
+        [],
+    )
+    namespace_mode, patterns = namespace_filter
     match advanced.get("annotations"):
         case ("all", _):
             annotations: Literal["none", "all"] | tuple[Literal["pattern"], str] = "all"

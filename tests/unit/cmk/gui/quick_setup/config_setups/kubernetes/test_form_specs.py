@@ -50,6 +50,7 @@ def test_cluster_form_prefills_deployment_namespace_and_non_pod_kinds() -> None:
             "nodes",
             "statefulsets",
         ],
+        "namespaces": None,
     }
 
 
@@ -73,7 +74,13 @@ def test_invalid_cluster_settings_are_rejected(field: str, value: object) -> Non
     visitor = get_visitor(
         cluster_configuration(), VisitorOptions(migrate_values=True, mask_values=False)
     )
-    settings = {"cluster_name": "production", "namespace": "monitoring", "host_kinds": []}
+    settings: dict[str, object] = {
+        "cluster_name": "production",
+        "namespace": "monitoring",
+        "host_kinds": [],
+        "namespaces": None,
+    }
+    assert not visitor.validate(RawDiskData(settings))
 
     errors = visitor.validate(RawDiskData({**settings, field: value}))
 
@@ -105,7 +112,7 @@ def test_advanced_defaults_exclude_infrastructure_roles_without_importing_annota
 
     _spec, values = visitor.to_vue(DEFAULT_VALUE)
 
-    assert values == {"excluded_node_roles": ["control-plane", "infra"]}
+    assert values == {"excluded_node_roles": ["control-plane", "infra"], "annotations": None}
 
 
 @pytest.mark.parametrize(

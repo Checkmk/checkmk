@@ -53,7 +53,7 @@ export const statusCmds: AgentStatusCmds = {
 
 /** Shaped like `build_kubernetes_helm_cmd()` and `KUBERNETES_VALUES` in the backend. */
 export const kubernetesHelmCommand =
-  'helm install checkmk cmk-rustik --version "~2.5.0" --set push.registrationToken=[AGENT_REGISTRATION_OTT]'
+  'helm install checkmk checkmk-agent --version "~2.5.0" --set push.registrationToken=[AGENT_REGISTRATION_OTT]'
 export const kubernetesValues =
   'clusterName: "{{HOSTNAME}}"\npush:\n  url: "https://{{SERVER}}/{{SITE}}"'
 

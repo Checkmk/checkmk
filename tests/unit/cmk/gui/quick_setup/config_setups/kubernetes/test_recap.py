@@ -130,3 +130,32 @@ def test_deployment_instructions_precede_files_and_runnable_commands(
         isinstance(note, Text) and f"<b>{escape(version_range)}</b>" in note.text
         for note in notes.items
     )
+
+
+@pytest.mark.parametrize("mode", ["push", "pull"])
+def test_download_instructions_name_the_offered_files(
+    data: ParsedFormData, mode: Literal["push", "pull"]
+) -> None:
+    settings = read_settings(
+        {**data, CONNECTION: (mode, {"shared_secret": "shared-secret"})},
+        default_site=SiteId("site"),
+    )
+    widgets = deployment_widgets(
+        settings,
+        prepare_push=lambda _settings: PushCredentials(
+            receiver_url="https://receiver:8000/site",
+            registration_token="0:token-id",
+            site_ca_certificate="site-ca",
+        ),
+    )
+
+    (instructions,) = (
+        widget for widget in widgets if isinstance(widget, Text) and "Download both" in widget.text
+    )
+    offered = [
+        widget.download_filename
+        for widget in widgets
+        if isinstance(widget, Code) and widget.download_filename
+    ]
+    assert len(offered) == 2
+    assert all(f"<tt>{filename}</tt>" in instructions.text for filename in offered)

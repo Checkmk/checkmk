@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.ccc.hostaddress import HostName
-from cmk.gui.form_specs.unstable import TwoColumnDictionary
+from cmk.gui.form_specs.unstable import OptionalChoice, TwoColumnDictionary
 from cmk.rulesets.internal.form_specs import ListExtended
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
@@ -88,28 +88,37 @@ def cluster_configuration() -> Dictionary:
                 ),
             ),
             "namespaces": DictElement(
-                parameter_form=CascadingSingleChoice(
-                    title=Title("Namespaces to monitor"),
-                    elements=[
-                        CascadingSingleChoiceElement(
-                            name="include",
-                            title=Title("Monitor namespaces matching"),
-                            parameter_form=_namespace_patterns(),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="exclude",
-                            title=Title("Exclude namespaces matching"),
-                            parameter_form=_namespace_patterns(),
-                        ),
-                    ],
-                    prefill=DefaultValue("include"),
+                required=True,
+                parameter_form=OptionalChoice(
+                    title=Title("Namespaces"),
+                    label=Label("Filter which namespaces to monitor"),
+                    none_label=Label(""),
                     help_text=Help(
-                        "When disabled, all namespaces are monitored. Filters apply to namespaced "
+                        "When unchecked, all namespaces are monitored. Filters apply to namespaced "
                         "resources; cluster and node hosts and their rollups are unaffected."
                     ),
+                    parameter_form=_namespace_filter(),
                 ),
             ),
         }
+    )
+
+
+def _namespace_filter() -> CascadingSingleChoice:
+    return CascadingSingleChoice(
+        elements=[
+            CascadingSingleChoiceElement(
+                name="include",
+                title=Title("Monitor namespaces matching"),
+                parameter_form=_namespace_patterns(),
+            ),
+            CascadingSingleChoiceElement(
+                name="exclude",
+                title=Title("Exclude namespaces matching"),
+                parameter_form=_namespace_patterns(),
+            ),
+        ],
+        prefill=DefaultValue("include"),
     )
 
 
@@ -149,22 +158,27 @@ def advanced_configuration() -> Dictionary:
                 ),
             ),
             "annotations": DictElement(
-                parameter_form=CascadingSingleChoice(
-                    title=Title("Import annotations as host labels"),
-                    elements=[
-                        CascadingSingleChoiceElement(
-                            name="all",
-                            title=Title("Import all valid annotations"),
-                            parameter_form=FixedValue(value=None),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="pattern",
-                            title=Title("Import matching annotation keys"),
-                            parameter_form=_pattern(),
-                        ),
-                    ],
-                    prefill=DefaultValue("all"),
-                    help_text=Help("When disabled, no annotations are imported as host labels."),
+                required=True,
+                parameter_form=OptionalChoice(
+                    title=Title("Annotations"),
+                    label=Label("Import annotations as host labels"),
+                    none_label=Label(""),
+                    help_text=Help("When unchecked, no annotations are imported as host labels."),
+                    parameter_form=CascadingSingleChoice(
+                        elements=[
+                            CascadingSingleChoiceElement(
+                                name="all",
+                                title=Title("Import all valid annotations"),
+                                parameter_form=FixedValue(value=None),
+                            ),
+                            CascadingSingleChoiceElement(
+                                name="pattern",
+                                title=Title("Import matching annotation keys"),
+                                parameter_form=_pattern(),
+                            ),
+                        ],
+                        prefill=DefaultValue("all"),
+                    ),
                 ),
             ),
         }

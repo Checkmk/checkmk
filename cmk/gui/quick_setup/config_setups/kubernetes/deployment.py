@@ -14,7 +14,7 @@ from cmk.ccc.version import __version__, Version
 
 from .helm import monitoring_values, MonitoringSettings
 
-CHART_REFERENCE = "oci://ghcr.io/checkmk/charts/cmk-rustik"
+CHART_REFERENCE = "oci://ghcr.io/checkmk/charts/checkmk-agent"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -128,7 +128,7 @@ def _pull_values(
             },
             "encryption": {"enabled": bool(tls_secret_name), "existingSecret": tls_secret_name},
         },
-        "metricsCache": {"service": {"type": "NodePort", "nodePort": node_port}},
+        "clusterAggregator": {"service": {"type": "NodePort", "nodePort": node_port}},
     }
 
 

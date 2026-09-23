@@ -142,8 +142,7 @@ SOLARIS_REGISTRATION_CMD = """sudo cmk-agent-ctl register \\
     --site {{SITE}} \\
     --user agent_registration"""
 
-
-KUBERNETES_HELM_INSTALL_CMD = """helm install checkmk oci://ghcr.io/checkmk/charts/cmk-rustik \\
+KUBERNETES_HELM_INSTALL_CMD = """helm install checkmk oci://ghcr.io/checkmk/charts/checkmk-agent \\
   --version "{chart_version}" \\
   --values values.yaml \\
   --set push.registrationToken=[AGENT_REGISTRATION_OTT] \\

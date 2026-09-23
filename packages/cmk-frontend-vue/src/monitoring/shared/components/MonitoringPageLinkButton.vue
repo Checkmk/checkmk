@@ -60,6 +60,8 @@ function navigate(): void {
 .monitoring-page-link-button--inline {
   margin-left: var(--dimension-4);
   vertical-align: middle;
+  float: right;
+  margin-right: var(--dimension-3);
 }
 
 .monitoring-page-link-button__icon {

@@ -526,3 +526,26 @@ test('the select-all hit area carries a native tooltip, since the checkbox itsel
     'Select all rows'
   )
 })
+
+test('a header label that fits shows no tooltip repeating it', async () => {
+  const user = userEvent.setup()
+  mountTable({})
+
+  const header = screen.getByRole('button', { name: 'Name' })
+  await user.hover(header)
+
+  expect(header).not.toHaveAttribute('title')
+})
+
+test('a truncated header label shows its full text as a tooltip', async () => {
+  const user = userEvent.setup()
+  mountTable({})
+
+  const header = screen.getByRole('button', { name: 'Name' })
+  const label = header.querySelector('.monitoring-table-header__label')!
+  Object.defineProperty(label, 'scrollWidth', { configurable: true, value: 120 })
+  Object.defineProperty(label, 'clientWidth', { configurable: true, value: 40 })
+  await user.hover(header)
+
+  expect(header).toHaveAttribute('title', 'Name')
+})

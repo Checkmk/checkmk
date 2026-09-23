@@ -60,14 +60,30 @@ function columnLabel(column: Column<T, unknown>): string {
 }
 
 function filterButtonLabel(column: Column<T, unknown>, isActive: boolean): string {
-  const columnTitle = (
+  const columnTitle = headerTitle(column)
+  return isActive
+    ? _t('Filter %{column} (active)', { column: columnTitle })
+    : _t('Filter %{column}', { column: columnTitle })
+}
+
+function headerTitle(column: Column<T, unknown>): string {
+  return (
     column.columnDef.meta?.headerTitle?.toString() ??
     column.columnDef.header?.toString() ??
     ''
   ).trim()
-  return isActive
-    ? _t('Filter %{column} (active)', { column: columnTitle })
-    : _t('Filter %{column}', { column: columnTitle })
+}
+
+function showTitleIfHidden(event: MouseEvent, column: Column<T, unknown>): void {
+  const target = event.currentTarget as HTMLElement
+  const label = target.querySelector<HTMLElement>('.monitoring-table-header__label') ?? target
+  const title = headerTitle(column)
+  const isTruncated = label.scrollWidth > label.clientWidth
+  if (title !== '' && (isTruncated || title !== label.textContent?.trim())) {
+    target.title = title
+  } else {
+    target.removeAttribute('title')
+  }
 }
 
 function helpLabel(column: Column<T, unknown>): string {
@@ -215,11 +231,8 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
             type="button"
             class="monitoring-table-header__header-button"
             :style="contentStyle(header.column.columnDef)"
-            :title="
-              header.column.columnDef.meta?.headerTitle?.toString() ??
-              header.column.columnDef.header?.toString()
-            "
             :disabled="disabled"
+            @mouseenter="showTitleIfHidden($event, header.column)"
             @click="header.column.getToggleSortingHandler()?.($event)"
           >
             <span class="monitoring-table-header__label">
@@ -253,10 +266,7 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
             v-else-if="!header.isPlaceholder"
             class="monitoring-table-header__label monitoring-table-header__label--standalone"
             :style="labelStyle(header.column.columnDef)"
-            :title="
-              header.column.columnDef.meta?.headerTitle?.toString() ??
-              header.column.columnDef.header?.toString()
-            "
+            @mouseenter="showTitleIfHidden($event, header.column)"
           >
             <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
           </span>

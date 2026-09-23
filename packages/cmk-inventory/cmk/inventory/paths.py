@@ -18,8 +18,6 @@ class TreePath:
     legacy: Path
 
     def __post_init__(self) -> None:
-        if self.path == Path() or self.legacy == Path():
-            return
         if self.path.suffix != ".json":
             raise ValueError(self.path)
 

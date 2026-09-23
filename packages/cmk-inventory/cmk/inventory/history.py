@@ -43,8 +43,12 @@ class _HistoryPath:
 
 @dataclass(frozen=True, kw_only=True)
 class HistoryArchivePath:
-    previous: _HistoryPath
+    previous: _HistoryPath | None
     current: _HistoryPath
+
+    @property
+    def previous_timestamp(self) -> int:
+        return -1 if self.previous is None else self.previous.timestamp
 
     @property
     def current_timestamp(self) -> int:
@@ -134,7 +138,6 @@ class HistoryStore:
         except FileNotFoundError:
             return
 
-        yield OK(_HistoryPath(TreePath(path=Path(), legacy=Path()), -1))
         for file_path in file_paths:
             try:
                 yield OK(
@@ -184,8 +187,10 @@ class HistoryStore:
         sorted_paths_from_archive = sorted(
             [r.ok for r in results_from_archive if r.is_ok()], key=lambda p: p.timestamp
         )
-        for previous, current in zip(sorted_paths_from_archive, sorted_paths_from_archive[1:]):
-            if (key := (host_name, previous.timestamp, current.timestamp)) not in known_paths:
+        previous_paths: Sequence[_HistoryPath | None] = [None, *sorted_paths_from_archive]
+        for previous, current in zip(previous_paths, sorted_paths_from_archive):
+            previous_timestamp = -1 if previous is None else previous.timestamp
+            if (key := (host_name, previous_timestamp, current.timestamp)) not in known_paths:
                 known_paths[key] = HistoryArchivePath(previous=previous, current=current)
 
         for key in sorted(known_paths, key=lambda k: k[-1]):
@@ -195,15 +200,14 @@ class HistoryStore:
             if result_from_archive.is_error():
                 yield Error(result_from_archive.error)
 
-    def _lookup_tree(self, tree_path: TreePath) -> ImmutableTree:
-        if tree_path.path == Path() or tree_path.legacy == Path():
+    def _lookup_tree(self, path: _HistoryPath | None) -> ImmutableTree:
+        if path is None:
             return ImmutableTree()
 
-        key = (tree_path.path, tree_path.legacy)
-        if key in self._lookup:
-            return self._lookup[key]
-
-        return self._lookup.setdefault(key, load_tree_from_tree_path(tree_path))
+        key = (path.tree_path.path, path.tree_path.legacy)
+        if key not in self._lookup:
+            self._lookup[key] = load_tree_from_tree_path(path.tree_path)
+        return self._lookup[key]
 
     def _load_history_entry(
         self, *, host_name: HostName, path: HistoryDeltaPath | HistoryArchivePath
@@ -232,11 +236,11 @@ class HistoryStore:
 
             case HistoryArchivePath():
                 entry = HistoryEntry.from_delta_tree(
-                    previous_timestamp=path.previous.timestamp,
-                    current_timestamp=path.current.timestamp,
+                    previous_timestamp=path.previous_timestamp,
+                    current_timestamp=path.current_timestamp,
                     delta_tree=compare_trees(
-                        self._lookup_tree(path.current.tree_path),
-                        self._lookup_tree(path.previous.tree_path),
+                        self._lookup_tree(path.current),
+                        self._lookup_tree(path.previous),
                     ),
                 )
 

@@ -23,7 +23,6 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui/rule_specs:compatibility",
         "//cmk/gui/rule_specs:types",
         "//packages/cmk-ccc:version",
         "//packages/cmk-plugin-apis:discover_plugins",
@@ -57,21 +56,6 @@ py_library(
         "//packages/cmk-ccc:version",
         "//packages/cmk-plugin-apis:rulesets",
         "//packages/cmk-web/cmk/web/utils",
-    ],
-)
-
-py_library(
-    name = "compatibility",
-    srcs = ["compatibility.py"],
-    imports = ["../../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        "//cmk/gui/form_specs",
-        "//cmk/gui/rule_specs:types",
-        "//packages/cmk-plugin-apis:rulesets",
     ],
 )
 

@@ -111,6 +111,22 @@ def test_reserve_ids_and_create_werk(tmp_path: Path) -> None:
     assert remaining == [11112, 11113]
 
 
+def test_delete_werk_returns_the_id_to_the_stash(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    stash_file = prepare_reserved_ids(home, [11111, 11112])
+
+    repo_path = tmp_path / "repo"
+    initialize_werks_project(repo_path, first_free=11_111)
+
+    with mock.patch.dict(os.environ, {"HOME": str(home), "EDITOR": "true"}):
+        os.chdir(repo_path)
+        create_werk(title="some_title")
+        subprocess.run(["python", "-m", "cmk.werks", "delete", "11111"], check=False)
+
+    assert json.loads(stash_file.read_text())["ids"] == [11111, 11112]
+
+
 def test_commit_config(tmp_path: Path) -> None:
     home = tmp_path / "home"
     home.mkdir()

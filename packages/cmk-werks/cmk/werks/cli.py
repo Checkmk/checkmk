@@ -445,7 +445,7 @@ def werk_is_modified(werkid: WerkId) -> bool:
 
 
 def werk_exists(werkid: WerkId) -> bool:
-    return os.path.exists(str(werkid))
+    return os.path.exists(str(werkid)) or os.path.exists(f"{werkid}.md")
 
 
 def load_werk(werk_path: Path) -> Werk:

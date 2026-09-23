@@ -59,7 +59,8 @@ class EndpointFamilyFactory(DataclassFactory[EndpointFamily]):
 
 
 class EndpointBehaviorFactory(DataclassFactory[versioned_endpoint.EndpointBehavior]):
-    pass
+    # Avoid randomly generating a locking combination the validation rejects.
+    skip_locking = False
 
 
 class EndpointDefinitionFactory(DataclassFactory[registry.EndpointDefinition]):

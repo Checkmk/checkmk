@@ -414,10 +414,26 @@ class EndpointValidator:
                 )
 
     @staticmethod
+    def _validate_locking(endpoint: RequestEndpoint) -> None:
+        if endpoint.method == "get":
+            # For GET neither flag has any effect.
+            return
+
+        if endpoint.skip_locking and endpoint.update_config_generation:
+            raise ValueError(
+                f"Endpoint {endpoint.operation_id} skips the configuration lock but still "
+                "updates the configuration generation. Regenerating and committing the "
+                "configuration without the lock exposes it to race conditions. Set "
+                "`update_config_generation=False` for endpoints that do not mutate the "
+                "configuration."
+            )
+
+    @staticmethod
     def validate_endpoint_definition(endpoint_definition: EndpointDefinition) -> None:
         """Validate a versioned endpoint configuration"""
         # TODO: this function should be invoked for custom endpoints
         endpoint = endpoint_definition.request_endpoint()
+        EndpointValidator._validate_locking(endpoint)
         with _with_endpoint_context(endpoint.operation_id):
             EndpointValidator._validate_parameters(endpoint.handler)
 

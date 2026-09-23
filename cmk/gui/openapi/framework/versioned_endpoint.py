@@ -92,8 +92,9 @@ class EndpointBehavior:
     """When set to True, the decorator will not try to acquire a wato configuration lock,
     which can lead to higher performance of this particular endpoint. WARNING: Do not
     activate this flag when configuration files are changed by the endpoint! This
-    exposes the data to potential race conditions. Use it for endpoints which trigger
-    livestatus commands."""
+    exposes the data to potential race conditions. Use it for non-mutating endpoints,
+    such as those triggering livestatus commands or read-only endpoints that carry a
+    POST body, which must also set `update_config_generation=False`."""
 
     update_config_generation: bool = True
     """Whether to generate a new configuration. All endpoints with methods other than `get`

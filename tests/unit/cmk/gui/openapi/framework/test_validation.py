@@ -511,3 +511,33 @@ def test_string_annotations_are_validated() -> None:
                 metadata={"content_type": "application/json"},
             )
         )
+
+
+def test_skip_locking_while_updating_config_generation_is_rejected() -> None:
+    with pytest.raises(ValueError, match="skips the configuration lock"):
+        validate_endpoint_definition(
+            EndpointDefinitionFactory.build(
+                metadata={"method": "post"},
+                behavior={"skip_locking": True, "update_config_generation": True},
+            )
+        )
+
+
+@pytest.mark.parametrize(
+    "method, behavior",
+    [
+        pytest.param(
+            "post", {"skip_locking": True, "update_config_generation": False}, id="skip-no-gen"
+        ),
+        pytest.param(
+            "post", {"skip_locking": False, "update_config_generation": True}, id="lock-gen"
+        ),
+        pytest.param(
+            "get", {"skip_locking": True, "update_config_generation": True}, id="get-no-ops"
+        ),
+    ],
+)
+def test_valid_locking_combinations(method: str, behavior: dict[str, bool]) -> None:
+    validate_endpoint_definition(
+        EndpointDefinitionFactory.build(metadata={"method": method}, behavior=behavior)
+    )

@@ -2793,6 +2793,10 @@ async def process_vault(
         "protectionStatus",
         "policyName",
         "isArchiveEnabled",
+        "isScheduledForDeferredDelete",
+        "deferredDeleteTimeInUTC",
+        # The API docs say softDeleteRetentionPeriodInDays, but the API sends this name.
+        "softDeleteRetentionPeriod",
     )
 
     response = await api_client.get_async(

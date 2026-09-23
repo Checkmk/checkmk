@@ -13,7 +13,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any, Literal, NamedTuple
 
-from cmk.agent_based.v2 import DiscoveryResult, Service, StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.rulesets.v1 import Title
 
 SectionSystem = Mapping[str, Mapping[str, Any]]
@@ -152,14 +152,6 @@ class Perfdata(NamedTuple):
     boundaries: tuple[float | None, float | None] | None
 
 
-def parse_redfish(string_table: StringTable) -> RedfishAPIData:
-    """parse one line of data to dictionary"""
-    try:
-        return json.loads(string_table[0][0])
-    except IndexError, json.decoder.JSONDecodeError:
-        return {}
-
-
 def parse_redfish_multiple(string_table: StringTable) -> RedfishAPIData:
     """parse list of device dictionaries to one dictionary"""
     hpe_matches = [
@@ -212,12 +204,6 @@ def parse_redfish_multiple(string_table: StringTable) -> RedfishAPIData:
             item = entry.get("Id")
         parsed.setdefault(item, entry)
     return parsed
-
-
-def discovery_redfish_multiple(section: RedfishAPIData) -> DiscoveryResult:
-    """Discovery multiple items from one dictionary"""
-    for item in section:
-        yield Service(item=item)
 
 
 def _try_convert_to_float(value: str | None) -> float | None:

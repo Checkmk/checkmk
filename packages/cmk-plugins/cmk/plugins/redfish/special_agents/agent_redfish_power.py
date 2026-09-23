@@ -121,17 +121,6 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def dropnonascii(input_str):
-    """Drop all non ASCII characters from string"""
-    output_str = ""
-    for i in input_str:
-        num = ord(i)
-        if num >= 0 and num <= 127:
-            output_str = output_str + i
-
-    return output_str
-
-
 def fetch_data(redfishobj, url, component):
     """fetch a single data object from Redfish"""
     response_url = redfishobj.get(url, None)

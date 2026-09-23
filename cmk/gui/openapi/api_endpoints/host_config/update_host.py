@@ -27,6 +27,7 @@ from ._utils import (
     host_etag,
     make_pending_changes,
     PERMISSIONS_UPDATE,
+    reject_deprecated_attributes,
     serialize_host,
     UNREMOVABLE_HOST_ATTRIBUTES,
     validate_host_attributes_for_quick_setup,
@@ -60,10 +61,17 @@ def update_host_v1(
             detail="Cannot modify locked attributes.",
         )
 
-    if body.attributes:
-        new_attributes = carry_over_unexposed_attributes(
-            host.attributes, body.attributes.to_internal()
-        )
+    new_attributes = (
+        carry_over_unexposed_attributes(host.attributes, body.attributes.to_internal())
+        if body.attributes
+        else None
+    )
+    update_attributes = body.update_attributes.to_internal() if body.update_attributes else None
+    reject_deprecated_attributes(
+        host.attributes, {**(new_attributes or {}), **(update_attributes or {})}
+    )
+
+    if new_attributes is not None:
         host.edit(
             new_attributes,
             host.cluster_nodes(),
@@ -72,9 +80,9 @@ def update_host_v1(
             acting_user=acting_user,
         )
 
-    if body.update_attributes:
+    if update_attributes is not None:
         host.update_attributes(
-            body.update_attributes.to_internal(),
+            update_attributes,
             pprint_value=api_context.config.wato_pprint_config,
             pending_changes=make_pending_changes(api_context),
             acting_user=acting_user,

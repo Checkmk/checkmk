@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
 import pytest
 
 import cmk.gui.watolib.host_attributes as attrs
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.gui.config import active_config, Config
 from cmk.gui.http import request
 from cmk.gui.type_defs import CustomHostAttrSpec
@@ -370,3 +371,72 @@ def test_collect_attributes_reads_an_offered_attribute_from_the_request() -> Non
     collected = _collect_host_attributes(attrs.HostAttributes(alias="the stored alias"))
 
     assert collected["alias"] == "the new alias"
+
+
+@pytest.mark.usefixtures("request_context", "load_config")
+def test_collect_attributes_does_not_set_a_deprecated_attribute_anew() -> None:
+    request.set_var("host_change_management_address", "on")
+    request.set_var("management_address", "10.0.0.1")
+
+    collected = _collect_host_attributes(attrs.HostAttributes())
+
+    assert "management_address" not in collected
+
+
+@pytest.mark.usefixtures("request_context", "load_config")
+def test_collect_attributes_keeps_a_deprecated_attribute_editable_where_it_is_set() -> None:
+    request.set_var("host_change_management_address", "on")
+    request.set_var("management_address", "10.0.0.2")
+
+    collected = _collect_host_attributes(
+        attrs.HostAttributes(management_address=HostAddress("10.0.0.1"))
+    )
+
+    assert collected["management_address"] == "10.0.0.2"
+
+
+@pytest.mark.usefixtures("request_context", "load_config")
+def test_collect_attributes_keeps_a_stored_no_management_board() -> None:
+    request.set_var("host_change_management_protocol", "on")
+
+    collected = _collect_host_attributes(attrs.HostAttributes(management_protocol=None))
+
+    assert collected["management_protocol"] is None
+
+
+@pytest.mark.usefixtures("request_context", "load_config")
+def test_collect_attributes_lets_a_deprecated_attribute_be_removed() -> None:
+    collected = _collect_host_attributes(
+        attrs.HostAttributes(management_address=HostAddress("10.0.0.1"))
+    )
+
+    assert "management_address" not in collected
+
+
+@pytest.mark.parametrize(
+    "stored, attributes, expected",
+    [
+        pytest.param({}, {"management_protocol": "snmp"}, ["management_protocol"], id="set anew"),
+        pytest.param(
+            {"management_protocol": "snmp"}, {"management_protocol": "ipmi"}, [], id="changed"
+        ),
+        pytest.param(
+            {"management_protocol": "snmp"},
+            {"management_snmp_community": "public"},
+            [],
+            id="completes a configured board",
+        ),
+        pytest.param({}, {"alias": "new"}, [], id="not deprecated"),
+        pytest.param({}, {"management_protocol": None}, [], id="set to no board"),
+        pytest.param(
+            {"management_protocol": None},
+            {"management_protocol": "snmp"},
+            ["management_protocol"],
+            id="stored no board",
+        ),
+    ],
+)
+def test_deprecated_attributes_set_anew(
+    stored: Mapping[str, object], attributes: Mapping[str, object], expected: list[str]
+) -> None:
+    assert attrs.deprecated_attributes_set_anew(stored, attributes) == expected

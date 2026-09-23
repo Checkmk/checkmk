@@ -19,7 +19,7 @@ from pytest_mock import MockerFixture
 
 from cmk.automations.results import DeleteHostsResult
 from cmk.ccc import version
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import omd_site, SiteId
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -71,6 +71,23 @@ def _field_errors(fields: dict[str, Any], field_name: str) -> list[dict[str, Any
         for detail in fields.values()
         if field_name in detail["loc"] and detail["type"] != "is_instance_of"
     ]
+
+
+def _create_host_with_management_board(attributes: HostAttributes) -> None:
+    """Management board attributes can no longer be set anew through the API, only where a host
+    already has them - so these hosts are created the way they were before the deprecation."""
+    folder_tree().root_folder().create_hosts(
+        [(HostName("heute"), attributes, None)],
+        pprint_value=False,
+        pending_changes=PendingChanges(
+            activation_sites=activation_sites(active_config.sites),
+            local_site=omd_site(),
+            acting_user=user.id,
+            store=PendingChangesStore(),
+            hooks=(),
+        ),
+        acting_user=user,
+    )
 
 
 @pytest.fixture()
@@ -1303,22 +1320,23 @@ def test_openapi_host_config_snmpv3_auth_priv_passwords_redacted_on_get(
     assert "privacy_password" not in snmp
 
 
+@pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_openapi_host_config_ipmi_password_redacted_on_get(
     clients: ClientRegistry,
 ) -> None:
     """The stored IPMI password must never be returned on GET responses."""
-    clients.HostConfig.create(
-        folder="/",
-        host_name="heute",
-        attributes={
-            "management_protocol": "ipmi",
-            "management_address": "127.0.0.1",
-            "management_ipmi_credentials": {
-                "username": "ipmi-user",
-                "password": "ipmi-secret",
-            },
-        },
-    ).assert_status_code(200)
+    _create_host_with_management_board(
+        HostAttributes(
+            {
+                "management_protocol": "ipmi",
+                "management_address": HostAddress("127.0.0.1"),
+                "management_ipmi_credentials": {
+                    "username": "ipmi-user",
+                    "password": "ipmi-secret",
+                },
+            }
+        )
+    )
 
     resp = clients.HostConfig.get("heute").assert_status_code(200)
     ipmi = resp.json["extensions"]["attributes"]["management_ipmi_credentials"]
@@ -1326,22 +1344,20 @@ def test_openapi_host_config_ipmi_password_redacted_on_get(
     assert "password" not in ipmi
 
 
+@pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_openapi_host_config_management_snmp_community_redacted_on_get(
     clients: ClientRegistry,
 ) -> None:
     """Management-board SNMP credentials must redact secrets on GET responses."""
-    clients.HostConfig.create(
-        folder="/",
-        host_name="heute",
-        attributes={
-            "management_protocol": "snmp",
-            "management_address": "127.0.0.1",
-            "management_snmp_community": {
-                "type": "v1_v2_community",
-                "community": "mgmt-secret",
-            },
-        },
-    ).assert_status_code(200)
+    _create_host_with_management_board(
+        HostAttributes(
+            {
+                "management_protocol": "snmp",
+                "management_address": HostAddress("127.0.0.1"),
+                "management_snmp_community": "mgmt-secret",
+            }
+        )
+    )
 
     resp = clients.HostConfig.get("heute").assert_status_code(200)
     snmp = resp.json["extensions"]["attributes"]["management_snmp_community"]
@@ -2410,3 +2426,86 @@ class TestHostConfigWithRelayAttribute:
                 etag=None,
             )
         assert excinfo.value.response.status_code == 400
+
+
+def test_openapi_host_config_refuses_a_new_management_board(
+    clients: ClientRegistry,
+) -> None:
+    resp = clients.HostConfig.create(
+        folder="/",
+        host_name="heute",
+        attributes={"management_protocol": "snmp"},
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(400)
+    assert "management_protocol" in resp.json["detail"]
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_host_config_refuses_a_management_board_on_an_existing_host(
+    clients: ClientRegistry,
+) -> None:
+    resp = clients.HostConfig.edit(
+        host_name="heute",
+        update_attributes={"management_address": "127.0.0.1"},
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(400)
+    assert "management_address" in resp.json["detail"]
+
+
+@pytest.mark.parametrize(
+    "name, value",
+    [
+        pytest.param("management_protocol", "ipmi", id="changed"),
+        pytest.param("management_address", "127.0.0.1", id="completed"),
+    ],
+)
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_openapi_host_config_edits_an_existing_management_board(
+    clients: ClientRegistry, name: str, value: str
+) -> None:
+    _create_host_with_management_board(HostAttributes({"management_protocol": "snmp"}))
+
+    clients.HostConfig.edit(host_name="heute", update_attributes={name: value}).assert_status_code(
+        200
+    )
+
+    resp = clients.HostConfig.get("heute")
+    assert resp.json["extensions"]["attributes"][name] == value
+
+
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_openapi_host_config_removes_an_existing_management_board(
+    clients: ClientRegistry,
+) -> None:
+    _create_host_with_management_board(HostAttributes({"management_protocol": "snmp"}))
+
+    clients.HostConfig.edit(
+        host_name="heute", remove_attributes=["management_protocol"]
+    ).assert_status_code(200)
+
+    resp = clients.HostConfig.get("heute")
+    assert "management_protocol" not in resp.json["extensions"]["attributes"]
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_host_config_bulk_update_refuses_a_new_management_board_as_a_whole(
+    clients: ClientRegistry,
+) -> None:
+    """A host with several entries is refused before any of them is applied."""
+    resp = clients.HostConfig.bulk_edit(
+        entries=[
+            {"host_name": "heute", "update_attributes": {"alias": "changed"}},
+            {"host_name": "heute", "update_attributes": {"management_address": "127.0.0.1"}},
+        ],
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(400)
+    assert "heute" in resp.json["ext"]["failed_hosts"]
+    assert clients.HostConfig.get("heute").json["extensions"]["attributes"].get("alias") != (
+        "changed"
+    )

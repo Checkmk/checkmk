@@ -32,6 +32,7 @@ from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
     all_host_attributes,
     collect_attributes,
+    deprecated_attributes_set_anew,
     sorted_host_attributes,
 )
 from cmk.gui.watolib.hosts_and_folders import (
@@ -117,8 +118,11 @@ class ModeBulkEdit(WatoMode):
         host_names = get_hostnames_from_checkboxes(self._folder)
         for host_name in host_names:
             host = self._folder.load_host(host_name)
+            attributes = changed_attributes.copy()
+            for name in deprecated_attributes_set_anew(host.attributes, changed_attributes):
+                del attributes[name]  # type: ignore[misc]
             host.update_attributes(
-                changed_attributes,
+                attributes,
                 pprint_value=config.wato_pprint_config,
                 pending_changes=_pending_changes(
                     config=config, local_site=omd_site(), acting_user=user.id

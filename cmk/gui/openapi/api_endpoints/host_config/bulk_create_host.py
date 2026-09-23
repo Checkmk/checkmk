@@ -32,6 +32,7 @@ from cmk.web.utils import permission_verification as permissions
 from ._family import HOST_CONFIG_FAMILY
 from ._utils import (
     bulk_host_action_response,
+    deprecated_attributes_error,
     make_pending_changes,
     rw_permissions,
 )
@@ -94,12 +95,16 @@ def bulk_create_host_v1(
         validated_entries = []
         folder.prepare_create_hosts(acting_user=acting_user)
         for host in grouped_hosts:
+            attributes = host.attributes.to_internal()
+            if (error := deprecated_attributes_error({}, attributes)) is not None:
+                failed_hosts[host.host_name] = error
+                continue
             try:
                 validated_entries.append(
                     (
                         host.host_name,
                         folder.verify_and_update_host_details(
-                            host.host_name, host.attributes.to_internal(), acting_user=acting_user
+                            host.host_name, attributes, acting_user=acting_user
                         ),
                         None,
                     )

@@ -25,6 +25,7 @@ from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
     ABCHostAttributeFormSpec,
     ABCHostAttributeValueSpec,
+    may_set_deprecated_attribute,
     sorted_host_attribute_topics,
     sorted_host_attributes_by_topic,
 )
@@ -112,9 +113,11 @@ def configure_attributes(
         if topic_id == "management_board":
             message = _(
                 "<b>This feature is deprecated and will be removed in the version 3.1 of Checkmk.</b>"
-                "<br>Please do not configure management boards in here anymore. "
-                "Monitor the management boards via a dedicated host using <a href='%(ipmi_url)s'>IPMI</a>"
-                " or SNMP.<br><a href='%(read_more_url)s' target='_blank'>Read more about management boards.</a>"
+                "<br><br>You can no longer add management boards here. Existing settings can still "
+                "be changed or removed."
+                "<br>Monitor the management boards via a dedicated host using "
+                "<a href='%(ipmi_url)s'>IPMI</a> or SNMP instead."
+                "<br><br><a href='%(read_more_url)s' target='_blank'>Read more about management boards.</a>"
             ) % {
                 "ipmi_url": makeuri_contextless(
                     request,
@@ -268,6 +271,10 @@ def configure_attributes(
             is_editable = attr.editable() and attr.may_edit() and num_have_locked_it == 0
             if for_what == "host_search":
                 is_editable = True
+            elif attr.is_deprecated() and not _may_set_deprecated(attrname, new, hosts):
+                # Shown read-only where stored, e.g. an explicit "No management board"
+                active = active and not new
+                is_editable = False
 
             if not is_editable:
                 if active:
@@ -452,6 +459,14 @@ def _determine_attribute_settings(
             if host.attributes.get(attrname) not in values:
                 values.append(host.attributes.get(attrname))
     return values, num_have_locked_it, num_haveit
+
+
+def _may_set_deprecated(
+    attrname: str, new: bool, hosts: Mapping[str, Host | Folder | None]
+) -> bool:
+    """Whether every edited object already has this deprecated attribute's feature configured."""
+    edited = [{}] if new else [obj.attributes if obj else {} for obj in hosts.values()]
+    return bool(edited) and all(may_set_deprecated_attribute(stored, attrname) for stored in edited)
 
 
 def _some_host_hasnt_set(folder: Folder, attrname: str) -> bool:

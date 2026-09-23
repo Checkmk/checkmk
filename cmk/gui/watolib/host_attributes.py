@@ -267,6 +267,8 @@ class HostAttributeTopic:
     title: str
     """The topics are sorted by this number wherever displayed as a list"""
     sort_index: int
+    """Its attributes can no longer be set on an object that has none of them set yet"""
+    deprecated: bool = False
 
 
 class HostAttributeTopicRegistry(cmk.ccc.plugin_registry.Registry[HostAttributeTopic]):
@@ -316,6 +318,7 @@ HOST_ATTRIBUTE_TOPIC_MANAGEMENT_BOARD = HostAttributeTopic(
     ident="management_board",
     title=_("Management board"),
     sort_index=50,
+    deprecated=True,
 )
 
 HOST_ATTRIBUTE_TOPIC_RELATIONS = HostAttributeTopic(
@@ -458,6 +461,9 @@ class ABCHostAttribute(abc.ABC):
         """Whether or not this attribute can be edited using the GUI.
         This makes the attribute a read only attribute in the GUI."""
         return True
+
+    def is_deprecated(self) -> bool:
+        return self.topic().deprecated
 
     def openapi_editable(self) -> bool:
         """If True, this attribute will be editable through the REST API,
@@ -604,6 +610,44 @@ class HostAttributeRegistry(cmk.ccc.plugin_registry.Registry[type[ABCHostAttribu
 
 
 host_attribute_registry = HostAttributeRegistry()
+
+
+def _deprecated_topic(name: str) -> str | None:
+    if (attr_class := host_attribute_registry.get(name)) is None:
+        return None
+    attr = attr_class()
+    return attr.topic().ident if attr.is_deprecated() else None
+
+
+def _configured_deprecated_topics(stored: Mapping[str, object]) -> set[str]:
+    # None is "No management board" or empty credentials, which configures nothing
+    return {
+        topic
+        for name, value in stored.items()
+        if value is not None and (topic := _deprecated_topic(name)) is not None
+    }
+
+
+def deprecated_attributes_set_anew(
+    stored: Mapping[str, object], attributes: Mapping[str, object]
+) -> list[str]:
+    """The deprecated attributes that ``attributes`` sets on an object that has none of their topic.
+
+    An object that has one of them set, e.g. a management board, may still complete the rest."""
+    stored_topics = _configured_deprecated_topics(stored)
+    return sorted(
+        name
+        for name, value in attributes.items()
+        if value is not None
+        and (topic := _deprecated_topic(name)) is not None
+        and topic not in stored_topics
+    )
+
+
+def may_set_deprecated_attribute(stored: Mapping[str, object], name: str) -> bool:
+    return (topic := _deprecated_topic(name)) is None or topic in _configured_deprecated_topics(
+        stored
+    )
 
 
 def sorted_host_attributes(host_attributes: Sequence[ABCHostAttribute]) -> list[ABCHostAttribute]:
@@ -978,6 +1022,16 @@ def collect_attributes(
             # slipping through would reach the disk unvalidated. It must not drop it either -
             # configure_attributes() renders a forced entry for an attribute it only shows
             # (see "force_entry" there), so the request carries values nobody may edit.
+            if stored is not None and attrname in stored:
+                # Mypy can not help here with the dynamic key
+                host[attrname] = stored[attrname]  # type: ignore[literal-required]
+            continue
+        if (
+            attr.is_deprecated()
+            and for_what not in ("host_search", "bulk")
+            and not may_set_deprecated_attribute(stored or {}, attrname)
+        ):
+            # A bulk edit has no single stored object, its caller filters per host.
             if stored is not None and attrname in stored:
                 # Mypy can not help here with the dynamic key
                 host[attrname] = stored[attrname]  # type: ignore[literal-required]

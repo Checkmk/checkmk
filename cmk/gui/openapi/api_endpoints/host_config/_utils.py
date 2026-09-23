@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Final, get_type_hints
 
 from cmk.ccc.hostaddress import HostName
@@ -22,7 +22,7 @@ from cmk.gui.openapi.utils import EXT, ProblemException
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
-from cmk.gui.watolib.host_attributes import HostAttributes
+from cmk.gui.watolib.host_attributes import deprecated_attributes_set_anew, HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
@@ -271,3 +271,24 @@ def carry_over_unexposed_attributes(
         if name in stored:
             carried[name] = stored[name]
     return carried
+
+
+def deprecated_attributes_error(
+    stored: Mapping[str, object], attributes: Mapping[str, object]
+) -> str | None:
+    if deprecated := deprecated_attributes_set_anew(stored, attributes):
+        return (
+            "The following attributes are deprecated and can only be changed, completed or "
+            "removed on hosts and folders that already have one of them set: "
+            f"{', '.join(deprecated)}"
+        )
+    return None
+
+
+def reject_deprecated_attributes(
+    stored: Mapping[str, object], attributes: Mapping[str, object]
+) -> None:
+    if (error := deprecated_attributes_error(stored, attributes)) is not None:
+        raise ProblemException(
+            status=400, title="Deprecated attributes cannot be set", detail=error
+        )

@@ -1134,3 +1134,15 @@ def test_cmk_agent_connection_attribute_regression(
         attributes={"cmk_agent_connection": field_value},
         expect_ok=status_code == 200,
     ).assert_status_code(status_code)
+
+
+def test_openapi_folder_config_refuses_a_new_management_board(clients: ClientRegistry) -> None:
+    resp = clients.Folder.create(
+        title="with board",
+        parent="/",
+        attributes={"management_protocol": "snmp"},
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(400)
+    assert "management_protocol" in resp.json["detail"]

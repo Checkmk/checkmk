@@ -25,6 +25,7 @@ from ._family import HOST_CONFIG_FAMILY
 from ._utils import (
     bulk_host_action_response,
     carry_over_unexposed_attributes,
+    deprecated_attributes_error,
     make_pending_changes,
     PERMISSIONS_UPDATE,
     UNREMOVABLE_HOST_ATTRIBUTES,
@@ -93,6 +94,16 @@ def bulk_update_hosts_v1(
                     f"The following attributes are not managed through the API: "
                     f"{', '.join(unexposed)}"
                 )
+                continue
+
+            requested: dict[str, object] = {}
+            for update in updates:
+                if update.attributes:
+                    requested.update(update.attributes.to_internal())
+                if update.update_attributes:
+                    requested.update(update.update_attributes.to_internal())
+            if (error := deprecated_attributes_error(host.attributes, requested)) is not None:
+                failed_hosts[host.name()] = error
                 continue
 
             for update in updates:

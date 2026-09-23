@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from cmk.gui.openapi.api_endpoints.host_config._utils import reject_deprecated_attributes
 from cmk.gui.openapi.api_endpoints.models.folder_models import FolderModel
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -36,13 +37,16 @@ def create_folder_v1(api_context: ApiContext, body: CreateFolderModel) -> ApiRes
             detail=f"A folder with name {name!r} already exists.",
         )
 
+    attributes = body.attributes.to_internal()
+    reject_deprecated_attributes({}, attributes)
+
     if name is None:
         name = find_available_folder_name(body.title, parent_folder)
 
     folder = parent_folder.create_subfolder(
         name,
         body.title,
-        body.attributes.to_internal(),
+        attributes,
         pprint_value=api_context.config.wato_pprint_config,
         pending_changes=make_pending_changes(api_context),
         acting_user=api_context.user,

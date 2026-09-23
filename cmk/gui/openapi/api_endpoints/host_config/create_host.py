@@ -32,6 +32,7 @@ from ._utils import (
     host_etag,
     make_pending_changes,
     PERMISSIONS_CREATE,
+    reject_deprecated_attributes,
     serialize_host,
 )
 from .models.response_models import HostConfigModel
@@ -73,10 +74,12 @@ def create_host_v1(
     """Create a hosts."""
     api_context.user.need_permission("wato.edit")
     host_name = body.host_name
+    attributes = body.attributes.to_internal()
+    reject_deprecated_attributes({}, attributes)
 
     # is_cluster is defined as "cluster_hosts is not None"
     body.folder.create_hosts(
-        [(host_name, body.attributes.to_internal(), None)],
+        [(host_name, attributes, None)],
         pprint_value=api_context.config.wato_pprint_config,
         pending_changes=make_pending_changes(api_context),
         acting_user=api_context.user,

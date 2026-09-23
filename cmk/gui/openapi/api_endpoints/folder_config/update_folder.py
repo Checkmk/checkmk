@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from cmk.gui.openapi.api_endpoints.host_config._utils import reject_deprecated_attributes
 from cmk.gui.openapi.api_endpoints.models.folder_models import FolderModel
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -62,6 +63,8 @@ def update_folder_v1(
                     f"{', '.join(faulty_attributes)}"
                 ),
             )
+
+    reject_deprecated_attributes(folder.attributes, attributes)
 
     folder.edit(
         folder.title() if body.title is None else body.title,

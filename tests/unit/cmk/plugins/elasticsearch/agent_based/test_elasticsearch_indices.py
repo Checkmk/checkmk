@@ -335,3 +335,43 @@ def test_check(
         )
         == expected_result
     )
+
+
+@pytest.mark.xfail(strict=True, reason="Crash report 559d4302: ValidationError")
+def test_check_index_next_to_index_without_primaries() -> None:
+    # Elasticsearch reported an empty "primaries" object for one index, e.g. while
+    # its primary shard was unassigned. The other indices must still be monitored.
+    section = parse_elasticsearch_indices(
+        [
+            [
+                json.dumps(
+                    {
+                        "healthy-index": {
+                            "primaries": {"docs": {"count": 2}},
+                            "total": {"store": {"size_in_bytes": 35800}},
+                        },
+                        "index-without-primaries": {
+                            "primaries": {},
+                            "total": {"store": {"size_in_bytes": 3360}},
+                        },
+                    }
+                )
+            ]
+        ]
+    )
+    discovered = list(discover_elasticsearch_indices({"grouping": ("disabled", [])}, section))
+    assert discovered == [Service(item="healthy-index", parameters={"grouping_regex": None})]
+    assert list(
+        _check_elasticsearch_indices(
+            item="healthy-index",
+            params={"grouping_regex": None},
+            section=section,
+            value_store={},
+            now=300,
+        )
+    ) == [
+        Result(state=State.OK, summary="Document count: 2"),
+        Metric("elasticsearch_count", 2.0),
+        Result(state=State.OK, summary="Size: 35.0 KiB"),
+        Metric("elasticsearch_size", 35800.0),
+    ]

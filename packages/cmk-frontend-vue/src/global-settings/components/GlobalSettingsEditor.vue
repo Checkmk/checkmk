@@ -296,7 +296,7 @@ const currentStateText = computed<TranslatedString>(() => {
 .global-settings-editor__sections {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--dimension-7);
 }
 
 .global-settings-editor__alerts {

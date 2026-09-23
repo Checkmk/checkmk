@@ -1149,6 +1149,13 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         )
         for module in CROSS_DEPENDING_UTILS_MODULES
     },
+    Component("cmk.utils.backup"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_CRYPTO,
+        *(f"cmk.utils.{m}" for m in CROSS_DEPENDING_UTILS_MODULES),
+        "cmk.utils.password_store",
+        "cmk.utils.schedule",
+    ),
     **{Component(f"cmk.utils.{module}"): _allow(*PACKAGE_CCC) for module in CLEAN_UTILS_MODULES},
     Component("cmk.utils"): _allow(
         *PACKAGE_CCC,

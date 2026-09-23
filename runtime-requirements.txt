@@ -1147,6 +1147,7 @@ httpx2==2.11.0 \
     --hash=sha256:ea01b2e8febfb026e2601814c77ecb1e64fff114a87bc789cb520e67f27e7809
     # via
     #   -c requirements.txt
+    #   -r non-free/packages/cmk-ai-control-plane/requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   anthropic
     #   genai-prices

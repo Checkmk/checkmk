@@ -100,7 +100,7 @@ def ip_info_34_from(
         # in case we can't parse the OID using the above pattern we assume this is not for us
         return None
 
-    if (prefix := ("64" if oid_end.startswith("4.20.254.128.") else ip_prefix)) == "0":
+    if (prefix := ("64" if oid_end.startswith("4.20.254.128.") else ip_prefix)) in ("", "0"):
         return None
 
     adr_length, raw_address = (

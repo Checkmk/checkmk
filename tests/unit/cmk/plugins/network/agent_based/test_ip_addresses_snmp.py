@@ -325,7 +325,6 @@ def test_inventorize_ip_addresses_snmp(section: Section, expected_result: Invent
     assert list(inventorize_ip_addresses_snmp(section)) == expected_result
 
 
-@pytest.mark.xfail(strict=True, reason="Crash report e5e919fc: ValueError in ip_interface")
 def test_parse_ip_addresses_without_prefix() -> None:
     # The device reported no prefix (empty ipAddressPrefix) for its '34' entries,
     # while the '20' table still carries the address with its netmask

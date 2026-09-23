@@ -544,3 +544,18 @@ def test_check_w32time_status_incomplete_states(
     result = list(w32time_status.check_plugin_w32time_status.check_function(params, qs))
     assert isinstance(result[-1], Result)  # mypy
     assert result[-1].state == expected
+
+
+@pytest.mark.xfail(strict=True, reason="Crash report b337189a: ValueError on empty summary")
+def test_check_w32time_status_error_without_message() -> None:
+    # w32tm output from a German host: the agent delivers the error line, but no message after it
+    string_table = [["Folgender", "Fehler", "ist", "aufgetreten:"]]
+    section = w32time_status.parse_w32time_status(string_table)
+    assert list(
+        w32time_status.check_plugin_w32time_status.check_function(DEFAULT_PARAMS, section)
+    ) == [
+        Result(
+            state=State.WARN,
+            summary="Windows time service reported an error without a message",
+        ),
+    ]

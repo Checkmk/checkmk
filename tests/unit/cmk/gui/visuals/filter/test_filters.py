@@ -471,7 +471,56 @@ filter_tests = [
             ("hst_service_level_lower", "10"),
             ("hst_service_level_upper", "20"),
         ],
-        expected_filters=("Filter: host_custom_variable_names >= EC_SL\n"),
+        expected_filters=(
+            "Filter: host_custom_variables = EC_SL 10\n"
+            "Filter: host_custom_variables = EC_SL 20\n"
+            "Or: 2\n"
+        ),
+    ),
+    FilterTest(
+        ident="hst_service_level",
+        request_vars=[("hst_service_level_lower", "30")],
+        expected_filters=("Filter: host_custom_variables = EC_SL 30\n"),
+    ),
+    FilterTest(
+        ident="hst_service_level",
+        request_vars=[("hst_service_level_upper", "0")],
+        expected_filters=("Filter: host_custom_variables = EC_SL 0\n"),
+    ),
+    FilterTest(
+        ident="hst_service_level",
+        request_vars=[
+            ("hst_service_level_lower", "30"),
+            ("hst_service_level_upper", "10"),
+        ],
+        expected_filters=("Or: 0\n"),
+    ),
+    FilterTest(
+        ident="hst_service_level",
+        request_vars=[("hst_service_level_lower", "not-a-number")],
+        expected_filters="",
+    ),
+    FilterTest(
+        ident="hst_service_level",
+        request_vars=[
+            ("hst_service_level_lower", "not-a-number"),
+            ("hst_service_level_upper", "20"),
+        ],
+        expected_filters="",
+    ),
+    FilterTest(
+        ident="svc_service_level",
+        request_vars=[
+            ("svc_service_level_lower", "0"),
+            ("svc_service_level_upper", "30"),
+        ],
+        expected_filters=(
+            "Filter: service_custom_variables = EC_SL 0\n"
+            "Filter: service_custom_variables = EC_SL 10\n"
+            "Filter: service_custom_variables = EC_SL 20\n"
+            "Filter: service_custom_variables = EC_SL 30\n"
+            "Or: 4\n"
+        ),
     ),
     FilterTest(
         ident="log_class",
@@ -1137,79 +1186,6 @@ filter_table_tests = [
         ],
         expected_rows=[
             {"invinterface_last_change": 1523811000 - (60 * 60 * 24 * 4)},
-        ],
-    ),
-    # FilterECServiceLevelRange
-    FilterTableTest(
-        ident="svc_service_level",
-        request_vars=[("svc_service_level_lower", "1"), ("svc_service_level_upper", "3")],
-        rows=[
-            {
-                "service_custom_variables": {"EC_SL": "0"},
-            },
-            {
-                "service_custom_variables": {"EC_SL": "1"},
-            },
-            {
-                "service_custom_variables": {"EC_SL": "2"},
-            },
-            {
-                "service_custom_variables": {"EC_SL": "3"},
-            },
-            {
-                "service_custom_variables": {"EC_SL": "4"},
-            },
-        ],
-        expected_rows=[
-            {
-                "service_custom_variables": {"EC_SL": "1"},
-            },
-            {
-                "service_custom_variables": {"EC_SL": "2"},
-            },
-            {
-                "service_custom_variables": {"EC_SL": "3"},
-            },
-        ],
-    ),
-    FilterTableTest(
-        ident="hst_service_level",
-        request_vars=[("hst_service_level_lower", "1")],
-        rows=[
-            {
-                "host_custom_variables": {"EC_SL": "0"},
-            },
-            {
-                "host_custom_variables": {"EC_SL": "1"},
-            },
-            {
-                "host_custom_variables": {"EC_SL": "2"},
-            },
-        ],
-        expected_rows=[
-            {
-                "host_custom_variables": {"EC_SL": "1"},
-            },
-        ],
-    ),
-    FilterTableTest(
-        ident="hst_service_level",
-        request_vars=[("hst_service_level_upper", "2")],
-        rows=[
-            {
-                "host_custom_variables": {"EC_SL": "0"},
-            },
-            {
-                "host_custom_variables": {"EC_SL": "1"},
-            },
-            {
-                "host_custom_variables": {"EC_SL": "2"},
-            },
-        ],
-        expected_rows=[
-            {
-                "host_custom_variables": {"EC_SL": "2"},
-            },
         ],
     ),
     # TODO: Testing base class FilterHistoric

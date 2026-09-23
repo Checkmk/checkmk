@@ -321,13 +321,16 @@ const addTo = computed<AddTo | null>(() =>
         @update:requested-time-range="onPanelTimeRange"
         @update:value-resolution="valueResolution = $event"
         @inspect="pauseRefresh"
-      />
-      <GraphNotice
-        v-if="previewNotice"
-        v-bind="previewNotice"
-        class="graphing-designer-body__notice"
-        @retry="data.refetch()"
-      />
+      >
+        <template #notice>
+          <GraphNotice
+            v-if="previewNotice"
+            v-bind="previewNotice"
+            class="graphing-designer-body__notice"
+            @retry="data.refetch()"
+          />
+        </template>
+      </GraphPanel>
     </div>
 
     <slot name="alerts" />

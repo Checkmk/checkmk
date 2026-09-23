@@ -65,6 +65,8 @@ vi.mock('@/graphing/components/GraphPanel.vue', () => ({
       :data-min-value-axis-width="minValueAxisWidth"
     >
       <span>{{ title }}</span>
+      <!-- The real panel renders the host's notice over its plot; the mock must too. -->
+      <slot name="notice" />
       <span data-testid="brush-geometry">{{ brushSnapshot
         ? brushSnapshot.drawnDomain.start + ',' + brushSnapshot.drawnDomain.end + '|' +
           brushSnapshot.window.start + ',' + brushSnapshot.window.end
@@ -426,6 +428,44 @@ test('a populated stack reference does not make an otherwise empty panel drawabl
   await vi.advanceTimersByTimeAsync(0)
 
   expect(within(notice()!).getByText('No data available')).toBeInTheDocument()
+})
+
+test('states a panel notice inside the panel it describes', async () => {
+  vi.useFakeTimers()
+  resolvesWith(FETCHED_WITHOUT_DATA)
+
+  renderGroup()
+  await vi.advanceTimersByTimeAsync(0)
+
+  // Over the plot rather than beside it: a sibling would centre on the brush and legend too.
+  expect(panels()[0]!.contains(notice())).toBe(true)
+})
+
+test('a first load that failed has no panel, so its notice stands alone', async () => {
+  vi.useFakeTimers()
+  postSpy.mockRejectedValue(new Error('gone'))
+
+  renderGroup()
+  await vi.advanceTimersByTimeAsync(1_000)
+
+  expect(panels()).toHaveLength(0)
+  expect(within(notice()!).getByText('gone')).toBeInTheDocument()
+})
+
+test('retrying from a panel notice refetches', async () => {
+  vi.useFakeTimers()
+  renderGroup()
+  await vi.advanceTimersByTimeAsync(0)
+  postSpy.mockRejectedValue(new Error('gone'))
+  await fireEvent.click(screen.getByText('pan'))
+  await vi.advanceTimersByTimeAsync(1_000)
+  const before = postSpy.mock.calls.length
+
+  resolvesWith(FETCHED)
+  await fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+  await vi.advanceTimersByTimeAsync(0)
+
+  expect(postSpy.mock.calls.length).toBeGreaterThan(before)
 })
 
 test('a fetch failure over an empty panel states the failure alone', async () => {

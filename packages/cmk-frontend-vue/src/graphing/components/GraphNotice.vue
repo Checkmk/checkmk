@@ -101,6 +101,9 @@ const iconColor = computed(() => ({
 
 <style scoped>
 .graphing-graph-notice {
+  /* It sits over a plot the user can still pan, and over an inert one whose retry must still
+     be reachable, so only the retry takes the pointer. */
+  pointer-events: none;
   display: flex;
   align-items: flex-start;
   gap: var(--dimension-4);
@@ -148,6 +151,7 @@ const iconColor = computed(() => ({
 
 /* An inline link rather than a CmkButton: the design puts the action at the end of the sentence. */
 .graphing-graph-notice__retry {
+  pointer-events: auto;
   padding: 0;
   background: none;
   border: none;

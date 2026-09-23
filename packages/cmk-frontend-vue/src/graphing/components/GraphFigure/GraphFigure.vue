@@ -284,6 +284,12 @@ onBeforeUnmount(() => {
           @pin-create="onPinCreate"
           @pin-action="clearPin"
         />
+        <GraphNotice
+          v-if="displayedNotice"
+          v-bind="displayedNotice"
+          class="graphing-graph-figure__notice"
+          @retry="onRetry"
+        />
       </div>
       <GraphLegendCompact
         v-if="showLegend"
@@ -297,10 +303,9 @@ onBeforeUnmount(() => {
         @hover-metrics="highlightedMetricNames = $event"
       />
     </template>
-    <!-- A sibling of the graph rather than a branch beside it, so a failed refetch states itself
-         over the data it was going to replace. -->
+    <!-- A first load that failed has no plot to sit over, so the notice stands on its own. -->
     <GraphNotice
-      v-if="displayedNotice"
+      v-if="displayedNotice && graph === null"
       v-bind="displayedNotice"
       class="graphing-graph-figure__notice"
       @retry="onRetry"
@@ -352,6 +357,9 @@ onBeforeUnmount(() => {
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
+
+  /* The box the notice centres on. */
+  position: relative;
 }
 
 .graphing-graph-figure__graph--pinnable {

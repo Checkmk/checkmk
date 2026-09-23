@@ -345,6 +345,19 @@ test.each([
   expect(screen.queryByText('No data available')).not.toBeInTheDocument()
 })
 
+test('states a refetch failure inside the plot it covers', async () => {
+  renderFigure()
+  await screen.findByTestId('time-series-graph')
+
+  postSpy.mockRejectedValue(new Error('gone'))
+  await fireEvent.click(screen.getByTestId('emit-pan'))
+
+  const pill = await screen.findByText('Graph data could not be loaded.')
+  const plot = document.querySelector('.graphing-graph-figure__graph')
+  // The compact legend sits below the plot, so a figure-level notice would ride too low.
+  expect(plot!.contains(pill)).toBe(true)
+})
+
 test('a failed fetch outranks the no-data message', async () => {
   const fetchGraph = vi.fn().mockRejectedValue(new Error('livestatus is down'))
 

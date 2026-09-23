@@ -322,6 +322,7 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_
           >
             {{ _t('All metrics are hidden') }}
           </CmkAlertBox>
+          <slot name="notice" />
         </div>
 
         <GraphBrush

@@ -330,14 +330,17 @@ function onRetry(): void {
           "
           @update:consolidation-fn="consolidationFnPerPanel[panelSlot.index] = $event"
           @inspect="pauseRefresh"
-        />
-        <GraphNotice
-          v-if="panelNotices[panelSlot.index]"
-          v-bind="panelNotices[panelSlot.index]!"
-          silent
-          class="graphing-graph-group__notice"
-          @retry="onRetry"
-        />
+        >
+          <template #notice>
+            <GraphNotice
+              v-if="panelNotices[panelSlot.index]"
+              v-bind="panelNotices[panelSlot.index]!"
+              silent
+              class="graphing-graph-group__notice"
+              @retry="onRetry"
+            />
+          </template>
+        </GraphPanel>
       </div>
     </template>
     <!-- A first load that failed has no panel to sit over, so the notice stands on its own. -->

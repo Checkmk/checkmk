@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Literal
+
 import pytest
 
 from cmk.bakery.v1 import WindowsGlobalConfigEntry
@@ -10,7 +12,7 @@ from cmk.base.plugins.bakery.win_script_async import get_win_script_async_window
 
 
 @pytest.mark.parametrize("mode", ["parallel", "sequential"])
-def test_win_script_async_windows_config(mode: str) -> None:
+def test_win_script_async_windows_config(mode: Literal["sequential", "parallel"]) -> None:
     assert list(get_win_script_async_windows_config(mode)) == [
         WindowsGlobalConfigEntry(name="async_script_execution", content=mode),
     ]

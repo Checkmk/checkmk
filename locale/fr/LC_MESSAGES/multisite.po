@@ -2476,6 +2476,14 @@ msgstr "Un titre descriptif pour ce pack de règles"
 msgid "A descriptive title of this action."
 msgstr "Un titre descriptif de cette action."
 
+#, fuzzy
+msgid ""
+"A destination address may only contain letters, numbers, dashes, "
+"underscores, dots and colons."
+msgstr ""
+"Les descriptions de service valides ne peuvent contenir que des lettres, des "
+"chiffres, des tirets, des traits de soulignement, des espaces et des points."
+
 msgid "A direct link to all groups of BI aggregations"
 msgstr "Un lien direct avec tous les groupes d'agrégations BI"
 
@@ -23971,6 +23979,14 @@ msgstr ""
 
 #, python-format
 msgid ""
+"Duplicate destination \"%s\", already configured as entry %d. The service "
+"name is the address plus whatever differs in connection type, IP version, "
+"port, packet size, source address or maximum hops, so two entries have to "
+"differ in at least one of those."
+msgstr ""
+
+#, python-format
+msgid ""
 "Duplicate service name <b>%(description)s</b> for host <b>%(host_name)s</b>. "
 "Only one of the following services can be monitored at a time:<ul>%(items)s</"
 "ul>"
@@ -33792,8 +33808,8 @@ msgstr ""
 
 msgid ""
 "Host name, IPv4 address or IPv6 address that mtr will trace the route to. "
-"This value is also used as service description in Checkmk, so it must be "
-"unique per host."
+"The service name is built from this address plus whatever distinguishes "
+"several entries for the same address."
 msgstr ""
 
 #, fuzzy
@@ -77994,6 +78010,10 @@ msgstr "Ce nom sera utilisé dans la description du service"
 msgid "This node has nested aggregation differences."
 msgstr "L'agrégation BI demandée n'existe pas."
 
+#, fuzzy
+msgid "This node is configured differently in the frozen aggregation"
+msgstr "Ce nœud n'est présent que dans l'agrégation gelée"
+
 msgid "This node is not in the frozen aggregation"
 msgstr "Ce nœud ne fait pas partie de l'agrégation gelée"
 
@@ -90204,14 +90224,6 @@ msgstr "Secret d'automatisation valide pour l'utilisateur d'automatisation"
 msgid "Valid from"
 msgstr "Valable à partir de"
 
-#, fuzzy
-msgid ""
-"Valid service names may only contain letters, numbers, dashes, underscores, "
-"spaces, dots and colons."
-msgstr ""
-"Les descriptions de service valides ne peuvent contenir que des lettres, des "
-"chiffres, des tirets, des traits de soulignement, des espaces et des points."
-
 msgid "Valid till"
 msgstr "Valable jusqu'à"
 
@@ -96350,6 +96362,10 @@ msgstr "intervalle de confiance"
 
 msgid "configuration"
 msgstr "configuration"
+
+#, fuzzy
+msgid "configuration changed"
+msgstr "Changement de configuration inconnu"
 
 msgid "configure"
 msgstr "configurer"

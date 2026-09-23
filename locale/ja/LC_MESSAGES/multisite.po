@@ -2387,6 +2387,14 @@ msgstr "このルールパックの説明的なタイトル"
 msgid "A descriptive title of this action."
 msgstr "このアクションの説明的なタイトル。"
 
+#, fuzzy
+msgid ""
+"A destination address may only contain letters, numbers, dashes, "
+"underscores, dots and colons."
+msgstr ""
+"有効なサービス名には、文字、数字、ダッシュ、アンダースコア、スペース、および"
+"ドットのみを含めることができます。"
+
 msgid "A direct link to all groups of BI aggregations"
 msgstr "BI集計のすべてのグループへの直接リンク"
 
@@ -22089,6 +22097,14 @@ msgstr "Duplex"
 
 #, python-format
 msgid ""
+"Duplicate destination \"%s\", already configured as entry %d. The service "
+"name is the address plus whatever differs in connection type, IP version, "
+"port, packet size, source address or maximum hops, so two entries have to "
+"differ in at least one of those."
+msgstr ""
+
+#, python-format
+msgid ""
 "Duplicate service name <b>%(description)s</b> for host <b>%(host_name)s</b>. "
 "Only one of the following services can be monitored at a time:<ul>%(items)s</"
 "ul>"
@@ -31263,10 +31279,11 @@ msgstr "コンテナに使用されるホスト名"
 msgid "Host name, IP address or host alias the event is relevant for"
 msgstr "イベントに関連するホスト名、IPアドレス、またはホストエイリアス"
 
+#, fuzzy
 msgid ""
 "Host name, IPv4 address or IPv6 address that mtr will trace the route to. "
-"This value is also used as service description in Checkmk, so it must be "
-"unique per host."
+"The service name is built from this address plus whatever distinguishes "
+"several entries for the same address."
 msgstr ""
 "mtr が経路追跡を行うホスト名、IPv4 アドレス、または IPv6 アドレスです。この値"
 "は Checkmk 内のサービス説明としても使用されるため、ホストごとに一意である必要"
@@ -73532,6 +73549,10 @@ msgstr "この名前は、サービスの説明で使用されます"
 msgid "This node has nested aggregation differences."
 msgstr "このノードにはネストされた集計の差分が存在します。"
 
+#, fuzzy
+msgid "This node is configured differently in the frozen aggregation"
+msgstr "このノードは凍結したアグリゲーションにのみ含まれる"
+
 msgid "This node is not in the frozen aggregation"
 msgstr "このノードは凍結したアグリゲーションに含まれない"
 
@@ -84765,14 +84786,6 @@ msgstr "自動化ユーザーの有効な自動化シークレット"
 msgid "Valid from"
 msgstr "から有効"
 
-#, fuzzy
-msgid ""
-"Valid service names may only contain letters, numbers, dashes, underscores, "
-"spaces, dots and colons."
-msgstr ""
-"有効なサービス名には、文字、数字、ダッシュ、アンダースコア、スペース、および"
-"ドットのみを含めることができます。"
-
 msgid "Valid till"
 msgstr "まで有効"
 
@@ -90622,6 +90635,10 @@ msgstr "信頼区間"
 
 msgid "configuration"
 msgstr "構成"
+
+#, fuzzy
+msgid "configuration changed"
+msgstr "不明な構成変更"
 
 msgid "configure"
 msgstr "設定"

@@ -2456,6 +2456,14 @@ msgstr "Un titlu descriptiv pentru acest pachet de reguli"
 msgid "A descriptive title of this action."
 msgstr "Un titlu descriptiv despre această acțiune."
 
+#, fuzzy
+msgid ""
+"A destination address may only contain letters, numbers, dashes, "
+"underscores, dots and colons."
+msgstr ""
+"Descrierile valabile ale serviciilor pot conține numai litere, cifre, "
+"liniuțe, liniuțe de subsol, spații și puncte."
+
 msgid "A direct link to all groups of BI aggregations"
 msgstr "O legătură directă cu toate grupurile de agregări BI"
 
@@ -23857,6 +23865,14 @@ msgstr ""
 
 #, python-format
 msgid ""
+"Duplicate destination \"%s\", already configured as entry %d. The service "
+"name is the address plus whatever differs in connection type, IP version, "
+"port, packet size, source address or maximum hops, so two entries have to "
+"differ in at least one of those."
+msgstr ""
+
+#, python-format
+msgid ""
 "Duplicate service name <b>%(description)s</b> for host <b>%(host_name)s</b>. "
 "Only one of the following services can be monitored at a time:<ul>%(items)s</"
 "ul>"
@@ -33602,8 +33618,8 @@ msgstr ""
 
 msgid ""
 "Host name, IPv4 address or IPv6 address that mtr will trace the route to. "
-"This value is also used as service description in Checkmk, so it must be "
-"unique per host."
+"The service name is built from this address plus whatever distinguishes "
+"several entries for the same address."
 msgstr ""
 
 #, fuzzy
@@ -77633,6 +77649,10 @@ msgstr "Acest nume va fi utilizat în descrierea serviciului."
 msgid "This node has nested aggregation differences."
 msgstr "Agregarea BI solicitată nu există."
 
+#, fuzzy
+msgid "This node is configured differently in the frozen aggregation"
+msgstr "Acest nod se află doar în agregarea înghețată"
+
 msgid "This node is not in the frozen aggregation"
 msgstr "Acest nod nu se află în agregarea înghețată"
 
@@ -89721,14 +89741,6 @@ msgstr "Secret de automatizare valabil pentru utilizatorul de automatizare"
 msgid "Valid from"
 msgstr "Valabil de la"
 
-#, fuzzy
-msgid ""
-"Valid service names may only contain letters, numbers, dashes, underscores, "
-"spaces, dots and colons."
-msgstr ""
-"Descrierile valabile ale serviciilor pot conține numai litere, cifre, "
-"liniuțe, liniuțe de subsol, spații și puncte."
-
 msgid "Valid till"
 msgstr "Valabil până la"
 
@@ -95783,6 +95795,10 @@ msgstr "interval de încredere"
 
 msgid "configuration"
 msgstr "configurare"
+
+#, fuzzy
+msgid "configuration changed"
+msgstr "Schimbare de configurație necunoscută"
 
 msgid "configure"
 msgstr "configurați"

@@ -2430,6 +2430,14 @@ msgstr "Een beschrijvende titel voor dit regelpakket"
 msgid "A descriptive title of this action."
 msgstr "Een beschrijvende titel van deze actie."
 
+#, fuzzy
+msgid ""
+"A destination address may only contain letters, numbers, dashes, "
+"underscores, dots and colons."
+msgstr ""
+"Geldige dienstomschrijvingen mogen alleen letters, cijfers, streepjes, "
+"underscores, spaties en punten bevatten."
+
 msgid "A direct link to all groups of BI aggregations"
 msgstr "Een directe link naar alle groepen van BI-aggregaties"
 
@@ -23776,6 +23784,14 @@ msgstr ""
 
 #, python-format
 msgid ""
+"Duplicate destination \"%s\", already configured as entry %d. The service "
+"name is the address plus whatever differs in connection type, IP version, "
+"port, packet size, source address or maximum hops, so two entries have to "
+"differ in at least one of those."
+msgstr ""
+
+#, python-format
+msgid ""
 "Duplicate service name <b>%(description)s</b> for host <b>%(host_name)s</b>. "
 "Only one of the following services can be monitored at a time:<ul>%(items)s</"
 "ul>"
@@ -33498,8 +33514,8 @@ msgstr "Hostnaam, IP-adres of host alias waarvoor de gebeurtenis relevant is"
 
 msgid ""
 "Host name, IPv4 address or IPv6 address that mtr will trace the route to. "
-"This value is also used as service description in Checkmk, so it must be "
-"unique per host."
+"The service name is built from this address plus whatever distinguishes "
+"several entries for the same address."
 msgstr ""
 
 #, fuzzy
@@ -77335,6 +77351,10 @@ msgstr "Deze naam zal worden gebruikt in de beschrijving van de dienst"
 msgid "This node has nested aggregation differences."
 msgstr "De gevraagde BI-aggregatie bestaat niet."
 
+#, fuzzy
+msgid "This node is configured differently in the frozen aggregation"
+msgstr "Dit knooppunt zit alleen in de bevroren aggregatie"
+
 msgid "This node is not in the frozen aggregation"
 msgstr "Dit knooppunt zit niet in de bevroren aggregatie"
 
@@ -89394,14 +89414,6 @@ msgstr "Geldig automatiseringsgeheim voor de automatiseringsgebruiker"
 msgid "Valid from"
 msgstr "Geldig vanaf"
 
-#, fuzzy
-msgid ""
-"Valid service names may only contain letters, numbers, dashes, underscores, "
-"spaces, dots and colons."
-msgstr ""
-"Geldige dienstomschrijvingen mogen alleen letters, cijfers, streepjes, "
-"underscores, spaties en punten bevatten."
-
 msgid "Valid till"
 msgstr "Geldig tot"
 
@@ -95445,6 +95457,10 @@ msgstr "betrouwbaarheidsinterval"
 
 msgid "configuration"
 msgstr "configuratie"
+
+#, fuzzy
+msgid "configuration changed"
+msgstr "Onbekende configuratiewijziging"
 
 msgid "configure"
 msgstr "configureren"

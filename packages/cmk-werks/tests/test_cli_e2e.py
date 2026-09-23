@@ -64,6 +64,32 @@ current_version = "0.1.0"
     return repo
 
 
+def call_output(*args: str, home: Path, cwd: Path) -> tuple[int, str]:
+    completed = subprocess.run(
+        [sys.executable, "-m", "cmk.werks", *args],
+        capture_output=True,
+        text=True,
+        check=False,
+        cwd=cwd,
+        env=os.environ | {"HOME": str(home)},
+    )
+    return completed.returncode, completed.stdout
+
+
+def write_secret(home: Path) -> Path:
+    secret = home / ".config/cmk-werks/secret"
+    secret.parent.mkdir(parents=True, exist_ok=True)
+    secret.write_text("fake-secret", encoding="utf-8")
+    return secret
+
+
+def write_stash(home: Path, ids: list[int]) -> Path:
+    stash_file = home / ".local/state/cmk-werks/reserved-ids"
+    stash_file.parent.mkdir(parents=True, exist_ok=True)
+    stash_file.write_text(Stash(ids=ids).model_dump_json(by_alias=True))
+    return stash_file
+
+
 def latest_commit_subject(repo_path: Path) -> str:
     repo = Repo(repo_path)
     message = repo.head.commit.message
@@ -72,6 +98,18 @@ def latest_commit_subject(repo_path: Path) -> str:
     if isinstance(message, bytes):
         message = message.decode("utf-8")
     return message.split("\n")[0]
+
+
+def _create_werk(home: Path, repo_path: Path, title: bytes = b"some_title") -> None:
+    with mock.patch.dict(os.environ, {"HOME": str(home), "EDITOR": "true"}):
+        os.chdir(repo_path)
+        p = subprocess.Popen(
+            [sys.executable, "-m", "cmk.werks", "new"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        p.communicate(input=title + b"\nf\nc\nc\n1\nc\nk\n", timeout=30)
 
 
 def test_reserve_ids_and_create_werk(tmp_path: Path) -> None:
@@ -102,6 +140,21 @@ def test_reserve_ids_and_create_werk(tmp_path: Path) -> None:
     assert "some_title" in (repo_path / ".werks/11111.md").read_text()
     remaining = json.loads(stash_file.read_text())["ids"]
     assert remaining == [11112, 11113]
+
+
+def test_delete_werk_returns_the_id_to_the_stash(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    write_secret(home)
+    stash_file = write_stash(home, [11111, 11112])
+
+    repo_path = tmp_path / "repo"
+    initialize_werks_project(repo_path, first_free=11_111)
+    _create_werk(home, repo_path)
+
+    call_output("delete", "11111", home=home, cwd=repo_path)
+
+    assert json.loads(stash_file.read_text())["ids"] == [11111, 11112]
 
 
 def test_commit_config(tmp_path: Path) -> None:

@@ -31,6 +31,7 @@ from cmk.graphing_engine import (
 from cmk.gui import sites
 from cmk.livestatus_client import LivestatusColumn, lqencode, MKLivestatusNotFoundError
 
+from ._edge_neighbours import expected_served_step, with_edge_neighbours
 from ._metric_data import (
     map_metric_names,
     merge_series,
@@ -268,6 +269,34 @@ class RRDFetchTimeSeries:
         return result
 
 
+@dataclass(frozen=True)
+class _TimeSeriesWithEdgeNeighboursAtServedStep:
+    time_series_source: _RRDFetchTimeSeriesProtocol
+
+    def __call__(
+        self,
+        rrd_metrics: Sequence[RRDMetric],
+        *,
+        consolidation_function: ConsolidationFunction,
+        time_range: TimeRange,
+        only_site: EngineSiteID | None,
+    ) -> Mapping[RRDMetric, TimeSeries]:
+        def fetch_widened_by(neighbour_step: int) -> Mapping[RRDMetric, TimeSeries]:
+            return self.time_series_source(
+                rrd_metrics,
+                consolidation_function=consolidation_function,
+                time_range=with_edge_neighbours(time_range, neighbour_step),
+                only_site=only_site,
+            )
+
+        expected_step = expected_served_step(time_range, now=time.time())
+        fetched = fetch_widened_by(expected_step)
+        served_step = max((series.time_range.step for series in fetched.values()), default=0)
+        if served_step <= expected_step:
+            return fetched
+        return fetch_widened_by(served_step)
+
+
 @dataclass(frozen=True, kw_only=True)
 class QueryLimitReached:
     # A fan-out query hit its backend series cap, so its result is truncated.
@@ -322,6 +351,7 @@ class RRDFetchData:
     # scale and merge the series - sits above them and is independent of it.
     performance_data_source: _RRDFetchPerformanceDataProtocol = RRDFetchPerformanceData()
     time_series_source: _RRDFetchTimeSeriesProtocol = RRDFetchTimeSeries()
+    edge_neighbours_at_served_step: bool = False
     # Accumulated while fetching; read by the dispatcher into the evaluated result.
     diagnostics: FetchDiagnostics = field(default_factory=FetchDiagnostics, compare=False)
 
@@ -480,10 +510,15 @@ class RRDFetchData:
         time_range: TimeRange,
         consolidation_function: ConsolidationFunction,
     ) -> Mapping[RRDMetric, TimeSeries]:
+        time_series_source = (
+            _TimeSeriesWithEdgeNeighboursAtServedStep(self.time_series_source)
+            if self.edge_neighbours_at_served_step
+            else self.time_series_source
+        )
         result: dict[RRDMetric, TimeSeries] = {}
         for group_site, site_metrics in _grouped_by_site(rrd_metrics).items():
             result.update(
-                self.time_series_source(
+                time_series_source(
                     site_metrics,
                     consolidation_function=consolidation_function,
                     time_range=time_range,

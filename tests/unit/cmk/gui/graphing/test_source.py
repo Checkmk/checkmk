@@ -6,8 +6,10 @@
 import time
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
+from typing import override
 
 import pytest
+import time_machine
 
 from cmk.ccc.hostaddress import HostAddress
 from cmk.graphing.v1 import translations
@@ -15,6 +17,7 @@ from cmk.graphing_engine import (
     ConsolidationFunction,
     EvaluatedCurve,
     EvaluatedGraph,
+    FetchedData,
     HostName,
     MetricName,
     RRDMetric,
@@ -33,6 +36,7 @@ from cmk.gui.graphing import (
     TemplateGraphSpecification,
 )
 from cmk.gui.graphing._graph_templates import _EvaluateTemplateGraphs
+from cmk.gui.graphing._metric_data import timestamps
 from cmk.gui.graphing._source import (
     chop_last_empty_step,
     PerformanceDataRow,
@@ -388,3 +392,152 @@ def test_a_step_one_curve_still_has_data_for_is_kept() -> None:
         other: _chopped_series(end - 30, end, 10, [1.0, 2.0, 3.0]),
     }
     assert chop_last_empty_step(time_series, end) == time_series
+
+
+_NOW = 1_800_000_000
+_DAY = 24 * 60 * 60
+_MIDNIGHT_A_WEEK_AGO = (_NOW - 7 * _DAY) // _DAY * _DAY
+_HALF_HOUR_A_WEEK_AGO = TimeRange(
+    start=_MIDNIGHT_A_WEEK_AGO, end=_MIDNIGHT_A_WEEK_AGO + 30 * 60, step=60
+)
+_FIVE_MINUTES = 5 * 60
+_EDGE_METRIC = RRDMetric(
+    site_id=_SITE,
+    host_name=HostName("h"),
+    service_name=ServiceName("svc"),
+    metric_name=MetricName("x"),
+)
+
+
+def _snapped_out_to_grid(time_range: TimeRange, grid_step: int) -> TimeRange:
+    return TimeRange(
+        start=time_range.start - time_range.start % grid_step,
+        end=time_range.end + -time_range.end % grid_step,
+        step=grid_step,
+    )
+
+
+@dataclass
+class _FakeRRDWithOneArchive:
+    archive_step: int
+    asked_ranges: list[TimeRange] = field(default_factory=list)
+
+    def __call__(
+        self,
+        rrd_metrics: Sequence[RRDMetric],
+        *,
+        consolidation_function: ConsolidationFunction,  # noqa: ARG002
+        time_range: TimeRange,
+        only_site: SiteID | None,  # noqa: ARG002
+    ) -> Mapping[RRDMetric, TimeSeries]:
+        self.asked_ranges.append(time_range)
+        served = _snapped_out_to_grid(time_range, self.archive_step)
+        sample_count = (served.end - served.start) // served.step
+        return {
+            metric: TimeSeries(time_range=served, values=[1.0] * sample_count)
+            for metric in rrd_metrics
+        }
+
+
+_EDGE_PERFORMANCE_DATA = _FakeRRDFetchPerformanceData("x=5")
+
+
+@dataclass
+class _CountingRRDFetchPerformanceData(_FakeRRDFetchPerformanceData):
+    reads: int = 0
+
+    @override
+    def __call__(
+        self, services: Sequence[Service], *, only_site: SiteID | None
+    ) -> Sequence[PerformanceDataRow]:
+        self.reads += 1
+        return super().__call__(services, only_site=only_site)
+
+
+def _fetched_with_edge_neighbours(
+    rrd: _FakeRRDWithOneArchive,
+    performance_data: _FakeRRDFetchPerformanceData = _EDGE_PERFORMANCE_DATA,
+) -> FetchedData:
+    with time_machine.travel(_NOW, tick=False):
+        [fetched] = RRDFetchData(
+            debug=False,
+            performance_data_source=performance_data,
+            time_series_source=rrd,
+            edge_neighbours_at_served_step=True,
+        )(
+            [_EDGE_METRIC],
+            consolidation_function=ConsolidationFunction.MAX,
+            time_range=_HALF_HOUR_A_WEEK_AGO,
+        )[_EDGE_METRIC]
+    return fetched
+
+
+def _sample_times(fetched: FetchedData) -> Sequence[int]:
+    return timestamps(fetched.time_series.time_range) if fetched.time_series else []
+
+
+@pytest.mark.parametrize(
+    "archive_step",
+    [
+        pytest.param(_FIVE_MINUTES, id="the default archive"),
+        pytest.param(_DAY, id="an archive coarser than the default"),
+    ],
+)
+def test_old_data_comes_with_a_sample_before_and_after_the_window(archive_step: int) -> None:
+    rrd = _FakeRRDWithOneArchive(archive_step=archive_step)
+
+    fetched = _fetched_with_edge_neighbours(rrd)
+
+    sample_times = _sample_times(fetched)
+    assert sample_times[0] < _HALF_HOUR_A_WEEK_AGO.start
+    assert sample_times[-1] > _HALF_HOUR_A_WEEK_AGO.end
+
+
+@pytest.mark.parametrize(
+    "archive_step",
+    [
+        pytest.param(_FIVE_MINUTES, id="the default archive"),
+        pytest.param(60, id="an archive finer than the default"),
+    ],
+)
+def test_an_archive_no_coarser_than_expected_is_queried_once(archive_step: int) -> None:
+    rrd = _FakeRRDWithOneArchive(archive_step=archive_step)
+
+    _fetched_with_edge_neighbours(rrd)
+
+    assert len(rrd.asked_ranges) == 1
+
+
+def test_the_performance_data_is_read_once_when_the_rrd_is_queried_again() -> None:
+    rrd = _FakeRRDWithOneArchive(archive_step=_DAY)
+    performance_data = _CountingRRDFetchPerformanceData("x=5")
+
+    _fetched_with_edge_neighbours(rrd, performance_data)
+
+    assert len(rrd.asked_ranges) == 2
+    assert performance_data.reads == 1
+
+
+def test_the_widened_query_keeps_the_requested_resolution() -> None:
+    rrd = _FakeRRDWithOneArchive(archive_step=_FIVE_MINUTES)
+
+    _fetched_with_edge_neighbours(rrd)
+
+    [asked_range] = rrd.asked_ranges
+    assert asked_range.step == _HALF_HOUR_A_WEEK_AGO.step
+
+
+def test_a_fetch_without_edge_neighbours_asks_for_exactly_the_range() -> None:
+    rrd = _FakeRRDWithOneArchive(archive_step=_FIVE_MINUTES)
+
+    RRDFetchData(
+        debug=False,
+        performance_data_source=_EDGE_PERFORMANCE_DATA,
+        time_series_source=rrd,
+    )(
+        [_EDGE_METRIC],
+        consolidation_function=ConsolidationFunction.MAX,
+        time_range=_HALF_HOUR_A_WEEK_AGO,
+    )
+
+    assert rrd.asked_ranges == [_HALF_HOUR_A_WEEK_AGO]

@@ -259,7 +259,7 @@ def test_mkbackup_parse(info: StringTable, expect_check_result: bool) -> None:
 def test_check_mkbackup_ok_when_started() -> None:
     now = datetime(1970, 1, 1, tzinfo=UTC)
     started = now - timedelta(minutes=5)
-    with time_machine.travel(now):
+    with time_machine.travel(now, tick=False):
         results = list(
             check_mkbackup(
                 {"state": "started", "started": started.timestamp(), "bytes_per_second": 10}
@@ -274,7 +274,7 @@ def test_check_mkbackup_ok_when_running() -> None:
     now = datetime(1970, 1, 1, tzinfo=UTC)
     started = now - timedelta(minutes=5)
     job_state = {"state": "running", "started": started.timestamp(), "bytes_per_second": 10}
-    with time_machine.travel(now):
+    with time_machine.travel(now, tick=False):
         results = list(check_mkbackup(job_state))
 
     assert results[0][0] == STATE_OK
@@ -351,7 +351,7 @@ def test_check_mkbackup_ok_when_finished_and_next_schedule_is_on_time(
     started = datetime(1970, 1, 1, tzinfo=UTC)
     finished = started + timedelta(seconds=30)
 
-    with time_machine.travel(started):
+    with time_machine.travel(started, tick=False):
         results = list(
             check_mkbackup(
                 {
@@ -383,7 +383,7 @@ def test_check_mkbackup_crit_when_finished_and_next_schedule_is_late(
     started = now - timedelta(days=7)
     finished = started + timedelta(seconds=30)
 
-    with time_machine.travel(now):
+    with time_machine.travel(now, tick=False):
         results = list(
             check_mkbackup(
                 {

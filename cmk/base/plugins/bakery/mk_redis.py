@@ -80,11 +80,13 @@ def _host_and_port(redis_instance: _Instance) -> tuple[str, str | int]:
 
 
 def _get_mk_redis_config(conf: RedisConfig) -> Iterator[str]:
-    if conf == "autodetect":
-        yield "# Autodetect instances"
-        return
-
-    yield from _get_static_instances_config([_Instance.model_validate(e) for e in conf[1]])
+    match conf:
+        case "autodetect":
+            yield "# Autodetect instances"
+        case ("static", instances):
+            yield from _get_static_instances_config(
+                [_Instance.model_validate(e) for e in instances]
+            )
 
 
 def _get_static_instances_config(instances: Sequence[_Instance]) -> Iterator[str]:

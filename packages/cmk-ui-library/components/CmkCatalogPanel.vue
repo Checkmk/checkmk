@@ -96,13 +96,14 @@ const id = useId()
   --cmk-catalog-panel-header-bg: var(--ux-theme-3);
   --cmk-catalog-panel-header-bg-hover: var(--ux-theme-5);
 
+  display: flex;
+  align-items: center;
   width: 100%;
   background: var(--cmk-catalog-panel-header-bg);
   padding: 4px 10px 3px 9px;
   margin: 0;
   font-weight: 700;
   letter-spacing: 1px;
-  vertical-align: middle;
   text-align: left;
   border-radius: var(--border-radius) var(--border-radius) 0 0;
   border: none;

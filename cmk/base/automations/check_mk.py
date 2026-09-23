@@ -4146,6 +4146,13 @@ def automation_get_agent_output(
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> GetAgentOutputResult:
+    # Only honoured for agent sources: the SNMP branch always does a live walk,
+    # as there is no cache holding a full walk.
+    cached, args = _extract_directive("@cached", args)
+    # Tolerate unknown trailing options, so newer callers don't break us.
+    raw_host, ty, *_ = args
+    hostname = HostName(raw_host)
+
     # TODO: This is inconsistent.
     # On one hand we are loading the penging config,
     # # on the other hand we are using the activated secrets.
@@ -4155,8 +4162,6 @@ def automation_get_agent_output(
     # Also clarify: Are we running any datasource, or just the (push/pull) agent fetcher?
     # Seems we are also running the special agents here.
     # For SNMP we are not getting the output we would get during checking, but a walk.
-    hostname = HostName(args[0])
-    ty = args[1]
 
     plugins = plugins or load_plugins()  # do we really still need this?
     # This loads the pending config:
@@ -4190,8 +4195,7 @@ def automation_get_agent_output(
     # I am not sure we should resolve the link here. What if the core removes the config?
     active_config_path = config_path.detect_latest_config_path(cmk.utils.paths.omd_root)
 
-    # No caching option over commandline here.
-    file_cache_options = FileCacheOptions()
+    file_cache_options = FileCacheOptions(use_outdated=cached)
 
     host_labels = label_manager.labels_of_host(hostname)
     relay_id = config.get_relay_id(host_labels)

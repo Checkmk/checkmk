@@ -694,13 +694,15 @@ def get_agent_output(
     agent_type: str,
     timeout: int | None,
     *,
+    cached: bool,
     debug: bool,
 ) -> results.GetAgentOutputResult:
     return _deserialize(
         _automation_serialized(
             "get-agent-output",
             automation_config=automation_config,
-            args=[host_name, agent_type],
+            # Keep the directive trailing: older versions ignore extra arguments.
+            args=[host_name, agent_type, *(("@cached",) if cached else ())],
             timeout=timeout,
             debug=debug,
         ),

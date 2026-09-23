@@ -65,7 +65,7 @@ def test_fetch_agent_job(host: Host, mocker: MockerFixture) -> None:
 
     # THEN
     get_agent_output_mock.assert_called_once_with(
-        LocalAutomationConfig(), "host1", "agent", timeout=10, debug=True
+        LocalAutomationConfig(), "host1", "agent", timeout=10, cached=False, debug=True
     )
     job_status = get_fetch_agent_job_status(request)
     assert job_status.state == "finished", job_status

@@ -10,7 +10,7 @@ import type {
 } from 'cmk-shared-typing/typescript/global_settings'
 import CmkAccordionItem from 'cmk-ui-library/components/CmkAccordion/CmkAccordionItem.vue'
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
-import CmkButton from 'cmk-ui-library/components/CmkButton'
+import CmkChip from 'cmk-ui-library/components/CmkChip.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
@@ -68,26 +68,24 @@ const siteOverrideFilterLabel = computed(() =>
       </div>
     </template>
     <template #header-right>
-      <CmkButton
+      <CmkChip
         v-if="modifiedCount > 0"
-        size="small"
-        variant="optional"
-        class="global-settings-topic__filter"
+        color="others"
+        variant="outline"
         :title="_t('Show only the modified settings')"
         @click="emit('filter', 'modified')"
       >
         {{ modifiedCountLabel }}
-      </CmkButton>
-      <CmkButton
+      </CmkChip>
+      <CmkChip
         v-if="siteOverrideCount > 0"
-        size="small"
-        variant="optional"
-        class="global-settings-topic__filter"
+        color="others"
+        variant="outline"
         :title="siteOverrideFilterLabel"
         @click="emit('filter', 'site')"
       >
         {{ siteOverrideCountLabel }}
-      </CmkButton>
+      </CmkChip>
     </template>
     <template #content>
       <CmkAlertBox v-if="topic.warning !== null" variant="warning" size="small">
@@ -127,10 +125,5 @@ const siteOverrideFilterLabel = computed(() =>
   color: var(--global-settings-topic-subline-color);
   font-size: var(--font-size-normal);
   font-weight: var(--font-weight-default);
-}
-
-.global-settings-topic__filter {
-  min-width: 90px;
-  font-size: var(--font-size-normal);
 }
 </style>

@@ -345,16 +345,9 @@ def _filter_with_sort_key(
 
     sortable_value = sort_key(value)
 
-    if from_value and until_value:
-        return sort_key(from_value) < sortable_value < sort_key(until_value)
-
-    if from_value and not until_value:
-        return sort_key(from_value) < sortable_value
-
-    if not from_value and until_value:
-        return sortable_value < sort_key(until_value)
-
-    return True
+    above_from = not from_value or sort_key(from_value) < sortable_value
+    below_until = not until_value or sortable_value < sort_key(until_value)
+    return above_from and below_until
 
 
 def _filter_rows_with_sort_key(

@@ -19,6 +19,7 @@ import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell
 import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
 import { ACTION_REFRESH_DELAY_MS, HOST_LIMIT_TIERS } from '@/monitoring/shared/constants'
 
+import MonitoringHeaderActions from '../shared/components/MonitoringHeaderActions.vue'
 import MonitoringLegacyViewButton from '../shared/components/MonitoringLegacyViewButton.vue'
 import MonitoringSplitPane from '../shared/components/MonitoringSplitPane.vue'
 import MonitoringSurveyLink from '../shared/components/MonitoringSurveyLink.vue'
@@ -304,16 +305,14 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
 
 <template>
   <CmkErrorBoundary>
-    <MonitoringSurveyLink
-      url="https://survey.checkmk.com/index.php/815511?lang=en"
-      :teleport-target="header_teleport_target"
-    />
-    <MonitoringLegacyViewButton
-      v-if="legacy_view_button"
-      :title="legacy_view_button.title"
-      :url="legacy_view_button.url"
-      :teleport_target="header_teleport_target ?? null"
-    />
+    <MonitoringHeaderActions :teleport-target="header_teleport_target">
+      <MonitoringSurveyLink url="https://survey.checkmk.com/index.php/815511?lang=en" />
+      <MonitoringLegacyViewButton
+        v-if="legacy_view_button"
+        :title="legacy_view_button.title"
+        :url="legacy_view_button.url"
+      />
+    </MonitoringHeaderActions>
     <div class="monitoring-all-hosts-app">
       <MonitoringToolbar
         ref="toolbar"

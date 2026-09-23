@@ -4,15 +4,14 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { MonitoringPageLinkButton } from 'cmk-shared-typing/typescript/monitoring/page_link_button'
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 
-import { useTeleportPlacement } from '@/monitoring/shared/components/teleportPlacement'
+import { useIsDefaultPlacement } from '@/monitoring/shared/components/teleportPlacement'
 
-const props = defineProps<MonitoringPageLinkButton>()
+const props = defineProps<{ title: string; url: string }>()
 
-const { target, isDefault } = useTeleportPlacement('.titlebar', () => props.teleport_target)
+const isDefault = useIsDefaultPlacement()
 
 function navigate(): void {
   window.location.href = props.url
@@ -20,36 +19,19 @@ function navigate(): void {
 </script>
 
 <template>
-  <Teleport defer :to="target">
-    <CmkButton
-      class="monitoring-legacy-view-button"
-      :class="
-        isDefault
-          ? 'monitoring-legacy-view-button--titlebar'
-          : 'monitoring-legacy-view-button--inline'
-      "
-      :size="isDefault ? 'medium' : 'small'"
-      @click="navigate"
-    >
-      <CmkIcon name="back" class="monitoring-legacy-view-button__icon" />
-      {{ title }}
-    </CmkButton>
-  </Teleport>
+  <CmkButton
+    class="monitoring-legacy-view-button"
+    :size="isDefault ? 'medium' : 'small'"
+    @click="navigate"
+  >
+    <CmkIcon name="back" class="monitoring-legacy-view-button__icon" />
+    {{ title }}
+  </CmkButton>
 </template>
 
 <style scoped>
 .monitoring-legacy-view-button {
   white-space: nowrap;
-}
-
-.monitoring-legacy-view-button--titlebar {
-  right: var(--dimension-4);
-  align-self: center;
-}
-
-.monitoring-legacy-view-button--inline {
-  margin-left: var(--dimension-4);
-  vertical-align: middle;
 }
 
 .monitoring-legacy-view-button__icon {

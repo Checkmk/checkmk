@@ -170,12 +170,11 @@ class HistoryStore:
     def _collect_history_paths(
         self, *, host_name: HostName
     ) -> Iterator[Result[HistoryDeltaPath | HistoryArchivePath, Path]]:
-        known_paths: dict[tuple[HostName, int, int], HistoryDeltaPath | HistoryArchivePath] = {}
+        known_paths: dict[tuple[int, int], HistoryDeltaPath | HistoryArchivePath] = {}
         for result_from_delta_cache in self._collect_paths_from_delta_cache(host_name):
             if result_from_delta_cache.is_ok():
                 known_paths[
                     (
-                        host_name,
                         result_from_delta_cache.ok.previous_timestamp,
                         result_from_delta_cache.ok.current_timestamp,
                     )
@@ -190,10 +189,10 @@ class HistoryStore:
         previous_paths: Sequence[_HistoryPath | None] = [None, *sorted_paths_from_archive]
         for previous, current in zip(previous_paths, sorted_paths_from_archive):
             previous_timestamp = -1 if previous is None else previous.timestamp
-            if (key := (host_name, previous_timestamp, current.timestamp)) not in known_paths:
+            if (key := (previous_timestamp, current.timestamp)) not in known_paths:
                 known_paths[key] = HistoryArchivePath(previous=previous, current=current)
 
-        for key in sorted(known_paths, key=lambda k: k[-1]):
+        for key in sorted(known_paths, key=lambda k: k[1]):
             yield OK(known_paths[key])
 
         for result_from_archive in results_from_archive:

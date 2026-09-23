@@ -447,6 +447,8 @@ onBeforeUnmount(() => {
   border-radius: 4px;
   box-shadow: 0 4px 12px rgb(0 0 0 / 25%);
   font-weight: var(--font-weight-default);
+  text-align: left;
+  white-space: normal;
 }
 
 .monitoring-filter-dropdown__sort {

@@ -67,6 +67,13 @@ class WerksParser:
                     self._level = int(self._validate_line_format(line))
                 elif "compatible" in line:
                     self._compatible = self._validate_line_format(line)
+        missing = [
+            attr.lstrip("_")
+            for attr in ("_version", "_summary", "_level", "_compatible")
+            if not hasattr(self, attr)
+        ]
+        if missing:
+            raise ValueError(f"Werk {self._id} is missing required fields: {missing}")
         self._impact = self._get_impact()
 
     def _validate_line_format(self, line: str) -> str:

@@ -236,6 +236,9 @@ def collect_changes_with_werks(args: type[TCliArgs], client: GerritClient) -> li
             exc.add_note("Skip change...")
             print(exc)  # noqa: T201  # It's OK for scripts to print()
             continue
+        except ValueError as exc:
+            print(f"ERROR: Skipping werk in change '{change.change_id}': {exc}")  # noqa: T201
+            continue
 
         jira_urls = [
             f"{JIRA_URL_PREFIX}/{jira_id}" for jira_id in get_jira_ticket_in_change(client, change)

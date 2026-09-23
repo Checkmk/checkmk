@@ -6,6 +6,15 @@ distribution: check_mk
 description:
  This check provides information about the network adaptors of a Redfish compatible device.
 
+ If the device lists the physical ports of an adapter (e.g. HPE iLO), only the
+ ports that were up at discovery are monitored. The check goes {CRIT} if such a
+ port goes down or is no longer reported, and {WARN} if a port that is not
+ monitored comes up. Rediscover the service to monitor the new port.
+
+ A {WARN} or {CRIT} adapter health is reported as {OK} if an unmonitored port has
+ the same health. The device does not say what caused the adapter health, so an
+ unrelated adapter fault of the same severity is not reported either.
+
 discovery:
  One service is created for each network adapter of the device.
 

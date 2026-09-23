@@ -30,6 +30,7 @@ from .components import (
     Dropdown,
     DualList,
     FilterComponent,
+    Hidden,
     HorizontalGroup,
     RadioButton,
     StaticText,
@@ -123,7 +124,12 @@ class Filter(abc.ABC):
         return True
 
     def display(self, value: FilterHTTPVariables) -> None:
+        is_first_row = True
         for component in self.components():
+            if not isinstance(component, Hidden):
+                if not is_first_row:
+                    html.br()
+                is_first_row = False
             component.render_html(self.ident, value)
 
     @abc.abstractmethod

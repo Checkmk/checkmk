@@ -432,6 +432,7 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
             self._host_name,
             self._agent_type,
             timeout=timeout,
+            cached=False,
             debug=debug,
         )
 

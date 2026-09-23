@@ -537,6 +537,35 @@ def test_automation_get_agent_output(site: Site) -> None:
     assert result.success is True
 
 
+@pytest.mark.usefixtures("test_cfg")
+def test_automation_get_agent_output_cached(site: Site) -> None:
+    agent_output_file = "var/check_mk/agent_output/modes-test-host"
+
+    def get_agent_output(*options: str) -> bytes:
+        result = _execute_automation(
+            site,
+            "get-agent-output",
+            args=["modes-test-host", "agent", *options],
+        )
+        assert isinstance(result, results.GetAgentOutputResult)
+        return bytes(result.raw_agent_data)
+
+    # A regular fetch populates the cache
+    assert b"<<<uptime>>>" in get_agent_output()
+
+    site.write_file(agent_output_file, "<<<cmk_test_changed_agent_output>>>\nfoo\n")
+    try:
+        cached = get_agent_output("@cached")
+        assert b"<<<uptime>>>" in cached
+        assert b"<<<cmk_test_changed_agent_output>>>" not in cached
+
+        fresh = get_agent_output()
+        assert b"<<<cmk_test_changed_agent_output>>>" in fresh
+        assert b"<<<uptime>>>" not in fresh
+    finally:
+        site.write_file(agent_output_file, get_standard_linux_agent_output())
+
+
 def test_automation_get_agent_output_unknown_host(site: Site) -> None:
     result = _execute_automation(
         site,

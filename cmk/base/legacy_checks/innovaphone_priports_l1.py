@@ -55,7 +55,10 @@ def check_innovaphone_priports_l1(item, params, parsed):
     }
 
     l1state = data["state"]
-    yield 0 if l1state == 2 else 2, "Current state is %s" % states[l1state]
+    if (state_name := states.get(l1state)) is None:
+        yield 3, "Current state is unknown (%d)" % l1state
+    else:
+        yield 0 if l1state == 2 else 2, "Current state is %s" % state_name
 
     l1sigloss = data["sigloss"]
     siglos_per_sec = get_rate(

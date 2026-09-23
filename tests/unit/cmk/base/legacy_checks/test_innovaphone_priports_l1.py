@@ -139,7 +139,6 @@ def test_check_innovaphone_priports_l1_item_not_found() -> None:
     assert len(result) == 0
 
 
-@pytest.mark.xfail(strict=True, reason="Crash report 4e70a284: KeyError 0")
 @time_machine.travel(60.0)
 def test_check_innovaphone_priports_l1_unknown_state(monkeypatch: pytest.MonkeyPatch) -> None:
     # The device reported a port state that is neither Down (1) nor UP (2)

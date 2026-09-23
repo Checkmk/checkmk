@@ -173,6 +173,7 @@ const resolutionLabel = computed(() => {
           :options="consolidationOptions"
           :label="_t('Graph values')"
           required
+          floating
         />
       </template>
       <span v-if="showTimestamp && timeRange" class="graphing-graph-header__timestamp">

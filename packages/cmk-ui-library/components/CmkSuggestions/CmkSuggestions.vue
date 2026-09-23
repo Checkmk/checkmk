@@ -408,6 +408,7 @@ defineExpose({
             v-for="suggestion in section.suggestions"
             ref="suggestionRefs"
             tabindex="-1"
+            class="cmk-suggestions__item"
             :role="role"
             :aria-label="suggestion.title"
             :aria-selected="
@@ -424,37 +425,39 @@ defineExpose({
             @click="selectSuggestion(suggestion)"
           >
             <SuggestionTooltip :text="suggestion.tooltip">
-              <span class="cmk-suggestions__option">
-                <slot name="option" :suggestion="suggestion">
-                  <template v-for="render in [getRowRender(suggestion)]">
-                    <template v-if="render.kind === 'title-match'">
-                      <span>{{ render.parts.before }}</span
-                      ><mark>{{ render.parts.match }}</mark
-                      ><span>{{ render.parts.after }}</span>
+              <span class="cmk-suggestions__row">
+                <span class="cmk-suggestions__option">
+                  <slot name="option" :suggestion="suggestion">
+                    <template v-for="render in [getRowRender(suggestion)]">
+                      <template v-if="render.kind === 'title-match'">
+                        <span>{{ render.parts.before }}</span
+                        ><mark>{{ render.parts.match }}</mark
+                        ><span>{{ render.parts.after }}</span>
+                      </template>
+                      <template v-else-if="render.kind === 'name-match'"
+                        >{{ suggestion.title
+                        }}<span class="cmk-suggestions__name-match">
+                          ({{ render.nameParts.before }}<mark>{{ render.nameParts.match }}</mark
+                          >{{ render.nameParts.after }})</span
+                        >
+                      </template>
+                      <template v-else>{{ suggestion.title }}</template>
                     </template>
-                    <template v-else-if="render.kind === 'name-match'"
-                      >{{ suggestion.title
-                      }}<span class="cmk-suggestions__name-match">
-                        ({{ render.nameParts.before }}<mark>{{ render.nameParts.match }}</mark
-                        >{{ render.nameParts.after }})</span
-                      >
-                    </template>
-                    <template v-else>{{ suggestion.title }}</template>
-                  </template>
-                </slot>
+                  </slot>
+                </span>
+                <CmkIcon
+                  v-if="
+                    markSelected &&
+                    suggestion.name !== null &&
+                    suggestion.name === selectedSuggestion.getName()
+                  "
+                  name="checkmark-bare"
+                  size="small"
+                  aria-hidden="true"
+                  class="cmk-suggestions__selected-mark"
+                />
               </span>
             </SuggestionTooltip>
-            <CmkIcon
-              v-if="
-                markSelected &&
-                suggestion.name !== null &&
-                suggestion.name === selectedSuggestion.getName()
-              "
-              name="checkmark-bare"
-              size="small"
-              aria-hidden="true"
-              class="cmk-suggestions__selected-mark"
-            />
           </li>
         </template>
         <!-- eslint-enable vue/valid-v-for vue/require-v-for-key -->
@@ -560,7 +563,16 @@ defineExpose({
       }
     }
 
-    &.cmk-suggestions__item--markable {
+    &.cmk-suggestions__item {
+      padding: 0;
+    }
+
+    .cmk-suggestions__row {
+      display: block;
+      padding: 6px;
+    }
+
+    &.cmk-suggestions__item--markable .cmk-suggestions__row {
       display: flex;
       align-items: center;
     }
@@ -572,7 +584,7 @@ defineExpose({
       min-width: 0;
     }
 
-    &.cmk-suggestions__item--in-section {
+    &.cmk-suggestions__item--in-section .cmk-suggestions__row {
       padding-left: 18px;
     }
 

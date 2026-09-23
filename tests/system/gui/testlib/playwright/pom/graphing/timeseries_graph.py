@@ -255,7 +255,7 @@ class GraphPanel:
         """Open the consolidation dropdown and pick the option shown as `option_label`."""
         logger.info("Selecting the consolidation function '%s'", option_label)
         self.consolidation_control.click()
-        options = self._values_and_time_group.locator(".cmk-suggestions")
+        options = self._document.locator(".cmk-suggestions")
         expect(
             options, f"The consolidation dropdown did not open to offer {option_label!r}"
         ).to_be_visible()

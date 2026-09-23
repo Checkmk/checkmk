@@ -24,6 +24,7 @@ import type {
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
 import { MODE_COLUMN_ID } from '@/monitoring/shared/components/modeColumn'
+import { columnId } from '@/monitoring/shared/tableState/schema'
 
 /**
  * Columns the user may hide that also map to API-optional fields.
@@ -283,4 +284,20 @@ export function useHostServicesColumns({
       meta: { justify: 'right' }
     }
   ]
+}
+
+export function uncapNameWithoutSummary(
+  columns: ColumnDef<HostServiceEntry>[],
+  visibility: VisibilityState
+): ColumnDef<HostServiceEntry>[] {
+  if (visibility['summary'] !== false) {
+    return columns
+  }
+  return columns.map((column) => {
+    if (columnId(column) !== 'name') {
+      return column
+    }
+    const { maxSize: _cap, ...uncapped } = column
+    return uncapped
+  })
 }

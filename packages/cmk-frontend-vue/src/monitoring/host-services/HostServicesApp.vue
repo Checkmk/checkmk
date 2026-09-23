@@ -47,7 +47,11 @@ import { useRescheduleServicesAction } from './actions/rescheduleServices'
 import { useScheduleServiceDowntimeAction } from './actions/scheduleServiceDowntime'
 import { ServiceActionMenuApi } from './api/actionMenu'
 import { HostServicesApi } from './api/services'
-import { buildHostServicesColumnPinning, useHostServicesColumns } from './columns'
+import {
+  buildHostServicesColumnPinning,
+  uncapNameWithoutSummary,
+  useHostServicesColumns
+} from './columns'
 import HostServicesRow from './components/HostServicesRow.vue'
 import ServiceSlideIn, { SERVICE_GRAPHS_TAB_ID } from './components/ServiceSlideIn.vue'
 import { HostServicesService } from './services/HostServicesService'
@@ -161,7 +165,12 @@ const hostServicesService = new HostServicesService(
 )
 
 const modeColumnSize = useModeColumnWidth(() => hostServicesService.items.value)
-const tableColumns = computed(() => sizeModeColumn(columns, modeColumnSize.value))
+const tableColumns = computed(() =>
+  sizeModeColumn(
+    uncapNameWithoutSummary(columns, hostServicesService.columnVisibility.value),
+    modeColumnSize.value
+  )
+)
 
 const actionRegistry = createActionRegistry<string>([
   useAcknowledgeServicesAction(

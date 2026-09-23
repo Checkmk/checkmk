@@ -10,6 +10,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { buildHostColumns } from '@/monitoring/all-hosts/columns'
 import {
   buildHostServicesColumnPinning,
+  uncapNameWithoutSummary,
   useHostServicesColumns,
   visibleServiceFields
 } from '@/monitoring/host-services/columns'
@@ -179,4 +180,21 @@ test('the select column adds itself without disturbing the other columns', () =>
 test('the select column is never on offer in the picker', () => {
   expect(schemaOf(true).hideable).not.toContain('select')
   expect(makeService().toggleableColumns.map((column) => column.id)).not.toContain('select')
+})
+
+function nameColumn(columns: ColumnDef<HostServiceEntry>[]): ColumnDef<HostServiceEntry> {
+  return columns.find((column) => columnId(column) === 'name')!
+}
+
+test('the service name keeps its cap while the summary takes the spare width', () => {
+  const columns = uncapNameWithoutSummary(serviceColumns(), {})
+
+  expect(nameColumn(columns).maxSize).toBe(350)
+})
+
+test('the service name takes the spare width once the summary is hidden', () => {
+  const columns = uncapNameWithoutSummary(serviceColumns(), { summary: false })
+
+  expect(nameColumn(columns).maxSize).toBeUndefined()
+  expect(nameColumn(columns).minSize).toBe(150)
 })

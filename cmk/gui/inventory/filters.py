@@ -55,7 +55,13 @@ def _make_filter_row_bool(inventory_path: InventoryPath) -> Callable[[bool, Row]
     return keep_row
 
 
-class FilterInvBool(FilterOption):
+class _FilterInvOption(FilterOption):
+    @override
+    def need_inventory(self, value: FilterHTTPVariables) -> bool:
+        return self.query_filter.selection_value(value) != self.query_filter.ignore
+
+
+class FilterInvBool(_FilterInvOption):
     def __init__(
         self,
         *,
@@ -76,10 +82,6 @@ class FilterInvBool(FilterOption):
             is_show_more=is_show_more,
             group=FilterGroup.INVENTORY,
         )
-
-    @override
-    def need_inventory(self, value: FilterHTTPVariables) -> bool:
-        return self.query_filter.selection_value(value) != self.query_filter.ignore
 
 
 @dataclass(frozen=True)
@@ -462,7 +464,7 @@ class FilterInvTextWithSortKey(_FilterTextRange):
         return bool(value.get(self.htmlvars[0], "").strip().lower())
 
 
-class FilterInvChoice(FilterOption):
+class FilterInvChoice(_FilterInvOption):
     def __init__(
         self,
         *,
@@ -484,10 +486,6 @@ class FilterInvChoice(FilterOption):
             is_show_more=is_show_more,
             group=FilterGroup.INVENTORY,
         )
-
-    @override
-    def need_inventory(self, value: FilterHTTPVariables) -> bool:
-        return self.query_filter.selection_value(value) != self.query_filter.ignore
 
 
 def _filter_rows_table_choice(ident: str, context: VisualContext, rows: Rows) -> Rows:
@@ -827,7 +825,7 @@ class FilterInvtableInterfaceType(DualListFilter):
         return [row for row in rows if str(row[self.query_filter.column]) in selection]
 
 
-class FilterHasInv(FilterOption):
+class FilterHasInv(_FilterInvOption):
     def __init__(self) -> None:
         super().__init__(
             title=_l("Has inventory data"),
@@ -841,10 +839,6 @@ class FilterHasInv(FilterOption):
             is_show_more=True,
             group=FilterGroup.HOST_HAS,
         )
-
-    @override
-    def need_inventory(self, value: FilterHTTPVariables) -> bool:
-        return self.query_filter.selection_value(value) != self.query_filter.ignore
 
 
 def _version_is_lower(a: str | None, b: str | None) -> bool:

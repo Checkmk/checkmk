@@ -4,18 +4,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
-from typing import Literal
+from typing import Literal, NamedTuple
 
 from pydantic import BaseModel
 
 from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
 
-_Auth = Literal["system"] | tuple[Literal["db"], tuple[str, str]]
+
+class _DbCredentials(NamedTuple):
+    user: str
+    password: str
+
+
+_Auth = Literal["system"] | tuple[Literal["db"], _DbCredentials]
+
+
+class _InstanceAuth(NamedTuple):
+    instance: str
+    auth: _Auth
 
 
 class _Config(BaseModel):
     auth_default: _Auth = "system"
-    auth_instances: Sequence[tuple[str, _Auth]] = ()
+    auth_instances: Sequence[_InstanceAuth] = ()
     inst_excludes: Sequence[str] = ()
     timeout_connection: int | None = None
     timeout_command: int | None = None
@@ -34,11 +45,11 @@ def get_mssql_files(conf: Mapping[str, object]) -> FileGenerator:
         target=Path("mssql.ini"),
     )
 
-    for instance, auth in config.auth_instances:
-        sane_id = _sanitize_instance_for_filename(instance)
+    for instance_auth in config.auth_instances:
+        sane_id = _sanitize_instance_for_filename(instance_auth.instance)
         yield PluginConfig(
             base_os=OS.WINDOWS,
-            lines=list(_get_mssql_ini_lines(auth, config)),
+            lines=list(_get_mssql_ini_lines(instance_auth.auth, config)),
             target=Path(f"mssql_{sane_id}.ini"),
         )
 
@@ -52,10 +63,10 @@ def _get_mssql_ini_lines(
     match auth:
         case "system":
             yield "type = system"
-        case ("db", (user, password)):
+        case ("db", credentials):
             yield "type = db"
-            yield f"username = {user}"
-            yield f"password = {password}"
+            yield f"username = {credentials.user}"
+            yield f"password = {credentials.password}"
 
     if excludes:
         yield "[instance]"

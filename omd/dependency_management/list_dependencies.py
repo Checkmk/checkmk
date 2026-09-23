@@ -84,6 +84,25 @@ class PackageMetadataAttributes(BaseModel):
 # alone.
 _WHEEL_ARTIFACT_QUALIFIERS = ("file_name", "repository_url")
 
+# gazelle's go_deps qualifies module purls with the go.sum `checksum`.  As with the
+# wheel qualifiers above it describes the artifact rather than the package: a Go module
+# path and version already identify it uniquely, and the checksum is canonical for that
+# pair.  Keeping it would key our license data by the go.sum entry, so regenerating
+# go.sum would invalidate every Go dependency at once - including the ones whose version
+# never changed.
+_GO_MODULE_ARTIFACT_QUALIFIERS = ("checksum",)
+
+
+def _canonical_purl(purl: PUrl) -> PUrl:
+    """Drop qualifiers that describe the downloaded artifact, not the package."""
+    match purl.type_:
+        case "pypi":
+            return purl.without_qualifiers(_WHEEL_ARTIFACT_QUALIFIERS)
+        case "golang":
+            return purl.without_qualifiers(_GO_MODULE_ARTIFACT_QUALIFIERS)
+        case _:
+            return purl
+
 
 class PackageMetadata(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -96,9 +115,7 @@ class PackageMetadata(BaseModel):
         purl = PUrl.from_str(self.purl)
         return Component(
             type_="library",
-            purl=purl.without_qualifiers(_WHEEL_ARTIFACT_QUALIFIERS)
-            if purl.type_ == "pypi"
-            else purl,
+            purl=_canonical_purl(purl),
             labels=frozenset({self.label}),
             license_info=LicenseInfo(
                 id_=SPDXId(license_data.kind.identifier), text=license_data.read()

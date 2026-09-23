@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { cleanup, render, screen } from '@testing-library/vue'
 
 import AgentFlavourWizard from '@/mode-host/agent-connection-test/components/AgentFlavourWizard.vue'
@@ -100,6 +101,20 @@ describe('AgentFlavourWizard', () => {
     renderWizard(registrationOnly)
 
     expect(screen.queryByText(/Troubleshooting registration issues/)).not.toBeInTheDocument()
+  })
+
+  test('offers the secret check instead of the registration user for a cluster', async () => {
+    renderWizard({
+      ...registrationOnly,
+      register: { ...registrationOnly.register!, troubleshooting: 'kubernetes-secret' }
+    })
+
+    await userEvent.click(
+      screen.getByRole('button', { name: /Check whether the registration was successful/ })
+    )
+
+    expect(screen.getByText('cmk-signed-push-cert')).toBeVisible()
+    expect(screen.queryByText(/Authenticate with the registration user/)).not.toBeInTheDocument()
   })
 
   test("shows the flavour's own registration explanation instead of the generic one", () => {

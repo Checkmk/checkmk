@@ -282,7 +282,8 @@ export function buildFlavours(payload: AgentSlideoutPayload): AgentFlavour[] {
           },
           code: { title: _t('Minimal values.yaml'), text: kubernetes.values }
         },
-        commands: { kind: 'single', block: { command: kubernetes.helmCommand } }
+        commands: { kind: 'single', block: { command: kubernetes.helmCommand } },
+        troubleshooting: 'kubernetes-secret'
       }
     }
   }

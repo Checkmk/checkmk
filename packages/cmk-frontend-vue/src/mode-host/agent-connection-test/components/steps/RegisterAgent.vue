@@ -54,6 +54,13 @@ const { _t } = usei18n()
 const ott = ref<TokenValue>(null)
 const collapsibleOpen = ref<boolean>(false)
 
+/** Commands and resource names in the cluster hint, which are not translated. */
+const kubernetesCheck = {
+  listSecrets: 'kubectl get secrets -n checkmk-monitoring',
+  secret: 'cmk-signed-push-cert',
+  logs: 'kubectl logs -n checkmk-monitoring -l app.kubernetes.io/component=cluster-aggregator'
+}
+
 const variants = computed<CommandChoice[] | null>(() =>
   props.spec.commands.kind === 'shell-variants' ? props.spec.commands.variants : null
 )
@@ -224,6 +231,29 @@ function reset() {
             </CmkParagraph>
             <ShellToggle v-if="variants" v-model="shellId" :choices="variants" />
             <CommandBlockList :blocks="untokenised.blocks" />
+          </CmkIndent>
+        </CmkCollapsible>
+      </template>
+      <template v-else-if="spec.troubleshooting === 'kubernetes-secret'">
+        <CmkCollapsibleTitle
+          :open="collapsibleOpen"
+          :title="
+            _t('Troubleshooting registration issues: Check whether the registration was successful')
+          "
+          @toggle-open="collapsibleOpen = !collapsibleOpen"
+        />
+        <CmkCollapsible :open="collapsibleOpen">
+          <CmkIndent>
+            <CmkParagraph>
+              {{ _t('To check if registration was successful, run') }}
+              <code>{{ kubernetesCheck.listSecrets }}</code>
+              {{ _t('and look for the existence of a secret named') }}
+              <code>{{ kubernetesCheck.secret }}</code
+              >.
+              {{ _t('If this secret does not exist, use') }}
+              <code>{{ kubernetesCheck.logs }}</code>
+              {{ _t('on the cluster-aggregator pod to check for any errors.') }}
+            </CmkParagraph>
           </CmkIndent>
         </CmkCollapsible>
       </template>

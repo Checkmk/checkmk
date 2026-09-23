@@ -144,11 +144,16 @@ describe('buildFlavours', () => {
     ])
   })
 
-  test('registers Kubernetes without install, test connection or troubleshooting', () => {
+  test('registers Kubernetes without install or test connection', () => {
     const built = flavour('kubernetes', { kubernetes })
     expect(built.install).toBeUndefined()
     expect(built.status).toBeUndefined()
-    expect(built.register?.troubleshooting).toBeUndefined()
+  })
+
+  test('troubleshoots Kubernetes by checking for the push certificate secret', () => {
+    expect(flavour('kubernetes', { kubernetes }).register?.troubleshooting).toBe(
+      'kubernetes-secret'
+    )
   })
 
   test('shows the values.yaml and the monitoring guide before the Helm command', () => {

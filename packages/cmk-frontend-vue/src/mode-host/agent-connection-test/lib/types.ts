@@ -56,7 +56,7 @@ export interface RegisterSpec {
     | { kind: 'single'; block: CommandBlock }
     | { kind: 'shell-variants'; variants: CommandChoice[] }
   /** Which troubleshooting hint applies; absent means none. */
-  troubleshooting?: 'registration-user'
+  troubleshooting?: 'registration-user' | 'kubernetes-secret'
 }
 
 export type StatusSpec =

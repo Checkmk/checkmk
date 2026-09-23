@@ -160,7 +160,9 @@ annotated-types==0.8.0 \
 anthropic==1.6.0 \
     --hash=sha256:049434f013d3a874acdfee696ec626e19166d58f4277e8fa34e5d0a5ec250ad0 \
     --hash=sha256:ce3c032f940984f67c516db896375bff36959f8dc589973e386f8e6ea81bbec3
-    # via pydantic-ai-slim
+    # via
+    #   -r non-free/packages/cmk-ai-control-plane/dev-requirements.in
+    #   pydantic-ai-slim
 anyio==4.14.2 \
     --hash=sha256:9f505dda5ac9f0c8309b5e8bd445a8c2bf7246f3ce950121e45ea15bc41d1494 \
     --hash=sha256:cfa139f3ed1a23ee8f88a145ddb5ac7605b8bbfd8592baacd7ce3d8bb4313c7f
@@ -1871,7 +1873,7 @@ httpx2==2.12.0 \
     --hash=sha256:7631fe9887a8a2275f4a2540e053aa670fcc50742864a9ae7c66e609fdcf12cf \
     --hash=sha256:cc8b6eecb8661c146b8f89a60e97456ee086e91a784ed31ac450c3a9e613dd36
     # via
-    #   -r non-free/packages/cmk-ai-control-plane/dev-requirements.in
+    #   -r non-free/packages/cmk-ai-control-plane/requirements.in
     #   -r non-free/packages/cmk-dev-ai/dev-requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r non-free/packages/cmk-relay-engine/requirements.in
@@ -3583,7 +3585,9 @@ oauthlib==3.3.1 \
 openai==3.14.1 \
     --hash=sha256:2f3423a71af767d9071b059cf6df1e97a721c3a8d19417375ad7993d4df0d346 \
     --hash=sha256:a6758739282f3b1cafe8df1204f7a2f7b1e9edbbcfa41c0efba687448fbc51cf
-    # via pydantic-ai-slim
+    # via
+    #   -r non-free/packages/cmk-ai-control-plane/dev-requirements.in
+    #   pydantic-ai-slim
 openapi-schema-validator==0.9.0 \
     --hash=sha256:b72db64315b89d21834cd3ffef37e3e6893bc876327be2d366e8424b1029afd3 \
     --hash=sha256:faa3bbe7c3aa8ca2087ad83f709dc3b7d920283153a570c03e24ea182558aa25

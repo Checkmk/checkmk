@@ -32,10 +32,6 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.generators.host_address import create_host_address
 from cmk.gui.form_specs.unstable import StaticText
-from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
-    CascadingSingleChoiceExtended,
-    CascadingSingleChoiceLayout,
-)
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
     Tuple,
@@ -105,6 +101,8 @@ from cmk.livestatus_client import (
     SiteConfigurations,
 )
 from cmk.rulesets.internal.form_specs import (
+    CascadingSingleChoiceExtended,
+    CascadingSingleChoiceLayout,
     MultipleChoiceElementExtended,
     MultipleChoiceExtended,
     SingleChoiceElementExtended,

@@ -9,9 +9,9 @@
 from collections.abc import Sequence
 from typing import Any
 
-from cmk.gui.form_specs.unstable import CascadingSingleChoiceExtended
-from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
+from cmk.rulesets.internal.form_specs import (
     CascadingSingleChoiceElementExtended,
+    CascadingSingleChoiceExtended,
     CascadingSingleChoiceLayout,
 )
 from cmk.rulesets.v1 import Help, Label, Message, Title

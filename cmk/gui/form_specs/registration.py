@@ -9,7 +9,6 @@ import cmk.rulesets.v1.form_specs.validators as formspec_validators
 from cmk.gui.form_specs.unstable import (
     BinaryConditionChoices,
     CACertificate,
-    CascadingSingleChoiceExtended,
     Catalog,
     CommentTextArea,
     ConditionChoices,
@@ -50,6 +49,7 @@ from cmk.gui.form_specs.visitors.recomposers import (
     recompose_user_selection,
 )
 from cmk.rulesets.internal.form_specs import (
+    CascadingSingleChoiceExtended,
     DictionaryExtended,
     ListExtended,
     ListOfStrings,

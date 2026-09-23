@@ -12,6 +12,7 @@ from typing import Any
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
+from cmk.rulesets.internal.form_specs import CascadingSingleChoiceExtended
 from cmk.rulesets.v1.form_specs import CascadingSingleChoice
 
 CascadingElementSelectionTypes = str | int | None | bool
@@ -28,7 +29,7 @@ CascadingElementValueMapping = dict[str, CascadingDataConversion]
 
 
 def enable_deprecated_cascading_elements(
-    wrapped_form_spec: CascadingSingleChoice,
+    wrapped_form_spec: CascadingSingleChoice | CascadingSingleChoiceExtended,
     special_value_mapping: Sequence[CascadingDataConversion],
 ) -> TransformDataForLegacyFormatOrRecomposeFunction:
     mapping = {v.name_in_form_spec: v for v in special_value_mapping}

@@ -6,10 +6,11 @@
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import override
+from typing import Any, override
 
 from cmk.rulesets.v1 import Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoiceElement,
     DefaultValue,
     DictGroup,
     Dictionary,
@@ -62,6 +63,12 @@ class ListOfStringsLayout(StrEnum):
     vertical = "vertical"
 
 
+class CascadingSingleChoiceLayout(StrEnum):
+    vertical = "vertical"
+    horizontal = "horizontal"
+    button_group = "button_group"
+
+
 @dataclass(frozen=True, kw_only=True)
 class ListExtended[ModelT](List[ModelT]):
     prefill: DefaultValue[Sequence[ModelT]]
@@ -86,6 +93,37 @@ class SingleChoiceExtended[T](FormSpec[T]):
     prefill: DefaultValue[T] | InputHint[Title] = InputHint(Title("Please choose"))
     ignored_elements: tuple[str, ...] = ()
     invalid_element_validation: InvalidElementValidator | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
+class CascadingSingleChoiceElementExtended[ModelT](CascadingSingleChoiceElement[ModelT]):
+    """Specifies an element of a single choice cascading form.
+
+    It can and should only be used internally when using it to generate CascadingSingleChoiceExtended
+    FormSpecs when the input data is not predefined, for example when creating FormSpecs based on
+    user input, like for contact groups.
+    """
+
+    @override
+    def __post_init__(self) -> None:
+        pass
+
+
+@dataclass(frozen=True, kw_only=True)
+class CascadingSingleChoiceExtended(FormSpec[tuple[str, object]]):  # type: ignore[explicit-any]
+    elements: Sequence[CascadingSingleChoiceElement[Any]]  # type: ignore[explicit-any]
+    no_elements_text: Message = Message("(No choices available)")
+    label: Label | None = None
+    prefill: DefaultValue[str] | InputHint[Title] = InputHint(Title("Please choose"))
+    layout: CascadingSingleChoiceLayout = CascadingSingleChoiceLayout.vertical
+
+    def __post_init__(self) -> None:
+        available_names = {elem.name for elem in self.elements}
+        if isinstance(self.prefill, DefaultValue) and self.prefill.value not in available_names:
+            raise ValueError(
+                f"Default element {self.prefill.value!r} is not "
+                f"one of the specified elements {available_names!r}"
+            )
 
 
 @dataclass(frozen=True, kw_only=True)

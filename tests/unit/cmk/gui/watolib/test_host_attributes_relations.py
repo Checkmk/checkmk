@@ -16,11 +16,11 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.unstable import CascadingSingleChoiceExtended
 from cmk.gui.http import request
 from cmk.gui.watolib.builtin_attributes import HostAttributeRelations
 from cmk.gui.watolib.form_spec_generators import create_host_attributes_selection
 from cmk.gui.watolib.host_attributes import host_attribute_registry
+from cmk.rulesets.internal.form_specs import CascadingSingleChoiceExtended
 
 
 @pytest.mark.usefixtures("request_context")

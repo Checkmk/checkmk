@@ -14,7 +14,7 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
     Tuple,
 )
-from cmk.rulesets.internal.form_specs import SingleChoiceExtended
+from cmk.rulesets.internal.form_specs import CascadingSingleChoiceExtended, SingleChoiceExtended
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     DataSize,
@@ -95,7 +95,7 @@ def _derive_type(value: object, form_spec: FormSpec[Any] | None = None) -> str:
 
 
 def enable_deprecated_alternative(
-    wrapped_form_spec: CascadingSingleChoice,
+    wrapped_form_spec: CascadingSingleChoice | CascadingSingleChoiceExtended,
     match_function: Callable[[Any], int] | None = None,
 ) -> TransformDataForLegacyFormatOrRecomposeFunction:
     # Basic idea:

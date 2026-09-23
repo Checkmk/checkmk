@@ -59,6 +59,7 @@ from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.rulesets import internal as ruleset_api_internal
 from cmk.rulesets import v1 as ruleset_api_v1
 from cmk.rulesets.internal.form_specs import (
+    CascadingSingleChoiceExtended,
     DictionaryExtended,
     ListExtended,
     ListOfStrings,
@@ -653,7 +654,7 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.SingleChoice() | SingleChoiceExtended():
             return _convert_to_legacy_dropdown_choice(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.CascadingSingleChoice():
+        case ruleset_api_v1.form_specs.CascadingSingleChoice() | CascadingSingleChoiceExtended():
             return _convert_to_legacy_cascading_dropdown(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.ServiceState():
@@ -761,7 +762,10 @@ def convert_to_legacy_valuespec(
     if to_convert.migrate is not None:
         migrate_func = (
             allow_empty_value_wrapper(to_convert.migrate)
-            if isinstance(to_convert, ruleset_api_v1.form_specs.CascadingSingleChoice)
+            if isinstance(
+                to_convert,
+                ruleset_api_v1.form_specs.CascadingSingleChoice | CascadingSingleChoiceExtended,
+            )
             else to_convert.migrate
         )
         return legacy_valuespecs.Transform(
@@ -1389,7 +1393,7 @@ def _convert_to_legacy_dropdown_choice(
 
 
 def _convert_to_legacy_cascading_dropdown(
-    to_convert: ruleset_api_v1.form_specs.CascadingSingleChoice,
+    to_convert: ruleset_api_v1.form_specs.CascadingSingleChoice | CascadingSingleChoiceExtended,
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.CascadingDropdown:
     legacy_choices = [

@@ -5,7 +5,6 @@
 
 from .binary_condition_choices import BinaryConditionChoices
 from .ca_certificate import CACertificate
-from .cascading_single_choice_extended import CascadingSingleChoiceExtended
 from .catalog import Catalog, Topic, TopicElement, TopicGroup
 from .comment_text_area import CommentTextArea
 from .condition_choices import ConditionChoices
@@ -26,7 +25,6 @@ from .validators import id_validators, not_empty
 __all__ = [
     "BinaryConditionChoices",
     "CACertificate",
-    "CascadingSingleChoiceExtended",
     "Catalog",
     "CommentTextArea",
     "ConditionChoices",

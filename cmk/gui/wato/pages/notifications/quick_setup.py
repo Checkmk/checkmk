@@ -12,7 +12,6 @@ from cmk.ccc.version import Edition
 from cmk.events.notify_types import HostEventType, ServiceEventType
 from cmk.gui.config import active_config
 from cmk.gui.form_specs.unstable import (
-    CascadingSingleChoiceExtended,
     CommentTextArea,
     ConditionChoices,
     Labels,
@@ -21,10 +20,6 @@ from cmk.gui.form_specs.unstable import (
     SingleChoiceEditable,
     TwoColumnDictionary,
     World,
-)
-from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
-    CascadingSingleChoiceElementExtended,
-    CascadingSingleChoiceLayout,
 )
 from cmk.gui.form_specs.unstable.legacy_converter import Tuple
 from cmk.gui.form_specs.unstable.list_unique_selection import (
@@ -100,6 +95,9 @@ from cmk.rulesets.internal.form_specs import (
     Autocompleter,
     AutocompleterData,
     AutocompleterParams,
+    CascadingSingleChoiceElementExtended,
+    CascadingSingleChoiceExtended,
+    CascadingSingleChoiceLayout,
     DictionaryExtended,
     ListExtended,
     ListOfStrings,

@@ -34,13 +34,7 @@ from cmk.gui.form_specs.generators.cascading_choice_utils import (
     enable_deprecated_cascading_elements,
 )
 from cmk.gui.form_specs.generators.regex_utils import create_regex
-from cmk.gui.form_specs.unstable import (
-    CascadingSingleChoiceExtended,
-    LegacyValueSpec,
-)
-from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
-    CascadingSingleChoiceElementExtended,
-)
+from cmk.gui.form_specs.unstable import LegacyValueSpec
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import ContentDispositionType, Request, request, response
@@ -71,6 +65,8 @@ from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.objref import ObjectRefType
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.rulesets.internal.form_specs import (
+    CascadingSingleChoiceElementExtended,
+    CascadingSingleChoiceExtended,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
 )

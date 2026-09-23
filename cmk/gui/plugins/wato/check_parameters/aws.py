@@ -11,11 +11,6 @@ from typing import Any
 
 from cmk.gui.form_specs.generators.age import Age
 from cmk.gui.form_specs.generators.alternative_utils import enable_deprecated_alternative
-from cmk.gui.form_specs.unstable import CascadingSingleChoiceExtended
-from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
-    CascadingSingleChoiceElementExtended,
-    CascadingSingleChoiceLayout,
-)
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
     Tuple,
@@ -26,6 +21,11 @@ from cmk.plugins.aws.constants import (  # astrein: disable=cmk-module-layer-vio
     AWS_EC2_INST_TYPES,
     AWS_EC2_LIMITS_DEFAULT,
     AWS_EC2_LIMITS_SPECIAL,
+)
+from cmk.rulesets.internal.form_specs import (
+    CascadingSingleChoiceElementExtended,
+    CascadingSingleChoiceExtended,
+    CascadingSingleChoiceLayout,
 )
 from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (

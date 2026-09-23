@@ -28,7 +28,7 @@ from cmk.ccc.hostaddress import HostName, HostNameValidationError
 from cmk.ccc.site import SiteId
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.generators.config_host_name import create_config_host_name
-from cmk.gui.form_specs.unstable import CascadingSingleChoiceExtended, not_empty
+from cmk.gui.form_specs.unstable import not_empty
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
@@ -52,7 +52,11 @@ from cmk.gui.utils.host_relations import (
     reverse_direction,
 )
 from cmk.gui.watolib.host_attributes import HostAttributes
-from cmk.rulesets.internal.form_specs import StringAutocompleter
+from cmk.rulesets.internal.form_specs import (
+    CascadingSingleChoiceExtended,
+    CascadingSingleChoiceLayout,
+    StringAutocompleter,
+)
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoiceElement,
@@ -60,7 +64,6 @@ from cmk.rulesets.v1.form_specs import (
     List,
 )
 from cmk.rulesets.v1.form_specs.validators import ValidationError
-from cmk.shared_typing.vue_formspec_components import CascadingSingleChoiceLayout
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 

@@ -9,13 +9,13 @@ import dataclasses
 from typing import Any
 
 from cmk.gui.form_specs.generators.alternative_utils import enable_deprecated_alternative
-from cmk.gui.form_specs.unstable import CascadingSingleChoiceExtended
-from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
-    CascadingSingleChoiceElementExtended,
-)
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
     Tuple,
+)
+from cmk.rulesets.internal.form_specs import (
+    CascadingSingleChoiceElementExtended,
+    CascadingSingleChoiceExtended,
 )
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (

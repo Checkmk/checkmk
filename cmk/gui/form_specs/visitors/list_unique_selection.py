@@ -5,14 +5,13 @@
 from collections.abc import Sequence
 from typing import override
 
-from cmk.gui.form_specs.unstable import CascadingSingleChoiceExtended
 from cmk.gui.form_specs.unstable.list_unique_selection import (
     ListUniqueSelection,
     UniqueCascadingSingleChoiceElement,
     UniqueSingleChoiceElement,
 )
 from cmk.gui.i18n import _, translate_to_current_language
-from cmk.rulesets.internal.form_specs import SingleChoiceExtended
+from cmk.rulesets.internal.form_specs import CascadingSingleChoiceExtended, SingleChoiceExtended
 from cmk.rulesets.v1.form_specs import CascadingSingleChoice, FormSpec, SingleChoice
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 

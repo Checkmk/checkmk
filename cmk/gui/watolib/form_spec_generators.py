@@ -9,13 +9,7 @@ from collections.abc import Callable, Sequence
 from typing import Any, TypeVar
 
 from cmk.gui.config import active_config
-from cmk.gui.form_specs.unstable import (
-    CascadingSingleChoiceExtended,
-    SingleChoiceEditable,
-)
-from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
-    CascadingSingleChoiceElementExtended,
-)
+from cmk.gui.form_specs.unstable import SingleChoiceEditable
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.host_attributes import (
@@ -28,6 +22,9 @@ from cmk.gui.watolib.host_attributes import (
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.timeperiods import load_timeperiods
 from cmk.rulesets.internal.form_specs import (
+    CascadingSingleChoiceElementExtended,
+    CascadingSingleChoiceExtended,
+    CascadingSingleChoiceLayout,
     ListExtended,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
@@ -36,7 +33,6 @@ from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import DefaultValue
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 from cmk.shared_typing.configuration_entity import ConfigEntityType
-from cmk.shared_typing.vue_formspec_components import CascadingSingleChoiceLayout
 from cmk.utils.timeperiod import TimeperiodName
 
 T = TypeVar("T")

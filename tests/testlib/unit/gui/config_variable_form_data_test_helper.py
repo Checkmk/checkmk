@@ -68,6 +68,7 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.internal.form_specs import (
+    CascadingSingleChoiceExtended,
     ListOfStrings,
     MultipleChoiceExtended,
     SimplePassword,
@@ -578,7 +579,7 @@ def _walk_form_spec(spec: FormSpec[Any], path: str, revealed: dict[str, object])
         template_path = f"{path}[add]"
         revealed[template_path] = _form_spec_revealed_default(spec.string_spec)
         _walk_form_spec(spec.string_spec, template_path, revealed)
-    elif isinstance(spec, form_specs.CascadingSingleChoice):
+    elif isinstance(spec, form_specs.CascadingSingleChoice | CascadingSingleChoiceExtended):
         for choice_element in spec.elements:
             element_path = _join_key(path, choice_element.name)
             revealed[element_path] = _form_spec_revealed_default(choice_element.parameter_form)

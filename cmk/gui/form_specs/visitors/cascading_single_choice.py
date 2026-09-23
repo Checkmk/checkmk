@@ -4,10 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import override
+from typing import assert_never, override
 
-from cmk.gui.form_specs.unstable import CascadingSingleChoiceExtended
 from cmk.gui.i18n import _, translate_to_current_language
+from cmk.rulesets.internal.form_specs import (
+    CascadingSingleChoiceExtended,
+    CascadingSingleChoiceLayout,
+)
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
@@ -101,7 +104,7 @@ class CascadingSingleChoiceVisitor(
                 no_elements_text=localize(self.form_spec.no_elements_text),
                 validators=build_vue_validators(compute_validators(self.form_spec)),
                 input_hint=compute_title_input_hint(self.form_spec.prefill),
-                layout=self.form_spec.layout,
+                layout=_to_shared_layout(self.form_spec.layout),
             ),
             (selected_name, selected_vue_value),
         )
@@ -140,3 +143,17 @@ class CascadingSingleChoiceVisitor(
             element_visitor = get_visitor(element.parameter_form, self.visitor_options)
             disk_value = element_visitor.to_disk(selected_value)
         return selected_name, disk_value
+
+
+def _to_shared_layout(
+    layout: CascadingSingleChoiceLayout,
+) -> shared_type_defs.CascadingSingleChoiceLayout:
+    match layout:
+        case CascadingSingleChoiceLayout.vertical:
+            return shared_type_defs.CascadingSingleChoiceLayout.vertical
+        case CascadingSingleChoiceLayout.horizontal:
+            return shared_type_defs.CascadingSingleChoiceLayout.horizontal
+        case CascadingSingleChoiceLayout.button_group:
+            return shared_type_defs.CascadingSingleChoiceLayout.button_group
+        case _:
+            assert_never(layout)

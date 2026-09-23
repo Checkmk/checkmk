@@ -13,7 +13,7 @@ has to be installed on the backup server itself.
 import argparse
 import json
 import sys
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 
 import requests
 from pydantic import BaseModel, ValidationError
@@ -26,8 +26,14 @@ PASSWORD_OPTION = "password"
 API_VERSION = "1.3-rev0"
 TOKEN_PATH = "/api/oauth2/token"
 
-type Section = tuple[str, str]
-"""The agent section name and the API path it is filled from."""
+
+type FetchStrategy = Callable[["VeeamClient", str], str]
+"""Fetches a section's data and renders it, including its `<<<name:sep(0)>>>`
+header(s), into the exact text to write to stdout for it. Takes the client and
+the section name; which API path(s) to call is baked into the strategy itself."""
+
+type Section = tuple[str, FetchStrategy]
+"""The agent section name and how to fetch it."""
 
 SECTIONS: Sequence[Section] = ()
 
@@ -225,14 +231,54 @@ class VeeamClient:
             raise EndpointError(f"Request to {path} returned invalid JSON") from exc
 
 
+def _get_all(client: VeeamClient, path: str) -> list[object]:
+    """Fetch every page of a `data`/`pagination` endpoint and merge them."""
+    items: list[object] = []
+    skip = 0
+    while True:
+        page = client.get(f"{path}?skip={skip}")
+        if not isinstance(page, dict) or "data" not in page or "pagination" not in page:
+            raise EndpointError(f"Request to {path} did not return a paginated data list")
+        batch = page["data"]
+        total = page["pagination"]["total"]
+        if not batch and len(items) < total:
+            raise EndpointError(
+                f"Request to {path} returned an empty page before reaching {total} total items"
+            )
+        items.extend(batch)
+        # Advance by the number of items actually returned, not the requested page size
+        skip += len(batch)
+        if len(items) >= total:
+            return items
+
+
+def fetch_object(path: str) -> FetchStrategy:
+    """A single-object endpoint (no `data`/`pagination` envelope), e.g. /api/v1/serverInfo."""
+
+    def _fetch(client: VeeamClient, name: str) -> str:
+        return f"<<<{name}:sep(0)>>>\n{json.dumps(client.get(path))}\n"
+
+    return _fetch
+
+
+def fetch_list(path: str) -> FetchStrategy:
+    """A `data`/`pagination` endpoint, fetched to completion, one item per line."""
+
+    def _fetch(client: VeeamClient, name: str) -> str:
+        items = _get_all(client, path)
+        return f"<<<{name}:sep(0)>>>\n" + "".join(f"{json.dumps(item)}\n" for item in items)
+
+    return _fetch
+
+
 def write_sections(client: VeeamClient, sections: Sequence[Section]) -> None:
-    for name, path in sections:
+    for name, fetch in sections:
         try:
-            data = client.get(path)
+            output = fetch(client, name)
         except EndpointError as exc:
             sys.stderr.write(f"Section {name}: {exc}\n")
             continue
-        sys.stdout.write(f"<<<{name}:sep(0)>>>\n{json.dumps(data)}\n")
+        sys.stdout.write(output)
 
 
 def main(argv: Sequence[str] | None = None) -> int:

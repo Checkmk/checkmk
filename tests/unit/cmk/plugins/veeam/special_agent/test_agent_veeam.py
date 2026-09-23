@@ -16,6 +16,8 @@ from cmk.plugins.veeam.special_agent.agent_veeam import (
     CertificateRejected,
     create_session,
     FatalError,
+    fetch_list,
+    fetch_object,
     main,
     ServerUnreachable,
     UnsupportedApiVersion,
@@ -62,9 +64,9 @@ def test_login_requests_a_token_with_the_credentials_and_api_version(
 
 def test_requests_after_login_use_the_token_as_bearer(api: responses.RequestsMock) -> None:
     client = _logged_in_client(api)
-    api.get(f"{URL}/api/v1/jobs", json={"data": []})
+    api.get(f"{URL}/api/v1/jobs", json={"data": [], "pagination": {"total": 0}})
 
-    write_sections(client, [("veeam_jobs", "/api/v1/jobs")])
+    write_sections(client, [("veeam_jobs", fetch_list("/api/v1/jobs"))])
 
     assert api.calls[-1].request.headers["Authorization"] == "Bearer the-token"
 
@@ -75,12 +77,18 @@ def test_failing_endpoint_does_not_stop_the_other_sections(
     api.get(
         f"{URL}/api/v1/broken", status=500, json={"errorCode": "UnknownError", "message": "boom"}
     )
-    api.get(f"{URL}/api/v1/jobs", json={"data": []})
+    api.get(f"{URL}/api/v1/jobs", json={"data": [], "pagination": {"total": 0}})
 
-    write_sections(_client(), [("veeam_broken", "/api/v1/broken"), ("veeam_jobs", "/api/v1/jobs")])
+    write_sections(
+        _client(),
+        [
+            ("veeam_broken", fetch_list("/api/v1/broken")),
+            ("veeam_jobs", fetch_list("/api/v1/jobs")),
+        ],
+    )
 
     captured = capsys.readouterr()
-    assert captured.out == '<<<veeam_jobs:sep(0)>>>\n{"data": []}\n'
+    assert captured.out == "<<<veeam_jobs:sep(0)>>>\n"
     assert "HTTP 500: boom" in captured.err
 
 
@@ -88,12 +96,18 @@ def test_broken_response_on_a_data_endpoint_does_not_stop_the_other_sections(
     api: responses.RequestsMock, capsys: pytest.CaptureFixture[str]
 ) -> None:
     api.get(f"{URL}/api/v1/broken", body=requests.exceptions.ChunkedEncodingError("cut off"))
-    api.get(f"{URL}/api/v1/jobs", json={"data": []})
+    api.get(f"{URL}/api/v1/jobs", json={"data": [], "pagination": {"total": 0}})
 
-    write_sections(_client(), [("veeam_broken", "/api/v1/broken"), ("veeam_jobs", "/api/v1/jobs")])
+    write_sections(
+        _client(),
+        [
+            ("veeam_broken", fetch_list("/api/v1/broken")),
+            ("veeam_jobs", fetch_list("/api/v1/jobs")),
+        ],
+    )
 
     captured = capsys.readouterr()
-    assert captured.out == '<<<veeam_jobs:sep(0)>>>\n{"data": []}\n'
+    assert captured.out == "<<<veeam_jobs:sep(0)>>>\n"
     assert "cut off" in captured.err
 
 
@@ -101,7 +115,58 @@ def test_rejected_session_on_a_data_endpoint_is_fatal(api: responses.RequestsMoc
     api.get(f"{URL}/api/v1/jobs", status=401, json={"errorCode": "AccessDenied", "message": "x"})
 
     with pytest.raises(AuthenticationFailed):
-        write_sections(_client(), [("veeam_jobs", "/api/v1/jobs")])
+        write_sections(_client(), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
+
+
+def test_list_section_pages_until_complete_and_writes_one_item_per_line(
+    api: responses.RequestsMock,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    api.get(
+        f"{URL}/api/v1/jobs?skip=0",
+        json={"data": [{"id": 1}, {"id": 2}], "pagination": {"total": 3}},
+    )
+    api.get(
+        f"{URL}/api/v1/jobs?skip=2",
+        json={"data": [{"id": 3}], "pagination": {"total": 3}},
+    )
+
+    write_sections(_client(), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
+
+    assert capsys.readouterr().out == ('<<<veeam_jobs:sep(0)>>>\n{"id": 1}\n{"id": 2}\n{"id": 3}\n')
+    assert api.calls[-2].request.url == f"{URL}/api/v1/jobs?skip=0"
+    assert api.calls[-1].request.url == f"{URL}/api/v1/jobs?skip=2"
+
+
+def test_empty_page_before_reaching_total_does_not_hang(
+    api: responses.RequestsMock,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    api.get(
+        f"{URL}/api/v1/jobs?skip=0",
+        json={"data": [], "pagination": {"total": 3}},
+    )
+
+    write_sections(_client(), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "returned an empty page before reaching 3 total items" in captured.err
+    assert len(api.calls) == 1
+
+
+def test_object_section_is_written_as_a_single_line(
+    api: responses.RequestsMock,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    api.get(f"{URL}/api/v1/serverInfo", json={"name": "backup-server-01"})
+
+    write_sections(_client(), [("veeam_vbr_server_info", fetch_object("/api/v1/serverInfo"))])
+
+    assert (
+        capsys.readouterr().out
+        == '<<<veeam_vbr_server_info:sep(0)>>>\n{"name": "backup-server-01"}\n'
+    )
 
 
 def test_wrong_credentials_are_reported(api: responses.RequestsMock) -> None:

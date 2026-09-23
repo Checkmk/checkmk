@@ -980,10 +980,10 @@ class FilterInvHasSoftwarePackage(Filter):
         if not name:
             return rows
 
-        from_version = value[self._varprefix + "version_from"]
-        to_version = value[self._varprefix + "version_to"]
-        negate = bool(value[self._varprefix + "negate"])
-        match = value[self._varprefix + "match"]
+        from_version = value.get(self._varprefix + "version_from", "")
+        to_version = value.get(self._varprefix + "version_to", "")
+        negate = bool(value.get(self._varprefix + "negate", ""))
+        match = value.get(self._varprefix + "match", "")
         if match == "regex":
             try:
                 name = re.compile(name)

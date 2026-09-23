@@ -7,20 +7,57 @@
 Checkmk special agent for Veeam Backup & Replication.
 
 Queries the REST API of a Veeam backup server over the network, so that nothing
-has to be installed on the backup server itself. This module currently only
-establishes the connection; the sections are added by the follow-up work.
+has to be installed on the backup server itself.
 """
 
 import argparse
+import json
 import sys
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 import requests
+from pydantic import BaseModel, ValidationError
 
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1 import HostnameValidationAdapter
 
 PASSWORD_OPTION = "password"
+
+API_VERSION = "1.3-rev0"
+TOKEN_PATH = "/api/oauth2/token"
+
+type Section = tuple[str, str]
+"""The agent section name and the API path it is filled from."""
+
+SECTIONS: Sequence[Section] = ()
+
+
+class FatalError(Exception):
+    """An error that makes the whole run pointless."""
+
+
+class AuthenticationFailed(FatalError):
+    pass
+
+
+class ServerUnreachable(FatalError):
+    pass
+
+
+class CertificateRejected(FatalError):
+    pass
+
+
+class UnsupportedApiVersion(FatalError):
+    pass
+
+
+class EndpointError(Exception):
+    """A single data request failed; the other sections are still worth writing."""
+
+
+class _Token(BaseModel):
+    access_token: str
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -34,6 +71,12 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
     parser.add_argument(
         "--port", type=int, default=9419, help="Port of the Veeam REST API (default: 9419)"
+    )
+    parser.add_argument(
+        "--timeout",
+        type=int,
+        default=30,
+        help="Timeout in seconds for each request to the REST API (default: 30)",
     )
 
     tls = parser.add_mutually_exclusive_group(required=True)
@@ -71,23 +114,148 @@ def create_session(url: str, cert_server_name: str | None) -> requests.Session:
     return session
 
 
-def write_sections(session: requests.Session, user: str, password: str) -> None:
-    """Query the REST API and write the agent sections.
+def _veeam_error(response: requests.Response) -> tuple[str, str]:
+    try:
+        body = response.json()
+    except json.JSONDecodeError:
+        return "", response.text.strip() or (response.reason or "")
+    if not isinstance(body, dict):
+        return "", str(body)
+    return str(body.get("errorCode") or ""), str(body.get("message") or "")
 
-    Authentication (OAuth2 against ``/api/oauth2/token``) and the sections
-    themselves are added by the follow-up work. For now the special agent only
-    establishes the connection.
-    """
+
+class VeeamClient:
+    def __init__(
+        self,
+        session: requests.Session,
+        url: str,
+        *,
+        cert_server_name: str | None,
+        timeout: int,
+    ) -> None:
+        self._session = session
+        self._session.headers["x-api-version"] = API_VERSION
+        self._url = url
+        self._cert_server_name = cert_server_name
+        self._timeout = timeout
+
+    def _request(
+        self, method: str, path: str, data: Mapping[str, str] | None = None
+    ) -> requests.Response:
+        try:
+            # Pass `verify` explicitly, otherwise REQUESTS_CA_BUNDLE would override it.
+            return self._session.request(
+                method,
+                f"{self._url}{path}",
+                timeout=self._timeout,
+                verify=self._session.verify,
+                data=data,
+            )
+        except requests.exceptions.SSLError as exc:
+            if self._cert_server_name is None:
+                raise CertificateRejected(
+                    f"The TLS handshake with the Veeam backup server at {self._url} failed ({exc})"
+                ) from exc
+            raise CertificateRejected(
+                f"The certificate of the Veeam backup server was rejected: it could not be "
+                f"validated against the host name '{self._cert_server_name}'. Configure the "
+                f"correct certificate server name or disable certificate verification in the "
+                f"rule ({exc})"
+            ) from exc
+        except requests.exceptions.Timeout as exc:
+            raise ServerUnreachable(
+                f"The Veeam backup server at {self._url} did not answer within "
+                f"{self._timeout} seconds"
+            ) from exc
+        except requests.exceptions.ConnectionError as exc:
+            raise ServerUnreachable(
+                f"The Veeam backup server at {self._url} is unreachable ({exc})"
+            ) from exc
+        except requests.RequestException as exc:
+            raise EndpointError(f"Request to {path} failed ({exc})") from exc
+
+    def login(self, user: str, password: str) -> None:
+        try:
+            response = self._request(
+                "POST",
+                TOKEN_PATH,
+                data={"grant_type": "password", "username": user, "password": password},
+            )
+        except EndpointError as exc:
+            raise FatalError(f"Login at the Veeam REST API failed: {exc}") from exc
+        if response.ok:
+            try:
+                token = _Token.model_validate_json(response.content)
+            except ValidationError as exc:
+                raise FatalError(
+                    "The Veeam REST API returned an invalid access token response"
+                ) from exc
+            self._session.headers["Authorization"] = f"Bearer {token.access_token}"
+            return
+
+        error_code, message = _veeam_error(response)
+        if response.status_code == 401:
+            raise AuthenticationFailed(
+                f"Authentication at the Veeam REST API failed for user '{user}': {message}. "
+                f"Check the user name and password"
+            )
+        if response.status_code == 400 and error_code == "NotImplemented":
+            raise UnsupportedApiVersion(
+                f"The Veeam backup server does not support the REST API version "
+                f"{API_VERSION}: {message}"
+            )
+        raise FatalError(
+            f"Login at the Veeam REST API failed with HTTP {response.status_code}: {message}"
+        )
+
+    def get(self, path: str) -> object:
+        response = self._request("GET", path)
+        if response.status_code == 401:
+            raise AuthenticationFailed(
+                f"The Veeam REST API rejected the session on {path}: {_veeam_error(response)[1]}"
+            )
+        if not response.ok:
+            raise EndpointError(
+                f"Request to {path} failed with HTTP {response.status_code}: "
+                f"{_veeam_error(response)[1]}"
+            )
+        try:
+            return response.json()
+        except json.JSONDecodeError as exc:
+            raise EndpointError(f"Request to {path} returned invalid JSON") from exc
+
+
+def write_sections(client: VeeamClient, sections: Sequence[Section]) -> None:
+    for name, path in sections:
+        try:
+            data = client.get(path)
+        except EndpointError as exc:
+            sys.stderr.write(f"Section {name}: {exc}\n")
+            continue
+        sys.stdout.write(f"<<<{name}:sep(0)>>>\n{json.dumps(data)}\n")
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_arguments(sys.argv[1:] if argv is None else argv)
+    url = base_url(args.address, args.port)
+    cert_server_name = None if args.disable_cert_verification else args.cert_server_name
 
-    with create_session(
-        base_url(args.address, args.port),
-        None if args.disable_cert_verification else args.cert_server_name,
-    ) as session:
-        write_sections(session, args.user, resolve_secret_option(args, PASSWORD_OPTION).reveal())
+    try:
+        with create_session(url, cert_server_name) as session:
+            client = VeeamClient(
+                session,
+                url,
+                cert_server_name=cert_server_name,
+                timeout=args.timeout,
+            )
+            client.login(args.user, resolve_secret_option(args, PASSWORD_OPTION).reveal())
+            # A failing data endpoint must not exit non-zero: that discards all sections.
+            write_sections(client, SECTIONS)
+    except FatalError as exc:
+        if args.debug:
+            raise
+        sys.stderr.write(f"{exc}\n")
+        return 1
 
     return 0
 

@@ -285,20 +285,12 @@ class Site:
                 return False
             return new_t > after
 
-        reload_time, timeout = time.time(), 120
-        while not config_reloaded():
-            if time.time() > reload_time + timeout:
-                ps_proc = subprocess.run(
-                    ["ps", "-ef"],
-                    capture_output=True,
-                    encoding="utf-8",
-                    check=True,
-                )
-                raise Exception(
-                    f"Config did not update within {timeout} seconds.\nOutput of ps -ef "
-                    f"(to check if core is actually running):\n{ps_proc.stdout}"
-                )
-            time.sleep(0.2)
+        wait_until(
+            config_reloaded,
+            timeout=120,
+            interval=0.2,
+            condition_name=f"core of site {self.id} reloaded",
+        )
 
     @tracer.instrument("Site.restart_core")
     def restart_core(self) -> None:
@@ -2221,45 +2213,59 @@ class Site:
 
     @tracer.instrument("Site.activate_changes_and_wait_for_core_reload")
     def activate_changes_and_wait_for_core_reload(
-        self, allow_foreign_changes: bool = False, remote_site: Site | None = None
+        self, allow_foreign_changes: bool = False, reload_core_on_sites: Sequence[Site] = ()
     ) -> None:
+        """Activate the pending changes and wait until the cores have reloaded.
+
+        `reload_core_on_sites` lists the sites to wait for. It defaults to this site,
+        which is all a single site needs. In a distributed setup, list every site that
+        gets changes: one activation covers them all, so calling this again for the
+        other site finds nothing pending and waits for nothing.
+        """
         logger.info("Activate changes and wait for reload...")
         self.ensure_running()
         try:
-            site = remote_site or self
+            sites = tuple(reload_core_on_sites) or (self,)
 
             logger.debug("Getting old program start")
-            old_t = site.live.query_value("GET status\nColumns: program_start\n")
+            program_starts = [
+                (site, site.live.query_value("GET status\nColumns: program_start\n"))
+                for site in sites
+            ]
 
-            logger.debug("Read replication changes of site")
-            base_dir = site.path("var/check_mk/wato").as_posix()
-            for path in glob.glob(base_dir + "/replication_*"):
-                logger.debug("Replication file: %(path)r", {"path": path})
-                with suppress(FileNotFoundError):
-                    logger.debug(site.read_file(base_dir + "/" + os.path.basename(path)))
-
-            # Ensure no previous activation is still running
-            for status_path in glob.glob(base_dir + "/replication_status_*"):
-                logger.debug(
-                    "Replication status file: %(status_path)r", {"status_path": status_path}
-                )
-                with suppress(FileNotFoundError):
-                    changes = ast.literal_eval(
-                        site.read_file(base_dir + "/" + os.path.basename(status_path))
-                    )
-                    if changes.get("current_activation") is not None:
-                        raise RuntimeError(
-                            "A previous activation is still running. Does the wait work?"
-                        )
+            for site in sites:
+                self._log_replication_state(site)
 
             changed = self.openapi.changes.activate_and_wait_for_completion(
                 force_foreign_changes=allow_foreign_changes
             )
             if changed:
-                logger.info("Waiting for core reloads of: %(site_id)s", {"site_id": site.id})
-                site.wait_for_core_reloaded(old_t)
+                for site, old_t in program_starts:
+                    logger.info("Waiting for core reload of: %(site_id)s", {"site_id": site.id})
+                    site.wait_for_core_reloaded(old_t)
         finally:
             self.ensure_running()
+
+    @staticmethod
+    def _log_replication_state(site: Site) -> None:
+        """Log the site's replication files and refuse to activate over a running activation."""
+        logger.debug("Read replication changes of site")
+        base_dir = site.path("var/check_mk/wato").as_posix()
+        for path in glob.glob(base_dir + "/replication_*"):
+            logger.debug("Replication file: %(path)r", {"path": path})
+            with suppress(FileNotFoundError):
+                logger.debug(site.read_file(base_dir + "/" + os.path.basename(path)))
+
+        for status_path in glob.glob(base_dir + "/replication_status_*"):
+            logger.debug("Replication status file: %(status_path)r", {"status_path": status_path})
+            with suppress(FileNotFoundError):
+                changes = ast.literal_eval(
+                    site.read_file(base_dir + "/" + os.path.basename(status_path))
+                )
+                if changes.get("current_activation") is not None:
+                    raise RuntimeError(
+                        "A previous activation is still running. Does the wait work?"
+                    )
 
     def is_global_flag_enabled(self, column: str) -> bool:
         return self._get_global_flag(column) == 1

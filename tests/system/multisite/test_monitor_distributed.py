@@ -71,11 +71,12 @@ def _hosts_per_site(central_site: Site, remote_site: Site) -> Iterator[Mapping[s
                 hostname=name,
                 attributes={"ipaddress": "127.0.0.1", "site": site_id},
             )
-        central_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
-        # Activating the configuration is not the same as every site's core having
-        # reloaded, so the hosts reach the merged host list a moment later. Every test
-        # below depends on all six being there, so wait for that, not for the
-        # activation alone.
+        central_site.activate_changes_and_wait_for_core_reload(
+            allow_foreign_changes=True, reload_core_on_sites=(central_site, remote_site)
+        )
+        # Both cores hold the hosts now, but the merged host list is read through the
+        # central's livestatus proxy, which reaches the remote a moment later. Every
+        # test below depends on all six being there, so wait for that too.
         wait_until(
             lambda: set(_listed_hosts(central_site)) == set(_ALL_HOSTS),
             timeout=120,

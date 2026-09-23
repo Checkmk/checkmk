@@ -59,8 +59,8 @@ def test_automatic_host_removal(
                 },
             )
 
-            central_site.openapi.changes.activate_and_wait_for_completion(
-                force_foreign_changes=True
+            central_site.activate_changes_and_wait_for_core_reload(
+                allow_foreign_changes=True, reload_core_on_sites=(central_site, remote_site)
             )
 
             central_site.send_service_check_result(hostname_central, "Check_MK", 2, "FAKE CRIT")

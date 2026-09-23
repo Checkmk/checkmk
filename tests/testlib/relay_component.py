@@ -29,9 +29,11 @@ Provides:
 """
 
 import logging
+import shlex
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Self
 
 import docker
@@ -46,6 +48,7 @@ from tests.testlib.container_lifecycle import (
     wait_for_container_removed,
     wait_for_container_running,
 )
+from tests.testlib.docker import copy_to_container
 from tests.testlib.utils import is_cleanup_enabled
 
 logger = logging.getLogger(__name__)
@@ -75,9 +78,11 @@ class DockerHttpMock:
     """Minimal HTTP server on a network, usable as an active-check target.
 
     Public attributes:
-        ip   -- IP of the container on *network*
-        port -- port the server listens on
-        logs -- current stdout/stderr of the server container
+        ip        -- IP of the container on *network*
+        port      -- port the server listens on
+        logs      -- current stdout/stderr of the server container
+        container -- the server container, for tests that start further mock
+                     servers inside it (see start_tls_server, start_basic_auth_http_server)
     """
 
     def __init__(
@@ -96,6 +101,10 @@ class DockerHttpMock:
     @property
     def logs(self) -> str:
         return self._container.logs().decode("utf-8")
+
+    @property
+    def container(self) -> docker.models.containers.Container:
+        return self._container
 
     def __enter__(self) -> Self:
         return self
@@ -216,13 +225,16 @@ def assert_ldd_resolves(
 def start_tls_server(
     container: docker.models.containers.Container,
     port: int,
+    openssl: str = _RELAY_OPENSSL,
 ) -> Iterator[None]:
-    """Serve a self-signed TLS cert on *port* (loopback), stopping it on exit.
+    """Serve a self-signed TLS cert on *port*, stopping it on exit.
 
     A self-contained target for TLS active checks: generates a throwaway
-    self-signed certificate and runs ``openssl s_server`` in the background,
-    yielding once the port accepts connections. On exit the server is killed so
-    the port is freed and no stale server lingers to trap a later test.
+    self-signed certificate (CN ``cert-mock``) and runs ``openssl s_server`` in
+    the background, yielding once the port accepts connections. On exit the
+    server is killed so the port is freed and no stale server lingers to trap a
+    later test. *openssl* is the binary inside *container*: the relay image's
+    own by default, ``/usr/bin/openssl`` in the HTTP mock image.
     """
     cert, key = "/tmp/relay_component_cert.pem", "/tmp/relay_component_key.pem"
     pidfile = f"/tmp/relay_component_tls_{port}.pid"
@@ -231,7 +243,7 @@ def start_tls_server(
         [
             "env",
             _OPENSSL_ENV,
-            _RELAY_OPENSSL,
+            openssl,
             "req",
             "-x509",
             "-newkey",
@@ -254,7 +266,7 @@ def start_tls_server(
             "sh",
             "-c",
             (
-                f"echo $$ > {pidfile}; exec env {_OPENSSL_ENV} {_RELAY_OPENSSL} s_server "
+                f"echo $$ > {pidfile}; exec env {_OPENSSL_ENV} {openssl} s_server "
                 f"-cert {cert} -key {key} -accept {port} -www -quiet"
             ),
         ],
@@ -265,6 +277,64 @@ def start_tls_server(
         yield
     finally:
         container.exec_run(["sh", "-c", f"kill $(cat {pidfile}) 2>/dev/null || true"])
+
+
+_MOCK_SERVERS_DIR = Path(__file__).parent / "mock_servers"
+# Where the standalone mock servers are copied to inside a mock container.
+_MOCK_SERVERS_TARGET = "/opt/relay-e2e"
+
+
+@contextmanager
+def start_basic_auth_http_server(
+    container: docker.models.containers.Container,
+    port: int,
+    user: str,
+    password: str,
+) -> Iterator[str]:
+    """Serve HTTP on *port* requiring basic auth *user*/*password*; stop it on exit.
+
+    Copies ``mock_servers/basic_auth_http_server.py`` into *container* (the SDK
+    equivalent of ``docker cp``) and runs it in the background. Yields the path of
+    the server's request log inside *container* (read it with
+    :func:`read_container_file`): one line per request, ``<client ip>
+    auth=<ok|bad|missing> <request line>``, so a test can assert which client
+    authenticated and that the credential actually arrived at the endpoint.
+    """
+    script = _MOCK_SERVERS_DIR / "basic_auth_http_server.py"
+    log_path = f"/tmp/relay_component_basic_auth_{port}.log"
+    pidfile = f"/tmp/relay_component_basic_auth_{port}.pid"
+    exit_code, output = _exec(
+        container, ["sh", "-c", f"mkdir -p {_MOCK_SERVERS_TARGET} && : > {log_path}"]
+    )
+    if exit_code != 0:
+        raise RuntimeError(f"could not prepare {container.name} for the auth server: {output}")
+    if not copy_to_container(container, script, _MOCK_SERVERS_TARGET):
+        raise RuntimeError(f"could not copy {script.name} into {container.name}")
+    container.exec_run(
+        [
+            "sh",
+            "-c",
+            (
+                f"echo $$ > {pidfile}; exec python3 {_MOCK_SERVERS_TARGET}/{script.name} "
+                f"--port {port} --user {shlex.quote(user)} --password {shlex.quote(password)} "
+                f"--log {log_path}"
+            ),
+        ],
+        detach=True,
+    )
+    try:
+        _wait_until_tcp_open(container, port)
+        yield log_path
+    finally:
+        container.exec_run(["sh", "-c", f"kill $(cat {pidfile}) 2>/dev/null || true"])
+
+
+def read_container_file(container: docker.models.containers.Container, path: str) -> str:
+    """Return the content of *path* inside *container*."""
+    exit_code, output = _exec(container, ["cat", path])
+    if exit_code != 0:
+        raise RuntimeError(f"could not read {path}: {output}")
+    return output
 
 
 def run_via_checkhelper(

@@ -1396,13 +1396,14 @@ def _convert_to_legacy_cascading_dropdown(
     to_convert: ruleset_api_v1.form_specs.CascadingSingleChoice | CascadingSingleChoiceExtended,
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.CascadingDropdown:
+    elements = to_convert.elements() if callable(to_convert.elements) else to_convert.elements
     legacy_choices = [
         (
             str(element.name),
             element.title.localize(localizer),
             convert_to_legacy_valuespec(element.parameter_form, localizer),
         )
-        for element in to_convert.elements
+        for element in elements
     ]
 
     converted_kwargs: dict[str, Any] = {
@@ -1414,16 +1415,25 @@ def _convert_to_legacy_cascading_dropdown(
         case ruleset_api_v1.form_specs.InputHint():
             converted_kwargs["no_preselect_title"] = to_convert.prefill.value.localize(localizer)
         case ruleset_api_v1.form_specs.DefaultValue():
-            # CascadingSingleChoice.__post_init__ checks that prefill_selection is one of the elements
+            # __post_init__ checks that the prefill selection is one of the static elements,
+            # but dynamic elements may no longer contain it
             default_choice = next(
-                legacy_choice
-                for legacy_choice in legacy_choices
-                if legacy_choice[0] == to_convert.prefill.value
+                (
+                    legacy_choice
+                    for legacy_choice in legacy_choices
+                    if legacy_choice[0] == to_convert.prefill.value
+                ),
+                None,
             )
-            converted_kwargs["default_value"] = (
-                to_convert.prefill.value,
-                default_choice[2].default_value(),
-            )
+            if default_choice is None:
+                converted_kwargs["no_preselect_title"] = ruleset_api_v1.Title(
+                    "Please choose"
+                ).localize(localizer)
+            else:
+                converted_kwargs["default_value"] = (
+                    to_convert.prefill.value,
+                    default_choice[2].default_value(),
+                )
 
     if to_convert.custom_validate is not None:
         converted_kwargs["validate"] = _convert_to_legacy_validation(

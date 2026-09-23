@@ -115,9 +115,13 @@ def enable_deprecated_alternative(
     # }
     # This can't be waterproof, but it should be sufficient for the most common cases.
 
+    elements = wrapped_form_spec.elements
+    if callable(elements):
+        raise TypeError("Deprecated alternatives are derived from static elements only")
+
     mapping: dict[str, str] = {}
     if not match_function:
-        for element in wrapped_form_spec.elements:
+        for element in elements:
             visitor = get_visitor(
                 element.parameter_form, VisitorOptions(migrate_values=False, mask_values=False)
             )
@@ -147,9 +151,9 @@ def enable_deprecated_alternative(
         if match_function is not None:
             # If a match function is provided, use it to determine the correct element
             index = match_function(value)
-            if index < 0 or index >= len(wrapped_form_spec.elements):
+            if index < 0 or index >= len(elements):
                 raise MKGeneralException("Value does not match any alternative")
-            return wrapped_form_spec.elements[index].name, value
+            return elements[index].name, value
 
         try:
             return mapping[_derive_type_from_data(value)], value

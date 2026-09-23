@@ -37,6 +37,8 @@ from cmk.rulesets.internal.form_specs import (
     Autocompleter,
     AutocompleterData,
     AutocompleterParams,
+    CascadingSingleChoiceElementExtended,
+    CascadingSingleChoiceExtended,
     OAuth2Connection,
     StringAutocompleter,
 )
@@ -444,6 +446,46 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 validate=lambda x, y: None,  # noqa: ARG005
             ),
             id="CascadingDropdown",
+        ),
+        pytest.param(
+            CascadingSingleChoiceExtended(
+                elements=lambda: [
+                    CascadingSingleChoiceElementExtended(
+                        name="first",
+                        title=api_v1.Title("Spec title"),
+                        parameter_form=api_v1.form_specs.String(),
+                    )
+                ],
+                title=api_v1.Title("parent title"),
+                prefill=api_v1.form_specs.DefaultValue("first"),
+            ),
+            legacy_valuespecs.CascadingDropdown(
+                choices=[
+                    ("first", _("Spec title"), legacy_valuespecs.TextInput(placeholder="", size=35))
+                ],
+                title=_("parent title"),
+                default_value=("first", ""),
+            ),
+            id="CascadingDropdown from CascadingSingleChoiceExtended with lazy elements",
+        ),
+        pytest.param(
+            CascadingSingleChoiceExtended(
+                elements=lambda: [
+                    CascadingSingleChoiceElementExtended(
+                        name="first",
+                        title=api_v1.Title("Spec title"),
+                        parameter_form=api_v1.form_specs.String(),
+                    )
+                ],
+                prefill=api_v1.form_specs.DefaultValue("gone"),
+            ),
+            legacy_valuespecs.CascadingDropdown(
+                choices=[
+                    ("first", _("Spec title"), legacy_valuespecs.TextInput(placeholder="", size=35))
+                ],
+                no_preselect_title="Please choose",
+            ),
+            id="CascadingDropdown from lazy elements without the default",
         ),
         pytest.param(
             api_v1.form_specs.List(element_template=api_v1.form_specs.Dictionary(elements={})),

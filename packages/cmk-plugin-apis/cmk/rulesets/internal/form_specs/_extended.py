@@ -111,13 +111,18 @@ class CascadingSingleChoiceElementExtended[ModelT](CascadingSingleChoiceElement[
 
 @dataclass(frozen=True, kw_only=True)
 class CascadingSingleChoiceExtended(FormSpec[tuple[str, object]]):  # type: ignore[explicit-any]
-    elements: Sequence[CascadingSingleChoiceElement[Any]]  # type: ignore[explicit-any]
+    elements: (  # type: ignore[explicit-any]
+        Sequence[CascadingSingleChoiceElement[Any]]
+        | Callable[[], Sequence[CascadingSingleChoiceElement[Any]]]
+    )
     no_elements_text: Message = Message("(No choices available)")
     label: Label | None = None
     prefill: DefaultValue[str] | InputHint[Title] = InputHint(Title("Please choose"))
     layout: CascadingSingleChoiceLayout = CascadingSingleChoiceLayout.vertical
 
     def __post_init__(self) -> None:
+        if callable(self.elements):
+            return
         available_names = {elem.name for elem in self.elements}
         if isinstance(self.prefill, DefaultValue) and self.prefill.value not in available_names:
             raise ValueError(

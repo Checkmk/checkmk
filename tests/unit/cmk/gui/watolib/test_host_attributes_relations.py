@@ -96,4 +96,5 @@ def _attribute_names_offered_for_setting() -> set[str]:
     selection = create_host_attributes_selection(default_host_attributes=None)
     element_template = selection.element_template
     assert isinstance(element_template, CascadingSingleChoiceExtended)
+    assert not callable(element_template.elements)
     return {element.name for element in element_template.elements}

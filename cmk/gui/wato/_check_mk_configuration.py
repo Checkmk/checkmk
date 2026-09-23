@@ -5491,6 +5491,7 @@ ManagementBoardConfig = HostRulespec(
     group=RulespecGroupAgentSNMP,
     name="management_board_config",
     valuespec=_valuespec_management_board_config,
+    is_deprecated=True,
 )
 
 
@@ -5541,6 +5542,7 @@ ManagementBulkwalkHosts = BinaryHostRulespec(
     help_func=_help_enable_snmpv2c,
     name="management_bulkwalk_hosts",
     title=lambda: _("Enable SNMPv2c for management boards"),
+    is_deprecated=True,
 )
 
 

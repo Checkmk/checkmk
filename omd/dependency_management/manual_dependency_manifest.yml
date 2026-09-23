@@ -48,7 +48,7 @@ dependencies:
     license: MIT
     path: non-free/packages/cmk-update-agent/src/pip/setuptools-46.4.0-py3-none-any.whl
 
-  - purl: pkg:pypi/PySocks@1.7.1
+  - purl: pkg:pypi/pysocks@1.7.1
     license: BSD-3-Clause
     path: non-free/packages/cmk-update-agent/src/pip/PySocks-1.7.1-py3-none-any.whl
 
@@ -64,7 +64,7 @@ dependencies:
   - purl: pkg:pypi/urllib3@1.26.20
     path: non-free/packages/cmk-update-agent/src/pip/urllib3-1.26.20-py2.py3-none-any.whl
 
-  - purl: pkg:pypi/PyInstaller@3.6
+  - purl: pkg:pypi/pyinstaller@3.6
     license: GPL-2.0-or-later
     path: non-free/packages/cmk-update-agent/src/pip/PyInstaller-3.6.tar.gz
 

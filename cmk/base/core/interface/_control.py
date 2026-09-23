@@ -328,38 +328,42 @@ def _create_active_config(
         config_path.create(cmk.utils.paths.omd_root) as config_creation_context,
         _backup_objects_file(core_client),
     ):
-        snapshot_local_dir(cmk.utils.paths.local_root, config_creation_context.path_created)
-        snapshot_trusted_cas(cmk.utils.paths.trusted_ca_file, config_creation_context.path_created)
+        intermediate_config = IntermediateMonitoringConfig(
+            config_creation_context=config_creation_context,
+            passwords=passwords,
+            licensing_handler=licensing_handler_factory(),
+            config_cache=config_cache,
+            core_objects_config=core_objects_config,
+            hosts_config=hosts_config,
+            host_tags=host_tags,
+            plugins=plugins,
+            hosts_to_update=hosts_to_update,
+            final_service_name_config=final_service_name_config,
+            passive_service_name_config=passive_service_name_config,
+            enforced_services_table=enforced_services_table,
+            get_ip_stack_config=get_ip_stack_config,
+            default_address_family=default_address_family,
+            ip_address_of=ip_address_of,
+            ip_address_of_mgmt=ip_address_of_mgmt,
+            service_depends_on=service_depends_on,
+        )
 
-        checker_config_writer(config_creation_context.path_created)
+        snapshot_local_dir(
+            cmk.utils.paths.local_root, intermediate_config.config_creation_context.path_created
+        )
+        snapshot_trusted_cas(
+            cmk.utils.paths.trusted_ca_file,
+            intermediate_config.config_creation_context.path_created,
+        )
 
-        licensing_handler = licensing_handler_factory()
-        licensing_handler.persist_licensed_state(
+        checker_config_writer(intermediate_config.config_creation_context.path_created)
+
+        intermediate_config.licensing_handler.persist_licensed_state(
             get_licensed_state_file_path(cmk.utils.paths.omd_root)
         )
-        core.build(
-            IntermediateMonitoringConfig(
-                config_creation_context=config_creation_context,
-                passwords=passwords,
-                licensing_handler=licensing_handler,
-                config_cache=config_cache,
-                core_objects_config=core_objects_config,
-                hosts_config=hosts_config,
-                host_tags=host_tags,
-                plugins=plugins,
-                hosts_to_update=hosts_to_update,
-                final_service_name_config=final_service_name_config,
-                passive_service_name_config=passive_service_name_config,
-                enforced_services_table=enforced_services_table,
-                get_ip_stack_config=get_ip_stack_config,
-                default_address_family=default_address_family,
-                ip_address_of=ip_address_of,
-                ip_address_of_mgmt=ip_address_of_mgmt,
-                service_depends_on=service_depends_on,
-            )
-        )
+        core.build(intermediate_config)
         cmk.utils.password_store.save(
-            {k: s.reveal() for k, s in passwords.items()},
+            {k: s.reveal() for k, s in intermediate_config.passwords.items()},
             cmk.utils.password_store.active_secrets_path_site(
                 RELATIVE_PATH_SECRETS, config_creation_context.path_created
             ),

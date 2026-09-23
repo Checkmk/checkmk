@@ -337,7 +337,6 @@ def test_check(
     )
 
 
-@pytest.mark.xfail(strict=True, reason="Crash report 559d4302: ValidationError")
 def test_check_index_next_to_index_without_primaries() -> None:
     # Elasticsearch reported an empty "primaries" object for one index, e.g. while
     # its primary shard was unassigned. The other indices must still be monitored.

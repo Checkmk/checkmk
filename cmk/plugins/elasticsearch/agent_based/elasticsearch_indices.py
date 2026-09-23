@@ -60,15 +60,21 @@ _Section = Mapping[str, _ElasticIndex]
 
 def parse_elasticsearch_indices(string_table: StringTable) -> _Section:
     return {
-        index_name: _ElasticIndex(
-            count=index_response.primaries.docs.count,
-            size=index_response.total.store.size_in_bytes,
-        )
-        for index_name, index_response in (
-            (index_name, _IndexResponse.model_validate(raw_dict))
-            for index_name, raw_dict in json.loads(string_table[0][0]).items()
-        )
+        index_name: index
+        for index_name, raw_dict in json.loads(string_table[0][0]).items()
+        if (index := _parse_index(raw_dict)) is not None
     }
+
+
+def _parse_index(raw_dict: object) -> _ElasticIndex | None:
+    try:
+        index_response = _IndexResponse.model_validate(raw_dict)
+    except pydantic.ValidationError:
+        return None
+    return _ElasticIndex(
+        count=index_response.primaries.docs.count,
+        size=index_response.total.store.size_in_bytes,
+    )
 
 
 agent_section_elasticsearch_indices = AgentSection(

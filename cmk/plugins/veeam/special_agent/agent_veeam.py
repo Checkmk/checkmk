@@ -269,6 +269,31 @@ def fetch_list(path: str) -> FetchStrategy:
     return _fetch
 
 
+def fetch_list_piggyback(path: str) -> FetchStrategy:
+    """A `data`/`pagination` endpoint whose items each belong to a different host.
+
+    Each item's `name` field names the object it is about (e.g. the protected
+    machine); items are grouped by it and wrapped in a piggyback envelope. An
+    item with no name cannot be attributed to a host and is dropped.
+    """
+
+    def _fetch(client: VeeamClient, name: str) -> str:
+        groups: dict[str, list[object]] = {}
+        for item in _get_all(client, path):
+            if not isinstance(item, dict) or not (host := item.get("name")):
+                continue
+            groups.setdefault(host, []).append(item)
+
+        output = ""
+        for host, host_items in groups.items():
+            output += f"<<<<{host}>>>>\n<<<{name}:sep(0)>>>\n"
+            output += "".join(f"{json.dumps(item)}\n" for item in host_items)
+            output += "<<<<>>>>\n"
+        return output
+
+    return _fetch
+
+
 def write_sections(client: VeeamClient, sections: Sequence[Section]) -> None:
     for name, fetch in sections:
         try:
@@ -279,7 +304,10 @@ def write_sections(client: VeeamClient, sections: Sequence[Section]) -> None:
         sys.stdout.write(output)
 
 
-SECTIONS: Sequence[Section] = (("veeam_backup_jobs", fetch_list("/api/v1/jobs/states")),)
+SECTIONS: Sequence[Section] = (
+    ("veeam_backup_jobs", fetch_list("/api/v1/jobs/states")),
+    ("veeam_backups", fetch_list_piggyback("/api/v1/taskSessions")),
+)
 
 
 def main(argv: Sequence[str] | None = None) -> int:

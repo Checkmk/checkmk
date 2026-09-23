@@ -17,6 +17,7 @@ from cmk.plugins.veeam.special_agent.agent_veeam import (
     create_session,
     FatalError,
     fetch_list,
+    fetch_list_piggyback,
     fetch_object,
     main,
     ServerUnreachable,
@@ -166,6 +167,62 @@ def test_object_section_is_written_as_a_single_line(
     assert (
         capsys.readouterr().out
         == '<<<veeam_vbr_server_info:sep(0)>>>\n{"name": "backup-server-01"}\n'
+    )
+
+
+def test_piggyback_section_groups_items_by_name(
+    api: responses.RequestsMock,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    api.get(
+        f"{URL}/api/v1/taskSessions?skip=0",
+        json={
+            "data": [
+                {"name": "web-server-01", "jobName": "Daily"},
+                {"name": "db-server-02", "jobName": "Daily"},
+                {"name": "web-server-01", "jobName": "Weekly"},
+            ],
+            "pagination": {"total": 3},
+        },
+    )
+
+    write_sections(_client(), [("veeam_backups", fetch_list_piggyback("/api/v1/taskSessions"))])
+
+    assert capsys.readouterr().out == (
+        "<<<<web-server-01>>>>\n"
+        "<<<veeam_backups:sep(0)>>>\n"
+        '{"name": "web-server-01", "jobName": "Daily"}\n'
+        '{"name": "web-server-01", "jobName": "Weekly"}\n'
+        "<<<<>>>>\n"
+        "<<<<db-server-02>>>>\n"
+        "<<<veeam_backups:sep(0)>>>\n"
+        '{"name": "db-server-02", "jobName": "Daily"}\n'
+        "<<<<>>>>\n"
+    )
+
+
+def test_piggyback_section_drops_items_with_no_name(
+    api: responses.RequestsMock,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    api.get(
+        f"{URL}/api/v1/taskSessions?skip=0",
+        json={
+            "data": [
+                {"jobName": "Daily"},
+                {"name": "web-server-01", "jobName": "Daily"},
+            ],
+            "pagination": {"total": 2},
+        },
+    )
+
+    write_sections(_client(), [("veeam_backups", fetch_list_piggyback("/api/v1/taskSessions"))])
+
+    assert capsys.readouterr().out == (
+        "<<<<web-server-01>>>>\n"
+        "<<<veeam_backups:sep(0)>>>\n"
+        '{"name": "web-server-01", "jobName": "Daily"}\n'
+        "<<<<>>>>\n"
     )
 
 

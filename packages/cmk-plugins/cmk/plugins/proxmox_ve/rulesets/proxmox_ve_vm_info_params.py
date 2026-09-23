@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+from collections.abc import Mapping
 
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
@@ -17,10 +17,21 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
+LOCK_DURATION_DEFAULT_LEVELS = (15 * 60.0, 30 * 60.0)
+
+
+def _migrate_ruleset(value: object) -> Mapping[str, object]:
+    if not isinstance(value, dict):
+        raise TypeError(value)
+
+    value.setdefault("lock_duration", ("fixed", LOCK_DURATION_DEFAULT_LEVELS))
+    return value
+
 
 def _parameter_valuespec_proxmox_ve_vm_info() -> Dictionary:
     return Dictionary(
         title=Title("Check parameter"),
+        migrate=_migrate_ruleset,
         elements={
             "required_vm_status": DictElement(
                 required=False,
@@ -47,7 +58,7 @@ def _parameter_valuespec_proxmox_ve_vm_info() -> Dictionary:
                             TimeMagnitude.MINUTE,
                         ]
                     ),
-                    prefill_fixed_levels=DefaultValue(value=(15 * 60.0, 30 * 60.0)),
+                    prefill_fixed_levels=DefaultValue(value=LOCK_DURATION_DEFAULT_LEVELS),
                 ),
             ),
         },

@@ -1807,6 +1807,9 @@ allows = []
 [components."cmk.testlib.ai_control_plane"]
 allows = ["cmk.ai_control_plane"]
 
+[components."cmk.testlib.ai_control_plane.fake_provider"]
+allows = []
+
 [components."cmk.testlib.ai_control_plane.scripted_model"]
 allows = []
 

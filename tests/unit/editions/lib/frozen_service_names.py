@@ -1896,7 +1896,6 @@ FROZEN_SERVICE_NAMES: Final[Mapping[str, str]] = {
     "redfish_memory": "Memory %s",
     "redfish_memory_summary": "Memory %s",
     "redfish_networkadapters": "Network adapter %s",
-    "redfish_networkports": "Physical port %s",
     "redfish_outlets": "Outlet %s",
     "redfish_pdus": "PDU %s",
     "redfish_physicaldrives": "Drive %s",

@@ -33,7 +33,7 @@ const slideInVariants = cva('', {
 
 export type SlideInVariants = VariantProps<typeof slideInVariants>
 
-export type Focusable = { focus: () => void }
+export type Focusable = { focus: (options?: FocusOptions) => void }
 
 export interface CmkSlideInProps {
   open: boolean
@@ -72,7 +72,7 @@ watch(
       await nextTick(() => {
         const target = props.initialFocusTarget ?? dialogContentRef.value?.$el
         if (target && typeof (target as Partial<Focusable>).focus === 'function') {
-          ;(target as Focusable).focus()
+          ;(target as Focusable).focus({ focusVisible: false })
         }
       })
     }

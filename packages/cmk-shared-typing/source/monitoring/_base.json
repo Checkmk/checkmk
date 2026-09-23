@@ -21,7 +21,10 @@
       "type": "boolean",
       "default": false
     },
-    "legacy_view_button": { "$ref": "page_link_button.json" }
+    "legacy_view_button": { "$ref": "page_link_button.json" },
+    "header_teleport_target": {
+      "type": ["string", "null"]
+    }
   },
   "$defs": {
     "monitoring_action": {

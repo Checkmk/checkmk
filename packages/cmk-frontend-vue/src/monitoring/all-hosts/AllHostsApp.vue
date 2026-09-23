@@ -74,6 +74,9 @@ const { _t } = usei18n()
 
 const props = defineProps<MonitoringAllHostsApp>()
 
+const headerActionsTarget = computed(() => props.header_teleport_target ?? '.titlebar')
+const inTitlebar = computed(() => headerActionsTarget.value === '.titlebar')
+
 const ACTION_ICONS: Record<string, SimpleIcons> = {
   [ACK_ACTION_ID]: 'ack',
   [RESCHEDULE_ACTION_ID]: 'reload',
@@ -483,21 +486,33 @@ function navigateToLegacy() {
 </script>
 
 <template>
-  <Teleport defer to=".titlebar">
-    <CmkLink
-      href="https://survey.checkmk.com/index.php/815511?lang=en"
-      target="_blank"
-      class="monitoring-all-hosts-app__survey-link"
+  <Teleport defer :to="headerActionsTarget">
+    <div
+      class="monitoring-all-hosts-app__header-actions"
+      :class="
+        inTitlebar
+          ? 'monitoring-all-hosts-app__header-actions--titlebar'
+          : 'monitoring-all-hosts-app__header-actions--page-menu'
+      "
     >
-      <CmkIcon name="comment" class="monitoring-all-hosts-app__legacy-view-button-icon" />
-      {{ _t('Give feedback on the new view') }}
-    </CmkLink>
-  </Teleport>
-  <Teleport v-if="legacy_view_button" defer to=".titlebar">
-    <CmkButton class="monitoring-all-hosts-app__legacy-view-button" @click="navigateToLegacy">
-      <CmkIcon name="back" class="monitoring-all-hosts-app__legacy-view-button-icon" />
-      {{ legacy_view_button.title }}
-    </CmkButton>
+      <CmkLink
+        href="https://survey.checkmk.com/index.php/815511?lang=en"
+        target="_blank"
+        class="monitoring-all-hosts-app__survey-link"
+      >
+        <CmkIcon name="comment" class="monitoring-all-hosts-app__survey-link-icon" />
+        {{ _t('Give feedback on the new view') }}
+      </CmkLink>
+      <CmkButton
+        v-if="legacy_view_button"
+        class="monitoring-all-hosts-app__legacy-view-button"
+        :size="inTitlebar ? 'medium' : 'small'"
+        @click="navigateToLegacy"
+      >
+        <CmkIcon name="back" class="monitoring-all-hosts-app__legacy-view-button-icon" />
+        {{ legacy_view_button.title }}
+      </CmkButton>
+    </div>
   </Teleport>
   <div class="monitoring-all-hosts-app">
     <div class="monitoring-all-hosts-app__header">
@@ -651,18 +666,35 @@ function navigateToLegacy() {
   padding-right: var(--spacing);
 }
 
-.monitoring-all-hosts-app__survey-link {
-  margin-right: var(--dimension-6);
-  place-content: center flex-end;
+.monitoring-all-hosts-app__header-actions {
+  display: flex;
   align-items: center;
+  justify-content: flex-end;
+  gap: var(--dimension-6);
+}
+
+.monitoring-all-hosts-app__header-actions--titlebar {
+  align-self: center;
+  margin-right: var(--dimension-6);
+}
+
+.monitoring-all-hosts-app__header-actions--page-menu {
+  float: right;
+  height: 100%;
+  margin-right: var(--dimension-3);
+}
+
+.monitoring-all-hosts-app__survey-link {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
 }
 
 .monitoring-all-hosts-app__legacy-view-button {
-  right: var(--dimension-4);
   white-space: nowrap;
-  align-self: center;
 }
 
+.monitoring-all-hosts-app__survey-link-icon,
 .monitoring-all-hosts-app__legacy-view-button-icon {
   margin-right: var(--dimension-3);
 }

@@ -97,8 +97,9 @@ def monitor_all_hosts_visual_spec() -> Visual:
 
 
 class MonitorAllHostsPage(Page):
-    def __init__(self, commands: CommandRegistry) -> None:
+    def __init__(self, commands: CommandRegistry, teleport_target: str | None = None) -> None:
         self._commands = commands
+        self._teleport_target = teleport_target
 
     @override
     def page(self, ctx: PageContext) -> None:
@@ -132,6 +133,7 @@ class MonitorAllHostsPage(Page):
                         ),
                         title=_("Return to classic view"),
                     ),
+                    header_teleport_target=self._teleport_target,
                 )
             ),
         )

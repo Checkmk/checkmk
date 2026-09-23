@@ -28,5 +28,5 @@ def register(
         versioned_endpoint_registry,
         ignore_duplicate_endpoints=ignore_duplicate_endpoints,
     )
-    register_pages(page_registry, command_registry)
+    register_pages(page_registry, command_registry, teleport_target)
     register_builtin("experimental_view_button", AllHostsLinkButton(teleport_target))

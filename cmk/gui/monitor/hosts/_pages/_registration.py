@@ -11,5 +11,8 @@ from ._monitor_all_hosts import MonitorAllHostsPage
 def register_pages(
     page_registry: PageRegistry,
     command_registry: CommandRegistry,
+    teleport_target: str | None,
 ) -> None:
-    page_registry.register(PageEndpoint("monitor_all_hosts", MonitorAllHostsPage(command_registry)))
+    page_registry.register(
+        PageEndpoint("monitor_all_hosts", MonitorAllHostsPage(command_registry, teleport_target))
+    )

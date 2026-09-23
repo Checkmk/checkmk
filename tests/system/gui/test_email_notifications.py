@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import subprocess
+import time
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -22,6 +23,7 @@ from tests.system.gui.testlib.playwright.pom.setup.notification_configuration im
 )
 from tests.system.gui.testlib.playwright.pom.setup.notification_rules import EditNotificationRule
 from tests.system.gui.testlib.playwright.pom.setup.ruleset import Ruleset
+from tests.testlib.common.utils import wait_until
 from tests.testlib.emails import EmailManager
 from tests.testlib.site import Site
 from tests.testlib.utils import run
@@ -39,6 +41,22 @@ def _copy_file(
     except subprocess.CalledProcessError as exception:
         exception.add_note(f"Failed to copy '{src}' to '{dst}'!")
         raise exception
+
+
+def _sent_notifications_last_seven_days(site: Site) -> int:
+    """Count the notification results the core logged, as the notification overview does."""
+    from_timestamp = int(time.time()) - 7 * 24 * 60 * 60
+    count: int = site.live.query_value(
+        "GET log\n"
+        "Filter: class = 3\n"
+        f"Filter: log_time >= {from_timestamp}\n"
+        "Filter: log_type = HOST NOTIFICATION RESULT\n"
+        "Filter: log_type = SERVICE NOTIFICATION RESULT\n"
+        "Or: 2\n"
+        "Filter: log_command_name != check-mk-notify\n"
+        "Stats: class = 3\n"
+    )
+    return count
 
 
 @pytest.fixture(name="modify_notification_rule", scope="function")
@@ -159,6 +177,12 @@ def test_filesystem_email_notifications(
         expected_content["Event"] = "OK–›WARN"
         expected_content["Summary"] = service_summary
 
+        # The mail is spooled before the core logs its result, so the count can lag behind.
+        wait_until(
+            lambda: _sent_notifications_last_seven_days(test_site) != total_sent,
+            timeout=30,
+            interval=1,
+        )
         notification_configuration_page.navigate()
         # The notifications stats need to be read -> open overview
         notification_configuration_page.collapse_notification_overview(False)

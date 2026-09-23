@@ -100,8 +100,7 @@ def _piggyback_env_two_site_setup(
             _setup_source_host(central_site, remote_site.id, _HOSTNAME_SOURCE_REMOTE),
             set_omd_config_piggyback_hub(central_site, "on"),
             set_omd_config_piggyback_hub(remote_site, "on"),
-            piggyback_hub_log_level(central_site, "INFO"),
-            piggyback_hub_log_level(remote_site, "INFO"),
+            piggyback_hub_log_level(central_site, remote_site),
         ):
             central_site.openapi.changes.activate_and_wait_for_completion()
             await_broker_ready(central_site, remote_site)

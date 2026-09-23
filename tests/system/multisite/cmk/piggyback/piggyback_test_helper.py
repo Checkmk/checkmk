@@ -7,7 +7,7 @@
 import signal
 import subprocess
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import contextmanager, ExitStack
 from dataclasses import dataclass
 from types import FrameType
 from typing import Final, IO, Literal
@@ -16,6 +16,11 @@ from tests.testlib.common.utils2 import ServiceInfo
 from tests.testlib.system.site import Site
 
 CMK_TRACK_TIMEOUT: Final = 30  # secs
+
+# "INFO" logs the hub's config receive and save, which is what the config sync tests
+# compare against. "DEBUG" adds every AMQP frame from pika, noisy enough to shift the
+# timing those tests measure.
+PIGGYBACK_HUB_LOG_LEVEL: Final = ""
 
 
 @dataclass
@@ -97,13 +102,23 @@ def set_omd_config_piggyback_hub(site: Site, value: Literal["on", "off"]) -> Ite
 
 
 @contextmanager
-def piggyback_hub_log_level(site: Site, level: str) -> Iterator[None]:
-    """Run the piggyback hub daemon at an explicit log level.
-
-    The init script starts the daemon without `--log-level`, so its default (NOTSET)
-    leaves the config receive/save messages invisible. Restart it by hand to make them
-    show up in var/log/piggyback-hub.log (CMK-35803).
+def piggyback_hub_log_level(*sites: Site) -> Iterator[None]:
     """
+    Run the piggyback hub daemons at PIGGYBACK_HUB_LOG_LEVEL, when one is set.
+    The init script starts the daemon without `--log-level`, so at its default (NOTSET)
+    """
+    if not PIGGYBACK_HUB_LOG_LEVEL:
+        yield
+        return
+
+    with ExitStack() as stack:
+        for site in sites:
+            stack.enter_context(_restart_hub_with_log_level(site, PIGGYBACK_HUB_LOG_LEVEL))
+        yield
+
+
+@contextmanager
+def _restart_hub_with_log_level(site: Site, level: str) -> Iterator[None]:
     site.omd("stop", "piggyback-hub")
     site.run(
         [

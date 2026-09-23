@@ -3,20 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from pathlib import Path
-from typing import NotRequired, ReadOnly, TypedDict
+
+from pydantic import BaseModel
 
 from .bakery_api.v1 import FileGenerator, OS, password_store, Plugin, PluginConfig, register
 
 
-class ScaleioConfig(TypedDict):
-    user: ReadOnly[str]
-    password: ReadOnly[password_store.PasswordId]
-    interval: NotRequired[ReadOnly[int]]
+class _Config(BaseModel):
+    user: str
+    password: password_store.PasswordId
+    interval: int = 0
 
 
-def get_mk_scaleio_files(conf: ScaleioConfig) -> FileGenerator:
-    interval = conf.get("interval", 0)
+def get_mk_scaleio_files(conf: Mapping[str, object]) -> FileGenerator:
+    config = _Config.model_validate(conf)
+    interval = config.interval
     if interval <= 60:
         interval = 0
     yield Plugin(base_os=OS.LINUX, source=Path("mk_scaleio"), interval=interval)
@@ -24,8 +27,8 @@ def get_mk_scaleio_files(conf: ScaleioConfig) -> FileGenerator:
     yield PluginConfig(
         base_os=OS.LINUX,
         lines=[
-            f"SIO_USER={conf['user']}",
-            f"SIO_PASSWORD={password_store.extract(conf['password'])}",
+            f"SIO_USER={config.user}",
+            f"SIO_PASSWORD={password_store.extract(config.password)}",
         ],
         target=Path("mk_scaleio.cfg"),
         include_header=True,

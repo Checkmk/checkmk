@@ -187,16 +187,20 @@ class State:
         self._save()
 
     def _save(self) -> None:
-        dumped = json.dumps(
-            self.current_state.model_dump(),
+        save_job_state(self.path, self.current_state)
+
+
+def save_job_state(path: Path, state: JobState) -> None:
+    """Write a job state file in the format that the Checkmk agent transfers."""
+    store.save_text_to_file(
+        path,
+        json.dumps(
+            state.model_dump(),
             sort_keys=True,
             indent=4,
             separators=(",", ": "),
-        )
-        store.save_text_to_file(
-            self.path,
-            dumped,
-        )
+        ),
+    )
 
 
 class InfoCalculator:

@@ -20,11 +20,13 @@ import subprocess
 import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
+from datetime import datetime
 from io import TextIOWrapper
 from pathlib import Path
 from typing import assert_never, cast, Final, Generic, TypeVar
 
 import cmk.ccc.version as cmk_version
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site
@@ -32,6 +34,7 @@ from cmk.ccc.site import omd_site
 from cmk.utils import render
 from cmk.utils.backup.config import Config as RawConfig
 from cmk.utils.backup.job import JobConfig, JobState, ScheduleConfig
+from cmk.utils.backup.schedule import next_schedule
 from cmk.utils.backup.targets import TargetId
 from cmk.utils.backup.targets.aws_s3_bucket import S3Bucket, S3Params, S3Target
 from cmk.utils.backup.targets.azure_blob_storage import (
@@ -49,10 +52,9 @@ from cmk.utils.backup.targets.remote_interface import (
     TRemoteStorage,
 )
 from cmk.utils.backup.type_defs import SiteBackupInfo
-from cmk.utils.backup.utils import BACKUP_INFO_FILENAME
+from cmk.utils.backup.utils import BACKUP_INFO_FILENAME, save_job_state
 from cmk.utils.certs import CertManagementEvent
 from cmk.utils.paths import omd_root
-from cmk.utils.schedule import next_scheduled_time
 
 from cmk.gui import forms, key_mgmt
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
@@ -201,6 +203,7 @@ class Config:
         self._config.site.jobs[job.ident] = job.config
         self._config.save()
         self._save_cronjobs()
+        job.update_next_schedule()
 
     def delete_job(self, job_id: str) -> None:
         del self._config.site.jobs[job_id]
@@ -377,6 +380,15 @@ class Job(MKBackupJob):
 
     def schedule(self) -> ScheduleConfig | None:
         return self.config["schedule"]
+
+    def update_next_schedule(self) -> None:
+        state_path = self.state_file_path()
+        if not state_path.exists():
+            return
+        with store.locked(state_path):
+            state = JobState.model_validate_json(state_path.read_text())
+            next_run = next_schedule(self.schedule(), after=datetime.now())
+            save_job_state(state_path, state.model_copy(update={"next_schedule": next_run}))
 
     def cron_config(self) -> list[str]:
         if not (schedule := self.config["schedule"]) or schedule["disabled"]:
@@ -644,22 +656,15 @@ class PageBackup:
                     )
 
                 table.cell(_("Next run"))
-                schedule = job.schedule()
-                if not schedule:
-                    html.write_text_permissive(_("Only execute manually"))
-
-                elif schedule["disabled"]:
-                    html.write_text_permissive(_("Disabled"))
-
-                elif schedule["timeofday"]:
-                    # find the next time of all configured times
-                    times = []
-                    for timespec in schedule["timeofday"]:
-                        times.append(next_scheduled_time(schedule["period"], timespec))
-
-                    html.write_text_permissive(
-                        time.strftime("%Y-%m-%d %H:%M", time.localtime(min(times)))
-                    )
+                match next_schedule(job.schedule(), after=datetime.now()):
+                    case None:
+                        html.write_text_permissive(_("Only execute manually"))
+                    case "disabled":
+                        html.write_text_permissive(_("Disabled"))
+                    case float() as next_run:
+                        html.write_text_permissive(
+                            time.strftime("%Y-%m-%d %H:%M", time.localtime(next_run))
+                        )
 
 
 class PageEditBackupJob:

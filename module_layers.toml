@@ -1807,6 +1807,9 @@ allows = []
 [components."cmk.testlib.ai_control_plane"]
 allows = ["cmk.ai_control_plane"]
 
+[components."cmk.testlib.ai_control_plane.scripted_model"]
+allows = []
+
 [components."cmk.testlib.agent_receiver"]
 allows = ["@crypto", "@relay_protocols", "cmk.agent_receiver"]
 

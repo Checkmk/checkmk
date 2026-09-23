@@ -109,6 +109,10 @@ function clear(): void {
   background-color: var(--default-form-element-bg-color);
   border: 1px solid var(--default-form-element-border-color);
   border-radius: var(--border-radius);
+
+  &:has(.cmk-search-input__field:focus-visible) {
+    outline: auto;
+  }
 }
 
 .cmk-search-input__icon {
@@ -125,7 +129,7 @@ function clear(): void {
   border: 0;
 
   &:focus-visible {
-    outline: revert;
+    outline: none;
   }
 
   &::-webkit-search-cancel-button {

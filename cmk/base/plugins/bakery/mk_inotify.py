@@ -3,15 +3,37 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
 from collections.abc import Iterator, Sequence
 from pathlib import Path
+from typing import NamedTuple
 
 from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
 
 
-def get_mk_inotify_files(conf: Sequence) -> FileGenerator:
+class _Folder(NamedTuple):
+    path: str
+    operations: Sequence[str]
+
+
+class _Files(NamedTuple):
+    path: str
+    files: Sequence[str]
+    operations: Sequence[str]
+
+
+_RawEntry = tuple[str, Sequence[str]] | tuple[str, Sequence[str], Sequence[str]]
+_RawConfig = tuple[float, float, int, float, Sequence[_RawEntry]]
+
+
+def _parse_entry(entry: _RawEntry) -> _Folder | _Files:
+    match entry:
+        case (path, operations):
+            return _Folder(path, operations)
+        case (path, files, operations):
+            return _Files(path, files, operations)
+
+
+def get_mk_inotify_files(conf: _RawConfig) -> FileGenerator:
     yield Plugin(base_os=OS.LINUX, source=Path("mk_inotify.py"))
 
     yield PluginConfig(
@@ -22,25 +44,25 @@ def get_mk_inotify_files(conf: Sequence) -> FileGenerator:
     )
 
 
-def _get_mk_inotify_config(conf: Sequence) -> Iterator[str]:
-    heartbeat_timeout, stats_interval, stats_messages, stats_retention, file_cfg = conf
+def _get_mk_inotify_config(conf: _RawConfig) -> Iterator[str]:
+    heartbeat_timeout, write_interval, max_messages_per_interval, stats_retention, entries = conf
 
     yield from [
         "[global]",
         f"heartbeat_timeout={int(heartbeat_timeout)}",
-        f"write_interval={int(stats_interval)}",
-        f"max_messages_per_interval={int(stats_messages)}",
+        f"write_interval={int(write_interval)}",
+        f"max_messages_per_interval={int(max_messages_per_interval)}",
         f"stats_retention={int(stats_retention)}",
         "",
     ]
 
-    for entry in file_cfg:
-        if len(entry) == 2:  # a folder
-            yield f"[{entry[0]}]"
-        else:
-            yield "[{}|{}]".format(entry[0], "|".join(entry[1]))
-
-        for operation in entry[-1]:
+    for entry in map(_parse_entry, entries):
+        match entry:
+            case _Folder():
+                yield f"[{entry.path}]"
+            case _Files():
+                yield "[{}|{}]".format(entry.path, "|".join(entry.files))
+        for operation in entry.operations:
             yield f"{operation}=1"
 
 

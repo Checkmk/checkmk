@@ -217,14 +217,20 @@ function resetSearchAndFilters(): void {
 .global-settings-app {
   display: flex;
   flex-direction: column;
-  gap: var(--dimension-6);
-  padding: var(--dimension-4) var(--dimension-4) 0;
+  padding: 0 var(--dimension-4);
 }
 
 .global-settings-app__header {
+  position: sticky;
+  top: 0;
+
+  /* Above an accordion section that holds the focus */
+  z-index: calc(var(--z-index-base) + 2);
   display: flex;
   flex-direction: column;
   gap: var(--dimension-4);
+  padding: var(--dimension-4) 0 var(--dimension-6);
+  background: var(--default-bg-color);
 }
 
 .global-settings-app__toolbar {

@@ -361,7 +361,7 @@ class AllHostsExperimental(CmkPage):
         return self.main_area.locator().get_by_role("button", name="Cancel", exact=True)
 
     def catalog_panel(self, title: str) -> Locator:
-        """A collapsible section of an action form, e.g. Duration or Advanced options."""
+        """A collapsible section of an action form, e.g. Advanced options."""
         return self.main_area.locator().get_by_role("button", name=title)
 
     def form_option(self, label: str) -> Locator:

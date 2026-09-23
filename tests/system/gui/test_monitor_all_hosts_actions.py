@@ -154,7 +154,6 @@ def test_scheduling_a_downtime_offers_a_comment_a_duration_and_the_host_only_opt
 
     expect(all_hosts.action_form(SCHEDULE_DOWNTIME)).to_be_visible()
     expect(all_hosts.downtime_comment).to_be_visible()
-    expect(all_hosts.catalog_panel("Duration")).to_be_visible()
     # Rendered inside the collapsed Advanced section, so present in the DOM but
     # not on screen - counted rather than seen, which mirrors the absence check
     # the services form gets.

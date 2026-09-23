@@ -73,6 +73,7 @@ const modified = computed(() => isModified(props.variable))
   width: 100%;
   padding: 4px 12px;
   border-radius: 2px;
+  color: var(--global-settings-variable-color);
   cursor: pointer;
 
   &:hover,
@@ -93,7 +94,7 @@ const modified = computed(() => isModified(props.variable))
 }
 
 .global-settings-variable-row__modified {
-  color: var(--font-color-dimmed);
+  color: var(--font-color-secondary);
   white-space: nowrap;
 }
 

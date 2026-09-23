@@ -93,7 +93,7 @@
     --popup-dialog-title-color: var(--color-conference-grey-100);
     --popup-dialog-message-color: var(--color-mid-grey-100);
     --menu-entry-disabled: var(--color-midnight-grey-100);
-    --switch-off-bg-color: var(--color-daylight-grey-90);
+    --switch-off-bg-color: var(--color-daylight-grey-70);
     --switch-off-border-color: var(--color-mid-grey-50);
     --switch-on-border-color: var(--color-corporate-green-70);
     --switch-on-bg-color: var(--color-corporate-green-50);
@@ -136,8 +136,8 @@
     --form-element-required-color: var(--success-dimmed-2);
     --input-hover-bg-color: var(--ux-theme-4);
     --global-settings-row-hover-bg-color: var(--color-dark-blue-10);
-    --global-settings-topic-headline-color: var(--font-color);
-    --global-settings-topic-subline-color: var(--font-color-dimmed);
+    --global-settings-topic-subline-color: var(--color-mid-grey-100);
+    --global-settings-variable-color: var(--color-mid-grey-100);
     --code-background-color: var(--color-daylight-grey-50);
     --wizard-progress-bar-background-color: var(--color-daylight-grey-60);
     --wizard-progress-bar-background-badge-color: var(--color-midnight-grey-100);
@@ -288,8 +288,8 @@
     --form-element-required-color: var(--success);
     --input-hover-bg-color: var(--ux-theme-4);
     --global-settings-row-hover-bg-color: var(--color-dark-blue-90);
-    --global-settings-topic-headline-color: var(--color-white-80);
     --global-settings-topic-subline-color: var(--color-mid-grey-0);
+    --global-settings-variable-color: var(--font-color);
     --code-background-color: var(--ux-theme-0);
     --wizard-progress-bar-background-color: var(--white);
     --wizard-progress-bar-background-badge-color: var(--color-white-100);

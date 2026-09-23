@@ -116,7 +116,7 @@ const siteOverrideFilterLabel = computed(() =>
 }
 
 .global-settings-topic__headline {
-  color: var(--global-settings-topic-headline-color);
+  color: var(--font-color);
   font-size: var(--font-size-large);
   font-weight: var(--font-weight-bold);
 }

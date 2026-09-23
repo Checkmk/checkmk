@@ -332,7 +332,8 @@ STAGES:
               -//packages/unixcat/... \
               -//non-free/packages/cmc/... \
               -//non-free/packages/cmk-relay-engine/... \
-              -//non-free/packages/cmk-update-agent/...
+              -//non-free/packages/cmk-update-agent/... \
+              //omd/dependency_management/...
           make_rc=$?
           set -e
           ../buildscripts/scripts/bazel_test_post_archive_xunit.sh || :

@@ -3,25 +3,35 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
-from typing import Literal
+from typing import Literal, NamedTuple
 
 from pydantic import BaseModel
 
 from .bakery_api.v1 import FileGenerator, OS, password_store, Plugin, PluginConfig, register
 
-_UserAndPwd = tuple[str, password_store.PasswordId]
+
+class _UserAndPassword(NamedTuple):
+    user: str
+    password: password_store.PasswordId
 
 
-class _Conf(BaseModel):
-    credentials: _UserAndPwd | str | list[tuple[str, str, str, _UserAndPwd | str]]
-    credentials_sap_connect: _UserAndPwd | None = None
+class _Database(NamedTuple):
+    sid: str
+    instance: str
+    database: str
+    credentials: _UserAndPassword | str
+
+
+class _Config(BaseModel):
+    credentials: _UserAndPassword | str | list[_Database]
+    credentials_sap_connect: _UserAndPassword | None = None
     runas: Literal["instance", "agent"] | None = None
 
 
 def get_mk_sap_hana_files(conf: Mapping[str, object]) -> FileGenerator:
-    config = _Conf.model_validate(conf)
+    config = _Config.model_validate(conf)
     yield Plugin(base_os=OS.LINUX, source=Path("mk_sap_hana"))
 
     yield PluginConfig(
@@ -32,7 +42,7 @@ def get_mk_sap_hana_files(conf: Mapping[str, object]) -> FileGenerator:
     )
 
 
-def _get_mk_sap_hana_config(config: _Conf) -> Iterator[str]:
+def _get_mk_sap_hana_config(config: _Config) -> Iterator[str]:
     match config.credentials:
         case list() as credentials:
             yield _get_sap_hana_databases(credentials)
@@ -49,29 +59,30 @@ def _get_mk_sap_hana_config(config: _Conf) -> Iterator[str]:
 
 
 def _user_and_pwd_lines(
-    credentials: _UserAndPwd,
+    credentials: _UserAndPassword,
     *,
     suffix: Literal["", "_CONNECT"] = "",
 ) -> tuple[str, str]:
-    user, indiv_or_stored_pwd = credentials
-    pwd = password_store.extract(indiv_or_stored_pwd)
-    return (f"USER{suffix}={user}", f"PASSWORD{suffix}={pwd}")
+    return (
+        f"USER{suffix}={credentials.user}",
+        f"PASSWORD{suffix}={password_store.extract(credentials.password)}",
+    )
 
 
-def _database_credential_fields(credentials: _UserAndPwd | str) -> tuple[str, str, str]:
+def _database_credential_fields(credentials: _UserAndPassword | str) -> tuple[str, str, str]:
     """Return (user, password, userstorekey)"""
     match credentials:
-        case (user, indiv_or_stored_pwd):
-            return user, password_store.extract(indiv_or_stored_pwd), ""
+        case _UserAndPassword():
+            return credentials.user, password_store.extract(credentials.password), ""
         case str(key):
             return "", "", key
 
 
-def _get_sap_hana_databases(db_conf: Iterable[tuple[str, str, str, _UserAndPwd | str]]) -> str:
+def _get_sap_hana_databases(databases: Sequence[_Database]) -> str:
     entries = []
-    for sid, instance, db_name, credentials in db_conf:
-        user, password, userstorekey = _database_credential_fields(credentials)
-        entries.append(f"{sid},{instance},{db_name},{user},{password},{userstorekey}")
+    for db in databases:
+        user, password, userstorekey = _database_credential_fields(db.credentials)
+        entries.append(f"{db.sid},{db.instance},{db.database},{user},{password},{userstorekey}")
 
     return "DBS=({})".format(" ".join(entries))
 

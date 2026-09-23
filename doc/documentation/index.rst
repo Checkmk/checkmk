@@ -12,6 +12,7 @@ Architecture
    sec-auth.rst
    sec-boundaries.rst
    arch-werk.rst
+   arch-experimental-flags.rst
 
 APIs
 ----

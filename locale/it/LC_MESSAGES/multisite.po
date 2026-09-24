@@ -2509,6 +2509,10 @@ msgstr ""
 "velocità del 100%, tutti i controlli di servizio vengono eseguiti "
 "esattamente al ritmo desiderato."
 
+#, python-format
+msgid "A graph of type '%(graph_type)s' cannot be added to a graph collection."
+msgstr ""
+
 msgid "A graphical user interface (GUI) view"
 msgstr "Una vista nell'interfaccia utente (GUI)"
 
@@ -56455,6 +56459,12 @@ msgstr "Hostname DNS o indirizzo IP"
 
 msgid "Proxy settings"
 msgstr "Impostazioni proxy"
+
+msgid ""
+"Proxy used to reach Microsoft, both for the authorization performed here and "
+"for the recurring API calls of the services using this connection. Without "
+"this option the proxy settings of the process environment are used."
+msgstr ""
 
 msgid "Public"
 msgstr "Pubblico"

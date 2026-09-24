@@ -2519,6 +2519,10 @@ msgstr ""
 "contrôle prévu. Si le Speed-O-Meter affiche une vitesse de 100 %, tous les "
 "contrôles de service sont exécutés exactement au rythme souhaité."
 
+#, python-format
+msgid "A graph of type '%(graph_type)s' cannot be added to a graph collection."
+msgstr ""
+
 #, fuzzy
 msgid "A graphical user interface (GUI) view"
 msgstr "L'URL du multisite doit se terminer par /check_mk/"
@@ -57129,6 +57133,12 @@ msgstr "Nom d'hôte DNS ou adresse IP"
 
 msgid "Proxy settings"
 msgstr "Paramètres du proxy"
+
+msgid ""
+"Proxy used to reach Microsoft, both for the authorization performed here and "
+"for the recurring API calls of the services using this connection. Without "
+"this option the proxy settings of the process environment are used."
+msgstr ""
 
 msgid "Public"
 msgstr "Public"

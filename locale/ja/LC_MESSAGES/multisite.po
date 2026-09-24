@@ -2431,6 +2431,10 @@ msgstr ""
 "するガジェット。Speed-O-Meterが100%の速度を示している場合、すべてのサービス"
 "チェックは希望どおりの速度で実行されています。"
 
+#, python-format
+msgid "A graph of type '%(graph_type)s' cannot be added to a graph collection."
+msgstr ""
+
 msgid "A graphical user interface (GUI) view"
 msgstr "グラフィカルユーザーインターフェース（GUI）ビュー"
 
@@ -53426,6 +53430,12 @@ msgstr "DNSホスト名またはIPアドレス"
 
 msgid "Proxy settings"
 msgstr "プロキシ設定"
+
+msgid ""
+"Proxy used to reach Microsoft, both for the authorization performed here and "
+"for the recurring API calls of the services using this connection. Without "
+"this option the proxy settings of the process environment are used."
+msgstr ""
 
 msgid "Public"
 msgstr "公衆"

@@ -2500,6 +2500,10 @@ msgstr ""
 "rata de verificare programată. Dacă Speed-O-Meter arată o viteză de 100 %, "
 "toate verificările de service sunt executate exact în ritmul dorit."
 
+#, python-format
+msgid "A graph of type '%(graph_type)s' cannot be added to a graph collection."
+msgstr ""
+
 #, fuzzy
 msgid "A graphical user interface (GUI) view"
 msgstr "URL-ul Multisite trebuie să se termine cu /check_mk/"
@@ -56822,6 +56826,12 @@ msgstr "Numele de gazdă DNS sau adresa IP"
 
 msgid "Proxy settings"
 msgstr "Setări Proxy"
+
+msgid ""
+"Proxy used to reach Microsoft, both for the authorization performed here and "
+"for the recurring API calls of the services using this connection. Without "
+"this option the proxy settings of the process environment are used."
+msgstr ""
 
 msgid "Public"
 msgstr "Public"

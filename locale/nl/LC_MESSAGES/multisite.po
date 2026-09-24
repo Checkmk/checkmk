@@ -2474,6 +2474,10 @@ msgstr ""
 "aangeeft, worden alle servicechecks uitgevoerd in precies de gewenste "
 "snelheid."
 
+#, python-format
+msgid "A graph of type '%(graph_type)s' cannot be added to a graph collection."
+msgstr ""
+
 #, fuzzy
 msgid "A graphical user interface (GUI) view"
 msgstr "De URL van de Multisite moet eindigen op /check_mk/"
@@ -56665,6 +56669,12 @@ msgstr "DNS-hostnaam of IP-adres"
 
 msgid "Proxy settings"
 msgstr "Proxy-instellingen"
+
+msgid ""
+"Proxy used to reach Microsoft, both for the authorization performed here and "
+"for the recurring API calls of the services using this connection. Without "
+"this option the proxy settings of the process environment are used."
+msgstr ""
 
 msgid "Public"
 msgstr "Publiek"

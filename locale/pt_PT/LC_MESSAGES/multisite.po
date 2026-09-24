@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-09-23 09:43+0000\n"
+"PO-Revision-Date: 2026-09-24 06:22+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -2475,6 +2475,10 @@ msgstr ""
 "taxa de verificação programada. Se o velocímetro mostra uma velocidade de "
 "100%, todas as verificações de serviço estão sendo executadas exatamente na "
 "taxa desejada."
+
+#, python-format
+msgid "A graph of type '%(graph_type)s' cannot be added to a graph collection."
+msgstr ""
 
 #, fuzzy
 msgid "A graphical user interface (GUI) view"
@@ -56664,6 +56668,12 @@ msgstr "Nome de host DNS ou endereço IP"
 
 msgid "Proxy settings"
 msgstr "Configurações de Proxy"
+
+msgid ""
+"Proxy used to reach Microsoft, both for the authorization performed here and "
+"for the recurring API calls of the services using this connection. Without "
+"this option the proxy settings of the process environment are used."
+msgstr ""
 
 msgid "Public"
 msgstr "Público"

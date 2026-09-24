@@ -2541,6 +2541,10 @@ msgstr ""
 "dann werden alle Service-Checks so ausgeführt wie im Check-Intervall "
 "konfiguriert."
 
+#, python-format
+msgid "A graph of type '%(graph_type)s' cannot be added to a graph collection."
+msgstr ""
+
 msgid "A graphical user interface (GUI) view"
 msgstr "Eine Tabellenansicht der Benutzeroberfläche (GUI)"
 
@@ -54271,6 +54275,12 @@ msgstr "Proxy Server-Name oder IP-Adresse"
 
 msgid "Proxy settings"
 msgstr "Proxy-Einstellungen"
+
+msgid ""
+"Proxy used to reach Microsoft, both for the authorization performed here and "
+"for the recurring API calls of the services using this connection. Without "
+"this option the proxy settings of the process environment are used."
+msgstr ""
 
 msgid "Public"
 msgstr "Öffentlich"

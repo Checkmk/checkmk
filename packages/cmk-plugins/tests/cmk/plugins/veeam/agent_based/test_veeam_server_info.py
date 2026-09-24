@@ -6,8 +6,9 @@
 import json
 from datetime import datetime
 
-from cmk.agent_based.v2 import Attributes, TableRow
+from cmk.agent_based.v2 import Attributes, HostLabel, StringTable, TableRow
 from cmk.plugins.veeam.agent_based.veeam_server_info import (
+    host_labels_veeam_server_info,
     inventory_veeam_server,
     parse_veeam_server_info,
 )
@@ -84,3 +85,26 @@ def test_server_without_patches_has_no_patch_rows() -> None:
 
 def test_empty_section_is_not_parsed() -> None:
     assert parse_veeam_server_info([]) is None
+
+
+# Example response of GET /api/v1/serverInfo (VBR 13 REST API reference)
+STRING_TABLE: StringTable = [
+    [
+        (
+            '{"platform": "Linux", "vbrId": "f2ef2bfd-e8e6-418a-8725-472e2e2d1efc",'
+            ' "name": "srv88.tech.local", "buildVersion": "13.0.0.4883", "patches": [],'
+            ' "databaseVendor": "PostgreSQL", "sqlServerEdition": "",'
+            ' "sqlServerVersion": "PostgreSQL 17.5 on x86_64-pc-linux-gnu", "databaseSchemaVersion": "9688",'
+            ' "databaseContentVersion": "9688", "veeamRegistration": {"isRegistered": true,'
+            ' "expirationDate": "2026-08-17T13:07:16Z",'
+            ' "thumprint": "BC7F6108B16884C70E6F6C2CC714463777FE65C0"}}'
+        )
+    ]
+]
+
+
+def test_host_labels_veeam_server_info_sets_the_platform() -> None:
+    assert (section := parse_veeam_server_info(STRING_TABLE))
+    assert list(host_labels_veeam_server_info(section)) == [
+        HostLabel("cmk/veeam_vbr/platform", "Linux"),
+    ]

@@ -10,6 +10,8 @@ from dataclasses import dataclass
 from cmk.agent_based.v2 import (
     AgentSection,
     Attributes,
+    HostLabel,
+    HostLabelGenerator,
     InventoryPlugin,
     InventoryResult,
     StringTable,
@@ -60,9 +62,22 @@ def parse_veeam_server_info(string_table: StringTable) -> BackupServer | None:
     )
 
 
+def host_labels_veeam_server_info(section: BackupServer) -> HostLabelGenerator:
+    """Generates host labels for Veeam backup servers
+
+    Labels:
+
+        cmk/veeam_vbr/platform:
+            This label is set to the platform of the Veeam backup server
+            (such as "Linux" or "Windows").
+    """
+    yield HostLabel("cmk/veeam_vbr/platform", section.platform)
+
+
 agent_section_veeam_server_info = AgentSection(
     name="veeam_server_info",
     parse_function=parse_veeam_server_info,
+    host_label_function=host_labels_veeam_server_info,
 )
 
 

@@ -61,6 +61,9 @@ export interface ComputedWidgetResponse<T> {
 }
 
 export type SavedWidgetContent = components['schemas']['SavedWidgetContent']
+export type ResolvedLink = components['schemas']['ResolvedLink']
+export type LinkProperties = components['schemas']['LinkProperties']
+export type FilterResult = components['schemas']['FilterResult']
 export type WidgetSource<C> =
   | { type: 'explicit'; content: C; context: VisualContext }
   | SavedWidgetContent

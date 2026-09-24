@@ -99,9 +99,8 @@ class SingleChoiceExtended[T](FormSpec[T]):
 class CascadingSingleChoiceElementExtended[ModelT](CascadingSingleChoiceElement[ModelT]):
     """Specifies an element of a single choice cascading form.
 
-    It can and should only be used internally when using it to generate CascadingSingleChoiceExtended
-    FormSpecs when the input data is not predefined, for example when creating FormSpecs based on
-    user input, like for contact groups.
+    Unlike the public API element, the name is not validated as a Python identifier. Use it only
+    for elements built from user-defined data, such as contact group names.
     """
 
     @override
@@ -142,9 +141,8 @@ class MultipleChoiceExtendedLayout(StrEnum):
 class MultipleChoiceElementExtended(MultipleChoiceElement):
     """Specifies an element of a multiple choice form.
 
-    It can and should only be used internally when using it to generate MultipleChoiceExtended
-    FormSpecs when the input data is not predefined, for example when creating FormSpecs based on
-    user input, like for contact groups.
+    Unlike the public API element, the name is not validated as a Python identifier. Use it only
+    for elements built from user-defined data, such as contact group names.
     """
 
     @override

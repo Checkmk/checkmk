@@ -17,7 +17,7 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
+    TitledDomainObjectModel,
 )
 from cmk.gui.openapi.restful_objects.constructors import domain_object_collection_href
 
@@ -30,7 +30,7 @@ class DataSourceExtensions:
 
 
 @api_model
-class DataSourceModel(DomainObjectModel):
+class DataSourceModel(TitledDomainObjectModel):
     domainType: Literal["constant"] = api_field(description="The domain type of the object.")
     extensions: DataSourceExtensions = api_field(
         description="The configuration of this data source."

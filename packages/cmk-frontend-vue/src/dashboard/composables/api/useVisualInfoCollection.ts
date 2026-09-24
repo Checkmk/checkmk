@@ -30,7 +30,7 @@ export function useVisualInfoCollection() {
     return map
   })
   const suggestions = computed(() => {
-    return list.value.map((vi) => ({ name: vi.id, title: vi.title ?? vi.id }))
+    return list.value.map((vi) => ({ name: vi.id, title: vi.title }))
   })
   return {
     isLoading: loader.isLoading,

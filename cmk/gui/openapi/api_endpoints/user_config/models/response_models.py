@@ -9,7 +9,7 @@ from typing import Literal
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
+    TitledDomainObjectModel,
 )
 from cmk.gui.openapi.framework.model.dynamic_fields import WithDynamicFields
 
@@ -270,7 +270,7 @@ class UserAttributesModel(WithDynamicFields):
 
 
 @api_model
-class UserObject(DomainObjectModel):
+class UserObject(TitledDomainObjectModel):
     domainType: Literal["user_config"] = api_field(
         description="The domain type of the object.",
     )

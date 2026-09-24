@@ -8,7 +8,7 @@ from typing import Literal
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
+    TitledDomainObjectModel,
 )
 
 
@@ -48,7 +48,7 @@ class MasterControlExtensionsModel:
 
 
 @api_model
-class MasterControlModel(DomainObjectModel):
+class MasterControlModel(TitledDomainObjectModel):
     domainType: Literal["master_control"] = api_field(
         description="The domain type of the object.",
     )

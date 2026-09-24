@@ -16,7 +16,7 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
+    TitledDomainObjectModel,
 )
 from cmk.gui.openapi.restful_objects.constructors import domain_object_collection_href
 from cmk.gui.visuals.filter.api import filter_component_from_internal, FilterComponentModel
@@ -36,7 +36,7 @@ class VisualInfoExtensions:
 
 
 @api_model
-class VisualInfoModel(DomainObjectModel):
+class VisualInfoModel(TitledDomainObjectModel):
     domainType: Literal["constant"] = api_field(description="The domain type of the object.")
     extensions: VisualInfoExtensions = api_field(description="The configuration of this info.")
 

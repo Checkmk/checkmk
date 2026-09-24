@@ -10,7 +10,7 @@ from pydantic import Discriminator, StringConstraints
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
+    TitledDomainObjectModel,
 )
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedFolder
 
@@ -198,7 +198,7 @@ class RuleExtensionsModel:
 
 
 @api_model
-class RuleObjectModel(DomainObjectModel):
+class RuleObjectModel(TitledDomainObjectModel):
     domainType: Literal["rule"] = api_field(description="Domain type of this object.")
     extensions: RuleExtensionsModel = api_field(description="Attributes specific to rule objects.")
 

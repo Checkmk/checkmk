@@ -11,8 +11,8 @@ from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
     LinkModel,
+    TitledDomainObjectModel,
 )
 from cmk.gui.openapi.framework.versioned_endpoint import (
     EndpointDoc,
@@ -46,7 +46,7 @@ class FilterExtensions:
 
 
 @dataclass(kw_only=True, slots=True, frozen=True)
-class FilterDomainObject(DomainObjectModel):
+class FilterDomainObject(TitledDomainObjectModel):
     domainType: Literal["visual_filter"] = api_field(description="The domain type of the object.")
     extensions: FilterExtensions = api_field(description="All the data and metadata of this host.")
 

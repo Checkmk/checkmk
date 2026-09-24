@@ -6,7 +6,7 @@
 from typing import Literal
 
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
-from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
+from cmk.gui.openapi.framework.model.base_models import TitledDomainObjectModel
 
 
 @api_model
@@ -32,7 +32,7 @@ class UserRoleExtensionsModel:
 
 
 @api_model
-class UserRoleModel(DomainObjectModel):
+class UserRoleModel(TitledDomainObjectModel):
     domainType: Literal["user_role"] = api_field(
         description="The domain type of the object.",
     )

@@ -19,7 +19,7 @@ from cmk.gui.mkeventd._openapi.commands import (
     SyslogPriorityType,
 )
 from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
+from cmk.gui.openapi.framework.model.base_models import TitledDomainObjectModel
 from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.livestatus_client.queries import ResultRow
 
@@ -118,7 +118,7 @@ class HistoricalEventExtensionsModel:
 
 
 @api_model
-class HistoricalEventModel(DomainObjectModel):
+class HistoricalEventModel(TitledDomainObjectModel):
     domainType: Literal["historical_event"] = api_field(
         description="The domain type of the object.",
     )

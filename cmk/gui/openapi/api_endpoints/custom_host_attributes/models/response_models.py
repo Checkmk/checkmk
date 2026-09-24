@@ -8,7 +8,7 @@ from typing import Literal
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
+    TitledDomainObjectModel,
 )
 
 
@@ -33,7 +33,7 @@ class CustomHostAttrExtensions:
 
 
 @api_model
-class CustomHostAttrObject(DomainObjectModel):
+class CustomHostAttrObject(TitledDomainObjectModel):
     domainType: Literal["custom_host_attribute"] = api_field(
         description="The domain type of the object.",
     )

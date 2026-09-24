@@ -9,7 +9,7 @@ import cmk.ccc.version as cmk_version
 from cmk.ccc.version import Edition
 from cmk.gui.fields.utils import edition_field_description
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
-from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
+from cmk.gui.openapi.framework.model.base_models import TitledDomainObjectModel
 from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.gui.openapi.framework.model.restrict_editions import RestrictEditions
 from cmk.gui.site_config import site_is_local
@@ -127,7 +127,7 @@ class SiteConnectionExtensionsModel(SiteConnectionBaseModel):
 
 
 @api_model
-class SiteConnectionModel(DomainObjectModel):
+class SiteConnectionModel(TitledDomainObjectModel):
     domainType: Literal["site_connection"] = api_field(
         description="The domain type of the object.",
     )

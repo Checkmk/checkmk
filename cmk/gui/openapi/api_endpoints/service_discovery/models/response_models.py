@@ -6,7 +6,10 @@
 from typing import Literal
 
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
-from cmk.gui.openapi.framework.model.base_models import DomainObjectModel, LinkableModel
+from cmk.gui.openapi.framework.model.base_models import (
+    LinkableModel,
+    TitledDomainObjectModel,
+)
 
 ServiceDiscoveryRunState = Literal["initialized", "running", "finished", "stopped", "exception"]
 
@@ -29,7 +32,7 @@ class ServiceDiscoveryRunExtensionsModel:
 
 
 @api_model
-class ServiceDiscoveryRunModel(DomainObjectModel):
+class ServiceDiscoveryRunModel(TitledDomainObjectModel):
     domainType: Literal["service_discovery_run"] = api_field(
         description="The domain type of the object"
     )
@@ -85,7 +88,7 @@ class ServiceDiscoveryResultExtensionsModel:
 
 
 @api_model
-class ServiceDiscoveryResultModel(DomainObjectModel):
+class ServiceDiscoveryResultModel(TitledDomainObjectModel):
     domainType: Literal["service_discovery"] = api_field(
         description="The domain type of the object"
     )

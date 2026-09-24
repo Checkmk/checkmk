@@ -19,7 +19,7 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
+    TitledDomainObjectModel,
 )
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.theme import make_theme
@@ -34,7 +34,7 @@ class IconExtensions:
 
 
 @api_model
-class IconModel(DomainObjectModel):
+class IconModel(TitledDomainObjectModel):
     domainType: Literal["icon"] = api_field(description="The domain type of the object.")
     extensions: IconExtensions = api_field(description="All the metadata of this icon.")
 

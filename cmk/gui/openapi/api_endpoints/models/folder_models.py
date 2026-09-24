@@ -8,8 +8,8 @@ from typing import Literal
 from cmk.gui.openapi.api_endpoints.models.folder_attribute_models import FolderViewAttributeModel
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import (
-    DomainObjectModel,
     ObjectCollectionMemberModel,
+    TitledDomainObjectModel,
 )
 
 
@@ -36,7 +36,7 @@ class FolderExtensionsModel:
 
 
 @api_model
-class FolderModel(DomainObjectModel):
+class FolderModel(TitledDomainObjectModel):
     domainType: Literal["folder_config"] = api_field(
         description="The domain type of the object.",
     )

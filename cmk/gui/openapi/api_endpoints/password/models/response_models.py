@@ -8,7 +8,7 @@ from typing import Literal
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
+    TitledDomainObjectModel,
 )
 
 
@@ -44,7 +44,7 @@ class PasswordExtension:
 
 
 @api_model
-class PasswordObject(DomainObjectModel):
+class PasswordObject(TitledDomainObjectModel):
     domainType: Literal["password"] = api_field(
         description="The type of the domain-object.",
     )

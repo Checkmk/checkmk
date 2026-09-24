@@ -17,8 +17,8 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
     LinkModel,
+    TitledDomainObjectModel,
 )
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.pagetypes._core import PagetypeTopics
@@ -40,7 +40,7 @@ class PagetypeTopicExtensions:
 
 
 @api_model
-class PagetypeTopicModel(DomainObjectModel):
+class PagetypeTopicModel(TitledDomainObjectModel):
     domainType: Literal["pagetype_topic"] = api_field(description="The domain type of the object.")
     id: str = api_field(
         title="ID",

@@ -10,7 +10,7 @@ from annotated_types import Ge
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
+    TitledDomainObjectModel,
 )
 
 
@@ -27,7 +27,7 @@ class GraphTimerangeExtension:
 
 
 @api_model
-class GraphTimerangeObject(DomainObjectModel):
+class GraphTimerangeObject(TitledDomainObjectModel):
     domainType: Literal["graph_timerange"] = api_field(
         description="The type of the domain-object.",
     )

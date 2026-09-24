@@ -10,8 +10,8 @@ from cmk.gui.availability.type_defs import AVEntry, AVSpan, AVTimelineRow, AVTim
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
     LinkModel,
+    TitledDomainObjectModel,
 )
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedHostName
 from cmk.gui.openapi.restful_objects.constructors import object_href, sub_object_href
@@ -263,7 +263,7 @@ class HostAvailabilityExtension:
 
 
 @api_model
-class HostAvailabilityObject(DomainObjectModel):
+class HostAvailabilityObject(TitledDomainObjectModel):
     domainType: Literal["host_availability"] = api_field(
         description="The type of the domain object.",
     )
@@ -348,7 +348,7 @@ class ServiceAvailabilityExtension:
 
 
 @api_model
-class ServiceAvailabilityObject(DomainObjectModel):
+class ServiceAvailabilityObject(TitledDomainObjectModel):
     domainType: Literal["service_availability"] = api_field(
         description="The type of the domain object.",
     )

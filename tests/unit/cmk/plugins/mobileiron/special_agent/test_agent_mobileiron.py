@@ -119,10 +119,6 @@ def test_agent_output_regexes(capsys: pytest.CaptureFixture[str]) -> None:
     assert "device_duplication" not in captured.out
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash report 6e0f2512-b7fa-11f1-a443-4b932895c847: ConnectionError not caught in agent_mobileiron_main",
-)
 @responses.activate
 def test_agent_handles_connection_error(capsys: pytest.CaptureFixture) -> None:
     args = argparse.Namespace(

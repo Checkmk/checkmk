@@ -11,7 +11,7 @@ from argparse import ArgumentParser, Namespace
 from collections.abc import Sequence
 from pathlib import Path
 
-from cmk.inventory.transformation.tree_files import transform_inventory_trees
+from .tree_files import transform_inventory_trees
 
 logger = logging.getLogger(__name__)
 

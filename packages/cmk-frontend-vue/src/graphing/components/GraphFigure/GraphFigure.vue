@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
+import CmkSurfaceNotice from 'cmk-ui-library/components/CmkSurfaceNotice.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { LOADING_AFFORDANCE_DELAY_MS, useDelayedFlag } from 'cmk-ui-library/lib/useDelayedFlag'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
@@ -19,7 +20,6 @@ import { useGraphVisibility } from '../../composables/useGraphVisibility'
 import type { RequestedTimeRange } from '../../types.ts'
 import { drawnTimeRange } from '../../utils/timeRange'
 import GraphBurgerMenu from '../GraphBurgerMenu.vue'
-import GraphNotice from '../GraphNotice.vue'
 import GraphTimestamp from '../GraphTimestamp.vue'
 import TimeSeriesGraph, { type GraphOptions, type Size, type TimeRange } from '../TimeSeriesGraph'
 import { deriveYAxis } from '../TimeSeriesGraph/yAxis'
@@ -299,7 +299,7 @@ onBeforeUnmount(() => {
           @pin-create="onPinCreate"
           @pin-action="clearPin"
         />
-        <GraphNotice
+        <CmkSurfaceNotice
           v-if="displayedNotice"
           v-bind="displayedNotice"
           class="graphing-graph-figure__notice"
@@ -319,7 +319,7 @@ onBeforeUnmount(() => {
       />
     </template>
     <!-- A first load that failed has no plot to sit over, so the notice stands on its own. -->
-    <GraphNotice
+    <CmkSurfaceNotice
       v-if="displayedNotice && graph === null"
       v-bind="displayedNotice"
       class="graphing-graph-figure__notice"

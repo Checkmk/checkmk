@@ -257,8 +257,8 @@ const group = (): Element | null => document.querySelector('.graphing-graph-grou
 
 // Scoped deliberately: the group's live region carries the same message as the pill, so an
 // unscoped text query matches twice.
-const notice = (): HTMLElement | null => document.querySelector('.graphing-graph-notice')
-const notices = (): NodeListOf<Element> => document.querySelectorAll('.graphing-graph-notice')
+const notice = (): HTMLElement | null => document.querySelector('.cmk-surface-notice')
+const notices = (): NodeListOf<Element> => document.querySelectorAll('.cmk-surface-notice')
 
 const EVERYTHING_SHOWN: GraphDisplayOptions = {
   show_consolidation: true,

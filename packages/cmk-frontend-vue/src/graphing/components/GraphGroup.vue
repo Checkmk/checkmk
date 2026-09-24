@@ -11,6 +11,7 @@ Registered as the cmk-graph-group custom element via defineCmkComponent in main.
 
 <script setup lang="ts">
 import type { CmkTimeSeriesGraph } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
+import CmkSurfaceNotice from 'cmk-ui-library/components/CmkSurfaceNotice.vue'
 import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { LOADING_AFFORDANCE_DELAY_MS, useDelayedFlag } from 'cmk-ui-library/lib/useDelayedFlag'
@@ -31,7 +32,6 @@ import type {
   TimeRangeCommitKind
 } from '../types'
 import { drawnTimeRange } from '../utils/timeRange'
-import GraphNotice from './GraphNotice.vue'
 import GraphPanel from './GraphPanel.vue'
 import GraphSkeleton from './GraphSkeleton.vue'
 import { clippedToNavigableTime, navigableBounds } from './TimeSeriesGraph/interaction/timeBounds'
@@ -332,7 +332,7 @@ function onRetry(): void {
           @inspect="pauseRefresh"
         >
           <template #notice>
-            <GraphNotice
+            <CmkSurfaceNotice
               v-if="panelNotices[panelSlot.index]"
               v-bind="panelNotices[panelSlot.index]!"
               silent
@@ -344,7 +344,7 @@ function onRetry(): void {
       </div>
     </template>
     <!-- A first load that failed has no panel to sit over, so the notice stands on its own. -->
-    <GraphNotice
+    <CmkSurfaceNotice
       v-if="notice && graphs.length === 0"
       v-bind="notice"
       silent

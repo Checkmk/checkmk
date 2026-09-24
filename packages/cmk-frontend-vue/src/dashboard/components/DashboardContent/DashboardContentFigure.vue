@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
+import CmkSurfaceNotice from 'cmk-ui-library/components/CmkSurfaceNotice.vue'
 import { LOADING_AFFORDANCE_DELAY_MS, useDelayedFlag } from 'cmk-ui-library/lib/useDelayedFlag'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { type Ref, computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
@@ -13,7 +14,7 @@ import DashboardContentContainer from '@/dashboard/components/DashboardContent/D
 import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
 import { useSuppressEventOnPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import type { FilterHTTPVars } from '@/dashboard/types/widget.ts'
-import { GraphNotice, useGraphNotice } from '@/graphing'
+import { useGraphNotice } from '@/graphing'
 
 import { FigureBase } from './cmk_figures.ts'
 import type { ContentProps } from './types.ts'
@@ -234,7 +235,7 @@ onBeforeUnmount(() => {
         size="xlarge"
         class="db-content-figure__loading-icon"
       />
-      <GraphNotice
+      <CmkSurfaceNotice
         v-if="notice"
         v-bind="notice"
         class="db-content-figure__notice"

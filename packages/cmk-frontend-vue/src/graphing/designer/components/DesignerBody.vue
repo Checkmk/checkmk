@@ -11,6 +11,7 @@ import type {
 } from 'cmk-shared-typing/typescript/custom_graph_designer'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
+import CmkSurfaceNotice from 'cmk-ui-library/components/CmkSurfaceNotice.vue'
 import CmkTabs, { CmkTab, CmkTabContent } from 'cmk-ui-library/components/CmkTabs'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
@@ -18,7 +19,6 @@ import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { computed, ref, watch } from 'vue'
 
 import { useGlobalRefresh } from '../../GlobalTimePicker/globalTimeState'
-import GraphNotice from '../../components/GraphNotice.vue'
 import GraphPanel from '../../components/GraphPanel.vue'
 import {
   clippedToNavigableTime,
@@ -323,7 +323,7 @@ const addTo = computed<AddTo | null>(() =>
         @inspect="pauseRefresh"
       >
         <template #notice>
-          <GraphNotice
+          <CmkSurfaceNotice
             v-if="previewNotice"
             v-bind="previewNotice"
             class="graphing-designer-body__notice"

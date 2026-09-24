@@ -14,6 +14,7 @@ from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import (
     ACTION_MENU_BUTTON_NAME,
     ACTION_MENU_DROPDOWN_SELECTOR,
     GraphAccessor,
+    SURFACE_NOTICE_ERROR_SELECTOR,
 )
 from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import GraphContainment
 from tests.system.gui.testlib.playwright.pom.monitor.service import ServicePage
@@ -389,7 +390,7 @@ class ServiceGraphs:
         Scoped to the group, not to a panel: a first load that produced no panel at all
         puts its notice outside every panel.
         """
-        return self._main_area.locator(".graphing-graph-notice--error")
+        return self._main_area.locator(SURFACE_NOTICE_ERROR_SELECTOR)
 
     def panel_count(self) -> int:
         # ``.count()`` does not auto-wait, so this is only correct once

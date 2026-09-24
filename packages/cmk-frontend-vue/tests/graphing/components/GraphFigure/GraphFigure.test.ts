@@ -219,7 +219,7 @@ test("states the response's warnings as advisory, with no retry offered", async 
   renderFigure()
 
   const message = await screen.findByText('The query matched more than 100 time series.')
-  expect(message.closest('.graphing-graph-notice')).toHaveClass('graphing-graph-notice--warning')
+  expect(message.closest('.cmk-surface-notice')).toHaveClass('cmk-surface-notice--warning')
   // A retry would only reproduce the truncation, so none is offered.
   expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument()
   expect(screen.getByTestId('time-series-graph')).toBeInTheDocument()
@@ -241,7 +241,7 @@ test('states errors and warnings together, at the error severity', async () => {
   const message = await screen.findByText(
     'Metrics backend is unavailable. The query matched more than 100 time series.'
   )
-  expect(message.closest('.graphing-graph-notice')).toHaveClass('graphing-graph-notice--error')
+  expect(message.closest('.cmk-surface-notice')).toHaveClass('cmk-surface-notice--error')
 })
 
 test('fetches the definition via fetch_data with the max consolidation', async () => {

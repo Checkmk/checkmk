@@ -50,7 +50,7 @@ const loadingIcon = (): Element | null => document.querySelector('.db-content-fi
 
 // Scoped deliberately: the legacy #figure_error node keeps its own copy of the same text, hidden
 // behind the wrapper, so an unscoped text query would match twice.
-const notice = (): HTMLElement | null => document.querySelector('.graphing-graph-notice')
+const notice = (): HTMLElement | null => document.querySelector('.cmk-surface-notice')
 
 const wrapperIsHidden = (): boolean =>
   document

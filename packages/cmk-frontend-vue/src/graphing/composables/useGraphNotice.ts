@@ -3,16 +3,16 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { CmkSurfaceNoticeVariant } from 'cmk-ui-library/components/CmkSurfaceNotice.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { type ComputedRef, computed } from 'vue'
 
-import type { GraphNoticeVariant } from '../components/GraphNotice.vue'
 import type { Metric } from '../components/TimeSeriesGraph/types'
 
-/** The GraphNotice props a surface binds when it has something to state over its graph. */
+/** The CmkSurfaceNotice props a surface binds when it has something to state over its graph. */
 export interface GraphNoticeDescriptor {
-  variant: GraphNoticeVariant
+  variant: CmkSurfaceNoticeVariant
   message: TranslatedString
   description?: string
   retry?: boolean

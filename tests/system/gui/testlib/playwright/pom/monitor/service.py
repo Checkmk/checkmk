@@ -10,6 +10,9 @@ from playwright.sync_api import expect, Locator, Page
 
 from tests.system.gui.testlib.playwright.helpers import DropdownListNameToID
 from tests.system.gui.testlib.playwright.pom.ai_conversation import AiConversationSlideout
+from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import (
+    SURFACE_NOTICE_ERROR_SELECTOR,
+)
 from tests.system.gui.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
@@ -67,7 +70,7 @@ class ServicePage(CmkPage):
         One per unloadable graph, plus a standalone one when a first load produced no panel
         to sit over - so this is not capped at a single element.
         """
-        return self.row_content("Service graphs").locator(".graphing-graph-notice--error")
+        return self.row_content("Service graphs").locator(SURFACE_NOTICE_ERROR_SELECTOR)
 
     def click_explain_with_ai(self) -> None:
         self.main_area.get_suggestion("Explain with AI").click()

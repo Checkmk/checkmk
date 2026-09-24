@@ -10,7 +10,10 @@ from playwright.sync_api import expect, Locator
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from tests.system.gui.testlib.playwright.helpers import DropdownListNameToID
-from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import GraphAccessor
+from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import (
+    GraphAccessor,
+    SURFACE_NOTICE_ERROR_SELECTOR,
+)
 from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import GraphContainment
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import GraphPanel
 from tests.system.gui.testlib.playwright.pom.page import CmkPage
@@ -68,7 +71,7 @@ class CombinedGraphsServiceSearch(CmkPage):
         One per unloadable card, plus a standalone one when a first load produced no card
         to sit over - so this is scoped to the group and not capped at a single element.
         """
-        return self.main_area.locator(".graphing-graph-notice--error")
+        return self.main_area.locator(SURFACE_NOTICE_ERROR_SELECTOR)
 
     def check_graph(self, graph_title: str) -> None:
         canvas = self.panel(graph_title).graph.canvas

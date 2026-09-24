@@ -21,6 +21,9 @@ from urllib.parse import urljoin
 from playwright.sync_api import expect, Locator, Page
 
 from tests.system.gui.testlib.playwright.helpers import DropdownListNameToID
+from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import (
+    SURFACE_NOTICE_ERROR_SELECTOR,
+)
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import TimeSeriesGraph
 from tests.system.gui.testlib.playwright.pom.page import CmkPage
 
@@ -29,7 +32,6 @@ logger = logging.getLogger(__name__)
 _PREVIEW_SELECTOR = ".graphing-designer-body__preview"
 _LEGEND_ROW_SELECTOR = ".graphing-graph-legend__row"
 _LEGEND_STAT_SELECTOR = ".graphing-graph-legend__stat"
-_ERROR_NOTICE_SELECTOR = ".graphing-graph-notice--error"
 
 # The metrics selection tab - the designer's default tab in edit mode.
 _METRICS_TABLE_SELECTOR = ".graphing-metrics-table"
@@ -122,7 +124,7 @@ class CustomGraphDesigner(CmkPage):
     @property
     def error_notices(self) -> Locator:
         """The engine's error state, shown over the graph when it cannot be drawn."""
-        return self.main_area.locator(_ERROR_NOTICE_SELECTOR)
+        return self.main_area.locator(SURFACE_NOTICE_ERROR_SELECTOR)
 
     @property
     def source_rows(self) -> Locator:

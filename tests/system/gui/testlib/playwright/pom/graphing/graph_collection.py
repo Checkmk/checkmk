@@ -20,6 +20,7 @@ from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import (
     ENGINE_GRAPH_GROUP_SELECTOR,
     ENGINE_GRAPH_PANEL_SELECTOR,
     GraphAccessor,
+    SURFACE_NOTICE_ERROR_SELECTOR,
 )
 from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import GraphContainment
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import GraphPanel
@@ -30,7 +31,6 @@ logger = logging.getLogger(__name__)
 _SLOT_SELECTOR = "table.graph_collection td.graph"
 # A class fragment, as the server combines it with others.
 _BROKEN_GRAPH_SELECTOR = "div[class*='brokengraph']"
-_ERROR_NOTICE_SELECTOR = ".graphing-graph-notice--error"
 _SKELETON_SELECTOR = ".graphing-graph-skeleton"
 _PLOT_SELECTOR = f"{ENGINE_GRAPH_PANEL_SELECTOR} canvas[role='img']"
 # The group reports itself loaded once its first fetch resolved, successfully or not.
@@ -139,4 +139,4 @@ class GraphCollection(CmkPage):
     @property
     def error_notices(self) -> Locator:
         """The failure pills the engine shows for graphs whose data did not arrive."""
-        return self.main_area.locator(_ERROR_NOTICE_SELECTOR)
+        return self.main_area.locator(SURFACE_NOTICE_ERROR_SELECTOR)

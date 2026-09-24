@@ -5,12 +5,14 @@
 
 """Graph loading and error states.
 
-The two tests here are the browser backstop for the whole concern: one proves the
-skeleton -> canvas transition wires up against a real fetch, the other that a refetch's
-skeletons hold the footprint they replace, a layout claim jsdom cannot make. Everything
-else - the fast load, the widgets' spinner and its containment, the error states and their
-retry - is component-level behaviour and is covered in the Vitest suite
-(`GraphGroup.test.ts`), where the pending, 500 and 404 responses can be driven exactly.
+The tests here are the browser backstop for the whole concern: one proves the
+skeleton -> canvas transition wires up against a real fetch, one that a refetch's
+skeletons hold the footprint they replace, a layout claim jsdom cannot make, and one that
+a failed fetch surfaces the error notice every page object's `to_have_count(0)` check
+relies on. Everything else - the fast load, the widgets' spinner and its containment, the
+remaining error states and their retry - is component-level behaviour and is covered in
+the Vitest suite (`GraphGroup.test.ts`), where the pending, 500 and 404 responses can be
+driven exactly.
 
 The remaining surfaces need no browser test of their own: each renders the same
 `cmk-graph-group`, so the skeleton follows from `GraphGroup`.
@@ -143,3 +145,22 @@ def test_refetch_skeletons_hold_the_panel_footprint(
         route.continue_()
     service_graphs.wait_until_rendered()
     assert not javascript_errors, f"The refetch raised uncaught page errors: {javascript_errors}"
+
+
+def test_failed_fetch_shows_the_error_notice(
+    dashboard_page: MainDashboard, graph_hosts_with_varying_data: list[str]
+) -> None:
+    """A graph whose data request fails shows the error notice in its place.
+
+    The broken-graph checks elsewhere only assert that no notice is present, which a stale
+    selector satisfies as well; this is what keeps that selector pointing at the notice.
+    """
+    dashboard_page.page.route(_GRAPH_DATA_URL, lambda route: route.fulfill(status=500))
+
+    graphs = _open_service_graphs(dashboard_page, graph_hosts_with_varying_data[0])
+
+    expect(
+        graphs.broken_graphs.first,
+        "A failed graph data request showed no error notice",
+    ).to_be_visible()
+    expect(graphs.broken_graphs.first).to_contain_text("Graph data could not be loaded.")

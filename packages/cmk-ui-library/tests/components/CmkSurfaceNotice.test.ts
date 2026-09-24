@@ -4,14 +4,20 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
+import CmkSurfaceNotice, {
+  type CmkSurfaceNoticeVariant
+} from 'cmk-ui-library/components/CmkSurfaceNotice.vue'
 
-import GraphNotice, { type GraphNoticeVariant } from '@/graphing/components/GraphNotice.vue'
-
-const notice = (): HTMLElement | null => document.querySelector('.graphing-graph-notice')
+const notice = (): HTMLElement | null => document.querySelector('.cmk-surface-notice')
 
 test('states the message for every variant', () => {
-  for (const variant of ['error', 'warning', 'loading', 'info'] satisfies GraphNoticeVariant[]) {
-    const { unmount } = render(GraphNotice, {
+  for (const variant of [
+    'error',
+    'warning',
+    'loading',
+    'info'
+  ] satisfies CmkSurfaceNoticeVariant[]) {
+    const { unmount } = render(CmkSurfaceNotice, {
       props: { variant, message: `${variant} happened` }
     })
 
@@ -21,31 +27,31 @@ test('states the message for every variant', () => {
 })
 
 test('announces an error assertively and the other variants politely', () => {
-  const { unmount } = render(GraphNotice, {
+  const { unmount } = render(CmkSurfaceNotice, {
     props: { variant: 'error', message: 'Broken' }
   })
   expect(notice()).toHaveAttribute('role', 'alert')
   unmount()
 
-  const { unmount: unmountLoading } = render(GraphNotice, {
+  const { unmount: unmountLoading } = render(CmkSurfaceNotice, {
     props: { variant: 'loading', message: 'Loading data …' }
   })
   expect(notice()).toHaveAttribute('role', 'status')
   unmountLoading()
 
   // A warning too: the data it advises about is on screen and valid, so it does not interrupt.
-  render(GraphNotice, { props: { variant: 'warning', message: 'Truncated' } })
+  render(CmkSurfaceNotice, { props: { variant: 'warning', message: 'Truncated' } })
   expect(notice()).toHaveAttribute('role', 'status')
 })
 
 test('offers no retry unless asked for one', () => {
-  render(GraphNotice, { props: { variant: 'error', message: 'Broken' } })
+  render(CmkSurfaceNotice, { props: { variant: 'error', message: 'Broken' } })
 
   expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument()
 })
 
 test('emits retry when the action is activated', async () => {
-  const { emitted } = render(GraphNotice, {
+  const { emitted } = render(CmkSurfaceNotice, {
     props: { variant: 'error', message: 'Broken', retry: true }
   })
 
@@ -55,7 +61,7 @@ test('emits retry when the action is activated', async () => {
 })
 
 test('renders the description as a second line when given', () => {
-  render(GraphNotice, {
+  render(CmkSurfaceNotice, {
     props: {
       variant: 'info',
       message: 'No metrics added',
@@ -68,7 +74,9 @@ test('renders the description as a second line when given', () => {
 })
 
 test('carries no announcing role when the host announces instead', () => {
-  render(GraphNotice, { props: { variant: 'error', message: 'Broken', retry: true, silent: true } })
+  render(CmkSurfaceNotice, {
+    props: { variant: 'error', message: 'Broken', retry: true, silent: true }
+  })
 
   expect(notice()).not.toHaveAttribute('role')
   // Silenced, not hidden: the retry is still reachable.
@@ -76,16 +84,16 @@ test('carries no announcing role when the host announces instead', () => {
 })
 
 test('carries the graph glyph for an empty state and the multitone error icon otherwise', () => {
-  const icon = (): Element => notice()!.querySelector('.graphing-graph-notice__icon')!
+  const icon = (): Element => notice()!.querySelector('.cmk-surface-notice__icon')!
 
-  const { unmount } = render(GraphNotice, {
+  const { unmount } = render(CmkSurfaceNotice, {
     props: { variant: 'info', message: 'No metrics added' }
   })
   // The empty state uses the plain purple graph asset, so it is an <img> with that source.
   expect(icon().getAttribute('src')).toMatch(/graph/)
   unmount()
 
-  render(GraphNotice, { props: { variant: 'error', message: 'Broken' } })
+  render(CmkSurfaceNotice, { props: { variant: 'error', message: 'Broken' } })
   // A failure keeps the recoloured multitone icon, which renders as an inline svg instead.
   expect(icon()).toHaveClass('cmk-multitone-icon')
 })

@@ -655,7 +655,7 @@ test("states the response's own warnings over the preview it drew anyway", async
   renderBody('view')
 
   const message = await screen.findByText('The query for A matched more than 100 time series.')
-  expect(message.closest('.graphing-graph-notice')).toHaveClass('graphing-graph-notice--warning')
+  expect(message.closest('.cmk-surface-notice')).toHaveClass('cmk-surface-notice--warning')
   expect(await screen.findByTestId('time-series-graph')).toBeInTheDocument()
 })
 

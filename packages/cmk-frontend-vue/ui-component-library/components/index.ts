@@ -96,6 +96,7 @@ import UclCmkPopup from './system-feedback/CmkPopup/UclCmkPopup.vue'
 import UclCmkPopupDialog from './system-feedback/CmkPopupDialog/UclCmkPopupDialog.vue'
 import UclCmkSkeleton from './system-feedback/CmkSkeleton/UclCmkSkeleton.vue'
 import UclCmkStateCountBar from './system-feedback/CmkStateCountBar/UclCmkStateCountBar.vue'
+import UclCmkSurfaceNotice from './system-feedback/CmkSurfaceNotice/UclCmkSurfaceNotice.vue'
 import UclCmkTooltip from './system-feedback/CmkTooltip/UclCmkTooltip.vue'
 import UclStateTag from './system-feedback/StateTag/UclStateTag.vue'
 import UclCmkProgressCircle from './system-feedback/progress/UclCmkProgressCircle.vue'
@@ -210,6 +211,7 @@ const systemFeedbackPages = [
   ]),
   new Page('CmkSkeleton', UclCmkSkeleton),
   new Page('CmkStateCountBar', UclCmkStateCountBar),
+  new Page('CmkSurfaceNotice', UclCmkSurfaceNotice),
   new Page('StateTag', UclStateTag),
   new Page('CmkTooltip', UclCmkTooltip)
 ]

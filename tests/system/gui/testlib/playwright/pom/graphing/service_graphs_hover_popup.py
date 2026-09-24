@@ -9,7 +9,10 @@ import logging
 
 from playwright.sync_api import Locator
 
-from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import GraphAccessor
+from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import (
+    GraphAccessor,
+    SURFACE_NOTICE_ERROR_SELECTOR,
+)
 from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import GraphContainment
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import GraphPanel
 from tests.system.gui.testlib.playwright.pom.monitor.services_of_host import ServicesOfHostPage
@@ -53,7 +56,7 @@ class ServiceGraphsHoverPopup:
     @property
     def broken_graphs(self) -> Locator:
         """The notices shown in place of graphs the popup could not load."""
-        return self.popup.locator(".graphing-graph-notice--error")
+        return self.popup.locator(SURFACE_NOTICE_ERROR_SELECTOR)
 
     def open(self) -> ServiceGraphsHoverPopup:
         """Hover the graphs icon and wait for the popup's first plot to render.

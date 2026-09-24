@@ -129,7 +129,8 @@ def check(suffix: str, abs_path: Path, rel_path: Path) -> bool:
         return CHECKER[suffix].check(
             abs_path,
             HEADER_CEE
-            if rel_path.is_relative_to(Path("src/telemetry-metrics-custom-query"))
+            if "nonfree" in rel_path.parts
+            or rel_path.is_relative_to(Path("src/telemetry-metrics-custom-query"))
             or rel_path.is_relative_to(Path("src/telemetry-metrics"))
             or rel_path in ENTERPRISE_LICENSED_FILES_FORM_SPECS
             else HEADER,

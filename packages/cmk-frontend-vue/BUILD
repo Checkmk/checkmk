@@ -1,5 +1,7 @@
 load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library", "js_run_binary", "js_run_devserver")
+load("@aspect_rules_js//npm:defs.bzl", "npm_link_package", "npm_package")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//:vitest/package_json.bzl", vitest_bin = "bin")
 load("@npm//:vue-tsc/package_json.bzl", vue_tsc_bin = "bin")
@@ -88,9 +90,14 @@ filegroup(
     ],
 )
 
+NONFREE = ["src/**/nonfree/**"]
+
 vue_library(
     name = "src_vue",
-    srcs = glob(["src/**/*.vue"]),
+    srcs = glob(
+        ["src/**/*.vue"],
+        exclude = NONFREE,
+    ),
     data = [":tsconfig"],
     deps = [
         ":src_ts",
@@ -100,16 +107,44 @@ vue_library(
 
 js_library(
     name = "src_ts",
-    srcs = glob(["src/**/*.ts"]) + [":tsconfig"],
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = NONFREE,
+    ) + [":tsconfig"],
 )
 
 css_library(
     name = "src_css",
-    srcs = glob([
-        "src/**/*.css",
-        "src/**/*.scss",
-    ]),
+    srcs = glob(
+        [
+            "src/**/*.css",
+            "src/**/*.scss",
+        ],
+        exclude = NONFREE,
+    ),
 )
+
+js_library(
+    name = "src_nonfree",
+    srcs = glob(
+        [
+            "src/**/nonfree/**/*.ts",
+            "src/**/nonfree/**/*.vue",
+            "src/**/nonfree/**/*.css",
+            "src/**/nonfree/**/*.scss",
+        ],
+        allow_empty = True,
+    ) + [":tsconfig"],
+    deps = [
+        ":src_ts",
+        "//:node_modules/vue",
+    ],
+)
+
+BUNDLED_NONFREE = select({
+    "@cmk//edition:community": [],
+    "//conditions:default": [":src_nonfree"],
+})
 
 vue_library(
     name = "demo_vue",
@@ -139,7 +174,7 @@ js_run_binary(
         ":src_ts",
         ":src_vue",
         "//packages/cmk-ui-library:pkg",
-    ],
+    ] + BUNDLED_NONFREE,
     outs = ["locale/messages.pot"],
     tool = ":gettext-extract",
     visibility = ["//locale:__pkg__"],
@@ -219,6 +254,7 @@ VITE_SRCS = [
     ":node_modules/acorn",
     ":node_modules/axios",
     ":node_modules/class-variance-authority",
+    ":node_modules/cmk-ai-control-plane",
     ":node_modules/cmk-shared-typing-bzl",
     ":node_modules/d3-array",
     ":node_modules/d3-axis",
@@ -286,9 +322,10 @@ js_library(
     srcs = glob(["tests/**/*.ts"]) + [":tsconfig"],
 )
 
-TYPE_CHECK_DATA = TOOLING + TYPE_CHECK_SRCS
+TYPE_CHECK_DATA = TOOLING + TYPE_CHECK_SRCS + [":src_nonfree"]
 
 TEST_DATA = TEST_TOOLING + VITE_SRCS + [
+    ":src_nonfree",
     ":test_ts",
     ":test_vue",
     "//packages/cmk-frontend:theme_images",
@@ -296,9 +333,37 @@ TEST_DATA = TEST_TOOLING + VITE_SRCS + [
 
 link_shared_typing()
 
+write_file(
+    name = "ai_control_plane_typescript_stub_package_json",
+    out = "ai_control_plane_typescript_stub/package.json",
+    content = ['{"name": "cmk-ai-control-plane"}'],
+)
+
+npm_package(
+    name = "ai_control_plane_typescript_stub",
+    srcs = [":ai_control_plane_typescript_stub_package_json"],
+    out = "ai_control_plane_typescript_stub_package",
+    package = "cmk-ai-control-plane",
+    root_paths = [package_name() + "/ai_control_plane_typescript_stub"],
+)
+
+alias(
+    name = "ai_control_plane_typescript",
+    actual = select({
+        "@//:gpl+nonfree_repo": "//non-free/packages/cmk-ai-control-plane:typescript",
+        "@//:gpl_repo": ":ai_control_plane_typescript_stub",
+    }),
+)
+
+npm_link_package(
+    name = "node_modules/cmk-ai-control-plane",
+    src = ":ai_control_plane_typescript",
+    package = "cmk-ai-control-plane",
+)
+
 vite_bin.vite(
     name = "dist",
-    srcs = TOOLING + SRCS,
+    srcs = TOOLING + SRCS + BUNDLED_NONFREE,
     args = ["build"],
     chdir = package_name(),
     out_dirs = ["dist"],
@@ -412,7 +477,7 @@ vite_bin.vite_binary(name = "vite_server")
 js_run_devserver(
     name = "vite",
     chdir = package_name(),
-    data = TOOLING + DEV_SERVER_SRCS,
+    data = TOOLING + DEV_SERVER_SRCS + BUNDLED_NONFREE,
     tool = ":vite_server",
 )
 

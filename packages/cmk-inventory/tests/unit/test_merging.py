@@ -128,3 +128,26 @@ def test_merge_with_empty_right_table() -> None:
             },
         )
     )
+
+
+def test_merge_joins_the_rows_of_the_same_ident() -> None:
+    assert merge_trees(
+        ImmutableTree(
+            table=ImmutableTable(
+                key_columns=[SDKey("key_column")],
+                rows_by_ident={
+                    ("Key Column",): {SDKey("key_column"): "Key Column", SDKey("left"): "Left"}
+                },
+            )
+        ),
+        ImmutableTree(
+            table=ImmutableTable(
+                key_columns=[SDKey("key_column")],
+                rows_by_ident={
+                    ("Key Column",): {SDKey("key_column"): "Key Column", SDKey("right"): "Right"}
+                },
+            )
+        ),
+    ).table.rows == [
+        {SDKey("key_column"): "Key Column", SDKey("left"): "Left", SDKey("right"): "Right"}
+    ]

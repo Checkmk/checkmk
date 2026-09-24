@@ -154,16 +154,21 @@ class MultipleChoiceElementExtended(MultipleChoiceElement):
 
 @dataclass(frozen=True, kw_only=True)
 class MultipleChoiceExtended(FormSpec[Sequence[str]]):
-    elements: Sequence[MultipleChoiceElement] | Autocompleter
+    elements: (
+        Sequence[MultipleChoiceElement]
+        | Callable[[], Sequence[MultipleChoiceElement]]
+        | Autocompleter
+    )
     show_toggle_all: bool = False
     prefill: DefaultValue[Sequence[str]] = DefaultValue(())
     layout: MultipleChoiceExtendedLayout = MultipleChoiceExtendedLayout.auto
 
     def __post_init__(self) -> None:
-        if not isinstance(self.elements, Autocompleter):
-            available_names = {elem.name for elem in self.elements}
-            if invalid := set(self.prefill.value) - available_names:
-                raise ValueError(f"Invalid prefill element(s): {', '.join(invalid)}")
+        if isinstance(self.elements, Autocompleter) or callable(self.elements):
+            return
+        available_names = {elem.name for elem in self.elements}
+        if invalid := set(self.prefill.value) - available_names:
+            raise ValueError(f"Invalid prefill element(s): {', '.join(invalid)}")
 
 
 @dataclass(frozen=True, kw_only=True)

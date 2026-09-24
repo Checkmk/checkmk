@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence, Set
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -59,7 +59,7 @@ class _FilterTree:
             else row
         )
 
-    def filter_node_names(self, node_names: set[SDNodeName]) -> set[SDNodeName]:
+    def filter_node_names(self, node_names: Set[SDNodeName]) -> Set[SDNodeName]:
         filter_nodes = consolidate_filter_funcs(self._filter_choices_nodes)
         return {n for n in node_names if filter_nodes(n)}.union(self.filters_by_name)
 

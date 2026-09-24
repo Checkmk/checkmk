@@ -21,6 +21,7 @@ py_library(
         "//packages/cmk-plugin-apis:server_side_programs",
         requirement("pydantic"),
         requirement("requests"),
+        requirement("urllib3"),
     ],
 )
 

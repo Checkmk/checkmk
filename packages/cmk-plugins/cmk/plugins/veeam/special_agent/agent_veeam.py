@@ -16,6 +16,7 @@ import sys
 from collections.abc import Callable, Mapping, Sequence
 
 import requests
+import urllib3
 from pydantic import BaseModel, ValidationError
 
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
@@ -113,6 +114,8 @@ def create_session(url: str, cert_server_name: str | None) -> requests.Session:
     session = requests.Session()
     if cert_server_name is None:
         session.verify = False
+        # The user opted out of verification; warning on every request is just noise.
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     else:
         session.mount(url, HostnameValidationAdapter(cert_server_name))
     return session

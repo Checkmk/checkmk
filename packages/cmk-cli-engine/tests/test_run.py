@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTerminate
-from cmk.cli.engine.modes import make_mode, Mode
+from cmk.cli.engine.commands import make_mode, Mode
 from cmk.cli.engine.run import dispatch, enable_file_logging, log_level, run, Runtime
 from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
 

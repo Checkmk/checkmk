@@ -10,7 +10,7 @@ import pytest
 
 from cmk import trace
 from cmk.cli.engine.call import call
-from cmk.cli.engine.modes import make_mode, make_option, parse_sub_options
+from cmk.cli.engine.commands import make_mode, make_option, parse_sub_options
 from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 
 # The engine only hands this through to the command's handler.

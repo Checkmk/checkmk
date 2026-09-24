@@ -27,7 +27,7 @@ from cmk.checkengine.snmp_backends.classic import ClassicSNMPBackend
 from cmk.checkengine.snmp_backends.stored_walk import StoredWalkSNMPBackend
 from cmk.checkengine.sources._sources import SNMPSource
 from cmk.cli.engine.call import call
-from cmk.cli.engine.modes import make_mode, Options
+from cmk.cli.engine.commands import make_mode, Options
 from cmk.cli.internal import GlobalOptions
 from cmk.plugins.checkmk.cli import dump
 from cmk.plugins.checkmk.cli.dump import cli_command_dump_agent

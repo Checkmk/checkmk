@@ -4791,6 +4791,7 @@ pytest==9.1.1 \
     #   -r packages/cmk-backup/dev-requirements.in
     #   -r packages/cmk-ccc/dev-requirements.in
     #   -r packages/cmk-check-engine/dev-requirements.in
+    #   -r packages/cmk-cli-engine/dev-requirements.in
     #   -r packages/cmk-crash/dev-requirements.in
     #   -r packages/cmk-crypto/dev-requirements.in
     #   -r packages/cmk-dev-deploy/dev-requirements.in
@@ -4898,6 +4899,7 @@ pytest-random-order==1.2.0 \
     #   -r non-free/packages/cmk-mcp/dev-requirements.in
     #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
     #   -r packages/cmk-agent-receiver/dev-requirements.in
+    #   -r packages/cmk-cli-engine/dev-requirements.in
     #   -r tests/dev-requirements.in
 pytest-recording==0.13.4 \
     --hash=sha256:568d64b2a85992eec4ae0a419c855d5fd96782c5fb016784d86f18053792768c \

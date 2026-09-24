@@ -127,7 +127,6 @@ py_library(
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
-        "//cmk/cli/engine:__pkg__",
         "//cmk/config_anonymizer:__pkg__",
         "//cmk/plugins:__subpackages__",
         "//non-free/packages/cmk-bakery:__pkg__",
@@ -226,7 +225,6 @@ py_library(
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
-        "//cmk/cli/engine:__pkg__",
         "//cmk/config_anonymizer:__pkg__",
         "//cmk/plugins/checkmk:__subpackages__",
         "//cmk/product_usage:__pkg__",
@@ -303,9 +301,9 @@ py_library(
         "//cmk/base/errorhandling",
         "//cmk/base/modes",
         "//cmk/base/plugins:plugins-bakery",
-        "//cmk/cli/engine",
-        "//cmk/cli/engine:main",
         "//packages/cmk-check-engine:sources",
+        "//packages/cmk-cli-engine:engine",
+        "//packages/cmk-cli-engine:main",
     ],
 )
 

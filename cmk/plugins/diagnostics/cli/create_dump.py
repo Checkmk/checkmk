@@ -23,7 +23,7 @@ from cmk.base.diagnostics import (
 )
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
-from cmk.cli.engine.modes import option_string
+from cmk.cli.engine.commands import option_string
 from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 from cmk.diagnostics.engine import DumpSelection, resolve_selection
 from cmk.diagnostics.internal import DiagnosticsPlugin, Sensitivity, Topic

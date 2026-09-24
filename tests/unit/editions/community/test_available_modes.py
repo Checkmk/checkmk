@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.cli.engine.modes import discover_modes, general_options, Modes
+from cmk.cli.engine.commands import discover_modes, general_options, Modes
 
 
 def test_available_modes() -> None:

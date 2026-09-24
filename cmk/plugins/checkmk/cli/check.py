@@ -24,7 +24,7 @@ from cmk.base.modes.check_mk import (
 )
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
 from cmk.checkengine.plugins import CheckPluginName, SectionName
-from cmk.cli.engine.modes import option_names, option_string
+from cmk.cli.engine.commands import option_names, option_string
 from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 from cmk.server_side_calls_backend import load_secrets_file
 

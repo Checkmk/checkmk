@@ -8,7 +8,7 @@ from pathlib import Path
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.version import edition
-from cmk.cli.engine.modes import (
+from cmk.cli.engine.commands import (
     write_stdout,
 )
 from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options

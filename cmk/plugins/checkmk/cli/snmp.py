@@ -32,7 +32,7 @@ from cmk.checkengine.snmplib import (
     SNMPHostConfig,
     walk_for_export,
 )
-from cmk.cli.engine.modes import option_strings
+from cmk.cli.engine.commands import option_strings
 from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 from cmk.utils import ip_lookup
 from cmk.utils.log import console

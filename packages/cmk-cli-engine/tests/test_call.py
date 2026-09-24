@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Final
 
 from cmk.cli.engine.call import call
-from cmk.cli.engine.modes import Mode, Option
+from cmk.cli.engine.commands import Mode, Option
 from cmk.cli.internal import Args, CommandHandler, GlobalOptions, Options
 from cmk.trace import Context
 

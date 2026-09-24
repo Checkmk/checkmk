@@ -24,7 +24,7 @@ from cmk.ccc.exceptions import (
 from cmk.ccc.log import CMKFormatter
 from cmk.ccc.site import get_omd_config, omd_site
 from cmk.cli.engine.call import call
-from cmk.cli.engine.modes import (
+from cmk.cli.engine.commands import (
     discover_modes,
     general_options,
     Mode,

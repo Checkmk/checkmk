@@ -8,7 +8,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Final
 
-from .modes import Argument, Mode, Modes, Options
+from .commands import Argument, Mode, Modes, Options
 
 _IMPLICIT_CHECK_ARGUMENT_LIMIT: Final = 2
 _IMPLICIT_CHECK_MODE: Final = "check"

@@ -66,7 +66,7 @@ from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.plugins import CheckPluginName, SectionName
 from cmk.checkengine.snmplib import SNMPSectionName
 from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
-from cmk.cli.engine.modes import option_count, option_names, option_string
+from cmk.cli.engine.commands import option_count, option_names, option_string
 from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import load_secrets_file

@@ -29,7 +29,7 @@ from cmk.checkengine.plugins import (
     CheckPlugin,
     SNMPSectionPlugin,
 )
-from cmk.cli.engine.modes import (
+from cmk.cli.engine.commands import (
     write_stdout,
 )
 from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options

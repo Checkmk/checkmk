@@ -6,7 +6,7 @@
 from pathlib import Path
 
 from cmk import trace
-from cmk.cli.engine.modes import (
+from cmk.cli.engine.commands import (
     Argument,
     Arguments,
     Mode,

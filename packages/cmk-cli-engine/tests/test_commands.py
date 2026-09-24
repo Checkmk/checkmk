@@ -11,7 +11,7 @@ from typing import NoReturn
 import pytest
 
 from cmk.ccc.exceptions import MKGeneralException, raise_mkterminate_on_sigint
-from cmk.cli.engine.modes import (
+from cmk.cli.engine.commands import (
     _pager_environment,
     Mode,
     Modes,

@@ -14,7 +14,7 @@ from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.modes.check_mk import forced_ip_lookup, host_addresses, load_checks, set_fake_dns
 from cmk.ccc import tty
 from cmk.checkengine.discovery import remove_autochecks_of_host
-from cmk.cli.engine.modes import write_stdout
+from cmk.cli.engine.commands import write_stdout
 from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
 from cmk.inventory.paths import InventoryPaths
 from cmk.piggyback import backend as piggyback_backend

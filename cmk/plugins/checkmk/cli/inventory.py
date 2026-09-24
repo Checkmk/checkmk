@@ -53,7 +53,7 @@ from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.plugins import InventoryPluginName, SectionName
 from cmk.checkengine.snmplib import SNMPSectionName
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
-from cmk.cli.engine.modes import option_names, option_string
+from cmk.cli.engine.commands import option_names, option_string
 from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 from cmk.inventory.paths import InventoryPaths
 from cmk.inventory.store import InventoryStore

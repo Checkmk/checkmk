@@ -10,7 +10,7 @@ from typing import Final, NoReturn
 import pytest
 
 from cmk.cli.engine.arguments import InvalidArguments, parse, RunMode, ShowHelp
-from cmk.cli.engine.modes import (
+from cmk.cli.engine.commands import (
     general_options,
     Mode,
     Modes,

@@ -41,7 +41,7 @@ from cmk.checkengine.helper_interface import FetcherType
 from cmk.checkengine.parser import make_parser, NO_SELECTION, parse_raw_data, SectionStore
 from cmk.checkengine.source_builder import SourceBuilder
 from cmk.checkengine.summarize import summarize
-from cmk.cli.engine.modes import write_stdout
+from cmk.cli.engine.commands import write_stdout
 from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import ExecutableFinder, load_secrets_file

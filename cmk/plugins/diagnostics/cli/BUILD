@@ -14,10 +14,10 @@ py_library(
     deps = [
         "//cmk/base:diagnostics",
         "//cmk/base/automations",
-        "//cmk/cli/engine",
         "//cmk/utils:paths",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:i18n",
+        "//packages/cmk-cli-engine:engine",
         "//packages/cmk-diagnostics:engine",
         "//packages/cmk-plugin-apis:cli",
         "//packages/cmk-plugin-apis:diagnostics",

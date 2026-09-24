@@ -36,6 +36,17 @@ def check_proxmox_ve_node_mem_allocation(
     if section.node_total_mem is None or section.allocated_mem is None:
         return
 
+    if section.status == "offline" or section.node_total_mem == 0:
+        yield Result(
+            state=State.OK,
+            summary=(
+                f"Node status: {section.status}, "
+                f"total memory: {render.bytes(section.node_total_mem)}, "
+                "cannot calculate memory allocation ratio"
+            ),
+        )
+        return
+
     yield from check_levels(
         value=(section.allocated_mem / section.node_total_mem) * 100,
         levels_upper=params["mem_allocation_ratio"],

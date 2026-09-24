@@ -110,10 +110,6 @@ def test_discover_proxmox_ve_node_cpu_allocation_missing_data() -> None:
                 ),
             ],
             id="Offline node with node total cpu 0",
-            marks=pytest.mark.xfail(
-                strict=True,
-                reason="Crash report 31915e7e-484d-11f1-8000-005056a019b7: ZeroDivisionError",
-            ),
         ),
         pytest.param(
             {
@@ -136,10 +132,6 @@ def test_discover_proxmox_ve_node_cpu_allocation_missing_data() -> None:
                 ),
             ],
             id="Offline node with node total cpu reported",
-            marks=pytest.mark.xfail(
-                strict=True,
-                reason="Crash report 31915e7e-484d-11f1-8000-005056a019b7: ZeroDivisionError",
-            ),
         ),
         pytest.param(
             {
@@ -161,10 +153,6 @@ def test_discover_proxmox_ve_node_cpu_allocation_missing_data() -> None:
                 ),
             ],
             id="Online node with node total cpu 0",
-            marks=pytest.mark.xfail(
-                strict=True,
-                reason="Crash report 31915e7e-484d-11f1-8000-005056a019b7: ZeroDivisionError",
-            ),
         ),
     ],
 )

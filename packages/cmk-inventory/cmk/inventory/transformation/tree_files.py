@@ -18,6 +18,9 @@ from cmk.ccc.hostaddress import HostName
 from cmk.inventory.paths import collect_files, InventoryPaths, TreePath, TreePathGz
 from cmk.inventory.store import parse_from_gzipped, save_raw_tree, save_raw_tree_gz
 
+_KILO = 1000
+_NUMBER_OF_BUNDLES = 200
+
 
 def _transform_tree_path(tree_path: TreePath, mtime: float) -> None:
     with cmk.ccc.store.locked(tree_path.path), cmk.ccc.store.locked(tree_path.legacy):
@@ -156,12 +159,12 @@ def _render_duration(duration: int | float) -> str:
 
 
 def _render_size(size: int | float) -> str:
-    if size > 1000**3:
-        return f"{size / 1000**3:.2f} GB"
-    if size > 1000**2:
-        return f"{size / 1000**2:.2f} MB"
-    if size > 1000:
-        return f"{size / 1000:.2f} KB"
+    if size > _KILO**3:
+        return f"{size / _KILO**3:.2f} GB"
+    if size > _KILO**2:
+        return f"{size / _KILO**2:.2f} MB"
+    if size > _KILO:
+        return f"{size / _KILO:.2f} KB"
     return f"{size} B"
 
 
@@ -213,7 +216,7 @@ def _compute_bundle(
         return []
     if bundle_length > 0:
         return host_tree_paths[:bundle_length]
-    return host_tree_paths[: math.ceil(len(host_tree_paths) / 200)]
+    return host_tree_paths[: math.ceil(len(host_tree_paths) / _NUMBER_OF_BUNDLES)]
 
 
 def _transform_host_tree_path(host_tree_path: _HostTreePath) -> TransformationResult:

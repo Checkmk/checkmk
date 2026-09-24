@@ -67,7 +67,6 @@ class Autocompleter(Protocol):
 class DictionaryGroupLayout(StrEnum):
     horizontal = "horizontal"
     vertical = "vertical"
-    two_columns = "two_columns"
 
 
 class ListOfStringsLayout(StrEnum):

@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import codeExample from './UclTableColumnFilters.vue?raw'
+import codeExample from './UclTableColumnFiltersAndSorting.vue?raw'
 
 export const a11yData = [
   {
@@ -416,11 +416,11 @@ const sortedRows = computed<HostEntry[]>(() => {
 
 <template>
   <UclDetailPageLayout>
-    <UclDetailPageHeader>Table column filters</UclDetailPageHeader>
+    <UclDetailPageHeader>Table column filters and sorting</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <div class="ucl-table-column-filters__stack">
-        <div class="ucl-table-column-filters__viewport">
+      <div class="ucl-table-column-filters-and-sorting__stack">
+        <div class="ucl-table-column-filters-and-sorting__viewport">
           <MonitoringTable
             :rows="sortedRows"
             :fetch-state="'idle'"
@@ -440,13 +440,13 @@ const sortedRows = computed<HostEntry[]>(() => {
           </MonitoringTable>
         </div>
 
-        <p class="ucl-table-column-filters__readout">
+        <p class="ucl-table-column-filters-and-sorting__readout">
           Active filters:
           <code v-if="activeFilters.length">{{ activeFilters.join(' · ') }}</code>
           <span v-else>none</span>
         </p>
 
-        <p class="ucl-table-column-filters__hint">
+        <p class="ucl-table-column-filters-and-sorting__hint">
           The State column declares a <code>checkbox-list-with-flags</code> filter via
           <code>meta.filter</code>: the state options plus the orthogonal flapping/stale flags,
           which are AND-combined with the list's own condition. The header button opens the
@@ -476,7 +476,7 @@ const sortedRows = computed<HostEntry[]>(() => {
 </template>
 
 <style scoped>
-.ucl-table-column-filters__stack {
+.ucl-table-column-filters-and-sorting__stack {
   display: flex;
   flex-direction: column;
   align-items: start;
@@ -485,20 +485,20 @@ const sortedRows = computed<HostEntry[]>(() => {
   margin-left: calc(-1 * var(--dimension-10));
 }
 
-.ucl-table-column-filters__viewport {
+.ucl-table-column-filters-and-sorting__viewport {
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 420px;
 }
 
-.ucl-table-column-filters__readout {
+.ucl-table-column-filters-and-sorting__readout {
   margin: 0;
   font-style: italic;
   opacity: 0.7;
 }
 
-.ucl-table-column-filters__hint {
+.ucl-table-column-filters-and-sorting__hint {
   margin: 0;
   font-style: italic;
   opacity: 0.7;

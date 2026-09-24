@@ -96,6 +96,9 @@ const httpVars: Ref<FilterHTTPVars> = computed(() => {
     single_infos: JSON.stringify(props.effective_filter_context.uses_infos)
   }
 })
+// The parent hands out new prop objects whenever anything on the dashboard recomputes, e.g. when
+// the widget titles arrive, so compare what we would send.
+const httpQuery = computed(() => new URLSearchParams(httpVars.value).toString())
 
 // Resolve figure type for special cases where figure and content type are not the same
 const figureType: Ref<string> = computed(() => {
@@ -164,7 +167,7 @@ const initializeFigure = () => {
     legacyFigureType.value,
     `#${figureId.value}`,
     dataEndpointUrl.value,
-    new URLSearchParams(httpVars.value).toString(),
+    httpQuery.value,
     props.content,
     updateInterval
   )
@@ -173,16 +176,23 @@ const initializeFigure = () => {
   })
 }
 
+const updateFigure = () => {
+  if (!figure) {
+    return
+  }
+  // FigureBase writes #figure_error through a d3 join and clears it only on a successful render,
+  // so without removing it here a second failure in a row rewrites the text of a node already
+  // there, mutating nothing the observer watches, and the widget loads forever.
+  figure.instance.clear_error_info()
+  isLoading.value = true
+  figure.update(dataEndpointUrl.value, httpQuery.value, props.content)
+}
+
 onMounted(() => {
   initializeFigure()
 })
 
-watch(httpVars, (newHttpVars: FilterHTTPVars) => {
-  if (figure) {
-    isLoading.value = true
-    figure.update(dataEndpointUrl.value, new URLSearchParams(newHttpVars).toString(), props.content)
-  }
-})
+watch(httpQuery, updateFigure)
 
 onBeforeUnmount(() => {
   figure?.disable()

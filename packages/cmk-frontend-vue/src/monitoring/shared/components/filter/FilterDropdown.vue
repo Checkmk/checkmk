@@ -14,9 +14,10 @@ this shell.
 
 Edits are staged in a `draft` that is snapshotted from the committed model when
 the popover opens. The mounted filter component binds to that draft, so toggling
-options never touches the committed model directly. Only "Apply" commits the
-draft (closing the popover and updating the table); "Cancel", Escape and
-click-outside discard the draft, leaving the model at the state it had on open.
+options never touches the committed model directly. "Apply" commits the draft
+(closing the popover and updating the table), and so does picking a sort
+direction; "Cancel", Escape and click-outside discard the draft, leaving the
+model at the state it had on open.
 -->
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
@@ -236,6 +237,16 @@ function apply(): void {
   close()
 }
 
+function pickSort(direction: SortDirection): void {
+  sort.value = direction
+  apply()
+}
+
+function pickExtendedSort(direction: SortDirection): void {
+  extendedSort.value = direction
+  apply()
+}
+
 function cancel(): void {
   close()
 }
@@ -440,7 +451,7 @@ onBeforeUnmount(() => {
             type="button"
             class="monitoring-filter-dropdown__sort-option"
             :aria-pressed="isSortMarked(option.direction)"
-            @click="sort = option.direction"
+            @click="pickSort(option.direction)"
           >
             <CmkMultitoneIcon
               v-if="option.direction !== false"
@@ -478,7 +489,7 @@ onBeforeUnmount(() => {
             type="button"
             class="monitoring-filter-dropdown__sort-option"
             :aria-pressed="extendedSort === option.direction"
-            @click="extendedSort = option.direction"
+            @click="pickExtendedSort(option.direction)"
           >
             <CmkMultitoneIcon
               name="dashlet-resize"

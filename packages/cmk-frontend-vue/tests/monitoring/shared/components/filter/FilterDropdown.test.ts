@@ -112,6 +112,52 @@ test('a sort direction is reported as it is picked, on its own', async () => {
   expect(model.value).toBeUndefined()
 })
 
+test('picking a sort direction closes the panel', async () => {
+  const user = userEvent.setup()
+  renderDropdown(undefined, true)
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  await user.click(screen.getByRole('button', { name: 'Sort descending' }))
+
+  expect(screen.queryByRole('group', { name: 'Filter State' })).not.toBeInTheDocument()
+})
+
+test('extending the active sort closes the panel', async () => {
+  const user = userEvent.setup()
+  renderDropdown(undefined, true, ['Host name'])
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  const extend = screen.getByRole('group', { name: 'Extend active sorting of "Host name" by' })
+  await user.click(within(extend).getByRole('button', { name: 'Sort ascending' }))
+
+  expect(screen.queryByRole('group', { name: 'Filter State' })).not.toBeInTheDocument()
+})
+
+test('picking a sort direction applies the staged selection with it', async () => {
+  const user = userEvent.setup()
+  const { model, sort } = renderDropdown(undefined, true)
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  await user.click(screen.getByRole('checkbox', { name: 'UP' }))
+  await user.click(screen.getByRole('button', { name: 'Sort descending' }))
+
+  expect(sort.value).toBe('desc')
+  expect(model.value).toEqual(upFilter())
+})
+
+test('extending the active sort applies the staged selection with it', async () => {
+  const user = userEvent.setup()
+  const { model, extendedSort } = renderDropdown(undefined, true, ['Host name'])
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  await user.click(screen.getByRole('checkbox', { name: 'UP' }))
+  const extend = screen.getByRole('group', { name: 'Extend active sorting of "Host name" by' })
+  await user.click(within(extend).getByRole('button', { name: 'Sort ascending' }))
+
+  expect(extendedSort.value).toBe('asc')
+  expect(model.value).toEqual(upFilter())
+})
+
 test('a column offers no sort directions unless it sorts', async () => {
   const user = userEvent.setup()
   renderDropdown()

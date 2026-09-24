@@ -10,10 +10,7 @@ import pytest
 from cmk.ccc.hostaddress import HostName
 from cmk.inventory.delta import compare_trees, SDDeltaValue
 from cmk.inventory.serialization import deserialize_tree
-from cmk.inventory.trees import (
-    MutableTree,
-    SDKey,
-)
+from cmk.inventory.trees import ImmutableTree, MutableTree, SDKey, SDNodeName
 
 from ._fixtures import (
     empty_immutable_tree,
@@ -325,3 +322,14 @@ def test_compare_trees_rows() -> None:
             SDKey("key4"): SDDeltaValue(old="val4-old", new="val4-new"),
         }
     ]
+
+
+def test_a_node_only_in_the_previous_tree_is_removed() -> None:
+    previous_tree = MutableTree()
+    previous_tree.add(path=(SDNodeName("node"),), pairs=[{SDKey("key"): "value"}])
+
+    delta_tree = compare_trees(ImmutableTree(), immutable_tree(previous_tree))
+
+    assert delta_tree.get_tree((SDNodeName("node"),)).attributes.pairs == {
+        SDKey("key"): SDDeltaValue(old="value", new=None)
+    }

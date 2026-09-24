@@ -4,30 +4,28 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+export interface SseFrame {
+  id: string | undefined
+  data: unknown
+}
+
 /**
- * Reads server-sent-event frames off a byte stream and yields their parsed JSON payloads.
+ * Yields the frames of a server-sent-event stream, with `data` parsed as JSON.
  *
- * For streams a browser `EventSource` cannot open — anything that needs a request body, custom
- * headers or a method other than GET. `createEventStream` covers the long-lived GET case, and
- * both are here so a Checkmk daemon stream is not framed by hand a third time.
+ * Frames without data are not yielded, and a frame whose data is not JSON is skipped with a
+ * warning. A frame without any field lines is taken as data, for streams that send bare JSON.
  *
- * Deliberately lenient about framing, because the daemons in the product are: a payload may or
- * may not carry the `data: ` prefix, keepalive comments (`: ping`) are dropped, a frame may be
- * split across any number of reads, and a trailing frame without the closing blank line is still
- * emitted when the stream ends. A frame whose payload is not JSON is skipped with a warning
- * rather than ending the stream — one malformed event must not discard the ones after it.
- *
- * @param stream - the response body to read
- * @param timeoutMs - reject if a single read takes longer than this; omit to wait indefinitely.
- *   Guards against a stalled stream, not against a slow one overall.
+ * @param timeoutMs - reject when a single read stalls longer than this
  */
 export async function* readSseFrames(
   stream: ReadableStream<Uint8Array>,
   timeoutMs?: number
-): AsyncGenerator<unknown> {
+): AsyncGenerator<SseFrame> {
   const reader = stream.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
+  // A CR that ends a read may be the first half of a CRLF, so it waits for the next read.
+  let heldCr = false
 
   try {
     while (true) {
@@ -44,7 +42,9 @@ export async function* readSseFrames(
       if (done) {
         break
       }
-      buffer += decoder.decode(value, { stream: true })
+      const text: string = (heldCr ? '\r' : '') + decoder.decode(value, { stream: true })
+      heldCr = text.endsWith('\r')
+      buffer += (heldCr ? text.slice(0, -1) : text).replace(/\r\n?/g, '\n')
 
       while (buffer.length > 0) {
         const separatorIdx = buffer.indexOf('\n\n')
@@ -52,27 +52,17 @@ export async function* readSseFrames(
           break
         }
 
-        const frame = buffer.substring(0, separatorIdx).trim()
+        const frame = parseFrame(buffer.substring(0, separatorIdx))
         buffer = buffer.substring(separatorIdx + 2)
-
-        if (!frame || frame.startsWith(':')) {
-          continue
-        }
-
-        const parsed = parseFrame(frame, 'Failed to parse JSON from message')
-        if (parsed !== NOT_JSON) {
-          yield parsed
+        if (frame) {
+          yield frame
         }
       }
     }
 
-    // The stream ended without a closing blank line: the daemon still meant to send this.
-    const remaining = buffer.trim()
-    if (remaining && !remaining.startsWith(':')) {
-      const parsed = parseFrame(remaining, 'Failed to parse remaining JSON')
-      if (parsed !== NOT_JSON) {
-        yield parsed
-      }
+    const trailingFrame = parseFrame(buffer)
+    if (trailingFrame) {
+      yield trailingFrame
     }
   } catch (e) {
     await reader.cancel()
@@ -82,15 +72,34 @@ export async function* readSseFrames(
   }
 }
 
-/** Sentinel for "this frame was not JSON" — distinct from a frame whose payload is `null`. */
-const NOT_JSON = Symbol('not-json')
+const FIELD = /^(data|id|event|retry)(?:$|: ?)/
 
-function parseFrame(frame: string, warning: string): unknown {
-  const payload = frame.startsWith('data: ') ? frame.slice(6) : frame
+function parseFrame(frame: string): SseFrame | undefined {
+  const lines = frame.split('\n').filter((line) => line.trim() && !line.startsWith(':'))
+  const dataLines: string[] = []
+  let id: string | undefined
+  let hasFields = false
+  for (const line of lines) {
+    const field = FIELD.exec(line)
+    if (!field) {
+      continue
+    }
+    hasFields = true
+    const value = line.slice(field[0].length)
+    if (field[1] === 'data') {
+      dataLines.push(value)
+    } else if (field[1] === 'id') {
+      id = value
+    }
+  }
+  const data = hasFields ? dataLines : lines
+  if (data.length === 0) {
+    return undefined
+  }
   try {
-    return JSON.parse(payload)
+    return { id, data: JSON.parse(data.join('\n')) }
   } catch (e) {
-    console.warn(`${warning}:`, frame, e)
-    return NOT_JSON
+    console.warn('Failed to parse JSON from frame:', frame, e)
+    return undefined
   }
 }

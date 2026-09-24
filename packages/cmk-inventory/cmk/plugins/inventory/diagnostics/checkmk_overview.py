@@ -10,7 +10,6 @@ from pathlib import PurePosixPath
 from cmk.ccc.hostaddress import HostName
 from cmk.diagnostics.internal import (
     CollectContext,
-    CollectError,
     CollectWarning,
     DiagnosticsPlugin,
     DumpItem,
@@ -28,10 +27,7 @@ _TOPIC_GENERAL = Topic("General site information")
 
 def _collect_checkmk_overview(context: CollectContext) -> Iterable[DumpItem]:
     checkmk_server_host = HostName(context.resolve_checkmk_server_host())
-    try:
-        tree = InventoryStore(context.omd_root).load_inventory_tree(host_name=checkmk_server_host)
-    except FileNotFoundError as e:
-        raise CollectError("No HW/SW Inventory tree of '%s' found" % checkmk_server_host) from e
+    tree = InventoryStore(context.omd_root).load_inventory_tree(host_name=checkmk_server_host)
 
     if not (
         node := tree.get_tree(

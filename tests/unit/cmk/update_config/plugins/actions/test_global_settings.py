@@ -229,7 +229,7 @@ def test_update_global_config_is_idempotent(monkeypatch: pytest.MonkeyPatch) -> 
             id="central",
             marks=pytest.mark.xfail(
                 strict=True,
-                reason="the update skips a central site's sitespecific.mk",
+                reason="CMK-39715: the update skips a central site's sitespecific.mk",
             ),
         ),
     ],

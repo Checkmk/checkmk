@@ -22,7 +22,6 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/utils",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:tty",
         "//packages/cmk-plugin-apis:cli",
@@ -43,7 +42,6 @@ py_library(
     ],
     deps = [
         ":engine",
-        "//cmk/utils",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:log",

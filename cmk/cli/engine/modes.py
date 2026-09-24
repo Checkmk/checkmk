@@ -20,7 +20,6 @@ from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.cli.internal import CLICommand, CLIOption, entry_point_prefixes, GlobalOptions
 from cmk.discover_plugins import discover_all_plugins, PluginGroup
-from cmk.utils.log import console
 
 OptionSpec = str
 Argument = str
@@ -32,6 +31,12 @@ Arguments = Sequence[str]
 # Signature of mode handlers:
 # site root, general options, parsed sub-options, positional arguments
 type ModeHandler = Callable[[Path, GlobalOptions, Mapping[str, object], Sequence[str]], int]
+
+
+def write_stdout(txt: str) -> None:
+    with suppress(IOError):
+        sys.stdout.write(txt)
+        sys.stdout.flush()
 
 
 class Option:
@@ -136,8 +141,9 @@ def parse_sub_options(
                 continue
 
             if option.is_deprecated_option(o):
-                console.warning(
+                write_stdout(
                     tty.format_warning(f"{o!r} is deprecated in favour of option {option.name!r}")
+                    + "\n"
                 )
 
             if a and not option.argument:
@@ -372,12 +378,6 @@ def discover_modes() -> Sequence[Mode]:
         raise_errors=True,
     )
     return tuple(make_mode(command) for command in discovered.plugins.values())
-
-
-def write_stdout(txt: str) -> None:
-    with suppress(IOError):
-        sys.stdout.write(txt)
-        sys.stdout.flush()
 
 
 _DEFAULT_PAGER: Final = "less"

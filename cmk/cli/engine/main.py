@@ -16,7 +16,7 @@ import os
 import sys
 from logging.handlers import WatchedFileHandler
 from pathlib import Path
-from typing import override, Self
+from typing import Final, override, Self
 
 # Needs to be placed before cmk modules, because they are not available
 # when executed as non site user.
@@ -57,11 +57,23 @@ from cmk.trace.export import (
     exporter_from_config,
     init_span_processor,
 )
-from cmk.utils import log
-from cmk.utils.paths import profile_dir
 
 from .arguments import InvalidArguments, parse, ShowHelp
 from .modes import write_paged
+
+_PROFILE_DIR: Final = OMD_ROOT / "var/check_mk/web"
+
+_VERBOSE: Final = 15
+
+
+def _log_level(verbosity: int) -> int:
+    match verbosity:
+        case 0:
+            return logging.INFO
+        case 1:
+            return _VERBOSE
+        case _:
+            return logging.DEBUG
 
 
 class CrashReport(ABCCrashReport[BaseDetails]):
@@ -166,12 +178,12 @@ def main() -> int:
             _enable_file_logging(argument)
     global_options = parse_general_options(parsed.options)
     if global_options.verbosity:
-        log.logger.setLevel(log.verbosity_to_log_level(global_options.verbosity))
+        root_logger.setLevel(_log_level(global_options.verbosity))
     if global_options.debug:
         cmk.ccc.debug.enable()
     if global_options.profile:
         profiling.enable()
-        log.logger.debug("Enabled profiling")
+        root_logger.debug("Enabled profiling")
 
     try:
         if isinstance(parsed, ShowHelp):
@@ -218,4 +230,4 @@ def main() -> int:
         return 1
 
     finally:
-        profiling.output_profile(profile_dir)
+        profiling.output_profile(_PROFILE_DIR)

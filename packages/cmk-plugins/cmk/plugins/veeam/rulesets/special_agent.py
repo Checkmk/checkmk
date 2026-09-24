@@ -13,7 +13,6 @@ from cmk.rulesets.v1.form_specs import (
     Dictionary,
     FixedValue,
     Integer,
-    migrate_to_password,
     Password,
     String,
     validators,
@@ -89,7 +88,6 @@ def _parameter_form() -> Dictionary:
                 parameter_form=Password(
                     title=Title("Password"),
                     custom_validate=(validators.LengthInRange(min_value=1),),
-                    migrate=migrate_to_password,
                 ),
             ),
             "disable_cert_verification": DictElement(

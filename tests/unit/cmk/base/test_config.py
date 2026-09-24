@@ -70,7 +70,7 @@ from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher, RulesetMatche
 from cmk.ruleset_matcher.ruleset_name import RuleSetName
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig
-from cmk.utils.ip_lookup import IPStackConfig
+from cmk.utils.ip_lookup import IPStackConfig, make_lookup_ip_address
 from tests.testlib.unit.base_configuration_scenario import Scenario
 from tests.testlib.unit.empty_config import EMPTY_CONFIG
 
@@ -3313,6 +3313,41 @@ def test_cmk_inv_keeps_the_site_executable_on_a_relay_host(
         str(family_libexec_dir(location.module) / "check_cmk_inv")
     ]
     assert not [arg for s in services for arg in s.command if str(secrets_path) in arg]
+
+
+def test_relay_monitored_host_keeps_its_name_as_address_without_a_site_lookup(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The site hands a relay-monitored host's name through as its address, unresolved.
+
+    A relay's network is normally invisible to the site's resolver, so Checkmk ships a
+    dynamic-DNS rule for every host carrying the cmk/relay_monitored label (see
+    get_relay_dyndns_rule_config in the relay Setup code). This pins the base side of
+    that decision with a rule of that shape: the address every consumer receives -
+    fetcher config and active-check commands alike - is the host name, and no lookup
+    runs. The name cannot resolve (RFC 6761 ".invalid"), so a lookup would not pass
+    unnoticed.
+    """
+    host_name = HostName("relay-host.invalid")
+    ts = Scenario()
+    ts.add_host(host_name, labels={"cmk/relay": "relay-1", "cmk/relay_monitored": "yes"})
+    ts.set_ruleset(
+        "dyndns_hosts",
+        [
+            {
+                "id": "relay_dyndns_rule",
+                "value": True,
+                "condition": {"host_label_groups": [("and", [("and", "cmk/relay_monitored:yes")])]},
+                "options": {},
+            }
+        ],
+    )
+    config_cache = ts.apply(monkeypatch).config_cache
+
+    lookup = make_lookup_ip_address(config_cache.ip_lookup_config())
+    attrs = config_cache.get_host_attributes(host_name, socket.AddressFamily.AF_INET, lookup)
+
+    assert attrs["address"] == host_name
 
 
 @pytest.mark.parametrize("flag_enabled", [False, True])

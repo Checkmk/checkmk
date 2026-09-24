@@ -10,6 +10,7 @@ py_cmk_test(
     visibility = ["//visibility:private"],
     deps = [
         "//cmk/cli/engine",
+        "//cmk/cli/engine:run",
         "//packages/cmk-plugin-apis:cli",
         requirement("pytest-random-order"),
     ],

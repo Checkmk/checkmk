@@ -7,7 +7,7 @@ import os
 import sys
 from pathlib import Path
 
-from .run import run
+from .run import run, Runtime
 
 
 def main() -> int:
@@ -16,4 +16,4 @@ def main() -> int:
             sys.stderr.write("Checkmk can be used only as site user.\n")
             return 1
         case omd_root:
-            return run(Path(omd_root), sys.argv, os.environ)
+            return run(Path(omd_root), sys.argv, os.environ, Runtime())

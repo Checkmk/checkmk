@@ -445,8 +445,10 @@ class Modes:
         *,
         plugins: Sequence[Mode],
         general_options: Sequence[Option],
+        page: Callable[[str], None] = write_paged,
     ) -> None:
         super().__init__()
+        self._page = page
         modes = [*plugins, self.mode_help()]
         self._mode_map: Mapping[OptionName, Mode] = _map_options(modes)
         self._modes = modes
@@ -458,7 +460,7 @@ class Modes:
         def _show_help(
             _omd_root: Path, _global_options: GlobalOptions, _options: object, _args: object
         ) -> int:
-            write_paged(self.help())
+            self._page(self.help())
             return 0
 
         return Mode(

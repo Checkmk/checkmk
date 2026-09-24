@@ -11,7 +11,7 @@ from argparse import ArgumentParser, Namespace
 from collections.abc import Sequence
 from pathlib import Path
 
-from .tree_files import transform_inventory_trees
+from .tree_files import show_transformation_results, transform_inventory_trees
 
 logger = logging.getLogger(__name__)
 
@@ -64,10 +64,15 @@ def main() -> int:
     omd_root = Path(os.environ.get("OMD_ROOT", ""))
     args = _parse_arguments(sys.argv)
     try:
+        if args.show_results:
+            return show_transformation_results(
+                omd_root=omd_root,
+                filter_host_names=args.host_name,
+                all_host_names=_collect_hosts(logger),
+            )
         return transform_inventory_trees(
             logger=logger,
             omd_root=omd_root,
-            show_results=args.show_results,
             bundle_length=args.bundle_length,
             filter_host_names=args.host_name,
             all_host_names=_collect_hosts(logger),

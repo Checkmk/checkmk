@@ -227,27 +227,44 @@ def _transform_host_tree_path(host_tree_path: _HostTreePath) -> TransformationRe
     )
 
 
-def transform_inventory_trees(
-    *,
-    logger: logging.Logger,
-    omd_root: Path,
-    show_results: bool,
-    bundle_length: int,
-    filter_host_names: Sequence[str],
-    all_host_names: Sequence[str],
-) -> int:
+def _collect_selected_host_tree_paths_or_unknown_file_paths(
+    omd_root: Path, filter_host_names: Sequence[str], all_host_names: Sequence[str]
+) -> tuple[Sequence[_HostTreePath], Sequence[Path]]:
     host_tree_paths, unknown_file_paths = _collect_host_tree_paths_or_unknown_file_paths(
         omd_root, all_host_names
     )
     if filter_host_names:
         host_tree_paths = [htp for htp in host_tree_paths if htp.host_name in filter_host_names]
+    return host_tree_paths, unknown_file_paths
+
+
+def show_transformation_results(
+    *,
+    omd_root: Path,
+    filter_host_names: Sequence[str],
+    all_host_names: Sequence[str],
+) -> int:
+    host_tree_paths, unknown_file_paths = _collect_selected_host_tree_paths_or_unknown_file_paths(
+        omd_root, filter_host_names, all_host_names
+    )
+    _show_results(host_tree_paths, unknown_file_paths, TransformationResultsStore(omd_root).load())
+    return 0
+
+
+def transform_inventory_trees(
+    *,
+    logger: logging.Logger,
+    omd_root: Path,
+    bundle_length: int,
+    filter_host_names: Sequence[str],
+    all_host_names: Sequence[str],
+) -> int:
+    host_tree_paths, _unknown_file_paths = _collect_selected_host_tree_paths_or_unknown_file_paths(
+        omd_root, filter_host_names, all_host_names
+    )
 
     transformation_results_store = TransformationResultsStore(omd_root)
     transformation_results = transformation_results_store.load()
-
-    if show_results:
-        _show_results(host_tree_paths, unknown_file_paths, transformation_results)
-        return 0
 
     if filter_host_names:
         to_be_transformed = host_tree_paths

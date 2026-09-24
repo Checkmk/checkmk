@@ -11,6 +11,7 @@ import cmk.ccc.store
 from cmk.inventory.serialization import SDRawTree
 from cmk.inventory.store import make_meta, SDMetaAndRawTree
 from cmk.inventory.transformation.tree_files import (
+    show_transformation_results,
     transform_inventory_trees,
     TransformationResult,
     TransformationResultsStore,
@@ -24,7 +25,6 @@ def test_transformation_nothing_to_do(tmp_path: Path) -> None:
     transform_inventory_trees(
         logger=null_logger(),
         omd_root=tmp_path,
-        show_results=False,
         bundle_length=0,
         filter_host_names=[],
         all_host_names=[],
@@ -77,7 +77,6 @@ def test_transform_inventory_tree(tmp_path: Path) -> None:
     transform_inventory_trees(
         logger=null_logger(),
         omd_root=tmp_path,
-        show_results=False,
         bundle_length=0,
         filter_host_names=["hostname"],
         all_host_names=["hostname"],
@@ -96,7 +95,6 @@ def test_transform_status_data_tree(tmp_path: Path) -> None:
     transform_inventory_trees(
         logger=null_logger(),
         omd_root=tmp_path,
-        show_results=False,
         bundle_length=0,
         filter_host_names=["hostname"],
         all_host_names=["hostname"],
@@ -115,7 +113,6 @@ def test_transform_archive_tree(tmp_path: Path) -> None:
     transform_inventory_trees(
         logger=null_logger(),
         omd_root=tmp_path,
-        show_results=False,
         bundle_length=0,
         filter_host_names=["hostname"],
         all_host_names=["hostname"],
@@ -134,7 +131,6 @@ def test_transform_delta_cache_tree(tmp_path: Path) -> None:
     transform_inventory_trees(
         logger=null_logger(),
         omd_root=tmp_path,
-        show_results=False,
         bundle_length=0,
         filter_host_names=["hostname"],
         all_host_names=["hostname"],
@@ -153,3 +149,15 @@ def test_transformation_results_store_reads_back_what_it_saved(tmp_path: Path) -
     store = TransformationResultsStore(tmp_path)
     store.save(results)
     assert list(store.load()) == results
+
+
+def test_show_transformation_results_leaves_the_legacy_tree(tmp_path: Path) -> None:
+    cmk.ccc.store.save_object_to_file(tmp_path / "var/check_mk/inventory/hostname", _raw_tree())
+
+    show_transformation_results(
+        omd_root=tmp_path,
+        filter_host_names=["hostname"],
+        all_host_names=["hostname"],
+    )
+
+    assert (tmp_path / "var/check_mk/inventory/hostname").exists()

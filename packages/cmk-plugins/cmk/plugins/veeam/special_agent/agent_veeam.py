@@ -20,7 +20,11 @@ import urllib3
 from pydantic import BaseModel, ValidationError
 
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1 import HostnameValidationAdapter
+from cmk.server_side_programs.v1 import HostnameValidationAdapter, report_agent_crashes
+
+AGENT = "veeam"
+
+__version__ = "3.0.0b1"
 
 PASSWORD_OPTION = "password"
 
@@ -37,31 +41,14 @@ type Section = tuple[str, FetchStrategy]
 """The agent section name and how to fetch it."""
 
 
-class FatalError(Exception):
-    """An error that makes the whole run pointless."""
+class TerminateAgent(RuntimeError):
+    """An error that makes the whole run pointless.
+
+    Terminate the agent with a user facing message, but do not create a crash report.
+    """
 
 
-class AuthenticationFailed(FatalError):
-    pass
-
-
-class ServerUnreachable(FatalError):
-    pass
-
-
-class CertificateRejected(FatalError):
-    pass
-
-
-class UnsupportedApiVersion(FatalError):
-    pass
-
-
-class EndpointError(Exception):
-    """A single data request failed; the other sections are still worth writing."""
-
-
-class AccessDenied(EndpointError):
+class AccessDenied(RuntimeError):
     """The user lacks the Veeam role required for this endpoint."""
 
 
@@ -164,41 +151,36 @@ class VeeamClient:
             )
         except requests.exceptions.SSLError as exc:
             if self._cert_server_name is None:
-                raise CertificateRejected(
+                raise TerminateAgent(
                     f"The TLS handshake with the Veeam backup server at {self._url} failed ({exc})"
                 ) from exc
-            raise CertificateRejected(
+            raise TerminateAgent(
                 f"The certificate of the Veeam backup server was rejected: it could not be "
                 f"validated against the host name '{self._cert_server_name}'. Configure the "
                 f"correct certificate server name or disable certificate verification in the "
                 f"rule ({exc})"
             ) from exc
         except requests.exceptions.Timeout as exc:
-            raise ServerUnreachable(
+            raise TerminateAgent(
                 f"The Veeam backup server at {self._url} did not answer within "
                 f"{self._timeout} seconds"
             ) from exc
         except requests.exceptions.ConnectionError as exc:
-            raise ServerUnreachable(
+            raise TerminateAgent(
                 f"The Veeam backup server at {self._url} is unreachable ({exc})"
             ) from exc
-        except requests.RequestException as exc:
-            raise EndpointError(f"Request to {path} failed ({exc})") from exc
 
     def login(self, user: str, password: str) -> None:
-        try:
-            response = self._request(
-                "POST",
-                TOKEN_PATH,
-                data={"grant_type": "password", "username": user, "password": password},
-            )
-        except EndpointError as exc:
-            raise FatalError(f"Login at the Veeam REST API failed: {exc}") from exc
+        response = self._request(
+            "POST",
+            TOKEN_PATH,
+            data={"grant_type": "password", "username": user, "password": password},
+        )
         if response.ok:
             try:
                 token = _Token.model_validate_json(response.content)
             except ValidationError as exc:
-                raise FatalError(
+                raise TerminateAgent(
                     "The Veeam REST API returned an invalid access token response"
                 ) from exc
             self._session.headers["Authorization"] = f"Bearer {token.access_token}"
@@ -206,23 +188,23 @@ class VeeamClient:
 
         error_code, message = _veeam_error(response)
         if response.status_code == 401:
-            raise AuthenticationFailed(
+            raise TerminateAgent(
                 f"Authentication at the Veeam REST API failed for user '{user}': {message}. "
                 f"Check the user name and password"
             )
         if response.status_code == 400 and error_code == "NotImplemented":
-            raise UnsupportedApiVersion(
+            raise TerminateAgent(
                 f"The Veeam backup server does not support the REST API version "
                 f"{API_VERSION}: {message}"
             )
-        raise FatalError(
+        raise TerminateAgent(
             f"Login at the Veeam REST API failed with HTTP {response.status_code}: {message}"
         )
 
     def get(self, path: str) -> object:
         response = self._request("GET", path)
         if response.status_code == 401:
-            raise AuthenticationFailed(
+            raise TerminateAgent(
                 f"The Veeam REST API rejected the session on {path}: {_veeam_error(response)[1]}"
             )
         if response.status_code == 403:
@@ -230,14 +212,11 @@ class VeeamClient:
                 f"Request to {path} failed with HTTP 403: {_veeam_error(response)[1]}"
             )
         if not response.ok:
-            raise EndpointError(
+            raise RuntimeError(
                 f"Request to {path} failed with HTTP {response.status_code}: "
                 f"{_veeam_error(response)[1]}"
             )
-        try:
-            return response.json()
-        except json.JSONDecodeError as exc:
-            raise EndpointError(f"Request to {path} returned invalid JSON") from exc
+        return response.json()
 
 
 def _get_all(client: VeeamClient, path: str) -> list[object]:
@@ -247,11 +226,11 @@ def _get_all(client: VeeamClient, path: str) -> list[object]:
     while True:
         page = client.get(f"{path}?skip={skip}")
         if not isinstance(page, dict) or "data" not in page or "pagination" not in page:
-            raise EndpointError(f"Request to {path} did not return a paginated data list")
+            raise RuntimeError(f"Request to {path} did not return a paginated data list")
         batch = page["data"]
         total = page["pagination"]["total"]
         if not batch and len(items) < total:
-            raise EndpointError(
+            raise RuntimeError(
                 f"Request to {path} returned an empty page before reaching {total} total items"
             )
         items.extend(batch)
@@ -320,12 +299,7 @@ def empty_on_access_denied(fetch: FetchStrategy) -> FetchStrategy:
 
 def write_sections(client: VeeamClient, sections: Sequence[Section]) -> None:
     for name, fetch in sections:
-        try:
-            output = fetch(client, name)
-        except EndpointError as exc:
-            sys.stderr.write(f"Section {name}: {exc}\n")
-            continue
-        sys.stdout.write(output)
+        sys.stdout.write(fetch(client, name))
 
 
 SECTIONS: Sequence[Section] = (
@@ -345,6 +319,7 @@ SECTIONS: Sequence[Section] = (
 )
 
 
+@report_agent_crashes(AGENT, __version__)
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_arguments(sys.argv[1:] if argv is None else argv)
     url = base_url(args.address, args.port)
@@ -359,9 +334,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 timeout=args.timeout,
             )
             client.login(args.user, resolve_secret_option(args, PASSWORD_OPTION).reveal())
-            # A failing data endpoint must not exit non-zero: that discards all sections.
             write_sections(client, SECTIONS)
-    except FatalError as exc:
+    except TerminateAgent as exc:
         if args.debug:
             raise
         sys.stderr.write(f"{exc}\n")

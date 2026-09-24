@@ -12,17 +12,14 @@ import requests
 import responses
 
 from cmk.plugins.veeam.special_agent.agent_veeam import (
-    AuthenticationFailed,
-    CertificateRejected,
+    AccessDenied,
     create_session,
     empty_on_access_denied,
-    FatalError,
     fetch_list,
     fetch_list_piggyback,
     fetch_object,
     main,
-    ServerUnreachable,
-    UnsupportedApiVersion,
+    TerminateAgent,
     VeeamClient,
     write_sections,
 )
@@ -73,7 +70,7 @@ def test_requests_after_login_use_the_token_as_bearer(api: responses.RequestsMoc
     assert api.calls[-1].request.headers["Authorization"] == "Bearer the-token"
 
 
-def test_failing_endpoint_does_not_stop_the_other_sections(
+def test_failing_endpoint_does_stop_the_other_sections(
     api: responses.RequestsMock, capsys: pytest.CaptureFixture[str]
 ) -> None:
     api.get(
@@ -81,36 +78,36 @@ def test_failing_endpoint_does_not_stop_the_other_sections(
     )
     api.get(f"{URL}/api/v1/jobs", json={"data": [], "pagination": {"total": 0}})
 
-    write_sections(
-        _client(),
-        [
-            ("veeam_broken", fetch_list("/api/v1/broken")),
-            ("veeam_jobs", fetch_list("/api/v1/jobs")),
-        ],
-    )
+    with pytest.raises(RuntimeError, match="boom"):
+        write_sections(
+            _client(),
+            [
+                ("veeam_broken", fetch_list("/api/v1/broken")),
+                ("veeam_jobs", fetch_list("/api/v1/jobs")),
+            ],
+        )
 
     captured = capsys.readouterr()
-    assert captured.out == "<<<veeam_jobs:sep(0)>>>\n"
-    assert "HTTP 500: boom" in captured.err
+    assert "<<<veeam_jobs:sep(0)>>>" not in captured.out
 
 
-def test_broken_response_on_a_data_endpoint_does_not_stop_the_other_sections(
+def test_broken_response_on_a_data_endpoint_does_stop_the_other_sections(
     api: responses.RequestsMock, capsys: pytest.CaptureFixture[str]
 ) -> None:
     api.get(f"{URL}/api/v1/broken", body=requests.exceptions.ChunkedEncodingError("cut off"))
     api.get(f"{URL}/api/v1/jobs", json={"data": [], "pagination": {"total": 0}})
 
-    write_sections(
-        _client(),
-        [
-            ("veeam_broken", fetch_list("/api/v1/broken")),
-            ("veeam_jobs", fetch_list("/api/v1/jobs")),
-        ],
-    )
+    with pytest.raises(requests.exceptions.ChunkedEncodingError, match="cut off"):
+        write_sections(
+            _client(),
+            [
+                ("veeam_broken", fetch_list("/api/v1/broken")),
+                ("veeam_jobs", fetch_list("/api/v1/jobs")),
+            ],
+        )
 
     captured = capsys.readouterr()
-    assert captured.out == "<<<veeam_jobs:sep(0)>>>\n"
-    assert "cut off" in captured.err
+    assert "<<<veeam_jobs:sep(0)>>>" not in captured.out
 
 
 def test_access_denied_on_a_role_restricted_endpoint_writes_an_empty_section(
@@ -130,22 +127,21 @@ def test_access_denied_on_a_role_restricted_endpoint_writes_an_empty_section(
     assert captured.err == ""
 
 
-def test_access_denied_on_an_unrestricted_endpoint_is_reported(
+def test_access_denied_on_an_unrestricted_endpoint_is_raised(
     api: responses.RequestsMock, capsys: pytest.CaptureFixture[str]
 ) -> None:
     api.get(f"{URL}/api/v1/jobs", status=403, json={"errorCode": "Forbidden", "message": "denied"})
 
-    write_sections(_client(), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
+    with pytest.raises(AccessDenied, match="HTTP 403: denied"):
+        write_sections(_client(), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
 
-    captured = capsys.readouterr()
-    assert captured.out == ""
-    assert "HTTP 403: denied" in captured.err
+    assert capsys.readouterr().out == ""
 
 
 def test_rejected_session_on_a_data_endpoint_is_fatal(api: responses.RequestsMock) -> None:
     api.get(f"{URL}/api/v1/jobs", status=401, json={"errorCode": "AccessDenied", "message": "x"})
 
-    with pytest.raises(AuthenticationFailed):
+    with pytest.raises(TerminateAgent):
         write_sections(_client(), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
 
 
@@ -178,11 +174,10 @@ def test_empty_page_before_reaching_total_does_not_hang(
         json={"data": [], "pagination": {"total": 3}},
     )
 
-    write_sections(_client(), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
+    with pytest.raises(RuntimeError, match="returned an empty page before reaching 3 total items"):
+        write_sections(_client(), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
 
-    captured = capsys.readouterr()
-    assert captured.out == ""
-    assert "returned an empty page before reaching 3 total items" in captured.err
+    assert capsys.readouterr().out == ""
     assert len(api.calls) == 1
 
 
@@ -262,7 +257,7 @@ def test_wrong_credentials_are_reported(api: responses.RequestsMock) -> None:
         json={"errorCode": "AccessDenied", "message": "Authentication failed"},
     )
 
-    with pytest.raises(AuthenticationFailed, match="Check the user name and password"):
+    with pytest.raises(TerminateAgent, match="Check the user name and password"):
         _client().login("monitoring", "wrong")
 
 
@@ -276,14 +271,14 @@ def test_unsupported_api_version_names_the_supported_ones(api: responses.Request
         },
     )
 
-    with pytest.raises(UnsupportedApiVersion, match="versions are supported: 1.1-rev0"):
+    with pytest.raises(TerminateAgent, match="versions are supported: 1.1-rev0"):
         _client().login("monitoring", "top-secret")
 
 
 def test_unexpected_login_answer_reports_the_http_status(api: responses.RequestsMock) -> None:
     api.post(TOKEN_URL, status=500, json={"errorCode": "UnknownError", "message": "boom"})
 
-    with pytest.raises(FatalError, match="failed with HTTP 500: boom"):
+    with pytest.raises(TerminateAgent, match="failed with HTTP 500: boom"):
         _client().login("monitoring", "top-secret")
 
 
@@ -299,14 +294,14 @@ def test_timeout_is_reported_as_unreachable(
 ) -> None:
     api.post(TOKEN_URL, body=timeout)
 
-    with pytest.raises(ServerUnreachable, match="did not answer within 30 seconds"):
+    with pytest.raises(TerminateAgent, match="did not answer within 30 seconds"):
         _client().login("monitoring", "top-secret")
 
 
 def test_rejected_certificate_names_the_expected_host_name(api: responses.RequestsMock) -> None:
     api.post(TOKEN_URL, body=requests.exceptions.SSLError("certificate verify failed"))
 
-    with pytest.raises(CertificateRejected, match="against the host name 'veeam-server'"):
+    with pytest.raises(TerminateAgent, match="against the host name 'veeam-server'"):
         _client(cert_server_name="veeam-server").login("monitoring", "top-secret")
 
 
@@ -315,7 +310,7 @@ def test_tls_failure_without_verification_is_reported_as_handshake_failure(
 ) -> None:
     api.post(TOKEN_URL, body=requests.exceptions.SSLError("unsupported protocol"))
 
-    with pytest.raises(CertificateRejected, match="TLS handshake with the Veeam backup server"):
+    with pytest.raises(TerminateAgent, match="TLS handshake with the Veeam backup server"):
         _client().login("monitoring", "top-secret")
 
 

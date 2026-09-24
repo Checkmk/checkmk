@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Callable, Iterator, Sequence
-from typing import cast, override
+from typing import assert_never, cast, override
 
 from cmk.ccc.i18n import _
 from cmk.gui.form_specs.unstable.validators import IsFloat
@@ -38,7 +38,7 @@ def magnitude_translator(magnitude: TimeMagnitude) -> shared_type_defs.TimeSpanT
         case TimeMagnitude.DAY:
             return shared_type_defs.TimeSpanTimeMagnitude.day
         case _:
-            raise RuntimeError
+            assert_never(magnitude)
 
 
 def _render_value(value: float) -> str:

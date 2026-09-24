@@ -2,9 +2,9 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import override
+from typing import assert_never, override
 
-from cmk.gui.form_specs.unstable.static_text import StaticText
+from cmk.gui.form_specs.unstable.static_text import StaticText, StaticTextStyle
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
@@ -42,7 +42,7 @@ class StaticTextVisitor(FormSpecVisitor[StaticText, _ParsedValueModel, _Fallback
                 help=help_text,
                 validators=[],
                 value=value,
-                style=shared_type_defs.StaticTextStyle(self.form_spec.style),
+                style=_to_shared_style(self.form_spec.style),
                 placeholder=localize(self.form_spec.placeholder) or None,
             ),
             value,
@@ -51,3 +51,19 @@ class StaticTextVisitor(FormSpecVisitor[StaticText, _ParsedValueModel, _Fallback
     @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> str:
         return parsed_value
+
+
+def _to_shared_style(style: StaticTextStyle) -> shared_type_defs.StaticTextStyle:
+    match style:
+        case "text":
+            return shared_type_defs.StaticTextStyle.text
+        case "preformatted":
+            return shared_type_defs.StaticTextStyle.preformatted
+        case "alert_info":
+            return shared_type_defs.StaticTextStyle.alert_info
+        case "alert_warning":
+            return shared_type_defs.StaticTextStyle.alert_warning
+        case "alert_error":
+            return shared_type_defs.StaticTextStyle.alert_error
+        case _:
+            assert_never(style)

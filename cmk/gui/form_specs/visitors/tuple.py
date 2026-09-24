@@ -7,6 +7,7 @@ from typing import assert_never, cast, override
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.form_specs.unstable.legacy_converter import Tuple
+from cmk.gui.form_specs.unstable.legacy_converter.tuple import TupleLayout
 from cmk.gui.i18n import _
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
@@ -105,7 +106,7 @@ class TupleVisitor(FormSpecVisitor[Tuple, _ParsedValueModel, _FallbackModel]):
                 help=help_text,
                 elements=vue_specs,
                 validators=build_vue_validators(compute_validators(self.form_spec)),
-                layout=shared_type_defs.TupleLayout(self.form_spec.layout),
+                layout=_to_shared_layout(self.form_spec.layout),
                 show_titles=self.form_spec.show_titles,
             ),
             vue_elements,
@@ -135,3 +136,17 @@ class TupleVisitor(FormSpecVisitor[Tuple, _ParsedValueModel, _FallbackModel]):
             element_visitor = get_visitor(parameter_form, self.visitor_options)
             disk_values.append(element_visitor.to_disk(value))
         return tuple(disk_values)
+
+
+def _to_shared_layout(layout: TupleLayout) -> shared_type_defs.TupleLayout:
+    match layout:
+        case "vertical":
+            return shared_type_defs.TupleLayout.vertical
+        case "horizontal":
+            return shared_type_defs.TupleLayout.horizontal
+        case "horizontal_titles_top":
+            return shared_type_defs.TupleLayout.horizontal_titles_top
+        case "float":
+            return shared_type_defs.TupleLayout.float
+        case _:
+            assert_never(layout)

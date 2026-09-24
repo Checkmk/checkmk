@@ -32,19 +32,30 @@ export function useBurgerMenu(
   const showBurgerMenu = computed(() => addTo.value !== null && enabled.value)
   const burgerMenuGroups = ref<BurgerMenuGroup[]>([])
 
+  // The add type the groups were loaded for, so a target that keeps changing - every refetch hands
+  // over a new built graph - reloads the menu only until one load has succeeded.
+  const loadedFor = ref<string | null>(null)
+
   watch(
-    () => (enabled.value ? (addTo.value?.type ?? null) : null),
-    (addType) => {
-      if (addType === null) {
+    [enabled, () => addTo.value?.type ?? null, () => addTo.value?.internal ?? null],
+    ([isEnabled, addType]) => {
+      if (!isEnabled || addType === null) {
         burgerMenuGroups.value = []
+        loadedFor.value = null
+        return
+      }
+      if (loadedFor.value === addType) {
         return
       }
       loadMenu(addType)
         .then((groups) => {
           burgerMenuGroups.value = groups
+          loadedFor.value = addType
         })
-        .catch((err) => {
-          throw new Error(`Failed to load menu for add type "${addType}": ${err.message}`)
+        .catch((err: unknown) => {
+          // Reported rather than raised: a failed load leaves the menu empty instead of tearing
+          // the surface down, and the next refetch of the target retries loading the menu.
+          console.error(`Failed to load the burger menu for add type "${addType}":`, err)
         })
     },
     { immediate: true }

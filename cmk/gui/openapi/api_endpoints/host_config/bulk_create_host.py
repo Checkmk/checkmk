@@ -123,12 +123,10 @@ def bulk_create_host_v1(
     if not isinstance(bake_agent, ApiOmitted) and bake_agent:
         bakery.try_bake_agents_for_hosts(succeeded_hosts, debug=api_context.config.debug)
 
+    tree = make_folder_tree(api_context.config)
     return bulk_host_action_response(
         failed_hosts,
-        [
-            make_folder_tree(api_context.config).load_host(host_name)
-            for host_name in succeeded_hosts
-        ],
+        [tree.load_host(host_name) for host_name in succeeded_hosts],
         api_context=api_context,
     )
 

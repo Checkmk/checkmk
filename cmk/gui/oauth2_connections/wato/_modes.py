@@ -608,15 +608,14 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
             )
 
         found_rules = []
+        tree = make_folder_tree(config)
         for ruleset_name in [
             "active_checks:mail",
             "active_checks:mail_loop",
             "active_checks:mailboxes",
         ]:
             for folder, index, rule in (
-                SingleRulesetRecursively.load_single_ruleset_recursively(
-                    make_folder_tree(config), ruleset_name
-                )
+                SingleRulesetRecursively.load_single_ruleset_recursively(tree, ruleset_name)
                 .get_rulesets()[ruleset_name]
                 .get_rules()
             ):

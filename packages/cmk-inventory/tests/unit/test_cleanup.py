@@ -1530,3 +1530,47 @@ def test_file_age_removes_an_archive_file_dated_at_the_epoch(tmp_path: Path) -> 
         logger=null_logger(),
     )
     assert not archive_tree.path.exists()
+
+
+def test_without_host_names_no_abandoned_file_is_removed(tmp_path: Path) -> None:
+    abandoned_file_path = tmp_path / "var/check_mk/inventory/unknown-host.json"
+    abandoned_file_path.parent.mkdir(parents=True)
+    abandoned_file_path.touch()
+    os.utime(abandoned_file_path, (0, 0))
+
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(for_hosts=[], default=None, abandoned_file_age=1),
+        host_names=[],
+        now=100,
+        logger=null_logger(),
+    )
+
+    assert abandoned_file_path.exists()
+
+
+@pytest.mark.parametrize(
+    "file_name",
+    [
+        pytest.param("inventory_archive/hostname/not-a-timestamp", id="archive"),
+        pytest.param("inventory_delta_cache/hostname/not-a-timestamp", id="delta-cache"),
+    ],
+)
+def test_a_history_file_without_timestamps_is_kept(tmp_path: Path, file_name: str) -> None:
+    file_path = tmp_path / "var/check_mk" / file_name
+    file_path.parent.mkdir(parents=True)
+    file_path.touch()
+
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[
+                InvCleanupParamsOfHosts(regex_or_explicit=["hostname"], parameters=("file_age", 1))
+            ],
+            default=None,
+            abandoned_file_age=1,
+        ),
+        host_names=[HostName("hostname")],
+        now=100,
+        logger=null_logger(),
+    )
+
+    assert file_path.exists()

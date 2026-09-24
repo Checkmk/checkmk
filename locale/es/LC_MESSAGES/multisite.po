@@ -2503,10 +2503,6 @@ msgstr ""
 "Una combinación de la instancia, la base de datos y el nombre (lógico) del "
 "archivo."
 
-#, fuzzy
-msgid "A comment is required."
-msgstr "como macro denominada"
-
 msgid ""
 "A compact dashboard which lists your unhandled host and service problems."
 msgstr ""
@@ -2558,6 +2554,10 @@ msgstr ""
 "de estos hosts en esta regla les obliga a utilizar la comprobación de la "
 "interfaz con contadores de 32 bits en su lugar."
 
+#, fuzzy
+msgid "A custom address"
+msgstr "Dirección personalizada"
+
 msgid ""
 "A dashboard can have an optional context. It can for example be restricted "
 "to display only information of a single host or for a set of services "
@@ -2602,6 +2602,14 @@ msgstr "Un título descriptivo para este paquete de reglas"
 msgid "A descriptive title of this action."
 msgstr "Un título descriptivo de esta acción."
 
+#, fuzzy
+msgid ""
+"A destination address may only contain letters, numbers, dashes, "
+"underscores, dots and colons."
+msgstr ""
+"Las descripciones de servicio válidas sólo pueden contener letras, números, "
+"guiones, guiones bajos, espacios y puntos."
+
 msgid "A direct link to all groups of BI aggregations"
 msgstr "Un enlace directo a todos los grupos de agregaciones de BI"
 
@@ -2640,6 +2648,10 @@ msgid ""
 "A graph can only be added to a custom graph together with the graph itself."
 msgstr ""
 "Muestra un gráfico personalizado diseñado con el diseñador de gráficos."
+
+#, python-format
+msgid "A graph of type '%(graph_type)s' cannot be added to a graph collection."
+msgstr ""
 
 #, fuzzy
 msgid "A graphical user interface (GUI) view"
@@ -3123,6 +3135,10 @@ msgstr "Instancia"
 #, fuzzy
 msgid "AI features"
 msgstr "Iniciar la restauración"
+
+#, fuzzy
+msgid "AI provider"
+msgstr "Proporcionar niveles"
 
 msgid "AIX"
 msgstr "AIX"
@@ -7800,6 +7816,10 @@ msgstr "Otra sesión está activa"
 #, fuzzy
 msgid "Answer seizure ratio"
 msgstr "Ratio de éxito de Varnish Backend"
+
+#, fuzzy
+msgid "Anthropic"
+msgstr "Añadir tema"
 
 msgid "AntiVirus last update age"
 msgstr "Edad de la última actualización del antivirus"
@@ -17043,6 +17063,11 @@ msgstr "Desajuste de las características configuradas"
 msgid "Configured time period parameters"
 msgstr "Parámetros del periodo de tiempo configurado"
 
+msgid ""
+"Configures Checkmk Maps: monitoring connections, the backend daemon and the "
+"defaults for new maps and map objects"
+msgstr ""
+
 #, fuzzy
 msgid "Configures Event Console logging and diagnostic settings"
 msgstr "Consola de eventos: Registrar & diagnosticar"
@@ -21850,6 +21875,12 @@ msgstr "Usuario eliminado: %(users)s"
 msgid "Deletes"
 msgstr "Borra"
 
+#, python-format
+msgid ""
+"Deleting %(host)s removes these relations. The related hosts themselves are "
+"not deleted."
+msgstr ""
+
 #, fuzzy, python-format
 msgid "Deleting %(name)s..."
 msgstr "Buscando '%s'..."
@@ -24451,6 +24482,14 @@ msgid "Dump file: %(tarfile_path)s"
 msgstr "Archivo de volcado: %(tarfile_path)s"
 
 msgid "Duplex"
+msgstr ""
+
+#, python-format
+msgid ""
+"Duplicate destination \"%(name)s\", already configured as entry %(first)s. "
+"The service name is the address plus whatever differs in connection type, IP "
+"version, port, packet size, source address or maximum hops, so two entries "
+"have to differ in at least one of those."
 msgstr ""
 
 #, python-format
@@ -34401,8 +34440,8 @@ msgstr ""
 
 msgid ""
 "Host name, IPv4 address or IPv6 address that mtr will trace the route to. "
-"This value is also used as service name in Checkmk, so it must be unique per "
-"host."
+"The service name is built from this address plus whatever distinguishes "
+"several entries for the same address."
 msgstr ""
 
 #, fuzzy
@@ -38472,6 +38511,9 @@ msgstr "Obras incompatibles"
 msgid "Incompatible version: %(version)s"
 msgstr "Versión incompatible: %(version)s"
 
+msgid "Incompatible werk"
+msgstr "Trabajo incompatible"
+
 #, fuzzy
 msgid "Incomplete calls"
 msgstr "Llamadas incompletas"
@@ -39292,6 +39334,10 @@ msgstr "inválido:"
 msgid "Invalid (not loaded)"
 msgstr "Inválido (no cargado)"
 
+#, fuzzy, python-format
+msgid "Invalid AI provider configuration: %(error)s"
+msgstr "Ocultar los nombres de las variables de configuración"
+
 #, fuzzy
 msgid "Invalid API key"
 msgstr "Clave privada no válida"
@@ -39550,10 +39596,6 @@ msgstr "Nombre de host no válido"
 #, fuzzy
 msgid "Invalid host name or IP address."
 msgstr "Nombre de host o dirección IP consultada"
-
-#, fuzzy
-msgid "Invalid host name."
-msgstr "Nombre de host no válido"
 
 #, fuzzy, python-format
 msgid "Invalid host name: %(hostname)s"
@@ -41474,6 +41516,12 @@ msgstr ""
 msgid "Learning Checkmk"
 msgstr "Aprendizaje Checkmk"
 
+msgid "Leave empty to not set a path."
+msgstr ""
+
+msgid "Leave empty to not set a user."
+msgstr ""
+
 msgid ""
 "Leave the field disabled to inherit the global Icon defaults. Individual "
 "objects on the map can still override this."
@@ -41498,6 +41546,10 @@ msgid "Leave unset on installations where over-voltage is not a concern."
 msgstr ""
 "Niveles de tensión para dispositivos como SAIs o PDUs. Pueden abordarse "
 "varias fases de forma independiente."
+
+msgid ""
+"Leave unset to use the default endpoint of the provider's client library."
+msgstr ""
 
 msgid "Left"
 msgstr "Izquierda"
@@ -41770,9 +41822,6 @@ msgstr "Niveles de los índices de descartes"
 msgid "Levels for disk usage"
 msgstr "Niveles de uso del disco"
 
-msgid "Levels for duration of backup job"
-msgstr "Niveles de duración del trabajo de copia de seguridad"
-
 msgid "Levels for erlang process usage"
 msgstr "Niveles de uso del proceso erlang"
 
@@ -41925,6 +41974,10 @@ msgstr "Niveles para el tamaño del Tablespace"
 
 msgid "Levels for the Tablespace usage"
 msgstr "Niveles de uso del Tablespace"
+
+#, fuzzy
+msgid "Levels for the duration of the backup job"
+msgstr "Niveles de duración del trabajo de copia de seguridad"
 
 msgid "Levels for the electrical power consumption of a device "
 msgstr "Niveles de consumo de energía eléctrica de un dispositivo "
@@ -45162,13 +45215,6 @@ msgid ""
 "for a 1:1 result."
 msgstr ""
 
-#, fuzzy
-msgid "Maps: connections & daemon"
-msgstr "Máximo de conexiones por segundo"
-
-msgid "Maps: map & object defaults"
-msgstr ""
-
 msgid "March"
 msgstr "Marzo"
 
@@ -47394,6 +47440,15 @@ msgid ""
 "agent. What is returned by the agent (and therefore what is monitored) is "
 "configured in the cluster itself via the agent's Helm chart. Thus, there are "
 "no Kubernetes-specific settings here."
+msgstr ""
+
+msgid ""
+"Monitor a Veeam Backup & Replication server through its REST API. Nothing is "
+"installed on the backup server, so this also works for the Veeam software "
+"appliance, where the Checkmk agent cannot run. The built-in <tt>Veeam Backup "
+"Viewer</tt> role is sufficient. Do not configure an administrator account: "
+"it could also delete backups, trigger restores and read stored encryption "
+"passwords."
 msgstr ""
 
 msgid "Monitor all files in folder"
@@ -49735,10 +49790,6 @@ msgid "No fallback email address configured"
 msgstr ""
 "(¡No se ha configurado ninguna dirección de correo electrónico de reserva!)"
 
-#, fuzzy
-msgid "No form values were sent."
-msgstr "Establecer valores por defecto para todas las secciones"
-
 msgid ""
 "No fresh discovery information available. Using latest cached information. "
 "Please perform a rescan in case you want to discover the current state."
@@ -49884,6 +49935,10 @@ msgstr "No comprobar los plugins que utilizan la API obsoleta"
 #, fuzzy
 msgid "No previous cycle available"
 msgstr "No hay información disponible"
+
+#, fuzzy
+msgid "No provider configured"
+msgstr "No hay rango de IP configurado"
 
 #, fuzzy
 msgid "No proxy"
@@ -52832,6 +52887,10 @@ msgstr "Interfaces de unión"
 
 msgid "Open/close this element"
 msgstr "Abrir/cerrar este elemento"
+
+#, fuzzy
+msgid "OpenAI"
+msgstr "Abrir"
 
 msgid "OpenHardwareMonitor (Windows)"
 msgstr "OpenHardwareMonitor (Windows)"
@@ -56852,6 +56911,10 @@ msgstr "Por favor, introduzca una hora."
 
 #, fuzzy
 msgid "Please enter a file name."
+msgstr "Por favor, introduzca un nombre de archivo."
+
+#, fuzzy
+msgid "Please enter a model name."
 msgstr "Por favor, introduzca un nombre de archivo."
 
 #, fuzzy
@@ -67049,10 +67112,6 @@ msgstr ""
 "Mostrar este atributo en la tabla de usuarios del menú de configuración"
 
 #, fuzzy
-msgid "Show this map in the maps list"
-msgstr "Mostrar esta vista en la GUI móvil"
-
-#, fuzzy
 msgid "Show this view in the mobile GUI"
 msgstr "Mostrar esta vista en la GUI móvil"
 
@@ -72022,10 +72081,6 @@ msgstr "Tabla de porcentajes de hinchazón"
 msgid "Table spaces"
 msgstr "Espacios de mesa"
 
-#, fuzzy
-msgid "Table view"
-msgstr "Vista de clonación"
-
 msgid "Table with availability figures"
 msgstr "Cuadro con las cifras de disponibilidad"
 
@@ -73212,6 +73267,10 @@ msgstr ""
 "sombra)."
 
 #, fuzzy
+msgid "The IP address of the host"
+msgstr "Dirección IP del host"
+
+#, fuzzy
 msgid "The IP address or host name the receiver should listen on."
 msgstr ""
 "Nombre de host, dirección IP o alias de host para el que el evento es "
@@ -73295,6 +73354,11 @@ msgstr ""
 "para indicar a qué directorio LDAP está asignado. Los usuarios sin conflicto "
 "de nombres sólo tienen que proporcionar su nombre de usuario normal como de "
 "costumbre."
+
+msgid ""
+"The LLM provider the AI assistant talks to. The API key is taken from the "
+"password store."
+msgstr ""
 
 msgid ""
 "The Linux Agent Controller is available as x86 64-bit (x86-64) and ARM 64-"
@@ -73690,6 +73754,12 @@ msgid ""
 msgstr ""
 "Los servicios de comprobación activos tienen una latencia de comprobación "
 "media de %(check_latency_generic).3fs."
+
+msgid ""
+"The address the special agent connects to. Independently of this, the TLS "
+"certificate is validated against the host name, so certificate validation "
+"keeps working when connecting to an IP address."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -75241,10 +75311,6 @@ msgstr ""
 msgid "The following users"
 msgstr "Los siguientes usuarios"
 
-#, fuzzy
-msgid "The form values must be sent as an object."
-msgstr "El clúster debe tener al menos un nodo"
-
 msgid "The found hosts themselves"
 msgstr "Los propios hosts encontrados"
 
@@ -75489,6 +75555,11 @@ msgid ""
 "The host name template must reference at least one attribute, for example "
 "$RESOURCE_ATTR.service.name$, $SCOPE_ATTR.scope.name$ or "
 "$DATA_POINT_ATTR.pod$, so the host name can be computed from the data."
+msgstr ""
+
+msgid ""
+"The host name the server certificate is validated against. If omitted, the "
+"Checkmk host name is used."
 msgstr ""
 
 msgid "The host or service was in a scheduled downtime"
@@ -75768,9 +75839,10 @@ msgid ""
 "operating speed of the interface, reaches at least this value. On interfaces "
 "with little traffic, a few packets can already account for a large share of "
 "the overall traffic, which makes percentual levels fire even though the "
-"absolute traffic volume is negligible. If the used bandwidth cannot be "
-"determined, because the operating speed of the interface is unknown or no "
-"traffic counters are available, the levels are always applied."
+"absolute traffic volume is negligible. If the operating speed of the "
+"interface is unknown, the used bandwidth cannot be related to it at all and "
+"the levels are not applied either. If only the traffic counters are missing, "
+"the levels are applied as usual."
 msgstr ""
 
 msgid ""
@@ -76292,6 +76364,10 @@ msgid ""
 msgstr ""
 "El nombre del grupo se utiliza como clave interna. No se puede cambiar "
 "posteriormente. También es visible en la GUI de estado."
+
+#, fuzzy
+msgid "The name of the host"
+msgstr "El nombre del puerto FC"
 
 msgid "The name of the input, e.g. <tt>Phase 1</tt>"
 msgstr "El nombre de la entrada, por ejemplo <tt>Fase 1</tt>"
@@ -77005,6 +77081,10 @@ msgstr "El puerto que se utiliza para la llamada api."
 msgid "The port the DBMS listens to"
 msgstr "El puerto en el que escucha el SGBD"
 
+#, fuzzy
+msgid "The port the Veeam REST API listens on."
+msgstr "El puerto en el que escucha el SGBD"
+
 #. weblate-flags: read-only, domain-specific
 #, fuzzy
 msgid "The port to query data from the data backend."
@@ -77161,11 +77241,6 @@ msgstr ""
 #, fuzzy, python-format
 msgid "The relations of this host are malformed: %(error)s"
 msgstr "Ha fallado la verificación: %s"
-
-msgid ""
-"The relations of this host will be deleted, and removed from the related "
-"hosts wherever they can be written."
-msgstr ""
 
 msgid ""
 "The renaming of hosts is a complex operation since a host's name is being "
@@ -80036,15 +80111,17 @@ msgid_plural "This host has %(count)d comments"
 msgstr[0] "Este host no tiene agentes de Checkmk."
 msgstr[1] "Este host no tiene agentes de Checkmk."
 
+#, fuzzy, python-format
+msgid "This host has %(count)d related host:"
+msgid_plural "This host has %(count)d related hosts:"
+msgstr[0] "Este host no tiene agentes de Checkmk."
+msgstr[1] "Este host no tiene agentes de Checkmk."
+
 msgid "This host has a baked agent"
 msgstr "Este host tiene un agente horneado"
 
 msgid "This host has no Checkmk agents."
 msgstr "Este host no tiene agentes de Checkmk."
-
-#, fuzzy, python-format
-msgid "This host has related hosts: %(count)d"
-msgstr "Total de comentarios: %(count)d"
 
 #, python-format
 msgid "This host is a cluster of %(nodes)s"
@@ -80335,10 +80412,6 @@ msgstr ""
 "Este patrón de archivo de registro coincide primero y se utilizará para "
 "definir el estado de la línea dada."
 
-#, fuzzy
-msgid "This map is read-only."
-msgstr "El LUN es de sólo lectura"
-
 msgid ""
 "This match only makes sense for custom notifications. When a user creates a "
 "custom notification then he/she can enter a comment. This comment is shipped "
@@ -80467,6 +80540,10 @@ msgstr "Este nombre se utilizará en la descripción del servicio"
 #, fuzzy
 msgid "This node has nested aggregation differences."
 msgstr "La agregación de BI solicitada no existe."
+
+#, fuzzy
+msgid "This node is configured differently in the frozen aggregation"
+msgstr "Este nodo sólo está en la agregación congelada"
 
 msgid "This node is not in the frozen aggregation"
 msgstr "Este nodo no está en la agregación congelada"
@@ -89252,10 +89329,6 @@ msgstr "Agregación desconocida"
 msgid "Unknown check parameter rule sets"
 msgstr "Mostrar parámetros de comprobación"
 
-#, fuzzy, python-format
-msgid "Unknown command '%(action)s'."
-msgstr "%d íconos y acciones"
-
 msgid "Unknown configuration change"
 msgstr "Cambio de configuración desconocido"
 
@@ -91976,6 +92049,10 @@ msgstr "Mensajes de los usuarios"
 msgid "User messages"
 msgstr "Mensajes de los usuarios"
 
+#, fuzzy
+msgid "User name"
+msgstr "Nombre de usuario"
+
 msgid "User notification"
 msgstr "Notificación al usuario"
 
@@ -92819,9 +92896,6 @@ msgstr "VA"
 msgid "VCenter authentication"
 msgstr "Autenticación de VCenter"
 
-msgid "VEEAM tape backup jobs"
-msgstr "Trabajos de copia de seguridad en cinta de VEEAM"
-
 msgid "VLAN type"
 msgstr "Tipo de VLAN"
 
@@ -92959,14 +93033,6 @@ msgstr "Val. %(nr)d"
 
 msgid "Valid from"
 msgstr "Válido desde"
-
-#, fuzzy
-msgid ""
-"Valid service names may only contain letters, numbers, dashes, underscores, "
-"spaces, dots and colons."
-msgstr ""
-"Las descripciones de servicio válidas sólo pueden contener letras, números, "
-"guiones, guiones bajos, espacios y puntos."
 
 msgid "Valid till"
 msgstr "Válido hasta"
@@ -93144,8 +93210,16 @@ msgid "Vaults"
 msgstr "Bóvedas"
 
 #, fuzzy
+msgid "Veeam Backup & Replication"
+msgstr "Reescribir la aplicación"
+
+#, fuzzy
 msgid "Veeam backup status (Windows)"
 msgstr "Estado de la copia de seguridad de Veeam (Windows)"
+
+#, fuzzy
+msgid "Veeam tape backup jobs"
+msgstr "Trabajos de copia de seguridad en cinta de VEEAM"
 
 msgid "Veeam: Time since last CDP run"
 msgstr "Veeam: Tiempo desde la última copia de seguridad"
@@ -95324,12 +95398,6 @@ msgstr ""
 "desplegable no sea demasiado grande cuando tengas un gran número de listas. "
 
 msgid ""
-"When unchecked, the map is hidden from regular users in the maps list and "
-"dashboard. Direct links continue to work for users who already have view "
-"permission."
-msgstr ""
-
-msgid ""
 "When using the regular HTTP protocol all data transfered between the Checkmk "
 "and the clients using the GUI is sent over the network in plain text "
 "(unencrypted). This includes the passwords users enter to authenticate with "
@@ -96630,10 +96698,6 @@ msgstr "No está permitido editar los cuadros de mando."
 
 #, fuzzy
 msgid "You are not allowed to create dashboards."
-msgstr "No está permitido editar los cuadros de mando."
-
-#, fuzzy
-msgid "You are not allowed to create or edit maps."
 msgstr "No está permitido editar los cuadros de mando."
 
 #, python-format
@@ -99052,6 +99116,10 @@ msgid "and"
 msgstr "Banda"
 
 #, fuzzy, python-format
+msgid "and %(count)d more"
+msgstr " y %s '%s'"
+
+#, fuzzy, python-format
 msgid "and %(count)s more"
 msgstr " y %s '%s'"
 
@@ -99235,6 +99303,10 @@ msgstr "intervalo de confianza"
 
 msgid "configuration"
 msgstr "configuración"
+
+#, fuzzy
+msgid "configuration changed"
+msgstr "Cambio de configuración desconocido"
 
 msgid "configure"
 msgstr "configure"
@@ -101393,6 +101465,10 @@ msgid "Close"
 msgstr "Cerrado"
 
 #, fuzzy
+msgid "Could not load this content."
+msgstr "No se puede eliminar esta conexión."
+
+#, fuzzy
 msgid "Toggle %{ title }"
 msgstr "Alternar entradas de registro"
 
@@ -101511,10 +101587,6 @@ msgstr "Secreto copiado en el portapapeles"
 #, fuzzy
 msgid "Clear search"
 msgstr "Búsqueda de reglas"
-
-#, fuzzy
-msgid "Could not load this content."
-msgstr "No se puede eliminar esta conexión."
 
 #, fuzzy
 msgid "No services"
@@ -104021,6 +104093,10 @@ msgid "Graph data could not be loaded."
 msgstr "No se ha podido encontrar el DN de la base del grupo."
 
 #, fuzzy
+msgid "There is no data to display in this time range"
+msgstr "Percentil dentro del intervalo de tiempo"
+
+#, fuzzy
 msgid "Formula input"
 msgstr "Fórmula"
 
@@ -104858,6 +104934,2577 @@ msgstr ""
 msgid "Alt + k"
 msgstr ""
 
+msgid "Free placement of objects on a canvas or background image"
+msgstr ""
+
+msgid "Objects positioned on an interactive world map using geo-coordinates"
+msgstr ""
+
+msgid "Dynamic tree of all hosts and their relationships"
+msgstr ""
+
+msgid "Automatic display of all hosts/services matching a group filter"
+msgstr ""
+
+msgid ""
+"Live status tree along the Checkmk SETUP folder hierarchy, with worst-state "
+"roll-up"
+msgstr ""
+
+msgid ""
+"Design-first slide for dashboards and status walls — direct manipulation"
+msgstr ""
+
+msgid "Map ID is too long (max %{max} characters)"
+msgstr ""
+
+#, fuzzy
+msgid "Only letters, digits, hyphens (-) and underscores (_) allowed"
+msgstr "Utilice aquí sólo letras minúsculas, dígitos y guiones bajos."
+
+msgid ""
+"Some characters were removed (umlauts, punctuation, symbols are not allowed)"
+msgstr ""
+
+#, fuzzy
+msgid "A map with this ID already exists"
+msgstr "Ya existe un paquete de BI con este ID."
+
+#, fuzzy
+msgid "Failed to create map"
+msgstr "No se ha podido mostrar el valor:"
+
+msgid "Map ID"
+msgstr ""
+
+msgid ""
+"Letters, digits, hyphens and underscores only — spaces become hyphens "
+"automatically"
+msgstr ""
+
+#, fuzzy
+msgid "My map"
+msgstr "Añadir macro"
+
+#, fuzzy
+msgid "No connections configured yet — create one first."
+msgstr "Configuración de host"
+
+#, fuzzy
+msgid "Manage connections →"
+msgstr "Añadir conexión"
+
+#, fuzzy
+msgid "%{n} selected"
+msgid_plural "%{n} selected"
+msgstr[0] "Ninguno seleccionado"
+msgstr[1] "Ninguno seleccionado"
+
+#, fuzzy
+msgid "Delete %{n} maps"
+msgstr "Borrar todos los mapas"
+
+msgid ""
+"The following maps will be permanently removed. This action cannot be undone."
+msgstr ""
+
+#, fuzzy
+msgid "… and %{n} more"
+msgstr " y %s '%s'"
+
+msgid "%{head}, … and %{n} more"
+msgstr ""
+
+#, fuzzy
+msgid "Edit %{n} maps"
+msgstr "Editar todos los mapas"
+
+msgid ""
+"Tick the fields you want to overwrite on every selected map. Unchecked "
+"fields stay untouched."
+msgstr ""
+
+#, fuzzy
+msgid "Could not load the bulk-edit form."
+msgstr "No se puede eliminar esta conexión."
+
+#, fuzzy
+msgid "Apply to %{n} maps"
+msgstr "Aplicar a los gráficos combinados"
+
+#, fuzzy
+msgid "%{n} object"
+msgid_plural "%{n} objects"
+msgstr[0] "objetos"
+msgstr[1] "objetos"
+
+#, fuzzy
+msgid "Map flags"
+msgstr "Es por defecto"
+
+#, fuzzy
+msgid "Not in menu"
+msgstr "Menú de acción"
+
+#, fuzzy
+msgid "Not shown in the Monitor menu"
+msgstr "Tema en el menú 'Monitor'"
+
+#, fuzzy
+msgid "Rotates every %{n} seconds"
+msgstr "por segundo"
+
+msgid "No maps match \"%{q}\"."
+msgstr ""
+
+#, fuzzy
+msgid "No maps configured."
+msgstr "No está configurado."
+
+msgid "Check for typing errors or try a broader term."
+msgstr ""
+
+msgid "Create your first map with \"Add map\" above."
+msgstr ""
+
+#, fuzzy
+msgid "Contact your administrator to have a map created."
+msgstr "Póngase en contacto con su administrador."
+
+#, fuzzy
+msgid "Maps administration"
+msgstr "Administración de la sede"
+
+#, fuzzy
+msgid "Select all visible maps"
+msgstr "Borrar todos los mapas"
+
+#, fuzzy
+msgid "Select %{name}"
+msgstr "Borrar host"
+
+msgid "Contents come from the live query"
+msgstr ""
+
+#, fuzzy
+msgid "%{n} map"
+msgid_plural "%{n} maps"
+msgstr[0] "%d días"
+msgstr[1] "%d días"
+
+#, fuzzy
+msgid "Show maps"
+msgstr "Mostrar %s"
+
+#, fuzzy
+msgid "Search maps…"
+msgstr "Buscar hosts"
+
+#, fuzzy
+msgid "Map list drawing"
+msgstr "Configuración global"
+
+#, fuzzy
+msgid "Clone map \"%{name}\""
+msgstr "Clon"
+
+#, fuzzy
+msgid "Export map as JSON"
+msgstr "Exportar como JSON"
+
+#, fuzzy
+msgid "Export map \"%{name}\" as JSON"
+msgstr "Exportar como JSON"
+
+#, fuzzy
+msgid "Delete map"
+msgstr "Borrar todos los mapas"
+
+#, fuzzy
+msgid "Delete map \"%{name}\""
+msgstr "Borrar host"
+
+msgid "Actions for map \"%{name}\""
+msgstr ""
+
+#, fuzzy
+msgid "%{type} preview"
+msgstr "Avance de la actualización"
+
+#, fuzzy
+msgid "%{n} maps deleted"
+msgstr "Ninguno seleccionado"
+
+msgid "%{ok} deleted, %{fail} failed"
+msgstr ""
+
+#, fuzzy
+msgid "Bulk delete failed"
+msgstr "Fallo del gestor de alertas"
+
+msgid "None of the selected maps is editable (all are read-only)."
+msgstr ""
+
+#, fuzzy
+msgid "Updated %{n} maps"
+msgstr "Estado de actualización"
+
+msgid "Updated %{ok}, %{fail} failed"
+msgstr ""
+
+#, fuzzy
+msgid "Bulk edit failed"
+msgstr "Edición masiva de hosts"
+
+#, fuzzy
+msgid "%{alias} (Copy)"
+msgstr " (Copia)"
+
+#, fuzzy
+msgid "Clone failed"
+msgstr "Inicio de sesión desactivado"
+
+#, fuzzy
+msgid "Export failed"
+msgstr "Cargar el archivo MIB"
+
+#, fuzzy
+msgid "Import failed"
+msgstr "Importar iCalendar"
+
+#, fuzzy
+msgid "Yours"
+msgstr "Horas"
+
+#, fuzzy
+msgid "Cards"
+msgstr "noCard"
+
+#, fuzzy
+msgid ""
+"Are you sure you want to delete \"%{name}\"? This action cannot be undone."
+msgstr "No está permitido borrar este %s."
+
+msgid "Map \"%{name}\" already exists. Overwrite?"
+msgstr ""
+
+#, fuzzy
+msgid "Select all (%{n} visible)"
+msgstr "Eliminar todo"
+
+#, fuzzy
+msgid "Static"
+msgstr "Texto estático"
+
+msgid "Radar"
+msgstr ""
+
+#, fuzzy
+msgid "live contents"
+msgstr "El cliente se conecta"
+
+#, fuzzy
+msgid "Published"
+msgstr "Editorial"
+
+#, fuzzy
+msgid "Shared (sites)"
+msgstr "Compartido con"
+
+#, fuzzy
+msgid "Shared (groups)"
+msgstr "Grupos de servicios"
+
+#, fuzzy
+msgid "Private"
+msgstr "IP privadas"
+
+msgid "You"
+msgstr ""
+
+#, fuzzy
+msgid "Delete image"
+msgstr "Borrar el rango de tiempo"
+
+#, fuzzy
+msgid "Delete image %{name}"
+msgstr "Borrar usuario"
+
+#, fuzzy
+msgid "Icon filename"
+msgstr "Nombre de archivo no válido"
+
+#, fuzzy
+msgid "Search images…"
+msgstr "Buscar hosts"
+
+#, fuzzy
+msgid "Search icons…"
+msgstr "Buscar hosts"
+
+#, fuzzy
+msgid "Upload image"
+msgstr "Cargar el archivo MIB"
+
+#, fuzzy
+msgid "%{n} image"
+msgid_plural "%{n} images"
+msgstr[0] "Imagen del icono"
+msgstr[1] "Imagen del icono"
+
+#, fuzzy
+msgid "%{n} icon"
+msgid_plural "%{n} icons"
+msgstr[0] "segundos"
+msgstr[1] "segundos"
+
+#, fuzzy
+msgid "Clear selected image"
+msgstr "Selección de carpetas"
+
+msgid "No images match \"%{q}\""
+msgstr ""
+
+#, fuzzy
+msgid "No images uploaded yet"
+msgstr "Bytes cargados"
+
+#, fuzzy
+msgid "as background"
+msgstr "Trabajos de fondo"
+
+#, fuzzy
+msgid "Image is still in use"
+msgstr "Sigue siendo utilizado por"
+
+msgid ""
+"The image \"%{name}\" is referenced by %{count} map(s). Deleting it will "
+"leave those maps without an image. Continue?"
+msgstr ""
+
+#, fuzzy
+msgid "Delete failed"
+msgstr "Perfil de usuario por defecto"
+
+#, fuzzy
+msgid "Upload failed"
+msgstr "Cargar el archivo MIB"
+
+#, fuzzy
+msgid "Delete image \"%{name}\"?"
+msgstr "Borrar usuario"
+
+msgid "Upload and manage images for map objects"
+msgstr ""
+
+#, fuzzy
+msgid "Uploaded images"
+msgstr "Cargar el archivo MIB"
+
+msgid "No images uploaded yet — upload one to add custom icons."
+msgstr ""
+
+#, fuzzy
+msgid "No matches for '%{q}'."
+msgstr "No hay coincidencias"
+
+#, fuzzy
+msgid "Built-in icons"
+msgstr "Visibilidad de los iconos incorporados"
+
+#, fuzzy
+msgid "This cannot be undone."
+msgstr "Este trabajo no se puede detener"
+
+#, fuzzy
+msgid "host group"
+msgstr "Grupos de acogida"
+
+#, fuzzy
+msgid "service group"
+msgstr "Grupos de servicios"
+
+#, fuzzy
+msgid "Failed to acknowledge"
+msgstr "Actualizar & reconocer"
+
+#, fuzzy
+msgid "Acknowledge problem"
+msgstr "Reconocer los problemas"
+
+msgid ""
+"Checkmk fans this command out across all members; partial failures abort the "
+"operation."
+msgstr ""
+
+#, fuzzy
+msgid "Applies to every member of the %{type}"
+msgstr "Se permite ver partes del árbol"
+
+msgid "Sticky (stays until OK)"
+msgstr ""
+
+#, fuzzy
+msgid "Persistent"
+msgstr "Persistente (largo)"
+
+#, fuzzy
+msgid "Acknowledgement set"
+msgstr "Agradecimiento"
+
+#, fuzzy
+msgid "Acknowledging…"
+msgstr "Reconozca"
+
+#, fuzzy
+msgid "Acknowledge several problems"
+msgstr "Reconocer los problemas"
+
+#, fuzzy
+msgid "%{count} from \"%{origin}\""
+msgstr "contando"
+
+msgid "%{count} without a problem left out"
+msgstr ""
+
+#, fuzzy
+msgid "%{count} acknowledged"
+msgstr "reconoció"
+
+msgid "Acknowledging %{current}/%{total}…"
+msgstr ""
+
+#, fuzzy
+msgid "Acknowledge %{count}"
+msgstr "Agradecimiento"
+
+#, fuzzy
+msgid "Please provide a start and an end time, with the end after the start."
+msgstr "Por favor, indique un host y un puerto válidos"
+
+#, fuzzy
+msgid "Schedule downtime for several"
+msgstr "Programar el tiempo de inactividad para %d %s"
+
+#, fuzzy
+msgid "Downtime period"
+msgstr "ID de tiempo de inactividad"
+
+#, fuzzy
+msgid "Downtime scheduled for %{count}"
+msgstr "Actualizar servicio"
+
+#, fuzzy
+msgid "Scheduling %{current}/%{total}…"
+msgstr "Añadir nueva etiqueta"
+
+#, fuzzy
+msgid "Schedule downtime for %{count}"
+msgstr "Programar el tiempo de inactividad para %(count)d %(services)s"
+
+#, fuzzy
+msgid "and %{count} more"
+msgstr " y %s '%s'"
+
+#, fuzzy
+msgid "Failed to add comment"
+msgstr "Operaciones de índice fallidas"
+
+#, fuzzy
+msgid "Comment added"
+msgstr "Comentario id"
+
+#, fuzzy
+msgid "Adding…"
+msgstr "Cargando..."
+
+#, fuzzy
+msgid "This aggregation has no hosts or services to put into downtime."
+msgstr "Esta agregación está actualmente fuera de su período de servicio."
+
+#, fuzzy
+msgid "%{failed}/%{total} failed to schedule downtime"
+msgstr "Inicio o fin de un tiempo de inactividad programado"
+
+#, fuzzy
+msgid "Failed to schedule downtime"
+msgstr "considerar como tiempo de inactividad programado"
+
+#, fuzzy
+msgid "Schedule downtime"
+msgstr "Programar los tiempos de inactividad"
+
+#, fuzzy
+msgid "Downtime scheduled"
+msgstr "Fin del tiempo de inactividad"
+
+#, fuzzy
+msgid "Scheduling…"
+msgstr "Programar"
+
+#, fuzzy
+msgid "Failed to remove downtime"
+msgstr "Establecer/eliminar tiempos de inactividad"
+
+#, fuzzy
+msgid "Remove downtime"
+msgstr "Eliminar los tiempos de inactividad"
+
+#, fuzzy
+msgid "no active downtimes"
+msgstr "Eliminar los tiempos de inactividad"
+
+#, fuzzy
+msgid "%{n} downtime active"
+msgid_plural "%{n} downtimes active"
+msgstr[0] "En mantenimiento"
+msgstr[1] "En mantenimiento"
+
+#, fuzzy
+msgid "Removing…"
+msgstr "Ahorro de espacio"
+
+msgid "%{failed} of %{total} failed: %{sample}"
+msgstr ""
+
+#, fuzzy
+msgid "Failed to remove acknowledgement"
+msgstr "Eliminar el acuse de recibo"
+
+#, fuzzy
+msgid "No active downtimes found"
+msgstr "No se ha encontrado"
+
+#, fuzzy
+msgid "Downtime removed"
+msgstr "Fin del tiempo de inactividad"
+
+#, fuzzy
+msgid "Force check failed"
+msgstr "Fallo en la búsqueda"
+
+#, fuzzy
+msgid "Force check scheduled"
+msgstr "Activar el programador de cambios"
+
+#, fuzzy
+msgid "Failed to toggle notifications"
+msgstr "Notificaciones fallidas"
+
+#, fuzzy
+msgid "Notifications updated"
+msgstr "Fase de notificación"
+
+#, fuzzy
+msgid "Host in Checkmk"
+msgstr "Aprendizaje Checkmk"
+
+#, fuzzy
+msgid "Problem services"
+msgstr "servicios con problemas"
+
+#, fuzzy
+msgid "Service in Checkmk"
+msgstr "Controles de servicio"
+
+#, fuzzy
+msgid "Group in Checkmk"
+msgstr "Acerca de Checkmk"
+
+#, fuzzy
+msgid "Aggregation tree in Checkmk"
+msgstr "Controles de agregación"
+
+#, fuzzy
+msgid "All aggregations in Checkmk"
+msgstr "Todas las agregaciones"
+
+#, fuzzy
+msgid "No Checkmk URL configured"
+msgstr "Archivos de configuración de Checkmk"
+
+#, fuzzy
+msgid "Detach from object"
+msgstr "Dirección de servidor URL personalizada"
+
+#, fuzzy
+msgid "Remove bend"
+msgstr "Eliminado"
+
+#, fuzzy
+msgid "Duplicate"
+msgstr "Tasa de deduplicación"
+
+#, fuzzy
+msgid "next check in %{duration}"
+msgstr "Duración de la comprobación del host"
+
+#, fuzzy
+msgid "check overdue by %{duration}"
+msgstr "duración media"
+
+#, fuzzy
+msgid "No permission"
+msgstr "Permiso"
+
+#, fuzzy
+msgid "Not found in monitoring data"
+msgstr "Crear datos de seguimiento aleatorios"
+
+#, fuzzy
+msgid "since %{duration}"
+msgstr "duración media"
+
+msgid "ACK"
+msgstr ""
+
+#, fuzzy
+msgid "DOWNTIME"
+msgstr "ABAJO"
+
+msgid "STALE"
+msgstr ""
+
+#, fuzzy
+msgid "Notifications disabled — alerts will not be sent for this host"
+msgstr "Las notificaciones están desactivadas para este %(what)s"
+
+msgid "MUTED"
+msgstr ""
+
+#, fuzzy
+msgid "Exit full screen"
+msgstr "Datos enviados"
+
+msgid "Live"
+msgstr ""
+
+#, fuzzy
+msgid "Read-only"
+msgstr "Modo de sólo lectura"
+
+#, fuzzy
+msgid "Editing"
+msgstr "Edición"
+
+#, fuzzy
+msgid "← Back to overview"
+msgstr "Volver a la vista"
+
+msgid ""
+"%{total} service issues (%{critical} critical, %{warning} warning) across %"
+"{hostsWithProblems} hosts"
+msgstr ""
+
+msgid "%{critical} crit · %{warning} warn"
+msgstr ""
+
+#, fuzzy
+msgid "Resume rotation"
+msgstr "Presentación"
+
+#, fuzzy
+msgid "Pause rotation"
+msgstr "Contenedores en pausa"
+
+#, fuzzy
+msgid "%{seconds}s"
+msgstr "No seleccionado"
+
+#, fuzzy
+msgid "Object ID"
+msgstr "Objeto"
+
+#, fuzzy
+msgid "Search — type '/' for operators"
+msgstr "Patrón de búsqueda"
+
+#, fuzzy
+msgid "Show search operators"
+msgstr "Patrón de búsqueda"
+
+msgid "Type '/' to use a search operator"
+msgstr ""
+
+msgid ""
+"Without a prefix all fields are searched. Multiple terms are AND-combined."
+msgstr ""
+
+msgid "Open in new tab (full screen)"
+msgstr ""
+
+msgid "Zoom in"
+msgstr ""
+
+#, fuzzy
+msgid "Zoom out"
+msgstr "Cerrar sesión"
+
+#, fuzzy
+msgid "Fit all objects"
+msgstr "Limitar los objetos"
+
+#, fuzzy
+msgid "Reset to fit"
+msgstr "Restablecer los valores por defecto"
+
+#, fuzzy
+msgid "%{duration} ago"
+msgstr "duración media"
+
+#, fuzzy
+msgid "in %{duration}"
+msgstr "duración mínima"
+
+#, fuzzy
+msgid "Acknowledge problems on all %{n} members of this group"
+msgstr "Reconocer los problemas"
+
+#, fuzzy
+msgid "Acknowledge (%{n})"
+msgstr "Reconozca"
+
+#, fuzzy
+msgid "Remove ACK"
+msgstr "Eliminar"
+
+#, fuzzy
+msgid "Force check"
+msgstr "Controles de servicio"
+
+#, fuzzy
+msgid "Schedule downtime on all %{n} members of this group"
+msgstr "Programar el tiempo de inactividad para %(count)d %(services)s"
+
+#, fuzzy
+msgid "Downtime (%{n})"
+msgstr "Fin del tiempo de inactividad"
+
+#, fuzzy
+msgid "Enable notifications"
+msgstr "activar las notificaciones"
+
+#, fuzzy
+msgid "Active downtimes"
+msgstr "Eliminar los tiempos de inactividad"
+
+#, fuzzy
+msgid "Flexible (triggered) downtime"
+msgstr "Tiempo de inactividad flexible"
+
+msgid "FLEX"
+msgstr ""
+
+#, fuzzy
+msgid "expires"
+msgstr "Expira"
+
+#, fuzzy
+msgid "Aggregation view"
+msgstr "Agregación"
+
+#, fuzzy
+msgid "Worst leaf"
+msgstr "El peor estado"
+
+msgid "%{count} nodes at depth %{depth} below the root."
+msgstr ""
+
+msgid ""
+"Connection to at least one federation site is unhealthy — leaf states shown "
+"may be out of date."
+msgstr ""
+
+#, fuzzy
+msgid "Acknowledge %{count} contributing leaves"
+msgstr "Werks incompatibles reconocidos"
+
+#, fuzzy
+msgid "Open in Checkmk"
+msgstr "Aprendizaje Checkmk"
+
+#, fuzzy
+msgid "Edit in Checkmk Setup"
+msgstr "Monitorización a través del agente Checkmk"
+
+#, fuzzy
+msgid "Search members…"
+msgstr "Coincidir con los Servicios"
+
+#, fuzzy
+msgid "No members match the current filter"
+msgstr "Coincidencia de nombres de proceso"
+
+msgid "Open %{name} in the drawer"
+msgstr ""
+
+msgid "DT"
+msgstr ""
+
+msgid "+%{n} more — refine the filter to see them"
+msgstr ""
+
+#, fuzzy
+msgid "Raw metrics (%{n})"
+msgstr "Métrica"
+
+msgid "Summary (depth %{depth})"
+msgstr ""
+
+#, fuzzy
+msgid "Notif. period"
+msgstr "Período de notificación"
+
+#, fuzzy
+msgid "Children"
+msgstr "hijos"
+
+#, fuzzy
+msgid "Activity"
+msgstr "Activar"
+
+#, fuzzy
+msgid "Show problems"
+msgstr "Mostrar sólo los problemas"
+
+#, fuzzy
+msgid "Attempt"
+msgstr "vacío"
+
+msgid "%{current}/%{max} (%{type})"
+msgstr ""
+
+msgid "soft"
+msgstr ""
+
+msgid "hard"
+msgstr ""
+
+#, fuzzy
+msgid "Last check"
+msgstr "Última comprobación de host"
+
+msgid "overdue"
+msgstr ""
+
+msgid ""
+"%{count} nodes — the subtree will be very crowded on the map. Set expand "
+"depth to 0 to keep only the root glyph and drill into details via the drawer."
+msgstr ""
+
+#, fuzzy
+msgid "Location-bound"
+msgstr "Ubicación"
+
+msgid "Hosts at this coordinate — new hosts added there join automatically."
+msgstr ""
+
+#, fuzzy
+msgid "Fixed selection"
+msgstr "Selección de carpetas"
+
+msgid "Exactly the selected hosts — does not change on its own."
+msgstr ""
+
+#, fuzzy
+msgid "Bundle into a location"
+msgstr "utilizado de asignación"
+
+msgid "%{n} hosts will be merged into one worst-state location icon."
+msgstr ""
+
+#, fuzzy
+msgid "Name (optional)"
+msgstr "Comentario (opcional)"
+
+#, fuzzy
+msgid "e.g. Datacenter Zürich"
+msgstr "Centro de datos %d"
+
+#, fuzzy
+msgid "Bundle type"
+msgstr "Tipo de regla"
+
+#, fuzzy
+msgid "Bundle"
+msgstr "maneja"
+
+msgid ""
+"Preview unavailable — the Checkmk connection is unhealthy. Check the "
+"connection status and reload."
+msgstr ""
+
+#, fuzzy
+msgid "Preview (live state)"
+msgstr "Actualizaciones pendientes"
+
+#, fuzzy
+msgid "…%{count} more"
+msgstr "contando"
+
+#, fuzzy
+msgid "Select an aggregation"
+msgstr "Borrar agregaciones"
+
+msgid ""
+"No BI aggregations available — none are configured in Checkmk, or your user "
+"has no permission to view them."
+msgstr ""
+
+msgid ""
+"Top-level aggregation function from Checkmk (e.g. worst, best, count_ok). "
+"Configured in the setup."
+msgstr ""
+
+#, fuzzy
+msgid "Expand depth"
+msgstr "Ampliar"
+
+msgid "Show child nodes up to N levels (0 = root only)."
+msgstr ""
+
+#, fuzzy
+msgid "Hostname"
+msgstr "Nombre del host"
+
+#, fuzzy
+msgid "Select a host"
+msgstr "Borrar host"
+
+#, fuzzy
+msgid "No hosts available"
+msgstr "No hay información disponible"
+
+msgid "Service description"
+msgstr "Descripción del servicio"
+
+#, fuzzy
+msgid "Select a service"
+msgstr "Borrar usuario"
+
+#, fuzzy
+msgid "Pick a host first"
+msgstr "Importación masiva de hosts"
+
+#, fuzzy
+msgid "No services for this host"
+msgstr "Número de servicios del host"
+
+#, fuzzy
+msgid "Select a group"
+msgstr "Conexiones rechazadas"
+
+#, fuzzy
+msgid "No host groups configured in this site"
+msgstr "Replicar la configuración de la Consola de Eventos a este sitio"
+
+#, fuzzy
+msgid "No service groups configured in this site"
+msgstr "Replicar la configuración de la Consola de Eventos a este sitio"
+
+#, fuzzy
+msgid "Map name"
+msgstr "Nombre de la máquina virtual"
+
+#, fuzzy
+msgid "Select a map"
+msgstr "Conexiones rechazadas"
+
+#, fuzzy
+msgid "No other maps available"
+msgstr "Puertos disponibles"
+
+#, fuzzy
+msgid "Filter on"
+msgstr "Filtro host"
+
+#, fuzzy
+msgid "Livestatus filter"
+msgstr "Error de Livestatus"
+
+msgid "One or more Filter: lines, forwarded verbatim to Livestatus."
+msgstr ""
+
+#, fuzzy
+msgid "Text content"
+msgstr "contenido"
+
+#, fuzzy
+msgid "Add object"
+msgstr "Añadir previsión"
+
+msgid "Grid"
+msgstr ""
+
+#, fuzzy
+msgid "Bring to front"
+msgstr "Cadena a enviar"
+
+#, fuzzy
+msgid "Send to back"
+msgstr "Añadido a la pila"
+
+#, fuzzy
+msgid "Unbundle"
+msgstr "No se ha tratado"
+
+#, fuzzy
+msgid "Inherit from map"
+msgstr "Heredado de "
+
+#, fuzzy
+msgid "Invalid regular expression."
+msgstr "Expresión regular no válida"
+
+msgid "0 of %{total} leaves hidden — filter matches nothing."
+msgstr ""
+
+msgid "All %{count} leaves would be hidden — the filter is too broad."
+msgstr ""
+
+msgid "%{count} of %{total} leaves will be hidden."
+msgstr ""
+
+#, fuzzy
+msgid "Click on map to place…"
+msgstr "Colección de gráficos clonados"
+
+msgid "Say what it shows, then place it"
+msgstr ""
+
+#, fuzzy
+msgid "Select a type"
+msgstr "Seleccione el tipo de dispositivo"
+
+#, fuzzy
+msgid "Place on map"
+msgstr "Clon"
+
+msgid "Pick a metric — weather coloring needs one to colorize the line."
+msgstr ""
+
+#, fuzzy
+msgid "Object properties"
+msgstr "Informe de propiedades"
+
+#, fuzzy
+msgid "Traffic light"
+msgstr "Tráfico enviado"
+
+#, fuzzy
+msgid "map default"
+msgstr "Es por defecto"
+
+#, fuzzy
+msgid "Gadget type"
+msgstr "Tipo de agente"
+
+#, fuzzy
+msgid "first metric"
+msgstr "Detalles del host"
+
+#, fuzzy
+msgid "No metrics available"
+msgstr "Puertos disponibles"
+
+#, fuzzy
+msgid "Custom icon"
+msgstr "Iconos personalizados"
+
+#, fuzzy
+msgid "Exclude members"
+msgstr "Excluir el patrón"
+
+#, fuzzy
+msgid "regex pattern…"
+msgstr "Eliminar el filtro"
+
+#, fuzzy
+msgid "Exclude states"
+msgstr "Excluir casos"
+
+msgid "Regex to exclude members / comma-separated states to ignore"
+msgstr ""
+
+#, fuzzy
+msgid "Image (img)"
+msgstr "Tamaño de la imagen"
+
+#, fuzzy
+msgid "Interactive (iframe)"
+msgstr "Inactivo (archivos)"
+
+msgid "URL embed"
+msgstr ""
+
+#, fuzzy
+msgid "Embed as"
+msgstr "Incrustar la vista existente"
+
+msgid "Auto-refresh (s)"
+msgstr ""
+
+msgid "0 = off"
+msgstr ""
+
+#, fuzzy
+msgid "Template"
+msgstr "Plantilla de nombre de host"
+
+#, fuzzy
+msgid "Metric source"
+msgstr "Historia de la métrica"
+
+#, fuzzy
+msgid "hostname"
+msgstr "Nombre del Vhost"
+
+#, fuzzy
+msgid "service description"
+msgstr "Descripción del servicio"
+
+#, fuzzy
+msgid "Add metric…"
+msgstr "Añadir nueva métrica"
+
+#, fuzzy
+msgid "Time window"
+msgstr "Calendario de tarifas"
+
+#, fuzzy
+msgid "Monitoring object"
+msgstr "Controlar el núcleo"
+
+#, fuzzy
+msgid "Only hard states"
+msgstr "Estados duros de servicio"
+
+#, fuzzy
+msgid "Consider services"
+msgstr "Servicios en la nube"
+
+#, fuzzy
+msgid "group name"
+msgstr "Nombre del grupo"
+
+#, fuzzy
+msgid "No groups available"
+msgstr "No hay información disponible"
+
+msgid ""
+"One or more %{filter} lines, each terminated by a literal %{newline}. "
+"Forwarded verbatim to Livestatus against %{query}."
+msgstr ""
+
+#, fuzzy
+msgid "map-name"
+msgstr "Nombre del ventilador"
+
+#, fuzzy
+msgid "aggregation id"
+msgstr "agregación"
+
+#, fuzzy
+msgid "Subtree line"
+msgstr "Nombre de la sección"
+
+#, fuzzy
+msgid "Use color"
+msgstr "Agente controlador"
+
+#, fuzzy
+msgid "Subtree width"
+msgstr "Fijar la anchura"
+
+#, fuzzy
+msgid "Show label"
+msgstr "Mostrar etiqueta para"
+
+#, fuzzy
+msgid "Label text"
+msgstr "Texto de ayuda"
+
+msgid "(auto from object)"
+msgstr ""
+
+#, fuzzy
+msgid "Offset X"
+msgstr "Desplazamiento"
+
+#, fuzzy
+msgid "Offset Y"
+msgstr "Desplazamiento"
+
+#, fuzzy
+msgid "Background & border"
+msgstr "Trabajos de fondo"
+
+#, fuzzy
+msgid "Border color"
+msgstr "Gráfico de barras"
+
+#, fuzzy
+msgid "no limit"
+msgstr "límite inferior"
+
+#, fuzzy
+msgid "service description (optional)"
+msgstr "Descripción del servicio: "
+
+msgid "This line is attached to an object and follows it."
+msgstr ""
+
+msgid "Z"
+msgstr ""
+
+msgid "Style"
+msgstr "Estilo"
+
+#, fuzzy
+msgid "Perfdata label"
+msgstr "Perfdata"
+
+#, fuzzy
+msgid "Color by utilization (weathermap)"
+msgstr "Utilización de la CPU (media)"
+
+#, fuzzy
+msgid "Metric (in)"
+msgstr "Etiqueta métrica"
+
+#, fuzzy
+msgid "Metric (out)"
+msgstr "Métrica"
+
+#, fuzzy
+msgid "second metric (optional)"
+msgstr "Comentario (opcional)"
+
+#, fuzzy
+msgid "Line color"
+msgstr "Colores de la línea de tiempo"
+
+#, fuzzy
+msgid "Line width"
+msgstr "Limitar la anchura"
+
+#, fuzzy
+msgid "Start X"
+msgstr "Inicie"
+
+#, fuzzy
+msgid "Start Y"
+msgstr "Inicie"
+
+#, fuzzy
+msgid "End X"
+msgstr "no hay tiempo"
+
+#, fuzzy
+msgid "End Y"
+msgstr "no hay tiempo"
+
+#, fuzzy
+msgid "Line label"
+msgstr "Nombre de usuario"
+
+msgid "Automatically derived from Checkmk URL when left empty"
+msgstr ""
+
+#, fuzzy
+msgid "Lat"
+msgstr "Última"
+
+#, fuzzy
+msgid "Lng"
+msgstr "El más largo"
+
+#, fuzzy
+msgid "X"
+msgstr "RX"
+
+msgid "Y"
+msgstr ""
+
+msgid ""
+"Available: {{name}}, {{state}}, {{output}}, {{host}}, {{service}}, "
+"{{address}}, {{state_type}}, {{attempts}}, {{last_check}}, "
+"{{state_duration}}, {{acknowledged}}, {{in_downtime}}, {{stale}}"
+msgstr ""
+
+msgid "e.g. {{name}} is {{state}}"
+msgstr ""
+
+#, fuzzy
+msgid "Hover URL"
+msgstr "URL del módem"
+
+#, fuzzy
+msgid "Center"
+msgstr "Contador"
+
+#, fuzzy
+msgid "Text content…"
+msgstr "contenido"
+
+#, fuzzy
+msgid "Alignment"
+msgstr "Asignar al grupo"
+
+#, fuzzy
+msgid "unsaved"
+msgstr "Guardar"
+
+#, fuzzy
+msgid "Replace…"
+msgstr "Sustitución"
+
+#, fuzzy
+msgid "Remove background image"
+msgstr "Retire el paquete"
+
+#, fuzzy
+msgid "Upload background image…"
+msgstr "Cargar la clave de seguridad"
+
+#, fuzzy
+msgid "(all folders)"
+msgstr "carpeta"
+
+#, fuzzy
+msgid "List (tree)"
+msgstr "Oyentes"
+
+msgid "Map (treemap)"
+msgstr ""
+
+msgid "Any problem (incl. WARNING)"
+msgstr ""
+
+#, fuzzy
+msgid "Only critical & down"
+msgstr "crítico si está por debajo de"
+
+#, fuzzy
+msgid "Root folder"
+msgstr "carpeta"
+
+msgid ""
+"Show only this folder and below. Empty = whole tree. Accepts a folder path "
+"or its stable id."
+msgstr ""
+
+#, fuzzy
+msgid "Auto-expand depth"
+msgstr "Generar"
+
+msgid "How many folder levels are expanded when the map opens."
+msgstr ""
+
+#, fuzzy
+msgid "Default view"
+msgstr "Valor por defecto"
+
+#, fuzzy
+msgid "Which presentation the map opens in by default."
+msgstr "El estado del trabajo se ignora por defecto."
+
+#, fuzzy
+msgid ""
+"Distributed monitoring: limit the tree to these sites. None selected = all "
+"sites."
+msgstr ""
+"Esta condición hace que la regla coincida sólo con los hosts de los sitios "
+"seleccionados."
+
+#, fuzzy
+msgid "Show empty folders"
+msgstr "Mostrar grupos vacíos"
+
+#, fuzzy
+msgid "Expand hosts to their services"
+msgstr "Otros servicios"
+
+#, fuzzy
+msgid "Show only folders/hosts with problems"
+msgstr "Mostrar sólo los problemas"
+
+#, fuzzy
+msgid "Problem severity"
+msgstr "Alertas de problemas"
+
+msgid ""
+"On typical sites almost every host carries some WARNING service — narrowing "
+"to critical keeps the problem filter meaningful."
+msgstr ""
+
+#, fuzzy
+msgid "Use hard states only"
+msgstr "Utilizar estados duros"
+
+#, fuzzy
+msgid "Remove %{site}"
+msgstr "Eliminar el filtro"
+
+#, fuzzy
+msgid "Add site…"
+msgstr "Añadir clasificador"
+
+msgid ""
+"Control who can see this map and whether it is listed in the Monitor menu. "
+"You can always see your own maps."
+msgstr ""
+
+#, fuzzy
+msgid "No contact groups available to share with."
+msgstr "No se han asignado grupos de contacto."
+
+#, fuzzy
+msgid "No sites available to share with."
+msgstr "No está permitido editar los cuadros de mando."
+
+#, fuzzy
+msgid "Monitor menu"
+msgstr "Supervisar las entradas del menú"
+
+#, fuzzy
+msgid "Hide this map in the Monitor menu"
+msgstr "Ocultar este %(title)s en el menú del monitor"
+
+#, fuzzy
+msgid "You do not have permission to share maps with other users."
+msgstr "No tienes permisos para editar este %s"
+
+#, fuzzy
+msgid "Live preview"
+msgstr "Resumen"
+
+#, fuzzy
+msgid "Filter type"
+msgstr "Tipo de racimo"
+
+msgid ""
+"Hosts (or hosts hosting a service) belonging to this Checkmk group are "
+"pulled live from the connection. The group has to exist in the Checkmk setup."
+msgstr ""
+
+msgid "Pick a group — the map has nothing to show without one."
+msgstr ""
+
+#, fuzzy
+msgid "Background image"
+msgstr "Trabajos de fondo"
+
+#, fuzzy
+msgid "Background color"
+msgstr "Trabajos de fondo"
+
+msgid "None — manual placement only"
+msgstr ""
+
+#, fuzzy
+msgid "All hosts with geo coordinates"
+msgstr "Todos los hosts del sitio"
+
+#, fuzzy
+msgid "Hosts in host group…"
+msgstr "El anfitrión está en el Grupo"
+
+#, fuzzy
+msgid "Hosts hosting a service in service group…"
+msgstr "Asignación de servicios a grupos de servicios"
+
+#, fuzzy
+msgid "Map view"
+msgstr "Vista de clonación"
+
+msgid "Latitude"
+msgstr ""
+
+#, fuzzy
+msgid "Longitude"
+msgstr "El más largo"
+
+msgid ""
+"Pan/zoom the map first, then reopen settings to capture the current view."
+msgstr ""
+
+msgid "Closes settings and switches the map to picker mode."
+msgstr ""
+
+msgid "Pick from map"
+msgstr ""
+
+msgid ""
+"Leave empty for the site default. Only OpenStreetMap and the tile server "
+"configured in the global settings can be reached — tiles from anywhere else "
+"are blocked by the browser."
+msgstr ""
+
+msgid "This server is not allowed by the site, its tiles would not load."
+msgstr ""
+
+#, fuzzy
+msgid "Map saturation (%)"
+msgstr "Duración de la actualización"
+
+#, fuzzy
+msgid "100 (default)"
+msgstr "Autenticación (por defecto)"
+
+#, fuzzy
+msgid "Automap source"
+msgstr "Fuente de datos"
+
+msgid ""
+"Hosts are auto-discovered from monitoring data via maps_lat/maps_lng labels "
+"or LAT/LONG custom variables. They show up alongside any objects you place "
+"manually."
+msgstr ""
+
+#, fuzzy
+msgid "Pick a group to discover hosts from."
+msgstr "No se han encontrado hosts detectables"
+
+#, fuzzy
+msgid "%{field} is required."
+msgstr "es necesario"
+
+#, fuzzy
+msgid "No changes to save"
+msgstr "%d cambios"
+
+msgid "Fix the highlighted fields to save"
+msgstr ""
+
+msgid "Save (%{shortcut})"
+msgstr ""
+
+#, fuzzy
+msgid "Please correct the highlighted fields."
+msgstr "Utilice los siguientes niveles"
+
+#, fuzzy
+msgid "Map settings saved"
+msgstr "Configuración global"
+
+#, fuzzy
+msgid "Open map"
+msgstr "Modo abierto"
+
+msgid ""
+"Map changed elsewhere — close and reopen to apply your edit on top of the "
+"latest version."
+msgstr ""
+
+#, fuzzy
+msgid "An error occurred"
+msgstr ", ocurrieron errores"
+
+#, fuzzy
+msgid "Delete map \"%{name}\"?"
+msgstr "Borrar host"
+
+#, fuzzy
+msgid "Map \"%{name}\" deleted"
+msgstr "Objetos gestionados"
+
+#, fuzzy
+msgid "Hover preview:"
+msgstr "ver más"
+
+#, fuzzy
+msgid "Hide preview"
+msgstr "Avance de la actualización"
+
+#, fuzzy
+msgid "Show preview"
+msgstr "ver más"
+
+#, fuzzy
+msgid "Delete map…"
+msgstr "Borrar todos los mapas"
+
+msgid ""
+"This permanently removes the map configuration. Existing object data on "
+"other maps is unaffected."
+msgstr ""
+
+#, fuzzy
+msgid "Only me"
+msgstr "Sólo el tiempo"
+
+#, fuzzy
+msgid "Specific contact groups"
+msgstr "Grupos de contacto del servicio"
+
+#, fuzzy
+msgid "live"
+msgstr "Keepalive"
+
+#, fuzzy
+msgid "+%{n}"
+msgstr "%d días"
+
+#, fuzzy
+msgid "Load failed"
+msgstr "Inicio de sesión desactivado"
+
+#, fuzzy
+msgid "No URL configured"
+msgstr "No está configurado."
+
+msgid "No data for \"%{service}\" on %{host}"
+msgstr ""
+
+#, fuzzy
+msgid "Waiting for data…"
+msgstr "Cargando..."
+
+#, fuzzy
+msgid "Resize"
+msgstr "Tamaño de lectura"
+
+#, fuzzy
+msgid "Stale data"
+msgstr "Anchura total"
+
+#, fuzzy
+msgid "Utilization ring (first metric)"
+msgstr "Utilización de la CPU en el último minuto"
+
+#, fuzzy
+msgid "%{count} selected"
+msgstr "No seleccionado"
+
+#, fuzzy
+msgid "Acknowledge…"
+msgstr "Reconozca"
+
+#, fuzzy
+msgid "Schedule downtime…"
+msgstr "Programar los tiempos de inactividad"
+
+#, fuzzy
+msgid "Clear selection"
+msgstr "Selección de carpetas"
+
+#, fuzzy
+msgid "%{n} more service"
+msgid_plural "%{n} more services"
+msgstr[0] "Servicios obligatorios"
+msgstr[1] "Servicios obligatorios"
+
+#, fuzzy
+msgid "+%{n} more"
+msgid_plural "+%{n} more"
+msgstr[0] "%d hora"
+msgstr[1] "%d hora"
+
+#, fuzzy
+msgid "Fan"
+msgstr "Ventiladores"
+
+msgid "Orbit"
+msgstr ""
+
+#, fuzzy
+msgid "Row"
+msgstr "Filas"
+
+#, fuzzy
+msgid "Failed to load topology"
+msgstr "Operaciones de índice fallidas"
+
+msgid "Force check failed for %{failed} of %{total}"
+msgstr ""
+
+#, fuzzy
+msgid "Force check scheduled for %{count}"
+msgstr "Actualizar servicio"
+
+#, fuzzy
+msgid "No connection configured for this map."
+msgstr "Configuración de host"
+
+msgid "Topology update failed — showing the last one that arrived"
+msgstr ""
+
+#, fuzzy
+msgid "Show only hosts with problems"
+msgstr "Mostrar sólo los problemas"
+
+#, fuzzy
+msgid "Services shown for %{shown} of %{total} hosts"
+msgstr "Servicios de los hosts de baja"
+
+msgid ""
+"Showing service detail for the top %{shown} of %{total} most affected hosts "
+"— others are aggregated as donuts"
+msgstr ""
+
+#, fuzzy
+msgid "Dismiss this hint"
+msgstr "Desactivar este sitio"
+
+#, fuzzy
+msgid "Map not found"
+msgstr "No se ha encontrado"
+
+msgid "…"
+msgstr ""
+
+#, fuzzy
+msgid "Notifications disabled"
+msgstr "Las notificaciones están desactivadas"
+
+#, fuzzy
+msgid "Folder actions — %{folder}"
+msgstr "Carpeta: %(folder)s"
+
+msgid "Applies to %{count} host in “%{folder}”."
+msgid_plural "Applies to %{count} hosts in “%{folder}”."
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "%{count} host without a problem left out."
+msgid_plural "%{count} hosts without a problem left out."
+msgstr[0] ""
+msgstr[1] ""
+
+#, fuzzy
+msgid "Include sub-folders"
+msgstr "Incluir todas las subcarpetas"
+
+#, fuzzy
+msgid "%{count} host done."
+msgid_plural "%{count} hosts done."
+msgstr[0] "No seleccionado"
+msgstr[1] "No seleccionado"
+
+#, fuzzy
+msgid "Sending %{current}/%{total}…"
+msgstr "Añadir nueva etiqueta"
+
+#, fuzzy
+msgid "Acknowledge %{count} host"
+msgid_plural "Acknowledge %{count} hosts"
+msgstr[0] "Reconocer los problemas"
+msgstr[1] "Reconocer los problemas"
+
+#, fuzzy
+msgid "Downtime %{count} host"
+msgid_plural "Downtime %{count} hosts"
+msgstr[0] "Tiempos de inactividad de los hosts"
+msgstr[1] "Tiempos de inactividad de los hosts"
+
+#, fuzzy
+msgid "Folder actions"
+msgstr "Selección de carpetas"
+
+#, fuzzy
+msgid "Open in Checkmk Setup"
+msgstr "Aprendizaje Checkmk"
+
+#, fuzzy
+msgid "Loading services…"
+msgstr "Servicios pendientes"
+
+#, fuzzy
+msgid "Could not load services"
+msgstr "No se puede eliminar esta conexión."
+
+#, fuzzy
+msgid "No problem services"
+msgstr "servicios con problemas"
+
+#, fuzzy
+msgid "Nothing to show here."
+msgstr "No se ha cambiado nada."
+
+#, fuzzy
+msgid "%{n} %{state} host"
+msgid_plural "%{n} %{state} hosts"
+msgstr[0] "No seleccionado"
+msgstr[1] "No seleccionado"
+
+#, fuzzy
+msgid "Collapse"
+msgstr "colapsado"
+
+#, fuzzy
+msgid "empty · 0 hosts"
+msgstr "Importación de hosts"
+
+#, fuzzy
+msgid "%{n} host"
+msgid_plural "%{n} hosts"
+msgstr[0] "%d hora"
+msgstr[1] "%d hora"
+
+#, fuzzy
+msgid "Site unreachable — last known state"
+msgstr "los hosts son inalcanzables o tienen servicios desconocidos"
+
+#, fuzzy
+msgid "stale"
+msgstr "Estancado"
+
+#, fuzzy
+msgid "List"
+msgstr "Oyentes"
+
+msgid "showing %{n} host"
+msgid_plural "showing %{n} hosts"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "all OK"
+msgstr ""
+
+#, fuzzy
+msgid "more matches exist — refine your search"
+msgstr "Más de %d resultados disponibles, por favor afine su búsqueda."
+
+#, fuzzy
+msgid "Search folders, hosts, services…"
+msgstr "Coincidir con los Servicios"
+
+#, fuzzy
+msgid "Folder tree drawing"
+msgstr "Árbol de carpetas"
+
+msgid "Connection lost — showing last known state"
+msgstr ""
+
+msgid "Site unreachable: %{sites} — showing last known state for its hosts"
+msgstr ""
+
+#, fuzzy
+msgid "Waiting for folder data…"
+msgstr "Advertencia si es mayor de"
+
+msgid ""
+"No folders to show. The selected connection has no SETUP folders, or your "
+"filters hide them."
+msgstr ""
+
+msgid "No problems — everything is OK."
+msgstr ""
+
+#, fuzzy
+msgid "No matches for the current filter."
+msgstr "Coincidencia de nombres de proceso"
+
+#, fuzzy
+msgid "Clear filter"
+msgstr "Filtro de búsqueda"
+
+msgid "%{title} · empty"
+msgstr ""
+
+msgid "FLAP"
+msgstr ""
+
+#, fuzzy
+msgid "click: details"
+msgstr "Detalles de la licencia"
+
+msgid "services failed to load — click to retry"
+msgstr ""
+
+#, fuzzy
+msgid "loading services…"
+msgstr "Servicios pendientes"
+
+#, fuzzy
+msgid "click: show services"
+msgstr "Servicios en la sombra"
+
+#, fuzzy
+msgid "click: collapse"
+msgstr "colapsado"
+
+msgid "click: expand"
+msgstr ""
+
+#, fuzzy
+msgid "flapping"
+msgstr "Flapping"
+
+#, fuzzy
+msgid "stale — site unreachable"
+msgstr "El host se vuelve inalcanzable"
+
+msgid "%{n} host · %{breakdown}"
+msgid_plural "%{n} hosts · %{breakdown}"
+msgstr[0] ""
+msgstr[1] ""
+
+#, fuzzy
+msgid "Delete object"
+msgstr "Eliminar trabajo"
+
+#, fuzzy
+msgid "Save failed"
+msgstr "Inicio de sesión desactivado"
+
+#, fuzzy
+msgid "Loading map…"
+msgstr "Opciones de etiquetado"
+
+#, fuzzy
+msgid "Delete %{n} objects?"
+msgstr "En los objetos seleccionados"
+
+#, fuzzy
+msgid "theme default"
+msgstr "Es por defecto"
+
+#, fuzzy
+msgid "Use theme color"
+msgstr "Color del tema por defecto"
+
+msgid "Solid"
+msgstr ""
+
+#, fuzzy
+msgid "Dashed"
+msgstr "Desaparecido"
+
+msgid "Dotted"
+msgstr ""
+
+msgid "Fill"
+msgstr ""
+
+#, fuzzy
+msgid "Stroke"
+msgstr "Rompido"
+
+#, fuzzy
+msgid "Stroke style"
+msgstr "Eliminar todo"
+
+msgid "Flow animation overrides the stroke style"
+msgstr ""
+
+msgid "Radius"
+msgstr ""
+
+#, fuzzy
+msgid "Light"
+msgstr "noLight"
+
+#, fuzzy
+msgid "State dot (default)"
+msgstr "Estado si no hay ninguna entrada que coincida"
+
+#, fuzzy
+msgid "Label size"
+msgstr "Etiquetas"
+
+#, fuzzy
+msgid "Label color"
+msgstr "Gráfico de barras"
+
+#, fuzzy
+msgid "Start endpoint"
+msgstr "Punto final de metadatos"
+
+#, fuzzy
+msgid "End endpoint"
+msgstr "Añadir nueva métrica"
+
+msgid "Animate flow (weathermap)"
+msgstr ""
+
+#, fuzzy
+msgid "Flow metric"
+msgstr "Mostrar métrica"
+
+#, fuzzy
+msgid "Pick a metric…"
+msgstr "Métrica"
+
+msgid "e.g. if_in_bps"
+msgstr ""
+
+#, fuzzy
+msgid "Return metric (optional)"
+msgstr "Comentario (opcional)"
+
+msgid "Splits the link into a two-way weathermap"
+msgstr ""
+
+msgid "Data slot (fill in connect mode)"
+msgstr ""
+
+#, fuzzy
+msgid "Contain"
+msgstr "Contenedor"
+
+#, fuzzy
+msgid "Cover"
+msgstr "Recuperar"
+
+msgid "From image library"
+msgstr ""
+
+#, fuzzy
+msgid "Choose an image…"
+msgstr "Elige todo"
+
+msgid "…or image URL"
+msgstr ""
+
+msgid "https://…"
+msgstr ""
+
+#, fuzzy
+msgid "Fit"
+msgstr "Primero"
+
+#, fuzzy
+msgid "H"
+msgstr "HA"
+
+#, fuzzy
+msgid "Rotation"
+msgstr "Notificación"
+
+#, fuzzy
+msgid "Lock aspect ratio"
+msgstr "Índice de aciertos de la caché L2"
+
+#, fuzzy
+msgid "Opacity"
+msgstr "Capacidad del SAI"
+
+#, fuzzy
+msgid "Theme default"
+msgstr "Es por defecto"
+
+#, fuzzy
+msgid "Typography"
+msgstr "gráfico"
+
+#, fuzzy
+msgid "Font"
+msgstr "Tamaño de letra"
+
+msgid "Italic"
+msgstr ""
+
+#, fuzzy
+msgid "I"
+msgstr "AIX"
+
+msgid "Align"
+msgstr ""
+
+msgid "Align left"
+msgstr ""
+
+#, fuzzy
+msgid "Align center"
+msgstr "Añadir contador"
+
+#, fuzzy
+msgid "Align right"
+msgstr "a la derecha"
+
+#, fuzzy
+msgid "Align top"
+msgstr "Asignar al grupo"
+
+msgid "Align middle"
+msgstr ""
+
+msgid "Align bottom"
+msgstr ""
+
+#, fuzzy
+msgid "Distribute horizontally"
+msgstr "Distribuir la respuesta"
+
+#, fuzzy
+msgid "Distribute vertically"
+msgstr "Supervisión distribuida"
+
+#, fuzzy
+msgid "Host / service"
+msgstr "host/Servicio"
+
+#, fuzzy
+msgid "Map default"
+msgstr "Es por defecto"
+
+#, fuzzy
+msgid "Bind to host…"
+msgstr "Asignar al grupo"
+
+#, fuzzy
+msgid "Service (optional)"
+msgstr "Iconos de servicio"
+
+#, fuzzy
+msgid "Whole host if empty"
+msgstr "Importación masiva de hosts"
+
+#, fuzzy
+msgid "Pick a group…"
+msgstr "Editar grupo de etiquetas"
+
+#, fuzzy
+msgid "Pick an aggregation…"
+msgstr "Agregación única"
+
+#, fuzzy
+msgid "No aggregations available"
+msgstr "No hay información disponible"
+
+msgid "Pick a tool above to start your slide"
+msgstr ""
+
+#, fuzzy
+msgid "Replace slide contents?"
+msgstr "Sustituir por guiones bajos"
+
+msgid ""
+"Applying a template replaces every element on this slide. Undo restores them."
+msgstr ""
+
+#, fuzzy
+msgid "Apply template"
+msgstr "Latencia"
+
+#, fuzzy
+msgid "%{bound} of %{total} connected"
+msgstr "Añadir nueva etiqueta"
+
+#, fuzzy
+msgid "Previous slot"
+msgstr "Descubrimiento del proceso"
+
+#, fuzzy
+msgid "Next slot"
+msgstr "Resumen del estado del anfitrión"
+
+msgid "Done"
+msgstr ""
+
+#, fuzzy
+msgid "Skip"
+msgstr "Detenido"
+
+#, fuzzy
+msgid "Search hosts…"
+msgstr "Buscar hosts"
+
+#, fuzzy
+msgid "Search groups…"
+msgstr "Buscar hosts"
+
+#, fuzzy
+msgid "Search aggregations…"
+msgstr "Agregación métrica"
+
+#, fuzzy
+msgid "Data browser"
+msgstr "Transferencia de datos"
+
+msgid "Drag an entry onto the slide"
+msgstr ""
+
+#, fuzzy
+msgid "Nothing matches your search"
+msgstr "Coincidencia de nombres de proceso"
+
+#, fuzzy
+msgid "Nothing available"
+msgstr "no disponible"
+
+msgid "On slide"
+msgstr ""
+
+msgid "+%{n} more — keep typing to narrow results"
+msgstr ""
+
+#, fuzzy
+msgid "PENDING"
+msgstr "PEND"
+
+#, fuzzy
+msgid "Sample"
+msgstr "Ejemplo:"
+
+#, fuzzy
+msgid "Unbound"
+msgstr "Redondo"
+
+#, fuzzy
+msgid "No image"
+msgstr "Imagen del icono"
+
+#, fuzzy
+msgid "Bind a host first"
+msgstr "Filtros aplicados:"
+
+msgid ""
+"Groups and BI aggregations carry no metrics — gauge and bar show a state "
+"light instead."
+msgstr ""
+
+msgid "Undo"
+msgstr ""
+
+msgid "Redo"
+msgstr ""
+
+#, fuzzy
+msgid "Live status"
+msgstr "Livestatus"
+
+msgid "Slide"
+msgstr ""
+
+#, fuzzy
+msgid "Select an element on the slide"
+msgstr "Seleccione al menos un elemento"
+
+msgid "Element"
+msgstr "Elemento"
+
+#, fuzzy
+msgid "Save now"
+msgstr "Hosts rancios"
+
+#, fuzzy
+msgid "Element name"
+msgstr "Nombre de la ciudad"
+
+msgid "Group — move or duplicate it as one unit."
+msgstr ""
+
+#, fuzzy
+msgid "Ungroup"
+msgstr "grupos"
+
+#, fuzzy
+msgid "%{n} elements selected"
+msgstr "No seleccionado"
+
+msgid "Use the toolbar above the slide to align and distribute."
+msgstr ""
+
+#, fuzzy
+msgid "Theme"
+msgstr "Programar"
+
+#, fuzzy
+msgid "Aspect / size"
+msgstr "Tamaño usado"
+
+#, fuzzy
+msgid "Background image…"
+msgstr "Trabajos de fondo"
+
+#, fuzzy
+msgid "Uploading…"
+msgstr "Cargando..."
+
+#, fuzzy
+msgid "Browse templates…"
+msgstr "Estado de descubrimiento"
+
+msgid "Layers"
+msgstr ""
+
+msgid "Shift-click to select multiple"
+msgstr ""
+
+#, fuzzy
+msgid "Not connected"
+msgstr "Hosts conectados"
+
+#, fuzzy
+msgid "Unlock"
+msgstr "Desbloqueado"
+
+#, fuzzy
+msgid "Lock"
+msgstr "Cerraduras"
+
+#, fuzzy
+msgid "Connect data"
+msgstr "Conéctate a"
+
+#, fuzzy
+msgid "Start with a design"
+msgstr "A partir de la entrada"
+
+msgid "Pick a template, then connect your hosts and services — or start blank."
+msgstr ""
+
+#, fuzzy
+msgid "Connect slot %{n}: %{name}"
+msgstr "Nombre de la conexión"
+
+#, fuzzy
+msgid "Not saved"
+msgstr "No se comparte"
+
+msgid "Some elements now extend beyond the slide — move or resize them."
+msgstr ""
+
+msgid "Rectangle"
+msgstr ""
+
+msgid "Ellipse"
+msgstr ""
+
+#, fuzzy
+msgid "Arrow"
+msgstr "mañana"
+
+#, fuzzy
+msgid "Connect each tile to a host or service"
+msgstr "Muestra un gráfico de rendimiento de un host o servicio."
+
+msgid "STATUS WALL"
+msgstr ""
+
+msgid "SERVICE KPIs"
+msgstr ""
+
+msgid "NETWORK WEATHERMAP"
+msgstr ""
+
+#, fuzzy
+msgid "CRITICAL SERVICES"
+msgstr "CRÍTICA"
+
+#, fuzzy
+msgid "All states update live"
+msgstr "Estados de la administración para descubrir"
+
+msgid "LOCATION STATUS"
+msgstr ""
+
+msgid "Blank"
+msgstr ""
+
+#, fuzzy
+msgid "Start from an empty slide"
+msgstr "No hay datos de ningún sitio"
+
+#, fuzzy
+msgid "NOC Overview"
+msgstr "Resumen"
+
+msgid "Headline and six gauge tiles for the big screen"
+msgstr ""
+
+#, fuzzy
+msgid "Status Wall"
+msgstr "Estatus de la situación"
+
+msgid "Twelve status tiles at a glance"
+msgstr ""
+
+#, fuzzy
+msgid "KPI Dashboard"
+msgstr "Tablero de mandos"
+
+msgid "Four gauges and two bars on a dark ops theme"
+msgstr ""
+
+#, fuzzy
+msgid "Network Weathermap"
+msgstr "Adaptadores de red"
+
+msgid "Core and five sites with animated flow links"
+msgstr ""
+
+#, fuzzy
+msgid "Incident wall"
+msgstr "Incidente"
+
+msgid "Three large state tiles for war-room walls"
+msgstr ""
+
+#, fuzzy
+msgid "Location Status"
+msgstr "Estado de activación"
+
+msgid "Floor plan or photo beside four status tiles"
+msgstr ""
+
+#, fuzzy
+msgid "DO"
+msgstr "O"
+
+#, fuzzy
+msgid "NF"
+msgstr "NFS"
+
+msgid "NOT FOUND"
+msgstr ""
+
+#, fuzzy
+msgid "NP"
+msgstr "P"
+
+msgid "NO ACCESS"
+msgstr ""
+
+#, fuzzy
+msgid "No objects found"
+msgstr "No se han encontrado reglas."
+
+#, fuzzy
+msgid "Adjust the filter via map settings"
+msgstr "%d Configuración del filtro"
+
+#, fuzzy
+msgid "Radar summary"
+msgstr "Resumen"
+
+#, fuzzy
+msgid "(showing %{n})"
+msgstr "Solo"
+
+#, fuzzy
+msgid "Radar objects"
+msgstr "Objetos gestionados"
+
+msgid "Preview limited — %{hidden} more not shown"
+msgstr ""
+
+#, fuzzy
+msgid "Map canvas"
+msgstr "Datos mapeados"
+
+msgid "No objects yet — click the Edit button (bottom right) to add some"
+msgstr ""
+
+#, fuzzy
+msgid "This map has no objects yet"
+msgstr "Este grupo no existe."
+
+msgid "Geo map canvas"
+msgstr ""
+
+#, fuzzy
+msgid "Save current view as default"
+msgstr "Activación de la regla"
+
+msgid "Pan/zoom the map, then apply."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to load connections"
+msgstr "Operaciones de índice fallidas"
+
+#, fuzzy
+msgid "Failed to load maps"
+msgstr "Operaciones de índice fallidas"
+
+#, fuzzy
+msgid "Failed to load map"
+msgstr "Operaciones de índice fallidas"
+
+#, fuzzy
+msgid "delete failed"
+msgstr "Perfil de usuario por defecto"
+
+#, fuzzy
+msgid "edit failed"
+msgstr "Fallo en la búsqueda"
+
+#, fuzzy
+msgid "Failed to save map"
+msgstr "Ratio de fallos en el recambio"
+
+#, fuzzy
+msgid "Live connection failed"
+msgstr "Modo de conexión del agente Checkmk"
+
+#, fuzzy
+msgid "Failed to load states"
+msgstr "Operaciones de índice fallidas"
+
+msgid "Use a 6-digit hex code like '#ffffff' or 'transparent'"
+msgstr ""
+
+#, fuzzy
+msgid "Nothing to pick"
+msgstr "Nada registrado"
+
+#, fuzzy
+msgid "Discard unsaved changes?"
+msgstr "Activar los cambios en el extranjero"
+
+msgid "You have unsaved changes on this page. Leaving now will discard them."
+msgstr ""
+
+#, fuzzy
+msgid "Discard changes"
+msgstr "%d cambios"
+
+#, fuzzy
+msgid "Stay on page"
+msgstr "Ha cambiado"
+
+#, fuzzy
+msgid "Simple line"
+msgstr "Línea de tiempo"
+
+msgid "Arrow →"
+msgstr ""
+
+msgid "Arrow ←"
+msgstr ""
+
+msgid "Double arrow ↔"
+msgstr ""
+
+msgid "Double arrow (middle) →←"
+msgstr ""
+
+#, fuzzy
+msgid "Dynamic group"
+msgstr "Grupos de contacto"
+
+#, fuzzy
+msgid "Map link"
+msgstr "Ajuste de gráficos"
+
+#, fuzzy
+msgid "Textbox"
+msgstr "Texto"
+
+#, fuzzy
+msgid "Checkmk label"
+msgstr "Agente Checkmk"
+
+#, fuzzy
+msgid "Delete %{type}?"
+msgstr "Borrar %s"
+
+#, fuzzy
+msgid "Delete %{type} \"%{name}\"?"
+msgstr "Borrar host"
+
+#, fuzzy
+msgid "Percent"
+msgstr "por ciento"
+
+#, fuzzy
+msgid "No state"
+msgstr "Estado del nodo"
+
 #, fuzzy
 msgid "Define threshold"
 msgstr "Umbral del sensor"
@@ -105127,131 +107774,6 @@ msgstr "todos los agentes"
 msgid "Select the type of system you want to monitor"
 msgstr "Seleccione el tipo de elemento de contenido"
 
-#, fuzzy
-msgid "Save host"
-msgstr "Hosts rancios"
-
-msgid ""
-"Agent registration is only possible for hosts that already exist in Checkmk "
-"(they don’t need to be activated yet)."
-msgstr ""
-
-msgid ""
-"Could not save host \"${hostName}\". Close the slideout and review your "
-"input."
-msgstr ""
-
-#, fuzzy
-msgid "Host \"${hostName}\" exists"
-msgstr "El anfitrión ya existe"
-
-#, fuzzy
-msgid "Close and revise form"
-msgstr "Modelo y revsiones"
-
-#, fuzzy
-msgid "Close & review"
-msgstr "Vista de clonación"
-
-#, fuzzy
-msgid "Save host & next step"
-msgstr "Guardar y probar"
-
-#, fuzzy
-msgid "Download and install"
-msgstr "Agente descargado"
-
-msgid ""
-"To securely fetch the latest agent package via the command line, you must "
-"first generate a temporary authentication token. "
-msgstr ""
-
-#, fuzzy
-msgid "Download the agent"
-msgstr "Agente descargado"
-
-#, fuzzy
-msgid "Install the agent"
-msgstr "Agente instalado"
-
-#, fuzzy
-msgid "Next step: Register agent"
-msgstr "Destinatario"
-
-msgid ""
-"Test if you have configured everything correctly with pasting the following\n"
-"                  command into the CLI of the target system."
-msgstr ""
-
-#, fuzzy
-msgid "Install the legacy Checkmk agent"
-msgstr "Contacte también con el agente de Checkmk"
-
-msgid ""
-"Run these commands on your Windows host to download and install the Checkmk "
-"agent. Please make sure to run these commands with sufficient permissions "
-"(e.g. \"Run as Administrator\")"
-msgstr ""
-
-msgid ""
-"After you have installed the agent, run this command on your Windows host to "
-"register the Checkmk agent controller. Please make sure to run this command "
-"with sufficient permissions (e.g. \"Run as Administrator\")."
-msgstr ""
-
-msgid ""
-"If you want to install the Checkmk agent on Linux, please read how to "
-"install the legacy agent"
-msgstr ""
-
-msgid ""
-"After you have installed the agent, run this command on your Linux host to "
-"register the Checkmk agent controller."
-msgstr ""
-
-msgid ""
-"Run this command on your Linux host to download and install the Checkmk "
-"agent."
-msgstr ""
-
-msgid ""
-"Run these commands on your Linux host to download and install the Checkmk "
-"agent."
-msgstr ""
-
-msgid ""
-"This command extracts files directly into the root directory (/). Make sure "
-"you are executing this command on the correct host."
-msgstr ""
-
-msgid "Run this command on your Solaris host to download the Checkmk agent."
-msgstr ""
-
-msgid ""
-"If you want to install the Checkmk agent on Solaris, please read how to "
-"install the legacy agent"
-msgstr ""
-
-msgid ""
-"After you have installed the agent, run this command on your Solaris host to "
-"register the Checkmk agent."
-msgstr ""
-
-msgid ""
-"Run these commands on your AIX host to download and install the Checkmk "
-"agent."
-msgstr ""
-
-msgid ""
-"If you want to install the Checkmk agent on AIX, please read how to install "
-"the legacy agent"
-msgstr ""
-
-msgid ""
-"After you have installed the agent, run this command on your AIX host to "
-"register the Checkmk agent controller."
-msgstr ""
-
 msgid ""
 "To monitor systems like Linux or Windows with Checkmk, you need to install "
 "an agent on these systems.\n"
@@ -105298,11 +107820,28 @@ msgid "Error generating one-time token: ${ottError.message}"
 msgstr ""
 
 #, fuzzy
+msgid "Try again"
+msgstr "Por favor, introduzca un nombre de archivo."
+
+#, fuzzy
 msgid "Successfully generated one-time token"
 msgstr "Se ha cambiado la contraseña con éxito."
 
 msgid "(Expires: ${ottExpiry?.toLocaleString() || 'never'})"
 msgstr ""
+
+#, fuzzy
+msgid "Download and install"
+msgstr "Agente descargado"
+
+msgid ""
+"To securely fetch the latest agent package via the command line, you must "
+"first generate a temporary authentication token. "
+msgstr ""
+
+#, fuzzy
+msgid "Next step: Register agent"
+msgstr "Destinatario"
 
 msgid ""
 "Agent registration will establish trust between the Agent Controller\n"
@@ -105312,6 +107851,12 @@ msgstr ""
 #, fuzzy
 msgid "This requires the generation of a registration token."
 msgstr "Este permiso permite el registro de cualquier host existente."
+
+msgid ""
+"The registration command is hidden until a token has been generated "
+"successfully. You can register with the agent_registration user instead - "
+"see \"Troubleshooting registration issues\" below."
+msgstr ""
 
 msgid ""
 "The agent receiver port could not be determined from the remote site. The "
@@ -105352,6 +107897,137 @@ msgstr "Usuario de registro del agente"
 
 msgid "and paste it into the terminal to continue the registration."
 msgstr ""
+
+#, fuzzy
+msgid "Save host"
+msgstr "Hosts rancios"
+
+msgid ""
+"Agent registration is only possible for hosts that already exist in Checkmk "
+"(they don’t need to be activated yet)."
+msgstr ""
+
+msgid ""
+"Could not save host \"${hostName}\". Close the slideout and review your "
+"input."
+msgstr ""
+
+#, fuzzy
+msgid "Host \"${hostName}\" exists"
+msgstr "El anfitrión ya existe"
+
+#, fuzzy
+msgid "Close and revise form"
+msgstr "Modelo y revsiones"
+
+#, fuzzy
+msgid "Close & review"
+msgstr "Vista de clonación"
+
+#, fuzzy
+msgid "Save host & next step"
+msgstr "Guardar y probar"
+
+msgid ""
+"Test if you have configured everything correctly with pasting the following\n"
+"                  command into the CLI of the target system."
+msgstr ""
+
+#, fuzzy
+msgid "Install the legacy Checkmk agent"
+msgstr "Contacte también con el agente de Checkmk"
+
+msgid ""
+"This command extracts files directly into the root directory (/). Make sure "
+"you are executing this command on the correct host."
+msgstr ""
+
+#, fuzzy
+msgid "Download the agent"
+msgstr "Agente descargado"
+
+#, fuzzy
+msgid "Install the agent"
+msgstr "Agente instalado"
+
+msgid ""
+"Run these commands on your Windows host to download and install the Checkmk "
+"agent. Please make sure to run these commands with sufficient permissions "
+"(e.g. \"Run as Administrator\")"
+msgstr ""
+
+msgid ""
+"After you have installed the agent, run this command on your Windows host to "
+"register the Checkmk agent controller. Please make sure to run this command "
+"with sufficient permissions (e.g. \"Run as Administrator\")."
+msgstr ""
+
+msgid ""
+"Run this command on your Linux host to download and install the Checkmk "
+"agent."
+msgstr ""
+
+msgid ""
+"Run these commands on your Linux host to download and install the Checkmk "
+"agent."
+msgstr ""
+
+msgid ""
+"If you want to install the Checkmk agent on Linux, please read how to "
+"install the legacy agent"
+msgstr ""
+
+msgid ""
+"After you have installed the agent, run this command on your Linux host to "
+"register the Checkmk agent controller."
+msgstr ""
+
+msgid "Run this command on your Solaris host to download the Checkmk agent."
+msgstr ""
+
+msgid ""
+"If you want to install the Checkmk agent on Solaris, please read how to "
+"install the legacy agent"
+msgstr ""
+
+msgid ""
+"After you have installed the agent, run this command on your Solaris host to "
+"register the Checkmk agent."
+msgstr ""
+
+msgid ""
+"Run these commands on your AIX host to download and install the Checkmk "
+"agent."
+msgstr ""
+
+msgid ""
+"If you want to install the Checkmk agent on AIX, please read how to install "
+"the legacy agent"
+msgstr ""
+
+msgid ""
+"After you have installed the agent, run this command on your AIX host to "
+"register the Checkmk agent controller."
+msgstr ""
+
+msgid ""
+"Agent registration will establish trust between the Checkmk monitoring in-"
+"cluster components and the Agent Receiver on the Checkmk server."
+msgstr ""
+
+msgid ""
+"Save the configuration as values.yaml and adjust it as needed. On the "
+"selected Checkmk site, open Setup > Certificate overview and download the "
+"certificate with purpose \"Signing the site certificate\", then replace the "
+"site CA certificate path in this command."
+msgstr ""
+
+msgid "Read the Kubernetes monitoring guide for all configuration options."
+msgstr ""
+
+#, fuzzy
+msgid "Minimal values.yaml"
+msgstr "Edad mínima"
 
 msgid ""
 "Maximum number of ping attempts reached.\n"
@@ -106276,10 +108952,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "%{count} host selected"
-msgid_plural "%{count} hosts selected"
-msgstr[0] "No seleccionado"
-msgstr[1] "No seleccionado"
+msgid "Selected host: %{count}"
+msgid_plural "Selected hosts: %{count}"
+msgstr[0] "Borrar host"
+msgstr[1] "Borrar host"
 
 msgid "Selected host: %{selected} | Total hosts: %{total}"
 msgid_plural "Selected hosts: %{selected} | Total hosts: %{total}"
@@ -106287,16 +108963,8 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, fuzzy
-msgid "Search hosts…"
-msgstr "Buscar hosts"
-
-#, fuzzy
 msgid "Actions for selected hosts"
 msgstr "En los hosts seleccionados"
-
-#, fuzzy
-msgid "PENDING"
-msgstr "PEND"
 
 #, fuzzy
 msgid "Shows hosts with at least one service."
@@ -106379,20 +109047,32 @@ msgid "Number of services in warning state"
 msgstr "Número de servicios en el estado OK"
 
 #, fuzzy
+msgid "Warning (Wa)"
+msgstr "Advertencia (Dentro)"
+
+#, fuzzy
 msgid "Number of services in critical state"
 msgstr "Número de servicios en el estado OK"
+
+#, fuzzy
+msgid "Critical (Cr)"
+msgstr "Crítico (In)"
 
 #, fuzzy
 msgid "Number of services in unknown state"
 msgstr "Número de servicios en el estado OK"
 
 #, fuzzy
+msgid "Unknown (Un)"
+msgstr "Desconocido (%s)"
+
+#, fuzzy
 msgid "Number of services in pending state"
 msgstr "Número de servicios en el estado OK"
 
 #, fuzzy
-msgid "Last check"
-msgstr "Última comprobación de host"
+msgid "Pending (Pd)"
+msgstr "pendiente"
 
 #, fuzzy
 msgid "Last state change"
@@ -106582,10 +109262,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "%{count} service selected"
-msgid_plural "%{count} services selected"
-msgstr[0] "No seleccionado"
-msgstr[1] "No seleccionado"
+msgid "Selected service: %{count}"
+msgid_plural "Selected services: %{count}"
+msgstr[0] "Borrar host"
+msgstr[1] "Borrar host"
 
 msgid "Selected service: %{selected} | Total services: %{total}"
 msgid_plural "Selected services: %{selected} | Total services: %{total}"
@@ -106856,10 +109536,6 @@ msgstr "Rango de fechas"
 #, fuzzy
 msgid "Contains ..."
 msgstr "Contenedores"
-
-#, fuzzy
-msgid "DO"
-msgstr "O"
 
 #, fuzzy
 msgid "No results for your combination of search and filter settings."
@@ -107294,16 +109970,8 @@ msgid "Selected (click to clear)"
 msgstr ""
 
 #, fuzzy
-msgid "Clear selection"
-msgstr "Selección de carpetas"
-
-#, fuzzy
 msgid "Filter table..."
 msgstr "Vista del filtro"
-
-#, fuzzy
-msgid "Clear filter"
-msgstr "Filtro de búsqueda"
 
 #, fuzzy
 msgid "No profiling data available"
@@ -107317,10 +109985,6 @@ msgid ""
 "The upload form was not rendered by the page. Reload the page; if the error "
 "persists the performance-profiles feature may be misconfigured."
 msgstr ""
-
-#, fuzzy
-msgid "Upload failed"
-msgstr "Cargar el archivo MIB"
 
 msgid "Drag & drop a cProfile dump here"
 msgstr ""
@@ -107779,25 +110443,97 @@ msgstr "por encima del umbral"
 msgid "Lower threshold must be below the upper threshold"
 msgstr "El clúster debe tener al menos un nodo"
 
+#, fuzzy
+msgid "Step %{step} of %{total}"
+msgstr "Añadir nueva etiqueta"
+
+#, fuzzy
+msgid "Resend code"
+msgstr "Regenerar los códigos de seguridad"
+
+msgid "Resend code (%{countdown})"
+msgstr ""
+
+#, fuzzy
+msgid "Code"
+msgstr "Código Tamaño"
+
+#, fuzzy
+msgid "Enter your verification code"
+msgstr "Iniciar verificación"
+
+msgid "We sent a 6-digit code to %{email}. It expires after 24 hours."
+msgstr ""
+
+#, fuzzy
+msgid "Verification code"
+msgstr "Verificación"
+
+#, fuzzy
+msgid "Didn't receive it?"
+msgstr "Datos recibidos"
+
+#, fuzzy
+msgid "Verify"
+msgstr "Verificar los certificados"
+
+msgid ""
+"I agree to receive email newsletters about Checkmk products and services. I "
+"can unsubscribe via %{link}."
+msgstr ""
+
+#, fuzzy
+msgid "General Terms & Conditions"
+msgstr "Permisos generales"
+
+msgid "EULA"
+msgstr ""
+
+#, fuzzy
+msgid "email"
+msgstr "Envíe un correo electrónico a"
+
+msgid "unsubscribe from onboarding emails by email"
+msgstr ""
+
+msgid ""
+"I agree to the %{terms} and the %{eula}. I will receive Checkmk trial "
+"onboarding emails and can unsubscribe any time via %{unsubscribe}. I have "
+"noted the %{privacy_policy}."
+msgstr ""
+
+#, fuzzy
+msgid "Enter a valid email address."
+msgstr "todos los usuarios con dirección de correo electrónico"
+
+#, fuzzy
+msgid "Verify your email address"
+msgstr "De: dirección de correo electrónico"
+
+msgid ""
+"We'll email you a one-time code to activate your verified %{days}-day trial."
+msgstr ""
+
+msgid ""
+"Use an address you can access now — codes expire after 24 hours. "
+"Verification links this site to your trial registration."
+msgstr ""
+
+msgid "unsubscribe from the newsletter by email"
+msgstr ""
+
+#, fuzzy
+msgid "Send code"
+msgstr "Datos mapeados"
+
 msgid "Tell us how you're using this site so we can set it up correctly."
 msgstr ""
-
-#, fuzzy
-msgid "Verify your license"
-msgstr "Verificar la respuesta"
-
-msgid "Choose how to validate the license for this site."
-msgstr ""
-
-#, fuzzy
-msgid "Saving your selection failed. Please try again."
-msgstr "Añadir elemento de la barra lateral"
 
 #, fuzzy
 msgid "Start a trial"
 msgstr "Tipo de inicio"
 
-msgid "Try all features of Checkmk free for 30 days."
+msgid "Try all features of Checkmk free for %{days} days."
 msgstr ""
 
 #, fuzzy
@@ -107807,6 +110543,13 @@ msgstr "Contador creciente"
 #, fuzzy
 msgid "Verify your license to activate this site."
 msgstr "no activar este %s"
+
+#, fuzzy
+msgid "Verify your license"
+msgstr "Verificar la respuesta"
+
+msgid "Choose how to validate the license for this site."
+msgstr ""
 
 #, fuzzy
 msgid "Verify online"
@@ -107827,6 +110570,24 @@ msgstr "Cargar o eliminar iconos personalizados"
 #, fuzzy
 msgid "Verify later"
 msgstr "Verificar los certificados"
+
+msgid ""
+"This site is now linked to %{email}. Your %{days}-day trial of %{edition} "
+"runs until %{endDate} — after that, the site reverts to the free edition "
+"unless you add a license."
+msgstr ""
+
+#, fuzzy
+msgid "Trial verified"
+msgstr "La prueba ha caducado"
+
+#, fuzzy
+msgid "Start monitoring"
+msgstr "Buscar en la supervisión"
+
+#, fuzzy
+msgid "Saving your selection failed. Please try again."
+msgstr "Añadir elemento de la barra lateral"
 
 msgid "Signed in as %{user}."
 msgstr ""
@@ -108548,10 +111309,6 @@ msgstr ""
 msgid "Add custom dashboard"
 msgstr "Enlace al panel de control"
 
-#, fuzzy
-msgid "Enable notifications"
-msgstr "activar las notificaciones"
-
 msgid "2 Steps | Takes 5-7 min"
 msgstr ""
 
@@ -108627,6 +111384,56 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "A comment is required."
+#~ msgstr "como macro denominada"
+
+#, fuzzy
+#~ msgid "Invalid host name."
+#~ msgstr "Nombre de host no válido"
+
+#, fuzzy
+#~ msgid "Maps: connections & daemon"
+#~ msgstr "Máximo de conexiones por segundo"
+
+#, fuzzy
+#~ msgid "No form values were sent."
+#~ msgstr "Establecer valores por defecto para todas las secciones"
+
+#, fuzzy
+#~ msgid "Show this map in the maps list"
+#~ msgstr "Mostrar esta vista en la GUI móvil"
+
+#, fuzzy
+#~ msgid "Table view"
+#~ msgstr "Vista de clonación"
+
+#, fuzzy
+#~ msgid "The form values must be sent as an object."
+#~ msgstr "El clúster debe tener al menos un nodo"
+
+#, fuzzy, python-format
+#~ msgid "This host has related hosts: %(count)d"
+#~ msgstr "Total de comentarios: %(count)d"
+
+#, fuzzy
+#~ msgid "This map is read-only."
+#~ msgstr "El LUN es de sólo lectura"
+
+#, fuzzy, python-format
+#~ msgid "Unknown command '%(action)s'."
+#~ msgstr "%d íconos y acciones"
+
+#, fuzzy
+#~ msgid "You are not allowed to create or edit maps."
+#~ msgstr "No está permitido editar los cuadros de mando."
+
+#, fuzzy
+#~ msgid "%{count} service selected"
+#~ msgid_plural "%{count} services selected"
+#~ msgstr[0] "No seleccionado"
+#~ msgstr[1] "No seleccionado"
 
 #, fuzzy
 #~ msgid "Metric Backend"
@@ -108732,9 +111539,6 @@ msgstr ""
 #~ msgid "Reset configuration variable to default value"
 #~ msgstr "Restablecer el valor por defecto de la variable de configuración"
 
-#~ msgid "Reset to default"
-#~ msgstr "Restablecer los valores por defecto"
-
 #~ msgid ""
 #~ "Select the graph to be displayed by this element. In case the current "
 #~ "selection displays 'Deprecated choice, please re-select', this element "
@@ -108798,9 +111602,6 @@ msgstr ""
 
 #~ msgid "bytes/s"
 #~ msgstr "bytes/s"
-
-#~ msgid "graph"
-#~ msgstr "gráfico"
 
 #, fuzzy
 #~ msgid "%{count} variable"
@@ -109035,10 +111836,6 @@ msgstr ""
 #~ msgstr "Datos enviados"
 
 #, fuzzy
-#~ msgid "Agent connection failed"
-#~ msgstr "Modo de conexión del agente Checkmk"
-
-#, fuzzy
 #~ msgid "Download agent"
 #~ msgstr "Agente descargado"
 
@@ -109053,20 +111850,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Show full host status"
 #~ msgstr "Mostrar el estado del host"
-
-#, fuzzy
-#~ msgid "Acknowledge problem"
-#~ msgstr "Reconocer los problemas"
-
-#, fuzzy
-#~ msgid "Schedule downtime"
-#~ msgstr "Programar los tiempos de inactividad"
-
-#, fuzzy
-#~ msgid "%{count} selected host"
-#~ msgid_plural "%{count} selected hosts"
-#~ msgstr[0] "No seleccionado"
-#~ msgstr[1] "No seleccionado"
 
 #, fuzzy
 #~ msgid "Persistent comment"
@@ -109301,9 +112084,6 @@ msgstr ""
 #~ msgid "legacy"
 #~ msgstr "carrera heredada"
 
-#~ msgid "objects"
-#~ msgstr "objetos"
-
 #~ msgid "Add this metric to dedicated graph"
 #~ msgstr "Añadir esta métrica al gráfico dedicado"
 
@@ -109485,10 +112265,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Graph lines"
 #~ msgstr "Sintonías gráficas"
-
-#, fuzzy
-#~ msgid "Graph line"
-#~ msgstr "Ajuste de gráficos"
 
 #, fuzzy
 #~ msgid "Select graph line to edit"
@@ -110040,10 +112816,6 @@ msgstr ""
 #~ "tiempo mostrado. El percentil aplicado a un grupo de métricas se calcula "
 #~ "en cada paso de tiempo."
 
-#, fuzzy
-#~ msgid "Percentile within the time range"
-#~ msgstr "Percentil dentro del intervalo de tiempo"
-
 #~ msgid "Please select a number between 0 and 100"
 #~ msgstr "Seleccione un número entre 0 y 100"
 
@@ -110099,12 +112871,6 @@ msgstr ""
 #~ msgid_plural "%{n} metrics"
 #~ msgstr[0] "métrica"
 #~ msgstr[1] "métrica"
-
-#, fuzzy
-#~ msgid "%{n} selected"
-#~ msgid_plural "%{n} selected"
-#~ msgstr[0] "Ninguno seleccionado"
-#~ msgstr[1] "Ninguno seleccionado"
 
 #, fuzzy
 #~ msgid "Note that the installation requires administrator privileges."
@@ -110206,9 +112972,6 @@ msgstr ""
 #, fuzzy, python-format
 #~ msgid "Host address too long: %s"
 #~ msgstr "Familias de host"
-
-#~ msgid "Incompatible werk"
-#~ msgstr "Trabajo incompatible"
 
 #~ msgid "Incompatible werks"
 #~ msgstr "Obras incompatibles"
@@ -110856,10 +113619,6 @@ msgstr ""
 #~ msgstr ""
 #~ "Comprobación guardada de la configuración del host '%s' con los servicios "
 #~ "%d"
-
-#, python-format
-#~ msgid "Schedule downtime for %d %s"
-#~ msgstr "Programar el tiempo de inactividad para %d %s"
 
 #, fuzzy, python-format
 #~ msgid "Section: %s"
@@ -112298,10 +115057,6 @@ msgstr ""
 #~ msgstr "Intervalo para comprobar las copias de seguridad de Plesk:"
 
 #, fuzzy
-#~ msgid "Capacity"
-#~ msgstr "Capacidad del SAI"
-
-#, fuzzy
 #~ msgid "Media type"
 #~ msgstr "Coincidir con el Tipo"
 
@@ -112481,10 +115236,6 @@ msgstr ""
 #~ msgid "HTTP Method"
 #~ msgstr "Método HTTP"
 
-#, fuzzy
-#~ msgid "Hostname"
-#~ msgstr "Nombre del host"
-
 #~ msgid "Include Pattern"
 #~ msgstr "Incluir patrón"
 
@@ -112523,9 +115274,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Request Rate"
 #~ msgstr "Solicitar tarifa"
-
-#~ msgid "Service description"
-#~ msgstr "Descripción del servicio"
 
 #~ msgid "Short - Use the first 12 characters of the docker container ID"
 #~ msgstr ""
@@ -112667,9 +115415,6 @@ msgstr ""
 #~ msgid "Checkmk Agent installation auditing"
 #~ msgstr "Auditoría de la instalación del agente Checkmk"
 
-#~ msgid "Comment id"
-#~ msgstr "Comentario id"
-
 #, fuzzy, python-format
 #~ msgid "Connector: Collecting metric backend hosts on site  \"%s\""
 #~ msgstr "Fase 1.1: Obtención del sitio \"%s\""
@@ -112680,9 +115425,6 @@ msgstr ""
 
 #~ msgid "Download snmp walk"
 #~ msgstr "Descargar snmp walk"
-
-#~ msgid "Downtime id"
-#~ msgstr "ID de tiempo de inactividad"
 
 #, fuzzy
 #~ msgid ""
@@ -112741,9 +115483,6 @@ msgstr ""
 
 #~ msgid "Interface id"
 #~ msgstr "ID de la interfaz"
-
-#~ msgid "Invalid filename"
-#~ msgstr "Nombre de archivo no válido"
 
 #~ msgid "Kubernetes Cluster"
 #~ msgstr "Clúster Kubernetes"
@@ -112900,9 +115639,6 @@ msgstr ""
 #, python-format
 #~ msgid "Service performance data - value number %2d"
 #~ msgstr "Datos de rendimiento del servicio - número de valor %2d"
-
-#~ msgid "Services of down hosts"
-#~ msgstr "Servicios de los hosts de baja"
 
 #, fuzzy
 #~ msgid "Specify sites this OpenTelemetry collector should run on. "
@@ -113146,10 +115882,6 @@ msgstr ""
 #~ msgstr "Este permiso permite el registro de cualquier nuevo host."
 
 #, fuzzy
-#~ msgid "Only me"
-#~ msgstr "Sólo el tiempo"
-
-#, fuzzy
 #~ msgid "Register agent updater, if automatic updates are enabled"
 #~ msgstr "Activación de las actualizaciones automáticas de los agentes"
 
@@ -113388,10 +116120,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Changes:"
 #~ msgstr "Cambios"
-
-#, fuzzy
-#~ msgid "No changes"
-#~ msgstr "%d cambios"
 
 #, fuzzy
 #~ msgid "Set connection title"
@@ -113881,9 +116609,6 @@ msgstr ""
 #~ msgid "Hosts or sites, depending on context"
 #~ msgstr "Hosts o sites, según el contexto"
 
-#~ msgid "Limit objects"
-#~ msgstr "Limitar los objetos"
-
 #, fuzzy
 #~ msgid "Maximum hexagon size"
 #~ msgstr "Tamaño máximo"
@@ -114013,9 +116738,6 @@ msgstr ""
 #~ msgid "A Multisite view"
 #~ msgstr "Una vista multisitio"
 
-#~ msgid "Acknowledgement"
-#~ msgstr "Agradecimiento"
-
 #, fuzzy, python-format
 #~ msgid "Add %s (deprecated)"
 #~ msgstr "Desaprobado"
@@ -114034,9 +116756,6 @@ msgstr ""
 
 #~ msgid "Average Outgoing Queue Delay"
 #~ msgstr "Retraso medio de la cola de salida"
-
-#~ msgid "Bulk host import"
-#~ msgstr "Importación masiva de hosts"
 
 #~ msgid "Bulking"
 #~ msgstr "Aumento de volumen"
@@ -114184,9 +116903,6 @@ msgstr ""
 #~ msgid "Parameters for the  requests"
 #~ msgstr "Parámetros de las solicitudes"
 
-#~ msgid "Perfdata"
-#~ msgstr "Perfdata"
-
 #~ msgid "Perfdata error state"
 #~ msgstr "Estado de error de Perfdata"
 
@@ -114292,9 +117008,6 @@ msgstr ""
 #, python-format
 #~ msgid "Edit element: %s"
 #~ msgstr "Editar elemento: %s"
-
-#~ msgid "Element"
-#~ msgstr "Elemento"
 
 #~ msgid "Embed existing view"
 #~ msgstr "Incrustar la vista existente"
@@ -114511,9 +117224,6 @@ msgstr ""
 #~ msgid "Release"
 #~ msgstr "Publique"
 
-#~ msgid "Remove package"
-#~ msgstr "Retire el paquete"
-
 #, fuzzy
 #~ msgid "Documents"
 #~ msgstr "URL de la documentación"
@@ -114537,10 +117247,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Total RUs"
 #~ msgstr "Total de RAM utilizable"
-
-#, fuzzy
-#~ msgid "Total data"
-#~ msgstr "Anchura total"
 
 #, fuzzy
 #~ msgid "Total packets"
@@ -114922,10 +117628,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Shared data:"
 #~ msgstr "Datos mapeados"
-
-#, fuzzy
-#~ msgid "Short summary"
-#~ msgstr "Resumen"
 
 #, fuzzy
 #~ msgid "Detected problem"
@@ -115393,10 +118095,6 @@ msgstr ""
 #~ msgstr ""
 #~ "Actualmente se está indexando, por favor inténtelo de nuevo en breve."
 
-#, python-format
-#~ msgid "More than %d results available, please refine your search."
-#~ msgstr "Más de %d resultados disponibles, por favor afine su búsqueda."
-
 #, fuzzy
 #~ msgid "Search for menu entries, settings, hosts and rule sets."
 #~ msgstr "Búsqueda de entradas de menú, ajustes, hosts y conjuntos de reglas."
@@ -115763,9 +118461,6 @@ msgstr ""
 #~ msgid "Add new constant"
 #~ msgstr "Añadir nueva constante"
 
-#~ msgid "Add new metric"
-#~ msgstr "Añadir nueva métrica"
-
 #~ msgid "Add new scalar"
 #~ msgstr "Añadir nuevo escalar"
 
@@ -115831,9 +118526,6 @@ msgstr ""
 #~ msgid "Please select at least one metric"
 #~ msgstr "Seleccione al menos una métrica"
 
-#~ msgid "Style"
-#~ msgstr "Estilo"
-
 #~ msgid "Toggle the visibility of this metric"
 #~ msgstr "Activar la visibilidad de esta métrica"
 
@@ -115888,9 +118580,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Show HW/SW Inventory of this host"
 #~ msgstr "Mostrar el inventario de hardware/software de este host"
-
-#~ msgid "General Permissions"
-#~ msgstr "Permisos generales"
 
 #~ msgid "Wanted Host State for defined Nutanix Host"
 #~ msgstr "Estado de host deseado para el host Nutanix definido"
@@ -115976,10 +118665,6 @@ msgstr ""
 
 #~ msgid "DEB packaging"
 #~ msgstr "Embalaje DEB"
-
-#, python-format
-#~ msgid "Datacenter %d"
-#~ msgstr "Centro de datos %d"
 
 #~ msgid "Decibel"
 #~ msgstr "Decibelios"
@@ -116321,9 +119006,6 @@ msgstr ""
 #~ msgid "Got invalid status of remote site %s"
 #~ msgstr "Se ha cerrado la sesión en el sitio remoto %s"
 
-#~ msgid " (Copy)"
-#~ msgstr " (Copia)"
-
 #~ msgid ""
 #~ "Gain a complete view of your entire IT infrastructure: from public cloud "
 #~ "providers, to your data centers, across servers, networks, containers, "
@@ -116494,10 +119176,6 @@ msgstr ""
 #~ msgstr "Cuando el Agente que se va a desinstalar"
 
 #, fuzzy
-#~ msgid "Distributed piggyback"
-#~ msgstr "Supervisión distribuida"
-
-#, fuzzy
 #~ msgid "Number of graphs per event (default: 5)"
 #~ msgstr "Gráficos por notificación (por defecto: 5)"
 
@@ -116549,12 +119227,6 @@ msgstr ""
 #~ msgid "Cannot render graph: host %s, service %s not found."
 #~ msgstr ""
 #~ "No se puede representar el gráfico: host %s, servicio %s no encontrado."
-
-#, fuzzy, python-format
-#~ msgid "%s other service"
-#~ msgid_plural "%s other services"
-#~ msgstr[0] "Otros servicios"
-#~ msgstr[1] "Otros servicios"
 
 #~ msgid "Show discovered service labels"
 #~ msgstr "Mostrar etiquetas de servicios descubiertos"
@@ -116952,9 +119624,6 @@ msgstr ""
 #~ msgid "No declined requests"
 #~ msgstr "No hay solicitudes rechazadas"
 
-#~ msgid "No discoverable hosts found"
-#~ msgstr "No se han encontrado hosts detectables"
-
 #~ msgid "No hosts discovered"
 #~ msgstr "No se han descubierto hosts"
 
@@ -117335,9 +120004,6 @@ msgstr ""
 #~ "La dirección de correo electrónico y el nombre visible que se utiliza en "
 #~ "la cabecera Reply-To de los mensajes de notificación."
 
-#~ msgid "Activate"
-#~ msgstr "Activar"
-
 #~ msgid "Deactivate"
 #~ msgstr "Desactivar"
 
@@ -117578,9 +120244,6 @@ msgstr ""
 #~ msgid "Error Handling"
 #~ msgstr "Tratamiento de errores"
 
-#~ msgid "Metric aggregation"
-#~ msgstr "Agregación métrica"
-
 #~ msgid "Connect Timeout"
 #~ msgstr "Tiempo de espera de conexión"
 
@@ -117719,9 +120382,6 @@ msgstr ""
 #~ "Cantidad total de espacio reservado para objetos en la base de datos, "
 #~ "pero no utilizado"
 
-#~ msgid "Critical (In)"
-#~ msgstr "Crítico (In)"
-
 #~ msgid "Critical (Out)"
 #~ msgstr "Crítico (Fuera)"
 
@@ -117735,9 +120395,6 @@ msgstr ""
 #~ msgstr ""
 #~ "El usuario, utilizado para el inicio de sesión, tiene que tener al menos "
 #~ "el rol 'itil' en ServiceNow."
-
-#~ msgid "Warning (In)"
-#~ msgstr "Advertencia (Dentro)"
 
 #~ msgid "Warning (Out)"
 #~ msgstr "Advertencia (Fuera)"
@@ -117801,10 +120458,6 @@ msgstr ""
 
 #~ msgid "Recent hardware/software inventory"
 #~ msgstr "Inventario reciente de hardware/software"
-
-#, python-format
-#~ msgid "Unknown (%s)"
-#~ msgstr "Desconocido (%s)"
 
 #~ msgid "More information can be found in ~/var/log/web.log"
 #~ msgstr "Puede encontrar más información en ~/var/log/web.log"
@@ -117896,9 +120549,6 @@ msgstr ""
 #~ msgid "Alternative Service description"
 #~ msgstr "Descripción del servicio alternativo"
 
-#~ msgid "Service description: "
-#~ msgstr "Descripción del servicio: "
-
 #~ msgid "Service descriptions"
 #~ msgstr "Descripciones de servicios"
 
@@ -117935,10 +120585,6 @@ msgstr ""
 #~ "una información de <i>Esperas de lectura</i> en su salida, cualquier "
 #~ "ajuste de configuración que haga referencia a <i>Esperas de lectura</i> "
 #~ "no tendrá ningún efecto."
-
-#, fuzzy
-#~ msgid "Discard foreign changes"
-#~ msgstr "Activar los cambios en el extranjero"
 
 #, python-format
 #~ msgid "%sPacket loss"

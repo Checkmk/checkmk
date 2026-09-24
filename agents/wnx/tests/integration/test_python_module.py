@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from .conftest import YieldFixture
+from .conftest import YieldFixture  # astrein: disable=conftest-import
 from .utils import (
     CMK_UPDATER_CHECKMK_PY,
     CMK_UPDATER_PY,

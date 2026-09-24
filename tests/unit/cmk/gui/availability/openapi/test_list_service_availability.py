@@ -9,6 +9,8 @@ import pytest
 
 from cmk.gui.availability.type_defs import AVEntry
 from tests.testlib.unit.rest_api_client import ClientRegistry
+
+# astrein: disable=conftest-import
 from tests.unit.cmk.gui.availability.openapi.conftest import TIME_FROM, TIME_UNTIL
 
 _MODULE = "cmk.gui.availability.openapi.list_service_availability"

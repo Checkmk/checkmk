@@ -16,7 +16,7 @@ from contextlib import asynccontextmanager
 from typing import override
 
 import pytest
-from conftest import RouterClientFactory
+from conftest import RouterClientFactory  # astrein: disable=conftest-import
 from fake_connection import FakeConnection
 from fastapi.testclient import TestClient
 

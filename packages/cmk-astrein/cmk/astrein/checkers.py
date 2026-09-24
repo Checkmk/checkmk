@@ -14,6 +14,7 @@ from cmk.astrein.checker_module_layers import ModuleLayersChecker
 from cmk.astrein.checker_request_input import RequestValidatedInputChecker
 from cmk.astrein.checker_simple_patterns import (
     ABCMetaMetaclassChecker,
+    ConftestImportChecker,
     HTMLDebugChecker,
     LoggingNamedPlaceholderChecker,
     PillowImportChecker,
@@ -26,6 +27,7 @@ from cmk.astrein.framework import ASTVisitorChecker
 def all_checkers() -> dict[str, type[ASTVisitorChecker]]:
     return {
         "abcmeta-metaclass": ABCMetaMetaclassChecker,
+        "conftest-import": ConftestImportChecker,
         "html-debug": HTMLDebugChecker,
         "key-size-unit-test": KeySizeUnitTestChecker,
         "localization": LocalizationChecker,

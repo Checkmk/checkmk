@@ -16,7 +16,7 @@ from cmk.plugins.f5_bigip.agent_based.f5_bigip_snat import (
     SnatParams,
 )
 
-from ..conftest import value_store
+from ..conftest import value_store  # astrein: disable=conftest-import
 
 _NO_PARAMS: SnatParams = {}
 

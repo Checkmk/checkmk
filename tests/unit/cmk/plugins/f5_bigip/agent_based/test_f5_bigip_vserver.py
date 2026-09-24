@@ -18,7 +18,7 @@ from cmk.plugins.f5_bigip.agent_based.f5_bigip_vserver import (
     VServerParams,
 )
 
-from ..conftest import value_store
+from ..conftest import value_store  # astrein: disable=conftest-import
 
 _CHILDREN_DOWN_DETAIL = "The children pool member(s) are down"
 

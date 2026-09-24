@@ -8,6 +8,7 @@ from cmk.astrein.checker_localization import (
     LocalizationNamedPlaceholderChecker,
 )
 from cmk.astrein.checker_module_layers import ModuleLayersChecker
+from cmk.astrein.checker_simple_patterns import ConftestImportChecker
 from cmk.astrein.checkers import all_checkers
 
 
@@ -20,3 +21,4 @@ def test_all_checkers_returns_expected_checkers() -> None:
     assert checkers["localization"] == LocalizationChecker
     assert checkers["localization-named-placeholder"] == LocalizationNamedPlaceholderChecker
     assert checkers["module-layers"] == ModuleLayersChecker
+    assert checkers["conftest-import"] == ConftestImportChecker

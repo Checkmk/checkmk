@@ -15,7 +15,7 @@ from cmk.plugins.f5_bigip.agent_based.f5_bigip_chassis_temp import (
 )
 from cmk.plugins.lib.temperature import TempParamDict
 
-from ..conftest import value_store
+from ..conftest import value_store  # astrein: disable=conftest-import
 
 _STRING_TABLE = [["1", "30"], ["2", "32"], ["3", "36"], ["4", "41"], ["5", "41"]]
 

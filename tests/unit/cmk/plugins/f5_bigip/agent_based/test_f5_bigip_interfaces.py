@@ -16,7 +16,7 @@ from cmk.plugins.f5_bigip.agent_based.f5_bigip_interfaces import (
     parse_f5_bigip_interfaces,
 )
 
-from ..conftest import value_store
+from ..conftest import value_store  # astrein: disable=conftest-import
 
 # port, state, in bytes, out bytes
 _STRING_TABLE: StringTable = [

@@ -44,6 +44,7 @@ PERMISSIONS_WIDGET_QUERY = permissions.AllPerm(
         permissions.Optional(permissions.Perm("general.see_all")),
         permissions.Optional(permissions.Perm("bi.see_all")),
         permissions.Optional(permissions.OkayToIgnorePerm("mkeventd.seeall")),
+        permissions.Optional(permissions.OkayToIgnorePerm("mkeventd.seeunrelated")),
         permissions.Optional(
             permissions.AllPerm(
                 [

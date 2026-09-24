@@ -4803,6 +4803,21 @@ class DashboardClient(RestApiClient):
             api_version=APIVersion.INTERNAL,
         )
 
+    def compute_stats(
+        self,
+        body: dict[str, Any],
+        headers: Mapping[str, str] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/compute-stats/invoke",
+            body=body,
+            headers=headers,
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
     def compute_top_list(
         self, top_list_config: dict[str, Any], context: VisualContext, _ok: bool = True
     ) -> Response:

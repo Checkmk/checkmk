@@ -166,6 +166,7 @@ CmkEndpointName = Literal[
     "cmk/compute_shared_single_metric",
     "cmk/compute_shared_timeline_count",
     "cmk/compute_single_metric",
+    "cmk/compute_stats",
     "cmk/compute_timeline_count",
     "cmk/configure",
     "cmk/create",

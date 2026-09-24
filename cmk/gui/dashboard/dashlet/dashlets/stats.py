@@ -295,12 +295,12 @@ class StatsDashletDataGenerator[S: HostStats | ServiceStats | EventStats](abc.AB
     @classmethod
     def generate_response_data(
         cls,
-        dashlet_spec: StatsDashletConfig,
+        dashlet_spec: StatsDashletConfig,  # noqa: ARG003
         context: VisualContext,
         infos: SingleInfos,
     ) -> FigureResponseData:
         return {
-            "data": cls._collect_data(dashlet_spec, context, infos).serialize(),
+            "data": cls._collect_data(context, infos).serialize(),
         }
 
     @classmethod
@@ -319,24 +319,14 @@ class StatsDashletDataGenerator[S: HostStats | ServiceStats | EventStats](abc.AB
         raise NotImplementedError
 
     @classmethod
-    def _collect_data(
-        cls,
-        dashlet_spec: StatsDashletConfig,
-        context: VisualContext,
-        infos: SingleInfos,
-    ) -> StatsElement:
-        stats = cls._get_stats(dashlet_spec, context, infos)
+    def _collect_data(cls, context: VisualContext, infos: SingleInfos) -> StatsElement:
+        stats = cls.stats(context, infos)
         general_url_vars = cls._general_url_vars(context)
         parts_data = stats.get_parts_data(general_url_vars)
         return cls._get_stats_element(parts_data, general_url_vars)
 
     @classmethod
-    def _get_stats(
-        cls,
-        dashlet_spec: StatsDashletConfig,  # noqa: ARG003
-        context: VisualContext,
-        infos: SingleInfos,
-    ) -> S:
+    def stats(cls, context: VisualContext, infos: SingleInfos) -> S:
         filter_headers, only_sites = visuals.get_filter_headers(infos=infos, context=context)
         query = cls._stats_query() + "\n" + filter_headers
         try:

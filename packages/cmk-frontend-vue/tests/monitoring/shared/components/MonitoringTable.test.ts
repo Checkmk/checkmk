@@ -11,7 +11,7 @@ import type {
   VisibilityState
 } from '@tanstack/vue-table'
 import userEvent from '@testing-library/user-event'
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen, within } from '@testing-library/vue'
 import { type Ref, defineComponent, h, inject, nextTick, provide, ref } from 'vue'
 
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
@@ -297,6 +297,109 @@ test('the column panel marks the direction the column is sorted by', async () =>
     'aria-pressed',
     'false'
   )
+})
+
+async function pickInPanelSection(column: string, section: string, direction: string) {
+  const user = userEvent.setup()
+  await user.click(screen.getByRole('button', { name: `Filter ${column}` }))
+  const group = screen.getByRole('group', { name: section })
+  await user.click(within(group).getByRole('button', { name: direction }))
+}
+
+test('the column panel extends the active sort by its column', async () => {
+  const onSortUpdate = vi.fn()
+  mountTable({ sortState: [{ id: 'name', desc: false }], onSortUpdate })
+
+  await pickInPanelSection('State', 'Extend active sorting of "Name" by', 'Sort descending')
+
+  expect(onSortUpdate).toHaveBeenCalledTimes(1)
+  expect(onSortUpdate.mock.calls[0]![0]).toEqual([
+    { id: 'name', desc: false },
+    { id: 'state', desc: true }
+  ])
+})
+
+test('the column panel offers no extension while nothing else is sorted', async () => {
+  const user = userEvent.setup()
+  mountTable({ sortState: [{ id: 'name', desc: false }] })
+
+  await user.click(screen.getByRole('button', { name: 'Filter Name' }))
+
+  expect(screen.queryByRole('group', { name: /Extend active sorting/ })).not.toBeInTheDocument()
+})
+
+test('the column panel marks the direction a column extends the sort by', async () => {
+  const user = userEvent.setup()
+  mountTable({
+    sortState: [
+      { id: 'name', desc: false },
+      { id: 'state', desc: true }
+    ]
+  })
+
+  await user.click(screen.getByRole('button', { name: 'Filter State' }))
+
+  const extend = screen.getByRole('group', { name: 'Extend active sorting of "Name" by' })
+  expect(within(extend).getByRole('button', { name: 'Sort descending' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  )
+  const own = screen.getByRole('group', { name: 'Sort by this column' })
+  expect(within(own).getByRole('button', { name: 'No sorting / default sorting' })).toHaveAttribute(
+    'aria-pressed',
+    'false'
+  )
+})
+
+test('sorting by a column that extends the sort makes it the only sort', async () => {
+  const onSortUpdate = vi.fn()
+  mountTable({
+    sortState: [
+      { id: 'name', desc: false },
+      { id: 'state', desc: true }
+    ],
+    onSortUpdate
+  })
+
+  await pickInPanelSection('State', 'Sort by this column', 'Sort ascending')
+
+  expect(onSortUpdate.mock.calls[0]![0]).toEqual([{ id: 'state', desc: false }])
+})
+
+test('turning the primary sort column around keeps the columns extending it', async () => {
+  const onSortUpdate = vi.fn()
+  mountTable({
+    sortState: [
+      { id: 'name', desc: true },
+      { id: 'state', desc: false }
+    ],
+    onSortUpdate
+  })
+
+  await pickInPanelSection('Name', 'Sort by this column', 'Sort ascending')
+
+  expect(onSortUpdate.mock.calls[0]![0]).toEqual([
+    { id: 'name', desc: false },
+    { id: 'state', desc: false }
+  ])
+})
+
+test('headers number the sort order once more than one column sorts', () => {
+  mountTable({
+    sortState: [
+      { id: 'state', desc: true },
+      { id: 'name', desc: false }
+    ]
+  })
+
+  expect(screen.getByRole('button', { name: 'State' })).toHaveTextContent(/^State\s*1$/)
+  expect(screen.getByRole('button', { name: 'Name' })).toHaveTextContent(/^Name\s*2$/)
+})
+
+test('headers do not number a single-column sort', () => {
+  mountTable({ sortState: [{ id: 'name', desc: false }] })
+
+  expect(screen.getByRole('button', { name: 'Name' })).toHaveTextContent(/^Name$/)
 })
 
 test('aria-busy is true while a fetch is in flight', () => {

@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { render, screen } from '@testing-library/vue'
+import { render, screen, within } from '@testing-library/vue'
 import { defineComponent, h, nextTick, ref } from 'vue'
 
 import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
@@ -32,10 +32,12 @@ function upFilter(): ColumnFilterNode<'state'> {
 // commits, and supplying the trigger slot the shell expects.
 function renderDropdown(
   initial: ColumnFilterNode<FilterField> | undefined = undefined,
-  sortable: boolean = false
+  sortable: boolean = false,
+  extendsSortOf: string[] = []
 ) {
   const model = ref<ColumnFilterNode<FilterField> | undefined>(initial)
   const sort = ref<SortDirection>(false)
+  const extendedSort = ref<SortDirection>(false)
   const wrapper = defineComponent({
     setup() {
       return () =>
@@ -48,6 +50,11 @@ function renderDropdown(
             sort: sort.value,
             'onUpdate:sort': (value: SortDirection) => {
               sort.value = value
+            },
+            extendsSortOf: extendsSortOf,
+            extendedSort: extendedSort.value,
+            'onUpdate:extendedSort': (value: SortDirection) => {
+              extendedSort.value = value
             },
             modelValue: model.value,
             'onUpdate:modelValue': (value: ColumnFilterValue<FilterField> | undefined) => {
@@ -78,7 +85,7 @@ function renderDropdown(
         )
     }
   })
-  return { model, sort, ...render(wrapper) }
+  return { model, sort, extendedSort, ...render(wrapper) }
 }
 
 test('a sort direction is reported as it is picked, on its own', async () => {
@@ -109,6 +116,27 @@ test('opening the panel focuses the filter rather than the sort directions', asy
   await nextTick()
 
   expect(screen.getByRole('checkbox', { name: 'Select all' })).toHaveFocus()
+})
+
+test('the sort is only offered for extension once another column sorts', async () => {
+  const user = userEvent.setup()
+  renderDropdown(undefined, true)
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+
+  expect(screen.queryByRole('group', { name: /Extend active sorting/ })).not.toBeInTheDocument()
+})
+
+test('extending the active sort is reported apart from sorting by the column', async () => {
+  const user = userEvent.setup()
+  const { sort, extendedSort } = renderDropdown(undefined, true, ['Host name'])
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  const extend = screen.getByRole('group', { name: 'Extend active sorting of "Host name" by' })
+  await user.click(within(extend).getByRole('button', { name: 'Sort descending' }))
+
+  expect(extendedSort.value).toBe('desc')
+  expect(sort.value).toBe(false)
 })
 
 test('toggling an option does not commit to the model before Apply', async () => {

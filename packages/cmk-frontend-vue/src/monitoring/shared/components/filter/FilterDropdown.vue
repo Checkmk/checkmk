@@ -78,11 +78,18 @@ const props = defineProps<{
   anchor?: string
   /** Offer the column's sort directions above the filter. */
   sortable?: boolean
+  /**
+   * Labels of the columns the table is already sorted by ahead of this one.
+   * Non-empty, the panel also offers to extend that sort by this column.
+   */
+  extendsSortOf?: string[]
 }>()
 
 const model = defineModel<ColumnFilterValue<FilterField> | undefined>({ default: undefined })
 
 const sort = defineModel<SortDirection>('sort', { default: false })
+
+const extendedSort = defineModel<SortDirection>('extendedSort', { default: false })
 
 const { _t } = usei18n()
 const panelId = useId()
@@ -135,6 +142,27 @@ const sortOptions = computed<{ direction: SortDirection; label: string }[]>(() =
   { direction: 'desc', label: _t('Sort descending') },
   { direction: false, label: _t('No sorting / default sorting') }
 ])
+
+const extendSortOptions = computed<{ direction: SortDirection; label: string }[]>(() =>
+  sortOptions.value.filter((option) => option.direction !== false)
+)
+
+const canExtendSort = computed(() => (props.extendsSortOf ?? []).length > 0)
+
+const extendSortHeading = computed(() =>
+  _t('Extend active sorting of %{columns} by', {
+    columns: (props.extendsSortOf ?? []).map((label) => `"${label}"`).join(', ')
+  })
+)
+
+const sortHeadingId = useId()
+const extendSortHeadingId = useId()
+
+function isSortMarked(direction: SortDirection): boolean {
+  return direction === false
+    ? sort.value === false && extendedSort.value === false
+    : sort.value === direction
+}
 
 const filterComponent = computed(() => FILTER_COMPONENTS[props.definition.type])
 
@@ -373,34 +401,75 @@ onBeforeUnmount(() => {
       @focusout="onFocusOut"
     >
       <div v-if="sortable" class="monitoring-filter-dropdown__sort">
-        <button
-          v-for="option in sortOptions"
-          :key="String(option.direction)"
-          type="button"
-          class="monitoring-filter-dropdown__sort-option"
-          :aria-pressed="sort === option.direction"
-          @click="sort = option.direction"
+        <div
+          class="monitoring-filter-dropdown__sort-group"
+          role="group"
+          :aria-labelledby="sortHeadingId"
         >
-          <CmkMultitoneIcon
-            v-if="option.direction !== false"
-            name="dashlet-resize"
-            :rotate="option.direction === 'asc' ? 180 : 0"
-            primary-color="font"
-            aria-hidden="true"
-            size="xsmall"
-          />
-          <span
-            v-else
-            class="monitoring-filter-dropdown__sort-option-spacer"
-            aria-hidden="true"
-          ></span>
-          {{ option.label }}
-          <span
-            v-if="sort === option.direction"
-            class="monitoring-filter-dropdown__sort-marker"
-            aria-hidden="true"
-          ></span>
-        </button>
+          <span :id="sortHeadingId" class="monitoring-filter-dropdown__sort-heading">{{
+            _t('Sort by this column')
+          }}</span>
+          <button
+            v-for="option in sortOptions"
+            :key="String(option.direction)"
+            type="button"
+            class="monitoring-filter-dropdown__sort-option"
+            :aria-pressed="isSortMarked(option.direction)"
+            @click="sort = option.direction"
+          >
+            <CmkMultitoneIcon
+              v-if="option.direction !== false"
+              name="dashlet-resize"
+              :rotate="option.direction === 'asc' ? 180 : 0"
+              primary-color="font"
+              aria-hidden="true"
+              size="xsmall"
+            />
+            <span
+              v-else
+              class="monitoring-filter-dropdown__sort-option-spacer"
+              aria-hidden="true"
+            ></span>
+            {{ option.label }}
+            <span
+              v-if="isSortMarked(option.direction)"
+              class="monitoring-filter-dropdown__sort-marker"
+              aria-hidden="true"
+            ></span>
+          </button>
+        </div>
+        <div
+          v-if="canExtendSort"
+          class="monitoring-filter-dropdown__sort-group"
+          role="group"
+          :aria-labelledby="extendSortHeadingId"
+        >
+          <span :id="extendSortHeadingId" class="monitoring-filter-dropdown__sort-heading">{{
+            extendSortHeading
+          }}</span>
+          <button
+            v-for="option in extendSortOptions"
+            :key="String(option.direction)"
+            type="button"
+            class="monitoring-filter-dropdown__sort-option"
+            :aria-pressed="extendedSort === option.direction"
+            @click="extendedSort = option.direction"
+          >
+            <CmkMultitoneIcon
+              name="dashlet-resize"
+              :rotate="option.direction === 'asc' ? 180 : 0"
+              primary-color="font"
+              aria-hidden="true"
+              size="xsmall"
+            />
+            {{ option.label }}
+            <span
+              v-if="extendedSort === option.direction"
+              class="monitoring-filter-dropdown__sort-marker"
+              aria-hidden="true"
+            ></span>
+          </button>
+        </div>
       </div>
 
       <div class="monitoring-filter-dropdown__content">
@@ -470,7 +539,18 @@ onBeforeUnmount(() => {
   border-bottom: 1px solid var(--ux-theme-4);
 }
 
+.monitoring-filter-dropdown__sort-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.monitoring-filter-dropdown__sort-heading {
+  padding: var(--dimension-3) var(--dimension-5);
+  font-weight: var(--font-weight-bold);
+}
+
 .monitoring-filter-dropdown__sort-option {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: var(--dimension-5);

@@ -10,6 +10,7 @@ import {
   FlexRender,
   type Header,
   type HeaderGroup,
+  type SortingState,
   type Table
 } from '@tanstack/vue-table'
 import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
@@ -47,12 +48,56 @@ function setFilterValue(
   column.setFilterValue(node)
 }
 
-function setSort(column: Column<T, unknown>, direction: SortDirection): void {
+function primarySort(column: Column<T, unknown>): SortDirection {
+  return column.getSortIndex() === 0 ? column.getIsSorted() : false
+}
+
+function extendedSort(column: Column<T, unknown>): SortDirection {
+  return column.getSortIndex() > 0 ? column.getIsSorted() : false
+}
+
+function sortedAheadOf(table: Table<T>, column: Column<T, unknown>): string[] {
+  const sorting = table.getState().sorting
+  const index = column.getSortIndex()
+  return (index < 0 ? sorting : sorting.slice(0, index)).map((entry) => {
+    const sortedColumn = table.getColumn(entry.id)
+    return sortedColumn ? columnLabel(sortedColumn) : entry.id
+  })
+}
+
+function sortPosition(table: Table<T>, column: Column<T, unknown>): number | null {
+  const index = column.getSortIndex()
+  return table.getState().sorting.length > 1 && index >= 0 ? index + 1 : null
+}
+
+function withDirection(sorting: SortingState, columnId: string, desc: boolean): SortingState {
+  return sorting.map((entry) => (entry.id === columnId ? { ...entry, desc } : entry))
+}
+
+function setSort(table: Table<T>, column: Column<T, unknown>, direction: SortDirection): void {
   if (direction === false) {
     column.clearSorting()
     return
   }
-  column.toggleSorting(direction === 'desc')
+  const desc = direction === 'desc'
+  if (column.getSortIndex() === 0) {
+    table.setSorting((sorting) => withDirection(sorting, column.id, desc))
+    return
+  }
+  table.setSorting([{ id: column.id, desc }])
+}
+
+function extendSort(table: Table<T>, column: Column<T, unknown>, direction: SortDirection): void {
+  if (direction === false) {
+    column.clearSorting()
+    return
+  }
+  const desc = direction === 'desc'
+  table.setSorting((sorting) =>
+    column.getSortIndex() < 0
+      ? [...sorting, { id: column.id, desc }]
+      : withDirection(sorting, column.id, desc)
+  )
 }
 
 function columnLabel(column: Column<T, unknown>): string {
@@ -248,6 +293,12 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
               aria-hidden="true"
               size="xsmall"
             />
+            <span
+              v-if="sortPosition(header.getContext().table, header.column) !== null"
+              class="monitoring-table-header__sort-position"
+              aria-hidden="true"
+              >{{ sortPosition(header.getContext().table, header.column) }}</span
+            >
           </button>
           <span
             v-else-if="!header.isPlaceholder && header.column.columnDef.meta?.headerHelp"
@@ -281,9 +332,12 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
             anchor="th"
             :heading="_t('Filter')"
             :sortable="header.column.getCanSort()"
-            :sort="header.column.getIsSorted()"
+            :sort="primarySort(header.column)"
+            :extended-sort="extendedSort(header.column)"
+            :extends-sort-of="sortedAheadOf(header.getContext().table, header.column)"
             :model-value="filterValue(header.column)"
-            @update:sort="setSort(header.column, $event)"
+            @update:sort="setSort(header.getContext().table, header.column, $event)"
+            @update:extended-sort="extendSort(header.getContext().table, header.column, $event)"
             @update:model-value="setFilterValue(header.column, $event)"
           >
             <template #trigger="{ toggle, isOpen, isActive, panelId }">
@@ -490,5 +544,11 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
 
 .monitoring-table-header__sort-icon {
   flex-shrink: 0;
+}
+
+.monitoring-table-header__sort-position {
+  flex-shrink: 0;
+  margin-left: calc(-1 * var(--dimension-2));
+  font-size: var(--font-size-small);
 }
 </style>

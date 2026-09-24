@@ -93,7 +93,7 @@ describe('HomeView', () => {
     await userEvent.type(search, 'nope')
     await waitFor(() => expect(screen.getByText('No maps match "nope".')).toBeInTheDocument())
 
-    await userEvent.click(screen.getByRole('button', { name: 'Table' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Toggle Table' }))
     await waitFor(() => expect(screen.getByText('No maps match "nope".')).toBeInTheDocument())
   })
 
@@ -115,7 +115,7 @@ describe('HomeView', () => {
     await renderHome([listed('prod')])
     expect(screen.queryByRole('columnheader')).not.toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Table' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Toggle Table' }))
     await waitFor(() =>
       expect(screen.getByRole('columnheader', { name: /Name/ })).toBeInTheDocument()
     )

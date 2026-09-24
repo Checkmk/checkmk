@@ -4,11 +4,16 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref } from 'vue'
 
 import { useAuth, useSettings } from '@/maps/services/context'
-import type { ViewSwitchOption } from '@/maps/shared/components/MapsViewSwitch.vue'
 import type { MapListView } from '@/maps/types/api'
+
+export interface MapListViewOption {
+  label: TranslatedString
+  value: MapListView
+}
 
 /**
  * Cards-vs-table choice for the map list. A per-user override is persisted in
@@ -35,7 +40,7 @@ export function useMapListViewMode() {
       localViewMode.value ??
       (settingsStore.settings.value.map_list_view === 'table' ? 'table' : 'cards')
   )
-  const viewModeOptions = computed<ViewSwitchOption<MapListView>[]>(() => [
+  const viewModeOptions = computed<MapListViewOption[]>(() => [
     { label: _t('Cards'), value: 'cards' },
     { label: _t('Table'), value: 'table' }
   ])

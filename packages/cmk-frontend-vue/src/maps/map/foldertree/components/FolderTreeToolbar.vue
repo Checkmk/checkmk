@@ -13,18 +13,19 @@ scroller, so anything floating would sit on top of the data instead of beside
 it. Being its own band is also what keeps it on a kiosk screen, where the
 header itself is gone.
 
-Every control here is quieter than the search beside it: the search is the one
-framed thing in the bar, the two commands are plain text, the view switch is a
-small track. Framing all four would leave the bar shouting its own chrome at
-the operator instead of the map's state.
+Every control here is quieter than the search beside it: the two commands are
+plain text and the view switch is Checkmk's toggle group at its small size.
+Giving all of them the search's weight would leave the bar shouting its own
+chrome at the operator instead of the map's state.
 -->
 <script setup lang="ts">
+import CmkToggleButtonGroup from 'cmk-ui-library/components/CmkToggleButtonGroup.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
 
 import MapSearch from '@/maps/map/components/MapSearch.vue'
 import ProblemsOnlyToggle from '@/maps/map/components/ProblemsOnlyToggle.vue'
-import MapsViewSwitch, { type ViewSwitchOption } from '@/maps/shared/components/MapsViewSwitch.vue'
 import type { FolderTreeView } from '@/maps/types/api'
 import { stateWordFromToken } from '@/maps/utils/objectAria'
 import { severityPills } from '@/maps/utils/stateColors'
@@ -67,10 +68,18 @@ const healthy = computed(() =>
   )
 )
 
-const modes = computed<ViewSwitchOption<FolderTreeMode>[]>(() => [
+const modes = computed<{ label: TranslatedString; value: FolderTreeMode }[]>(() => [
   { label: _t('Map'), value: 'map' },
   { label: _t('List'), value: 'list' }
 ])
+
+// The group hands back a plain string; the option it came from carries the type.
+function selectMode(value: string): void {
+  const picked = modes.value.find((option) => option.value === value)
+  if (picked) {
+    emit('update:mode', picked.value)
+  }
+}
 </script>
 
 <template>
@@ -124,12 +133,15 @@ const modes = computed<ViewSwitchOption<FolderTreeMode>[]>(() => [
       {{ _t('Collapse all') }}
     </button>
 
-    <MapsViewSwitch
+    <CmkToggleButtonGroup
       v-if="!kiosk"
+      role="group"
+      :aria-label="_t('Folder tree drawing')"
       :model-value="mode"
       :options="modes"
-      :label="_t('Folder tree drawing')"
-      @update:model-value="emit('update:mode', $event)"
+      size="small"
+      spacing="none"
+      @update:model-value="selectMode"
     />
   </div>
 </template>

@@ -168,8 +168,8 @@ describe('FolderTreeMapView (list mode)', () => {
     const summaries = screen.getAllByText(/2 hosts/)
     expect(summaries.some((element) => element.closest('[role="treeitem"]') === null)).toBe(true)
     expect(screen.getByText('1 Down')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'List', pressed: true })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Map', pressed: false })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Toggle List', pressed: true })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Toggle Map', pressed: false })).toBeInTheDocument()
   })
 
   it('renders the waiting placeholder when no folder tree arrived yet', () => {

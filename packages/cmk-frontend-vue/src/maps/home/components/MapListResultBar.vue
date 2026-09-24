@@ -9,22 +9,31 @@ drawn as cards or as a table. Both are about the list, so they sit on it rather
 than in the page header's bar with the search and the page's actions.
 -->
 <script setup lang="ts">
+import CmkToggleButtonGroup from 'cmk-ui-library/components/CmkToggleButtonGroup.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
-import MapsViewSwitch, { type ViewSwitchOption } from '@/maps/shared/components/MapsViewSwitch.vue'
+import type { MapListViewOption } from '@/maps/home/composables/useMapListViewMode'
 import type { MapListView } from '@/maps/types/api'
 
-defineProps<{
+const props = defineProps<{
   /** How many maps the list below shows, after scope and search. */
   count: number
   /** Whether the list below is drawn as cards or as a table. */
   viewMode: MapListView
-  viewModeOptions: ViewSwitchOption<MapListView>[]
+  viewModeOptions: MapListViewOption[]
 }>()
 
 const emit = defineEmits<{ 'update:viewMode': [value: MapListView] }>()
 
 const { _t, _tn } = usei18n()
+
+// The group hands back a plain string; the option it came from carries the type.
+function select(value: string): void {
+  const picked = props.viewModeOptions.find((option) => option.value === value)
+  if (picked) {
+    emit('update:viewMode', picked.value)
+  }
+}
 </script>
 
 <template>
@@ -34,11 +43,14 @@ const { _t, _tn } = usei18n()
     <span class="maps-map-list-result-bar__count">
       {{ _tn('%{n} map', '%{n} maps', count, { n: count }) }}
     </span>
-    <MapsViewSwitch
+    <CmkToggleButtonGroup
+      role="group"
+      :aria-label="_t('Map list drawing')"
       :model-value="viewMode"
       :options="viewModeOptions"
-      :label="_t('Map list drawing')"
-      @update:model-value="emit('update:viewMode', $event)"
+      size="small"
+      spacing="none"
+      @update:model-value="select"
     />
   </div>
 </template>

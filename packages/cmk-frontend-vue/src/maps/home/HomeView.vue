@@ -21,6 +21,7 @@ import MapCardGrid from '@/maps/home/components/MapCardGrid.vue'
 import MapCloneDialog from '@/maps/home/components/MapCloneDialog.vue'
 import MapListEmptyState from '@/maps/home/components/MapListEmptyState.vue'
 import MapListHeader from '@/maps/home/components/MapListHeader.vue'
+import MapListResultBar from '@/maps/home/components/MapListResultBar.vue'
 import MapListTable from '@/maps/home/components/MapListTable.vue'
 import MapListToolbar from '@/maps/home/components/MapListToolbar.vue'
 import { useMapBulkActions } from '@/maps/home/composables/useMapBulkActions'
@@ -98,51 +99,57 @@ onMounted(async () => {
 <template>
   <div class="maps-home-view" role="region" :aria-label="_t('Maps')">
     <main class="maps-home-view__main">
-      <MapListHeader @create="showCreate = true" @import="importInput?.click()" />
+      <MapListHeader @create="showCreate = true" @import="importInput?.click()">
+        <MapListToolbar
+          v-if="hasMaps"
+          v-model:scope="scope"
+          v-model:search-query="searchQuery"
+          :scope-options="scopeOptions"
+          :show-scope-filter="showScopeFilter"
+        />
+      </MapListHeader>
 
-      <MapListToolbar
-        v-if="hasMaps"
-        v-model:scope="scope"
-        v-model:search-query="searchQuery"
-        :scope-options="scopeOptions"
-        :show-scope-filter="showScopeFilter"
-        :count="displayedMaps.length"
-        :view-mode="viewMode"
-        :view-mode-options="viewModeOptions"
-        @update:view-mode="setViewMode"
-      />
+      <div class="maps-home-view__list">
+        <MapListResultBar
+          v-if="hasMaps"
+          :count="displayedMaps.length"
+          :view-mode="viewMode"
+          :view-mode-options="viewModeOptions"
+          @update:view-mode="setViewMode"
+        />
 
-      <div v-if="maps.loading.value" class="maps-home-view__loading">
-        <CmkLoading />
-        {{ _t('Loading…') }}
+        <div v-if="maps.loading.value" class="maps-home-view__loading">
+          <CmkLoading />
+          {{ _t('Loading…') }}
+        </div>
+
+        <CmkAlertBox v-else-if="maps.error.value" variant="error">
+          {{ maps.error.value }}
+        </CmkAlertBox>
+
+        <MapListEmptyState v-else-if="displayedMaps.length === 0" :search-query="searchQuery" />
+
+        <MapCardGrid
+          v-else-if="viewMode === 'cards'"
+          :maps="displayedMaps"
+          :order-is-pristine="isOrderPristine"
+          @clone="clone.start"
+          @export="exportMap"
+          @delete="confirmDelete = $event"
+        />
+
+        <MapListTable
+          v-else
+          :maps="displayedMaps"
+          :selected-maps="bulk.selectedMaps.value"
+          :all-selected="bulk.allFilteredSelected.value"
+          @toggle-select="bulk.toggleMapSelection"
+          @toggle-select-all="bulk.toggleSelectAllFiltered"
+          @clone="clone.start"
+          @export="exportMap"
+          @delete="confirmDelete = $event"
+        />
       </div>
-
-      <CmkAlertBox v-else-if="maps.error.value" variant="error">
-        {{ maps.error.value }}
-      </CmkAlertBox>
-
-      <MapListEmptyState v-else-if="displayedMaps.length === 0" :search-query="searchQuery" />
-
-      <MapCardGrid
-        v-else-if="viewMode === 'cards'"
-        :maps="displayedMaps"
-        :order-is-pristine="isOrderPristine"
-        @clone="clone.start"
-        @export="exportMap"
-        @delete="confirmDelete = $event"
-      />
-
-      <MapListTable
-        v-else
-        :maps="displayedMaps"
-        :selected-maps="bulk.selectedMaps.value"
-        :all-selected="bulk.allFilteredSelected.value"
-        @toggle-select="bulk.toggleMapSelection"
-        @toggle-select-all="bulk.toggleSelectAllFiltered"
-        @clone="clone.start"
-        @export="exportMap"
-        @delete="confirmDelete = $event"
-      />
     </main>
   </div>
 
@@ -198,8 +205,8 @@ onMounted(async () => {
     @cancel="clone.cancel"
   />
 
-  <!-- Opened by the header's "Import" button; a file input has no styling of
-       its own worth keeping. -->
+  <!-- Opened by the header's "Import map" menu entry; a file input has no
+       styling of its own worth keeping. -->
   <input
     v-if="auth.canCreateMaps.value"
     ref="importInput"
@@ -221,18 +228,31 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+/* The list is a Checkmk page like the settings it links to, so it is set in
+   Checkmk's text size; a map and its editor keep the app's larger one. */
 .maps-home-view {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  font-size: var(--font-size-normal);
   background: var(--ux-theme-1);
 }
 
-/* The horizontal padding is the one Checkmk's own page content carries, so the
-   toolbar and the list start on the axis of the breadcrumb and the page title
-   instead of a step inside it. */
+/* The padding and the spacing are the global settings page's, so both pages put
+   the breadcrumb, the title and the bar at the same place. */
 .maps-home-view__main {
-  padding: var(--dimension-7) var(--dimension-4) var(--dimension-11);
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-6);
+  padding: var(--dimension-4) var(--dimension-4) var(--dimension-11);
+}
+
+/* The result bar belongs to the list below it, so it sits closer to that than
+   to the header above. */
+.maps-home-view__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-4);
 }
 
 .maps-home-view__loading {

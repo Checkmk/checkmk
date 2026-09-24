@@ -10,19 +10,20 @@ list as a whole.
 ``maps.py`` renders no heading and no page menu (see cmk/maps/gui/_pages.py) --
 the SPA routes between the list, a map and the image library client side, and
 server chrome cannot follow that. So the app owns its chrome, the way the
-dashboard does.
+dashboard does. It is laid out like the global settings page Maps' own settings
+open in: breadcrumb, title, then one bar with the list's controls on the left
+and the page's actions on the right.
 
-Creating and importing a map are the two actions this page exists for, so they
-are buttons. The image library and the two settings forms are administration
-and are reached often enough to need a way in, rarely enough not to spend the
-bar's width on -- they sit in the overflow menu.
+Adding a map is what this page exists for, so it is the one button. Importing
+one, the image library and the settings are reached rarely enough not to spend
+the bar's width on -- they sit in the overflow menu.
 -->
 <script setup lang="ts">
 import CmkBreadcrumb from 'cmk-ui-library/components/CmkBreadcrumb'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { DropdownMenuItem } from 'reka-ui'
+import { DropdownMenuItem, DropdownMenuSeparator } from 'reka-ui'
 
 import { useAuth, useNavigation } from '@/maps/services/context'
 import { useMapsBreadcrumbRoot } from '@/maps/shared/breadcrumb'
@@ -41,45 +42,57 @@ const links = useMapsPageLinks()
 
 // The list is where the SPA starts, so its own level is the last one: below it
 // the views route client side and carry their breadcrumb themselves.
-const breadcrumb = [...useMapsBreadcrumbRoot(), { title: _t('Maps'), link: null }]
+const breadcrumb = [
+  ...useMapsBreadcrumbRoot(),
+  { title: _t('Maps'), link: nav.href({ view: 'home' }) }
+]
 </script>
 
 <template>
   <div class="maps-map-list-header">
     <CmkBreadcrumb :items="breadcrumb" />
+    <CmkHeading>{{ _t('Maps') }}</CmkHeading>
 
     <div class="maps-map-list-header__bar">
-      <CmkHeading type="h2">{{ _t('Maps') }}</CmkHeading>
+      <slot />
 
       <div class="maps-map-list-header__actions">
-        <template v-if="auth.canCreateMaps.value">
-          <CmkButton
-            variant="secondary"
-            :icon="{ name: 'upload', size: 'small' }"
-            @click="emit('import')"
-          >
-            {{ _t('Import') }}
-          </CmkButton>
-          <CmkButton
-            variant="primary"
-            :icon="{ name: 'new', size: 'small' }"
-            @click="emit('create')"
-          >
-            {{ _t('Add map') }}
-          </CmkButton>
-        </template>
+        <CmkButton
+          v-if="auth.canCreateMaps.value"
+          variant="primary"
+          :icon="{ name: 'new', size: 'small' }"
+          @click="emit('create')"
+        >
+          {{ _t('Add map') }}
+        </CmkButton>
 
-        <MapsOverflowMenu v-if="auth.canConfigure.value" :label="_t('Maps administration')">
+        <MapsOverflowMenu
+          v-if="auth.canCreateMaps.value || auth.canConfigure.value"
+          :label="_t('More actions')"
+        >
           <DropdownMenuItem
+            v-if="auth.canCreateMaps.value"
             class="maps-overflow-menu__item"
-            @select="nav.navigate({ view: 'admin', tab: 'icons' })"
+            @select="emit('import')"
           >
-            {{ _t('Images') }}
+            {{ _t('Import map…') }}
           </DropdownMenuItem>
-          <!-- Checkmk pages, not SPA views: a full navigation out of the app. -->
-          <DropdownMenuItem as-child class="maps-overflow-menu__item">
-            <a :href="links.settings">{{ _t('Maps settings') }}</a>
-          </DropdownMenuItem>
+          <template v-if="auth.canConfigure.value">
+            <DropdownMenuSeparator
+              v-if="auth.canCreateMaps.value"
+              class="maps-overflow-menu__separator"
+            />
+            <DropdownMenuItem
+              class="maps-overflow-menu__item"
+              @select="nav.navigate({ view: 'admin', tab: 'icons' })"
+            >
+              {{ _t('Images') }}
+            </DropdownMenuItem>
+            <!-- Checkmk pages, not SPA views: a full navigation out of the app. -->
+            <DropdownMenuItem as-child class="maps-overflow-menu__item">
+              <a :href="links.settings">{{ _t('Maps settings') }}</a>
+            </DropdownMenuItem>
+          </template>
         </MapsOverflowMenu>
       </div>
     </div>
@@ -91,19 +104,21 @@ const breadcrumb = [...useMapsBreadcrumbRoot(), { title: _t('Maps'), link: null 
   display: flex;
   flex-direction: column;
   gap: var(--dimension-4);
-  margin-bottom: var(--dimension-6);
 }
 
+/* The list's controls and the page's actions are two groups, so even a narrow
+   bar keeps twice the gap between them that their own items have. */
 .maps-map-list-header__bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--dimension-6);
+  gap: var(--dimension-4) var(--dimension-10);
 }
 
 .maps-map-list-header__actions {
   display: flex;
   align-items: center;
   gap: var(--dimension-4);
+  margin-left: auto;
 }
 </style>

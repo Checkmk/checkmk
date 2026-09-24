@@ -52,6 +52,11 @@ describe('HomeView', () => {
     expect(screen.queryByPlaceholderText('Search maps…')).not.toBeInTheDocument()
   })
 
+  it('offers adding a map while there is none yet', async () => {
+    await renderHome([])
+    expect(screen.getByRole('button', { name: 'Add map' })).toBeInTheDocument()
+  })
+
   it('leaves the scope filter out while every map has the same owner', async () => {
     await renderHome([listed('prod'), listed('lab')])
     expect(screen.getByPlaceholderText('Search maps…')).toBeInTheDocument()

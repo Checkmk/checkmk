@@ -3,22 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
-from cmk.ccc.site import SiteId
 from cmk.gui.form_specs import RawDiskData, serialize_data_for_frontend
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     build_formspec_map_from_stages,
 )
-from cmk.gui.quick_setup.v0_unstable.setups import ProgressLogger
+from cmk.gui.quick_setup.v0_unstable.setups import ProgressLogger, QuickSetupContext
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ParsedFormData,
     QuickSetupId,
     StageIndex,
 )
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecRecap, Widget
-from cmk.livestatus_client import SiteConfiguration
 
 
 def recaps_form_spec(
@@ -26,8 +24,7 @@ def recaps_form_spec(
     stage_index: StageIndex,
     parsed_form_data: ParsedFormData,
     _progress_logger: ProgressLogger,
-    site_configs: Mapping[SiteId, SiteConfiguration],  # noqa: ARG001
-    debug: bool,  # noqa: ARG001
+    ctx: QuickSetupContext,  # noqa: ARG001
 ) -> Sequence[Widget]:
     quick_setup = quick_setup_registry.get(quick_setup_id)
     if quick_setup is None:

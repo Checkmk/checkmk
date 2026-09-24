@@ -33,7 +33,11 @@ from cmk.gui.quick_setup.handlers.utils import (
 )
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupActionMode, QuickSetupBackgroundAction
+from cmk.gui.quick_setup.v0_unstable.setups import (
+    QuickSetupActionMode,
+    QuickSetupBackgroundAction,
+    QuickSetupContext,
+)
 from cmk.gui.quick_setup.v0_unstable.type_defs import ActionId, RawFormData
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
@@ -257,6 +261,8 @@ def complete_quick_setup_action(
                 user_input_stages=[{"form_data": s.form_data} for s in body.stages],
                 object_id=object_id,
                 user_permission_config=user_permission_config,
+                site_configs=api_context.config.sites,
+                debug=api_context.config.debug,
                 use_git=api_context.config.wato_use_git,
                 pprint_value=api_context.config.wato_pprint_config,
             )
@@ -281,8 +287,7 @@ def complete_quick_setup_action(
         input_stages=[{"form_data": s.form_data} for s in body.stages],
         form_spec_map=form_spec_map,
         object_id=object_id,
-        use_git=api_context.config.wato_use_git,
-        pprint_value=api_context.config.wato_pprint_config,
+        ctx=QuickSetupContext.from_config(api_context.config),
     )
 
     if not result.redirect_url and not result.all_stage_errors:

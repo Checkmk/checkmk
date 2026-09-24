@@ -5,7 +5,6 @@
 
 from collections.abc import Mapping, Sequence
 
-from cmk.ccc.site import SiteId
 from cmk.gui.form_specs.unstable.two_column_dictionary import TwoColumnDictionary
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
@@ -30,6 +29,7 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
     QuickSetupActionMode,
     QuickSetupBackgroundAction,
     QuickSetupBackgroundStageAction,
+    QuickSetupContext,
     QuickSetupStage,
     QuickSetupStageAction,
     StepStatus,
@@ -51,7 +51,6 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Widget,
 )
 from cmk.gui.utils.doc_reference_urls import doc_reference_url
-from cmk.livestatus_client import SiteConfiguration
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Dictionary
@@ -273,8 +272,7 @@ def recap_found_services(
     _stage_index: StageIndex,
     parsed_data: ParsedFormData,
     progress_logger: ProgressLogger,
-    site_configs: Mapping[SiteId, SiteConfiguration],
-    debug: bool,
+    ctx: QuickSetupContext,
 ) -> Sequence[Widget]:
     service_discovery_result = utils.get_service_discovery_preview(
         rulespec_name=RuleGroup.SpecialAgents("aws"),
@@ -282,8 +280,8 @@ def recap_found_services(
         parameter_form=quick_setup_aws_form_spec(),
         collect_params=aws_collect_params_with_defaults,
         progress_logger=progress_logger,
-        site_configs=site_configs,
-        debug=debug,
+        site_configs=ctx.site_configs,
+        debug=ctx.debug,
     )
     progress_logger.log_new_progress_step(
         "identify_relevant_services", "Search for AWS related services"
@@ -342,8 +340,7 @@ def action(
     mode: QuickSetupActionMode,
     progress_logger: ProgressLogger,
     _object_id: str | None,
-    use_git: bool,  # noqa: ARG001
-    pprint_value: bool,  # noqa: ARG001
+    ctx: QuickSetupContext,  # noqa: ARG001
 ) -> str:
     match mode:
         case QuickSetupActionMode.SAVE:

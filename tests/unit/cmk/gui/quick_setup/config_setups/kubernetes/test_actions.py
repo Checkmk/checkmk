@@ -35,7 +35,10 @@ from cmk.gui.quick_setup.config_setups.kubernetes.settings import (
     read_settings,
 )
 from cmk.gui.quick_setup.handlers.utils import InfoLogger
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupActionMode
+from cmk.gui.quick_setup.v0_unstable.setups import (
+    QuickSetupActionMode,
+    QuickSetupContext,
+)
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, StageIndex
 from cmk.gui.quick_setup.v0_unstable.widgets import Code, FormSpecId
 from cmk.gui.utils.roles import UserPermissions
@@ -53,8 +56,7 @@ def test_pull_recap_works_without_a_push_receiver_or_site_ca(data: ParsedFormDat
         StageIndex(2),
         {**data, CONNECTION: ("pull", {"shared_secret": "kept-secret"})},
         InfoLogger(),
-        {},
-        False,
+        QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
     )
 
     assert {widget.download_filename for widget in widgets if isinstance(widget, Code)} == {
@@ -117,7 +119,15 @@ def test_push_issuance_rejects_pull_mode(data: ParsedFormData) -> None:
 
 
 def test_host_validation_does_not_require_a_connection_mode(data: ParsedFormData) -> None:
-    assert validate_configuration(QUICK_SETUP_ID, data, InfoLogger()) == []
+    assert (
+        validate_configuration(
+            QUICK_SETUP_ID,
+            data,
+            InfoLogger(),
+            QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
+        )
+        == []
+    )
 
 
 def test_deployment_without_a_mode_does_not_prepare_push_credentials(data: ParsedFormData) -> None:
@@ -132,15 +142,20 @@ def test_deployment_without_a_mode_does_not_prepare_push_credentials(data: Parse
             StageIndex(2),
             data,
             InfoLogger(),
-            {},
-            False,
+            QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
             prepare_push=unexpected_credentials,
         )
 
 
 def test_save_without_a_mode_does_not_create_configuration(data: ParsedFormData) -> None:
     with pytest.raises(ValueError, match="Choose a connection mode"):
-        finish_setup(data, QuickSetupActionMode.SAVE, InfoLogger(), None, False, False)
+        finish_setup(
+            data,
+            QuickSetupActionMode.SAVE,
+            InfoLogger(),
+            None,
+            QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
+        )
 
     assert not ConfigBundleStore().load_for_reading()
     assert not folder_tree().all_hosts()
@@ -158,8 +173,7 @@ def test_pull_deployment_requires_password_store_permission(data: ParsedFormData
             StageIndex(2),
             {**data, CONNECTION: ("pull", {"shared_secret": "kept-secret"})},
             InfoLogger(),
-            {},
-            False,
+            QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
         )
 
 
@@ -168,6 +182,7 @@ def test_configuration_name_must_be_a_helm_release_name(data: ParsedFormData) ->
         QUICK_SETUP_ID,
         {**data, FormSpecId("formspec_unique_id"): {"bundle_id": "not.a.helm.name"}},
         InfoLogger(),
+        QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
     )
 
     assert errors and "Helm release name" in errors[0]
@@ -186,7 +201,12 @@ def test_configuration_names_cannot_normalize_to_the_same_release(data: ParsedFo
         pprint_value=False,
     )
 
-    assert validate_configuration(QUICK_SETUP_ID, data, InfoLogger())
+    assert validate_configuration(
+        QUICK_SETUP_ID,
+        data,
+        InfoLogger(),
+        QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
+    )
 
     def unexpected_credentials(
         _settings: PushSettings, _sites: Mapping[SiteId, SiteConfiguration]
@@ -199,12 +219,17 @@ def test_configuration_names_cannot_normalize_to_the_same_release(data: ParsedFo
             StageIndex(2),
             data,
             InfoLogger(),
-            {},
-            False,
+            QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
             prepare_push=unexpected_credentials,
         )
 
 
 def test_editing_through_quick_setup_is_rejected(data: ParsedFormData) -> None:
     with pytest.raises(ValueError, match="Editing an existing"):
-        finish_setup(data, QuickSetupActionMode.EDIT, InfoLogger(), "existing", False, False)
+        finish_setup(
+            data,
+            QuickSetupActionMode.EDIT,
+            InfoLogger(),
+            "existing",
+            QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
+        )

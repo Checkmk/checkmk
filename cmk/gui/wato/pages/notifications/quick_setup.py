@@ -51,6 +51,7 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
     QuickSetupAction,
     QuickSetupActionButtonIcon,
     QuickSetupActionMode,
+    QuickSetupContext,
     QuickSetupStage,
     QuickSetupStageAction,
 )
@@ -97,7 +98,7 @@ from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.timeperiods import load_timeperiods
 from cmk.gui.watolib.user_scripts import load_notification_scripts, NotificationUserScripts
 from cmk.gui.watolib.users import notification_script_choices
-from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
+from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.internal.form_specs import (
     DictionaryExtended,
     ListExtended,
@@ -400,8 +401,7 @@ def custom_recap_formspec_triggering_events(
     stage_index: StageIndex,
     all_stages_form_data: ParsedFormData,
     progress_logger: ProgressLogger,
-    site_configs: Mapping[SiteId, SiteConfiguration],
-    debug: bool,
+    ctx: QuickSetupContext,
 ) -> Sequence[Widget]:
     cleaned_stages_form_data = {
         form_spec_wrapper_id: (
@@ -421,8 +421,7 @@ def custom_recap_formspec_triggering_events(
         stage_index,
         cleaned_stages_form_data,
         progress_logger,
-        site_configs,
-        debug=debug,
+        ctx,
     )
 
 
@@ -449,8 +448,7 @@ def custom_recap_formspec_filter_for_hosts_and_services(
     stage_index: StageIndex,
     all_stages_form_data: ParsedFormData,
     progress_logger: ProgressLogger,
-    site_configs: Mapping[SiteId, SiteConfiguration],
-    debug: bool,
+    ctx: QuickSetupContext,
 ) -> Sequence[Widget]:
     cleaned_stages_form_data = {
         form_spec_wrapper_id: form_data
@@ -458,7 +456,11 @@ def custom_recap_formspec_filter_for_hosts_and_services(
         if len(form_data) > 0
     }
     return recaps.recaps_form_spec(
-        quick_setup_id, stage_index, cleaned_stages_form_data, progress_logger, site_configs, debug
+        quick_setup_id,
+        stage_index,
+        cleaned_stages_form_data,
+        progress_logger,
+        ctx,
     )
 
 
@@ -1942,18 +1944,17 @@ def save_and_test_action(
     mode: QuickSetupActionMode,
     _progress_logger: ProgressLogger,
     object_id: str | None,
-    use_git: bool,
-    pprint_value: bool,
+    ctx: QuickSetupContext,
 ) -> str:
     result_msg = _save_or_edit(
         all_stages_form_data,
         mode,
         _progress_logger,
         object_id,
-        pprint_value=pprint_value,
+        pprint_value=ctx.pprint_value,
         pending_changes=_pending_changes(
             active_config.sites,
-            use_git=use_git,
+            use_git=ctx.use_git,
             local_site=omd_site(),
             user_id=logged_in_user.id,
         ),
@@ -1968,18 +1969,17 @@ def save_and_new_action(
     mode: QuickSetupActionMode,
     _progress_logger: ProgressLogger,
     object_id: str | None,
-    use_git: bool,
-    pprint_value: bool,
+    ctx: QuickSetupContext,
 ) -> str:
     result_msg = _save_or_edit(
         all_stages_form_data,
         mode,
         _progress_logger,
         object_id,
-        pprint_value=pprint_value,
+        pprint_value=ctx.pprint_value,
         pending_changes=_pending_changes(
             active_config.sites,
-            use_git=use_git,
+            use_git=ctx.use_git,
             local_site=omd_site(),
             user_id=logged_in_user.id,
         ),
@@ -1995,18 +1995,17 @@ def save_and_view_action(
     mode: QuickSetupActionMode,
     _progress_logger: ProgressLogger,
     object_id: str | None,
-    use_git: bool,
-    pprint_value: bool,
+    ctx: QuickSetupContext,
 ) -> str:
     result_msg = _save_or_edit(
         all_stages_form_data,
         mode,
         _progress_logger,
         object_id,
-        pprint_value=pprint_value,
+        pprint_value=ctx.pprint_value,
         pending_changes=_pending_changes(
             active_config.sites,
-            use_git=use_git,
+            use_git=ctx.use_git,
             local_site=omd_site(),
             user_id=logged_in_user.id,
         ),

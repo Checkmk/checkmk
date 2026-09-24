@@ -7,7 +7,6 @@
 
 from collections.abc import Mapping, Sequence
 
-from cmk.ccc.site import SiteId
 from cmk.gui.form_specs.unstable.two_column_dictionary import TwoColumnDictionary
 from cmk.gui.i18n import _
 from cmk.gui.quick_setup.v0_unstable.predefined import (
@@ -26,6 +25,7 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
     QuickSetupActionMode,
     QuickSetupBackgroundAction,
     QuickSetupBackgroundStageAction,
+    QuickSetupContext,
     QuickSetupStage,
     QuickSetupStageAction,
 )
@@ -44,7 +44,6 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Text,
     Widget,
 )
-from cmk.livestatus_client import SiteConfiguration
 from cmk.plugins.azure_deprecated.rulesets import (  # astrein: disable=cmk-module-layer-violation
     azure,
 )
@@ -242,8 +241,7 @@ def recap_found_services(
     _stage_index: StageIndex,
     parsed_data: ParsedFormData,
     progress_logger: ProgressLogger,
-    site_configs: Mapping[SiteId, SiteConfiguration],
-    debug: bool,
+    ctx: QuickSetupContext,
 ) -> Sequence[Widget]:
     service_discovery_result = utils.get_service_discovery_preview(
         rulespec_name=RuleGroup.SpecialAgents("azure"),
@@ -251,8 +249,8 @@ def recap_found_services(
         parameter_form=azure.formspec(),
         collect_params=azure_collect_params,
         progress_logger=progress_logger,
-        site_configs=site_configs,
-        debug=debug,
+        site_configs=ctx.site_configs,
+        debug=ctx.debug,
     )
     azure_service_interest = ServiceInterest(r"(?i).*azure.*", "services")
     filtered_groups_of_services, _other_services = utils.group_services_by_interest(
@@ -314,8 +312,7 @@ def action(
     mode: QuickSetupActionMode,
     progress_logger: ProgressLogger,
     _object_id: str | None,
-    use_git: bool,  # noqa: ARG001
-    pprint_value: bool,  # noqa: ARG001
+    ctx: QuickSetupContext,  # noqa: ARG001
 ) -> str:
     match mode:
         case QuickSetupActionMode.SAVE:

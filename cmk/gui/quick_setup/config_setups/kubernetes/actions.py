@@ -13,7 +13,12 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
-from cmk.gui.quick_setup.v0_unstable.setups import ProgressLogger, QuickSetupActionMode, StepStatus
+from cmk.gui.quick_setup.v0_unstable.setups import (
+    ProgressLogger,
+    QuickSetupActionMode,
+    QuickSetupContext,
+    StepStatus,
+)
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
@@ -46,7 +51,10 @@ from .settings import PullSettings, PushSettings, read_common_settings, read_set
 
 
 def validate_configuration(
-    _quick_setup_id: QuickSetupId, data: ParsedFormData, _progress_logger: ProgressLogger
+    _quick_setup_id: QuickSetupId,
+    data: ParsedFormData,
+    _progress_logger: ProgressLogger,
+    _ctx: QuickSetupContext,
 ) -> GeneralStageErrors:
     try:
         settings = read_common_settings(data, default_site=omd_site())
@@ -106,21 +114,20 @@ def recap_deployment(
     _stage_index: StageIndex,
     data: ParsedFormData,
     progress_logger: ProgressLogger,
-    site_configs: Mapping[SiteId, SiteConfiguration],
-    _debug: bool,
+    ctx: QuickSetupContext,
     *,
     prepare_push: Callable[
         [PushSettings, Mapping[SiteId, SiteConfiguration]], PushCredentials
     ] = prepare_push_credentials,
 ) -> Sequence[Widget]:
     # Authorize centrally on every generation request, including requests that skip earlier stages.
-    if errors := validate_configuration(quick_setup_id, data, progress_logger):
+    if errors := validate_configuration(quick_setup_id, data, progress_logger, ctx):
         raise MKUserError(None, " ".join(errors))
     settings = read_settings(data, default_site=omd_site())
     if isinstance(settings, PullSettings):
         user.need_permission("wato.edit_all_passwords")
     return deployment_widgets(
-        settings, prepare_push=lambda push_settings: prepare_push(push_settings, site_configs)
+        settings, prepare_push=lambda push_settings: prepare_push(push_settings, ctx.site_configs)
     )
 
 
@@ -129,14 +136,13 @@ def finish_setup(
     mode: QuickSetupActionMode,
     progress_logger: ProgressLogger,
     _object_id: str | None,
-    use_git: bool,
-    pprint_value: bool,
+    ctx: QuickSetupContext,
 ) -> str:
     if mode != QuickSetupActionMode.SAVE:
         raise ValueError(
             "Editing an existing Kubernetes deployment through Quick Setup is not supported"
         )
-    if errors := validate_configuration(QUICK_SETUP_ID, data, progress_logger):
+    if errors := validate_configuration(QUICK_SETUP_ID, data, progress_logger, ctx):
         raise MKUserError(None, " ".join(errors))
     settings = read_settings(data, default_site=omd_site())
     pending_changes = PendingChanges(
@@ -145,7 +151,7 @@ def finish_setup(
         acting_user=user.id,
         store=PendingChangesStore(),
         hooks=(
-            make_audit_log_change_hook(use_git=use_git),
+            make_audit_log_change_hook(use_git=ctx.use_git),
             sidebar_reload_change_hook,
             index_update_change_hook,
         ),
@@ -159,7 +165,7 @@ def finish_setup(
         acting_user=user,
         user_permissions=UserPermissions.from_config(active_config, permission_registry),
         pending_changes=pending_changes,
-        pprint_value=pprint_value,
+        pprint_value=ctx.pprint_value,
         debug=active_config.debug,
     )
     pending_changes.add(

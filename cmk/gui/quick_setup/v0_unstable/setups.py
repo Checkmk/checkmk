@@ -10,7 +10,7 @@ import enum
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Protocol
+from typing import Protocol, Self
 
 from cmk.ccc.site import SiteId
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
@@ -45,18 +45,52 @@ class ProgressLogger(Protocol):
     def update_progress_step_status(self, step_name: str, status: StepStatus) -> None: ...
 
 
+class QuickSetupConfigSource(Protocol):
+    """Satisfied by the GUI's Config and the REST API's ApiConfig"""
+
+    @property
+    def sites(self) -> Mapping[SiteId, SiteConfiguration]: ...
+
+    @property
+    def debug(self) -> bool: ...
+
+    @property
+    def wato_use_git(self) -> bool: ...
+
+    @property
+    def wato_pprint_config(self) -> bool: ...
+
+
+@dataclass(frozen=True, kw_only=True)
+class QuickSetupContext:
+    site_configs: Mapping[SiteId, SiteConfiguration]
+    debug: bool
+    use_git: bool
+    pprint_value: bool
+
+    @classmethod
+    def from_config(cls, config: QuickSetupConfigSource) -> Self:
+        return cls(
+            site_configs=config.sites,
+            debug=config.debug,
+            use_git=config.wato_use_git,
+            pprint_value=config.wato_pprint_config,
+        )
+
+
 FormspecMap = Mapping[FormSpecId, FormSpec]
 # TODO: Validator should be refactored so during complete action, overlapping validations can be
 #  skipped
-CallableValidator = Callable[[QuickSetupId, ParsedFormData, ProgressLogger], GeneralStageErrors]
+CallableValidator = Callable[
+    [QuickSetupId, ParsedFormData, ProgressLogger, QuickSetupContext], GeneralStageErrors
+]
 CallableRecap = Callable[
     [
         QuickSetupId,
         StageIndex,
         ParsedFormData,
         ProgressLogger,
-        Mapping[SiteId, SiteConfiguration],
-        bool,
+        QuickSetupContext,
     ],
     Sequence[Widget],
 ]
@@ -66,8 +100,7 @@ CallableAction = Callable[
         QuickSetupActionMode,
         ProgressLogger,
         str | None,
-        bool,
-        bool,
+        QuickSetupContext,
     ],
     str,
 ]

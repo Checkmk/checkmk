@@ -23,6 +23,7 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
     QuickSetupActionMode,
     QuickSetupBackgroundAction,
     QuickSetupBackgroundStageAction,
+    QuickSetupContext,
     QuickSetupStage,
     QuickSetupStageAction,
 )
@@ -57,8 +58,7 @@ def _make_action(
         mode: QuickSetupActionMode,  # noqa: ARG001
         _progress_logger: ProgressLogger,
         object_id: str | None,  # noqa: ARG001
-        use_git: bool,  # noqa: ARG001
-        pprint_value: bool,  # noqa: ARG001
+        _ctx: QuickSetupContext,
     ) -> str:
         return return_value
 
@@ -174,6 +174,7 @@ def _form_spec_extra_validate(
     _quick_setup_id: QuickSetupId,
     _stages: ParsedFormData,
     _progress_logger: ProgressLogger,
+    _ctx: QuickSetupContext,
 ) -> GeneralStageErrors:
     return ["this is a general error", "and another one"]
 

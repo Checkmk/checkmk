@@ -31,6 +31,7 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
     ConditionalStage,
     FormspecMap,
     ProgressLogger,
+    QuickSetupContext,
     StageFactory,
     StepStatus,
 )
@@ -350,6 +351,7 @@ def validate_custom_validators(
     stages_raw_formspecs: Sequence[RawFormData],
     quick_setup_formspec_map: FormspecMap,
     progress_logger: ProgressLogger,
+    ctx: QuickSetupContext,
 ) -> ValidationErrors:
     errors = ValidationErrors(stage_index=None)
     for custom_validator in custom_validators:
@@ -358,6 +360,7 @@ def validate_custom_validators(
                 quick_setup_id,
                 form_spec_parse(stages_raw_formspecs, quick_setup_formspec_map),
                 progress_logger,
+                ctx,
             )
         )
     return errors

@@ -39,7 +39,10 @@ from cmk.gui.quick_setup.handlers.utils import (
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
 from cmk.gui.quick_setup.v0_unstable.predefined._common import find_id_in_form_data
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupBackgroundStageAction
+from cmk.gui.quick_setup.v0_unstable.setups import (
+    QuickSetupBackgroundStageAction,
+    QuickSetupContext,
+)
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ActionId,
     QuickSetupId,
@@ -164,6 +167,10 @@ def run_stage_action_v1(
                 language=language,
                 user_permission_config=user_permission_config,
                 job_uuid=None,
+                site_configs=api_context.config.sites,
+                debug=api_context.config.debug,
+                use_git=api_context.config.wato_use_git,
+                pprint_value=api_context.config.wato_pprint_config,
             )
 
         parameters: dict[str, str] = {"job_id": background_job_id}
@@ -186,8 +193,7 @@ def run_stage_action_v1(
         form_spec_map=form_spec_map,
         built_stages=built_stages,
         progress_logger=None,
-        site_configs=api_context.config.sites,
-        debug=api_context.config.debug,
+        ctx=QuickSetupContext.from_config(api_context.config),
     )
     status_code = 200 if result.validation_errors is None else 400
     return ApiResponse(

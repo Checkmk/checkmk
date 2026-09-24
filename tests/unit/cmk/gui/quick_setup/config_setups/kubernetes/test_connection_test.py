@@ -18,6 +18,7 @@ from cmk.gui.quick_setup.config_setups.kubernetes.settings import (
     read_settings,
 )
 from cmk.gui.quick_setup.handlers.utils import InfoLogger
+from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupContext
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 from cmk.gui.watolib.automations import MKAutomationException
@@ -44,7 +45,11 @@ def test_pull_connection_uses_saved_rule_parameters_and_an_ad_hoc_secret(
         return DiagSpecialAgentResult([SpecialAgentResult(0, "<<<kube_pod_info:sep(0)>>>\n{}\n")])
 
     errors = validate_pull_connection(
-        QUICK_SETUP_ID, pull_data, InfoLogger(), run_diagnostic=run_diagnostic
+        QUICK_SETUP_ID,
+        pull_data,
+        InfoLogger(),
+        QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
+        run_diagnostic=run_diagnostic,
     )
 
     assert errors == []
@@ -94,7 +99,11 @@ def test_failed_pull_test_returns_errors_without_exposing_response_credentials(
     pull_data: ParsedFormData, result: DiagSpecialAgentResult
 ) -> None:
     errors = validate_pull_connection(
-        QUICK_SETUP_ID, pull_data, InfoLogger(), run_diagnostic=lambda _input: result
+        QUICK_SETUP_ID,
+        pull_data,
+        InfoLogger(),
+        QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
+        run_diagnostic=lambda _input: result,
     )
 
     assert errors
@@ -106,7 +115,11 @@ def test_pull_automation_failure_does_not_expose_command_input(pull_data: Parsed
         raise MKAutomationException("Command input: kept-secret")
 
     errors = validate_pull_connection(
-        QUICK_SETUP_ID, pull_data, InfoLogger(), run_diagnostic=failed_automation
+        QUICK_SETUP_ID,
+        pull_data,
+        InfoLogger(),
+        QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
+        run_diagnostic=failed_automation,
     )
 
     assert all("kept-secret" not in error for error in errors)
@@ -122,7 +135,11 @@ def test_pull_failure_points_to_the_site_log_without_exposing_output(
     )
 
     errors = validate_pull_connection(
-        QUICK_SETUP_ID, pull_data, InfoLogger(), run_diagnostic=lambda _input: diagnostic
+        QUICK_SETUP_ID,
+        pull_data,
+        InfoLogger(),
+        QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
+        run_diagnostic=lambda _input: diagnostic,
     )
 
     assert len(errors) == 1
@@ -149,5 +166,6 @@ def test_pull_test_rejects_wrong_mode_or_site_before_running(
             QUICK_SETUP_ID,
             {**pull_data, **invalid_data[field]},
             InfoLogger(),
+            QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
             run_diagnostic=unexpected_diagnostic,
         )

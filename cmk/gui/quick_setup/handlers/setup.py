@@ -61,6 +61,7 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
     QuickSetup,
     QuickSetupAction,
     QuickSetupActionMode,
+    QuickSetupContext,
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ActionId,
@@ -70,6 +71,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     StageIndex,
 )
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
+from cmk.livestatus_client import SiteConfigurations
 
 
 @dataclass
@@ -264,8 +266,7 @@ def complete_quick_setup(
     quick_setup_formspec_map: FormspecMap,
     progress_logger: ProgressLogger,
     object_id: str | None,
-    use_git: bool,
-    pprint_value: bool,
+    ctx: QuickSetupContext,
 ) -> QuickSetupSaveRedirect:
     return QuickSetupSaveRedirect(
         redirect_url=action.action(
@@ -273,8 +274,7 @@ def complete_quick_setup(
             mode,
             progress_logger,
             object_id,
-            use_git,
-            pprint_value,
+            ctx,
         )
     )
 
@@ -314,10 +314,8 @@ def verify_custom_validators_and_complete_quick_setup(
     input_stages: Sequence[dict],
     form_spec_map: FormspecMap,
     object_id: str | None,
+    ctx: QuickSetupContext,
     progress_logger: ProgressLogger | None = None,
-    *,
-    use_git: bool,
-    pprint_value: bool,
 ) -> CompleteActionResult:
     if progress_logger is None:
         progress_logger = InfoLogger()
@@ -336,6 +334,7 @@ def verify_custom_validators_and_complete_quick_setup(
         stages_raw_formspecs=stages_raw_formspecs,
         quick_setup_formspec_map=form_spec_map,
         progress_logger=progress_logger,
+        ctx=ctx,
     )
     if errors.exist():
         return CompleteActionResult(
@@ -351,8 +350,7 @@ def verify_custom_validators_and_complete_quick_setup(
         quick_setup_formspec_map=form_spec_map,
         progress_logger=progress_logger,
         object_id=object_id,
-        use_git=use_git,
-        pprint_value=pprint_value,
+        ctx=ctx,
     ).redirect_url
     return CompleteActionResult(
         quick_setup_id=quick_setup.id,
@@ -392,6 +390,8 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
         job_interface: BackgroundProcessInterface,
         user_permission_config: UserPermissionSerializableConfig,
         *,
+        site_configs: SiteConfigurations,
+        debug: bool,
         use_git: bool,
         pprint_value: bool,
     ) -> None:
@@ -401,7 +401,13 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
         ):
             try:
                 self._run_quick_setup_stage(
-                    job_interface, use_git=use_git, pprint_value=pprint_value
+                    job_interface,
+                    ctx=QuickSetupContext(
+                        site_configs=site_configs,
+                        debug=debug,
+                        use_git=use_git,
+                        pprint_value=pprint_value,
+                    ),
                 )
             except Exception as e:
                 job_interface.get_logger().debug(
@@ -419,7 +425,7 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
                 ).save_to_file(Path(job_interface.get_work_dir()))
 
     def _run_quick_setup_stage(
-        self, job_interface: BackgroundProcessInterface, *, use_git: bool, pprint_value: bool
+        self, job_interface: BackgroundProcessInterface, *, ctx: QuickSetupContext
     ) -> None:
         job_interface.send_progress_update(_("Starting Quick Setup action..."))
 
@@ -432,8 +438,7 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
             form_spec_map=build_formspec_map_from_stages([stage() for stage in quick_setup.stages]),
             object_id=self._object_id,
             progress_logger=JobBasedProgressLogger(job_interface),
-            use_git=use_git,
-            pprint_value=pprint_value,
+            ctx=ctx,
         )
 
         job_interface.send_progress_update(_("Saving the result..."))
@@ -449,6 +454,8 @@ def start_quick_setup_job(
     object_id: str | None,
     user_permission_config: UserPermissionSerializableConfig,
     *,
+    site_configs: SiteConfigurations,
+    debug: bool,
     use_git: bool,
     pprint_value: bool,
 ) -> str:
@@ -470,6 +477,8 @@ def start_quick_setup_job(
                 mode=mode,
                 object_id=object_id,
                 user_permission_config=user_permission_config,
+                site_configs=site_configs,
+                debug=debug,
                 use_git=use_git,
                 pprint_value=pprint_value,
             ),
@@ -495,6 +504,8 @@ class QuickSetupActionJobArgs(BaseModel, frozen=True):
     mode: QuickSetupActionMode
     object_id: str | None
     user_permission_config: UserPermissionSerializableConfig
+    site_configs: SiteConfigurations
+    debug: bool
     use_git: bool
     pprint_value: bool
 
@@ -511,6 +522,8 @@ def quick_setup_action_job_entry_point(
     ).run_quick_setup_stage(
         job_interface,
         args.user_permission_config,
+        site_configs=args.site_configs,
+        debug=args.debug,
         use_git=args.use_git,
         pprint_value=args.pprint_value,
     )

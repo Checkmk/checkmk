@@ -28,7 +28,12 @@ from cmk.gui.quick_setup.v0_unstable.predefined._utils import (
     existing_folder_from_path,
     normalize_folder_path_str,
 )
-from cmk.gui.quick_setup.v0_unstable.setups import CallableValidator, ProgressLogger, StepStatus
+from cmk.gui.quick_setup.v0_unstable.setups import (
+    CallableValidator,
+    ProgressLogger,
+    QuickSetupContext,
+    StepStatus,
+)
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
@@ -67,6 +72,7 @@ def _validate_non_quick_setup_password(
     _quick_setup_id: QuickSetupId,
     all_stages_form_data: ParsedFormData,
     _progress_logger: ProgressLogger,
+    _ctx: QuickSetupContext,
 ) -> GeneralStageErrors:
     general_errors: GeneralStageErrors = []
     possible_expected_password_keys = [
@@ -107,6 +113,7 @@ def _validate_test_connection(
     _quick_setup_id: QuickSetupId,
     all_stages_form_data: ParsedFormData,
     progress_logger: ProgressLogger,
+    _ctx: QuickSetupContext,
     *,
     debug: bool,
 ) -> GeneralStageErrors:
@@ -159,6 +166,7 @@ def validate_unique_id(
     _quick_setup_id: QuickSetupId,
     stages_form_data: ParsedFormData,
     _progress_logger: ProgressLogger,
+    _ctx: QuickSetupContext,
 ) -> GeneralStageErrors:
     bundle_id = find_id_in_form_data(stages_form_data, UniqueBundleIDStr)
     if bundle_id is None:
@@ -174,6 +182,7 @@ def validate_host_name_doesnt_exists(
     _quick_setup_id: QuickSetupId,
     stages_form_data: ParsedFormData,
     _progress_logger: ProgressLogger,
+    _ctx: QuickSetupContext,
 ) -> GeneralStageErrors:
     host_name = find_id_in_form_data(stages_form_data, QSHostName)
     assert host_name is not None
@@ -194,6 +203,7 @@ def validate_host_path_permissions(
     _quick_setup_id: QuickSetupId,
     stages_form_data: ParsedFormData,
     _progress_logger: ProgressLogger,
+    _ctx: QuickSetupContext,
 ) -> GeneralStageErrors:
     host_path = find_id_in_form_data(stages_form_data, QSHostPath)
     assert host_path is not None

@@ -12,7 +12,7 @@ from cmk.ccc.site import omd_site
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.quick_setup.v0_unstable.predefined._common import create_diag_special_agent_input
-from cmk.gui.quick_setup.v0_unstable.setups import ProgressLogger, StepStatus
+from cmk.gui.quick_setup.v0_unstable.setups import ProgressLogger, QuickSetupContext, StepStatus
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
@@ -31,6 +31,7 @@ def validate_pull_connection(
     _quick_setup_id: QuickSetupId,
     data: ParsedFormData,
     progress_logger: ProgressLogger,
+    _ctx: QuickSetupContext,
     *,
     run_diagnostic: Callable[[DiagSpecialAgentInput], DiagSpecialAgentResult] = partial(
         diag_special_agent, LocalAutomationConfig(), debug=False

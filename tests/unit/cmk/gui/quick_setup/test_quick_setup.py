@@ -7,7 +7,11 @@ from cmk.gui.quick_setup.handlers.utils import InfoLogger
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
 from cmk.gui.quick_setup.v0_unstable.predefined._recaps import recaps_form_spec
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupStage, QuickSetupStageAction
+from cmk.gui.quick_setup.v0_unstable.setups import (
+    QuickSetupContext,
+    QuickSetupStage,
+    QuickSetupStageAction,
+)
 from cmk.gui.quick_setup.v0_unstable.type_defs import ActionId, RawFormData, StageIndex
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecRecap, FormSpecWrapper
 from cmk.rulesets.v1 import Title
@@ -62,9 +66,8 @@ def test_form_spec_recap() -> None:
             RawFormData({FormSpecId("wrapper"): {"test_dict_element": "I am a test string"}})
         ],
         quick_setup_formspec_map=form_spec_map,
-        site_configs={},
         progress_logger=InfoLogger(),
-        debug=False,
+        ctx=QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
     )
 
     assert len(stage_recap) == 1

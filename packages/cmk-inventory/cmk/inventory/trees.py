@@ -64,6 +64,166 @@ def make_row_ident(key_columns: Sequence[SDKey], row: Mapping[SDKey, SDValue]) -
     return tuple(row[k] for k in key_columns if k in row)
 
 
+@dataclass(frozen=True, kw_only=True)
+class ImmutableAttributes:
+    pairs: Mapping[SDKey, SDValue] = field(default_factory=dict)
+    retentions: Mapping[SDKey, RetentionInterval] = field(default_factory=dict)
+
+    def __len__(self) -> int:
+        # The attribute 'pairs' is decisive. Other attributes like 'retentions' have no impact
+        # if there are no pairs.
+        return len(self.pairs)
+
+    @override
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, _MutableAttributes | ImmutableAttributes):
+            return NotImplemented
+        return self.pairs == other.pairs
+
+
+@dataclass(frozen=True, kw_only=True)
+class ImmutableTable:
+    key_columns: Sequence[SDKey] = field(default_factory=list)
+    rows_by_ident: Mapping[SDRowIdent, Mapping[SDKey, SDValue]] = field(default_factory=dict)
+    retentions: Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]] = field(default_factory=dict)
+
+    def __len__(self) -> int:
+        # The attribute 'rows' is decisive. Other attributes like 'key_columns' or 'retentions'
+        # have no impact if there are no rows.
+        return sum(map(len, self.rows_by_ident.values()))
+
+    @override
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, _MutableTable | ImmutableTable):
+            return NotImplemented
+
+        compared_row_idents = DictKeys.compare(
+            left=set(self.rows_by_ident),
+            right=set(other.rows_by_ident),
+        )
+
+        if compared_row_idents.only_left:
+            return False
+
+        if compared_row_idents.only_right:
+            return False
+
+        return all(
+            self.rows_by_ident[i] == other.rows_by_ident[i] for i in compared_row_idents.both
+        )
+
+    @property
+    def rows(self) -> Sequence[Mapping[SDKey, SDValue]]:
+        return list(self.rows_by_ident.values())
+
+    @property
+    def rows_with_retentions(
+        self,
+    ) -> Sequence[Mapping[SDKey, tuple[SDValue, RetentionInterval | None]]]:
+        return [
+            {key: (value, self.retentions.get(ident, {}).get(key)) for key, value in row.items()}
+            for ident, row in self.rows_by_ident.items()
+        ]
+
+
+@dataclass(frozen=True, kw_only=True)
+class ImmutableTree:
+    path: SDPath = ()
+    attributes: ImmutableAttributes = ImmutableAttributes()
+    table: ImmutableTable = ImmutableTable()
+    nodes_by_name: Mapping[SDNodeName, ImmutableTree] = field(default_factory=dict)
+
+    def __len__(self) -> int:
+        return sum(
+            [len(self.attributes), len(self.table)]
+            + [len(node) for node in self.nodes_by_name.values()]
+        )
+
+    @override
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, MutableTree | ImmutableTree):
+            return NotImplemented
+
+        if self.attributes != other.attributes or self.table != other.table:
+            return False
+
+        compared_node_names = DictKeys.compare(
+            left=set(self.nodes_by_name),
+            right=set(other.nodes_by_name),
+        )
+
+        if any(self.nodes_by_name[n] for n in compared_node_names.only_left):
+            return False
+
+        if any(other.nodes_by_name[n] for n in compared_node_names.only_right):
+            return False
+
+        return all(
+            self.nodes_by_name[n] == other.nodes_by_name[n] for n in compared_node_names.both
+        )
+
+    def get_attribute(self, path: SDPath, key: SDKey) -> SDValue:
+        return self.get_tree(path).attributes.pairs.get(key)
+
+    def get_rows(self, path: SDPath) -> Sequence[Mapping[SDKey, SDValue]]:
+        return self.get_tree(path).table.rows
+
+    def get_tree(self, path: SDPath) -> ImmutableTree:
+        if not path:
+            return self
+        return (
+            ImmutableTree()
+            if (node := self.nodes_by_name.get(path[0])) is None
+            else node.get_tree(path[1:])
+        )
+
+
+def _make_retentions_filter_func(
+    *,
+    filter_func: Callable[[SDKey], bool],
+    intervals_by_key: Mapping[SDKey, RetentionInterval] | None,
+    now: int,
+) -> Callable[[SDKey], bool]:
+    return lambda k: bool(
+        filter_func(k)
+        and intervals_by_key
+        and (interval := intervals_by_key.get(k))
+        and now <= interval.keep_until
+    )
+
+
+@dataclass(frozen=True)
+class _SDRetentionFilterChoice:
+    choice: Literal["nothing", "all"] | Sequence[SDKey]
+    cache_info: tuple[int, int]
+
+
+@dataclass(frozen=True, kw_only=True)
+class SDRetentionFilterChoices:
+    path: SDPath
+    interval: int
+    _pairs: list[_SDRetentionFilterChoice] = field(default_factory=list)
+    _columns: list[_SDRetentionFilterChoice] = field(default_factory=list)
+
+    @property
+    def pairs(self) -> Sequence[_SDRetentionFilterChoice]:
+        return self._pairs
+
+    @property
+    def columns(self) -> Sequence[_SDRetentionFilterChoice]:
+        return self._columns
+
+    def add_pairs_choice(
+        self, choice: Literal["nothing", "all"] | Sequence[SDKey], cache_info: tuple[int, int]
+    ) -> None:
+        self._pairs.append(_SDRetentionFilterChoice(choice, cache_info))
+
+    def add_columns_choice(
+        self, choice: Literal["nothing", "all"] | Sequence[SDKey], cache_info: tuple[int, int]
+    ) -> None:
+        self._columns.append(_SDRetentionFilterChoice(choice, cache_info))
+
+
 def _format_update_result_attrs(*, title: str, message: str) -> str:
     return f"[Attributes] {title}: {message}"
 
@@ -394,166 +554,6 @@ class MutableTree:
             if update_results := node.get_update_results():
                 by_path.update({p: list(rs) for p, rs in update_results.items()})
         return by_path
-
-
-@dataclass(frozen=True, kw_only=True)
-class ImmutableAttributes:
-    pairs: Mapping[SDKey, SDValue] = field(default_factory=dict)
-    retentions: Mapping[SDKey, RetentionInterval] = field(default_factory=dict)
-
-    def __len__(self) -> int:
-        # The attribute 'pairs' is decisive. Other attributes like 'retentions' have no impact
-        # if there are no pairs.
-        return len(self.pairs)
-
-    @override
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, _MutableAttributes | ImmutableAttributes):
-            return NotImplemented
-        return self.pairs == other.pairs
-
-
-@dataclass(frozen=True, kw_only=True)
-class ImmutableTable:
-    key_columns: Sequence[SDKey] = field(default_factory=list)
-    rows_by_ident: Mapping[SDRowIdent, Mapping[SDKey, SDValue]] = field(default_factory=dict)
-    retentions: Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]] = field(default_factory=dict)
-
-    def __len__(self) -> int:
-        # The attribute 'rows' is decisive. Other attributes like 'key_columns' or 'retentions'
-        # have no impact if there are no rows.
-        return sum(map(len, self.rows_by_ident.values()))
-
-    @override
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, _MutableTable | ImmutableTable):
-            return NotImplemented
-
-        compared_row_idents = DictKeys.compare(
-            left=set(self.rows_by_ident),
-            right=set(other.rows_by_ident),
-        )
-
-        if compared_row_idents.only_left:
-            return False
-
-        if compared_row_idents.only_right:
-            return False
-
-        return all(
-            self.rows_by_ident[i] == other.rows_by_ident[i] for i in compared_row_idents.both
-        )
-
-    @property
-    def rows(self) -> Sequence[Mapping[SDKey, SDValue]]:
-        return list(self.rows_by_ident.values())
-
-    @property
-    def rows_with_retentions(
-        self,
-    ) -> Sequence[Mapping[SDKey, tuple[SDValue, RetentionInterval | None]]]:
-        return [
-            {key: (value, self.retentions.get(ident, {}).get(key)) for key, value in row.items()}
-            for ident, row in self.rows_by_ident.items()
-        ]
-
-
-@dataclass(frozen=True, kw_only=True)
-class ImmutableTree:
-    path: SDPath = ()
-    attributes: ImmutableAttributes = ImmutableAttributes()
-    table: ImmutableTable = ImmutableTable()
-    nodes_by_name: Mapping[SDNodeName, ImmutableTree] = field(default_factory=dict)
-
-    def __len__(self) -> int:
-        return sum(
-            [len(self.attributes), len(self.table)]
-            + [len(node) for node in self.nodes_by_name.values()]
-        )
-
-    @override
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, MutableTree | ImmutableTree):
-            return NotImplemented
-
-        if self.attributes != other.attributes or self.table != other.table:
-            return False
-
-        compared_node_names = DictKeys.compare(
-            left=set(self.nodes_by_name),
-            right=set(other.nodes_by_name),
-        )
-
-        if any(self.nodes_by_name[n] for n in compared_node_names.only_left):
-            return False
-
-        if any(other.nodes_by_name[n] for n in compared_node_names.only_right):
-            return False
-
-        return all(
-            self.nodes_by_name[n] == other.nodes_by_name[n] for n in compared_node_names.both
-        )
-
-    def get_attribute(self, path: SDPath, key: SDKey) -> SDValue:
-        return self.get_tree(path).attributes.pairs.get(key)
-
-    def get_rows(self, path: SDPath) -> Sequence[Mapping[SDKey, SDValue]]:
-        return self.get_tree(path).table.rows
-
-    def get_tree(self, path: SDPath) -> ImmutableTree:
-        if not path:
-            return self
-        return (
-            ImmutableTree()
-            if (node := self.nodes_by_name.get(path[0])) is None
-            else node.get_tree(path[1:])
-        )
-
-
-def _make_retentions_filter_func(
-    *,
-    filter_func: Callable[[SDKey], bool],
-    intervals_by_key: Mapping[SDKey, RetentionInterval] | None,
-    now: int,
-) -> Callable[[SDKey], bool]:
-    return lambda k: bool(
-        filter_func(k)
-        and intervals_by_key
-        and (interval := intervals_by_key.get(k))
-        and now <= interval.keep_until
-    )
-
-
-@dataclass(frozen=True)
-class _SDRetentionFilterChoice:
-    choice: Literal["nothing", "all"] | Sequence[SDKey]
-    cache_info: tuple[int, int]
-
-
-@dataclass(frozen=True, kw_only=True)
-class SDRetentionFilterChoices:
-    path: SDPath
-    interval: int
-    _pairs: list[_SDRetentionFilterChoice] = field(default_factory=list)
-    _columns: list[_SDRetentionFilterChoice] = field(default_factory=list)
-
-    @property
-    def pairs(self) -> Sequence[_SDRetentionFilterChoice]:
-        return self._pairs
-
-    @property
-    def columns(self) -> Sequence[_SDRetentionFilterChoice]:
-        return self._columns
-
-    def add_pairs_choice(
-        self, choice: Literal["nothing", "all"] | Sequence[SDKey], cache_info: tuple[int, int]
-    ) -> None:
-        self._pairs.append(_SDRetentionFilterChoice(choice, cache_info))
-
-    def add_columns_choice(
-        self, choice: Literal["nothing", "all"] | Sequence[SDKey], cache_info: tuple[int, int]
-    ) -> None:
-        self._columns.append(_SDRetentionFilterChoice(choice, cache_info))
 
 
 # Data for the HW/SW Inventory has a validity period (live data or persisted).

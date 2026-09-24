@@ -79,6 +79,11 @@ class SDMeta(TypedDict):
     do_archive: bool
 
 
+class SDMetaAndRawTree(TypedDict):
+    meta: SDMeta
+    raw_tree: SDRawTree
+
+
 def save_raw_tree(tree_path: TreePath, raw_tree: SDRawTree) -> None:
     tree_path.path.parent.mkdir(parents=True, exist_ok=True)
     store.save_text_to_file(tree_path.path, json.dumps(raw_tree) + "\n")
@@ -134,11 +139,6 @@ def _archive_inventory_tree(inv_paths: InventoryPaths, host_name: HostName) -> N
 
 def make_meta(*, do_archive: bool) -> SDMeta:
     return SDMeta(version="1", do_archive=do_archive)
-
-
-class SDMetaAndRawTree(TypedDict):
-    meta: SDMeta
-    raw_tree: SDRawTree
 
 
 def _parse_raw_meta(raw_meta: object) -> SDMeta:

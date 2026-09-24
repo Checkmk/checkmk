@@ -204,6 +204,7 @@ def show_user_messages() -> None:
         )
         html.close_div()
         html.close_div()
+        html.close_div()
         forms.end()
 
     html.close_div()

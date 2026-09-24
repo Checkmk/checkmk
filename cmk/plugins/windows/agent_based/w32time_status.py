@@ -200,7 +200,10 @@ def _sync_result_to_check_result(state_params: StateParams, result: int) -> Chec
 
 def check_w32time_status(params: Params, section: QueryStatus | ErrorStatus) -> CheckResult:
     if isinstance(section, ErrorStatus):
-        yield Result(state=State.WARN, summary=section.error)
+        yield Result(
+            state=State.WARN,
+            summary=section.error or "Windows time service reported an error without a message",
+        )
         return
 
     # Parameter merging is not a deep merge, so merge states against defaults.

@@ -546,7 +546,6 @@ def test_check_w32time_status_incomplete_states(
     assert result[-1].state == expected
 
 
-@pytest.mark.xfail(strict=True, reason="Crash report b337189a: ValueError on empty summary")
 def test_check_w32time_status_error_without_message() -> None:
     # w32tm output from a German host: the agent delivers the error line, but no message after it
     string_table = [["Folgender", "Fehler", "ist", "aufgetreten:"]]

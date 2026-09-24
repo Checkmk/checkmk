@@ -115,6 +115,9 @@ const httpVars: Ref<FilterHTTPVars> = computed(() => {
     single_infos: JSON.stringify(props.effective_filter_context.uses_infos)
   }
 })
+// The parent hands out new prop objects whenever anything on the dashboard recomputes, e.g. when
+// the widget titles arrive, so compare what we would send.
+const httpQuery = computed(() => new URLSearchParams(httpVars.value).toString())
 
 // Resolve figure type for special cases where figure and content type are not the same
 const figureType: Ref<string> = computed(() => {
@@ -161,8 +164,8 @@ function setupMutationObserver(targetElement: HTMLElement) {
       }
       for (const node of mutation.addedNodes) {
         if (node instanceof HTMLElement && node.id === 'figure_error') {
-          // Left hidden behind the wrapper's modifier rather than removed here; only `onRetry`
-          // removes it, so that a repeat failure stays observable.
+          // Left hidden behind the wrapper's modifier rather than removed here; only
+          // `updateFigure` removes it, so that a repeat failure stays observable.
           error.value = node.textContent?.trim() ?? ''
           isLoading.value = false
           return
@@ -182,7 +185,7 @@ const initializeFigure = () => {
     legacyFigureType.value,
     `#${figureId.value}`,
     dataEndpointUrl.value,
-    new URLSearchParams(httpVars.value).toString(),
+    httpQuery.value,
     props.content,
     updateInterval
   )
@@ -193,7 +196,7 @@ const initializeFigure = () => {
   })
 }
 
-const onRetry = () => {
+const updateFigure = () => {
   if (!figure) {
     return
   }
@@ -202,23 +205,14 @@ const onRetry = () => {
   // there, mutating nothing the observer watches, and the widget loads forever.
   figure.instance.clear_error_info()
   isLoading.value = true
-  figure.update(
-    dataEndpointUrl.value,
-    new URLSearchParams(httpVars.value).toString(),
-    props.content
-  )
+  figure.update(dataEndpointUrl.value, httpQuery.value, props.content)
 }
 
 onMounted(() => {
   initializeFigure()
 })
 
-watch(httpVars, (newHttpVars: FilterHTTPVars) => {
-  if (figure) {
-    isLoading.value = true
-    figure.update(dataEndpointUrl.value, new URLSearchParams(newHttpVars).toString(), props.content)
-  }
-})
+watch(httpQuery, updateFigure)
 
 onBeforeUnmount(() => {
   figure?.disable()
@@ -244,7 +238,7 @@ onBeforeUnmount(() => {
         v-if="notice"
         v-bind="notice"
         class="db-content-figure__notice"
-        @retry="onRetry"
+        @retry="updateFigure"
       />
       <div
         ref="wrapperDiv"

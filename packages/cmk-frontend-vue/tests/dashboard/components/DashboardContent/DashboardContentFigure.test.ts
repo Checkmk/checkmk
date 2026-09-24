@@ -147,6 +147,46 @@ test('a fast second load shows no icon either', async () => {
   expect(loadingIcon()).not.toBeInTheDocument()
 })
 
+test('a new title with the same filters does not refetch the figure', async () => {
+  const { rerender } = renderWidget()
+  await nextTick()
+  finishRender()
+  await nextTick()
+
+  // What the dashboard hands down once the widget titles arrive: equal values, new objects.
+  await rerender({
+    ...baseProps,
+    effectiveTitle: 'Host statistics of main',
+    effective_filter_context: { uses_infos: [], filters: {}, context: {} }
+  } as never)
+  await nextTick()
+
+  expect(updateCount).toBe(0)
+  expect(wrapperIsHidden()).toBe(false)
+})
+
+test('changed filters refetch the figure', async () => {
+  const { rerender } = renderWidget()
+  await nextTick()
+
+  await rerender(REFILTERED as never)
+  await nextTick()
+
+  expect(updateCount).toBe(1)
+})
+
+test('still reports a failure after changed filters, rather than loading forever', async () => {
+  const { rerender } = renderWidget()
+  await nextTick()
+  await injectLegacyError('Cannot fetch data')
+
+  await rerender(REFILTERED as never)
+  await nextTick()
+  await injectLegacyError('Cannot fetch data')
+
+  expect(within(notice()!).getByText('Graph data could not be loaded.')).toBeInTheDocument()
+})
+
 test('keeps the figure hidden from the start, undelayed, until it has rendered', async () => {
   renderWidget()
 

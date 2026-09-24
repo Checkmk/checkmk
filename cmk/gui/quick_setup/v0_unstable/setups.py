@@ -22,6 +22,11 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     StageIndex,
 )
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, Widget
+from cmk.gui.watolib.hosts_and_folders import (
+    FolderTree,
+    FolderTreeConfigSource,
+    make_folder_tree,
+)
 from cmk.livestatus_client import SiteConfiguration
 from cmk.rulesets.v1.form_specs import FormSpec
 
@@ -45,11 +50,8 @@ class ProgressLogger(Protocol):
     def update_progress_step_status(self, step_name: str, status: StepStatus) -> None: ...
 
 
-class QuickSetupConfigSource(Protocol):
+class QuickSetupConfigSource(FolderTreeConfigSource, Protocol):
     """Satisfied by the GUI's Config and the REST API's ApiConfig"""
-
-    @property
-    def sites(self) -> Mapping[SiteId, SiteConfiguration]: ...
 
     @property
     def debug(self) -> bool: ...
@@ -63,6 +65,7 @@ class QuickSetupConfigSource(Protocol):
 
 @dataclass(frozen=True, kw_only=True)
 class QuickSetupContext:
+    tree: FolderTree
     site_configs: Mapping[SiteId, SiteConfiguration]
     debug: bool
     use_git: bool
@@ -71,6 +74,7 @@ class QuickSetupContext:
     @classmethod
     def from_config(cls, config: QuickSetupConfigSource) -> Self:
         return cls(
+            tree=make_folder_tree(config),
             site_configs=config.sites,
             debug=config.debug,
             use_git=config.wato_use_git,

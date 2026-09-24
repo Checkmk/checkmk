@@ -70,8 +70,11 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     RawFormData,
     StageIndex,
 )
+from cmk.gui.type_defs import CustomHostAttrSpec
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
+from cmk.gui.watolib.hosts_and_folders import FolderTree, HostsAndFoldersConfig
 from cmk.livestatus_client import SiteConfigurations
+from cmk.ruleset_matcher.tags import TagConfig, TagConfigSpec
 
 
 @dataclass
@@ -394,6 +397,9 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
         debug: bool,
         use_git: bool,
         pprint_value: bool,
+        wato_hide_folders_without_read_permissions: bool,
+        wato_host_attrs: Sequence[CustomHostAttrSpec],
+        tags: TagConfigSpec,
     ) -> None:
         job_interface.get_logger().debug("Running Quick setup action finally")
         with job_interface.gui_context(
@@ -403,6 +409,14 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
                 self._run_quick_setup_stage(
                     job_interface,
                     ctx=QuickSetupContext(
+                        tree=FolderTree(
+                            config=HostsAndFoldersConfig(
+                                wato_hide_folders_without_read_permissions=wato_hide_folders_without_read_permissions,
+                                wato_host_attrs=wato_host_attrs,
+                                tags=TagConfig.from_config(tags),
+                                sites=site_configs,
+                            )
+                        ),
                         site_configs=site_configs,
                         debug=debug,
                         use_git=use_git,
@@ -458,6 +472,9 @@ def start_quick_setup_job(
     debug: bool,
     use_git: bool,
     pprint_value: bool,
+    wato_hide_folders_without_read_permissions: bool,
+    wato_host_attrs: Sequence[CustomHostAttrSpec],
+    tags: TagConfigSpec,
 ) -> str:
     job = QuickSetupActionBackgroundJob(
         quick_setup_id=quick_setup.id,
@@ -481,6 +498,9 @@ def start_quick_setup_job(
                 debug=debug,
                 use_git=use_git,
                 pprint_value=pprint_value,
+                wato_hide_folders_without_read_permissions=wato_hide_folders_without_read_permissions,
+                wato_host_attrs=wato_host_attrs,
+                tags=tags,
             ),
         ),
         InitialStatusArgs(
@@ -508,6 +528,9 @@ class QuickSetupActionJobArgs(BaseModel, frozen=True):
     debug: bool
     use_git: bool
     pprint_value: bool
+    wato_hide_folders_without_read_permissions: bool
+    wato_host_attrs: Sequence[CustomHostAttrSpec]
+    tags: TagConfigSpec
 
 
 def quick_setup_action_job_entry_point(
@@ -526,4 +549,7 @@ def quick_setup_action_job_entry_point(
         debug=args.debug,
         use_git=args.use_git,
         pprint_value=args.pprint_value,
+        wato_hide_folders_without_read_permissions=args.wato_hide_folders_without_read_permissions,
+        wato_host_attrs=args.wato_host_attrs,
+        tags=args.tags,
     )

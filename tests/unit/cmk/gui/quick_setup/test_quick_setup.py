@@ -2,6 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from cmk.gui.config import Config
 from cmk.gui.quick_setup.handlers.stage import recap_stage
 from cmk.gui.quick_setup.handlers.utils import InfoLogger
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
@@ -14,6 +15,7 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import ActionId, RawFormData, StageIndex
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecRecap, FormSpecWrapper
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary, FieldSize, String, validators
 from tests.unit.cmk.gui.quick_setup.factories import QuickSetupFactory
@@ -67,7 +69,13 @@ def test_form_spec_recap() -> None:
         ],
         quick_setup_formspec_map=form_spec_map,
         progress_logger=InfoLogger(),
-        ctx=QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
+        ctx=QuickSetupContext(
+            tree=make_folder_tree(Config()),
+            site_configs={},
+            debug=False,
+            use_git=False,
+            pprint_value=False,
+        ),
     )
 
     assert len(stage_recap) == 1

@@ -312,7 +312,7 @@ def action(
     mode: QuickSetupActionMode,
     progress_logger: ProgressLogger,
     _object_id: str | None,
-    ctx: QuickSetupContext,  # noqa: ARG001
+    ctx: QuickSetupContext,
 ) -> str:
     match mode:
         case QuickSetupActionMode.SAVE:
@@ -322,6 +322,7 @@ def action(
                 all_stages_form_data=all_stages_form_data,
                 custom_collect_params=azure_collect_params,
                 progress_logger=progress_logger,
+                tree=ctx.tree,
             )
         case QuickSetupActionMode.EDIT:
             raise ValueError("Edit mode not supported")

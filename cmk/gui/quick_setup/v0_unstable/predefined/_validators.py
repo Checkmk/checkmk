@@ -42,7 +42,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
 from cmk.gui.watolib.automations import make_automation_config
 from cmk.gui.watolib.check_mk_automations import diag_special_agent
 from cmk.gui.watolib.configuration_bundle_store import ConfigBundleStore, is_locked_by_config_bundle
-from cmk.gui.watolib.hosts_and_folders import _normalize_folder_name, folder_tree
+from cmk.gui.watolib.hosts_and_folders import _normalize_folder_name
 from cmk.gui.watolib.passwords import load_passwords
 from cmk.rulesets.v1.form_specs import Dictionary, Password
 
@@ -182,11 +182,11 @@ def validate_host_name_doesnt_exists(
     _quick_setup_id: QuickSetupId,
     stages_form_data: ParsedFormData,
     _progress_logger: ProgressLogger,
-    _ctx: QuickSetupContext,
+    ctx: QuickSetupContext,
 ) -> GeneralStageErrors:
     host_name = find_id_in_form_data(stages_form_data, QSHostName)
     assert host_name is not None
-    host = folder_tree().host(HostName(host_name))
+    host = ctx.tree.host(HostName(host_name))
     if host:
         return [
             _(
@@ -203,18 +203,18 @@ def validate_host_path_permissions(
     _quick_setup_id: QuickSetupId,
     stages_form_data: ParsedFormData,
     _progress_logger: ProgressLogger,
-    _ctx: QuickSetupContext,
+    ctx: QuickSetupContext,
 ) -> GeneralStageErrors:
     host_path = find_id_in_form_data(stages_form_data, QSHostPath)
     assert host_path is not None
 
     sanitized_folder_path = normalize_folder_path_str(host_path)
-    if folder := existing_folder_from_path(sanitized_folder_path):
+    if folder := existing_folder_from_path(ctx.tree, sanitized_folder_path):
         has_permissions = folder.permissions.may("write", user)
     else:
         # If the folder does not exist, we need to check if the user has permissions to create it
         # in the potential parent folder
-        folder = folder_tree().root_folder()
+        folder = ctx.tree.root_folder()
         for title in sanitized_folder_path.split("/"):
             name = _normalize_folder_name(title)
             potential_sub_folder = folder.subfolder_by_title(title) or folder.subfolder(name)

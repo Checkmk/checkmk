@@ -78,13 +78,16 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     FormSpecId,
     Widget,
 )
+from cmk.gui.type_defs import CustomHostAttrSpec
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
     do_remote_automation,
     MKAutomationException,
 )
+from cmk.gui.watolib.hosts_and_folders import FolderTree, HostsAndFoldersConfig
 from cmk.livestatus_client import SiteConfigurations
+from cmk.ruleset_matcher.tags import TagConfig, TagConfigSpec
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils.automation_config import RemoteAutomationConfig
 
@@ -368,6 +371,9 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
         debug: bool,
         use_git: bool,
         pprint_value: bool,
+        wato_hide_folders_without_read_permissions: bool,
+        wato_host_attrs: Sequence[CustomHostAttrSpec],
+        tags: TagConfigSpec,
     ) -> None:
         job_interface.get_logger().debug("Running Quick setup stage action finally")
         with job_interface.gui_context(
@@ -378,6 +384,14 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
                 self._run_quick_setup_stage_action(
                     job_interface,
                     ctx=QuickSetupContext(
+                        tree=FolderTree(
+                            config=HostsAndFoldersConfig(
+                                wato_hide_folders_without_read_permissions=wato_hide_folders_without_read_permissions,
+                                wato_host_attrs=wato_host_attrs,
+                                tags=TagConfig.from_config(tags),
+                                sites=site_configs,
+                            )
+                        ),
                         site_configs=site_configs,
                         debug=debug,
                         use_git=use_git,
@@ -438,6 +452,9 @@ def start_quick_setup_stage_job(
     debug: bool,
     use_git: bool,
     pprint_value: bool,
+    wato_hide_folders_without_read_permissions: bool,
+    wato_host_attrs: Sequence[CustomHostAttrSpec],
+    tags: TagConfigSpec,
 ) -> str:
     if job_uuid is None:
         job_uuid = str(uuid.uuid4())
@@ -465,6 +482,9 @@ def start_quick_setup_stage_job(
                 debug=debug,
                 use_git=use_git,
                 pprint_value=pprint_value,
+                wato_hide_folders_without_read_permissions=wato_hide_folders_without_read_permissions,
+                wato_host_attrs=wato_host_attrs,
+                tags=tags,
             ),
         ),
         InitialStatusArgs(
@@ -502,6 +522,9 @@ class QuickSetupStageActionJobArgs(QuickSetupStageActionRemoteArgs, frozen=True)
     debug: bool
     use_git: bool
     pprint_value: bool
+    wato_hide_folders_without_read_permissions: bool
+    wato_host_attrs: Sequence[CustomHostAttrSpec]
+    tags: TagConfigSpec
 
 
 def quick_setup_stage_action_job_entry_point(
@@ -521,6 +544,9 @@ def quick_setup_stage_action_job_entry_point(
         debug=args.debug,
         use_git=args.use_git,
         pprint_value=args.pprint_value,
+        wato_hide_folders_without_read_permissions=args.wato_hide_folders_without_read_permissions,
+        wato_host_attrs=args.wato_host_attrs,
+        tags=args.tags,
     )
 
 
@@ -624,6 +650,9 @@ class AutomationQuickSetupStageAction(AutomationCommand[QuickSetupStageActionJob
             debug=config.debug,
             use_git=config.wato_use_git,
             pprint_value=config.wato_pprint_config,
+            wato_hide_folders_without_read_permissions=config.wato_hide_folders_without_read_permissions,
+            wato_host_attrs=config.wato_host_attrs,
+            tags=config.tags.get_dict_format(),
         )
 
     @override
@@ -640,6 +669,9 @@ class AutomationQuickSetupStageAction(AutomationCommand[QuickSetupStageActionJob
             debug=api_request.debug,
             use_git=api_request.use_git,
             pprint_value=api_request.pprint_value,
+            wato_hide_folders_without_read_permissions=api_request.wato_hide_folders_without_read_permissions,
+            wato_host_attrs=api_request.wato_host_attrs,
+            tags=api_request.tags,
         )
 
 

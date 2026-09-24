@@ -12,7 +12,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import login
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
@@ -43,7 +43,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, StageIndex
 from cmk.gui.quick_setup.v0_unstable.widgets import Code, FormSpecId
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle, ConfigBundleStore
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.livestatus_client import SiteConfiguration
 from cmk.utils import paths
 
@@ -56,7 +56,13 @@ def test_pull_recap_works_without_a_push_receiver_or_site_ca(data: ParsedFormDat
         StageIndex(2),
         {**data, CONNECTION: ("pull", {"shared_secret": "kept-secret"})},
         InfoLogger(),
-        QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
+        QuickSetupContext(
+            tree=make_folder_tree(Config()),
+            site_configs={},
+            debug=False,
+            use_git=False,
+            pprint_value=False,
+        ),
     )
 
     assert {widget.download_filename for widget in widgets if isinstance(widget, Code)} == {
@@ -124,7 +130,13 @@ def test_host_validation_does_not_require_a_connection_mode(data: ParsedFormData
             QUICK_SETUP_ID,
             data,
             InfoLogger(),
-            QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
+            QuickSetupContext(
+                tree=make_folder_tree(Config()),
+                site_configs={},
+                debug=False,
+                use_git=False,
+                pprint_value=False,
+            ),
         )
         == []
     )
@@ -142,7 +154,13 @@ def test_deployment_without_a_mode_does_not_prepare_push_credentials(data: Parse
             StageIndex(2),
             data,
             InfoLogger(),
-            QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
+            QuickSetupContext(
+                tree=make_folder_tree(Config()),
+                site_configs={},
+                debug=False,
+                use_git=False,
+                pprint_value=False,
+            ),
             prepare_push=unexpected_credentials,
         )
 
@@ -154,11 +172,17 @@ def test_save_without_a_mode_does_not_create_configuration(data: ParsedFormData)
             QuickSetupActionMode.SAVE,
             InfoLogger(),
             None,
-            QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
+            QuickSetupContext(
+                tree=make_folder_tree(Config()),
+                site_configs={},
+                debug=False,
+                use_git=False,
+                pprint_value=False,
+            ),
         )
 
     assert not ConfigBundleStore().load_for_reading()
-    assert not folder_tree().all_hosts()
+    assert not make_folder_tree(Config()).all_hosts()
 
 
 def test_pull_deployment_requires_password_store_permission(data: ParsedFormData) -> None:
@@ -173,7 +197,13 @@ def test_pull_deployment_requires_password_store_permission(data: ParsedFormData
             StageIndex(2),
             {**data, CONNECTION: ("pull", {"shared_secret": "kept-secret"})},
             InfoLogger(),
-            QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
+            QuickSetupContext(
+                tree=make_folder_tree(Config()),
+                site_configs={},
+                debug=False,
+                use_git=False,
+                pprint_value=False,
+            ),
         )
 
 
@@ -182,7 +212,13 @@ def test_configuration_name_must_be_a_helm_release_name(data: ParsedFormData) ->
         QUICK_SETUP_ID,
         {**data, FormSpecId("formspec_unique_id"): {"bundle_id": "not.a.helm.name"}},
         InfoLogger(),
-        QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
+        QuickSetupContext(
+            tree=make_folder_tree(Config()),
+            site_configs={},
+            debug=False,
+            use_git=False,
+            pprint_value=False,
+        ),
     )
 
     assert errors and "Helm release name" in errors[0]
@@ -205,7 +241,13 @@ def test_configuration_names_cannot_normalize_to_the_same_release(data: ParsedFo
         QUICK_SETUP_ID,
         data,
         InfoLogger(),
-        QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
+        QuickSetupContext(
+            tree=make_folder_tree(Config()),
+            site_configs={},
+            debug=False,
+            use_git=False,
+            pprint_value=False,
+        ),
     )
 
     def unexpected_credentials(
@@ -219,7 +261,13 @@ def test_configuration_names_cannot_normalize_to_the_same_release(data: ParsedFo
             StageIndex(2),
             data,
             InfoLogger(),
-            QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
+            QuickSetupContext(
+                tree=make_folder_tree(Config()),
+                site_configs={},
+                debug=False,
+                use_git=False,
+                pprint_value=False,
+            ),
             prepare_push=unexpected_credentials,
         )
 
@@ -231,5 +279,11 @@ def test_editing_through_quick_setup_is_rejected(data: ParsedFormData) -> None:
             QuickSetupActionMode.EDIT,
             InfoLogger(),
             "existing",
-            QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
+            QuickSetupContext(
+                tree=make_folder_tree(Config()),
+                site_configs={},
+                debug=False,
+                use_git=False,
+                pprint_value=False,
+            ),
         )

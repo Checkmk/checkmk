@@ -8,6 +8,7 @@ import pytest
 from cmk.automations.results import DiagSpecialAgentInput, DiagSpecialAgentResult
 from cmk.automations.results.diagnostics import SpecialAgentResult
 from cmk.ccc.site import omd_site
+from cmk.gui.config import Config
 from cmk.gui.quick_setup.config_setups.kubernetes.configuration import pull_configuration
 from cmk.gui.quick_setup.config_setups.kubernetes.connection_test import validate_pull_connection
 from cmk.gui.quick_setup.config_setups.kubernetes.constants import QUICK_SETUP_ID
@@ -22,6 +23,7 @@ from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupContext
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 from cmk.gui.watolib.automations import MKAutomationException
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 
 pytestmark = pytest.mark.usefixtures("with_admin_login")
 
@@ -48,7 +50,13 @@ def test_pull_connection_uses_saved_rule_parameters_and_an_ad_hoc_secret(
         QUICK_SETUP_ID,
         pull_data,
         InfoLogger(),
-        QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
+        QuickSetupContext(
+            tree=make_folder_tree(Config()),
+            site_configs={},
+            debug=False,
+            use_git=False,
+            pprint_value=False,
+        ),
         run_diagnostic=run_diagnostic,
     )
 
@@ -102,7 +110,13 @@ def test_failed_pull_test_returns_errors_without_exposing_response_credentials(
         QUICK_SETUP_ID,
         pull_data,
         InfoLogger(),
-        QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
+        QuickSetupContext(
+            tree=make_folder_tree(Config()),
+            site_configs={},
+            debug=False,
+            use_git=False,
+            pprint_value=False,
+        ),
         run_diagnostic=lambda _input: result,
     )
 
@@ -118,7 +132,13 @@ def test_pull_automation_failure_does_not_expose_command_input(pull_data: Parsed
         QUICK_SETUP_ID,
         pull_data,
         InfoLogger(),
-        QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
+        QuickSetupContext(
+            tree=make_folder_tree(Config()),
+            site_configs={},
+            debug=False,
+            use_git=False,
+            pprint_value=False,
+        ),
         run_diagnostic=failed_automation,
     )
 
@@ -138,7 +158,13 @@ def test_pull_failure_points_to_the_site_log_without_exposing_output(
         QUICK_SETUP_ID,
         pull_data,
         InfoLogger(),
-        QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
+        QuickSetupContext(
+            tree=make_folder_tree(Config()),
+            site_configs={},
+            debug=False,
+            use_git=False,
+            pprint_value=False,
+        ),
         run_diagnostic=lambda _input: diagnostic,
     )
 
@@ -166,6 +192,12 @@ def test_pull_test_rejects_wrong_mode_or_site_before_running(
             QUICK_SETUP_ID,
             {**pull_data, **invalid_data[field]},
             InfoLogger(),
-            QuickSetupContext(site_configs={}, debug=False, use_git=False, pprint_value=False),
+            QuickSetupContext(
+                tree=make_folder_tree(Config()),
+                site_configs={},
+                debug=False,
+                use_git=False,
+                pprint_value=False,
+            ),
             run_diagnostic=unexpected_diagnostic,
         )

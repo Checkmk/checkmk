@@ -171,6 +171,9 @@ def run_stage_action_v1(
                 debug=api_context.config.debug,
                 use_git=api_context.config.wato_use_git,
                 pprint_value=api_context.config.wato_pprint_config,
+                wato_hide_folders_without_read_permissions=api_context.config.wato_hide_folders_without_read_permissions,
+                wato_host_attrs=api_context.config.wato_host_attrs,
+                tags=api_context.config.tags.get_dict_format(),
             )
 
         parameters: dict[str, str] = {"job_id": background_job_id}

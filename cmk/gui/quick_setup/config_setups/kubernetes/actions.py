@@ -31,7 +31,6 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import CORE
 from cmk.gui.watolib.configuration_bundle_store import ConfigBundleStore
-from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.mode import mode_url
 from cmk.gui.watolib.pending_changes import (
     Change,
@@ -54,7 +53,7 @@ def validate_configuration(
     _quick_setup_id: QuickSetupId,
     data: ParsedFormData,
     _progress_logger: ProgressLogger,
-    _ctx: QuickSetupContext,
+    ctx: QuickSetupContext,
 ) -> GeneralStageErrors:
     try:
         settings = read_common_settings(data, default_site=omd_site())
@@ -68,14 +67,14 @@ def validate_configuration(
                     "A configuration with this Helm release name already exists. Choose another name."
                 )
             ]
-    if folder_tree().host(host_name):
+    if ctx.tree.host(host_name):
         return [
             _(
                 "The source host already exists. Choose another host name or remove the old source host first."
             )
         ]
     # These configuration checks must run centrally, before deployment and again before saving.
-    folder_tree().folder(settings.host_path).prepare_create_hosts(acting_user=user)
+    ctx.tree.folder(settings.host_path).prepare_create_hosts(acting_user=user)
     return []
 
 
@@ -161,7 +160,7 @@ def finish_setup(
     )
     save_configuration(
         settings,
-        tree=folder_tree(),
+        tree=ctx.tree,
         acting_user=user,
         user_permissions=UserPermissions.from_config(active_config, permission_registry),
         pending_changes=pending_changes,

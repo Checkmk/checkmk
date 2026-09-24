@@ -265,6 +265,9 @@ def complete_quick_setup_action(
                 debug=api_context.config.debug,
                 use_git=api_context.config.wato_use_git,
                 pprint_value=api_context.config.wato_pprint_config,
+                wato_hide_folders_without_read_permissions=api_context.config.wato_hide_folders_without_read_permissions,
+                wato_host_attrs=api_context.config.wato_host_attrs,
+                tags=api_context.config.tags.get_dict_format(),
             )
         except AlreadyRunningError:
             raise ProblemException(

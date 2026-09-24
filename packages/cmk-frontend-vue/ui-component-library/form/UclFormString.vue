@@ -22,39 +22,27 @@ for (let i = 0; i < 200; i++) {
 
 async function interceptor({ request }: { request: Request }) {
   if (apiReturnsError.value) {
-    return HttpResponse.json({
-      result:
-        'some error very very very very very very very very very very very very very very very very very very very very very long message',
-      result_code: 1,
-      severity: 'error'
-    })
+    return HttpResponse.json(
+      {
+        title: 'Invalid input',
+        detail:
+          'some error very very very very very very very very very very very very very very very very very very very very very long message'
+      },
+      { status: 400 }
+    )
   }
 
-  const jsonData = (await request.formData()).get('request')
-  if (jsonData === null) {
-    throw new Error('could not find json data in form')
-  }
-  if (jsonData instanceof File) {
-    throw new Error('got file, expected string')
-  }
-  const value = JSON.parse(jsonData).value
+  const { value } = (await request.json()) as { value: string }
 
-  const choices = ALL.filter((element: string) => element.includes(value)).map(
-    (element: unknown) => [element, element]
-  )
   return HttpResponse.json({
-    result: {
-      choices: choices
-    },
-    result_code: 0,
-    severity: 'success'
+    choices: ALL.filter((element: string) => element.includes(value)).map((element) => ({
+      id: element,
+      value: element
+    }))
   })
 }
 const { mockLoaded } = useMswWorker([
-  http.post(
-    new RegExp(`${location.protocol}//${location.host}/ajax_vs_autocomplete.py`),
-    interceptor
-  ),
+  http.post('*/api/internal/objects/autocomplete/:ident', interceptor),
   http.get(/.+/, () => passthrough())
 ])
 
@@ -79,7 +67,7 @@ const spec: String = {
         context: {}
       }
     },
-    fetch_method: 'ajax_vs_autocomplete'
+    fetch_method: 'rest_autocomplete'
   }
 }
 

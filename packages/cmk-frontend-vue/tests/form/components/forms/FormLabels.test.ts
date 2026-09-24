@@ -46,7 +46,7 @@ const spec: FormSpec.Labels = {
   validators: [],
   max_labels: 10,
   autocompleter: {
-    fetch_method: 'ajax_vs_autocomplete',
+    fetch_method: 'rest_autocomplete',
     data: { ident: 'label', params: { world: 'config' } }
   },
   i18n: {

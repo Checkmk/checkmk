@@ -15,7 +15,7 @@ import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
 export type RestAutocompleterResponse = components['schemas']['AutocompleteResponseModel']
 
-export async function fetchtData(
+export async function fetchData(
   value: string,
   data: AutocompleterData
 ): Promise<RestAutocompleterResponse> {
@@ -27,9 +27,15 @@ export async function fetchtData(
       },
       body: {
         value,
-        // spread: AutocompleterParams is an interface, which TypeScript will not
-        // assign to the generated open `parameters` record
-        parameters: { ...data.params }
+        // Every AutocompleterParams field defaults to None and the form spec is
+        // serialized with a plain asdict, so the parameters a producer left unset
+        // arrive here as null. The autocompleters read them with `.get(key, {})`,
+        // which hands back that null instead of the default, so drop them rather
+        // than send them. Spread first: AutocompleterParams is an interface, which
+        // TypeScript will not assign to the generated open `parameters` record.
+        parameters: Object.fromEntries(
+          Object.entries({ ...data.params }).filter(([, value]) => value !== null)
+        )
       }
     })
   )
@@ -39,12 +45,8 @@ export async function fetchSuggestions(
   autocompleter: Autocompleter,
   query: string
 ): Promise<Response | ErrorResponse | WarningResponse> {
-  if (autocompleter.fetch_method !== 'rest_autocomplete') {
-    throw new Error(`Internal: Can not fetch data for autocompleter ${autocompleter.fetch_method}`)
-  }
-
   try {
-    const result = await fetchtData(query, autocompleter.data)
+    const result = await fetchData(query, autocompleter.data)
     const choices = result.choices.map((element) => ({
       name: element.id,
       title: untranslated(element.value)

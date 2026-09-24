@@ -78,7 +78,7 @@ test('FormString with autocompleter renders backend validation messages', async 
     ...spec,
     autocompleter: {
       data: { ident: '', params: {} },
-      fetch_method: 'ajax_vs_autocomplete'
+      fetch_method: 'rest_autocomplete'
     }
   }
   render(FormString, {
@@ -169,7 +169,7 @@ test('FormString with autocompleter loads value', async () => {
               context: {}
             }
           },
-          fetch_method: 'ajax_vs_autocomplete'
+          fetch_method: 'rest_autocomplete'
         }
       },
       data: 'val1',
@@ -205,7 +205,7 @@ test('FormString with autocompleter shows placeholder when data is empty string'
               context: {}
             }
           },
-          fetch_method: 'ajax_vs_autocomplete'
+          fetch_method: 'rest_autocomplete'
         }
       },
       data: '',
@@ -241,7 +241,7 @@ test('FormString with autocompleter updates value to title', async () => {
               context: {}
             }
           },
-          fetch_method: 'ajax_vs_autocomplete'
+          fetch_method: 'rest_autocomplete'
         }
       },
       data: 'val1',

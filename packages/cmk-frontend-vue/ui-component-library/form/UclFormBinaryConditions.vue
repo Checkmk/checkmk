@@ -23,7 +23,7 @@ const spec: BinaryConditionChoices = {
   validators: [],
   label: 'some label',
   autocompleter: {
-    fetch_method: 'ajax_vs_autocomplete',
+    fetch_method: 'rest_autocomplete',
     data: {
       ident: 'label',
       params: {

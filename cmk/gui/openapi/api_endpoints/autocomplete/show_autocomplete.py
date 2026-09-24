@@ -61,7 +61,7 @@ def show_autocomplete_v1(
             exc_info=True,
         )
         return AutocompleteResponseModel(
-            choices=[AutocompleteChoiceModel(id=k, value=v) for k, v in e.choices if k is not None],
+            choices=[AutocompleteChoiceModel(id=k, value=v) for k, v in e.choices],
             warning=str(e),
         )
     except ValueError as e:
@@ -78,7 +78,7 @@ def show_autocomplete_v1(
         raise ProblemException(status=400, title="Missing field", detail=f"Missing field: {e}")
 
     return AutocompleteResponseModel(
-        choices=[AutocompleteChoiceModel(id=k, value=v) for k, v in choices if k is not None],
+        choices=[AutocompleteChoiceModel(id=k, value=v) for k, v in choices],
     )
 
 

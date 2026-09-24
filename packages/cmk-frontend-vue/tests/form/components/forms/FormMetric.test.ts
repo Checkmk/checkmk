@@ -57,7 +57,7 @@ const spec: Metric = {
         escape_regex: false
       }
     },
-    fetch_method: 'ajax_vs_autocomplete'
+    fetch_method: 'rest_autocomplete'
   },
   service_filter_autocompleter: {
     data: {
@@ -68,7 +68,7 @@ const spec: Metric = {
         escape_regex: false
       }
     },
-    fetch_method: 'ajax_vs_autocomplete'
+    fetch_method: 'rest_autocomplete'
   },
   host_filter_autocompleter: {
     data: {
@@ -79,7 +79,7 @@ const spec: Metric = {
         escape_regex: false
       }
     },
-    fetch_method: 'ajax_vs_autocomplete'
+    fetch_method: 'rest_autocomplete'
   },
   i18n: {
     host_input_hint: '(Select host)',

@@ -12,11 +12,14 @@ import { ref } from 'vue'
 import FormEdit from '@/form/FormEdit.vue'
 
 async function interceptor({ request }: { request: Request }) {
-  const jsonData = (await request.formData()).get('request')
-  const parsed = JSON.parse(jsonData as string)
+  const parsed = (await request.json()) as {
+    value?: string
+    parameters?: { input_type?: string; context?: { input_type?: string } }
+  }
 
   const query = parsed.value ?? ''
-  const inputType = parsed.input_type ?? parsed.context?.input_type ?? 'regex'
+  const inputType =
+    parsed.parameters?.input_type ?? parsed.parameters?.context?.input_type ?? 'regex'
 
   const isRegex = inputType === 'regex'
   const isText = inputType === 'text'
@@ -73,18 +76,12 @@ async function interceptor({ request }: { request: Request }) {
     data.value = query
   }
 
-  const choices = filtered.map((choice) => [choice, choice])
   return HttpResponse.json({
-    result: { choices, total: allChoices.length },
-    result_code: 0,
-    severity: 'success'
+    choices: filtered.map((choice) => ({ id: choice, value: choice }))
   })
 }
 const { mockLoaded } = useMswWorker([
-  http.post(
-    new RegExp(`${location.protocol}//${location.host}/ajax_vs_autocomplete.py`),
-    interceptor
-  )
+  http.post('*/api/internal/objects/autocomplete/:ident', interceptor)
 ])
 
 defineProps<{ screenshotMode: boolean }>()
@@ -106,7 +103,7 @@ const regexSpec: Regex = {
         input_hint: ''
       }
     },
-    fetch_method: 'ajax_vs_autocomplete'
+    fetch_method: 'rest_autocomplete'
   }
 }
 

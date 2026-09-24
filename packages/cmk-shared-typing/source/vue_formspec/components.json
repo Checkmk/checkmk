@@ -1543,7 +1543,7 @@
       "properties": {
         "fetch_method": {
           "enum": ["ajax_vs_autocomplete", "rest_autocomplete"],
-          "default": "ajax_vs_autocomplete"
+          "default": "rest_autocomplete"
         },
         "data": {
           "title": "AutocompleterData",

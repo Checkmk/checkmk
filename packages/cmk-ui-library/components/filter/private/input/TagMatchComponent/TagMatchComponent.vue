@@ -123,7 +123,7 @@ const hasAnyValue = (index: number): boolean => {
 }
 
 const groupAutocompleter: Autocompleter = {
-  fetch_method: 'ajax_vs_autocomplete',
+  fetch_method: 'rest_autocomplete',
   data: {
     ident: 'tag_groups',
     params: {
@@ -135,7 +135,7 @@ const groupAutocompleter: Autocompleter = {
 
 const getTagAutocompleter = (index: number): ComputedRef<Autocompleter> =>
   computed(() => ({
-    fetch_method: 'ajax_vs_autocomplete',
+    fetch_method: 'rest_autocomplete',
     data: {
       ident: 'tag_groups_opt',
       params: {

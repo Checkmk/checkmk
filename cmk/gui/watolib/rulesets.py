@@ -2457,7 +2457,7 @@ def _create_explicit_rule_conditions_dict(
                                 ident="label",
                                 params=AutocompleterParams(world="core", object_type="host"),
                             ),
-                            fetch_method=FetchMethod.ajax_vs_autocomplete,
+                            fetch_method=FetchMethod.rest_autocomplete,
                         ),
                         custom_validate=[
                             not_empty(error_msg=Message("Please add at least one host label."))
@@ -2516,7 +2516,7 @@ def _create_explicit_rule_conditions_dict(
                         ident="label",
                         params=AutocompleterParams(world="core", object_type="service"),
                     ),
-                    fetch_method=FetchMethod.ajax_vs_autocomplete,
+                    fetch_method=FetchMethod.rest_autocomplete,
                 ),
                 custom_validate=[
                     not_empty(error_msg=Message("Please add at least one service label."))

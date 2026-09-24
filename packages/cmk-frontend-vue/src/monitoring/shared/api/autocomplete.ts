@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { AutocompleterData } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { fetchData } from 'cmk-ui-library/components/FormAutocompleter/autocompleters/ajax'
+import { fetchData } from 'cmk-ui-library/components/FormAutocompleter/autocompleters/rest'
 
 export type MonitoredObject = 'host' | 'service'
 
@@ -20,9 +20,7 @@ export function autocompleter(
 ): (query: string) => Promise<string[]> {
   return async (query: string): Promise<string[]> => {
     const { choices } = await fetchData(query, { ident, params } as unknown as AutocompleterData)
-    return choices
-      .map(([name, title]) => name ?? title)
-      .filter((value): value is string => value !== null && value !== '')
+    return choices.map(({ id, value }) => id || value).filter((value) => value !== '')
   }
 }
 

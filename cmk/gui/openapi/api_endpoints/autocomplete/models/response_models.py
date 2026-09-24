@@ -8,7 +8,13 @@ from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 
 @api_model
 class AutocompleteChoiceModel:
-    id: str = api_field(description="The id of the choice.")
+    id: str | None = api_field(
+        description=(
+            "The id of the choice, or null for a choice the user cannot select. "
+            "Autocompleters use those to carry a hint, such as telling the user "
+            "that the result list was truncated."
+        )
+    )
     value: str = api_field(description="The display value of the choice.")
 
 

@@ -8,7 +8,7 @@ import { type DualListChoice } from 'cmk-shared-typing/typescript/vue_formspec_c
 import CmkDualList from 'cmk-ui-library/components/CmkDualList'
 import type { DualListElement } from 'cmk-ui-library/components/CmkDualList'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
-import { fetchData } from 'cmk-ui-library/components/FormAutocompleter/autocompleters/ajax'
+import { fetchData } from 'cmk-ui-library/components/FormAutocompleter/autocompleters/rest'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { type Ref } from 'vue'
 import { onMounted, ref } from 'vue'
@@ -37,12 +37,10 @@ onMounted(async () => {
   }
   loading.value = true
   await fetchData('', props.spec.autocompleter.data).then((result) => {
-    localElements.value = result['choices']
-      .filter(([id, _]) => id !== null)
-      .map(([id, title]) => ({
-        name: id,
-        title: title.length > 60 ? `${title.substring(0, 57)}...` : title
-      })) as DualListElement[]
+    localElements.value = result.choices.map(({ id, value }) => ({
+      name: id,
+      title: value.length > 60 ? `${value.substring(0, 57)}...` : value
+    })) as DualListElement[]
     loading.value = false
   })
 })

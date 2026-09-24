@@ -47,7 +47,7 @@ describe('FormAutocompleter', () => {
     render(FormAutocompleter, {
       props: {
         placeholder: 'Search...',
-        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
+        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'rest_autocomplete' },
         size: 7,
         id: 'test',
         'onUpdate:modelValue': (option: string | null) => {
@@ -76,7 +76,7 @@ describe('FormAutocompleter', () => {
     render(FormAutocompleter, {
       props: {
         placeholder: 'Add some labels',
-        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
+        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'rest_autocomplete' },
         size: 7,
         id: 'test'
       }
@@ -97,7 +97,7 @@ describe('FormAutocompleter', () => {
     render(FormAutocompleter, {
       props: {
         placeholder: 'Add some labels',
-        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
+        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'rest_autocomplete' },
         size: 7,
         id: 'test'
       }
@@ -118,7 +118,7 @@ describe('FormAutocompleter', () => {
     render(FormAutocompleter, {
       props: {
         placeholder: 'Add some labels',
-        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
+        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'rest_autocomplete' },
         size: 7,
         id: 'test'
       }
@@ -140,7 +140,7 @@ describe('FormAutocompleter', () => {
     render(FormAutocompleter, {
       props: {
         placeholder: 'Add some labels',
-        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
+        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'rest_autocomplete' },
         size: 7,
         id: 'test',
         'onUpdate:modelValue': (option: string | null) => {
@@ -167,7 +167,7 @@ describe('FormAutocompleter', () => {
     render(FormAutocompleter, {
       props: {
         placeholder: 'Add some labels',
-        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
+        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'rest_autocomplete' },
         size: 7,
         id: 'test',
         'onUpdate:modelValue': (option: string | null) => {

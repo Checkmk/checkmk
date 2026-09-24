@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from copy import deepcopy
 from dataclasses import replace
 
@@ -11,10 +11,10 @@ import pytest
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
-from cmk.gui import login
-from cmk.gui.config import active_config
+from cmk.ccc.user import UserId
+from cmk.gui.config import Config, get_default_config, make_config_object
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, UserDefaultConfig
 from cmk.gui.permissions import permission_registry
 from cmk.gui.quick_setup.config_setups.kubernetes.helm import MonitoringSettings
 from cmk.gui.quick_setup.config_setups.kubernetes.save import save_configuration
@@ -24,13 +24,14 @@ from cmk.gui.quick_setup.config_setups.kubernetes.settings import (
     PushSettings,
     Settings,
 )
+from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundleStore
 from cmk.gui.watolib.configuration_bundles import (
     BundleReferences,
     identify_single_bundle_references,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.passwords import load_passwords
 from cmk.gui.watolib.pending_changes import (
     ChangeEvent,
@@ -38,9 +39,36 @@ from cmk.gui.watolib.pending_changes import (
     NoopPendingChangesStore,
     PendingChanges,
 )
+from cmk.ruleset_matcher.tags import get_effective_tag_config
+from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 
-pytestmark = pytest.mark.usefixtures("with_admin_login", "mock_password_file_regeneration")
+pytestmark = pytest.mark.usefixtures("mock_password_file_regeneration")
+
+_ADMIN_ID = UserId("admin")
+
+
+@pytest.fixture
+def config() -> Config:
+    raw_config = get_default_config()
+    raw_config["tags"] = get_effective_tag_config(raw_config["wato_tags"])
+    return make_config_object(raw_config)
+
+
+def _admin(roles: Mapping[str, BuiltInUserRole | CustomUserRole]) -> LoggedInUser:
+    paths.profile_dir.mkdir(parents=True, exist_ok=True)
+    return LoggedInUser(
+        _ADMIN_ID,
+        UserPermissions(roles, permission_registry, {_ADMIN_ID: ["admin"]}, []),
+        defaults=UserDefaultConfig(
+            users={}, default_language="en", default_show_mode="default_show_less"
+        ),
+    )
+
+
+@pytest.fixture
+def admin(config: Config) -> LoggedInUser:
+    return _admin(config.roles)
 
 
 @pytest.fixture
@@ -61,16 +89,22 @@ def settings() -> PullSettings:
     )
 
 
-def _save(settings: Settings, *, hooks: Sequence[ChangeHook] = ()) -> BundleReferences:
+def _save(
+    settings: Settings,
+    config: Config,
+    acting_user: LoggedInUser,
+    *,
+    hooks: Sequence[ChangeHook] = (),
+) -> BundleReferences:
     save_configuration(
         settings,
-        tree=folder_tree(),
-        acting_user=user,
-        user_permissions=UserPermissions.from_config(active_config, permission_registry),
+        tree=make_folder_tree(config),
+        acting_user=acting_user,
+        user_permissions=UserPermissions.from_config(config, permission_registry),
         pending_changes=PendingChanges(
-            activation_sites=active_config.sites,
+            activation_sites=config.sites,
             local_site=omd_site(),
-            acting_user=user.id,
+            acting_user=acting_user.id,
             store=NoopPendingChangesStore(),
             hooks=hooks,
         ),
@@ -78,15 +112,17 @@ def _save(settings: Settings, *, hooks: Sequence[ChangeHook] = ()) -> BundleRefe
         debug=False,
     )
     return identify_single_bundle_references(
-        folder_tree(),
+        make_folder_tree(config),
         settings.common.bundle_id,
-        acting_user=user,
+        acting_user=acting_user,
         program_id=PROGRAM_ID_QUICK_SETUP,
     )
 
 
-def test_pull_saves_host_rule_and_the_deployed_password(settings: PullSettings) -> None:
-    bundle = _save(settings)
+def test_pull_saves_host_rule_and_the_deployed_password(
+    settings: PullSettings, config: Config, admin: LoggedInUser
+) -> None:
+    bundle = _save(settings, config, admin)
 
     assert bundle.hosts and bundle.rules and bundle.passwords
     assert len(bundle.hosts) == len(bundle.rules) == len(bundle.passwords) == 1
@@ -94,7 +130,7 @@ def test_pull_saves_host_rule_and_the_deployed_password(settings: PullSettings) 
     assert bundle.hosts[0].attributes["tag_agent"] == "special-agents"
     password_id, password = bundle.passwords[0]
     assert password["password"] == "deployed-secret"
-    assert password["owned_by"] == user.id
+    assert password["owned_by"] == admin.id
     assert bundle.rules[0].value == {
         "url": "https://agent:30050",
         "shared_secret": ("cmk_postprocessed", "stored_password", (password_id, "")),
@@ -102,8 +138,10 @@ def test_pull_saves_host_rule_and_the_deployed_password(settings: PullSettings) 
     }
 
 
-def test_push_saves_a_push_host_without_pull_rule_or_password(settings: PullSettings) -> None:
-    bundle = _save(PushSettings(common=settings.common))
+def test_push_saves_a_push_host_without_pull_rule_or_password(
+    settings: PullSettings, config: Config, admin: LoggedInUser
+) -> None:
+    bundle = _save(PushSettings(common=settings.common), config, admin)
 
     assert bundle.hosts and len(bundle.hosts) == 1
     assert bundle.hosts[0].attributes["tag_agent"] == "cmk-agent"
@@ -112,45 +150,52 @@ def test_push_saves_a_push_host_without_pull_rule_or_password(settings: PullSett
     assert bundle.passwords is None
 
 
-def test_pull_cannot_save_without_the_final_url(settings: PullSettings) -> None:
+def test_pull_cannot_save_without_the_final_url(
+    settings: PullSettings, config: Config, admin: LoggedInUser
+) -> None:
     with pytest.raises(ValueError, match="pull mode base URL"):
-        _save(replace(settings, base_url=""))
+        _save(replace(settings, base_url=""), config, admin)
 
     assert settings.common.bundle_id not in ConfigBundleStore().load_for_reading()
-    assert not folder_tree().all_hosts()
+    assert not make_folder_tree(config).all_hosts()
 
 
-def test_pull_requires_password_store_permission_before_saving(settings: PullSettings) -> None:
-    roles = deepcopy(active_config.roles)
+def test_pull_requires_password_store_permission_before_saving(
+    settings: PullSettings, config: Config
+) -> None:
+    roles = deepcopy(config.roles)
     roles["admin"].setdefault("permissions", {})["wato.edit_all_passwords"] = False
-    assert user.id is not None
-    permissions = UserPermissions(roles, permission_registry, {user.id: ["admin"]}, [])
-    with login.TransactionIdContext(user.id, permissions), pytest.raises(MKAuthException):
-        _save(settings)
+
+    with pytest.raises(MKAuthException):
+        _save(settings, config, _admin(roles))
 
     assert settings.common.bundle_id not in ConfigBundleStore().load_for_reading()
-    assert not folder_tree().all_hosts()
+    assert not make_folder_tree(config).all_hosts()
 
 
-def test_failed_save_removes_the_new_password_and_bundle(settings: PullSettings) -> None:
-    previous_passwords = load_passwords(user)
+def test_failed_save_removes_the_new_password_and_bundle(
+    settings: PullSettings, config: Config, admin: LoggedInUser
+) -> None:
+    previous_passwords = load_passwords(admin)
 
     def unavailable_audit_log(event: ChangeEvent) -> None:
         if event.request.action_name == "add-password":
-            assert load_passwords(user) != previous_passwords
+            assert load_passwords(admin) != previous_passwords
             raise OSError("Audit log unavailable")
 
     with pytest.raises(MKGeneralException, match="Failed to create configuration bundle"):
-        _save(settings, hooks=[unavailable_audit_log])
+        _save(settings, config, admin, hooks=[unavailable_audit_log])
 
-    assert load_passwords(user) == previous_passwords
+    assert load_passwords(admin) == previous_passwords
     assert settings.common.bundle_id not in ConfigBundleStore().load_for_reading()
-    assert not folder_tree().all_hosts()
+    assert not make_folder_tree(config).all_hosts()
 
 
-def test_existing_source_host_is_not_overwritten_by_another_bundle(settings: PullSettings) -> None:
-    _save(settings)
-    previous_passwords = load_passwords(user)
+def test_existing_source_host_is_not_overwritten_by_another_bundle(
+    settings: PullSettings, config: Config, admin: LoggedInUser
+) -> None:
+    _save(settings, config, admin)
+    previous_passwords = load_passwords(admin)
     conflicting = replace(
         settings,
         common=replace(settings.common, bundle_id=BundleId("another_bundle")),
@@ -158,8 +203,8 @@ def test_existing_source_host_is_not_overwritten_by_another_bundle(settings: Pul
     )
 
     with pytest.raises(MKGeneralException, match="failed validation"):
-        _save(conflicting)
+        _save(conflicting, config, admin)
 
-    assert load_passwords(user) == previous_passwords
+    assert load_passwords(admin) == previous_passwords
     assert conflicting.common.bundle_id not in ConfigBundleStore().load_for_reading()
-    assert set(folder_tree().all_hosts()) == {"legacy"}
+    assert set(make_folder_tree(config).all_hosts()) == {"legacy"}

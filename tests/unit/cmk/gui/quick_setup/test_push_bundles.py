@@ -6,11 +6,12 @@
 import pytest
 
 from cmk.ccc.hostaddress import HostName
+from cmk.gui.config import Config
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup
 from cmk.gui.quick_setup.v0_unstable.type_defs import QuickSetupId
 from cmk.gui.watolib.configuration_bundles import BundleReferences, valid_special_agent_bundle
 from cmk.gui.watolib.host_attributes import HostAttributes
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import Folder, Host, make_folder_tree
 from cmk.gui.watolib.rulesets import FolderRulesets, Rule
 from cmk.utils.agent_registration import HostAgentConnectionMode
 
@@ -38,7 +39,7 @@ def test_push_agent_bundles_require_explicit_opt_in() -> None:
 def test_only_supported_source_combinations_are_valid(
     push: bool, allow_push: bool, rule_count: int, host_count: int, expected: bool
 ) -> None:
-    folder = folder_tree().root_folder()
+    folder = make_folder_tree(Config()).root_folder()
     host = Host(
         folder,
         HostName("source"),
@@ -61,7 +62,7 @@ def test_only_supported_source_combinations_are_valid(
 
 @pytest.fixture
 def push_folder() -> Folder:
-    tree = folder_tree()
+    tree = make_folder_tree(Config())
     return Folder.new(
         tree=tree,
         name="push",

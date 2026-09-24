@@ -17,6 +17,12 @@ class GlobalSettingModel:
         description="The value of the configuration variable, values not masked.",
         example={"cmk.web": 20},
     )
+    spec: object = api_field(
+        description="The form the GUI renders and edits the value with. Choices that "
+        "refer to configuration objects, e.g. stored passwords, list the ones existing "
+        "at the time of the request.",
+        example={"type": "dictionary", "title": "Logging"},
+    )
     origin: GlobalSettingsOrigin = api_field(
         description="The layer the value comes from: `global` once a value is configured "
         "centrally, `factory` while none is, even if the configured value is identical "

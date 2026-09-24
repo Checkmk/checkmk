@@ -30,6 +30,7 @@ export function describeError(error: unknown, fallback: TranslatedString): Trans
 
 export function applyReceived(variable: GlobalSettingsVariable, received: ReceivedValue): void {
   variable.value = received.value
+  variable.spec = received.spec
   variable.origin = received.origin
 }
 

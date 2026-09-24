@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from dataclasses import asdict
 from typing import Annotated
 
 from pydantic import AfterValidator
@@ -153,11 +154,12 @@ def form_spec_of(
     return config_variable.value_model(global_settings_context_of(site_id, api_context))
 
 
-def value_to_json(form_spec: FormSpec[object], value: object) -> object:
-    """The frontend representation, i.e. the one the GUI exchanges with the form spec."""
+def to_json(form_spec: FormSpec[object], value: object) -> tuple[dict[str, object], object]:
+    """The frontend representation, i.e. the rendered form spec and the value the GUI
+    exchanges with it."""
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
-    _component, json_value = visitor.to_vue(RawDiskData(value))
-    return json_value
+    component, json_value = visitor.to_vue(RawDiskData(value))
+    return asdict(component), json_value
 
 
 def value_from_json(form_spec: FormSpec[object], json_value: object) -> object:

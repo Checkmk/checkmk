@@ -24,6 +24,7 @@ export const GLOBAL_SETTINGS_TOGGLE: InjectionKey<ToggleSetting> = Symbol('Globa
 
 export interface ReceivedValue {
   value: unknown
+  spec: GlobalSettingsVariable['spec']
   origin: GlobalSettingsOrigin
   etag: string
 }
@@ -37,7 +38,7 @@ export interface GlobalSettingsService {
 const CONTENT_TYPE_HEADER = { 'Content-Type': 'application/json' } as const
 
 function toReceivedValue(result: {
-  data?: { value: unknown; origin: GlobalSettingsOrigin }
+  data?: { value: unknown; spec: unknown; origin: GlobalSettingsOrigin }
   response: Response
 }): ReceivedValue {
   const body = unwrap(result)
@@ -47,7 +48,13 @@ function toReceivedValue(result: {
       'The server answered without a version identifier for this setting. Reload the page to see its current state.'
     )
   }
-  return { value: body.value, origin: body.origin, etag }
+  return {
+    value: body.value,
+    // The REST API declares the form spec as an untyped object.
+    spec: body.spec as GlobalSettingsVariable['spec'],
+    origin: body.origin,
+    etag
+  }
 }
 
 function globalScopeService(): GlobalSettingsService {

@@ -29,7 +29,7 @@ from ._utils import (
     global_setting_etag,
     GlobalSettingVarName,
     RO_PERMISSIONS,
-    value_to_json,
+    to_json,
 )
 from .models.response_models import GlobalSettingModel
 
@@ -46,9 +46,9 @@ def show_global_setting_v1(
     config_variable = config_variable_registry[varname]
     need_read_permission(config_variable)
     value, origin = effective_value(load_configuration_settings(), varname)
-    json_value = value_to_json(form_spec_of(config_variable, omd_site(), api_context), value)
+    spec, json_value = to_json(form_spec_of(config_variable, omd_site(), api_context), value)
     return ApiResponse(
-        body=GlobalSettingModel(varname=varname, value=json_value, origin=origin),
+        body=GlobalSettingModel(varname=varname, value=json_value, spec=spec, origin=origin),
         status_code=200,
         etag=global_setting_etag(varname, value, origin),
     )

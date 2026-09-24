@@ -10,6 +10,7 @@ import logging
 from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import override
+from unittest.mock import ANY
 
 import pytest
 from marshmallow_oneofschema.one_of_schema import OneOfSchema
@@ -26,6 +27,7 @@ from cmk.gui.customer import (
     SCOPE_GLOBAL,
 )
 from cmk.gui.form_specs.unstable.legacy_valuespec import LegacyValueSpec
+from cmk.gui.form_specs.unstable.single_choice_editable import SingleChoiceEditable
 from cmk.gui.mkeventd.config_domain import ConfigDomainEventConsole
 from cmk.gui.openapi.api_endpoints.site_management.models.config_example import (
     default_config_example,
@@ -52,6 +54,7 @@ from cmk.gui.watolib.piggyback_hub import CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
 from cmk.gui.watolib.site_changes import SiteChanges
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import BooleanChoice, FormSpec, Password
+from cmk.shared_typing.configuration_entity import ConfigEntityType
 from tests.testlib.unit.gui.web_test_app import SetConfig
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
@@ -252,6 +255,21 @@ def fixture_legacy_valuespec_var(monkeypatch: pytest.MonkeyPatch) -> Iterator[st
     )
 
 
+@pytest.fixture(name="stored_password_var")
+def fixture_stored_password_var(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
+    yield from _register_variable(
+        monkeypatch,
+        "test_stored_password",
+        ConfigDomainGUI,
+        SingleChoiceEditable(
+            title=Title("Stored password"),
+            entity_type=ConfigEntityType.passwordstore_password,
+            entity_type_specifier="all",
+        ),
+        None,
+    )
+
+
 @pytest.fixture(name="var_without_factory_default")
 def fixture_var_without_factory_default() -> Iterator[str]:
     varname = "test_no_default"
@@ -269,7 +287,12 @@ def fixture_var_without_factory_default() -> Iterator[str]:
 
 def test_show_factory_setting(clients: ClientRegistry) -> None:
     resp = clients.GlobalSetting.get(INT_VAR)
-    assert resp.json == {"varname": INT_VAR, "value": INT_DEFAULT, "origin": "factory"}
+    assert resp.json == {
+        "varname": INT_VAR,
+        "value": INT_DEFAULT,
+        "spec": ANY,
+        "origin": "factory",
+    }
     assert resp.headers["ETag"]
 
 
@@ -300,9 +323,34 @@ def test_update_moves_the_origin_to_the_global_layer(clients: ClientRegistry) ->
     assert clients.GlobalSetting.update(INT_VAR, 42).json == {
         "varname": INT_VAR,
         "value": 42,
+        "spec": ANY,
         "origin": "global",
     }
     assert clients.GlobalSetting.get(INT_VAR).json["origin"] == "global"
+
+
+@pytest.mark.usefixtures("mock_password_file_regeneration")
+def test_update_answers_with_a_spec_offering_a_newly_stored_password(
+    clients: ClientRegistry, stored_password_var: str
+) -> None:
+    clients.Password.create(
+        ident="new_password", title="New password", password="s3cret", shared=["all"]
+    )
+    spec = clients.GlobalSetting.update(stored_password_var, "new_password").json["spec"]
+    assert "new_password" in [element["name"] for element in spec["elements"]]
+
+
+@pytest.mark.usefixtures("mock_password_file_regeneration")
+def test_site_update_answers_with_a_spec_offering_a_newly_stored_password(
+    clients: ClientRegistry, stored_password_var: str, remote_site: str
+) -> None:
+    clients.Password.create(
+        ident="new_password", title="New password", password="s3cret", shared=["all"]
+    )
+    spec = clients.GlobalSetting.update_site(remote_site, stored_password_var, "new_password").json[
+        "spec"
+    ]
+    assert "new_password" in [element["name"] for element in spec["elements"]]
 
 
 def test_update_to_the_default_value_still_moves_the_origin(clients: ClientRegistry) -> None:
@@ -330,6 +378,7 @@ def test_delete_resets_to_the_factory_setting(clients: ClientRegistry) -> None:
     assert clients.GlobalSetting.get(INT_VAR).json == {
         "varname": INT_VAR,
         "value": INT_DEFAULT,
+        "spec": ANY,
         "origin": "factory",
     }
 
@@ -641,6 +690,7 @@ def test_site_value_falls_back_to_the_central_value(
         "site_id": remote_site,
         "varname": INT_VAR,
         "value": INT_DEFAULT,
+        "spec": ANY,
         "origin": "factory",
     }
 
@@ -658,6 +708,7 @@ def test_site_override_replaces_the_central_value(
         "site_id": remote_site,
         "varname": INT_VAR,
         "value": 7,
+        "spec": ANY,
         "origin": "site",
     }
     # the central value is untouched

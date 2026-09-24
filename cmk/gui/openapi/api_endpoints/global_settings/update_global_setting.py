@@ -39,8 +39,8 @@ from ._utils import (
     GlobalSettingVarName,
     make_pending_changes,
     RW_PERMISSIONS,
+    to_json,
     value_from_json,
-    value_to_json,
 )
 from .models.request_models import UpdateGlobalSettingModel
 from .models.response_models import GlobalSettingModel
@@ -86,10 +86,10 @@ def update_global_setting_v1(
         ),
     )
 
-    json_value = value_to_json(form_spec, new_value)
+    spec, json_value = to_json(form_spec, new_value)
     return ApiResponse(
         body=GlobalSettingModel(
-            varname=varname, value=json_value, origin=GlobalSettingsOrigin.global_
+            varname=varname, value=json_value, spec=spec, origin=GlobalSettingsOrigin.global_
         ),
         status_code=200,
         etag=global_setting_etag(varname, new_value, GlobalSettingsOrigin.global_),

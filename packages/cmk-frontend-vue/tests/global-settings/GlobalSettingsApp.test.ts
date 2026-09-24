@@ -10,6 +10,7 @@ import type {
   GlobalSettingsOrigin,
   GlobalSettingsTopic
 } from 'cmk-shared-typing/typescript/global_settings'
+import type { SingleChoiceEditable } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { HttpResponse, http } from 'msw'
 import { setupServer } from 'msw/node'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest'
@@ -61,6 +62,8 @@ const data: GlobalSettingsAppData = {
   ]
 }
 
+const integerSpec = data.topics[0]!.variables[0]!.spec
+
 const booleanTopic: GlobalSettingsTopic = {
   icon: 'sites',
   headline: 'Distributed monitoring',
@@ -87,6 +90,8 @@ const booleanTopic: GlobalSettingsTopic = {
     }
   ]
 }
+
+const booleanSpec = booleanTopic.variables[0]!.spec
 
 const resettableTopic: GlobalSettingsTopic = {
   icon: 'users',
@@ -142,7 +147,7 @@ const server = setupServer(
   http.get(SETTING_URL, () => {
     requests.push({ method: 'GET', ifMatch: null, body: null })
     return HttpResponse.json(
-      { varname: 'lock_on_logon_failures', ...serverValue },
+      { varname: 'lock_on_logon_failures', spec: integerSpec, ...serverValue },
       { headers: { ETag: '"v1"' } }
     )
   }),
@@ -151,7 +156,7 @@ const server = setupServer(
     requests.push({ method: 'PUT', ifMatch: request.headers.get('If-Match'), body })
     serverValue = { value: body.value, origin: 'global' }
     return HttpResponse.json(
-      { varname: 'lock_on_logon_failures', ...serverValue },
+      { varname: 'lock_on_logon_failures', spec: integerSpec, ...serverValue },
       { headers: { ETag: '"v2"' } }
     )
   }),
@@ -165,7 +170,7 @@ const server = setupServer(
     requests.push({ method: 'PUT', ifMatch: request.headers.get('If-Match'), body })
     booleanServerValue = { value: body.value, origin: 'global' }
     return HttpResponse.json(
-      { varname: 'site_piggyback_hub', ...booleanServerValue },
+      { varname: 'site_piggyback_hub', spec: booleanSpec, ...booleanServerValue },
       { headers: { ETag: '"b2"' } }
     )
   })
@@ -195,7 +200,7 @@ async function openSiteEditor(origin: GlobalSettingsOrigin): Promise<HTMLElement
   server.use(
     http.get(SITE_SETTING_URL, () =>
       HttpResponse.json(
-        { varname: 'lock_on_logon_failures', value: 20, origin },
+        { varname: 'lock_on_logon_failures', spec: integerSpec, value: 20, origin },
         { headers: { ETag: '"s1"' } }
       )
     )
@@ -446,6 +451,77 @@ describe('GlobalSettingsApp', () => {
     expect(screen.getByText('(modified)')).toBeInTheDocument()
   })
 
+  test('a choice created after the page was loaded can be saved and is shown in the row', async () => {
+    const apiKeyUrl = `${location.protocol}//${location.host}/api/internal/objects/global_setting/api_key`
+    const entitiesUrl = `${location.protocol}//${location.host}/api/internal/domain-types/notification_parameter/collections/mail`
+    const pageSpec: SingleChoiceEditable = {
+      type: 'single_choice_editable',
+      title: 'API key',
+      help: '',
+      validators: [],
+      elements: [{ name: 'old_key', title: 'Old key' }],
+      config_entity_type: 'notification_parameter',
+      config_entity_type_specifier: 'mail',
+      allow_editing_existing_elements: true
+    }
+    // Only the save answer knows the entry: it gets created in the picker's slide-in.
+    const savedSpec: SingleChoiceEditable = {
+      ...pageSpec,
+      elements: [...pageSpec.elements, { name: 'new_key', title: 'New key' }]
+    }
+    server.use(
+      http.get(apiKeyUrl, () =>
+        HttpResponse.json(
+          { varname: 'api_key', value: 'old_key', spec: pageSpec, origin: 'global' },
+          { headers: { ETag: '"k1"' } }
+        )
+      ),
+      http.get(entitiesUrl, () =>
+        HttpResponse.json({
+          value: [
+            { id: 'old_key', title: 'Old key' },
+            { id: 'new_key', title: 'New key' }
+          ]
+        })
+      ),
+      http.put(apiKeyUrl, async ({ request }) => {
+        const body = (await request.json()) as { value: string }
+        return HttpResponse.json(
+          { varname: 'api_key', value: body.value, spec: savedSpec, origin: 'global' },
+          { headers: { ETag: '"k2"' } }
+        )
+      })
+    )
+    const choiceTopic: GlobalSettingsTopic = {
+      ...data.topics[0]!,
+      variables: [
+        {
+          ...data.topics[0]!.variables[0]!,
+          name: 'api_key',
+          spec: pageSpec,
+          value: 'old_key',
+          default_value: 'old_key',
+          origin: 'global'
+        }
+      ]
+    }
+    render(GlobalSettingsApp, { props: { ...data, topics: [choiceTopic] } })
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Toggle accordion item User management' })
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'Edit API key' }))
+
+    const dialog = screen.getByRole('dialog')
+    await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Save' })).toBeEnabled())
+    await fireEvent.click(within(dialog).getByRole('combobox', { name: 'API key' }))
+    await fireEvent.click(await screen.findByRole('option', { name: 'New key' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(screen.getByText('New key')).toBeInTheDocument()
+    expect(screen.queryByText(/Invalid value/)).not.toBeInTheDocument()
+  })
+
   test('an explicit value equal to the factory default gets the explicit-setting wording', async () => {
     serverValue = { value: 10, origin: 'global' }
     await openEditor()
@@ -647,7 +723,7 @@ describe('GlobalSettingsApp', () => {
       http.get(SITE_SETTING_URL, () => {
         requests.push({ method: 'GET', ifMatch: null, body: null })
         return HttpResponse.json(
-          { varname: 'lock_on_logon_failures', value: 15, origin: 'site' },
+          { varname: 'lock_on_logon_failures', spec: integerSpec, value: 15, origin: 'site' },
           { headers: { ETag: '"s1"' } }
         )
       }),
@@ -658,7 +734,7 @@ describe('GlobalSettingsApp', () => {
           body: await request.json()
         })
         return HttpResponse.json(
-          { varname: 'lock_on_logon_failures', value: 20, origin: 'site' },
+          { varname: 'lock_on_logon_failures', spec: integerSpec, value: 20, origin: 'site' },
           { headers: { ETag: '"s2"' } }
         )
       })
@@ -755,7 +831,7 @@ describe('GlobalSettingsApp', () => {
           body: await request.json()
         })
         return HttpResponse.json(
-          { varname: 'site_piggyback_hub', value: true, origin: 'site' },
+          { varname: 'site_piggyback_hub', spec: booleanSpec, value: true, origin: 'site' },
           { headers: { ETag: '"sb2"' } }
         )
       })
@@ -788,20 +864,30 @@ describe('GlobalSettingsApp', () => {
       http.get(SETTING_URL, async () => {
         await staleLoad
         return HttpResponse.json(
-          { varname: 'lock_on_logon_failures', value: 99, origin: 'global' },
+          { varname: 'lock_on_logon_failures', spec: integerSpec, value: 99, origin: 'global' },
           { headers: { ETag: '"stale"' } }
         )
       }),
       http.get(secondSettingUrl, () =>
         HttpResponse.json(
-          { varname: 'site_setting', value: 42, origin: 'global' },
+          {
+            varname: 'site_setting',
+            spec: secondTopic.variables[0]!.spec,
+            value: 42,
+            origin: 'global'
+          },
           { headers: { ETag: '"fresh"' } }
         )
       ),
       http.put(secondSettingUrl, ({ request }) => {
         putIfMatch = request.headers.get('If-Match')
         return HttpResponse.json(
-          { varname: 'site_setting', value: 43, origin: 'global' },
+          {
+            varname: 'site_setting',
+            spec: secondTopic.variables[0]!.spec,
+            value: 43,
+            origin: 'global'
+          },
           { headers: { ETag: '"fresh2"' } }
         )
       })

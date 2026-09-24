@@ -5,7 +5,6 @@
  */
 import { render, screen } from '@testing-library/vue'
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { nextTick } from 'vue'
 
 import type {
   HoverSample,
@@ -91,37 +90,12 @@ describe('GraphTooltip', () => {
     expect(screen.getByText(/, \d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}/)).toBeInTheDocument()
   })
 
-  test('positions the tooltip beside the viewport cursor coordinates', () => {
-    renderGraphTooltip(makeHoverState({ clientX: 105, clientY: 205 }))
-
-    const tooltip = document.querySelector<HTMLElement>('.graphing-graph-tooltip')
-    // jsdom reports a zero-size element, so the position degrades to cursor + offset;
-    // flip and clamp behaviour is covered by the computeTooltipPosition unit tests.
-    expect(tooltip!.style.left).toBe('124px')
-    expect(tooltip!.style.top).toBe('213px')
-  })
-
-  test('keeps the scoped-style attribute when teleported to the body', () => {
+  test('keeps its scoped style on the content inside the shared tooltip', () => {
     renderGraphTooltip(makeHoverState({}))
 
     const tooltip = document.querySelector<HTMLElement>('.graphing-graph-tooltip')
-    expect(tooltip!.parentElement).toBe(document.body)
-    // Without the scope attribute none of the component's styles would match — the
-    // exact regression the previous reka-ui portal shipped with.
     const attributeNames = Array.from(tooltip!.attributes).map((attribute) => attribute.name)
     expect(attributeNames.some((name) => name.startsWith('data-v-'))).toBe(true)
-  })
-
-  test('opens the tooltip as a manual popover', async () => {
-    const showPopover = vi.spyOn(HTMLElement.prototype, 'showPopover')
-
-    renderGraphTooltip(makeHoverState({}))
-    await nextTick()
-
-    const tooltip = document.querySelector<HTMLElement>('.graphing-graph-tooltip')
-    expect(tooltip!.getAttribute('popover')).toBe('manual')
-    expect(showPopover).toHaveBeenCalledOnce()
-    expect(showPopover.mock.instances[0]).toBe(tooltip)
   })
 
   test("lists the hovered line's attributes grouped by kind", () => {

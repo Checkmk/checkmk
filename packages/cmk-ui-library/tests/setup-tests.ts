@@ -21,6 +21,8 @@ vi.mock('cmk-ui-library/lib/i18n', () => ({
 // Mock the scrollIntoView method to prevent errors. jsdom has no concept of scrolling anyway
 window.HTMLElement.prototype.scrollIntoView = function () {}
 
+window.HTMLElement.prototype.showPopover = function () {}
+
 // Slide-ins portal into the index page's #content_area, which always exists in the
 // real app but must be provided for tests that render a slide-in.
 beforeEach(() => {

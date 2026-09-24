@@ -3,12 +3,11 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { describe, expect, test } from 'vitest'
-
 import {
   type TooltipPlacementInput,
   computeTooltipPosition
-} from '@/graphing/components/TimeSeriesGraph/overlay/tooltipPosition'
+} from 'cmk-ui-library/lib/tooltipPosition'
+import { describe, expect, test } from 'vitest'
 
 function placementInput(overrides: Partial<TooltipPlacementInput>): TooltipPlacementInput {
   return {

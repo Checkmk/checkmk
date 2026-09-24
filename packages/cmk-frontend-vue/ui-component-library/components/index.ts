@@ -92,6 +92,7 @@ import UclCmkInlineValidation from './system-feedback/CmkInlineValidation/UclCmk
 import UclCmkLoading from './system-feedback/CmkLoading/UclCmkLoading.vue'
 import UclCmkPaste from './system-feedback/CmkPaste/UclCmkPaste.vue'
 import UclCmkPerfometer from './system-feedback/CmkPerfometer/UclCmkPerfometer.vue'
+import UclCmkPointerTooltip from './system-feedback/CmkPointerTooltip/UclCmkPointerTooltip.vue'
 import UclCmkPopup from './system-feedback/CmkPopup/UclCmkPopup.vue'
 import UclCmkPopupDialog from './system-feedback/CmkPopupDialog/UclCmkPopupDialog.vue'
 import UclCmkSkeleton from './system-feedback/CmkSkeleton/UclCmkSkeleton.vue'
@@ -205,6 +206,7 @@ const systemFeedbackPages = [
   new Page('CmkPerfometer', UclCmkPerfometer),
   new Page('CmkPopup', UclCmkPopup),
   new Page('CmkPopupDialog', UclCmkPopupDialog),
+  new Page('CmkPointerTooltip', UclCmkPointerTooltip),
   new Folder('Progress', [
     new Page('CmkProgressbar', UclCmkProgressbar),
     new Page('CmkProgressCircle', UclCmkProgressCircle)

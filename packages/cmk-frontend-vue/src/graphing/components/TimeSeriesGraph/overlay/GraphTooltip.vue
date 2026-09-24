@@ -6,15 +6,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import { fromAbsolute, getLocalTimeZone } from '@internationalized/date'
-import { computed, ref, useTemplateRef, watch } from 'vue'
+import CmkPointerTooltip from 'cmk-ui-library/components/CmkPointerTooltip.vue'
+import { computed } from 'vue'
 
 import { isoDate, isoTime, shortWeekday } from '../../../utils/timeFormat'
 import MetricAttributeGroups from '../../MetricAttributeGroups.vue'
 import type { HoverState } from '../interaction/hover'
-import { computeTooltipPosition } from './tooltipPosition'
-
-const CURSOR_OFFSET_X = 19
-const CURSOR_OFFSET_Y = 8
 
 const props = defineProps<{
   hoverState: HoverState | null
@@ -33,62 +30,11 @@ const formattedTime = computed(() => {
   const zonedTime = fromAbsolute(props.hoverState.snapTime * 1000, timeZone)
   return `${shortWeekday(props.hoverState.snapTime, timeZone)}, ${isoDate(zonedTime)}  ${isoTime(zonedTime)}`
 })
-
-const tooltipElement = useTemplateRef<HTMLDivElement>('tooltip')
-const tooltipSize = ref({ width: 0, height: 0 })
-
-// The measured size feeds the position of the same render pass: the post-flush
-// watcher runs before the browser paints, so the corrected position is never visible.
-watch(
-  [() => props.hoverState, tooltipElement],
-  () => {
-    const tooltip = tooltipElement.value
-    if (!tooltip) {
-      tooltipSize.value = { width: 0, height: 0 }
-      return
-    }
-    if (!tooltip.matches(':popover-open')) {
-      tooltip.showPopover()
-    }
-    tooltipSize.value = { width: tooltip.offsetWidth, height: tooltip.offsetHeight }
-  },
-  { flush: 'post' }
-)
-
-const positionStyle = computed(() => {
-  if (!props.hoverState) {
-    return {}
-  }
-  const { left, top } = computeTooltipPosition({
-    cursorX: props.hoverState.clientX,
-    cursorY: props.hoverState.clientY,
-    tooltipWidth: tooltipSize.value.width,
-    tooltipHeight: tooltipSize.value.height,
-    viewportWidth: window.innerWidth,
-    viewportHeight: window.innerHeight,
-    cursorOffsetX: CURSOR_OFFSET_X,
-    cursorOffsetY: CURSOR_OFFSET_Y
-  })
-  return { left: `${left}px`, top: `${top}px` }
-})
 </script>
 
 <template>
-  <!-- Teleported to body because dashboard widget frames are stacking contexts
-       (they carry their own z-index), so no z-index inside the widget could keep
-       the tooltip above a sibling widget. Unlike a portal rendered by a foreign
-       component, our own teleported element keeps its scoped-style attribute. -->
-  <Teleport to="body">
-    <!-- Pointer-only ephemera (values under the moving cursor), deliberately hidden
-         from assistive technology; keyboard users cannot trigger it. -->
-    <div
-      v-if="hoverState"
-      ref="tooltip"
-      class="graphing-graph-tooltip"
-      popover="manual"
-      :style="positionStyle"
-      aria-hidden="true"
-    >
+  <CmkPointerTooltip :pointer="hoverState">
+    <div v-if="hoverState" class="graphing-graph-tooltip">
       <div class="graphing-graph-tooltip__time">{{ formattedTime }}</div>
       <div class="graphing-graph-tooltip__rows">
         <div
@@ -108,27 +54,13 @@ const positionStyle = computed(() => {
         :attributes="closestSample.attributes"
       />
     </div>
-  </Teleport>
+  </CmkPointerTooltip>
 </template>
 
 <style scoped>
 .graphing-graph-tooltip {
-  position: fixed;
-  inset: auto;
-  margin: 0;
-  overflow: visible;
   min-width: 280px;
   max-width: 420px;
-  padding: var(--dimension-5);
-  background: var(--ux-theme-2);
-  border: 1px solid var(--font-color);
-  border-radius: var(--border-radius);
-  font-size: var(--font-size-normal);
-  font-weight: var(--font-weight-default);
-  line-height: normal;
-  letter-spacing: 0.36px;
-  color: var(--font-color);
-  pointer-events: none;
 }
 
 .graphing-graph-tooltip__time {

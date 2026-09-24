@@ -41,6 +41,8 @@ _GRAPH_SIZE = 2000, 700
 
 _FIVE_MINUTES = 300
 
+_VERTICAL_HEADROOM = 0.1
+
 
 class Color(enum.StrEnum):
     PREDICTION = "#000000"
@@ -425,7 +427,10 @@ def _compute_vertical_range(
         *((measured_point[1],) if measured_point else ()),
         *(measured_rrd if measured_rrd else ()),
     )
-    return min(filter(None, points), default=0.0), max(filter(None, points), default=0.0)
+    values = [p for p in points if p is not None]
+    low = min(values, default=0.0)
+    high = max(values, default=0.0)
+    return low, high + _VERTICAL_HEADROOM * (high - low)
 
 
 def _create_graph(

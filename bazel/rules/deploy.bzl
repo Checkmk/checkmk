@@ -223,6 +223,7 @@ COMMUNITY_WHEELS = [
     "//packages/cmk-plugins:wheel-tplink",
     "//packages/cmk-plugins:wheel-tsm",
     "//packages/cmk-plugins:wheel-ucs_bladecenter",
+    "//packages/cmk-plugins:wheel-veeam",
     "//packages/cmk-plugins:wheel-viprinet",
     "//packages/cmk-plugins:wheel-vsphere",
     "//packages/cmk-profiling:wheel",

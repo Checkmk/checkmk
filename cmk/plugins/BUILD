@@ -179,7 +179,6 @@ sh_library(
         "tinkerforge/libexec/agent_tinkerforge",
         "traceroute/libexec/check_traceroute",
         "uniserv/libexec/check_uniserv",
-        "veeam/libexec/agent_veeam",
         "vnx_quotas/libexec/agent_vnx_quotas",
         "zerto/libexec/agent_zerto",
     ],

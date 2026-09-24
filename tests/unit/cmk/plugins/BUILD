@@ -26,6 +26,7 @@ py_cmk_test(
         "//packages/cmk-plugins:azure_deprecated",
         "//packages/cmk-plugins:azure_v2",
         "//packages/cmk-plugins:proxmox_ve",
+        "//packages/cmk-plugins:veeam",
         "//tests/testlib/common",
         requirement("exchangelib"),
         requirement("feedparser"),

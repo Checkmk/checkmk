@@ -99,9 +99,11 @@ export interface CmkKpiStatCardProps {
   /** Configures the delta indicator; omit for the defaults (shown, averaged over `series`). */
   delta?: KpiDeltaConfig | undefined
   /**
-   * Formats a raw sample value the same way `value` was formatted, for the
-   * comparison basis text. Defaults to a plain one-decimal number for
-   * consumers with no formatter of their own.
+   * Formats a raw sample value the same way `value` and `unit` were formatted,
+   * unit included, for the comparison basis text and a hovered sample. Output
+   * without a unit means the sample has none, so it never borrows `unit`.
+   * Defaults to a plain one-decimal number, shown with `unit`, for consumers
+   * with no formatter of their own.
    */
   formatValue?: ((value: number) => string) | undefined
   /** CSS color of the value and the sparkline. */

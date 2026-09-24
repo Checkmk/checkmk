@@ -27,7 +27,7 @@ const props = withDefaults(defineProps<CmkKpiStatCardProps>(), {
   unit: undefined,
   series: () => [],
   delta: () => ({}),
-  formatValue: (value: number) => value.toFixed(1),
+  formatValue: undefined,
   state: undefined,
   stale: undefined,
   rangeLimits: undefined,
@@ -37,6 +37,11 @@ const props = withDefaults(defineProps<CmkKpiStatCardProps>(), {
 })
 
 const { _t } = usei18n()
+
+function renderValue(value: number): string {
+  return props.formatValue ? props.formatValue(value) : value.toFixed(1)
+}
+
 const showDelta = computed(() => props.delta.show ?? true)
 const comparisonBasis = computed(() => props.delta.comparisonBasis ?? 'average')
 
@@ -105,11 +110,11 @@ const seriesDelta = computed<KpiDelta | undefined>(() => {
   const comparisonText =
     comparisonBasis.value === 'last'
       ? _t('vs. %{basisValue} %{basisLabel}', {
-          basisValue: props.formatValue(basisValue),
+          basisValue: renderValue(basisValue),
           basisLabel: BASIS_LABEL[comparisonBasis.value]()
         })
       : _t('vs. %{basisValue} %{basisLabel} (%{window})', {
-          basisValue: props.formatValue(basisValue),
+          basisValue: renderValue(basisValue),
           basisLabel: BASIS_LABEL[comparisonBasis.value](),
           window: durationFormatter.render(currentSample.timestamp - basisSamples[0]!.timestamp)
         })
@@ -229,18 +234,24 @@ function onSparkLineFocus(
   hoveredXPercent.value = xPercent
 }
 
-// formatValue's output may embed its own unit (e.g. "414.49 Mbps"), so split it like
-// the headline value/unit or a hovered sample's unit doubles up with the static one.
+// A caller's formatValue embeds the sample's own unit ("414.49 Mbps", "42.0%"), so split
+// it like the headline value/unit. Its prefix may differ from the headline's, so a sample
+// rendered without one ("500" against "1.50 K") must not borrow the static unit - only
+// the built-in formatter, which never renders a unit, falls back to it.
 const hoveredFormatted = computed<{ value: string; unit: string | undefined } | undefined>(() => {
   const sample = hoveredSample.value
   if (!sample) {
     return undefined
   }
-  const rendered = props.formatValue(sample.value!)
+  const rendered = renderValue(sample.value!)
   const spaceIndex = rendered.indexOf(' ')
-  return spaceIndex === -1
-    ? { value: rendered, unit: undefined }
-    : { value: rendered.slice(0, spaceIndex), unit: rendered.slice(spaceIndex + 1) }
+  if (spaceIndex !== -1) {
+    return { value: rendered.slice(0, spaceIndex), unit: rendered.slice(spaceIndex + 1) }
+  }
+  if (rendered.endsWith('%')) {
+    return { value: rendered.slice(0, -1), unit: '%' }
+  }
+  return { value: rendered, unit: props.formatValue ? undefined : props.unit }
 })
 
 const hoveredValueText = computed<string | undefined>(() => hoveredFormatted.value?.value)
@@ -270,7 +281,7 @@ const scrubValueText = computed<string | undefined>(() => {
     return `${hoveredTimeLabel.value}: ${hoveredValueText.value}`
   }
   const sample = lastRealSample.value
-  return sample ? `${lastSampleTimeLabel.value}: ${props.formatValue(sample.value!)}` : undefined
+  return sample ? `${lastSampleTimeLabel.value}: ${renderValue(sample.value!)}` : undefined
 })
 
 // A freshly polled value dips in opacity rather than counting up - rolling digits would
@@ -403,8 +414,8 @@ const windowRangeLabel = computed<string | undefined>(() => {
     return undefined
   }
   return _t('%{minimum} to %{maximum}', {
-    minimum: props.formatValue(Math.min(...realValues)),
-    maximum: props.formatValue(Math.max(...realValues))
+    minimum: renderValue(Math.min(...realValues)),
+    maximum: renderValue(Math.max(...realValues))
   })
 })
 
@@ -481,10 +492,10 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
           {{ hoveredValueText ?? (hasData ? value : '—') }}
         </span>
         <span
-          v-if="hoveredFormatted ? (hoveredFormatted.unit ?? unit) : unit"
+          v-if="hoveredFormatted ? hoveredFormatted.unit : unit"
           class="db-cmk-kpi-stat-card__unit"
         >
-          {{ hoveredFormatted ? (hoveredFormatted.unit ?? unit) : unit }}
+          {{ hoveredFormatted ? hoveredFormatted.unit : unit }}
         </span>
       </component>
       <div

@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
 import useTimer from 'cmk-ui-library/lib/useTimer'
 import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
@@ -104,10 +105,16 @@ const series = computed<TimestampedSample[]>(() => data.value?.series ?? [])
 
 const deltaConfig = computed<KpiDeltaConfig>(() => ({ show: props.content.show_delta }))
 
+// The series is raw, so whatever the card derives from it (the delta's comparison
+// value, a hovered sample) is scaled like the headline value. The backend sends the
+// unit already converted to the user's temperature unit, so the one given here is moot.
+const formatter = computed(() => {
+  const unitFormat = data.value?.unit_format
+  return unitFormat ? userSpecificUnit(unitFormat, 'celsius').formatter : undefined
+})
+
 function formatValue(value: number): string {
-  const rendered = value.toFixed(1)
-  const unit = data.value?.unit
-  return unit ? `${rendered} ${unit}` : rendered
+  return formatter.value?.render(value) ?? value.toFixed(1)
 }
 </script>
 

@@ -30,13 +30,14 @@ from cmk.gui.type_defs import ColumnName
 from cmk.gui.unit_formatter import NotationFormatter
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.livestatus_client.tables.services import Services
+from cmk.shared_typing.cmk_time_series_graph import UnitFormat
 
 from ._performance_data import (
     parse_performance_data,
     RawPerformanceData,
     RawPerformanceValue,
 )
-from ._unit_format import unit_to_unit_format
+from ._unit_format import apply_temperature_unit, unit_to_unit_format
 from ._user_specific_unit import user_specific_unit_from_unit_format
 
 _PREDICT_PREFIXES = ("predict_lower_", "predict_")
@@ -477,6 +478,7 @@ class EvaluatedMetric:
     title: str
     color: str
     formatter: NotationFormatter
+    unit_format: UnitFormat
     performance_data: PerformanceData
 
 
@@ -515,14 +517,15 @@ def evaluated_metrics(
         attributes = metric_display_attributes(
             name, translate_to_current_language, registered_metrics
         )
-        unit = user_specific_unit_from_unit_format(
+        unit_format, conversion = apply_temperature_unit(
             unit_to_unit_format(attributes.unit), temperature_unit
         )
         evaluated[name] = EvaluatedMetric(
             name=name,
             title=attributes.title,
             color=attributes.color,
-            formatter=unit.formatter,
-            performance_data=_in_user_unit(performance_data, unit.conversion),
+            formatter=user_specific_unit_from_unit_format(unit_format, temperature_unit).formatter,
+            unit_format=unit_format,
+            performance_data=_in_user_unit(performance_data, conversion),
         )
     return evaluated

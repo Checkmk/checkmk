@@ -24,6 +24,12 @@ function singleMetric(overrides: Partial<ComputedSingleMetric> = {}): ComputedSi
   return {
     value: '801.84',
     unit: 'GB',
+    unit_format: {
+      notation: 'si',
+      symbol: 'B',
+      precision: { type: 'auto', digits: 2 },
+      convertible: false
+    },
     color: '#3CC2FF',
     series: [
       { timestamp: 0, value: 10 },
@@ -136,6 +142,24 @@ describe('DashboardContentSingleMetric', () => {
     )
     expect(container.querySelector('.db-cmk-kpi-stat-card__range--maximum')).toHaveTextContent(
       '1.00 TB'
+    )
+  })
+
+  it('scales the comparison value like the value itself', async () => {
+    computeSingleMetricData.mockResolvedValue({
+      value: singleMetric({
+        series: [
+          { timestamp: 0, value: 1_000_000 },
+          { timestamp: 60, value: 3_000_000 },
+          { timestamp: 120, value: 2_000_000 },
+          { timestamp: 180, value: 4_000_000 }
+        ]
+      })
+    })
+    const { container } = await renderWidget()
+
+    expect(container.querySelector('.db-cmk-kpi-stat-card__delta-comparison')).toHaveTextContent(
+      'vs. 2 MB avg.'
     )
   })
 

@@ -481,6 +481,13 @@ def test_a_temperature_metric_is_converted_to_the_users_unit() -> None:
     assert (performance_data.value, performance_data.warning) == (50.0, 68.0)
 
 
+def test_a_temperature_metric_carries_its_already_converted_unit() -> None:
+    unit_format = _evaluated("temp=10", temperature_unit=TemperatureUnit.FAHRENHEIT)[
+        MetricName("temp")
+    ].unit_format
+    assert (unit_format.symbol, unit_format.convertible) == ("°F", False)
+
+
 def test_a_metric_only_the_rrd_knows_is_read_as_well() -> None:
     evaluated = _evaluated("used=10B", rrd_metrics=[MetricName("temp")])
     assert sorted(evaluated) == [MetricName("temp"), MetricName("used")]

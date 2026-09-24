@@ -114,7 +114,6 @@ from cmk.utils.ip_lookup import (
     IPLookup,
     IPLookupOptional,
     IPStackConfig,
-    is_fallback_ip,
 )
 from cmk.utils.prediction import make_updated_predictions, MetricRecord, PredictionStore
 from cmk.utils.prediction import Paths as PredictionPaths
@@ -410,27 +409,19 @@ class CMKFetcher(FetcherFunction):
     def _lookup_ip_address(
         self, host_name: HostName, ip_stack_config: IPStackConfig
     ) -> HostAddress | None:
-        """Look up the host address, reporting "no address" honestly.
+        """Look up the host address.
 
-        With a strict lookup the caller has asked for a failure to be raised, so
-        its answer is passed through unchanged -- including an explicitly
-        configured or faked ``0.0.0.0``.
-
-        A tolerant `ConfiguredIPLookup` instead substitutes a fallback address
-        (``0.0.0.0`` / ``::``) for one it failed to obtain.  Passing that on
-        would point the fetchers at the local system, so it becomes ``None``:
-        `SourceBuilder` then emits a `MissingIPSource` for the sources that need
-        an address and leaves the ones that do not alone.
-
-        The sentinel check disappears together with the fallback address itself,
-        see CMK-38939.
+        The answer may be the unspecified address (``0.0.0.0`` / ``::``): a
+        tolerant `ConfiguredIPLookup` substitutes it for one it failed to
+        obtain, and it can just as well be configured or faked explicitly.
+        Either way it is passed on unchanged -- the consumers of the result
+        recognise it as "no address" and refuse to contact it.
         """
         if ip_stack_config is IPStackConfig.NO_IP:
             return None
         if self.ip_address_of_mandatory is not None:
             return self.ip_address_of_mandatory(host_name, self.default_address_family(host_name))
-        address = self.ip_address_of(host_name, self.default_address_family(host_name))
-        return None if is_fallback_ip(address) else address
+        return self.ip_address_of(host_name, self.default_address_family(host_name))
 
     @override
     def __call__(

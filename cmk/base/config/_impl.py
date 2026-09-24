@@ -140,7 +140,13 @@ from cmk.utils.host_storage import (
     get_host_storage_loaders,
     StorageFormat,
 )
-from cmk.utils.ip_lookup import IPLookup, IPLookupOptional, IPStackConfig
+from cmk.utils.ip_lookup import (
+    IPLookup,
+    IPLookupOptional,
+    IPStackConfig,
+    is_fallback_ip,
+    SupportedAddressFamily,
+)
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.misc import key_config_paths
@@ -1186,6 +1192,22 @@ def load_resource_cfg_macros(
             raise
         error_handler(f"Cannot read {resource_cfg}: {exc}")
     return {}
+
+
+def _without_unusable_address(ip_address_of: IPLookup) -> IPLookupOptional:
+    """Report the unspecified address as the absent address it stands for.
+
+    `0.0.0.0` and `::` are how a failed or unconfigured lookup is spelled (see
+    `cmk.utils.ip_lookup`), but they look like ordinary addresses, which defeats
+    the two places that already handle a missing one: `get_host_attributes()`
+    renders `None` as `""`, and `IPConfig.address` raises `RuntimeError`.
+    """
+
+    def lookup(host_name: HostName, family: SupportedAddressFamily) -> HostAddress | None:
+        address = ip_address_of(host_name, family)
+        return None if is_fallback_ip(address) else address
+
+    return lookup
 
 
 def get_ssc_host_config(
@@ -2339,7 +2361,16 @@ class ConfigCache:
         if not (host_special_agents := self.special_agents(host_name)):
             return
 
-        host_attrs = self.get_host_attributes(host_name, host_ip_family, ip_address_of)
+        # Handing a special agent the unspecified address would aim it at the
+        # local system, so drop it from every channel that reaches the plug-in:
+        # the `ip_address` argument, the `$HOSTADDRESS$` macro built from the
+        # host attributes, and the address in the `HostConfig`. Doing it here
+        # rather than in the callers is what makes it hold for all of them.
+        usable_ip_address_of = _without_unusable_address(ip_address_of)
+        if ip_address is not None and is_fallback_ip(ip_address):
+            ip_address = None
+
+        host_attrs = self.get_host_attributes(host_name, host_ip_family, usable_ip_address_of)
         special_agent = SpecialAgent(
             load_special_agents(raise_errors=cmk.ccc.debug.enabled()),
             host_name,
@@ -2355,7 +2386,7 @@ class ConfigCache:
                     "<HOST>": host_name,
                     **self.get_host_macros_from_attributes(host_name, host_attrs),
                 },
-                ip_address_of,
+                usable_ip_address_of,
             ),
             host_attrs,
             config_processing.GlobalProxiesWithLookup(

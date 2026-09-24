@@ -56,17 +56,9 @@ def _merge_tables_by_same_or_empty_key_columns(
     )
 
 
-def _merge_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableTable:
-    if left.key_columns and not right.key_columns:
-        return _merge_tables_by_same_or_empty_key_columns(left.key_columns, left, right)
-
-    if not left.key_columns and right.key_columns:
-        return _merge_tables_by_same_or_empty_key_columns(right.key_columns, left, right)
-
-    if left.key_columns == right.key_columns:
-        return _merge_tables_by_same_or_empty_key_columns(left.key_columns, left, right)
-
-    # Re-calculate row identifiers for legacy tables or inventory and status tables
+def _merge_tables_by_common_key_columns(
+    left: ImmutableTable, right: ImmutableTable
+) -> ImmutableTable:
     key_columns = sorted(set(left.key_columns).intersection(right.key_columns))
     rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
     for row in list(left.rows_by_ident.values()) + list(right.rows_by_ident.values()):
@@ -77,6 +69,19 @@ def _merge_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableTable
         rows_by_ident=rows_by_ident,
         retentions={**left.retentions, **right.retentions},
     )
+
+
+def _merge_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableTable:
+    if left.key_columns and not right.key_columns:
+        return _merge_tables_by_same_or_empty_key_columns(left.key_columns, left, right)
+
+    if not left.key_columns and right.key_columns:
+        return _merge_tables_by_same_or_empty_key_columns(right.key_columns, left, right)
+
+    if left.key_columns == right.key_columns:
+        return _merge_tables_by_same_or_empty_key_columns(left.key_columns, left, right)
+
+    return _merge_tables_by_common_key_columns(left, right)
 
 
 def merge_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableTree:

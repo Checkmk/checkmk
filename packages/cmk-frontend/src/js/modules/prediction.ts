@@ -234,12 +234,16 @@ export function render_curve(
     c.stroke();
 }
 
-export function render_area(points: number[], color: string, alpha: number) {
+export function render_area(
+    points: (number | null)[],
+    color: string,
+    alpha: number,
+) {
     render_dual_area(null, points, color, alpha);
 }
 
 export function render_area_reverse(
-    points: number[],
+    points: (number | null)[],
     color: string,
     alpha: number,
 ) {
@@ -247,8 +251,8 @@ export function render_area_reverse(
 }
 
 export function render_dual_area(
-    lower_points: null | number[],
-    upper_points: null | number[],
+    lower_points: null | (number | null)[],
+    upper_points: null | (number | null)[],
     color: string,
     alpha: number,
 ) {
@@ -266,12 +270,16 @@ export function render_dual_area(
 
     let x, yl, yu, h;
     for (let i = 0; i < num_points; i++) {
-        x = point(from_time + time_step * i, 0)[0];
-        if (lower_points) yl = point(0, lower_points[i])[1];
-        else yl = height - bottom_border;
+        const lower = lower_points ? lower_points[i] : undefined;
+        const upper = upper_points ? upper_points[i] : undefined;
+        if (lower === null || upper === null) continue;
 
-        if (upper_points) yu = point(0, upper_points[i])[1];
-        else yu = top_border;
+        x = point(from_time + time_step * i, 0)[0];
+        if (lower === undefined) yl = height - bottom_border;
+        else yl = point(0, lower)[1];
+
+        if (upper === undefined) yu = top_border;
+        else yu = point(0, upper)[1];
         h = yu - yl;
         c.fillRect(x, yl, pix_step, h);
     }

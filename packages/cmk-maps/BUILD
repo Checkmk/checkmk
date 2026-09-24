@@ -1,9 +1,9 @@
 load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
-load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_python//python:packaging.bzl", "py_wheel")
+load("//bazel/rules:fastapi_openapi_spec.bzl", "fastapi_openapi_spec")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
@@ -88,21 +88,11 @@ pkg_files(
 # runs in //packages/cmk-shared-typing, where openapi-typescript is already
 # wired up for the GUI's REST API; only the dump lives here, next to the app it
 # describes. Build-only — not part of the wheel.
-py_binary(
-    name = "dump_openapi_spec",
-    srcs = ["tools/dump_openapi_spec.py"],
-    deps = [":backend"],
-)
-
-run_binary(
+fastapi_openapi_spec(
     name = "openapi_spec",
-    outs = ["maps_openapi.json"],
-    args = [
-        "--out",
-        "$(execpath maps_openapi.json)",
-    ],
-    tool = ":dump_openapi_spec",
+    app = "cmk.maps.backend.app:create_app",
     visibility = ["//packages:__subpackages__"],
+    deps = [":backend"],
 )
 
 # GUI integration (permissions, settings pages, config domains, session-auth AJAX
@@ -258,7 +248,7 @@ py_requirements_test(
     libs = [
         ":backend",
         ":cmk-maps-server",
-        ":dump_openapi_spec",
+        ":openapi_spec_dump",
     ],
     requirements_in = "requirements.in",
 )

@@ -1,4 +1,5 @@
 load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_env.bzl", "bazel_env")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@npm//:defs.bzl", "npm_link_all_packages")
@@ -13,7 +14,10 @@ load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:sh_expand_template.bzl", "sh_expand_template")
 
 exports_files(
-    ["ps_script_analyzer_wrapper.ps1"],
+    [
+        "dump_fastapi_openapi_spec.py",
+        "ps_script_analyzer_wrapper.ps1",
+    ],
     visibility = ["//visibility:public"],
 )
 
@@ -148,6 +152,12 @@ bazel_env(
         "stylelint": ":stylelint",
         "uv": "@multitool//tools/uv",
     },
+)
+
+py_library(
+    name = "dump_fastapi_openapi_spec",
+    srcs = ["dump_fastapi_openapi_spec.py"],
+    visibility = ["//visibility:public"],
 )
 
 py_binary(

@@ -96,6 +96,7 @@ py_cmk_test(
         requirement("fakeredis"),
         requirement("feedparser"),
         requirement("google-cloud-monitoring"),
+        requirement("jsonschema"),
         requirement("marshmallow"),
         requirement("polyfactory"),
         requirement("pysmb"),

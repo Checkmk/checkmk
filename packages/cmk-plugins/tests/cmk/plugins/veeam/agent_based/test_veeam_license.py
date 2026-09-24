@@ -7,11 +7,12 @@ import json
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import HostLabel, Metric, Result, Service, State, StringTable
 from cmk.plugins.veeam.agent_based.veeam_license import (
     check_veeam_license,
     CheckParameters,
     discovery_veeam_license,
+    host_labels_veeam_license,
     monitoring_state,
     parse_veeam_license,
     VeeamLicense,
@@ -163,3 +164,26 @@ def test_check_veeam_license_sockets_and_capacity_are_independent_of_instances()
     assert not any(
         isinstance(r, Metric) and r.name == "veeam_license_instances_percent" for r in results
     )
+
+
+# Example response of GET /api/v1/license (VBR 13 REST API reference), without the
+# per-workload details
+STRING_TABLE: StringTable = [
+    [
+        (
+            '{"status": "Valid", "type": "Subscription", "edition": "EnterprisePlus",'
+            ' "cloudConnect": "Disabled", "licensedTo": "Veeam Software Group GmbH",'
+            ' "instanceLicenseSummary": {"package": "Backup", "licensedInstancesNumber": 100,'
+            ' "usedInstancesNumber": 4, "newInstancesNumber": 0, "rentalInstancesNumber": 0,'
+            ' "expirationDate": "2026-12-12T00:00:00Z"}, "supportId": "02067762",'
+            ' "autoUpdateEnabled": true, "freeAgentInstanceConsumptionEnabled": true,'
+            ' "IsMultiSection": false, "proactiveSupportEnabled": true}'
+        )
+    ]
+]
+
+
+def test_host_labels_veeam_license_sets_the_edition() -> None:
+    assert list(host_labels_veeam_license(parse_veeam_license(STRING_TABLE))) == [
+        HostLabel("cmk/veeam_vbr/edition", "EnterprisePlus"),
+    ]

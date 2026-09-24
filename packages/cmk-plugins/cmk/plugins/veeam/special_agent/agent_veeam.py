@@ -330,6 +330,7 @@ def write_sections(client: VeeamClient, sections: Sequence[Section]) -> None:
 
 SECTIONS: Sequence[Section] = (
     ("veeam_server_info", fetch_object("/api/v1/serverInfo")),
+    ("veeam_license", fetch_object("/api/v1/license")),
     ("veeam_backup_jobs", fetch_list("/api/v1/jobs/states")),
     ("veeam_backups", fetch_list_piggyback("/api/v1/taskSessions")),
     ("veeam_replicas", empty_on_access_denied(fetch_list("/api/v1/replicas"))),

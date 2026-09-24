@@ -73,6 +73,7 @@ DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/pve/entity:node",
     "cmk/pve/tag/<tag>:yes",
     "cmk/systemd/unit/{name}:yes",
+    "cmk/veeam_vbr/edition",
     "cmk/veeam_vbr/platform",
     "cmk/vsphere_object",
     "cmk/vsphere_vcenter",

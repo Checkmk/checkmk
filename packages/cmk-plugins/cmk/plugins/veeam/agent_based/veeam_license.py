@@ -14,6 +14,8 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    HostLabel,
+    HostLabelGenerator,
     LevelsT,
     render,
     Result,
@@ -82,6 +84,18 @@ def parse_veeam_license(string_table: StringTable) -> Section:
         capacity_licensed_tb=capacity.get("licensedCapacityTb"),
         capacity_used_tb=capacity.get("usedCapacityTb"),
     )
+
+
+def host_labels_veeam_license(section: Section) -> HostLabelGenerator:
+    """Generates host labels for Veeam backup servers
+
+    Labels:
+
+        cmk/veeam_vbr/edition:
+            This label is set to the edition of the license installed on the
+            Veeam backup server (such as "Community" or "EnterprisePlus").
+    """
+    yield HostLabel("cmk/veeam_vbr/edition", section.edition)
 
 
 def discovery_veeam_license(section: Section) -> DiscoveryResult:  # noqa: ARG001
@@ -194,6 +208,7 @@ def check_veeam_license(params: CheckParameters, section: Section) -> CheckResul
 agent_section_veeam_license = AgentSection(
     name="veeam_license",
     parse_function=parse_veeam_license,
+    host_label_function=host_labels_veeam_license,
 )
 
 check_plugin_veeam_license = CheckPlugin(

@@ -52,6 +52,40 @@ const MODIFIER_KEYS = new Set([
   'command'
 ])
 
+// Inputs that hold no text, so typing into them means nothing.
+const NON_TEXT_INPUT_TYPES = new Set([
+  'checkbox',
+  'radio',
+  'button',
+  'submit',
+  'reset',
+  'range',
+  'color',
+  'file'
+])
+
+function isTextEntry(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) {
+    return false
+  }
+  if (target.isContentEditable) {
+    return true
+  }
+  if (target instanceof HTMLInputElement) {
+    return !NON_TEXT_INPUT_TYPES.has(target.type)
+  }
+  return target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement
+}
+
+/**
+ * A printable key with no Ctrl or Alt is a character before it is a shortcut, so whoever is
+ * typing gets it. Escape, the arrows and the modified combinations stay with the shortcut,
+ * because a text field is exactly where several of them are meant to work.
+ */
+function isBarePrintable(shortcut: KeyShortcutEnsured): boolean {
+  return !shortcut.ctrl && !shortcut.alt && shortcut.key.every((key) => key.length === 1)
+}
+
 export class KeyShortcutService {
   private keyStates: KeyStates = {}
   private handlers: KeyShortcutHandler[] = []
@@ -238,7 +272,11 @@ export class KeyShortcutService {
   }
 
   private callHandlers(e: KeyboardEvent): void {
+    const typing = isTextEntry(e.target)
     for (const handler of this.handlers) {
+      if (typing && isBarePrintable(handler)) {
+        continue
+      }
       if (
         e.ctrlKey === handler.ctrl &&
         e.shiftKey === handler.shift &&

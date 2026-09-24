@@ -37,14 +37,14 @@ vi.mock('@/dashboard/components/DashboardContent/cmk_figures.ts', () => ({
 }))
 
 const baseProps = makeContentProps(
-  { type: 'host_stats' },
+  { type: 'gauge' },
   {
     widget_id: 'w1',
     general_settings: {
-      title: { text: 'Host statistics', render_mode: 'with_background' },
+      title: { text: 'Gauge', render_mode: 'with_background' },
       render_background: true
     },
-    effectiveTitle: 'Host statistics'
+    effectiveTitle: 'Gauge'
   }
 )
 
@@ -158,7 +158,7 @@ test('a new title with the same filters does not refetch the figure', async () =
   // What the dashboard hands down once the widget titles arrive: equal values, new objects.
   await rerender({
     ...baseProps,
-    effectiveTitle: 'Host statistics of main',
+    effectiveTitle: 'Gauge of main',
     effective_filter_context: { uses_infos: [], filters: {}, context: {} }
   } as never)
   await nextTick()

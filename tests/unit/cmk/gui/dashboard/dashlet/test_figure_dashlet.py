@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.gui.dashboard.api.compute_stats import STATS_TYPES
 from cmk.gui.dashboard.dashlet.figure_dashlet import ABCFigureDashlet
 from cmk.gui.dashboard.dashlet.registry import dashlet_registry
 from cmk.gui.dashboard.page_figure_widget import GENERATOR_BY_FIGURE_TYPE
@@ -14,5 +15,5 @@ def test_generate_response_data_mapping() -> None:
         dashlet.type_name()
         for dashlet in dashlet_registry.values()
         if issubclass(dashlet, ABCFigureDashlet)
-    }
+    } - STATS_TYPES
     assert set(GENERATOR_BY_FIGURE_TYPE.keys()) == all_figure_types

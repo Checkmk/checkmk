@@ -702,10 +702,7 @@ div.dashlet.nodata {
 }
 
 div.site_overview,
-div.alert_overview,
-div.eventstats,
-div.hoststats,
-div.servicestats {
+div.alert_overview {
   g.element_box:hover {
     path + path {
       fill-opacity: 0.96;
@@ -820,99 +817,5 @@ div.servicestats {
     fill: $headline-color;
     stroke-dasharray: 3, 3;
     stroke: $grey-3;
-  }
-}
-
-div.eventstats,
-div.hoststats,
-div.servicestats {
-  position: relative;
-  display: flex;
-  height: 100%;
-
-  svg,
-  div.stats_table {
-    width: 50%;
-    margin: auto;
-  }
-
-  path.hexagon.empty {
-    fill: $hexagon-empty-color;
-    fill-opacity: $hexagon-empty-fill-opacity;
-    stroke: $hexagon-empty-stroke-color;
-    stroke-opacity: $hexagon-empty-stroke-opacity;
-  }
-
-  div.stats_table {
-    table {
-      border-collapse: collapse;
-    }
-
-    td {
-      padding: 3px 3px 0;
-      vertical-align: top;
-    }
-
-    td:last-child {
-      width: 115px; // aligns the host and service stats tables
-    }
-
-    a {
-      text-decoration: none;
-      cursor: pointer;
-
-      &.box {
-        display: inline-block;
-        width: $spacing-half;
-        height: 14px;
-        padding: 0;
-        background-color: $font-color;
-        border-radius: $theme-border-radius;
-        box-sizing: border-box;
-
-        &.critical {
-          background-color: $hexagon-critical-color;
-          border: 1px solid $label-box-critical-border-color;
-        }
-
-        &.unknown {
-          background-color: $hexagon-unknown-color;
-          border: 1px solid $label-box-unknown-border-color;
-        }
-
-        &.warning {
-          background-color: $color-state-1-background;
-          border: 1px solid $color-state-1-border;
-        }
-
-        &.downtime {
-          background-color: $hexagon-downtime-color;
-          border: 1px solid $label-box-downtime-border-color;
-        }
-
-        &.host_down {
-          background-color: $hexagon-host-down-color;
-          border: 1px solid $label-box-host-down-border-color;
-        }
-
-        &.ok {
-          background-color: $success;
-          border: 1px solid $label-box-ok-border-color;
-        }
-      }
-
-      &.count {
-        float: right;
-      }
-
-      &.count:hover,
-      &.text:hover {
-        color: $font-color-green;
-      }
-    }
-
-    .warning {
-      background-color: transparent;
-    }
   }
 }

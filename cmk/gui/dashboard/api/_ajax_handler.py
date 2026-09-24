@@ -39,7 +39,6 @@ from cmk.gui.dashboard.type_defs import (
     SingleTimeseriesDashletConfig,
     SiteOverviewDashletConfig,
     StateDashletConfig,
-    StatsDashletConfig,
 )
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -58,7 +57,6 @@ from .model.widget_content.metric import (
 from .model.widget_content.overview import AlertOverviewContent, SiteOverviewContent
 from .model.widget_content.state import HostStateContent, ServiceStateContent
 from .model.widget_content.state_summary import HostStateSummaryContent, ServiceStateSummaryContent
-from .model.widget_content.stats import EventStatsContent, HostStatsContent, ServiceStatsContent
 from .model.widget_content.timeline import AlertTimelineContent, NotificationTimelineContent
 
 type FigureContent = Annotated[
@@ -66,16 +64,13 @@ type FigureContent = Annotated[
     | AlertTimelineContent
     | AverageScatterplotContent
     | BarplotContent
-    | EventStatsContent
     | GaugeContent
     | HostStateContent
     | HostStateSummaryContent
-    | HostStatsContent
     | InventoryContent
     | NotificationTimelineContent
     | ServiceStateContent
     | ServiceStateSummaryContent
-    | ServiceStatsContent
     | SingleMetricContent
     | SiteOverviewContent,
     Discriminator("type"),
@@ -93,7 +88,6 @@ type FigureDashletConfig = (
     | ServiceStateSummaryDashletConfig
     | SingleMetricDashletConfig
     | SiteOverviewDashletConfig
-    | StatsDashletConfig
 )
 
 

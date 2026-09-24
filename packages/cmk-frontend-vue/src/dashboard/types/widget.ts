@@ -101,6 +101,7 @@ export type SidebarElementContent = components['schemas']['SidebarElementContent
 export type PerformanceGraphContent = components['schemas']['PerformanceGraphContent']
 export type SingleTimeseriesContent = components['schemas']['SingleTimeseriesContent']
 export type SingleMetricContent = components['schemas']['SingleMetricContent']
+export type StatsContent = components['schemas']['StatsContent']
 export type Stats = components['schemas']['Stats']
 export type StatsPart = components['schemas']['StatsPart']
 export type AlertTimelineContent = components['schemas']['AlertTimelineContent']

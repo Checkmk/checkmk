@@ -14,16 +14,12 @@ import { InventoryFigure } from './cmk_inventory'
 import { SiteOverview } from './cmk_site_overview'
 import { StateFigure, StateHostFigure } from './cmk_state'
 import { HostStateSummary, ServiceStateSummary } from './cmk_state_summary'
-import { EventStats, HostStats, ServiceStats } from './cmk_stats'
 import { TableFigure } from './cmk_table'
 import { AverageScatterplotFigure } from './timeseries/average_scatterplot_figure'
 import { TimeseriesFigure } from './timeseries/cmk_timeseries'
 
 export function register() {
   figure_registry.register(TableFigure)
-  figure_registry.register(HostStats)
-  figure_registry.register(ServiceStats)
-  figure_registry.register(EventStats)
   figure_registry.register(AlertOverview)
   figure_registry.register(BarplotFigure)
   figure_registry.register(HorizontalBarFigure)

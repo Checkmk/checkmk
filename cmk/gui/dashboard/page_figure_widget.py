@@ -14,11 +14,6 @@ from cmk.gui.dashboard.api import (
     FigureRequestInternal,
     get_validated_internal_figure_request,
 )
-from cmk.gui.dashboard.dashlet.dashlets.stats import (
-    EventStatsDashletDataGenerator,
-    HostStatsDashletDataGenerator,
-    ServiceStatsDashletDataGenerator,
-)
 from cmk.gui.dashboard.token_util import (
     DashboardTokenAuthenticatedJsonPage,
     get_dashboard_widget_by_id,
@@ -38,11 +33,7 @@ from cmk.gui.utils.roles import UserPermissions
 GENERATOR_BY_FIGURE_TYPE: Mapping[
     str,
     Callable[..., FigureResponseData],
-] = {
-    "eventstats": EventStatsDashletDataGenerator.generate_response_data,
-    "hoststats": HostStatsDashletDataGenerator.generate_response_data,
-    "servicestats": ServiceStatsDashletDataGenerator.generate_response_data,
-}
+] = {}
 
 
 class FigureWidgetPage(AjaxPage):

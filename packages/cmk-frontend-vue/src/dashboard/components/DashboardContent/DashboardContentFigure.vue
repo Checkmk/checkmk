@@ -130,9 +130,6 @@ const figureType: Ref<string> = computed(() => {
   return props.content.type
 })
 const typeMap: Record<string, string> = {
-  event_stats: 'eventstats',
-  host_stats: 'hoststats',
-  service_stats: 'servicestats',
   host_state: 'state_host',
   service_state: 'state_service'
 }
@@ -143,11 +140,6 @@ const legacyFigureType: Ref<string> = computed(() => {
   }
   return newType
 })
-
-// We need to style SVGs for some figure types to make them responsive
-const sizeSvg = computed(() =>
-  ['event_stats', 'host_stats', 'service_stats'].includes(figureType.value)
-)
 
 const updateInterval = 60
 
@@ -252,7 +244,6 @@ onBeforeUnmount(() => {
           class="db-content-figure cmk_figure"
           :class="[
             {
-              'db-content-figure__size-svg': sizeSvg,
               'db-content-figure__background': !!general_settings.render_background
             },
             legacyFigureType

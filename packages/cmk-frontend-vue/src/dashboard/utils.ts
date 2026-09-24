@@ -39,6 +39,7 @@ import type {
   ComputedSingleMetricResponse,
   ComputedTimelineCountResponse,
   ComputedTopListResponse,
+  ComputedWidgetResponse,
   ComputedWidgetSpecResponse,
   EffectiveWidgetFilterContext,
   NetworkFlowDonutContent,
@@ -47,11 +48,14 @@ import type {
   NetworkFlowTrendChartContent,
   ResponsiveGridWidgetLayouts,
   SingleMetricContent,
+  Stats,
+  StatsContent,
   TimelineContent,
   TopListContent,
   VisualContext,
   WidgetAvailableInventory,
-  WidgetContent
+  WidgetContent,
+  WidgetSource
 } from '@/dashboard/types/widget.ts'
 
 import type { ComputeWidgetTitlesRequest, ComputeWidgetTitlesResponse } from './types/api'
@@ -289,6 +293,18 @@ export const dashboardAPI = {
       await client.POST('/domain-types/dashboard/actions/compute-widget-titles/invoke', {
         ...CONTENT_TYPE_HEADER,
         body: request
+      })
+    )
+  },
+  computeStats: async (
+    body: { source: WidgetSource<StatsContent> },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<Stats>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-stats/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
       })
     )
   },

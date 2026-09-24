@@ -10,12 +10,9 @@ from typing import Annotated, Literal
 from pydantic import Discriminator
 
 import cmk.web.utils.permission_verification as permissions
-from cmk.gui.dashboard.dashlet.dashlets.stats import (
-    EventStatsDashletDataGenerator,
-    HostStatsDashletDataGenerator,
-    ServiceStatsDashletDataGenerator,
-)
+from cmk.gui import sites, visuals
 from cmk.gui.i18n import _l
+from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -28,7 +25,8 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
-from cmk.gui.type_defs import SingleInfos, VisualContext, VisualName
+from cmk.gui.type_defs import VisualContext, VisualName
+from cmk.livestatus_client import MKLivestatusNotFoundError
 from cmk.web.utils.speaklater import LazyString
 
 from ._contextual_link_encoding import EffectiveLink, link_properties_for
@@ -91,6 +89,26 @@ class Stats:
 _NOT_IN_HOST_DOWNTIME = {"is_host_scheduled_downtime_depth": "0"}
 _NOT_IN_DOWNTIME = {"is_in_downtime": "0"}
 
+_HOST_STATS_QUERY = (
+    "GET hosts\n"
+    # Up
+    "Stats: state = 0\n"
+    "Stats: scheduled_downtime_depth = 0\n"
+    "StatsAnd: 2\n"
+    # Downtime
+    "Stats: scheduled_downtime_depth > 0\n"
+    # Unreachable
+    "Stats: state = 2\n"
+    "Stats: scheduled_downtime_depth = 0\n"
+    "StatsAnd: 2\n"
+    # Down
+    "Stats: state = 1\n"
+    "Stats: scheduled_downtime_depth = 0\n"
+    "StatsAnd: 2\n"
+    # Filter
+    "Filter: custom_variable_names < _REALNAME"
+)
+
 _HOST_PARTS: Sequence[tuple[HostStatsCategory, VisualContext]] = (
     (
         "up",
@@ -105,6 +123,49 @@ _HOST_PARTS: Sequence[tuple[HostStatsCategory, VisualContext]] = (
         "down",
         {"hoststate": {"hst1": "on"}, "host_scheduled_downtime_depth": _NOT_IN_HOST_DOWNTIME},
     ),
+)
+
+_SERVICE_STATS_QUERY = (
+    "GET services\n"
+    # OK
+    "Stats: state = 0\n"
+    "Stats: scheduled_downtime_depth = 0\n"
+    "Stats: host_scheduled_downtime_depth = 0\n"
+    "Stats: host_state = 0\n"
+    "Stats: host_has_been_checked = 1\n"
+    "StatsAnd: 5\n"
+    # Downtime
+    "Stats: scheduled_downtime_depth > 0\n"
+    "Stats: host_scheduled_downtime_depth > 0\n"
+    "StatsOr: 2\n"
+    # Down host
+    "Stats: scheduled_downtime_depth = 0\n"
+    "Stats: host_scheduled_downtime_depth = 0\n"
+    "Stats: host_state != 0\n"
+    "StatsAnd: 3\n"
+    # Warning
+    "Stats: state = 1\n"
+    "Stats: scheduled_downtime_depth = 0\n"
+    "Stats: host_scheduled_downtime_depth = 0\n"
+    "Stats: host_state = 0\n"
+    "Stats: host_has_been_checked = 1\n"
+    "StatsAnd: 5\n"
+    # Unknown
+    "Stats: state = 3\n"
+    "Stats: scheduled_downtime_depth = 0\n"
+    "Stats: host_scheduled_downtime_depth = 0\n"
+    "Stats: host_state = 0\n"
+    "Stats: host_has_been_checked = 1\n"
+    "StatsAnd: 5\n"
+    # Critical
+    "Stats: state = 2\n"
+    "Stats: scheduled_downtime_depth = 0\n"
+    "Stats: host_scheduled_downtime_depth = 0\n"
+    "Stats: host_state = 0\n"
+    "Stats: host_has_been_checked = 1\n"
+    "StatsAnd: 5\n"
+    # Filter
+    "Filter: host_custom_variable_names < _REALNAME"
 )
 
 _SERVICE_PARTS: Sequence[tuple[ServiceStatsCategory, VisualContext]] = (
@@ -150,6 +211,15 @@ _SERVICE_PARTS: Sequence[tuple[ServiceStatsCategory, VisualContext]] = (
     ),
 )
 
+_EVENT_STATS_QUERY = (
+    "GET eventconsoleevents\n"
+    "Stats: event_state = 0\n"  # ok
+    "Stats: event_state = 1\n"  # warning
+    "Stats: event_state = 3\n"  # unknown
+    "Stats: event_state = 2"  # critical
+)
+_RELATED_EVENTS_ONLY = "\nFilter: event_contact_groups != \nFilter: host_name != \nOr: 2"
+
 _EVENT_PARTS: Sequence[tuple[EventStatsCategory, VisualContext]] = (
     ("ok", {"event_state": {"event_state_0": "on"}}),
     ("warning", {"event_state": {"event_state_1": "on"}}),
@@ -158,9 +228,15 @@ _EVENT_PARTS: Sequence[tuple[EventStatsCategory, VisualContext]] = (
 )
 
 
+def _event_stats_query() -> str:
+    if user.may("mkeventd.seeall") or user.may("mkeventd.seeunrelated"):
+        return _EVENT_STATS_QUERY
+    return _EVENT_STATS_QUERY + _RELATED_EVENTS_ONLY
+
+
 @dataclass(frozen=True)
 class _StatsType:
-    stats: Callable[[VisualContext, SingleInfos], Sequence[int]]
+    query: Callable[[], str]
     parts: Sequence[tuple[StatsCategory, VisualContext]]
     link_title: LazyString
     view_name: VisualName
@@ -168,19 +244,19 @@ class _StatsType:
 
 _STATS_BY_TYPE: Mapping[str, _StatsType] = {
     HostStatsContent.internal_type(): _StatsType(
-        stats=HostStatsDashletDataGenerator.stats,
+        query=lambda: _HOST_STATS_QUERY,
         parts=_HOST_PARTS,
         link_title=_l("All hosts"),
         view_name="searchhost",
     ),
     ServiceStatsContent.internal_type(): _StatsType(
-        stats=ServiceStatsDashletDataGenerator.stats,
+        query=lambda: _SERVICE_STATS_QUERY,
         parts=_SERVICE_PARTS,
         link_title=_l("All services"),
         view_name="searchsvc",
     ),
     EventStatsContent.internal_type(): _StatsType(
-        stats=EventStatsDashletDataGenerator.stats,
+        query=_event_stats_query,
         parts=_EVENT_PARTS,
         link_title=_l("All events"),
         view_name="ec_events",
@@ -202,10 +278,19 @@ def _built_in_link(content: StatsContent) -> EffectiveLink:
 
 def _counted_parts(widget: ResolvedWidget) -> list[tuple[StatsCategory, VisualContext, int]]:
     stats_type = _STATS_BY_TYPE[widget.config["type"]]
-    counts = stats_type.stats(widget.context, widget.infos)
+    filter_headers, only_sites = visuals.get_filter_headers(
+        infos=widget.infos, context=widget.context
+    )
+    try:
+        with sites.only_sites(only_sites):
+            counts = sites.live().query_summed_stats(stats_type.query() + "\n" + filter_headers)
+    except MKLivestatusNotFoundError:
+        counts = []
     return [
         (category, native_key, count)
-        for (category, native_key), count in zip(stats_type.parts, counts, strict=True)
+        for (category, native_key), count in zip(
+            stats_type.parts, counts or [0] * len(stats_type.parts), strict=True
+        )
     ]
 
 

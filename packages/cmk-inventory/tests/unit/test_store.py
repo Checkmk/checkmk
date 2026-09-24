@@ -5,7 +5,6 @@
 
 import gzip
 import json
-import shutil
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -479,13 +478,9 @@ def test_load_from(tree_name: HostName) -> None:
 def test_save_and_load_real_tree(tree_name: HostName, tmp_path: Path) -> None:
     orig_tree = inventory_store().load_inventory_tree(host_name=tree_name)
     inv_store = InventoryStore(tmp_path)
-    try:
-        inv_store.save_inventory_tree(
-            host_name=HostName("foo"),
-            tree=orig_tree,
-            meta=make_meta(do_archive=False),
-        )
-        loaded_tree = inv_store.load_inventory_tree(host_name=HostName("foo"))
-        assert orig_tree == loaded_tree
-    finally:
-        shutil.rmtree(str(tmp_path))
+    inv_store.save_inventory_tree(
+        host_name=HostName("foo"),
+        tree=orig_tree,
+        meta=make_meta(do_archive=False),
+    )
+    assert inv_store.load_inventory_tree(host_name=HostName("foo")) == orig_tree

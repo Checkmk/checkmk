@@ -119,6 +119,32 @@ def test_agent_output_regexes(capsys: pytest.CaptureFixture[str]) -> None:
     assert "device_duplication" not in captured.out
 
 
+@responses.activate
+def test_agent_handles_connection_error(capsys: pytest.CaptureFixture) -> None:
+    # Crash group 4927: ConnectionError from DNS failure propagates unhandled
+    # instead of returning 1 and writing to stderr
+    args = argparse.Namespace(
+        hostname="agent_mobileiron",
+        key_fields=("entityName",),
+        android_regex=["foo"],
+        ios_regex=["foo"],
+        other_regex=["foo"],
+        username="",
+        password=Secret(""),
+        partition=["test"],
+        proxy=None,
+        debug=False,
+    )
+    responses.get(
+        f"https://{args.hostname}/api/v1/device",
+        body=requests.exceptions.ConnectionError("Failed to resolve 'agent_mobileiron'"),
+    )
+
+    return_code = agent_mobileiron_main(args)
+    assert return_code == 1
+    assert "ConnectionError" in capsys.readouterr().err
+
+
 @pytest.mark.parametrize(
     "exception",
     [

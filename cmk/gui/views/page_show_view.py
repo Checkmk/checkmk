@@ -370,6 +370,16 @@ def _fetch_rows_from_livestatus(view: View, all_active_filters: list[Filter]) ->
     return rows, unfiltered_amount_of_rows
 
 
+def _filter_form_filters(view: View) -> list[Filter]:
+    # The merged context, not the saved one: a filter that a link carried would otherwise be
+    # applied without a form field, and the first submit of the form would drop it.
+    spec = view.spec.copy()
+    spec["context"] = view.context
+    return visuals.filters_of_visual(
+        spec, view.datasource.infos, link_filters=view.datasource.link_filters
+    )
+
+
 def _show_view(
     view_renderer: ABCViewRenderer,
     unfiltered_amount_of_rows: int,
@@ -388,9 +398,7 @@ def _show_view(
     force_checkboxes = view.spec.get("force_checkboxes", False)
     show_checkboxes = force_checkboxes or request.var("show_checkboxes", "0") == "1"
 
-    show_filters = visuals.filters_of_visual(
-        view.spec, view.datasource.infos, link_filters=view.datasource.link_filters
-    )
+    show_filters = _filter_form_filters(view)
 
     # Set browser reload
     if (

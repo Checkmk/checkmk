@@ -6,7 +6,7 @@
 from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Literal, Self
+from typing import Literal
 
 from ._dict_keys import DictKeys
 from .trees import (
@@ -142,45 +142,31 @@ def _encode_as_removed(value: SDValue) -> SDDeltaValue:
     return SDDeltaValue(old=value, new=None)
 
 
-@dataclass(frozen=True, kw_only=True)
-class _DeltaDict:
-    result: Mapping[SDKey, SDDeltaValue]
-    has_changes: bool
+def _compare_pairs(
+    left: Mapping[SDKey, SDValue], right: Mapping[SDKey, SDValue]
+) -> Mapping[SDKey, SDDeltaValue]:
+    compared_keys = DictKeys.compare(left=set(left), right=set(right))
+    return {
+        **{
+            k: SDDeltaValue(old=right[k], new=left[k])
+            for k in compared_keys.both
+            if left[k] != right[k]
+        },
+        **{k: _encode_as_removed(right[k]) for k in compared_keys.only_right},
+        **{k: _encode_as_new(left[k]) for k in compared_keys.only_left},
+    }
 
-    @classmethod
-    def compare(
-        cls, *, left: Mapping[SDKey, SDValue], right: Mapping[SDKey, SDValue], keep_identical: bool
-    ) -> Self:
-        compared_keys = DictKeys.compare(left=set(left), right=set(right))
-        compared_dict: dict[SDKey, SDDeltaValue] = {}
 
-        has_changes = False
-        for key in compared_keys.both:
-            if (left_value := left[key]) != (right_value := right[key]):
-                compared_dict.setdefault(key, SDDeltaValue(old=right_value, new=left_value))
-                has_changes = True
-            elif keep_identical:
-                compared_dict.setdefault(key, SDDeltaValue(old=left_value, new=left_value))
-
-        compared_dict |= {k: _encode_as_removed(right[k]) for k in compared_keys.only_right}
-        compared_dict |= {k: _encode_as_new(left[k]) for k in compared_keys.only_left}
-
-        return cls(
-            result=compared_dict,
-            has_changes=bool(has_changes or compared_keys.only_right or compared_keys.only_left),
-        )
+def _identical_pairs(
+    left: Mapping[SDKey, SDValue], right: Mapping[SDKey, SDValue]
+) -> Mapping[SDKey, SDDeltaValue]:
+    return {k: SDDeltaValue(old=v, new=v) for k, v in left.items() if k in right and right[k] == v}
 
 
 def _compare_attributes(
     left: ImmutableAttributes, right: ImmutableAttributes
 ) -> ImmutableDeltaAttributes:
-    return ImmutableDeltaAttributes(
-        pairs=_DeltaDict.compare(
-            left=left.pairs,
-            right=right.pairs,
-            keep_identical=False,
-        ).result,
-    )
+    return ImmutableDeltaAttributes(pairs=_compare_pairs(left.pairs, right.pairs))
 
 
 def _compare_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableDeltaTable:
@@ -195,14 +181,10 @@ def _compare_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableDel
         rows.append({k: _encode_as_new(v) for k, v in left.rows_by_ident[ident].items()})
 
     for ident in compared_row_idents.both:
-        if (
-            compared_dict_result := _DeltaDict.compare(
-                left=left.rows_by_ident[ident],
-                right=right.rows_by_ident[ident],
-                keep_identical=True,
-            )
-        ).has_changes:
-            rows.append(compared_dict_result.result)
+        left_row = left.rows_by_ident[ident]
+        right_row = right.rows_by_ident[ident]
+        if changed_pairs := _compare_pairs(left_row, right_row):
+            rows.append({**_identical_pairs(left_row, right_row), **changed_pairs})
 
     for ident in compared_row_idents.only_right:
         rows.append({k: _encode_as_removed(v) for k, v in right.rows_by_ident[ident].items()})

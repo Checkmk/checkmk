@@ -67,21 +67,6 @@ class ExperimentalFlagConfig(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="ignore")
 
-    exp_relay_active_checks: Annotated[
-        bool,
-        experimental_field(
-            description=(
-                "Run the relay-supported active checks (check_httpv2, check_cert, "
-                "check_icmp) on the relay for hosts monitored by a relay, including the "
-                "ad-hoc run from the service discovery page. While disabled, active "
-                "checks on relay-monitored hosts are reported as not supported there."
-            ),
-            remove_ticket="CMK-38421",
-            remove_after="3.1.0",
-            owner="pablo.municio@checkmk.com",
-        ),
-    ] = False
-
     exp_ai_assistant: Annotated[
         bool,
         experimental_field(

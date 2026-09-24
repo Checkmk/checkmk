@@ -43,7 +43,6 @@ from cmk.fetchers import (
     PiggybackFetcher,
     PlainFetcherTrigger,
 )
-from cmk.flags import ExperimentalFlagConfig
 from cmk.relay_protocols.tasks import AdHocActiveCheckTask, AdHocSiteStores
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, replace_macros
 from cmk.server_side_calls_backend import load_active_checks
@@ -547,11 +546,6 @@ def _password_check_on(
         "PASSWORD_STORE_SECRET_FILE", str(paths.omd_root / "etc/password_store.secret")
     )
     cmk.utils.password_store.save({"uuid1234": "s3cret"}, pending_secrets_path_site())
-    monkeypatch.setattr(
-        config,
-        "load_experimental_flags",
-        lambda _config_dir: ExperimentalFlagConfig(exp_relay_active_checks=True),
-    )
     automation = _RecordingAutomation()
     automation.execute(
         context, ["my_host", plugin, "Password check"], AgentBasedPlugins.empty(), lr

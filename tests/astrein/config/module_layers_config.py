@@ -457,7 +457,6 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     Component("cmk.base.config"): _allow(
         *PACKAGE_CCC,
-        *PACKAGE_FLAGS,
         *PACKAGE_PLUGIN_APIS,
         *PACKAGE_TRACE,
         "cmk.automations",
@@ -720,7 +719,6 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     Component("cmk.gui.nonfree.ultimate"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_CRYPTO,
-        *PACKAGE_FLAGS,
         *PACKAGE_PLUGIN_APIS,
         *PACKAGE_METRIC_BACKEND,
         *PACKAGE_LIVESTATUS_CLIENT,

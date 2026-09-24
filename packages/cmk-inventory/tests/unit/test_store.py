@@ -5,6 +5,7 @@
 
 import gzip
 import json
+import os
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -484,3 +485,51 @@ def test_save_and_load_real_tree(tree_name: HostName, tmp_path: Path) -> None:
         meta=make_meta(do_archive=False),
     )
     assert inv_store.load_inventory_tree(host_name=HostName("foo")) == orig_tree
+
+
+def test_rename_without_history_reports_only_the_renamed_trees(tmp_path: Path) -> None:
+    cmk.ccc.store.save_text_to_file(
+        tmp_path / "var/check_mk/inventory/old_host_name.json", json.dumps(raw_tree("val"))
+    )
+
+    actions = rename(
+        tmp_path, old_host_name=HostName("old_host_name"), new_host_name=HostName("new_host_name")
+    )
+
+    assert list(actions) == ["inv"]
+
+
+def test_archive_inventory_tree_without_a_tree_archives_nothing(tmp_path: Path) -> None:
+    InventoryStore(tmp_path).archive_inventory_tree(host_name=HostName("hostname"))
+
+    assert not (tmp_path / "var/check_mk/inventory_archive/hostname").exists()
+
+
+def test_archive_inventory_tree_moves_the_tree_dated_by_its_mtime(tmp_path: Path) -> None:
+    tree_file_path = tmp_path / "var/check_mk/inventory/hostname.json"
+    cmk.ccc.store.save_text_to_file(tree_file_path, json.dumps(raw_tree("val")))
+    os.utime(tree_file_path, (123, 123))
+
+    InventoryStore(tmp_path).archive_inventory_tree(host_name=HostName("hostname"))
+
+    assert list((tmp_path / "var/check_mk/inventory_archive/hostname").iterdir()) == [
+        tmp_path / "var/check_mk/inventory_archive/hostname/123.json"
+    ]
+
+
+def test_load_previous_inventory_tree_prefers_the_current_tree(tmp_path: Path) -> None:
+    cmk.ccc.store.save_text_to_file(
+        tmp_path / "var/check_mk/inventory/hostname.json", json.dumps(raw_tree("current"))
+    )
+    cmk.ccc.store.save_text_to_file(
+        tmp_path / "var/check_mk/inventory_archive/hostname/123.json",
+        json.dumps(raw_tree("archived")),
+    )
+
+    tree = InventoryStore(tmp_path).load_previous_inventory_tree(host_name=HostName("hostname"))
+
+    assert tree == deserialize_tree(raw_tree("current"))
+
+
+def test_load_previous_inventory_tree_without_any_tree_is_empty(tmp_path: Path) -> None:
+    assert not InventoryStore(tmp_path).load_previous_inventory_tree(host_name=HostName("hostname"))

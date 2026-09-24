@@ -55,6 +55,11 @@ export interface EffectiveWidgetFilterContext extends WidgetFilterContext {
 export type FilterHTTPVars = Record<string, string>
 export type VisualContext = Record<string, FilterHTTPVars>
 
+export interface ComputedWidgetResponse<T> {
+  domainType: 'widget-compute'
+  value: T
+}
+
 export type SavedWidgetContent = components['schemas']['SavedWidgetContent']
 export type WidgetSource<C> =
   | { type: 'explicit'; content: C; context: VisualContext }

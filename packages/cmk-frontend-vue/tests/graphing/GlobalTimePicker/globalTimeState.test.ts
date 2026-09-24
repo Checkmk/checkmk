@@ -279,6 +279,22 @@ describe('carrying the window forward', () => {
     expect(endsNow(caughtUp, 0)).toBe(true)
     expect(durationSeconds(caughtUp)).toBe(durationSeconds(staleWindow))
   })
+
+  test('the window moves in the same update as the tick, so a widget reads the two as one refresh', async () => {
+    const { activeTimeRange, setActiveTimeRange } = useGlobalTimeRange()
+    const { refreshTick, resumeRefresh } = useGlobalRefresh()
+    setActiveTimeRange(rollingRange(4 * 3600), 'time_picker')
+    resumeRefresh()
+    await nextTick()
+    const updates: number[] = []
+    const stop = watch([activeTimeRange, refreshTick], ([, tick]) => updates.push(tick))
+
+    vi.advanceTimersByTime(oneIntervalMs())
+    await nextTick()
+    stop()
+
+    expect(updates).toHaveLength(1)
+  })
 })
 
 describe('a page whose content the refresh re-fetches', () => {

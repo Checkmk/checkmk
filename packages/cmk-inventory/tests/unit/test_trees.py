@@ -515,3 +515,68 @@ def test_update_from_previous_2() -> None:
         }
     }
     assert current_tree.get_rows(()) == [{"c2": "C2: only prev", "c3": "C3: only cur", "kc": "KC"}]
+
+
+def _tree_with(
+    *,
+    path: SDPath = (),
+    pairs: Sequence[Mapping[SDKey, str]] = (),
+    rows: Sequence[Mapping[SDKey, str]] = (),
+) -> MutableTree:
+    tree = MutableTree()
+    tree.add(path=path, pairs=pairs, key_columns=[SDKey("key")], rows=rows)
+    return tree
+
+
+_UNEQUAL_TREES = [
+    pytest.param(
+        _tree_with(pairs=[{SDKey("key"): "left"}]),
+        _tree_with(pairs=[{SDKey("key"): "right"}]),
+        id="different-attributes",
+    ),
+    pytest.param(
+        _tree_with(rows=[{SDKey("key"): "left"}]),
+        _tree_with(),
+        id="row-only-left",
+    ),
+    pytest.param(
+        _tree_with(),
+        _tree_with(rows=[{SDKey("key"): "right"}]),
+        id="row-only-right",
+    ),
+    pytest.param(
+        _tree_with(path=(SDNodeName("node"),), pairs=[{SDKey("key"): "value"}]),
+        _tree_with(),
+        id="node-only-left",
+    ),
+    pytest.param(
+        _tree_with(),
+        _tree_with(path=(SDNodeName("node"),), pairs=[{SDKey("key"): "value"}]),
+        id="node-only-right",
+    ),
+]
+
+
+@pytest.mark.parametrize("left, right", _UNEQUAL_TREES)
+def test_mutable_trees_with_different_content_are_unequal(
+    left: MutableTree, right: MutableTree
+) -> None:
+    assert left != right
+
+
+@pytest.mark.parametrize("left, right", _UNEQUAL_TREES)
+def test_immutable_trees_with_different_content_are_unequal(
+    left: MutableTree, right: MutableTree
+) -> None:
+    assert immutable_tree(left) != immutable_tree(right)
+
+
+@pytest.mark.parametrize(
+    "tree",
+    [
+        pytest.param(MutableTree(), id="mutable"),
+        pytest.param(ImmutableTree(), id="immutable"),
+    ],
+)
+def test_a_tree_is_unequal_to_a_non_tree(tree: MutableTree | ImmutableTree) -> None:
+    assert tree != "tree"

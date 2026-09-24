@@ -87,7 +87,7 @@ _FLAT_DEFAULTS: AuthoringDefaults = {
     "hover_template": None,
     "context_template": None,
     # New-map defaults. ``default_backend_id`` is resolved site-aware in
-    # ``_flatten`` (the seeded connection is ``cmk_<site>``); the empty base here
+    # ``_flatten`` (the default connection is ``cmk_<site>``); the empty base here
     # is always overridden.
     "default_backend_id": "",
     "default_map_type": "static",

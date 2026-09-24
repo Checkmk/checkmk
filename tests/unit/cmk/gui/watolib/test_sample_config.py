@@ -29,7 +29,6 @@ def test_registered_generators() -> None:
         "create_registration_automation_user",
         "builtin_host_labels",
         "ec_sample_rule_pack",
-        "maps_connections",
     ]
 
     assert sorted(sample_config_generator_registry.keys()) == sorted(expected_generators)
@@ -45,7 +44,6 @@ def test_get_sorted_generators() -> None:
         "create_initial_admin_user",
         "create_registration_automation_user",
         "builtin_host_labels",
-        "maps_connections",
     ]
 
     assert {g.ident() for g in sample_config_generator_registry.get_generators()} == set(expected)

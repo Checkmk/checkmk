@@ -28,10 +28,9 @@ logger = logging.getLogger(__name__)
 def _local_connection() -> ConnectionConfig:
     """A built-in connection to the site's own Livestatus socket.
 
-    Used when no connection is configured in WATO yet, so maps work out of the
-    box. On a fresh site the SampleConfigGenerator pre-seeds an equivalent entry
-    into ``maps_connections``; this is the daemon-side safety net (the daemon
-    cannot write config).
+    Used when ``maps_connections`` holds no connection: the GUI's factory default
+    describes the same connection but is never written to the file this daemon
+    reads.
     """
     return ConnectionConfig(
         id=f"cmk_{settings.checkmk_site}",

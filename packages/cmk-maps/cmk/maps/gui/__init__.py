@@ -26,7 +26,6 @@ from cmk.gui.watolib.config_sync import (
     ReplicationPathRegistry,
     ReplicationPathType,
 )
-from cmk.gui.watolib.sample_config import SampleConfigGeneratorRegistry
 from cmk.maps.gui import (
     _config_variables,
     _folders,
@@ -37,7 +36,6 @@ from cmk.maps.gui import (
 )
 from cmk.maps.gui._config_domain import ConfigDomainMaps
 from cmk.maps.gui._pages import ShowMapsPage
-from cmk.maps.gui._sample_config import SampleConfigGeneratorMapsConnections
 from cmk.maps.gui.pagetype import MapPage
 
 __all__ = ["register"]
@@ -51,7 +49,6 @@ def register(
     config_variable_group_registry: ConfigVariableGroupRegistry,
     config_variable_registry: ConfigVariableRegistry,
     replication_path_registry: ReplicationPathRegistry,
-    sample_config_generator_registry: SampleConfigGeneratorRegistry,
 ) -> None:
     _permissions.register(permission_section_registry, permission_registry)
     # No page_handlers on MapPage, so declare() registers no generic pagetype
@@ -75,7 +72,6 @@ def register(
             site_path=str(maps_domain.config_dir().relative_to(cmk.utils.paths.omd_root)),
         )
     )
-    sample_config_generator_registry.register(SampleConfigGeneratorMapsConnections)
     # Both write a file the daemon consumes instead of re-implementing GUI logic:
     # the Livestatus site specs and the SETUP-folder skeleton.
     _sites.register()

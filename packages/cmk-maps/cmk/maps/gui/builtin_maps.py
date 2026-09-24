@@ -42,7 +42,7 @@ def _builtin_map(name: MapName, alias: str, view: MapView, sort_order: int) -> M
         # keys live state by it).
         "name": name,
         "alias": alias,
-        # The local-site connection the sample config seeds (the daemon falls
+        # The local-site default connection (the daemon falls
         # back to the local site for any connection id it cannot resolve).
         "connection_id": f"cmk_{omd_site()}",
         "icon_size": None,

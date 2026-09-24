@@ -1304,10 +1304,9 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
     "login_screen": {},
     "maps_connections": [],
     "maps_map_defaults": {
-        # No connections configured in the test context, so the default
-        # connection falls back to the free-text variant, see
-        # cmk.maps.gui.form_specs.global_settings._default_connection_element.
-        "default_backend_id": "",
+        # The site's own connection is the factory default and thereby the only
+        # choice, see cmk.maps.gui._config_domain._connections_default.
+        "default_backend_id": "cmk_NO_SITE",
         "default_map_type": ("static", None),
         "default_render_mode": "default",
     },

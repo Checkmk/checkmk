@@ -14,6 +14,7 @@ resolve under ``omd_root`` for the registration to be valid.
 """
 
 import cmk.utils.paths
+from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.maps.gui._config_domain import (
     _object_defaults_factory_value,
     CONFIG_VAR_CONNECTIONS,
@@ -23,6 +24,7 @@ from cmk.maps.gui._config_domain import (
     CONFIG_VAR_STATE_REFRESH_INTERVAL,
     ConfigDomainMaps,
 )
+from cmk.maps.gui._config_variables import connections_form_spec
 
 
 def test_daemon_domain_requests_sync_so_remote_daemons_get_config() -> None:
@@ -36,7 +38,7 @@ def test_daemon_domain_requests_sync_so_remote_daemons_get_config() -> None:
 
 
 def test_settings_are_not_listed_in_the_central_global_settings() -> None:
-    # Maps owns its settings pages (the two curated modes), like dcd.
+    # Maps owns its settings page, like the Event Console.
     assert ConfigDomainMaps.in_global_settings is False
 
 
@@ -62,19 +64,44 @@ def test_default_globals_carry_daemon_and_authoring_defaults(request_context: No
     # All Maps settings live in the one feature domain (like dcd); the daemon reads
     # only the runtime knobs and ignores the GUI-only authoring defaults in the file.
     defaults = ConfigDomainMaps().default_globals()
-    # No connection out of the box — the daemon synthesises a local-site one when
-    # the list is empty, so maps work unconfigured.
-    assert defaults[CONFIG_VAR_CONNECTIONS] == []
     assert defaults[CONFIG_VAR_LOG_LEVEL] == "INFO"
     assert defaults[CONFIG_VAR_STATE_REFRESH_INTERVAL] == 5
     # The GUI-only authoring defaults share the domain.
     assert CONFIG_VAR_MAP_DEFAULTS in defaults
     assert CONFIG_VAR_OBJECT_DEFAULTS in defaults
-    # The map default names the seeded local connection (cmk_<site>) directly.
+    # The map default names the default local connection (cmk_<site>) directly.
     # default_globals() is also reached from non-request activation paths, so it
     # must stay a pure factory default — it must NOT read the connection list
     # from disk to synthesise this.
     assert defaults[CONFIG_VAR_MAP_DEFAULTS]["default_backend_id"].startswith("cmk_")
+
+
+def test_every_site_starts_with_a_connection_to_its_own_livestatus(
+    request_context: None,  # noqa: ARG001
+) -> None:
+    defaults = ConfigDomainMaps().default_globals()
+
+    (connection,) = defaults[CONFIG_VAR_CONNECTIONS]
+
+    assert connection["id"] == defaults[CONFIG_VAR_MAP_DEFAULTS]["default_backend_id"]
+    assert connection["type"][1]["target"] == (
+        "socket",
+        {"socket_path": str(cmk.utils.paths.omd_root / "tmp" / "run" / "live")},
+    )
+
+
+def test_the_default_connection_is_a_valid_connections_value(
+    request_context: None,  # noqa: ARG001
+) -> None:
+    visitor = get_visitor(
+        connections_form_spec(), VisitorOptions(migrate_values=True, mask_values=False)
+    )
+
+    messages = visitor.validate(
+        RawDiskData(ConfigDomainMaps().default_globals()[CONFIG_VAR_CONNECTIONS])
+    )
+
+    assert messages == []
 
 
 def test_object_defaults_form_spec_is_rendered_once(request_context: None) -> None:  # noqa: ARG001

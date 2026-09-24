@@ -29,7 +29,6 @@ def _register(ctx: RegistrationContext) -> None:
         ctx.config_variable_group_registry,
         ctx.config_variable_registry,
         ctx.replication_path_registry,
-        ctx.sample_config_generator_registry,
     )
     maps_rest_api.register(
         versioned_endpoint_registry=ctx.versioned_endpoint_registry,

@@ -387,7 +387,7 @@ class MapsAuthoringSettings:
     )
     default_backend_id: str = api_field(
         description="Connection a new map is bound to. Falls back to the local site's "
-        "seeded connection.",
+        "default connection.",
         example="cmk_heute",
     )
     default_map_type: str = api_field(description="Type a new map is created as.", example="static")

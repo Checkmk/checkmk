@@ -12,9 +12,6 @@ from cmk.ccc.version import Edition
 from cmk.events.notify_types import HostEventType, ServiceEventType
 from cmk.gui.config import active_config
 from cmk.gui.form_specs.unstable import (
-    Autocompleter,
-    AutocompleterData,
-    AutocompleterParams,
     CascadingSingleChoiceExtended,
     CommentTextArea,
     ConditionChoices,
@@ -100,6 +97,9 @@ from cmk.gui.watolib.user_scripts import load_notification_scripts, Notification
 from cmk.gui.watolib.users import notification_script_choices
 from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.internal.form_specs import (
+    Autocompleter,
+    AutocompleterData,
+    AutocompleterParams,
     DictionaryExtended,
     ListExtended,
     ListOfStrings,

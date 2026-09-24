@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import cast, override
+from typing import override
 
 from cmk.gui.i18n import _
 from cmk.rulesets.internal.form_specs import StringAutocompleter
 from cmk.rulesets.v1.form_specs import FieldSize
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
+from ._autocompleter import to_vue_autocompleter
 from ._base import FormSpecVisitor
 from ._type_defs import DefaultValue, IncomingData, InvalidValue, RawFrontendData
 from ._utils import (
@@ -61,8 +62,10 @@ class StringVisitor(FormSpecVisitor[StringAutocompleter, _ParsedValueModel, _Fal
                 validators=build_vue_validators(self._validators()),
                 input_hint=compute_input_hint(self.form_spec.prefill),
                 field_size=field_size_translator(self.form_spec.field_size),
-                autocompleter=cast(
-                    shared_type_defs.Autocompleter | None, self.form_spec.autocompleter
+                autocompleter=(
+                    to_vue_autocompleter(self.form_spec.autocompleter)
+                    if self.form_spec.autocompleter
+                    else None
                 ),
             ),
             (

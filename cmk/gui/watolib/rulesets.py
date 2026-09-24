@@ -37,13 +37,9 @@ from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.form_specs import DEFAULT_VALUE, get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.form_specs.generators.config_host_name import create_config_host_name
 from cmk.gui.form_specs.unstable import (
-    Autocompleter,
-    AutocompleterData,
-    AutocompleterParams,
     BinaryConditionChoices,
     CommentTextArea,
     ConditionChoices,
-    FetchMethod,
     not_empty,
 )
 from cmk.gui.form_specs.unstable.catalog import Catalog, Locked, Topic, TopicElement
@@ -94,6 +90,12 @@ from cmk.ruleset_matcher.matcher import (
     TagConditionNE,
 )
 from cmk.ruleset_matcher.tags import AuxTag, TagGroup, TagGroupID, TagID
+from cmk.rulesets.internal.form_specs import (
+    Autocompleter,
+    AutocompleterData,
+    AutocompleterParams,
+    FetchMethod,
+)
 from cmk.rulesets.internal.form_specs import (
     ListOfStrings as ListOfStringsAPI,
 )

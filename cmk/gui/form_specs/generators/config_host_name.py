@@ -6,14 +6,14 @@
 from collections.abc import Callable, Sequence
 from typing import TypeVar
 
-from cmk.rulesets.internal.form_specs import StringAutocompleter
-from cmk.rulesets.v1 import Help, Title
-from cmk.rulesets.v1.form_specs import InputHint, Prefill
-from cmk.shared_typing.vue_formspec_components import (
+from cmk.rulesets.internal.form_specs import (
     Autocompleter,
     AutocompleterData,
     AutocompleterParams,
+    StringAutocompleter,
 )
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import InputHint, Prefill
 
 T = TypeVar("T")
 

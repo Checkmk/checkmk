@@ -6,7 +6,7 @@
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import override, Protocol, runtime_checkable
+from typing import override
 
 from cmk.rulesets.v1 import Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
@@ -22,46 +22,34 @@ from cmk.rulesets.v1.form_specs import (
     Prefill,
 )
 
-# Note: We use Protocols here instead of importing from cmk.shared_typing
-# to avoid module layer violations. These Protocols are compatible with
-# the dataclasses defined in cmk.shared_typing.vue_formspec_components.
-# When using StringAutocompleter, pass an Autocompleter instance from
-# cmk.shared_typing.vue_formspec_components.
+
+class FetchMethod(StrEnum):
+    ajax_vs_autocomplete = "ajax_vs_autocomplete"
+    rest_autocomplete = "rest_autocomplete"
 
 
-class AutocompleterParams(Protocol):
-    @property
-    def show_independent_of_context(self) -> bool | None: ...
-    @property
-    def strict(self) -> bool | None: ...
-    @property
-    def escape_regex(self) -> bool | None: ...
-    @property
-    def world(self) -> str | None: ...
-    @property
-    def context(self) -> Mapping[str, object] | None: ...
-    @property
-    def input_hint(self) -> str | None: ...
+@dataclass(frozen=True, kw_only=True)
+class AutocompleterParams:
+    show_independent_of_context: bool | None = None
+    strict: bool | None = None
+    escape_regex: bool | None = None
+    literal_search: bool | None = None
+    world: str | None = None
+    object_type: str | None = None
+    context: Mapping[str, object] | None = None
+    input_hint: str | None = None
 
 
-class AutocompleterData(Protocol):
-    @property
-    def ident(self) -> str: ...
-    @property
-    def params(self) -> AutocompleterParams: ...
+@dataclass(frozen=True, kw_only=True)
+class AutocompleterData:
+    ident: str
+    params: AutocompleterParams
 
 
-class FetchMethod(Protocol):
-    @property
-    def value(self) -> str: ...
-
-
-@runtime_checkable
-class Autocompleter(Protocol):
-    @property
-    def data(self) -> AutocompleterData: ...
-    @property
-    def fetch_method(self) -> FetchMethod | None: ...
+@dataclass(frozen=True, kw_only=True)
+class Autocompleter:
+    data: AutocompleterData
+    fetch_method: FetchMethod = FetchMethod.ajax_vs_autocomplete
 
 
 class DictionaryGroupLayout(StrEnum):

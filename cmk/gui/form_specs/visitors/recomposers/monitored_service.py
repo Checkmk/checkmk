@@ -8,14 +8,14 @@
 from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.rulesets.internal.form_specs import StringAutocompleter
-from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import FormSpec, InputHint, MonitoredService
-from cmk.shared_typing.vue_formspec_components import (
+from cmk.rulesets.internal.form_specs import (
     Autocompleter,
     AutocompleterData,
     AutocompleterParams,
+    StringAutocompleter,
 )
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import FormSpec, InputHint, MonitoredService
 
 
 def recompose(form_spec: FormSpec[Any]) -> StringAutocompleter:

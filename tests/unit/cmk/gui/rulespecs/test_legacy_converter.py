@@ -16,11 +16,6 @@ import cmk.rulesets.v1 as api_v1
 from cmk.ccc.version import Edition
 from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.unstable import (
-    Autocompleter,
-    AutocompleterData,
-    AutocompleterParams,
-)
 from cmk.gui.form_specs.unstable.legacy_converter import Tuple
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.rule_specs.legacy_converter import (
@@ -39,6 +34,9 @@ from cmk.gui.watolib import timeperiods as legacy_timeperiods
 from cmk.gui.watolib.password_store import IndividualOrStoredPassword
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.rulesets.internal.form_specs import (
+    Autocompleter,
+    AutocompleterData,
+    AutocompleterParams,
     OAuth2Connection,
     StringAutocompleter,
 )

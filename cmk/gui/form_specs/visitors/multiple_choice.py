@@ -16,6 +16,7 @@ from cmk.rulesets.internal.form_specs import (
 )
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
+from ._autocompleter import to_vue_autocompleter
 from ._base import FormSpecVisitor
 from ._type_defs import (
     DefaultValue,
@@ -117,7 +118,7 @@ class MultipleChoiceVisitor(
 
         if isinstance(self.form_spec.elements, Autocompleter):
             elements = []
-            autocompleter = _to_vue_autocompleter(self.form_spec.elements)
+            autocompleter = to_vue_autocompleter(self.form_spec.elements)
         else:
             elements = [
                 shared_type_defs.MultipleChoiceElement(
@@ -180,22 +181,3 @@ class MultipleChoiceVisitor(
         # str() coerces str subclasses (e.g. StrEnum members supplied as
         # element.name) back to a plain str so disk repr() round-trips cleanly.
         return [str(v["name"]) for v in parsed_value]
-
-
-def _to_vue_autocompleter(autocompleter: Autocompleter) -> shared_type_defs.Autocompleter:
-    return shared_type_defs.Autocompleter(
-        data=shared_type_defs.AutocompleterData(
-            ident=autocompleter.data.ident,
-            params=shared_type_defs.AutocompleterParams(
-                show_independent_of_context=autocompleter.data.params.show_independent_of_context,
-                strict=autocompleter.data.params.strict,
-                escape_regex=autocompleter.data.params.escape_regex,
-                world=autocompleter.data.params.world,
-                context=autocompleter.data.params.context,
-                input_hint=autocompleter.data.params.input_hint,
-            ),
-        ),
-        fetch_method=shared_type_defs.FetchMethod(autocompleter.fetch_method.value)
-        if autocompleter.fetch_method
-        else None,
-    )

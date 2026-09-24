@@ -3,21 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import gzip
-import io
 from pathlib import Path
 
 import cmk.ccc.store
-from cmk.inventory.serialization import SDRawTree
-from cmk.inventory.store import make_meta, SDMetaAndRawTree
 from cmk.inventory.transformation.tree_files import (
     show_transformation_results,
     transform_inventory_trees,
     TransformationResult,
     TransformationResultsStore,
 )
-from cmk.inventory.trees import SDKey, SDNodeName
 
+from ._fixtures import gzipped_repr, raw_tree
 from ._logger import null_logger
 
 
@@ -31,47 +27,10 @@ def test_transformation_nothing_to_do(tmp_path: Path) -> None:
     )
 
 
-def _raw_tree() -> SDRawTree:
-    return SDRawTree(
-        Attributes={"Pairs": {SDKey("key"): "val"}},
-        Table={
-            "KeyColumns": [SDKey("col1")],
-            "Rows": [
-                {SDKey("col1"): "val11", SDKey("col2"): "val12"},
-                {SDKey("col1"): "val21", SDKey("col2"): "val22"},
-            ],
-        },
-        Nodes={
-            SDNodeName("node"): SDRawTree(
-                Attributes={"Pairs": {SDKey("nkey"): "nval"}},
-                Table={
-                    "KeyColumns": [SDKey("ncol1")],
-                    "Rows": [
-                        {SDKey("ncol1"): "nval11", SDKey("ncol2"): "nval12"},
-                        {SDKey("ncol1"): "nval21", SDKey("ncol2"): "nval22"},
-                    ],
-                },
-                Nodes={},
-            ),
-        },
-    )
-
-
-def _gzipped_repr(raw_tree: SDRawTree) -> bytes:
-    buf = io.BytesIO()
-    with gzip.GzipFile(fileobj=buf, mode="wb") as f:
-        f.write(
-            (
-                repr(SDMetaAndRawTree(meta=make_meta(do_archive=False), raw_tree=raw_tree)) + "\n"
-            ).encode("utf-8")
-        )
-    return buf.getvalue()
-
-
 def test_transform_inventory_tree(tmp_path: Path) -> None:
-    raw_tree = _raw_tree()
-    gzipped = _gzipped_repr(raw_tree)
-    cmk.ccc.store.save_object_to_file(tmp_path / "var/check_mk/inventory/hostname", raw_tree)
+    tree = raw_tree("val")
+    gzipped = gzipped_repr(tree)
+    cmk.ccc.store.save_object_to_file(tmp_path / "var/check_mk/inventory/hostname", tree)
     cmk.ccc.store.save_bytes_to_file(tmp_path / "var/check_mk/inventory/hostname.gz", gzipped)
 
     transform_inventory_trees(
@@ -89,8 +48,8 @@ def test_transform_inventory_tree(tmp_path: Path) -> None:
 
 
 def test_transform_status_data_tree(tmp_path: Path) -> None:
-    raw_tree = _raw_tree()
-    cmk.ccc.store.save_object_to_file(tmp_path / "tmp/check_mk/status_data/hostname", raw_tree)
+    tree = raw_tree("val")
+    cmk.ccc.store.save_object_to_file(tmp_path / "tmp/check_mk/status_data/hostname", tree)
 
     transform_inventory_trees(
         logger=null_logger(),
@@ -105,9 +64,9 @@ def test_transform_status_data_tree(tmp_path: Path) -> None:
 
 
 def test_transform_archive_tree(tmp_path: Path) -> None:
-    raw_tree = _raw_tree()
+    tree = raw_tree("val")
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "var/check_mk/inventory_archive/hostname/123", raw_tree
+        tmp_path / "var/check_mk/inventory_archive/hostname/123", tree
     )
 
     transform_inventory_trees(
@@ -123,9 +82,9 @@ def test_transform_archive_tree(tmp_path: Path) -> None:
 
 
 def test_transform_delta_cache_tree(tmp_path: Path) -> None:
-    raw_tree = _raw_tree()
+    tree = raw_tree("val")
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "var/check_mk/inventory_delta_cache/hostname/123_456", raw_tree
+        tmp_path / "var/check_mk/inventory_delta_cache/hostname/123_456", tree
     )
 
     transform_inventory_trees(
@@ -152,7 +111,7 @@ def test_transformation_results_store_reads_back_what_it_saved(tmp_path: Path) -
 
 
 def test_show_transformation_results_leaves_the_legacy_tree(tmp_path: Path) -> None:
-    cmk.ccc.store.save_object_to_file(tmp_path / "var/check_mk/inventory/hostname", _raw_tree())
+    cmk.ccc.store.save_object_to_file(tmp_path / "var/check_mk/inventory/hostname", raw_tree("val"))
 
     show_transformation_results(
         omd_root=tmp_path,

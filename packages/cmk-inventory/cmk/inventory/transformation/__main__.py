@@ -45,7 +45,7 @@ def _parse_arguments(argv: Sequence[str]) -> Namespace:
     return parser.parse_args(args=argv[1:])
 
 
-def _collect_hosts() -> Sequence[str]:
+def _collect_hosts(logger: logging.Logger) -> Sequence[str]:
     try:
         return list(
             set(
@@ -70,7 +70,7 @@ def main() -> int:
             show_results=args.show_results,
             bundle_length=args.bundle_length,
             filter_host_names=args.host_name,
-            all_host_names=_collect_hosts(),
+            all_host_names=_collect_hosts(logger),
         )
     except Exception:
         logger.exception("Failed to transform inventory trees")

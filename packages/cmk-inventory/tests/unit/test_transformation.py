@@ -7,6 +7,8 @@ import json
 from collections.abc import Sequence
 from pathlib import Path
 
+import pytest
+
 import cmk.ccc.store
 from cmk.inventory.transformation.tree_files import (
     show_transformation_results,
@@ -194,3 +196,24 @@ def test_a_stray_file_in_the_archive_directory_is_skipped(tmp_path: Path) -> Non
     )
 
     assert (tmp_path / "var/check_mk/inventory_archive/hostname/123.json").exists()
+
+
+@pytest.mark.parametrize(
+    "size, rendered_size",
+    [
+        pytest.param(500, "500 B", id="bytes"),
+        pytest.param(1_500, "1.50 KB", id="kilobytes"),
+        pytest.param(1_500_000, "1.50 MB", id="megabytes"),
+        pytest.param(1_500_000_000, "1.50 GB", id="gigabytes"),
+    ],
+)
+def test_show_transformation_results_renders_the_size(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], size: int, rendered_size: str
+) -> None:
+    TransformationResultsStore(tmp_path).save(
+        [TransformationResult(host_name="hostname", path="a/path", duration=1.5, size=size)]
+    )
+
+    show_transformation_results(omd_root=tmp_path, filter_host_names=[], all_host_names=[])
+
+    assert f"Size: {rendered_size}\n" in capsys.readouterr().out

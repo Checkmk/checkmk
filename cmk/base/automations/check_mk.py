@@ -646,10 +646,6 @@ def _automation_discovery_preview(
         # note (mo): The behavior of repeated lookups changed. The above _might_ not be true anymore.
         else ip_address_of_with_fallback(host_name, ip_family)
     )
-    if ip_address is not None and ip_lookup.is_fallback_ip(ip_address):
-        # A failed lookup must not abort the preview; the sources that need no
-        # address are still fetchable.  See CMK-38939.
-        ip_address = None
     return _get_discovery_preview(
         host_name,
         ip_lookup_config.default_address_family,

@@ -533,3 +533,33 @@ def test_load_previous_inventory_tree_prefers_the_current_tree(tmp_path: Path) -
 
 def test_load_previous_inventory_tree_without_any_tree_is_empty(tmp_path: Path) -> None:
     assert not InventoryStore(tmp_path).load_previous_inventory_tree(host_name=HostName("hostname"))
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        pytest.param(["Attributes", "Table", "Nodes"], id="no-dict"),
+        pytest.param({"meta": "1", "raw_tree": {}}, id="meta-no-dict"),
+        pytest.param(
+            {"meta": {"version": 1, "do_archive": True}, "raw_tree": {}}, id="version-no-str"
+        ),
+        pytest.param(
+            {"meta": {"version": "1", "do_archive": 1}, "raw_tree": {}}, id="do-archive-no-bool"
+        ),
+        pytest.param(
+            {"meta": {"version": "1", "do_archive": True}, "raw_tree": []}, id="raw-tree-no-dict"
+        ),
+    ],
+)
+def test_parse_from_gzipped_rejects_a_malformed_tree(raw: object) -> None:
+    with pytest.raises(TypeError):
+        parse_from_gzipped(gzip.compress(json.dumps(raw).encode()))
+
+
+def test_parse_from_gzipped_rejects_an_unknown_version() -> None:
+    with pytest.raises(ValueError):
+        parse_from_gzipped(
+            gzip.compress(
+                json.dumps({"meta": {"version": "2", "do_archive": True}, "raw_tree": {}}).encode()
+            )
+        )

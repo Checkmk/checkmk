@@ -123,3 +123,21 @@ def test_parse_delta_cache_timestamps_without_a_previous_tree() -> None:
 def test_parse_delta_cache_timestamps_of_an_unknown_file() -> None:
     with pytest.raises(ValueError):
         parse_delta_cache_timestamps(Path("/var/check_mk/inventory_delta_cache/hostname/2.json"))
+
+
+def test_tree_path_rejects_a_path_without_json_suffix() -> None:
+    with pytest.raises(ValueError):
+        TreePath(path=Path("hostname.gz"), legacy=Path("hostname"))
+
+
+@pytest.mark.parametrize(
+    "path, legacy",
+    [
+        pytest.param(Path("hostname.json"), Path("hostname.gz"), id="path-not-gzipped"),
+        pytest.param(Path("hostname.gz"), Path("hostname.gz"), id="path-without-json"),
+        pytest.param(Path("hostname.json.gz"), Path("hostname"), id="legacy-not-gzipped"),
+    ],
+)
+def test_tree_path_gz_rejects_a_misnamed_path(path: Path, legacy: Path) -> None:
+    with pytest.raises(ValueError):
+        TreePathGz(path=path, legacy=legacy)

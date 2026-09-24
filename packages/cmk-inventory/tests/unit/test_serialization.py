@@ -395,3 +395,17 @@ def test_deserialize_delta_tree_with_attributes_key() -> None:
     delta_tree = deserialize_delta_tree(raw_delta_tree)
     assert delta_tree.attributes.pairs[SDKey("k")].old is None
     assert delta_tree.attributes.pairs[SDKey("k")].new == "v"
+
+
+def test_deserialize_tree_rejects_a_raw_tree_that_is_no_dict() -> None:
+    with pytest.raises(TypeError):
+        deserialize_tree(["Attributes", "Table", "Nodes"])
+
+
+def test_legacy_tree_skips_an_empty_list() -> None:
+    assert deserialize_tree({"empty": [], "attr": "value"}).attributes.pairs == {"attr": "value"}
+
+
+def test_legacy_tree_rejects_an_unsupported_value() -> None:
+    with pytest.raises(TypeError):
+        deserialize_tree({"attr": ("tuple", "value")})

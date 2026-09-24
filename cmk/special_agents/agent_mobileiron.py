@@ -311,6 +311,7 @@ def agent_mobileiron_main(args: Args) -> int:
                     )
     except (
         requests.Timeout,
+        requests.exceptions.ConnectionError,
         requests.exceptions.SSLError,
         requests.exceptions.HTTPError,
         requests.exceptions.JSONDecodeError,

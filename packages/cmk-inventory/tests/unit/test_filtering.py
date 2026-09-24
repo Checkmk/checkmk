@@ -283,7 +283,6 @@ def test_filter_tree_mixed() -> None:
 @pytest.mark.parametrize(
     "entry, expected_filter_choice",
     [
-        # Tuple format
         (
             ".path.to.node.",
             SDFilterChoice(
@@ -332,7 +331,6 @@ def test__make_filter_choices_from_api_request_paths(
     "filters, unavail",
     [
         (
-            # container                   table                    attributes
             [
                 SDFilterChoice(
                     path=(SDNodeName("hardware"), SDNodeName("components")),

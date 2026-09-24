@@ -314,7 +314,6 @@ def test_save_inventory_tree_writes_the_meta(tmp_path: Path, do_archive: bool) -
     with (tmp_path / "var/check_mk/inventory/heute.json.gz").open("rb") as f:
         content = f.read()
 
-    # Similiar to InventoryUpdater:
     meta_and_raw_tree = parse_from_gzipped(content)
     assert meta_and_raw_tree["meta"]["version"] == "1"
     assert meta_and_raw_tree["meta"]["do_archive"] is do_archive

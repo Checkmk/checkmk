@@ -288,37 +288,6 @@ def test_legacy_tree() -> None:
             "table": [{"col": "value"}],
         },
     }
-    # Object structure:
-    # {
-    #     'path-to': {
-    #         'idx-node': {
-    #             '0': {
-    #                 'idx-attr': 'value',
-    #                 'idx-sub-idx-node': {
-    #                     '0': {
-    #                         'bar-node': {
-    #                             'bar-attr': 'value'
-    #                         }
-    #                     }
-    #                 },
-    #                 'idx-sub-node': {
-    #                     'foo-node': {
-    #                         'foo-attr': 'value'
-    #                     }
-    #                 },
-    #                 'idx-table': [{
-    #                     'idx-col': 'value'
-    #                 }]
-    #             }
-    #         },
-    #         'node': {
-    #             'attr': 'value'
-    #         },
-    #         'table': [{
-    #             'col': 'value'
-    #         }]
-    #     }
-    # }
 
     tree = deserialize_tree(raw_tree)
 
@@ -418,15 +387,6 @@ def test_serialize_retention_interval(
 
 
 def test_deserialize_delta_tree_with_attributes_key() -> None:
-    """Regression test for crash groups 3652/3629.
-
-    The old ImmutableDeltaTree._deserialize class method accessed raw_tree["Attributes"]
-    which raised KeyError when old cached delta tree files lacked that key.  That class
-    method was removed in favour of the standalone deserialize_delta_tree() function which
-    is the sole public entry point.  The current serialisation always produces an
-    "Attributes" key, so roundtripping through serialize/deserialize must never raise
-    KeyError.
-    """
     raw_delta_tree = SDRawDeltaTree(
         Attributes={"Pairs": {SDKey("k"): (None, "v")}},
         Table={},

@@ -50,14 +50,6 @@ def test_load_history(tmp_path: Path) -> None:
 
 
 def test_load_history_only_from_archive_files(tmp_path: Path) -> None:
-    """Regression test for crash groups 3652/3629.
-
-    The former _CachedDeltaTreeLoader.get_cached_entry() code path tried to deserialise
-    old delta-cache files via ImmutableDeltaTree.deserialize() which raised
-    KeyError: Attributes for pre-WK-18319 files.  That class and method were removed by
-    WK-18319 which also introduced HistoryArchivePath so that history entries can be
-    computed directly from archive trees without requiring a pre-existing delta cache.
-    """
     host_name = HostName("hostname")
     for idx in range(3):
         tree = raw_tree(f"val-{idx}")
@@ -65,7 +57,6 @@ def test_load_history_only_from_archive_files(tmp_path: Path) -> None:
             tmp_path / f"var/check_mk/inventory_archive/hostname/{idx}", tree
         )
 
-    # No delta cache files — history must still be computed from archives alone.
     history = HistoryStore(tmp_path).load(
         host_name,
         history_paths_filter=lambda paths: paths,

@@ -39,7 +39,6 @@ def _make_context(
 
 
 def test_checkmk_overview_no_inventory_tree(tmp_path: Path) -> None:
-    # A missing tree loads as an empty tree, so the node lookup reports the warning
     with pytest.raises(
         CollectWarning, match="No HW/SW Inventory node 'Software > Applications > Checkmk'"
     ):

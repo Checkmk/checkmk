@@ -78,7 +78,9 @@ def check_proxmox_ve_replication(params: Params, section: SectionReplication) ->
     if errors:
         yield Result(
             state=State.CRIT,
-            summary=f"Replication job: {errors[0].id}: {errors[0].error}",
+            summary=f"Replication job: {errors[0].id}: {errors[0].error}".strip().replace(
+                "\n", "; "
+            ),
             details="\n".join(f"{repl.id}: {repl.error}" for repl in errors[1:]) or None,
         )
         return

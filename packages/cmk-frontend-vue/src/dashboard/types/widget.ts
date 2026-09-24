@@ -101,6 +101,8 @@ export type SidebarElementContent = components['schemas']['SidebarElementContent
 export type PerformanceGraphContent = components['schemas']['PerformanceGraphContent']
 export type SingleTimeseriesContent = components['schemas']['SingleTimeseriesContent']
 export type SingleMetricContent = components['schemas']['SingleMetricContent']
+export type Stats = components['schemas']['Stats']
+export type StatsPart = components['schemas']['StatsPart']
 export type AlertTimelineContent = components['schemas']['AlertTimelineContent']
 export type NotificationTimelineContent = components['schemas']['NotificationTimelineContent']
 /** Either timeline widget; they share their render modes and their computed count. */

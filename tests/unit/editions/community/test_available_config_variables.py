@@ -40,7 +40,6 @@ def test_registered_configvars() -> None:
         "event_limit",
         "eventsocket_queue_len",
         "exp_ai_assistant",
-        "exp_relay_active_checks",
         "exp_trial_mode_selection",
         "failed_notification_horizon",
         "hard_query_limit",

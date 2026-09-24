@@ -23,7 +23,6 @@ py_cmk_test(
     deps = [
         "//cmk/base:active-check-result",
         "//cmk/plugins",
-        "//packages/cmk-flags",
         "//tests/testlib/unit",
         "//tests/unit:conftest",
         requirement("pytest-mock"),

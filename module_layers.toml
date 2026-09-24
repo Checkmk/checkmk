@@ -593,7 +593,6 @@ allows = [
 [components."cmk.base.config"]
 allows = [
   "@ccc",
-  "@flags",
   "@plugin_apis",
   "@trace",
   "cmk.automations",
@@ -1235,7 +1234,6 @@ allows = [
   "cmk.web.utils",
   "@ccc",
   "@crypto",
-  "@flags",
   "@livestatus_client",
   "@data_backend",
   "@plugin_apis",

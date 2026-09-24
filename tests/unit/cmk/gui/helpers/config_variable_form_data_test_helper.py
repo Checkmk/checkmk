@@ -1961,7 +1961,6 @@ CASES: Mapping[str, list[Case] | EditionDependentDefault] = {
     ],
     "eventsocket_queue_len": MIN_ONE_INTEGER_CASES,
     "exp_ai_assistant": CHECKBOX_CASES,
-    "exp_relay_active_checks": CHECKBOX_CASES,
     "exp_trial_mode_selection": CHECKBOX_CASES,
     "failed_notification_horizon": [
         CasePass("configured", 172800),

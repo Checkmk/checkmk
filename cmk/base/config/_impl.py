@@ -91,7 +91,6 @@ from cmk.checkengine.snmplib import (  # some of these are required in the modul
 from cmk.checkengine.source_abc import SourceConfig
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.summarize import SummaryConfig
-from cmk.flags import load_experimental_flags
 from cmk.password_store.v1 import Secret
 from cmk.piggyback import backend as piggyback_backend
 from cmk.ruleset_matcher import matcher as ruleset_matcher
@@ -2028,16 +2027,7 @@ class ConfigCache:
             ),
             ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
             for_relay=for_relay,
-            # Experimental flag exp_relay_active_checks (CMK-38421): until the feature is GA no
-            # active check is supported on relays, so relay-monitored hosts keep getting the
-            # "not supported on relays" warning / UNKNOWN result.
-            relay_supported_active_checks=(
-                self._relay_supported_active_checks
-                if load_experimental_flags(
-                    cmk.utils.paths.default_config_dir
-                ).exp_relay_active_checks
-                else frozenset()
-            ),
+            relay_supported_active_checks=self._relay_supported_active_checks,
             site_side_only_active_checks=SITE_SIDE_ONLY_ACTIVE_CHECKS,
         )
 

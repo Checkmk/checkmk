@@ -47,7 +47,6 @@ from cmk.checkengine.fetchers.piggyback import PiggybackFetcher
 from cmk.checkengine.specs.checkresults import ServiceState
 from cmk.checkengine.submitters import ServiceDetails
 from cmk.discover_plugins import PluginLocation
-from cmk.flags import ExperimentalFlagConfig
 from cmk.inventory.label_picker import InventorizedHostLabelsStore
 from cmk.plugins.checkmk.automations import checkmk
 from cmk.relay_protocols.tasks import AdHocActiveCheckTask, AdHocSiteStores
@@ -571,11 +570,6 @@ def _password_check_on(
     )
     cmk.utils.password_store.save(
         {"uuid1234": "s3cret", "uuid-of-another-host": "theirs"}, pending_secrets_path_site()
-    )
-    monkeypatch.setattr(
-        config._impl,  # noqa: SLF001
-        "load_experimental_flags",
-        lambda _config_dir: ExperimentalFlagConfig(exp_relay_active_checks=True),
     )
     automation = _RecordingAutomation()
     automation.execute(make_common_state(lr), ["my_host", plugin, "Password check"])

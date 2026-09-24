@@ -33,7 +33,6 @@ py_library(
         "//packages/cmk-check-engine/cmk/checkengine/discovery",
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
-        "//packages/cmk-flags",
         "//packages/cmk-plugin-apis:password_store",
         "//packages/cmk-plugin-apis:server_side_calls",
         "//packages/cmk-trace",

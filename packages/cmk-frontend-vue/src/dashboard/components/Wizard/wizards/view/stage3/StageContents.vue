@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, toValue } from 'vue'
@@ -29,6 +30,8 @@ import type {
 const { _t } = usei18n()
 
 interface Stage3Props {
+  tick: number
+  range: DateTimeRange
   dashboardKey: DashboardKey
   widget_id: string
   content: EmbeddedViewContent | LinkedViewContent
@@ -69,6 +72,8 @@ const widgetContentProps = computed<ContentProps>(
       effectiveTitle: effectiveTitle.value,
       effective_filter_context: props.effective_filter_context,
       dashboardKey: props.dashboardKey,
+      tick: props.tick,
+      range: props.range,
       general_settings: visualizationProps.value.widgetGeneralSettings.value
     }) as ContentProps
 )

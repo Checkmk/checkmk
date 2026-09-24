@@ -70,6 +70,7 @@ import type {
   WidgetSpec
 } from '@/dashboard/types/widget'
 import { dashboardAPI, urlHandler } from '@/dashboard/utils.ts'
+import { useGlobalRefresh } from '@/graphing/GlobalTimePicker/globalTimeState.ts'
 import { useGlobalTimePickerRange } from '@/graphing/GlobalTimePicker/useGlobalTimePickerRange.ts'
 import NetworkFlowSlideIns from '@/network-flow/slide-ins/NetworkFlowSlideIns.vue'
 import { useNetworkFlowSlideIns } from '@/network-flow/slide-ins/useNetworkFlowSlideIns'
@@ -616,6 +617,7 @@ const reviewFilters = () => {
 }
 
 const { range } = useGlobalTimePickerRange(props.global_time_picker.default_time_range)
+const { refreshTick } = useGlobalRefresh()
 </script>
 
 <template>
@@ -711,6 +713,8 @@ const { range } = useGlobalTimePickerRange(props.global_time_picker.default_time
           :is-open="openWizard"
           :selected-wizard="selectedWizard"
           :dashboard-key="dashboardsManager.activeDashboardKey.value!"
+          :tick="refreshTick"
+          :range="range"
           :context-filters="dashboardFilters.contextFilters.value || {}"
           :edit-widget-spec="getWidgetSpecToEdit(widgetToEdit ?? null)"
           :edit-widget-id="widgetToEdit"
@@ -779,6 +783,8 @@ const { range } = useGlobalTimePickerRange(props.global_time_picker.default_time
             :updated-widget-render-keys="dashboardWidgets.updatedWidgetRenderKeys"
             :widget-titles="widgetTitles"
             :is-editing="isDashboardEditingMode"
+            :tick="refreshTick"
+            :range="range"
             @widget:edit="editWidget($event)"
             @widget:delete="dashboardWidgets.deleteWidget($event)"
             @widget:clone="(oldWidgetId, newLayout) => cloneWidget(oldWidgetId, newLayout)"

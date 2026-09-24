@@ -11,6 +11,8 @@ import DashboardContentTopList from '@/dashboard/components/DashboardContent/Das
 import { useProvideIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import type { ComputedTopList, TopListContent } from '@/dashboard/types/widget'
 
+import { makeContentProps } from '@tests/dashboard/contentProps'
+
 import { flushPromises } from '../../utils.ts'
 
 const computeTopListData = vi.fn()
@@ -44,13 +46,8 @@ function topList(overrides: Partial<ComputedTopList> = {}): ComputedTopList {
 }
 
 function props(content: Partial<TopListContent> = {}) {
-  return {
-    widget_id: 'w1',
-    general_settings: {
-      title: { text: 'Top list', render_mode: 'with_background' as const },
-      render_background: true
-    },
-    content: {
+  return makeContentProps(
+    {
       type: 'top_list' as const,
       metric: 'load1',
       columns: { show_service_description: true, show_bar_visualization: true },
@@ -59,10 +56,15 @@ function props(content: Partial<TopListContent> = {}) {
       limit_to: 10,
       ...content
     },
-    effectiveTitle: 'Top 10: CPU load',
-    effective_filter_context: { uses_infos: [], filters: {}, context: {} },
-    dashboardKey: { owner: 'cmkadmin', name: 'main' }
-  }
+    {
+      widget_id: 'w1',
+      general_settings: {
+        title: { text: 'Top list', render_mode: 'with_background' },
+        render_background: true
+      },
+      effectiveTitle: 'Top 10: CPU load'
+    }
+  )
 }
 
 async function renderWidget(

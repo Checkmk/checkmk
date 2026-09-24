@@ -11,6 +11,8 @@ import DashboardContentSingleMetric from '@/dashboard/components/DashboardConten
 import { useProvideIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import type { ComputedSingleMetric, SingleMetricContent } from '@/dashboard/types/widget'
 
+import { makeContentProps } from '@tests/dashboard/contentProps'
+
 import { flushPromises } from '../../utils.ts'
 
 const computeSingleMetricData = vi.fn()
@@ -44,13 +46,8 @@ function singleMetric(overrides: Partial<ComputedSingleMetric> = {}): ComputedSi
 }
 
 function props(content: Partial<SingleMetricContent> = {}) {
-  return {
-    widget_id: 'w1',
-    general_settings: {
-      title: { text: 'Single metric', render_mode: 'with_background' as const },
-      render_background: true
-    },
-    content: {
+  return makeContentProps(
+    {
       type: 'single_metric' as const,
       metric: 'load1',
       time_range: 'current' as const,
@@ -58,10 +55,15 @@ function props(content: Partial<SingleMetricContent> = {}) {
       show_display_range_limits: false,
       ...content
     },
-    effectiveTitle: 'CPU load',
-    effective_filter_context: { uses_infos: [], filters: {}, context: {} },
-    dashboardKey: { owner: 'cmkadmin', name: 'main' }
-  }
+    {
+      widget_id: 'w1',
+      general_settings: {
+        title: { text: 'Single metric', render_mode: 'with_background' },
+        render_background: true
+      },
+      effectiveTitle: 'CPU load'
+    }
+  )
 }
 
 async function renderWidget(

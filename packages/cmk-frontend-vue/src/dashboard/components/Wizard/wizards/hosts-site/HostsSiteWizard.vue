@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
 import { useFilterDefinitions } from 'cmk-ui-library/components/filter'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -43,6 +44,8 @@ import Stage2 from './stage2/StageContents.vue'
 const { _t } = usei18n()
 
 interface MetricsWizardProps {
+  tick: number
+  range: DateTimeRange
   dashboardKey: DashboardKey
   contextFilters: ContextFilters
   editWidgetSpec?: WidgetSpec | null
@@ -188,6 +191,8 @@ const handleObjectTypeSwitch = (objectType: string): void => {
         <Stage2
           v-if="wizardHandler.stage.value === 1"
           :dashboard-key="dashboardKey"
+          :tick="tick"
+          :range="range"
           :host-filter-type="hostFilterType"
           :filters="appliedFilters"
           :widget-filters="extractConfiguredFilters(widgetFilterManager)"

@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { ref, toValue } from 'vue'
@@ -38,6 +39,8 @@ import {
 const { _t } = usei18n()
 
 interface Stage2Props {
+  tick: number
+  range: DateTimeRange
   dashboardKey: DashboardKey
   hostFilterType: ElementSelection
   serviceFilterType: ElementSelection
@@ -148,17 +151,23 @@ const isUnrestricted = props.dashboardFeatures === DashboardFeatures.UNRESTRICTE
     v-if="selectedWidget === Graph.SERVICE_STATE && isUnrestricted"
     v-model:handler="handler[Graph.SERVICE_STATE] as unknown as UseServiceState"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
   />
 
   <ServiceStateSummary
     v-if="selectedWidget === Graph.SERVICE_STATE_SUMMARY && isUnrestricted"
     v-model:handler="handler[Graph.SERVICE_STATE_SUMMARY] as unknown as UseServiceStateSummary"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
   />
 
   <ServiceStatistics
     v-if="selectedWidget === Graph.SERVICE_STATS"
     v-model:handler="handler[Graph.SERVICE_STATS] as unknown as UseServiceStatistics"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
   />
 </template>

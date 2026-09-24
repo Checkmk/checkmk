@@ -28,6 +28,8 @@ import type {
 import type { WidgetLayout } from '@/dashboard/types/widget'
 
 interface DashboardProps {
+  tick: number
+  range: DateTimeRange
   dashboardKey: DashboardKey
   baseFilters: DashboardFilters['baseFilters']
   widgetCores: DashboardWidgets['widgetCores']
@@ -69,7 +71,9 @@ const widgetContentProps = computed<ContentPropsRecord>(() => {
         restricted_to_single: widgetConstants.filter_context.restricted_to_single,
         filters: squashFilters(props.baseFilters.value, widget.filter_context.filters)
       },
-      dashboardKey: props.dashboardKey
+      dashboardKey: props.dashboardKey,
+      tick: props.tick,
+      range: props.range
     }
   }
   return record

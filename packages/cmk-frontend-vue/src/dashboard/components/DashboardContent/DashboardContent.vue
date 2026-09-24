@@ -108,6 +108,8 @@ function componentKey(content: WidgetContent): string {
     :effective_filter_context="effective_filter_context"
     :dashboard-key="dashboardKey"
     :is-preview="isPreview"
+    :tick="tick"
+    :range="range"
     @update-time-range="$emit('updateTimeRange', $event)"
   />
 </template>

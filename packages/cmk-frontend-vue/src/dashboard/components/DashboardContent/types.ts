@@ -3,6 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
+
 import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type {
   EffectiveWidgetFilterContext,
@@ -12,6 +14,8 @@ import type {
 
 // General
 export interface ContentProps<T = WidgetContent> {
+  tick: number
+  range: DateTimeRange
   widget_id: string
   general_settings: WidgetGeneralSettings
   content: T

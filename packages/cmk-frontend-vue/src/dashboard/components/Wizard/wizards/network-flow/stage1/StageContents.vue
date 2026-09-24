@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { type ShallowRef, computed, ref, toValue, useTemplateRef } from 'vue'
@@ -32,6 +33,8 @@ import { type GetValidWidgetProps, NetworkFlowWidgetType } from '../types'
 const { _t } = usei18n()
 
 interface Stage1Props {
+  tick: number
+  range: DateTimeRange
   dashboardKey: DashboardKey
   editWidgetSpec: WidgetSpec | null
 }
@@ -135,6 +138,8 @@ function gotoNextStage() {
     v-show="selectedWidget === NetworkFlowWidgetType.TOP_TABLE"
     ref="topTableRef"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
     :edit-widget-spec="editWidgetSpec"
   />
 
@@ -142,6 +147,8 @@ function gotoNextStage() {
     v-show="selectedWidget === NetworkFlowWidgetType.DONUT"
     ref="donutRef"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
     :edit-widget-spec="editWidgetSpec"
   />
 
@@ -149,6 +156,8 @@ function gotoNextStage() {
     v-show="selectedWidget === NetworkFlowWidgetType.KPI_STAT_CARD"
     ref="kpiStatCardRef"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
     :edit-widget-spec="editWidgetSpec"
   />
 
@@ -156,6 +165,8 @@ function gotoNextStage() {
     v-show="selectedWidget === NetworkFlowWidgetType.TREND_CHART"
     ref="trendChartRef"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
     :edit-widget-spec="editWidgetSpec"
   />
 </template>

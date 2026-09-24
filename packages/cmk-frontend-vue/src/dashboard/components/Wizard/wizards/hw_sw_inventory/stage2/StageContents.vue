@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
 import { toRef } from 'vue'
 
@@ -18,6 +19,8 @@ import InventoryWidget from './InventoryWidget/InventoryWidget.vue'
 import { useInventory } from './InventoryWidget/useInventory'
 
 interface Stage2Props {
+  tick: number
+  range: DateTimeRange
   filters: ConfiguredFilters
   widgetFilters: ConfiguredFilters
   dashboardKey: DashboardKey
@@ -64,6 +67,8 @@ const inventoryHandler = await useInventory(
     widget_id="inventory-preview"
     class="inventory-widget__preview"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
     :general_settings="inventoryHandler.widgetProps.value.general_settings"
     :content="inventoryHandler.widgetProps.value.content"
     :effective-title="inventoryHandler.widgetProps.value.effectiveTitle"

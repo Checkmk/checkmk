@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { ref, toValue } from 'vue'
@@ -53,6 +54,8 @@ import { type UseTopList, useTopList } from './TopListWidget/composables/useTopL
 const { _t } = usei18n()
 
 interface Stage2Props {
+  tick: number
+  range: DateTimeRange
   dashboardKey: DashboardKey
   hostFilterType: ElementSelection
   serviceFilterType: ElementSelection
@@ -172,34 +175,46 @@ if (props.metricType === MetricSelection.SINGLE_METRIC) {
       v-if="selectedWidget === Graph.GAUGE"
       v-model:handler="handler[Graph.GAUGE] as unknown as UseGauge"
       :dashboard-key="dashboardKey"
+      :tick="tick"
+      :range="range"
     />
     <GraphWidget
       v-if="selectedWidget === Graph.SINGLE_GRAPH"
       v-model:handler="handler[Graph.SINGLE_GRAPH] as unknown as UseGraph"
       :dashboard-key="dashboardKey"
+      :tick="tick"
+      :range="range"
     />
     <MetricWidget
       v-if="selectedWidget === Graph.SINGLE_METRIC"
       v-model:handler="handler[Graph.SINGLE_METRIC] as unknown as UseMetric"
       :dashboard-key="dashboardKey"
+      :tick="tick"
+      :range="range"
     />
 
     <BarplotWidget
       v-if="selectedWidget === Graph.BARPLOT"
       v-model:handler="handler[Graph.BARPLOT] as unknown as UseBarplot"
       :dashboard-key="dashboardKey"
+      :tick="tick"
+      :range="range"
     />
 
     <ScatterplotWidget
       v-if="selectedWidget === Graph.SCATTERPLOT"
       v-model:handler="handler[Graph.SCATTERPLOT] as unknown as UseScatterplot"
       :dashboard-key="dashboardKey"
+      :tick="tick"
+      :range="range"
     />
 
     <TopListWidget
       v-if="selectedWidget === Graph.TOP_LIST"
       v-model:handler="handler[Graph.TOP_LIST] as unknown as UseTopList"
       :dashboard-key="dashboardKey"
+      :tick="tick"
+      :range="range"
     />
   </div>
   <div v-else>
@@ -207,12 +222,16 @@ if (props.metricType === MetricSelection.SINGLE_METRIC) {
       v-if="selectedWidget === Graph.PERFORMANCE_GRAPH"
       v-model:handler="handler[Graph.ANY_GRAPH] as unknown as UsePerformanceGraph"
       :dashboard-key="dashboardKey"
+      :tick="tick"
+      :range="range"
     />
 
     <CombinedGraphWidget
       v-if="selectedWidget === Graph.COMBINED_GRAPH"
       v-model:handler="handler[Graph.ANY_GRAPH] as unknown as UseCombinedGraph"
       :dashboard-key="dashboardKey"
+      :tick="tick"
+      :range="range"
     />
   </div>
 </template>

@@ -80,6 +80,8 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
     <DashboardPreviewContent
       widget_id="network-flow-kpi-stat-card-preview"
       :dashboard-key="dashboardKey"
+      :tick="tick"
+      :range="range"
       :general_settings="handler.widgetProps.value.general_settings!"
       :content="handler.widgetProps.value.content!"
       :effective-title="handler.widgetProps.value!.effectiveTitle"

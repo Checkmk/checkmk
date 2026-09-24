@@ -5,6 +5,7 @@
  */
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon'
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import type { Ref } from 'vue'
 
 import type { DashboardKey } from '@/dashboard/types/dashboard'
@@ -59,6 +60,8 @@ export enum ElementSelection {
 }
 
 export interface BaseWidgetProp {
+  tick: number
+  range: DateTimeRange
   dashboardKey: DashboardKey
 }
 

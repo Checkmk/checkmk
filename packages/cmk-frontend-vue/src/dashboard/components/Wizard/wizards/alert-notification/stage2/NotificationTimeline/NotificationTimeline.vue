@@ -52,6 +52,8 @@ const availableVisualizationTypes = getVisualizationTypes()
     <DashboardPreviewContent
       widget_id="notification-timeline-preview"
       :dashboard-key="dashboardKey"
+      :tick="tick"
+      :range="range"
       :general_settings="widgetProps.value!.general_settings!"
       :content="widgetProps.value!.content!"
       :effective-title="widgetProps.value!.effectiveTitle"

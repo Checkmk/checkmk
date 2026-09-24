@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
 import { useFilterDefinitions } from 'cmk-ui-library/components/filter'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -49,6 +50,8 @@ import { useDataConfiguration } from './useDataConfiguration'
 const { _t } = usei18n()
 
 interface ViewWizardProps {
+  tick: number
+  range: DateTimeRange
   dashboardKey: DashboardKey
   viewsById: Record<string, ViewModel>
   contextFilters: ContextFilters
@@ -378,6 +381,8 @@ async function handleOverwriteFilters(newFilters: ConfiguredFilters) {
         v-model:visualization="visualizationProps"
         :is-edit-mode="!!editWidgetSpec"
         :dashboard-key="dashboardKey"
+        :tick="tick"
+        :range="range"
         :widget_id="widgetId"
         :content="content!"
         :effective_filter_context="effectiveFilterContext"

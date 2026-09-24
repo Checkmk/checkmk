@@ -9,6 +9,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import DashboardContentTimelineCount from '@/dashboard/components/DashboardContent/DashboardContentTimelineCount.vue'
 import type { TimelineContent } from '@/dashboard/types/widget'
 
+import { makeContentProps } from '@tests/dashboard/contentProps'
+
 import { flushPromises } from '../../utils.ts'
 
 const computeTimelineCountData = vi.fn()
@@ -19,13 +21,8 @@ vi.mock('@/dashboard/utils.ts', () => ({
 }))
 
 function props(type: TimelineContent['type'] = 'alert_timeline') {
-  return {
-    widget_id: 'w1',
-    general_settings: {
-      title: { text: 'Alert timeline', render_mode: 'with_background' as const },
-      render_background: true
-    },
-    content: {
+  return makeContentProps(
+    {
       type,
       render_mode: {
         type: 'simple_number' as const,
@@ -33,10 +30,15 @@ function props(type: TimelineContent['type'] = 'alert_timeline') {
       },
       log_target: 'both' as const
     },
-    effectiveTitle: 'Problem alerts',
-    effective_filter_context: { uses_infos: [], filters: {}, context: {} },
-    dashboardKey: { owner: 'cmkadmin', name: 'main' }
-  }
+    {
+      widget_id: 'w1',
+      general_settings: {
+        title: { text: 'Alert timeline', render_mode: 'with_background' },
+        render_background: true
+      },
+      effectiveTitle: 'Problem alerts'
+    }
+  )
 }
 
 async function renderWidget(type: TimelineContent['type'] = 'alert_timeline') {

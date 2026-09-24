@@ -10,6 +10,8 @@ import { defineComponent, h } from 'vue'
 import DashboardContentUserMessages from '@/dashboard/components/DashboardContent/DashboardContentUserMessages.vue'
 import { useProvideIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 
+import { makeContentProps } from '@tests/dashboard/contentProps'
+
 import { flushPromises } from '../../utils.ts'
 
 const mockCmkAjax = vi.hoisted(() => vi.fn().mockResolvedValue([]))
@@ -18,17 +20,17 @@ vi.mock('cmk-ui-library/lib/ajax', () => ({
   cmkAjax: mockCmkAjax
 }))
 
-const baseProps = {
-  widget_id: 'w1',
-  general_settings: {
-    title: { text: 'User messages', render_mode: 'with_background' as const },
-    render_background: true
-  },
-  content: { type: 'user_messages' as const },
-  effectiveTitle: 'User messages',
-  effective_filter_context: { uses_infos: [], filters: {}, context: {} },
-  dashboardKey: { owner: 'cmkadmin', name: 'main' }
-}
+const baseProps = makeContentProps(
+  { type: 'user_messages' as const },
+  {
+    widget_id: 'w1',
+    general_settings: {
+      title: { text: 'User messages', render_mode: 'with_background' },
+      render_background: true
+    },
+    effectiveTitle: 'User messages'
+  }
+)
 
 function renderInPublicDashboard() {
   const wrapper = defineComponent({

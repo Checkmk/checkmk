@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkSlideIn from 'cmk-ui-library/components/CmkSlideIn'
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
 import type { DashboardFeatures, DashboardKey } from '../../types/dashboard.ts'
@@ -28,6 +29,8 @@ import ServicesOverviewWizard from '../Wizard/wizards/services/ServicesOverviewW
 import ViewWizardWrapper from '../Wizard/wizards/view/ViewWizardWrapper.vue'
 
 interface AllWizardsProps {
+  tick: number
+  range: DateTimeRange
   isOpen: boolean
   selectedWizard: string
   dashboardKey: DashboardKey
@@ -91,6 +94,8 @@ const handleAddEditWidget = (
       <AlertsAndNotificationsWizard
         v-if="selectedWizard === 'alerts_notifications'"
         :dashboard-key="dashboardKey"
+        :tick="tick"
+        :range="range"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
         @go-back="handleGoBack"
@@ -101,6 +106,8 @@ const handleAddEditWidget = (
       <HostsSiteWizard
         v-if="selectedWizard === 'host_site_overview'"
         :dashboard-key="dashboardKey"
+        :tick="tick"
+        :range="range"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
         :dashboard-features="dashboardFeatures"
@@ -112,6 +119,8 @@ const handleAddEditWidget = (
       <HwSwInventoryWizard
         v-if="selectedWizard === 'hw_sw_inventory'"
         :dashboard-key="dashboardKey"
+        :tick="tick"
+        :range="range"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
         @go-back="handleGoBack"
@@ -122,6 +131,8 @@ const handleAddEditWidget = (
       <MetricsWizard
         v-if="selectedWizard === 'metrics_graphs'"
         :dashboard-key="dashboardKey"
+        :tick="tick"
+        :range="range"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
         :dashboard-features="dashboardFeatures"
@@ -133,6 +144,8 @@ const handleAddEditWidget = (
       <ServicesOverviewWizard
         v-if="selectedWizard === 'service_overview'"
         :dashboard-key="dashboardKey"
+        :tick="tick"
+        :range="range"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
         :dashboard-features="dashboardFeatures"
@@ -144,6 +157,8 @@ const handleAddEditWidget = (
       <ViewWizardWrapper
         v-if="selectedWizard === 'views'"
         :dashboard-key="dashboardKey"
+        :tick="tick"
+        :range="range"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
         :edit-widget-id="editWidgetId"
@@ -155,6 +170,8 @@ const handleAddEditWidget = (
       <EventsWizard
         v-if="selectedWizard === 'event_stats'"
         :dashboard-key="dashboardKey"
+        :tick="tick"
+        :range="range"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
         @go-back="handleGoBack"
@@ -165,6 +182,8 @@ const handleAddEditWidget = (
       <CustomGraphsWizard
         v-if="selectedWizard === 'custom_graphs'"
         :dashboard-key="dashboardKey"
+        :tick="tick"
+        :range="range"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
         @go-back="handleGoBack"
@@ -175,6 +194,8 @@ const handleAddEditWidget = (
       <OtherWizard
         v-if="selectedWizard === 'other'"
         :dashboard-key="dashboardKey"
+        :tick="tick"
+        :range="range"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
         @go-back="handleGoBack"
@@ -193,6 +214,8 @@ const handleAddEditWidget = (
       <NetworkFlowWizard
         v-if="selectedWizard === 'network_flow'"
         :dashboard-key="dashboardKey"
+        :tick="tick"
+        :range="range"
         :edit-widget-spec="editWidgetSpec"
         @go-back="handleGoBack"
         @close="handleClose"

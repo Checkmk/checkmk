@@ -105,17 +105,9 @@ export type GraphWidgetContent = Pick<
 export type WidgetAvailableInventory =
   components['schemas']['WidgetAvailableInventoryCollectionModel']
 
-export interface WidgetRefreshSignal {
-  tick: number
-}
-
 export interface WidgetInteractionState {
   editMode: boolean
   isPreview: boolean
-}
-
-export interface WidgetTimeRange {
-  range: DateTimeRange
 }
 
 export interface WidgetEmitTimeRange {

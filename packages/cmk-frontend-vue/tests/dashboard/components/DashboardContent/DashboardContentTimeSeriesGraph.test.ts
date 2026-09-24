@@ -15,6 +15,8 @@ import { useProvideSharedWidgetGraphs } from '@/dashboard/composables/useSharedW
 import type { SharedWidgetGraphs } from '@/dashboard/types/page.ts'
 import type { CustomGraphContent } from '@/dashboard/types/widget.ts'
 
+import { makeContentProps } from '@tests/dashboard/contentProps'
+
 // The figure owns its own data fetch; stubbing it keeps these tests on the discovery step and on
 // which fetch function the widget hands it.
 vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
@@ -51,17 +53,14 @@ const CUSTOM_GRAPH_CONTENT: CustomGraphContent = {
   graph_render_options: { show_legend: true, show_graph_time: false }
 }
 
-const baseProps = {
+const baseProps = makeContentProps(CUSTOM_GRAPH_CONTENT, {
   widget_id: 'w1',
   general_settings: {
-    title: { text: 'My graph', render_mode: 'with_background' as const },
+    title: { text: 'My graph', render_mode: 'with_background' },
     render_background: true
   },
-  content: CUSTOM_GRAPH_CONTENT,
-  effectiveTitle: 'My graph',
-  effective_filter_context: { uses_infos: [], filters: {}, context: {} },
-  dashboardKey: { owner: 'cmkadmin', name: 'main' }
-}
+  effectiveTitle: 'My graph'
+})
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let postSpy: any

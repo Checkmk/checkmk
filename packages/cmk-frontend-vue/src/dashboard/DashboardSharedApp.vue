@@ -21,6 +21,8 @@ import { type DashboardKey, DashboardLayout } from '@/dashboard/types/dashboard.
 import { urlParamsKey } from '@/dashboard/types/injectionKeys.ts'
 import type { SharedDashboardPageProperties } from '@/dashboard/types/page.ts'
 import { createDashboardModel, setupTokenValidityCheck } from '@/dashboard/utils.ts'
+import { useGlobalRefresh } from '@/graphing/GlobalTimePicker/globalTimeState.ts'
+import { useGlobalTimePickerRange } from '@/graphing/GlobalTimePicker/useGlobalTimePickerRange.ts'
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const { CmkErrorBoundary } = useCmkErrorBoundary()
@@ -59,6 +61,9 @@ onMounted(() => {
 const dashboardFilters = useDashboardFilters(computed(() => sharedDashboard.filter_context))
 const dashboardWidgets = useDashboardWidgets(computed(() => sharedDashboard.content.widgets))
 useProvideMissingRuntimeFiltersAction(dashboardFilters.areAllMandatoryFiltersApplied, () => {})
+
+const { range } = useGlobalTimePickerRange(props.default_time_range)
+const { refreshTick } = useGlobalRefresh()
 </script>
 
 <template>
@@ -74,6 +79,8 @@ useProvideMissingRuntimeFiltersAction(dashboardFilters.areAllMandatoryFiltersApp
       :updated-widget-render-keys="dashboardWidgets.updatedWidgetRenderKeys"
       :widget-titles="widget_titles"
       :is-editing="false"
+      :tick="refreshTick"
+      :range="range"
     />
   </CmkErrorBoundary>
 </template>

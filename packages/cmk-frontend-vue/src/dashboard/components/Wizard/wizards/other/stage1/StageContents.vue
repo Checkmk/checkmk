@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { type ShallowRef, computed, ref, toValue, useTemplateRef } from 'vue'
 
@@ -31,6 +32,8 @@ import UserMessages from './UserMessages/UserMessages.vue'
 const { _t } = usei18n()
 
 interface Stage1Props {
+  tick: number
+  range: DateTimeRange
   dashboardKey: DashboardKey
   editWidgetSpec: WidgetSpec | null
 }
@@ -136,6 +139,8 @@ function gotoNextStage() {
     v-show="selectedWidget === OtherWidgetType.USER_MESSAGES"
     ref="userMessagesRef"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
     :edit-widget-spec="editWidgetSpec"
   />
 
@@ -143,6 +148,8 @@ function gotoNextStage() {
     v-show="selectedWidget === OtherWidgetType.SIDEBAR_WIDGET"
     ref="sidebarWidgetRef"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
     :edit-widget-spec="editWidgetSpec"
   />
 
@@ -150,6 +157,8 @@ function gotoNextStage() {
     v-show="selectedWidget === OtherWidgetType.EMBEDDED_URL"
     ref="embeddedURLRef"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
     :edit-widget-spec="editWidgetSpec"
   />
 
@@ -157,6 +166,8 @@ function gotoNextStage() {
     v-show="selectedWidget === OtherWidgetType.STATIC_TEXT"
     ref="staticTextRef"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
     :edit-widget-spec="editWidgetSpec"
   />
 </template>

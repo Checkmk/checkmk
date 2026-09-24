@@ -9,6 +9,8 @@ import { nextTick } from 'vue'
 
 import DashboardContentFigure from '@/dashboard/components/DashboardContent/DashboardContentFigure.vue'
 
+import { makeContentProps } from '@tests/dashboard/contentProps'
+
 // The legacy figure draws itself with d3 against a live endpoint, so stub it. `finishRender` replays
 // the post-render hook the real figure fires once painted, which clears the widget's loading flag.
 let finishRender: () => void
@@ -34,17 +36,17 @@ vi.mock('@/dashboard/components/DashboardContent/cmk_figures.ts', () => ({
   }
 }))
 
-const baseProps = {
-  widget_id: 'w1',
-  general_settings: {
-    title: { text: 'Host statistics', render_mode: 'with_background' as const },
-    render_background: true
-  },
-  content: { type: 'host_stats' },
-  effectiveTitle: 'Host statistics',
-  effective_filter_context: { uses_infos: [], filters: {}, context: {} },
-  dashboardKey: { owner: 'cmkadmin', name: 'main' }
-}
+const baseProps = makeContentProps(
+  { type: 'host_stats' },
+  {
+    widget_id: 'w1',
+    general_settings: {
+      title: { text: 'Host statistics', render_mode: 'with_background' },
+      render_background: true
+    },
+    effectiveTitle: 'Host statistics'
+  }
+)
 
 const loadingIcon = (): Element | null => document.querySelector('.db-content-figure__loading-icon')
 

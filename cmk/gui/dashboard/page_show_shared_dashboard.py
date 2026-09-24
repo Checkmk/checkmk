@@ -16,6 +16,7 @@ from cmk.ccc.user import UserId
 from cmk.gui import visuals
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
+from cmk.gui.graphing import resolve_default_time_range_seconds
 from cmk.gui.graphing.openapi.models import ApiDiscoveredGraph
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
@@ -56,6 +57,11 @@ class SharedDashboardPageComponents:
     def verify_dashboard_referenced_token(dashboard: DashboardConfig, token_id: str) -> None:
         if dashboard.get("public_token_id") != token_id:
             raise ValueError("Referenced invalid dashboard token")
+
+    @staticmethod
+    def default_time_range(config: Config) -> int:
+        """The site's default graph time range, the same for every viewer of a token."""
+        return resolve_default_time_range_seconds(config.graph_timeranges, None)
 
     @staticmethod
     def html_section(title: str, page_properties: dict[str, Any], config: Config) -> None:
@@ -202,5 +208,6 @@ def page_shared_dashboard(
         "dashboard_constants": DashboardConstants.dict_output(),
         "url_params": {"ifid": ctx.request.get_ascii_input("ifid")},
         "token_value": token_id,
+        "default_time_range": SharedDashboardPageComponents.default_time_range(ctx.config),
     }
     SharedDashboardPageComponents.html_section(title, page_properties, ctx.config)

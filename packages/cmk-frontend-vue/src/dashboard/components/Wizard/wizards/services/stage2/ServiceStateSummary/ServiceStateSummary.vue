@@ -39,6 +39,8 @@ const widgetProps = computed(() => handler.value.widgetProps)
   <DashboardPreviewContent
     widget_id="host-state-summary-preview"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
     :general_settings="widgetProps.value!.general_settings!"
     :content="widgetProps.value!.content!"
     :effective-title="widgetProps.value!.effectiveTitle"

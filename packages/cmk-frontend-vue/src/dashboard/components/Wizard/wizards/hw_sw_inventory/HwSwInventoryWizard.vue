@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { Suggestion } from 'cmk-ui-library/components/CmkSuggestions'
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
 import { useFilterDefinitions } from 'cmk-ui-library/components/filter'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
@@ -42,6 +43,8 @@ import Stage2 from './stage2/StageContents.vue'
 const { _t } = usei18n()
 
 interface HwSwInventoryWizardProps {
+  tick: number
+  range: DateTimeRange
   dashboardKey: DashboardKey
   contextFilters: ContextFilters
   editWidgetSpec?: WidgetSpec | null
@@ -233,6 +236,8 @@ const handleAddWidget = (
         <Stage2
           v-if="wizardHandler.stage.value === 1"
           :dashboard-key="dashboardKey"
+          :tick="tick"
+          :range="range"
           :filters="appliedFilters"
           :widget-filters="widgetFilterManager.getConfiguredFilters()"
           :edit-widget="editWidget"

@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import { onMounted, ref } from 'vue'
 
 import ViewWizardInner from '@/dashboard/components/Wizard/wizards/view/ViewWizardInner.vue'
@@ -29,6 +30,8 @@ onMounted(async () => {
 })
 
 interface ViewWizardProps {
+  tick: number
+  range: DateTimeRange
   dashboardKey: DashboardKey
   contextFilters: ContextFilters
   editWidgetSpec?: WidgetSpec | null
@@ -52,6 +55,8 @@ defineEmits<{
   <template v-if="viewsReady && dataSourcesReady">
     <ViewWizardInner
       :dashboard-key="dashboardKey"
+      :tick="tick"
+      :range="range"
       :views-by-id="viewsById"
       :context-filters="contextFilters"
       :edit-widget-spec="editWidgetSpec"

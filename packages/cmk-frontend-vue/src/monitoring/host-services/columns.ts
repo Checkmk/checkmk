@@ -233,7 +233,11 @@ export function useHostServicesColumns({
       sortDescFirst: true,
       minSize: 120,
       maxSize: 200,
-      meta: { headerTitle: _t('Age of the state'), filter: lastStateChangeFilter }
+      meta: {
+        headerTitle: _t('Age of the state'),
+        justify: 'right',
+        filter: lastStateChangeFilter
+      }
     },
     {
       accessorKey: 'last_check',
@@ -241,7 +245,11 @@ export function useHostServicesColumns({
       sortDescFirst: true,
       minSize: 120,
       maxSize: 200,
-      meta: { headerTitle: _t('Age of the check'), filter: lastCheckFilter }
+      meta: {
+        headerTitle: _t('Age of the check'),
+        justify: 'right',
+        filter: lastCheckFilter
+      }
     },
     {
       accessorKey: 'labels',

@@ -119,6 +119,34 @@ def test_agent_output_regexes(capsys: pytest.CaptureFixture[str]) -> None:
     assert "device_duplication" not in captured.out
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="Crash report 6e0f2512-b7fa-11f1-a443-4b932895c847: ConnectionError not caught in agent_mobileiron_main",
+)
+@responses.activate
+def test_agent_handles_connection_error(capsys: pytest.CaptureFixture) -> None:
+    args = argparse.Namespace(
+        hostname="agent_mobileiron",
+        key_fields=("entityName",),
+        android_regex=["foo"],
+        ios_regex=["foo"],
+        other_regex=["foo"],
+        username="",
+        password=Secret(""),
+        partition=["test"],
+        proxy=None,
+        debug=False,
+    )
+    responses.get(
+        f"https://{args.hostname}/api/v1/device",
+        body=requests.exceptions.ConnectionError("Failed to resolve 'agent_mobileiron'"),
+    )
+
+    return_code = agent_mobileiron_main(args)
+    assert return_code == 1
+    assert "ConnectionError" in capsys.readouterr().err
+
+
 @pytest.mark.parametrize(
     "exception",
     [

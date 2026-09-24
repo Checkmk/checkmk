@@ -31,6 +31,7 @@
       "type": "object",
       "properties": {
         "key": {
+          "description": "Also declared as DismissableWarning in cmk/gui/type_defs.py, which the REST API and the user config use. Nothing generates one list from the other, so add a warning to both. tests/unit/cmk/gui/test_type_defs.py guards against drift.",
           "enum": [
             "notification_fallback",
             "immediate_slideout_change",

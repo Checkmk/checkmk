@@ -5,7 +5,7 @@
 
 # mypy: disable-error-code="type-arg"
 
-from typing import Literal
+from typing import get_args, Literal
 
 import pytest
 
@@ -13,9 +13,11 @@ from cmk.gui.type_defs import (
     _RawColumnSpec,
     _RawLegacyColumnSpec,
     ColumnSpec,
+    DismissableWarning,
     PainterParameters,
     VisualLinkSpec,
 )
+from cmk.shared_typing.dialog import Key as DialogDismissalKey
 
 
 @pytest.mark.parametrize(
@@ -306,3 +308,15 @@ def test_column_spec_to_raw(
     expected_raw_column_spec: _RawColumnSpec,
 ) -> None:
     assert column_spec.to_raw() == expected_raw_column_spec
+
+
+def test_dialog_dismissal_keys_match_dismissable_warning() -> None:
+    """The dismissal keys are declared twice and nothing generates one from the other.
+
+    `DismissableWarning` is what the REST API accepts and what the user config
+    stores. `dialog.json` declares the same keys again, because the shared-typing
+    generator turns JSON into Python and TypeScript, not the other way round.
+    A key added to one and not the other is rejected by the server at runtime,
+    which is easy to miss since the dismissal call is fire-and-forget.
+    """
+    assert {key.value for key in DialogDismissalKey} == set(get_args(DismissableWarning))

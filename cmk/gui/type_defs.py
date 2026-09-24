@@ -105,6 +105,9 @@ AuthType = Literal[
     "web_server",
 ]
 
+# Also declared as `dismissal.key` in packages/cmk-shared-typing/source/dialog.json,
+# which the frontend uses. Nothing generates one list from the other, so add a
+# warning to both. tests/unit/cmk/gui/test_type_defs.py guards against drift.
 DismissableWarning = Literal[
     "notification_fallback",
     "immediate_slideout_change",

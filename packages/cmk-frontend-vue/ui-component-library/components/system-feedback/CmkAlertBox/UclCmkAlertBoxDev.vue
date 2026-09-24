@@ -7,18 +7,19 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { useDismissDialog } from 'cmk-ui-library/lib/useDismissDialog'
 import { ref } from 'vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
 const { _t } = usei18n()
 
-// This demo key is deliberately not one of the warnings the server knows, so
-// the dismissal it sends is a no-op the backend rejects. A real key would
-// dismiss that warning in the user config of whoever opens the library.
-// @ts-expect-error demo-only key, not a DismissableWarning
-const { isShown: mode1Shown, dismiss: dismissMode1 } = useDismissDialog('ucl_cmk_alert_box_demo')
+// The demo shows the dismissal interaction, not its persistence. Persisting it
+// would need one of the warnings the server knows, and dismissing a real one
+// here would change the user config of whoever opens the library.
+const mode1Shown = ref(true)
+function dismissMode1() {
+  mode1Shown.value = false
+}
 function resetMode1() {
   mode1Shown.value = true
 }

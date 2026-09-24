@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+from collections.abc import Sequence
 from pathlib import Path
 
 import cmk.ccc.store
@@ -120,3 +122,75 @@ def test_show_transformation_results_leaves_the_legacy_tree(tmp_path: Path) -> N
     )
 
     assert (tmp_path / "var/check_mk/inventory/hostname").exists()
+
+
+def _save_legacy_inventory_trees(omd_root: Path, host_names: Sequence[str]) -> None:
+    for host_name in host_names:
+        cmk.ccc.store.save_object_to_file(
+            omd_root / f"var/check_mk/inventory/{host_name}", raw_tree("val")
+        )
+
+
+def test_the_bundle_length_limits_the_transformed_trees(tmp_path: Path) -> None:
+    _save_legacy_inventory_trees(tmp_path, ["host1", "host2", "host3"])
+
+    transform_inventory_trees(
+        logger=null_logger(),
+        omd_root=tmp_path,
+        bundle_length=2,
+        filter_host_names=[],
+        all_host_names=["host1", "host2", "host3"],
+    )
+
+    assert len(list((tmp_path / "var/check_mk/inventory").glob("*.json"))) == 2
+
+
+def test_without_a_bundle_length_at_least_one_tree_is_transformed(tmp_path: Path) -> None:
+    _save_legacy_inventory_trees(tmp_path, ["host1", "host2"])
+
+    transform_inventory_trees(
+        logger=null_logger(),
+        omd_root=tmp_path,
+        bundle_length=0,
+        filter_host_names=[],
+        all_host_names=["host1", "host2"],
+    )
+
+    assert len(list((tmp_path / "var/check_mk/inventory").glob("*.json"))) == 1
+
+
+def test_a_transformed_tree_is_not_overwritten_by_its_legacy_tree(tmp_path: Path) -> None:
+    cmk.ccc.store.save_object_to_file(tmp_path / "var/check_mk/inventory/hostname", raw_tree("old"))
+    cmk.ccc.store.save_text_to_file(
+        tmp_path / "var/check_mk/inventory/hostname.json", json.dumps(raw_tree("new"))
+    )
+
+    transform_inventory_trees(
+        logger=null_logger(),
+        omd_root=tmp_path,
+        bundle_length=0,
+        filter_host_names=["hostname"],
+        all_host_names=["hostname"],
+    )
+
+    assert json.loads((tmp_path / "var/check_mk/inventory/hostname.json").read_text()) == raw_tree(
+        "new"
+    )
+
+
+def test_a_stray_file_in_the_archive_directory_is_skipped(tmp_path: Path) -> None:
+    (tmp_path / "var/check_mk/inventory_archive").mkdir(parents=True)
+    (tmp_path / "var/check_mk/inventory_archive/stray-file").touch()
+    cmk.ccc.store.save_object_to_file(
+        tmp_path / "var/check_mk/inventory_archive/hostname/123", raw_tree("val")
+    )
+
+    transform_inventory_trees(
+        logger=null_logger(),
+        omd_root=tmp_path,
+        bundle_length=0,
+        filter_host_names=["hostname"],
+        all_host_names=["hostname"],
+    )
+
+    assert (tmp_path / "var/check_mk/inventory_archive/hostname/123.json").exists()

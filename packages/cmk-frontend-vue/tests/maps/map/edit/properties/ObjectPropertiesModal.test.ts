@@ -70,7 +70,7 @@ describe('ObjectPropertiesModal – conditional fields by object type', () => {
     renderModal(obj({ type: 'host', host_name: 'web01' }))
 
     expect(screen.getByText('Monitoring object')).toBeInTheDocument()
-    expect(screen.getByText('Hostname')).toBeInTheDocument()
+    expect(screen.getByText('Host name')).toBeInTheDocument()
     expect(screen.getByText('Only hard states')).toBeInTheDocument()
     expect(screen.getByText('Consider services')).toBeInTheDocument()
     // Host is not a service/textbox/graph, so those sections stay hidden.
@@ -82,7 +82,7 @@ describe('ObjectPropertiesModal – conditional fields by object type', () => {
   it('adds the service field for a service and drops the host-only toggle', () => {
     renderModal(obj({ type: 'service', host_name: 'web01', service_description: 'PING' }))
 
-    expect(screen.getByText('Hostname')).toBeInTheDocument()
+    expect(screen.getByText('Host name')).toBeInTheDocument()
     // Twice: the header's type badge and the field's own label.
     expect(screen.getAllByText('Service')).toHaveLength(2)
     expect(screen.getByText('Only hard states')).toBeInTheDocument()

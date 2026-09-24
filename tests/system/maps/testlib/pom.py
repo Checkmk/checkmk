@@ -244,7 +244,7 @@ class MapsMapView(CmkPage):
         before = self.map_elements.count()
         panel = self.open_add_panel()
         self._pick(panel.get_by_role("combobox", name="Object type"), "Host")
-        self._pick(panel.get_by_role("combobox", name="Hostname"), host_name, query=host_name)
+        self._pick(panel.get_by_role("combobox", name="Host name"), host_name, query=host_name)
         place = panel.get_by_role("button", name="Place on map", exact=True)
         expect(place, message="'Place on map' stayed disabled").to_be_enabled()
         place.click()
@@ -332,7 +332,7 @@ class MapsMapView(CmkPage):
         before = self.geo_objects.count()
         panel = self.open_add_panel()
         self._pick(panel.get_by_role("combobox", name="Object type"), "Host")
-        self._pick(panel.get_by_role("combobox", name="Hostname"), host_name, query=host_name)
+        self._pick(panel.get_by_role("combobox", name="Host name"), host_name, query=host_name)
         panel.get_by_role("button", name="Place on map", exact=True).click()
         expect(self.geo_objects, message="Host was not auto-placed on the world map").to_have_count(
             before + 1

@@ -43,10 +43,10 @@ const dyngroupTypeSuggestions = computed(() => ({
 
 <template>
   <template v-if="draft.type === 'host'">
-    <EditField :label="_t('Hostname')" required>
+    <EditField :label="_t('Host name')" required>
       <MapsSuggestionField
         v-model="draft.host_name"
-        :label="_t('Hostname')"
+        :label="_t('Host name')"
         :list="suggestions.hosts"
         :placeholder="_t('Select a host')"
         :empty-hint="_t('No hosts available')"
@@ -55,10 +55,10 @@ const dyngroupTypeSuggestions = computed(() => ({
   </template>
 
   <template v-else-if="draft.type === 'service'">
-    <EditField :label="_t('Hostname')" required>
+    <EditField :label="_t('Host name')" required>
       <MapsSuggestionField
         v-model="draft.host_name"
-        :label="_t('Hostname')"
+        :label="_t('Host name')"
         :list="suggestions.hosts"
         :placeholder="_t('Select a host')"
         :empty-hint="_t('No hosts available')"
@@ -140,10 +140,10 @@ const dyngroupTypeSuggestions = computed(() => ({
   </template>
 
   <template v-else-if="draft.type === 'line'">
-    <EditField :label="_t('Hostname')">
+    <EditField :label="_t('Host name')">
       <MapsSuggestionField
         v-model="draft.host_name"
-        :label="_t('Hostname')"
+        :label="_t('Host name')"
         :list="suggestions.hosts"
         :placeholder="_t('optional')"
         :empty-hint="_t('No hosts available')"
@@ -175,10 +175,10 @@ const dyngroupTypeSuggestions = computed(() => ({
   </template>
 
   <template v-else-if="draft.type === 'graph'">
-    <EditField :label="_t('Hostname')">
+    <EditField :label="_t('Host name')">
       <MapsSuggestionField
         v-model="draft.host_name"
-        :label="_t('Hostname')"
+        :label="_t('Host name')"
         :list="suggestions.hosts"
         :placeholder="_t('Select a host')"
         :empty-hint="_t('No hosts available')"

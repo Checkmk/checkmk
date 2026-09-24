@@ -91,10 +91,10 @@ function suggestMetrics(query: string): Promise<string[]> {
 
 <template>
   <PropertySection :title="_t('Metric source')">
-    <PropertyRow :label="_t('Hostname')">
+    <PropertyRow :label="_t('Host name')">
       <MapsSuggestionField
         v-model="form.host_name"
-        :label="_t('Hostname')"
+        :label="_t('Host name')"
         :list="suggestions.hosts"
         :placeholder="_t('hostname')"
         :empty-hint="_t('No hosts available')"

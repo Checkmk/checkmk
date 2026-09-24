@@ -294,7 +294,6 @@ def _wait_for_config_redistributed(
         _wait_for_conf_redistributed(site, previous_mtimes_ms[site.id], timeout)
 
 
-@pytest.mark.xfail(raises=TimeoutError, strict=False, reason="CMK-37535; flake")
 @pytest.mark.skip_if_not_edition("ultimatemt")
 def test_config_sync_source_remote_diff_customer(central_site: Site, remote_site: Site) -> None:
     """

@@ -153,7 +153,7 @@ class CrashReportsRowTable(RowTableLivestatus):
 
     def get_crash_report_rows(
         self, only_sites: OnlySites, filter_headers: str
-    ) -> Iterator[dict[str, str]]:
+    ) -> Iterator[dict[str, str | bytes]]:
         # First fetch the information that is needed to query for the dynamic columns (crash_info,
         # ...)
         for crash_info in self._get_crash_report_info(only_sites, filter_headers):
@@ -178,8 +178,9 @@ class CrashReportsRowTable(RowTableLivestatus):
             except MKLivestatusNotFoundError:
                 continue
 
-            crash_info.update(dict(zip(headers, raw_row)))
-            yield crash_info
+            row: dict[str, str | bytes] = dict(crash_info)
+            row.update(dict(zip(headers, raw_row)))
+            yield row
 
     def _get_crash_report_info(
         self, only_sites: OnlySites, filter_headers: str | None = None

@@ -62,7 +62,7 @@ from cmk.web.utils.urls import makeuri, makeuri_contextless, urlencode, urlencod
 from .helpers import local_files_involved_in_crash
 from .views import CrashReportsRowTable
 
-CrashReportRow = dict[str, str]
+CrashReportRow = dict[str, str | bytes]
 
 USER_SESSION_CRASH_TYPES: Final = frozenset({"gui", "javascript"})
 """Crash types produced while the user was browsing, so the user is the reporter."""
@@ -86,7 +86,7 @@ class ReportSubmitDetails(TypedDict):
 class CrashReportsRowFetcher(Protocol):
     def get_crash_report_rows(
         self, only_sites: livestatus.OnlySites, filter_headers: str
-    ) -> Iterator[dict[str, str]]: ...
+    ) -> Iterator[CrashReportRow]: ...
 
 
 @dataclasses.dataclass(frozen=True)
@@ -129,7 +129,11 @@ class CrashReport:
 
 
 def _get_serialized_crash_report(row: CrashReportRow) -> Mapping[str, bytes | None]:
-    return {k: v.encode() for k, v in row.items() if k not in ["site", "crash_id", "crash_type"]}
+    return {
+        k: v if isinstance(v, bytes) else v.encode()
+        for k, v in row.items()
+        if k not in ["site", "crash_id", "crash_type"]
+    }
 
 
 def show_automatic_upload_hint_on_view(view_name: str) -> None:
@@ -876,7 +880,7 @@ def _show_output_box(title: str, content: str) -> None:
 
 def _show_agent_output(row: CrashReportRow) -> None:
     agent_output = row.get("agent_output")
-    if agent_output:
+    if isinstance(agent_output, str):
         _show_output_box(_("Agent output"), agent_output)
 
 

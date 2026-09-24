@@ -3,8 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type EventStream, createEventStream } from 'cmk-ui-library/lib/daemon-client/eventStream'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { type EventStream, createEventStream } from 'cmk-ui-library/lib/sse/eventStream'
 import { type Ref, type ShallowRef, markRaw, ref, shallowRef, triggerRef, watch } from 'vue'
 
 import type { ConnectionsApi } from '@/maps/api/connections'

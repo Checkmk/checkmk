@@ -7,12 +7,12 @@ export interface EventStreamOptions {
   /**
    * Builds the stream URL, including whatever credential it carries.
    *
-   * `EventSource` cannot set headers, so a daemon stream authenticates by query parameter. That
+   * `EventSource` cannot set headers, so the stream authenticates by query parameter. That
    * is the caller's scheme to choose, not this client's — it only has to be re-derived per
    * connect so a rotated credential lands in the URL of the next connection.
    */
   url: () => string | Promise<string>
-  /** Called for every frame the daemon sends. Frames that are not JSON never reach here. */
+  /** Called for every frame the server sends. Frames that are not JSON never reach here. */
   onMessage: (payload: unknown) => void
   /**
    * The fallback used when the stream cannot be opened at all — typically a reverse proxy that
@@ -43,7 +43,7 @@ export interface EventStream {
 }
 
 /**
- * A long-lived daemon event stream with a polling fallback.
+ * A long-lived event stream with a polling fallback.
  *
  * `EventSource` reconnects by itself on a transient drop, so the lifecycle worth owning here is
  * the one it does not handle: a stream that never opened at all. That is a deployment problem

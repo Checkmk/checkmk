@@ -3,12 +3,12 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { CmkApiError } from 'cmk-ui-library/lib/error'
 import {
-  createDaemonClient,
+  createFastApiClient,
   formatDaemonError,
   unwrapDaemonResponse
-} from 'cmk-ui-library/lib/daemon-client/client'
-import { CmkApiError } from 'cmk-ui-library/lib/error'
+} from 'cmk-ui-library/lib/fastapi-client/client'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 function responseWith(status: number): Response {
@@ -84,7 +84,7 @@ interface TestPaths {
   }
 }
 
-describe('createDaemonClient', () => {
+describe('createFastApiClient', () => {
   afterEach(() => {
     vi.restoreAllMocks()
   })
@@ -95,7 +95,7 @@ describe('createDaemonClient', () => {
       .spyOn(globalThis, 'fetch')
       .mockImplementation(async () => new Response('{}', { status: 200 }))
 
-    const client = createDaemonClient<TestPaths>({
+    const client = createFastApiClient<TestPaths>({
       baseUrl: 'https://example.invalid/api/v1',
       auth: { headers: () => ({ 'X-Ticket': tokens.shift()! }) }
     })
@@ -114,7 +114,7 @@ describe('createDaemonClient', () => {
       .spyOn(globalThis, 'fetch')
       .mockImplementation(async () => new Response('{}', { status: 200 }))
 
-    const client = createDaemonClient<TestPaths>({
+    const client = createFastApiClient<TestPaths>({
       baseUrl: 'https://example.invalid/api/v1'
     })
     await client.GET('/thing')

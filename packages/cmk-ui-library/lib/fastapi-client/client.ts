@@ -7,31 +7,30 @@ import { CmkApiError } from 'cmk-ui-library/lib/error'
 import createClientImpl from 'openapi-fetch'
 
 /**
- * Supplies the credentials a daemon request carries.
+ * Supplies the credentials a request carries.
  *
- * A hook rather than a fixed header so the scheme stays swappable: the daemons in the product do
+ * A hook rather than a fixed header so the scheme stays swappable: the FastAPI apps in the product do
  * not agree on one today, and a consumer that changes scheme should not have to change anything
  * but this. Called per request, so a rotated token is picked up without rebuilding the client.
  */
-export interface DaemonAuth {
+export interface FastApiAuth {
   headers: () => Record<string, string> | undefined
 }
 
-export interface DaemonClientOptions {
-  /** Absolute base URL of the daemon's API, e.g. `/<site>/check_mk/maps/api/v1`. */
+export interface FastApiClientOptions {
+  /** Absolute base URL of the API, e.g. `/<site>/check_mk/maps/api/v1`. */
   baseUrl: string
-  auth?: DaemonAuth
+  auth?: FastApiAuth
 }
 
 /**
- * A typed client for a Checkmk daemon's HTTP API — the daemon counterpart of
- * `lib/rest-api-client`.
+ * A typed client for a FastAPI app's HTTP API — the FastAPI counterpart of `lib/rest-api-client`.
  *
- * The daemons are FastAPI apps behind the site Apache, so they share a shape the GUI's REST API
- * does not: their own error body, no GUI session (credentials travel per the auth hook, not as a
- * cookie), and an OpenAPI schema of their own that generates `Paths`.
+ * A FastAPI app has a shape the GUI's REST API does not: its own error body, no GUI session
+ * (credentials travel per the auth hook, not as a cookie), and an OpenAPI schema of its own that
+ * generates `Paths`.
  */
-export function createDaemonClient<Paths extends object>({ baseUrl, auth }: DaemonClientOptions) {
+export function createFastApiClient<Paths extends object>({ baseUrl, auth }: FastApiClientOptions) {
   const client = createClientImpl<Paths, 'application/json'>({
     baseUrl,
     headers: { Accept: 'application/json' }
@@ -51,8 +50,10 @@ export function createDaemonClient<Paths extends object>({ baseUrl, auth }: Daem
   return client
 }
 
+export type FastApiClient<Paths extends object> = ReturnType<typeof createFastApiClient<Paths>>
+
 /**
- * Unwraps a daemon response, returning the data or throwing a `CmkApiError` carrying the status.
+ * Unwraps a FastAPI response, returning the data or throwing a `CmkApiError` carrying the status.
  *
  * Separate from `lib/rest-api-client`'s `unwrap` only in how it reads the error body: FastAPI
  * answers with `detail`, either a string or a list of validation errors, where the GUI's REST API

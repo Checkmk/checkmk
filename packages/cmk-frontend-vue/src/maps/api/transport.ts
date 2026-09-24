@@ -12,11 +12,15 @@
  * caller's ticket.
  */
 import type { paths } from 'cmk-shared-typing/typescript/maps_openapi'
-import { type DaemonAuth, createDaemonClient } from 'cmk-ui-library/lib/daemon-client/client'
+import {
+  type FastApiAuth,
+  type FastApiClient,
+  createFastApiClient
+} from 'cmk-ui-library/lib/fastapi-client/client'
 
 import { resolveDaemonBase } from '@/maps/utils/deploymentBase'
 
-export type MapsDaemonClient = ReturnType<typeof createDaemonClient<paths>>
+export type MapsDaemonClient = FastApiClient<paths>
 
 /**
  * A client for the Maps daemon.
@@ -25,6 +29,6 @@ export type MapsDaemonClient = ReturnType<typeof createDaemonClient<paths>>
  * caller's credential through the auth hook, and that is owned by a service with
  * the app's lifetime, not by the module.
  */
-export function createMapsDaemonClient(auth: DaemonAuth): MapsDaemonClient {
-  return createDaemonClient<paths>({ baseUrl: resolveDaemonBase(), auth })
+export function createMapsDaemonClient(auth: FastApiAuth): MapsDaemonClient {
+  return createFastApiClient<paths>({ baseUrl: resolveDaemonBase(), auth })
 }

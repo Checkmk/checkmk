@@ -10,7 +10,7 @@
  * them. The other calls here are the ones that need the daemon's own Livestatus
  * session: the flow topology, metric history and an object's extended detail.
  */
-import { unwrapDaemonResponse } from 'cmk-ui-library/lib/daemon-client/client'
+import { unwrapDaemonResponse } from 'cmk-ui-library/lib/fastapi-client/client'
 
 import type { MapsDaemonClient } from '@/maps/api/transport'
 import type {

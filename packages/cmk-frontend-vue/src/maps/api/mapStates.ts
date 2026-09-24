@@ -10,7 +10,7 @@
  * keeps it in memory for as long as someone watches it. Everything here is
  * therefore about one already-registered map.
  */
-import { unwrapDaemonResponse } from 'cmk-ui-library/lib/daemon-client/client'
+import { unwrapDaemonResponse } from 'cmk-ui-library/lib/fastapi-client/client'
 
 import type { MapsDaemonClient } from '@/maps/api/transport'
 import { daemonConfig } from '@/maps/api/wire'

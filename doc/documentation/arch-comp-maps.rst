@@ -185,7 +185,7 @@ Interfaces
   so the URL is a capability.
 * **SPA → daemon**: ``/<site>/check_mk/maps/api/v1/…`` behind the site Apache
   (``ProxyPass`` to the Unix socket, SSE unbuffered), through the shared
-  ``lib/daemon-client``. The routes are ``maps/register``,
+  ``lib/fastapi-client``. The routes are ``maps/register``,
   ``maps/{name}/states``, ``maps/{name}/auto-objects``,
   ``maps/{name}/folder-host-services``, ``maps/{name}/folder-search``, the
   connection routes (``topology``, ``metric-history``, ``object-details``) and

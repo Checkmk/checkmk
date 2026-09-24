@@ -16,6 +16,7 @@ from livestatus import OnlySites
 
 from cmk.crash import AggregatedCrashInfo
 from cmk.gui.crash_reporting.pages import (
+    _get_serialized_crash_report,
     _show_agent_output,
     _show_automatic_upload_hint,
     CrashReport,
@@ -191,3 +192,21 @@ def test_agent_output_with_undecodable_bytes_is_rendered() -> None:
         rendered = "".join(output_funnel.drain())
 
     assert "check_mk" in rendered
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="Crash report f7541508-b5b6-11f1-bac8-145a415bde61: AttributeError in _get_serialized_crash_report when crash_info is bytes",
+)
+def test_get_serialized_crash_report_with_bytes_crash_info() -> None:
+    # Livestatus dynamic column reads crash.info file content as bytes.
+    # _get_serialized_crash_report calls .encode() on every value, which fails
+    # when the value is already bytes.
+    row: dict[str, str | bytes] = {
+        "crash_info": b'{"core": "cmc"}',
+        "crash_type": "gui",
+        "crash_id": "f7541508-b5b6-11f1-bac8-145a415bde61",
+        "site": "v300",
+    }
+    result = _get_serialized_crash_report(row)  # type: ignore[arg-type]
+    assert result["crash_info"] == b'{"core": "cmc"}'

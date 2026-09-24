@@ -16,6 +16,7 @@
       "cmk-ui-library/lib/i18nString": ["./weaki18nString.d.ts"],
       "@/*": ["./src/*"],
       "@ucl/*": ["./ui-component-library/*"],
+      "@tests/*": ["./tests/*"],
       "*": [
         // @types/* first: "Bundler" resolution resolves a typeless
         // package to its .js and stops, so the @types package would

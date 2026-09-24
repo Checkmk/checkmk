@@ -65,6 +65,7 @@ export default defineConfig(({ command }) => {
         '@': path.resolve('./src'),
         'cmk-ui-library': path.resolve('./node_modules/cmk-ui-library'),
         '@ucl': path.resolve('./ui-component-library'),
+        '@tests': path.resolve('./tests'),
         // This is only a temporary hack to allow resolving icons and the demo css. Do not use this in new code!
         '~cmk-frontend': path.resolve('../cmk-frontend/dist')
       },

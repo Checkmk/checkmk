@@ -15,6 +15,7 @@ const config = {
     '^@\/components.*$',
     '^@\/form.*$',
     '^@\/.*$',
+    '^@tests\/.*$',
     '^[./]'
   ],
   importOrderSeparation: true,

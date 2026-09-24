@@ -9,17 +9,7 @@ import { type Ref, defineComponent, h, nextTick, ref } from 'vue'
 
 import { type PresetOverflow, usePresetOverflow } from '@/lib/usePresetOverflow'
 
-// jsdom has no ResizeObserver and does no layout, so stub the observer (its callback is the
-// composable's `recompute`, which we invoke directly) and feed every element its geometry by hand.
-class FakeResizeObserver {
-  static instances: FakeResizeObserver[] = []
-  constructor(public callback: ResizeObserverCallback) {
-    FakeResizeObserver.instances.push(this)
-  }
-  observe(): void {}
-  unobserve(): void {}
-  disconnect(): void {}
-}
+import { FakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 function stubGeometry(
   el: HTMLElement,
@@ -94,7 +84,7 @@ function setupOverflow(
 
   const fire = (): void => {
     const observer = FakeResizeObserver.instances.at(-1)!
-    observer.callback([], observer as unknown as ResizeObserver)
+    observer.fire()
   }
   const setReplica = (props: { offsetLeft?: number; offsetWidth?: number }): void =>
     stubGeometry(replica, props)

@@ -11,6 +11,8 @@ import { setupServer } from 'msw/node'
 import ProfilingFlamegraphApp from '@/profiling/ProfilingFlamegraphApp.vue'
 import type { HotspotData, ProfilingFlamegraphData } from '@/profiling/types'
 
+import { FakeResizeObserver } from '@tests/lib/fakeResizeObserver'
+
 const DATA_URL = 'http://localhost/profile_data.py'
 
 const originalOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')
@@ -54,15 +56,9 @@ const PAYLOAD: ProfilingFlamegraphData = {
 
 const server = setupServer(http.get(DATA_URL, () => HttpResponse.json(PAYLOAD)))
 
-class ResizeObserverStub {
-  observe(): void {}
-  unobserve(): void {}
-  disconnect(): void {}
-}
-
 beforeAll(() => {
   server.listen({ onUnhandledRequest: 'error' })
-  vi.stubGlobal('ResizeObserver', ResizeObserverStub)
+  vi.stubGlobal('ResizeObserver', FakeResizeObserver)
   Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, value: 600 })
   Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, value: 800 })
 })

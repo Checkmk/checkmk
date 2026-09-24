@@ -9,17 +9,7 @@ import { type Ref, defineComponent, h, nextTick, ref } from 'vue'
 
 import { useHeaderLineBreakLevel } from '@/graphing/components/header/useHeaderLineBreakLevel'
 
-// jsdom has no ResizeObserver and does no layout, so stub the observer and feed every element its
-// geometry by hand (getBoundingClientRect + the title's computed line-height).
-class FakeResizeObserver {
-  static instances: FakeResizeObserver[] = []
-  constructor(public callback: ResizeObserverCallback) {
-    FakeResizeObserver.instances.push(this)
-  }
-  observe(): void {}
-  unobserve(): void {}
-  disconnect(): void {}
-}
+import { FakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 interface Rect {
   top: number

@@ -33,21 +33,12 @@ class Metadata(typing.TypedDict):
 
 
 class SelfDescribingModel(pydantic.BaseModel):
-    __version__: str
-    __namespace__: str
-    __name__: str
+    metadata: typing.ClassVar[Metadata]
 
     def model_dump_with_metadata(self) -> dict[str, object]:
         return {
-            "metadata": self._metadata(),
+            "metadata": self.metadata,
             "data": self.model_dump(),
-        }
-
-    def _metadata(self) -> Metadata:
-        return {
-            "version": self.__version__,
-            "namespace": self.__namespace__,
-            "name": self.__name__,
         }
 
     def model_dump_with_metadata_json(self, indent: int = 0) -> bytes:
@@ -70,6 +61,8 @@ class ProductUsageData(SiteInfo):
 
 
 class ProductUsagePayload(SelfDescribingModel, ProductUsageData):
-    __version__: str = "v1"
-    __namespace__: str = "checkmk"
-    __name__: str = "product_usage_analytics"
+    metadata: typing.ClassVar[Metadata] = {
+        "version": "v1",
+        "namespace": "checkmk",
+        "name": "product_usage_analytics",
+    }

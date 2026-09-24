@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
+
 import matplotlib
 import numpy as np
 
@@ -27,6 +29,7 @@ from cmk.gui.graphing import compute_png_size_mm, GraphDisplayConfigImage, rende
 from cmk.gui.graphing._graph_png import (
     _all_curves_with_sign,
     _derived_y_axis_unit,
+    _fit_time_axis,
     _graph_scalars,
     _mirrored_y_labels,
     _notation_formatter,
@@ -399,7 +402,7 @@ def test_plot_metrics_spans_the_full_time_range_despite_a_long_leading_gap() -> 
     ax = fig.add_subplot(1, 1, 1)
     _plot_metrics(ax, graph)
 
-    assert ax.get_xlim() == (time_range.start, time_range.end - time_range.step)
+    assert ax.get_xlim() == (time_range.start, time_range.end)
 
 
 def test_plot_metrics_spans_the_full_time_range_for_an_entirely_empty_curve() -> None:
@@ -420,7 +423,7 @@ def test_plot_metrics_spans_the_full_time_range_for_an_entirely_empty_curve() ->
     ax = fig.add_subplot(1, 1, 1)
     _plot_metrics(ax, graph)
 
-    assert ax.get_xlim() == (_TIME_RANGE.start, _TIME_RANGE.end - _TIME_RANGE.step)
+    assert ax.get_xlim() == (_TIME_RANGE.start, _TIME_RANGE.end)
 
 
 def test_stack_extents_pads_a_shorter_member_to_the_longest_curve() -> None:
@@ -438,3 +441,48 @@ def test_stack_extents_pads_a_shorter_member_to_the_longest_curve() -> None:
     assert shorter_has_value.tolist() == [True, True, False]
     # The padded (missing) position must not contribute to the running stack sum.
     assert longer_top[2] == 1.0
+
+
+def test_time_axis_of_a_multi_day_graph_is_labelled_with_weekday_and_time() -> None:
+    """The PNG time axis follows the Vue graph's labelling, not a fixed "%H:%M": a two-day range
+    has to tell its days apart."""
+    two_days = TimeRange(start=1668426600, end=1668426600 + 2 * 86400, step=3600)
+    curve = EvaluatedCurve(
+        id="m",
+        attributes=CurveAttributes(title="m", unit=_UNIT, color="#000000"),
+        value=None,
+        time_series=TimeSeries(time_range=two_days, values=[1.0] * 48),
+    )
+    graph = EvaluatedGraph(
+        name="g",
+        title="Graph",
+        vertical_range=None,
+        stacks=[EvaluatedStack(members=[curve], inverse=False)],
+        lines=[],
+    )
+    fig = Figure()
+    ax = fig.add_subplot(1, 1, 1)
+    _plot_metrics(ax, graph)
+
+    _fit_time_axis(ax, graph, GraphDisplayConfigImage())
+
+    labels = [label.get_text() for label in ax.get_xticklabels() if label.get_text()]
+    assert len(labels) > 2
+    assert all(re.fullmatch(r"\w+ \d{2}:\d{2}", label) for label in labels)
+
+
+def test_values_are_drawn_at_their_bucket_end_like_the_vue_graph() -> None:
+    graph = EvaluatedGraph(
+        name="g",
+        title="Graph",
+        vertical_range=None,
+        stacks=[],
+        lines=[EvaluatedLine(curve=_curve("m", [1.0, 2.0, 3.0]), inverse=False)],
+    )
+    fig = Figure()
+    ax = fig.add_subplot(1, 1, 1)
+
+    _plot_metrics(ax, graph)
+
+    (line,) = ax.get_lines()
+    assert np.asarray(line.get_xdata()).tolist() == [60, 120, 180]

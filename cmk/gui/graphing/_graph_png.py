@@ -5,7 +5,6 @@
 """Render Checkmk graphs as PNG images.
 This is needed for the graphs sent with mail notifications."""
 
-import datetime
 import io
 from collections.abc import Iterator, Sequence
 
@@ -14,10 +13,10 @@ import numpy.typing as npt
 from matplotlib.axes import Axes
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
+from matplotlib.font_manager import FontProperties
 from matplotlib.offsetbox import AnnotationBbox, DrawingArea
 from matplotlib.patches import FancyBboxPatch
 from matplotlib.text import Text
-from matplotlib.ticker import FuncFormatter
 from matplotlib.transforms import Bbox, blended_transform_factory, ScaledTranslation
 
 import cmk.utils.render
@@ -39,6 +38,7 @@ from cmk.shared_typing.cmk_time_series_graph import UnitFormat
 
 from ._drawn_curves import drawn_curves
 from ._graph_display_config import GraphDisplayConfigImage
+from ._time_axis import compute_time_axis
 from ._unit_format import unit_from_curves
 from ._user_specific_unit import user_specific_unit_from_unit_format
 
@@ -107,12 +107,11 @@ def _curves_length(graph: EvaluatedGraph) -> int:
 
 
 def _timestamps(time_range: TimeRange, length: int) -> list[int]:
-    # Deliberately not cmk.gui.graphing._metric_data._timestamps: that one returns each
-    # bucket's *end* (t + step) for resampling; plotting needs each bucket's *start* (t) to line
-    # up with the curve's own time_series.values. Built from `length` (see _curves_length),
-    # not range(time_range.start, time_range.end, time_range.step): the two agree whenever every
-    # curve's values matches time_range exactly, but not every curve is guaranteed to.
-    return [time_range.start + i * time_range.step for i in range(length)]
+    # Each value is drawn at its bucket's *end* (t + step), as the Vue graph's timestampAt()
+    # draws it, so the last value lands on time_range.end. Built from `length` (see
+    # _curves_length), not from time_range: the two agree whenever every curve's values matches
+    # time_range exactly, but not every curve is guaranteed to.
+    return [time_range.start + (i + 1) * time_range.step for i in range(length)]
 
 
 def _series_values(series: TimeSeries, *, length: int | None = None) -> npt.NDArray[np.float64]:
@@ -250,14 +249,14 @@ def _plot_metrics(ax: Axes, graph: EvaluatedGraph) -> None:
 
     ax.margins(y=0)
 
-    if timestamps:
-        # Always span the full requested time_range - the same one _graph_time_caption reads
-        # for the title - rather than trimming to the first real data point. A graph mostly
-        # made of a leading None-only period (e.g. a newly created host, or any range wider
-        # than the data's actual history) must render as mostly empty, matching what Vue's
-        # on-screen renderer already shows, instead of silently zooming into the tail end while
-        # the title still claims the full range.
-        ax.set_xlim(timestamps[0], timestamps[-1])
+    if time_range is not None:
+        # Always span the full time_range - the window the Vue graph draws against, and the one
+        # _graph_time_caption reads for the title - rather than trimming to the first real data
+        # point. A graph mostly made of a leading None-only period (e.g. a newly created host,
+        # or any range wider than the data's actual history) must render as mostly empty,
+        # matching what Vue's on-screen renderer already shows, instead of silently zooming into
+        # the tail end while the title still claims the full range.
+        ax.set_xlim(time_range.start, time_range.end)
 
 
 def _drawn_vertical_extent(graph: EvaluatedGraph) -> tuple[float | None, float | None]:
@@ -445,16 +444,10 @@ def _apply_render_config(
         ax.yaxis.set_visible(False)
 
     if config.show_time_axis:
-        ax.xaxis.set_major_formatter(
-            FuncFormatter(
-                lambda x, _: (
-                    datetime.datetime.fromtimestamp(x, tz=datetime.UTC)
-                    .astimezone()
-                    .strftime("%H:%M")
-                )
-            )
-        )
-        ax.tick_params(axis="x")
+        ax.tick_params(axis="x", which="minor", labelsize=config.font_size, length=0)
+        # A first placement, so the layout pass reserves room for the labels; the plot width
+        # it settles on is only known afterwards (see _fit_time_axis).
+        _fit_time_axis(ax, graph, config)
         ax.grid(axis="x", color=DIVISION_COLOR, linestyle="--")
     else:
         ax.tick_params(axis="x", labelbottom=False, bottom=False)
@@ -467,6 +460,38 @@ def _apply_render_config(
         )
 
     return title_artist
+
+
+def _fit_time_axis(ax: Axes, graph: EvaluatedGraph, config: GraphDisplayConfigImage) -> None:
+    """Place the time axis ticks where the Vue graph places them, labelled the same way.
+
+    The tick density follows the plot width and the measured label widths, so this must run
+    again after a layout pass (e.g. fig.tight_layout()) has settled the plot width.
+    """
+    if not config.show_time_axis:
+        return
+    if _time_range(graph) is None:
+        ax.set_xticks([])
+        return
+    renderer = FigureCanvasAgg(ax.get_figure(root=True)).get_renderer()  # type: ignore[no-untyped-call]
+    font = FontProperties(size=config.font_size)
+
+    def measure_label(text: str) -> float:
+        width, _height, _descent = renderer.get_text_width_height_descent(text, font, ismath=False)
+        return float(width)
+
+    start, end = ax.get_xlim()
+    ticks = compute_time_axis(start, end, ax.get_window_extent(renderer).width, measure_label)
+    # Ticks with a line get a grid line; the label-only ones (a day's label centered between
+    # its day boundaries) must not, so they go on the minor ticks, which have no grid.
+    grid_ticks = [tick for tick in ticks if tick.line_width > 0]
+    label_ticks = [tick for tick in ticks if tick.line_width == 0]
+    ax.set_xticks([tick.position for tick in grid_ticks], [tick.text or "" for tick in grid_ticks])
+    ax.set_xticks(
+        [tick.position for tick in label_ticks],
+        [tick.text or "" for tick in label_ticks],
+        minor=True,
+    )
 
 
 def _align_title_to_y_ticks(fig: Figure, ax: Axes, title_artist: Text | None) -> None:
@@ -710,6 +735,7 @@ def render_png_ex(
         ax, graph, config, y_axis_unit, formatter, is_mirrored=is_mirrored
     )
     fig.tight_layout()
+    _fit_time_axis(ax, graph, config)
     _align_title_to_y_ticks(fig, ax, title_artist)
     buf = io.BytesIO()
     fig.savefig(buf, format="png")
@@ -751,7 +777,7 @@ def render_png_graphs(
         facecolor=BACKGROUND_COLOR,
     )
     no_legend_config = config.model_copy(update={"show_legend": False, "show_graph_time": False})
-    axes_and_titles: list[tuple[Axes, Text | None]] = []
+    axes_and_titles: list[tuple[Axes, EvaluatedGraph, Text | None]] = []
     for idx, graph in enumerate(graphs):
         ax = fig.add_subplot(len(graphs), 1, idx + 1)
         ax.set_facecolor(BACKGROUND_COLOR)
@@ -770,9 +796,10 @@ def render_png_graphs(
             _notation_formatter(y_axis_unit),
             is_mirrored=is_mirrored,
         )
-        axes_and_titles.append((ax, title_artist))
+        axes_and_titles.append((ax, graph, title_artist))
     fig.tight_layout()
-    for ax, title_artist in axes_and_titles:
+    for ax, graph, title_artist in axes_and_titles:
+        _fit_time_axis(ax, graph, no_legend_config)
         _align_title_to_y_ticks(fig, ax, title_artist)
     buf = io.BytesIO()
     fig.savefig(buf, format="png")

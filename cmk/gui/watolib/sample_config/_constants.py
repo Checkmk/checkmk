@@ -275,15 +275,6 @@ SHIPPED_RULES = {
             "options": {"description": 'Hosts with the tag "snmp-v1" must not use bulkwalk'},
         },
     ],
-    # All SNMP managment boards should use SNMP v2c if not specially tagged
-    "management_bulkwalk_hosts": [
-        {
-            "id": "59d84cde-ee3a-4f8d-8bec-fce35a2b0d15",
-            "condition": {},
-            "value": True,
-            "options": {"description": "All management boards use SNMPv2 and bulk walk"},
-        },
-    ],
     # Put all hosts and the contact group 'all'
     "host_contactgroups": [
         {

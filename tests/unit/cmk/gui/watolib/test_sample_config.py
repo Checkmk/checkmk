@@ -10,6 +10,7 @@ import pytest
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.watolib.sample_config import (
     init_wato_datastructures,
     sample_config_generator_registry,
@@ -61,6 +62,20 @@ def test_init_wato_data_structures() -> None:
     assert Path(omd_root, "var/check_mk/web/agent_registration/automation.secret").exists()
     # the classic backend is the shipped default, no need to configure it
     assert "snmp_backend_default" not in load_configuration_settings()
+
+
+@pytest.mark.usefixtures("request_context")
+def test_sample_config_ships_no_rules_of_deprecated_rule_sets() -> None:
+    tree = folder_tree()
+    sample_config_generator_registry["basic_wato_config"]().generate(tree)
+
+    deprecated_with_rules = [
+        ruleset.name
+        for ruleset in AllRulesets.load_all_rulesets(tree).get_rulesets().values()
+        if ruleset.is_deprecated() and ruleset.num_rules()
+    ]
+
+    assert deprecated_with_rules == []
 
 
 @pytest.mark.usefixtures("request_context")

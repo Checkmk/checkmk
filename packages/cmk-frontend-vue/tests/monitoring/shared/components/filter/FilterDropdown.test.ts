@@ -4,13 +4,15 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { render, screen, within } from '@testing-library/vue'
+import { render, screen, waitFor, within } from '@testing-library/vue'
 import { defineComponent, h, nextTick, ref } from 'vue'
 
 import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
 import FilterDropdown from '@/monitoring/shared/components/filter/FilterDropdown.vue'
 import type {
+  AutocompleteChoiceFilter,
   CheckboxListFilter,
+  ColumnFilterDefinition,
   ColumnFilterValue,
   SortDirection
 } from '@/monitoring/shared/components/filter/types'
@@ -24,6 +26,15 @@ const definition: CheckboxListFilter<'state'> = {
   ]
 }
 
+const LABELS = ['cmk/os_family:linux', 'cmk/os_family:windows', 'cmk/site:heute']
+
+const labelsDefinition: AutocompleteChoiceFilter<'labels'> = {
+  type: 'autocomplete-choice',
+  field: 'labels',
+  op: 'all_of',
+  suggest: (query: string) => Promise.resolve(LABELS.filter((label) => label.includes(query)))
+}
+
 function upFilter(): ColumnFilterNode<'state'> {
   return { type: 'condition', field: 'state', op: 'one_of', value: ['UP'] }
 }
@@ -33,7 +44,9 @@ function upFilter(): ColumnFilterNode<'state'> {
 function renderDropdown(
   initial: ColumnFilterNode<FilterField> | undefined = undefined,
   sortable: boolean = false,
-  extendsSortOf: string[] = []
+  extendsSortOf: string[] = [],
+  filterDefinition: ColumnFilterDefinition = definition,
+  label: string = 'State'
 ) {
   const model = ref<ColumnFilterNode<FilterField> | undefined>(initial)
   const sort = ref<SortDirection>(false)
@@ -44,8 +57,8 @@ function renderDropdown(
         h(
           FilterDropdown,
           {
-            definition: definition,
-            label: 'State',
+            definition: filterDefinition,
+            label: label,
             sortable: sortable,
             sort: sort.value,
             'onUpdate:sort': (value: SortDirection) => {
@@ -354,4 +367,24 @@ test('a column scrolled past the right edge keeps the panel inside it', async ()
 
   expect(panel.style.left).toBe('auto')
   expect(panel.style.right).toBe('100px')
+})
+
+test('the arrow keys walk the suggestions one at a time', async () => {
+  const user = userEvent.setup()
+  renderDropdown(undefined, false, [], labelsDefinition, 'Labels')
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  await user.type(screen.getByRole('searchbox'), 'os_family')
+  await waitFor(() => screen.getByRole('button', { name: 'cmk/os_family:linux' }))
+
+  await user.keyboard('{ArrowDown}')
+  expect(screen.getByRole('button', { name: 'cmk/os_family:linux' })).toHaveFocus()
+
+  // The shell walks the panel's rows on the same keys, so without the suggestion list
+  // keeping them this second press would land on the third suggestion.
+  await user.keyboard('{ArrowDown}')
+  expect(screen.getByRole('button', { name: 'cmk/os_family:windows' })).toHaveFocus()
+
+  await user.keyboard('{ArrowUp}')
+  expect(screen.getByRole('button', { name: 'cmk/os_family:linux' })).toHaveFocus()
 })

@@ -287,3 +287,17 @@ test('drops the wildcard entry when a key leaves a single value to match', async
   expect(screen.getByRole('button', { name: 'criticality' })).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'criticality*' })).not.toBeInTheDocument()
 })
+
+test('keeps the arrow keys it acts on, so nothing outside moves as well', async () => {
+  const outside = vi.fn()
+  window.addEventListener('keydown', outside)
+  mountChips()
+
+  await userEvent.type(screen.getByRole('searchbox'), 'os_family')
+  await waitFor(() => screen.getByRole('button', { name: 'cmk/os_family:linux' }))
+  outside.mockClear()
+  await userEvent.keyboard('{ArrowDown}{ArrowUp}')
+
+  expect(outside).not.toHaveBeenCalled()
+  window.removeEventListener('keydown', outside)
+})

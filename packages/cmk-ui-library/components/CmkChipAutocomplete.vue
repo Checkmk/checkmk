@@ -260,8 +260,8 @@ defineExpose({ focus })
       :placeholder="placeholder ?? _t('Search')"
       :aria-label="ariaLabel ?? _t('Search')"
       @focusin="onFocus"
-      @keydown.down.prevent="onArrowDown"
-      @keydown.up.prevent="onArrowUp"
+      @keydown.down.prevent.stop="onArrowDown"
+      @keydown.up.prevent.stop="onArrowUp"
       @keydown.backspace="onBackspace"
       @keydown.escape="onEscape"
     />
@@ -278,8 +278,8 @@ defineExpose({ focus })
           class="cmk-chip-autocomplete__suggestion"
           :disabled="isFull"
           @click="select(suggestion)"
-          @keydown.down.prevent="moveFocus(1)"
-          @keydown.up.prevent="moveFocus(-1)"
+          @keydown.down.prevent.stop="moveFocus(1)"
+          @keydown.up.prevent.stop="moveFocus(-1)"
         >
           {{ suggestion }}
         </button>

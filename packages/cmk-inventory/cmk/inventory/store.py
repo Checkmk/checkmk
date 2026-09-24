@@ -169,7 +169,6 @@ def _parse_from_unzipped(raw: object) -> SDMetaAndRawTree:
     if not isinstance(raw, dict):
         raise TypeError(raw)
     if set(raw) == {"meta", "raw_tree"}:
-        # Handle future versions
         return SDMetaAndRawTree(
             meta=_parse_raw_meta(raw.get("meta")),
             raw_tree=_parse_raw_tree(raw.get("raw_tree")),
@@ -196,9 +195,6 @@ def _parse_dump(dump: bytes) -> object:
 
 
 def parse_from_gzipped(gzipped: bytes) -> SDMetaAndRawTree:
-    # Note: Since Checkmk 2.1 we explicitly extract "Attributes", "Table" or "Nodes" while
-    # deserialization. This means that "meta_*" are not taken into account and we stay
-    # compatible.
     return _parse_from_unzipped(_parse_dump(gzip.GzipFile(fileobj=io.BytesIO(gzipped)).read()))
 
 
@@ -247,7 +243,6 @@ class InventoryStore:
         save_raw_tree_gz(tree_path_gz, SDMetaAndRawTree(meta=meta, raw_tree=raw_tree))
         tree_path_gz.legacy.unlink(missing_ok=True)
 
-        # Inform Livestatus about the latest inventory update
         self.inv_paths.inventory_marker_file.touch()
 
     def remove_inventory_tree(self, *, host_name: HostName) -> None:
@@ -269,7 +264,6 @@ class InventoryStore:
         save_raw_tree(tree_path, serialize_tree(tree))
         tree_path.legacy.unlink(missing_ok=True)
 
-        # Inform Livestatus about the latest inventory update
         self.inv_paths.status_data_marker_file.touch()
 
     def remove_status_data_tree(self, *, host_name: HostName) -> None:

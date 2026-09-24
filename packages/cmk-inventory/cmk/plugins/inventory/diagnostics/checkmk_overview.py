@@ -23,7 +23,6 @@ from cmk.inventory.serialization import serialize_tree
 from cmk.inventory.store import InventoryStore
 from cmk.inventory.trees import SDNodeName
 
-# Shared with the diagnostics plugin family; topics compare by value.
 _TOPIC_GENERAL = Topic("General site information")
 
 

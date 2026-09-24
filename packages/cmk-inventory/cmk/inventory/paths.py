@@ -23,11 +23,6 @@ class TreePath:
 
     @classmethod
     def from_archive_or_delta_cache_file_path(cls, file_path: Path) -> TreePath:
-        # 'file_path' is of the form
-        # - <OMD_ROOT>/var/check_mk/inventory_archive/<HOST>/<TS>.json
-        # - <OMD_ROOT>/var/check_mk/inventory_archive/<HOST>/<TS>
-        # - <OMD_ROOT>/var/check_mk/inventory_delta_cache/<HOST>/<TS>_<TS>.json
-        # - <OMD_ROOT>/var/check_mk/inventory_delta_cache/<HOST>/<TS>_<TS>
         return (
             cls(path=file_path, legacy=file_path.with_suffix(""))
             if file_path.suffix == ".json"

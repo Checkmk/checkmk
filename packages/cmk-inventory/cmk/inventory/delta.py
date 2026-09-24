@@ -195,10 +195,6 @@ def _compare_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableDel
         rows.append({k: _encode_as_new(v) for k, v in left.rows_by_ident[ident].items()})
 
     for ident in compared_row_idents.both:
-        # Note: Rows which have at least one change also provide all table fields.
-        # Example:
-        # If the version of a package (below "Software > Packages") has changed from 1.0 to 2.0
-        # then it would be very annoying if the rest of the row is not shown.
         if (
             compared_dict_result := _DeltaDict.compare(
                 left=left.rows_by_ident[ident],

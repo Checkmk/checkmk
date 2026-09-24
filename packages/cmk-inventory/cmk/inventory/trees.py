@@ -70,8 +70,6 @@ class ImmutableAttributes:
     retentions: Mapping[SDKey, RetentionInterval] = field(default_factory=dict)
 
     def __len__(self) -> int:
-        # The attribute 'pairs' is decisive. Other attributes like 'retentions' have no impact
-        # if there are no pairs.
         return len(self.pairs)
 
     @override
@@ -88,8 +86,6 @@ class ImmutableTable:
     retentions: Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]] = field(default_factory=dict)
 
     def __len__(self) -> int:
-        # The attribute 'rows' is decisive. Other attributes like 'key_columns' or 'retentions'
-        # have no impact if there are no rows.
         return sum(map(len, self.rows_by_ident.values()))
 
     @override
@@ -235,8 +231,6 @@ class _MutableAttributes:
     update_results: list[str] = field(default_factory=list)
 
     def __len__(self) -> int:
-        # The attribute 'pairs' is decisive. Other attributes like 'retentions' have no impact
-        # if there are no pairs.
         return len(self.pairs)
 
     @override
@@ -313,8 +307,6 @@ class _MutableTable:
     update_results: list[str] = field(default_factory=list)
 
     def __len__(self) -> int:
-        # The attribute 'rows' is decisive. Other attributes like 'key_columns' or 'retentions'
-        # have no impact if there are no rows.
         return sum(map(len, self.rows_by_ident.values()))
 
     @override
@@ -394,7 +386,6 @@ class _MutableTable:
                 )
 
             if previous_row:
-                # Update row with key column entries
                 previous_row |= {k: previous.rows_by_ident[ident][k] for k in previous.key_columns}
                 self._add_row(ident, previous_row)
                 self.update_results.append(
@@ -421,7 +412,6 @@ class _MutableTable:
                 retentions.setdefault(ident, {})[key] = retention_interval
 
             if row:
-                # Update row with key column entries
                 row.update(
                     {
                         **{k: previous.rows_by_ident[ident][k] for k in previous.key_columns},
@@ -554,32 +544,6 @@ class MutableTree:
             if update_results := node.get_update_results():
                 by_path.update({p: list(rs) for p, rs in update_results.items()})
         return by_path
-
-
-# Data for the HW/SW Inventory has a validity period (live data or persisted).
-# With the retention intervals configuration you can keep specific attributes or table columns
-# longer than their validity period.
-#
-# 1.) Collect cache infos from plugins if and only if there is a configured 'path-to-node' and
-#     attributes/table keys entry in the ruleset 'Retention intervals for HW/SW Inventory
-#     entities'.
-#
-# 2.) Process collected cache infos - handle the following four cases:
-#
-#       previous node | inv node | retention intervals from
-#     -----------------------------------------------------------------------------------
-#       no            | no       | None
-#       no            | yes      | inv_node keys
-#       yes           | no       | previous_node keys
-#       yes           | yes      | previous_node keys + inv_node keys
-#
-#     - If there's no previous node then filtered keys + intervals of current node is stored
-#       (like a first run) and will be checked against the future node in the next run.
-#     - if there's a previous node then check if the data is recent enough and merge
-#       attributes/tables data from the previous node with the current one.
-#       'Recent enough' means: now <= cache_at + cache_interval + retention_interval
-#       where cache_at, cache_interval: from agent data (or set to (now, 0) if not persisted),
-#             retention_interval: configured in the above ruleset
 
 
 def _parse_choice(

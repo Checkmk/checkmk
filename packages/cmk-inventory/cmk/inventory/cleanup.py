@@ -460,7 +460,6 @@ def _cleanup_abandoned_files_of_host(
             logger.warning("Remove abandoned host file %(path)r", {"path": file.path})
             file.path.unlink(missing_ok=True)
         with contextlib.suppress(OSError):
-            # Folder not empty
             folder.rmdir()
 
     for file in abandoned_files_of_host.files:

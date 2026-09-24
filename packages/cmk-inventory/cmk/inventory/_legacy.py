@@ -65,17 +65,6 @@ def deserialize_legacy_tree(
                 continue
 
             if all(not isinstance(v, list | dict) for row in value for v in row.values()):
-                # Either we get:
-                #   [
-                #       {"column1": "value 11", "column2": "value 12",...},
-                #       {"column1": "value 11", "column2": "value 12",...},
-                #       ...
-                #   ]
-                # Or:
-                #   [
-                #       {"attr": "attr1", "table": [...], "node": {...}, "idx-node": [...]},
-                #       ...
-                #   ]
                 raw_tables.setdefault(SDNodeName(key), [_parse_legacy_row(r) for r in value])
                 continue
 

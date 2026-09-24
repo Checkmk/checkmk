@@ -28,7 +28,6 @@ class InventoryPath:
 
 
 def _sanitize_path(path: Sequence[str]) -> SDPath:
-    # ":": Nested tables, see also lib/structured_data.py
     return tuple(
         SDNodeName(p) for part in path for p in (part.split(":") if ":" in part else [part]) if p
     )
@@ -54,8 +53,6 @@ def parse_internal_raw_path(raw: str) -> InventoryPath:
     sanitized_path = _sanitize_path(path[:-1])
     if ":" in path[-2]:
         source = TreeSource.table
-        # Forget the last '*' or an index like '17'
-        # because it's related to columns (not nodes)
         sanitized_path = sanitized_path[:-1]
     else:
         source = TreeSource.attributes

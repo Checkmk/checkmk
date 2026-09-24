@@ -89,6 +89,83 @@ def test_discover_proxmox_ve_node_cpu_allocation_missing_data() -> None:
             [],
             id="No output when node total cpu is missing",
         ),
+        pytest.param(
+            {
+                "cpu_allocation_ratio": ("fixed", (150.0, 200.0)),
+            },
+            # An offline node is reported with all totals set to 0
+            SectionNodeAllocation(
+                allocated_cpu=0.0,
+                node_total_cpu=0.0,
+                allocated_mem=0.0,
+                node_total_mem=0.0,
+                status="offline",
+            ),
+            [
+                Result(
+                    state=State.OK,
+                    summary=(
+                        "Node status: offline, total CPUs: 0, cannot calculate CPU allocation ratio"
+                    ),
+                ),
+            ],
+            id="Offline node with node total cpu 0",
+            marks=pytest.mark.xfail(
+                strict=True,
+                reason="Crash report 31915e7e-484d-11f1-8000-005056a019b7: ZeroDivisionError",
+            ),
+        ),
+        pytest.param(
+            {
+                "cpu_allocation_ratio": ("fixed", (150.0, 200.0)),
+            },
+            # An offline node can still report the totals of its last known stats
+            SectionNodeAllocation(
+                allocated_cpu=0.0,
+                node_total_cpu=13.0,
+                allocated_mem=0.0,
+                node_total_mem=64000000.0,
+                status="offline",
+            ),
+            [
+                Result(
+                    state=State.OK,
+                    summary=(
+                        "Node status: offline, total CPUs: 13, cannot calculate CPU allocation ratio"
+                    ),
+                ),
+            ],
+            id="Offline node with node total cpu reported",
+            marks=pytest.mark.xfail(
+                strict=True,
+                reason="Crash report 31915e7e-484d-11f1-8000-005056a019b7: ZeroDivisionError",
+            ),
+        ),
+        pytest.param(
+            {
+                "cpu_allocation_ratio": ("fixed", (150.0, 200.0)),
+            },
+            SectionNodeAllocation(
+                allocated_cpu=0.0,
+                node_total_cpu=0.0,
+                allocated_mem=0.0,
+                node_total_mem=0.0,
+                status="online",
+            ),
+            [
+                Result(
+                    state=State.OK,
+                    summary=(
+                        "Node status: online, total CPUs: 0, cannot calculate CPU allocation ratio"
+                    ),
+                ),
+            ],
+            id="Online node with node total cpu 0",
+            marks=pytest.mark.xfail(
+                strict=True,
+                reason="Crash report 31915e7e-484d-11f1-8000-005056a019b7: ZeroDivisionError",
+            ),
+        ),
     ],
 )
 def test_check_proxmox_ve_node_cpu_allocation(

@@ -240,10 +240,6 @@ def test_discover_proxmox_ve_replication(
                 )
             ],
             id="Replication with multi-line error -> CRIT with error on one line",
-            marks=pytest.mark.xfail(
-                strict=True,
-                reason="Crash report c7f0638e-9f77-11f1-b783-bc2411ee888d: ValueError",
-            ),
         ),
     ],
 )

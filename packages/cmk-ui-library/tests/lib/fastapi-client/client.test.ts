@@ -3,77 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { CmkApiError } from 'cmk-ui-library/lib/error'
-import {
-  createFastApiClient,
-  formatDaemonError,
-  unwrapDaemonResponse
-} from 'cmk-ui-library/lib/fastapi-client/client'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { createFastApiClient } from 'cmk-ui-library/lib/fastapi-client/client'
+import { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
+import { afterEach, describe, expect, expectTypeOf, test, vi } from 'vitest'
 
-function responseWith(status: number): Response {
-  return new Response(null, { status })
-}
-
-describe('formatDaemonError', () => {
-  test('uses a string detail as-is', () => {
-    expect(formatDaemonError({ detail: 'Map not found' }, 404)).toBe('Map not found')
-  })
-
-  test('falls back to a message field', () => {
-    expect(formatDaemonError({ message: 'boom' }, 500)).toBe('boom')
-  })
-
-  test('renders a validation list with its field locations', () => {
-    const body = {
-      detail: [
-        { loc: ['body', 'objects', 0, 'name'], msg: 'field required' },
-        { loc: ['body', 'view', 'type'], msg: 'Value error, unknown type' }
-      ]
-    }
-    // The framework's own root element is dropped; what is left is what points the operator at
-    // the offending field.
-    expect(formatDaemonError(body, 422)).toBe(
-      'objects.0.name: field required; view.type: unknown type'
-    )
-  })
-
-  test('states the status when the body says nothing usable', () => {
-    expect(formatDaemonError(null, 503)).toBe('HTTP 503')
-    expect(formatDaemonError({ detail: [] }, 422)).toBe('HTTP 422')
-  })
-})
-
-describe('unwrapDaemonResponse', () => {
-  test('returns the data on success', () => {
-    expect(unwrapDaemonResponse({ data: { a: 1 }, response: responseWith(200) })).toEqual({ a: 1 })
-  })
-
-  test('returns undefined for a no-content response', () => {
-    expect(unwrapDaemonResponse({ response: responseWith(204) })).toBeUndefined()
-  })
-
-  test('throws an error carrying the status, so callers can branch on it', () => {
-    // The reason this is not lib/rest-api-client's unwrap: a create dialog has to tell 409
-    // "already exists" from 422 "invalid" to say anything useful.
-    try {
-      unwrapDaemonResponse({ error: { detail: 'already exists' }, response: responseWith(409) })
-      expect.unreachable('should have thrown')
-    } catch (e) {
-      expect(e).toBeInstanceOf(CmkApiError)
-      expect((e as CmkApiError).statusCode).toBe(409)
-      expect((e as CmkApiError).message).toBe('already exists')
-    }
-  })
-
-  test('throws on a non-ok response even when the body parsed', () => {
-    expect(() => unwrapDaemonResponse({ data: {}, response: responseWith(500) })).toThrow(
-      CmkApiError
-    )
-  })
-})
-
-/** The smallest shape openapi-fetch needs to type a GET — enough to call the client honestly. */
 interface TestPaths {
   '/thing': {
     get: {
@@ -82,43 +15,202 @@ interface TestPaths {
       }
     }
   }
+  '/things/{id}': {
+    get: {
+      parameters: { path: { id: string } }
+      responses: {
+        200: { content: { 'application/json': { id: string } } }
+      }
+    }
+    delete: {
+      parameters: { path: { id: string } }
+      responses: {
+        204: { content?: never }
+      }
+    }
+  }
+  '/things': {
+    post: {
+      requestBody: { content: { 'application/json': { name: string } } }
+      responses: {
+        201: { content: { 'application/json': { id: string } } }
+        409: { content: { 'application/json': { detail: string } } }
+        422: { content: { 'application/json': { detail: { loc: unknown[]; msg: string }[] } } }
+      }
+    }
+  }
+  '/events': {
+    get: {
+      responses: {
+        200: { content: { 'text/event-stream': unknown } }
+      }
+    }
+  }
 }
 
+const BASE_URL = 'https://example.invalid/api/v1'
+
+function respondWith(response: () => Response): Request[] {
+  const sent: Request[] = []
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async (request) => {
+    sent.push(request as Request)
+    return response()
+  })
+  return sent
+}
+
+function json(body: unknown, status: number): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json' }
+  })
+}
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
+
 describe('createFastApiClient', () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
+  test('resolves to the success payload', async () => {
+    respondWith(() => json({ ok: true }, 200))
+    const api = createFastApiClient<TestPaths>({ baseUrl: BASE_URL })
+
+    const payload = await api.GET('/thing')
+
+    expect(payload).toEqual({ ok: true })
+  })
+
+  test.each([
+    { status: 409, detail: 'Thing already exists' },
+    { status: 500, detail: 'Internal failure' }
+  ])('rejects a $status with its string detail and status', async ({ status, detail }) => {
+    respondWith(() => json({ detail }, status))
+    const api = createFastApiClient<TestPaths>({ baseUrl: BASE_URL })
+
+    const call = api.POST('/things', { body: { name: 'a' } })
+
+    await expect(call).rejects.toMatchObject({
+      name: 'CmkApiError',
+      message: detail,
+      statusCode: status
+    })
+  })
+
+  test('rejects a 422 naming each invalid field and keeping the parsed body', async () => {
+    const body = {
+      detail: [
+        { loc: ['body', 'name'], msg: 'field required' },
+        { loc: ['body', 'tags', 0], msg: 'Value error, unknown tag' }
+      ]
+    }
+    respondWith(() => json(body, 422))
+    const api = createFastApiClient<TestPaths>({ baseUrl: BASE_URL })
+
+    const call = api.POST('/things', { body: { name: 'a' } })
+
+    await expect(call).rejects.toMatchObject({
+      name: 'CmkApiError',
+      message: 'name: field required; tags.0: unknown tag',
+      body
+    })
+  })
+
+  test('rejects an empty-body 503 with its status', async () => {
+    respondWith(() => new Response(null, { status: 503 }))
+    const api = createFastApiClient<TestPaths>({ baseUrl: BASE_URL })
+
+    const call = api.GET('/thing')
+
+    await expect(call).rejects.toMatchObject({
+      name: 'CmkApiError',
+      message: 'HTTP 503',
+      statusCode: 503
+    })
+  })
+
+  test('resolves a 204 to undefined', async () => {
+    respondWith(() => new Response(null, { status: 204 }))
+    const api = createFastApiClient<TestPaths>({ baseUrl: BASE_URL })
+
+    const payload = await api.DELETE('/things/{id}', { params: { path: { id: 'a' } } })
+
+    expect(payload).toBeUndefined()
+  })
+
+  test('resolves a stream call to the response body stream', async () => {
+    respondWith(
+      () =>
+        new Response('data: {}\n\n', {
+          status: 200,
+          headers: { 'Content-Type': 'text/event-stream' }
+        })
+    )
+    const api = createFastApiClient<TestPaths>({ baseUrl: BASE_URL })
+
+    const payload = await api.GET('/events', { parseAs: 'stream' })
+
+    expect(payload).toBeInstanceOf(ReadableStream)
+  })
+
+  test('rejects a failed stream call like a JSON call', async () => {
+    respondWith(() => json({ detail: 'Conversation not found' }, 404))
+    const api = createFastApiClient<TestPaths>({ baseUrl: BASE_URL })
+
+    const call = api.GET('/events', { parseAs: 'stream' })
+
+    await expect(call).rejects.toMatchObject({
+      name: 'CmkApiError',
+      message: 'Conversation not found',
+      statusCode: 404
+    })
   })
 
   test('asks the auth hook per request, so a rotated credential is picked up', async () => {
+    const sent = respondWith(() => json({ ok: true }, 200))
     const tokens = ['first', 'second']
-    const fetchSpy = vi
-      .spyOn(globalThis, 'fetch')
-      .mockImplementation(async () => new Response('{}', { status: 200 }))
-
-    const client = createFastApiClient<TestPaths>({
-      baseUrl: 'https://example.invalid/api/v1',
+    const api = createFastApiClient<TestPaths>({
+      baseUrl: BASE_URL,
       auth: { headers: () => ({ 'X-Ticket': tokens.shift()! }) }
     })
 
-    await client.GET('/thing')
-    await client.GET('/thing')
+    await api.GET('/thing')
+    await api.GET('/thing')
 
-    const sent = fetchSpy.mock.calls.map(([request]) =>
-      (request as Request).headers.get('X-Ticket')
-    )
-    expect(sent).toEqual(['first', 'second'])
+    expect(sent.map((request) => request.headers.get('X-Ticket'))).toEqual(['first', 'second'])
+  })
+})
+
+describe('the schema types each call', () => {
+  const api = createFastApiClient<TestPaths>({ baseUrl: BASE_URL })
+
+  test('an unknown path does not compile', () => {
+    // @ts-expect-error '/unknown' is not a path of the schema
+    void (() => api.GET('/unknown'))
   })
 
-  test('sends no credential header when no hook is configured', async () => {
-    const fetchSpy = vi
-      .spyOn(globalThis, 'fetch')
-      .mockImplementation(async () => new Response('{}', { status: 200 }))
+  test('a missing required path parameter does not compile', () => {
+    // @ts-expect-error '/things/{id}' requires the id
+    void (() => api.GET('/things/{id}'))
+  })
 
-    const client = createFastApiClient<TestPaths>({
-      baseUrl: 'https://example.invalid/api/v1'
-    })
-    await client.GET('/thing')
+  test('a body of the wrong shape does not compile', () => {
+    // @ts-expect-error name has to be a string
+    void (() => api.POST('/things', { body: { name: 1 } }))
+  })
 
-    expect((fetchSpy.mock.calls[0]![0] as Request).headers.get('X-Ticket')).toBeNull()
+  test('the payload is typed by the schema', () => {
+    const getThing = () => api.GET('/thing')
+
+    expectTypeOf(getThing).returns.resolves.toEqualTypeOf<{ ok: boolean }>()
+    // @ts-expect-error the schema declares no such field
+    void (async () => (await getThing()).missing)
+  })
+
+  test('the payload cannot be passed to the REST API unwrap', () => {
+    const getThing = () => api.GET('/thing')
+
+    expectTypeOf(getThing).returns.resolves.toEqualTypeOf<{ ok: boolean }>()
+    // @ts-expect-error a payload carries no response to unwrap
+    void (async () => unwrap(await getThing()))
   })
 })

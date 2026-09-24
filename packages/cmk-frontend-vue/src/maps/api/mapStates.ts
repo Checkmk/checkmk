@@ -10,8 +10,6 @@
  * keeps it in memory for as long as someone watches it. Everything here is
  * therefore about one already-registered map.
  */
-import { unwrapDaemonResponse } from 'cmk-ui-library/lib/fastapi-client/client'
-
 import type { MapsDaemonClient } from '@/maps/api/transport'
 import { daemonConfig } from '@/maps/api/wire'
 import type {
@@ -42,11 +40,9 @@ export class MapStatesApi {
    * poll and none can substitute a tampered config.
    */
   public async register(signed: { config_b64: string; sig: string }): Promise<void> {
-    unwrapDaemonResponse(
-      await this.client.POST('/api/v1/maps/register', {
-        body: { config_b64: signed.config_b64, sig: signed.sig }
-      })
-    )
+    await this.client.POST('/api/v1/maps/register', {
+      body: { config_b64: signed.config_b64, sig: signed.sig }
+    })
   }
 
   /**
@@ -56,9 +52,7 @@ export class MapStatesApi {
    * never poison a foreign map's shared loop.
    */
   public async registerEdit(map: MapConfig): Promise<void> {
-    unwrapDaemonResponse(
-      await this.client.POST('/api/v1/maps/register', { body: { config: daemonConfig(map) } })
-    )
+    await this.client.POST('/api/v1/maps/register', { body: { config: daemonConfig(map) } })
   }
 
   public async fetchStates(
@@ -66,26 +60,24 @@ export class MapStatesApi {
     radarOverride?: RadarOverride | null,
     folderOverride?: FolderTreeOverride | null
   ): Promise<MapStates> {
-    return unwrapDaemonResponse(
-      await this.client.GET('/api/v1/maps/{name}/states', {
-        params: {
-          path: { name },
-          query: {
-            ...(radarOverride && {
-              radar_filter: radarOverride.filter,
-              radar_filter_value: radarOverride.filterValue
-            }),
-            ...(folderOverride && {
-              ft_override: true,
-              ft_root_folder: folderOverride.rootFolder,
-              ft_show_empty_folders: folderOverride.showEmptyFolders,
-              ft_only_hard_states: folderOverride.onlyHardStates,
-              ft_sites: folderOverride.sites
-            })
-          }
+    return this.client.GET('/api/v1/maps/{name}/states', {
+      params: {
+        path: { name },
+        query: {
+          ...(radarOverride && {
+            radar_filter: radarOverride.filter,
+            radar_filter_value: radarOverride.filterValue
+          }),
+          ...(folderOverride && {
+            ft_override: true,
+            ft_root_folder: folderOverride.rootFolder,
+            ft_show_empty_folders: folderOverride.showEmptyFolders,
+            ft_only_hard_states: folderOverride.onlyHardStates,
+            ft_sites: folderOverride.sites
+          })
         }
-      })
-    )
+      }
+    })
   }
 
   /**
@@ -94,9 +86,9 @@ export class MapStatesApi {
    * would freeze the live host set into the stored config.
    */
   public async fetchAutoObjects(name: string): Promise<MapElement[]> {
-    return unwrapDaemonResponse(
-      await this.client.GET('/api/v1/maps/{name}/auto-objects', { params: { path: { name } } })
-    ) as unknown as MapElement[]
+    return (await this.client.GET('/api/v1/maps/{name}/auto-objects', {
+      params: { path: { name } }
+    })) as unknown as MapElement[]
   }
 
   /**
@@ -104,11 +96,9 @@ export class MapStatesApi {
    * Loading them eagerly is what makes a large site unusable.
    */
   public async fetchFolderHostServices(name: string, host: string): Promise<FolderHostService[]> {
-    return unwrapDaemonResponse(
-      await this.client.GET('/api/v1/maps/{name}/folder-host-services', {
-        params: { path: { name }, query: { host } }
-      })
-    )
+    return this.client.GET('/api/v1/maps/{name}/folder-host-services', {
+      params: { path: { name }, query: { host } }
+    })
   }
 
   /**
@@ -122,10 +112,8 @@ export class MapStatesApi {
     name: string,
     terms: { s: string[]; h: string[]; q: string[] }
   ): Promise<FolderServiceSearchResult> {
-    return unwrapDaemonResponse(
-      await this.client.GET('/api/v1/maps/{name}/folder-search', {
-        params: { path: { name }, query: { s: terms.s, h: terms.h, q: terms.q } }
-      })
-    )
+    return this.client.GET('/api/v1/maps/{name}/folder-search', {
+      params: { path: { name }, query: { s: terms.s, h: terms.h, q: terms.q } }
+    })
   }
 }

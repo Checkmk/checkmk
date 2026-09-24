@@ -91,6 +91,30 @@ SECTION_WITH_TWO_ERRORS = SectionReplication(
     cluster_has_replications=True,
 )
 
+# Proxmox VE reports some replication errors as multi-line text (crash group 4866)
+SECTION_WITH_MULTILINE_ERROR = SectionReplication(
+    node="node1",
+    cluster="cluster1",
+    replications=[
+        Replication(
+            id="r1",
+            source="node1",
+            target="node2",
+            schedule="*/5",
+            last_sync=0,
+            last_try=1700000300,
+            next_sync=1700000600,
+            duration=1.3,
+            error=(
+                "No common base snapshot on volume(s) local-zfs:vm-100-disk-0\n"
+                "Please remove the problematic volume(s) from the replication target "
+                "or delete and re-create the whole job r1"
+            ),
+        ),
+    ],
+    cluster_has_replications=True,
+)
+
 SECTION_WITH_ONE_REPLICATION = SectionReplication(
     node="node1",
     cluster="cluster1",
@@ -198,6 +222,28 @@ def test_discover_proxmox_ve_replication(
                 )
             ],
             id="Two replications with errors -> CRIT",
+        ),
+        pytest.param(
+            {
+                "time_since_last_replication": ("no_levels", None),
+                "no_replications_state": 2,
+            },
+            SECTION_WITH_MULTILINE_ERROR,
+            [
+                Result(
+                    state=State.CRIT,
+                    summary=(
+                        "Replication job: r1: No common base snapshot on volume(s) "
+                        "local-zfs:vm-100-disk-0; Please remove the problematic volume(s) "
+                        "from the replication target or delete and re-create the whole job r1"
+                    ),
+                )
+            ],
+            id="Replication with multi-line error -> CRIT with error on one line",
+            marks=pytest.mark.xfail(
+                strict=True,
+                reason="Crash report c7f0638e-9f77-11f1-b783-bc2411ee888d: ValueError",
+            ),
         ),
     ],
 )

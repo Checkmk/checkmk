@@ -30,7 +30,6 @@ from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.config import ConfigCache
 from cmk.ccc import version as cmk_version
 from cmk.ccc.hostaddress import Hosts
-from cmk.checkengine.plugins import AgentBasedPlugins
 
 from ._cache import Cache, CacheError
 from ._config import Config, ReloaderConfig
@@ -45,7 +44,6 @@ class AutomationEngine(Protocol):
         app: CheckmkBaseApp,
         cmd: AutomationID,
         args: list[str],
-        plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> ABCAutomationResult | AutomationError: ...
 
@@ -58,18 +56,14 @@ class _State:
         config.LoadingResult,
     ]
     last_reload_at: float
-    plugins: AgentBasedPlugins | None
     loading_result: config.LoadingResult | None
     changes_cache: Cache
 
     def load(self) -> None:
-        """Load the plugins (once) and reload the configuration.
+        """Reload the configuration.
 
         Raises on failure; callers decide whether to continue or report the error.
         """
-        if self.plugins is None:
-            self.plugins = config.load_all_plugins()
-
         # Do not yet set `self.last_reload_at`. We don't know if we succeed.
         time_right_before_reload = time.time()
         self.loading_result = self.reload_config()
@@ -136,7 +130,6 @@ def make_application(
             automation_or_reload_lock=asyncio.Lock(),
             reload_config=reload_config,
             last_reload_at=0,
-            plugins=None,
             loading_result=None,
             changes_cache=cache,
         ),
@@ -317,7 +310,6 @@ def _execute_automation_endpoint(
                 make_app(omd_root),
                 payload.name,
                 list(payload.args),
-                state.plugins,
                 state.loading_result,
             )
             automation_end_time = time.time()

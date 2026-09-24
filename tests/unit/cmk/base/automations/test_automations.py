@@ -23,7 +23,6 @@ from cmk.base.config import LoadingResult
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Version
-from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.ruleset_matcher.labels import LabelSource
 from cmk.ruleset_matcher.matcher import RuleSpec
 from tests.testlib.unit.base_configuration_scenario import Scenario
@@ -53,7 +52,6 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
     assert automations.automation_analyse_host.handler(
         make_app(),
         ["test-host"],
-        AgentBasedPlugins.empty(),
         LoadingResult(
             loaded_config=EMPTY_CONFIG,
             hosts_config=loading_result.hosts_config,
@@ -100,7 +98,6 @@ def test_service_labels(monkeypatch: MonkeyPatch) -> None:
     assert automations.automation_get_services_labels.handler(
         make_app(),
         ["test-host", "CPU load", "CPU temp"],
-        AgentBasedPlugins.empty(),
         LoadingResult(
             loaded_config=EMPTY_CONFIG,
             hosts_config=loading_result.hosts_config,
@@ -127,9 +124,7 @@ class _Result(ABCAutomationResult):
 
 
 def test_handler_output_does_not_reach_stdout(capsys: pytest.CaptureFixture[str]) -> None:
-    def chatty_handler(
-        _app: object, _args: list[str], _plugins: object, _loading_result: object
-    ) -> _Result:
+    def chatty_handler(_app: object, _args: list[str], _loading_result: object) -> _Result:
         sys.stdout.write("chatter")
         return _Result()
 
@@ -144,9 +139,7 @@ def test_handler_output_does_not_reach_stdout(capsys: pytest.CaptureFixture[str]
 
 @pytest.mark.usefixtures("disable_debug")
 def test_output_of_a_failing_handler_reaches_stdout(capsys: pytest.CaptureFixture[str]) -> None:
-    def failing_handler(
-        _app: object, _args: list[str], _plugins: object, _loading_result: object
-    ) -> _Result:
+    def failing_handler(_app: object, _args: list[str], _loading_result: object) -> _Result:
         sys.stdout.write("chatter")
         raise MKGeneralException("broken")
 

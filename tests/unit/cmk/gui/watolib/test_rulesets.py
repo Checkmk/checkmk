@@ -61,7 +61,7 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))
-            return automation_analyze_host_rule_matches.handler(make_app(), [h], None, None)
+            return automation_analyze_host_rule_matches.handler(make_app(), [h], None)
 
     monkeypatch.setattr(rulesets, "analyze_host_rule_matches", analyze_with_matcher)
 
@@ -187,7 +187,7 @@ def fixture_mock_analyze_service_rule_matches_automation(monkeypatch: pytest.Mon
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr((rules, service_labels))))
             return automation_analyze_service_rule_matches.handler(
-                make_app(), [host_name, service_or_item], None, None
+                make_app(), [host_name, service_or_item], None
             )
 
     monkeypatch.setattr(rulesets, "analyze_service_rule_matches", analyze_with_matcher)

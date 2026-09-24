@@ -19,7 +19,6 @@ py_library(
         "//packages/cmk-ccc:daemon",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:version",
-        "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-trace",
         requirement("fastapi"),
         requirement("opentelemetry-api"),

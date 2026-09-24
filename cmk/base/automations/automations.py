@@ -19,7 +19,6 @@ from cmk.base import config
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.timeout import Timeout
-from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.discover_plugins import discover_plugins_from_modules
 
 logger = logging.getLogger(__name__)
@@ -44,7 +43,6 @@ class Automation:
         [
             CheckmkBaseApp,
             list[str],
-            AgentBasedPlugins | None,
             config.LoadingResult | None,
         ],
         ABCAutomationResult,
@@ -83,7 +81,6 @@ class Automations:
         app: CheckmkBaseApp,
         cmd: AutomationID,
         args: list[str],
-        plugins: AgentBasedPlugins | None = None,
         loading_result: config.LoadingResult | None = None,
     ) -> ABCAutomationResult | AutomationError:
         remaining_args, timeout = self._extract_timeout_from_args(args)
@@ -92,14 +89,13 @@ class Automations:
             if timeout is None
             else Timeout(timeout, message="Action timed out after %s seconds." % timeout)
         ):
-            return self._execute(app, cmd, remaining_args, plugins, loading_result)
+            return self._execute(app, cmd, remaining_args, loading_result)
 
     def _execute(
         self,
         app: CheckmkBaseApp,
         cmd: AutomationID,
         args: list[str],
-        plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> ABCAutomationResult | AutomationError:
         # TODO: Disentangle this control flow mess
@@ -113,7 +109,7 @@ class Automations:
                 )
 
             with tracer.span(f"execute_automation[{cmd}]"), _stdout_only_on_failure():
-                result = automation.handler(app, args, plugins, loading_result)
+                result = automation.handler(app, args, loading_result)
 
         except (MKGeneralException, MKTimeout) as e:
             logger.error(  # noqa: TRY400
@@ -154,11 +150,6 @@ def _stdout_only_on_failure() -> Iterator[None]:
     except BaseException:
         sys.stdout.write(buffer.getvalue())
         raise
-
-
-def load_plugins() -> AgentBasedPlugins:
-    with tracer.span("load_all_plugins"):
-        return config.load_all_plugins()
 
 
 def load_config() -> config.LoadingResult:

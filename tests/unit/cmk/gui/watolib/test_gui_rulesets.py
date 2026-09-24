@@ -145,9 +145,7 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))
-            return automation_analyze_host_rule_matches.handler(
-                make_app(), [h], None, loading_result
-            )
+            return automation_analyze_host_rule_matches.handler(make_app(), [h], loading_result)
 
     monkeypatch.setattr(rulesets, "analyze_host_rule_matches", analyze_with_matcher)
 
@@ -295,7 +293,7 @@ def fixture_inline_analyze_host_rule_effectiveness_automation(
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))
             return automation_analyze_host_rule_effectiveness.handler(
-                make_app(), [], None, loading_result
+                make_app(), [], loading_result
             )
 
     monkeypatch.setattr(

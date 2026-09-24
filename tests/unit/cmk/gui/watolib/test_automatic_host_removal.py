@@ -248,7 +248,7 @@ def fixture_mock_analyze_host_rule_matches_automation(
         debug: bool,
     ) -> ABCAutomationResult:
         with mocker.patch("sys.stdin", StringIO(repr(r))):
-            return automation_analyze_host_rule_matches.handler(make_app(), [h], None, None)
+            return automation_analyze_host_rule_matches.handler(make_app(), [h], None)
 
     return mocker.patch.object(
         automatic_host_removal, "analyze_host_rule_matches", analyze_with_matcher

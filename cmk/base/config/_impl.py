@@ -12,6 +12,7 @@ import contextlib
 import copy
 import dataclasses
 import enum
+import functools
 import itertools
 import numbers
 import os
@@ -1069,6 +1070,7 @@ NEGATE = tuple_rulesets.NEGATE
 #   '----------------------------------------------------------------------'
 
 
+@functools.lru_cache
 def load_all_plugins() -> AgentBasedPlugins:
     with tracer.span("load_legacy_check_plugins"):
         with tracer.span("discover_legacy_check_plugins"):

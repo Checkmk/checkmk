@@ -168,7 +168,6 @@ py_library(
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:timeout",
         "//packages/cmk-ccc:version",
-        "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-events",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-plugin-apis:cli",

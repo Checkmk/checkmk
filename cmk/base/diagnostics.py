@@ -60,7 +60,6 @@ SUFFIX = ".tar.gz"
 def handler(
     _app: object,
     args: DiagnosticsCLParameters,
-    plugins: object,  # noqa: ARG001
     loading_result: LoadingResult | None,
 ) -> CreateDiagnosticsDumpResult:
     buf = io.StringIO()
@@ -89,7 +88,6 @@ automation_create_diagnostics_dump = Automation(
 def handler_v2(
     _app: object,
     args: Sequence[str],
-    plugins: object,  # noqa: ARG001
     loading_result: LoadingResult | None,
 ) -> CreateDiagnosticsDumpV2Result:
     buf = io.StringIO()

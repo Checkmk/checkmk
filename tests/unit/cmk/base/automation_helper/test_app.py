@@ -37,7 +37,6 @@ from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.config import ConfigCache, LoadingResult, make_host_tags, make_hosts_config
 from cmk.ccc.hostaddress import Hosts
 from cmk.ccc.version import Version
-from cmk.checkengine.plugins import AgentBasedPlugins
 from tests.testlib.common.utils import wait_until
 from tests.testlib.unit.empty_config import EMPTY_CONFIG
 
@@ -59,7 +58,6 @@ class _DummyAutomationEngineSuccess:
         app: CheckmkBaseApp,  # noqa: ARG002
         cmd: str,  # noqa: ARG002
         args: list[str],  # noqa: ARG002
-        plugins: AgentBasedPlugins | None,  # noqa: ARG002
         loading_result: LoadingResult | None,  # noqa: ARG002
     ) -> _DummyAutomationResult:
         sys.stdout.write("stdout_success")
@@ -73,7 +71,6 @@ class _DummyAutomationEngineFailure:
         app: CheckmkBaseApp,  # noqa: ARG002
         cmd: str,  # noqa: ARG002
         args: list[str],  # noqa: ARG002
-        plugins: AgentBasedPlugins | None,  # noqa: ARG002
         loading_result: LoadingResult | None,  # noqa: ARG002
     ) -> AutomationError:
         sys.stdout.write("stdout_failure")
@@ -87,7 +84,6 @@ class _DummyAutomationEngineSystemExit:
         app: CheckmkBaseApp,  # noqa: ARG002
         cmd: str,  # noqa: ARG002
         args: list[str],  # noqa: ARG002
-        plugins: AgentBasedPlugins | None,  # noqa: ARG002
         loading_result: LoadingResult | None,  # noqa: ARG002
     ) -> AutomationError:
         sys.stdout.write("stdout_system_exit")
@@ -294,7 +290,6 @@ async def test_reloader_single_change(mocker: MockerFixture, cache: Cache) -> No
         last_reload_at=1,
         automation_or_reload_lock=asyncio.Lock(),
         reload_config=mock_reload_callback,
-        plugins=AgentBasedPlugins.empty(),
         loading_result=None,
         changes_cache=cache,
     )
@@ -337,7 +332,6 @@ async def test_reloader_two_changes(mocker: MockerFixture, cache: Cache) -> None
     state = _State(
         last_reload_at=1,
         automation_or_reload_lock=asyncio.Lock(),
-        plugins=AgentBasedPlugins.empty(),
         reload_config=mock_reload_callback,
         loading_result=None,
         changes_cache=cache,
@@ -389,7 +383,6 @@ async def test_reloader_takes_state_into_account(mocker: MockerFixture, cache: C
     state = _State(
         last_reload_at=1,
         automation_or_reload_lock=lock,
-        plugins=None,
         reload_config=mock_reload_callback,
         loading_result=None,
         changes_cache=cache,

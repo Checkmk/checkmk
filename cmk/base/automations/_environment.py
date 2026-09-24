@@ -29,9 +29,9 @@ from typing import Literal, overload
 
 import cmk.utils.paths
 from cmk.base import config
-from cmk.base.automations.automations import load_config, load_plugins
+from cmk.base.automations.automations import load_config
 from cmk.base.base_app import CheckmkBaseApp
-from cmk.base.config import ConfigCache
+from cmk.base.config import ConfigCache, load_all_plugins
 from cmk.base.configlib.checkengine import DiscoveryConfig
 from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.configlib.servicename import (
@@ -95,24 +95,24 @@ class AutomationEnvironment:
     """
 
     app: CheckmkBaseApp
-    plugins: AgentBasedPlugins
     loading_result: config.LoadingResult
 
     @classmethod
     def create(
         cls,
         app: CheckmkBaseApp,
-        plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> AutomationEnvironment:
-        """Lazy-loads plugins and the pending config if the caller passed ``None``."""
-        if plugins is None:
-            plugins = load_plugins()
+        """Lazy-loads the pending config if the caller passed ``None``."""
         if loading_result is None:
             loading_result = load_config()
-        return cls(app=app, plugins=plugins, loading_result=loading_result)
+        return cls(app=app, loading_result=loading_result)
 
     # --- Pass-through accessors (no caching — just re-expose what's already there).
+
+    @property
+    def plugins(self) -> AgentBasedPlugins:
+        return load_all_plugins()
 
     @property
     def loaded_config(self) -> BaseConfig:

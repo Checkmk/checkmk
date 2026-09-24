@@ -36,7 +36,6 @@ from cmk.checkengine.fetcher_abc import Fetcher, Mode
 from cmk.checkengine.fetcher_utils.secrets import FetcherSecrets
 from cmk.checkengine.fetcher_utils.trigger import PlainFetcherTrigger
 from cmk.checkengine.fetchers.piggyback import PiggybackFetcher
-from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.checkengine.snmplib import oids_to_walk, SNMPContextConfig
 from cmk.checkengine.specs.checkresults import ServiceState
 from cmk.checkengine.submitters import ServiceDetails
@@ -159,7 +158,6 @@ class TestAutomationDiagHost:
         assert check_mk.AutomationDiagHost().execute(
             app,
             args,
-            AgentBasedPlugins.empty(),
             config.LoadingResult(
                 loaded_config=loaded_config,
                 hosts_config=hosts_config,
@@ -320,7 +318,6 @@ def test_automation_active_check(  # type: ignore[misc]
         active_check.execute(
             app,
             active_check_args,
-            AgentBasedPlugins.empty(),
             config.LoadingResult(
                 loaded_config=EMPTY_CONFIG,
                 hosts_config=config.make_hosts_config(EMPTY_CONFIG),
@@ -402,7 +399,6 @@ def test_automation_active_check_invalid_args(  # type: ignore[misc]
     active_check.execute(
         app,
         active_check_args,
-        AgentBasedPlugins.empty(),
         config.LoadingResult(
             loaded_config=loaded_config,
             hosts_config=config.make_hosts_config(loaded_config),
@@ -439,9 +435,7 @@ def test_active_check_on_relay_host_routes_to_relay(monkeypatch: pytest.MonkeyPa
         lambda *a, **kw: iter([_FakeServiceData("My svc", ("check_httpv2", "-u", "http://x"))]),  # noqa: ARG005
     )
     auto = _RecordingAutomation()
-    result = auto.execute(
-        app, ["my_host", "my_active_check", "My svc"], AgentBasedPlugins.empty(), lr
-    )
+    result = auto.execute(app, ["my_host", "my_active_check", "My svc"], lr)
     assert result == automation_results.ActiveCheckResult(state=0, output="relay output")
     assert auto.calls["relay"] == ("relay-1", "my_host", "check_httpv2 -u http://x")
     assert "local" not in auto.calls
@@ -455,9 +449,7 @@ def test_active_check_on_non_relay_host_runs_locally(monkeypatch: pytest.MonkeyP
         lambda *a, **kw: iter([_FakeServiceData("My svc", ("check_httpv2", "-u", "http://x"))]),  # noqa: ARG005
     )
     auto = _RecordingAutomation()
-    result = auto.execute(
-        app, ["my_host", "my_active_check", "My svc"], AgentBasedPlugins.empty(), lr
-    )
+    result = auto.execute(app, ["my_host", "my_active_check", "My svc"], lr)
     assert result == automation_results.ActiveCheckResult(state=0, output="local output")
     assert auto.calls["local"] == "check_httpv2 -u http://x"
     assert "relay" not in auto.calls
@@ -479,7 +471,6 @@ def test_active_check_site_side_only_on_relay_host_runs_locally(
     result = auto.execute(
         app,
         ["my_host", "cmk_inv", "Check_MK HW/SW Inventory"],
-        AgentBasedPlugins.empty(),
         lr,
     )
     assert result == automation_results.ActiveCheckResult(state=0, output="local output")
@@ -501,7 +492,6 @@ def test_active_check_unsupported_on_relay_reports_unknown(monkeypatch: pytest.M
     result = AutomationActiveCheckTestable().execute(
         app,
         ["my_host", "my_active_check", "Active check of my_host"],
-        AgentBasedPlugins.empty(),
         lr,
     )
     assert result == automation_results.ActiveCheckResult(

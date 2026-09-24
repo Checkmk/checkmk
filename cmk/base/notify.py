@@ -51,7 +51,7 @@ from cmk.automations.results import (
 )
 from cmk.automations.types import AutomationID
 from cmk.base import config, events
-from cmk.base.automations.automations import Automation, load_config, load_plugins
+from cmk.base.automations.automations import Automation, load_config
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.ccc import store
@@ -60,7 +60,6 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.regex import regex
 from cmk.ccc.timeout import Timeout
 from cmk.ccc.version import Edition
-from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.events.event_context import EnrichedEventContext, EventContext
 from cmk.events.log_to_history import (
     log_to_history,
@@ -761,10 +760,8 @@ def _notify_keepalive(
 def _automation_notification_replay(
     app: CheckmkBaseApp,
     args: list[str],
-    plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> NotificationReplayResult:
-    plugins = plugins or load_plugins()  # do we really still need this?
     loading_result = loading_result or load_config()
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
@@ -792,10 +789,8 @@ def _automation_notification_replay(
 def _automation_notification_analyse(
     app: CheckmkBaseApp,
     args: list[str],
-    plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> NotificationAnalyseResult:
-    plugins = plugins or load_plugins()  # do we really still need this?
     loading_result = loading_result or load_config()
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
@@ -824,13 +819,11 @@ def _automation_notification_analyse(
 def _automation_notification_test(
     app: CheckmkBaseApp,
     args: list[str],
-    plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> NotificationTestResult:
     context = json.loads(args[0])
     dispatch = args[1]
 
-    plugins = plugins or load_plugins()  # do we really still need this?
     loading_result = loading_result or load_config()
     ensure_nagios = make_ensure_nagios(loading_result.loaded_config.monitoring_core)
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
@@ -860,7 +853,6 @@ def _automation_notification_test(
 def _automation_get_bulks(
     _app: object,
     args: list[str],
-    plugins: AgentBasedPlugins | None,  # noqa: ARG001
     loading_result: config.LoadingResult | None,
 ) -> NotificationGetBulksResult:
     only_ripe = args[0] == "1"

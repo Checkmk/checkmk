@@ -30,15 +30,15 @@ py_library(
     ],
 )
 
-# The entry point. Separate from :engine because it assembles the application,
-# which depends on the commands, which depend on :engine.
+# The application: everything the entry point does once it knows the site root.
+# Separate from :main so it can be imported -- and tested -- without OMD_ROOT.
 py_library(
-    name = "main",
-    srcs = ["main.py"],
+    name = "run",
+    srcs = ["run.py"],
     imports = ["../../.."],
     visibility = [
-        "//cmk:__pkg__",
-        "//cmk/base:__subpackages__",
+        "//cmk/cli/engine:__pkg__",
+        "//tests:__subpackages__",
     ],
     deps = [
         ":engine",
@@ -51,4 +51,17 @@ py_library(
         "//packages/cmk-profiling:backend",
         "//packages/cmk-trace",
     ],
+)
+
+# The entry point. Separate from :engine because it assembles the application,
+# which depends on the commands, which depend on :engine.
+py_library(
+    name = "main",
+    srcs = ["main.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__pkg__",
+        "//cmk/base:__subpackages__",
+    ],
+    deps = [":run"],
 )

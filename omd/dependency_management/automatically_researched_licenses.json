@@ -2283,6 +2283,7 @@
   "pkg:pypi/pillow@12.2.0": "MIT-CMU",
   "pkg:pypi/pillow@12.3.0": "MIT-CMU",
   "pkg:pypi/pip@26.1.1": "MIT",
+  "pkg:pypi/pip@26.2.1": "MIT",
   "pkg:pypi/platformdirs@4.9.2": "MIT",
   "pkg:pypi/pluggy@1.5.0": "MIT",
   "pkg:pypi/pluggy@1.6.0": "MIT",

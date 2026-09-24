@@ -492,7 +492,8 @@ describe('ServiceSlideIn', () => {
         host_name: 'web-server-01',
         service_name: 'CPU load',
         service_state: 'OK',
-        host_state: 'Up'
+        host_state: 'Up',
+        is_stale: false
       }
     ])
   })

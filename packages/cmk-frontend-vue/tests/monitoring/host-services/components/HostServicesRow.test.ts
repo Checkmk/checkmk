@@ -188,6 +188,22 @@ test('emits a picked command with the service it acts on', async () => {
   expect(onCommand).toHaveBeenCalledWith({ id: 'reschedule', target: 'Memory' })
 })
 
+test('offers no AI explanation by default', () => {
+  mountRow(makeService(), makeTableRow(), { loadActionMenu: async () => [] })
+
+  expect(screen.queryByRole('button', { name: 'Explain with AI' })).not.toBeInTheDocument()
+})
+
+test('asks for the AI explanation of its own service', async () => {
+  const onExplain = vi.fn()
+  const service = makeService({ name: 'Memory' })
+  mountRow(service, makeTableRow(), { aiExplain: true, onExplain })
+
+  await userEvent.click(screen.getByRole('button', { name: 'Explain with AI' }))
+
+  expect(onExplain).toHaveBeenCalledWith(service)
+})
+
 test('renders the contact groups of a service, sorted alphabetically', () => {
   const { container } = mountRow(makeService({ contact_groups: ['linux', 'all'] }))
 

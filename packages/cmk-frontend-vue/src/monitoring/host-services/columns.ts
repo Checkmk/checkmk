@@ -46,12 +46,20 @@ export function visibleServiceFields(visibility: VisibilityState): ServiceOption
   return OPTIONAL_FIELD_COLUMNS.filter((field) => visibility[field] !== false)
 }
 
+const ACTION_BUTTON_WIDTH = 25
+const ACTIONS_MENU_WIDTH = 50
+
+function actionsColumnWidth(inlineActions: number): number {
+  return ACTIONS_MENU_WIDTH + inlineActions * ACTION_BUTTON_WIDTH
+}
+
 export interface HostServicesColumnOptions {
   /**
    * Whether to offer the row-selection column. Only a user who may run a command on the
    * selection gets it - without one, ticking a row would lead nowhere.
    */
   includeSelect: boolean
+  inlineActions?: number
 }
 
 /**
@@ -83,7 +91,8 @@ type ServiceModeField =
   | 'check_crashed'
 
 export function useHostServicesColumns({
-  includeSelect
+  includeSelect,
+  inlineActions = 0
 }: HostServicesColumnOptions): ColumnDef<HostServiceEntry>[] {
   const { _t } = usei18n()
 
@@ -279,8 +288,8 @@ export function useHostServicesColumns({
       header: _t('Actions'),
       enableSorting: false,
       enableHiding: false,
-      minSize: 75,
-      maxSize: 75,
+      minSize: actionsColumnWidth(inlineActions),
+      maxSize: actionsColumnWidth(inlineActions),
       meta: { justify: 'right' }
     }
   ]

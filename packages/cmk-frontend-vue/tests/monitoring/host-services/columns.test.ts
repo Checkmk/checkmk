@@ -198,3 +198,13 @@ test('the service name takes the spare width once the summary is hidden', () => 
   expect(nameColumn(columns).maxSize).toBeUndefined()
   expect(nameColumn(columns).minSize).toBe(150)
 })
+
+test('the actions column widens by one button width per inline action', () => {
+  const actionsSize = (inlineActions: number) =>
+    useHostServicesColumns({ includeSelect: true, inlineActions }).find(
+      (column) => columnId(column) === 'actions'
+    )!.minSize!
+
+  expect(actionsSize(2) - actionsSize(1)).toBe(actionsSize(1) - actionsSize(0))
+  expect(actionsSize(1)).toBeGreaterThan(actionsSize(0))
+})

@@ -49,7 +49,8 @@ function isSameContext(a: ExplainThisIssueData, b: ExplainThisIssueData): boolea
     a.host_name === b.host_name &&
     a.service_name === b.service_name &&
     a.service_state === b.service_state &&
-    a.host_state === b.host_state
+    a.host_state === b.host_state &&
+    a.is_stale === b.is_stale
   )
 }
 

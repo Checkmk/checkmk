@@ -11,7 +11,7 @@ import type {
 } from 'cmk-shared-typing/typescript/monitoring/host_services'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
-import { afterEach, beforeEach, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import HostServicesApp from '@/monitoring/host-services/HostServicesApp.vue'
 
@@ -845,4 +845,57 @@ test('reads the host of the page alongside its services', async () => {
       })
     })
   )
+})
+
+describe('with the rows laid out', () => {
+  const originalOffsetHeight = Object.getOwnPropertyDescriptor(
+    HTMLElement.prototype,
+    'offsetHeight'
+  )
+  const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
+
+  beforeEach(() => {
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, value: 600 })
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, value: 800 })
+  })
+
+  afterEach(() => {
+    if (originalOffsetHeight) {
+      Object.defineProperty(HTMLElement.prototype, 'offsetHeight', originalOffsetHeight)
+    }
+    if (originalOffsetWidth) {
+      Object.defineProperty(HTMLElement.prototype, 'offsetWidth', originalOffsetWidth)
+    }
+  })
+
+  test('asks for the AI explanation of a row with its host and service state', async () => {
+    host = makeApiHost({ state: 'DOWN' })
+    mockServices([{ ...makeApiEntry(), state: 'WARN', stale: true }])
+    const onExplain = vi.fn()
+    document.addEventListener('cmk-ai-explain-button', onExplain)
+    renderApp({ ai_explain: true })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Explain with AI' }))
+    document.removeEventListener('cmk-ai-explain-button', onExplain)
+
+    expect(onExplain.mock.calls.map(([event]) => (event as CustomEvent).detail)).toEqual([
+      {
+        host_name: 'web-1',
+        service_name: 'CPU load',
+        service_state: 'Warning',
+        host_state: 'Down',
+        is_stale: true
+      }
+    ])
+  })
+
+  test('offers no AI explanation in the rows while the host is not found', async () => {
+    host = makeApiHost({ name: 'db-1' })
+    mockServices([makeApiEntry()])
+    renderApp({ ai_explain: true })
+
+    await screen.findByRole('button', { name: 'More actions' })
+
+    expect(screen.queryByRole('button', { name: 'Explain with AI' })).not.toBeInTheDocument()
+  })
 })

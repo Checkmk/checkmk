@@ -57,6 +57,7 @@ import { useUrlSync } from '../shared/urlState/useUrlSync'
 import { useAcknowledgeServicesAction } from './actions/acknowledgeServices'
 import { useRescheduleServicesAction } from './actions/rescheduleServices'
 import { useScheduleServiceDowntimeAction } from './actions/scheduleServiceDowntime'
+import { requestAiExplanation } from './aiExplain'
 import { ServiceActionMenuApi } from './api/actionMenu'
 import { HostServicesApi } from './api/services'
 import {
@@ -121,7 +122,12 @@ async function loadActionMenu(service: string): Promise<CellAction[]> {
 // that decides the action bar decides the select column too.
 const mayActOnSelection = serviceActions.length > 0
 
-const columns = useHostServicesColumns({ includeSelect: mayActOnSelection })
+const aiExplain = props.ai_explain ?? false
+
+const columns = useHostServicesColumns({
+  includeSelect: mayActOnSelection,
+  inlineActions: rowActionButtons.length + (aiExplain ? 1 : 0)
+})
 const columnPinning = buildHostServicesColumnPinning({ includeSelect: mayActOnSelection })
 
 // The row limit is deliberately left at its single tier: this page offers no limit
@@ -306,6 +312,20 @@ function serviceCountsLabel(selected: number, total: number): TranslatedString {
   )
 }
 
+function explainService(service: HostServiceEntry): void {
+  const hostEntry = hostServicesService.hostEntry.value
+  if (hostEntry === null) {
+    return
+  }
+  requestAiExplanation({
+    hostName: host.name,
+    hostState: hostEntry.state,
+    serviceName: service.name,
+    serviceState: service.state,
+    stale: service.stale
+  })
+}
+
 function onActionPerformed(result: ActionFeedbackResult): void {
   if (result.variant === 'success') {
     hostServicesService.refresh(ACTION_REFRESH_DELAY_MS)
@@ -357,9 +377,11 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
             :row-actions="rowActionButtons"
             :load-action-menu="loadActionMenu"
             :display-options="displayOptions"
+            :ai-explain="aiExplain && hostServicesService.hostEntry.value !== null"
             @open="openSlideIn"
             @open-graphs="openServiceGraphs"
             @command="onCommand"
+            @explain="explainService"
           />
         </template>
         <template #display-options="{ close }">
@@ -380,7 +402,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :display-options="displayOptions"
         :service="slideInService"
         :host="host"
-        :ai-explain="props.ai_explain ?? false"
+        :ai-explain="aiExplain"
         :actions="actionRegistry"
         :permitted-actions="serviceActions"
         :load-action-menu="loadActionMenu"

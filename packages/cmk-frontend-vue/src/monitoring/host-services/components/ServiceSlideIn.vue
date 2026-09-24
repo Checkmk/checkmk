@@ -280,14 +280,19 @@ const tabs = computed<SlideInTab[]>(() => {
         :actions="inlineActions"
         :load-action-menu="actionMenuLoader"
       />
-      <ServiceAiExplainButton v-if="aiExplain && overview" :overview="overview" />
     </template>
-    <template v-if="slideInActions.length" #actions>
-      <SlideInActions
-        :actions="slideInActions"
-        :running-action-id="runningActionId"
-        @select="openAction"
-      />
+    <template v-if="slideInActions.length || (aiExplain && overview)" #actions>
+      <div class="monitoring-service-slide-in__actions">
+        <SlideInActions
+          v-if="slideInActions.length"
+          :actions="slideInActions"
+          :running-action-id="runningActionId"
+          @select="openAction"
+        />
+        <div v-if="aiExplain && overview" class="monitoring-service-slide-in__ai-explain">
+          <ServiceAiExplainButton :overview="overview" />
+        </div>
+      </div>
       <ActionFeedback
         v-if="feedback"
         v-model:open="feedbackOpen"
@@ -315,6 +320,16 @@ const tabs = computed<SlideInTab[]>(() => {
 </template>
 
 <style scoped>
+.monitoring-service-slide-in__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-4);
+}
+
+.monitoring-service-slide-in__ai-explain {
+  display: flex;
+}
+
 .monitoring-service-slide-in__feedback {
   margin-top: var(--spacing);
 }

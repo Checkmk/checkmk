@@ -166,20 +166,10 @@ async function createDCDConnector(ctx: PostSaveContext): Promise<PostSaveResult>
       params: { header: CONTENT_TYPE_JSON },
       body: {
         title: ctx.configName,
-        // openapi-typescript types a request field that carries a default as
-        // required, so these have to be sent even though the server would
-        // supply them. The values mirror the server-side defaults.
-        comment: '',
-        documentation_url: '',
-        disabled: false,
         site: ctx.siteId,
         dcd_id: dcdId,
         connector: {
           connector_type: 'telemetry_metrics',
-          interval: 60,
-          discover_on_creation: true,
-          validity_period: 3600,
-          maximum_number_of_hosts: 500,
           host_name_lookup_rules: [{ host_name_template: '$RESOURCE_ATTR.service.name$' }],
           creation_rules: [{ folder_path: '/telemetry', delete_hosts: true }]
         }
@@ -616,10 +606,6 @@ export function createPrometheusScrapeConfigAction(
     execute: async () => {
       const body = {
         id: input.id,
-        // Typed as required because the schema gives them a default; both mirror
-        // the server-side default of null.
-        comment: null,
-        docu_url: null,
         // Mirrors the OTel create action: the wizard-level configuration name
         // is reused as the display title in the Prometheus Overview list.
         title: input.id,
@@ -682,9 +668,6 @@ export function createOTelBundleAction(input: OTelBundleInput): PostSaveAction {
             params: { header: CONTENT_TYPE_JSON },
             body: {
               title: input.configName,
-              // Typed as required because the schema gives it a default; mirrors
-              // the server-side default of null.
-              comment: null,
               site: input.siteId,
               otel_config_id: input.configName,
               dcd_connection_id: `quick_setup_${input.configName}`,

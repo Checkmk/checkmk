@@ -706,8 +706,6 @@ describe('createPrometheusScrapeConfigAction', () => {
         params: { header: JSON_HEADER },
         body: {
           id: 'p1',
-          comment: null,
-          docu_url: null,
           title: 'p1',
           disabled: false,
           site: ['prod'],
@@ -879,17 +877,10 @@ describe('createDCDConnectorAction', () => {
       params: { header: JSON_HEADER },
       body: {
         title: 'my-cfg',
-        comment: '',
-        documentation_url: '',
-        disabled: false,
         site: 'prod',
         dcd_id: 'quick_setup_my-cfg',
         connector: {
           connector_type: 'telemetry_metrics',
-          interval: 60,
-          discover_on_creation: true,
-          validity_period: 3600,
-          maximum_number_of_hosts: 500,
           host_name_lookup_rules: [{ host_name_template: '$RESOURCE_ATTR.service.name$' }],
           creation_rules: [{ folder_path: '/telemetry', delete_hosts: true }]
         }

@@ -154,6 +154,12 @@ openapi_typescript.openapi_typescript(
         "$(rootpath :openapi_spec_internal)",
         "-o",
         "$(rootpath typescript/openapi_internal.d.ts)",
+        # A request field that carries a default is optional by definition: the
+        # default exists so the client may leave it out. Without this, every such
+        # field is generated as required and callers have to send values the
+        # server would have supplied itself.
+        "--default-non-nullable",
+        "false",
     ],
 )
 

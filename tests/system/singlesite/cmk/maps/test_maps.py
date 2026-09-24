@@ -38,23 +38,25 @@ def _maps_url(site: Site, path: str) -> str:
     return site.url_for_path(f"/{site.id}/check_mk/maps{path}")
 
 
-def _ticket_path(site: Site) -> str:
-    """The internal REST endpoint that mints a daemon ticket for the session."""
-    return f"/{site.id}/check_mk/api/internal/domain-types/maps_ticket/collections/all"
+def _maps_ticket(site: Site) -> str:
+    """Mint a signed daemon ticket through the internal REST API, as the SPA does on boot.
 
-
-def _maps_ticket(site: Site, web: CMKWebSession) -> str:
-    """Mint a signed daemon ticket from the logged-in GUI session."""
-    ticket = web.get(_ticket_path(site)).json()["ticket"]
+    Minted as the automation user: on cloud the GUI session of the ``web`` fixture is not
+    logged in, and the endpoint answers any authenticated caller holding ``maps.use``."""
+    response = site.openapi.get(
+        "domain-types/maps_ticket/collections/all", api_version=APIVersion.INTERNAL
+    )
+    response.raise_for_status()
+    ticket = response.json()["ticket"]
     assert ticket
     return str(ticket)
 
 
-def _first_connection_id(site: Site, web: CMKWebSession) -> str:
+def _first_connection_id(site: Site) -> str:
     """The id of the site's (built-in) local Livestatus connection."""
     response = requests.get(
         _maps_url(site, "/api/v1/connections"),
-        headers={"X-Maps-Ticket": _maps_ticket(site, web)},
+        headers={"X-Maps-Ticket": _maps_ticket(site)},
         timeout=_TIMEOUT,
     )
     response.raise_for_status()
@@ -63,10 +65,10 @@ def _first_connection_id(site: Site, web: CMKWebSession) -> str:
     return str(connections[0]["id"])
 
 
-def _topology_nodes(site: Site, web: CMKWebSession, connection_id: str) -> list[dict[str, object]]:
+def _topology_nodes(site: Site, connection_id: str) -> list[dict[str, object]]:
     response = requests.get(
         _maps_url(site, f"/api/v1/connections/{connection_id}/topology"),
-        headers={"X-Maps-Ticket": _maps_ticket(site, web)},
+        headers={"X-Maps-Ticket": _maps_ticket(site)},
         timeout=_TIMEOUT,
     )
     response.raise_for_status()
@@ -137,13 +139,10 @@ def test_maps_api_rejects_request_without_ticket(site: Site, maps_on: None) -> N
     assert response.status_code == 401
 
 
-def test_maps_ticket_handshake_end_to_end(site: Site, web: CMKWebSession, maps_on: None) -> None:
-    ticket = web.get(_ticket_path(site)).json()["ticket"]
-    assert ticket
-
+def test_maps_ticket_handshake_end_to_end(site: Site, maps_on: None) -> None:
     response = requests.get(
         _maps_url(site, "/api/v1/connections"),
-        headers={"X-Maps-Ticket": ticket},
+        headers={"X-Maps-Ticket": _maps_ticket(site)},
         timeout=_TIMEOUT,
     )
     assert response.status_code == 200
@@ -167,18 +166,16 @@ def _monitored_host(site: Site, maps_on: None) -> Iterator[str]:
         site.openapi.changes.activate_and_wait_for_completion()
 
 
-def test_maps_daemon_topology_includes_monitored_host(
-    site: Site, web: CMKWebSession, monitored_host: str
-) -> None:
+def test_maps_daemon_topology_includes_monitored_host(site: Site, monitored_host: str) -> None:
     # The daemon fans a Livestatus query out over the connection and returns the
     # site's hosts as topology nodes. The host we just activated must show up,
     # tagged with the site it is monitored by. Wait past the daemon's topology
     # cache TTL so a pre-activation (empty) cache entry can expire and rebuild.
-    connection_id = _first_connection_id(site, web)
+    connection_id = _first_connection_id(site)
     wait_until(
         lambda: any(
             node.get("name") == monitored_host and node.get("site_id") == site.id
-            for node in _topology_nodes(site, web, connection_id)
+            for node in _topology_nodes(site, connection_id)
         ),
         timeout=60,
         interval=3,
@@ -186,16 +183,14 @@ def test_maps_daemon_topology_includes_monitored_host(
     )
 
 
-def test_maps_daemon_object_details_for_host(
-    site: Site, web: CMKWebSession, monitored_host: str
-) -> None:
+def test_maps_daemon_object_details_for_host(site: Site, monitored_host: str) -> None:
     # The detail drawer fetches per-object details on demand (off the state
     # stream). The daemon must answer with the host's own row.
-    connection_id = _first_connection_id(site, web)
+    connection_id = _first_connection_id(site)
     response = requests.get(
         _maps_url(site, f"/api/v1/connections/{connection_id}/object-details"),
         params={"type": "host", "host": monitored_host},
-        headers={"X-Maps-Ticket": _maps_ticket(site, web)},
+        headers={"X-Maps-Ticket": _maps_ticket(site)},
         timeout=_TIMEOUT,
     )
     assert response.status_code == 200
@@ -204,18 +199,16 @@ def test_maps_daemon_object_details_for_host(
     assert body["host_name"] == monitored_host
 
 
-def test_maps_daemon_metric_history_through_proxy(
-    site: Site, web: CMKWebSession, monitored_host: str
-) -> None:
+def test_maps_daemon_metric_history_through_proxy(site: Site, monitored_host: str) -> None:
     # The metric-history endpoint drives the Livestatus rrddata path end to end
     # (proxy → ticket auth → connection → rrddata). A freshly created host may not
     # have RRDs yet, so the point is the wiring: a well-formed 200 with the
     # series/titles envelope, not that data already exists.
-    connection_id = _first_connection_id(site, web)
+    connection_id = _first_connection_id(site)
     response = requests.get(
         _maps_url(site, f"/api/v1/connections/{connection_id}/metric-history"),
         params={"host": monitored_host, "service": "PING", "minutes": "60"},
-        headers={"X-Maps-Ticket": _maps_ticket(site, web)},
+        headers={"X-Maps-Ticket": _maps_ticket(site)},
         timeout=_TIMEOUT,
     )
     assert response.status_code == 200

@@ -13,14 +13,15 @@ has to be installed on the backup server itself.
 import argparse
 import json
 import sys
+import time
 from collections.abc import Callable, Mapping, Sequence
 
 import requests
 import urllib3
 from pydantic import BaseModel, ValidationError
 
-from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1 import HostnameValidationAdapter, report_agent_crashes
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option, Secret
+from cmk.server_side_programs.v1 import HostnameValidationAdapter, report_agent_crashes, Storage
 
 AGENT = "veeam"
 
@@ -30,6 +31,10 @@ PASSWORD_OPTION = "password"
 
 API_VERSION = "1.3-rev0"
 TOKEN_PATH = "/api/oauth2/token"
+
+TOKEN_STORAGE_KEY = "token"
+MIN_TOKEN_VALIDITY = 60
+"""Seconds a stored access token must still be valid to be reused at agent start."""
 
 
 type FetchStrategy = Callable[["VeeamClient", str], str]
@@ -52,8 +57,20 @@ class AccessDenied(RuntimeError):
     """The user lacks the Veeam role required for this endpoint."""
 
 
-class _Token(BaseModel):
+class _TokenResponse(BaseModel):
     access_token: str
+    refresh_token: str
+    expires_in: int
+
+
+class _StoredToken(BaseModel):
+    owner: str
+    """The user and server the token was issued for."""
+    access_token: str
+    refresh_token: str
+    """Can be used only once, and outlives the access token (14 days by default)."""
+    expires_at: float
+    """Expiry of the access token, as local unix time: immune to clock skew with the server."""
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -128,14 +145,22 @@ class VeeamClient:
         session: requests.Session,
         url: str,
         *,
+        storage: Storage,
+        user: str,
+        password: Secret[str],
         cert_server_name: str | None,
         timeout: int,
     ) -> None:
         self._session = session
         self._session.headers["x-api-version"] = API_VERSION
         self._url = url
+        self._storage = storage
+        self._user = user
+        self._password = password
+        self._owner = f"{user}@{url}"
         self._cert_server_name = cert_server_name
         self._timeout = timeout
+        self._token: _StoredToken | None = None
 
     def _request(
         self, method: str, path: str, data: Mapping[str, str] | None = None
@@ -170,27 +195,67 @@ class VeeamClient:
                 f"The Veeam backup server at {self._url} is unreachable ({exc})"
             ) from exc
 
-    def login(self, user: str, password: str) -> None:
-        response = self._request(
-            "POST",
-            TOKEN_PATH,
-            data={"grant_type": "password", "username": user, "password": password},
+    def _load_token(self) -> _StoredToken | None:
+        if (raw := self._storage.read(TOKEN_STORAGE_KEY, None)) is None:
+            return None
+        try:
+            token = _StoredToken.model_validate_json(raw)
+        except ValidationError:
+            return None
+        return token if token.owner == self._owner else None
+
+    def _use_token(self, token: _StoredToken) -> None:
+        self._token = token
+        self._session.headers["Authorization"] = f"Bearer {token.access_token}"
+
+    def _request_token(self, data: Mapping[str, str]) -> requests.Response:
+        requested_at = time.time()
+        response = self._request("POST", TOKEN_PATH, data=data)
+        if not response.ok:
+            return response
+        try:
+            token = _TokenResponse.model_validate_json(response.content)
+        except ValidationError as exc:
+            raise TerminateAgent(
+                "The Veeam REST API returned an invalid access token response"
+            ) from exc
+        stored = _StoredToken(
+            owner=self._owner,
+            access_token=token.access_token,
+            refresh_token=token.refresh_token,
+            expires_at=requested_at + token.expires_in,
+        )
+        # Store right away: the refresh token we just used is gone for good.
+        self._storage.write(TOKEN_STORAGE_KEY, stored.model_dump_json())
+        self._use_token(stored)
+        return response
+
+    def _refresh(self, refresh_token: str) -> bool:
+        response = self._request_token(
+            {"grant_type": "refresh_token", "refresh_token": refresh_token}
         )
         if response.ok:
-            try:
-                token = _Token.model_validate_json(response.content)
-            except ValidationError as exc:
-                raise TerminateAgent(
-                    "The Veeam REST API returned an invalid access token response"
-                ) from exc
-            self._session.headers["Authorization"] = f"Bearer {token.access_token}"
+            return True
+        if 400 <= response.status_code < 500:
+            # Expired, already used or revoked. The password login will tell if it's worse.
+            return False
+        raise TerminateAgent(
+            f"Refreshing the access token at the Veeam REST API failed with HTTP "
+            f"{response.status_code}: {_veeam_error(response)[1]}"
+        )
+
+    def _login(self) -> None:
+        response = self._request_token(
+            {"grant_type": "password", "username": self._user, "password": self._password.reveal()}
+        )
+        if response.ok:
             return
 
         error_code, message = _veeam_error(response)
         if response.status_code == 401:
             raise TerminateAgent(
-                f"Authentication at the Veeam REST API failed for user '{user}': {message}. "
-                f"Check the user name and password"
+                f"Authentication at the Veeam REST API failed for user '{self._user}': "
+                f"{message}. Check the user name and password"
             )
         if response.status_code == 400 and error_code == "NotImplemented":
             raise TerminateAgent(
@@ -201,8 +266,28 @@ class VeeamClient:
             f"Login at the Veeam REST API failed with HTTP {response.status_code}: {message}"
         )
 
+    def _renew(self) -> None:
+        if self._token is not None and self._refresh(self._token.refresh_token):
+            return
+        self._login()
+
+    def authenticate(self) -> None:
+        """Reuse the stored access token if it is still valid long enough, renew it otherwise."""
+        if (token := self._load_token()) is None:
+            self._login()
+            return
+        self._token = token
+        if token.expires_at - time.time() < MIN_TOKEN_VALIDITY:
+            self._renew()
+            return
+        self._use_token(token)
+
     def get(self, path: str) -> object:
         response = self._request("GET", path)
+        if response.status_code == 401:
+            # The token expired mid-run or was revoked: renew it and try once more.
+            self._renew()
+            response = self._request("GET", path)
         if response.status_code == 401:
             raise TerminateAgent(
                 f"The Veeam REST API rejected the session on {path}: {_veeam_error(response)[1]}"
@@ -329,10 +414,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             client = VeeamClient(
                 session,
                 url,
+                storage=Storage(AGENT, host=args.address),
+                user=args.user,
+                password=resolve_secret_option(args, PASSWORD_OPTION),
                 cert_server_name=cert_server_name,
                 timeout=args.timeout,
             )
-            client.login(args.user, resolve_secret_option(args, PASSWORD_OPTION).reveal())
+            client.authenticate()
             write_sections(client, SECTIONS)
     except TerminateAgent as exc:
         if args.debug:

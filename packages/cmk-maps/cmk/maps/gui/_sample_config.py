@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Pre-seed the local-site Maps connection on fresh site creation.
 
-So an operator opening *Customize → Maps → "Connections & daemon"* for the
+So an operator opening *Customize → Maps → "Maps settings"* for the
 first time already sees a working connection to their own site, this sample
 config generator writes one ``maps_connections`` entry on ``omd create`` (it
 runs once, via ``init_wato_datastructures``). The daemon's built-in local-site

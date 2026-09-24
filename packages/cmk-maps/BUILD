@@ -105,7 +105,7 @@ run_binary(
     visibility = ["//packages:__subpackages__"],
 )
 
-# GUI integration (permissions, WATO modes, config domains, session-auth AJAX
+# GUI integration (permissions, settings pages, config domains, session-auth AJAX
 # endpoints backing the SPA). Imports cmk.gui.* internals and the shared layer;
 # depends only on cmk/gui sub-targets (never //cmk/gui:app), so //cmk/gui:app
 # can depend on this target without a cycle.
@@ -131,14 +131,13 @@ py_library(
         "//cmk/gui:page_toolkit",
         "//cmk/gui/bi:bi_manager",
         "//cmk/gui/form_specs",
+        "//cmk/gui/global_settings",
         "//cmk/gui/graphing",
         "//cmk/gui/pagetypes",
         "//cmk/gui/rule_specs:legacy_converter",
         "//cmk/gui/sidebar",
-        "//cmk/gui/watolib:registries",
         "//cmk/utils",
         "//packages/cmk-ccc:user",
-        "//packages/cmk-ccc:version",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-plugin-apis:graphing",
         "//packages/cmk-plugin-apis:rulesets",

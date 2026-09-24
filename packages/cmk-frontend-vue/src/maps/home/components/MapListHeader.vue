@@ -78,10 +78,7 @@ const breadcrumb = [...useMapsBreadcrumbRoot(), { title: _t('Maps'), link: null 
           </DropdownMenuItem>
           <!-- Checkmk pages, not SPA views: a full navigation out of the app. -->
           <DropdownMenuItem as-child class="maps-overflow-menu__item">
-            <a :href="links.authoring_settings">{{ _t('Map & object defaults') }}</a>
-          </DropdownMenuItem>
-          <DropdownMenuItem as-child class="maps-overflow-menu__item">
-            <a :href="links.daemon_settings">{{ _t('Connections & daemon') }}</a>
+            <a :href="links.settings">{{ _t('Maps settings') }}</a>
           </DropdownMenuItem>
         </MapsOverflowMenu>
       </div>

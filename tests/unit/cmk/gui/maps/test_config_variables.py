@@ -30,9 +30,12 @@ def _register() -> tuple[ConfigVariableGroupRegistry, ConfigVariableRegistry]:
     return group_registry, variable_registry
 
 
-def test_registers_one_group() -> None:
+def test_registers_the_two_groups() -> None:
     group_registry, _vars = _register()
-    assert sorted(group_registry.keys()) == ["Maps"]
+    assert sorted(group_registry.keys()) == [
+        "Maps: Connections & daemon",
+        "Maps: Map and object defaults",
+    ]
 
 
 def test_registers_the_five_variables() -> None:

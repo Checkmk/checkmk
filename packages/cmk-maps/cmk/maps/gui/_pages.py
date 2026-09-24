@@ -28,7 +28,7 @@ from cmk.gui.type_defs import VisualPublic
 from cmk.gui.utils.roles import is_user_with_publish_permissions, UserPermissions
 from cmk.maps.gui._images import seed_builtin_images
 from cmk.maps.gui._settings import tile_csp_sources
-from cmk.maps.gui._settings_modes import ModeMapsAuthoringSettings, ModeMapsDaemonSettings
+from cmk.maps.gui._settings_page import SETTINGS_URL
 from cmk.maps.gui._tickets import _publishable_contact_groups, _publishable_sites
 from cmk.shared_typing.maps import MapsApp, MapsBreadcrumbItem, MapsPageLinks
 
@@ -93,24 +93,21 @@ class ShowMapsPage(Page):
         # turns a forbidden or unknown ``?name=`` into a plain REST 403/404 the
         # SPA can render, rather than a silently absent prop.
         #
-        # ``links`` is not data but wiring: the two curated settings forms have
-        # no other entry point (Maps has no Setup tile) and their mode names
-        # belong here, not to a TypeScript constant that a rename would leave
-        # pointing nowhere. The dashboard page hands its own out the same way.
+        # ``links`` is not data but wiring: the settings page has no other entry
+        # point (Maps has no Setup tile) and its page name belongs here, not to a
+        # TypeScript constant that a rename would leave pointing nowhere. The
+        # dashboard page hands its own out the same way.
         #
         # ``breadcrumb_root`` is the same kind of wiring: the levels above the SPA
         # (the main menu Maps hangs under), so the app can put its own levels
         # behind them without naming a Checkmk menu in TypeScript. The settings
-        # modes root their breadcrumb the same way.
+        # page roots its breadcrumb the same way.
         html.open_div(id_="app")
         html.vue_component(
             "cmk-maps",
             data=asdict(
                 MapsApp(
-                    links=MapsPageLinks(
-                        authoring_settings=ModeMapsAuthoringSettings.mode_url(),
-                        daemon_settings=ModeMapsDaemonSettings.mode_url(),
-                    ),
+                    links=MapsPageLinks(settings=SETTINGS_URL),
                     breadcrumb_root=[
                         MapsBreadcrumbItem(title=str(item.title), link=item.url)
                         for item in make_main_menu_breadcrumb(main_menu_registry.menu_customize())

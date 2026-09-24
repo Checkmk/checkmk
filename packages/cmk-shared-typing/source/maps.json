@@ -18,16 +18,12 @@
       "description": "The Checkmk pages the app links out to.",
       "type": "object",
       "properties": {
-        "authoring_settings": {
-          "description": "Setup form for the map and object defaults.",
-          "type": "string"
-        },
-        "daemon_settings": {
-          "description": "Setup form for the connections and the daemon.",
+        "settings": {
+          "description": "The Maps settings page.",
           "type": "string"
         }
       },
-      "required": ["authoring_settings", "daemon_settings"]
+      "required": ["settings"]
     },
     "maps_breadcrumb_item": {
       "title": "MapsBreadcrumbItem",

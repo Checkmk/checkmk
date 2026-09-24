@@ -210,8 +210,7 @@ export function mountWithServices<T>(
 /** The Checkmk URLs ``maps.py`` hands the app, as the page emits them. */
 export function aPageLinks(overrides: Partial<MapsPageLinks> = {}): MapsPageLinks {
   return {
-    authoring_settings: 'wato.py?mode=maps_authoring_settings',
-    daemon_settings: 'wato.py?mode=maps_daemon_settings',
+    settings: 'maps_settings.py',
     ...overrides
   }
 }

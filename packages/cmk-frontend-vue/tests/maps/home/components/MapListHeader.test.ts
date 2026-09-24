@@ -62,19 +62,15 @@ describe('MapListHeader', () => {
     expect(emitted()).toHaveProperty('import')
   })
 
-  it('leads an administrator to the image library and the two settings forms', async () => {
+  it('leads an administrator to the image library and the settings page', async () => {
     await renderHeader()
 
     await openAdministration()
 
     expect(screen.getByRole('menuitem', { name: 'Images' })).toBeInTheDocument()
-    expect(screen.getByRole('menuitem', { name: 'Map & object defaults' })).toHaveAttribute(
+    expect(screen.getByRole('menuitem', { name: 'Maps settings' })).toHaveAttribute(
       'href',
-      'wato.py?mode=maps_authoring_settings'
-    )
-    expect(screen.getByRole('menuitem', { name: 'Connections & daemon' })).toHaveAttribute(
-      'href',
-      'wato.py?mode=maps_daemon_settings'
+      'maps_settings.py'
     )
   })
 

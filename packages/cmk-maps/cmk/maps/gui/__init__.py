@@ -26,14 +26,13 @@ from cmk.gui.watolib.config_sync import (
     ReplicationPathRegistry,
     ReplicationPathType,
 )
-from cmk.gui.watolib.mode import ModeRegistry
 from cmk.gui.watolib.sample_config import SampleConfigGeneratorRegistry
 from cmk.maps.gui import (
     _config_variables,
     _folders,
     _main_menu,
     _permissions,
-    _settings_modes,
+    _settings_page,
     _sites,
 )
 from cmk.maps.gui._config_domain import ConfigDomainMaps
@@ -53,21 +52,20 @@ def register(
     config_variable_registry: ConfigVariableRegistry,
     replication_path_registry: ReplicationPathRegistry,
     sample_config_generator_registry: SampleConfigGeneratorRegistry,
-    mode_registry: ModeRegistry,
 ) -> None:
     _permissions.register(permission_section_registry, permission_registry)
     # No page_handlers on MapPage, so declare() registers no generic pagetype
     # list/edit pages: that UI stays maps-own (the SPA via maps.py).
     pagetypes.declare(MapPage)
-    # The one page Maps registers: everything the SPA calls is a REST endpoint
+    # The page mounting the SPA: everything the SPA calls is a REST endpoint
     # (map CRUD the official ``cmk.maps.rest_api``, everything else the internal
     # family in ``cmk.maps.rest_api.internal``), reached through the generated,
     # typed client.
     page_registry.register(PageEndpoint("maps", ShowMapsPage()))
+    _settings_page.register(page_registry)
     maps_domain = ConfigDomainMaps()
     config_domain_registry.register(maps_domain)
     _config_variables.register(config_variable_group_registry, config_variable_registry)
-    _settings_modes.register(mode_registry)
     # Ships the domain's config dir (maps.d/wato) to the remote sites, so their
     # daemon reads the same settings; see cmk.maps.gui._config_domain.
     replication_path_registry.register(

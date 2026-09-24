@@ -80,7 +80,7 @@ async def list_backends(
 
 
 # Connection CRUD lives in Checkmk's own settings (Customize → Maps →
-# "Connections & daemon", ConfigDomainMaps). This service is read-only: it lists
+# "Maps settings", ConfigDomainMaps). This service is read-only: it lists
 # connections (above) and runs live *read* queries against them (below).
 #
 # Commands (acknowledge, downtime, reschedule, …) are intentionally NOT served

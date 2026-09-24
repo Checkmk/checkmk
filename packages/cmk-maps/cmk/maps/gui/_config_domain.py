@@ -5,7 +5,7 @@
 """Config domain for the Checkmk Maps backend daemon.
 
 Maps settings are edited as native Checkmk global settings (Customize → Maps →
-the "Maps" page menu), but — like every other Checkmk daemon configured via
+"Maps settings"), but — like every other Checkmk daemon configured via
 WATO (liveproxyd, dcd, mkeventd) — they belong to the daemon's *own* config
 domain, not to the GUI domain. WATO writes them to ``etc/check_mk/maps.d/wato/``
 (``global.mk`` + per-site ``sitespecific.mk``); the daemon reads that directory
@@ -33,11 +33,13 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigDomainName,
     SerializedSettings,
 )
+from cmk.maps.gui._permissions import PERMISSION_SECTION_MAPS
 from cmk.maps.gui.form_specs.global_settings import object_defaults_spec
 from cmk.maps.shared import config_vars as maps_config_vars
 from cmk.maps.shared.map_payload import MapViewType, RenderMode
 from cmk.rulesets.v1 import Title
 from cmk.utils.config_warnings import ConfigurationWarnings
+from cmk.web.utils.permission_verification import PermissionName
 
 MAPS: Final[ConfigDomainName] = "maps"
 
@@ -52,7 +54,7 @@ CONFIG_VAR_STATE_REFRESH_INTERVAL = maps_config_vars.VAR_STATE_REFRESH_INTERVAL
 CONFIG_VAR_MAP_DEFAULTS = "maps_map_defaults"
 CONFIG_VAR_OBJECT_DEFAULTS = "maps_object_defaults"
 
-# Titles shown in the "Maps" global-settings group (the group already says
+# Titles shown in the "Maps: …" global-settings groups (the groups already say
 # "Maps", so the individual settings are not prefixed).
 CONNECTIONS_TITLE = Title("Connections")
 MAP_DEFAULTS_TITLE = Title("Map defaults")
@@ -117,6 +119,8 @@ class ConfigDomainMaps(ABCConfigDomain):
     needs_sync = True
     needs_activation = False
     in_global_settings = False
+    # Global defaults are an admin concern, on the Maps pages as well as per site.
+    global_settings_permission: PermissionName = f"{PERMISSION_SECTION_MAPS.name}.configure"
 
     @override
     @classmethod

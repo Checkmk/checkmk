@@ -328,19 +328,17 @@ def test_maps_geo_map_auto_places_host_by_coordinates(
 def test_maps_administration_menu_reaches_the_settings_form(
     maps_home_page: MapsHomePage,
 ) -> None:
-    """The listing's administration menu leads to the curated settings forms.
+    """The listing's administration menu leads to the Maps settings page.
 
     ``maps.py`` renders no page menu, so this menu is the only way from the SPA
-    into the two WATO modes -- and the only consumer of the URLs the page hands
+    into the settings page -- and the only consumer of the URL the page hands
     the SPA.
     """
     maps_home_page.open_administration()
-    maps_home_page.administration_entry("Map & object defaults").click()
+    maps_home_page.administration_entry("Maps settings").click()
 
-    maps_home_page.page.wait_for_url(
-        re.compile(r"wato\.py\?mode=maps_authoring_settings"), wait_until="load"
-    )
-    maps_home_page.main_area.check_page_title("Map & object defaults")
+    maps_home_page.page.wait_for_url(re.compile(r"/maps_settings\.py([?&].*)?$"), wait_until="load")
+    expect(maps_home_page.page).to_have_title("Maps settings")
 
 
 def test_maps_permissions_view_only_user(

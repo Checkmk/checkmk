@@ -7,7 +7,7 @@ single package (the Vue SPA lives in `cmk-frontend-vue`, see below):
   OMD site behind the site Apache) that resolves maps and streams live host/
   service states. `cmk.maps.shared` is the pure GUI↔daemon domain layer
   (no framework deps) that the GUI is allowed to import.
-- `cmk.maps.gui` — the GUI integration: permissions, WATO modes, the package's
+- `cmk.maps.gui` — the GUI integration: permissions, settings pages, the package's
   own `ConfigDomainMaps` config domain and the session-authenticated AJAX
   endpoints backing the SPA.
 - `cmk.maps.rest_api` — the versioned REST API endpoints for maps.

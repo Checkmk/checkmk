@@ -19,7 +19,6 @@ from .paths import (
     parse_archive_timestamp,
     parse_delta_cache_timestamps,
     TreePath,
-    TreePathGz,
 )
 
 
@@ -213,8 +212,7 @@ def _compute_host_params(
 @dataclass(frozen=True, kw_only=True)
 class _FilePathsOfHost:
     inventory_tree: TreePath
-    inventory_tree_gz: TreePathGz
-    status_data_tree: TreePath
+    tree_file_paths: Sequence[Path]
     archive_file_paths: Sequence[Path]
     delta_cache_file_paths: Sequence[Path]
 
@@ -262,14 +260,27 @@ class _ClassifiedFilePaths:
     abandoned_files: Sequence[_File]
 
 
+def _tree_file_paths(inventory_paths: InventoryPaths, host_name: HostName) -> Sequence[Path]:
+    inventory_tree = inventory_paths.inventory_tree(host_name)
+    inventory_tree_gz = inventory_paths.inventory_tree_gz(host_name)
+    status_data_tree = inventory_paths.status_data_tree(host_name)
+    return [
+        inventory_tree.path,
+        inventory_tree.legacy,
+        inventory_tree_gz.path,
+        inventory_tree_gz.legacy,
+        status_data_tree.path,
+        status_data_tree.legacy,
+    ]
+
+
 def _collect_file_paths_by_host(
     inventory_paths: InventoryPaths, host_names: Sequence[HostName]
 ) -> Mapping[HostName, _FilePathsOfHost]:
     return {
         h: _FilePathsOfHost(
             inventory_tree=inventory_paths.inventory_tree(h),
-            inventory_tree_gz=inventory_paths.inventory_tree_gz(h),
-            status_data_tree=inventory_paths.status_data_tree(h),
+            tree_file_paths=_tree_file_paths(inventory_paths, h),
             archive_file_paths=collect_files(inventory_paths.archive_host(h)),
             delta_cache_file_paths=collect_files(inventory_paths.delta_cache_host(h)),
         )
@@ -305,18 +316,7 @@ def _collect_abandoned_tree_files_by_host(
 ) -> Mapping[str, Sequence[_File]]:
     abandoned_tree_files_by_host: dict[str, list[_File]] = {}
     for raw_host_name in raw_host_names:
-        host_name = HostName(raw_host_name)
-        inventory_tree = inventory_paths.inventory_tree(host_name)
-        inventory_tree_gz = inventory_paths.inventory_tree_gz(host_name)
-        status_data_tree = inventory_paths.status_data_tree(host_name)
-        for file_path in [
-            inventory_tree.path,
-            inventory_tree.legacy,
-            inventory_tree_gz.path,
-            inventory_tree_gz.legacy,
-            status_data_tree.path,
-            status_data_tree.legacy,
-        ]:
+        for file_path in _tree_file_paths(inventory_paths, HostName(raw_host_name)):
             if (timestamp := _compute_timestamp_from_file_path(file_path)) is not None:
                 abandoned_tree_files_by_host.setdefault(raw_host_name, []).append(
                     _File(path=file_path, timestamp=timestamp)
@@ -334,18 +334,7 @@ def _collect_remaining_abandoned_files(
         for file_path in (
             set(inventory_paths.inventory_dir.glob("[!.]*"))
             .union(inventory_paths.status_data_dir.glob("*"))
-            .difference(
-                fp
-                for fps in file_paths_by_host.values()
-                for fp in [
-                    fps.inventory_tree.path,
-                    fps.inventory_tree.legacy,
-                    fps.inventory_tree_gz.path,
-                    fps.inventory_tree_gz.legacy,
-                    fps.status_data_tree.path,
-                    fps.status_data_tree.legacy,
-                ]
-            )
+            .difference(fp for fps in file_paths_by_host.values() for fp in fps.tree_file_paths)
             .difference(f.path for fs in abandoned_tree_files_by_host.values() for f in fs)
         )
         if (timestamp := _compute_timestamp_from_file_path(file_path)) is not None

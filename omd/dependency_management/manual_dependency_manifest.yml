@@ -44,9 +44,9 @@ dependencies:
     license: BSD-3-Clause
     path: non-free/packages/cmk-update-agent/src/pip/pycparser-2.21-py2.py3-none-any.whl
 
-  - purl: pkg:pypi/setuptools@46.4.0
+  - purl: pkg:pypi/setuptools@65.5.1
     license: MIT
-    path: non-free/packages/cmk-update-agent/src/pip/setuptools-46.4.0-py3-none-any.whl
+    path: non-free/packages/cmk-update-agent/src/pip/setuptools-65.5.1-py3-none-any.whl
 
   - purl: pkg:pypi/pysocks@1.7.1
     license: BSD-3-Clause

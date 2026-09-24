@@ -319,12 +319,6 @@ botocore==1.42.97 \
     #   -r cmk/requirements.in
     #   boto3
     #   s3transfer
-build==1.5.0 \
-    --hash=sha256:13f3eecb844759ab66efec90ca17639bbf14dc06cb2fdf37a9010322d9c50a6f \
-    --hash=sha256:302c22c3ba2a0fd5f3911918651341ebb3896176cbdec15bd421f80b1afc7647
-    # via
-    #   -c requirements.txt
-    #   meraki
 cached-property==2.0.1 \
     --hash=sha256:484d617105e3ee0e4f1f58725e72a8ef9e93deee462222dbd51cd91230897641 \
     --hash=sha256:f617d70ab1100b7bcf6e42228f9ddcb78c676ffa167278d9f730d1c2fba69ccb
@@ -1173,12 +1167,6 @@ idna==3.18 \
     #   httpx2
     #   requests
     #   yarl
-iniconfig==2.3.0 \
-    --hash=sha256:c76315c77db068650d49c5b56314774a7804df16fee4402c1f19d6d15d8c4730 \
-    --hash=sha256:f631c04d2c48c52b84d0d0549c99ff3859c98df65b3101406327ecc7d53fbf12
-    # via
-    #   -c requirements.txt
-    #   pytest
 invoke==3.0.3 \
     --hash=sha256:437b6a622223824380bfb4e64f612711a6b648c795f565efc8625af66fb57f0c \
     --hash=sha256:f11327165e5cbb89b2ad1d88d3292b5113332c43b8553b494da435d6ec6f5053
@@ -1207,7 +1195,6 @@ jinja2==3.1.6 \
     #   -r cmk/requirements.in
     #   -r packages/cmk-livestatus-client/requirements.in
     #   flask
-    #   meraki
     #   pysmi
 jira==3.10.5 \
     --hash=sha256:2d09ae3bf4741a2787dd889dfea5926a5d509aac3b28ab3b98c098709e6ee72d \
@@ -1793,9 +1780,9 @@ mdurl==0.1.2 \
     # via
     #   -c requirements.txt
     #   markdown-it-py
-meraki==2.1.2 \
-    --hash=sha256:6091a0aab8ee349ed34e98aad9fb7dc926479837aefefb4ce43caab95b6a9db7 \
-    --hash=sha256:f391d4990c11ac842afe65cd0c9ce05ce28de780374e0cbbef4656cfc3031106
+meraki==3.0.2 \
+    --hash=sha256:57d640dc37d5aa9833e53d1d4da01bc2feaa7cfc775825a5fcb8496c426f889d \
+    --hash=sha256:ceeff216f44e44f9acc4c62a5a44ab8975f590442eb3136444698a96883afb5f
     # via
     #   -c constraints.txt
     #   -c requirements.txt
@@ -2277,14 +2264,11 @@ packaging==26.2 \
     # via
     #   -c requirements.txt
     #   apispec
-    #   build
     #   gunicorn
     #   jira
     #   marshmallow
     #   opentelemetry-instrumentation
-    #   pytest
     #   setuptools-scm
-    #   wheel
 paho-mqtt==2.1.0 \
     --hash=sha256:12d6e7511d4137555a3f6ea167ae846af2c7357b10bc6fa4f7c3968fc1723834 \
     --hash=sha256:6db9ba9b34ed5bc6b6e3812718c7e06e2fd7444540df2455d2c51bd58808feee
@@ -2403,13 +2387,6 @@ pillow==12.3.0 \
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   reportlab
-pluggy==1.5.0 \
-    --hash=sha256:2cffa88e94fdc978c4c574f15f9e59b7f4201d439195c3715ca9e2486f1d0cf1 \
-    --hash=sha256:44e1ad92c8ca002de6377e165f3e0f1be63266ab4d554740532335b9d75ea669
-    # via
-    #   -c constraints.txt
-    #   -c requirements.txt
-    #   pytest
 ply==3.11 \
     --hash=sha256:00c7c1aaa88358b9c765b6d3000c6eec0ba42abca5351b095321aef446081da3 \
     --hash=sha256:096f9b8350b65ebd2fd1346b12452efe5b9607f7482813ffca50c22722a807ce
@@ -3080,12 +3057,6 @@ pyprof2calltree==1.4.5 \
     #   -c constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
-pyproject-hooks==1.2.0 \
-    --hash=sha256:1e859bd5c40fae9448642dd871adf459e5e2084186e8d2c2a79a824c970da1f8 \
-    --hash=sha256:9e5c6bfa8dcc30091c74b0cf803c81fdd29d94f01992a7707bc97babb1141913
-    # via
-    #   -c requirements.txt
-    #   build
 pysaml2==7.5.0 \
     --hash=sha256:bc6627cc344476a83c757f440a73fda1369f13b6fda1b4e16bca63ffbabb5318 \
     --hash=sha256:f36871d4e5ee857c6b85532e942550d2cf90ea4ee943d75eb681044bbc4f54f7
@@ -3123,13 +3094,6 @@ pyspnego==0.12.1 \
     # via
     #   -c requirements.txt
     #   requests-ntlm
-pytest==8.3.5 \
-    --hash=sha256:c69214aa47deac29fad6c2a4f590b9c4a9fdb16a403176fe154b79c0b4d4d820 \
-    --hash=sha256:f4efe70cc14e511565ac476b57c279e12a855b11f48f212af1080ef2263d3845
-    # via
-    #   -c constraints.txt
-    #   -c requirements.txt
-    #   meraki
 python-active-directory==2.0.1 \
     --hash=sha256:023d5d47fa1fc966527d63d73b6c3864a233c236e3e258f9af778e73549230e0 \
     --hash=sha256:119f0acf9d4cba8ee99639602969214757100a12f3fafe6a6083ead56bfc655b \
@@ -3803,14 +3767,13 @@ setproctitle==1.3.7 \
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-ec/requirements.in
-setuptools==78.1.1 \
-    --hash=sha256:c3a9c4211ff4c309edb8b8c4f1cbfa7ae324c4ba9f91ff254e3d305b9fd54561 \
-    --hash=sha256:fcc17fd9cd898242f6b4adfaca46137a9edef687f43e6f78469692a5e70d851d
+setuptools==83.0.0 \
+    --hash=sha256:025bccbbf0fa05b6192bc64ae1e7b16e001fd6d6d4d5de03c97b1c1ade523bef \
+    --hash=sha256:29b23c360f22f414dc7336bb39178cc7bcbf6021ed2733cde173f09dba19abb3
     # via
     #   -c constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
-    #   meraki
     #   opsgenie-sdk
     #   setuptools-scm
 setuptools-scm==9.2.2 \
@@ -4223,12 +4186,6 @@ werkzeug==3.1.8 \
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   flask
-wheel==0.46.3 \
-    --hash=sha256:4b399d56c9d9338230118d705d9737a2a468ccca63d5e813e2a4fc7815d8bc4d \
-    --hash=sha256:e3e79874b07d776c40bd6033f8ddf76a7dad46a7b8aa1b2787a83083519a1803
-    # via
-    #   -c requirements.txt
-    #   meraki
 wrapt==1.17.3 \
     --hash=sha256:02b551d101f31694fc785e58e0720ef7d9a10c4e62c1c9358ce6f63f23e30a56 \
     --hash=sha256:042ec3bb8f319c147b1301f2393bc19dba6e176b7da446853406d041c36c7828 \

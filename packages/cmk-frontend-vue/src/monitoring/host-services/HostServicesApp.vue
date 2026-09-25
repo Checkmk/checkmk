@@ -54,6 +54,7 @@ import {
   slideInWriter
 } from '../shared/urlState/slideInState'
 import { useUrlSync } from '../shared/urlState/useUrlSync'
+import { useFallbackKeys } from '../shared/useFallbackKeys'
 import { useAcknowledgeServicesAction } from './actions/acknowledgeServices'
 import { useRescheduleServicesAction } from './actions/rescheduleServices'
 import { useScheduleServiceDowntimeAction } from './actions/scheduleServiceDowntime'
@@ -219,6 +220,10 @@ const actionRegistry = createActionRegistry<string>([
 
 const toolbar = useTemplateRef<{ focus: () => void }>('toolbar')
 
+const root = useTemplateRef<HTMLElement>('root')
+
+useFallbackKeys(root, () => root.value?.querySelector<HTMLElement>('.monitoring-table'))
+
 onMounted(() => {
   hostServicesService.onFocusSearch(() => toolbar.value?.focus())
 })
@@ -352,7 +357,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :url="legacy_view_button.url"
       />
     </MonitoringHeaderActions>
-    <div class="monitoring-host-services-app">
+    <div ref="root" class="monitoring-host-services-app">
       <MonitoringToolbar
         ref="toolbar"
         :service="hostServicesService"

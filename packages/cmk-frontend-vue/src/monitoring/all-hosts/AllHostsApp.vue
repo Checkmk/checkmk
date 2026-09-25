@@ -52,6 +52,7 @@ import {
   slideInWriter
 } from '../shared/urlState/slideInState'
 import { useUrlSync } from '../shared/urlState/useUrlSync'
+import { useFallbackKeys } from '../shared/useFallbackKeys'
 import { useAcknowledgeHostsAction } from './actions/acknowledgeHosts'
 import { useRescheduleHostsAction } from './actions/rescheduleHosts'
 import { useScheduleHostDowntimeAction } from './actions/scheduleHostDowntime'
@@ -204,6 +205,10 @@ const displayOptions = usePersistentRef(
 
 const toolbar = useTemplateRef<{ focus: () => void }>('toolbar')
 
+const root = useTemplateRef<HTMLElement>('root')
+
+useFallbackKeys(root, () => root.value?.querySelector<HTMLElement>('.monitoring-table'))
+
 const actionRegistry = createActionRegistry([
   useAcknowledgeHostsAction(
     {
@@ -338,7 +343,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :url="legacy_view_button.url"
       />
     </MonitoringHeaderActions>
-    <div class="monitoring-all-hosts-app">
+    <div ref="root" class="monitoring-all-hosts-app">
       <MonitoringToolbar
         ref="toolbar"
         :service="hostService"

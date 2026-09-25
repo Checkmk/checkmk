@@ -7,8 +7,9 @@
  * The hover card and the right-click menu on a map's objects.
  *
  * Both are anchored to the pointer and both close on the same events, so they
- * are one piece of state rather than two: opening either closes the other, and
- * anything that takes the operator elsewhere closes both.
+ * are one piece of state rather than two: the menu closes the card, no card
+ * opens while the menu is up, and anything that takes the operator elsewhere
+ * closes both.
  *
  * The templates the card and the menu render come from three places — the
  * object, the map, the site — in that order, so a map can set a house style and
@@ -93,12 +94,12 @@ export function useMapObjectMenus(source: {
       )
     ),
     openHover: (object, event, options) => {
-      if (!source.preview()) {
+      if (!source.preview() && !context.visible) {
         hover.open(object, event, options)
       }
     },
     openSubtreeHover: (object, state, event) => {
-      if (!source.preview()) {
+      if (!source.preview() && !context.visible) {
         hover.open(object, event, { stateOverride: state })
       }
     },
@@ -107,6 +108,7 @@ export function useMapObjectMenus(source: {
       if (source.stateOf(object.id)?.state === 'NO_PERMISSION') {
         return
       }
+      hover.close()
       context.object = object
       context.x = event.clientX
       context.y = event.clientY

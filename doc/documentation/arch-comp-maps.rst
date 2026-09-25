@@ -24,7 +24,7 @@ the regular ``cmk-frontend-vue`` bundle. The parts are:
 * the **shared domain layer** (``cmk.maps.shared``): the pure GUI↔daemon
   code both sides import — ticket protocol, config-variable names, row
   extractors, state/severity maps, geo resolver, filter allow-list, perf-data
-  parser, autocomplete builder.
+  parser.
 
 Requirements overview
 ---------------------
@@ -172,7 +172,7 @@ Interfaces
   endpoints, so this one root reaches both families. Domain types ``map``
   (public) and ``maps_aggregation``, ``maps_command``, ``maps_folder``,
   ``maps_form``, ``maps_host_geo``, ``maps_image``, ``maps_member``,
-  ``maps_metric_info``, ``maps_object``, ``maps_perf_metrics``,
+  ``maps_metric_info``, ``maps_perf_metrics``,
   ``maps_settings``, ``maps_site``, ``maps_ticket`` (internal). The SPA's types
   for them come from the GUI's generated OpenAPI types, not from hand-written
   mirrors.

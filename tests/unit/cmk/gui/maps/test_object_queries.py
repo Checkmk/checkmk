@@ -95,24 +95,6 @@ def test_perf_metrics_host_has_no_check_command(monkeypatch: pytest.MonkeyPatch)
     assert result.metrics == ["rta"]
 
 
-def test_objects_service_rows_are_bare_descriptions(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    # What the picker offers is what the object stores in
-    # ``service_description``, so the host must not be prefixed onto it.
-    _patch_live(monkeypatch, [["CPU"], ["Mem"]])
-    assert _object_queries.object_names("service", "h1", None) == ["CPU", "Mem"]
-
-
-def test_objects_unscoped_service_search_offers_each_name_once(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    # Without a host the same description comes back from every host running
-    # it, and the picker has nothing to tell the repeats apart by.
-    _patch_live(monkeypatch, [["CPU"], ["CPU"], ["Mem"], ["CPU"]])
-    assert _object_queries.object_names("service", None, "c") == ["CPU", "Mem"]
-
-
 def test_group_members_maps_host_state_and_flags(monkeypatch: pytest.MonkeyPatch) -> None:
     _patch_live(monkeypatch, [["h1", 1, "DOWN - unreachable\nline2", 1, 0, 1, 123.0]])
     assert _object_queries.group_members("hostgroup", "linux") == [

@@ -68,7 +68,7 @@ def test_schema_is_independent_of_the_environment() -> None:
         OMD_SITE="pinned",
         MAPS_LOG_LEVEL="DEBUG",
         MAPS_STATE_REFRESH_INTERVAL="99",
-        MAPS_OBJECT_AUTOCOMPLETE_LIMIT="1",
+        MAPS_FOLDER_SEARCH_MAX_SERVICES="1",
     )
 
 

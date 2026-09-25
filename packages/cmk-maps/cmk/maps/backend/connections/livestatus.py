@@ -55,7 +55,6 @@ from cmk.maps.backend.schemas.state import (
     ObjectState,
     ServicesSummary,
 )
-from cmk.maps.shared.autocomplete import object_autocomplete_query, unique_names
 from cmk.maps.shared.geo import LAT_LABEL, LAT_VAR, LNG_LABEL, LNG_VAR, resolve_host_coords
 from cmk.maps.shared.perfdata import parse_perf_metrics
 from cmk.maps.shared.rows import (
@@ -760,34 +759,6 @@ class LivestatusConnection(ConnectionBase):
             services_summary=services_summary,
             hosts_summary=hosts_summary,
         )
-
-    @override
-    async def get_objects(
-        self, obj_type: str, host: str | None = None, search: str | None = None
-    ) -> list[str]:
-        # Filtered and hard-capped at the source, so a multi-million-host site
-        # never streams every name into the editor — the same approach as
-        # cmk.gui's monitored_hostname_autocompleter. The cap is logged when hit
-        # so truncation isn't silent.
-        limit = settings.object_autocomplete_limit
-        query = object_autocomplete_query(
-            obj_type, escape=lqencode, limit=limit, host=host, search=search
-        )
-        if query is None:
-            return []
-        rows = await self._query(query)
-        names = unique_names(row_str(r, 0) for r in rows)
-        # The cap is about what the query returned, not what survived the
-        # de-duplication — a truncated answer stays worth reporting.
-        if len(rows) >= limit:
-            logger.info(
-                "%(what)s autocomplete truncated to %(limit)d; site has more — type to narrow",
-                {"what": obj_type, "limit": limit},
-            )
-        # MultiSiteConnection applies ``Limit`` per site and concatenates, so a
-        # federated result can hold up to limit×num_sites names. Re-slice so the
-        # cap the editor relies on holds across a distributed setup too.
-        return names[:limit]
 
     @override
     async def get_group_members(self, group_type: str, group_name: str) -> list[str]:

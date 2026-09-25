@@ -59,17 +59,6 @@ class MapsPerfMetricsResponse:
 
 
 @api_model
-class MapsObjectsResponse:
-    objects: list[str] = api_field(
-        description=(
-            "Matching object names, capped server-side. Service results are "
-            "``<host>;<service>`` pairs; every other object type is a plain name."
-        ),
-        example=["heute", "localhost"],
-    )
-
-
-@api_model
 class MapsMember:
     host: str = api_field(description="The member's host name.", example="heute")
     service: str = api_field(

@@ -51,13 +51,6 @@ def test_perf_metrics(clients: ClientRegistry, mock_livestatus: MockLiveStatusCo
 
 
 @pytest.mark.usefixtures("request_context")
-def test_objects(clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection) -> None:
-    mock_livestatus.expect_query("GET hosts\nColumns: name\nLimit: 100")
-    with mock_livestatus:
-        assert "heute" in clients.Maps.get_objects("host").json["objects"]
-
-
-@pytest.mark.usefixtures("request_context")
 def test_group_members(clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection) -> None:
     mock_livestatus.expect_query(f"GET hosts\nColumns: {_MEMBER_COLUMNS}\nFilter: groups >= linux")
     with mock_livestatus:

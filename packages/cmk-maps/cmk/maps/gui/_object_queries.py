@@ -26,21 +26,14 @@ from cmk.gui.logged_in import user
 from cmk.gui.sites import live
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.watolib.hosts_and_folders import FolderTree
-from cmk.livestatus_client import lqencode
 from cmk.livestatus_client.expressions import And
 from cmk.livestatus_client.queries import Query, ResultRow
 from cmk.livestatus_client.tables.hosts import Hosts
 from cmk.livestatus_client.tables.services import Services
-from cmk.maps.shared.autocomplete import object_autocomplete_query, unique_names
 from cmk.maps.shared.filters import normalize_object_filter
 from cmk.maps.shared.geo import resolve_host_coords
 from cmk.maps.shared.perfdata import parse_perf_metrics
 from cmk.maps.shared.states import HOST_STATE_MAP, SERVICE_STATE_MAP
-
-# Autocomplete hard cap — a multi-million-object site filters + bounds at the
-# source instead of streaming every name into the editor. The GUI picker caps
-# tighter than the daemon's API default; the SPA narrows further as you type.
-_AUTOCOMPLETE_LIMIT = 100
 
 _HOST_MEMBER_COLUMNS = [
     Hosts.name,
@@ -175,27 +168,6 @@ def perf_metrics(host: str, service: str | None) -> PerfMetricsSource:
         check_command=check_command,
         metrics=[m["label"] for m in parse_perf_metrics(perf_data)],
     )
-
-
-# ---------------------------------------------------------------------------
-# Object autocomplete (editor)
-# ---------------------------------------------------------------------------
-
-
-def object_names(obj_type: str, host: str | None, search: str | None) -> list[str]:
-    """Matching object names for the editor autocomplete (auth-scoped).
-
-    The query text comes from ``cmk.maps.shared.autocomplete``: the same builder
-    serves the Flask-free daemon, and ``cmk.maps.shared`` must not depend on the
-    livestatus client, so it emits raw LQL. Hence no column-typed ``Query`` on
-    this one path — the shared seam owns the query.
-    """
-    query = object_autocomplete_query(
-        obj_type, escape=lqencode, limit=_AUTOCOMPLETE_LIMIT, host=host, search=search
-    )
-    if query is None:
-        return []
-    return unique_names(str(row[0]) for row in live().query(query))
 
 
 # ---------------------------------------------------------------------------

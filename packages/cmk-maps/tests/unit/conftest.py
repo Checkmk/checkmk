@@ -117,7 +117,6 @@ def mock_connection() -> MagicMock:
     connection.get_host_services = AsyncMock(return_value=[])
     connection.get_services_summary = AsyncMock(return_value={})
 
-    connection.get_objects = AsyncMock(return_value=[])
     connection.get_group_members = AsyncMock(return_value=[])
 
     connection.get_dyngroup_state = AsyncMock(

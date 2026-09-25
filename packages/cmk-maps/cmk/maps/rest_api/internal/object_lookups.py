@@ -30,7 +30,6 @@ from cmk.maps.gui._object_queries import (
     group_members,
     host_geo,
     Member,
-    object_names,
     perf_metrics,
     site_choices,
 )
@@ -42,7 +41,6 @@ from cmk.maps.rest_api.internal.models.response_models import (
     MapsHostGeoResponse,
     MapsMember,
     MapsMembersResponse,
-    MapsObjectsResponse,
     MapsPerfMetricsResponse,
     MapsSite,
     MapsSitesResponse,
@@ -112,28 +110,6 @@ def show_perf_metrics_v1(
         check_command=source.check_command,
         metrics=source.metrics,
     )
-
-
-def list_objects_v1(
-    object_type: Annotated[
-        str,
-        QueryParam(description="One of host, service, hostgroup, servicegroup.", example="host"),
-    ],
-    host_name: Annotated[
-        str | None,
-        QueryParam(
-            description="Scope a service search to one host (required at scale).",
-            example="heute",
-        ),
-    ] = None,
-    search: Annotated[
-        str | None,
-        QueryParam(description="Case-insensitive substring to filter by.", example="eth"),
-    ] = None,
-) -> MapsObjectsResponse:
-    """Show matching object names"""
-    user.need_permission("maps.use")
-    return MapsObjectsResponse(objects=object_names(object_type, host_name, search))
 
 
 def list_group_members_v1(
@@ -210,18 +186,6 @@ ENDPOINT_SHOW_PERF_METRICS = VersionedEndpoint(
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
     behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=show_perf_metrics_v1)},
-)
-
-ENDPOINT_LIST_OBJECTS = VersionedEndpoint(
-    metadata=EndpointMetadata(
-        path=collection_href("maps_object"),
-        link_relation="cmk/list_maps_objects",
-        method="get",
-    ),
-    permissions=EndpointPermissions(required=_LIVESTATUS_LOOKUP_PERMISSIONS),
-    doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
-    behavior=NO_CONFIG_CHANGE,
-    versions={APIVersion.INTERNAL: EndpointHandler(handler=list_objects_v1)},
 )
 
 # Two collections of the same domain type: the members are the same shape, only

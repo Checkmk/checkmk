@@ -69,9 +69,6 @@ _PINNED_SERVICE_STATES: dict[tuple[str, str], tuple[str, str]] = {
     ("switch01", "PING"): ("OK", "rta=0.8ms;200;500;0; pl=0%;20;60;0;100"),
 }
 
-_DEMO_HOSTGROUPS = ["linux-servers", "windows-servers", "network-devices"]
-_DEMO_SERVICEGROUPS = ["web-services", "storage", "system-checks"]
-
 
 def _classify_service(service: str) -> str:
     """Map a service description to a category key used by the demo helpers."""
@@ -322,28 +319,6 @@ class FakeConnection(ConnectionBase):
             state=state,
             output=f"Servicegroup {group}: {state}",
         )
-
-    @override
-    async def get_objects(
-        self, obj_type: str, host: str | None = None, search: str | None = None
-    ) -> list[str]:
-        q = (search or "").strip().lower()
-
-        def _match(items: list[str]) -> list[str]:
-            return [i for i in items if not q or q in i.lower()]
-
-        if obj_type == "host":
-            return _match(list(_DEMO_HOSTS))
-        if obj_type == "service":
-            if host is not None and host not in _DEMO_HOSTS:
-                return []
-            # Every demo host runs the same service set.
-            return _match(list(_DEMO_SERVICES))
-        if obj_type == "hostgroup":
-            return _match(list(_DEMO_HOSTGROUPS))
-        if obj_type == "servicegroup":
-            return _match(list(_DEMO_SERVICEGROUPS))
-        return []
 
     @override
     async def get_group_members(self, group_type: str, group_name: str) -> list[str]:

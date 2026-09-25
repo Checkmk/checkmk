@@ -31,7 +31,6 @@ from cmk.maps.rest_api.internal.object_lookups import (
     ENDPOINT_LIST_DYNGROUP_MEMBERS,
     ENDPOINT_LIST_FOLDERS,
     ENDPOINT_LIST_GROUP_MEMBERS,
-    ENDPOINT_LIST_OBJECTS,
     ENDPOINT_LIST_SITES,
     ENDPOINT_SHOW_HOST_GEO,
     ENDPOINT_SHOW_PERF_METRICS,
@@ -47,7 +46,6 @@ def register(
     endpoint_family_registry.register(MAPS_INTERNAL_FAMILY)
     versioned_endpoint_registry.register(ENDPOINT_SHOW_HOST_GEO)
     versioned_endpoint_registry.register(ENDPOINT_SHOW_PERF_METRICS)
-    versioned_endpoint_registry.register(ENDPOINT_LIST_OBJECTS)
     versioned_endpoint_registry.register(ENDPOINT_LIST_GROUP_MEMBERS)
     versioned_endpoint_registry.register(ENDPOINT_LIST_DYNGROUP_MEMBERS)
     versioned_endpoint_registry.register(ENDPOINT_LIST_FOLDERS)

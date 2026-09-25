@@ -2244,11 +2244,6 @@ class MapsClient(RestApiClient):
             "/domain-types/maps_perf_metrics/collections/all", query, expect_ok
         )
 
-    def get_objects(self, object_type: str, expect_ok: bool = True) -> Response:
-        return self._internal_get(
-            "/domain-types/maps_object/collections/all", {"object_type": object_type}, expect_ok
-        )
-
     def get_group_members(
         self, group_type: str, group_name: str, expect_ok: bool = True
     ) -> Response:

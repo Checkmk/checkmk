@@ -434,7 +434,7 @@ async def folder_service_search(
     it already has in the tree. Pure host/folder searches stay client-side and
     never call this. Terms shorter than 2 chars are dropped (too broad).
     """
-    limit = settings.object_autocomplete_limit
+    limit = settings.folder_search_max_services
 
     # Trim and drop sub-2-char terms (too broad); forward the trimmed value so a
     # stray space never leaks into the match.

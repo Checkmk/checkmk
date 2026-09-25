@@ -102,10 +102,10 @@ class Settings(BaseModel):
     connection_warmup_interval: int = Field(
         default_factory=lambda: _env_int("MAPS_CONNECTION_WARMUP_INTERVAL", 60), ge=1
     )
-    # Hard cap on object-name autocomplete results (host/group pickers in the
-    # editor). Without it a multi-million-host site would freeze the UI.
-    object_autocomplete_limit: int = Field(
-        default_factory=lambda: _env_int("MAPS_OBJECT_AUTOCOMPLETE_LIMIT", 5000), ge=1
+    # Hard cap on the services a folder-tree search returns. Without it a
+    # multi-million-service site would freeze the UI.
+    folder_search_max_services: int = Field(
+        default_factory=lambda: _env_int("MAPS_FOLDER_SEARCH_MAX_SERVICES", 5000), ge=1
     )
 
 

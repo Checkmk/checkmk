@@ -239,20 +239,6 @@ class ConnectionBase(ABC):
         return ObjectState(object_id="", type="dyngroup", state="NOT_SUPPORTED")
 
     @abstractmethod
-    async def get_objects(
-        self, obj_type: str, host: str | None = None, search: str | None = None
-    ) -> list[str]:
-        """Return list of object names of given type (host/service/hostgroup/…).
-
-        When *host* is given for ``obj_type == "service"`` the lookup is scoped
-        to that host so large environments don't fetch every service. *search*
-        is a case-insensitive substring applied server-side (CMK-style
-        autocompleter) so huge sites filter+limit at the source instead of
-        streaming every name to the client.
-        """
-        ...
-
-    @abstractmethod
     async def get_group_members(self, group_type: str, group_name: str) -> list[str]:
         """Return member names for a radar filter (hostgroup/servicegroup/all_hosts/all_services)."""
         ...

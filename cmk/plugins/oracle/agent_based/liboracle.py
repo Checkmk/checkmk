@@ -312,6 +312,9 @@ def _oracle_handle_legacy_ora_errors(line: Sequence[str]) -> Result | Literal[Fa
 # Fully prevent creation of services when an error is found.
 def oracle_handle_ora_errors_discovery(info: StringTable) -> None:
     for line in info:
+        # Only mk-oracle sends FAILURE rows here. Its errors must not abort the discovery.
+        if len(line) > 1 and line[1] == "FAILURE":
+            continue
         err = oracle_handle_ora_errors(line)
         if err is False:
             continue

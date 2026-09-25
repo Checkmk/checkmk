@@ -756,17 +756,6 @@ def _main() -> Dictionary:
                 ),
                 required=False,
             ),
-            "custom_metrics_cache_age": DictElement(
-                parameter_form=Integer(
-                    title=Title("Custom metrics cache age"),
-                    help_text=Help(
-                        "How old (in seconds) the cache file for custom metrics is allowed to be."
-                    ),
-                    custom_validate=(validators.NumberInRange(min_value=30),),
-                    prefill=DefaultValue(600),
-                ),
-                required=False,
-            ),
             "discovery": DictElement(
                 parameter_form=_discovery(),
                 required=False,
@@ -780,6 +769,7 @@ def _main() -> Dictionary:
                 required=False,
             ),
         },
+        ignored_elements=("custom_metrics_cache_age",),
     )
 
 

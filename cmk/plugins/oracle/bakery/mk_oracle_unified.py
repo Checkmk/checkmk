@@ -115,29 +115,6 @@ OS_ORACLE_FILES: Sequence[tuple[OS, Sequence[OraclePluginFile]]] = (
     SOLARIS_ORACLE_FILES,
 )
 
-CUSTOM_METRICS_ASYNC_FILES: Mapping[OS, OraclePluginFile] = {
-    OS.LINUX: OraclePluginFile(
-        source=Path("oracle_unified_async_custom_metrics"),
-        target=Path("mk-oracle-v2_async_custom_metrics"),
-        cached=True,
-    ),
-    OS.WINDOWS: OraclePluginFile(
-        source=Path("oracle_unified_async_custom_metrics.ps1"),
-        target=Path("mk-oracle-v2_async_custom_metrics.ps1"),
-        cached=True,
-    ),
-    OS.AIX: OraclePluginFile(
-        source=Path("oracle_unified_async_custom_metrics.aix"),
-        target=Path("mk-oracle-v2_async_custom_metrics.aix"),
-        cached=True,
-    ),
-    OS.SOLARIS: OraclePluginFile(
-        source=Path("oracle_unified_async_custom_metrics.solaris"),
-        target=Path("mk-oracle-v2_async_custom_metrics.solaris"),
-        cached=True,
-    ),
-}
-
 GuiSectionOptions = Mapping[str, Literal["synchronous", "asynchronous", "disabled"]]
 
 
@@ -222,7 +199,6 @@ class GuiMainConf(BaseModel, Generic[SecretT]):
     auth: GuiAuthConf[SecretT]
     connection: GuiConnectionConf
     cache_age: int | None = None
-    custom_metrics_cache_age: int | None = None
     discovery: GuiDiscoveryConf | None = None
     sections: GuiSectionOptions | None = None
     excluded_sections: list[GuiExcludedSectionConf] | None = None
@@ -230,10 +206,6 @@ class GuiMainConf(BaseModel, Generic[SecretT]):
     def get_active_cache_age(self) -> int:
         """Return cache age in seconds, default is 600 seconds: must be in sync with agent plugin"""
         return self.cache_age or 600
-
-    def get_active_custom_metrics_cache_age(self) -> int:
-        """Return metrics cache age in seconds, default is 600 seconds: must be in sync with agent plugin"""
-        return self.custom_metrics_cache_age or 600
 
 
 class GuiInstanceAdditionalOptionsConf(BaseModel):
@@ -330,7 +302,6 @@ class OracleMain(BaseModel):
     connection: OracleConnection | None
     options: OracleAdditionalOptions | None = None
     cache_age: int | None = None
-    custom_metrics_cache_age: int | None = None
     discovery: OracleDiscovery | None = None
     sections: Sequence[Mapping[str, OracleSection]] | None = None
     instances: list[OracleInstance] | None = None
@@ -347,8 +318,6 @@ def get_oracle_plugin_files(confm: GuiConfig) -> FileGenerator:
 
     config_lines = list(_get_oracle_yaml_lines(confm))
     cache_age = confm.main.get_active_cache_age()
-    custom_metrics_cache_age = confm.main.get_active_custom_metrics_cache_age()
-    deploy_custom_metrics = cache_age != custom_metrics_cache_age
 
     for base_os, files in OS_ORACLE_FILES:
         for file in files:
@@ -357,15 +326,6 @@ def get_oracle_plugin_files(confm: GuiConfig) -> FileGenerator:
                 target=file.target,
                 source=file.source,
                 interval=cache_age if file.cached else None,
-            )
-
-        if deploy_custom_metrics:
-            cm_file = CUSTOM_METRICS_ASYNC_FILES[base_os]
-            yield Plugin(
-                base_os=base_os,
-                target=cm_file.target,
-                source=cm_file.source,
-                interval=custom_metrics_cache_age,
             )
 
         yield PluginConfig(
@@ -396,7 +356,6 @@ def _get_oracle_dict(config: GuiConfig) -> OracleMain:
         sections=_get_oracle_sections(main_config.sections),
         instances=_get_oracle_instances(instances_config),
         cache_age=main_config.get_active_cache_age(),
-        custom_metrics_cache_age=main_config.get_active_custom_metrics_cache_age(),
         excluded_sections=_get_oracle_excluded_sections(main_config.excluded_sections),
     )
 

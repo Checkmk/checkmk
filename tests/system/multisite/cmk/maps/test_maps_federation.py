@@ -177,33 +177,74 @@ def test_maps_daemon_federates_remote_site_hosts(
     assert central_site.id in site_ids
 
 
+@pytest.fixture(name="stored_maps_connections")
+def _stored_maps_connections(central_site: Site) -> Iterator[list[dict[str, object]]]:
+    """The central's own connection, stored explicitly in ``maps_connections``.
+
+    The factory default is computed on each site and never written, so only a
+    stored list shows that the daemon-consumed settings are shipped. Written
+    straight into the file: the following Activate Changes syncs every file that
+    differs from the remote. Storing the default keeps the central daemon's view
+    unchanged.
+    """
+    original = (
+        central_site.read_file(_MAPS_SETTINGS_PATH)
+        if central_site.file_exists(_MAPS_SETTINGS_PATH)
+        else None
+    )
+    connections: list[dict[str, object]] = [
+        {
+            "id": f"cmk_{central_site.id}",
+            "label": f"Checkmk {central_site.id}",
+            "type": (
+                "livestatus",
+                {
+                    "target": ("socket", {"socket_path": f"{central_site.root}/tmp/run/live"}),
+                    "timeout": 10,
+                    "checkmk_url": f"/{central_site.id}/check_mk",
+                    "metric_history": ("livestatus", None),
+                },
+            ),
+        }
+    ]
+    settings = central_site.read_global_settings(_MAPS_SETTINGS_PATH) if original else {}
+    central_site.write_global_settings(
+        _MAPS_SETTINGS_PATH, settings | {"maps_connections": connections}
+    )
+    try:
+        yield connections
+    finally:
+        if original is None:
+            central_site.delete_file(_MAPS_SETTINGS_PATH)
+        else:
+            central_site.write_file(_MAPS_SETTINGS_PATH, original)
+
+
 def test_maps_config_domain_replicated_to_remote(
     central_site: Site,
     remote_site: Site,
     maps_on: None,
+    stored_maps_connections: list[dict[str, object]],
     remote_monitored_host: str,
 ) -> None:
     """The Maps config domain must reach remote sites on Activate Changes.
 
     The daemon reads its runtime config (the ``maps_connections`` the SPA queries
     against) from ``etc/check_mk/maps.d/wato`` — a directory shipped by the config
-    domain's ``ReplicationPath``. The ``remote_monitored_host`` fixture already ran
-    a distributed Activate Changes, so the directory (and the central's settings)
-    must have landed on the remote; without the registered ReplicationPath the
-    remote daemon would read nothing and its maps would be empty.
+    domain's ``ReplicationPath``. The ``remote_monitored_host`` fixture runs a
+    distributed Activate Changes after ``stored_maps_connections`` stored the
+    list, so the central's settings must have landed on the remote; without the
+    registered ReplicationPath the remote daemon would read nothing and its maps
+    would be empty.
 
     ``needs_sync = True`` — the property that lets a Maps-*only* change trigger the
     sync — is pinned at unit level (``test_config_domain.py``); this pins the
     delivery + path end to end on a real distributed setup.
     """
-    assert remote_site.is_dir("etc/check_mk/maps.d/wato"), (
-        "Maps config domain directory was not replicated to the remote site"
+    assert remote_site.file_exists(_MAPS_SETTINGS_PATH), (
+        "Maps global.mk was not replicated to the remote site"
     )
-    # The sample-config generator seeds maps_connections on a fresh site, so the
-    # central has a global.mk; the replicated copy on the remote must carry the
-    # same daemon-consumed connection list.
-    if central_site.file_exists(str(_MAPS_SETTINGS_PATH)):
-        assert remote_site.file_exists(str(_MAPS_SETTINGS_PATH)), (
-            "Maps global.mk present on the central but missing on the remote"
-        )
-        assert "maps_connections" in remote_site.read_global_settings(_MAPS_SETTINGS_PATH)
+    assert (
+        remote_site.read_global_settings(_MAPS_SETTINGS_PATH).get("maps_connections")
+        == stored_maps_connections
+    )

@@ -1018,8 +1018,13 @@ function closeBulkAckModal(sent: boolean): void {
      get its own idea of a radius, a font size or a state colour. */
 
   /* A near-opaque surface for the controls that float over a map: readable on
-     any background, without hiding what is behind them entirely. */
-  --maps-map-view-glass: color-mix(in srgb, var(--ux-theme-1) 92%, transparent);
+     any background, without hiding what is behind them entirely. Checkmk's
+     tooltip surface rather than the map's own, so a card stands off the map. */
+  --maps-map-view-glass: color-mix(
+    in srgb,
+    var(--default-tooltip-background-color) 92%,
+    transparent
+  );
 
   /* Keeps an icon legible on any backdrop in either theme, where the
      theme-coupled invert it replaces left dark-map icons invisible in the

@@ -5338,6 +5338,63 @@ class HostRelationDiscoveryClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def scan(
+        self,
+        findings: list[dict[str, object]] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url="/domain-types/host_relation_discovery/actions/scan/invoke",
+            body={
+                "findings": (
+                    [{"id": "word:ilo", "kind": "management", "words": ["ilo", "bmc"]}]
+                    if findings is None
+                    else findings
+                )
+            },
+            expect_ok=expect_ok,
+        )
+
+    def accept(
+        self,
+        scan_id: str,
+        findings: list[str],
+        excluded: list[str] | None = None,
+        answers: dict[str, str] | None = None,
+        resolutions: dict[str, str] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url="/domain-types/host_relation_discovery/actions/accept/invoke",
+            body={
+                "scan_id": scan_id,
+                "findings": findings,
+                "excluded": excluded or [],
+                "answers": answers or {},
+                "resolutions": resolutions or {},
+            },
+            expect_ok=expect_ok,
+        )
+
+    def show(self, job_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/host_relation_discovery/{job_id}",
+            expect_ok=expect_ok,
+        )
+
+    def rows(
+        self, job_id: str, query: Mapping[str, str | int] | None = None, expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/host_relation_discovery/{job_id}/collections/rows"
+            + (f"?{urllib.parse.urlencode(query)}" if query else ""),
+            expect_ok=expect_ok,
+        )
+
 
 class MonitorHostsClient(RestApiClient):
     default_version = APIVersion.INTERNAL

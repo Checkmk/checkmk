@@ -7,6 +7,182 @@ from typing import Literal
 
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedHostName
+from cmk.gui.watolib.host_relation_discovery import LinkOutcome
+
+_REASON_EXAMPLE: dict[str, object] = {"word": "ilo", "source": None, "name": None, "value": None}
+
+_RELATION_EXAMPLE: dict[str, object] = {
+    "key": "srv-01-ilo|management|srv-01",
+    "finding": "word:ilo",
+    "source_host": "srv-01-ilo",
+    "target_host": "srv-01",
+    "kind": "management",
+    "relation": "management_parent",
+    "folders": ["oob", "linux"],
+    "evidence": 'The name is "srv-01" with "ilo" added.',
+    "reason": _REASON_EXAMPLE,
+    "outcome": "link",
+    "detail": "",
+}
+
+_GROUP_EXAMPLE: dict[str, object] = {
+    "key": "management|w-4711,w-4712",
+    "finding": "label:cmdb/sn",
+    "kind": "management",
+    "relation": "management_parent",
+    "members": ["w-4711", "w-4712"],
+    "folders": ["cmdb"],
+    "evidence": 'All of them carry the host label "cmdb/sn" with the value "S-1".',
+    "reason": {"word": None, "source": "label", "name": "cmdb/sn", "value": "S-1"},
+    "outcome": "undecided",
+    "settled": None,
+    "refusals": {},
+}
+
+_COUNTS_EXAMPLE = {
+    "link": 371,
+    "already_linked": 26,
+    "stored_otherwise": 1,
+    "not_writable": 15,
+    "undecided": 2,
+}
+
+
+@api_model
+class RelationReasonModel:
+    """What a proposal was found by: a word in a host name, or a value both hosts carry."""
+
+    word: str | None = api_field(
+        description="The word one host name carries on top of the other, if the names are "
+        "what found the pair.",
+        example="ilo",
+    )
+    source: Literal["label", "attribute"] | None = api_field(
+        description="Whether the shared value is a host label or a custom host attribute, if "
+        "a shared value is what found the pair.",
+        example=None,
+    )
+    name: str | None = api_field(description="The name of the label or attribute.", example=None)
+    value: str | None = api_field(description="The value the hosts share.", example=None)
+
+
+@api_model
+class RelationRowModel:
+    key: str = api_field(
+        description="What identifies the relation when it is left out of a run.",
+        example="srv-01-ilo|management|srv-01",
+    )
+    finding: str = api_field(description="The finding that proposed it.", example="word:ilo")
+    source_host: AnnotatedHostName = api_field(
+        description="The host the relation is stored on.", example="srv-01-ilo"
+    )
+    target_host: AnnotatedHostName = api_field(
+        description="The host it is related to.", example="srv-01"
+    )
+    kind: str = api_field(description="The kind of relation.", example="management")
+    relation: str = api_field(
+        description="The relation, named by the end the source host sits at.",
+        example="management_parent",
+    )
+    folders: list[str] = api_field(
+        description="The folders of the source and the target host.", example=["oob", "linux"]
+    )
+    evidence: str = api_field(
+        description="What speaks for these two hosts belonging together, in one sentence.",
+        example='The name is "srv-01" with "ilo" added.',
+    )
+    reason: RelationReasonModel | None = api_field(
+        description="What the sentence says, taken apart.", example=_REASON_EXAMPLE
+    )
+    outcome: LinkOutcome = api_field(
+        description="What storing it does: 'link', or why it does nothing - "
+        "'already_linked', 'stored_otherwise', 'not_writable'.",
+        example="link",
+    )
+    detail: str = api_field(
+        description="Why, for the outcomes that need a reason. Empty otherwise.", example=""
+    )
+
+
+@api_model
+class RelationGroupModel:
+    """Hosts that belong together, with nothing saying which of them sits where."""
+
+    key: str = api_field(
+        description="What identifies the group when it is answered.",
+        example="management|w-4711,w-4712",
+    )
+    finding: str = api_field(
+        description="The finding that found these hosts.", example="label:cmdb/sn"
+    )
+    kind: str = api_field(
+        description="The kind of relation these hosts would get.", example="management"
+    )
+    relation: str = api_field(
+        description="The relation the host that gets named would hold to all the others.",
+        example="management_parent",
+    )
+    members: list[AnnotatedHostName] = api_field(
+        description="The hosts carrying the same value.", example=["w-4711", "w-4712"]
+    )
+    folders: list[str] = api_field(description="The folders of the members.", example=["cmdb"])
+    evidence: str = api_field(
+        description="What speaks for these hosts belonging together, in one sentence.",
+        example='All of them carry the host label "cmdb/sn" with the value "S-1".',
+    )
+    reason: RelationReasonModel = api_field(
+        description="What the sentence says, taken apart.",
+        example={"word": None, "source": "label", "name": "cmdb/sn", "value": "S-1"},
+    )
+    outcome: LinkOutcome = api_field(
+        description="'undecided' while the question is open, 'already_linked' once one of "
+        "the members holds this relation to all the others.",
+        example="undecided",
+    )
+    settled: AnnotatedHostName | None = api_field(
+        description="The member that already holds this relation to all the others.",
+        example=None,
+    )
+    refusals: dict[str, str] = api_field(
+        description="Per member that cannot be named, why - such a host cannot be written.",
+        example={},
+    )
+
+
+@api_model
+class RelationConflictModel:
+    """Two hosts the findings say different things about."""
+
+    key: str = api_field(
+        description="What identifies the conflict when it is resolved.",
+        example="srv-01|srv-01-ilo",
+    )
+    hosts: list[AnnotatedHostName] = api_field(
+        description="The two hosts.", example=["srv-01", "srv-01-ilo"]
+    )
+    claims: list[RelationRowModel] = api_field(
+        description="What each finding says about them.", example=[_RELATION_EXAMPLE]
+    )
+
+
+@api_model
+class RowsPageModel:
+    total: int = api_field(description="How many rows match, on all pages.", example=1204)
+    relations: list[RelationRowModel] = api_field(
+        description="The relations on this page, if relations were asked for.",
+        example=[_RELATION_EXAMPLE],
+    )
+    groups: list[RelationGroupModel] = api_field(
+        description="The groups on this page, if groups were asked for.", example=[]
+    )
+    conflicts: list[RelationConflictModel] = api_field(
+        description="The conflicts on this page, if conflicts were asked for.", example=[]
+    )
+    keys: list[str] = api_field(
+        description="The key of every relation that matches and can be stored, on all pages, "
+        "if asked for.",
+        example=[],
+    )
 
 
 @api_model
@@ -149,4 +325,99 @@ class SuggestionsModel:
     )
     attribute_names: list[str] = api_field(
         description="Every custom host attribute there is.", example=["cmdb_serial"]
+    )
+
+
+@api_model
+class RelationJobModel:
+    job_id: str = api_field(
+        description="The background job now scanning, respectively storing.",
+        example="relation_scan-8f2a1c",
+    )
+
+
+@api_model
+class FindingSummaryModel:
+    id: str = api_field(description="The finding.", example="word:ilo")
+    counts: dict[str, int] = api_field(
+        description="How many of its relations fall to each outcome. A question about a group "
+        "counts as one.",
+        example=_COUNTS_EXAMPLE,
+    )
+    samples: list[RelationRowModel] = api_field(
+        description="A few of its relations, spread over all of them.",
+        example=[_RELATION_EXAMPLE],
+    )
+    questions: int = api_field(
+        description="Its groups of hosts nothing tells apart, still to be answered.", example=0
+    )
+    settled_groups: int = api_field(description="Its groups of hosts answered already.", example=0)
+    conflicts: int = api_field(
+        description="The pairs of hosts it disagrees about with another finding. They are not "
+        "in its counts.",
+        example=0,
+    )
+
+
+@api_model
+class ScanSummaryModel:
+    hosts_scanned: int = api_field(description="How many hosts of Setup were read.", example=812)
+    findings: list[FindingSummaryModel] = api_field(
+        description="What each finding comes to, in the order they were asked for.",
+        example=[
+            {
+                "id": "word:ilo",
+                "counts": _COUNTS_EXAMPLE,
+                "samples": [_RELATION_EXAMPLE],
+                "questions": 0,
+                "settled_groups": 0,
+                "conflicts": 0,
+            }
+        ],
+    )
+    conflicts: int = api_field(
+        description="How many pairs of hosts the findings disagree about.", example=0
+    )
+    folders: list[str] = api_field(
+        description="The folders the hosts of what was found are in, by path, to filter by.",
+        example=["", "oob", "linux"],
+    )
+
+
+@api_model
+class RunSummaryModel:
+    findings: list[FindingSummaryModel] = api_field(
+        description="What came of the relations of each finding.",
+        example=[
+            {
+                "id": "word:ilo",
+                "counts": {"link": 371},
+                "samples": [],
+                "questions": 0,
+                "settled_groups": 0,
+                "conflicts": 0,
+            }
+        ],
+    )
+    failed: int = api_field(description="How many relations could not be stored.", example=15)
+
+
+@api_model
+class RelationJobStatusModel:
+    running: bool = api_field(description="Whether the job is still running.", example=False)
+    message: str = api_field(
+        description="The most recent progress line of the job, for display while it runs.",
+        example="[137/412] srv-137-ilo -> srv-137: stored",
+    )
+    summary: str = api_field(
+        description="The job in one line, once it has finished. Empty while it runs.",
+        example="371 stored, 26 already related",
+    )
+    scan: ScanSummaryModel | None = api_field(
+        description="What a finished scan found. Null for a run, or while it runs.",
+        example=None,
+    )
+    run: RunSummaryModel | None = api_field(
+        description="What a finished run stored. Null for a scan, or while it runs.",
+        example=None,
     )

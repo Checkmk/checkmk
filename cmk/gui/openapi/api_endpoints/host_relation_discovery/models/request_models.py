@@ -7,7 +7,7 @@ from typing import Annotated, Literal
 
 from annotated_types import MinLen
 
-from cmk.gui.openapi.framework.model import api_field, api_model
+from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 
 
 @api_model
@@ -40,4 +40,89 @@ class SuggestEvidenceRequestModel:
         "share, or both.",
         example=["names"],
         default_factory=lambda: ["names", "values"],
+    )
+
+
+@api_model
+class MarkedValueModel:
+    source: Literal["label", "attribute"] = api_field(
+        description="Whether the value is a host label or a custom host attribute.",
+        example="label",
+    )
+    name: Annotated[str, MinLen(1)] = api_field(
+        description="The name of the label or attribute.", example="cmdb/kind"
+    )
+    value: Annotated[str, MinLen(1)] = api_field(
+        description="The value it carries on the host at the deciding end.", example="board"
+    )
+
+
+@api_model
+class FindingModel:
+    id: Annotated[str, MinLen(1)] = api_field(
+        description="What the page calls this finding. Every relation the scan proposes names "
+        "the finding it came from by this id.",
+        example="word:ilo",
+    )
+    kind: str = api_field(description="The kind of relation it stands for.", example="management")
+    words: list[str] = api_field(
+        description="Words in the host names that mark the host at the deciding end - "
+        '"srv-01-ilo" next to "srv-01". Without \'paired_by\' they pair the two hosts as well.',
+        example=["ilo"],
+        default_factory=list,
+    )
+    marked_by: MarkedValueModel | ApiOmitted = api_field(
+        description="Instead of words: a label or attribute value that marks the host at "
+        "the deciding end. Needs 'paired_by' beside it.",
+        example={"source": "label", "name": "cmdb/kind", "value": "board"},
+        default_factory=ApiOmitted,
+    )
+    paired_by: HostValueModel | ApiOmitted = api_field(
+        description="A label or attribute whose value the two hosts share, such as a serial "
+        "number. Hosts sharing a value that nothing marks are asked about as a group.",
+        example={"source": "label", "name": "cmdb/sn"},
+        default_factory=ApiOmitted,
+    )
+
+
+@api_model
+class ScanRequestModel:
+    findings: Annotated[list[FindingModel], MinLen(1)] = api_field(
+        description="What to look for, in the order the page lists it. Where two findings "
+        "propose the same relation, it is the first one's.",
+        example=[
+            {"id": "word:ilo", "kind": "management", "words": ["ilo"]},
+            {
+                "id": "label:cmdb/sn",
+                "kind": "management",
+                "marked_by": {"source": "label", "name": "cmdb/kind", "value": "board"},
+                "paired_by": {"source": "label", "name": "cmdb/sn"},
+            },
+        ],
+    )
+
+
+@api_model
+class AcceptRequestModel:
+    scan_id: str = api_field(description="The scan to store from.", example="relation_scan-8f2a1c")
+    findings: list[str] = api_field(
+        description="The findings whose relations are stored. The relations of the others are not.",
+        example=["word:ilo"],
+    )
+    excluded: list[str] = api_field(
+        description="Relations of those findings that are not stored, by key.",
+        example=["srv-02-ilo|management|srv-02"],
+        default_factory=list,
+    )
+    answers: dict[str, str] = api_field(
+        description="Per group of hosts the scan could only ask about, by key, the host that "
+        "is at the deciding end. It is related to every other host of the group.",
+        example={"management|w-4711,w-4712": "w-4712"},
+        default_factory=dict,
+    )
+    resolutions: dict[str, str] = api_field(
+        description="Per pair of hosts the findings disagree about, by key, the claim to "
+        "store, by its key. A conflict left out here stores nothing.",
+        example={"srv-01|srv-01-ilo": "srv-01-ilo|management|srv-01"},
+        default_factory=dict,
     )

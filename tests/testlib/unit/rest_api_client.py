@@ -4083,6 +4083,25 @@ class PagetypeTopicClient(RestApiClient):
         )
 
 
+class GuiSessionClient(RestApiClient):
+    domain: DomainType = "gui_session"
+    default_version = APIVersion.INTERNAL
+
+    def identify(
+        self,
+        body: Mapping[str, Any],
+        headers: Mapping[str, str] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/identify/invoke",
+            body=dict(body),
+            headers=dict(headers) if headers else None,
+            expect_ok=expect_ok,
+        )
+
+
 class IconClient(RestApiClient):
     domain: DomainType = "icon"
     default_version = APIVersion.INTERNAL
@@ -4317,6 +4336,7 @@ class ClientRegistry:
     MetricBackendClient: MetricBackendClient
     PagetypeTopicClient: PagetypeTopicClient
     IconClient: IconClient
+    GuiSession: GuiSessionClient
     HistoricalEventConsole: HistoricalEventConsole
     HostAvailability: HostAvailabilityClient
     ServiceAvailability: ServiceAvailabilityClient
@@ -4378,6 +4398,7 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         MetricBackendClient=MetricBackendClient(request_handler, url_prefix),
         PagetypeTopicClient=PagetypeTopicClient(request_handler, url_prefix),
         IconClient=IconClient(request_handler, url_prefix),
+        GuiSession=GuiSessionClient(request_handler, url_prefix),
         HistoricalEventConsole=HistoricalEventConsole(request_handler, url_prefix),
         HostAvailability=HostAvailabilityClient(request_handler, url_prefix),
         ServiceAvailability=ServiceAvailabilityClient(request_handler, url_prefix),

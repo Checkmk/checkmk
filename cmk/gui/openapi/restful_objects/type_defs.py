@@ -43,6 +43,7 @@ DomainType = Literal[
     "folder_config",
     "graph",
     "graph_timerange",
+    "gui_session",
     "historical_event",
     "host",
     "host_availability",
@@ -110,6 +111,7 @@ DomainType = Literal[
 
 CmkEndpointName = Literal[
     "cmk/run",
+    "cmk/identify_session",
     "cmk/run_setup",
     "cmk/activate",
     "cmk/acknowledge",

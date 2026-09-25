@@ -798,15 +798,16 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.nonfree.ultimate.metric_backend.gui",
         "cmk.utils.paths",
     ),
-    # The RFC 6749 authorization-server endpoints and WATO client management.
-    # Deliberately narrower than a blanket "cmk.gui" self-allowance:
-    # cmk.gui.auth (session.py, login.py) depends on this component
-    # (active_token(), token/backend.py, token/token_store.py) to verify
-    # OAuth bearer tokens, so this component must not depend back on
-    # cmk.gui.session/cmk.gui.auth or the cycle Bazel's BUILD graph already
-    # forbids reappears here in the imports.
+    # The RFC 6749 authorization-server endpoints, WATO client management, and
+    # the internal REST API endpoints that turn a GUI session into a user or a
+    # delegated access token. Deliberately narrower than a blanket "cmk.gui"
+    # self-allowance. cmk.gui.auth depends on cmk.gui.oauth.token only to
+    # verify OAuth bearer tokens, so the rest of this component may import
+    # cmk.gui.auth, but cmk.gui.oauth.token must never import anything that
+    # reaches back to cmk.gui.auth.
     Component("cmk.gui.oauth"): _allow(
         *PACKAGE_CCC,
+        "cmk.gui.auth",
         "cmk.gui.breadcrumb",
         "cmk.gui.config",
         "cmk.gui.exceptions",
@@ -816,6 +817,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.gui.log",
         "cmk.gui.logged_in",
         "cmk.gui.main_menu",
+        "cmk.gui.openapi",
         "cmk.gui.page_menu",
         "cmk.gui.pages",
         "cmk.gui.permissions",

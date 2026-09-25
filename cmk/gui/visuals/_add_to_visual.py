@@ -30,7 +30,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import PageContext
 from cmk.gui.pagetypes import page_menu_add_to_topics
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import VisualContext
+from cmk.gui.type_defs import ADD_TO_GRAPH_TYPES, VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.roles import UserPermissions
@@ -112,7 +112,7 @@ def page_menu_dropdown_add_to_visual(
         )
 
     if (
-        add_type in ("pnpgraph", "custom_graph", "combined_graph", "single_timeseries")
+        add_type in ADD_TO_GRAPH_TYPES
         and cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY
     ):
         visual_topics.append(

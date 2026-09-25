@@ -14,6 +14,7 @@ from enum import Enum
 from typing import (
     Annotated,
     Any,
+    Final,
     Literal,
     NamedTuple,
     NewType,
@@ -370,6 +371,17 @@ FilterHTTPVariables = Mapping[str, str]
 VisualName = str
 VisualTypeName = Literal["dashboards", "views", "reports"]
 VisualContext = Mapping[FilterName, FilterHTTPVariables]
+
+# Every graph type that has a storable form, i.e. the kinds that offer an add-to action at all.
+# One list because every add-to gate has to agree on it. An individual target may still refuse
+# one - see CustomGraphPage.may_contain.
+ADD_TO_GRAPH_TYPES: Final = (
+    "pnpgraph",
+    "custom_graph",
+    "combined_graph",
+    "single_timeseries",
+    "problem_percentage",
+)
 VisualPublic = bool | tuple[Literal["contact_groups", "sites"], Sequence[str]]
 InfoName = str
 SingleInfos = Sequence[InfoName]

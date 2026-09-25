@@ -41,6 +41,25 @@ class DashletSizeAndPosition(TypedDict):
     position: DashletPosition
 
 
+type ContextualLinkTargetType = Literal["views", "dashboards"]
+
+
+class ContextualLinkNoneConfig(TypedDict):
+    type: Literal["none"]
+
+
+class ContextualLinkInheritedConfig(TypedDict):
+    type: Literal["inherited"]
+    location: tuple[ContextualLinkTargetType, VisualName]
+    include_context: bool
+    include_time_range: bool
+    show_filter_form: bool
+
+
+# A widget in `default` mode stores no link key, so `default` has no persisted form.
+type ContextualLinkConfig = ContextualLinkNoneConfig | ContextualLinkInheritedConfig
+
+
 class _DashletConfigMandatory(TypedDict):
     type: str
 

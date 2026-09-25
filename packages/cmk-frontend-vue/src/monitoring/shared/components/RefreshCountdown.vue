@@ -10,6 +10,7 @@ import CmkProgressCircle, {
   type Colors,
   type Sizes
 } from 'cmk-ui-library/components/progress/CmkProgressCircle.vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 interface RefreshCountdownProps {
@@ -34,11 +35,18 @@ const {
 
 const emit = defineEmits<{ toggle: [] }>()
 
+const { _t } = usei18n()
+
 const secondsLabel = computed<string>(() => Math.max(0, Math.ceil(remaining)).toString())
-const accessibilityLabel = computed<string>(() =>
-  paused
-    ? 'Refresh paused, click to resume'
-    : `Refreshing in ${secondsLabel.value} seconds, click to pause`
+const tooltip = computed(() =>
+  manualPaused ? _t('Continue reload countdown') : _t('Pause reload countdown')
+)
+const accessibilityLabel = computed(() =>
+  manualPaused
+    ? tooltip.value
+    : _t('Pause reload countdown, next reload in %{seconds} seconds', {
+        seconds: secondsLabel.value
+      })
 )
 </script>
 
@@ -47,9 +55,9 @@ const accessibilityLabel = computed<string>(() =>
     type="button"
     class="monitoring-refresh-countdown"
     :class="{ 'monitoring-refresh-countdown--paused': paused }"
-    :title="accessibilityLabel"
+    :title="tooltip"
     :aria-label="accessibilityLabel"
-    :aria-pressed="paused"
+    :aria-pressed="manualPaused"
     @click="emit('toggle')"
   >
     <CmkProgressCircle

@@ -26,6 +26,7 @@ onUnmounted(() => window.clearInterval(timer))
     :remaining="remaining"
     :interval="interval"
     :paused="paused"
+    :manual-paused="paused"
     @toggle="paused = !paused"
   />
 </template>

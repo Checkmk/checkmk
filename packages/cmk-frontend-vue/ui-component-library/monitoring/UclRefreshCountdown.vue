@@ -110,6 +110,7 @@ onUnmounted(() => {
         :size="propState.size"
         :color="propState.color"
         :paused="paused"
+        :manual-paused="paused"
         @toggle="paused = !paused"
       />
 

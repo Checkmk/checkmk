@@ -176,7 +176,7 @@ function handleSelect(selected: Suggestion | null): void {
   /* Theme the shared CmkSuggestions popup via its custom-property hooks (no :deep needed). */
   --cmk-suggestions-background: var(--ux-theme-5);
   --cmk-suggestions-border-color: var(--button-optional-border-color);
-  --cmk-suggestions-item-active-color: var(--font-color);
+  --cmk-suggestions-item-active-color: var(--success-dimmed);
   --cmk-suggestions-item-hover-background: var(--input-hover-bg-color);
 }
 

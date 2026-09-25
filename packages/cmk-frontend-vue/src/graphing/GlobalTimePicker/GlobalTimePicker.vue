@@ -125,6 +125,7 @@ watch(activePresetId, (value) => {
         v-if="customPresets.length || $slots.trailing"
         :presets="customPresets"
         :active-preset-id="activePresetId"
+        :variant="variant"
         :include-custom-entry="!isExtendedVariant"
         @apply="(preset) => !props.disabled && applyPreset(preset)"
       >

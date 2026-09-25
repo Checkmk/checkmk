@@ -6,7 +6,6 @@
 import ast
 import logging
 import re
-import time
 from collections.abc import Iterator, MutableMapping, Sequence
 
 import pytest
@@ -551,9 +550,9 @@ def test_automation_get_agent_output_cached(site: Site) -> None:
         assert isinstance(result, results.GetAgentOutputResult)
         return bytes(result.raw_agent_data)
 
-    # The core's own checks of this host write the same cache file. Stop the core, so that
-    # only this test writes it.
-    site.omd("stop", "core", check=True)
+    # The core's own checks of this host write the same cache file. Stop service checks, so
+    # that only this test writes it. A check already running is done before the first fetch is.
+    site.stop_active_services()
     try:
         # A regular fetch populates the cache
         assert b"<<<uptime>>>" in get_agent_output()
@@ -568,11 +567,7 @@ def test_automation_get_agent_output_cached(site: Site) -> None:
         assert b"<<<uptime>>>" not in fresh
     finally:
         site.write_file(agent_output_file, get_standard_linux_agent_output())
-        # program_start has a resolution of one second, and wait_for_core_reloaded compares with ">"
-        before_start = time.time()
-        time.sleep(1)
-        site.omd("start", "core", check=True)
-        site.wait_for_core_reloaded(before_start)
+        site.start_active_services()
 
 
 def test_automation_get_agent_output_unknown_host(site: Site) -> None:

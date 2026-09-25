@@ -151,6 +151,19 @@ _KNOWN_ATTRIBUTES_KEY_ORDERS = {
     ],
     ("software", "applications", "proxmox_ve", "metadata"): ["object", "provider", "name", "node"],
     ("software", "applications", "proxmox_ve", "cluster"): ["cluster"],
+    ("software", "applications", "veeam", "backup_server"): [
+        "name",
+        "build_version",
+        "platform",
+        "database_vendor",
+        "sql_server_edition",
+        "sql_server_version",
+        "vbr_id",
+        "database_schema_version",
+        "database_content_version",
+        "is_registered",
+        "registration_expiration_date",
+    ],
     ("software", "applications", "mobileiron"): ["partition_name", "registration_state"],
     ("software", "applications", "citrix", "controller"): ["controller_version"],
     ("software", "applications", "citrix", "vm"): [
@@ -844,6 +857,7 @@ _KNOWN_COLUMNS_KEY_ORDERS = {
         "is_bound_to_template",
         "url",
     ],
+    ("software", "applications", "veeam", "patches"): ["name"],
     ("software", "applications", "cisco_meraki", "organisations"): [
         "org_id",
         "org_name",

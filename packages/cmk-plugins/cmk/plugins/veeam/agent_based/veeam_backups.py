@@ -22,7 +22,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.veeam.agent_based.veeam_backup_jobs import (
+from cmk.plugins.veeam.lib import (
     parse_dotnet_timespan_seconds,
     parse_iso8601_epoch,
 )

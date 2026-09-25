@@ -162,11 +162,10 @@ def test_object_section_is_written_as_a_single_line(
 ) -> None:
     api.get(f"{URL}/api/v1/serverInfo", json={"name": "backup-server-01"})
 
-    write_sections(_client(), [("veeam_vbr_server_info", fetch_object("/api/v1/serverInfo"))])
+    write_sections(_client(), [("veeam_server_info", fetch_object("/api/v1/serverInfo"))])
 
     assert (
-        capsys.readouterr().out
-        == '<<<veeam_vbr_server_info:sep(0)>>>\n{"name": "backup-server-01"}\n'
+        capsys.readouterr().out == '<<<veeam_server_info:sep(0)>>>\n{"name": "backup-server-01"}\n'
     )
 
 

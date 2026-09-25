@@ -8,7 +8,6 @@ import json
 import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State
-from cmk.plugins.veeam.agent_based.veeam_backup_jobs import parse_iso8601_epoch
 from cmk.plugins.veeam.agent_based.veeam_backups import (
     BackupTask,
     check_veeam_backups,
@@ -16,6 +15,7 @@ from cmk.plugins.veeam.agent_based.veeam_backups import (
     monitoring_state,
     parse_veeam_backups,
 )
+from cmk.plugins.veeam.lib import parse_iso8601_epoch
 
 
 def _task(

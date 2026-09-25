@@ -65,7 +65,7 @@ const { toasts } = useToast()
   line-height: 20px;
   font-weight: 500;
   background: var(--ux-theme-3);
-  border-radius: 12px;
+  border-radius: var(--dimension-5);
   pointer-events: auto;
 }
 

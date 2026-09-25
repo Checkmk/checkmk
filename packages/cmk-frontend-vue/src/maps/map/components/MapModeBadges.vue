@@ -63,7 +63,7 @@ defineProps<{
   font-size: var(--font-size-normal);
   line-height: 16px;
   font-weight: var(--font-weight-bold);
-  border-radius: 8px;
+  border-radius: var(--dimension-4);
 }
 
 .maps-map-mode-badges__badge--readonly {

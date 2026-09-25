@@ -259,7 +259,7 @@ defineExpose({
   gap: var(--dimension-5);
   padding: var(--dimension-4) var(--dimension-6);
   background: var(--maps-map-view-glass);
-  border-radius: 8px;
+  border-radius: var(--dimension-4);
   box-shadow:
     0 0 0 1px var(--default-border-color),
     0 25px 50px -12px rgb(0 0 0 / 25%);

@@ -132,7 +132,7 @@ const readingColor = computed(() => {
   padding: 6px 8px 5px;
   background: var(--ux-theme-3);
   border: 1px solid var(--default-border-color);
-  border-radius: 8px;
+  border-radius: var(--dimension-4);
 }
 
 .maps-map-element-chart__head {

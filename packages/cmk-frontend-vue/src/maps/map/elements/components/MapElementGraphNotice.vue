@@ -52,7 +52,7 @@ defineProps<{
   height: 100%;
   color: var(--font-color-dimmed);
   border: 1px solid var(--default-border-color);
-  border-radius: 8px;
+  border-radius: var(--dimension-4);
 }
 
 .maps-map-element-graph-notice--dashed {

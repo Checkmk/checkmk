@@ -49,7 +49,7 @@ const glyphSize = computed(() => `${Math.min(Math.round(props.size * 0.55), 32)}
   color: var(--maps-map-view-missing-ink);
   background: var(--maps-map-view-missing-bg);
   border: 1px dashed var(--maps-map-view-missing-ink);
-  border-radius: 2px;
+  border-radius: var(--border-radius-half);
   pointer-events: none;
 }
 </style>

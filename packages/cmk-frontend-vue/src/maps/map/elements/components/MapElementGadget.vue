@@ -99,7 +99,7 @@ const metricUnits = useMetricUnits({
 }
 
 .maps-map-element-gadget__frame--selected {
-  border-radius: 12px;
+  border-radius: var(--dimension-5);
   box-shadow:
     0 0 0 2px var(--ux-theme-1),
     0 0 0 4px var(--color-corporate-green-50);

@@ -127,7 +127,7 @@ function onKeydown(event: KeyboardEvent): void {
 .maps-map-canvas-object--bind-target {
   outline: 3px solid var(--color-corporate-green-50);
   outline-offset: 3px;
-  border-radius: 8px;
+  border-radius: var(--dimension-4);
 }
 
 .maps-map-canvas-object--selected {

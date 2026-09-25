@@ -115,13 +115,13 @@ const waitingMessage = computed(() =>
   height: 100%;
   background: color-mix(in srgb, var(--ux-theme-1) 20%, transparent);
   border: 1px solid var(--default-border-color);
-  border-radius: 8px;
+  border-radius: var(--dimension-4);
 }
 
 .maps-map-element-graph__selection {
   position: absolute;
   inset: 0;
-  border-radius: 8px;
+  border-radius: var(--dimension-4);
   box-shadow:
     0 0 0 1px var(--ux-theme-1),
     0 0 0 3px var(--color-corporate-green-50);

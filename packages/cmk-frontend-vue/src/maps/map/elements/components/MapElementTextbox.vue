@@ -121,7 +121,7 @@ const configuredStyle = computed(() => {
   overflow: auto;
   padding: 6px 10px;
   color: var(--font-color);
-  border-radius: 8px;
+  border-radius: var(--dimension-4);
 }
 
 .maps-map-element-textbox--glass {

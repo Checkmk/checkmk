@@ -104,7 +104,7 @@ function onKeydown(e: KeyboardEvent): void {
   padding: 6px 0;
   background: var(--maps-map-view-glass);
   backdrop-filter: blur(12px);
-  border-radius: 12px;
+  border-radius: var(--dimension-5);
   box-shadow:
     0 0 0 1px var(--default-border-color),
     0 25px 50px -12px rgb(0 0 0 / 60%);

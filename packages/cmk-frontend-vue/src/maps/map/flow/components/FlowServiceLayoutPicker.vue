@@ -130,7 +130,7 @@ function pick(layout: ServiceLayout): void {
   font-size: var(--font-size-normal);
   font-weight: 500;
   line-height: 16px;
-  border-radius: 12px;
+  border-radius: var(--dimension-5);
   transition: all 0.2s;
 }
 
@@ -176,7 +176,7 @@ function pick(layout: ServiceLayout): void {
   margin-bottom: 6px;
   overflow: hidden;
   background: var(--ux-theme-3);
-  border-radius: 12px;
+  border-radius: var(--dimension-5);
   box-shadow:
     0 0 0 1px var(--default-border-color),
     0 25px 50px -12px rgb(0 0 0 / 50%);

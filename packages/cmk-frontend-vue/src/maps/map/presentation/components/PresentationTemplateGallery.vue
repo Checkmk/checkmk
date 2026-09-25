@@ -151,7 +151,7 @@ function previewElements(t: PresentationTemplate): PresentationElement[] {
   gap: var(--dimension-3);
   padding: var(--dimension-4);
   border: 1px solid var(--default-border-color, rgb(255 255 255 / 10%));
-  border-radius: 12px;
+  border-radius: var(--dimension-5);
   background: transparent;
   color: inherit;
   cursor: pointer;
@@ -172,7 +172,7 @@ function previewElements(t: PresentationTemplate): PresentationElement[] {
   justify-content: center;
   height: 139px;
   border: 1px dashed var(--default-border-color, rgb(255 255 255 / 18%));
-  border-radius: 8px;
+  border-radius: var(--dimension-4);
   color: var(--font-color-dimmed);
 }
 

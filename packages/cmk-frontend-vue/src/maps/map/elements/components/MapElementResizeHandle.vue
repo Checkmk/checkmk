@@ -46,7 +46,7 @@ defineEmits<{ start: [event: PointerEvent] }>()
   width: var(--dimension-7);
   height: var(--dimension-7);
   background: color-mix(in srgb, var(--color-corporate-green-50) 70%, transparent);
-  border-top-left-radius: 4px;
+  border-top-left-radius: var(--border-radius);
   cursor: se-resize;
   transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }

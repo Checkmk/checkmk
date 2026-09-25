@@ -81,6 +81,10 @@ def test_a_users_own_less_options_are_kept_after_ours() -> None:
     assert _pager_environment({"LESS": "--tabs=4"})["LESS"].endswith("$ --tabs=4")
 
 
+def test_a_page_that_fits_the_screen_is_not_held_open() -> None:
+    assert "--quit-if-one-screen" in _pager_environment({})["LESS"].split()
+
+
 def test_an_argument_to_a_flag_option_is_rejected() -> None:
     option = Option(long_option="flag", short_help="a flag")
 

@@ -387,7 +387,7 @@ _PAGER_PROMPT: Final = (
     "?ltline %lt?L/%L.:byte %bB?s/%s..?e (END):?pB %pB\\%.. (press h for help or q to quit)"
 )
 
-_LESS_OPTIONS: Final = f"--no-init --prompt={_PAGER_PROMPT}$"
+_LESS_OPTIONS: Final = f"--no-init --quit-if-one-screen --prompt={_PAGER_PROMPT}$"
 
 
 def _pager_environment(environ: Mapping[str, str]) -> Mapping[str, str]:

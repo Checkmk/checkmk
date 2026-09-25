@@ -31,7 +31,7 @@ import pytest
 from playwright.sync_api import BrowserContext, expect, Page
 
 from tests.system.gui.testlib.playwright.helpers import CmkCredentials
-from tests.system.maps.conftest import navigate_to_page  # astrein: disable=conftest-import
+from tests.system.gui.testlib.playwright.navigation import navigate_to_page
 from tests.system.maps.testlib.pom import (
     DrawerTab,
     MapsFilter,

@@ -105,7 +105,7 @@ export async function useDashboardGeneralSettings(
 
     const visibility: DashboardGeneralSettings['visibility'] = {
       hide_in_monitor_menu: !showInMonitorMenu.value,
-      hide_in_drop_down_menus: false,
+      hide_in_drop_down_menus: s?.visibility.hide_in_drop_down_menus ?? false,
       share: 'no'
     }
 

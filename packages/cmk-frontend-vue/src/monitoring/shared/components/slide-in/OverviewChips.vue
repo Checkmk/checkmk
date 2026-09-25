@@ -37,7 +37,7 @@ const visibleItems = computed(() =>
       :color="item.color ?? 'default'"
       :content="item.text"
     />
-    <CmkButton v-if="hasOverflow" size="small" variant="optional" @click="expanded = !expanded">
+    <CmkButton v-if="hasOverflow" size="small" variant="text" @click="expanded = !expanded">
       {{ expanded ? _t('show less') : `+${items.length - limit}` }}
     </CmkButton>
   </div>

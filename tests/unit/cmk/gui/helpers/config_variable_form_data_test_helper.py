@@ -2187,6 +2187,7 @@ CASES: Mapping[str, list[Case]] = {
                 },
             },
         ),
+        CasePass("telemetry-on-central", {"features": {"telemetry": "central"}}),
         CasePass(
             "local-instance",
             {

@@ -7,7 +7,7 @@ import os
 import shutil
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import replace
-from typing import cast
+from typing import cast, override
 
 import pytest
 
@@ -25,7 +25,7 @@ from cmk.gui.utils.host_relation_kinds import (
     RelationEnd,
     RelationKind,
 )
-from cmk.gui.utils.host_relations import RelationDirection
+from cmk.gui.utils.host_relations import RelationDirection, RelationLink, relations_or_empty
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.host_attributes import HostAttributes, HostContactGroupSpec
@@ -34,6 +34,7 @@ from cmk.gui.watolib.host_relation_discovery import (
     Evidence,
     Finding,
     HostPair,
+    link_relations,
     LinkOutcome,
     MarkedValue,
     NameReason,
@@ -45,6 +46,7 @@ from cmk.gui.watolib.host_relation_discovery import (
     relation_to_find,
     RelationEntry,
     RelationToFind,
+    run_summary,
     scan_for_evidence,
     ScannedHost,
     SharedAttribute,
@@ -55,7 +57,12 @@ from cmk.gui.watolib.host_relation_discovery import (
     ValueTellsApart,
 )
 from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree, Host, make_folder_tree
-from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
+from cmk.gui.watolib.pending_changes import (
+    NoopPendingChangesStore,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.site_changes import ChangeSpec
 from cmk.livestatus_client import SiteConfigurations
 from cmk.utils.redis import disable_redis
 
@@ -1011,6 +1018,336 @@ def test_the_suggestions_name_no_host_of_a_folder_the_user_may_not_see(tree: Fol
     assert (suggested.hosts_scanned, suggested.words) == (1, [])
 
 
+def test_a_conflict_one_of_whose_claims_is_stored_is_not_asked_again(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(
+        root, "srv-01", HostAttributes({"labels": {"cmdb/sn": "S-1", "cmdb/kind": "board"}})
+    )
+    _create_host(root, "srv-01-ilo", HostAttributes({"labels": {"cmdb/sn": "S-1"}}))
+    evidence = _findings(
+        [
+            ("management", RelationToFind(marker=NameWords(("ilo",)))),
+            (
+                "management",
+                RelationToFind(
+                    marker=MarkedValue(where=SharedLabel("cmdb/kind"), value="board"),
+                    shared=SharedLabel("cmdb/sn"),
+                ),
+            ),
+        ]
+    )
+    (conflict,) = discover_relations(tree, evidence=evidence, acting_user=_SUPERUSER).conflicts
+    by_name = next(claim for claim in conflict.claims if claim.finding == "finding-0")
+    link_relations(
+        [by_name.pair],
+        tree,
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+        progress=lambda _entry: None,
+    )
+
+    again = discover_relations(tree, evidence=evidence, acting_user=_SUPERUSER)
+
+    assert again.conflicts == []
+    assert _outcomes(again.entries) == [("srv-01-ilo", "srv-01", LinkOutcome.ALREADY_LINKED)]
+
+
+class _RecordingPendingChangesStore(PendingChangesStore):
+    def __init__(self, recorded: list[ChangeSpec]) -> None:
+        self._recorded = recorded
+
+    @override
+    def append(self, site_id: SiteId, entry: ChangeSpec) -> None:
+        self._recorded.append(entry)
+
+
+def _recording_pending_changes(recorded: list[ChangeSpec]) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=SiteConfigurations({}),
+        local_site=SiteId("NO_SITE"),
+        acting_user=None,
+        store=_RecordingPendingChangesStore(recorded),
+        hooks=(make_audit_log_change_hook(use_git=False),),
+    )
+
+
+def _accept_everything(
+    tree: FolderTree,
+    *,
+    acting_user: LoggedInUser = _SUPERUSER,
+    pending_changes: PendingChanges | None = None,
+) -> Sequence[RelationEntry]:
+    """Store what a scan just found, the way the page does after the user confirms it."""
+    found = discover_relations(tree, evidence=_evidence(), acting_user=acting_user)
+    return link_relations(
+        [entry.pair for entry in found.entries if entry.outcome is LinkOutcome.LINK],
+        tree,
+        pprint_value=False,
+        pending_changes=pending_changes or _noop_pending_changes(),
+        acting_user=acting_user,
+        progress=lambda _entry: None,
+    )
+
+
+def _stored_relations(tree: FolderTree, host_name: str) -> Sequence[RelationLink]:
+    """What the tree says this host's relations are, rather than what one folder instance of
+    it is left holding in memory."""
+    host = tree.host(HostName(host_name))
+    assert host is not None
+    return relations_or_empty(host.attributes.get("relations", []))
+
+
+def test_an_accepted_relation_is_stored_on_both_hosts(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(root, "srv-01")
+    _create_host(root, "srv-01-ilo")
+
+    _accept_everything(tree)
+
+    assert _stored_relations(tree, "srv-01-ilo") == [
+        {"kind": "management", "direction": "parent", "host": HostName("srv-01")}
+    ]
+    assert _stored_relations(tree, "srv-01") == [
+        {"kind": "management", "direction": "child", "host": HostName("srv-01-ilo")}
+    ]
+
+
+def _changes_of(recorded: Sequence[ChangeSpec]) -> dict[str, list[ChangeSpec]]:
+    """The recorded changes, per host they are logged under."""
+    per_host: dict[str, list[ChangeSpec]] = {}
+    for change in recorded:
+        assert change["object"] is not None
+        per_host.setdefault(change["object"].ident, []).append(change)
+    return per_host
+
+
+def _link(*pairs: tuple[str, str], tree: FolderTree, pending_changes: PendingChanges) -> None:
+    link_relations(
+        [
+            HostPair(
+                source=HostName(source),
+                target=HostName(target),
+                kind_id="management",
+                source_direction="parent",
+            )
+            for source, target in pairs
+        ],
+        tree,
+        pprint_value=False,
+        pending_changes=pending_changes,
+        acting_user=_SUPERUSER,
+        progress=lambda _entry: None,
+    )
+
+
+def test_every_host_the_run_changed_is_logged_under_its_own_name(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    for name in ("srv-01", "srv-01-ilo", "srv-02", "srv-02-ilo"):
+        _create_host(root, name)
+    recorded: list[ChangeSpec] = []
+
+    _accept_everything(tree, pending_changes=_recording_pending_changes(recorded))
+
+    assert sorted(_changes_of(recorded)) == ["srv-01", "srv-01-ilo", "srv-02", "srv-02-ilo"]
+
+
+def test_a_board_several_pairs_change_is_logged_once(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    for name in ("chassis-oa", "blade-1", "blade-2"):
+        _create_host(root, name)
+    recorded: list[ChangeSpec] = []
+
+    _link(
+        ("chassis-oa", "blade-1"),
+        ("chassis-oa", "blade-2"),
+        tree=tree,
+        pending_changes=_recording_pending_changes(recorded),
+    )
+
+    assert len(_changes_of(recorded)["chassis-oa"]) == 1
+
+
+def test_the_change_of_a_host_shows_every_relation_the_run_gave_it(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    for name in ("chassis-oa", "blade-1", "blade-2"):
+        _create_host(root, name)
+    recorded: list[ChangeSpec] = []
+
+    _link(
+        ("chassis-oa", "blade-1"),
+        ("chassis-oa", "blade-2"),
+        tree=tree,
+        pending_changes=_recording_pending_changes(recorded),
+    )
+
+    (change,) = _changes_of(recorded)["chassis-oa"]
+    assert "blade-1" in str(change["diff_text"]) and "blade-2" in str(change["diff_text"])
+
+
+def test_the_change_of_a_host_updates_it_and_its_counterparts(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    for name in ("srv-01", "srv-01-ilo", "srv-02", "srv-02-ilo"):
+        _create_host(root, name)
+    recorded: list[ChangeSpec] = []
+
+    _accept_everything(tree, pending_changes=_recording_pending_changes(recorded))
+
+    (change,) = _changes_of(recorded)["srv-01"]
+    assert sorted(change["domain_settings"]["check_mk"]["hosts_to_update"]) == [
+        "srv-01",
+        "srv-01-ilo",
+    ]
+
+
+def test_scanning_again_after_a_run_offers_nothing_further(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(root, "srv-01")
+    _create_host(root, "srv-01-ilo")
+    _accept_everything(tree)
+    recorded: list[ChangeSpec] = []
+
+    again = _accept_everything(tree, pending_changes=_recording_pending_changes(recorded))
+
+    assert list(again) == []
+    assert recorded == []
+    assert _outcomes(
+        discover_relations(tree, evidence=_evidence(), acting_user=_SUPERUSER).entries
+    ) == [("srv-01-ilo", "srv-01", LinkOutcome.ALREADY_LINKED)]
+
+
+def test_a_host_that_is_gone_by_the_time_the_run_starts_is_reported(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(root, "srv-01")
+
+    done = link_relations(
+        [
+            HostPair(
+                source=HostName("ghost"),
+                target=HostName("srv-01"),
+                kind_id="management",
+                source_direction="parent",
+            )
+        ],
+        tree,
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+        progress=lambda _entry: None,
+    )
+
+    assert _outcomes(done) == [("ghost", "srv-01", LinkOutcome.NOT_WRITABLE)]
+    assert done[0].detail == "The host is gone."
+
+
+def test_a_relation_only_its_target_holds_is_not_stored_again(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_other_half(root, "srv-01", "srv-01-ilo")
+    _create_host(root, "srv-01-ilo")
+    tree.invalidate_caches()
+
+    done = link_relations(
+        [
+            HostPair(
+                source=HostName("srv-01-ilo"),
+                target=HostName("srv-01"),
+                kind_id="management",
+                source_direction="parent",
+            )
+        ],
+        tree,
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+        progress=lambda _entry: None,
+    )
+
+    assert _outcomes(done) == [("srv-01-ilo", "srv-01", LinkOutcome.ALREADY_LINKED)]
+
+
+def test_a_pair_that_cannot_be_written_leaves_the_others_stored(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    open_folder = root.create_subfolder(
+        "open",
+        "Open",
+        HostAttributes({"contactgroups": _contact_groups("cg")}),
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+    closed = root.create_subfolder(
+        "closed",
+        "Closed",
+        HostAttributes({"contactgroups": _contact_groups("another_cg")}),
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+    _create_host(open_folder, "srv-01")
+    _create_host(open_folder, "srv-01-ilo")
+    _create_host(open_folder, "srv-02")
+    _create_host(closed, "srv-02-ilo", HostAttributes({"contactgroups": _contact_groups("cg")}))
+    tree.invalidate_caches()
+    acting_user = _user_of_one_contact_group("cg")
+    found = discover_relations(tree, evidence=_evidence(), acting_user=acting_user)
+
+    done = link_relations(
+        [entry.pair for entry in found.entries],
+        tree,
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=acting_user,
+        progress=lambda _entry: None,
+    )
+
+    assert sorted(_outcomes(done)) == [
+        ("srv-01-ilo", "srv-01", LinkOutcome.LINK),
+        ("srv-02-ilo", "srv-02", LinkOutcome.NOT_WRITABLE),
+    ]
+    assert _stored_relations(tree, "srv-01") == [
+        {"kind": "management", "direction": "child", "host": HostName("srv-01-ilo")}
+    ]
+    assert _stored_relations(tree, "srv-02") == []
+
+
+def test_a_pair_its_target_refuses_leaves_no_half_on_its_source(tree: FolderTree) -> None:
+    folder = tree.root_folder().create_subfolder(
+        "open",
+        "Open",
+        HostAttributes({"contactgroups": _contact_groups("cg")}),
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+    for name in ("srv-01", "srv-01-ilo", "srv-02-ilo"):
+        _create_host(folder, name)
+    _create_host(folder, "srv-02", HostAttributes({"contactgroups": _contact_groups("other_cg")}))
+    tree.invalidate_caches()
+
+    done = link_relations(
+        [
+            HostPair(
+                source=HostName(f"{name}-ilo"),
+                target=HostName(name),
+                kind_id="management",
+                source_direction="parent",
+            )
+            for name in ("srv-02", "srv-01")
+        ],
+        tree,
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_user_of_one_contact_group("cg"),
+        progress=lambda _entry: None,
+    )
+
+    assert _outcomes(done) == [
+        ("srv-02-ilo", "srv-02", LinkOutcome.NOT_WRITABLE),
+        ("srv-01-ilo", "srv-01", LinkOutcome.LINK),
+    ]
+    assert _stored_relations(tree, "srv-02-ilo") == []
+
+
 def _entry(source: str, target: str, outcome: LinkOutcome) -> RelationEntry:
     return RelationEntry(
         pair=HostPair(
@@ -1033,6 +1370,10 @@ def test_every_outcome_is_counted_even_the_ones_with_no_entry() -> None:
         LinkOutcome.NOT_WRITABLE: 0,
         LinkOutcome.UNDECIDED: 0,
     }
+
+
+def test_a_summary_names_only_the_outcomes_the_run_had() -> None:
+    assert run_summary([_entry("a-ilo", "a", LinkOutcome.LINK)]) == "1 stored"
 
 
 def test_two_findings_of_one_relation_are_read_together() -> None:
@@ -1540,6 +1881,64 @@ def test_the_value_that_pairs_the_hosts_does_not_also_tell_them_apart() -> None:
 
     assert finding.where == SharedLabel("cmdb/sn")
     assert finding.told_apart is None
+
+
+def test_a_relation_stored_the_other_way_round_is_not_offered_again(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(root, "srv-01")
+    _create_host(root, "srv-01-ilo")
+    link_relations(
+        [
+            HostPair(
+                source=HostName("srv-01-ilo"),
+                target=HostName("srv-01"),
+                kind_id="management",
+                source_direction="child",
+            )
+        ],
+        tree,
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+        progress=lambda _entry: None,
+    )
+
+    found = discover_relations(tree, evidence=_evidence(), acting_user=_SUPERUSER)
+
+    assert _outcomes(found.entries) == [("srv-01-ilo", "srv-01", LinkOutcome.STORED_OTHERWISE)]
+
+
+def test_a_run_does_not_replace_a_relation_somebody_stored_in_the_meantime(
+    tree: FolderTree,
+) -> None:
+    root = tree.root_folder()
+    _create_host(root, "srv-01")
+    _create_host(root, "srv-01-ilo")
+    board = HostPair(
+        source=HostName("srv-01-ilo"),
+        target=HostName("srv-01"),
+        kind_id="management",
+        source_direction="parent",
+    )
+    by_hand = replace(board, source_direction="child")
+
+    def store(pair: HostPair) -> Sequence[RelationEntry]:
+        return link_relations(
+            [pair],
+            tree,
+            pprint_value=False,
+            pending_changes=_noop_pending_changes(),
+            acting_user=_SUPERUSER,
+            progress=lambda _entry: None,
+        )
+
+    store(by_hand)
+    (entry,) = store(board)
+
+    assert entry.outcome is LinkOutcome.STORED_OTHERWISE
+    assert _stored_relations(tree, "srv-01-ilo") == [
+        {"kind": "management", "direction": "child", "host": HostName("srv-01")}
+    ]
 
 
 def test_hosts_sharing_a_value_with_more_hosts_than_a_machine_are_neither_paired_nor_asked() -> (

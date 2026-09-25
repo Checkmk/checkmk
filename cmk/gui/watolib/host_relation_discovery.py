@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Find the relations the hosts in Setup already show.
+"""Find the relations the hosts in Setup already show, and store the ones the user confirms.
 
 Relations are stored on both hosts of a pair, which is why every bulk route into the
 ``relations`` attribute is closed (see
@@ -17,6 +17,9 @@ Discovery rather than a rule, the way services are found rather than configured:
 hosts of a relation say so themselves - a board named after the host it sits in, or a
 label the CMDB wrote on both - and a user who has to describe that in regular expressions
 is doing the work the configuration has already done.
+
+Finding what to store is separate from storing it, and nothing is stored that was not
+named: the run writes the pairs it is handed, not the ones a second scan would find.
 """
 
 import heapq
@@ -28,6 +31,7 @@ from enum import StrEnum
 from typing import assert_never, Final
 
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser
@@ -41,18 +45,27 @@ from cmk.gui.utils.host_relation_kinds import (
 from cmk.gui.utils.host_relations import (
     RelationDirection,
     RelationLink,
+    relations_or_empty,
     reverse_direction,
 )
+from cmk.gui.watolib.config_domain_name import CORE as CORE_DOMAIN
+from cmk.gui.watolib.config_domain_name import generate_hosts_to_update_settings
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.host_relations import relation_choice_name
 from cmk.gui.watolib.hosts_and_folders import (
+    apply_relation_mirror,
+    counterpart_resolver,
+    diff_attributes,
+    Folder,
     FolderTree,
     Host,
+    HostEditResult,
     PathWithoutSlash,
     plan_relation_mirror,
     relation_mirror_folders,
 )
+from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
 from cmk.ruleset_matcher.labels import Labels
 from cmk.web.utils.escaping import strip_tags
 
@@ -1368,3 +1381,180 @@ def outcome_counts(outcomes: Iterable[LinkOutcome]) -> Mapping[LinkOutcome, int]
     """How often each outcome occurs, including the outcomes that do not."""
     counted = Counter(outcomes)
     return {outcome: counted.get(outcome, 0) for outcome in LinkOutcome}
+
+
+@dataclass
+class _Touched:
+    """A host a run changed, with what it was before the run."""
+
+    host: Host
+    before: HostAttributes
+    counterparts: set[HostName] = field(default_factory=set)
+    sites: set[SiteId] = field(default_factory=set)
+
+
+@dataclass
+class _Batch:
+    """What a run has touched so far.
+
+    Collected rather than written per pair: ``Host.edit()`` saves the folder on every call,
+    which would rewrite the same "hosts.mk" once per host of it, and it records a change per
+    half - a board of sixteen blades would be logged sixteen times. Each host is written once
+    and logged once, with what the whole run changed about it.
+    """
+
+    folders: dict[PathWithoutSlash, Folder] = field(default_factory=dict)
+    hosts: dict[HostName, _Touched] = field(default_factory=dict)
+
+    def record(
+        self,
+        edited: Sequence[tuple[Host, HostEditResult]],
+        unchanged: Mapping[HostName, HostAttributes],
+        *,
+        acting_user: LoggedInUser,
+    ) -> None:
+        # The folders of the hosts that were changed, not of the pair as the run looked it up:
+        # a counterpart may sit on another instance of the same folder (see
+        # counterpart_resolver()), and saving that one would silently drop the write.
+        self.folders.update(
+            relation_mirror_folders([host for host, _edit in edited], acting_user=acting_user)
+        )
+        for host, edit in edited:
+            if (touched := self.hosts.get(host.name())) is None:
+                touched = self.hosts[host.name()] = _Touched(
+                    host=host, before=unchanged[host.name()]
+                )
+            touched.counterparts.update(edit.counterpart_hosts)
+            touched.sites.update(edit.affected_sites)
+
+    def log(self, pending_changes: PendingChanges) -> None:
+        for name, touched in self.hosts.items():
+            nodes = touched.host.cluster_nodes()
+            pending_changes.add(
+                Change(
+                    action_name="discover-relations",
+                    text=_("Stored discovered relations of host %(host)s.") % {"host": name},
+                    object_ref=touched.host.object_ref(),
+                    diff_text=diff_attributes(
+                        touched.before, nodes, touched.host.attributes, nodes
+                    ),
+                    domains=[CORE_DOMAIN],
+                    domain_settings={
+                        CORE_DOMAIN: generate_hosts_to_update_settings(
+                            sorted({name, *touched.counterparts})
+                        )
+                    },
+                ),
+                ChangeScope.sites(sorted(touched.sites)),
+            )
+
+
+def link_relations(
+    accepted: Sequence[HostPair],
+    tree: FolderTree,
+    *,
+    pprint_value: bool,
+    pending_changes: PendingChanges,
+    acting_user: LoggedInUser,
+    progress: Callable[[RelationEntry], None],
+) -> Sequence[RelationEntry]:
+    """Store every relation in ``accepted``, and report what came of each, in the same order.
+
+    A pair that cannot be written is reported and the run goes on: one locked folder in a
+    fleet of four hundred must not cost the other three hundred and ninety nine.
+    """
+    batch = _Batch()
+    done: list[RelationEntry] = []
+    for pair in accepted:
+        settled = _link_pair(pair, tree, batch, acting_user=acting_user)
+        done.append(settled)
+        progress(settled)
+
+    for folder in batch.folders.values():
+        folder.save_hosts(pprint_value=pprint_value, acting_user=acting_user)
+
+    batch.log(pending_changes)
+    return done
+
+
+def _link_pair(
+    pair: HostPair, tree: FolderTree, batch: _Batch, *, acting_user: LoggedInUser
+) -> RelationEntry:
+    """Store the one relation ``pair`` asks for, mutating in memory only."""
+    source, target = tree.host(pair.source), tree.host(pair.target)
+    if source is None or target is None:
+        # Deleted between the scan and the run. Not an error of the discovery, but not
+        # something to pass over silently either.
+        return RelationEntry(
+            pair=pair, outcome=LinkOutcome.NOT_WRITABLE, detail=_("The host is gone.")
+        )
+
+    try:
+        return _write_pair(pair, source, target, batch, acting_user=acting_user)
+    except (MKAuthException, MKUserError) as refusal:
+        return RelationEntry(pair=pair, outcome=LinkOutcome.NOT_WRITABLE, detail=str(refusal))
+
+
+def _write_pair(
+    pair: HostPair, source: Host, target: Host, batch: _Batch, *, acting_user: LoggedInUser
+) -> RelationEntry:
+    """The order ``Host.edit()`` establishes: refuse before the first write, then both halves."""
+    link = link_of(pair)
+    if _holds(pair, source, target):
+        return RelationEntry(pair=pair, outcome=LinkOutcome.ALREADY_LINKED)
+    # Asked again rather than trusted from the scan: somebody may have related the two hosts
+    # by hand since, and that relation is not the discovery's to replace.
+    if (otherwise := _stored_otherwise(source, target)) is not None:
+        return RelationEntry(pair=pair, outcome=LinkOutcome.STORED_OTHERWISE, detail=otherwise)
+
+    unchanged = {host.name(): host.attributes for host in (source, target)}
+    before = relations_or_empty(source.attributes.get("relations", []))
+    relation_mirror_folders([source, target], acting_user=acting_user)
+
+    if (edit := source.set_relations_about(target.name(), [link], acting_user=acting_user)) is None:
+        return RelationEntry(pair=pair, outcome=LinkOutcome.ALREADY_LINKED)
+
+    try:
+        mirrored = apply_relation_mirror(
+            counterpart_resolver(source.folder()),
+            source.name(),
+            plan_relation_mirror(
+                source.name(),
+                before,
+                relations_or_empty(source.attributes.get("relations", [])),
+            ),
+            acting_user=acting_user,
+        )
+    except MKAuthException, MKUserError:
+        # Unlike in Host.edit(), the source does not die with the request: its folder is saved
+        # at the end of the run if any other pair touched it.
+        source.attributes = unchanged[source.name()]
+        raise
+    batch.record([(source, edit), *mirrored], unchanged, acting_user=acting_user)
+    return RelationEntry(pair=pair, outcome=LinkOutcome.LINK)
+
+
+def outcome_label(outcome: LinkOutcome) -> str:
+    """What an outcome is called where it is reported as running text."""
+    match outcome:
+        case LinkOutcome.LINK:
+            return _("stored")
+        case LinkOutcome.ALREADY_LINKED:
+            return _("already related")
+        case LinkOutcome.STORED_OTHERWISE:
+            return _("related in another way")
+        case LinkOutcome.NOT_WRITABLE:
+            return _("could not be stored")
+        case LinkOutcome.UNDECIDED:
+            return _("not answered")
+        case _:
+            assert_never(outcome)
+
+
+def run_summary(entries: Sequence[RelationEntry]) -> str:
+    """The run in one line, naming only the outcomes it actually had."""
+    return ", ".join(
+        "%(count)d %(label)s" % {"count": count, "label": outcome_label(outcome)}
+        for outcome, count in outcome_counts(entry.outcome for entry in entries).items()
+        if count
+    )

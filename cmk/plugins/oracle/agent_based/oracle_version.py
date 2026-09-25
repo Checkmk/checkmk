@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import assert_never
+
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -14,18 +16,18 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .liboracle import oracle_handle_ora_errors
+from .liboracle import (
+    oracle_handle_ora_errors,
+    oracle_handle_ora_errors_discovery,
+)
 
 # <<<oracle_version>>>
 # XE Oracle Database 11g Express Edition Release 11.2.0.2.0 - 64bit Production
 
 
 def discover_oracle_version(section: StringTable) -> DiscoveryResult:
-    yield from [
-        Service(item=line[0])
-        for line in section
-        if len(line) >= 2 and oracle_handle_ora_errors(line) is None
-    ]
+    oracle_handle_ora_errors_discovery(section)
+    yield from [Service(item=line[0]) for line in section if len(line) >= 2]
 
 
 def check_oracle_version(item: str, section: StringTable) -> CheckResult:
@@ -34,9 +36,13 @@ def check_oracle_version(item: str, section: StringTable) -> CheckResult:
             err = oracle_handle_ora_errors(line)
             if err is False:
                 continue
-            if isinstance(err, Result):
+            elif isinstance(err, Result):
                 yield err
-                return
+            elif err is None:
+                pass
+            else:
+                assert_never(err)
+
             yield Result(state=State.OK, summary="Version: " + " ".join(line[1:]))
             return
     yield Result(state=State.UNKNOWN, summary="no version information, database might be stopped")

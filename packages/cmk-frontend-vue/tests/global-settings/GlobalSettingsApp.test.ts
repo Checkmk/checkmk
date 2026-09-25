@@ -556,7 +556,7 @@ describe('GlobalSettingsApp', () => {
     })
     expect(
       within(dialog).getByText(
-        'This setting uses an explicit value and overrides the factory and Global settings value.'
+        'This setting is stored explicitly with a value equal to the factory setting.'
       )
     ).toBeInTheDocument()
 

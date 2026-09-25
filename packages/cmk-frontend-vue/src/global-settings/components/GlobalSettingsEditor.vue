@@ -115,7 +115,7 @@ const resetConfirmation = computed<{
     ? {
         heading: _t('Remove explicit setting?'),
         body: _t(
-          'Removing the explicit value will restore the default value for this site. The value will be inherited from Global settings or the factory settings.'
+          'Removing the explicit value will restore the factory setting. The value will no longer be stored explicitly.'
         ),
         confirm: _t('Remove')
       }
@@ -212,11 +212,7 @@ const currentStateText = computed<TranslatedString>(() => {
         dismissible
         class="global-settings-editor__alert"
       >
-        {{
-          _t(
-            'This setting uses an explicit value and overrides the factory and Global settings value.'
-          )
-        }}
+        {{ _t('This setting is stored explicitly with a value equal to the factory setting.') }}
       </CmkAlertBox>
 
       <CmkAlertBox

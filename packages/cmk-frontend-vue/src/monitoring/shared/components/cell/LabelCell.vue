@@ -201,7 +201,7 @@ watch(columnWidth, (width, previous) => {
           data-label-cell-overflow
           class="monitoring-label-cell__overflow"
           size="small"
-          variant="optional"
+          variant="text"
           :aria-label="_t('Show all %{count} entries', { count: items.length })"
           @click="expanded = true"
         >
@@ -211,7 +211,7 @@ watch(columnWidth, (width, previous) => {
           v-if="expanded && !measuring"
           class="monitoring-label-cell__overflow"
           size="small"
-          variant="optional"
+          variant="text"
           @click="expanded = false"
         >
           {{ _t('show less') }}

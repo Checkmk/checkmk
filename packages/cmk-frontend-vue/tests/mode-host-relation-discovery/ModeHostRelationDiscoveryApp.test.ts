@@ -56,6 +56,28 @@ const OOB = {
   kind: null
 }
 
+const SERIAL = {
+  source: 'label',
+  name: 'cmdb/sn',
+  groups: 3,
+  largest_group: 2,
+  examples: [{ value: 'S-1', hosts: ['w-4711', 'w-4712'] }],
+  too_wide: 0,
+  told_apart: {
+    by: 'value',
+    kind: null,
+    words: [],
+    groups: 0,
+    source: 'label',
+    name: 'cmdb/kind',
+    values: [
+      { value: 'board', groups: 3 },
+      { value: 'server', groups: 3 }
+    ],
+    suggested: null
+  }
+}
+
 function suggesting(found: { words?: unknown[]; values?: unknown[] } = {}): void {
   server.use(
     http.post(SUGGEST_URL, () =>
@@ -87,12 +109,29 @@ function row(source: string, target: string, overrides: Record<string, unknown> 
   }
 }
 
+const GROUP = {
+  key: 'management|w-4711,w-4712',
+  finding: 'label:cmdb/sn',
+  kind: 'management',
+  relation: 'management_parent',
+  members: ['w-4711', 'w-4712'],
+  folders: [''],
+  evidence: 'All of them carry the host label "cmdb/sn" with the value "S-1".',
+  reason: { word: null, source: 'label', name: 'cmdb/sn', value: 'S-1' },
+  outcome: 'undecided',
+  settled: null,
+  refusals: {}
+}
+
 /** What a finding summary says beyond its relations, when it says nothing. */
 const NOTHING_ELSE = { questions: 0, settled_groups: 0, conflicts: 0 }
 
 interface Scanned {
   findings?: unknown[]
+  conflicts?: number
   relations?: unknown[]
+  groups?: unknown[]
+  conflictRows?: unknown[]
 }
 
 /** A scan that is done at once, with a finding "ilo" of three new relations by default. */
@@ -119,7 +158,7 @@ function scanning(scanned: Scanned = {}): { sent: unknown[] } {
               findings: scanned.findings ?? [
                 { ...NOTHING_ELSE, id: 'word:ilo', counts: { link: 3 }, samples: relations }
               ],
-              conflicts: 0,
+              conflicts: scanned.conflicts ?? 0,
               folders: ['']
             },
             run: null
@@ -144,8 +183,19 @@ function scanning(scanned: Scanned = {}): { sent: unknown[] } {
     ),
     http.get(ROWS_URL, ({ request }) => {
       const part = new URL(request.url).searchParams.get('part')
-      const page = { total: 0, relations: [] as unknown[], groups: [], conflicts: [] }
-      if (part === 'failed') {
+      const page = {
+        total: 0,
+        relations: [] as unknown[],
+        groups: [] as unknown[],
+        conflicts: [] as unknown[]
+      }
+      if (part === 'groups') {
+        page.groups = scanned.groups ?? []
+        page.total = page.groups.length
+      } else if (part === 'conflicts') {
+        page.conflicts = scanned.conflictRows ?? []
+        page.total = page.conflicts.length
+      } else if (part === 'failed') {
         page.relations = [
           row('srv-03-ilo', 'srv-03', { outcome: 'not_writable', detail: 'No permission.' })
         ]
@@ -186,8 +236,18 @@ function renderApp() {
   })
 }
 
-/** Step 1 with what it starts out with. */
-async function lookThroughTheHosts(): Promise<void> {
+async function pick(combobox: string, option: string): Promise<void> {
+  await userEvent.click(await screen.findByRole('combobox', { name: combobox }))
+  await userEvent.click(await screen.findByRole('option', { name: option }))
+}
+
+const SHARED_VALUES = 'In a host label or custom host attribute both hosts carry'
+
+/** Step 1 with what it starts out with - or with the labels and attributes looked in as well. */
+async function lookThroughTheHosts(options: { values?: boolean } = {}): Promise<void> {
+  if (options.values) {
+    await userEvent.click(await screen.findByRole('checkbox', { name: SHARED_VALUES }))
+  }
   await userEvent.click(await screen.findByRole('button', { name: 'Continue' }))
   await screen.findByRole('button', { name: 'Back' })
 }
@@ -234,13 +294,22 @@ test('the hosts are read only once the user said what to look for', async () => 
   expect(sent).toEqual([])
 })
 
-test('the host names are what is looked in', async () => {
+test('the host names are looked in, the labels and attributes only when asked for', async () => {
   const { sent } = suggestionsAsked()
   renderApp()
 
+  expect(await screen.findByRole('checkbox', { name: 'In the host names' })).toBeChecked()
+  expect(screen.getByRole('checkbox', { name: SHARED_VALUES })).not.toBeChecked()
   await lookThroughTheHosts()
+  await userEvent.click(screen.getByRole('button', { name: 'Back' }))
+  await lookThroughTheHosts({ values: true })
 
-  expect(sent).toEqual([{ words: [], look_in: ['names'] }])
+  await waitFor(() =>
+    expect(sent).toEqual([
+      { words: [], values: [], look_in: ['names'] },
+      { words: [], values: [], look_in: ['names', 'values'] }
+    ])
+  )
 })
 
 test('a step that is done says what was chosen in it', async () => {
@@ -256,6 +325,15 @@ test('a step that is done says what was chosen in it', async () => {
 
   await screen.findByText('"ilo" in the name, "oob" in the name')
   screen.getByText('Management board and OS host, in the host names')
+})
+
+test('continuing needs somewhere to look, and says so', async () => {
+  renderApp()
+
+  await userEvent.click(await screen.findByRole('checkbox', { name: 'In the host names' }))
+
+  screen.getByText('To continue, say where Checkmk should look.')
+  expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled()
 })
 
 test('a word the relation declares starts out ticked, and says which host is which', async () => {
@@ -326,6 +404,69 @@ test('every word that means a relation is a finding of its own', async () => {
   ])
 })
 
+test('what tells hosts sharing a value apart is found, and only its value is picked', async () => {
+  suggesting({ words: [], values: [SERIAL] })
+  const { sent } = scanning({ findings: [] })
+  renderApp()
+  await lookThroughTheHosts({ values: true })
+
+  await userEvent.click(
+    screen.getByRole('checkbox', {
+      name: '3 pairs of hosts share a value in the host label "cmdb/sn"'
+    })
+  )
+  expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled()
+  await pick('The Management board is the one with cmdb/kind:', 'board (in 3 groups)')
+  await userEvent.click(screen.getByRole('button', { name: 'Continue' }))
+
+  await waitFor(() =>
+    expect(sent).toEqual([
+      {
+        findings: [
+          {
+            id: 'label:cmdb/sn',
+            kind: 'management',
+            paired_by: { source: 'label', name: 'cmdb/sn' },
+            marked_by: { source: 'label', name: 'cmdb/kind', value: 'board' }
+          }
+        ]
+      }
+    ])
+  )
+})
+
+test('what tells the hosts apart can be changed to picking per group', async () => {
+  suggesting({ words: [], values: [SERIAL] })
+  const { sent } = scanning({ findings: [] })
+  renderApp()
+  await lookThroughTheHosts({ values: true })
+
+  await userEvent.click(
+    screen.getByRole('checkbox', {
+      name: '3 pairs of hosts share a value in the host label "cmdb/sn"'
+    })
+  )
+  await userEvent.click(screen.getByRole('button', { name: 'Tell them apart another way' }))
+  expect(
+    screen.getByRole('radio', { name: 'I will pick it in the next step, one group at a time' })
+  ).toBeChecked()
+  await userEvent.click(screen.getByRole('button', { name: 'Continue' }))
+
+  await waitFor(() =>
+    expect(sent).toEqual([
+      {
+        findings: [
+          {
+            id: 'label:cmdb/sn',
+            kind: 'management',
+            paired_by: { source: 'label', name: 'cmdb/sn' }
+          }
+        ]
+      }
+    ])
+  )
+})
+
 test('a finding is stored as a whole, with a few of its relations to check it by', async () => {
   suggesting()
   scanning()
@@ -342,7 +483,9 @@ test('a finding is stored as a whole, with a few of its relations to check it by
       {
         scan_id: 'relation_scan-1',
         findings: ['word:ilo'],
-        excluded: []
+        excluded: [],
+        answers: {},
+        resolutions: {}
       }
     ])
   )
@@ -392,6 +535,66 @@ test('all relations of a finding can be looked through', async () => {
 
   await screen.findByText('srv-07-ilo')
   screen.getByRole('searchbox', { name: 'Search host names' })
+})
+
+test('a group nothing tells apart is answered by picking its board', async () => {
+  suggesting({ words: [], values: [SERIAL] })
+  scanning({
+    relations: [],
+    findings: [{ ...NOTHING_ELSE, id: 'label:cmdb/sn', counts: {}, samples: [], questions: 1 }],
+    groups: [GROUP]
+  })
+  const { sent } = accepting()
+  renderApp()
+  await lookThroughTheHosts({ values: true })
+  await userEvent.click(
+    screen.getByRole('checkbox', {
+      name: '3 pairs of hosts share a value in the host label "cmdb/sn"'
+    })
+  )
+  await userEvent.click(screen.getByRole('button', { name: 'Tell them apart another way' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Continue' }))
+  await screen.findByRole('checkbox', { name: 'Host label "cmdb/sn"' })
+
+  await pick('Which of them is the Management board', 'w-4712')
+  await store(1)
+
+  await waitFor(() =>
+    expect(sent).toEqual([
+      expect.objectContaining({ answers: { 'management|w-4711,w-4712': 'w-4712' } })
+    ])
+  )
+})
+
+test('two findings that disagree about two hosts are for the user to settle', async () => {
+  suggesting()
+  const reverse = row('srv-04', 'srv-04-ilo', { finding: 'word:ilo' })
+  const board = row('srv-04-ilo', 'srv-04')
+  scanning({
+    conflicts: 1,
+    conflictRows: [
+      { key: 'srv-04|srv-04-ilo', hosts: ['srv-04', 'srv-04-ilo'], claims: [board, reverse] }
+    ]
+  })
+  const { sent } = accepting()
+  renderApp()
+  await continueToReview()
+
+  await screen.findByRole('heading', { name: 'Needs your attention: 1 conflict' })
+  await userEvent.click(
+    screen.getByRole('radio', {
+      name: 'srv-04-ilo is management board of srv-04 ("ilo" in the name)'
+    })
+  )
+  await store(4)
+
+  await waitFor(() =>
+    expect(sent).toEqual([
+      expect.objectContaining({
+        resolutions: { 'srv-04|srv-04-ilo': 'srv-04-ilo|management|srv-04' }
+      })
+    ])
+  )
 })
 
 test('the result says what came of each finding, and lists what failed', async () => {
@@ -476,7 +679,45 @@ test('a word the user adds is looked up and can be removed again', async () => {
   await userEvent.click(screen.getByTitle('Remove the word "oob"'))
 
   await waitFor(() => expect(screen.queryByText(/plus "oob"/)).toBeNull())
-  expect(asked.at(-1)).toEqual({ words: [], look_in: ['names'] })
+  expect(asked.at(-1)).toEqual({ words: [], values: [], look_in: ['names'] })
+})
+
+test('a value the user adds means nothing until the user says what it is', async () => {
+  const CATEGORY = {
+    ...SERIAL,
+    name: 'cmdb/kind',
+    groups: 0,
+    largest_group: 400,
+    too_wide: 2,
+    examples: [{ value: 'board', hosts: Array.from({ length: 400 }, (_u, at) => `w-${at}a`) }],
+    told_apart: null
+  }
+  server.use(
+    http.post(SUGGEST_URL, async ({ request }) => {
+      const body = (await request.json()) as { values: { name: string }[] }
+      return HttpResponse.json({
+        hosts_scanned: 800,
+        words: [ILO],
+        values: body.values.length > 0 ? [CATEGORY] : [],
+        label_names: ['cmdb/kind'],
+        attribute_names: []
+      })
+    })
+  )
+  renderApp()
+  await lookThroughTheHosts({ values: true })
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Something missing?' }))
+  await pick('A value hosts share', 'cmdb/kind')
+
+  await screen.findByText(/shared by so many hosts that they name kinds of hosts/)
+  screen.getByText('w-0a, w-1a, w-2a, w-3a and 396 more')
+  expect(
+    screen.getByRole('checkbox', {
+      name: 'Every value of the host label "cmdb/kind" is shared by too many hosts to pair them'
+    })
+  ).toBeDisabled()
+  screen.getByText('"cmdb/kind" has been looked up and is listed above.')
 })
 
 test('every relation a search matches can be taken out at once', async () => {

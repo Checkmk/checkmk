@@ -9,18 +9,23 @@ import type {
   AcceptRequest,
   FindingRequest,
   JobStatus,
+  LookIn,
   Outcome,
   RowsPage,
   RowsPart,
+  SharedValue,
   Suggestions
 } from './types'
 
-/** What the host names give away, with what each of the words the user added finds. */
-export async function suggestEvidence(words: string[]): Promise<Suggestions> {
+export async function suggestEvidence(
+  words: string[],
+  values: SharedValue[],
+  lookIn: LookIn[]
+): Promise<Suggestions> {
   return unwrap(
     await client.POST('/domain-types/host_relation_discovery/actions/suggest/invoke', {
       params: { header: { 'Content-Type': 'application/json' } },
-      body: { words, look_in: ['names'] }
+      body: { words, values, look_in: lookIn }
     })
   )
 }

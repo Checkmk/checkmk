@@ -13,6 +13,7 @@ import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
+import ConflictList from './ConflictList.vue'
 import FindingList from './FindingList.vue'
 import FindingReview from './FindingReview.vue'
 import LookFor from './LookFor.vue'
@@ -22,17 +23,26 @@ import { usePairNoun } from './relationWording'
 import type {
   FindingRequest,
   JobStatus,
+  LookIn,
+  RelationConflict,
+  RelationGroup,
   RelationRow,
   RunSummary,
   ScanSummary,
+  SharedValue,
   Suggestions,
+  ValueChoice,
   WordChoice
 } from './types'
 import {
   acceptRequest,
   findingsToScan,
+  isComplete,
+  newValueChoice,
   noDecisions,
+  partnersOf,
   relationsToStore,
+  valueKey,
   withNewChoices,
   withoutKey,
   wordFindingId
@@ -64,43 +74,71 @@ const POLL_ATTEMPTS = 5
 
 const currentStep = ref(STEP_LOOK_FOR)
 
-// Step 1: what to look for. The host names are where a fleet usually says it.
+// Step 1: what to look for, and where. The names are where a fleet usually says it; the labels
+// and attributes are asked for only when they are needed, since they find a lot to decide.
 const kind = ref(Object.keys(props.kinds)[0] ?? '')
-/** Whether the suggestions on hand are the ones for what step 1 says. */
-const lookedThrough = ref(false)
+const lookIn = ref<LookIn[]>(['names'])
+/** What the suggestions on hand were made for. */
+const suggestedFor = ref('')
+const wantedNow = computed(() => JSON.stringify([...lookIn.value].sort()))
 const pairNounOf = usePairNoun(() => props.relation_nouns)
 
 /** What step 1 said, for the step once it is done. */
-const lookedFor = computed(() =>
-  _t('%{relation}, %{where}', { relation: pairNounOf(kind.value), where: _t('in the host names') })
-)
+const lookedFor = computed(() => {
+  const where = lookIn.value.includes('names')
+    ? lookIn.value.includes('values')
+      ? _t('in the host names and in host labels and custom host attributes')
+      : _t('in the host names')
+    : _t('in host labels and custom host attributes')
+  return _t('%{relation}, %{where}', { relation: pairNounOf(kind.value), where })
+})
 
 // Step 2: what the findings mean.
 const suggestions = ref<Suggestions | null>(null)
 const suggesting = ref(false)
 const suggestFailed = ref(false)
 const ownWords = ref<string[]>([])
+const ownValues = ref<SharedValue[]>([])
 const wordChoices = ref<Record<string, WordChoice>>({})
+const valueChoices = ref<Record<string, ValueChoice>>({})
 
 // A finding ticked for one relation says nothing about another.
 watch(kind, () => {
   wordChoices.value = {}
-  lookedThrough.value = false
+  valueChoices.value = {}
+  suggestedFor.value = ''
 })
 
 const foundWords = computed(() => suggestions.value?.words ?? [])
-const findings = computed(() => findingsToScan(foundWords.value, wordChoices.value))
-const canScan = computed(() => findings.value.length > 0)
-const nothingFound = computed(() => foundWords.value.length === 0)
+const foundValues = computed(() => suggestions.value?.values ?? [])
+const findings = computed(() =>
+  findingsToScan(foundWords.value, wordChoices.value, foundValues.value, valueChoices.value)
+)
+const allComplete = computed(() =>
+  foundValues.value.every((finding) =>
+    isComplete(finding, valueChoices.value[valueKey(finding)] ?? newValueChoice(finding))
+  )
+)
+const canScan = computed(() => findings.value.length > 0 && allComplete.value)
+const nothingFound = computed(() => foundWords.value.length === 0 && foundValues.value.length === 0)
 
 /** What each finding is called on the pages after the first, by its id. */
 const findingTitles = computed<Record<string, string>>(() =>
-  Object.fromEntries(
-    foundWords.value.map(
+  Object.fromEntries([
+    ...foundWords.value.map(
       (finding) =>
         [wordFindingId(finding), _t('"%{word}" in the name', { word: finding.word })] as const
+    ),
+    ...foundValues.value.map(
+      (finding) =>
+        [
+          valueKey(finding),
+          finding.source === 'label'
+            ? _t('Host label "%{name}"', { name: finding.name })
+            : _t('Custom host attribute "%{name}"', { name: finding.name })
+        ] as const
     )
-  )
+  ])
 )
 
 /** What step 2 said, for the step once it is done. */
@@ -138,11 +176,14 @@ let unmounted = false
 
 async function suggest(added: { word?: string } = {}): Promise<void> {
   suggesting.value = true
+  const wanted = wantedNow.value
   try {
-    const found = await suggestEvidence(ownWords.value)
-    wordChoices.value = withNewChoices(found, wordChoices.value, kind.value, added)
+    const found = await suggestEvidence(ownWords.value, ownValues.value, lookIn.value)
+    const next = withNewChoices(found, wordChoices.value, valueChoices.value, kind.value, added)
+    wordChoices.value = next.words
+    valueChoices.value = next.values
     suggestions.value = found
-    lookedThrough.value = true
+    suggestedFor.value = wanted
     suggestFailed.value = false
   } catch {
     suggestFailed.value = true
@@ -164,9 +205,25 @@ async function removeWord(word: string): Promise<void> {
   await suggest()
 }
 
+async function addValue(value: SharedValue): Promise<void> {
+  if (!ownValues.value.some((own) => valueKey(own) === valueKey(value))) {
+    ownValues.value = [...ownValues.value, value]
+  }
+  await suggest()
+}
+
+async function removeValue(value: SharedValue): Promise<void> {
+  ownValues.value = ownValues.value.filter((own) => valueKey(own) !== valueKey(value))
+  valueChoices.value = withoutKey(valueChoices.value, valueKey(value))
+  await suggest()
+}
+
 /** Look through the hosts for what step 1 says, unless that is what is on hand already. */
 async function suggestForStep1(): Promise<boolean> {
-  if (!lookedThrough.value) {
+  if (lookIn.value.length === 0) {
+    return false
+  }
+  if (suggestedFor.value !== wantedNow.value) {
     await suggest()
   }
   return !suggestFailed.value && suggestions.value !== null
@@ -223,7 +280,7 @@ async function scan(asked: FindingRequest[] = findings.value): Promise<boolean> 
     scannedFor.value = asked
     decisions.value = noDecisions()
     for (const summary of status.scan.findings) {
-      if ((summary.counts.link ?? 0) > 0) {
+      if ((summary.counts.link ?? 0) > 0 || summary.questions > 0) {
         decisions.value.findings.add(summary.id)
       }
     }
@@ -265,6 +322,34 @@ function toggleAll(finding: string, keys: string[], picked: boolean): void {
       decisions.value.excluded.set(key, finding)
     }
   }
+}
+
+function answer(group: RelationGroup, host: string | null): void {
+  if (host) {
+    decisions.value.answers.set(group.key, {
+      host,
+      finding: group.finding,
+      relations: partnersOf(group, host).length
+    })
+  } else {
+    decisions.value.answers.delete(group.key)
+  }
+}
+
+function resolve(conflict: RelationConflict, claim: RelationRow | null): void {
+  if (claim) {
+    decisions.value.resolutions.set(conflict.key, {
+      claim: claim.key,
+      stores: claim.outcome === 'link'
+    })
+  } else {
+    decisions.value.resolutions.delete(conflict.key)
+  }
+}
+
+function nounOfFinding(findingId: string): string {
+  const kind = scannedFor.value.find((finding) => finding.id === findingId)?.kind ?? ''
+  return props.relation_nouns[props.kinds[kind] ?? ''] ?? ''
 }
 
 async function store(): Promise<void> {
@@ -320,6 +405,7 @@ async function scanAgain(): Promise<void> {
           <div class="mode-host-relation-discovery-app__step">
             <LookFor
               v-model:kind="kind"
+              v-model:look-in="lookIn"
               :kinds="props.kinds"
               :kind-words="props.kind_words"
               :relation-nouns="props.relation_nouns"
@@ -330,13 +416,19 @@ async function scanAgain(): Promise<void> {
             <CmkAlertBox v-else-if="suggestFailed" variant="error">
               {{ _t('The hosts could not be read.') }}
             </CmkAlertBox>
+            <CmkParagraph
+              v-else-if="lookIn.length === 0"
+              class="mode-host-relation-discovery-app__dimmed"
+            >
+              {{ _t('To continue, say where Checkmk should look.') }}
+            </CmkParagraph>
           </div>
         </template>
         <template #actions>
           <CmkWizardButton
             type="next"
             :override-label="suggesting ? _t('Looking through the hosts...') : _t('Continue')"
-            :disabled="suggesting"
+            :disabled="suggesting || lookIn.length === 0"
             :validation-cb="suggestForStep1"
           />
         </template>
@@ -365,14 +457,22 @@ async function scanAgain(): Promise<void> {
             </CmkParagraph>
             <FindingList
               v-model:word-choices="wordChoices"
+              v-model:value-choices="valueChoices"
               :words="foundWords"
+              :values="foundValues"
+              :label-names="suggestions.label_names"
+              :attribute-names="suggestions.attribute_names"
               :kinds="props.kinds"
               :kind="kind"
+              :look-in="lookIn"
               :relation-nouns="props.relation_nouns"
               :busy="suggesting"
               :own-words="ownWords"
+              :own-values="ownValues.map(valueKey)"
               @add-word="addWord"
               @remove-word="removeWord"
+              @add-value="addValue"
+              @remove-value="removeValue"
             />
           </div>
           <CmkAlertBox v-if="suggestFailed || scanFailed" variant="error">
@@ -388,8 +488,10 @@ async function scanAgain(): Promise<void> {
           >
             {{
               nothingFound
-                ? _t('To continue, add a word your host names use.')
-                : _t('To continue, tick at least one finding.')
+                ? _t('To continue, add what your hosts are related by.')
+                : findings.length === 0
+                  ? _t('To continue, tick at least one finding.')
+                  : _t('To continue, answer the questions above.')
             }}
           </CmkParagraph>
         </template>
@@ -426,19 +528,46 @@ async function scanAgain(): Promise<void> {
                 )
               }}
             </CmkParagraph>
+            <section
+              v-if="scanned.conflicts > 0"
+              class="mode-host-relation-discovery-app__attention"
+            >
+              <CmkHeading type="h4">
+                {{
+                  _tn(
+                    'Needs your attention: 1 conflict',
+                    'Needs your attention: %{count} conflicts',
+                    scanned.conflicts,
+                    { count: scanned.conflicts }
+                  )
+                }}
+              </CmkHeading>
+              <ConflictList
+                :job-id="scanId"
+                :relation-titles="props.relation_titles"
+                :finding-titles="findingTitles"
+                :resolutions="decisions.resolutions"
+                @resolve="resolve"
+              />
+            </section>
             <FindingReview
               v-for="summary in scanned.findings"
               :key="`${scanId}:${summary.id}`"
               :job-id="scanId"
               :summary="summary"
               :title="findingTitles[summary.id] ?? summary.id"
+              :noun="nounOfFinding(summary.id)"
               :folders="scanned.folders"
               :relation-titles="props.relation_titles"
+              :relation-nouns="props.relation_nouns"
               :ticked="decisions.findings.has(summary.id)"
               :excluded="decisions.excluded"
+              :answers="decisions.answers"
               @tick="(picked) => tick(summary.id, picked)"
               @toggle="toggle"
               @toggle-all="(keys, picked) => toggleAll(summary.id, keys, picked)"
+              @answer="answer"
+              @back="currentStep = STEP_FOUND"
             />
           </div>
         </template>
@@ -518,6 +647,15 @@ async function scanAgain(): Promise<void> {
   display: flex;
   flex-direction: column;
   gap: var(--spacing);
+}
+
+.mode-host-relation-discovery-app__attention {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing);
+  padding: var(--spacing);
+  border: 1px solid var(--ux-theme-4);
+  border-radius: var(--border-radius);
 }
 
 .mode-host-relation-discovery-app__running {

@@ -31,10 +31,6 @@ def test_discover_heartbeat_rscstatus(
     assert result == expected_discoveries
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="the check treats the Parameters mapping as legacy string params",
-)
 @pytest.mark.parametrize(
     "params, string_table, expected_results",
     [

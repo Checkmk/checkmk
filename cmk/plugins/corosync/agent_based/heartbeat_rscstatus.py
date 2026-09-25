@@ -41,13 +41,7 @@ def check_heartbeat_rscstatus(params: Mapping[str, Any], section: str | None) ->
     if section is None:
         return
 
-    if not isinstance(params, dict):
-        # old params comes styled with double quotes
-        params = {"discovered_state": str(params).replace('"', "")}
-
-    expected_state = params.get("discovered_state")
-    if "expected_state" in params:
-        expected_state = params["expected_state"]
+    expected_state = params.get("expected_state", params.get("discovered_state"))
 
     if expected_state == section:
         yield Result(state=State.OK, summary=f"Current state: {section}")

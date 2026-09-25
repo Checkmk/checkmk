@@ -366,3 +366,29 @@ def test_parse_entity_sensors(
         )
         == expected_section
     )
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="Crash report efcafd74-3aa5-11f1-9612-005056ab3733: KeyError in parse_entity_sensors",
+)
+def test_parse_entity_sensors_skips_sensor_without_type() -> None:
+    # Some switches report sensors of a transceiver slot without entPhySensorType.
+    string_table = [
+        [["1", "Chassis Temp"], ["2", "Xcvr Temp"]],
+        [
+            ["1", "8", "9", "1", "387", "1", "Celsius"],
+            ["2", "", "9", "1", "215", "1", "Celsius"],
+        ],
+    ]
+    assert parse_entity_sensors(string_table) == {
+        "temp": {
+            "Sensor Chassis Temp": EntitySensor(
+                name="Sensor Chassis Temp",
+                reading=38.7,
+                unit="c",
+                state=State.OK,
+                status_descr="OK",
+            ),
+        },
+    }

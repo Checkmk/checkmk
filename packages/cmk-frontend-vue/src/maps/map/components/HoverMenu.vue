@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { type CSSProperties, computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useMetricInfo } from '@/maps/map/composables/useMetricInfo'
 import type { HoverAnchorRect } from '@/maps/map/composables/useObjectHoverMenu'
@@ -23,7 +23,7 @@ import {
   getEffectiveObjectType,
   getMapElementIdentifier
 } from '@/maps/utils/naming'
-import { overlayFrameOf } from '@/maps/utils/overlayFrame'
+import { usePointerOverlayStyle } from '@/maps/utils/overlayFrame'
 import { type PerfMetric, parsePerfData, utilColor, utilPercent } from '@/maps/utils/perf'
 import { sanitizeTemplateHtml } from '@/maps/utils/sanitize'
 import { interpolateTemplate } from '@/maps/utils/template'
@@ -54,8 +54,6 @@ const emit = defineEmits<{
   'card-leave': []
 }>()
 
-// Frozen while the pointer is on the card: the parent keeps emitting hover
-// coordinates, which would yank it from under the cursor mid-click.
 const pinned = ref(false)
 function onCardEnter() {
   pinned.value = true
@@ -96,91 +94,25 @@ const cmkPerfometer = computed(() => cmkMetricInfo.value?.perfometer ?? null)
 // bundle_hosts, so they skip this.
 const dyngroupMemberHosts = ref<string[] | null>(null)
 
-// Rendered invisible once to measure, then flipped to the cursor's left/top
-// side where it would overflow the frame. It is measured at the frame's origin:
-// placed near the right edge it would shrink to the room left there and the
-// flip would reckon with a narrower card than the one it then shows.
-const rootEl = ref<HTMLDivElement | null>(null)
-const adjusted = ref<{ left: number; top: number; ready: boolean }>({
-  left: 0,
-  top: 0,
-  ready: false
-})
-
-const positionStyle = computed<CSSProperties>(() =>
-  adjusted.value.ready
-    ? { left: `${adjusted.value.left}px`, top: `${adjusted.value.top}px` }
-    : { left: '0px', top: '0px', visibility: 'hidden' }
-)
-
-// Inside Checkmk's <iframe name="main"> the outer window is often smaller than
-// the iframe's own innerHeight, so a position that fits `window.innerHeight`
-// can still paint past the visible parent edge.
-function getEffectiveBounds(): { width: number; height: number } {
-  const fallback = { width: window.innerWidth, height: window.innerHeight }
-  if (window === window.top) {
-    return fallback
-  }
-  try {
-    const top = window.top
-    const frame = window.frameElement as HTMLIFrameElement | null
-    if (!top || !frame) {
-      return fallback
-    }
-    const fr = frame.getBoundingClientRect()
-    return {
-      width: Math.min(fallback.width, top.innerWidth - fr.left),
-      height: Math.min(fallback.height, top.innerHeight - fr.top)
-    }
-  } catch {
-    return fallback
-  }
-}
-
-async function updatePosition() {
-  await nextTick()
-  if (!rootEl.value) {
-    return
-  }
-  const rect = rootEl.value.getBoundingClientRect()
-  const frame = overlayFrameOf(rootEl.value)
-  const visible = getEffectiveBounds()
-  const right = Math.min(frame.right, visible.width)
-  const bottom = Math.min(frame.bottom, visible.height)
-  const margin = 8
-  const gap = 8
-  let left = props.x
-  let top = props.y
-  if (left + rect.width > right - margin) {
-    // Flip past the icon's *left edge* if we know it; otherwise back off
-    // from the cursor by the tooltip width. Cursor-based fallback can
-    // overlap a small icon, so anchorRect is strongly preferred.
-    const flipFrom = props.anchorRect ? props.anchorRect.left : props.x
-    left = Math.max(frame.left + margin, flipFrom - rect.width - gap)
-  }
-  if (top + rect.height > bottom - margin) {
-    const flipFrom = props.anchorRect ? props.anchorRect.top : props.y
-    top = Math.max(frame.top + margin, flipFrom - rect.height - gap)
-  }
-  adjusted.value = { left: left - frame.left, top: top - frame.top, ready: true }
-}
-
+// Where the card opens and what it steps around when it has to flip. Frozen
+// while the pointer is on the card: the parent keeps emitting hover
+// coordinates, which would yank the card from under the cursor mid-click.
+const opensAt = ref({ x: props.x, y: props.y, around: props.anchorRect ?? null })
 watch(
-  () => [props.x, props.y],
+  () => [props.x, props.y, props.anchorRect],
   () => {
-    // Frozen while the pointer is on the card — repositioning would yank
-    // the pill out from under the cursor mid-click.
-    if (pinned.value) {
-      return
+    if (!pinned.value) {
+      opensAt.value = { x: props.x, y: props.y, around: props.anchorRect ?? null }
     }
-    adjusted.value.ready = false
-    void updatePosition()
   }
 )
 
-onMounted(() => {
-  void updatePosition()
-})
+const rootEl = ref<HTMLDivElement | null>(null)
+const positionStyle = usePointerOverlayStyle(
+  rootEl,
+  () => opensAt.value,
+  () => opensAt.value.around
+)
 
 onMounted(() => {
   if (
@@ -666,6 +598,8 @@ function fmtMetricValue(m: PerfMetric): string {
 .maps-hover-menu {
   position: fixed;
   z-index: 50;
+  width: max-content;
+  max-width: calc(100% - 16px);
   pointer-events: none;
 }
 

@@ -482,7 +482,9 @@ const hostServicesUrl = computed(() => {
 .maps-context-menu {
   position: fixed;
   z-index: 50;
+  width: max-content;
   min-width: 192px;
+  max-width: calc(100% - 16px);
   padding: 6px 0;
   background: var(--maps-map-view-glass);
   backdrop-filter: blur(12px);

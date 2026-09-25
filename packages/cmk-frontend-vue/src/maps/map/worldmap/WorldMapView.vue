@@ -253,7 +253,9 @@ defineExpose({
 .maps-world-map-view__menu {
   position: fixed;
   z-index: 50;
+  width: max-content;
   min-width: 200px;
+  max-width: calc(100% - 16px);
   padding: var(--dimension-2);
   background: var(--maps-map-view-glass);
   border: 1px solid var(--default-border-color);

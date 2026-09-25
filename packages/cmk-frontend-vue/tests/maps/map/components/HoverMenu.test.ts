@@ -24,13 +24,8 @@ function measureAs(frame: typeof FRAME, card: typeof CARD): void {
   parent.getBoundingClientRect = () =>
     ({ ...frame, right: frame.left + frame.width, bottom: frame.top + frame.height }) as DOMRect
   vi.spyOn(HTMLElement.prototype, 'offsetParent', 'get').mockReturnValue(parent)
-  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
-    ...card,
-    left: 0,
-    top: 0,
-    right: card.width,
-    bottom: card.height
-  } as DOMRect)
+  vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(card.width)
+  vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(card.height)
 }
 
 async function renderPlaced(
@@ -50,7 +45,7 @@ async function renderPlaced(
     global: mapsGlobal()
   })
   const root = container.querySelector<HTMLElement>('.maps-hover-menu')!
-  // Measured invisibly first; the placement lands once the card is in the DOM.
+  // Hidden until the card is in the DOM and placed.
   await waitFor(() => expect(root.style.visibility).not.toBe('hidden'))
   return root.style
 }
@@ -75,5 +70,50 @@ describe('HoverMenu placement', () => {
 
     // 570 (anchor left) - 288 (card width) - 8 (gap) - 74 (frame left).
     expect(style.left).toBe('200px')
+  })
+
+  it('stays in view while it follows the pointer', async () => {
+    measureAs(FRAME, CARD)
+    const { container, rerender } = render(HoverMenu, {
+      props: { object: anObject({ id: 'o1', type: 'host' }), state: undefined, x: 300, y: 200 },
+      global: mapsGlobal()
+    })
+    const root = container.querySelector<HTMLElement>('.maps-hover-menu')!
+    await waitFor(() => expect(root.style.left).toBe('226px'))
+    const seen: string[] = []
+    new MutationObserver(() => seen.push(root.style.visibility)).observe(root, {
+      attributes: true,
+      attributeFilter: ['style']
+    })
+
+    await rerender({ x: 320, y: 200 })
+
+    await waitFor(() => expect(root.style.left).toBe('246px'))
+    expect(seen).not.toContain('hidden')
+  })
+
+  it('moves above the object once its details make it run past the bottom', async () => {
+    // jsdom has no layout, so a resize is announced by hand.
+    const resizes: (() => void)[] = []
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(onResize: ResizeObserverCallback) {
+          resizes.push(() => onResize([], this as unknown as ResizeObserver))
+        }
+        observe(): void {}
+        unobserve(): void {}
+        disconnect(): void {}
+      }
+    )
+    const style = await renderPlaced(300, 500, { left: 270, top: 480, right: 310, bottom: 530 })
+    expect(style.top).toBe('500px')
+
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(250)
+    resizes.forEach((resize) => resize())
+
+    // 480 (anchor top) - 8 (gap) - 250 (grown card height).
+    await waitFor(() => expect(style.top).toBe('222px'))
+    vi.unstubAllGlobals()
   })
 })

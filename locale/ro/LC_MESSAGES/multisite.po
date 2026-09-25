@@ -2963,12 +2963,20 @@ msgid "AI"
 msgstr "AIX"
 
 #, fuzzy
+msgid "AI Assistant"
+msgstr "Instanța"
+
+#, fuzzy
 msgid "AI assistance"
 msgstr "Instanța"
 
 #, fuzzy
 msgid "AI features"
 msgstr "Caracteristică nouă"
+
+#, fuzzy
+msgid "AI provider"
+msgstr "Furnizarea de niveluri"
 
 msgid "AIX"
 msgstr "AIX"
@@ -4359,6 +4367,10 @@ msgstr "Adaugă un comentariu sau descrie această gazdă"
 
 msgid "Add a first row with column titles"
 msgstr "Adăugați un prim rând cu titluri de coloane"
+
+#, fuzzy
+msgid "Add a password"
+msgstr "Conectați parola"
 
 msgid "Add additional folder"
 msgstr "Adăugați un dosar suplimentar"
@@ -7423,12 +7435,26 @@ msgstr "O altă sesiune este activă"
 msgid "Answer seizure ratio"
 msgstr ""
 
+#, fuzzy
+msgid "Anthropic"
+msgstr "Adăugați un subiect"
+
 msgid "AntiVirus last update age"
 msgstr "Vârsta ultimei actualizări AntiVirus"
 
 #, fuzzy
 msgid "Any"
 msgstr "orice"
+
+msgid ""
+"Any application using the selected tokens will no longer be able to access "
+"the API with them."
+msgstr ""
+
+msgid ""
+"Any application using this token will no longer be able to access the API "
+"with it."
+msgstr ""
 
 msgid ""
 "Any certificate should expire at some point. Usual values are within 90 and "
@@ -10324,6 +10350,10 @@ msgstr "Baza DN"
 
 msgid "Base OID"
 msgstr "OID de bază"
+
+#, fuzzy
+msgid "Base URL"
+msgstr "URL-ul de bază al site-ului"
 
 #, fuzzy
 msgid "Base URL (OMD site)"
@@ -38391,6 +38421,10 @@ msgstr "invalidă:"
 msgid "Invalid (not loaded)"
 msgstr "Invalid (Neîncărcat)"
 
+#, fuzzy, python-format
+msgid "Invalid AI provider configuration: %(error)s"
+msgstr "Hash de configurare invalid"
+
 #, fuzzy
 msgid "Invalid API key"
 msgstr "Cheie privată invalidă"
@@ -40438,6 +40472,10 @@ msgid "Leave unset on installations where over-voltage is not a concern."
 msgstr ""
 "Nivelurile de tensiune pentru dispozitive precum UPS sau PDU. Mai multe faze "
 "pot fi abordate în mod independent."
+
+msgid ""
+"Leave unset to use the default endpoint of the provider's client library."
+msgstr ""
 
 msgid "Left"
 msgstr "Stânga"
@@ -48346,12 +48384,20 @@ msgstr "Din magazinul de parole"
 msgid "No password selected"
 msgstr "Din magazinul de parole"
 
+#, fuzzy
+msgid "No passwords configured yet"
+msgstr "Configurație gazdă"
+
 msgid "No pending changes."
 msgstr "Nu există modificări în așteptare."
 
 #, fuzzy
 msgid "No previous cycle available"
 msgstr "Dispozitiv disponibil"
+
+#, fuzzy
+msgid "No provider configured"
+msgstr "Nu este configurat niciun interval IP"
 
 msgid "No proxy"
 msgstr "Fără proxy"
@@ -51232,6 +51278,10 @@ msgstr "Starea interfeței de conectare OVS"
 
 msgid "Open/close this element"
 msgstr "Deschideți/închideți acest element"
+
+#, fuzzy
+msgid "OpenAI"
+msgstr "Deschideți"
 
 msgid "OpenHardwareMonitor (Windows)"
 msgstr "OpenHardwareMonitor (Windows)"
@@ -55140,6 +55190,10 @@ msgstr "Vă rugăm să introduceți o oră."
 
 #, fuzzy
 msgid "Please enter a file name."
+msgstr "Vă rugăm să introduceți un nume de fișier."
+
+#, fuzzy
+msgid "Please enter a model name."
 msgstr "Vă rugăm să introduceți un nume de fișier."
 
 #, fuzzy
@@ -70330,6 +70384,12 @@ msgid "The <i>from</i> time must not be later then the <i>until</i> time."
 msgstr ""
 "Timpul <i>de la</i> nu trebuie să fie mai târziu de timpul <i>până la</i>."
 
+#, python-format
+msgid ""
+"The API key is picked from the password store. %s if it is not stored there "
+"yet."
+msgstr ""
+
 msgid "The ARN of the IAM role to assume"
 msgstr "ARN al rolului IAM care trebuie asumat"
 
@@ -70877,6 +70937,11 @@ msgstr ""
 "timpul autentificării în loc de simplu <tt>[username]</tt> pentru a indica "
 "directorul LDAP căruia îi este atribuit. Utilizatorii fără conflict de nume "
 "trebuie doar să furnizeze numele de utilizator obișnuit, ca de obicei."
+
+msgid ""
+"The LLM provider the AI assistant talks to. The API key is taken from the "
+"password store."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -97958,6 +98023,29 @@ msgstr[1] ""
 msgstr[2] ""
 
 #, fuzzy
+msgid "Dock to the left"
+msgstr "ID-ul regulii"
+
+#, fuzzy
+msgid "Dock to the bottom"
+msgstr "Mergeți la magazinul de rapoarte"
+
+#, fuzzy
+msgid "Dock to the right"
+msgstr "Setați înălțimea"
+
+#, fuzzy
+msgid "AI assistant"
+msgstr "Instanța"
+
+#, fuzzy
+msgid "Close"
+msgstr "Închis"
+
+msgid "The AI assistant will live here."
+msgstr ""
+
+#, fuzzy
 msgid "Privacy Policy"
 msgstr "Protocol de confidențialitate"
 
@@ -98016,10 +98104,6 @@ msgid ""
 "Daily AI usage limit reached. Your quota refills over time. Try again in a "
 "little while."
 msgstr ""
-
-#, fuzzy
-msgid "Close"
-msgstr "Închis"
 
 msgid "What would you like the AI to do?"
 msgstr ""
@@ -106803,9 +106887,6 @@ msgstr ""
 
 #~ msgid "Shrinkage"
 #~ msgstr "Contracția"
-
-#~ msgid "Site base URL"
-#~ msgstr "URL-ul de bază al site-ului"
 
 #~ msgid ""
 #~ "Site base URL for accessing the REST API to e.g. create hosts (e.g. "

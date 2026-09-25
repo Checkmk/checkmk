@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-09-24 06:22+0000\n"
+"PO-Revision-Date: 2026-09-25 08:20+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -2939,12 +2939,20 @@ msgid "AI"
 msgstr "AIX"
 
 #, fuzzy
+msgid "AI Assistant"
+msgstr "Instância"
+
+#, fuzzy
 msgid "AI assistance"
 msgstr "Instância"
 
 #, fuzzy
 msgid "AI features"
 msgstr "Novo recurso"
+
+#, fuzzy
+msgid "AI provider"
+msgstr "Fornecer níveis"
 
 msgid "AIX"
 msgstr "AIX"
@@ -4341,6 +4349,10 @@ msgstr "Adicionar um comentário ou descrever este anfitrião"
 
 msgid "Add a first row with column titles"
 msgstr "Adicionar uma primeira linha com títulos de coluna"
+
+#, fuzzy
+msgid "Add a password"
+msgstr "Senha de encadernação"
 
 msgid "Add additional folder"
 msgstr "Adicionar pasta adicional"
@@ -7412,12 +7424,26 @@ msgstr "Outra sessão está activa"
 msgid "Answer seizure ratio"
 msgstr ""
 
+#, fuzzy
+msgid "Anthropic"
+msgstr "Adicionar tópico"
+
 msgid "AntiVirus last update age"
 msgstr "AntiVirus última era de actualização"
 
 #, fuzzy
 msgid "Any"
 msgstr "qualquer"
+
+msgid ""
+"Any application using the selected tokens will no longer be able to access "
+"the API with them."
+msgstr ""
+
+msgid ""
+"Any application using this token will no longer be able to access the API "
+"with it."
+msgstr ""
 
 msgid ""
 "Any certificate should expire at some point. Usual values are within 90 and "
@@ -10333,6 +10359,10 @@ msgstr "DN base"
 
 msgid "Base OID"
 msgstr "OID de base"
+
+#, fuzzy
+msgid "Base URL"
+msgstr "URL base do site"
 
 #, fuzzy
 msgid "Base URL (OMD site)"
@@ -38240,6 +38270,10 @@ msgstr "inválido:"
 msgid "Invalid (not loaded)"
 msgstr "Inválido (Não carregado)"
 
+#, fuzzy, python-format
+msgid "Invalid AI provider configuration: %(error)s"
+msgstr "hash de configuração inválido"
+
 #, fuzzy
 msgid "Invalid API key"
 msgstr "Chave privada inválida"
@@ -40288,6 +40322,10 @@ msgid "Leave unset on installations where over-voltage is not a concern."
 msgstr ""
 "Níveis de tensão para dispositivos como UPS ou PDUs. Várias fases podem ser "
 "tratadas de forma independente."
+
+msgid ""
+"Leave unset to use the default endpoint of the provider's client library."
+msgstr ""
 
 msgid "Left"
 msgstr "Esquerda"
@@ -48205,12 +48243,20 @@ msgstr "Da loja de senhas"
 msgid "No password selected"
 msgstr "Da loja de senhas"
 
+#, fuzzy
+msgid "No passwords configured yet"
+msgstr "Configuração do anfitrião"
+
 msgid "No pending changes."
 msgstr "Não há alterações pendentes."
 
 #, fuzzy
 msgid "No previous cycle available"
 msgstr "Dispositivo disponível"
+
+#, fuzzy
+msgid "No provider configured"
+msgstr "Sem intervalo de IP configurado"
 
 #, fuzzy
 msgid "No proxy"
@@ -51069,6 +51115,10 @@ msgstr "Interfaces de colagem"
 
 msgid "Open/close this element"
 msgstr "Abrir/fechar este elemento"
+
+#, fuzzy
+msgid "OpenAI"
+msgstr "Aberto"
 
 msgid "OpenHardwareMonitor (Windows)"
 msgstr "OpenHardwareMonitor (Windows)"
@@ -54983,6 +55033,10 @@ msgstr "Por favor, introduza uma hora."
 
 #, fuzzy
 msgid "Please enter a file name."
+msgstr "Por favor, introduza um nome de ficheiro."
+
+#, fuzzy
+msgid "Please enter a model name."
 msgstr "Por favor, introduza um nome de ficheiro."
 
 #, fuzzy
@@ -70092,6 +70146,12 @@ msgstr "O tempo não deve ser maior do que %02d:%02d."
 msgid "The <i>from</i> time must not be later then the <i>until</i> time."
 msgstr "O tempo <i> de</i> não deve ser posterior, então o tempo <i> até</i>."
 
+#, python-format
+msgid ""
+"The API key is picked from the password store. %s if it is not stored there "
+"yet."
+msgstr ""
+
 msgid "The ARN of the IAM role to assume"
 msgstr "A ARN do papel do IAM para assumir"
 
@@ -70636,6 +70696,11 @@ msgstr ""
 "apenas <tt>[nome de usuário]</tt> para dizer a qual diretório LDAP ele está "
 "atribuído. Utilizadores sem conflito de nomes apenas precisam de fornecer o "
 "seu nome de utilizador habitual."
+
+msgid ""
+"The LLM provider the AI assistant talks to. The API key is taken from the "
+"password store."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -97531,6 +97596,29 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, fuzzy
+msgid "Dock to the left"
+msgstr "identificação da regra"
+
+#, fuzzy
+msgid "Dock to the bottom"
+msgstr "Ir para a loja de relatórios"
+
+#, fuzzy
+msgid "Dock to the right"
+msgstr "Ajuste a altura"
+
+#, fuzzy
+msgid "AI assistant"
+msgstr "Instância"
+
+#, fuzzy
+msgid "Close"
+msgstr "Fechado"
+
+msgid "The AI assistant will live here."
+msgstr ""
+
+#, fuzzy
 msgid "Privacy Policy"
 msgstr "Protocolo de privacidade"
 
@@ -97589,10 +97677,6 @@ msgid ""
 "Daily AI usage limit reached. Your quota refills over time. Try again in a "
 "little while."
 msgstr ""
-
-#, fuzzy
-msgid "Close"
-msgstr "Fechado"
 
 msgid "What would you like the AI to do?"
 msgstr ""
@@ -106328,9 +106412,6 @@ msgstr ""
 
 #~ msgid "Shrinkage"
 #~ msgstr "Encolhimento"
-
-#~ msgid "Site base URL"
-#~ msgstr "URL base do site"
 
 #~ msgid ""
 #~ "Site base URL for accessing the REST API to e.g. create hosts (e.g. "

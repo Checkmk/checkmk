@@ -2930,12 +2930,20 @@ msgid "AI"
 msgstr "AIX"
 
 #, fuzzy
+msgid "AI Assistant"
+msgstr "Instantie"
+
+#, fuzzy
 msgid "AI assistance"
 msgstr "Instantie"
 
 #, fuzzy
 msgid "AI features"
 msgstr "Nieuwe functie"
+
+#, fuzzy
+msgid "AI provider"
+msgstr "Zorg voor niveaus"
 
 msgid "AIX"
 msgstr "AIX"
@@ -4338,6 +4346,10 @@ msgstr "Voeg een commentaar toe of beschrijf deze host"
 
 msgid "Add a first row with column titles"
 msgstr "Voeg een eerste rij toe met kolomtitels"
+
+#, fuzzy
+msgid "Add a password"
+msgstr "Bind wachtwoord"
 
 msgid "Add additional folder"
 msgstr "Extra map toevoegen"
@@ -7402,12 +7414,26 @@ msgstr "Een andere sessie is actief"
 msgid "Answer seizure ratio"
 msgstr ""
 
+#, fuzzy
+msgid "Anthropic"
+msgstr "Onderwerp toevoegen"
+
 msgid "AntiVirus last update age"
 msgstr "AntiVirus laatste update leeftijd"
 
 #, fuzzy
 msgid "Any"
 msgstr "elke"
+
+msgid ""
+"Any application using the selected tokens will no longer be able to access "
+"the API with them."
+msgstr ""
+
+msgid ""
+"Any application using this token will no longer be able to access the API "
+"with it."
+msgstr ""
 
 msgid ""
 "Any certificate should expire at some point. Usual values are within 90 and "
@@ -10318,6 +10344,10 @@ msgstr "Basis DN"
 
 msgid "Base OID"
 msgstr "Basis OID"
+
+#, fuzzy
+msgid "Base URL"
+msgstr "Website basis URL"
 
 #, fuzzy
 msgid "Base URL (OMD site)"
@@ -38229,6 +38259,10 @@ msgstr "ongeldig:"
 msgid "Invalid (not loaded)"
 msgstr "Ongeldig (niet geladen)"
 
+#, fuzzy, python-format
+msgid "Invalid AI provider configuration: %(error)s"
+msgstr "Ongeldige configuratie hash"
+
 #, fuzzy
 msgid "Invalid API key"
 msgstr "Ongeldige privésleutel"
@@ -40283,6 +40317,10 @@ msgid "Leave unset on installations where over-voltage is not a concern."
 msgstr ""
 "Spanningsniveaus voor apparaten zoals UPS of PDUs. Verschillende fasen "
 "kunnen onafhankelijk worden aangesproken."
+
+msgid ""
+"Leave unset to use the default endpoint of the provider's client library."
+msgstr ""
 
 msgid "Left"
 msgstr "Links"
@@ -48192,12 +48230,20 @@ msgid "No password selected"
 msgstr "Van wachtwoord opslag"
 
 #, fuzzy
+msgid "No passwords configured yet"
+msgstr "Host configuratie"
+
+#, fuzzy
 msgid "No pending changes."
 msgstr "Geen hangende wijzigingen"
 
 #, fuzzy
 msgid "No previous cycle available"
 msgstr "Apparaat beschikbaar"
+
+#, fuzzy
+msgid "No provider configured"
+msgstr "Geen IP-bereik geconfigureerd"
 
 #, fuzzy
 msgid "No proxy"
@@ -51073,6 +51119,10 @@ msgstr "Koppelvlakken"
 
 msgid "Open/close this element"
 msgstr "Openen/sluiten van dit element"
+
+#, fuzzy
+msgid "OpenAI"
+msgstr "Open"
 
 msgid "OpenHardwareMonitor (Windows)"
 msgstr "OpenHardwareMonitor (Windows)"
@@ -54995,6 +55045,10 @@ msgstr "Geef een tijd op."
 
 #, fuzzy
 msgid "Please enter a file name."
+msgstr "Voer een bestandsnaam in."
+
+#, fuzzy
+msgid "Please enter a model name."
 msgstr "Voer een bestandsnaam in."
 
 #, fuzzy
@@ -70079,6 +70133,12 @@ msgstr "De tijd mag niet groter zijn dan %02d:%02d."
 msgid "The <i>from</i> time must not be later then the <i>until</i> time."
 msgstr "De <i>vanaf</i> tijd mag niet later zijn dan de <i>tot</i> tijd."
 
+#, python-format
+msgid ""
+"The API key is picked from the password store. %s if it is not stored there "
+"yet."
+msgstr ""
+
 msgid "The ARN of the IAM role to assume"
 msgstr "Het ARN van de IAM-rol die moet worden aangenomen"
 
@@ -70625,6 +70685,11 @@ msgstr ""
 "gewone <tt>[gebruikersnaam]</tt> om aan te geven aan welke LDAP-directory "
 "hij is toegewezen. Gebruikers zonder naamsconflict hoeven alleen hun gewone "
 "gebruikersnaam op te geven."
+
+msgid ""
+"The LLM provider the AI assistant talks to. The API key is taken from the "
+"password store."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -97615,6 +97680,29 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, fuzzy
+msgid "Dock to the left"
+msgstr "ID van de regel"
+
+#, fuzzy
+msgid "Dock to the bottom"
+msgstr "Ga naar de rapport winkel"
+
+#, fuzzy
+msgid "Dock to the right"
+msgstr "Stel de hoogte in"
+
+#, fuzzy
+msgid "AI assistant"
+msgstr "Instantie"
+
+#, fuzzy
+msgid "Close"
+msgstr "Gesloten"
+
+msgid "The AI assistant will live here."
+msgstr ""
+
+#, fuzzy
 msgid "Privacy Policy"
 msgstr "Privacy-protocol"
 
@@ -97673,10 +97761,6 @@ msgid ""
 "Daily AI usage limit reached. Your quota refills over time. Try again in a "
 "little while."
 msgstr ""
-
-#, fuzzy
-msgid "Close"
-msgstr "Gesloten"
 
 msgid "What would you like the AI to do?"
 msgstr ""
@@ -106369,9 +106453,6 @@ msgstr ""
 
 #~ msgid "Shrinkage"
 #~ msgstr "Krimp"
-
-#~ msgid "Site base URL"
-#~ msgstr "Website basis URL"
 
 #~ msgid ""
 #~ "Site base URL for accessing the REST API to e.g. create hosts (e.g. "

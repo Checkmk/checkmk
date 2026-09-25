@@ -2991,11 +2991,19 @@ msgstr "AES-256-C (Cisco)"
 msgid "AI"
 msgstr "KI"
 
+#, fuzzy
+msgid "AI Assistant"
+msgstr "KI-Unterstützung"
+
 msgid "AI assistance"
 msgstr "KI-Unterstützung"
 
 msgid "AI features"
 msgstr "KI-Funktionen"
+
+#, fuzzy
+msgid "AI provider"
+msgstr "Provider"
 
 msgid "AIX"
 msgstr "AIX"
@@ -4321,6 +4329,10 @@ msgstr "Kommentar/Beschreibung für Host hinzufügen"
 
 msgid "Add a first row with column titles"
 msgstr "Eine erste Zeile mit Spaltentiteln hinzufügen"
+
+#, fuzzy
+msgid "Add a password"
+msgstr "Passwort anbinden"
 
 msgid "Add additional folder"
 msgstr "Zusätzlichen Ordner hinzufügen"
@@ -7301,11 +7313,25 @@ msgstr "Andere Sitzung aktiv"
 msgid "Answer seizure ratio"
 msgstr "Antwort-Anfall-Verhältnis (Answer Seizure Ratio, ASR)"
 
+#, fuzzy
+msgid "Anthropic"
+msgstr "Thema hinzufügen"
+
 msgid "AntiVirus last update age"
 msgstr "Alter des letzten AntiVirus-Updates"
 
 msgid "Any"
 msgstr "Beliebig"
+
+msgid ""
+"Any application using the selected tokens will no longer be able to access "
+"the API with them."
+msgstr ""
+
+msgid ""
+"Any application using this token will no longer be able to access the API "
+"with it."
+msgstr ""
 
 msgid ""
 "Any certificate should expire at some point. Usual values are within 90 and "
@@ -9938,6 +9964,10 @@ msgstr "Basis DN"
 
 msgid "Base OID"
 msgstr "Basis-OID"
+
+#, fuzzy
+msgid "Base URL"
+msgstr "Instanz-Basis-URL"
 
 #, fuzzy
 msgid "Base URL (OMD site)"
@@ -36899,6 +36929,10 @@ msgstr "Ungültig"
 msgid "Invalid (not loaded)"
 msgstr "Ungültig (nicht geladen)"
 
+#, fuzzy, python-format
+msgid "Invalid AI provider configuration: %(error)s"
+msgstr "Ungültiger Konfigurationshashwert"
+
 msgid "Invalid API key"
 msgstr "Ungültiger API-Schlüssel"
 
@@ -38806,6 +38840,10 @@ msgid "Leave unset on installations where over-voltage is not a concern."
 msgstr ""
 "Bei Installationen, bei denen keine Gefahr durch Überspannung besteht, diese "
 "Einstellung nicht vornehmen."
+
+msgid ""
+"Leave unset to use the default endpoint of the provider's client library."
+msgstr ""
 
 msgid "Left"
 msgstr "Links"
@@ -46282,11 +46320,19 @@ msgstr "Kein Passwort angegeben"
 msgid "No password selected"
 msgstr "Kein Passwort ausgewählt"
 
+#, fuzzy
+msgid "No passwords configured yet"
+msgstr "Bis jetzt noch keine Relays konfiguriert."
+
 msgid "No pending changes."
 msgstr "Keine ausstehenden Änderungen."
 
 msgid "No previous cycle available"
 msgstr "Kein vorheriger Zyklus verfügbar"
+
+#, fuzzy
+msgid "No provider configured"
+msgstr "Kein IP-Bereich definiert"
 
 msgid "No proxy"
 msgstr "Kein Proxy"
@@ -49036,6 +49082,10 @@ msgstr "Status der Bonding-Schnittstelle von Open vSwitch (ovs)"
 
 msgid "Open/close this element"
 msgstr "Dieses Element öffnen/schließen"
+
+#, fuzzy
+msgid "OpenAI"
+msgstr "Öffnen"
 
 msgid "OpenHardwareMonitor (Windows)"
 msgstr "OpenHardwareMonitor (Windows)"
@@ -52683,6 +52733,10 @@ msgstr "Bitte geben Sie einen Kommentar ein, nach dem Sie filtern möchten."
 
 msgid "Please enter a file name."
 msgstr "Bitte einen Dateinamen eingeben."
+
+#, fuzzy
+msgid "Please enter a model name."
+msgstr "Bitte geben Sie einen Namen ein."
 
 msgid "Please enter a name."
 msgstr "Bitte geben Sie einen Namen ein."
@@ -67175,6 +67229,12 @@ msgstr "Der Wert für 'sende alle' muss größer als 0 sein."
 msgid "The <i>from</i> time must not be later then the <i>until</i> time."
 msgstr "Wert für <i>von</i> darf nicht später als <i>bis</i> sein."
 
+#, python-format
+msgid ""
+"The API key is picked from the password store. %s if it is not stored there "
+"yet."
+msgstr ""
+
 msgid "The ARN of the IAM role to assume"
 msgstr "Der ARN der zu übernehmenden IAM-Rolle"
 
@@ -67720,6 +67780,11 @@ msgstr ""
 "<tt>[benutzername]@[suffix]</tt> statt <tt>[benutzername]</tt> eingeben, um "
 "zu spezifizieren, welchem LDAP-Ordner er zugeordnet ist. Benutzer ohne "
 "Namenskonflikt müssen wie üblich nur ihren normalen Benutzernamen angeben."
+
+msgid ""
+"The LLM provider the AI assistant talks to. The API key is taken from the "
+"password store."
+msgstr ""
 
 msgid ""
 "The Linux RPM packages built by the Agent Bakery are packaged independently "
@@ -94239,6 +94304,28 @@ msgid_plural "There are %{ n } apples"
 msgstr[0] "Da ist %{n} Apfel"
 msgstr[1] "Da sind %{n} Äpfel"
 
+#, fuzzy
+msgid "Dock to the left"
+msgstr "Regel-ID"
+
+#, fuzzy
+msgid "Dock to the bottom"
+msgstr "Gehe zum Berichtslager"
+
+#, fuzzy
+msgid "Dock to the right"
+msgstr "Höhe festlegen"
+
+#, fuzzy
+msgid "AI assistant"
+msgstr "KI-Unterstützung"
+
+msgid "Close"
+msgstr "Schließen"
+
+msgid "The AI assistant will live here."
+msgstr ""
+
 msgid "Privacy Policy"
 msgstr "Datenschutzerklärung"
 
@@ -94294,9 +94381,6 @@ msgid ""
 msgstr ""
 "Das tägliche Nutzungslimit für KI wurde erreicht. Ihr Kontingent wird im "
 "Laufe der Zeit wieder aufgefüllt. Versuchen Sie es später erneut."
-
-msgid "Close"
-msgstr "Schließen"
 
 msgid "What would you like the AI to do?"
 msgstr "Was soll die KI tun?"
@@ -103030,9 +103114,6 @@ msgstr ""
 
 #~ msgid "Shrinkage"
 #~ msgstr "Schrumpfen"
-
-#~ msgid "Site base URL"
-#~ msgstr "Instanz-Basis-URL"
 
 #~ msgid ""
 #~ "Site base URL for accessing the REST API to e.g. create hosts (e.g. "

@@ -2863,11 +2863,19 @@ msgstr "AES-256-C (Cisco)"
 msgid "AI"
 msgstr "AI"
 
+#, fuzzy
+msgid "AI Assistant"
+msgstr "AIアシスタンス"
+
 msgid "AI assistance"
 msgstr "AIアシスタンス"
 
 msgid "AI features"
 msgstr "AI機能"
+
+#, fuzzy
+msgid "AI provider"
+msgstr "レベルを提供する"
 
 msgid "AIX"
 msgstr "AIX"
@@ -4119,6 +4127,10 @@ msgstr "このホストのコメントまたは説明追加"
 
 msgid "Add a first row with column titles"
 msgstr "列タイトルを含む最初の行を追加します"
+
+#, fuzzy
+msgid "Add a password"
+msgstr "バインドパスワード"
 
 msgid "Add additional folder"
 msgstr "フォルダを追加します"
@@ -6950,11 +6962,25 @@ msgstr "別のセッションがアクティブです"
 msgid "Answer seizure ratio"
 msgstr "通話成功率"
 
+#, fuzzy
+msgid "Anthropic"
+msgstr "トピックの追加"
+
 msgid "AntiVirus last update age"
 msgstr "アンチウイルスの最終更新期間"
 
 msgid "Any"
 msgstr "どれか"
+
+msgid ""
+"Any application using the selected tokens will no longer be able to access "
+"the API with them."
+msgstr ""
+
+msgid ""
+"Any application using this token will no longer be able to access the API "
+"with it."
+msgstr ""
 
 msgid ""
 "Any certificate should expire at some point. Usual values are within 90 and "
@@ -9497,6 +9523,10 @@ msgstr "ベースDN"
 
 msgid "Base OID"
 msgstr "ベースOID"
+
+#, fuzzy
+msgid "Base URL"
+msgstr "サイトベースURL"
 
 msgid "Base URL (OMD site)"
 msgstr "ベースURL(OMDサイト)"
@@ -35918,6 +35948,10 @@ msgstr "無効:"
 msgid "Invalid (not loaded)"
 msgstr "無効(ロードされていません)"
 
+#, fuzzy, python-format
+msgid "Invalid AI provider configuration: %(error)s"
+msgstr "無効な構成ハッシュ"
+
 msgid "Invalid API key"
 msgstr "無効なAPIキー"
 
@@ -37850,6 +37884,10 @@ msgid "Leave unset on installations where over-voltage is not a concern."
 msgstr ""
 "UPSやPDUなどのデバイスの上位電圧レベル。過電圧が問題にならないインストールで"
 "は、設定しないままにしておいてください。"
+
+msgid ""
+"Leave unset to use the default endpoint of the provider's client library."
+msgstr ""
 
 msgid "Left"
 msgstr "左"
@@ -45448,11 +45486,19 @@ msgstr "パスワードが提供されていません"
 msgid "No password selected"
 msgstr "パスワードが選択されていません"
 
+#, fuzzy
+msgid "No passwords configured yet"
+msgstr "まだリレーが設定されていません。"
+
 msgid "No pending changes."
 msgstr "保留中の変更はありません。"
 
 msgid "No previous cycle available"
 msgstr "以前のサイクルは利用できません"
+
+#, fuzzy
+msgid "No provider configured"
+msgstr "IP範囲が構成されていません"
 
 msgid "No proxy"
 msgstr "プロキシなし"
@@ -48213,6 +48259,10 @@ msgstr "Open vSwitch (ovs) ボンディング インターフェースの状態"
 
 msgid "Open/close this element"
 msgstr "この要素を開く/閉じる"
+
+#, fuzzy
+msgid "OpenAI"
+msgstr "開いた"
 
 msgid "OpenHardwareMonitor (Windows)"
 msgstr "OpenHardwareMonitor(Windows)"
@@ -51846,6 +51896,10 @@ msgstr "フィルターをかけるためのコメントを入力してくださ
 #, fuzzy
 msgid "Please enter a file name."
 msgstr "ファイル名を入力してください。"
+
+#, fuzzy
+msgid "Please enter a model name."
+msgstr "名前を入力してください。"
 
 msgid "Please enter a name."
 msgstr "名前を入力してください。"
@@ -66326,6 +66380,12 @@ msgstr "'send everu'の値は０より大きくなければなりません。"
 msgid "The <i>from</i> time must not be later then the <i>until</i> time."
 msgstr "<i>from</i>の時間は、<i>until</i>の時間より遅くてはなりません。"
 
+#, python-format
+msgid ""
+"The API key is picked from the password store. %s if it is not stored there "
+"yet."
+msgstr ""
+
 msgid "The ARN of the IAM role to assume"
 msgstr "引き受けるIAMロールのARN"
 
@@ -66843,6 +66903,11 @@ msgstr ""
 "<tt>[username]</tt>の代わりに<tt>[username]@[suffix]</tt>を挿入してどのLDAP"
 "ディレクトリに割り当てられているかを指定できます。名前の競合がないユーザー"
 "は、通常どおり通常のユーザー名を入力する必要があります。"
+
+msgid ""
+"The LLM provider the AI assistant talks to. The API key is taken from the "
+"password store."
+msgstr ""
 
 msgid ""
 "The Linux RPM packages built by the Agent Bakery are packaged independently "
@@ -92721,6 +92786,29 @@ msgid_plural "There are %{ n } apples"
 msgstr[0] "リンゴが %{ n } 個あります"
 
 #, fuzzy
+msgid "Dock to the left"
+msgstr "ルールのID"
+
+#, fuzzy
+msgid "Dock to the bottom"
+msgstr "レポートストアに移動します"
+
+#, fuzzy
+msgid "Dock to the right"
+msgstr "高さを設定する"
+
+#, fuzzy
+msgid "AI assistant"
+msgstr "AIアシスタンス"
+
+#, fuzzy
+msgid "Close"
+msgstr "クローズド"
+
+msgid "The AI assistant will live here."
+msgstr ""
+
+#, fuzzy
 msgid "Privacy Policy"
 msgstr "プライバシープロトコル"
 
@@ -92782,10 +92870,6 @@ msgid ""
 msgstr ""
 "AIの1日あたりの使用状況制限に達しました。利用枠は時間の経過とともに回復しま"
 "す。しばらくしてから再度お試しください。"
-
-#, fuzzy
-msgid "Close"
-msgstr "クローズド"
 
 msgid "What would you like the AI to do?"
 msgstr "AIに何をさせたいですか？"
@@ -101916,9 +102000,6 @@ msgstr ""
 
 #~ msgid "Shrinkage"
 #~ msgstr "収縮"
-
-#~ msgid "Site base URL"
-#~ msgstr "サイトベースURL"
 
 #~ msgid ""
 #~ "Site base URL for accessing the REST API to e.g. create hosts (e.g. "

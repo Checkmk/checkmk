@@ -162,13 +162,21 @@ function resetSearchAndFilters(): void {
   query.value = ''
   modification.value = 'all'
 }
+
+function reloadPage(): void {
+  window.location.reload()
+}
 </script>
 
 <template>
   <div class="global-settings-app">
     <div class="global-settings-app__header">
       <CmkBreadcrumb :items="breadcrumb" />
-      <CmkHeading>{{ title }}</CmkHeading>
+      <CmkHeading>
+        <a href="#" class="global-settings-app__title-link" @click.prevent="reloadPage">{{
+          title
+        }}</a>
+      </CmkHeading>
       <div class="global-settings-app__toolbar">
         <div class="global-settings-app__search-and-filter">
           <CmkSearchInput
@@ -234,6 +242,11 @@ function resetSearchAndFilters(): void {
   gap: var(--dimension-4);
   padding: var(--dimension-4) 0 var(--dimension-6);
   background: var(--default-bg-color);
+}
+
+.global-settings-app__title-link {
+  color: inherit;
+  text-decoration: none;
 }
 
 .global-settings-app__toolbar {

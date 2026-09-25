@@ -18,7 +18,6 @@ from cmk.agent_based.v2 import (
     IgnoreResultsError,
     Result,
     Service,
-    State,
     StringTable,
 )
 
@@ -53,8 +52,8 @@ def check_oracle_logswitches(
             err = oracle_handle_ora_errors(line)
             if err is False:
                 continue
-            elif isinstance(err, str):
-                yield Result(state=State.UNKNOWN, summary=err)
+            elif isinstance(err, Result):
+                yield err
             elif err is None:
                 pass
             else:

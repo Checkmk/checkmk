@@ -88,9 +88,9 @@ def check_oracle_jobs(item: str, params: Mapping[str, Any], section: StringTable
         error = oracle_handle_ora_errors(line)
         if error is False:
             continue
-        if isinstance(error, str):
+        if isinstance(error, Result):
             if line[0] == item_sid:
-                yield Result(state=State.UNKNOWN, summary=error)
+                yield error
                 return
             continue
 

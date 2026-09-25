@@ -11,10 +11,10 @@ import platform
 import subprocess
 import sys
 import time
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Final, NamedTuple
+from typing import Final, NamedTuple, TypeVar
 
 import telnetlib3
 import yaml
@@ -44,6 +44,8 @@ import yaml
 # OnlyFrom:
 
 
+T = TypeVar("T")
+YieldFixture = Generator[T]
 YamlDict = dict[str, dict[str, object]]
 INTEGRATION_PORT: Final = 25998
 AGENT_EXE_NAME: Final = "check_mk_agent.exe"

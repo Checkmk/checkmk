@@ -5,9 +5,8 @@
 
 # mypy: disable-error-code="no-any-return"
 
-from collections.abc import Generator
 from pathlib import Path
-from typing import Final, TypeVar
+from typing import Final
 
 import pytest
 import yaml
@@ -20,11 +19,8 @@ from .utils import (
     get_path_from_env,
     INTEGRATION_PORT,
     YamlDict,
+    YieldFixture,
 )
-
-T = TypeVar("T")
-YieldFixture = Generator[T]
-
 
 check_os()
 

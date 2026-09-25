@@ -42,11 +42,12 @@ class LicenseState(Enum):
     UNLICENSED = auto()
 
     # The site has no active license, but is still in the trial period. The user has selected "trial
-    # mode" in the trial verification workflow, but has not completed the verification process.
+    # mode" in the trial verification workflow, but has not completed the email verification process.
     PENDING_TRIAL_VERIFICATION = auto()
 
     # The site has no active license, but is still in the trial period. The user has selected
-    # "licensed mode", but did not completed the license verification process yet.
+    # "licensed mode", but did not complete the license verification process yet, or verified a
+    # license with a start time in the future.
     PENDING_LICENSE_VERIFICATION = auto()
 
     # The site has no active license, but is still in the trial period. The user has not selected

@@ -1926,6 +1926,7 @@ allows = ["@crypto", "cmk.ccc.store", "cmk.ccc.user"]
 [components."cmk.licensing.nonfree"]
 allows = [
   "@crypto",
+  "@flags",
   "@livestatus_client",
   "cmk.ccc.exceptions",
   "cmk.ccc.i18n",

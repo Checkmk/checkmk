@@ -39,14 +39,18 @@ section() {
 # The measured source files, as Bazel labels: what a py rule compiles, minus what
 # Bazel marks as test support. `testonly` is enforced -- a non-testonly target may
 # not depend on a testonly one -- so a target claiming it has been checked by the
-# build, unlike a naming convention. Configuration-less, `bazel query` following
+# build, unlike a naming convention. Also minus what is tagged
+# `exclude-from-test-coverage`: a deliberate opt-out for code not suited to package
+# tests, which the build does not check. Configuration-less, `bazel query` following
 # every select() branch, so one edition's run measures them all.
 #
 # Filtered to .py: a py rule's srcs also carry the data files beside the code,
 # which have no executable line and would otherwise reach the denominator.
 source_labels_query() {
     cat <<'EOF'
-filter("\.py$", labels(srcs, kind("py_.*", //...) except attr("testonly", 1, //...)))
+filter("\.py$", labels(srcs, kind("py_.*", //...)
+    except attr("testonly", 1, //...)
+    except attr("tags", "[\[ ]exclude-from-test-coverage[,\]]", //...)))
 EOF
 }
 

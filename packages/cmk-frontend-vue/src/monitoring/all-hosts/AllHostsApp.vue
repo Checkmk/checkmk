@@ -52,6 +52,7 @@ import {
   slideInWriter
 } from '../shared/urlState/slideInState'
 import { useUrlSync } from '../shared/urlState/useUrlSync'
+import { useContextMenuKey } from '../shared/useContextMenuKey'
 import { useFallbackKeys } from '../shared/useFallbackKeys'
 import { useAcknowledgeHostsAction } from './actions/acknowledgeHosts'
 import { useRescheduleHostsAction } from './actions/rescheduleHosts'
@@ -208,6 +209,7 @@ const toolbar = useTemplateRef<{ focus: () => void }>('toolbar')
 const root = useTemplateRef<HTMLElement>('root')
 
 useFallbackKeys(root, () => root.value?.querySelector<HTMLElement>('.monitoring-table'))
+useContextMenuKey(root)
 
 const actionRegistry = createActionRegistry([
   useAcknowledgeHostsAction(

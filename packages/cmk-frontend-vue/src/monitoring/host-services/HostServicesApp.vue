@@ -54,6 +54,7 @@ import {
   slideInWriter
 } from '../shared/urlState/slideInState'
 import { useUrlSync } from '../shared/urlState/useUrlSync'
+import { useContextMenuKey } from '../shared/useContextMenuKey'
 import { useFallbackKeys } from '../shared/useFallbackKeys'
 import { useAcknowledgeServicesAction } from './actions/acknowledgeServices'
 import { useRescheduleServicesAction } from './actions/rescheduleServices'
@@ -223,6 +224,7 @@ const toolbar = useTemplateRef<{ focus: () => void }>('toolbar')
 const root = useTemplateRef<HTMLElement>('root')
 
 useFallbackKeys(root, () => root.value?.querySelector<HTMLElement>('.monitoring-table'))
+useContextMenuKey(root)
 
 onMounted(() => {
   hostServicesService.onFocusSearch(() => toolbar.value?.focus())

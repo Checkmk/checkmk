@@ -15,7 +15,7 @@ from cmk.plugins.f5_bigip.agent_based.f5_bigip_cpu_temp import (
 )
 from cmk.plugins.lib.temperature import TempParamDict
 
-from ..conftest import value_store  # astrein: disable=conftest-import
+from ..testlib import value_store
 
 
 @pytest.mark.parametrize(

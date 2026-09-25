@@ -17,7 +17,7 @@ from cmk.plugins.f5_bigip.agent_based.f5_bigip_conns import (
     parse_f5_bigip_conns,
 )
 
-from ..conftest import value_store  # astrein: disable=conftest-import
+from ..testlib import value_store
 
 _STRING_TABLE = [["4001", "1500", "700", "300", "9000"]]
 

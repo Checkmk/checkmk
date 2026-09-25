@@ -15,6 +15,7 @@ import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/d
 
 import '@/assets/variables.css'
 import MapsApp from '@/maps/MapsApp.vue'
+import ModeHostRelationDiscoveryApp from '@/mode-host-relation-discovery/ModeHostRelationDiscoveryApp.vue'
 import ModeHostApp from '@/mode-host/ModeHostApp.vue'
 import NotificationParametersOverviewApp from '@/notification/NotificationParametersOverviewApp.vue'
 import { registerCustomQueryFormComponents } from '@/telemetry-metrics-custom-query/registerFormComponents'
@@ -73,6 +74,7 @@ defineCmkComponent('cmk-notification-overview', NotificationOverview)
 defineCmkComponent('cmk-agent-download', AgentDownload)
 defineCmkComponent('cmk-notification-parameters-overview', NotificationParametersOverviewApp)
 defineCmkComponent('cmk-mode-host', ModeHostApp)
+defineCmkComponent('cmk-mode-host-relation-discovery', ModeHostRelationDiscoveryApp)
 defineCmkComponent('cmk-mode-create-otel-conf', ModeCreateOTelConfApp)
 defineCmkComponent('cmk-mode-create-prometheus-conf', ModeCreatePrometheusConfApp)
 defineCmkComponent('cmk-mode-create-alert', AlertWizardApp)

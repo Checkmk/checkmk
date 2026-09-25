@@ -1383,6 +1383,42 @@ def outcome_counts(outcomes: Iterable[LinkOutcome]) -> Mapping[LinkOutcome, int]
     return {outcome: counted.get(outcome, 0) for outcome in LinkOutcome}
 
 
+def relation_row_titles() -> Mapping[str, str]:
+    """How each relation reads in a proposed row - the page has no vocabulary of its own."""
+    return {
+        relation_choice_name(kind.id, direction): str(kind.end(direction).row)
+        for kind in RELATION_KINDS.values()
+        for direction in kind.directions()
+    }
+
+
+def relation_end_nouns() -> Mapping[str, str]:
+    """What the host at each end is called - what a row asking for one has to name."""
+    return {
+        relation_choice_name(kind.id, direction): str(kind.end(direction).noun)
+        for kind in RELATION_KINDS.values()
+        for direction in kind.directions()
+    }
+
+
+def discoverable_kinds() -> Mapping[str, str]:
+    """The relations a finding can stand for, each by the relation the host it marks holds."""
+    return {
+        kind.id: relation_choice_name(kind.id, evidence.direction)
+        for kind in RELATION_KINDS.values()
+        if (evidence := kind.name_evidence) is not None
+    }
+
+
+def discoverable_kind_words() -> Mapping[str, list[str]]:
+    """Per kind a finding can stand for, the words its vendors habitually put in host names."""
+    return {
+        kind.id: list(evidence.tokens)
+        for kind in RELATION_KINDS.values()
+        if (evidence := kind.name_evidence) is not None
+    }
+
+
 @dataclass
 class _Touched:
     """A host a run changed, with what it was before the run."""

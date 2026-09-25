@@ -134,6 +134,7 @@ TagsOrLabels = TypeVar("TagsOrLabels", Mapping[TagGroupID, TagID], Labels)
 class FolderMenuLocation(StrEnum):
     IN_FOLDER = auto()
     SELECTED_HOSTS = auto()
+    RELATED = auto()
 
 
 @dataclass(frozen=True)
@@ -640,6 +641,9 @@ class ModeFolder(WatoMode):
                     folder_preserving_link(request, [("mode", "dcd_connections")])
                 ),
             )
+
+        for entry in folder_menu_entry_registry.by_location(FolderMenuLocation.RELATED):
+            yield from entry.func(self._folder)
 
     def _page_menu_entries_search(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(

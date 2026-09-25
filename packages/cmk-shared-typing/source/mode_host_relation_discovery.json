@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "host_relation_discovery",
+  "properties": {
+    "kinds": {
+      "description": "The relations a finding can stand for, by kind id, each with the relation the host the finding marks holds, by the name the wire uses for it.",
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "kind_words": {
+      "description": "Per kind id, the words host names habitually carry for it - what the page names to say what it looks for.",
+      "type": "object",
+      "additionalProperties": { "type": "array", "items": { "type": "string" } }
+    },
+    "relation_titles": {
+      "description": "How each relation reads in a proposed row, by the name the wire uses for it.",
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "relation_nouns": {
+      "description": "What the host at each end of a relation is called, by the name the wire uses for it.",
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "activate_changes_url": { "type": "string" }
+  },
+  "required": ["kinds", "kind_words", "relation_titles", "relation_nouns", "activate_changes_url"]
+}

@@ -63,21 +63,24 @@ bool GetConfiguredCheck();
 bool GetConfiguredAllowElevated();
 bool IsConfiguredEmergencyOnCrash();
 
-/// To be called once when cap is installed
+/// To be called once when cap is installed, before the controller is started
+///
+/// The controller reads allow-legacy-pull only at its own startup, so the
+/// artifacts have to be in place by then.
 ///
 /// marker contains uninstall information
 /// always remove marker file
-/// controller_exists is determined by caller
+/// controller_enabled is determined by caller
 /// creates controller-flag allow-pull-mode
 /// According to https://jira.lan.tribe29.com/browse/CMK-10073
-/// if !controler_exists
+/// if !controller_enabled
 /// - does nothing
 /// else
 /// - creates legacy-pull if no controller flag
 /// - create controller flag
 ///
 void CreateArtifacts(const std::filesystem::path &marker,
-                     bool controller_exists) noexcept;
+                     bool controller_enabled) noexcept;
 }  // namespace cma::ac
 
 #endif  // AGENT_CONTROLLER_H

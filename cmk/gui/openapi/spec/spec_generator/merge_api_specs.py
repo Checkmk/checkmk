@@ -16,19 +16,8 @@ from cmk.ccc.version import Edition
 
 # TODO: editions should introduce their own endpoints instead of redefining shared ones with
 #  different models. Each entry names the diverging edition, whose copy is dropped from the merge.
-_KNOWN_DIVERGENT_PATHS = frozenset(
-    {
-        ("cloud", "get", "/domain-types/otel_collector_config_receivers/collections/all"),
-        ("cloud", "post", "/domain-types/otel_collector_config_receivers/collections/all"),
-        ("cloud", "delete", "/objects/otel_collector_config_receivers/{config_id}"),
-        ("cloud", "get", "/objects/otel_collector_config_receivers/{config_id}"),
-    }
-)
-_KNOWN_DIVERGENT_COMPONENTS = frozenset(
-    {
-        ("cloud", "schemas", "OTelCollectorProtocolConfig"),
-    }
-)
+_KNOWN_DIVERGENT_PATHS: frozenset[tuple[str, str, str]] = frozenset()
+_KNOWN_DIVERGENT_COMPONENTS: frozenset[tuple[str, str, str]] = frozenset()
 
 # Editions ranked from least to most feature-complete. When two editions describe the same
 # endpoint identically except for its permission documentation, the higher-ranked edition's

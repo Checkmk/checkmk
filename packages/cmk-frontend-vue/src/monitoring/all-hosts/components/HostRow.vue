@@ -144,7 +144,12 @@ const lastStateChange = computed(() =>
     @click="emit('open', row, true)"
   />
   <StringCell v-if="hasColumn('alias')" column-id="alias" :value="row.alias" />
-  <StringCell v-if="hasColumn('address')" column-id="address" :value="row.address" />
+  <StringCell
+    v-if="hasColumn('address')"
+    column-id="address"
+    :value="row.address"
+    :title-only-when-cut="true"
+  />
   <StringCell v-if="hasColumn('folder')" column-id="folder" :value="row.folder" />
   <StringCell v-if="hasColumn('site_id')" column-id="site_id" :value="row.site_id" />
   <NumberCell

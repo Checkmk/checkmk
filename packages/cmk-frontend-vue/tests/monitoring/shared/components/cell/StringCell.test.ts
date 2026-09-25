@@ -24,6 +24,25 @@ test('renders the value as cell text', () => {
   expect(screen.getByTitle('web-1')).toBeInTheDocument()
 })
 
+test('repeats no value on hover that fits the cell, when told to title only a cut one', async () => {
+  mountCell('fe80::1', { titleOnlyWhenCut: true })
+
+  await fireEvent.mouseEnter(screen.getByText('fe80::1'))
+
+  expect(screen.queryByTitle('fe80::1')).not.toBeInTheDocument()
+})
+
+test('shows a cut value in full on hover, when told to title only a cut one', async () => {
+  mountCell('fe80::1', { titleOnlyWhenCut: true })
+  const text = screen.getByText('fe80::1')
+  Object.defineProperty(text, 'scrollWidth', { configurable: true, value: 120 })
+  Object.defineProperty(text, 'clientWidth', { configurable: true, value: 40 })
+
+  await fireEvent.mouseEnter(text)
+
+  expect(text).toHaveAttribute('title', 'fe80::1')
+})
+
 test('renders a placeholder instead of crashing when the value is missing', () => {
   const { container } = mountCell(undefined)
 

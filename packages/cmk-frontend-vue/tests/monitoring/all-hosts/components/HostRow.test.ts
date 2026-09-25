@@ -64,10 +64,18 @@ function mountRow(row: HostEntry, tableRow: Row<HostEntry> = makeTableRow()) {
 }
 
 test('renders host name and ip in their cells', () => {
-  mountRow(makeHost())
+  mountRow(makeHost({ address: 'fe80::1' }))
 
   expect(screen.getByTitle('web-1')).toBeInTheDocument()
-  expect(screen.getByTitle('10.0.0.1')).toBeInTheDocument()
+  expect(screen.getByText('fe80::1')).toBeInTheDocument()
+})
+
+test('repeats no ip address on hover that the cell shows in full', async () => {
+  mountRow(makeHost({ address: 'fe80::1' }))
+
+  await fireEvent.mouseEnter(screen.getByText('fe80::1'))
+
+  expect(screen.queryByTitle('fe80::1')).not.toBeInTheDocument()
 })
 
 test('renders alias, folder and formatted timestamps in their cells', () => {

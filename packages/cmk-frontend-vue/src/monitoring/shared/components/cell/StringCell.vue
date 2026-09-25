@@ -5,6 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import { computed, ref } from 'vue'
+
 import PluginOutput from '../PluginOutput.vue'
 import BaseCell, { type CellLink, type CellVerticalAlign } from './BaseCell.vue'
 import { useSoftBreak } from './base/useSoftBreak'
@@ -19,6 +21,7 @@ const props = withDefaults(
     button?: boolean | undefined
     verticalAlign?: CellVerticalAlign | undefined
     noWrap?: boolean | undefined
+    titleOnlyWhenCut?: boolean | undefined
     /** Renders the state markers a check embeds in its output, for a cell showing one. */
     stateMarkers?: boolean | undefined
   }>(),
@@ -33,6 +36,14 @@ const display = useSoftBreak(
   () => props.value ?? props.emptyLabel ?? 'n/a',
   () => props.hardBreakEvery
 )
+
+const cut = ref(false)
+const title = computed(() => (!props.titleOnlyWhenCut || cut.value ? props.value : undefined))
+
+function measureCut(event: MouseEvent): void {
+  const text = event.currentTarget as HTMLElement
+  cut.value = text.scrollWidth > text.clientWidth || text.scrollHeight > text.clientHeight
+}
 </script>
 
 <template>
@@ -47,11 +58,12 @@ const display = useSoftBreak(
   >
     <template #default>
       <span
-        :title="value"
+        :title="title"
         class="monitoring-string-cell__text"
         :class="{
           'monitoring-string-cell__text--empty-string': display === 'n/a' || display === emptyLabel
         }"
+        @mouseenter="titleOnlyWhenCut && measureCut($event)"
       >
         <PluginOutput
           v-if="stateMarkers && value"

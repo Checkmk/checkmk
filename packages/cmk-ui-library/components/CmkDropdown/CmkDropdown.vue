@@ -255,6 +255,12 @@ function showSuggestions(): void {
   }
 }
 
+function openFromKeyboard(): void {
+  if (!suggestionsShown.value) {
+    showSuggestions()
+  }
+}
+
 function updateNonFloatingPlacement(): void {
   const listElement = suggestionsRef.value?.$el as HTMLElement | undefined
   const anchor = rootRef.value
@@ -369,6 +375,7 @@ const group = computed<ButtonVariants['group']>(() => {
       :width="width"
       :class="{ 'cmk-dropdown__validation-error': formValidation }"
       @click="showSuggestions"
+      @keydown.down.prevent="openFromKeyboard"
     >
       <span v-if="!!slots['button-prefix']" class="cmk-dropdown--button-prefix">
         <slot name="button-prefix"></slot>

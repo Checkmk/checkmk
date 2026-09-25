@@ -8,7 +8,13 @@ import functools
 import pytest
 from polyfactory.factories import DataclassFactory
 
-from cmk.gui.monitor.hosts._models import Host, HostSort, HostSortColumn, HostSortDirection
+from cmk.gui.monitor.hosts._models import (
+    Host,
+    HostSort,
+    HostSortColumn,
+    HostSortDirection,
+    HostState,
+)
 from cmk.gui.monitor.hosts._sorting import host_sorter, sort_naturally
 
 
@@ -137,6 +143,44 @@ def test_host_sorter_relation_count_column() -> None:
     value = [host.name for host in sorted(hosts, key=host_sorter(sorters))]
 
     assert value == ["two", "one", "none"]
+
+
+_MOST_SEVERE_FIRST = [
+    (HostState.UNREACHABLE, False, False),
+    (HostState.DOWN, False, False),
+    (HostState.DOWN, True, True),
+    (HostState.DOWN, True, False),
+    (HostState.DOWN, False, True),
+    (HostState.PENDING, False, False),
+    (HostState.UP, True, True),
+    (HostState.UP, True, False),
+    (HostState.UP, False, True),
+    (HostState.UP, False, False),
+]
+
+
+@pytest.mark.parametrize(
+    "direction, expected",
+    [
+        pytest.param(HostSortDirection.DESC, _MOST_SEVERE_FIRST, id="most severe first"),
+        pytest.param(HostSortDirection.ASC, _MOST_SEVERE_FIRST[::-1], id="least severe first"),
+    ],
+)
+def test_host_sorter_state_column_orders_by_severity_including_stale_and_flapping(
+    direction: HostSortDirection, expected: list[tuple[HostState, bool, bool]]
+) -> None:
+    hosts = [
+        HostFactory.build(state=state, stale=stale, is_flapping=is_flapping)
+        for state, stale, is_flapping in sorted(_MOST_SEVERE_FIRST, key=repr)
+    ]
+    sorters = [HostSort(column=HostSortColumn.STATE, direction=direction)]
+
+    value = [
+        (host.state, host.stale, host.is_flapping)
+        for host in sorted(hosts, key=host_sorter(sorters))
+    ]
+
+    assert value == expected
 
 
 @pytest.mark.parametrize(

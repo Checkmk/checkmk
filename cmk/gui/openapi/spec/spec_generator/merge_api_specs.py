@@ -18,7 +18,6 @@ from cmk.ccc.version import Edition
 #  different models. Each entry names the diverging edition, whose copy is dropped from the merge.
 _KNOWN_DIVERGENT_PATHS = frozenset(
     {
-        ("cloud", "post", "/domain-types/otel_collector_config_bundles/collections/all"),
         ("cloud", "get", "/domain-types/otel_collector_config_receivers/collections/all"),
         ("cloud", "post", "/domain-types/otel_collector_config_receivers/collections/all"),
         ("cloud", "delete", "/objects/otel_collector_config_receivers/{config_id}"),
@@ -27,7 +26,6 @@ _KNOWN_DIVERGENT_PATHS = frozenset(
 )
 _KNOWN_DIVERGENT_COMPONENTS = frozenset(
     {
-        ("cloud", "schemas", "OTelBundleRequest"),
         ("cloud", "schemas", "OTelCollectorProtocolConfig"),
     }
 )

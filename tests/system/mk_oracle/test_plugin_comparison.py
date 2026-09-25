@@ -16,7 +16,7 @@ column count; field values beyond the key and row order are ignored).
 """
 
 from tests.system.mk_oracle.comparison import ComparisonResult, PluginOutput
-from tests.system.mk_oracle.conftest import OracleDatabase  # astrein: disable=conftest-import
+from tests.system.mk_oracle.oracle_database import OracleDatabase
 
 # Accepted old-vs-new differences (section names carry their ``:sep(124)`` modifier
 # because that is the full header the comparison keys on). Captured against Oracle

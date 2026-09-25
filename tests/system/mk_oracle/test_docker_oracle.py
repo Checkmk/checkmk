@@ -10,9 +10,7 @@ from typing import Final, Literal
 import pytest
 
 from tests.system.mk_oracle.comparison import ComparisonResult, PluginOutput
-
-# astrein: disable=conftest-import
-from tests.system.mk_oracle.conftest import OracleDatabase, SECTION_LINES
+from tests.system.mk_oracle.oracle_database import OracleDatabase, SECTION_LINES
 from tests.system.mk_oracle.test_plugin_comparison import (
     KNOWN_DEVIATIONS,
     run_old_plugin,

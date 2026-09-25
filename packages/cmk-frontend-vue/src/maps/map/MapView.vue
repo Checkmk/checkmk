@@ -186,23 +186,6 @@ watch(
   { immediate: true }
 )
 
-// The toolbar must not cover what is being edited.
-const actionBarStyle = computed(() => {
-  const { top, left, width, bottom } = selectedRect
-  if (!selectedObjectEl.value || width === 0) {
-    return null
-  }
-  const barHeightApprox = 36
-  const gap = 8
-  const aboveTop = top - barHeightApprox - gap
-  const useAbove = aboveTop >= 8
-  return {
-    top: `${useAbove ? aboveTop : bottom + gap}px`,
-    left: `${left + width / 2}px`,
-    transform: 'translateX(-50%)'
-  }
-})
-
 // The editing controls are for whoever may change *this* map, and only while
 // the view is not doing something else: a kiosk screen, a live preview, or
 // triage in the detail drawer.
@@ -936,8 +919,8 @@ function closeBulkAckModal(sent: boolean): void {
         leave-active-class="maps-map-view__bar-leave-active"
       >
         <MapObjectActionBar
-          v-if="showsActionBar && selectedObject && actionBarStyle"
-          :style="actionBarStyle"
+          v-if="showsActionBar && selectedObject && selectedObjectAnchor"
+          :anchor="selectedObjectAnchor"
           :object="selectedObject"
           :selected-count="editor.selectedCount.value"
           :can-bundle="canBundle"
@@ -1119,10 +1102,14 @@ body[data-theme='facelift'] .maps-map-view {
 }
 
 .maps-map-view__bar-enter-active {
-  transition: all 0.15s cubic-bezier(0, 0, 0.2, 1);
+  transition:
+    opacity 0.15s cubic-bezier(0, 0, 0.2, 1),
+    transform 0.15s cubic-bezier(0, 0, 0.2, 1);
 }
 
 .maps-map-view__bar-leave-active {
-  transition: all 0.1s cubic-bezier(0.4, 0, 1, 1);
+  transition:
+    opacity 0.1s cubic-bezier(0.4, 0, 1, 1),
+    transform 0.1s cubic-bezier(0.4, 0, 1, 1);
 }
 </style>

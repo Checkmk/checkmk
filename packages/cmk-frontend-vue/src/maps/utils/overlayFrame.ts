@@ -124,3 +124,51 @@ export function usePointerOverlayStyle(
 
   return placedStyle(placed)
 }
+
+/**
+ * ``left``/``top`` for a fixed overlay centred above an object given in
+ * viewport coordinates. Without room above it goes below, and it is kept
+ * inside the frame sideways. While the object is out of the frame altogether
+ * the overlay is not shown: it would offer to act on something out of sight.
+ */
+export function useAnchorOverlayStyle(
+  overlay: Readonly<Ref<HTMLElement | null>>,
+  anchor: () => AnchorRect | null | undefined
+): ComputedRef<CSSProperties> {
+  const placed = ref<{ left: number; top: number } | null>(null)
+
+  function place(): void {
+    const el = overlay.value
+    const a = anchor()
+    if (!el || !a) {
+      placed.value = null
+      return
+    }
+    const frame = overlayFrameOf(el)
+    if (
+      a.right < frame.left ||
+      a.left > frame.right ||
+      a.bottom < frame.top ||
+      a.top > frame.bottom
+    ) {
+      placed.value = null
+      return
+    }
+    const width = el.offsetWidth
+    const height = el.offsetHeight
+    const above = a.top - ANCHOR_GAP - height
+    const top = above >= frame.top + EDGE_MARGIN ? above : a.bottom + ANCHOR_GAP
+    const centred = (a.left + a.right) / 2 - width / 2
+    const left = Math.max(
+      frame.left + EDGE_MARGIN,
+      Math.min(centred, frame.right - EDGE_MARGIN - width)
+    )
+    placed.value = { left: left - frame.left, top: top - frame.top }
+  }
+
+  // The overlay's width changes with what it offers, which the anchor does not see.
+  useResizeObserver(place).observe(overlay)
+  watch([overlay, anchor], place, { flush: 'post', immediate: true })
+
+  return placedStyle(placed)
+}

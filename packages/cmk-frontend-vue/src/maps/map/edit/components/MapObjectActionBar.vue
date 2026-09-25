@@ -11,19 +11,21 @@ A toolbar beside the selection rather than a menu somewhere else — while
 arranging a map, the operator's attention is on the object, and the actions
 have to be one click away from it.
 
-The glyphs are drawn colourless: several of them are Checkmk's own
-multi-coloured icons, which side by side read as a row of unrelated pictures
-rather than as one set of actions.
+The glyphs are the ones Checkmk shows for the same actions everywhere else,
+drawn colourless: several of them are multi-coloured, which side by side read
+as a row of unrelated pictures rather than as one set of actions.
 -->
 <script setup lang="ts">
 import type { IconNames } from 'cmk-shared-typing/typescript/icon'
-import CmkIcon from 'cmk-ui-library/components/CmkIcon'
+import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import type { MapElement } from '@/maps/types/api'
+import type { AnchorRect } from '@/maps/utils/anchorRect'
 import { objectTypeLabel } from '@/maps/utils/dropdownOptions'
+import { useAnchorOverlayStyle } from '@/maps/utils/overlayFrame'
 
 /** What the toolbar can ask the view to do with the selection. */
 export type MapObjectAction =
@@ -38,6 +40,8 @@ export type MapObjectAction =
 
 const props = defineProps<{
   object: MapElement
+  /** The selected object on screen, which the toolbar sits above. */
+  anchor: AnchorRect
   selectedCount: number
   /** Several hosts at one place can be merged into a single location icon. */
   canBundle: boolean
@@ -47,6 +51,9 @@ const props = defineProps<{
 const emit = defineEmits<{ act: [action: MapObjectAction] }>()
 
 const { _t, _tn } = usei18n()
+
+const barEl = ref<HTMLElement | null>(null)
+const barStyle = useAnchorOverlayStyle(barEl, () => props.anchor)
 
 const isSingle = computed(() => props.selectedCount <= 1)
 /** A line bound to an object follows it, and can be freed again. */
@@ -103,21 +110,23 @@ const buttons = computed<ActionButton[]>(() => {
 </script>
 
 <template>
-  <div class="maps-map-object-action-bar">
+  <div ref="barEl" class="maps-map-object-action-bar" :style="barStyle">
     <span class="maps-map-object-action-bar__label">{{ label }}</span>
     <span class="maps-map-object-action-bar__divider" />
-    <button
-      v-for="button in buttons"
-      :key="button.action"
-      type="button"
-      class="maps-map-object-action-bar__button"
-      :class="button.tone ? `maps-map-object-action-bar__button--${button.tone}` : ''"
-      :title="button.title"
-      :aria-label="button.title"
-      @click="emit('act', button.action)"
-    >
-      <CmkIcon :name="button.icon" size="small" :colored="false" />
-    </button>
+    <template v-for="button in buttons" :key="button.action">
+      <!-- Set apart: the one action that cannot be undone. -->
+      <span v-if="button.tone === 'danger'" class="maps-map-object-action-bar__divider" />
+      <CmkIconButton
+        class="maps-map-object-action-bar__button"
+        :class="button.tone ? `maps-map-object-action-bar__button--${button.tone}` : ''"
+        :name="button.icon"
+        :colored="false"
+        size="medium"
+        :title="button.title"
+        :aria-label="button.title"
+        @click="emit('act', button.action)"
+      />
+    </template>
   </div>
 </template>
 
@@ -127,10 +136,10 @@ const buttons = computed<ActionButton[]>(() => {
   z-index: 40;
   display: flex;
   align-items: center;
-  gap: var(--dimension-2);
-  padding: var(--dimension-3);
+  gap: 3px;
+  padding: var(--dimension-3) 6px;
   background: var(--ux-theme-3);
-  border-radius: var(--border-radius);
+  border-radius: var(--dimension-5);
   box-shadow:
     0 0 0 1px var(--default-border-color),
     0 25px 50px -12px rgb(0 0 0 / 40%);
@@ -146,14 +155,15 @@ const buttons = computed<ActionButton[]>(() => {
 .maps-map-object-action-bar__divider {
   width: 1px;
   height: 14px;
-  background: var(--default-border-color);
+  margin: 0 1px;
+  background: var(--ux-theme-5);
 }
 
-.maps-map-object-action-bar__button {
-  display: flex;
-  align-items: center;
-  padding: var(--dimension-3);
-  border-radius: var(--border-radius-half);
+/* Doubled to outweigh CmkIconButton's own padding reset. */
+.maps-map-object-action-bar__button.maps-map-object-action-bar__button {
+  padding: 7px;
+  border-radius: var(--dimension-4);
+  transition: background-color 0.15s;
 }
 
 .maps-map-object-action-bar__button:hover {

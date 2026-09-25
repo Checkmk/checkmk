@@ -22,6 +22,7 @@ from tests.system.gui.testlib.api_helpers import LOCALHOST_IPV4
 from tests.system.gui.testlib.host_details import HostDetails
 from tests.system.gui.testlib.playwright import plugin as playwright_plugin
 from tests.system.gui.testlib.playwright.helpers import CmkCredentials
+from tests.system.gui.testlib.playwright.navigation import navigate_to_page
 from tests.system.gui.testlib.playwright.plugin import PageGetter
 from tests.system.gui.testlib.playwright.pom.customize.edit_dashboard import EditDashboards
 from tests.system.gui.testlib.playwright.pom.graphing.fixtures import (
@@ -45,11 +46,9 @@ from tests.system.gui.testlib.playwright.pom.graphing.fixtures import (
     fixture_service_graphs_hover_popup,
     fixture_stored_graph_pin,
 )
-from tests.system.gui.testlib.playwright.pom.login import LoginPage
 from tests.system.gui.testlib.playwright.pom.monitor.custom_dashboard import CustomDashboard
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import DashboardMobile, MainDashboard
 from tests.system.gui.testlib.playwright.pom.monitor.hosts_dashboard import LinuxHostsDashboard
-from tests.system.gui.testlib.playwright.pom.page import CmkPage
 from tests.system.gui.testlib.playwright.pom.setup.fixtures import notification_user
 from tests.system.gui.testlib.playwright.pom.setup.hosts import AddHost, SetupHost
 from tests.system.gui.testlib.playwright.pom.setup.licensing import Licensing
@@ -202,25 +201,6 @@ def fixture_dashboard_page_mobile(
 def _licensing_page(cmk_page: Page, test_site: Site, credentials: CmkCredentials) -> Licensing:
     """Entrypoint to test browser GUI. Navigates to 'Licensing page'."""
     return navigate_to_page(cmk_page, test_site.internal_url, credentials, Licensing)
-
-
-def navigate_to_page[TCmkPage: CmkPage](
-    page: Page,
-    url: str,
-    credentials: CmkCredentials,
-    page_type: type[TCmkPage],
-) -> TCmkPage:
-    """Navigate to a page.
-
-    Performs a login to Checkmk site, if necessary.
-    """
-    page.goto(url, wait_until="load")
-
-    if "login.py" in page.url:
-        # Log in to the site if not already logged in.
-        LoginPage(page, site_url=url, navigate_to_page=False).login(credentials)
-
-    return page_type(page, navigate_to_page=True)
 
 
 @pytest.fixture(name="new_browser_context_and_page")

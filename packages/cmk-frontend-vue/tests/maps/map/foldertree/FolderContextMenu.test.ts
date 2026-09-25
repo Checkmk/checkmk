@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { render, screen, waitFor } from '@testing-library/vue'
+import { render, screen, waitFor, within } from '@testing-library/vue'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
@@ -41,15 +41,26 @@ const hostComponent = defineComponent({
 })
 
 describe('FolderContextMenu', () => {
+  it('offers its entries as a menu named after the folder', async () => {
+    render(hostComponent)
+
+    const menu = await screen.findByRole('menu', { name: 'Web servers' })
+    expect(
+      within(menu)
+        .getAllByRole('menuitem')
+        .map((entry) => entry.textContent?.trim())
+    ).toEqual(['Folder actions', 'Open in Checkmk Setup'])
+  })
+
   it('closes on Escape without the operator having to tab into it first', async () => {
     const user = userEvent.setup()
     render(hostComponent)
     // Measured invisibly first, then shown where it opens.
-    expect(await screen.findByRole('button', { name: /Folder actions/ })).toBeInTheDocument()
+    expect(await screen.findByRole('menuitem', { name: /Folder actions/ })).toBeInTheDocument()
 
     await user.keyboard('{Escape}')
 
-    expect(screen.queryByRole('button', { name: /Folder actions/ })).toBeNull()
+    expect(screen.queryByRole('menuitem', { name: /Folder actions/ })).toBeNull()
   })
 })
 
@@ -77,7 +88,7 @@ describe('FolderContextMenu placement', () => {
         canCommand: true
       }
     })
-    const menu = container.querySelector<HTMLElement>('.maps-folder-context-menu')!
+    const menu = container.querySelector<HTMLElement>('.maps-menu')!
     // Measured invisibly first; the placement lands once the menu is in the DOM.
     await waitFor(() => expect(menu.style.visibility).not.toBe('hidden'))
     return menu.style

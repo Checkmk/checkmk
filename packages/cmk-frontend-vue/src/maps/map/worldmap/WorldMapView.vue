@@ -27,9 +27,10 @@ import type { MapEditor } from '@/maps/map/composables/useMapEditor'
 import type { LineEndpoint } from '@/maps/map/worldmap/composables/useWorldmapLines'
 import type { MarkerMove } from '@/maps/map/worldmap/composables/useWorldmapMarkers'
 import { type LatLng, type WorldmapViewport, pointObjects } from '@/maps/map/worldmap/geo'
+import MapsMenu from '@/maps/shared/components/MapsMenu.vue'
+import MapsMenuItem from '@/maps/shared/components/MapsMenuItem.vue'
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
 import type { AnchorRect } from '@/maps/utils/anchorRect'
-import { usePointerOverlayStyle } from '@/maps/utils/overlayFrame'
 
 import WorldMapCanvas from './components/WorldMapCanvas.vue'
 
@@ -70,8 +71,6 @@ const canFit = computed(() => pointObjects(props.config?.objects ?? []).length >
 
 /** Where a right-click on the empty map opened the menu. */
 const canvasMenu = ref<{ x: number; y: number } | null>(null)
-const canvasMenuEl = useTemplateRef('canvasMenuEl')
-const canvasMenuStyle = usePointerOverlayStyle(canvasMenuEl, () => canvasMenu.value)
 
 function saveViewport(): void {
   canvasMenu.value = null
@@ -211,18 +210,19 @@ defineExpose({
         @fit="canvas?.fitAll()"
       />
 
-      <div
+      <MapsMenu
         v-if="canvasMenu"
-        ref="canvasMenuEl"
-        class="maps-world-map-view__menu"
-        :style="canvasMenuStyle"
+        :x="canvasMenu.x"
+        :y="canvasMenu.y"
+        :label="_t('Map')"
         @click.stop
+        @close="canvasMenu = null"
       >
-        <button type="button" class="maps-world-map-view__menu-item" @click="saveViewport">
+        <MapsMenuItem @click="saveViewport">
           <CmkIcon name="checkmark" size="small" />
           <span>{{ _t('Save current view as default') }}</span>
-        </button>
-      </div>
+        </MapsMenuItem>
+      </MapsMenu>
 
       <div v-if="picking" class="maps-world-map-view__picker">
         <span class="maps-world-map-view__picker-text">
@@ -247,39 +247,6 @@ defineExpose({
   flex: 1 1 0%;
   overflow: hidden;
   background: var(--ux-theme-1);
-}
-
-/* Pointer position, so the menu opens where the operator right-clicked. */
-.maps-world-map-view__menu {
-  position: fixed;
-  z-index: 50;
-  width: max-content;
-  min-width: 200px;
-  max-width: calc(100% - 16px);
-  padding: var(--dimension-2);
-  background: var(--maps-map-view-glass);
-  border: 1px solid var(--default-border-color);
-  border-radius: var(--border-radius);
-  box-shadow: var(--maps-map-view-badge-shadow);
-  backdrop-filter: blur(12px);
-}
-
-.maps-world-map-view__menu-item {
-  display: flex;
-  align-items: center;
-  gap: var(--dimension-4);
-  width: 100%;
-  padding: var(--dimension-3) var(--dimension-4);
-  color: var(--font-color);
-  text-align: left;
-  background: transparent;
-  border: 0;
-  border-radius: var(--border-radius);
-  cursor: pointer;
-}
-
-.maps-world-map-view__menu-item:hover {
-  background: var(--ux-theme-3);
 }
 
 .maps-world-map-view__picker {

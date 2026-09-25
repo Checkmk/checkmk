@@ -5,13 +5,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed } from 'vue'
 
+import MapsMenu from '@/maps/shared/components/MapsMenu.vue'
+import MapsMenuItem from '@/maps/shared/components/MapsMenuItem.vue'
 import type { MapElement, ObjectState } from '@/maps/types/api'
 import { objectTypeLabel } from '@/maps/utils/dropdownOptions'
 import { buildCheckmkViewUrl } from '@/maps/utils/mapNavigation'
 import { getEffectiveObjectType, getMapElementName } from '@/maps/utils/naming'
-import { usePointerOverlayStyle } from '@/maps/utils/overlayFrame'
 import { sanitizeTemplateHtml } from '@/maps/utils/sanitize'
 import { interpolateTemplate } from '@/maps/utils/template'
 
@@ -36,46 +37,6 @@ const emit = defineEmits<{
   straighten: []
   detach: []
 }>()
-
-// Menu keyboard support: the invoking element is a canvas object, so focus
-// moves into the menu on open (there is no DOM element to restore it to).
-const menuEl = ref<HTMLElement | null>(null)
-const menuStyle = usePointerOverlayStyle(menuEl, () => ({ x: props.x, y: props.y }))
-
-function menuItems(): HTMLElement[] {
-  return Array.from(menuEl.value?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])
-}
-
-onMounted(async () => {
-  await nextTick()
-  ;(menuItems()[0] ?? menuEl.value)?.focus()
-})
-
-function onMenuKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') {
-    e.preventDefault()
-    emit('close')
-    return
-  }
-  const items = menuItems()
-  if (items.length === 0) {
-    return
-  }
-  const idx = items.indexOf(document.activeElement as HTMLElement)
-  if (e.key === 'ArrowDown') {
-    e.preventDefault()
-    items[(idx + 1) % items.length]?.focus()
-  } else if (e.key === 'ArrowUp') {
-    e.preventDefault()
-    items[(idx - 1 + items.length) % items.length]?.focus()
-  } else if (e.key === 'Home') {
-    e.preventDefault()
-    items[0]?.focus()
-  } else if (e.key === 'End') {
-    e.preventDefault()
-    items[items.length - 1]?.focus()
-  }
-}
 
 // A bent line can be straightened back to a direct two-point line.
 const lineHasBend = computed(
@@ -198,35 +159,18 @@ const hostServicesUrl = computed(() => {
 </script>
 
 <template>
-  <div
-    ref="menuEl"
-    class="maps-context-menu"
-    role="menu"
-    :aria-label="displayName"
-    tabindex="-1"
-    :style="menuStyle"
-    @keydown="onMenuKeydown"
+  <MapsMenu
+    :x="x"
+    :y="y"
+    :label="displayName"
+    :heading="displayName"
+    :subheading="objectTypeLabel(getEffectiveObjectType(object), _t)"
+    @close="emit('close')"
   >
-    <div class="maps-context-menu__header">
-      <p class="maps-context-menu__name">
-        {{ displayName }}
-      </p>
-      <p class="maps-context-menu__type">
-        {{ objectTypeLabel(getEffectiveObjectType(object), _t) }}
-      </p>
-    </div>
-
     <!-- eslint-disable-next-line vue/no-v-html -- content is sanitized via sanitizeTemplateHtml -->
     <div v-if="renderedTemplate" class="maps-context-menu__template" v-html="renderedTemplate" />
 
-    <a
-      v-if="hostUrl"
-      :href="hostUrl"
-      target="_blank"
-      rel="noopener noreferrer"
-      role="menuitem"
-      class="maps-context-menu__item"
-    >
+    <MapsMenuItem v-if="hostUrl" :href="hostUrl">
       <svg
         class="maps-context-menu__icon"
         fill="none"
@@ -241,15 +185,8 @@ const hostServicesUrl = computed(() => {
         />
       </svg>
       <span>{{ _t('Host in Checkmk') }}</span>
-    </a>
-    <a
-      v-if="hostServicesUrl"
-      :href="hostServicesUrl"
-      target="_blank"
-      rel="noopener noreferrer"
-      role="menuitem"
-      class="maps-context-menu__item"
-    >
+    </MapsMenuItem>
+    <MapsMenuItem v-if="hostServicesUrl" :href="hostServicesUrl">
       <svg
         class="maps-context-menu__icon"
         fill="none"
@@ -264,15 +201,8 @@ const hostServicesUrl = computed(() => {
         />
       </svg>
       <span>{{ _t('Problem services') }}</span>
-    </a>
-    <a
-      v-if="serviceUrl"
-      :href="serviceUrl"
-      target="_blank"
-      rel="noopener noreferrer"
-      role="menuitem"
-      class="maps-context-menu__item"
-    >
+    </MapsMenuItem>
+    <MapsMenuItem v-if="serviceUrl" :href="serviceUrl">
       <svg
         class="maps-context-menu__icon"
         fill="none"
@@ -287,15 +217,8 @@ const hostServicesUrl = computed(() => {
         />
       </svg>
       <span>{{ _t('Service in Checkmk') }}</span>
-    </a>
-    <a
-      v-if="groupUrl"
-      :href="groupUrl"
-      target="_blank"
-      rel="noopener noreferrer"
-      role="menuitem"
-      class="maps-context-menu__item"
-    >
+    </MapsMenuItem>
+    <MapsMenuItem v-if="groupUrl" :href="groupUrl">
       <svg
         class="maps-context-menu__icon"
         fill="none"
@@ -310,15 +233,8 @@ const hostServicesUrl = computed(() => {
         />
       </svg>
       <span>{{ _t('Group in Checkmk') }}</span>
-    </a>
-    <a
-      v-if="aggregationUrl"
-      :href="aggregationUrl"
-      target="_blank"
-      rel="noopener noreferrer"
-      role="menuitem"
-      class="maps-context-menu__item"
-    >
+    </MapsMenuItem>
+    <MapsMenuItem v-if="aggregationUrl" :href="aggregationUrl">
       <svg
         class="maps-context-menu__icon"
         fill="none"
@@ -333,15 +249,8 @@ const hostServicesUrl = computed(() => {
         />
       </svg>
       <span>{{ _t('Aggregation tree in Checkmk') }}</span>
-    </a>
-    <a
-      v-if="aggregationOverviewUrl"
-      :href="aggregationOverviewUrl"
-      target="_blank"
-      rel="noopener noreferrer"
-      role="menuitem"
-      class="maps-context-menu__item"
-    >
+    </MapsMenuItem>
+    <MapsMenuItem v-if="aggregationOverviewUrl" :href="aggregationOverviewUrl">
       <svg
         class="maps-context-menu__icon"
         fill="none"
@@ -356,7 +265,7 @@ const hostServicesUrl = computed(() => {
         />
       </svg>
       <span>{{ _t('All aggregations in Checkmk') }}</span>
-    </a>
+    </MapsMenuItem>
 
     <div
       v-if="
@@ -372,13 +281,8 @@ const hostServicesUrl = computed(() => {
              for the same operation. In view mode right-click is navigation only;
              edit/duplicate/delete are gated on edit mode via showEdit. -->
 
-    <div class="maps-context-menu__footer" role="none">
-      <button
-        v-if="lineHasBinding"
-        role="menuitem"
-        class="maps-context-menu__item"
-        @click="$emit('detach')"
-      >
+    <div v-if="lineHasBinding || showEdit" class="maps-context-menu__footer" role="none">
+      <MapsMenuItem v-if="lineHasBinding" @click="$emit('detach')">
         <svg
           class="maps-context-menu__icon"
           fill="none"
@@ -393,13 +297,8 @@ const hostServicesUrl = computed(() => {
           />
         </svg>
         {{ _t('Detach from object') }}
-      </button>
-      <button
-        v-if="showEdit && lineHasBend"
-        role="menuitem"
-        class="maps-context-menu__item"
-        @click="$emit('straighten')"
-      >
+      </MapsMenuItem>
+      <MapsMenuItem v-if="showEdit && lineHasBend" @click="$emit('straighten')">
         <svg
           class="maps-context-menu__icon"
           fill="none"
@@ -410,13 +309,8 @@ const hostServicesUrl = computed(() => {
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 18L20 6" />
         </svg>
         {{ _t('Remove bend') }}
-      </button>
-      <button
-        v-if="showEdit"
-        role="menuitem"
-        class="maps-context-menu__item"
-        @click="$emit('edit')"
-      >
+      </MapsMenuItem>
+      <MapsMenuItem v-if="showEdit" @click="$emit('edit')">
         <svg
           class="maps-context-menu__icon"
           fill="none"
@@ -431,13 +325,8 @@ const hostServicesUrl = computed(() => {
           />
         </svg>
         {{ _t('Edit properties') }}
-      </button>
-      <button
-        v-if="showEdit"
-        role="menuitem"
-        class="maps-context-menu__item"
-        @click="$emit('duplicate')"
-      >
+      </MapsMenuItem>
+      <MapsMenuItem v-if="showEdit" @click="$emit('duplicate')">
         <svg
           class="maps-context-menu__icon"
           fill="none"
@@ -452,13 +341,8 @@ const hostServicesUrl = computed(() => {
           />
         </svg>
         {{ _t('Duplicate') }}
-      </button>
-      <button
-        v-if="showEdit"
-        role="menuitem"
-        class="maps-context-menu__item maps-context-menu__item--danger"
-        @click="$emit('delete')"
-      >
+      </MapsMenuItem>
+      <MapsMenuItem v-if="showEdit" danger @click="$emit('delete')">
         <svg
           class="maps-context-menu__icon"
           fill="none"
@@ -473,50 +357,12 @@ const hostServicesUrl = computed(() => {
           />
         </svg>
         {{ _t('Delete') }}
-      </button>
+      </MapsMenuItem>
     </div>
-  </div>
+  </MapsMenu>
 </template>
 
 <style scoped>
-.maps-context-menu {
-  position: fixed;
-  z-index: 50;
-  width: max-content;
-  min-width: 192px;
-  max-width: calc(100% - 16px);
-  padding: 6px 0;
-  background: var(--maps-map-view-glass);
-  backdrop-filter: blur(12px);
-  border-radius: 12px;
-  box-shadow:
-    0 0 0 1px var(--default-border-color),
-    0 25px 50px -12px rgb(0 0 0 / 60%);
-}
-
-.maps-context-menu__header {
-  margin-bottom: var(--dimension-3);
-  padding: var(--dimension-4) 14px;
-  border-bottom: 1px solid var(--default-border-color);
-}
-
-.maps-context-menu__name {
-  overflow: hidden;
-  max-width: 208px;
-  font-size: var(--font-size-normal);
-  line-height: 16px;
-  font-weight: var(--font-weight-bold);
-  color: var(--font-color);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.maps-context-menu__type {
-  margin-top: var(--dimension-2);
-  font-size: var(--font-size-small);
-  color: var(--font-color-dimmed);
-}
-
 .maps-context-menu__template {
   /* See HoverMenu: paint containment is what keeps a template inside its card. */
   contain: paint;
@@ -526,41 +372,6 @@ const hostServicesUrl = computed(() => {
   line-height: 16px;
   color: var(--font-color);
   border-bottom: 1px solid var(--default-border-color);
-}
-
-.maps-context-menu__item {
-  display: flex;
-  align-items: center;
-  gap: var(--dimension-4);
-  width: 100%;
-  padding: var(--dimension-4) 14px;
-  font-size: var(--font-size-large);
-  line-height: 20px;
-  color: var(--font-color-dimmed);
-  text-align: left;
-  transition:
-    color 0.15s,
-    background-color 0.15s;
-}
-
-.maps-context-menu__item:hover {
-  color: var(--font-color);
-  background: var(--input-hover-bg-color);
-}
-
-.maps-context-menu:focus-visible,
-.maps-context-menu__item:focus-visible {
-  outline: 2px solid var(--color-corporate-green-50);
-  outline-offset: 2px;
-}
-
-.maps-context-menu__item--danger {
-  color: var(--color-light-red-40);
-}
-
-.maps-context-menu__item--danger:hover {
-  color: var(--color-light-red-40);
-  background: color-mix(in srgb, var(--color-light-red-50) 8%, transparent);
 }
 
 .maps-context-menu__icon {

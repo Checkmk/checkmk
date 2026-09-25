@@ -57,7 +57,7 @@ def discover_oracle_jobs(section: StringTable) -> DiscoveryResult:
     for line in section:
         if len(line) <= 2:
             continue
-        if oracle_handle_ora_errors(line) is not None:
+        if len(line) == 3 and line[1] == "FAILURE":
             continue
         # old format < RDBMS 12.1
         if 3 <= len(line) <= 10:
@@ -85,11 +85,9 @@ def check_oracle_jobs(item: str, params: Mapping[str, Any], section: StringTable
             # Skip invalid lines from Agent
             continue
 
-        error = oracle_handle_ora_errors(line)
-        if error is False:
-            continue
-        if isinstance(error, Result):
-            if line[0] == item_sid:
+        if line[0] == item_sid and len(line) == 3 and line[1] == "FAILURE":
+            error = oracle_handle_ora_errors(line)
+            if isinstance(error, Result):
                 yield error
                 return
             continue

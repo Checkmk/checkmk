@@ -175,7 +175,6 @@ sh_library(
         "storeonce/libexec/agent_storeonce",
         "storeonce/libexec/agent_storeonce4x",
         "tinkerforge/libexec/agent_tinkerforge",
-        "traceroute/libexec/check_traceroute",
         "uniserv/libexec/check_uniserv",
         "vnx_quotas/libexec/agent_vnx_quotas",
         "zerto/libexec/agent_zerto",

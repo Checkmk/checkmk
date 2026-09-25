@@ -629,7 +629,7 @@ def load(
     with_conf_d: bool = True,
     validate_hosts: bool = True,
 ) -> LoadingResult:
-    raw_config = _load_config(get_default_config(), StorageFormat.PICKLE, with_conf_d=with_conf_d)
+    raw_config = load_raw_config(with_conf_d=with_conf_d)
 
     loading_result = perform_post_config_loading_actions(
         raw_config,
@@ -781,12 +781,11 @@ def _load_config_file(file_to_load: Path, into_dict: dict[str, object]) -> None:
     exec(compile(file_to_load.read_text(), file_to_load, "exec"), into_dict, into_dict)  # nosec B102 # BNS:aee528
 
 
-def _load_config(
-    target_context: dict[str, object],
-    storage_format: StorageFormat,
+def load_raw_config(
     *,
     with_conf_d: bool,
-) -> dict[str, object]:
+) -> Mapping[str, object]:
+    target_context = get_default_config()
     helper_vars = {
         "FOLDER_PATH": None,
     }
@@ -803,7 +802,7 @@ def _load_config(
 
     target_context |= helper_vars
 
-    host_storage_loaders = get_host_storage_loaders(storage_format)
+    host_storage_loaders = get_host_storage_loaders(StorageFormat.PICKLE)
     for path in get_config_file_paths(with_conf_d):
         try:
             # Make the config path available as a global variable to be used

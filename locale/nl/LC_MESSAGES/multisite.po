@@ -1771,10 +1771,11 @@ msgstr ""
 
 #, python-format
 msgid ""
-"<b>This feature will be deprecated in a future version of Checkmk.</"
-"b><br>Please do not configure management boards in here anymore. Monitor the "
-"management boards via a dedicated host using <a href='%(ipmi_url)s'>IPMI</a> "
-"or SNMP.<br><a href='%(read_more_url)s' target='_blank'>Read more about "
+"<b>This feature is deprecated and will be removed in the version 3.1 of "
+"Checkmk.</b><br><br>You can no longer add management boards here. Existing "
+"settings can still be changed or removed.<br>Monitor the management boards "
+"via a dedicated host using <a href='%(ipmi_url)s'>IPMI</a> or SNMP instead."
+"<br><br><a href='%(read_more_url)s' target='_blank'>Read more about "
 "management boards.</a>"
 msgstr ""
 
@@ -2461,7 +2462,7 @@ msgstr "Een regelpakket met deze ID bestaat al."
 
 msgid ""
 "A Secret in the deployment namespace containing tls.crt and tls.key. Its "
-"certificate must cover the hostname used by Checkmk. Without this, the pull "
+"certificate must cover the host name used by Checkmk. Without this, the pull "
 "endpoint serves HTTP: use a trusted network or external TLS termination."
 msgstr ""
 
@@ -7763,6 +7764,16 @@ msgid "Any"
 msgstr "elke"
 
 msgid ""
+"Any application using the selected tokens will no longer be able to access "
+"the API with them."
+msgstr ""
+
+msgid ""
+"Any application using this token will no longer be able to access the API "
+"with it."
+msgstr ""
+
+msgid ""
 "Any certificate should expire at some point. Usual values are within 90 and "
 "365 days."
 msgstr ""
@@ -11573,6 +11584,12 @@ msgstr ""
 "Door deze regel voor een host te configureren - in plaats van de normale "
 "Check_MK agent zullen willekeurige monitoringgegevens worden aangemaakt."
 
+msgid ""
+"By default the server's TLS certificate is validated against the Checkmk "
+"host name. Enable this to connect without verifying the certificate, for "
+"example when the backup server presents a self-signed certificate."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "By default, Checkmk does not import annotations. If this option is enabled, "
@@ -13644,10 +13661,6 @@ msgid "Changed %(key)s from %(old_value)s to %(new_value)s"
 msgstr "Veranderd %(key)s van %(old_value)s naar %(new_value)s"
 
 #, fuzzy
-msgid "Changed Checkmk Maps settings"
-msgstr "Globale instelling wijzigen"
-
-#, fuzzy
 msgid "Changed DCD global settings"
 msgstr "Globale instelling wijzigen"
 
@@ -14828,11 +14841,6 @@ msgstr ""
 #, fuzzy
 msgid "Choose condition"
 msgstr "Geen voorwaarden"
-
-msgid ""
-"Choose how the Kubernetes agent connects to Checkmk, then generate the "
-"deployment files."
-msgstr ""
 
 #, fuzzy
 msgid "Choose if this rule applies to plug-ins or local checks"
@@ -16936,11 +16944,6 @@ msgstr "Geconfigureerde eigenschap mismatch"
 msgid "Configured time period parameters"
 msgstr "Geconfigureerde tijdsparameters"
 
-msgid ""
-"Configures Checkmk Maps: monitoring connections, the backend daemon and the "
-"defaults for new maps and map objects"
-msgstr ""
-
 #, fuzzy
 msgid "Configures Event Console logging and diagnostic settings"
 msgstr "Gebeurtenis Console: Logging & diagnose"
@@ -17025,10 +17028,17 @@ msgstr ""
 msgid "Configures the connection to ntopng for network flow data"
 msgstr ""
 
+msgid "Configures the defaults for new maps and map objects"
+msgstr ""
+
 msgid ""
 "Configures the dynamic configuration daemon: logging, update intervals and "
 "activation limits"
 msgstr ""
+
+#, fuzzy
+msgid "Configures the monitoring connections and the Maps backend daemon"
+msgstr "Niet waarschuwen bij verlies van verbinding"
 
 msgid ""
 "Configures the number of available filters in the network topology view."
@@ -17357,10 +17367,6 @@ msgstr "Type aansluiting"
 
 msgid "Connections"
 msgstr "Verbindingen"
-
-#, fuzzy
-msgid "Connections & daemon"
-msgstr "Verbindingen per seconde"
 
 #, fuzzy
 msgid "Connections (Azure, Redis)"
@@ -21941,6 +21947,10 @@ msgid "Deploy the Kubernetes agent"
 msgstr "Implementeer de netstat plugin"
 
 #, fuzzy
+msgid "Deploy the Kubernetes agent to your cluster"
+msgstr "Implementeer de netstat plugin"
+
+#, fuzzy
 msgid "Deploy the MegaRAID plug-in"
 msgstr "Inzet MegaRAID plugin"
 
@@ -24097,9 +24107,11 @@ msgstr "De handtekeningsleutel van de agent downloaden"
 msgid "Download backup key"
 msgstr "Back-up sleutel downloaden"
 
+#, python-format
 msgid ""
-"Download both files below and save them in the same directory. "
-"Alternatively, use them with your existing deployment workflow."
+"Download both files below (%(first)s and %(second)s) and save them in the "
+"same directory. Alternatively, use them with your existing deployment "
+"workflow."
 msgstr ""
 
 #, fuzzy
@@ -26203,16 +26215,16 @@ msgstr ""
 "veld is hoofdletterongevoelig"
 
 msgid ""
+"Enter the host name or IP address reachable from the cluster, without a "
+"scheme or port."
+msgstr ""
+
+msgid ""
 "Enter the host names of the cluster nodes. These hosts must be present in "
 "Setup."
 msgstr ""
 "Voer de hostnamen van de clusterknooppunten in. Deze hosts moeten aanwezig "
 "zijn in Setup."
-
-msgid ""
-"Enter the hostname or IP address reachable from the cluster, without a "
-"scheme or port."
-msgstr ""
 
 #, fuzzy
 msgid ""
@@ -28770,6 +28782,10 @@ msgstr "Geldige annotaties filteren op sleutelpatroon"
 msgid "Filter view"
 msgstr "Filter bekijken"
 
+#, fuzzy
+msgid "Filter which namespaces to monitor"
+msgstr "Instanties om te controleren"
+
 msgid "Filtering and computation options"
 msgstr "Filter- en berekeningsopties"
 
@@ -29211,6 +29227,12 @@ msgstr ""
 
 msgid "For NFS enter the name of the mount point."
 msgstr "Voor NFS voert u de naam van het koppelpunt in."
+
+msgid ""
+"For a new setup, use the cluster name. When migrating, record the old source "
+"host name and delete that host before running this setup, then enter it as "
+"an explicit host name to retain monitoring history."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -44238,6 +44260,10 @@ msgid "Main folder"
 msgstr "Hoofdmap"
 
 #, fuzzy
+msgid "Main instance"
+msgstr "actieve instanties"
+
+#, fuzzy
 msgid "Main memory usage (Unix / other devices)"
 msgstr "Hoofdgeheugengebruik (UNIX / andere apparaten)"
 
@@ -44666,10 +44692,6 @@ msgstr ""
 msgid "Map"
 msgstr "Mei"
 
-#, fuzzy
-msgid "Map & object defaults"
-msgstr "Staat als geen enkele invoer overeenkomt"
-
 msgid "Map Database States"
 msgstr "Kaart Database Staten"
 
@@ -44890,6 +44912,18 @@ msgid ""
 "light canvas and is auto-selected when importing a legacy NagVis .cfg map "
 "for a 1:1 result."
 msgstr ""
+
+#, fuzzy
+msgid "Maps settings"
+msgstr "Globale instellingen"
+
+#, fuzzy
+msgid "Maps: Connections & daemon"
+msgstr "Maximale verbindingen per seconde"
+
+#, fuzzy
+msgid "Maps: Map and object defaults"
+msgstr "Staat als geen enkele invoer overeenkomt"
 
 msgid "March"
 msgstr "Maart"
@@ -48521,10 +48555,6 @@ msgstr "Namespace problemen"
 
 msgid "Namespaces"
 msgstr "Namespaces"
-
-#, fuzzy
-msgid "Namespaces to monitor"
-msgstr "Instanties om te controleren"
 
 #, fuzzy
 msgid "Naming for outlets at discovery"
@@ -54267,7 +54297,7 @@ msgstr "Overschrijven controle status gebaseerd op laatste build resultaat"
 msgid "Override managed plan settings"
 msgstr "Overbruggingseenheid van sensor"
 
-msgid "Override push receiver hostname"
+msgid "Override push receiver host name"
 msgstr ""
 
 msgid "Override unit of sensor"
@@ -58355,8 +58385,9 @@ msgstr "Gepubliceerde berichten"
 msgid "Publisher"
 msgstr "Uitgever"
 
-msgid "Pull"
-msgstr ""
+#, fuzzy
+msgid "Pull mode"
+msgstr "Pushover"
 
 #, fuzzy
 msgid "Pull mode base URL"
@@ -58391,10 +58422,6 @@ msgstr "Azure Opslag"
 
 msgid "Purpose"
 msgstr ""
-
-#, fuzzy
-msgid "Push"
-msgstr "Pushover"
 
 msgid "Push configuration to this site"
 msgstr "Push configuratie naar deze site"
@@ -63215,6 +63242,9 @@ msgstr "Maak een kopie van deze aggregatie"
 msgid "Save response"
 msgstr "Reactie opslaan"
 
+msgid "Save the files and run the commands above, then continue."
+msgstr ""
+
 msgid "Save this host and go to"
 msgstr "Sla deze host op en ga naar"
 
@@ -67260,6 +67290,10 @@ msgstr "Omvang en gebruikte ruimte"
 #, fuzzy
 msgid "Skip SSL certificate verification"
 msgstr "SSL-certificaat verificatie"
+
+#, fuzzy
+msgid "Skip TLS certificate validation"
+msgstr "SSL-certificaat validatie"
 
 #, fuzzy
 msgid "Skip TLS certificate verification"
@@ -74961,11 +74995,6 @@ msgid ""
 "$DATA_POINT_ATTR.pod$, so the host name can be computed from the data."
 msgstr ""
 
-msgid ""
-"The host name the server certificate is validated against. If omitted, the "
-"Checkmk host name is used."
-msgstr ""
-
 msgid "The host or service was in a scheduled downtime"
 msgstr "De host of dienst bevond zich in een geplande downtime"
 
@@ -76221,6 +76250,11 @@ msgstr "De parameter \"%(varname)s\" is geen geheel getal."
 #, fuzzy
 msgid "The parameter \"topology_type\" is missing."
 msgstr "De parameter \"%s\" ontbreekt."
+
+msgid ""
+"The parameters of the JMX instance to monitor. They also serve as the "
+"defaults for the additional instances configured below."
+msgstr ""
 
 msgid "The parameters this diagnostics dump was created with"
 msgstr ""
@@ -91343,10 +91377,6 @@ msgstr "Berichten van gebruikers"
 msgid "User messages"
 msgstr "Berichten van gebruikers"
 
-#, fuzzy
-msgid "User name"
-msgstr "Naam gebruiker"
-
 msgid "User notification"
 msgstr "Kennisgeving gebruiker"
 
@@ -93865,15 +93895,6 @@ msgstr ""
 "op te slaan met deze bestandsnaam. De extensie moet altijd <tt>pdf</tt> zijn."
 
 msgid ""
-"When disabled, all namespaces are monitored. Filters apply to namespaced "
-"resources; cluster and node hosts and their rollups are unaffected."
-msgstr ""
-
-#, fuzzy
-msgid "When disabled, no annotations are imported as host labels."
-msgstr "Gebruik poortnaam als dienstnaam"
-
-msgid ""
 "When disabled, the plug-in is deployed without its configuration file. The "
 "file <tt>/etc/check_mk/filestats.cfg</tt> must then be created and "
 "maintained manually."
@@ -94082,11 +94103,6 @@ msgstr ""
 "Bij het opsommen van de groepsleden in de uitvoer van de dienst die de groep "
 "bewaakt, zorgt deze optie ervoor dat checkmk ofwel de interfacebeschrijving, "
 "de alias of het poortnummer gebruikt."
-
-msgid ""
-"When migrating, record the old source host name and delete that host before "
-"running this setup. Reuse its name to retain monitoring history."
-msgstr ""
 
 msgid ""
 "When monitoring the performance of a monitoring site (i.e. its core) then "
@@ -94681,6 +94697,15 @@ msgstr ""
 "verschijnen met alle overeenkomende hostnamen die die tekst bevatten. Die "
 "lijst is beperkt in grootte, zodat de dropdown niet te groot wordt als je "
 "een enorm aantal lijsten hebt. "
+
+msgid ""
+"When unchecked, all namespaces are monitored. Filters apply to namespaced "
+"resources; cluster and node hosts and their rollups are unaffected."
+msgstr ""
+
+#, fuzzy
+msgid "When unchecked, no annotations are imported as host labels."
+msgstr "Gebruik poortnaam als dienstnaam"
 
 msgid ""
 "When using the regular HTTP protocol all data transfered between the Checkmk "
@@ -103062,6 +103087,9 @@ msgstr "Repliceer Event Console configuratie naar deze site"
 msgid "Reset to factory default"
 msgstr "Terugzetten naar standaard"
 
+msgid "Could not save this setting, the errors are shown in the form."
+msgstr ""
+
 msgid ""
 "This setting uses an explicit value and overrides the factory and Global "
 "settings value."
@@ -104312,8 +104340,22 @@ msgid "Contact your administrator to have a map created."
 msgstr "Neem contact op met uw beheerder."
 
 #, fuzzy
-msgid "Maps administration"
-msgstr "Host administratie"
+msgid "More actions"
+msgstr "Montagemogelijkheden"
+
+#, fuzzy
+msgid "Import map…"
+msgstr "Importeren"
+
+#, fuzzy
+msgid "%{n} map"
+msgid_plural "%{n} maps"
+msgstr[0] "%d dagen"
+msgstr[1] "%d dagen"
+
+#, fuzzy
+msgid "Map list drawing"
+msgstr "Globale instellingen"
 
 #, fuzzy
 msgid "Select all visible maps"
@@ -104327,22 +104369,12 @@ msgid "Contents come from the live query"
 msgstr ""
 
 #, fuzzy
-msgid "%{n} map"
-msgid_plural "%{n} maps"
-msgstr[0] "%d dagen"
-msgstr[1] "%d dagen"
-
-#, fuzzy
-msgid "Show maps"
-msgstr "Toon %s"
-
-#, fuzzy
 msgid "Search maps…"
 msgstr "Zoek hosts"
 
 #, fuzzy
-msgid "Map list drawing"
-msgstr "Globale instellingen"
+msgid "Show maps"
+msgstr "Toon %s"
 
 #, fuzzy
 msgid "Clone map \"%{name}\""
@@ -105102,10 +105134,6 @@ msgstr "Uitbreiden"
 
 msgid "Show child nodes up to N levels (0 = root only)."
 msgstr ""
-
-#, fuzzy
-msgid "Hostname"
-msgstr "Host naam"
 
 #, fuzzy
 msgid "Select a host"
@@ -107135,6 +107163,25 @@ msgstr "Agent registratie gebruiker"
 msgid "and paste it into the terminal to continue the registration."
 msgstr ""
 
+msgid ""
+"Troubleshooting registration issues: Check whether the registration was "
+"successful"
+msgstr ""
+
+#, fuzzy
+msgid "To check if registration was successful, run"
+msgstr "Registratie succesvol"
+
+msgid "and look for the existence of a secret named"
+msgstr ""
+
+#, fuzzy
+msgid "If this secret does not exist, use"
+msgstr "Deze gebruiker bestaat niet."
+
+msgid "on the cluster-aggregator pod to check for any errors."
+msgstr ""
+
 #, fuzzy
 msgid "Save host"
 msgstr "Stale gastheren"
@@ -108632,10 +108679,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "More actions"
-msgstr "Montagemogelijkheden"
-
-#, fuzzy
 msgid "Could not load actions."
 msgstr "U kunt deze verbinding niet verwijderen."
 
@@ -108841,22 +108884,6 @@ msgstr "Algemene fout"
 #, fuzzy
 msgid "Total rows: %{total}"
 msgstr "Totale omvang"
-
-#, fuzzy
-msgid "%{count} sec"
-msgstr "Niet geselecteerd"
-
-#, fuzzy
-msgid "%{count} min"
-msgstr "tellen"
-
-#, fuzzy
-msgid "%{count} h"
-msgstr "tel"
-
-#, fuzzy
-msgid "%{count} d"
-msgstr "tel"
 
 msgid "%{share} of shown"
 msgstr ""
@@ -110608,16 +110635,52 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Changed Checkmk Maps settings"
+#~ msgstr "Globale instelling wijzigen"
+
+#, fuzzy
+#~ msgid "Connections & daemon"
+#~ msgstr "Verbindingen per seconde"
+
+#, fuzzy
+#~ msgid "Push"
+#~ msgstr "Pushover"
+
+#, fuzzy
+#~ msgid "User name"
+#~ msgstr "Naam gebruiker"
+
+#, fuzzy
+#~ msgid "Maps administration"
+#~ msgstr "Host administratie"
+
+#, fuzzy
+#~ msgid "Hostname"
+#~ msgstr "Host naam"
+
+#, fuzzy
+#~ msgid "%{count} sec"
+#~ msgstr "Niet geselecteerd"
+
+#, fuzzy
+#~ msgid "%{count} min"
+#~ msgstr "tellen"
+
+#, fuzzy
+#~ msgid "%{count} h"
+#~ msgstr "tel"
+
+#, fuzzy
+#~ msgid "%{count} d"
+#~ msgstr "tel"
+
+#, fuzzy
 #~ msgid "A comment is required."
 #~ msgstr "als macro met de naam"
 
 #, fuzzy
 #~ msgid "Invalid host name."
 #~ msgstr "Ongeldige hostnaam"
-
-#, fuzzy
-#~ msgid "Maps: connections & daemon"
-#~ msgstr "Maximale verbindingen per seconde"
 
 #, fuzzy
 #~ msgid "No form values were sent."

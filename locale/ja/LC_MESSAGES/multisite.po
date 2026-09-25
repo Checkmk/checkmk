@@ -1731,12 +1731,13 @@ msgstr ""
 "<b>注意</b>: <i>htpasswd</i> コネクタに移行した場合、ユーザーは次回ログイン時"
 "にパスワードを変更する必要があります。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"<b>This feature will be deprecated in a future version of Checkmk.</"
-"b><br>Please do not configure management boards in here anymore. Monitor the "
-"management boards via a dedicated host using <a href='%(ipmi_url)s'>IPMI</a> "
-"or SNMP.<br><a href='%(read_more_url)s' target='_blank'>Read more about "
+"<b>This feature is deprecated and will be removed in the version 3.1 of "
+"Checkmk.</b><br><br>You can no longer add management boards here. Existing "
+"settings can still be changed or removed.<br>Monitor the management boards "
+"via a dedicated host using <a href='%(ipmi_url)s'>IPMI</a> or SNMP instead."
+"<br><br><a href='%(read_more_url)s' target='_blank'>Read more about "
 "management boards.</a>"
 msgstr ""
 "<b>この機能は、将来のCheckmkのバージョンで非推奨となります。</b><br>もうここ"
@@ -2424,7 +2425,7 @@ msgstr "エイリアス「%(new_alias)s」を持つリレーはすでに存在�
 
 msgid ""
 "A Secret in the deployment namespace containing tls.crt and tls.key. Its "
-"certificate must cover the hostname used by Checkmk. Without this, the pull "
+"certificate must cover the host name used by Checkmk. Without this, the pull "
 "endpoint serves HTTP: use a trusted network or external TLS termination."
 msgstr ""
 
@@ -7290,6 +7291,16 @@ msgid "Any"
 msgstr "どれか"
 
 msgid ""
+"Any application using the selected tokens will no longer be able to access "
+"the API with them."
+msgstr ""
+
+msgid ""
+"Any application using this token will no longer be able to access the API "
+"with it."
+msgstr ""
+
+msgid ""
 "Any certificate should expire at some point. Usual values are within 90 and "
 "365 days."
 msgstr ""
@@ -10609,6 +10620,12 @@ msgstr ""
 "このルールをホストに対して設定すると、通常のCheck_MKエージェントの代わりに、"
 "ランダムな監視データが作成されます。"
 
+msgid ""
+"By default the server's TLS certificate is validated against the Checkmk "
+"host name. Enable this to connect without verifying the certificate, for "
+"example when the backup server presents a self-signed certificate."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "By default, Checkmk does not import annotations. If this option is enabled, "
@@ -12598,10 +12615,6 @@ msgstr "%(connection_type)s接続 を変更しました%(connection_id)s"
 msgid "Changed %(key)s from %(old_value)s to %(new_value)s"
 msgstr "%(key)s を%(old_value)sから%(new_value)sに変更"
 
-#, fuzzy
-msgid "Changed Checkmk Maps settings"
-msgstr "DCDグローバル設定の変更"
-
 msgid "Changed DCD global settings"
 msgstr "DCDグローバル設定の変更"
 
@@ -13658,11 +13671,6 @@ msgstr ""
 
 msgid "Choose condition"
 msgstr "条件選択"
-
-msgid ""
-"Choose how the Kubernetes agent connects to Checkmk, then generate the "
-"deployment files."
-msgstr ""
 
 msgid "Choose if this rule applies to plug-ins or local checks"
 msgstr ""
@@ -15614,11 +15622,6 @@ msgstr "構成された機能の不一致"
 msgid "Configured time period parameters"
 msgstr "構成された期間パラメーター"
 
-msgid ""
-"Configures Checkmk Maps: monitoring connections, the backend daemon and the "
-"defaults for new maps and map objects"
-msgstr ""
-
 #, fuzzy
 msgid "Configures Event Console logging and diagnostic settings"
 msgstr "イベントコンソール:ログと診断"
@@ -15703,10 +15706,17 @@ msgstr ""
 msgid "Configures the connection to ntopng for network flow data"
 msgstr ""
 
+msgid "Configures the defaults for new maps and map objects"
+msgstr ""
+
 msgid ""
 "Configures the dynamic configuration daemon: logging, update intervals and "
 "activation limits"
 msgstr ""
+
+#, fuzzy
+msgid "Configures the monitoring connections and the Maps backend daemon"
+msgstr "接続切断自のアラート設定"
 
 msgid ""
 "Configures the number of available filters in the network topology view."
@@ -16014,10 +16024,6 @@ msgstr "接続タイプ"
 
 msgid "Connections"
 msgstr "接続"
-
-#, fuzzy
-msgid "Connections & daemon"
-msgstr "1秒あたりの接続数"
 
 msgid "Connections (Azure, Redis)"
 msgstr "接続(Azure, Redis)"
@@ -20324,6 +20330,10 @@ msgstr "Jolokiaプラグインをデプロイする"
 msgid "Deploy the Kubernetes agent"
 msgstr "netstatプラグインをデプロイする"
 
+#, fuzzy
+msgid "Deploy the Kubernetes agent to your cluster"
+msgstr "netstatプラグインをデプロイする"
+
 msgid "Deploy the MegaRAID plug-in"
 msgstr "MegaRAIDプラグインをデプロイする"
 
@@ -22295,9 +22305,11 @@ msgstr "エージェントの署名キーをダウンロードする"
 msgid "Download backup key"
 msgstr "バックアップキーをダウンロードする"
 
+#, python-format
 msgid ""
-"Download both files below and save them in the same directory. "
-"Alternatively, use them with your existing deployment workflow."
+"Download both files below (%(first)s and %(second)s) and save them in the "
+"same directory. Alternatively, use them with your existing deployment "
+"workflow."
 msgstr ""
 
 msgid "Download file name"
@@ -24341,16 +24353,16 @@ msgstr ""
 "大文字小文字を区別しません。"
 
 msgid ""
+"Enter the host name or IP address reachable from the cluster, without a "
+"scheme or port."
+msgstr ""
+
+msgid ""
 "Enter the host names of the cluster nodes. These hosts must be present in "
 "Setup."
 msgstr ""
 "クラスタノードのホスト名を入力します。これらのホストはセットアップに存在する"
 "必要があります。"
-
-msgid ""
-"Enter the hostname or IP address reachable from the cluster, without a "
-"scheme or port."
-msgstr ""
 
 msgid ""
 "Enter the name of the sensor. In single mode, this can be read off from the "
@@ -26765,6 +26777,10 @@ msgstr "キーパターンによる有効なタグのフィルタリング"
 msgid "Filter view"
 msgstr "フィルタビュー"
 
+#, fuzzy
+msgid "Filter which namespaces to monitor"
+msgstr "監視するインスタンス"
+
 msgid "Filtering and computation options"
 msgstr "フィルタリングと計算のオプション"
 
@@ -27177,6 +27193,12 @@ msgstr ""
 
 msgid "For NFS enter the name of the mount point."
 msgstr "NFSの場合は、マウントポイントの名前を入力します。"
+
+msgid ""
+"For a new setup, use the cluster name. When migrating, record the old source "
+"host name and delete that host before running this setup, then enter it as "
+"an explicit host name to retain monitoring history."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -41202,6 +41224,10 @@ msgstr "メインダッシュボード"
 msgid "Main folder"
 msgstr "メインフォルダー"
 
+#, fuzzy
+msgid "Main instance"
+msgstr "アクティブ インスタンス"
+
 msgid "Main memory usage (Unix / other devices)"
 msgstr "メインメモリ使用量(Unix /その他のデバイス)"
 
@@ -41617,10 +41643,6 @@ msgstr ""
 msgid "Map"
 msgstr "May"
 
-#, fuzzy
-msgid "Map & object defaults"
-msgstr "デフォルトでない場合の状態"
-
 msgid "Map Database States"
 msgstr "データベースの状態をマップする"
 
@@ -41828,6 +41850,18 @@ msgid ""
 "light canvas and is auto-selected when importing a legacy NagVis .cfg map "
 "for a 1:1 result."
 msgstr ""
+
+#, fuzzy
+msgid "Maps settings"
+msgstr "プラン設定"
+
+#, fuzzy
+msgid "Maps: Connections & daemon"
+msgstr "1秒あたりの最大接続数"
+
+#, fuzzy
+msgid "Maps: Map and object defaults"
+msgstr "デフォルトでない場合の状態"
 
 msgid "March"
 msgstr "行進"
@@ -45206,10 +45240,6 @@ msgstr "名前空間の問題"
 
 msgid "Namespaces"
 msgstr "名前空間"
-
-#, fuzzy
-msgid "Namespaces to monitor"
-msgstr "監視するインスタンス"
 
 msgid "Naming for outlets at discovery"
 msgstr "発見時のアウトレットのネーミング"
@@ -50450,7 +50480,7 @@ msgstr "最後のビルド結果に基づいてチェック状態をオーバー
 msgid "Override managed plan settings"
 msgstr "管理されたプランの設定を上書きする"
 
-msgid "Override push receiver hostname"
+msgid "Override push receiver host name"
 msgstr ""
 
 msgid "Override unit of sensor"
@@ -54299,8 +54329,9 @@ msgstr "公開されたメッセージ"
 msgid "Publisher"
 msgstr "パブリッシャー"
 
-msgid "Pull"
-msgstr ""
+#, fuzzy
+msgid "Pull mode"
+msgstr "Pushover"
 
 #, fuzzy
 msgid "Pull mode base URL"
@@ -54333,10 +54364,6 @@ msgstr "純粋なストレージFlashArray"
 
 msgid "Purpose"
 msgstr "目的"
-
-#, fuzzy
-msgid "Push"
-msgstr "Pushover"
 
 msgid "Push configuration to this site"
 msgstr "このサイトに設定をプッシュする"
@@ -58873,6 +58900,9 @@ msgstr "この集計の新しいレイアウトとして保存する"
 msgid "Save response"
 msgstr "応答を保存"
 
+msgid "Save the files and run the commands above, then continue."
+msgstr ""
+
 msgid "Save this host and go to"
 msgstr "このホストを保存して、行く"
 
@@ -62753,6 +62783,10 @@ msgstr "サイズ、使用済および予約済領域"
 
 msgid "Skip SSL certificate verification"
 msgstr "SSL証明書の検証をスキップする"
+
+#, fuzzy
+msgid "Skip TLS certificate validation"
+msgstr "TLS 証明書の検証"
 
 msgid "Skip TLS certificate verification"
 msgstr "TLS証明書の検証をスキップする"
@@ -70209,14 +70243,6 @@ msgstr ""
 "の属性例、$RESOURCE_ATTR.service.name$、$SCOPE_ATTR.scope.name$、または"
 "$DATA_POINT_ATTR.pod$を参照する必要があります。"
 
-#, fuzzy
-msgid ""
-"The host name the server certificate is validated against. If omitted, the "
-"Checkmk host name is used."
-msgstr ""
-"このホスト名は、TLS証明書の検証に特殊エージェントが使用します。省略された場"
-"合、ホストのCheckmkホスト名が使用されます"
-
 msgid "The host or service was in a scheduled downtime"
 msgstr "ホストまたはサービスがスケジュールされたダウンタイムにありました"
 
@@ -71480,6 +71506,11 @@ msgstr "パラメータ \"%(varname)s\" は整数ではありません。"
 
 msgid "The parameter \"topology_type\" is missing."
 msgstr "パラメータ「topology_type」が欠落しています。"
+
+msgid ""
+"The parameters of the JMX instance to monitor. They also serve as the "
+"defaults for the additional instances configured below."
+msgstr ""
 
 msgid "The parameters this diagnostics dump was created with"
 msgstr "この診断ダンプの作成に使用されたパラメータ"
@@ -85592,10 +85623,6 @@ msgstr "ユーザ―メッセージ"
 msgid "User messages"
 msgstr "ユーザ―メッセージ"
 
-#, fuzzy
-msgid "User name"
-msgstr "ユーザー名"
-
 msgid "User notification"
 msgstr "ユーザー通知"
 
@@ -87896,15 +87923,6 @@ msgstr ""
 "す。拡張子は常に <tt>pdf</tt>である必要があります。"
 
 msgid ""
-"When disabled, all namespaces are monitored. Filters apply to namespaced "
-"resources; cluster and node hosts and their rollups are unaffected."
-msgstr ""
-
-#, fuzzy
-msgid "When disabled, no annotations are imported as host labels."
-msgstr "インポートした注釈をポストラベルとして設定する"
-
-msgid ""
 "When disabled, the plug-in is deployed without its configuration file. The "
 "file <tt>/etc/check_mk/filestats.cfg</tt> must then be created and "
 "maintained manually."
@@ -88116,11 +88134,6 @@ msgstr ""
 "グループを監視するサービスの出力にグループメンバーをリストアップするとき、こ"
 "のオプションはcheckmkにインターフェイスの説明、エイリアス、またはポート番号の"
 "いずれかを使用させるようにします。"
-
-msgid ""
-"When migrating, record the old source host name and delete that host before "
-"running this setup. Reuse its name to retain monitoring history."
-msgstr ""
 
 msgid ""
 "When monitoring the performance of a monitoring site (i.e. its core) then "
@@ -88677,6 +88690,15 @@ msgstr ""
 "のホスト名を一覧表示するドロップダウンが表示されます。リストの数が膨大になっ"
 "てもドロップダウンが過度に長くなるのを防ぐため、表示されるリストの数には制限"
 "が設けられています。 "
+
+msgid ""
+"When unchecked, all namespaces are monitored. Filters apply to namespaced "
+"resources; cluster and node hosts and their rollups are unaffected."
+msgstr ""
+
+#, fuzzy
+msgid "When unchecked, no annotations are imported as host labels."
+msgstr "インポートした注釈をポストラベルとして設定する"
 
 msgid ""
 "When using the regular HTTP protocol all data transfered between the Checkmk "
@@ -96594,6 +96616,10 @@ msgstr "イベントコンソールの構成をこのサイトに複製します
 msgid "Reset to factory default"
 msgstr "デフォルトにリセット"
 
+#, fuzzy
+msgid "Could not save this setting, the errors are shown in the form."
+msgstr "フォームを検証できませんでした。エラーがフォームに表示されます"
+
 msgid ""
 "This setting uses an explicit value and overrides the factory and Global "
 "settings value."
@@ -97838,8 +97864,21 @@ msgid "Contact your administrator to have a map created."
 msgstr "管理者にお問い合わせください。"
 
 #, fuzzy
-msgid "Maps administration"
-msgstr "ホスト管理"
+msgid "More actions"
+msgstr "その他のオプション"
+
+#, fuzzy
+msgid "Import map…"
+msgstr "インポート"
+
+#, fuzzy
+msgid "%{n} map"
+msgid_plural "%{n} maps"
+msgstr[0] "%d日間"
+
+#, fuzzy
+msgid "Map list drawing"
+msgstr "プラン設定"
 
 #, fuzzy
 msgid "Select all visible maps"
@@ -97853,21 +97892,12 @@ msgid "Contents come from the live query"
 msgstr ""
 
 #, fuzzy
-msgid "%{n} map"
-msgid_plural "%{n} maps"
-msgstr[0] "%d日間"
-
-#, fuzzy
-msgid "Show maps"
-msgstr "表示方法"
-
-#, fuzzy
 msgid "Search maps…"
 msgstr "ホストを検索…"
 
 #, fuzzy
-msgid "Map list drawing"
-msgstr "プラン設定"
+msgid "Show maps"
+msgstr "表示方法"
 
 #, fuzzy
 msgid "Clone map \"%{name}\""
@@ -98627,9 +98657,6 @@ msgstr "すべて展開"
 
 msgid "Show child nodes up to N levels (0 = root only)."
 msgstr ""
-
-msgid "Hostname"
-msgstr "ホスト名"
 
 #, fuzzy
 msgid "Select a host"
@@ -100659,6 +100686,26 @@ msgid "and paste it into the terminal to continue the registration."
 msgstr "ターミナルに貼り付けて、登録を続行してください。"
 
 #, fuzzy
+msgid ""
+"Troubleshooting registration issues: Check whether the registration was "
+"successful"
+msgstr "登録に関する問題のトラブルシューティング：登録ユーザーで認証を行う"
+
+#, fuzzy
+msgid "To check if registration was successful, run"
+msgstr "登録完了"
+
+msgid "and look for the existence of a secret named"
+msgstr ""
+
+#, fuzzy
+msgid "If this secret does not exist, use"
+msgstr "このユーザーは存在しません。"
+
+msgid "on the cluster-aggregator pod to check for any errors."
+msgstr ""
+
+#, fuzzy
 msgid "Save host"
 msgstr "古いホスト"
 
@@ -102233,10 +102280,6 @@ msgstr ""
 "ダウンタイムを開始してください "
 
 #, fuzzy
-msgid "More actions"
-msgstr "その他のオプション"
-
-#, fuzzy
 msgid "Could not load actions."
 msgstr "この接続を削除することはできません。"
 
@@ -102445,22 +102488,6 @@ msgstr "一般的なフィルター"
 
 msgid "Total rows: %{total}"
 msgstr "行数合計：%{total}"
-
-#, fuzzy
-msgid "%{count} sec"
-msgstr "選択されていない"
-
-#, fuzzy
-msgid "%{count} min"
-msgstr "カウント"
-
-#, fuzzy
-msgid "%{count} h"
-msgstr "カウント"
-
-#, fuzzy
-msgid "%{count} d"
-msgstr "カウント"
 
 msgid "%{share} of shown"
 msgstr "表示されている%{share}"
@@ -104346,16 +104373,59 @@ msgstr ""
 "スできます"
 
 #, fuzzy
+#~ msgid "Changed Checkmk Maps settings"
+#~ msgstr "DCDグローバル設定の変更"
+
+#, fuzzy
+#~ msgid "Connections & daemon"
+#~ msgstr "1秒あたりの接続数"
+
+#, fuzzy
+#~ msgid "Push"
+#~ msgstr "Pushover"
+
+#, fuzzy
+#~ msgid ""
+#~ "The host name the server certificate is validated against. If omitted, "
+#~ "the Checkmk host name is used."
+#~ msgstr ""
+#~ "このホスト名は、TLS証明書の検証に特殊エージェントが使用します。省略された"
+#~ "場合、ホストのCheckmkホスト名が使用されます"
+
+#, fuzzy
+#~ msgid "User name"
+#~ msgstr "ユーザー名"
+
+#, fuzzy
+#~ msgid "Maps administration"
+#~ msgstr "ホスト管理"
+
+#~ msgid "Hostname"
+#~ msgstr "ホスト名"
+
+#, fuzzy
+#~ msgid "%{count} sec"
+#~ msgstr "選択されていない"
+
+#, fuzzy
+#~ msgid "%{count} min"
+#~ msgstr "カウント"
+
+#, fuzzy
+#~ msgid "%{count} h"
+#~ msgstr "カウント"
+
+#, fuzzy
+#~ msgid "%{count} d"
+#~ msgstr "カウント"
+
+#, fuzzy
 #~ msgid "A comment is required."
 #~ msgstr "マクロ名は必須"
 
 #, fuzzy
 #~ msgid "Invalid host name."
 #~ msgstr "無効なホスト名"
-
-#, fuzzy
-#~ msgid "Maps: connections & daemon"
-#~ msgstr "1秒あたりの最大接続数"
 
 #, fuzzy
 #~ msgid "No form values were sent."

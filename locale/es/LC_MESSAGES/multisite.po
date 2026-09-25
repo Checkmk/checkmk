@@ -1767,12 +1767,13 @@ msgstr ""
 "<b>Nota</b>: Si migras al conector <i>htpasswd</i>, los usuarios tendrán que "
 "cambiar su contraseña en el siguiente inicio de sesión."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"<b>This feature will be deprecated in a future version of Checkmk.</"
-"b><br>Please do not configure management boards in here anymore. Monitor the "
-"management boards via a dedicated host using <a href='%(ipmi_url)s'>IPMI</a> "
-"or SNMP.<br><a href='%(read_more_url)s' target='_blank'>Read more about "
+"<b>This feature is deprecated and will be removed in the version 3.1 of "
+"Checkmk.</b><br><br>You can no longer add management boards here. Existing "
+"settings can still be changed or removed.<br>Monitor the management boards "
+"via a dedicated host using <a href='%(ipmi_url)s'>IPMI</a> or SNMP instead."
+"<br><br><a href='%(read_more_url)s' target='_blank'>Read more about "
 "management boards.</a>"
 msgstr ""
 "<b>Esta característica quedará obsoleta en una versión futura de Checkmk.</"
@@ -2466,7 +2467,7 @@ msgstr "Ya existe un paquete de reglas con este ID."
 
 msgid ""
 "A Secret in the deployment namespace containing tls.crt and tls.key. Its "
-"certificate must cover the hostname used by Checkmk. Without this, the pull "
+"certificate must cover the host name used by Checkmk. Without this, the pull "
 "endpoint serves HTTP: use a trusted network or external TLS termination."
 msgstr ""
 
@@ -7829,6 +7830,16 @@ msgid "Any"
 msgstr "cualquier"
 
 msgid ""
+"Any application using the selected tokens will no longer be able to access "
+"the API with them."
+msgstr ""
+
+msgid ""
+"Any application using this token will no longer be able to access the API "
+"with it."
+msgstr ""
+
+msgid ""
 "Any certificate should expire at some point. Usual values are within 90 and "
 "365 days."
 msgstr ""
@@ -11655,6 +11666,12 @@ msgstr ""
 "Al configurar esta regla para un host - en lugar del agente Check_MK normal "
 "se crearán datos de monitorización aleatorios."
 
+msgid ""
+"By default the server's TLS certificate is validated against the Checkmk "
+"host name. Enable this to connect without verifying the certificate, for "
+"example when the backup server presents a self-signed certificate."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "By default, Checkmk does not import annotations. If this option is enabled, "
@@ -13739,10 +13756,6 @@ msgid "Changed %(key)s from %(old_value)s to %(new_value)s"
 msgstr "Cambió %(key)s de %(old_value)s a %(new_value)s"
 
 #, fuzzy
-msgid "Changed Checkmk Maps settings"
-msgstr "Editar la configuración global"
-
-#, fuzzy
 msgid "Changed DCD global settings"
 msgstr "Editar la configuración global"
 
@@ -14936,11 +14949,6 @@ msgstr ""
 #, fuzzy
 msgid "Choose condition"
 msgstr "Sin condiciones"
-
-msgid ""
-"Choose how the Kubernetes agent connects to Checkmk, then generate the "
-"deployment files."
-msgstr ""
 
 #, fuzzy
 msgid "Choose if this rule applies to plug-ins or local checks"
@@ -17063,11 +17071,6 @@ msgstr "Desajuste de las características configuradas"
 msgid "Configured time period parameters"
 msgstr "Parámetros del periodo de tiempo configurado"
 
-msgid ""
-"Configures Checkmk Maps: monitoring connections, the backend daemon and the "
-"defaults for new maps and map objects"
-msgstr ""
-
 #, fuzzy
 msgid "Configures Event Console logging and diagnostic settings"
 msgstr "Consola de eventos: Registrar & diagnosticar"
@@ -17152,10 +17155,17 @@ msgstr ""
 msgid "Configures the connection to ntopng for network flow data"
 msgstr ""
 
+msgid "Configures the defaults for new maps and map objects"
+msgstr ""
+
 msgid ""
 "Configures the dynamic configuration daemon: logging, update intervals and "
 "activation limits"
 msgstr ""
+
+#, fuzzy
+msgid "Configures the monitoring connections and the Maps backend daemon"
+msgstr "No alertar en caso de pérdida de conexión"
 
 msgid ""
 "Configures the number of available filters in the network topology view."
@@ -17481,10 +17491,6 @@ msgstr "Tipo de conexión"
 
 msgid "Connections"
 msgstr "Conexiones"
-
-#, fuzzy
-msgid "Connections & daemon"
-msgstr "Conexiones por segundo"
 
 #, fuzzy
 msgid "Connections (Azure, Redis)"
@@ -22084,6 +22090,10 @@ msgid "Deploy the Kubernetes agent"
 msgstr "Implementar el complemento netstat"
 
 #, fuzzy
+msgid "Deploy the Kubernetes agent to your cluster"
+msgstr "Implementar el complemento netstat"
+
+#, fuzzy
 msgid "Deploy the MegaRAID plug-in"
 msgstr "Implementar el complemento MegaRAID"
 
@@ -24270,9 +24280,11 @@ msgstr "Descargar la clave de firma del agente"
 msgid "Download backup key"
 msgstr "Descarga de la clave de seguridad"
 
+#, python-format
 msgid ""
-"Download both files below and save them in the same directory. "
-"Alternatively, use them with your existing deployment workflow."
+"Download both files below (%(first)s and %(second)s) and save them in the "
+"same directory. Alternatively, use them with your existing deployment "
+"workflow."
 msgstr ""
 
 #, fuzzy
@@ -26396,16 +26408,16 @@ msgstr ""
 "\"Proyecto\". Este campo no distingue entre mayúsculas y minúsculas"
 
 msgid ""
+"Enter the host name or IP address reachable from the cluster, without a "
+"scheme or port."
+msgstr ""
+
+msgid ""
 "Enter the host names of the cluster nodes. These hosts must be present in "
 "Setup."
 msgstr ""
 "Introduzca los nombres de host de los nodos del clúster. Estos hosts deben "
 "estar presentes en Setup."
-
-msgid ""
-"Enter the hostname or IP address reachable from the cluster, without a "
-"scheme or port."
-msgstr ""
 
 #, fuzzy
 msgid ""
@@ -28985,6 +28997,10 @@ msgstr "Filtrar las anotaciones válidas por patrón de clave"
 msgid "Filter view"
 msgstr "Vista del filtro"
 
+#, fuzzy
+msgid "Filter which namespaces to monitor"
+msgstr "Instancias a vigilar"
+
 msgid "Filtering and computation options"
 msgstr "Opciones de filtrado y cálculo"
 
@@ -29427,6 +29443,12 @@ msgstr ""
 
 msgid "For NFS enter the name of the mount point."
 msgstr "Para NFS introduzca el nombre del punto de montaje."
+
+msgid ""
+"For a new setup, use the cluster name. When migrating, record the old source "
+"host name and delete that host before running this setup, then enter it as "
+"an explicit host name to retain monitoring history."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -44550,6 +44572,10 @@ msgid "Main folder"
 msgstr "Carpeta principal"
 
 #, fuzzy
+msgid "Main instance"
+msgstr "instancias activas"
+
+#, fuzzy
 msgid "Main memory usage (Unix / other devices)"
 msgstr "Uso de la memoria principal (UNIX / Otros dispositivos)"
 
@@ -44990,10 +45016,6 @@ msgstr ""
 msgid "Map"
 msgstr "Mayo"
 
-#, fuzzy
-msgid "Map & object defaults"
-msgstr "Estado si no hay ninguna entrada que coincida"
-
 msgid "Map Database States"
 msgstr "Mapa de los Estados de la base de datos"
 
@@ -45214,6 +45236,18 @@ msgid ""
 "light canvas and is auto-selected when importing a legacy NagVis .cfg map "
 "for a 1:1 result."
 msgstr ""
+
+#, fuzzy
+msgid "Maps settings"
+msgstr "Configuración global"
+
+#, fuzzy
+msgid "Maps: Connections & daemon"
+msgstr "Máximo de conexiones por segundo"
+
+#, fuzzy
+msgid "Maps: Map and object defaults"
+msgstr "Estado si no hay ninguna entrada que coincida"
 
 msgid "March"
 msgstr "Marzo"
@@ -48877,10 +48911,6 @@ msgstr "Problemas con el espacio de nombres"
 
 msgid "Namespaces"
 msgstr "Espacio de nombres"
-
-#, fuzzy
-msgid "Namespaces to monitor"
-msgstr "Instancias a vigilar"
 
 #, fuzzy
 msgid "Naming for outlets at discovery"
@@ -54658,7 +54688,7 @@ msgstr ""
 msgid "Override managed plan settings"
 msgstr "Unidad de anulación del sensor"
 
-msgid "Override push receiver hostname"
+msgid "Override push receiver host name"
 msgstr ""
 
 msgid "Override unit of sensor"
@@ -58791,8 +58821,9 @@ msgstr "Mensajes publicados"
 msgid "Publisher"
 msgstr "Editorial"
 
-msgid "Pull"
-msgstr ""
+#, fuzzy
+msgid "Pull mode"
+msgstr "Pushover"
 
 #, fuzzy
 msgid "Pull mode base URL"
@@ -58827,10 +58858,6 @@ msgstr "Almacenamiento de Azure"
 
 msgid "Purpose"
 msgstr ""
-
-#, fuzzy
-msgid "Push"
-msgstr "Pushover"
 
 msgid "Push configuration to this site"
 msgstr "Configuración de empuje a este sitio"
@@ -63716,6 +63743,9 @@ msgstr "Crear una copia de esta agregación"
 msgid "Save response"
 msgstr "Guardar respuesta"
 
+msgid "Save the files and run the commands above, then continue."
+msgstr ""
+
 msgid "Save this host and go to"
 msgstr "Guarde este host y vaya a"
 
@@ -67804,6 +67834,10 @@ msgstr "Tamaño y espacio utilizado"
 #, fuzzy
 msgid "Skip SSL certificate verification"
 msgstr "Verificación del certificado SSL"
+
+#, fuzzy
+msgid "Skip TLS certificate validation"
+msgstr "Validación de certificados SSL"
 
 #, fuzzy
 msgid "Skip TLS certificate verification"
@@ -75557,11 +75591,6 @@ msgid ""
 "$DATA_POINT_ATTR.pod$, so the host name can be computed from the data."
 msgstr ""
 
-msgid ""
-"The host name the server certificate is validated against. If omitted, the "
-"Checkmk host name is used."
-msgstr ""
-
 msgid "The host or service was in a scheduled downtime"
 msgstr "El host o servicio estaba en un tiempo de inactividad programado"
 
@@ -76834,6 +76863,11 @@ msgstr "El parámetro \"%(varname)s\" no es un entero."
 #, fuzzy
 msgid "The parameter \"topology_type\" is missing."
 msgstr "Falta el parámetro \"%s\"."
+
+msgid ""
+"The parameters of the JMX instance to monitor. They also serve as the "
+"defaults for the additional instances configured below."
+msgstr ""
 
 msgid "The parameters this diagnostics dump was created with"
 msgstr ""
@@ -92049,10 +92083,6 @@ msgstr "Mensajes de los usuarios"
 msgid "User messages"
 msgstr "Mensajes de los usuarios"
 
-#, fuzzy
-msgid "User name"
-msgstr "Nombre de usuario"
-
 msgid "User notification"
 msgstr "Notificación al usuario"
 
@@ -94582,15 +94612,6 @@ msgstr ""
 "con este nombre. La extensión debe ser siempre <tt>pdf</tt>."
 
 msgid ""
-"When disabled, all namespaces are monitored. Filters apply to namespaced "
-"resources; cluster and node hosts and their rollups are unaffected."
-msgstr ""
-
-#, fuzzy
-msgid "When disabled, no annotations are imported as host labels."
-msgstr "Utilizar el nombre del puerto como nombre del servicio"
-
-msgid ""
 "When disabled, the plug-in is deployed without its configuration file. The "
 "file <tt>/etc/check_mk/filestats.cfg</tt> must then be created and "
 "maintained manually."
@@ -94802,11 +94823,6 @@ msgstr ""
 "Cuando se enumeran los miembros del grupo en la salida del servicio que "
 "supervisa el grupo, esta opción hace que checkmk utilice la descripción de "
 "la interfaz, el alias o el número de puerto."
-
-msgid ""
-"When migrating, record the old source host name and delete that host before "
-"running this setup. Reuse its name to retain monitoring history."
-msgstr ""
 
 msgid ""
 "When monitoring the performance of a monitoring site (i.e. its core) then "
@@ -95396,6 +95412,15 @@ msgstr ""
 "desplegable con una lista de todos los nombres de host coincidentes que "
 "contengan ese texto. Esa lista tiene un tamaño limitado para que el "
 "desplegable no sea demasiado grande cuando tengas un gran número de listas. "
+
+msgid ""
+"When unchecked, all namespaces are monitored. Filters apply to namespaced "
+"resources; cluster and node hosts and their rollups are unaffected."
+msgstr ""
+
+#, fuzzy
+msgid "When unchecked, no annotations are imported as host labels."
+msgstr "Utilizar el nombre del puerto como nombre del servicio"
 
 msgid ""
 "When using the regular HTTP protocol all data transfered between the Checkmk "
@@ -103821,6 +103846,9 @@ msgstr "Replicar la configuración de la Consola de Eventos a este sitio"
 msgid "Reset to factory default"
 msgstr "Restablecer los valores por defecto"
 
+msgid "Could not save this setting, the errors are shown in the form."
+msgstr ""
+
 msgid ""
 "This setting uses an explicit value and overrides the factory and Global "
 "settings value."
@@ -105072,8 +105100,22 @@ msgid "Contact your administrator to have a map created."
 msgstr "Póngase en contacto con su administrador."
 
 #, fuzzy
-msgid "Maps administration"
-msgstr "Administración de la sede"
+msgid "More actions"
+msgstr "Opciones de montaje"
+
+#, fuzzy
+msgid "Import map…"
+msgstr "Importar"
+
+#, fuzzy
+msgid "%{n} map"
+msgid_plural "%{n} maps"
+msgstr[0] "%d días"
+msgstr[1] "%d días"
+
+#, fuzzy
+msgid "Map list drawing"
+msgstr "Configuración global"
 
 #, fuzzy
 msgid "Select all visible maps"
@@ -105087,22 +105129,12 @@ msgid "Contents come from the live query"
 msgstr ""
 
 #, fuzzy
-msgid "%{n} map"
-msgid_plural "%{n} maps"
-msgstr[0] "%d días"
-msgstr[1] "%d días"
-
-#, fuzzy
-msgid "Show maps"
-msgstr "Mostrar %s"
-
-#, fuzzy
 msgid "Search maps…"
 msgstr "Buscar hosts"
 
 #, fuzzy
-msgid "Map list drawing"
-msgstr "Configuración global"
+msgid "Show maps"
+msgstr "Mostrar %s"
 
 #, fuzzy
 msgid "Clone map \"%{name}\""
@@ -105862,10 +105894,6 @@ msgstr "Ampliar"
 
 msgid "Show child nodes up to N levels (0 = root only)."
 msgstr ""
-
-#, fuzzy
-msgid "Hostname"
-msgstr "Nombre del host"
 
 #, fuzzy
 msgid "Select a host"
@@ -107898,6 +107926,25 @@ msgstr "Usuario de registro del agente"
 msgid "and paste it into the terminal to continue the registration."
 msgstr ""
 
+msgid ""
+"Troubleshooting registration issues: Check whether the registration was "
+"successful"
+msgstr ""
+
+#, fuzzy
+msgid "To check if registration was successful, run"
+msgstr "Registro realizado con éxito"
+
+msgid "and look for the existence of a secret named"
+msgstr ""
+
+#, fuzzy
+msgid "If this secret does not exist, use"
+msgstr "Este usuario no existe."
+
+msgid "on the cluster-aggregator pod to check for any errors."
+msgstr ""
+
 #, fuzzy
 msgid "Save host"
 msgstr "Hosts rancios"
@@ -109409,10 +109456,6 @@ msgstr ""
 "durante la hora de inicio y fin definida (flexible)"
 
 #, fuzzy
-msgid "More actions"
-msgstr "Opciones de montaje"
-
-#, fuzzy
 msgid "Could not load actions."
 msgstr "No se puede eliminar esta conexión."
 
@@ -109618,22 +109661,6 @@ msgstr "Error general"
 #, fuzzy
 msgid "Total rows: %{total}"
 msgstr "Tamaño total"
-
-#, fuzzy
-msgid "%{count} sec"
-msgstr "No seleccionado"
-
-#, fuzzy
-msgid "%{count} min"
-msgstr "contando"
-
-#, fuzzy
-msgid "%{count} h"
-msgstr "cuenta"
-
-#, fuzzy
-msgid "%{count} d"
-msgstr "cuenta"
 
 msgid "%{share} of shown"
 msgstr ""
@@ -111386,16 +111413,52 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Changed Checkmk Maps settings"
+#~ msgstr "Editar la configuración global"
+
+#, fuzzy
+#~ msgid "Connections & daemon"
+#~ msgstr "Conexiones por segundo"
+
+#, fuzzy
+#~ msgid "Push"
+#~ msgstr "Pushover"
+
+#, fuzzy
+#~ msgid "User name"
+#~ msgstr "Nombre de usuario"
+
+#, fuzzy
+#~ msgid "Maps administration"
+#~ msgstr "Administración de la sede"
+
+#, fuzzy
+#~ msgid "Hostname"
+#~ msgstr "Nombre del host"
+
+#, fuzzy
+#~ msgid "%{count} sec"
+#~ msgstr "No seleccionado"
+
+#, fuzzy
+#~ msgid "%{count} min"
+#~ msgstr "contando"
+
+#, fuzzy
+#~ msgid "%{count} h"
+#~ msgstr "cuenta"
+
+#, fuzzy
+#~ msgid "%{count} d"
+#~ msgstr "cuenta"
+
+#, fuzzy
 #~ msgid "A comment is required."
 #~ msgstr "como macro denominada"
 
 #, fuzzy
 #~ msgid "Invalid host name."
 #~ msgstr "Nombre de host no válido"
-
-#, fuzzy
-#~ msgid "Maps: connections & daemon"
-#~ msgstr "Máximo de conexiones por segundo"
 
 #, fuzzy
 #~ msgid "No form values were sent."

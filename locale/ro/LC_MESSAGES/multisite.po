@@ -1787,12 +1787,13 @@ msgstr ""
 "<b>Nota</b>: Dacă migrați la conectorul <i>htpasswd</i>, utilizatorii vor "
 "trebui să își schimbe parola la următoarea autentificare."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"<b>This feature will be deprecated in a future version of Checkmk.</"
-"b><br>Please do not configure management boards in here anymore. Monitor the "
-"management boards via a dedicated host using <a href='%(ipmi_url)s'>IPMI</a> "
-"or SNMP.<br><a href='%(read_more_url)s' target='_blank'>Read more about "
+"<b>This feature is deprecated and will be removed in the version 3.1 of "
+"Checkmk.</b><br><br>You can no longer add management boards here. Existing "
+"settings can still be changed or removed.<br>Monitor the management boards "
+"via a dedicated host using <a href='%(ipmi_url)s'>IPMI</a> or SNMP instead."
+"<br><br><a href='%(read_more_url)s' target='_blank'>Read more about "
 "management boards.</a>"
 msgstr ""
 "<b>Această funcție va fi eliminată într-o versiune viitoare a Checkmk.</"
@@ -2491,7 +2492,7 @@ msgstr "Există deja un pachet de reguli cu acest ID."
 
 msgid ""
 "A Secret in the deployment namespace containing tls.crt and tls.key. Its "
-"certificate must cover the hostname used by Checkmk. Without this, the pull "
+"certificate must cover the host name used by Checkmk. Without this, the pull "
 "endpoint serves HTTP: use a trusted network or external TLS termination."
 msgstr ""
 
@@ -7794,6 +7795,16 @@ msgid "Any"
 msgstr "orice"
 
 msgid ""
+"Any application using the selected tokens will no longer be able to access "
+"the API with them."
+msgstr ""
+
+msgid ""
+"Any application using this token will no longer be able to access the API "
+"with it."
+msgstr ""
+
+msgid ""
 "Any certificate should expire at some point. Usual values are within 90 and "
 "365 days."
 msgstr ""
@@ -11579,6 +11590,12 @@ msgstr ""
 "Prin configurarea acestei reguli pentru o gazdă - în locul agentului "
 "Check_MK normal vor fi create date de monitorizare aleatorii."
 
+msgid ""
+"By default the server's TLS certificate is validated against the Checkmk "
+"host name. Enable this to connect without verifying the certificate, for "
+"example when the backup server presents a self-signed certificate."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "By default, Checkmk does not import annotations. If this option is enabled, "
@@ -13715,10 +13732,6 @@ msgid "Changed %(key)s from %(old_value)s to %(new_value)s"
 msgstr "A schimbat %(key)s din %(old_value)s în %(new_value)s"
 
 #, fuzzy
-msgid "Changed Checkmk Maps settings"
-msgstr "Editarea setării globale"
-
-#, fuzzy
 msgid "Changed DCD global settings"
 msgstr "Editarea setării globale"
 
@@ -14897,11 +14910,6 @@ msgstr ""
 #, fuzzy
 msgid "Choose condition"
 msgstr "Fără condiții"
-
-msgid ""
-"Choose how the Kubernetes agent connects to Checkmk, then generate the "
-"deployment files."
-msgstr ""
 
 #, fuzzy
 msgid "Choose if this rule applies to plug-ins or local checks"
@@ -17013,11 +17021,6 @@ msgstr "Nepotrivire între caracteristicile configurate"
 msgid "Configured time period parameters"
 msgstr "Parametrii perioadei de timp configurate"
 
-msgid ""
-"Configures Checkmk Maps: monitoring connections, the backend daemon and the "
-"defaults for new maps and map objects"
-msgstr ""
-
 #, fuzzy
 msgid "Configures Event Console logging and diagnostic settings"
 msgstr "Consola de evenimente: Înregistrare & diagnosticare"
@@ -17102,10 +17105,17 @@ msgstr ""
 msgid "Configures the connection to ntopng for network flow data"
 msgstr ""
 
+msgid "Configures the defaults for new maps and map objects"
+msgstr ""
+
 msgid ""
 "Configures the dynamic configuration daemon: logging, update intervals and "
 "activation limits"
 msgstr ""
+
+#, fuzzy
+msgid "Configures the monitoring connections and the Maps backend daemon"
+msgstr "Nu alertați la pierderea conexiunii"
 
 msgid ""
 "Configures the number of available filters in the network topology view."
@@ -17431,10 +17441,6 @@ msgstr "Tipul de conexiune"
 
 msgid "Connections"
 msgstr "Conexiuni"
-
-#, fuzzy
-msgid "Connections & daemon"
-msgstr "Conexiuni pe secundă"
 
 #, fuzzy
 msgid "Connections (Azure, Redis)"
@@ -22031,6 +22037,10 @@ msgid "Deploy the Kubernetes agent"
 msgstr "Implementați plugin-ul netstat"
 
 #, fuzzy
+msgid "Deploy the Kubernetes agent to your cluster"
+msgstr "Implementați plugin-ul netstat"
+
+#, fuzzy
 msgid "Deploy the MegaRAID plug-in"
 msgstr "Implementarea pluginului MegaRAID"
 
@@ -24195,9 +24205,11 @@ msgstr "Descărcați cheia de semnătură a agentului"
 msgid "Download backup key"
 msgstr "Descărcați cheia de rezervă"
 
+#, python-format
 msgid ""
-"Download both files below and save them in the same directory. "
-"Alternatively, use them with your existing deployment workflow."
+"Download both files below (%(first)s and %(second)s) and save them in the "
+"same directory. Alternatively, use them with your existing deployment "
+"workflow."
 msgstr ""
 
 #, fuzzy
@@ -26322,16 +26334,16 @@ msgstr ""
 "nu ține cont de majuscule și minuscule"
 
 msgid ""
+"Enter the host name or IP address reachable from the cluster, without a "
+"scheme or port."
+msgstr ""
+
+msgid ""
 "Enter the host names of the cluster nodes. These hosts must be present in "
 "Setup."
 msgstr ""
 "Introduceți numele de gazdă ale nodurilor de cluster. Aceste gazde trebuie "
 "să fie prezente în Setup."
-
-msgid ""
-"Enter the hostname or IP address reachable from the cluster, without a "
-"scheme or port."
-msgstr ""
 
 #, fuzzy
 msgid ""
@@ -28902,6 +28914,10 @@ msgstr "Filtrarea etichetelor valide după un model de cheie"
 msgid "Filter view"
 msgstr "Vizualizare filtru"
 
+#, fuzzy
+msgid "Filter which namespaces to monitor"
+msgstr "Instanțe de monitorizat"
+
 msgid "Filtering and computation options"
 msgstr "Opțiuni de filtrare și calcul"
 
@@ -29336,6 +29352,12 @@ msgstr ""
 
 msgid "For NFS enter the name of the mount point."
 msgstr "Pentru NFS, introduceți numele punctului de montare."
+
+msgid ""
+"For a new setup, use the cluster name. When migrating, record the old source "
+"host name and delete that host before running this setup, then enter it as "
+"an explicit host name to retain monitoring history."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -44387,6 +44409,10 @@ msgid "Main folder"
 msgstr "Dosarul principal"
 
 #, fuzzy
+msgid "Main instance"
+msgstr "instanțe active"
+
+#, fuzzy
 msgid "Main memory usage (Unix / other devices)"
 msgstr "Utilizarea memoriei principale (UNIX / Alte dispozitive)"
 
@@ -44827,10 +44853,6 @@ msgstr ""
 msgid "Map"
 msgstr "Mai"
 
-#, fuzzy
-msgid "Map & object defaults"
-msgstr "Stare dacă nicio intrare nu corespunde"
-
 msgid "Map Database States"
 msgstr "Hartă Baza de date a statelor"
 
@@ -45048,6 +45070,18 @@ msgid ""
 "light canvas and is auto-selected when importing a legacy NagVis .cfg map "
 "for a 1:1 result."
 msgstr ""
+
+#, fuzzy
+msgid "Maps settings"
+msgstr "Setări globale"
+
+#, fuzzy
+msgid "Maps: Connections & daemon"
+msgstr "Conexiuni maxime pe secundă"
+
+#, fuzzy
+msgid "Maps: Map and object defaults"
+msgstr "Stare dacă nicio intrare nu corespunde"
 
 msgid "March"
 msgstr "Martie"
@@ -48703,10 +48737,6 @@ msgstr "Probleme de spațiu de nume"
 
 msgid "Namespaces"
 msgstr "Spații de nume"
-
-#, fuzzy
-msgid "Namespaces to monitor"
-msgstr "Instanțe de monitorizat"
 
 #, fuzzy
 msgid "Naming for outlets at discovery"
@@ -54446,7 +54476,7 @@ msgstr ""
 msgid "Override managed plan settings"
 msgstr "Unitatea de suprascriere a senzorului"
 
-msgid "Override push receiver hostname"
+msgid "Override push receiver host name"
 msgstr ""
 
 msgid "Override unit of sensor"
@@ -58537,8 +58567,9 @@ msgstr "Mesaje publicate"
 msgid "Publisher"
 msgstr "Editor"
 
-msgid "Pull"
-msgstr ""
+#, fuzzy
+msgid "Pull mode"
+msgstr "Pushover"
 
 #, fuzzy
 msgid "Pull mode base URL"
@@ -58571,10 +58602,6 @@ msgstr "Pure Storage FlashArray"
 
 msgid "Purpose"
 msgstr ""
-
-#, fuzzy
-msgid "Push"
-msgstr "Pushover"
 
 msgid "Push configuration to this site"
 msgstr "Configurație push către acest site"
@@ -63409,6 +63436,9 @@ msgstr "Salvați ca nou aspect pentru această agregare"
 msgid "Save response"
 msgstr "Salvați răspunsul"
 
+msgid "Save the files and run the commands above, then continue."
+msgstr ""
+
 msgid "Save this host and go to"
 msgstr "Salvați această gazdă și mergeți la"
 
@@ -67522,6 +67552,10 @@ msgstr "Dimensiunea și spațiul utilizat"
 #, fuzzy
 msgid "Skip SSL certificate verification"
 msgstr "Verificarea certificatului SSL"
+
+#, fuzzy
+msgid "Skip TLS certificate validation"
+msgstr "Validarea certificatului SSL"
 
 #, fuzzy
 msgid "Skip TLS certificate verification"
@@ -75248,11 +75282,6 @@ msgid ""
 "$DATA_POINT_ATTR.pod$, so the host name can be computed from the data."
 msgstr ""
 
-msgid ""
-"The host name the server certificate is validated against. If omitted, the "
-"Checkmk host name is used."
-msgstr ""
-
 msgid "The host or service was in a scheduled downtime"
 msgstr "Gazda sau serviciul se afla într-o perioadă de întrerupere programată"
 
@@ -76534,6 +76563,11 @@ msgstr "Parametrul \"%(varname)s\" nu este un număr întreg."
 #, fuzzy
 msgid "The parameter \"topology_type\" is missing."
 msgstr "Parametrul \"%s\" lipsește."
+
+msgid ""
+"The parameters of the JMX instance to monitor. They also serve as the "
+"defaults for the additional instances configured below."
+msgstr ""
 
 msgid "The parameters this diagnostics dump was created with"
 msgstr ""
@@ -91688,10 +91722,6 @@ msgstr "Mesaje de utilizator"
 msgid "User messages"
 msgstr "Mesaje de utilizator"
 
-#, fuzzy
-msgid "User name"
-msgstr "Numele utilizatorului"
-
 msgid "User notification"
 msgstr "Notificarea utilizatorului"
 
@@ -94208,15 +94238,6 @@ msgstr ""
 "cu acest nume de fișier. Extensia trebuie să fie întotdeauna <tt>pdf</tt>."
 
 msgid ""
-"When disabled, all namespaces are monitored. Filters apply to namespaced "
-"resources; cluster and node hosts and their rollups are unaffected."
-msgstr ""
-
-#, fuzzy
-msgid "When disabled, no annotations are imported as host labels."
-msgstr "Utilizați numele portului ca nume de serviciu"
-
-msgid ""
 "When disabled, the plug-in is deployed without its configuration file. The "
 "file <tt>/etc/check_mk/filestats.cfg</tt> must then be created and "
 "maintained manually."
@@ -94430,11 +94451,6 @@ msgstr ""
 "Atunci când enumeră membrii grupului în rezultatul serviciului care "
 "monitorizează grupul, această opțiune face ca checkmk să utilizeze fie "
 "descrierea interfeței, fie aliasul sau numărul de port."
-
-msgid ""
-"When migrating, record the old source host name and delete that host before "
-"running this setup. Reuse its name to retain monitoring history."
-msgstr ""
 
 msgid ""
 "When monitoring the performance of a monitoring site (i.e. its core) then "
@@ -95026,6 +95042,15 @@ msgstr ""
 "derulantă cu toate numele de gazde corespunzătoare care conțin acel text. "
 "Această listă este limitată în dimensiune, astfel încât lista derulantă să "
 "nu devină prea mare atunci când aveți un număr mare de liste. "
+
+msgid ""
+"When unchecked, all namespaces are monitored. Filters apply to namespaced "
+"resources; cluster and node hosts and their rollups are unaffected."
+msgstr ""
+
+#, fuzzy
+msgid "When unchecked, no annotations are imported as host labels."
+msgstr "Utilizați numele portului ca nume de serviciu"
 
 msgid ""
 "When using the regular HTTP protocol all data transfered between the Checkmk "
@@ -103431,6 +103456,9 @@ msgstr "Replicați configurația Consola de evenimente pe acest site"
 msgid "Reset to factory default"
 msgstr "Resetare la valorile implicite"
 
+msgid "Could not save this setting, the errors are shown in the form."
+msgstr ""
+
 msgid ""
 "This setting uses an explicit value and overrides the factory and Global "
 "settings value."
@@ -104688,8 +104716,23 @@ msgid "Contact your administrator to have a map created."
 msgstr "Vă rugăm să vă contactați administratorul."
 
 #, fuzzy
-msgid "Maps administration"
-msgstr "Administrarea gazdei"
+msgid "More actions"
+msgstr "Mai multe opțiuni"
+
+#, fuzzy
+msgid "Import map…"
+msgstr "Import"
+
+#, fuzzy
+msgid "%{n} map"
+msgid_plural "%{n} maps"
+msgstr[0] "%d zile"
+msgstr[1] "%d zile"
+msgstr[2] "%d zile"
+
+#, fuzzy
+msgid "Map list drawing"
+msgstr "Setări globale"
 
 #, fuzzy
 msgid "Select all visible maps"
@@ -104703,23 +104746,12 @@ msgid "Contents come from the live query"
 msgstr ""
 
 #, fuzzy
-msgid "%{n} map"
-msgid_plural "%{n} maps"
-msgstr[0] "%d zile"
-msgstr[1] "%d zile"
-msgstr[2] "%d zile"
-
-#, fuzzy
-msgid "Show maps"
-msgstr "Arată %s"
-
-#, fuzzy
 msgid "Search maps…"
 msgstr "Căutare gazde"
 
 #, fuzzy
-msgid "Map list drawing"
-msgstr "Setări globale"
+msgid "Show maps"
+msgstr "Arată %s"
 
 #, fuzzy
 msgid "Clone map \"%{name}\""
@@ -105485,10 +105517,6 @@ msgstr "Extindeți"
 
 msgid "Show child nodes up to N levels (0 = root only)."
 msgstr ""
-
-#, fuzzy
-msgid "Hostname"
-msgstr "Numele gazdei"
 
 #, fuzzy
 msgid "Select a host"
@@ -107536,6 +107564,25 @@ msgstr "Utilizator de înregistrare agent"
 msgid "and paste it into the terminal to continue the registration."
 msgstr ""
 
+msgid ""
+"Troubleshooting registration issues: Check whether the registration was "
+"successful"
+msgstr ""
+
+#, fuzzy
+msgid "To check if registration was successful, run"
+msgstr "Înregistrare reușită"
+
+msgid "and look for the existence of a secret named"
+msgstr ""
+
+#, fuzzy
+msgid "If this secret does not exist, use"
+msgstr "Acest utilizator nu există."
+
+msgid "on the cluster-aggregator pod to check for any errors."
+msgstr ""
+
 #, fuzzy
 msgid "Save host"
 msgstr "Gazde învechite"
@@ -109067,10 +109114,6 @@ msgstr ""
 "orelor de început și de sfârșit definite (flexibil)"
 
 #, fuzzy
-msgid "More actions"
-msgstr "Mai multe opțiuni"
-
-#, fuzzy
 msgid "Could not load actions."
 msgstr "Nu puteți șterge această conexiune."
 
@@ -109276,22 +109319,6 @@ msgstr "Eroare generală"
 #, fuzzy
 msgid "Total rows: %{total}"
 msgstr "Dimensiunea totală"
-
-#, fuzzy
-msgid "%{count} sec"
-msgstr "Nu este selectat"
-
-#, fuzzy
-msgid "%{count} min"
-msgstr "numărare"
-
-#, fuzzy
-msgid "%{count} h"
-msgstr "numărătoare"
-
-#, fuzzy
-msgid "%{count} d"
-msgstr "numărătoare"
 
 msgid "%{share} of shown"
 msgstr ""
@@ -111053,16 +111080,52 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Changed Checkmk Maps settings"
+#~ msgstr "Editarea setării globale"
+
+#, fuzzy
+#~ msgid "Connections & daemon"
+#~ msgstr "Conexiuni pe secundă"
+
+#, fuzzy
+#~ msgid "Push"
+#~ msgstr "Pushover"
+
+#, fuzzy
+#~ msgid "User name"
+#~ msgstr "Numele utilizatorului"
+
+#, fuzzy
+#~ msgid "Maps administration"
+#~ msgstr "Administrarea gazdei"
+
+#, fuzzy
+#~ msgid "Hostname"
+#~ msgstr "Numele gazdei"
+
+#, fuzzy
+#~ msgid "%{count} sec"
+#~ msgstr "Nu este selectat"
+
+#, fuzzy
+#~ msgid "%{count} min"
+#~ msgstr "numărare"
+
+#, fuzzy
+#~ msgid "%{count} h"
+#~ msgstr "numărătoare"
+
+#, fuzzy
+#~ msgid "%{count} d"
+#~ msgstr "numărătoare"
+
+#, fuzzy
 #~ msgid "A comment is required."
 #~ msgstr "ca macro numit"
 
 #, fuzzy
 #~ msgid "Invalid host name."
 #~ msgstr "Nume gazdă invalid"
-
-#, fuzzy
-#~ msgid "Maps: connections & daemon"
-#~ msgstr "Conexiuni maxime pe secundă"
 
 #, fuzzy
 #~ msgid "No form values were sent."

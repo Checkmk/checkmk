@@ -14,9 +14,11 @@ import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 import TrialModeSelectionCodeEntry from './screens/TrialModeSelectionCodeEntry.vue'
 import TrialModeSelectionEmailEntry from './screens/TrialModeSelectionEmailEntry.vue'
+import TrialModeSelectionEndpointUnreachable from './screens/TrialModeSelectionEndpointUnreachable.vue'
 import TrialModeSelectionEntryChoice from './screens/TrialModeSelectionEntryChoice.vue'
 import TrialModeSelectionLicenseVerification from './screens/TrialModeSelectionLicenseVerification.vue'
 import TrialModeSelectionTrialVerified from './screens/TrialModeSelectionTrialVerified.vue'
+import TrialModeSelectionUnverifiedTrial from './screens/TrialModeSelectionUnverifiedTrial.vue'
 import { useTrialModeSelection } from './useTrialModeSelection'
 
 const { _t } = usei18n()
@@ -29,10 +31,15 @@ const {
   saving,
   saveFailed,
   resendCooldown,
+  sendLimitResetsIn,
+  startTrial,
+  openUnverifiedTrial,
+  leaveUnverifiedTrial,
   sendCode,
   resendCode,
   goTo,
   recordTrial,
+  recordUnverifiedTrial,
   verifyNow,
   verifyLater
 } = useTrialModeSelection(props)
@@ -48,7 +55,7 @@ const {
     <TrialModeSelectionEntryChoice
       v-if="screen === 'choice'"
       :trial-length-days="props.trial_length_days"
-      @trial="goTo('email')"
+      @trial="startTrial"
       @customer="goTo('verification')"
     />
 
@@ -58,6 +65,24 @@ const {
       @back="goTo('choice')"
       @verify-now="verifyNow"
       @verify-later="verifyLater"
+    />
+
+    <TrialModeSelectionEndpointUnreachable
+      v-else-if="screen === 'unreachable'"
+      :domain="props.verification_domain"
+      @back="goTo('choice')"
+      @retry="startTrial"
+      @continue-offline="openUnverifiedTrial"
+    />
+
+    <TrialModeSelectionUnverifiedTrial
+      v-else-if="screen === 'unverified'"
+      :trial-end-timestamp="props.trial_end_timestamp"
+      :trial-length-days="props.trial_length_days"
+      :free-services-limit="props.free_services_limit"
+      :saving="saving"
+      @back="leaveUnverifiedTrial"
+      @start-monitoring="recordUnverifiedTrial"
     />
 
     <TrialModeSelectionEmailEntry
@@ -72,9 +97,11 @@ const {
       v-else-if="screen === 'code'"
       :email="email"
       :resend-cooldown="resendCooldown"
+      :send-limit-resets-in="sendLimitResetsIn"
       @back="goTo('email')"
       @resend="resendCode"
       @verified="goTo('success')"
+      @continue-unverified="openUnverifiedTrial"
     />
 
     <TrialModeSelectionTrialVerified

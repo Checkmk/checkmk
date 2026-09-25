@@ -104,10 +104,6 @@ def test_discover_oracle_performance(
     assert sorted(opc.discover_oracle_performance({}, section)) == expected_result
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash report ded3a844-89b1-11f1-b95a-005056bcb993: TypeError",
-)
 def test_discover_oracle_performance_ignores_rows_without_instance_name() -> None:
     # The agent output contained a row whose instance name column was empty,
     # which made discovery crash on Service(item="").

@@ -34,7 +34,7 @@ def parse_oracle_performance(string_table: StringTable) -> SectionPerformance:
             case False:
                 continue
             case None:
-                if len(line) < 3:
+                if len(line) < 3 or not line[0]:
                     continue
                 group = counters_by_sid.setdefault(line[0], {}).setdefault(line[1], {})
                 counters = line[3:]

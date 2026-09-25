@@ -65,11 +65,12 @@ KNOWN_DEVIATIONS: dict[str, set[str]] = {
 def run_old_plugin(oracle: OracleDatabase) -> str:
     """Run the old bash mk_oracle in the container and return its stdout."""
     rc, output = oracle.container.exec_run(
-        f"""bash -c '{oracle.cmk_plugin.as_posix()}'""", user="root"
+        f"""bash -c '{oracle.cmk_plugin.as_posix()}'""", user="root", demux=True
     )
-    assert isinstance(output, bytes)  # stream/socket/demux not used above
-    text = output.decode("utf-8")
-    assert rc == 0, f"old mk_oracle plugin failed!\n{text}"
+    assert isinstance(output, tuple)  # demux=True splits stdout and stderr
+    stdout, stderr = output
+    text = (stdout or b"").decode("utf-8")
+    assert rc == 0, f"old mk_oracle plugin failed!\n{text}\n{(stderr or b'').decode('utf-8')}"
     return text
 
 

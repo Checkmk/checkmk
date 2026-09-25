@@ -231,3 +231,28 @@ test('leaves the listing alone after a command the site refused', async () => {
 
   expect(listingReads()).toBe(1)
 })
+
+test('typing letters focuses the first host name containing them', async () => {
+  // The rows only render once the virtualiser sees a viewport.
+  const offsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')
+  const offsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
+  Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, value: 600 })
+  Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, value: 800 })
+  try {
+    mockHosts([makeHost({ name: 'dbnode' }), makeHost({ name: 'cpunode' })])
+    renderApp('community')
+    const target = await screen.findByRole('button', { name: 'cpunode' })
+
+    await userEvent.keyboard('cpu')
+
+    expect(target).toHaveFocus()
+    expect(screen.getByRole('status')).toHaveTextContent('cpu')
+  } finally {
+    if (offsetHeight) {
+      Object.defineProperty(HTMLElement.prototype, 'offsetHeight', offsetHeight)
+    }
+    if (offsetWidth) {
+      Object.defineProperty(HTMLElement.prototype, 'offsetWidth', offsetWidth)
+    }
+  }
+})

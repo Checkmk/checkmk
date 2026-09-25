@@ -17,6 +17,7 @@ import { HostApi } from '@/monitoring/shared/api/hosts'
 import type { HostEntry, HostRef, HostState } from '@/monitoring/shared/api/types'
 import DisplayOptionsPane from '@/monitoring/shared/components/DisplayOptionsPane.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
+import TypeToFocusIndicator from '@/monitoring/shared/components/TypeToFocusIndicator.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
 import { ACTION_REFRESH_DELAY_MS, HOST_LIMIT_TIERS } from '@/monitoring/shared/constants'
@@ -54,6 +55,7 @@ import {
 import { useUrlSync } from '../shared/urlState/useUrlSync'
 import { useContextMenuKey } from '../shared/useContextMenuKey'
 import { useFallbackKeys } from '../shared/useFallbackKeys'
+import { useTypeToFocus } from '../shared/useTypeToFocus'
 import { useAcknowledgeHostsAction } from './actions/acknowledgeHosts'
 import { useRescheduleHostsAction } from './actions/rescheduleHosts'
 import { useScheduleHostDowntimeAction } from './actions/scheduleHostDowntime'
@@ -208,6 +210,7 @@ const toolbar = useTemplateRef<{ focus: () => void }>('toolbar')
 
 const root = useTemplateRef<HTMLElement>('root')
 
+const typeToFocus = useTypeToFocus(root)
 useFallbackKeys(root, () => root.value?.querySelector<HTMLElement>('.monitoring-table'))
 useContextMenuKey(root)
 
@@ -402,12 +405,18 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         @close="closeSlideIn"
         @performed="onActionPerformed"
       />
+      <TypeToFocusIndicator
+        :buffer="typeToFocus.buffer.value"
+        :index="typeToFocus.index.value"
+        :count="typeToFocus.count.value"
+      />
     </div>
   </CmkErrorBoundary>
 </template>
 
 <style scoped>
 .monitoring-all-hosts-app {
+  position: relative;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;

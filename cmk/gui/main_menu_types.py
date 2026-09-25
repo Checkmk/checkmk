@@ -16,6 +16,7 @@ from cmk.shared_typing.main_menu import (
     NavItemTopic,
     NavItemVueApp,
     NavLinkItem,
+    NavToggleItem,
 )
 from cmk.web.utils.speaklater import LazyString
 
@@ -38,6 +39,11 @@ class MainMenuItem(MainMenuItemBase, NavItem):
 class MainMenuLinkItem(MainMenuItemBase, NavLinkItem):
     hide: Callable[[], bool] | None = None
     get_url: Callable[[Request], str] | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
+class MainMenuToggleItem(MainMenuItemBase, NavToggleItem):
+    hide: Callable[[], bool] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)

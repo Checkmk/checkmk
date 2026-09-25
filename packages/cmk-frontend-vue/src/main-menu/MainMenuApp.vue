@@ -18,9 +18,11 @@ import { computed, onMounted, provide, ref } from 'vue'
 import { toggleCheatSheetPin, useCheatSheetPinned } from '@/lib/keyboard-cheat-sheet/cheatSheetKey'
 
 import { MainMenuService } from '@/main-menu/lib/main-menu-service'
+import { getNavToggle } from '@/main-menu/lib/nav-toggles'
 import { type UserPopupMessageRef } from '@/main-menu/lib/type-defs'
 
 import NavItem from './components/NavItem.vue'
+import NavToggleItem from './components/NavToggleItem.vue'
 import SidebarToggle from './components/SidebarToggle.vue'
 import ItemPopup from './components/popup/ItemPopup.vue'
 import PopupBackdrop from './components/popup/PopupBackdrop.vue'
@@ -36,6 +38,13 @@ const mainMenu = new MainMenuService(
   new KeyShortcutService(window, iFrames, iFrames)
 )
 provide(mainMenuKey, mainMenu)
+
+const registeredToggles = computed(() =>
+  (props.toggles ?? []).flatMap((item) => {
+    const navToggle = getNavToggle(item.id)
+    return navToggle ? [{ item, navToggle }] : []
+  })
+)
 
 const cheatSheetPinned = useCheatSheetPinned()
 const CHEAT_SHEET_COMBO = ['Alt', 'k']
@@ -94,6 +103,15 @@ onMounted(() => {
         "
       />
     </a>
+    <ul v-if="registeredToggles.length" id="toggle-menu">
+      <NavToggleItem
+        v-for="{ item, navToggle } in registeredToggles"
+        :key="`nav-toggle-${item.id}`"
+        :item="item"
+        :nav-toggle="navToggle"
+        :hide-item-title="props.hide_item_title"
+      />
+    </ul>
     <ul id="main-menu">
       <NavItem
         v-for="item in props.main"

@@ -13,7 +13,8 @@ import type {
   NavItemTopic,
   NavItemTopicEntry,
   NavItems,
-  NavLinkItem
+  NavLinkItem,
+  NavToggleItem
 } from 'cmk-shared-typing/typescript/main_menu'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { type KeyShortcut, KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
@@ -73,6 +74,19 @@ export class MainMenuService extends ServiceBase {
 
   public getNavShortCutCombo(shortcut: NavItemShortcut): string[] {
     return KeyShortcutService.getShortCutCombo(this.toKeyShortcut(shortcut))
+  }
+
+  public registerToggleShortcut(item: NavToggleItem, toggle: () => void): () => void {
+    const id = this.shortCutService.on(
+      {
+        ...this.toKeyShortcut(item.shortcut),
+        preventDefault: item.shortcut.prevent_default || false,
+        scope: _t('Main menu'),
+        description: untranslated(item.title)
+      },
+      toggle
+    )
+    return () => this.shortCutService.remove([id])
   }
 
   private toKeyShortcut(shortcut: NavItemShortcut): KeyShortcut {

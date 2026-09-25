@@ -526,13 +526,7 @@ class EventStatsDashletDataGenerator(StatsDashletDataGenerator[EventStats]):
         # In case the user is not allowed to see unrelated events
         ec_filters = ""
         if not user.may("mkeventd.seeall") and not user.may("mkeventd.seeunrelated"):
-            ec_filters = "\n".join(  # noqa: FLY002
-                [
-                    "Filter: event_contact_groups != ",
-                    "Filter: host_name != ",
-                    "Or: 2",
-                ]
-            )
+            ec_filters = "\nFilter: event_contact_groups != \nFilter: host_name != \nOr: 2"
 
         return (
             "GET eventconsoleevents\n"

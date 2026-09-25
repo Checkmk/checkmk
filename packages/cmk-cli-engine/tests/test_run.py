@@ -255,12 +255,28 @@ def test_the_command_line_takes_the_interrupt_signal() -> None:
     assert len(installed.calls) == 1
 
 
-def test_tracing_starts_for_the_site() -> None:
+def test_tracing_starts_for_the_site_when_a_command_runs() -> None:
+    started = Recorder()
+
+    _run(["cmk", "--demo"], _runtime([_command(lambda *_args: 0)], start_tracing=started))
+
+    assert started.calls == [_SITE]
+
+
+def test_the_help_is_not_traced() -> None:
     started = Recorder()
 
     _run(["cmk", "--help"], _runtime(start_tracing=started))
 
-    assert started.calls == [_SITE]
+    assert not started.calls
+
+
+def test_a_command_line_that_is_rejected_is_not_traced() -> None:
+    started = Recorder()
+
+    _run(["cmk", "--nonsense"], _runtime(start_tracing=started))
+
+    assert not started.calls
 
 
 def test_verbosity_raises_the_log_level() -> None:

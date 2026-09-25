@@ -225,12 +225,10 @@ def run(
     runtime: Runtime,
 ) -> int:
     runtime.on_sigint()
-    runtime.start_tracing(omd_root)
 
     commands = Commands(
         plugins=runtime.discover(),
         general_options=[*general_options(), _LOG_FILE_OPTION],
-        page=runtime.page,
     )
 
     parsed = parse(commands, argv)
@@ -254,6 +252,7 @@ def run(
         if isinstance(parsed, ShowHelp):
             runtime.page(commands.help())
             return 0
+        runtime.start_tracing(omd_root)
         return call(
             omd_root,
             parsed.command,

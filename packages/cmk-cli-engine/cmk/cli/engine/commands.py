@@ -13,7 +13,6 @@ import textwrap
 from collections import Counter
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
-from pathlib import Path
 from typing import Final, override
 
 from cmk.ccc import tty
@@ -422,17 +421,23 @@ def write_paged(txt: str) -> None:
         write_stdout(txt)
 
 
+HELP_OPTION: Final = Option(long_option="help", short_option="h", short_help="Print this help")
+
+
 def _map_options(commands: Sequence[Command]) -> Mapping[OptionName, Command]:
     """Map every spelling of every command to it, rejecting a collision.
 
     Two commands claiming the same option would otherwise shadow one another
     silently, and the one that loses simply could not be invoked.
     """
+    reserved = {HELP_OPTION.long_option, HELP_OPTION.short_option}
     mapped: dict[OptionName, Command] = {}
     for command in commands:
         for name in (command.long_option, command.short_option):
             if name is None:
                 continue
+            if name in reserved:
+                raise MKGeneralException(f"{name!r} is the help, not the command {command.name!r}")
             if (other := mapped.get(name)) is not None:
                 raise MKGeneralException(
                     f"{name!r} is claimed by the commands {other.name!r} and {command.name!r}"
@@ -447,36 +452,17 @@ class Commands:
         *,
         plugins: Sequence[Command],
         general_options: Sequence[Option],
-        page: Callable[[str], None] = write_paged,
     ) -> None:
         super().__init__()
-        self._page = page
-        commands = [*plugins, self.help_command()]
-        self._command_map: Mapping[OptionName, Command] = _map_options(commands)
-        self._commands = commands
+        self._command_map: Mapping[OptionName, Command] = _map_options(plugins)
+        self._commands = plugins
         self._general_options = general_options
-
-    def help_command(self) -> Command:
-        # It's a little weird to implement the --help option like this,
-        # but it is the easiest way to be consistent with how we use `getopt`.
-        def _show_help(
-            _omd_root: Path, _global_options: GlobalOptions, _options: object, _args: object
-        ) -> int:
-            self._page(self.help())
-            return 0
-
-        return Command(
-            long_option="help",
-            short_option="h",
-            handler_function=_show_help,
-            short_help="Print this help",
-        )
 
     def find(self, name: OptionName) -> Command | None:
         return self._command_map.get(name)
 
     def short_getopt_specs(self) -> str:
-        options = ""
+        options = "".join(HELP_OPTION.short_getopt_specs())
         for command in self._commands:
             options += "".join(command.short_getopt_specs())
         for option in self._general_options:
@@ -484,7 +470,7 @@ class Commands:
         return options
 
     def long_getopt_specs(self) -> list[str]:
-        options: list[str] = []
+        options = HELP_OPTION.long_getopt_specs()
         for command in self._commands:
             options += command.long_getopt_specs()
         for option in self._general_options:
@@ -516,5 +502,8 @@ NOTES:
         return "\n\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
 
     def _general_option_help(self) -> str:
-        texts = [option.short_help_text(fmt="  %-21s") for option in self._general_options]
+        texts = [
+            option.short_help_text(fmt="  %-21s")
+            for option in [HELP_OPTION, *self._general_options]
+        ]
         return "\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))

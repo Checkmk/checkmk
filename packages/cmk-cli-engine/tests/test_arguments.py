@@ -126,11 +126,12 @@ def test_a_general_option_alone_shows_the_help_and_hands_the_options_back() -> N
 
 
 @pytest.mark.parametrize("option", ["--help", "-h"])
-def test_the_help_option_selects_the_help_command(option: str) -> None:
-    parsed = parse(_COMMANDS, ["cmk", option])
+def test_the_help_option_shows_the_help(option: str) -> None:
+    assert isinstance(parse(_COMMANDS, ["cmk", option]), ShowHelp)
 
-    assert isinstance(parsed, RunCommand)
-    assert parsed.command.name == "help"
+
+def test_the_help_option_wins_over_a_command_before_it() -> None:
+    assert isinstance(parse(_COMMANDS, ["cmk", "--plain", "--help"]), ShowHelp)
 
 
 def test_the_first_of_two_command_options_wins() -> None:

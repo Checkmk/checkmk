@@ -8,7 +8,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Final
 
-from .commands import Argument, Command, Commands, Options
+from .commands import Argument, Command, Commands, HELP_OPTION, Options
 
 _IMPLICIT_CHECK_ARGUMENT_LIMIT: Final = 2
 _IMPLICIT_CHECK_COMMAND: Final = "check"
@@ -46,6 +46,9 @@ def parse(commands: Commands, argv: Sequence[str]) -> RunCommand | ShowHelp | In
     except getopt.GetoptError as error:
         program = argv[0].split("/")[-1]
         return InvalidArguments(f"ERROR: {error} (see `{program} --help` for valid options)\n")
+
+    if any(option in HELP_OPTION.options() for option, _argument in options):
+        return ShowHelp(options)
 
     for option, argument in options:
         if (command := commands.find(option.lstrip("-"))) is not None:

@@ -49,6 +49,7 @@ from .api_endpoints import global_settings as api_global_settings
 from .api_endpoints import host_config as api_host_config
 from .api_endpoints import host_config_internal as api_host_config_internal
 from .api_endpoints import host_group_config as api_host_group_config
+from .api_endpoints import host_relation_discovery as api_host_relation_discovery
 from .api_endpoints import master_control as api_master_control
 from .api_endpoints import notification_rule as api_notification_rule
 from .api_endpoints import quick_setup as api_quick_setup
@@ -111,6 +112,10 @@ def register(
         endpoint_family_registry=endpoint_family_registry,
     )
     api_host_config_internal.register(versioned_endpoint_registry)
+    api_host_relation_discovery.register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+    )
     api_notification_rule.register(versioned_endpoint_registry)
     api_host_group_config.register(
         versioned_endpoint_registry=versioned_endpoint_registry,

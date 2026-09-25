@@ -5317,6 +5317,28 @@ class ServiceAvailabilityClient(RestApiClient):
         )
 
 
+class HostRelationDiscoveryClient(RestApiClient):
+    default_version = APIVersion.INTERNAL
+
+    def suggest(
+        self,
+        words: list[str] | None = None,
+        values: list[dict[str, str]] | None = None,
+        look_in: list[str] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url="/domain-types/host_relation_discovery/actions/suggest/invoke",
+            body={
+                "words": words or [],
+                "values": values or [],
+                "look_in": ["names", "values"] if look_in is None else look_in,
+            },
+            expect_ok=expect_ok,
+        )
+
+
 class MonitorHostsClient(RestApiClient):
     default_version = APIVersion.INTERNAL
 
@@ -5575,6 +5597,7 @@ class ClientRegistry:
     HostAvailability: HostAvailabilityClient
     ServiceAvailability: ServiceAvailabilityClient
     DisabledEndpointStub: DisabledEndpointStubClient
+    HostRelationDiscovery: HostRelationDiscoveryClient
     MonitorHosts: MonitorHostsClient
     CustomService: CustomServiceClient
 
@@ -5647,6 +5670,7 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         HostAvailability=HostAvailabilityClient(request_handler, url_prefix),
         ServiceAvailability=ServiceAvailabilityClient(request_handler, url_prefix),
         DisabledEndpointStub=DisabledEndpointStubClient(request_handler, url_prefix),
+        HostRelationDiscovery=HostRelationDiscoveryClient(request_handler, url_prefix),
         MonitorHosts=MonitorHostsClient(request_handler, url_prefix),
         CustomService=CustomServiceClient(request_handler, url_prefix),
     )

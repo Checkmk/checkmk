@@ -58,6 +58,7 @@ DomainType = Literal[
     "host_availability",
     "host_config",
     "host_config_internal",
+    "host_relation_discovery",
     "hostgroup",
     "host_group_config",
     "host_tag_group",

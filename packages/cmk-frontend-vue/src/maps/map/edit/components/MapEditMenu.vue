@@ -106,21 +106,31 @@ function onKeydown(event: KeyboardEvent, index: number): void {
   margin-bottom: var(--dimension-4);
   overflow: hidden;
   background: var(--ux-theme-3);
-  border-radius: var(--border-radius);
+  border-radius: var(--dimension-5);
   box-shadow:
     0 0 0 1px var(--default-border-color),
     0 25px 50px -12px rgb(0 0 0 / 60%);
 }
 
+/* The entries are buttons, which Checkmk styles page-wide: the reset keeps
+   them plain rows. */
 .maps-map-edit-menu__item {
   display: flex;
   align-items: center;
   gap: var(--spacing);
+  box-sizing: border-box;
   width: 100%;
+  margin: 0;
   padding: var(--dimension-4) var(--dimension-5);
   font-size: var(--font-size-normal);
+  font-weight: inherit;
+  letter-spacing: inherit;
   color: var(--font-color);
   text-align: left;
+  background: none;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
 }
 
 .maps-map-edit-menu__item:hover {

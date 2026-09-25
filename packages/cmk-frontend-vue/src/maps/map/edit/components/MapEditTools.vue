@@ -250,13 +250,18 @@ const gridEntries = computed<MapEditMenuEntry[]>(() =>
     0 25px 50px -12px rgb(0 0 0 / 60%);
 }
 
+/* Checkmk styles every button of the page; these are plain tiles. The radius
+   is the one the other controls floating over the map share. */
 .maps-map-edit-tools__button {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 40px;
   height: 40px;
-  border-radius: var(--border-radius);
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--dimension-5);
   transition: all 0.2s;
 }
 

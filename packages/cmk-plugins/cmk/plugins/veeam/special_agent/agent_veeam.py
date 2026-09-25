@@ -339,6 +339,7 @@ SECTIONS: Sequence[Section] = (
     ),
     ("veeam_managed_servers", fetch_list("/api/v1/backupInfrastructure/managedServers")),
     ("veeam_wan_accelerators", fetch_list("/api/v1/backupInfrastructure/wanAccelerators")),
+    ("veeam_license", fetch_object("/api/v1/license")),
 )
 
 

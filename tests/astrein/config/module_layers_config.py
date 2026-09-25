@@ -1156,12 +1156,14 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.rulesets",
         "cmk.utils.tags",
     ),
-    # The trial mode selection record keeps the request's Selection enum.
+    # The trial mode selection record keeps the request's Selection enum, and the license
+    # state follows the selection behind the exp_trial_mode_selection flag.
     Component("cmk.utils.nonfree.pro.licensing"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_CRYPTO,
         *(f"cmk.utils.{m}" for m in CROSS_DEPENDING_UTILS_MODULES),
         "cmk.utils.password_store",
+        "cmk.flags",
         "cmk.shared_typing.trial_mode_selection_request",
     ),
     **{

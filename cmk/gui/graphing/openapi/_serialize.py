@@ -19,7 +19,8 @@ from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 from .._drawn_curves import DrawnCurve, serialize_drawn_curves
 from .._source import FetchDiagnostics
-from .._unit_format import apply_temperature_unit, unit_to_unit_format
+from .._unit_format import unit_to_unit_format
+from .._user_specific_unit import apply_temperature_unit
 from .models import (
     ApiConsolidation,
     ApiHorizontalLine,

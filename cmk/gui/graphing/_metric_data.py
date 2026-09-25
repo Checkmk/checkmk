@@ -37,8 +37,12 @@ from ._performance_data import (
     RawPerformanceData,
     RawPerformanceValue,
 )
-from ._unit_format import apply_temperature_unit, unit_to_unit_format
-from ._user_specific_unit import user_specific_unit_from_unit_format
+from ._unit_format import unit_to_unit_format
+from ._user_specific_unit import (
+    apply_temperature_unit,
+    formatter_from_unit_format,
+    user_specific_unit_from_unit_format,
+)
 
 _PREDICT_PREFIXES = ("predict_lower_", "predict_")
 
@@ -524,7 +528,7 @@ def evaluated_metrics(
             name=name,
             title=attributes.title,
             color=attributes.color,
-            formatter=user_specific_unit_from_unit_format(unit_format, temperature_unit).formatter,
+            formatter=formatter_from_unit_format(unit_format),
             unit_format=unit_format,
             performance_data=_in_user_unit(performance_data, conversion),
         )

@@ -49,7 +49,8 @@ from cmk.gui.graphing import (
 )
 from cmk.gui.graphing._graph_dispatch import serialize_graphs
 from cmk.gui.graphing._graph_templates import _EvaluateTemplateGraphs
-from cmk.gui.graphing._unit_format import apply_temperature_unit, unit_to_unit_format
+from cmk.gui.graphing._unit_format import unit_to_unit_format
+from cmk.gui.graphing._user_specific_unit import apply_temperature_unit
 from cmk.gui.graphing.openapi import fetch_graph_data as fetch_graph_data_module
 from cmk.gui.graphing.openapi._serialize import (
     api_consolidation_to_engine,

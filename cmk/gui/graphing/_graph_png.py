@@ -33,14 +33,13 @@ from cmk.graphing_engine import (
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import SizeMM
 from cmk.gui.unit_formatter import Label, NegativeYRange, NotationFormatter, PositiveYRange
-from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import UnitFormat
 
 from ._drawn_curves import drawn_curves
 from ._graph_display_config import GraphDisplayConfigImage
 from ._time_axis import compute_time_axis
 from ._unit_format import unit_from_curves
-from ._user_specific_unit import user_specific_unit_from_unit_format
+from ._user_specific_unit import formatter_from_unit_format
 
 DPI = 96
 TITLE_COLOR = "#1E262E"
@@ -366,13 +365,8 @@ def _notation_formatter(y_axis_unit: UnitFormat | None) -> NotationFormatter | N
     if y_axis_unit is None:
         return None
     # PNG plots the evaluated graph's own values rather than the converted fetch response, so
-    # the label must stay truthful to the actually-plotted (unconverted) values: match the
-    # requested unit to the metric's own degree scale rather than the user's preferred one,
-    # which always resolves to the identity conversion.
-    native_temperature_unit = (
-        TemperatureUnit.FAHRENHEIT if y_axis_unit.symbol == "°F" else TemperatureUnit.CELSIUS
-    )
-    return user_specific_unit_from_unit_format(y_axis_unit, native_temperature_unit).formatter
+    # the label must stay truthful to the actually-plotted (unconverted) values.
+    return formatter_from_unit_format(y_axis_unit)
 
 
 def _y_range_for_labels(ax: Axes) -> PositiveYRange | NegativeYRange | None:

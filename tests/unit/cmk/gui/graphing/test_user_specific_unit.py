@@ -17,6 +17,10 @@ from cmk.gui.graphing import (
     user_specific_unit_from_unit_format,
 )
 from cmk.gui.graphing._unit_specification import NonConvertibleUnitSpecification
+from cmk.gui.graphing._user_specific_unit import (
+    apply_temperature_unit,
+    formatter_from_unit_format,
+)
 from cmk.gui.unit_formatter import (
     AutoPrecision,
     DecimalFormatter,
@@ -330,3 +334,75 @@ def test_user_specific_unit_from_unit_format_not_convertible_keeps_a_literal_sym
     unit = user_specific_unit_from_unit_format(unit_format, TemperatureUnit.FAHRENHEIT)
     assert unit.formatter.symbol == "°C"
     assert unit.conversion(10) == 10
+
+
+def test_apply_temperature_unit_celsius_to_fahrenheit() -> None:
+    unit_format, conversion = apply_temperature_unit(
+        UnitFormat(
+            notation="decimal", symbol="°C", precision=SharedPrecision(type="auto", digits=2)
+        ),
+        TemperatureUnit.FAHRENHEIT,
+    )
+    assert unit_format == UnitFormat(
+        notation="decimal",
+        symbol="°F",
+        precision=SharedPrecision(type="auto", digits=2),
+        convertible=False,
+    )
+    assert conversion(20.0) == 68.0
+
+
+def test_apply_temperature_unit_fahrenheit_to_celsius() -> None:
+    unit_format, conversion = apply_temperature_unit(
+        UnitFormat(
+            notation="decimal", symbol="°F", precision=SharedPrecision(type="auto", digits=2)
+        ),
+        TemperatureUnit.CELSIUS,
+    )
+    assert unit_format.symbol == "°C"
+    assert conversion(68.0) == 20.0
+
+
+def test_apply_temperature_unit_celsius_to_celsius_is_the_identity() -> None:
+    unit_format, conversion = apply_temperature_unit(
+        UnitFormat(
+            notation="decimal", symbol="°C", precision=SharedPrecision(type="auto", digits=2)
+        ),
+        TemperatureUnit.CELSIUS,
+    )
+    assert unit_format.symbol == "°C"
+    assert conversion(20.0) == 20.0
+
+
+def test_apply_temperature_unit_leaves_a_non_temperature_symbol_alone() -> None:
+    unit_format, conversion = apply_temperature_unit(
+        UnitFormat(notation="si", symbol="B", precision=SharedPrecision(type="strict", digits=3)),
+        TemperatureUnit.FAHRENHEIT,
+    )
+    assert unit_format.symbol == "B"
+    assert unit_format.precision == SharedPrecision(type="strict", digits=3)
+    assert conversion(123.456) == 123.456
+
+
+def test_apply_temperature_unit_respects_a_unit_that_opts_out() -> None:
+    # A custom-graph unit whose label merely happens to read "°C" is not a temperature.
+    unit_format, conversion = apply_temperature_unit(
+        UnitFormat(
+            notation="decimal",
+            symbol="°C",
+            precision=SharedPrecision(type="auto", digits=2),
+            convertible=False,
+        ),
+        TemperatureUnit.FAHRENHEIT,
+    )
+    assert unit_format.symbol == "°C"
+    assert conversion(20.0) == 20.0
+
+
+def test_formatter_from_unit_format_keeps_a_temperature_symbol_as_given() -> None:
+    formatter = formatter_from_unit_format(
+        UnitFormat(
+            notation="decimal", symbol="°C", precision=SharedPrecision(type="auto", digits=2)
+        )
+    )
+    assert formatter == DecimalFormatter(symbol="°C", precision=AutoPrecision(digits=2))

@@ -18,7 +18,7 @@ from cmk.web.utils.icons import IconNames
 
 from .._built_graphs import BuiltGraph, DiscoveredGraphs
 from .._graph_dispatch import serialize_graphs
-from .._unit_format import apply_temperature_unit
+from .._user_specific_unit import apply_temperature_unit
 
 type ApiConsolidation = Literal["min", "max", "avg"]
 

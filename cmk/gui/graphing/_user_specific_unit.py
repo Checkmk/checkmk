@@ -5,7 +5,7 @@
 
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import assert_never
 
 from cmk.gui.logged_in import LoggedInUser
@@ -103,43 +103,57 @@ def user_specific_unit(
     )
 
 
-def user_specific_unit_from_unit_format(
+def apply_temperature_unit(
     unit_format: SharedUnitFormat, temperature_unit: TemperatureUnit
-) -> UserSpecificUnit:
-    """Same shape as ``user_specific_unit``, keyed off the shared ``UnitFormat`` - a notation
-    string and a ``convertible`` flag - instead of the pydantic Convertible/NonConvertible unit
-    specification. ``UnitFormat`` is what PNG and the Vue graph both already carry."""
+) -> tuple[SharedUnitFormat, Callable[[float], float]]:
+    """Unit and converter as a pair, so no caller relabels values without converting them.
+
+    ``convertible=False`` tells the frontend the numbers are already converted."""
     noop_conversion = _Conversion(symbol=unit_format.symbol, converter=lambda v: v)
     conversion = (
         _temperature_conversion(unit_format.symbol, temperature_unit, noop_conversion)
         if unit_format.convertible is not False
         else noop_conversion
     )
+    return (
+        replace(unit_format, symbol=conversion.symbol, convertible=False),
+        conversion.converter,
+    )
+
+
+def formatter_from_unit_format(unit_format: SharedUnitFormat) -> NotationFormatter:
+    """The formatter for values already in ``unit_format``; it converts nothing."""
     precision: AutoPrecision | StrictPrecision = (
         AutoPrecision(digits=unit_format.precision.digits)
         if unit_format.precision.type == "auto"
         else StrictPrecision(digits=unit_format.precision.digits)
     )
-    formatter: NotationFormatter
+    symbol = unit_format.symbol
     match unit_format.notation:
         case "decimal":
-            formatter = DecimalFormatter(symbol=conversion.symbol, precision=precision)
+            return DecimalFormatter(symbol=symbol, precision=precision)
         case "si":
-            formatter = SIFormatter(symbol=conversion.symbol, precision=precision)
+            return SIFormatter(symbol=symbol, precision=precision)
         case "iec":
-            formatter = IECFormatter(symbol=conversion.symbol, precision=precision)
+            return IECFormatter(symbol=symbol, precision=precision)
         case "standard_scientific":
-            formatter = StandardScientificFormatter(symbol=conversion.symbol, precision=precision)
+            return StandardScientificFormatter(symbol=symbol, precision=precision)
         case "engineering_scientific":
-            formatter = EngineeringScientificFormatter(
-                symbol=conversion.symbol, precision=precision
-            )
+            return EngineeringScientificFormatter(symbol=symbol, precision=precision)
         case "time":
-            formatter = TimeFormatter(symbol=conversion.symbol, precision=precision)
+            return TimeFormatter(symbol=symbol, precision=precision)
         case other:
             assert_never(other)
 
-    return UserSpecificUnit(formatter=formatter, conversion=conversion.converter)
+
+def user_specific_unit_from_unit_format(
+    unit_format: SharedUnitFormat, temperature_unit: TemperatureUnit
+) -> UserSpecificUnit:
+    """Same shape as ``user_specific_unit``, keyed off the shared ``UnitFormat`` - a notation
+    string and a ``convertible`` flag - instead of the pydantic Convertible/NonConvertible unit
+    specification. ``UnitFormat`` is what PNG and the Vue graph both already carry."""
+    converted, conversion = apply_temperature_unit(unit_format, temperature_unit)
+    return UserSpecificUnit(formatter=formatter_from_unit_format(converted), conversion=conversion)
 
 
 def _degree_celsius_conversion(temperature_unit: TemperatureUnit) -> _Conversion:

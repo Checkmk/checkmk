@@ -30,8 +30,15 @@ from ._utils import (
     save_dashboard_to_file,
     validated_dashboard_token,
 )
+from ._widget_resolution import (
+    PERMISSIONS_LINK_TARGET,
+    PERMISSIONS_WIDGET_QUERY,
+    resolve_widget,
+    ResolvedWidget,
+)
 from .model.contextual_link import ContextualLinkSpec
 from .model.link_properties import LinkProperties, ResolvedLink
+from .model.widget_source import ExplicitWidgetContent, SavedWidgetContent, WidgetTimeRange
 
 __all__ = [
     "ContextualLinkSpec",
@@ -39,6 +46,7 @@ __all__ = [
     "DashboardConstants",
     "DashboardOwnerWithBuiltin",
     "EffectiveLink",
+    "ExplicitWidgetContent",
     "FigureDashletConfig",
     "FigureRequestInternal",
     "GraphDashletConfig",
@@ -48,7 +56,12 @@ __all__ = [
     "PERMISSIONS_DASHBOARD",
     "PERMISSIONS_DASHBOARD_EDIT",
     "PERMISSIONS_DASHBOARD_READ",
+    "PERMISSIONS_LINK_TARGET",
+    "PERMISSIONS_WIDGET_QUERY",
     "ResolvedLink",
+    "ResolvedWidget",
+    "SavedWidgetContent",
+    "WidgetTimeRange",
     "clone_dashboard_config",
     "convert_internal_relative_dashboard_to_api_model_dict",
     "dashboard_owner_description",
@@ -59,6 +72,7 @@ __all__ = [
     "link_properties_for",
     "make_pending_changes",
     "register_endpoints",
+    "resolve_widget",
     "save_dashboard_to_file",
     "validated_dashboard_token",
 ]

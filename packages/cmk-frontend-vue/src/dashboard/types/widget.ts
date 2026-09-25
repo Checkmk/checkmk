@@ -55,6 +55,11 @@ export interface EffectiveWidgetFilterContext extends WidgetFilterContext {
 export type FilterHTTPVars = Record<string, string>
 export type VisualContext = Record<string, FilterHTTPVars>
 
+export type SavedWidgetContent = components['schemas']['SavedWidgetContent']
+export type WidgetSource<C> =
+  | { type: 'explicit'; content: C; context: VisualContext }
+  | SavedWidgetContent
+
 // Specific widget types
 export type EmbeddedViewContent = components['schemas']['EmbeddedViewContent']
 export type IFrameContent = components['schemas']['URLContent']

@@ -213,6 +213,7 @@ COMMUNITY_WHEELS = [
     "//packages/cmk-plugins:wheel-ipmi",
     "//packages/cmk-plugins:wheel-jenkins",
     "//packages/cmk-plugins:wheel-kube",
+    "//packages/cmk-plugins:wheel-ldapcheck",
     "//packages/cmk-plugins:wheel-lib",
     "//packages/cmk-plugins:wheel-netapp",
     "//packages/cmk-plugins:wheel-prism",

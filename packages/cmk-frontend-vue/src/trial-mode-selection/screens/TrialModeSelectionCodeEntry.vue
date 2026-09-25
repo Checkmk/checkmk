@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
@@ -18,19 +19,22 @@ import TrialModeSelectionDialogFooter from '../components/TrialModeSelectionDial
 import TrialModeSelectionScreenHeading from '../components/TrialModeSelectionScreenHeading.vue'
 import TrialModeSelectionStepIndicator from '../components/TrialModeSelectionStepIndicator.vue'
 
-const { email, resendCooldown } = defineProps<{
+const { email, resendCooldown, sendLimitResetsIn } = defineProps<{
   email: string
   /** Seconds left before another code may be requested; 0 means it is available. */
   resendCooldown: number
+  /** Seconds until the send limit resets; 0 if not reached. */
+  sendLimitResetsIn: number
 }>()
 
 const emit = defineEmits<{
   back: []
   resend: []
   verified: []
+  continueUnverified: []
 }>()
 
-const { _t } = usei18n()
+const { _t, _tn } = usei18n()
 
 const codeInput = ref<InstanceType<typeof OtpInput> | null>(null)
 const codeLabelId = useId()
@@ -43,12 +47,23 @@ const codeLabelId = useId()
 const code = ref('')
 
 const isComplete = computed(() => code.value.length === DIGIT_COUNT)
-const canResend = computed(() => resendCooldown <= 0)
+const limitReached = computed(() => sendLimitResetsIn > 0)
+const canResend = computed(() => resendCooldown <= 0 && !limitReached.value)
 
+const limitResetsIn = computed(() => {
+  const hours = Math.ceil(sendLimitResetsIn / 3600)
+  if (hours > 1) {
+    return _tn('%{n} hour', '%{n} hours', hours, { n: `${hours}` })
+  }
+  const minutes = Math.ceil(sendLimitResetsIn / 60)
+  return _tn('%{n} minute', '%{n} minutes', minutes, { n: `${minutes}` })
+})
+
+// No countdown at the limit: the button stays disabled until midnight, not for 60 s.
 const resendLabel = computed(() =>
-  canResend.value
-    ? _t('Resend code')
-    : _t('Resend code (%{countdown})', { countdown: formatCountdown(resendCooldown) })
+  resendCooldown > 0 && !limitReached.value
+    ? _t('Resend code (%{countdown})', { countdown: formatCountdown(resendCooldown) })
+    : _t('Resend code')
 )
 
 function formatCountdown(seconds: number): string {
@@ -108,6 +123,18 @@ onMounted(() => codeInput.value?.focus())
       <OtpInput ref="codeInput" v-model="code" @submit="verify" />
     </div>
 
+    <CmkAlert
+      v-if="limitReached"
+      variant="warning"
+      class="trial-mode-selection-code-entry__limit"
+      :text="
+        _t(
+          'Too many codes requested for this address. Try again in %{time}, go back to use a different email address, or continue without verification as an unverified trial.',
+          { time: limitResetsIn }
+        )
+      "
+    />
+
     <div class="trial-mode-selection-code-entry__resend">
       <CmkParagraph class="trial-mode-selection-code-entry__resend-question">
         {{ _t("Didn't receive it?") }}
@@ -118,6 +145,9 @@ onMounted(() => codeInput.value?.focus())
     </div>
 
     <TrialModeSelectionDialogFooter @back="emit('back')">
+      <CmkButton v-if="limitReached" variant="secondary" @click="emit('continueUnverified')">
+        {{ _t('Continue without verification') }}
+      </CmkButton>
       <CmkButton variant="success" :disabled="!isComplete" @click="verify">
         {{ _t('Verify') }}
       </CmkButton>
@@ -133,6 +163,10 @@ onMounted(() => codeInput.value?.focus())
 
 .trial-mode-selection-code-entry__code {
   margin: var(--dimension-4) 0 var(--dimension-6);
+}
+
+.trial-mode-selection-code-entry__limit {
+  margin-bottom: var(--dimension-6);
 }
 
 .trial-mode-selection-code-entry__resend {

@@ -42,6 +42,8 @@ function renderApp(overrides: Partial<TrialModeSelectionProps> = {}) {
       // 2026-08-13 12:00:00 UTC
       trial_end_timestamp: 1786622400,
       trial_length_days: 30,
+      free_services_limit: 750,
+      verification_domain: 'analytics.checkmk.com',
       ...overrides
     }
   })
@@ -259,6 +261,101 @@ describe('TrialModeSelectionApp', () => {
     })
   })
 
+  describe('offline site', () => {
+    async function continueOffline() {
+      await startTrial()
+      await user.click(screen.getByRole('button', { name: 'Continue as offline trial' }))
+    }
+
+    it('explains the blocked connection instead of asking for an email address', async () => {
+      renderApp({ offline: true })
+      await startTrial()
+
+      expect(
+        screen.getByRole('heading', { name: /This site can't reach analytics.checkmk.com/ })
+      ).toBeInTheDocument()
+      expect(screen.queryByLabelText('Email address')).not.toBeInTheDocument()
+    })
+
+    it('names the domain the page was given', async () => {
+      renderApp({ offline: true, verification_domain: 'mock.example.com' })
+      await startTrial()
+
+      expect(
+        screen.getByRole('heading', { name: /This site can't reach mock.example.com/ })
+      ).toBeInTheDocument()
+    })
+
+    it('returns to the undecided entry choice on Back', async () => {
+      renderApp({ offline: true })
+      await startTrial()
+
+      await user.click(screen.getByRole('button', { name: 'Back' }))
+
+      expect(screen.getByText('Welcome to your new Checkmk site')).toBeInTheDocument()
+      expect(mockCmkAjax).not.toHaveBeenCalled()
+    })
+
+    it('shows the unverified trial with the days left on Continue as offline trial', async () => {
+      renderApp({ offline: true, trial_end_timestamp: Date.now() / 1000 + 26 * 24 * 3600 - 300 })
+      await continueOffline()
+
+      expect(screen.getByRole('heading', { name: 'Unverified trial' })).toBeInTheDocument()
+      expect(screen.getByText('Full features · 26 days left')).toBeInTheDocument()
+      expect(mockCmkAjax).not.toHaveBeenCalled()
+    })
+
+    it('shows no days left once the trial has ended', async () => {
+      renderApp({ offline: true, trial_end_timestamp: Date.now() / 1000 - 2 * 24 * 3600 })
+      await continueOffline()
+
+      expect(screen.getByRole('heading', { name: 'Unverified trial' })).toBeInTheDocument()
+      expect(screen.queryByText(/days? left/)).not.toBeInTheDocument()
+    })
+
+    it('shows at most the trial length as days left', async () => {
+      renderApp({ offline: true, trial_end_timestamp: Date.now() / 1000 + 33 * 24 * 3600 })
+      await continueOffline()
+
+      expect(screen.getByText('Full features · 30 days left')).toBeInTheDocument()
+    })
+
+    it('goes back to the blocked connection from the unverified trial', async () => {
+      renderApp({ offline: true })
+      await continueOffline()
+
+      await user.click(screen.getByRole('button', { name: 'Back' }))
+
+      expect(
+        screen.getByRole('heading', { name: /This site can't reach analytics.checkmk.com/ })
+      ).toBeInTheDocument()
+    })
+
+    it('records the unverified trial and leaves for the dashboard on Start monitoring', async () => {
+      renderApp({ offline: true })
+      await continueOffline()
+
+      await user.click(screen.getByRole('button', { name: 'Start monitoring' }))
+
+      await waitFor(() => {
+        expect(mockCmkAjax).toHaveBeenCalledExactlyOnceWith('ajax_save_trial_mode_selection.py', {
+          selection: 'unverified_trial',
+          _csrf_token: 'the-csrf-token'
+        })
+        expect(mockLocationAssign).toHaveBeenCalledWith('index.py')
+      })
+    })
+
+    // The page sends `offline: null` until CMK-37828.
+    it('asks for an email address when the page does not say the site is offline', async () => {
+      // The props type has no null, so the whole object is cast.
+      renderApp({ offline: null } as unknown as Partial<TrialModeSelectionProps>)
+      await startTrial()
+
+      expect(screen.getByText('Verify your email address')).toBeInTheDocument()
+    })
+  })
+
   describe('email step', () => {
     it('returns to the entry choice on Back', async () => {
       renderApp()
@@ -413,6 +510,8 @@ describe('TrialModeSelectionApp', () => {
   describe('resend cooldown', () => {
     beforeEach(() => {
       vi.useFakeTimers()
+      // Midday, so no test here crosses midnight and resets the daily send limit.
+      vi.setSystemTime(Date.UTC(2026, 8, 25, 12, 0, 0))
       // Handing user-event the fake clock rather than letting real elapsed time drive it:
       // the countdown then only moves where a test advances it, which is what makes the
       // exact seconds below exact rather than a race against how loaded the machine is.
@@ -483,6 +582,121 @@ describe('TrialModeSelectionApp', () => {
       await user.click(resendButton())
 
       expect(resendButton()).toHaveTextContent('Resend code (1:00)')
+    })
+
+    /** Sends 5 codes: the first one plus 4 resends. */
+    async function useUpSends() {
+      for (let resend = 0; resend < 4; resend++) {
+        await vi.advanceTimersByTimeAsync(60_000)
+        await user.click(resendButton())
+      }
+    }
+
+    it('offers continuing unverified once the send limit is used up', async () => {
+      renderApp()
+      await reachCodeStep()
+      expect(
+        screen.queryByRole('button', { name: 'Continue without verification' })
+      ).not.toBeInTheDocument()
+      expect(screen.queryByText(/Too many codes requested/)).not.toBeInTheDocument()
+
+      await useUpSends()
+
+      expect(screen.getByText(/Too many codes requested for this address/)).toBeInTheDocument()
+      await vi.advanceTimersByTimeAsync(60_000)
+      expect(resendButton()).toBeDisabled()
+      expect(resendButton()).toHaveTextContent(/^Resend code$/)
+
+      await user.click(screen.getByRole('button', { name: 'Continue without verification' }))
+
+      expect(screen.getByRole('heading', { name: 'Unverified trial' })).toBeInTheDocument()
+    })
+
+    it('goes back to the code from the unverified trial', async () => {
+      renderApp()
+      await reachCodeStep()
+      await useUpSends()
+      await user.click(screen.getByRole('button', { name: 'Continue without verification' }))
+
+      await user.click(screen.getByRole('button', { name: 'Back' }))
+
+      expect(screen.getByText('Enter your verification code')).toBeInTheDocument()
+    })
+
+    it('still verifies a code already delivered once the send limit is used up', async () => {
+      renderApp()
+      await reachCodeStep()
+      await useUpSends()
+
+      await user.type(codeDigits()[0]!, '42424')
+      expect(screen.getByRole('button', { name: 'Verify' })).toBeDisabled()
+      await user.type(codeDigits()[5]!, '2')
+
+      expect(screen.getByText('Trial verified')).toBeInTheDocument()
+    })
+
+    it('counts down to midnight in the browser time zone, when the limit resets', async () => {
+      // Fixed zone and UTC instants, so the result is the same on every machine.
+      // Auckland is UTC+12 on these days, far from UTC, so a UTC midnight would fail.
+      zone.current = 'Pacific/Auckland'
+      vi.setSystemTime(Date.UTC(2026, 8, 24, 22, 0, 0)) // 25 Sep, 10:00 in Auckland
+      renderApp()
+      await reachCodeStep()
+      await useUpSends()
+
+      expect(screen.getByText(/Try again in 14 hours,/)).toBeInTheDocument()
+
+      vi.setSystemTime(Date.UTC(2026, 8, 25, 11, 30, 0)) // 25 Sep, 23:30 in Auckland
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(screen.getByText(/Try again in 30 minutes,/)).toBeInTheDocument()
+
+      vi.setSystemTime(Date.UTC(2026, 8, 25, 12, 0, 0)) // 26 Sep, 00:00 in Auckland
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(screen.queryByText(/Too many codes requested/)).not.toBeInTheDocument()
+      expect(resendButton()).toBeEnabled()
+    })
+
+    it('gives a different address sends of its own', async () => {
+      renderApp()
+      await reachCodeStep()
+      await useUpSends()
+
+      await user.click(screen.getByRole('button', { name: 'Back' }))
+      await user.clear(screen.getByLabelText('Email address'))
+      await user.type(screen.getByLabelText('Email address'), 'john.doe@example.com')
+      await user.click(screen.getByRole('button', { name: 'Send code' }))
+
+      expect(screen.queryByText(/Too many codes requested/)).not.toBeInTheDocument()
+      await vi.advanceTimersByTimeAsync(60_000)
+      expect(resendButton()).toBeEnabled()
+    })
+
+    it('counts an address in any letter case as the same address', async () => {
+      renderApp()
+      await reachCodeStep()
+      await useUpSends()
+
+      await user.click(screen.getByRole('button', { name: 'Back' }))
+      await user.clear(screen.getByLabelText('Email address'))
+      await user.type(screen.getByLabelText('Email address'), 'Jane.Doe@Example.com')
+      await user.click(screen.getByRole('button', { name: 'Send code' }))
+
+      expect(screen.getByText(/Too many codes requested for this address/)).toBeInTheDocument()
+    })
+
+    it('keeps the limit of an address after switching to another one and back', async () => {
+      renderApp()
+      await reachCodeStep()
+      await useUpSends()
+
+      for (const address of ['john.doe@example.com', 'jane.doe@example.com']) {
+        await user.click(screen.getByRole('button', { name: 'Back' }))
+        await user.clear(screen.getByLabelText('Email address'))
+        await user.type(screen.getByLabelText('Email address'), address)
+        await user.click(screen.getByRole('button', { name: 'Send code' }))
+      }
+
+      expect(screen.getByText(/Too many codes requested for this address/)).toBeInTheDocument()
     })
 
     it('empties the boxes on a resend, the previous code being dead', async () => {

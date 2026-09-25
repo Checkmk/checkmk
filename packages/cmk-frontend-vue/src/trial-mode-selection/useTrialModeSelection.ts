@@ -3,24 +3,36 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { fromDate, getLocalTimeZone, toCalendarDate } from '@internationalized/date'
 import { type TrialModeSelectionProps } from 'cmk-shared-typing/typescript/trial_mode_selection_props'
 import {
   type TrialModeSelectionRequest,
   type VerificationMode
 } from 'cmk-shared-typing/typescript/trial_mode_selection_request'
 import { cmkAjax } from 'cmk-ui-library/lib/ajax'
-import { onScopeDispose, ref } from 'vue'
+import { computed, onScopeDispose, ref } from 'vue'
 
 import { getCsrfToken } from '@/lib/csrf'
 
 /** Seconds a resend stays unavailable after a code has been sent. */
 const RESEND_COOLDOWN_SECONDS = 60
+/** Max codes per email address per day. */
+const SEND_LIMIT = 5
 
 /**
  * Screens the gate dialog can show. The customer branch is a single step, asking how the
  * license is verified; the trial branch walks choice -> email -> code -> success.
+ * Offline sites go choice -> unreachable -> unverified; the send limit also leads to
+ * unverified.
  */
-export type TrialModeScreen = 'choice' | 'verification' | 'email' | 'code' | 'success'
+export type TrialModeScreen =
+  | 'choice'
+  | 'verification'
+  | 'email'
+  | 'code'
+  | 'success'
+  | 'unreachable'
+  | 'unverified'
 
 /**
  * State shared by the dialog's screens.
@@ -46,10 +58,40 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
    */
   const resendCooldown = ref(0)
   /** Address the standing cooldown belongs to. */
-  let lastSentTo = ''
+  const lastSentTo = ref('')
   /** When the standing cooldown runs out, as a timestamp. */
   let resendAvailableAt = 0
   let ticker: ReturnType<typeof setInterval> | undefined
+  /**
+   * When codes were sent, per address. Mocked until CMK-37828 connects the backend: the
+   * count lives only in this page, so a reload, another browser or another admin starts
+   * at 0. The backend will enforce the real limit and return when it resets.
+   */
+  const sendTimes = ref<Record<string, number[]>>({})
+  const now = ref(Date.now())
+  /** Ticks `now` every second, so the limit countdown updates and resets at midnight. */
+  const clock = setInterval(() => (now.value = Date.now()), 1000)
+  onScopeDispose(() => clearInterval(clock))
+
+  /** Seconds until midnight in the browser's time zone once the limit is reached, otherwise 0. */
+  const sendLimitResetsIn = computed(() => {
+    const timeZone = getLocalTimeZone()
+    const today = toCalendarDate(fromDate(new Date(now.value), timeZone))
+    const todayStart = today.toDate(timeZone).getTime()
+    const sent = sendTimes.value[lastSentTo.value] ?? []
+    if (sent.filter((time) => time >= todayStart).length < SEND_LIMIT) {
+      return 0
+    }
+    const nextMidnight = today.add({ days: 1 }).toDate(timeZone).getTime()
+    return Math.ceil((nextMidnight - now.value) / 1000)
+  })
+
+  function recordSend(): void {
+    now.value = Date.now()
+    const sent = sendTimes.value[lastSentTo.value] ?? []
+    sendTimes.value[lastSentTo.value] = [...sent, now.value]
+    armResendCooldown()
+  }
 
   function stopTicking(): void {
     if (ticker !== undefined) {
@@ -92,6 +134,23 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
     screen.value = next
   }
 
+  /** Offline sites get the unreachable screen. Mocked: `offline` stays unset until CMK-37828. */
+  function startTrial(): void {
+    goTo(props.offline ? 'unreachable' : 'email')
+  }
+
+  /** Screen that Back on the unverified trial returns to. */
+  let unverifiedOpenedFrom: TrialModeScreen = 'choice'
+
+  function openUnverifiedTrial(): void {
+    unverifiedOpenedFrom = screen.value
+    goTo('unverified')
+  }
+
+  function leaveUnverifiedTrial(): void {
+    goTo(unverifiedOpenedFrom)
+  }
+
   /**
    * Sends a code to the address and moves on to entering it. Nothing actually leaves the
    * site until CMK-37828 wires this up.
@@ -102,9 +161,12 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
    * A different address is a different rate-limit key, so it starts its own.
    */
   function sendCode(): void {
-    if (email.value !== lastSentTo || resendCooldown.value <= 0) {
-      armResendCooldown()
-      lastSentTo = email.value
+    // Case-insensitive, so changing the letter case is not a new address.
+    const address = email.value.toLowerCase()
+    const newAddress = address !== lastSentTo.value
+    lastSentTo.value = address
+    if ((newAddress || resendCooldown.value <= 0) && sendLimitResetsIn.value === 0) {
+      recordSend()
     }
     goTo('code')
   }
@@ -141,6 +203,16 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
     return persistAndLeave({ selection: 'trial' }, 'index.py')
   }
 
+  function resendCode(): void {
+    if (sendLimitResetsIn.value === 0) {
+      recordSend()
+    }
+  }
+
+  function recordUnverifiedTrial(): Promise<void> {
+    return persistAndLeave({ selection: 'unverified_trial' }, 'index.py')
+  }
+
   function verifyNow(mode: VerificationMode): Promise<void> {
     return persistAndLeave(
       { selection: 'customer', verification_mode: mode },
@@ -158,10 +230,15 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
     saving,
     saveFailed,
     resendCooldown,
+    sendLimitResetsIn,
+    startTrial,
+    openUnverifiedTrial,
+    leaveUnverifiedTrial,
     sendCode,
-    resendCode: armResendCooldown,
+    resendCode,
     goTo,
     recordTrial,
+    recordUnverifiedTrial,
     verifyNow,
     verifyLater
   }

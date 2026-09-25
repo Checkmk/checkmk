@@ -16,6 +16,18 @@
     "trial_length_days": {
       "type": "number",
       "description": "Days a trial runs for."
+    },
+    "free_services_limit": {
+      "type": "number",
+      "description": "Services the free edition monitors once the trial has ended."
+    },
+    "verification_domain": {
+      "type": "string",
+      "description": "Domain the site must reach to verify a trial."
+    },
+    "offline": {
+      "type": "boolean",
+      "description": "The site cannot reach the Checkmk servers. Unset (online) until CMK-37828."
     }
   },
   "required": [
@@ -26,6 +38,8 @@
     "user_name",
     "edition_title",
     "trial_end_timestamp",
-    "trial_length_days"
+    "trial_length_days",
+    "free_services_limit",
+    "verification_domain"
   ]
 }

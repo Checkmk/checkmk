@@ -106,6 +106,13 @@ function shortcutCombo(shortcut: KeyShortcut): string[] {
   return combo.concat(shortcut.key)
 }
 
+function pressedKey(e: KeyboardEvent): string {
+  if (e.key === 'Unidentified' && e.code === 'Space') {
+    return ' '
+  }
+  return e.key
+}
+
 export class KeyShortcutService {
   private keyStates: KeyStates = {}
   private handlers: KeyShortcutHandler[] = []
@@ -283,12 +290,12 @@ export class KeyShortcutService {
   }
 
   private handleKeyDown(e: KeyboardEvent): void {
-    this.setKeyState(e.key, true)
+    this.setKeyState(pressedKey(e), true)
     this.callHandlers(e)
   }
 
   private handleKeyUp(e: KeyboardEvent): void {
-    this.setKeyState(e.key, false)
+    this.setKeyState(pressedKey(e), false)
   }
 
   // A window that loses focus gets no keyup for the keys still held, e.g. after alt-tab.

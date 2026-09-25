@@ -161,3 +161,19 @@ test('a key held while a listened-to iframe loses focus counts as released', asy
 
   expect(escape).toHaveBeenCalledTimes(1)
 })
+
+test('matches a shortcut by the key the browser reports', () => {
+  const toggle = on({ key: [' '], ctrl: true })
+
+  press(document.body, ' ', { ctrlKey: true, code: 'Space' })
+
+  expect(toggle).toHaveBeenCalledOnce()
+})
+
+test('matches an unidentified key press by its physical key', () => {
+  const toggle = on({ key: [' '], ctrl: true })
+
+  press(document.body, 'Unidentified', { ctrlKey: true, code: 'Space' })
+
+  expect(toggle).toHaveBeenCalledOnce()
+})

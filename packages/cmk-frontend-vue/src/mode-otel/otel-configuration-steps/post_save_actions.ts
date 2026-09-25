@@ -333,33 +333,15 @@ export const enableDataBackendAction: PostSaveAction = {
 }
 
 /**
- * REST body shape for the `otel_collector_config_receivers` POST. The same URL
- * serves both the ultimate and cloud editions — the server picks the right
- * handler by edition, and only the body shape differs (cloud has no
- * address/port/encryption/event_console, only auth).
+ * REST body shape for the `otel_collector_config_receivers` POST. Every edition
+ * shares one schema; cloud rejects the socket address, encryption, event console
+ * and the `none` authentication, so the wizard only sends them where it collects
+ * them (see `OTelReceiverProtocolInput.extended`).
  */
-type OTelAuthBody =
-  | { type: 'none' }
-  | {
-      type: 'basicauth'
-      userlist: { username: string; password: { type: 'store'; value: string } }[]
-    }
-
-type OTelSocketAddressBody =
-  | { type: 'default_ipv4' }
-  | { type: 'default_ipv6' }
-  | { type: 'custom'; address: string; port: number }
-
-type OTelEndpointBody =
-  | { auth: OTelAuthBody }
-  | {
-      auth: OTelAuthBody
-      socket_address: OTelSocketAddressBody
-      encryption: boolean
-      event_console: { host_name_resource_attribute_key: string } | null
-    }
-
-type OTelProtocolConfigBody = { endpoint: OTelEndpointBody }
+type OTelReceiverBody = components['schemas']['OTelCollectorReceiverRequestSpec']
+type OTelProtocolConfigBody = components['schemas']['OTelCollectorProtocolConfig']
+type OTelAuthBody = components['schemas']['OTelEndpoint']['auth']
+type OTelSocketAddressBody = components['schemas']['SocketAddressModel']
 
 /**
  * Auth payload the wizard hands to the create action. Discriminated on
@@ -423,7 +405,7 @@ function buildAuthBody(auth: OTelAuthInput): OTelAuthBody {
 }
 
 // Mirrors the server's `SocketAddressDefault | SocketAddressCustom`
-// discriminator (non-free/cmk-otel-collector/.../full/_models.py): default
+// discriminator (non-free/cmk-otel-collector/.../base/_receiver_models.py): default
 // modes only carry the type; custom carries an explicit address + port. The
 // input shape encodes this invariant — no runtime guards needed here.
 function buildSocketAddressBody(socketAddress: OTelSocketAddressInput): OTelSocketAddressBody {
@@ -512,23 +494,9 @@ async function saveReceiverPasswords(
 }
 
 /**
- * Request body of the `otel_collector_config_receivers` POST. Declared here
- * rather than taken from the generated spec because the merged internal spec
- * describes only the ultimate shape — see the assertion at the call site. A
- * protocol key is omitted entirely when the user did not configure that tab.
- */
-interface OTelReceiverBody {
-  id: string
-  title: string
-  disabled: boolean
-  site: string[]
-  receiver_protocol_grpc?: OTelProtocolConfigBody
-  receiver_protocol_http?: OTelProtocolConfigBody
-}
-
-/**
  * Builds the `otel_collector_config_receivers` POST body. The wizard's single
- * configuration name doubles as both the id and the Overview display title.
+ * configuration name doubles as both the id and the Overview display title. A
+ * protocol key is omitted entirely when the user did not configure that tab.
  */
 function buildReceiverBody(input: OTelReceiverConfigInput): OTelReceiverBody {
   const body: OTelReceiverBody = {
@@ -571,14 +539,7 @@ export function createOTelReceiverConfigAction(input: OTelReceiverConfigInput): 
         unwrap(
           await client.POST('/domain-types/otel_collector_config_receivers/collections/all', {
             params: { header: CONTENT_TYPE_JSON },
-            // The merged internal spec carries only the ultimate shape of
-            // OTelCollectorProtocolConfig: merge_api_specs drops the cloud variant
-            // (_KNOWN_DIVERGENT_COMPONENTS), whose endpoint holds auth alone.
-            // OTelReceiverBody models both editions, so the checked body is
-            // asserted onto the ultimate-only generated type here.
-            body: buildReceiverBody(
-              input
-            ) as components['schemas']['OTelCollectorReceiverRequestSpec']
+            body: buildReceiverBody(input)
           })
         )
         return {

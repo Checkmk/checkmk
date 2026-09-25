@@ -6,18 +6,13 @@ import argparse
 import difflib
 import json
 import sys
-from collections.abc import Mapping, Sequence, Set
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import override
 
 import yaml
 
 from cmk.ccc.version import Edition
-
-# TODO: editions should introduce their own endpoints instead of redefining shared ones with
-#  different models. Each entry names the diverging edition, whose copy is dropped from the merge.
-_KNOWN_DIVERGENT_PATHS: frozenset[tuple[str, str, str]] = frozenset()
-_KNOWN_DIVERGENT_COMPONENTS: frozenset[tuple[str, str, str]] = frozenset()
 
 # Editions ranked from least to most feature-complete. When two editions describe the same
 # endpoint identically except for its permission documentation, the higher-ranked edition's
@@ -74,28 +69,11 @@ class _Missing:
 _MISSING = _Missing()
 
 
-def merge_specs(
-    specs: Mapping[str, Mapping[str, object]],
-    *,
-    divergent_paths: Set[tuple[str, str, str]] = frozenset(),
-    divergent_components: Set[tuple[str, str, str]] = frozenset(),
-) -> dict[str, object]:
-    """Merge per-edition specs, raising MergeConflictError on unexpected divergence.
-
-    Divergence entries are (edition, method, path) / (edition, section, name) tuples; the
-    tagged edition's copy is dropped and must exist whenever that edition is merged.
-    """
+def merge_specs(specs: Mapping[str, Mapping[str, object]]) -> dict[str, object]:
+    """Merge per-edition specs, raising MergeConflictError if the editions diverge."""
     known_editions = {edition.long for edition in Edition}
     if unknown_editions := set(specs) - known_editions:
         raise ValueError(f"Unknown editions: {sorted(unknown_editions)}")
-    if (
-        unknown_tags := {entry[0] for entry in divergent_paths | divergent_components}
-        - known_editions
-    ):
-        raise ValueError(f"Unknown editions in divergence entries: {sorted(unknown_tags)}")
-
-    pending_paths = {entry for entry in divergent_paths if entry[0] in specs}
-    pending_components = {entry for entry in divergent_components if entry[0] in specs}
 
     metadata: dict[str, object] = {}
     paths: dict[str, dict[str, object]] = {}
@@ -149,17 +127,11 @@ def merge_specs(
             merge_entry(metadata, key, spec.get(key, _MISSING), edition, (key,))
         for path, path_item in _as_mapping(spec.get("paths", {}), f"{edition}: paths").items():
             for method, operation in _as_mapping(path_item, f"{edition}: paths/{path}").items():
-                if (edition, method, path) in divergent_paths:
-                    pending_paths.discard((edition, method, path))
-                    continue
                 merge_operation(path, method, operation, edition)
         for section, entries in _as_mapping(
             spec.get("components", {}), f"{edition}: components"
         ).items():
             for name, value in _as_mapping(entries, f"{edition}: components/{section}").items():
-                if (edition, section, name) in divergent_components:
-                    pending_components.discard((edition, section, name))
-                    continue
                 merge_entry(
                     components.setdefault(section, {}),
                     name,
@@ -178,12 +150,6 @@ def merge_specs(
             for member in _as_sequence(group_mapping["tags"], location):
                 if member not in members:
                     members.append(_as_str(member, location))
-
-    if pending_paths or pending_components:
-        raise ValueError(
-            "Expected divergences were not encountered, clean up the divergence entries: "
-            + ", ".join(repr(entry) for entry in sorted(pending_paths | pending_components))
-        )
 
     merged = dict(metadata)
     merged["paths"] = paths
@@ -251,11 +217,7 @@ def main() -> int:
         edition: _as_mapping(yaml.safe_load(path.read_text()), str(path))
         for edition, path in _parse_inputs(args.inputs).items()
     }
-    merged = merge_specs(
-        specs,
-        divergent_paths=_KNOWN_DIVERGENT_PATHS,
-        divergent_components=_KNOWN_DIVERGENT_COMPONENTS,
-    )
+    merged = merge_specs(specs)
     args.out.write_text(yaml.safe_dump(merged, sort_keys=False))
     return 0
 

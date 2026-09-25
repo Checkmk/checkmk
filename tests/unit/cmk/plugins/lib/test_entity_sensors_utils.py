@@ -368,10 +368,6 @@ def test_parse_entity_sensors(
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash report efcafd74-3aa5-11f1-9612-005056ab3733: KeyError in parse_entity_sensors",
-)
 def test_parse_entity_sensors_skips_sensor_without_type() -> None:
     # Some switches report sensors of a transceiver slot without entPhySensorType.
     string_table = [

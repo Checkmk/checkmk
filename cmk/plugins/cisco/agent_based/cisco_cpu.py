@@ -58,8 +58,6 @@ def check_cisco_cpu(params: Mapping[str, Any], section: Section) -> CheckResult:
 
     util = float(section.new_oid) if section.new_oid else float(section.old_oid)
 
-    if not isinstance(params, dict):
-        params = {"util": params}
     warn, crit = params.get("util", (None, None))
 
     yield from check_levels(

@@ -3,18 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-
 from cmk.agent_based.v2 import Metric, Result, State
 from cmk.checkengine.specs.parameters import Parameters
 from cmk.plugins.cisco.agent_based.cisco_cpu import check_cisco_cpu, Section
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason="Crash report cd83e33c-b02c-11f1-bac8-145a415bde61: ValueError",
-)
 def test_check_cisco_cpu_applies_levels_from_rule_parameters() -> None:
     # The check engine passes the rule as an immutable Parameters mapping, not a dict.
     params = Parameters({"util": (80.0, 90.0)})

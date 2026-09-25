@@ -339,7 +339,7 @@ describe('createSharedGraphFetcher', () => {
       expect.objectContaining({
         headers: { Authorization: `CMK-TOKEN ${CMK_TOKEN}` },
         body: {
-          widget_id: 'w1',
+          source: { type: 'saved', widget_id: 'w1' },
           requested_time_range: { start: 1_000, end: 2_000, step: 60 },
           consolidation_function: 'max'
         }

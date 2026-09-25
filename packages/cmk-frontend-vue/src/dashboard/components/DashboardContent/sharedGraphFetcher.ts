@@ -21,7 +21,7 @@ export function createSharedGraphFetcher(widgetId: string, cmkToken: string): Gr
         params: { header: { 'Content-Type': 'application/json' } },
         headers: { Authorization: `CMK-TOKEN ${cmkToken}` },
         body: {
-          widget_id: widgetId,
+          source: { type: 'saved', widget_id: widgetId },
           requested_time_range: params.fetchWindow,
           consolidation_function: params.consolidationFunction
         }

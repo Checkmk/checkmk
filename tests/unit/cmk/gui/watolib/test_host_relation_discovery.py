@@ -37,6 +37,7 @@ from cmk.gui.watolib.host_relation_discovery import (
     LinkOutcome,
     MarkedValue,
     NameReason,
+    NamesTellApart,
     NameWords,
     outcome_counts,
     Proposals,
@@ -44,10 +45,14 @@ from cmk.gui.watolib.host_relation_discovery import (
     relation_to_find,
     RelationEntry,
     RelationToFind,
+    scan_for_evidence,
     ScannedHost,
     SharedAttribute,
     SharedLabel,
+    suggest_evidence,
+    Suggestions,
     ValueReason,
+    ValueTellsApart,
 )
 from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree, Host, make_folder_tree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
@@ -992,6 +997,20 @@ def test_a_scan_reads_no_host_of_a_folder_the_user_may_not_see(tree: FolderTree)
     assert (found.hosts_scanned, found.entries) == (1, [])
 
 
+def test_the_suggestions_name_no_host_of_a_folder_the_user_may_not_see(tree: FolderTree) -> None:
+    _create_host(_folder_of_its_own(tree, "own", "cg"), "srv-01")
+    _create_host(_folder_of_its_own(tree, "other", "another_cg"), "srv-01-ilo")
+    tree.invalidate_caches()
+
+    suggested = scan_for_evidence(
+        tree,
+        attribute_names=[],
+        acting_user=_user_of_one_contact_group("cg", sees_all_folders=False),
+    )
+
+    assert (suggested.hosts_scanned, suggested.words) == (1, [])
+
+
 def _entry(source: str, target: str, outcome: LinkOutcome) -> RelationEntry:
     return RelationEntry(
         pair=HostPair(
@@ -1129,6 +1148,248 @@ def test_a_finding_that_could_not_find_anything_is_refused(
         relation_to_find("management", words=words, marked_by=marked_by, paired_by=paired_by)
 
 
+def _suggested(
+    hosts: Sequence[ScannedHost],
+    *,
+    words: Sequence[str] = (),
+    values: Sequence[SharedLabel | SharedAttribute] = (),
+    attribute_names: Sequence[str] = (),
+    in_names: bool = True,
+    in_values: bool = True,
+    kinds: Mapping[str, RelationKind] = RELATION_KINDS,
+) -> Suggestions:
+    return suggest_evidence(
+        hosts,
+        attribute_names=attribute_names,
+        words=words,
+        values=values,
+        in_names=in_names,
+        in_values=in_values,
+        kinds=kinds,
+    )
+
+
+def _words(suggestions: Suggestions) -> list[tuple[str, int, str | None]]:
+    return [(finding.word, finding.pairs, finding.kind_id) for finding in suggestions.words]
+
+
+def test_a_word_a_kind_declares_is_suggested_as_that_kind() -> None:
+    (finding,) = _suggested([_scanned("srv-01"), _scanned("srv-01-ilo")]).words
+
+    assert (finding.word, finding.pairs, finding.kind_id) == ("ilo", 1, "management")
+    assert finding.examples == [(HostName("srv-01-ilo"), HostName("srv-01"))]
+
+
+def test_a_word_no_kind_declares_is_suggested_for_the_user_to_name() -> None:
+    assert _words(_suggested([_scanned("srv-01"), _scanned("srv-01-oob")])) == [("oob", 1, None)]
+
+
+def _named_and_sharing_a_serial() -> list[ScannedHost]:
+    return [
+        _scanned(name, labels={"cmdb/sn": f"S-{machine}"})
+        for machine in range(3)
+        for name in (f"srv-0{machine}", f"srv-0{machine}-ilo")
+    ]
+
+
+def test_looking_in_the_names_alone_reports_no_shared_value() -> None:
+    suggested = _suggested(
+        _named_and_sharing_a_serial(), attribute_names=["asset"], in_values=False
+    )
+
+    assert _words(suggested) == [("ilo", 3, "management")]
+    assert (suggested.values, suggested.label_names, suggested.attribute_names) == ([], [], [])
+
+
+def test_looking_in_the_shared_values_alone_reports_no_word() -> None:
+    suggested = _suggested(_named_and_sharing_a_serial(), in_names=False)
+
+    assert suggested.words == []
+    assert [finding.where for finding in suggested.values] == [SharedLabel("cmdb/sn")]
+
+
+@pytest.mark.parametrize(
+    "names",
+    [
+        pytest.param(("ilo-srv-01", "srv-01"), id="word at the start"),
+        pytest.param(("srv_01_ilo", "srv_01"), id="underscores"),
+        pytest.param(("SRV-01-ILO", "SRV-01"), id="upper case"),
+        pytest.param(("idrac.srv-01", "srv-01"), id="word as a label of its own"),
+        pytest.param(("srv-01.ilo.example.com", "srv-01.example.com"), id="a management domain"),
+    ],
+)
+def test_a_word_is_found_wherever_a_scan_would_read_one(names: tuple[str, str]) -> None:
+    assert [
+        finding.kind_id for finding in _suggested([_scanned(name) for name in names]).words
+    ] == ["management"]
+
+
+def test_a_number_is_not_a_word() -> None:
+    assert _words(_suggested([_scanned("srv"), _scanned("srv-01")])) == []
+
+
+def test_a_number_the_user_typed_is_counted_the_way_the_scan_reads_it() -> None:
+    hosts = [_scanned("srv"), _scanned("srv-01")]
+
+    assert _words(_suggested(hosts, words=["01"])) == [("01", 1, None)]
+    assert _proposed(hosts, relations={"management": ["01"]}) == [("srv-01", "srv")]
+
+
+def test_a_word_is_counted_once_per_pair_and_regardless_of_case() -> None:
+    hosts = [_scanned(name) for name in ("a", "a-ilo", "B", "B-ILO", "c")]
+
+    assert _words(_suggested(hosts)) == [("ilo", 2, "management")]
+
+
+def test_declared_words_come_first_then_the_most_frequent() -> None:
+    hosts = [
+        _scanned(name)
+        for name in ("a", "a-db", "b", "b-db", "c", "c-bmc", "d", "d-oob", "e", "e-oob", "f-oob")
+    ]
+
+    assert _words(_suggested(hosts)) == [
+        ("bmc", 1, "management"),
+        ("db", 2, None),
+        ("oob", 2, None),
+    ]
+
+
+def test_only_a_handful_of_undeclared_words_is_offered() -> None:
+    hosts = [
+        _scanned(name) for index in range(12) for name in (f"srv{index}", f"srv{index}-w{index}")
+    ]
+
+    assert len(_suggested(hosts).words) == 8
+
+
+def test_a_word_the_user_typed_is_reported_even_without_a_pair() -> None:
+    assert _words(_suggested([_scanned("srv-01")], words=["OOB"])) == [("oob", 0, None)]
+
+
+def test_a_label_whose_values_each_sit_on_two_hosts_is_suggested() -> None:
+    hosts = [
+        _scanned("w-4711", labels={"cmdb/sn": "S-1"}),
+        _scanned("w-4712", labels={"cmdb/sn": "S-1"}),
+        _scanned("w-4713", labels={"cmdb/sn": "S-2"}),
+        _scanned("w-4714", labels={"cmdb/sn": "S-2"}),
+        _scanned("w-4715", labels={"cmdb/sn": "S-3"}),
+        _scanned("w-4716", labels={"cmdb/sn": "S-3"}),
+        _scanned("w-4717", labels={"cmdb/sn": "S-4"}),
+    ]
+
+    (finding,) = _suggested(hosts).values
+
+    assert finding.where == SharedLabel("cmdb/sn")
+    assert (finding.groups, finding.largest_group) == (3, 2)
+    assert finding.examples == [
+        ("S-1", [HostName("w-4711"), HostName("w-4712")]),
+        ("S-2", [HostName("w-4713"), HostName("w-4714")]),
+    ]
+
+
+def test_a_chassis_label_is_suggested_as_well() -> None:
+    hosts = [
+        _scanned(f"blade-{chassis}{slot}", labels={"chassis": chassis})
+        for chassis in ("a", "b", "c")
+        for slot in range(8)
+    ]
+
+    (finding,) = _suggested(hosts).values
+
+    assert (finding.where, finding.largest_group) == (SharedLabel("chassis"), 8)
+
+
+def test_a_custom_attribute_is_suggested_the_same_way() -> None:
+    hosts = [
+        _scanned(name, cmdb_serial=serial)
+        for name, serial in (("a", "1"), ("b", "1"), ("c", "2"), ("d", "2"), ("e", "3"), ("f", "3"))
+    ]
+
+    (finding,) = _suggested(hosts, attribute_names=["cmdb_serial"]).values
+
+    assert finding.where == SharedAttribute("cmdb_serial")
+
+
+def test_a_label_with_two_values_is_a_category_rather_than_an_identity() -> None:
+    hosts = [
+        _scanned(f"w-{index}", labels={"cmdb/kind": "board" if index % 2 else "server"})
+        for index in range(6)
+    ]
+
+    assert _suggested(hosts).values == []
+
+
+def test_a_label_shared_by_too_many_hosts_says_nothing_about_belonging_together() -> None:
+    hosts = [_scanned(f"srv-{index}", labels={"os": "linux"}) for index in range(30)]
+    hosts += [_scanned(f"win-{index}", labels={"os": "windows"}) for index in range(3)]
+
+    assert _suggested(hosts).values == []
+
+
+def test_checkmks_own_labels_are_never_suggested() -> None:
+    hosts = [
+        _scanned(name, labels={"cmk/os_family": family})
+        for name, family in (("a", "x"), ("b", "x"), ("c", "y"), ("d", "y"))
+    ]
+
+    assert _suggested(hosts).values == []
+
+
+def test_every_label_name_is_offered_for_marking_a_board() -> None:
+    hosts = [_scanned("a", labels={"cmdb/kind": "board", "cmk/site": "heute"})]
+
+    assert _suggested(hosts).label_names == ["cmdb/kind", "cmk/site"]
+
+
+def test_a_value_the_user_added_is_reported_however_widely_it_is_shared() -> None:
+    hosts = [
+        _scanned(f"srv-{index}", labels={"location": "muc" if index < 8 else "ber"})
+        for index in range(16)
+    ]
+
+    (finding,) = _suggested(hosts, values=[SharedLabel("location")]).values
+
+    assert (finding.where, finding.groups, finding.largest_group) == (
+        SharedLabel("location"),
+        2,
+        8,
+    )
+    assert sorted(value for value, _hosts in finding.examples) == ["ber", "muc"]
+
+
+def test_a_value_the_user_added_that_no_two_hosts_share_is_reported_as_such() -> None:
+    (finding,) = _suggested(
+        [_scanned("a", labels={"cmdb/sn": "1"}), _scanned("b", labels={"cmdb/sn": "2"})],
+        values=[SharedLabel("cmdb/sn")],
+    ).values
+
+    assert (finding.groups, finding.largest_group, finding.examples) == (0, 0, [])
+
+
+def test_a_checkmk_label_the_user_added_is_read_after_all() -> None:
+    hosts = [_scanned(name, labels={"cmk/site": "heute"}) for name in ("a", "b")]
+
+    (finding,) = _suggested(hosts, values=[SharedLabel("cmk/site")]).values
+
+    assert finding.groups == 1
+
+
+def test_an_attribute_the_user_added_is_read_even_if_setup_does_not_list_it() -> None:
+    hosts = [_scanned(name, cmdb_serial="1") for name in ("a", "b")]
+
+    (finding,) = _suggested(hosts, values=[SharedAttribute("cmdb_serial")]).values
+
+    assert finding.where == SharedAttribute("cmdb_serial")
+
+
+def test_a_value_both_found_and_added_is_offered_once() -> None:
+    hosts = [_scanned(f"w-{index}", labels={"cmdb/sn": f"S-{index // 2}"}) for index in range(6)]
+
+    assert [
+        finding.where for finding in _suggested(hosts, values=[SharedLabel("cmdb/sn")]).values
+    ] == [SharedLabel("cmdb/sn")]
+
+
 def test_a_pair_found_by_its_names_says_which_word_found_it() -> None:
     (proposal,) = _found([_scanned("srv-01"), _scanned("srv-01-ilo")]).pairs
 
@@ -1222,6 +1483,65 @@ def test_two_findings_that_disagree_about_two_hosts_propose_neither() -> None:
     ]
 
 
+def _cmdb_fleet(kinds: Sequence[str] = ("board", "server")) -> list[ScannedHost]:
+    """Three machines the CMDB pairs by serial number, and marks by what each host is."""
+    return [
+        _scanned(f"w-{machine}{kind[0]}", labels={"cmdb/sn": f"S-{machine}", "cmdb/kind": kind})
+        for machine in range(3)
+        for kind in kinds
+    ]
+
+
+def test_a_value_only_one_host_per_machine_carries_tells_the_hosts_apart() -> None:
+    (finding,) = _suggested(_cmdb_fleet()).values
+
+    assert finding.told_apart == ValueTellsApart(
+        where=SharedLabel("cmdb/kind"), values=[("board", 3), ("server", 3)], suggested=None
+    )
+
+
+def test_a_value_with_a_vendor_word_in_it_is_suggested_as_the_deciding_end() -> None:
+    (finding,) = _suggested(_cmdb_fleet(kinds=("bmc", "server"))).values
+
+    assert isinstance(finding.told_apart, ValueTellsApart)
+    assert finding.told_apart.suggested == "bmc"
+
+
+def test_a_vendor_word_in_one_name_per_machine_tells_the_hosts_apart() -> None:
+    hosts = [
+        _scanned(name, labels={"cmdb/sn": f"S-{machine}"})
+        for machine in range(3)
+        for name in (f"blade-{machine}", f"bmc-{machine}")
+    ]
+
+    (finding,) = _suggested(hosts).values
+
+    assert finding.told_apart == NamesTellApart(kind_id="management", words=["bmc"], groups=3)
+
+
+def test_hosts_nothing_tells_apart_are_left_to_the_user() -> None:
+    hosts = [
+        _scanned(f"w-{index}", labels={"cmdb/sn": f"S-{index // 2}", "location": "muc"})
+        for index in range(6)
+    ]
+
+    (finding,) = _suggested(hosts).values
+
+    assert finding.told_apart is None
+
+
+def test_the_value_that_pairs_the_hosts_does_not_also_tell_them_apart() -> None:
+    hosts = [
+        _scanned(f"w-{index}", labels={"cmdb/sn": f"S-{index // 2}", "cmdb/rack": "R1"})
+        for index in range(6)
+    ]
+
+    (finding,) = _suggested(hosts, values=[SharedLabel("cmdb/rack")]).values[:1]
+
+    assert finding.where == SharedLabel("cmdb/sn")
+    assert finding.told_apart is None
+
+
 def test_hosts_sharing_a_value_with_more_hosts_than_a_machine_are_neither_paired_nor_asked() -> (
     None
 ):
@@ -1233,3 +1553,15 @@ def test_hosts_sharing_a_value_with_more_hosts_than_a_machine_are_neither_paired
     found = _found(hosts, shared=SharedLabel("cmdb/kind"))
 
     assert (found.pairs, found.groups) == ([], [])
+
+
+def test_a_value_the_user_added_says_how_many_of_its_values_are_too_widely_shared() -> None:
+    hosts = [
+        _scanned(f"w-{index}", labels={"cmdb/kind": "board" if index < 30 else "server"})
+        for index in range(60)
+    ]
+
+    (finding,) = _suggested(hosts, values=[SharedLabel("cmdb/kind")]).values
+
+    assert (finding.groups, finding.too_wide, finding.told_apart) == (0, 2, None)
+    assert [value for value, _hosts in finding.examples] == ["board", "server"]

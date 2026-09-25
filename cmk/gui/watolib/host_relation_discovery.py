@@ -19,6 +19,7 @@ label the CMDB wrote on both - and a user who has to describe that in regular ex
 is doing the work the configuration has already done.
 """
 
+import heapq
 import re
 from collections import Counter
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -780,6 +781,389 @@ def readable_hosts(tree: FolderTree, *, acting_user: LoggedInUser) -> Mapping[Ho
         for name, host in tree.root_folder().all_hosts_recursively().items()
         if may_read(host)
     }
+
+
+#: How many words a suggestion offers that no kind declares: enough to show a fleet's own
+#: habit, few enough that the page does not turn into a list of every part of every name.
+_WORD_LIMIT: Final = 8
+
+#: How many real pairs a finding shows to say what it means.
+_EXAMPLE_LIMIT: Final = 2
+
+#: How many values a label must share out a handful of hosts at a time to read as an identity.
+#: Two such values are as likely a category - board and server, two locations - as a serial.
+_MACHINE_MIN: Final = 3
+
+#: How many labels and attributes a suggestion offers as values hosts share.
+_VALUE_LIMIT: Final = 5
+
+#: The most distinct values a label may have fleet-wide to tell the hosts of a machine apart:
+#: "board" and "server" do, a serial number does not. Also what keeps the search cheap - only
+#: these few labels are read per group.
+_CATEGORY_SIZE: Final = 10
+
+
+@dataclass(frozen=True, kw_only=True)
+class WordFinding:
+    """Hosts named like another host with this word added."""
+
+    word: str
+    pairs: int
+    examples: Sequence[tuple[HostName, HostName]]
+    """A few of the pairs, the host carrying the word first."""
+    kind_id: str | None
+    """The relation whose vendors use this word, or ``None`` for one no kind declares - what
+    that one stands for, only the user can say."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class NamesTellApart:
+    """In each group one host carries one of these words in its name, and that one is at the
+    end the word stands for."""
+
+    kind_id: str | None
+    """The relation whose vendors use the words, or ``None`` for words only the user gave."""
+
+    words: Sequence[str]
+    """The words that told the hosts apart, the most frequent first."""
+
+    groups: int
+    """In how many groups exactly one host carries one of them."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class ValueTellsApart:
+    """In each group one host carries a value of ``where`` no other host of the group does.
+
+    Which end that value stands for is not in the data - "board" and "server" both stand
+    alone in their group - so the user picks it, and :attr:`suggested` is the one Checkmk can
+    tell, if any.
+    """
+
+    where: SharedLabel | SharedAttribute
+
+    values: Sequence[tuple[str, int]]
+    """Each value, with the number of groups in which exactly one host carries it."""
+
+    suggested: str | None
+    """The value that reads like the deciding end - it has a word a kind declares in it."""
+
+
+#: What tells the hosts sharing a value apart, or ``None`` where nothing does.
+TellApart = NamesTellApart | ValueTellsApart | None
+
+
+@dataclass(frozen=True, kw_only=True)
+class ValueFinding:
+    """A label or attribute whose values each sit on a handful of hosts: a serial number."""
+
+    where: SharedLabel | SharedAttribute
+    groups: int
+    """How many values are each shared by a handful of hosts - the ones that can pair them."""
+    largest_group: int
+    examples: Sequence[tuple[str, Sequence[HostName]]]
+    """A few of the values, each with the hosts sharing it."""
+    too_wide: int = 0
+    """How many values are shared by more hosts than one machine has. These pair nothing, and
+    a finding that has only such values is a category rather than an identity."""
+    told_apart: TellApart = None
+    """What says which host of each group is which, as far as the hosts give it away."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class Suggestions:
+    """What the hosts give away about belonging together, before anybody asked for anything."""
+
+    hosts_scanned: int
+    words: Sequence[WordFinding]
+    values: Sequence[ValueFinding]
+    label_names: Sequence[str]
+    """Every host label there is, for a finding whose board carries a label value."""
+    attribute_names: Sequence[str]
+
+
+def suggest_evidence(
+    hosts: Sequence[ScannedHost],
+    *,
+    attribute_names: Sequence[str],
+    words: Sequence[str] = (),
+    values: Sequence[SharedLabel | SharedAttribute] = (),
+    in_names: bool = True,
+    in_values: bool = True,
+    kinds: Mapping[str, RelationKind] = RELATION_KINDS,
+) -> Suggestions:
+    """What the discovery could look for in ``hosts``, found in the hosts themselves.
+
+    ``words`` and ``values`` are the ones the user added, reported whatever they find - even
+    nothing - so the page can show what each of them would read before it is used.
+    ``in_names`` and ``in_values`` say where to look at all: a fleet named by convention has
+    no use for a list of every label that happens to pair two hosts.
+    """
+    declared = _declared_words(kinds)
+    return Suggestions(
+        hosts_scanned=len(hosts),
+        words=_word_findings(hosts, requested=words, declared=declared) if in_names else [],
+        values=(
+            _value_findings(
+                hosts, attribute_names, requested=values, words=words, declared=declared
+            )
+            if in_values
+            else []
+        ),
+        label_names=sorted({name for host in hosts for name in host.labels}) if in_values else [],
+        attribute_names=sorted(attribute_names) if in_values else [],
+    )
+
+
+def scan_for_evidence(
+    tree: FolderTree,
+    *,
+    attribute_names: Sequence[str],
+    acting_user: LoggedInUser,
+    words: Sequence[str] = (),
+    values: Sequence[SharedLabel | SharedAttribute] = (),
+    in_names: bool = True,
+    in_values: bool = True,
+) -> Suggestions:
+    """:func:`suggest_evidence` for every host the user may see, read the way a scan reads them."""
+    return suggest_evidence(
+        [
+            scanned_host(host, read_labels=in_values)
+            for host in readable_hosts(tree, acting_user=acting_user).values()
+        ],
+        attribute_names=attribute_names,
+        words=words,
+        values=values,
+        in_names=in_names,
+        in_values=in_values,
+    )
+
+
+def _declared_words(kinds: Mapping[str, RelationKind]) -> Mapping[str, str]:
+    """Every word a kind declares, lowered, with the kind that declares it."""
+    return {
+        token.lower(): kind.id
+        for kind in kinds.values()
+        if (evidence := kind.name_evidence) is not None
+        for token in evidence.tokens
+    }
+
+
+def _word_findings(
+    hosts: Sequence[ScannedHost],
+    *,
+    requested: Sequence[str],
+    declared: Mapping[str, str],
+) -> Sequence[WordFinding]:
+    """Every word that turns one existing host name into another, the declared ones first."""
+    wanted = {word.lower() for word in requested}
+    # A number is not offered as a word: "srv-01" is not "srv" with "01" added. One the user
+    # typed is counted all the same - the scan would read it, so the count has to say so.
+    found = {
+        word: pairs
+        for word, pairs in _name_pairs(hosts).items()
+        if not word.isdigit() or word in wanted
+    }
+    findings = []
+    for word in {*found, *wanted}:
+        pairs = found.get(word, set())
+        findings.append(
+            WordFinding(
+                word=word,
+                pairs=len(pairs),
+                examples=heapq.nsmallest(_EXAMPLE_LIMIT, pairs),
+                kind_id=declared.get(word),
+            )
+        )
+    findings.sort(key=lambda finding: (finding.kind_id is None, -finding.pairs, finding.word))
+    undeclared = [finding for finding in findings if finding.kind_id is None]
+    offered = {finding.word for finding in undeclared[:_WORD_LIMIT]} | wanted
+    return [
+        finding for finding in findings if finding.kind_id is not None or finding.word in offered
+    ]
+
+
+def _value_findings(
+    hosts: Sequence[ScannedHost],
+    attribute_names: Sequence[str],
+    *,
+    requested: Sequence[SharedLabel | SharedAttribute],
+    words: Sequence[str],
+    declared: Mapping[str, str],
+) -> Sequence[ValueFinding]:
+    """The labels and attributes whose shared values each look like one machine.
+
+    Checkmk's own labels are left out: none of them is a serial number, and "cmk/site" alone
+    would otherwise be offered on every fleet. What the user asked for is reported whatever it
+    looks like, counting every value two hosts or more share - how widely is what the user has
+    to see before relying on it.
+    """
+    wanted = set(requested)
+    wanted_labels = {where.name for where in requested if isinstance(where, SharedLabel)}
+    attributes = [SharedAttribute(name) for name in attribute_names]
+    attributes.extend(
+        where
+        for where in requested
+        if isinstance(where, SharedAttribute) and where not in attributes
+    )
+    # One instance per label name rather than one per host and label: the fleet is read once,
+    # and every lookup below hashes it.
+    labels: dict[str, SharedLabel] = {}
+    grouped: dict[SharedLabel | SharedAttribute, dict[str, list[HostName]]] = {}
+    for host in hosts:
+        for name in host.labels:
+            if name.startswith("cmk/") and name not in wanted_labels:
+                continue
+            label = labels.get(name) or labels.setdefault(name, SharedLabel(name))
+            if (value := shared_value(host, label)) is not None:
+                grouped.setdefault(label, {}).setdefault(value, []).append(host.name)
+        for attribute in attributes:
+            if (value := shared_value(host, attribute)) is not None:
+                grouped.setdefault(attribute, {}).setdefault(value, []).append(host.name)
+
+    def split(
+        by_value: Mapping[str, list[HostName]],
+    ) -> tuple[list[tuple[str, list[HostName]]], list[tuple[str, list[HostName]]]]:
+        machines = [
+            (v, members) for v, members in by_value.items() if 2 <= len(members) <= _MACHINE_SIZE
+        ]
+        wider = [(v, members) for v, members in by_value.items() if len(members) > _MACHINE_SIZE]
+        return machines, wider
+
+    candidates = []
+    for where, by_value in grouped.items():
+        if where in wanted:
+            continue
+        machines, wider = split(by_value)
+        if len(machines) >= _MACHINE_MIN and len(machines) > len(wider):
+            candidates.append((where, machines, wider))
+    candidates.sort(key=lambda candidate: (-len(candidate[1]), candidate[0].name))
+    offered = [
+        *candidates[:_VALUE_LIMIT],
+        *((where, *split(grouped.get(where, {}))) for where in requested),
+    ]
+
+    telling = _TellingApart(
+        hosts=hosts,
+        categories=[
+            where for where, by_value in grouped.items() if 2 <= len(by_value) <= _CATEGORY_SIZE
+        ],
+        words=words,
+        declared=declared,
+    )
+    return [
+        ValueFinding(
+            where=where,
+            groups=len(machines),
+            largest_group=max((len(members) for _value, members in [*machines, *wider]), default=0),
+            # What a value that pairs nothing looks like is what the user has to see to believe it.
+            examples=_first_groups(machines or wider),
+            too_wide=len(wider),
+            told_apart=telling.told_apart(where, machines) if machines else None,
+        )
+        for where, machines, wider in offered
+    ]
+
+
+def _first_groups(
+    groups: Sequence[tuple[str, Sequence[HostName]]],
+) -> list[tuple[str, list[HostName]]]:
+    """The groups whose members sort first, without sorting all of them."""
+    first = heapq.nsmallest(_EXAMPLE_LIMIT, groups, key=lambda group: min(group[1]))
+    return sorted(((value, sorted(members)) for value, members in first), key=lambda g: g[1])
+
+
+#: What splits a value into the words it is made of: "mgmt-board" reads as "mgmt" and "board".
+_VALUE_PARTS: Final = re.compile(r"[^a-z0-9]+")
+
+
+class _TellingApart:
+    """What tells the hosts of each group apart, read once per suggestion.
+
+    Whatever marks one host per group and no other: a word a kind declares in its name, or a
+    value of a label with few values fleet-wide - "cmdb/kind: board". Names win a tie, because
+    they also say which end the host sits at.
+    """
+
+    def __init__(
+        self,
+        *,
+        hosts: Sequence[ScannedHost],
+        categories: Sequence[SharedLabel | SharedAttribute],
+        words: Sequence[str],
+        declared: Mapping[str, str],
+    ) -> None:
+        self._by_name = {host.name: host for host in hosts}
+        self._categories = categories
+        self._declared = declared
+        self._marking_words = [*self._declared, *(w.lower() for w in words)]
+
+    def told_apart(
+        self,
+        where: SharedLabel | SharedAttribute,
+        machines: Sequence[tuple[str, Sequence[HostName]]],
+    ) -> TellApart:
+        groups = [[self._by_name[member] for member in members] for _value, members in machines]
+
+        named: Counter[str] = Counter()
+        named_groups = 0
+        for group in groups:
+            marked = [
+                word
+                for host in group
+                if (word := _marking_word(host.name, self._marking_words)) is not None
+            ]
+            if len(marked) == 1:
+                named_groups += 1
+                named[marked[0]] += 1
+        by_names = (
+            NamesTellApart(
+                kind_id=self._declared.get(named.most_common(1)[0][0]),
+                words=[word for word, _count in named.most_common()],
+                groups=named_groups,
+            )
+            if named_groups
+            else None
+        )
+        # Names that settle every group cannot be beaten, and a fleet named this way is the
+        # common case: the labels need not be read at all.
+        if by_names is not None and named_groups == len(groups):
+            return by_names
+
+        standing_alone: Counter[tuple[SharedLabel | SharedAttribute, str]] = Counter()
+        for group in groups:
+            for category in self._categories:
+                if category == where:
+                    continue
+                carried = Counter(
+                    value for host in group if (value := shared_value(host, category)) is not None
+                )
+                standing_alone.update(
+                    (category, value) for value, count in carried.items() if count == 1
+                )
+
+        by_category: dict[SharedLabel | SharedAttribute, list[tuple[str, int]]] = {}
+        for (category, value), told in standing_alone.items():
+            if told >= 2:
+                by_category.setdefault(category, []).append((value, told))
+        best = max(
+            by_category.items(),
+            key=lambda item: (max(told for _value, told in item[1]), -len(item[1])),
+            default=None,
+        )
+        if best is None or (by_names is not None and named_groups >= max(t for _v, t in best[1])):
+            return by_names
+        category, values = best
+        values.sort(key=lambda item: (-item[1], item[0]))
+        return ValueTellsApart(where=category, values=values, suggested=self._suggested(values))
+
+    def _suggested(self, values: Sequence[tuple[str, int]]) -> str | None:
+        reading = [
+            value
+            for value, _groups in values
+            if set(_VALUE_PARTS.split(value.lower())) & self._declared.keys()
+        ]
+        return reading[0] if len(reading) == 1 else None
 
 
 def _refusals_per_folder_pair(*, acting_user: LoggedInUser) -> Callable[[Host, Host], str | None]:

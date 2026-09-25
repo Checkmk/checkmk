@@ -19,6 +19,7 @@ from cmk.automations.results import Gateway, GatewayResult, ScanParentsResult
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.parentscan.background_job import (
     ParentScanBackgroundJob,
@@ -114,6 +115,9 @@ def test_scan_parents_job(
                 is_trusted=False,
             )
         },
+        wato_hide_folders_without_read_permissions=False,
+        wato_host_attrs=[],
+        tags=active_config.tags.get_dict_format(),
         pprint_value=False,
         debug=False,
         use_git=False,

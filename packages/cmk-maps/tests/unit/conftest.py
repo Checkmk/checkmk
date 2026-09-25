@@ -6,37 +6,18 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Iterator
-from typing import Protocol
+from collections.abc import Iterator
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from fastapi import APIRouter, FastAPI, Request
+from fastapi import APIRouter, FastAPI
 from fastapi.testclient import TestClient
+from router_client import AuthDependency, RouterClientFactory
 
 from cmk.maps.backend.connections.base import ConnectionBase
 from cmk.maps.backend.core.auth import Principal
 from cmk.maps.backend.core.ratelimit import rest_read_limiter, ws_connect_limiter
 from cmk.maps.backend.services import map_service, state_service
-
-# A guard dependency is either ticket-authenticating off the request
-# (``deps.get_current_user``) or chained onto the principal it resolved
-# (``deps.rate_limited_read``, ``deps.require_connection_read``).
-AuthDependency = (
-    Callable[[Request], Awaitable[Principal]] | Callable[[Principal], Awaitable[Principal]]
-)
-
-
-class RouterClientFactory(Protocol):
-    """Builds a ``TestClient`` for a single router with auth overrides."""
-
-    def __call__(
-        self,
-        router: APIRouter,
-        prefix: str,
-        *,
-        overrides: dict[AuthDependency, Principal] | None = None,
-    ) -> TestClient: ...
 
 
 @pytest.fixture

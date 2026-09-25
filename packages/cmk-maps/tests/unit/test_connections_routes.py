@@ -19,8 +19,8 @@ from contextlib import asynccontextmanager
 from typing import override
 
 import pytest
-from conftest import RouterClientFactory  # astrein: disable=conftest-import
 from fake_connection import FakeConnection
+from router_client import RouterClientFactory
 
 from cmk.maps.backend.api.v1 import connections, deps
 from cmk.maps.backend.connections.base import MetricHistoryResult

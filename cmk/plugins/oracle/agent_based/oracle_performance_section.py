@@ -18,7 +18,7 @@ def parse_oracle_performance(string_table: StringTable) -> SectionPerformance:
 
     parsed: dict[str, dict[str, dict[str, Any]]] = {}
     for line in string_table:
-        if len(line) < 3:
+        if len(line) < 3 or not line[0]:
             continue
         parsed.setdefault(line[0], {})
         parsed[line[0]].setdefault(line[1], {})

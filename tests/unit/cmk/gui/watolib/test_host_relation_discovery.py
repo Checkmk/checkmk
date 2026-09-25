@@ -3,14 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+import os
+import shutil
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import replace
 from typing import cast
 
 import pytest
 
+import cmk.ruleset_matcher.tags
+import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
+from cmk.gui.config import get_default_config, make_config_object
 from cmk.gui.i18n import _l
+from cmk.gui.logged_in import LoggedInSuperUser, LoggedInUser, UserDefaultConfig
 from cmk.gui.utils.host_relation_kinds import (
     DirectedRelationKind,
     NameEvidence,
@@ -19,23 +26,35 @@ from cmk.gui.utils.host_relation_kinds import (
     RelationKind,
 )
 from cmk.gui.utils.host_relations import RelationDirection
-from cmk.gui.watolib.host_attributes import HostAttributes
+from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
+from cmk.gui.watolib.host_attributes import HostAttributes, HostContactGroupSpec
 from cmk.gui.watolib.host_relation_discovery import (
+    discover_relations,
     Evidence,
     Finding,
     HostPair,
+    LinkOutcome,
     MarkedValue,
     NameReason,
     NameWords,
+    outcome_counts,
     Proposals,
     propose_relations,
     relation_to_find,
+    RelationEntry,
     RelationToFind,
     ScannedHost,
     SharedAttribute,
     SharedLabel,
     ValueReason,
 )
+from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree, Host, make_folder_tree
+from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
+from cmk.livestatus_client import SiteConfigurations
+from cmk.utils.redis import disable_redis
+
+_SUPERUSER = LoggedInSuperUser()
 
 
 def _scanned(name: str, *, labels: dict[str, str] | None = None, **attributes: str) -> ScannedHost:
@@ -132,6 +151,10 @@ def _management_kind_spelled(
     """
     kind = RELATION_KINDS["management"]
     return {kind.id: replace(kind, name_evidence=NameEvidence(tokens=tokens, direction=direction))}
+
+
+def _outcomes(entries: Sequence[RelationEntry]) -> list[tuple[str, str, LinkOutcome]]:
+    return [(str(entry.pair.source), str(entry.pair.target), entry.outcome) for entry in entries]
 
 
 @pytest.mark.parametrize(
@@ -609,6 +632,388 @@ def test_a_pair_naming_an_end_the_relation_does_not_have_is_refused() -> None:
             kind_id="management",
             source_direction="symmetric",
         )
+
+
+@pytest.fixture(name="tree")
+def _tree() -> Iterator[FolderTree]:
+    # Built explicitly rather than through the request-global folder_tree(), so that no Flask
+    # request context is needed - the same way test_hosts_and_folders.py builds one.
+    cmk.utils.paths.profile_dir.mkdir(parents=True, exist_ok=True)
+    raw_config = get_default_config()
+    raw_config["tags"] = cmk.ruleset_matcher.tags.get_effective_tag_config(raw_config["wato_tags"])
+    with disable_redis():
+        tree = make_folder_tree(make_config_object(raw_config))
+        tree.invalidate_caches()
+
+    yield tree
+
+    shutil.rmtree(tree.root_folder().filesystem_path(), ignore_errors=True)
+    os.makedirs(tree.root_folder().filesystem_path())
+
+
+def _noop_pending_changes() -> PendingChanges:
+    return PendingChanges(
+        activation_sites=SiteConfigurations({}),
+        local_site=SiteId("NO_SITE"),
+        acting_user=None,
+        store=NoopPendingChangesStore(),
+        hooks=(make_audit_log_change_hook(use_git=False),),
+    )
+
+
+def _create_host(folder: Folder, name: str, attributes: HostAttributes | None = None) -> Host:
+    folder.create_hosts(
+        [(HostName(name), attributes or HostAttributes(), [])],
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+    return folder.hosts()[HostName(name)]
+
+
+def _create_other_half(
+    folder: Folder, name: str, board: str, *, labels: Mapping[str, str] | None = None
+) -> Host:
+    """A host holding its half of a relation to a board that does not exist yet, so that the
+    board, created afterwards, holds none - the way a hand written "hosts.mk" can leave it."""
+    return _create_host(
+        folder,
+        name,
+        HostAttributes(
+            {
+                "labels": dict(labels or {}),
+                "relations": [
+                    {"kind": "management", "direction": "child", "host": HostName(board)}
+                ],
+            }
+        ),
+    )
+
+
+def _contact_groups(*names: str) -> HostContactGroupSpec:
+    return HostContactGroupSpec(
+        groups=list(names),
+        recurse_perms=False,
+        use=False,
+        use_for_services=False,
+        recurse_use=False,
+    )
+
+
+def _user_of_one_contact_group(
+    contact_group: str, *, sees_all_folders: bool = True
+) -> LoggedInUser:
+    user_ = LoggedInUser(
+        None,
+        UserPermissions({}, {}, {}, []),
+        defaults=UserDefaultConfig(
+            users={}, default_language="en", default_show_mode="default_show_less"
+        ),
+        explicitly_given_permissions=frozenset(
+            {
+                "wato.use",
+                "wato.edit",
+                "wato.edit_hosts",
+                "wato.manage_hosts",
+                "wato.manage_folders",
+                *(["wato.see_all_folders"] if sees_all_folders else []),
+            }
+        ),
+    )
+    user_.attributes["contactgroups"] = [contact_group]
+    return user_
+
+
+def test_a_scan_reads_every_host_of_setup(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    for name in ("srv-01", "srv-01-ilo", "gateway"):
+        _create_host(root, name)
+
+    found = discover_relations(tree, evidence=_evidence(), acting_user=_SUPERUSER)
+
+    assert found.hosts_scanned == 3
+    assert _outcomes(found.entries) == [("srv-01-ilo", "srv-01", LinkOutcome.LINK)]
+
+
+def test_a_label_setup_holds_pairs_two_hosts(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    for name in ("blade-77", "bmc-77"):
+        _create_host(root, name, HostAttributes({"labels": {"cmdb/serial": "5XJ9K2"}}))
+    tree.invalidate_caches()
+
+    found = discover_relations(
+        tree,
+        evidence=_evidence(shared=SharedLabel("cmdb/serial")),
+        acting_user=_SUPERUSER,
+    )
+
+    assert _outcomes(found.entries) == [("bmc-77", "blade-77", LinkOutcome.LINK)]
+
+
+def test_a_group_nothing_settles_is_handed_on_as_a_question(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    for name in ("srv-01", "srv-02"):
+        _create_host(root, name, HostAttributes({"labels": {"cmdb/serial": "5XJ9K2"}}))
+    tree.invalidate_caches()
+
+    found = discover_relations(
+        tree,
+        evidence=_evidence(shared=SharedLabel("cmdb/serial")),
+        acting_user=_SUPERUSER,
+    )
+
+    (question,) = found.groups
+    assert found.entries == []
+    assert question.outcome is LinkOutcome.UNDECIDED
+    assert question.settled is None
+    assert question.refusals == {}
+
+
+def test_a_group_a_run_has_answered_is_not_asked_again(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(root, "srv-01", HostAttributes({"labels": {"cmdb/serial": "5XJ9K2"}}))
+    _create_host(
+        root,
+        "srv-02",
+        HostAttributes(
+            {
+                "labels": {"cmdb/serial": "5XJ9K2"},
+                "relations": [
+                    {"kind": "management", "direction": "parent", "host": HostName("srv-01")}
+                ],
+            }
+        ),
+    )
+    tree.invalidate_caches()
+
+    (question,) = discover_relations(
+        tree,
+        evidence=_evidence(shared=SharedLabel("cmdb/serial")),
+        acting_user=_SUPERUSER,
+    ).groups
+
+    assert question.outcome is LinkOutcome.ALREADY_LINKED
+    assert question.settled == HostName("srv-02")
+
+
+def test_a_group_whose_members_hold_only_the_other_half_is_not_asked_again(
+    tree: FolderTree,
+) -> None:
+    root = tree.root_folder()
+    _create_other_half(root, "srv-01", "srv-02", labels={"cmdb/serial": "5XJ9K2"})
+    _create_host(root, "srv-02", HostAttributes({"labels": {"cmdb/serial": "5XJ9K2"}}))
+    tree.invalidate_caches()
+
+    (question,) = discover_relations(
+        tree,
+        evidence=_evidence(shared=SharedLabel("cmdb/serial")),
+        acting_user=_SUPERUSER,
+    ).groups
+
+    assert question.settled == HostName("srv-02")
+
+
+def test_a_member_of_a_group_that_cannot_be_written_cannot_be_named(tree: FolderTree) -> None:
+    parent = tree.root_folder().create_subfolder(
+        "parent",
+        "Parent",
+        HostAttributes({"contactgroups": _contact_groups("cg")}),
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+    own = parent.create_subfolder(
+        "own",
+        "Own",
+        HostAttributes(),
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+    other = parent.create_subfolder(
+        "other",
+        "Other",
+        HostAttributes({"contactgroups": _contact_groups("another_cg")}),
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+    _create_host(own, "srv-01", HostAttributes({"labels": {"cmdb/serial": "5XJ9K2"}}))
+    _create_host(
+        other,
+        "srv-02",
+        HostAttributes(
+            {"labels": {"cmdb/serial": "5XJ9K2"}, "contactgroups": _contact_groups("cg")}
+        ),
+    )
+    tree.invalidate_caches()
+
+    (question,) = discover_relations(
+        tree,
+        evidence=_evidence(shared=SharedLabel("cmdb/serial")),
+        acting_user=_user_of_one_contact_group("cg"),
+    ).groups
+
+    assert set(question.refusals) == {HostName("srv-01"), HostName("srv-02")}
+
+
+def test_a_relation_that_is_already_stored_is_reported_as_such(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(root, "srv-01")
+    _create_host(
+        root,
+        "srv-01-ilo",
+        HostAttributes(
+            {
+                "relations": [
+                    {"kind": "management", "direction": "parent", "host": HostName("srv-01")}
+                ]
+            }
+        ),
+    )
+    tree.invalidate_caches()
+
+    found = discover_relations(tree, evidence=_evidence(), acting_user=_SUPERUSER)
+
+    assert _outcomes(found.entries) == [("srv-01-ilo", "srv-01", LinkOutcome.ALREADY_LINKED)]
+
+
+def test_a_relation_only_its_target_holds_is_reported_as_stored(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_other_half(root, "srv-01", "srv-01-ilo")
+    _create_host(root, "srv-01-ilo")
+    tree.invalidate_caches()
+
+    found = discover_relations(tree, evidence=_evidence(), acting_user=_SUPERUSER)
+
+    assert _outcomes(found.entries) == [("srv-01-ilo", "srv-01", LinkOutcome.ALREADY_LINKED)]
+
+
+def test_a_pair_the_user_cannot_write_is_reported_instead_of_offered(tree: FolderTree) -> None:
+    parent = tree.root_folder().create_subfolder(
+        "parent",
+        "Parent",
+        HostAttributes({"contactgroups": _contact_groups("cg")}),
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+    own = parent.create_subfolder(
+        "own",
+        "Own",
+        HostAttributes(),
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+    other = parent.create_subfolder(
+        "other",
+        "Other",
+        HostAttributes({"contactgroups": _contact_groups("another_cg")}),
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+    _create_host(own, "srv-01")
+    _create_host(other, "srv-01-ilo", HostAttributes({"contactgroups": _contact_groups("cg")}))
+    tree.invalidate_caches()
+
+    found = discover_relations(
+        tree, evidence=_evidence(), acting_user=_user_of_one_contact_group("cg")
+    )
+
+    assert _outcomes(found.entries) == [("srv-01-ilo", "srv-01", LinkOutcome.NOT_WRITABLE)]
+    assert found.entries[0].detail == 'No permission to edit the hosts in the folder "Other".'
+
+
+def _folder_of_its_own(tree: FolderTree, name: str, contact_group: str) -> Folder:
+    return tree.root_folder().create_subfolder(
+        name,
+        name.title(),
+        HostAttributes({"contactgroups": _contact_groups(contact_group)}),
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+
+
+def test_a_host_the_user_may_not_edit_is_reported_instead_of_offered(tree: FolderTree) -> None:
+    folder = _folder_of_its_own(tree, "open", "cg")
+    _create_host(folder, "srv-01-ilo")
+    _create_host(folder, "srv-01", HostAttributes({"contactgroups": _contact_groups("other_cg")}))
+    tree.invalidate_caches()
+
+    found = discover_relations(
+        tree, evidence=_evidence(), acting_user=_user_of_one_contact_group("cg")
+    )
+
+    assert _outcomes(found.entries) == [("srv-01-ilo", "srv-01", LinkOutcome.NOT_WRITABLE)]
+    assert found.entries[0].detail == 'No permission to edit the host "srv-01".'
+
+
+def test_a_member_the_user_may_not_edit_cannot_be_named(tree: FolderTree) -> None:
+    folder = _folder_of_its_own(tree, "open", "cg")
+    for name in ("srv-01", "srv-02"):
+        _create_host(folder, name, HostAttributes({"labels": {"cmdb/serial": "5XJ9K2"}}))
+    _create_host(
+        folder,
+        "srv-03",
+        HostAttributes(
+            {"labels": {"cmdb/serial": "5XJ9K2"}, "contactgroups": _contact_groups("other_cg")}
+        ),
+    )
+    tree.invalidate_caches()
+
+    (question,) = discover_relations(
+        tree,
+        evidence=_evidence(shared=SharedLabel("cmdb/serial")),
+        acting_user=_user_of_one_contact_group("cg"),
+    ).groups
+
+    assert set(question.refusals) == {
+        HostName("srv-01"),
+        HostName("srv-02"),
+        HostName("srv-03"),
+    }
+
+
+def test_a_scan_reads_no_host_of_a_folder_the_user_may_not_see(tree: FolderTree) -> None:
+    """The discovery names hosts; it must not name one the folder view would hide."""
+    _create_host(_folder_of_its_own(tree, "own", "cg"), "srv-01")
+    _create_host(_folder_of_its_own(tree, "other", "another_cg"), "srv-01-ilo")
+    tree.invalidate_caches()
+
+    found = discover_relations(
+        tree,
+        evidence=_evidence(),
+        acting_user=_user_of_one_contact_group("cg", sees_all_folders=False),
+    )
+
+    assert (found.hosts_scanned, found.entries) == (1, [])
+
+
+def _entry(source: str, target: str, outcome: LinkOutcome) -> RelationEntry:
+    return RelationEntry(
+        pair=HostPair(
+            source=HostName(source),
+            target=HostName(target),
+            kind_id="management",
+            source_direction="parent",
+        ),
+        outcome=outcome,
+    )
+
+
+def test_every_outcome_is_counted_even_the_ones_with_no_entry() -> None:
+    counts = outcome_counts([LinkOutcome.LINK, LinkOutcome.ALREADY_LINKED])
+
+    assert counts == {
+        LinkOutcome.LINK: 1,
+        LinkOutcome.ALREADY_LINKED: 1,
+        LinkOutcome.STORED_OTHERWISE: 0,
+        LinkOutcome.NOT_WRITABLE: 0,
+        LinkOutcome.UNDECIDED: 0,
+    }
 
 
 def test_two_findings_of_one_relation_are_read_together() -> None:

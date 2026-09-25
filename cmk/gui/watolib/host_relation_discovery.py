@@ -20,12 +20,16 @@ is doing the work the configuration has already done.
 """
 
 import re
-from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass, replace
+from collections import Counter
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from dataclasses import dataclass, field, replace
+from enum import StrEnum
 from typing import assert_never, Final
 
 from cmk.ccc.hostaddress import HostName
+from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.utils.host_relation_kinds import (
     is_name_token,
     kind_accepts,
@@ -33,10 +37,23 @@ from cmk.gui.utils.host_relation_kinds import (
     RELATION_KINDS,
     RelationKind,
 )
-from cmk.gui.utils.host_relations import RelationDirection, reverse_direction
+from cmk.gui.utils.host_relations import (
+    RelationDirection,
+    RelationLink,
+    reverse_direction,
+)
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.host_relations import relation_choice_name
+from cmk.gui.watolib.hosts_and_folders import (
+    FolderTree,
+    Host,
+    PathWithoutSlash,
+    plan_relation_mirror,
+    relation_mirror_folders,
+)
 from cmk.ruleset_matcher.labels import Labels
+from cmk.web.utils.escaping import strip_tags
 
 #: What a host name puts between the parts of its first label.
 _SEPARATORS: Final = "-_"
@@ -254,6 +271,26 @@ class HostPair:
         return self.target, self.source, self.kind_id, reverse_direction(self.source_direction)
 
 
+class LinkOutcome(StrEnum):
+    """What storing one proposed relation does - or why it does nothing.
+
+    :attr:`UNDECIDED` is the one that is not about storing at all: it belongs to a group the
+    discovery can only ask about, and turns into one of the others once the user has
+    answered it.
+    """
+
+    LINK = "link"
+    ALREADY_LINKED = "already_linked"
+    STORED_OTHERWISE = "stored_otherwise"
+    NOT_WRITABLE = "not_writable"
+    UNDECIDED = "undecided"
+
+
+def group_outcome(settled: str | None) -> LinkOutcome:
+    """A question is answered once one of its members holds the relation to all the others."""
+    return LinkOutcome.ALREADY_LINKED if settled else LinkOutcome.UNDECIDED
+
+
 @dataclass(frozen=True)
 class NameReason:
     """The name of one host is the other's with this word added."""
@@ -274,6 +311,29 @@ Reason = NameReason | ValueReason
 
 
 @dataclass(frozen=True, kw_only=True)
+class RelationEntry:
+    """One relation, what speaks for it, and what Setup has to say about storing it."""
+
+    pair: HostPair
+
+    outcome: LinkOutcome
+
+    finding: str = ""
+    """The id of the finding that proposed it. Empty for a pair that was named rather than
+    found."""
+
+    evidence: str = ""
+    """Why the discovery proposes this pair; already translated. Empty for a pair that was
+    named rather than found."""
+
+    reason: Reason | None = None
+    """What :attr:`evidence` says, taken apart. ``None`` where the evidence is."""
+
+    detail: str = ""
+    """Why the outcome is not :attr:`LinkOutcome.LINK`; already translated."""
+
+
+@dataclass(frozen=True, kw_only=True)
 class ScannedHost:
     """A host as the discovery reads it - everything the evidence can be taken from.
 
@@ -284,6 +344,20 @@ class ScannedHost:
     name: HostName
     labels: Labels
     attributes: HostAttributes
+
+
+def scanned_host(host: Host, *, read_labels: bool) -> ScannedHost:
+    """``host`` as the scan reads it.
+
+    The labels are the ones Setup holds for it - its own, its folders' and the ones its
+    attributes set - not the ones the monitoring discovered. Read only when a label is what
+    the scan pairs or marks on: :meth:`Host.labels` walks the folder chain on every call.
+    """
+    return ScannedHost(
+        name=host.name(),
+        labels=host.labels() if read_labels else {},
+        attributes=host.attributes,
+    )
 
 
 def at_deciding_end(host: ScannedHost, marker: EndMarker) -> bool:
@@ -617,3 +691,296 @@ def _shared_evidence(
         case _:
             assert_never(shared)
     return template % {"name": name, "value": value}
+
+
+@dataclass(frozen=True, kw_only=True)
+class GroupEntry:
+    """A question the discovery found, and what Setup has to say about answering it."""
+
+    proposal: GroupProposal
+
+    settled: HostName | None = None
+    """The member that already holds this relation to all the others, if there is one."""
+
+    refusals: Mapping[HostName, str] = field(default_factory=dict)
+    """Per member that cannot be written, why - such a host cannot be named as the end."""
+
+    @property
+    def outcome(self) -> LinkOutcome:
+        return group_outcome(self.settled)
+
+
+@dataclass(frozen=True, kw_only=True)
+class ConflictEntry:
+    """Two hosts the findings disagree about, each claim with what storing it would do."""
+
+    hosts: tuple[HostName, HostName]
+    claims: Sequence[RelationEntry]
+
+
+@dataclass(frozen=True, kw_only=True)
+class Discovery:
+    """What a scan found, and how much of Setup it read to find it."""
+
+    hosts_scanned: int
+    entries: Sequence[RelationEntry]
+    groups: Sequence[GroupEntry] = ()
+    conflicts: Sequence[ConflictEntry] = ()
+
+
+def discover_relations(
+    tree: FolderTree,
+    *,
+    evidence: Evidence,
+    acting_user: LoggedInUser,
+) -> Discovery:
+    """The relations the hosts in ``tree`` speak for, each with what storing it would do.
+
+    Everything is read from Setup rather than from the monitoring, so that a host the core
+    does not know yet is found as well.
+    """
+    all_hosts = readable_hosts(tree, acting_user=acting_user)
+    scanned = [scanned_host(host, read_labels=evidence.reads_labels) for host in all_hosts.values()]
+    refusal = _refusals_per_folder_pair(acting_user=acting_user)
+    found = propose_relations(scanned, evidence=evidence)
+    entries = [_settled(proposal, all_hosts, refusal) for proposal in found.pairs]
+    conflicts = []
+    for conflict in found.conflicts:
+        claims = [_settled(claim, all_hosts, refusal) for claim in conflict.claims]
+        # One of the claims stored already is the conflict answered - by the user in an earlier
+        # run, or by hand. It is not asked again on every scan.
+        if stored := [claim for claim in claims if claim.outcome is LinkOutcome.ALREADY_LINKED]:
+            entries.extend(stored)
+        else:
+            conflicts.append(ConflictEntry(hosts=conflict.hosts, claims=claims))
+    return Discovery(
+        hosts_scanned=len(all_hosts),
+        entries=entries,
+        groups=[_settled_group(question, all_hosts, refusal) for question in found.groups],
+        conflicts=conflicts,
+    )
+
+
+def readable_hosts(tree: FolderTree, *, acting_user: LoggedInUser) -> Mapping[HostName, Host]:
+    """Every host of Setup in a folder the user may see.
+
+    The discovery shows host names in examples, rows and questions, so it reads no host the
+    folder view would not show either. Asked once per folder rather than once per host.
+    """
+    readable: dict[PathWithoutSlash, bool] = {}
+
+    def may_read(host: Host) -> bool:
+        folder = host.folder()
+        if (path := folder.path()) not in readable:
+            readable[path] = folder.permissions.may("read", acting_user)
+        return readable[path]
+
+    return {
+        name: host
+        for name, host in tree.root_folder().all_hosts_recursively().items()
+        if may_read(host)
+    }
+
+
+def _refusals_per_folder_pair(*, acting_user: LoggedInUser) -> Callable[[Host, Host], str | None]:
+    """:func:`_refusal_to_write`, asked once per pair of folders rather than once per pair,
+    and then whether the user may edit each of the two hosts, asked once per host.
+
+    Whether a user may write a folder is the same answer for every host in it, and a scan
+    of a large fleet asks it tens of thousands of times over a handful of folders. A host can
+    still name contact groups of its own that the folder does not.
+    """
+    seen: dict[tuple[PathWithoutSlash, PathWithoutSlash], str | None] = {}
+    editable: dict[HostName, bool] = {}
+
+    def refusal(source: Host, target: Host) -> str | None:
+        key = (source.folder().path(), target.folder().path())
+        if key not in seen:
+            seen[key] = _refusal_to_write(source, target, acting_user=acting_user)
+        if seen[key] is not None:
+            return seen[key]
+        for host in (source, target):
+            if (name := host.name()) not in editable:
+                editable[name] = host.permissions.may("write", acting_user)
+            if not editable[name]:
+                return _('No permission to edit the host "%(host)s".') % {"host": name}
+        return None
+
+    return refusal
+
+
+def _settled(
+    proposal: Proposal,
+    all_hosts: Mapping[HostName, Host],
+    refusal: Callable[[Host, Host], str | None],
+) -> RelationEntry:
+    """What the state of Setup has to say about a pair the discovery found."""
+    outcome, detail = _state_of(proposal.pair, all_hosts, refusal)
+    return RelationEntry(
+        pair=proposal.pair,
+        outcome=outcome,
+        finding=proposal.finding,
+        evidence=proposal.evidence,
+        reason=proposal.reason,
+        detail=detail,
+    )
+
+
+def _state_of(
+    pair: HostPair,
+    all_hosts: Mapping[HostName, Host],
+    refusal: Callable[[Host, Host], str | None],
+) -> tuple[LinkOutcome, str]:
+    source, target = all_hosts[pair.source], all_hosts[pair.target]
+    if _holds(pair, source, target):
+        # No detail: the outcome says this in one word, and a question whose group is settled
+        # carries none either - two rows of the same table must not read differently.
+        return LinkOutcome.ALREADY_LINKED, ""
+
+    if (otherwise := _stored_otherwise(source, target)) is not None:
+        return LinkOutcome.STORED_OTHERWISE, otherwise
+
+    if (locked := _locked_by_quick_setup(source, target)) is not None:
+        return LinkOutcome.NOT_WRITABLE, locked
+
+    if (refused := refusal(source, target)) is not None:
+        return LinkOutcome.NOT_WRITABLE, refused
+
+    return LinkOutcome.LINK, ""
+
+
+def _holds(pair: HostPair, source: Host, target: Host) -> bool:
+    """Whether the relation ``pair`` asks for is stored already, by either half of it.
+
+    One half is enough: :func:`cmk.gui.watolib.host_relations.resolve_all_relations` derives
+    the other, so the monitoring shows the relation whichever of the two hosts stores it.
+    """
+    link = link_of(pair)
+    if source.stores_relations_about(target.name(), [link]):
+        return True
+    # A source saying something else about the target holds a different relation, not a lost half.
+    if not source.stores_relations_about(target.name(), []):
+        return False
+    other_half = plan_relation_mirror(pair.source, [], [link])[pair.target]
+    return target.stores_relations_about(source.name(), other_half)
+
+
+def _stored_otherwise(source: Host, target: Host) -> str | None:
+    """Why this pair must not be written: the two hosts are related in some other way already.
+
+    Storing a pair replaces whatever the two hosts say about each other, so a relation somebody
+    entered by hand would be lost without a trace. The discovery proposes, it does not correct.
+    """
+    for host, other in ((source, target), (target, source)):
+        if not host.stores_relations_about(other.name(), []):
+            return _('"%(source)s" and "%(target)s" are already related in another way.') % {
+                "source": source.name(),
+                "target": target.name(),
+            }
+    return None
+
+
+def _settled_group(
+    proposal: GroupProposal,
+    all_hosts: Mapping[HostName, Host],
+    refusal: Callable[[Host, Host], str | None],
+) -> GroupEntry:
+    """What the state of Setup has to say about a question the discovery found."""
+    members = [all_hosts[name] for name in proposal.members]
+    return GroupEntry(
+        proposal=proposal,
+        settled=_member_at_end(proposal, members),
+        refusals={
+            host.name(): reason
+            for host in members
+            if (reason := _refusal_for_member(host, members, refusal)) is not None
+        },
+    )
+
+
+def _refusal_for_member(
+    host: Host, members: Sequence[Host], refusal: Callable[[Host, Host], str | None]
+) -> str | None:
+    """Why this host cannot be the one named: a relation it would take part in cannot be written.
+
+    Asked against the whole group, because naming it is naming every pair it would produce.
+    """
+    if (locked := _locked_by_quick_setup(host)) is not None:
+        return locked
+    for other in members:
+        if other.name() != host.name() and (refused := refusal(host, other)) is not None:
+            return refused
+    return None
+
+
+def _member_at_end(proposal: GroupProposal, members: Sequence[Host]) -> HostName | None:
+    """The member that already holds this relation to every other one, if there is one.
+
+    What keeps a second scan from asking again about a group that a run has answered.
+    """
+    for host in members:
+        if all(
+            _holds(
+                HostPair(
+                    source=host.name(),
+                    target=other.name(),
+                    kind_id=proposal.kind_id,
+                    source_direction=proposal.direction,
+                ),
+                host,
+                other,
+            )
+            for other in members
+            if other.name() != host.name()
+        ):
+            return host.name()
+    return None
+
+
+def _locked_by_quick_setup(*hosts: Host) -> str | None:
+    """Why one of these hosts may not be edited at all - asked per host, not per folder.
+
+    ``Host.set_relations_about()`` refuses such a host as well, so this is what keeps the
+    proposal honest rather than what keeps the write safe.
+    """
+    for host in hosts:
+        if is_locked_by_config_bundle(host.locked_by()):
+            return _("'%(host)s' is locked by Quick setup.") % {"host": host.name()}
+    return None
+
+
+def _refusal_to_write(source: Host, target: Host, *, acting_user: LoggedInUser) -> str | None:
+    """Why this pair cannot be written, short enough for a row of the table.
+
+    Worded here rather than taken from the checks: those also list the contact groups, which a
+    row repeated for every pair of a folder cannot carry. The checks are asked afterwards all
+    the same, so that one added to them later refuses here too.
+
+    Both halves are checked, because both get written. Asked before anything is mutated, in
+    the same order ``Host.edit()`` asks it, so that the proposal and the run agree.
+    """
+    for folder in dict.fromkeys((source.folder(), target.folder())):
+        if folder.locked_hosts():
+            return _('The hosts in the folder "%(folder)s" are locked.') % {
+                "folder": folder.title()
+            }
+        if not folder.permissions.may("write", acting_user):
+            return _('No permission to edit the hosts in the folder "%(folder)s".') % {
+                "folder": folder.title()
+            }
+    try:
+        relation_mirror_folders([source, target], acting_user=acting_user)
+    except (MKAuthException, MKUserError) as refusal:
+        return strip_tags(str(refusal))
+    return None
+
+
+def link_of(pair: HostPair) -> RelationLink:
+    """The row the pair will store on its source host."""
+    return {"kind": pair.kind_id, "direction": pair.source_direction, "host": pair.target}
+
+
+def outcome_counts(outcomes: Iterable[LinkOutcome]) -> Mapping[LinkOutcome, int]:
+    """How often each outcome occurs, including the outcomes that do not."""
+    counted = Counter(outcomes)
+    return {outcome: counted.get(outcome, 0) for outcome in LinkOutcome}

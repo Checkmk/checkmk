@@ -144,29 +144,19 @@ py_cmk_test(
     ],
     env = {"EDITION": "community"},
     tags = [
-        "deballast-keep=//cmk/gui:auth",  # loaded at runtime by test fixtures (inline_background_jobs / parent-scan jobs)
-        "deballast-keep=//cmk/gui:config",  # loaded at runtime by test fixtures (inline_background_jobs / parent-scan jobs)
-        "deballast-keep=//cmk/gui:core_toolkit",  # loaded at runtime by test fixtures (inline_background_jobs / parent-scan jobs)
-        "deballast-keep=//cmk/gui/background_job/job:job",  # loaded at runtime by test fixtures (inline_background_jobs / parent-scan jobs)
         "deballast-keep=//cmk/gui/background_job/process:process",  # background jobs launched at runtime via the inline_background_jobs fixture
-        "deballast-keep=//cmk/gui/wato:wato",  # loaded at runtime by test fixtures (inline_background_jobs / parent-scan jobs)
-        "deballast-keep=//cmk/utils:redis",  # loaded at runtime by test fixtures (inline_background_jobs / parent-scan jobs)
         "deballast-keep=//packages/cmk-plugins/cmk/plugins/kube:kube",  # rulesets loaded at runtime for Kubernetes Quick Setup persistence tests
     ],
     use_project_pytest_config = True,
     deps = [
         ":conftest",
         ":init_py",
-        "//cmk/gui:auth",
         "//cmk/gui:auth_core",
-        "//cmk/gui:config",
-        "//cmk/gui:core_toolkit",
         "//cmk/gui:customer",
         "//cmk/gui:page_toolkit",
         "//cmk/gui:painter_options",
         "//cmk/gui:session_context",
         "//cmk/gui:visual_link",
-        "//cmk/gui/background_job/job",
         "//cmk/gui/background_job/process",
         "//cmk/gui/data_source",
         "//cmk/gui/form_specs",
@@ -188,7 +178,6 @@ py_cmk_test(
         "//cmk/gui/utils:middle",
         "//cmk/gui/valuespec",
         "//cmk/gui/views",
-        "//cmk/gui/wato",
         "//cmk/gui/wato:base",
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:config_infra",
@@ -197,7 +186,6 @@ py_cmk_test(
         "//cmk/gui/watolib:timeperiods",
         "//cmk/server_side_calls_backend",
         "//cmk/utils",
-        "//cmk/utils:redis",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:user",

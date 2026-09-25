@@ -198,7 +198,6 @@ oracle_config_full: GuiConfig = GuiConfig(
     deploy=(DEPLOY, None),
     options=GuiAdditionalOptionsConf(
         max_connections=10,
-        max_queries=100,
         ignore_db_name=True,
         oracle_client_library=None,
     ),
@@ -326,7 +325,6 @@ expected_yaml_lines_full = [
     "    options:",
     "      ignore_db_name: 1",
     "      max_connections: 10",
-    "      max_queries: 100",
     "    sections:",
     "    - instance:",
     "        is_async: false",

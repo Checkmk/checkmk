@@ -54,6 +54,8 @@ def test_registered_background_jobs() -> None:
         "QuickSetupStageActionBackgroundJob",
         "QuickSetupActionBackgroundJob",
         "ProfileReplicationBackgroundJob",
+        "RelationDiscoveryBackgroundJob",
+        "RelationScanBackgroundJob",
     ]
 
     assert sorted(job_registry.keys()) == sorted(expected_jobs)

@@ -296,6 +296,7 @@ py_library(
         "//cmk:__subpackages__",
         "//cmk/nonfree:__subpackages__",
         "//non-free/packages/cmk-data-backend:__pkg__",
+        "//non-free/packages/cmk-licensing-nonfree:__pkg__",
         "//non-free/packages/cmk-network-flow:__pkg__",
         "//non-free/packages/cmk-robotmk:__pkg__",
         "//non-free/packages/cmk-telemetry:__pkg__",

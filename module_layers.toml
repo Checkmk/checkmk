@@ -1935,6 +1935,7 @@ allows = [
   # ARGL
   "cmk.cloud.config",
   "cmk.licensing",
+  "cmk.shared_typing.trial_mode_selection_request",
   "cmk.utils.mail",
   "cmk.utils.password_store",
   "cmk.utils.paths",

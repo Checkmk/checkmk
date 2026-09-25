@@ -4316,6 +4316,7 @@ pydantic==2.13.5 \
     #   -r non-free/packages/cmk-data-backend/requirements.in
     #   -r non-free/packages/cmk-dcd/requirements.in
     #   -r non-free/packages/cmk-dev-ai/requirements.in
+    #   -r non-free/packages/cmk-licensing-nonfree/requirements.in
     #   -r non-free/packages/cmk-liveproxyd/requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r non-free/packages/cmk-network-flow/requirements.in

@@ -11,7 +11,7 @@ import { describe, expect, it } from 'vitest'
 import { type Ref, ref } from 'vue'
 
 import MapsSuggestionField from '@/maps/shared/components/MapsSuggestionField.vue'
-import { type SuggestionList, namedSuggestions } from '@/maps/shared/suggestions'
+import { type SuggestionList, titledSuggestions } from '@/maps/shared/suggestions'
 
 import { mapsGlobal } from '../../support/services'
 
@@ -27,14 +27,17 @@ function aLoadingList(): SuggestionList & {
   return { items: ref([]), loading: ref(true) }
 }
 
+const WEB_SHOP = { id: 'aggr-web', title: 'Web shop' }
+const MAIL = { id: 'aggr-mail', title: 'Mail' }
+
 function renderField(list: SuggestionList, modelValue: string) {
   return render(MapsSuggestionField, {
     props: {
       list,
       modelValue,
-      label: untranslated('Hostname'),
-      placeholder: untranslated('hostname'),
-      emptyHint: untranslated('No hosts available')
+      label: untranslated('BI aggregation'),
+      placeholder: untranslated('Pick an aggregation'),
+      emptyHint: untranslated('No aggregations available')
     },
     global: mapsGlobal()
   })
@@ -43,46 +46,46 @@ function renderField(list: SuggestionList, modelValue: string) {
 // The dropdown truncates its label into two spans, so the whole label is only
 // readable as one string on the title the dropdown puts beside it.
 function label(): string | null {
-  const field = screen.getByRole('combobox', { name: 'Hostname' })
+  const field = screen.getByRole('combobox', { name: 'BI aggregation' })
   return field.querySelector('[title]')?.getAttribute('title') ?? null
 }
 
 describe('MapsSuggestionField', () => {
   it('shows the picked value once a list that was still loading arrives', async () => {
-    // What the properties card does: it opens on an object that already names a
-    // host, while the host list is still on its way.
+    // What the properties card does: it opens on an object that already names an
+    // aggregation, while the list is still on its way.
     const list = aLoadingList()
-    renderField(list, 'web01')
+    renderField(list, 'aggr-web')
     await waitFor(() => expect(label()).toBe('Loading…'))
 
-    list.items.value = namedSuggestions(['web01', 'web02'])
+    list.items.value = titledSuggestions([WEB_SHOP, MAIL])
     list.loading.value = false
 
-    await waitFor(() => expect(label()).toBe('web01'))
+    await waitFor(() => expect(label()).toBe('Web shop'))
   })
 
   it('says the list is loading when opened before it arrives', async () => {
     const list = aLoadingList()
     renderField(list, '')
-    await userEvent.click(screen.getByRole('combobox', { name: 'Hostname' }))
+    await userEvent.click(screen.getByRole('combobox', { name: 'BI aggregation' }))
 
     expect(await screen.findByText('Loading…')).toBeInTheDocument()
 
-    list.items.value = namedSuggestions(['web01'])
+    list.items.value = titledSuggestions([WEB_SHOP])
     list.loading.value = false
 
-    expect(await screen.findByRole('option', { name: 'web01' })).toBeInTheDocument()
+    expect(await screen.findByRole('option', { name: 'Web shop' })).toBeInTheDocument()
   })
 
   it('stops claiming to load when the list comes back empty', async () => {
     const list = aLoadingList()
-    renderField(list, 'web01')
+    renderField(list, 'aggr-web')
     await waitFor(() => expect(label()).toBe('Loading…'))
 
     // As the loaders do it: the answer is assigned, then the flag drops.
-    list.items.value = namedSuggestions([])
+    list.items.value = titledSuggestions([])
     list.loading.value = false
 
-    await waitFor(() => expect(label()).toBe('No hosts available'))
+    await waitFor(() => expect(label()).toBe('No aggregations available'))
   })
 })

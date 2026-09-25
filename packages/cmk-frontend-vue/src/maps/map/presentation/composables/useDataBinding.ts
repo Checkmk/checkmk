@@ -7,11 +7,12 @@ import { useMetricCatalog } from '@/maps/map/composables/useMetricInfo'
 import { useMapsApis } from '@/maps/services/context'
 import type { AggregationInfo, MetricChoice } from '@/maps/types/api'
 
-// Shared host/service/group/metric lookups for every binding surface
+// Shared BI aggregation and metric lookups for every binding surface
 // (inspector, data panel, connect-data popover). Results are cached per
-// connection so opening the inspector on ten elements fetches the host list
+// connection so opening the inspector on ten elements fetches the aggregations
 // once; a failed fetch is evicted so the next call retries instead of pinning
-// an empty list.
+// an empty list. Hosts, services and groups are searched as the operator types
+// (see monitoringAutocompleters), so there is no list of them to cache.
 const cache = new Map<string, Promise<unknown>>()
 
 function cached<T>(key: string, fetcher: () => Promise<T>, empty: T): Promise<T> {
@@ -35,40 +36,12 @@ export function useDataBinding(connectionId: () => string) {
   const { objects } = useMapsApis()
   const { fetchMetricChoices } = useMetricCatalog()
 
-  function objectNames(type: 'host' | 'hostgroup' | 'servicegroup'): Promise<string[]> {
-    const conn = connectionId()
-    if (!conn) {
-      return Promise.resolve([])
-    }
-    return cached(`${type}|${conn}`, () => objects.fetchObjects(type), [])
-  }
-
-  function hosts(): Promise<string[]> {
-    return objectNames('host')
-  }
-
-  function hostgroups(): Promise<string[]> {
-    return objectNames('hostgroup')
-  }
-
-  function servicegroups(): Promise<string[]> {
-    return objectNames('servicegroup')
-  }
-
   function aggregations(): Promise<AggregationInfo[]> {
     const conn = connectionId()
     if (!conn) {
       return Promise.resolve([])
     }
     return cached(`aggregations|${conn}`, () => objects.fetchAggregations(), [])
-  }
-
-  function services(host: string): Promise<string[]> {
-    const conn = connectionId()
-    if (!conn || !host) {
-      return Promise.resolve([])
-    }
-    return cached(`services|${conn}|${host}`, () => objects.fetchObjects('service', host), [])
   }
 
   function metrics(host: string, service?: string | null): Promise<MetricChoice[]> {
@@ -83,5 +56,5 @@ export function useDataBinding(connectionId: () => string) {
     )
   }
 
-  return { hosts, hostgroups, servicegroups, aggregations, services, metrics }
+  return { aggregations, metrics }
 }

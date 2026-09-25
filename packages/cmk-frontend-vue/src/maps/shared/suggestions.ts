@@ -8,17 +8,12 @@ import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { type Ref, computed } from 'vue'
 
 /**
- * A host list from a large site runs into the thousands, and every entry of a
+ * A metric or BI aggregation list can run long, and every entry of a
  * ``filtered`` dropdown is rendered as soon as it opens. Matching is therefore
  * done here and only this many results are handed on; the operator narrows the
  * rest by typing.
  */
 const SUGGESTION_LIMIT = 500
-
-/** Names as they come from the daemon, which has no titles to offer. */
-export function namedSuggestions(names: readonly string[]): Suggestion[] {
-  return names.map((name) => ({ name, title: untranslated(name) }))
-}
 
 /** Ids with a human title beside them (maps, BI aggregations, metrics). */
 export function titledSuggestions(entries: readonly { id: string; title: string }[]): Suggestion[] {

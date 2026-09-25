@@ -15,15 +15,14 @@ import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import type { ObjectMetrics } from '@/maps/map/edit/composables/useObjectMetrics'
-import type { ObjectSuggestions } from '@/maps/map/edit/composables/useObjectSuggestions'
+import { rebindHost } from '@/maps/map/edit/hostBinding'
 import PropertyRow from '@/maps/map/edit/properties/PropertyRow.vue'
 import PropertySection from '@/maps/map/edit/properties/PropertySection.vue'
 import { type GraphSource, graphTimeWindows } from '@/maps/map/edit/properties/graphSource'
 import type { ObjectForm } from '@/maps/map/edit/properties/objectForm'
-import MapsSuggestionField from '@/maps/shared/components/MapsSuggestionField.vue'
+import MapsObjectField from '@/maps/shared/components/MapsObjectField.vue'
 
 const props = defineProps<{
-  suggestions: ObjectSuggestions
   metrics: ObjectMetrics
   source: GraphSource
 }>()
@@ -92,21 +91,21 @@ function suggestMetrics(query: string): Promise<string[]> {
 <template>
   <PropertySection :title="_t('Metric source')">
     <PropertyRow :label="_t('Host name')">
-      <MapsSuggestionField
-        v-model="form.host_name"
+      <MapsObjectField
+        :model-value="form.host_name"
+        kind="host"
         :label="_t('Host name')"
-        :list="suggestions.hosts"
         :placeholder="_t('hostname')"
-        :empty-hint="_t('No hosts available')"
+        @update:model-value="rebindHost(form, $event)"
       />
     </PropertyRow>
     <PropertyRow :label="_t('Service')">
-      <MapsSuggestionField
+      <MapsObjectField
         v-model="form.service_description"
+        kind="service"
+        :host-name="form.host_name"
         :label="_t('Service')"
-        :list="suggestions.services"
         :placeholder="_t('service description')"
-        :empty-hint="form.host_name ? _t('No services for this host') : undefined"
       />
     </PropertyRow>
     <PropertyRow :label="_t('Source')">

@@ -20,20 +20,21 @@ describe('useDataBinding', () => {
     clearDataBindingCache()
   })
 
-  it('caches host lookups per connection', async () => {
-    vi.mocked(services.apis.objects.fetchObjects).mockResolvedValue(['web01', 'web02'])
+  it('caches BI aggregation lookups per connection', async () => {
+    vi.mocked(services.apis.objects.fetchAggregations).mockResolvedValue([
+      { id: 'aggr1', title: 'Web shop', pack_id: 'default', function: 'worst' }
+    ])
     const b = runWithServices(services, () => useDataBinding(() => 'live_1'))
-    expect(await b.hosts()).toEqual(['web01', 'web02'])
-    expect(await b.hosts()).toEqual(['web01', 'web02'])
-    expect(vi.mocked(services.apis.objects.fetchObjects)).toHaveBeenCalledTimes(1)
+    expect((await b.aggregations())[0]!.title).toBe('Web shop')
+    await b.aggregations()
+    expect(vi.mocked(services.apis.objects.fetchAggregations)).toHaveBeenCalledTimes(1)
 
     const other = runWithServices(services, () => useDataBinding(() => 'live_2'))
-    await other.hosts()
-    expect(vi.mocked(services.apis.objects.fetchObjects)).toHaveBeenCalledTimes(2)
+    await other.aggregations()
+    expect(vi.mocked(services.apis.objects.fetchAggregations)).toHaveBeenCalledTimes(2)
   })
 
-  it('caches services per host and metrics per host/service', async () => {
-    vi.mocked(services.apis.objects.fetchObjects).mockResolvedValue(['CPU load'])
+  it('caches metrics per host/service', async () => {
     // The daemon ships the raw perfdata source; titles come from the GUI
     // metric-info resolution (fetchMetricChoices merges the two).
     vi.mocked(services.apis.objects.fetchPerfMetrics).mockResolvedValue({
@@ -54,9 +55,6 @@ describe('useDataBinding', () => {
       }
     })
     const b = runWithServices(services, () => useDataBinding(() => 'live_1'))
-    await b.services('web01')
-    await b.services('web01')
-    expect(vi.mocked(services.apis.objects.fetchObjects)).toHaveBeenCalledTimes(1)
     expect(await b.metrics('web01', 'CPU load')).toEqual([
       { name: 'load1', title: 'CPU load average of last minute' },
       // No registry entry — falls back to the raw label.
@@ -69,34 +67,20 @@ describe('useDataBinding', () => {
   })
 
   it('returns [] on failure and retries on the next call instead of pinning the error', async () => {
-    vi.mocked(services.apis.objects.fetchObjects).mockRejectedValueOnce(new Error('boom'))
-    vi.mocked(services.apis.objects.fetchObjects).mockResolvedValueOnce(['web01'])
+    const aggregation = { id: 'aggr1', title: 'Web shop', pack_id: 'default', function: 'worst' }
+    vi.mocked(services.apis.objects.fetchAggregations).mockRejectedValueOnce(new Error('boom'))
+    vi.mocked(services.apis.objects.fetchAggregations).mockResolvedValueOnce([aggregation])
     const b = runWithServices(services, () => useDataBinding(() => 'live_1'))
-    expect(await b.hosts()).toEqual([])
-    expect(await b.hosts()).toEqual(['web01'])
-  })
-
-  it('serves groups and BI aggregations from their own cached sources', async () => {
-    vi.mocked(services.apis.objects.fetchObjects).mockResolvedValue(['linux'])
-    vi.mocked(services.apis.objects.fetchAggregations).mockResolvedValue([
-      { id: 'aggr1', title: 'Web shop', pack_id: 'default', function: 'worst' }
-    ])
-    const b = runWithServices(services, () => useDataBinding(() => 'live_1'))
-    expect(await b.hostgroups()).toEqual(['linux'])
-    expect(vi.mocked(services.apis.objects.fetchObjects)).toHaveBeenCalledWith('hostgroup')
-    await b.servicegroups()
-    expect(vi.mocked(services.apis.objects.fetchObjects)).toHaveBeenCalledWith('servicegroup')
-    const aggs = await b.aggregations()
-    expect(aggs[0]!.title).toBe('Web shop')
-    await b.aggregations()
-    expect(vi.mocked(services.apis.objects.fetchAggregations)).toHaveBeenCalledTimes(1)
+    expect(await b.aggregations()).toEqual([])
+    expect(await b.aggregations()).toEqual([aggregation])
   })
 
   it('short-circuits without a connection or host', async () => {
     const b = runWithServices(services, () => useDataBinding(() => ''))
-    expect(await b.hosts()).toEqual([])
+    expect(await b.aggregations()).toEqual([])
     const c = runWithServices(services, () => useDataBinding(() => 'live_1'))
-    expect(await c.services('')).toEqual([])
-    expect(vi.mocked(services.apis.objects.fetchObjects)).not.toHaveBeenCalled()
+    expect(await c.metrics('')).toEqual([])
+    expect(vi.mocked(services.apis.objects.fetchAggregations)).not.toHaveBeenCalled()
+    expect(vi.mocked(services.apis.objects.fetchPerfMetrics)).not.toHaveBeenCalled()
   })
 })

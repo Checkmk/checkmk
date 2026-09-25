@@ -9,8 +9,13 @@ import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import CmkTabs, { CmkTab } from 'cmk-ui-library/components/CmkTabs'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import { useDebounceRef } from 'cmk-ui-library/lib/useDebounce'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 
+import {
+  type MonitoringObject,
+  searchMonitoringObjects
+} from '@/maps/shared/monitoringAutocompleters'
 import type { ObjectState, PresentationElement } from '@/maps/types/api'
 import { stateColor } from '@/maps/utils/stateColors'
 
@@ -44,43 +49,50 @@ interface Row {
   title: string
 }
 
-const hosts = ref<string[]>([])
-const hostgroups = ref<string[]>([])
-const servicegroups = ref<string[]>([])
-const aggregations = ref<Row[]>([])
+const rows = ref<Row[]>([])
 const loading = ref(false)
 const query = ref('')
+const debouncedQuery = useDebounceRef(query)
 const expanded = reactive(new Set<string>())
 const loadingServices = reactive(new Set<string>())
 const servicesByHost = reactive<Record<string, string[]>>({})
 
-// A connection switch invalidates every loaded tab — reload the visible one,
-// the rest refetch lazily on their next visit.
-watch(
-  () => props.connectionId,
-  () => void loadTab(tab.value)
-)
+function asRows(kind: BindingDropKind, found: MonitoringObject[]): Row[] {
+  return found.map((entry) => ({ kind, name: entry.name, title: entry.title }))
+}
 
-// Revisiting a tab asks again rather than remembering that it was loaded:
-// useDataBinding caches per connection, and drops a failed fetch so it retries
-// instead of pinning the tab on the empty list it fell back to.
+/**
+ * Hosts and groups are searched on the server — a site's host list runs into
+ * the thousands, and a list fetched once would only hold its first page. The BI
+ * aggregations come as one list and are narrowed here.
+ */
+async function rowsFor(t: Tab, q: string): Promise<Row[]> {
+  if (t === 'hosts') {
+    return asRows('host', await searchMonitoringObjects('host', q))
+  }
+  if (t === 'groups') {
+    const [hostgroups, servicegroups] = await Promise.all([
+      searchMonitoringObjects('hostgroup', q),
+      searchMonitoringObjects('servicegroup', q)
+    ])
+    return [...asRows('hostgroup', hostgroups), ...asRows('servicegroup', servicegroups)]
+  }
+  const needle = q.toLowerCase()
+  return (await binding.aggregations())
+    .map((a) => ({ kind: 'aggregation' as const, name: a.id, title: a.title || a.id }))
+    .filter((row) => !needle || row.title.toLowerCase().includes(needle))
+}
+
+// Only the newest lookup may write: a slower answer for an earlier query or
+// tab must not overwrite the list of the one now shown.
 let loadSeq = 0
-async function loadTab(t: Tab): Promise<void> {
+async function loadRows(): Promise<void> {
   const seq = ++loadSeq
   loading.value = true
   try {
-    if (t === 'hosts') {
-      hosts.value = await binding.hosts()
-    } else if (t === 'groups') {
-      const [hg, sg] = await Promise.all([binding.hostgroups(), binding.servicegroups()])
-      hostgroups.value = hg
-      servicegroups.value = sg
-    } else {
-      aggregations.value = (await binding.aggregations()).map((a) => ({
-        kind: 'aggregation' as const,
-        name: a.id,
-        title: a.title || a.id
-      }))
+    const found = await rowsFor(tab.value, debouncedQuery.value)
+    if (seq === loadSeq) {
+      rows.value = found
     }
   } finally {
     if (seq === loadSeq) {
@@ -89,8 +101,15 @@ async function loadTab(t: Tab): Promise<void> {
   }
 }
 
-onMounted(() => void loadTab('hosts'))
-watch(tab, (t) => void loadTab(t))
+onMounted(() => void loadRows())
+// Another tab's rows must not stand in for this one's while it loads. A new
+// query keeps the rows up until its answer replaces them, so typing does not
+// make the list jump.
+watch(tab, () => {
+  rows.value = []
+  void loadRows()
+})
+watch([debouncedQuery, () => props.connectionId], () => void loadRows())
 
 const searchPlaceholder = computed(() =>
   tab.value === 'hosts'
@@ -100,26 +119,12 @@ const searchPlaceholder = computed(() =>
       : _t('Search aggregations…')
 )
 
-const allRows = computed<Row[]>(() => {
-  if (tab.value === 'hosts') {
-    return hosts.value.map((h) => ({ kind: 'host' as const, name: h, title: h }))
-  }
-  if (tab.value === 'groups') {
-    return [
-      ...hostgroups.value.map((g) => ({ kind: 'hostgroup' as const, name: g, title: g })),
-      ...servicegroups.value.map((g) => ({ kind: 'servicegroup' as const, name: g, title: g }))
-    ]
-  }
-  return aggregations.value
-})
-
-const matchingRows = computed(() => {
-  const q = query.value.toLowerCase()
-  const list = q ? allRows.value.filter((r) => r.title.toLowerCase().includes(q)) : allRows.value
-  return [...list].sort((a, b) => a.title.localeCompare(b.title))
-})
-const filteredRows = computed(() => matchingRows.value.slice(0, ROW_LIMIT))
-const truncated = computed(() => Math.max(0, matchingRows.value.length - ROW_LIMIT))
+const filteredRows = computed(() =>
+  [...rows.value].sort((a, b) => a.title.localeCompare(b.title)).slice(0, ROW_LIMIT)
+)
+// Checkmk's autocompleters answer one entry past their limit when there are
+// more, so only more rows than are shown means the list is cut.
+const capped = computed(() => rows.value.length > ROW_LIMIT)
 
 async function toggleHost(host: string): Promise<void> {
   if (expanded.has(host)) {
@@ -127,9 +132,10 @@ async function toggleHost(host: string): Promise<void> {
     return
   }
   expanded.add(host)
-  if (!servicesByHost[host]) {
+  if (!servicesByHost[host] && !loadingServices.has(host)) {
     loadingServices.add(host)
-    servicesByHost[host] = await binding.services(host)
+    const found = await searchMonitoringObjects('service', '', host)
+    servicesByHost[host] = found.map((entry) => entry.name)
     loadingServices.delete(host)
   }
 }
@@ -216,8 +222,8 @@ function onDragStart(e: DragEvent, payload: BindingDropPayload): void {
     />
     <div class="maps-presentation-data-panel__hint">{{ _t('Drag an entry onto the slide') }}</div>
     <CmkScrollContainer class="maps-presentation-data-panel__list-wrap">
-      <div class="maps-presentation-data-panel__list">
-        <CmkLoading v-if="loading" />
+      <div class="maps-presentation-data-panel__list" :aria-busy="loading">
+        <CmkLoading v-if="loading && !rows.length" />
         <div v-else-if="!filteredRows.length" class="maps-presentation-data-panel__empty">
           {{ query ? _t('Nothing matches your search') : _t('Nothing available') }}
         </div>
@@ -315,8 +321,8 @@ function onDragStart(e: DragEvent, payload: BindingDropPayload): void {
           </div>
         </template>
 
-        <div v-if="truncated > 0" class="maps-presentation-data-panel__more">
-          {{ _t('+%{n} more — keep typing to narrow results', { n: String(truncated) }) }}
+        <div v-if="capped" class="maps-presentation-data-panel__more">
+          {{ _t('Showing the first %{n} — keep typing to narrow results', { n: ROW_LIMIT }) }}
         </div>
       </div>
     </CmkScrollContainer>

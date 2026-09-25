@@ -130,7 +130,6 @@ export function fakeMapsServices(
   })
   const connectionsApi = stubApi(new ConnectionsApi(daemon), { list: [], fetchTopology: [] })
   const objects = stubApi(new MonitoringObjectsApi(), {
-    fetchObjects: [],
     fetchFolders: [],
     fetchSites: [],
     fetchAggregations: [],

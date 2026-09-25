@@ -98,7 +98,6 @@ const connectionId = computed(() => form.value.connection_id || props.connection
 const suggestions = useObjectSuggestions({
   connectionId: () => connectionId.value,
   objectType: () => props.object.type,
-  hostName: () => form.value.host_name,
   mapName: () => form.value.map_name
 })
 
@@ -255,7 +254,6 @@ function onConfirmDelete(): void {
         <template v-if="objectType === 'graph'">
           <GraphSourceSection
             v-model:form="form"
-            :suggestions="suggestions"
             :metrics="metrics"
             :source="graphSource"
             @update:source="setGraphSource"
@@ -266,7 +264,6 @@ function onConfirmDelete(): void {
           v-if="isLine"
           v-model:form="form"
           :object="object"
-          :suggestions="suggestions"
           :metrics="metrics"
           :map-type="mapType"
           @detach="emit('detach')"

@@ -22,6 +22,8 @@ import type { NewObjectDraft } from '@/maps/map/composables/useMapEditor'
 import DraftAggregationFields from '@/maps/map/edit/components/DraftAggregationFields.vue'
 import EditField from '@/maps/map/edit/components/EditField.vue'
 import type { ObjectSuggestions } from '@/maps/map/edit/composables/useObjectSuggestions'
+import { rebindHost } from '@/maps/map/edit/hostBinding'
+import MapsObjectField from '@/maps/shared/components/MapsObjectField.vue'
 import MapsSuggestionField from '@/maps/shared/components/MapsSuggestionField.vue'
 import MapsTextArea from '@/maps/shared/components/MapsTextArea.vue'
 import { dyngroupTypeOptions } from '@/maps/utils/dropdownOptions'
@@ -44,49 +46,44 @@ const dyngroupTypeSuggestions = computed(() => ({
 <template>
   <template v-if="draft.type === 'host'">
     <EditField :label="_t('Host name')" required>
-      <MapsSuggestionField
-        v-model="draft.host_name"
+      <MapsObjectField
+        :model-value="draft.host_name"
+        kind="host"
         :label="_t('Host name')"
-        :list="suggestions.hosts"
         :placeholder="_t('Select a host')"
-        :empty-hint="_t('No hosts available')"
+        @update:model-value="rebindHost(draft, $event)"
       />
     </EditField>
   </template>
 
   <template v-else-if="draft.type === 'service'">
     <EditField :label="_t('Host name')" required>
-      <MapsSuggestionField
-        v-model="draft.host_name"
+      <MapsObjectField
+        :model-value="draft.host_name"
+        kind="host"
         :label="_t('Host name')"
-        :list="suggestions.hosts"
         :placeholder="_t('Select a host')"
-        :empty-hint="_t('No hosts available')"
+        @update:model-value="rebindHost(draft, $event)"
       />
     </EditField>
     <EditField :label="_t('Service description')" required>
-      <MapsSuggestionField
+      <MapsObjectField
         v-model="draft.service_description"
+        kind="service"
+        :host-name="draft.host_name"
         :label="_t('Service description')"
-        :list="suggestions.services"
         :placeholder="draft.host_name ? _t('Select a service') : _t('Pick a host first')"
-        :empty-hint="draft.host_name ? _t('No services for this host') : undefined"
       />
     </EditField>
   </template>
 
   <template v-else-if="draft.type === 'hostgroup' || draft.type === 'servicegroup'">
     <EditField :label="_t('Group name')" required>
-      <MapsSuggestionField
+      <MapsObjectField
         v-model="draft.group_name"
+        :kind="draft.type"
         :label="_t('Group name')"
-        :list="suggestions.groups"
         :placeholder="_t('Select a group')"
-        :empty-hint="
-          draft.type === 'hostgroup'
-            ? _t('No host groups configured in this site')
-            : _t('No service groups configured in this site')
-        "
       />
     </EditField>
   </template>
@@ -141,19 +138,20 @@ const dyngroupTypeSuggestions = computed(() => ({
 
   <template v-else-if="draft.type === 'line'">
     <EditField :label="_t('Host name')">
-      <MapsSuggestionField
-        v-model="draft.host_name"
+      <MapsObjectField
+        :model-value="draft.host_name"
+        kind="host"
         :label="_t('Host name')"
-        :list="suggestions.hosts"
         :placeholder="_t('optional')"
-        :empty-hint="_t('No hosts available')"
+        @update:model-value="rebindHost(draft, $event)"
       />
     </EditField>
     <EditField :label="_t('Service description')">
-      <MapsSuggestionField
+      <MapsObjectField
         v-model="draft.service_description"
+        kind="service"
+        :host-name="draft.host_name"
         :label="_t('Service description')"
-        :list="suggestions.services"
         :placeholder="_t('optional')"
       />
     </EditField>
@@ -176,19 +174,20 @@ const dyngroupTypeSuggestions = computed(() => ({
 
   <template v-else-if="draft.type === 'graph'">
     <EditField :label="_t('Host name')">
-      <MapsSuggestionField
-        v-model="draft.host_name"
+      <MapsObjectField
+        :model-value="draft.host_name"
+        kind="host"
         :label="_t('Host name')"
-        :list="suggestions.hosts"
         :placeholder="_t('Select a host')"
-        :empty-hint="_t('No hosts available')"
+        @update:model-value="rebindHost(draft, $event)"
       />
     </EditField>
     <EditField :label="_t('Service description')">
-      <MapsSuggestionField
+      <MapsObjectField
         v-model="draft.service_description"
+        kind="service"
+        :host-name="draft.host_name"
         :label="_t('Service description')"
-        :list="suggestions.services"
         :placeholder="_t('optional')"
       />
     </EditField>

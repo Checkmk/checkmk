@@ -6,18 +6,7 @@
 import { describe, expect, it } from 'vitest'
 import { ref } from 'vue'
 
-import {
-  localSuggestions,
-  namedSuggestions,
-  suggestionList,
-  titledSuggestions
-} from '@/maps/shared/suggestions'
-
-describe('namedSuggestions', () => {
-  it('offers a name as its own label — the daemon has no titles', () => {
-    expect(namedSuggestions(['web01'])).toEqual([{ name: 'web01', title: 'web01' }])
-  })
-})
+import { localSuggestions, suggestionList, titledSuggestions } from '@/maps/shared/suggestions'
 
 describe('titledSuggestions', () => {
   it('falls back to the id when there is no title', () => {
@@ -28,11 +17,15 @@ describe('titledSuggestions', () => {
 })
 
 describe('localSuggestions', () => {
-  const hosts = namedSuggestions(['web01', 'web02', 'db-prod'])
+  const metrics = titledSuggestions([
+    { id: 'load1', title: 'CPU load 1 min' },
+    { id: 'load5', title: 'CPU load 5 min' },
+    { id: 'mem_used', title: 'Memory used' }
+  ])
 
   it('matches on the label, case-insensitively', async () => {
-    const response = await localSuggestions(() => hosts)('WEB')
-    expect(response.choices).toEqual(namedSuggestions(['web01', 'web02']))
+    const response = await localSuggestions(() => metrics)('cpu LOAD')
+    expect(response.choices).toEqual(metrics.slice(0, 2))
   })
 
   it('matches on the id too, so a value resolves to its own label', async () => {
@@ -45,31 +38,33 @@ describe('localSuggestions', () => {
   })
 
   it('offers everything for an empty query', async () => {
-    expect((await localSuggestions(() => hosts)('  ')).choices).toHaveLength(3)
+    expect((await localSuggestions(() => metrics)('  ')).choices).toHaveLength(3)
   })
 
   it('caps how many entries a dropdown has to render at once', async () => {
-    const many = namedSuggestions(Array.from({ length: 600 }, (_, i) => `host-${i}`))
+    const many = titledSuggestions(
+      Array.from({ length: 600 }, (_, i) => ({ id: `m${i}`, title: `Metric ${i}` }))
+    )
     expect((await localSuggestions(() => many)('')).choices).toHaveLength(500)
   })
 
   it('reads the list on every query, so a later load is picked up', async () => {
-    const list = ref(namedSuggestions([]))
+    const list = ref(titledSuggestions([]))
     const query = localSuggestions(() => list.value)
 
     expect((await query('')).choices).toHaveLength(0)
-    list.value = hosts
+    list.value = metrics
     expect((await query('')).choices).toHaveLength(3)
   })
 })
 
 describe('suggestionList', () => {
   it('tracks the caller’s own source', () => {
-    const names = ref(['web01'])
-    const list = suggestionList(() => namedSuggestions(names.value))
+    const entries = ref([{ id: 'aggr-web', title: 'Web shop' }])
+    const list = suggestionList(() => titledSuggestions(entries.value))
 
     expect(list.items.value).toHaveLength(1)
-    names.value = ['web01', 'web02']
+    entries.value = [...entries.value, { id: 'aggr-mail', title: 'Mail' }]
     expect(list.items.value).toHaveLength(2)
     expect(list.loading.value).toBe(false)
   })

@@ -16,10 +16,12 @@ import { computed } from 'vue'
 
 import { useConnectionOverride } from '@/maps/map/edit/composables/useConnectionOverride'
 import type { ObjectSuggestions } from '@/maps/map/edit/composables/useObjectSuggestions'
+import { rebindHost } from '@/maps/map/edit/hostBinding'
 import PropertyRow from '@/maps/map/edit/properties/PropertyRow.vue'
 import PropertySection from '@/maps/map/edit/properties/PropertySection.vue'
 import type { ObjectForm } from '@/maps/map/edit/properties/objectForm'
 import MapsColorInput from '@/maps/shared/components/MapsColorInput.vue'
+import MapsObjectField from '@/maps/shared/components/MapsObjectField.vue'
 import MapsSuggestionField from '@/maps/shared/components/MapsSuggestionField.vue'
 import MapsTextArea from '@/maps/shared/components/MapsTextArea.vue'
 import type { MapElement } from '@/maps/types/api'
@@ -61,21 +63,21 @@ const showsSubtreeLines = computed(() => form.value.expand_depth > 0)
 
     <template v-if="type === 'host' || type === 'service'">
       <PropertyRow :label="_t('Host name')">
-        <MapsSuggestionField
-          v-model="form.host_name"
+        <MapsObjectField
+          :model-value="form.host_name"
+          kind="host"
           :label="_t('Host name')"
-          :list="suggestions.hosts"
           :placeholder="_t('hostname')"
-          :empty-hint="_t('No hosts available')"
+          @update:model-value="rebindHost(form, $event)"
         />
       </PropertyRow>
       <PropertyRow v-if="type === 'service'" :label="_t('Service')">
-        <MapsSuggestionField
+        <MapsObjectField
           v-model="form.service_description"
+          kind="service"
+          :host-name="form.host_name"
           :label="_t('Service')"
-          :list="suggestions.services"
           :placeholder="_t('service description')"
-          :empty-hint="form.host_name ? _t('No services for this host') : undefined"
         />
       </PropertyRow>
       <div class="maps-identity-section__checks">
@@ -89,12 +91,11 @@ const showsSubtreeLines = computed(() => form.value.expand_depth > 0)
     </template>
 
     <PropertyRow v-if="type === 'hostgroup' || type === 'servicegroup'" :label="_t('Group name')">
-      <MapsSuggestionField
+      <MapsObjectField
         v-model="form.group_name"
+        :kind="type"
         :label="_t('Group name')"
-        :list="suggestions.groups"
         :placeholder="_t('group name')"
-        :empty-hint="_t('No groups available')"
       />
     </PropertyRow>
 

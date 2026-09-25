@@ -23,21 +23,6 @@ import type {
 } from '@/maps/types/api'
 
 export class MonitoringObjectsApi {
-  /** Names of one object type, optionally narrowed by host or a search term. */
-  public async fetchObjects(objectType: string, host?: string, search?: string): Promise<string[]> {
-    return unwrap(
-      await client.GET('/domain-types/maps_object/collections/all', {
-        params: {
-          query: {
-            object_type: objectType,
-            ...(host && { host_name: host }),
-            ...(search && { search })
-          }
-        }
-      })
-    ).objects
-  }
-
   public async fetchFolders(): Promise<{ path: string; title: string }[]> {
     return unwrap(await client.GET('/domain-types/maps_folder/collections/all')).folders
   }

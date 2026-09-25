@@ -58,8 +58,7 @@ const objectTypeOptions = computed(() => ({
 
 const suggestions = useObjectSuggestions({
   connectionId: () => props.connectionId,
-  objectType: () => draft.value.type,
-  hostName: () => draft.value.host_name
+  objectType: () => draft.value.type
 })
 
 const canPlace = computed(() => isDraftPlaceable(draft.value))

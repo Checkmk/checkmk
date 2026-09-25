@@ -10,14 +10,12 @@ resolved live against the connection.
 <script setup lang="ts">
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 
 import EditField from '@/maps/map/edit/components/EditField.vue'
-import { useRadarGroups } from '@/maps/map/edit/composables/useRadarGroups'
 import SettingsSection from '@/maps/map/edit/settings/components/SettingsSection.vue'
 import type { SettingsForm } from '@/maps/map/edit/settings/settingsForm'
-import MapsSuggestionField from '@/maps/shared/components/MapsSuggestionField.vue'
-import { namedSuggestions, suggestionList } from '@/maps/shared/suggestions'
+import MapsObjectField from '@/maps/shared/components/MapsObjectField.vue'
 import type { RadarView } from '@/maps/types/api'
 
 const props = defineProps<{ saveAttempted: boolean }>()
@@ -36,19 +34,18 @@ const filterOptions = computed(() => ({
   ]
 }))
 
-const { names, loading } = useRadarGroups(form)
-const groups = suggestionList(
-  () => namedSuggestions(names.value),
-  () => loading.value
+const groupKind = computed(() =>
+  form.value.radar_filter === 'hostgroup' || form.value.radar_filter === 'servicegroup'
+    ? form.value.radar_filter
+    : null
 )
 
-const needsGroup = computed(
-  () => form.value.radar_filter === 'hostgroup' || form.value.radar_filter === 'servicegroup'
-)
-const emptyHint = computed(() =>
-  form.value.radar_filter === 'hostgroup'
-    ? _t('No host groups configured in this site')
-    : _t('No service groups configured in this site')
+// A group picked for the other filter type must not survive the swap.
+watch(
+  () => form.value.radar_filter,
+  () => {
+    form.value.radar_filter_value = ''
+  }
 )
 </script>
 
@@ -66,7 +63,7 @@ const emptyHint = computed(() =>
       />
     </EditField>
     <EditField
-      v-if="needsGroup"
+      v-if="groupKind"
       :label="_t('Group name')"
       required
       :help="
@@ -75,12 +72,11 @@ const emptyHint = computed(() =>
         )
       "
     >
-      <MapsSuggestionField
+      <MapsObjectField
         v-model="form.radar_filter_value"
+        :kind="groupKind"
         :label="_t('Group name')"
-        :list="groups"
         :placeholder="_t('Group name')"
-        :empty-hint="emptyHint"
       />
       <p v-if="props.saveAttempted && !form.radar_filter_value" class="maps-radar-settings__gap">
         {{ _t('Pick a group — the map has nothing to show without one.') }}

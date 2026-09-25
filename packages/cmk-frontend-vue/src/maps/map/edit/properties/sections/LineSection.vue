@@ -16,18 +16,18 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import type { ObjectMetrics } from '@/maps/map/edit/composables/useObjectMetrics'
-import type { ObjectSuggestions } from '@/maps/map/edit/composables/useObjectSuggestions'
+import { rebindHost } from '@/maps/map/edit/hostBinding'
 import PropertyRow from '@/maps/map/edit/properties/PropertyRow.vue'
 import PropertySection from '@/maps/map/edit/properties/PropertySection.vue'
 import type { ObjectForm } from '@/maps/map/edit/properties/objectForm'
 import MapsColorInput from '@/maps/shared/components/MapsColorInput.vue'
+import MapsObjectField from '@/maps/shared/components/MapsObjectField.vue'
 import MapsSuggestionField from '@/maps/shared/components/MapsSuggestionField.vue'
 import type { LinePerfdataLabel, MapElement, MapViewType } from '@/maps/types/api'
 import { linePerfdataLabelOptions, lineStyleOptions } from '@/maps/utils/dropdownOptions'
 
 const props = defineProps<{
   object: MapElement
-  suggestions: ObjectSuggestions
   metrics: ObjectMetrics
   mapType: MapViewType | undefined
 }>()
@@ -58,21 +58,21 @@ const hasOwnCoordinates = computed(() => props.mapType !== 'worldmap')
 <template>
   <PropertySection :title="_t('Monitoring object')">
     <PropertyRow :label="_t('Host name')">
-      <MapsSuggestionField
-        v-model="form.host_name"
+      <MapsObjectField
+        :model-value="form.host_name"
+        kind="host"
         :label="_t('Host name')"
-        :list="suggestions.hosts"
         :placeholder="_t('hostname')"
-        :empty-hint="_t('No hosts available')"
+        @update:model-value="rebindHost(form, $event)"
       />
     </PropertyRow>
     <PropertyRow :label="_t('Service')">
-      <MapsSuggestionField
+      <MapsObjectField
         v-model="form.service_description"
+        kind="service"
+        :host-name="form.host_name"
         :label="_t('Service')"
-        :list="suggestions.services"
         :placeholder="_t('service description (optional)')"
-        :empty-hint="form.host_name ? _t('No services for this host') : undefined"
       />
     </PropertyRow>
   </PropertySection>

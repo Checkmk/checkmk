@@ -11,8 +11,9 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import { useConnections } from '@/maps/services/context'
+import MapsObjectField from '@/maps/shared/components/MapsObjectField.vue'
 import MapsSuggestionField from '@/maps/shared/components/MapsSuggestionField.vue'
-import { namedSuggestions, suggestionList, titledSuggestions } from '@/maps/shared/suggestions'
+import { suggestionList, titledSuggestions } from '@/maps/shared/suggestions'
 import type { AggregationInfo, DataElement, ShapeElement } from '@/maps/types/api'
 
 import { EMPTY_BINDING } from '../binding'
@@ -83,95 +84,27 @@ function onBindKindChange(v: string | null): void {
   emit('patch', { ...EMPTY_BINDING, object_type: kind === 'host' ? null : kind })
 }
 
-const hosts = ref<string[]>([])
-const services = ref<string[]>([])
-const groups = ref<string[]>([])
 const aggregationInfos = ref<AggregationInfo[]>([])
-const loadingHosts = ref(false)
-const loadingServices = ref(false)
-const loadingGroups = ref(false)
 const loadingAggregations = ref(false)
-const hostModel = ref('')
-const serviceModel = ref('')
-const groupModel = ref('')
-const aggregationModel = ref('')
 
-const hostList = suggestionList(
-  () => namedSuggestions(hosts.value),
-  () => loadingHosts.value
-)
-const serviceList = suggestionList(
-  () => namedSuggestions(services.value),
-  () => loadingServices.value
-)
-const groupList = suggestionList(
-  () => namedSuggestions(groups.value),
-  () => loadingGroups.value
-)
 const aggregationList = suggestionList(
   () => titledSuggestions(aggregationInfos.value.map((a) => ({ id: a.id, title: a.title }))),
   () => loadingAggregations.value
 )
 
-async function loadHosts(): Promise<void> {
-  loadingHosts.value = true
-  hosts.value = await binding.hosts()
-  loadingHosts.value = false
+// Hosts, services and groups are searched as the operator types; only the BI
+// aggregations come as one list.
+async function loadAggregations(): Promise<void> {
+  loadingAggregations.value = true
+  aggregationInfos.value = await binding.aggregations()
+  loadingAggregations.value = false
 }
 
-async function loadServices(host: string): Promise<void> {
-  if (!host) {
-    services.value = []
-    return
-  }
-  loadingServices.value = true
-  services.value = await binding.services(host)
-  loadingServices.value = false
-}
-
-async function loadSourcesFor(kind: BindKind): Promise<void> {
-  if (kind === 'host') {
-    void loadHosts()
-  } else if (kind === 'hostgroup' || kind === 'servicegroup') {
-    loadingGroups.value = true
-    groups.value = await (kind === 'hostgroup' ? binding.hostgroups() : binding.servicegroups())
-    loadingGroups.value = false
-  } else {
-    loadingAggregations.value = true
-    aggregationInfos.value = await binding.aggregations()
-    loadingAggregations.value = false
-  }
-}
-
-// Track the whole binding (not just the element id): a drag&drop bind or a
-// type switch repatches the very element that is already selected, and the
-// inputs must follow. Selecting in the autocomplete round-trips to the same
-// value, so this never fights the user's typing.
 watch(
-  () => [
-    props.element.id,
-    bindKind.value,
-    props.element.host_name,
-    props.element.service_description,
-    props.element.group_name,
-    props.element.aggregation_id
-  ],
-  (next, prev) => {
-    hostModel.value = props.element.host_name ?? ''
-    serviceModel.value = props.element.service_description ?? ''
-    groupModel.value = props.element.group_name ?? ''
-    aggregationModel.value = props.element.aggregation_id ?? ''
-    const idChanged = next[0] !== prev?.[0]
-    const kindChanged = next[1] !== prev?.[1]
-    if (idChanged || kindChanged) {
-      void loadSourcesFor(bindKind.value)
-    }
-    if (bindKind.value === 'host') {
-      if (!hostModel.value) {
-        services.value = []
-      } else if (idChanged || next[2] !== prev?.[2]) {
-        void loadServices(hostModel.value)
-      }
+  [() => props.element.id, bindKind],
+  () => {
+    if (bindKind.value === 'aggregation') {
+      void loadAggregations()
     }
   },
   { immediate: true }
@@ -199,15 +132,12 @@ function onConnectionChange(v: string | null): void {
     object_type: props.element.object_type ?? null,
     connection_id: v || null
   })
-  hosts.value = []
-  services.value = []
-  groups.value = []
   aggregationInfos.value = []
-  void loadSourcesFor(bindKind.value)
+  if (bindKind.value === 'aggregation') {
+    void loadAggregations()
+  }
 }
 
-// The watch above re-syncs the models and reloads sources from the patched
-// element — these handlers only commit the change.
 function onHostChange(v: string): void {
   emit('patch', { host_name: v || null, service_description: null })
 }
@@ -258,22 +188,21 @@ function onAggregationChange(v: string): void {
     <template v-if="bindKind === 'host'">
       <div class="maps-presentation-binding-form__field">
         <span class="maps-cap">{{ _t('Host') }}</span>
-        <MapsSuggestionField
+        <MapsObjectField
+          kind="host"
           :label="_t('Host')"
-          :model-value="hostModel"
-          :list="hostList"
+          :model-value="element.host_name ?? ''"
           :placeholder="_t('Bind to host…')"
-          :empty-hint="_t('No hosts available')"
           @update:model-value="onHostChange"
         />
       </div>
       <div class="maps-presentation-binding-form__field">
         <span class="maps-cap">{{ _t('Service (optional)') }}</span>
-        <MapsSuggestionField
+        <MapsObjectField
+          kind="service"
+          :host-name="element.host_name ?? ''"
           :label="_t('Service (optional)')"
-          :model-value="serviceModel"
-          :list="serviceList"
-          :disabled="!hostModel"
+          :model-value="element.service_description ?? ''"
           :placeholder="_t('Whole host if empty')"
           @update:model-value="onServiceChange"
         />
@@ -287,12 +216,11 @@ function onAggregationChange(v: string): void {
       <span class="maps-cap">{{
         bindKind === 'hostgroup' ? _t('Host group') : _t('Service group')
       }}</span>
-      <MapsSuggestionField
+      <MapsObjectField
+        :kind="bindKind"
         :label="bindKind === 'hostgroup' ? _t('Host group') : _t('Service group')"
-        :model-value="groupModel"
-        :list="groupList"
+        :model-value="element.group_name ?? ''"
         :placeholder="_t('Pick a group…')"
-        :empty-hint="_t('No groups available')"
         @update:model-value="onGroupChange"
       />
     </div>
@@ -301,7 +229,7 @@ function onAggregationChange(v: string): void {
       <span class="maps-cap">{{ _t('BI aggregation') }}</span>
       <MapsSuggestionField
         :label="_t('BI aggregation')"
-        :model-value="aggregationModel"
+        :model-value="element.aggregation_id ?? ''"
         :list="aggregationList"
         :placeholder="_t('Pick an aggregation…')"
         :empty-hint="_t('No aggregations available')"

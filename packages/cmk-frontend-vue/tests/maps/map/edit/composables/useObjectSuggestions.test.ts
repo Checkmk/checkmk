@@ -3,8 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { describe, expect, it, vi } from 'vitest'
-import { nextTick, ref } from 'vue'
+import { describe, expect, it } from 'vitest'
 
 import { useObjectSuggestions } from '@/maps/map/edit/composables/useObjectSuggestions'
 
@@ -23,8 +22,7 @@ describe('useObjectSuggestions – maps', () => {
     const suggestions = runWithServices(services, () =>
       useObjectSuggestions({
         connectionId: () => 'test',
-        objectType: () => 'map',
-        hostName: () => ''
+        objectType: () => 'map'
       })
     )
 
@@ -46,43 +44,10 @@ describe('useObjectSuggestions – maps', () => {
       useObjectSuggestions({
         connectionId: () => 'test',
         objectType: () => 'map',
-        hostName: () => '',
         mapName: () => 'here'
       })
     )
 
     expect(suggestions.maps.items.value.map((entry) => entry.name)).toEqual(['here', 'all_hosts'])
-  })
-})
-
-describe('useObjectSuggestions – services', () => {
-  it('drops the lookup the cleared host left in flight', async () => {
-    // Clearing the host empties the list; the answer still on its way for that
-    // host must not refill it under a field that now names no host at all.
-    const services = fakeMapsServices()
-    let answer: (names: string[]) => void = () => {}
-    const inFlight = new Promise<string[]>((resolve) => {
-      answer = resolve
-    })
-    vi.mocked(services.apis.objects.fetchObjects).mockImplementation(async (objectType: string) =>
-      objectType === 'service' ? inFlight : []
-    )
-
-    const hostName = ref('web-01')
-    const suggestions = runWithServices(services, () =>
-      useObjectSuggestions({
-        connectionId: () => 'test',
-        objectType: () => 'service',
-        hostName: () => hostName.value
-      })
-    )
-
-    hostName.value = ''
-    await nextTick()
-    answer(['CPU load'])
-    await nextTick()
-
-    expect(suggestions.services.items.value).toEqual([])
-    expect(suggestions.services.loading.value).toBe(false)
   })
 })

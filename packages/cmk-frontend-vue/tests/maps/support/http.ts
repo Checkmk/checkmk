@@ -30,8 +30,10 @@ export async function snapshot(request: Request): Promise<SeenRequest> {
  * transports run end to end: URL building, body encoding and the error mapping
  * are exercised instead of asserted about.
  */
-export function useMswServer(): ReturnType<typeof setupServer> {
-  const server = setupServer()
+export function useMswServer(
+  ...handlers: Parameters<typeof setupServer>
+): ReturnType<typeof setupServer> {
+  const server = setupServer(...handlers)
   beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
   afterEach(() => server.resetHandlers())
   afterAll(() => server.close())

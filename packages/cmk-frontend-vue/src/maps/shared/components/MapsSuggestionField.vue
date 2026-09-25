@@ -4,14 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <!--
-Picking one entry out of a list the caller already fetched — a host, a service,
-a group, a BI aggregation, another map, a metric.
+Picking one entry out of a list the caller already fetched — a BI aggregation,
+another map, a metric. Hosts, services and groups are searched on the server
+instead, see MapsObjectField.
 
 The dropdown filters the list it was given rather than querying a backend, but
 it takes the callback form regardless: that caps how many entries are rendered
-at once, and it keeps showing a value the list no longer carries (a host that
-was removed from the site stays visible on the object instead of silently
-reading as "nothing picked").
+at once, and it keeps showing a value the list no longer carries (a map that
+was deleted stays visible on the object instead of silently reading as
+"nothing picked").
 
 Every editing surface in Maps is a bounded overlay -- an add panel in a corner,
 a card over the canvas -- so the list is ``floating``: it is portalled out of
@@ -37,7 +38,6 @@ const props = defineProps<{
   placeholder: TranslatedString
   /** Says why the list is empty — a site with no host groups, say. */
   emptyHint?: TranslatedString | undefined
-  disabled?: boolean
 }>()
 
 const model = defineModel<string>({ required: true })
@@ -77,7 +77,6 @@ const noResultsHint = computed<TranslatedString>(() =>
       :label="label"
       :no-results-hint="noResultsHint"
       :no-elements-text="noElementsText"
-      :disabled="disabled ?? false"
       width="fill"
       @update:model-value="model = $event ?? ''"
     />

@@ -9,7 +9,6 @@ py_cmk_test(
     ],
     data = glob(
         include = [
-            "**/_check_form_submit_response",
             "**/*.json",
             "**/*.yaml",
         ],

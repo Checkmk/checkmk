@@ -150,7 +150,6 @@ sh_library(
         "emailchecks/libexec/check_mail",
         "emailchecks/libexec/check_mail_loop",
         "emailchecks/libexec/check_mailboxes",
-        "form_submit/libexec/check_form_submit",
         "fritzbox/libexec/agent_fritzbox",
         "hivemanager/libexec/agent_hivemanager",
         "hivemanager_ng/libexec/agent_hivemanager_ng",

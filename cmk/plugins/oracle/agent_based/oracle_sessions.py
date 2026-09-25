@@ -14,6 +14,7 @@
 
 import contextlib
 from collections.abc import Mapping
+from dataclasses import dataclass, field
 from typing import Any
 
 from cmk.agent_based.v2 import (
@@ -30,63 +31,62 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .liboracle import Error, Ok, oracle_handle_ora_errors, Parsed
-
-type _Metrics = dict[str, int]
-type Section = Mapping[str, Parsed[_Metrics]]
+from .liboracle import oracle_handle_ora_errors
 
 
-def parse_oracle_sessions(string_table: StringTable) -> Section:
+@dataclass
+class OracleSession:
+    metrics: dict[str, int] = field(default_factory=dict)
+    error: str | None = None
+
+
+type SectionOracleSessions = Mapping[str, OracleSession]
+
+
+def parse_oracle_sessions(string_table: StringTable) -> SectionOracleSessions:
     header = ["cursess", "maxsess", "curmax"]
-    metrics_by_sid: dict[str, _Metrics] = {}
-    errors: dict[str, str] = {}
+    parsed: dict[str, OracleSession] = {}
     for line in string_table:
-        match oracle_handle_ora_errors(line):
-            case str() as message:
-                errors.setdefault(line[0], message)
-            case False:
-                continue
-            case None:
-                for key, entry in zip(header, line[1:]):
-                    with contextlib.suppress(ValueError):
-                        metrics_by_sid.setdefault(line[0], {})[key] = int(entry)
-
-    parsed: dict[str, Parsed[_Metrics]] = {
-        sid: Ok(metrics) for sid, metrics in metrics_by_sid.items() if sid not in errors
-    }
-    for sid, message in errors.items():
-        parsed[sid] = Error(message)
+        error = oracle_handle_ora_errors(line)
+        if error is False:
+            continue
+        if isinstance(error, str):
+            parsed.setdefault(line[0], OracleSession()).error = error
+            continue
+        for key, entry in zip(header, line[1:]):
+            with contextlib.suppress(ValueError):
+                parsed.setdefault(line[0], OracleSession()).metrics[key] = int(entry)
     return parsed
 
 
-def discover_oracle_sessions(section: Section) -> DiscoveryResult:
-    for sid, result in section.items():
-        if isinstance(result, Ok) and result.value:
+def discover_oracle_sessions(section: SectionOracleSessions) -> DiscoveryResult:
+    for sid, data in section.items():
+        if data.metrics:
             yield Service(item=sid)
 
 
-def check_oracle_sessions(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_oracle_sessions(
+    item: str, params: Mapping[str, Any], section: SectionOracleSessions
+) -> CheckResult:
     if isinstance(params, tuple):
         params = {"sessions_abs": params}
 
-    match section.get(item):
-        case None:
-            # In case of missing information we assume that the login into
-            # the database has failed and we simply skip this check. It won't
-            # switch to UNKNOWN, but will get stale.
-            raise IgnoreResultsError("Login into database failed")
-        case Error(message):
-            yield Result(state=State.UNKNOWN, summary=message)
-        case Ok(metrics):
-            yield from _check_sessions(params, metrics)
-
-
-def _check_sessions(params: Mapping[str, Any], metrics: _Metrics) -> CheckResult:
-    if "cursess" not in metrics:
+    data = section.get(item)
+    if data is None:
+        # In case of missing information we assume that the login into
+        # the database has failed and we simply skip this check. It won't
+        # switch to UNKNOWN, but will get stale.
         raise IgnoreResultsError("Login into database failed")
 
-    sessions = metrics["cursess"]
-    sessions_max = metrics.get("maxsess")
+    if data.error is not None:
+        yield Result(state=State.UNKNOWN, summary=data.error)
+        return
+
+    if "cursess" not in data.metrics:
+        raise IgnoreResultsError("Login into database failed")
+
+    sessions = data.metrics["cursess"]
+    sessions_max = data.metrics.get("maxsess")
 
     yield from check_levels(
         sessions,

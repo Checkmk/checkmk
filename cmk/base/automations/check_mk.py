@@ -2682,31 +2682,24 @@ def _execute_silently(
 
 def _automation_get_configuration(
     _app: object,
-    args: list[str],  # noqa: ARG001
-    plugins: AgentBasedPlugins | None,
-    loading_result: config.LoadingResult | None,
+    _args: object,
+    _plugins: object,
+    _loading_result: object,
 ) -> GetConfigurationResult:
     """Automation call to get the default configuration"""
-    called_from_automation_helper = plugins is not None or loading_result is not None
-    if called_from_automation_helper:
-        raise RuntimeError(
-            "This automation call should never be called from the automation helper "
-            "as it can only return the active config and we want the default config."
-        )
-
     # We read the list of variable names from stdin since
     # that could be too much for the command line
-    variable_names = ast.literal_eval(sys.stdin.read())
+    variable_names = {str(vn) for vn in ast.literal_eval(sys.stdin.read())}
 
-    base_config = config.load(with_conf_d=False).loaded_config
+    raw_config = config.load_raw_config(with_conf_d=False)
 
-    result = {}
-    for varname in variable_names:
-        if hasattr(base_config, varname):
-            value = getattr(base_config, varname)
-            if not hasattr(value, "__call__"):
-                result[varname] = value
-    return GetConfigurationResult(result)
+    return GetConfigurationResult(
+        {
+            k: v
+            for k in variable_names.intersection(raw_config)
+            if not hasattr(v := raw_config[k], "__call__")
+        }
+    )
 
 
 def _automation_get_check_information(

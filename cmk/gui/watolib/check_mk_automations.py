@@ -482,9 +482,6 @@ def get_configuration(
             AutomationID("get-configuration"),
             automation_config=LocalAutomationConfig(),
             indata=config_var_names,
-            # We must not call this through the automation helper,
-            # see automation call execution.
-            force_cli_interface=True,
             debug=debug,
         ),
         results.GetConfigurationResult,

@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""The kinds of relation two hosts can have, and how each end of one is worded.
+"""The kinds of relation two hosts can have, how each end of one is worded, and what gives it away.
 
 A kind is an object with its readings as fields, so the one table below decides what the host
-dialog offers, what a contradiction message says, and what the monitoring calls a related host. A
-further kind is one more entry here; nothing else enumerates them.
+dialog offers, what a contradiction message says, what the monitoring calls a related host, and
+what the relation discovery proposes. A further kind is one more entry here; nothing else
+enumerates them.
 
 Only the ids of a kind and of a direction are stored (see :mod:`cmk.gui.utils.host_relations`),
 so the wording stays free to change and to be translated. That is also why this is a module of
@@ -22,6 +23,37 @@ from typing import Final
 from cmk.gui.i18n import _l
 from cmk.gui.utils.host_relations import RelationDirection, RelationLink
 from cmk.web.utils.speaklater import LazyString
+
+#: What a host name puts between its parts. A relation word is one whole part of a name,
+#: so a word carrying one of these could never be read out of one.
+NAME_SEPARATORS: Final = "-_."
+
+
+def is_name_token(token: str) -> bool:
+    """Whether this word can be read out of a host name at all."""
+    return bool(token) and not any(separator in token for separator in NAME_SEPARATORS)
+
+
+@dataclass(frozen=True)
+class NameEvidence:
+    """How a host name says that its host sits at one end of this relation.
+
+    ``tokens`` are the words a name carries for it - "ilo" and "idrac" for a management
+    board - and ``direction`` is the end a host carrying one of them sits at. A kind that
+    leaves this out is simply not discovered from host names; nothing else has to know.
+
+    The words a kind declares are the ones its vendors habitually use: where a fleet's names
+    carry one, the relation discovery offers it as this kind already. What a scan reads are
+    the words the user confirmed.
+    """
+
+    tokens: Sequence[str]
+    direction: RelationDirection
+
+    def __post_init__(self) -> None:
+        for token in self.tokens:
+            if not is_name_token(token):
+                raise ValueError(f"Not a word a host name can carry: {token!r}")
 
 
 @dataclass(frozen=True)
@@ -53,9 +85,11 @@ class DirectedRelationKind:
     id: str
     parent: RelationEnd
     child: RelationEnd
+    name_evidence: NameEvidence | None = None
 
     def __post_init__(self) -> None:
         _validate_kind_id(self.id)
+        _validate_name_evidence(self.id, self.name_evidence, self.directions())
 
     def directions(self) -> Sequence[RelationDirection]:
         return ("parent", "child")
@@ -79,9 +113,11 @@ class SymmetricRelationKind:
 
     id: str
     peer: RelationEnd
+    name_evidence: NameEvidence | None = None
 
     def __post_init__(self) -> None:
         _validate_kind_id(self.id)
+        _validate_name_evidence(self.id, self.name_evidence, self.directions())
 
     def directions(self) -> Sequence[RelationDirection]:
         return ("symmetric",)
@@ -93,6 +129,18 @@ class SymmetricRelationKind:
 
 
 RelationKind = DirectedRelationKind | SymmetricRelationKind
+
+
+def _validate_name_evidence(
+    kind_id: str, evidence: NameEvidence | None, directions: Sequence[RelationDirection]
+) -> None:
+    """A kind that says which end its names give away has to have that end.
+
+    Asked here rather than where a proposal is built, so that a malformed entry is refused
+    at the entry and not halfway through a scan.
+    """
+    if evidence is not None and evidence.direction not in directions:
+        raise ValueError(f"Relation kind {kind_id!r} has no end {evidence.direction!r}.")
 
 
 def _validate_kind_id(kind_id: str) -> None:
@@ -110,6 +158,26 @@ RELATION_KINDS: Final[Mapping[str, RelationKind]] = {
             id="management",
             parent=RelationEnd(row=_l("is management board of"), noun=_l("Management board")),
             child=RelationEnd(row=_l("is OS host of"), noun=_l("OS host")),
+            # What vendors call the board that sits in a host, as it turns up in host
+            # names: "srv-01-ilo", "idrac.srv-01". A host carrying one of these is the
+            # board, which is the parent end of this kind.
+            name_evidence=NameEvidence(
+                tokens=(
+                    "ilo",
+                    "ilom",
+                    "idrac",
+                    "drac",
+                    "imm",
+                    "xcc",
+                    "irmc",
+                    "cimc",
+                    "bmc",
+                    "ipmi",
+                    "oa",
+                    "mgmt",
+                ),
+                direction="parent",
+            ),
         ),
     )
 }

@@ -106,7 +106,7 @@ def _related_host_choice() -> StringAutocompleter:
     )
 
 
-def _choice_name(kind_id: str, direction: RelationDirection) -> str:
+def relation_choice_name(kind_id: str, direction: RelationDirection) -> str:
     """One element of the relation type choice, named by the end of the kind it offers.
 
     ``CascadingSingleChoiceElement`` requires an identifier as its name, so the two ids are joined
@@ -135,7 +135,7 @@ def _relation_type_choice() -> CascadingSingleChoiceExtended:
         prefill=InputHint(Title("Select relation type")),
         elements=[
             CascadingSingleChoiceElement(
-                name=_choice_name(kind.id, direction),
+                name=relation_choice_name(kind.id, direction),
                 # Already a translatable string, held lazily by the kind it belongs to.
                 title=Title(str(kind.end(direction).row)),  # astrein: disable=localization-checker
                 parameter_form=_related_host_choice(),
@@ -178,7 +178,7 @@ def host_relations_form_spec() -> TransformDataForLegacyFormatOrRecomposeFunctio
 
 def _links_to_form_data(raw: object) -> list[tuple[str, str]]:
     return [
-        (_choice_name(link["kind"], link["direction"]), link["host"])
+        (relation_choice_name(link["kind"], link["direction"]), link["host"])
         for link in known_relations(parse_relations_value(raw))
     ]
 

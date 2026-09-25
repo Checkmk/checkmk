@@ -197,6 +197,7 @@ COMMUNITY_WHEELS = [
     "//packages/cmk-plugins:wheel-bazel",
     "//packages/cmk-plugins:wheel-cisco_prime",
     "//packages/cmk-plugins:wheel-dell",
+    "//packages/cmk-plugins:wheel-dns",
     "//packages/cmk-plugins:wheel-elasticsearch",
     "//packages/cmk-plugins:wheel-gcp",
     "//packages/cmk-plugins:wheel-gerrit",

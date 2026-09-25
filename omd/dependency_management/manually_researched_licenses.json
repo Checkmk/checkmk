@@ -17,7 +17,6 @@
   "pkg:cpan/XML-SAX@0.99": "Artistic-1.0-Perl OR GPL-1.0-or-later",
   "pkg:cpan/base@2.18": "Artistic-1.0-Perl OR GPL-1.0-or-later",
   "pkg:cpan/common-sense@3.73": "Artistic-1.0-Perl OR GPL-1.0-or-later",
-  "pkg:deb/ubuntu/liblzma5@5.6.1%2Breally5.4.5-1?arch=amd64": "0BSD",
   "pkg:deb/ubuntu/base-files@13ubuntu10?arch=amd64": "GPL-2.0-or-later",
   "pkg:deb/ubuntu/bash@5.2.21-2ubuntu4?arch=amd64": "GPL-3.0-or-later",
   "pkg:deb/ubuntu/coreutils@9.4-3ubuntu6?arch=amd64": "GPL-3.0-or-later AND BSD-4-Clause-UC AND ISC",
@@ -40,6 +39,7 @@
   "pkg:deb/ubuntu/libkeyutils1@1.6.3-3build1?arch=amd64": "LGPL-2.0-or-later AND GPL-2.0-or-later",
   "pkg:deb/ubuntu/libkrb5-3@1.20.1-6ubuntu2?arch=amd64": "MIT",
   "pkg:deb/ubuntu/libkrb5support0@1.20.1-6ubuntu2?arch=amd64": "MIT",
+  "pkg:deb/ubuntu/liblzma5@5.6.1%2Breally5.4.5-1?arch=amd64": "0BSD",
   "pkg:deb/ubuntu/libmd0@1.1.0-2build1?arch=amd64": "BSD-3-Clause AND BSD-2-Clause AND BSD-2-Clause-NetBSD AND ISC AND Beerware",
   "pkg:deb/ubuntu/libnettle8t64@3.9.1-2.2build1?arch=amd64": "LGPL-3.0-or-later OR GPL-2.0-or-later",
   "pkg:deb/ubuntu/libnsl2@1.3.0-3build3?arch=amd64": "LGPL-2.1-or-later AND BSD-3-Clause",
@@ -123,5 +123,6 @@
   "pkg:pypi/tiktoken@0.14.0": "MIT",
   "pkg:pypi/uritemplate@4.2.0": "BSD-3-Clause OR Apache-2.0",
   "pkg:pypi/urllib3@2.3.0": "MIT",
+  "pkg:pypi/wheel@0.42.0": "MIT",
   "pkg:pypi/wrapt@1.17.3": "BSD-2-Clause"
 }

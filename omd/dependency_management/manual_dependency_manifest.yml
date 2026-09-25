@@ -52,8 +52,8 @@ dependencies:
     license: BSD-3-Clause
     path: non-free/packages/cmk-update-agent/src/pip/PySocks-1.7.1-py3-none-any.whl
 
-  - purl: pkg:pypi/wheel@0.34.2
-    path: non-free/packages/cmk-update-agent/src/pip/wheel-0.34.2-py2.py3-none-any.whl
+  - purl: pkg:pypi/wheel@0.42.0
+    path: non-free/packages/cmk-update-agent/src/pip/wheel-0.42.0-py3-none-any.whl
 
   - purl: pkg:pypi/six@1.15.0
     path: non-free/packages/cmk-update-agent/src/pip/six-1.15.0-py2.py3-none-any.whl

@@ -52,7 +52,7 @@ const emit = defineEmits<{
 const { _t } = usei18n()
 
 const objectTypeOptions = computed(() => ({
-  type: 'fixed' as const,
+  type: 'filtered' as const,
   suggestions: placeableObjectTypes(_t)
 }))
 
@@ -99,6 +99,7 @@ watch(
           :options="objectTypeOptions"
           :input-hint="_t('Select a type')"
           :label="_t('Object type')"
+          :no-results-hint="_t('No results found')"
           width="fill"
           @update:model-value="draft.type = ($event ?? '') as ObjectType | ''"
         />

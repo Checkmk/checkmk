@@ -57,9 +57,13 @@ const options = computed(() => {
   }
 })
 
-// A list still on its way must not read as an empty one.
+// A list still on its way must not read as an empty one, neither on the field
+// nor in the list opened over it.
 const noElementsText = computed<TranslatedString>(() =>
   props.list.loading.value ? _t('Loading…') : (props.emptyHint ?? _t('Nothing to pick'))
+)
+const noResultsHint = computed<TranslatedString>(() =>
+  props.list.loading.value ? _t('Loading…') : _t('No results found')
 )
 </script>
 
@@ -71,7 +75,7 @@ const noElementsText = computed<TranslatedString>(() =>
       :options="options"
       :input-hint="placeholder"
       :label="label"
-      :no-results-hint="_t('No results found')"
+      :no-results-hint="noResultsHint"
       :no-elements-text="noElementsText"
       :disabled="disabled ?? false"
       width="fill"

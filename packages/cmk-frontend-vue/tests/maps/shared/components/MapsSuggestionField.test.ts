@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
 import type { Suggestion } from 'cmk-ui-library/components/CmkSuggestions'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
@@ -58,6 +59,19 @@ describe('MapsSuggestionField', () => {
     list.loading.value = false
 
     await waitFor(() => expect(label()).toBe('web01'))
+  })
+
+  it('says the list is loading when opened before it arrives', async () => {
+    const list = aLoadingList()
+    renderField(list, '')
+    await userEvent.click(screen.getByRole('combobox', { name: 'Hostname' }))
+
+    expect(await screen.findByText('Loading…')).toBeInTheDocument()
+
+    list.items.value = namedSuggestions(['web01'])
+    list.loading.value = false
+
+    expect(await screen.findByRole('option', { name: 'web01' })).toBeInTheDocument()
   })
 
   it('stops claiming to load when the list comes back empty', async () => {

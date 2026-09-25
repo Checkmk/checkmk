@@ -117,6 +117,17 @@ describe('MapEditTools – the add-object panel', () => {
     expect(screen.queryByRole('menu', { name: 'Select type…' })).not.toBeInTheDocument()
   })
 
+  it('narrows the object types to what is typed', async () => {
+    renderTools([])
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add object' }))
+    await userEvent.click(await screen.findByRole('combobox', { name: 'Object type' }))
+    await userEvent.type(screen.getByRole('textbox', { name: 'filter' }), 'group')
+
+    await waitFor(() => expect(screen.queryByRole('option', { name: 'Image' })).toBeNull())
+    expect(screen.getByRole('option', { name: 'Host group' })).toBeInTheDocument()
+  })
+
   // The panel sits in the corner of the canvas: left open while placing, it
   // would swallow the click meant for the map underneath it.
   it('shrinks to its header while placing, freeing the canvas beneath it', async () => {

@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { SidebarSnapin } from 'cmk-shared-typing/typescript/sidebar'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 import { ServiceBase } from 'cmk-ui-library/lib/service/base'
 import { type Ref, ref } from 'vue'
@@ -15,6 +16,7 @@ import type { OnUpdateSnapinContent, SidebarSnapinContents } from './type-defs'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const cmk: any
 
+const { _t } = usei18n()
 const active = ref<boolean>(true)
 
 export class SidebarService extends ServiceBase {
@@ -221,7 +223,9 @@ export class SidebarService extends ServiceBase {
     this.registerShortCut(
       {
         key: ['/'],
-        ctrl: true
+        ctrl: true,
+        scope: _t('Sidebar'),
+        description: _t('Toggle sidebar')
       },
       SidebarService.toggle
     )
@@ -229,7 +233,9 @@ export class SidebarService extends ServiceBase {
       {
         key: ['/'],
         ctrl: true,
-        shift: true
+        shift: true,
+        scope: _t('Sidebar'),
+        description: _t('Toggle sidebar')
       },
       SidebarService.toggle
     )

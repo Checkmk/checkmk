@@ -18,6 +18,7 @@ import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 const SUGGEST_DEBOUNCE_MS = 200
@@ -56,6 +57,12 @@ const props = defineProps<{
 const model = defineModel<string[]>({ default: () => [] })
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Autocomplete'), [
+  { combo: ['ArrowDown'], description: _t('Move through suggestions') },
+  { combo: ['ArrowUp'], description: _t('Move through suggestions') },
+  { combo: ['Backspace'], description: _t('Remove last selected value') },
+  { combo: ['Escape'], description: _t('Clear input') }
+])
 
 const query = ref('')
 const suggestions = ref<string[]>([])

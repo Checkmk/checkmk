@@ -11,6 +11,7 @@ import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon
 import type { CmkMultitoneIconColor, OneColorIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import CmkKeyboardKey from 'cmk-ui-library/components/CmkKeyboardKey.vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { comboKey, highlightCombo, highlightedCombo } from 'cmk-ui-library/lib/keyboardHelp'
 import { computed } from 'vue'
 
 import { getInjectedMainMenu } from '@/main-menu/provider/main-menu'
@@ -22,6 +23,13 @@ const props = defineProps<{
   item: NavItem | NavLinkItem
   hideItemTitle: boolean
 }>()
+
+const combo = computed(() =>
+  props.item.shortcut ? mainMenu.getNavShortCutCombo(props.item.shortcut) : null
+)
+const highlighted = computed(
+  () => combo.value !== null && highlightedCombo.value === comboKey(combo.value)
+)
 
 const color = computed<CmkMultitoneIconColor>(() => {
   return (props.active ? 'success' : 'font') as CmkMultitoneIconColor
@@ -46,6 +54,8 @@ const target = computed<string | undefined>(() => {
     class="mm-nav-item__li"
     :class="{ 'mm-nav-item__li--active': active, 'mm-nav-item__li--small': hideItemTitle }"
     :title="hideItemTitle ? item.title : item.hint"
+    @mouseenter="highlightCombo(combo)"
+    @mouseleave="highlightCombo(null)"
   >
     <a
       :href="href"
@@ -71,6 +81,7 @@ const target = computed<string | undefined>(() => {
         :keyboard-key="mainMenu.getNavShortCutInfo(props.item.shortcut)"
         size="small"
         class="mm-nav-item__key-hint"
+        :class="{ 'mm-nav-item__key-hint--highlighted': highlighted }"
       />
       <CmkBadge
         v-if="mainMenu.getNavItemBadge(item.id)"
@@ -116,6 +127,10 @@ const target = computed<string | undefined>(() => {
       left: 35px;
       white-space: nowrap;
       z-index: +1;
+    }
+
+    .mm-nav-item__key-hint--highlighted {
+      outline: 2px solid var(--success);
     }
 
     .mm-nav-item__badge {

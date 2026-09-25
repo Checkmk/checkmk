@@ -10,6 +10,7 @@ import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
+import { useKeyboardHints } from 'cmk-ui-library/lib/keyboardHelp'
 import usePersistentRef from 'cmk-ui-library/lib/usePersistentRef'
 import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
 
@@ -41,6 +42,7 @@ import { downtimePresets } from '../shared/components/action/actions/scheduleDow
 import { createActionRegistry } from '../shared/components/action/registry'
 import { buildFilterUrlSchema } from '../shared/filterState/schema'
 import { filterStateWriter, readFilterUrlState } from '../shared/filterState/urlState'
+import { tableKeyboardHints } from '../shared/keyboardHints'
 import {
   buildColumnStorageKey,
   buildDisplayOptionsStorageKey,
@@ -74,6 +76,11 @@ import ServiceSlideIn, { SERVICE_GRAPHS_TAB_ID } from './components/ServiceSlide
 import { HostServicesService } from './services/HostServicesService'
 
 const { _t, _tn } = usei18n()
+
+useKeyboardHints(_t('Host services'), [
+  ...tableKeyboardHints(),
+  _t('Press [Enter] on a service name to open its details')
+])
 
 const props = defineProps<MonitoringHostServicesApp>()
 

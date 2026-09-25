@@ -8,12 +8,21 @@ import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkSpace from 'cmk-ui-library/components/CmkSpace.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 
 import type { BurgerMenuCallable, BurgerMenuGroup } from '../types'
 import { BOTTOM_SCREEN_MARGIN } from './constants'
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Graph menu'), [
+  { combo: ['ArrowDown'], description: _t('Open menu and move between entries') },
+  { combo: ['ArrowUp'], description: _t('Open menu and move between entries') },
+  { combo: ['Home'], description: _t('Jump to first entry') },
+  { combo: ['End'], description: _t('Jump to last entry') },
+  { combo: ['Tab'], description: _t('Close menu') },
+  { combo: ['Escape'], description: _t('Close menu') }
+])
 
 interface BurgerMenuProps {
   ariaLabel?: string | undefined

@@ -9,6 +9,7 @@ import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
 import StateTag, { type StateTone } from 'cmk-ui-library/components/StateTag.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -37,6 +38,17 @@ const props = withDefaults(defineProps<CmkKpiStatCardProps>(), {
 })
 
 const { _t } = usei18n()
+useWidgetKeys(_t('KPI card'), [
+  { combo: ['ArrowLeft'], description: _t('Select previous value') },
+  { combo: ['ArrowRight'], description: _t('Select next value') },
+  { combo: ['PageUp'], description: _t('Jump 10 values') },
+  { combo: ['PageDown'], description: _t('Jump 10 values') },
+  { combo: ['Home'], description: _t('Select first value') },
+  { combo: ['End'], description: _t('Select last value') },
+  { combo: ['ArrowUp'], description: _t('Select highest value') },
+  { combo: ['ArrowDown'], description: _t('Select lowest value') },
+  { combo: ['Escape'], description: _t('Clear selection') }
+])
 
 function renderValue(value: number): string {
   return props.formatValue ? props.formatValue(value) : value.toFixed(1)

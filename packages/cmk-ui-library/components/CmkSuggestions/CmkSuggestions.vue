@@ -9,6 +9,7 @@ import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import { CmkTooltipProvider } from 'cmk-ui-library/components/CmkTooltip'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { useDebounceRef } from 'cmk-ui-library/lib/useDebounce'
 import { immediateWatch } from 'cmk-ui-library/lib/watch'
 import { type Ref, computed, nextTick, ref, useTemplateRef } from 'vue'
@@ -30,6 +31,13 @@ type DisplaySection = Omit<Section, 'title'> & {
 }
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Suggestions'), [
+  { combo: ['Enter'], description: _t('Pick suggestion') },
+  { combo: ['Tab'], description: _t('Pick suggestion') },
+  { combo: ['Escape'], description: _t('Close') },
+  { combo: ['ArrowDown'], description: _t('Move through suggestions') },
+  { combo: ['ArrowUp'], description: _t('Move through suggestions') }
+])
 
 const {
   selectedSuggestion,

@@ -15,9 +15,15 @@ import type {
   NavItems,
   NavLinkItem
 } from 'cmk-shared-typing/typescript/main_menu'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { type KeyShortcut, KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 import { ServiceBase } from 'cmk-ui-library/lib/service/base'
 import { type Ref, ref } from 'vue'
+
+import {
+  isAnyCheatSheetVisible,
+  subscribeAnyCheatSheetVisible
+} from '@/lib/keyboard-cheat-sheet/cheatSheetKey'
 
 import { MainMenuApiClient } from './main-menu-api-client'
 import type {
@@ -33,9 +39,12 @@ import type {
   UserPopupMessageRef
 } from './type-defs'
 
+const { _t } = usei18n()
+
 export class MainMenuService extends ServiceBase {
   public currentItem: Ref<NavItem | null> = ref<NavItem | null>(null)
-  public showKeyHints: Ref<boolean> = ref<boolean>(false)
+  /** Shown together with the keyboard cheat sheet, of this frame or the content frame. */
+  public showKeyHints: Ref<boolean> = ref<boolean>(isAnyCheatSheetVisible())
   protected showAllTopic = ref<{ id: string; topic: NavItemTopic } | null>(null)
   protected showMoreActive: { [key: string]: Ref<boolean> } = {}
   protected userMessageTrigger: Ref<UserHintMessages | null> = ref<UserHintMessages | null>(null)
@@ -52,21 +61,27 @@ export class MainMenuService extends ServiceBase {
     shortCutService: KeyShortcutService
   ) {
     super('main-menu-service', shortCutService)
+    subscribeAnyCheatSheetVisible((visible) => {
+      this.showKeyHints.value = visible
+    })
     this.init()
   }
 
-  public toggleKeyHints() {
-    this.showKeyHints.value = !this.showKeyHints.value
+  public getNavShortCutInfo(shortcut: NavItemShortcut): string {
+    return KeyShortcutService.getShortCutInfo(this.toKeyShortcut(shortcut))
   }
 
-  public getNavShortCutInfo(shortcut: NavItemShortcut): string {
-    const sc: KeyShortcut = {
+  public getNavShortCutCombo(shortcut: NavItemShortcut): string[] {
+    return KeyShortcutService.getShortCutCombo(this.toKeyShortcut(shortcut))
+  }
+
+  private toKeyShortcut(shortcut: NavItemShortcut): KeyShortcut {
+    return {
       key: [shortcut.key],
       alt: shortcut.alt,
       ctrl: shortcut.ctrl,
       shift: shortcut.shift
     }
-    return KeyShortcutService.getShortCutInfo(sc)
   }
 
   public isAnyNavItemActive() {
@@ -78,7 +93,6 @@ export class MainMenuService extends ServiceBase {
   }
 
   public navigate(id: NavItemIdEnum) {
-    this.showKeyHints.value = false
     const item = this.getItemById(id)
 
     if (item.type === 'item') {
@@ -293,7 +307,9 @@ export class MainMenuService extends ServiceBase {
             ctrl: item.shortcut.ctrl || false,
             alt: item.shortcut.alt || false,
             shift: item.shortcut.shift || false,
-            preventDefault: item.shortcut.prevent_default || false
+            preventDefault: item.shortcut.prevent_default || false,
+            scope: _t('Main menu'),
+            description: untranslated(item.title)
           },
           () => {
             if (this.isNavItemActive(item.id)) {
@@ -306,18 +322,16 @@ export class MainMenuService extends ServiceBase {
       }
     }
 
-    this.registerShortCut({ key: ['k'], alt: true }, () => {
-      this.toggleKeyHints()
-    })
-    this.registerShortCut({ key: ['Escape'] }, () => {
+    const scope = _t('Main menu')
+    this.registerShortCut({ key: ['Escape'], scope, description: _t('Close menu') }, () => {
       if (this.isAnyNavItemActive()) {
         this.close()
       }
     })
-    this.registerShortCut({ key: ['ArrowDown'] }, () => {
+    this.registerShortCut({ key: ['ArrowDown'], scope, description: _t('Next entry') }, () => {
       this.focusAdjacentEntry(1)
     })
-    this.registerShortCut({ key: ['ArrowUp'] }, () => {
+    this.registerShortCut({ key: ['ArrowUp'], scope, description: _t('Previous entry') }, () => {
       this.focusAdjacentEntry(-1)
     })
     this.enableShortCuts()

@@ -5,7 +5,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { computed, ref } from 'vue'
+
+const { _t } = usei18n()
+useWidgetKeys(_t('Switch'), [
+  { combo: [' '], description: _t('Toggle') },
+  { combo: ['Enter'], description: _t('Toggle') }
+])
 
 const modelValue = defineModel({ type: Boolean, default: false })
 

@@ -8,9 +8,11 @@ import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { useTemplateRef } from 'vue'
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Search'), [{ combo: ['Enter'], description: _t('Search') }])
 
 const { inlineSearchIcon = false, showSubmitButton = true } = defineProps<{
   placeholder: string

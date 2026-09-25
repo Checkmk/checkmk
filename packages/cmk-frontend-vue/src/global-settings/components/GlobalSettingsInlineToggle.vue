@@ -8,11 +8,16 @@ import type { GlobalSettingsVariable } from 'cmk-shared-typing/typescript/global
 import CmkSwitch from 'cmk-ui-library/components/CmkSwitch.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { computed, inject, ref } from 'vue'
 
 import { GLOBAL_SETTINGS_TOGGLE } from '../api'
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Setting switch'), [
+  { combo: [' '], description: _t('Toggle setting') },
+  { combo: ['Enter'], description: _t('Toggle setting') }
+])
 
 const { variable } = defineProps<{ variable: GlobalSettingsVariable }>()
 

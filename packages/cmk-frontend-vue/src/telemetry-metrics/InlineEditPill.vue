@@ -6,10 +6,21 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { provideFloatingTarget } from 'cmk-ui-library/lib/useFloatingTarget'
 import { nextTick, useTemplateRef, watch } from 'vue'
 
 import useInlineEdit, { type InlineEditLeaveReason } from './useInlineEdit'
+
+const { _t } = usei18n()
+useWidgetKeys(_t('Pill'), [
+  { combo: ['Enter'], description: _t('Edit pill') },
+  { combo: [' '], description: _t('Edit pill') },
+  { combo: ['Delete'], description: _t('Remove pill') },
+  { combo: ['Backspace'], description: _t('Remove pill') },
+  { combo: ['Escape'], description: _t('Leave edit') }
+])
 
 // A pill toggling between a collapsed read-only summary and inline edit controls, both supplied via the `read-only` and `edit` slots.
 const props = withDefaults(

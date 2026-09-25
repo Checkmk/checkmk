@@ -5,10 +5,16 @@
  */
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen } from '@testing-library/vue'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { registerKeyboardHelp } from 'cmk-ui-library/lib/keyboardHelp'
 import { afterEach, expect, test, vi } from 'vitest'
 import { defineComponent, h, nextTick, ref } from 'vue'
 
 import { MATCH_ATTRIBUTE, useTypeToFocus } from '@/monitoring/shared/useTypeToFocus'
+
+function t(value: string): TranslatedString {
+  return value as TranslatedString
+}
 
 const clicks = vi.fn()
 
@@ -221,6 +227,9 @@ test('typing while the focus is outside the scope does nothing', async () => {
 })
 
 test('a bound key does not start a search, but is typed once one is on', async () => {
+  const unregister = registerKeyboardHelp([
+    { kind: 'shortcut', scope: t('Table'), combo: ['/'], description: t('Focus search') }
+  ])
   render(fixture)
 
   expect(claimed({ key: '/' })).toBe(false)
@@ -228,6 +237,7 @@ test('a bound key does not start a search, but is typed once one is on', async (
 
   await userEvent.keyboard('cpu/')
   expect(await state()).toBe('cpu/|-1|0')
+  unregister()
 })
 
 test('Space does not start a search, but is typed once one is on, without clicking', async () => {
@@ -242,14 +252,31 @@ test('Space does not start a search, but is typed once one is on, without clicki
   expect(clicks).not.toHaveBeenCalled()
 })
 
-test('the modified combinations and the browser keys pass while searching', async () => {
+test('the page shortcuts are off while searching; the browser keys are not', async () => {
+  const unregister = registerKeyboardHelp([
+    { kind: 'shortcut', scope: t('Main menu'), combo: ['Alt', 'm'], description: t('Main menu') }
+  ])
+  render(fixture)
+  expect(claimed({ key: 'm', altKey: true })).toBe(false)
+
+  await userEvent.keyboard('cpu')
+
+  expect(claimed({ key: 'm', altKey: true })).toBe(true)
+  expect(claimed({ key: 'c', ctrlKey: true })).toBe(false)
+  expect(claimed({ key: 'Enter' })).toBe(false)
+  unregister()
+})
+
+test('the cheat sheet key still works while searching', async () => {
+  const unregister = registerKeyboardHelp([
+    { kind: 'shortcut', scope: t('Keyboard'), combo: ['Alt', 'k'], description: t('Cheat sheet') }
+  ])
   render(fixture)
 
   await userEvent.keyboard('cpu')
 
   expect(claimed({ key: 'k', altKey: true })).toBe(false)
-  expect(claimed({ key: 'c', ctrlKey: true })).toBe(false)
-  expect(claimed({ key: 'Enter' })).toBe(false)
+  unregister()
 })
 
 test('modifier combinations do not start a search', async () => {

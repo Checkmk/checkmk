@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { ref, watch } from 'vue'
 
 import { DIGIT_COUNT } from './otpInput'
@@ -19,6 +20,11 @@ type Props = {
 
 const { disabled = false, error = false } = defineProps<Props>()
 const { _t } = usei18n()
+useWidgetKeys(_t('One-time code'), [
+  { combo: ['Backspace'], description: _t('Clear digit') },
+  { combo: ['ArrowLeft'], description: _t('Move between digits') },
+  { combo: ['ArrowRight'], description: _t('Move between digits') }
+])
 const emit = defineEmits<{
   (e: 'submit'): void
 }>()

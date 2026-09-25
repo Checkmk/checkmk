@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { ref, useTemplateRef } from 'vue'
 
@@ -16,6 +17,7 @@ import { availableFilterOptions } from './QueryOptions'
 import SearchOperatorOptionEntry from './SearchOperatorOptionEntry.vue'
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Search'), [{ combo: ['Enter'], description: _t('Insert operator') }])
 const searchUtils = getSearchUtils()
 const operatorDropdownBtn = useTemplateRef('unified-search-operator-btn')
 const filterOptions = ref<FilterOption[]>(availableFilterOptions)

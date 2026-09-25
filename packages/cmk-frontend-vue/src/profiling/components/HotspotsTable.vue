@@ -8,6 +8,7 @@ import { useVirtualizer } from '@tanstack/vue-virtual'
 import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { type ComponentPublicInstance, computed, ref, watch } from 'vue'
 
@@ -28,6 +29,10 @@ const props = defineProps<{
 }>()
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Hotspots table'), [
+  { combo: ['Enter'], description: _t('Select function') },
+  { combo: [' '], description: _t('Select function') }
+])
 
 const emit = defineEmits<{
   (e: 'select-function', name: string): void

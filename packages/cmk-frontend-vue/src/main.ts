@@ -8,6 +8,8 @@ import IconApp from 'cmk-ui-library/components/CmkIcon/IconApp.vue'
 import RnbwApp from 'cmk-ui-library/components/graphics/RnbwApp.vue'
 import initCmkUi from 'cmk-ui-library/lib/initCmkUi'
 
+import '@/lib/keyboard-cheat-sheet/keyboardCheatSheet'
+
 import { FormApp } from '@/form'
 import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/dispatch'
 

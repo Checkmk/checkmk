@@ -8,6 +8,7 @@ import CmkGhostWidth from 'cmk-ui-library/components/CmkGhostWidth.vue'
 import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import useId from 'cmk-ui-library/lib/useId'
 
 import { type SegmentedFieldApi, selectInputOnFocus } from './useSegmentedField'
@@ -27,6 +28,13 @@ withDefaults(
 )
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Date and time input'), [
+  { combo: ['Enter'], description: _t('Apply') },
+  { combo: ['ArrowUp'], description: _t('Step value') },
+  { combo: ['ArrowDown'], description: _t('Step value') },
+  { combo: ['ArrowLeft'], description: _t('Switch segment') },
+  { combo: ['ArrowRight'], description: _t('Switch segment') }
+])
 
 const fieldId = useId()
 function segmentLabelId(key: string): string {

@@ -18,8 +18,9 @@ import CmkSuggestions, {
 } from 'cmk-ui-library/components/CmkSuggestions'
 import ArrowDown from 'cmk-ui-library/components/graphics/ArrowDown.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
-import { untranslated } from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { useFloatingTarget } from 'cmk-ui-library/lib/useFloatingTarget'
 import { immediateWatch } from 'cmk-ui-library/lib/watch'
@@ -29,6 +30,9 @@ import { computed, nextTick, ref, useSlots, useTemplateRef } from 'vue'
 import CmkInlineValidation from '../user-input/CmkInlineValidation.vue'
 import CmkDropdownButton, { type ButtonVariants } from './CmkDropdownButton.vue'
 import TruncateText from './TruncateText.vue'
+
+const { _t } = usei18n()
+useWidgetKeys(_t('Dropdown'), [{ combo: ['ArrowDown'], description: _t('Open') }])
 
 export interface DropdownOption {
   name: string

@@ -12,7 +12,10 @@ import CmkPopupDialog from 'cmk-ui-library/components/CmkPopupDialog.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
-import { onMounted, provide, ref } from 'vue'
+import { comboKey, highlightCombo, highlightedCombo } from 'cmk-ui-library/lib/keyboardHelp'
+import { computed, onMounted, provide, ref } from 'vue'
+
+import { toggleCheatSheetPin, useCheatSheetPinned } from '@/lib/keyboard-cheat-sheet/cheatSheetKey'
 
 import { MainMenuService } from '@/main-menu/lib/main-menu-service'
 import { type UserPopupMessageRef } from '@/main-menu/lib/type-defs'
@@ -33,6 +36,12 @@ const mainMenu = new MainMenuService(
   new KeyShortcutService(window, iFrames, iFrames)
 )
 provide(mainMenuKey, mainMenu)
+
+const cheatSheetPinned = useCheatSheetPinned()
+const CHEAT_SHEET_COMBO = ['Alt', 'k']
+const cheatSheetHintHighlighted = computed(
+  () => highlightedCombo.value === comboKey(CHEAT_SHEET_COMBO)
+)
 
 const usePopupMessages = ref<UserPopupMessageRef[]>([])
 
@@ -94,11 +103,15 @@ onMounted(() => {
         :active="mainMenu.isNavItemActive(item.id)"
         @click.stop="onClick(item.id)"
       />
-      <div class="mm-app__key-hint-wrapper">
+      <div
+        class="mm-app__key-hint-wrapper"
+        @mouseenter="highlightCombo(CHEAT_SHEET_COMBO)"
+        @mouseleave="highlightCombo(null)"
+      >
         <CmkButton
-          :variant="mainMenu.showKeyHints.value ? 'success' : 'optional'"
+          :variant="cheatSheetPinned ? 'success' : 'optional'"
           class="mm-app__key-hint-button"
-          @click="mainMenu.toggleKeyHints()"
+          @click="toggleCheatSheetPin()"
         >
           {{ _t('Key hints') }}
         </CmkButton>
@@ -107,6 +120,7 @@ onMounted(() => {
           :keyboard-key="_t('Alt + k')"
           size="small"
           class="mm-app__key-hint"
+          :class="{ 'mm-app__key-hint--highlighted': cheatSheetHintHighlighted }"
         />
       </div>
     </ul>
@@ -210,6 +224,10 @@ nav {
         top: 28px;
         white-space: nowrap;
         z-index: +1;
+      }
+
+      .mm-app__key-hint--highlighted {
+        outline: 2px solid var(--success);
       }
     }
   }

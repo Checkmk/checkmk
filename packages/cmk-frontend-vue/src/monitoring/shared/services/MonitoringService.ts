@@ -9,7 +9,7 @@ import type {
   SortingState,
   VisibilityState
 } from '@tanstack/vue-table'
-import { untranslated } from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 import { ServiceBase } from 'cmk-ui-library/lib/service/base'
 import usePersistentRef from 'cmk-ui-library/lib/usePersistentRef'
@@ -430,7 +430,11 @@ export abstract class MonitoringService<T> extends ServiceBase {
   }
 
   private initShortCuts(): void {
-    this.registerShortCut({ key: ['/'], preventDefault: true }, () => this.focusSearch())
+    const { _t } = usei18n()
+    this.registerShortCut(
+      { key: ['/'], preventDefault: true, scope: _t('Table'), description: _t('Focus search') },
+      () => this.focusSearch()
+    )
     this.enableShortCuts()
   }
 

@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { computed } from 'vue'
 
 const props = defineProps<{
@@ -17,6 +18,8 @@ const props = defineProps<{
 const model = defineModel<string>({ default: '' })
 
 const { _t } = usei18n()
+
+useWidgetKeys(_t('Filter'), [{ combo: ['Escape'], description: _t('Clear search') }])
 
 const placeholderText = computed(() => props.placeholder ?? _t('Search'))
 const ariaLabelText = computed(() => props.ariaLabel ?? _t('Search'))

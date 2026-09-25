@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { type PieArcDatum, arc, pie } from 'd3-shape'
 import { computed, ref, useId } from 'vue'
 
@@ -16,6 +17,10 @@ import type { CmkDonutChartProps, DonutLegendRow, DonutSlice } from './types'
 import { type SliceAngles, useDonutTween } from './useDonutTween'
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Donut chart'), [
+  { combo: ['Enter'], description: _t('Select segment') },
+  { combo: [' '], description: _t('Select segment') }
+])
 const props = withDefaults(defineProps<CmkDonutChartProps>(), { legendMode: 'table' })
 const emit = defineEmits<{ sliceActivate: [key: string] }>()
 

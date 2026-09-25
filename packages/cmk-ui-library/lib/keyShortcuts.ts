@@ -4,7 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import usei18n from 'cmk-ui-library/lib/i18n'
-import type { Ref } from 'vue'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { comboLabels, registerKeyboardHelp } from 'cmk-ui-library/lib/keyboardHelp'
 
 import { randomId } from './randomId'
 
@@ -29,6 +30,10 @@ export interface KeyShortcut {
   alt?: boolean | undefined
   preventDefault?: boolean | undefined
   propagate?: boolean | undefined
+  /** Cheat sheet group; "Other" if left out. */
+  scope?: TranslatedString | undefined
+  /** Cheat sheet text; listed as undocumented if left out. */
+  description?: TranslatedString | undefined
 }
 
 export interface KeyShortcutHandler extends KeyShortcutEnsured {
@@ -86,9 +91,25 @@ function isBarePrintable(shortcut: KeyShortcutEnsured): boolean {
   return !shortcut.ctrl && !shortcut.alt && shortcut.key.every((key) => key.length === 1)
 }
 
+/** Modifiers first, then the keys - the order the cheat sheet shows them in. */
+function shortcutCombo(shortcut: KeyShortcut): string[] {
+  const combo: string[] = []
+  if (shortcut.ctrl) {
+    combo.push('Ctrl')
+  }
+  if (shortcut.shift) {
+    combo.push('Shift')
+  }
+  if (shortcut.alt) {
+    combo.push('Alt')
+  }
+  return combo.concat(shortcut.key)
+}
+
 export class KeyShortcutService {
   private keyStates: KeyStates = {}
   private handlers: KeyShortcutHandler[] = []
+  private helpUnregisters = new Map<string, () => void>()
   private readonly boundHandleKeyDown: (e: KeyboardEvent) => void
   private readonly boundHandleKeyUp: (e: KeyboardEvent) => void
   private iframeObserver: MutationObserver | null = null
@@ -109,10 +130,26 @@ export class KeyShortcutService {
 
     this.handlers.push(shortcut as KeyShortcutHandler)
 
-    return (shortcut as KeyShortcutHandler).id
+    const id = (shortcut as KeyShortcutHandler).id
+    this.helpUnregisters.set(
+      id,
+      registerKeyboardHelp([
+        {
+          kind: 'shortcut',
+          scope: shortcut.scope ?? _t('Other'),
+          combo: shortcutCombo(shortcut),
+          description: shortcut.description
+        }
+      ])
+    )
+    return id
   }
 
   public remove(ids: string[]): void {
+    for (const id of ids) {
+      this.helpUnregisters.get(id)?.()
+      this.helpUnregisters.delete(id)
+    }
     this.handlers = this.handlers
       .map((handler) => {
         if (ids.indexOf(handler.id) >= 0) {
@@ -128,23 +165,12 @@ export class KeyShortcutService {
     this.propagateTo = propagateTo
   }
 
+  public static getShortCutCombo(shortcut: KeyShortcut): string[] {
+    return shortcutCombo(shortcut)
+  }
+
   public static getShortCutInfo(shortcut: KeyShortcut): string {
-    const keys = []
-    if (shortcut.ctrl) {
-      keys.push((_t('Ctrl') as unknown as Ref).value)
-    }
-
-    if (shortcut.shift) {
-      keys.push((_t('Shift') as unknown as Ref).value)
-    }
-
-    if (shortcut.alt) {
-      keys.push((_t('Alt') as unknown as Ref).value)
-    }
-
-    keys.push(shortcut.key.map((k) => k.toUpperCase()))
-
-    return keys.join(' + ')
+    return comboLabels(shortcutCombo(shortcut)).join(' + ')
   }
 
   private ensureShortcut(shortcut: KeyShortcut): KeyShortcutEnsured {

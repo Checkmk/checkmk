@@ -23,6 +23,7 @@ import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { provideFloatingTarget } from 'cmk-ui-library/lib/useFloatingTarget'
 import useId from 'cmk-ui-library/lib/useId'
@@ -92,6 +93,7 @@ const sort = defineModel<SortDirection>('sort', { default: false })
 const extendedSort = defineModel<SortDirection>('extendedSort', { default: false })
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Filter'), [{ combo: ['ArrowDown'], description: _t('Open filter') }])
 const panelId = useId()
 
 const vClickOutside = useClickOutside()
@@ -355,11 +357,18 @@ function registerShortcuts(): void {
   if (shortcutIds.length > 0) {
     return
   }
-  shortcutIds = [shortcuts.on({ key: ['Escape'] }, close)]
+  const scope = _t('Filter')
+  shortcutIds = [shortcuts.on({ key: ['Escape'], scope, description: _t('Close filter') }, close)]
   if (!ARROW_NAV_DISABLED_TYPES.has(props.definition.type)) {
     shortcutIds.push(
-      shortcuts.on({ key: ['ArrowDown'], preventDefault: true }, () => moveFocus(1)),
-      shortcuts.on({ key: ['ArrowUp'], preventDefault: true }, () => moveFocus(-1))
+      shortcuts.on(
+        { key: ['ArrowDown'], preventDefault: true, scope, description: _t('Next row') },
+        () => moveFocus(1)
+      ),
+      shortcuts.on(
+        { key: ['ArrowUp'], preventDefault: true, scope, description: _t('Previous row') },
+        () => moveFocus(-1)
+      )
     )
   }
 }

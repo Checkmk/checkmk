@@ -9,12 +9,16 @@
  * Idle, a printable key nothing else binds starts a search: the first clickable element in
  * `scope` whose text contains the buffer gets the focus. Searching, the buffer owns the
  * keyboard: every printable key is typed into it, `/` and Space included, Down/Right and
- * Up/Left move between the matches, Backspace edits, and the modified combinations pass. A search is abandoned by Esc or a pointer going down
+ * Up/Left move between the matches, Backspace edits, the page's own shortcuts stay quiet
+ * and the browser's keys pass. A search is abandoned by Esc or a pointer going down
  * anywhere, and the focus ring goes with it. It is finished by Enter or a click activating
  * the match, or by the focus leaving the view; the focus then stays where it landed. All
  * matches are framed while searching.
  */
+import { getKeyboardHelp } from 'cmk-ui-library/lib/keyboardHelp'
 import { type Ref, onBeforeUnmount, onMounted, readonly, ref } from 'vue'
+
+import { isCheatSheetKey } from '@/lib/keyboard-cheat-sheet/cheatSheetKey'
 
 import { INTERACTIVE_SELECTOR } from './interactiveSelector'
 import { isTextEntry } from './isTextEntry'
@@ -87,11 +91,39 @@ function findMatches(scope: HTMLElement, needle: string): HTMLElement[] {
   return byText.concat(byLabel)
 }
 
-/** Bound on its own by a page shortcut, the table search; must not start a search. */
-const BOUND_KEYS = new Set(['/'])
+/** The combination as the help registry lists it, lower-cased: modifiers first, then the key. */
+function comboOf(event: KeyboardEvent): string[] {
+  const combo: string[] = []
+  if (event.ctrlKey) {
+    combo.push('ctrl')
+  }
+  if (event.shiftKey) {
+    combo.push('shift')
+  }
+  if (event.altKey) {
+    combo.push('alt')
+  }
+  combo.push(event.key.toLowerCase())
+  return combo
+}
 
+function isRegistered(combo: string[], kinds: readonly string[]): boolean {
+  return getKeyboardHelp().some(
+    (entry) =>
+      kinds.includes(entry.kind) &&
+      entry.combo.length === combo.length &&
+      entry.combo.every((key, position) => key.toLowerCase() === combo[position])
+  )
+}
+
+/** Bound on its own by a page shortcut or a widget, like `/`; must not start a search. */
 function isBoundKey(key: string): boolean {
-  return BOUND_KEYS.has(key)
+  return isRegistered([key.toLowerCase()], ['shortcut', 'widget'])
+}
+
+/** A page shortcut with modifiers, like Alt+K. */
+function isPageShortcut(event: KeyboardEvent): boolean {
+  return isRegistered(comboOf(event), ['shortcut'])
 }
 
 /** Ours alone: nothing else on the page gets to see this key. */
@@ -186,6 +218,9 @@ export function useTypeToFocus(scope: Readonly<Ref<HTMLElement | null>>): TypeTo
       return
     }
     if (event.ctrlKey || event.altKey || event.metaKey) {
+      if (isPageShortcut(event) && !isCheatSheetKey(event)) {
+        claim(event)
+      }
       return
     }
     if (NEXT_KEYS.has(event.key) || PREVIOUS_KEYS.has(event.key)) {

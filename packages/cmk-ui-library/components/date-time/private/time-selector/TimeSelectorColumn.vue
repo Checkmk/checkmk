@@ -6,7 +6,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts" generic="T extends string | number">
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import useId from 'cmk-ui-library/lib/useId'
 import { useTemplateRef } from 'vue'
 
@@ -34,6 +36,15 @@ const emit = defineEmits<{
 const model = defineModel<T>({ required: true })
 
 const labelId = useId()
+
+const { _t } = usei18n()
+useWidgetKeys(_t('Time selector'), [
+  { combo: ['ArrowDown'], description: _t('Change value') },
+  { combo: ['ArrowUp'], description: _t('Change value') },
+  { combo: ['ArrowLeft'], description: _t('Switch column') },
+  { combo: ['ArrowRight'], description: _t('Switch column') },
+  { combo: ['Enter'], description: _t('Apply') }
+])
 
 const scrollContainerRef = useTemplateRef('scrollContainerRef')
 const listboxRef = useTemplateRef('listboxRef')

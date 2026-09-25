@@ -14,6 +14,7 @@ import CmkTooltip, {
 } from 'cmk-ui-library/components/CmkTooltip'
 import ArrowDown from 'cmk-ui-library/components/graphics/ArrowDown.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import type { NotationFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
 import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
 import { scaleLinear, scaleTime } from 'd3-scale'
@@ -451,6 +452,7 @@ function onPinActionClick(): void {
 }
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Graph'), [{ combo: ['Home'], description: _t('Reset zoom') }])
 const resetLabel = _t('Reset zoom')
 const maxZoomLabel = _t('Maximum zoom reached')
 const panHovered = ref(false)

@@ -17,6 +17,7 @@ import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { immediateWatch } from 'cmk-ui-library/lib/watch'
 import { type Ref, onBeforeUnmount, ref } from 'vue'
 
@@ -40,6 +41,7 @@ export interface UnifiedSearchResultGroup {
 const MAX_ITEMS_SHOW_ALL = 5
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Search'), [{ combo: ['Enter'], description: _t('Open result') }])
 
 const searchUtils = getSearchUtils()
 const currentlySelected = ref<number>(-1)

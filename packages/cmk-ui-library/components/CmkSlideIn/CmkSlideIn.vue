@@ -5,6 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
+import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { provideFloatingTarget } from 'cmk-ui-library/lib/useFloatingTarget'
 import { DialogContent, DialogPortal, DialogRoot } from 'reka-ui'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
@@ -47,6 +49,9 @@ export interface CmkSlideInProps {
 const props = defineProps<CmkSlideInProps>()
 const emit = defineEmits(['close'])
 const dialogContentRef = ref<InstanceType<typeof DialogContent>>()
+
+const { _t } = usei18n()
+useWidgetKeys(_t('Slide-in'), [{ combo: ['Escape'], description: _t('Close') }])
 
 provideFloatingTarget(() => dialogContentRef.value?.$el as HTMLElement | undefined)
 

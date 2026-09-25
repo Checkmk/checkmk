@@ -16,6 +16,7 @@ import CmkInlineButton from 'cmk-ui-library/components/user-input/CmkInlineButto
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import { AjaxResponseError, cmkAjax } from 'cmk-ui-library/lib/ajax'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import useId from 'cmk-ui-library/lib/useId'
 import { ref, shallowRef } from 'vue'
 
@@ -51,6 +52,7 @@ class Fetched {
 type FetchState = Idle | Fetching | FetchFailed | Fetched
 
 const { _t } = usei18n()
+useWidgetKeys(_t('CA certificate'), [{ combo: ['Enter'], description: _t('Fetch certificate') }])
 
 defineProps<{
   spec: FormSpec.CaCertificate

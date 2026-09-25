@@ -9,7 +9,7 @@
 
 import ast
 import uuid
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import override
@@ -36,6 +36,7 @@ from cmk.gui.http import request as thread_local_request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
+from cmk.gui.type_defs import CustomHostAttrSpec
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
@@ -48,7 +49,13 @@ from cmk.gui.watolib.automations import (
     RemoteAutomationGetStatusResponseRaw,
 )
 from cmk.gui.watolib.host_attributes import CollectedHostAttributes
-from cmk.gui.watolib.hosts_and_folders import collect_all_hosts, folder_tree
+from cmk.gui.watolib.hosts_and_folders import (
+    collect_all_hosts,
+    FolderTree,
+    HostsAndFoldersConfig,
+)
+from cmk.livestatus_client import SiteConfigurations
+from cmk.ruleset_matcher.tags import TagConfig, TagConfigSpec
 
 from .automation_commands import AutomationCommandRegistry
 
@@ -66,6 +73,10 @@ def register(
 class AutomationCheckmkAutomationStartRequest:
     api_request: CheckmkAutomationRequest
     user_permission_config: UserPermissionSerializableConfig
+    site_configs: SiteConfigurations
+    wato_hide_folders_without_read_permissions: bool
+    wato_host_attrs: Sequence[CustomHostAttrSpec]
+    tags: TagConfigSpec
 
 
 class AutomationCheckmkAutomationStart(AutomationCommand[AutomationCheckmkAutomationStartRequest]):
@@ -84,6 +95,10 @@ class AutomationCheckmkAutomationStart(AutomationCommand[AutomationCheckmkAutoma
                 *ast.literal_eval(request.get_ascii_input_mandatory("request"))
             ),
             user_permission_config=UserPermissionSerializableConfig.from_global_config(config),
+            site_configs=config.sites,
+            wato_hide_folders_without_read_permissions=config.wato_hide_folders_without_read_permissions,
+            wato_host_attrs=config.wato_host_attrs,
+            tags=config.tags.get_dict_format(),
         )
 
     @override
@@ -102,6 +117,10 @@ class AutomationCheckmkAutomationStart(AutomationCommand[AutomationCheckmkAutoma
                         for_cmk_version=str(
                             cmk_version_of_remote_automation_source(thread_local_request)
                         ),
+                        site_configs=request.site_configs,
+                        wato_hide_folders_without_read_permissions=request.wato_hide_folders_without_read_permissions,
+                        wato_host_attrs=request.wato_host_attrs,
+                        tags=request.tags,
                     ),
                 ),
                 InitialStatusArgs(
@@ -124,6 +143,10 @@ class CheckmkAutomationJobArgs(BaseModel, frozen=True):
     api_request: CheckmkAutomationRequest
     user_permission_config: UserPermissionSerializableConfig
     for_cmk_version: str
+    site_configs: SiteConfigurations
+    wato_hide_folders_without_read_permissions: bool
+    wato_host_attrs: Sequence[CustomHostAttrSpec]
+    tags: TagConfigSpec
 
 
 def checkmk_automation_job_entry_point(
@@ -131,12 +154,20 @@ def checkmk_automation_job_entry_point(
     args: CheckmkAutomationJobArgs,
 ) -> None:
     job = CheckmkAutomationBackgroundJob(args.job_id)
+    tree = FolderTree(
+        config=HostsAndFoldersConfig(
+            wato_hide_folders_without_read_permissions=args.wato_hide_folders_without_read_permissions,
+            wato_host_attrs=args.wato_host_attrs,
+            tags=TagConfig.from_config(args.tags),
+            sites=args.site_configs,
+        )
+    )
     job.execute_automation(
         job_interface=job_interface,
         api_request=args.api_request,
         user_permission_config=args.user_permission_config,
         for_cmk_version=Version.from_str(args.for_cmk_version),
-        collect_all_hosts=lambda: collect_all_hosts(folder_tree()),
+        collect_all_hosts=lambda: collect_all_hosts(tree),
     )
 
 

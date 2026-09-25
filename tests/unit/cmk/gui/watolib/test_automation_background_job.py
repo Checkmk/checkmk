@@ -19,6 +19,7 @@ from cmk.automations.types import AutomationID
 from cmk.ccc import store
 from cmk.ccc import version as cmk_version
 from cmk.gui.background_job.job import BackgroundProcessInterface
+from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib import automation_background_job
@@ -178,6 +179,10 @@ class TestCheckmkAutomationBackgroundJob:
                     user_permission_config=UserPermissionSerializableConfig(
                         roles={}, user_roles={}, default_user_profile_roles=[]
                     ),
+                    site_configs=active_config.sites,
+                    wato_hide_folders_without_read_permissions=False,
+                    wato_host_attrs=[],
+                    tags=active_config.tags.get_dict_format(),
                 )
             )
             job = CheckmkAutomationBackgroundJob(job_id)

@@ -237,6 +237,19 @@ test('the trigger points at the panel it expands', async () => {
   expect(panel.id).not.toBe('')
 })
 
+test('ArrowDown on the trigger opens the panel and moves into it', async () => {
+  const user = userEvent.setup()
+  renderDropdown()
+
+  const trigger = screen.getByRole('button', { name: 'Open' })
+  trigger.focus()
+  await user.keyboard('{ArrowDown}')
+
+  expect(trigger).toHaveAttribute('aria-expanded', 'true')
+  const panel = screen.getByRole('group', { name: 'Filter State' })
+  expect(panel).toContainElement(document.activeElement as HTMLElement)
+})
+
 function renderAnchoredDropdown(clipped = false) {
   const wrapper = defineComponent({
     setup() {

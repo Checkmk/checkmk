@@ -207,6 +207,22 @@ function toggle(): void {
   }
 }
 
+/** ArrowDown on the trigger opens the panel, like any dropdown; inside it the rows own the arrows. */
+function onTriggerKeydown(event: KeyboardEvent): void {
+  if (
+    event.key !== 'ArrowDown' ||
+    isOpen.value ||
+    event.ctrlKey ||
+    event.altKey ||
+    event.metaKey ||
+    event.shiftKey
+  ) {
+    return
+  }
+  event.preventDefault()
+  open()
+}
+
 function apply(): void {
   if (!isValid.value) {
     return
@@ -379,7 +395,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <span ref="trigger" class="monitoring-filter-dropdown">
+  <span ref="trigger" class="monitoring-filter-dropdown" @keydown="onTriggerKeydown">
     <slot
       name="trigger"
       :toggle="toggle"

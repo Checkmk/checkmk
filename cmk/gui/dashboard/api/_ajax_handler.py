@@ -23,7 +23,6 @@ from cmk.gui.dashboard.api.model.widget_content.graph import (
     SingleTimeseriesContent,
 )
 from cmk.gui.dashboard.dashlet.dashlets.graph import TemplateGraphDashletConfig
-from cmk.gui.dashboard.dashlet.dashlets.stats import StatsDashletConfig
 from cmk.gui.dashboard.type_defs import (
     AlertOverviewDashletConfig,
     AverageScatterplotDashletConfig,
@@ -40,6 +39,7 @@ from cmk.gui.dashboard.type_defs import (
     SingleTimeseriesDashletConfig,
     SiteOverviewDashletConfig,
     StateDashletConfig,
+    StatsDashletConfig,
 )
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _

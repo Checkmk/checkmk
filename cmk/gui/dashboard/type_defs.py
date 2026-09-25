@@ -224,6 +224,10 @@ class NetworkFlowTrendChartDashletConfig(DashletConfig):
     show_legend: bool
 
 
+class StatsDashletConfig(DashletConfig):
+    contextual_link: NotRequired[ContextualLinkConfig]
+
+
 class StateDashletConfig(DashletConfig):
     status_display: StatusDisplay
     show_summary: Literal["not_ok"] | None

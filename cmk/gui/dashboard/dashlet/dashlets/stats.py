@@ -10,7 +10,7 @@ from dataclasses import asdict, dataclass
 from typing import NamedTuple, override
 
 from cmk.gui import sites, visuals
-from cmk.gui.dashboard.type_defs import DashletConfig
+from cmk.gui.dashboard.type_defs import StatsDashletConfig
 from cmk.gui.figures import FigureResponseData
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -194,9 +194,6 @@ class StatsElement:
         serialized["total"] = asdict(self.total)
         serialized["parts"] = [asdict(p) for p in self.parts]
         return serialized
-
-
-class StatsDashletConfig(DashletConfig): ...
 
 
 class HostStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):

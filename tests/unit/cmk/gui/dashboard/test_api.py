@@ -23,7 +23,7 @@ from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec, VisualLinkSpec
 from cmk.gui.views.icon.registry import all_icons
 from tests.testlib.unit.gui.web_test_app import SetConfig
-from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry, Response
 from tests.unit.cmk.gui.helpers.dashboard_api_test_helper import (
     check_widget_create,
     create_dashboard_payload,
@@ -844,3 +844,62 @@ class TestSharePermissionEnforcement:
             "You are not allowed to share dashboards with users of sites."
             in resp.json["fields"]["body.general_settings.visibility.share"]["msg"]
         )
+
+
+_INHERITED = {
+    "type": "inherited",
+    "location": {"type": "views", "name": "searchhost"},
+    "include_context": True,
+    "include_time_range": True,
+    "show_filter_form": False,
+}
+
+
+def _write_host_stats(clients: ClientRegistry, contextual_link: dict[str, object]) -> Response:
+    return clients.DashboardClient.create_relative_grid_dashboard(
+        create_dashboard_payload(
+            "test_dashboard",
+            {
+                "test_widget": create_widget(
+                    {"type": "host_stats", "contextual_link": contextual_link}
+                )
+            },
+        ),
+        expect_ok=False,
+    )
+
+
+def _written_link(clients: ClientRegistry) -> dict[str, object]:
+    widgets = clients.DashboardClient.get_relative_grid_dashboard("test_dashboard").json[
+        "extensions"
+    ]["widgets"]
+    contextual_link: dict[str, object] = next(iter(widgets.values()))["content"]["contextual_link"]
+    return contextual_link
+
+
+def test_an_inherited_link_round_trips(clients: ClientRegistry) -> None:
+    _write_host_stats(clients, _INHERITED)
+
+    assert _written_link(clients) == _INHERITED
+
+
+def test_a_link_to_a_forbidden_target_is_rejected_on_write(clients: ClientRegistry) -> None:
+    response = _write_host_stats(
+        clients, {**_INHERITED, "location": {"type": "views", "name": "no_such_view"}}
+    )
+
+    assert response.status_code == 400, (
+        f"Expected 400, got {response.status_code} {response.body!r}"
+    )
+    assert (
+        response.json["fields"][
+            "body.widgets.test_widget.content.host_stats.contextual_link.inherited.location"
+        ]["msg"]
+        == "View 'no_such_view' does not exist or you don't have permission to see it."
+    )
+
+
+def test_an_explicit_default_reads_back_as_default(clients: ClientRegistry) -> None:
+    _write_host_stats(clients, {"type": "default"})
+
+    assert _written_link(clients) == {"type": "default"}

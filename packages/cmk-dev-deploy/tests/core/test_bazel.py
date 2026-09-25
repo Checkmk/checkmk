@@ -58,6 +58,7 @@ class TestBazelCommand:
             "--host_jvm_args=-Xmx3g",
             "build",
             "--symlink_prefix=/",
+            "--remote_download_outputs=toplevel",
             "--cmk_edition=pro",
             "//pkg:t",
         ]
@@ -68,6 +69,7 @@ class TestBazelCommand:
         monkeypatch.setenv(OUTPUT_BASE_ENV, "/ob")
         cmd = bazel_command(["run", "//:deploy-python", "--", "/omd/sites/x"], tmp_path)
         assert cmd.index("--symlink_prefix=/") < cmd.index("--")
+        assert cmd.index("--remote_download_outputs=toplevel") < cmd.index("--")
 
     @pytest.mark.parametrize("command", ["query", "cquery", "info"])
     def test_non_building_commands_touch_no_symlinks(
@@ -77,12 +79,18 @@ class TestBazelCommand:
         cmd = bazel_command([command, "somearg"], tmp_path)
         assert "--output_base=/ob" in cmd
         assert "--symlink_prefix=/" not in cmd
+        assert "--remote_download_outputs=toplevel" not in cmd
 
-    def test_shared_mode_returns_plain_argv(
+    def test_shared_mode_adds_only_the_download_option(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setenv(SHARED_SERVER_ENV, "1")
-        assert bazel_command(["build", "//pkg:t"], tmp_path) == ["bazel", "build", "//pkg:t"]
+        assert bazel_command(["build", "//pkg:t"], tmp_path) == [
+            "bazel",
+            "build",
+            "--remote_download_outputs=toplevel",
+            "//pkg:t",
+        ]
 
     def test_shared_env_zero_means_isolated(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv(SHARED_SERVER_ENV, "0")

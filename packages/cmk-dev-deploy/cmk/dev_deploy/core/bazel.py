@@ -46,6 +46,12 @@ _STARTUP_OPTIONS: tuple[str, ...] = ("--host_jvm_args=-Xmx3g",)
 _SYMLINK_CREATING_COMMANDS = frozenset({"build", "run", "test"})
 _NO_SYMLINKS_OPTION = "--symlink_prefix=/"
 
+# The tool copies top-level outputs out of bazel-out.  A user rc with
+# ``--remote_download_outputs=minimal`` leaves cache hits unmaterialized
+# (e.g. an empty Vue dist when switching back to an already built commit).
+_DOWNLOADING_COMMANDS = frozenset({"build", "run"})
+_DOWNLOAD_OPTION = "--remote_download_outputs=toplevel"
+
 
 def use_shared_server() -> bool:
     """Return True when the user opted out of the dedicated deploy server."""
@@ -121,11 +127,13 @@ def bazel_command(args: Sequence[str], repo_root: Path) -> list[str]:
 
     Unless the shared server was requested, prepends the startup options
     selecting the dedicated deploy output base, and suppresses convenience
-    symlink updates on commands that would create them.
+    symlink updates on commands that would create them.  Building commands
+    always materialize their top-level outputs.
     """
-    if use_shared_server():
-        return ["bazel", *args]
     command, *rest = args
+    download_options = [_DOWNLOAD_OPTION] if command in _DOWNLOADING_COMMANDS else []
+    if use_shared_server():
+        return ["bazel", command, *download_options, *rest]
     symlink_options = [_NO_SYMLINKS_OPTION] if command in _SYMLINK_CREATING_COMMANDS else []
     return [
         "bazel",
@@ -133,5 +141,6 @@ def bazel_command(args: Sequence[str], repo_root: Path) -> list[str]:
         *_STARTUP_OPTIONS,
         command,
         *symlink_options,
+        *download_options,
         *rest,
     ]

@@ -6,6 +6,8 @@
 from logging import Logger
 from typing import override
 
+from cmk.gui.config import active_config
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, RulesetCollection
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.update_config.lib import ExpiryVersion, format_warning
@@ -46,7 +48,9 @@ def warn_obsolete_hivemanager_ng_rules(
 class WarnObsoleteHivemanagerNgRules(UpdateAction):
     @override
     def __call__(self, logger: Logger) -> None:
-        warn_obsolete_hivemanager_ng_rules(AllRulesets.load_all_rulesets(), logger)
+        warn_obsolete_hivemanager_ng_rules(
+            AllRulesets.load_all_rulesets(make_folder_tree(active_config)), logger
+        )
 
 
 update_action_registry.register(

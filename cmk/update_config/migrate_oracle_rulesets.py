@@ -14,6 +14,7 @@ from cmk.ccc.version import edition
 from cmk.gui import main_modules
 from cmk.gui.config import active_config
 from cmk.gui.site_config import is_distributed_setup_remote_site
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, Rule
 from cmk.gui.wsgi.app import gui_context
 from cmk.update_config.plugins.lib.mk_oracle_migration import (
@@ -65,7 +66,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
             return 0
 
-        all_rulesets = AllRulesets.load_all_rulesets()
+        all_rulesets = AllRulesets.load_all_rulesets(make_folder_tree(active_config))
         legacy_ruleset = all_rulesets.get("agent_config:mk_oracle")
         unified_ruleset = all_rulesets.get("agent_config:mk_oracle_unified")
 

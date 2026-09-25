@@ -9,7 +9,7 @@ from typing import Final, override
 
 from cmk.gui.config import active_config
 from cmk.gui.site_config import is_distributed_setup_remote_site
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import Folder, make_folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, Rule
 from cmk.update_config.lib import ExpiryVersion, format_warning
 from cmk.update_config.plugins.lib.mk_oracle_migration import convert
@@ -24,7 +24,7 @@ class WarnAboutLegacyOracleRules(UpdateAction):
         if is_distributed_setup_remote_site(active_config.sites):
             return
 
-        all_rulesets = AllRulesets.load_all_rulesets()
+        all_rulesets = AllRulesets.load_all_rulesets(make_folder_tree(active_config))
         if not all_rulesets.exists(_AGENT_CONFIG_LEGACY_ORACLE):
             return
 

@@ -621,15 +621,8 @@ class AllRulesets(RulesetCollection):
         self._load_folder_rulesets(folder)
 
     @staticmethod
-    def load_all_rulesets(tree: FolderTree | None = None) -> AllRulesets:
-        """Load all rules of all folders
-
-        tree defaults to the request-global folder_tree() for callers that must not
-        depend on cmk.gui.watolib.hosts_and_folders directly, e.g. plugin components
-        restricted by the module-layer isolation.
-        """
-        if tree is None:
-            tree = folder_tree()
+    def load_all_rulesets(tree: FolderTree) -> AllRulesets:
+        """Load all rules of all folders"""
         rulesets = RulesetCollection._initialize_rulesets()  # noqa: SLF001
         self = AllRulesets(rulesets, tree)
         self._load_rulesets_recursively(tree.root_folder())

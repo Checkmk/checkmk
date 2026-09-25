@@ -307,7 +307,10 @@ const addTo = computed<AddTo | null>(() => {
   }
 })
 const showBurgerMenu = computed(
-  () => (graphRenderOptions.value?.show_controls ?? false) && addTo.value !== null
+  () =>
+    sharedWidgetGraphs === undefined &&
+    (graphRenderOptions.value?.show_controls ?? false) &&
+    addTo.value !== null
 )
 
 onMounted(() => {

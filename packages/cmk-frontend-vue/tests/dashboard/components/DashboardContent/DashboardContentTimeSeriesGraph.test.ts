@@ -32,6 +32,8 @@ vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
       'showValueAxis',
       'showMargin',
       'minValueAxisWidth',
+      'showBurgerMenu',
+      'addTo',
       'fetchGraph'
     ],
     template: `<div
@@ -42,6 +44,7 @@ vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
       :data-show-value-axis="showValueAxis"
       :data-show-margin="showMargin"
       :data-min-value-axis-width="minValueAxisWidth"
+      :data-show-burger-menu="showBurgerMenu"
     >{{ internal }}</div>`
   }
 }))
@@ -212,15 +215,33 @@ describe('graph render options', () => {
 
 const CMK_TOKEN = '0:the-token'
 
-function renderInSharedDashboard(widgetGraphs: Record<string, SharedWidgetGraphs>) {
+function renderInSharedDashboard(
+  widgetGraphs: Record<string, SharedWidgetGraphs>,
+  props: Record<string, unknown> = {}
+) {
   const wrapper = defineComponent({
     setup() {
       useProvideCmkToken(CMK_TOKEN)
       useProvideSharedWidgetGraphs(widgetGraphs)
-      return () => h(DashboardContentTimeSeriesGraph, baseProps as never)
+      return () => h(DashboardContentTimeSeriesGraph, { ...baseProps, ...props } as never)
     }
   })
   return render(wrapper)
+}
+
+// A shell an interactive dashboard would offer the burger menu for.
+const ADDABLE_SHELL = {
+  internal: '{"graphs": []}',
+  title: 'My graph',
+  name: 'my_graph',
+  add_to_specification: { graph_type: 'custom', id: 'my_graph' },
+  add_type: 'custom_graph',
+  y_axis: null
+}
+
+const BURGER_ENABLED = {
+  ...CUSTOM_GRAPH_CONTENT,
+  graph_render_options: { ...CUSTOM_GRAPH_CONTENT.graph_render_options, show_controls: true }
 }
 
 describe('graph widget on a shared dashboard', () => {
@@ -343,5 +364,32 @@ describe('the widget pin', () => {
     renderWidget({ isPreview: true })
 
     expect(await pinOf()).toBe('false')
+  })
+})
+
+describe('the burger menu of a graph widget', () => {
+  test('is offered on an interactive dashboard when the widget asks for it', async () => {
+    postSpy.mockResolvedValue({
+      data: { graphs: [ADDABLE_SHELL], no_data_message: null },
+      error: undefined,
+      response: new Response('{}', { status: 200 })
+    } as never)
+
+    renderWidget({ content: BURGER_ENABLED })
+
+    const figure = await screen.findByTestId('graph-figure')
+    await waitFor(() => expect(figure.getAttribute('data-show-burger-menu')).toBe('true'))
+  })
+
+  test('is never offered on a shared dashboard, even with an add-to target', async () => {
+    renderInSharedDashboard(
+      { w1: { graphs: [ADDABLE_SHELL], no_data_message: null } },
+      {
+        content: BURGER_ENABLED
+      }
+    )
+
+    const figure = await screen.findByTestId('graph-figure')
+    expect(figure.getAttribute('data-show-burger-menu')).toBe('false')
   })
 })

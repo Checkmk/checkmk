@@ -8,6 +8,7 @@ import { type Ref, computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import type { MapElement } from '@/maps/types/api'
 import type { AnchorRect } from '@/maps/utils/anchorRect'
+import { overlayFrameOf } from '@/maps/utils/overlayFrame'
 
 /** How close to the edge of the area the card may come. */
 const EDGE_MARGIN = 12
@@ -20,20 +21,6 @@ interface PropertiesPopoverOptions {
   object: () => MapElement
   /** The card itself, so it is placed by its real size. */
   card: Ref<HTMLElement | null>
-}
-
-/**
- * The box the card's ``left``/``top`` are measured from, in viewport
- * coordinates, or ``null`` while the card cannot be measured.
- *
- * Embedded in the Checkmk page, the SPA's overlays are contained by the content
- * area rather than the viewport (``.maps-app--embed`` sets ``contain: layout``),
- * so the card's own offset parent — not the window — says both where its
- * coordinates start and how much room there is. Guessing the window instead
- * would place the card in the wrong coordinate space, off by the sidebar.
- */
-function positioningFrame(card: HTMLElement | null): DOMRect | null {
-  return card?.offsetParent?.getBoundingClientRect() ?? null
 }
 
 /**
@@ -55,23 +42,22 @@ export function usePropertiesPopover(options: PropertiesPopoverOptions) {
     // Read through the getter every time: the caller keeps it tracking the
     // object, which moves whenever the canvas re-lays out under the card.
     const r = anchorRect() ?? null
-    const frame = positioningFrame(card.value)
-    if (!r || !frame) {
-      // Nothing to sit beside, or nothing measurable yet — placing on a
-      // guessed frame would put the card in the wrong coordinate space.
+    const el = card.value
+    if (!r || !el) {
       popoverStyle.value = {}
       return
     }
-    const width = card.value!.offsetWidth
-    const height = card.value!.offsetHeight
+    const frame = overlayFrameOf(el)
+    const width = el.offsetWidth
+    const height = el.offsetHeight
 
     // Both edges are clamped: the card is wider than the gap beside an object
     // near either side.
-    const maxLeft = Math.max(EDGE_MARGIN, frame.width - width - EDGE_MARGIN)
+    const maxLeft = Math.max(EDGE_MARGIN, frame.right - frame.left - width - EDGE_MARGIN)
     const preferred = r.right - frame.left + EDGE_MARGIN
     const left = preferred <= maxLeft ? preferred : r.left - frame.left - EDGE_MARGIN - width
 
-    const maxTop = Math.max(EDGE_MARGIN, frame.height - height - EDGE_MARGIN)
+    const maxTop = Math.max(EDGE_MARGIN, frame.bottom - frame.top - height - EDGE_MARGIN)
 
     popoverStyle.value = {
       left: `${Math.min(Math.max(left, EDGE_MARGIN), maxLeft)}px`,

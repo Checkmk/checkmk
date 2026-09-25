@@ -251,6 +251,9 @@ describe('ObjectPropertiesModal – popover placement', () => {
   const CARD = { width: 402, height: 578 }
 
   function measureAs(frame: typeof FRAME, card: typeof CARD): void {
+    // jsdom's window is 1024px wide; the browser around a frame this size is not.
+    vi.stubGlobal('innerWidth', 1440)
+    vi.stubGlobal('innerHeight', 900)
     const parent = document.createElement('div')
     parent.getBoundingClientRect = () =>
       ({ ...frame, right: frame.left + frame.width, bottom: frame.top + frame.height }) as DOMRect
@@ -273,6 +276,7 @@ describe('ObjectPropertiesModal – popover placement', () => {
 
   afterEach(() => {
     vi.restoreAllMocks()
+    vi.unstubAllGlobals()
   })
 
   it('opens beside the object, in the frame coordinates rather than the viewport ones', async () => {

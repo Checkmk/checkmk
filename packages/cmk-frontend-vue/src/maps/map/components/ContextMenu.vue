@@ -11,6 +11,7 @@ import type { MapElement, ObjectState } from '@/maps/types/api'
 import { objectTypeLabel } from '@/maps/utils/dropdownOptions'
 import { buildCheckmkViewUrl } from '@/maps/utils/mapNavigation'
 import { getEffectiveObjectType, getMapElementName } from '@/maps/utils/naming'
+import { usePointerOverlayStyle } from '@/maps/utils/overlayFrame'
 import { sanitizeTemplateHtml } from '@/maps/utils/sanitize'
 import { interpolateTemplate } from '@/maps/utils/template'
 
@@ -39,6 +40,7 @@ const emit = defineEmits<{
 // Menu keyboard support: the invoking element is a canvas object, so focus
 // moves into the menu on open (there is no DOM element to restore it to).
 const menuEl = ref<HTMLElement | null>(null)
+const menuStyle = usePointerOverlayStyle(menuEl, () => ({ x: props.x, y: props.y }))
 
 function menuItems(): HTMLElement[] {
   return Array.from(menuEl.value?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])
@@ -202,7 +204,7 @@ const hostServicesUrl = computed(() => {
     role="menu"
     :aria-label="displayName"
     tabindex="-1"
-    :style="{ left: `${x}px`, top: `${y}px` }"
+    :style="menuStyle"
     @keydown="onMenuKeydown"
   >
     <div class="maps-context-menu__header">

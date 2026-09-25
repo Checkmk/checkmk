@@ -108,8 +108,8 @@ export function useMapObjectMenus(source: {
         return
       }
       context.object = object
-      context.x = event.pageX
-      context.y = event.pageY
+      context.x = event.clientX
+      context.y = event.clientY
       context.visible = true
     },
     close

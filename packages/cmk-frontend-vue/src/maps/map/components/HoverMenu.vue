@@ -23,6 +23,7 @@ import {
   getEffectiveObjectType,
   getMapElementIdentifier
 } from '@/maps/utils/naming'
+import { overlayFrameOf } from '@/maps/utils/overlayFrame'
 import { type PerfMetric, parsePerfData, utilColor, utilPercent } from '@/maps/utils/perf'
 import { sanitizeTemplateHtml } from '@/maps/utils/sanitize'
 import { interpolateTemplate } from '@/maps/utils/template'
@@ -96,19 +97,21 @@ const cmkPerfometer = computed(() => cmkMetricInfo.value?.perfometer ?? null)
 const dyngroupMemberHosts = ref<string[] | null>(null)
 
 // Rendered invisible once to measure, then flipped to the cursor's left/top
-// side where it would overflow the viewport.
+// side where it would overflow the frame. It is measured at the frame's origin:
+// placed near the right edge it would shrink to the room left there and the
+// flip would reckon with a narrower card than the one it then shows.
 const rootEl = ref<HTMLDivElement | null>(null)
 const adjusted = ref<{ left: number; top: number; ready: boolean }>({
-  left: props.x,
-  top: props.y,
+  left: 0,
+  top: 0,
   ready: false
 })
 
-const positionStyle = computed<CSSProperties>(() => ({
-  left: `${adjusted.value.left}px`,
-  top: `${adjusted.value.top}px`,
-  visibility: adjusted.value.ready ? 'visible' : 'hidden'
-}))
+const positionStyle = computed<CSSProperties>(() =>
+  adjusted.value.ready
+    ? { left: `${adjusted.value.left}px`, top: `${adjusted.value.top}px` }
+    : { left: '0px', top: '0px', visibility: 'hidden' }
+)
 
 // Inside Checkmk's <iframe name="main"> the outer window is often smaller than
 // the iframe's own innerHeight, so a position that fits `window.innerHeight`
@@ -140,23 +143,26 @@ async function updatePosition() {
     return
   }
   const rect = rootEl.value.getBoundingClientRect()
-  const { width: viewportW, height: viewportH } = getEffectiveBounds()
+  const frame = overlayFrameOf(rootEl.value)
+  const visible = getEffectiveBounds()
+  const right = Math.min(frame.right, visible.width)
+  const bottom = Math.min(frame.bottom, visible.height)
   const margin = 8
   const gap = 8
   let left = props.x
   let top = props.y
-  if (left + rect.width > viewportW - margin) {
+  if (left + rect.width > right - margin) {
     // Flip past the icon's *left edge* if we know it; otherwise back off
     // from the cursor by the tooltip width. Cursor-based fallback can
     // overlap a small icon, so anchorRect is strongly preferred.
     const flipFrom = props.anchorRect ? props.anchorRect.left : props.x
-    left = Math.max(margin, flipFrom - rect.width - gap)
+    left = Math.max(frame.left + margin, flipFrom - rect.width - gap)
   }
-  if (top + rect.height > viewportH - margin) {
+  if (top + rect.height > bottom - margin) {
     const flipFrom = props.anchorRect ? props.anchorRect.top : props.y
-    top = Math.max(margin, flipFrom - rect.height - gap)
+    top = Math.max(frame.top + margin, flipFrom - rect.height - gap)
   }
-  adjusted.value = { left, top, ready: true }
+  adjusted.value = { left: left - frame.left, top: top - frame.top, ready: true }
 }
 
 watch(

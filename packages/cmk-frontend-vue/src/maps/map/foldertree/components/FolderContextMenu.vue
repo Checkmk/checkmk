@@ -14,11 +14,12 @@ map types open; it is the folder tree's own.
 <script setup lang="ts">
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed } from 'vue'
+import { computed, useTemplateRef } from 'vue'
 
 import { useEscapeClose } from '@/maps/shared/composables/useEscapeClose'
 import type { FolderTreeNode } from '@/maps/types/api'
 import { stripCheckmkBase } from '@/maps/utils/mapNavigation'
+import { usePointerOverlayStyle } from '@/maps/utils/overlayFrame'
 
 const props = defineProps<{
   folder: FolderTreeNode
@@ -33,6 +34,9 @@ const props = defineProps<{
 const emit = defineEmits<{ close: []; 'bulk-command': [] }>()
 
 const { _t } = usei18n()
+
+const menuEl = useTemplateRef('menuEl')
+const menuStyle = usePointerOverlayStyle(menuEl, () => ({ x: props.x, y: props.y }))
 
 // A right-click leaves the focus on the tile or row it came from, so a key
 // bound on the menu itself would never be reached. Escape is bound on the
@@ -60,7 +64,7 @@ const setupUrl = computed(() => {
     @click="emit('close')"
     @contextmenu.prevent="emit('close')"
   />
-  <div class="maps-folder-context-menu" :style="{ left: `${x}px`, top: `${y}px` }" @click.stop>
+  <div ref="menuEl" class="maps-folder-context-menu" :style="menuStyle" @click.stop>
     <div class="maps-folder-context-menu__header">
       <p class="maps-folder-context-menu__name">{{ folder.title }}</p>
       <p class="maps-folder-context-menu__type">{{ _t('Folder') }}</p>

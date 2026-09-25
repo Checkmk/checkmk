@@ -29,6 +29,7 @@ import type { MarkerMove } from '@/maps/map/worldmap/composables/useWorldmapMark
 import { type LatLng, type WorldmapViewport, pointObjects } from '@/maps/map/worldmap/geo'
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
 import type { AnchorRect } from '@/maps/utils/anchorRect'
+import { usePointerOverlayStyle } from '@/maps/utils/overlayFrame'
 
 import WorldMapCanvas from './components/WorldMapCanvas.vue'
 
@@ -69,6 +70,8 @@ const canFit = computed(() => pointObjects(props.config?.objects ?? []).length >
 
 /** Where a right-click on the empty map opened the menu. */
 const canvasMenu = ref<{ x: number; y: number } | null>(null)
+const canvasMenuEl = useTemplateRef('canvasMenuEl')
+const canvasMenuStyle = usePointerOverlayStyle(canvasMenuEl, () => canvasMenu.value)
 
 function saveViewport(): void {
   canvasMenu.value = null
@@ -210,8 +213,9 @@ defineExpose({
 
       <div
         v-if="canvasMenu"
+        ref="canvasMenuEl"
         class="maps-world-map-view__menu"
-        :style="{ left: `${canvasMenu.x}px`, top: `${canvasMenu.y}px` }"
+        :style="canvasMenuStyle"
         @click.stop
       >
         <button type="button" class="maps-world-map-view__menu-item" @click="saveViewport">

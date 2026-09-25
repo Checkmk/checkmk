@@ -17,7 +17,7 @@ export interface HoverAnchorRect {
 }
 
 export interface HoverOpenOptions {
-  /** Explicit page position; defaults to the event's cursor + 12px offset. */
+  /** Explicit viewport position; defaults to the event's cursor + 12px offset. */
   x?: number
   y?: number
   /** Anchor box for the viewport flip — when the card has to flip away from
@@ -78,8 +78,8 @@ export function useObjectHoverMenu(options: HoverMenuOptions = {}) {
   function open(obj: MapElement, event: MouseEvent | null, opts: HoverOpenOptions = {}): void {
     grace.cancelClose()
     hover.object = obj
-    hover.x = opts.x ?? (event ? event.pageX + 12 : hover.x)
-    hover.y = opts.y ?? (event ? event.pageY + 12 : hover.y)
+    hover.x = opts.x ?? (event ? event.clientX + 12 : hover.x)
+    hover.y = opts.y ?? (event ? event.clientY + 12 : hover.y)
     hover.anchorRect = opts.anchorRect ?? null
     hover.stateOverride = opts.stateOverride ?? null
     hover.visible = true

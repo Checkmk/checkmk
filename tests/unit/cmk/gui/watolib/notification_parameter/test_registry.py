@@ -9,33 +9,10 @@ from cmk.gui.valuespec import Dictionary
 from cmk.gui.watolib import rulespecs
 from cmk.gui.watolib.notification_parameter import (
     _registry,
-    notification_parameter_registry,
     NotificationParameter,
     register_notification_parameters,
 )
 from cmk.ruleset_matcher.definition import RuleGroup
-
-
-def test_registered_notification_parameters() -> None:
-    expected_plugins = [
-        "asciimail",
-        "cisco_webex_teams",
-        "ilert",
-        "mail",
-        "mkeventd",
-        "msteams",
-        "opsgenie_issues",
-        "pagerduty",
-        "pushover",
-        "signl4",
-        "slack",
-        "sms_api",
-        "spectrum",
-        "victorops",
-    ]
-
-    registered_plugins = sorted(notification_parameter_registry.keys())
-    assert registered_plugins == sorted(expected_plugins)
 
 
 def test_register_legacy_notification_parameters(

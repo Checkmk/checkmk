@@ -10,7 +10,7 @@ import pytest
 
 from cmk import trace
 from cmk.cli.engine.call import call
-from cmk.cli.engine.commands import make_mode, make_option, parse_sub_options
+from cmk.cli.engine.commands import make_command, make_option, parse_sub_options
 from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 
 # The engine only hands this through to the command's handler.
@@ -37,8 +37,8 @@ def test_make_option_keeps_deprecated_long_options() -> None:
     assert option.is_deprecated_option("--checks")
 
 
-def test_make_mode_parses_sub_options_with_conversion() -> None:
-    mode = make_mode(
+def test_make_command_parses_sub_options_with_conversion() -> None:
+    command = make_command(
         CLICommand(
             long_option="snmpwalk",
             handler_function=_handler,
@@ -56,7 +56,7 @@ def test_make_mode_parses_sub_options_with_conversion() -> None:
         )
     )
     assert parse_sub_options(
-        mode.sub_options, [("--oid", "iso"), ("--verbose", ""), ("--verbose", "")]
+        command.sub_options, [("--oid", "iso"), ("--verbose", ""), ("--verbose", "")]
     ) == {
         "oid": "ISO",
         "verbose": 2,
@@ -82,7 +82,7 @@ def test_call_shapes_the_positional_arguments(
         seen.append(args)
         return 42
 
-    mode = make_mode(
+    command = make_command(
         CLICommand(
             long_option="thing",
             handler_function=_record,
@@ -94,7 +94,7 @@ def test_call_shapes_the_positional_arguments(
     )
     exit_status = call(
         _OMD_ROOT,
-        mode,
+        command,
         GlobalOptions(),
         "ARG" if argument else "",
         [("--thing", "ARG" if argument else "")],

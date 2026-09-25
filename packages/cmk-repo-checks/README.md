@@ -39,7 +39,7 @@ Deps confirmed unused should be removed from the corresponding `BUILD` file; ver
 A dep that is loaded at runtime (plugin discovery, fixtures) rather than imported by name is exempted per edge with a tag on the consuming target; the reason stays next to it as a comment:
 
 ```starlark
-tags = ["deballast-keep=//cmk/base/modes:modes"],  # loaded at runtime via discover_modes()
+tags = ["deballast-keep=//cmk/base/modes:modes"],  # loaded at runtime via discover_commands()
 ```
 
 A target whose deps are all runtime-loaded (e.g. sphinx autodoc builds) opts out entirely with `tags = ["no-deballast"]`; the generic `no-lint` tag is honored, too.

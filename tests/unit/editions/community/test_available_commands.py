@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.cli.engine.commands import discover_modes, general_options, Modes
+from cmk.cli.engine.commands import Commands, discover_commands, general_options
 
 
-def test_available_modes() -> None:
-    assert {m.name for m in discover_modes()} == {
+def test_available_commands() -> None:
+    assert {m.name for m in discover_commands()} == {
         "automation",
         "browse-man",
         "check",
@@ -40,6 +40,6 @@ def test_available_modes() -> None:
 
 
 def test_no_two_commands_claim_the_same_option() -> None:
-    # Modes() rejects a collision; nothing else sees one, because the names above
+    # Commands() rejects a collision; nothing else sees one, because the names above
     # are a set and a duplicate would collapse into it.
-    Modes(plugins=discover_modes(), general_options=general_options())
+    Commands(plugins=discover_commands(), general_options=general_options())

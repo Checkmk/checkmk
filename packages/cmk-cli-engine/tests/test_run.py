@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTerminate
-from cmk.cli.engine.commands import make_mode, Mode
+from cmk.cli.engine.commands import Command, make_command
 from cmk.cli.engine.run import dispatch, enable_file_logging, log_level, run, Runtime
 from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
 
@@ -162,14 +162,14 @@ def test_file_logging_replaces_the_handlers_it_finds(tmp_path: Path) -> None:
     assert len(logger.handlers) == 1
 
 
-def _command(handler: Callable[[Path, GlobalOptions, Options, Args], int]) -> Mode:
-    return make_mode(
+def _command(handler: Callable[[Path, GlobalOptions, Options, Args], int]) -> Command:
+    return make_command(
         CLICommand(long_option="demo", handler_function=handler, short_help="Demonstrate")
     )
 
 
 def _runtime(
-    commands: Sequence[Mode] = (),
+    commands: Sequence[Command] = (),
     *,
     start_tracing: Callable[[Path], None] = lambda _omd_root: None,
     on_sigint: Callable[[], None] = lambda: None,

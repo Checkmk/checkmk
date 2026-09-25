@@ -9,7 +9,7 @@ from cmk import trace
 from cmk.cli.engine.commands import (
     Argument,
     Arguments,
-    Mode,
+    Command,
     Options,
     parse_sub_options,
 )
@@ -20,29 +20,29 @@ tracer = trace.get_tracer()
 
 def call(
     omd_root: Path,
-    mode: Mode,
+    command: Command,
     global_options: GlobalOptions,
     arg: Argument,
     all_opts: Options,
     all_args: Arguments,
     trace_context: trace.Context,
 ) -> int:
-    sub_options = parse_sub_options(mode.sub_options, all_opts)
+    sub_options = parse_sub_options(command.sub_options, all_opts)
 
     args: Arguments
-    if mode.argument and not mode.argument_optional:
+    if command.argument and not command.argument_optional:
         args = [arg]
-    elif mode.argument:
+    elif command.argument:
         args = all_args
     else:
         args = ()
 
     with tracer.span(
-        f"mode[{mode.name}]",
+        f"command[{command.name}]",
         attributes={
-            "cmk.base.mode.name": mode.name,
-            "cmk.base.mode.args": repr((global_options, sub_options, args)),
+            "cmk.base.command.name": command.name,
+            "cmk.base.command.args": repr((global_options, sub_options, args)),
         },
         context=trace_context,
     ):
-        return mode.handler_function(omd_root, global_options, sub_options, args)
+        return command.handler_function(omd_root, global_options, sub_options, args)

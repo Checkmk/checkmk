@@ -18,7 +18,13 @@ from typing import Final, override
 
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.cli.internal import CLICommand, CLIOption, entry_point_prefixes, GlobalOptions
+from cmk.cli.internal import (
+    CLICommand,
+    CLIOption,
+    CommandHandler,
+    entry_point_prefixes,
+    GlobalOptions,
+)
 from cmk.discover_plugins import discover_all_plugins, PluginGroup
 
 OptionSpec = str
@@ -27,10 +33,6 @@ OptionName = str
 ConvertFunction = Callable[[str], object]
 Options = list[tuple[OptionSpec, Argument]]
 Arguments = Sequence[str]
-
-# Signature of mode handlers:
-# site root, general options, parsed sub-options, positional arguments
-type ModeHandler = Callable[[Path, GlobalOptions, Mapping[str, object], Sequence[str]], int]
 
 
 def write_stdout(txt: str) -> None:
@@ -218,12 +220,12 @@ def option_names[NameT](
             raise MKGeneralException(f"--{name}: invalid argument {value!r}")
 
 
-class Mode(Option):
+class Command(Option):
     def __init__(
         self,
         *,
         long_option: OptionName,
-        handler_function: ModeHandler,
+        handler_function: CommandHandler,
         short_help: str,
         short_option: OptionName | None = None,
         argument: bool = False,
@@ -308,9 +310,9 @@ def make_option(option: CLIOption) -> Option:
     )
 
 
-def make_mode(command: CLICommand) -> Mode:
-    """Build the engine's mode from its API declaration"""
-    return Mode(
+def make_command(command: CLICommand) -> Command:
+    """Build the engine's command from its API declaration"""
+    return Command(
         long_option=command.long_option,
         handler_function=command.handler_function,
         short_help=command.short_help,
@@ -370,14 +372,14 @@ def parse_general_options(all_opts: Options) -> GlobalOptions:
     return GlobalOptions(verbosity=verbosity, debug=debug, profile=profile, fake_dns=fake_dns)
 
 
-def discover_modes() -> Sequence[Mode]:
+def discover_commands() -> Sequence[Command]:
     discovered = discover_all_plugins(
         PluginGroup.CLI,
         entry_point_prefixes(),
         skip_wrong_types=False,
         raise_errors=True,
     )
-    return tuple(make_mode(command) for command in discovered.plugins.values())
+    return tuple(make_command(command) for command in discovered.plugins.values())
 
 
 _DEFAULT_PAGER: Final = "less"
@@ -420,41 +422,41 @@ def write_paged(txt: str) -> None:
         write_stdout(txt)
 
 
-def _map_options(modes: Sequence[Mode]) -> Mapping[OptionName, Mode]:
+def _map_options(commands: Sequence[Command]) -> Mapping[OptionName, Command]:
     """Map every spelling of every command to it, rejecting a collision.
 
     Two commands claiming the same option would otherwise shadow one another
     silently, and the one that loses simply could not be invoked.
     """
-    mapped: dict[OptionName, Mode] = {}
-    for mode in modes:
-        for name in (mode.long_option, mode.short_option):
+    mapped: dict[OptionName, Command] = {}
+    for command in commands:
+        for name in (command.long_option, command.short_option):
             if name is None:
                 continue
             if (other := mapped.get(name)) is not None:
                 raise MKGeneralException(
-                    f"{name!r} is claimed by the commands {other.name!r} and {mode.name!r}"
+                    f"{name!r} is claimed by the commands {other.name!r} and {command.name!r}"
                 )
-            mapped[name] = mode
+            mapped[name] = command
     return mapped
 
 
-class Modes:
+class Commands:
     def __init__(
         self,
         *,
-        plugins: Sequence[Mode],
+        plugins: Sequence[Command],
         general_options: Sequence[Option],
         page: Callable[[str], None] = write_paged,
     ) -> None:
         super().__init__()
         self._page = page
-        modes = [*plugins, self.mode_help()]
-        self._mode_map: Mapping[OptionName, Mode] = _map_options(modes)
-        self._modes = modes
+        commands = [*plugins, self.help_command()]
+        self._command_map: Mapping[OptionName, Command] = _map_options(commands)
+        self._commands = commands
         self._general_options = general_options
 
-    def mode_help(self) -> Mode:
+    def help_command(self) -> Command:
         # It's a little weird to implement the --help option like this,
         # but it is the easiest way to be consistent with how we use `getopt`.
         def _show_help(
@@ -463,28 +465,28 @@ class Modes:
             self._page(self.help())
             return 0
 
-        return Mode(
+        return Command(
             long_option="help",
             short_option="h",
             handler_function=_show_help,
             short_help="Print this help",
         )
 
-    def find(self, name: OptionName) -> Mode | None:
-        return self._mode_map.get(name)
+    def find(self, name: OptionName) -> Command | None:
+        return self._command_map.get(name)
 
     def short_getopt_specs(self) -> str:
         options = ""
-        for mode in self._modes:
-            options += "".join(mode.short_getopt_specs())
+        for command in self._commands:
+            options += "".join(command.short_getopt_specs())
         for option in self._general_options:
             options += "".join(option.short_getopt_specs())
         return options
 
     def long_getopt_specs(self) -> list[str]:
         options: list[str] = []
-        for mode in self._modes:
-            options += mode.long_getopt_specs()
+        for command in self._commands:
+            options += command.long_getopt_specs()
         for option in self._general_options:
             options += option.long_getopt_specs()
         return options
@@ -502,13 +504,13 @@ NOTES:
 """
 
     def _short_help(self) -> str:
-        texts = [mode.short_help_text(" cmk %-36s") for mode in self._modes]
+        texts = [command.short_help_text(" cmk %-36s") for command in self._commands]
         return "\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
 
     def _long_help(self) -> str:
         texts = []
-        for mode in self._modes:
-            text = mode.long_help_text()
+        for command in self._commands:
+            text = command.long_help_text()
             if text:
                 texts.append(text)
         return "\n\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))

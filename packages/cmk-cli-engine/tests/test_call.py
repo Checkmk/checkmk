@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Final
 
 from cmk.cli.engine.call import call
-from cmk.cli.engine.commands import Mode, Option
+from cmk.cli.engine.commands import Command, Option
 from cmk.cli.internal import Args, CommandHandler, GlobalOptions, Options
 from cmk.trace import Context
 
@@ -32,17 +32,17 @@ class _Recorder:
         return self._exit_code
 
 
-def _mode(
+def _command(
     handler: CommandHandler,
     *,
     argument: bool = False,
     argument_optional: bool = False,
     sub_options: Sequence[Option] = (),
-) -> Mode:
-    return Mode(
-        long_option="test-mode",
+) -> Command:
+    return Command(
+        long_option="test-command",
         handler_function=handler,
-        short_help="a mode under test",
+        short_help="a command under test",
         argument=argument,
         argument_descr="HOST" if argument else None,
         argument_optional=argument_optional,
@@ -50,18 +50,20 @@ def _mode(
     )
 
 
-def _call(mode: Mode, argument: str = "", *, arguments: Sequence[str] = ()) -> int:
-    return call(_OMD_ROOT, mode, _GLOBAL_OPTIONS, argument, [("--flag", "")], arguments, Context())
+def _call(command: Command, argument: str = "", *, arguments: Sequence[str] = ()) -> int:
+    return call(
+        _OMD_ROOT, command, _GLOBAL_OPTIONS, argument, [("--flag", "")], arguments, Context()
+    )
 
 
-def test_a_mode_returns_its_handlers_exit_code() -> None:
-    assert _call(_mode(_Recorder(exit_code=23))) == 23
+def test_a_command_returns_its_handlers_exit_code() -> None:
+    assert _call(_command(_Recorder(exit_code=23))) == 23
 
 
-def test_a_mode_without_argument_receives_no_arguments() -> None:
+def test_a_command_without_argument_receives_no_arguments() -> None:
     handler = _Recorder()
 
-    _call(_mode(handler), "ignored", arguments=["ignored", "too"])
+    _call(_command(handler), "ignored", arguments=["ignored", "too"])
 
     assert [args for _global_options, _options, args in handler.calls] == [()]
 
@@ -69,7 +71,7 @@ def test_a_mode_without_argument_receives_no_arguments() -> None:
 def test_a_required_argument_reaches_the_handler() -> None:
     handler = _Recorder()
 
-    _call(_mode(handler, argument=True), "myhost", arguments=["myhost", "other"])
+    _call(_command(handler, argument=True), "myhost", arguments=["myhost", "other"])
 
     assert [args for _global_options, _options, args in handler.calls] == [["myhost"]]
 
@@ -77,7 +79,7 @@ def test_a_required_argument_reaches_the_handler() -> None:
 def test_the_positional_arguments_reach_the_handler() -> None:
     handler = _Recorder()
 
-    _call(_mode(handler, argument=True, argument_optional=True), arguments=["host1", "host2"])
+    _call(_command(handler, argument=True, argument_optional=True), arguments=["host1", "host2"])
 
     assert [args for _global_options, _options, args in handler.calls] == [["host1", "host2"]]
 
@@ -85,15 +87,15 @@ def test_the_positional_arguments_reach_the_handler() -> None:
 def test_the_sub_options_reach_the_handler() -> None:
     handler = _Recorder()
 
-    _call(_mode(handler, sub_options=_SUB_OPTIONS))
+    _call(_command(handler, sub_options=_SUB_OPTIONS))
 
     assert [options for _global_options, options, _args in handler.calls] == [{"flag": True}]
 
 
-def test_a_mode_without_sub_options_receives_none() -> None:
+def test_a_command_without_sub_options_receives_none() -> None:
     handler = _Recorder()
 
-    _call(_mode(handler))
+    _call(_command(handler))
 
     assert [options for _global_options, options, _args in handler.calls] == [{}]
 
@@ -101,7 +103,7 @@ def test_a_mode_without_sub_options_receives_none() -> None:
 def test_the_global_options_reach_the_handler() -> None:
     handler = _Recorder()
 
-    _call(_mode(handler))
+    _call(_command(handler))
 
     assert [global_options for global_options, _options, _args in handler.calls] == [
         _GLOBAL_OPTIONS

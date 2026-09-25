@@ -119,7 +119,7 @@ class CLICommand:
     >>> def greet(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
     ...     print("Hello", ", ".join(args))
     ...     return 0
-    >>> mode_greet = CLICommand(
+    >>> cli_command_greet = CLICommand(
     ...     long_option="greet",
     ...     handler_function=greet,
     ...     short_help="Greet the given names",

@@ -53,7 +53,7 @@ This is a src-import-vs-declared-dep check with the following implemented:
 
       py_library(
           ...
-          tags = ["deballast-keep=//cmk/base/modes:modes"],  # loaded via discover_modes()
+          tags = ["deballast-keep=//cmk/base/modes:modes"],  # loaded via discover_commands()
       )
 - Generated srcs of the analyzed target contribute no imports (they are not
   action inputs); targets whose srcs are all generated yield no findings.

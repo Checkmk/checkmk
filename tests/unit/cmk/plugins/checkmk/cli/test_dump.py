@@ -27,7 +27,7 @@ from cmk.checkengine.snmp_backends.classic import ClassicSNMPBackend
 from cmk.checkengine.snmp_backends.stored_walk import StoredWalkSNMPBackend
 from cmk.checkengine.sources._sources import SNMPSource
 from cmk.cli.engine.call import call
-from cmk.cli.engine.commands import make_mode, Options
+from cmk.cli.engine.commands import make_command, Options
 from cmk.cli.internal import GlobalOptions
 from cmk.plugins.checkmk.cli import dump
 from cmk.plugins.checkmk.cli.dump import cli_command_dump_agent
@@ -68,7 +68,7 @@ def _patch_fetcher_trigger(monkeypatch: pytest.MonkeyPatch, raw_data: bytes) -> 
     )
 
 
-class TestModeDumpAgent:
+class TestDumpAgent:
     @pytest.fixture
     def hostname(self) -> HostName:
         return HostName("testhost")
@@ -146,7 +146,7 @@ class TestModeDumpAgent:
 
         call(
             _OMD_ROOT,
-            make_mode(cli_command_dump_agent),
+            make_command(cli_command_dump_agent),
             GlobalOptions(),
             hostname,
             [],
@@ -157,7 +157,7 @@ class TestModeDumpAgent:
         assert capsys.readouterr().out == raw_data.decode()
 
 
-class TestModeDumpAgentSnmpBackend:
+class TestDumpAgentSnmpBackend:
     @pytest.fixture
     def hostname(self) -> HostName:
         return HostName("snmphost")
@@ -257,7 +257,7 @@ class TestModeDumpAgentSnmpBackend:
         _patch_fetcher_trigger(monkeypatch, b"")
         call(
             _OMD_ROOT,
-            make_mode(cli_command_dump_agent),
+            make_command(cli_command_dump_agent),
             GlobalOptions(),
             hostname,
             options,

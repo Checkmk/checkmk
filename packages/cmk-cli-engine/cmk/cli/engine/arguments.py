@@ -8,15 +8,15 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Final
 
-from .commands import Argument, Mode, Modes, Options
+from .commands import Argument, Command, Commands, Options
 
 _IMPLICIT_CHECK_ARGUMENT_LIMIT: Final = 2
-_IMPLICIT_CHECK_MODE: Final = "check"
+_IMPLICIT_CHECK_COMMAND: Final = "check"
 
 
 @dataclass(frozen=True)
-class RunMode:
-    mode: Mode
+class RunCommand:
+    command: Command
     argument: Argument
     options: Options
     arguments: Sequence[str]
@@ -38,23 +38,23 @@ def _is_implicit_check(options: Options, arguments: Sequence[str]) -> bool:
     )
 
 
-def parse(modes: Modes, argv: Sequence[str]) -> RunMode | ShowHelp | InvalidArguments:
+def parse(commands: Commands, argv: Sequence[str]) -> RunCommand | ShowHelp | InvalidArguments:
     try:
         options, arguments = getopt.getopt(
-            list(argv[1:]), modes.short_getopt_specs(), modes.long_getopt_specs()
+            list(argv[1:]), commands.short_getopt_specs(), commands.long_getopt_specs()
         )
     except getopt.GetoptError as error:
         program = argv[0].split("/")[-1]
         return InvalidArguments(f"ERROR: {error} (see `{program} --help` for valid options)\n")
 
     for option, argument in options:
-        if (mode := modes.find(option.lstrip("-"))) is not None:
-            return RunMode(mode, argument, options, arguments)
+        if (command := commands.find(option.lstrip("-"))) is not None:
+            return RunCommand(command, argument, options, arguments)
 
     if (
         _is_implicit_check(options, arguments)
-        and (mode := modes.find(_IMPLICIT_CHECK_MODE)) is not None
+        and (command := commands.find(_IMPLICIT_CHECK_COMMAND)) is not None
     ):
-        return RunMode(mode, "", options, arguments)
+        return RunCommand(command, "", options, arguments)
 
     return ShowHelp(options)

@@ -13,8 +13,8 @@ import pytest
 from cmk.ccc.exceptions import MKGeneralException, raise_mkterminate_on_sigint
 from cmk.cli.engine.commands import (
     _pager_environment,
-    Mode,
-    Modes,
+    Command,
+    Commands,
     Option,
     option_count,
     option_names,
@@ -161,8 +161,8 @@ def _never(*_args: object, **_kwargs: object) -> NoReturn:
     raise AssertionError("the command must not run")
 
 
-def _mode(long_option: str, short_option: str | None = None) -> Mode:
-    return Mode(
+def _command(long_option: str, short_option: str | None = None) -> Command:
+    return Command(
         long_option=long_option,
         short_option=short_option,
         handler_function=_never,
@@ -172,14 +172,14 @@ def _mode(long_option: str, short_option: str | None = None) -> Mode:
 
 def test_two_commands_cannot_claim_the_same_long_option() -> None:
     with pytest.raises(MKGeneralException, match="'twice'"):
-        Modes(plugins=[_mode("twice"), _mode("twice")], general_options=[])
+        Commands(plugins=[_command("twice"), _command("twice")], general_options=[])
 
 
 def test_two_commands_cannot_claim_the_same_short_option() -> None:
     with pytest.raises(MKGeneralException, match="'x'"):
-        Modes(plugins=[_mode("one", "x"), _mode("other", "x")], general_options=[])
+        Commands(plugins=[_command("one", "x"), _command("other", "x")], general_options=[])
 
 
 def test_a_command_cannot_claim_the_built_in_help_option() -> None:
     with pytest.raises(MKGeneralException, match="'help'"):
-        Modes(plugins=[_mode("help")], general_options=[])
+        Commands(plugins=[_command("help")], general_options=[])

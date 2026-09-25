@@ -9,11 +9,11 @@ from typing import Final, NoReturn
 
 import pytest
 
-from cmk.cli.engine.arguments import InvalidArguments, parse, RunMode, ShowHelp
+from cmk.cli.engine.arguments import InvalidArguments, parse, RunCommand, ShowHelp
 from cmk.cli.engine.commands import (
+    Command,
+    Commands,
     general_options,
-    Mode,
-    Modes,
     Option,
     parse_sub_options,
 )
@@ -26,24 +26,24 @@ def _unreachable(
     raise AssertionError("parsing must not run the command")
 
 
-_MODE_ARGUMENT: Final = "myhost"
+_COMMAND_ARGUMENT: Final = "myhost"
 
 _ARGUMENT_EVERY_CONVERSION_ACCEPTS: Final = "inline"
 
-_PLAIN: Final = Mode(
+_PLAIN: Final = Command(
     long_option="plain",
     short_option="p",
     handler_function=_unreachable,
     short_help="takes no argument",
 )
 
-_OTHER_PLAIN: Final = Mode(
+_OTHER_PLAIN: Final = Command(
     long_option="other-plain",
     handler_function=_unreachable,
     short_help="takes no argument either",
 )
 
-_WITH_ARGUMENT: Final = Mode(
+_WITH_ARGUMENT: Final = Command(
     long_option="with-argument",
     handler_function=_unreachable,
     argument=True,
@@ -53,7 +53,7 @@ _WITH_ARGUMENT: Final = Mode(
 
 # The engine runs this one when the command line names no command at all, so the
 # name is not free to choose.
-_CHECK: Final = Mode(
+_CHECK: Final = Command(
     long_option="check",
     short_option="c",
     handler_function=_unreachable,
@@ -84,7 +84,7 @@ _CHECK: Final = Mode(
     short_help="the implicit command",
 )
 
-_MODES: Final = Modes(
+_COMMANDS: Final = Commands(
     plugins=[_PLAIN, _OTHER_PLAIN, _WITH_ARGUMENT, _CHECK],
     general_options=general_options(),
 )
@@ -96,132 +96,132 @@ def _general_option_argv(option: Option) -> Sequence[str]:
     return [f"--{option.long_option}"]
 
 
-def test_the_long_option_selects_its_mode() -> None:
-    parsed = parse(_MODES, ["cmk", "--plain"])
+def test_the_long_option_selects_its_command() -> None:
+    parsed = parse(_COMMANDS, ["cmk", "--plain"])
 
-    assert isinstance(parsed, RunMode)
-    assert parsed.mode is _PLAIN
-
-
-def test_the_short_option_selects_its_mode() -> None:
-    parsed = parse(_MODES, ["cmk", "-p"])
-
-    assert isinstance(parsed, RunMode)
-    assert parsed.mode is _PLAIN
+    assert isinstance(parsed, RunCommand)
+    assert parsed.command is _PLAIN
 
 
-def test_a_sub_option_reaches_its_mode() -> None:
-    parsed = parse(_MODES, ["cmk", "--check", "--keepalive"])
+def test_the_short_option_selects_its_command() -> None:
+    parsed = parse(_COMMANDS, ["cmk", "-p"])
 
-    assert isinstance(parsed, RunMode)
-    assert "keepalive" in parse_sub_options(parsed.mode.sub_options, parsed.options)
+    assert isinstance(parsed, RunCommand)
+    assert parsed.command is _PLAIN
+
+
+def test_a_sub_option_reaches_its_command() -> None:
+    parsed = parse(_COMMANDS, ["cmk", "--check", "--keepalive"])
+
+    assert isinstance(parsed, RunCommand)
+    assert "keepalive" in parse_sub_options(parsed.command.sub_options, parsed.options)
 
 
 def test_a_bare_command_shows_the_help() -> None:
-    assert parse(_MODES, ["cmk"]) == ShowHelp(options=[])
+    assert parse(_COMMANDS, ["cmk"]) == ShowHelp(options=[])
 
 
 def test_a_general_option_alone_shows_the_help_and_hands_the_options_back() -> None:
-    assert parse(_MODES, ["cmk", "-v"]) == ShowHelp(options=[("-v", "")])
+    assert parse(_COMMANDS, ["cmk", "-v"]) == ShowHelp(options=[("-v", "")])
 
 
 @pytest.mark.parametrize("option", ["--help", "-h"])
-def test_the_help_option_selects_the_help_mode(option: str) -> None:
-    parsed = parse(_MODES, ["cmk", option])
+def test_the_help_option_selects_the_help_command(option: str) -> None:
+    parsed = parse(_COMMANDS, ["cmk", option])
 
-    assert isinstance(parsed, RunMode)
-    assert parsed.mode.name == "help"
-
-
-def test_the_first_of_two_mode_options_wins() -> None:
-    parsed = parse(_MODES, ["cmk", "--plain", "--other-plain"])
-
-    assert isinstance(parsed, RunMode)
-    assert parsed.mode is _PLAIN
+    assert isinstance(parsed, RunCommand)
+    assert parsed.command.name == "help"
 
 
-def test_a_required_mode_argument_comes_off_the_option() -> None:
-    parsed = parse(_MODES, ["cmk", f"--with-argument={_MODE_ARGUMENT}"])
+def test_the_first_of_two_command_options_wins() -> None:
+    parsed = parse(_COMMANDS, ["cmk", "--plain", "--other-plain"])
 
-    assert isinstance(parsed, RunMode)
-    assert (parsed.argument, parsed.arguments) == (_MODE_ARGUMENT, [])
+    assert isinstance(parsed, RunCommand)
+    assert parsed.command is _PLAIN
 
 
-def test_an_optional_mode_argument_stays_in_the_positional_arguments() -> None:
-    parsed = parse(_MODES, ["cmk", "--check", "host1", "host2"])
+def test_a_required_command_argument_comes_off_the_option() -> None:
+    parsed = parse(_COMMANDS, ["cmk", f"--with-argument={_COMMAND_ARGUMENT}"])
 
-    assert isinstance(parsed, RunMode)
+    assert isinstance(parsed, RunCommand)
+    assert (parsed.argument, parsed.arguments) == (_COMMAND_ARGUMENT, [])
+
+
+def test_an_optional_command_argument_stays_in_the_positional_arguments() -> None:
+    parsed = parse(_COMMANDS, ["cmk", "--check", "host1", "host2"])
+
+    assert isinstance(parsed, RunCommand)
     assert (parsed.argument, parsed.arguments) == ("", ["host1", "host2"])
 
 
 def test_a_repeated_sub_option_is_counted() -> None:
-    parsed = parse(_MODES, ["cmk", "-cc", "myhost"])
+    parsed = parse(_COMMANDS, ["cmk", "-cc", "myhost"])
 
-    assert isinstance(parsed, RunMode)
-    assert parsed.mode is _CHECK
-    assert parse_sub_options(parsed.mode.sub_options, parsed.options) == {"counted": 2}
+    assert isinstance(parsed, RunCommand)
+    assert parsed.command is _CHECK
+    assert parse_sub_options(parsed.command.sub_options, parsed.options) == {"counted": 2}
 
 
 def test_a_repeated_sub_option_argument_is_collected() -> None:
-    parsed = parse(_MODES, ["cmk", "--check", "--collected=.1.1", "--collected=.1.2", "myhost"])
+    parsed = parse(_COMMANDS, ["cmk", "--check", "--collected=.1.1", "--collected=.1.2", "myhost"])
 
-    assert isinstance(parsed, RunMode)
-    assert parse_sub_options(parsed.mode.sub_options, parsed.options) == {
+    assert isinstance(parsed, RunCommand)
+    assert parse_sub_options(parsed.command.sub_options, parsed.options) == {
         "collected": (".1.1", ".1.2")
     }
 
 
 def test_a_sub_option_argument_is_converted() -> None:
-    parsed = parse(_MODES, ["cmk", "--check", "--converted=value", "myhost"])
+    parsed = parse(_COMMANDS, ["cmk", "--check", "--converted=value", "myhost"])
 
-    assert isinstance(parsed, RunMode)
-    assert parse_sub_options(parsed.mode.sub_options, parsed.options) == {"converted": "VALUE"}
+    assert isinstance(parsed, RunCommand)
+    assert parse_sub_options(parsed.command.sub_options, parsed.options) == {"converted": "VALUE"}
 
 
 def test_a_deprecated_sub_option_reaches_the_option_it_replaces() -> None:
-    parsed = parse(_MODES, ["cmk", "--check", "--legacy-name=value", "myhost"])
+    parsed = parse(_COMMANDS, ["cmk", "--check", "--legacy-name=value", "myhost"])
 
-    assert isinstance(parsed, RunMode)
-    assert parse_sub_options(parsed.mode.sub_options, parsed.options) == {"converted": "VALUE"}
-
-
-def test_one_argument_runs_the_implicit_check_mode() -> None:
-    parsed = parse(_MODES, ["cmk", "myhost"])
-
-    assert isinstance(parsed, RunMode)
-    assert (parsed.mode.name, parsed.argument, parsed.arguments) == ("check", "", ["myhost"])
+    assert isinstance(parsed, RunCommand)
+    assert parse_sub_options(parsed.command.sub_options, parsed.options) == {"converted": "VALUE"}
 
 
-def test_a_host_and_an_address_run_the_implicit_check_mode() -> None:
-    parsed = parse(_MODES, ["cmk", "myhost", "1.2.3.4"])
+def test_one_argument_runs_the_implicit_check_command() -> None:
+    parsed = parse(_COMMANDS, ["cmk", "myhost"])
 
-    assert isinstance(parsed, RunMode)
-    assert (parsed.mode.name, parsed.arguments) == ("check", ["myhost", "1.2.3.4"])
+    assert isinstance(parsed, RunCommand)
+    assert (parsed.command.name, parsed.argument, parsed.arguments) == ("check", "", ["myhost"])
 
 
-def test_keepalive_runs_the_implicit_check_mode() -> None:
-    parsed = parse(_MODES, ["cmk", "--keepalive"])
+def test_a_host_and_an_address_run_the_implicit_check_command() -> None:
+    parsed = parse(_COMMANDS, ["cmk", "myhost", "1.2.3.4"])
 
-    assert isinstance(parsed, RunMode)
-    assert parsed.mode.name == "check"
+    assert isinstance(parsed, RunCommand)
+    assert (parsed.command.name, parsed.arguments) == ("check", ["myhost", "1.2.3.4"])
+
+
+def test_keepalive_runs_the_implicit_check_command() -> None:
+    parsed = parse(_COMMANDS, ["cmk", "--keepalive"])
+
+    assert isinstance(parsed, RunCommand)
+    assert parsed.command.name == "check"
 
 
 def test_more_arguments_than_a_host_and_an_address_show_the_help() -> None:
-    parsed = parse(_MODES, ["cmk", "host1", "host2", "host3"])
+    parsed = parse(_COMMANDS, ["cmk", "host1", "host2", "host3"])
 
     assert isinstance(parsed, ShowHelp)
 
 
 def test_an_unknown_option_is_rejected() -> None:
-    parsed = parse(_MODES, ["cmk", "--not-an-option"])
+    parsed = parse(_COMMANDS, ["cmk", "--not-an-option"])
 
     assert parsed == InvalidArguments(
         "ERROR: option --not-an-option not recognized (see `cmk --help` for valid options)\n"
     )
 
 
-def test_a_missing_mode_argument_is_rejected() -> None:
-    parsed = parse(_MODES, ["cmk", "--with-argument"])
+def test_a_missing_command_argument_is_rejected() -> None:
+    parsed = parse(_COMMANDS, ["cmk", "--with-argument"])
 
     assert parsed == InvalidArguments(
         "ERROR: option --with-argument requires argument (see `cmk --help` for valid options)\n"
@@ -229,23 +229,23 @@ def test_a_missing_mode_argument_is_rejected() -> None:
 
 
 def test_the_rejection_names_the_program_as_it_was_called() -> None:
-    parsed = parse(_MODES, ["/omd/sites/mysite/bin/check_mk", "--not-an-option"])
+    parsed = parse(_COMMANDS, ["/omd/sites/mysite/bin/check_mk", "--not-an-option"])
 
     assert isinstance(parsed, InvalidArguments)
     assert "see `check_mk --help`" in parsed.message
 
 
 @pytest.mark.parametrize("option", general_options(), ids=lambda option: option.name)
-def test_a_general_option_does_not_select_a_mode(option: Option) -> None:
-    parsed = parse(_MODES, ["cmk", *_general_option_argv(option), "myhost"])
+def test_a_general_option_does_not_select_a_command(option: Option) -> None:
+    parsed = parse(_COMMANDS, ["cmk", *_general_option_argv(option), "myhost"])
 
-    assert isinstance(parsed, RunMode)
-    assert parsed.mode.name == "check"
+    assert isinstance(parsed, RunCommand)
+    assert parsed.command.name == "check"
 
 
 @pytest.mark.parametrize("option", general_options(), ids=lambda option: option.name)
 def test_a_general_option_is_handed_back_for_processing(option: Option) -> None:
-    parsed = parse(_MODES, ["cmk", *_general_option_argv(option), "myhost"])
+    parsed = parse(_COMMANDS, ["cmk", *_general_option_argv(option), "myhost"])
 
-    assert isinstance(parsed, RunMode)
+    assert isinstance(parsed, RunCommand)
     assert f"--{option.long_option}" in [name for name, _argument in parsed.options]

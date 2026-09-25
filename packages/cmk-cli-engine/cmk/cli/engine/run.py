@@ -25,10 +25,10 @@ from cmk.ccc.log import CMKFormatter
 from cmk.ccc.site import get_omd_config, omd_site
 from cmk.cli.engine.call import call
 from cmk.cli.engine.commands import (
-    discover_modes,
+    Command,
+    Commands,
+    discover_commands,
     general_options,
-    Mode,
-    Modes,
     Option,
     parse_general_options,
     write_paged,
@@ -168,7 +168,7 @@ _LOG_FILE_OPTION: Final = Option(
 class Runtime:
     """What the command line reaches for besides its arguments, injectable one by one"""
 
-    discover: Callable[[], Sequence[Mode]] = discover_modes
+    discover: Callable[[], Sequence[Command]] = discover_commands
     start_tracing: Callable[[Path], None] = start_tracing
     on_sigint: Callable[[], None] = raise_mkterminate_on_sigint
     crash_reporter_for: Callable[[Path, Sequence[str], Mapping[str, str]], CrashReporter] = (
@@ -227,13 +227,13 @@ def run(
     runtime.on_sigint()
     runtime.start_tracing(omd_root)
 
-    modes = Modes(
+    commands = Commands(
         plugins=runtime.discover(),
         general_options=[*general_options(), _LOG_FILE_OPTION],
         page=runtime.page,
     )
 
-    parsed = parse(modes, argv)
+    parsed = parse(commands, argv)
     if isinstance(parsed, InvalidArguments):
         runtime.write(parsed.message)
         return 1
@@ -252,11 +252,11 @@ def run(
 
     def command() -> int:
         if isinstance(parsed, ShowHelp):
-            runtime.page(modes.help())
+            runtime.page(commands.help())
             return 0
         return call(
             omd_root,
-            parsed.mode,
+            parsed.command,
             global_options,
             parsed.argument,
             parsed.options,

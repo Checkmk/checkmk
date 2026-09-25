@@ -270,8 +270,8 @@ export function useHostServicesColumns({
       accessorKey: 'perfometer',
       header: _t('Perf-O-Meter'),
       enableSorting: false,
-      minSize: 168,
-      maxSize: 168,
+      minSize: 192,
+      maxSize: 192,
       meta: { justify: 'center' }
     },
     {

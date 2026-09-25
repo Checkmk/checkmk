@@ -32,7 +32,8 @@
 # QS1|ORACLE_OCM|MGMT_CONFIG_JOB|DISABLED|0|40|FALSE|08-APR-15 01.01.01.200000 AM +01:00|-|
 # QS1|DBADMIN|DATENEXPORT-FUR|COMPLETED|0|3|FALSE|22-AUG-14 01.11.00.000000 AM EUROPE/BERLIN|-|
 
-from collections.abc import Mapping, Sequence
+
+from collections.abc import Mapping
 from typing import Any
 
 from cmk.agent_based.v2 import (
@@ -49,70 +50,54 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .liboracle import Error, Ok, oracle_handle_ora_errors, Parsed
-
-type _JobRows = list[Sequence[str]]
-type Section = Mapping[str, Parsed[_JobRows]]
+from .liboracle import oracle_handle_ora_errors
 
 
-def parse_oracle_jobs(string_table: StringTable) -> Section:
-    rows_by_sid: dict[str, _JobRows] = {}
-    errors: dict[str, str] = {}
-    for line in string_table:
-        if len(line) < 2 or line[1].startswith(" Debug "):
-            # ignore wrong/corrupted lines
+def discover_oracle_jobs(section: StringTable) -> DiscoveryResult:
+    for line in section:
+        if len(line) <= 2:
             continue
-        match oracle_handle_ora_errors(line):
-            case str() as message:
-                errors.setdefault(line[0], message)
-            case False:
-                continue
-            case None:
-                rows_by_sid.setdefault(line[0], []).append(line)
-
-    parsed: dict[str, Parsed[_JobRows]] = {
-        sid: Ok(rows) for sid, rows in rows_by_sid.items() if sid not in errors
-    }
-    for sid, message in errors.items():
-        parsed[sid] = Error(message)
-    return parsed
-
-
-def discover_oracle_jobs(section: Section) -> DiscoveryResult:
-    for result in section.values():
-        if not isinstance(result, Ok):
+        if oracle_handle_ora_errors(line) is not None:
             continue
-        for line in result.value:
-            if len(line) <= 2:
-                continue
-            # old format < RDBMS 12.1
-            if 3 <= len(line) <= 10:
-                yield Service(item=f"{line[0]}.{line[1]}.{line[2]}")
-            else:
-                # new format: sid.pdb_name.job_owner.job_name
-                yield Service(item=f"{line[0]}.{line[1]}.{line[2]}.{line[3]}")
+        # old format < RDBMS 12.1
+        if 3 <= len(line) <= 10:
+            yield Service(item=f"{line[0]}.{line[1]}.{line[2]}")
+        else:
+            # new format: sid.pdb_name.job_owner.job_name
+            yield Service(item=f"{line[0]}.{line[1]}.{line[2]}.{line[3]}")
 
 
-def check_oracle_jobs(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_oracle_jobs(item: str, params: Mapping[str, Any], section: StringTable) -> CheckResult:
     # only extract the sid from item.
     sid = item[0 : item.index(".", 0)]
+    item_sid = sid  # the row unpacking below rebinds `sid`
 
-    match section.get(sid):
-        case None:
-            # In case of missing information we assume that the login into
-            # the database has failed and we simply skip this check. It won't
-            # switch to UNKNOWN, but will get stale.
-            raise IgnoreResultsError("Login not possible for check %s" % item)
-        case Error(message):
-            yield Result(state=State.UNKNOWN, summary=message)
-        case Ok(rows):
-            yield from _check_job(item, params, rows)
+    data_found = False
 
+    for line in section:
+        service_found = False
 
-def _check_job(item: str, params: Mapping[str, Any], rows: _JobRows) -> CheckResult:
-    service_found = False
+        if len(line) < 2:
+            # ignore wrong/corrupted lines
+            continue
 
-    for line in rows:
+        if line[1].startswith(" Debug "):
+            # Skip invalid lines from Agent
+            continue
+
+        error = oracle_handle_ora_errors(line)
+        if error is False:
+            continue
+        if isinstance(error, str):
+            if line[0] == item_sid:
+                yield Result(state=State.UNKNOWN, summary=error)
+                return
+            continue
+
+        # we need to check against valid lines before the following comparisonq
+        if line[0] == sid:
+            data_found = True
+
         # check for pdb_name in agent output
         # => the agentoutput is responsible for the format of item from Checkmk!
         # item could have the following formats. Keep in mind, that job_name could include a '.'!
@@ -165,7 +150,6 @@ def _check_job(item: str, params: Mapping[str, Any], rows: _JobRows) -> CheckRes
             itemowner = ""
             lineformat = 1
 
-            sid = line[0]
             job_name = line[2]
             job_state = line[3]
             job_runtime = line[4]
@@ -198,6 +182,12 @@ def _check_job(item: str, params: Mapping[str, Any], rows: _JobRows) -> CheckRes
             param_consider_job_status = params["consider_job_status"]
 
             break
+
+    if not data_found:
+        # In case of missing information we assume that the login into
+        # the database has failed and we simply skip this check. It won't
+        # switch to UNKNOWN, but will get stale.
+        raise IgnoreResultsError("Login not possible for check %s" % item)
 
     if not service_found:
         # 'missingjob' was once used in the default parameters, so we still need to keep this key
@@ -296,6 +286,10 @@ def _check_job(item: str, params: Mapping[str, Any], rows: _JobRows) -> CheckRes
 
     yield Result(state=state, summary=", ".join(output))
     yield from perfdata
+
+
+def parse_oracle_jobs(string_table: StringTable) -> StringTable:
+    return string_table
 
 
 agent_section_oracle_jobs = AgentSection(

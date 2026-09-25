@@ -692,22 +692,11 @@ def _oracle_client_library_options() -> Dictionary:
     )
 
 
-def _options(is_default_options: bool = True) -> Dictionary:
+def _options() -> Dictionary:
     elements: dict[
         str,
-        DictElement[int]
-        | DictElement[bool]
-        | DictElement[_NamedOption]
-        | DictElement[_AuthOptions],
+        DictElement[bool] | DictElement[_NamedOption] | DictElement[_AuthOptions],
     ] = {
-        "max_queries": DictElement(
-            parameter_form=Integer(
-                title=Title("Maximum queries"),
-                help_text=Help("Maximum number of queries to execute per connection."),
-                prefill=DefaultValue(16),
-            ),
-            required=False,
-        ),
         "ignore_db_name": DictElement(
             parameter_form=FixedValue(
                 title=Title("Ignore database name"),
@@ -726,12 +715,10 @@ def _options(is_default_options: bool = True) -> Dictionary:
         ),
         "validate_permissions": DictElement(parameter_form=_permissions(), required=False),
     }
-    if not is_default_options:
-        _ = elements.pop("max_connections")
-        _ = elements.pop("max_queries")
     return Dictionary(
         title=Title("Additional options"),
         elements=elements,
+        ignored_elements=("max_queries",),
     )
 
 

@@ -198,7 +198,6 @@ class GuiOracleSafeEntries(BaseModel):
 
 class GuiAdditionalOptionsConf(BaseModel):
     max_connections: int | None = None
-    max_queries: int | None = None
     ignore_db_name: bool | None = None
     oracle_client_library: GuiOracleClientLibOptions | None = None
     # `validate_permissions` is a CascadingSingleChoice in the ruleset, so its value is a bare
@@ -255,7 +254,6 @@ class GuiConfig[SecretT = Secret](BaseModel):
 
 class OracleAdditionalOptions(BaseModel):
     max_connections: int | None = None
-    max_queries: int | None = None
     ignore_db_name: int | None = None
     use_host_client: str | None = None
     permissions_check: bool | None = None
@@ -466,7 +464,6 @@ def _get_oracle_additional_options(
         )
         and options.ignore_db_name is None
         and options.max_connections is None
-        and options.max_queries is None
         and options.validate_permissions is None
     ):
         return None
@@ -493,7 +490,6 @@ def _get_oracle_additional_options(
 
     return OracleAdditionalOptions(
         max_connections=options.max_connections,
-        max_queries=options.max_queries,
         ignore_db_name=int(options.ignore_db_name) if options.ignore_db_name is not None else None,
         use_host_client=use_host_client,
         permissions_check=permissions_check,

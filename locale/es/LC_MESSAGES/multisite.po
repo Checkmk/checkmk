@@ -1166,10 +1166,6 @@ msgstr "(ninguno)"
 msgid "(nothing selected)"
 msgstr "(nada seleccionado)"
 
-#, fuzzy
-msgid "(ntopng integration disabled)"
-msgstr "Integración de Ntopng"
-
 #, fuzzy, python-format
 msgid "(old version: %(old_version)s, new version: %(new_version)s)"
 msgstr "Versión: %s, Edición: %s"
@@ -7572,6 +7568,11 @@ msgid ""
 msgstr ""
 "Una ruta absoluta al nombre del archivo (en el caso de MRPE) o a un "
 "directorio en el caso del plugin local /"
+
+msgid ""
+"An active ntopng instance needs a host address, an ntopng admin user and a "
+"password."
+msgstr ""
 
 msgid "An alias or description of the role"
 msgstr "Un alias o descripción de la función"
@@ -45987,10 +45988,6 @@ msgid "Maximum number of parsed lines per log file"
 msgstr "Número máximo de líneas analizadas por archivo de registro"
 
 #, fuzzy
-msgid "Maximum number of queries to execute per connection."
-msgstr "Número máximo de clientes"
-
-#, fuzzy
 msgid "Maximum number of re-executions"
 msgstr "Número máximo de clientes"
 
@@ -46028,10 +46025,6 @@ msgstr "Máximas conexiones paralelas"
 #, fuzzy
 msgid "Maximum parallel connections per source IP address"
 msgstr "Máximas conexiones paralelas"
-
-#, fuzzy
-msgid "Maximum queries"
-msgstr "Número máximo de inodos"
 
 msgid "Maximum rate for total number of packets"
 msgstr "Velocidad máxima para el número total de paquetes"
@@ -77681,6 +77674,10 @@ msgstr "Los hosts seleccionados no tienen atributos explícitos"
 msgid "The selected icon does not exist."
 msgstr "El icono seleccionado no existe."
 
+#, fuzzy
+msgid "The selected managed robot no longer exists."
+msgstr "El emblema seleccionado no existe."
+
 msgid ""
 "The selected monitoring site does not support push mode. Use pull mode "
 "instead."
@@ -100390,6 +100387,10 @@ msgstr "mihost089"
 msgid "n/a"
 msgstr "n/a"
 
+#, fuzzy
+msgid "nearest phase of the selected time range"
+msgstr "Reconocer los problemas"
+
 msgid "negate"
 msgstr "negar"
 
@@ -103831,12 +103832,12 @@ msgstr "Esta opción ha sido modificada."
 msgid "This variable inherits the value from Global settings."
 msgstr "Esta variable está en la configuración de fábrica."
 
+msgid "This variable is at factory settings."
+msgstr "Esta variable está en la configuración de fábrica."
+
 #, fuzzy
 msgid "This variable has been modified."
 msgstr "Esta opción ha sido modificada."
-
-msgid "This variable is at factory settings."
-msgstr "Esta variable está en la configuración de fábrica."
 
 #, fuzzy
 msgid "Remove the value configured for this site"
@@ -109086,6 +109087,10 @@ msgid "Number of related hosts (management board / OS host)"
 msgstr "Número de contenedores en funcionamiento"
 
 #, fuzzy
+msgid "Last state change"
+msgstr "Último cambio de estado del host"
+
+#, fuzzy
 msgid "Number of services in OK state"
 msgstr "Número de servicios en el estado OK"
 
@@ -109120,10 +109125,6 @@ msgstr "Número de servicios en el estado OK"
 #, fuzzy
 msgid "Pending (Pd)"
 msgstr "pendiente"
-
-#, fuzzy
-msgid "Last state change"
-msgstr "Último cambio de estado del host"
 
 msgid "Show the 1 related host of %{host}"
 msgid_plural "Show the %{count} related hosts of %{host}"
@@ -109533,6 +109534,13 @@ msgstr "Descendiendo"
 msgid "No sorting / default sorting"
 msgstr ""
 
+msgid "Extend active sorting of %{columns} by"
+msgstr ""
+
+#, fuzzy
+msgid "Sort by this column"
+msgstr "Ordenar por columna"
+
 #, fuzzy
 msgid "Clear"
 msgstr "estado 'Borrado'"
@@ -109661,6 +109669,17 @@ msgstr "Error general"
 #, fuzzy
 msgid "Total rows: %{total}"
 msgstr "Tamaño total"
+
+#, fuzzy
+msgid "Continue reload countdown"
+msgstr "Containerización"
+
+#, fuzzy
+msgid "Pause reload countdown"
+msgstr "Contenedores en pausa"
+
+msgid "Pause reload countdown, next reload in %{seconds} seconds"
+msgstr ""
 
 msgid "%{share} of shown"
 msgstr ""
@@ -111411,6 +111430,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "(ntopng integration disabled)"
+#~ msgstr "Integración de Ntopng"
+
+#, fuzzy
+#~ msgid "Maximum number of queries to execute per connection."
+#~ msgstr "Número máximo de clientes"
+
+#, fuzzy
+#~ msgid "Maximum queries"
+#~ msgstr "Número máximo de inodos"
 
 #, fuzzy
 #~ msgid "Changed Checkmk Maps settings"

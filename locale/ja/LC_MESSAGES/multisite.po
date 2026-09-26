@@ -1155,9 +1155,6 @@ msgstr "(無し)"
 msgid "(nothing selected)"
 msgstr "(何も選択されていません)"
 
-msgid "(ntopng integration disabled)"
-msgstr "(ntopng 統合が無効です)"
-
 #, python-format
 msgid "(old version: %(old_version)s, new version: %(new_version)s)"
 msgstr "(古いバージョン: %(old_version)s, 新しいバージョン: %(new_version)s)"
@@ -7057,6 +7054,11 @@ msgid ""
 msgstr ""
 "設定ファイルへの絶対パス（MRPEの場合）、またはローカル／プラグインの場合は"
 "ディレクトリへの絶対パス"
+
+msgid ""
+"An active ntopng instance needs a host address, an ntopng admin user and a "
+"password."
+msgstr ""
 
 msgid "An alias or description of the role"
 msgstr "役割のエイリアスまたは説明"
@@ -42566,9 +42568,6 @@ msgstr "サービス停止の最大数"
 msgid "Maximum number of parsed lines per log file"
 msgstr "ログファイルごとに解析される最大行数"
 
-msgid "Maximum number of queries to execute per connection."
-msgstr "１つの接続につき実行できるクエリの最大数。"
-
 msgid "Maximum number of re-executions"
 msgstr "最大再実行回数"
 
@@ -42610,9 +42609,6 @@ msgstr "最大並列接続"
 #, fuzzy
 msgid "Maximum parallel connections per source IP address"
 msgstr "最大並列接続"
-
-msgid "Maximum queries"
-msgstr "最大クエリ数"
 
 msgid "Maximum rate for total number of packets"
 msgstr "パケット総数の最大レート"
@@ -72331,6 +72327,10 @@ msgstr "選択したホストには明示的な属性がありません"
 msgid "The selected icon does not exist."
 msgstr "選択したアイコンは存在しません。"
 
+#, fuzzy
+msgid "The selected managed robot no longer exists."
+msgstr "選択したエンブレムは存在しません。"
+
 msgid ""
 "The selected monitoring site does not support push mode. Use pull mode "
 "instead."
@@ -93451,6 +93451,10 @@ msgstr "myhost089"
 msgid "n/a"
 msgstr "該当なし"
 
+#, fuzzy
+msgid "nearest phase of the selected time range"
+msgstr "問題を承認する"
+
 msgid "negate"
 msgstr "否定する"
 
@@ -96601,12 +96605,12 @@ msgstr "このオプションは変更されました。"
 msgid "This variable inherits the value from Global settings."
 msgstr "この変数は工場出荷時の設定です。"
 
+msgid "This variable is at factory settings."
+msgstr "この変数は工場出荷時の設定です。"
+
 #, fuzzy
 msgid "This variable has been modified."
 msgstr "このオプションは変更されました。"
-
-msgid "This variable is at factory settings."
-msgstr "この変数は工場出荷時の設定です。"
 
 #, fuzzy
 msgid "Remove the value configured for this site"
@@ -101931,6 +101935,10 @@ msgid "Number of related hosts (management board / OS host)"
 msgstr "作成されたPodmanポッドの数"
 
 #, fuzzy
+msgid "Last state change"
+msgstr "最後のホスト状態変化"
+
+#, fuzzy
 msgid "Number of services in OK state"
 msgstr "OK状態のサービスの数"
 
@@ -101961,10 +101969,6 @@ msgstr "ペンディング状態のサービス数"
 #, fuzzy
 msgid "Pending (Pd)"
 msgstr "保留中"
-
-#, fuzzy
-msgid "Last state change"
-msgstr "最後のホスト状態変化"
 
 #, fuzzy
 msgid "Show the 1 related host of %{host}"
@@ -102357,6 +102361,13 @@ msgstr "降順"
 msgid "No sorting / default sorting"
 msgstr ""
 
+msgid "Extend active sorting of %{columns} by"
+msgstr ""
+
+#, fuzzy
+msgid "Sort by this column"
+msgstr "列で並び替え"
+
 #, fuzzy
 msgid "Clear"
 msgstr "クリア"
@@ -102488,6 +102499,17 @@ msgstr "一般的なフィルター"
 
 msgid "Total rows: %{total}"
 msgstr "行数合計：%{total}"
+
+#, fuzzy
+msgid "Continue reload countdown"
+msgstr "コンテナ化"
+
+#, fuzzy
+msgid "Pause reload countdown"
+msgstr "一時停止したコンテナ"
+
+msgid "Pause reload countdown, next reload in %{seconds} seconds"
+msgstr ""
 
 msgid "%{share} of shown"
 msgstr "表示されている%{share}"
@@ -104371,6 +104393,15 @@ msgid ""
 msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
+
+#~ msgid "(ntopng integration disabled)"
+#~ msgstr "(ntopng 統合が無効です)"
+
+#~ msgid "Maximum number of queries to execute per connection."
+#~ msgstr "１つの接続につき実行できるクエリの最大数。"
+
+#~ msgid "Maximum queries"
+#~ msgstr "最大クエリ数"
 
 #, fuzzy
 #~ msgid "Changed Checkmk Maps settings"

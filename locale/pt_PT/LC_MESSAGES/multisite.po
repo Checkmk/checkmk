@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-09-25 08:20+0000\n"
+"PO-Revision-Date: 2026-09-26 11:41+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -1168,10 +1168,6 @@ msgstr "(nenhuma)"
 
 msgid "(nothing selected)"
 msgstr "(nada seleccionado)"
-
-#, fuzzy
-msgid "(ntopng integration disabled)"
-msgstr "Integração total"
 
 #, fuzzy, python-format
 msgid "(old version: %(old_version)s, new version: %(new_version)s)"
@@ -7520,6 +7516,11 @@ msgid ""
 msgstr ""
 "Um caminho absoluto para o nome do arquivo (no caso de MRPE) ou para um "
 "diretório, no caso de local / plugin"
+
+msgid ""
+"An active ntopng instance needs a host address, an ntopng admin user and a "
+"password."
+msgstr ""
 
 msgid "An alias or description of the role"
 msgstr "Um pseudónimo ou descrição do papel"
@@ -45657,10 +45658,6 @@ msgid "Maximum number of parsed lines per log file"
 msgstr "Número máximo de linhas analisadas por arquivo de log"
 
 #, fuzzy
-msgid "Maximum number of queries to execute per connection."
-msgstr "Número máximo de clientes"
-
-#, fuzzy
 msgid "Maximum number of re-executions"
 msgstr "Número máximo de clientes"
 
@@ -45698,10 +45695,6 @@ msgstr "Máximo de ligações paralelas"
 #, fuzzy
 msgid "Maximum parallel connections per source IP address"
 msgstr "Máximo de ligações paralelas"
-
-#, fuzzy
-msgid "Maximum queries"
-msgstr "Máximo de nós"
 
 msgid "Maximum rate for total number of packets"
 msgstr "Taxa máxima para o número total de pacotes"
@@ -77054,6 +77047,10 @@ msgstr "Os anfitriões seleccionados não têm atributos explícitos"
 msgid "The selected icon does not exist."
 msgstr "O ícone selecionado não existe."
 
+#, fuzzy
+msgid "The selected managed robot no longer exists."
+msgstr "O emblema selecionado não existe."
+
 msgid ""
 "The selected monitoring site does not support push mode. Use pull mode "
 "instead."
@@ -99565,6 +99562,10 @@ msgstr "myhost089"
 msgid "n/a"
 msgstr "n/d"
 
+#, fuzzy
+msgid "nearest phase of the selected time range"
+msgstr "Reconhecer os problemas"
+
 msgid "negate"
 msgstr "negar"
 
@@ -102983,12 +102984,12 @@ msgstr "Esta opção foi modificada."
 msgid "This variable inherits the value from Global settings."
 msgstr "Esta variável está nas configurações de fábrica."
 
+msgid "This variable is at factory settings."
+msgstr "Esta variável está nas configurações de fábrica."
+
 #, fuzzy
 msgid "This variable has been modified."
 msgstr "Esta opção foi modificada."
-
-msgid "This variable is at factory settings."
-msgstr "Esta variável está nas configurações de fábrica."
 
 #, fuzzy
 msgid "Remove the value configured for this site"
@@ -108229,6 +108230,10 @@ msgid "Number of related hosts (management board / OS host)"
 msgstr "Número de contentores em execução"
 
 #, fuzzy
+msgid "Last state change"
+msgstr "Última alteração de estado do anfitrião"
+
+#, fuzzy
 msgid "Number of services in OK state"
 msgstr "Número de serviços no estado OK"
 
@@ -108263,10 +108268,6 @@ msgstr "Número de serviços no estado OK"
 #, fuzzy
 msgid "Pending (Pd)"
 msgstr "Pendente"
-
-#, fuzzy
-msgid "Last state change"
-msgstr "Última alteração de estado do anfitrião"
 
 msgid "Show the 1 related host of %{host}"
 msgid_plural "Show the %{count} related hosts of %{host}"
@@ -108667,6 +108668,13 @@ msgstr "Descendente"
 msgid "No sorting / default sorting"
 msgstr ""
 
+msgid "Extend active sorting of %{columns} by"
+msgstr ""
+
+#, fuzzy
+msgid "Sort by this column"
+msgstr "Ordenar por coluna"
+
 #, fuzzy
 msgid "Clear"
 msgstr "Estado 'limpo'"
@@ -108795,6 +108803,17 @@ msgstr "Erro geral"
 #, fuzzy
 msgid "Total rows: %{total}"
 msgstr "Tamanho total"
+
+#, fuzzy
+msgid "Continue reload countdown"
+msgstr "Containerização"
+
+#, fuzzy
+msgid "Pause reload countdown"
+msgstr "Contentores em pausa"
+
+msgid "Pause reload countdown, next reload in %{seconds} seconds"
+msgstr ""
 
 msgid "%{share} of shown"
 msgstr ""
@@ -110546,6 +110565,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "(ntopng integration disabled)"
+#~ msgstr "Integração total"
+
+#, fuzzy
+#~ msgid "Maximum number of queries to execute per connection."
+#~ msgstr "Número máximo de clientes"
+
+#, fuzzy
+#~ msgid "Maximum queries"
+#~ msgstr "Máximo de nós"
 
 #, fuzzy
 #~ msgid "Changed Checkmk Maps settings"

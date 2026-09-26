@@ -1180,10 +1180,6 @@ msgstr "(nimic)"
 msgid "(nothing selected)"
 msgstr "(nimic selectat)"
 
-#, fuzzy
-msgid "(ntopng integration disabled)"
-msgstr "Integrarea Ntopng"
-
 #, fuzzy, python-format
 msgid "(old version: %(old_version)s, new version: %(new_version)s)"
 msgstr "Versiunea: %s, Ediție: %s"
@@ -7536,6 +7532,11 @@ msgid ""
 msgstr ""
 "O cale absolută către fișierul de configurare (în cazul MRPE) sau către un "
 "director în cazul plugin-ului local / plugin"
+
+msgid ""
+"An active ntopng instance needs a host address, an ntopng admin user and a "
+"password."
+msgstr ""
 
 msgid "An alias or description of the role"
 msgstr "Un pseudonim sau o descriere a rolului"
@@ -45812,10 +45813,6 @@ msgstr "Numărul maxim de întreruperi ale serviciului"
 msgid "Maximum number of parsed lines per log file"
 msgstr "Numarul maxim de linii parsate per fisier de loguri"
 
-#, fuzzy
-msgid "Maximum number of queries to execute per connection."
-msgstr "Numărul maxim de re-executări"
-
 msgid "Maximum number of re-executions"
 msgstr "Numărul maxim de re-executări"
 
@@ -45853,10 +45850,6 @@ msgstr "Număr maxim de conexiuni paralele"
 #, fuzzy
 msgid "Maximum parallel connections per source IP address"
 msgstr "Număr maxim de conexiuni paralele"
-
-#, fuzzy
-msgid "Maximum queries"
-msgstr "Noduri maxime"
 
 msgid "Maximum rate for total number of packets"
 msgstr "Rata maximă pentru numărul total de pachete"
@@ -77383,6 +77376,10 @@ msgstr "Gazdele selectate nu au atribute explicite"
 msgid "The selected icon does not exist."
 msgstr "Pictograma selectată nu există."
 
+#, fuzzy
+msgid "The selected managed robot no longer exists."
+msgstr "Emblema selectată nu există."
+
 msgid ""
 "The selected monitoring site does not support push mode. Use pull mode "
 "instead."
@@ -100000,6 +99997,10 @@ msgstr "myhost089"
 msgid "n/a"
 msgstr "n/a"
 
+#, fuzzy
+msgid "nearest phase of the selected time range"
+msgstr "Recunoașteți problemele"
+
 msgid "negate"
 msgstr "nega"
 
@@ -103441,12 +103442,12 @@ msgstr "Această opțiune a fost modificată."
 msgid "This variable inherits the value from Global settings."
 msgstr "Această variabilă este la setările din fabrică."
 
+msgid "This variable is at factory settings."
+msgstr "Această variabilă este la setările din fabrică."
+
 #, fuzzy
 msgid "This variable has been modified."
 msgstr "Această opțiune a fost modificată."
-
-msgid "This variable is at factory settings."
-msgstr "Această variabilă este la setările din fabrică."
 
 #, fuzzy
 msgid "Remove the value configured for this site"
@@ -108730,6 +108731,10 @@ msgid "Number of related hosts (management board / OS host)"
 msgstr "Numărul de containere care rulează"
 
 #, fuzzy
+msgid "Last state change"
+msgstr "Ultima schimbare de stare a gazdei"
+
+#, fuzzy
 msgid "Number of services in OK state"
 msgstr "Numărul de servicii în stat OK"
 
@@ -108764,10 +108769,6 @@ msgstr "Numărul de servicii în stat OK"
 #, fuzzy
 msgid "Pending (Pd)"
 msgstr "În așteptare"
-
-#, fuzzy
-msgid "Last state change"
-msgstr "Ultima schimbare de stare a gazdei"
 
 msgid "Show the 1 related host of %{host}"
 msgid_plural "Show the %{count} related hosts of %{host}"
@@ -109191,6 +109192,13 @@ msgstr "Coborâre"
 msgid "No sorting / default sorting"
 msgstr ""
 
+msgid "Extend active sorting of %{columns} by"
+msgstr ""
+
+#, fuzzy
+msgid "Sort by this column"
+msgstr "Sortare după coloană"
+
 #, fuzzy
 msgid "Clear"
 msgstr "Starea \"Liber"
@@ -109319,6 +109327,17 @@ msgstr "Eroare generală"
 #, fuzzy
 msgid "Total rows: %{total}"
 msgstr "Dimensiunea totală"
+
+#, fuzzy
+msgid "Continue reload countdown"
+msgstr "Containerizare"
+
+#, fuzzy
+msgid "Pause reload countdown"
+msgstr "Containere în pauză"
+
+msgid "Pause reload countdown, next reload in %{seconds} seconds"
+msgstr ""
 
 msgid "%{share} of shown"
 msgstr ""
@@ -111078,6 +111097,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "(ntopng integration disabled)"
+#~ msgstr "Integrarea Ntopng"
+
+#, fuzzy
+#~ msgid "Maximum number of queries to execute per connection."
+#~ msgstr "Numărul maxim de re-executări"
+
+#, fuzzy
+#~ msgid "Maximum queries"
+#~ msgstr "Noduri maxime"
 
 #, fuzzy
 #~ msgid "Changed Checkmk Maps settings"

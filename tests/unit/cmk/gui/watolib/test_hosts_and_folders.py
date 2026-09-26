@@ -51,7 +51,7 @@ from cmk.gui.utils.host_relations import RelationLink, relations_or_empty
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import hosts_and_folders
 from cmk.gui.watolib.audit_log import AuditLogStore, make_audit_log_change_hook
-from cmk.gui.watolib.builtin_attributes import validate_host_relations
+from cmk.gui.watolib.builtin_attributes import validate_host_parents, validate_host_relations
 from cmk.gui.watolib.config_domain_name import CORE as CORE_DOMAIN
 from cmk.gui.watolib.host_attributes import HostAttributes, HostContactGroupSpec
 from cmk.gui.watolib.host_match_item_generator import MatchItemGeneratorHosts
@@ -2237,6 +2237,22 @@ def test_validate_host_relations_passes_for_an_existing_host(tree: FolderTree) -
     )
 
     validate_host_relations(board)
+
+
+def test_validate_host_parents_reports_a_parent_that_is_gone(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    host = _create_host(root, "host", HostAttributes({"parents": [HostName("gw")]}))
+
+    with pytest.raises(MKUserError, match="non-existing host 'gw' as a parent"):
+        validate_host_parents(host)
+
+
+def test_validate_host_parents_passes_for_an_existing_parent(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(root, "gw")
+    host = _create_host(root, "host", HostAttributes({"parents": [HostName("gw")]}))
+
+    validate_host_parents(host)
 
 
 def test_validate_host_relations_reports_a_malformed_value(tree: FolderTree) -> None:

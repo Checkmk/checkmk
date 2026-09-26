@@ -88,7 +88,7 @@ from cmk.gui.watolib.host_relations import (
     relation_conflicts,
     relations_or_user_error,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.translation import HostnameTranslation
 from cmk.livestatus_client import SiteConfigurations
@@ -626,6 +626,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
 
 
 def validate_host_parents(host: Host) -> None:
+    tree = host.folder().tree
     for parent_name in host.parents():
         if parent_name == host.name():
             raise MKUserError(
@@ -633,7 +634,7 @@ def validate_host_parents(host: Host) -> None:
                 _("You configured the host to be its own parent, which is not allowed."),
             )
 
-        parent = folder_tree().host(parent_name)
+        parent = tree.host(parent_name)
         if not parent:
             raise MKUserError(
                 None,

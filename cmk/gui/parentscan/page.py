@@ -143,7 +143,6 @@ class ModeParentScan(WatoMode):
             ping_probes=request.get_integer_input_mandatory("ping_probes", 5),
             gateway_folder_path=None,
         )
-        self._job = ParentScanBackgroundJob()
         self._folder = disk_or_search_folder_from_request(
             make_folder_tree(self._ctx.config),
             request.var("folder"),
@@ -151,6 +150,7 @@ class ModeParentScan(WatoMode):
             acting_user=user,
             request=request,
         )
+        self._job = ParentScanBackgroundJob(back_url=self._folder.url(request))
 
     @override
     def action(self, config: Config) -> ActionResult:

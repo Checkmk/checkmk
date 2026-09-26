@@ -42,9 +42,7 @@ from cmk.gui.watolib.check_mk_automations import scan_parents
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import (
     disk_or_search_base_folder_from_request,
-    disk_or_search_folder_from_request,
     Folder,
-    folder_tree,
     FolderTree,
     Host,
     HostsAndFoldersConfig,
@@ -95,18 +93,13 @@ class ParentScanBackgroundJob(BackgroundJob):
     def gui_title(cls) -> str:
         return _("Parent scan")
 
-    def __init__(self) -> None:
+    def __init__(self, *, back_url: str | None = None) -> None:
         super().__init__(self.job_prefix)
+        self._details_back_url = back_url
 
     @override
-    def _back_url(self) -> str:
-        return disk_or_search_folder_from_request(
-            folder_tree(),
-            request.var("folder"),
-            request.get_ascii_input("host"),
-            acting_user=user,
-            request=request,
-        ).url(request)
+    def _back_url(self) -> str | None:
+        return self._details_back_url
 
     def do_execute(
         self,

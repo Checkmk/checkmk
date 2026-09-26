@@ -41886,9 +41886,6 @@ msgstr "開いているファイル記述子の最大数"
 msgid "Maximum number of parsed lines per log file"
 msgstr "ログファイルごとに解析される最大行数"
 
-msgid "Maximum number of queries to execute per connection."
-msgstr "１つの接続につき実行できるクエリの最大数。"
-
 msgid "Maximum number of re-executions"
 msgstr "最大再実行回数"
 
@@ -41925,10 +41922,6 @@ msgstr "最大並列接続"
 
 msgid "Maximum possible value"
 msgstr "可能な最大値"
-
-#, fuzzy
-msgid "Maximum queries"
-msgstr "最大 iノード"
 
 msgid "Maximum rate for total number of packets"
 msgstr "パケット総数の最大レート"
@@ -49946,6 +49939,10 @@ msgstr "ホストグループのPENDサービス"
 
 msgid "PENDING services of host"
 msgstr "保留中(PENDING)のホストのサービス"
+
+#, fuzzy
+msgid "PGA memory"
+msgstr "記憶"
 
 msgid "PGs Activating + Undersized"
 msgstr "PGs Activating + Undersized"
@@ -98011,6 +98008,13 @@ msgid ""
 msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
+
+#~ msgid "Maximum number of queries to execute per connection."
+#~ msgstr "１つの接続につき実行できるクエリの最大数。"
+
+#, fuzzy
+#~ msgid "Maximum queries"
+#~ msgstr "最大 iノード"
 
 #~ msgid "Prometheus Alertmanager"
 #~ msgstr "Prometheus アラートマネージャ"

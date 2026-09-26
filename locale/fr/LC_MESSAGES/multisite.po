@@ -44825,10 +44825,6 @@ msgid "Maximum number of parsed lines per log file"
 msgstr "Nombre maximum de lignes analysées par fichier journal"
 
 #, fuzzy
-msgid "Maximum number of queries to execute per connection."
-msgstr "Nombre maximal de clients"
-
-#, fuzzy
 msgid "Maximum number of re-executions"
 msgstr "Nombre maximal de clients"
 
@@ -44861,10 +44857,6 @@ msgstr "Nombre maximal de connexions parallèles"
 
 msgid "Maximum possible value"
 msgstr "Valeur maximale possible"
-
-#, fuzzy
-msgid "Maximum queries"
-msgstr "Inodes maximum"
 
 msgid "Maximum rate for total number of packets"
 msgstr "Taux maximum pour le nombre total de paquets"
@@ -53409,6 +53401,10 @@ msgstr "Services PEND du groupe d'accueil"
 #, fuzzy
 msgid "PENDING services of host"
 msgstr "EN ATTENTE Services de l'hôte"
+
+#, fuzzy
+msgid "PGA memory"
+msgstr "mémoire"
 
 #, fuzzy
 msgid "PGs Activating + Undersized"
@@ -103576,6 +103572,14 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Maximum number of queries to execute per connection."
+#~ msgstr "Nombre maximal de clients"
+
+#, fuzzy
+#~ msgid "Maximum queries"
+#~ msgstr "Inodes maximum"
 
 #, fuzzy
 #~ msgid "Prometheus Alertmanager"

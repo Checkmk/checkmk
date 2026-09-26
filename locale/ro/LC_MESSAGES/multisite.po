@@ -44592,10 +44592,6 @@ msgstr "Numărul așteptat de descriptori de fișiere deschise"
 msgid "Maximum number of parsed lines per log file"
 msgstr "Numarul maxim de linii parsate per fisier de loguri"
 
-#, fuzzy
-msgid "Maximum number of queries to execute per connection."
-msgstr "Numărul maxim de re-executări"
-
 msgid "Maximum number of re-executions"
 msgstr "Numărul maxim de re-executări"
 
@@ -44628,10 +44624,6 @@ msgstr "Număr maxim de conexiuni paralele"
 
 msgid "Maximum possible value"
 msgstr "Valoarea maximă posibilă"
-
-#, fuzzy
-msgid "Maximum queries"
-msgstr "Noduri maxime"
 
 msgid "Maximum rate for total number of packets"
 msgstr "Rata maximă pentru numărul total de pachete"
@@ -53145,6 +53137,10 @@ msgstr "Servicii PEND ale grupului gazdă"
 #, fuzzy
 msgid "PENDING services of host"
 msgstr "PENDING Servicii de gazdă"
+
+#, fuzzy
+msgid "PGA memory"
+msgstr "memorie"
 
 #, fuzzy
 msgid "PGs Activating + Undersized"
@@ -103033,6 +103029,14 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Maximum number of queries to execute per connection."
+#~ msgstr "Numărul maxim de re-executări"
+
+#, fuzzy
+#~ msgid "Maximum queries"
+#~ msgstr "Noduri maxime"
 
 #, fuzzy
 #~ msgid "Prometheus Alertmanager"

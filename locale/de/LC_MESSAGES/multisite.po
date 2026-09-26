@@ -42799,9 +42799,6 @@ msgstr "Maximale Anzahl an Open File-Deskriptoren"
 msgid "Maximum number of parsed lines per log file"
 msgstr "Maximale Anzahl Zeilen, die pro Log-Datei gelesen werden"
 
-msgid "Maximum number of queries to execute per connection."
-msgstr "Maximale Anzahl an Anfragen, die pro Verbindung ausgeführt werden."
-
 msgid "Maximum number of re-executions"
 msgstr "Maximale Anzahl an Wiederausführungen"
 
@@ -42840,9 +42837,6 @@ msgstr "Maximale Anzahl paralleler Verbindungen"
 
 msgid "Maximum possible value"
 msgstr "Höchster möglicher Wert"
-
-msgid "Maximum queries"
-msgstr "Maximale Anfragen"
 
 msgid "Maximum rate for total number of packets"
 msgstr "Maximale Rate der Gesamtanzahl der Pakete"
@@ -50779,6 +50773,10 @@ msgstr "PEND-Services der Host-Gruppe"
 
 msgid "PENDING services of host"
 msgstr "PENDING Services von Host"
+
+#, fuzzy
+msgid "PGA memory"
+msgstr "SGA-Speicher"
 
 msgid "PGs Activating + Undersized"
 msgstr "PGs Activating + Undersized"
@@ -99052,6 +99050,12 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "Maximum number of queries to execute per connection."
+#~ msgstr "Maximale Anzahl an Anfragen, die pro Verbindung ausgeführt werden."
+
+#~ msgid "Maximum queries"
+#~ msgstr "Maximale Anfragen"
 
 #~ msgid "Prometheus Alertmanager"
 #~ msgstr "Prometheus Alertmanager"

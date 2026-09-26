@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-09-25 08:20+0000\n"
+"PO-Revision-Date: 2026-09-26 11:41+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -44472,10 +44472,6 @@ msgid "Maximum number of parsed lines per log file"
 msgstr "Número máximo de linhas analisadas por arquivo de log"
 
 #, fuzzy
-msgid "Maximum number of queries to execute per connection."
-msgstr "Número máximo de clientes"
-
-#, fuzzy
 msgid "Maximum number of re-executions"
 msgstr "Número máximo de clientes"
 
@@ -44508,10 +44504,6 @@ msgstr "Máximo de ligações paralelas"
 
 msgid "Maximum possible value"
 msgstr "Valor máximo possível"
-
-#, fuzzy
-msgid "Maximum queries"
-msgstr "Máximo de nós"
 
 msgid "Maximum rate for total number of packets"
 msgstr "Taxa máxima para o número total de pacotes"
@@ -52983,6 +52975,10 @@ msgstr "Serviços PEND do grupo de acolhimento"
 #, fuzzy
 msgid "PENDING services of host"
 msgstr "PENDENTE Serviços do anfitrião"
+
+#, fuzzy
+msgid "PGA memory"
+msgstr "memória"
 
 #, fuzzy
 msgid "PGs Activating + Undersized"
@@ -102575,6 +102571,14 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Maximum number of queries to execute per connection."
+#~ msgstr "Número máximo de clientes"
+
+#, fuzzy
+#~ msgid "Maximum queries"
+#~ msgstr "Máximo de nós"
 
 #, fuzzy
 #~ msgid "Prometheus Alertmanager"

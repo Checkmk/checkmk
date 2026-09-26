@@ -1,9 +1,9 @@
 load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
 load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library", "js_run_binary")
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("@npm//:vitest/package_json.bzl", vitest_bin = "bin")
 load("@npm//.ide/vscode:@vscode/vsce/package_json.bzl", vsce_bin = "bin")
 load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+load("//bazel/rules:vitest_test.bzl", "vitest_test")
 
 npm_link_all_packages(name = "node_modules")
 
@@ -23,10 +23,8 @@ js_library(
     ],
 )
 
-vitest_bin.vitest_test(
+vitest_test(
     name = "test",
-    args = ["run"],
-    chdir = package_name(),
     data = [
         "package.json",
         ":node_modules/@types",

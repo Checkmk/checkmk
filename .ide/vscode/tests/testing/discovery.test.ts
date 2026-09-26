@@ -78,4 +78,45 @@ py_library(
 
     expect(targets).toEqual([])
   })
+
+  it('discovers vitest_test targets from both the macro and the npm binary rule', async () => {
+    writeBuild(
+      'packages/app',
+      `load("//bazel/rules:vitest_test.bzl", "vitest_test")
+
+vitest_test(
+    name = "unit-test",
+    workers = 3,
+)
+
+vitest_bin.vitest_test(
+    name = "legacy",
+)
+`
+    )
+
+    const targets = await discoverTargetsFromFilesystem(wsPath)
+
+    expect(targets.sort((a, b) => a.label.localeCompare(b.label))).toEqual([
+      { label: '//packages/app:legacy', kind: 'vitest_test' },
+      { label: '//packages/app:unit-test', kind: 'vitest_test' }
+    ])
+  })
+
+  it('discovers the unit-test target that vue_package generates', async () => {
+    writeBuild(
+      'packages/cmk-ui-library',
+      `load("//bazel/rules:vue_package.bzl", "vue_package")
+
+vue_package(
+    name = "cmk-ui-library",
+    test_deps = [":node_modules/msw"],
+)
+`
+    )
+
+    const targets = await discoverTargetsFromFilesystem(wsPath)
+
+    expect(targets).toEqual([{ label: '//packages/cmk-ui-library:unit-test', kind: 'vitest_test' }])
+  })
 })

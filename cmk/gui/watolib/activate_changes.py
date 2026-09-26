@@ -1942,6 +1942,7 @@ class ActivateChangesManager:
         with _debug_log_message("Creating snapshots"):
             self._create_snapshots(
                 activation_features.snapshot_manager_factory,
+                tree,
                 max_snapshots=max_snapshots,
                 debug=debug,
                 use_git=use_git,
@@ -2111,7 +2112,10 @@ class ActivateChangesManager:
     @tracer.instrument("create_snapshots")
     def _create_snapshots(
         self,
-        snapshot_manager_factory: Callable[[str, dict[SiteId, SnapshotSettings]], SnapshotManager],
+        snapshot_manager_factory: Callable[
+            [str, dict[SiteId, SnapshotSettings], FolderTree], SnapshotManager
+        ],
+        tree: FolderTree,
         *,
         max_snapshots: int,
         debug: bool,
@@ -2158,7 +2162,7 @@ class ActivateChangesManager:
                 with suppress(KeyError):
                     del site_snapshot_settings[omd_site()]
 
-                snapshot_manager = snapshot_manager_factory(work_dir, site_snapshot_settings)
+                snapshot_manager = snapshot_manager_factory(work_dir, site_snapshot_settings, tree)
                 snapshot_manager.generate_snapshots()
                 logger.debug(
                     "Config sync snapshot creation took %(duration).4f",
@@ -4292,7 +4296,9 @@ def activate_changes_start(
 class ActivationFeatures:
     edition: version.Edition
     sync_file_filter_func: Callable[[str], bool] | None
-    snapshot_manager_factory: Callable[[str, dict[SiteId, SnapshotSettings]], SnapshotManager]
+    snapshot_manager_factory: Callable[
+        [str, dict[SiteId, SnapshotSettings], FolderTree], SnapshotManager
+    ]
     get_rabbitmq_definitions: Callable[
         [Mapping[SiteId, SiteConfiguration], BrokerConnections], Mapping[str, rabbitmq.Definitions]
     ]

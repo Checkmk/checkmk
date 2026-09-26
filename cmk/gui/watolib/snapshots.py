@@ -31,6 +31,7 @@ from cmk.gui.watolib.config_sync import (
     SnapshotSettings,
 )
 from cmk.gui.watolib.global_settings import save_site_global_settings_raw
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 
 tracer = trace.get_tracer()
 
@@ -38,6 +39,7 @@ tracer = trace.get_tracer()
 def make_cre_snapshot_manager(
     work_dir: str,
     site_snapshot_settings: dict[SiteId, SnapshotSettings],
+    _tree: FolderTree,
 ) -> SnapshotManager:
     return SnapshotManager(
         work_dir,

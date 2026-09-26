@@ -17,9 +17,10 @@ import cmk.ccc.version as cmk_version
 import cmk.gui.mkeventd.wato
 import cmk.utils.paths
 from cmk.ccc.site import SiteId
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.nodevis.utils import topology_configs_dir
 from cmk.gui.watolib import activate_changes, config_sync
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.livestatus_client import NetworkSocketDetails, SiteConfiguration, TLSParams
 from cmk.messaging import rabbitmq
 
@@ -268,7 +269,7 @@ def generate_sync_snapshot(
     work_dir = tmp_path / "activation"
     snapshot_manager = activate_changes.activation_features_registry[
         str(edition)
-    ].snapshot_manager_factory(str(work_dir), site_snapshot_settings)
+    ].snapshot_manager_factory(str(work_dir), site_snapshot_settings, make_folder_tree(Config()))
     assert snapshot_manager._data_collector.__class__.__name__ == snapshot_data_collector_class  # noqa: SLF001
 
     snapshot_manager.generate_snapshots()

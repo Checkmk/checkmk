@@ -45,7 +45,6 @@ FILES_IGNORED = {
     Path("ui-component-library/index.html"),
     Path("env.d.ts"),
     Path("ui-component-library/public/mockServiceWorker.js"),  # auto generated
-    Path("cmk-frontend-vue.txt"),  # generated inside CI
 }
 
 ENTERPRISE_LICENSED_FILES_FORM_SPECS = {

@@ -71,9 +71,6 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-werks\\|^cmk/utils/werks' || true"
       REPLACE_NEWLINES: true
 
-    - NAME: CHANGED_JS_DEPENDENCIES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^package.json\\|^pnpm-' || true"
-
     ########## packages ########################################################
 
     - NAME: CHANGED_CC_FILES
@@ -84,12 +81,6 @@ VARIABLES:
 
     - NAME: CHANGED_MK_ORACLE_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/mk-oracle/\\|^packages/[^/]*$' || true"
-
-    - NAME: CHANGED_FRONTEND_VUE_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-frontend-vue/' || true"
-
-    - NAME: CHANGED_SHARED_TYPING_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-shared-typing/' || true"
 
 STAGES:
     - NAME: "Bazel sanity check (guarded)"
@@ -233,13 +224,6 @@ STAGES:
       TEXT_ON_SKIP: "No Bazel files changed"
 
     ########## packages ########################################################
-
-    - NAME: "Package cmk-frontend-vue"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FRONTEND_VUE_FILES,CHANGED_SHARED_TYPING_FILES,CHANGED_JS_DEPENDENCIES
-      DIR: "packages/cmk-frontend-vue"
-      COMMAND: "./run -B --build-dev --lint &> ${RESULTS}/cmk-frontend-vue.txt"
-      TEXT_ON_SKIP: "No cmk-frontend-vue files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-frontend-vue.txt"
 
     - NAME: "Package mk-oracle"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_MK_ORACLE_FILES,CHANGED_RUST_WORKSPACE_FILES

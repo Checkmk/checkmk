@@ -40,7 +40,7 @@ from cmk.gui.watolib.host_attributes import (
     HostAttributeTopic,
     HostContactGroupSpec,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, FolderTree
 from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
 from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.watolib.timeperiods import load_timeperiods
@@ -162,6 +162,7 @@ def delete_group(
     name: GroupName,
     group_type: GroupType,
     *,
+    tree: FolderTree,
     pprint_value: bool,
     pending_changes: PendingChanges,
 ) -> None:
@@ -176,7 +177,7 @@ def delete_group(
         )
 
     # Check if still used
-    usages = find_usages_of_group(name, group_type)
+    usages = find_usages_of_group(tree, name, group_type)
     if usages:
         raise GroupInUseException(
             None,
@@ -255,24 +256,28 @@ def _set_group(
         hooks.call("contactgroups-saved", all_groups)
 
 
-def find_usages_of_group(name: GroupName, group_type: GroupType) -> list[tuple[str, str]]:
+def find_usages_of_group(
+    tree: FolderTree, name: GroupName, group_type: GroupType
+) -> list[tuple[str, str]]:
     usages = []
     if group_type == "contact":
-        usages = find_usages_of_contact_group(name)
+        usages = find_usages_of_contact_group(tree, name)
     elif group_type == "host":
-        usages = find_usages_of_host_group(name)
+        usages = find_usages_of_host_group(tree, name)
     elif group_type == "service":
-        usages = find_usages_of_service_group(name)
+        usages = find_usages_of_service_group(tree, name)
     return usages
 
 
-def find_usages_of_contact_group(name: GroupName) -> list[tuple[str, str]]:
+def find_usages_of_contact_group(tree: FolderTree, name: GroupName) -> list[tuple[str, str]]:
     """Check if a group is currently in use and cannot be deleted
     Returns a list of occurrances.
     """
     global_config = load_configuration_settings()
 
-    used_in = _find_usages_of_group_in_rules(name, ["host_contactgroups", "service_contactgroups"])
+    used_in = _find_usages_of_group_in_rules(
+        tree, name, ["host_contactgroups", "service_contactgroups"]
+    )
     for finder in contact_group_usage_finder_registry.values():
         used_in += finder(name, global_config)
 
@@ -283,17 +288,19 @@ def _used_in_notification_rule(name: str, rule: EventRule) -> bool:
     return name in rule.get("contact_groups", []) or name in rule.get("match_contactgroups", [])
 
 
-def find_usages_of_host_group(name: GroupName) -> list[tuple[str, str]]:
-    return _find_usages_of_group_in_rules(name, ["host_groups"])
+def find_usages_of_host_group(tree: FolderTree, name: GroupName) -> list[tuple[str, str]]:
+    return _find_usages_of_group_in_rules(tree, name, ["host_groups"])
 
 
-def find_usages_of_service_group(name: GroupName) -> list[tuple[str, str]]:
-    return _find_usages_of_group_in_rules(name, ["service_groups"])
+def find_usages_of_service_group(tree: FolderTree, name: GroupName) -> list[tuple[str, str]]:
+    return _find_usages_of_group_in_rules(tree, name, ["service_groups"])
 
 
-def _find_usages_of_group_in_rules(name: GroupName, varnames: list[str]) -> list[tuple[str, str]]:
+def _find_usages_of_group_in_rules(
+    tree: FolderTree, name: GroupName, varnames: list[str]
+) -> list[tuple[str, str]]:
     used_in = []
-    rulesets = AllRulesets.load_all_rulesets(folder_tree())
+    rulesets = AllRulesets.load_all_rulesets(tree)
     for varname in varnames:
         ruleset = rulesets.get(varname)
         for _folder, _rulenr, rule in ruleset.get_rules():

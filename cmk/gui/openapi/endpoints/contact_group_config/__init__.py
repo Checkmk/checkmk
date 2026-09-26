@@ -84,6 +84,7 @@ from cmk.gui.watolib.groups_io import (
     NothingOrChoices,
     PermittedPath,
 )
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
     PendingChanges,
@@ -328,6 +329,7 @@ def delete(params: Mapping[str, Any]) -> Response:
             delete_group(
                 name,
                 "contact",
+                tree=make_folder_tree(active_config),
                 pprint_value=active_config.wato_pprint_config,
                 pending_changes=_pending_changes(
                     active_config.sites,
@@ -366,6 +368,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.edit")
     user.need_permission("wato.users")
     body = params["body"]
+    tree = make_folder_tree(active_config)
     with disable_permission_tracking(), SuperUserContext():
         for group_name in body["entries"]:
             # We need to supress this, because a lot of dashboard permissions are checked for
@@ -374,6 +377,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
                 delete_group(
                     group_name,
                     "contact",
+                    tree=tree,
                     pprint_value=active_config.wato_pprint_config,
                     pending_changes=_pending_changes(
                         active_config.sites,

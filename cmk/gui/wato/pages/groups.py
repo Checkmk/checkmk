@@ -54,7 +54,7 @@ from cmk.gui.watolib.groups_io import (
     load_host_group_information,
     load_service_group_information,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_folder_tree
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
@@ -164,7 +164,8 @@ class ModeGroups(WatoMode, abc.ABC):
 
         if request.var("_delete"):
             delname = request.get_ascii_input_mandatory("_delete")
-            usages = groups.find_usages_of_group(delname, self.type_name)
+            tree = make_folder_tree(config)
+            usages = groups.find_usages_of_group(tree, delname, self.type_name)
 
             if usages:
                 message = "<b>{}</b><br>{}:<ul>".format(
@@ -180,6 +181,7 @@ class ModeGroups(WatoMode, abc.ABC):
             groups.delete_group(
                 delname,
                 self.type_name,
+                tree=tree,
                 pprint_value=config.wato_pprint_config,
                 pending_changes=_pending_changes(
                     config.sites,

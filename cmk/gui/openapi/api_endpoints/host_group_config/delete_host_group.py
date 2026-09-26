@@ -18,6 +18,7 @@ from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.watolib import groups
 from cmk.gui.watolib.groups import GroupInUseException, UnknownGroupException
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 
 from ._family import HOST_GROUP_FAMILY
 from ._utils import make_pending_changes, RW_PERMISSIONS
@@ -37,6 +38,7 @@ def delete_host_group_v1(
         groups.delete_group(
             name,
             "host",
+            tree=make_folder_tree(api_context.config),
             pprint_value=api_context.config.wato_pprint_config,
             pending_changes=make_pending_changes(api_context),
         )

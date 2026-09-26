@@ -62,6 +62,7 @@ from cmk.gui.watolib import groups
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.groups import GroupInUseException, UnknownGroupException
 from cmk.gui.watolib.groups_io import load_service_group_information
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
     PendingChanges,
@@ -200,6 +201,7 @@ def delete(params: Mapping[str, Any]) -> Response:
         groups.delete_group(
             name,
             group_type="service",
+            tree=make_folder_tree(active_config),
             pprint_value=active_config.wato_pprint_config,
             pending_changes=_pending_changes(
                 active_config.sites,
@@ -238,11 +240,13 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.edit")
     user.need_permission("wato.groups")
     body = params["body"]
+    tree = make_folder_tree(active_config)
     for group_name in body["entries"]:
         try:
             groups.delete_group(
                 group_name,
                 group_type="service",
+                tree=tree,
                 pprint_value=active_config.wato_pprint_config,
                 pending_changes=_pending_changes(
                     active_config.sites,

@@ -173,45 +173,36 @@ js_run_binary(
     visibility = ["//visibility:private"],
 )
 
-TOOLING = [
+TEST_TOOLING = [
+    "//:node_modules/@vue/test-utils",
+    "//:node_modules/jsdom",
+    "//:node_modules/vitest",
+    "//:node_modules/vitest-fail-on-console",
+    "//:node_modules/vue",
+]
+
+TOOLING = TEST_TOOLING + [
     "//:node_modules/@eslint/js",
     "//:node_modules/@typescript-eslint/parser",
     "//:node_modules/@vue/compiler-dom",
     "//:node_modules/@vue/eslint-config-prettier",
     "//:node_modules/@vue/eslint-config-typescript",
     "//:node_modules/@vue/server-renderer",
-    "//:node_modules/@vue/test-utils",
     "//:node_modules/eslint",
     "//:node_modules/eslint-plugin-vue",
-    "//:node_modules/jsdom",
     "//:node_modules/postcss-html",
     "//:node_modules/sass-embedded",
     "//:node_modules/stylelint",
     "//:node_modules/stylelint-config-standard",
     "//:node_modules/typescript-eslint",
-    "//:node_modules/vitest",
-    "//:node_modules/vitest-fail-on-console",
-    "//:node_modules/vue",
     "//:node_modules/vue-tsc",
     "//:node_modules/vue3-gettext",
 ]
 
-# The dev server serves no translations and falls back to English: compiling the
-# catalogs re-extracts them from all sources, which takes seconds per rebuild.
-DEV_SERVER_SRCS = [
-    "//:eslintrc",
-    "//packages/cmk-frontend:dist",
+VITE_SRCS = [
     ":node_modules/cmk-ui-library",
-    "env.d.ts",
-    "weaki18nString.d.ts",
-    "scripts/stylelint-vue-bem-naming-convention.js",
-    "ui-component-library/_ucl/vite-plugin-ucl-mcp.ts",
-    "ui-component-library/_ucl/ucl-mcp-runtime.mjs",
-    "index.html",
     "package.json",
-    "vite.config.ucl.ts",
     "vite.config.ts",
-    "ui-component-library/index.html",
     ":demo_ts",
     ":demo_vue",
     ":demo_css",
@@ -258,8 +249,23 @@ DEV_SERVER_SRCS = [
 ] + glob([
     "ui-component-library/**/*.png",
     "ui-component-library/**/*.svg",
-    "ui-component-library/public/*",
 ])
+
+TYPE_CHECK_SRCS = VITE_SRCS + [
+    "//:eslintrc",
+    "env.d.ts",
+    "weaki18nString.d.ts",
+    "scripts/stylelint-vue-bem-naming-convention.js",
+    "ui-component-library/_ucl/vite-plugin-ucl-mcp.ts",
+    "ui-component-library/_ucl/ucl-mcp-runtime.mjs",
+    "index.html",
+    "vite.config.ucl.ts",
+    "ui-component-library/index.html",
+] + glob(["ui-component-library/public/*"])
+
+# The dev server serves no translations and falls back to English: compiling the
+# catalogs re-extracts them from all sources, which takes seconds per rebuild.
+DEV_SERVER_SRCS = TYPE_CHECK_SRCS + ["//packages/cmk-frontend:dist"]
 
 SRCS = DEV_SERVER_SRCS + LOCALE_OUTS
 
@@ -279,7 +285,13 @@ js_library(
     srcs = glob(["tests/**/*.ts"]) + [":tsconfig"],
 )
 
-SRCS_AND_TESTS = SRCS + [":test_ts"]
+TYPE_CHECK_DATA = TOOLING + TYPE_CHECK_SRCS
+
+TEST_DATA = TEST_TOOLING + VITE_SRCS + [
+    ":test_ts",
+    ":test_vue",
+    "//packages/cmk-frontend:theme_images",
+]
 
 link_shared_typing()
 
@@ -339,7 +351,7 @@ vitest_bin.vitest_test(
         "run",
     ],
     chdir = package_name(),
-    data = TOOLING + SRCS_AND_TESTS + [":test_vue"],
+    data = TEST_DATA,
 )
 
 # One target per tsconfig project: they have no cross-references, so a single
@@ -353,7 +365,7 @@ vue_tsc_bin.vue_tsc_test(
         "tsconfig.app.json",
     ],
     chdir = package_name(),
-    data = TOOLING + SRCS,
+    data = TYPE_CHECK_DATA,
     include_types = True,
 )
 
@@ -365,7 +377,7 @@ vue_tsc_bin.vue_tsc_test(
         "tsconfig.node.json",
     ],
     chdir = package_name(),
-    data = TOOLING + SRCS,
+    data = TYPE_CHECK_DATA,
     include_types = True,
 )
 
@@ -379,7 +391,7 @@ vue_tsc_bin.vue_tsc_test(
         "tsconfig.ucl.json",
     ],
     chdir = package_name(),
-    data = TOOLING + SRCS,
+    data = TYPE_CHECK_DATA,
     include_types = True,
 )
 
@@ -391,7 +403,10 @@ vue_tsc_bin.vue_tsc_test(
         "tsconfig.test.json",
     ],
     chdir = package_name(),
-    data = TOOLING + SRCS_AND_TESTS + [":test_vue"],
+    data = TYPE_CHECK_DATA + [
+        ":test_ts",
+        ":test_vue",
+    ],
     include_types = True,
 )
 
@@ -408,7 +423,7 @@ js_run_devserver(
 vitest_bin.vitest_binary(
     name = "vitest",
     chdir = package_name(),
-    data = TOOLING + SRCS_AND_TESTS + [":test_vue"],
+    data = TEST_DATA,
 )
 
 alias(

@@ -29,9 +29,11 @@ export default defineConfig({
     alias: {
       // Self-reference: package files import each other as `cmk-ui-library/...`.
       'cmk-ui-library': path.resolve('.'),
-      // Icons and theme images resolved from the classic frontend, same
-      // temporary hack as in cmk-frontend-vue's vite config.
-      '~cmk-frontend': path.resolve('../cmk-frontend/dist')
+      // Icons from the classic frontend, same temporary hack as in cmk-frontend-vue's
+      // vite config; under vitest only theme images resolve.
+      '~cmk-frontend': path.resolve(
+        process.env.VITEST ? '../cmk-frontend/src' : '../cmk-frontend/dist'
+      )
     }
   },
   server: {

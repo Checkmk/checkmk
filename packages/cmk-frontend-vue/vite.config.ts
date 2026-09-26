@@ -66,8 +66,11 @@ export default defineConfig(({ command }) => {
         'cmk-ui-library': path.resolve('./node_modules/cmk-ui-library'),
         '@ucl': path.resolve('./ui-component-library'),
         '@tests': path.resolve('./tests'),
-        // This is only a temporary hack to allow resolving icons and the demo css. Do not use this in new code!
-        '~cmk-frontend': path.resolve('../cmk-frontend/dist')
+        // Temporary hack to resolve icons and the demo css; under vitest only theme images resolve.
+        // Do not use this in new code!
+        '~cmk-frontend': path.resolve(
+          process.env.VITEST ? '../cmk-frontend/src' : '../cmk-frontend/dist'
+        )
       },
       // cmk-ui-library is a source workspace package compiled by this vite build; make
       // sure it uses this package's vue instance.

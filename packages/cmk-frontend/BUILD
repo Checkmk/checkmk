@@ -147,6 +147,15 @@ webpack_bundle(
     deps = BUILD_DEPS,
 )
 
+copy_to_bin(
+    name = "theme_images",
+    srcs = glob(["src/themes/*/images/**"]),
+    visibility = [
+        "//packages/cmk-frontend-vue:__pkg__",
+        "//packages/cmk-ui-library:__pkg__",
+    ],
+)
+
 webpack_cli_bin.webpack_cli_binary(
     name = "dist-watch",
     args = [

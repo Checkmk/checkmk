@@ -9,7 +9,7 @@ vue_package(
         ":node_modules/@testing-library",
         ":node_modules/msw",
         ":node_modules/vue-component-type-helpers",
-        "//packages/cmk-frontend:dist",
+        "//packages/cmk-frontend:theme_images",
     ],
     deps = [
         ":node_modules/@internationalized",

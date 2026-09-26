@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import functools
 from collections.abc import Iterator
 
 import cmk.ccc.version as cmk_version
+from cmk.ccc.site import get_omd_config
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -21,6 +23,13 @@ from cmk.gui.page_menu import (
 from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.urls import requested_file_name
 from cmk.utils import paths
+
+
+@functools.cache
+def user_oauth_tokens_page_enabled() -> bool:
+    """The MCP server is the only OAuth-consuming feature. Only Pro and above
+    ship it, so the option is missing from the site config in Community."""
+    return get_omd_config(paths.omd_root).get("CONFIG_MCP_SERVER", "off") == "on"
 
 
 def user_profile_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
@@ -78,6 +87,7 @@ def _page_menu_entries_related(
         page_name != "user_oauth_tokens"
         and user.may("general.edit_profile")
         and not must_change_password
+        and user_oauth_tokens_page_enabled()
     ):
         yield PageMenuEntry(
             title=_("OAuth access tokens"),

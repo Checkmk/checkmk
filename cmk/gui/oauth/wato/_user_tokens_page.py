@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable
 from typing import override
 
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import Config
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKNotFound, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request
@@ -39,11 +40,14 @@ from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_re
 _SELECTION_KEY = "user_oauth_tokens"
 
 
-def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint("user_oauth_tokens", UserOAuthTokensOverview()))
+def register(registry: PageRegistry, *, enabled: Callable[[], bool]) -> None:
+    registry.register(PageEndpoint("user_oauth_tokens", UserOAuthTokensOverview(enabled)))
 
 
 class UserOAuthTokensOverview(Page):
+    def __init__(self, enabled: Callable[[], bool]) -> None:
+        self._enabled = enabled
+
     def _page_title(self) -> str:
         return _("OAuth access tokens")
 
@@ -73,6 +77,9 @@ class UserOAuthTokensOverview(Page):
 
     @override
     def page(self, ctx: PageContext) -> None:
+        if not self._enabled():
+            raise MKNotFound()
+
         verify_requirements(
             UserPermissions.from_config(ctx.config, permission_registry),
             "general.edit_profile",

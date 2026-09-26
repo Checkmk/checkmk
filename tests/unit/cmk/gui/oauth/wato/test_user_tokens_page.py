@@ -15,15 +15,18 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 from cmk.gui import login
 from cmk.gui.config import Config
+from cmk.gui.exceptions import MKNotFound
 from cmk.gui.http import request
 from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.oauth.store.client_store import get_client_store
 from cmk.gui.oauth.token.token_store import get_token_store
 from cmk.gui.oauth.wato._user_tokens_page import UserOAuthTokensOverview
+from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.scopes import DEFAULT_SCOPE
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.wato.pages.user_profile.page_menu import user_oauth_tokens_page_enabled
 
 
 def _future(minutes: int) -> datetime:
@@ -55,6 +58,29 @@ def _issue_token(user_id: UserId, client_id: str) -> str:
     return token.ok
 
 
+@pytest.mark.usefixtures("request_context")
+def test_page_raises_not_found_when_disabled() -> None:
+    with pytest.raises(MKNotFound):
+        UserOAuthTokensOverview(lambda: False).page(PageContext(config=Config(), request=request))
+
+
+@pytest.mark.parametrize(
+    "omd_config, expected",
+    [
+        pytest.param({"CONFIG_MCP_SERVER": "on"}, True, id="mcp-on"),
+        pytest.param({"CONFIG_MCP_SERVER": "off"}, False, id="mcp-off"),
+        pytest.param({}, False, id="community"),
+    ],
+)
+def test_menus_link_to_page_only_while_mcp_server_enabled(
+    omd_config: dict[str, str], expected: bool
+) -> None:
+    user_oauth_tokens_page_enabled.cache_clear()
+    with patch("cmk.gui.wato.pages.user_profile.page_menu.get_omd_config", return_value=omd_config):
+        assert user_oauth_tokens_page_enabled() is expected
+    user_oauth_tokens_page_enabled.cache_clear()
+
+
 def test_show_form_renders_only_the_callers_own_tokens(
     monkeypatch: pytest.MonkeyPatch, with_admin_login: UserId
 ) -> None:
@@ -68,7 +94,7 @@ def test_show_form_renders_only_the_callers_own_tokens(
     _issue_token(UserId("other"), other_client)
 
     with output_funnel.plugged():
-        UserOAuthTokensOverview()._show_form(request, Config())
+        UserOAuthTokensOverview(lambda: True)._show_form(request, Config())
         written = "".join(output_funnel.drain())
 
     assert "own-client" in written
@@ -78,7 +104,7 @@ def test_show_form_renders_only_the_callers_own_tokens(
 @pytest.mark.usefixtures("with_admin_login")
 def test_show_form_renders_empty_table_without_error() -> None:
     with output_funnel.plugged():
-        UserOAuthTokensOverview()._show_form(request, Config())
+        UserOAuthTokensOverview(lambda: True)._show_form(request, Config())
         written = "".join(output_funnel.drain())
 
     assert "No entries" in written
@@ -94,7 +120,7 @@ def test_action_revokes_the_callers_own_token(with_admin_login: UserId) -> None:
 
     fake_request = MagicMock()
     fake_request.get_ascii_input.return_value = record.token_hash
-    UserOAuthTokensOverview()._action(fake_request)
+    UserOAuthTokensOverview(lambda: True)._action(fake_request)
 
     with get_token_store() as store:
         assert store.get_by_token(token) is None
@@ -110,7 +136,7 @@ def test_action_does_not_revoke_another_users_token() -> None:
 
     fake_request = MagicMock()
     fake_request.get_ascii_input.return_value = record.token_hash
-    UserOAuthTokensOverview()._action(fake_request)
+    UserOAuthTokensOverview(lambda: True)._action(fake_request)
 
     with get_token_store() as store:
         assert store.get_by_token(token) is not None
@@ -154,7 +180,7 @@ def test_action_revokes_multiple_selected_tokens_at_once(
         _login(user_id, load_config),
     ):
         flask_app.preprocess_request()
-        UserOAuthTokensOverview()._action(request)
+        UserOAuthTokensOverview(lambda: True)._action(request)
 
     with get_token_store() as store:
         assert store.get_by_token(checked) is None
@@ -189,7 +215,7 @@ def test_action_bulk_revoke_only_revokes_the_callers_own_tokens(
         _login(user_id, load_config),
     ):
         flask_app.preprocess_request()
-        UserOAuthTokensOverview()._action(request)
+        UserOAuthTokensOverview(lambda: True)._action(request)
 
     with get_token_store() as store:
         assert store.get_by_token(own_token) is None
@@ -201,4 +227,4 @@ def test_action_rejects_missing_csrf_token() -> None:
     fake_request = MagicMock()
     fake_request.get_ascii_input.return_value = "irrelevant-hash"
     with pytest.raises(MKGeneralException, match="CSRF"):
-        UserOAuthTokensOverview()._action(fake_request)
+        UserOAuthTokensOverview(lambda: True)._action(fake_request)

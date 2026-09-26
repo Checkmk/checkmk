@@ -28,6 +28,7 @@ from cmk.gui.userdb.store import load_cached_profile, load_custom_attr, save_cus
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.wato.pages.user_profile.page_menu import user_oauth_tokens_page_enabled
 
 
 def register(
@@ -139,7 +140,7 @@ def default_user_menu_topics(
             ),
         )
 
-    if user.may("general.edit_profile"):
+    if user.may("general.edit_profile") and user_oauth_tokens_page_enabled():
         entries.append(
             MainMenuItem(
                 name="oauth_tokens",

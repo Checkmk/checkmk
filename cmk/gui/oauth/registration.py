@@ -16,6 +16,7 @@ from cmk.gui.oauth.wato._registered_clients_mode import (
     register as register_registered_clients_mode,
 )
 from cmk.gui.oauth.wato._user_tokens_mode import register as register_user_tokens_mode
+from cmk.gui.oauth.wato._user_tokens_page import register as register_user_tokens_page
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.pages import PageEndpoint, PageRegistry
@@ -38,7 +39,8 @@ def register(
 
     enabled decides whether any OAuth-consuming feature (currently only the
     MCP server) is active for the site; while it returns False, every page
-    answers 404.
+    answers 404. This includes the user's own token page, which is also left
+    out of the user menus.
 
     The Setup pages for managing already-registered clients and already-issued
     tokens are always available, independent of enabled -- an admin may still
@@ -56,6 +58,7 @@ def register(
     )
     page_registry.register(PageEndpoint("noauth:oauth_token", OAuthTokenPage(enabled)))
     page_registry.register(PageEndpoint("noauth:oauth_introspect", OAuthIntrospectPage(enabled)))
+    register_user_tokens_page(page_registry, enabled=enabled)
     register_registered_clients_mode(mode_registry)
     register_user_tokens_mode(mode_registry)
     register_main_module(main_module_registry)

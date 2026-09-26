@@ -131,7 +131,6 @@ def test_registered_pages() -> None:
         "tree_openclose",
         "user_change_pw",
         "user_message",
-        "user_oauth_tokens",
         "user_profile",
         "user_profile_replicate",
         "user_webauthn_register_begin",
@@ -248,6 +247,7 @@ def test_registered_pages() -> None:
             "noauth:oauth_client_registration",
             "noauth:oauth_token",
             "noauth:oauth_introspect",
+            "user_oauth_tokens",
         ]
 
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CLOUD:

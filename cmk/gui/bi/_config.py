@@ -84,6 +84,7 @@ from cmk.gui.wato import ContactGroupSelection, TileMenuRenderer
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import GUI
 from cmk.gui.watolib.groups_io import load_contact_group_information
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.main_menu import (
     ABCMainModule,
     MainModuleRegistry,
@@ -123,6 +124,7 @@ from ._cron import reset_compile_bi_aggregations_scheduling
 from ._packs import get_cached_bi_packs
 from ._valuespecs import (
     bi_config_aggregation_function_registry,
+    FolderChoices,
     get_aggregation_function_choices,
     get_bi_aggregation_node_choices,
     get_bi_rule_node_choices_vs,
@@ -1228,6 +1230,8 @@ class ModeBIEditRule(ABCBIMode):
         super().__init__(edition, ctx)
         self._rule_id = request.get_str_input("id")
         self._new = self._rule_id is None
+        tree = make_folder_tree(ctx.config)
+        self._folder_choices: FolderChoices = lambda: tree.folder_choices(user)
 
         if not self._new and self._rule_id is not None and not self.bi_pack.get_rule(self._rule_id):
             raise MKUserError("id", _("This BI rule does not exist"))
@@ -1267,7 +1271,7 @@ class ModeBIEditRule(ABCBIMode):
             return redirect(mode_url("bi_rules", pack=self.bi_pack.id))
 
         self.verify_pack_permission(self.bi_pack)
-        vs_rule = self.valuespec(rule_id=self._rule_id)
+        vs_rule = self.valuespec(self._folder_choices, rule_id=self._rule_id)
         vs_rule_config = vs_rule.from_html_vars("rule")
         vs_rule.validate_value(copy.deepcopy(vs_rule_config), "rule")
         # We use the schema only for validation here. We need this schema.load(schema.dump(...))
@@ -1383,7 +1387,9 @@ class ModeBIEditRule(ABCBIMode):
             # call, because the value for label conditions as given in the schema format cannot be
             # rendered by the LabelGroups valuespec
             rule_vs_config = schema_inst.load(schema_inst.dump(bi_rule))
-            self.valuespec(rule_id=self._rule_id).render_input("rule", rule_vs_config)
+            self.valuespec(self._folder_choices, rule_id=self._rule_id).render_input(
+                "rule", rule_vs_config
+            )
             forms.end()
             html.hidden_fields()
             if self._new:
@@ -1428,7 +1434,7 @@ class ModeBIEditRule(ABCBIMode):
         return None
 
     @classmethod
-    def valuespec(cls, rule_id: str | None) -> Transform:
+    def valuespec(cls, folder_choices: FolderChoices, rule_id: str | None) -> Transform:
         if rule_id:
             id_valuespec: ValueSpec = FixedValue(
                 value=rule_id,
@@ -1528,7 +1534,7 @@ class ModeBIEditRule(ABCBIMode):
             (
                 "nodes",
                 ListOf(
-                    valuespec=get_bi_rule_node_choices_vs(),
+                    valuespec=get_bi_rule_node_choices_vs(folder_choices),
                     add_label=_("Add child node generator"),
                     title=_("Aggregated nodes"),
                     allow_empty=False,
@@ -1658,7 +1664,8 @@ class AjaxBIRulePreview(AjaxPage):
         compiler.prepare_for_compilation(compiler.compute_current_configstatus()["online_sites"])
 
         # Create preview rule
-        vs = ModeBIEditRule.valuespec(rule_id=None)
+        tree = make_folder_tree(ctx.config)
+        vs = ModeBIEditRule.valuespec(lambda: tree.folder_choices(user), rule_id=None)
         varprefix = ctx.request.get_str_input_mandatory("varprefix")
         preview_config = vs.from_html_vars(varprefix)
         preview_bi_rule = BIRule(preview_config)
@@ -1701,7 +1708,10 @@ class AjaxBIAggregationPreview(AjaxPage):
 
         # Create preview aggr
         varprefix = ctx.request.get_str_input_mandatory("varprefix")
-        vs = BIModeEditAggregation.get_vs_aggregation(aggregation_id=None)
+        tree = make_folder_tree(ctx.config)
+        vs = BIModeEditAggregation.get_vs_aggregation(
+            lambda: tree.folder_choices(user), aggregation_id=None
+        )
         preview_config = vs.from_html_vars(varprefix)
         preview_bi_aggr = BIAggregation(
             AggrConfigDict(
@@ -1830,6 +1840,8 @@ class BIModeEditAggregation(ABCBIMode):
         super().__init__(edition, ctx)
         aggr_id = request.get_str_input_mandatory("id", "")
         clone_id = request.get_str_input_mandatory("clone", "")
+        tree = make_folder_tree(ctx.config)
+        self._folder_choices: FolderChoices = lambda: tree.folder_choices(user)
         self._new = False
         self._clone = False
         if clone_id:
@@ -1894,9 +1906,10 @@ class BIModeEditAggregation(ABCBIMode):
             return redirect(mode_url("bi_aggregations", pack=self.bi_pack.id))
 
         vs_aggregation = self.get_vs_aggregation(
+            self._folder_choices,
             aggregation_id=request.get_str_input_mandatory(
                 varname="aggr_p_id", deflt=self._bi_aggregation.id
-            )
+            ),
         )
         vs_aggregation_config = vs_aggregation.from_html_vars("aggr")
         vs_aggregation.validate_value(vs_aggregation_config, "aggr")
@@ -1967,6 +1980,7 @@ class BIModeEditAggregation(ABCBIMode):
             aggr_vs_config = schema_inst.load(schema_inst.dump(self._bi_aggregation))
 
             self.get_vs_aggregation(
+                self._folder_choices,
                 aggregation_id=self._bi_aggregation.id,
                 aggregation_exists=(self._bi_aggregation.id in self.bi_pack.get_aggregations()),
             ).render_input("aggr", aggr_vs_config)
@@ -1978,7 +1992,10 @@ class BIModeEditAggregation(ABCBIMode):
 
     @classmethod
     def get_vs_aggregation(
-        cls, aggregation_id: str | None, aggregation_exists: bool = True
+        cls,
+        folder_choices: FolderChoices,
+        aggregation_id: str | None,
+        aggregation_exists: bool = True,
     ) -> BIAggregationForm:
         visualization_choices = []
         visualization_choices.append((None, _("Use default layout")))
@@ -2007,7 +2024,7 @@ class BIModeEditAggregation(ABCBIMode):
                 ("id", id_valuespec),
                 ("comment", RuleComment()),
                 ("groups", cls._get_vs_aggregation_groups()),
-                ("node", get_bi_aggregation_node_choices()),
+                ("node", get_bi_aggregation_node_choices(folder_choices)),
                 ("computation_options", cls._get_vs_computation_options()),
                 ("aggregation_visualization", cls._get_vs_aggregation_visualization()),
             ],

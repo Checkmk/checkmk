@@ -10,6 +10,7 @@
 
 import abc
 import copy
+from collections.abc import Callable, Sequence
 from typing import override
 
 from cmk.bi.actions import (
@@ -50,10 +51,12 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.wato import DictHostTagCondition
-from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.utils.statename import short_service_state_name
 
 from ._packs import get_cached_bi_packs
+
+# Evaluated lazily by the folder dropdown of the host and service searches
+FolderChoices = Callable[[], Sequence[tuple[str, str]]]
 
 
 def register() -> None:
@@ -147,15 +150,15 @@ def _convert_bi_aggr_from_vs(value):
     }
 
 
-def get_bi_aggregation_node_choices() -> ValueSpec:
+def get_bi_aggregation_node_choices(folder_choices: FolderChoices) -> ValueSpec:
     return Transform(
-        valuespec=CascadingDropdown(choices=_get_aggregation_choices()),
+        valuespec=CascadingDropdown(choices=_get_aggregation_choices(folder_choices)),
         to_valuespec=_convert_bi_aggr_to_vs,
         from_valuespec=_convert_bi_aggr_from_vs,
     )
 
 
-def _get_aggregation_choices() -> CascadingDropdownChoices:
+def _get_aggregation_choices(folder_choices: FolderChoices) -> CascadingDropdownChoices:
     # These choices are currently hardcoded
     # A more dynamic approach will be introduced once the BI GUI gets an overhaul
     elements: list[tuple[str, str, ValueSpec]] = []
@@ -163,7 +166,7 @@ def _get_aggregation_choices() -> CascadingDropdownChoices:
     elements.append(call_a_rule.cascading_dropdown_choice_element())
     for search_plugin in ["host_search", "service_search"]:
         plugin = bi_config_search_registry[search_plugin]
-        plugin_type, title, valuespec = plugin.cascading_dropdown_choice_element()
+        plugin_type, title, valuespec = plugin.cascading_dropdown_choice_element(folder_choices)
         elements.append(
             (
                 plugin_type,
@@ -225,20 +228,20 @@ def _convert_bi_rule_from_vs(value):
     return {"search": search, "action": action}
 
 
-def get_bi_rule_node_choices_vs() -> ValueSpec:
+def get_bi_rule_node_choices_vs(folder_choices: FolderChoices) -> ValueSpec:
     return Transform(
-        valuespec=CascadingDropdown(choices=_get_rule_choices(), sorted=False),
+        valuespec=CascadingDropdown(choices=_get_rule_choices(folder_choices), sorted=False),
         to_valuespec=_convert_bi_rule_to_vs,
         from_valuespec=_convert_bi_rule_from_vs,
     )
 
 
-def _get_rule_choices() -> CascadingDropdownChoices:
+def _get_rule_choices(folder_choices: FolderChoices) -> CascadingDropdownChoices:
     action_choices = _get_action_cascading_dropdown_choices()
     choices: list[tuple[str, str, ValueSpec]] = list(action_choices)
     for search_plugin in ["host_search", "service_search"]:
         plugin = bi_config_search_registry[search_plugin]
-        plugin_type, title, valuespec = plugin.cascading_dropdown_choice_element()
+        plugin_type, title, valuespec = plugin.cascading_dropdown_choice_element(folder_choices)
         choices.append(
             (
                 plugin_type,
@@ -270,12 +273,14 @@ def _get_action_cascading_dropdown_choices() -> list[tuple[ActionKind, str, Valu
 class ABCBIConfigSearch(ABCBISearch):
     @classmethod
     @abc.abstractmethod
-    def cascading_dropdown_choice_element(cls) -> tuple[SearchKind, str, ValueSpec]:
+    def cascading_dropdown_choice_element(
+        cls, folder_choices: FolderChoices
+    ) -> tuple[SearchKind, str, ValueSpec]:
         raise NotImplementedError
 
     @classmethod
     @abc.abstractmethod
-    def valuespec(cls) -> ValueSpec:
+    def valuespec(cls, folder_choices: FolderChoices) -> ValueSpec:
         raise NotImplementedError
 
 
@@ -331,12 +336,14 @@ def _bi_host_choice_vs(title):
 class BIConfigEmptySearch(BIEmptySearch, ABCBIConfigSearch):
     @classmethod
     @override
-    def cascading_dropdown_choice_element(cls) -> tuple[SearchKind, str, ValueSpec]:
+    def cascading_dropdown_choice_element(
+        cls, folder_choices: FolderChoices
+    ) -> tuple[SearchKind, str, ValueSpec]:
         return (
             cls.kind(),
             _("No search"),
             Transform(
-                valuespec=cls.valuespec(),
+                valuespec=cls.valuespec(folder_choices),
                 to_valuespec=lambda x: "",  # noqa: ARG005
                 from_valuespec=lambda x: {"type": cls.kind()},  # noqa: ARG005
             ),
@@ -344,15 +351,17 @@ class BIConfigEmptySearch(BIEmptySearch, ABCBIConfigSearch):
 
     @classmethod
     @override
-    def valuespec(cls) -> ValueSpec:
+    def valuespec(cls, folder_choices: FolderChoices) -> ValueSpec:
         return FixedValue(value="")
 
 
 class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
     @classmethod
     @override
-    def cascading_dropdown_choice_element(cls) -> tuple[SearchKind, str, ValueSpec]:
-        return (cls.kind(), _("Create nodes based on a host search"), cls.valuespec())
+    def cascading_dropdown_choice_element(
+        cls, folder_choices: FolderChoices
+    ) -> tuple[SearchKind, str, ValueSpec]:
+        return (cls.kind(), _("Create nodes based on a host search"), cls.valuespec(folder_choices))
 
     @classmethod
     def _convert_child_with_to_vs(cls, value):
@@ -374,13 +383,15 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
 
     @classmethod
     @override
-    def valuespec(cls) -> ValueSpec:
+    def valuespec(cls, folder_choices: FolderChoices) -> ValueSpec:
         return Dictionary(
             elements=[
                 (
                     "conditions",
                     Dictionary(
-                        title=_("Conditions"), elements=cls.get_host_conditions(), optional_keys=[]
+                        title=_("Conditions"),
+                        elements=cls.get_host_conditions(folder_choices),
+                        optional_keys=[],
                     ),
                 ),
                 (
@@ -396,7 +407,7 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
                                     _("The found hosts' children (with child filtering)"),
                                     Dictionary(
                                         title=_("Child conditions"),
-                                        elements=cls.get_host_conditions(),
+                                        elements=cls.get_host_conditions(folder_choices),
                                         optional_keys=[],
                                     ),
                                 ),
@@ -424,14 +435,14 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
         )
 
     @classmethod
-    def get_host_conditions(cls):
+    def get_host_conditions(cls, folder_choices: FolderChoices):
         return [
             (
                 "host_folder",
                 DropdownChoice(
                     title=_("Folder"),
                     help=_("The rule is only applied to hosts directly in or below this folder."),
-                    choices=folder_tree().folder_choices(user),
+                    choices=folder_choices,
                     encode_value=False,
                 ),
             ),
@@ -453,19 +464,25 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
 class BIConfigServiceSearch(BIServiceSearch, ABCBIConfigSearch):
     @classmethod
     @override
-    def cascading_dropdown_choice_element(cls) -> tuple[SearchKind, str, ValueSpec]:
-        return (cls.kind(), _("Create nodes based on a service search"), cls.valuespec())
+    def cascading_dropdown_choice_element(
+        cls, folder_choices: FolderChoices
+    ) -> tuple[SearchKind, str, ValueSpec]:
+        return (
+            cls.kind(),
+            _("Create nodes based on a service search"),
+            cls.valuespec(folder_choices),
+        )
 
     @classmethod
     @override
-    def valuespec(cls) -> ValueSpec:
+    def valuespec(cls, folder_choices: FolderChoices) -> ValueSpec:
         return Dictionary(
             title=_("Conditions"),
             elements=[
                 (
                     "conditions",
                     Dictionary(
-                        elements=BIConfigHostSearch.get_host_conditions()
+                        elements=BIConfigHostSearch.get_host_conditions(folder_choices)
                         + cls.get_service_conditions(),
                         optional_keys=[],
                     ),
@@ -504,12 +521,18 @@ class BIConfigServiceSearch(BIServiceSearch, ABCBIConfigSearch):
 class BIConfigFixedArgumentsSearch(BIFixedArgumentsSearch, ABCBIConfigSearch):
     @classmethod
     @override
-    def cascading_dropdown_choice_element(cls) -> tuple[SearchKind, str, ValueSpec]:
-        return (cls.kind(), _("No search, specify list of arguments"), cls.valuespec())
+    def cascading_dropdown_choice_element(
+        cls, folder_choices: FolderChoices
+    ) -> tuple[SearchKind, str, ValueSpec]:
+        return (
+            cls.kind(),
+            _("No search, specify list of arguments"),
+            cls.valuespec(folder_choices),
+        )
 
     @classmethod
     @override
-    def valuespec(cls) -> ValueSpec:
+    def valuespec(cls, folder_choices: FolderChoices) -> ValueSpec:
         return Dictionary(
             elements=[
                 (

@@ -44,8 +44,6 @@ def create_full_path_folder_choice(
     custom_validate: Sequence[Callable[[str], object]] | None = None,
     allow_new_folder_creation: bool = False,
 ) -> SingleChoiceExtended[str] | SingleChoiceEditable:
-    choices = folder_tree().folder_choices_fulltitle(user)
-
     if allow_new_folder_creation:
         return SingleChoiceEditable(
             # FormSpec
@@ -63,12 +61,12 @@ def create_full_path_folder_choice(
     return SingleChoiceExtended[str](
         title=title,
         help_text=help_text,
-        elements=[
+        elements=lambda: [
             SingleChoiceElementExtended(
-                name=choice[0],
-                title=Title(choice[1]),  # astrein: disable=localization-checker
+                name=path,
+                title=Title(folder_title),  # astrein: disable=localization-checker
             )
-            for choice in choices
+            for path, folder_title in folder_tree().folder_choices_fulltitle(user)
         ],
         prefill=DefaultValue(""),
         custom_validate=custom_validate,

@@ -1,7 +1,15 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 
 # The shared runner behind rust_wine_test() (xcomp/rust_wine_test.bzl).
 exports_files(["xcomp/rust-test-wine.sh"])
+
+js_library(
+    name = "vitest_runner",
+    srcs = ["vitest_runner.mjs"],
+    visibility = ["//visibility:public"],
+    deps = ["//:node_modules/vitest"],
+)
 
 py_library(
     name = "runpath_patch",

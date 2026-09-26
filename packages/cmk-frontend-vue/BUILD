@@ -11,6 +11,7 @@ load("//bazel/rules:css_library.bzl", "css_library")
 load("//bazel/rules:git_hash_file.bzl", "git_hash_file")
 load("//bazel/rules:link_shared_typing.bzl", "link_shared_typing")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
+load("//bazel/rules:vitest_test.bzl", "vitest_test")
 load("//bazel/rules:vue_library.bzl", "vue_library")
 
 exports_files([
@@ -343,15 +344,12 @@ vite_bin.vite(
 
 # "UI Component Library" end
 
-vitest_bin.vitest_test(
+vitest_test(
     name = "unit-test",
     timeout = "long",
-    args = [
-        "--configLoader=runner",
-        "run",
-    ],
-    chdir = package_name(),
     data = TEST_DATA,
+    shard_count = 2,
+    workers = 3,
 )
 
 # One target per tsconfig project: they have no cross-references, so a single

@@ -44,8 +44,8 @@ Package file conventions (all at the package root):
 
 load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("@npm//:vitest/package_json.bzl", vitest_bin = "bin")
 load("@npm//:vue-tsc/package_json.bzl", vue_tsc_bin = "bin")
+load("//bazel/rules:vitest_test.bzl", "vitest_test")
 
 # Tooling that lives in the root package.json and is needed inside every
 # package's type-check / vitest sandbox.
@@ -202,12 +202,8 @@ def vue_package(name, deps = [], test_deps = []):
         include_types = True,
     )
 
-    vitest_bin.vitest_test(
+    vitest_test(
         name = "unit-test",
-        args = [
-            "--configLoader=runner",
-            "run",
-        ],
-        chdir = native.package_name(),
         data = _test_data,
+        workers = 2,
     )

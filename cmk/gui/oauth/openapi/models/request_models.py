@@ -18,3 +18,19 @@ class IdentifySessionRequest:
         description="The value of the auth_<site> cookie the browser sent.",
         example="cmkadmin:4f1c2b1e-0d7a-4a3b-9a55-8d9d7c3a2b10:9c1e...",
     )
+
+
+@api_model
+class DelegateSessionRequest:
+    session_cookie: _CookieValue = api_field(
+        description="The value of the auth_<site> cookie the browser sent.",
+        example="cmkadmin:4f1c2b1e-0d7a-4a3b-9a55-8d9d7c3a2b10:9c1e...",
+    )
+    resource: Annotated[str, StringConstraints(min_length=1, max_length=2048)] = api_field(
+        description="The URI of the service the token is for, for example the MCP server.",
+        example="https://monitoring.example.com/mysite/check_mk/mcp",
+    )
+    scope: str = api_field(
+        description='What the token may do: "read", "write" or "read write". Write includes read.',
+        example="read",
+    )

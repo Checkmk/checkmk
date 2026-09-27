@@ -31,6 +31,7 @@ def register(
     endpoint_family_registry: EndpointFamilyRegistry,
     *,
     enabled: Callable[[], bool],
+    delegation_enabled: Callable[[], bool],
     ignore_duplicate_endpoints: bool = False,
 ) -> None:
     """Register the OAuth authorization server pages of this site.
@@ -61,5 +62,6 @@ def register(
     register_openapi_endpoints(
         versioned_endpoint_registry,
         endpoint_family_registry,
+        delegation_enabled=delegation_enabled,
         ignore_duplicates=ignore_duplicate_endpoints,
     )

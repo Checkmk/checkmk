@@ -162,6 +162,21 @@ class OAuthTokenFailureEvent(SecurityEvent):
 
 
 @dataclass
+class OAuthTokenIssuedEvent(SecurityEvent):
+    """Indicates an issued OAuth access token"""
+
+    def __init__(self, *, user_id: UserId, client_id: str) -> None:
+        super().__init__(
+            "oauth token issued",
+            {
+                "user": str(user_id),
+                "client_id": client_id,
+            },
+            SecurityEvent.Domain.auth,
+        )
+
+
+@dataclass
 class UserManagementEvent(SecurityEvent):
     """Indicates a user creation, modification or deletion"""
 

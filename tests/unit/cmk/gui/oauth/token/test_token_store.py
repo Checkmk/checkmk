@@ -7,6 +7,7 @@ import sqlite3
 from datetime import datetime, timedelta, UTC
 
 import pytest
+import time_machine
 
 from cmk.ccc.resulttype import Error
 from cmk.ccc.user import UserId
@@ -396,3 +397,22 @@ def test_revoke_scoped_to_a_user_does_not_delete_another_users_token(store: Toke
 
     assert deleted == 0
     assert store.get_by_token(token.ok) is not None
+
+
+def test_issue_token_deletes_expired_tokens_and_keeps_valid_ones(store: TokenStore) -> None:
+    expiring = store.issue_token(
+        _USER, expires_at=_future(1), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
+    )
+    lasting = store.issue_token(
+        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
+    )
+    assert expiring.is_ok()
+    assert lasting.is_ok()
+
+    with time_machine.travel(_future(5)):
+        store.issue_token(
+            _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
+        )
+
+    assert store.get_by_token(expiring.ok) is None
+    assert store.get_by_token(lasting.ok) is not None

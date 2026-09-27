@@ -80,6 +80,9 @@ class TokenStore(Backend):
         A client deleted between the authorization request and the code
         redemption takes its grants with it (tokens.client_id is ON DELETE
         CASCADE), so there is nothing left to issue against.
+
+        Issuing also deletes the expired tokens of every client, so they do
+        not pile up.
         """
         if not user_id:
             raise ValueError("user_id must not be empty")
@@ -95,32 +98,36 @@ class TokenStore(Backend):
             raise ValueError("expires_at must be later than the issue time")
 
         token = _mint_token()
-        try:
+        with self.write_transaction():
             self._connection.execute(
-                """
-                INSERT INTO tokens
-                    (user_id, token_hash, issued_at, expires_at, resource, scope, client_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    user_id,
-                    _token_hash(token),
-                    issued_at_timestamp,
-                    expires_at_timestamp,
-                    resource,
-                    format_scopes(scope),
-                    client_id,
-                ),
+                "DELETE FROM tokens WHERE expires_at <= ?", (issued_at_timestamp,)
             )
-        except sqlite3.IntegrityError:
-            # The client_id foreign key is the only constraint left to trip:
-            # the ValueError guards above cover every other CHECK on the
-            # table, and token_hash is a fresh sha256 hexdigest.
-            logger.exception(
-                "Refusing to issue an OAuth access token: client %(client_id)s is not registered",
-                {"client_id": client_id},
-            )
-            return Error(UnknownClient())
+            try:
+                self._connection.execute(
+                    """
+                    INSERT INTO tokens
+                        (user_id, token_hash, issued_at, expires_at, resource, scope, client_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        user_id,
+                        _token_hash(token),
+                        issued_at_timestamp,
+                        expires_at_timestamp,
+                        resource,
+                        format_scopes(scope),
+                        client_id,
+                    ),
+                )
+            except sqlite3.IntegrityError:
+                # The client_id foreign key is the only constraint left to trip:
+                # the ValueError guards above cover every other CHECK on the
+                # table, and token_hash is a fresh sha256 hexdigest.
+                logger.exception(
+                    "Refusing to issue an OAuth access token: client %(client_id)s is not registered",
+                    {"client_id": client_id},
+                )
+                return Error(UnknownClient())
         return OK(token)
 
     def get_by_token(self, token: str) -> TokenRecord | None:

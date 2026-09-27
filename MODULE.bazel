@@ -143,6 +143,15 @@ single_version_override(
     ],
 )
 
+single_version_override(
+    module_name = "aspect_rules_js",
+    patch_strip = 1,
+    patches = [
+        # https://github.com/aspect-build/rules_js/issues/3039
+        "//bazel/patches:rules_js-devserver_sync_by_rename.patch",
+    ],
+)
+
 # Held at 2.0.0 by the stack of patches below. Note that this does not leave us
 # behind on aspect_rules_js: every 2.x release of rules_lint, 2.9.0 included,
 # declares a floor of aspect_rules_js 1.40.0 and relies on version resolution to

@@ -1,0 +1,66 @@
+--- a/js/private/devserver/js_run_devserver.mjs
++++ b/js/private/devserver/js_run_devserver.mjs
+@@ -451,7 +451,7 @@
+     ).reduce((s, t) => s + t, 0)
+ }
+ 
+-async function syncFile(file, src, dst, exists, lstat, writePerm) {
++async function syncFile(file, src, dst, sandbox, exists, lstat, writePerm) {
+     if (JS_BINARY__LOG_DEBUG) {
+         console.error(
+             `Syncing file ${file}${
+@@ -459,20 +459,19 @@
+             })`
+         );
+     }
+-    if (exists) {
+-        await fs.promises.unlink(dst);
+-    } else {
++    if (!exists) {
+         // Intentionally synchronous; see comment on mkdirpSync
+         mkdirpSync(path.dirname(dst));
+     }
+ 
++    const tmp = path.join(path.dirname(sandbox), crypto.randomUUID());
+     await withRetry(
+-        () => fs.promises.copyFile(src, dst),
+-        `copyFile from ${src} to ${dst}`
++        () => fs.promises.copyFile(src, tmp),
++        `copyFile from ${src} to ${tmp}`
+     );
+ 
+     if (writePerm) {
+-        const s = await fs.promises.stat(dst);
++        const s = await fs.promises.stat(tmp);
+         const mode = s.mode | fs.constants.S_IWUSR;
+         if (JS_BINARY__LOG_DEBUG) {
+             console.error(
+@@ -481,8 +480,9 @@
+                 ).toString(8)}`
+             );
+         }
+-        await fs.promises.chmod(dst, mode);
++        await fs.promises.chmod(tmp, mode);
+     }
++    await fs.promises.rename(tmp, dst);
+     return 1
+ }
+ 
+@@ -529,7 +529,7 @@
+             }
+             syncedChecksum.set(file, checksum);
+ 
+-            return syncFile(file, src, dst, exists, lstat, writePerm)
++            return syncFile(file, src, dst, sandbox, exists, lstat, writePerm)
+         }
+     } catch (e) {
+         console.error(e);
+@@ -984,7 +984,7 @@
+     if (isDirectory) {
+         return syncDirectory(file, src, sandbox, writePerm)
+     } else {
+-        return syncFile(file, src, dst, exists, null, writePerm)
++        return syncFile(file, src, dst, sandbox, exists, null, writePerm)
+     }
+ }
+ (async () => {

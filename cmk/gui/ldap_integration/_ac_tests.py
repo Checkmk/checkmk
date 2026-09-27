@@ -8,7 +8,7 @@ from typing import override
 
 import cmk.gui.ldap_integration.ldap_connector as ldap
 from cmk.ccc.site import SiteId
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.i18n import _
 from cmk.gui.userdb import active_connections
 from cmk.gui.watolib.analyze_configuration import (
@@ -39,17 +39,9 @@ class ACTestLDAPSecured(ACTest):
 
     # TODO: Only test master site?
     @override
-    def is_relevant(self) -> bool:
-        return bool(
-            [
-                c
-                for _cid, c in active_connections(active_config.user_connections)
-                if c.type() == "ldap"
-            ]
-        )
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        if not any(c.type() == "ldap" for _cid, c in active_connections(config.user_connections)):
+            return
         for connection_id, connection in active_connections(config.user_connections):
             if connection.type() != "ldap":
                 continue

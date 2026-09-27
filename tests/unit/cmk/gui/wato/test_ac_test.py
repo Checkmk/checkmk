@@ -39,6 +39,8 @@ from cmk.utils.paths import local_lib_dir, local_web_dir
 def test_local_connection_mocked(mock_livestatus: MockLiveStatusConnection) -> None:
     live = mock_livestatus
     live.set_sites(["NO_SITE"])
+    # The test only applies to the microcore, which it asks for first.
+    live.expect_query(["GET status", "Columns: program_version", "ColumnHeaders: off"])
     live.expect_query(
         [
             "GET status",

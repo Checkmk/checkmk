@@ -75,10 +75,6 @@ class _FakeACTestSingleSite(ACTest):
         return "Help"
 
     @override
-    def is_relevant(self) -> bool:
-        return False
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         yield ACSingleResult(
             state=ACResultState.OK,
@@ -104,10 +100,6 @@ class _FakeACTestMultiSite(ACTest):
     @override
     def help(self) -> str:
         return "Help"
-
-    @override
-    def is_relevant(self) -> bool:
-        return False
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:

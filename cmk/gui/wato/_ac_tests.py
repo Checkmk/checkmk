@@ -117,16 +117,11 @@ class ACTestPersistentConnections(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        # This check is only executed on the central instance of multisite setups
-        return len(active_config.sites) > 1
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        yield from (
-            self._check_site(site_id, active_config.sites[site_id])
-            for site_id in active_config.sites
-        )
+        # This check is only executed on the central instance of multisite setups
+        if len(config.sites) <= 1:
+            return
+        yield from (self._check_site(site_id, config.sites[site_id]) for site_id in config.sites)
 
     def _check_site(self, site_id: SiteId, site_config: SiteConfiguration) -> ACSingleResult:
         persist = site_config.get("persist", False)
@@ -180,15 +175,11 @@ class ACTestLiveproxyd(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        # This check is only executed on the central instance of multisite setups
-        return len(active_config.sites) > 1
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        yield from (
-            self._check_site(site_id, active_config.sites) for site_id in active_config.sites
-        )
+        # This check is only executed on the central instance of multisite setups
+        if len(config.sites) <= 1:
+            return
+        yield from (self._check_site(site_id, config.sites) for site_id in config.sites)
 
     def _check_site(self, site_id: SiteId, site_configs: SiteConfigurations) -> ACSingleResult:
         if _site_is_using_livestatus_proxy(site_id):
@@ -239,10 +230,6 @@ class ACTestLivestatusUsage(ACTest):
             "Consider increasing the number of parallel Livestatus connections or track down "
             "the clients to check whether or not you can reduce the usage somehow.</p>"
         )
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -312,10 +299,6 @@ class ACTestTmpfs(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if self._tmpfs_mounted(site_id):
             yield ACSingleResult(
@@ -372,19 +355,9 @@ class ACTestLivestatusSecured(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        cfg = ConfigDomainOMD().default_globals()
-        return bool(cfg["site_livestatus_tcp"])
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         cfg = ConfigDomainOMD().default_globals()
         if not cfg["site_livestatus_tcp"]:
-            yield ACSingleResult(
-                state=ACResultState.OK,
-                text=_("Livestatus network traffic is encrypted"),
-                site_id=site_id,
-            )
             return
 
         if not cfg["site_livestatus_tcp"]["tls"]:
@@ -413,10 +386,6 @@ class ACTestNumberOfUsers(ACTest):
             "Please review the filter configuration of the LDAP sync. Maybe you can "
             "decrease the sync scope to get a smaller number of users.</p>"
         )
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -469,10 +438,6 @@ class ACTestHTTPSecured(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if request.is_ssl_request:
             yield ACSingleResult(
@@ -511,10 +476,6 @@ class ACTestBackupConfigured(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         n_configured_jobs = len(BackupConfig.load().jobs)
         if n_configured_jobs:
@@ -549,10 +510,6 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
             "already be secure enough without extra backup encryption. But in "
             "some cases it may be a good idea to store the backup encrypted."
         )
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -594,10 +551,6 @@ class ACTestEscapeHTMLDisabled(ACTest):
             "services, to be sure that not every random check plug-in is able to produce code "
             "which your browser interprets."
         )
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -684,10 +637,6 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
             "the required memory needed by the Apache processes."
             "</p>"
         )
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -778,10 +727,6 @@ class ACTestApacheProcessUsage(ABCACApacheTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         total_slots = self._get_maximum_number_of_processes()
         open_slots = self._get_number_of_idle_processes()
@@ -841,11 +786,9 @@ class ACTestCheckMKHelperUsage(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return self._uses_microcore()
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        if not self._uses_microcore():
+            return
         local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_checker average_latency_checker\n"
@@ -908,11 +851,9 @@ class ACTestCheckMKFetcherUsage(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return self._uses_microcore()
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        if not self._uses_microcore():
+            return
         local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_fetcher average_latency_fetcher\n"
@@ -990,11 +931,9 @@ class ACTestCheckMKCheckerUsage(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return self._uses_microcore()
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        if not self._uses_microcore():
+            return
         local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_checker average_latency_fetcher\n"
@@ -1065,11 +1004,9 @@ class ACTestGenericCheckHelperUsage(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return self._uses_microcore()
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        if not self._uses_microcore():
+            return
         local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_generic average_latency_generic\n"
@@ -1123,12 +1060,6 @@ class ACTestSizeOfExtensions(ACTest):
             "all the extensions.</p>"
         )
 
-    @override
-    def is_relevant(self) -> bool:
-        return has_distributed_setup_remote_sites(active_config.sites) and self._replicates_mkps(
-            active_config.sites
-        )
-
     def _replicates_mkps(self, site_configs: SiteConfigurations) -> bool:
         return any(
             site.get("replicate_mkps")
@@ -1137,6 +1068,10 @@ class ACTestSizeOfExtensions(ACTest):
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        if not has_distributed_setup_remote_sites(config.sites) or not self._replicates_mkps(
+            config.sites
+        ):
+            return
         size = self._size_of_extensions()
         state = ACResultState.CRIT if size > 100 * 1024 * 1024 else ACResultState.OK
 
@@ -1169,10 +1104,6 @@ class ACTestBrokenGUIExtension(ACTest):
             "Instead of this, the errors are logged in <tt>var/log/web.log</tt>. In addition to this, "
             "the errors are displayed here."
         )
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -1213,10 +1144,6 @@ class ACTestDeprecatedRuleSets(ACTest):
             " to the next major release. There should be a Werk for each of these rules providing"
             " you with further information on what to do specifically."
         )
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -1272,10 +1199,6 @@ class ACTestUnknownCheckParameterRuleSets(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if rule_sets := find_unknown_check_parameter_rule_sets(debug=active_config.debug).result:
             for rule_set in rule_sets:
@@ -1329,10 +1252,6 @@ class ACTestDeprecatedGUIExtensions(ACTest):
             return []
 
     @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if files := self._get_files():
             for plugin_filepath in files:
@@ -1383,10 +1302,6 @@ class ACTestDeprecatedLegacyGUIExtensions(ACTest):
             return list(_walk(local_web_dir))
         except FileNotFoundError:
             return []
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -1444,10 +1359,6 @@ class ACTestDeprecatedPNPTemplates(ACTest):
             return list(local_pnp_templates_dir.iterdir())
         except FileNotFoundError:
             return []
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -1629,20 +1540,8 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return bool(self._get_rules())
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        rules = self._get_rules()
-        if not rules:
-            yield ACSingleResult(
-                state=ACResultState.OK,
-                text=_(
-                    "No rule set <b>State in case of restricted address mismatch</b> is configured"
-                ),
-                site_id=site_id,
-            )
+        if not (rules := self._get_rules()):
             return
 
         for folder_title, rule_state in rules:
@@ -1684,11 +1583,9 @@ class ACTestCheckMKCheckerNumber(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return self._uses_microcore()
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        if not self._uses_microcore():
+            return
         try:
             num_cpu = multiprocessing.cpu_count()
         except NotImplementedError:
@@ -1747,10 +1644,6 @@ class ACTestAutomationUserSecret(ACTest):
             "We do not recommend to store the secret for automation users with high privileges."
         )
 
-    @override
-    def is_relevant(self) -> bool:
-        return not is_distributed_setup_remote_site(active_config.sites)
-
     @staticmethod
     def get_flagged_users(
         user_permissions: UserPermissions, user_db: Users
@@ -1768,6 +1661,8 @@ class ACTestAutomationUserSecret(ACTest):
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        if is_distributed_setup_remote_site(config.sites):
+            return
         flagged_users = self.get_flagged_users(
             UserPermissions.from_config(config, permission_registry),
             userdb.load_users(),

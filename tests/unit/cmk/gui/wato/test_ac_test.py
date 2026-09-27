@@ -23,6 +23,7 @@ from cmk.gui.wato._ac_tests import (
     ACTestHaSIAPI,
     ACTestPasswordStoreAPI,
     ACTestSpecialAgentsAPI,
+    ACTestUnexpectedAllowedIPRanges,
 )
 from cmk.gui.watolib.analyze_configuration import (
     ABCACTestPluginAPIs,
@@ -51,6 +52,11 @@ def test_local_connection_mocked(mock_livestatus: MockLiveStatusConnection) -> N
     with live(expect_status_query=False):
         gen = ACTestGenericCheckHelperUsage().execute(SiteId("NO_SITE"), Config())
         list(gen)
+
+
+def test_allowed_ip_ranges_test_does_not_apply_without_such_rules() -> None:
+    """A test that does not apply yields nothing, so it is not shown at all."""
+    assert not list(ACTestUnexpectedAllowedIPRanges().execute(SiteId("NO_SITE"), Config()))
 
 
 def _userpermission_mock() -> UserPermissions:

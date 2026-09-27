@@ -44,7 +44,7 @@ from cmk.gui.watolib.analyze_configuration import (
 from cmk.gui.watolib.check_mk_automations import find_unknown_check_parameter_rule_sets
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
-from cmk.gui.watolib.hosts_and_folders import folder_tree, make_folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree, make_folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, SingleRulesetRecursively
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.livestatus_client import LocalConnection, SiteConfiguration, SiteConfigurations
@@ -1541,7 +1541,7 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        if not (rules := self._get_rules()):
+        if not (rules := self._get_rules(make_folder_tree(config))):
             return
 
         for folder_title, rule_state in rules:
@@ -1551,9 +1551,9 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
                 site_id=site_id,
             )
 
-    def _get_rules(self) -> list[tuple[str, str]]:
+    def _get_rules(self, tree: FolderTree) -> list[tuple[str, str]]:
         ruleset = SingleRulesetRecursively.load_single_ruleset_recursively(
-            folder_tree(), RuleGroup.CheckgroupParameters("agent_update")
+            tree, RuleGroup.CheckgroupParameters("agent_update")
         ).get(RuleGroup.CheckgroupParameters("agent_update"))
         state_map = {0: "OK", 1: "WARN", 2: "CRIT", 3: "UNKNOWN"}
         return [

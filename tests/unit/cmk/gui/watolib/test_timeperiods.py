@@ -9,9 +9,8 @@ from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
 def test_group_usage_finder_registry_entries() -> None:
     expected = [
         "find_timeperiod_usage_in_ec_rules",
-        "find_timeperiod_usage_in_host_and_service_rules",
         "find_timeperiod_usage_in_notification_rules",
-        "find_timeperiod_usage_in_time_specific_parameters",
+        "find_timeperiod_usage_in_rules",
         "find_timeperiod_usage_in_users",
     ]
 

@@ -32,7 +32,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.regex import escape_regex_chars
 from cmk.ccc.version import Edition, edition
 from cmk.gui import hooks
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.form_specs import DEFAULT_VALUE, get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.form_specs.generators.config_host_name import create_config_host_name
@@ -138,9 +138,9 @@ from .check_mk_automations import get_services_labels, update_merged_password_fi
 from .hosts_and_folders import (
     Folder,
     folder_preserving_link,
-    folder_tree,
     FolderTree,
     Host,
+    make_folder_tree,
 )
 from .objref import ObjectRef, ObjectRefType
 from .rulespecs import (
@@ -2040,11 +2040,17 @@ class EnabledDisabledServicesEditor:
         return None
 
 
-def find_timeperiod_usage_in_host_and_service_rules(time_period_name: str) -> list[TimeperiodUsage]:
+def find_timeperiod_usage_in_rules(time_period_name: str, config: Config) -> list[TimeperiodUsage]:
+    rulesets = AllRulesets.load_all_rulesets(make_folder_tree(config))
+    return _timeperiod_usage_in_host_and_service_rules(
+        rulesets, time_period_name
+    ) + _timeperiod_usage_in_time_specific_parameters(rulesets, time_period_name)
+
+
+def _timeperiod_usage_in_host_and_service_rules(
+    rulesets: AllRulesets, time_period_name: str
+) -> list[TimeperiodUsage]:
     used_in: list[TimeperiodUsage] = []
-    # Gated: registered in timeperiod_usage_finder_registry, which invokes finders with a fixed
-    # (time_period_name) signature and hands them no folder tree.
-    rulesets = AllRulesets.load_all_rulesets(folder_tree())
     for varname, ruleset in rulesets.get_rulesets().items():
         if not isinstance(ruleset.rulespec.value_model, TimeperiodValuespec | TimeSpecific):
             continue
@@ -2071,13 +2077,10 @@ def _get_used_timeperiods(value: dict[str, Any]) -> set[str]:
     return {tp for tp, _params in value.get(TIMESPECIFIC_VALUES_KEY, [])}
 
 
-def find_timeperiod_usage_in_time_specific_parameters(
-    time_period_name: str,
+def _timeperiod_usage_in_time_specific_parameters(
+    rulesets: AllRulesets, time_period_name: str
 ) -> list[TimeperiodUsage]:
     used_in: list[TimeperiodUsage] = []
-    # Gated: registered in timeperiod_usage_finder_registry, which invokes finders with a fixed
-    # (time_period_name) signature and hands them no folder tree.
-    rulesets = AllRulesets.load_all_rulesets(folder_tree())
     for ruleset in rulesets.get_rulesets().values():
         if not isinstance(ruleset.rulespec.value_model, TimeperiodValuespec | TimeSpecific):
             continue

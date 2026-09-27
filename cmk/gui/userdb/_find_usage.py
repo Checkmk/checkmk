@@ -6,6 +6,7 @@
 
 from cmk.ccc.user import UserId
 from cmk.events.notify_types import EventRule
+from cmk.gui.config import Config
 from cmk.gui.groups import GroupName
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -35,7 +36,7 @@ def find_usages_of_contact_group_in_users(
     return used_in
 
 
-def find_timeperiod_usage_in_users(time_period_name: str) -> list[tuple[str, str]]:
+def find_timeperiod_usage_in_users(time_period_name: str, _config: Config) -> list[tuple[str, str]]:
     used_in: list[tuple[str, str]] = []
     for userid, user in load_users().items():
         tp = user.get("notification_period")

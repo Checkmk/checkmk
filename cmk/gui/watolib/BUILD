@@ -178,6 +178,7 @@ py_library(
     ],
     deps = [
         ":config_infra",
+        "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
         "//cmk/gui/valuespec",
         "//cmk/utils",

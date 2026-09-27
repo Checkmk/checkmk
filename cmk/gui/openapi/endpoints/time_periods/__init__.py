@@ -205,6 +205,7 @@ def delete(params: Mapping[str, Any]) -> Response:
     try:
         delete_timeperiod(
             name,
+            config=active_config,
             pprint_value=active_config.wato_pprint_config,
             pending_changes=_pending_changes(
                 active_config.sites,

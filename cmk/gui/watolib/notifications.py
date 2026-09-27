@@ -47,6 +47,7 @@ from cmk.events.notify_types import (
     PluginNameWithParameters,
 )
 from cmk.gui import userdb
+from cmk.gui.config import Config
 from cmk.gui.i18n import _
 from cmk.gui.rest_api_types.notifications_rule_types import (
     APIConditions,
@@ -855,7 +856,9 @@ def _used_in_notification_rule(name: str, rule: EventRule) -> bool:
     return name in rule.get("contact_groups", []) or name in rule.get("match_contactgroups", [])
 
 
-def find_timeperiod_usage_in_notification_rules(time_period_name: str) -> list[tuple[str, str]]:
+def find_timeperiod_usage_in_notification_rules(
+    time_period_name: str, _config: Config
+) -> list[tuple[str, str]]:
     used_in: list[tuple[str, str]] = []
     for index, rule in enumerate(NotificationRuleConfigFile().load_for_reading()):
         used_in += userdb.find_timeperiod_usage_in_notification_rule(time_period_name, index, rule)

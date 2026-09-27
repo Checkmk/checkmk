@@ -294,6 +294,7 @@ class ModeTimeperiods(WatoMode):
         try:
             watolib.timeperiods.delete_timeperiod(
                 TimeperiodName(delname),
+                config=config,
                 pprint_value=config.wato_pprint_config,
                 pending_changes=_pending_changes(
                     config.sites,

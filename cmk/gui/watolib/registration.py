@@ -88,8 +88,7 @@ from .recomposers.internal_proxy import recompose as recompose_internal_proxy
 from .recomposers.proxy import recompose as recompose_proxy
 from .recomposers.time_period import recompose as recompose_time_period
 from .rulesets import (
-    find_timeperiod_usage_in_host_and_service_rules,
-    find_timeperiod_usage_in_time_specific_parameters,
+    find_timeperiod_usage_in_rules,
 )
 from .rulespecs import (
     RulespecGroupEnforcedServices,
@@ -157,8 +156,7 @@ def register(
     contact_group_usage_finder_registry_.register(
         find_usages_of_contact_group_in_notification_rules
     )
-    timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_host_and_service_rules)
-    timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_time_specific_parameters)
+    timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_rules)
     timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_notification_rules)
     config_variable_groups.register(config_variable_group_registry)
     autocompleter_registry.register_autocompleter("config_hostname", config_hostname_autocompleter)

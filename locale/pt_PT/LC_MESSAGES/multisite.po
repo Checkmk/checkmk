@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-09-26 11:41+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -98545,7 +98545,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -99072,7 +99071,6 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -105052,10 +105050,6 @@ msgstr ""
 msgid "Select a host"
 msgstr "Eliminar o anfitrião"
 
-#, fuzzy
-msgid "No hosts available"
-msgstr "Não há informação disponível"
-
 msgid "Service description"
 msgstr "Descrição do serviço"
 
@@ -105068,20 +105062,8 @@ msgid "Pick a host first"
 msgstr "Importação a granel"
 
 #, fuzzy
-msgid "No services for this host"
-msgstr "Número de serviços do anfitrião"
-
-#, fuzzy
 msgid "Select a group"
 msgstr "Ligações rejeitadas"
-
-#, fuzzy
-msgid "No host groups configured in this site"
-msgstr "Replicar a configuração do Console de Eventos a este site"
-
-#, fuzzy
-msgid "No service groups configured in this site"
-msgstr "Replicar a configuração do Console de Eventos a este site"
 
 #, fuzzy
 msgid "Map name"
@@ -105267,10 +105249,6 @@ msgstr "Serviços em nuvem"
 #, fuzzy
 msgid "group name"
 msgstr "Nome do grupo"
-
-#, fuzzy
-msgid "No groups available"
-msgstr "Não há informação disponível"
 
 msgid ""
 "One or more %{filter} lines, each terminated by a literal %{newline}. "
@@ -106310,7 +106288,7 @@ msgstr "não disponíveis"
 msgid "On slide"
 msgstr ""
 
-msgid "+%{n} more — keep typing to narrow results"
+msgid "Showing the first %{n} — keep typing to narrow results"
 msgstr ""
 
 #, fuzzy
@@ -110565,6 +110543,26 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "No hosts available"
+#~ msgstr "Não há informação disponível"
+
+#, fuzzy
+#~ msgid "No services for this host"
+#~ msgstr "Número de serviços do anfitrião"
+
+#, fuzzy
+#~ msgid "No host groups configured in this site"
+#~ msgstr "Replicar a configuração do Console de Eventos a este site"
+
+#, fuzzy
+#~ msgid "No service groups configured in this site"
+#~ msgstr "Replicar a configuração do Console de Eventos a este site"
+
+#, fuzzy
+#~ msgid "No groups available"
+#~ msgstr "Não há informação disponível"
 
 #, fuzzy
 #~ msgid "(ntopng integration disabled)"

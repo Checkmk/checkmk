@@ -105900,10 +105900,6 @@ msgstr ""
 msgid "Select a host"
 msgstr "Borrar host"
 
-#, fuzzy
-msgid "No hosts available"
-msgstr "No hay información disponible"
-
 msgid "Service description"
 msgstr "Descripción del servicio"
 
@@ -105916,20 +105912,8 @@ msgid "Pick a host first"
 msgstr "Importación masiva de hosts"
 
 #, fuzzy
-msgid "No services for this host"
-msgstr "Número de servicios del host"
-
-#, fuzzy
 msgid "Select a group"
 msgstr "Conexiones rechazadas"
-
-#, fuzzy
-msgid "No host groups configured in this site"
-msgstr "Replicar la configuración de la Consola de Eventos a este sitio"
-
-#, fuzzy
-msgid "No service groups configured in this site"
-msgstr "Replicar la configuración de la Consola de Eventos a este sitio"
 
 #, fuzzy
 msgid "Map name"
@@ -106115,10 +106099,6 @@ msgstr "Servicios en la nube"
 #, fuzzy
 msgid "group name"
 msgstr "Nombre del grupo"
-
-#, fuzzy
-msgid "No groups available"
-msgstr "No hay información disponible"
 
 msgid ""
 "One or more %{filter} lines, each terminated by a literal %{newline}. "
@@ -107157,7 +107137,7 @@ msgstr "no disponible"
 msgid "On slide"
 msgstr ""
 
-msgid "+%{n} more — keep typing to narrow results"
+msgid "Showing the first %{n} — keep typing to narrow results"
 msgstr ""
 
 #, fuzzy
@@ -111430,6 +111410,26 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "No hosts available"
+#~ msgstr "No hay información disponible"
+
+#, fuzzy
+#~ msgid "No services for this host"
+#~ msgstr "Número de servicios del host"
+
+#, fuzzy
+#~ msgid "No host groups configured in this site"
+#~ msgstr "Replicar la configuración de la Consola de Eventos a este sitio"
+
+#, fuzzy
+#~ msgid "No service groups configured in this site"
+#~ msgstr "Replicar la configuración de la Consola de Eventos a este sitio"
+
+#, fuzzy
+#~ msgid "No groups available"
+#~ msgstr "No hay información disponible"
 
 #, fuzzy
 #~ msgid "(ntopng integration disabled)"

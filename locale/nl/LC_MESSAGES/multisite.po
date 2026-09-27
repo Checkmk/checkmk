@@ -105140,10 +105140,6 @@ msgstr ""
 msgid "Select a host"
 msgstr "Hosts verwijderen"
 
-#, fuzzy
-msgid "No hosts available"
-msgstr "Geen informatie beschikbaar"
-
 msgid "Service description"
 msgstr "Beschrijving van de dienst"
 
@@ -105156,20 +105152,8 @@ msgid "Pick a host first"
 msgstr "Bulk host import"
 
 #, fuzzy
-msgid "No services for this host"
-msgstr "Aantal diensten van de gastheer"
-
-#, fuzzy
 msgid "Select a group"
 msgstr "Afgewezen verbindingen"
-
-#, fuzzy
-msgid "No host groups configured in this site"
-msgstr "Repliceer Event Console configuratie naar deze site"
-
-#, fuzzy
-msgid "No service groups configured in this site"
-msgstr "Repliceer Event Console configuratie naar deze site"
 
 #, fuzzy
 msgid "Map name"
@@ -105355,10 +105339,6 @@ msgstr "Cloud diensten"
 #, fuzzy
 msgid "group name"
 msgstr "Naam van de groep"
-
-#, fuzzy
-msgid "No groups available"
-msgstr "Geen informatie beschikbaar"
 
 msgid ""
 "One or more %{filter} lines, each terminated by a literal %{newline}. "
@@ -106397,7 +106377,7 @@ msgstr "niet beschikbaar"
 msgid "On slide"
 msgstr ""
 
-msgid "+%{n} more — keep typing to narrow results"
+msgid "Showing the first %{n} — keep typing to narrow results"
 msgstr ""
 
 #, fuzzy
@@ -110652,6 +110632,26 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "No hosts available"
+#~ msgstr "Geen informatie beschikbaar"
+
+#, fuzzy
+#~ msgid "No services for this host"
+#~ msgstr "Aantal diensten van de gastheer"
+
+#, fuzzy
+#~ msgid "No host groups configured in this site"
+#~ msgstr "Repliceer Event Console configuratie naar deze site"
+
+#, fuzzy
+#~ msgid "No service groups configured in this site"
+#~ msgstr "Repliceer Event Console configuratie naar deze site"
+
+#, fuzzy
+#~ msgid "No groups available"
+#~ msgstr "Geen informatie beschikbaar"
 
 #, fuzzy
 #~ msgid "(ntopng integration disabled)"

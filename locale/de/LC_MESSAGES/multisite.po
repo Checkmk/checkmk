@@ -100977,10 +100977,6 @@ msgstr ""
 msgid "Select a host"
 msgstr "(Host auswählen)"
 
-#, fuzzy
-msgid "No hosts available"
-msgstr "Keine Optionen vorhanden"
-
 msgid "Service description"
 msgstr "Service-Name"
 
@@ -100993,20 +100989,8 @@ msgid "Pick a host first"
 msgstr "Bulk-Import von Hosts"
 
 #, fuzzy
-msgid "No services for this host"
-msgstr "Anzahl der Services des Hosts"
-
-#, fuzzy
 msgid "Select a group"
 msgstr "Gruppe auswählen..."
-
-#, fuzzy
-msgid "No host groups configured in this site"
-msgstr "Event Console Konfiguration auf diese Instanz replizieren"
-
-#, fuzzy
-msgid "No service groups configured in this site"
-msgstr "Event Console Konfiguration auf diese Instanz replizieren"
 
 #, fuzzy
 msgid "Map name"
@@ -101193,10 +101177,6 @@ msgstr "Cloud-Services"
 #, fuzzy
 msgid "group name"
 msgstr "Gruppen-Name"
-
-#, fuzzy
-msgid "No groups available"
-msgstr "Keine Optionen vorhanden"
 
 msgid ""
 "One or more %{filter} lines, each terminated by a literal %{newline}. "
@@ -102237,7 +102217,7 @@ msgstr "Nicht verfügbar"
 msgid "On slide"
 msgstr ""
 
-msgid "+%{n} more — keep typing to narrow results"
+msgid "Showing the first %{n} — keep typing to narrow results"
 msgstr ""
 
 msgid "PENDING"
@@ -106565,6 +106545,26 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#, fuzzy
+#~ msgid "No hosts available"
+#~ msgstr "Keine Optionen vorhanden"
+
+#, fuzzy
+#~ msgid "No services for this host"
+#~ msgstr "Anzahl der Services des Hosts"
+
+#, fuzzy
+#~ msgid "No host groups configured in this site"
+#~ msgstr "Event Console Konfiguration auf diese Instanz replizieren"
+
+#, fuzzy
+#~ msgid "No service groups configured in this site"
+#~ msgstr "Event Console Konfiguration auf diese Instanz replizieren"
+
+#, fuzzy
+#~ msgid "No groups available"
+#~ msgstr "Keine Optionen vorhanden"
 
 #, fuzzy
 #~ msgid "(ntopng integration disabled)"

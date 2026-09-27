@@ -105523,10 +105523,6 @@ msgstr ""
 msgid "Select a host"
 msgstr "Ștergeți gazda"
 
-#, fuzzy
-msgid "No hosts available"
-msgstr "Nu există informații disponibile"
-
 msgid "Service description"
 msgstr "Descrierea serviciului"
 
@@ -105539,20 +105535,8 @@ msgid "Pick a host first"
 msgstr "Importul de gazde în masă"
 
 #, fuzzy
-msgid "No services for this host"
-msgstr "Numărul de servicii ale gazdei"
-
-#, fuzzy
 msgid "Select a group"
 msgstr "Conexiuni respinse"
-
-#, fuzzy
-msgid "No host groups configured in this site"
-msgstr "Replicați configurația Consola de evenimente pe acest site"
-
-#, fuzzy
-msgid "No service groups configured in this site"
-msgstr "Replicați configurația Consola de evenimente pe acest site"
 
 #, fuzzy
 msgid "Map name"
@@ -105739,10 +105723,6 @@ msgstr "Servicii cloud"
 #, fuzzy
 msgid "group name"
 msgstr "Numele grupului"
-
-#, fuzzy
-msgid "No groups available"
-msgstr "Nu există informații disponibile"
 
 msgid ""
 "One or more %{filter} lines, each terminated by a literal %{newline}. "
@@ -106794,7 +106774,7 @@ msgstr "nu este disponibil"
 msgid "On slide"
 msgstr ""
 
-msgid "+%{n} more — keep typing to narrow results"
+msgid "Showing the first %{n} — keep typing to narrow results"
 msgstr ""
 
 #, fuzzy
@@ -111097,6 +111077,26 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "No hosts available"
+#~ msgstr "Nu există informații disponibile"
+
+#, fuzzy
+#~ msgid "No services for this host"
+#~ msgstr "Numărul de servicii ale gazdei"
+
+#, fuzzy
+#~ msgid "No host groups configured in this site"
+#~ msgstr "Replicați configurația Consola de evenimente pe acest site"
+
+#, fuzzy
+#~ msgid "No service groups configured in this site"
+#~ msgstr "Replicați configurația Consola de evenimente pe acest site"
+
+#, fuzzy
+#~ msgid "No groups available"
+#~ msgstr "Nu există informații disponibile"
 
 #, fuzzy
 #~ msgid "(ntopng integration disabled)"

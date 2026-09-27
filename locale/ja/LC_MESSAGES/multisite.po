@@ -98666,10 +98666,6 @@ msgstr ""
 msgid "Select a host"
 msgstr "(ホスト選択)"
 
-#, fuzzy
-msgid "No hosts available"
-msgstr "利用可能なオプションはありません"
-
 msgid "Service description"
 msgstr "サービスの説明"
 
@@ -98682,20 +98678,8 @@ msgid "Pick a host first"
 msgstr "ホストの一括インポート"
 
 #, fuzzy
-msgid "No services for this host"
-msgstr "ホストのサービス数"
-
-#, fuzzy
 msgid "Select a group"
 msgstr "グループを選択..."
-
-#, fuzzy
-msgid "No host groups configured in this site"
-msgstr "イベントコンソールの構成をこのサイトに複製します"
-
-#, fuzzy
-msgid "No service groups configured in this site"
-msgstr "イベントコンソールの構成をこのサイトに複製します"
 
 #, fuzzy
 msgid "Map name"
@@ -98882,10 +98866,6 @@ msgstr "クラウドサービス"
 #, fuzzy
 msgid "group name"
 msgstr "グループ名"
-
-#, fuzzy
-msgid "No groups available"
-msgstr "利用可能なオプションはありません"
 
 msgid ""
 "One or more %{filter} lines, each terminated by a literal %{newline}. "
@@ -99913,7 +99893,7 @@ msgstr "利用不可"
 msgid "On slide"
 msgstr ""
 
-msgid "+%{n} more — keep typing to narrow results"
+msgid "Showing the first %{n} — keep typing to narrow results"
 msgstr ""
 
 #, fuzzy
@@ -104393,6 +104373,26 @@ msgid ""
 msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
+
+#, fuzzy
+#~ msgid "No hosts available"
+#~ msgstr "利用可能なオプションはありません"
+
+#, fuzzy
+#~ msgid "No services for this host"
+#~ msgstr "ホストのサービス数"
+
+#, fuzzy
+#~ msgid "No host groups configured in this site"
+#~ msgstr "イベントコンソールの構成をこのサイトに複製します"
+
+#, fuzzy
+#~ msgid "No service groups configured in this site"
+#~ msgstr "イベントコンソールの構成をこのサイトに複製します"
+
+#, fuzzy
+#~ msgid "No groups available"
+#~ msgstr "利用可能なオプションはありません"
 
 #~ msgid "(ntopng integration disabled)"
 #~ msgstr "(ntopng 統合が無効です)"

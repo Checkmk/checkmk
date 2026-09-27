@@ -146,6 +146,7 @@ async def refresh_cert(
     ],
 )
 async def forward_monitoring_data(
+    relay_id: str,
     monitoring_data: MonitoringData,
     handler: Annotated[
         handlers.ForwardMonitoringDataHandler,
@@ -157,6 +158,7 @@ async def forward_monitoring_data(
     """
     try:
         handler.process(
+            relay_id=RelayID(relay_id),
             payload=monitoring_data.payload,
             host=monitoring_data.host,
             config_serial=Serial(monitoring_data.serial),

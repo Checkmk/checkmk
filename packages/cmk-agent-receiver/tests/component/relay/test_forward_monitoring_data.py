@@ -66,6 +66,7 @@ def test_forward_monitoring_data(
         f"payload_type:fetcher;"
         f"payload_size:{len(payload)};"
         f"config_serial:{relay_config.serial};"
+        f"relay_id:{relay_id};"
         f"start_timestamp:{timestamp};"
         f"host_by_name:{HOST};"
         f"service_description:{service_name};"
@@ -123,6 +124,7 @@ def test_forward_monitoring_data_huge_payload(
         assert "payload_type:fetcher;" in received_header
         assert f"payload_size:{len(payload)};" in received_header
         assert f"config_serial:{relay_config.serial};" in received_header
+        assert f"relay_id:{relay_id};" in received_header
         assert f"host_by_name:{HOST};" in received_header
         assert f"service_description:{service_name};" in received_header
 

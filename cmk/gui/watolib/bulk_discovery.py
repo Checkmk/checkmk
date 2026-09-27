@@ -70,8 +70,6 @@ from cmk.gui.watolib.config_domain_name import (
     generate_hosts_to_update_settings,
 )
 from cmk.gui.watolib.hosts_and_folders import (
-    disk_or_search_folder_from_request,
-    folder_tree,
     FolderTree,
     Host,
     HostsAndFoldersConfig,
@@ -417,19 +415,14 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
     def gui_title(cls) -> str:
         return _("Bulk discovery")
 
-    def __init__(self) -> None:
+    def __init__(self, *, back_url: str | None = None) -> None:
         job_id = f"{self.job_prefix}-{gen_id()}"
         super().__init__(job_id)
+        self._details_back_url = back_url
 
     @override
-    def _back_url(self) -> str:
-        return disk_or_search_folder_from_request(
-            folder_tree(),
-            request.var("folder"),
-            request.get_ascii_input("host"),
-            acting_user=user,
-            request=request,
-        ).url(request)
+    def _back_url(self) -> str | None:
+        return self._details_back_url
 
     def do_execute(
         self,

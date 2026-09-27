@@ -268,6 +268,7 @@ CmkEndpointName = Literal[
     "cmk/filter_graph",
     "cmk/resolve_color",
     "cmk/identify_session",
+    "cmk/delegate_session",
     "cmk/site_logout",
     "cmk/site_login",
     "cmk/update",

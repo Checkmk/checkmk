@@ -5,6 +5,8 @@
 
 """Types shared by the tests of the internal gui_session endpoints and their fixtures."""
 
+from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Protocol
 
 from cmk.ccc.user import UserId
@@ -20,3 +22,11 @@ class SessionCookieFactory(Protocol):
         age_seconds: int = ...,
         idle_seconds: int = ...,
     ) -> tuple[str, str]: ...
+
+
+@dataclass(frozen=True, slots=True)
+class LoggedSecurityEvent:
+    """One event from the security log, as the security_events fixture records it"""
+
+    summary: str
+    details: Mapping[str, object]

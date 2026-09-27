@@ -5205,6 +5205,20 @@ class GuiSessionClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def delegate(
+        self,
+        body: Mapping[str, Any],
+        headers: Mapping[str, str] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/delegate/invoke",
+            body=dict(body),
+            headers=dict(headers) if headers else None,
+            expect_ok=expect_ok,
+        )
+
 
 class IconClient(RestApiClient):
     domain: DomainType = "icon"

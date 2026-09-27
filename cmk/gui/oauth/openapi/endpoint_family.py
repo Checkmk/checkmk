@@ -9,8 +9,8 @@ GUI_SESSION_FAMILY = EndpointFamily(
     name="GUI sessions (internal)",
     description=(
         "Lets site-internal services such as the AI control plane find the user "
-        "behind a GUI session. Only callers holding the site-internal secret may "
-        "use these endpoints."
+        "behind a GUI session, and get an access token on that user's behalf. "
+        "Only callers holding the site-internal secret may use these endpoints."
     ),
     doc_group="Checkmk Internal",
 )

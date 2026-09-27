@@ -22,7 +22,7 @@ ClientId = NewType("ClientId", str)
 
 @dataclass(frozen=True, slots=True)
 class ClientRegistration:
-    """A dynamically registered OAuth client, as persisted to the store."""
+    """An OAuth client, dynamically registered or built in, as persisted to the store."""
 
     client_id: ClientId
     redirect_uris: list[str]
@@ -66,6 +66,16 @@ class ClientStore(Backend):
                 ),
             )
         return OK(registration)
+
+    def ensure_builtin(self, client_id: ClientId, client_name: str) -> None:
+        """Create a client with this fixed id, unless one already exists."""
+        self._connection.execute(
+            """
+            INSERT OR IGNORE INTO clients (client_id, redirect_uris, client_name, registered_at)
+            VALUES (?, '[]', ?, ?)
+            """,
+            (client_id, client_name, int(datetime.now(UTC).timestamp())),
+        )
 
     def get(self, client_id: str) -> ClientRegistration | None:
         row = self._connection.execute(

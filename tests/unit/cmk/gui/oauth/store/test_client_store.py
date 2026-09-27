@@ -10,7 +10,7 @@ import pytest
 
 from cmk.ccc.resulttype import Error
 from cmk.ccc.user import UserId
-from cmk.gui.oauth.store.client_store import ClientStore, RegistryFull
+from cmk.gui.oauth.store.client_store import ClientId, ClientStore, RegistryFull
 from cmk.gui.oauth.token.backend import create_schema
 from cmk.gui.oauth.token.token_store import TokenStore
 from cmk.gui.scopes import DEFAULT_SCOPE
@@ -167,3 +167,29 @@ def test_delete_revokes_the_deleted_clients_tokens(store: ClientStore) -> None:
     store.delete([registered.ok.client_id])
 
     assert token_store.get_by_token(token.ok) is None
+
+
+def test_ensure_builtin_creates_the_client_under_its_fixed_id(store: ClientStore) -> None:
+    store.ensure_builtin(ClientId("checkmk-builtin"), "Checkmk built-in")
+
+    client = store.get("checkmk-builtin")
+    assert client is not None
+    assert (client.client_name, client.redirect_uris) == ("Checkmk built-in", [])
+
+
+def test_ensure_builtin_leaves_an_existing_client_unchanged(store: ClientStore) -> None:
+    """Two first uses racing each other must end with the first row and no error."""
+    store.ensure_builtin(ClientId("checkmk-builtin"), "Checkmk built-in")
+    first = store.get("checkmk-builtin")
+
+    store.ensure_builtin(ClientId("checkmk-builtin"), "Another name")
+
+    assert store.list() == [first]
+
+
+def test_ensure_builtin_is_not_bound_by_the_registration_limit(store: ClientStore) -> None:
+    _seed_clients(store, 1000)
+
+    store.ensure_builtin(ClientId("checkmk-builtin"), "Checkmk built-in")
+
+    assert store.get("checkmk-builtin") is not None

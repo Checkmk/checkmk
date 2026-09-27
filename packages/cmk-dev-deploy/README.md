@@ -48,7 +48,7 @@ Then:
 cdd                        # auto-detect site and deploy
 cdd --site v260            # deploy to a specific site
 cdd --watch                # watch for changes and auto-deploy
-cdd --frontend --watch     # full-stack: iBazel HMR + auto-deploy
+cdd --frontend --watch     # full-stack: Vite HMR + auto-deploy
 ```
 
 **Tip: use `-v` to see what the tool is doing.** Verbose mode shows detected site details, per-file change lists, Bazel target resolution, dependency expansion, diff base source, and a timing timeline at the end. Highly recommended when getting started or debugging unexpected behavior:
@@ -166,7 +166,7 @@ Bazel executes one command at a time per output base. On the checkout's
 default server, every deploy would queue behind whatever `bazel test` or
 `bazel build` you have running -- and block it in return. The tool
 therefore runs all of its Bazel commands (`build`, `run //:deploy-python`,
-`query`, `cquery`, `info`, and the iBazel frontend supervisor's rebuilds)
+`query`, `cquery`, `info`, and the frontend supervisor's rebuilds)
 against a dedicated output base:
 
 ```
@@ -245,29 +245,27 @@ Press Ctrl-C to stop.
 
 ### Frontend Mode
 
-Deploy backend first, then start the iBazel frontend supervisor for hot module replacement.
+Deploy backend first, then start the frontend supervisor for hot module replacement.
 
 ```bash
 cdd --frontend
 ```
 
-Runs a one-shot deploy of all backend changes, then starts `ibazel run //packages/cmk-frontend-vue:vite` as a foreground subprocess. iBazel watches the frontend source tree and triggers Vite rebuilds automatically, providing hot module replacement for Vue/TypeScript files. The tool also writes a site config override (`load_frontend_vue = "inject"`) so the GUI loads frontend assets from the Vite dev server. Press Ctrl-C to stop; the override is removed on shutdown.
+Runs a one-shot deploy of all backend changes, then starts `bazel run //bazel/tools/devserver -- //packages/cmk-frontend-vue:vite` as a foreground subprocess. It watches the frontend sources and those of their dependencies and triggers Vite rebuilds automatically, providing hot module replacement for Vue/TypeScript files. The tool also writes a site config override (`load_frontend_vue = "inject"`) so the GUI loads frontend assets from the Vite dev server. Press Ctrl-C to stop; the override is removed on shutdown.
 
-iBazel is auto-downloaded (v0.28.0) on first use and cached at `~/.cache/cmk-dev-deploy/`.
-
-When `--frontend` is active, the `packages/cmk-frontend-vue` Bazel target is filtered out of regular deploy builds to avoid conflicts with iBazel.
+When `--frontend` is active, the `packages/cmk-frontend-vue` Bazel target is filtered out of regular deploy builds, since the dev server serves it.
 
 ### Combined Mode
 
-The recommended mode for full-stack development: iBazel HMR for frontend, auto-deploy for backend.
+The recommended mode for full-stack development: Vite HMR for frontend, auto-deploy for backend.
 
 ```bash
 cdd --frontend --watch
 ```
 
-Starts the iBazel frontend supervisor after the initial deploy, then enters the watch loop. Backend changes trigger re-deploys while iBazel stays alive and continues to serve frontend changes via HMR.
+Starts the frontend supervisor after the initial deploy, then enters the watch loop. Backend changes trigger re-deploys while the dev server stays alive and continues to serve frontend changes via HMR.
 
-The supervisor is health-checked before each poll cycle and after each deploy cycle. If iBazel crashes, the watch loop stops and prints the last stderr output for diagnostics. If a deploy fails in combined mode, the frontend supervisor is stopped automatically.
+The supervisor is health-checked before each poll cycle and after each deploy cycle. If the dev server crashes, the watch loop stops and prints the last stderr output for diagnostics. If a deploy fails in combined mode, the frontend supervisor is stopped automatically.
 
 ## Site Resolution
 
@@ -295,7 +293,7 @@ echo 'v260' > .site
 | `--full`                |       |             | Force full deploy: delete and recreate the clone, deploy everything                                                                                                                                               |
 | `--dry-run`             | `-n`  |             | Show deploy plan without executing                                                                                                                                                                                |
 | `--watch`               | `-w`  |             | Watch for changes and auto-deploy                                                                                                                                                                                 |
-| `--frontend`            |       |             | Start iBazel frontend supervisor after deploying                                                                                                                                                                  |
+| `--frontend`            |       |             | Start the Vite dev server with hot module replacement after deploying                                                                                                                                             |
 | `--commit REF`          |       |             | Use a specific commit/branch/tag for change detection instead of the working tree (implies `--full`). Manifest and builds still use the current working tree — check out the ref first to deploy its exact state. |
 | `--verbose`             | `-v`  | 0           | Increase verbosity (`-v` for detailed output)                                                                                                                                                                     |
 | `--jobs N`              | `-j`  | 4           | Max parallel deployment workers                                                                                                                                                                                   |

@@ -13,6 +13,7 @@ py_library(
         "bazel_devserver/rebuild_loop.py",
     ],
     imports = ["."],
+    visibility = ["//packages/cmk-dev-deploy:__pkg__"],
     deps = [requirement("watchdog")],
 )
 

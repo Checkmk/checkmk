@@ -94,7 +94,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--frontend",
         action="store_true",
-        help="Start iBazel frontend supervisor after deploying (foreground, Ctrl-C to stop)",
+        help=(
+            "Start the Vite dev server with hot module replacement after deploying "
+            "(foreground, Ctrl-C to stop)"
+        ),
     )
     parser.add_argument(
         "--purge",

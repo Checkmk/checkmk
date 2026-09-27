@@ -374,12 +374,12 @@ class DeployCycleResult:
 
 @dataclass(frozen=True)
 class FrontendConfig:
-    """Configuration for the iBazel frontend supervisor."""
+    """Configuration for the frontend supervisor."""
 
     port: int = 5173
 
-    startup_timeout: float = 300.0
-    """Generous (5 min) to accommodate cold-cache iBazel builds."""
+    startup_timeout: float = 60.0
+    """Seconds to wait for the dev server's port once the initial build is done."""
 
     stderr_buffer_lines: int = 50
 

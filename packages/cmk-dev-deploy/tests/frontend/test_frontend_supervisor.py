@@ -4,26 +4,36 @@
 
 """Unit tests for cmk.dev_deploy.frontend_supervisor module.
 
-Comprehensive coverage of the iBazel-based frontend supervisor: inotify
-pre-flight check, PID file management, orphan detection, immediate SIGKILL
-shutdown, iBazel spawning, [frontend] stdout prefix, startup banner, crash
-reporting, v1.4 code removal verification, and CLI help text.
+Coverage of the frontend supervisor: inotify pre-flight check, PID file
+management, orphan detection, SIGINT-first shutdown, launcher
+spawning, [frontend] stdout prefix, startup banner, crash reporting, and
+v1.4 code removal verification.
 """
 
 import contextlib
 import inspect
 import io
+import os
 import signal
+import socket
+import subprocess
+import sys
+import threading
+import time
+from collections.abc import Iterator
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
+from cmk.dev_deploy.core.bazel import deploy_output_base, SHARED_SERVER_ENV
 from cmk.dev_deploy.errors import DeployError, FrontendError
+from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor, VITE_TARGET
 from cmk.dev_deploy.types import (
     ChangeCategory,
     ChangeSet,
     detect_frontend_project,
+    Edition,
     FrontendConfig,
     InstallSpec,
 )
@@ -57,24 +67,14 @@ class TestFrontendError:
 
 
 class TestFrontendConfig:
-    """FrontendConfig defaults match locked decisions for iBazel."""
+    """FrontendConfig defaults."""
 
     def test_defaults(self) -> None:
         config = FrontendConfig()
         assert config.port == 5173
-        assert config.startup_timeout == 300.0
+        assert config.startup_timeout == 60.0
         assert config.stderr_buffer_lines == 50
         assert config.health_check_interval == 0.5
-
-    def test_no_shutdown_grace(self) -> None:
-        """shutdown_grace was removed in iBazel rewrite (immediate SIGKILL)."""
-        config = FrontendConfig()
-        assert not hasattr(config, "shutdown_grace")
-
-    def test_startup_timeout_300s(self) -> None:
-        """300s timeout for initial Bazel builds (cold cache can take 3-5 min)."""
-        config = FrontendConfig()
-        assert config.startup_timeout == 300.0
 
 
 # ---------------------------------------------------------------------------
@@ -267,9 +267,9 @@ class TestPidFileManagement:
     def test_write_pid_file(self, tmp_path: Path) -> None:
         from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
 
-        pid_file = tmp_path / "cache" / "ibazel.pid"
+        pid_file = tmp_path / "cache" / "frontend.pid"
         config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
+        supervisor = FrontendSupervisor(config, repo_root=tmp_path, edition=Edition.COMMUNITY)
 
         with patch(
             "cmk.dev_deploy.frontend.frontend_supervisor._pid_file",
@@ -281,10 +281,10 @@ class TestPidFileManagement:
     def test_remove_pid_file(self, tmp_path: Path) -> None:
         from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
 
-        pid_file = tmp_path / "ibazel.pid"
+        pid_file = tmp_path / "frontend.pid"
         pid_file.write_text("12345")
         config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
+        supervisor = FrontendSupervisor(config, repo_root=tmp_path, edition=Edition.COMMUNITY)
 
         with patch(
             "cmk.dev_deploy.frontend.frontend_supervisor._pid_file",
@@ -298,7 +298,7 @@ class TestPidFileManagement:
 
         pid_file = tmp_path / "nonexistent.pid"
         config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
+        supervisor = FrontendSupervisor(config, repo_root=tmp_path, edition=Edition.COMMUNITY)
 
         with patch(
             "cmk.dev_deploy.frontend.frontend_supervisor._pid_file",
@@ -310,9 +310,9 @@ class TestPidFileManagement:
     def test_write_pid_file_creates_parent_dir(self, tmp_path: Path) -> None:
         from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
 
-        pid_file = tmp_path / "deep" / "nested" / "dir" / "ibazel.pid"
+        pid_file = tmp_path / "deep" / "nested" / "dir" / "frontend.pid"
         config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
+        supervisor = FrontendSupervisor(config, repo_root=tmp_path, edition=Edition.COMMUNITY)
 
         with patch(
             "cmk.dev_deploy.frontend.frontend_supervisor._pid_file",
@@ -328,14 +328,52 @@ class TestPidFileManagement:
 # ---------------------------------------------------------------------------
 
 
+_RUNNER_CMDLINE = f"python3\x00devserver/__main__.py\x00{VITE_TARGET}\x00"
+
+
+@contextlib.contextmanager
+def _orphaned_dev_server(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, trap: str, *args: str
+) -> Iterator[tuple[FrontendSupervisor, subprocess.Popen[str]]]:
+    """Run a shell that passes for a runner left behind by a crashed cdd.
+
+    *trap* sets its reaction to SIGINT.  Whatever survives the test is killed.
+    """
+    monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "cache"))
+    with socket.socket() as sock:
+        sock.bind(("127.0.0.1", 0))
+        port = sock.getsockname()[1]
+    with subprocess.Popen(
+        ["sh", "-c", f"{trap}; echo ready; while :; do sleep 1; done", VITE_TARGET, *args],
+        start_new_session=True,
+        stdout=subprocess.PIPE,
+        text=True,
+    ) as orphan:
+        try:
+            assert orphan.stdout is not None
+            orphan.stdout.readline()
+            pid_file = tmp_path / "cache" / "cmk-dev-deploy" / "frontend-dev-server.pid"
+            pid_file.parent.mkdir(parents=True)
+            pid_file.write_text(str(orphan.pid))
+            yield (
+                FrontendSupervisor(
+                    FrontendConfig(port=port), repo_root=tmp_path, edition=Edition.COMMUNITY
+                ),
+                orphan,
+            )
+        finally:
+            with contextlib.suppress(ProcessLookupError):
+                os.killpg(orphan.pid, signal.SIGKILL)
+
+
 class TestOrphanDetection:
-    """_cleanup_orphaned_ibazel detects and kills stale iBazel processes."""
+    """_cleanup_orphaned_server detects and kills stale dev server processes."""
 
     def test_noop_when_no_pid_file(self, tmp_path: Path) -> None:
         from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
 
         config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
+        supervisor = FrontendSupervisor(config, repo_root=tmp_path, edition=Edition.COMMUNITY)
         with (
             patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor._pid_file",
@@ -346,54 +384,73 @@ class TestOrphanDetection:
             ) as mock_port_cleanup,
         ):
             # Should not raise; should call port cleanup as fallback
-            supervisor._cleanup_orphaned_ibazel()  # noqa: SLF001
+            supervisor._cleanup_orphaned_server()  # noqa: SLF001
             mock_port_cleanup.assert_called_once_with(config.port)
 
-    def test_kills_orphaned_ibazel_process(self, tmp_path: Path) -> None:
-        from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
+    def test_lets_orphaned_dev_server_remove_its_sandbox(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        sandbox = tmp_path / "sandbox"
+        sandbox.mkdir()
+        with _orphaned_dev_server(
+            tmp_path, monkeypatch, "trap 'rm -r \"$1\"; exit' INT", str(sandbox)
+        ) as (supervisor, orphan):
+            supervisor._cleanup_orphaned_server()  # noqa: SLF001
+            orphan.wait(timeout=10)
 
-        pid_file = tmp_path / "ibazel.pid"
+        assert not sandbox.exists()
+
+    def test_kills_orphaned_dev_server_that_ignores_sigint(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr("cmk.dev_deploy.frontend.frontend_supervisor._SHUTDOWN_GRACE", 0.2)
+        with _orphaned_dev_server(tmp_path, monkeypatch, "trap '' INT") as (supervisor, orphan):
+            supervisor._cleanup_orphaned_server()  # noqa: SLF001
+
+            assert orphan.wait(timeout=10) == -signal.SIGKILL
+
+    def test_waits_for_killed_dev_server_to_release_port(self, tmp_path: Path) -> None:
+        pid_file = tmp_path / "frontend.pid"
         pid_file.write_text("9999")
-
-        config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
-
-        # Mock /proc/{pid}/cmdline to contain "ibazel"
+        supervisor = FrontendSupervisor(
+            FrontendConfig(), repo_root=tmp_path, edition=Edition.COMMUNITY
+        )
         mock_cmdline_path = MagicMock()
-        mock_cmdline_path.read_text.return_value = "/usr/bin/ibazel\x00run\x00"
+        mock_cmdline_path.read_text.return_value = _RUNNER_CMDLINE
 
         with (
             patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor._pid_file",
                 return_value=pid_file,
             ),
-            patch("os.kill"),  # Process alive (no exception)
+            patch("os.kill"),
             patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor.Path",
                 side_effect=lambda p: mock_cmdline_path if "/proc/" in str(p) else Path(p),
             ),
-            patch("cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group") as mock_kill,
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._find_bazel_children",
-                return_value=[],
-            ),
+            patch("os.getpgid", return_value=9999),
+            patch("bazel_devserver.process_tree.signal_group"),
+            patch("bazel_devserver.process_tree.wait_for_exit"),
             patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor._check_port",
-                return_value=False,
+                side_effect=[True, True, False],
             ),
-            patch("cmk.dev_deploy.frontend.frontend_supervisor.output"),
+            patch("cmk.dev_deploy.frontend.frontend_supervisor.time.sleep"),
+            patch("cmk.dev_deploy.frontend.frontend_supervisor.output") as mock_output,
         ):
-            supervisor._cleanup_orphaned_ibazel()  # noqa: SLF001
-            mock_kill.assert_called_once_with(9999)
+            supervisor._cleanup_orphaned_server()  # noqa: SLF001
+
+        warnings = [c.args[0] for c in mock_output.warn.call_args_list]
+        assert not [w for w in warnings if "still in use" in w]
 
     def test_ignores_dead_process(self, tmp_path: Path) -> None:
         from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
 
-        pid_file = tmp_path / "ibazel.pid"
+        pid_file = tmp_path / "frontend.pid"
         pid_file.write_text("9999")
 
         config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
+        supervisor = FrontendSupervisor(config, repo_root=tmp_path, edition=Edition.COMMUNITY)
 
         with (
             patch(
@@ -406,22 +463,22 @@ class TestOrphanDetection:
                 "cmk.dev_deploy.frontend.frontend_supervisor._cleanup_orphaned_port"
             ) as mock_port_cleanup,
         ):
-            supervisor._cleanup_orphaned_ibazel()  # noqa: SLF001
+            supervisor._cleanup_orphaned_server()  # noqa: SLF001
             mock_kill.assert_not_called()
             mock_port_cleanup.assert_called_once_with(config.port)
             # PID file should be cleaned up (finally block)
             assert not pid_file.exists()
 
-    def test_ignores_non_ibazel_process(self, tmp_path: Path) -> None:
+    def test_ignores_process_other_than_dev_server(self, tmp_path: Path) -> None:
         from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
 
-        pid_file = tmp_path / "ibazel.pid"
+        pid_file = tmp_path / "frontend.pid"
         pid_file.write_text("9999")
 
         config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
+        supervisor = FrontendSupervisor(config, repo_root=tmp_path, edition=Edition.COMMUNITY)
 
-        # Process is alive but not ibazel
+        # Process is alive but not the dev server
         mock_cmdline_path = MagicMock()
         mock_cmdline_path.read_text.return_value = "/usr/bin/python3\x00script.py\x00"
 
@@ -435,58 +492,19 @@ class TestOrphanDetection:
                 "cmk.dev_deploy.frontend.frontend_supervisor.Path",
                 side_effect=lambda p: mock_cmdline_path if "/proc/" in str(p) else Path(p),
             ),
+            patch("os.killpg") as mock_killpg,
             patch("cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group") as mock_kill,
         ):
-            supervisor._cleanup_orphaned_ibazel()  # noqa: SLF001
+            supervisor._cleanup_orphaned_server()  # noqa: SLF001
+            mock_killpg.assert_not_called()
             mock_kill.assert_not_called()
-
-    def test_kills_bazel_children_before_ibazel(self, tmp_path: Path) -> None:
-        """When orphaned iBazel is found, its Bazel children are also killed."""
-        from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
-
-        pid_file = tmp_path / "ibazel.pid"
-        pid_file.write_text("9999")
-
-        config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
-
-        mock_cmdline_path = MagicMock()
-        mock_cmdline_path.read_text.return_value = "/usr/bin/ibazel\x00run\x00"
-
-        with (
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._pid_file",
-                return_value=pid_file,
-            ),
-            patch("os.kill"),  # Process alive
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor.Path",
-                side_effect=lambda p: mock_cmdline_path if "/proc/" in str(p) else Path(p),
-            ),
-            patch("cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group") as mock_kill,
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._find_bazel_children",
-                return_value=[10001, 10002],
-            ),
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._check_port",
-                return_value=False,
-            ),
-            patch("cmk.dev_deploy.frontend.frontend_supervisor.output"),
-        ):
-            supervisor._cleanup_orphaned_ibazel()  # noqa: SLF001
-            # iBazel + 2 children = 3 calls
-            assert mock_kill.call_count == 3
-            mock_kill.assert_any_call(9999)
-            mock_kill.assert_any_call(10001)
-            mock_kill.assert_any_call(10002)
 
     def test_port_cleanup_fallback_when_no_pid_file(self, tmp_path: Path) -> None:
         """When no PID file exists but port is in use, _cleanup_orphaned_port is called."""
         from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
 
         config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
+        supervisor = FrontendSupervisor(config, repo_root=tmp_path, edition=Edition.COMMUNITY)
         with (
             patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor._pid_file",
@@ -496,95 +514,8 @@ class TestOrphanDetection:
                 "cmk.dev_deploy.frontend.frontend_supervisor._cleanup_orphaned_port"
             ) as mock_port_cleanup,
         ):
-            supervisor._cleanup_orphaned_ibazel()  # noqa: SLF001
+            supervisor._cleanup_orphaned_server()  # noqa: SLF001
             mock_port_cleanup.assert_called_once_with(config.port)
-
-
-# ---------------------------------------------------------------------------
-# TestFindBazelChildren
-# ---------------------------------------------------------------------------
-
-
-class TestFindBazelChildren:
-    """_find_bazel_children discovers Bazel/Java child processes via /proc/."""
-
-    def test_finds_bazel_child_via_proc_task(self, tmp_path: Path) -> None:
-        """Mock /proc/{pid}/task/{tid}/children to return a child PID."""
-        from cmk.dev_deploy.frontend.frontend_supervisor import _find_bazel_children
-
-        # Create mock /proc structure
-        task_dir = tmp_path / "proc" / "1000" / "task" / "1000"
-        task_dir.mkdir(parents=True)
-        (task_dir / "children").write_text("2000")
-
-        # Mock child cmdline
-        child_cmdline = tmp_path / "proc" / "2000" / "cmdline"
-        child_cmdline.parent.mkdir(parents=True)
-        child_cmdline.write_text("/usr/bin/bazel\x00build\x00")
-
-        with (
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor.Path",
-                side_effect=lambda p: Path(str(p).replace("/proc/", str(tmp_path / "proc") + "/")),
-            ),
-        ):
-            result = _find_bazel_children(1000)
-            assert 2000 in result
-
-    def test_ignores_non_bazel_children(self, tmp_path: Path) -> None:
-        """Children with non-bazel cmdline are not returned."""
-        from cmk.dev_deploy.frontend.frontend_supervisor import _find_bazel_children
-
-        task_dir = tmp_path / "proc" / "1000" / "task" / "1000"
-        task_dir.mkdir(parents=True)
-        (task_dir / "children").write_text("2000")
-
-        child_cmdline = tmp_path / "proc" / "2000" / "cmdline"
-        child_cmdline.parent.mkdir(parents=True)
-        child_cmdline.write_text("/usr/bin/python3\x00script.py\x00")
-
-        with (
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor.Path",
-                side_effect=lambda p: Path(str(p).replace("/proc/", str(tmp_path / "proc") + "/")),
-            ),
-        ):
-            result = _find_bazel_children(1000)
-            assert result == []
-
-    def test_returns_empty_on_proc_error(self) -> None:
-        """OSError reading /proc/ returns empty list, not a crash."""
-        from cmk.dev_deploy.frontend.frontend_supervisor import _find_bazel_children
-
-        with patch(
-            "cmk.dev_deploy.frontend.frontend_supervisor.Path",
-            side_effect=lambda _p: MagicMock(
-                iterdir=MagicMock(side_effect=OSError("Permission denied"))
-            ),
-        ):
-            result = _find_bazel_children(1000)
-            assert result == []
-
-    def test_finds_java_workers(self, tmp_path: Path) -> None:
-        """Java processes (Bazel JVM workers) are also found."""
-        from cmk.dev_deploy.frontend.frontend_supervisor import _find_bazel_children
-
-        task_dir = tmp_path / "proc" / "1000" / "task" / "1000"
-        task_dir.mkdir(parents=True)
-        (task_dir / "children").write_text("3000")
-
-        child_cmdline = tmp_path / "proc" / "3000" / "cmdline"
-        child_cmdline.parent.mkdir(parents=True)
-        child_cmdline.write_text("/usr/bin/java\x00-jar\x00bazel-worker.jar\x00")
-
-        with (
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor.Path",
-                side_effect=lambda p: Path(str(p).replace("/proc/", str(tmp_path / "proc") + "/")),
-            ),
-        ):
-            result = _find_bazel_children(1000)
-            assert 3000 in result
 
 
 # ---------------------------------------------------------------------------
@@ -711,94 +642,12 @@ class TestCleanupOrphanedPort:
 
 
 # ---------------------------------------------------------------------------
-# TestCollectDescendantPids
+# TestKillProcessGroup
 # ---------------------------------------------------------------------------
 
 
-class TestCollectDescendantPids:
-    """_collect_descendant_pids recursively collects process tree (deepest first)."""
-
-    def test_collects_direct_children(self) -> None:
-        """Direct children of root PID are collected."""
-        from cmk.dev_deploy.frontend.frontend_supervisor import _collect_descendant_pids
-
-        def mock_find(pid: int) -> list[int]:
-            if pid == 42:
-                return [100, 200]
-            return []
-
-        with patch(
-            "cmk.dev_deploy.frontend.frontend_supervisor._find_bazel_children",
-            side_effect=mock_find,
-        ):
-            result = _collect_descendant_pids(42)
-            assert 100 in result
-            assert 200 in result
-
-    def test_collects_recursive_children(self) -> None:
-        """Grandchildren are collected, with deepest first (bottom-up kill order)."""
-        from cmk.dev_deploy.frontend.frontend_supervisor import _collect_descendant_pids
-
-        def mock_find(pid: int) -> list[int]:
-            if pid == 42:
-                return [100]
-            if pid == 100:
-                return [200]
-            return []
-
-        with patch(
-            "cmk.dev_deploy.frontend.frontend_supervisor._find_bazel_children",
-            side_effect=mock_find,
-        ):
-            result = _collect_descendant_pids(42)
-            assert 100 in result
-            assert 200 in result
-            # 200 (deepest) should come before 100 (its parent)
-            assert result.index(200) < result.index(100)
-
-    def test_returns_empty_on_no_children(self) -> None:
-        """No children -> empty list."""
-        from cmk.dev_deploy.frontend.frontend_supervisor import _collect_descendant_pids
-
-        with patch(
-            "cmk.dev_deploy.frontend.frontend_supervisor._find_bazel_children",
-            return_value=[],
-        ):
-            result = _collect_descendant_pids(42)
-            assert result == []
-
-    def test_handles_disappearing_processes(self) -> None:
-        """OSError during child discovery does not crash, returns what it can find."""
-        from cmk.dev_deploy.frontend.frontend_supervisor import _collect_descendant_pids
-
-        call_count = 0
-
-        def mock_find(pid: int) -> list[int]:
-            nonlocal call_count
-            call_count += 1
-            if pid == 42:
-                return [100, 200]
-            if pid == 100:
-                raise OSError("Process disappeared")
-            return []
-
-        with patch(
-            "cmk.dev_deploy.frontend.frontend_supervisor._find_bazel_children",
-            side_effect=mock_find,
-        ):
-            result = _collect_descendant_pids(42)
-            # 200 found normally, 100 also in result (added after its children)
-            assert 200 in result
-            assert 100 in result
-
-
-# ---------------------------------------------------------------------------
-# TestImmediateKill (replaces TestGracefulShutdown)
-# ---------------------------------------------------------------------------
-
-
-class TestImmediateKill:
-    """_kill_process_group sends immediate SIGKILL to process group."""
+class TestKillProcessGroup:
+    """_kill_process_group sends SIGKILL to the process group."""
 
     def test_sigkill_via_process_group(self) -> None:
         from cmk.dev_deploy.frontend.frontend_supervisor import _kill_process_group
@@ -808,24 +657,7 @@ class TestImmediateKill:
             patch("os.killpg") as mock_killpg,
         ):
             _kill_process_group(42)
-            # Should have sent ONLY SIGKILL (no SIGTERM)
             mock_killpg.assert_called_once_with(1000, signal.SIGKILL)
-
-    def test_no_sigterm_sent(self) -> None:
-        """Per user decision: immediate SIGKILL, no SIGTERM, no grace period."""
-        from cmk.dev_deploy.frontend.frontend_supervisor import _kill_process_group
-
-        with (
-            patch("os.getpgid", return_value=1000),
-            patch("os.killpg") as mock_killpg,
-        ):
-            _kill_process_group(42)
-            # Verify only one call and it was SIGKILL
-            assert mock_killpg.call_count == 1
-            assert mock_killpg.call_args[0][1] == signal.SIGKILL
-            # Explicitly verify SIGTERM was NOT sent
-            for call in mock_killpg.call_args_list:
-                assert call[0][1] != signal.SIGTERM
 
     def test_handles_process_already_gone(self) -> None:
         from cmk.dev_deploy.frontend.frontend_supervisor import _kill_process_group
@@ -844,39 +676,6 @@ class TestImmediateKill:
             # Should not raise
             _kill_process_group(42)
 
-    def test_stop_still_uses_sigkill(self) -> None:
-        """Enhanced stop() with tree cleanup still uses SIGKILL via _kill_process_group."""
-        from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
-
-        config = FrontendConfig()  # nosec B108
-        supervisor = FrontendSupervisor(config, repo_root=Path("/tmp"))  # nosec B108
-
-        mock_proc = MagicMock()
-        mock_proc.pid = 42
-        mock_proc.poll.return_value = None  # process alive
-        mock_proc.wait.return_value = None
-        supervisor._proc = mock_proc  # noqa: SLF001
-
-        with (
-            patch("cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group") as mock_kill,
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._collect_descendant_pids",
-                return_value=[],
-            ),
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._check_port",
-                return_value=False,
-            ),
-            patch("cmk.dev_deploy.frontend.frontend_supervisor.time.sleep"),
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._pid_file",
-                return_value=Path("/tmp/test.pid"),  # nosec B108
-            ),
-        ):
-            supervisor.stop()
-            # _kill_process_group is called (which internally sends SIGKILL)
-            mock_kill.assert_called_with(42)
-
 
 # ---------------------------------------------------------------------------
 # TestStopFullCleanup
@@ -884,30 +683,35 @@ class TestImmediateKill:
 
 
 class TestStopFullCleanup:
-    """Enhanced stop() kills full process tree and verifies port is free."""
+    """stop() stops the runner's process group and verifies port is free."""
 
-    def test_stop_kills_descendants(self, tmp_path: Path) -> None:
-        """stop() kills descendant process groups found by _collect_descendant_pids."""
-        from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
-
-        config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
-
+    def _supervisor(self, tmp_path: Path, returncode: int | None) -> FrontendSupervisor:
+        supervisor = FrontendSupervisor(
+            FrontendConfig(), repo_root=tmp_path, edition=Edition.COMMUNITY
+        )
         mock_proc = MagicMock()
         mock_proc.pid = 42
-        mock_proc.poll.return_value = None  # process alive
-        mock_proc.wait.return_value = None
+        mock_proc.poll.return_value = returncode
+        mock_proc.wait.return_value = returncode
         supervisor._proc = mock_proc  # noqa: SLF001
+        return supervisor
+
+    def _signals_sent_by_stop(
+        self, supervisor: FrontendSupervisor, tmp_path: Path
+    ) -> list[tuple[int, signal.Signals]]:
+        sent: list[tuple[int, signal.Signals]] = []
+
+        def track_signal(pgid: int, sig: signal.Signals) -> None:
+            sent.append((pgid, sig))
 
         with (
             patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._collect_descendant_pids",
-                return_value=[100, 200],
-            ),
-            patch("cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group") as mock_kill,
-            patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor._check_port",
                 return_value=False,
+            ),
+            patch(
+                "bazel_devserver.process_tree.signal_group",
+                side_effect=track_signal,
             ),
             patch("cmk.dev_deploy.frontend.frontend_supervisor.time.sleep"),
             patch(
@@ -916,72 +720,27 @@ class TestStopFullCleanup:
             ),
         ):
             supervisor.stop()
-            # iBazel PID + 2 descendants = 3 calls
-            assert mock_kill.call_count == 3
-            mock_kill.assert_any_call(42)
-            mock_kill.assert_any_call(100)
-            mock_kill.assert_any_call(200)
+        return sent
 
-    def test_stop_kills_bottom_up(self, tmp_path: Path) -> None:
-        """Descendants are killed in the order returned (deepest first)."""
-        from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
+    def test_stop_interrupts_runner_group_before_killing_it(self, tmp_path: Path) -> None:
+        supervisor = self._supervisor(tmp_path, returncode=None)
 
-        config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
+        sent = self._signals_sent_by_stop(supervisor, tmp_path)
 
-        mock_proc = MagicMock()
-        mock_proc.pid = 42
-        mock_proc.poll.return_value = None
-        mock_proc.wait.return_value = None
-        supervisor._proc = mock_proc  # noqa: SLF001
+        assert sent == [(42, signal.SIGINT), (42, signal.SIGKILL)]
 
-        kill_order: list[int] = []
+    def test_stop_kills_survivors_of_runner_that_already_exited(self, tmp_path: Path) -> None:
+        supervisor = self._supervisor(tmp_path, returncode=1)
 
-        def track_kill(pid: int) -> None:
-            kill_order.append(pid)
+        sent = self._signals_sent_by_stop(supervisor, tmp_path)
 
-        with (
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._collect_descendant_pids",
-                return_value=[200, 100],  # 200 is deepest
-            ),
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group",
-                side_effect=track_kill,
-            ),
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._check_port",
-                return_value=False,
-            ),
-            patch("cmk.dev_deploy.frontend.frontend_supervisor.time.sleep"),
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._pid_file",
-                return_value=tmp_path / "test.pid",
-            ),
-        ):
-            supervisor.stop()
-            # iBazel killed first (42), then descendants in order (200, 100)
-            assert kill_order == [42, 200, 100]
+        assert sent == [(42, signal.SIGKILL)]
 
     def test_stop_verifies_port_free(self, tmp_path: Path) -> None:
         """No warning when port is free after kill."""
-        from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
-
-        config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
-
-        mock_proc = MagicMock()
-        mock_proc.pid = 42
-        mock_proc.poll.return_value = None
-        mock_proc.wait.return_value = None
-        supervisor._proc = mock_proc  # noqa: SLF001
+        supervisor = self._supervisor(tmp_path, returncode=None)
 
         with (
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._collect_descendant_pids",
-                return_value=[],
-            ),
-            patch("cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group"),
             patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor._check_port",
                 return_value=False,
@@ -989,6 +748,7 @@ class TestStopFullCleanup:
             patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor._cleanup_orphaned_port"
             ) as mock_port_cleanup,
+            patch("bazel_devserver.process_tree.signal_group"),
             patch("cmk.dev_deploy.frontend.frontend_supervisor.time.sleep"),
             patch("cmk.dev_deploy.frontend.frontend_supervisor.output") as mock_output,
             patch(
@@ -1002,23 +762,10 @@ class TestStopFullCleanup:
 
     def test_stop_warns_if_port_still_in_use(self, tmp_path: Path) -> None:
         """Port still in use after kill -> warn + _cleanup_orphaned_port fallback."""
-        from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
-
         config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
-
-        mock_proc = MagicMock()
-        mock_proc.pid = 42
-        mock_proc.poll.return_value = None
-        mock_proc.wait.return_value = None
-        supervisor._proc = mock_proc  # noqa: SLF001
+        supervisor = self._supervisor(tmp_path, returncode=None)
 
         with (
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._collect_descendant_pids",
-                return_value=[],
-            ),
-            patch("cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group"),
             patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor._check_port",
                 return_value=True,
@@ -1026,6 +773,7 @@ class TestStopFullCleanup:
             patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor._cleanup_orphaned_port"
             ) as mock_port_cleanup,
+            patch("bazel_devserver.process_tree.signal_group"),
             patch("cmk.dev_deploy.frontend.frontend_supervisor.time.sleep"),
             patch("cmk.dev_deploy.frontend.frontend_supervisor.output") as mock_output,
             patch(
@@ -1038,57 +786,62 @@ class TestStopFullCleanup:
             assert "still in use" in mock_output.warn.call_args[0][0]
             mock_port_cleanup.assert_called_once_with(config.port)
 
-    def test_stop_cleans_up_when_proc_already_dead(self, tmp_path: Path) -> None:
-        """stop() with dead process still kills surviving descendant children."""
-        from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
-
-        config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
-
-        mock_proc = MagicMock()
-        mock_proc.pid = 42
-        mock_proc.poll.return_value = 1  # process already dead
-        supervisor._proc = mock_proc  # noqa: SLF001
-
-        with (
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._collect_descendant_pids",
-                return_value=[100],
-            ),
-            patch("cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group") as mock_kill,
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._check_port",
-                return_value=False,
-            ),
-            patch("cmk.dev_deploy.frontend.frontend_supervisor.time.sleep"),
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._pid_file",
-                return_value=tmp_path / "test.pid",
-            ),
-        ):
-            supervisor.stop()
-            # Descendant 100 should still be killed even though main proc is dead
-            mock_kill.assert_called_once_with(100)
-            # Proc should be cleared (is_running returns False)
-            assert not supervisor.is_running()
-
     def test_stop_noop_when_proc_is_none(self, tmp_path: Path) -> None:
         """stop() is a no-op when _proc is None."""
-        from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
-
-        config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
-        # _proc is None by default
+        supervisor = FrontendSupervisor(
+            FrontendConfig(), repo_root=tmp_path, edition=Edition.COMMUNITY
+        )
 
         with (
-            patch("cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group") as mock_kill,
+            patch("bazel_devserver.process_tree.signal_group") as mock_signal,
             patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor._pid_file",
                 return_value=tmp_path / "test.pid",
             ),
         ):
             supervisor.stop()
-            mock_kill.assert_not_called()
+            mock_signal.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# TestStopInterruptsDevServer
+# ---------------------------------------------------------------------------
+
+
+class TestStopInterruptsDevServer:
+    """stop() interrupts the runner before killing it, as the runner stops the
+    dev server only then."""
+
+    def test_stop_lets_runner_stop_the_dev_server(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "cache"))
+        with socket.socket() as sock:
+            sock.bind(("127.0.0.1", 0))
+            port = sock.getsockname()[1]
+        supervisor = FrontendSupervisor(
+            FrontendConfig(port=port), repo_root=tmp_path, edition=Edition.COMMUNITY
+        )
+        sandbox = tmp_path / "sandbox"
+        sandbox.mkdir()
+        with subprocess.Popen(
+            [
+                "sh",
+                "-c",
+                "trap 'rm -r \"$0\"; exit' INT; echo ready; while :; do sleep 1; done",
+                str(sandbox),
+            ],
+            start_new_session=True,
+            stdout=subprocess.PIPE,
+            text=True,
+        ) as dev_server:
+            assert dev_server.stdout is not None
+            dev_server.stdout.readline()
+            supervisor._proc = dev_server  # noqa: SLF001
+
+            supervisor.stop()
+
+        assert not sandbox.exists()
 
 
 # ---------------------------------------------------------------------------
@@ -1136,7 +889,7 @@ class TestShutdownParity:
         mock_supervisor.stop.assert_called()
 
     def test_run_frontend_crash_calls_stop(self, tmp_path: Path) -> None:
-        """iBazel crash path (while loop falls through) calls supervisor.stop()."""
+        """Crash path (while loop falls through) calls supervisor.stop()."""
         from cmk.dev_deploy.__main__ import _run_frontend
 
         project = tmp_path / "packages" / "cmk-frontend-vue"
@@ -1213,7 +966,7 @@ class TestWaitUntilReady:
         from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
 
         config = FrontendConfig(startup_timeout=5.0)
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
+        supervisor = FrontendSupervisor(config, repo_root=tmp_path, edition=Edition.COMMUNITY)
         mock_proc = MagicMock()
         mock_proc.poll.return_value = None  # process alive
         supervisor._proc = mock_proc  # noqa: SLF001
@@ -1233,7 +986,7 @@ class TestWaitUntilReady:
         from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
 
         config = FrontendConfig(startup_timeout=2.0)
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
+        supervisor = FrontendSupervisor(config, repo_root=tmp_path, edition=Edition.COMMUNITY)
         mock_proc = MagicMock()
         mock_proc.poll.return_value = None
         supervisor._proc = mock_proc  # noqa: SLF001
@@ -1254,7 +1007,7 @@ class TestWaitUntilReady:
         from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
 
         config = FrontendConfig(startup_timeout=5.0)
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
+        supervisor = FrontendSupervisor(config, repo_root=tmp_path, edition=Edition.COMMUNITY)
         mock_proc = MagicMock()
         mock_proc.poll.return_value = 1  # process dead
         supervisor._proc = mock_proc  # noqa: SLF001
@@ -1270,125 +1023,55 @@ class TestWaitUntilReady:
         ):
             assert supervisor._wait_until_ready() is False  # noqa: SLF001
 
-    def test_startup_message_mentions_build_output(self, tmp_path: Path) -> None:
-        """Startup message says 'build output' instead of 'this may take a minute'."""
-        from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
-
-        config = FrontendConfig(startup_timeout=5.0)
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
-        mock_proc = MagicMock()
-        mock_proc.poll.return_value = None
-        supervisor._proc = mock_proc  # noqa: SLF001
-
-        with (
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._check_port",
-                side_effect=[True],
-            ),
-            patch("time.monotonic", side_effect=[0.0, 0.5]),
-            patch("time.sleep"),
-            patch("cmk.dev_deploy.frontend.frontend_supervisor.output") as mock_output,
-        ):
-            supervisor._wait_until_ready()  # noqa: SLF001
-            mock_output.info.assert_called_once()
-            msg = mock_output.info.call_args[0][0]
-            assert "build output" in msg
-            assert "this may take a minute" not in msg
-
 
 # ---------------------------------------------------------------------------
-# TestSpawnIbazel
+# TestSpawnLauncher
 # ---------------------------------------------------------------------------
 
 
-class TestSpawnIbazel:
-    """_spawn_ibazel spawns iBazel in a new process group."""
+class TestSpawnLauncher:
+    """_spawn_launcher starts the runner in a new process group."""
 
-    def test_spawns_with_correct_command(self, tmp_path: Path) -> None:
-        from cmk.dev_deploy.frontend.frontend_supervisor import (
-            FrontendSupervisor,
-            IBAZEL_TARGET,
+    def _spawn(self, tmp_path: Path) -> tuple[FrontendSupervisor, MagicMock]:
+        supervisor = FrontendSupervisor(
+            FrontendConfig(), repo_root=tmp_path, edition=Edition.COMMUNITY
         )
-
-        config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
-
         mock_proc = MagicMock()
         mock_proc.pid = 42
         mock_proc.stdout = io.StringIO("")
         mock_proc.stderr = io.StringIO("")
-
         with (
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor.ensure_ibazel",
-                return_value=Path("/cache/ibazel"),
-            ),
             patch("subprocess.Popen", return_value=mock_proc) as mock_popen,
             patch(
+                "cmk.dev_deploy.frontend.frontend_supervisor._launcher",
+                return_value=tmp_path / "launcher",
+            ),
+            patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor._pid_file",
                 return_value=tmp_path / "test.pid",
             ),
         ):
-            supervisor._spawn_ibazel()  # noqa: SLF001
-            mock_popen.assert_called_once()
-            call_args = mock_popen.call_args
-            cmd = call_args[0][0]
-            assert cmd == ["/cache/ibazel", "run", IBAZEL_TARGET]
-            assert call_args[1]["start_new_session"] is True
-            assert call_args[1]["cwd"] == str(tmp_path)
+            supervisor._spawn_launcher()  # noqa: SLF001
+        return supervisor, mock_popen
+
+    def test_runs_launcher_in_new_session(self, tmp_path: Path) -> None:
+        _supervisor, mock_popen = self._spawn(tmp_path)
+
+        args, kwargs = mock_popen.call_args
+        assert str(tmp_path / "launcher") in args[0]
+        assert kwargs["start_new_session"] is True
+        assert kwargs["cwd"] == str(tmp_path)
 
     def test_writes_pid_file_after_spawn(self, tmp_path: Path) -> None:
-        from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
+        self._spawn(tmp_path)
 
-        pid_file = tmp_path / "test.pid"
-        config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
-
-        mock_proc = MagicMock()
-        mock_proc.pid = 42
-        mock_proc.stdout = io.StringIO("")
-        mock_proc.stderr = io.StringIO("")
-
-        with (
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor.ensure_ibazel",
-                return_value=Path("/cache/ibazel"),
-            ),
-            patch("subprocess.Popen", return_value=mock_proc),
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._pid_file",
-                return_value=pid_file,
-            ),
-        ):
-            supervisor._spawn_ibazel()  # noqa: SLF001
-            assert pid_file.read_text() == "42"
+        assert (tmp_path / "test.pid").read_text() == "42"
 
     def test_starts_stdout_prefixer_and_stderr_capture(self, tmp_path: Path) -> None:
-        from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
+        supervisor, _mock_popen = self._spawn(tmp_path)
 
-        config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
-
-        mock_proc = MagicMock()
-        mock_proc.pid = 42
-        mock_proc.stdout = io.StringIO("")
-        mock_proc.stderr = io.StringIO("")
-
-        with (
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor.ensure_ibazel",
-                return_value=Path("/cache/ibazel"),
-            ),
-            patch("subprocess.Popen", return_value=mock_proc),
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._pid_file",
-                return_value=tmp_path / "test.pid",
-            ),
-        ):
-            supervisor._spawn_ibazel()  # noqa: SLF001
-            # Both threads should have been created
-            assert supervisor._stdout_prefixer is not None  # noqa: SLF001
-            assert supervisor._stderr_capture is not None  # noqa: SLF001
+        assert supervisor._stdout_prefixer is not None  # noqa: SLF001
+        assert supervisor._stderr_capture is not None  # noqa: SLF001
 
 
 # ---------------------------------------------------------------------------
@@ -1403,14 +1086,14 @@ class TestFrontendSupervisorLifecycle:
         from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
 
         config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
+        supervisor = FrontendSupervisor(config, repo_root=tmp_path, edition=Edition.COMMUNITY)
         assert supervisor.is_running() is False
 
     def test_stop_is_noop_when_not_started(self, tmp_path: Path) -> None:
         from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
 
         config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
+        supervisor = FrontendSupervisor(config, repo_root=tmp_path, edition=Edition.COMMUNITY)
         # Should not raise; also verify PID file removed
         with patch(
             "cmk.dev_deploy.frontend.frontend_supervisor._pid_file",
@@ -1422,34 +1105,8 @@ class TestFrontendSupervisorLifecycle:
         from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
 
         config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
+        supervisor = FrontendSupervisor(config, repo_root=tmp_path, edition=Edition.COMMUNITY)
         assert supervisor.get_crash_report() == []
-
-    def test_stop_sends_sigkill_not_sigterm(self, tmp_path: Path) -> None:
-        from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
-
-        config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
-
-        mock_proc = MagicMock()
-        mock_proc.pid = 42
-        mock_proc.poll.return_value = None  # process alive
-        mock_proc.wait.return_value = None
-        supervisor._proc = mock_proc  # noqa: SLF001
-
-        with (
-            patch("cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group") as mock_kill,
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._collect_descendant_pids",
-                return_value=[],
-            ),
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._pid_file",
-                return_value=tmp_path / "test.pid",
-            ),
-        ):
-            supervisor.stop()
-            mock_kill.assert_called_once_with(42)
 
 
 # ---------------------------------------------------------------------------
@@ -1512,29 +1169,18 @@ class TestStdoutPrefixer:
 
 
 class TestPreFlightChecks:
-    """Pre-flight checks validate port availability for iBazel."""
+    """Pre-flight checks validate port availability."""
 
     def test_port_in_use_raises(self, tmp_path: Path) -> None:
         from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
 
         config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
+        supervisor = FrontendSupervisor(config, repo_root=tmp_path, edition=Edition.COMMUNITY)
         with (
             patch("cmk.dev_deploy.frontend.frontend_supervisor._check_port", return_value=True),
             pytest.raises(FrontendError, match="Port 5173 is already in use"),
         ):
             supervisor._check_port_available()  # noqa: SLF001
-
-    def test_port_error_mentions_ibazel(self, tmp_path: Path) -> None:
-        from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
-
-        config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
-        with patch("cmk.dev_deploy.frontend.frontend_supervisor._check_port", return_value=True):
-            with pytest.raises(FrontendError) as exc_info:
-                supervisor._check_port_available()  # noqa: SLF001
-            assert exc_info.value.recovery is not None
-            assert "iBazel" in exc_info.value.recovery
 
 
 # ---------------------------------------------------------------------------
@@ -1550,7 +1196,7 @@ class TestSimplifiedPortError:
         from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
 
         config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
+        supervisor = FrontendSupervisor(config, repo_root=tmp_path, edition=Edition.COMMUNITY)
         with patch("cmk.dev_deploy.frontend.frontend_supervisor._check_port", return_value=True):
             with pytest.raises(FrontendError) as exc_info:
                 supervisor._check_port_available()  # noqa: SLF001
@@ -1564,7 +1210,7 @@ class TestSimplifiedPortError:
         from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
 
         config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
+        supervisor = FrontendSupervisor(config, repo_root=tmp_path, edition=Edition.COMMUNITY)
         with patch("cmk.dev_deploy.frontend.frontend_supervisor._check_port", return_value=True):
             with pytest.raises(FrontendError) as exc_info:
                 supervisor._check_port_available()  # noqa: SLF001
@@ -1618,7 +1264,7 @@ class TestRunFrontend:
         (project / "vite.config.ts").write_text("export default {}")
 
         mock_supervisor = MagicMock()
-        mock_supervisor.start.side_effect = FrontendError("iBazel failed to start")
+        mock_supervisor.start.side_effect = FrontendError("Vite failed to start")
         mock_supervisor.is_running.return_value = False
         mock_site = self._make_mock_site(tmp_path)
 
@@ -1669,7 +1315,7 @@ class TestRunFrontend:
         mock_output.success.assert_any_call("Frontend supervisor stopped.")
 
     def test_run_frontend_crash(self, tmp_path: Path) -> None:
-        """iBazel crash (is_running returns False) -> returns 1 with crash report."""
+        """Dev server crash (is_running returns False) -> returns 1 with crash report."""
         from cmk.dev_deploy.__main__ import _run_frontend
 
         project = tmp_path / "packages" / "cmk-frontend-vue"
@@ -1695,7 +1341,7 @@ class TestRunFrontend:
         ):
             result = _run_frontend(tmp_path, mock_site)
         assert result == 1
-        mock_output.error.assert_any_call("iBazel frontend supervisor crashed")
+        mock_output.error.assert_any_call("Frontend dev server crashed")
 
     def test_run_frontend_startup_banner(self, tmp_path: Path) -> None:
         """After successful start, startup banner with success+info is printed."""
@@ -1795,7 +1441,7 @@ class TestFrontendSupervisedRegistry:
         assert "packages/cmk-frontend-vue/" in prefixes
 
     def test_input_packages_of_frontend_vue_are_supervised(self) -> None:
-        """iBazel watches the vite target's transitive sources, so HMR covers them too."""
+        """The vite target is rebuilt on changes to its transitive sources, so HMR covers them."""
         from cmk.dev_deploy.manifest.reader import get_frontend_supervised_prefixes
 
         prefixes = get_frontend_supervised_prefixes()
@@ -2174,8 +1820,8 @@ class TestWatchLoopSupervisor:
 class TestRunFrontendWatch:
     """_run_frontend_watch combined mode lifecycle tests."""
 
-    def test_combined_mode_starts_ibazel_and_watch(self, tmp_path: Path) -> None:
-        """Combined mode starts iBazel-based supervisor and calls watch_loop with it."""
+    def test_combined_mode_starts_supervisor_and_watch(self, tmp_path: Path) -> None:
+        """Combined mode starts the supervisor and calls watch_loop with it."""
         from cmk.dev_deploy.__main__ import _run_frontend_watch
 
         project = tmp_path / "packages" / "cmk-frontend-vue"
@@ -2240,7 +1886,7 @@ class TestRunFrontendWatch:
         (project / "vite.config.ts").write_text("export default {}")
 
         mock_supervisor = MagicMock()
-        mock_supervisor.start.side_effect = FrontendError("iBazel failed")
+        mock_supervisor.start.side_effect = FrontendError("Vite failed")
         mock_supervisor.is_running.return_value = False
 
         mock_args = MagicMock()
@@ -2441,48 +2087,17 @@ class TestV14CodeRemoval:
 
 
 # ---------------------------------------------------------------------------
-# TestCLIHelpText
+# TestViteTarget
 # ---------------------------------------------------------------------------
 
 
-class TestCLIHelpText:
-    """CLI help text for --frontend mentions iBazel."""
-
-    def test_frontend_help_mentions_ibazel(self) -> None:
-        from cmk.dev_deploy.cli import parse_args
-
-        # parse_args builds the parser internally; let's inspect the help
-        with pytest.raises(SystemExit):
-            parse_args(["--help"])
-        # The above exits. Instead, inspect parse_args source or the action.
-        # Directly check the help text from the parser created by parse_args.
-
-    def test_frontend_help_contains_ibazel(self) -> None:
-        """--frontend help text mentions iBazel."""
-        from cmk.dev_deploy.cli import parse_args
-
-        # Capture the help text
-        with contextlib.suppress(SystemExit):
-            parse_args(["--help"])
-
-        # The simplest approach: check the source code directly
-        cli_source = inspect.getsource(parse_args)
-        # The help text for --frontend is in the source
-        assert "iBazel" in cli_source
-
-
-# ---------------------------------------------------------------------------
-# TestIBazelTarget
-# ---------------------------------------------------------------------------
-
-
-class TestIBazelTarget:
-    """IBAZEL_TARGET constant is correctly defined."""
+class TestViteTarget:
+    """VITE_TARGET constant is correctly defined."""
 
     def test_target_value(self) -> None:
-        from cmk.dev_deploy.frontend.frontend_supervisor import IBAZEL_TARGET
+        from cmk.dev_deploy.frontend.frontend_supervisor import VITE_TARGET
 
-        assert IBAZEL_TARGET == "//packages/cmk-frontend-vue:vite"
+        assert VITE_TARGET == "//packages/cmk-frontend-vue:vite"
 
 
 # ---------------------------------------------------------------------------
@@ -2491,7 +2106,7 @@ class TestIBazelTarget:
 
 
 class TestCrashReport:
-    """Crash report with stderr ring buffer from iBazel."""
+    """Crash report with stderr ring buffer from the dev server."""
 
     def test_crash_report_returns_stderr_lines(self, tmp_path: Path) -> None:
         from cmk.dev_deploy.frontend.frontend_supervisor import (
@@ -2500,7 +2115,7 @@ class TestCrashReport:
         )
 
         config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
+        supervisor = FrontendSupervisor(config, repo_root=tmp_path, edition=Edition.COMMUNITY)
 
         # Simulate stderr capture with crash output
         pipe = io.StringIO("FATAL: build failed\nError: missing dependency\n")
@@ -2517,7 +2132,7 @@ class TestCrashReport:
         from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
 
         config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
+        supervisor = FrontendSupervisor(config, repo_root=tmp_path, edition=Edition.COMMUNITY)
         assert supervisor.get_crash_report() == []
 
     def test_crash_report_ring_buffer_eviction(self, tmp_path: Path) -> None:
@@ -2527,7 +2142,7 @@ class TestCrashReport:
         )
 
         config = FrontendConfig()
-        supervisor = FrontendSupervisor(config, repo_root=tmp_path)
+        supervisor = FrontendSupervisor(config, repo_root=tmp_path, edition=Edition.COMMUNITY)
 
         # Generate 100 lines with buffer of 50
         lines = "".join(f"line{i}\n" for i in range(100))
@@ -2621,43 +2236,144 @@ class TestSiteConfigIntegration:
 
 
 # ---------------------------------------------------------------------------
-# TestSpawnIBazelBazelPath
+# Supervisor with a fake bazel and runner
 # ---------------------------------------------------------------------------
 
+_FAKE_BAZEL = """\
+import os
+import pathlib
+import sys
+import time
 
-class TestSpawnIBazelBazelPath:
-    """iBazel is pointed at the deploy server via -bazel_path."""
+fake = pathlib.Path(os.environ["FAKE_DIR"])
+with (fake / "bazel.log").open("a") as log:
+    log.write(" ".join(sys.argv[1:]) + "\\n")
+command = next(arg for arg in sys.argv[1:] if not arg.startswith("-"))
+if command == "run":
+    [script] = [arg.split("=", 1)[1] for arg in sys.argv if arg.startswith("--script_path=")]
+    launcher = pathlib.Path(script)
+    launcher.write_text(f'#!/bin/sh\\nexec "{sys.executable}" "{fake / "runner.py"}" "$@"\\n')
+    launcher.chmod(0o755)
+elif os.environ.get("FAKE_BUILD") == "hang":
+    (fake / "build.pid").write_text(str(os.getpid()))
+    time.sleep(60)
+"""
 
-    def _spawn(self, tmp_path: Path, wrapper: Path | None) -> list[str]:
-        from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
+_FAKE_RUNNER = """\
+import os
+import pathlib
+import signal
+import socket
+import sys
 
-        supervisor = FrontendSupervisor(FrontendConfig(), repo_root=tmp_path)
-        with (
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor.ensure_ibazel",
-                return_value=Path("/bin/ibazel"),
-            ),
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor.ensure_bazel_wrapper",
-                return_value=wrapper,
-            ),
-            patch("cmk.dev_deploy.frontend.frontend_supervisor.subprocess.Popen") as popen,
-            patch("cmk.dev_deploy.frontend.frontend_supervisor._StdoutPrefixer"),
-            patch("cmk.dev_deploy.frontend.frontend_supervisor._StderrCapture"),
-            patch.object(FrontendSupervisor, "_write_pid_file"),
-        ):
-            supervisor._spawn_ibazel()  # noqa: SLF001
-        cmd: list[str] = popen.call_args.args[0]
-        return cmd
+if os.environ.get("FAKE_RUNNER") == "exit":
+    sys.exit(1)
+(pathlib.Path(os.environ["FAKE_DIR"]) / "argv").write_text("\\n".join(sys.argv[1:]))
+server = socket.create_server(("127.0.0.1", int(os.environ["FAKE_PORT"])))
+signal.pause()
+"""
 
-    def test_bazel_path_flag_in_isolated_mode(self, tmp_path: Path) -> None:
-        from cmk.dev_deploy.frontend.frontend_supervisor import IBAZEL_TARGET
 
-        cmd = self._spawn(tmp_path, Path("/cache/bazel-wrapper"))
-        assert cmd == ["/bin/ibazel", "-bazel_path=/cache/bazel-wrapper", "run", IBAZEL_TARGET]
+def _read_once_written(path: Path, timeout: float = 5.0) -> str:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if path.is_file() and (content := path.read_text()):
+            return content
+        time.sleep(0.05)
+    return ""
 
-    def test_plain_ibazel_in_shared_mode(self, tmp_path: Path) -> None:
-        from cmk.dev_deploy.frontend.frontend_supervisor import IBAZEL_TARGET
 
-        cmd = self._spawn(tmp_path, None)
-        assert cmd == ["/bin/ibazel", "run", IBAZEL_TARGET]
+@pytest.fixture(name="supervisor")
+def fixture_supervisor(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> Iterator[FrontendSupervisor]:
+    """A pro site's supervisor whose bazel on PATH is fake, like the runner its launcher runs.
+
+    The fake bazel adds its arguments to ``fake/bazel.log``.  The fake runner
+    writes its arguments to ``fake/argv`` and listens on the port.
+    """
+    fake = tmp_path / "fake"
+    (fake / "bin").mkdir(parents=True)
+    (fake / "bazel.py").write_text(_FAKE_BAZEL)
+    (fake / "runner.py").write_text(_FAKE_RUNNER)
+    bazel = fake / "bin" / "bazel"
+    bazel.write_text(f'#!/bin/sh\nexec "{sys.executable}" "{fake / "bazel.py"}" "$@"\n')
+    bazel.chmod(0o755)
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        port = probe.getsockname()[1]
+    monkeypatch.setenv("PATH", f"{bazel.parent}{os.pathsep}{os.environ['PATH']}")
+    monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "cache"))
+    monkeypatch.setenv("FAKE_DIR", str(fake))
+    monkeypatch.setenv("FAKE_PORT", str(port))
+    supervisor = FrontendSupervisor(
+        FrontendConfig(port=port), repo_root=tmp_path, edition=Edition.PRO
+    )
+    yield supervisor
+    supervisor.stop()
+
+
+def test_runner_runs_the_vite_target(tmp_path: Path, supervisor: FrontendSupervisor) -> None:
+    supervisor.start()
+
+    assert (tmp_path / "fake" / "argv").read_text().splitlines()[-1] == VITE_TARGET
+
+
+def test_runner_runs_bazel_on_the_deploy_server(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, supervisor: FrontendSupervisor
+) -> None:
+    monkeypatch.delenv(SHARED_SERVER_ENV, raising=False)
+
+    supervisor.start()
+
+    assert (
+        f"--bazel_startup_option=--output_base={deploy_output_base(tmp_path)}"
+        in (tmp_path / "fake" / "argv").read_text().splitlines()
+    )
+
+
+def test_bazel_commands_build_for_the_site_edition(
+    tmp_path: Path, supervisor: FrontendSupervisor
+) -> None:
+    supervisor.start()
+
+    commands = (tmp_path / "fake" / "bazel.log").read_text().splitlines()
+    assert commands
+    assert all("--cmk_edition=pro" in command.split() for command in commands)
+
+
+def test_runner_builds_for_the_site_edition(tmp_path: Path, supervisor: FrontendSupervisor) -> None:
+    supervisor.start()
+
+    assert (
+        "--bazel_build_option=--cmk_edition=pro"
+        in (tmp_path / "fake" / "argv").read_text().splitlines()
+    )
+
+
+def test_stop_ends_running_build(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, supervisor: FrontendSupervisor
+) -> None:
+    monkeypatch.setenv("FAKE_BUILD", "hang")
+
+    def start() -> None:
+        with contextlib.suppress(FrontendError):
+            supervisor.start()
+
+    starting = threading.Thread(target=start)
+    starting.start()
+    build = Path("/proc") / _read_once_written(tmp_path / "fake" / "build.pid")
+
+    supervisor.stop()
+
+    starting.join()
+    assert not build.exists()
+
+
+def test_start_fails_as_soon_as_runner_exits(
+    monkeypatch: pytest.MonkeyPatch, supervisor: FrontendSupervisor
+) -> None:
+    monkeypatch.setenv("FAKE_RUNNER", "exit")
+
+    with pytest.raises(FrontendError, match="exited during startup"):
+        supervisor.start()

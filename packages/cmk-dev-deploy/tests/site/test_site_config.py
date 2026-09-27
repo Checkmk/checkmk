@@ -164,7 +164,7 @@ class TestIsStaleOverride:
     def test_no_mk_file_not_stale(self, tmp_path: Path) -> None:
         """No .mk file means nothing to clean up."""
         mk_path = tmp_path / "zzz_dev_inject.mk"
-        pid_file = tmp_path / "ibazel.pid"
+        pid_file = tmp_path / "frontend.pid"
         # Neither file exists
         assert is_stale_override(mk_path, pid_file, "v260") is False
 
@@ -172,7 +172,7 @@ class TestIsStaleOverride:
         """Override exists but no PID file -> stale."""
         mk_path = tmp_path / "zzz_dev_inject.mk"
         mk_path.write_text("override")
-        pid_file = tmp_path / "ibazel.pid"
+        pid_file = tmp_path / "frontend.pid"
         # pid_file does not exist
         assert is_stale_override(mk_path, pid_file, "v260") is True
 
@@ -180,7 +180,7 @@ class TestIsStaleOverride:
         """Override exists, PID file has valid PID, but process is dead."""
         mk_path = tmp_path / "zzz_dev_inject.mk"
         mk_path.write_text("override")
-        pid_file = tmp_path / "ibazel.pid"
+        pid_file = tmp_path / "frontend.pid"
         pid_file.write_text("12345")
         with patch("cmk.dev_deploy.site.site_config.os.kill", side_effect=ProcessLookupError):
             assert is_stale_override(mk_path, pid_file, "v260") is True
@@ -189,7 +189,7 @@ class TestIsStaleOverride:
         """Override exists, PID file has valid PID, process is alive."""
         mk_path = tmp_path / "zzz_dev_inject.mk"
         mk_path.write_text("override")
-        pid_file = tmp_path / "ibazel.pid"
+        pid_file = tmp_path / "frontend.pid"
         pid_file.write_text("12345")
         with patch("cmk.dev_deploy.site.site_config.os.kill"):
             # os.kill(12345, 0) succeeds (no exception) -> alive
@@ -199,7 +199,7 @@ class TestIsStaleOverride:
         """PID file contains non-numeric content -> stale (ValueError)."""
         mk_path = tmp_path / "zzz_dev_inject.mk"
         mk_path.write_text("override")
-        pid_file = tmp_path / "ibazel.pid"
+        pid_file = tmp_path / "frontend.pid"
         pid_file.write_text("not-a-number")
         assert is_stale_override(mk_path, pid_file, "v260") is True
 

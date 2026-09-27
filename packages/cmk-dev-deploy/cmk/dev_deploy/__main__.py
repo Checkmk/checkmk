@@ -617,11 +617,11 @@ def _setup_frontend_supervisor(
     site: SiteInfo,
 ) -> tuple[FrontendSupervisor, FrontendConfig, Path] | int:
     """Shared frontend setup: site check, stale cleanup, supervisor start, .mk override."""
-    from cmk.dev_deploy.errors import FrontendError, IBazelError
+    from cmk.dev_deploy.errors import FrontendError
     from cmk.dev_deploy.frontend.frontend_supervisor import (
         _pid_file,
         FrontendSupervisor,
-        IBAZEL_TARGET,
+        VITE_TARGET,
     )
     from cmk.dev_deploy.site.site_config import (
         check_site_running,
@@ -651,16 +651,16 @@ def _setup_frontend_supervisor(
         return 1
 
     config = FrontendConfig()
-    supervisor = FrontendSupervisor(config, repo_root)
+    supervisor = FrontendSupervisor(config, repo_root, edition=site.edition)
 
-    output.info("Starting frontend supervisor (iBazel)...")
+    output.info("Starting frontend supervisor...")
     try:
         supervisor.start()
-    except (FrontendError, IBazelError) as e:
+    except FrontendError as e:
         output.error(str(e))
         return 1
     output.success("Frontend supervisor active -- watching for changes")
-    output.info(f"  Target: {IBAZEL_TARGET}")
+    output.info(f"  Target: {VITE_TARGET}")
     output.info(f"  Vite: http://localhost:{config.port}/")
 
     if not write_override(site.name, mk_path):
@@ -675,10 +675,10 @@ def _setup_frontend_supervisor(
 
 
 def _run_frontend(repo_root: Path, site: SiteInfo) -> int:
-    """Start iBazel frontend supervisor as foreground blocking process."""
+    """Start the frontend supervisor as foreground blocking process."""
     import time
 
-    from cmk.dev_deploy.errors import FrontendError, IBazelError
+    from cmk.dev_deploy.errors import FrontendError
     from cmk.dev_deploy.site.site_config import remove_override
 
     result = _setup_frontend_supervisor(repo_root, site)
@@ -687,13 +687,13 @@ def _run_frontend(repo_root: Path, site: SiteInfo) -> int:
     supervisor, _config, mk_path = result
 
     try:
-        # Block until iBazel exits or user presses Ctrl-C
+        # Block until the dev server exits or user presses Ctrl-C
         while supervisor.is_running():
             time.sleep(0.5)
 
-        # If we get here, iBazel crashed (exited without Ctrl-C)
+        # If we get here, the dev server crashed (exited without Ctrl-C)
         crash_lines = supervisor.get_crash_report()
-        output.error("iBazel frontend supervisor crashed")
+        output.error("Frontend dev server crashed")
         if crash_lines:
             output.error("Last stderr output:")
             for line in crash_lines:
@@ -702,7 +702,7 @@ def _run_frontend(repo_root: Path, site: SiteInfo) -> int:
         supervisor.stop()
         return 1
 
-    except (FrontendError, IBazelError) as e:
+    except FrontendError as e:
         output.error(str(e))
         return 1
     except KeyboardInterrupt:
@@ -719,8 +719,8 @@ def _run_frontend(repo_root: Path, site: SiteInfo) -> int:
 
 
 def _run_frontend_watch(args: argparse.Namespace, repo_root: Path, site: SiteInfo) -> int:
-    """Combined --frontend --watch: deploy first, start iBazel, enter watch loop."""
-    from cmk.dev_deploy.errors import FrontendError, IBazelError
+    """Combined --frontend --watch: deploy first, start the dev server, enter watch loop."""
+    from cmk.dev_deploy.errors import FrontendError
     from cmk.dev_deploy.site.site_config import remove_override
 
     result = _setup_frontend_supervisor(repo_root, site)
@@ -735,7 +735,7 @@ def _run_frontend_watch(args: argparse.Namespace, repo_root: Path, site: SiteInf
             lambda: _run_deploy_cycle(args, repo_root, site),
             supervisor=supervisor,
         )
-    except (FrontendError, IBazelError) as e:
+    except FrontendError as e:
         output.error(f"[frontend] {e}")
         return 1
     except KeyboardInterrupt:
@@ -757,7 +757,6 @@ def _infer_phase(error: BaseException) -> str:
         CloneError,
         ConfigDeployError,
         FrontendError,
-        IBazelError,
         WheelDeployError,
     )
 
@@ -770,7 +769,6 @@ def _infer_phase(error: BaseException) -> str:
         ConfigDeployError: "config_deploy",
         WheelDeployError: "wheel_deploy",
         FrontendError: "frontend",
-        IBazelError: "ibazel",
     }
     return phase_map.get(type(error), "unknown")
 

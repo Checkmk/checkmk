@@ -4,7 +4,6 @@
 
 """Unit tests for the deploy-server Bazel command composition."""
 
-import os
 from pathlib import Path
 
 import pytest
@@ -12,13 +11,11 @@ import pytest
 from cmk.dev_deploy.core.bazel import (
     bazel_command,
     deploy_output_base,
-    ensure_bazel_wrapper,
     OUTPUT_BASE_ENV,
     request_shared_server,
     SHARED_SERVER_ENV,
     use_shared_server,
 )
-from cmk.dev_deploy.errors import DeployError
 
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
@@ -100,40 +97,3 @@ class TestBazelCommand:
         assert not use_shared_server()
         request_shared_server()
         assert use_shared_server()
-
-
-class TestEnsureBazelWrapper:
-    def test_shared_mode_needs_no_wrapper(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv(SHARED_SERVER_ENV, "1")
-        assert ensure_bazel_wrapper(Path("/repo")) is None
-
-    def test_writes_executable_shim(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
-        monkeypatch.setenv(OUTPUT_BASE_ENV, "/ob")
-        monkeypatch.setattr(
-            "cmk.dev_deploy.core.bazel.shutil.which", lambda _name: "/usr/bin/bazel"
-        )
-        wrapper = ensure_bazel_wrapper(tmp_path / "checkout")
-        assert wrapper is not None
-        assert os.access(wrapper, os.X_OK)
-        content = wrapper.read_text()
-        assert content.startswith("#!/bin/sh\n")
-        assert 'exec "/usr/bin/bazel" "--output_base=/ob"' in content
-        assert content.rstrip().endswith('"$@"')
-
-    def test_regenerated_on_every_call(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
-        monkeypatch.setattr("cmk.dev_deploy.core.bazel.shutil.which", lambda _name: "/old/bazel")
-        first = ensure_bazel_wrapper(tmp_path / "checkout")
-        monkeypatch.setattr("cmk.dev_deploy.core.bazel.shutil.which", lambda _name: "/new/bazel")
-        second = ensure_bazel_wrapper(tmp_path / "checkout")
-        assert first == second
-        assert second is not None
-        assert '"/new/bazel"' in second.read_text()
-
-    def test_missing_bazel_raises(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr("cmk.dev_deploy.core.bazel.shutil.which", lambda _name: None)
-        with pytest.raises(DeployError, match="bazel not found"):
-            ensure_bazel_wrapper(tmp_path / "checkout")

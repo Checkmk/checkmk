@@ -3,35 +3,49 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="explicit-any"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.legacy_includes.cpu_util import check_cpu_util
+import time
+from collections.abc import Mapping
+from typing import Any
+
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.plugins.lib.cpu_util import check_cpu_util
 from cmk.plugins.netextreme.lib import DETECT_NETEXTREME
-
-check_info = {}
 
 # .1.3.6.1.4.1.1916.1.32.1.2.0 59 --> EXTREME-SOFTWARE-MONITOR-MIB::extremeCpuMonitorTotalUtilization.0$
 
 # As in some other checks
 
 
-def discover_netextreme_cpu_util(info):
-    if info:
-        yield None, {}
+def discover_netextreme_cpu_util(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-def check_netextreme_cpu_util(_no_item, params, info):
-    return check_cpu_util(float(info[0][0]), params)
+def check_netextreme_cpu_util(params: Mapping[str, Any], section: StringTable) -> CheckResult:
+    yield from check_cpu_util(
+        util=float(section[0][0]),
+        params=params,
+        value_store=get_value_store(),
+        this_time=time.time(),
+    )
 
 
 def parse_netextreme_cpu_util(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["netextreme_cpu_util"] = LegacyCheckDefinition(
+snmp_section_netextreme_cpu_util = SimpleSNMPSection(
     name="netextreme_cpu_util",
     parse_function=parse_netextreme_cpu_util,
     detect=DETECT_NETEXTREME,
@@ -39,6 +53,11 @@ check_info["netextreme_cpu_util"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.1916.1.32.1.2",
         oids=["0"],
     ),
+)
+
+
+check_plugin_netextreme_cpu_util = CheckPlugin(
+    name="netextreme_cpu_util",
     service_name="CPU utilization",
     discovery_function=discover_netextreme_cpu_util,
     check_function=check_netextreme_cpu_util,

@@ -28,6 +28,7 @@ flowchart TD
         subgraph CVORA[" "]
             PKG["'Package mk-oracle' stage<br/>build-cmk-package-k8s<br/>⇒ oracle-rocky-ci"]
             CVTSM["test-system-mk-oracle<br/>⇒ Docker Oracle Free"]
+            CVWMO["winagt-test-mk-oracle<br/>⇒ ORACLE-WIN-CI<br/>(network + run-on-VM)"]
             CVTCM["test-component-mk-oracle<br/>⇒ oracle-rocky-ci<br/>(SSH, runs on VM)"]
         end
         TG -->|"on changes touching<br/>packages/mk-oracle"| CVORA
@@ -90,20 +91,17 @@ otherwise it is skipped with "No mk-oracle files changed".
 not in checkmk.git).
 
 Since [CMK-38578](https://jira.lan.tribe29.com/browse/CMK-38578) the CV
-additionally triggers the mk-oracle test jobs per change, guarded by
+additionally triggers the three mk-oracle test jobs per change, guarded by
 `ONLY_WHEN_NOT_EMPTY: CHANGED_MK_ORACLE_FILES` (changes under
 `packages/mk-oracle/` or top-level `packages/` files; no reference-image or
 Rust-workspace trigger). Previously these ran only post-submit or via manual
 `start: <job>` comments. The stages reuse the existing job definitions
-unchanged — see the stage 2 / stage 3 tables for what they run. On this
-branch (2.5.0) the Windows lane is not wired: `winagt-test-mk-oracle` here
-still runs the network model already covered per change by
-`cv/winagt-test-build`, so a per-change stage for it would only duplicate;
-it follows once the run-on-VM model is backported.
+unchanged — see the stage 2 / stage 3 tables for what they run:
 
 | CV stage (`stages.yml`)                                   | Triggered job                       | Notes                                                                                                                                                                |
 | --------------------------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **System tests for mk-oracle**                            | `heavy/test-system-mk-oracle`       | junit report shown in the CV result table                                                                                                                            |
+| **Windows on-VM component tests for mk-oracle**           | `heavy/winagt-test-mk-oracle`       | test output linked in the CV result table (`mk-oracle-win.txt`)                                                                                                      |
 | **Linux/Solaris/AIX on-VM component tests for mk-oracle** | `builders/test-component-mk-oracle` | `EDITION=ultimatemt`, like the nightly chain (plugin is edition-independent); per-lane test output linked in the CV result table (`mk-oracle-component-tests/*.txt`) |
 
 ## Stage 2 — post-submit heavy chain (several times a day)

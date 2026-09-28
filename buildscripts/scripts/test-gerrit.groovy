@@ -186,6 +186,12 @@ void main() {
                                 VERSION: "daily",
                             ];
                             break;
+                        case "Windows on-VM component tests for mk-oracle":
+                            relative_job_name = "${branch_base_folder}/heavy/winagt-test-mk-oracle";
+                            build_params = [
+                                CUSTOM_GIT_REF: GERRIT_PATCHSET_REVISION,
+                            ];
+                            break;
                         case "Linux/Solaris/AIX on-VM component tests for mk-oracle":
                             relative_job_name = "${branch_base_folder}/builders/test-component-mk-oracle";
                             build_params = [

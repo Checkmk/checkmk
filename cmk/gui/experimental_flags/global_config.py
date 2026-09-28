@@ -5,9 +5,8 @@
 """GUI integration for experimental flags.
 
 This module exposes the file-backed experimental flags (defined in the ``cmk-flags``
-package) in the global settings UI. It is the only writer of
-``release_flag.json``; every other consumer reads the file through
-``cmk.flags.load_experimental_flags``.
+package) in the global settings UI. Changed flags are visible to consumer after
+all changes are activated.
 
 The config variables are generated from the fields of
 :class:`cmk.flags.ExperimentalFlagConfig`, so adding a flag there is enough to
@@ -25,7 +24,7 @@ from pydantic.fields import FieldInfo
 
 from cmk.ccc import store
 from cmk.flags import CONFIG_FILENAME as EXPERIMENTAL_FLAGS_CONFIG_FILENAME
-from cmk.flags import ExperimentalFlagConfig, load_experimental_flags
+from cmk.flags import ExperimentalFlagConfig
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.utils.html import HTML
@@ -47,6 +46,7 @@ from cmk.utils.paths import default_config_dir, omd_root
 # boundary; see CMK-38694 / the 2026-09-09 revert of #22265.
 EXPERIMENTAL_FLAGS_CONFIG_ID: Final[ConfigDomainName] = "release_flags"
 EXPERIMENTAL_FLAGS_CONFIG_DIR: Final = default_config_dir
+EXPERIMENTAL_FLAGS_STAGED_FILENAME: Final = "_pending_release_flag.json"
 EXPERIMENTAL_FLAGS_CONFIG_FILE_RELATIVE: Final = (
     EXPERIMENTAL_FLAGS_CONFIG_DIR.relative_to(omd_root) / EXPERIMENTAL_FLAGS_CONFIG_FILENAME
 )
@@ -54,6 +54,14 @@ EXPERIMENTAL_FLAGS_CONFIG_FILE_RELATIVE: Final = (
 
 def is_development_site(environ: Mapping[str, str] = os.environ) -> bool:
     return environ.get("CMK_DEV", "").lower() == "true"
+
+
+def _load_flags(filename: Path) -> ExperimentalFlagConfig:
+    # Same fallback as load_experimental_flags, which can only read the active file.
+    try:
+        return ExperimentalFlagConfig.model_validate_json(filename.read_text())
+    except Exception:
+        return ExperimentalFlagConfig()
 
 
 class ConfigDomainExperimentalFlags(ABCConfigDomain):
@@ -88,18 +96,24 @@ class ConfigDomainExperimentalFlags(ABCConfigDomain):
 
     @override
     def config_file(self, site_specific: bool) -> Path:
+        return self.config_dir() / EXPERIMENTAL_FLAGS_STAGED_FILENAME
+
+    def active_config_file(self) -> Path:
         return self.config_dir() / EXPERIMENTAL_FLAGS_CONFIG_FILENAME
 
     @override
     def load_full_config(
         self, site_specific: bool = False, custom_site_path: str | None = None
     ) -> GlobalSettings:
-        filename = self.config_file(site_specific)
+        # Without a staged file nothing has been changed since the last activation,
+        # e.g. right after an update, so the active file is the current state.
+        candidates = [self.config_file(site_specific), self.active_config_file()]
         if custom_site_path:
-            filename = Path(custom_site_path) / filename.relative_to(omd_root)
-        if not filename.exists():
+            candidates = [Path(custom_site_path) / f.relative_to(omd_root) for f in candidates]
+        filename = next((f for f in candidates if f.exists()), None)
+        if filename is None:
             return {}
-        return dict(load_experimental_flags(filename.parent).model_dump())
+        return dict(_load_flags(filename).model_dump())
 
     @override
     def save(
@@ -117,7 +131,20 @@ class ConfigDomainExperimentalFlags(ABCConfigDomain):
 
     @override
     def create_artifacts(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+        # Move the final flags in place in the create artifacts stage, so consumers
+        # can use them in the activate stage.
+        staged = self.config_file(site_specific=False)
+        if staged.exists():
+            staged.replace(self.active_config_file())
         return []
+
+    def drop_undeclared_flags(self) -> None:
+        for config_file in (self.config_file(site_specific=False), self.active_config_file()):
+            if config_file.exists():
+                config = _load_flags(config_file)
+                store.save_text_to_file(
+                    config_file, config.model_dump_json(indent=2, exclude_unset=True)
+                )
 
     @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:

@@ -128,7 +128,8 @@ def check(suffix: str, abs_path: Path, rel_path: Path) -> bool:
         return CHECKER[suffix].check(
             abs_path,
             HEADER_CEE
-            if rel_path.is_relative_to(Path("src/graph-designer"))
+            if "nonfree" in rel_path.parts
+            or rel_path.is_relative_to(Path("src/graph-designer"))
             or rel_path.is_relative_to(Path("src/metric-backend"))
             or rel_path in ENTERPRISE_LICENSED_FILES_FORM_SPECS
             else HEADER,

@@ -136,6 +136,25 @@ export default [
   },
 
   {
+    ignores: ['**/nonfree/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/nonfree', 'cmk-ai-control-plane'],
+              message:
+                'Only code in a nonfree/ directory may import non-free code: the GPL mirror deletes ' +
+                'every nonfree/ directory, and cmk-ai-control-plane is an empty stub there.'
+            }
+          ]
+        }
+      ]
+    }
+  },
+
+  {
     files: ['demo/**/*'],
     rules: {
       'vue/no-bare-strings-in-template': 'off'

@@ -1,6 +1,7 @@
-load("@aspect_rules_js//js:defs.bzl", "js_run_binary", "js_run_devserver")
+load("@aspect_rules_js//js:defs.bzl", "js_library", "js_run_binary", "js_run_devserver")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
 load("@aspect_rules_py//py:defs.bzl", "py_test")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//:eslint/package_json.bzl", eslint_bin = "bin")
@@ -142,6 +143,7 @@ SRCS = [
     ":node_modules/@types",
     ":node_modules/axios",
     ":node_modules/class-variance-authority",
+    ":node_modules/cmk-ai-control-plane",
     ":node_modules/cmk-shared-typing-bzl",
     ":node_modules/grid-layout-plus",
     ":node_modules/lucide-vue-next",
@@ -179,6 +181,32 @@ npm_link_package(
     package = "cmk-shared-typing",
     root_package = "packages/cmk-frontend-vue",
     visibility = ["//packages:__subpackages__"],
+)
+
+write_file(
+    name = "ai_control_plane_typescript_stub_package_json",
+    out = "ai_control_plane_typescript_stub/package.json",
+    content = ['{"name": "cmk-ai-control-plane"}'],
+)
+
+js_library(
+    name = "ai_control_plane_typescript_stub",
+    srcs = [":ai_control_plane_typescript_stub_package_json"],
+)
+
+alias(
+    name = "ai_control_plane_typescript",
+    actual = select({
+        "@//:gpl+nonfree_repo": "//non-free/packages/cmk-ai-control-plane:typescript",
+        "@//:gpl_repo": ":ai_control_plane_typescript_stub",
+    }),
+)
+
+npm_link_package(
+    name = "node_modules/cmk-ai-control-plane",
+    src = ":ai_control_plane_typescript",
+    package = "cmk-ai-control-plane",
+    root_package = "packages/cmk-frontend-vue",
 )
 
 vite_bin.vite(

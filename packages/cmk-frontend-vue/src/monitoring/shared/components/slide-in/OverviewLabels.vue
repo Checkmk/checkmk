@@ -36,6 +36,7 @@ const visibleItems = computed(() =>
       v-for="item in visibleItems"
       :key="item.text"
       size="small"
+      spacing="none"
       variant="fill"
       :color="item.color"
       :content="item.text"

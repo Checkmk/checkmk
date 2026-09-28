@@ -53,6 +53,28 @@ def test_command_confirm_dialog_form_action_preserves_view_context() -> None:
     assert "host=myhost" in form_action
 
 
+@pytest.mark.usefixtures("request_context")
+def test_command_confirm_dialog_cancel_leaves_action_mode() -> None:
+    """Regression test for CMK-39728: cancel must show the full view with checkboxes again."""
+    request.set_var("view_name", "crash_reports")
+    request.set_var("show_checkboxes", "1")
+    request.set_var("_do_actions", "yes")
+
+    with output_funnel.plugged():
+        command_confirm_dialog(
+            confirm_options=[("Yes", "_do_yes")],
+            command_title="Confirm",
+            command_html=HTML.empty(),
+            icon_class="question",
+        )
+        output = output_funnel.drain()
+
+    marker = 'location.href = "'
+    start = output.index(marker) + len(marker)
+    cancel_url = output[start : output.index('"', start)]
+    assert cancel_url == "index.py?show_checkboxes=1\\u0026view_name=crash_reports"
+
+
 def _extract_form_action(output: str) -> str:
     marker = 'action="'
     start = output.index(marker) + len(marker)

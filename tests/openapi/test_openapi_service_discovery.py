@@ -2257,17 +2257,15 @@ def fixture_tier3_writes(mocker: MockerFixture) -> Tier3Writes:
 #: automation ran. Every mode makes exactly one autochecks write except `only_host_labels`, which
 #: makes none -- so that mode is asserted by what it *does* do, not only by an absence.
 #:
-#: `only_service_labels` is the divergence: it writes the same four services as `new` although the
-#: only row it is documented to touch is the `changed` one (§10.5, CMK-38599). The mechanism
-#: differs -- `new` retargets one row and writes four because the file is rebuilt from scratch
-#: (§1), while `only_service_labels` retargets all four -- but the payload cannot tell them apart.
-#: The value-adoption tests below can.
+#: `only_service_labels` refreshes only `changed` services (§10.5, CMK-38599); it rebuilds the
+#: file from scratch (§1), so its service set is the baseline -- `new` is not adopted, `vanished`
+#: not revived. The value-adoption test below pins what it writes to the `changed` row.
 _MODE_WRITES: Mapping[str, tuple[frozenset[str] | None, bool]] = {
     "new": (TIER3_BASELINE | {tier3_service("new")}, False),
     "remove": (TIER3_BASELINE - {tier3_service("vanished")}, False),
     "fix_all": ((TIER3_BASELINE | {tier3_service("new")}) - {tier3_service("vanished")}, True),
     "only_host_labels": (None, True),
-    "only_service_labels": (TIER3_BASELINE | {tier3_service("new")}, False),
+    "only_service_labels": (TIER3_BASELINE, False),
 }
 
 
@@ -2326,32 +2324,29 @@ def test_fix_all_adopts_both_parameters_and_labels_of_a_changed_service(
 
 
 @pytest.mark.usefixtures("with_host", "inline_background_jobs")
-def test_update_service_labels_adopts_labels_only_and_on_every_row_it_retargets(
+def test_update_service_labels_adopts_labels_of_changed_services_only(
     clients: ClientRegistry, tier3_writes: Tier3Writes
 ) -> None:
     """§10.5 (CMK-38599) at the REST boundary, with the `unchanged` row as the control.
 
-    Two halves, and only the first is intended. The mode takes new *labels* and leaves parameters
-    alone -- correct, and the reason it is not simply `new` under another name. But it applies that
-    to every row it retargets, so an undecided service is silently adopted and a vanished one
-    written back, on a host where the caller asked for nothing of the sort. The `unchanged` row is
-    the tell: it is the one row already at the target, so it is the one row left untouched.
-
-    When CMK-38599 lands, the payload does **not** shrink to the `changed` row -- the write is a
-    full rebuild of the file (§1), so it still carries the whole baseline. What changes is which
-    rows the mode *touched*: `new` drops out of the payload because it is no longer adopted, and
-    `vanished` stays in it but with its **old** labels. Only `changed` should still carry
-    `TIER3_NEW_LABELS`.
+    The mode refreshes the labels of `changed` services only. A red here means it adopted an
+    undecided service, revived a vanished one, or touched any service's parameters -- or lost the
+    `changed` row's new labels. The write is a full rebuild (§1), so the service set is the
+    baseline; the value assertions below are what distinguish the fix from a no-op.
     """
     clients.ServiceDiscovery.start_service_discovery(str(TIER3_HOST), "only_service_labels")
 
-    for source in ("changed", "new", "vanished"):
-        entry = tier3_writes.written(tier3_service(source))
-        assert entry.parameters == TIER3_OLD_PARAMS, source
-        assert entry.service_labels == TIER3_NEW_LABELS, source
+    (write,) = tier3_writes.inputs
+    assert frozenset(write.target_services) == TIER3_BASELINE
 
-    untouched = tier3_writes.written(tier3_service("unchanged"))
-    assert untouched.service_labels == TIER3_OLD_LABELS
+    changed = write.target_services[tier3_service("changed")]
+    assert changed.parameters == TIER3_OLD_PARAMS
+    assert changed.service_labels == TIER3_NEW_LABELS
+
+    for retained in ("unchanged", "vanished"):
+        entry = write.target_services[tier3_service(retained)]
+        assert entry.parameters == TIER3_OLD_PARAMS, retained
+        assert entry.service_labels == TIER3_OLD_LABELS, retained
 
 
 # --- T3.5 / §6.2: the two modes that start a background job ----------------------------------

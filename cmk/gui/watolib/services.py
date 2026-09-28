@@ -569,15 +569,18 @@ class Discovery:
             # entry.check_source in [DiscoveryState.MONITORED, DiscoveryState.UNDECIDED]
             return DiscoveryState.MONITORED
 
-        if self._action == DiscoveryAction.UPDATE_SERVICE_LABELS and self._update_target:
-            if entry.check_source == DiscoveryState.IGNORED:
-                return DiscoveryState.IGNORED
-            return self._update_target
-
-        if self._action == DiscoveryAction.UPDATE_DISCOVERY_PARAMETERS and self._update_target:
-            if entry.check_source == DiscoveryState.IGNORED:
-                return DiscoveryState.IGNORED
-            return self._update_target
+        if self._action in (
+            DiscoveryAction.UPDATE_SERVICE_LABELS,
+            DiscoveryAction.UPDATE_DISCOVERY_PARAMETERS,
+        ):
+            # Refresh the discovered values of services that are already monitored
+            # (CMK-38599). `clustered_old` is included because when the action targets
+            # a cluster, the node autochecks are rebuilt from the node tables processed
+            # alongside the cluster table, so the node row must be retargeted or the
+            # refresh never reaches the node's file.
+            if entry.check_source in (DiscoveryState.CHANGED, DiscoveryState.CLUSTERED_OLD):
+                return DiscoveryState.MONITORED
+            return entry.check_source
 
         if not self._update_target:
             return entry.check_source

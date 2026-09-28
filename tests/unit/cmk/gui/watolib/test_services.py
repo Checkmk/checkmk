@@ -1790,23 +1790,29 @@ def _make_preview_entry(
     old_params: Mapping[str, object],
     new_params: Mapping[str, object],
     found_on_nodes: list[HostName],
+    *,
+    description: str = "my-description",
+    plugin_name: str = "dummy_plugin",
+    item: str | None = None,
+    old_labels: Mapping[str, str] | None = None,
+    new_labels: Mapping[str, str] | None = None,
 ) -> CheckPreviewEntry:
     """make a dummy preview entry from the values relevant for the test"""
     return CheckPreviewEntry(
         check_source=check_source,
-        check_plugin_name="dummy_plugin",
+        check_plugin_name=plugin_name,
         ruleset_name=None,
         discovery_ruleset_name=None,
-        item=None,
+        item=item,
         old_discovered_parameters=old_params,
         new_discovered_parameters=new_params,
         effective_parameters={},
-        description="my-description",
+        description=description,
         state=0,
         output="",
         metrics=[],
-        old_labels={},
-        new_labels={},
+        old_labels=dict(old_labels or {}),
+        new_labels=dict(new_labels or {}),
         found_on_nodes=found_on_nodes,
     )
 
@@ -1972,6 +1978,233 @@ class TestDiscovery:
                 target_services={},
                 nodes_services={},
             ),
+        )
+
+    def test_update_service_labels_leaves_non_changed_services_untouched(self) -> None:
+        """No drifted service on the host means nothing to refresh. A red here means an
+        undecided or already-monitored service was written into the autochecks anyway
+        (CMK-38599)."""
+        target_host = HostName("myhost")
+        discovery_result = _make_discovery_result(
+            check_table=[
+                _make_preview_entry(
+                    "unchanged",
+                    {},
+                    {},
+                    [target_host],
+                    description="Memory",
+                    plugin_name="mem_linux",
+                ),
+                _make_preview_entry(
+                    "new",
+                    {},
+                    {},
+                    [target_host],
+                    description="Temperature Zone 1",
+                    plugin_name="lnx_thermal",
+                    item="Zone 1",
+                ),
+            ],
+            nodes_check_table={},
+        )
+        assert (
+            Discovery(
+                host=object(),  # type: ignore[arg-type]
+                action=DiscoveryAction.UPDATE_SERVICE_LABELS,
+                update_target="unchanged",
+                selected_services=(),
+                user_need_permission=_grant_all_permissions,
+            ).compute_discovery_transition(discovery_result, target_host)
+            is None
+        )
+
+    @pytest.mark.parametrize(
+        "action, expected_params, expected_labels",
+        [
+            (DiscoveryAction.UPDATE_SERVICE_LABELS, {"p": "old"}, {"l": "new"}),
+            (DiscoveryAction.UPDATE_DISCOVERY_PARAMETERS, {"p": "new"}, {"l": "old"}),
+        ],
+        ids=["update_service_labels", "update_discovery_parameters"],
+    )
+    def test_value_update_rewrites_only_the_changed_service(
+        self,
+        action: DiscoveryAction,
+        expected_params: Mapping[str, str],
+        expected_labels: Mapping[str, str],
+    ) -> None:
+        """Only the changed service is written, with the action's facet adopted; the undecided
+        service on the same host is left out (CMK-38599)."""
+        target_host = HostName("myhost")
+        discovery_result = _make_discovery_result(
+            check_table=[
+                _make_preview_entry(
+                    "changed",
+                    {"p": "old"},
+                    {"p": "new"},
+                    [target_host],
+                    description="Memory",
+                    plugin_name="mem_linux",
+                    old_labels={"l": "old"},
+                    new_labels={"l": "new"},
+                ),
+                _make_preview_entry(
+                    "new",
+                    {},
+                    {},
+                    [target_host],
+                    description="Temperature Zone 1",
+                    plugin_name="lnx_thermal",
+                    item="Zone 1",
+                ),
+            ],
+            nodes_check_table={},
+        )
+        transition = Discovery(
+            host=object(),  # type: ignore[arg-type]
+            action=action,
+            update_target="unchanged",
+            selected_services=(),
+            user_need_permission=_grant_all_permissions,
+        ).compute_discovery_transition(discovery_result, target_host)
+        assert transition is not None
+        assert transition.new_autochecks.target_services == {
+            "Memory": AutocheckEntry(
+                CheckPluginName("mem_linux"), None, expected_params, expected_labels
+            ),
+        }
+
+    def test_update_service_labels_does_not_revive_vanished_services(self) -> None:
+        """A red here means a vanished service was rewritten to monitored with its freshly
+        discovered labels instead of being kept with its stored values (CMK-38599)."""
+        target_host = HostName("myhost")
+        discovery_result = _make_discovery_result(
+            check_table=[
+                _make_preview_entry(
+                    "changed",
+                    {"level": "old"},
+                    {"level": "new"},
+                    [target_host],
+                    description="Memory",
+                    plugin_name="mem_linux",
+                    old_labels={},
+                    new_labels={"cmk/updated": "yes"},
+                ),
+                _make_preview_entry(
+                    "vanished",
+                    {"level": "gone"},
+                    {"level": "gone"},
+                    [target_host],
+                    description="Temperature Zone 1",
+                    plugin_name="lnx_thermal",
+                    item="Zone 1",
+                    old_labels={"was": "here"},
+                    new_labels={"fresh": "label"},
+                ),
+            ],
+            nodes_check_table={},
+        )
+        transition = Discovery(
+            host=object(),  # type: ignore[arg-type]
+            action=DiscoveryAction.UPDATE_SERVICE_LABELS,
+            update_target="unchanged",
+            selected_services=(),
+            user_need_permission=_grant_all_permissions,
+        ).compute_discovery_transition(discovery_result, target_host)
+        assert transition is not None
+        assert transition.new_autochecks.target_services == {
+            "Memory": AutocheckEntry(
+                CheckPluginName("mem_linux"), None, {"level": "old"}, {"cmk/updated": "yes"}
+            ),
+            "Temperature Zone 1": AutocheckEntry(
+                CheckPluginName("lnx_thermal"), "Zone 1", {"level": "gone"}, {"was": "here"}
+            ),
+        }
+
+    def test_update_discovery_parameters_adopts_drifted_values_on_cluster_nodes(self) -> None:
+        """A clustered service that drifted is 'changed' on the cluster and 'clustered_old' on
+        the node, and the node autochecks are written from nodes_services. A red here means the
+        node kept its stale parameters and the update was silently lost (CMK-38599)."""
+        target_host = HostName("mycluster")
+        node = HostName("node1")
+        discovery_result = _make_discovery_result(
+            check_table=[
+                _make_preview_entry("changed", {"p": "old"}, {"p": "new"}, [node]),
+            ],
+            nodes_check_table={
+                node: [_make_preview_entry("clustered_old", {"p": "old"}, {"p": "new"}, [node])],
+            },
+        )
+        transition = Discovery(
+            host=object(),  # type: ignore[arg-type]
+            action=DiscoveryAction.UPDATE_DISCOVERY_PARAMETERS,
+            update_target="unchanged",
+            selected_services=(),
+            user_need_permission=_grant_all_permissions,
+        ).compute_discovery_transition(discovery_result, target_host)
+        assert transition is not None
+        assert transition.new_autochecks.target_services == {
+            "my-description": _make_autocheck_entry("new")
+        }
+        assert transition.new_autochecks.nodes_services[node] == {
+            "my-description": _make_autocheck_entry("new")
+        }
+
+    def test_update_service_labels_does_not_adopt_undecided_cluster_services(self) -> None:
+        """An undecided clustered service is 'new' on the cluster and 'clustered_new' on the
+        node. A red here means it was adopted into monitoring (CMK-38599)."""
+        target_host = HostName("mycluster")
+        node = HostName("node1")
+        discovery_result = _make_discovery_result(
+            check_table=[
+                _make_preview_entry("new", {"p": "old"}, {"p": "new"}, [node]),
+            ],
+            nodes_check_table={
+                node: [_make_preview_entry("clustered_new", {"p": "old"}, {"p": "new"}, [node])],
+            },
+        )
+        assert (
+            Discovery(
+                host=object(),  # type: ignore[arg-type]
+                action=DiscoveryAction.UPDATE_SERVICE_LABELS,
+                update_target="unchanged",
+                selected_services=(),
+                user_need_permission=_grant_all_permissions,
+            ).compute_discovery_transition(discovery_result, target_host)
+            is None
+        )
+
+    @pytest.mark.parametrize(
+        "source",
+        ["clustered_vanished", "clustered_ignored", "ignored_active", "ignored_custom"],
+    )
+    def test_value_update_leaves_non_owned_sources_untouched(self, source: str) -> None:
+        """Only `changed`/`clustered_old` are owned by a whole-host value refresh. A red here
+        means one of these other sources was retargeted -- e.g. a clustered vanished service
+        revived with fresh values. update_target=None also pins that the gate does not read it
+        (CMK-38599)."""
+        target_host = HostName("myhost")
+        discovery_result = _make_discovery_result(
+            check_table=[
+                _make_preview_entry(
+                    source,
+                    {"p": "old"},
+                    {"p": "new"},
+                    [target_host],
+                    old_labels={"l": "old"},
+                    new_labels={"l": "new"},
+                ),
+            ],
+            nodes_check_table={},
+        )
+        assert (
+            Discovery(
+                host=object(),  # type: ignore[arg-type]
+                action=DiscoveryAction.UPDATE_SERVICE_LABELS,
+                update_target=None,
+                selected_services=(),
+                user_need_permission=_grant_all_permissions,
+            ).compute_discovery_transition(discovery_result, target_host)
+            is None
         )
 
 

@@ -411,16 +411,12 @@ _MODE_CASES: Mapping[str, ModeCase] = {
     # A scan writes nothing, so a freshly created host's rows stay undecided.
     "refresh": ModeCase(expected=dict.fromkeys(_SERVICES, "undecided")),
     "only_host_labels": ModeCase(expected=dict.fromkeys(_SERVICES, "undecided")),
-    # §10.5 in its sharper form, which §10.5 records as pinned nowhere else: driven on a host with
-    # **no** changed service at all, the mode still retargets every row, because
-    # `_get_table_target`'s UPDATE_SERVICE_LABELS arm returns `update_target` for every source but
-    # `ignored` and never reads the `update_source="changed"` its caller transmits. Three
-    # undecided services are therefore adopted into monitoring. Driving it from a *monitored*
-    # baseline would assert nothing at all -- `unchanged -> unchanged` is a no-op today and after
-    # the fix alike, and the cell would survive a mutant that made the mode do nothing. The fix
-    # keys off `update_source`, at which point these rows stay `undecided` and this cell goes
-    # red: intended, since §10.5 lands before the refactoring starts.
-    "only_service_labels": ModeCase(expected=dict.fromkeys(_SERVICES, "monitored")),
+    # §10.5 (CMK-38599): the mode refreshes only `changed` services; on this fresh host none is
+    # `changed`, so every row stays `undecided`. This cell is parity-only -- byte-identical to
+    # `refresh`/`only_host_labels`, so it would also pass for a no-op mode. The positive half (a
+    # `changed` service is refreshed, other rows are not) is pinned in the REST-tier test
+    # `test_update_service_labels_adopts_labels_of_changed_services_only`.
+    "only_service_labels": ModeCase(expected=dict.fromkeys(_SERVICES, "undecided")),
 }
 
 

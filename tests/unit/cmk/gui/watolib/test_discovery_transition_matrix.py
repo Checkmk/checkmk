@@ -849,8 +849,7 @@ def test_an_unselected_row_is_left_alone(
     on a page whose entire interface is the checkboxes.
 
     `FIX_ALL` and the two `UPDATE_*` value actions are deliberately absent: they are whole-table
-    actions that never consult the selection, which is intended (A1-F2 — the host-wide scope is
-    the design, the missing `update_source` filter is the defect, §10.5).
+    actions that never consult the selection, by design (§10.5, CMK-38599).
     """
     transition, _permissions = compute(
         action=action,
@@ -879,15 +878,12 @@ def test_a_whole_table_value_update_leaves_a_disabled_service_disabled(
     expected_params: Mapping[str, object],
     expected_labels: Mapping[str, str],
 ) -> None:
-    """Werk 17711 / CMK-22272: *"used to move disabled services to monitored services … no longer"*.
+    """Werk 17711 / CMK-22272: these two actions must not re-enable a disabled service.
 
-    The `IGNORED` carve-out in both branches is that werk's entire diff, and it is the only thing
-    standing between these two actions and a re-enabled service: they retarget **every** row on
-    the host to `update_target` (A1-F2), so without the carve-out "Update service labels" silently
-    accepts every disabled service on the host back into monitoring.
-
-    The changed row is what the action is *for*; its adopted values are asserted alongside so that
-    "the disabled row was skipped" cannot be satisfied by the action not running.
+    A disabled service is `ignored`, not `changed`, so the scope gate leaves it alone: it is
+    neither written back into the autochecks file nor stripped of its disabling rule. The changed
+    row is what the action is *for*; its adopted values are asserted alongside so that "the disabled
+    row was skipped" cannot be satisfied by the action not running (§10.5, CMK-38599).
     """
     transition, _permissions = compute(
         action=action,

@@ -22,9 +22,16 @@ def _experimental_flags_config_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Pa
     monkeypatch.setattr(global_config, "EXPERIMENTAL_FLAGS_CONFIG_DIR", tmp_path)
 
 
+@pytest.mark.parametrize(
+    "filename",
+    [
+        pytest.param(CONFIG_FILENAME, id="active"),
+        pytest.param(global_config.EXPERIMENTAL_FLAGS_STAGED_FILENAME, id="staged"),
+    ],
+)
 @pytest.mark.usefixtures("request_context", "_experimental_flags_config_dir")
-def test_removes_flags_that_no_longer_exist(tmp_path: Path) -> None:
-    config_file = tmp_path / CONFIG_FILENAME
+def test_removes_flags_that_no_longer_exist(tmp_path: Path, filename: str) -> None:
+    config_file = tmp_path / filename
     config_file.write_text('{"already_removed_flag": true, "exp_trial_mode_selection": true}')
 
     update_action_registry["experimental_flags"](LOGGER)
@@ -43,9 +50,7 @@ def test_resets_unreadable_config_file_to_defaults(tmp_path: Path) -> None:
 
 
 @pytest.mark.usefixtures("request_context", "_experimental_flags_config_dir")
-def test_does_not_create_config_file_when_missing(tmp_path: Path) -> None:
-    config_file = tmp_path / CONFIG_FILENAME
-
+def test_does_not_create_config_files_when_missing(tmp_path: Path) -> None:
     update_action_registry["experimental_flags"](LOGGER)
 
-    assert not config_file.exists()
+    assert not list(tmp_path.iterdir())

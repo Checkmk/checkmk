@@ -12,18 +12,11 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
 class UpdateExperimentalFlags(UpdateAction):
-    """Drop flags from release_flag.json that are no longer declared.
-
-    ExperimentalFlagConfig has extra="ignore", so loading drops unknown keys.
-    Saving what was loaded rewrites the file without them.
-    """
+    """Drop flags that are no longer declared from the staged and the active file."""
 
     @override
     def __call__(self, logger: Logger) -> None:
-        domain = ConfigDomainExperimentalFlags()
-        if not domain.config_file(site_specific=False).exists():
-            return
-        domain.save(domain.load_full_config())
+        ConfigDomainExperimentalFlags().drop_undeclared_flags()
 
 
 update_action_registry.register(

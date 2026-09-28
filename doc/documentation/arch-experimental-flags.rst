@@ -52,9 +52,9 @@ Changing a flag
 Setting a flag is a two-stage write that follows the usual activate-changes flow:
 
 1. Saving the setting in Global Settings writes the new state to
-   ``$OMD_ROOT/etc/check_mk/pre_flag.json``. Nothing reads this file except
-   ``ConfigDomainExperimentalFlags``, so the running site is unaffected.
-2. Activating changes copies that state to ``release_flag.json`` and then restarts
+   ``$OMD_ROOT/etc/check_mk/_pending_release_flag.json``. Nothing reads this file
+   except ``ConfigDomainExperimentalFlags``, so the running site is unaffected.
+2. Activating changes moves that file to ``release_flag.json`` and then restarts
    the whole site.
 
 Flags are read in many processes, and many of them, like the GUI registration

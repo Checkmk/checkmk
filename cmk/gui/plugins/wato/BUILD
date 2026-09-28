@@ -11,6 +11,7 @@ py_library(
     ],
     deps = [
         "//cmk/gui:core_toolkit",
+        "//cmk/gui/experimental_flags",
         "//cmk/gui/inventory",
         "//cmk/gui/valuespec",
         "//cmk/gui/wato:base",

@@ -1092,7 +1092,7 @@ def _agent_config_mk_oracle() -> Dictionary:
 
 rule_spec_oracle_bakelet = AgentConfig(
     name="mk_oracle_unified",
-    title=Title("Unified Oracle plug-in (beta)"),
+    title=Title("Oracle databases (Linux, Solaris, AIX, Windows) (Experimental)"),
     topic=Topic.DATABASES,
     parameter_form=_agent_config_mk_oracle,
     help_text=Help(

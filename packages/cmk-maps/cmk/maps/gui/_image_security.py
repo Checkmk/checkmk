@@ -81,10 +81,18 @@ def _looks_like_svg_header(content: bytes) -> bool:
 # case-folded (the HTML parser's SVG tag-name adjustment maps e.g.
 # ``foreignobject`` back to ``foreignObject``), so a case variant must not slip
 # through. Same matching rule as _SVG_LOCAL_HREF_ONLY_TAGS below.
+# iframe/object/embed carry their own subresource (srcdoc/data/src) and can run
+# script. They render inside SVG only via <foreignObject> (already forbidden), but
+# the walk matches on the namespace-stripped local name, so listing them here also
+# rejects a foreign-namespace smuggle (``<x:iframe>``/``<x:object>``/``<x:embed>``)
+# that would otherwise pass the tag check.
 _SVG_FORBIDDEN_TAGS = frozenset(
     {
         "script",
         "foreignobject",
+        "iframe",
+        "object",
+        "embed",
         "set",
         "animate",
         "animatetransform",

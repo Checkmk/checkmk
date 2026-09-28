@@ -80,6 +80,24 @@ def test_is_safe_svg_accepts_plain_svg() -> None:
         pytest.param(b'<svg><animate attributeName="x"/></svg>', id="animate"),
         pytest.param(b'<svg><animateTransform attributeName="transform"/></svg>', id="animatexf"),
         pytest.param(b'<svg><a href="javascript:alert(1)"><rect/></a></svg>', id="js-href"),
+        # Subresource-bearing HTML elements, incl. a foreign-namespace smuggle the
+        # namespace-stripped tag check must still catch.
+        pytest.param(b'<svg><iframe src="https://evil.example/"/></svg>', id="iframe"),
+        pytest.param(
+            b'<svg xmlns:x="http://www.w3.org/1999/xhtml">'
+            b'<x:iframe srcdoc="&lt;script&gt;alert(1)&lt;/script&gt;"/></svg>',
+            id="foreign-ns-iframe",
+        ),
+        pytest.param(
+            b'<svg xmlns:x="http://www.w3.org/1999/xhtml">'
+            b'<x:object data="https://evil.example/x.swf"/></svg>',
+            id="foreign-ns-object",
+        ),
+        pytest.param(
+            b'<svg xmlns:x="http://www.w3.org/1999/xhtml">'
+            b'<x:embed src="https://evil.example/x.swf"/></svg>',
+            id="foreign-ns-embed",
+        ),
         # Whitespace character references stay literal in the parsed attribute
         # value; browsers strip them before resolving the scheme, so these are
         # live "javascript:" despite the embedded tab/newline.

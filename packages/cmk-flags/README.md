@@ -53,6 +53,10 @@ if flags.new_monitoring_views:
     ...
 ```
 
+The GUI shows the flags in the global settings only on development sites, as
+defined by `is_development_site()` in `cmk/gui/experimental_flags/global_config.py`.
+Flags already set in `release_flag.json` stay in effect either way.
+
 The public API is `load_experimental_flags`, `ExperimentalFlagConfig`, and
 `CONFIG_FILENAME` (still `"release_flag.json"`, see above). `experimental_field`
 is exported for use inside the model declaration.

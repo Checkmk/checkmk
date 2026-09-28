@@ -152,10 +152,11 @@ py_cmk_test(
 )
 
 # Setup test suite: wato, watolib, rulespecs, form_specs, quick_setup,
-# parentscan, search, plugins.
+# parentscan, search, plugins, experimental_flags.
 py_cmk_test(
     name = "setup_tests",
     srcs = glob([
+        "experimental_flags/**/*.py",
         "form_specs/**/*.py",
         "global_settings/**/*.py",
         "parentscan/**/*.py",
@@ -167,6 +168,7 @@ py_cmk_test(
         "watolib/**/*.py",
     ]),
     args = [
+        "tests/unit/cmk/gui/experimental_flags",
         "tests/unit/cmk/gui/form_specs",
         "tests/unit/cmk/gui/global_settings",
         "tests/unit/cmk/gui/parentscan",
@@ -195,6 +197,7 @@ py_cmk_test(
         "//cmk/gui:visual_link",
         "//cmk/gui/background_job/process",
         "//cmk/gui/data_source",
+        "//cmk/gui/experimental_flags",
         "//cmk/gui/form_specs",
         "//cmk/gui/global_settings",
         "//cmk/gui/graphing",
@@ -227,6 +230,7 @@ py_cmk_test(
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//packages/cmk-crypto",
+        "//packages/cmk-flags",
         "//packages/cmk-licensing",
         "//packages/cmk-livestatus-client:py_livestatus",
         "//packages/cmk-plugin-apis:password_store",

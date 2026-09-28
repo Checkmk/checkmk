@@ -12,9 +12,12 @@ package) in the global settings UI. It is the only writer of
 The config variables are generated from the fields of
 :class:`cmk.flags.ExperimentalFlagConfig`, so adding a flag there is enough to
 make it appear in the UI -- no per-flag boilerplate here.
+
+The flags are only shown on development sites, see :func:`is_development_site`.
 """
 
 import os
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Final, override
 
@@ -49,6 +52,10 @@ EXPERIMENTAL_FLAGS_CONFIG_DIR: Final = default_config_dir
 EXPERIMENTAL_FLAGS_CONFIG_FILE_RELATIVE: Final = (
     EXPERIMENTAL_FLAGS_CONFIG_DIR.relative_to(omd_root) / EXPERIMENTAL_FLAGS_CONFIG_FILENAME
 )
+
+
+def is_development_site(environ: Mapping[str, str] = os.environ) -> bool:
+    return environ.get("CMK_DEV", "").lower() == "true"
 
 
 class ConfigDomainExperimentalFlags(ABCConfigDomain):
@@ -130,7 +137,9 @@ ConfigVariableGroupExperimentalFlags = ConfigVariableGroup(
 )
 
 
-def _make_flag_config_variable(name: str, field_info: FieldInfo) -> ConfigVariable:
+def _make_flag_config_variable(
+    name: str, field_info: FieldInfo, *, in_global_settings: bool
+) -> ConfigVariable:
     extra = field_info.json_schema_extra or {}
     assert isinstance(extra, dict)
     description = str(extra.get("description", ""))
@@ -149,10 +158,12 @@ def _make_flag_config_variable(name: str, field_info: FieldInfo) -> ConfigVariab
             label=Label("Enabled"),
             help_text=help_text,
         ),
+        in_global_settings=in_global_settings,
     )
 
 
-experimental_flag_config_variables: Final[list[ConfigVariable]] = [
-    _make_flag_config_variable(name, field_info)
-    for name, field_info in ExperimentalFlagConfig.model_fields.items()
-]
+def experimental_flag_config_variables(*, in_global_settings: bool) -> list[ConfigVariable]:
+    return [
+        _make_flag_config_variable(name, field_info, in_global_settings=in_global_settings)
+        for name, field_info in ExperimentalFlagConfig.model_fields.items()
+    ]

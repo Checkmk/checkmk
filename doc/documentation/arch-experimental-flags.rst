@@ -42,8 +42,8 @@ Visibility
 
 Flags are a developer tool, not a user-facing setting. The "Experimental flags"
 group in Global Settings appears only on sites installed with ``cmk-dev-install``
-(see the ``cmk-dev-site`` repository). On every other site the group is not
-registered, so users cannot change a flag from the GUI. Achieved with
+(see the ``cmk-dev-site`` repository). On every other site the group is only
+registered but not shown, so users cannot change a flag from the GUI. Achieved with
 the environment variable CMK_DEV=TRUE, which defaults to false.
 
 Changing a flag

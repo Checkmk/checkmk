@@ -1304,7 +1304,7 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
         "url_target": "_blank",
         "labels": ("shown", {"size": 11}),
     },
-    "data_backend": {},
+    "data_backend": {"features": {"telemetry": "disabled"}},
     "mkeventd_notify_remotehost": None,
     "mkeventd_service_levels": [],
     "network_flow": ("disabled", None),
@@ -2169,7 +2169,9 @@ CASES: Mapping[str, list[Case]] = {
         CaseFail("not-an-int", "5000"),
     ],
     "data_backend": [
-        CaseMigrates("legacy-disabled", ("disabled", None), {}),
+        CaseMigrates(
+            "legacy-disabled", ("disabled", None), {"features": {"telemetry": "disabled"}}
+        ),
         CaseMigrates(
             "legacy-enabled",
             (
@@ -2177,6 +2179,7 @@ CASES: Mapping[str, list[Case]] = {
                 {"tls_port": 9000, "https_port": 8443, "relative_memory_limit_percentage": 50.0},
             ),
             {
+                "features": {"telemetry": "local"},
                 "local_instance": {
                     "tls_port": 9000,
                     "https_port": 8443,
@@ -2187,6 +2190,7 @@ CASES: Mapping[str, list[Case]] = {
         CasePass(
             "local-instance",
             {
+                "features": {"telemetry": "local"},
                 "local_instance": {
                     "tls_port": 9000,
                     "https_port": 8443,
@@ -2194,9 +2198,11 @@ CASES: Mapping[str, list[Case]] = {
                 },
             },
         ),
+        CaseFail("local-feature-without-local-instance", {"features": {"telemetry": "local"}}),
         CaseFail(
             "duplicate-ports",
             {
+                "features": {"telemetry": "local"},
                 "local_instance": {
                     "tls_port": 9000,
                     "https_port": 9000,

@@ -24,6 +24,11 @@ from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import all_painters
 from cmk.gui.painter.v0.painters import _paint_custom_notes
 from cmk.gui.type_defs import ColumnSpec, Row
+from cmk.gui.utils.host_relations import (
+    dump_resolved_relations,
+    RELATIONS_CUSTOM_VARIABLE,
+    ResolvedRelation,
+)
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views.page_edit_view import painters_of_datasource
@@ -368,18 +373,39 @@ def test_service_painters(
             _test_painter(painter_ident, live)
 
 
-def _test_painter(painter_ident: str, live: MockLiveStatusConnection) -> None:
-    _set_expected_queries(painter_ident, live)
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_host_custom_attributes_leave_out_the_host_relations() -> None:
+    """The relations have a column of their own, which only names hosts the user may see."""
+    (cell,) = _view_of(ColumnSpec(name="host_custom_vars"), "hosts").row_cells
+    relations = dump_resolved_relations(
+        [ResolvedRelation(kind="management", direction="parent", host="hidden-board", site="s")]
+    )
+    row = {"host_custom_variables": {"OWNER": "team-a", RELATIONS_CUSTOM_VARIABLE: relations}}
 
-    name, params = _painter_name_spec(painter_ident)
+    _tdclass, content = cell.render(
+        row,
+        partial(render_link_to_view, request=request, user_permissions=_NO_PERMISSIONS),
+        user,
+    )
 
-    view = View(
+    assert "team-a" in str(content)
+    assert "hidden-board" not in str(content)
+    assert "hidden-board" not in str(cell.render_for_csv_export(row, user))
+    assert "hidden-board" not in str(cell.render_for_json_export(row, user))
+    assert "hidden-board" not in str(cell.painter().group_by(row, cell))
+
+
+_NO_PERMISSIONS = UserPermissions({}, {}, {}, [])
+
+
+def _view_of(column: ColumnSpec, datasource: str) -> View:
+    return View(
         view_name="",
         view_spec={
             "group_painters": [],
-            "painters": [ColumnSpec(name=name, parameters=params)],
+            "painters": [column],
             "sorters": [],
-            "datasource": "services",
+            "datasource": datasource,
             "browser_reload": 30,
             "column_headers": "pergroup",
             "description": "",
@@ -406,14 +432,22 @@ def _test_painter(painter_ident: str, live: MockLiveStatusConnection) -> None:
             "main_menu_search_terms": [],
         },
         context={},
-        user_permissions=(user_permissions := UserPermissions({}, {}, {}, [])),
+        user_permissions=_NO_PERMISSIONS,
     )
+
+
+def _test_painter(painter_ident: str, live: MockLiveStatusConnection) -> None:
+    _set_expected_queries(painter_ident, live)
+
+    name, params = _painter_name_spec(painter_ident)
+
+    view = _view_of(ColumnSpec(name=name, parameters=params), "services")
 
     row = _service_row()
     for cell in view.row_cells:
         _tdclass, content = cell.render(
             row,
-            partial(render_link_to_view, request=request, user_permissions=user_permissions),
+            partial(render_link_to_view, request=request, user_permissions=_NO_PERMISSIONS),
             user,
         )
         assert isinstance(content, str | HTML)

@@ -46,6 +46,7 @@ from cmk.gui.painter_options import (
 )
 from cmk.gui.theme import Theme
 from cmk.gui.type_defs import ColumnName, PainterParameters, Row, SorterName, VisualLinkSpec
+from cmk.gui.utils.host_relations import RELATIONS_CUSTOM_VARIABLE
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.valuespec import (
@@ -3995,6 +3996,7 @@ class PainterHostCustomVariables(Painter):
         "NODEIPS",
         "NODEIPS_4",
         "NODEIPS_6",
+        RELATIONS_CUSTOM_VARIABLE,
     ]
 
     @property
@@ -4013,7 +4015,9 @@ class PainterHostCustomVariables(Painter):
 
     @override
     def group_by(self, row: Row, cell: Cell) -> tuple[tuple[str, str], ...]:
-        return tuple(row["host_custom_variables"].items())
+        return tuple(
+            item for item in row["host_custom_variables"].items() if item[0] not in self.BLACKLIST
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:

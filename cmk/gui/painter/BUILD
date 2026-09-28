@@ -75,6 +75,7 @@ py_library(
         "//cmk/gui:painter_options",
         "//cmk/gui:visual_link",
         "//cmk/gui/graphing",
+        "//cmk/gui/utils:base",
         "//cmk/gui/utils:middle",
         "//cmk/gui/valuespec",
         "//cmk/utils",

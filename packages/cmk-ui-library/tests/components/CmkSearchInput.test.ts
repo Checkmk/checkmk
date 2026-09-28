@@ -89,6 +89,14 @@ test('clears the field and emits an empty query when the clear button is clicked
   expect(emitted('search')).toEqual([['']])
 })
 
+test('leaves the focus in the field when the clear button is clicked', async () => {
+  renderInput('web01')
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Clear search' }))
+
+  expect(screen.getByRole('searchbox')).toHaveFocus()
+})
+
 test('omits the submit button when it is turned off', () => {
   render(CmkSearchInput, {
     props: { placeholder: 'Search settings…', modelValue: '', showSubmitButton: false }

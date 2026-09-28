@@ -45,6 +45,9 @@ function submit(): void {
 function clear(): void {
   query.value = ''
   emit('search', '')
+  // The click moved focus to the clear button, which hides once the field is
+  // empty; return it to the field so the next query can be typed straight away.
+  input.value?.focus()
 }
 </script>
 

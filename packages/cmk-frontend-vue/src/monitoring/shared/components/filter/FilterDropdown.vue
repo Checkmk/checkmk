@@ -15,9 +15,10 @@ this shell.
 Edits are staged in a `draft` that is snapshotted from the committed model when
 the popover opens. The mounted filter component binds to that draft, so toggling
 options never touches the committed model directly. "Apply" commits the draft
-(closing the popover and updating the table), and so does picking a sort
-direction; "Cancel", Escape and click-outside discard the draft, leaving the
-model at the state it had on open.
+(closing the popover and updating the table), and so do picking a sort
+direction and pressing Enter in a text, number or date field; "Cancel", Escape
+and click-outside discard the draft, leaving the model at the state it had on
+open.
 -->
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
@@ -255,6 +256,40 @@ function clear(): void {
   draft.value = undefined
   isValid.value = true
   draftKey.value += 1
+  // The remount replaces the field the user was typing in, and the click has
+  // moved focus to the Clear button, so hand it back to the fresh filter.
+  void nextTick(focusFilter)
+}
+
+// Enter in a typed-in field applies, as in any form. Search fields are left
+// out: they narrow a list of options or suggestions, so Enter there belongs to
+// that search. So are keys a control has already claimed, and the Enter that
+// confirms an IME candidate (Safari reports it as keyCode 229, not composing).
+const TEXT_INPUT_TYPES = new Set([
+  'text',
+  'number',
+  'email',
+  'url',
+  'tel',
+  'password',
+  'date',
+  'time',
+  'datetime-local'
+])
+
+function onBodyEnter(event: KeyboardEvent): void {
+  const target = event.target
+  if (
+    event.defaultPrevented ||
+    event.isComposing ||
+    event.keyCode === 229 ||
+    !(target instanceof HTMLInputElement) ||
+    !TEXT_INPUT_TYPES.has(target.type)
+  ) {
+    return
+  }
+  event.preventDefault()
+  apply()
 }
 
 // Floating content inside the panel typically unmounts on the very click that
@@ -521,7 +556,7 @@ onBeforeUnmount(() => {
           </CmkButton>
         </div>
 
-        <div ref="body">
+        <div ref="body" @keydown.enter="onBodyEnter">
           <component
             :is="filterComponent"
             :key="draftKey"

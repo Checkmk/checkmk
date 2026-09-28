@@ -14,7 +14,8 @@ import type {
   CheckboxListFilter,
   ColumnFilterDefinition,
   ColumnFilterValue,
-  SortDirection
+  SortDirection,
+  StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
 
 const definition: CheckboxListFilter<'state'> = {
@@ -33,6 +34,11 @@ const labelsDefinition: AutocompleteChoiceFilter<'labels'> = {
   field: 'labels',
   op: 'all_of',
   suggest: (query: string) => Promise.resolve(LABELS.filter((label) => label.includes(query)))
+}
+
+const nameDefinition: StringInputFilter<'name'> = {
+  type: 'string-input',
+  field: 'name'
 }
 
 function upFilter(): ColumnFilterNode<'state'> {
@@ -446,4 +452,54 @@ test('the arrow keys walk the suggestions one at a time', async () => {
 
   await user.keyboard('{ArrowUp}')
   expect(screen.getByRole('button', { name: 'cmk/os_family:linux' })).toHaveFocus()
+})
+
+test('Clear leaves the focus in the emptied filter field', async () => {
+  const user = userEvent.setup()
+  renderDropdown(undefined, false, [], nameDefinition, 'Host')
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  await user.type(screen.getByRole('textbox', { name: 'Value' }), 'web')
+  await user.click(screen.getByRole('button', { name: 'Clear' }))
+  await nextTick()
+
+  const field = screen.getByRole('textbox', { name: 'Value' })
+  expect(field).toHaveValue('')
+  expect(field).toHaveFocus()
+})
+
+test('Enter in a typed-in filter field commits it and closes the dropdown', async () => {
+  const user = userEvent.setup()
+  const { model } = renderDropdown(undefined, false, [], nameDefinition, 'Host')
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  await user.type(screen.getByRole('textbox', { name: 'Value' }), 'web{Enter}')
+
+  expect(model.value).toEqual({ type: 'condition', field: 'name', op: 'contains', value: 'web' })
+  expect(screen.queryByRole('button', { name: 'Apply' })).not.toBeInTheDocument()
+})
+
+test('Enter in a suggestion search keeps the dropdown open', async () => {
+  const user = userEvent.setup()
+  renderDropdown(undefined, false, [], labelsDefinition, 'Labels')
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  await user.type(screen.getByRole('searchbox'), 'os_family')
+  await waitFor(() => screen.getByRole('button', { name: 'cmk/os_family:linux' }))
+  await user.keyboard('{Enter}')
+
+  expect(screen.getByRole('searchbox')).toHaveValue('os_family')
+  expect(screen.getByRole('button', { name: 'Apply' })).toBeInTheDocument()
+})
+
+test('Enter in the option search of a checkbox list keeps the dropdown open', async () => {
+  const user = userEvent.setup()
+  const { model } = renderDropdown(undefined, false, [], { ...definition, searchThreshold: 0 })
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  await user.click(screen.getByRole('checkbox', { name: 'UP' }))
+  await user.type(screen.getByRole('searchbox'), 'DO{Enter}')
+
+  expect(model.value).toBeUndefined()
+  expect(screen.getByRole('button', { name: 'Apply' })).toBeInTheDocument()
 })

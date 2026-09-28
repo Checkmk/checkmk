@@ -681,7 +681,7 @@ test('shows the columns the URL a link arrived on names, and asks for their fiel
   await screen.findByText('Total rows: 1')
 
   expect(screen.getByRole('columnheader', { name: 'Labels' })).toBeInTheDocument()
-  expect(screen.queryByRole('columnheader', { name: 'Last check' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('columnheader', { name: 'Check age' })).not.toBeInTheDocument()
   // `state` and `name` cannot be hidden, so the URL never has to name them.
   expect(screen.getByRole('columnheader', { name: 'Service' })).toBeInTheDocument()
 
@@ -691,6 +691,21 @@ test('shows the columns the URL a link arrived on names, and asks for their fiel
       body: { limit: 1000, fields: ['labels'] }
     })
   )
+})
+
+test('names the timestamp columns by when they happened once they show a point in time', async () => {
+  window.history.replaceState(
+    null,
+    '',
+    '/monitor_host_services.py?host=web-1&site=local&timestamp_format=abs'
+  )
+  mockServices([makeApiEntry()])
+  renderApp()
+  await screen.findByText('Total rows: 1')
+
+  expect(screen.getByRole('columnheader', { name: 'Last state change' })).toBeInTheDocument()
+  expect(screen.getByRole('columnheader', { name: 'Last check' })).toBeInTheDocument()
+  expect(screen.queryByRole('columnheader', { name: 'State age' })).not.toBeInTheDocument()
 })
 
 test('falls back to the default ordering when the URL names an unsortable column', async () => {
@@ -735,8 +750,8 @@ test('requests services whose last state change is at or after the picked instan
   mockServices([makeApiEntry()])
   renderApp()
 
-  await userEvent.click(await screen.findByRole('button', { name: 'Filter Last state change' }))
-  const panel = screen.getByRole('group', { name: 'Filter Last state change' })
+  await userEvent.click(await screen.findByRole('button', { name: 'Filter State age' }))
+  const panel = screen.getByRole('group', { name: 'Filter State age' })
   const from = within(panel).getByRole('group', { name: 'From' })
 
   await userEvent.click(within(from).getByRole('button', { name: 'Open calendar' }))

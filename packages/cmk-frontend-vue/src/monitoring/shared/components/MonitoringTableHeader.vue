@@ -105,7 +105,7 @@ function columnLabel(column: Column<T, unknown>): string {
 }
 
 function filterButtonLabel(column: Column<T, unknown>, isActive: boolean): string {
-  const columnTitle = headerTitle(column)
+  const columnTitle = columnLabel(column)
   return isActive
     ? _t('Filter %{column} (active)', { column: columnTitle })
     : _t('Filter %{column}', { column: columnTitle })

@@ -20,6 +20,7 @@ import OverviewDetailList from '@/monitoring/shared/components/slide-in/Overview
 import OverviewLabels from '@/monitoring/shared/components/slide-in/OverviewLabels.vue'
 import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { toNameItems, toTagItems } from '@/monitoring/shared/labels'
+import { timestampLabels } from '@/monitoring/shared/timestampLabels'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
 const props = defineProps<{ data: ServiceOverview; displayOptions: DisplayOptions }>()
@@ -38,6 +39,8 @@ const lastCheck = computed(() =>
     ? '–'
     : formatDisplayTimestamp(props.data.last_check, props.displayOptions)
 )
+
+const ages = computed(() => timestampLabels(props.displayOptions.timestampFormat))
 
 const stateAge = computed(() =>
   formatDisplayTimestamp(props.data.last_state_change, props.displayOptions)
@@ -99,10 +102,10 @@ const nextCheck = computed(() =>
     <hr class="monitoring-service-overview-tab__divider" />
 
     <OverviewDetailList align="start">
-      <dt>{{ _t('Last check:') }}</dt>
+      <dt :title="ages.lastCheck.title">{{ ages.lastCheck.label }}:</dt>
       <dd>{{ lastCheck }}</dd>
 
-      <dt>{{ _t('State age:') }}</dt>
+      <dt :title="ages.lastStateChange.title">{{ ages.lastStateChange.label }}:</dt>
       <dd>{{ stateAge }}</dd>
 
       <dt>{{ _t('Current check attempt:') }}</dt>

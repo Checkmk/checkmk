@@ -18,5 +18,5 @@ export interface DisplayOptions {
 
 export const DEFAULT_DISPLAY_OPTIONS: DisplayOptions = {
   dateFormat: '%Y-%m-%d',
-  timestampFormat: 'mixed'
+  timestampFormat: 'rel'
 }

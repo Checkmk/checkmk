@@ -111,14 +111,14 @@ describe('displayOptionsWriter', () => {
     const { urlSync, replaceUrl } = makeUrlSync()
 
     useUrlSync([displayOptionsWriter(displayOptions)], { urlSync })
-    displayOptions.value = { dateFormat: '%d.%m.', timestampFormat: 'rel' }
+    displayOptions.value = { dateFormat: '%d.%m.', timestampFormat: 'abs' }
     await nextTick()
 
     expect(replaceUrl).toHaveBeenCalledTimes(1)
     const url = replaceUrl.mock.calls[0]![0] as string
     const params = new URLSearchParams(url.split('?')[1])
     expect(params.get('date_format')).toBe('%d.%m.')
-    expect(params.get('timestamp_format')).toBe('rel')
+    expect(params.get('timestamp_format')).toBe('abs')
   })
 
   it('drops a field back out of the URL once it returns to its default', async () => {
@@ -126,7 +126,7 @@ describe('displayOptionsWriter', () => {
     const { urlSync, replaceUrl } = makeUrlSync()
 
     useUrlSync([displayOptionsWriter(displayOptions)], { urlSync })
-    displayOptions.value = { dateFormat: '%d.%m.', timestampFormat: 'rel' }
+    displayOptions.value = { dateFormat: '%d.%m.', timestampFormat: 'abs' }
     await nextTick()
     displayOptions.value = { ...DEFAULT_DISPLAY_OPTIONS }
     await nextTick()

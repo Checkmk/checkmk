@@ -1473,7 +1473,7 @@ describe('display options storage', () => {
   it('falls back to the defaults when storage holds something unusable', () => {
     expect(sanitizeDisplayOptions(['abs'])).toEqual({
       dateFormat: '%Y-%m-%d',
-      timestampFormat: 'mixed'
+      timestampFormat: 'rel'
     })
   })
 })

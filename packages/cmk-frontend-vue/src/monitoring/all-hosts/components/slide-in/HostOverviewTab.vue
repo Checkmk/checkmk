@@ -15,6 +15,7 @@ import OverviewDetailList from '@/monitoring/shared/components/slide-in/Overview
 import OverviewLabels from '@/monitoring/shared/components/slide-in/OverviewLabels.vue'
 import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { toNameItems, toTagItems } from '@/monitoring/shared/labels'
+import { timestampLabels } from '@/monitoring/shared/timestampLabels'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
 import HostRelationsSection from './HostRelationsSection.vue'
@@ -39,6 +40,8 @@ const contactGroupChips = computed(() => toNameItems(props.data.contact_groups))
 const lastCheck = computed(() =>
   formatDisplayTimestamp(props.data.last_check, props.displayOptions)
 )
+const ages = computed(() => timestampLabels(props.displayOptions.timestampFormat))
+
 const age = computed(() =>
   formatDisplayTimestamp(props.data.last_state_change, props.displayOptions)
 )
@@ -83,10 +86,10 @@ const age = computed(() =>
     <hr class="monitoring-host-overview-tab__divider" />
 
     <OverviewDetailList>
-      <dt>{{ _t('Last check') }}</dt>
+      <dt :title="ages.lastCheck.title">{{ ages.lastCheck.label }}</dt>
       <dd>{{ lastCheck }}</dd>
 
-      <dt>{{ _t('Age') }}</dt>
+      <dt :title="ages.lastStateChange.title">{{ ages.lastStateChange.label }}</dt>
       <dd>{{ age }}</dd>
     </OverviewDetailList>
 

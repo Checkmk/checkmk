@@ -16,6 +16,7 @@ The flags are only shown on development sites, see :func:`is_development_site`.
 """
 
 import os
+import subprocess
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Final, override
@@ -24,7 +25,7 @@ from pydantic.fields import FieldInfo
 
 from cmk.ccc import store
 from cmk.flags import CONFIG_FILENAME as EXPERIMENTAL_FLAGS_CONFIG_FILENAME
-from cmk.flags import ExperimentalFlagConfig
+from cmk.flags import ExperimentalFlagConfig, load_experimental_flags
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.utils.html import HTML
@@ -34,17 +35,13 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigDomainName,
     ConfigVariable,
     ConfigVariableGroup,
+    EXPERIMENTAL_FLAGS,
     SerializedSettings,
 )
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.paths import default_config_dir, omd_root
 
-# Kept as "release_flags" (not "experimental_flags"): this is the ConfigDomain
-# ident used as a dict key on both sides of activate_changes. A central and a
-# remote site running different versions would otherwise raise a hard KeyError
-# there. Renaming it needs a dual-registration alias spanning a major version
-# boundary; see CMK-38694 / the 2026-09-09 revert of #22265.
-EXPERIMENTAL_FLAGS_CONFIG_ID: Final[ConfigDomainName] = "release_flags"
+EXPERIMENTAL_FLAGS_CONFIG_ID: Final = EXPERIMENTAL_FLAGS
 EXPERIMENTAL_FLAGS_CONFIG_DIR: Final = default_config_dir
 EXPERIMENTAL_FLAGS_STAGED_FILENAME: Final = "_pending_release_flag.json"
 EXPERIMENTAL_FLAGS_CONFIG_FILE_RELATIVE: Final = (
@@ -74,6 +71,7 @@ class ConfigDomainExperimentalFlags(ABCConfigDomain):
     """
 
     always_activate = True
+    _flags_changed = False
 
     @override
     @classmethod
@@ -86,7 +84,8 @@ class ConfigDomainExperimentalFlags(ABCConfigDomain):
         return HTML.without_escaping(
             _(
                 "This is an experimental flag for testing only. It may change or be removed "
-                "without notice and must not be relied on for permanent configuration."
+                "without notice and must not be relied on for permanent configuration. "
+                "Changing it restarts the whole site during activate changes."
             )
         )
 
@@ -134,8 +133,11 @@ class ConfigDomainExperimentalFlags(ABCConfigDomain):
         # Move the final flags in place in the create artifacts stage, so consumers
         # can use them in the activate stage.
         staged = self.config_file(site_specific=False)
+        self._flags_changed = False
         if staged.exists():
+            before = load_experimental_flags(self.config_dir())
             staged.replace(self.active_config_file())
+            self._flags_changed = load_experimental_flags(self.config_dir()) != before
         return []
 
     def drop_undeclared_flags(self) -> None:
@@ -148,7 +150,22 @@ class ConfigDomainExperimentalFlags(ABCConfigDomain):
 
     @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
-        return []
+        if not self._flags_changed:
+            return []
+        self._flags_changed = False
+        return self._restart_site()
+
+    def _restart_site(self) -> ConfigurationWarnings:
+        completed_process = subprocess.run(
+            ["omd", "restart"],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            close_fds=True,
+            encoding="utf-8",
+            check=False,
+        )
+        return [completed_process.stdout] if completed_process.returncode else []
 
     @override
     def default_globals(self) -> GlobalSettings:

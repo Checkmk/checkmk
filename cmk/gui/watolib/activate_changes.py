@@ -124,6 +124,7 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigDomainName,
     DomainRequest,
     DomainRequests,
+    EXPERIMENTAL_FLAGS,
     get_always_activate_domains,
     get_config_domain,
     SerializedSettings,
@@ -2899,7 +2900,7 @@ def _save_state(activation_id: ActivationId, site_id: SiteId, state: SiteActivat
 
 
 # These domains restart the site, so they activate after all others, in this order.
-_ACTIVATE_LAST: Final[Sequence[ConfigDomainName]] = (OMDDomainName,)
+_ACTIVATE_LAST: Final[Sequence[ConfigDomainName]] = (OMDDomainName, EXPERIMENTAL_FLAGS)
 
 
 def sort_for_activation(domain_requests: DomainRequests) -> list[DomainRequest]:

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -65,3 +66,72 @@ def test_settings_show_the_active_flags_when_nothing_is_saved(config_dir: Path) 
     (config_dir / CONFIG_FILENAME).write_text('{"exp_ai_assistant": true}')
 
     assert ConfigDomainExperimentalFlags().load_full_config()["exp_ai_assistant"] is True
+
+
+class _RecordingRun:
+    def __init__(self, returncode: int = 0, stdout: str = "") -> None:
+        self.commands: list[list[str]] = []
+        self._returncode = returncode
+        self._stdout = stdout
+
+    def __call__(
+        self,
+        args: list[str],
+        **kwargs: object,
+    ) -> subprocess.CompletedProcess[str]:
+        self.commands.append(args)
+        return subprocess.CompletedProcess(args, self._returncode, stdout=self._stdout)
+
+
+@pytest.fixture(name="run")
+def fixture_run(monkeypatch: pytest.MonkeyPatch) -> _RecordingRun:
+    run = _RecordingRun()
+    monkeypatch.setattr(subprocess, "run", run)
+    return run
+
+
+def _activate(domain: ConfigDomainExperimentalFlags) -> list[str]:
+    domain.create_artifacts()
+    return domain.activate()
+
+
+@pytest.mark.usefixtures("config_dir")
+def test_activating_a_changed_flag_restarts_the_site(run: _RecordingRun) -> None:
+    domain = ConfigDomainExperimentalFlags()
+    domain.save({"exp_ai_assistant": True})
+
+    _activate(domain)
+
+    assert run.commands == [["omd", "restart"]]
+
+
+@pytest.mark.usefixtures("config_dir")
+def test_activating_unchanged_flags_does_not_restart_the_site(run: _RecordingRun) -> None:
+    domain = ConfigDomainExperimentalFlags()
+    domain.save({"exp_ai_assistant": True})
+    _activate(domain)
+
+    _activate(domain)
+
+    assert run.commands == [["omd", "restart"]]
+
+
+@pytest.mark.usefixtures("config_dir")
+def test_activating_default_flags_on_a_site_without_flags_does_not_restart_the_site(
+    run: _RecordingRun,
+) -> None:
+    domain = ConfigDomainExperimentalFlags()
+    domain.save({})
+
+    _activate(domain)
+
+    assert not run.commands
+
+
+@pytest.mark.usefixtures("config_dir")
+def test_a_failed_restart_is_reported_as_warning(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(subprocess, "run", _RecordingRun(returncode=1, stdout="restart failed"))
+    domain = ConfigDomainExperimentalFlags()
+    domain.save({"exp_ai_assistant": True})
+
+    assert _activate(domain) == ["restart failed"]

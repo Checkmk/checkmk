@@ -46,6 +46,12 @@ LIVEPROXY: Final[ConfigDomainName] = "liveproxyd"
 CA_CERTIFICATES: Final[ConfigDomainName] = "ca-certificates"
 SITE_CERTIFICATE: Final[ConfigDomainName] = "site-certificate"
 OMD: Final[ConfigDomainName] = "omd"
+# Kept as "release_flags" (not "experimental_flags"): this is the ConfigDomain
+# ident used as a dict key on both sides of activate_changes. A central and a
+# remote site running different versions would otherwise raise a hard KeyError
+# there. Renaming it needs a dual-registration alias spanning a major version
+# boundary; see CMK-38694 / the 2026-09-09 revert of #22265.
+EXPERIMENTAL_FLAGS: Final[ConfigDomainName] = "release_flags"
 
 
 def wato_fileheader() -> str:

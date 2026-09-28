@@ -18,7 +18,6 @@ py_library(
         "//cmk/automations",
         "//cmk/base",
         "//cmk/bi",
-        "//cmk/checkengine",
         "//cmk/config_anonymizer",
         "//cmk/core_client",
         "//cmk/diskspace",

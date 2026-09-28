@@ -43,7 +43,6 @@ py_library(
     deps = [
         "//cmk:message_broker_certs",
         "//cmk/base/config",
-        "//cmk/checkengine",
         "//cmk/gui:app",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",

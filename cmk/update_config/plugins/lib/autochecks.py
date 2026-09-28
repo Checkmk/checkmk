@@ -5,13 +5,11 @@
 
 from collections.abc import Callable, Generator, Iterable, Mapping
 from dataclasses import dataclass
-from typing import Any
 
 from cmk.base.config import load_all_plugins
 from cmk.ccc import debug
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery import AutochecksStore
-from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.plugin_backend import get_check_plugin
 from cmk.checkengine.plugins import AutocheckEntry, CheckPlugin, CheckPluginName
 from cmk.gui.watolib.hosts_and_folders import FolderTree
@@ -33,10 +31,7 @@ _ALL_EXPLICIT_DISCOVERED_ITEMS_TRANSFORMS: TDiscoveredItemsTransforms = {
     },
 }
 
-type ParameterTransformer = Callable[  # type: ignore[explicit-any]
-    [Any],  # should be LegacyCheckParameters, but this makes writing transforms cumbersome ...
-    Mapping[str, object],
-]
+type ParameterTransformer = Callable[[Mapping[str, object]], Mapping[str, object]]
 # some autocheck parameters need transformation even though there is no ruleset.
 type TDiscoveredParametersTransforms = Mapping[CheckPluginName, ParameterTransformer]
 
@@ -167,9 +162,9 @@ def _fix_entry(
     )
 
 
-def _transformed_params[T: LegacyCheckParameters](
+def _transformed_params(
     plugin_name: CheckPluginName,
-    params: T,
+    params: Mapping[str, object],
     all_rulesets: RulesetCollection,
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     host: str,  # noqa: ARG001
@@ -210,7 +205,7 @@ def _get_ruleset(
 
 
 def _apply_rulesets_migration(
-    params: LegacyCheckParameters, ruleset: Ruleset, plugin_name: CheckPluginName
+    params: Mapping[str, object], ruleset: Ruleset, plugin_name: CheckPluginName
 ) -> Mapping[str, object]:
     new_params = ruleset.rulespec.valuespec.transform_value(params) if params else {}
 

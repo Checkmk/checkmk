@@ -20,7 +20,6 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/checkengine",
         "//cmk/utils",
         "//cmk/utils:unixsocket_http",
         "//packages/cmk-ccc:exceptions",

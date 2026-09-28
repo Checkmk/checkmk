@@ -5,27 +5,32 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyResult
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.legacy_includes.mem import check_memory_element
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.datapower.lib import DETECT
-
-check_info = {}
-
-
-def discover_datapower_mem(info: StringTable) -> Iterable[tuple[None, Mapping[str, Any]]]:
-    if info:
-        yield None, {}
+from cmk.plugins.lib.memory import check_element
 
 
-def check_datapower_mem(item: None, params: Mapping[str, Any], info: StringTable) -> LegacyResult:  # noqa: ARG001
-    mem_total_bytes = int(info[0][0]) * 1024
-    mem_used_bytes = int(info[0][1]) * 1024
+def discover_datapower_mem(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
 
-    return check_memory_element(
+
+def check_datapower_mem(params: Mapping[str, Any], section: StringTable) -> CheckResult:
+    mem_total_bytes = int(section[0][0]) * 1024
+    mem_used_bytes = int(section[0][1]) * 1024
+
+    yield from check_element(
         "Usage",
         mem_used_bytes,
         mem_total_bytes,
@@ -38,7 +43,7 @@ def parse_datapower_mem(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["datapower_mem"] = LegacyCheckDefinition(
+snmp_section_datapower_mem = SimpleSNMPSection(
     name="datapower_mem",
     parse_function=parse_datapower_mem,
     detect=DETECT,
@@ -46,6 +51,11 @@ check_info["datapower_mem"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.14685.3.1.5",
         oids=["2", "3"],
     ),
+)
+
+
+check_plugin_datapower_mem = CheckPlugin(
+    name="datapower_mem",
     service_name="Memory",
     discovery_function=discover_datapower_mem,
     check_function=check_datapower_mem,

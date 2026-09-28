@@ -16,12 +16,14 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import ConflictList from './ConflictList.vue'
 import FindingList from './FindingList.vue'
 import FindingReview from './FindingReview.vue'
+import LabeledRow from './LabeledRow.vue'
 import LookFor from './LookFor.vue'
 import RunResult from './RunResult.vue'
 import { acceptRelations, fetchStatus, startScan, suggestEvidence } from './api'
 import { usePairNoun } from './relationWording'
 import type {
   FindingRequest,
+  FindingSummary,
   JobStatus,
   LookIn,
   RelationConflict,
@@ -41,7 +43,7 @@ import {
   newValueChoice,
   noDecisions,
   partnersOf,
-  relationsToStore,
+  relationsToStorePerFinding,
   valueKey,
   withNewChoices,
   withoutKey,
@@ -67,7 +69,7 @@ const props = defineProps<Props>()
 const STEP_LOOK_FOR = 1
 const STEP_FOUND = 2
 const STEP_CONFIRM = 3
-const STEP_RESULT = 4
+const STEP_SUMMARY = 4
 const POLL_INTERVAL_MS = 1000
 /** How often in a row the status may not be read before the page gives up on the job. */
 const POLL_ATTEMPTS = 5
@@ -83,15 +85,14 @@ const suggestedFor = ref('')
 const wantedNow = computed(() => JSON.stringify([...lookIn.value].sort()))
 const pairNounOf = usePairNoun(() => props.relation_nouns)
 
+const indicators = computed(() =>
+  [
+    ...(lookIn.value.includes('names') ? [_t('Host names')] : []),
+    ...(lookIn.value.includes('values') ? [_t('Host labels and custom host attributes')] : [])
+  ].join(', ')
+)
 /** What step 1 said, for the step once it is done. */
-const lookedFor = computed(() => {
-  const where = lookIn.value.includes('names')
-    ? lookIn.value.includes('values')
-      ? _t('in the host names and in host labels and custom host attributes')
-      : _t('in the host names')
-    : _t('in host labels and custom host attributes')
-  return _t('%{relation}, %{where}', { relation: pairNounOf(kind.value), where })
-})
+const lookedFor = computed(() => [pairNounOf(kind.value), indicators.value].join(' · '))
 
 // Step 2: what the findings mean.
 const suggestions = ref<Suggestions | null>(null)
@@ -155,16 +156,41 @@ const scanFailed = ref(false)
 const scanProgress = ref('')
 const decisions = ref(noDecisions())
 
-const toStore = computed(() =>
-  scanned.value ? relationsToStore(scanned.value.findings, decisions.value) : 0
+/** How many relations the decisions store, per finding. */
+const perFinding = computed(() =>
+  scanned.value
+    ? relationsToStorePerFinding(scanned.value.findings, decisions.value)
+    : new Map<string, number>()
 )
+const toStore = computed(() =>
+  [...perFinding.value.values()].reduce((count, relations) => count + relations, 0)
+)
+/** Whether a finding of the scan has anything the user could store - new relations or questions. */
+function offersAnything(summary: FindingSummary): boolean {
+  return (summary.counts.link ?? 0) > 0 || summary.questions > 0
+}
+const nothingNew = computed(
+  () =>
+    scanned.value !== null &&
+    scanned.value.conflicts === 0 &&
+    !scanned.value.findings.some(offersAnything)
+)
+
 /** Whether what step 2 says now is what the scan on hand was made for. */
 const scanIsCurrent = computed(
   () =>
     scanned.value !== null && JSON.stringify(scannedFor.value) === JSON.stringify(findings.value)
 )
 
-// Step 4: what the run did.
+/** The findings step 3 leaves anything to store of, by their titles. */
+const storedFindings = computed(() =>
+  (scanned.value?.findings ?? [])
+    .filter((summary) => (perFinding.value.get(summary.id) ?? 0) > 0)
+    .map((summary) => findingTitles.value[summary.id] ?? summary.id)
+    .join(', ')
+)
+
+// Step 4: what is about to be stored, and then what the run did.
 const runId = ref('')
 const running = ref(false)
 const runProgress = ref('')
@@ -280,7 +306,7 @@ async function scan(asked: FindingRequest[] = findings.value): Promise<boolean> 
     scannedFor.value = asked
     decisions.value = noDecisions()
     for (const summary of status.scan.findings) {
-      if ((summary.counts.link ?? 0) > 0 || summary.questions > 0) {
+      if (offersAnything(summary)) {
         decisions.value.findings.add(summary.id)
       }
     }
@@ -340,6 +366,7 @@ function resolve(conflict: RelationConflict, claim: RelationRow | null): void {
   if (claim) {
     decisions.value.resolutions.set(conflict.key, {
       claim: claim.key,
+      finding: claim.finding,
       stores: claim.outcome === 'link'
     })
   } else {
@@ -352,13 +379,16 @@ function nounOfFinding(findingId: string): string {
   return props.relation_nouns[props.kinds[kind] ?? ''] ?? ''
 }
 
+function resetRun(): void {
+  run.value = null
+  runText.value = ''
+  runProgress.value = ''
+  runFailed.value = false
+}
+
 async function store(): Promise<void> {
   running.value = true
-  runFailed.value = false
-  runProgress.value = ''
-  runText.value = ''
-  run.value = null
-  currentStep.value = STEP_RESULT
+  resetRun()
   try {
     runId.value = await acceptRelations(acceptRequest(scanId.value, decisions.value))
     const status = await finished(runId.value, (message) => (runProgress.value = message))
@@ -377,6 +407,7 @@ async function store(): Promise<void> {
 /** Back to deciding: read the hosts once more, with what step 2 said last time. */
 async function scanAgain(): Promise<void> {
   if (await scan(scannedFor.value)) {
+    resetRun()
     currentStep.value = STEP_CONFIRM
   }
 }
@@ -394,7 +425,7 @@ async function scanAgain(): Promise<void> {
     <CmkWizard v-model="currentStep" mode="guided" :locked="running || scanning || suggesting">
       <CmkWizardStep :index="STEP_LOOK_FOR" :is-completed="() => currentStep > STEP_LOOK_FOR">
         <template #header>
-          <CmkHeading type="h3">{{ _t('What to look for') }}</CmkHeading>
+          <CmkHeading type="h3">{{ _t('Relation mapping') }}</CmkHeading>
         </template>
         <template #recap>
           <CmkParagraph class="mode-host-relation-discovery-app__dimmed">{{
@@ -436,7 +467,7 @@ async function scanAgain(): Promise<void> {
 
       <CmkWizardStep :index="STEP_FOUND" :is-completed="() => currentStep > STEP_FOUND">
         <template #header>
-          <CmkHeading type="h3">{{ _t('What Checkmk found in your hosts') }}</CmkHeading>
+          <CmkHeading type="h3">{{ _t('Relation proposal') }}</CmkHeading>
         </template>
         <template #recap>
           <CmkParagraph class="mode-host-relation-discovery-app__dimmed">{{ ticked }}</CmkParagraph>
@@ -496,7 +527,6 @@ async function scanAgain(): Promise<void> {
           </CmkParagraph>
         </template>
         <template #actions>
-          <CmkWizardButton type="previous" :override-label="_t('Back')" />
           <CmkWizardButton
             type="next"
             :override-label="
@@ -509,12 +539,18 @@ async function scanAgain(): Promise<void> {
             :disabled="scanning || !canScan"
             :validation-cb="scanForStep2"
           />
+          <CmkWizardButton type="previous" :override-label="_t('Back')" />
         </template>
       </CmkWizardStep>
 
       <CmkWizardStep :index="STEP_CONFIRM" :is-completed="() => currentStep > STEP_CONFIRM">
         <template #header>
-          <CmkHeading type="h3">{{ _t('Check what will be stored') }}</CmkHeading>
+          <CmkHeading type="h3">{{ _t('Relation review') }}</CmkHeading>
+        </template>
+        <template #recap>
+          <CmkParagraph class="mode-host-relation-discovery-app__dimmed">{{
+            _tn('1 relation to store', '%{count} relations to store', toStore, { count: toStore })
+          }}</CmkParagraph>
         </template>
         <template #content>
           <div v-if="scanned" class="mode-host-relation-discovery-app__step">
@@ -569,26 +605,34 @@ async function scanAgain(): Promise<void> {
               @answer="answer"
               @back="currentStep = STEP_FOUND"
             />
+            <CmkParagraph v-if="toStore === 0" class="mode-host-relation-discovery-app__dimmed">
+              {{
+                nothingNew
+                  ? _t(
+                      'Nothing new was found: every relation is stored already or cannot be stored.'
+                    )
+                  : _t('To continue, choose at least one relation to store.')
+              }}
+            </CmkParagraph>
           </div>
         </template>
         <template #actions>
+          <CmkWizardButton type="next" :override-label="_t('Continue')" :disabled="toStore === 0" />
           <CmkWizardButton type="previous" :override-label="_t('Back to the findings')" />
-          <CmkWizardButton
-            type="finish"
-            :override-label="
-              _tn('Store 1 relation', 'Store %{count} relations', toStore, { count: toStore })
-            "
-            :disabled="toStore === 0"
-            @click="store"
-          />
         </template>
       </CmkWizardStep>
 
-      <CmkWizardStep :index="STEP_RESULT" :is-completed="() => run !== null">
+      <CmkWizardStep :index="STEP_SUMMARY" :is-completed="() => run !== null">
         <template #header>
-          <CmkHeading type="h3">{{ _t('Result') }}</CmkHeading>
+          <CmkHeading type="h3">{{ _t('Summary') }}</CmkHeading>
         </template>
         <template #content>
+          <div class="mode-host-relation-discovery-app__summary">
+            <LabeledRow :label="_t('Relation type')">{{ pairNounOf(kind) }}</LabeledRow>
+            <LabeledRow :label="_t('Relation indicators')">{{ indicators }}</LabeledRow>
+            <LabeledRow :label="_t('Findings')">{{ storedFindings }}</LabeledRow>
+            <LabeledRow :label="_t('Relations to store')">{{ toStore }}</LabeledRow>
+          </div>
           <div v-if="running" class="mode-host-relation-discovery-app__running">
             <CmkProgressbar max="unknown" />
             <CmkParagraph>{{ runProgress }}</CmkParagraph>
@@ -604,20 +648,39 @@ async function scanAgain(): Promise<void> {
             :finding-titles="findingTitles"
             :relation-titles="props.relation_titles"
           />
+          <!-- Scanning again starts here; it only moves on to the review once it has a scan. -->
+          <CmkAlertBoxDeprecated v-if="scanFailed" variant="error">
+            {{ _t('The hosts could not be read.') }}
+          </CmkAlertBoxDeprecated>
         </template>
         <template #actions>
-          <!-- What was stored does nothing until it is activated: the step a first-time user
-               must not miss, so it is the one that stands out. -->
-          <CmkButton v-if="run" variant="primary" :href="props.activate_changes_url">
-            {{ _t('Activate changes') }}
-          </CmkButton>
-          <CmkWizardButton
-            v-if="!running"
-            type="other"
-            :override-label="scanning ? _t('Finding the relations...') : _t('Scan again')"
-            :disabled="scanning"
-            @click="scanAgain"
-          />
+          <template v-if="!running">
+            <!-- A run that failed may have lost its scan, so what is left is to scan again. -->
+            <template v-if="run !== null || runFailed">
+              <!-- What was stored does nothing until it is activated: the step a first-time user
+                   must not miss, so it is the one that stands out. -->
+              <CmkButton v-if="run !== null" variant="primary" :href="props.activate_changes_url">
+                {{ _t('Activate changes') }}
+              </CmkButton>
+              <CmkWizardButton
+                type="other"
+                :override-label="scanning ? _t('Finding the relations...') : _t('Scan again')"
+                :disabled="scanning"
+                @click="scanAgain"
+              />
+            </template>
+            <template v-else>
+              <CmkWizardButton
+                type="finish"
+                :override-label="
+                  _tn('Store 1 relation', 'Store %{count} relations', toStore, { count: toStore })
+                "
+                :disabled="toStore === 0"
+                @click="store"
+              />
+              <CmkWizardButton type="previous" :override-label="_t('Back to the review')" />
+            </template>
+          </template>
         </template>
       </CmkWizardStep>
     </CmkWizard>
@@ -656,6 +719,13 @@ async function scanAgain(): Promise<void> {
   padding: var(--spacing);
   border: 1px solid var(--ux-theme-4);
   border-radius: var(--border-radius);
+}
+
+.mode-host-relation-discovery-app__summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-half);
+  margin-bottom: var(--spacing);
 }
 
 .mode-host-relation-discovery-app__running {

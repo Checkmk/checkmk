@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { userEvent } from '@testing-library/user-event'
-import { render, screen, waitFor } from '@testing-library/vue'
+import { render, screen, waitFor, within } from '@testing-library/vue'
 import { HttpResponse, http } from 'msw'
 import { setupServer } from 'msw/node'
 import { afterAll, afterEach, beforeAll, expect, test, vi } from 'vitest'
@@ -241,7 +241,7 @@ async function pick(combobox: string, option: string): Promise<void> {
   await userEvent.click(await screen.findByRole('option', { name: option }))
 }
 
-const SHARED_VALUES = 'In a host label or custom host attribute both hosts carry'
+const SHARED_VALUES = 'Host labels and custom host attributes'
 
 /** Step 1 with what it starts out with - or with the labels and attributes looked in as well. */
 async function lookThroughTheHosts(options: { values?: boolean } = {}): Promise<void> {
@@ -257,13 +257,15 @@ async function continueToReview(): Promise<void> {
   const next = await screen.findByRole('button', { name: 'Continue' })
   await waitFor(() => expect(next).not.toBeDisabled())
   await userEvent.click(next)
-  await screen.findByRole('heading', { name: 'Check what will be stored' })
+  await screen.findByRole('heading', { name: 'Relation review' })
   await screen.findByRole('checkbox', { name: '"ilo" in the name' })
 }
 
+/** From the review, through the summary, to storing. */
 async function store(count: number): Promise<void> {
+  await userEvent.click(screen.getByRole('button', { name: 'Continue' }))
   await userEvent.click(
-    screen.getByRole('button', { name: `Store ${count} relation${count === 1 ? '' : 's'}` })
+    await screen.findByRole('button', { name: `Store ${count} relation${count === 1 ? '' : 's'}` })
   )
 }
 
@@ -289,8 +291,7 @@ test('the hosts are read only once the user said what to look for', async () => 
 
   renderApp()
 
-  await screen.findByRole('radio', { name: 'Management board and OS host' })
-  expect(screen.getByRole('radio', { name: 'Management board and OS host' })).toBeChecked()
+  await screen.findByRole('checkbox', { name: 'Host names' })
   expect(sent).toEqual([])
 })
 
@@ -298,7 +299,7 @@ test('the host names are looked in, the labels and attributes only when asked fo
   const { sent } = suggestionsAsked()
   renderApp()
 
-  expect(await screen.findByRole('checkbox', { name: 'In the host names' })).toBeChecked()
+  expect(await screen.findByRole('checkbox', { name: 'Host names' })).toBeChecked()
   expect(screen.getByRole('checkbox', { name: SHARED_VALUES })).not.toBeChecked()
   await lookThroughTheHosts()
   await userEvent.click(screen.getByRole('button', { name: 'Back' }))
@@ -324,13 +325,13 @@ test('a step that is done says what was chosen in it', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Continue' }))
 
   await screen.findByText('"ilo" in the name, "oob" in the name')
-  screen.getByText('Management board and OS host, in the host names')
+  screen.getByText('Management board and OS host · Host names')
 })
 
 test('continuing needs somewhere to look, and says so', async () => {
   renderApp()
 
-  await userEvent.click(await screen.findByRole('checkbox', { name: 'In the host names' }))
+  await userEvent.click(await screen.findByRole('checkbox', { name: 'Host names' }))
 
   screen.getByText('To continue, say where Checkmk should look.')
   expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled()
@@ -392,7 +393,7 @@ test('every word that means a relation is a finding of its own', async () => {
     screen.getByRole('checkbox', { name: '1 host is named like another host plus "oob"' })
   )
   await userEvent.click(screen.getByRole('button', { name: 'Continue' }))
-  await screen.findByRole('heading', { name: 'Check what will be stored' })
+  await screen.findByRole('heading', { name: 'Relation review' })
 
   expect(sent).toEqual([
     {
@@ -508,7 +509,7 @@ test('a single relation taken out of a finding is left out of the run', async ()
   )
 })
 
-test('a finding taken out stores nothing', async () => {
+test('a finding taken out stores nothing, and says how to continue', async () => {
   suggesting()
   scanning()
   renderApp()
@@ -516,7 +517,23 @@ test('a finding taken out stores nothing', async () => {
 
   await userEvent.click(screen.getByRole('checkbox', { name: '"ilo" in the name' }))
 
-  expect(screen.getByRole('button', { name: 'Store 0 relations' })).toBeDisabled()
+  screen.getByText('To continue, choose at least one relation to store.')
+  expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled()
+})
+
+test('a scan with nothing new to store says so', async () => {
+  const stored = [row('srv-01-ilo', 'srv-01', { outcome: 'already_linked' })]
+  suggesting()
+  scanning({
+    relations: stored,
+    findings: [{ ...NOTHING_ELSE, id: 'word:ilo', counts: { already_linked: 1 }, samples: stored }]
+  })
+  renderApp()
+
+  await continueToReview()
+
+  screen.getByText('Nothing new was found: every relation is stored already or cannot be stored.')
+  expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled()
 })
 
 test('all relations of a finding can be looked through', async () => {
@@ -612,6 +629,23 @@ test('the result says what came of each finding, and lists what failed', async (
   screen.getByRole('link', { name: 'Activate changes' })
 })
 
+test('scanning again after a run says so when the hosts cannot be read', async () => {
+  suggesting()
+  scanning()
+  accepting()
+  renderApp()
+  await continueToReview()
+  await store(3)
+  await screen.findByRole('link', { name: 'Activate changes' })
+  server.use(http.post(SCAN_URL, () => HttpResponse.json({}, { status: 500 })))
+
+  await userEvent.click(screen.getByRole('button', { name: 'Scan again' }))
+
+  await within(screen.getByRole('listitem', { current: 'step' })).findByText(
+    'The hosts could not be read.'
+  )
+})
+
 test('a run that ends without a result says why it stored nothing', async () => {
   suggesting()
   scanning()
@@ -635,6 +669,8 @@ test('a run that ends without a result says why it stored nothing', async () => 
   await store(3)
 
   await screen.findByText('The relations could not be stored. The scan is gone. Scan again.')
+  screen.getByRole('button', { name: 'Scan again' })
+  expect(screen.queryByRole('button', { name: 'Store 3 relations' })).toBeNull()
 })
 
 test('going back to the findings keeps the scan while nothing was changed', async () => {
@@ -646,7 +682,7 @@ test('going back to the findings keeps the scan while nothing was changed', asyn
   await userEvent.click(screen.getByRole('button', { name: 'Back to the findings' }))
   await userEvent.click(await screen.findByRole('button', { name: 'Back to what was found' }))
 
-  await screen.findByRole('heading', { name: 'Check what will be stored' })
+  await screen.findByRole('heading', { name: 'Relation review' })
   expect(sent).toHaveLength(1)
 })
 
@@ -668,7 +704,7 @@ test('a word the user adds is looked up and can be removed again', async () => {
   renderApp()
   await lookThroughTheHosts()
 
-  await userEvent.click(await screen.findByRole('button', { name: 'Something missing?' }))
+  await userEvent.click(await screen.findByRole('button', { name: 'Additional indicators' }))
   await userEvent.type(screen.getByRole('textbox', { name: 'A word in host names' }), 'oob')
   await userEvent.click(screen.getByRole('button', { name: 'Add word' }))
 
@@ -707,7 +743,7 @@ test('a value the user adds means nothing until the user says what it is', async
   renderApp()
   await lookThroughTheHosts({ values: true })
 
-  await userEvent.click(await screen.findByRole('button', { name: 'Something missing?' }))
+  await userEvent.click(await screen.findByRole('button', { name: 'Additional indicators' }))
   await pick('A value hosts share', 'cmdb/kind')
 
   await screen.findByText(/shared by so many hosts that they name kinds of hosts/)
@@ -752,8 +788,42 @@ test('every relation a search matches can be taken out at once', async () => {
   await screen.findByText('8 relations match')
   await userEvent.click(screen.getByRole('button', { name: 'Untick all of them' }))
 
-  await waitFor(() =>
-    expect(screen.getByRole('button', { name: 'Store 0 relations' })).toBeDisabled()
-  )
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled())
+  expect(sent).toEqual([])
+})
+
+test('a single relation type is named, not offered as a choice', async () => {
+  renderApp()
+
+  // Once in step 1, and once more in the summary still to come.
+  expect(await screen.findAllByText('Management board and OS host')).toHaveLength(2)
+  expect(screen.queryByRole('combobox', { name: 'Relation type' })).toBeNull()
+  expect(screen.queryByRole('radio')).toBeNull()
+})
+
+test('the way forward comes before the way back', async () => {
+  suggesting()
+  renderApp()
+  await lookThroughTheHosts()
+
+  const forward = screen.getByRole('button', { name: 'Continue' })
+  const back = screen.getByRole('button', { name: 'Back' })
+  expect(forward.compareDocumentPosition(back) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+})
+
+test('the summary says what is about to be stored, and nothing is stored before', async () => {
+  suggesting()
+  scanning()
+  const { sent } = accepting()
+  renderApp()
+  await continueToReview()
+
+  await userEvent.click(screen.getByRole('button', { name: 'Continue' }))
+
+  await screen.findByRole('button', { name: 'Store 3 relations' })
+  screen.getByText('Relations to store')
+  screen.getByText('"ilo" in the name', {
+    selector: '.mode-host-relation-discovery-labeled-row__value'
+  })
   expect(sent).toEqual([])
 })

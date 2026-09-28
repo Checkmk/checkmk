@@ -240,35 +240,41 @@ export interface Decisions {
   excluded: Map<string, string>
   /** Per group, by key, the host named - with the number of relations that makes. */
   answers: Map<string, { host: string; finding: string; relations: number }>
-  /** Per conflict, by key, the claim to store - with whether storing it stores anything. */
-  resolutions: Map<string, { claim: string; stores: boolean }>
+  /** Per conflict, by key, the claim to store - with its finding and whether storing it
+   * stores anything. */
+  resolutions: Map<string, { claim: string; finding: string; stores: boolean }>
 }
 
 export function noDecisions(): Decisions {
   return { findings: new Set(), excluded: new Map(), answers: new Map(), resolutions: new Map() }
 }
 
-/** How many relations storing these decisions stores. */
-export function relationsToStore(summaries: FindingSummary[], decisions: Decisions): number {
-  let count = 0
+/** How many relations storing these decisions stores, per finding they come from. */
+export function relationsToStorePerFinding(
+  summaries: FindingSummary[],
+  decisions: Decisions
+): Map<string, number> {
+  const count = new Map<string, number>()
+  const add = (finding: string, relations: number) =>
+    count.set(finding, (count.get(finding) ?? 0) + relations)
   for (const summary of summaries) {
     if (decisions.findings.has(summary.id)) {
-      count += summary.counts.link ?? 0
+      add(summary.id, summary.counts.link ?? 0)
     }
   }
   for (const finding of decisions.excluded.values()) {
     if (decisions.findings.has(finding)) {
-      count -= 1
+      add(finding, -1)
     }
   }
   for (const answer of decisions.answers.values()) {
     if (decisions.findings.has(answer.finding)) {
-      count += answer.relations
+      add(answer.finding, answer.relations)
     }
   }
   for (const resolution of decisions.resolutions.values()) {
     if (resolution.stores) {
-      count += 1
+      add(resolution.finding, 1)
     }
   }
   return count

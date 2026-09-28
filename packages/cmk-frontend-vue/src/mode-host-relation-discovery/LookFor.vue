@@ -4,14 +4,14 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
-import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
+import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
+import type { Suggestions as DropdownOptions } from 'cmk-ui-library/components/CmkSuggestions'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
-import { CmkRadioButton, CmkRadioGroup } from 'cmk-ui-library/components/user-input/CmkRadioButton'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import useId from 'cmk-ui-library/lib/useId'
 import { computed } from 'vue'
 
+import LabeledRow from './LabeledRow.vue'
 import { usePairNoun } from './relationWording'
 import type { LookIn } from './types'
 
@@ -26,11 +26,25 @@ const props = defineProps<{
 const kind = defineModel<string>('kind', { required: true })
 const lookIn = defineModel<LookIn[]>('lookIn', { required: true })
 
-const kindHeadingId = useId()
+const kindId = useId()
+const indicatorsId = useId()
 
 const pairNounOf = usePairNoun(() => props.relationNouns)
 
-const words = computed(() => props.kindWords[kind.value] ?? [])
+const kindIds = computed(() => Object.keys(props.kinds))
+const kindOptions = computed<DropdownOptions>(() => ({
+  type: 'fixed',
+  suggestions: kindIds.value.map((id) => ({ name: id, title: untranslated(pairNounOf(id)) }))
+}))
+const namesHelp = computed(() => {
+  const words = props.kindWords[kind.value] ?? []
+  return words.length > 0
+    ? _t(
+        '"srv-01-%{word}" next to "srv-01", for example. Checkmk knows the usual words - %{words} - and also shows you the other words your host names use.',
+        { word: words[0] ?? '', words: words.join(', ') }
+      )
+    : _t('One host named like another plus a word, for example.')
+})
 
 function looksIn(where: LookIn): boolean {
   return lookIn.value.includes(where)
@@ -44,52 +58,38 @@ function setLookIn(where: LookIn, wanted: boolean): void {
 
 <template>
   <div class="mode-host-relation-discovery-look-for">
-    <section class="mode-host-relation-discovery-look-for__section">
-      <CmkHeading :id="kindHeadingId" type="h4">{{
-        _t('Which hosts belong together?')
-      }}</CmkHeading>
-      <CmkRadioGroup v-model="kind" :aria-labelledby="kindHeadingId">
-        <CmkRadioButton
-          v-for="kindId in Object.keys(props.kinds)"
-          :key="kindId"
-          :value="kindId"
-          :label="untranslated(pairNounOf(kindId))"
-        />
-      </CmkRadioGroup>
-    </section>
+    <LabeledRow :label="_t('Relation type')" :for="kindIds.length > 1 ? kindId : undefined">
+      <CmkDropdown
+        v-if="kindIds.length > 1"
+        :component-id="kindId"
+        :model-value="kind"
+        :options="kindOptions"
+        :label="_t('Relation type')"
+        @update:model-value="(picked) => (kind = picked ?? kind)"
+      />
+      <span v-else>{{ pairNounOf(kind) }}</span>
+    </LabeledRow>
 
-    <section class="mode-host-relation-discovery-look-for__section">
-      <CmkHeading type="h4">{{ _t('Where can Checkmk see it?') }}</CmkHeading>
-      <CmkCheckbox
-        :model-value="looksIn('names')"
-        :label="_t('In the host names')"
-        @update:model-value="(wanted) => setLookIn('names', wanted)"
-      >
-        <CmkParagraph class="mode-host-relation-discovery-look-for__hint">
-          {{
-            words.length > 0
-              ? _t(
-                  '"srv-01-%{word}" next to "srv-01", for example. Checkmk knows the usual words - %{words} - and also shows you the other words your host names use.',
-                  { word: words[0] ?? '', words: words.join(', ') }
-                )
-              : _t('One host named like another plus a word, for example.')
-          }}
-        </CmkParagraph>
-      </CmkCheckbox>
-      <CmkCheckbox
-        :model-value="looksIn('values')"
-        :label="_t('In a host label or custom host attribute both hosts carry')"
-        @update:model-value="(wanted) => setLookIn('values', wanted)"
-      >
-        <CmkParagraph class="mode-host-relation-discovery-look-for__hint">
-          {{
+    <LabeledRow :label="_t('Relation indicators')" :label-id="indicatorsId">
+      <div role="group" :aria-labelledby="indicatorsId">
+        <CmkCheckbox
+          :model-value="looksIn('names')"
+          :label="_t('Host names')"
+          :help="namesHelp"
+          @update:model-value="(wanted) => setLookIn('names', wanted)"
+        />
+        <CmkCheckbox
+          :model-value="looksIn('values')"
+          :label="_t('Host labels and custom host attributes')"
+          :help="
             _t(
-              'A serial number or asset tag from your CMDB, for example. Only needed if your host names do not say which hosts belong together.'
+              'A serial number or asset tag from your CMDB that both hosts carry, for example. Only needed if your host names do not say which hosts belong together.'
             )
-          }}
-        </CmkParagraph>
-      </CmkCheckbox>
-    </section>
+          "
+          @update:model-value="(wanted) => setLookIn('values', wanted)"
+        />
+      </div>
+    </LabeledRow>
   </div>
 </template>
 
@@ -97,16 +97,6 @@ function setLookIn(where: LookIn, wanted: boolean): void {
 .mode-host-relation-discovery-look-for {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-double);
-}
-
-.mode-host-relation-discovery-look-for__section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-half);
-}
-
-.mode-host-relation-discovery-look-for__hint {
-  color: var(--font-color-dimmed);
+  gap: var(--spacing);
 }
 </style>

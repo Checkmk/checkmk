@@ -680,7 +680,7 @@ function addValue(picked: string | null): void {
 
     <section class="mode-host-relation-discovery-finding-list__section">
       <CmkCollapsibleTitle
-        :title="_t('Something missing?')"
+        :title="_t('Additional indicators')"
         :open="addingOpen || nothingFound"
         @toggle-open="addingOpen = !addingOpen"
       />

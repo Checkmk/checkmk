@@ -482,8 +482,8 @@ def get_configuration(
             AutomationID("get-configuration"),
             automation_config=LocalAutomationConfig(),
             indata=config_var_names,
-            # We must not call this through the automation helper,
-            # see automation call execution.
+            # Don't depend on the automation helper: a fresh GUI process may need
+            # this while the helper is (re)starting, e.g. during `omd reload`.
             force_cli_interface=True,
             debug=debug,
         ),

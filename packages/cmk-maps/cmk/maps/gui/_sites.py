@@ -12,11 +12,10 @@ to ``etc/check_mk/maps.d/sitespecs.mk``.
 
 The specs are (re)written on two triggers: ``sites-saved`` (so a distributed
 setup takes effect the moment the connection is saved, like liveproxyd) *and*
-``pre-activate-changes`` (so the file lands in every activation's replication
-snapshot). The activation trigger is what makes the specs appear for a
-distributed setup that predates Maps — or one configured outside the WATO save
-flow — without requiring a manual sites re-save; it mirrors how
-:mod:`cmk.maps.gui._folders` regenerates the folder skeleton.
+``pre-activate-changes``, which every site runs before its own core restart. The
+activation trigger is what makes the specs appear for a distributed setup that
+predates Maps — or one configured outside the WATO save flow — without requiring
+a manual sites re-save.
 
 The file holds the *central* site's fan-out view and is deliberately not
 replicated: on remote sites (and single-site setups) it is absent or empty,

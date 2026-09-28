@@ -31,6 +31,7 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.config_sync import replication_path_registry
 from cmk.gui.watolib.mode import mode_registry
 from cmk.gui.watolib.sample_config import sample_config_generator_registry
+from cmk.gui.watolib.snapshot_artifacts import snapshot_artifact_registry
 from cmk.gui_plugins.internal.feature_registration import GuiFeaturePlugin, RegistrationContext
 from cmk.licensing.basics.options import get_license_options, LicenseOptions
 from cmk.utils import paths
@@ -64,6 +65,7 @@ def _build_context(edition: Edition, features: LicenseOptions) -> RegistrationCo
         replication_path_registry=replication_path_registry,
         sample_config_generator_registry=sample_config_generator_registry,
         snapin_registry=snapin_registry,
+        snapshot_artifact_registry=snapshot_artifact_registry,
         versioned_endpoint_registry=versioned_endpoint_registry,
     )
 

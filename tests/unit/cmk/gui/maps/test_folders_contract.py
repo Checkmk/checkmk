@@ -11,17 +11,20 @@ The GUI (:mod:`cmk.maps.gui._folders`) resolves the SETUP-folder skeleton with
 the real ``Folder.groups()`` on every activation and writes it to
 ``maps.d/wato/folder_perms.mk``; the daemon
 (:mod:`cmk.maps.backend.integrations.checkmk_folders`) reads it back to scope its
-folder-tree map. This test writes with the *real* GUI hook and reads with the
+folder-tree map. This test writes with the *real* GUI writer and reads with the
 *real* daemon loader, so drift in the file location, variable name or entry shape
 fails CI. The ``Folder.groups()`` resolution itself is watolib's own concern; here
 the folder tree is faked so the test pins the wire shape, not watolib.
 """
 
+import os
 from collections.abc import Iterator
 from pathlib import Path
+from typing import cast
 
 import pytest
 
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.maps.backend.core.config import settings as daemon_settings
 from cmk.maps.backend.integrations import checkmk_folders
 from cmk.maps.gui import _folders
@@ -63,21 +66,21 @@ def fixture_shared_omd_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     yield tmp_path
 
 
-def _fake_tree(monkeypatch: pytest.MonkeyPatch, folders: list[_FakeFolder]) -> None:
-    monkeypatch.setattr(_folders, "folder_tree", lambda: _FakeTree(folders))
+def _fake_tree(folders: list[_FakeFolder]) -> FolderTree:
+    # The writer only asks the tree for its folders.
+    return cast(FolderTree, _FakeTree(folders))
 
 
-def test_skeleton_round_trips(shared_omd_root: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    _fake_tree(
-        monkeypatch,
-        [
-            _FakeFolder("", "Main", "root-id", []),
-            _FakeFolder("dc", "Datacenters", "dc-id", ["ops"]),
-            _FakeFolder("dc/muc", "Munich", "muc-id", ["ops", "muc-admins"]),
-        ],
+def test_skeleton_round_trips(shared_omd_root: Path) -> None:
+    _folders.write_folder_skeleton(
+        _fake_tree(
+            [
+                _FakeFolder("", "Main", "root-id", []),
+                _FakeFolder("dc", "Datacenters", "dc-id", ["ops"]),
+                _FakeFolder("dc/muc", "Munich", "muc-id", ["ops", "muc-admins"]),
+            ]
+        )
     )
-
-    _folders._on_pre_activate_changes()  # noqa: SLF001
     loaded = checkmk_folders.load_folder_perms()
 
     by_path = {entry["path"]: entry for entry in loaded}
@@ -98,14 +101,11 @@ def test_missing_file_means_no_skeleton(shared_omd_root: Path) -> None:
     assert checkmk_folders.load_folder_perms() == []
 
 
-def test_daemon_converts_loaded_entries_to_folder_infos(
-    shared_omd_root: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_daemon_converts_loaded_entries_to_folder_infos(shared_omd_root: Path) -> None:
     # The reader's entries feed the daemon's FolderInfo conversion unchanged.
     from cmk.maps.backend.connections.livestatus import _folder_info_from_entry
 
-    _fake_tree(monkeypatch, [_FakeFolder("dc", "Datacenters", "dc-id", ["ops"])])
-    _folders._on_pre_activate_changes()  # noqa: SLF001
+    _folders.write_folder_skeleton(_fake_tree([_FakeFolder("dc", "Datacenters", "dc-id", ["ops"])]))
 
     (entry,) = checkmk_folders.load_folder_perms()
     assert _folder_info_from_entry(entry) == {
@@ -114,3 +114,25 @@ def test_daemon_converts_loaded_entries_to_folder_infos(
         "folder_id": "dc-id",
         "permitted_groups": ["ops"],
     }
+
+
+def test_an_unchanged_skeleton_is_not_rewritten(shared_omd_root: Path) -> None:
+    """It is written on every activation, so an unchanged file must keep its state."""
+    tree = _fake_tree([_FakeFolder("dc", "Datacenters", "dc-id", ["ops"])])
+    _folders.write_folder_skeleton(tree)
+    path = _folders.folder_perms_path()
+    os.utime(path, ns=(1, 1))
+
+    _folders.write_folder_skeleton(tree)
+
+    assert path.stat().st_mtime_ns == 1
+
+
+def test_an_unreadable_skeleton_is_rewritten(shared_omd_root: Path) -> None:
+    path = _folders.folder_perms_path()
+    path.parent.mkdir(parents=True)
+    path.write_text("maps_folder_perms = [\n")
+
+    _folders.write_folder_skeleton(_fake_tree([_FakeFolder("dc", "Datacenters", "dc-id", ["ops"])]))
+
+    assert [entry["path"] for entry in checkmk_folders.load_folder_perms()] == ["dc"]

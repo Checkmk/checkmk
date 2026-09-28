@@ -17,18 +17,20 @@ remote sites by the Maps ReplicationPath — the same prepared-file pattern
 
 The daemon reads it back (``cmk.maps.backend.integrations.checkmk_folders``) and
 only does the trivial per-user scope match; ``permitted_groups`` is
-user-independent, so one file serves every viewer. Resolving on
-``pre-activate-changes`` (like mkeventd regenerates its config) lands the file in
-the same activation's replication snapshot.
+user-independent, so one file serves every viewer. The central site writes it as
+a snapshot artifact, before the activation takes its snapshots, so the file lands
+in the same activation's replication snapshot. The remote sites don't resolve it
+themselves: their folders are the central site's.
 """
 
 from pathlib import Path
 
 import cmk.utils.paths
 from cmk.ccc import store
-from cmk.gui import hooks
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.log import logger
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
+from cmk.gui.watolib.snapshot_artifacts import SnapshotArtifact, SnapshotArtifactRegistry
 from cmk.maps.shared.config_vars import FolderPermEntry, VAR_FOLDER_PERMS
 
 
@@ -36,7 +38,7 @@ def folder_perms_path() -> Path:
     return cmk.utils.paths.default_config_dir / "maps.d" / "wato" / "folder_perms.mk"
 
 
-def _resolve_folder_skeleton() -> list[FolderPermEntry]:
+def _resolve_folder_skeleton(tree: FolderTree) -> list[FolderPermEntry]:
     """Every SETUP folder with its title, stable id and effective read-permitted
     contact groups, resolved via the real ``Folder.groups()``.
 
@@ -44,7 +46,6 @@ def _resolve_folder_skeleton() -> list[FolderPermEntry]:
     daemon only needs the first — the effective *read* permission incl. the
     ``recurse_perms`` ancestor inheritance.
     """
-    tree = folder_tree()
     skeleton: list[FolderPermEntry] = []
     for folder in tree.all_folders().values():
         permitted_groups, _host_contact_groups, _use_for_services = folder.groups()
@@ -59,16 +60,30 @@ def _resolve_folder_skeleton() -> list[FolderPermEntry]:
     return skeleton
 
 
-def _on_pre_activate_changes(*_args: object) -> None:
-    # Builtin hooks propagate, and this one runs inside Activate Changes: an
-    # unwritable maps.d or a folder-tree read error would abort the activation for
-    # the whole site. Maps is not core-critical (unlike mkeventd's config
-    # regeneration) — the folder-tree map just keeps serving the previous skeleton
-    # — so log and let the activation finish.
+def _is_written(path: Path, skeleton: list[FolderPermEntry]) -> bool:
+    # A file that cannot be read counts as changed, so the next write repairs it.
+    try:
+        written: list[FolderPermEntry] = store.load_from_mk_file(
+            path, key=VAR_FOLDER_PERMS, default=[], lock=False
+        )
+    except MKGeneralException:
+        return False
+    return written == skeleton
+
+
+def write_folder_skeleton(tree: FolderTree) -> None:
+    # This runs inside Activate Changes, where an exception aborts the activation:
+    # an unwritable maps.d or a folder-tree read error would do that for the whole
+    # site. Maps is not core-critical — the folder-tree map just keeps serving the
+    # previous skeleton — so log and let the activation finish.
     try:
         path = folder_perms_path()
+        skeleton = _resolve_folder_skeleton(tree)
+        # Written on every activation, so leave an unchanged file untouched.
+        if _is_written(path, skeleton):
+            return
         path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
-        store.save_to_mk_file(path, key=VAR_FOLDER_PERMS, value=_resolve_folder_skeleton())
+        store.save_to_mk_file(path, key=VAR_FOLDER_PERMS, value=skeleton)
     except Exception:
         logger.exception(
             "Cannot write the Maps folder permissions to %(path)s",
@@ -76,7 +91,7 @@ def _on_pre_activate_changes(*_args: object) -> None:
         )
 
 
-def register() -> None:
-    # Resolve on every activation so the skeleton lands in the replication
-    # snapshot shipped to remote sites (mirrors mkeventd's pre-activate hook).
-    hooks.register_builtin("pre-activate-changes", _on_pre_activate_changes)
+def register(snapshot_artifact_registry: SnapshotArtifactRegistry) -> None:
+    snapshot_artifact_registry.register(
+        SnapshotArtifact(ident="maps_folder_permissions", write=write_folder_skeleton)
+    )

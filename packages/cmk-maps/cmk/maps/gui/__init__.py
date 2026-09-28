@@ -26,6 +26,7 @@ from cmk.gui.watolib.config_sync import (
     ReplicationPathRegistry,
     ReplicationPathType,
 )
+from cmk.gui.watolib.snapshot_artifacts import SnapshotArtifactRegistry
 from cmk.maps.gui import (
     _config_variables,
     _folders,
@@ -49,6 +50,7 @@ def register(
     config_variable_group_registry: ConfigVariableGroupRegistry,
     config_variable_registry: ConfigVariableRegistry,
     replication_path_registry: ReplicationPathRegistry,
+    snapshot_artifact_registry: SnapshotArtifactRegistry,
 ) -> None:
     _permissions.register(permission_section_registry, permission_registry)
     # No page_handlers on MapPage, so declare() registers no generic pagetype
@@ -75,7 +77,7 @@ def register(
     # Both write a file the daemon consumes instead of re-implementing GUI logic:
     # the Livestatus site specs and the SETUP-folder skeleton.
     _sites.register()
-    _folders.register()
+    _folders.register(snapshot_artifact_registry)
     # Contributes the viewable maps to the Monitor menu through a registry, so
     # cmk.gui's menu builders need no Maps import.
     _main_menu.register()

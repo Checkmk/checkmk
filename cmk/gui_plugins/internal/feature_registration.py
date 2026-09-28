@@ -25,6 +25,7 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.config_sync import ReplicationPathRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 from cmk.gui.watolib.sample_config import SampleConfigGeneratorRegistry
+from cmk.gui.watolib.snapshot_artifacts import SnapshotArtifactRegistry
 from cmk.licensing.basics.options import LicenseOptions
 
 
@@ -49,6 +50,7 @@ class RegistrationContext:
     replication_path_registry: ReplicationPathRegistry
     sample_config_generator_registry: SampleConfigGeneratorRegistry
     snapin_registry: SnapinRegistry
+    snapshot_artifact_registry: SnapshotArtifactRegistry
     versioned_endpoint_registry: VersionedEndpointRegistry
     # Add more registries here as new GuiFeaturePlugin instances require them.
 

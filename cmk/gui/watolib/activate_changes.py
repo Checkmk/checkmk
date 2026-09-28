@@ -153,6 +153,7 @@ from cmk.gui.watolib.piggyback_hub import (
     has_piggyback_hub_relevant_changes,
 )
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
+from cmk.gui.watolib.snapshot_artifacts import snapshot_artifact_registry
 from cmk.gui.watolib.snapshots import SnapshotManager
 from cmk.licensing.export import LicenseUsageExtensions
 from cmk.licensing.handler import ActivationBlock
@@ -2099,7 +2100,8 @@ class ActivateChangesManager:
         # Both consumers want every host of the tree, and neither is guaranteed to run, so the
         # walk is shared but still only paid for when something asks for it.
         all_hosts = functools.cache(tree.all_hosts)
-        if not is_distributed_setup_remote_site(all_site_configs):
+        is_central_site = not is_distributed_setup_remote_site(all_site_configs)
+        if is_central_site:
             try:
                 export_host_relations(all_hosts(), relations_export_path())
             except Exception:
@@ -2109,6 +2111,9 @@ class ActivateChangesManager:
                     "error exporting the host relations, keeping the last ones"
                 )
         try:
+            if is_central_site:
+                for artifact in snapshot_artifact_registry.values():
+                    artifact.write(tree)
             if hooks.registered("pre-distribute-changes"):
                 hooks.call("pre-distribute-changes", collect_hosts(all_hosts()))
         except Exception as e:

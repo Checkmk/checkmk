@@ -1412,14 +1412,48 @@ def _refusal_of(
         raise MKUserError(None, message % {"host": counterpart, "reason": exc}) from exc
 
 
+def _need_relatable(site_id: SiteId, counterpart: Host) -> None:
+    """Let the edition refuse a relation between the hosts of these two sites."""
+    folder = counterpart.folder()
+    folder.validators.validate_host_relation(
+        site_id, counterpart.site_id(), SiteConfigurations(folder.tree.config.sites)
+    )
+
+
+def _need_relatable_from(
+    site_id: SiteId, hosts: Iterable[Host], resolve_host: Callable[[HostName], Host | None]
+) -> None:
+    """Let the edition refuse a relation ``hosts`` keep once they are monitored on ``site_id``.
+
+    A counterpart among ``hosts`` moves along, so that relation stays on one site.
+    """
+    hosts = list(hosts)
+    moving = {host.name() for host in hosts}
+    for host in hosts:
+        for other in referenced_host_names(
+            relations_or_empty(host.attributes.get("relations", []))
+        ):
+            if other not in moving and (counterpart := resolve_host(other)) is not None:
+                _need_relatable(site_id, counterpart)
+
+
+def _inheriting_hosts_below(folder: Folder) -> Iterator[Host]:
+    """The hosts that follow ``folder`` to another site: those naming no site on their way up."""
+    yield from (host for host in folder.hosts().values() if not host.attributes.get("site"))
+    for subfolder in folder.subfolders():
+        if "site" not in subfolder.attributes:
+            yield from _inheriting_hosts_below(subfolder)
+
+
 def apply_relation_mirror(
     resolve_host: Callable[[HostName], Host | None],
     host_name: HostName,
     mirror: RelationMirror,
     *,
+    site_id: SiteId,
     acting_user: LoggedInUser,
 ) -> Sequence[tuple[Host, HostEditResult]]:
-    """Make every counterpart say what ``mirror`` says about ``host_name``.
+    """Make every counterpart say what ``mirror`` says about ``host_name``, monitored on ``site_id``.
 
     Resolving a counterpart and asking whether it already agrees does not edit it, so the folders
     that would have to be written are refused before the first host is mutated - the ordering
@@ -1440,6 +1474,8 @@ def apply_relation_mirror(
             # Named a host that is not there - resolve_all_relations() drops such a link, and
             # validate_host_relations() reports it. Nothing to mirror onto.
             continue
+        if links:
+            _need_relatable(site_id, counterpart)
         if counterpart.stores_relations_about(host_name, links):
             continue
         with _refusal_of(counterpart.name(), host_name, dropping=not links):
@@ -2607,6 +2643,10 @@ class Folder:
         """
         if "site" in self.attributes:
             return self.attributes["site"]
+        return self._inherited_site_id()
+
+    def _inherited_site_id(self) -> SiteId:
+        """The site of this folder's hosts if the folder named none itself."""
         if self.has_parent():
             parent = self.parent()
             assert parent is not None
@@ -3078,6 +3118,12 @@ class Folder:
                 _("Cannot move folder: A folder cannot be moved into a folder within itself."),
             )
 
+        target_site = target_folder.site_id()
+        if "site" not in subfolder.attributes and target_site != subfolder.site_id():
+            _need_relatable_from(
+                target_site, _inheriting_hosts_below(subfolder), counterpart_resolver(subfolder)
+            )
+
         original_alias_path = subfolder.alias_path()
 
         # 2. Actual modification
@@ -3137,6 +3183,13 @@ class Folder:
         self.validators.validate_edit_folder(
             self, new_attributes, SiteConfigurations(self.tree.config.sites)
         )
+        new_site_id = (
+            new_attributes["site"] if "site" in new_attributes else self._inherited_site_id()
+        )
+        if new_site_id != self.site_id():
+            _need_relatable_from(
+                new_site_id, _inheriting_hosts_below(self), counterpart_resolver(self)
+            )
 
         # For changing contact groups user needs write permission on parent folder
         new_cgconf = _get_cgconf_from_attributes(new_attributes)
@@ -3254,6 +3307,7 @@ class Folder:
                     plan_relation_mirror(
                         host_name, (), relations_or_empty(attributes.get("relations", []))
                     ),
+                    site_id=attributes.get("site", self.site_id()),
                     acting_user=acting_user,
                 )
             )
@@ -3521,6 +3575,16 @@ class Folder:
         self.validators.validate_move_hosts(
             self, host_names, target_folder, SiteConfigurations(self.tree.config.sites)
         )
+        if (target_site := target_folder.site_id()) != self.site_id():
+            _need_relatable_from(
+                target_site,
+                (
+                    host
+                    for host_name in host_names
+                    if not (host := self.load_host(host_name)).attributes.get("site")
+                ),
+                counterpart_resolver(self),
+            )
 
         # 2. Actual modification
         for host_name in host_names:
@@ -4424,11 +4488,14 @@ class Host:
         )
 
         # 2. Actual modification
-        affected_sites = [self.site_id()]
+        stored_site = self.site_id()
         self.attributes = attributes
         self._cluster_nodes = cluster_nodes
+        if self.site_id() != stored_site:
+            # Judged on the relations the host keeps, which it only has once they are applied.
+            _need_relatable_from(self.site_id(), [self], counterpart_resolver(folder))
         affected_sites = list(
-            {self.site_id(), *affected_sites, *(host.site_id() for host in counterparts)}
+            {self.site_id(), stored_site, *(host.site_id() for host in counterparts)}
         )
 
         return HostEditResult(
@@ -4473,11 +4540,13 @@ class Host:
         """
         stored_relations = relations_or_empty(self.attributes.get("relations", []))
         edit = self.apply_edit(attributes, cluster_nodes, acting_user=acting_user)
-        mirror = plan_relation_mirror(
-            self.name(), stored_relations, relations_or_empty(self.attributes.get("relations", []))
-        )
+        relations = relations_or_empty(self.attributes.get("relations", []))
         counterparts = apply_relation_mirror(
-            counterpart_resolver(self.folder()), self.name(), mirror, acting_user=acting_user
+            counterpart_resolver(self.folder()),
+            self.name(),
+            plan_relation_mirror(self.name(), stored_relations, relations),
+            site_id=self.site_id(),
+            acting_user=acting_user,
         )
 
         folders = relation_mirror_folders(
@@ -4526,6 +4595,10 @@ class Host:
             raise MKUserError(
                 None, _("Relations are stored on both hosts and cannot be cleaned up in bulk.")
             )
+        if "site" in attrnames_to_clean:
+            folder = self.folder()
+            if (folder_site := folder.site_id()) != self.site_id():
+                _need_relatable_from(folder_site, [self], counterpart_resolver(folder))
         self.need_unlocked()
 
         old_attrs = self.attributes.copy()
@@ -5145,6 +5218,8 @@ class FolderValidators:
     validate_edit_folder: Callable[[Folder, HostAttributes, SiteConfigurations], None]
     validate_move_hosts: Callable[[Folder, Iterable[HostName], Folder, SiteConfigurations], None]
     validate_move_subfolder_to: Callable[[Folder, Folder, SiteConfigurations], None]
+    #: Called with the sites of the two hosts of a relation a save establishes.
+    validate_host_relation: Callable[[SiteId, SiteId, SiteConfigurations], None]
 
 
 class FolderValidatorsRegistry(Registry[FolderValidators]):

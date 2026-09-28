@@ -136,6 +136,7 @@ def register(
             validate_edit_folder=lambda f, a, si: None,  # noqa: ARG005
             validate_move_hosts=lambda f, n, t, si: None,  # noqa: ARG005
             validate_move_subfolder_to=lambda f, t, si: None,  # noqa: ARG005
+            validate_host_relation=lambda s, o, si: None,  # noqa: ARG005
         )
     )
     _sync_remote_sites.register(automation_command_registry, cron_job_registry)

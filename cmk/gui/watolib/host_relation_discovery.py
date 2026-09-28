@@ -1559,6 +1559,7 @@ def _write_pair(
                 before,
                 relations_or_empty(source.attributes.get("relations", [])),
             ),
+            site_id=source.site_id(),
             acting_user=acting_user,
         )
     except MKAuthException, MKUserError:

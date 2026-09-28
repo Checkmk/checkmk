@@ -351,24 +351,24 @@ Then, as separate work: **CMK-35050** (faithful source failures — reopens D7),
 
 ## 4. Ticket disposition
 
-| Ticket                            | Role                                                                                            |
-| --------------------------------- | ----------------------------------------------------------------------------------------------- |
-| CMK-37497                         | Phase 3. Absorbed into the core swap; A→C→B read-side seam, D dead                              |
-| CMK-34150                         | Phase 0. Promoted to prerequisite. **Done**                                                     |
-| CMK-38599 (§10.5)                 | **Before Phase 1** (D15)                                                                        |
-| CMK-38587 … CMK-38598             | The other 12 divergence tickets — indexed below                                                 |
-| CMK-38679                         | **Not this epic.** Matcher-owned, spun out of the tier-2/4 review                               |
-| CMK-32562                         | Phase 2. Critical path — batch apply needs a canonical key                                      |
-| Story F1 (audit log)              | Phase 2. Settled once, in the batch-apply design                                                |
-| Story F2 (TABULA_RASA dedup)      | Phase 3. Nearly free after Phase 1                                                              |
-| Story F3 (rename)                 | Phase 3 backend half; new wording ships in Phase 4                                              |
-| CMK-29094 (ReDoc descriptions)    | Phase 2, partially                                                                              |
-| CMK-19765 (OWASP false positive)  | Phase 5. Closed by deleting HTML-over-the-wire                                                  |
-| CMK-35050                         | Follow-on. Contract reserves its fields (D6); may reopen D7                                     |
-| CMK-32560                         | Follow-on. Independent performance change                                                       |
-| CMK-37187                         | Out of scope (D9)                                                                               |
-| CMK-28034 (no progress indicator) | **Not planned.** Probably a transient issue left open; keep in mind while building the new page |
-| CMK-31896                         | Already fixed; informs the cold-cache split                                                     |
+| Ticket                            | Role                                                                                                                                          |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| CMK-37497                         | Phase 3. Absorbed into the core swap; A→C→B read-side seam, D dead                                                                            |
+| CMK-34150                         | Phase 0. Promoted to prerequisite. **Done**                                                                                                   |
+| CMK-38599 (§10.5)                 | **Before Phase 1** (D15). Ships a slice of DM §6.1 Gate 0 — clustered rows stop being retargeted — so the Gate 0 werk must not re-announce it |
+| CMK-38587 … CMK-38598             | The other 12 divergence tickets — indexed below                                                                                               |
+| CMK-38679                         | **Not this epic.** Matcher-owned, spun out of the tier-2/4 review                                                                             |
+| CMK-32562                         | Phase 2. Critical path — batch apply needs a canonical key                                                                                    |
+| Story F1 (audit log)              | Phase 2. Settled once, in the batch-apply design                                                                                              |
+| Story F2 (TABULA_RASA dedup)      | Phase 3. Nearly free after Phase 1                                                                                                            |
+| Story F3 (rename)                 | Phase 3 backend half; new wording ships in Phase 4                                                                                            |
+| CMK-29094 (ReDoc descriptions)    | Phase 2, partially                                                                                                                            |
+| CMK-19765 (OWASP false positive)  | Phase 5. Closed by deleting HTML-over-the-wire                                                                                                |
+| CMK-35050                         | Follow-on. Contract reserves its fields (D6); may reopen D7                                                                                   |
+| CMK-32560                         | Follow-on. Independent performance change                                                                                                     |
+| CMK-37187                         | Out of scope (D9)                                                                                                                             |
+| CMK-28034 (no progress indicator) | **Not planned.** Probably a transient issue left open; keep in mind while building the new page                                               |
+| CMK-31896                         | Already fixed; informs the cold-cache split                                                                                                   |
 
 ### The divergence tickets from Phase 0
 

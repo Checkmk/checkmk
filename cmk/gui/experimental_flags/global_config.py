@@ -30,6 +30,7 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
+    ActivationContext,
     ConfigDomainName,
     ConfigVariable,
     ConfigVariableGroup,
@@ -157,7 +158,9 @@ class ConfigDomainExperimentalFlags(ABCConfigDomain):
                 )
 
     @override
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+    def activate(
+        self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
+    ) -> ConfigurationWarnings:
         if not self._flags_changed:
             return []
         self._flags_changed = False

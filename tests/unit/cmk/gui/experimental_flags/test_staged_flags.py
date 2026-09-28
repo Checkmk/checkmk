@@ -14,6 +14,7 @@ from cmk.gui.experimental_flags.global_config import (
     ConfigDomainExperimentalFlags,
     EXPERIMENTAL_FLAGS_STAGED_FILENAME,
 )
+from cmk.gui.watolib.config_domain_name import ActivationContext
 
 
 @pytest.fixture(name="config_dir")
@@ -92,7 +93,7 @@ def fixture_run(monkeypatch: pytest.MonkeyPatch) -> _RecordingRun:
 
 def _activate(domain: ConfigDomainExperimentalFlags) -> list[str]:
     domain.create_artifacts()
-    return domain.activate()
+    return domain.activate(ctx=ActivationContext())
 
 
 @pytest.mark.usefixtures("config_dir")

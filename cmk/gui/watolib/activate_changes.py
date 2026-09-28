@@ -117,6 +117,7 @@ from cmk.gui.watolib.broker_certificates import (
 )
 from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import (
+    ActivationContext,
     config_domain_registry,
     ConfigDomainName,
     DomainRequest,
@@ -139,6 +140,7 @@ from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.host_relations_export import export_host_relations, relations_export_path
 from cmk.gui.watolib.host_relations_export import LOGGER as relations_logger
 from cmk.gui.watolib.hosts_and_folders import (
+    ACTIVATION_FOLDER_TREE,
     collect_all_hosts,
     collect_hosts,
     folder_preserving_link,
@@ -3160,6 +3162,7 @@ def sort_for_activation(domain_requests: DomainRequests) -> list[DomainRequest]:
 def execute_activate_changes(
     tree: FolderTree, domain_requests: DomainRequests, is_remote_site: bool
 ) -> ConfigWarnings:
+    ctx = ActivationContext({ACTIVATION_FOLDER_TREE: tree})
     # A site a major version behind still names a domain by its pre-rename ident.
     local_requests = [
         DomainRequest(
@@ -3198,7 +3201,9 @@ def execute_activate_changes(
                 "cmk.activate_changes.domain.settings": repr(domain_request.settings),
             },
         ):
-            warnings = get_config_domain(domain_request.name).activate(domain_request.settings)
+            warnings = get_config_domain(domain_request.name).activate(
+                domain_request.settings, ctx=ctx
+            )
             results[domain_request.name].extend(warnings or [])
 
     _add_extensions_for_license_usage()

@@ -44,12 +44,14 @@ from cmk.gui.watolib import bakery, config_domain_name
 from cmk.gui.watolib.check_mk_automations import get_configuration, reload, restart
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
+    ActivationContext,
     ConfigDomainName,
     DomainRequest,
     finalize_specifically_set_settings,
     generate_hosts_to_update_settings,
     SerializedSettings,
 )
+from cmk.gui.watolib.hosts_and_folders import ACTIVATION_FOLDER_TREE
 from cmk.gui.watolib.piggyback_hub import validate_piggyback_hub_config
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 from cmk.livestatus_client import SiteConfigurations
@@ -127,7 +129,9 @@ class ConfigDomainCore(ABCConfigDomain):
         return []
 
     @override
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+    def activate(
+        self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
+    ) -> ConfigurationWarnings:
         # Agents have to be baked from the new configuration, but before the core picks
         # it up, matching the point at which cmk/base used to do this.
         bakery.try_bake_agents_on_activation(
@@ -137,7 +141,9 @@ class ConfigDomainCore(ABCConfigDomain):
         )
 
         return {"restart": restart, "reload": reload}[active_config.wato_activation_method](
-            self._parse_settings(settings).hosts_to_update, debug=active_config.debug
+            self._parse_settings(settings).hosts_to_update,
+            tree=ctx.get(ACTIVATION_FOLDER_TREE),
+            debug=active_config.debug,
         ).config_warnings
 
     def _parse_settings(
@@ -188,7 +194,9 @@ class ConfigDomainGUI(ABCConfigDomain):
         return []
 
     @override
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+    def activate(
+        self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
+    ) -> ConfigurationWarnings:
         warnings: ConfigurationWarnings = []
 
         if active_config.wato_use_git and shutil.which("git") is None:
@@ -352,7 +360,9 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         return warnings
 
     @override
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+    def activate(
+        self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
+    ) -> ConfigurationWarnings:
         return []
 
     def _update_trusted_cas(
@@ -492,7 +502,9 @@ class ConfigDomainSiteCertificate(ABCConfigDomain):
         return []
 
     @override
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+    def activate(
+        self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
+    ) -> ConfigurationWarnings:
         reload_stunnel()
         reload_agent_receiver()
 
@@ -625,7 +637,9 @@ class ConfigDomainOMD(ABCConfigDomain):
         return []
 
     @override
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+    def activate(
+        self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
+    ) -> ConfigurationWarnings:
         current_settings = self._load_site_config()
 
         omd_settings = finalize_specifically_set_settings(

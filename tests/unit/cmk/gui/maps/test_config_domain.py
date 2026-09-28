@@ -15,6 +15,7 @@ resolve under ``omd_root`` for the registration to be valid.
 
 import cmk.utils.paths
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
+from cmk.gui.watolib.config_domain_name import ActivationContext
 from cmk.maps.gui._config_domain import (
     _object_defaults_factory_value,
     CONFIG_VAR_CONNECTIONS,
@@ -56,7 +57,7 @@ def test_config_dir_is_replicable() -> None:
 
 def test_activate_and_create_artifacts_are_noops() -> None:
     domain = ConfigDomainMaps()
-    assert domain.activate() == []
+    assert domain.activate(ctx=ActivationContext()) == []
     assert domain.create_artifacts() == []
 
 

@@ -82,6 +82,33 @@ class DomainRequest:
 DomainRequests = Sequence[DomainRequest]
 
 
+@dataclass(frozen=True, slots=True)
+class ActivationContextKey[T]:
+    """A value the activation of a site hands to the config domains it activates
+
+    Keys are defined next to the type of their value, which may live above this module in the
+    dependency graph. Define each one once at module level.
+    """
+
+    name: str
+    type_: type[T]
+
+
+@dataclass(frozen=True)
+class ActivationContext:
+    """What the activation of a site knows, for the config domains it activates
+
+    A domain activated outside an activation, e.g. while a site is set up, gets an empty one.
+    """
+
+    values: Mapping[ActivationContextKey[object], object] = field(default_factory=dict)
+
+    def get[T](self, key: ActivationContextKey[T]) -> T:
+        if not isinstance(value := self.values.get(key), key.type_):
+            raise MKGeneralException(f"The activation provides no {key.name}")
+        return value
+
+
 class ABCConfigDomain(abc.ABC):
     """
     always_activate:
@@ -131,7 +158,9 @@ class ABCConfigDomain(abc.ABC):
         """
 
     @abc.abstractmethod
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings: ...
+    def activate(
+        self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
+    ) -> ConfigurationWarnings: ...
 
     @classmethod
     def enabled(cls) -> bool:

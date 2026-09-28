@@ -17,6 +17,7 @@ from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
+    ActivationContext,
     ConfigDomainName,
     EVENT_CONSOLE,
     SerializedSettings,
@@ -55,7 +56,9 @@ class ConfigDomainEventConsole(ABCConfigDomain):
         return []
 
     @override
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+    def activate(
+        self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
+    ) -> ConfigurationWarnings:
         if getattr(active_config, "mkeventd_enabled", False):
             log_audit(
                 action="mkeventd-activate",

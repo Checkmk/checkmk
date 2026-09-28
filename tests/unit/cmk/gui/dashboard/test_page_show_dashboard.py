@@ -10,6 +10,7 @@ from cmk.gui.dashboard import page_show_dashboard
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
+    ActivationContext,
     ConfigDomainName,
     ConfigDomainRegistry,
     SerializedSettings,
@@ -45,7 +46,9 @@ class _FakeNetworkFlowDomain(ABCConfigDomain):
         return []
 
     @override
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+    def activate(
+        self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
+    ) -> ConfigurationWarnings:
         return []
 
 

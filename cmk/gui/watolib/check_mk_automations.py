@@ -7,13 +7,14 @@
 # mypy: disable-error-code="type-arg"
 
 import json
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any, NamedTuple
 
 import cmk.ccc.version as cmk_version
 from cmk.automations import results
 from cmk.automations.internal import AutomationID, AutomationResult
 from cmk.automations.results import SetAutochecksInput
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery import DiscoverySettings
 from cmk.checkengine.plugins import CheckPluginName
@@ -28,7 +29,8 @@ from cmk.gui.watolib.automations import (
     get_local_automation_failure_message,
     MKAutomationException,
 )
-from cmk.gui.watolib.hosts_and_folders import collect_all_hosts, folder_tree
+from cmk.gui.watolib.host_attributes import CollectedHostAttributes
+from cmk.gui.watolib.hosts_and_folders import collect_all_hosts, folder_tree, FolderTree
 from cmk.ruleset_matcher.labels import HostLabel, Labels
 from cmk.ruleset_matcher.matcher import RuleSpec
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
@@ -40,6 +42,11 @@ class AutomationResponse(NamedTuple):
     serialized_result: str
     local: bool
     cmdline: Iterable[str]
+
+
+def _hosts_collected_only_for_restart_and_reload() -> Mapping[HostName, CollectedHostAttributes]:
+    # The hooks handed the hosts are only called on a restart or a reload of the core.
+    raise MKGeneralException("Only the restart and the reload automation collect the hosts")
 
 
 def _automation_serialized(
@@ -54,6 +61,9 @@ def _automation_serialized(
     non_blocking_http: bool = False,
     force_cli_interface: bool = False,
     debug: bool,
+    collect_hosts: Callable[
+        [], Mapping[HostName, CollectedHostAttributes]
+    ] = _hosts_collected_only_for_restart_and_reload,
 ) -> AutomationResponse:
     if args is None:
         args = []
@@ -67,7 +77,7 @@ def _automation_serialized(
             timeout=timeout,
             force_cli_interface=force_cli_interface,
             debug=debug,
-            collect_all_hosts=lambda: collect_all_hosts(folder_tree()),
+            collect_all_hosts=collect_hosts,
         )
         return AutomationResponse(
             command=command,
@@ -456,26 +466,32 @@ def delete_hosts(
     )
 
 
-def restart(hosts_to_update: Sequence[HostName] | None, *, debug: bool) -> results.RestartResult:
+def restart(
+    hosts_to_update: Sequence[HostName] | None, *, tree: FolderTree, debug: bool
+) -> results.RestartResult:
     return _deserialize(
         _automation_serialized(
             AutomationID("restart"),
             automation_config=LocalAutomationConfig(),
             args=hosts_to_update,
             debug=debug,
+            collect_hosts=lambda: collect_all_hosts(tree),
         ),
         results.RestartResult,
         debug=debug,
     )
 
 
-def reload(hosts_to_update: Sequence[HostName] | None, *, debug: bool) -> results.ReloadResult:
+def reload(
+    hosts_to_update: Sequence[HostName] | None, *, tree: FolderTree, debug: bool
+) -> results.ReloadResult:
     return _deserialize(
         _automation_serialized(
             AutomationID("reload"),
             automation_config=LocalAutomationConfig(),
             args=hosts_to_update,
             debug=debug,
+            collect_hosts=lambda: collect_all_hosts(tree),
         ),
         results.ReloadResult,
         debug=debug,

@@ -96,11 +96,12 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.automations import (
     make_automation_config,
 )
-from cmk.gui.watolib.config_domain_name import CORE as CORE_DOMAIN
 from cmk.gui.watolib.config_domain_name import (
+    ActivationContextKey,
     DomainSettings,
     generate_hosts_to_update_settings,
 )
+from cmk.gui.watolib.config_domain_name import CORE as CORE_DOMAIN
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
@@ -1838,6 +1839,10 @@ class FolderTree:
     # Dangerous operation! Only use this if you have a good knowledge of the internas
     def set_root_dir(self, root_dir: str) -> None:
         self._root_dir = _ensure_trailing_slash(root_dir)
+
+
+# The tree of the activation, for the config domains it activates.
+ACTIVATION_FOLDER_TREE = ActivationContextKey("folder tree", FolderTree)
 
 
 def make_folder_tree(config: FolderTreeConfigSource) -> FolderTree:

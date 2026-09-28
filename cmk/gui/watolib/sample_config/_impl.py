@@ -38,6 +38,7 @@ from cmk.gui.userdb import (
     UserSpec,
 )
 from cmk.gui.utils.htpasswd import Htpasswd
+from cmk.gui.watolib.config_domain_name import ActivationContext
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
 from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
@@ -90,7 +91,7 @@ def init_wato_datastructures(tree: FolderTree, with_wato_lock: bool = False) -> 
 
     def init() -> None:
         if not os.path.exists(ConfigDomainCACertificates.trusted_cas_file):
-            ConfigDomainCACertificates().activate()
+            ConfigDomainCACertificates().activate(ctx=ActivationContext())
         _create_sample_config(tree)
 
     if with_wato_lock:

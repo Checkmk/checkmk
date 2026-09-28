@@ -30,6 +30,7 @@ from cmk.gui.rule_specs.legacy_converter import convert_to_legacy_valuespec
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
+    ActivationContext,
     ConfigDomainName,
     SerializedSettings,
 )
@@ -187,7 +188,9 @@ class ConfigDomainMaps(ABCConfigDomain):
         return []
 
     @override
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+    def activate(
+        self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
+    ) -> ConfigurationWarnings:
         # No reload signal: the Maps daemon re-reads its config dir per request.
         return []
 

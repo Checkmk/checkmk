@@ -5,15 +5,20 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from collections.abc import Iterable
+from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.legacy_includes.elphase import check_elphase
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.plugins.lib.elphase import check_elphase, ElPhase, ReadingWithState
 from cmk.plugins.netextreme.lib import DETECT_NETEXTREME
-
-check_info = {}
 
 # .1.3.6.1.4.1.1916.1.1.1.40.1.0 96250 --> EXTREME-SYSTEM-MIB::extremeSystemPowerUsageValue.0
 # .1.3.6.1.4.1.1916.1.1.1.40.2.0 -3 --> EXTREME-SYSTEM-MIB::extremeSystemPowerUsageUnitMultiplier.0
@@ -22,20 +27,32 @@ check_info = {}
 # as in the documentation 'Summit-X460-G2-DS.pdf'
 
 
-def parse_netextreme_psu(string_table: StringTable) -> dict[str, dict[str, float]]:
+def parse_netextreme_psu(string_table: StringTable) -> Mapping[str, ElPhase]:
     try:
-        return {"1": {"power": float(string_table[0][0]) * pow(10, int(string_table[0][1]))}}
+        return {
+            "1": ElPhase(
+                power=ReadingWithState(
+                    value=float(string_table[0][0]) * pow(10, int(string_table[0][1]))
+                )
+            )
+        }
     except IndexError, ValueError:
         return {}
 
 
-def discover_netextreme_psu(
-    section: dict[str, dict[str, float]],
-) -> Iterable[tuple[str, dict[str, Any]]]:
-    yield from ((item, {}) for item in section)
+def discover_netextreme_psu(section: Mapping[str, ElPhase]) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
-check_info["netextreme_psu"] = LegacyCheckDefinition(
+def check_netextreme_psu(
+    item: str, params: Mapping[str, Any], section: Mapping[str, ElPhase]
+) -> CheckResult:
+    if (elphase := section.get(item)) is None:
+        return
+    yield from check_elphase(params, elphase)
+
+
+snmp_section_netextreme_psu = SimpleSNMPSection(
     name="netextreme_psu",
     detect=DETECT_NETEXTREME,
     fetch=SNMPTree(
@@ -43,9 +60,14 @@ check_info["netextreme_psu"] = LegacyCheckDefinition(
         oids=["1", "2"],
     ),
     parse_function=parse_netextreme_psu,
+)
+
+
+check_plugin_netextreme_psu = CheckPlugin(
+    name="netextreme_psu",
     service_name="Power Supply %s",
     discovery_function=discover_netextreme_psu,
-    check_function=check_elphase,
+    check_function=check_netextreme_psu,
     check_ruleset_name="el_inphase",
     check_default_parameters={
         "power": (110, 120),

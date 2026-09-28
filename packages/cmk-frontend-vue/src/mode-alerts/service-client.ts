@@ -11,9 +11,8 @@ import type { ServiceNameMatch } from '@/mode-alerts/types'
 const ENDPOINT = '/domain-types/service/collections/all'
 
 // The cores derive a Checkmk check's command as "check_mk-<check plugin name>". This
-// selects every service the custom-query special agent produces, hand-written rules in
-// the ruleset included.
-const CUSTOM_SERVICE_CHECK_COMMAND = 'check_mk-telemetry_metrics_custom_query'
+// selects every service a "Custom Service" rule produces.
+const CUSTOM_SERVICE_CHECK_COMMAND = 'check_mk-telemetry_custom_service'
 
 // The endpoint applies no limit of its own, so a broad pattern would return every custom
 // service in the site. Matches beyond this are reported as truncated instead.

@@ -82,7 +82,7 @@ test('the search is restricted to services of the custom services check plugin',
   expect(conditionOn('check_command')).toEqual({
     op: '=',
     left: 'check_command',
-    right: 'check_mk-telemetry_metrics_custom_query'
+    right: 'check_mk-telemetry_custom_service'
   })
 })
 

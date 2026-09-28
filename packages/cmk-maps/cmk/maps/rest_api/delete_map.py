@@ -18,6 +18,7 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import RestAPIRequestGeneralException
+from cmk.maps.gui._images import delete_background_files
 from cmk.maps.gui.store import delete_map, get_permitted_map
 from cmk.maps.rest_api.endpoint_family import MAPS_FAMILY
 from cmk.maps.rest_api.utils import map_etag, RW_PERMISSIONS
@@ -53,6 +54,10 @@ def delete_map_v1(
     if api_context.etag.enabled:
         api_context.etag.verify(map_etag(page))
     delete_map(page.config.owner, name)
+    # Its background files are keyed by the map, not referenced from anywhere else,
+    # so a delete that left them behind would orphan them while they stay anonymously
+    # fetchable under their capability URL.
+    delete_background_files(page.config.owner, name)
 
 
 ENDPOINT_DELETE_MAP = VersionedEndpoint(

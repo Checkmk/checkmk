@@ -341,7 +341,18 @@ def upload_background(map_name: str, filename: str, content_type: str, contents:
 
 def delete_background(map_name: str) -> None:
     """Remove a map's background image files (the GUI clears the field on save)."""
-    owner = _editable_map_owner(map_name)
+    delete_background_files(_editable_map_owner(map_name), map_name)
+
+
+def delete_background_files(owner: str, map_name: str) -> None:
+    """Remove every background file of ``owner``'s map (owner already resolved).
+
+    For callers that have already resolved the real owner (e.g. deleting a foreign
+    map, where the caller may delete but not edit it, so ``_editable_map_owner``
+    would refuse). The name is still pattern-checked because it feeds the
+    ``{stem}.*`` glob that must not reach across maps."""
+    if not is_valid_map_name(map_name):
+        return
     bg_dir = _backgrounds_dir()
     for f in bg_dir.glob(f"{_bg_stem(owner, map_name)}.*"):
         f.unlink(missing_ok=True)

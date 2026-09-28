@@ -32,7 +32,7 @@ import cmk.ccc.version as cmk_version
 pytest.register_assert_rewrite("tests.testlib")
 
 
-from tests.testlib import fake_site  # noqa: E402
+from tests.testlib.unit import fake_site  # noqa: E402
 
 fake_site.fake_paths()
 

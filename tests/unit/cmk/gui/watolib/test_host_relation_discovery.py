@@ -688,18 +688,12 @@ def _create_other_half(
 ) -> Host:
     """A host holding its half of a relation to a board that does not exist yet, so that the
     board, created afterwards, holds none - the way a hand written "hosts.mk" can leave it."""
-    return _create_host(
-        folder,
-        name,
-        HostAttributes(
-            {
-                "labels": dict(labels or {}),
-                "relations": [
-                    {"kind": "management", "direction": "child", "host": HostName(board)}
-                ],
-            }
-        ),
-    )
+    host = _create_host(folder, name, HostAttributes({"labels": dict(labels or {})}))
+    host.attributes["relations"] = [
+        {"kind": "management", "direction": "child", "host": HostName(board)}
+    ]
+    folder.save_hosts(pprint_value=False, acting_user=_SUPERUSER)
+    return host
 
 
 def _contact_groups(*names: str) -> HostContactGroupSpec:

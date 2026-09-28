@@ -221,8 +221,13 @@ def test_rename_host_rewrites_the_relations_pointing_at_it() -> None:
     tree = folder_tree()
     folder = tree.root_folder()
     folder.create_hosts(
+        [(HostName("os1"), HostAttributes(), None)],
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=user,
+    )
+    folder.create_hosts(
         [
-            (HostName("os1"), HostAttributes(), None),
             (
                 HostName("board"),
                 HostAttributes(

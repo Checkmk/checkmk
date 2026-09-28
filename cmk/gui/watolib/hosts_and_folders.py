@@ -1369,7 +1369,12 @@ def host_url_resolver(tree: FolderTree, user: LoggedInUser) -> Callable[[HostNam
 
 @contextmanager
 def _refusal_of(
-    counterpart: HostName, about: HostName, *, optional: bool = False, dropping: bool = False
+    counterpart: HostName,
+    about: HostName,
+    *,
+    optional: bool = False,
+    dropping: bool = False,
+    visible: bool = True,
 ) -> Iterator[None]:
     """Say a counterpart's refusal in terms of the host the user is actually saving.
 
@@ -1381,6 +1386,9 @@ def _refusal_of(
 
     ``dropping`` says the write would have removed the counterpart's row rather than set it, and
     only picks what the refusal tells the user to do about it.
+
+    A counterpart the user may not see is refused without the reason, which names its folder and
+    contact groups. Only dropping a relation gets that far: establishing one is refused before.
     """
     try:
         yield
@@ -1391,7 +1399,12 @@ def _refusal_of(
                 {"host": counterpart, "about": about, "reason": exc},
             )
             return
-        if isinstance(exc, MKAuthException):
+        if not visible:
+            message = _(
+                "The relation concerns '%(host)s' as well, which you cannot edit. "
+                "Put the entry back to save this host."
+            )
+        elif isinstance(exc, MKAuthException):
             message = (
                 _(
                     "The relation concerns '%(host)s' as well, which you cannot edit: "
@@ -1445,15 +1458,21 @@ def _inheriting_hosts_below(folder: Folder) -> Iterator[Host]:
             yield from _inheriting_hosts_below(subfolder)
 
 
-def apply_relation_mirror(
+class _MirrorWrite(NamedTuple):
+    counterpart: Host
+    links: Sequence[RelationLink]
+    visible: bool
+
+
+def _need_relation_mirror(
     resolve_host: Callable[[HostName], Host | None],
     host_name: HostName,
     mirror: RelationMirror,
     *,
     site_id: SiteId,
     acting_user: LoggedInUser,
-) -> Sequence[tuple[Host, HostEditResult]]:
-    """Make every counterpart say what ``mirror`` says about ``host_name``, monitored on ``site_id``.
+) -> Sequence[_MirrorWrite]:
+    """Refuse ``mirror`` now if any counterpart would refuse it, and say what is to be written.
 
     Resolving a counterpart and asking whether it already agrees does not edit it, so the folders
     that would have to be written are refused before the first host is mutated - the ordering
@@ -1467,24 +1486,39 @@ def apply_relation_mirror(
     the dialog of this host shows none. A deleted host is the one case where a half may stay
     behind (see :func:`_drop_relations_to`) - it names a host that is gone, which every reader of
     the relations drops anyway.
+
+    Establishing a pair needs a counterpart the user may see; a missing and a hidden one get the
+    same refusal, so it does not tell which hosts exist.
     """
-    pending: list[tuple[Host, Sequence[RelationLink]]] = []
+    pending: list[_MirrorWrite] = []
     for name, links in mirror.items():
-        if (counterpart := resolve_host(name)) is None:
-            # Named a host that is not there - resolve_all_relations() drops such a link, and
-            # validate_host_relations() reports it. Nothing to mirror onto.
+        counterpart = resolve_host(name)
+        visible = counterpart is not None and counterpart.permissions.may("read", acting_user)
+        if links and not visible:
+            raise MKUserError(
+                None,
+                _("The related host '%(host)s' does not exist or you are not permitted to see it.")
+                % {"host": name},
+            )
+        if counterpart is None:
+            # The pair is dropped, and the host it named is gone: nothing to mirror onto.
             continue
         if links:
             _need_relatable(site_id, counterpart)
         if counterpart.stores_relations_about(host_name, links):
             continue
-        with _refusal_of(counterpart.name(), host_name, dropping=not links):
+        with _refusal_of(counterpart.name(), host_name, dropping=not links, visible=visible):
             need_writable_folders([counterpart.folder()], acting_user=acting_user)
-            pending.append((counterpart, links))
+            pending.append(_MirrorWrite(counterpart, links, visible))
+    return pending
 
+
+def _write_relation_mirror(
+    host_name: HostName, pending: Sequence[_MirrorWrite], *, acting_user: LoggedInUser
+) -> Sequence[tuple[Host, HostEditResult]]:
     applied: list[tuple[Host, HostEditResult]] = []
-    for counterpart, links in pending:
-        with _refusal_of(counterpart.name(), host_name, dropping=not links):
+    for counterpart, links, visible in pending:
+        with _refusal_of(counterpart.name(), host_name, dropping=not links, visible=visible):
             if (
                 mirrored := counterpart.set_relations_about(
                     host_name, links, acting_user=acting_user
@@ -1492,6 +1526,27 @@ def apply_relation_mirror(
             ) is not None:
                 applied.append((counterpart, mirrored))
     return applied
+
+
+def apply_relation_mirror(
+    resolve_host: Callable[[HostName], Host | None],
+    host_name: HostName,
+    mirror: RelationMirror,
+    *,
+    site_id: SiteId,
+    acting_user: LoggedInUser,
+) -> Sequence[tuple[Host, HostEditResult]]:
+    """Make every counterpart say what ``mirror`` says about ``host_name``, monitored on ``site_id``.
+
+    Everything is refused before the first counterpart is edited, see :func:`_need_relation_mirror`.
+    """
+    return _write_relation_mirror(
+        host_name,
+        _need_relation_mirror(
+            resolve_host, host_name, mirror, site_id=site_id, acting_user=acting_user
+        ),
+        acting_user=acting_user,
+    )
 
 
 def _drop_relations_to(
@@ -3287,21 +3342,18 @@ class Folder:
             for host_name, attributes, _cluster_nodes in entries
         ]
 
-        # A host created with a relation is a write on the host it names. Mutate those in memory
-        # first and refuse before anything is written, the way editing a host does -
-        # create_validated_hosts() itself must stay a phase that cannot fail, because the
-        # configuration bundles rely on that.
+        # A host created with a relation is a write on the host it names. Refuse for every entry
+        # before any counterpart is mutated in memory, and mutate them before anything is
+        # written, the way editing a host does - create_validated_hosts() itself must stay a
+        # phase that cannot fail, because the configuration bundles rely on that.
         # Counterparts are looked up among the hosts that already exist: a host from this very
-        # batch is not one of them, so apply_relation_mirror() writes no half for it. Every entry
-        # states its own relations, so a pair created together is consistent as long as both
-        # entries name each other - and nothing that creates hosts in bulk sets relations, which
-        # the REST API does not expose (see UNEXPOSED_HOST_ATTRIBUTES).
+        # batch is not one of them, so a relation to it is refused like one to any other host
+        # that is missing.
         resolve_counterpart = counterpart_resolver(self)
-        counterparts: list[tuple[Host, HostEditResult, HostName]] = []
-        for host_name, attributes, _cluster_nodes in validated:
-            counterparts.extend(
-                (counterpart, mirrored, host_name)
-                for counterpart, mirrored in apply_relation_mirror(
+        writes = [
+            (
+                host_name,
+                _need_relation_mirror(
                     resolve_counterpart,
                     host_name,
                     plan_relation_mirror(
@@ -3309,8 +3361,17 @@ class Folder:
                     ),
                     site_id=attributes.get("site", self.site_id()),
                     acting_user=acting_user,
-                )
+                ),
             )
+            for host_name, attributes, _cluster_nodes in validated
+        ]
+        counterparts = [
+            (counterpart, mirrored, host_name)
+            for host_name, pending in writes
+            for counterpart, mirrored in _write_relation_mirror(
+                host_name, pending, acting_user=acting_user
+            )
+        ]
         counterpart_folders = relation_mirror_folders(
             [host for host, _mirrored, _related_to in counterparts], acting_user=acting_user
         )

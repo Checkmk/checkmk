@@ -1669,21 +1669,27 @@ def test_folder_attributes_for_base_config_exports_inherited_agent_connection(
 
 
 def _create_host(
-    folder: Folder, name: str, attributes: HostAttributes | None = None
+    folder: Folder,
+    name: str,
+    attributes: HostAttributes | None = None,
+    *,
+    acting_user: LoggedInUser = _SUPERUSER,
 ) -> hosts_and_folders.Host:
     folder.create_hosts(
         [(HostName(name), attributes or HostAttributes(), [])],
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
-        acting_user=_SUPERUSER,
+        acting_user=acting_user,
     )
     return folder.hosts()[HostName(name)]
 
 
-def _user_of_one_contact_group(contact_group: str) -> LoggedInUser:
+def _user_of_one_contact_group(
+    contact_group: str, *, sees_all_folders: bool = True
+) -> LoggedInUser:
     """A user who may manage hosts and folders but has no blanket folder access, so that the
     permission checks fall back to contact groups - which is where a host's differ from those of
-    its folder."""
+    its folder. Without ``sees_all_folders`` the user sees only the hosts of that group."""
     user_ = LoggedInUser(
         None,
         UserPermissions({}, {}, {}, []),
@@ -1691,14 +1697,8 @@ def _user_of_one_contact_group(contact_group: str) -> LoggedInUser:
             users={}, default_language="en", default_show_mode="default_show_less"
         ),
         explicitly_given_permissions=frozenset(
-            {
-                "wato.use",
-                "wato.edit",
-                "wato.edit_hosts",
-                "wato.manage_hosts",
-                "wato.manage_folders",
-                "wato.see_all_folders",
-            }
+            {"wato.use", "wato.edit", "wato.edit_hosts", "wato.manage_hosts"}
+            | ({"wato.manage_folders", "wato.see_all_folders"} if sees_all_folders else set())
         ),
     )
     user_.attributes["contactgroups"] = [contact_group]
@@ -1943,6 +1943,123 @@ def test_create_host_refuses_before_touching_a_counterpart_it_may_not_write(
     assert _relations_of(tree, HostName("board")) == [
         {"kind": "management", "direction": "parent", "host": "os1"}
     ]
+
+
+def _folder_of(tree: FolderTree, name: str, contact_group: str) -> Folder:
+    return tree.root_folder().create_subfolder(
+        name,
+        name.title(),
+        HostAttributes({"contactgroups": _contact_groups(contact_group)}),
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+
+
+def _refusal_of_board_of(host: str, folder: Folder, acting_user: LoggedInUser) -> str:
+    with pytest.raises(MKUserError) as refused:
+        _create_host(
+            folder,
+            "board",
+            HostAttributes(
+                {
+                    "relations": [
+                        {"kind": "management", "direction": "parent", "host": HostName(host)}
+                    ]
+                }
+            ),
+            acting_user=acting_user,
+        )
+    return str(refused.value)
+
+
+def test_create_hosts_refuses_every_entry_before_it_touches_a_counterpart(
+    tree: FolderTree,
+) -> None:
+    """Otherwise the counterpart of an earlier entry keeps a row about a host never created."""
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+
+    with pytest.raises(MKUserError, match="'ghost' does not exist"):
+        root.create_hosts(
+            [
+                (
+                    HostName(board),
+                    HostAttributes(
+                        {
+                            "relations": [
+                                {"kind": "management", "direction": "parent", "host": HostName(os)}
+                            ]
+                        }
+                    ),
+                    [],
+                )
+                for board, os in [("board1", "os1"), ("board2", "ghost")]
+            ],
+            pprint_value=False,
+            pending_changes=_noop_pending_changes(),
+            acting_user=_SUPERUSER,
+        )
+
+    assert "relations" not in os1.attributes
+
+
+def test_create_host_refuses_a_relation_to_a_host_that_does_not_exist(tree: FolderTree) -> None:
+    """A link to a free name would turn up on whichever host takes that name later."""
+    refusal = _refusal_of_board_of("ghost", tree.root_folder(), _SUPERUSER)
+
+    assert "'ghost' does not exist" in refusal
+    assert tree.host(HostName("board")) is None
+
+
+def test_relation_to_a_host_the_user_may_not_see_is_refused_like_a_missing_one(
+    tree: FolderTree,
+) -> None:
+    """The same answer for both, so trying names does not tell which hosts exist."""
+    _create_host(_folder_of(tree, "hidden", "another_cg"), "hidden-os")
+    own = _folder_of(tree, "own", "cg")
+    user_ = _user_of_one_contact_group("cg", sees_all_folders=False)
+
+    hidden = _refusal_of_board_of("hidden-os", own, user_)
+
+    assert hidden == _refusal_of_board_of("ghost", own, user_).replace("ghost", "hidden-os")
+    assert "relations" not in tree.load_host(HostName("hidden-os")).attributes
+
+
+def test_edit_keeps_a_stored_relation_to_a_host_that_is_gone(tree: FolderTree) -> None:
+    """Only a relation the save establishes needs its counterpart."""
+    board = _create_host(tree.root_folder(), "board")
+    gone: list[RelationLink] = [
+        {"kind": "management", "direction": "parent", "host": HostName("ghost")}
+    ]
+    board.attributes["relations"] = gone
+
+    _edit_relations(board, gone, alias="Board")
+
+    assert board.attributes["relations"] == gone
+
+
+def test_refusal_to_drop_a_relation_keeps_the_hidden_counterparts_folder_to_itself(
+    tree: FolderTree,
+) -> None:
+    _create_host(_folder_of(tree, "own", "cg"), "os1")
+    _create_host(
+        _folder_of(tree, "hidden", "another_cg"),
+        "board",
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+    )
+    tree.invalidate_caches()
+    os1 = tree.load_host(HostName("os1"))
+
+    with pytest.raises(MKUserError, match="'board' as well, which you cannot edit") as refused:
+        _edit_relations(
+            os1, [], acting_user=_user_of_one_contact_group("cg", sees_all_folders=False)
+        )
+
+    assert "Hidden" not in str(refused.value)
+    assert "another_cg" not in str(refused.value)
 
 
 def test_delete_subfolder_logs_no_change_for_a_pair_inside_it(tree: FolderTree) -> None:
@@ -2213,13 +2330,10 @@ def test_edit_keeps_a_contradiction_the_counterpart_already_stored(tree: FolderT
 
 def test_validate_host_relations_reports_a_host_that_is_gone(tree: FolderTree) -> None:
     root = tree.root_folder()
-    board = _create_host(
-        root,
-        "board",
-        HostAttributes(
-            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
-        ),
-    )
+    board = _create_host(root, "board")
+    board.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("os1")}
+    ]
 
     with pytest.raises(MKUserError, match="non-existing host 'os1'"):
         validate_host_relations(board)
@@ -2459,6 +2573,7 @@ def test_plan_relation_mirror_turns_a_flip_into_one_write() -> None:
 def test_clean_attributes_refuses_to_drop_a_relation(tree: FolderTree) -> None:
     """Only Host.edit() knows how to take the other half with it."""
     root = tree.root_folder()
+    _create_host(root, "os1")
     board = _create_host(
         root,
         "board",
@@ -2579,16 +2694,16 @@ def test_edit_writes_a_shared_hosts_mk_once(tree: FolderTree) -> None:
     ) == 1
 
 
-def test_edit_stores_a_row_that_has_nothing_to_mirror_onto(tree: FolderTree) -> None:
-    """Nothing to write the other half to - the row is reported by validate_host_relations()."""
+def test_edit_refuses_a_row_that_has_nothing_to_mirror_onto(tree: FolderTree) -> None:
     root = tree.root_folder()
     os1 = _create_host(root, "os1")
 
-    _edit_relations(os1, [{"kind": "management", "direction": "child", "host": HostName("ghost")}])
+    with pytest.raises(MKUserError, match="'ghost' does not exist"):
+        _edit_relations(
+            os1, [{"kind": "management", "direction": "child", "host": HostName("ghost")}]
+        )
 
-    assert os1.attributes["relations"] == [
-        {"kind": "management", "direction": "child", "host": "ghost"}
-    ]
+    assert "ghost" not in (Path(root.filesystem_path()) / "hosts.mk").read_text()
 
 
 def test_edit_reports_a_contradiction_about_the_host_being_saved(tree: FolderTree) -> None:
@@ -2659,13 +2774,7 @@ def test_edit_refuses_to_drop_a_relation_to_a_counterpart_it_cannot_write(
     """Dropping this host's half alone would not get rid of the relation: the counterpart keeps
     its own, and resolve_all_relations() derives the reverse of it back onto both hosts."""
     root = tree.root_folder()
-    _create_host(
-        root,
-        "os1",
-        HostAttributes(
-            relations=[{"kind": "management", "direction": "child", "host": HostName("board")}]
-        ),
-    )
+    _create_host(root, "os1")
     _locked_folder_with_a_board(
         root,
         HostAttributes(

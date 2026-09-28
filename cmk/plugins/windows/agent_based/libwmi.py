@@ -221,8 +221,6 @@ WMISection = Mapping[str, WMITable]
 def parse_wmi_table(
     string_table: StringTable,
     key: str = "Name",
-    # Needed in check_legacy_includes/wmi.py
-    table_type: type[WMITable] = WMITable,
 ) -> WMISection:
     parsed: MutableMapping[str, WMITable] = {}
     info_iter = iter(string_table)
@@ -257,7 +255,6 @@ def parse_wmi_table(
                 key,
                 timestamp,
                 frequency,
-                table_type,
             )
 
             # read table content
@@ -279,8 +276,6 @@ def _prepare_wmi_table(
     key: str | None,
     timestamp: int | None,
     frequency: int | None,
-    # Needed in check_legacy_includes/wmi.py
-    table_type: type[WMITable],
 ) -> tuple[bool, WMITable]:
     # Possibilities:
     # #1 Agent provides extra column for WMIStatus; since 1.5.0p14
@@ -323,7 +318,7 @@ def _prepare_wmi_table(
 
     current_table = parsed.setdefault(
         tablename,
-        table_type(
+        WMITable(
             tablename,
             header,
             key,

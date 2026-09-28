@@ -47,12 +47,10 @@ therefore not super fast (currently six seconds)
 To combine both the vite auto hot reload and the site, the proxy feature of the
 vite dev server is used.
 
-To watch file changes across the bazelized components, you need to use
-`ibazel` instead of `bazel`.
+To watch file changes across the bazelized components, run the dev server
+through `//bazel/tools/devserver`.
 
-* download https://github.com/bazelbuild/bazel-watcher/releases/latest/download/ibazel_linux_amd64
-  and add it to your path
-* run `ibazel run :vite`
+* run `bazel run //bazel/tools/devserver -- //packages/cmk-frontend-vue:vite`
 * surf to `http://localhost:5173/<yoursite>/check_mk/` (tailing slash is
   important, otherwise checkmk will redirect to a url without the port)
 * enable "Inject cmk-frontend-vue files via vite client" in "User Interface"
@@ -74,7 +72,7 @@ persist, reach out to Team Bug.
 
 To try our reusable components outside a checkmk site, you can
 
-* run `ibazel run :vite -- --config vite.config.ucl.ts`
+* run `bazel run //bazel/tools/devserver -- //packages/cmk-frontend-vue:vite -- --config vite.config.ucl.ts`
 * surf to `http://localhost:5174/`
 
 or

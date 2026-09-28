@@ -3,7 +3,7 @@ load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@cmk_requirements//:requirements.bzl", "requirement")
+load("@cmk_requirements//:requirements.bzl", "all_whl_requirements", "requirement")
 load("@gazelle//:def.bzl", "gazelle")
 load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
 load("@npm//:defs.bzl", "npm_link_all_packages")
@@ -324,11 +324,22 @@ create_venv(
     # https://github.com/bazel-contrib/rules_uv/issues/163
     # We use gcc for compiling c extensions though
     env = {"CC": "gcc"},
+    # Install only the wheels Bazel already fetched for @cmk_requirements (through the
+    # bazel-registry mirror and the repository cache), so building the venv never
+    # reaches pypi.org, whose outages from CI would otherwise fail the venv.
+    find_links = all_whl_requirements,
     requirements_txt = select({
         "@//:gpl+nonfree_repo": ":requirements.txt",
         "@//:gpl_repo": ":community-requirements.txt",
     }),
     site_packages_extra_files = [":sitecustomize.py"],
+    uv_args = [
+        "--no-index",
+        # The lock pins sdist hashes for the few sdist-only packages, which the wheels
+        # rules_python built from them cannot match. Bazel already verified every
+        # download against the lock.
+        "--no-verify-hashes",
+    ],
     whls = [
         "@rrdtool//:rrdtool_python_wheel",
         "//packages/cmk-shared-typing:wheel",

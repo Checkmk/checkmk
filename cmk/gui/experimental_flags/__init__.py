@@ -20,15 +20,23 @@ def register(
     config_variable_registry: ConfigVariableRegistry,
     config_variable_group_registry: ConfigVariableGroupRegistry,
     replication_path_registry: ReplicationPathRegistry,
+    *,
+    show_in_global_settings: bool,
 ) -> None:
     config_domain_registry.register(global_config.ConfigDomainExperimentalFlags())
 
     # The group and its config variables are generated from the flags declared on
     # ExperimentalFlagConfig. When no flags are declared (e.g. on master) there is
     # nothing to show, so we skip registering an empty settings group.
-    if global_config.experimental_flag_config_variables:
+    # show_in_global_settings only hides the variables. The domain and the replication
+    # path below stay registered, so remote sites keep receiving and activating the
+    # flags whether they are development sites or not.
+    config_variables = global_config.experimental_flag_config_variables(
+        in_global_settings=show_in_global_settings
+    )
+    if config_variables:
         config_variable_group_registry.register(global_config.ConfigVariableGroupExperimentalFlags)
-        for config_variable in global_config.experimental_flag_config_variables:
+        for config_variable in config_variables:
             config_variable_registry.register(config_variable)
 
     # Sync the flags file to remote sites so a distributed setup shares the same

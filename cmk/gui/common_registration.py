@@ -323,6 +323,7 @@ def register(
         config_variable_registry,
         config_variable_group_registry,
         replication_path_registry,
+        show_in_global_settings=experimental_flags.global_config.is_development_site(),
     )
     quick_setup_registration.register(
         automation_command_registry,

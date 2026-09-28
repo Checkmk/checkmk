@@ -103,6 +103,21 @@ def test_passive_service_without_cache_is_blocked_for_being_passive() -> None:
     assert offer.tooltip == "This service is checked passively and cannot be rescheduled."
 
 
+def test_active_service_with_active_checks_disabled_is_blocked_for_that() -> None:
+    offer = build_reschedule_offer(
+        ServiceFactory.build(
+            name="CPU load", **{**_ACTIVE_OWN_CHECK, "active_checks_enabled": False}
+        )
+    )
+
+    assert offer is not None
+    assert isinstance(offer.target, ApiOmitted)
+    assert offer.icon_name == "cannot-reschedule"
+    assert offer.tooltip == (
+        "Active checks are disabled for this service, so it cannot be rescheduled."
+    )
+
+
 _SHADOW_REFUSAL = "This service is monitored by a remote site and cannot be rescheduled here."
 
 

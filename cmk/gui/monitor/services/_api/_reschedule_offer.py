@@ -96,4 +96,8 @@ def build_reschedule_offer(service: Service) -> ServiceRescheduleOffer | None:
             target=service.name,
         )
 
-    return _blocked(_("This service is checked passively and cannot be rescheduled."))
+    return _blocked(
+        _("Active checks are disabled for this service, so it cannot be rescheduled.")
+        if service.check_type is CheckType.ACTIVE
+        else _("This service is checked passively and cannot be rescheduled.")
+    )

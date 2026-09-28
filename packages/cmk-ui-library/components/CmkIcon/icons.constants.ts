@@ -324,6 +324,7 @@ import lightIconMainUserSvg from '~cmk-frontend/themes/facelift/images/icon_main
 import lightIconMainUserActiveSvg from '~cmk-frontend/themes/facelift/images/icon_main_user_active.svg?url&no-inline'
 import lightIconManualSvg from '~cmk-frontend/themes/facelift/images/icon_manual.svg?url&no-inline'
 import lightIconManualActiveSvg from '~cmk-frontend/themes/facelift/images/icon_manual_active.svg?url&no-inline'
+import lightIconMapsSvg from '~cmk-frontend/themes/facelift/images/icon_maps.svg?url&no-inline'
 import lightIconMatrixPng from '~cmk-frontend/themes/facelift/images/icon_matrix.png?url&no-inline'
 import lightIconMenuPng from '~cmk-frontend/themes/facelift/images/icon_menu.png?url&no-inline'
 import lightIconMenuItemCheckedPng from '~cmk-frontend/themes/facelift/images/icon_menu_item_checked.png?url&no-inline'
@@ -1137,6 +1138,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   'main-setup-active': lightIconMainSetupActiveSvg,
   'main-user-active': lightIconMainUserActiveSvg,
   'manual-active': lightIconManualActiveSvg,
+  maps: lightIconMapsSvg,
   matrix: lightIconMatrixPng,
   menu: lightIconMenuPng,
   'menu-item-checked': lightIconMenuItemCheckedPng,

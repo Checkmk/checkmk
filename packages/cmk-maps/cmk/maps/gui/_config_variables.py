@@ -73,14 +73,14 @@ from cmk.web.utils.icons import IconNames
 ConfigVariableGroupMapsDefaults = ConfigVariableGroup(
     title=_l("Maps: Map and object defaults"),
     sort_index=60,
-    icon=IconNames.topic_visualization,
+    icon=IconNames.maps,
     description=_l("Configures the defaults for new maps and map objects"),
 )
 
 ConfigVariableGroupMapsDaemon = ConfigVariableGroup(
     title=_l("Maps: Connections & daemon"),
     sort_index=61,
-    icon=IconNames.topic_visualization,
+    icon=IconNames.maps,
     description=_l("Configures the monitoring connections and the Maps backend daemon"),
 )
 

@@ -359,6 +359,7 @@ export const iconSearchLabels: Record<string, string[]> = {
   'main-user-active': ['person', 'account menu', 'profile'],
   manual: ['documentation', 'guide', 'handbook'],
   'manual-active': ['documentation', 'guide', 'handbook'],
+  maps: ['map', 'nagvis', 'geography', 'location'],
   matrix: ['grid', 'table', 'array'],
   menu: ['hamburger', 'list', 'navigation', 'options'],
   'menu-item-checked': ['selected', 'checkmark', 'ticked option'],

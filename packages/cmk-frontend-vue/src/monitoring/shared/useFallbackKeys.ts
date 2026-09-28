@@ -4,13 +4,15 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 /**
- * What Esc and the arrows do when nothing else wants them (CMK-38372). A key some widget,
+ * What Esc, the arrows and the paging keys do when nothing else wants them (CMK-38372). A key some widget,
  * menu or type-to-focus has taken is left alone, and so is one pressed while the focus is
  * outside the view (a slide-in, say).
  *
  * - Esc lets go of the focus, unless its handling has moved the focus already.
  * - The arrows move the focus to the nearest clickable element in their direction, or,
  *   with nothing focused, ArrowUp/ArrowDown scroll the table.
+ * - With nothing focused, PageUp/PageDown scroll the table by a page, Home and End to
+ *   either end of it.
  */
 import { type Ref, onBeforeUnmount, onMounted } from 'vue'
 
@@ -22,6 +24,10 @@ const SCROLL_STEP_PX = 33
 const TOLERANCE_PX = 2
 
 type Direction = 'ArrowDown' | 'ArrowUp' | 'ArrowLeft' | 'ArrowRight'
+
+type PageKey = 'Home' | 'End' | 'PageUp' | 'PageDown'
+
+const PAGE_KEYS: ReadonlySet<string> = new Set<PageKey>(['Home', 'End', 'PageUp', 'PageDown'])
 
 /** Elements that give the arrows a meaning of their own. */
 const OWNS_ARROWS_SELECTOR = [
@@ -49,6 +55,10 @@ const BEYOND: Record<Direction, (from: DOMRect, to: DOMRect) => boolean> = {
 
 function isDirection(key: string): key is Direction {
   return Object.hasOwn(BEYOND, key)
+}
+
+function isPageKey(key: string): key is PageKey {
+  return PAGE_KEYS.has(key)
 }
 
 /** Distance along the direction, with straying off its axis weighing double. */
@@ -104,6 +114,28 @@ export function useFallbackKeys(
     }
   }
 
+  function scrollTablePage(key: PageKey, event: KeyboardEvent): void {
+    const element = container()
+    if (!element) {
+      return
+    }
+    event.preventDefault()
+    const page = Math.max(SCROLL_STEP_PX, element.clientHeight - SCROLL_STEP_PX)
+    switch (key) {
+      case 'Home':
+        element.scrollTo({ top: 0 })
+        break
+      case 'End':
+        element.scrollTo({ top: element.scrollHeight })
+        break
+      case 'PageUp':
+        element.scrollBy({ top: -page })
+        break
+      case 'PageDown':
+        element.scrollBy({ top: page })
+    }
+  }
+
   function onKeyDownCapture(event: KeyboardEvent): void {
     focusedOnEscape = event.key === 'Escape' ? document.activeElement : focusedOnEscape
   }
@@ -113,12 +145,15 @@ export function useFallbackKeys(
       return
     }
     const active = document.activeElement
+    const nothingFocused = !active || active === document.body
     if (event.key === 'Escape' && inScope(active) && active === focusedOnEscape) {
       active.blur()
     } else if (isDirection(event.key) && inScope(active)) {
       moveFocus(active, event.key, event)
-    } else if (isDirection(event.key) && (!active || active === document.body)) {
+    } else if (isDirection(event.key) && nothingFocused) {
       scrollTable(event.key, event)
+    } else if (isPageKey(event.key) && nothingFocused) {
+      scrollTablePage(event.key, event)
     }
   }
 

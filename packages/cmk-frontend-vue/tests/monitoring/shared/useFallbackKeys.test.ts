@@ -10,11 +10,13 @@ import { defineComponent, h, ref } from 'vue'
 import { useFallbackKeys } from '@/monitoring/shared/useFallbackKeys'
 
 const scrollBy = vi.fn()
+const scrollTo = vi.fn()
 const originalRect = Element.prototype.getBoundingClientRect
 
 // jsdom does no layout: elements are placed by their `data-rect`, "left top".
 beforeAll(() => {
   Element.prototype.scrollBy = scrollBy as unknown as Element['scrollBy']
+  Element.prototype.scrollTo = scrollTo as unknown as Element['scrollTo']
   Element.prototype.scrollIntoView = vi.fn()
   Element.prototype.getBoundingClientRect = function (this: Element): DOMRect {
     const [left, top] = (this.getAttribute('data-rect') ?? '0 0').split(' ').map(Number)
@@ -40,7 +42,7 @@ const fixture = defineComponent({
         h('button', { type: 'button', 'data-rect': '500 500' }, 'outside'),
         h('div', { ref: root }, [
           h('input', { type: 'text', 'aria-label': 'Search', 'data-rect': '0 -50' }),
-          h('div', { ref: table }, [
+          h('div', { ref: table, 'data-testid': 'table' }, [
             cell('a1', '0 0'),
             cell('b1', '100 0'),
             cell('a2', '0 40'),
@@ -104,6 +106,34 @@ test('with nothing focused ArrowUp/ArrowDown scroll the table', () => {
   press('ArrowUp')
 
   expect(scrollBy.mock.calls.map(([options]) => Math.sign(options.top))).toEqual([1, -1])
+})
+
+test('with nothing focused the paging keys scroll the table a page, Home and End to its ends', () => {
+  render(fixture)
+  scrollBy.mockReset()
+  scrollTo.mockReset()
+  Object.defineProperty(screen.getByTestId('table'), 'scrollHeight', { value: 1000 })
+  ;(document.activeElement as HTMLElement | null)?.blur()
+
+  press('PageDown')
+  press('PageUp')
+  press('End')
+  press('Home')
+
+  expect(scrollBy.mock.calls.map(([options]) => Math.sign(options.top))).toEqual([1, -1])
+  expect(scrollTo.mock.calls.map(([options]) => options.top)).toEqual([1000, 0])
+})
+
+test('the paging keys leave a focused element to the browser', () => {
+  render(fixture)
+  scrollBy.mockReset()
+  scrollTo.mockReset()
+  button('a1').focus()
+
+  expect(press('PageDown').defaultPrevented).toBe(false)
+  expect(press('End').defaultPrevented).toBe(false)
+  expect(scrollBy).not.toHaveBeenCalled()
+  expect(scrollTo).not.toHaveBeenCalled()
 })
 
 test('Esc lets go of the focus, unless its handling moved the focus already', () => {

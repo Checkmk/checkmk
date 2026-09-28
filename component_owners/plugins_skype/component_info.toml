@@ -5,5 +5,5 @@ members_required = 0
 tier = 4
 product_managers = ["andrea.vaccaro@checkmk.com"]
 description = """
-Manpages for Skype for Business (formerly Lync) plugins. Source plugins live in cmk/legacy_checks/.
+Skype for Business (formerly Lync) plugins in cmk/plugins/skype/.
 """

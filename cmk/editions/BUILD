@@ -30,7 +30,6 @@ py_library(
         "//cmk/gui/plugins/legacy_bakery_rulesets",
         "//cmk/gui/plugins/wato/check_parameters",
         "//cmk/gui_plugins/internal",
-        "//cmk/legacy_checks",
         "//cmk/mkp:cli",
         "//cmk/piggyback:backend",
         "//cmk/piggyback:cli",

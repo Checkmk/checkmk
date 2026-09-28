@@ -5,14 +5,10 @@ py_library(
     name = "common_tests",
     testonly = True,
     srcs = glob(["**/*.py"]),
-    tags = [
-        "deballast-keep=//cmk/legacy_checks:legacy_checks",  # discovered via pkgutil.iter_modules() in find_legacy_check_modules()
-    ],
     visibility = ["//tests/plugins_consistency:__subpackages__"],
     deps = [
         "//cmk/gui/dashboard",
         "//cmk/gui/graphing",
-        "//cmk/legacy_checks",
         "//cmk/plugins",
         "//cmk/server_side_calls_backend",
         "//cmk/utils",

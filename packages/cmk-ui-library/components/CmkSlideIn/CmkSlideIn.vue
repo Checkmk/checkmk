@@ -152,7 +152,7 @@ onBeforeUnmount(() => {
   }
 
   &[data-state='closed'] {
-    animation: cmk-slide-in__container-hide 0.2s ease-in-out;
+    animation: cmk-slide-in__container-hide 0.2s ease-in-out forwards;
   }
 }
 
@@ -198,6 +198,7 @@ onBeforeUnmount(() => {
   }
 
   to {
+    visibility: hidden;
     opacity: 0;
     transform: translate(50%, 0%);
   }

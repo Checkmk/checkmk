@@ -8,7 +8,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from cmk.checkengine.plugins import AgentBasedPlugins, LegacyPluginLocation
+from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.discover_plugins import PluginLocation
 
 from .utils import filter_relevant_raw_sections
@@ -18,7 +18,6 @@ _PLUGINS_FILE_NAME = "inventory_plugins_index.json"
 
 @dataclass(frozen=True)
 class PluginIndex:
-    legacy: Sequence[str]
     locations: Sequence[PluginLocation]
 
 
@@ -29,7 +28,6 @@ def make_index_file(config_path: Path) -> Path:
 def load_plugin_index(config_path: Path) -> PluginIndex:
     raw = json.loads(make_index_file(config_path).read_text())
     return PluginIndex(
-        legacy=[str(f) for f in raw["legacy"]],
         locations=[PluginLocation.from_str(loc) for loc in raw["locations"]],
     )
 
@@ -43,11 +41,6 @@ def create_plugin_index(plugins: AgentBasedPlugins) -> str:
         "locations": [
             *(str(p.location) for p in sections.values() if isinstance(p.location, PluginLocation)),
             *(str(p.location) for p in plugins.inventory_plugins.values()),
-        ],
-        "legacy": [
-            p.location.file_name
-            for p in sections.values()
-            if isinstance(p.location, LegacyPluginLocation)
         ],
     }
     return json.dumps(raw)

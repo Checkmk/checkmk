@@ -79,7 +79,7 @@ if [ -z "$mysql_socket_string" ]; then
     mysql_socket_string=$(ps -fww -C mysqld | grep "socket" | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
 fi
 if [ -z "$mysql_socket_string" ]; then
-    mysql_socket_string=$(find /run/mysqld -type s 2>/dev/null)
+    mysql_socket_string=$(find /run/mysqld -type s ! -name 'mysqlx*' 2>/dev/null)
     mysql_socket_count=$(grep -c . <<<"$mysql_socket_string")
 fi
 if [ -z "$mysql_socket_string" ]; then

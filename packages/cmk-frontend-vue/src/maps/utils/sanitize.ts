@@ -30,11 +30,16 @@ export const SAFE_URL_SCHEMES = [
 const OS_HANDLER_SCHEMES = ['ssh:', 'telnet:', 'rdp:', 'vnc:']
 
 export function hasSafeUrlAuthority(url: string): boolean {
-  const scheme = url.slice(0, url.indexOf(':') + 1).toLowerCase()
+  // A browser strips ASCII tab/newline/CR from anywhere in a URL and trims
+  // leading control characters and spaces before it parses the scheme, so parse
+  // the same normalized form here. Without it " ssh://…" or "s\tsh://…" reads as
+  // a non-OS scheme and slips through, yet still launches the OS handler.
+  const normalized = url.replace(/[\t\n\r]/g, '').replace(/^[\p{Cc} ]+/u, '')
+  const scheme = normalized.slice(0, normalized.indexOf(':') + 1).toLowerCase()
   if (!OS_HANDLER_SCHEMES.includes(scheme)) {
     return true
   }
-  const authority = url.slice(scheme.length).replace(/^\/\//, '').split(/[/?#]/)[0] ?? ''
+  const authority = normalized.slice(scheme.length).replace(/^\/\//, '').split(/[/?#]/)[0] ?? ''
   const at = authority.lastIndexOf('@')
   const userinfo = at < 0 ? '' : authority.slice(0, at)
   const host = authority.slice(at + 1)

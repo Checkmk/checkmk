@@ -61,6 +61,15 @@ describe('sanitizeTemplateHtml', () => {
     expect(sanitizeTemplateHtml('<a href="vnc://kvm01%20-evil">x</a>')).toBe(
       '<a rel="noopener noreferrer nofollow" target="_blank">x</a>'
     )
+    // A browser strips leading control/space and tab/newline in the scheme
+    // before it parses, so these read as "ssh:" and launch the OS handler; the
+    // authority check must see the same normalized form and drop them.
+    expect(sanitizeTemplateHtml('<a href=" ssh://-oProxyCommand=curl+evil@switch01">x</a>')).toBe(
+      '<a rel="noopener noreferrer nofollow" target="_blank">x</a>'
+    )
+    expect(
+      sanitizeTemplateHtml('<a href="s&#9;sh://-oProxyCommand=curl+evil@switch01">x</a>')
+    ).toBe('<a rel="noopener noreferrer nofollow" target="_blank">x</a>')
     // An ordinary remote-access link is untouched.
     expect(sanitizeTemplateHtml('<a href="ssh://ops@switch01:2222">x</a>')).toBe(
       '<a href="ssh://ops@switch01:2222" rel="noopener noreferrer nofollow" target="_blank">x</a>'

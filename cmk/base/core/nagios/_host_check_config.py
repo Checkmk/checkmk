@@ -17,7 +17,6 @@ class HostCheckConfig:
     dst: str
     verify_site_python: bool
     locations: list[PluginLocation]
-    checks_to_load: list[str]
     # Services excluded from the core configuration by the "Disabled services"
     # ruleset.  The host check cannot determine these itself: it only loads the
     # plug-ins of the services it is supposed to check, and without the plug-in

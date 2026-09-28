@@ -33,7 +33,6 @@ from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     CheckPlugin,
     InventoryPlugin,
-    LegacyPluginLocation,
     SectionPlugin,
     ServiceID,
 )
@@ -170,7 +169,7 @@ def dump_precompiled_hostcheck(
     verify_site_python: bool = True,
     precompile_mode: PrecompileMode,
 ) -> str:
-    locations, legacy_checks_to_load = _make_needed_plugins_locations(
+    locations = _make_needed_plugins_locations(
         hosts_config,
         config_cache,
         passive_service_name_config,
@@ -220,7 +219,6 @@ def dump_precompiled_hostcheck(
         dst=str(HostCheckStore.host_check_file_path(config_path, hostname)),
         verify_site_python=verify_site_python,
         locations=locations,
-        checks_to_load=legacy_checks_to_load,
         disabled_service_ids=_get_disabled_service_ids(
             config_cache,
             passive_service_name_config,
@@ -252,10 +250,7 @@ def _make_needed_plugins_locations(
     ],
     hostname: HostName,
     plugins: AgentBasedPlugins,
-) -> tuple[  # we need `list` for the weird template replacement technique
-    list[PluginLocation],
-    list[str],
-]:
+) -> list[PluginLocation]:  # we need `list` for the weird template replacement technique
     needed_agent_based_plugins = _get_needed_plugins(
         config_cache, passive_service_name_config, enforced_services_table, hostname, plugins
     )
@@ -278,13 +273,8 @@ def _make_needed_plugins_locations(
         sections=itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
     ).values()
 
-    return (
-        _get_needed_agent_based_locations(
-            itertools.chain(needed_agent_based_sections, needed_agent_based_plugins)
-        ),
-        _get_needed_legacy_check_files(
-            itertools.chain(needed_agent_based_sections, needed_agent_based_plugins),
-        ),
+    return _get_needed_agent_based_locations(
+        itertools.chain(needed_agent_based_sections, needed_agent_based_plugins)
     )
 
 
@@ -360,16 +350,6 @@ def _get_disabled_service_ids(
             filter_mode=FilterMode.INCLUDE_CLUSTERED,
         ).ignored_services
     ]
-
-
-def _get_needed_legacy_check_files(
-    # Note: we don't *have* any InventoryPlugins that match the condition below, but
-    # it's easier to type it like this.
-    plugins: Iterable[SectionPlugin | CheckPlugin | InventoryPlugin],
-) -> list[str]:
-    return sorted(
-        {p.location.file_name for p in plugins if isinstance(p.location, LegacyPluginLocation)}
-    )
 
 
 def _get_needed_agent_based_locations(

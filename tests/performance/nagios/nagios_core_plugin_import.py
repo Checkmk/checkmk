@@ -53,10 +53,6 @@ class NagiosCorePluginImport:
             dst=self.host_check_file.as_posix().removesuffix(".py"),
             verify_site_python=True,
             locations=list(plugin_locations),
-            checks_to_load=[
-                f"{self.omd_root}/share/check_mk/checks/kernel",
-                f"{self.omd_root}/share/check_mk/checks/mem_linux",
-            ],
             # This host check loads all plug-ins, so there is nothing to exclude.
             disabled_service_ids=[],
             ipaddresses={self.host_name: self.host_ip},

@@ -20,7 +20,6 @@ py_library(
         "cmk/agent_based/internal/__init__.py",
         "cmk/agent_based/internal/_snmp.py",
         "cmk/agent_based/legacy/__init__.py",
-        "cmk/agent_based/legacy/_loading.py",
         "cmk/agent_based/legacy/conversion.py",
         "cmk/agent_based/legacy/v0_unstable.py",
         "cmk/agent_based/prediction_backend.py",

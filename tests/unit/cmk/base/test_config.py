@@ -13,7 +13,7 @@ import re
 import shutil
 import socket
 import time
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, fields, replace
 from pathlib import Path
 from typing import Literal, NoReturn
@@ -23,18 +23,7 @@ from pytest import MonkeyPatch
 
 import cmk.base.configlib.fetchers
 import cmk.ccc.debug
-import cmk.checkengine.plugin_backend as agent_based_register
 import cmk.utils.paths
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import (
-    CheckPlugin,
-    exists,
-    Result,
-    Service,
-    SimpleSNMPSection,
-    SNMPTree,
-    StringTable,
-)
 from cmk.base import config, notify
 from cmk.base.config import ConfigCache, EnforcedServicesTable
 from cmk.base.configlib.checkengine import CheckingConfig
@@ -60,8 +49,6 @@ from cmk.checkengine.discovery import (
 )
 from cmk.checkengine.fetcher_abc import Mode
 from cmk.checkengine.helper_interface import SourceType
-from cmk.checkengine.plugin_backend.check_plugins_legacy import convert_legacy_check_plugins
-from cmk.checkengine.plugin_backend.section_plugins_legacy import convert_legacy_sections
 from cmk.checkengine.plugins import (
     AutocheckEntry,
     CheckPluginName,
@@ -74,7 +61,7 @@ from cmk.checkengine.plugins import (
 from cmk.checkengine.plugins import CheckPlugin as CheckPluginAPI
 from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
-from cmk.discover_plugins import DiscoveredPlugins, family_libexec_dir, PluginLocation
+from cmk.discover_plugins import family_libexec_dir, PluginLocation
 from cmk.flags import ExperimentalFlagConfig
 from cmk.gui.watolib.sample_config import USE_NEW_DESCRIPTIONS_FOR_SETTING
 from cmk.password_store.v1 import Secret
@@ -2947,84 +2934,6 @@ def test_save_packed_config(monkeypatch: MonkeyPatch, config_path: Path) -> None
     )(config_path)
 
     assert precompiled_check_config.exists()
-
-
-def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
-    duplicate_legacy_plugin = LegacyCheckDefinition(
-        name="duplicate_plugin",
-        service_name="blah",
-        check_function=list,
-    )
-
-    def _noop_disco(section: None) -> Iterable[Service]:
-        yield from ()
-
-    def _noop_check(section: None) -> Iterable[Result]:
-        yield from ()
-
-    new_style_plugin = CheckPlugin(
-        name="duplicate_plugin",
-        service_name="Duplicate Plug-in new style",
-        discovery_function=_noop_disco,
-        check_function=_noop_check,
-    )
-
-    monkeypatch.setattr(
-        agent_based_register._discover,  # noqa: SLF001
-        "discover_all_plugins",
-        lambda *a, **kw: DiscoveredPlugins(  # noqa: ARG005
-            errors=(), plugins={PluginLocation(module="module", name="name"): new_style_plugin}
-        ),
-    )
-    converted_legacy_checks = convert_legacy_check_plugins(
-        (duplicate_legacy_plugin,),
-        {duplicate_legacy_plugin.name: "/path/to/duplicate_legacy_plugin.py"},
-        validate_creation_kwargs=False,
-        raise_errors=True,
-    )[1]
-    assert converted_legacy_checks
-    # new check plugins should win silently:
-    plugins = agent_based_register.load_all_plugins(
-        sections=(),
-        checks=converted_legacy_checks,
-        legacy_errors=(),
-        raise_errors=True,
-    )
-    # It's a new style plugin:
-    assert (
-        plugins.check_plugins[CheckPluginName("duplicate_plugin")].service_name
-        == "Duplicate Plug-in new style"
-    )
-
-
-def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
-    duplicate_plugin = (LegacyCheckDefinition(name="duplicate_plugin"),)
-
-    def dummy_parse_function(string_table: StringTable) -> int:
-        return 42
-
-    new_style_section = SimpleSNMPSection(
-        name="duplicate_plugin",
-        detect=exists(".1.2.3"),
-        fetch=SNMPTree(base=".1.2.3", oids=[]),
-        parse_function=dummy_parse_function,
-    )
-
-    monkeypatch.setattr(
-        agent_based_register._discover,  # noqa: SLF001
-        "discover_all_plugins",
-        lambda *a, **kw: DiscoveredPlugins(  # noqa: ARG005
-            errors=(), plugins={PluginLocation(module="module", name="name"): new_style_section}
-        ),
-    )
-
-    plugins = agent_based_register.load_all_plugins(
-        sections=convert_legacy_sections(duplicate_plugin, {}, raise_errors=True)[1],
-        checks=(),
-        legacy_errors=(),
-        raise_errors=True,  # we don't expect any errors
-    )
-    assert plugins.snmp_sections[SectionName("duplicate_plugin")].detect_spec
 
 
 @pytest.mark.parametrize(

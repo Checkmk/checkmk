@@ -29,7 +29,6 @@ import cmk.checkengine.plugin_backend as agent_based_register
 import cmk.utils
 import cmk.utils.paths
 from cmk import trace
-from cmk.agent_based.legacy import discover_legacy_checks, find_legacy_check_modules
 from cmk.base import default_config
 from cmk.base.configlib.agent import make_only_from_config
 from cmk.base.configlib.checkengine import CheckingConfig
@@ -69,19 +68,13 @@ from cmk.checkengine.fetchers.snmp import NoSelectedSNMPSections, SNMPFetcherCon
 from cmk.checkengine.filecache import MaxAge
 from cmk.checkengine.helper_interface import SourceType
 from cmk.checkengine.parser import ParserConfig, SectionStore
-from cmk.checkengine.plugin_backend.check_plugins_legacy import convert_legacy_check_plugins
-from cmk.checkengine.plugin_backend.section_plugins_legacy import (
-    convert_legacy_sections,
-)
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
-    AgentSectionPlugin,
     AutocheckEntry,
     CheckPlugin,
     CheckPluginName,
     SectionName,
     ServiceID,
-    SNMPSectionPlugin,
 )
 from cmk.checkengine.snmplib import (  # some of these are required in the modules' namespace to load the configuration!
     parse_oid_range_config,
@@ -1072,42 +1065,7 @@ NEGATE = tuple_rulesets.NEGATE
 
 @functools.lru_cache
 def load_all_plugins() -> AgentBasedPlugins:
-    with tracer.span("load_legacy_check_plugins"):
-        with tracer.span("discover_legacy_check_plugins"):
-            module_names = find_legacy_check_modules()
-
-        legacy_errors, sections, checks = load_and_convert_legacy_checks(module_names)
-
-    return agent_based_register.load_all_plugins(
-        sections=sections,
-        checks=checks,
-        legacy_errors=legacy_errors,
-        raise_errors=cmk.ccc.debug.enabled(),
-    )
-
-
-@tracer.instrument("load_and_convert_legacy_checks")
-def load_and_convert_legacy_checks(
-    module_list: Iterable[str],
-) -> tuple[list[str], Sequence[SNMPSectionPlugin | AgentSectionPlugin], Sequence[CheckPlugin]]:
-    discovered_legacy_checks = discover_legacy_checks(
-        module_list, raise_errors=cmk.ccc.debug.enabled()
-    )
-
-    section_errors, sections = convert_legacy_sections(
-        discovered_legacy_checks.sane_check_info,
-        discovered_legacy_checks.plugin_files,
-        raise_errors=cmk.ccc.debug.enabled(),
-    )
-    check_errors, checks = convert_legacy_check_plugins(
-        discovered_legacy_checks.sane_check_info,
-        discovered_legacy_checks.plugin_files,
-        # skip validation. These plugins are not changed anymore.
-        validate_creation_kwargs=False,
-        raise_errors=cmk.ccc.debug.enabled(),
-    )
-
-    return (section_errors + check_errors, sections, checks)
+    return agent_based_register.load_all_plugins(raise_errors=cmk.ccc.debug.enabled())
 
 
 # .

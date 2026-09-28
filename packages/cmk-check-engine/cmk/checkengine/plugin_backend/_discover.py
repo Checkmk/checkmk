@@ -12,12 +12,10 @@ from typing import assert_never
 
 import cmk.trace
 from cmk.agent_based import v2, v3_unstable
-from cmk.agent_based.legacy import find_legacy_check_modules
 from cmk.checkengine import plugins
 from cmk.checkengine.plugins import SectionName
 from cmk.discover_plugins import (
     discover_all_plugins,
-    discover_plugins_from_modules,
     DiscoveredPlugins,
     PluginGroup,
     PluginLocation,
@@ -48,10 +46,7 @@ tracer = cmk.trace.get_tracer()
 
 @tracer.instrument("load_all_plugins")
 def load_all_plugins(
-    sections: Iterable[plugins.SNMPSectionPlugin | plugins.AgentSectionPlugin],
-    checks: Iterable[plugins.CheckPlugin],
     *,
-    legacy_errors: Iterable[str],
     raise_errors: bool,
 ) -> plugins.AgentBasedPlugins:
     with tracer.span("discover_plugins"):
@@ -61,31 +56,12 @@ def load_all_plugins(
             skip_wrong_types=False,
             raise_errors=raise_errors,
         )
-        # HACK for migrating plugins: also search in legacy check modules.
-        # This is for convenience of the reviewer of a plugin migration only:
-        # This way we can separate migration and moving.
-        # We do it this way rather than listing individual modules because it
-        # prevents unrelated migrations from creating merge conflict.
-        if not_yet_moved_plugins := find_legacy_check_modules():
-            more_discovered_plugins = discover_plugins_from_modules(
-                ENTRY_POINT_PREFIXES,
-                not_yet_moved_plugins,
-                skip_wrong_types=False,
-                raise_errors=raise_errors,
-            )
-            discovered_plugins = DiscoveredPlugins(
-                [*discovered_plugins.errors, *more_discovered_plugins.errors],
-                {**discovered_plugins.plugins, **more_discovered_plugins.plugins},
-            )
 
     registered_agent_sections: dict[SectionName, plugins.AgentSectionPlugin] = {}
     registered_snmp_sections: dict[SectionName, plugins.SNMPSectionPlugin] = {}
     registered_check_plugins: dict[plugins.CheckPluginName, plugins.CheckPlugin] = {}
     registered_inventory_plugins: dict[plugins.InventoryPluginName, plugins.InventoryPlugin] = {}
-    errors = [
-        *legacy_errors,
-        *(f"Error in agent based plugin: {exc}" for exc in discovered_plugins.errors),
-    ]
+    errors = [f"Error in agent based plugin: {exc}" for exc in discovered_plugins.errors]
 
     with tracer.span("load_discovered_plugins"):
         for location, plugin in discovered_plugins.plugins.items():
@@ -104,8 +80,6 @@ def load_all_plugins(
                     raise
                 errors.append(f"Error in agent based plug-in {plugin.name} ({type(plugin)}): {exc}")
 
-    _add_legacy_sections(sections, registered_agent_sections, registered_snmp_sections)
-    _add_legacy_checks(checks, registered_check_plugins)
     return plugins.AgentBasedPlugins(
         agent_sections=registered_agent_sections,
         snmp_sections=registered_snmp_sections,
@@ -117,8 +91,6 @@ def load_all_plugins(
 
 def load_selected_plugins(
     locations: Iterable[PluginLocation],
-    sections: Iterable[plugins.SNMPSectionPlugin | plugins.AgentSectionPlugin],
-    checks: Iterable[plugins.CheckPlugin],
     *,
     validate: bool,
 ) -> plugins.AgentBasedPlugins:
@@ -138,8 +110,6 @@ def load_selected_plugins(
                 registered_inventory_plugins,
                 validate=validate,
             )
-    _add_legacy_sections(sections, registered_agent_sections, registered_snmp_sections)
-    _add_legacy_checks(checks, registered_check_plugins)
     return plugins.AgentBasedPlugins(
         agent_sections=registered_agent_sections,
         snmp_sections=registered_snmp_sections,
@@ -292,27 +262,3 @@ def _register_inventory_plugin(
         raise ValueError(f"duplicate inventory plug-in definition: {plugin.name}")
 
     registered_inventory_plugins[plugin.name] = plugin
-
-
-def _add_legacy_sections(
-    sections: Iterable[plugins.SNMPSectionPlugin | plugins.AgentSectionPlugin],
-    registered_agent_sections: dict[SectionName, plugins.AgentSectionPlugin],
-    registered_snmp_sections: dict[SectionName, plugins.SNMPSectionPlugin],
-) -> None:
-    for section in sections:
-        if section.name in registered_agent_sections or section.name in registered_snmp_sections:
-            continue
-        if isinstance(section, plugins.AgentSectionPlugin):
-            registered_agent_sections[section.name] = section
-        else:
-            registered_snmp_sections[section.name] = section
-
-
-def _add_legacy_checks(
-    checks: Iterable[plugins.CheckPlugin],
-    registered_check_plugins: dict[plugins.CheckPluginName, plugins.CheckPlugin],
-) -> None:
-    for check in checks:
-        if check.name in registered_check_plugins:
-            continue
-        registered_check_plugins[check.name] = check

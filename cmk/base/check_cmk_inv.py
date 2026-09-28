@@ -297,8 +297,7 @@ def load_checks() -> AgentBasedPlugins:
 
 def load_plugins_from_index(config_path: Path) -> AgentBasedPlugins:
     plugin_idx = plugin_index.load_plugin_index(config_path)
-    _errors, sections, checks = config.load_and_convert_legacy_checks(plugin_idx.legacy)
-    return load_selected_plugins(plugin_idx.locations, sections, checks, validate=False)
+    return load_selected_plugins(plugin_idx.locations, validate=False)
 
 
 if __name__ == "__main__":

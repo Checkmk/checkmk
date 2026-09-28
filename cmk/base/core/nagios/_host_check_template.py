@@ -36,7 +36,6 @@ CONFIG = HostCheckConfig(
     dst="",
     verify_site_python=False,
     locations=[PluginLocation("dummy.callsite.of.plugin.location", "dummy_name")],
-    checks_to_load=[],
     disabled_service_ids=[ServiceID(CheckPluginName("dummy_plugin"), None)],
     ipaddresses={HostName("somehost"): HostAddress("::")},
     ipv6addresses={},
@@ -95,8 +94,7 @@ def main() -> int:
         # serials while running checks.
         active_config_path = detect_latest_config_path(omd_root)
 
-        _errors, sections, checks = config.load_and_convert_legacy_checks(CONFIG.checks_to_load)
-        plugins = load_selected_plugins(CONFIG.locations, sections, checks, validate=debug)
+        plugins = load_selected_plugins(CONFIG.locations, validate=debug)
 
         app = make_app(omd_root)
         raw_config = {

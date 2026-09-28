@@ -196,7 +196,9 @@ TOOLING = [
     "//:node_modules/vue3-gettext",
 ]
 
-SRCS = [
+# The dev server serves no translations and falls back to English: compiling the
+# catalogs re-extracts them from all sources, which takes seconds per rebuild.
+DEV_SERVER_SRCS = [
     "//:eslintrc",
     "//packages/cmk-frontend:dist",
     ":node_modules/cmk-ui-library",
@@ -216,7 +218,6 @@ SRCS = [
     ":src_ts",
     ":src_vue",
     ":src_css",
-    ":compile_i18n",
     ":node_modules/@tanstack",
     ":node_modules/@testing-library",
     ":node_modules/@tsconfig",
@@ -254,11 +255,13 @@ SRCS = [
     ":node_modules/typescript",
     ":node_modules/vue-component-type-helpers",
     ":node_modules/vue-router",
-] + LOCALE_OUTS + glob([
+] + glob([
     "ui-component-library/**/*.png",
     "ui-component-library/**/*.svg",
     "ui-component-library/public/*",
 ])
+
+SRCS = DEV_SERVER_SRCS + LOCALE_OUTS
 
 vue_library(
     name = "test_vue",
@@ -397,7 +400,7 @@ vite_bin.vite_binary(name = "vite_server")
 js_run_devserver(
     name = "vite",
     chdir = package_name(),
-    data = TOOLING + SRCS,
+    data = TOOLING + DEV_SERVER_SRCS,
     tool = ":vite_server",
 )
 

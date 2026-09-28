@@ -124,6 +124,9 @@ common:ci --memory_profile=bazel-memory.profile
 common:ci --generate_json_trace_profile
 common:ci --profile=trace_profile.json
 common:ci --//bazel/toolchains/cc/gcc/local:gcc_path=opt
+# rules_python builds sdist-only packages with pip, whose build isolation fetches setuptools
+# from pypi.org. Offer the internal Nexus proxy as a second index.
+common:ci --repo_env=PIP_EXTRA_INDEX_URL=https://artifacts.lan.tribe29.com/repository/pypi-proxy/simple
 # the onwards set jobs and CPU limits shall be aligned with the k8s pod limits
 common:ci --jobs=6
 common:ci --loading_phase_threads=4

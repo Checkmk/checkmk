@@ -89,7 +89,7 @@ const comments = computed(() => commentRows(props.details, props.nowMs, _t))
   text-transform: uppercase;
   color: var(--font-color-dimmed);
   letter-spacing: 0.04em;
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-medium);
   margin: 4px 0 6px;
 }
 

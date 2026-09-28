@@ -11,8 +11,9 @@ full record. An aggregation additionally links into Setup: when its behaviour
 needs adjusting, the BI pack is where that happens.
 -->
 <script setup lang="ts">
-import CmkIcon from 'cmk-ui-library/components/CmkIcon'
-import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
+import CmkIconLink from 'cmk-ui-library/components/CmkIconLink.vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import type { ObjectState } from '@/maps/types/api'
@@ -76,37 +77,35 @@ const statePillStyle = computed(() => {
       </div>
     </div>
 
-    <a
-      v-if="checkmkUrl"
-      :href="checkmkUrl"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="maps-detail-header__icon-btn"
-      :title="_t('Open in Checkmk')"
-      :aria-label="_t('Open in Checkmk')"
-    >
-      <CmkIcon name="export-link" size="small" />
-    </a>
-    <a
-      v-if="setupUrl"
-      :href="setupUrl"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="maps-detail-header__icon-btn"
-      :title="_t('Edit in Checkmk Setup')"
-      :aria-label="_t('Edit in Checkmk Setup')"
-    >
-      <CmkIcon name="main-setup" size="small" />
-    </a>
-    <button
-      type="button"
-      class="maps-detail-header__icon-btn maps-detail-header__icon-btn--close"
-      :title="_t('Close')"
-      :aria-label="_t('Close')"
-      @click="emit('close')"
-    >
-      <span aria-hidden="true">{{ untranslated('×') }}</span>
-    </button>
+    <div class="maps-detail-header__actions">
+      <CmkIconLink
+        v-if="checkmkUrl"
+        name="export-link"
+        size="small"
+        :href="checkmkUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        :title="_t('Open in Checkmk')"
+        :aria-label="_t('Open in Checkmk')"
+      />
+      <CmkIconLink
+        v-if="setupUrl"
+        name="main-setup"
+        size="small"
+        :href="setupUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        :title="_t('Edit in Checkmk Setup')"
+        :aria-label="_t('Edit in Checkmk Setup')"
+      />
+      <CmkIconButton
+        name="close"
+        size="xsmall"
+        :title="_t('Close')"
+        :aria-label="_t('Close')"
+        @click="emit('close')"
+      />
+    </div>
   </header>
 </template>
 
@@ -141,7 +140,7 @@ const statePillStyle = computed(() => {
 }
 
 .maps-detail-header__name {
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-medium);
   color: var(--font-color);
   font-size: var(--font-size-large);
   overflow: hidden;
@@ -171,7 +170,7 @@ const statePillStyle = computed(() => {
   border-radius: 999px;
   padding: 1px 6px;
   flex-shrink: 0;
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-medium);
 }
 
 .maps-detail-header__state-line {
@@ -192,35 +191,13 @@ const statePillStyle = computed(() => {
 
 .maps-detail-header__since {
   font-size: var(--font-size-normal);
-  font-weight: var(--font-weight-bold);
   color: var(--font-color);
 }
 
-.maps-detail-header__icon-btn {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--input-hover-bg-color);
-  color: var(--font-color);
-  border: none;
-  cursor: pointer;
-  font-size: var(--font-size-xxlarge);
-  line-height: 22px;
-  text-align: center;
-  padding: 0;
-  display: inline-flex;
+.maps-detail-header__actions {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  text-decoration: none;
+  gap: var(--dimension-4);
   flex-shrink: 0;
-}
-
-.maps-detail-header__icon-btn--close {
-  color: var(--font-color-dimmed);
-}
-
-.maps-detail-header__icon-btn:hover {
-  color: var(--color-corporate-green-50);
-  background: var(--ux-theme-1);
 }
 </style>

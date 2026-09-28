@@ -111,7 +111,7 @@ const selectable = computed(() => new Set(props.selectableHosts))
   text-transform: uppercase;
   color: var(--font-color-dimmed);
   letter-spacing: 0.04em;
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-medium);
   margin: 4px 0 6px;
 }
 
@@ -130,6 +130,7 @@ const selectable = computed(() => new Set(props.selectableHosts))
   text-transform: uppercase;
   font-size: var(--font-size-small);
   letter-spacing: 0.04em;
+  font-weight: var(--font-weight-medium);
   margin-top: var(--dimension-3);
 }
 

@@ -119,8 +119,8 @@ const { _t } = usei18n()
   color: var(--font-color-dimmed);
   font-size: var(--font-size-small);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.04em;
+  font-weight: var(--font-weight-medium);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -143,7 +143,7 @@ const { _t } = usei18n()
   text-transform: uppercase;
   color: var(--font-color-dimmed);
   letter-spacing: 0.04em;
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-medium);
   margin: 4px 0 6px;
 }
 
@@ -181,8 +181,8 @@ const { _t } = usei18n()
   color: var(--font-color-dimmed);
   font-size: var(--font-size-small);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.04em;
+  font-weight: var(--font-weight-medium);
   padding: 4px 0;
   user-select: none;
 }

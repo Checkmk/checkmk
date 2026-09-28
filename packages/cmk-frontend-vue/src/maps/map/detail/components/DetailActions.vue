@@ -140,12 +140,12 @@ function groupHint(one: string): string {
 }
 
 .maps-detail-actions__title {
-  font-size: 9px;
+  font-size: var(--font-size-small);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   color: var(--font-color-dimmed);
   margin: 0;
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-medium);
 }
 
 .maps-detail-actions__grid {

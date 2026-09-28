@@ -48,7 +48,7 @@ defineProps<{
 .maps-detail-meta-list {
   display: grid;
   grid-template-columns: 90px 1fr;
-  gap: 4px 12px;
+  gap: 6px 12px;
   margin: 0;
   font-size: 11px;
 }

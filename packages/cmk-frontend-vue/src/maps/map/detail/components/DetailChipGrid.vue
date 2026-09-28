@@ -91,12 +91,12 @@ function elementOf(chip: DetailChip): 'a' | 'button' | 'span' {
 }
 
 .maps-detail-chip-grid__label {
-  font-size: 11px;
-  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--font-color-dimmed);
-  margin-bottom: var(--dimension-3);
+  margin-bottom: var(--dimension-4);
 }
 
 .maps-detail-chip-grid__chip {
@@ -138,7 +138,7 @@ button.maps-detail-chip-grid__chip:hover {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--font-color-dimmed);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-medium);
 }
 
 /* The tint tracks Checkmk's own state colours, so a chip and the object it

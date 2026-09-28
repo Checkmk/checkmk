@@ -368,32 +368,6 @@ function onDragStart(e: DragEvent, payload: BindingDropPayload): void {
   padding: 8px 12px 0;
 }
 
-/* Vendored CmkTabs default to a boxy bar — slim it to an underline tab strip
-   that fits the 260px panel, matching the sibling DetailDrawer. */
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
-.maps-presentation-data-panel__tabs :deep(.cmk-tabs__list) {
-  gap: 0;
-  border-bottom: 1px solid var(--default-border-color, rgb(255 255 255 / 8%));
-}
-
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
-.maps-presentation-data-panel__tabs :deep(.cmk-tab__li) {
-  padding: 5px 12px !important;
-  font-size: var(--font-size-normal);
-  line-height: 1;
-  border-radius: 0;
-  border-color: transparent;
-  background: transparent;
-  color: var(--font-color-dimmed);
-}
-
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
-.maps-presentation-data-panel__tabs :deep(.cmk-tab__li[data-state='active']) {
-  color: var(--font-color);
-  background: transparent;
-  border-bottom: 2px solid var(--color-corporate-green-50, rgb(34 197 94));
-}
-
 .maps-presentation-data-panel__search {
   margin: 10px 12px 0;
   width: calc(100% - 24px);

@@ -92,7 +92,6 @@ from cmk.checkengine.plugins import (
     DiscoveryPlugin,
     FinalCheckResult,
     FinalDiscoveryResult,
-    LegacyPluginLocation,
     ParsedSectionName,
     SectionName,
     ServiceID,
@@ -106,6 +105,7 @@ from cmk.checkengine.sectionparser import (
 )
 from cmk.checkengine.snmplib import SNMPRawDataElem
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
+from cmk.discover_plugins import PluginLocation
 from cmk.ruleset_matcher.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.ruleset_matcher.ruleset_name import RuleSetName
 from cmk.utils.everythingtype import EVERYTHING
@@ -168,7 +168,7 @@ _TEST_SECTION = AgentSectionPlugin(
     host_label_ruleset_name=None,
     host_label_ruleset_type="merged",
     supersedes=set(),
-    location=LegacyPluginLocation(file_name="<test>"),
+    location=PluginLocation(module="<test>", name="<test>"),
 )
 
 _TEST_LABELS_SECTION = AgentSectionPlugin(
@@ -180,7 +180,7 @@ _TEST_LABELS_SECTION = AgentSectionPlugin(
     host_label_ruleset_name=None,
     host_label_ruleset_type="merged",
     supersedes=set(),
-    location=LegacyPluginLocation(file_name="<test>"),
+    location=PluginLocation(module="<test>", name="<test>"),
 )
 
 
@@ -200,7 +200,7 @@ _TEST_CHECK_PLUGIN = InternalCheckPlugin(
     check_default_parameters=None,
     check_ruleset_name=None,
     cluster_check_function=None,
-    location=LegacyPluginLocation(file_name="<test>"),
+    location=PluginLocation(module="<test>", name="<test>"),
 )
 
 _TEST_AGENT_SECTIONS: Mapping[SectionName, AgentSectionPlugin] = {

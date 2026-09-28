@@ -31,7 +31,6 @@ from cmk.checkengine.plugins import (
     AgentParseFunction,
     AgentSectionPlugin,
     HostLabelFunction,
-    LegacyPluginLocation,
     ParsedSectionName,
     SectionName,
     SimpleSNMPParseFunction,
@@ -237,7 +236,7 @@ def _create_supersedes(
 
 def create_agent_section_plugin(
     agent_section_spec: AgentSection,
-    location: PluginLocation | LegacyPluginLocation,
+    location: PluginLocation,
     *,
     validate: bool,
 ) -> AgentSectionPlugin:
@@ -279,7 +278,7 @@ def create_agent_section_plugin(
 
 def create_metrics_section_plugin(
     section_spec: MetricsSection,
-    location: PluginLocation | LegacyPluginLocation,
+    location: PluginLocation,
     *,
     validate: bool,
 ) -> AgentSectionPlugin:
@@ -332,7 +331,7 @@ def create_metrics_section_plugin(
 
 def create_snmp_section_plugin(
     snmp_section_spec: SimpleSNMPSection | SNMPSection,
-    location: PluginLocation | LegacyPluginLocation,
+    location: PluginLocation,
     *,
     validate: bool,
 ) -> SNMPSectionPlugin:

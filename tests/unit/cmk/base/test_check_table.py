@@ -26,11 +26,11 @@ from cmk.checkengine.plugins import (
     AutocheckEntry,
     CheckPlugin,
     CheckPluginName,
-    LegacyPluginLocation,
     ParsedSectionName,
     ServiceID,
 )
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
+from cmk.discover_plugins import PluginLocation
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
@@ -68,7 +68,7 @@ def _make_plugin(
         check_default_parameters=check_default_parameters,
         check_ruleset_name=None,
         cluster_check_function=None,
-        location=LegacyPluginLocation(file_name="<test>"),
+        location=PluginLocation(module="<test>", name="<test>"),
     )
 
 

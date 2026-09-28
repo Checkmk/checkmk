@@ -54,7 +54,6 @@ from cmk.checkengine.plugins import (
     CheckPluginName,
     InventoryPlugin,
     InventoryPluginName,
-    LegacyPluginLocation,
     SectionName,
     ServiceID,
 )
@@ -1473,7 +1472,7 @@ def test_host_config_static_checks(
             check_default_parameters=None,
             check_ruleset_name=None,
             cluster_check_function=None,
-            location=LegacyPluginLocation(""),
+            location=PluginLocation(module="<test>", name="<test>"),
         )
 
     ts = Scenario()

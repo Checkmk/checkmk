@@ -11,7 +11,6 @@ from ._check import FinalDiscoveryFunction as FinalDiscoveryFunction
 from ._check import FinalDiscoveryResult as FinalDiscoveryResult
 from ._check import ServiceID as ServiceID
 from ._combined import AgentBasedPlugins as AgentBasedPlugins
-from ._common import LegacyPluginLocation as LegacyPluginLocation
 from ._common import RuleSetTypeName as RuleSetTypeName
 from ._common import SectionName as SectionName
 from ._discovery import AutocheckEntry as AutocheckEntry

@@ -18,7 +18,6 @@ from cmk.checkengine.plugins import (
     FinalCheckFunction,
     FinalCheckResult,
     FinalDiscoveryFunction,
-    LegacyPluginLocation,
     ParsedSectionName,
 )
 from cmk.discover_plugins import PluginLocation
@@ -181,7 +180,7 @@ def create_check_plugin(
     check_default_parameters: Mapping[str, object] | None = None,
     check_ruleset_name: str | None = None,
     cluster_check_function: FinalCheckFunction | None = None,
-    location: PluginLocation | LegacyPluginLocation,
+    location: PluginLocation,
     validate_kwargs: bool = True,
 ) -> CheckPlugin:
     """Return an CheckPlugin object after validating and converting the arguments one by one

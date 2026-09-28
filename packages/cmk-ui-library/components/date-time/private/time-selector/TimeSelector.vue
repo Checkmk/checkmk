@@ -151,6 +151,7 @@ onMounted(scrollSelectedIntoView)
       @navigate="onMeridiemNavigate"
       @commit="emit('commit')"
     />
+    <div v-else class="cmk-time-selector__meridiem" aria-hidden="true"></div>
   </div>
 </template>
 

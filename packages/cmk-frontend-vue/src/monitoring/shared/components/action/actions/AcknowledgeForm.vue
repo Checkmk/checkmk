@@ -31,8 +31,6 @@ import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequi
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, watch } from 'vue'
 
-import { ACTION_DATE_TIME_SETTINGS } from '@/monitoring/shared/constants'
-
 import type { ActionTargetKind } from '../types'
 
 const props = withDefaults(
@@ -134,7 +132,6 @@ watch(model, (values) => emit('update:valid', isAcknowledgeValid(values)), {
           v-if="model.expireOnEnabled"
           v-model="model.expireOn"
           :nullable="true"
-          :settings="ACTION_DATE_TIME_SETTINGS"
           :label="_t('Choose an expiry date & time')"
         />
       </CmkCheckbox>

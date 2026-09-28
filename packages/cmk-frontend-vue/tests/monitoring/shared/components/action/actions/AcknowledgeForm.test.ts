@@ -166,10 +166,3 @@ test('an expiry date makes the form valid again', async () => {
 
   expect(emitted('update:valid')?.at(-1)).toEqual([true])
 })
-
-test('the expiry picker reads times as 24 hours, so no AM/PM segment widens it', async () => {
-  mountForm({ expireOnEnabled: true, expireOn: now(getLocalTimeZone()) })
-
-  expect(screen.getByLabelText('Time')).toBeInTheDocument()
-  expect(screen.queryByRole('spinbutton', { name: 'AM or PM' })).not.toBeInTheDocument()
-})

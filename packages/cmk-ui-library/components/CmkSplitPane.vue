@@ -18,7 +18,6 @@ export interface CmkSplitPaneProps {
   rightMinSize?: number
   rightMaxSize?: number
   rightDefaultSize?: number
-  rightMinWidth?: string | undefined
   sizeUnit?: '%' | 'px'
   keyboardResizeBy?: number
   hideHandleWhenCollapsed?: boolean
@@ -29,7 +28,6 @@ const {
   rightMinSize = 20,
   rightMaxSize = 50,
   rightDefaultSize = 30,
-  rightMinWidth,
   sizeUnit = '%',
   keyboardResizeBy = 10,
   hideHandleWhenCollapsed = true,
@@ -97,7 +95,6 @@ function focusHandle(event: PointerEvent): void {
       :max-size="rightMaxSize"
       :default-size="rightDefaultSize"
       :size-unit="sizeUnit"
-      :style="rightMinWidth ? { minWidth: rightMinWidth } : undefined"
       class="cmk-split-pane__panel"
       @collapse="onCollapse"
       @expand="onExpand"

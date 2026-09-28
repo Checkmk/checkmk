@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { GlobalSettingsVariable } from 'cmk-shared-typing/typescript/global_settings'
+import CmkChip from 'cmk-ui-library/components/CmkChip.vue'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
@@ -32,23 +33,6 @@ const value = computed(() => props.variable.current.value)
 
 <template>
   <div class="global-settings-variable-row" @click="emit('edit')">
-    <GlobalSettingsRow
-      :label="untranslated(variable.spec.title)"
-      class="global-settings-variable-row__row"
-    >
-      <template #label>
-        <GlobalSettingsHighlightedText :text="variable.spec.title" :query="query" />
-      </template>
-      <template #default>
-        <div class="global-settings-variable-row__value">
-          <GlobalSettingsInlineToggle v-if="isBooleanChoice" :variable="variable" />
-          <FormReadonly v-else :spec="variable.spec" :data="value" :backend-validation="[]" />
-          <span v-if="modified" class="global-settings-variable-row__modified">
-            {{ _t('(modified)') }}
-          </span>
-        </div>
-      </template>
-    </GlobalSettingsRow>
     <CmkIconButton
       name="edit"
       size="small"
@@ -56,6 +40,23 @@ const value = computed(() => props.variable.current.value)
       class="global-settings-variable-row__edit"
       @click.stop="emit('edit')"
     />
+    <GlobalSettingsRow
+      :label="untranslated(variable.spec.title)"
+      class="global-settings-variable-row__row"
+    >
+      <template #label>
+        <GlobalSettingsHighlightedText :text="variable.spec.title" :query="query" />
+      </template>
+      <template v-if="modified" #label-end>
+        <CmkChip as-div size="small" color="others" variant="outline">
+          {{ _t('modified') }}
+        </CmkChip>
+      </template>
+      <template #default>
+        <GlobalSettingsInlineToggle v-if="isBooleanChoice" :variable="variable" />
+        <FormReadonly v-else :spec="variable.spec" :data="value" :backend-validation="[]" />
+      </template>
+    </GlobalSettingsRow>
   </div>
 </template>
 
@@ -65,7 +66,7 @@ const value = computed(() => props.variable.current.value)
 
   display: flex;
   min-width: min-content;
-  align-items: flex-start;
+  align-items: baseline;
   gap: var(--dimension-4);
   padding: var(--dimension-3) var(--dimension-5);
   border-radius: var(--border-radius-half);
@@ -83,21 +84,8 @@ const value = computed(() => props.variable.current.value)
   min-width: min-content;
 }
 
-.global-settings-variable-row__value {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: var(--dimension-3);
-}
-
-.global-settings-variable-row__modified {
-  color: var(--font-color-secondary);
-  white-space: nowrap;
-}
-
 .global-settings-variable-row__edit {
   flex-shrink: 0;
-  align-self: center;
   opacity: 0;
 
   .global-settings-variable-row:hover &,

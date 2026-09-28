@@ -385,13 +385,13 @@ describe('GlobalSettingsApp accordion', () => {
     expect(screen.getByRole('button', { name: 'Edit Site setting' })).toHaveFocus()
   })
 
-  test('only modified rows are marked', async () => {
+  test('only modified rows are marked, next to the setting name', async () => {
     render(GlobalSettingsApp, { props: { ...data, topics: [...data.topics, secondTopic] } })
     await userEvent.click(screen.getByRole('button', { name: 'Expand all' }))
-    expect(screen.getAllByText('(modified)')).toHaveLength(1)
-    expect(
-      screen.getByText('Site setting').closest('.global-settings-variable-row')
-    ).toHaveTextContent('(modified)')
+    expect(screen.getAllByText('modified')).toHaveLength(1)
+    expect(screen.getByText('Site setting').closest('label')).toContainElement(
+      screen.getByText('modified')
+    )
   })
 })
 
@@ -448,7 +448,7 @@ describe('GlobalSettingsApp', () => {
   test('opening the editor loads the server value and refreshes the row', async () => {
     await openEditor()
     expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByText('(modified)')).toBeInTheDocument()
+    expect(screen.getByText('modified')).toBeInTheDocument()
     await waitFor(() => expect(screen.getByRole('spinbutton')).toHaveValue(15))
   })
 
@@ -506,7 +506,7 @@ describe('GlobalSettingsApp', () => {
     await waitFor(() => expect(requests.map((r) => r.method)).toEqual(['GET', 'DELETE', 'GET']))
     expect(requests[1]!.ifMatch).toBe('"v1"')
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    expect(screen.queryByText('(modified)')).not.toBeInTheDocument()
+    expect(screen.queryByText('modified')).not.toBeInTheDocument()
     const row = settingRow()
     expect(row).not.toHaveTextContent('15')
     expect(row).toHaveTextContent('10')
@@ -520,7 +520,7 @@ describe('GlobalSettingsApp', () => {
     await waitFor(() => expect(requests.map((r) => r.method)).toEqual(['GET', 'PUT']))
     expect(requests[1]).toMatchObject({ ifMatch: '"v1"', body: { value: 10 } })
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    expect(screen.getByText('(modified)')).toBeInTheDocument()
+    expect(screen.getByText('modified')).toBeInTheDocument()
   })
 
   test('a choice created after the page was loaded can be saved and is shown in the row', async () => {
@@ -612,7 +612,7 @@ describe('GlobalSettingsApp', () => {
 
     await waitFor(() => expect(requests.map((r) => r.method)).toEqual(['GET', 'DELETE', 'GET']))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    expect(screen.queryByText('(modified)')).not.toBeInTheDocument()
+    expect(screen.queryByText('modified')).not.toBeInTheDocument()
   })
 
   test('toggling a boolean setting saves the flipped value inline without a dialog', async () => {
@@ -628,7 +628,7 @@ describe('GlobalSettingsApp', () => {
     await waitFor(() => expect(requests.map((r) => r.method)).toEqual(['PUT']))
     expect(requests[0]).toMatchObject({ ifMatch: '*', body: { value: true } })
     await waitFor(() => expect(inlineSwitch).toHaveAttribute('aria-checked', 'true'))
-    expect(screen.getByText('(modified)')).toBeInTheDocument()
+    expect(screen.getByText('modified')).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
@@ -670,7 +670,7 @@ describe('GlobalSettingsApp', () => {
 
     expect(await screen.findByText(/ETag mismatch/)).toBeInTheDocument()
     expect(inlineSwitch).toHaveAttribute('aria-checked', 'false')
-    expect(screen.queryByText('(modified)')).not.toBeInTheDocument()
+    expect(screen.queryByText('modified')).not.toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
@@ -1190,8 +1190,11 @@ describe('GlobalSettingsApp search', () => {
   }
 
   // Highlighting splits the text around a <mark>, which getByText does not see.
+  // The title is the innermost span holding the whole text.
   const label = (text: string) => (_content: string, element: Element | null) =>
-    element?.tagName === 'SPAN' && element.textContent?.trim() === text
+    element?.tagName === 'SPAN' &&
+    element.textContent?.trim() === text &&
+    element.querySelector('span') === null
 
   test('a query matching one variable hides the topics without a hit', async () => {
     const user = setup()
@@ -1309,7 +1312,7 @@ describe('GlobalSettingsApp search', () => {
     const row = screen
       .getByText(label('Enable piggyback-hub'))
       .closest('.global-settings-variable-row')
-    expect(row).toHaveTextContent('(modified)')
+    expect(row).toHaveTextContent('modified')
     expect(screen.getByRole('switch', { name: 'Toggle Enable piggyback-hub' })).toHaveAttribute(
       'aria-checked',
       'true'

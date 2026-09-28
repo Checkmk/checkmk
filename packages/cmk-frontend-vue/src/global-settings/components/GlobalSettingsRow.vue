@@ -17,7 +17,12 @@ defineProps<{
   <div class="global-settings-row">
     <div class="global-settings-row__label">
       <CmkLabel :help="help" cursor="inherit" dots grow>
-        <slot name="label">{{ label }}</slot>
+        <span class="global-settings-row__label-content">
+          <span class="global-settings-row__label-text">
+            <slot name="label">{{ label }}</slot>
+          </span>
+          <slot name="label-end" />
+        </span>
       </CmkLabel>
     </div>
     <div class="global-settings-row__value">
@@ -42,6 +47,19 @@ defineProps<{
   overflow: hidden;
   white-space: nowrap;
   contain: inline-size;
+}
+
+.global-settings-row__label-content {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dimension-3);
+  max-width: 100%;
+}
+
+.global-settings-row__label-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .global-settings-row__value {

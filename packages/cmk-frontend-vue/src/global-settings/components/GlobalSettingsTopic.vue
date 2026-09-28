@@ -111,7 +111,10 @@ const siteOverrideFilterLabel = computed(() =>
   padding: 20px 30px;
 }
 
+/* The rows reach into the left padding by their small edit icon (12px) and
+   its gap, so the setting names stay aligned with the rest of the content. */
 .global-settings-topic__rows {
+  margin-left: calc(-12px - var(--dimension-4));
   overflow-x: auto;
 }
 

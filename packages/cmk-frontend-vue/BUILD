@@ -134,8 +134,6 @@ js_run_binary(
     name = "extract_pot_file",
     srcs = [
         "gettext.config.js",
-        ":demo_ts",
-        ":demo_vue",
         ":node_modules/vue3-gettext",
         ":src_ts",
         ":src_vue",

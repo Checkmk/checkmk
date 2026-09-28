@@ -2,9 +2,9 @@ export default {
   input: {
     path: './',
     include: [
-      '{src,demo}/**/*.js',
-      '{src,demo}/**/*.ts',
-      '{src,demo}/**/*.vue',
+      'src/**/*.js',
+      'src/**/*.ts',
+      'src/**/*.vue',
       // cmk-ui-library strings land in this package's catalog (single messages.pot);
       // the package registers no catalogs of its own.
       '../cmk-ui-library/{lib,components}/**/*.ts',

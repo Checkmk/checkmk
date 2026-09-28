@@ -30,6 +30,14 @@ from tests.unit.cmk.gui.helpers.dashboard_api_test_helper import (
     create_widget,
 )
 
+_INHERITED = {
+    "type": "inherited",
+    "location": {"type": "views", "name": "searchhost"},
+    "include_context": True,
+    "include_time_range": True,
+    "show_filter_form": False,
+}
+
 
 @pytest.mark.parametrize(
     "title_url,expected_url",
@@ -846,22 +854,15 @@ class TestSharePermissionEnforcement:
         )
 
 
-_INHERITED = {
-    "type": "inherited",
-    "location": {"type": "views", "name": "searchhost"},
-    "include_context": True,
-    "include_time_range": True,
-    "show_filter_form": False,
-}
-
-
-def _write_host_stats(clients: ClientRegistry, contextual_link: dict[str, object]) -> Response:
+def _write_stats_widget(
+    clients: ClientRegistry, widget_type: str, contextual_link: dict[str, object]
+) -> Response:
     return clients.DashboardClient.create_relative_grid_dashboard(
         create_dashboard_payload(
             "test_dashboard",
             {
                 "test_widget": create_widget(
-                    {"type": "host_stats", "contextual_link": contextual_link}
+                    {"type": widget_type, "contextual_link": contextual_link}
                 )
             },
         ),
@@ -877,15 +878,16 @@ def _written_link(clients: ClientRegistry) -> dict[str, object]:
     return contextual_link
 
 
-def test_an_inherited_link_round_trips(clients: ClientRegistry) -> None:
-    _write_host_stats(clients, _INHERITED)
+@pytest.mark.parametrize("widget_type", ["host_stats", "service_stats"])
+def test_an_inherited_link_round_trips(clients: ClientRegistry, widget_type: str) -> None:
+    _write_stats_widget(clients, widget_type, _INHERITED)
 
     assert _written_link(clients) == _INHERITED
 
 
 def test_a_link_to_a_forbidden_target_is_rejected_on_write(clients: ClientRegistry) -> None:
-    response = _write_host_stats(
-        clients, {**_INHERITED, "location": {"type": "views", "name": "no_such_view"}}
+    response = _write_stats_widget(
+        clients, "host_stats", {**_INHERITED, "location": {"type": "views", "name": "no_such_view"}}
     )
 
     assert response.status_code == 400, (
@@ -900,6 +902,6 @@ def test_a_link_to_a_forbidden_target_is_rejected_on_write(clients: ClientRegist
 
 
 def test_an_explicit_default_reads_back_as_default(clients: ClientRegistry) -> None:
-    _write_host_stats(clients, {"type": "default"})
+    _write_stats_widget(clients, "host_stats", {"type": "default"})
 
     assert _written_link(clients) == {"type": "default"}

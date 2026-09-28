@@ -19,7 +19,7 @@ class EffectiveLink:
     include_context: bool
     include_time_range: bool
     show_filter_form: bool
-    # TODO: add the configured filters once all filters are defined.
+    # TODO (CMK-39160): add the configured filters once all filters are defined.
 
     def to_api(self) -> ResolvedLink:
         return ResolvedLink(
@@ -40,4 +40,4 @@ def link_properties_for(
         filter_name: EncodedFilter(status="encoded", variables=dict(variables))
         for filter_name, variables in native_key.items()
     }
-    return LinkProperties(links=[dict(encoded) for _link in links])
+    return LinkProperties(links=[dict(encoded) for _ in links])

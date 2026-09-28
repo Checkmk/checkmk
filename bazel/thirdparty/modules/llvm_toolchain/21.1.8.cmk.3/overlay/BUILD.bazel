@@ -10,8 +10,6 @@ load("@bazel_skylib//rules/directory:subdirectory.bzl", "subdirectory")
 
 package(default_visibility = ["//visibility:public"])
 
-exports_files(["bin/llvm-rc"])
-
 native_binary(
     name = "clang-cl",
     src = "bin/clang-cl",
@@ -49,6 +47,13 @@ native_binary(
     name = "llvm-readobj",
     src = "bin/llvm-readobj",
     out = "llvm-readobj",
+)
+
+native_binary(
+    name = "llvm-rc",
+    src = "bin/llvm-rc",
+    out = "llvm-rc",
+    data = [":compiler_builtins"],
 )
 
 native_binary(

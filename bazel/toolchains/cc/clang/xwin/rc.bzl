@@ -23,16 +23,13 @@ def _windows_rc_impl(ctx):
     args.add("/FO", out)
     args.add(ctx.file.src)
 
-    clang = ctx.attr._clang[DefaultInfo].default_runfiles.files
-
     ctx.actions.run(
-        executable = ctx.file._llvm_rc,
+        executable = ctx.attr._llvm_rc[DefaultInfo].files_to_run,
         arguments = [args],
         inputs = depset(
             direct = [ctx.file.src] + ctx.files.hdrs,
             transitive = sysroot_inputs,
         ),
-        tools = depset([ctx.file._llvm_rc], transitive = [clang]),
         outputs = [out],
         mnemonic = "WindowsResource",
         progress_message = "Compiling Windows resource %{label}",
@@ -69,12 +66,10 @@ windows_rc = rule(
             doc = "Windows SDK / CRT include directories; defaults to the " +
                   "@xwin_sysroot set in the cc toolchain's search order.",
         ),
-        "_clang": attr.label(
-            default = "@llvm_toolchain//:compiler_builtins",
-        ),
         "_llvm_rc": attr.label(
-            allow_single_file = True,
-            default = "@llvm_toolchain//:bin/llvm-rc",
+            default = "@llvm_toolchain//:llvm-rc",
+            executable = True,
+            cfg = "exec",
         ),
     },
 )

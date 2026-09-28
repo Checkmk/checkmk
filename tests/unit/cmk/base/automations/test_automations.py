@@ -3,13 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
+from typing import override
+
+import pytest
 from pytest import MonkeyPatch
 
 import cmk.base.automations.check_mk as automations
-from cmk.automations.results import AnalyseHostResult, GetServicesLabelsResult
+from cmk.automations.results import (
+    ABCAutomationResult,
+    AnalyseHostResult,
+    GetServicesLabelsResult,
+    SerializedResult,
+)
+from cmk.automations.types import AutomationID
+from cmk.base.automations.automations import Automation, AutomationError, Automations
 from cmk.base.community_app import make_app
 from cmk.base.config import LoadingResult
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.version import Version
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.ruleset_matcher.labels import LabelSource
 from cmk.ruleset_matcher.matcher import RuleSpec
@@ -100,3 +113,46 @@ def test_service_labels(monkeypatch: MonkeyPatch) -> None:
             "CPU temp": {"label1": "val1"},
         }
     )
+
+
+class _Result(ABCAutomationResult):
+    @staticmethod
+    @override
+    def automation_call() -> AutomationID:
+        return AutomationID("dummy")
+
+    @override
+    def serialize(self, for_cmk_version: Version) -> SerializedResult:
+        return SerializedResult("dummy")
+
+
+def test_handler_output_does_not_reach_stdout(capsys: pytest.CaptureFixture[str]) -> None:
+    def chatty_handler(
+        _app: object, _args: list[str], _plugins: object, _loading_result: object
+    ) -> _Result:
+        sys.stdout.write("chatter")
+        return _Result()
+
+    engine = Automations(
+        [Automation(name=AutomationID("chatty"), handler=chatty_handler, result=_Result)]
+    )
+
+    engine.execute(make_app(), AutomationID("chatty"), [])
+
+    assert capsys.readouterr().out == ""
+
+
+@pytest.mark.usefixtures("disable_debug")
+def test_output_of_a_failing_handler_reaches_stdout(capsys: pytest.CaptureFixture[str]) -> None:
+    def failing_handler(
+        _app: object, _args: list[str], _plugins: object, _loading_result: object
+    ) -> _Result:
+        sys.stdout.write("chatter")
+        raise MKGeneralException("broken")
+
+    engine = Automations(
+        [Automation(name=AutomationID("failing"), handler=failing_handler, result=_Result)]
+    )
+
+    assert engine.execute(make_app(), AutomationID("failing"), []) is AutomationError.KNOWN_ERROR
+    assert capsys.readouterr().out == "chatter"

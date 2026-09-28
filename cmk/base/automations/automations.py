@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import enum
+import io
 import logging
-import os
-from collections.abc import Callable, Iterable, Mapping
-from contextlib import nullcontext, redirect_stdout
+import sys
+from collections.abc import Callable, Iterable, Iterator, Mapping
+from contextlib import contextmanager, nullcontext, redirect_stdout
 from dataclasses import dataclass
 from typing import Final
 
@@ -111,7 +112,7 @@ class Automations:
                     f" (available: {', '.join(sorted(self._automations))})"
                 )
 
-            with tracer.span(f"execute_automation[{cmd}]"):
+            with tracer.span(f"execute_automation[{cmd}]"), _stdout_only_on_failure():
                 result = automation.handler(app, args, plugins, loading_result)
 
         except (MKGeneralException, MKTimeout) as e:
@@ -138,11 +139,25 @@ class Automations:
                 return args, None
 
 
+@contextmanager
+def _stdout_only_on_failure() -> Iterator[None]:
+    """Hold back what the handler prints, and pass it on only if the handler fails.
+
+    On success, stdout is where "cmk --automation" writes the serialized result,
+    so nothing else may reach it. On failure, what the handler printed is part of
+    the error report: the callers show stdout to the user.
+    """
+    buffer = io.StringIO()
+    try:
+        with redirect_stdout(buffer):
+            yield
+    except BaseException:
+        sys.stdout.write(buffer.getvalue())
+        raise
+
+
 def load_plugins() -> AgentBasedPlugins:
-    with (
-        tracer.span("load_all_plugins"),
-        redirect_stdout(open(os.devnull, "w")),
-    ):
+    with tracer.span("load_all_plugins"):
         return config.load_all_plugins()
 
 

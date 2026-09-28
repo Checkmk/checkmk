@@ -1039,11 +1039,7 @@ def _automation_autodiscovery(
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> AutodiscoveryResult:
-    # TODO: Is this redirect still needed?
-    with redirect_stdout(open(os.devnull, "w")):
-        result = _execute_autodiscovery(app, plugins, loading_result)
-
-    return AutodiscoveryResult(*result)
+    return AutodiscoveryResult(*_execute_autodiscovery(app, plugins, loading_result))
 
 
 def _make_configured_notify_relay(
@@ -2623,9 +2619,6 @@ def _execute_silently(
     )
     hosts_config = rctx.hosts_config
 
-    # Config generation logic writes directly to STDOUT. We discard it here.
-    # TODO: Should we not capture and forward it to the logs?
-
     checker_config_writer = make_packed_config_writer(
         {f.name: getattr(env.loaded_config, f.name) for f in fields(env.loaded_config)},
         hosts_config,
@@ -2633,47 +2626,46 @@ def _execute_silently(
         is_active=config_cache.is_active,
     )
 
-    with redirect_stdout(open(os.devnull, "w")):
-        try:
-            do_restart(
-                config_cache,
-                core_objects_config,
-                hosts_config,
-                env.host_tags,
-                env.final_service_name_config,
-                env.passive_service_name_config,
-                env.enforced_services_table,
-                env.ip_lookup_config.ip_stack_config,
-                env.ip_lookup_config.default_address_family,
-                rctx.ip_address_of,
-                rctx.ip_address_of_mgmt,
-                rctx.monitoring_core,
-                env.plugins,
-                action=action,
-                hosts_to_update=hosts_to_update,
-                service_depends_on=rctx.service_depends_on,
-                locking_mode=env.loaded_config.restart_locking,
-                duplicates=sorted(
-                    hosts_config.duplicates(
-                        lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
-                    )
-                ),
-                notify_relay=rctx.notify_relay,
-                checker_config_writer=checker_config_writer,
-                licensing_handler_factory=rctx.licensing_handler_factory,
-            )
-        except (MKBailOut, MKGeneralException) as e:
-            raise MKAutomationError(str(e))
-        except Exception as e:
-            if cmk.ccc.debug.enabled():
-                raise
-            raise MKAutomationError(str(e))
-
-        return RestartResult(
-            config_warnings.get_configuration(
-                additional_warnings=rctx.ip_address_of.error_handler.format_errors()
-            )
+    try:
+        do_restart(
+            config_cache,
+            core_objects_config,
+            hosts_config,
+            env.host_tags,
+            env.final_service_name_config,
+            env.passive_service_name_config,
+            env.enforced_services_table,
+            env.ip_lookup_config.ip_stack_config,
+            env.ip_lookup_config.default_address_family,
+            rctx.ip_address_of,
+            rctx.ip_address_of_mgmt,
+            rctx.monitoring_core,
+            env.plugins,
+            action=action,
+            hosts_to_update=hosts_to_update,
+            service_depends_on=rctx.service_depends_on,
+            locking_mode=env.loaded_config.restart_locking,
+            duplicates=sorted(
+                hosts_config.duplicates(
+                    lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
+                )
+            ),
+            notify_relay=rctx.notify_relay,
+            checker_config_writer=checker_config_writer,
+            licensing_handler_factory=rctx.licensing_handler_factory,
         )
+    except (MKBailOut, MKGeneralException) as e:
+        raise MKAutomationError(str(e))
+    except Exception as e:
+        if cmk.ccc.debug.enabled():
+            raise
+        raise MKAutomationError(str(e))
+
+    return RestartResult(
+        config_warnings.get_configuration(
+            additional_warnings=rctx.ip_address_of.error_handler.format_errors()
+        )
+    )
 
 
 def _automation_get_configuration(

@@ -852,13 +852,12 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "labels.shown.color": "#ffffff",
     },
     "data_backend": {
-        "disabled": None,
-        "enabled": {
+        "local_instance": {
             "https_port": 27909,
             "relative_memory_limit_percentage": 50.0,
             "tls_port": 25720,
         },
-        "enabled.http_port": 25962,
+        "local_instance.http_port": 25962,
     },
     "mkeventd_notify_remotehost": {
         "[enable]": "",
@@ -1305,7 +1304,7 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
         "url_target": "_blank",
         "labels": ("shown", {"size": 11}),
     },
-    "data_backend": ("disabled", None),
+    "data_backend": {},
     "mkeventd_notify_remotehost": None,
     "mkeventd_service_levels": [],
     "network_flow": ("disabled", None),
@@ -2170,22 +2169,41 @@ CASES: Mapping[str, list[Case]] = {
         CaseFail("not-an-int", "5000"),
     ],
     "data_backend": [
-        CasePass("disabled", ("disabled", None)),
-        CasePass(
-            "configured",
+        CaseMigrates("legacy-disabled", ("disabled", None), {}),
+        CaseMigrates(
+            "legacy-enabled",
             (
                 "enabled",
                 {"tls_port": 9000, "https_port": 8443, "relative_memory_limit_percentage": 50.0},
             ),
+            {
+                "local_instance": {
+                    "tls_port": 9000,
+                    "https_port": 8443,
+                    "relative_memory_limit_percentage": 50.0,
+                },
+            },
+        ),
+        CasePass(
+            "local-instance",
+            {
+                "local_instance": {
+                    "tls_port": 9000,
+                    "https_port": 8443,
+                    "relative_memory_limit_percentage": 50.0,
+                },
+            },
         ),
         CaseFail(
             "duplicate-ports",
-            (
-                "enabled",
-                {"tls_port": 9000, "https_port": 9000, "relative_memory_limit_percentage": 50.0},
-            ),
+            {
+                "local_instance": {
+                    "tls_port": 9000,
+                    "https_port": 9000,
+                    "relative_memory_limit_percentage": 50.0,
+                },
+            },
         ),
-        CaseFail("unknown-choice", ("bogus", None)),
     ],
     "mkeventd_connect_timeout": MIN_ONE_INTEGER_CASES,
     "mkeventd_notify_contactgroup": [

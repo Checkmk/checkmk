@@ -132,7 +132,9 @@ const timestampLabel = computed(() => {
   const date = dateLabel.value ?? ''
   return showConsolidationControl.value
     ? _t('for %{date},', { date })
-    : _t('Graph values for %{date},', { date })
+    : props.isHoverGraph
+      ? date
+      : _t('Graph values for %{date},', { date })
 })
 
 const resolutionLabel = computed(() => {
@@ -177,10 +179,13 @@ const resolutionLabel = computed(() => {
         />
       </template>
       <span v-if="showTimestamp && timeRange" class="graphing-graph-header__timestamp">
-        {{ timestampLabel }}
-        <span class="graphing-graph-header__resolution">
-          {{ resolutionLabel }}
-        </span>
+        <template v-if="!isHoverGraph">
+          {{ timestampLabel }}
+          <span class="graphing-graph-header__resolution">
+            {{ resolutionLabel }}
+          </span>
+        </template>
+        <span v-else> {{ resolutionLabel }}, {{ timestampLabel }} </span>
       </span>
     </div>
     <div
@@ -280,7 +285,7 @@ const resolutionLabel = computed(() => {
 .graphing-graph-header--hover-graph {
   // For hover graphs the background color is handled in the panel
   background-color: transparent;
-  padding: var(--dimension-4) var(--dimension-4) var(--dimension-5);
+  padding: var(--dimension-4);
 }
 
 .graphing-graph-header--hover-graph .graphing-graph-header__title {

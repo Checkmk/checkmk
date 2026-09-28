@@ -6,12 +6,6 @@
 
 /* Stylesheets for graphs */
 
-/* stylelint-disable-next-line selector-id-pattern */
-div#hover_menu div.cmk_graph_hover {
-  width: max-content;
-  max-width: 90vw;
-}
-
 /* The error placeholder from render_graph_error_html is the only server-rendered
    "graph" box left; it used to take its frame from the legacy div.graph rule. */
 div.graph.brokengraph {

@@ -370,6 +370,10 @@ function onRetry(): void {
   flex-flow: row wrap;
   align-items: flex-start;
   gap: 2px;
+  // --cmk-graph-group-justify-content is only ever set in cmk-frontend's hover.ts code.
+  // When a hover graphs popup renders to the left of the cursor this prevents a gap between cursor
+  // and graph group.
+  justify-content: var(--cmk-graph-group-justify-content, flex-start);
 }
 
 .graphing-graph-group__panel {

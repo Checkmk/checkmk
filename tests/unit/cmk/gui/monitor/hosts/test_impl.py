@@ -688,7 +688,16 @@ def test_unavailable_sites(state: SiteState, expected_unavailable: bool) -> None
     ``AuthUser`` - to someone who may not be its contact."""
     site_states = SiteStates({SiteId("remote"): SiteStatus(state=state)})
 
-    assert (SiteId("remote") in unavailable_sites(site_states)) is expected_unavailable
+    assert (
+        SiteId("remote") in unavailable_sites(site_states, sees_all=True)
+    ) is expected_unavailable
+
+
+def test_unavailable_sites_are_none_for_a_reader_who_does_not_see_all_hosts() -> None:
+    """No core answered for a host on such a site, so nothing says the reader may see it."""
+    site_states = SiteStates({SiteId("remote"): SiteStatus(state="dead")})
+
+    assert unavailable_sites(site_states, sees_all=False) == frozenset()
 
 
 def test_visible_relation_hosts_asks_nothing_when_no_relation_count_is_shown(

@@ -17,6 +17,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
 from cmk.gui.config import active_config
+from cmk.gui.logged_in import user
 from cmk.gui.sites import SiteStates
 from cmk.gui.utils.host_relation_kinds import kind_accepts
 from cmk.gui.utils.host_relations import (
@@ -64,14 +65,19 @@ def _site_states() -> SiteStates:
     return sites.states()
 
 
-def unavailable_sites(site_states: SiteStates) -> frozenset[str]:
-    """The sites whose answer is missing rather than empty.
+def unavailable_sites(site_states: SiteStates, *, sees_all: bool) -> frozenset[str]:
+    """The sites whose answer is missing rather than empty, as far as the reader may learn it.
 
     A host on such a site is unknown, not absent, so relations to it are kept and shown as
     "cannot be read right now". "disabled" is the reader's own site selection instead of a site
     that could not be reached - and a host there was never queried, so the ``AuthUser`` filter
     never applied to it.
+
+    That is the case for every such site when the reader does not see all hosts: nothing can tell
+    whether the host is one of theirs, so it is left out like any other they may not see.
     """
+    if not sees_all:
+        return frozenset()
     return frozenset(
         site_id
         for site_id, status in site_states.items()
@@ -87,7 +93,7 @@ class LiveStatusHostRepository:
         folders: MonitorFolders | None = None,
         sites: MonitorSites | None = None,
         read_unavailable_sites: Callable[[], frozenset[str]] = lambda: unavailable_sites(
-            _site_states()
+            _site_states(), sees_all=user.may("general.see_all")
         ),
     ) -> None:
         self._connection = connection
@@ -483,8 +489,9 @@ def _relation_is_shown(
 
     The one rule the relation count and the host details both answer with, so the number cannot
     promise cards that are not there: a counterpart a core answered for is shown, and so is one
-    whose site could not be reached - the reader learns it exists. One the reader may not see, or
-    that no site knows any more, is left out of both.
+    whose site could not be reached - the reader learns it exists, if they see all hosts (see
+    :func:`unavailable_sites`). One the reader may not see, or that no site knows any more, is
+    left out of both.
     """
     return (link.site, link.host) in known or link.site in unavailable
 

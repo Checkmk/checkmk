@@ -243,10 +243,9 @@ function Update-Dirs() {
 }
 
 function Invoke-RemoteComponentTest {
-    # Build the Windows test binary here, ship it to the remote Oracle host and
-    # run it there against localhost. This is the "local" model: it exercises
-    # host-local sysdba connections and registry-based instance discovery that
-    # the network model (--component-tests over TCP) never reaches.
+    # Build the Windows test binaries, ship them to the Oracle host, and run
+    # them there against the host's own DB. Registry-based instance discovery
+    # only works on a machine with an Oracle installation.
     if ([string]::IsNullOrEmpty($env:CI_ORA_WIN_TEST_PASSWORD)) {
         Write-Error "CI_ORA_WIN_TEST_PASSWORD is absent, remote component testing cannot run" -ErrorAction Stop
     }
@@ -271,26 +270,26 @@ function Invoke-RemoteComponentTest {
         $ssh_opts += @("-i", $ssh_keyfile)
     }
 
-    # 1. Build the integration-test binary for the Windows target without running it.
+    # 1. Build the component-test binaries for the Windows target without running them.
     Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target "--no-run"
     $deps_dir = Join-Path (cargo metadata --no-deps | ConvertFrom-Json).target_directory (Join-Path $cargo_target "release" "deps")
-    $test_exe = Get-ChildItem -Path $deps_dir -Filter "test_ora_sql-*.exe" |
-        Sort-Object LastWriteTime -Descending |
-        Select-Object -First 1
-    if ($null -eq $test_exe) {
-        Write-Error "No test_ora_sql-*.exe found in $deps_dir" -ErrorAction Stop
+    $test_exes = foreach ($name in @("test_ora_no_db", "test_ora_discovery", "test_ora_with_db")) {
+        $exe = Get-ChildItem -Path $deps_dir -Filter "$name-*.exe" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+        if ($null -eq $exe) {
+            Write-Error "No $name-*.exe found in $deps_dir" -ErrorAction Stop
+        }
+        Write-Host "Remote component test binary: $($exe.FullName)" -ForegroundColor White
+        $exe
     }
-    Write-Host "Remote component test binary: $($test_exe.FullName)" -ForegroundColor White
+    $exe_list = ($test_exes | ForEach-Object { "'$($_.Name)'" }) -join ", "
 
-    # 2. Generate the remote runner. Both endpoints resolve to the co-located DB
-    #    via $remote_db_host, using the installed Oracle client via ORACLE_HOME;
-    #    the binary resolves fixtures and TNS_ADMIN relative to its working dir.
-    #    CI_ORA2 is the external reference (system, standard auth). CI_ORA1 is the
-    #    local endpoint; its tests force the sysdba role, so it authenticates as
-    #    sys. Field order: host:user:pass:port:instance:role:service:sid:_:_
-    $conn_ext = "${remote_db_host}:system:${pass}:1521:_::FREE:FREE:_:"
-    $conn_local = "${remote_db_host}:sys:${pass}:1521:_:sysdba:FREE:FREE:_:"
-    $exe_leaf = $test_exe.Name
+    # 2. Generate the remote runner. Endpoints resolve to the co-located DB via
+    #    $remote_db_host, using the installed Oracle client via ORACLE_HOME; the
+    #    binaries resolve fixtures and TNS_ADMIN relative to their working dir.
+    #    CI_ORA2 connects as system, CI_ORA1 as sys/sysdba.
+    #    Field order: host:user:pass:port:instance:role:service:sid:_:_
+    $conn_ref = "${remote_db_host}:system:${pass}:1521:_::FREE:FREE:_:"
+    $conn_secondary = "${remote_db_host}:sys:${pass}:1521:_:sysdba:FREE:FREE:_:"
     $remote_script = Join-Path ([System.IO.Path]::GetTempPath()) "mk-oracle-remote-run.ps1"
     @"
 `$ErrorActionPreference = "Stop"
@@ -299,18 +298,23 @@ Set-Location -Path `$PSScriptRoot
 `$env:PATH = "`$env:ORACLE_HOME\bin;`$env:PATH"
 # test_environment asserts this Windows build flag also at run time
 `$env:CFLAGS = "-DNDEBUG"
-`$env:CI_ORA2_DB_TEST = "$conn_ext"
-`$env:CI_ORA1_DB_TEST = "$conn_local"
-& "`$PSScriptRoot\$exe_leaf" --test-threads=4
-exit `$LASTEXITCODE
+`$env:CI_ORA2_DB_TEST = "$conn_ref"
+`$env:CI_ORA1_DB_TEST = "$conn_secondary"
+foreach (`$exe in @($exe_list)) {
+    & "`$PSScriptRoot\`$exe" --test-threads=4
+    if (`$LASTEXITCODE -ne 0) { exit `$LASTEXITCODE }
+}
+exit 0
 "@ | Set-Content -Path $remote_script -Encoding utf8BOM
 
     try {
-        # 3. Stage binary, fixtures and runner on the remote host.
+        # 3. Stage binaries, fixtures and runner on the remote host.
         & ssh @ssh_opts $target "powershell -NoProfile -Command `"New-Item -ItemType Directory -Force -Path '$remote_dir\tests' | Out-Null`""
         if ($LASTEXITCODE -ne 0) { Write-Error "Failed to create remote dir on $target" -ErrorAction Stop }
-        & scp @ssh_opts $test_exe.FullName "${target}:$remote_dir/"
-        if ($LASTEXITCODE -ne 0) { Write-Error "Failed to copy test binary" -ErrorAction Stop }
+        foreach ($exe in $test_exes) {
+            & scp @ssh_opts $exe.FullName "${target}:$remote_dir/"
+            if ($LASTEXITCODE -ne 0) { Write-Error "Failed to copy $($exe.Name)" -ErrorAction Stop }
+        }
         & scp @ssh_opts -r "tests/files" "${target}:$remote_dir/tests/"
         if ($LASTEXITCODE -ne 0) { Write-Error "Failed to copy test fixtures" -ErrorAction Stop }
         # The runtime-detection tests probe the factory runtime tree relative

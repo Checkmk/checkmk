@@ -15,10 +15,14 @@ import pytest
 from livestatus import SiteConfigurations
 
 from cmk.ccc.hostaddress import HostName
-from cmk.gui.utils.host_relations import RELATIONS_MACRO
+from cmk.gui.utils.host_relations import RELATIONS_MACRO, ResolvedRelation
 from cmk.gui.watolib.activate_changes import ActivateChangesManager
 from cmk.gui.watolib.host_relations import RelatedHost
-from cmk.gui.watolib.host_relations_export import export_host_relations, relations_export_path
+from cmk.gui.watolib.host_relations_export import (
+    export_host_relations,
+    read_host_relations,
+    relations_export_path,
+)
 from tests.unit.cmk.gui.watolib.host_relations_fakes import fake_hosts
 
 
@@ -44,6 +48,27 @@ def test_export_writes_both_sides_of_a_relation(tmp_path: Path) -> None:
     assert json.loads(macro["mgmt"]) == [
         {"kind": "management", "direction": "parent", "host": "srv", "site": "central"}
     ]
+
+
+def test_export_reads_back_as_it_was_resolved(tmp_path: Path) -> None:
+    export_file = tmp_path / "relations.mk"
+    export_host_relations(
+        fake_hosts(srv=[{"kind": "management", "direction": "child", "host": "mgmt"}], mgmt=None),
+        export_file,
+    )
+
+    assert read_host_relations(export_file) == {
+        HostName("srv"): [
+            ResolvedRelation(kind="management", direction="child", host="mgmt", site="central")
+        ],
+        HostName("mgmt"): [
+            ResolvedRelation(kind="management", direction="parent", host="srv", site="central")
+        ],
+    }
+
+
+def test_a_missing_export_reads_as_no_relations(tmp_path: Path) -> None:
+    assert read_host_relations(tmp_path / "relations.mk") == {}
 
 
 def test_export_declares_the_macro_even_without_relations(tmp_path: Path) -> None:

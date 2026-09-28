@@ -29,18 +29,23 @@ defined in :mod:`cmk.gui.utils.host_relations`, which the monitoring side reads 
 
 from collections.abc import Mapping
 from pathlib import Path
+from typing import cast
 
 import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.log import logger
-from cmk.gui.utils.host_relations import dump_resolved_relations, RELATIONS_MACRO
+from cmk.gui.utils.host_relations import (
+    dump_resolved_relations,
+    parse_resolved_relations,
+    RELATIONS_MACRO,
+)
 from cmk.gui.watolib.config_sync import (
     ReplicationPath,
     ReplicationPathRegistry,
     ReplicationPathType,
 )
-from cmk.gui.watolib.host_relations import RelatedHost, resolve_all_relations
+from cmk.gui.watolib.host_relations import RelatedHost, resolve_all_relations, ResolvedRelations
 
 _LOGGER = logger.getChild("host_relations")
 
@@ -75,6 +80,24 @@ def _write_export_file(path: Path, macro_values: dict[str, str]) -> bool:
     return True
 
 
+def write_host_relations(path: Path, resolved: ResolvedRelations) -> bool:
+    """Write ``resolved`` as the ``_RELATIONS`` variable of its hosts. Returns whether it was written."""
+    return _write_export_file(
+        path,
+        {str(host): dump_resolved_relations(relations) for host, relations in resolved.items()},
+    )
+
+
+def read_host_relations(path: Path) -> ResolvedRelations:
+    """The relations an export file holds, the way the core reads them."""
+    config = store.load_mk_file(path, default={"explicit_host_conf": {}}, lock=False)
+    explicit_host_conf = cast(Mapping[str, Mapping[str, str]], config["explicit_host_conf"])
+    return {
+        HostName(host): list(parse_resolved_relations(value))
+        for host, value in explicit_host_conf.get(RELATIONS_MACRO, {}).items()
+    }
+
+
 def export_host_relations(
     all_hosts: Mapping[HostName, RelatedHost], export_file_path: Path
 ) -> None:
@@ -85,15 +108,12 @@ def export_host_relations(
     Counterparts that do not exist are dropped by :func:`resolve_all_relations`.
     """
     resolved = resolve_all_relations(all_hosts)
-    macro_values = {
-        str(host): dump_resolved_relations(relations) for host, relations in resolved.items()
-    }
-    written = _write_export_file(export_file_path, macro_values)
+    written = write_host_relations(export_file_path, resolved)
     _LOGGER.debug(
         "Host relations export: %(hosts)d host(s) with relations, %(entries)d relation entries, "
         "%(outcome)s %(path)s.",
         {
-            "hosts": len(macro_values),
+            "hosts": len(resolved),
             "entries": sum(len(relations) for relations in resolved.values()),
             "outcome": "written to" if written else "unchanged in",
             "path": export_file_path,

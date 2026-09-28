@@ -8,8 +8,7 @@ Map *config* is owned by the GUI visuals store. The daemon keeps maps in
 memory only so its state/SSE path can resolve them: the SPA registers the map
 it loaded (``register_map``) before opening the stream, and the state endpoints
 read it back (``get_map``). Nothing here reads or writes map config on disk —
-persistence lives entirely in the GUI (pre-visuals on-disk ``.json`` maps are
-migrated into the visuals store by ``cmk.update_config`` on update).
+persistence lives entirely in the GUI.
 """
 
 from __future__ import annotations

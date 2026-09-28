@@ -6,7 +6,7 @@
 
 The daemon owns only live state now, so image and map-background management —
 plain file I/O plus validation — is a GUI concern. Files are written under
-``var/maps/{images,maps/backgrounds}`` and served statically by Apache (the
+``var/maps/{images,backgrounds}`` and served statically by Apache (the
 daemon no longer proxies or gates them). Built-in icons ship with this package
 (``builtin_icons/``) and are seeded into the served images dir on page load.
 
@@ -70,7 +70,7 @@ def _images_dir() -> Path:
 
 
 def _backgrounds_dir() -> Path:
-    d = cmk.utils.paths.omd_root / "var/maps/maps/backgrounds"
+    d = cmk.utils.paths.omd_root / "var/maps/backgrounds"
     d.mkdir(parents=True, exist_ok=True)
     return d
 

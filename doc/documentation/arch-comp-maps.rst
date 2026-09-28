@@ -179,7 +179,7 @@ Interfaces
 * **SPA → GUI page**: ``/<site>/check_mk/maps.py`` — the page that mounts the
   SPA, and the only GUI page Maps registers.
 * **SPA → static files**: ``/<site>/check_mk/maps/images`` and
-  ``/<site>/check_mk/maps/maps/backgrounds`` are plain Apache ``Alias`` es onto
+  ``/<site>/check_mk/maps/backgrounds`` are plain Apache ``Alias`` es onto
   GUI-owned files under ``var/maps/`` (``cmk.maps.gui._images``) — the daemon
   does not serve files. Backgrounds carry an unguessable token in the filename,
   so the URL is a capability.

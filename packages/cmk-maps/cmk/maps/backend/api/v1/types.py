@@ -10,7 +10,7 @@ from typing import Annotated
 
 from fastapi import Path
 
-# Map names end up as filenames (under maps_dir) and as path components
+# Map names end up in filenames (map backgrounds) and as path components
 # in Checkmk permission lookups. Restricting the character set here prevents
 # path traversal and odd permission-key lookups before the value reaches any
 # business logic.

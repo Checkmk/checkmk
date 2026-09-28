@@ -32,9 +32,8 @@ _MAPS_PAGE = "maps.py"
 def _iter_maps(user_permissions: UserPermissions) -> list[tuple[str, str]]:
     """Return (name, title) for each map the user may see listed, from the pagetype store.
 
-    Maps are canonical Checkmk pagetypes now, so the menu reads the same
-    permission-filtered store the overview does (``MapPage.pages``), not the
-    daemon's legacy on-disk files.
+    The menu reads the same permission-filtered pagetype store the overview does
+    (``MapPage.pages``).
     """
     return sorted(
         ((page.name(), page.title() or page.name()) for page in get_menu_maps(user_permissions)),

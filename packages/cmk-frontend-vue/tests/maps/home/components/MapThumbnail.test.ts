@@ -25,7 +25,10 @@ describe('MapThumbnail', () => {
   it("shows the map's own background image when it has one", () => {
     renderThumbnail(listed({ background_image: 'datacenter.png' }))
     const image = screen.getByRole('img', { name: 'Production' })
-    expect(image).toHaveAttribute('src', expect.stringContaining('maps/backgrounds/datacenter.png'))
+    expect(image).toHaveAttribute(
+      'src',
+      new URL('maps/backgrounds/datacenter.png', window.location.href).href
+    )
   })
 
   it('falls back to the illustration when the image is gone from the site', async () => {

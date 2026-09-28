@@ -13,7 +13,6 @@ variables (set by the init script) for emergency tuning without a code change.
 from __future__ import annotations
 
 import os
-from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -50,7 +49,6 @@ def _normalize_log_level(value: str) -> Literal["DEBUG", "INFO", "WARNING", "ERR
 
 _OMD_ROOT = os.environ.get("OMD_ROOT", "")
 _OMD_SITE = os.environ.get("OMD_SITE", "")
-_VAR_DIR = str(Path(_OMD_ROOT) / "var" / "maps")
 
 
 class Settings(BaseModel):
@@ -63,9 +61,6 @@ class Settings(BaseModel):
     # OMD site context (always present in-tree).
     checkmk_omd_root: str = _OMD_ROOT
     checkmk_site: str = _OMD_SITE
-
-    # Map JSON files live in var/maps/maps/; uploaded images in var/maps/images/.
-    maps_dir: str = str(Path(_VAR_DIR) / "maps")
 
     state_refresh_interval: int = Field(
         default_factory=lambda: _env_int("MAPS_STATE_REFRESH_INTERVAL", 5), ge=1

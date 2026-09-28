@@ -21,5 +21,5 @@ export function imageAssetUrl(name: string): string {
 }
 
 export function backgroundAssetUrl(name: string): string {
-  return assetUrl(`maps/backgrounds/${encodeURIComponent(name)}`)
+  return assetUrl(`backgrounds/${encodeURIComponent(name)}`)
 }

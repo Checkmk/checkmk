@@ -82,7 +82,8 @@ const props = withDefaults(
 const groupEl = ref<HTMLElement | null>(null)
 const availableWidth = ref(0)
 
-// Without figure_width the graphs fill the page, so the width comes from #main_page_content.
+// Without figure_width the graphs fill the page, so the width comes from #main_page_content or
+// the document element as a fallback for view widget rendering (iframe, no #main_page_content)
 if (props.figure_width === undefined) {
   const containerEl = ref<HTMLElement | null>(null)
 
@@ -102,7 +103,7 @@ if (props.figure_width === undefined) {
   observe(containerEl)
 
   onMounted(() => {
-    containerEl.value = document.getElementById('main_page_content')
+    containerEl.value = document.getElementById('main_page_content') ?? document.documentElement
     recomputeAvailableWidth()
   })
 }

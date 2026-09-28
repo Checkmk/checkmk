@@ -13,3 +13,13 @@ import { resolveAssetBase } from '@/maps/utils/deploymentBase'
 export function assetUrl(relPath: string): string {
   return `${resolveAssetBase()}${relPath}`
 }
+
+// A stored icon/background reference is a bare filename; encoding it keeps a
+// value with a path separator inside the asset directory.
+export function imageAssetUrl(name: string): string {
+  return assetUrl(`images/${encodeURIComponent(name)}`)
+}
+
+export function backgroundAssetUrl(name: string): string {
+  return assetUrl(`maps/backgrounds/${encodeURIComponent(name)}`)
+}

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
 
 from cmk.maps.backend.schemas.presentation import PresentationView
 from cmk.maps.shared.filters import normalize_object_filter
@@ -19,7 +19,16 @@ from cmk.maps.shared.map_payload import (
     ObjectType,
     RenderMode,
 )
-from cmk.maps.shared.validators import coerce_url_target, validate_color, validate_user_url
+from cmk.maps.shared.validators import (
+    coerce_asset_ref,
+    coerce_url_target,
+    validate_color,
+    validate_user_url,
+)
+
+# Uploaded icon / background references are bare filenames the SPA expands into an
+# asset URL; drop anything that could climb out of the asset directory.
+_AssetRef = Annotated[str | None, BeforeValidator(coerce_asset_ref)]
 
 
 def _accept_legacy_backend_id(data: object) -> object:
@@ -107,7 +116,7 @@ class LabelConfig(BaseModel):
 
 class DisplayConfig(BaseModel):
     mode: Literal["icon", "text", "gadget"] = "icon"
-    image: str | None = None
+    image: _AssetRef = None
     image_size: int | None = None
     gadget_type: Literal["gauge", "bar", "trafficlight", "value"] | None = None
     gadget_metric: str | None = None
@@ -234,7 +243,7 @@ class MapElement(BaseModel):
     service_description: str | None = None
     group_name: str | None = None
     map_name: str | None = None
-    image_src: str | None = None
+    image_src: _AssetRef = None
     x2: int | float | None = None
     y2: int | float | None = None
     lat2: float | None = None
@@ -361,7 +370,7 @@ class MapConfig(BaseModel):
     click_action: ClickAction = "link"
     hover_template: str | None = None
     context_template: str | None = None
-    background_image: str | None = None
+    background_image: _AssetRef = None
     background_color: str | None = None
     # Default keeps existing maps on the Maps renderer; "nagvis_classic"
     # opts an imported map into top-left anchoring + flat styling.
@@ -392,7 +401,7 @@ class MapCreate(BaseModel):
 
     name: str = Field(..., min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9_\-]+$")
     alias: str = ""
-    background_image: str | None = None
+    background_image: _AssetRef = None
     background_color: str | None = None
     icon_size: int | None = None
     connection_id: str = "live_1"
@@ -405,7 +414,7 @@ class MapUpdate(BaseModel):
     _migrate_legacy_keys = model_validator(mode="before")(_accept_legacy_backend_id)
 
     alias: str | None = None
-    background_image: str | None = None
+    background_image: _AssetRef = None
     background_color: str | None = None
     icon_size: int | None = None
     connection_id: str | None = None
@@ -431,7 +440,7 @@ class MapRead(BaseModel):
 
     name: str
     alias: str
-    background_image: str | None
+    background_image: _AssetRef
     background_color: str | None = None
     icon_size: int | None
     connection_id: str
@@ -464,7 +473,7 @@ class MapElementUpdate(BaseModel):
     service_description: str | None = None
     group_name: str | None = None
     map_name: str | None = None
-    image_src: str | None = None
+    image_src: _AssetRef = None
     x2: int | float | None = None
     y2: int | float | None = None
     lat2: float | None = None

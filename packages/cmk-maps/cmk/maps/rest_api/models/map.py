@@ -44,7 +44,12 @@ from cmk.maps.shared.map_payload import (
     PresentationTheme,
     RenderMode,
 )
-from cmk.maps.shared.validators import coerce_url_target, validate_color, validate_user_url
+from cmk.maps.shared.validators import (
+    coerce_asset_ref,
+    coerce_url_target,
+    validate_color,
+    validate_user_url,
+)
 
 # Reject CSS-injection payloads in user-supplied colors at the REST write
 # boundary (defense in depth — the SPA also escapes these at the render sink).
@@ -59,6 +64,9 @@ _Color = Annotated[str, AfterValidator(validate_color)]
 # so the REST write boundary is never laxer. Both pass ``None``/``""`` through.
 _UserUrl = Annotated[str, AfterValidator(validate_user_url)]
 _UrlTarget = Annotated[str, BeforeValidator(coerce_url_target)]
+# Uploaded icon / background filenames — drop anything that could leave the asset
+# dir. Coerces like the daemon: the model also validates stored maps on read.
+_AssetRef = Annotated[str | None, BeforeValidator(coerce_asset_ref)]
 
 
 def _normalize_object_filter(value: str) -> str | None:
@@ -104,8 +112,10 @@ class MapElementDisplay:
     mode: Literal["icon", "text", "gadget"] = api_field(
         description="Render mode for the data element.", example="icon"
     )
-    image: str | None | ApiOmitted = api_field(
-        description="Icon image name.", example="icon_server", default_factory=ApiOmitted
+    image: _UserUrl | None | ApiOmitted = api_field(
+        description="Icon image (store filename or URL).",
+        example="icon_server",
+        default_factory=ApiOmitted,
     )
     image_size: int | None | ApiOmitted = api_field(
         description="Icon size in pixels.", example=32, default_factory=ApiOmitted
@@ -261,7 +271,7 @@ class MapImageElement:
     name: str | None | ApiOmitted = api_field(
         description="Editor display name.", example="Logo", default_factory=ApiOmitted
     )
-    src: str | None | ApiOmitted = api_field(
+    src: _UserUrl | None | ApiOmitted = api_field(
         description="Image source (store filename or URL).",
         example="/logo.png",
         default_factory=ApiOmitted,
@@ -484,8 +494,10 @@ class MapPresentationView:
     background: _Color | None | ApiOmitted = api_field(
         description="Background color.", example="#0f172a", default_factory=ApiOmitted
     )
-    background_image: str | None | ApiOmitted = api_field(
-        description="Background image source.", example="/floorplan.png", default_factory=ApiOmitted
+    background_image: _UserUrl | None | ApiOmitted = api_field(
+        description="Background image (store filename or URL).",
+        example="floorplan.png",
+        default_factory=ApiOmitted,
     )
     problems_only: bool | ApiOmitted = api_field(
         description="Show only objects with problems.", example=False, default_factory=ApiOmitted
@@ -793,7 +805,7 @@ class MapObjectDisplay:
     mode: Literal["icon", "text", "gadget"] = api_field(
         description="Render mode for the object.", example="icon"
     )
-    image: str | None | ApiOmitted = api_field(
+    image: _AssetRef | ApiOmitted = api_field(
         description="Custom icon image name.", example="icon_server", default_factory=ApiOmitted
     )
     image_size: int | None | ApiOmitted = api_field(
@@ -819,8 +831,10 @@ class MapElement:
     type: ObjectType = api_field(description="Object type.", example="host")
     position: MapObjectPosition = api_field(description="Where the object sits on the map.")
     link: MapObjectLink = api_field(description="Click-through and hover behaviour.")
-    image_src: str | None | ApiOmitted = api_field(
-        description="Image source (image objects).", example="/logo.png", default_factory=ApiOmitted
+    image_src: _AssetRef | ApiOmitted = api_field(
+        description="Image filename (image objects).",
+        example="logo.png",
+        default_factory=ApiOmitted,
     )
     binding: MapObjectBinding | ApiOmitted = api_field(
         description="Bound monitoring entity.", default_factory=ApiOmitted
@@ -893,8 +907,10 @@ class MapConfig:
         example="{{ host_name }}",
         default_factory=ApiOmitted,
     )
-    background_image: str | None | ApiOmitted = api_field(
-        description="Background image source.", example="/floorplan.png", default_factory=ApiOmitted
+    background_image: _AssetRef | ApiOmitted = api_field(
+        description="Background image filename.",
+        example="floorplan.png",
+        default_factory=ApiOmitted,
     )
     background_color: str | None | ApiOmitted = api_field(
         description="Background color.", example="#0f172a", default_factory=ApiOmitted
@@ -942,8 +958,10 @@ class MapListEntry:
         description="Default object click action.", example="link"
     )
     object_count: int = api_field(description="Number of placed objects/elements.", example=12)
-    background_image: str | None | ApiOmitted = api_field(
-        description="Background image source.", example="/floorplan.png", default_factory=ApiOmitted
+    background_image: _AssetRef | ApiOmitted = api_field(
+        description="Background image filename.",
+        example="floorplan.png",
+        default_factory=ApiOmitted,
     )
     background_color: str | None | ApiOmitted = api_field(
         description="Background color.", example="#0f172a", default_factory=ApiOmitted

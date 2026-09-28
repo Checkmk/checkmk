@@ -63,6 +63,11 @@ class ElementDisplay(BaseModel):
     gadget_type: Literal["gauge", "bar", "trafficlight", "value"] | None = None
     gadget_metric: str | None = None
 
+    @field_validator("image")
+    @classmethod
+    def _v_image(cls, v: str | None) -> str | None:
+        return _validate_image_src(v)
+
 
 class ElementLabel(BaseModel):
     show: bool = True

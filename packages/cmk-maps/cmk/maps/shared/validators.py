@@ -94,6 +94,24 @@ def coerce_user_url(value: object) -> object:
 _ALLOWED_URL_TARGETS = frozenset({"_blank", "_self"})
 
 
+def coerce_asset_ref(value: object) -> object:
+    """Fold an image/background reference that is not a bare filename to ``None``.
+
+    Map icons and backgrounds are uploaded files; the SPA turns the stored value
+    into a ``maps/images|backgrounds/<value>`` asset URL. A value carrying a path
+    separator, ``..`` or a scheme could climb out of the asset directory into a
+    same-origin GET, so anything but a plain filename is dropped (coerces, so a
+    stored map with a stale reference still loads without it).
+    """
+    if value is None or value == "":
+        return value
+    if not isinstance(value, str):
+        return None
+    if _CONTROL_CHARS.search(value) or set(value) & {"/", "\\", ":"} or ".." in value:
+        return None
+    return value
+
+
 def coerce_url_target(value: object) -> object:
     """Fold any stored link target other than a new tab / same frame to ``_blank``.
 

@@ -15,7 +15,7 @@ import { type Ref, computed, ref, watch } from 'vue'
 
 import { useMaps } from '@/maps/services/context'
 import type { MapConfig } from '@/maps/types/api'
-import { assetUrl } from '@/maps/utils/assetUrl'
+import { backgroundAssetUrl } from '@/maps/utils/assetUrl'
 
 /** URLs a live settings preview may patch in for a not-yet-uploaded image. */
 const INLINE_URL = /^(blob:|data:|https?:)/
@@ -42,7 +42,7 @@ export function useCanvasBackground(source: {
     }
     return INLINE_URL.test(background)
       ? background
-      : assetUrl(`maps/backgrounds/${background}?v=${cacheKey.value}`)
+      : `${backgroundAssetUrl(background)}?v=${cacheKey.value}`
   })
 
   watch(

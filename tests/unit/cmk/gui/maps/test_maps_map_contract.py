@@ -23,7 +23,7 @@ import pytest
 from pydantic import ValidationError
 
 from cmk.maps.backend.schemas.map import MapConfig as DaemonMapConfig
-from cmk.maps.rest_api.models.map import MapObjectBinding
+from cmk.maps.rest_api.models.map import MapObjectBinding, MapObjectDisplay
 from cmk.maps.rest_api.utils import map_from_spec, spec_from_map
 from cmk.maps.shared.map_payload import MapPayload
 
@@ -197,3 +197,41 @@ def test_imported_cfg_map_passes_the_rest_bridge(all_objects_map: MapPayload) ->
     object and line type the shared fixture covers.
     """
     map_from_spec(all_objects_map)
+
+
+def test_rest_model_drops_traversal_in_image_filenames() -> None:
+    # Icons and map backgrounds are bare filenames the SPA expands into an asset
+    # URL; a traversal value must not survive to become a same-origin GET, and a
+    # stored map carrying one must still load.
+    dense = DaemonMapConfig.model_validate(_WORLDMAP_MAP).model_dump(mode="json")
+    dense["background_image"] = "../floor.png"
+    dense["objects"][0]["display"] = {"mode": "icon", "image": "../../check_mk/logout.py"}
+    rest_obj = map_from_spec(dense)
+    display = rest_obj.objects[0].display
+    assert isinstance(display, MapObjectDisplay)
+    assert (rest_obj.background_image, display.image) == (None, None)
+
+
+@pytest.mark.parametrize("ref", ["https://cdn.example/floor.png", "/floor.png", "floor.png"])
+def test_rest_model_keeps_presentation_image_urls(ref: str) -> None:
+    # Slide images and backgrounds take a store filename or an external URL.
+    dense = DaemonMapConfig.model_validate(_PRESENTATION_MAP).model_dump(mode="json")
+    dense["view"]["background_image"] = ref
+    next(e for e in dense["view"]["elements"] if e["kind"] == "image")["src"] = ref
+    map_from_spec(dense)
+
+
+@pytest.mark.parametrize("field", ["background_image", "src", "display"])
+def test_rest_model_rejects_script_urls_in_presentation_images(field: str) -> None:
+    dense = DaemonMapConfig.model_validate(_PRESENTATION_MAP).model_dump(mode="json")
+    view = dense["view"]
+    if field == "background_image":
+        view["background_image"] = "javascript:alert(1)"
+    elif field == "src":
+        next(e for e in view["elements"] if e["kind"] == "image")["src"] = "javascript:alert(1)"
+    else:
+        next(e for e in view["elements"] if e["kind"] == "data")["display"]["image"] = (
+            "javascript:alert(1)"
+        )
+    with pytest.raises(ValidationError):
+        map_from_spec(dense)

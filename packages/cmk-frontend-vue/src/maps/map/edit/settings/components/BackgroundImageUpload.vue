@@ -8,7 +8,7 @@ import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref, watch } from 'vue'
 
-import { assetUrl } from '@/maps/utils/assetUrl'
+import { backgroundAssetUrl } from '@/maps/utils/assetUrl'
 
 const ACCEPT_TYPES = 'image/png,image/jpeg,image/svg+xml,image/webp,image/gif'
 
@@ -53,7 +53,7 @@ const hasImage = computed(() =>
 const displayUrl = computed(() =>
   props.pendingFile
     ? (props.pendingPreviewUrl ?? '')
-    : assetUrl(`maps/backgrounds/${props.modelValue}?v=${cacheBust.value}`)
+    : `${backgroundAssetUrl(props.modelValue)}?v=${cacheBust.value}`
 )
 const displayName = computed(() => props.pendingFile?.name ?? props.modelValue)
 

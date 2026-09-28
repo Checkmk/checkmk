@@ -22,7 +22,7 @@ import RadarMapThumbnail from '@/maps/home/components/thumbnails/RadarMapThumbna
 import StaticMapThumbnail from '@/maps/home/components/thumbnails/StaticMapThumbnail.vue'
 import { type MapViewType, mapTypeLabel } from '@/maps/home/mapLabels'
 import type { MapRead } from '@/maps/types/api'
-import { assetUrl } from '@/maps/utils/assetUrl'
+import { backgroundAssetUrl } from '@/maps/utils/assetUrl'
 
 // Lazy: leaflet only reaches the list page when a geo map is actually listed.
 const worldMapThumbnail = defineAsyncComponent(
@@ -54,7 +54,7 @@ watch(
 // The demo maps ship a background that is not part of the site's image library.
 const backgroundImage = computed(() =>
   props.map.background_image && !props.map.name.startsWith('demo-') && !imageFailed.value
-    ? assetUrl(`maps/backgrounds/${props.map.background_image}`)
+    ? backgroundAssetUrl(props.map.background_image)
     : null
 )
 

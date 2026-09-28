@@ -12,7 +12,7 @@ import type {
   ShapeElement,
   TextElement
 } from '@/maps/types/api'
-import { assetUrl } from '@/maps/utils/assetUrl'
+import { imageAssetUrl } from '@/maps/utils/assetUrl'
 import { resolveAssetBase } from '@/maps/utils/deploymentBase'
 import type { TranslateFn } from '@/maps/utils/dropdownOptions'
 
@@ -72,7 +72,7 @@ export function resolveImageRef(ref: string | null | undefined): string {
   if (IMAGE_URL_RE.test(ref)) {
     return ref
   }
-  return assetUrl(`images/${ref}`)
+  return imageAssetUrl(ref)
 }
 
 // Given a stored ``src``/``background_image``, return the image-store filename it

@@ -17,7 +17,7 @@ import { computed, ref } from 'vue'
 
 import { useUtilizationRing } from '@/maps/map/elements/composables/useUtilizationRing'
 import type { MapElement, ObjectState } from '@/maps/types/api'
-import { assetUrl } from '@/maps/utils/assetUrl'
+import { imageAssetUrl } from '@/maps/utils/assetUrl'
 import { stateColorVar } from '@/maps/utils/stateColors'
 
 import AggregationSubtree from './AggregationSubtree.vue'
@@ -78,7 +78,7 @@ const imageStyle = computed(() => ({
          mousemove and break the canvas's own drag. -->
     <img
       v-if="image && !imageLoadFailed"
-      :src="assetUrl(`images/${image}`)"
+      :src="imageAssetUrl(image)"
       :style="imageStyle"
       draggable="false"
       class="maps-map-element-icon__image"

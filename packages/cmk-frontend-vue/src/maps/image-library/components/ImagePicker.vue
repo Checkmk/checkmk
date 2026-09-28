@@ -23,7 +23,7 @@ import { computed, ref } from 'vue'
 
 import ImageUploadButton from '@/maps/image-library/components/ImageUploadButton.vue'
 import { useImageLibrary } from '@/maps/image-library/composables/useImageLibrary'
-import { assetUrl } from '@/maps/utils/assetUrl'
+import { assetUrl, imageAssetUrl } from '@/maps/utils/assetUrl'
 
 const props = defineProps<{
   modelValue: string
@@ -75,7 +75,7 @@ function select(name: string) {
   <div class="maps-image-picker">
     <div v-if="modelValue" class="maps-image-picker__selected">
       <img
-        :src="assetUrl(`images/${modelValue}`)"
+        :src="imageAssetUrl(modelValue)"
         class="maps-image-picker__image maps-image-picker__image--selected"
         :class="{ 'maps-image-picker__image--monochrome': modelValue.endsWith('.svg') }"
         alt=""

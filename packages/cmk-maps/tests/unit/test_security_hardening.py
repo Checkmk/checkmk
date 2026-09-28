@@ -34,7 +34,12 @@ from cmk.maps.backend.schemas.map import (
     MapElementUpdate,
 )
 from cmk.maps.backend.services.state_service import _names_or_filter
-from cmk.maps.shared.validators import coerce_url_target, coerce_user_url, validate_user_url
+from cmk.maps.shared.validators import (
+    coerce_asset_ref,
+    coerce_url_target,
+    coerce_user_url,
+    validate_user_url,
+)
 
 # --- validate_user_url: scheme allowlist + rejection ---
 
@@ -148,6 +153,24 @@ def test_coerce_user_url_drops_invalid(value: object, expected: object) -> None:
 )
 def test_coerce_url_target_folds_unsafe(value: object, expected: object) -> None:
     assert coerce_url_target(value) == expected
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param(None, None, id="none-passthrough"),
+        pytest.param("", "", id="empty-passthrough"),
+        pytest.param("logo.png", "logo.png", id="bare-filename-kept"),
+        pytest.param("abcd__mymap.token123.svg", "abcd__mymap.token123.svg", id="upload-name-kept"),
+        pytest.param("../../check_mk/logout.py", None, id="traversal-dropped"),
+        pytest.param("sub/dir.png", None, id="separator-dropped"),
+        pytest.param("a\\b.png", None, id="backslash-dropped"),
+        pytest.param("https://evil.example/x.png", None, id="url-dropped"),
+        pytest.param(123, None, id="non-string-dropped"),
+    ],
+)
+def test_coerce_asset_ref_folds_non_filenames(value: object, expected: object) -> None:
+    assert coerce_asset_ref(value) == expected
 
 
 # --- map-object URL validation + XSS rejection ---

@@ -15,6 +15,7 @@ import pytest
 from livestatus import SiteConfigurations
 
 from cmk.ccc.hostaddress import HostName
+from cmk.gui.config import Config
 from cmk.gui.utils.host_relations import RELATIONS_MACRO, ResolvedRelation
 from cmk.gui.watolib.activate_changes import ActivateChangesManager
 from cmk.gui.watolib.host_relations import RelatedHost
@@ -23,6 +24,7 @@ from cmk.gui.watolib.host_relations_export import (
     read_host_relations,
     relations_export_path,
 )
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from tests.unit.cmk.gui.watolib.host_relations_fakes import fake_hosts
 
 
@@ -143,7 +145,7 @@ def test_activation_summary_is_logged(
 def test_activation_exports_the_relations() -> None:
     """Pins the wiring: the activation itself writes the export file, where config sync finds it."""
     ActivateChangesManager()._pre_activate_changes(  # noqa: SLF001
-        SiteConfigurations({}), debug=True
+        make_folder_tree(Config()), SiteConfigurations({}), debug=True
     )
 
     assert RELATIONS_MACRO in relations_export_path().read_text()
@@ -160,7 +162,7 @@ def unwritable_relations_export() -> Iterator[None]:
 @pytest.mark.usefixtures("with_admin_login", "load_config", "unwritable_relations_export")
 def test_activation_goes_on_when_the_relations_cannot_be_exported() -> None:
     ActivateChangesManager()._pre_activate_changes(  # noqa: SLF001
-        SiteConfigurations({}), debug=False
+        make_folder_tree(Config()), SiteConfigurations({}), debug=False
     )
 
 
@@ -168,7 +170,7 @@ def test_activation_goes_on_when_the_relations_cannot_be_exported() -> None:
 def test_a_failed_export_is_logged_as_host_relations(caplog: pytest.LogCaptureFixture) -> None:
     with caplog.at_level(logging.ERROR, logger="cmk.web.host_relations"):
         ActivateChangesManager()._pre_activate_changes(  # noqa: SLF001
-            SiteConfigurations({}), debug=False
+            make_folder_tree(Config()), SiteConfigurations({}), debug=False
         )
 
     assert any(record.name == "cmk.web.host_relations" for record in caplog.records)

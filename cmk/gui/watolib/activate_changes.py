@@ -409,7 +409,7 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:  # no
 
 
 # If the site is not up-to-date, synchronize it first.
-def sync_changes_before_remote_automation(site_id: SiteId, debug: bool) -> None:
+def sync_changes_before_remote_automation(tree: FolderTree, site_id: SiteId, debug: bool) -> None:
     manager = ActivateChangesManager()
     # TODO: So far we used active_config.sites. Would it be enough to use [site_id]?
     manager.changes.load(list(active_config.sites))
@@ -421,6 +421,7 @@ def sync_changes_before_remote_automation(site_id: SiteId, debug: bool) -> None:
 
     manager.start(
         sites=[site_id],
+        tree=tree,
         activate_foreign=True,
         prevent_activate=True,
         source="INTERNAL",
@@ -1842,6 +1843,7 @@ class ActivateChangesManager:
         sites: Sequence[SiteId],
         source: ActivationSource,
         *,
+        tree: FolderTree,
         all_site_configs: SiteConfigurations,
         user_permission_config: UserPermissionSerializableConfig,
         max_snapshots: int,
@@ -1920,11 +1922,11 @@ class ActivateChangesManager:
         self._set_persisted_changes()
 
         with _debug_log_message("Verifying host config"):
-            self._verify_valid_host_config(tree := folder_tree())
+            self._verify_valid_host_config(tree)
         self._save_activation()
 
         with _debug_log_message("Calling pre-activate changes"):
-            self._pre_activate_changes(all_site_configs, debug=debug)
+            self._pre_activate_changes(tree, all_site_configs, debug=debug)
 
         with _debug_log_message("Creating snapshots"):
             self._create_snapshots(
@@ -2073,7 +2075,9 @@ class ActivateChangesManager:
         to_file = {key: getattr(self, key) for key in self.info_keys}
         store.save_object_to_file(Path(self._info_path(self._activation_id)), to_file)
 
-    def _pre_activate_changes(self, all_site_configs: SiteConfigurations, *, debug: bool) -> None:
+    def _pre_activate_changes(
+        self, tree: FolderTree, all_site_configs: SiteConfigurations, *, debug: bool
+    ) -> None:
         """Write the artifacts the sites need in their snapshot, then let the hooks have their say.
 
         Anything but the host relations export aborts the activation when it fails: the relations
@@ -2085,7 +2089,7 @@ class ActivateChangesManager:
         """
         # Both consumers want every host of the tree, and neither is guaranteed to run, so the
         # walk is shared but still only paid for when something asks for it.
-        all_hosts = functools.cache(lambda: folder_tree().all_hosts())
+        all_hosts = functools.cache(tree.all_hosts)
         if not is_distributed_setup_remote_site(all_site_configs):
             try:
                 export_host_relations(all_hosts(), relations_export_path())
@@ -4245,6 +4249,7 @@ def _check_sites_that_can_be_activated(
 
 def activate_changes_start(
     *,
+    tree: FolderTree,
     sites: Sequence[SiteId],
     all_site_configs: SiteConfigurations,
     user_permission_config: UserPermissionSerializableConfig,
@@ -4299,6 +4304,7 @@ def activate_changes_start(
 
     manager.start(
         sites=list(sites_that_can_be_activated),
+        tree=tree,
         comment=comment,
         activate_foreign=force_foreign_changes,
         source=source,

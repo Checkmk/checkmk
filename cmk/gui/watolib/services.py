@@ -1235,7 +1235,7 @@ def get_check_table(
             debug=debug,
         )
 
-    sync_changes_before_remote_automation(host.site_id(), debug)
+    sync_changes_before_remote_automation(host.folder().tree, host.site_id(), debug)
 
     return DiscoveryResult.deserialize(
         str(

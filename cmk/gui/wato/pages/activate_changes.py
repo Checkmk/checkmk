@@ -266,6 +266,7 @@ class ModeRevertChanges(WatoMode):
         manager.start(
             sites=[local_site],
             source="GUI",
+            tree=make_folder_tree(config),
             all_site_configs=active_config.sites,
             user_permission_config=UserPermissionSerializableConfig.from_global_config(config),
             max_snapshots=config.wato_max_snapshots,
@@ -1110,6 +1111,7 @@ class PageAjaxStartActivation(AjaxPage):
 
         activation_id = manager.start(
             sites=affected_sites,
+            tree=make_folder_tree(ctx.config),
             all_site_configs=ctx.config.sites,
             activate_until=activate_until,
             comment=comment,

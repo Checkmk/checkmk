@@ -79,7 +79,7 @@ from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automations import make_automation_config
 from cmk.gui.watolib.host_attributes import HostAttributes
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, FolderTree, Host
 from cmk.gui.watolib.pending_changes import (
     Change,
     ChangeScope,
@@ -229,7 +229,7 @@ class Transport:
         )
         return self.remote_check_table.serialize(_THIS_VERSION)
 
-    def sync(self, site_id: SiteId, debug: bool) -> None:  # noqa: ARG002
+    def sync(self, _tree: FolderTree, site_id: SiteId, debug: bool) -> None:  # noqa: ARG002
         self.synced_sites.append(site_id)
 
 

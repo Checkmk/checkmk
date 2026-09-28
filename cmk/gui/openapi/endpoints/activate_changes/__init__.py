@@ -53,6 +53,7 @@ from cmk.gui.watolib.activate_changes import (
     load_activate_change_manager_with_id,
     MKLicensingError,
 )
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.web.utils import permission_verification as permissions
 
 ACTIVATION_ID = {
@@ -141,6 +142,7 @@ def activate_changes(params: Mapping[str, Any]) -> Response:
 
     try:
         activation_response = activate_changes_start(
+            tree=make_folder_tree(active_config),
             sites=sites,
             all_site_configs=active_config.sites,
             user_permission_config=UserPermissionSerializableConfig.from_global_config(

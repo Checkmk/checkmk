@@ -322,6 +322,7 @@ def _activate_changes(
         activation_id = manager.start(
             sites=list(sites),
             source="INTERNAL",
+            tree=tree,
             all_site_configs=all_site_configs,
             user_permission_config=user_permission_config,
             max_snapshots=max_snapshots,

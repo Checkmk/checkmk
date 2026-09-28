@@ -128,7 +128,7 @@ from cmk.server_side_calls_backend.config_processing import (
 )
 from cmk.utils import config_warnings, ip_lookup, password_store
 from cmk.utils.caching import cache_manager
-from cmk.utils.check_utils import maincheckify, section_name_of
+from cmk.utils.check_utils import maincheckify
 from cmk.utils.host_storage import (
     apply_hosts_file_to_object,
     get_host_storage_loaders,
@@ -1351,7 +1351,6 @@ class ConfigCache:
         self.__snmp_backend: dict[HostName, SNMPBackendEnum] = {}
 
         self._check_table_cache = cache_manager.obtain_cache("check_tables")
-        self._cache_section_name_of: dict[str, str] = {}
 
         self.autochecks_memoizer: Final = AutochecksMemoizer(autochecks_dir)
 
@@ -2734,14 +2733,6 @@ class ConfigCache:
             for identifier in identifiers
             for msg in piggyback_backend.get_messages_for(identifier, cmk.utils.paths.omd_root)
         )
-
-    def section_name_of(self, section: str) -> str:
-        try:
-            return self._cache_section_name_of[section]
-        except KeyError:
-            section_name = section_name_of(section)
-            self._cache_section_name_of[section] = section_name
-            return section_name
 
     @staticmethod
     def _get_tag_attributes(

@@ -32,10 +32,16 @@ from cmk.utils.log import VERBOSE
 REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
     "special_agents:custom_query_metric_backend": "special_agents:telemetry_metrics_custom_query",
     "checkgroup_parameters:custom_query_metric_backend_monitoring": (
-        "checkgroup_parameters:telemetry_metrics_custom_query_monitoring"
+        "checkgroup_parameters:telemetry_custom_service_monitoring"
     ),
     "static_checks:custom_query_metric_backend_monitoring": (
-        "static_checks:telemetry_metrics_custom_query_monitoring"
+        "static_checks:telemetry_custom_service_monitoring"
+    ),
+    "checkgroup_parameters:telemetry_metrics_custom_query_monitoring": (
+        "checkgroup_parameters:telemetry_custom_service_monitoring"
+    ),
+    "static_checks:telemetry_metrics_custom_query_monitoring": (
+        "static_checks:telemetry_custom_service_monitoring"
     ),
     "checkgroup_parameters:metric_backend_omd": (
         "checkgroup_parameters:data_backend_telemetry_metrics_omd"

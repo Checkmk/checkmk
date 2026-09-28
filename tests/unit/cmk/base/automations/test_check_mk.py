@@ -600,7 +600,7 @@ class TestWarnServiceNameConflicts:
         preview = self._make_preview(
             [
                 self._make_entry("Check_MK Agent", "checkmk_agent", "unchanged"),
-                self._make_entry("Check_MK Agent", "telemetry_metrics_custom_query", "new"),
+                self._make_entry("Check_MK Agent", "telemetry_custom_service", "new"),
             ]
         )
         check_mk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
@@ -608,7 +608,7 @@ class TestWarnServiceNameConflicts:
         assert len(warnings) == 1
         assert "Check_MK Agent" in warnings[0]
         assert "checkmk_agent" in warnings[0]
-        assert "telemetry_metrics_custom_query" in warnings[0]
+        assert "telemetry_custom_service" in warnings[0]
 
     def test_vanished_monitored_conflict_emits_warning(self) -> None:
         """A vanished (but still monitored) service can conflict with a new service.
@@ -620,7 +620,7 @@ class TestWarnServiceNameConflicts:
         preview = self._make_preview(
             [
                 self._make_entry("Check_MK Agent", "checkmk_agent", "vanished"),
-                self._make_entry("Check_MK Agent", "telemetry_metrics_custom_query", "new"),
+                self._make_entry("Check_MK Agent", "telemetry_custom_service", "new"),
             ]
         )
         check_mk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
@@ -628,7 +628,7 @@ class TestWarnServiceNameConflicts:
         assert len(warnings) == 1
         assert "Check_MK Agent" in warnings[0]
         assert "checkmk_agent" in warnings[0]
-        assert "telemetry_metrics_custom_query" in warnings[0]
+        assert "telemetry_custom_service" in warnings[0]
 
     def test_more_than_two_conflicts_emits_single_warning(self) -> None:
         config_warnings.initialize()

@@ -10,9 +10,7 @@ from cmk.checkengine.plugins import CheckPluginName
 # Please keep this functionality even if we currently don't have any replaced check plugins!
 _REPLACED_CHECK_PLUGINS: dict[CheckPluginName, CheckPluginName] = {
     # 3.0: metric backend -> data backend / telemetry metrics
-    CheckPluginName("custom_query_metric_backend"): CheckPluginName(
-        "telemetry_metrics_custom_query"
-    ),
+    CheckPluginName("custom_query_metric_backend"): CheckPluginName("telemetry_custom_service"),
     CheckPluginName("metric_backend_omd"): CheckPluginName("data_backend_telemetry_metrics_omd"),
 }
 

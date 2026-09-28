@@ -265,7 +265,7 @@ class TestCategorizeFile:
             ("buildscripts/scripts/test-gerrit.groovy", ChangeCategory.IGNORED),
             ("component_owners/saas_dev/OWNERS_DEFINITION", ChangeCategory.IGNORED),
             ("docker_image/Dockerfile", ChangeCategory.IGNORED),
-            ("doc/treasures/migration_helpers/legacy_checks/to_v2.py", ChangeCategory.IGNORED),
+            ("doc/treasures/migration_helpers/legacy_vs_to_fs_v1.py", ChangeCategory.IGNORED),
             ("omd/dependency_management/generate_bom_csv.py", ChangeCategory.IGNORED),
             ("scripts/find-python-files", ChangeCategory.IGNORED),
             # Python packages (.py under packages/ and non-free/packages/)

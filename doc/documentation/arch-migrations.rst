@@ -23,20 +23,6 @@ If you own one of these migrations, please keep its section up to date and remov
 If you come across this document and find it outdated or incomplete, feel free to take action.
 If in doubt, reach out to Moritz Kiemer.
 
-Check plugin API: legacy checks to ``agent_based.v2``
-=====================================================
-
-:Phase: mostly done
-:Owner: Respective plugin components / Lead: General "Plugins" component
-:Old: dict-based legacy check plugins in ``cmk/legacy_checks/``
-:New: ``cmk.agent_based.v2`` plugins in ``cmk/plugins/<family>/agent_based/``
-:References: ``doc/treasures/migration_helpers/legacy_checks/instruction.md`` (migration recipe and tooling)
-
-The legacy check API is untyped and predates the structured ``Service``/``Result``/``Metric`` model, making plugins hard to test and validate.
-A few hundred legacy checks remain; they are converted with a semi-automated two-commit process.
-
-This migration is meant to be finished by the end of Q3/2026.
-
 Bakery plugin API: ``bakery_api.v1`` to ``cmk.bakery``
 ======================================================
 

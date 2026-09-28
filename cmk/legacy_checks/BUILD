@@ -10,7 +10,6 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/legacy_includes",
         "//cmk/plugins",
         "//packages/cmk-plugin-apis:agent_based",
     ],

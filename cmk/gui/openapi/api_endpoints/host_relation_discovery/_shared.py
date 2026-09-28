@@ -13,6 +13,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.openapi.api_endpoints.host_config._utils import rw_permissions
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.utils import ProblemException
+from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.utils.host_relation_kinds import is_name_token
 from cmk.gui.watolib.host_relation_discovery import (
     LinkOutcome,
@@ -31,13 +32,20 @@ from cmk.gui.watolib.host_relation_scan import (
     FoundReason,
     FoundRelation,
     MarkArgs,
+    ScopeArgs,
     value_source,
     ValueArgs,
 )
 from cmk.gui.watolib.host_relations import relation_choice_name
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.web.utils import permission_verification as permissions
 
-from .models.request_models import HostValueModel, ScanRequestModel, SuggestEvidenceRequestModel
+from .models.request_models import (
+    HostValueModel,
+    ScanRequestModel,
+    ScopeModel,
+    SuggestEvidenceRequestModel,
+)
 from .models.response_models import (
     RelationConflictModel,
     RelationGroupModel,
@@ -118,6 +126,22 @@ def parsed_values(body: SuggestEvidenceRequestModel) -> list[SharedLabel | Share
     return [ValueArgs(source=value.source, name=value.name).where() for value in body.values]
 
 
+def parsed_scope(model: ScopeModel | ApiOmitted) -> ScopeArgs:
+    """Where the page asked to look, or a 400 for a folder or site the page would not offer.
+
+    Asked against the very choices the page offers, so the two cannot disagree.
+    """
+    if isinstance(model, ApiOmitted):
+        return ScopeArgs()
+    folder = "" if isinstance(model.folder, ApiOmitted) else model.folder.path()
+    if folder not in dict(folder_tree().folder_choices_fulltitle(user)):
+        raise invalid_request(f"The folder {'/' + folder!r} cannot be looked in.")
+    site = None if isinstance(model.site, ApiOmitted) else model.site
+    if site is not None and site not in dict(get_configured_site_choices()):
+        raise invalid_request(f"The site {site!r} cannot be looked in.")
+    return ScopeArgs(folder=folder, site=site)
+
+
 def invalid_request(detail: str) -> ProblemException:
     return ProblemException(status=400, title="Invalid request", detail=detail)
 
@@ -169,6 +193,10 @@ def as_group_model(group: FoundGroup) -> RelationGroupModel:
         outcome=group.outcome,
         settled=None if group.settled is None else HostName(group.settled),
         refusals=dict(group.refusals),
+        partners={
+            member: [HostName(partner) for partner in group.partners(member)]
+            for member in group.members
+        },
     )
 
 

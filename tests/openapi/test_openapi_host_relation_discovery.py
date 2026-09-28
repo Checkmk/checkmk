@@ -137,6 +137,51 @@ def test_every_storable_relation_a_filter_matches_is_named_on_request(
     assert page["keys"] == [f"web-{index}-ilo|management|web-{index}" for index in range(5)]
 
 
+@pytest.mark.usefixtures("inline_background_jobs")
+def test_a_scan_narrowed_to_a_folder_proposes_the_relations_with_a_host_in_it(
+    clients: ClientRegistry,
+) -> None:
+    clients.Folder.create(folder_name="oob", title="OOB", parent="~")
+    clients.HostConfig.bulk_create(
+        entries=[
+            {"host_name": "srv-01-ilo", "folder": "/oob"},
+            {"host_name": "srv-01", "folder": "/"},
+            {"host_name": "srv-02-ilo", "folder": "/"},
+            {"host_name": "srv-02", "folder": "/"},
+        ]
+    )
+
+    scan_id = str(
+        clients.HostRelationDiscovery.scan([_ILO], scope={"folder": "/oob"}).json["job_id"]
+    )
+
+    assert _rows(clients, scan_id) == [("srv-01-ilo", "srv-01", "link")]
+
+
+def test_a_scan_narrowed_to_a_folder_that_does_not_exist_is_refused(
+    clients: ClientRegistry,
+) -> None:
+    resp = clients.HostRelationDiscovery.scan([_ILO], scope={"folder": "/nope"}, expect_ok=False)
+
+    resp.assert_status_code(400)
+
+
+def test_a_scan_narrowed_to_a_site_that_does_not_exist_is_refused(
+    clients: ClientRegistry,
+) -> None:
+    resp = clients.HostRelationDiscovery.scan([_ILO], scope={"site": "nowhere"}, expect_ok=False)
+
+    resp.assert_status_code(400)
+
+
+def test_suggestions_narrowed_to_a_folder_that_does_not_exist_are_refused(
+    clients: ClientRegistry,
+) -> None:
+    resp = clients.HostRelationDiscovery.suggest(scope={"folder": "/nope"}, expect_ok=False)
+
+    resp.assert_status_code(400)
+
+
 @pytest.mark.parametrize(
     "finding",
     [

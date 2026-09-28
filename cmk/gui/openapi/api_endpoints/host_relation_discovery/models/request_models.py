@@ -7,7 +7,10 @@ from typing import Annotated, Literal
 
 from annotated_types import MinLen
 
+from cmk.ccc.site import SiteId
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
+from cmk.gui.openapi.framework.model.common_fields import AnnotatedFolder
+from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
 
 
 @api_model
@@ -18,6 +21,24 @@ class HostValueModel:
     )
     name: Annotated[str, MinLen(1)] = api_field(
         description="The name of the label or attribute.", example="cmdb/sn"
+    )
+
+
+@api_model
+class ScopeModel:
+    folder: AnnotatedFolder | ApiOmitted = api_field(
+        description="Only relations with a host in this folder or one of its subfolders. The "
+        "other host may sit in any folder.",
+        example="/oob",
+        default_factory=ApiOmitted,
+    )
+    site: Annotated[SiteId, TypedPlainValidator(str, SiteIdConverter.should_exist)] | ApiOmitted = (
+        api_field(
+            description="Only relations with a host monitored on this site. The other host may be "
+            "on any site.",
+            example="central",
+            default_factory=ApiOmitted,
+        )
     )
 
 
@@ -40,6 +61,12 @@ class SuggestEvidenceRequestModel:
         "share, or both.",
         example=["names"],
         default_factory=lambda: ["names", "values"],
+    )
+    scope: ScopeModel | ApiOmitted = api_field(
+        description="Where to look. Every host the user may see is still read as the other "
+        "end of a relation. Omitted, it is all of Setup.",
+        example={"folder": "/oob"},
+        default_factory=ApiOmitted,
     )
 
 
@@ -99,6 +126,12 @@ class ScanRequestModel:
                 "paired_by": {"source": "label", "name": "cmdb/sn"},
             },
         ],
+    )
+    scope: ScopeModel | ApiOmitted = api_field(
+        description="Where to look. Every host the user may see is still read as the other "
+        "end of a relation. Omitted, it is all of Setup.",
+        example={"folder": "/oob"},
+        default_factory=ApiOmitted,
     )
 
 

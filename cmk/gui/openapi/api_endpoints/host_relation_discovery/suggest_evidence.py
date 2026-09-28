@@ -22,6 +22,7 @@ from ._family import HOST_RELATION_DISCOVERY_FAMILY
 from ._shared import (
     as_suggestions_model,
     need_discovery_permissions,
+    parsed_scope,
     parsed_values,
     parsed_words,
     PERMISSIONS,
@@ -37,7 +38,8 @@ def suggest_host_relation_evidence(
 
     Reads every host the user may see and reports the words that turn one host name into another and the
     labels and attributes whose values each sit on a handful of hosts - what a scan could
-    look for. ``look_in`` narrows it to either. Changes nothing.
+    look for. ``look_in`` narrows it to either, ``scope`` to the relations with a host in a
+    folder or on a site. Changes nothing.
     """
     need_discovery_permissions()
     return as_suggestions_model(
@@ -49,6 +51,7 @@ def suggest_host_relation_evidence(
             values=parsed_values(body),
             in_names="names" in body.look_in,
             in_values="values" in body.look_in,
+            scope=parsed_scope(body.scope).scope(),
         )
     )
 

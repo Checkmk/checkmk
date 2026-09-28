@@ -17,14 +17,10 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
-from cmk.gui.watolib.host_relation_scan import (
-    RelationScanBackgroundJob,
-    ScopeArgs,
-    start_relation_scan,
-)
+from cmk.gui.watolib.host_relation_scan import RelationScanBackgroundJob, start_relation_scan
 
 from ._family import HOST_RELATION_DISCOVERY_FAMILY
-from ._shared import finding_args, need_discovery_permissions, PERMISSIONS
+from ._shared import finding_args, need_discovery_permissions, parsed_scope, PERMISSIONS
 from .models.request_models import ScanRequestModel
 from .models.response_models import RelationJobModel
 
@@ -38,12 +34,13 @@ def scan_host_relations(api_context: ApiContext, body: ScanRequestModel) -> Rela
     """
     need_discovery_permissions()
     findings = finding_args(body)
+    scope = parsed_scope(body.scope)
     job = RelationScanBackgroundJob()
     if (
         result := start_relation_scan(
             job,
             findings,
-            ScopeArgs(),
+            scope,
             UserPermissionSerializableConfig.from_global_config(active_config),
             site_configs=api_context.config.sites,
             wato_hide_folders_without_read_permissions=api_context.config.wato_hide_folders_without_read_permissions,

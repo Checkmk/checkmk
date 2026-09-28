@@ -147,6 +147,12 @@ class RelationGroupModel:
         description="Per member that cannot be named, why - such a host cannot be written.",
         example={},
     )
+    partners: dict[str, list[AnnotatedHostName]] = api_field(
+        description="Per member, the hosts it is related to when it is named - the members "
+        "that can be written, and, for a member outside the folder or site looked in, only "
+        "those inside it.",
+        example={"w-4711": ["w-4712"], "w-4712": ["w-4711"]},
+    )
 
 
 @api_model
@@ -294,7 +300,11 @@ class ValueFindingModel:
 
 @api_model
 class SuggestionsModel:
-    hosts_scanned: int = api_field(description="How many hosts of Setup were read.", example=812)
+    hosts_scanned: int = api_field(
+        description="How many hosts were looked at: those in scope, or every host of Setup the "
+        "user may see.",
+        example=812,
+    )
     words: list[WordFindingModel] = api_field(
         description="Words that turn one host name into another, the ones a kind declares first.",
         example=[
@@ -361,7 +371,11 @@ class FindingSummaryModel:
 
 @api_model
 class ScanSummaryModel:
-    hosts_scanned: int = api_field(description="How many hosts of Setup were read.", example=812)
+    hosts_scanned: int = api_field(
+        description="How many hosts were looked at: those in scope, or every host of Setup the "
+        "user may see.",
+        example=812,
+    )
     findings: list[FindingSummaryModel] = api_field(
         description="What each finding comes to, in the order they were asked for.",
         example=[

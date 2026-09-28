@@ -5362,6 +5362,7 @@ class HostRelationDiscoveryClient(RestApiClient):
         words: list[str] | None = None,
         values: list[dict[str, str]] | None = None,
         look_in: list[str] | None = None,
+        scope: dict[str, str] | None = None,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
@@ -5371,6 +5372,7 @@ class HostRelationDiscoveryClient(RestApiClient):
                 "words": words or [],
                 "values": values or [],
                 "look_in": ["names", "values"] if look_in is None else look_in,
+                **({} if scope is None else {"scope": scope}),
             },
             expect_ok=expect_ok,
         )
@@ -5378,6 +5380,7 @@ class HostRelationDiscoveryClient(RestApiClient):
     def scan(
         self,
         findings: list[dict[str, object]] | None = None,
+        scope: dict[str, str] | None = None,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
@@ -5388,7 +5391,8 @@ class HostRelationDiscoveryClient(RestApiClient):
                     [{"id": "word:ilo", "kind": "management", "words": ["ilo", "bmc"]}]
                     if findings is None
                     else findings
-                )
+                ),
+                **({} if scope is None else {"scope": scope}),
             },
             expect_ok=expect_ok,
         )

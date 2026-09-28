@@ -364,8 +364,10 @@ const hostServicesUrl = computed(() => {
 
 <style scoped>
 .maps-context-menu__template {
-  /* See HoverMenu: paint containment is what keeps a template inside its card. */
+  /* See HoverMenu. */
   contain: paint;
+  max-height: 40vh;
+  overflow: auto;
   margin-bottom: var(--dimension-3);
   padding: var(--dimension-4) 14px;
   font-size: var(--font-size-normal);

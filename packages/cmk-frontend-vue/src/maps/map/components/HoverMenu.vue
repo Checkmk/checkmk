@@ -645,8 +645,13 @@ a.maps-hover-menu__pill:hover {
 
 .maps-hover-menu__template {
   /* Holds author- and monitoring-driven markup: without paint containment a
-     purely cosmetic style (margin + size) still covers the map and eats clicks. */
+     purely cosmetic style (margin + size) still covers the map and eats clicks.
+     contain: paint clips descendant paint but not this box's own height, so a
+     tall child would still grow the card into a full-viewport overlay — the
+     max-height + overflow caps it. */
   contain: paint;
+  max-height: 40vh;
+  overflow: auto;
   font-size: var(--font-size-large);
   line-height: 20px;
   color: var(--font-color);

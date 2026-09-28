@@ -8,11 +8,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import AsyncIterator
-from typing import cast, Literal
+from collections.abc import AsyncIterator, Callable
+from typing import cast, Literal, override
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from fastapi.responses import StreamingResponse
+from starlette.types import Receive, Scope, Send
 
 from cmk.maps.backend.api.v1.connections import auth_user_scope, build_topology_response
 from cmk.maps.backend.api.v1.deps import (
@@ -24,7 +25,7 @@ from cmk.maps.backend.api.v1.types import MapName
 from cmk.maps.backend.connections.base import ServiceMatchRow, ServiceRow
 from cmk.maps.backend.core.auth import Principal
 from cmk.maps.backend.core.config import settings
-from cmk.maps.backend.core.ratelimit import ws_connect_limiter
+from cmk.maps.backend.core.ratelimit import sse_stream_limiter, ws_connect_limiter
 from cmk.maps.backend.core.sse import manager, Subscriber
 from cmk.maps.backend.integrations.checkmk import resolve_folder_scope
 from cmk.maps.backend.schemas.map import FlowView, FolderTreeView, MapConfig, RadarView
@@ -504,9 +505,30 @@ async def folder_service_search(
 
 
 class SseResponse(StreamingResponse):
-    """Carries the stream's media type into the schema; the body is streamed."""
+    """Carries the stream's media type into the schema; the body is streamed.
+
+    ``on_close`` runs however the response ends, also when the client is gone
+    before the body generator starts: that generator's own ``finally`` would
+    never run then.
+    """
 
     media_type: str | None = "text/event-stream"
+
+    def __init__(
+        self,
+        content: AsyncIterator[bytes],
+        on_close: Callable[[], None],
+        headers: dict[str, str] | None = None,
+    ) -> None:
+        super().__init__(content, headers=headers)
+        self._on_close = on_close
+
+    @override
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        try:
+            await super().__call__(scope, receive, send)
+        finally:
+            self._on_close()
 
 
 @router.get(
@@ -515,6 +537,9 @@ class SseResponse(StreamingResponse):
     # them — declaring them here is what puts them in the schema, and with it in
     # the frontend's generated types.
     response_class=SseResponse,
+    # FastAPI reads the default from the response class's __init__ otherwise,
+    # which SseResponse's own signature no longer carries.
+    status_code=status.HTTP_200_OK,
     responses={200: {"model": StreamMessage, "description": "One state or topology frame."}},
 )
 async def sse_map_states(
@@ -562,12 +587,20 @@ async def sse_map_states(
     if cfg.view.type == "foldertree":
         folder_scope = resolve_folder_scope(user)
         group_key = f"{auth_user}#{folder_scope.key}"
+
+    if not sse_stream_limiter.try_acquire(user.name):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many concurrent streams"
+        )
     sub = manager.subscribe(map_key, auth_user, folder_scope=folder_scope, group_key=group_key)
 
-    # Only ``event_stream``'s finally unsubscribes, and it doesn't run until the
-    # StreamingResponse is driven — so any failure in the setup below would leak
-    # the subscriber (queue never drained, broadcast loop never idle). Pair the
-    # unsubscribe with the subscribe by unwinding it on a setup error.
+    def close_stream() -> None:
+        manager.unsubscribe(map_key, sub)
+        sse_stream_limiter.release(user.name)
+
+    # The response closes the stream only once it is driven, so any failure in the
+    # setup below would leak the subscriber (queue never drained, broadcast loop
+    # never idle) and the stream slot. Unwind both on a setup error.
     try:
         # A new subscriber must not diverge from its REST first paint on anything
         # that changed before it joined (the group snapshot already absorbed those,
@@ -585,34 +618,31 @@ async def sse_map_states(
         if cfg.view.type == "flow":
             await _push_topology_to(cfg, map_key, auth_user, [sub], force_full=True, store=False)
     except Exception:
-        manager.unsubscribe(map_key, sub)
+        close_stream()
         raise
 
     async def event_stream() -> AsyncIterator[bytes]:
-        try:
-            while True:
-                if await request.is_disconnected():
-                    break
-                # The client fell too far behind and its queue overflowed. Its
-                # buffered deltas are now an incomplete history, so end the stream
-                # instead of streaming a corrupt state — the browser reconnects and
-                # the drop-snapshot-on-join above yields a fresh full resend.
-                if sub.overflowed:
-                    break
-                # The ticket is only validated at connect; without this the loop
-                # would stream forever with frozen capabilities. Re-check it on
-                # every wake (message or keepalive, so at most one keepalive
-                # interval past expiry) and close the stream once it expires —
-                # the client reconnects with a freshly minted ticket.
-                if principal_from_token(token) is None:
-                    break
-                try:
-                    msg = await asyncio.wait_for(sub.queue.get(), timeout=_SSE_KEEPALIVE_INTERVAL)
-                    yield f"data: {msg}\n\n".encode()
-                except TimeoutError:
-                    yield b": keepalive\n\n"
-        finally:
-            manager.unsubscribe(map_key, sub)
+        while True:
+            if await request.is_disconnected():
+                break
+            # The client fell too far behind and its queue overflowed. Its
+            # buffered deltas are now an incomplete history, so end the stream
+            # instead of streaming a corrupt state — the browser reconnects and
+            # the drop-snapshot-on-join above yields a fresh full resend.
+            if sub.overflowed:
+                break
+            # The ticket is only validated at connect; without this the loop
+            # would stream forever with frozen capabilities. Re-check it on
+            # every wake (message or keepalive, so at most one keepalive
+            # interval past expiry) and close the stream once it expires —
+            # the client reconnects with a freshly minted ticket.
+            if principal_from_token(token) is None:
+                break
+            try:
+                msg = await asyncio.wait_for(sub.queue.get(), timeout=_SSE_KEEPALIVE_INTERVAL)
+                yield f"data: {msg}\n\n".encode()
+            except TimeoutError:
+                yield b": keepalive\n\n"
 
     headers = {
         # Apache buffers proxied responses by default; opt out so events flow
@@ -620,4 +650,4 @@ async def sse_map_states(
         "X-Accel-Buffering": "no",
         "Cache-Control": "no-cache, no-store",
     }
-    return SseResponse(event_stream(), headers=headers)
+    return SseResponse(event_stream(), headers=headers, on_close=close_stream)

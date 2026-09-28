@@ -65,10 +65,55 @@ class RateLimiter:
             return max(0.0, q[0] + self._window - now)
 
 
+class ConcurrencyLimiter:
+    """Caps how many resources are held at once, per key and site-wide.
+
+    Thread-safe; suitable for single-process deployments. Where RateLimiter caps
+    the *rate* of new acquisitions, this caps how many are *held simultaneously*.
+    """
+
+    def __init__(self, max_per_key: int, max_total: int) -> None:
+        self._max_per_key = max_per_key
+        self._max_total = max_total
+        self._counts: dict[str, int] = {}
+        self._total = 0
+        self._lock = Lock()
+
+    def try_acquire(self, key: str) -> bool:
+        """Reserve one slot for key; return False (reserving nothing) when full."""
+        with self._lock:
+            held = self._counts.get(key, 0)
+            if self._total >= self._max_total or held >= self._max_per_key:
+                return False
+            self._counts[key] = held + 1
+            self._total += 1
+            return True
+
+    def release(self, key: str) -> None:
+        """Give back one slot previously acquired for key (idempotent at zero)."""
+        with self._lock:
+            held = self._counts.get(key, 0)
+            if held <= 0:
+                return
+            if held == 1:
+                del self._counts[key]
+            else:
+                self._counts[key] = held - 1
+            self._total -= 1
+
+
 # 30 stream handshakes per minute per authenticated user — covers typical
 # reconnect storms (tab restore, laptop wake, hidden tabs resuming) but blocks
 # scripted connection floods.
 ws_connect_limiter = RateLimiter(max_calls=30, window_seconds=60)
+
+# Concurrently held SSE streams. Each stream pins one of the site Apache's
+# prefork workers (MaxClients 64) until its ticket expires, so the handshake rate
+# cap above is not enough on its own — a client can hold far more streams than the
+# pool absorbs. Cap them per user (a real client shows one map per visible tab and
+# closes hidden ones) and site-wide, keeping the total well under MaxClients so
+# the GUI and REST API always keep workers.
+sse_stream_limiter = ConcurrencyLimiter(max_per_key=6, max_total=40)
 
 # Per-authenticated-user budget for the expensive Livestatus readers (topology,
 # metric-history, object-details, folder search/host-services, map states).

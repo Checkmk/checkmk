@@ -22,17 +22,18 @@ import hashlib
 import hmac
 import json
 import time
-from collections.abc import Iterator
+from collections.abc import AsyncIterator, Iterator
 from unittest.mock import MagicMock
 
 import pytest
 from fastapi import FastAPI, HTTPException
 from fastapi.testclient import TestClient
+from starlette.requests import ClientDisconnect
 
 from cmk.maps.backend.api.v1 import states
 from cmk.maps.backend.app import create_app
 from cmk.maps.backend.core.auth import Principal
-from cmk.maps.backend.core.ratelimit import ws_connect_limiter
+from cmk.maps.backend.core.ratelimit import sse_stream_limiter, ws_connect_limiter
 from cmk.maps.backend.core.sse import manager
 from cmk.maps.backend.schemas.map import MapConfig
 from cmk.maps.backend.schemas.state import MapStates, ObjectState, ObjectTiming
@@ -305,3 +306,42 @@ def test_sse_invalid_tokens_do_not_count_toward_the_limit(client: TestClient) ->
     for _ in range(ws_connect_limiter._max):  # noqa: SLF001
         assert client.get("/api/v1/sse/maps/b1?token=forged").status_code == 401
     assert client.get(f"/api/v1/sse/maps/b1?token={_stream_token('alice')}").status_code == 404
+
+
+def test_sse_rejects_when_the_concurrent_stream_cap_is_reached(client: TestClient) -> None:
+    # A held stream pins an Apache worker until its ticket expires, so past the
+    # per-user cap a further connect for a real map is refused before it opens.
+    map_service.register_map("alice", MapConfig(name="b1"))
+    held = 0
+    try:
+        while sse_stream_limiter.try_acquire("alice"):
+            held += 1
+        assert client.get(f"/api/v1/sse/maps/b1?token={_stream_token('alice')}").status_code == 429
+    finally:
+        for _ in range(held):
+            sse_stream_limiter.release("alice")
+
+
+def test_sse_response_closes_when_the_client_is_gone_before_the_body() -> None:
+    # Starlette sends the response start before it first pulls the body; a client
+    # that is already gone fails that send, so the body generator never starts
+    # and only the response itself can give the stream slot back.
+    started: list[bool] = []
+    closed: list[bool] = []
+
+    async def body() -> AsyncIterator[bytes]:
+        started.append(True)
+        yield b""
+
+    async def receive() -> dict[str, object]:
+        await asyncio.Event().wait()
+        return {}
+
+    async def send(_message: object) -> None:
+        raise OSError("client gone")
+
+    response = states.SseResponse(body(), on_close=lambda: closed.append(True))
+    scope = {"type": "http", "asgi": {"spec_version": "2.4"}}
+    with pytest.raises(ClientDisconnect):
+        asyncio.run(response(scope, receive, send))
+    assert (started, closed) == ([], [True])

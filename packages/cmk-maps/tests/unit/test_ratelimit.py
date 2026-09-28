@@ -18,7 +18,12 @@ from collections.abc import Iterator
 
 import pytest
 
-from cmk.maps.backend.core.ratelimit import RateLimiter, ws_connect_limiter
+from cmk.maps.backend.core.ratelimit import (
+    ConcurrencyLimiter,
+    RateLimiter,
+    sse_stream_limiter,
+    ws_connect_limiter,
+)
 
 
 class _Clock:
@@ -121,3 +126,55 @@ def test_ws_connect_limiter_is_thirty_per_minute(clock: _Clock) -> None:
     # The module-level limiter guarding the SSE handshake.
     assert ws_connect_limiter._max == 30  # noqa: SLF001
     assert ws_connect_limiter._window == 60  # noqa: SLF001
+
+
+def test_concurrency_allows_up_to_the_per_key_limit() -> None:
+    limiter = ConcurrencyLimiter(max_per_key=2, max_total=10)
+    assert limiter.try_acquire("k") is True
+    assert limiter.try_acquire("k") is True
+    assert limiter.try_acquire("k") is False
+
+
+def test_concurrency_release_frees_a_slot() -> None:
+    limiter = ConcurrencyLimiter(max_per_key=1, max_total=10)
+    assert limiter.try_acquire("k") is True
+    assert limiter.try_acquire("k") is False
+    limiter.release("k")
+    assert limiter.try_acquire("k") is True
+
+
+def test_concurrency_global_cap_blocks_across_keys() -> None:
+    limiter = ConcurrencyLimiter(max_per_key=5, max_total=2)
+    assert limiter.try_acquire("a") is True
+    assert limiter.try_acquire("b") is True
+    # Total budget spent even though neither key hit its own limit.
+    assert limiter.try_acquire("c") is False
+    limiter.release("a")
+    assert limiter.try_acquire("c") is True
+
+
+def test_concurrency_keys_are_independent() -> None:
+    limiter = ConcurrencyLimiter(max_per_key=1, max_total=10)
+    assert limiter.try_acquire("a") is True
+    assert limiter.try_acquire("a") is False
+    assert limiter.try_acquire("b") is True
+
+
+def test_concurrency_release_at_zero_is_a_noop() -> None:
+    limiter = ConcurrencyLimiter(max_per_key=1, max_total=10)
+    limiter.release("never-acquired")
+    # The spurious release must not hand out a negative-debt bonus slot.
+    assert limiter.try_acquire("never-acquired") is True
+    assert limiter.try_acquire("never-acquired") is False
+
+
+def test_sse_stream_limiter_holds_six_streams_per_user() -> None:
+    # The module-level limiter guarding concurrent SSE streams.
+    held = 0
+    try:
+        while sse_stream_limiter.try_acquire("wall-display"):
+            held += 1
+        assert held == 6
+    finally:
+        for _ in range(held):
+            sse_stream_limiter.release("wall-display")

@@ -173,8 +173,17 @@ def test_cfg_to_map_global_background_color() -> None:
 
 
 def test_cfg_to_map_global_background_color_invalid_falls_back() -> None:
-    content = "define global {\n    background_color = rgb(1,2,3)\n}\n"
+    content = "define global {\n    background_color = expression(alert(1))\n}\n"
     assert cfg_to_map(content, "x")["background_color"] == "#ffffff"
+
+
+@pytest.mark.parametrize(
+    ("css", "hex_color"),
+    [("rgb(1,2,3)", "#010203"), ("rgba(255, 128, 0, 0.5)", "#ff800080")],
+)
+def test_cfg_to_map_global_background_rgb_color_becomes_hex(css: str, hex_color: str) -> None:
+    content = f"define global {{\n    background_color = {css}\n}}\n"
+    assert cfg_to_map(content, "x")["background_color"] == hex_color
 
 
 def test_cfg_to_map_global_iconset() -> None:
@@ -282,7 +291,7 @@ def test_cfg_to_map_line_width_stays_within_the_daemons_range(
 
 
 def test_cfg_to_map_line_color_border_invalid_falls_back() -> None:
-    content = "define line {\n    x = 0,10\n    y = 0,10\n    line_color_border = rgb(1,2,3)\n}\n"
+    content = "define line {\n    x = 0,10\n    y = 0,10\n    line_color_border = expression(alert(1))\n}\n"
     assert _first_obj(cfg_to_map(content, "test"))["line_color_border"] == "#000000"
 
 
@@ -444,7 +453,7 @@ def test_cfg_to_map_textbox_html_stripped() -> None:
     assert obj["label"]["text"] == "Bold text"
 
 
-def test_cfg_to_map_textbox_html_rgb_color_falls_back() -> None:
+def test_cfg_to_map_textbox_html_rgb_color_becomes_hex() -> None:
     content = (
         "define textbox {\n"
         "    x = 0\n"
@@ -453,7 +462,7 @@ def test_cfg_to_map_textbox_html_rgb_color_falls_back() -> None:
         "}\n"
     )
     obj = _first_obj(cfg_to_map(content, "test"))
-    assert obj["label"]["color"] == "#000000"
+    assert obj["label"]["color"] == "#ff0000"
 
 
 def test_cfg_to_map_textbox_background_color_is_not_text_color() -> None:

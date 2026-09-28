@@ -13,6 +13,11 @@ import re
 # CSS-injection payloads out of stroke/background/fill attributes rendered downstream.
 _COLOR_RE = re.compile(r"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]{1,32}|transparent)$")
 
+# CSS rgb()/rgba(), as legacy maps carry them (NagVis textboxes' inline HTML).
+_RGB_RE = re.compile(
+    r"rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*(?:,\s*([0-9.]+)(%?)\s*)?\)"
+)
+
 # Allowlist instead of a scheme blocklist: browsers strip ASCII control
 # characters when parsing URLs, so "java\tscript:alert(1)" bypasses any
 # startswith("javascript:") check yet still executes on click. Rejecting
@@ -142,13 +147,26 @@ def coerce_color(value: object) -> object:
     Read-side companion to ``validate_color`` — pre-existing JSON may carry values
     that newer rules reject (e.g. unsupported CSS expressions written before the
     validator existed). Dropping them is the safe fallback; re-saving the map
-    through the API still rejects bad input.
+    through the API still rejects bad input. A CSS ``rgb()``/``rgba()`` color is
+    kept, as the hex color it names.
     """
     if value is None or value == "":
         return value
     if not isinstance(value, str):
         return None
     try:
-        return validate_color(value)
+        return validate_color(_rgb_to_hex(value))
     except ValueError:
         return None
+
+
+def _rgb_to_hex(value: str) -> str:
+    """``rgb(...)``/``rgba(...)`` as the hex color it names; any other value as is."""
+    if (match := _RGB_RE.fullmatch(value.strip())) is None:
+        return value
+    red, green, blue = (min(int(channel), 255) for channel in match.group(1, 2, 3))
+    color = f"#{red:02x}{green:02x}{blue:02x}"
+    if (alpha := match.group(4)) is None:
+        return color
+    opacity = float(alpha) / 100 if match.group(5) else float(alpha)
+    return f"{color}{round(min(max(opacity, 0.0), 1.0) * 255):02x}"

@@ -180,7 +180,12 @@ test('keeps only the newest response when an earlier one resolves late', async (
   expect(screen.queryByRole('button', { name: 'stale' })).not.toBeInTheDocument()
 })
 
-const PAIRS = ['cmk/os_family:linux', 'cmk/os_family:windows', 'criticality:prod']
+const PAIRS = [
+  'cmk/os_family:linux',
+  'cmk/os_family:linux-rt',
+  'cmk/os_family:windows',
+  'criticality:prod'
+]
 
 function mountKeyValue(options: { wildcardOption?: boolean } = {}) {
   const selected = ref<string[]>([])
@@ -286,6 +291,35 @@ test('drops the wildcard entry when a key leaves a single value to match', async
 
   expect(screen.getByRole('button', { name: 'criticality' })).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'criticality*' })).not.toBeInTheDocument()
+})
+
+test('offers no wildcard for a key without the start of a value, which matches no pair', async () => {
+  mountKeyValue({ wildcardOption: true })
+
+  await userEvent.type(screen.getByRole('searchbox'), 'cmk/os_family:')
+  await waitFor(() => screen.getByRole('button', { name: 'cmk/os_family:linux' }))
+
+  expect(screen.getByRole('button', { name: 'cmk/os_family:windows' })).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'cmk/os_family:*' })).not.toBeInTheDocument()
+})
+
+test('offers no wildcard for the start of a value without its key', async () => {
+  mountKeyValue({ wildcardOption: true })
+
+  await userEvent.type(screen.getByRole('searchbox'), ':')
+  await waitFor(() => screen.getByRole('button', { name: 'criticality:prod' }))
+
+  expect(screen.queryByRole('button', { name: ':*' })).not.toBeInTheDocument()
+})
+
+test('offers a wildcard for the start of a value of a key', async () => {
+  mountKeyValue({ wildcardOption: true })
+
+  await userEvent.type(screen.getByRole('searchbox'), 'cmk/os_family:li')
+
+  await waitFor(() => {
+    expect(screen.getByRole('button', { name: 'cmk/os_family:li*' })).toBeInTheDocument()
+  })
 })
 
 test('keeps the arrow keys it acts on, so nothing outside moves as well', async () => {

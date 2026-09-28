@@ -101,11 +101,24 @@ const matchingKeys = computed<string[]>(() => {
 
 const wildcardEntry = computed<string[]>(() => {
   const typed = query.value.trim()
-  if (!props.wildcardOption || typed === '' || typed.endsWith(WILDCARD)) {
+  if (
+    !props.wildcardOption ||
+    typed === '' ||
+    typed.endsWith(WILDCARD) ||
+    !isPrefixOfAPair(typed)
+  ) {
     return []
   }
   return [`${typed}${WILDCARD}`]
 })
+
+function isPrefixOfAPair(typed: string): boolean {
+  if (!props.keyValue) {
+    return true
+  }
+  const separator = typed.indexOf(KEY_VALUE_SEPARATOR)
+  return separator !== 0 && separator !== typed.length - 1
+}
 
 const matchedEntries = computed<string[]>(() => {
   const seen = new Set<string>()

@@ -12,6 +12,8 @@ redaction. SVG safety is covered separately in the GUI's ``test_image_security``
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
@@ -293,6 +295,77 @@ def test_authuser_header_is_lqencoded(monkeypatch: pytest.MonkeyPatch, tmp_path:
     # A single header line: the injected newline was neutralised by lqencode.
     assert headers.count("\n") == 1
     assert "\nStats:" not in headers
+
+
+def _automation_connection() -> livestatus.LivestatusConnection:
+    return livestatus.LivestatusConnection(
+        socket_path="/var/run/live",
+        host=None,
+        checkmk_url="http://localhost/heute",
+        automation_user="automation",
+        automation_secret="secret",
+    )
+
+
+async def _rest_must_not_run(*_args: object) -> list[str]:
+    raise AssertionError("automation credentials used without the user's visibility")
+
+
+def test_metric_history_rest_path_requires_auth_user_visibility(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # The REST path uses the connection's automation credentials, which see every
+    # object. An object the requesting user cannot see (AuthUser-scoped _query
+    # returns nothing) must yield no metrics and must never reach the REST call.
+    conn = _automation_connection()
+
+    async def _empty(_query: str) -> Sequence[object]:
+        return []
+
+    monkeypatch.setattr(conn, "_query", _empty)
+    monkeypatch.setattr(conn, "_get_cmk_metric_names", _rest_must_not_run)
+
+    result = asyncio.run(conn.get_metric_history("secret-host", "CPU", 0, 100))
+    assert result.series == {}
+
+
+def test_metric_history_rest_path_proceeds_when_visible(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # A visible object without perf_data clears the gate and asks the REST API for
+    # its metric names (none here, so no time-series request follows).
+    conn = _automation_connection()
+    asked: list[str] = []
+
+    async def _one_row(_query: str) -> Sequence[object]:
+        return [[""]]
+
+    async def _metric_names(host: str, *_args: object) -> list[str]:
+        asked.append(host)
+        return []
+
+    monkeypatch.setattr(conn, "_query", _one_row)
+    monkeypatch.setattr(conn, "_get_cmk_metric_names", _metric_names)
+
+    asyncio.run(conn.get_metric_history("secret-host", "CPU", 0, 100))
+    assert asked == ["secret-host"]
+
+
+def test_metric_history_rest_path_fails_closed_without_livestatus(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Without an answer from Livestatus the user's visibility is unknown, so the
+    # automation credentials must not be used to look the metrics up instead.
+    conn = _automation_connection()
+
+    async def _timeout(_query: str) -> Sequence[object]:
+        raise TimeoutError
+
+    monkeypatch.setattr(conn, "_query", _timeout)
+    monkeypatch.setattr(conn, "_get_cmk_metric_names", _rest_must_not_run)
+
+    result = asyncio.run(conn.get_metric_history("secret-host", "CPU", 0, 100))
+    assert result.series == {}
 
 
 # --- connection URL validation (SSRF mitigations) ---

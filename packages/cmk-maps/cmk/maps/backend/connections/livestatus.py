@@ -596,19 +596,23 @@ class LivestatusConnection(ConnectionBase):
             site_id=_default_site_id(sid),
         )
 
-    async def get_service_perf_and_cmd(self, host: str, service: str) -> tuple[str, str]:
-        """Return (perf_data, check_command) for a single service."""
-        query = (
-            f"GET services\n"
-            f"Columns: perf_data check_command\n"
-            f"Filter: host_name = {lqencode(host)}\n"
-            f"Filter: description = {lqencode(service)}\n"
-        )
+    async def _visible_perf_data(self, host: str, service: str | None) -> str | None:
+        """The object's perf_data, or None when it is outside the requesting
+        user's monitoring scope.
+
+        Runs through the AuthUser-scoped ``_query``, so it answers for the user
+        who opened the map, not for any credentials the connection carries.
+        """
+        if service:
+            query = (
+                f"GET services\nColumns: perf_data\n"
+                f"Filter: host_name = {lqencode(host)}\n"
+                f"Filter: description = {lqencode(service)}\n"
+            )
+        else:
+            query = f"GET hosts\nColumns: perf_data\nFilter: name = {lqencode(host)}\n"
         rows = await self._query(query)
-        if not rows:
-            return "", ""
-        r = rows[0]
-        return row_str(r, 0), row_str(r, 1)
+        return row_str(rows[0], 0) if rows else None
 
     @override
     async def get_host_details(self, hostname: str) -> ObjectDetails | None:
@@ -996,14 +1000,29 @@ class LivestatusConnection(ConnectionBase):
         (Checkmk Raw / Nagios core). Falls back to Livestatus rrddata column otherwise
         (Checkmk Enterprise / CMC only).
         """
+        # Both paths start from the requesting user's own (AuthUser-scoped)
+        # perf_data. The REST path queries with the connection's automation
+        # credentials, which see every object, so an object outside the user's
+        # scope ends here, and without an answer the lookup fails closed.
+        try:
+            perf_data = await self._visible_perf_data(host, service)
+        except Exception as exc:
+            logger.warning(
+                "Metric history: failed to get perf_data for %(host)r/%(service)r: %(error)s",
+                {"host": host, "service": service, "error": exc},
+            )
+            return MetricHistoryResult()
+        if perf_data is None:
+            return MetricHistoryResult()
         if self._checkmk_url and self._automation_user and self._automation_secret:
-            return await self._fetch_cmk_graph_history(host, service, start, end)
-        return await self._fetch_rrddata_history(host, service, start, end)
+            return await self._fetch_cmk_graph_history(host, service, perf_data, start, end)
+        return await self._fetch_rrddata_history(host, service, perf_data, start, end)
 
     async def _fetch_cmk_graph_history(
         self,
         host: str,
         service: str | None,
+        perf_data: str,
         start: int,
         end: int,
     ) -> MetricHistoryResult:
@@ -1016,14 +1035,6 @@ class LivestatusConnection(ConnectionBase):
         site = parts[-2] if len(parts) >= 2 and parts[-1] == "check_mk" else parts[-1]
         api_url = base_url + "/api/1.0/domain-types/metric/actions/get/invoke"
 
-        try:
-            if service:
-                perf_data, _check_command = await self.get_service_perf_and_cmd(host, service)
-            else:
-                perf_data = (await self.get_host_state(host)).perf_data or ""
-        except Exception as exc:
-            logger.debug("Failed to get perf_data from Livestatus: %(error)s", {"error": exc})
-            perf_data = ""
         metric_names = [m["label"] for m in parse_perf_metrics(perf_data)]
         if not metric_names:
             metric_names = await self._get_cmk_metric_names(host, service, base_url, auth_header)
@@ -1134,6 +1145,7 @@ class LivestatusConnection(ConnectionBase):
         self,
         host: str,
         service: str | None,
+        perf_data: str,
         start: int,
         end: int,
     ) -> MetricHistoryResult:
@@ -1142,18 +1154,6 @@ class LivestatusConnection(ConnectionBase):
             "rrddata fetch: host=%(host)r service=%(service)r start=%(start)d end=%(end)d",
             {"host": host, "service": service, "start": start, "end": end},
         )
-
-        try:
-            if service:
-                perf_data, _check_command = await self.get_service_perf_and_cmd(host, service)
-            else:
-                perf_data = (await self.get_host_state(host)).perf_data or ""
-        except Exception as exc:
-            logger.warning(
-                "rrddata: failed to get state for %(host)r/%(service)r: %(error)s",
-                {"host": host, "service": service, "error": exc},
-            )
-            return MetricHistoryResult()
 
         metrics = parse_perf_metrics(perf_data)
         if not metrics:

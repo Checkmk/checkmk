@@ -86,7 +86,7 @@ from cmk.gui.site_config import (
 )
 from cmk.gui.sites import SiteStatus
 from cmk.gui.sites import states as sites_states
-from cmk.gui.type_defs import GlobalSettings, Users
+from cmk.gui.type_defs import CustomHostAttrSpec, GlobalSettings, Users
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import (
     effective_authentication_connections,
@@ -142,8 +142,8 @@ from cmk.gui.watolib.hosts_and_folders import (
     collect_all_hosts,
     collect_hosts,
     folder_preserving_link,
-    folder_tree,
     FolderTree,
+    HostsAndFoldersConfig,
     validate_all_hosts,
 )
 from cmk.gui.watolib.paths import wato_var_dir
@@ -162,6 +162,7 @@ from cmk.livestatus_client import (
     SiteConfigurations,
 )
 from cmk.messaging import rabbitmq
+from cmk.ruleset_matcher.tags import TagConfig, TagConfigSpec
 from cmk.shared_typing.changes import (
     ActivationPhase,
     OnlineStatus,
@@ -1053,6 +1054,7 @@ def _get_omd_domain_background_job_result(
 
 
 def _call_activate_changes_automation(
+    tree: FolderTree,
     site_id: SiteId,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     site_changes_activate_until: Sequence[ChangeSpec],
@@ -1063,7 +1065,7 @@ def _call_activate_changes_automation(
     domain_requests = _get_domains_needing_activation(site_changes_activate_until)
 
     if isinstance(automation_config, LocalAutomationConfig):
-        return execute_activate_changes(domain_requests, is_remote_site=is_remote_site)
+        return execute_activate_changes(tree, domain_requests, is_remote_site=is_remote_site)
 
     serialized_requests = [asdict(x) for x in domain_requests]
     try:
@@ -1091,6 +1093,7 @@ def _call_activate_changes_automation(
 
 
 def _do_activate(
+    tree: FolderTree,
     site_id: SiteId,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     site_changes_activate_until: Sequence[ChangeSpec],
@@ -1104,6 +1107,7 @@ def _do_activate(
     start = time.time()
 
     configuration_warnings = _call_activate_changes_automation(
+        tree,
         site_id,
         automation_config,
         site_changes_activate_until,
@@ -1124,6 +1128,7 @@ def activate_site_changes(
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     debug: bool,
     is_remote_site: bool,
+    tree: FolderTree,
 ) -> SiteActivationState | None:
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
@@ -1141,6 +1146,7 @@ def activate_site_changes(
             else:
                 if activate_changes.is_activate_needed_until(site_id):
                     configuration_warnings = _do_activate(
+                        tree,
                         site_id,
                         automation_config,
                         site_changes_activate_until,
@@ -1940,7 +1946,7 @@ class ActivateChangesManager:
 
         with _debug_log_message("Starting activation"):
             self._start_activation(
-                all_site_configs, user_permission_config, debug=debug, use_git=use_git
+                tree, all_site_configs, user_permission_config, debug=debug, use_git=use_git
             )
 
         _activate_central_steps(
@@ -2237,6 +2243,7 @@ class ActivateChangesManager:
     @tracer.instrument("start_activation")
     def _start_activation(
         self,
+        tree: FolderTree,
         all_site_configs: SiteConfigurations,
         user_permission_config: UserPermissionSerializableConfig,
         *,
@@ -2255,6 +2262,9 @@ class ActivateChangesManager:
                     prevent_activate=self._prevent_activate,
                     source=self._source,
                     all_site_configs=all_site_configs,
+                    wato_hide_folders_without_read_permissions=tree.config.wato_hide_folders_without_read_permissions,
+                    wato_host_attrs=tree.config.wato_host_attrs,
+                    tags=tree.config.tags.get_dict_format(),
                     user_permission_config=user_permission_config,
                     debug=debug,
                     use_git=use_git,
@@ -2672,6 +2682,7 @@ def _sync_and_activate(
     file_filter_func: FileFilterFunc,
     source: ActivationSource,
     all_site_configs: SiteConfigurations,
+    tree: FolderTree,
     *,
     debug: bool,
     prevent_activate: bool,
@@ -2775,6 +2786,7 @@ def _sync_and_activate(
                         automation_config,
                         debug,
                         is_distributed_setup_remote_site(all_site_configs),
+                        tree,
                     ),
                     error_callback=_error_callback,
                 )
@@ -2801,6 +2813,7 @@ def _sync_and_activate(
                 site_snapshot_settings,
                 task_pool,
                 automation_configs,
+                tree,
                 debug=debug,
             )
 
@@ -2926,6 +2939,7 @@ def _handle_active_tasks(
     site_snapshot_settings: Mapping[SiteId, SnapshotSettings],
     task_pool: ThreadPool,
     automation_configs: Mapping[SiteId, LocalAutomationConfig | RemoteAutomationConfig],
+    tree: FolderTree,
     *,
     debug: bool,
 ) -> None:
@@ -2999,6 +3013,7 @@ def _handle_active_tasks(
                 automation_configs[site_id],
                 debug,
                 True,
+                tree,
             ),
             error_callback=_error_callback,
         )
@@ -3016,6 +3031,9 @@ class ActivateChangesSchedulerJobArgs(BaseModel, frozen=True):
     prevent_activate: bool
     source: ActivationSource
     all_site_configs: SiteConfigurations
+    wato_hide_folders_without_read_permissions: bool
+    wato_host_attrs: Sequence[CustomHostAttrSpec]
+    tags: TagConfigSpec
     user_permission_config: UserPermissionSerializableConfig
     debug: bool
     use_git: bool
@@ -3024,6 +3042,8 @@ class ActivateChangesSchedulerJobArgs(BaseModel, frozen=True):
 def activate_changes_scheduler_job_entry_point(
     job_interface: BackgroundProcessInterface, args: ActivateChangesSchedulerJobArgs
 ) -> None:
+    # The job acts on the configuration of the request that started it, so the tree is built
+    # from the values that request put into the job arguments.
     ActivateChangesSchedulerBackgroundJob(args.activation_id).schedule_sites(
         job_interface,
         args.site_snapshot_settings,
@@ -3033,6 +3053,14 @@ def activate_changes_scheduler_job_entry_point(
         args.user_permission_config,
         args.debug,
         args.use_git,
+        FolderTree(
+            config=HostsAndFoldersConfig(
+                wato_hide_folders_without_read_permissions=args.wato_hide_folders_without_read_permissions,
+                wato_host_attrs=args.wato_host_attrs,
+                tags=TagConfig.from_config(args.tags),
+                sites=args.all_site_configs,
+            )
+        ),
     )
 
 
@@ -3060,6 +3088,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
         user_permission_config: UserPermissionSerializableConfig,
         debug: bool,
         use_git: bool,
+        tree: FolderTree,
     ) -> None:
         with job_interface.gui_context(
             UserPermissions.from_serialized_config(user_permission_config, permission_registry)
@@ -3081,6 +3110,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
                 ].sync_file_filter_func,
                 source,
                 all_site_configs,
+                tree,
                 debug=debug,
                 prevent_activate=prevent_activate,
                 use_git=use_git,
@@ -3127,7 +3157,7 @@ def sort_for_activation(domain_requests: DomainRequests) -> list[DomainRequest]:
 
 @tracer.instrument("execute_activate_changes")
 def execute_activate_changes(
-    domain_requests: DomainRequests, is_remote_site: bool
+    tree: FolderTree, domain_requests: DomainRequests, is_remote_site: bool
 ) -> ConfigWarnings:
     # A site a major version behind still names a domain by its pre-rename ident.
     local_requests = [
@@ -3171,7 +3201,7 @@ def execute_activate_changes(
             results[domain_request.name].extend(warnings or [])
 
     _add_extensions_for_license_usage()
-    _update_links_for_agent_receiver()
+    _update_links_for_agent_receiver(tree)
     # Only the remote sites are dealt with here, since the central site is dealt with separately.
     # The rabbitmq definition of the central site has to be updated anytime the definition of a
     # remote site is activated, not only when the central site is activated.
@@ -3195,7 +3225,7 @@ def _add_extensions_for_license_usage() -> None:
     )
 
 
-def _update_links_for_agent_receiver() -> None:
+def _update_links_for_agent_receiver(tree: FolderTree) -> None:
     uuid_link_manager = agent_registration.UUIDLinkManager(
         received_outputs_dir=paths.received_outputs_dir,
         data_source_dir=paths.data_source_push_agent_dir,
@@ -3203,7 +3233,7 @@ def _update_links_for_agent_receiver() -> None:
         uuid_lookup_dir=paths.uuid_lookup_dir,
     )
 
-    uuid_link_manager.update_links(collect_all_hosts(folder_tree()))
+    uuid_link_manager.update_links(collect_all_hosts(tree))
 
 
 def get_pending_changes_tooltip(changes_info: PendingChangesInfo) -> str:

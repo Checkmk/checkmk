@@ -13,7 +13,7 @@ import enum
 import json
 from collections.abc import Collection, Iterator, Sequence
 from pathlib import Path
-from typing import Literal, override
+from typing import Literal, NamedTuple, override
 
 from cmk.ccc import tar_archive
 from cmk.ccc.hostaddress import HostName
@@ -1149,27 +1149,35 @@ class PageAjaxActivationState(AjaxPage):
         return manager.get_state()
 
 
-class AutomationActivateChanges(AutomationCommand[DomainRequests]):
+class _ActivateChangesRequest(NamedTuple):
+    domain_requests: DomainRequests
+    tree: FolderTree
+
+
+class AutomationActivateChanges(AutomationCommand[_ActivateChangesRequest]):
     @override
     def command_name(self) -> str:
         return "activate-changes"
 
     @override
-    def get_request(self, config: Config, request: Request) -> DomainRequests:
+    def get_request(self, config: Config, request: Request) -> _ActivateChangesRequest:
         verify_remote_site_config(
             config.sites, SiteId(request.get_ascii_input_mandatory("site_id"))
         )
         domains = request.get_ascii_input_mandatory("domains")
         try:
-            return [DomainRequest(**x) for x in ast.literal_eval(domains)]
+            domain_requests = [DomainRequest(**x) for x in ast.literal_eval(domains)]
         except SyntaxError:
             raise MKAutomationException(_("Invalid request: %(domains)r") % {"domains": domains})
+        return _ActivateChangesRequest(domain_requests, make_folder_tree(config))
 
     @override
-    def execute(self, api_request: DomainRequests) -> ConfigWarnings:
+    def execute(self, api_request: _ActivateChangesRequest) -> ConfigWarnings:
         timeout_manager.enable_timeout(500)
         try:
-            return activate_changes.execute_activate_changes(api_request, is_remote_site=True)
+            return activate_changes.execute_activate_changes(
+                api_request.tree, api_request.domain_requests, is_remote_site=True
+            )
         finally:
             timeout_manager.disable_timeout()
 

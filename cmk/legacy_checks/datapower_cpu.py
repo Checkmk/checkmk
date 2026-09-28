@@ -3,32 +3,46 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="explicit-any"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.legacy_includes.cpu_util import check_cpu_util
+import time
+from collections.abc import Mapping
+from typing import Any
+
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.datapower.lib import DETECT
-
-check_info = {}
-
-
-def discover_datapower_cpu(info):
-    if info:
-        yield None, {}
+from cmk.plugins.lib.cpu_util import check_cpu_util
 
 
-def check_datapower_cpu(_no_item, params, info):
-    util = int(info[0][0])
-    return check_cpu_util(util, params)
+def discover_datapower_cpu(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
+
+
+def check_datapower_cpu(params: Mapping[str, Any], section: StringTable) -> CheckResult:
+    util = int(section[0][0])
+    yield from check_cpu_util(
+        util=util,
+        params=params,
+        value_store=get_value_store(),
+        this_time=time.time(),
+    )
 
 
 def parse_datapower_cpu(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["datapower_cpu"] = LegacyCheckDefinition(
+snmp_section_datapower_cpu = SimpleSNMPSection(
     name="datapower_cpu",
     parse_function=parse_datapower_cpu,
     detect=DETECT,
@@ -36,6 +50,11 @@ check_info["datapower_cpu"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.14685.3.1.14",
         oids=["2"],
     ),
+)
+
+
+check_plugin_datapower_cpu = CheckPlugin(
+    name="datapower_cpu",
     service_name="CPU Utilization",
     discovery_function=discover_datapower_cpu,
     check_function=check_datapower_cpu,

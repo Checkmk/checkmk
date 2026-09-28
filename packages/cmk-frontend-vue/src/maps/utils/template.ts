@@ -3,6 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { escapeHtml } from 'cmk-ui-library/lib/utils'
+
 import type { MapElement as MapObject, ObjectState } from '@/maps/types/api'
 import { getMapElementName } from '@/maps/utils/naming'
 import { parsePerfData } from '@/maps/utils/perf'
@@ -79,14 +81,18 @@ export function interpolateTemplate(
     metric_unit: firstMetric?.unit ?? ''
   }
 
+  // The template is authored markup, but the substituted values carry monitoring
+  // data a monitored host controls (plugin output, alias, labels). Escape every
+  // value so a host cannot inject markup of its own — the sanitizer that runs
+  // afterwards is the second line of defense, not the first.
   return template.replace(/\{\{(\w+(?::\w+)?)\}\}/g, (_, key: string) => {
     // {{metric:LABEL}} – look up a named perf metric
     if (key.startsWith('metric:')) {
       const label = key.slice(7)
       const m = metrics.find((x) => x.label === label)
-      return m ? String(m.value) + m.unit : ''
+      return m ? escapeHtml(String(m.value) + m.unit) : ''
     }
-    return vars[key] ?? ''
+    return escapeHtml(vars[key] ?? '')
   })
 }
 

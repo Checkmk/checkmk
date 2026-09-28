@@ -88,6 +88,15 @@ describe('interpolateTemplate', () => {
     )
   })
 
+  it('escapes interpolated values but keeps the authored template markup', () => {
+    // A monitored host controls its plugin output; markup in it must not survive
+    // as markup, while the author's own template tags stay intact.
+    const state = makeState({ output: '<a href="ssh://evil">x</a> & <b>bold</b>' })
+    expect(interpolateTemplate('<b>Status:</b> {{output}}', makeObject(), state)).toBe(
+      '<b>Status:</b> &lt;a href=&quot;ssh://evil&quot;&gt;x&lt;/a&gt; &amp; &lt;b&gt;bold&lt;/b&gt;'
+    )
+  })
+
   it('renders boolean flags as true/false strings', () => {
     const state = makeState({ acknowledged: true, in_downtime: false, stale: true })
     expect(
@@ -114,22 +123,33 @@ describe('interpolateTemplate', () => {
 })
 
 describe('interpolateTemplate → sanitizeTemplateHtml pipeline', () => {
-  // The two functions are a security pair: interpolation injects untrusted
-  // monitoring data (plugin output) into the template, and sanitization must
-  // neutralise anything dangerous that data smuggles in.
-  it('strips a <script> smuggled through plugin output', () => {
-    const state = makeState({ output: '<script>alert(1)</script>SAFE' })
-    const html = sanitizeTemplateHtml(interpolateTemplate('<b>{{output}}</b>', makeObject(), state))
-    expect(html).not.toContain('script')
-    expect(html).not.toContain('alert')
-    expect(html).toContain('SAFE')
+  // The two functions are a security pair: interpolation escapes the untrusted
+  // monitoring data (plugin output) it injects, so it can never become markup,
+  // and sanitization is the second line of defense on the authored template.
+  it('neutralises a link smuggled through plugin output', () => {
+    const state = makeState({ output: '<a href=" ssh://-oProxyCommand=curl+evil@h">x</a>' })
+    const html = sanitizeTemplateHtml(interpolateTemplate('{{output}}', makeObject(), state))
+    expect(html).not.toContain('<a')
+    expect(html).toContain('&lt;a')
   })
 
-  it('strips event-handler attributes smuggled through plugin output', () => {
+  it('neutralises a <script> smuggled through plugin output', () => {
+    const state = makeState({ output: '<script>alert(1)</script>SAFE' })
+    const html = sanitizeTemplateHtml(interpolateTemplate('<b>{{output}}</b>', makeObject(), state))
+    // No live <script>: the smuggled tag survives only as inert escaped text,
+    // while the author's own <b> tag is preserved.
+    expect(html).not.toContain('<script')
+    expect(html).toContain('&lt;script&gt;')
+    expect(html).toContain('SAFE')
+    expect(html).toContain('<b>')
+  })
+
+  it('neutralises event-handler markup smuggled through plugin output', () => {
     const state = makeState({ output: '<img src=x onerror="alert(1)">marker' })
     const html = sanitizeTemplateHtml(interpolateTemplate('<b>{{output}}</b>', makeObject(), state))
-    expect(html).not.toContain('onerror')
-    expect(html).not.toContain('alert')
+    // No live <img>/attribute — escaped to text.
+    expect(html).not.toContain('<img')
+    expect(html).toContain('&lt;img')
     expect(html).toContain('marker')
   })
 })

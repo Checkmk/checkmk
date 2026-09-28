@@ -5,12 +5,13 @@
 
 """The "Relation discovery" page: what the hosts say about each other, and what to keep.
 
-A thin shell around the Vue app. The page asks only which relation to look for and where -
-then it shows what it found in the hosts and lets the user confirm it - so all the shell hands
-over is how the relations are worded, and the app talks to the internal API.
+A thin shell around the Vue app. The page asks only which relation to look for, where, and
+in which folder or site - then it shows what it found in the hosts and lets the user confirm
+it - so all the shell hands over is how the relations are worded, what can be looked in, and
+the app talks to the internal API.
 """
 
-from collections.abc import Collection, Iterator
+from collections.abc import Collection, Iterator, Sequence
 from dataclasses import asdict
 from typing import override
 
@@ -21,6 +22,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_link, PageMenu, PageMenuEntry
+from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.wato.pages.folders import (
     FolderMenuEntry,
     FolderMenuEntryRegistry,
@@ -33,9 +35,14 @@ from cmk.gui.watolib.host_relation_discovery import (
     relation_end_nouns,
     relation_row_titles,
 )
-from cmk.gui.watolib.hosts_and_folders import Folder, SearchFolder
+from cmk.gui.watolib.hosts_and_folders import (
+    Folder,
+    folder_preserving_link,
+    folder_tree,
+    SearchFolder,
+)
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
-from cmk.shared_typing.mode_host_relation_discovery import HostRelationDiscovery
+from cmk.shared_typing.mode_host_relation_discovery import HostRelationDiscovery, ScopeChoice
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeuri_contextless
@@ -69,6 +76,11 @@ class ModeHostRelationDiscovery(WatoMode[None]):
 
     @override
     def page(self, config: Config) -> None:
+        folders = [
+            ScopeChoice(name=f"/{path}", title=title)
+            for path, title in folder_tree().folder_choices_fulltitle(user)
+        ]
+        sites = get_configured_site_choices()
         html.vue_component(
             "cmk-mode-host-relation-discovery",
             data=asdict(
@@ -80,23 +92,35 @@ class ModeHostRelationDiscovery(WatoMode[None]):
                     activate_changes_url=makeuri_contextless(
                         request, [("mode", "changelog")], filename="wato.py"
                     ),
+                    folders=folders,
+                    folder=_opened_from(folders),
+                    sites=(
+                        [ScopeChoice(name=site_id, title=title) for site_id, title in sites]
+                        if len(sites) > 1
+                        else []
+                    ),
                 )
             ),
         )
 
 
+def _opened_from(folders: Sequence[ScopeChoice]) -> str:
+    """The folder the page was opened from, as the API names it, if the user may see it; else
+    the main folder."""
+    wanted = "/" + request.get_str_input_mandatory("folder", "")
+    return wanted if any(folder.name == wanted for folder in folders) else "/"
+
+
 def _folder_page_menu_entries(_folder: Folder | SearchFolder) -> Iterator[PageMenuEntry]:
-    # Next to the other tools that work on all of Setup rather than on the folder at hand:
-    # the page reads every host, wherever it is opened from.
+    # Next to the other tools that work on all of Setup rather than on the folder at hand: the
+    # page reads every host, and only starts out looking for relations in this folder.
     if user.may("wato.hosts") and user.may("wato.edit_hosts"):
         # A verb in the menu and a noun on the page, like "Detect network parent hosts".
         yield PageMenuEntry(
             title=_("Detect related hosts"),
             icon_name=StaticIcon(IconNames.link),
             item=make_simple_link(
-                makeuri_contextless(
-                    request, [("mode", ModeHostRelationDiscovery.name())], filename="wato.py"
-                )
+                folder_preserving_link(request, [("mode", ModeHostRelationDiscovery.name())])
             ),
         )
 

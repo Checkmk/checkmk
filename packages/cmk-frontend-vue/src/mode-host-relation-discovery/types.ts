@@ -22,6 +22,8 @@ export type FindingRequest = components['schemas']['FindingModel']
 export type AcceptRequest = components['schemas']['AcceptRequestModel']
 /** A host label or custom host attribute, by name. */
 export type SharedValue = components['schemas']['HostValueModel']
+/** The folder and site a scan looks for relations in; empty is all of Setup. */
+export type ScanScope = components['schemas']['ScopeModel']
 /** Where a suggestion looks: in the host names, or in the labels and attributes hosts share. */
 export type LookIn = NonNullable<
   components['schemas']['SuggestEvidenceRequestModel']['look_in']
@@ -225,9 +227,9 @@ export function candidates(group: RelationGroup): string[] {
   return group.members.filter((member) => !(member in group.refusals))
 }
 
-/** The hosts the named one would be related to. */
+/** The hosts the named one would be related to, as the server stores them. */
 export function partnersOf(group: RelationGroup, host: string): string[] {
-  return candidates(group).filter((member) => member !== host)
+  return group.partners[host] ?? []
 }
 
 /**

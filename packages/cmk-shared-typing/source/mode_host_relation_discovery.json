@@ -23,7 +23,40 @@
       "type": "object",
       "additionalProperties": { "type": "string" }
     },
-    "activate_changes_url": { "type": "string" }
+    "activate_changes_url": { "type": "string" },
+    "folders": {
+      "description": "The folders the user may see, to narrow the scan to one of them, the main folder first.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/scope_choice" }
+    },
+    "folder": {
+      "description": "The folder the page was opened from, by path - where the scan looks unless the user says otherwise.",
+      "type": "string"
+    },
+    "sites": {
+      "description": "The sites the user may see, to narrow the scan to one of them. Empty where there is only one.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/scope_choice" }
+    }
   },
-  "required": ["kinds", "kind_words", "relation_titles", "relation_nouns", "activate_changes_url"]
+  "required": [
+    "kinds",
+    "kind_words",
+    "relation_titles",
+    "relation_nouns",
+    "activate_changes_url",
+    "folders",
+    "folder",
+    "sites"
+  ],
+  "$defs": {
+    "scope_choice": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "title": { "type": "string" }
+      },
+      "required": ["name", "title"]
+    }
+  }
 }

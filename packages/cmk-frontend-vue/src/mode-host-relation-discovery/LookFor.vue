@@ -4,8 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { ScopeChoice } from 'cmk-shared-typing/typescript/mode_host_relation_discovery'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
-import type { Suggestions as DropdownOptions } from 'cmk-ui-library/components/CmkSuggestions'
+import type {
+  Suggestions as DropdownOptions,
+  Suggestion
+} from 'cmk-ui-library/components/CmkSuggestions'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import useId from 'cmk-ui-library/lib/useId'
@@ -21,13 +25,20 @@ const props = defineProps<{
   kinds: Record<string, string>
   kindWords: Record<string, string[]>
   relationNouns: Record<string, string>
+  folders: ScopeChoice[]
+  /** Empty where there is only one site to look on. */
+  sites: ScopeChoice[]
 }>()
 
 const kind = defineModel<string>('kind', { required: true })
 const lookIn = defineModel<LookIn[]>('lookIn', { required: true })
+const folder = defineModel<string>('folder', { required: true })
+const site = defineModel<string>('site', { required: true })
 
 const kindId = useId()
 const indicatorsId = useId()
+const folderId = useId()
+const siteId = useId()
 
 const pairNounOf = usePairNoun(() => props.relationNouns)
 
@@ -36,6 +47,15 @@ const kindOptions = computed<DropdownOptions>(() => ({
   type: 'fixed',
   suggestions: kindIds.value.map((id) => ({ name: id, title: untranslated(pairNounOf(id)) }))
 }))
+const folderOptions = computed<DropdownOptions>(() => ({
+  type: 'filtered',
+  suggestions: asSuggestions(props.folders)
+}))
+const siteOptions = computed<DropdownOptions>(() => ({
+  type: 'fixed',
+  suggestions: [{ name: '', title: _t('All sites') }, ...asSuggestions(props.sites)]
+}))
+
 const namesHelp = computed(() => {
   const words = props.kindWords[kind.value] ?? []
   return words.length > 0
@@ -45,6 +65,10 @@ const namesHelp = computed(() => {
       )
     : _t('One host named like another plus a word, for example.')
 })
+
+function asSuggestions(choices: ScopeChoice[]): Suggestion[] {
+  return choices.map((choice) => ({ name: choice.name, title: untranslated(choice.title) }))
+}
 
 function looksIn(where: LookIn): boolean {
   return lookIn.value.includes(where)
@@ -89,6 +113,43 @@ function setLookIn(where: LookIn, wanted: boolean): void {
           @update:model-value="(wanted) => setLookIn('values', wanted)"
         />
       </div>
+    </LabeledRow>
+
+    <LabeledRow
+      :label="_t('Folder')"
+      :for="folderId"
+      :help="
+        _t(
+          'Only relations with a host in this folder or one of its subfolders are looked for. The other host can be in any folder - management boards, for example, often have a folder of their own.'
+        )
+      "
+    >
+      <CmkDropdown
+        :component-id="folderId"
+        :model-value="folder"
+        :options="folderOptions"
+        :label="_t('Folder')"
+        @update:model-value="(picked) => (folder = picked ?? '')"
+      />
+    </LabeledRow>
+
+    <LabeledRow
+      v-if="props.sites.length > 0"
+      :label="_t('Site')"
+      :for="siteId"
+      :help="
+        _t(
+          'Only relations with a host monitored on this site are looked for. The other host can be on any site.'
+        )
+      "
+    >
+      <CmkDropdown
+        :component-id="siteId"
+        :model-value="site"
+        :options="siteOptions"
+        :label="_t('Site')"
+        @update:model-value="(picked) => (site = picked ?? '')"
+      />
     </LabeledRow>
   </div>
 </template>

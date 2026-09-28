@@ -5,6 +5,7 @@
  */
 import { userEvent } from '@testing-library/user-event'
 import { render, screen, waitFor, within } from '@testing-library/vue'
+import type { ScopeChoice } from 'cmk-shared-typing/typescript/mode_host_relation_discovery'
 import { HttpResponse, http } from 'msw'
 import { setupServer } from 'msw/node'
 import { afterAll, afterEach, beforeAll, expect, test, vi } from 'vitest'
@@ -120,7 +121,8 @@ const GROUP = {
   reason: { word: null, source: 'label', name: 'cmdb/sn', value: 'S-1' },
   outcome: 'undecided',
   settled: null,
-  refusals: {}
+  refusals: {},
+  partners: { 'w-4711': ['w-4712'], 'w-4712': ['w-4711'] }
 }
 
 /** What a finding summary says beyond its relations, when it says nothing. */
@@ -152,7 +154,7 @@ function scanning(scanned: Scanned = {}): { sent: unknown[] } {
         ? HttpResponse.json({
             running: false,
             message: '',
-            summary: '4 hosts read.',
+            summary: '4 hosts looked at.',
             scan: {
               hosts_scanned: 4,
               findings: scanned.findings ?? [
@@ -221,7 +223,7 @@ function accepting(): { sent: unknown[] } {
   return { sent }
 }
 
-function renderApp() {
+function renderApp(scope: { folder?: string; sites?: ScopeChoice[] } = {}) {
   return render(ModeHostRelationDiscoveryApp, {
     props: {
       kinds: { management: 'management_parent' },
@@ -231,7 +233,13 @@ function renderApp() {
         management_child: 'is OS host of'
       },
       relation_nouns: { management_parent: 'Management board', management_child: 'OS host' },
-      activate_changes_url: 'wato.py?mode=changelog'
+      activate_changes_url: 'wato.py?mode=changelog',
+      folders: [
+        { name: '/', title: 'Main' },
+        { name: '/oob', title: 'Main / oob' }
+      ],
+      folder: scope.folder ?? '/',
+      sites: scope.sites ?? []
     }
   })
 }
@@ -307,8 +315,8 @@ test('the host names are looked in, the labels and attributes only when asked fo
 
   await waitFor(() =>
     expect(sent).toEqual([
-      { words: [], values: [], look_in: ['names'] },
-      { words: [], values: [], look_in: ['names', 'values'] }
+      { words: [], values: [], look_in: ['names'], scope: { folder: '/' } },
+      { words: [], values: [], look_in: ['names', 'values'], scope: { folder: '/' } }
     ])
   )
 })
@@ -400,7 +408,8 @@ test('every word that means a relation is a finding of its own', async () => {
       findings: [
         { id: 'word:ilo', kind: 'management', words: ['ilo'] },
         { id: 'word:oob', kind: 'management', words: ['oob'] }
-      ]
+      ],
+      scope: { folder: '/' }
     }
   ])
 })
@@ -430,7 +439,8 @@ test('what tells hosts sharing a value apart is found, and only its value is pic
             paired_by: { source: 'label', name: 'cmdb/sn' },
             marked_by: { source: 'label', name: 'cmdb/kind', value: 'board' }
           }
-        ]
+        ],
+        scope: { folder: '/' }
       }
     ])
   )
@@ -462,7 +472,8 @@ test('what tells the hosts apart can be changed to picking per group', async () 
             kind: 'management',
             paired_by: { source: 'label', name: 'cmdb/sn' }
           }
-        ]
+        ],
+        scope: { folder: '/' }
       }
     ])
   )
@@ -581,6 +592,36 @@ test('a group nothing tells apart is answered by picking its board', async () =>
       expect.objectContaining({ answers: { 'management|w-4711,w-4712': 'w-4712' } })
     ])
   )
+})
+
+test('an answered group stores as many relations as the scan names for the host picked', async () => {
+  const ACROSS = {
+    ...GROUP,
+    key: 'management|blade-1,blade-2,oa',
+    members: ['blade-1', 'blade-2', 'oa'],
+    partners: { 'blade-1': ['blade-2', 'oa'], 'blade-2': ['blade-1'], oa: ['blade-1'] }
+  }
+  suggesting({ words: [], values: [SERIAL] })
+  scanning({
+    relations: [],
+    findings: [{ ...NOTHING_ELSE, id: 'label:cmdb/sn', counts: {}, samples: [], questions: 1 }],
+    groups: [ACROSS]
+  })
+  renderApp()
+  await lookThroughTheHosts({ values: true })
+  await userEvent.click(
+    screen.getByRole('checkbox', {
+      name: '3 pairs of hosts share a value in the host label "cmdb/sn"'
+    })
+  )
+  await userEvent.click(screen.getByRole('button', { name: 'Tell them apart another way' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Continue' }))
+  await screen.findByRole('checkbox', { name: 'Host label "cmdb/sn"' })
+
+  await pick('Which of them is the Management board', 'oa')
+
+  await userEvent.click(screen.getByRole('button', { name: 'Continue' }))
+  await screen.findByRole('button', { name: 'Store 1 relation' })
 })
 
 test('two findings that disagree about two hosts are for the user to settle', async () => {
@@ -715,7 +756,12 @@ test('a word the user adds is looked up and can be removed again', async () => {
   await userEvent.click(screen.getByTitle('Remove the word "oob"'))
 
   await waitFor(() => expect(screen.queryByText(/plus "oob"/)).toBeNull())
-  expect(asked.at(-1)).toEqual({ words: [], values: [], look_in: ['names'] })
+  expect(asked.at(-1)).toEqual({
+    words: [],
+    values: [],
+    look_in: ['names'],
+    scope: { folder: '/' }
+  })
 })
 
 test('a value the user adds means nothing until the user says what it is', async () => {
@@ -809,6 +855,37 @@ test('the way forward comes before the way back', async () => {
   const forward = screen.getByRole('button', { name: 'Continue' })
   const back = screen.getByRole('button', { name: 'Back' })
   expect(forward.compareDocumentPosition(back) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+})
+
+test('the folder the page was opened from is where the relations are looked for', async () => {
+  const { sent: suggested } = suggestionsAsked()
+  const { sent: scanned } = scanning()
+  renderApp({ folder: '/oob' })
+
+  await continueToReview()
+
+  expect(suggested).toEqual([
+    { words: [], values: [], look_in: ['names'], scope: { folder: '/oob' } }
+  ])
+  expect(scanned).toEqual([expect.objectContaining({ scope: { folder: '/oob' } })])
+  screen.getByText('Management board and OS host · Host names · Main / oob')
+})
+
+test('a site is only offered where there is more than one', async () => {
+  const { sent } = suggestionsAsked()
+  renderApp({
+    sites: [
+      { name: 'central', title: 'Central' },
+      { name: 'remote', title: 'Remote' }
+    ]
+  })
+
+  await pick('Site', 'Remote')
+  await lookThroughTheHosts()
+
+  await waitFor(() =>
+    expect(sent).toEqual([expect.objectContaining({ scope: { folder: '/', site: 'remote' } })])
+  )
 })
 
 test('the summary says what is about to be stored, and nothing is stored before', async () => {

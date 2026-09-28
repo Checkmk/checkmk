@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { ScopeChoice } from 'cmk-shared-typing/typescript/mode_host_relation_discovery'
 import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkWizard, { CmkWizardButton, CmkWizardStep } from 'cmk-ui-library/components/CmkWizard'
@@ -30,6 +31,7 @@ import type {
   RelationGroup,
   RelationRow,
   RunSummary,
+  ScanScope,
   ScanSummary,
   SharedValue,
   Suggestions,
@@ -62,6 +64,10 @@ interface Props {
   relation_titles: Record<string, string>
   relation_nouns: Record<string, string>
   activate_changes_url: string
+  /** By path as the API names them: "/" is the main folder. */
+  folders: ScopeChoice[]
+  folder: string
+  sites: ScopeChoice[]
 }
 
 const props = defineProps<Props>()
@@ -70,6 +76,7 @@ const STEP_LOOK_FOR = 1
 const STEP_FOUND = 2
 const STEP_CONFIRM = 3
 const STEP_SUMMARY = 4
+const MAIN_FOLDER = '/'
 const POLL_INTERVAL_MS = 1000
 /** How often in a row the status may not be read before the page gives up on the job. */
 const POLL_ATTEMPTS = 5
@@ -80,9 +87,15 @@ const currentStep = ref(STEP_LOOK_FOR)
 // and attributes are asked for only when they are needed, since they find a lot to decide.
 const kind = ref(Object.keys(props.kinds)[0] ?? '')
 const lookIn = ref<LookIn[]>(['names'])
+const folder = ref(props.folder)
+const site = ref('')
+const scope = computed<ScanScope>(() => ({
+  folder: folder.value,
+  ...(site.value ? { site: site.value } : {})
+}))
 /** What the suggestions on hand were made for. */
 const suggestedFor = ref('')
-const wantedNow = computed(() => JSON.stringify([...lookIn.value].sort()))
+const wantedNow = computed(() => JSON.stringify([[...lookIn.value].sort(), scope.value]))
 const pairNounOf = usePairNoun(() => props.relation_nouns)
 
 const indicators = computed(() =>
@@ -91,8 +104,25 @@ const indicators = computed(() =>
     ...(lookIn.value.includes('values') ? [_t('Host labels and custom host attributes')] : [])
   ].join(', ')
 )
+function titleOf(choices: ScopeChoice[], name: string): string {
+  return choices.find((choice) => choice.name === name)?.title ?? name
+}
+function folderTitle(path: string): string {
+  return titleOf(props.folders, path)
+}
+function siteTitle(id: string): string {
+  return id ? titleOf(props.sites, id) : _t('All sites')
+}
+
 /** What step 1 said, for the step once it is done. */
-const lookedFor = computed(() => [pairNounOf(kind.value), indicators.value].join(' · '))
+const lookedFor = computed(() =>
+  [
+    pairNounOf(kind.value),
+    indicators.value,
+    ...(folder.value !== MAIN_FOLDER ? [folderTitle(folder.value)] : []),
+    ...(site.value ? [siteTitle(site.value)] : [])
+  ].join(' · ')
+)
 
 // Step 2: what the findings mean.
 const suggestions = ref<Suggestions | null>(null)
@@ -150,7 +180,11 @@ const ticked = computed(() =>
 // Step 3: what of the scan to store.
 const scanId = ref('')
 const scanned = ref<ScanSummary | null>(null)
-const scannedFor = ref<FindingRequest[]>([])
+/** What the scan on hand was made for. */
+const scannedFor = ref<{ findings: FindingRequest[]; scope: ScanScope }>({
+  findings: [],
+  scope: {}
+})
 const scanning = ref(false)
 const scanFailed = ref(false)
 const scanProgress = ref('')
@@ -179,7 +213,9 @@ const nothingNew = computed(
 /** Whether what step 2 says now is what the scan on hand was made for. */
 const scanIsCurrent = computed(
   () =>
-    scanned.value !== null && JSON.stringify(scannedFor.value) === JSON.stringify(findings.value)
+    scanned.value !== null &&
+    JSON.stringify(scannedFor.value) ===
+      JSON.stringify({ findings: findings.value, scope: scope.value })
 )
 
 /** The findings step 3 leaves anything to store of, by their titles. */
@@ -204,7 +240,7 @@ async function suggest(added: { word?: string } = {}): Promise<void> {
   suggesting.value = true
   const wanted = wantedNow.value
   try {
-    const found = await suggestEvidence(ownWords.value, ownValues.value, lookIn.value)
+    const found = await suggestEvidence(ownWords.value, ownValues.value, lookIn.value, scope.value)
     const next = withNewChoices(found, wordChoices.value, valueChoices.value, kind.value, added)
     wordChoices.value = next.words
     valueChoices.value = next.values
@@ -292,18 +328,21 @@ async function finished(jobId: string, progress: (message: string) => void): Pro
  * stored starts out chosen, the way the service discovery offers what it found: taking out
  * the few that are wrong is less work than picking the many that are right.
  */
-async function scan(asked: FindingRequest[] = findings.value): Promise<boolean> {
+async function scan(
+  asked: FindingRequest[] = findings.value,
+  where: ScanScope = scope.value
+): Promise<boolean> {
   scanning.value = true
   scanProgress.value = ''
   try {
-    const jobId = await startScan(asked)
+    const jobId = await startScan(asked, where)
     const status = await finished(jobId, (message) => (scanProgress.value = message))
     if (status.scan === null) {
       throw new Error(status.summary)
     }
     scanId.value = jobId
     scanned.value = status.scan
-    scannedFor.value = asked
+    scannedFor.value = { findings: asked, scope: where }
     decisions.value = noDecisions()
     for (const summary of status.scan.findings) {
       if (offersAnything(summary)) {
@@ -375,7 +414,7 @@ function resolve(conflict: RelationConflict, claim: RelationRow | null): void {
 }
 
 function nounOfFinding(findingId: string): string {
-  const kind = scannedFor.value.find((finding) => finding.id === findingId)?.kind ?? ''
+  const kind = scannedFor.value.findings.find((finding) => finding.id === findingId)?.kind ?? ''
   return props.relation_nouns[props.kinds[kind] ?? ''] ?? ''
 }
 
@@ -406,7 +445,7 @@ async function store(): Promise<void> {
 
 /** Back to deciding: read the hosts once more, with what step 2 said last time. */
 async function scanAgain(): Promise<void> {
-  if (await scan(scannedFor.value)) {
+  if (await scan(scannedFor.value.findings, scannedFor.value.scope)) {
     resetRun()
     currentStep.value = STEP_CONFIRM
   }
@@ -418,7 +457,7 @@ async function scanAgain(): Promise<void> {
     <CmkParagraph>
       {{
         _t(
-          'Related hosts are shown together in the monitoring - a server and its management board, for example. Checkmk looks for them in all hosts in Setup. Nothing is changed until you store.'
+          'Related hosts are shown together in the monitoring - a server and its management board, for example. Nothing is changed until you store.'
         )
       }}
     </CmkParagraph>
@@ -437,9 +476,13 @@ async function scanAgain(): Promise<void> {
             <LookFor
               v-model:kind="kind"
               v-model:look-in="lookIn"
+              v-model:folder="folder"
+              v-model:site="site"
               :kinds="props.kinds"
               :kind-words="props.kind_words"
               :relation-nouns="props.relation_nouns"
+              :folders="props.folders"
+              :sites="props.sites"
             />
             <div v-if="suggesting" class="mode-host-relation-discovery-app__running">
               <CmkProgressbar max="unknown" />
@@ -477,8 +520,8 @@ async function scanAgain(): Promise<void> {
             <CmkParagraph class="mode-host-relation-discovery-app__dimmed">
               {{
                 _tn(
-                  'Checkmk read 1 host.',
-                  'Checkmk read %{count} hosts.',
+                  'Checkmk looked at 1 host.',
+                  'Checkmk looked at %{count} hosts.',
                   suggestions.hosts_scanned,
                   {
                     count: suggestions.hosts_scanned
@@ -557,8 +600,8 @@ async function scanAgain(): Promise<void> {
             <CmkParagraph class="mode-host-relation-discovery-app__dimmed">
               {{
                 _tn(
-                  '1 host read. Every finding you tick is stored as a whole; untick single relations below if they are wrong.',
-                  '%{count} hosts read. Every finding you tick is stored as a whole; untick single relations below if they are wrong.',
+                  '1 host looked at. Every finding you tick is stored as a whole; untick single relations below if they are wrong.',
+                  '%{count} hosts looked at. Every finding you tick is stored as a whole; untick single relations below if they are wrong.',
                   scanned.hosts_scanned,
                   { count: scanned.hosts_scanned }
                 )
@@ -630,6 +673,12 @@ async function scanAgain(): Promise<void> {
           <div class="mode-host-relation-discovery-app__summary">
             <LabeledRow :label="_t('Relation type')">{{ pairNounOf(kind) }}</LabeledRow>
             <LabeledRow :label="_t('Relation indicators')">{{ indicators }}</LabeledRow>
+            <LabeledRow :label="_t('Folder')">{{
+              folderTitle(scannedFor.scope.folder ?? MAIN_FOLDER)
+            }}</LabeledRow>
+            <LabeledRow v-if="props.sites.length > 0" :label="_t('Site')">{{
+              siteTitle(scannedFor.scope.site ?? '')
+            }}</LabeledRow>
             <LabeledRow :label="_t('Findings')">{{ storedFindings }}</LabeledRow>
             <LabeledRow :label="_t('Relations to store')">{{ toStore }}</LabeledRow>
           </div>

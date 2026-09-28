@@ -13,6 +13,7 @@ import type {
   Outcome,
   RowsPage,
   RowsPart,
+  ScanScope,
   SharedValue,
   Suggestions
 } from './types'
@@ -20,21 +21,22 @@ import type {
 export async function suggestEvidence(
   words: string[],
   values: SharedValue[],
-  lookIn: LookIn[]
+  lookIn: LookIn[],
+  scope: ScanScope
 ): Promise<Suggestions> {
   return unwrap(
     await client.POST('/domain-types/host_relation_discovery/actions/suggest/invoke', {
       params: { header: { 'Content-Type': 'application/json' } },
-      body: { words, values, look_in: lookIn }
+      body: { words, values, look_in: lookIn, scope }
     })
   )
 }
 
 /** Starts a scan and answers with its job, which the status is then asked for. */
-export async function startScan(findings: FindingRequest[]): Promise<string> {
+export async function startScan(findings: FindingRequest[], scope: ScanScope): Promise<string> {
   const result = await client.POST('/domain-types/host_relation_discovery/actions/scan/invoke', {
     params: { header: { 'Content-Type': 'application/json' } },
-    body: { findings }
+    body: { findings, scope }
   })
   return unwrap(result).job_id
 }

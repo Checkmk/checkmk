@@ -1464,3 +1464,7 @@ def test_check_dotnet_clrmemory(
     parsed = parse_wmi_table(info)
     result = list(check_dotnet_clrmemory(item, params, parsed))
     assert result == expected_results
+
+
+def test_dotnet_clrmemory_no_discovery_on_timeout() -> None:
+    assert not list(discover_dotnet_clrmemory(parse_wmi_table([["WMItimeout"]])))

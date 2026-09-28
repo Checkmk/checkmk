@@ -17,6 +17,7 @@ from cmk.agent_based.v2 import (
     TableRow,
 )
 from cmk.plugins.mssql.agent_based.mssql_instance import (
+    check_mssql_instance,
     check_plugin_mssql_instance,
     inventorize_mssql_instance,
     parse_mssql_instance,
@@ -366,3 +367,11 @@ def test_inventorize_mssql_instance(
     assert sort_inventory_result(
         inventorize_mssql_instance(parse_mssql_instance(string_table))
     ) == sort_inventory_result(expected_result)
+
+
+def test_check_mssql_instance_vanished() -> None:
+    assert list(check_mssql_instance(item="MSSQL instance", params={}, section={})) == [
+        Result(
+            state=State.CRIT, summary="Database or necessary processes not running or login failed"
+        ),
+    ]

@@ -9,88 +9,72 @@ import subprocess
 import pytest
 
 from cmk.checkengine.discovery import AutochecksSerializer
-from cmk.utils import paths
+from tests.system.singlesite.cmk.base.automation_helper_restart import (
+    restart_automation_helper_and_wait_until_reachable,
+)
 from tests.system.singlesite.linux_test_host import create_linux_test_host
-from tests.testlib.common.version import CMKEdition
 from tests.testlib.system.site import Site
+
+_PLUGIN_SRC = "test_plugins/check_variables_plugin/agent_based/test_check_3.py"
+_PLUGIN_DST = (
+    "local/lib/python3/cmk_addons/plugins/check_variables_test/agent_based/test_check_3.py"
+)
 
 
 # Test whether or not factory settings and checkgroup parameters work
-@pytest.mark.skipif(
-    CMKEdition.edition_from_path(paths.omd_root).is_community_edition(),
-    reason="flaky on Checkmk Community",
-)
 def test_check_default_parameters(request: pytest.FixtureRequest, site: Site) -> None:
     host_name = "check-variables-test-host"
 
     create_linux_test_host(request, site, host_name)
     site.write_file(f"var/check_mk/agent_output/{host_name}", "<<<test_check_3>>>\n1 2\n")
 
-    test_check_path = "local/share/check_mk/checks/test_check_3"
-
     def cleanup() -> None:
         if site.file_exists("etc/check_mk/conf.d/test_check_3.mk"):
             site.delete_file("etc/check_mk/conf.d/test_check_3.mk")
-
-        site.delete_file(test_check_path)
+        # the plug-in is gone by now, make the automation helper forget about it
+        restart_automation_helper_and_wait_until_reachable(site)
 
     request.addfinalizer(cleanup)
 
-    site.write_file(
-        test_check_path,
-        """
+    with site.copy_file(_PLUGIN_SRC, _PLUGIN_DST):
+        site.activate_changes_and_wait_for_core_reload()
+        # discovery runs in the automation helper, which only loads plug-ins on startup
+        restart_automation_helper_and_wait_until_reachable(site)
+        site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
 
-def inventory(info):
-    yield None, {}
+        # Verify that the discovery worked as expected
+        entries = AutochecksSerializer().deserialize(
+            site.read_file(f"var/check_mk/autochecks/{host_name}.mk").encode("utf-8")
+        )
+        assert str(entries[0].check_plugin_name) == "test_check_3"
+        assert entries[0].item is None
+        assert entries[0].parameters == {}
+        assert entries[0].service_labels == {}
 
-def check(item, params, info):
-    yield 0, "OK - %r" % (params, )
+        # Now execute the check function to verify the default parameters are applied.
+        # The per-service results are only logged with -vv, and they go to stderr.
+        p = site.execute(["cmk", "-nvv", host_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        assert "[agent] Success" in stdout, stdout
+        assert "params={'param1': 123}" in stderr, stderr
+        assert p.returncode == 0
 
-check_info["test_check_3"] = LegacyCheckDefinition(
-    check_function=check,
-    discovery_function=inventory,
-    service_name="Testcheck 3",
-    check_ruleset_name="asd",
-    check_default_parameters={"param1": 123},
-)
-""",
-    )
-
-    site.activate_changes_and_wait_for_core_reload()
-    site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
-
-    # Verify that the discovery worked as expected
-    entries = AutochecksSerializer().deserialize(
-        site.read_file(f"var/check_mk/autochecks/{host_name}.mk").encode("utf-8")
-    )
-    assert str(entries[0].check_plugin_name) == "test_check_3"
-    assert entries[0].item is None
-    assert entries[0].parameters == {}
-    assert entries[0].service_labels == {}
-
-    # Now execute the check function to verify the variable is available
-    p = site.execute(["cmk", "-nv", host_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert "OK - {'param1': 123}\n" in stdout, stdout
-    assert stderr == ""
-    assert p.returncode == 0
-
-    # And now overwrite the setting in the config
-    site.write_file(
-        "etc/check_mk/conf.d/test_check_3.mk",
-        """
+        # And now overwrite the setting in the config
+        site.write_file(
+            "etc/check_mk/conf.d/test_check_3.mk",
+            """
 checkgroup_parameters.setdefault('asd', [])
 
 checkgroup_parameters['asd'] = [
     {'condition': {}, 'options': {}, 'value': {'param2': 'xxx'}},
 ] + checkgroup_parameters['asd']
 """,
-    )
+        )
 
-    # And execute the check again to check for the parameters
-    p = site.execute(["cmk", "-nv", host_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert "'param1': 123" in stdout
-    assert "'param2': 'xxx'" in stdout
-    assert stderr == ""
-    assert p.returncode == 0
+        # And execute the check again to check for the parameters
+        p = site.execute(["cmk", "-nvv", host_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        assert "[agent] Success" in stdout, stdout
+        assert "'param1': 123" in stderr, stderr
+        assert "'param2': 'xxx'" in stderr, stderr
+        assert p.returncode == 0

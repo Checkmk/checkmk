@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import subprocess
-
 import pytest
 
 from cmk.checkengine.discovery import AutochecksSerializer
+from tests.system.singlesite.cmk.base.automation_helper_restart import (
+    restart_automation_helper_and_wait_until_reachable,
+)
 from tests.system.singlesite.linux_test_host import create_linux_test_host
-from tests.testlib.common.utils import wait_until
 from tests.testlib.system.site import Site
 
 
@@ -62,7 +62,7 @@ check_plugin_test_check_1 = CheckPlugin(
     )
 
     site.activate_changes_and_wait_for_core_reload()
-    _restart_automation_helpers_and_wait_until_reachable(site)
+    restart_automation_helper_and_wait_until_reachable(site)
 
     site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
 
@@ -145,7 +145,7 @@ check_plugin_test_check_2 = CheckPlugin(
     )
 
     site.activate_changes_and_wait_for_core_reload()
-    _restart_automation_helpers_and_wait_until_reachable(site)
+    restart_automation_helper_and_wait_until_reachable(site)
 
     site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
 
@@ -179,19 +179,3 @@ check_plugin_test_check_2 = CheckPlugin(
             break
     else:
         raise AssertionError('"test_check_2" not discovered')
-
-
-def _restart_automation_helpers_and_wait_until_reachable(site: Site) -> None:
-    def automation_helper_socket_reachable() -> bool:
-        try:
-            site.python_helper("_helper_connect_to_automation_helper_socket.py").check_output()
-        except subprocess.CalledProcessError:
-            return False
-        return True
-
-    site.omd("restart", "automation-helper")
-    wait_until(
-        automation_helper_socket_reachable,
-        timeout=10,
-        interval=0.25,
-    )

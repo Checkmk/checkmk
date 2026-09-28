@@ -244,7 +244,7 @@ class LiveStatusHostServicesRepository:
             host_acknowledged=bool(row["host_acknowledged"]),
             host_in_downtime=row["host_scheduled_downtime_depth"] > 0,
             contact_groups=list(row["contact_groups"]),
-            long_output=row["long_plugin_output"],
+            long_output=_unescape_livestatus_newlines(row["long_plugin_output"]),
             current_attempt=row["current_attempt"],
             max_check_attempts=row["max_check_attempts"],
             next_check=int(row["next_check"]) or None,
@@ -350,6 +350,10 @@ def _in_check_period(row: Mapping[str, object]) -> bool:
     it governs - so it counts as checked only while inside both.
     """
     return bool(row["in_check_period"]) and bool(row["in_passive_check_period"])
+
+
+def _unescape_livestatus_newlines(text: str) -> str:
+    return text.replace("\\n", "\n")
 
 
 def _manually_disabled(

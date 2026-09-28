@@ -114,8 +114,8 @@ class ServiceOverviewResponse:
     )
     long_output: str = api_field(
         description=(
-            "The remaining check plugin output below the summary. Empty when the plugin produces "
-            "no details. Can span many lines, so the frontend renders it collapsed."
+            "The remaining check plugin output below the summary, one line per detail. Empty "
+            "when the plugin produces no details."
         ),
         example="15 min load: 0.01 (per core: 0.01)",
     )

@@ -126,26 +126,46 @@ describe('ServiceOverviewTab', () => {
     expect(screen.getByText('–')).toBeInTheDocument()
   })
 
-  it('keeps the long output collapsed until the panel is opened', async () => {
+  it('shows the long output without the panel having to be opened', () => {
     render(ServiceOverviewTab, {
       props: {
         displayOptions: DISPLAY_OPTIONS,
         data: makeOverview({ long_output: '15 min load: 0.01 (per core: 0.01)' })
       }
     })
-    expect(screen.getByText('15 min load: 0.01 (per core: 0.01)')).not.toBeVisible()
-
-    await userEvent.click(screen.getByRole('button', { name: /Toggle Service details/ }))
 
     expect(screen.getByText('15 min load: 0.01 (per core: 0.01)')).toBeVisible()
   })
 
-  it('keeps the details panel when the plugin produced no output', async () => {
+  it('collapses the long output when the panel is closed', async () => {
     render(ServiceOverviewTab, {
-      props: { displayOptions: DISPLAY_OPTIONS, data: makeOverview({ long_output: '' }) }
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        data: makeOverview({ long_output: '15 min load: 0.01 (per core: 0.01)' })
+      }
     })
 
     await userEvent.click(screen.getByRole('button', { name: /Toggle Service details/ }))
+
+    expect(screen.getByText('15 min load: 0.01 (per core: 0.01)')).not.toBeVisible()
+  })
+
+  it('shows the state markers of the long output as badges', () => {
+    const { container } = render(ServiceOverviewTab, {
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        data: makeOverview({ long_output: 'Inodes used: 97%(!!)' })
+      }
+    })
+
+    const details = container.querySelector('.monitoring-service-overview-tab__details-text')
+    expect(details?.querySelector('.cmk-state-tag--critical')).toHaveTextContent('CR')
+  })
+
+  it('keeps the details panel when the plugin produced no output', () => {
+    render(ServiceOverviewTab, {
+      props: { displayOptions: DISPLAY_OPTIONS, data: makeOverview({ long_output: '' }) }
+    })
 
     expect(screen.getByText('This check plugin reports no further details.')).toBeVisible()
   })

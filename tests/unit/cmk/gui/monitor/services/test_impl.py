@@ -7,6 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
+from cmk.gui import sites
 from cmk.gui.monitor.services._impl import (
     _build_primary_sort,
     _build_query_filter,
@@ -20,7 +21,7 @@ from cmk.gui.monitor.services._models import (
     ServiceSortColumn,
     ServiceSortDirection,
 )
-from cmk.livestatus_client.testing import expect_single_query
+from cmk.livestatus_client.testing import expect_single_query, MockLiveStatusConnection
 from tests.testlib.unit.gui.web_test_app import SetConfig
 
 # "foo-server-01" matches no row in the default hosts/services test-data, so queries against it
@@ -472,3 +473,57 @@ def test_fetch_counts_a_service_as_checked_only_inside_both_check_periods(
         )
 
     assert [service.in_check_period for service in services] == [expected]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_get_overview_puts_each_detail_of_the_long_output_on_its_own_line(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    row = {
+        "description": "Filesystem /",
+        "host_name": _UNKNOWN_HOSTNAME,
+        "state": 0,
+        "has_been_checked": 1,
+        "plugin_output": "Used: 29.61%",
+        "last_check": 0,
+        "last_state_change": 0,
+        "acknowledged": 0,
+        "scheduled_downtime_depth": 0,
+        "notifications_enabled": 1,
+        "comments": [],
+        "modified_attributes_list": [],
+        "active_checks_enabled": 1,
+        "accept_passive_checks": 1,
+        "in_notification_period": 1,
+        "in_service_period": 1,
+        "in_check_period": 1,
+        "in_passive_check_period": 1,
+        "is_flapping": 0,
+        "staleness": 0.0,
+        "host_alias": _UNKNOWN_HOSTNAME,
+        "host_state": 0,
+        "host_has_been_checked": 1,
+        "host_acknowledged": 0,
+        "host_scheduled_downtime_depth": 0,
+        "contact_groups": [],
+        "long_plugin_output": "Used: 29.61%\\nInodes used: 10.26%",
+        "current_attempt": 1,
+        "max_check_attempts": 1,
+        "next_check": 0,
+        "tags": {},
+        "labels": {},
+        "label_sources": {},
+        "perf_data": "",
+        "check_command": "check_mk-df",
+        "check_type": 0,
+        "cached_at": 0,
+        "cache_interval": 0,
+    }
+    mock_livestatus.add_table("services", [row])
+    mock_livestatus.expect_query("GET services", match_type="loose", sites=["NO_SITE"])
+    with mock_livestatus(expect_status_query=True):
+        overview = LiveStatusHostServicesRepository(connection=sites.live()).get_overview(
+            hostname=_UNKNOWN_HOSTNAME, service_name="Filesystem /", site_id="NO_SITE"
+        )
+
+    assert overview.long_output == "Used: 29.61%\nInodes used: 10.26%"

@@ -122,10 +122,12 @@ const nextCheck = computed(() =>
       <dd><PluginOutput :output="data.summary" /></dd>
     </OverviewDetailList>
 
-    <CmkCatalogPanel :title="_t('Service details')" :open="false">
-      <pre v-if="data.long_output" class="monitoring-service-overview-tab__details-text">{{
-        data.long_output
-      }}</pre>
+    <CmkCatalogPanel :title="_t('Service details')">
+      <PluginOutput
+        v-if="data.long_output"
+        class="monitoring-service-overview-tab__details-text"
+        :output="data.long_output"
+      />
       <CmkParagraph v-else class="monitoring-service-overview-tab__details-empty">
         {{ _t('This check plugin reports no further details.') }}
       </CmkParagraph>
@@ -167,9 +169,9 @@ const nextCheck = computed(() =>
 }
 
 .monitoring-service-overview-tab__details-text {
-  margin: 0;
-  overflow-x: auto;
-  font-family: monospace;
+  display: block;
+  max-height: 20lh;
+  overflow-y: auto;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }

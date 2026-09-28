@@ -147,3 +147,15 @@ def test_activation_exports_the_relations() -> None:
     )
 
     assert RELATIONS_MACRO in relations_export_path().read_text()
+
+
+@pytest.mark.usefixtures("with_admin_login", "load_config")
+def test_activation_goes_on_when_the_relations_cannot_be_exported() -> None:
+    export_file = relations_export_path()
+    export_file.mkdir(parents=True)
+    try:
+        ActivateChangesManager()._pre_activate_changes(  # noqa: SLF001
+            SiteConfigurations({}), debug=False
+        )
+    finally:
+        export_file.rmdir()

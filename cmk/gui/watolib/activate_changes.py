@@ -2089,18 +2089,24 @@ class ActivateChangesManager:
     def _pre_activate_changes(self, all_site_configs: SiteConfigurations, *, debug: bool) -> None:
         """Write the artifacts the sites need in their snapshot, then let the hooks have their say.
 
-        Anything raised here aborts the activation.
+        Anything but the host relations export aborts the activation when it fails: the relations
+        are metadata no core acts on, so the sites keep the last exported ones instead.
 
         Like :func:`_activate_central_steps`, the central artifacts are skipped on a remote site:
         cron-driven local activations (agent auto-registration, automatic host removal) reach this
         too, and a remote site receives the file through config sync.
         """
-        try:
-            # Both consumers want every host of the tree, and neither is guaranteed to run, so
-            # the walk is shared but still only paid for when something asks for it.
-            all_hosts = functools.cache(folder_tree().root_folder().all_hosts_recursively)
-            if not is_distributed_setup_remote_site(all_site_configs):
+        # Both consumers want every host of the tree, and neither is guaranteed to run, so the
+        # walk is shared but still only paid for when something asks for it.
+        all_hosts = functools.cache(lambda: folder_tree().all_hosts())
+        if not is_distributed_setup_remote_site(all_site_configs):
+            try:
                 export_host_relations(all_hosts(), relations_export_path())
+            except Exception:
+                if debug:
+                    raise
+                logger.exception("error exporting the host relations, keeping the last ones")
+        try:
             if hooks.registered("pre-distribute-changes"):
                 hooks.call("pre-distribute-changes", collect_hosts(all_hosts()))
         except Exception as e:

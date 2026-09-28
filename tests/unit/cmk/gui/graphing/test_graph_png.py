@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from zoneinfo import ZoneInfo
 
 import matplotlib
 import numpy as np
@@ -31,6 +32,7 @@ from cmk.gui.graphing._graph_png import (
     _derived_y_axis_unit,
     _fit_time_axis,
     _graph_scalars,
+    _graph_time_caption,
     _mirrored_y_labels,
     _notation_formatter,
     _plot_metrics,
@@ -464,7 +466,7 @@ def test_time_axis_of_a_multi_day_graph_is_labelled_with_weekday_and_time() -> N
     ax = fig.add_subplot(1, 1, 1)
     _plot_metrics(ax, graph)
 
-    _fit_time_axis(ax, graph, GraphDisplayConfigImage())
+    _fit_time_axis(ax, graph, GraphDisplayConfigImage(), None)
 
     labels = [label.get_text() for label in ax.get_xticklabels() if label.get_text()]
     assert len(labels) > 2
@@ -486,3 +488,49 @@ def test_values_are_drawn_at_their_bucket_end_like_the_vue_graph() -> None:
 
     (line,) = ax.get_lines()
     assert np.asarray(line.get_xdata()).tolist() == [60, 120, 180]
+
+
+def _hourly_graph(time_range: TimeRange) -> EvaluatedGraph:
+    curve = EvaluatedCurve(
+        id="m",
+        attributes=CurveAttributes(title="m", unit=_UNIT, color="#000000"),
+        value=None,
+        time_series=TimeSeries(
+            time_range=time_range,
+            values=[1.0] * ((time_range.end - time_range.start) // time_range.step),
+        ),
+    )
+    return EvaluatedGraph(
+        name="g",
+        title="Graph",
+        vertical_range=None,
+        stacks=[EvaluatedStack(members=[curve], inverse=False)],
+        lines=[],
+    )
+
+
+def test_time_axis_is_labelled_in_the_given_time_zone() -> None:
+    # 2026-09-28 10:00 to 14:00 UTC, i.e. 12:00 to 16:00 in Berlin (CEST, UTC+2).
+    graph = _hourly_graph(TimeRange(start=1790589600, end=1790604000, step=600))
+
+    def labels(tz: ZoneInfo) -> list[str]:
+        fig = Figure()
+        ax = fig.add_subplot(1, 1, 1)
+        _plot_metrics(ax, graph)
+        _fit_time_axis(ax, graph, GraphDisplayConfigImage(), tz)
+        return [label.get_text() for label in ax.get_xticklabels() if label.get_text()]
+
+    utc_labels = labels(ZoneInfo("UTC"))
+
+    assert utc_labels
+    assert labels(ZoneInfo("Europe/Berlin")) == [
+        f"{int(label[:2]) + 2:02d}{label[2:]}" for label in utc_labels
+    ]
+
+
+def test_graph_time_caption_dates_the_range_in_the_given_time_zone() -> None:
+    # 2026-09-28 23:00 UTC is already 2026-09-29 in Berlin.
+    time_range = TimeRange(start=1790636400, end=1790640000, step=60)
+
+    assert "2026-09-28" in _graph_time_caption(time_range, ZoneInfo("UTC"))
+    assert "2026-09-29" in _graph_time_caption(time_range, ZoneInfo("Europe/Berlin"))

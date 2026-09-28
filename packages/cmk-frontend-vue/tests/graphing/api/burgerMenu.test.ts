@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { getLocalTimeZone } from '@internationalized/date'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
@@ -135,6 +136,21 @@ describe('graphExport', () => {
       expect.objectContaining({ body: expect.objectContaining({ y_range_min: 2, y_range_max: 8 }) })
     )
     expect(openSpy).toHaveBeenCalledWith('graph_image.py?request=%7B%7D', '_blank', 'noopener')
+  })
+
+  test("sends the browser's time zone, the one the graph's time axis is labelled in", async () => {
+    await graphExport(
+      'graph_image',
+      { graph_type: 'template' },
+      { internal: '{}', timeStart: 100, timeEnd: 200, consolidationFunction: 'max' }
+    )
+
+    expect(postSpy).toHaveBeenCalledWith(
+      '/domain-types/graph/actions/export/invoke',
+      expect.objectContaining({
+        body: expect.objectContaining({ time_zone: getLocalTimeZone() })
+      })
+    )
   })
 
   test('omits y_range_min/y_range_max when the graph has no explicit value range', async () => {

@@ -7,14 +7,18 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Annotated, final, Literal, override
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import (
+    AfterValidator,
     BaseModel,
     computed_field,
+    Field,
     field_validator,
     PlainValidator,
     SerializeAsAny,
 )
+from tzlocal import get_localzone_name
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
@@ -23,6 +27,24 @@ from cmk.gui.utils.roles import UserPermissions
 GraphConsolidationFunction = Literal["max", "min", "average"]
 
 AnnotatedHostName = Annotated[HostName, PlainValidator(HostName.parse)]
+
+
+def validate_time_zone(name: str) -> str:
+    """Accept an IANA timezone name, e.g. "Europe/Berlin", as a browser reports it."""
+    try:
+        ZoneInfo(name)
+    except ValueError, ZoneInfoNotFoundError:
+        raise ValueError(f"Unknown time zone: {name!r}")
+    return name
+
+
+TimeZoneName = Annotated[str, AfterValidator(validate_time_zone)]
+
+
+def site_time_zone() -> str:
+    """The IANA name of the site's time zone, e.g. "Europe/Berlin"."""
+    # tzlocal finds no name when the system has no time zone configured, which is UTC then.
+    return get_localzone_name() or "UTC"
 
 
 @dataclass(frozen=True)
@@ -100,6 +122,9 @@ class GraphExportRequest(BaseModel, frozen=True):
     time_end: int | None = None
     y_range_min: float | None = None
     y_range_max: float | None = None
+    # The browser's timezone, which the Vue graph labels its time axis in. The site's one when
+    # omitted.
+    time_zone: TimeZoneName = Field(default_factory=site_time_zone)
 
     @field_validator("specification", mode="before")
     @classmethod

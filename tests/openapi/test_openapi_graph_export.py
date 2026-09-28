@@ -6,6 +6,7 @@
 import json
 from urllib.parse import parse_qs, urlparse
 
+from cmk.gui.graphing._graph_specification import site_time_zone
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
 _TEMPLATE_SPEC = {
@@ -45,6 +46,8 @@ def test_export_prepares_the_download_of_the_displayed_graph(clients: ClientRegi
         "time_end": 1781528400,
         "y_range_min": None,
         "y_range_max": None,
+        # Omitted by the caller: the image is rendered in the site's time zone.
+        "time_zone": site_time_zone(),
     }
 
 
@@ -62,6 +65,29 @@ def test_export_forwards_an_explicit_y_axis_range(clients: ClientRegistry) -> No
 
     assert request["y_range_min"] == 2.0
     assert request["y_range_max"] == 8.0
+
+
+def test_export_forwards_the_browsers_time_zone(clients: ClientRegistry) -> None:
+    # The image labels its time axis in the zone the browser shows the graph in, not the site's.
+    request = _export_request_of(
+        clients.Graph.export(
+            specification=_TEMPLATE_SPEC, target="graph_image", time_zone="Europe/Berlin"
+        ).json["download_url"]
+    )
+
+    assert request["time_zone"] == "Europe/Berlin"
+
+
+def test_export_rejects_an_unknown_time_zone(clients: ClientRegistry) -> None:
+    response = clients.Graph.export(
+        specification=_TEMPLATE_SPEC,
+        target="graph_image",
+        time_zone="Mars/Olympus_Mons",
+        expect_ok=False,
+    )
+
+    response.assert_status_code(400)
+    assert "time zone" in json.dumps(response.json["fields"])
 
 
 def test_export_rejects_an_inverted_y_axis_range(clients: ClientRegistry) -> None:

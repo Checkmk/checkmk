@@ -1375,6 +1375,7 @@ class GraphClient(RestApiClient):
         time_end: int | None = None,
         y_range_min: float | None = None,
         y_range_max: float | None = None,
+        time_zone: str | None = None,
         expect_ok: bool = True,
     ) -> Response:
         # y_range_min/y_range_max are omittable, not nullable: the schema has no `None` variant, so
@@ -1390,6 +1391,8 @@ class GraphClient(RestApiClient):
             body["y_range_min"] = y_range_min
         if y_range_max is not None:
             body["y_range_max"] = y_range_max
+        if time_zone is not None:
+            body["time_zone"] = time_zone
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/actions/export/invoke",

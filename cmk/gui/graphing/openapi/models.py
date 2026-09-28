@@ -18,6 +18,7 @@ from cmk.web.utils.icons import IconNames
 
 from .._built_graphs import BuiltGraph, DiscoveredGraphs
 from .._graph_dispatch import serialize_graphs
+from .._graph_specification import TimeZoneName
 from .._user_specific_unit import apply_temperature_unit
 
 type ApiConsolidation = Literal["min", "max", "avg"]
@@ -542,6 +543,14 @@ class ExportRequest:
     y_range_max: float | ApiOmitted = api_field(
         description=("Upper bound of the Y axis. Inferred from the displayed data when omitted."),
         example=100.0,
+        default_factory=ApiOmitted,
+    )
+    time_zone: TimeZoneName | ApiOmitted = api_field(
+        description=(
+            "The IANA time zone the graph is displayed in, which an exported image labels its "
+            "time axis in. The site's time zone when omitted."
+        ),
+        example="Europe/Berlin",
         default_factory=ApiOmitted,
     )
 

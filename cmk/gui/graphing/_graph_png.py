@@ -5,6 +5,7 @@
 """Render Checkmk graphs as PNG images.
 This is needed for the graphs sent with mail notifications."""
 
+import datetime
 import io
 from collections.abc import Iterator, Sequence
 
@@ -19,7 +20,6 @@ from matplotlib.patches import FancyBboxPatch
 from matplotlib.text import Text
 from matplotlib.transforms import Bbox, blended_transform_factory, ScaledTranslation
 
-import cmk.utils.render
 from cmk.graphing_engine import (
     EvaluatedCurve,
     EvaluatedGraph,
@@ -350,9 +350,18 @@ def _resolution_label(step: int) -> str:
     return f"{fmt(step / 86400)} d"
 
 
-def _graph_time_caption(time_range: TimeRange) -> str:
-    start_date = cmk.utils.render.date(time_range.start)
-    end_date = cmk.utils.render.date(time_range.end)
+def _render_date(timestamp: int, tz: datetime.tzinfo | None) -> str:
+    """cmk.utils.render.date(), but in the given timezone (None: the local one)."""
+    return datetime.datetime.fromtimestamp(timestamp, tz).strftime(
+        # xgettext: no-python-format
+        # astrein: disable=localization-named-placeholder
+        _("%Y-%m-%d")
+    )
+
+
+def _graph_time_caption(time_range: TimeRange, tz: datetime.tzinfo | None) -> str:
+    start_date = _render_date(time_range.start, tz)
+    end_date = _render_date(time_range.end, tz)
     date_range = start_date if start_date == end_date else f"{start_date} — {end_date}"
 
     return _("for %(date_range)s, resolution: %(resolution)s") % {
@@ -404,6 +413,7 @@ def _apply_render_config(
     formatter: NotationFormatter | None,
     *,
     is_mirrored: bool,
+    tz: datetime.tzinfo | None,
 ) -> Text | None:
     ax.tick_params(labelsize=config.font_size, length=0)
     for spine in ax.spines.values():
@@ -441,14 +451,14 @@ def _apply_render_config(
         ax.tick_params(axis="x", which="minor", labelsize=config.font_size, length=0)
         # A first placement, so the layout pass reserves room for the labels; the plot width
         # it settles on is only known afterwards (see _fit_time_axis).
-        _fit_time_axis(ax, graph, config)
+        _fit_time_axis(ax, graph, config, tz)
         ax.grid(axis="x", color=DIVISION_COLOR, linestyle="--")
     else:
         ax.tick_params(axis="x", labelbottom=False, bottom=False)
 
     if config.show_graph_time and (time_range := _time_range(graph)) is not None:
         ax.set_title(
-            _graph_time_caption(time_range),
+            _graph_time_caption(time_range, tz),
             fontsize=config.font_size * X_AXIS_TITLE_FONT_SCALE,
             loc="right",
         )
@@ -456,8 +466,11 @@ def _apply_render_config(
     return title_artist
 
 
-def _fit_time_axis(ax: Axes, graph: EvaluatedGraph, config: GraphDisplayConfigImage) -> None:
-    """Place the time axis ticks where the Vue graph places them, labelled the same way.
+def _fit_time_axis(
+    ax: Axes, graph: EvaluatedGraph, config: GraphDisplayConfigImage, tz: datetime.tzinfo | None
+) -> None:
+    """Place the time axis ticks where the Vue graph places them, labelled the same way, in the
+    timezone tz (None: the local one).
 
     The tick density follows the plot width and the measured label widths, so this must run
     again after a layout pass (e.g. fig.tight_layout()) has settled the plot width.
@@ -475,7 +488,7 @@ def _fit_time_axis(ax: Axes, graph: EvaluatedGraph, config: GraphDisplayConfigIm
         return float(width)
 
     start, end = ax.get_xlim()
-    ticks = compute_time_axis(start, end, ax.get_window_extent(renderer).width, measure_label)
+    ticks = compute_time_axis(start, end, ax.get_window_extent(renderer).width, measure_label, tz)
     # Ticks with a line get a grid line; the label-only ones (a day's label centered between
     # its day boundaries) must not, so they go on the minor ticks, which have no grid.
     grid_ticks = [tick for tick in ticks if tick.line_width > 0]
@@ -680,13 +693,21 @@ def compute_png_size_mm(
 
 
 def render_png_ex(
-    graph: EvaluatedGraph, config: GraphDisplayConfigImage, y_axis_unit: UnitFormat | None = None
+    graph: EvaluatedGraph,
+    config: GraphDisplayConfigImage,
+    y_axis_unit: UnitFormat | None = None,
+    *,
+    tz: datetime.tzinfo | None = None,
 ) -> tuple[bytes, SizeMM, SizeMM]:
     """Render a single evaluated graph to PNG bytes.
 
     ``y_axis_unit`` defaults to this graph's own derived unit (``_derived_y_axis_unit``) - the same
     server-derived unit the Vue graph renders from. Only a caller holding the unit the graph
     names for itself has to pass one: the evaluated graph does not carry it.
+
+    ``tz`` is the timezone the time axis and the graph time are rendered in. It defaults to the
+    site's local one; a PNG exported from the browser passes the browser's, the one the Vue
+    graph labels its time axis in.
 
     Pure function - no registries, no Livestatus, no global state.
     """
@@ -726,10 +747,10 @@ def render_png_ex(
         sign = -1.0 if rule.inverse else 1.0
         ax.axhline(sign * rule.value, color=rule.attributes.color)
     title_artist = _apply_render_config(
-        ax, graph, config, y_axis_unit, formatter, is_mirrored=is_mirrored
+        ax, graph, config, y_axis_unit, formatter, is_mirrored=is_mirrored, tz=tz
     )
     fig.tight_layout()
-    _fit_time_axis(ax, graph, config)
+    _fit_time_axis(ax, graph, config, tz)
     _align_title_to_y_ticks(fig, ax, title_artist)
     buf = io.BytesIO()
     fig.savefig(buf, format="png")
@@ -738,17 +759,24 @@ def render_png_ex(
 
 
 def render_png(
-    graph: EvaluatedGraph, config: GraphDisplayConfigImage, y_axis_unit: UnitFormat | None = None
+    graph: EvaluatedGraph,
+    config: GraphDisplayConfigImage,
+    y_axis_unit: UnitFormat | None = None,
+    *,
+    tz: datetime.tzinfo | None = None,
 ) -> bytes:
-    png_bytes, _, _ = render_png_ex(graph, config, y_axis_unit)
+    png_bytes, _, _ = render_png_ex(graph, config, y_axis_unit, tz=tz)
     return png_bytes
 
 
 def render_png_graphs(
     graphs: Sequence[EvaluatedGraph],
     config: GraphDisplayConfigImage,
+    *,
+    tz: datetime.tzinfo | None = None,
 ) -> bytes:
-    """Render multiple graphs stacked vertically into one combined PNG image.
+    """Render multiple graphs stacked vertically into one combined PNG image, their time axes in
+    the timezone tz (None: the local one).
 
     Pure function - no registries, no Livestatus, no global state.
     """
@@ -789,11 +817,12 @@ def render_png_graphs(
             y_axis_unit,
             _notation_formatter(y_axis_unit),
             is_mirrored=is_mirrored,
+            tz=tz,
         )
         axes_and_titles.append((ax, graph, title_artist))
     fig.tight_layout()
     for ax, graph, title_artist in axes_and_titles:
-        _fit_time_axis(ax, graph, no_legend_config)
+        _fit_time_axis(ax, graph, no_legend_config, tz)
         _align_title_to_y_ticks(fig, ax, title_artist)
     buf = io.BytesIO()
     fig.savefig(buf, format="png")

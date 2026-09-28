@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { getLocalTimeZone } from '@internationalized/date'
 import type { IconNames } from 'cmk-shared-typing/typescript/icon'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
@@ -82,6 +83,8 @@ export const graphExport = async (
         consolidation_function: displayed.consolidationFunction,
         time_start: displayed.timeStart,
         time_end: displayed.timeEnd,
+        // The zone the graph's time axis is labelled in, so an exported image reads the same.
+        time_zone: getLocalTimeZone(),
         // y_range_min/y_range_max are omittable, not nullable: an absent range must be a missing
         // key, never an explicit `null`.
         ...(displayed.valueRange

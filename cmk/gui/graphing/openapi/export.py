@@ -7,7 +7,11 @@ import json
 from typing import Final
 from urllib.parse import urlencode
 
-from cmk.gui.graphing._graph_specification import GraphConsolidationFunction, GraphExportRequest
+from cmk.gui.graphing._graph_specification import (
+    GraphConsolidationFunction,
+    GraphExportRequest,
+    site_time_zone,
+)
 from cmk.gui.graphing.openapi._add_to import parse_specification
 from cmk.gui.graphing.openapi._family import GRAPH_FAMILY
 from cmk.gui.graphing.openapi.models import ApiConsolidation, ExportRequest, ExportResponse
@@ -44,6 +48,7 @@ def export_v1(body: ExportRequest) -> ExportResponse:
         time_end=body.time_end,
         y_range_min=ApiOmitted.to_optional(body.y_range_min),
         y_range_max=ApiOmitted.to_optional(body.y_range_max),
+        time_zone=(site_time_zone() if isinstance(body.time_zone, ApiOmitted) else body.time_zone),
     )
     query = urlencode({"request": json.dumps(export_request.model_dump())})
     return ExportResponse(download_url=f"{body.target}.py?{query}")

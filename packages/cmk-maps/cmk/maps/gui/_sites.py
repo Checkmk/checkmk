@@ -40,7 +40,7 @@ def site_specs_path() -> Path:
     return cmk.utils.paths.default_config_dir / "maps.d" / "sitespecs.mk"
 
 
-def _for_livestatus(site_id: SiteId, site_spec: SiteConfiguration) -> SiteConfiguration:
+def _for_livestatus(site_id: SiteId, site_spec: SiteConfiguration) -> dict[str, object]:
     """Normalise a site spec for ``livestatus.MultiSiteConnection``.
 
     Mirrors ``cmk.gui.sites``' own (module-private) normalisation: encode the
@@ -49,19 +49,27 @@ def _for_livestatus(site_id: SiteId, site_spec: SiteConfiguration) -> SiteConfig
     connection needs. Kept here rather than widening the ``cmk.gui.sites`` API for
     a single caller; the socket encoding itself (the proxy/OMD-specific part) is
     the shared helper.
+
+    Only the keys the connection reads are written: the daemon never logs in to
+    a remote site or applies its global settings, so the remote login secret and
+    whatever a site spec gains later stay out of its file (part of omd backup).
     """
-    prepared = site_spec.copy()
+    prepared: dict[str, object] = {
+        "socket": encode_socket_for_livestatus(site_id, site_spec),
+        "timeout": site_spec["timeout"],
+        "persist": site_spec["persist"],
+        "status_host": site_spec["status_host"],
+    }
     proxy = site_spec.get("proxy")
     socket = site_spec["socket"]
     if proxy is not None:
         prepared["cache"] = proxy.get("cache", True)
     elif isinstance(socket, tuple) and socket[0] in ("tcp", "tcp6"):
         prepared["tls"] = socket[1]["tls"]
-    prepared["socket"] = encode_socket_for_livestatus(site_id, site_spec)
     return prepared
 
 
-def _prepared_site_specs(sites: SiteConfigurations) -> dict[SiteId, SiteConfiguration]:
+def _prepared_site_specs(sites: SiteConfigurations) -> dict[SiteId, dict[str, object]]:
     enabled = site_config.enabled_sites(sites)
     if site_config.is_single_local_site(enabled):
         # Empty specs = the daemon's single-socket fast path; written (not

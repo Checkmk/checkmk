@@ -98,6 +98,22 @@ def test_distributed_specs_round_trip(shared_omd_root: Path) -> None:
     assert str(loaded["central"]["socket"]).startswith("unix:")
 
 
+def test_specs_carry_only_what_the_fan_out_reads(shared_omd_root: Path) -> None:
+    # The daemon never logs in to a remote site, so its backed-up spec file must
+    # not hold the remote login secret or anything else it does not read.
+    remote = _site("remote1")
+    remote["secret"] = "remote-login-secret"
+    remote["globals"] = {"debug_rules": True}
+    _sites._on_sites_saved(  # noqa: SLF001
+        _sites_config(central=_site("central", local=True), remote1=remote)
+    )
+    loaded = checkmk_sites.load_sites()
+
+    assert loaded is not None
+    assert set(loaded["remote1"]) == {"socket", "timeout", "persist", "status_host", "tls"}
+    assert "remote-login-secret" not in _sites.site_specs_path().read_text()
+
+
 def test_single_local_site_means_fast_path(shared_omd_root: Path) -> None:
     _sites._on_sites_saved(_sites_config(central=_site("central", local=True)))  # noqa: SLF001
 

@@ -31,7 +31,7 @@ TypeScript type names stay unambiguous in the shared spec namespace.
 
 from typing import Annotated, Literal
 
-from pydantic import AfterValidator, Field
+from pydantic import AfterValidator, BeforeValidator, Field
 
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.maps.shared.filters import normalize_object_filter
@@ -44,7 +44,7 @@ from cmk.maps.shared.map_payload import (
     PresentationTheme,
     RenderMode,
 )
-from cmk.maps.shared.validators import validate_color
+from cmk.maps.shared.validators import coerce_url_target, validate_color, validate_user_url
 
 # Reject CSS-injection payloads in user-supplied colors at the REST write
 # boundary (defense in depth — the SPA also escapes these at the render sink).
@@ -53,6 +53,12 @@ from cmk.maps.shared.validators import validate_color
 # daemon. ``validate_color`` passes ``None``/``""`` through, so it composes with the
 # optional/nullable fields below.
 _Color = Annotated[str, AfterValidator(validate_color)]
+
+# The same for user-supplied URLs and their link target: mirror the daemon's
+# allowlist (scheme + OS-handler authority) and its ``_blank``/``_self`` narrowing
+# so the REST write boundary is never laxer. Both pass ``None``/``""`` through.
+_UserUrl = Annotated[str, AfterValidator(validate_user_url)]
+_UrlTarget = Annotated[str, BeforeValidator(coerce_url_target)]
 
 
 def _normalize_object_filter(value: str) -> str | None:
@@ -349,7 +355,7 @@ class MapWorldmapView:
     lat: float = api_field(description="Initial map center latitude.", example=51.0)
     lng: float = api_field(description="Initial map center longitude.", example=10.0)
     zoom: int = api_field(description="Initial zoom level.", example=5)
-    tile_url: str | None | ApiOmitted = api_field(
+    tile_url: _UserUrl | None | ApiOmitted = api_field(
         description="Leaflet tile URL template override.",
         example="https://tiles.example.com/{z}/{x}/{y}.png",
         default_factory=ApiOmitted,
@@ -681,7 +687,7 @@ class MapObjectTextbox:
 class MapObjectGraph:
     """Embedded-graph configuration for a graph object."""
 
-    url: str | None | ApiOmitted = api_field(
+    url: _UserUrl | None | ApiOmitted = api_field(
         description="Embedded graph URL.",
         example="/check_mk/graph.py?host=web-01",
         default_factory=ApiOmitted,
@@ -725,15 +731,15 @@ class MapObjectFilter:
 class MapObjectLink:
     """Click-through and hover behaviour for the object."""
 
-    url_target: str = api_field(
+    url_target: _UrlTarget = api_field(
         description="Link target for the object's click-through URL.", example="_blank"
     )
-    url: str | None | ApiOmitted = api_field(
+    url: _UserUrl | None | ApiOmitted = api_field(
         description="Click-through URL.",
         example="/check_mk/view.py?host=web-01",
         default_factory=ApiOmitted,
     )
-    hover_url: str | None | ApiOmitted = api_field(
+    hover_url: _UserUrl | None | ApiOmitted = api_field(
         description="Hover preview URL.",
         example="/check_mk/hover.py?host=web-01",
         default_factory=ApiOmitted,

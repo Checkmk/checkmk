@@ -88,6 +88,26 @@ def coerce_user_url(value: object) -> object:
         return None
 
 
+# A click-through URL's target. Anything other than a new tab or the same frame
+# (``_top``/``_parent``/a named frame) would let the URL replace the whole
+# Checkmk UI with an external page, turning an object link into a phishing vector.
+_ALLOWED_URL_TARGETS = frozenset({"_blank", "_self"})
+
+
+def coerce_url_target(value: object) -> object:
+    """Fold any stored link target other than a new tab / same frame to ``_blank``.
+
+    Coerces rather than rejects (like ``coerce_color``) because the map models are
+    dual-use for reads: a stored map may pre-date this allowlist and must stay
+    loadable, while the narrowed value still keeps ``_top``/``_parent`` off-limits.
+    """
+    if value is None or value == "":
+        return value
+    if isinstance(value, str) and value in _ALLOWED_URL_TARGETS:
+        return value
+    return "_blank"
+
+
 def validate_color(value: str | None) -> str | None:
     """Accept a hex/named/`transparent` color; reject anything else (API save-side)."""
     if value is None or value == "":

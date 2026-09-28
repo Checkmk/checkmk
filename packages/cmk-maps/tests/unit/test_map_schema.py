@@ -30,6 +30,20 @@ def test_object_filter_normalises_and_empty_becomes_none() -> None:
     assert empty.object_filter is None
 
 
+def test_url_target_folds_unsafe_targets_to_blank() -> None:
+    # _top / _parent (or a named frame) would let a click-through URL replace the
+    # whole Checkmk UI with an external page, so anything but _blank/_self folds.
+    for unsafe in ("_top", "_parent", "victimframe"):
+        obj = MapElement.model_validate({"id": "o", "type": "host", "url_target": unsafe})
+        assert obj.url_target == "_blank"
+
+
+def test_url_target_keeps_safe_targets() -> None:
+    for safe in ("_blank", "_self"):
+        obj = MapElement.model_validate({"id": "o", "type": "host", "url_target": safe})
+        assert obj.url_target == safe
+
+
 def test_legacy_weathermap_style_migrates_to_arrow_inward() -> None:
     # A stored map with line_style='weathermap' must keep loading by
     # rewriting transparently to the orthogonal model on validation.

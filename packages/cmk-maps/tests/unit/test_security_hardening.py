@@ -34,7 +34,7 @@ from cmk.maps.backend.schemas.map import (
     MapElementUpdate,
 )
 from cmk.maps.backend.services.state_service import _names_or_filter
-from cmk.maps.shared.validators import coerce_user_url, validate_user_url
+from cmk.maps.shared.validators import coerce_url_target, coerce_user_url, validate_user_url
 
 # --- validate_user_url: scheme allowlist + rejection ---
 
@@ -131,6 +131,23 @@ def test_validate_user_url_keeps_ordinary_remote_handler_urls(url: str) -> None:
 )
 def test_coerce_user_url_drops_invalid(value: object, expected: object) -> None:
     assert coerce_user_url(value) == expected
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param(None, None, id="none-passthrough"),
+        pytest.param("", "", id="empty-passthrough"),
+        pytest.param("_blank", "_blank", id="blank-kept"),
+        pytest.param("_self", "_self", id="self-kept"),
+        pytest.param("_top", "_blank", id="top-folded"),
+        pytest.param("_parent", "_blank", id="parent-folded"),
+        pytest.param("victimframe", "_blank", id="named-frame-folded"),
+        pytest.param(123, "_blank", id="non-string-folded"),
+    ],
+)
+def test_coerce_url_target_folds_unsafe(value: object, expected: object) -> None:
+    assert coerce_url_target(value) == expected
 
 
 # --- map-object URL validation + XSS rejection ---

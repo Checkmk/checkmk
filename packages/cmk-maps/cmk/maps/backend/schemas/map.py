@@ -19,7 +19,7 @@ from cmk.maps.shared.map_payload import (
     ObjectType,
     RenderMode,
 )
-from cmk.maps.shared.validators import validate_color, validate_user_url
+from cmk.maps.shared.validators import coerce_url_target, validate_color, validate_user_url
 
 
 def _accept_legacy_backend_id(data: object) -> object:
@@ -312,6 +312,11 @@ class MapElement(BaseModel):
     def _validate_urls(cls, v: str | None) -> str | None:
         return validate_user_url(v)
 
+    @field_validator("url_target", mode="before")
+    @classmethod
+    def _coerce_url_target(cls, v: object) -> object:
+        return coerce_url_target(v)
+
     @field_validator(
         "line_color", "line_color_border", "label_border", "textbox_background", "textbox_border"
     )
@@ -516,6 +521,11 @@ class MapElementUpdate(BaseModel):
     @classmethod
     def _validate_urls(cls, v: str | None) -> str | None:
         return validate_user_url(v)
+
+    @field_validator("url_target", mode="before")
+    @classmethod
+    def _coerce_url_target(cls, v: object) -> object:
+        return coerce_url_target(v)
 
     @field_validator(
         "line_color", "line_color_border", "label_border", "textbox_background", "textbox_border"

@@ -96,7 +96,7 @@ def command_confirm_dialog(
         if mobile
         else makeuri(
             request=request,
-            addvars=[("_do_actions", "no")],
+            addvars=[],
             delvars=["filled_in", "_transid"],
         )
     )

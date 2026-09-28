@@ -49,6 +49,7 @@ from cmk.gui.watolib.host_relation_discovery import (
     run_summary,
     scan_for_evidence,
     ScannedHost,
+    Scope,
     SharedAttribute,
     SharedLabel,
     suggest_evidence,
@@ -932,14 +933,20 @@ def test_a_pair_the_user_cannot_write_is_reported_instead_of_offered(tree: Folde
     assert found.entries[0].detail == 'No permission to edit the hosts in the folder "Other".'
 
 
-def _folder_of_its_own(tree: FolderTree, name: str, contact_group: str) -> Folder:
-    return tree.root_folder().create_subfolder(
+def _subfolder(parent: Folder, name: str, attributes: HostAttributes | None = None) -> Folder:
+    return parent.create_subfolder(
         name,
         name.title(),
-        HostAttributes({"contactgroups": _contact_groups(contact_group)}),
+        attributes or HostAttributes(),
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
         acting_user=_SUPERUSER,
+    )
+
+
+def _folder_of_its_own(tree: FolderTree, name: str, contact_group: str) -> Folder:
+    return _subfolder(
+        tree.root_folder(), name, HostAttributes({"contactgroups": _contact_groups(contact_group)})
     )
 
 
@@ -1010,6 +1017,170 @@ def test_the_suggestions_name_no_host_of_a_folder_the_user_may_not_see(tree: Fol
     )
 
     assert (suggested.hosts_scanned, suggested.words) == (1, [])
+
+
+def test_a_folder_scope_finds_the_relations_with_one_host_in_it(tree: FolderTree) -> None:
+    """The boards have a folder of their own; the hosts they manage are found wherever they are."""
+    root = tree.root_folder()
+    _create_host(_subfolder(root, "oob"), "srv-01-ilo")
+    _create_host(_subfolder(root, "dc1"), "srv-01")
+    _create_host(root, "srv-02-ilo")
+    _create_host(root, "srv-02")
+    tree.invalidate_caches()
+
+    found = discover_relations(
+        tree, evidence=_evidence(), acting_user=_SUPERUSER, scope=Scope(folder="oob")
+    )
+
+    assert _outcomes(found.entries) == [("srv-01-ilo", "srv-01", LinkOutcome.LINK)]
+
+
+def test_a_folder_scope_takes_in_its_subfolders(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(_subfolder(_subfolder(root, "oob"), "rack1"), "srv-01-ilo")
+    _create_host(root, "srv-01")
+    tree.invalidate_caches()
+
+    found = discover_relations(
+        tree, evidence=_evidence(), acting_user=_SUPERUSER, scope=Scope(folder="oob")
+    )
+
+    assert _outcomes(found.entries) == [("srv-01-ilo", "srv-01", LinkOutcome.LINK)]
+
+
+def test_a_site_scope_finds_the_relations_with_one_host_on_it(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(root, "srv-01-ilo", HostAttributes({"site": SiteId("remote")}))
+    _create_host(root, "srv-01")
+    _create_host(root, "srv-02-ilo")
+    _create_host(root, "srv-02")
+    tree.invalidate_caches()
+
+    found = discover_relations(
+        tree, evidence=_evidence(), acting_user=_SUPERUSER, scope=Scope(site=SiteId("remote"))
+    )
+
+    assert _outcomes(found.entries) == [("srv-01-ilo", "srv-01", LinkOutcome.LINK)]
+
+
+def _chassis_across_three_folders(tree: FolderTree, *, stored: bool = False) -> None:
+    """A chassis with its board in /oob and a blade each in /dc1 and /dc2."""
+    root = tree.root_folder()
+    labels = {"asset/chassis": "CH-1"}
+    board = HostAttributes({"labels": labels})
+    if stored:
+        board["relations"] = [
+            {"kind": "management", "direction": "parent", "host": HostName("blade-1")}
+        ]
+    _create_host(_subfolder(root, "dc1"), "blade-1", HostAttributes({"labels": labels}))
+    _create_host(_subfolder(root, "dc2"), "blade-2", HostAttributes({"labels": labels}))
+    _create_host(_subfolder(root, "oob"), "chassis-1", board)
+    tree.invalidate_caches()
+
+
+def test_a_host_named_from_outside_the_scope_is_related_only_to_the_members_inside(
+    tree: FolderTree,
+) -> None:
+    """Every relation an answer stores has a host in scope, as the scope promises."""
+    _chassis_across_three_folders(tree)
+
+    (question,) = discover_relations(
+        tree,
+        evidence=_evidence(shared=SharedLabel("asset/chassis")),
+        acting_user=_SUPERUSER,
+        scope=Scope(folder="dc1"),
+    ).groups
+
+    assert question.proposal.partners(HostName("chassis-1")) == [HostName("blade-1")]
+
+
+def test_a_group_whose_relations_in_scope_are_stored_is_not_asked_again(tree: FolderTree) -> None:
+    _chassis_across_three_folders(tree, stored=True)
+
+    (question,) = discover_relations(
+        tree,
+        evidence=_evidence(shared=SharedLabel("asset/chassis")),
+        acting_user=_SUPERUSER,
+        scope=Scope(folder="dc1"),
+    ).groups
+
+    assert question.settled == HostName("chassis-1")
+
+
+def test_a_folder_removed_before_the_scan_holds_nothing(tree: FolderTree) -> None:
+    _create_host(tree.root_folder(), "srv-01-ilo")
+    _create_host(tree.root_folder(), "srv-01")
+    tree.invalidate_caches()
+
+    found = discover_relations(
+        tree, evidence=_evidence(), acting_user=_SUPERUSER, scope=Scope(folder="gone")
+    )
+
+    assert (found.hosts_scanned, found.entries) == (0, [])
+
+
+def test_a_scan_counts_the_hosts_of_its_scope(tree: FolderTree) -> None:
+    """The hosts elsewhere are read as the other end, but what was looked at is the scope."""
+    root = tree.root_folder()
+    _create_host(_subfolder(root, "oob"), "srv-01-ilo")
+    _create_host(root, "srv-01")
+    _create_host(root, "srv-02")
+    tree.invalidate_caches()
+
+    found = discover_relations(
+        tree, evidence=_evidence(), acting_user=_SUPERUSER, scope=Scope(folder="oob")
+    )
+
+    assert found.hosts_scanned == 1
+
+
+def test_the_suggestions_count_the_hosts_of_their_scope(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(_subfolder(root, "oob"), "srv-01-ilo")
+    _create_host(root, "srv-01")
+    _create_host(root, "srv-02")
+    tree.invalidate_caches()
+
+    suggested = scan_for_evidence(
+        tree, attribute_names=[], acting_user=_SUPERUSER, scope=Scope(folder="oob")
+    )
+
+    assert suggested.hosts_scanned == 1
+
+
+def test_the_suggestions_count_only_the_pairs_a_scope_takes_in(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(_subfolder(root, "oob"), "srv-01-ilo")
+    for name in ("srv-01", "srv-02-ilo", "srv-02", "srv-03-ilo", "srv-03"):
+        _create_host(root, name)
+    tree.invalidate_caches()
+
+    suggested = scan_for_evidence(
+        tree, attribute_names=[], acting_user=_SUPERUSER, scope=Scope(folder="oob")
+    )
+
+    assert [(finding.word, finding.pairs) for finding in suggested.words] == [("ilo", 1)]
+
+
+def test_the_suggestions_count_only_the_values_a_scope_takes_in(tree: FolderTree) -> None:
+    oob = _subfolder(tree.root_folder(), "oob")
+    for serial in range(1, 7):
+        labels = HostAttributes({"labels": {"cmdb/sn": f"S-{serial}"}})
+        _create_host(oob if serial <= 3 else tree.root_folder(), f"w-{serial}a", labels)
+        _create_host(tree.root_folder(), f"w-{serial}b", labels)
+    tree.invalidate_caches()
+
+    suggested = scan_for_evidence(
+        tree,
+        attribute_names=[],
+        acting_user=_SUPERUSER,
+        in_names=False,
+        scope=Scope(folder="oob"),
+    )
+
+    assert [(finding.where, finding.groups) for finding in suggested.values] == [
+        (SharedLabel("cmdb/sn"), 3)
+    ]
 
 
 def test_a_conflict_one_of_whose_claims_is_stored_is_not_asked_again(tree: FolderTree) -> None:
@@ -1500,6 +1671,7 @@ def _suggested(
         values=values,
         in_names=in_names,
         in_values=in_values,
+        inside=frozenset(host.name for host in hosts),
         kinds=kinds,
     )
 

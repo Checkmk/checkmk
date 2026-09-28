@@ -52,6 +52,7 @@ from cmk.gui.watolib.host_relation_discovery import (
     Finding,
     group_key,
     group_outcome,
+    group_partners,
     GroupEntry,
     HostPair,
     link_relations,
@@ -65,6 +66,7 @@ from cmk.gui.watolib.host_relation_discovery import (
     relation_to_find,
     RelationEntry,
     run_summary,
+    Scope,
     SharedAttribute,
     SharedLabel,
     ValueReason,
@@ -115,6 +117,16 @@ class FindingArgs(BaseModel, frozen=True):
     words: list[str] = []
     marked_by: MarkArgs | None = None
     paired_by: ValueArgs | None = None
+
+
+class ScopeArgs(BaseModel, frozen=True):
+    """Where the scan looks, as it travels to the scan job (see :class:`Scope`)."""
+
+    folder: str = ""
+    site: SiteId | None = None
+
+    def scope(self) -> Scope:
+        return Scope(folder=self.folder, site=self.site)
 
 
 def evidence_of(findings: Sequence[FindingArgs]) -> Evidence:
@@ -209,6 +221,8 @@ class FoundGroup(BaseModel, frozen=True):
     reason: FoundReason
     settled: str | None
     refusals: dict[str, str]
+    outside: list[str]
+    """The members out of scope, where the scan has one."""
 
     @property
     def key(self) -> str:
@@ -217,6 +231,14 @@ class FoundGroup(BaseModel, frozen=True):
     @property
     def outcome(self) -> LinkOutcome:
         return group_outcome(self.settled)
+
+    def partners(self, named: str) -> list[str]:
+        """The hosts ``named`` is related to when it is named - none that cannot be written."""
+        return [
+            partner
+            for partner in group_partners(self.members, self.outside, named)
+            if partner not in self.refusals
+        ]
 
 
 class FoundConflict(BaseModel, frozen=True):
@@ -298,6 +320,7 @@ def _found_group(group: GroupEntry, folder_of: Callable[[HostName], str]) -> Fou
         reason=reason,
         settled=group.settled,
         refusals={str(host): refusal for host, refusal in group.refusals.items()},
+        outside=sorted(group.proposal.outside),
     )
 
 
@@ -501,8 +524,7 @@ def accepted_pairs(result: ScanResult, accepted: AcceptedScan) -> list[tuple[str
                     source_direction=group.direction,
                 ),
             )
-            for member in group.members
-            if member != named and member not in group.refusals
+            for member in group.partners(named)
         )
 
     conflicts = {conflict.key: conflict for conflict in result.conflicts}
@@ -636,6 +658,7 @@ class RelationScanBackgroundJob(BackgroundJob):
     def do_execute(
         self,
         findings: Sequence[FindingArgs],
+        scope: Scope,
         job_interface: BackgroundProcessInterface,
         user_permission_config: UserPermissionSerializableConfig,
         tree: FolderTree,
@@ -645,7 +668,7 @@ class RelationScanBackgroundJob(BackgroundJob):
         ):
             job_interface.send_progress_update(_("Reading the hosts of Setup..."))
             evidence = evidence_of(findings)
-            discovery = discover_relations(tree, evidence=evidence, acting_user=user)
+            discovery = discover_relations(tree, evidence=evidence, acting_user=user, scope=scope)
             folders = {
                 name: host.folder().path()
                 for name, host in tree.root_folder().all_hosts_recursively().items()
@@ -658,12 +681,13 @@ class RelationScanBackgroundJob(BackgroundJob):
                 )
             )
             job_interface.send_result_message(
-                _("%(count)d hosts read.") % {"count": discovery.hosts_scanned}
+                _("%(count)d hosts looked at.") % {"count": discovery.hosts_scanned}
             )
 
 
 class RelationScanJobArgs(BaseModel, frozen=True):
     findings: list[FindingArgs]
+    scope: ScopeArgs
     user_permission_config: UserPermissionSerializableConfig
     site_configs: SiteConfigurations
     wato_hide_folders_without_read_permissions: bool
@@ -676,6 +700,7 @@ def relation_scan_job_entry_point(
 ) -> None:
     RelationScanBackgroundJob(job_interface.get_job_id()).do_execute(
         args.findings,
+        args.scope.scope(),
         job_interface,
         args.user_permission_config,
         FolderTree(
@@ -692,6 +717,7 @@ def relation_scan_job_entry_point(
 def start_relation_scan(
     job: RelationScanBackgroundJob,
     findings: Sequence[FindingArgs],
+    scope: ScopeArgs,
     user_permission_config: UserPermissionSerializableConfig,
     *,
     site_configs: SiteConfigurations,
@@ -705,6 +731,7 @@ def start_relation_scan(
             callable=relation_scan_job_entry_point,
             args=RelationScanJobArgs(
                 findings=list(findings),
+                scope=scope,
                 user_permission_config=user_permission_config,
                 site_configs=site_configs,
                 wato_hide_folders_without_read_permissions=wato_hide_folders_without_read_permissions,

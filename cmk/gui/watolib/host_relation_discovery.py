@@ -25,7 +25,7 @@ named: the run writes the pairs it is handed, not the ones a second scan would f
 import heapq
 import re
 from collections import Counter
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from enum import StrEnum
 from typing import assert_never, Final
@@ -242,6 +242,17 @@ def pair_key(source: str, kind_id: str, target: str) -> str:
 
 def group_key(kind_id: str, members: Sequence[str]) -> str:
     return f"{kind_id}|{','.join(members)}"
+
+
+def group_partners[T: str](members: Sequence[T], outside: Collection[str], named: str) -> list[T]:
+    """The members of a group the host named in it is related to.
+
+    All the others - but a host named from outside the scope only to the ones inside it, so
+    that every relation an answer stores has a host in scope (see :class:`Scope`).
+    """
+    if named not in outside:
+        return [member for member in members if member != named]
+    return [member for member in members if member != named and member not in outside]
 
 
 def conflict_key(hosts: tuple[str, str]) -> str:
@@ -487,9 +498,15 @@ class GroupProposal:
     """Why these hosts belong together, in the words the row shows; already translated."""
     reason: ValueReason
 
+    outside: frozenset[HostName] = frozenset()
+    """The members out of scope, where the scan has one."""
+
     @property
     def key(self) -> str:
         return group_key(self.kind_id, self.members)
+
+    def partners(self, named: HostName) -> list[HostName]:
+        return group_partners(self.members, self.outside, named)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -734,12 +751,67 @@ class ConflictEntry:
 
 @dataclass(frozen=True, kw_only=True)
 class Discovery:
-    """What a scan found, and how much of Setup it read to find it."""
+    """What a scan found, and how many hosts it looked at to find it."""
 
     hosts_scanned: int
+    """The hosts in scope. The others are read too, but only as the other end of a relation."""
     entries: Sequence[RelationEntry]
     groups: Sequence[GroupEntry] = ()
     conflicts: Sequence[ConflictEntry] = ()
+
+
+@dataclass(frozen=True, kw_only=True)
+class Scope:
+    """Which relations a scan is after: the ones with a host in this folder or on this site.
+
+    One host of a pair is enough. The boards of a fleet often have a folder of their own
+    while the hosts they manage live elsewhere, so every host the user may see is still read
+    as the other end.
+    """
+
+    folder: PathWithoutSlash = ""
+    """Subfolders included; the main folder is all of Setup."""
+    site: SiteId | None = None
+
+    def hosts_in(self, tree: FolderTree, hosts: Mapping[HostName, Host]) -> frozenset[HostName]:
+        """The names of those of ``hosts`` in scope."""
+        names: Collection[HostName]
+        if not self.folder:
+            names = hosts.keys()
+        elif (folder := tree.all_folders().get(self.folder)) is not None:
+            names = hosts.keys() & folder.all_hosts_recursively().keys()
+        else:
+            # Removed since the scan was asked for: nothing is in it any more.
+            return frozenset()
+        if self.site is None:
+            return frozenset(names)
+        return frozenset(name for name in names if hosts[name].site_id() == self.site)
+
+
+#: All of Setup.
+EVERYWHERE: Final = Scope()
+
+
+def _touches(inside: frozenset[HostName], hosts: Iterable[HostName]) -> bool:
+    """Whether one of ``hosts`` is in scope."""
+    return not inside.isdisjoint(hosts)
+
+
+def _within(found: Proposals, inside: frozenset[HostName]) -> Proposals:
+    """What of ``found`` has a host ``inside``."""
+    groups = []
+    for group in found.groups:
+        if len(outside := frozenset(group.members) - inside) < len(group.members):
+            groups.append(replace(group, outside=outside) if outside else group)
+    return Proposals(
+        pairs=[
+            proposal
+            for proposal in found.pairs
+            if _touches(inside, (proposal.pair.source, proposal.pair.target))
+        ],
+        groups=groups,
+        conflicts=[conflict for conflict in found.conflicts if _touches(inside, conflict.hosts)],
+    )
 
 
 def discover_relations(
@@ -747,6 +819,7 @@ def discover_relations(
     *,
     evidence: Evidence,
     acting_user: LoggedInUser,
+    scope: Scope = EVERYWHERE,
 ) -> Discovery:
     """The relations the hosts in ``tree`` speak for, each with what storing it would do.
 
@@ -756,7 +829,8 @@ def discover_relations(
     all_hosts = readable_hosts(tree, acting_user=acting_user)
     scanned = [scanned_host(host, read_labels=evidence.reads_labels) for host in all_hosts.values()]
     refusal = _refusals_per_folder_pair(acting_user=acting_user)
-    found = propose_relations(scanned, evidence=evidence)
+    inside = scope.hosts_in(tree, all_hosts)
+    found = _within(propose_relations(scanned, evidence=evidence), inside)
     entries = [_settled(proposal, all_hosts, refusal) for proposal in found.pairs]
     conflicts = []
     for conflict in found.conflicts:
@@ -768,7 +842,7 @@ def discover_relations(
         else:
             conflicts.append(ConflictEntry(hosts=conflict.hosts, claims=claims))
     return Discovery(
-        hosts_scanned=len(all_hosts),
+        hosts_scanned=len(inside),
         entries=entries,
         groups=[_settled_group(question, all_hosts, refusal) for question in found.groups],
         conflicts=conflicts,
@@ -888,6 +962,7 @@ class Suggestions:
     """What the hosts give away about belonging together, before anybody asked for anything."""
 
     hosts_scanned: int
+    """The hosts in scope, as for :class:`Discovery`."""
     words: Sequence[WordFinding]
     values: Sequence[ValueFinding]
     label_names: Sequence[str]
@@ -903,6 +978,7 @@ def suggest_evidence(
     values: Sequence[SharedLabel | SharedAttribute] = (),
     in_names: bool = True,
     in_values: bool = True,
+    inside: frozenset[HostName],
     kinds: Mapping[str, RelationKind] = RELATION_KINDS,
 ) -> Suggestions:
     """What the discovery could look for in ``hosts``, found in the hosts themselves.
@@ -910,15 +986,25 @@ def suggest_evidence(
     ``words`` and ``values`` are the ones the user added, reported whatever they find - even
     nothing - so the page can show what each of them would read before it is used.
     ``in_names`` and ``in_values`` say where to look at all: a fleet named by convention has
-    no use for a list of every label that happens to pair two hosts.
+    no use for a list of every label that happens to pair two hosts. Only pairs and groups
+    with a host ``inside`` count (see :class:`Scope`).
     """
     declared = _declared_words(kinds)
     return Suggestions(
-        hosts_scanned=len(hosts),
-        words=_word_findings(hosts, requested=words, declared=declared) if in_names else [],
+        hosts_scanned=len(inside),
+        words=(
+            _word_findings(hosts, requested=words, declared=declared, inside=inside)
+            if in_names
+            else []
+        ),
         values=(
             _value_findings(
-                hosts, attribute_names, requested=values, words=words, declared=declared
+                hosts,
+                attribute_names,
+                requested=values,
+                words=words,
+                declared=declared,
+                inside=inside,
             )
             if in_values
             else []
@@ -937,18 +1023,18 @@ def scan_for_evidence(
     values: Sequence[SharedLabel | SharedAttribute] = (),
     in_names: bool = True,
     in_values: bool = True,
+    scope: Scope = EVERYWHERE,
 ) -> Suggestions:
     """:func:`suggest_evidence` for every host the user may see, read the way a scan reads them."""
+    hosts = readable_hosts(tree, acting_user=acting_user)
     return suggest_evidence(
-        [
-            scanned_host(host, read_labels=in_values)
-            for host in readable_hosts(tree, acting_user=acting_user).values()
-        ],
+        [scanned_host(host, read_labels=in_values) for host in hosts.values()],
         attribute_names=attribute_names,
         words=words,
         values=values,
         in_names=in_names,
         in_values=in_values,
+        inside=scope.hosts_in(tree, hosts),
     )
 
 
@@ -967,16 +1053,18 @@ def _word_findings(
     *,
     requested: Sequence[str],
     declared: Mapping[str, str],
+    inside: frozenset[HostName],
 ) -> Sequence[WordFinding]:
     """Every word that turns one existing host name into another, the declared ones first."""
     wanted = {word.lower() for word in requested}
     # A number is not offered as a word: "srv-01" is not "srv" with "01" added. One the user
     # typed is counted all the same - the scan would read it, so the count has to say so.
-    found = {
-        word: pairs
+    in_scope = {
+        word: {pair for pair in pairs if _touches(inside, pair)}
         for word, pairs in _name_pairs(hosts).items()
         if not word.isdigit() or word in wanted
     }
+    found = {word: pairs for word, pairs in in_scope.items() if pairs}
     findings = []
     for word in {*found, *wanted}:
         pairs = found.get(word, set())
@@ -1003,6 +1091,7 @@ def _value_findings(
     requested: Sequence[SharedLabel | SharedAttribute],
     words: Sequence[str],
     declared: Mapping[str, str],
+    inside: frozenset[HostName],
 ) -> Sequence[ValueFinding]:
     """The labels and attributes whose shared values each look like one machine.
 
@@ -1037,10 +1126,18 @@ def _value_findings(
     def split(
         by_value: Mapping[str, list[HostName]],
     ) -> tuple[list[tuple[str, list[HostName]]], list[tuple[str, list[HostName]]]]:
+        # Out of scope is only what pairs; the categories below still count every value. The
+        # size goes first: most values of a label sit on one host and pair nothing anyway.
         machines = [
-            (v, members) for v, members in by_value.items() if 2 <= len(members) <= _MACHINE_SIZE
+            (v, members)
+            for v, members in by_value.items()
+            if 2 <= len(members) <= _MACHINE_SIZE and _touches(inside, members)
         ]
-        wider = [(v, members) for v, members in by_value.items() if len(members) > _MACHINE_SIZE]
+        wider = [
+            (v, members)
+            for v, members in by_value.items()
+            if len(members) > _MACHINE_SIZE and _touches(inside, members)
+        ]
         return machines, wider
 
     candidates = []
@@ -1286,51 +1383,54 @@ def _settled_group(
     members = [all_hosts[name] for name in proposal.members]
     return GroupEntry(
         proposal=proposal,
-        settled=_member_at_end(proposal, members),
+        settled=_member_at_end(proposal, all_hosts),
         refusals={
             host.name(): reason
             for host in members
-            if (reason := _refusal_for_member(host, members, refusal)) is not None
+            if (reason := _refusal_for_member(proposal, host, all_hosts, refusal)) is not None
         },
     )
 
 
 def _refusal_for_member(
-    host: Host, members: Sequence[Host], refusal: Callable[[Host, Host], str | None]
+    proposal: GroupProposal,
+    host: Host,
+    all_hosts: Mapping[HostName, Host],
+    refusal: Callable[[Host, Host], str | None],
 ) -> str | None:
     """Why this host cannot be the one named: a relation it would take part in cannot be written.
 
-    Asked against the whole group, because naming it is naming every pair it would produce.
+    Asked against all its partners, because naming it is naming every pair it would produce.
     """
     if (locked := _locked_by_quick_setup(host)) is not None:
         return locked
-    for other in members:
-        if other.name() != host.name() and (refused := refusal(host, other)) is not None:
+    for other in proposal.partners(host.name()):
+        if (refused := refusal(host, all_hosts[other])) is not None:
             return refused
     return None
 
 
-def _member_at_end(proposal: GroupProposal, members: Sequence[Host]) -> HostName | None:
-    """The member that already holds this relation to every other one, if there is one.
+def _member_at_end(proposal: GroupProposal, all_hosts: Mapping[HostName, Host]) -> HostName | None:
+    """The member that already holds this relation to all its partners, if there is one.
 
     What keeps a second scan from asking again about a group that a run has answered.
     """
-    for host in members:
+    for name in proposal.members:
+        host = all_hosts[name]
         if all(
             _holds(
                 HostPair(
-                    source=host.name(),
-                    target=other.name(),
+                    source=name,
+                    target=other,
                     kind_id=proposal.kind_id,
                     source_direction=proposal.direction,
                 ),
                 host,
-                other,
+                all_hosts[other],
             )
-            for other in members
-            if other.name() != host.name()
+            for other in proposal.partners(name)
         ):
-            return host.name()
+            return name
     return None
 
 

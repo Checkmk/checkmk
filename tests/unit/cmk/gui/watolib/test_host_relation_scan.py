@@ -64,7 +64,10 @@ def _relation(
 
 
 def _group(
-    *members: str, finding: str = "label:cmdb/sn", refusals: dict[str, str] | None = None
+    *members: str,
+    finding: str = "label:cmdb/sn",
+    refusals: dict[str, str] | None = None,
+    outside: list[str] | None = None,
 ) -> FoundGroup:
     return FoundGroup(
         finding=finding,
@@ -76,6 +79,7 @@ def _group(
         reason=FoundReason(source="label", name="cmdb/sn", value="S-1"),
         settled=None,
         refusals=refusals or {},
+        outside=outside or [],
     )
 
 
@@ -140,6 +144,16 @@ def test_only_what_can_be_stored_is_stored() -> None:
 
 def test_an_answered_group_relates_the_host_named_to_every_other_one() -> None:
     group = _group("blade-1", "blade-2", "oa", refusals={"blade-2": "No permission."})
+    result = _scan([], groups=[group])
+
+    assert _stored(
+        result,
+        AcceptedScan(scan_id="s", findings=["label:cmdb/sn"], answers={group.key: "oa"}),
+    ) == [("label:cmdb/sn", "oa", "blade-1")]
+
+
+def test_an_answer_from_outside_the_scope_relates_only_to_the_members_inside() -> None:
+    group = _group("blade-1", "blade-2", "oa", outside=["blade-2", "oa"])
     result = _scan([], groups=[group])
 
     assert _stored(

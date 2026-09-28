@@ -12,7 +12,7 @@ Overview
 The data backend is self-contained in ``non-free/packages/cmk-data-backend/``. Its telemetry metrics part (query engine, aggregation, consolidation and the related GUI) lives in the subpackage ``cmk/data_backend/telemetry_metrics/``.
 All library code, the query client, schema manager, configuration models, and self-monitoring
 components live there. Consumers such as the DCD special agent, the DCD connector, and the
-custom query special agent are implemented separately and interact with the data backend
+telemetry metrics fetcher are implemented separately and interact with the data backend
 only through its published interfaces.
 
 The central dependency for all consumers is the **query client**, which encapsulates all
@@ -108,5 +108,5 @@ Consumers
 The data backend is consumed by several external components that are documented separately:
 
 * The DCD special agent and DCD connector — see :doc:`arch-comp-otel-monitoring-dcd`
-* The custom query special agent — see :doc:`arch-comp-otel-monitoring-custom-query`
+* The telemetry metrics fetcher, for custom services — see :doc:`arch-comp-otel-monitoring-custom-query`
 * The custom graphing feature

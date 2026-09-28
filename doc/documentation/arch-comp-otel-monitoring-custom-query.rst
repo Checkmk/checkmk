@@ -1,13 +1,13 @@
-================================================
-Custom-query monitoring of OpenTelemetry metrics
-================================================
+==================================================
+Custom-service monitoring of OpenTelemetry metrics
+==================================================
 
 Introduction and goals
 ======================
 
-The custom-query monitoring is one the two main channels for monitoring OpenTelemetry (OTel) metrics ingested into the :doc:`data backend <arch-comp-data-backend>`.
+The custom-service monitoring is one of the two main channels for monitoring OpenTelemetry (OTel) metrics ingested into the :doc:`data backend <arch-comp-data-backend>`.
 The goal is to offer application monitoring with Checkmk.
-The custom-query monitoring supports this goal by enabling users to first explore the ingested OTel metrics and then create alerts for selected time series.
+The custom-service monitoring supports this goal by enabling users to first explore the ingested OTel metrics and then create alerts for selected time series.
 A time series is set of (time stamp, value) pairs uniquely identified by a metric name and a set of attributes.
 
 Architecture
@@ -21,13 +21,21 @@ Runtime view
 * The entry point is the custom graph editor.
   If the backend is enabled, it offers a configuration section for adding OTel metrics stored in the data backend to the custom graph.
 
-* Once added, a monitoring button becomes available for the graphed OTel metric.
-  This button opens a slide-in interface to configure a special agent rule.
+* Once added, a graphed OTel metric can be turned into a custom service.
+  This opens a slide-in, prefilled from the graphed metric, that creates a "Custom Service" rule.
+  The same rules can be created, edited and deleted on the "Custom Services" Setup page and through the REST API.
+  Each rule holds exactly one query.
 
-* After saving and activating this rule, the host which it applies to will discover additional services — one for each matching time series.
+* After activating, the telemetry metrics fetcher of every host the rule applies to runs the rule's query against the data backend.
+  It writes the results into the host's ``telemetry_custom_service`` section: one line per rule, in rule order, including a line for a rule that matched nothing.
+  The queries are deliberately not scoped to the host: the rule alone says which time series it wants.
+
+* The ``telemetry_custom_service`` check plugin creates one service per resolved service name template, typically one per matching time series.
+  A service name that more than one time series resolves to is reported as UNKNOWN.
 
 Risks and technical debts
 =========================
-Each special agent execution requires spawning a new Python process.
-This limits the performance of the custom-query monitoring.
-However, we expect this to be less of an issue compared to the :doc:`DCD-based monitoring <arch-comp-otel-monitoring-dcd>`, since custom-query monitoring is expected to to run on a smaller set of hosts.
+
+The telemetry metrics fetcher only runs for hosts with a metrics association.
+The :doc:`DCD-based monitoring <arch-comp-otel-monitoring-dcd>` sets one on every host it creates.
+A "Custom Service" rule applying to a manually created host without a metrics association produces no services.

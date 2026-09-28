@@ -19,7 +19,7 @@ Once ingested, there are two main channels for monitoring:
 
 * :doc:`DCD-based monitoring <arch-comp-otel-monitoring-dcd>`
 
-* :doc:`Custom-query monitoring <arch-comp-otel-monitoring-custom-query>`
+* :doc:`Custom-service monitoring <arch-comp-otel-monitoring-custom-query>`
 
 Note that Checkmk has another system for storing time series data, :doc:`RRDs <arch-comp-rrd-backend>`.
 RRDs are used to store metric data produced by check plugins.

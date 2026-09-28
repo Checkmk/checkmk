@@ -5,14 +5,19 @@ interface "HTTP" as http_data_backend
 
 component "[[../arch-comp-gui.html GUI]]" as gui {
     component "Custom graph editor" as custom_graph_editor
-    component "agent_custom_query rules" as agent_custom_query_rules
+    component "Custom Services Setup page" as custom_services_page
+    component "Custom Service rules" as custom_service_rules
 }
 
-component "agent_custom_query" as agent_custom_query
+component "Telemetry metrics fetcher" as fetcher
+component "telemetry_custom_service check plugin" as check_plugin
 
 data_backend - http_data_backend
 custom_graph_editor -left-> http_data_backend: query
-custom_graph_editor --> agent_custom_query_rules: create via slide-in
-agent_custom_query -up-> http_data_backend: query
+custom_graph_editor --> custom_service_rules: create via slide-in
+custom_services_page --> custom_service_rules: create, edit, delete
+custom_service_rules ..> fetcher: the host's rules
+fetcher -up-> http_data_backend: query
+fetcher --> check_plugin: telemetry_custom_service section
 
 @enduml

@@ -58,7 +58,6 @@ HACK_AGENTS = {
     "jira": False,
     "jolokia": False,
     "kube": False,
-    "telemetry_metrics_custom_query": False,  # needs no secret
     "mobileiron": False,
     "mqtt": False,
     "netapp_ontap": False,

@@ -182,7 +182,6 @@ SPECIAL_AGENTS = [
     SpecialAgent("agent_jira"),
     SpecialAgent("agent_jolokia"),
     SpecialAgent("agent_kube"),
-    SpecialAgent("agent_telemetry_metrics_custom_query"),
     SpecialAgent("agent_mobileiron"),
     SpecialAgent("agent_mqtt"),
     SpecialAgent("agent_netapp_ontap"),
@@ -215,10 +214,6 @@ _SKIPPED_SPECIAL_AGENTS = {
     "agent_acme_sbc",  # has no help option
 }
 
-_ULTIMATE_AGENTS = {
-    "agent_telemetry_metrics_custom_query",
-}
-
 
 @pytest.mark.parametrize(
     "plugin",
@@ -244,9 +239,6 @@ def test_monitoring_plugins_can_be_executed(plugin: Plugin, site: Site) -> None:
 )
 def test_special_agents_can_be_executed(agent: SpecialAgent, site: Site) -> None:
     """Validate the plugin's presence and version in the site."""
-    if not site.edition.is_ultimate_edition() and agent.binary_name in _ULTIMATE_AGENTS:
-        pytest.skip(f"{agent.binary_name} is disabled in this edition")
-
     cmd_line = [agent.detect_full_path(site).as_posix(), agent.cmd_line_option]
     process = site.run(cmd_line, check=False)
     assert agent.expected in process.stdout, (

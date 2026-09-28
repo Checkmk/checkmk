@@ -267,15 +267,6 @@ allows = [
   "cmk.otel_collector.gui",
 ]
 
-[plugin_families.violations.telemetry_metrics_custom_query]
-allows = [
-  "cmk.data_backend",
-  "cmk.telemetry.custom_query_building",
-  "cmk.telemetry.custom_query_rule_value",
-  "cmk.telemetry.custom_query_section",
-  "cmk.utils.paths",
-]
-
 [plugin_families.violations.custom_service]
 allows = [
   # TelemetryMetricsCustomQuery FormSpec

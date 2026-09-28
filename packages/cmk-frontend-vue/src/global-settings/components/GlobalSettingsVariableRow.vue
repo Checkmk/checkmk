@@ -64,6 +64,7 @@ const value = computed(() => props.variable.current.value)
   --global-settings-row-label-width: 400px;
 
   display: flex;
+  min-width: min-content;
   align-items: flex-start;
   gap: var(--dimension-4);
   padding: var(--dimension-3) var(--dimension-5);
@@ -79,11 +80,12 @@ const value = computed(() => props.variable.current.value)
 
 .global-settings-variable-row__row {
   flex: 1 1 auto;
-  min-width: 0;
+  min-width: min-content;
 }
 
 .global-settings-variable-row__value {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   gap: var(--dimension-3);
 }

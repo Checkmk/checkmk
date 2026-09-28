@@ -92,13 +92,15 @@ const siteOverrideFilterLabel = computed(() =>
         variant="warning"
         :text="untranslated(topic.warning)"
       />
-      <GlobalSettingsVariableRow
-        v-for="variable in shownVariables"
-        :key="variable.name"
-        :variable="variable"
-        :query="query"
-        @edit="emit('edit', variable)"
-      />
+      <div class="global-settings-topic__rows">
+        <GlobalSettingsVariableRow
+          v-for="variable in shownVariables"
+          :key="variable.name"
+          :variable="variable"
+          :query="query"
+          @edit="emit('edit', variable)"
+        />
+      </div>
     </template>
   </CmkAccordionItem>
 </template>
@@ -107,6 +109,10 @@ const siteOverrideFilterLabel = computed(() =>
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
 .global-settings-topic :deep(.cmk-accordion-item__content-wrapper) {
   padding: 20px 30px;
+}
+
+.global-settings-topic__rows {
+  overflow-x: auto;
 }
 
 .global-settings-topic__header {

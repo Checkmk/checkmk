@@ -29,6 +29,7 @@ defineProps<{
 <style scoped>
 .global-settings-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   gap: var(--dimension-4);
   padding: var(--dimension-3) 0;
@@ -40,10 +41,11 @@ defineProps<{
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
+  contain: inline-size;
 }
 
 .global-settings-row__value {
   flex: 1 1 0;
-  min-width: 0;
+  min-width: min-content;
 }
 </style>

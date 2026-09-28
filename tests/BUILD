@@ -16,10 +16,5 @@ py_library(
     name = "conftest",
     testonly = True,
     srcs = ["conftest.py"],
-    deps = [
-        "//tests/testlib/common",
-        "//tests/testlib/pytest_helpers",
-        requirement("pytest"),
-        requirement("pytest-check"),
-    ],
+    deps = [requirement("pytest")],
 )

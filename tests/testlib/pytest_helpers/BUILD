@@ -11,5 +11,6 @@ py_library(
         "//tests/testlib/common",
         requirement("psutil"),
         requirement("pytest"),
+        requirement("pytest-check"),
     ],
 )

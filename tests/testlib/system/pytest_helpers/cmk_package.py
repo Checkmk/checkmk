@@ -11,14 +11,17 @@ environment before any site is created.
 
 On top of that this plugin provides the `skip_if_edition`, `skip_if_not_edition`,
 `skip_if_containerized` and `skip_if_not_containerized` markers, records the
-environment in the pytest-html report and reports site crashes after each test.
+environment in the pytest-html report, reports site crashes after each test and
+renders the state of the OMD sites on the host for a failure report.
 
 Register from a conftest's `pytest_addoption` via
 `tests.testlib.pytest_helpers.registration.register_pytest_plugins`.
 """
 
 import os
+from collections.abc import Iterator
 from enum import StrEnum
+from pathlib import Path
 from typing import Final
 
 import pytest
@@ -28,6 +31,7 @@ from tests.testlib.common.repo import current_base_branch_name
 from tests.testlib.common.utils2 import is_containerized
 from tests.testlib.common.version import CMKEdition, CMKVersion, edition_from_env, TypeCMKEdition
 from tests.testlib.pytest_helpers import faked_artifacts, registration
+from tests.testlib.pytest_helpers.diagnostics import render_command_output
 from tests.testlib.system.site import Site
 
 ARG_EDITION_CMK: Final[str] = "--cmk-edition"
@@ -185,3 +189,41 @@ def pytest_runtest_teardown(item: pytest.Item) -> None:
     for obj in getattr(item, "funcargs", {}).values():
         if isinstance(obj, Site):
             obj.report_crashes(ignore_bakery_crashes=ignore_bakery_crashes)
+
+
+def add_host_diagnostics(excp: BaseException, sudo: bool) -> None:
+    """Attach the process list and, for every OMD site on the host, its locks and status.
+
+    Meant for suites with several sites talking to each other, where the test alone
+    rarely tells which site got stuck.
+    """
+    excp.add_note("-" * 80)
+    excp.add_note(render_command_output("ps -ef", sudo=sudo))
+    if not sudo:
+        excp.add_note("-" * 80)
+        excp.add_note(render_command_output("lslocks --output-all --notruncate", sudo=False))
+        return
+    for site_name in _omd_site_names():
+        excp.add_note("-" * 80)
+        excp.add_note(f"SITE: {site_name}")
+        for command_output in _site_diagnostics(site_name):
+            excp.add_note("-" * 80)
+            excp.add_note(command_output)
+
+
+def _omd_site_names() -> Iterator[str]:
+    """Yield the names of all currently existing OMD sites"""
+    sites = Path("/omd/sites")
+    if sites.is_dir():
+        yield from (site_path.name for site_path in sites.iterdir())
+
+
+def _site_diagnostics(site_name: str) -> Iterator[str]:
+    """Yield rendered output for OMD site command-by-command"""
+    for cmd in (
+        "lslocks --output-all --notruncate",
+        "cmk-ui-job-scheduler-health",
+        "omd status",
+        'lq "GET hosts\\nColumns: name"',
+    ):
+        yield render_command_output(cmd, sudo=True, substitute_user=site_name)

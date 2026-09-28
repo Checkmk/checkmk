@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.pytest_helpers import faked_artifacts, registration, timeouts
+from tests.testlib.pytest_helpers import diagnostics, faked_artifacts, registration, timeouts
 
 
 def _resolve_packages(config: pytest.Config) -> list[Path]:
@@ -28,7 +28,7 @@ def _resolve_packages(config: pytest.Config) -> list[Path]:
 
 
 def pytest_addoption(parser: pytest.Parser, pluginmanager: pytest.PytestPluginManager) -> None:
-    registration.register_pytest_plugins(pluginmanager, faked_artifacts, timeouts)
+    registration.register_pytest_plugins(pluginmanager, diagnostics, faked_artifacts, timeouts)
     group = parser.getgroup("package-sanity", "Package sanity test options")
     group.addoption(
         "--packages",

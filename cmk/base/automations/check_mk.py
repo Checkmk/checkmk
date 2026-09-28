@@ -238,7 +238,6 @@ from cmk.utils.paths import (
     data_source_cache_dir,
     discovered_host_labels_dir,
     local_agent_based_plugins_dir,
-    local_checks_dir,
     logwatch_dir,
     omd_root,
     precompiled_hostchecks_dir,
@@ -2529,7 +2528,6 @@ class AutomationRestart:
             and checks_path.exists()
             and self._last_modification(checks_path) > last_time
             for checks_path in (
-                local_checks_dir,
                 local_agent_based_plugins_dir,
                 addons_plugins_local_path(),
                 plugins_local_path(),

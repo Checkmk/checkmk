@@ -20,7 +20,6 @@ py_cmk_test(
     visibility = ["//visibility:private"],
     deps = [
         "//cmk/legacy_checks",
-        "//cmk/legacy_includes",
         "//tests/unit:conftest",
         requirement("pytest-asyncio"),
         requirement("pytest-random-order"),

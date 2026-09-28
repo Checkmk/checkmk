@@ -596,11 +596,8 @@ allows = [
   "cmk.ruleset_matcher",
 ]
 
-[components."cmk.legacy_includes"]
-allows = ["@plugin_apis", "cmk.plugins"]
-
 [components."cmk.legacy_checks"]
-allows = ["@plugin_apis", "cmk.legacy_includes", "cmk.plugins"]
+allows = ["@plugin_apis", "cmk.plugins"]
 
 [components."cmk.base.plugins.bakery.bakery_api"]
 allows = ["cmk.bakery", "cmk.base.api.bakery", "cmk.utils"]

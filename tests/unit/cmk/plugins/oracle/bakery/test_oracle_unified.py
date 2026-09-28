@@ -185,7 +185,6 @@ expected_yaml_lines_min = [
     "    cache_age: 600",
     "    connection:",
     "      hostname: localhost",
-    "    custom_metrics_cache_age: 600",
 ]
 
 # 2. Full config
@@ -269,7 +268,6 @@ expected_yaml_lines_full = [
     "      port: 1521",
     "      timeout: 10",
     "      tns_admin: /etc/oracle/tns",
-    "    custom_metrics_cache_age: 600",
     "    discovery:",
     "      detect: true",
     "      exclude:",
@@ -341,7 +339,6 @@ expected_yaml_lines_section = [
     "      oracle_local_registry: some_registry",
     "      port: 1521",
     "      tns_admin: some_tns_admin",
-    "    custom_metrics_cache_age: 600",
     "    sections:",
     "    - instance:",
     "        is_async: false",
@@ -393,7 +390,6 @@ expected_yaml_lines_instance_sid = [
     "    cache_age: 600",
     "    connection:",
     "      hostname: localhost",
-    "    custom_metrics_cache_age: 600",
     "    instances:",
     "    - service_name: SIDONLY",
 ]
@@ -471,7 +467,6 @@ expected_yaml_lines_discovery_instances = [
     "      hostname: localhost",
     "      port: 1521",
     "      timeout: 5",
-    "    custom_metrics_cache_age: 600",
     "    discovery:",
     "      detect: true",
     "    instances:",
@@ -525,7 +520,6 @@ expected_yaml_lines_use_host_client_always = [
     "    connection:",
     "      hostname: localhost",
     "      port: 1521",
-    "    custom_metrics_cache_age: 600",
     "    options:",
     "      use_host_client: always",
 ]
@@ -567,7 +561,6 @@ expected_yaml_lines_use_host_client_path = [
     "    connection:",
     "      hostname: localhost",
     "      port: 1521",
-    "    custom_metrics_cache_age: 600",
     "    options:",
     "      use_host_client: /path/to/client",
 ]
@@ -609,7 +602,6 @@ expected_yaml_lines_deploy_oracle_binaries = [
     "    connection:",
     "      hostname: localhost",
     "      port: 1521",
-    "    custom_metrics_cache_age: 600",
 ]
 
 # 9. Main config with wallet auth, connection
@@ -643,7 +635,6 @@ expected_yaml_lines_wallet_auth = [
     "    connection:",
     "      hostname: localhost",
     "      port: 1521",
-    "    custom_metrics_cache_age: 600",
 ]
 
 
@@ -672,75 +663,6 @@ def _process(config: BakedConfig) -> Sequence[Plugin | PluginConfig | SystemBina
 )
 def test_oracle_min(config: BakedConfig, expected: Sequence[str]) -> None:
     assert _process(config) == _combine(files_base, expected), "name"
-
-
-# --- custom_metrics_cache_age tests ---
-
-oracle_config_custom_metrics_cache_age: BakedConfig = BakedConfig(
-    deploy_rev2=DEPLOY,
-    auth=BakedAuthConf(
-        auth_type=(
-            "standard",
-            BakedAuthUserPasswordData(
-                username="cmk",
-                password=Secret("pw", "", ""),
-            ),
-        ),
-        role=None,
-    ),
-    connection=StoredConnectionConf(
-        host="localhost",
-        port=None,
-        timeout=None,
-    ),
-    cache_age=None,
-    custom_metrics_cache_age=120,
-    discovery=None,
-    sections=None,
-    instances_rev2=None,
-)
-
-expected_yaml_lines_custom_metrics_cache_age = [
-    "---",
-    "oracle:",
-    "  main:",
-    "    authentication:",
-    "      password: pw",
-    "      type: standard",
-    "      username: cmk",
-    "    cache_age: 600",
-    "    connection:",
-    "      hostname: localhost",
-    "    custom_metrics_cache_age: 120",
-]
-
-
-custom_metrics_files: list[Plugin] = [
-    Plugin(
-        base_os=OS.LINUX,
-        source=Path("oracle_unified_async_custom_metrics"),
-        target=Path("mk-oracle-v2_async_custom_metrics"),
-        interval=120,
-    ),
-    Plugin(
-        base_os=OS.WINDOWS,
-        source=Path("oracle_unified_async_custom_metrics.ps1"),
-        target=Path("mk-oracle-v2_async_custom_metrics.ps1"),
-        interval=120,
-    ),
-    Plugin(
-        base_os=OS.AIX,
-        source=Path("oracle_unified_async_custom_metrics.aix"),
-        target=Path("mk-oracle-v2_async_custom_metrics.aix"),
-        interval=120,
-    ),
-    Plugin(
-        base_os=OS.SOLARIS,
-        source=Path("oracle_unified_async_custom_metrics.solaris"),
-        target=Path("mk-oracle-v2_async_custom_metrics.solaris"),
-        interval=120,
-    ),
-]
 
 
 # The rule may leave the host unset. The plug-in then picks its own default,
@@ -778,7 +700,6 @@ expected_yaml_lines_no_host = [
     "      type: standard",
     "      username: cmk",
     "    cache_age: 600",
-    "    custom_metrics_cache_age: 600",
 ]
 
 
@@ -797,61 +718,6 @@ def test_oracle_without_host_keeps_other_connection_keys() -> None:
     ]
     assert "      port: 1234" in lines
     assert not any(line.strip().startswith("hostname:") for line in lines)
-
-
-def test_custom_metrics_cache_age_in_yaml() -> None:
-    assert _process(oracle_config_custom_metrics_cache_age) == _combine(
-        files_base + custom_metrics_files, expected_yaml_lines_custom_metrics_cache_age
-    )
-
-
-def test_no_custom_metrics_files_when_cache_ages_equal() -> None:
-    config = BakedConfig(
-        deploy_rev2=DEPLOY,
-        auth=BakedAuthConf(
-            auth_type=(
-                "standard",
-                BakedAuthUserPasswordData(username="cmk", password=Secret("pw", "", "")),
-            ),
-            role=None,
-        ),
-        connection=StoredConnectionConf(host="localhost", port=None, timeout=None),
-        cache_age=300,
-        custom_metrics_cache_age=300,
-        instances_rev2=None,
-    )
-    result = _process(config)
-    custom_metrics_sources = [
-        p for p in result if isinstance(p, Plugin) and "custom_metrics" in str(p.source)
-    ]
-    assert custom_metrics_sources == []
-
-
-@pytest.mark.parametrize(
-    ["custom_metrics_cache_age", "expected"],
-    [
-        (None, 600),
-        (120, 120),
-        (30, 30),
-        (900, 900),
-    ],
-)
-def test_get_active_custom_metrics_cache_age(
-    custom_metrics_cache_age: int | None, expected: int
-) -> None:
-    conf = BakedConfig(
-        deploy_rev2=DEPLOY,
-        auth=BakedAuthConf(
-            auth_type=(
-                "standard",
-                BakedAuthUserPasswordData(username="u", password=Secret("p", "", "")),
-            ),
-            role=None,
-        ),
-        connection=StoredConnectionConf(host="localhost", port=None, timeout=None),
-        custom_metrics_cache_age=custom_metrics_cache_age,
-    )
-    assert conf.get_active_custom_metrics_cache_age() == expected
 
 
 def _parsed(**stored: object) -> BakedConfig:

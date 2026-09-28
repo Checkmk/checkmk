@@ -822,19 +822,6 @@ def _cache_ages() -> Mapping[str, DictElement[float]]:
             required=False,
             group=_PLUGIN_BEHAVIOR,
         ),
-        "custom_metrics_cache_age": DictElement(
-            parameter_form=_cache_age(
-                title=Title("Cache age for asynchronous custom metrics"),
-                help_text=Help(
-                    "How old the cached output of the asynchronous custom metrics is "
-                    "allowed to be. When this equals the cache age above, a single "
-                    "agent plug-in collects both. A different value deploys a second "
-                    "plug-in for the custom metrics."
-                ),
-            ),
-            required=False,
-            group=_PLUGIN_BEHAVIOR,
-        ),
     }
 
 
@@ -943,7 +930,6 @@ _LIFTED_FROM_MAIN: Final = (
     "auth",
     "connection",
     "cache_age",
-    "custom_metrics_cache_age",
     "discovery",
     "sections",
     "excluded_sections",

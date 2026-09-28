@@ -127,29 +127,6 @@ OS_ORACLE_FILES: Sequence[tuple[OS, Sequence[OraclePluginFile]]] = (
     SOLARIS_ORACLE_FILES,
 )
 
-CUSTOM_METRICS_ASYNC_FILES: Mapping[OS, OraclePluginFile] = {
-    OS.LINUX: OraclePluginFile(
-        source=Path("oracle_unified_async_custom_metrics"),
-        target=Path("mk-oracle-v2_async_custom_metrics"),
-        cached=True,
-    ),
-    OS.WINDOWS: OraclePluginFile(
-        source=Path("oracle_unified_async_custom_metrics.ps1"),
-        target=Path("mk-oracle-v2_async_custom_metrics.ps1"),
-        cached=True,
-    ),
-    OS.AIX: OraclePluginFile(
-        source=Path("oracle_unified_async_custom_metrics.aix"),
-        target=Path("mk-oracle-v2_async_custom_metrics.aix"),
-        cached=True,
-    ),
-    OS.SOLARIS: OraclePluginFile(
-        source=Path("oracle_unified_async_custom_metrics.solaris"),
-        target=Path("mk-oracle-v2_async_custom_metrics.solaris"),
-        cached=True,
-    ),
-}
-
 
 class OracleAuthType(StrEnum):
     STANDARD = "standard"
@@ -238,7 +215,6 @@ class OracleMain(BaseModel):
     connection: OracleConnection | None
     options: OracleAdditionalOptions | None = None
     cache_age: int | None = None
-    custom_metrics_cache_age: int | None = None
     discovery: OracleDiscovery | None = None
     sections: Sequence[Mapping[str, OracleSection]] | None = None
     instances: list[OracleInstance] | None = None
@@ -269,8 +245,6 @@ def get_oracle_plugin_files(confm: BakedConfig) -> FileGenerator:
 
     config_lines = list(_get_oracle_yaml_lines(confm))
     cache_age = confm.get_active_cache_age()
-    custom_metrics_cache_age = confm.get_active_custom_metrics_cache_age()
-    deploy_custom_metrics = cache_age != custom_metrics_cache_age
 
     for base_os, files in OS_ORACLE_FILES:
         for file in files:
@@ -279,15 +253,6 @@ def get_oracle_plugin_files(confm: BakedConfig) -> FileGenerator:
                 target=file.target,
                 source=file.source,
                 interval=cache_age if file.cached else None,
-            )
-
-        if deploy_custom_metrics:
-            cm_file = CUSTOM_METRICS_ASYNC_FILES[base_os]
-            yield Plugin(
-                base_os=base_os,
-                target=cm_file.target,
-                source=cm_file.source,
-                interval=custom_metrics_cache_age,
             )
 
         yield PluginConfig(
@@ -322,7 +287,6 @@ def _get_oracle_dict(config: BakedConfig) -> OracleMain:
         sections=_get_oracle_sections(config.sections),
         instances=_get_oracle_instances(config.instances_rev2),
         cache_age=config.get_active_cache_age(),
-        custom_metrics_cache_age=config.get_active_custom_metrics_cache_age(),
         excluded_sections=_get_oracle_excluded_sections(config.excluded_sections),
     )
 

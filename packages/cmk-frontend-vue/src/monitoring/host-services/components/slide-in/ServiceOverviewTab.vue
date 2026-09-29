@@ -69,8 +69,8 @@ const nextCheck = computed(() =>
           class="monitoring-service-overview-tab__host-link"
           :href="data.legacy_host_status_link"
           target="_top"
-          :title="_t('Show details of host %{name}', { name: data.host_name })"
-          :aria-label="_t('Show details of host %{name}', { name: data.host_name })"
+          :title="_t('Show host state')"
+          :aria-label="_t('Show host state')"
         >
           <CmkIcon name="folder" size="small" />
         </a>

@@ -338,13 +338,11 @@ describe('ServiceSlideIn', () => {
       props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
     })
 
-    expect(
-      await screen.findByRole('link', { name: 'Show details of service CPU load' })
-    ).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: 'Show service details' })).toHaveAttribute(
       'href',
       'view.py?view_name=service&site=local&host=web-server-01&service=CPU+load'
     )
-    expect(screen.getByRole('link', { name: 'Parameters of this service' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Show service parameters' })).toHaveAttribute(
       'href',
       'wato.py?mode=object_parameters&host=web-server-01&service=CPU+load'
     )
@@ -459,11 +457,9 @@ describe('ServiceSlideIn', () => {
       props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
     })
 
-    await screen.findByRole('link', { name: 'Show details of service CPU load' })
+    await screen.findByRole('link', { name: 'Show service details' })
 
-    expect(
-      screen.queryByRole('link', { name: 'Parameters of this service' })
-    ).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Show service parameters' })).not.toBeInTheDocument()
   })
 
   it('offers no AI explanation outside the cloud edition', async () => {

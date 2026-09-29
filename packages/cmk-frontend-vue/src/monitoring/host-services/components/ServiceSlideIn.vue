@@ -228,7 +228,7 @@ const inlineActions = computed<CellAction[]>(() => {
   const actions: CellAction[] = [
     {
       id: 'show_service',
-      label: _t('Show details of service %{name}', { name: loaded.name }),
+      label: _t('Show service details'),
       icon: { name: 'services', color: 'services', emblem: 'burger' },
       url: loaded.legacy_service_status_link
     }
@@ -236,7 +236,7 @@ const inlineActions = computed<CellAction[]>(() => {
   if (loaded.legacy_service_parameters_link !== null) {
     actions.push({
       id: 'show_parameters',
-      label: _t('Parameters of this service'),
+      label: _t('Show service parameters'),
       icon: 'rulesets',
       url: loaded.legacy_service_parameters_link
     })

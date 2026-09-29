@@ -173,17 +173,20 @@ const inlineActions = computed<CellAction[]>(() => {
   if (!host) {
     return []
   }
-  const name = host.name
   const statusAction: CellAction = {
     id: 'show_status',
-    label: _t('Show status of host %{name}', { name }),
+    label: _t('Show host state'),
     icon: 'folder',
     url: host.legacy_host_status_link
   }
+  const labels: Record<string, CellAction['label']> = {
+    edit: _t('Edit host properties'),
+    parameters: _t('Show host parameters')
+  }
   const resolved = props.rowActions.map((action) => ({
     ...action,
-    label: action.id === 'edit' ? _t('Edit host %{name}', { name }) : action.label,
-    url: action.url?.replace('{host}', encodeURIComponent(name))
+    label: labels[action.id] ?? action.label,
+    url: action.url?.replace('{host}', encodeURIComponent(host.name))
   }))
   return [statusAction, ...resolved]
 })

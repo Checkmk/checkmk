@@ -212,9 +212,7 @@ describe('ServiceOverviewTab', () => {
   it('links to the host details from the host row', () => {
     render(ServiceOverviewTab, { props: { displayOptions: DISPLAY_OPTIONS, data: makeOverview() } })
 
-    expect(
-      screen.getByRole('link', { name: 'Show details of host web-server-01' })
-    ).toHaveAttribute('href', HOST_LINK)
+    expect(screen.getByRole('link', { name: 'Show host state' })).toHaveAttribute('href', HOST_LINK)
   })
 
   it('shows the modes of the host next to its state', () => {

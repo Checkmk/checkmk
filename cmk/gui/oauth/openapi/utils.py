@@ -5,12 +5,15 @@
 
 import http.client
 from datetime import datetime
+from typing import Literal
 
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import LoggedInSuperUser, user
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.utils import EXT, ProblemException
+from cmk.gui.utils.security_log_events import GUISessionRejectedEvent
+from cmk.utils.log.security_event import log_security_event
 
 from .session_check import verify_gui_session
 
@@ -25,8 +28,13 @@ def require_site_internal_caller(api_context: ApiContext) -> None:
         )
 
 
-def live_session_user(api_context: ApiContext, session_cookie: str) -> UserId:
-    """The user behind the cookie, or a 400 that says nothing about why."""
+def live_session_user(
+    api_context: ApiContext, session_cookie: str, *, endpoint: Literal["identify", "delegate"]
+) -> UserId:
+    """The user behind the cookie, or a 400 that says nothing about why.
+
+    Why the session was refused goes to the security log instead.
+    """
     session_mgmt = active_config.session_mgmt
     verdict = verify_gui_session(
         session_cookie,
@@ -36,6 +44,12 @@ def live_session_user(api_context: ApiContext, session_cookie: str) -> UserId:
         now=datetime.now(),
     )
     if not verdict.is_ok():
+        rejected = verdict.error
+        log_security_event(
+            GUISessionRejectedEvent(
+                reason=rejected.reason, user_id=rejected.user_id, endpoint=endpoint
+            )
+        )
         # The OAuth error code tells the caller this is a verdict on the
         # session. Other 400 answers, such as a malformed body, carry none.
         raise ProblemException(

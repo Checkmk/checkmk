@@ -31,7 +31,7 @@ from cmk.gui.scopes import (
     ScopeId,
     SUPPORTED_SCOPES,
 )
-from cmk.gui.utils.security_log_events import OAuthTokenIssuedEvent
+from cmk.gui.utils.security_log_events import OAuthTokenFailureEvent, OAuthTokenIssuedEvent
 from cmk.utils.log.security_event import log_security_event
 
 from .endpoint_family import GUI_SESSION_FAMILY
@@ -53,6 +53,12 @@ def _requested_scopes(raw: str) -> frozenset[ScopeId]:
     try:
         return parse_scopes(raw)
     except InvalidScopeError:
+        # No remote address: the caller is always a site service on the loopback.
+        log_security_event(
+            OAuthTokenFailureEvent(
+                reason="invalid scope", client_id=_AI_CONTROL_PLANE_CLIENT_ID, remote_ip=None
+            )
+        )
         raise ProblemException(
             status=http.client.BAD_REQUEST,
             title="Invalid scope",
@@ -107,7 +113,7 @@ def make_delegate_session_endpoint(delegation_enabled: Callable[[], bool]) -> Ve
                 detail="The AI control plane is not enabled on this site.",
             )
         scopes = _requested_scopes(body.scope)
-        user_id = live_session_user(api_context, body.session_cookie)
+        user_id = live_session_user(api_context, body.session_cookie, endpoint="delegate")
         access_token = _issue_token(user_id, resource=body.resource, scopes=scopes)
         log_security_event(
             OAuthTokenIssuedEvent(user_id=user_id, client_id=_AI_CONTROL_PLANE_CLIENT_ID)

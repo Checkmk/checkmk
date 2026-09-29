@@ -18,6 +18,7 @@ import select
 import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from http import HTTPStatus
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Any, Literal, NotRequired, Self, TypedDict
@@ -252,7 +253,7 @@ class AggregationRawdataGenerator:
             timeout=900,
         )
 
-        if response.status_code == 503:
+        if response.status_code == HTTPStatus.SERVICE_UNAVAILABLE:
             # BI aggregations are compiled asynchronously (see cmk.gui.bi._openapi); the
             # endpoint returns 503 with a human-readable `detail` while compilation is
             # still pending. Surface that message instead of the generic HTTP error text,

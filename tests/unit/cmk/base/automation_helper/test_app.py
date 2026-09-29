@@ -10,6 +10,7 @@ import sys
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from http import HTTPStatus
 from pathlib import Path
 from typing import NoReturn, override
 
@@ -201,7 +202,7 @@ def test_automation_with_success(mocker: MockerFixture, cache: Cache) -> None:
     ) as client:
         resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
 
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     assert AutomationResponse.model_validate(resp.json()) == AutomationResponse(
         serialized_result_or_error_code="dummy_serialized",
         stdout="stdout_success",
@@ -222,7 +223,7 @@ def test_automation_with_failure(mocker: MockerFixture, cache: Cache) -> None:
     ) as client:
         resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
 
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     assert AutomationResponse.model_validate(resp.json()) == AutomationResponse(
         serialized_result_or_error_code=1,
         stdout="stdout_failure",
@@ -243,7 +244,7 @@ def test_automation_with_system_exit(mocker: MockerFixture, cache: Cache) -> Non
     ) as client:
         resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
 
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     assert AutomationResponse.model_validate(resp.json()) == AutomationResponse(
         serialized_result_or_error_code=1,
         stdout="stdout_system_exit",
@@ -316,7 +317,7 @@ def test_health_check(cache: Cache) -> None:
     ) as client:
         resp = client.get("/health")
 
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     assert HealthCheckResponse.model_validate(resp.json()).last_reload_at < time.time()
 
 

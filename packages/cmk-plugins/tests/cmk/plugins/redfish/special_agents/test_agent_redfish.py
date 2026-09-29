@@ -16,6 +16,7 @@ import json
 import sys
 import time
 from collections.abc import Mapping, Sequence
+from http import HTTPStatus
 from pathlib import Path
 from typing import Any
 from unittest import mock
@@ -388,10 +389,10 @@ def test_load_section_data_uses_intact_cache(
 @pytest.mark.parametrize(
     "response",
     [
-        _response(400, _ILO_NOT_READY),
-        _response(503),
+        _response(HTTPStatus.BAD_REQUEST, _ILO_NOT_READY),
+        _response(HTTPStatus.SERVICE_UNAVAILABLE),
         _response(
-            500,
+            HTTPStatus.INTERNAL_SERVER_ERROR,
             {
                 "error": {
                     "@Message.ExtendedInfo": [
@@ -400,9 +401,12 @@ def test_load_section_data_uses_intact_cache(
                 }
             },
         ),
-        _response(500, {"error": {"code": "Base.1.8.ServiceTemporarilyUnavailable"}}),
         _response(
-            400,
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            {"error": {"code": "Base.1.8.ServiceTemporarilyUnavailable"}},
+        ),
+        _response(
+            HTTPStatus.BAD_REQUEST,
             {
                 "error": {
                     "@Message.ExtendedInfo": [{"MessageId": "HpeCommon.2.1.ResourceNotReadyRetry"}]
@@ -433,7 +437,9 @@ def test_fetch_data_raises_on_temporarily_unavailable(response: mock.Mock) -> No
     ids=["base_message", "code_without_dot", "empty_code"],
 )
 def test_fetch_data_plain_bad_request_is_no_transient_failure(body: object) -> None:
-    result = agent_redfish.fetch_data(_client(_response(400, body)), "/x", "Storage")
+    result = agent_redfish.fetch_data(
+        _client(_response(HTTPStatus.BAD_REQUEST, body)), "/x", "Storage"
+    )
 
     assert result == {"error": "Storage data could not be fetched\n"}
 
@@ -441,7 +447,7 @@ def test_fetch_data_plain_bad_request_is_no_transient_failure(body: object) -> N
 @pytest.mark.parametrize("debug", [False, True], ids=["normal", "debug"])
 def test_fetch_sections_leaves_out_unavailable_section(debug: bool) -> None:
     redfishobj = _make_redfishobj(debug=debug)
-    redfishobj.redfish_connection = _client(_response(400, _ILO_NOT_READY))
+    redfishobj.redfish_connection = _client(_response(HTTPStatus.BAD_REQUEST, _ILO_NOT_READY))
     redfishobj.sections = {"Storage"}
     redfishobj.section_data["Storage"] = [{"Id": "of-an-earlier-system"}]
 
@@ -456,8 +462,8 @@ def test_fetch_sections_leaves_out_unavailable_section(debug: bool) -> None:
 def test_fetch_list_of_elements_leaves_out_partially_fetched_section() -> None:
     redfishobj = _make_redfishobj()
     redfishobj.redfish_connection = _client(
-        _response(200, {"@odata.type": "#Drive.v1_18_0.Drive", "Id": "0"}),
-        _response(400, _ILO_NOT_READY),
+        _response(HTTPStatus.OK, {"@odata.type": "#Drive.v1_18_0.Drive", "Id": "0"}),
+        _response(HTTPStatus.BAD_REQUEST, _ILO_NOT_READY),
     )
     redfishobj.sections = {"Drives"}
 
@@ -489,7 +495,7 @@ def _device_tree() -> dict[str, list[mock.Mock | Exception]]:
     return {
         "/redfish/v1": [
             _response(
-                200,
+                HTTPStatus.OK,
                 {
                     "Systems": {"@odata.id": "/redfish/v1/Systems"},
                     "Chassis": {"@odata.id": "/redfish/v1/Chassis"},
@@ -498,14 +504,17 @@ def _device_tree() -> dict[str, list[mock.Mock | Exception]]:
             )
         ],
         "/redfish/v1/Systems": [
-            _response(200, {"Members": [{"@odata.id": "/redfish/v1/Systems/1"}]})
+            _response(HTTPStatus.OK, {"Members": [{"@odata.id": "/redfish/v1/Systems/1"}]})
         ],
         "/redfish/v1/Systems/1": [
-            _response(200, {"Id": "1", "Storage": {"@odata.id": "/redfish/v1/Systems/1/Storage"}})
+            _response(
+                HTTPStatus.OK,
+                {"Id": "1", "Storage": {"@odata.id": "/redfish/v1/Systems/1/Storage"}},
+            )
         ],
         "/redfish/v1/Systems/1/Storage": [
             _response(
-                200,
+                HTTPStatus.OK,
                 {
                     "@odata.type": "#StorageCollection.StorageCollection",
                     "Members@odata.count": 1,
@@ -515,7 +524,7 @@ def _device_tree() -> dict[str, list[mock.Mock | Exception]]:
         ],
         _STORAGE: [
             _response(
-                200,
+                HTTPStatus.OK,
                 {
                     "@odata.type": "#Storage.v1_15_0.Storage",
                     "Id": "DE07A000",
@@ -524,11 +533,11 @@ def _device_tree() -> dict[str, list[mock.Mock | Exception]]:
             )
         ],
         f"{_STORAGE}/Drives/0": [
-            _response(200, {"@odata.type": "#Drive.v1_18_0.Drive", "Id": "0"})
+            _response(HTTPStatus.OK, {"@odata.type": "#Drive.v1_18_0.Drive", "Id": "0"})
         ],
-        _FIRMWARE: [_response(200, {"Members": [{"@odata.id": f"{_FIRMWARE}/BMC"}]})],
-        f"{_FIRMWARE}/BMC": [_response(200, {"Id": "BMC"})],
-        "/redfish/v1/Chassis": [_response(200, {"Members": []})],
+        _FIRMWARE: [_response(HTTPStatus.OK, {"Members": [{"@odata.id": f"{_FIRMWARE}/BMC"}]})],
+        f"{_FIRMWARE}/BMC": [_response(HTTPStatus.OK, {"Id": "BMC"})],
+        "/redfish/v1/Chassis": [_response(HTTPStatus.OK, {"Members": []})],
     }
 
 
@@ -559,7 +568,8 @@ def test_get_information_emits_empty_collection_and_its_dependents(
     tree = _device_tree()
     tree["/redfish/v1/Systems/1/Storage"] = [
         _response(
-            200, {"@odata.type": "#StorageCollection.StorageCollection", "Members@odata.count": 0}
+            HTTPStatus.OK,
+            {"@odata.type": "#StorageCollection.StorageCollection", "Members@odata.count": 0},
         )
     ]
 
@@ -581,7 +591,8 @@ def test_get_information_emits_empty_sections_only_when_selected(
     tree = _device_tree()
     tree["/redfish/v1/Systems/1/Storage"] = [
         _response(
-            200, {"@odata.type": "#StorageCollection.StorageCollection", "Members@odata.count": 0}
+            HTTPStatus.OK,
+            {"@odata.type": "#StorageCollection.StorageCollection", "Members@odata.count": 0},
         )
     ]
     redfishobj = _agent(tree)
@@ -599,7 +610,7 @@ def test_get_information_leaves_out_unavailable_storage_and_its_drives(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     tree = _device_tree()
-    tree[_STORAGE] = [_response(400, _ILO_NOT_READY)]
+    tree[_STORAGE] = [_response(HTTPStatus.BAD_REQUEST, _ILO_NOT_READY)]
 
     _run(_agent(tree))
 
@@ -613,7 +624,7 @@ def test_get_information_does_not_persist_storage_with_error_entry(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     tree = _device_tree()
-    tree[_STORAGE] = [_response(404)]
+    tree[_STORAGE] = [_response(HTTPStatus.NOT_FOUND)]
 
     _run(_agent(tree))
 
@@ -640,7 +651,7 @@ def test_get_information_leaves_out_unavailable_firmware_inventory(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     tree = _device_tree()
-    tree[_FIRMWARE] = [_response(503)]
+    tree[_FIRMWARE] = [_response(HTTPStatus.SERVICE_UNAVAILABLE)]
 
     _run(_agent(tree))
 
@@ -651,7 +662,7 @@ def test_get_information_leaves_out_unavailable_firmware_inventory(
 
 def test_get_information_retries_unavailable_systems(capsys: pytest.CaptureFixture[str]) -> None:
     tree = _device_tree()
-    tree["/redfish/v1/Systems"].insert(0, _response(503))
+    tree["/redfish/v1/Systems"].insert(0, _response(HTTPStatus.SERVICE_UNAVAILABLE))
     redfishobj = _agent(tree)
     redfishobj.systems_retries = 1
 
@@ -666,7 +677,7 @@ def test_get_information_keeps_systems_next_to_an_unavailable_one(
     tree = _device_tree()
     tree["/redfish/v1/Systems"] = [
         _response(
-            200,
+            HTTPStatus.OK,
             {
                 "Members": [
                     {"@odata.id": "/redfish/v1/Systems/1"},
@@ -675,7 +686,7 @@ def test_get_information_keeps_systems_next_to_an_unavailable_one(
             },
         )
     ]
-    tree["/redfish/v1/Systems/2"] = [_response(503)]
+    tree["/redfish/v1/Systems/2"] = [_response(HTTPStatus.SERVICE_UNAVAILABLE)]
 
     _run(_agent(tree))
 
@@ -684,7 +695,7 @@ def test_get_information_keeps_systems_next_to_an_unavailable_one(
 
 def test_get_information_aborts_on_unavailable_systems_without_retries() -> None:
     tree = _device_tree()
-    tree["/redfish/v1/Systems"] = [_response(503)]
+    tree["/redfish/v1/Systems"] = [_response(HTTPStatus.SERVICE_UNAVAILABLE)]
 
     with pytest.raises(agent_redfish.CannotRecover, match="could not be fetched after 0"):
         _run(_agent(tree))
@@ -692,7 +703,7 @@ def test_get_information_aborts_on_unavailable_systems_without_retries() -> None
 
 def test_get_information_aborts_on_unavailable_chassis_collection() -> None:
     tree = _device_tree()
-    tree["/redfish/v1/Chassis"] = [_response(503)]
+    tree["/redfish/v1/Chassis"] = [_response(HTTPStatus.SERVICE_UNAVAILABLE)]
 
     with pytest.raises(agent_redfish.TemporarilyUnavailable):
         _run(_agent(tree))
@@ -702,7 +713,7 @@ def _hpe_device_tree() -> dict[str, list[mock.Mock | Exception]]:
     return {
         "/redfish/v1": [
             _response(
-                200,
+                HTTPStatus.OK,
                 {
                     "Oem": {"Hpe": {}},
                     "Managers": {"@odata.id": "/redfish/v1/Managers"},
@@ -712,14 +723,16 @@ def _hpe_device_tree() -> dict[str, list[mock.Mock | Exception]]:
             )
         ],
         "/redfish/v1/Managers?$expand=.": [
-            _response(200, {"Members": [{"Oem": {"Hpe": {}}, "FirmwareVersion": "iLO 5 v2.72"}]})
+            _response(
+                HTTPStatus.OK, {"Members": [{"Oem": {"Hpe": {}}, "FirmwareVersion": "iLO 5 v2.72"}]}
+            )
         ],
         "/redfish/v1/Systems": [
-            _response(200, {"Members": [{"@odata.id": "/redfish/v1/Systems/1"}]})
+            _response(HTTPStatus.OK, {"Members": [{"@odata.id": "/redfish/v1/Systems/1"}]})
         ],
         "/redfish/v1/Systems/1": [
             _response(
-                200,
+                HTTPStatus.OK,
                 {
                     "Id": "1",
                     "Oem": {
@@ -732,8 +745,8 @@ def _hpe_device_tree() -> dict[str, list[mock.Mock | Exception]]:
                 },
             )
         ],
-        "/redfish/v1/Systems/1/SmartStorage": [_response(400, _ILO_NOT_READY)],
-        "/redfish/v1/Chassis": [_response(200, {"Members": []})],
+        "/redfish/v1/Systems/1/SmartStorage": [_response(HTTPStatus.BAD_REQUEST, _ILO_NOT_READY)],
+        "/redfish/v1/Chassis": [_response(HTTPStatus.OK, {"Members": []})],
     }
 
 
@@ -804,7 +817,7 @@ def test_get_information_emits_no_empty_sections_after_a_failed_phase(
 ) -> None:
     tree = _device_tree()
     tree["/redfish/v1/Chassis"] = [
-        _response(200, {"Members": [{"@odata.id": "/redfish/v1/Chassis/1"}]})
+        _response(HTTPStatus.OK, {"Members": [{"@odata.id": "/redfish/v1/Chassis/1"}]})
     ]
     tree["/redfish/v1/Chassis/1"] = [TimeoutError("read timed out")]
     redfishobj = _agent(tree, debug=False)
@@ -822,7 +835,7 @@ def test_get_information_keeps_cached_dependents_of_unavailable_section(
 ) -> None:
     monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(tmp_path))
     tree = _device_tree()
-    tree[_STORAGE] = [_response(400, _ILO_NOT_READY)]
+    tree[_STORAGE] = [_response(HTTPStatus.BAD_REQUEST, _ILO_NOT_READY)]
     redfishobj = _agent(tree)
     redfishobj.cache_per_section = {"Drives": 300}
     cached_at = int(time.time())

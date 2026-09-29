@@ -10,6 +10,7 @@ import json
 import socket
 import sys
 from base64 import b64encode
+from http import HTTPStatus
 from http.client import HTTPConnection
 from pathlib import Path
 from typing import Any
@@ -157,7 +158,7 @@ def main() -> int:
                 )
                 response = connection.getresponse()
 
-                if response.status != 200:
+                if response.status != HTTPStatus.OK:
                     sys.stderr.write(
                         "Could not fetch data from AppDynamics server. "
                         "HTTP %s: %s\n" % (response.status, response.reason)

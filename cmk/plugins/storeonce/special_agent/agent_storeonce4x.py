@@ -19,6 +19,7 @@ import json
 import logging
 import sys
 from collections.abc import Callable, Generator, Sequence
+from http import HTTPStatus
 from types import GeneratorType
 from typing import Any, TypedDict
 
@@ -121,7 +122,7 @@ class StoreOnceOauth2Session:
             url=url,
             verify=self._verify_ssl,
         )
-        if resp.status_code != 200:
+        if resp.status_code != HTTPStatus.OK:
             LOGGER.warning(
                 "Call to %(url)s returned HTTP %(status_code)s.",
                 {"url": url, "status_code": resp.status_code},

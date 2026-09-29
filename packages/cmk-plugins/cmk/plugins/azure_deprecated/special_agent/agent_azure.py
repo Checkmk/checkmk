@@ -28,6 +28,7 @@ import sys
 import time
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from http import HTTPStatus
 from multiprocessing import Lock
 from typing import Any, Literal, NamedTuple, override
 
@@ -552,7 +553,7 @@ class BaseApiClient:
         self._update_ratelimit(response)
 
         for cool_off_interval in (5, 10):
-            if response.status_code != 429:
+            if response.status_code != HTTPStatus.TOO_MANY_REQUESTS:
                 break
 
             LOGGER.debug(

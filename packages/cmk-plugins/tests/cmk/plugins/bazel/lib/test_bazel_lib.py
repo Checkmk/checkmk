@@ -6,6 +6,7 @@
 # mypy: disable-error-code="no-any-return"
 
 import json
+from http import HTTPStatus
 from pathlib import Path
 from unittest import mock
 
@@ -177,7 +178,7 @@ def patched_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None
 
 class MockResponse:
     text = METRICS_RESPONSE
-    status_code = 200
+    status_code = HTTPStatus.OK
     content = "non-empty"
 
     def __init__(self, json_response: dict[str, object] | list[object]) -> None:

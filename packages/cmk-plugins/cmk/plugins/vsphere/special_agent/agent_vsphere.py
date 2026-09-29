@@ -21,6 +21,7 @@ import sys
 import time
 from collections import Counter
 from collections.abc import Callable, Iterator, Mapping, Sequence
+from http import HTTPStatus
 from typing import Any
 from xml.dom import minicompat, minidom
 
@@ -1233,7 +1234,7 @@ class ESXConnection:
         finally:
             auth["password"] = "*****"
 
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise SystemExit(
                 f"Cannot login to vSphere Server (reason: [{response.status_code}] {response.reason}). "
                 "Please check the credentials."

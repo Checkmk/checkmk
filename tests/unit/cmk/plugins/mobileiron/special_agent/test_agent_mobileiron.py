@@ -7,6 +7,7 @@
 
 import argparse
 import json
+from http import HTTPStatus
 from pathlib import Path
 
 import pytest
@@ -42,7 +43,7 @@ def test_agent_output_2_partitions(capsys: pytest.CaptureFixture[str]) -> None:
             responses.GET,
             u,
             json=json.loads(r),
-            status=200,
+            status=HTTPStatus.OK,
         )
 
     args = argparse.Namespace(
@@ -90,7 +91,7 @@ def test_agent_output_regexes(capsys: pytest.CaptureFixture[str]) -> None:
             responses.GET,
             u,
             json=json.loads(r),
-            status=200,
+            status=HTTPStatus.OK,
         )
 
     args = argparse.Namespace(

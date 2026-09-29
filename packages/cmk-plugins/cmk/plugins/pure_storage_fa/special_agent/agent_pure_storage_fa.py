@@ -17,6 +17,7 @@ import logging
 import sys
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
+from http import HTTPStatus
 from typing import NamedTuple, override
 
 import requests
@@ -227,7 +228,7 @@ class PureStorageFlashArray:
             _LOGGER.exception("Login failed")
             raise AuthError
 
-        if login_response.status_code != 200:
+        if login_response.status_code != HTTPStatus.OK:
             _LOGGER.error(
                 "Login failed: %(reason)s (%(status_code)s)",
                 {
@@ -246,7 +247,7 @@ class PureStorageFlashArray:
             _LOGGER.exception("Getting API version failed")
             raise APIVersionError
 
-        if api_version_response.status_code != 200:
+        if api_version_response.status_code != HTTPStatus.OK:
             _LOGGER.error(
                 "Getting API version failed: %(reason)s (%(status_code)s)",
                 {
@@ -279,7 +280,7 @@ class PureStorageFlashArray:
             _LOGGER.exception("Collecting '%(section_name)s' failed", {"section_name": spec.name})
             raise SectionError
 
-        if section_response.status_code != 200:
+        if section_response.status_code != HTTPStatus.OK:
             _LOGGER.error(
                 "Collecting '%(section_name)s' failed: %(reason)s (%(status_code)s)",
                 {

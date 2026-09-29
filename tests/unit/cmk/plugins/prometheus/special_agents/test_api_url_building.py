@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from http import HTTPStatus
 
 import pytest
 import requests
@@ -26,7 +27,7 @@ def _session_recording_requests(connection: str) -> tuple[ApiSession, list[str]]
     ) -> requests.models.Response:
         requested_urls.append(url)
         response = requests.models.Response()
-        response.status_code = 200
+        response.status_code = HTTPStatus.OK
         response._content = json.dumps({"data": {"version": "2.45.0"}}).encode()  # noqa: SLF001
         return response
 

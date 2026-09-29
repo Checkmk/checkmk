@@ -15,6 +15,7 @@ import json
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
+from http import HTTPStatus
 
 import requests
 import urllib3
@@ -252,12 +253,12 @@ class VeeamClient:
             return
 
         error_code, message = _veeam_error(response)
-        if response.status_code == 401:
+        if response.status_code == HTTPStatus.UNAUTHORIZED:
             raise TerminateAgent(
                 f"Authentication at the Veeam REST API failed for user '{self._user}': "
                 f"{message}. Check the user name and password"
             )
-        if response.status_code == 400 and error_code == "NotImplemented":
+        if response.status_code == HTTPStatus.BAD_REQUEST and error_code == "NotImplemented":
             raise TerminateAgent(
                 f"The Veeam backup server does not support the REST API version "
                 f"{API_VERSION}: {message}"
@@ -284,15 +285,15 @@ class VeeamClient:
 
     def get(self, path: str) -> object:
         response = self._request("GET", path)
-        if response.status_code == 401:
+        if response.status_code == HTTPStatus.UNAUTHORIZED:
             # The token expired mid-run or was revoked: renew it and try once more.
             self._renew()
             response = self._request("GET", path)
-        if response.status_code == 401:
+        if response.status_code == HTTPStatus.UNAUTHORIZED:
             raise TerminateAgent(
                 f"The Veeam REST API rejected the session on {path}: {_veeam_error(response)[1]}"
             )
-        if response.status_code == 403:
+        if response.status_code == HTTPStatus.FORBIDDEN:
             raise AccessDenied(
                 f"Request to {path} failed with HTTP 403: {_veeam_error(response)[1]}"
             )

@@ -18,6 +18,7 @@ import sys
 from collections import defaultdict
 from collections.abc import Collection, Iterable, Mapping, Sequence
 from enum import Enum
+from http import HTTPStatus
 from typing import Final, override
 
 import urllib3
@@ -119,7 +120,7 @@ def safe_write_section(
     try:
         write_section(section_name, generator, logger)
     except NetAppRestError as exc:
-        if exc.status_code == 401:
+        if exc.status_code == HTTPStatus.UNAUTHORIZED:
             raise
         logger.exception("Section '%(section_name)s' failed", {"section_name": section_name})
         _write_error(section_name, str(exc))
@@ -1114,7 +1115,7 @@ def get_nodes(
                     logger.exception("Failed to get version from cluster endpoint")
                     _write_error("node", str(cluster_exc))
         except NetAppRestError as exc:
-            if exc.status_code == 401:
+            if exc.status_code == HTTPStatus.UNAUTHORIZED:
                 raise
             logger.exception("Failed to fetch nodes")
             _write_error("node", str(exc))
@@ -1143,7 +1144,7 @@ def write_sections(
         try:
             volumes = list(fetch_volumes(connection))
         except NetAppRestError as exc:
-            if exc.status_code == 401:
+            if exc.status_code == HTTPStatus.UNAUTHORIZED:
                 raise
             logger.exception("Failed to fetch volumes")
             _write_error("volumes", str(exc))
@@ -1183,7 +1184,7 @@ def write_sections(
         try:
             interfaces = list(fetch_interfaces(connection, logger))
         except NetAppRestError as exc:
-            if exc.status_code == 401:
+            if exc.status_code == HTTPStatus.UNAUTHORIZED:
                 raise
             logger.exception("Failed to fetch interfaces")
             _write_error("if", str(exc))
@@ -1348,7 +1349,7 @@ def agent_netapp_main(args: argparse.Namespace) -> int:
         try:
             write_sections(connection, logger, args)
         except NetAppRestError as exc:
-            if exc.status_code == 401:
+            if exc.status_code == HTTPStatus.UNAUTHORIZED:
                 sys.stderr.write("Authentication failed. Please check the credentials.\n")
                 return 1
             raise exc

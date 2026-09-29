@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from http import HTTPStatus
+
 import pytest
 import responses
 from pytest import MonkeyPatch
@@ -25,7 +27,7 @@ def test_agent_output(capsys: pytest.CaptureFixture[str], monkeypatch: MonkeyPat
         responses.GET,
         URL,
         json={"random_answer": "foo-bar"},
-        status=200,
+        status=HTTPStatus.OK,
     )
     monkeypatch.setattr(
         "sys.argv", ["agent_salesforce", "--section_url", f"salesforce_instances,{URL}"]

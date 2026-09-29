@@ -8,6 +8,7 @@
 import json
 import logging
 from collections.abc import Mapping, Sequence
+from http import HTTPStatus
 from unittest.mock import patch
 
 import polyfactory.factories.pydantic_factory
@@ -56,23 +57,23 @@ def supported_version_str() -> str:
 def test_raw_api_get_healthz_ok(core_api: CoreAPI) -> None:
     with patch(CALL_API) as mock_request:
         response = requests.Response()
-        response.status_code = 200
+        response.status_code = HTTPStatus.OK
         response._content = b"response-ok"  # noqa: SLF001
         mock_request.return_value = response
         result = core_api._get_healthz("/some_health_endpoint")  # noqa: SLF001
-    assert result.status_code == 200
+    assert result.status_code == HTTPStatus.OK
     assert result.response == "response-ok"
 
 
 def test_raw_api_get_healthz_nok(core_api: CoreAPI) -> None:
     with patch(CALL_API) as mock_request:
         response = requests.Response()
-        response.status_code = 500
+        response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
         response._content = b"response-nok"  # noqa: SLF001
         mock_request.return_value = response
         result = core_api._get_healthz("/some_health_endpoint")  # noqa: SLF001
 
-    assert result.status_code == 500
+    assert result.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
     assert result.response == "response-nok"
 
 
@@ -166,7 +167,7 @@ def test_version_endpoint(
     # arrange
     version_json_dump = json.dumps(version_json)
     response = requests.Response()
-    response.status_code = 200
+    response.status_code = HTTPStatus.OK
     response._content = version_json_dump.encode("utf-8")  # noqa: SLF001
     # act
     with patch(CALL_API) as mock_request:
@@ -183,7 +184,7 @@ def test_version_endpoint_no_json(core_api: CoreAPI) -> None:
     identify this issue. Instead, the issue needs to be handled separately.
     """
     response = requests.Response()
-    response.status_code = 200
+    response.status_code = HTTPStatus.OK
     response._content = b"I'm not json"  # noqa: SLF001
     with patch(CALL_API) as mock_request:
         mock_request.return_value = response
@@ -200,7 +201,7 @@ def test_version_endpoint_invalid_json(core_api: CoreAPI) -> None:
 
     # arrange
     response = requests.Response()
-    response.status_code = 200
+    response.status_code = HTTPStatus.OK
     response._content = b"{}"  # noqa: SLF001
     # act
     with patch(CALL_API) as mock_request:

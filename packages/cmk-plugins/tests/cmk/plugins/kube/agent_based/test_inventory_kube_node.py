@@ -6,6 +6,7 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Sequence
+from http import HTTPStatus
 
 import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
@@ -47,7 +48,7 @@ from tests.cmk.plugins.kube.agent_based.utils_inventory import sort_inventory_re
             ),
             KubeletInfo(
                 version="1.2.3",
-                health=HealthZ(status_code=200, response="ok"),
+                health=HealthZ(status_code=HTTPStatus.OK, response="ok"),
             ),
             [
                 Attributes(

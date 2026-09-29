@@ -12,6 +12,7 @@ import json
 import sys
 from collections.abc import Sequence
 from contextlib import suppress
+from http import HTTPStatus
 from typing import NamedTuple
 
 import requests
@@ -161,7 +162,7 @@ def handle_request(args: argparse.Namespace, sections: Sequence[Section]) -> obj
             return 1
 
         # Things might go wrong if authentication is missing.
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             sys.stderr.write("Could not fetch data from Jenkins. Details: %s\n" % response)
             return 2
 

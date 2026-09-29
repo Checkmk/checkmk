@@ -20,6 +20,7 @@ import logging
 import sys
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from http import HTTPStatus
 from typing import Any, Literal
 
 import urllib3
@@ -124,7 +125,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
 def fetch_data(redfishobj, url, component):
     """fetch a single data object from Redfish"""
     response_url = redfishobj.get(url, None)
-    if response_url.status == 200:
+    if response_url.status == HTTPStatus.OK:
         try:
             return response_url.dict
         except JsonDecodingError:

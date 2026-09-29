@@ -36,6 +36,7 @@ import pprint
 import re
 import sys
 from collections.abc import Iterator, Mapping, Sequence
+from http import HTTPStatus
 from typing import Final
 
 import requests
@@ -158,7 +159,7 @@ def _get_response(
         response.raise_for_status()
         return response
     except requests.exceptions.HTTPError:
-        if response.status_code != 500:  # type: ignore[possibly-undefined]
+        if response.status_code != HTTPStatus.INTERNAL_SERVER_ERROR:  # type: ignore[possibly-undefined]
             raise
 
     # old URL can not be found, select other base url in the hope that the other

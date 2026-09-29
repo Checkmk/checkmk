@@ -12,6 +12,7 @@ import argparse
 import sys
 import typing
 from collections.abc import Sequence
+from http import HTTPStatus
 
 import pydantic
 import requests
@@ -78,7 +79,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
 
 def _health_info() -> str:
     resp = requests.get("https://status.cloud.google.com/incidents.json", timeout=900)
-    if resp.status_code == 200:
+    if resp.status_code == HTTPStatus.OK:
         return resp.text
     return "{}"
 

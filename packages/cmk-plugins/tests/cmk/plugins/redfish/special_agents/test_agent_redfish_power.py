@@ -7,6 +7,7 @@
 found even when the service root does not advertise ``PowerEquipment``."""
 
 from collections.abc import Mapping
+from http import HTTPStatus
 
 import pytest
 
@@ -76,8 +77,8 @@ class _FakeClient:
     def get(self, url: str, _args: object = None) -> _Response:
         self.requested.append(url)
         if url not in self._routes:
-            return _Response(404, {})
-        return _Response(200, self._routes[url])
+            return _Response(HTTPStatus.NOT_FOUND, {})
+        return _Response(HTTPStatus.OK, self._routes[url])
 
 
 def _panduit_routes() -> Mapping[str, object]:

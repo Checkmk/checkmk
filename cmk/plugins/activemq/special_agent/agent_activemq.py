@@ -11,6 +11,7 @@ import argparse
 import sys
 import xml.etree.ElementTree as ET
 from collections.abc import Mapping, Sequence
+from http import HTTPStatus
 from typing import Literal
 from urllib.parse import urljoin
 
@@ -170,7 +171,7 @@ def agent_activemq_main(args: argparse.Namespace) -> int:
 
     try:
         response = session.get("queues.jsp")
-        if response.status_code == 401:
+        if response.status_code == HTTPStatus.UNAUTHORIZED:
             raise Exception("Unauthorized")
 
         xml = response.text

@@ -13,6 +13,7 @@ import argparse
 import logging
 import sys
 from collections.abc import Mapping, Sequence
+from http import HTTPStatus
 from urllib.parse import urljoin
 
 from requests import Response, Session
@@ -142,7 +143,7 @@ class ZertoRequest:
             additional_headers=self._headers,
         ).get("/vms")
 
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             LOGGER.debug(
                 "response status code: %(status_code)s", {"status_code": response.status_code}
             )
@@ -188,7 +189,7 @@ class ZertoConnection:
                 additional_headers={"content-type": "application/json"},
             ).request("post", "/session/add")
 
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             LOGGER.info(
                 "response status code: %(status_code)s", {"status_code": response.status_code}
             )

@@ -11,6 +11,7 @@ import argparse
 import re
 import sys
 from collections.abc import Mapping, Sequence
+from http import HTTPStatus
 
 import requests
 
@@ -97,7 +98,7 @@ def _fetch_and_output_data(args: argparse.Namespace) -> int:
         sys.stderr.write("Connection timed out")
         return 1
 
-    if response.status_code != 200:
+    if response.status_code != HTTPStatus.OK:
         sys.stderr.write(f"{url}: {response.reason}")
         return 1
 

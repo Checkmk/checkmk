@@ -17,6 +17,7 @@ import sys
 import xml.etree.ElementTree as ET
 from collections.abc import Callable, Sequence
 from html.parser import HTMLParser
+from http import HTTPStatus
 from typing import override
 from urllib.parse import urljoin
 
@@ -205,7 +206,7 @@ class HPMSAConnection:
         LOGGER.debug("GET %(url)r", {"url": url})
         # we must provide the verify keyword to every individual request call!
         response = self._session.get(url, timeout=self._timeout, verify=self._verify_ssl)
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             LOGGER.warning(
                 "RESPONSE.status_code, reason: %(status_and_reason)r",
                 {"status_and_reason": (response.status_code, response.reason)},

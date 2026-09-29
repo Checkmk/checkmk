@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -23,7 +25,7 @@ def check(section: ClusterDetails) -> CheckResult:
     api_health = section.api_health
     name_and_health = [("live", api_health.live), ("ready", api_health.ready)]
     for name, health in name_and_health:
-        if health.status_code == 200:
+        if health.status_code == HTTPStatus.OK:
             yield Result(state=State.OK, summary=name.title())
             continue
         yield Result(state=State.CRIT, summary=f"Not {name}")
@@ -32,7 +34,7 @@ def check(section: ClusterDetails) -> CheckResult:
             notice=f"{name.title()} response:\n{health.response}",
         )
 
-    if not all(h.status_code == 200 for _, h in name_and_health):
+    if not all(h.status_code == HTTPStatus.OK for _, h in name_and_health):
         yield Result(state=State.OK, summary="See service details for more information")
 
 

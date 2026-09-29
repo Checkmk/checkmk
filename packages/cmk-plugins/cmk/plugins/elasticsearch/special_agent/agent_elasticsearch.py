@@ -11,6 +11,7 @@ import argparse
 import json
 import sys
 from collections.abc import Mapping, Sequence
+from http import HTTPStatus
 
 import pydantic
 import requests
@@ -75,7 +76,7 @@ def agent_elasticsearch_main(args: argparse.Namespace) -> int:
                         raise
                     continue
 
-                if response.status_code != 200:
+                if response.status_code != HTTPStatus.OK:
                     sys.stderr.write(
                         f"Error: HTTP {response.status_code} for {url}: {response.text[:200]}\n"
                     )

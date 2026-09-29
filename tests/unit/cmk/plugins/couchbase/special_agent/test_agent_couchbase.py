@@ -6,6 +6,7 @@
 import json
 import sys
 from collections.abc import Mapping, Sequence
+from http import HTTPStatus
 
 import pytest
 import requests
@@ -240,7 +241,7 @@ def test_bucket_without_samples_is_reported_with_name_only(
 @responses.activate
 def test_unreachable_bucket_is_skipped(capsys: pytest.CaptureFixture[str]) -> None:
     responses.add(responses.GET, BASE, json={})
-    responses.add(responses.GET, f"{BASE}/buckets/missing/stats", status=404)
+    responses.add(responses.GET, f"{BASE}/buckets/missing/stats", status=HTTPStatus.NOT_FOUND)
     responses.add(responses.GET, f"{BASE}/buckets/present/stats", json=BUCKET_RESPONSE)
 
     exit_code = _run(["-b", "missing", "-b", "present", HOST])
@@ -267,7 +268,9 @@ def test_bucket_with_invalid_json_is_skipped(capsys: pytest.CaptureFixture[str])
 @responses.activate
 def test_unreachable_bucket_raises_in_debug_mode() -> None:
     responses.add(responses.GET, BASE, json={})
-    responses.add(responses.GET, f"{BASE}/buckets/missing/stats", status=500)
+    responses.add(
+        responses.GET, f"{BASE}/buckets/missing/stats", status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
 
     with pytest.raises(requests.HTTPError):
         _run(["--debug", "-b", "missing", HOST])
@@ -275,7 +278,7 @@ def test_unreachable_bucket_raises_in_debug_mode() -> None:
 
 @responses.activate
 def test_unreachable_pool_returns_error_code(capsys: pytest.CaptureFixture[str]) -> None:
-    responses.add(responses.GET, BASE, status=401)
+    responses.add(responses.GET, BASE, status=HTTPStatus.UNAUTHORIZED)
 
     exit_code = _run([HOST])
 
@@ -299,7 +302,7 @@ def test_pool_with_invalid_json_returns_error_code() -> None:
 
 @responses.activate
 def test_unreachable_pool_raises_in_debug_mode() -> None:
-    responses.add(responses.GET, BASE, status=503)
+    responses.add(responses.GET, BASE, status=HTTPStatus.SERVICE_UNAVAILABLE)
 
     with pytest.raises(requests.HTTPError):
         _run(["--debug", HOST])

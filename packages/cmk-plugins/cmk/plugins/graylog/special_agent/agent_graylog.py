@@ -14,6 +14,7 @@ import json
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
+from http import HTTPStatus
 
 import requests
 import urllib3
@@ -212,7 +213,7 @@ def section_messages(
     args: argparse.Namespace, url: str, session: requests.Session
 ) -> JsonSerializable:
     value = _do_get(url, args, session)
-    if value.status_code != 200:
+    if value.status_code != HTTPStatus.OK:
         return value.json()
     return {"events": value.json().get("counts", {}).get("events", 0)}
 

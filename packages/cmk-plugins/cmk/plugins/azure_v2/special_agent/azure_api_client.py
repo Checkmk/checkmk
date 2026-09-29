@@ -10,6 +10,7 @@
 import asyncio
 import logging
 from collections.abc import Callable, Mapping, MutableMapping
+from http import HTTPStatus
 from typing import Literal, NamedTuple, override
 
 import aiohttp
@@ -234,7 +235,7 @@ class BaseAsyncApiClient:
         raise_for_rate_limit = kwargs.pop("raise_for_rate_limit", False)
         response = await get_response()
         for cool_off_interval in (5, 10):
-            if response.status != 429:
+            if response.status != HTTPStatus.TOO_MANY_REQUESTS:
                 break
             if raise_for_rate_limit:
                 raise RateLimitException(

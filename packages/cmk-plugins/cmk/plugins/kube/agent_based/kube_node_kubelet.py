@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from http import HTTPStatus
+
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -30,7 +32,7 @@ def check_kube_node_kubelet(section: KubeletInfo) -> CheckResult:
             state=State.OK,
             notice=f"Verbose response:\n{section.health.message}",
         )
-    elif section.health.status_code == 200:
+    elif section.health.status_code == HTTPStatus.OK:
         yield Result(state=State.OK, summary="Healthy")
     else:
         yield Result(state=State.CRIT, summary="Not healthy")

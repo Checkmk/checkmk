@@ -5,6 +5,7 @@
 
 import socket
 from collections.abc import Iterator
+from http import HTTPStatus
 from pathlib import Path
 from urllib.parse import parse_qs
 
@@ -145,7 +146,11 @@ def test_a_rejected_refresh_token_falls_back_to_the_password(
     api: responses.RequestsMock, storage: Storage
 ) -> None:
     api.post(TOKEN_URL, json=_token("first"))
-    api.post(TOKEN_URL, status=401, json={"errorCode": "AccessDenied", "message": "used"})
+    api.post(
+        TOKEN_URL,
+        status=HTTPStatus.UNAUTHORIZED,
+        json={"errorCode": "AccessDenied", "message": "used"},
+    )
     api.post(TOKEN_URL, json=_token("second"))
     with time_machine.travel(0, tick=False) as traveller:
         _client(storage).authenticate()
@@ -176,7 +181,11 @@ def test_a_token_rejected_mid_run_is_renewed_and_the_request_retried(
 ) -> None:
     api.post(TOKEN_URL, json=_token("first"))
     api.post(TOKEN_URL, json=_token("second"))
-    api.get(f"{URL}/api/v1/jobs", status=401, json={"errorCode": "ExpiredToken", "message": "x"})
+    api.get(
+        f"{URL}/api/v1/jobs",
+        status=HTTPStatus.UNAUTHORIZED,
+        json={"errorCode": "ExpiredToken", "message": "x"},
+    )
     api.get(f"{URL}/api/v1/jobs", json={"data": [], "pagination": {"total": 0}})
     client = _client(storage)
     client.authenticate()
@@ -192,7 +201,9 @@ def test_failing_endpoint_does_stop_the_other_sections(
     api: responses.RequestsMock, storage: Storage, capsys: pytest.CaptureFixture[str]
 ) -> None:
     api.get(
-        f"{URL}/api/v1/broken", status=500, json={"errorCode": "UnknownError", "message": "boom"}
+        f"{URL}/api/v1/broken",
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
+        json={"errorCode": "UnknownError", "message": "boom"},
     )
     api.get(f"{URL}/api/v1/jobs", json={"data": [], "pagination": {"total": 0}})
 
@@ -232,7 +243,9 @@ def test_access_denied_on_a_role_restricted_endpoint_writes_an_empty_section(
     api: responses.RequestsMock, storage: Storage, capsys: pytest.CaptureFixture[str]
 ) -> None:
     api.get(
-        f"{URL}/api/v1/replicas", status=403, json={"errorCode": "Forbidden", "message": "denied"}
+        f"{URL}/api/v1/replicas",
+        status=HTTPStatus.FORBIDDEN,
+        json={"errorCode": "Forbidden", "message": "denied"},
     )
 
     write_sections(
@@ -248,7 +261,11 @@ def test_access_denied_on_a_role_restricted_endpoint_writes_an_empty_section(
 def test_access_denied_on_an_unrestricted_endpoint_is_raised(
     api: responses.RequestsMock, storage: Storage, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    api.get(f"{URL}/api/v1/jobs", status=403, json={"errorCode": "Forbidden", "message": "denied"})
+    api.get(
+        f"{URL}/api/v1/jobs",
+        status=HTTPStatus.FORBIDDEN,
+        json={"errorCode": "Forbidden", "message": "denied"},
+    )
 
     with pytest.raises(AccessDenied, match="HTTP 403: denied"):
         write_sections(_client(storage), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
@@ -260,7 +277,11 @@ def test_session_rejected_again_after_renewal_is_fatal(
     api: responses.RequestsMock, storage: Storage
 ) -> None:
     api.post(TOKEN_URL, json=_token("first"))
-    api.get(f"{URL}/api/v1/jobs", status=401, json={"errorCode": "AccessDenied", "message": "x"})
+    api.get(
+        f"{URL}/api/v1/jobs",
+        status=HTTPStatus.UNAUTHORIZED,
+        json={"errorCode": "AccessDenied", "message": "x"},
+    )
     client = _client(storage)
     client.authenticate()
 
@@ -385,7 +406,7 @@ def test_piggyback_section_drops_items_with_no_name(
 def test_wrong_credentials_are_reported(api: responses.RequestsMock, storage: Storage) -> None:
     api.post(
         TOKEN_URL,
-        status=401,
+        status=HTTPStatus.UNAUTHORIZED,
         json={"errorCode": "AccessDenied", "message": "Authentication failed"},
     )
 
@@ -398,7 +419,7 @@ def test_unsupported_api_version_names_the_supported_ones(
 ) -> None:
     api.post(
         TOKEN_URL,
-        status=400,
+        status=HTTPStatus.BAD_REQUEST,
         json={
             "errorCode": "NotImplemented",
             "message": "Unsupported RESTAPI version. The following versions are supported: 1.1-rev0",
@@ -412,7 +433,11 @@ def test_unsupported_api_version_names_the_supported_ones(
 def test_unexpected_login_answer_reports_the_http_status(
     api: responses.RequestsMock, storage: Storage
 ) -> None:
-    api.post(TOKEN_URL, status=500, json={"errorCode": "UnknownError", "message": "boom"})
+    api.post(
+        TOKEN_URL,
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
+        json={"errorCode": "UnknownError", "message": "boom"},
+    )
 
     with pytest.raises(TerminateAgent, match="failed with HTTP 500: boom"):
         _client(storage).authenticate()

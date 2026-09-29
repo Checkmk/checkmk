@@ -10,6 +10,7 @@
 import argparse
 import logging
 from collections.abc import Iterator
+from http import HTTPStatus
 from typing import override
 from unittest.mock import MagicMock, patch
 
@@ -39,7 +40,7 @@ class _AuthError(NetAppRestError):
     @property
     @override
     def status_code(self) -> int:
-        return 401
+        return HTTPStatus.UNAUTHORIZED
 
 
 class _ServerError(NetAppRestError):
@@ -51,7 +52,7 @@ class _ServerError(NetAppRestError):
     @property
     @override
     def status_code(self) -> int:
-        return 503
+        return HTTPStatus.SERVICE_UNAVAILABLE
 
 
 def test_agent_exits_1_when_connection_returns_401(capsys: pytest.CaptureFixture[str]) -> None:

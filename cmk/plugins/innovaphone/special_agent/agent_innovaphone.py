@@ -11,6 +11,7 @@ import argparse
 import sys
 import urllib.parse
 from collections.abc import Iterable, Sequence
+from http import HTTPStatus
 from xml.etree import ElementTree as etree
 
 import requests
@@ -46,7 +47,7 @@ class InnovaphoneConnection:
             sys.stderr.write(f"ERROR while connecting to {url}: {e}\n")
             return None
 
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             sys.stderr.write(
                 f"ERROR while processing request [{response.status_code}]: {response.reason}\n"
             )

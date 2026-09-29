@@ -21,6 +21,7 @@ import sys
 import time
 from collections.abc import Collection, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
+from http import HTTPStatus
 from typing import Any, Final, Literal, Self
 
 import urllib3
@@ -129,8 +130,9 @@ class RedfishClient:
             self._client.set_session_location(session.location)
             self._client.set_session_key(session.session)
             if (
-                self._client.get("/redfish/v1/SessionService/Sessions", None).status == 200
-                or self._client.get("/redfish/v1/Sessions", None).status == 200
+                self._client.get("/redfish/v1/SessionService/Sessions", None).status
+                == HTTPStatus.OK
+                or self._client.get("/redfish/v1/Sessions", None).status == HTTPStatus.OK
             ):
                 return
             # cleanup old session information
@@ -303,7 +305,9 @@ def _is_retry_message(message: Mapping[str, object]) -> bool:
 
 
 def _is_temporarily_unavailable(response: RestResponse) -> bool:
-    return response.status == 503 or any(_is_retry_message(m) for m in _error_messages(response))
+    return response.status == HTTPStatus.SERVICE_UNAVAILABLE or any(
+        _is_retry_message(m) for m in _error_messages(response)
+    )
 
 
 def fetch_data(
@@ -314,7 +318,7 @@ def fetch_data(
     Raises TemporarilyUnavailable if the device asks us to retry later.
     """
     response_url = client.get(url, timeout=timeout) if timeout else client.get(url, None)
-    if response_url.status == 200:
+    if response_url.status == HTTPStatus.OK:
         try:
             return response_url.dict
         except JsonDecodingError:
@@ -660,11 +664,11 @@ def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
     # but still serve the endpoints. Try the standard paths before giving up.
     if not systems_url:
         probe = redfishobj.redfish_connection.get("/redfish/v1/Systems", None)
-        if probe.status == 200:
+        if probe.status == HTTPStatus.OK:
             systems_url = "/redfish/v1/Systems"
     if not chassis_url:
         probe = redfishobj.redfish_connection.get("/redfish/v1/Chassis", None)
-        if probe.status == 200:
+        if probe.status == HTTPStatus.OK:
             chassis_url = "/redfish/v1/Chassis"
 
     if not systems_url or not chassis_url:

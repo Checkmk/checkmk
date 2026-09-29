@@ -18,6 +18,7 @@ import time
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import asdict, replace
+from http import HTTPStatus
 from io import BytesIO
 from typing import Annotated, Final, NamedTuple
 
@@ -456,13 +457,16 @@ def get_url_raw(
 
     response.encoding = "utf-8"  # Always decode with utf-8
 
-    if response.status_code == 401:
+    if response.status_code == HTTPStatus.UNAUTHORIZED:
         raise MKUserError("_passwd", _("Authentication failed. Invalid login/password."))
 
-    if response.status_code == 503 and "Site Not Started" in response.text:
+    if (
+        response.status_code == HTTPStatus.SERVICE_UNAVAILABLE
+        and "Site Not Started" in response.text
+    ):
         raise MKUserError(None, _("Site is not running"))
 
-    if response.status_code != 200:
+    if response.status_code != HTTPStatus.OK:
         raise MKUserError(
             None,
             _("HTTP Error - %(status_code)d: %(text)s")

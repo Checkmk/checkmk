@@ -11,6 +11,7 @@ to hosts and that is the basis of the rules."""
 
 import abc
 from collections.abc import Collection, Sequence
+from http import HTTPStatus
 from typing import cast, override
 
 import cmk.ruleset_matcher.tags
@@ -246,7 +247,7 @@ class ModeTags(ABCTagMode):
             pending_changes=pending_changes,
         )
         if message is False:
-            return FinalizeRequest(code=200)
+            return FinalizeRequest(code=HTTPStatus.OK)
 
         if message:
             self._tag_config.remove_tag_group(del_id)
@@ -296,7 +297,7 @@ class ModeTags(ABCTagMode):
             pending_changes=pending_changes,
         )
         if message is False:
-            return FinalizeRequest(code=200)
+            return FinalizeRequest(code=HTTPStatus.OK)
 
         if message:
             self._tag_config.aux_tag_list.remove(del_id)
@@ -996,7 +997,7 @@ class ModeEditTagGroup(ABCEditTagMode):
             pending_changes=pending_changes,
         )
         if message is False:
-            return FinalizeRequest(code=200)
+            return FinalizeRequest(code=HTTPStatus.OK)
 
         update_tag_config(tree, changed_hosttags_config, pprint_value=config.wato_pprint_config)
         pending_changes.add(

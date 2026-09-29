@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.gui.message import delete_gui_message, get_gui_messages
@@ -29,10 +30,12 @@ def delete_user_message_v1(
     """Delete a message."""
     messages = {m["id"]: m for m in get_gui_messages()}
     if (message := messages.get(message_id)) is None:
-        raise ProblemException(404, f"Message '{message_id}' not found")
+        raise ProblemException(HTTPStatus.NOT_FOUND, f"Message '{message_id}' not found")
 
     if bool(message.get("security")):
-        raise ProblemException(403, "Message cannot be deleted manually, must expire")
+        raise ProblemException(
+            HTTPStatus.FORBIDDEN, "Message cannot be deleted manually, must expire"
+        )
 
     delete_gui_message(message_id)
 

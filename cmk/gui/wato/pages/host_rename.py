@@ -11,6 +11,7 @@
 
 import socket
 from collections.abc import Collection, Iterable, Sequence
+from http import HTTPStatus
 from typing import Any, override
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -217,7 +218,7 @@ class ModeBulkRenameHost(WatoMode):
 
             return redirect(host_renaming_job.detail_url())
         if c is False:  # not yet confirmed
-            return FinalizeRequest(code=200)
+            return FinalizeRequest(code=HTTPStatus.OK)
         return None  # browser reload
 
     @staticmethod

@@ -11,6 +11,7 @@
 import socket
 import traceback
 from collections.abc import Collection, Iterable, Iterator, Mapping
+from http import HTTPStatus
 from typing import Any, assert_never, cast, overload, override
 from urllib.parse import urlparse
 
@@ -1468,7 +1469,7 @@ class ModeDistributedMonitoring(WatoMode):
             html.hidden_field("_login", login_id)
             html.hidden_fields()
         html.footer()
-        return FinalizeRequest(code=200)
+        return FinalizeRequest(code=HTTPStatus.OK)
 
     @override
     def page(self, config: Config) -> None:

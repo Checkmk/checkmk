@@ -35,6 +35,7 @@ from contextlib import contextmanager, ExitStack, suppress
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from html import unescape
+from http import HTTPStatus
 from itertools import filterfalse
 from multiprocessing.pool import AsyncResult, ThreadPool
 from pathlib import Path
@@ -4181,7 +4182,7 @@ def _check_sites_that_cannot_be_activated(
                 "offline or not logged in)."
             )
             % {"err_msg": err_msg},
-            status=409,
+            status=HTTPStatus.CONFLICT,
         )
 
 
@@ -4218,13 +4219,23 @@ def _check_sites_that_can_be_activated(
             )
 
     if manager.is_running():
-        raise MKUserError(None, _("There is an activation already running."), status=423)
+        raise MKUserError(
+            None, _("There is an activation already running."), status=HTTPStatus.LOCKED
+        )
 
     if not manager.changes.has_pending_changes():
-        raise MKUserError(None, _("Currently there are no changes to activate."), status=422)
+        raise MKUserError(
+            None,
+            _("Currently there are no changes to activate."),
+            status=HTTPStatus.UNPROCESSABLE_ENTITY,
+        )
 
     if not manager.changes.dirty_sites(activation_sites(sites_that_can_be_activated)):
-        raise MKUserError(None, _("Currently there are no changes to activate."), status=422)
+        raise MKUserError(
+            None,
+            _("Currently there are no changes to activate."),
+            status=HTTPStatus.UNPROCESSABLE_ENTITY,
+        )
 
     return manager, sites_that_can_be_activated
 
@@ -4268,7 +4279,7 @@ def activate_changes_start(
             raise MKUserError(
                 None,
                 _("Unknown site %(site_id)s") % {"site_id": escaping.escape_attribute(site_id)},
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
             )
 
     sites_to_activate = SiteConfigurations(

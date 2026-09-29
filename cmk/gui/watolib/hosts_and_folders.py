@@ -33,6 +33,7 @@ from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property, wraps
+from http import HTTPStatus
 from pathlib import Path
 from typing import (
     Any,
@@ -1683,7 +1684,7 @@ class FolderTree:
     def load_host(self, host_name: HostName) -> Host:
         host = self.host(host_name)
         if host is None:
-            raise MKUserError(None, "Host could not be found.", status=404)
+            raise MKUserError(None, "Host could not be found.", status=HTTPStatus.NOT_FOUND)
         return host
 
     def all_folders(self) -> Mapping[PathWithoutSlash, Folder]:

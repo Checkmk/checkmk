@@ -10,6 +10,7 @@
 
 from collections.abc import Iterable, Sequence
 from datetime import datetime
+from http import HTTPStatus
 from typing import Any, override
 
 from cmk.ccc.version import Edition
@@ -118,7 +119,7 @@ class UserProfile(Page):
         html.reload_whole_page(back_url)
         html.footer()
 
-        raise FinalizeRequest(code=200)
+        raise FinalizeRequest(code=HTTPStatus.OK)
 
     @override
     def page(self, ctx: PageContext) -> None:

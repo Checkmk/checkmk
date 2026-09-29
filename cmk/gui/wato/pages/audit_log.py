@@ -12,6 +12,7 @@ import dataclasses
 import time
 from collections.abc import Collection, Iterator
 from dataclasses import dataclass
+from http import HTTPStatus
 from typing import Any, override
 
 from cmk.ccc.resulttype import Error, OK, Result
@@ -875,7 +876,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
 
         response.set_data("".join(resp))
 
-        return FinalizeRequest(code=200)
+        return FinalizeRequest(code=HTTPStatus.OK)
 
     def _parse_audit_log(self) -> list[AuditLogStore.Entry]:
         options: AuditLogFilterRaw = {

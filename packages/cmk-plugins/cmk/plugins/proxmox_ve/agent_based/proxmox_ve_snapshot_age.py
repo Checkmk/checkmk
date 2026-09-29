@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
+import json
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -24,10 +25,12 @@ from cmk.agent_based.v2 import (
 
 
 class SectionSnapshots(BaseModel, frozen=True):
-    snaptimes: Sequence[int] = Field(alias="snaptimes", default_factory=list)
+    snaptimes: Sequence[int] | None = Field(alias="snaptimes", default_factory=list)
 
 
 def parse_proxmox_ve_snapshot_age(string_table: StringTable) -> SectionSnapshots:
+    if json.loads(string_table[0][0]) is None:
+        return SectionSnapshots(snaptimes=None)
     return SectionSnapshots.model_validate_json(string_table[0][0])
 
 
@@ -66,6 +69,13 @@ def _check_proxmox_ve_snapshot_age_testable(
 def check_proxmox_ve_snapshot_age(
     params: Mapping[str, Any], section: SectionSnapshots
 ) -> CheckResult:
+    if section.snaptimes is None:
+        yield Result(
+            state=State.UNKNOWN,
+            summary="No snapshot data received for this VM from the special agent (check the agent output of the Proxmox VE host)",
+        )
+        return
+
     if not section.snaptimes:
         yield Result(state=State.OK, summary="No snapshot found")
         return

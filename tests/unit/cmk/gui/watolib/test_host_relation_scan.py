@@ -14,6 +14,7 @@ import pytest
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.background_job.job import BackgroundJobDefines, BackgroundProcessInterface
+from cmk.gui.config import Config
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib.host_relation_discovery import LinkOutcome
 from cmk.gui.watolib.host_relation_scan import (
@@ -36,6 +37,7 @@ from cmk.gui.watolib.host_relation_scan import (
     SAMPLE_SIZE,
     ScanResult,
 )
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.livestatus_client import SiteConfigurations
 
 
@@ -339,6 +341,7 @@ def test_a_run_on_a_scan_that_is_gone_says_so(tmp_path: Path) -> None:
             progress_update=io.StringIO(),
         ),
         UserPermissionSerializableConfig(roles={}, user_roles={}, default_user_profile_roles=[]),
+        tree=make_folder_tree(Config()),
         pprint_value=False,
         use_git=False,
         activation_site_configs=SiteConfigurations({}),

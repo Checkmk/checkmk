@@ -38,7 +38,7 @@ from cmk.gui.i18n import _
 from cmk.gui.job_scheduler_client import StartupError
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import AnnotatedUserId
+from cmk.gui.type_defs import AnnotatedUserId, CustomHostAttrSpec
 from cmk.gui.utils.host_relations import RelationDirection
 from cmk.gui.utils.misc import gen_id
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
@@ -69,13 +69,14 @@ from cmk.gui.watolib.host_relation_discovery import (
     SharedLabel,
     ValueReason,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderTree
+from cmk.gui.watolib.hosts_and_folders import FolderTree, HostsAndFoldersConfig
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
     PendingChanges,
     PendingChangesStore,
 )
 from cmk.livestatus_client import SiteConfigurations
+from cmk.ruleset_matcher.tags import TagConfig, TagConfigSpec
 from cmk.utils.paths import configuration_lockfile
 
 ValueSource = Literal["label", "attribute"]
@@ -637,12 +638,12 @@ class RelationScanBackgroundJob(BackgroundJob):
         findings: Sequence[FindingArgs],
         job_interface: BackgroundProcessInterface,
         user_permission_config: UserPermissionSerializableConfig,
+        tree: FolderTree,
     ) -> None:
         with job_interface.gui_context(
             UserPermissions.from_serialized_config(user_permission_config, permission_registry)
         ):
             job_interface.send_progress_update(_("Reading the hosts of Setup..."))
-            tree = folder_tree()
             evidence = evidence_of(findings)
             discovery = discover_relations(tree, evidence=evidence, acting_user=user)
             folders = {
@@ -664,13 +665,27 @@ class RelationScanBackgroundJob(BackgroundJob):
 class RelationScanJobArgs(BaseModel, frozen=True):
     findings: list[FindingArgs]
     user_permission_config: UserPermissionSerializableConfig
+    site_configs: SiteConfigurations
+    wato_hide_folders_without_read_permissions: bool
+    wato_host_attrs: Sequence[CustomHostAttrSpec]
+    tags: TagConfigSpec
 
 
 def relation_scan_job_entry_point(
     job_interface: BackgroundProcessInterface, args: RelationScanJobArgs
 ) -> None:
     RelationScanBackgroundJob(job_interface.get_job_id()).do_execute(
-        args.findings, job_interface, args.user_permission_config
+        args.findings,
+        job_interface,
+        args.user_permission_config,
+        FolderTree(
+            config=HostsAndFoldersConfig(
+                wato_hide_folders_without_read_permissions=args.wato_hide_folders_without_read_permissions,
+                wato_host_attrs=args.wato_host_attrs,
+                tags=TagConfig.from_config(args.tags),
+                sites=args.site_configs,
+            )
+        ),
     )
 
 
@@ -678,13 +693,23 @@ def start_relation_scan(
     job: RelationScanBackgroundJob,
     findings: Sequence[FindingArgs],
     user_permission_config: UserPermissionSerializableConfig,
+    *,
+    site_configs: SiteConfigurations,
+    wato_hide_folders_without_read_permissions: bool,
+    wato_host_attrs: Sequence[CustomHostAttrSpec],
+    tags: TagConfigSpec,
 ) -> Result[None, AlreadyRunningError | StartupError]:
     """Scan in the background: a fleet of this size takes longer than a request may."""
     return job.start(
         JobTarget(
             callable=relation_scan_job_entry_point,
             args=RelationScanJobArgs(
-                findings=list(findings), user_permission_config=user_permission_config
+                findings=list(findings),
+                user_permission_config=user_permission_config,
+                site_configs=site_configs,
+                wato_hide_folders_without_read_permissions=wato_hide_folders_without_read_permissions,
+                wato_host_attrs=wato_host_attrs,
+                tags=tags,
             ),
         ),
         InitialStatusArgs(
@@ -715,6 +740,7 @@ class RelationDiscoveryBackgroundJob(BackgroundJob):
         job_interface: BackgroundProcessInterface,
         user_permission_config: UserPermissionSerializableConfig,
         *,
+        tree: FolderTree,
         pprint_value: bool,
         use_git: bool,
         activation_site_configs: SiteConfigurations,
@@ -732,6 +758,7 @@ class RelationDiscoveryBackgroundJob(BackgroundJob):
             self._do_execute(
                 accepted,
                 job_interface,
+                tree=tree,
                 pprint_value=pprint_value,
                 use_git=use_git,
                 activation_site_configs=activation_site_configs,
@@ -744,6 +771,7 @@ class RelationDiscoveryBackgroundJob(BackgroundJob):
         accepted: AcceptedScan,
         job_interface: BackgroundProcessInterface,
         *,
+        tree: FolderTree,
         pprint_value: bool,
         use_git: bool,
         activation_site_configs: SiteConfigurations,
@@ -763,7 +791,6 @@ class RelationDiscoveryBackgroundJob(BackgroundJob):
             job_interface.send_result_message(_("No relation was accepted, nothing to do."))
             return
 
-        tree = folder_tree()
         tree.invalidate_caches()
         job_interface.send_progress_update(
             _("Storing %(count)d relations...") % {"count": len(found)}
@@ -839,6 +866,10 @@ def run_result(
 class RelationDiscoveryJobArgs(BaseModel, frozen=True):
     accepted: AcceptedScan
     user_permission_config: UserPermissionSerializableConfig
+    site_configs: SiteConfigurations
+    wato_hide_folders_without_read_permissions: bool
+    wato_host_attrs: Sequence[CustomHostAttrSpec]
+    tags: TagConfigSpec
     pprint_value: bool
     use_git: bool
     activation_site_configs: SiteConfigurations
@@ -853,6 +884,14 @@ def relation_discovery_job_entry_point(
         args.accepted,
         job_interface,
         args.user_permission_config,
+        tree=FolderTree(
+            config=HostsAndFoldersConfig(
+                wato_hide_folders_without_read_permissions=args.wato_hide_folders_without_read_permissions,
+                wato_host_attrs=args.wato_host_attrs,
+                tags=TagConfig.from_config(args.tags),
+                sites=args.site_configs,
+            )
+        ),
         pprint_value=args.pprint_value,
         use_git=args.use_git,
         activation_site_configs=args.activation_site_configs,
@@ -866,6 +905,10 @@ def start_relation_linking(
     accepted: AcceptedScan,
     user_permission_config: UserPermissionSerializableConfig,
     *,
+    site_configs: SiteConfigurations,
+    wato_hide_folders_without_read_permissions: bool,
+    wato_host_attrs: Sequence[CustomHostAttrSpec],
+    tags: TagConfigSpec,
     pprint_value: bool,
     use_git: bool,
     activation_site_configs: SiteConfigurations,
@@ -879,6 +922,10 @@ def start_relation_linking(
             args=RelationDiscoveryJobArgs(
                 accepted=accepted,
                 user_permission_config=user_permission_config,
+                site_configs=site_configs,
+                wato_hide_folders_without_read_permissions=wato_hide_folders_without_read_permissions,
+                wato_host_attrs=wato_host_attrs,
+                tags=tags,
                 pprint_value=pprint_value,
                 use_git=use_git,
                 activation_site_configs=activation_site_configs,

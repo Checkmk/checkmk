@@ -68,6 +68,10 @@ def accept_host_relations(api_context: ApiContext, body: AcceptRequestModel) -> 
             job,
             accepted,
             UserPermissionSerializableConfig.from_global_config(active_config),
+            site_configs=api_context.config.sites,
+            wato_hide_folders_without_read_permissions=api_context.config.wato_hide_folders_without_read_permissions,
+            wato_host_attrs=api_context.config.wato_host_attrs,
+            tags=api_context.config.tags.get_dict_format(),
             pprint_value=api_context.config.wato_pprint_config,
             use_git=api_context.config.wato_use_git,
             # Resolved in the request: activation_sites() reads the logged-in user, which

@@ -5,6 +5,7 @@
 
 from cmk.gui.config import active_config
 from cmk.gui.openapi.framework import (
+    ApiContext,
     APIVersion,
     EndpointBehavior,
     EndpointDoc,
@@ -24,7 +25,7 @@ from .models.request_models import ScanRequestModel
 from .models.response_models import RelationJobModel
 
 
-def scan_host_relations(body: ScanRequestModel) -> RelationJobModel:
+def scan_host_relations(api_context: ApiContext, body: ScanRequestModel) -> RelationJobModel:
     """Find the relations the hosts in Setup speak for
 
     Starts a background job that reads every host and keeps what it proposes, each proposal
@@ -36,7 +37,13 @@ def scan_host_relations(body: ScanRequestModel) -> RelationJobModel:
     job = RelationScanBackgroundJob()
     if (
         result := start_relation_scan(
-            job, findings, UserPermissionSerializableConfig.from_global_config(active_config)
+            job,
+            findings,
+            UserPermissionSerializableConfig.from_global_config(active_config),
+            site_configs=api_context.config.sites,
+            wato_hide_folders_without_read_permissions=api_context.config.wato_hide_folders_without_read_permissions,
+            wato_host_attrs=api_context.config.wato_host_attrs,
+            tags=api_context.config.tags.get_dict_format(),
         )
     ).is_error():
         raise ProblemException(

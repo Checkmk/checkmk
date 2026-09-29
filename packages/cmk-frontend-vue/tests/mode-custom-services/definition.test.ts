@@ -10,7 +10,9 @@ import { describe, expect, test } from 'vitest'
 import {
   aggregationProblem,
   buildCustomServiceDefinition,
+  buildCustomServiceUpdate,
   configurationNameFor,
+  serviceModelFrom,
   slugForId
 } from '@/mode-custom-services/definition'
 import { type ServiceModel, emptyService } from '@/mode-custom-services/types'
@@ -246,6 +248,47 @@ describe('buildCustomServiceDefinition', () => {
     expect(buildCustomServiceDefinition(model({ hostName: 'web01' })).configuration_name).not.toBe(
       buildCustomServiceDefinition(model({ hostName: 'web02' })).configuration_name
     )
+  })
+})
+
+describe('buildCustomServiceUpdate', () => {
+  test('sends what create sends, without the name that identifies the service', () => {
+    const { configuration_name: _name, ...rest } = buildCustomServiceDefinition(model())
+    expect(buildCustomServiceUpdate(model())).toEqual(rest)
+  })
+})
+
+describe('serviceModelFrom', () => {
+  test('restores the model a definition was built from', () => {
+    const attributeFilter: AttributeFilter = {
+      type: 'equals',
+      key: { kind: 'resource', name: 'service.name' },
+      value: 'shop'
+    }
+    const original = model({
+      attributeFilter,
+      consolidation: { type: 'gauge', function: 'gauge_max', lookback_seconds: 300 }
+    })
+
+    expect(serviceModelFrom(buildCustomServiceUpdate(original))).toEqual(original)
+  })
+
+  test('restores a model without an attribute filter or an aggregator', () => {
+    const original = model({ attributeFilter: undefined, aggregator: undefined })
+
+    expect(serviceModelFrom(buildCustomServiceUpdate(original))).toEqual(original)
+  })
+
+  test('has no host to offer for a service assigned by host name template', () => {
+    const restored = serviceModelFrom({
+      host_assignment: {
+        mode: 'host_name_template',
+        host_name_template: '$RESOURCE_ATTR.service.name$'
+      },
+      configuration: buildCustomServiceUpdate(model()).configuration
+    })
+
+    expect(restored.hostName).toBeNull()
   })
 })
 

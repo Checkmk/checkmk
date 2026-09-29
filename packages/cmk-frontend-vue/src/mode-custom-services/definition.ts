@@ -9,10 +9,19 @@ import type { paths } from 'cmk-shared-typing/typescript/openapi_internal'
 import type { ServiceModel } from './types'
 
 type CreateCustomServicePath = '/domain-types/custom_service/collections/all'
+type CustomServicePath = '/objects/custom_service/{configuration_name}'
 
 export type CustomServiceDefinition = NonNullable<
   paths[CreateCustomServicePath]['post']['requestBody']
 >['content']['application/json']
+
+/** The body of an update: the same definition, minus the name that identifies it. */
+export type CustomServiceUpdate = NonNullable<
+  paths[CustomServicePath]['put']['requestBody']
+>['content']['application/json']
+
+export type CustomServiceExtensions =
+  paths[CustomServicePath]['get']['responses'][200]['content']['application/json']['extensions']
 
 export type AggregationProblem = 'thresholds_missing' | 'thresholds_out_of_order'
 
@@ -54,11 +63,10 @@ export function configurationNameFor(
   return host === '' ? name : `${name}_on_${host}`
 }
 
-export function buildCustomServiceDefinition(
+function customServiceBody(
   model: ServiceModel & { metricName: string; hostName: string }
-): CustomServiceDefinition {
+): CustomServiceUpdate {
   return {
-    configuration_name: configurationNameFor(model),
     host_assignment: { mode: 'explicit_host', host_name: model.hostName },
     configuration: {
       metric_name: model.metricName,
@@ -67,5 +75,30 @@ export function buildCustomServiceDefinition(
       consolidation: model.consolidation,
       ...(model.aggregator === undefined ? {} : { aggregator: model.aggregator })
     }
+  }
+}
+
+export function buildCustomServiceDefinition(
+  model: ServiceModel & { metricName: string; hostName: string }
+): CustomServiceDefinition {
+  return { configuration_name: configurationNameFor(model), ...customServiceBody(model) }
+}
+
+export function buildCustomServiceUpdate(
+  model: ServiceModel & { metricName: string; hostName: string }
+): CustomServiceUpdate {
+  return customServiceBody(model)
+}
+
+export function serviceModelFrom(extensions: CustomServiceExtensions): ServiceModel {
+  const { host_assignment: assignment, configuration } = extensions
+  return {
+    metricName: configuration.metric_name,
+    metricTypes: [],
+    attributeFilter: configuration.attribute_filter,
+    consolidation: configuration.consolidation,
+    aggregator: configuration.aggregator,
+    serviceName: configuration.service_name_template,
+    hostName: assignment.mode === 'explicit_host' ? assignment.host_name : null
   }
 }

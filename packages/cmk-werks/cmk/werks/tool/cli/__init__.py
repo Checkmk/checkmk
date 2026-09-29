@@ -419,7 +419,7 @@ def git_move(source: Path, destination: Path) -> None:
     subprocess.check_call(["git", "mv", str(source), str(destination)])
 
 
-def git_commit(werk: Werk, custom_files: list[str]) -> None:
+def git_commit(werk: Werk, custom_files: Sequence[str]) -> None:
     title = werk.content.metadata["title"]
     for classid, _classname, prefix in get_config().classes:
         if werk.content.metadata["class"] == classid and prefix:
@@ -428,10 +428,7 @@ def git_commit(werk: Werk, custom_files: list[str]) -> None:
     title = f"{werk.content.metadata['id'].rjust(5, '0')} {title}"
 
     if custom_files:
-        files_to_commit = custom_files
-        default_files = [".werks"]
-        for entry in default_files:
-            files_to_commit.append(f"{git_top_level()}/{entry}")
+        files_to_commit = [*custom_files, f"{git_top_level()}/.werks"]
 
         os.chdir(BASE_DIR)
         cmd = "git commit {} -m {}".format(

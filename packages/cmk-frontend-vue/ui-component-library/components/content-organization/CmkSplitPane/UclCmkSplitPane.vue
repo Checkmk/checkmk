@@ -62,6 +62,12 @@ export const panelConfig = {
     initialState: 30,
     help: 'Initial size of the right pane, expressed in sizeUnit.'
   },
+  rightMinWidth: {
+    type: 'string' as const,
+    title: 'rightMinWidth',
+    initialState: '',
+    help: 'CSS length the right pane never renders below, e.g. "520px". Empty means no floor.'
+  },
   sizeUnit: {
     type: 'list' as const,
     title: 'sizeUnit',
@@ -128,6 +134,7 @@ const propState = new PanelStateCreator<typeof CmkSplitPane>().createRef(panelCo
           :right-min-size="propState.rightMinSize"
           :right-max-size="propState.rightMaxSize"
           :right-default-size="propState.rightDefaultSize"
+          :right-min-width="propState.rightMinWidth || undefined"
           :size-unit="propState.sizeUnit"
           :keyboard-resize-by="propState.keyboardResizeBy"
           :collapsible-on-resize="propState.collapsibleOnResize"

@@ -384,24 +384,6 @@ class AllHostsExperimental(CmkPage):
         """A labelled control inside the open action form."""
         return self.main_area.locator().get_by_text(label, exact=True)
 
-    def select_duration(self, label: str) -> None:
-        """Pick one of the downtime form's duration chips by its label.
-
-        The form renders a second, ``aria-hidden`` copy of every chip to measure
-        which of them fit; that copy is out of the accessibility tree, so the
-        role lookup reaches the live chip only.
-        """
-        logger.info("Select downtime duration '%s'", label)
-        self.main_area.locator().get_by_role("button", name=label, exact=True).click()
-
-    def time_range_dialog(self, label: str) -> Locator:
-        """The start/end picker the Custom duration opens.
-
-        A flyout, so ``label`` is the dialog's ``aria-label`` rather than text on
-        the page; ``form_option`` cannot reach it.
-        """
-        return self.main_area.locator().get_by_role("dialog", name=label, exact=True)
-
     # -- Row limit ------------------------------------------------------------
 
     @property

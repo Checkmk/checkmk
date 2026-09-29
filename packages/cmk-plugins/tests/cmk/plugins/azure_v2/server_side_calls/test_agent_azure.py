@@ -7,10 +7,14 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
+from cmk.plugins.azure_v2.rulesets.azure import _azure_service_name_to_valid_formspec
+from cmk.plugins.azure_v2.server_side_calls.agent_azure import (
+    _formspec_name_to_azure_service_name,
+    AzureParams,
+)
 from cmk.plugins.azure_v2.server_side_calls.agent_azure import (
     agent_azure_arguments as commands_function,
 )
-from cmk.plugins.azure_v2.server_side_calls.agent_azure import AzureParams
 from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
 
 
@@ -314,6 +318,46 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
             ],
             id="unique hostnames long template with vm exclusion",
         ),
+        pytest.param(
+            {
+                "authority": "global_",
+                "subscription": ("all_subscriptions", None),
+                "tenant_name": "my_tenant",
+                "tenant": "strawberry",
+                "client": "blueberry",
+                "secret": Secret(0),
+                "config": {},
+                "services": ["Microsoft_DBforMySQL_slash_servers"],
+                "otel_resource_types": [
+                    "Microsoft_Cache_slash_Redis",
+                    "Wandisco_dot_Fusion_slash_migrators",
+                ],
+                "unique_hostnames": ("disabled", None),
+            },
+            HostConfig(name="testhost"),
+            [
+                "--tenant",
+                "strawberry",
+                "--client",
+                "blueberry",
+                "--secret-id",
+                Secret(0),
+                "--authority",
+                "global",
+                "--all-subscriptions",
+                "--service",
+                "Microsoft.DBforMySQL/servers",
+                "--otel-resource-type",
+                "Microsoft.Cache/Redis",
+                "--otel-resource-type",
+                "Wandisco.Fusion/migrators",
+                "--cache-id",
+                "testhost",
+                "--tenant-name",
+                "my_tenant",
+            ],
+            id="otel resource types",
+        ),
     ],
 )
 def test_azure_argument_parsing(
@@ -326,3 +370,20 @@ def test_azure_argument_parsing(
     assert len(commands) == 1
     arguments = commands[0].command_arguments
     assert arguments == expected_args
+
+
+@pytest.mark.parametrize(
+    "azure_service_name",
+    [
+        pytest.param("Microsoft.Sql/servers/databases", id="Microsoft resource type"),
+        pytest.param("microsoft.network/vpngateways", id="lowercase resource type"),
+        pytest.param("users_count", id="service without resource type"),
+    ],
+)
+def test_ruleset_encoding_and_ssc_decoding_stay_in_sync(azure_service_name: str) -> None:
+    assert (
+        _formspec_name_to_azure_service_name(
+            _azure_service_name_to_valid_formspec(azure_service_name)
+        )
+        == azure_service_name
+    )

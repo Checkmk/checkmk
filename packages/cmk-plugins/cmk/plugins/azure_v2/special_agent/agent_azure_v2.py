@@ -475,6 +475,15 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         dest="services",
     )
     parser.add_argument(
+        "--otel-resource-type",
+        default=[],
+        action="append",
+        metavar="RESOURCE_TYPE",
+        help="""Azure resource type for which an OpenTelemetry collector delivers metrics.
+             To specify multiple resource types, provide the option more than once.""",
+        dest="otel_resource_types",
+    )
+    parser.add_argument(
         "--unique-hostnames",
         default=None,
         choices=["short", "long"],

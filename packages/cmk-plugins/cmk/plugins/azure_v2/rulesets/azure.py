@@ -71,9 +71,22 @@ try:
 except ImportError:
     pass
 
+try:
+    from cmk.plugins.azure_v2_extended.rulesets.azure_otel_resource_types import (  # type: ignore[import-not-found]
+        OTEL_RESOURCE_TYPES,
+    )
+
+    _OTEL_RESOURCE_TYPES: Sequence[str] = OTEL_RESOURCE_TYPES
+except ImportError:
+    _OTEL_RESOURCE_TYPES = ()
+
 
 def _azure_service_name_to_valid_formspec(azure_service_name: str) -> str:
-    return azure_service_name.replace("Microsoft.", "Microsoft_").replace("/", "_slash_")
+    return (
+        azure_service_name.replace("Microsoft.", "Microsoft_")
+        .replace("/", "_slash_")
+        .replace(".", "_dot_")
+    )
 
 
 def get_azure_service_prefill() -> list[str]:
@@ -327,6 +340,30 @@ def configuration_authentication() -> Mapping[str, DictElement]:
     }
 
 
+def _otel_resource_types() -> Mapping[str, DictElement]:
+    if not _OTEL_RESOURCE_TYPES:
+        return {}
+    return {
+        "otel_resource_types": DictElement(
+            parameter_form=MultipleChoice(
+                title=Title("Resource types monitored via OpenTelemetry metrics"),
+                elements=[
+                    MultipleChoiceElement(
+                        name=_azure_service_name_to_valid_formspec(resource_type),
+                        title=Title("%(resource_type)s") % {"resource_type": resource_type},
+                    )
+                    for resource_type in _OTEL_RESOURCE_TYPES
+                ],
+                help_text=Help(
+                    "Select the Azure resource types for which your OpenTelemetry collector "
+                    "delivers metrics. Checkmk cannot detect them, so select the same resource "
+                    "types as in the collector configuration."
+                ),
+            ),
+        ),
+    }
+
+
 def configuration_services() -> Mapping[str, DictElement]:
     return {
         "services": DictElement(
@@ -345,6 +382,7 @@ def configuration_services() -> Mapping[str, DictElement]:
             ),
             required=True,
         ),
+        **_otel_resource_types(),
     }
 
 

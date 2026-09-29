@@ -54,6 +54,7 @@ class AzureParams(BaseModel):
     secret: Secret
     proxy: URLProxy | NoProxy | EnvProxy | None = None
     services: list[str]
+    otel_resource_types: list[str] = []
     config: Config
     filter_tags: (
         tuple[Literal["filter_tags"], str] | tuple[Literal["dont_import_tags"], None] | None
@@ -90,6 +91,14 @@ def _explicit_args(explicit: list[Explicit]) -> list[str]:
             args.append("--explicit-config")
             args.append("resources=%s" % ",".join(group_dict.resources))
     return args
+
+
+def _formspec_name_to_azure_service_name(formspec_name: str) -> str:
+    return (
+        formspec_name.replace("Microsoft_", "Microsoft.")
+        .replace("_slash_", "/")
+        .replace("_dot_", ".")
+    )
 
 
 def agent_azure_arguments(
@@ -139,7 +148,10 @@ def agent_azure_arguments(
         return
 
     for p in params.services:
-        args.extend(["--service", p.replace("Microsoft_", "Microsoft.").replace("_slash_", "/")])
+        args.extend(["--service", _formspec_name_to_azure_service_name(p)])
+
+    for choice_name in params.otel_resource_types:
+        args.extend(["--otel-resource-type", _formspec_name_to_azure_service_name(choice_name)])
 
     if params.unique_hostnames[0] == "enabled":
         opt = params.unique_hostnames[1]

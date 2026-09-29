@@ -1,0 +1,24 @@
+title: Veeam: Configuration backup
+agents: special
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the configuration backup of a Veeam Backup & Replication
+ server, collected via the Veeam special agent. It reports whether
+ configuration backup is enabled, the time since the last successful backup,
+ the number of restore points kept, whether encryption is enabled, and the
+ target repository.
+
+ This check is {WARN} by default if configuration backup is disabled; the
+ state is configurable, since deliberately not using configuration backup is
+ a valid choice for some customers. It is {CRIT} if configuration backup is
+ enabled but no successful backup has ever been recorded.
+
+ {WARN} and {CRIT} levels can be set for the time since the last successful
+ backup.
+
+discovery:
+ One service is created per host, provided the Veeam special agent was able
+ to fetch the configuration backup settings from the API (this endpoint
+ requires an Administrator credential until version 13.2).

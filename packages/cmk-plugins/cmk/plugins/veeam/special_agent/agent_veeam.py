@@ -332,7 +332,6 @@ SECTIONS: Sequence[Section] = (
     ("veeam_server_info", fetch_object("/api/v1/serverInfo")),
     ("veeam_backup_jobs", fetch_list("/api/v1/jobs/states")),
     ("veeam_backups", fetch_list_piggyback("/api/v1/taskSessions")),
-    ("veeam_server_info", fetch_object("/api/v1/serverInfo")),
     ("veeam_vbr_replicas", empty_on_access_denied(fetch_list("/api/v1/replicas"))),
     (
         "veeam_vbr_protection_groups",

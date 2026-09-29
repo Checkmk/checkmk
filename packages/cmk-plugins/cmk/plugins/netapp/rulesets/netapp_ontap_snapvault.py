@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Literal
+
+from cmk.plugins.netapp.lib.snapvault import DEFAULT_TRANSFER_STATE, DEFAULT_UNHEALTHY_STATE
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
@@ -13,6 +16,7 @@ from cmk.rulesets.v1.form_specs import (
     LevelDirection,
     List,
     migrate_to_float_simple_levels,
+    ServiceState,
     SimpleLevels,
     String,
     TimeMagnitude,
@@ -51,9 +55,53 @@ def _migrate_policy_lag_time(value: object) -> list[dict[str, object]]:
     ]
 
 
+_TRANSFER_STATE_TITLES = {
+    "success": Title("Success"),
+    "transferring": Title("Transferring"),
+    "queued": Title("Queued"),
+    "aborted": Title("Aborted"),
+    "hard_aborted": Title("Hard aborted"),
+    "failed": Title("Failed"),
+}
+
+
+def _transfer_state_element(
+    title: Title, prefill: Literal[0, 1, 2, 3]
+) -> DictElement[Literal[0, 1, 2, 3]]:
+    return DictElement(
+        required=True,
+        parameter_form=ServiceState(title=title, prefill=DefaultValue(prefill)),
+    )
+
+
+def _transfer_state_form() -> Dictionary:
+    return Dictionary(
+        title=Title("Monitoring state per transfer state"),
+        help_text=Help(
+            "Map the transfer state reported by the SnapMirror relationship to a monitoring state."
+        ),
+        elements={
+            transfer_state: _transfer_state_element(title, DEFAULT_TRANSFER_STATE[transfer_state])
+            for transfer_state, title in _TRANSFER_STATE_TITLES.items()
+        },
+    )
+
+
 def _parameter_form_snapvault() -> Dictionary:
     return Dictionary(
         elements={
+            "transfer_state": DictElement(parameter_form=_transfer_state_form()),
+            "unhealthy_state": DictElement(
+                parameter_form=ServiceState(
+                    title=Title("State if the relationship is unhealthy"),
+                    help_text=Help(
+                        "ONTAP marks a SnapMirror relationship as unhealthy, for example when "
+                        "an update failed. The reasons reported by ONTAP are shown in the "
+                        "service summary. Older ONTAP versions may not report the health."
+                    ),
+                    prefill=DefaultValue(DEFAULT_UNHEALTHY_STATE),
+                ),
+            ),
             "lag_time": DictElement(
                 parameter_form=SimpleLevels[float](
                     title=Title("Lag time (default levels)"),

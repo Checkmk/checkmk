@@ -7,6 +7,7 @@ from collections.abc import Mapping
 
 import pytest
 
+from cmk.plugins.netapp.lib.snapvault import DEFAULT_TRANSFER_STATE
 from cmk.plugins.netapp.rulesets.netapp_ontap_snapvault import rule_spec_snapvault
 from cmk.rulesets.v1.form_specs import Dictionary
 
@@ -39,3 +40,25 @@ MIGRATED_RULE = {
 )
 def test_migrate_rule(rule_value: Mapping[str, object]) -> None:
     assert _migrate(rule_value) == MIGRATED_RULE
+
+
+def test_transfer_state_form_offers_every_default() -> None:
+    form = rule_spec_snapvault.parameter_form()
+    transfer_state_form = form.elements["transfer_state"].parameter_form
+    assert isinstance(transfer_state_form, Dictionary)
+    assert transfer_state_form.elements.keys() == DEFAULT_TRANSFER_STATE.keys()
+
+
+def test_migrate_rule_from_2_5_0() -> None:
+    # 2.5.0 keeps the legacy rule and adds the new keys in the format of this rule.
+    new_keys = {
+        "transfer_state": {**DEFAULT_TRANSFER_STATE, "aborted": 1},
+        "unhealthy_state": 1,
+    }
+    rule_value = {
+        "lag_time": (3600, 7200),
+        "policy_lag_time": [("Asynchronous", (1800, 3600))],
+        **new_keys,
+    }
+
+    assert _migrate(rule_value) == {**MIGRATED_RULE, **new_keys}

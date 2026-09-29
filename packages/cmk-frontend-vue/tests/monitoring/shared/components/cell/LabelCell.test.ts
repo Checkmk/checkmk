@@ -28,13 +28,14 @@ function overflowWidth(element: Element): number {
  * non-wrapping row the cell measures in.
  */
 function stubLayout(rowWidth: number): void {
-  Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
-    configurable: true,
-    get(this: HTMLElement) {
-      return this.classList.contains('monitoring-label-cell__row') ? rowWidth : 0
-    }
+  vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(function (
+    this: HTMLElement
+  ) {
+    return this.classList.contains('monitoring-label-cell__row') ? rowWidth : 0
   })
-  HTMLElement.prototype.getBoundingClientRect = function (this: HTMLElement): DOMRect {
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+    this: HTMLElement
+  ): DOMRect {
     const row = this.closest('.monitoring-label-cell__row')
     if (this === row) {
       return { left: 0, right: rowWidth, width: rowWidth } as DOMRect
@@ -49,8 +50,10 @@ function stubLayout(rowWidth: number): void {
     const left = index * TAG_WIDTH
     const width = this.hasAttribute('data-label-cell-overflow') ? overflowWidth(this) : TAG_WIDTH
     return { left, right: left + width, width } as DOMRect
-  }
+  })
 }
+
+afterEach(() => vi.restoreAllMocks())
 
 function makeItems(count: number): LabelCellItem[] {
   return Array.from({ length: count }, (_unused, index) => ({

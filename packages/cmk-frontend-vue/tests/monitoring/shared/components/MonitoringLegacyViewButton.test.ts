@@ -12,12 +12,9 @@ const PROPS = { url: 'view.py?view_name=allhosts', title: 'Return to classic vie
 
 test('navigates to the legacy view on click', async () => {
   const assign = vi.fn()
-  Object.defineProperty(window, 'location', {
-    configurable: true,
-    value: {
-      set href(url: string) {
-        assign(url)
-      }
+  vi.stubGlobal('location', {
+    set href(url: string) {
+      assign(url)
     }
   })
 

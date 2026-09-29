@@ -5,7 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import InternalAccess from '@/dashboard/components/Wizard/wizards/dashboard-sharing/InternalAccess.vue'
 
@@ -30,15 +30,12 @@ describe('InternalAccess', () => {
 
   describe('Actions', () => {
     it('copies the dashboard URL to clipboard when the copy button is clicked', async () => {
-      const writeText = vi.fn().mockResolvedValue(undefined)
-      Object.assign(navigator, { clipboard: { writeText } })
+      const user = userEvent.setup()
       render(InternalAccess, { props: { dashboardUrl: DASHBOARD_URL } })
 
-      const button = screen.getByTestId('copy-internal-url')
-      expect(button).toBeDefined()
-      await userEvent.click(button!)
+      await user.click(screen.getByTestId('copy-internal-url'))
 
-      expect(writeText).toHaveBeenCalledWith(DASHBOARD_URL)
+      expect(await navigator.clipboard.readText()).toBe(DASHBOARD_URL)
     })
   })
 })

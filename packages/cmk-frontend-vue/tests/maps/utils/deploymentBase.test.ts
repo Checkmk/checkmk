@@ -3,22 +3,19 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { resolveAssetBase, resolveDaemonBase, resolveStreamUrl } from '@/maps/utils/deploymentBase'
 
 // jsdom's location is not writable; replacing the whole object is how a test
 // pretends to be served from a site path.
 function servedAt(href: string): void {
-  Object.defineProperty(window, 'location', {
-    configurable: true,
-    value: new URL(href)
-  })
+  vi.stubGlobal('location', new URL(href))
 }
 
 describe('deployment base', () => {
   afterEach(() => {
-    servedAt('http://localhost:3000/')
+    vi.unstubAllGlobals()
   })
 
   it('derives the daemon base from the Maps page it is served on', () => {

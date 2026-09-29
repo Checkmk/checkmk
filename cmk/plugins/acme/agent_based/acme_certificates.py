@@ -15,10 +15,13 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     LevelsT,
+    Metric,
     render,
+    Result,
     Service,
     SimpleSNMPSection,
     SNMPTree,
+    State,
     StringTable,
 )
 from cmk.plugins.acme.agent_based.lib import DETECT_ACME
@@ -57,6 +60,11 @@ def check_acme_certificates(item: str, params: CheckParamT, section: Section) ->
 
     now = time.time()
     time_diff = expire_time - now
+
+    if time_diff < 0:
+        yield Result(state=State.CRIT, summary=f"Expired {render.timespan(-time_diff)} ago")
+        yield Metric("certificate_expiration_time", time_diff)
+        return
 
     yield from check_levels(
         time_diff,

@@ -14,6 +14,8 @@ from git.repo import Repo
 
 from cmk.werks.tool.cli.stash import Stash
 
+from ._werk_files import werk_text
+
 
 def initialize_werks_project(
     path: Path,
@@ -391,3 +393,22 @@ def test_status_json_reports_problems_and_exits_non_zero(tmp_path: Path) -> None
     # every problem points at a key of the document itself
     for item in items:
         assert item in document
+
+
+def test_list_marks_the_werks_staged_in_the_checkout(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    repo_path = tmp_path / "repo"
+    repo = initialize_werks_project(repo_path, first_free=11_111)
+    (repo_path / ".werks/11111.md").write_text(werk_text(title="Committed"), encoding="utf-8")
+    repo.index.add([".werks/11111.md"])
+    repo.index.commit("werk 11111")
+    (repo_path / ".werks/11112.md").write_text(werk_text(title="Staged"), encoding="utf-8")
+    repo.index.add([".werks/11112.md"])
+
+    _returncode, output = call_output("list", home=home, cwd=repo_path)
+
+    assert {line.rsplit(" ", 1)[-1]: "(*)" in line for line in output.splitlines()} == {
+        "Committed": False,
+        "Staged": True,
+    }

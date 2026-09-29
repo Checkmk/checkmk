@@ -349,7 +349,7 @@ def git_modified_files() -> set[WerkId]:
     for line in os.popen("git status --porcelain"):
         if line[0] in "AM" and ".werks/" in line:
             try:
-                wid = line.rsplit("/", 1)[-1].strip()
+                wid = line.rsplit("/", 1)[-1].strip().removesuffix(".md")
                 modified.add(WerkId(int(wid)))
             except Exception:
                 pass

@@ -40,13 +40,22 @@ agent_section_netapp_ontap_cpu = AgentSection(
 
 
 def discover_netapp_ontap_cpu(section: Section) -> DiscoveryResult:
-    yield from (Service(item=item_name) for item_name in section)
+    yield from (
+        Service(item=item_name)
+        for item_name, node in section.items()
+        if node.processor_utilization is not None
+        and node.processor_utilization_timestamp is not None
+    )
 
 
 def check_netapp_ontap_cpu_utilization(
     item: str, params: Mapping[str, Any], section: Section
 ) -> CheckResult:
-    if (data := section.get(item)) is None:
+    if (
+        (data := section.get(item)) is None
+        or data.processor_utilization is None
+        or data.processor_utilization_timestamp is None
+    ):
         return
 
     yield from check_cpu_util(

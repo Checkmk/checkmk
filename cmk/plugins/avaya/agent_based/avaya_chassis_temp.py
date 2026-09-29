@@ -17,8 +17,8 @@ from cmk.plugins.avaya.lib import DETECT_AVAYA
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 
-def parse_avaya_chassis_temp(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_avaya_chassis_temp(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 def discover_avaya_chassis_temp(section: StringTable) -> DiscoveryResult:

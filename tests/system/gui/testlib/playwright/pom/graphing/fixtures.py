@@ -37,7 +37,6 @@ from tests.system.gui.testlib.playwright.pom.monitor.service_search import Servi
 from tests.system.gui.testlib.playwright.pom.monitor.services_of_host import ServicesOfHostPage
 from tests.system.gui.testlib.playwright.timeouts import TIMEOUT_SLOW_DASHBOARD_LOAD_MS
 from tests.testlib.common.utils2 import is_cleanup_enabled
-from tests.testlib.system.graphing import InjectedRrd
 from tests.testlib.system.site import ADMIN_USER, Site
 
 # Several multi-series graphs on one page, which the "every graph" and tooltip tests need.
@@ -66,38 +65,6 @@ GRAPH_COLLECTION_SIZE: Final = 2
 def fixture_graph_hosts_with_varying_data(linux_hosts: list[str]) -> list[str]:
     """Hosts whose real agent data yields graphs with varying values."""
     return linux_hosts
-
-
-@pytest.fixture(name="graph_hosts_high_density", scope="module")
-def fixture_graph_hosts_high_density(test_site: Site) -> list[str]:
-    """Monitored hosts/services with high-density graph data.
-
-    For performance/loading/legend/tooltip cases: a graph near the engine's
-    ceiling (~1M points) and/or many series (200+ metrics). `inject_rrd` covers
-    the point-count dimension (it writes one series); the many-series dimension
-    needs a host carrying many real metrics.
-    """
-    pytest.skip("graph_hosts_high_density is scaffolding: seed a high-density monitored service.")
-
-
-@pytest.fixture(name="graph_rrd_with_gaps", scope="module")
-def fixture_graph_rrd_with_gaps(test_site: Site) -> InjectedRrd:
-    """An RRD with missing samples; inject via `graphing.inject_rrd` (GAPS)."""
-    pytest.skip("graph_rrd_with_gaps is scaffolding: bind inject_rrd to a monitored service.")
-
-
-@pytest.fixture(name="graph_rrd_dst_boundary", scope="module")
-def fixture_graph_rrd_dst_boundary(test_site: Site) -> InjectedRrd:
-    """An RRD whose rendered window crosses a DST transition.
-
-    DST is a timezone/window concern, not a data shape: set the user timezone to
-    a DST-observing zone (e.g. Europe/Berlin) and inject `VARYING` data starting
-    at `graphing.DST_FALL_BACK_BERLIN_UTC`, bound to a monitored service.
-    Use the fall-back instant: it makes local 02:00-02:59 occur twice, which is
-    what the "no duplicate X-axis labels" regression (Werk #14830) needs;
-    spring-forward only skips the hour and would not exercise it.
-    """
-    pytest.skip("graph_rrd_dst_boundary is scaffolding: see docstring.")
 
 
 class RrdMetric(NamedTuple):

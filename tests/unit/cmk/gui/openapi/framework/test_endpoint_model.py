@@ -9,6 +9,7 @@ import dataclasses
 import inspect
 import json
 from collections.abc import Callable
+from http import HTTPStatus
 from typing import Annotated
 
 import pytest
@@ -362,7 +363,7 @@ def test_input_model_undecodable_body() -> None:
             api_context=_api_context(),
         )
 
-    assert exc_info.value.status == 400
+    assert exc_info.value.status == HTTPStatus.BAD_REQUEST
 
 
 @pytest.mark.parametrize(
@@ -663,5 +664,5 @@ def test_typed_plain_validator_rejects_a_wrong_json_type_with_400() -> None:
             api_context=_api_context(),
         )
 
-    assert exc_info.value.code == 400
+    assert exc_info.value.code == HTTPStatus.BAD_REQUEST
     assert "name" in exc_info.value.detail

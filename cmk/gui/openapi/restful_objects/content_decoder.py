@@ -6,7 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 
-import http.client
+from http import HTTPStatus
 from typing import Any
 
 from marshmallow import Schema
@@ -44,12 +44,12 @@ def gzip_decoder(request: Request, request_schema: type[Schema] | None) -> Any: 
 
     except (tar_archive.UnpackedArchiveTooLargeError, tar_archive.SecurityViolation) as err:
         raise RestAPIRequestDataValidationException(
-            title=http.client.responses[400],
+            title=HTTPStatus.BAD_REQUEST.phrase,
             detail=str(err),
         )
     except Exception:
         raise RestAPIRequestDataValidationException(
-            title=http.client.responses[400],
+            title=HTTPStatus.BAD_REQUEST.phrase,
             detail="Payload is not a valid .tar.gz file",
         )
 

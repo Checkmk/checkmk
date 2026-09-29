@@ -5,10 +5,10 @@
 
 
 import contextlib
-import http.client
 import json
 import types
 from collections.abc import Callable
+from http import HTTPStatus
 from inspect import BoundArguments
 from typing import get_origin, TypeAliasType
 
@@ -92,7 +92,7 @@ def _create_response(
         headers = endpoint_response.headers
     else:
         json_text = dump_body(endpoint_response, response_body_type, is_testing=is_testing)
-        status_code = 204 if json_text is None else 200
+        status_code = HTTPStatus.NO_CONTENT if json_text is None else HTTPStatus.OK
         headers = {}
 
     if json_text is not None and fields_filter is not None:
@@ -225,7 +225,7 @@ def handle_endpoint_request(
             # the user lacks a permission -> forbidden (403), not unauthorized (401). Without this
             # remap, `MKAuthException.status` (401) would end up in the response.
             raise RestAPIForbiddenException(
-                title=http.client.responses[403],
+                title=HTTPStatus.FORBIDDEN.phrase,
                 detail=str(exc),
             ) from exc
 

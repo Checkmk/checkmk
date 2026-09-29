@@ -603,54 +603,32 @@ OpenAPITag = TypedDict(
 ParameterKey = tuple[str, ...]
 
 ErrorStatusCodeInt = Literal[
-    400,
     HTTPStatus.BAD_REQUEST,
-    401,
     HTTPStatus.UNAUTHORIZED,
-    403,
     HTTPStatus.FORBIDDEN,
-    404,
     HTTPStatus.NOT_FOUND,
-    405,
     HTTPStatus.METHOD_NOT_ALLOWED,
-    406,
     HTTPStatus.NOT_ACCEPTABLE,
-    409,
     HTTPStatus.CONFLICT,
-    412,
     HTTPStatus.PRECONDITION_FAILED,
-    415,
     HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
-    422,
     HTTPStatus.UNPROCESSABLE_ENTITY,
-    423,
     HTTPStatus.LOCKED,
-    428,
     HTTPStatus.PRECONDITION_REQUIRED,
-    429,
     HTTPStatus.TOO_MANY_REQUESTS,
-    500,
     HTTPStatus.INTERNAL_SERVER_ERROR,
-    503,
     HTTPStatus.SERVICE_UNAVAILABLE,
-    504,
     HTTPStatus.GATEWAY_TIMEOUT,
 ]
 SuccessStatusCodeInt = Literal[
-    200,
     HTTPStatus.OK,
-    201,
     HTTPStatus.CREATED,
-    204,
     HTTPStatus.NO_CONTENT,
 ]
 
 RedirectStatusCodeInt = Literal[
-    301,
     HTTPStatus.MOVED_PERMANENTLY,
-    302,
     HTTPStatus.FOUND,
-    303,
     HTTPStatus.SEE_OTHER,
 ]
 

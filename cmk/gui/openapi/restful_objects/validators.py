@@ -190,7 +190,7 @@ class PathParamsValidator:
     @staticmethod
     def _schema_validation_exception(error_messages: list | dict) -> RestAPIPathValidationException:
         return RestAPIPathValidationException(
-            title=http.client.responses[404],
+            title=HTTPStatus.NOT_FOUND.phrase,
             detail=f"These fields have problems: {_format_fields(error_messages)}",
             fields=FIELDS(
                 error_messages if isinstance(error_messages, dict) else {"exc": error_messages},
@@ -200,7 +200,7 @@ class PathParamsValidator:
     @staticmethod
     def _auth_validation_exception(message: str) -> RestAPIForbiddenException:
         return RestAPIForbiddenException(
-            title=http.client.responses[403],
+            title=HTTPStatus.FORBIDDEN.phrase,
             detail=message,
         )
 
@@ -233,7 +233,7 @@ class QueryParamsValidator:
         error_messages: dict | list,
     ) -> RestAPIQueryPathValidationException:
         return RestAPIQueryPathValidationException(
-            title=http.client.responses[400],
+            title=HTTPStatus.BAD_REQUEST.phrase,
             detail=f"These fields have problems: {_format_fields(error_messages)}",
             fields=FIELDS(
                 error_messages if isinstance(error_messages, dict) else {"exc": error_messages},
@@ -243,7 +243,7 @@ class QueryParamsValidator:
     @staticmethod
     def _auth_validation_exception(message: str) -> RestAPIForbiddenException:
         return RestAPIForbiddenException(
-            title=http.client.responses[403],
+            title=HTTPStatus.FORBIDDEN.phrase,
             detail=message,
         )
 
@@ -257,7 +257,7 @@ class RequestDataValidator:
     ) -> RestAPIRequestDataValidationException:
         """Create a request data validation exception with consistent formatting"""
         return RestAPIRequestDataValidationException(
-            title=http.client.responses[400],
+            title=HTTPStatus.BAD_REQUEST.phrase,
             detail=f"These fields have problems: {_format_fields(error_messages)}",
             fields=FIELDS(
                 error_messages if isinstance(error_messages, dict) else {"exc": error_messages},
@@ -267,7 +267,7 @@ class RequestDataValidator:
     @staticmethod
     def _auth_exception(exc_detail: str) -> RestAPIForbiddenException:
         return RestAPIForbiddenException(
-            title=http.client.responses[403],
+            title=HTTPStatus.FORBIDDEN.phrase,
             detail=exc_detail,
         )
 
@@ -295,19 +295,13 @@ class RequestDataValidator:
     def raise_formatted_pydantic_error(
         validation_error: pydantic.ValidationError,
         status_code: Literal[
-            400,
             HTTPStatus.BAD_REQUEST,
-            401,
             HTTPStatus.UNAUTHORIZED,
-            403,
             HTTPStatus.FORBIDDEN,
-            404,
             HTTPStatus.NOT_FOUND,
-            406,
             HTTPStatus.NOT_ACCEPTABLE,
-            415,
             HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
-        ] = 400,
+        ] = HTTPStatus.BAD_REQUEST,
     ) -> NoReturn:
         """Convert a Pydantic validation error to a RestAPIRequestDataValidationException."""
         # the context may contain the actual exception, which is usually not serializable
@@ -321,21 +315,14 @@ class RequestDataValidator:
     def format_error_details(
         errors: Iterable[ErrorDetails],
         status_code: Literal[
-            400,
             HTTPStatus.BAD_REQUEST,
-            401,
             HTTPStatus.UNAUTHORIZED,
-            403,
             HTTPStatus.FORBIDDEN,
-            404,
             HTTPStatus.NOT_FOUND,
-            406,
             HTTPStatus.NOT_ACCEPTABLE,
-            409,
             HTTPStatus.CONFLICT,
-            415,
             HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
-        ] = 400,
+        ] = HTTPStatus.BAD_REQUEST,
     ) -> RestAPIRequestGeneralException:
         """Create a RestAPIRequestGeneralException from error details."""
         error_dict = {
@@ -366,7 +353,7 @@ class HeaderValidator:
     @staticmethod
     def _schema_validation_exception(error_messages: Any) -> RestAPIHeaderSchemaValidationException:
         return RestAPIHeaderSchemaValidationException(
-            title=http.client.responses[400],
+            title=HTTPStatus.BAD_REQUEST.phrase,
             detail=f"These fields have problems: {_format_fields(error_messages)}",
             fields=FIELDS(
                 error_messages if isinstance(error_messages, dict) else {"exc": error_messages},
@@ -453,7 +440,7 @@ class ResponseValidator:
                 ext=EXT({"data_sent": str(response.data)}),
             )
 
-        if response.status_code == 204:
+        if response.status_code == HTTPStatus.NO_CONTENT:
             del response.content_type
 
         if response.status_code not in expected_status_codes:

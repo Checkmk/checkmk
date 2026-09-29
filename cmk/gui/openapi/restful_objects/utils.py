@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
 from collections.abc import Sequence
+from http import HTTPStatus
 
 from cmk.gui.http import HTTPMethod
 from cmk.gui.openapi.restful_objects.type_defs import ETagBehaviour, StatusCodeInt, TagGroup
@@ -29,42 +30,42 @@ def identify_expected_status_codes(
 ) -> set[StatusCodeInt]:
     """Identify which status codes are expected to be returned by an endpoint."""
     expected_status_codes = set(additional_status_codes)
-    expected_status_codes.add(406)
+    expected_status_codes.add(HTTPStatus.NOT_ACCEPTABLE)
     # Authentication is enforced by the WSGI layer before any endpoint code runs, so every
     # endpoint can answer 401 for a caller that presents no or invalid credentials.
-    expected_status_codes.add(401)
+    expected_status_codes.add(HTTPStatus.UNAUTHORIZED)
 
     if content_type is None:
-        expected_status_codes.add(204)
+        expected_status_codes.add(HTTPStatus.NO_CONTENT)
 
     elif content_type != "application/json" or (
         content_type == "application/json" and has_response
     ):
-        expected_status_codes.add(200)
+        expected_status_codes.add(HTTPStatus.OK)
 
     if method == "post":
-        expected_status_codes.add(201)  # created
+        expected_status_codes.add(HTTPStatus.CREATED)  # created
 
     if not has_response:
         # TODO: this can be removed once marshmallow endpoints are gone
-        expected_status_codes.add(204)
+        expected_status_codes.add(HTTPStatus.NO_CONTENT)
 
     if doc_category == "Setup":
-        expected_status_codes.add(403)
+        expected_status_codes.add(HTTPStatus.FORBIDDEN)
 
     if method in ("put", "post", "patch"):
-        expected_status_codes.add(400)  # bad request
-        expected_status_codes.add(415)  # unsupported media type
+        expected_status_codes.add(HTTPStatus.BAD_REQUEST)  # bad request
+        expected_status_codes.add(HTTPStatus.UNSUPPORTED_MEDIA_TYPE)  # unsupported media type
 
     if has_path_params:
-        expected_status_codes.add(404)  # not found
+        expected_status_codes.add(HTTPStatus.NOT_FOUND)  # not found
 
     if has_query_params or has_request_schema:
-        expected_status_codes.add(400)  # bad request
+        expected_status_codes.add(HTTPStatus.BAD_REQUEST)  # bad request
 
     if etag in ("input", "both"):
-        expected_status_codes.add(412)  # precondition failed
-        expected_status_codes.add(428)  # precondition required
+        expected_status_codes.add(HTTPStatus.PRECONDITION_FAILED)  # precondition failed
+        expected_status_codes.add(HTTPStatus.PRECONDITION_REQUIRED)  # precondition required
 
     return expected_status_codes
 

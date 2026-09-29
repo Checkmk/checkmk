@@ -85,52 +85,64 @@ def marshmallow_doc_endpoints(
 
 
 DEFAULT_STATUS_CODE_SCHEMAS = {
-    (406, DefaultStatusCodeDescription.Code406): api_default_error_schema(
-        406,
+    (HTTPStatus.NOT_ACCEPTABLE, DefaultStatusCodeDescription.Code406): api_default_error_schema(
+        HTTPStatus.NOT_ACCEPTABLE,
         DefaultStatusCodeDescription.Code406.value,
     ),
-    (401, DefaultStatusCodeDescription.Code401): api_default_error_schema(
-        401,
+    (HTTPStatus.UNAUTHORIZED, DefaultStatusCodeDescription.Code401): api_default_error_schema(
+        HTTPStatus.UNAUTHORIZED,
         DefaultStatusCodeDescription.Code401.value,
     ),
-    (403, DefaultStatusCodeDescription.Code403): api_default_error_schema(
-        403,
+    (HTTPStatus.FORBIDDEN, DefaultStatusCodeDescription.Code403): api_default_error_schema(
+        HTTPStatus.FORBIDDEN,
         DefaultStatusCodeDescription.Code403.value,
     ),
-    (404, DefaultStatusCodeDescription.Code404): api_default_error_schema(
-        404,
+    (HTTPStatus.NOT_FOUND, DefaultStatusCodeDescription.Code404): api_default_error_schema(
+        HTTPStatus.NOT_FOUND,
         DefaultStatusCodeDescription.Code404.value,
     ),
-    (422, DefaultStatusCodeDescription.Code422): api_default_error_schema(
-        422,
+    (
+        HTTPStatus.UNPROCESSABLE_ENTITY,
+        DefaultStatusCodeDescription.Code422,
+    ): api_default_error_schema(
+        HTTPStatus.UNPROCESSABLE_ENTITY,
         DefaultStatusCodeDescription.Code422.value,
     ),
-    (423, DefaultStatusCodeDescription.Code423): api_default_error_schema(
-        423,
+    (HTTPStatus.LOCKED, DefaultStatusCodeDescription.Code423): api_default_error_schema(
+        HTTPStatus.LOCKED,
         DefaultStatusCodeDescription.Code423.value,
     ),
-    (405, DefaultStatusCodeDescription.Code405): api_default_error_schema(
-        405,
+    (HTTPStatus.METHOD_NOT_ALLOWED, DefaultStatusCodeDescription.Code405): api_default_error_schema(
+        HTTPStatus.METHOD_NOT_ALLOWED,
         DefaultStatusCodeDescription.Code405.value,
     ),
-    (409, DefaultStatusCodeDescription.Code409): api_default_error_schema(
-        409,
+    (HTTPStatus.CONFLICT, DefaultStatusCodeDescription.Code409): api_default_error_schema(
+        HTTPStatus.CONFLICT,
         DefaultStatusCodeDescription.Code409.value,
     ),
-    (415, DefaultStatusCodeDescription.Code415): api_default_error_schema(
-        415,
+    (
+        HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
+        DefaultStatusCodeDescription.Code415,
+    ): api_default_error_schema(
+        HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
         DefaultStatusCodeDescription.Code415.value,
     ),
-    (400, DefaultStatusCodeDescription.Code400): api_default_error_schema(
-        400,
+    (HTTPStatus.BAD_REQUEST, DefaultStatusCodeDescription.Code400): api_default_error_schema(
+        HTTPStatus.BAD_REQUEST,
         DefaultStatusCodeDescription.Code400.value,
     ),
-    (412, DefaultStatusCodeDescription.Code412): api_default_error_schema(
-        412,
+    (
+        HTTPStatus.PRECONDITION_FAILED,
+        DefaultStatusCodeDescription.Code412,
+    ): api_default_error_schema(
+        HTTPStatus.PRECONDITION_FAILED,
         DefaultStatusCodeDescription.Code412.value,
     ),
-    (428, DefaultStatusCodeDescription.Code428): api_default_error_schema(
-        428,
+    (
+        HTTPStatus.PRECONDITION_REQUIRED,
+        DefaultStatusCodeDescription.Code428,
+    ): api_default_error_schema(
+        HTTPStatus.PRECONDITION_REQUIRED,
         DefaultStatusCodeDescription.Code428.value,
     ),
 }

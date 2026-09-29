@@ -16,11 +16,11 @@ which then has to be dumped into the checkmk.yaml file.
 
 import contextlib
 import functools
-import http.client
 import json
 import logging
 import warnings
 from collections.abc import Callable, Iterator, Mapping, Sequence
+from http import HTTPStatus
 from typing import Any, Final, override, TypeVar
 
 from marshmallow import Schema, ValidationError
@@ -560,8 +560,8 @@ class Endpoint:
                 response = self.func(_params)
             except ValidationError as exc:
                 response = problem(
-                    status=400,
-                    title=http.client.responses[400],
+                    status=HTTPStatus.BAD_REQUEST,
+                    title=HTTPStatus.BAD_REQUEST.phrase,
                     detail=f"These fields have problems: {self._format_fields(exc.messages)}",
                     fields=FIELDS(
                         exc.messages if isinstance(exc.messages, dict) else {"exc": exc.messages},
@@ -582,7 +582,7 @@ class Endpoint:
                 # handle_endpoint_request(). Raised (not turned into `response` directly) so it
                 # bypasses this endpoint's declared status codes, like RestAPIWatoDisabledException.
                 raise RestAPIForbiddenException(
-                    title=http.client.responses[403],
+                    title=HTTPStatus.FORBIDDEN.phrase,
                     detail=str(exc),
                 ) from exc
 
@@ -637,7 +637,7 @@ class Endpoint:
 
         response.freeze()
         # response code 204 does not have headers.
-        if response.status_code == 204:
+        if response.status_code == HTTPStatus.NO_CONTENT:
             for key in ["Content-Type", "Etag"]:
                 del response.headers[key]
         return response
@@ -732,7 +732,15 @@ class Endpoint:
     @property
     def does_redirects(self) -> bool:
         # created, moved permanently, found, see other
-        return any(code in self._expected_status_codes for code in [201, 301, 302, 303])
+        return any(
+            code in self._expected_status_codes
+            for code in [
+                HTTPStatus.CREATED,
+                HTTPStatus.MOVED_PERMANENTLY,
+                HTTPStatus.FOUND,
+                HTTPStatus.SEE_OTHER,
+            ]
+        )
 
     @property
     def ident(self) -> str:

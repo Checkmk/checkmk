@@ -11,6 +11,7 @@ import inspect
 import types
 from collections.abc import Callable, Mapping, Sequence
 from functools import lru_cache
+from http import HTTPStatus
 from typing import Annotated, cast, get_args, get_origin, Literal, Self, TypeAliasType, TypedDict
 
 from pydantic import BaseModel, ConfigDict, ValidationError, with_config
@@ -451,7 +452,11 @@ class EndpointModel[**P, T]:
         try:
             return self._validate_request_parameters(request_data, content_type, api_context)
         except ValidationError as e:
-            status_code: Literal[400, 404] = 404 if self._contains_path_parameter_errors(e) else 400
+            status_code: Literal[HTTPStatus.BAD_REQUEST, HTTPStatus.NOT_FOUND] = (
+                HTTPStatus.NOT_FOUND
+                if self._contains_path_parameter_errors(e)
+                else HTTPStatus.BAD_REQUEST
+            )
             RequestDataValidator.raise_formatted_pydantic_error(e, status_code=status_code)
 
     def get_annotation(self, field: Literal["body", "path", "query", "headers"], /) -> type | None:

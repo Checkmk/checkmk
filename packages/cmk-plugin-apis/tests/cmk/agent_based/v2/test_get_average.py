@@ -82,10 +82,6 @@ def test_get_average_v2_time_goes_backwards_resets(
     assert avg == expected_averages[3]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash report b19e5f8c-aca6-11f1-9df9-00163e0e7d2b: ZeroDivisionError in get_average",
-)
 def test_get_average_v2_time_returns_to_start_after_going_backwards() -> None:
     # Uptime used as the time source first steps back by 61 seconds, then
     # returns to the value the averaging started at.

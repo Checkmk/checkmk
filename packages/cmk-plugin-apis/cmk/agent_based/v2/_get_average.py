@@ -73,7 +73,7 @@ def get_average(
 
     time_since_starting_averaging = time - start_time
     if (
-        time_since_starting_averaging < 0  # time anomaly. Assume we have a long backlog.
+        time_since_starting_averaging <= 0  # time anomaly. Assume we have a long backlog.
         or backlog_minutes * 60.0 < time_since_starting_averaging
     ):
         backlog_count = (backlog_minutes * 60.0) / time_diff

@@ -16,7 +16,7 @@ from tests.testlib.system.site import Site
 logger = logging.getLogger(__name__)
 
 
-@pytest.fixture(name="test_cfg", scope="module", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture(name="test_cfg", scope="module")
 def test_cfg_fixture(site: Site) -> Iterator[None]:
     print("Applying default config")
     site.openapi.hosts.create(
@@ -37,7 +37,7 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
 
 
 @pytest.mark.skip_if_edition("cloud")  # active checks not supported in SaaS
-@pytest.mark.usefixtures("web")
+@pytest.mark.usefixtures("web", "test_cfg")
 def test_active_check_execution(site: Site) -> None:
     rule_id = site.openapi.rules.create(
         ruleset_name="custom_checks",

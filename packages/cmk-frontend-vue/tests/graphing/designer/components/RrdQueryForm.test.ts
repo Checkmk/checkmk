@@ -8,7 +8,7 @@ import { Response } from 'cmk-ui-library/components/CmkSuggestions'
 import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { expect, test, vi } from 'vitest'
+import { beforeEach, expect, test, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 
 import RrdQueryForm from '@/graphing/designer/components/forms/RrdQueryForm.vue'
@@ -29,6 +29,10 @@ vi.mock(
 )
 
 const PALETTE: readonly string[] = ['#28a2f3', '#ff8400']
+
+beforeEach(() => {
+  mocks.fetchSuggestions.mockReset().mockResolvedValue(new Response([]))
+})
 
 function renderQueryForm(
   seed: DraftRRDQueryItem,
@@ -146,7 +150,6 @@ test('a service filter renders in the service section', () => {
 })
 
 test('the metric autocompleter resolves suggestions independent of an exact host+service', async () => {
-  mocks.fetchSuggestions.mockResolvedValue(new Response([]))
   renderQueryForm({ ...newRrdQueryDraft('A'), context: { hostregex: { host_regex: 'v300' } } })
 
   await fireEvent.click(await screen.findByTitle('Select service metric'))

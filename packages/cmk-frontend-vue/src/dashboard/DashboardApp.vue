@@ -73,7 +73,7 @@ import type {
   WidgetLayout,
   WidgetSpec
 } from '@/dashboard/types/widget'
-import { dashboardAPI, urlHandler } from '@/dashboard/utils.ts'
+import { type CloneResult, dashboardAPI, urlHandler } from '@/dashboard/utils.ts'
 import { useGlobalRefresh } from '@/graphing/GlobalTimePicker/globalTimeState.ts'
 import { useGlobalTimePickerRange } from '@/graphing/GlobalTimePicker/useGlobalTimePickerRange.ts'
 import NetworkFlowSlideIns from '@/network-flow/slide-ins/NetworkFlowSlideIns.vue'
@@ -106,6 +106,7 @@ const selectedWizard = ref('')
 const widgetToEdit = ref<string | null>(null)
 const selectedDashboardBreadcrumb = ref<BreadcrumbItem[] | null>(null)
 const showCloneSuccessAlert = ref(false)
+const clonedAsResponsive = ref(false)
 
 watch(showCloneSuccessAlert, async () => {
   await nextTick()
@@ -156,12 +157,12 @@ onBeforeMount(async () => {
       openDashboardFilterSettings.value = true
     }
 
-    const cloneSuccess = new URLSearchParams(window.location.search).get('clone_success')
-    if (cloneSuccess === '1') {
+    const currentUrl = new URL(window.location.href)
+    const cloneResult = urlHandler.readCloneResult(currentUrl)
+    if (cloneResult !== null) {
+      clonedAsResponsive.value = cloneResult === 'cloned_as_responsive'
       showCloneSuccessAlert.value = true
-      const cleanUrl = new URL(window.location.href)
-      cleanUrl.searchParams.delete('clone_success')
-      urlHandler.updateCurrentUrl(cleanUrl)
+      urlHandler.updateCurrentUrl(urlHandler.withoutCloneResult(currentUrl))
     }
   }
 })
@@ -538,9 +539,11 @@ const cloneDashboard = async (
     return
   }
 
-  const cloneUrl = urlHandler.getDashboardUrl(newKey, {})
-  cloneUrl.searchParams.set('clone_success', '1')
-  urlHandler.navigateTo(cloneUrl)
+  const cloneResult: CloneResult =
+    migratedWidgetLayouts === null ? 'cloned' : 'cloned_as_responsive'
+  urlHandler.navigateTo(
+    urlHandler.withCloneResult(urlHandler.getDashboardUrl(newKey, {}), cloneResult)
+  )
 }
 
 const dashboardHasFilters = computed(
@@ -779,6 +782,7 @@ const { refreshTick } = useGlobalRefresh()
           <CloneSuccessAlert
             v-model:open="showCloneSuccessAlert"
             :has-filters="dashboardHasFilters"
+            :cloned-as-responsive="clonedAsResponsive"
             @edit-filters="openDashboardFilterSettings = true"
           />
           <AddWidgetPage

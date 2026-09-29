@@ -523,6 +523,10 @@ export const buildWidgetEffectiveFilterContext = (
 const FILE_DASHBOARD = '/dashboard.py'
 const FILE_SHARED_DASHBOARD = '/shared_dashboard.py'
 
+const CLONE_RESULT_PARAM = 'clone_result'
+const CLONE_RESULTS = ['cloned', 'cloned_as_responsive'] as const
+export type CloneResult = (typeof CLONE_RESULTS)[number]
+
 export const urlHandler = {
   /** Construct a dashboard URL with the given name and runtime filters. The current
    * kiosk state is carried over, so navigating between dashboards keeps the main
@@ -587,6 +591,23 @@ export const urlHandler = {
    */
   navigateTo(url: URL): void {
     window.location.assign(url.toString())
+  },
+
+  withCloneResult(url: URL, cloneResult: CloneResult): URL {
+    const markedUrl = new URL(url)
+    markedUrl.searchParams.set(CLONE_RESULT_PARAM, cloneResult)
+    return markedUrl
+  },
+
+  readCloneResult(url: URL): CloneResult | null {
+    const markedValue = url.searchParams.get(CLONE_RESULT_PARAM)
+    return CLONE_RESULTS.find((cloneResult) => cloneResult === markedValue) ?? null
+  },
+
+  withoutCloneResult(url: URL): URL {
+    const cleanUrl = new URL(url)
+    cleanUrl.searchParams.delete(CLONE_RESULT_PARAM)
+    return cleanUrl
   },
 
   /** Generate a shared dashboard link using the provided public token.

@@ -176,6 +176,7 @@ class DockerRelaySetup:
         monitored_network: docker.models.networks.Network,
         relay_volume: docker.models.volumes.Volume,
         suffix: str,
+        cap_drop: list[str] | None = None,
     ) -> None:
         self._client = client
         self._checkmk = checkmk
@@ -184,6 +185,7 @@ class DockerRelaySetup:
         self._site_relay_network = site_relay_network
         self._relay_monitored_network = monitored_network
         self._relay_volume = relay_volume
+        self._cap_drop = cap_drop
 
         self._site_ip = self._attach_checkmk_to_network()
         self._relay_alias = f"relay-{self._suffix}"
@@ -271,6 +273,7 @@ class DockerRelaySetup:
             volumes=self._volume_mount(),
             network=self._site_relay_network.name,
             name=container_name,
+            cap_drop=self._cap_drop,
             auto_remove=True,
             detach=True,
         )

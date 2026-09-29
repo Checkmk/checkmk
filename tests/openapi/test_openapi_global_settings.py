@@ -9,6 +9,7 @@ import json
 import logging
 from collections.abc import Iterator
 from contextlib import contextmanager
+from http import HTTPStatus
 from typing import override
 from unittest.mock import ANY
 
@@ -302,18 +303,24 @@ def test_show_factory_setting(clients: ClientRegistry) -> None:
 
 
 def test_unknown_variable_404(clients: ClientRegistry) -> None:
-    clients.GlobalSetting.get("no_such_variable", expect_ok=False).assert_status_code(404)
+    clients.GlobalSetting.get("no_such_variable", expect_ok=False).assert_status_code(
+        HTTPStatus.NOT_FOUND
+    )
 
 
 def test_variable_outside_the_global_settings_404(clients: ClientRegistry) -> None:
     """default_language is registered but declared in_global_settings=False."""
-    clients.GlobalSetting.get("default_language", expect_ok=False).assert_status_code(404)
+    clients.GlobalSetting.get("default_language", expect_ok=False).assert_status_code(
+        HTTPStatus.NOT_FOUND
+    )
 
 
 def test_variable_without_a_factory_default_404(
     clients: ClientRegistry, var_without_factory_default: str
 ) -> None:
-    clients.GlobalSetting.get(var_without_factory_default, expect_ok=False).assert_status_code(404)
+    clients.GlobalSetting.get(var_without_factory_default, expect_ok=False).assert_status_code(
+        HTTPStatus.NOT_FOUND
+    )
 
 
 def _changes_of(site_id: str) -> list[str]:
@@ -373,7 +380,7 @@ def test_the_shown_value_can_be_sent_back_unchanged(clients: ClientRegistry, var
 
 def test_update_with_a_rejected_value_422(clients: ClientRegistry) -> None:
     resp = clients.GlobalSetting.update(INT_VAR, "not a number", expect_ok=False)
-    resp.assert_status_code(422)
+    resp.assert_status_code(HTTPStatus.UNPROCESSABLE_ENTITY)
     assert clients.GlobalSetting.get(INT_VAR).json["origin"] == "factory"
 
 
@@ -394,7 +401,7 @@ def test_a_rejected_value_matches_the_documented_error_schema(clients: ClientReg
 
 def test_every_rejected_element_is_reported_not_just_the_first(clients: ClientRegistry) -> None:
     resp = clients.GlobalSetting.update("log_levels", {"cmk.web": "nope"}, expect_ok=False)
-    resp.assert_status_code(422)
+    resp.assert_status_code(HTTPStatus.UNPROCESSABLE_ENTITY)
 
     locations = [error["location"] for error in resp.json["ext"]["validation_errors"]]
     assert ["cmk.web"] in locations
@@ -403,14 +410,14 @@ def test_every_rejected_element_is_reported_not_just_the_first(clients: ClientRe
 
 def test_site_update_with_a_rejected_value_422(clients: ClientRegistry, remote_site: str) -> None:
     resp = clients.GlobalSetting.update_site(remote_site, INT_VAR, "not a number", expect_ok=False)
-    resp.assert_status_code(422)
+    resp.assert_status_code(HTTPStatus.UNPROCESSABLE_ENTITY)
     assert resp.json["ext"]["validation_errors"][0]["message"] == "Not an integer number"
     assert clients.GlobalSetting.get_site(remote_site, INT_VAR).json["origin"] == "factory"
 
 
 def test_delete_resets_to_the_factory_setting(clients: ClientRegistry) -> None:
     clients.GlobalSetting.update(INT_VAR, 42)
-    clients.GlobalSetting.delete(INT_VAR).assert_status_code(204)
+    clients.GlobalSetting.delete(INT_VAR).assert_status_code(HTTPStatus.NO_CONTENT)
     assert clients.GlobalSetting.get(INT_VAR).json == {
         "varname": INT_VAR,
         "value": INT_DEFAULT,
@@ -420,7 +427,7 @@ def test_delete_resets_to_the_factory_setting(clients: ClientRegistry) -> None:
 
 
 def test_delete_of_an_unconfigured_variable_is_a_no_op(clients: ClientRegistry) -> None:
-    clients.GlobalSetting.delete(INT_VAR).assert_status_code(204)
+    clients.GlobalSetting.delete(INT_VAR).assert_status_code(HTTPStatus.NO_CONTENT)
     assert clients.GlobalSetting.get(INT_VAR).json["origin"] == "factory"
     assert _changes_of(LOCAL_SITE) == []
 
@@ -470,20 +477,26 @@ def test_a_secret_is_redacted_in_the_audit_description(
 
 
 def test_update_needs_a_matching_etag(clients: ClientRegistry) -> None:
-    clients.GlobalSetting.update(INT_VAR, 42, etag=None, expect_ok=False).assert_status_code(428)
+    clients.GlobalSetting.update(INT_VAR, 42, etag=None, expect_ok=False).assert_status_code(
+        HTTPStatus.PRECONDITION_REQUIRED
+    )
     clients.GlobalSetting.update(
         INT_VAR, 42, etag="invalid_etag", expect_ok=False
-    ).assert_status_code(412)
-    clients.GlobalSetting.update(INT_VAR, 42, etag="valid_etag").assert_status_code(200)
+    ).assert_status_code(HTTPStatus.PRECONDITION_FAILED)
+    clients.GlobalSetting.update(INT_VAR, 42, etag="valid_etag").assert_status_code(HTTPStatus.OK)
 
 
 def test_delete_needs_a_matching_etag(clients: ClientRegistry) -> None:
     clients.GlobalSetting.update(INT_VAR, 42)
-    clients.GlobalSetting.delete(INT_VAR, etag=None, expect_ok=False).assert_status_code(428)
-    clients.GlobalSetting.delete(INT_VAR, etag="invalid_etag", expect_ok=False).assert_status_code(
-        412
+    clients.GlobalSetting.delete(INT_VAR, etag=None, expect_ok=False).assert_status_code(
+        HTTPStatus.PRECONDITION_REQUIRED
     )
-    clients.GlobalSetting.delete(INT_VAR, etag="valid_etag").assert_status_code(204)
+    clients.GlobalSetting.delete(INT_VAR, etag="invalid_etag", expect_ok=False).assert_status_code(
+        HTTPStatus.PRECONDITION_FAILED
+    )
+    clients.GlobalSetting.delete(INT_VAR, etag="valid_etag").assert_status_code(
+        HTTPStatus.NO_CONTENT
+    )
 
 
 def test_an_update_invalidates_a_previously_read_etag(clients: ClientRegistry) -> None:
@@ -495,7 +508,7 @@ def test_an_update_invalidates_a_previously_read_etag(clients: ClientRegistry) -
         body={"value": 43},
         headers={"If-Match": stale},
         expect_ok=False,
-    ).assert_status_code(412)
+    ).assert_status_code(HTTPStatus.PRECONDITION_FAILED)
 
 
 def test_the_etag_returned_by_an_update_is_still_valid(clients: ClientRegistry) -> None:
@@ -508,7 +521,7 @@ def test_the_etag_returned_by_an_update_is_still_valid(clients: ClientRegistry) 
         url=f"/objects/global_setting/{INT_VAR}",
         body={"value": 43},
         headers={"If-Match": etag},
-    ).assert_status_code(200)
+    ).assert_status_code(HTTPStatus.OK)
 
 
 def test_a_legacy_valuespec_does_not_move_the_etag_of_its_setting(
@@ -532,18 +545,24 @@ def test_setting_a_variable_to_its_default_value_changes_the_etag(
 
 @pytest.mark.usefixtures("user_without_global_permission")
 def test_central_scope_needs_the_global_permission(clients: ClientRegistry) -> None:
-    clients.GlobalSetting.get(INT_VAR, expect_ok=False).assert_status_code(403)
-    clients.GlobalSetting.update(INT_VAR, 42, expect_ok=False).assert_status_code(403)
-    clients.GlobalSetting.delete(INT_VAR, expect_ok=False).assert_status_code(403)
+    clients.GlobalSetting.get(INT_VAR, expect_ok=False).assert_status_code(HTTPStatus.FORBIDDEN)
+    clients.GlobalSetting.update(INT_VAR, 42, expect_ok=False).assert_status_code(
+        HTTPStatus.FORBIDDEN
+    )
+    clients.GlobalSetting.delete(INT_VAR, expect_ok=False).assert_status_code(HTTPStatus.FORBIDDEN)
 
 
 @pytest.mark.usefixtures("user_without_global_permission")
 def test_site_scope_needs_the_global_permission(clients: ClientRegistry, remote_site: str) -> None:
-    clients.GlobalSetting.get_site(remote_site, INT_VAR, expect_ok=False).assert_status_code(403)
-    clients.GlobalSetting.update_site(remote_site, INT_VAR, 42, expect_ok=False).assert_status_code(
-        403
+    clients.GlobalSetting.get_site(remote_site, INT_VAR, expect_ok=False).assert_status_code(
+        HTTPStatus.FORBIDDEN
     )
-    clients.GlobalSetting.delete_site(remote_site, INT_VAR, expect_ok=False).assert_status_code(403)
+    clients.GlobalSetting.update_site(remote_site, INT_VAR, 42, expect_ok=False).assert_status_code(
+        HTTPStatus.FORBIDDEN
+    )
+    clients.GlobalSetting.delete_site(remote_site, INT_VAR, expect_ok=False).assert_status_code(
+        HTTPStatus.FORBIDDEN
+    )
 
 
 @pytest.mark.usefixtures("user_without_event_console_permission")
@@ -556,9 +575,15 @@ def test_an_event_console_setting_needs_the_event_console_permission(
     route, so the refusals cannot be read as that user having no access to the
     endpoints at all.
     """
-    clients.GlobalSetting.get(event_console_var, expect_ok=False).assert_status_code(403)
-    clients.GlobalSetting.update(event_console_var, True, expect_ok=False).assert_status_code(403)
-    clients.GlobalSetting.delete(event_console_var, expect_ok=False).assert_status_code(403)
+    clients.GlobalSetting.get(event_console_var, expect_ok=False).assert_status_code(
+        HTTPStatus.FORBIDDEN
+    )
+    clients.GlobalSetting.update(event_console_var, True, expect_ok=False).assert_status_code(
+        HTTPStatus.FORBIDDEN
+    )
+    clients.GlobalSetting.delete(event_console_var, expect_ok=False).assert_status_code(
+        HTTPStatus.FORBIDDEN
+    )
 
     assert clients.GlobalSetting.get(INT_VAR).json["value"] == INT_DEFAULT
     assert clients.GlobalSetting.update(INT_VAR, 42).json["value"] == 42
@@ -590,13 +615,13 @@ def test_an_event_console_site_override_needs_the_event_console_permission(
     """
     clients.GlobalSetting.get_site(
         remote_site, event_console_var, expect_ok=False
-    ).assert_status_code(403)
+    ).assert_status_code(HTTPStatus.FORBIDDEN)
     clients.GlobalSetting.update_site(
         remote_site, event_console_var, True, expect_ok=False
-    ).assert_status_code(403)
+    ).assert_status_code(HTTPStatus.FORBIDDEN)
     clients.GlobalSetting.delete_site(
         remote_site, event_console_var, expect_ok=False
-    ).assert_status_code(403)
+    ).assert_status_code(HTTPStatus.FORBIDDEN)
 
     assert clients.GlobalSetting.get_site(remote_site, INT_VAR).json["value"] == INT_DEFAULT
 
@@ -616,7 +641,9 @@ def test_an_event_console_site_override_does_not_need_the_general_permission(
 def test_the_event_console_actions_need_the_executables_permission(
     clients: ClientRegistry,
 ) -> None:
-    clients.GlobalSetting.get(EXECUTABLES_VAR, expect_ok=False).assert_status_code(403)
+    clients.GlobalSetting.get(EXECUTABLES_VAR, expect_ok=False).assert_status_code(
+        HTTPStatus.FORBIDDEN
+    )
 
 
 @pytest.mark.usefixtures("user_without_global_permission")
@@ -635,8 +662,12 @@ def test_a_read_only_setup_refuses_a_write(clients: ClientRegistry, set_config: 
     clients.GlobalSetting.update(INT_VAR, 42)
 
     with set_config(wato_read_only=_read_only()):
-        clients.GlobalSetting.update(INT_VAR, 7, expect_ok=False).assert_status_code(403)
-        clients.GlobalSetting.delete(INT_VAR, expect_ok=False).assert_status_code(403)
+        clients.GlobalSetting.update(INT_VAR, 7, expect_ok=False).assert_status_code(
+            HTTPStatus.FORBIDDEN
+        )
+        clients.GlobalSetting.delete(INT_VAR, expect_ok=False).assert_status_code(
+            HTTPStatus.FORBIDDEN
+        )
 
     assert clients.GlobalSetting.get(INT_VAR).json["value"] == 42
 
@@ -649,9 +680,9 @@ def test_a_read_only_setup_refuses_a_site_write(
     with set_config(wato_read_only=_read_only()):
         clients.GlobalSetting.update_site(
             remote_site, INT_VAR, 8, expect_ok=False
-        ).assert_status_code(403)
+        ).assert_status_code(HTTPStatus.FORBIDDEN)
         clients.GlobalSetting.delete_site(remote_site, INT_VAR, expect_ok=False).assert_status_code(
-            403
+            HTTPStatus.FORBIDDEN
         )
 
     assert clients.GlobalSetting.get_site(remote_site, INT_VAR).json["value"] == 7
@@ -675,9 +706,13 @@ def test_a_disabled_setup_refuses_the_central_scope(
     clients: ClientRegistry, set_config: SetConfig
 ) -> None:
     with set_config(wato_enabled=False):
-        clients.GlobalSetting.get(INT_VAR, expect_ok=False).assert_status_code(403)
-        clients.GlobalSetting.update(INT_VAR, 42, expect_ok=False).assert_status_code(403)
-        clients.GlobalSetting.delete(INT_VAR, expect_ok=False).assert_status_code(403)
+        clients.GlobalSetting.get(INT_VAR, expect_ok=False).assert_status_code(HTTPStatus.FORBIDDEN)
+        clients.GlobalSetting.update(INT_VAR, 42, expect_ok=False).assert_status_code(
+            HTTPStatus.FORBIDDEN
+        )
+        clients.GlobalSetting.delete(INT_VAR, expect_ok=False).assert_status_code(
+            HTTPStatus.FORBIDDEN
+        )
 
 
 def test_a_disabled_setup_refuses_the_site_scope(
@@ -685,13 +720,13 @@ def test_a_disabled_setup_refuses_the_site_scope(
 ) -> None:
     with set_config(wato_enabled=False):
         clients.GlobalSetting.get_site(remote_site, INT_VAR, expect_ok=False).assert_status_code(
-            403
+            HTTPStatus.FORBIDDEN
         )
         clients.GlobalSetting.update_site(
             remote_site, INT_VAR, 42, expect_ok=False
-        ).assert_status_code(403)
+        ).assert_status_code(HTTPStatus.FORBIDDEN)
         clients.GlobalSetting.delete_site(remote_site, INT_VAR, expect_ok=False).assert_status_code(
-            403
+            HTTPStatus.FORBIDDEN
         )
 
 
@@ -699,9 +734,13 @@ def test_the_site_of_a_customer_refuses_the_central_scope(
     clients: ClientRegistry, test_edition: Edition
 ) -> None:
     with _site_of_a_customer(test_edition):
-        clients.GlobalSetting.get(INT_VAR, expect_ok=False).assert_status_code(403)
-        clients.GlobalSetting.update(INT_VAR, 42, expect_ok=False).assert_status_code(403)
-        clients.GlobalSetting.delete(INT_VAR, expect_ok=False).assert_status_code(403)
+        clients.GlobalSetting.get(INT_VAR, expect_ok=False).assert_status_code(HTTPStatus.FORBIDDEN)
+        clients.GlobalSetting.update(INT_VAR, 42, expect_ok=False).assert_status_code(
+            HTTPStatus.FORBIDDEN
+        )
+        clients.GlobalSetting.delete(INT_VAR, expect_ok=False).assert_status_code(
+            HTTPStatus.FORBIDDEN
+        )
 
 
 def test_the_site_of_a_customer_refuses_the_site_scope(
@@ -709,13 +748,13 @@ def test_the_site_of_a_customer_refuses_the_site_scope(
 ) -> None:
     with _site_of_a_customer(test_edition):
         clients.GlobalSetting.get_site(remote_site, INT_VAR, expect_ok=False).assert_status_code(
-            403
+            HTTPStatus.FORBIDDEN
         )
         clients.GlobalSetting.update_site(
             remote_site, INT_VAR, 42, expect_ok=False
-        ).assert_status_code(403)
+        ).assert_status_code(HTTPStatus.FORBIDDEN)
         clients.GlobalSetting.delete_site(remote_site, INT_VAR, expect_ok=False).assert_status_code(
-            403
+            HTTPStatus.FORBIDDEN
         )
 
 
@@ -756,7 +795,9 @@ def test_deleting_a_site_override_falls_back_to_the_central_value(
 ) -> None:
     clients.GlobalSetting.update(INT_VAR, 42)
     clients.GlobalSetting.update_site(remote_site, INT_VAR, 7)
-    clients.GlobalSetting.delete_site(remote_site, INT_VAR).assert_status_code(204)
+    clients.GlobalSetting.delete_site(remote_site, INT_VAR).assert_status_code(
+        HTTPStatus.NO_CONTENT
+    )
     resp = clients.GlobalSetting.get_site(remote_site, INT_VAR)
     assert resp.json["value"] == 42
     assert resp.json["origin"] == "global"
@@ -775,15 +816,15 @@ def test_site_scope_changes_are_scoped_to_that_site(
 def test_site_scope_etags(clients: ClientRegistry, remote_site: str) -> None:
     clients.GlobalSetting.update_site(
         remote_site, INT_VAR, 7, etag=None, expect_ok=False
-    ).assert_status_code(428)
+    ).assert_status_code(HTTPStatus.PRECONDITION_REQUIRED)
     clients.GlobalSetting.update_site(
         remote_site, INT_VAR, 7, etag="invalid_etag", expect_ok=False
-    ).assert_status_code(412)
+    ).assert_status_code(HTTPStatus.PRECONDITION_FAILED)
     clients.GlobalSetting.update_site(
         remote_site, INT_VAR, 7, etag="valid_etag"
-    ).assert_status_code(200)
+    ).assert_status_code(HTTPStatus.OK)
     clients.GlobalSetting.delete_site(remote_site, INT_VAR, etag="valid_etag").assert_status_code(
-        204
+        HTTPStatus.NO_CONTENT
     )
 
 
@@ -798,22 +839,28 @@ def test_the_site_etag_returned_by_an_update_is_still_valid(
         url=f"/objects/site_connection/{remote_site}/global_setting/{INT_VAR}",
         body={"value": 8},
         headers={"If-Match": etag},
-    ).assert_status_code(200)
+    ).assert_status_code(HTTPStatus.OK)
 
 
 def test_site_scope_is_unavailable_without_a_distributed_setup(clients: ClientRegistry) -> None:
     """site_globals_editable() only accepts a site that already carries overrides, and here
     nothing can create the first one. The GUI refuses the same sites."""
-    clients.GlobalSetting.get_site(LOCAL_SITE, INT_VAR, expect_ok=False).assert_status_code(404)
-    clients.GlobalSetting.update_site(LOCAL_SITE, INT_VAR, 7, expect_ok=False).assert_status_code(
-        404
+    clients.GlobalSetting.get_site(LOCAL_SITE, INT_VAR, expect_ok=False).assert_status_code(
+        HTTPStatus.NOT_FOUND
     )
-    clients.GlobalSetting.delete_site(LOCAL_SITE, INT_VAR, expect_ok=False).assert_status_code(404)
+    clients.GlobalSetting.update_site(LOCAL_SITE, INT_VAR, 7, expect_ok=False).assert_status_code(
+        HTTPStatus.NOT_FOUND
+    )
+    clients.GlobalSetting.delete_site(LOCAL_SITE, INT_VAR, expect_ok=False).assert_status_code(
+        HTTPStatus.NOT_FOUND
+    )
 
 
 @pytest.mark.usefixtures("remote_site")
 def test_unknown_site_404(clients: ClientRegistry) -> None:
-    clients.GlobalSetting.get_site("no_such_site", INT_VAR, expect_ok=False).assert_status_code(404)
+    clients.GlobalSetting.get_site("no_such_site", INT_VAR, expect_ok=False).assert_status_code(
+        HTTPStatus.NOT_FOUND
+    )
 
 
 def test_the_event_console_is_served_by_the_central_endpoints(
@@ -864,7 +911,7 @@ def test_a_remote_site_cannot_enable_the_piggyback_hub_the_central_site_has_disa
 ) -> None:
     clients.GlobalSetting.update_site(
         remote_site, piggyback_hub_var, True, expect_ok=False
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_the_central_site_cannot_disable_the_piggyback_hub_a_remote_site_runs(
@@ -873,7 +920,9 @@ def test_the_central_site_cannot_disable_the_piggyback_hub_a_remote_site_runs(
     clients.GlobalSetting.update(piggyback_hub_var, True)
     clients.GlobalSetting.update_site(remote_site, piggyback_hub_var, True)
 
-    clients.GlobalSetting.update(piggyback_hub_var, False, expect_ok=False).assert_status_code(400)
+    clients.GlobalSetting.update(piggyback_hub_var, False, expect_ok=False).assert_status_code(
+        HTTPStatus.BAD_REQUEST
+    )
 
 
 def test_the_central_site_cannot_reset_the_piggyback_hub_a_remote_site_runs(
@@ -882,7 +931,9 @@ def test_the_central_site_cannot_reset_the_piggyback_hub_a_remote_site_runs(
     clients.GlobalSetting.update(piggyback_hub_var, True)
     clients.GlobalSetting.update_site(remote_site, piggyback_hub_var, True)
 
-    clients.GlobalSetting.delete(piggyback_hub_var, expect_ok=False).assert_status_code(400)
+    clients.GlobalSetting.delete(piggyback_hub_var, expect_ok=False).assert_status_code(
+        HTTPStatus.BAD_REQUEST
+    )
 
 
 def _self_signed_ca_pem() -> str:

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from cmk.graphing_engine import (
     AutoPrecision,
     ConsolidationFunction,
@@ -125,7 +127,7 @@ def test_fetch_graph_data_comprehensive_graph(
             requested_time_range={"start": 0, "end": 60, "step": 10},
             consolidation_function="avg",
         )
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     unit = {
         "notation": "decimal",
         "symbol": "X",

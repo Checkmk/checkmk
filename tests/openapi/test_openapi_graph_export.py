@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from http import HTTPStatus
 from urllib.parse import parse_qs, urlparse
 
 from cmk.gui.graphing._graph_specification import site_time_zone
@@ -99,7 +100,7 @@ def test_export_rejects_an_inverted_y_axis_range(clients: ClientRegistry) -> Non
         expect_ok=False,
     )
 
-    response.assert_status_code(400)
+    response.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert "y_range_min" in response.json["fields"]["body"]["msg"]
 
 
@@ -112,7 +113,7 @@ def test_export_rejects_an_equal_y_axis_range(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
 
-    response.assert_status_code(400)
+    response.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert "y_range_min" in response.json["fields"]["body"]["msg"]
 
 
@@ -138,5 +139,5 @@ def test_export_rejects_an_unparseable_specification(clients: ClientRegistry) ->
         expect_ok=False,
     )
 
-    response.assert_status_code(400)
+    response.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert response.json["title"] == "Invalid graph specification"

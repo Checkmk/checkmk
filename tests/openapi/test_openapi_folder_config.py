@@ -9,6 +9,7 @@ import urllib.parse
 import uuid
 from ast import literal_eval
 from collections.abc import Sequence
+from http import HTTPStatus
 
 import pytest
 
@@ -80,7 +81,7 @@ def test_openapi_folder_validation(
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         params='{"name": "new_folder", "title": "foo", "parent": "abababaabababaababababbbabababab"}',
-        status=400,
+        status=HTTPStatus.BAD_REQUEST,
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
@@ -89,7 +90,7 @@ def test_openapi_folder_validation(
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         params='{"name": "new_folder", "title": "foo", "parent": "/", "attributes": {"foo": "bar"}}',
-        status=400,
+        status=HTTPStatus.BAD_REQUEST,
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
@@ -105,7 +106,7 @@ def test_openapi_folders_recursively(aut_user_auth_wsgi_app: WebTestAppForCMK) -
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all?recursive=1",
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
     )
     assert len(resp.json["value"]) == 1
@@ -144,7 +145,7 @@ def test_openapi_folders(clients: ClientRegistry) -> None:
         remove_attributes=["tag_agent", "tag_piggyback"],
         etag=None,
         expect_ok=False,
-    ).assert_status_code(428)
+    ).assert_status_code(HTTPStatus.PRECONDITION_REQUIRED)
 
     # First test without the proper ETag, fails with 412 (precondition failed)
     clients.Folder.edit(
@@ -153,7 +154,7 @@ def test_openapi_folders(clients: ClientRegistry) -> None:
         remove_attributes=["tag_agent", "tag_piggyback"],
         etag="invalid_etag",
         expect_ok=False,
-    ).assert_status_code(412)
+    ).assert_status_code(HTTPStatus.PRECONDITION_FAILED)
 
     # With the right ETag, the operation shall succeed
     clients.Folder.edit(
@@ -176,28 +177,28 @@ def test_openapi_folders(clients: ClientRegistry) -> None:
         folder_name="~new_folder",
         destination="~",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     # Check that unknown folders also give a 400
     clients.Folder.move(
         folder_name="~new_folder",
         destination="unknown_folder",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     # Check that moving onto itself gives a 400
     clients.Folder.move(
         folder_name="~other_folder",
         destination="~other_folder",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     # Check that moving into it's own subfolder is not possible.
     clients.Folder.move(
         folder_name="~new_folder",
         destination="/new_folder/sub_folder",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     # Should succeed
     clients.Folder.move(
@@ -217,13 +218,13 @@ def test_openapi_folder_non_existent_site(clients: ClientRegistry) -> None:
         folder_name=folder_name,
         title="My super folder",
         parent="/",
-    ).assert_status_code(200)
+    ).assert_status_code(HTTPStatus.OK)
     resp = clients.Folder.edit(
         folder_name=f"~{folder_name}",
         update_attributes={"site": non_existing_site_name},
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert any("update_attributes.site" in key for key in resp.json["fields"])
 
 
@@ -232,7 +233,7 @@ def test_openapi_folder_config_collections(aut_user_auth_wsgi_app: WebTestAppFor
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         params='{"name": "new_folder", "title": "foo", "parent": "/"}',
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
@@ -241,7 +242,7 @@ def test_openapi_folder_config_collections(aut_user_auth_wsgi_app: WebTestAppFor
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         params='{"name": "new_folder", "title": "foo", "parent": "/"}',
-        status=400,
+        status=HTTPStatus.BAD_REQUEST,
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
@@ -250,7 +251,7 @@ def test_openapi_folder_config_collections(aut_user_auth_wsgi_app: WebTestAppFor
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/host_config/collections/all",
         params='{"host_name": "host-1", "folder": "/new_folder"}',
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
@@ -258,7 +259,7 @@ def test_openapi_folder_config_collections(aut_user_auth_wsgi_app: WebTestAppFor
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/host_config/collections/all",
         params='{"host_name": "host-2", "folder": "/new_folder"}',
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
@@ -274,7 +275,7 @@ def test_openapi_hosts_in_folder_collection(aut_user_auth_wsgi_app: WebTestAppFo
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         params='{"name": "new_folder", "title": "foo", "parent": "/"}',
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
@@ -282,7 +283,7 @@ def test_openapi_hosts_in_folder_collection(aut_user_auth_wsgi_app: WebTestAppFo
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         params='{"name": "new_folder", "title": "foo", "parent": "/"}',
-        status=400,
+        status=HTTPStatus.BAD_REQUEST,
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
@@ -290,7 +291,7 @@ def test_openapi_hosts_in_folder_collection(aut_user_auth_wsgi_app: WebTestAppFo
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/host_config/collections/all",
         params='{"host_name": "host-1", "folder": "/new_folder"}',
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
@@ -298,7 +299,7 @@ def test_openapi_hosts_in_folder_collection(aut_user_auth_wsgi_app: WebTestAppFo
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/host_config/collections/all",
         params='{"host_name": "host-2", "folder": "/new_folder"}',
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
@@ -308,7 +309,7 @@ def test_openapi_hosts_in_folder_collection(aut_user_auth_wsgi_app: WebTestAppFo
         query_string={"show_hosts": True},
         headers={"Accept": "application/json"},
         content_type="application/json",
-        status=200,
+        status=HTTPStatus.OK,
     )
     hosts_ = resp.json["value"][0]["members"]["hosts"]["value"]
     assert len(hosts_) == 2
@@ -339,7 +340,7 @@ def _create_criticality_tag(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
             }
         ),
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
         content_type="application/json",
     )
 
@@ -384,7 +385,7 @@ def test_openapi_create_folder_with_network_scan(
                 },
             }
         ),
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
@@ -506,7 +507,7 @@ def test_openapi_show_hosts_on_folder(aut_user_auth_wsgi_app: WebTestAppForCMK) 
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         params='{"name": "new_folder", "title": "foo", "parent": "/"}',
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
@@ -515,7 +516,7 @@ def test_openapi_show_hosts_on_folder(aut_user_auth_wsgi_app: WebTestAppForCMK) 
         "get",
         "/NO_SITE/check_mk/api/1.0/objects/folder_config/~new_folder",
         query_string={"show_hosts": True},
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
     )
     hosts_ = resp.json["members"]["hosts"]
@@ -525,7 +526,7 @@ def test_openapi_show_hosts_on_folder(aut_user_auth_wsgi_app: WebTestAppForCMK) 
         "get",
         "/NO_SITE/check_mk/api/1.0/objects/folder_config/~new_folder",
         query_string={"show_hosts": False},
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
     )
     assert "hosts" not in resp.json["members"]
@@ -534,7 +535,7 @@ def test_openapi_show_hosts_on_folder(aut_user_auth_wsgi_app: WebTestAppForCMK) 
 def test_openapi_missing_folder(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     resp = aut_user_auth_wsgi_app.get(
         "/NO_SITE/check_mk/api/1.0/objects/folder_config/asdf" + uuid.uuid4().hex,
-        status=404,
+        status=HTTPStatus.NOT_FOUND,
         headers={"Accept": "application/json"},
     )
     assert "title" in resp.json
@@ -547,7 +548,7 @@ def test_openapi_update_with_invalid_attribute_folder(
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         params='{"name": "new_folder", "title": "foo", "parent": "/"}',
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
@@ -555,7 +556,7 @@ def test_openapi_update_with_invalid_attribute_folder(
     aut_user_auth_wsgi_app.follow_link(
         resp,
         ".../update",
-        status=400,
+        status=HTTPStatus.BAD_REQUEST,
         params=json.dumps({"title": "foo", "remove_attributes": ["tag_foobar"]}),
         headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
         content_type="application/json",
@@ -575,13 +576,13 @@ def test_openapi_update_with_invalid_title(
         folder_name="~new_folder",
         title="",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     clients.Folder.edit(
         folder_name="~new_folder",
         update_attributes={"labels": "do_not_update:title"},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -601,7 +602,7 @@ def test_openapi_bulk_actions_folders(clients: ClientRegistry) -> None:
             }
         ],
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     # add tag_address_family
     clients.Folder.bulk_edit(
@@ -673,7 +674,7 @@ def test_openapi_folder_root(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
         "/NO_SITE/check_mk/api/1.0/objects/folder_config/~",
         query_string={"show_hosts": False},
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
     )
 
 
@@ -723,7 +724,7 @@ def test_openapi_folder_config_collections_recursive_list(
             "post",
             "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
             params=params,
-            status=200,
+            status=HTTPStatus.OK,
             headers={"Accept": "application/json"},
             content_type="application/json",
         )
@@ -743,7 +744,7 @@ def test_openapi_folder_config_collections_recursive_list(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         query_string={"parent": "~I", "recursive": "True"},
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
     )
 
@@ -758,7 +759,7 @@ def test_delete_root_folder(
     resp = aut_user_auth_wsgi_app.delete(
         url=base + "/objects/folder_config/~",
         headers={"Accept": "application/json"},
-        status=401,
+        status=HTTPStatus.UNAUTHORIZED,
     )
     assert resp.json["title"] == "Problem deleting folder."
     assert resp.json["detail"] == "Deleting the root folder is not permitted."
@@ -771,7 +772,7 @@ def test_create_folder_with_name_as_empty_string(clients: ClientRegistry) -> Non
         parent="~",
         expect_ok=False,
     )
-    r.assert_status_code(400)
+    r.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert r.json["fields"]["body.name"]["msg"] == "Value error, The name must not be empty."
 
 
@@ -852,7 +853,7 @@ def test_openapi_only_one_edit_action(clients: ClientRegistry) -> None:
         etag=None,
         expect_ok=False,
     )
-    resp1.assert_status_code(400)
+    resp1.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert resp1.json["fields"]["body"]["msg"].startswith(
         "Value error, This endpoint only allows 1 action (set/update/remove) per call, you specified"
     )
@@ -865,7 +866,7 @@ def test_openapi_only_one_edit_action(clients: ClientRegistry) -> None:
         etag=None,
         expect_ok=False,
     )
-    resp2.assert_status_code(400)
+    resp2.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert resp2.json["fields"]["body"]["msg"].startswith(
         "Value error, This endpoint only allows 1 action (set/update/remove) per call, you specified"
     )
@@ -878,7 +879,7 @@ def test_openapi_only_one_edit_action(clients: ClientRegistry) -> None:
         etag=None,
         expect_ok=False,
     )
-    resp3.assert_status_code(400)
+    resp3.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert resp3.json["fields"]["body"]["msg"].startswith(
         "Value error, This endpoint only allows 1 action (set/update/remove) per call, you specified"
     )
@@ -891,7 +892,7 @@ def test_openapi_only_one_edit_action(clients: ClientRegistry) -> None:
         etag=None,
         expect_ok=False,
     )
-    resp4.assert_status_code(400)
+    resp4.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert resp4.json["fields"]["body"]["msg"].startswith(
         "Value error, This endpoint only allows 1 action (set/update/remove) per call, you specified"
     )
@@ -916,7 +917,7 @@ def test_create_folder_name_with_newline(
         folder_name=folder_name,
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert (
         resp.json["fields"]["body.name"]["msg"]
         == f"Value error, {folder_name!r} does not match pattern {WATO_FOLDER_PATH_NAME_REGEX!r}."
@@ -933,11 +934,13 @@ def test_openapi_folder_name_with_extended_characters(clients: ClientRegistry) -
     res_get = clients.Folder.get(folder_name=f"~{encoded_extended_characters}")
     fetched_folder = res_get.json
 
-    clients.Folder.delete(folder_name=f"~{encoded_extended_characters}").assert_status_code(204)
+    clients.Folder.delete(folder_name=f"~{encoded_extended_characters}").assert_status_code(
+        HTTPStatus.NO_CONTENT
+    )
 
     clients.Folder.get(
         folder_name=f"~{encoded_extended_characters}", expect_ok=False
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
     assert created_folder["id"] == fetched_folder["id"]
     assert created_folder["extensions"]["path"] == fetched_folder["extensions"]["path"]
@@ -958,7 +961,7 @@ def test_openapi_folder_with_extended_characters_parent(clients: ClientRegistry)
 
 def test_move_root_folder(clients: ClientRegistry) -> None:
     resp = clients.Folder.move(folder_name="~", destination="/", expect_ok=False)
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert resp.json["detail"] == "You can't move the root folder."
 
 
@@ -973,7 +976,7 @@ def test_openapi_folder_move_etag_verification(clients: ClientRegistry) -> None:
         etag=None,
         expect_ok=False,
         api_version=APIVersion.V1,
-    ).assert_status_code(428)
+    ).assert_status_code(HTTPStatus.PRECONDITION_REQUIRED)
 
     # Wrong If-Match header -> 412 Precondition Failed
     clients.Folder.move(
@@ -982,7 +985,7 @@ def test_openapi_folder_move_etag_verification(clients: ClientRegistry) -> None:
         etag="invalid_etag",
         expect_ok=False,
         api_version=APIVersion.V1,
-    ).assert_status_code(412)
+    ).assert_status_code(HTTPStatus.PRECONDITION_FAILED)
 
 
 def test_openapi_delete_folder_with_hosts(clients: ClientRegistry) -> None:
@@ -996,8 +999,8 @@ def test_openapi_delete_folder_with_hosts(clients: ClientRegistry) -> None:
         folder_name="~new_folder", mode="abort_on_nonempty", expect_ok=False
     )
 
-    clients.Folder.delete(folder_name="~new_folder").assert_status_code(204)
-    assert no_force_delete_result.status_code == 409
+    clients.Folder.delete(folder_name="~new_folder").assert_status_code(HTTPStatus.NO_CONTENT)
+    assert no_force_delete_result.status_code == HTTPStatus.CONFLICT
 
 
 def test_openapi_delete_folder_with_subfolders(clients: ClientRegistry) -> None:
@@ -1015,8 +1018,8 @@ def test_openapi_delete_folder_with_subfolders(clients: ClientRegistry) -> None:
         folder_name="~new_folder", mode="abort_on_nonempty", expect_ok=False
     )
 
-    clients.Folder.delete(folder_name="~new_folder").assert_status_code(204)
-    assert no_force_delete_result.status_code == 409
+    clients.Folder.delete(folder_name="~new_folder").assert_status_code(HTTPStatus.NO_CONTENT)
+    assert no_force_delete_result.status_code == HTTPStatus.CONFLICT
 
 
 def test_openapi_delete_folder_with_rules(clients: ClientRegistry) -> None:
@@ -1037,8 +1040,8 @@ def test_openapi_delete_folder_with_rules(clients: ClientRegistry) -> None:
         folder_name="~new_folder", mode="abort_on_nonempty", expect_ok=False
     )
 
-    clients.Folder.delete(folder_name="~new_folder").assert_status_code(204)
-    assert no_force_delete_result.status_code == 409
+    clients.Folder.delete(folder_name="~new_folder").assert_status_code(HTTPStatus.NO_CONTENT)
+    assert no_force_delete_result.status_code == HTTPStatus.CONFLICT
 
 
 def test_openapi_delete_folder_with_predefined_conditions(clients: ClientRegistry) -> None:
@@ -1085,11 +1088,13 @@ def test_openapi_delete_folder_with_predefined_conditions(clients: ClientRegistr
         folder_name="~new_folder", mode="abort_on_nonempty", expect_ok=False
     )
 
-    clients.Folder.delete(folder_name="~new_folder~subfolder").assert_status_code(204)
-    clients.Folder.delete(folder_name="~new_folder").assert_status_code(204)
+    clients.Folder.delete(folder_name="~new_folder~subfolder").assert_status_code(
+        HTTPStatus.NO_CONTENT
+    )
+    clients.Folder.delete(folder_name="~new_folder").assert_status_code(HTTPStatus.NO_CONTENT)
 
-    assert no_force_delete_subfolder_result.status_code == 409
-    assert no_force_delete_folder_result.status_code == 409
+    assert no_force_delete_subfolder_result.status_code == HTTPStatus.CONFLICT
+    assert no_force_delete_folder_result.status_code == HTTPStatus.CONFLICT
 
 
 def test_openapi_delete_folder_default_mode_recursive(clients: ClientRegistry) -> None:
@@ -1101,8 +1106,10 @@ def test_openapi_delete_folder_default_mode_recursive(clients: ClientRegistry) -
     clients.HostConfig.create(host_name="host1", folder="~new_folder")
     no_force_delete_result = clients.Folder.delete(folder_name="~new_folder")
 
-    clients.Folder.get(folder_name="~new_folder", expect_ok=False).assert_status_code(404)
-    assert no_force_delete_result.status_code == 204
+    clients.Folder.get(folder_name="~new_folder", expect_ok=False).assert_status_code(
+        HTTPStatus.NOT_FOUND
+    )
+    assert no_force_delete_result.status_code == HTTPStatus.NO_CONTENT
 
 
 @pytest.mark.skipif(
@@ -1117,9 +1124,9 @@ def test_openapi_delete_folder_default_mode_recursive(clients: ClientRegistry) -
 @pytest.mark.parametrize(
     "field_value, status_code",
     [
-        ("push-agent", 200),
-        ("pull-agent", 200),
-        ("invalid-value", 400),
+        ("push-agent", HTTPStatus.OK),
+        ("pull-agent", HTTPStatus.OK),
+        ("invalid-value", HTTPStatus.BAD_REQUEST),
     ],
 )
 def test_cmk_agent_connection_attribute_regression(
@@ -1132,7 +1139,7 @@ def test_cmk_agent_connection_attribute_regression(
         title="push-agent-folder",
         parent="~",
         attributes={"cmk_agent_connection": field_value},
-        expect_ok=status_code == 200,
+        expect_ok=status_code == HTTPStatus.OK,
     ).assert_status_code(status_code)
 
 
@@ -1144,5 +1151,5 @@ def test_openapi_folder_config_refuses_a_new_management_board(clients: ClientReg
         expect_ok=False,
     )
 
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert "management_protocol" in resp.json["detail"]

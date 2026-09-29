@@ -8,6 +8,7 @@
 import ast
 import base64
 from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Any
 
 import pytest
@@ -91,7 +92,9 @@ def test_openapi_livestatus_hosts_empty_query(
         ],
     )
     with live:
-        resp = clients.Host.list_all(query={}, columns=["name", "alias"]).assert_status_code(200)
+        resp = clients.Host.list_all(query={}, columns=["name", "alias"]).assert_status_code(
+            HTTPStatus.OK
+        )
         assert resp.json["value"][0]["id"] == "heute"
 
 
@@ -126,7 +129,7 @@ def test_openapi_livestatus_hosts_single_column(
         clients.Host.list_all(
             query={"op": "~", "left": "alias", "right": "heute"},
             columns=["name"],
-        ).assert_status_code(200)
+        ).assert_status_code(HTTPStatus.OK)
 
 
 def test_openapi_livestatus_single_host(
@@ -190,7 +193,7 @@ def test_openapi_livestatus_host_list_all(
     with mock_livestatus():
         resp = clients.Host.list_all(
             query={"missing_key_op": "foo"}, expect_ok=False
-        ).assert_status_code(400)
+        ).assert_status_code(HTTPStatus.BAD_REQUEST)
         assert "'op'" in resp.json["fields"]["body.query"]["msg"]
 
         resp = clients.Host.list_all(
@@ -200,13 +203,13 @@ def test_openapi_livestatus_host_list_all(
                 "right": "heute",
             },
             expect_ok=False,
-        ).assert_status_code(400)
+        ).assert_status_code(HTTPStatus.BAD_REQUEST)
         assert "Unknown operator: invalid_operator" in resp.json["fields"]["body.query"]["msg"]
 
         resp = clients.Host.list_all(
             query={"op": "=", "left": "non_existing_column", "right": "heute"},
             expect_ok=False,
-        ).assert_status_code(400)
+        ).assert_status_code(HTTPStatus.BAD_REQUEST)
         assert (
             "Table 'hosts' has no column 'non_existing_column'."
             in resp.json["fields"]["body.query"]["msg"]
@@ -216,7 +219,7 @@ def test_openapi_livestatus_host_list_all(
             query={"op": "=", "left": "name", "right": "heute"},
             columns=["non_existing_column"],
             expect_ok=False,
-        ).assert_status_code(400)
+        ).assert_status_code(HTTPStatus.BAD_REQUEST)
         assert (
             "Unknown column 'non_existing_column' for table 'hosts'"
             in resp.json["fields"]["body.columns"]["msg"]

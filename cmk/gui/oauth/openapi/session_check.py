@@ -24,6 +24,8 @@ class SessionRejected:
     """Why the session was refused, for the security log, not sent to the caller"""
 
     reason: str
+    # None until the cookie is verified, its user name is not to be trusted before.
+    user_id: UserId | None = None
 
 
 def verify_gui_session(
@@ -48,10 +50,10 @@ def verify_gui_session(
     # Only a fully established session counts. The other states mean the
     # user is still in the login flow, for example waiting for a second factor.
     if info is None or info.session_state != "logged_in":
-        return Error(SessionRejected("session is not logged in"))
+        return Error(SessionRejected("session is not logged in", user_id))
 
     if max_duration and now.timestamp() - info.started_at > max_duration:
-        return Error(SessionRejected("session exceeded its maximum duration"))
+        return Error(SessionRejected("session exceeded its maximum duration", user_id))
 
     idle_timeout = load_custom_attr(
         user_id=user_id, key="idle_timeout", parser=convert_idle_timeout
@@ -63,14 +65,14 @@ def verify_gui_session(
         and idle_timeout is not False
         and int(now.timestamp()) - info.last_activity > idle_timeout
     ):
-        return Error(SessionRejected("session exceeded its idle timeout"))
+        return Error(SessionRejected("session exceeded its idle timeout", user_id))
 
     if load_user(user_id).get("locked", False):
-        return Error(SessionRejected("user is locked"))
+        return Error(SessionRejected("user is locked", user_id))
 
     # Check if the user may use the GUI at all
     if not user_permissions.user_may(user_id, _GUI_USE_PERMISSION):
-        return Error(SessionRejected("user may not use the GUI"))
+        return Error(SessionRejected("user may not use the GUI", user_id))
 
     return OK(user_id)
 

@@ -177,6 +177,22 @@ class OAuthTokenIssuedEvent(SecurityEvent):
 
 
 @dataclass
+class GUISessionRejectedEvent(SecurityEvent):
+    """Indicates a GUI session that a site service asked about and that was refused"""
+
+    def __init__(self, *, reason: str, user_id: UserId | None, endpoint: str) -> None:
+        super().__init__(
+            "gui session rejected",
+            {
+                "reason": reason,
+                "user": str(user_id or "Unknown user"),
+                "endpoint": endpoint,
+            },
+            SecurityEvent.Domain.auth,
+        )
+
+
+@dataclass
 class UserManagementEvent(SecurityEvent):
     """Indicates a user creation, modification or deletion"""
 

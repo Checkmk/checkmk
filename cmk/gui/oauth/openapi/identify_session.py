@@ -44,7 +44,7 @@ def identify_session_v1(
     decides what that means for its own service.
     """
     require_site_internal_caller(api_context)
-    user_id = live_session_user(api_context, body.session_cookie)
+    user_id = live_session_user(api_context, body.session_cookie, endpoint="identify")
     if isinstance(body.required_permissions, ApiOmitted):
         return IdentifySessionResponse(user_id=user_id)
     return IdentifySessionResponse(

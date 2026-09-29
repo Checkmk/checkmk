@@ -38,7 +38,9 @@ from cmk.gui.watolib.activate_changes import (
     ActivationCleanupJob,
     ConfigSyncFileInfo,
     default_rabbitmq_definitions,
+    sort_for_activation,
 )
+from cmk.gui.watolib.config_domain_name import DomainRequest, OMD, SITE_CERTIFICATE
 from cmk.gui.watolib.config_sync import (
     replication_path_registry,
     ReplicationPath,
@@ -1728,3 +1730,9 @@ class TestGetAllDataRequiredForActivationPopout:
         result = ActivateChanges().get_all_data_required_for_activation_popout(sites, None)
 
         assert result.licenseIsBlocking is True
+
+
+def test_omd_config_changes_are_activated_after_other_domains() -> None:
+    requests = [DomainRequest(OMD), DomainRequest(SITE_CERTIFICATE)]
+
+    assert [request.name for request in sort_for_activation(requests)] == [SITE_CERTIFICATE, OMD]

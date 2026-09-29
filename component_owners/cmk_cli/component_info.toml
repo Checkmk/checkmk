@@ -1,0 +1,28 @@
+type = "Component"
+display_name = "cmk CLI"
+previous_name = "Command Line cmk"
+has_support_component = true
+members_required = 2
+tier = 2
+product_managers = ["niklas.pulina@checkmk.com"]
+description = """
+The cmk command itself: how a command line reaches the right command, and how
+users find out what they can type.
+
+Belongs here:
+- The command line engine (cmk.cli.engine): parsing arguments and global
+  options, and dispatching a command line to the registered command
+- Discovering the cli plug-ins and building the registry of commands and their
+  options
+- Help texts and their presentation: cmk --help, per-command help, the pager
+- Consistent naming and grouping of commands and options across all plug-ins
+- Error messages for unknown commands and malformed options
+
+Goes elsewhere:
+- What a command does once it is dispatched → the component owning that
+  functionality, e.g. discovery → Check and Discovery Engine, extension
+  packages → MKP Tool
+- The cmk.cli plug-in API that commands are written against → Plugin APIs
+- The omd command and site administration → Site Management, OMD
+- Automation calls from the GUI to base → Automation Engine
+"""

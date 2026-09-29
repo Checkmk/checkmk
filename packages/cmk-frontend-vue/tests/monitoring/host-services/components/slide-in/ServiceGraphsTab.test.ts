@@ -50,7 +50,7 @@ test("the backend's own explanation wins over the general one", () => {
 test('the tab links to the graph page of the same host and service', () => {
   mountTab({ graphs: [makeShell()] })
 
-  expect(screen.getByRole('link', { name: /Open the service graph page/ })).toHaveAttribute(
+  expect(screen.getByRole('link', { name: /Explore all service graphs/ })).toHaveAttribute(
     'href',
     GRAPHS_LINK
   )
@@ -59,10 +59,24 @@ test('the tab links to the graph page of the same host and service', () => {
 test('the link out leaves the frame the listing renders in, as every other one does', () => {
   mountTab({ graphs: [makeShell()] })
 
-  expect(screen.getByRole('link', { name: /Open the service graph page/ })).toHaveAttribute(
+  expect(screen.getByRole('link', { name: /Explore all service graphs/ })).toHaveAttribute(
     'target',
     '_top'
   )
+})
+
+test('the graphs are headed by the time window they start with', () => {
+  mountTab({ graphs: [makeShell()] })
+
+  expect(
+    screen.getByText(/Initially showing the last 8 days \(since \d{4}-\d{2}-\d{2} /)
+  ).toBeInTheDocument()
+})
+
+test('a service without graphs names no time window', () => {
+  mountTab()
+
+  expect(screen.queryByText(/Initially showing the last/)).not.toBeInTheDocument()
 })
 
 test('a discovered shell is dressed as the graph the renderer takes', () => {
@@ -74,6 +88,6 @@ test('a discovered shell is dressed as the graph the renderer takes', () => {
   expect(graph.size.width).toBe(640)
 })
 
-test('a graph in the panel cannot be pinned to the page it has none of', () => {
-  expect(toTimeSeriesGraph(makeShell(), 640).interaction.pin).toBe('disabled')
+test('a graph in the panel can be pinned like on the graph page', () => {
+  expect(toTimeSeriesGraph(makeShell(), 640).interaction.pin).toBe('enabled')
 })

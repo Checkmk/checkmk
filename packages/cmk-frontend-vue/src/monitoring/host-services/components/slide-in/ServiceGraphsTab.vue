@@ -18,15 +18,13 @@ export interface ServiceGraphs {
 
 const PANEL_GRAPH_HEIGHT = 300
 
-// The panel is its own world: a graph may be zoomed, panned and read, but not pinned to a page
-// that is not there, nor added to a visual from inside a slide-in.
 const PANEL_INTERACTION: CmkTimeSeriesGraph['interaction'] = {
   burger: 'enabled',
   zoom: 'enabled',
   panning: 'enabled',
   hover: 'enabled',
   brush: 'enabled',
-  pin: 'disabled'
+  pin: 'enabled'
 }
 
 export function toTimeSeriesGraph(shell: DiscoveredGraph, width: number): CmkTimeSeriesGraph {
@@ -57,6 +55,7 @@ import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { computed, onMounted, ref } from 'vue'
 
 import { GraphGroup } from '@/graphing'
+import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
 
 const props = defineProps<{ data: ServiceGraphs }>()
 
@@ -88,6 +87,13 @@ const timeRange = computed(() => {
   return { start: end - DAYS_SHOWN * SECONDS_PER_DAY, end }
 })
 
+const windowInfo = computed(() =>
+  _t('Initially showing the last %{days} days (since %{since})', {
+    days: DAYS_SHOWN,
+    since: formatTimestamp(timeRange.value.start)
+  })
+)
+
 const graphHeight = PANEL_GRAPH_HEIGHT
 
 const graphs = computed(() =>
@@ -97,10 +103,15 @@ const graphs = computed(() =>
 
 <template>
   <div ref="containerEl" class="monitoring-service-graphs-tab">
-    <CmkLink class="monitoring-service-graphs-tab__link" :href="data.graphsLink" target="_top">
-      <CmkIcon name="graph" size="small" />
-      {{ _t('Open the service graph page') }}
-    </CmkLink>
+    <div class="monitoring-service-graphs-tab__header">
+      <CmkParagraph v-if="graphs.length > 0" class="monitoring-service-graphs-tab__window-info">
+        {{ windowInfo }}
+      </CmkParagraph>
+      <CmkLink class="monitoring-service-graphs-tab__link" :href="data.graphsLink" target="_top">
+        <CmkIcon name="graph" size="small" />
+        {{ _t('Explore all service graphs') }}
+      </CmkLink>
+    </div>
     <div v-if="graphs.length === 0" class="monitoring-service-graphs-tab__empty">
       <CmkParagraph v-if="data.noDataMessage === null">
         {{ _t('Checkmk has no graphs for this service.') }}
@@ -130,9 +141,21 @@ const graphs = computed(() =>
   color: var(--font-color-dimmed);
 }
 
+.monitoring-service-graphs-tab__header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing);
+  padding: var(--spacing-half) 0;
+}
+
+.monitoring-service-graphs-tab__window-info {
+  font-weight: var(--font-weight-bold);
+}
+
 .monitoring-service-graphs-tab__link {
-  align-self: flex-end;
+  flex: 0 0 auto;
   align-items: center;
   width: auto;
+  margin-left: auto;
 }
 </style>

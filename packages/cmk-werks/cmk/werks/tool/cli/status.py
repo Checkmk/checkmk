@@ -207,7 +207,7 @@ _SETUP_PROBLEMS: Mapping[SetupState, Problem | None] = {
         # Deliberately not 'werk init': it needs the ID server, so it is no help in the
         # state that made every other command bail out, and it carries over only the IDs
         # of project 'cmk' before deleting the file, losing all the others.
-        fix="look at both stash files and merge them by hand",
+        fix="merge the IDs you still need into the stash by hand, then delete it",
     ),
     SetupState.UNINITIALIZED: Problem(
         item=Item.SECRET,

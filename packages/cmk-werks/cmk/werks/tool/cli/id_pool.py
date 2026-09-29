@@ -70,7 +70,8 @@ def load_stash_from_file(paths: Paths) -> Stash:
             f"{TTY_RED}Found both a legacy and a new werk IDs file:\n"
             f"  {paths.legacy_stash_file}\n"
             f"  {paths.stash_file}\n"
-            f"Please run 'werk init' to merge them into a single file.{TTY_NORMAL}"
+            "Please merge the IDs you still need from the legacy file into the new one by hand, "
+            f"then delete the legacy file.{TTY_NORMAL}"
         )
     if not paths.secret_file.exists():
         bail_out(

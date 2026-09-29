@@ -350,6 +350,20 @@ def test_load_stash_from_file_bails_when_both_files_exist(tmp_path: Path) -> Non
         load_stash_from_file(paths)
 
 
+def test_load_stash_from_file_asks_to_delete_the_legacy_file_after_merging(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    paths = make_paths_object(tmp_path)
+    _write_secret(paths)
+    dump_stash_to_file(paths, Stash(ids=[5]))
+    paths.legacy_stash_file.write_text('{"ids_by_project": {"cmk": [99]}}', encoding="utf-8")
+
+    with pytest.raises(SystemExit):
+        load_stash_from_file(paths)
+
+    assert "then delete the legacy file" in capsys.readouterr().err
+
+
 # ---------------------------------------------------------------------------
 # Migration tests
 # ---------------------------------------------------------------------------

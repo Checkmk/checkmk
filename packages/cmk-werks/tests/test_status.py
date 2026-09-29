@@ -204,7 +204,7 @@ def test_both_stash_files_are_an_error(tmp_path: Path) -> None:
             item=Item.LEGACY_STASH,
             severity=Severity.ERROR,
             problem="exists next to the current stash file, every other command bails out",
-            fix="look at both stash files and merge them by hand",
+            fix="merge the IDs you still need into the stash by hand, then delete it",
         )
     ]
     assert status.has_errors is True

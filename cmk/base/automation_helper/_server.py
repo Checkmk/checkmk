@@ -10,6 +10,8 @@ from pathlib import Path
 
 from uvicorn import run as run_uvicorn_server
 
+from cmk.ccc.log import CMKFormatter
+
 from ._config import ServerConfig
 
 
@@ -31,14 +33,12 @@ def run(
                 "version": 1,
                 "disable_existing_loggers": False,
                 "formatters": {
-                    "default": {  # astrein: disable=logging-formatter
-                        "()": "uvicorn.logging.DefaultFormatter",
-                        "fmt": "%(asctime)s [%(levelno)s] [%(process)d] %(message)s",
-                        "use_colors": None,
+                    "default": {
+                        "()": CMKFormatter,
+                        "with_process": True,
                     },
-                    "access": {  # astrein: disable=logging-formatter
-                        "()": "uvicorn.logging.AccessFormatter",
-                        "fmt": "%(asctime)s %(message)s",
+                    "access": {
+                        "()": CMKFormatter,
                     },
                 },
                 "handlers": {

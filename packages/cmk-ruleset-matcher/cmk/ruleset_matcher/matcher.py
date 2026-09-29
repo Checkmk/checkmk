@@ -426,10 +426,6 @@ class RulesetOptimizer:
         """
         self._apply_processed_hosts(all_processed_hosts)
 
-    def set_all_processed_hosts(self, all_processed_hosts: Iterable[HostName]) -> None:
-        # Transitional: remaining callers are migrated to `processed_hosts`.
-        self._apply_processed_hosts(all_processed_hosts)
-
     @contextlib.contextmanager
     def processed_hosts(self, all_processed_hosts: Iterable[HostName]) -> Iterator[None]:
         """Restrict the precomputations to the given hosts while in this context"""

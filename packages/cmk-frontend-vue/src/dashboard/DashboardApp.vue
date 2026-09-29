@@ -484,7 +484,7 @@ const cloneDashboard = async (
   const sourceContent = dashboardsManager.activeDashboard.value!.model.content
   let migratedWidgetLayouts: Record<string, ResponsiveGridWidgetLayouts> | null = null
   if (sourceContent.layout.type === 'relative_grid' && layout === DashboardLayout.RESPONSIVE_GRID) {
-    const readingOrder = dashboardComponent.value?.getRelativeGridWidgetOrder() ?? null
+    const readingOrder = readRelativeGridWidgetOrder()
     if (readingOrder === null) {
       return
     }
@@ -544,6 +544,13 @@ const cloneDashboard = async (
   urlHandler.navigateTo(
     urlHandler.withCloneResult(urlHandler.getDashboardUrl(newKey, {}), cloneResult)
   )
+}
+
+function readRelativeGridWidgetOrder(): string[] | null {
+  if (isDashboardEmpty.value) {
+    return []
+  }
+  return dashboardComponent.value?.getRelativeGridWidgetOrder() ?? null
 }
 
 const dashboardHasFilters = computed(

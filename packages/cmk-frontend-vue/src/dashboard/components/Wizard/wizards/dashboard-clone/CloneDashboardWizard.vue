@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
@@ -56,13 +57,10 @@ const dashboardScope = computed(() =>
     : props.referenceDashboardRestrictedToSingle.join(', ')
 )
 
-let cloneAvailableLayouts: DashboardLayout[]
-if (props.referenceDashboardLayoutType === DashboardLayout.RELATIVE_GRID) {
-  cloneAvailableLayouts = [DashboardLayout.RELATIVE_GRID]
-} else {
-  // TODO: this must get changed once we support changing from legacy to responsive
-  cloneAvailableLayouts = [props.referenceDashboardLayoutType]
-}
+const isAnchoredReference = props.referenceDashboardLayoutType === DashboardLayout.RELATIVE_GRID
+const cloneAvailableLayouts = isAnchoredReference
+  ? props.availableLayouts
+  : [props.referenceDashboardLayoutType]
 
 const clonedDashboardName =
   props.referenceDashboardType === DashboardOwnerType.BUILT_IN
@@ -104,6 +102,10 @@ createUniqueId.value = false
 
 const dashboardLayout = ref<DashboardLayout>(props.referenceDashboardLayoutType)
 
+const isConvertingToResponsive = computed(
+  () => isAnchoredReference && dashboardLayout.value === DashboardLayout.RESPONSIVE_GRID
+)
+
 const validate = async (): Promise<boolean> => {
   return await validateGeneralSettings()
 }
@@ -122,7 +124,12 @@ const cancel = () => {
 <template>
   <div class="db-clone-dashboard-wizard__root">
     <div class="db-clone-dashboard-wizard__container">
-      <StepsHeader :title="_t('Clone dashboard')" @back="cancel" />
+      <StepsHeader
+        :title="_t('Clone dashboard')"
+        :hide-back-button="true"
+        :close-button="true"
+        @back="cancel"
+      />
 
       <ContentSpacer />
 
@@ -171,7 +178,20 @@ const cancel = () => {
         <DashboardLayoutSelector
           v-model:dashboard-layout="dashboardLayout"
           :available-layouts="cloneAvailableLayouts"
-        />
+          :help="
+            _t('You can choose between a fixed layout or a responsive, scrollable grid layout.')
+          "
+        >
+          <CmkAlert
+            v-if="isConvertingToResponsive"
+            variant="info"
+            :text="
+              _t(
+                'Widget positions and sizes may shift when converting to responsive. Review after cloning.'
+              )
+            "
+          />
+        </DashboardLayoutSelector>
       </CmkCatalogPanel>
 
       <ContentSpacer />

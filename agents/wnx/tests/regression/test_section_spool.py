@@ -48,7 +48,7 @@ def expected_output_engine():
     return expected
 
 
-@pytest.fixture(params=["yes", "no"], ids=["outdated", "not_outdated"], autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture(params=["yes", "no"], ids=["outdated", "not_outdated"])
 def manage_spoolfile(request):
     Globals.outdated = request.param == "yes"
     testfile = "0testfile" if request.param == "yes" else "testfile"
@@ -70,7 +70,7 @@ def manage_spoolfile(request):
         os.unlink(filename)
 
 
-@pytest.mark.usefixtures("testconfig")
+@pytest.mark.usefixtures("testconfig", "manage_spoolfile")
 def test_section_spool(request, expected_output, actual_output, testfile) -> None:  # type: ignore[misc]
     # request.node.name gives test name
     local_test(expected_output, actual_output, testfile, request.node.name)

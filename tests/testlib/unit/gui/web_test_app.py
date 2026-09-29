@@ -15,6 +15,7 @@ from base64 import b64encode
 from collections.abc import Generator, Mapping
 from contextlib import AbstractContextManager as ContextManager
 from contextlib import contextmanager, nullcontext
+from http import HTTPStatus
 from typing import Any, cast, Literal, override, Protocol
 
 from flask.testing import FlaskClient
@@ -184,7 +185,7 @@ class WebTestAppForCMK(FlaskClient):
             "_username": username,
             "_password": password,
         }
-        return self.post(_path, params=data, status=302)
+        return self.post(_path, params=data, status=HTTPStatus.FOUND)
 
     def set_authorization(self, value: tuple | None) -> None:
         """Enable HTTP authentication through the flask client.
@@ -275,7 +276,7 @@ class CmkTestResponse(TestResponse):
 
     def assert_rest_api_crash(self) -> typing.Self:
         """Assert that the response is a REST API crash report. Then delete the underlying file."""
-        if self.status_code != 500:
+        if self.status_code != HTTPStatus.INTERNAL_SERVER_ERROR:
             raise AssertionError(f"Expected a crash report (500), got {self.status_code}")
         assert_and_delete_rest_crash_report(self.json["ext"]["id"])
         return self

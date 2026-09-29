@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator
+from http import HTTPStatus
 from pathlib import Path
 
 import docker.client
@@ -147,7 +148,7 @@ def test_nexus_image_exists_when_tag_is_listed(monkeypatch: pytest.MonkeyPatch) 
     monkeypatch.setattr(
         requests,
         "get",
-        lambda _url, **_kwargs: _FakeResponse(200, {"tags": ["2.3.0p1", "2.3.0-latest"]}),
+        lambda _url, **_kwargs: _FakeResponse(HTTPStatus.OK, {"tags": ["2.3.0p1", "2.3.0-latest"]}),
     )
     registry = Registry(editions=["cloud"])
 
@@ -157,7 +158,11 @@ def test_nexus_image_exists_when_tag_is_listed(monkeypatch: pytest.MonkeyPatch) 
 
 @pytest.mark.usefixtures("docker_client")
 def test_nexus_communication_failure_is_raised(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(requests, "get", lambda _url, **_kwargs: _FakeResponse(503, text="down"))
+    monkeypatch.setattr(
+        requests,
+        "get",
+        lambda _url, **_kwargs: _FakeResponse(HTTPStatus.SERVICE_UNAVAILABLE, text="down"),
+    )
     registry = Registry(editions=["cloud"])
 
     with pytest.raises(RuntimeError, match="HTTP status 503- down"):
@@ -187,8 +192,12 @@ def test_docker_hub_image_listing_follows_pagination(monkeypatch: pytest.MonkeyP
         "https://hub.docker.com//v2/namespaces/checkmk/repositories/check-mk-pro/tags?page_size=100"
     )
     pages = {
-        first: _FakeResponse(200, {"results": [{"name": "2.3.0p1"}], "next": f"{first}&page=2"}),
-        f"{first}&page=2": _FakeResponse(200, {"results": [{"name": "2.3.0p2"}], "next": None}),
+        first: _FakeResponse(
+            HTTPStatus.OK, {"results": [{"name": "2.3.0p1"}], "next": f"{first}&page=2"}
+        ),
+        f"{first}&page=2": _FakeResponse(
+            HTTPStatus.OK, {"results": [{"name": "2.3.0p2"}], "next": None}
+        ),
     }
 
     class _Session:
@@ -214,7 +223,7 @@ def test_docker_hub_image_listing_stops_on_failed_request(
         auth: tuple[str, str] | None = None
 
         def get(self, *_args: object, **_kwargs: object) -> _FakeResponse:
-            return _FakeResponse(500)
+            return _FakeResponse(HTTPStatus.INTERNAL_SERVER_ERROR)
 
     monkeypatch.setattr(requests, "Session", _Session)
     registry = Registry(editions=DOCKER_HUB_EDITIONS)
@@ -226,7 +235,7 @@ def test_docker_hub_image_listing_stops_on_failed_request(
 @pytest.mark.usefixtures("docker_client")
 def test_nexus_image_listing_uses_tag_list(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        requests, "get", lambda _url, **_kwargs: _FakeResponse(200, {"tags": ["2.3.0p1"]})
+        requests, "get", lambda _url, **_kwargs: _FakeResponse(HTTPStatus.OK, {"tags": ["2.3.0p1"]})
     )
     registry = Registry(editions=["cloud"])
 
@@ -312,12 +321,14 @@ def test_tagging_rejects_empty_tag() -> None:
 def test_docker_hub_deletion_uses_a_login_token(monkeypatch: pytest.MonkeyPatch) -> None:
     deleted: list[tuple[str, dict[str, str]]] = []
     monkeypatch.setattr(
-        requests, "post", lambda _url, **_kwargs: _FakeResponse(200, {"token": "jwt-token"})
+        requests,
+        "post",
+        lambda _url, **_kwargs: _FakeResponse(HTTPStatus.OK, {"token": "jwt-token"}),
     )
 
     def delete(url: str, headers: dict[str, str], **_kwargs: object) -> _FakeResponse:
         deleted.append((url, headers))
-        return _FakeResponse(204)
+        return _FakeResponse(HTTPStatus.NO_CONTENT)
 
     monkeypatch.setattr(requests, "delete", delete)
     registry = Registry(editions=DOCKER_HUB_EDITIONS)
@@ -338,12 +349,14 @@ def test_nexus_deletion_resolves_the_manifest_digest(monkeypatch: pytest.MonkeyP
     monkeypatch.setattr(
         requests,
         "get",
-        lambda _url, **_kwargs: _FakeResponse(200, headers={"Docker-Content-Digest": "sha256:abc"}),
+        lambda _url, **_kwargs: _FakeResponse(
+            HTTPStatus.OK, headers={"Docker-Content-Digest": "sha256:abc"}
+        ),
     )
 
     def delete(url: str, **_kwargs: object) -> _FakeResponse:
         deleted.append(url)
-        return _FakeResponse(202)
+        return _FakeResponse(HTTPStatus.ACCEPTED)
 
     monkeypatch.setattr(requests, "delete", delete)
     registry = Registry(editions=["cloud"])
@@ -357,7 +370,9 @@ def test_nexus_deletion_resolves_the_manifest_digest(monkeypatch: pytest.MonkeyP
 
 @pytest.mark.usefixtures("docker_client")
 def test_nexus_deletion_fails_without_digest(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(requests, "get", lambda _url, **_kwargs: _FakeResponse(404))
+    monkeypatch.setattr(
+        requests, "get", lambda _url, **_kwargs: _FakeResponse(HTTPStatus.NOT_FOUND)
+    )
     registry = Registry(editions=["cloud"])
 
     with pytest.raises(RuntimeError, match="Could not get digest"):
@@ -367,9 +382,11 @@ def test_nexus_deletion_fails_without_digest(monkeypatch: pytest.MonkeyPatch) ->
 @pytest.mark.usefixtures("docker_client")
 def test_failed_deletion_is_raised(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        requests, "post", lambda _url, **_kwargs: _FakeResponse(200, {"token": "t"})
+        requests, "post", lambda _url, **_kwargs: _FakeResponse(HTTPStatus.OK, {"token": "t"})
     )
-    monkeypatch.setattr(requests, "delete", lambda _url, **_kwargs: _FakeResponse(403))
+    monkeypatch.setattr(
+        requests, "delete", lambda _url, **_kwargs: _FakeResponse(HTTPStatus.FORBIDDEN)
+    )
     registry = Registry(editions=DOCKER_HUB_EDITIONS)
 
     with pytest.raises(RuntimeError, match="Could not delete image tag"):

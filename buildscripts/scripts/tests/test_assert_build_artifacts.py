@@ -8,6 +8,7 @@ import io
 import json
 import sys
 from collections.abc import Iterable, Sequence
+from http import HTTPStatus
 from pathlib import Path
 from types import TracebackType
 from typing import Self
@@ -83,7 +84,7 @@ class _FakeSession:
         self.auth: tuple[str, str] | None = None
 
     def get(self, url: str, **_kwargs: object) -> _FakeResponse:
-        return self.pages.get(url, _FakeResponse(404))
+        return self.pages.get(url, _FakeResponse(HTTPStatus.NOT_FOUND))
 
 
 class _FakeDownloadServer:
@@ -98,19 +99,21 @@ class _FakeDownloadServer:
         return f"content of {filename}".encode()
 
     def head(self, url: str, **_kwargs: object) -> _FakeResponse:
-        return _FakeResponse(404 if url.rsplit("/", 1)[1] in self.missing else 200)
+        return _FakeResponse(
+            HTTPStatus.NOT_FOUND if url.rsplit("/", 1)[1] in self.missing else HTTPStatus.OK
+        )
 
     def get(self, url: str, **_kwargs: object) -> _FakeResponse:
         filename = url.rsplit("/", 1)[1]
         if filename in self.missing:
-            return _FakeResponse(404)
+            return _FakeResponse(HTTPStatus.NOT_FOUND)
         if not filename.endswith(".hash"):
-            return _FakeResponse(200, content=self._content(filename))
+            return _FakeResponse(HTTPStatus.OK, content=self._content(filename))
         artifact = filename.removesuffix(".hash")
         digest = hashlib.sha256(
             b"corrupt" if artifact in self.corrupt else self._content(artifact)
         ).hexdigest()
-        return _FakeResponse(200, content=f"{digest}  {artifact}\n".encode())
+        return _FakeResponse(HTTPStatus.OK, content=f"{digest}  {artifact}\n".encode())
 
 
 @pytest.fixture(name="editions_file")
@@ -137,13 +140,13 @@ def fixture_registries_with_images(monkeypatch: pytest.MonkeyPatch) -> None:
         "pages",
         {
             "https://hub.docker.com/v2/namespaces/checkmk/repositories/check-mk-pro/tags?page_size=100": _FakeResponse(
-                200, {"results": [{"name": "2.4.0p1"}], "next": None}
+                HTTPStatus.OK, {"results": [{"name": "2.4.0p1"}], "next": None}
             ),
             "https://artifacts.lan.tribe29.com:4000/v2/check-mk-cloud/tags/list": _FakeResponse(
-                200, {"tags": ["2.4.0p1"]}
+                HTTPStatus.OK, {"tags": ["2.4.0p1"]}
             ),
             "https://hub.docker.com/v2/repositories/checkmk/check-mk-relay/tags/2.4.0p1/": _FakeResponse(
-                200
+                HTTPStatus.OK
             ),
         },
     )
@@ -157,7 +160,7 @@ def _install_download_server(
 
     def get(url: str, **kwargs: object) -> _FakeResponse:
         if "hub.docker.com" in url:
-            return _FakeResponse(200 if relay_present else 404)
+            return _FakeResponse(HTTPStatus.OK if relay_present else HTTPStatus.NOT_FOUND)
         return server.get(url, **kwargs)
 
     monkeypatch.setattr(requests, "get", get)
@@ -282,10 +285,10 @@ def test_missing_docker_images_are_errors(
         "pages",
         {
             "https://hub.docker.com/v2/namespaces/checkmk/repositories/check-mk-pro/tags?page_size=100": _FakeResponse(
-                200, {"results": [{"name": "2.4.0"}], "next": None}
+                HTTPStatus.OK, {"results": [{"name": "2.4.0"}], "next": None}
             ),
             "https://artifacts.lan.tribe29.com:4000/v2/check-mk-cloud/tags/list": _FakeResponse(
-                200, {"tags": []}
+                HTTPStatus.OK, {"tags": []}
             ),
         },
     )
@@ -410,8 +413,10 @@ def test_docker_hub_lookup_follows_pagination(monkeypatch: pytest.MonkeyPatch) -
         _FakeSession,
         "pages",
         {
-            first: _FakeResponse(200, {"results": [{"name": "2.4.0"}], "next": f"{first}&page=2"}),
-            f"{first}&page=2": _FakeResponse(200, {"results": [{"name": "2.4.0p1"}]}),
+            first: _FakeResponse(
+                HTTPStatus.OK, {"results": [{"name": "2.4.0"}], "next": f"{first}&page=2"}
+            ),
+            f"{first}&page=2": _FakeResponse(HTTPStatus.OK, {"results": [{"name": "2.4.0p1"}]}),
         },
     )
 

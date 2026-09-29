@@ -16,6 +16,7 @@ import os
 import re
 import urllib.parse
 from collections.abc import Collection, Container
+from http import HTTPStatus
 from http.cookiejar import Cookie
 
 import requests
@@ -40,7 +41,7 @@ class CMKWebSession:
         self.session = requests.Session()
 
     def check_redirect(self, path: str, expected_target: str | None = None) -> None:
-        response = self.get(path, expected_code=302, allow_redirects=False)
+        response = self.get(path, expected_code=HTTPStatus.FOUND, allow_redirects=False)
         if expected_target and response.headers["Location"] != expected_target:
             raise AssertionError(
                 "REDIRECT FAILED: '{}' != '{}'".format(
@@ -58,7 +59,7 @@ class CMKWebSession:
         self,
         method: str | bytes,
         path: str,
-        expected_code: int = 200,
+        expected_code: int = HTTPStatus.OK,
         *,
         allow_redirect_to_login: bool = False,
         **kwargs,

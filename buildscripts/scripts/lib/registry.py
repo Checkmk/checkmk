@@ -14,6 +14,7 @@ from collections.abc import Callable, Iterator, Sequence
 from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import date, timedelta
+from http import HTTPStatus
 from os import environ
 from pathlib import Path
 from typing import NamedTuple, Self
@@ -89,7 +90,7 @@ class Registry:
             headers = {"Accept": "application/vnd.docker.distribution.manifest.v2+json"}
             print(f"Get digest of tag '{tag}' from '{url}'")
             response = requests.get(url, auth=docker_auth, headers=headers, timeout=30)
-            if response.status_code != 200:
+            if response.status_code != HTTPStatus.OK:
                 raise RuntimeError(
                     f"Could not get digest of tag {tag} for image {image_name} with {url}: {response.status_code}"
                 )

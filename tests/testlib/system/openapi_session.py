@@ -40,6 +40,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta, UTC
 from enum import StrEnum
+from http import HTTPStatus
 from typing import Any, Final, Literal, NamedTuple, override
 
 import requests
@@ -264,7 +265,7 @@ class CMKOpenApiSession(requests.Session):
         logger.debug("> [%s] %s (%s, %s)", method, url, args, kwargs)
         response = super().request(method, url, *args, **kwargs)
 
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             if (content_type := response.headers.get("content-type")) in (
                 "application/json",
                 "application/json; charset=utf-8",
@@ -280,7 +281,7 @@ class CMKOpenApiSession(requests.Session):
                     len(response.content),
                 )
 
-        if response.status_code == 401:
+        if response.status_code == HTTPStatus.UNAUTHORIZED:
             assert isinstance(self.headers["Authorization"], str)  # HACK
             raise AuthorizationFailed(
                 f"Authorization failed on site {self.site}",
@@ -352,7 +353,7 @@ class CMKOpenApiSession(requests.Session):
                 time.sleep(0.5)
                 continue
 
-            if response.status_code == 204 and not response.content:
+            if response.status_code == HTTPStatus.NO_CONTENT and not response.content:
                 logger.info(
                     "Wait for completion finished after %0.2fs / %s attempts for %s",
                     running_time,
@@ -450,10 +451,10 @@ class ChangesAPI(BaseAPI):
             allow_redirects=False,
         )
 
-        if response.status_code == 422:
+        if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
             raise NoActiveChanges  # there are no changes
 
-        if response.status_code not in (302, 303):
+        if response.status_code not in (HTTPStatus.FOUND, HTTPStatus.SEE_OTHER):
             raise UnexpectedResponse.from_response(response)
 
         logger.info(
@@ -468,7 +469,7 @@ class ChangesAPI(BaseAPI):
     def get_pending(self) -> list[dict[str, Any]]:
         """Returns a list of all changes currently pending."""
         response = self.session.get("/domain-types/activation_run/collections/pending_changes")
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         value: list[dict[str, Any]] = response.json()["value"]
         return value
@@ -548,7 +549,7 @@ class ChangesAPI(BaseAPI):
 
     def get_activation_status(self, activation_id: str) -> dict[str, Any]:
         response = self.session.get(f"/objects/activation_run/{activation_id}")
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
         json_data: dict[str, Any] = response.json()
@@ -593,7 +594,7 @@ class GlobalSettingsAPI(BaseAPI):
             f"/objects/global_setting/{varname}",
             api_version=APIVersion.INTERNAL,
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         body = response.json()
         return GlobalSetting(
@@ -608,7 +609,7 @@ class GlobalSettingsAPI(BaseAPI):
             headers={"If-Match": etag},
             json={"value": value},
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return response.headers["ETag"]
 
@@ -618,7 +619,7 @@ class GlobalSettingsAPI(BaseAPI):
             api_version=APIVersion.INTERNAL,
             headers={"If-Match": etag},
         )
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 
 
@@ -665,12 +666,12 @@ class UsersAPI(BaseAPI):
             "domain-types/user_config/collections/all",
             json=body,
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
     def get_all(self) -> list[User]:
         response = self.session.get("domain-types/user_config/collections/all")
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return [User(title=user_dict["title"]) for user_dict in response.json()["value"]]
 
@@ -681,9 +682,9 @@ class UsersAPI(BaseAPI):
             None if the user was not found
         """
         response = self.session.get(f"/objects/user_config/{username}")
-        if response.status_code not in (200, 404):
+        if response.status_code not in (HTTPStatus.OK, HTTPStatus.NOT_FOUND):
             raise UnexpectedResponse.from_response(response)
-        if response.status_code == 404:
+        if response.status_code == HTTPStatus.NOT_FOUND:
             return None
         return (
             response.json()["extensions"],
@@ -698,12 +699,12 @@ class UsersAPI(BaseAPI):
             },
             json=user_spec,
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
     def delete(self, username: str) -> None:
         response = self.session.delete(f"/objects/user_config/{username}")
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 
 
@@ -715,7 +716,7 @@ class UserRoleAPI(BaseAPI):
             "/domain-types/user_role/collections/all",
             json={"role_id": base_role_id, "new_role_id": new_role_id, "new_alias": new_alias},
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
     def edit_permissions(self, role_id: str, permissions: dict[str, str]) -> None:
@@ -724,12 +725,12 @@ class UserRoleAPI(BaseAPI):
             json={"new_permissions": permissions},
             headers={"If-Match": "*"},
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
     def delete(self, role_id: str) -> None:
         response = self.session.delete(f"/objects/user_role/{role_id}")
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 
 
@@ -756,7 +757,7 @@ class FoldersAPI(BaseAPI):
                 "attributes": attributes if attributes else {},
             },
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
     def get(self, folder: str) -> tuple[dict[Any, str], str] | None:
@@ -766,9 +767,9 @@ class FoldersAPI(BaseAPI):
             None if the folder was not found
         """
         response = self.session.get(f"/objects/folder_config/{folder.replace('/', '~')}")
-        if response.status_code not in (200, 404):
+        if response.status_code not in (HTTPStatus.OK, HTTPStatus.NOT_FOUND):
             raise UnexpectedResponse.from_response(response)
-        if response.status_code == 404:
+        if response.status_code == HTTPStatus.NOT_FOUND:
             return None
         return (
             response.json()["extensions"],
@@ -794,7 +795,7 @@ class FoldersAPI(BaseAPI):
             f"/objects/folder_config/{folder_path}", params={"delete_mode": delete_mode}
         )
 
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 
 
@@ -811,7 +812,7 @@ class HostsAPI(BaseAPI):
             f"/domain-types/host_config/collections/all{query_string}",
             json={"folder": folder, "host_name": hostname, "attributes": attributes or {}},
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return response
 
@@ -829,7 +830,7 @@ class HostsAPI(BaseAPI):
             f"/domain-types/host_config/actions/bulk-create/invoke{query_string}",
             json={"entries": entries},
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         value: list[dict[str, Any]] = response.json()["value"]
         return value
@@ -841,9 +842,9 @@ class HostsAPI(BaseAPI):
             None if the host was not found
         """
         response = self.session.get(f"/objects/host_config/{hostname}")
-        if response.status_code not in (200, 404):
+        if response.status_code not in (HTTPStatus.OK, HTTPStatus.NOT_FOUND):
             raise UnexpectedResponse.from_response(response)
-        if response.status_code == 404:
+        if response.status_code == HTTPStatus.NOT_FOUND:
             return None
         return (
             response.json()["extensions"],
@@ -863,14 +864,14 @@ class HostsAPI(BaseAPI):
                 "Content-Type": "application/json",
             },
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
     def get_all(self) -> list[dict[str, Any]]:
         response = self.session.get(
             "/domain-types/host_config/collections/all", params={"include_links": False}
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         value: list[dict[str, Any]] = response.json()["value"]
         return value
@@ -892,7 +893,7 @@ class HostsAPI(BaseAPI):
 
     def delete(self, hostname: str) -> None:
         response = self.session.delete(f"/objects/host_config/{hostname}")
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 
     def bulk_delete(self, hostnames: list[str], ignore_missing: bool = False) -> None:
@@ -905,7 +906,7 @@ class HostsAPI(BaseAPI):
             "/domain-types/host_config/actions/bulk-delete/invoke",
             json={"entries": hostnames},
         )
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 
     def rename(self, *, hostname_old: str, hostname_new: str, etag: str) -> None:
@@ -921,7 +922,7 @@ class HostsAPI(BaseAPI):
         if 300 <= response.status_code < 400:
             # rename pending
             raise Redirect(redirect_url=response.headers["Location"])
-        if not response.status_code == 200:
+        if not response.status_code == HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
     @tracer.instrument("rename_and_wait_for_completion")
@@ -960,13 +961,13 @@ class HostGroupsAPI(BaseAPI):
             "/domain-types/host_group_config/collections/all",
             json=body,
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return response
 
     def get(self, name: str) -> tuple[dict[Any, str], str]:
         response = self.session.get(f"/objects/host_group_config/{name}")
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return (
             response.json()["extensions"],
@@ -975,7 +976,7 @@ class HostGroupsAPI(BaseAPI):
 
     def delete(self, name: str) -> None:
         response = self.session.delete(f"/objects/host_group_config/{name}")
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 
 
@@ -990,13 +991,13 @@ class ServiceGroupsAPI(BaseAPI):
             "/domain-types/service_group_config/collections/all",
             json=body,
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return response
 
     def delete(self, name: str) -> None:
         response = self.session.delete(f"/objects/service_group_config/{name}")
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 
 
@@ -1006,13 +1007,13 @@ class HostTagGroupsAPI(BaseAPI):
             "/domain-types/host_tag_group/collections/all",
             json={"id": name, "title": title, "tags": tags},
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return response
 
     def get(self, name: str) -> tuple[dict[Any, str], str]:
         response = self.session.get(f"/objects/host_tag_group/{name}")
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return (
             response.json()["extensions"],
@@ -1021,7 +1022,7 @@ class HostTagGroupsAPI(BaseAPI):
 
     def delete(self, name: str) -> None:
         response = self.session.delete(f"/objects/host_tag_group/{name}")
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 
 
@@ -1043,7 +1044,7 @@ class ServiceDiscoveryAPI(BaseAPI):
         )
         if 300 <= response.status_code < 400:
             raise Redirect(redirect_url=response.headers["Location"])  # activation pending
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
     @tracer.instrument("run_bulk_discovery_and_wait_for_completion")
@@ -1078,7 +1079,7 @@ class ServiceDiscoveryAPI(BaseAPI):
         response = self.session.post(
             "/domain-types/discovery_run/actions/bulk-discovery-start/invoke", json=body
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         job_id: str = response.json()["id"]
         while self.get_bulk_discovery_status(job_id) in (
@@ -1107,7 +1108,7 @@ class ServiceDiscoveryAPI(BaseAPI):
 
     def get_bulk_discovery_job_status(self, job_id: str) -> dict[str, Any]:
         response = self.session.get(f"/objects/background_job/{job_id}")
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
         json_data: dict[str, Any] = response.json()
@@ -1125,7 +1126,7 @@ class ServiceDiscoveryAPI(BaseAPI):
 
     def get_discovery_job_status(self, hostname: str) -> dict[str, Any]:
         response = self.session.get(f"/objects/service_discovery_run/{hostname}")
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
         json_data: dict[str, Any] = response.json()
@@ -1144,7 +1145,7 @@ class ServiceDiscoveryAPI(BaseAPI):
 
     def get_discovery_result(self, hostname: str) -> Mapping[str, object]:
         response = self.session.get(f"/objects/service_discovery/{hostname}")
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return {str(k): v for k, v in response.json().items()}
 
@@ -1172,7 +1173,7 @@ class ServiceDiscoveryAPI(BaseAPI):
                 "target_phase": target_phase,
             },
         )
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 
 
@@ -1189,7 +1190,7 @@ class ServicesAPI(BaseAPI):
         if columns:
             body["columns"] = columns
         response = self.session.post(f"/objects/host/{hostname}/collections/services", json=body)
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         value: list[dict[str, Any]] = response.json()["value"]
         if pending is not None:
@@ -1209,7 +1210,7 @@ class InventoryAPI(BaseAPI):
             api_version=APIVersion.UNSTABLE,
             params={"host_names": list(host_names)},
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return {entry["host_name"]: entry["inventory_tree"] for entry in response.json()["value"]}
 
@@ -1217,7 +1218,7 @@ class InventoryAPI(BaseAPI):
 class AgentsAPI(BaseAPI):
     def get_baking_status(self) -> BakingStatus:
         response = self.session.get("/domain-types/agent/actions/baking_status/invoke")
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
         result = response.json()["result"]["value"]
@@ -1232,7 +1233,7 @@ class AgentsAPI(BaseAPI):
             "/domain-types/agent/actions/sign/invoke",
             json={"key_id": key_id, "passphrase": passphrase},
         )
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 
 
@@ -1259,7 +1260,7 @@ class RulesAPI(BaseAPI):
                 else value
             ),
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         the_id: str = response.json()["id"]
         return the_id
@@ -1271,9 +1272,9 @@ class RulesAPI(BaseAPI):
             None if the rule_id was not found
         """
         response = self.session.get(f"/objects/rule/{rule_id}")
-        if response.status_code not in (200, 404):
+        if response.status_code not in (HTTPStatus.OK, HTTPStatus.NOT_FOUND):
             raise UnexpectedResponse.from_response(response)
-        if response.status_code == 404:
+        if response.status_code == HTTPStatus.NOT_FOUND:
             return None
         return (
             response.json()["extensions"],
@@ -1302,12 +1303,12 @@ class RulesAPI(BaseAPI):
             json=update_data,
             headers={"If-Match": etag},
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
     def delete(self, rule_id: str) -> None:
         response = self.session.delete(f"/objects/rule/{rule_id}")
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 
     def get_all(
@@ -1329,7 +1330,7 @@ class RulesAPI(BaseAPI):
             "/domain-types/rule/collections/all",
             params=params,
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         value: list[dict[str, Any]] = response.json()["value"]
         return value
@@ -1349,7 +1350,7 @@ class RulesAPI(BaseAPI):
             f"/objects/rule/{rule_id}/actions/move/invoke",
             json=move_data,
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
 
@@ -1358,7 +1359,7 @@ class RulesetsAPI(BaseAPI):
         response = self.session.get(
             "/domain-types/ruleset/collections/all",
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         value: list[dict[str, Any]] = response.json()["value"]
         return value
@@ -1374,7 +1375,7 @@ class BrokerConnectionsAPI(BaseAPI):
         response = self.session.get(
             "/domain-types/broker_connection/collections/all",
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return [{str(k): v for k, v in el.items()} for el in response.json()["value"]]
 
@@ -1392,7 +1393,7 @@ class BrokerConnectionsAPI(BaseAPI):
                 ),
             },
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return {str(k): v for k, v in response.json().items()}
 
@@ -1409,7 +1410,7 @@ class BrokerConnectionsAPI(BaseAPI):
                 ),
             },
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return {str(k): v for k, v in response.json().items()}
 
@@ -1420,7 +1421,7 @@ class BrokerConnectionsAPI(BaseAPI):
                 "Content-Type": "application/json",
             },
         )
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 
 
@@ -1434,7 +1435,7 @@ class SitesAPI(BaseAPI):
             json={"site_config": site_config},
         )
 
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
     def update(self, site_id: str, site_config: dict[str, Any]) -> None:
@@ -1447,7 +1448,7 @@ class SitesAPI(BaseAPI):
             json={"site_config": site_config},
         )
 
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
     def show(self, site_id: str) -> dict[str, Any]:
@@ -1458,7 +1459,7 @@ class SitesAPI(BaseAPI):
             },
         )
 
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
         value: dict[str, Any] = response.json()["extensions"]
@@ -1469,7 +1470,7 @@ class SitesAPI(BaseAPI):
             response := self.session.post(
                 f"/objects/site_connection/{site_id}/actions/delete/invoke"
             )
-        ).status_code != 204:
+        ).status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 
     def login(self, site_id: str, user: str = "cmkadmin", password: str = "cmk") -> None:
@@ -1481,7 +1482,7 @@ class SitesAPI(BaseAPI):
             json={"username": user, "password": password},
         )
 
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 
 
@@ -1494,7 +1495,7 @@ class BackgroundJobsAPI(BaseAPI):
             },
         )
 
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
         value: dict[str, Any] = response.json()
@@ -1510,7 +1511,7 @@ class BIAggregationAPI(BaseAPI):
             },
         )
 
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
         value: dict[str, Any] = response.json()
@@ -1525,7 +1526,7 @@ class BIAggregationAPI(BaseAPI):
             json=body,
         )
 
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
     def delete(self, aggregation_id: str) -> None:
@@ -1536,7 +1537,7 @@ class BIAggregationAPI(BaseAPI):
             },
         )
 
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 
     def create(self, aggregation_id: str, body: dict[str, Any]) -> None:
@@ -1548,7 +1549,7 @@ class BIAggregationAPI(BaseAPI):
             json=body,
         )
 
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
 
@@ -1601,7 +1602,7 @@ class DcdAPI(BaseAPI):
                 },
             },
         )
-        if resp.status_code != 200:
+        if resp.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(resp)
 
     def create_telemetry_metrics_connection(
@@ -1683,9 +1684,9 @@ class DcdAPI(BaseAPI):
             None if the dcd_id was not found
         """
         response = self.session.get(f"/objects/dcd/{dcd_id}")
-        if response.status_code not in (200, 404):
+        if response.status_code not in (HTTPStatus.OK, HTTPStatus.NOT_FOUND):
             raise UnexpectedResponse.from_response(response)
-        if response.status_code == 404:
+        if response.status_code == HTTPStatus.NOT_FOUND:
             return None
 
         json_data: dict[str, Any] = response.json()
@@ -1694,7 +1695,7 @@ class DcdAPI(BaseAPI):
     def delete(self, dcd_id: str) -> None:
         """Delete a DCD connection via REST API."""
         resp = self.session.delete(f"/objects/dcd/{dcd_id}")
-        if resp.status_code != 204:
+        if resp.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(resp)
 
 
@@ -1829,13 +1830,13 @@ class LDAPConnectionAPI(BaseAPI):
                 },
             },
         )
-        if resp.status_code != 200:
+        if resp.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(resp)
 
     def delete(self, ldap_id: str) -> None:
         """Delete an LDAP connection via REST API."""
         resp = self.session.delete(f"/objects/ldap_connection/{ldap_id}", headers={"If-Match": "*"})
-        if resp.status_code != 204:
+        if resp.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(resp)
 
 
@@ -1850,7 +1851,7 @@ class DowntimesAPI(BaseAPI):
         if service_description is not None:
             params["service_description"] = service_description
         response = self.session.get("/domain-types/downtime/collections/all", params=params)
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return list(response.json()["value"])
 
@@ -1866,7 +1867,7 @@ class DowntimesAPI(BaseAPI):
         if service_descriptions is not None:
             body["service_descriptions"] = service_descriptions
         response = self.session.post("/domain-types/downtime/actions/delete/invoke", json=body)
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 
 
@@ -1897,7 +1898,7 @@ class PasswordsAPI(BaseAPI):
             "/domain-types/password/collections/all",
             json=request_data,
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
     def delete(
@@ -1907,7 +1908,7 @@ class PasswordsAPI(BaseAPI):
         """Delete a password via REST API."""
         response = self.session.delete(f"/objects/password/{ident}", headers={"If-Match": "*"})
 
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 
     def get_all(self) -> list[dict[str, Any]]:
@@ -1916,7 +1917,7 @@ class PasswordsAPI(BaseAPI):
             "/domain-types/password/collections/all", headers={"Content-Type": "application/json"}
         )
 
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
         value: list[dict[str, Any]] = response.json()["value"]
@@ -1934,13 +1935,13 @@ class LicenseAPI(BaseAPI):
             "/domain-types/licensing/actions/configure/invoke",
             json={"settings": settings} if settings else {},
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return response
 
     def download(self) -> requests.Response:
         response = self.session.get("/domain-types/license_request/actions/download/invoke")
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return response
 
@@ -1949,14 +1950,14 @@ class LicenseAPI(BaseAPI):
             url="/domain-types/license_response/actions/upload/invoke",
             json=verification_response,
         )
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
         return response
 
     def verify(self) -> requests.Response:
         """Trigger the license verification and receive its results"""
         response = self.session.post("/domain-types/licensing/actions/verify/invoke")
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
         return response
 
@@ -1968,7 +1969,7 @@ class OtelCollectorAPI(BaseAPI):
             "domain-types/otel_collector_config_receivers/collections/all",
             api_version=APIVersion.INTERNAL,
         )
-        if expect_ok and response.status_code != 200:
+        if expect_ok and response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return response
 
@@ -1978,7 +1979,7 @@ class OtelCollectorAPI(BaseAPI):
             "domain-types/otel_collector_config_prom_scrape/collections/all",
             api_version=APIVersion.INTERNAL,
         )
-        if expect_ok and response.status_code != 200:
+        if expect_ok and response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return response
 
@@ -2009,7 +2010,7 @@ class OtelCollectorAPI(BaseAPI):
             api_version=APIVersion.INTERNAL,
             json=body,
         )
-        if expect_ok and response.status_code != 200:
+        if expect_ok and response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return response
 
@@ -2037,7 +2038,7 @@ class OtelCollectorAPI(BaseAPI):
             api_version=APIVersion.INTERNAL,
             json=body,
         )
-        if expect_ok and response.status_code != 200:
+        if expect_ok and response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return response
 
@@ -2071,7 +2072,7 @@ class OtelCollectorAPI(BaseAPI):
             json=body,
             headers={"If-Match": "*"},
         )
-        if expect_ok and response.status_code != 200:
+        if expect_ok and response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return response
 
@@ -2102,7 +2103,7 @@ class OtelCollectorAPI(BaseAPI):
             json=body,
             headers={"If-Match": "*"},
         )
-        if expect_ok and response.status_code != 200:
+        if expect_ok and response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return response
 
@@ -2113,7 +2114,7 @@ class OtelCollectorAPI(BaseAPI):
             api_version=APIVersion.INTERNAL,
             headers={"If-Match": "*"},
         )
-        if expect_ok and response.status_code != 204:
+        if expect_ok and response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
         return response
 
@@ -2124,7 +2125,7 @@ class OtelCollectorAPI(BaseAPI):
             api_version=APIVersion.INTERNAL,
             headers={"If-Match": "*"},
         )
-        if expect_ok and response.status_code != 204:
+        if expect_ok and response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
         return response
 
@@ -2134,7 +2135,7 @@ class OtelCollectorAPI(BaseAPI):
             f"objects/otel_collector_config_bundles/{bundle_id}",
             api_version=APIVersion.INTERNAL,
         )
-        if expect_ok and response.status_code != 204:
+        if expect_ok and response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
         return response
 
@@ -2164,7 +2165,7 @@ class EventConsoleAPI(BaseAPI):
         response = self.session.get(
             "/domain-types/event_console/collections/all",
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         value: list[dict[str, Any]] = response.json()["value"]
         return value
@@ -2175,14 +2176,14 @@ class EventConsoleAPI(BaseAPI):
         response = self.session.post(
             url="/domain-types/event_console/actions/delete/invoke", json=body
         )
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 
 
 class Saml2API(BaseAPI):
     def get_all(self) -> list[dict[str, Any]]:
         response = self.session.get("/domain-types/saml_connection/collections/all")
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
         saml_connections: list[dict[str, Any]] = response.json()["value"]
@@ -2192,7 +2193,7 @@ class Saml2API(BaseAPI):
         """Returns a tuple with the connection details and the Etag header"""
         response = self.session.get(f"/objects/saml_connection/{connection_id}")
 
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
         return (response.json()["extensions"], response.headers["Etag"])
@@ -2217,7 +2218,7 @@ class Saml2API(BaseAPI):
             "/domain-types/saml_connection/collections/all",
             json=connection,
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
         json_data: dict[str, Any] = response.json()
@@ -2229,7 +2230,7 @@ class Saml2API(BaseAPI):
             headers={"If-Match": etag},
         )
 
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 
 
@@ -2262,14 +2263,14 @@ class RelayAPI(BaseAPI):
             },
         )
 
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
     def get(self, relay_id: str) -> tuple[Relay, str]:
         response = self.session.get(
             url=self._object_url(relay_id),
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         response_json = response.json()
         return Relay(
@@ -2282,7 +2283,7 @@ class RelayAPI(BaseAPI):
 
     def get_all(self) -> list[Relay]:
         response = self.session.get(url=self._domain_url)
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return [
             Relay(
@@ -2306,7 +2307,7 @@ class RelayAPI(BaseAPI):
             },
             headers={"If-Match": "*"},
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
     def delete(self, relay_id: str, etag: str) -> None:
@@ -2314,7 +2315,7 @@ class RelayAPI(BaseAPI):
             url=self._object_url(relay_id),
             headers={"If-Match": etag},
         )
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 
 
@@ -2335,7 +2336,7 @@ class RelayRegistrationTokenAPI(BaseAPI):
                 "expires_at": expires_at.isoformat(),
             },
         )
-        if response.status_code != 201:
+        if response.status_code != HTTPStatus.CREATED:
             raise UnexpectedResponse.from_response(response)
 
         return str(response.json()["id"])  # Explicit type case to make mypy happy
@@ -2475,7 +2476,7 @@ class GraphAPI(BaseAPI):
         response = self.session.get(
             "domain-types/graph/actions/get_pin/invoke", api_version=APIVersion.INTERNAL
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         pin_time = response.json()["pin_time"]
         return None if pin_time is None else int(pin_time)
@@ -2487,7 +2488,7 @@ class GraphAPI(BaseAPI):
             api_version=APIVersion.INTERNAL,
             json={"pin_time": pin_time},
         )
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 
 
@@ -2589,7 +2590,7 @@ class CustomGraphAPI(BaseAPI):
             api_version=APIVersion.INTERNAL,
             headers={"If-Match": "*"},
         )
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 
     def fetch_data(
@@ -2625,7 +2626,7 @@ class DashboardAPI(BaseAPI):
             api_version=APIVersion.UNSTABLE,
             json=body,
         )
-        if response.status_code != 201:
+        if response.status_code != HTTPStatus.CREATED:
             raise UnexpectedResponse.from_response(response)
         parsed = response.json()
         if not isinstance(parsed, dict):
@@ -2640,7 +2641,7 @@ class DashboardAPI(BaseAPI):
             api_version=APIVersion.UNSTABLE,
             headers={"If-Match": "*"},
         )
-        if response.status_code != 204:
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 
 
@@ -2655,7 +2656,7 @@ class AgentReceiverRelayAPI(ARBaseAPI):
             url=urllib.parse.urljoin(self.base_url, "relays/"),
             json=body.model_dump(),
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
         return RelayRegistrationResponse.model_validate(response.json())
@@ -2664,14 +2665,14 @@ class AgentReceiverRelayAPI(ARBaseAPI):
         response = self.session.delete(
             url=urllib.parse.urljoin(self.base_url, f"relays/{relay_id}")
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
     def get_status(self, relay_id: str, cert: tuple[str, str] | None) -> RelayStatusResponse:
         response = self.session.get(
             url=urllib.parse.urljoin(self.base_url, f"relays/{relay_id}/status"), cert=cert
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return RelayStatusResponse.model_validate(response.json())
 
@@ -2680,7 +2681,7 @@ class AgentReceiverRelayAPI(ARBaseAPI):
             url=urllib.parse.urljoin(self.base_url, f"relays/{relay_id}/tasks"),
             json=TaskCreateRequest(spec=task).model_dump(),
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return TaskCreateResponse.model_validate(response.json())
 
@@ -2689,6 +2690,6 @@ class AgentReceiverRelayAPI(ARBaseAPI):
             url=urllib.parse.urljoin(self.base_url, f"relays/{relay_id}/tasks"),
             cert=cert,
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return TaskListResponse.model_validate(response.json()).tasks

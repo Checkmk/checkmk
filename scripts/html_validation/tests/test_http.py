@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 import pytest
 
 from scripts.html_validation.lib.exceptions import AuthMissingError
@@ -61,22 +63,22 @@ class TestResponseInfoIsHtmlDocument:
 
 class TestResponseInfoNotFound:
     def test_true_when_404(self) -> None:
-        info = _make_response_info(status_code=404)
+        info = _make_response_info(status_code=HTTPStatus.NOT_FOUND)
         assert info.not_found is True
 
     def test_false_when_found(self) -> None:
-        info = _make_response_info(status_code=302)
+        info = _make_response_info(status_code=HTTPStatus.FOUND)
         assert info.not_found is False
 
     def test_false_when_ok(self) -> None:
-        info = _make_response_info(status_code=200)
+        info = _make_response_info(status_code=HTTPStatus.OK)
         assert info.not_found is False
 
 
 def _make_response_info(**kwargs: str | int) -> ResponseInfo:
     defaults: dict[str, str | int] = {
         "url": "http://localhost/check_mk/dashboard.py",
-        "status_code": 200,
+        "status_code": HTTPStatus.OK,
         "content_type": "text/html; charset=utf-8",
         "redirect_location": "",
     }

@@ -34,6 +34,7 @@ from contextlib import AbstractContextManager, contextmanager, nullcontext, supp
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
+from http import HTTPStatus
 from pathlib import Path
 from pprint import pformat
 from typing import Any, Final, Literal, overload
@@ -1632,7 +1633,7 @@ class Site:
             try:
                 status = self.openapi.changes.get_activation_status(activation_id)
             except UnexpectedResponse as e:
-                if e.status_code == 404:
+                if e.status_code == HTTPStatus.NOT_FOUND:
                     logger.warning(
                         "_get_activation_final_status: activation %(activation_id)r not found (404) "
                         "— already cleaned up before final status could be read",
@@ -1666,7 +1667,7 @@ class Site:
                 )
                 # The site restart triggered by the activation may kill httpd while we poll.
                 return False
-            if response.status_code != 200:
+            if response.status_code != HTTPStatus.OK:
                 logger.info(
                     "wait_for_site_restarting_changes_to_complete: unexpected status %d",
                     response.status_code,

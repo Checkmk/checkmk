@@ -20,6 +20,7 @@ import pprint
 import time
 import urllib.parse
 from collections.abc import Mapping, Sequence
+from http import HTTPStatus
 from typing import Any, cast, ClassVar, Literal, NoReturn, NotRequired, override, Self, TypedDict
 
 from cmk.ccc import version
@@ -90,7 +91,7 @@ class Response:
 
     def assert_rest_api_crash(self) -> Self:
         """Assert that the response is a REST API crash report. Then delete the underlying file."""
-        self.assert_status_code(500)
+        self.assert_status_code(HTTPStatus.INTERNAL_SERVER_ERROR)
         assert_and_delete_rest_crash_report(self.json["ext"]["id"])
         return self
 
@@ -353,7 +354,7 @@ class RestApiClient:
                 if time.time() > end:
                     raise TimeoutError("Redirect timeout reached")
 
-                if resp.status_code == 303:
+                if resp.status_code == HTTPStatus.SEE_OTHER:
                     # 303 See Other: we should explicitly use GET for the redirect
                     # other redirect codes should reuse the method of the original request
                     method = "get"
@@ -1754,7 +1755,7 @@ class RuleClient(RestApiClient):
             expect_ok=expect_ok,
         )
         if expect_ok:
-            resp.assert_status_code(204)
+            resp.assert_status_code(HTTPStatus.NO_CONTENT)
         return resp
 
     def create(
@@ -3252,7 +3253,7 @@ class CommentClient(RestApiClient):
         )
 
         if expect_ok:
-            res.assert_status_code(204)
+            res.assert_status_code(HTTPStatus.NO_CONTENT)
 
         return res
 
@@ -3592,7 +3593,7 @@ class AuditLogClient(RestApiClient):
         )
 
         if expect_ok:
-            result.assert_status_code(200)
+            result.assert_status_code(HTTPStatus.OK)
 
         return result
 
@@ -3604,7 +3605,7 @@ class AuditLogClient(RestApiClient):
         )
 
         if expect_ok:
-            result.assert_status_code(204)
+            result.assert_status_code(HTTPStatus.NO_CONTENT)
 
         return result
 

@@ -8,6 +8,7 @@ import threading
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
+from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from ipaddress import IPv4Address
 from pathlib import Path
@@ -81,7 +82,7 @@ class MockHandler(BaseHTTPRequestHandler):
         request_body = self.rfile.read(size) if size > 0 else b""
 
         if not (response := endpoints.get(endpoint)):
-            self.send_response(404)
+            self.send_response(HTTPStatus.NOT_FOUND)
             self.end_headers()
             return
         request_headers = dict(self.headers.items())
@@ -90,7 +91,7 @@ class MockHandler(BaseHTTPRequestHandler):
                 if not response.request_validator(request_headers, request_body):
                     raise AssertionError("Request validation failed")
             except AssertionError as excp:
-                self.send_response(400, "Request Validation Failed")
+                self.send_response(HTTPStatus.BAD_REQUEST, "Request Validation Failed")
                 self.end_headers()
                 self.wfile.write(str(excp).encode())
                 return

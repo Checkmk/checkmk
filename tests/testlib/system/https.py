@@ -7,6 +7,7 @@ certificates for testing purposes.
 """
 
 import ssl
+from http import HTTPStatus
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from ipaddress import IPv4Address
 from multiprocessing import get_context
@@ -28,7 +29,7 @@ class RedirectHandler(SimpleHTTPRequestHandler):
         # but that's not possible because HTTPServer insists in taking a
         # SimpleHTTPSRequestHandler class instead of an instance. Hence we set it on the HTTPServer instead.
         site_apache_address = f"{self.server.site_apache_url}{self.path}"  # type: ignore[attr-defined]
-        self.send_response(308)
+        self.send_response(HTTPStatus.PERMANENT_REDIRECT)
         self.send_header("Location", site_apache_address)
         self.end_headers()
 

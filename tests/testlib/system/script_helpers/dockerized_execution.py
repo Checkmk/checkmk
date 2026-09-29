@@ -22,6 +22,7 @@ import textwrap
 import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
+from http import HTTPStatus
 from io import BytesIO
 from pathlib import Path
 from typing import Any, Literal, TypedDict, Unpack
@@ -212,7 +213,9 @@ def _get_registry_data(
 
 
 def _handle_api_error(exc: docker.errors.APIError) -> None:
-    if exc.status_code == 401 or (exc.status_code == 500 and "no basic auth" in f"{exc}"):
+    if exc.status_code == HTTPStatus.UNAUTHORIZED or (
+        exc.status_code == HTTPStatus.INTERNAL_SERVER_ERROR and "no basic auth" in f"{exc}"
+    ):
         raise RuntimeError(
             'Could not authenticate against "%s". You will have to login to the '
             'registry using "docker login %s" to be able to execute the tests.'

@@ -702,9 +702,13 @@ pub fn convert(
         .ok_or_else(|| anyhow::anyhow!("DBUSER not defined in legacy config, cannot generate"))?;
     let dbuser = parse_dbuser("DBUSER", dbuser_raw)?;
 
+    // sorted, so the generated instance list does not depend on HashMap order
+    let mut sorted_variables: Vec<(&String, &String)> = variables.iter().collect();
+    sorted_variables.sort_unstable();
+
     let mut dbuser_extras: Vec<LegacyDbUser> = Vec::new();
     let mut invalid_remotes: Vec<(&str, &str)> = Vec::new();
-    for (name, value) in variables {
+    for &(name, value) in &sorted_variables {
         if name.starts_with("DBUSER_") {
             dbuser_extras.push(parse_dbuser(name, value)?);
         } else if !cfg!(windows) && name.starts_with("REMOTE_INSTANCE_") {
@@ -723,7 +727,7 @@ pub fn convert(
     ));
 
     out.push_str("# --- Known environment variables defined in legacy config ---\n");
-    for (name, value) in variables {
+    for &(name, value) in &sorted_variables {
         if name == "DBUSER"
             || name == "ASMUSER"
             || name.starts_with("DBUSER_")
@@ -1569,6 +1573,45 @@ mod tests {
         assert_eq!(
             ms.conn().oracle_local_registry(),
             Some(&std::path::PathBuf::from("/etc/oracle/olr.loc"))
+        );
+    }
+
+    #[cfg(not(windows))]
+    #[test]
+    fn test_convert_orders_instances_by_variable_name() {
+        // eight entries: a HashMap-ordered output matches the sorted one by chance
+        // only once in 8! runs
+        let mut vars = HashMap::from([("DBUSER".into(), "checkmk:secret::::".into())]);
+        for sid in ["A1", "A2", "A3", "A4"] {
+            vars.insert(format!("DBUSER_{sid}"), "user:pwd::host:1521:".into());
+            vars.insert(
+                format!("REMOTE_INSTANCE_{sid}"),
+                format!("user:pwd::rhost:1521::{sid}:19.0:"),
+            );
+        }
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        let unified = result
+            .split_once("# --- Unified Config ---")
+            .expect("unified section present")
+            .1;
+        let hosts: Vec<&str> = unified
+            .lines()
+            .filter_map(|l| l.trim().strip_prefix("hostname: "))
+            .filter(|h| *h != "localhost")
+            .collect();
+        assert_eq!(
+            hosts,
+            ["host", "host", "host", "host", "rhost", "rhost", "rhost", "rhost"],
+            "got: {result}"
+        );
+        let sids: Vec<&str> = unified
+            .lines()
+            .filter_map(|l| l.trim().strip_prefix("- sid: "))
+            .collect();
+        assert_eq!(
+            sids,
+            ["A1", "A2", "A3", "A4", "A1", "A2", "A3", "A4"],
+            "got: {result}"
         );
     }
 

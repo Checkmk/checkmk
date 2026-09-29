@@ -69,7 +69,7 @@ def _noop_pending_changes() -> PendingChanges:
     )
 
 
-@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture
 def test_env(
     monkeypatch: MonkeyPatch,
     with_admin_login: UserId,
@@ -146,6 +146,7 @@ def test_env(
     ],
 )
 @pytest.mark.parametrize("use_subfolder", [True, False])
+@pytest.mark.usefixtures("test_env")
 def test_rename_host(
     use_subfolder: bool,
     hosts_to_create: list[tuple[HostName, HostAttributes, list[HostName] | None]],
@@ -213,6 +214,7 @@ def test_rename_host(
         assert set(nodes) == expected_nodes
 
 
+@pytest.mark.usefixtures("test_env")
 def test_rename_host_rewrites_the_relations_pointing_at_it() -> None:
     """Both halves of a relation are stored, but only the half sitting on the counterpart names
     the renamed host - so the pass is the same as for a parent definition."""

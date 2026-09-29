@@ -179,11 +179,6 @@ def test_check_hp_proliant_temp(item: str, expected_results: Sequence[Result | M
     assert list(check_hp_proliant_temp(item, {}, parsed)) == expected_results
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason="Crash report fcbc9244-6b11-11f1-be8d-005056b907f2: ValueError in _format_hp_proliant_name",
-)
 def test_hp_proliant_temp_ignores_rows_without_sensor() -> None:
     # The iLO returns rows where only the status column is filled.
     section = parse_hp_proliant_temp(

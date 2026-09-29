@@ -6,7 +6,7 @@
 
 import abc
 import time
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import total_ordering
 from typing import Literal, override
@@ -54,6 +54,7 @@ from ._display_hints import (
     inv_display_hints,
     NodeDisplayHint,
     PaintFunctionFromAPI,
+    PaintResultFromAPI,
     TableWithView,
 )
 
@@ -253,6 +254,25 @@ class _SDDeltaItem:
         raise NotImplementedError
 
 
+def _paint_value(paint_function: PaintFunctionFromAPI) -> PaintFunctionFromAPI:
+    return paint_function
+
+
+def _paint_value_and_raw_value(paint_function: PaintFunctionFromAPI) -> PaintFunctionFromAPI:
+    def _paint(now: float, value: SDValue) -> PaintResultFromAPI:
+        td_styles, rendered_value = paint_function(now, value)
+        if not rendered_value:
+            return td_styles, rendered_value
+        return (
+            td_styles,
+            HTML.with_escaping(rendered_value)
+            + " "
+            + HTMLWriter.render_span(f"({value})", css="muted_text"),
+        )
+
+    return _paint
+
+
 @dataclass(frozen=True, kw_only=True)
 class _Column:
     key: SDKey
@@ -274,6 +294,7 @@ class _MinType:
 @dataclass(frozen=True)
 class _ABCItemsSorter(abc.ABC):
     hint: NodeDisplayHint
+    decorate_paint_function: Callable[[PaintFunctionFromAPI], PaintFunctionFromAPI]
 
     def _make_columns(
         self, keys: Iterable[SDKey], key_columns: Sequence[SDKey]
@@ -284,7 +305,7 @@ class _ABCItemsSorter(abc.ABC):
             _Column(
                 key=c,
                 title=h.title,
-                paint_function=h.paint_function,
+                paint_function=self.decorate_paint_function(h.paint_function),
                 key_info=f"{c}*" if c in key_columns else c,
             )
             for c in (
@@ -311,7 +332,7 @@ class _SDItemsSorter(_ABCItemsSorter):
                 title=h.title,
                 value=self.attributes.pairs[k],
                 retention_interval=self.attributes.retentions.get(k),
-                paint_function=h.paint_function,
+                paint_function=self.decorate_paint_function(h.paint_function),
                 icon_path_svc_problems=self.icon_path_svc_problems,
             )
             for k in sorted_keys
@@ -371,7 +392,7 @@ class _SDDeltaItemsSorter(_ABCItemsSorter):
                 title=h.title,
                 old=self.attributes.pairs[k].old,
                 new=self.attributes.pairs[k].new,
-                paint_function=h.paint_function,
+                paint_function=self.decorate_paint_function(h.paint_function),
             )
             for k in sorted_keys
             if (v := self.attributes.pairs.get(k)) is not None and v.old != v.new
@@ -507,6 +528,9 @@ class TreeRenderer:
         self._theme = theme
         self._request = request
         self._show_internal_tree_paths = show_internal_tree_paths
+        self._decorate_paint_function = (
+            _paint_value_and_raw_value if show_internal_tree_paths else _paint_value
+        )
 
     def _get_header(self, title: str, key_info: str) -> HTML:
         header = HTML.with_escaping(title)
@@ -625,6 +649,7 @@ class TreeRenderer:
             case ImmutableTree():
                 items_sorter = _SDItemsSorter(
                     hint,
+                    self._decorate_paint_function,
                     self._theme.detect_icon_path("svc_problems", "icon_"),
                     tree.attributes,
                     tree.table,
@@ -634,6 +659,7 @@ class TreeRenderer:
             case ImmutableDeltaTree():
                 delta_items_sorter = _SDDeltaItemsSorter(
                     hint,
+                    self._decorate_paint_function,
                     tree.attributes,
                     tree.table,
                 )

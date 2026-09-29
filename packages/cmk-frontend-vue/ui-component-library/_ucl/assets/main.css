@@ -10,6 +10,7 @@ body {
   margin: 0;
   padding: 0 0 0 10px;
   font-family: Inter, sans-serif;
+  font-feature-settings: 'cv05' 1;
   font-weight: 400;
   font-size: var(--ucl-font-size-body);
   letter-spacing: 0.5px;

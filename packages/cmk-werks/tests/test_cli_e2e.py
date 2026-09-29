@@ -172,6 +172,21 @@ def test_delete_werk_logs_the_returned_id(tmp_path: Path) -> None:
     assert read_log(home)[-1] == "launcher:bazel, action:delete, werk ID:11111"
 
 
+def test_blame_without_an_id_blames_the_last_werk(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    write_secret(home)
+    write_stash(home, [11111, 11112])
+
+    repo_path = tmp_path / "repo"
+    initialize_werks_project(repo_path, first_free=11_111)
+    _create_werk(home, repo_path)
+
+    _returncode, output = call_output("blame", home=home, cwd=repo_path)
+
+    assert "some_title" in output
+
+
 def test_commit_config(tmp_path: Path) -> None:
     home = tmp_path / "home"
     home.mkdir()

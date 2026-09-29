@@ -881,7 +881,7 @@ def main_status(args: argparse.Namespace) -> None:
 
 
 def main_blame(args: argparse.Namespace) -> None:
-    wid = get_werk_arg(WerkId(args.id))
+    wid = get_werk_arg(None if args.id is None else WerkId(args.id))
     os.system(f"git blame {werk_path_by_id(wid)}")  # nosec B605 # BNS:a52d7f
 
 

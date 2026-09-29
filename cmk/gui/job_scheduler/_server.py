@@ -43,9 +43,8 @@ def run_server(config: ServerConfig, app: FastAPI, logger: Logger) -> None:
                             "with_process": True,
                             "with_thread": True,
                         },
-                        "access": {  # astrein: disable=logging-formatter
-                            "()": "uvicorn.logging.AccessFormatter",
-                            "fmt": "%(asctime)s %(message)s",
+                        "access": {
+                            "()": "cmk.ccc.log.CMKFormatter",
                         },
                     },
                     "handlers": {

@@ -20,35 +20,3 @@ export async function snapshot(request: Request): Promise<SeenRequest> {
     body: await request.text()
   }
 }
-
-/**
- * The shared REST client module, with a fetch that is looked up per call.
- *
- * The real module captures ``globalThis.fetch`` when it loads, which is before
- * ``server.listen()`` patches it — so msw would never see a request the default
- * client makes. A suite that intercepts one replaces the module with this:
- *
- * ```ts
- * vi.mock('cmk-ui-library/lib/rest-api-client/client', async (importOriginal) => {
- *   const { interceptableRestClient } = await import('../support/http')
- *   return interceptableRestClient(await importOriginal())
- * })
- * ```
- *
- * The dynamic import is what makes it reachable: a ``vi.mock`` factory is
- * hoisted above the file's own imports.
- */
-export async function interceptableRestClient(
-  original: Record<string, unknown>
-): Promise<Record<string, unknown>> {
-  const createClient = (await import('openapi-fetch')).default
-  return {
-    ...original,
-    default: createClient({
-      baseUrl: `${location.protocol}//${location.host}/api/internal`,
-      credentials: 'include',
-      headers: { Accept: 'application/json' },
-      fetch: (...args: Parameters<typeof globalThis.fetch>) => globalThis.fetch(...args)
-    })
-  }
-}

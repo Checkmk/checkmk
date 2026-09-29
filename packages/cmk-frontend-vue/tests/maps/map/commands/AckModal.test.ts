@@ -7,7 +7,7 @@ import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import { CommandsApi } from '@/maps/api/commands'
 import AckModal from '@/maps/map/commands/AckModal.vue'
@@ -36,11 +36,6 @@ async function submitWithComment(comment = 'fixing it') {
   await user.type(await screen.findByRole('textbox'), comment)
   await user.click(screen.getByRole('button', { name: 'Acknowledge' }))
 }
-
-vi.mock('cmk-ui-library/lib/rest-api-client/client', async (importOriginal) => {
-  const { interceptableRestClient } = await import('../../support/http')
-  return interceptableRestClient(await importOriginal<Record<string, unknown>>())
-})
 
 const server = useMswServer()
 

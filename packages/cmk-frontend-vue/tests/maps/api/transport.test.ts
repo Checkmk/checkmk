@@ -5,7 +5,7 @@
  */
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 import { ImagesApi } from '@/maps/api/images'
 import { TicketApi, checkmkLoginUrl, checkmkLogoutUrl } from '@/maps/api/ticket'
@@ -19,11 +19,6 @@ const sampleTicket = {
   language: 'en',
   capabilities: fullCapabilities()
 }
-
-vi.mock('cmk-ui-library/lib/rest-api-client/client', async (importOriginal) => {
-  const { interceptableRestClient } = await import('../support/http')
-  return interceptableRestClient(await importOriginal<Record<string, unknown>>())
-})
 
 const server = useMswServer()
 
@@ -47,9 +42,8 @@ describe('handing off to the Checkmk GUI', () => {
 })
 
 // Everything the SPA asks Checkmk itself for is an endpoint of the internal REST
-// API, rooted at /api/internal (no base injected under jsdom, so the URL
-// resolves against the page origin). These assert the HTTP shape the SPA
-// depends on.
+// API, at api/internal relative to the page (/api/internal under jsdom). These
+// assert the HTTP shape the SPA depends on.
 describe('the internal REST transport', () => {
   it('scopes the ticket handshake to the open map', async () => {
     const seen: SeenRequest[] = []

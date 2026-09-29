@@ -5,18 +5,13 @@
  */
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import { MapConfigApi } from '@/maps/api/mapConfig'
 import type { MapConfig } from '@/maps/types/api'
 
 import { aMap, newMapView } from '../support/fixtures'
 import { type SeenRequest, snapshot } from '../support/http'
-
-vi.mock('cmk-ui-library/lib/rest-api-client/client', async (importOriginal) => {
-  const { interceptableRestClient } = await import('../support/http')
-  return interceptableRestClient(await importOriginal<Record<string, unknown>>())
-})
 
 const api = new MapConfigApi()
 

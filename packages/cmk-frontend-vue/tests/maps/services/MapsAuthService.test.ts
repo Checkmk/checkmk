@@ -31,11 +31,6 @@ const sampleTicket = {
   capabilities: sampleCaps
 }
 
-vi.mock('cmk-ui-library/lib/rest-api-client/client', async (importOriginal) => {
-  const { interceptableRestClient } = await import('../support/http')
-  return interceptableRestClient(await importOriginal<Record<string, unknown>>())
-})
-
 const TICKET_ENDPOINT = '*/api/internal/domain-types/maps_ticket/collections/all'
 
 let ticketCalls: number

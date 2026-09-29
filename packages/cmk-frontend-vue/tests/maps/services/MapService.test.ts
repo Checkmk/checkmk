@@ -5,7 +5,7 @@
  */
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, delay, http } from 'msw'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import { MapConfigApi } from '@/maps/api/mapConfig'
 import { MapStatesApi } from '@/maps/api/mapStates'
@@ -14,23 +14,6 @@ import { MapService } from '@/maps/services/MapService'
 import type { MapConfig, MapRead } from '@/maps/types/api'
 
 import { aMap, anObject, newMapView } from '../support/fixtures'
-
-// The default REST client captures `globalThis.fetch` when the module loads,
-// before `server.listen()` patches it. Re-create it with a lazy wrapper so the
-// interception applies (same shape as the other msw suites in this package).
-vi.mock('cmk-ui-library/lib/rest-api-client/client', async (importOriginal) => {
-  const mod = await importOriginal<Record<string, unknown>>()
-  const createClientImpl = (await import('openapi-fetch')).default
-  return {
-    ...mod,
-    default: createClientImpl({
-      baseUrl: `${location.protocol}//${location.host}/api/internal`,
-      credentials: 'include',
-      headers: { Accept: 'application/json' },
-      fetch: (...args: Parameters<typeof globalThis.fetch>) => globalThis.fetch(...args)
-    })
-  }
-})
 
 // Map config CRUD goes through the official Checkmk REST API (openapi-fetch,
 // rooted at /api/internal). The tests simulate that boundary with msw, so the

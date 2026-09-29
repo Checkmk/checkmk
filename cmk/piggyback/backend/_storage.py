@@ -7,6 +7,7 @@
 import contextlib
 import datetime
 import errno
+import itertools
 import json
 import logging
 import os
@@ -16,7 +17,7 @@ import time
 from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Self
+from typing import Literal, Self
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.inotify import Event, INotify, Masks
@@ -500,32 +501,41 @@ def _render_datetime(timestamp: float) -> str:
     return datetime.datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
 
-def move_for_host_rename(omd_root: Path, old_host: str, new_host: str) -> tuple[str, ...]:
+type RenameAction = Literal["piggyback-load", "piggyback-pig"]
+
+
+def move_for_host_rename(omd_root: Path, old_host: str, new_host: str) -> tuple[RenameAction, ...]:
     """Move all piggybacked and source files from old_host to new_host
 
-    Return a tuple of strings representing the actions taken.
+    Return one action per moved file.
     """
-    piggyback_dir = payload_dir(omd_root)
 
-    def _rename_piggybacked_dir(old_name: str, new_name: str) -> Iterable[str]:
-        if not (old_path := piggyback_dir / old_name).exists():
+    def _rename_piggybacked_dir(basedir: Path) -> Iterable[RenameAction]:
+        if not (old_path := basedir / old_host).exists():
             return
 
         with contextlib.suppress(FileNotFoundError):
-            shutil.rmtree(str(new_path := piggyback_dir / new_name))
+            shutil.rmtree(str(new_path := basedir / new_host))
 
-        os.rename(str(old_path), str(new_path))
+        try:
+            os.rename(str(old_path), str(new_path))
+        except FileNotFoundError:
+            return
         yield "piggyback-load"
 
-    def _rename_payload_file(basedir: Path, old_name: str, new_name: str) -> Iterable[str]:
-        if not (old_path := basedir / old_name).exists():
+    def _rename_file(basedir: Path) -> Iterable[RenameAction]:
+        try:
+            (basedir / old_host).replace(basedir / new_host)
+        except FileNotFoundError:
             return
-
-        (new_path := basedir / new_name).unlink(missing_ok=True)
-        old_path.rename(new_path)
         yield "piggyback-pig"
 
+    # the payload files of the renamed host sit in the folder of every host it is a source of,
+    # so they have to be moved before its own folder is renamed away
     return tuple(
-        *_rename_piggybacked_dir(old_host, new_host),
-        *_rename_payload_file(piggyback_dir, old_host, new_host),
+        itertools.chain(
+            *(_rename_file(folder) for folder in _get_piggybacked_host_folders(omd_root)),
+            _rename_file(source_status_dir(omd_root)),
+            _rename_piggybacked_dir(payload_dir(omd_root)),
+        )
     )

@@ -364,9 +364,6 @@ def test_remove_folder_if_empty_tolerates_vanished_folder(tmp_path: Path) -> Non
     _remove_folder_if_empty(tmp_path / "vanished")
 
 
-@pytest.mark.skip(
-    reason="move_for_host_rename returns a tuple of characters and never moves the files a host is the source of"
-)
 def test_renaming_a_piggybacked_host_moves_its_data() -> None:
     backend.store_piggyback_raw_data(
         HostAddress("source1"),
@@ -387,9 +384,6 @@ def test_renaming_a_piggybacked_host_moves_its_data() -> None:
     assert moved.raw_data == b"pay\nload\n"
 
 
-@pytest.mark.skip(
-    reason="move_for_host_rename returns a tuple of characters and never moves the files a host is the source of"
-)
 def test_renaming_a_source_host_keeps_it_the_source_of_its_piggybacked_hosts() -> None:
     backend.store_piggyback_raw_data(
         HostAddress("old-source"),
@@ -412,9 +406,6 @@ def test_renaming_a_source_host_keeps_it_the_source_of_its_piggybacked_hosts() -
     assert _get_only_raw_data_element(HostAddress("test-host")).meta.last_contact is not None
 
 
-@pytest.mark.skip(
-    reason="move_for_host_rename returns a tuple of characters and never moves the files a host is the source of"
-)
 def test_renaming_a_host_that_is_source_and_piggybacked_moves_both_sides() -> None:
     backend.store_piggyback_raw_data(
         HostAddress("peer"),
@@ -450,9 +441,6 @@ def test_renaming_a_host_that_is_source_and_piggybacked_moves_both_sides() -> No
             "renamed",
             "piggybacked",
             id="rename source host",
-            marks=pytest.mark.skip(
-                reason="move_for_host_rename returns a tuple of characters and never moves the files a host is the source of"
-            ),
         ),
     ],
 )

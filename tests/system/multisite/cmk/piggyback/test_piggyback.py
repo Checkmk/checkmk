@@ -538,9 +538,6 @@ def _rename_host(central_site: Site, hostname_old: str, hostname_new: str) -> st
     return summary
 
 
-@pytest.mark.skip(
-    reason="move_for_host_rename returns a tuple of characters and never moves the files a host is the source of"
-)
 def test_renaming_a_piggybacked_host_keeps_its_piggybacked_service(
     piggyback_env_two_site_setup: tuple[Site, Site],
 ) -> None:
@@ -577,9 +574,6 @@ def test_renaming_a_piggybacked_host_keeps_its_piggybacked_service(
         assert "Piggyback information from other host" in summary
 
 
-@pytest.mark.skip(
-    reason="move_for_host_rename returns a tuple of characters and never moves the files a host is the source of"
-)
 def test_renaming_a_source_host_keeps_delivering_the_piggybacked_service(
     piggyback_env_two_site_setup: tuple[Site, Site],
 ) -> None:

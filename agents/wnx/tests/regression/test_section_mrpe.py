@@ -77,7 +77,6 @@ def expected_output_engine():
         "include_with_newline",
         "include_with_newline_forward_slash",
     ],
-    autouse=True,  # ruff: ignore[pytest-fixture-autouse]
 )
 def manage_plugin(request):
     Globals.newline = request.param
@@ -108,7 +107,7 @@ def manage_plugin(request):
             os.unlink(os.path.join(target_dir, Globals.cfgfile))
 
 
-@pytest.mark.usefixtures("testconfig")
+@pytest.mark.usefixtures("manage_plugin", "testconfig")
 def test_section_mrpe(request, expected_output, actual_output, testfile) -> None:  # type: ignore[misc]
     # request.node.name gives test name
     local_test(expected_output, actual_output, testfile, request.node.name)

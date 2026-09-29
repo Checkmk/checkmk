@@ -9,29 +9,41 @@ import CmkIconEmblem from 'cmk-ui-library/components/CmkIcon/CmkIconEmblem.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { computed, useTemplateRef } from 'vue'
 
 import DisabledTooltipWrapper from '../DisabledTooltipWrapper.vue'
 import type { WorkflowItem } from '../WidgetWorkflowTypes'
 
 interface WorkflowListItemProps extends WorkflowItem {
-  disabled?: boolean
+  requiresHigherEdition?: boolean
 }
 
-defineProps<WorkflowListItemProps>()
+const props = defineProps<WorkflowListItemProps>()
 const { _t } = usei18n()
 
 const emit = defineEmits(['select'])
+
+const disabledReason = computed(() =>
+  props.requiresHigherEdition ? _t('Available in Checkmk Pro or higher.') : props.unavailableReason
+)
+const isDisabled = computed(() => disabledReason.value !== undefined)
+
+const buttonRef = useTemplateRef<HTMLButtonElement>('buttonRef')
+
+defineExpose({
+  focus: () => {
+    buttonRef.value?.focus()
+  }
+})
 </script>
 
 <template>
-  <DisabledTooltipWrapper
-    :disabled="!!disabled"
-    :tooltip="_t('Available in Checkmk Pro or higher.')"
-  >
+  <DisabledTooltipWrapper :disabled="isDisabled" :tooltip="disabledReason">
     <button
+      ref="buttonRef"
       class="db-workflow-list-item"
-      :class="{ 'db-workflow-list-item__disabled': disabled }"
-      :disabled="!!disabled"
+      :class="{ 'db-workflow-list-item__disabled': isDisabled }"
+      :disabled="isDisabled"
       @click="emit('select')"
     >
       <CmkIconEmblem :emblem="icon_emblem"><CmkIcon :name="icon" size="xxlarge" /></CmkIconEmblem>

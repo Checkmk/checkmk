@@ -35,7 +35,11 @@ import { offsetInitialPosition } from '@/dashboard/components/RelativeGrid/utils
 import { createWidgetLayout } from '@/dashboard/components/ResponsiveGrid/composables/useResponsiveGridLayout'
 import AddWidgetDialog from '@/dashboard/components/WidgetWorkflow/StarterDialog/AddWidgetDialog.vue'
 import AddWidgetPage from '@/dashboard/components/WidgetWorkflow/StarterPage/AddWidgetPage.vue'
-import { getDashboardWidgetWorkflows } from '@/dashboard/components/WidgetWorkflow/WidgetWorkflowTypes'
+import {
+  findParentWorkflowKey,
+  getDashboardWidgetWorkflows,
+  isWorkflowGroup
+} from '@/dashboard/components/WidgetWorkflow/WidgetWorkflowTypes'
 import CloneDashboardWizard from '@/dashboard/components/Wizard/CloneDashboardWizard.vue'
 import CreateDashboardWizard from '@/dashboard/components/Wizard/CreateDashboardWizard.vue'
 import WizardSelector from '@/dashboard/components/WizardSelector/WizardSelector.vue'
@@ -92,6 +96,7 @@ const isDashboardEditingMode = ref(props.mode === 'edit_layout' && !!props.dashb
 const openDashboardFilterSettings = ref(false)
 const openDashboardSettings = ref(props.mode === 'edit_settings')
 const openAddWidgetDialog = ref(false)
+const addWidgetDialogGroupKey = ref<string | null>(null)
 const openDashboardCreationDialog = ref(props.mode === 'create')
 const openDashboardCloneDialog = ref(props.mode === 'clone')
 const isCloning = ref(false)
@@ -282,12 +287,17 @@ watch(dashboardVisualTitle, (newTitle) => {
   document.title = newTitle
 })
 
+const showAddWidgetDialog = (groupKey: string | null = null) => {
+  addWidgetDialogGroupKey.value = groupKey
+  openAddWidgetDialog.value = true
+}
+
 const handleWizardSelectorGoBack = () => {
   // when editing, do not go back to widget type selection (and clear the edit state)
   if (widgetToEdit.value) {
     widgetToEdit.value = null
   } else {
-    openAddWidgetDialog.value = true
+    showAddWidgetDialog(findParentWorkflowKey(dashboardWidgetWorkflows, selectedWizard.value))
   }
   openWizard.value = false
 }
@@ -298,12 +308,16 @@ const handleWizardClose = () => {
   openAddWidgetDialog.value = false
 }
 
-const handleAddWidget = (widgetIdent: string) => {
+const selectWorkflow = (workflowKey: string) => {
   if (!dashboardsManager.isInitialized.value) {
     throw new Error('Dashboard not yet initialized.')
   }
+  if (isWorkflowGroup(dashboardWidgetWorkflows[workflowKey])) {
+    showAddWidgetDialog(workflowKey)
+    return
+  }
   openAddWidgetDialog.value = false
-  selectedWizard.value = widgetIdent
+  selectedWizard.value = workflowKey
   openWizard.value = true
 }
 
@@ -652,7 +666,7 @@ const { refreshTick } = useGlobalRefresh()
           @open-filter-settings="openFilterSettings"
           @open-settings="openDashboardSettings = true"
           @open-clone-workflow="openDashboardCloneDialog = true"
-          @open-widget-workflow="openAddWidgetDialog = true"
+          @open-widget-workflow="showAddWidgetDialog()"
           @open-share-workflow="openDashboardShareDialog = true"
           @save="saveDashboard"
           @enter-edit="dashboardsManager.activeDashboard.value && (isDashboardEditingMode = true)"
@@ -703,9 +717,10 @@ const { refreshTick } = useGlobalRefresh()
         />
         <AddWidgetDialog
           v-model:open="openAddWidgetDialog"
+          v-model:active-group-key="addWidgetDialogGroupKey"
           :workflow-items="dashboardWidgetWorkflows"
           :dashboard-features="available_features.dashboard_features"
-          @select="handleAddWidget"
+          @select="selectWorkflow"
           @close="openAddWidgetDialog = false"
         />
         <WizardSelector
@@ -770,7 +785,7 @@ const { refreshTick } = useGlobalRefresh()
             v-if="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
             :workflow-items="dashboardWidgetWorkflows"
             :dashboard-features="available_features.dashboard_features"
-            @select="handleAddWidget"
+            @select="selectWorkflow"
           />
           <DashboardComponent
             v-else-if="dashboardsManager.isInitialized.value"

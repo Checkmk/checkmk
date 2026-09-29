@@ -15,13 +15,37 @@ export interface WorkflowItem {
 
   icon: SimpleIcons
   icon_emblem?: IconEmblems | undefined
+
+  unavailableReason?: TranslatedString | undefined
+}
+
+export interface WorkflowGroup extends WorkflowItem {
+  subWorkflows: Record<string, WorkflowItem>
+}
+
+export type WorkflowCatalog = Record<string, WorkflowItem | WorkflowGroup>
+
+export function isWorkflowGroup(workflow: WorkflowItem | undefined): workflow is WorkflowGroup {
+  return workflow !== undefined && 'subWorkflows' in workflow
+}
+
+export function findParentWorkflowKey(
+  catalog: WorkflowCatalog,
+  workflowKey: string
+): string | null {
+  for (const [groupKey, workflow] of Object.entries(catalog)) {
+    if (isWorkflowGroup(workflow) && Object.hasOwn(workflow.subWorkflows, workflowKey)) {
+      return groupKey
+    }
+  }
+  return null
 }
 
 export function getDashboardWidgetWorkflows(
   ntopActive: boolean = false,
   networkFlowActive: boolean = false
-): Record<string, WorkflowItem> {
-  const workflows: Record<string, WorkflowItem> = {
+): WorkflowCatalog {
+  const workflows: WorkflowCatalog = {
     metrics_graphs: {
       title: _t('Metrics & graphs'),
       subtitle: _t('Visualize key metrics using charts and graphs'),

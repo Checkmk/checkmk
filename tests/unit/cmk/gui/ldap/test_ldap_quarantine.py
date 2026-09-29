@@ -31,7 +31,7 @@ def fixture_sync_result() -> SyncUsersResult:
     return SyncUsersResult(sync_start_time=time(), fetched_users={})
 
 
-@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture
 def _no_security_log(mocker: MockerFixture) -> None:
     mocker.patch("cmk.gui.ldap_integration.ldap_connector.log_security_event")
     mocker.patch(
@@ -43,7 +43,7 @@ def _synced_user(*, locked: bool = False) -> UserSpec:
     return UserSpec(connector=_CONNECTION_ID, locked=locked, roles=["user"])
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "_no_security_log")
 def test_vanished_user_is_quarantined(
     connector: LDAPUserConnector, sync_result: SyncUsersResult, set_config: SetConfig
 ) -> None:
@@ -58,7 +58,7 @@ def test_vanished_user_is_quarantined(
     assert any("Quarantined user bob" in change for change in sync_result.changes)
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "_no_security_log")
 def test_already_quarantined_user_is_left_untouched(
     connector: LDAPUserConnector, sync_result: SyncUsersResult, set_config: SetConfig
 ) -> None:
@@ -73,7 +73,7 @@ def test_already_quarantined_user_is_left_untouched(
     assert sync_result.changes == []
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "_no_security_log")
 def test_vanished_user_is_deleted_when_quarantine_disabled(
     connector: LDAPUserConnector, sync_result: SyncUsersResult, set_config: SetConfig
 ) -> None:
@@ -86,7 +86,7 @@ def test_vanished_user_is_deleted_when_quarantine_disabled(
     assert any("Removed user bob" in change for change in sync_result.changes)
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "_no_security_log")
 def test_present_user_is_not_quarantined(
     connector: LDAPUserConnector, sync_result: SyncUsersResult, set_config: SetConfig
 ) -> None:
@@ -103,6 +103,7 @@ def test_present_user_is_not_quarantined(
     assert sync_result.changes == []
 
 
+@pytest.mark.usefixtures("_no_security_log")
 def test_reactivate_clears_quarantine_and_unlocks(
     connector: LDAPUserConnector, sync_result: SyncUsersResult
 ) -> None:
@@ -117,6 +118,7 @@ def test_reactivate_clears_quarantine_and_unlocks(
     assert any("Reactivated quarantined user bob" in change for change in sync_result.changes)
 
 
+@pytest.mark.usefixtures("_no_security_log")
 def test_reactivate_does_not_unlock_manually_locked_user(
     connector: LDAPUserConnector, sync_result: SyncUsersResult
 ) -> None:

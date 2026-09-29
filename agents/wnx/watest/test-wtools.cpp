@@ -848,13 +848,19 @@ TEST(Wtools, MangleNameForPerfCounter) {
 }
 
 TEST(Wtools, OsInfo) {
-    const auto obtained = *GetOsInfo();
+    const auto info = GetOsInfo();
+    ASSERT_TRUE(info.has_value());
+    const auto &obtained = *info;
     EXPECT_TRUE(obtained.name.starts_with(L"Microsoft Windows"));
-    EXPECT_TRUE(obtained.name.ends_with(L"Pro") ||      // local
-                obtained.name.ends_with(L"Standard"));  // CI
+    // Any edition: only that the name is the product name alone, without
+    // the "|<windows dir>|<device>" part of WMI's Win32_OperatingSystem.Name.
+    EXPECT_GT(obtained.name.size(),
+              std::wstring_view{L"Microsoft Windows "}.size());
+    EXPECT_EQ(obtained.name.find(L'|'), std::wstring::npos);
 
     const auto num_strings = cma::tools::SplitString(obtained.version, L".");
     // 10.0.14559
+    ASSERT_GE(num_strings.size(), 3U);
     EXPECT_GE(std::stoi(num_strings[0]), 10);
     EXPECT_GE(std::stoi(num_strings[1]), 0);
     EXPECT_GE(std::stoi(num_strings[2]), 20);

@@ -63,7 +63,7 @@ class WerkDetailPage(Page):
             builder,
             _("Class"),
             translator.class_of(werk),
-            css="werkclass werkclass%s" % werk.level.value,
+            css="werkclass werkclass%s" % werk.class_.value,
         )
         acknowledged = is_acknowledged(werk, acknowledged_ids)
         _row(

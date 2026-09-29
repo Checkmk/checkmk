@@ -10,6 +10,7 @@ allow/deny decisions the routers and guard dependencies enforce.
 """
 
 import asyncio
+from http import HTTPStatus
 
 import pytest
 from fastapi import HTTPException
@@ -62,7 +63,7 @@ def test_rate_limited_read_blocks_after_budget() -> None:
         rest_read_limiter.record(user.name)
     with pytest.raises(HTTPException) as exc:
         asyncio.run(rate_limited_read(user))
-    assert exc.value.status_code == 429
+    assert exc.value.status_code == HTTPStatus.TOO_MANY_REQUESTS
 
 
 def test_rate_limited_read_is_per_user() -> None:

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from starlette.status import HTTP_403_FORBIDDEN
@@ -50,7 +52,7 @@ def test_agent_ca_revocation_rejects_only_the_revoked_certificate() -> None:
     revoke_serial_number(get_config().agent_ca_path, revoked)
     client = _client()
 
-    assert _get(client, still_valid) == (200, '{"agent":"output"}')
+    assert _get(client, still_valid) == (HTTPStatus.OK, '{"agent":"output"}')
 
     status_code, body = _get(client, revoked)
     assert status_code == HTTP_403_FORBIDDEN

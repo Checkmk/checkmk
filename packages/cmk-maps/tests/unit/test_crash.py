@@ -6,6 +6,7 @@
 
 import base64
 import json
+from http import HTTPStatus
 from pathlib import Path
 from typing import NoReturn
 
@@ -81,7 +82,7 @@ def test_unhandled_request_exception_returns_500_with_crash_id(
     client = TestClient(main.app, raise_server_exceptions=False)
     response = client.get("/test-unhandled-crash")
 
-    assert response.status_code == 500
+    assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
     assert response.json() == {
         "detail": "Internal server error",
         "crash_id": "deadbeef-crash-id",

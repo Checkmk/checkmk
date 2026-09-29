@@ -6,6 +6,7 @@
 import os
 import tempfile
 from functools import cache
+from http import HTTPStatus
 from pathlib import Path
 from typing import Annotated, assert_never
 
@@ -476,7 +477,7 @@ async def agent_data(
             {"uuid": uuid, "compression": compression},
         )
         raise HTTPException(
-            status_code=400,
+            status_code=HTTPStatus.BAD_REQUEST,
             detail=f"Unsupported compression algorithm: {compression}",
         ) from e
 
@@ -488,7 +489,7 @@ async def agent_data(
             {"uuid": uuid, "error": e},
         )
         raise HTTPException(
-            status_code=400,
+            status_code=HTTPStatus.BAD_REQUEST,
             detail="Decompression of agent data failed",
         ) from e
 
@@ -524,7 +525,9 @@ async def registration_status(
                 status=r4r.status,
                 message=r4r.request.rejection_notice(),
             )
-        raise HTTPException(status_code=404, detail="Host is not registered") from e
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="Host is not registered"
+        ) from e
 
     return RegistrationStatus(
         hostname=host.name,

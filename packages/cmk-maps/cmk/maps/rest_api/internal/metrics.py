@@ -8,6 +8,8 @@ Thin wrapper around :mod:`cmk.maps.gui._metrics`, which owns the graphing
 pipeline (translations, Perf-O-Meter renderers, graph evaluation).
 """
 
+from http import HTTPStatus
+
 from cmk.ccc.hostaddress import HostNameValidationError
 from cmk.gui.graphing import (
     get_temperature_unit,
@@ -63,13 +65,15 @@ def show_metric_info_v1(
     if body.graphs:
         if not body.host_name:
             raise ProblemException(
-                status=400, title="Missing field", detail="'host_name' is required with 'graphs'."
+                status=HTTPStatus.BAD_REQUEST,
+                title="Missing field",
+                detail="'host_name' is required with 'graphs'.",
             )
         try:
             context = object_context(body.site_id, body.host_name, body.service_description)
         except HostNameValidationError:
             raise ProblemException(
-                status=400, title="Invalid input", detail="Invalid host name."
+                status=HTTPStatus.BAD_REQUEST, title="Invalid input", detail="Invalid host name."
             ) from None
 
     info = metric_info(

@@ -12,6 +12,7 @@ CSP). These are pinned here so a future refactor cannot silently drop one.
 from __future__ import annotations
 
 import asyncio
+from http import HTTPStatus
 
 import pytest
 from starlette.applications import Starlette
@@ -35,7 +36,7 @@ def _client() -> TestClient:
 
 def test_all_security_headers_present(client: TestClient) -> None:
     resp = client.get("/x")
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     assert resp.headers["x-content-type-options"] == "nosniff"
     assert resp.headers["x-frame-options"] == "SAMEORIGIN"
     # no-referrer so the signed ticket in ``?token=`` never leaks via Referer.

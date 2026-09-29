@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager
+from http import HTTPStatus
 from typing import override
 
 import pytest
@@ -81,7 +82,7 @@ def test_list_backends_redacts_secrets(
 
     resp = client.get("/api/v1/connections")
 
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     body = resp.json()
     assert body[0]["id"] == "c1"
     # The resolved secret must never leave the server on the read-only list API.
@@ -137,7 +138,7 @@ def test_metric_history_returns_series(router_client: RouterClientFactory) -> No
         params={"host": "localhost", "service": "CPU utilization", "minutes": 60},
     )
 
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     body = resp.json()
     assert body["series"]  # synthetic series present
     assert body["error"] is None
@@ -154,7 +155,7 @@ def test_metric_history_unknown_connection_degrades_to_empty(
 
     resp = client.get("/api/v1/connections/absent/metric-history", params={"host": "localhost"})
 
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     assert resp.json()["series"] == {}
 
 
@@ -171,7 +172,7 @@ def test_metric_history_backend_error_is_soft_failure(
     )
 
     # A failing RRD fetch must not surface as a 5xx: empty series + an error flag.
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     body = resp.json()
     assert body["series"] == {}
     assert body["error"]
@@ -190,7 +191,7 @@ def test_metric_history_scopes_query_to_contact_user(
         "/api/v1/connections/c1/metric-history", params={"host": "localhost", "service": "PING"}
     )
 
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     # A contact-scoped user's read must be wrapped in their Livestatus AuthUser.
     assert spy.scoped_as == ["bob"]
 
@@ -208,7 +209,7 @@ def test_metric_history_see_all_user_runs_unscoped(
         "/api/v1/connections/c1/metric-history", params={"host": "localhost", "service": "PING"}
     )
 
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     # see-all bypasses AuthUser scoping — passing the raw name would filter cmkadmin
     # (typically no contact) down to zero rows.
     assert spy.scoped_as == []
@@ -226,7 +227,7 @@ def test_object_details_service_requires_service_param(
         "/api/v1/connections/c1/object-details", params={"type": "service", "host": "localhost"}
     )
 
-    assert resp.status_code == 400
+    assert resp.status_code == HTTPStatus.BAD_REQUEST
 
 
 def test_object_details_unknown_connection_returns_null(
@@ -240,5 +241,5 @@ def test_object_details_unknown_connection_returns_null(
         "/api/v1/connections/absent/object-details", params={"type": "host", "host": "h"}
     )
 
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     assert resp.json() is None

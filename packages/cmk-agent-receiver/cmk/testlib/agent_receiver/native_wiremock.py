@@ -15,6 +15,7 @@ import tempfile
 import time
 from collections.abc import Iterator
 from dataclasses import dataclass
+from http import HTTPStatus
 from pathlib import Path
 from typing import cast
 
@@ -58,7 +59,7 @@ def _wait_for_wiremock(base_url: str, timeout: int = 30) -> None:
     while True:
         try:
             response = httpx2.get(f"{base_url}/__admin/health", timeout=1)
-            if response.status_code == 200:
+            if response.status_code == HTTPStatus.OK:
                 return
         except httpx2.RequestError, httpx2.TimeoutException:
             pass

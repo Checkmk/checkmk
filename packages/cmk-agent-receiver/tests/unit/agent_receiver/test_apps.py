@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from fastapi import APIRouter, FastAPI
 from fastapi.testclient import TestClient
 from starlette.routing import Mount
@@ -22,10 +24,14 @@ from cmk.testlib.agent_receiver.certs import agent_ca_common_name, UNREVOKED_SER
 def test_uuid_validation_route() -> None:
     app = FastAPI()
     uuid_validation_router = APIRouter(
-        dependencies=[mtls_authorization_dependency("uuid", 400, ExpectedCA.AGENT)]
+        dependencies=[
+            mtls_authorization_dependency("uuid", HTTPStatus.BAD_REQUEST, ExpectedCA.AGENT)
+        ]
     )
     foo_validation_router = APIRouter(
-        dependencies=[mtls_authorization_dependency("foo", 400, ExpectedCA.AGENT)]
+        dependencies=[
+            mtls_authorization_dependency("foo", HTTPStatus.BAD_REQUEST, ExpectedCA.AGENT)
+        ]
     )
 
     @uuid_validation_router.get("/endpoint/{uuid}")
@@ -50,7 +56,7 @@ def test_uuid_validation_route() -> None:
             INJECTED_SERIAL_HEADER: UNREVOKED_SERIAL_NUMBER,
         },
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {"Hello": "World"}
 
     response = client.get(
@@ -61,7 +67,7 @@ def test_uuid_validation_route() -> None:
             INJECTED_SERIAL_HEADER: UNREVOKED_SERIAL_NUMBER,
         },
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response.json() == {
         "detail": "Verified client UUID (5678) does not match UUID in URL (1234)"
     }
@@ -74,7 +80,7 @@ def test_uuid_validation_route() -> None:
             INJECTED_SERIAL_HEADER: UNREVOKED_SERIAL_NUMBER,
         },
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {"Hello": "World"}
 
     response = client.get(
@@ -85,7 +91,7 @@ def test_uuid_validation_route() -> None:
             INJECTED_SERIAL_HEADER: UNREVOKED_SERIAL_NUMBER,
         },
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response.json() == {
         "detail": "Verified client UUID (5678) does not match UUID in URL (1234)"
     }
@@ -99,7 +105,9 @@ def test_uuid_validation_route_rejects_wrong_issuer() -> None:
     """
     app = FastAPI()
     uuid_validation_router = APIRouter(
-        dependencies=[mtls_authorization_dependency("uuid", 400, ExpectedCA.AGENT)]
+        dependencies=[
+            mtls_authorization_dependency("uuid", HTTPStatus.BAD_REQUEST, ExpectedCA.AGENT)
+        ]
     )
 
     @uuid_validation_router.get("/endpoint/{uuid}")
@@ -117,7 +125,7 @@ def test_uuid_validation_route_rejects_wrong_issuer() -> None:
             INJECTED_SERIAL_HEADER: UNREVOKED_SERIAL_NUMBER,
         },
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert "not issued by the expected CA" in response.json()["detail"]
 
 

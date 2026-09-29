@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import AsyncIterator, Callable
+from http import HTTPStatus
 from typing import cast, Literal, override
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
@@ -540,7 +541,9 @@ class SseResponse(StreamingResponse):
     # FastAPI reads the default from the response class's __init__ otherwise,
     # which SseResponse's own signature no longer carries.
     status_code=status.HTTP_200_OK,
-    responses={200: {"model": StreamMessage, "description": "One state or topology frame."}},
+    responses={
+        HTTPStatus.OK: {"model": StreamMessage, "description": "One state or topology frame."}
+    },
 )
 async def sse_map_states(
     name: MapName,

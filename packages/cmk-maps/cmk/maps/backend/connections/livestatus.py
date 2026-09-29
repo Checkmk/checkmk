@@ -17,6 +17,7 @@ from collections.abc import AsyncIterator, Iterable, Mapping
 from contextlib import asynccontextmanager
 from contextvars import ContextVar
 from datetime import datetime, UTC
+from http import HTTPStatus
 from pathlib import Path
 from typing import cast, Literal, override, TYPE_CHECKING
 
@@ -1063,7 +1064,7 @@ class LivestatusConnection(ConnectionBase):
                             json=body,
                             headers={"Authorization": auth_header, "Accept": "application/json"},
                         )
-                        if resp.status_code != 200:
+                        if resp.status_code != HTTPStatus.OK:
                             logger.debug(
                                 "CMK REST API %(metric_id)s: HTTP %(status_code)s",
                                 {"metric_id": metric_id, "status_code": resp.status_code},
@@ -1128,7 +1129,7 @@ class LivestatusConnection(ConnectionBase):
                     },
                     json={"host_name": host, "columns": ["metrics", "description"]},
                 )
-                if resp.status_code != 200:
+                if resp.status_code != HTTPStatus.OK:
                     return []
                 data = resp.json()
                 for item in data.get("value", []):

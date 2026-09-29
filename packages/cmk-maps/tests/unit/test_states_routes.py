@@ -23,6 +23,7 @@ import hmac
 import json
 import time
 from collections.abc import AsyncIterator, Iterator
+from http import HTTPStatus
 from unittest.mock import MagicMock
 
 import pytest
@@ -157,7 +158,7 @@ def test_map_for_stream_returns_registered_config() -> None:
 def test_map_for_stream_missing_map_is_404() -> None:
     with pytest.raises(HTTPException) as exc:
         states._map_for_stream(Principal(name="alice"), "absent")  # noqa: SLF001
-    assert exc.value.status_code == 404
+    assert exc.value.status_code == HTTPStatus.NOT_FOUND
 
 
 def test_map_for_stream_map_scoped_ticket_rejects_other_map() -> None:
@@ -167,7 +168,7 @@ def test_map_for_stream_map_scoped_ticket_rejects_other_map() -> None:
     scoped = Principal(name="alice", map_owner="alice", map_name="shared")
     with pytest.raises(HTTPException) as exc:
         states._map_for_stream(scoped, "other")  # noqa: SLF001
-    assert exc.value.status_code == 404
+    assert exc.value.status_code == HTTPStatus.NOT_FOUND
 
 
 # --------------------------------------------------------------------------- #
@@ -281,7 +282,7 @@ def client() -> Iterator[TestClient]:
 
 def test_sse_endpoint_rejects_invalid_token(client: TestClient) -> None:
     resp = client.get("/api/v1/sse/maps/b1?token=not-a-valid-ticket")
-    assert resp.status_code == 401
+    assert resp.status_code == HTTPStatus.UNAUTHORIZED
 
 
 def _stream_token(user: str) -> str:
@@ -297,15 +298,20 @@ def test_sse_connect_limit_is_per_user(client: TestClient) -> None:
     # has to follow the user: one user's reconnect storm must not lock out others.
     alice, bob = _stream_token("alice"), _stream_token("bob")
     for _ in range(ws_connect_limiter._max):  # noqa: SLF001
-        assert client.get(f"/api/v1/sse/maps/b1?token={alice}").status_code == 404
-    assert client.get(f"/api/v1/sse/maps/b1?token={alice}").status_code == 429
-    assert client.get(f"/api/v1/sse/maps/b1?token={bob}").status_code == 404
+        assert client.get(f"/api/v1/sse/maps/b1?token={alice}").status_code == HTTPStatus.NOT_FOUND
+    assert (
+        client.get(f"/api/v1/sse/maps/b1?token={alice}").status_code == HTTPStatus.TOO_MANY_REQUESTS
+    )
+    assert client.get(f"/api/v1/sse/maps/b1?token={bob}").status_code == HTTPStatus.NOT_FOUND
 
 
 def test_sse_invalid_tokens_do_not_count_toward_the_limit(client: TestClient) -> None:
     for _ in range(ws_connect_limiter._max):  # noqa: SLF001
-        assert client.get("/api/v1/sse/maps/b1?token=forged").status_code == 401
-    assert client.get(f"/api/v1/sse/maps/b1?token={_stream_token('alice')}").status_code == 404
+        assert client.get("/api/v1/sse/maps/b1?token=forged").status_code == HTTPStatus.UNAUTHORIZED
+    assert (
+        client.get(f"/api/v1/sse/maps/b1?token={_stream_token('alice')}").status_code
+        == HTTPStatus.NOT_FOUND
+    )
 
 
 def test_sse_rejects_when_the_concurrent_stream_cap_is_reached(client: TestClient) -> None:
@@ -316,7 +322,10 @@ def test_sse_rejects_when_the_concurrent_stream_cap_is_reached(client: TestClien
     try:
         while sse_stream_limiter.try_acquire("alice"):
             held += 1
-        assert client.get(f"/api/v1/sse/maps/b1?token={_stream_token('alice')}").status_code == 429
+        assert (
+            client.get(f"/api/v1/sse/maps/b1?token={_stream_token('alice')}").status_code
+            == HTTPStatus.TOO_MANY_REQUESTS
+        )
     finally:
         for _ in range(held):
             sse_stream_limiter.release("alice")

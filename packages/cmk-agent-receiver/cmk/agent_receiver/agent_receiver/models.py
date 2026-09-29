@@ -9,6 +9,7 @@ import socket
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
+from http import HTTPStatus
 from typing import Literal, override, Self
 
 from fastapi import HTTPException
@@ -133,7 +134,7 @@ class RegistrationWithHNBody(BaseModel, frozen=True):
     def valid_hostname(cls, v: str) -> str:
         if not _is_valid_hostname_or_ip(v):
             raise HTTPException(
-                status_code=400,
+                status_code=HTTPStatus.BAD_REQUEST,
                 detail=f"Invalid host name: '{v}'",
             )
         return v
@@ -150,7 +151,7 @@ class RegisterExistingBody(RegistrationWithHNBody, frozen=True):
     def valid_hostname(v: str) -> str:
         if not _is_valid_hostname_or_ip(v):
             raise HTTPException(
-                status_code=400,
+                status_code=HTTPStatus.BAD_REQUEST,
                 detail=f"Invalid host name: '{v}'",
             )
         return v

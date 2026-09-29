@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated, assert_never
 
 import fastapi
@@ -51,7 +52,7 @@ router = fastapi.APIRouter()
     "/{relay_id}/tasks",
     status_code=fastapi.status.HTTP_200_OK,
     responses={
-        200: {"model": tasks_protocol.TaskCreateResponse},
+        HTTPStatus.OK: {"model": tasks_protocol.TaskCreateResponse},
     },
     dependencies=[
         fastapi.Depends(validate_localhost_authorization),
@@ -113,7 +114,7 @@ async def create_task_endpoint(
     "/{relay_id}/tasks/{task_id}",
     status_code=fastapi.status.HTTP_202_ACCEPTED,
     responses={
-        202: {"model": tasks_protocol.TaskResponse},
+        HTTPStatus.ACCEPTED: {"model": tasks_protocol.TaskResponse},
     },
     dependencies=[
         mtls_authorization_dependency(

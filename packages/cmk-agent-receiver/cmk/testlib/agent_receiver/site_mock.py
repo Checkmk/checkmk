@@ -237,7 +237,7 @@ class SiteMock:
                 },
             ),
             response=Response(
-                status=200,
+                status=HTTPStatus.OK,
                 body=ListResponse(
                     value=[
                         GetResponse(id=r, extensions=RelayData(alias=r, siteid=self.site_name))
@@ -260,7 +260,7 @@ class SiteMock:
                     },
                 ),
                 response=Response(
-                    status=200,
+                    status=HTTPStatus.OK,
                     body=GetResponse(
                         id=r, extensions=RelayData(alias=r, siteid=self.site_name)
                     ).model_dump_json(),

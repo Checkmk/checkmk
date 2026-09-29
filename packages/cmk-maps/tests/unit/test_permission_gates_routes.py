@@ -12,6 +12,7 @@ layer, plus the real ``get_current_user`` 401 path for a missing ticket.
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+from http import HTTPStatus
 
 import pytest
 from fastapi import APIRouter, Depends, FastAPI
@@ -62,7 +63,7 @@ def test_guard_allows_authorised_principal(principal: Principal) -> None:
     app.dependency_overrides[deps.get_current_user] = lambda: principal
     with TestClient(app) as client:
         resp = client.get("/probe")
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     assert resp.json() == {"ok": True}
 
 
@@ -71,7 +72,7 @@ def test_guard_forbids_view_only_principal() -> None:
     app.dependency_overrides[deps.get_current_user] = lambda: _VIEW_ONLY
     with TestClient(app) as client:
         resp = client.get("/probe")
-    assert resp.status_code == 403
+    assert resp.status_code == HTTPStatus.FORBIDDEN
 
 
 def test_guard_rejects_missing_ticket_with_401() -> None:
@@ -80,4 +81,4 @@ def test_guard_rejects_missing_ticket_with_401() -> None:
     app = _guarded_app(_GUARDS["connection-read"])
     with TestClient(app) as client:
         resp = client.get("/probe")
-    assert resp.status_code == 401
+    assert resp.status_code == HTTPStatus.UNAUTHORIZED

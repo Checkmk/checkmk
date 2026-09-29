@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 import pytest
 from fastapi import HTTPException
 from fastapi.security import HTTPBasicCredentials
@@ -18,7 +20,7 @@ def test_link_host_with_uuid_unauthorized(
     uuid: UUID4,
 ) -> None:
     response = Response()
-    response.status_code = 403
+    response.status_code = HTTPStatus.FORBIDDEN
     response._content = (  # noqa: SLF001
         b'{"title": "You do not have the permission for agent pairing.", "status": 403}'
     )
@@ -37,7 +39,7 @@ def test_link_host_with_uuid_unauthorized(
             uuid,
         )
 
-    assert excpt_info.value.status_code == 403
+    assert excpt_info.value.status_code == HTTPStatus.FORBIDDEN
     assert excpt_info.value.detail == "You do not have the permission for agent pairing."
 
 
@@ -46,7 +48,7 @@ def test_link_host_with_uuid_ok(
     uuid: UUID4,
 ) -> None:
     response = Response()
-    response.status_code = 204
+    response.status_code = HTTPStatus.NO_CONTENT
     mocker.patch(
         "cmk.agent_receiver.agent_receiver.checkmk_rest_api._forward_put",
         return_value=response,

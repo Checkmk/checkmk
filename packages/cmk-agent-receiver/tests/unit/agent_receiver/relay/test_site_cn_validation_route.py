@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 import fastapi
 import pytest
 from fastapi import APIRouter, FastAPI
@@ -36,7 +38,7 @@ def test_site_cn_validation_route(monkeypatch: pytest.MonkeyPatch) -> None:
         headers={INJECTED_UUID_HEADER: "test-site-cn"},
     )
     print(response.text)  # noqa: T201  # It's OK for test/script helpers to print()
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {"whatever": "data"}
 
     # Test failed request with mismatching CN
@@ -44,7 +46,7 @@ def test_site_cn_validation_route(monkeypatch: pytest.MonkeyPatch) -> None:
         "/foo",
         headers={INJECTED_UUID_HEADER: "wrong-site-cn"},
     )
-    assert response.status_code == 403
+    assert response.status_code == HTTPStatus.FORBIDDEN
     assert response.json() == {
         "detail": "Client certificate CN (wrong-site-cn) does not match local site CN (test-site-cn)"
     }

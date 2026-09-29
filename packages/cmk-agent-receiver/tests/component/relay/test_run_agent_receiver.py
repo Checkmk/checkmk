@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from fastapi.testclient import TestClient
 
 from cmk.testlib.agent_receiver.site_mock import SiteMock
@@ -17,4 +19,4 @@ def test_health_check(test_client: TestClient, site: SiteMock) -> None:
     3. Confirm agent receiver is running
     """
     response = test_client.get(f"/{site.site_name}/agent-receiver/openapi.json")
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK

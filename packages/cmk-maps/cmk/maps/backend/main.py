@@ -24,6 +24,7 @@ import logging
 import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager, suppress
+from http import HTTPStatus
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -139,7 +140,8 @@ async def _handle_unhandled_exception(request: Request, exc: Exception) -> JSONR
         exc_info=exc,
     )
     return JSONResponse(
-        status_code=500, content={"detail": "Internal server error", "crash_id": crash_id}
+        status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+        content={"detail": "Internal server error", "crash_id": crash_id},
     )
 
 

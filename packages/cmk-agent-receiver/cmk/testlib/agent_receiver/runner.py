@@ -13,6 +13,7 @@ import sys
 import tempfile
 from collections.abc import Generator
 from contextlib import contextmanager
+from http import HTTPStatus
 from pathlib import Path
 from typing import final, Self
 
@@ -156,7 +157,7 @@ class AgentReceiverRunner:
                                 f"{self.base_url}/{self._site.config.site_name}"
                                 "/agent-receiver/openapi.json"
                             )
-                            assert resp.status_code == 200
+                            assert resp.status_code == HTTPStatus.OK
                         except Exception as exc:
                             last_exc = exc
                             raise

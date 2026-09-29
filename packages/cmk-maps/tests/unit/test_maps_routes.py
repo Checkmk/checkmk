@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from http import HTTPStatus
 from typing import override
 
 import pytest
@@ -45,7 +46,7 @@ def test_register_unsigned_own_returns_204(client: TestClient) -> None:
         "/api/v1/maps/register",
         json={"config": {"name": "streamed", "alias": "Streamed"}},
     )
-    assert resp.status_code == 204
+    assert resp.status_code == HTTPStatus.NO_CONTENT
     assert map_service.get_map(ADMIN_PRINCIPAL.name, "streamed") is not None
 
 
@@ -58,7 +59,7 @@ def test_register_unsigned_foreign_rejected(router_client: RouterClientFactory) 
         "/api/v1/maps/register",
         json={"config": {"name": "shared", "alias": "Shared"}},
     )
-    assert resp.status_code == 403
+    assert resp.status_code == HTTPStatus.FORBIDDEN
     assert map_service.get_map("alice", "shared") is None
 
 
@@ -73,7 +74,7 @@ def test_register_unsigned_without_edit_grant_rejected(
         "/api/v1/maps/register",
         json={"config": {"name": "unowned", "alias": "Unowned"}},
     )
-    assert resp.status_code == 403
+    assert resp.status_code == HTTPStatus.FORBIDDEN
     assert map_service.get_map("carol", "unowned") is None
 
 
@@ -88,13 +89,13 @@ def test_register_unsigned_name_mismatch_rejected(router_client: RouterClientFac
         "/api/v1/maps/register",
         json={"config": {"name": "other", "alias": "Other"}},
     )
-    assert resp.status_code == 403
+    assert resp.status_code == HTTPStatus.FORBIDDEN
     assert map_service.get_map("alice", "other") is None
 
 
 def test_register_missing_config_is_422(client: TestClient) -> None:
     resp = client.post("/api/v1/maps/register", json={})
-    assert resp.status_code == 422
+    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
 def test_register_signed_invalid_config_is_422_not_500(
@@ -116,7 +117,7 @@ def test_register_signed_invalid_config_is_422_not_500(
     resp = client.post(
         "/api/v1/maps/register", json={"config_b64": "irrelevant", "sig": "irrelevant"}
     )
-    assert resp.status_code == 422
+    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
 class _AuthScopeSpyConnection(FakeConnection):
@@ -161,7 +162,7 @@ def test_auto_objects_scopes_geo_query_to_auth_user(
     client = router_client(maps.router, "/api/v1/maps", overrides={deps.get_current_user: scoped})
     try:
         resp = client.get("/api/v1/maps/world/auto-objects")
-        assert resp.status_code == 200
+        assert resp.status_code == HTTPStatus.OK
         assert spy.geo_query_auth_user == "bob"
     finally:
         state_service.unregister_connection("spy")

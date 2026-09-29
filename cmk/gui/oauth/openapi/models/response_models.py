@@ -5,12 +5,20 @@
 
 from typing import Literal
 
-from cmk.gui.openapi.framework.model import api_field, api_model
+from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 
 
 @api_model
 class IdentifySessionResponse:
     user_id: str = api_field(description="The user the session belongs to.", example="cmkadmin")
+    permissions: dict[str, bool] | ApiOmitted = api_field(
+        default_factory=ApiOmitted,
+        description=(
+            "For each name in required_permissions, whether the user holds it. "
+            "Only present if the request named permissions."
+        ),
+        example={"general.use": True},
+    )
 
 
 @api_model

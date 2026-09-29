@@ -18,6 +18,7 @@ You can find an introduction to the acknowledgement of problems in the
 from collections.abc import Mapping
 
 # TODO: List acknowledgments
+from http import HTTPStatus
 from typing import Any
 from urllib.parse import unquote
 
@@ -75,9 +76,9 @@ RW_PERMISSIONS = permissions.AllPerm(
     method="post",
     tag_group="Monitoring",
     skip_locking=True,
-    additional_status_codes=[403, 422],
+    additional_status_codes=[HTTPStatus.FORBIDDEN, HTTPStatus.UNPROCESSABLE_ENTITY],
     status_descriptions={
-        422: "The query yielded no result.",
+        HTTPStatus.UNPROCESSABLE_ENTITY: "The query yielded no result.",
     },
     request_schema=AcknowledgeHostRelatedProblem,
     output_empty=True,
@@ -102,7 +103,7 @@ def set_acknowledgement_on_hosts(params: Mapping[str, Any]) -> Response:
         host_state = Query([Hosts.state], Hosts.name == name).value(live)
         if not host_state:
             raise ProblemException(
-                status=422,
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
                 title=f"Host {name!r} has no problem.",
                 detail="You can't acknowledge a problem that doesn't exist.",
             )
@@ -131,7 +132,7 @@ def set_acknowledgement_on_hosts(params: Mapping[str, Any]) -> Response:
             )
         except ValueError:
             raise ProblemException(
-                400,
+                HTTPStatus.BAD_REQUEST,
                 title="Host group could not be found.",
                 detail=f"Unknown host group: {host_group}",
             )
@@ -140,7 +141,7 @@ def set_acknowledgement_on_hosts(params: Mapping[str, Any]) -> Response:
         hosts = Query([Hosts.name], query).fetchall(live)
         if not hosts:
             raise ProblemException(
-                status=422,
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
                 title="No hosts found",
                 detail="The provided query returned no monitored hosts",
             )
@@ -157,12 +158,12 @@ def set_acknowledgement_on_hosts(params: Mapping[str, Any]) -> Response:
             )
     else:
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Unhandled acknowledge-type.",
             detail=f"The acknowledge-type {acknowledge_type!r} is not supported.",
         )
 
-    return http.Response(status=204)
+    return http.Response(status=HTTPStatus.NO_CONTENT)
 
 
 @Endpoint(
@@ -171,9 +172,9 @@ def set_acknowledgement_on_hosts(params: Mapping[str, Any]) -> Response:
     method="post",
     tag_group="Monitoring",
     skip_locking=True,
-    additional_status_codes=[403, 422],
+    additional_status_codes=[HTTPStatus.FORBIDDEN, HTTPStatus.UNPROCESSABLE_ENTITY],
     status_descriptions={
-        422: "Service was not in a problem state.",
+        HTTPStatus.UNPROCESSABLE_ENTITY: "Service was not in a problem state.",
     },
     request_schema=AcknowledgeServiceRelatedProblem,
     output_empty=True,
@@ -201,13 +202,13 @@ def set_acknowledgement_on_services(params: Mapping[str, Any]) -> Response:
         ).first(live)
         if not service:
             raise ProblemException(
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
                 title="Service not found",
                 detail=f"Service {description!r}@{host_name!r} could not be found.",
             )
         if not service.state:
             raise ProblemException(
-                status=422,
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
                 title="This service has no problem",
                 detail=f"Service {description!r}@{host_name!r} has no problem.",
             )
@@ -237,7 +238,7 @@ def set_acknowledgement_on_services(params: Mapping[str, Any]) -> Response:
             )
         except ValueError:
             raise ProblemException(
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
                 title="Service group could not be found.",
                 detail=f"Unknown service group: {service_group}",
             )
@@ -248,7 +249,7 @@ def set_acknowledgement_on_services(params: Mapping[str, Any]) -> Response:
         ).fetchall(live)
         if not services:
             raise ProblemException(
-                status=422,
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
                 title="No services with problems found.",
                 detail="All queried services are OK.",
             )
@@ -271,12 +272,12 @@ def set_acknowledgement_on_services(params: Mapping[str, Any]) -> Response:
             )
     else:
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Unhandled acknowledge-type.",
             detail=f"The acknowledge-type {acknowledge_type!r} is not supported.",
         )
 
-    return http.Response(status=204)
+    return http.Response(status=HTTPStatus.NO_CONTENT)
 
 
 def _delete_host_acknowledgements_with_query(
@@ -314,7 +315,7 @@ def _delete_service_acknowledgements_with_query(
     method="post",
     tag_group="Monitoring",
     skip_locking=True,
-    additional_status_codes=[403],
+    additional_status_codes=[HTTPStatus.FORBIDDEN],
     request_schema=RemoveProblemAcknowledgement,
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
@@ -360,12 +361,12 @@ def delete_acknowledgement(params: Mapping[str, Any]) -> Response:
 
     else:
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Unhandled acknowledge-type.",
             detail=f"The acknowledge-type {acknowledge_type!r} is not supported.",
         )
 
-    return http.Response(status=204)
+    return http.Response(status=HTTPStatus.NO_CONTENT)
 
 
 def register(endpoint_registry: EndpointRegistry) -> None:

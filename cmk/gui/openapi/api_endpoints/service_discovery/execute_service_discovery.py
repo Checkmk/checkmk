@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import assert_never
 
 from cmk.ccc.site import omd_site
@@ -94,12 +95,14 @@ def _execute_service_discovery(
 ) -> ServiceDiscoveryResultModel:
     snapshot = job_snapshot(host, site_configs, debug=debug)
     if snapshot.is_active:
-        raise ProblemException(status=409, title="Conflict", detail=_DISCOVERY_RUNNING_MSG)
+        raise ProblemException(
+            status=HTTPStatus.CONFLICT, title="Conflict", detail=_DISCOVERY_RUNNING_MSG
+        )
 
     discovery_action = DISCOVERY_ACTION[api_discovery_action.value]
     if not has_discovery_action_specific_permissions(discovery_action, None):
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Permission denied",
             detail="You do not have the necessary permissions to execute this action",
         )
@@ -215,13 +218,13 @@ ENDPOINT_EXECUTE_SERVICE_DISCOVERY = VersionedEndpoint(
     versions={
         APIVersion.V1: EndpointHandler(
             handler=execute_service_discovery_v1,
-            additional_status_codes=[303, 409],
+            additional_status_codes=[HTTPStatus.SEE_OTHER, HTTPStatus.CONFLICT],
             status_descriptions={
-                303: (
+                HTTPStatus.SEE_OTHER: (
                     "The service discovery background job has been initialized. Redirecting to "
                     "the 'Wait for service discovery completion' endpoint."
                 ),
-                409: _DISCOVERY_RUNNING_MSG,
+                HTTPStatus.CONFLICT: _DISCOVERY_RUNNING_MSG,
             },
         )
     },

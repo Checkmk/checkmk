@@ -22,6 +22,7 @@ A service group object can have the following relations present in `links`:
 """
 
 from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Any
 
 from cmk.ccc import version
@@ -190,7 +191,7 @@ def show_group(params: Mapping[str, Any]) -> Response:
     path_params=[GROUP_NAME_FIELD],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
-    additional_status_codes=[409],
+    additional_status_codes=[HTTPStatus.CONFLICT],
 )
 def delete(params: Mapping[str, Any]) -> Response:
     """Delete a service group"""
@@ -212,18 +213,18 @@ def delete(params: Mapping[str, Any]) -> Response:
         )
     except GroupInUseException as exc:
         raise ProblemException(
-            status=409,
+            status=HTTPStatus.CONFLICT,
             title="Group in use problem",
             detail=str(exc),
         )
     except UnknownGroupException as exc:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="Unknown group problem",
             detail=str(exc),
         )
 
-    return Response(status=204)
+    return Response(status=HTTPStatus.NO_CONTENT)
 
 
 @Endpoint(
@@ -233,7 +234,7 @@ def delete(params: Mapping[str, Any]) -> Response:
     request_schema=BulkDeleteServiceGroup,
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
-    additional_status_codes=[404, 409],
+    additional_status_codes=[HTTPStatus.NOT_FOUND, HTTPStatus.CONFLICT],
 )
 def bulk_delete(params: Mapping[str, Any]) -> Response:
     """Bulk delete service groups"""
@@ -257,18 +258,18 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
             )
         except GroupInUseException as exc:
             raise ProblemException(
-                status=409,
+                status=HTTPStatus.CONFLICT,
                 title="Group in use problem",
                 detail=str(exc),
             )
         except UnknownGroupException as exc:
             raise ProblemException(
-                status=404,
+                status=HTTPStatus.NOT_FOUND,
                 title="Unknown group problem",
                 detail=str(exc),
             )
 
-    return Response(status=204)
+    return Response(status=HTTPStatus.NO_CONTENT)
 
 
 @Endpoint(

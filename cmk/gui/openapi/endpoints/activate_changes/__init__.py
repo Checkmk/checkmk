@@ -22,6 +22,7 @@ import contextlib
 import re
 from collections.abc import Mapping
 from dataclasses import asdict
+from http import HTTPStatus
 from typing import Any
 from urllib.parse import urlparse
 
@@ -86,22 +87,29 @@ PERMISSIONS = permissions.AllPerm(
     "cmk/activate",
     method="post",
     status_descriptions={
-        200: "Activation has been started, but not completed (if you need to wait for completion, see documentation for this endpoint).",
-        303: (
+        HTTPStatus.OK: "Activation has been started, but not completed (if you need to wait for completion, see documentation for this endpoint).",
+        HTTPStatus.SEE_OTHER: (
             "The activation has been started and is still running. Redirecting to the "
             "'Wait for completion' endpoint."
         ),
-        403: (
+        HTTPStatus.FORBIDDEN: (
             "Activation not possible because of licensing issues, or the API user may not "
             "activate another users changes, or the user may and activation was not forced "
             "explicitly."
         ),
-        409: "Some sites could not be activated.",
-        422: "There are no changes to be activated.",
-        423: "There is already an activation running.",
-        503: "The ui-job-scheduler is currently unavailable.",
+        HTTPStatus.CONFLICT: "Some sites could not be activated.",
+        HTTPStatus.UNPROCESSABLE_ENTITY: "There are no changes to be activated.",
+        HTTPStatus.LOCKED: "There is already an activation running.",
+        HTTPStatus.SERVICE_UNAVAILABLE: "The ui-job-scheduler is currently unavailable.",
     },
-    additional_status_codes=[303, 403, 409, 422, 423, 503],
+    additional_status_codes=[
+        HTTPStatus.SEE_OTHER,
+        HTTPStatus.FORBIDDEN,
+        HTTPStatus.CONFLICT,
+        HTTPStatus.UNPROCESSABLE_ENTITY,
+        HTTPStatus.LOCKED,
+        HTTPStatus.SERVICE_UNAVAILABLE,
+    ],
     etag="input",
     request_schema=ActivateChanges,
     response_schema=ActivationRunResponse,
@@ -163,28 +171,28 @@ def activate_changes(params: Mapping[str, Any]) -> Response:
 
     except MKUserError as exc:
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="The operation has failed.",
             detail=str(exc) if not hasattr(exc, "message") else exc.message,
         ) from exc
 
     except MKLicensingError as exc:
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="The operation has failed.",
             detail=str(exc) if not hasattr(exc, "message") else exc.message,
         ) from exc
 
     except StartupError as exc:
         raise ProblemException(
-            status=503,
+            status=HTTPStatus.SERVICE_UNAVAILABLE,
             title="The ui-job-scheduler is currently unavailable.",
             detail=re.sub(r"<[^>]+>", "", str(exc)),
         ) from exc
 
     if body["redirect"]:
         wait_for = _completion_link(activation_response.activation_id)
-        response = Response(status=303)
+        response = Response(status=HTTPStatus.SEE_OTHER)
         response.location = urlparse(wait_for["href"]).path
         return response
 
@@ -226,14 +234,14 @@ def _activation_run_domain_object(
     "cmk/wait-for-completion",
     method="get",
     status_descriptions={
-        204: "The activation has been completed.",
-        302: (
+        HTTPStatus.NO_CONTENT: "The activation has been completed.",
+        HTTPStatus.FOUND: (
             "The activation is still running. Redirecting to the 'Wait for completion' endpoint."
         ),
-        404: "There is no running activation with this activation_id.",
+        HTTPStatus.NOT_FOUND: "There is no running activation with this activation_id.",
     },
     path_params=[ACTIVATION_ID],
-    additional_status_codes=[302],
+    additional_status_codes=[HTTPStatus.FOUND],
     permissions_required=PERMISSIONS,
     output_empty=True,
 )
@@ -249,17 +257,17 @@ def activate_changes_wait_for_completion(params: Mapping[str, Any]) -> Response:
         manager = load_activate_change_manager_with_id(activation_id)
     except MKUserError:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="The requested activation was not found",
             detail=f"Could not find an activation with id {activation_id!r}.",
         )
 
     if manager.is_running():
-        response = Response(status=302)
+        response = Response(status=HTTPStatus.FOUND)
         response.location = urlparse(request.url).path
         return response
 
-    return Response(status=204)
+    return Response(status=HTTPStatus.NO_CONTENT)
 
 
 @Endpoint(
@@ -268,7 +276,7 @@ def activate_changes_wait_for_completion(params: Mapping[str, Any]) -> Response:
     method="get",
     path_params=[ACTIVATION_ID],
     status_descriptions={
-        404: "There is no running activation with this activation_id.",
+        HTTPStatus.NOT_FOUND: "There is no running activation with this activation_id.",
     },
     permissions_required=PERMISSIONS,
     response_schema=ActivationStatusResponse,
@@ -285,7 +293,7 @@ def show_activation(params: Mapping[str, Any]) -> Response:
         activation_response = get_restapi_response_for_activation_id(activation_id)
     except MKUserError:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="The requested activation was not found",
             detail=f"Could not find an activation with id {activation_id!r}.",
         )

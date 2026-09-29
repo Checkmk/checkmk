@@ -13,6 +13,7 @@ Which entities can be configured like this is defined by the configuration entit
 
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict
+from http import HTTPStatus
 from typing import Any
 
 from cmk import fields
@@ -87,7 +88,7 @@ def _serve_validations(data: Sequence[shared_type_defs.ValidationMessage]) -> Re
         node.setdefault("", []).append(val.message)
 
     return problem(
-        422,
+        HTTPStatus.UNPROCESSABLE_ENTITY,
         "Validation error.",
         fields=FIELDS(error_fields),
         ext=EXT({"validation_errors": [asdict(val) for val in data]}),
@@ -111,7 +112,7 @@ def _serve_entities(data: ConfigurationEntityDescription) -> Response:
     "cmk/create",
     tag_group="Checkmk Internal",
     method="post",
-    additional_status_codes=[403, 422],
+    additional_status_codes=[HTTPStatus.FORBIDDEN, HTTPStatus.UNPROCESSABLE_ENTITY],
     request_schema=CreateConfigurationEntity,
     response_schema=EditConfigurationEntityResponse,
 )
@@ -155,7 +156,7 @@ def _create_configuration_entity(params: Mapping[str, Any]) -> Response:
     ".../update",
     tag_group="Checkmk Internal",
     method="put",
-    additional_status_codes=[403, 422],
+    additional_status_codes=[HTTPStatus.FORBIDDEN, HTTPStatus.UNPROCESSABLE_ENTITY],
     request_schema=UpdateConfigurationEntity,
     response_schema=EditConfigurationEntityResponse,
 )
@@ -201,7 +202,7 @@ def _update_configuration_entity(params: Mapping[str, Any]) -> Response:
     path_params=[ENTITY_TYPE],
     query_params=[ENTITY_TYPE_SPECIFIER_FIELD],
     method="get",
-    additional_status_codes=[403],
+    additional_status_codes=[HTTPStatus.FORBIDDEN],
     response_schema=response_schemas.DomainObject,
 )
 def _get_configuration_entity_form_spec_schema(params: Mapping[str, Any]) -> Response:

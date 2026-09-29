@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.gui.logged_in import user
@@ -46,7 +47,7 @@ def delete_rule_v1(
             if rule.id == rule_id:
                 if is_locked_by_config_bundle(rule.locked_by):
                     raise ProblemException(
-                        status=400,
+                        status=HTTPStatus.BAD_REQUEST,
                         title="Rule is managed by Quick setup",
                         detail="Rules managed by Quick setup cannot be deleted.",
                     )
@@ -57,10 +58,10 @@ def delete_rule_v1(
                     pprint_value=api_context.config.wato_pprint_config,
                     debug=api_context.config.debug,
                 )
-                return ApiResponse(body=None, status_code=204)
+                return ApiResponse(body=None, status_code=HTTPStatus.NO_CONTENT)
 
     raise ProblemException(
-        status=404,
+        status=HTTPStatus.NOT_FOUND,
         title="Rule not found.",
         detail=f"The rule with ID {rule_id!r} could not be found.",
     )
@@ -78,11 +79,11 @@ ENDPOINT_DELETE_RULE = VersionedEndpoint(
     versions={
         APIVersion.V1: EndpointHandler(
             handler=delete_rule_v1,
-            additional_status_codes=[400, 404],
+            additional_status_codes=[HTTPStatus.BAD_REQUEST, HTTPStatus.NOT_FOUND],
             status_descriptions={
-                204: "Rule was deleted successfully.",
-                400: "The rule is locked and cannot be deleted.",
-                404: "The rule to be deleted was not found.",
+                HTTPStatus.NO_CONTENT: "Rule was deleted successfully.",
+                HTTPStatus.BAD_REQUEST: "The rule is locked and cannot be deleted.",
+                HTTPStatus.NOT_FOUND: "The rule to be deleted was not found.",
             },
         )
     },

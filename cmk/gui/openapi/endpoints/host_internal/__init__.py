@@ -10,8 +10,8 @@
 WARNING: Use at your own risk, not supported.
 """
 
-import http.client
 from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Any, Literal
 from uuid import UUID
 
@@ -82,10 +82,14 @@ permission_registry.register(
     "cmk/register",
     method="put",
     tag_group="Checkmk Internal",
-    additional_status_codes=[403, 404, 405],
+    additional_status_codes=[
+        HTTPStatus.FORBIDDEN,
+        HTTPStatus.NOT_FOUND,
+        HTTPStatus.METHOD_NOT_ALLOWED,
+    ],
     status_descriptions={
-        403: "You do not have the permissions to register this host.",
-        405: "This host cannot be registered on this site.",
+        HTTPStatus.FORBIDDEN: "You do not have the permissions to register this host.",
+        HTTPStatus.METHOD_NOT_ALLOWED: "This host cannot be registered on this site.",
     },
     path_params=[
         {
@@ -139,7 +143,7 @@ def _verified_host(tree: FolderTree, host_name: HostName) -> Host:
             "wato.all_folders"
         ):
             raise ProblemException(
-                status=403,
+                status=HTTPStatus.FORBIDDEN,
                 title="Insufficient permissions",
                 detail="You have insufficient permissions to register this host. You either need the "
                 "explicit permission to register any host, the explict permission to register this host or "
@@ -147,8 +151,8 @@ def _verified_host(tree: FolderTree, host_name: HostName) -> Host:
             )
 
         raise ProblemException(
-            status=404,
-            title=http.client.responses[404],
+            status=HTTPStatus.NOT_FOUND,
+            title=HTTPStatus.NOT_FOUND.phrase,
             detail=f"Host {host_name} does not exist.",
         )
 
@@ -165,7 +169,7 @@ def _verify_permissions(host: Host) -> None:
         return
 
     unathorized_excpt = ProblemException(
-        status=403,
+        status=HTTPStatus.FORBIDDEN,
         title="Insufficient permissions",
         detail="You have insufficient permissions to register this host. You either need the "
         "explicit permission to register any host, the explict permission to register this host or "
@@ -185,13 +189,13 @@ def _verify_permissions(host: Host) -> None:
 def _verify_host_properties(host: Host) -> None:
     if host.site_id() != omd_site():
         raise ProblemException(
-            status=405,
+            status=HTTPStatus.METHOD_NOT_ALLOWED,
             title="Wrong site",
             detail=f"This host is monitored on the site {host.site_id()}, but you tried to register it at the site {omd_site()}.",
         )
     if host.is_cluster():
         raise ProblemException(
-            status=405,
+            status=HTTPStatus.METHOD_NOT_ALLOWED,
             title="Cannot register cluster hosts",
             detail="This host is a cluster host. Register its nodes instead.",
         )
@@ -243,9 +247,9 @@ def _link_with_uuid(
     "cmk/link_uuid",
     method="put",
     tag_group="Checkmk Internal",
-    additional_status_codes=[403],
+    additional_status_codes=[HTTPStatus.FORBIDDEN],
     status_descriptions={
-        403: "You do not have the permissions to edit this host.",
+        HTTPStatus.FORBIDDEN: "You do not have the permissions to edit this host.",
     },
     path_params=[HOST_NAME],
     request_schema=LinkHostUUID,
@@ -273,7 +277,7 @@ def link_with_uuid(params: Mapping[str, Any]) -> Response:
         params["body"]["uuid"],
         connection_mode,
     )
-    return Response(status=204)
+    return Response(status=HTTPStatus.NO_CONTENT)
 
 
 @Endpoint(
@@ -284,9 +288,9 @@ def link_with_uuid(params: Mapping[str, Any]) -> Response:
     "cmk/show",
     method="get",
     tag_group="Checkmk Internal",
-    additional_status_codes=[403],
+    additional_status_codes=[HTTPStatus.FORBIDDEN],
     status_descriptions={
-        403: "You do not have read access to this host.",
+        HTTPStatus.FORBIDDEN: "You do not have read access to this host.",
     },
     path_params=[HOST_NAME],
     response_schema=HostConfigSchemaInternal,

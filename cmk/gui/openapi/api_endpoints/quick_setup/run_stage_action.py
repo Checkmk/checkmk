@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Annotated, cast
 
 from cmk.ccc.site import SiteId
@@ -84,7 +85,7 @@ def run_stage_action_v1(
     quick_setup = quick_setup_registry.get(quick_setup_id)
     if quick_setup is None:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="Quick setup not found",
             detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
         )
@@ -98,7 +99,7 @@ def run_stage_action_v1(
         user.may(perm) for perm in stage_action.permissions
     ):
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Action not allowed",
             detail=(
                 f"Action with id '{stage_action_id}' requires "
@@ -126,7 +127,7 @@ def run_stage_action_v1(
                 stage_applicability=stage_applicability,
                 background_job_exception=None,
             ),
-            status_code=400,
+            status_code=HTTPStatus.BAD_REQUEST,
         )
 
     user_permission_config = UserPermissionSerializableConfig(
@@ -198,7 +199,7 @@ def run_stage_action_v1(
         progress_logger=None,
         ctx=QuickSetupContext.from_config(api_context.config),
     )
-    status_code = 200 if result.validation_errors is None else 400
+    status_code = HTTPStatus.OK if result.validation_errors is None else HTTPStatus.BAD_REQUEST
     return ApiResponse(
         body=convert_stage_action_response(result),
         status_code=status_code,
@@ -218,7 +219,7 @@ ENDPOINT_RUN_STAGE_ACTION = VersionedEndpoint(
     versions={
         APIVersion.V1: EndpointHandler(
             handler=run_stage_action_v1,
-            additional_status_codes=[303, 403],
+            additional_status_codes=[HTTPStatus.SEE_OTHER, HTTPStatus.FORBIDDEN],
         )
     },
 )

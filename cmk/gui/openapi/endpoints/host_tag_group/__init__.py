@@ -17,6 +17,7 @@ You can find an introduction to hosts including host tags and host tag groups in
 """
 
 from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Any, override
 
 from cmk import fields
@@ -172,7 +173,7 @@ def list_host_tag_groups(params: Mapping[str, Any]) -> Response:  # noqa: ARG001
     method="put",
     etag="both",
     path_params=[HOST_TAG_GROUP_NAME],
-    additional_status_codes=[405],
+    additional_status_codes=[HTTPStatus.METHOD_NOT_ALLOWED],
     request_schema=UpdateHostTagGroup,
     permissions_required=RW_PERMISSIONS,
     response_schema=ConcreteHostTagGroup,
@@ -186,7 +187,7 @@ def update_host_tag_group(params: Mapping[str, Any]) -> Response:
     ident = params["name"]
     if is_builtin(ident):
         return problem(
-            status=405,
+            status=HTTPStatus.METHOD_NOT_ALLOWED,
             title="Built-in cannot be modified",
             detail=f"The built-in host tag group {ident} cannot be modified",
         )
@@ -210,7 +211,7 @@ def update_host_tag_group(params: Mapping[str, Any]) -> Response:
         )
     except RepairError:
         return problem(
-            status=401,
+            status=HTTPStatus.UNAUTHORIZED,
             title=f'Updating this host tag group "{ident}" requires additional authorization',
             detail=(
                 "The host tag group you intend to edit is used by other instances. You must "
@@ -226,7 +227,7 @@ def update_host_tag_group(params: Mapping[str, Any]) -> Response:
     ".../delete",
     method="delete",
     path_params=[HOST_TAG_GROUP_NAME],
-    additional_status_codes=[405],
+    additional_status_codes=[HTTPStatus.METHOD_NOT_ALLOWED],
     query_params=[DeleteHostTagGroup],
     permissions_required=RW_PERMISSIONS,
     output_empty=True,
@@ -237,13 +238,13 @@ def delete_host_tag_group(params: Mapping[str, Any]) -> Response:
     ident = params["name"]
     if params["repair"] and params["mode"]:
         return problem(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Cannot use both repair and mode",
             detail="Cannot use both repair and mode at the same time",
         )
     if is_builtin(ident):
         return problem(
-            status=405,
+            status=HTTPStatus.METHOD_NOT_ALLOWED,
             title="Built-in cannot be delete",
             detail=f"The built-in host tag group {ident} cannot be deleted",
         )
@@ -280,7 +281,7 @@ def delete_host_tag_group(params: Mapping[str, Any]) -> Response:
                 )
 
             return problem(
-                status=401,
+                status=HTTPStatus.UNAUTHORIZED,
                 title=f'Deleting this host tag group "{ident}" requires additional authorization',
                 detail=(
                     f"The host tag group you intend to delete is used in the following occurrences: {', '.join(affected_occurrences)}. You must "
@@ -299,14 +300,14 @@ def delete_host_tag_group(params: Mapping[str, Any]) -> Response:
     tag_config = load_tag_config()
     tag_config.remove_tag_group(ident)
     update_tag_config(tree, tag_config, pprint_value=active_config.wato_pprint_config)
-    return Response(status=204)
+    return Response(status=HTTPStatus.NO_CONTENT)
 
 
 def _retrieve_group(ident: TagGroupID) -> TagGroup:
     tag_group = load_tag_group(ident)
     if tag_group is None:
         raise ProblemException(
-            status=500,
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
             title="Tag group not found",
             detail="The expected host tag group was not found",
         )

@@ -21,6 +21,7 @@ The broker connection endpoints allow for:
 """
 
 from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Any
 
 from cmk.ccc.site import omd_site, SiteId
@@ -80,7 +81,7 @@ CONNECTION_ID_SHOULD_EXIST = {
 
 def _validation_error(exc: MKUserError) -> Response:
     return problem(
-        status=400,
+        status=HTTPStatus.BAD_REQUEST,
         title="Initiating and accepting peer are already connected",
         detail=str(exc),
     )
@@ -104,7 +105,7 @@ def _serialize_broker_connection(
     ".../collection",
     method="get",
     tag_group="Checkmk Internal",
-    additional_status_codes=[403],
+    additional_status_codes=[HTTPStatus.FORBIDDEN],
     response_schema=BrokerConnectionResponseCollection,
     permissions_required=PERMISSIONS,
 )
@@ -130,7 +131,7 @@ def show_broker_connections(params: Mapping[str, Any]) -> Response:  # noqa: ARG
     "cmk/show",
     method="get",
     tag_group="Checkmk Internal",
-    additional_status_codes=[403],
+    additional_status_codes=[HTTPStatus.FORBIDDEN],
     path_params=[CONNECTION_ID_SHOULD_EXIST],
     response_schema=BrokerConnectionResponse,
     permissions_required=PERMISSIONS,
@@ -187,7 +188,7 @@ def _validate_and_save_boker_connection(
     "cmk/create",
     method="post",
     tag_group="Checkmk Internal",
-    additional_status_codes=[403],
+    additional_status_codes=[HTTPStatus.FORBIDDEN],
     response_schema=BrokerConnectionResponse,
     request_schema=BrokerConnectionRequestCreate,
     permissions_required=PERMISSIONS,
@@ -224,7 +225,7 @@ def create_broker_connection(params: Mapping[str, Any]) -> Response:
     "cmk/update",
     method="put",
     tag_group="Checkmk Internal",
-    additional_status_codes=[403],
+    additional_status_codes=[HTTPStatus.FORBIDDEN],
     path_params=[CONNECTION_ID_SHOULD_EXIST],
     response_schema=BrokerConnectionResponse,
     request_schema=BrokerConnectionRequestUpdate,
@@ -266,7 +267,7 @@ def edit_broker_connection(params: Mapping[str, Any]) -> Response:
     ".../delete",
     method="delete",
     tag_group="Checkmk Internal",
-    additional_status_codes=[403],
+    additional_status_codes=[HTTPStatus.FORBIDDEN],
     path_params=[CONNECTION_ID_SHOULD_EXIST],
     output_empty=True,
     permissions_required=PERMISSIONS,
@@ -293,7 +294,7 @@ def delete_broker_connection(params: Mapping[str, Any]) -> Response:
         ),
     )
 
-    return Response(status=204)
+    return Response(status=HTTPStatus.NO_CONTENT)
 
 
 def register(endpoint_registry: EndpointRegistry) -> None:

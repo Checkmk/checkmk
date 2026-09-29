@@ -20,6 +20,7 @@ tag for resolving conditions.
 """
 
 from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -122,7 +123,7 @@ def create_aux_tag(params: Mapping[str, Any]) -> Response:
 
     except MKGeneralException as e:
         return problem(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Unable to create auxiliary tag",
             detail=str(e),
         )
@@ -170,7 +171,7 @@ def put_aux_tag(params: Mapping[str, Any]) -> Response:
     path_params=[AuxTagID],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
-    additional_status_codes=[409],
+    additional_status_codes=[HTTPStatus.CONFLICT],
 )
 def delete_aux_tag(params: Mapping[str, Any]) -> Response:
     """Delete an Auxiliary Tag"""
@@ -182,7 +183,7 @@ def delete_aux_tag(params: Mapping[str, Any]) -> Response:
         tag_config.remove_aux_tag(TagID(params["aux_tag_id"]))
     except AuxTagInUseError as exc:
         return problem(
-            status=409,
+            status=HTTPStatus.CONFLICT,
             title="Aux tag in use",
             detail=str(exc),
         )
@@ -190,7 +191,7 @@ def delete_aux_tag(params: Mapping[str, Any]) -> Response:
     update_tag_config(
         make_folder_tree(active_config), tag_config, pprint_value=active_config.wato_pprint_config
     )
-    return Response(status=204)
+    return Response(status=HTTPStatus.NO_CONTENT)
 
 
 def _serialize_aux_tag(aux_tag: AuxTag) -> DomainObject:

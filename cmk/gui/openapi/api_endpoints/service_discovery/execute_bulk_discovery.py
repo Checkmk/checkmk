@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from cmk.ccc.site import omd_site
 from cmk.checkengine.discovery import DiscoverySettings
 from cmk.gui.logged_in import user
@@ -94,7 +96,7 @@ def execute_bulk_discovery_v1(
 
     return ApiResponse(
         body=None,
-        status_code=303,
+        status_code=HTTPStatus.SEE_OTHER,
         headers={
             "Location": path_to_endpoint(
                 family=BACKGROUND_JOB_FAMILY.name,
@@ -118,9 +120,9 @@ ENDPOINT_EXECUTE_BULK_DISCOVERY = VersionedEndpoint(
     versions={
         APIVersion.V1: EndpointHandler(
             handler=execute_bulk_discovery_v1,
-            additional_status_codes=[303],
+            additional_status_codes=[HTTPStatus.SEE_OTHER],
             status_descriptions={
-                303: (
+                HTTPStatus.SEE_OTHER: (
                     "The bulk discovery job has been started in the background. "
                     "Redirecting to the 'Get background job status snapshot' endpoint."
                 ),

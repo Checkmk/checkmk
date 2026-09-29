@@ -11,6 +11,7 @@ Checkmk uses TLS certificates to secure agent communication.
 """
 
 from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Any
 
 from cryptography import x509
@@ -103,9 +104,9 @@ def _serialized_signed_cert(csr: x509.CertificateSigningRequest) -> str:
     "cmk/show",
     method="get",
     tag_group="Checkmk Internal",
-    additional_status_codes=[403],
+    additional_status_codes=[HTTPStatus.FORBIDDEN],
     status_descriptions={
-        403: _403_STATUS_DESCRIPTION,
+        HTTPStatus.FORBIDDEN: _403_STATUS_DESCRIPTION,
     },
     permissions_required=permissions.Perm("general.agent_pairing"),
     response_schema=X509PEM,
@@ -114,7 +115,7 @@ def root_cert(param: Mapping[str, object]) -> Response:  # noqa: ARG001
     """X.509 PEM-encoded root certificate"""
     if not _user_is_authorized():
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Unauthorized",
             detail=_403_STATUS_DESCRIPTION,
         )
@@ -130,9 +131,9 @@ def root_cert(param: Mapping[str, object]) -> Response:  # noqa: ARG001
     "cmk/sign",
     method="post",
     tag_group="Checkmk Internal",
-    additional_status_codes=[403],
+    additional_status_codes=[HTTPStatus.FORBIDDEN],
     status_descriptions={
-        403: _403_STATUS_DESCRIPTION,
+        HTTPStatus.FORBIDDEN: _403_STATUS_DESCRIPTION,
     },
     request_schema=X509ReqPEMUUID,
     response_schema=X509PEM,
@@ -142,7 +143,7 @@ def make_certificate(param: Mapping[str, Any]) -> Response:  # type: ignore[expl
     """X.509 PEM-encoded Certificate Signing Requests (CSRs)"""
     if not _user_is_authorized():
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Unauthorized",
             detail=_403_STATUS_DESCRIPTION,
         )
@@ -158,9 +159,9 @@ def make_certificate(param: Mapping[str, Any]) -> Response:  # type: ignore[expl
     "cmk/global_config",
     method="get",
     tag_group="Checkmk Internal",
-    additional_status_codes=[403],
+    additional_status_codes=[HTTPStatus.FORBIDDEN],
     status_descriptions={
-        403: "Unauthorized to read the global settings",
+        HTTPStatus.FORBIDDEN: "Unauthorized to read the global settings",
     },
     response_schema=AgentControllerCertificateSettings,
     permissions_required=permissions.AnyPerm(
@@ -174,7 +175,7 @@ def agent_controller_certificates_settings(param: object) -> Response:  # noqa: 
     """Show agent controller certificate settings"""
     if not (user.may("wato.seeall") or user.may("wato.global")):
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Unauthorized",
             detail="Unauthorized to read the global settings",
         )

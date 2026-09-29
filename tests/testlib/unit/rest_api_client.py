@@ -5077,6 +5077,13 @@ class CustomServiceClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def get(self, configuration_name: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{configuration_name}",
+            expect_ok=expect_ok,
+        )
+
     def get_all(self, expect_ok: bool = True) -> Response:
         return self.request(
             "get",

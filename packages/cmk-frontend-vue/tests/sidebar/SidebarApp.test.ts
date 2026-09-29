@@ -5,24 +5,21 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, waitFor } from '@testing-library/vue'
-import { expect, vi } from 'vitest'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse, http } from 'msw'
+import { beforeEach, expect, vi } from 'vitest'
 
 import SidebarApp from '@/sidebar/SidebarApp.vue'
 
-const getSidebarSnapinContentsMock = vi.hoisted(() => vi.fn())
-
-vi.mock('@/sidebar/lib/sidebar-api-client', () => ({
-  SidebarApiClient: class {
-    public getSidebarSnapinContents = getSidebarSnapinContentsMock
-  }
-}))
+useMswServer(
+  http.get('*/sidebar_snapin.py', () =>
+    HttpResponse.json(['<input id="mk_side_search_field" type="text" />'])
+  )
+)
 
 beforeEach(() => {
-  // @ts-expect-error the legacy global is only stubbed for the snapin content hook
-  window.cmk = { utils: { execute_javascript_by_object: () => {} } }
-  getSidebarSnapinContentsMock.mockResolvedValue({
-    quicksearch: '<input id="mk_side_search_field" type="text" />'
-  })
+  // the legacy global is only stubbed for the snapin content hook
+  vi.stubGlobal('cmk', { utils: { execute_javascript_by_object: () => {} } })
 })
 
 async function renderSidebarWithQuicksearch(): Promise<{

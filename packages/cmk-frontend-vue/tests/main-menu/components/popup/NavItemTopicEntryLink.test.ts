@@ -6,25 +6,27 @@
 import { render, screen } from '@testing-library/vue'
 import type { NavItemTopicEntry } from 'cmk-shared-typing/typescript/main_menu'
 import { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse, http } from 'msw'
 
 import NavItemTopicEntryLink from '@/main-menu/components/popup/NavItemTopicEntryLink.vue'
 import { MainMenuService } from '@/main-menu/lib/main-menu-service'
 import { mainMenuKey } from '@/main-menu/provider/main-menu'
 
-vi.mock('@/main-menu/lib/main-menu-api-client', () => ({
-  MainMenuApiClient: class {
-    async getUserMessages() {
-      return {
+useMswServer(
+  http.get('*/ajax_sidebar_get_messages.py', () =>
+    HttpResponse.json({
+      result_code: 0,
+      result: {
         hint_messages: { type: 'gui_hint', title: 'Messages', text: 'new', count: 1 },
         popup_messages: []
       }
-    }
-
-    async getUnacknowledgedIncompatibleWerks() {
-      return { count: 0, text: '', tooltip: '' }
-    }
-  }
-}))
+    })
+  ),
+  http.get('*/ajax_sidebar_get_unack_incomp_werks.py', () =>
+    HttpResponse.json({ result_code: 0, result: { count: 0, text: '', tooltip: '' } })
+  )
+)
 
 const receivedMessages: NavItemTopicEntry = {
   id: 'user_messages',

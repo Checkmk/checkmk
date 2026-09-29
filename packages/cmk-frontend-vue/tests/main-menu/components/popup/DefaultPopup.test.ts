@@ -6,25 +6,30 @@
 import { render, screen } from '@testing-library/vue'
 import type { NavItemHeader } from 'cmk-shared-typing/typescript/main_menu'
 import { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse, http } from 'msw'
 
 import DefaultPopup from '@/main-menu/components/popup/DefaultPopup.vue'
 import { MainMenuService } from '@/main-menu/lib/main-menu-service'
 import { mainMenuKey } from '@/main-menu/provider/main-menu'
 
-vi.mock('@/main-menu/lib/main-menu-api-client', () => ({
-  MainMenuApiClient: class {
-    async getUserMessages() {
-      return {
+useMswServer(
+  http.get('*/ajax_sidebar_get_messages.py', () =>
+    HttpResponse.json({
+      result_code: 0,
+      result: {
         hint_messages: { type: 'gui_hint', title: '', text: '', count: 0 },
         popup_messages: []
       }
-    }
-
-    async getUnacknowledgedIncompatibleWerks() {
-      return { count: 8, text: 'Unacknowledged werks', tooltip: '' }
-    }
-  }
-}))
+    })
+  ),
+  http.get('*/ajax_sidebar_get_unack_incomp_werks.py', () =>
+    HttpResponse.json({
+      result_code: 0,
+      result: { count: 8, text: 'Unacknowledged werks', tooltip: '' }
+    })
+  )
+)
 
 const header: NavItemHeader = {
   trigger_button: { mode: 'unack-incomp-werks', color: 'danger', target_url: 'werk.py' }

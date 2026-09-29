@@ -5,20 +5,10 @@
  */
 import type { NavItemShortcut, NavItems } from 'cmk-shared-typing/typescript/main_menu'
 import { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse, http } from 'msw'
 
 import { MainMenuService } from '@/main-menu/lib/main-menu-service'
-
-const api = vi.hoisted(() => ({
-  getUserMessages: vi.fn(),
-  getUnacknowledgedIncompatibleWerks: vi.fn()
-}))
-
-vi.mock('@/main-menu/lib/main-menu-api-client', () => ({
-  MainMenuApiClient: class {
-    getUserMessages = api.getUserMessages
-    getUnacknowledgedIncompatibleWerks = api.getUnacknowledgedIncompatibleWerks
-  }
-}))
 
 class RefreshableMainMenuService extends MainMenuService {
   public refreshUserMessages(): Promise<void> {
@@ -37,10 +27,34 @@ const userMessages = (count: number) => ({
 
 const unackIncompWerks = (count: number) => ({ count, text: 'werks', tooltip: '' })
 
-beforeEach(() => {
-  api.getUserMessages.mockResolvedValue(userMessages(0))
-  api.getUnacknowledgedIncompatibleWerks.mockResolvedValue(unackIncompWerks(0))
-})
+const server = useMswServer(
+  http.get('*/ajax_sidebar_get_messages.py', () =>
+    HttpResponse.json({ result_code: 0, result: userMessages(0) })
+  ),
+  http.get('*/ajax_sidebar_get_unack_incomp_werks.py', () =>
+    HttpResponse.json({ result_code: 0, result: unackIncompWerks(0) })
+  )
+)
+
+const answerUserMessages = (count: number) =>
+  server.use(
+    http.get('*/ajax_sidebar_get_messages.py', () =>
+      HttpResponse.json({ result_code: 0, result: userMessages(count) })
+    )
+  )
+
+const answerUnackIncompWerks = (count: number) =>
+  server.use(
+    http.get('*/ajax_sidebar_get_unack_incomp_werks.py', () =>
+      HttpResponse.json({ result_code: 0, result: unackIncompWerks(count) })
+    )
+  )
+
+const failUserMessages = () =>
+  server.use(http.get('*/ajax_sidebar_get_messages.py', () => HttpResponse.error()))
+
+const failUnackIncompWerks = () =>
+  server.use(http.get('*/ajax_sidebar_get_unack_incomp_werks.py', () => HttpResponse.error()))
 
 const navItems = (shortcut: NavItemShortcut): NavItems => [
   {
@@ -101,13 +115,13 @@ describe('main menu service shortcut registration', () => {
 describe('main menu service failing requests', () => {
   test('clears the user badge when the messages cannot be loaded', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
-    api.getUserMessages.mockResolvedValue(userMessages(3))
+    answerUserMessages(3)
     const service = badgedService()
     await vi.waitFor(() => {
       expect(service.getNavItemBadge('user')).toMatchObject({ content: '3' })
     })
 
-    api.getUserMessages.mockRejectedValue(new Error('request failed'))
+    failUserMessages()
     await service.refreshUserMessages()
 
     expect(service.getNavItemBadge('user')).toBeNull()
@@ -115,13 +129,13 @@ describe('main menu service failing requests', () => {
 
   test('clears the help badge when the werks cannot be loaded', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
-    api.getUnacknowledgedIncompatibleWerks.mockResolvedValue(unackIncompWerks(3))
+    answerUnackIncompWerks(3)
     const service = badgedService()
     await vi.waitFor(() => {
       expect(service.getNavItemBadge('help')).toMatchObject({ content: '3' })
     })
 
-    api.getUnacknowledgedIncompatibleWerks.mockRejectedValue(new Error('request failed'))
+    failUnackIncompWerks()
     await service.refreshUnackIncompWerks()
 
     expect(service.getNavItemBadge('help')).toBeNull()
@@ -130,13 +144,13 @@ describe('main menu service failing requests', () => {
 
 describe('main menu service user badge', () => {
   test('clears the user badge once the message count drops to zero', async () => {
-    api.getUserMessages.mockResolvedValue(userMessages(3))
+    answerUserMessages(3)
     const service = badgedService()
     await vi.waitFor(() => {
       expect(service.getNavItemBadge('user')).toMatchObject({ content: '3' })
     })
 
-    api.getUserMessages.mockResolvedValue(userMessages(0))
+    answerUserMessages(0)
     await service.refreshUserMessages()
 
     expect(service.getNavItemBadge('user')).toBeNull()

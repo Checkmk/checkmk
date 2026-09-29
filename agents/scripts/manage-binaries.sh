@@ -6,6 +6,8 @@
 : "${MK_INSTALLDIR:=""}"
 : "${SYMLINK_DIR:="/usr/bin"}"
 
+# Linux calls this script with /bin/sh, Solaris with bash. Hence, stick to POSIX sh.
+
 usage() {
     cat >&2 <<HERE
 Usage ${0} install|remove
@@ -13,6 +15,7 @@ Usage ${0} install|remove
 Commands:
   install      Make all binaries found in this Checkmk agent package available as command by
                registering them with the 'update-alternatives' or 'alternatives' command.
+               On systems providing neither of them, plain symlinks are created instead.
   remove       Remove installed symlinks.
 HERE
     exit 1
@@ -33,12 +36,14 @@ _install_symlinks() {
             continue
         }
         [ -e "${SYMLINK_DIR}/${name}" ] && [ ! -L "${SYMLINK_DIR}/${name}" ] && {
-            echo "Can't create symlink at %s: A file already exists and is not a symlink."
+            printf "Can't create symlink at %s: A file already exists and is not a symlink.\n" \
+                "${SYMLINK_DIR}/${name}" >&2
             continue
         }
         # The downside to the plain symlink is that we lose the information from another agent installtion entirely.
         # Since we currently don't support multiple agent installations, this is OK for the moment.
-        ln -s "${binary}" "${SYMLINK_DIR}/${name}"
+        # Force the link, it may be left over from a previous installation, possibly dangling.
+        ln -sf "${binary}" "${SYMLINK_DIR}/${name}"
     done
 }
 
@@ -50,13 +55,12 @@ _setup_alternatives_command() {
         exit 0
     }
 
-    if which update-alternatives >/dev/null 2>&1; then
+    if command -v update-alternatives >/dev/null 2>&1; then
         ALTERNATIVES="update-alternatives"
-    elif which alternatives >/dev/null 2>&1; then
+    elif command -v alternatives >/dev/null 2>&1; then
         ALTERNATIVES="alternatives"
     else
-        echo "Found neither 'update-alternatives' nor 'alternatives' command. Aborting."
-        exit 1
+        ALTERNATIVES=""
     fi
 }
 
@@ -100,6 +104,10 @@ main() {
             usage
             ;;
     esac
+
+    # We're called from package manager scriptlets, where a non-zero exit code may abort the
+    # whole transaction. Individual failures are reported above, but must not be fatal.
+    exit 0
 }
 
 main "$@"

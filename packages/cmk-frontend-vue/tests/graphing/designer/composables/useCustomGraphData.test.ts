@@ -5,7 +5,7 @@
  */
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
-import { effectScope, nextTick, ref } from 'vue'
+import { type EffectScope, effectScope, nextTick, ref } from 'vue'
 
 import {
   type ApiGraphOptions,
@@ -28,6 +28,7 @@ const OVERVIEW_DOMAIN: TimeInterval = { start: -10_800, end: 14_400 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let postSpy: any
+const scopes: EffectScope[] = []
 
 beforeEach(() => {
   vi.useFakeTimers()
@@ -40,6 +41,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  scopes.splice(0).forEach((scope) => scope.stop())
   vi.restoreAllMocks()
   vi.useRealTimers()
 })
@@ -85,18 +87,22 @@ function mount(
   overviewDomain: TimeInterval | null = null,
   fetchHidden = false
 ): Harness {
+  const scope = effectScope()
+  scopes.push(scope)
   const items = ref<GraphItem[]>(initialItems)
   const overviewRange = ref<TimeInterval | null>(overviewDomain)
-  const data = useCustomGraphData({
-    getItems: () => items.value ?? [],
-    getGraphOptions: () => GRAPH_OPTIONS,
-    getRequestedTimeRange: () => RANGE,
-    getConsolidationFn: () => 'max',
-    getFigureWidth: () => 860,
-    getOverviewRange: () => overviewRange.value ?? null,
-    getFetchHidden: () => fetchHidden,
-    debounceMs: 400
-  })
+  const data = scope.run(() =>
+    useCustomGraphData({
+      getItems: () => items.value ?? [],
+      getGraphOptions: () => GRAPH_OPTIONS,
+      getRequestedTimeRange: () => RANGE,
+      getConsolidationFn: () => 'max',
+      getFigureWidth: () => 860,
+      getOverviewRange: () => overviewRange.value ?? null,
+      getFetchHidden: () => fetchHidden,
+      debounceMs: 400
+    })
+  )!
   return { items, data, overviewRange }
 }
 

@@ -4980,6 +4980,15 @@ class DataBackendClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def get_status(self, site_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/actions/get/invoke",
+            query_params={"site_id": site_id},
+            expect_ok=expect_ok,
+            api_version=APIVersion.UNSTABLE,
+        )
+
 
 class TelemetryMetricsClient(RestApiClient):
     domain: DomainType = "telemetry_metrics"

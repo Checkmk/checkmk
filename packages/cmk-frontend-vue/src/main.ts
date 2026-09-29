@@ -78,5 +78,5 @@ defineCmkComponent('cmk-monitoring-page-link-button', MonitoringPageLinkButton)
 
 registerNonFreeComponent(
   'cmk-ai-assistant-panel',
-  import.meta.glob('./ai/AiAssistantPanelApp.vue', { eager: true })
+  import.meta.glob('./nonfree/ai/AiAssistantPanelApp.vue', { eager: true })
 )

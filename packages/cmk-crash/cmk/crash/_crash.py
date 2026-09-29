@@ -196,10 +196,7 @@ def _get_generic_crash_info[TDetails](
     version_info: VersionInfo,
     details: TDetails,
 ) -> CrashInfo[TDetails]:
-    """Produces the crash info data structure.
-
-    The top level keys of the crash info dict are standardized and need
-    to be set for all crash reports."""
+    """Produces the crash info data structure from the current exception context."""
     exc_type, exc_value, _ = sys.exc_info()
 
     tb_list = list(
@@ -208,6 +205,33 @@ def _get_generic_crash_info[TDetails](
         )
     )
 
+    return build_crash_info(
+        type_name=type_name,
+        version_info=version_info,
+        details=details,
+        exc_type=exc_type.__name__ if exc_type else None,
+        exc_value=str(exc_value),
+        tb_list=[tuple(e) for e in tb_list],
+        local_vars=_get_local_vars_of_last_exception(),
+        crash_id=str(uuid.uuid1()),
+    )
+
+
+def build_crash_info[TDetails](
+    *,
+    type_name: str,
+    version_info: VersionInfo,
+    details: TDetails,
+    exc_type: str | None,
+    exc_value: str,
+    tb_list: Sequence[tuple[str, int, str, str]],
+    local_vars: Mapping[str, object] | None,
+    crash_id: str,
+) -> CrashInfo[TDetails]:
+    """Produces the crash info data structure.
+
+    The top level keys of the crash info dict are standardized and need
+    to be set for all crash reports."""
     # TODO: The typing gets *really* chaotic here, hence the cast. :-P
     modified_details = details
     if isinstance(details, Mapping) and "vars" in details:
@@ -221,12 +245,12 @@ def _get_generic_crash_info[TDetails](
 
     return CrashInfo(
         crash_info_version=CRASH_INFO_VERSION,
-        id=str(uuid.uuid1()),
+        id=crash_id,
         crash_type=type_name,
-        exc_type=exc_type.__name__ if exc_type else None,
-        exc_value=str(exc_value),
-        exc_traceback=[tuple(e) for e in tb_list],
-        local_vars=_get_local_vars_of_last_exception(),
+        exc_type=exc_type,
+        exc_value=exc_value,
+        exc_traceback=list(tb_list),
+        local_vars="" if local_vars is None else _encode_local_vars(local_vars),
         details=modified_details,
         core=version_info["core"],
         python_version=version_info["python_version"],
@@ -238,18 +262,23 @@ def _get_generic_crash_info[TDetails](
     )
 
 
-def _get_local_vars_of_last_exception() -> str:
+def _get_local_vars_of_last_exception() -> Mapping[str, object] | None:
     try:
-        local_vars = format_var_for_export(inspect.trace()[-1][0].f_locals, maxdepth=5)
+        return inspect.trace()[-1][0].f_locals
     except IndexError:
         # inspect.trace() returns [] when called outside an active exception handler,
         # making [-1] raise IndexError.
-        return ""
+        return None
 
+
+def _encode_local_vars(local_vars: Mapping[str, object]) -> str:
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.
     return base64.b64encode(
-        _truncate_str(pprint.pformat(local_vars), max_size=5 * 1024 * 1024).encode("utf-8")
+        _truncate_str(
+            pprint.pformat(format_var_for_export(local_vars, maxdepth=5)),
+            max_size=5 * 1024 * 1024,
+        ).encode("utf-8")
     ).decode()
 
 

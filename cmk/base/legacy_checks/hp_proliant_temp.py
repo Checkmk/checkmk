@@ -48,7 +48,7 @@ hp_proliant_status_map = {
 
 
 def parse_hp_proliant_temp(string_table: StringTable) -> StringTable:
-    return string_table
+    return [line for line in string_table if line[0] and line[1]]
 
 
 def format_hp_proliant_name(line):

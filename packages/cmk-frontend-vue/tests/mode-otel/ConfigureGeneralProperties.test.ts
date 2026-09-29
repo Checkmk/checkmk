@@ -90,6 +90,14 @@ function renderComponent(
   return { configName, siteId, compRef }
 }
 
+/** The site dropdown shows its loading hint until the site list has arrived. */
+async function waitForSites(label: string): Promise<void> {
+  await waitFor(() => expect(siteRequests).toBe(1))
+  await waitFor(() =>
+    expect(screen.getByRole('combobox', { name: 'Site selection' })).toHaveTextContent(label)
+  )
+}
+
 describe('ConfigureGeneralProperties', () => {
   beforeEach(() => {
     siteRequests = 0
@@ -125,9 +133,7 @@ describe('ConfigureGeneralProperties', () => {
       serveSites(SITES)
       const { siteId } = renderComponent('', 'remote2')
 
-      await waitFor(() => expect(siteRequests).toBe(1))
-      // Allow the async body of onMounted to finish
-      await new Promise((r) => setTimeout(r, 0))
+      await waitForSites('remote2 - Remote Site 2')
 
       expect(siteId.value).toBe('remote2')
     })
@@ -176,8 +182,7 @@ describe('ConfigureGeneralProperties', () => {
       serveSites(SITES, [{ id: 'opentelemetry_config_1' }])
       const { configName } = renderComponent('my_custom_name')
 
-      // Let the async onMounted body run.
-      await new Promise((r) => setTimeout(r, 0))
+      await waitForSites('local - Local Site')
 
       expect(configName.value).toBe('my_custom_name')
     })
@@ -199,6 +204,18 @@ describe('ConfigureGeneralProperties', () => {
       renderComponent()
 
       await screen.findByText('Failed to load sites. Please try again.')
+    })
+
+    test('asks for the sites again on the next mount after a failed load', async () => {
+      serveSitesError()
+      renderComponent()
+      await screen.findByText('Failed to load sites. Please try again.')
+      cleanup()
+      serveSites(SITES)
+
+      const { siteId } = renderComponent()
+
+      await waitFor(() => expect(siteId.value).toBe('local'))
     })
   })
 
@@ -225,6 +242,7 @@ describe('ConfigureGeneralProperties', () => {
     test('does not show validation errors before validate() is called', async () => {
       serveSites([])
       renderComponent()
+      await waitForSites('Select site')
 
       expect(
         screen.queryByText('Configuration name is required but not specified.')
@@ -237,7 +255,8 @@ describe('ConfigureGeneralProperties', () => {
       const { compRef, configName } = renderComponent('', null)
 
       await waitFor(() => expect(compRef.value).toBeDefined())
-      await new Promise((r) => setTimeout(r, 0))
+      await waitForSites('Select site')
+      await waitFor(() => expect(configName.value).toBe('opentelemetry_config_1'))
       // The field is prefilled on mount, so clear it to exercise the
       // "name is required" validation a user would hit by emptying it.
       configName.value = ''
@@ -254,7 +273,7 @@ describe('ConfigureGeneralProperties', () => {
       const { compRef } = renderComponent('valid_name', null)
 
       await waitFor(() => expect(compRef.value).toBeDefined())
-      await new Promise((r) => setTimeout(r, 0))
+      await waitForSites('Select site')
 
       const result = await compRef.value!.validate()
 

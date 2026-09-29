@@ -19,8 +19,10 @@ type OTelConfigEntry = {
   extensions: { site: string[] }
 }
 
-let cachedSites: RawSite[] | null = null
-let cachedConfigs: { kind: ConfigKind; entries: OTelConfigEntry[] } | null = null
+// The requests are cached rather than their results, so that a response arriving after a reset
+// cannot fill the cache again.
+let cachedSites: Promise<RawSite[]> | null = null
+let cachedConfigs: { kind: ConfigKind; entries: Promise<OTelConfigEntry[]> } | null = null
 
 /** Exposed for testing only — resets the module-level caches. */
 export function _resetCaches(): void {
@@ -88,17 +90,19 @@ function applySites(rawSites: RawSite[]) {
   }
 }
 
-async function loadSites(): Promise<void> {
-  if (cachedSites !== null) {
-    applySites(cachedSites)
-    return
-  }
+async function fetchSites(): Promise<RawSite[]> {
+  return unwrap(await client.GET('/domain-types/site_connection/collections/all')).value
+}
 
+async function loadSites(): Promise<void> {
   isLoading.value = true
+  const sites = (cachedSites ??= fetchSites())
   try {
-    cachedSites = unwrap(await client.GET('/domain-types/site_connection/collections/all')).value
-    applySites(cachedSites)
+    applySites(await sites)
   } catch {
+    if (cachedSites === sites) {
+      cachedSites = null
+    }
     loadError.value = _t('Failed to load sites. Please try again.')
   } finally {
     isLoading.value = false
@@ -114,13 +118,18 @@ async function loadConfigList(kind: ConfigKind): Promise<OTelConfigEntry[]> {
     .value
 }
 
-async function fetchConfigList(skipCache = false): Promise<OTelConfigEntry[]> {
+function fetchConfigList(skipCache = false): Promise<OTelConfigEntry[]> {
   if (!skipCache && cachedConfigs?.kind === props.configKind) {
     return cachedConfigs.entries
   }
-  const entries = await loadConfigList(props.configKind)
-  cachedConfigs = { kind: props.configKind, entries }
-  return entries
+  const cache = { kind: props.configKind, entries: loadConfigList(props.configKind) }
+  cachedConfigs = cache
+  cache.entries.catch(() => {
+    if (cachedConfigs === cache) {
+      cachedConfigs = null
+    }
+  })
+  return cache.entries
 }
 
 async function initConfigName(): Promise<void> {

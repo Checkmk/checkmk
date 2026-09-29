@@ -5069,6 +5069,29 @@ class CustomServiceClient(RestApiClient):
         )
 
 
+class AlertClient(RestApiClient):
+    domain: DomainType = "telemetry_alert"
+    default_version = APIVersion.UNSTABLE
+
+    def create(
+        self,
+        configuration_name: str,
+        alert_name: str,
+        service_match: Mapping[str, Any],
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body={
+                "configuration_name": configuration_name,
+                "alert_name": alert_name,
+                "service_match": dict(service_match),
+            },
+            expect_ok=expect_ok,
+        )
+
+
 class PagetypeTopicClient(RestApiClient):
     domain: DomainType = "pagetype_topic"
     default_version = APIVersion.INTERNAL
@@ -5732,6 +5755,7 @@ class ClientRegistry:
     HostRelationDiscovery: HostRelationDiscoveryClient
     MonitorHosts: MonitorHostsClient
     CustomService: CustomServiceClient
+    Alert: AlertClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -5806,4 +5830,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         HostRelationDiscovery=HostRelationDiscoveryClient(request_handler, url_prefix),
         MonitorHosts=MonitorHostsClient(request_handler, url_prefix),
         CustomService=CustomServiceClient(request_handler, url_prefix),
+        Alert=AlertClient(request_handler, url_prefix),
     )

@@ -2092,6 +2092,7 @@ allows = [
   "@plugin_apis",
   "cmk.ccc.exceptions",
   "cmk.ccc.hostaddress",
+  "cmk.ccc.regex",
   "cmk.ccc.site",
   "cmk.ccc.version",
   "cmk.dcd.gui",

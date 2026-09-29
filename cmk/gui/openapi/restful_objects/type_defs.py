@@ -117,6 +117,7 @@ DomainType = Literal[
     "sign_key",
     "site_connection",
     "sla",
+    "telemetry_alert",
     "telemetry_metrics",
     "time_period",
     "user",

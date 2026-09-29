@@ -122,11 +122,11 @@ def test_access_denied_on_a_role_restricted_endpoint_writes_an_empty_section(
 
     write_sections(
         _client(),
-        [("veeam_vbr_replicas", empty_on_access_denied(fetch_list("/api/v1/replicas")))],
+        [("veeam_replicas", empty_on_access_denied(fetch_list("/api/v1/replicas")))],
     )
 
     captured = capsys.readouterr()
-    assert captured.out == "<<<veeam_vbr_replicas:sep(0)>>>\n"
+    assert captured.out == "<<<veeam_replicas:sep(0)>>>\n"
     assert captured.err == ""
 
 

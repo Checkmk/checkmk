@@ -15,6 +15,7 @@ import datetime
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
+from http import HTTPStatus
 from time import time
 from typing import Literal, override
 from unittest import mock
@@ -364,7 +365,7 @@ def test_login_of_an_unknown_ldap_user_syncs_it(
     wsgi_app.get(
         "/NO_SITE/check_mk/api/1.0/version",
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
     )
 
     assert UserId("carol") in load_users()

@@ -9,6 +9,7 @@ import datetime as dt
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
+from http import HTTPStatus
 
 import pytest
 
@@ -113,7 +114,9 @@ def check_widget_create(
             {"test_widget": create_widget(content)},
         )
     )
-    assert resp.status_code == 201, f"Expected 201, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.CREATED, (
+        f"Expected 201, got {resp.status_code} {resp.body!r}"
+    )
     widgets = resp.json["extensions"]["widgets"]
     widget = next(iter(widgets.values()))  # IDs are not consistent
     assert widget["content"]["type"] == expected_type
@@ -323,7 +326,9 @@ class TestInventoryContent:
                 "path": "hardware.cpu.cores",
             }
         )
-        assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.OK, (
+            f"Expected 200, got {resp.status_code} {resp.body!r}"
+        )
         assert resp.json["value"]["filter_context"]["uses_infos"] == ["host"]
 
 

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Iterator
+from http import HTTPStatus
 
 import pytest
 from pytest_mock import MockerFixture
@@ -52,7 +53,7 @@ def _create_ldap_connection(ldap_id: str) -> None:
 @pytest.mark.usefixtures("mock_log_audit_file")
 def test_test_non_existing_connection(clients: ClientRegistry) -> None:
     resp = clients.LdapConnection.test_connection("non_existing", expect_ok=False)
-    assert resp.status_code == 404
+    assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.usefixtures("mock_log_audit_file")

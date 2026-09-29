@@ -10,6 +10,7 @@ each test here also pins its endpoint's declaration.
 """
 
 import copy
+from http import HTTPStatus
 
 import pytest
 
@@ -89,7 +90,7 @@ def test_disable_checks_goes_to_the_objects_site(
 def test_a_verb_the_rest_api_offers_is_not_run_here(clients: ClientRegistry) -> None:
     clients.Maps.run_command(
         {"action": "acknowledge", "host_name": "heute"}, expect_ok=False
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_form_schema_renders_the_dialog(clients: ClientRegistry) -> None:
@@ -107,7 +108,7 @@ def test_an_uploaded_image_joins_the_library(clients: ClientRegistry) -> None:
 
 def test_an_unused_image_is_deleted(clients: ClientRegistry) -> None:
     clients.Maps.upload_image("rack.png", "image/png", _PNG)
-    clients.Maps.delete_image("rack.png").assert_status_code(204)
+    clients.Maps.delete_image("rack.png").assert_status_code(HTTPStatus.NO_CONTENT)
 
 
 def test_an_image_in_use_is_kept_with_the_maps_using_it(clients: ClientRegistry) -> None:
@@ -116,7 +117,7 @@ def test_an_image_in_use_is_kept_with_the_maps_using_it(clients: ClientRegistry)
 
     resp = clients.Maps.delete_image("rack.png", expect_ok=False)
 
-    resp.assert_status_code(409)
+    resp.assert_status_code(HTTPStatus.CONFLICT)
     assert resp.json["ext"]["usage"] == [
         {"map": "floor", "alias": "Floor", "object_ids": [], "is_background": True}
     ]
@@ -133,7 +134,7 @@ def test_a_background_is_stored_for_its_map(clients: ClientRegistry) -> None:
 def test_a_background_is_removed(clients: ClientRegistry) -> None:
     clients.Maps.create(config=_map("floor"))
     clients.Maps.upload_background("floor", "plan.png", "image/png", _PNG)
-    clients.Maps.delete_background("floor").assert_status_code(204)
+    clients.Maps.delete_background("floor").assert_status_code(HTTPStatus.NO_CONTENT)
 
 
 def test_a_nagvis_cfg_parses_into_a_draft(clients: ClientRegistry) -> None:

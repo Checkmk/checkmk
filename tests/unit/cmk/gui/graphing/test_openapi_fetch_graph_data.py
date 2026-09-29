@@ -6,6 +6,7 @@
 import json
 import subprocess
 from collections.abc import Mapping, Sequence
+from http import HTTPStatus
 from pathlib import Path
 from typing import Literal
 from unittest.mock import MagicMock
@@ -195,7 +196,7 @@ def test_fetch_graph_data_invalid_internal_raises_500() -> None:
     )
     with pytest.raises(ProblemException) as exc_info:
         fetch_graph_data_v1(_api_context(), request)
-    assert exc_info.value.code == 500
+    assert exc_info.value.code == HTTPStatus.INTERNAL_SERVER_ERROR
     assert "Failed to evaluate graph" in exc_info.value.detail
 
 
@@ -209,7 +210,7 @@ def test_fetch_graph_data_unknown_graph_kind_raises_500() -> None:
     )
     with pytest.raises(ProblemException) as exc_info:
         fetch_graph_data_v1(_api_context(), request)
-    assert exc_info.value.code == 500
+    assert exc_info.value.code == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 @pytest.mark.usefixtures("load_config")
@@ -227,7 +228,7 @@ def test_fetch_graph_data_livestatus_failure_raises_503(
     )
     with pytest.raises(ProblemException) as exc_info:
         fetch_graph_data_v1(_api_context(), request)
-    assert exc_info.value.code == 503
+    assert exc_info.value.code == HTTPStatus.SERVICE_UNAVAILABLE
     assert "connection refused" in exc_info.value.detail
 
 
@@ -244,7 +245,7 @@ def test_fetch_graph_data_multiple_internal_graphs_raises_500() -> None:
     )
     with pytest.raises(ProblemException) as exc_info:
         fetch_graph_data_v1(_api_context(), request)
-    assert exc_info.value.code == 500
+    assert exc_info.value.code == HTTPStatus.INTERNAL_SERVER_ERROR
     assert "Expected exactly one graph" in exc_info.value.detail
     assert "got 2" in exc_info.value.detail
 
@@ -715,7 +716,7 @@ def test_fetch_graph_data_does_not_commit_the_setup_git_repo(
             headers={"Accept": "application/json", "Content-Type": "application/json"},
         )
 
-    assert resp.status_code == 200, resp.text
+    assert resp.status_code == HTTPStatus.OK, resp.text
     log = subprocess.run(
         ["git", "log", "--format=%s"], cwd=config_dir, check=True, capture_output=True, text=True
     ).stdout.splitlines()

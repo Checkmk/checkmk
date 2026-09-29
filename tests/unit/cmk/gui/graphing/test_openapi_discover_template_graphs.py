@@ -7,6 +7,7 @@
 
 import json
 from collections.abc import Callable, Sequence
+from http import HTTPStatus
 
 import pytest
 
@@ -265,7 +266,7 @@ def test_discover_template_graphs_livestatus_failure_is_503(
     resp = clients.Graph.discover_template_graphs(
         hostname="my-host", service_description="CPU load", expect_ok=False
     )
-    assert resp.status_code == 503
+    assert resp.status_code == HTTPStatus.SERVICE_UNAVAILABLE
     assert "connection refused" in resp.json["detail"]
 
 
@@ -275,4 +276,4 @@ def test_discover_template_graphs_invalid_hostname_is_400(clients: ClientRegistr
         service_description="CPU load",
         expect_ok=False,
     )
-    assert resp.status_code == 400
+    assert resp.status_code == HTTPStatus.BAD_REQUEST

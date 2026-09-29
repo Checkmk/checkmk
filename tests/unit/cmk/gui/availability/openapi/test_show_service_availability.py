@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
@@ -52,4 +53,4 @@ def test_show_service_availability_returns_404_when_not_found(
             time_range_from=TIME_FROM,
             time_range_until=TIME_UNTIL,
             expect_ok=False,
-        ).assert_status_code(404)
+        ).assert_status_code(HTTPStatus.NOT_FOUND)

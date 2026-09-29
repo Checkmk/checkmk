@@ -5,6 +5,7 @@
 
 import dataclasses
 from collections.abc import Iterator, Mapping
+from http import HTTPStatus
 from typing import override
 
 import pytest
@@ -236,7 +237,9 @@ def test_the_read_only_message_is_shown_on_the_page(
     with set_config(
         wato_read_only={"enabled": True, "rw_users": [], "message": "Maintenance in progress"}
     ):
-        response = logged_in_admin_wsgi_app.get("/NO_SITE/check_mk/global_settings.py", status=200)
+        response = logged_in_admin_wsgi_app.get(
+            "/NO_SITE/check_mk/global_settings.py", status=HTTPStatus.OK
+        )
     assert "Maintenance in progress" in response.text
 
 

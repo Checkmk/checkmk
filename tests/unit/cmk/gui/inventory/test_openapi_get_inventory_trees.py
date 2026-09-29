@@ -5,6 +5,7 @@
 
 import urllib.parse
 from collections.abc import Mapping
+from http import HTTPStatus
 
 import pytest
 
@@ -108,7 +109,7 @@ def test_openapi_get_inventory_trees(
             WebTestAppRequestHandler(aut_user_auth_wsgi_app),
             "/NO_SITE/check_mk/api/unstable",
         ).get_all(host_names=["hostname1", "hostname2"])
-        resp.assert_status_code(200)
+        resp.assert_status_code(HTTPStatus.OK)
         assert resp.json == {
             "domainType": "inventory",
             "id": "inventory_trees",

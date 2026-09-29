@@ -7,6 +7,7 @@
 
 import datetime as dt
 from collections.abc import Mapping, Sequence
+from http import HTTPStatus
 from typing import cast, Literal
 
 import pytest
@@ -135,13 +136,13 @@ def _celsius_graph(_graphs: Sequence[Graph], _options: Mapping[str, object]) -> 
 def test_fetch_with_a_token_of_another_kind_is_401() -> None:
     with pytest.raises(ProblemException) as exc_info:
         fetch_widget_graph_data_v1(api_context(_agent_download_token()), _REQUEST)
-    assert exc_info.value.code == 401
+    assert exc_info.value.code == HTTPStatus.UNAUTHORIZED
 
 
 def test_fetch_with_a_disabled_dashboard_token_is_401() -> None:
     with pytest.raises(ProblemException) as exc_info:
         fetch_widget_graph_data_v1(api_context(dashboard_token(disabled=True)), _REQUEST)
-    assert exc_info.value.code == 401
+    assert exc_info.value.code == HTTPStatus.UNAUTHORIZED
 
 
 @pytest.mark.usefixtures("load_config", "request_context")
@@ -154,7 +155,7 @@ def test_fetch_of_a_widget_without_a_discovered_graph_is_404(
     with pytest.raises(ProblemException) as exc_info:
         fetch_widget_graph_data_v1(api_context(dashboard_token()), _REQUEST)
 
-    assert exc_info.value.code == 404
+    assert exc_info.value.code == HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.usefixtures("load_config", "request_context")

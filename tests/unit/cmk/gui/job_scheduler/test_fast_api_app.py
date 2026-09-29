@@ -8,6 +8,7 @@
 import logging
 import threading
 from collections import Counter
+from http import HTTPStatus
 from typing import override
 
 from fastapi.testclient import TestClient
@@ -168,7 +169,7 @@ def test_start() -> None:
             ).model_dump(mode="json"),
         )
 
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     assert StartResponse.model_validate(resp.json()).success is True
 
 
@@ -178,7 +179,7 @@ def test_terminate() -> None:
             "terminate", json=TerminateRequest(job_id="test").model_dump(mode="json")
         )
 
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     assert resp.text == "null"
 
 
@@ -186,7 +187,7 @@ def test_is_alive() -> None:
     with _get_test_client(loaded_at=1337) as client:
         resp = client.post("is_alive", json=IsAliveRequest(job_id="test").model_dump(mode="json"))
 
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     assert IsAliveResponse.model_validate(resp.json()).is_alive is True
 
 
@@ -194,7 +195,7 @@ def test_health_check() -> None:
     with _get_test_client(loaded_at=(loaded_at := 1337)) as client:
         resp = client.get("health")
 
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     response = HealthResponse.model_validate(resp.json())
     assert response.loaded_at == loaded_at
     assert response.process == ProcessHealth(
@@ -221,5 +222,5 @@ def test_reset_scheduling() -> None:
     with _get_test_client(loaded_at=1337) as client:
         resp = client.post("reset_scheduling", json={"job_id": "foo_bar"})
 
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     assert resp.text == "null"

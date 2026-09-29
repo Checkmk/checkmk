@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
+from http import HTTPStatus
 from typing import get_args, get_type_hints
 
 import pytest
@@ -105,14 +106,16 @@ def test_widget_title_url_scheme_validation(
         expect_ok=not should_fail,
     )
     if should_fail:
-        assert resp.status_code == 400, f"Expected 400 for {title_url}, got {resp.status_code}"
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400 for {title_url}, got {resp.status_code}"
+        )
         field_error = resp.json["fields"]["body.widgets.test_widget.general_settings.title.url"]
         assert "invalid url" in field_error["msg"].lower(), (
             f"Expected error message to mention 'Invalid URL' for {title_url}, "
             f"got: {field_error['msg']}"
         )
     else:
-        assert resp.status_code == 201, (
+        assert resp.status_code == HTTPStatus.CREATED, (
             f"Expected 201 for {title_url}, got {resp.status_code} {resp.body!r}"
         )
 
@@ -141,7 +144,7 @@ def test_widget_api_model_has_valid_type_mapping(widget_api_model: BaseWidgetCon
 def test_show_dashboard_constants(clients: ClientRegistry) -> None:
     resp = clients.ConstantClient.get_dashboard()
 
-    assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.OK, f"Expected 200, got {resp.status_code} {resp.body!r}"
     assert len(resp.json["extensions"]["widgets"]) > 0, (
         "Expected at least one widget to be returned"
     )
@@ -187,21 +190,25 @@ def test_show_dashboard(clients: ClientRegistry) -> None:
 
     # main builtin dashboard should always be present
     resp = clients.DashboardClient.get_relative_grid_dashboard("main")
-    assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.OK, f"Expected 200, got {resp.status_code} {resp.body!r}"
     # check that we got the correct dashboard
     assert resp.json["id"] == "main", "Expected dashboard ID to be 'main'"
 
 
 def test_show_non_existent_dashboard(clients: ClientRegistry) -> None:
     resp = clients.DashboardClient.get_relative_grid_dashboard("non_existent" * 4, expect_ok=False)
-    assert resp.status_code == 404, f"Expected 404, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.NOT_FOUND, (
+        f"Expected 404, got {resp.status_code} {resp.body!r}"
+    )
 
 
 def test_create_empty_dashboard(clients: ClientRegistry) -> None:
     resp = clients.DashboardClient.create_relative_grid_dashboard(
         create_dashboard_payload("test_dashboard", {})
     )
-    assert resp.status_code == 201, f"Expected 201, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.CREATED, (
+        f"Expected 201, got {resp.status_code} {resp.body!r}"
+    )
     assert resp.json["id"] == "test_dashboard", (
         "Expected created dashboard ID to be 'test_dashboard'"
     )
@@ -215,7 +222,7 @@ def test_clone_relative_dashboard(clients: ClientRegistry) -> None:
     resp = clients.DashboardClient.clone_as_relative_grid_dashboard(
         {"reference_dashboard_id": "test_dashboard", "dashboard_id": "clone_dashboard"}
     )
-    assert resp.status_code == 201, f"Expected 201, got {resp.status_code}"
+    assert resp.status_code == HTTPStatus.CREATED, f"Expected 201, got {resp.status_code}"
     assert resp.json["id"] == "clone_dashboard", (
         "Expected cloned dashboard ID to be 'clone_dashboard'"
     )
@@ -231,7 +238,7 @@ def test_edit_relative_grid_layout(clients: ClientRegistry) -> None:
         dashboard_id,
         create_dashboard_payload(new_dashboard_id, {}),
     )
-    assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.OK, f"Expected 200, got {resp.status_code} {resp.body!r}"
     assert resp.json["id"] == new_dashboard_id
 
 
@@ -247,7 +254,9 @@ def test_edit_id_in_use(clients: ClientRegistry) -> None:
         create_dashboard_payload(dashboard_2, {}),
         expect_ok=False,
     )
-    assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+        f"Expected 400, got {resp.status_code} {resp.body!r}"
+    )
     assert resp.json["title"] == "Dashboard ID already in use"
 
 
@@ -258,7 +267,9 @@ def test_create_dashboard_with_invalid_id(clients: ClientRegistry, dashboard_id:
     resp = clients.DashboardClient.create_relative_grid_dashboard(
         create_dashboard_payload(dashboard_id, {}), expect_ok=False
     )
-    assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+        f"Expected 400, got {resp.status_code} {resp.body!r}"
+    )
     assert resp.json["fields"]["body.id"]["msg"] == "String should match pattern '^[a-zA-Z0-9_]+$'"
 
 
@@ -268,7 +279,9 @@ def test_create_dashboard_with_invalid_widget_type(clients: ClientRegistry) -> N
         {"test_widget": create_widget({"type": "not_a_real_type"})},
     )
     resp = clients.DashboardClient.create_relative_grid_dashboard(payload, expect_ok=False)
-    assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+        f"Expected 400, got {resp.status_code} {resp.body!r}"
+    )
 
 
 def test_delete_dashboard(clients: ClientRegistry) -> None:
@@ -278,9 +291,13 @@ def test_delete_dashboard(clients: ClientRegistry) -> None:
     )
 
     resp = clients.DashboardClient.delete(dashboard_id)
-    assert resp.status_code == 204, f"Expected 204, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.NO_CONTENT, (
+        f"Expected 204, got {resp.status_code} {resp.body!r}"
+    )
     resp = clients.DashboardClient.get_relative_grid_dashboard(dashboard_id, expect_ok=False)
-    assert resp.status_code == 404, f"Expected 404, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.NOT_FOUND, (
+        f"Expected 404, got {resp.status_code} {resp.body!r}"
+    )
 
 
 def test_compute_widget_titles(clients: ClientRegistry) -> None:
@@ -312,7 +329,7 @@ def test_compute_widget_titles(clients: ClientRegistry) -> None:
             },
         }
     )
-    assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.OK, f"Expected 200, got {resp.status_code} {resp.body!r}"
     titles = resp.json["extensions"]["titles"]
     assert titles["widget-1"] == "Widget 1", "Expected title for widget-1 to be 'Widget 1'"
     assert titles["widget-2"] == "Time series graph: custom"
@@ -322,7 +339,9 @@ class TestDashboardMetadata:
     def test_list_dashboard_metadata(self, clients: ClientRegistry) -> None:
         resp = clients.DashboardClient.list_dashboard_metadata()
 
-        assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.OK, (
+            f"Expected 200, got {resp.status_code} {resp.body!r}"
+        )
         assert len(resp.json["value"]) > 0, "Expected at least one dashboard to be returned"
 
         first_dashboard = resp.json["value"][0]
@@ -331,7 +350,9 @@ class TestDashboardMetadata:
     def test_show_dashboard_metadata(self, clients: ClientRegistry) -> None:
         resp = clients.DashboardClient.show_dashboard_metadata("main", owner="")
 
-        assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.OK, (
+            f"Expected 200, got {resp.status_code} {resp.body!r}"
+        )
 
 
 class TestDashboardIcon:
@@ -343,7 +364,9 @@ class TestDashboardIcon:
         resp = clients.DashboardClient.create_relative_grid_dashboard(
             create_dashboard_payload("test_dashboard_with_icon", {}, icon_config=icon_config)
         )
-        assert resp.status_code == 201, f"Expected 201, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.CREATED, (
+            f"Expected 201, got {resp.status_code} {resp.body!r}"
+        )
         assert resp.json["extensions"]["general_settings"]["menu"]["icon"] == icon_config, (
             "Expected icon to be set"
         )
@@ -356,7 +379,9 @@ class TestDashboardIcon:
         resp = clients.DashboardClient.create_relative_grid_dashboard(
             create_dashboard_payload("test_dashboard_with_icon", {}, icon_config=icon_config)
         )
-        assert resp.status_code == 201, f"Expected 201, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.CREATED, (
+            f"Expected 201, got {resp.status_code} {resp.body!r}"
+        )
         assert resp.json["extensions"]["general_settings"]["menu"]["icon"] == icon_config, (
             "Expected icon to be set"
         )
@@ -416,7 +441,9 @@ class TestSidebarElementContent:
             ),
             expect_ok=False,
         )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
         assert resp.json["fields"]["body.widgets.test_widget.content.sidebar_element.name"][
             "msg"
         ].startswith("Value error, Value 'non_existent_element' is not allowed, valid options are:")
@@ -466,13 +493,15 @@ class TestURLContent:
             expect_ok=not should_fail,
         )
         if should_fail:
-            assert resp.status_code == 400, f"Expected 400 for {url}, got {resp.status_code}"
+            assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+                f"Expected 400 for {url}, got {resp.status_code}"
+            )
             field_error = resp.json["fields"]["body.widgets.test_widget.content.url.url"]
             assert "invalid url" in field_error["msg"].lower(), (
                 f"Expected error message to mention 'Invalid URL' for {url}, got: {field_error['msg']}"
             )
         else:
-            assert resp.status_code == 201, (
+            assert resp.status_code == HTTPStatus.CREATED, (
                 f"Expected 201 for {url}, got {resp.status_code} {resp.body!r}"
             )
 
@@ -494,7 +523,9 @@ class TestStaticTextContent:
                 "text": "This is a static text widget",
             }
         )
-        assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.OK, (
+            f"Expected 200, got {resp.status_code} {resp.body!r}"
+        )
         assert set(resp.json["value"]) == {"filter_context"}
         assert resp.json["value"]["filter_context"]["uses_infos"] == []
 
@@ -524,7 +555,9 @@ class TestLinkedViewContent:
             ),
             expect_ok=False,
         )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
         assert (
             resp.json["fields"]["body.widgets.test_widget.content.linked_view.view_name"]["msg"]
             == "Value error, View does not exist or you don't have permission to see it."
@@ -624,7 +657,9 @@ class TestEmbeddedViewContent:
         resp = clients.DashboardClient.edit_relative_grid_dashboard(
             dashboard_id, payload, expect_ok=False
         )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
         assert (
             resp.json["fields"]["body.widgets.test_widget.content.embedded_view.datasource"]["msg"]
             == "Datasource does not match the embedded view definition."
@@ -645,7 +680,9 @@ class TestEmbeddedViewContent:
             },
         )
         resp = clients.DashboardClient.create_relative_grid_dashboard(payload, expect_ok=False)
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
         assert resp.json["fields"]["body.widgets.test_widget.content.embedded_view.datasource"][
             "msg"
         ].startswith(
@@ -667,7 +704,9 @@ class TestEmbeddedViewContent:
             },
         )
         resp = clients.DashboardClient.create_relative_grid_dashboard(payload, expect_ok=False)
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
         assert resp.json["fields"][
             "body.widgets.test_widget.content.embedded_view.restricted_to_single.0"
         ]["msg"].startswith(
@@ -688,7 +727,9 @@ class TestNotSupportedContent:
             ),
             expect_ok=False,
         )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
         assert (
             resp.json["fields"]["body.widgets.test_widget.content.not_supported"]["msg"]
             == "Value error, Cannot use unsupported content type."
@@ -733,7 +774,9 @@ class TestSharePermissionEnforcement:
         resp = clients.DashboardClient.create_relative_grid_dashboard(
             _payload_with_share("shared_with_all", {"type": "with_all_users"})
         )
-        assert resp.status_code == 201, f"Expected 201, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.CREATED, (
+            f"Expected 201, got {resp.status_code} {resp.body!r}"
+        )
 
     def test_share_with_all_users_denied_without_permission(
         self, clients: ClientRegistry, set_config: SetConfig, load_config: Config
@@ -743,7 +786,9 @@ class TestSharePermissionEnforcement:
                 _payload_with_share("shared_with_all_denied", {"type": "with_all_users"}),
                 expect_ok=False,
             )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
         assert (
             "You are not allowed to share dashboards with all users."
             in resp.json["fields"]["body.general_settings.visibility.share"]["msg"]
@@ -767,7 +812,9 @@ class TestSharePermissionEnforcement:
                     {"type": "with_contact_groups", "contact_groups": [own]},
                 )
             )
-        assert resp.status_code == 201, f"Expected 201, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.CREATED, (
+            f"Expected 201, got {resp.status_code} {resp.body!r}"
+        )
 
     def test_share_with_foreign_contact_group_denied_without_foreign_permission(
         self,
@@ -787,7 +834,9 @@ class TestSharePermissionEnforcement:
                 ),
                 expect_ok=False,
             )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
         assert (
             "not a member of"
             in resp.json["fields"]["body.general_settings.visibility.share"]["msg"]
@@ -804,7 +853,9 @@ class TestSharePermissionEnforcement:
                 {"type": "with_contact_groups", "contact_groups": [foreign]},
             )
         )
-        assert resp.status_code == 201, f"Expected 201, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.CREATED, (
+            f"Expected 201, got {resp.status_code} {resp.body!r}"
+        )
 
     def test_share_with_contact_groups_denied_without_any_group_permission(
         self,
@@ -828,7 +879,9 @@ class TestSharePermissionEnforcement:
                 ),
                 expect_ok=False,
             )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
         assert (
             "You are not allowed to share dashboards with contact groups."
             in resp.json["fields"]["body.general_settings.visibility.share"]["msg"]
@@ -847,7 +900,9 @@ class TestSharePermissionEnforcement:
                 ),
                 expect_ok=False,
             )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
         assert (
             "You are not allowed to share dashboards with users of sites."
             in resp.json["fields"]["body.general_settings.visibility.share"]["msg"]
@@ -890,7 +945,7 @@ def test_a_link_to_a_forbidden_target_is_rejected_on_write(clients: ClientRegist
         clients, "host_stats", {**_INHERITED, "location": {"type": "views", "name": "no_such_view"}}
     )
 
-    assert response.status_code == 400, (
+    assert response.status_code == HTTPStatus.BAD_REQUEST, (
         f"Expected 400, got {response.status_code} {response.body!r}"
     )
     assert (

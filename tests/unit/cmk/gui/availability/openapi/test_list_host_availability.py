@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
@@ -61,4 +62,4 @@ def test_list_host_availability_rejects_inverted_time_range(
         time_range_from=TIME_UNTIL,
         time_range_until=TIME_FROM,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)

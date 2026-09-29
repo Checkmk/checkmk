@@ -6,6 +6,7 @@
 import json
 import time
 from collections.abc import Sequence
+from http import HTTPStatus
 
 import pytest
 
@@ -105,5 +106,5 @@ def test_reschedule_checks_does_not_commit_the_setup_git_repo(
             headers={"Accept": "application/json", "Content-Type": "application/json"},
         )
 
-    assert resp.status_code == 200, resp.text
+    assert resp.status_code == HTTPStatus.OK, resp.text
     assert setup_git_commit_subjects(config_dir) == ["Initialized GIT for Checkmk"]

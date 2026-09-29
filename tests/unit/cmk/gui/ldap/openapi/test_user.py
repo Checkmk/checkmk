@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from http import HTTPStatus
+
 import pytest
 
 from cmk.ccc.site import SiteId
@@ -67,7 +69,7 @@ def test_edit_ldap_user_with_locked_attributes(clients: ClientRegistry) -> None:
         roles=["admin"],
         expect_ok=False,
         customer=None,
-    ).assert_status_code(403)
+    ).assert_status_code(HTTPStatus.FORBIDDEN)
 
 
 @pytest.mark.xfail(
@@ -95,7 +97,7 @@ def test_edit_ldap_user_with_auth_option_must_not_bypass_locked_attributes(
         auth_option={"auth_type": "password", "password": "supersecretpassword123"},
         expect_ok=False,
         customer=None,
-    ).assert_status_code(403)
+    ).assert_status_code(HTTPStatus.FORBIDDEN)
 
     user_spec = load_users()[name]
     assert user_spec["connector"] == LDAP_CONNECTION_ID, (

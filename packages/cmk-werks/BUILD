@@ -89,8 +89,10 @@ py_cmk_test(
         ":cmk-werk-ids-server",
         ":site",
         ":tool",
+        ":web",
         requirement("flask"),
         requirement("gitpython"),
+        requirement("lxml"),
         requirement("requests"),
         requirement("rich"),
         requirement("pytest-recording"),
@@ -134,6 +136,7 @@ py_library(
     srcs = [
         "cmk/werks/web/__init__.py",
         "cmk/werks/web/_pages.py",
+        "cmk/werks/web/werk_detail.py",
     ],
     imports = ["."],
     visibility = [

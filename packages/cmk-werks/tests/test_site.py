@@ -7,7 +7,7 @@ import datetime
 import json
 from pathlib import Path
 
-from cmk.werks.site import load
+from cmk.werks.site import find_werk, load
 from cmk.werks.site.acknowledgement import (
     load_acknowledgements,
     save_acknowledgements,
@@ -170,3 +170,11 @@ def test_saved_acknowledgements_are_loaded_back(tmp_path: Path) -> None:
 
 def test_no_werk_is_acknowledged_without_an_acknowledgements_file(tmp_path: Path) -> None:
     assert load_acknowledgements(acknowledged_werks_mk=tmp_path / "missing.mk") == set()
+
+
+def test_the_werk_with_the_requested_id_is_found() -> None:
+    assert find_werk([_werk(1), _werk(2)], 2) == _werk(2)
+
+
+def test_an_unknown_werk_is_not_found() -> None:
+    assert find_werk([_werk(1)], 2) is None

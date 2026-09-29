@@ -10,6 +10,7 @@ def werk_text(
     version: str | None = "2.5.0",
     edition: str = "community",
     component: str = "core",
+    compatible: str = "yes",
     werk_class: str = "fix",
 ) -> str:
     version_row = "" if version is None else f"version | {version}\n"
@@ -23,7 +24,7 @@ date | 2026-01-01T00:00:00+00:00
 edition | {edition}
 component | {component}
 level | 1
-compatible | yes
+compatible | {compatible}
 
 A description.
 """

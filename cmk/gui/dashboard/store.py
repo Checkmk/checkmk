@@ -37,6 +37,9 @@ from .type_defs import (
     DashboardName,
     DashletConfig,
     EmbeddedViewDashletConfig,
+    MetricCurrentValue,
+    MetricFixedWindow,
+    MetricTimeRange,
     ViewDashletConfig,
     WidgetId,
 )
@@ -238,6 +241,11 @@ def migrate_dashboard_config(dashboard: MaybeOldDashboardConfig) -> DashboardCon
                 f"{dashboard['name']}-{idx}": dashlet for idx, dashlet in enumerate(raw_dashlets)
             }
 
+    dashboard["widgets"] = {
+        widget_id: _migrate_metric_time_range(widget)
+        for widget_id, widget in dashboard["widgets"].items()
+    }
+
     # responsive dashboard already uses the new dashlet format
     if dashboard_uses_relative_grid(dashboard):
         widgets, embedded_views = _migrate_widgets(dashboard)
@@ -245,6 +253,22 @@ def migrate_dashboard_config(dashboard: MaybeOldDashboardConfig) -> DashboardCon
         dashboard["embedded_views"] = embedded_views
 
     return dashboard
+
+
+_METRIC_TIME_RANGE_TYPES = frozenset({"gauge", "single_metric"})
+
+
+def _migrate_metric_time_range(widget: DashletConfig) -> DashletConfig:
+    if widget["type"] not in _METRIC_TIME_RANGE_TYPES:
+        return widget
+    match cast(dict[str, object], widget).get("time_range"):
+        case "current":
+            time_range: MetricTimeRange = MetricCurrentValue(type="current")
+        case ("range", dict() as parameters):
+            time_range = cast(MetricFixedWindow, {"type": "range", **parameters})
+        case _:
+            return widget
+    return cast(DashletConfig, {**widget, "time_range": time_range})
 
 
 def _migrate_widgets(

@@ -50,6 +50,7 @@ py_library(
         "//cmk/gui:page_toolkit",
         "//cmk/gui:request_globals",
         "//cmk/gui:session_context",
+        "//cmk/gui/dashboard",
         "//cmk/gui/form_specs",
         "//cmk/gui/job_scheduler",
         "//cmk/gui/pagetypes",

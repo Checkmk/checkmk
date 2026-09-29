@@ -13,10 +13,11 @@ from cmk.gui.dashboard.type_defs import (
     AverageScatterplotDashletConfig,
     BarplotDashletConfig,
     GaugeDashletConfig,
+    MetricCurrentValue,
     MetricDisplayRangeFixed,
     MetricDisplayRangeWithAutomatic,
+    MetricFixedWindow,
     MetricTimeRange,
-    MetricTimeRangeParameters,
     SingleGraphDashletConfig,
     SingleMetricSparkHeightMode,
     StatusDisplayWithText,
@@ -149,39 +150,36 @@ class MetricTimeRangeWindow:
         assert_never(self.consolidation)
 
     @classmethod
-    def from_internal(cls, config: MetricTimeRangeParameters) -> Self:
+    def from_internal(cls, config: MetricFixedWindow) -> Self:
         return cls(
             type="window",
             window=timerange_from_internal(config["window"]),
             consolidation=cls.consolidation_from_internal(config["rrd_consolidation"]),
         )
 
-    def to_internal(self) -> MetricTimeRangeParameters:
-        return {
-            "window": self.window.to_internal(),
-            "rrd_consolidation": self.consolidation_to_internal(),
-        }
+    def to_internal(self) -> MetricFixedWindow:
+        return MetricFixedWindow(
+            type="range",
+            window=self.window.to_internal(),
+            rrd_consolidation=self.consolidation_to_internal(),
+        )
 
 
 type MetricTimeRangeModel = Literal["current"] | MetricTimeRangeWindow
 
 
 def _metric_time_range_from_internal(value: MetricTimeRange) -> MetricTimeRangeModel:
-    match value:
-        case "current":
-            return "current"
-        case ("range", config):
-            return MetricTimeRangeWindow.from_internal(config)
-    # TODO: change to `assert_never` once mypy can handle it correctly
-    raise ValueError(f"Invalid metric time range: {value!r}")
+    if value["type"] == "current":
+        return "current"
+    return MetricTimeRangeWindow.from_internal(value)
 
 
 def _metric_time_range_to_internal(value: MetricTimeRangeModel) -> MetricTimeRange:
     match value:
         case "current":
-            return "current"
+            return MetricCurrentValue(type="current")
         case MetricTimeRangeWindow():
-            return "range", value.to_internal()
+            return value.to_internal()
     # TODO: change to `assert_never` once mypy can handle it correctly
     raise ValueError(f"Invalid metric time range: {value!r}")
 

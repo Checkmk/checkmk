@@ -106,12 +106,17 @@ class CustomGraphDashletConfig(ABCGraphDashletConfig):
     show_legend: NotRequired[bool]
 
 
-class MetricTimeRangeParameters(TypedDict):
+class MetricCurrentValue(TypedDict):
+    type: Literal["current"]
+
+
+class MetricFixedWindow(TypedDict):
+    type: Literal["range"]
     window: TimerangeValue
     rrd_consolidation: Literal["average", "min", "max"]
 
 
-type MetricTimeRange = Literal["current"] | tuple[Literal["range"], MetricTimeRangeParameters]
+type MetricTimeRange = MetricCurrentValue | MetricFixedWindow
 type MetricDisplayRangeFixed = tuple[Literal["fixed"], tuple[str, tuple[float, float]]]
 type MetricDisplayRangeWithAutomatic = MetricDisplayRangeFixed | Literal["automatic"]
 type StatusDisplay = None | tuple[Literal["background"], Literal["all", "not_ok"]]

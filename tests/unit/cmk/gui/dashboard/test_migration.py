@@ -483,3 +483,54 @@ class TestInternalDashboardToRuntimeDashboard:
         result = _internal_dashboard_to_runtime_dashboard(raw)
 
         assert "dashlets" not in result
+
+
+def _responsive_dashboard(widget: dict[str, object]) -> MaybeOldDashboardConfig:
+    return _make_dashboard(
+        layout={"type": "responsive_grid", "layouts": {}}, widgets={"w1": widget}
+    )
+
+
+class TestMigrateMetricTimeRange:
+    def test_a_stored_current_value_becomes_a_typed_dict(self) -> None:
+        dashboard = _responsive_dashboard(
+            {"type": "single_metric", "metric": "load1", "time_range": "current"}
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["time_range"] == {"type": "current"}  # type: ignore[typeddict-item]
+
+    def test_a_stored_fixed_window_becomes_a_typed_dict(self) -> None:
+        dashboard = _responsive_dashboard(
+            {
+                "type": "gauge",
+                "metric": "load1",
+                "time_range": ("range", {"window": 14400, "rrd_consolidation": "max"}),
+            }
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["time_range"] == {  # type: ignore[typeddict-item]
+            "type": "range",
+            "window": 14400,
+            "rrd_consolidation": "max",
+        }
+
+    def test_a_migrated_time_range_stays_unchanged(self) -> None:
+        time_range = {"type": "range", "window": 14400, "rrd_consolidation": "max"}
+        dashboard = _responsive_dashboard(
+            {"type": "single_metric", "metric": "load1", "time_range": time_range}
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["time_range"] == time_range  # type: ignore[typeddict-item]
+
+    def test_another_widget_type_keeps_its_time_range(self) -> None:
+        dashboard = _responsive_dashboard({"type": "alert_overview", "time_range": ("age", 3600)})
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["time_range"] == ("age", 3600)  # type: ignore[typeddict-item]

@@ -5,17 +5,12 @@
 
 import datetime
 
-import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.acme.agent_based.acme_certificates import check_acme_certificates, CheckParamT
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash report b7fa9afc-b1b1-11f1-a020-6cf6da5a464b: ValueError in render.timespan",
-)
 def test_check_acme_certificates_reports_expired_certificate() -> None:
     # A root certificate that expired about 16 months before the check ran.
     section = {

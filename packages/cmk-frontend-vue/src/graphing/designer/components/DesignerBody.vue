@@ -435,7 +435,7 @@ const addTo = computed<AddTo | null>(() =>
   flex: 0 1 auto;
   min-height: 0;
   gap: var(--dimension-6);
-  padding: var(--dimension-6);
+  padding: var(--dimension-7);
   background: var(--ux-theme-3);
   border-radius: var(--border-radius);
 

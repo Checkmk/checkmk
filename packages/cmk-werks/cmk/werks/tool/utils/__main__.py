@@ -32,6 +32,8 @@ def path_dir(value: str) -> Path:
 def _get_filter(filter_by_edition: str | None) -> EditionV3 | None:
     if filter_by_edition is None:
         return None
+    if filter_by_edition in {edition.value for edition in EditionV2}:
+        return EditionV3.from_v2(EditionV2(filter_by_edition))
     return EditionV3(filter_by_edition)
 
 

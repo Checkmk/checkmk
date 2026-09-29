@@ -61,7 +61,8 @@ def default_config(
             # Ideally, we would use a single worker and synchronous endpoints. In that case, requests
             # would be handled concurrently via a thread pool. However, `cmk.base` is currently not
             # thread-safe, at least due to two reasons:
-            # * Global states. See also the `clear_caches_before_each_call` argument to `make_application`.
+            # * Global states, e.g. the caches below the configuration, which the automation
+            #   states keep between requests.
             # * Forking. The CMC config creation can use a process pool for parallelism, see the
             #   explicit `get_context("fork")` in `cmk.base.nonfree.cmc.helper_config`. Combining
             #   forking and multithreading is a no-go.

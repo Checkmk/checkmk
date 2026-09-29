@@ -13,7 +13,7 @@ py_library(
         "//cmk/automations",
         "//cmk/base/automations",
         "//cmk/base/config",
-        "//cmk/utils",
+        "//cmk/utils:paths",
         "//cmk/utils:redis",
         "//packages/cmk-ccc:daemon",
         "//packages/cmk-ccc:log",

@@ -11,9 +11,7 @@ from io import StringIO
 
 import pytest
 
-import cmk.utils.paths
 from cmk.automations.results import ABCAutomationResult
-from cmk.base.automations.automations import CommonState
 from cmk.base.automations.check_mk import (
     automation_analyze_host_rule_matches,
     automation_analyze_service_rule_matches,
@@ -31,6 +29,7 @@ from cmk.livestatus_client import SiteConfigurations
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.matcher import RuleSpec
 from cmk.utils.paths import default_config_dir
+from tests.testlib.unit.automations import make_common_state
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 
@@ -58,12 +57,12 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
         ts = Scenario()
         ts.add_host(HostName("ding"))
         ts.add_host(HostName("dong"))
-        ts.apply(monkeypatch)
+        loading_result = ts.apply(monkeypatch)
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))
             return automation_analyze_host_rule_matches.handler(
-                CommonState(cmk.utils.paths.omd_root, None), [h]
+                make_common_state(loading_result), [h]
             )
 
     monkeypatch.setattr(rulesets, "analyze_host_rule_matches", analyze_with_matcher)
@@ -185,12 +184,12 @@ def fixture_mock_analyze_service_rule_matches_automation(monkeypatch: pytest.Mon
     ) -> ABCAutomationResult:
         ts = Scenario()
         ts.add_host(HostName("ding"))
-        ts.apply(monkeypatch)
+        loading_result = ts.apply(monkeypatch)
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr((rules, service_labels))))
             return automation_analyze_service_rule_matches.handler(
-                CommonState(cmk.utils.paths.omd_root, None), [host_name, service_or_item]
+                make_common_state(loading_result), [host_name, service_or_item]
             )
 
     monkeypatch.setattr(rulesets, "analyze_service_rule_matches", analyze_with_matcher)

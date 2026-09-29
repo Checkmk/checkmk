@@ -15,9 +15,7 @@ from unittest.mock import patch
 
 import pytest
 
-import cmk.utils.paths
 from cmk.automations.results import ABCAutomationResult
-from cmk.base.automations.automations import CommonState
 from cmk.base.automations.check_mk import (
     automation_analyze_host_rule_effectiveness,
     automation_analyze_host_rule_matches,
@@ -35,6 +33,7 @@ from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.ruleset_matcher.matcher import RulesetName, RuleSpec
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.utils.redis import disable_redis
+from tests.testlib.unit.automations import make_common_state
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 
@@ -139,7 +138,7 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))
             return automation_analyze_host_rule_matches.handler(
-                CommonState(cmk.utils.paths.omd_root, loading_result), [h]
+                make_common_state(loading_result), [h]
             )
 
     monkeypatch.setattr(rulesets, "analyze_host_rule_matches", analyze_with_matcher)
@@ -288,7 +287,7 @@ def fixture_inline_analyze_host_rule_effectiveness_automation(
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))
             return automation_analyze_host_rule_effectiveness.handler(
-                CommonState(cmk.utils.paths.omd_root, loading_result), []
+                make_common_state(loading_result), []
             )
 
     monkeypatch.setattr(

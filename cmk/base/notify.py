@@ -52,7 +52,7 @@ from cmk.automations.results import (
 )
 from cmk.automations.types import AutomationID
 from cmk.base import events
-from cmk.base.automations.automations import Automation, CommonState, load_config
+from cmk.base.automations.automations import Automation, CommonState
 from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
@@ -761,7 +761,7 @@ def _automation_notification_replay(
     state: CommonState,
     args: list[str],
 ) -> NotificationReplayResult:
-    loading_result = state.loading_result or load_config()
+    loading_result = state.loading_result
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
     nr = args[0]
@@ -789,7 +789,7 @@ def _automation_notification_analyse(
     state: CommonState,
     args: list[str],
 ) -> NotificationAnalyseResult:
-    loading_result = state.loading_result or load_config()
+    loading_result = state.loading_result
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
     nr = args[0]
@@ -821,7 +821,7 @@ def _automation_notification_test(
     context = json.loads(args[0])
     dispatch = args[1]
 
-    loading_result = state.loading_result or load_config()
+    loading_result = state.loading_result
     ensure_nagios = make_ensure_nagios(loading_result.loaded_config.monitoring_core)
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
@@ -853,7 +853,7 @@ def _automation_get_bulks(
 ) -> NotificationGetBulksResult:
     only_ripe = args[0] == "1"
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
-    loading_result = state.loading_result or load_config()
+    loading_result = state.loading_result
     return NotificationGetBulksResult(
         find_bulks(
             only_ripe,

@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any, Final, Protocol
 
 import cmk.ccc.debug
+import cmk.utils.paths
 from cmk import trace
 from cmk.automations.results import ABCAutomationResult
 from cmk.automations.types import AutomationID
@@ -46,10 +47,10 @@ class AutomationState(Protocol):
     :meth:`update` whenever they change.
     """
 
-    def update(self, omd_root: Path, loading_result: config.LoadingResult | None) -> None: ...
+    def update(self, omd_root: Path, raw_config: Mapping[str, object]) -> None: ...
 
 
-type StateFactory[StateT: AutomationState] = Callable[[Path, config.LoadingResult | None], StateT]
+type StateFactory[StateT: AutomationState] = Callable[[Path, Mapping[str, object]], StateT]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -83,20 +84,32 @@ type DiscoveredAutomation = Automation[Any, ABCAutomationResult]  # type: ignore
 class CommonState:
     """The one state all automations share for now.
 
-    It holds what the engine used to pass to every handler. All automations name
-    this class as their factory, so the engine builds it once. Automations will
-    move to states of their own, one by one.
+    It derives what the handlers used to get passed from the raw configuration.
+    All automations name this class as their factory, so the engine builds it
+    once. Automations will move to states of their own, one by one.
     """
 
-    def __init__(self, omd_root: Path, loading_result: config.LoadingResult | None) -> None:
+    def __init__(self, omd_root: Path, raw_config: Mapping[str, object]) -> None:
         self.app: CheckmkBaseApp = make_app(omd_root)
-        self.loading_result = loading_result
+        self.loading_result = _derive_loading_result(raw_config)
 
-    def update(self, omd_root: Path, loading_result: config.LoadingResult | None) -> None:
+    def update(self, omd_root: Path, raw_config: Mapping[str, object]) -> None:
         # The site, and with it the app, does not change while we run. We rebuild the
         # app anyway, so that the state is derived from its arguments alone.
         self.app = make_app(omd_root)
-        self.loading_result = loading_result
+        # Deriving afresh also resets all caches below the configuration, including
+        # those of the ruleset optimizer: a new configuration starts from scratch.
+        self.loading_result = _derive_loading_result(raw_config)
+
+
+def _derive_loading_result(raw_config: Mapping[str, object]) -> config.LoadingResult:
+    with tracer.span("derive_loading_result"):
+        return config.perform_post_config_loading_actions(
+            raw_config,
+            autochecks_dir=cmk.utils.paths.autochecks_dir,
+            discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+            builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+        )
 
 
 def discover_automations() -> Iterable[DiscoveredAutomation]:
@@ -125,20 +138,13 @@ class Automations:
     builds the single state its command needs and nothing else.
     """
 
-    def __init__(
-        self,
-        plugins: Iterable[DiscoveredAutomation],
-        *,
-        omd_root: Path,
-        loading_result: config.LoadingResult | None,
-    ) -> None:
+    def __init__(self, plugins: Iterable[DiscoveredAutomation]) -> None:
         super().__init__()
         self._automations: Final[Mapping[AutomationID, DiscoveredAutomation]] = {
             automation.name: automation for automation in plugins
         }
         self._states_by_factory: Final[dict[StateFactory[AutomationState], AutomationState]] = {}
-        self._omd_root = omd_root
-        self._loading_result = loading_result
+        self._arguments: tuple[Path, Mapping[str, object]] | None = None
 
     def wants_configuration_lock(self, cmd: AutomationID) -> bool:
         """Whether the configuration must be read under lock for this automation."""
@@ -146,24 +152,26 @@ class Automations:
             automation.lock_configuration
         )
 
-    def update(self, omd_root: Path, loading_result: config.LoadingResult | None) -> None:
+    def update(self, omd_root: Path, raw_config: Mapping[str, object]) -> None:
         """Hand the new arguments to every state that exists.
 
-        States that were never built are left alone: they will be built from the
-        new arguments when they are needed.
+        Must be called before the first automation is executed. States that were
+        never built are left alone: they will be built from the new arguments
+        when they are needed.
         """
-        self._omd_root = omd_root
-        self._loading_result = loading_result
+        self._arguments = (omd_root, raw_config)
         for state in self._states_by_factory.values():
-            state.update(omd_root, loading_result)
+            state.update(omd_root, raw_config)
 
     def _get_state(self, automation: DiscoveredAutomation) -> AutomationState:
         try:
             return self._states_by_factory[automation.state_factory]
         except KeyError:
+            if self._arguments is None:
+                raise MKAutomationError("The configuration has not been loaded")
             return self._states_by_factory.setdefault(
                 automation.state_factory,
-                automation.state_factory(self._omd_root, self._loading_result),
+                automation.state_factory(*self._arguments),
             )
 
     # Called either via the CLI's "cmk --automation" mode or via the "/automation" endpoint of the

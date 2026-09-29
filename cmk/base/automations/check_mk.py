@@ -93,7 +93,6 @@ from cmk.base.automations._environment import (
 from cmk.base.automations.automations import (
     Automation,
     CommonState,
-    load_config,
     MKAutomationError,
 )
 from cmk.base.base_app import CheckmkBaseApp
@@ -1072,7 +1071,7 @@ def _make_configured_notify_relay(
 
 def _execute_autodiscovery(
     app: CheckmkBaseApp,
-    loading_result: config.LoadingResult | None,
+    loading_result: config.LoadingResult,
 ) -> tuple[Mapping[HostName, DiscoveryReport], bool]:
     file_cache_options = FileCacheOptions(use_outdated=True)
 
@@ -1525,7 +1524,7 @@ def _automation_update_host_labels(
         ]
     )
 
-    loading_result = state.loading_result or load_config()
+    loading_result = state.loading_result
     _trigger_discovery_check(
         loading_result.config_cache,
         loading_result.hosts_config,
@@ -2205,7 +2204,7 @@ def _automation_analyse_host(
 ) -> AnalyseHostResult:
     host_name = HostName(args[0])
 
-    loading_result = state.loading_result or load_config()
+    loading_result = state.loading_result
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
 
@@ -2224,7 +2223,7 @@ def _automation_analyze_host_rule_matches(
     # We read the list of rules from stdin since it could be too much for the command line
     match_rules = ast.literal_eval(sys.stdin.read())
 
-    loading_result = state.loading_result or load_config()
+    loading_result = state.loading_result
     # Rules from stdin must not enter the shared matcher: it caches by id(ruleset).
     ruleset_matcher = config.make_ruleset_matcher(
         loading_result.hosts_config, loading_result.host_tags
@@ -2261,7 +2260,7 @@ def _automation_analyze_service_rule_matches(
     # We read the list of rules from stdin since it could be too much for the command line
     match_rules, service_labels = ast.literal_eval(sys.stdin.read())
 
-    loading_result = state.loading_result or load_config()
+    loading_result = state.loading_result
     # Rules from stdin must not enter the shared matcher: it caches by id(ruleset).
     ruleset_matcher = config.make_ruleset_matcher(
         loading_result.hosts_config, loading_result.host_tags
@@ -2297,7 +2296,7 @@ def _automation_analyze_host_rule_effectiveness(
     # We read the list of rules from stdin since it could be too much for the command line
     match_rules = ast.literal_eval(sys.stdin.read())
 
-    loading_result = state.loading_result or load_config()
+    loading_result = state.loading_result
 
     hosts_config = loading_result.hosts_config
     config_cache = loading_result.config_cache
@@ -3071,7 +3070,7 @@ def _automation_diag_snmp(
     args: list[str],  # noqa: ARG001
 ) -> DiagSnmpResult:
     diag_input = DiagSnmpInput.deserialize(sys.stdin.read())
-    loading_result = state.loading_result or load_config()
+    loading_result = state.loading_result
     ip_address = diag_input.ip_address
 
     if not ip_address:
@@ -3902,7 +3901,7 @@ def _automation_update_passwords_merged_file(
     state: CommonState,
     args: list[str],  # noqa: ARG001
 ) -> UpdatePasswordsMergedFileResult:
-    loading_result = state.loading_result or load_config()
+    loading_result = state.loading_result
     cmk.utils.password_store.save(
         {k: s.reveal() for k, s in loading_result.config_cache.collect_passwords().items()},
         cmk.utils.password_store.pending_secrets_path_site(),
@@ -4191,7 +4190,7 @@ def _automation_find_unknown_check_parameter_rule_sets(
     args: list[str],  # noqa: ARG001
 ) -> UnknownCheckParameterRuleSetsResult:
     plugins = load_all_plugins(raise_errors=cmk.ccc.debug.enabled())
-    loaded_config = state.loading_result or load_config()
+    loaded_config = state.loading_result
     known_check_rule_sets = {
         str(plugin.check_ruleset_name)
         for plugin in plugins.check_plugins.values()

@@ -30,7 +30,6 @@ from typing import Literal, overload
 import cmk.ccc.debug
 import cmk.utils.paths
 from cmk.base import config
-from cmk.base.automations.automations import load_config
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.config import ConfigCache
 from cmk.base.configlib.checkengine import DiscoveryConfig
@@ -91,9 +90,9 @@ class IPLookupFailureMode(enum.Enum):
 class AutomationEnvironment:
     """Bootstrap state for an automation handler.
 
-    Build via :meth:`create`, which lazy-loads plugins and the pending config
-    if the caller passed ``None``. Variant-dependent factories are methods
-    taking a required enum so the choice is always explicit at the call site.
+    Build via :meth:`create`. The plugins are loaded on first use.
+    Variant-dependent factories are methods taking a required enum so the
+    choice is always explicit at the call site.
     """
 
     app: CheckmkBaseApp
@@ -103,11 +102,8 @@ class AutomationEnvironment:
     def create(
         cls,
         app: CheckmkBaseApp,
-        loading_result: config.LoadingResult | None,
+        loading_result: config.LoadingResult,
     ) -> AutomationEnvironment:
-        """Lazy-loads the pending config if the caller passed ``None``."""
-        if loading_result is None:
-            loading_result = load_config()
         return cls(app=app, loading_result=loading_result)
 
     # --- Pass-through accessors (no caching — just re-expose what's already there).

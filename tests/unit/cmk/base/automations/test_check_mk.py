@@ -7,7 +7,7 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, fields, replace
 from pathlib import Path
 from typing import NoReturn, override
 
@@ -27,7 +27,6 @@ from cmk.automations.results import DiagHostResult
 from cmk.base import config
 from cmk.base.automations import check_mk
 from cmk.base.automations.automations import CommonState
-from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.community_app import make_app
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -44,6 +43,7 @@ from cmk.relay_protocols.tasks import AdHocActiveCheckTask
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, replace_macros
 from cmk.utils import config_warnings
+from tests.testlib.unit.automations import make_common_state
 from tests.testlib.unit.base_configuration_scenario import Scenario
 from tests.testlib.unit.empty_config import EMPTY_CONFIG
 
@@ -94,13 +94,6 @@ def _prepare(
         config_cache=config_cache,
     )
     return config_cache, loading_result
-
-
-def _state_with_app(app: CheckmkBaseApp, loading_result: config.LoadingResult) -> CommonState:
-    """A state whose app the test controls, e.g. to fake the fetcher trigger."""
-    state = CommonState(cmk.utils.paths.omd_root, loading_result)
-    state.app = app
-    return state
 
 
 class _MockFetcherTrigger(PlainFetcherTrigger):
@@ -162,8 +155,7 @@ class TestAutomationDiagHost:
             make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data.encode(), Path("/")),  # noqa: ARG005
         )
         assert check_mk.AutomationDiagHost().execute(
-            _state_with_app(
-                app,
+            make_common_state(
                 config.LoadingResult(
                     loaded_config=loaded_config,
                     hosts_config=hosts_config,
@@ -177,6 +169,7 @@ class TestAutomationDiagHost:
                         builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
                     ),
                 ),
+                app=app,
             ),
             args,
         ) == DiagHostResult(
@@ -323,8 +316,7 @@ def test_automation_active_check(  # type: ignore[misc]
     active_check = AutomationActiveCheckTestable()
     assert (
         active_check.execute(
-            CommonState(
-                cmk.utils.paths.omd_root,
+            make_common_state(
                 config.LoadingResult(
                     loaded_config=EMPTY_CONFIG,
                     hosts_config=config.make_hosts_config(EMPTY_CONFIG),
@@ -332,7 +324,7 @@ def test_automation_active_check(  # type: ignore[misc]
                         EMPTY_CONFIG, config.make_hosts_config(EMPTY_CONFIG)
                     ),
                     config_cache=config_cache,
-                ),
+                )
             ),
             active_check_args,
         )
@@ -405,8 +397,7 @@ def test_automation_active_check_invalid_args(  # type: ignore[misc]
 
     active_check = check_mk.AutomationActiveCheck()
     active_check.execute(
-        CommonState(
-            cmk.utils.paths.omd_root,
+        make_common_state(
             config.LoadingResult(
                 loaded_config=loaded_config,
                 hosts_config=config.make_hosts_config(loaded_config),
@@ -414,7 +405,7 @@ def test_automation_active_check_invalid_args(  # type: ignore[misc]
                     loaded_config, config.make_hosts_config(loaded_config)
                 ),
                 config_cache=config_cache,
-            ),
+            )
         ),
         active_check_args,
     )
@@ -447,9 +438,7 @@ def test_active_check_on_relay_host_routes_to_relay(monkeypatch: pytest.MonkeyPa
         lambda *a, **kw: iter([_FakeServiceData("My svc", ("check_httpv2", "-u", "http://x"))]),  # noqa: ARG005
     )
     auto = _RecordingAutomation()
-    result = auto.execute(
-        CommonState(cmk.utils.paths.omd_root, lr), ["my_host", "my_active_check", "My svc"]
-    )
+    result = auto.execute(make_common_state(lr), ["my_host", "my_active_check", "My svc"])
     assert result == automation_results.ActiveCheckResult(state=0, output="relay output")
     assert auto.calls["relay"] == ("relay-1", "my_host", "check_httpv2 -u http://x")
     assert "local" not in auto.calls
@@ -463,9 +452,7 @@ def test_active_check_on_non_relay_host_runs_locally(monkeypatch: pytest.MonkeyP
         lambda *a, **kw: iter([_FakeServiceData("My svc", ("check_httpv2", "-u", "http://x"))]),  # noqa: ARG005
     )
     auto = _RecordingAutomation()
-    result = auto.execute(
-        CommonState(cmk.utils.paths.omd_root, lr), ["my_host", "my_active_check", "My svc"]
-    )
+    result = auto.execute(make_common_state(lr), ["my_host", "my_active_check", "My svc"])
     assert result == automation_results.ActiveCheckResult(state=0, output="local output")
     assert auto.calls["local"] == "check_httpv2 -u http://x"
     assert "relay" not in auto.calls
@@ -485,7 +472,7 @@ def test_active_check_site_side_only_on_relay_host_runs_locally(
     )
     auto = _RecordingAutomation()
     result = auto.execute(
-        CommonState(cmk.utils.paths.omd_root, lr),
+        make_common_state(lr),
         ["my_host", "cmk_inv", "Check_MK HW/SW Inventory"],
     )
     assert result == automation_results.ActiveCheckResult(state=0, output="local output")
@@ -505,7 +492,7 @@ def test_active_check_unsupported_on_relay_reports_unknown(monkeypatch: pytest.M
         ],
     )
     result = AutomationActiveCheckTestable().execute(
-        CommonState(cmk.utils.paths.omd_root, lr),
+        make_common_state(lr),
         ["my_host", "my_active_check", "Active check of my_host"],
     )
     assert result == automation_results.ActiveCheckResult(
@@ -687,12 +674,15 @@ class TestWarnServiceNameConflicts:
 
 def test_delete_hosts_deletes_inventorized_host_labels() -> None:
     host_name = HostName("test-host")
+    # asdict would recurse. I think it doesn't matter, but this is correct:
+    raw_config = {f.name: getattr(EMPTY_CONFIG, f.name) for f in fields(EMPTY_CONFIG)}
+
     InventorizedHostLabelsStore(host_name, cmk.utils.paths.inventorized_host_labels_dir).save(
         {"cmk/inventory/product": "foo"}
     )
 
     check_mk.automation_delete_hosts.handler(
-        CommonState(cmk.utils.paths.omd_root, None), [str(host_name)]
+        CommonState(cmk.utils.paths.omd_root, raw_config), [str(host_name)]
     )
 
     assert not (cmk.utils.paths.inventorized_host_labels_dir / f"{host_name}.json").exists()

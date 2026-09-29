@@ -8,7 +8,7 @@ import io
 import logging
 import sys
 import time
-from collections.abc import AsyncGenerator, Awaitable, Callable, Iterator
+from collections.abc import AsyncGenerator, Awaitable, Callable, Iterator, Mapping
 from contextlib import asynccontextmanager, contextmanager, redirect_stderr, redirect_stdout
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -23,11 +23,8 @@ from cmk.automations.logging import LoggingManager
 from cmk.automations.models.helper import AutomationPayload, AutomationResponse
 from cmk.automations.results import ABCAutomationResult
 from cmk.automations.types import AutomationID
-from cmk.base import config
 from cmk.base.automations.automations import AutomationError
-from cmk.base.config import ConfigCache
 from cmk.ccc import version as cmk_version
-from cmk.ccc.hostaddress import Hosts
 
 from ._cache import Cache, CacheError
 from ._config import Config, ReloaderConfig
@@ -35,7 +32,7 @@ from ._tracer import TRACER
 
 
 class AutomationEngine(Protocol):
-    def update(self, omd_root: Path, loading_result: config.LoadingResult | None) -> None: ...
+    def update(self, omd_root: Path, raw_config: Mapping[str, object]) -> None: ...
 
     def execute(
         self, cmd: AutomationID, args: list[str]
@@ -46,12 +43,8 @@ class AutomationEngine(Protocol):
 class _State:
     engine: AutomationEngine
     omd_root: Path
-    reload_config: Callable[
-        [],
-        config.LoadingResult,
-    ]
+    reload_config: Callable[[], Mapping[str, object]]
     last_reload_at: float
-    loading_result: config.LoadingResult | None
     changes_cache: Cache
     _busy: bool = field(default=False, init=False)
 
@@ -84,8 +77,7 @@ class _State:
         """
         # Do not yet set `self.last_reload_at`. We don't know if we succeed.
         time_right_before_reload = time.time()
-        self.loading_result = self.reload_config()
-        self.engine.update(self.omd_root, self.loading_result)
+        self.engine.update(self.omd_root, self.reload_config())
         self.last_reload_at = time_right_before_reload
 
     def reload_if_required(self) -> bool:
@@ -102,7 +94,6 @@ class _State:
 @dataclass(frozen=True)
 class _ApplicationDependencies:
     config: Config
-    clear_caches_before_each_call: Callable[[ConfigCache, Hosts], None]
     state: _State
     log_manager: LoggingManager
 
@@ -117,11 +108,7 @@ def make_application(
     engine: AutomationEngine,
     cache: Cache,
     config: Config,
-    reload_config: Callable[
-        [],
-        config.LoadingResult,
-    ],
-    clear_caches_before_each_call: Callable[[ConfigCache, Hosts], None],
+    reload_config: Callable[[], Mapping[str, object]],
 ) -> FastAPI:
     app = FastAPI(
         lifespan=_lifespan,
@@ -142,13 +129,11 @@ def make_application(
 
     app.state.dependencies = _ApplicationDependencies(
         config=config,
-        clear_caches_before_each_call=clear_caches_before_each_call,
         state=_State(
             engine=engine,
             omd_root=omd_root,
             reload_config=reload_config,
             last_reload_at=0,
-            loading_result=None,
             changes_cache=cache,
         ),
         log_manager=LoggingManager(log_level=logging.NOTSET),
@@ -161,7 +146,6 @@ def make_application(
         with dependencies.state.exclusive():
             return _execute_automation_endpoint(
                 payload,
-                dependencies.clear_caches_before_each_call,
                 dependencies.state,
                 dependencies.log_manager,
             )
@@ -283,7 +267,6 @@ async def _reloader_task(
 
 def _execute_automation_endpoint(
     payload: AutomationPayload,
-    clear_caches_before_each_call: Callable[[ConfigCache, Hosts], None],
     state: _State,
     log_manager: LoggingManager,
 ) -> AutomationResponse:
@@ -321,10 +304,6 @@ def _execute_automation_endpoint(
         log_manager.temporary_log_level(payload.log_level),
         log_manager.stream_logging(stream=buffer_stderr, log_level=logging.ERROR),
     ):
-        if state.loading_result:
-            clear_caches_before_each_call(
-                state.loading_result.config_cache, state.loading_result.hosts_config
-            )
         try:
             automation_start_time = time.time()
             result_or_error_code: ABCAutomationResult | int = state.engine.execute(

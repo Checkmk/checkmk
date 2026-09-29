@@ -8,7 +8,7 @@ import asyncio
 import logging
 import sys
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from http import HTTPStatus
 from pathlib import Path
@@ -21,7 +21,6 @@ from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 from starlette import status
 
-import cmk.utils.paths  # used in lambdas below
 from cmk.automations.models.helper import AutomationPayload, AutomationResponse
 from cmk.automations.results import ABCAutomationResult, SerializedResult
 from cmk.automations.types import AutomationID
@@ -35,11 +34,8 @@ from cmk.base.automation_helper._app import (
 from cmk.base.automation_helper._cache import Cache, CacheError
 from cmk.base.automation_helper._config import Config, ReloaderConfig, ServerConfig, WatcherConfig
 from cmk.base.automations.automations import AutomationError
-from cmk.base.config import ConfigCache, LoadingResult, make_host_tags, make_hosts_config
-from cmk.ccc.hostaddress import Hosts
 from cmk.ccc.version import Version
 from tests.testlib.common.utils import wait_until
-from tests.testlib.unit.empty_config import EMPTY_CONFIG
 
 
 class _DummyAutomationResult(ABCAutomationResult):
@@ -57,7 +53,7 @@ class _DummyAutomationEngineSuccess:
     def update(
         self,
         omd_root: Path,
-        loading_result: LoadingResult | None,
+        raw_config: Mapping[str, object],
     ) -> None:
         pass
 
@@ -75,7 +71,7 @@ class _DummyAutomationEngineFailure:
     def update(
         self,
         omd_root: Path,
-        loading_result: LoadingResult | None,
+        raw_config: Mapping[str, object],
     ) -> None:
         pass
 
@@ -93,7 +89,7 @@ class _DummyAutomationEngineSystemExit:
     def update(
         self,
         omd_root: Path,
-        loading_result: LoadingResult | None,
+        raw_config: Mapping[str, object],
     ) -> None:
         pass
 
@@ -109,11 +105,11 @@ class _DummyAutomationEngineSystemExit:
 
 class _RecordingAutomationEngine(_DummyAutomationEngineSuccess):
     def __init__(self) -> None:
-        self.updates: list[tuple[Path, LoadingResult | None]] = []
+        self.updates: list[tuple[Path, Mapping[str, object]]] = []
 
     @override
-    def update(self, omd_root: Path, loading_result: LoadingResult | None) -> None:
-        self.updates.append((omd_root, loading_result))
+    def update(self, omd_root: Path, raw_config: Mapping[str, object]) -> None:
+        self.updates.append((omd_root, raw_config))
 
 
 _EXAMPLE_AUTOMATION_PAYLOAD = AutomationPayload(
@@ -124,8 +120,7 @@ _EXAMPLE_AUTOMATION_PAYLOAD = AutomationPayload(
 def _make_test_client(
     engine: AutomationEngine,
     cache: Cache,
-    reload_config: Callable[[], LoadingResult],
-    clear_caches_before_each_call: Callable[[ConfigCache, Hosts], None],
+    reload_config: Callable[[], Mapping[str, object]],
     reloader_config: ReloaderConfig = ReloaderConfig(
         active=True,
         poll_interval=1.0,
@@ -153,7 +148,6 @@ def _make_test_client(
             cache=cache,
             config=config,
             reload_config=reload_config,
-            clear_caches_before_each_call=clear_caches_before_each_call,
         )
     )
 
@@ -164,7 +158,6 @@ def test_reloader_is_running(mocker: MockerFixture, cache: Cache) -> None:
         _DummyAutomationEngineSuccess(),
         cache,
         mock_reload_config,
-        lambda config_cache, hosts_config: None,  # noqa: ARG005
         reloader_config=ReloaderConfig(
             active=True,
             poll_interval=0.0,
@@ -194,12 +187,10 @@ def test_reloader_is_running(mocker: MockerFixture, cache: Cache) -> None:
 
 def test_automation_with_success(mocker: MockerFixture, cache: Cache) -> None:
     mock_reload_config = mocker.MagicMock()
-    mock_clear_caches_before_each_call = mocker.MagicMock()
     with _make_test_client(
         _DummyAutomationEngineSuccess(),
         cache,
         mock_reload_config,
-        mock_clear_caches_before_each_call,
     ) as client:
         resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
 
@@ -210,17 +201,14 @@ def test_automation_with_success(mocker: MockerFixture, cache: Cache) -> None:
         stderr="stderr_success",
     )
     mock_reload_config.assert_called_once()  # only at application startup
-    mock_clear_caches_before_each_call.assert_called_once()
 
 
 def test_automation_with_failure(mocker: MockerFixture, cache: Cache) -> None:
     mock_reload_config = mocker.MagicMock()
-    mock_clear_caches_before_each_call = mocker.MagicMock()
     with _make_test_client(
         _DummyAutomationEngineFailure(),
         cache,
         mock_reload_config,
-        mock_clear_caches_before_each_call,
     ) as client:
         resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
 
@@ -231,17 +219,14 @@ def test_automation_with_failure(mocker: MockerFixture, cache: Cache) -> None:
         stderr="stderr_failure",
     )
     mock_reload_config.assert_called_once()  # only at application startup
-    mock_clear_caches_before_each_call.assert_called_once()
 
 
 def test_automation_with_system_exit(mocker: MockerFixture, cache: Cache) -> None:
     mock_reload_config = mocker.MagicMock()
-    mock_clear_caches_before_each_call = mocker.MagicMock()
     with _make_test_client(
         _DummyAutomationEngineSystemExit(),
         cache,
         mock_reload_config,
-        mock_clear_caches_before_each_call,
     ) as client:
         resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
 
@@ -252,17 +237,14 @@ def test_automation_with_system_exit(mocker: MockerFixture, cache: Cache) -> Non
         stderr='stderr_system_exit[ERROR] Encountered SystemExit exception while processing automation "dummy" with args: []\n',
     )
     mock_reload_config.assert_called_once()  # only at application startup
-    mock_clear_caches_before_each_call.assert_called_once()
 
 
 def test_automation_reloads_if_necessary(mocker: MockerFixture, cache: Cache) -> None:
     mock_reload_config = mocker.MagicMock()
-    mock_clear_caches_before_each_call = mocker.MagicMock()
     with _make_test_client(
         _DummyAutomationEngineSuccess(),
         cache,
         mock_reload_config,
-        mock_clear_caches_before_each_call,
     ) as client:
         last_reload_before_cache_update = HealthCheckResponse.model_validate(
             client.get("/health").json()
@@ -278,7 +260,6 @@ def test_automation_reloads_if_necessary(mocker: MockerFixture, cache: Cache) ->
         # once at application startup, once when the endpoint is called
         mock_reload_config.call_count == 2
     )
-    mock_clear_caches_before_each_call.assert_called_once()
 
 
 def test_reloaded_configuration_reaches_the_engine(mocker: MockerFixture, cache: Cache) -> None:
@@ -288,33 +269,18 @@ def test_reloaded_configuration_reaches_the_engine(mocker: MockerFixture, cache:
         engine,
         cache,
         mocker.MagicMock(side_effect=[initial, reloaded]),
-        mocker.MagicMock(),
     ) as client:
         cache.store_last_detected_change(time.time())
         client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
 
-    assert [loading_result for _omd_root, loading_result in engine.updates] == [initial, reloaded]
+    assert [raw_config for _omd_root, raw_config in engine.updates] == [initial, reloaded]
 
 
 def test_health_check(cache: Cache) -> None:
-    loaded_config = EMPTY_CONFIG
     with _make_test_client(
         _DummyAutomationEngineSuccess(),
         cache,
-        lambda: LoadingResult(
-            loaded_config=loaded_config,
-            hosts_config=make_hosts_config(loaded_config),
-            host_tags=make_host_tags(loaded_config, make_hosts_config(loaded_config)),
-            config_cache=ConfigCache(
-                loaded_config,
-                make_hosts_config(loaded_config),
-                make_host_tags(loaded_config, make_hosts_config(loaded_config)),
-                autochecks_dir=cmk.utils.paths.autochecks_dir,
-                discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
-                builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
-            ),
-        ),
-        lambda config_cache, hosts_config: None,  # noqa: ARG005
+        dict,
     ) as client:
         resp = client.get("/health")
 
@@ -330,7 +296,6 @@ async def test_reloader_single_change(mocker: MockerFixture, cache: Cache) -> No
         engine=_DummyAutomationEngineSuccess(),
         omd_root=Path("/dev/null"),
         reload_config=mock_reload_callback,
-        loading_result=None,
         changes_cache=cache,
     )
     mock_delay_state = _MockDelayState(
@@ -374,7 +339,6 @@ async def test_reloader_two_changes(mocker: MockerFixture, cache: Cache) -> None
         engine=_DummyAutomationEngineSuccess(),
         omd_root=Path("/dev/null"),
         reload_config=mock_reload_callback,
-        loading_result=None,
         changes_cache=cache,
     )
     mock_delay_state = _MockDelayState(
@@ -426,7 +390,6 @@ async def test_reloader_takes_state_into_account(mocker: MockerFixture) -> None:
         engine=_DummyAutomationEngineSuccess(),
         omd_root=Path("/dev/null"),
         reload_config=mock_reload_callback,
-        loading_result=None,
         changes_cache=cache,
     )
     mock_delay_state = _MockDelayState(
@@ -469,7 +432,6 @@ def _make_state(cache: Cache) -> _State:
         omd_root=Path("/dev/null"),
         reload_config=lambda: pytest.fail("unexpected reload"),
         last_reload_at=0,
-        loading_result=None,
         changes_cache=cache,
     )
 
@@ -558,20 +520,7 @@ def test_automation_cache_error_on_stale_config() -> None:
     with _make_test_client(
         _DummyAutomationEngineSuccess(),
         FailingCache(fakeredis.FakeRedis()),
-        lambda: LoadingResult(
-            loaded_config=EMPTY_CONFIG,
-            hosts_config=make_hosts_config(EMPTY_CONFIG),
-            host_tags=make_host_tags(EMPTY_CONFIG, make_hosts_config(EMPTY_CONFIG)),
-            config_cache=ConfigCache(
-                EMPTY_CONFIG,
-                make_hosts_config(EMPTY_CONFIG),
-                make_host_tags(EMPTY_CONFIG, make_hosts_config(EMPTY_CONFIG)),
-                autochecks_dir=cmk.utils.paths.autochecks_dir,
-                discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
-                builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
-            ),
-        ),
-        lambda config_cache, hosts_config: None,  # noqa: ARG005
+        dict,
     ) as client:
         resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
 
@@ -607,7 +556,7 @@ class _GuardProbingEngine:
     def update(
         self,
         omd_root: Path,
-        loading_result: LoadingResult | None,
+        raw_config: Mapping[str, object],
     ) -> None:
         pass
 
@@ -627,7 +576,6 @@ def test_automation_runs_under_the_guard(mocker: MockerFixture, cache: Cache) ->
         engine,
         cache,
         mocker.MagicMock(),
-        lambda config_cache, hosts_config: None,  # noqa: ARG005
     )
     engine.state = _state_of(client)
 
@@ -640,16 +588,15 @@ def test_automation_runs_under_the_guard(mocker: MockerFixture, cache: Cache) ->
 def test_initial_load_runs_under_the_guard(mocker: MockerFixture, cache: Cache) -> None:
     guard_held: list[bool] = []
 
-    def reload_config() -> LoadingResult:
+    def reload_config() -> Mapping[str, object]:
         guard_held.append(_guard_is_held(state))
-        loading_result: LoadingResult = mocker.MagicMock()
-        return loading_result
+        raw_config: Mapping[str, object] = mocker.MagicMock()
+        return raw_config
 
     client = _make_test_client(
         _DummyAutomationEngineSuccess(),
         cache,
         reload_config,
-        lambda config_cache, hosts_config: None,  # noqa: ARG005
     )
     state = _state_of(client)
 
@@ -665,17 +612,16 @@ async def test_reload_by_the_reloader_runs_under_the_guard(
 ) -> None:
     guard_held: list[bool] = []
 
-    def reload_config() -> LoadingResult:
+    def reload_config() -> Mapping[str, object]:
         guard_held.append(_guard_is_held(state))
-        loading_result: LoadingResult = mocker.MagicMock()
-        return loading_result
+        raw_config: Mapping[str, object] = mocker.MagicMock()
+        return raw_config
 
     state = _State(
         engine=_DummyAutomationEngineSuccess(),
         omd_root=Path("/dev/null"),
         last_reload_at=1,
         reload_config=reload_config,
-        loading_result=None,
         changes_cache=cache,
     )
     mock_delay_state = _MockDelayState(
@@ -729,7 +675,6 @@ def test_reloader_crash_is_logged(mocker: MockerFixture, caplog: pytest.LogCaptu
         _DummyAutomationEngineSuccess(),
         _CrashingCache(fakeredis.FakeRedis()),
         mocker.MagicMock(),
-        lambda config_cache, hosts_config: None,  # noqa: ARG005
         reloader_config=ReloaderConfig(
             active=True,
             poll_interval=0.0,

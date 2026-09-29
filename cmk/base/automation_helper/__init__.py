@@ -9,6 +9,7 @@
 import os
 import signal
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -17,10 +18,7 @@ from setproctitle import setproctitle
 from cmk.automations.logging import LoggingManager
 from cmk.base import config
 from cmk.base.automations.automations import Automations, discover_automations
-from cmk.base.config import ConfigCache
 from cmk.ccc.daemon import daemonize, pid_file_lock
-from cmk.ccc.hostaddress import Hosts
-from cmk.utils.caching import cache_manager
 from cmk.utils.paths import omd_root
 from cmk.utils.redis import get_redis_client
 
@@ -106,26 +104,12 @@ def _application() -> FastAPI:
 
     return make_application(
         omd_root=omd_root,
-        engine=Automations(discover_automations(), omd_root=omd_root, loading_result=None),
+        engine=Automations(discover_automations()),
         cache=Cache.setup(client=get_redis_client()),
         config=config,
         reload_config=_reload_automation_config,
-        clear_caches_before_each_call=_clear_caches_before_each_call,
     )
 
 
-def _reload_automation_config() -> config.LoadingResult:
-    cache_manager.clear()
-    return config.load(validate_hosts=False)
-
-
-def _clear_caches_before_each_call(config_cache: ConfigCache, hosts_config: Hosts) -> None:
-    config_cache.ruleset_matcher.ruleset_optimizer.set_default_processed_hosts(
-        {
-            hn
-            for hn in set(hosts_config.hosts).union(hosts_config.clusters)
-            if config_cache.is_active(hn) and config_cache.is_online(hn)
-        }
-    )
-    config_cache.ruleset_matcher.ruleset_optimizer.clear_caches()
-    config_cache.ruleset_matcher.ruleset_optimizer.clear_ruleset_caches()
+def _reload_automation_config() -> Mapping[str, object]:
+    return config.load_raw_config(with_conf_d=True)

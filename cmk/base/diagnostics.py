@@ -22,7 +22,7 @@ import cmk.livestatus_client as livestatus
 import cmk.utils.paths
 from cmk.automations.results import CreateDiagnosticsDumpResult, CreateDiagnosticsDumpV2Result
 from cmk.automations.types import AutomationID
-from cmk.base.automations.automations import Automation, CommonState, load_config
+from cmk.base.automations.automations import Automation, CommonState
 from cmk.ccc import tty
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
@@ -57,9 +57,7 @@ SUFFIX = ".tar.gz"
 
 
 def _make_raw_base_config(state: CommonState) -> Mapping[str, object]:
-    loaded_config = (
-        load_config() if state.loading_result is None else state.loading_result
-    ).loaded_config
+    loaded_config = state.loading_result.loaded_config
     return {f.name: getattr(loaded_config, f.name) for f in fields(loaded_config)}
 
 

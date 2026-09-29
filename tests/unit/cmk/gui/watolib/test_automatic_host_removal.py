@@ -17,9 +17,7 @@ import pytest
 import time_machine
 from pytest_mock import MockerFixture
 
-import cmk.utils.paths
 from cmk.automations.results import ABCAutomationResult
-from cmk.base.automations.automations import CommonState
 from cmk.base.automations.check_mk import automation_analyze_host_rule_matches
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
@@ -34,6 +32,7 @@ from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.ruleset_matcher.matcher import RuleSpec
 from cmk.ruleset_matcher.tags import get_effective_tag_config
 from cmk.utils.paths import default_config_dir
+from tests.testlib.unit.automations import make_common_state
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 
@@ -240,7 +239,7 @@ def fixture_mock_analyze_host_rule_matches_automation(
     ts = Scenario()
     for host_name in TEST_HOSTS:
         ts.add_host(host_name)
-    ts.apply(monkeypatch)
+    loading_result = ts.apply(monkeypatch)
 
     def analyze_with_matcher(
         h: HostName,
@@ -250,7 +249,7 @@ def fixture_mock_analyze_host_rule_matches_automation(
     ) -> ABCAutomationResult:
         with mocker.patch("sys.stdin", StringIO(repr(r))):
             return automation_analyze_host_rule_matches.handler(
-                CommonState(cmk.utils.paths.omd_root, None), [h]
+                make_common_state(loading_result), [h]
             )
 
     return mocker.patch.object(

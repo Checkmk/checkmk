@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Checkmk development script to manage Werks"""
 
-# mypy: disable-error-code="comparison-overlap"
-
 import argparse
 import datetime
 import errno
@@ -602,13 +600,9 @@ def output_csv(werks: list[Werk]) -> None:
 
 def werk_class(werk: Werk) -> str:
     cl = werk.content.metadata["class"]
-    for entry in get_config().classes:
-        # typing: why would this be? LH: Tuple[str, str, str], RH: str
-        if entry == cl:
-            return cl  # type: ignore[unreachable]
-
-        if entry[0] == cl:
-            return entry[1]
+    for class_id, class_name, _prefix in get_config().classes:
+        if class_id == cl:
+            return class_name
     return cl
 
 
@@ -811,9 +805,7 @@ def main_meisterwerk_removed(_args: argparse.Namespace) -> None:
 def get_werk_arg(arg: WerkId | None) -> WerkId:
     wid = get_last_werk() if arg is None else arg
 
-    werk = load_werk(werk_path_by_id(wid))
-    if not werk:
-        bail_out("No such Werk.\n")
+    load_werk(werk_path_by_id(wid))
     save_last_werkid(wid)
     return wid
 
@@ -969,6 +961,29 @@ def main_edit(args: argparse.Namespace) -> None:
     save_last_werkid(werkid)
 
 
+def _edit_until_loadable(editor: str, werk_path: Path) -> Werk:
+    initial_werk_text = werk_path.read_text(encoding="utf-8")
+    number_of_lines_in_werk = initial_werk_text.count("\n")
+
+    while True:
+        if os.system(f"bash -c '{editor} +{number_of_lines_in_werk} {werk_path}'") != 0:  # nosec B605 # BNS:a52d7f
+            bail_out("Editor returned error, something is very wrong!")
+
+        try:
+            werk = load_werk(werk_path)
+            cmk_werks_load_werk(file_content=werk.path.read_text(), file_name=werk.path.name)
+            return werk
+        except Exception:
+            sys.stdout.write(initial_werk_text + "\n\n")
+            sys.stdout.write(traceback.format_exc() + "\n\n")
+            sys.stdout.write(
+                "Could not load the Werk, see exception above.\n"
+                "You may copy the initial Werk text above the exception to fix your Werk.\n"
+                "Will reopen the editor, after you acknowledged with enter\n"
+            )
+            input()
+
+
 def edit_werk(werk_path: Path, custom_files: list[str] | None = None, commit: bool = True) -> None:
     if custom_files is None:
         custom_files = []
@@ -983,31 +998,7 @@ def edit_werk(werk_path: Path, custom_files: list[str] | None = None, commit: bo
     if not editor:
         bail_out("No editor available (please set EDITOR).\n")
 
-    initial_werk_text = werk_path.read_text(encoding="utf-8")
-    number_of_lines_in_werk = initial_werk_text.count("\n")
-    werk = None
-
-    while True:
-        if os.system(f"bash -c '{editor} +{number_of_lines_in_werk} {werk_path}'") != 0:  # nosec B605 # BNS:a52d7f
-            bail_out("Editor returned error, something is very wrong!")
-
-        try:
-            werk = load_werk(werk_path)
-            # validate the werk, to make sure the commit part at the bottom will work
-            cmk_werks_load_werk(file_content=werk.path.read_text(), file_name=werk.path.name)
-            break
-        except Exception:
-            sys.stdout.write(initial_werk_text + "\n\n")
-            sys.stdout.write(traceback.format_exc() + "\n\n")
-            sys.stdout.write(
-                "Could not load the Werk, see exception above.\n"
-                "You may copy the initial Werk text above the exception to fix your Werk.\n"
-                "Will reopen the editor, after you acknowledged with enter\n"
-            )
-            input()
-
-    if werk is None:
-        bail_out("This should not have happened, Werk is None during edit_werk.")
+    werk = _edit_until_loadable(editor, werk_path)
 
     _git_add(werk_path)
     if commit and get_config().create_commit:

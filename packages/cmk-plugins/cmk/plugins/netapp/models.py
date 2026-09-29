@@ -476,8 +476,9 @@ class NodeModel(BaseModel):
     system_id: str
     cpu_processor: str | None = None  # default None inherited from old NetApp API logic
 
-    processor_utilization: float
-    processor_utilization_timestamp: datetime.datetime  # provided in ISO 8601 format
+    # ONTAP leaves out the "metric" object for some nodes
+    processor_utilization: float | None = None
+    processor_utilization_timestamp: datetime.datetime | None = None  # provided in ISO 8601 format
     date: datetime.datetime | None = None
 
 

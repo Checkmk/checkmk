@@ -644,6 +644,7 @@ def fetch_nodes(connection: HostConnection) -> Iterable[models.NodeModel]:
         connection=connection, fields=",".join(field_query)
     ):
         element_data = element.to_dict()
+        metric = element_data.get("metric", {})
 
         yield models.NodeModel(
             name=element_data["name"],
@@ -656,8 +657,8 @@ def fetch_nodes(connection: HostConnection) -> Iterable[models.NodeModel]:
             serial_number=element_data["serial_number"],
             system_id=element_data["system_id"],
             cpu_processor=element_data.get("controller", {}).get("cpu", {}).get("processor"),
-            processor_utilization=element_data["metric"]["processor_utilization"],
-            processor_utilization_timestamp=element_data["metric"]["timestamp"],
+            processor_utilization=metric.get("processor_utilization"),
+            processor_utilization_timestamp=metric.get("timestamp"),
             date=element_data.get("date"),
         )
 

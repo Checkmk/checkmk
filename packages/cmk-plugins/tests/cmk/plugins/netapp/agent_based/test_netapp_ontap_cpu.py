@@ -16,12 +16,14 @@ from cmk.agent_based.v2 import (
     CheckResult,
     Metric,
     Result,
+    Service,
     State,
 )
 from cmk.plugins.netapp.agent_based import netapp_ontap_cpu as mocktarget
 from cmk.plugins.netapp.agent_based.netapp_ontap_cpu import (
     check_netapp_ontap_cpu_utilization,
     check_netapp_ontap_nvram_bat,
+    discover_netapp_ontap_cpu,
 )
 from cmk.plugins.netapp.models import NodeModel
 
@@ -127,6 +129,33 @@ def test_check_netapp_ontap_cpu_utilization_not_present(
 
     result = check_netapp_ontap_cpu_utilization(item="cpu_not_present", params={}, section=section)
     assert len(list(result)) == 0
+
+
+def test_discover_netapp_ontap_cpu_skips_node_without_utilization() -> None:
+    with_value = NodeModelFactory.build(
+        name="node1",
+        processor_utilization=1.0,
+        processor_utilization_timestamp="2026-09-25T08:12:45Z",
+    )
+    without_value = NodeModelFactory.build(
+        name="node2", processor_utilization=None, processor_utilization_timestamp=None
+    )
+
+    discovered = list(discover_netapp_ontap_cpu({"node1": with_value, "node2": without_value}))
+
+    assert discovered == [Service(item="node1")]
+
+
+def test_check_netapp_ontap_cpu_utilization_without_utilization() -> None:
+    node_model = NodeModelFactory.build(
+        name="node1", processor_utilization=None, processor_utilization_timestamp=None
+    )
+
+    result = check_netapp_ontap_cpu_utilization(
+        item="node1", params={}, section={"node1": node_model}
+    )
+
+    assert not list(result)
 
 
 @pytest.mark.parametrize(

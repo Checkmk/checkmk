@@ -5,6 +5,7 @@
 
 
 import datetime
+from http import HTTPStatus
 
 import pytest
 
@@ -219,7 +220,7 @@ def test_openapi_schedule_service_downtime_with_non_matching_query(
             start_time="2020-01-01T00:00:00Z",
             end_time="2020-01-02T00:00:00Z",
             expect_ok=False,
-        ).assert_status_code(422)
+        ).assert_status_code(HTTPStatus.UNPROCESSABLE_ENTITY)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -236,7 +237,7 @@ def test_openapi_schedule_host_downtime_with_non_matching_query(
             start_time="2020-01-01T00:00:00Z",
             end_time="2020-01-02T00:00:00Z",
             expect_ok=False,
-        ).assert_status_code(422)
+        ).assert_status_code(HTTPStatus.UNPROCESSABLE_ENTITY)
 
 
 def test_openapi_show_downtimes_with_query(
@@ -536,7 +537,7 @@ def test_openapi_create_service_downtime_with_non_matching_query(
             start_time="2020-01-01T00:00:00Z",
             end_time="2020-01-02T00:00:00Z",
             expect_ok=False,
-        ).assert_status_code(422)
+        ).assert_status_code(HTTPStatus.UNPROCESSABLE_ENTITY)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -939,7 +940,7 @@ def test_openapi_delete_downtime_non_existing_host_group(
         delete_type="hostgroup",
         host_group="non-existent",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
     assert (
         resp.json["fields"]["body.hostgroup.hostgroup_name"]["msg"]
         == "Value error, Group missing: 'non-existent'"
@@ -954,7 +955,7 @@ def test_openapi_delete_downtime_non_existing_service_group(
         delete_type="servicegroup",
         service_group="non-existent",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
     assert (
         resp.json["fields"]["body.servicegroup.servicegroup_name"]["msg"]
         == "Value error, Group missing: 'non-existent'"
@@ -976,7 +977,7 @@ def test_openapi_downtime_non_existing_instance(
             end_time="2020-01-02T00:00:00Z",
             expect_ok=False,
         )
-        resp.assert_status_code(400)
+        resp.assert_status_code(HTTPStatus.BAD_REQUEST)
 
     assert resp.json["fields"]["body.host.host_name"]["msg"] == (
         "Value error, Host 'non-existent' is not actively monitored. Is the configuration activated?"
@@ -991,7 +992,7 @@ def test_openapi_downtime_non_existing_groups(clients: ClientRegistry) -> None:
         start_time="2020-01-01T00:00:00Z",
         end_time="2020-01-02T00:00:00Z",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -1067,7 +1068,7 @@ def test_openapi_downtime_invalid_single(
             downtime_id=123,
             site_id="NO_SITE",
             expect_ok=False,
-        ).assert_status_code(404)
+        ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 @pytest.mark.usefixtures("with_host")
@@ -1268,7 +1269,7 @@ def test_openapi_modify_downtime_without_parameters(clients: ClientRegistry) -> 
         modify_type="by_id",
         downtime_id="123",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -1587,7 +1588,7 @@ def test_openapi_modify_downtime_delta_minutes_cannot_be_zero(
         downtime_id="123",
         end_time=0,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -1598,7 +1599,7 @@ def test_openapi_modify_downtime_non_existing_host_group(
         modify_type="hostgroup",
         host_group="non-existent",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
     assert (
         resp.json["fields"]["body.hostgroup.hostgroup_name"]["msg"]
         == "Value error, Group missing: 'non-existent'"
@@ -1613,7 +1614,7 @@ def test_openapi_modify_downtime_non_existing_service_group(
         modify_type="servicegroup",
         service_group="non-existent",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
     assert (
         resp.json["fields"]["body.servicegroup.servicegroup_name"]["msg"]
         == "Value error, Group missing: 'non-existent'"

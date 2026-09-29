@@ -8,6 +8,7 @@
 import os
 import shutil
 from collections.abc import Iterator
+from http import HTTPStatus
 
 import pytest
 
@@ -163,7 +164,7 @@ def test_create_folder(clients: ClientRegistry) -> None:
     )
 
     # THEN
-    assert resp.status_code == 200, resp.json
+    assert resp.status_code == HTTPStatus.OK, resp.json
     assert resp.json["title"] == "New Folder"
     folder_tree().invalidate_caches()
     assert folder_tree().all_folders()["new_folder"].title() == "New Folder"
@@ -248,7 +249,7 @@ def test_create_folder_with_permissions(clients: ClientRegistry) -> None:
     )
 
     # THEN
-    assert resp.status_code == 200, resp.json
+    assert resp.status_code == HTTPStatus.OK, resp.json
     assert resp.json["title"] == "Protected Folder/New Folder"
     folder_tree().invalidate_caches()
     assert folder_tree().all_folders()["protected-folder/new_folder"].title() == "New Folder"

@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="explicit-any"
 
+from http import HTTPStatus
 from typing import Any
 
 import pytest
@@ -19,16 +20,24 @@ def test_create_auxtag_invalid_data(clients: ClientRegistry) -> None:
         "topic": "topic_1",
         "help": "HELP",
     }
-    clients.AuxTag.create(tag_data=test_data, expect_ok=False).assert_status_code(400)
+    clients.AuxTag.create(tag_data=test_data, expect_ok=False).assert_status_code(
+        HTTPStatus.BAD_REQUEST
+    )
 
     test_data.update({"title": None})
-    clients.AuxTag.create(tag_data=test_data, expect_ok=False).assert_status_code(400)
+    clients.AuxTag.create(tag_data=test_data, expect_ok=False).assert_status_code(
+        HTTPStatus.BAD_REQUEST
+    )
 
     test_data.update({"title": "aux_tag_1", "topic": ""})
-    clients.AuxTag.create(tag_data=test_data, expect_ok=False).assert_status_code(400)
+    clients.AuxTag.create(tag_data=test_data, expect_ok=False).assert_status_code(
+        HTTPStatus.BAD_REQUEST
+    )
 
     test_data.update({"topic": None})
-    clients.AuxTag.create(tag_data=test_data, expect_ok=False).assert_status_code(400)
+    clients.AuxTag.create(tag_data=test_data, expect_ok=False).assert_status_code(
+        HTTPStatus.BAD_REQUEST
+    )
 
 
 def test_update_auxtag_invalid_data(clients: ClientRegistry) -> None:
@@ -45,28 +54,28 @@ def test_update_auxtag_invalid_data(clients: ClientRegistry) -> None:
         aux_tag_id="aux_tag_id_1",
         tag_data=test_data,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     test_data.update({"title": "aux_tag_1", "topic": None})
     clients.AuxTag.edit(
         aux_tag_id="aux_tag_id_1",
         tag_data=test_data,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     test_data.update({"topic": ""})
     clients.AuxTag.edit(
         aux_tag_id="aux_tag_id_1",
         tag_data=test_data,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     test_data.update({"topic": None})
     clients.AuxTag.edit(
         aux_tag_id="aux_tag_id_1",
         tag_data=test_data,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_get_auxtag(clients: ClientRegistry) -> None:
@@ -158,9 +167,11 @@ def test_delete_custom_aux_tag(clients: ClientRegistry) -> None:
     }
     clients.AuxTag.create(tag_data=test_data)
     clients.AuxTag.get(aux_tag_id="aux_tag_id_1")
-    clients.AuxTag.delete(aux_tag_id="aux_tag_id_1").assert_status_code(status_code=204)
+    clients.AuxTag.delete(aux_tag_id="aux_tag_id_1").assert_status_code(
+        status_code=HTTPStatus.NO_CONTENT
+    )
     clients.AuxTag.get(aux_tag_id="aux_tag_id_1", expect_ok=False).assert_status_code(
-        status_code=404
+        status_code=HTTPStatus.NOT_FOUND
     )
 
 
@@ -170,7 +181,7 @@ def test_edit_non_existing_aux_tag(clients: ClientRegistry) -> None:
         tag_data={},
         expect_ok=False,
         with_etag=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_delete_tag_that_belongs_to_a_tag_group(clients: ClientRegistry) -> None:
@@ -203,7 +214,7 @@ def test_delete_tag_that_belongs_to_a_tag_group(clients: ClientRegistry) -> None
         expect_ok=False,
     )
 
-    resp.assert_status_code(409)
+    resp.assert_status_code(HTTPStatus.CONFLICT)
     assert resp.json["title"] == "Aux tag in use"
     assert (
         resp.json["detail"]
@@ -218,7 +229,7 @@ def test_update_builtin_aux_tag(clients: ClientRegistry) -> None:
         expect_ok=False,
         with_etag=False,
     )
-    r.assert_status_code(404)
+    r.assert_status_code(HTTPStatus.NOT_FOUND)
     assert r.json["title"] == "Not Found"
     assert (
         r.json["fields"]["aux_tag_id"][0]
@@ -248,7 +259,7 @@ def test_create_host_tag_with_newline_in_the_id(
         },
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert (
         resp.json["fields"]["aux_tag_id"][0]
         == f"{aux_tag_id!r} does not match pattern '^[-0-9a-zA-Z_]+\\\\Z'."
@@ -274,7 +285,7 @@ def test_id_already_in_use_by_custom_tag_group(clients: ClientRegistry) -> None:
             "topic": "topic_2",
         },
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     assert (
         f"The id '{custom_tag_group}' is already in use by a tag group."
@@ -291,7 +302,7 @@ def test_id_already_in_use_by_builtin_tag_group(clients: ClientRegistry) -> None
             "topic": "topic_3",
         },
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     assert (
         f"The id '{builtin_tag_group}' is already in use by a tag group."
@@ -317,7 +328,7 @@ def test_id_already_in_use_by_custom_aux_tag(clients: ClientRegistry) -> None:
             "topic": "topic_1",
         },
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     assert (
         f"The aux_tag '{custom_aux_tag}' should not exist but it does."
@@ -335,7 +346,7 @@ def test_id_in_use_by_builtin_aux_tag(clients: ClientRegistry) -> None:
             "topic": "topic_4",
         },
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     assert (
         f"The aux_tag '{builtin_aux_tag}' should not exist but it does."

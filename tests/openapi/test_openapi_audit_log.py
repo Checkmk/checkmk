@@ -8,6 +8,7 @@
 
 import datetime
 from dataclasses import dataclass
+from http import HTTPStatus
 from typing import Any
 
 import pytest
@@ -63,12 +64,12 @@ def audit_log_store_builder() -> AuditLogStore:
 def test_openapi_audit_log_invalid_date_filter(clients: ClientRegistry) -> None:
     res_invalid_string = clients.AuditLog.get_all(
         date="invalid", expect_ok=False
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
     assert "date" in res_invalid_string.json["detail"]
     assert "query.date" in res_invalid_string.json["fields"]
 
     res_bad_date = clients.AuditLog.get_all(date="1981-12-32", expect_ok=False).assert_status_code(
-        400
+        HTTPStatus.BAD_REQUEST
     )
     assert "date" in res_bad_date.json["detail"]
     assert "query.date" in res_bad_date.json["fields"]

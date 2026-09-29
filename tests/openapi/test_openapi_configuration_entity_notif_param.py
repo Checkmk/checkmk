@@ -6,6 +6,7 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Generator
+from http import HTTPStatus
 from unittest import mock
 
 import pytest
@@ -93,7 +94,7 @@ def test_save_notif_param(clients: ClientRegistry) -> None:
     )
 
     # THEN
-    resp.assert_status_code(200)
+    resp.assert_status_code(HTTPStatus.OK)
     assert resp.json["title"] == "foo"
 
 
@@ -117,7 +118,7 @@ def test_save_configuration_entity_non_admin(
     )
 
     # THEN
-    assert resp.status_code == 403, (
+    assert resp.status_code == HTTPStatus.FORBIDDEN, (
         f"Expected status code 403 for non-admin user, got {resp.status_code}"
     )
 
@@ -199,7 +200,7 @@ def test_update_configuration_entity_non_admin(
     )
 
     # THEN
-    assert resp.status_code == 403, (
+    assert resp.status_code == HTTPStatus.FORBIDDEN, (
         f"Expected status code 403 for non-admin user, got {resp.status_code}"
     )
 
@@ -300,7 +301,7 @@ def test_list_configuration_entities_without_permissions(clients: ClientRegistry
     )
 
     # THEN
-    resp.assert_status_code(403)
+    resp.assert_status_code(HTTPStatus.FORBIDDEN)
     assert resp.json["title"] == "Forbidden"
 
 
@@ -371,7 +372,7 @@ def test_get_notif_param_without_permissions(
     )
 
     # THEN
-    resp.assert_status_code(403)
+    resp.assert_status_code(HTTPStatus.FORBIDDEN)
     assert resp.json["title"] == "Forbidden"
 
 
@@ -382,7 +383,7 @@ def test_get_notif_param_throws_404(clients: ClientRegistry) -> None:
     )
 
     # THEN
-    assert resp.status_code == 404
+    assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
 def test_get_confguration_entity_fs_schema(clients: ClientRegistry) -> None:

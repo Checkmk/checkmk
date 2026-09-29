@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from pathlib import Path
 
 from pytest_mock import MockerFixture
@@ -29,7 +30,7 @@ def test_download_agent_shipped_with_checkmk(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/agent/actions/download/invoke?os_type=linux_deb",
         headers={"Accept": "application/octet-stream"},
-        status=200,
+        status=HTTPStatus.OK,
     )
 
     assert resp.body == agent_bin_data

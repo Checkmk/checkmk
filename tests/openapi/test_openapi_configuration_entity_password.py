@@ -6,6 +6,7 @@
 # ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
 from collections.abc import Iterable, Iterator
+from http import HTTPStatus
 
 import pytest
 
@@ -58,7 +59,7 @@ def test_list_passwords_without_permissions(clients: ClientRegistry) -> None:
     )
 
     # THEN
-    assert resp.status_code == 403
+    assert resp.status_code == HTTPStatus.FORBIDDEN
     assert resp.json["title"] == "Forbidden"
 
 
@@ -101,7 +102,7 @@ def test_list_passwords_with_permissions(clients: ClientRegistry) -> None:
     )
 
     # THEN
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     titles = {entry["title"] for entry in resp.json["value"]}
     assert titles == {"Protected title"}
 
@@ -165,7 +166,7 @@ def test_create_password_without_permissions(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
     # THEN
-    assert resp.status_code == 403
+    assert resp.status_code == HTTPStatus.FORBIDDEN
     assert resp.json["title"] == "Forbidden"
     assert "We are sorry, but you lack the permission for this operation" in resp.json["detail"]
     with pytest.raises(ValueError):
@@ -206,7 +207,7 @@ def test_create_password_with_permissions(clients: ClientRegistry) -> None:
     )
 
     # THEN
-    assert resp.status_code == 200, resp.json
+    assert resp.status_code == HTTPStatus.OK, resp.json
     assert resp.json["title"] == "My protected test password"
     assert (
         lookup(password_store_path(), "test_protected_password_id")
@@ -241,7 +242,7 @@ def test_create_password_as_admin(clients: ClientRegistry, with_admin: tuple[str
     )
 
     # THEN
-    assert resp.status_code == 200, resp.json
+    assert resp.status_code == HTTPStatus.OK, resp.json
     assert resp.json["title"] == "My admin test password"
     assert (
         lookup(password_store_path(), "test_admin_password_id") == "my-very-secret-admin-password"
@@ -294,7 +295,7 @@ def test_cannot_overwrite_existing_password(
     )
 
     # THEN
-    assert resp.status_code == 422, resp.json
+    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, resp.json
     assert (
         "This ID is already in use. Please choose another one."
         in resp.json["ext"]["validation_errors"][0]["message"]
@@ -343,7 +344,7 @@ def test_create_password_existing_passwords_still_exist(
     )
 
     # THEN
-    assert resp.status_code == 200, resp.json
+    assert resp.status_code == HTTPStatus.OK, resp.json
     assert resp.json["title"] == "My admin test password"
     assert (
         lookup(password_store_path(), "test_admin_password_id") == "my-very-secret-admin-password"

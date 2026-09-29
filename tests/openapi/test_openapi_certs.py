@@ -5,6 +5,7 @@
 
 import json
 from collections.abc import Iterator
+from http import HTTPStatus
 from unittest.mock import patch
 from urllib.parse import urljoin
 
@@ -106,7 +107,7 @@ def test_root_cert_403(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     aut_user_auth_wsgi_app.call_method(
         "get",
         _URL_ROOT_CERT,
-        status=403,
+        status=HTTPStatus.FORBIDDEN,
         headers={"Accept": "application/json"},
     )
 
@@ -122,7 +123,7 @@ def test_root_cert_200(
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         _URL_ROOT_CERT,
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
     )
     assert resp.json_body["cert"] == "fake_root_cert"
@@ -134,7 +135,7 @@ def test_csr_403(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
         "post",
         _URL_CSR,
         params=json.dumps({"csr": _CSR}),
-        status=403,
+        status=HTTPStatus.FORBIDDEN,
         headers={"Accept": "application/json"},
         content_type="application/json; charset=utf-8",
     )
@@ -173,7 +174,7 @@ def test_csr_400(
         "post",
         _URL_CSR,
         params=json.dumps({"csr": csr_str}),
-        status=400,
+        status=HTTPStatus.BAD_REQUEST,
         headers={"Accept": "application/json"},
         content_type="application/json; charset=utf-8",
     )
@@ -191,7 +192,7 @@ def test_csr_200(
         "post",
         _URL_CSR,
         params=json.dumps({"csr": _CSR}),
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
         content_type="application/json; charset=utf-8",
     )
@@ -204,7 +205,7 @@ def test_agent_controller_certificates_settings_ok(
     assert set(
         logged_in_admin_wsgi_app.get(
             urljoin(_BASE, "agent_controller_certificates_settings"),
-            status=200,
+            status=HTTPStatus.OK,
             headers={"Accept": "application/json"},
         ).json_body
     ) == {"lifetime_in_months"}
@@ -217,7 +218,7 @@ def test_agent_controller_certificates_settings_unauthorized(
     assert (
         logged_in_wsgi_app.get(
             urljoin(_BASE, "agent_controller_certificates_settings"),
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             headers={"Accept": "application/json"},
         ).json_body["title"]
         == "Unauthorized"

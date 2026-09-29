@@ -5,6 +5,7 @@
 
 # ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
+from http import HTTPStatus
 from unittest import mock
 
 import pytest
@@ -29,7 +30,7 @@ def test_activate_changes_permission_denied_is_403(
         side_effect=MKAuthException("hands off other users' changes"),
     )
     resp = clients.ActivateChanges.activate_changes(expect_ok=False)
-    resp.assert_status_code(403)
+    resp.assert_status_code(HTTPStatus.FORBIDDEN)
 
 
 def test_wait_for_completion_invalid_activation_id(clients: ClientRegistry) -> None:
@@ -38,7 +39,7 @@ def test_wait_for_completion_invalid_activation_id(clients: ClientRegistry) -> N
         url="/objects/activation_run/asdf/actions/wait-for-completion/invoke",
         expect_ok=False,
     )
-    resp.assert_status_code(404)
+    resp.assert_status_code(HTTPStatus.NOT_FOUND)
     assert resp.json["detail"] == "Could not find an activation with id 'asdf'."
 
 
@@ -46,7 +47,7 @@ def test_get_non_existing_activation(clients: ClientRegistry) -> None:
     clients.ActivateChanges.get_activation(
         activation_id="non_existing_activation_id",
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_list_currently_running_activations(clients: ClientRegistry) -> None:
@@ -56,7 +57,7 @@ def test_list_currently_running_activations(clients: ClientRegistry) -> None:
 @pytest.mark.usefixtures("is_licensed")
 def test_activate_changes_unknown_site(clients: ClientRegistry) -> None:
     resp = clients.ActivateChanges.activate_changes(sites=["asdf"], expect_ok=False)
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert "Unknown site" in repr(resp.json), resp.json
 
 
@@ -131,7 +132,7 @@ def test_list_activate_changes_invalid_etag(clients: ClientRegistry) -> None:
         etag="invalid_etag",
         expect_ok=False,
     )
-    resp.assert_status_code(412)
+    resp.assert_status_code(HTTPStatus.PRECONDITION_FAILED)
     assert resp.json["title"] == "Precondition failed"
 
 
@@ -141,7 +142,7 @@ def test_list_activate_changes_no_if_match_header(clients: ClientRegistry) -> No
         etag=None,
         expect_ok=False,
     )
-    resp.assert_status_code(428)
+    resp.assert_status_code(HTTPStatus.PRECONDITION_REQUIRED)
     assert resp.json["title"] == "Precondition required"
 
 

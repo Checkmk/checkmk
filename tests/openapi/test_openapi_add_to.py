@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
+from http import HTTPStatus
 
 import pytest
 
@@ -120,7 +121,7 @@ def test_add_to_visual_rejects_views(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
 
-    assert resp.status_code == 400
+    assert resp.status_code == HTTPStatus.BAD_REQUEST
     assert "views" in resp.json["detail"]
 
 
@@ -132,7 +133,7 @@ def test_add_to_visual_rejects_an_unknown_visual_type(clients: ClientRegistry) -
         expect_ok=False,
     )
 
-    assert resp.status_code == 400
+    assert resp.status_code == HTTPStatus.BAD_REQUEST
     assert "does_not_exist" in resp.json["detail"]
 
 
@@ -145,7 +146,7 @@ def test_add_to_container_rejects_an_unknown_container_type(clients: ClientRegis
         expect_ok=False,
     )
 
-    assert resp.status_code == 400
+    assert resp.status_code == HTTPStatus.BAD_REQUEST
     assert "does_not_exist" in resp.json["detail"]
 
 
@@ -157,7 +158,7 @@ def test_add_to_visual_rejects_an_unparseable_specification(clients: ClientRegis
         expect_ok=False,
     )
 
-    assert resp.status_code == 400
+    assert resp.status_code == HTTPStatus.BAD_REQUEST
     assert "specification" in resp.json["detail"]
 
 
@@ -173,7 +174,7 @@ def test_add_to_visual_rejects_a_graph_kind_without_an_add_to_action(
         expect_ok=False,
     )
 
-    assert resp.status_code == 400
+    assert resp.status_code == HTTPStatus.BAD_REQUEST
 
 
 def test_add_to_visual_unknown_target_is_404(clients: ClientRegistry) -> None:
@@ -184,4 +185,4 @@ def test_add_to_visual_unknown_target_is_404(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
 
-    assert resp.status_code == 404
+    assert resp.status_code == HTTPStatus.NOT_FOUND

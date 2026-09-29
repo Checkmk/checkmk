@@ -5,6 +5,7 @@
 
 import uuid
 from collections.abc import Iterable
+from http import HTTPStatus
 
 import pytest
 
@@ -95,7 +96,7 @@ def test_list_oauth2_connections_without_permissions(clients: ClientRegistry) ->
     )
 
     # THEN
-    assert resp.status_code == 403
+    assert resp.status_code == HTTPStatus.FORBIDDEN
     assert resp.json["title"] == "Forbidden"
 
 
@@ -155,7 +156,7 @@ def test_create_already_existing_oauth2_connection(
     )
 
     # THEN
-    assert resp.status_code == 400, resp.json
+    assert resp.status_code == HTTPStatus.BAD_REQUEST, resp.json
     assert "This ID is already in use." in resp.json["detail"], resp.json
 
 
@@ -194,7 +195,7 @@ def test_update_already_existing_oauth2_connection(
     )
 
     # THEN
-    assert resp.status_code == 200, resp.json
+    assert resp.status_code == HTTPStatus.OK, resp.json
     assert resp.json["id"] == MY_OAUTH2_CONNECTION_UUID, resp.json
 
 
@@ -233,7 +234,7 @@ def test_create_non_existing_oauth2_connection(
     )
 
     # THEN
-    assert resp.status_code == 200, resp.json
+    assert resp.status_code == HTTPStatus.OK, resp.json
     assert resp.json["id"] == my_new_uuid, resp.json
 
 
@@ -277,7 +278,7 @@ def test_create_non_existing_oauth2_connection_without_permissions(clients: Clie
     )
 
     # THEN
-    assert resp.status_code == 403
+    assert resp.status_code == HTTPStatus.FORBIDDEN
     assert resp.json["title"] == "Forbidden"
 
 
@@ -316,7 +317,7 @@ def test_create_oauth2_connection_with_duplicate_title(
     )
 
     # THEN
-    assert resp.status_code == 422, resp.json
+    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, resp.json
     validation_errors = resp.json["ext"]["validation_errors"]
     assert len(validation_errors) == 1
     assert validation_errors[0]["location"] == ["title"]
@@ -358,7 +359,7 @@ def test_update_oauth2_connection_keeping_same_title(
     )
 
     # THEN
-    assert resp.status_code == 200, resp.json
+    assert resp.status_code == HTTPStatus.OK, resp.json
     assert resp.json["id"] == MY_OAUTH2_CONNECTION_UUID, resp.json
 
 
@@ -392,7 +393,7 @@ def test_create_oauth2_connection_without_tokens(
     )
 
     # THEN
-    assert resp.status_code == 422, resp.json
+    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, resp.json
     validation_errors = resp.json["ext"]["validation_errors"]
     assert len(validation_errors) > 0
 
@@ -432,7 +433,7 @@ def test_update_oauth2_connection_to_existing_title(
     )
 
     # THEN
-    assert resp.status_code == 422, resp.json
+    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, resp.json
     validation_errors = resp.json["ext"]["validation_errors"]
     assert len(validation_errors) == 1
     assert validation_errors[0]["location"] == ["title"]
@@ -526,7 +527,7 @@ def test_show_oauth2_connection_not_usable(
     )
 
     # THEN
-    assert resp.status_code == 404
+    assert resp.status_code == HTTPStatus.NOT_FOUND
     assert resp.json["title"] == "Not found"
 
 
@@ -671,7 +672,7 @@ def test_list_oauth2_connections_editable_field_for_non_admin(
     )
 
     # THEN - both connections are listed, but only the owned one is editable
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     editable_by_id = {
         entry["id"]: not entry["extensions"]["ui_hide_edit_button"] for entry in resp.json["value"]
     }

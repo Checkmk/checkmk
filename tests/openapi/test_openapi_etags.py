@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator
+from http import HTTPStatus
 
 import pytest
 
@@ -29,14 +30,14 @@ def test_openapi_etag_disabled(
             "get",
             base + "/objects/host_config/example.com",
             headers={"Accept": "application/json"},
-            status=200,
+            status=HTTPStatus.OK,
         )
 
         aut_user_auth_wsgi_app.follow_link(
             resp,
             ".../update",
             headers={"Accept": "application/json"},
-            status=200,
+            status=HTTPStatus.OK,
             params='{"attributes": {"ipaddress": "127.0.0.1"}}',
             content_type="application/json",
         )
@@ -50,13 +51,13 @@ def test_openapi_etag_enabled(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
         "get",
         base + "/objects/host_config/example.com",
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
     )
 
     aut_user_auth_wsgi_app.follow_link(
         resp,
         ".../update",
-        status=428,
+        status=HTTPStatus.PRECONDITION_REQUIRED,
         headers={"Accept": "application/json"},
         params='{"attributes": {"ipaddress": "127.0.0.1"}}',
         content_type="application/json",
@@ -64,7 +65,7 @@ def test_openapi_etag_enabled(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     aut_user_auth_wsgi_app.follow_link(
         resp,
         ".../update",
-        status=412,
+        status=HTTPStatus.PRECONDITION_FAILED,
         headers={"If-Match": "foo", "Accept": "application/json"},
         params="{}",
         content_type="application/json",
@@ -73,7 +74,7 @@ def test_openapi_etag_enabled(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     resp = aut_user_auth_wsgi_app.follow_link(
         resp,
         ".../update",
-        status=200,
+        status=HTTPStatus.OK,
         params='{"attributes": {"ipaddress": "127.0.0.1"}}',
         headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         content_type="application/json",

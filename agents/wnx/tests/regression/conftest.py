@@ -6,13 +6,11 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
-import asyncio
 import subprocess
-import time
 
 import pytest
-import telnetlib3  # type: ignore[import-not-found]
 import yaml
+from testlib.agent_output import read_agent_output
 
 from .local import DEFAULT_CONFIG, host, main_exe, port, run_agent, user_yaml_config
 
@@ -39,57 +37,24 @@ def wait_agent_engine():
     return inner
 
 
-_result = ""
-
-
-async def _telnet_shell(reader: telnetlib3.TelnetReader, _: telnetlib3.TelnetWriter) -> None:
-    global _result
-
-    data = b""
-    while True:
-        block = await reader.read(1024)
-        if not block:
-            break
-        data += block
-
-    _result = data.decode("utf-8", errors="replace")
-
-
-def _read_client_data(addr_host: str, addr_port: int) -> None:
-    loop = asyncio.get_event_loop()
-    coro = telnetlib3.open_connection(addr_host, addr_port, shell=_telnet_shell)
-    _, writer = loop.run_until_complete(coro)
-    loop.run_until_complete(writer.protocol.waiter_closed)
-
-
-def _get_data_using_telnet(addr_host: str, addr_port: int) -> str:
-    # overloaded CI Node may delay start/init of the agent process
-    # we must retry connection few times to avoid complaints
-    global _result
-    _result = ""
-    for _ in range(5):
-        try:
-            _read_client_data(addr_host, addr_port)
-            if _result:
-                return _result
-            time.sleep(2)
-        except Exception:
-            # print('No connect, waiting for agent')
-            time.sleep(2)
-
-    return ""
+def pytest_configure(config: pytest.Config) -> None:
+    config.addinivalue_line(
+        "markers",
+        "agent_output_may_be_empty: the agent may legitimately send nothing for this test,"
+        " so empty output reaches the test instead of failing it",
+    )
 
 
 @pytest.fixture(name="actual_output")
-def actual_output_engine(write_config, wait_agent):  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-    # Run agent and yield telnet output.
+def actual_output_engine(request, write_config, wait_agent):  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    empty_ok = request.node.get_closest_marker("agent_output_may_be_empty") is not None
     p = None
     try:
         p = run_agent(main_exe)
         # Override wait_agent in tests to wait for async processes to start.
         wait_agent()
 
-        yield _get_data_using_telnet(host, port).splitlines()
+        yield read_agent_output(host, port, empty_ok=empty_ok).splitlines()
     finally:
         if p is not None:
             p.terminate()

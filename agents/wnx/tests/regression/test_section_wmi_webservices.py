@@ -104,6 +104,8 @@ def expected_output_engine():
     )
 
 
+# Without web services (e.g. on Server Core) the section alone is empty.
+@pytest.mark.agent_output_may_be_empty
 @pytest.mark.usefixtures("testconfig")
 def test_section_wmi_webservices(request, expected_output, actual_output, testfile) -> None:  # type: ignore[misc]
     # special case wmi may timeout

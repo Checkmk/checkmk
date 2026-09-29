@@ -14,8 +14,8 @@ py_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "//agents/wnx/tests/testlib:wnx-agent-python-testlib",
         requirement("pytest"),
-        requirement("telnetlib3"),
         requirement("pyyaml"),
     ],
 )

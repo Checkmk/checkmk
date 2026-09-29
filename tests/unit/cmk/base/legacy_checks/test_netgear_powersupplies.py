@@ -5,19 +5,12 @@
 
 # mypy: disable-error-code="no-untyped-call"
 
-import pytest
-
 from cmk.base.legacy_checks.netgear_powersupplies import (
     check_netgear_powersupplies,
     parse_netgear_powersupplies,
 )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=KeyError,
-    reason="Crash report 6c7c609c-9208-11f1-9a67-bc24115f944b: KeyError in check_netgear_powersupplies",
-)
 def test_check_netgear_powersupplies_reports_unknown_state() -> None:
     # The switch reports a power supply state the plugin does not know.
     section = parse_netgear_powersupplies([["1.0", "11"], ["1.1", "2"]])

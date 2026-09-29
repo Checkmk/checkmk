@@ -39,10 +39,12 @@ def check_netgear_powersupplies(item, params, parsed):
         "2": (0, "operational"),
         "3": (2, "failed"),
     }
-    if item in parsed:
-        state, state_readable = map_states[parsed[item]]
-        return state, "Status: %s" % state_readable
-    return None
+    if (raw_state := parsed.get(item)) is None:
+        return None
+    if raw_state not in map_states:
+        return 3, f"Status: unknown state {raw_state!r} (expected 1, 2 or 3)"
+    state, state_readable = map_states[raw_state]
+    return state, "Status: %s" % state_readable
 
 
 check_info["netgear_powersupplies"] = LegacyCheckDefinition(

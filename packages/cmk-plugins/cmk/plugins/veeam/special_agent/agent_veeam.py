@@ -61,6 +61,10 @@ class EndpointError(Exception):
     """A single data request failed; the other sections are still worth writing."""
 
 
+class AccessDenied(EndpointError):
+    """The user lacks the Veeam role required for this endpoint."""
+
+
 class _Token(BaseModel):
     access_token: str
 
@@ -221,6 +225,10 @@ class VeeamClient:
             raise AuthenticationFailed(
                 f"The Veeam REST API rejected the session on {path}: {_veeam_error(response)[1]}"
             )
+        if response.status_code == 403:
+            raise AccessDenied(
+                f"Request to {path} failed with HTTP 403: {_veeam_error(response)[1]}"
+            )
         if not response.ok:
             raise EndpointError(
                 f"Request to {path} failed with HTTP {response.status_code}: "
@@ -297,6 +305,19 @@ def fetch_list_piggyback(path: str) -> FetchStrategy:
     return _fetch
 
 
+def empty_on_access_denied(fetch: FetchStrategy) -> FetchStrategy:
+    """For endpoints that need a higher Veeam role than monitoring requires: a user
+    without it gets an empty section, so that no services are discovered."""
+
+    def _fetch(client: VeeamClient, name: str) -> str:
+        try:
+            return fetch(client, name)
+        except AccessDenied:
+            return f"<<<{name}:sep(0)>>>\n"
+
+    return _fetch
+
+
 def write_sections(client: VeeamClient, sections: Sequence[Section]) -> None:
     for name, fetch in sections:
         try:
@@ -312,6 +333,13 @@ SECTIONS: Sequence[Section] = (
     ("veeam_backup_jobs", fetch_list("/api/v1/jobs/states")),
     ("veeam_backups", fetch_list_piggyback("/api/v1/taskSessions")),
     ("veeam_server_info", fetch_object("/api/v1/serverInfo")),
+    ("veeam_vbr_replicas", empty_on_access_denied(fetch_list("/api/v1/replicas"))),
+    (
+        "veeam_vbr_protection_groups",
+        empty_on_access_denied(fetch_list("/api/v1/agents/protectionGroups")),
+    ),
+    ("veeam_vbr_managed_servers", fetch_list("/api/v1/backupInfrastructure/managedServers")),
+    ("veeam_vbr_wan_accelerators", fetch_list("/api/v1/backupInfrastructure/wanAccelerators")),
 )
 
 

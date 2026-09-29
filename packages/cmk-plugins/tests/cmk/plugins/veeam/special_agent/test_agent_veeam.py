@@ -15,6 +15,7 @@ from cmk.plugins.veeam.special_agent.agent_veeam import (
     AuthenticationFailed,
     CertificateRejected,
     create_session,
+    empty_on_access_denied,
     FatalError,
     fetch_list,
     fetch_list_piggyback,
@@ -110,6 +111,35 @@ def test_broken_response_on_a_data_endpoint_does_not_stop_the_other_sections(
     captured = capsys.readouterr()
     assert captured.out == "<<<veeam_jobs:sep(0)>>>\n"
     assert "cut off" in captured.err
+
+
+def test_access_denied_on_a_role_restricted_endpoint_writes_an_empty_section(
+    api: responses.RequestsMock, capsys: pytest.CaptureFixture[str]
+) -> None:
+    api.get(
+        f"{URL}/api/v1/replicas", status=403, json={"errorCode": "Forbidden", "message": "denied"}
+    )
+
+    write_sections(
+        _client(),
+        [("veeam_vbr_replicas", empty_on_access_denied(fetch_list("/api/v1/replicas")))],
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out == "<<<veeam_vbr_replicas:sep(0)>>>\n"
+    assert captured.err == ""
+
+
+def test_access_denied_on_an_unrestricted_endpoint_is_reported(
+    api: responses.RequestsMock, capsys: pytest.CaptureFixture[str]
+) -> None:
+    api.get(f"{URL}/api/v1/jobs", status=403, json={"errorCode": "Forbidden", "message": "denied"})
+
+    write_sections(_client(), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "HTTP 403: denied" in captured.err
 
 
 def test_rejected_session_on_a_data_endpoint_is_fatal(api: responses.RequestsMock) -> None:

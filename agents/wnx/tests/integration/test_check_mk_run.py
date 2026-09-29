@@ -7,6 +7,8 @@
 # mypy: disable-error-code="type-arg"
 
 import ast
+import os
+import re
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Final
@@ -32,6 +34,15 @@ def _make_config(config: YamlDict, only_from: Sequence[str]) -> YamlDict:
     if only_from:
         config["global"]["only_from"] = only_from
     return config
+
+
+def _expected_ctl_version() -> str:
+    if version := os.environ.get("CMK_VERSION"):
+        return version
+    defines = (Path(__file__).parents[4] / "defines.make").read_text()
+    if match := re.search(r"^VERSION\s*:=\s*(\S+)", defines, re.MULTILINE):
+        return match.group(1)
+    raise AssertionError("no VERSION in defines.make")
 
 
 def _get_ctl_status_line(data: Sequence[str]) -> dict[str, str | list | bool]:
@@ -101,8 +112,7 @@ def test_check_mk_base(
 
     # Validate controller status is the expected one.
     ctl_status = _get_ctl_status_line(output)
-    assert isinstance(ctl_status["version"], str)
-    assert ctl_status["version"].startswith("3.")
+    assert ctl_status["version"] == _expected_ctl_version()
     assert ctl_status["agent_socket_operational"] is True
     assert ctl_status["ip_allowlist"] == only_from
     assert ctl_status["allow_legacy_pull"] is True

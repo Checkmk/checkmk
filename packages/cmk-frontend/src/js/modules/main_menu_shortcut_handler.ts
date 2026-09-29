@@ -77,6 +77,18 @@ export function register_shortcuts(keyShortcuts: KeyShortcutService): void {
 
   keyShortcuts.on(
     {
+      key: [' '],
+      ctrl: true,
+      alt: true,
+      preventDefault: true
+    },
+    () => {
+      handle_main_menu('ai_assistant')
+    }
+  )
+
+  keyShortcuts.on(
+    {
       key: [
         'arrowup',
         'arrowup',

@@ -31,6 +31,13 @@ export interface KeyShortcutHandler extends KeyShortcutEnsured {
 const MODIFIER_KEYS = ['Control', 'Shift', 'Alt']
 const N_KEYS_REMEMBERED = 10
 
+function pressedKey(e: KeyboardEvent): string {
+  if (e.key === 'Unidentified' && e.code === 'Space') {
+    return ' '
+  }
+  return e.key.toLowerCase()
+}
+
 export class KeyShortcutService {
   private keySequence: string[] = []
   private handlers: KeyShortcutHandler[] = []
@@ -99,7 +106,7 @@ export class KeyShortcutService {
     if (!e.key || MODIFIER_KEYS.includes(e.key)) {
       return
     }
-    this.recordKeyPress(e.key.toLowerCase())
+    this.recordKeyPress(pressedKey(e))
     this.callHandlers(e)
   }
 

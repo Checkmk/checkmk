@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-call"
 
-import pytest
-
 from cmk.base.legacy_checks.hp_proliant_temp import (
     check_hp_proliant_temp,
     inventory_hp_proliant_temp,
@@ -14,10 +12,6 @@ from cmk.base.legacy_checks.hp_proliant_temp import (
 )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash report fcbc9244-6b11-11f1-be8d-005056b907f2: ValueError in format_hp_proliant_name",
-)
 def test_hp_proliant_temp_ignores_rows_without_sensor() -> None:
     # The iLO returns rows where only the status column is filled.
     section = parse_hp_proliant_temp(

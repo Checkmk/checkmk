@@ -39,14 +39,14 @@ import type { PanelKey, RequestedTimeRange, TimeRange, TimeRangeCommitKind } fro
 import type { CustomGraphMetric, CustomGraphOptions } from '../api'
 import { MetricsCalculationSlideout, type RefVisibility } from '../calculation'
 import { useCustomGraphData } from '../composables/useCustomGraphData'
-import { useDeleteWithDependents } from '../composables/useDeleteWithDependents'
+import { useDeleteConfirmation } from '../composables/useDeleteConfirmation'
 import type { GraphItemsStore } from '../composables/useGraphItems'
 import { useItemValidation } from '../composables/useItemValidation'
 import type { FormulaDraft, ItemId } from '../types'
 import type { RowIssue } from '../validation'
 import { yAxisUnitOf } from '../yAxisUnit'
 import AppearanceTable from './AppearanceTable.vue'
-import DeleteWithDependentsPopup from './DeleteWithDependentsPopup.vue'
+import DeleteConfirmationPopup from './DeleteConfirmationPopup.vue'
 import DesignerSettings from './DesignerSettings.vue'
 import MetricsTable from './MetricsTable.vue'
 
@@ -246,7 +246,7 @@ function onCalculationUpdate(id: ItemId, draft: FormulaDraft, refVisibility: Ref
   applyRefVisibility(refVisibility)
 }
 
-const calculationDelete = useDeleteWithDependents(store)
+const calculationDelete = useDeleteConfirmation(store, () => data.resolvedTitles.value)
 
 function onSettingsUpdate(newGraphOptions: CustomGraphOptions): void {
   emit('update-graph-options', newGraphOptions)
@@ -416,11 +416,10 @@ const addTo = computed<AddTo | null>(() =>
         @close="calculationSlideout = null"
       />
 
-      <DeleteWithDependentsPopup
+      <DeleteConfirmationPopup
         v-if="calculationDelete.pending.value !== null"
         open
-        :ids="calculationDelete.pending.value.ids"
-        :dependents="calculationDelete.pending.value.dependents"
+        :pending="calculationDelete.pending.value"
         @confirm="calculationDelete.confirm()"
         @close="calculationDelete.cancel()"
       />

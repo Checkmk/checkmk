@@ -30,7 +30,7 @@ import SwitchCell from '@/monitoring/shared/components/cell/SwitchCell.vue'
 import VisibilityCell from '@/monitoring/shared/components/cell/VisibilityCell.vue'
 
 import type { Metric } from '../../components/TimeSeriesGraph'
-import { useDeleteWithDependents } from '../composables/useDeleteWithDependents'
+import { useDeleteConfirmation } from '../composables/useDeleteConfirmation'
 import { type GraphItemsStore, retainKnownRows } from '../composables/useGraphItems'
 import { useItemValidation } from '../composables/useItemValidation'
 import { useRowLabels } from '../composables/useRowLabels'
@@ -48,7 +48,7 @@ import { customServiceModelFor } from '../telemetryMetrics'
 import { type ItemId, isFormula, isSingleLine, parseLineType } from '../types'
 import type { RowIssue } from '../validation'
 import AutomaticColorCell from './AutomaticColorCell.vue'
-import DeleteWithDependentsPopup from './DeleteWithDependentsPopup.vue'
+import DeleteConfirmationPopup from './DeleteConfirmationPopup.vue'
 import RowEditor from './forms/RowEditor.vue'
 
 /** Shared so an unaffected row keeps the same identity across renders. */
@@ -216,9 +216,13 @@ function rowActionsFor(row: DesignerItem): CellAction[] {
 
 const customServiceModel = ref<ServiceModel | null>(null)
 
-const rowDelete = useDeleteWithDependents(store, () => {
-  rowSelection.value = {}
-})
+const rowDelete = useDeleteConfirmation(
+  store,
+  () => resolvedTitles,
+  () => {
+    rowSelection.value = {}
+  }
+)
 
 function onRowAction(row: DesignerItem, action: CellAction): void {
   if (action.id === 'edit') {
@@ -453,11 +457,10 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
       </EditableTable>
     </CmkScrollContainer>
 
-    <DeleteWithDependentsPopup
+    <DeleteConfirmationPopup
       v-if="rowDelete.pending.value !== null"
       open
-      :ids="rowDelete.pending.value.ids"
-      :dependents="rowDelete.pending.value.dependents"
+      :pending="rowDelete.pending.value"
       @confirm="rowDelete.confirm()"
       @close="rowDelete.cancel()"
     />

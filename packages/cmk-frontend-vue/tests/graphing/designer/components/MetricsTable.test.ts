@@ -62,6 +62,12 @@ function focusedAddSource(focus: MockInstance): boolean {
   return focus.mock.contexts.includes(screen.getByRole('combobox', { name: 'Add source' }))
 }
 
+/** Confirms the delete dialog with its `button`. */
+async function confirmDelete(button: 'Delete' | 'Delete all' = 'Delete'): Promise<void> {
+  const dialog = await screen.findByRole('dialog')
+  await fireEvent.click(within(dialog).getByRole('button', { name: button }))
+}
+
 /** Waits for the row group holding `id` to have been scrolled into view. */
 async function expectScrolledToRow(scrollIntoView: MockInstance, id: string): Promise<void> {
   await waitFor(() => {
@@ -133,6 +139,9 @@ test('deleting the last source does not pull the focus to the add-source dropdow
   const { store } = renderTable([rrdMetricItem('A')])
   await fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
 
+  expect(await screen.findByText('Delete metric A?')).toBeInTheDocument()
+  await confirmDelete()
+
   expect(store.items.value).toHaveLength(0)
   expect(focusedAddSource(focus)).toBe(false)
 })
@@ -188,12 +197,27 @@ test('adding a service reference line opens the scalar form', async () => {
   expect(await screen.findByRole('combobox', { name: 'Threshold type' })).toBeInTheDocument()
 })
 
-test('deleting an unreferenced row needs no confirmation', async () => {
-  const { store } = renderTable([rrdMetricItem('A')])
-  await fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+test('deleting an unreferenced row asks by its display name', async () => {
+  const { store } = renderTable([rrdMetricItem('A'), constantItem('B')], true, true, {
+    resolvedTitles: new Map([['A', 'CPU load']])
+  })
+  const [deleteA] = screen.getAllByRole('button', { name: 'Delete' })
+  await fireEvent.click(deleteA!)
 
-  expect(store.items.value).toHaveLength(0)
-  expect(screen.queryByText('Delete A?')).not.toBeInTheDocument()
+  expect(await screen.findByText('Delete metric CPU load?')).toBeInTheDocument()
+  expect(store.items.value).toHaveLength(2)
+
+  await confirmDelete()
+  expect(store.items.value.map((item) => item.id)).toEqual(['B'])
+})
+
+test('cancelling the delete keeps the row', async () => {
+  const { store } = renderTable([rrdMetricItem('A'), constantItem('B')])
+  const [deleteA] = screen.getAllByRole('button', { name: 'Delete' })
+  await fireEvent.click(deleteA!)
+  await fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }))
+
+  expect(store.items.value).toHaveLength(2)
 })
 
 test('deleting a referenced row asks and cascades to its dependents', async () => {
@@ -204,10 +228,11 @@ test('deleting a referenced row asks and cascades to its dependents', async () =
   const [deleteA] = screen.getAllByRole('button', { name: 'Delete' })
   await fireEvent.click(deleteA!)
 
-  expect(await screen.findByText('Delete A?')).toBeInTheDocument()
+  expect(await screen.findByText('Delete metric A?')).toBeInTheDocument()
+  expect(screen.getByText('B = A')).toBeInTheDocument()
   expect(store.items.value).toHaveLength(2)
 
-  await fireEvent.click(screen.getByRole('button', { name: 'Delete all' }))
+  await confirmDelete()
   expect(store.items.value).toHaveLength(0)
 })
 
@@ -233,7 +258,19 @@ test('bulk delete of a referenced row routes through the confirmation', async ()
   await fireEvent.click(selectA!)
   await fireEvent.click(screen.getByRole('button', { name: 'Delete selected sources' }))
 
-  await fireEvent.click(await screen.findByRole('button', { name: 'Delete all' }))
+  await confirmDelete()
+  expect(store.items.value).toHaveLength(0)
+})
+
+test('bulk delete of every row asks to delete all', async () => {
+  const { store } = renderTable([rrdMetricItem('A'), constantItem('B')])
+  for (const select of screen.getAllByLabelText('Select row')) {
+    await fireEvent.click(select)
+  }
+  await fireEvent.click(screen.getByRole('button', { name: 'Delete selected sources' }))
+
+  expect(await screen.findByText('Delete all metrics?')).toBeInTheDocument()
+  await confirmDelete('Delete all')
   expect(store.items.value).toHaveLength(0)
 })
 
@@ -469,6 +506,7 @@ test('three metrics are three rows, and deleting one drops only that row', async
 
   const [, deleteSecond] = screen.getAllByRole('button', { name: 'Delete' })
   await fireEvent.click(deleteSecond!)
+  await confirmDelete()
 
   expect(store.items.value.map((item) => item.id)).toEqual(['A', 'C'])
   expect(screen.getAllByLabelText('Select row')).toHaveLength(2)

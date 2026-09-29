@@ -8,16 +8,24 @@ import { type ComputedRef, computed, ref } from 'vue'
 import type { FormulaItem, ItemId } from '../types'
 import type { GraphItemsStore } from './useGraphItems'
 
-export interface PendingDelete {
-  ids: readonly ItemId[]
-  /** The formulas that (transitively) reference `ids` and are deleted along with them. */
-  dependents: readonly FormulaItem[]
+export interface DeleteTarget {
+  id: ItemId
+  /** The resolved title, or the id while the row has none. */
+  name: string
 }
 
-export interface DeleteWithDependents {
-  /** The delete awaiting confirmation because formulas depend on the rows; null otherwise. */
+export interface PendingDelete {
+  targets: readonly DeleteTarget[]
+  /** The formulas that (transitively) reference the targets and are deleted along with them. */
+  dependents: readonly FormulaItem[]
+  /** Whether the targets are every row of the graph, and more than one. */
+  all: boolean
+}
+
+export interface DeleteConfirmation {
+  /** The delete awaiting confirmation; null otherwise. */
   pending: ComputedRef<PendingDelete | null>
-  /** Deletes directly when no formula references `ids`; otherwise stores them as `pending`. */
+  /** Stores `ids` and the formulas that reference them as `pending`. */
   request: (ids: readonly ItemId[]) => void
   /** Deletes the pending rows together with their dependents. */
   confirm: () => void
@@ -28,16 +36,12 @@ export interface DeleteWithDependents {
  * The delete flow shared by the metrics table and the calculation slideout.
  * @param onRemoved Called with the removed ids after every removal.
  */
-export function useDeleteWithDependents(
+export function useDeleteConfirmation(
   store: GraphItemsStore,
+  getResolvedTitles: () => ReadonlyMap<ItemId, string>,
   onRemoved: (ids: readonly ItemId[]) => void = () => {}
-): DeleteWithDependents {
+): DeleteConfirmation {
   const pending = ref<PendingDelete | null>(null)
-
-  function remove(ids: readonly ItemId[]): void {
-    store.removeMany(ids)
-    onRemoved(ids)
-  }
 
   function request(ids: readonly ItemId[]): void {
     const idSet = new Set(ids)
@@ -46,17 +50,22 @@ export function useDeleteWithDependents(
         store.dependentsOf(id).map((dependent) => [dependent.id, dependent] as const)
       )
     )
-    const dependents = [...dependentById.values()].filter((dependent) => !idSet.has(dependent.id))
-    if (dependents.length === 0) {
-      remove(ids)
-    } else {
-      pending.value = { ids: [...ids], dependents }
+    const resolvedTitles = getResolvedTitles()
+    pending.value = {
+      targets: ids.map((id) => ({ id, name: resolvedTitles.get(id) ?? id })),
+      dependents: [...dependentById.values()].filter((dependent) => !idSet.has(dependent.id)),
+      all: ids.length > 1 && ids.length === store.items.value.length
     }
   }
 
   function confirm(): void {
     if (pending.value !== null) {
-      remove([...pending.value.ids, ...pending.value.dependents.map((dependent) => dependent.id)])
+      const ids = [
+        ...pending.value.targets.map((target) => target.id),
+        ...pending.value.dependents.map((dependent) => dependent.id)
+      ]
+      store.removeMany(ids)
+      onRemoved(ids)
       pending.value = null
     }
   }

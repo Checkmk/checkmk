@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="type-arg"
 
+import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
 
 from cmk.agent_based.v2 import Result, State
@@ -55,7 +56,9 @@ def test_check_netapp_ontap_snapvault_metrics_ok() -> None:
 
     result = list(
         check_netapp_ontap_snapvault(
-            "snapmirror_destination", {"lag_time": (90000, 100000)}, section
+            "snapmirror_destination",
+            {"lag_time": ("fixed", (90000.0, 100000.0))},
+            section,
         )
     )
 
@@ -79,12 +82,47 @@ def test_check_netapp_ontap_snapvault_metrics_crit() -> None:
     section = {snapmirror_model.destination: snapmirror_model}
 
     result = list(
-        check_netapp_ontap_snapvault("snapmirror_destination", {"lag_time": (9000, 10000)}, section)
+        check_netapp_ontap_snapvault(
+            "snapmirror_destination", {"lag_time": ("fixed", (9000.0, 10000.0))}, section
+        )
     )
 
     assert result[0] == Result(state=State.OK, summary="Destination-system: snapmirror_destination")
     assert isinstance(result[2], Result)
     assert result[2].state == State.CRIT
+
+
+@pytest.mark.parametrize(
+    ["policy_name", "expected_state"],
+    [
+        pytest.param("Asynchronous", State.CRIT, id="policy levels win"),
+        pytest.param("Other", State.OK, id="default levels for other policies"),
+    ],
+)
+def test_check_policy_lag_time(policy_name: str, expected_state: State) -> None:
+    snapmirror_model = SnapMirrorModelFactory.build(
+        destination="snapmirror_destination",
+        source_svm_name=None,
+        policy_name=policy_name,
+        state=None,
+        lag_time="P1D",  # 86400 seconds
+        transfer_state=None,
+    )
+    params = {
+        "lag_time": ("fixed", (90000.0, 100000.0)),
+        "policy_lag_time": [
+            {"policy_name": "Asynchronous", "levels": ("fixed", (9000.0, 10000.0))}
+        ],
+    }
+
+    result = list(
+        check_netapp_ontap_snapvault(
+            "snapmirror_destination", params, {snapmirror_model.destination: snapmirror_model}
+        )
+    )
+
+    assert isinstance(result[-1], Result)
+    assert result[-1].state == expected_state
 
 
 def test_parse_snapmirror_cloud_destination_no_svm() -> None:

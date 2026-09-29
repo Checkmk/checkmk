@@ -8,12 +8,13 @@
 from collections.abc import Iterable, Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    LevelsT,
     render,
     Result,
     Service,
@@ -104,14 +105,14 @@ def check_netapp_ontap_snapvault(
     if (lagtime := snapvault.lagtime()) is None:
         return
 
-    policy_lag_time = dict(params.get("policy_lag_time", []))
+    policy_lag_time = {
+        entry["policy_name"]: entry["levels"] for entry in params.get("policy_lag_time", [])
+    }
+    levels: LevelsT[float] = policy_lag_time.get(
+        snapvault.policy_name, params.get("lag_time", ("no_levels", None))
+    )
 
-    if snapvault.policy_name in policy_lag_time:
-        levels = policy_lag_time.get(snapvault.policy_name)
-    else:
-        levels = params.get("lag_time")
-
-    yield from check_levels_v1(
+    yield from check_levels(
         value=lagtime,
         levels_upper=levels,
         render_func=render.timespan,

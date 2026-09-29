@@ -9,7 +9,8 @@ import { describe, expect, it } from 'vitest'
 import {
   type WorkflowCatalog,
   type WorkflowItem,
-  findParentWorkflowKey
+  findParentWorkflowKey,
+  getDashboardWidgetWorkflows
 } from '@/dashboard/components/WidgetWorkflow/WidgetWorkflowTypes'
 
 function workflowItem(title: string): WorkflowItem {
@@ -43,5 +44,15 @@ describe('findParentWorkflowKey', () => {
     const parentKey = findParentWorkflowKey(catalogWithTwoGroups, topLevelKey)
 
     expect(parentKey).toBeNull()
+  })
+})
+
+describe('getDashboardWidgetWorkflows', () => {
+  it('offers the link-existing custom graph wizard inside the custom graphs group', () => {
+    const dashboardCatalog = getDashboardWidgetWorkflows()
+
+    const parentKey = findParentWorkflowKey(dashboardCatalog, 'link_custom_graph')
+
+    expect(parentKey).toBe('custom_graphs')
   })
 })

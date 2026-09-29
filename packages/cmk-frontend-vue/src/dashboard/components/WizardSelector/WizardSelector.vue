@@ -180,7 +180,7 @@ const handleAddEditWidget = (
       />
 
       <CustomGraphsWizard
-        v-if="selectedWizard === 'custom_graphs'"
+        v-if="selectedWizard === 'link_custom_graph'"
         :dashboard-key="dashboardKey"
         :tick="tick"
         :range="range"

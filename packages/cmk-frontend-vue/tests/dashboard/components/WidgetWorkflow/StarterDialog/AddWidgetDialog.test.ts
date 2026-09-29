@@ -10,7 +10,10 @@ import { describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
 import AddWidgetDialog from '@/dashboard/components/WidgetWorkflow/StarterDialog/AddWidgetDialog.vue'
-import type { WorkflowCatalog } from '@/dashboard/components/WidgetWorkflow/WidgetWorkflowTypes'
+import {
+  type WorkflowCatalog,
+  getDashboardWidgetWorkflows
+} from '@/dashboard/components/WidgetWorkflow/WidgetWorkflowTypes'
 import { DashboardFeatures } from '@/dashboard/types/dashboard'
 
 function slideInWithoutRekaDialog() {
@@ -151,5 +154,14 @@ describe('AddWidgetDialog', () => {
     renderAddWidgetDialog({ startingGroupKey: 'grouped_workflows' })
 
     expect(screen.getByRole('dialog', { name: 'Add widget' })).toBeInTheDocument()
+  })
+
+  it('cannot open the custom graphs group in the restricted edition', () => {
+    renderAddWidgetDialog({
+      catalog: getDashboardWidgetWorkflows(),
+      dashboardFeatures: DashboardFeatures.RESTRICTED
+    })
+
+    expect(screen.getByRole('button', { name: /^Custom graphs/ })).toBeDisabled()
   })
 })

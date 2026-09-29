@@ -22,7 +22,7 @@ export function widgetTypeToSelectorMatcher(
     }
 
     case 'custom_graph': {
-      return 'custom_graphs'
+      return 'link_custom_graph'
     }
 
     case 'linked_view':

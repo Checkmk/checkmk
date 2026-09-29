@@ -55,7 +55,28 @@ export function getDashboardWidgetWorkflows(
       title: _t('Custom graphs'),
       subtitle: _t('Visualize built-in and preconfigured custom graphs'),
       icon: 'graph',
-      icon_emblem: 'add'
+      icon_emblem: 'add',
+      subWorkflows: {
+        new_custom_graph: {
+          title: _t('New custom graph'),
+          subtitle: _t('Create and configure a new custom graph'),
+          icon: 'graph',
+          icon_emblem: 'add',
+          unavailableReason: _t('Not available yet.')
+        },
+        clone_custom_graph: {
+          title: _t('Clone custom graph'),
+          subtitle: _t('Configure and edit an existing custom graph'),
+          icon: 'graph',
+          icon_emblem: 'add',
+          unavailableReason: _t('Not available yet.')
+        },
+        link_custom_graph: {
+          title: _t('Link existing custom graph'),
+          subtitle: _t('Select a pre-configured custom graph'),
+          icon: 'graph'
+        }
+      }
     },
     views: {
       title: _t('Views'),
@@ -113,7 +134,7 @@ export function getDashboardWidgetWorkflows(
 
 export type DashboardWidgetWorkflowKey =
   | 'metrics_graphs'
-  | 'custom_graphs'
+  | 'link_custom_graph'
   | 'views'
   | 'host_site_overview'
   | 'service_overview'

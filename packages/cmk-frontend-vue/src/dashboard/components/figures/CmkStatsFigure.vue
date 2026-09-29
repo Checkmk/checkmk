@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed } from 'vue'
+import { computed, shallowRef, useTemplateRef, watchPostEffect } from 'vue'
 
 import ContextualLinkTrigger from '@/dashboard/components/ContextualLinkTrigger.vue'
 import type { LinkProperties, Stats, StatsPart, VisualContext } from '@/dashboard/types/widget'
@@ -25,14 +25,13 @@ const { _t } = usei18n()
 type StatsCategory = StatsPart['category']
 
 const HEXAGON_RADIUS = 48
+const HEXAGON_WIDTH = HEXAGON_RADIUS * Math.sqrt(3)
+const GROUP_GAP = 12
 const ROW_HEIGHT = 20
-const COUNT_WIDTH = 40
 const BOX_WIDTH = 5
 const BOX_HEIGHT = 14
 const BOX_BORDER = 1
 const COLUMN_GAP = 6
-const TITLE_WIDTH = 115
-const TABLE_WIDTH = COUNT_WIDTH + COLUMN_GAP + BOX_WIDTH + COLUMN_GAP + TITLE_WIDTH
 
 interface CategoryStyle {
   color: string
@@ -105,16 +104,30 @@ const rows = computed<Row[]>(() => [
   }
 ])
 
-const hexagonCenter = computed(() => ({ x: props.width / 4, y: props.height / 2 }))
+const table = useTemplateRef<SVGGElement>('table')
+const tableBox = shallowRef({ x: 0, width: 0 })
 
-const tableOrigin = computed(() => ({
-  x: props.width / 2 + Math.max((props.width / 2 - TABLE_WIDTH) / 2, 0),
-  y: props.height / 2 - (rows.value.length * ROW_HEIGHT) / 2
+watchPostEffect(() => {
+  void rows.value
+  const box = table.value?.getBBox()
+  if (box) {
+    tableBox.value = { x: box.x, width: box.width }
+  }
+})
+
+const groupX = computed(() =>
+  Math.max((props.width - (HEXAGON_WIDTH + GROUP_GAP + tableBox.value.width)) / 2, 0)
+)
+
+const hexagonCenter = computed(() => ({
+  x: groupX.value + HEXAGON_WIDTH / 2,
+  y: props.height / 2
 }))
 
-function rowTransform(index: number): string {
-  return `translate(${tableOrigin.value.x}, ${tableOrigin.value.y + index * ROW_HEIGHT})`
-}
+const tableOrigin = computed(() => ({
+  x: groupX.value + HEXAGON_WIDTH + GROUP_GAP - tableBox.value.x,
+  y: props.height / 2 - (rows.value.length * ROW_HEIGHT) / 2
+}))
 </script>
 
 <template>
@@ -146,46 +159,48 @@ function rowTransform(index: number): string {
         />
       </template>
     </g>
-    <ContextualLinkTrigger
-      v-for="(row, index) in rows"
-      :key="row.key"
-      :links="value.links"
-      :link-properties="row.linkProperties"
-      :filters="filters"
-      :interactive="interactive"
-    >
-      <g :transform="rowTransform(index)">
-        <text
-          class="db-cmk-stats-figure__legend-text"
-          :x="COUNT_WIDTH"
-          :y="ROW_HEIGHT / 2"
-          text-anchor="end"
-          dominant-baseline="central"
-          fill="currentColor"
-        >
-          {{ row.count }}
-        </text>
-        <rect
-          class="db-cmk-stats-figure__legend-box"
-          :x="COUNT_WIDTH + COLUMN_GAP + BOX_BORDER / 2"
-          :y="(ROW_HEIGHT - BOX_HEIGHT + BOX_BORDER) / 2"
-          :width="BOX_WIDTH - BOX_BORDER"
-          :height="BOX_HEIGHT - BOX_BORDER"
-          rx="2"
-          :style="{ '--box-color': row.color }"
-          aria-hidden="true"
-        />
-        <text
-          class="db-cmk-stats-figure__legend-text"
-          :x="COUNT_WIDTH + COLUMN_GAP + BOX_WIDTH + COLUMN_GAP"
-          :y="ROW_HEIGHT / 2"
-          dominant-baseline="central"
-          fill="currentColor"
-        >
-          {{ row.title }}
-        </text>
-      </g>
-    </ContextualLinkTrigger>
+    <g ref="table" :transform="`translate(${tableOrigin.x}, ${tableOrigin.y})`">
+      <ContextualLinkTrigger
+        v-for="(row, index) in rows"
+        :key="row.key"
+        :links="value.links"
+        :link-properties="row.linkProperties"
+        :filters="filters"
+        :interactive="interactive"
+      >
+        <g :transform="`translate(0, ${index * ROW_HEIGHT})`">
+          <text
+            class="db-cmk-stats-figure__legend-text"
+            x="0"
+            :y="ROW_HEIGHT / 2"
+            text-anchor="end"
+            dominant-baseline="central"
+            fill="currentColor"
+          >
+            {{ row.count }}
+          </text>
+          <rect
+            class="db-cmk-stats-figure__legend-box"
+            :x="COLUMN_GAP + BOX_BORDER / 2"
+            :y="(ROW_HEIGHT - BOX_HEIGHT + BOX_BORDER) / 2"
+            :width="BOX_WIDTH - BOX_BORDER"
+            :height="BOX_HEIGHT - BOX_BORDER"
+            rx="2"
+            :style="{ '--box-color': row.color }"
+            aria-hidden="true"
+          />
+          <text
+            class="db-cmk-stats-figure__legend-text"
+            :x="COLUMN_GAP + BOX_WIDTH + COLUMN_GAP"
+            :y="ROW_HEIGHT / 2"
+            dominant-baseline="central"
+            fill="currentColor"
+          >
+            {{ row.title }}
+          </text>
+        </g>
+      </ContextualLinkTrigger>
+    </g>
   </svg>
 </template>
 

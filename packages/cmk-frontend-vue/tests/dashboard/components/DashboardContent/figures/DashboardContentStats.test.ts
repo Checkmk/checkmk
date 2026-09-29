@@ -44,8 +44,13 @@ async function renderWidget(): Promise<void> {
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 beforeEach(() => {
   vi.stubGlobal('ResizeObserver', FakeResizeObserver)
+  Object.defineProperty(SVGElement.prototype, 'getBBox', {
+    configurable: true,
+    value: () => ({ x: 0, y: 0, width: 100, height: 60 })
+  })
 })
 afterEach(() => {
+  Reflect.deleteProperty(SVGElement.prototype, 'getBBox')
   answer = () => HttpResponse.json({ domainType: 'widget-compute', value: HOST_STATS })
   server.resetHandlers()
   FakeResizeObserver.instances = []

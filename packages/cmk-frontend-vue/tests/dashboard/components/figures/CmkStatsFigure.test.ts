@@ -4,7 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen } from '@testing-library/vue'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { nextTick } from 'vue'
 
 import CmkStatsFigure from '@/dashboard/components/figures/CmkStatsFigure.vue'
 import type { LinkProperties, Stats } from '@/dashboard/types/widget'
@@ -32,13 +33,41 @@ const HOST_STATS: Stats = {
   total: { count: 15, link_properties: { links: [{}] } }
 }
 
-function renderFigure(interactive = true) {
+const TABLE_BOX = { x: -20, y: 0, width: 100, height: 100 }
+const HEXAGON_WIDTH = 48 * Math.sqrt(3)
+const GROUP_GAP = 12
+
+function renderFigure(interactive = true, width = 400) {
   return render(CmkStatsFigure, {
-    props: { value: HOST_STATS, width: 400, height: 200, filters: {}, interactive }
+    props: { value: HOST_STATS, width, height: 200, filters: {}, interactive }
   })
 }
 
+function translateX(element: Element | null): number {
+  const match = /translate\(([-\d.]+),/.exec(element?.getAttribute('transform') ?? '')
+  return Number(match?.[1])
+}
+
+function hexagonX(): number {
+  return translateX(screen.getAllByRole('img')[0]!.closest('g'))
+}
+
+function tableX(): number {
+  return translateX(screen.getByRole('link', { name: /Total/ }).closest('g'))
+}
+
 describe('CmkStatsFigure', () => {
+  beforeEach(() => {
+    Object.defineProperty(SVGElement.prototype, 'getBBox', {
+      configurable: true,
+      value: () => TABLE_BOX
+    })
+  })
+
+  afterEach(() => {
+    Reflect.deleteProperty(SVGElement.prototype, 'getBBox')
+  })
+
   it('draws one ring per part with a count', () => {
     renderFigure()
 
@@ -72,5 +101,22 @@ describe('CmkStatsFigure', () => {
     expect(svg).toHaveAttribute('width', '400')
     expect(svg).toHaveAttribute('height', '200')
     expect(svg).toHaveAttribute('viewBox', '0 0 400 200')
+  })
+
+  it('centres the hexagon and the measured table as one group', async () => {
+    renderFigure(true, 400)
+    await nextTick()
+
+    const groupX = (400 - (HEXAGON_WIDTH + GROUP_GAP + TABLE_BOX.width)) / 2
+    expect(hexagonX()).toBeCloseTo(groupX + HEXAGON_WIDTH / 2)
+    expect(tableX()).toBeCloseTo(groupX + HEXAGON_WIDTH + GROUP_GAP - TABLE_BOX.x)
+  })
+
+  it('aligns the group to the left edge when it does not fit', async () => {
+    renderFigure(true, 150)
+    await nextTick()
+
+    expect(hexagonX()).toBeCloseTo(HEXAGON_WIDTH / 2)
+    expect(tableX()).toBeCloseTo(HEXAGON_WIDTH + GROUP_GAP - TABLE_BOX.x)
   })
 })

@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from http import HTTPStatus
+
 import pytest
 
 from cmk.livestatus_client.testing import MockLiveStatusConnection
@@ -352,7 +354,9 @@ def test_openapi_non_existing_service(
     )
 
     with live:
-        clients.Host.get_service("heute", "CPU", expect_ok=False).assert_status_code(404)
+        clients.Host.get_service("heute", "CPU", expect_ok=False).assert_status_code(
+            HTTPStatus.NOT_FOUND
+        )
 
 
 def test_openapi_get_host_services_with_guest_user(

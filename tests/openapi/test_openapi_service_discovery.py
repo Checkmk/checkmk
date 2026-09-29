@@ -5,6 +5,7 @@
 
 from collections import defaultdict
 from collections.abc import Callable, Mapping
+from http import HTTPStatus
 from typing import get_args, get_type_hints
 from unittest.mock import call, MagicMock
 
@@ -1667,7 +1668,7 @@ def test_openapi_discovery_fails_on_invalid_content_type(
         f"{base}/domain-types/service_discovery_run/actions/start/invoke",
         params='{"mode": "foo", "host_name": "example.com"}',
         headers={"Accept": "application/json"},
-        status=415,
+        status=HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
     )
     assert "Content type not valid" in resp.json["title"]
     mock_discovery_preview.assert_not_called()
@@ -1687,7 +1688,7 @@ def test_openapi_discovery_on_invalid_mode(
         params='{"mode": "foo", "host_name": "example.com"}',
         content_type="application/json",
         headers={"Accept": "application/json"},
-        status=400,
+        status=HTTPStatus.BAD_REQUEST,
     )
     assert resp.json["detail"] == "These fields have problems: body.mode"
     mock_discovery_preview.assert_not_called()
@@ -1707,7 +1708,7 @@ def test_openapi_discovery_refresh_services(
         params='{"mode": "refresh", "host_name": "example.com"}',
         content_type="application/json",
         headers={"Accept": "application/json"},
-        status=303,
+        status=HTTPStatus.SEE_OTHER,
     )
     assert (
         resp.location
@@ -1734,7 +1735,7 @@ def test_openapi_discovery_tabula_rasa(
         params='{"mode": "tabula_rasa", "host_name": "example.com"}',
         content_type="application/json",
         headers={"Accept": "application/json"},
-        status=303,
+        status=HTTPStatus.SEE_OTHER,
     )
     mock_set_autochecks.assert_not_called()
     assert mock_discovery.mock_calls == [
@@ -1782,13 +1783,13 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
         params='{"mode": "refresh", "host_name": "example.com"}',
         content_type="application/json",
         headers={"Accept": "application/json"},
-        status=303,
+        status=HTTPStatus.SEE_OTHER,
     )
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         f"{base}/objects/service_discovery/example.com",
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
     )
     mock_discovery_preview.reset_mock()
     df_boot_ignore = aut_user_auth_wsgi_app.follow_link(
@@ -1796,7 +1797,7 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
         "cmk/service.move-ignored",
         json_data=resp.json["extensions"]["check_table"]["df-/boot"],
         headers={"Accept": "application/json"},
-        status=204,
+        status=HTTPStatus.NO_CONTENT,
     )
     assert df_boot_ignore.text == ""
     mock_discovery_preview.assert_called_once()
@@ -1881,7 +1882,7 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
         "cmk/service.move-monitored",
         json_data=resp.json["extensions"]["check_table"]["df-/boot"],
         headers={"Accept": "application/json"},
-        status=204,
+        status=HTTPStatus.NO_CONTENT,
     )
     assert df_boot_monitor.text == ""
     mock_discovery_preview.assert_called_once()
@@ -1927,13 +1928,13 @@ def test_openapi_bulk_discovery_with_default_options(
         follow_redirects=False,
     )
     automation.assert_called_once()
-    assert resp.status_code == 303
+    assert resp.status_code == HTTPStatus.SEE_OTHER
 
 
 @pytest.mark.usefixtures("base")
 def test_openapi_bulk_discovery_with_invalid_hostname(clients: ClientRegistry) -> None:
     resp = clients.ServiceDiscovery.bulk_discovery(hostnames=["wrong_hostname"], expect_ok=False)
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 @pytest.mark.usefixtures("with_host", "inline_background_jobs", "mock_discovery_preview")
@@ -1944,7 +1945,7 @@ def test_openapi_refresh_job_status(base: str, aut_user_auth_wsgi_app: WebTestAp
         "get",
         f"{base}/objects/service_discovery_run/example.com/actions/wait-for-completion/invoke",
         headers={"Accept": "application/json"},
-        status=404,
+        status=HTTPStatus.NOT_FOUND,
     )
 
     aut_user_auth_wsgi_app.call_method(
@@ -1953,20 +1954,20 @@ def test_openapi_refresh_job_status(base: str, aut_user_auth_wsgi_app: WebTestAp
         params='{"mode": "refresh", "host_name": "example.com"}',
         content_type="application/json",
         headers={"Accept": "application/json"},
-        status=303,
+        status=HTTPStatus.SEE_OTHER,
     )
 
     aut_user_auth_wsgi_app.call_method(
         "get",
         f"{base}/objects/service_discovery_run/example.com/actions/wait-for-completion/invoke",
         headers={"Accept": "application/json"},
-        status=204,
+        status=HTTPStatus.NO_CONTENT,
     )
 
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + f"/objects/service_discovery_run/{host_name}",
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
     )
     assert resp.json["id"] == resp.json["id"]
@@ -2004,15 +2005,17 @@ def test_openapi_service_discovery_accessible_to_folder_contact(clients: ClientR
 
     clients.ServiceDiscovery.set_credentials("folder_member", "supersecretish")
 
-    clients.ServiceDiscovery.start_service_discovery(host_name, "refresh").assert_status_code(303)
+    clients.ServiceDiscovery.start_service_discovery(host_name, "refresh").assert_status_code(
+        HTTPStatus.SEE_OTHER
+    )
 
     clients.ServiceDiscovery.wait_for_service_discovery_completion(host_name).assert_status_code(
-        204
+        HTTPStatus.NO_CONTENT
     )
 
     run_resp = clients.ServiceDiscovery.get_service_discovery_status(host_name)
 
-    run_resp.assert_status_code(200)
+    run_resp.assert_status_code(HTTPStatus.OK)
     assert run_resp.json["extensions"]["state"] == "finished"
 
 
@@ -2044,7 +2047,7 @@ def test_openapi_service_discovery_inaccessible_to_non_folder_contact(
 
     clients.ServiceDiscovery.wait_for_service_discovery_completion(
         host_name, expect_ok=False
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 @pytest.mark.usefixtures("inline_background_jobs", "mock_discovery_preview")
@@ -2068,15 +2071,17 @@ def test_openapi_service_discovery_accessible_to_admin_not_in_folder_contact_gro
     )
     clients.HostConfig.create(host_name=host_name, folder="/restricted_folder")
 
-    clients.ServiceDiscovery.start_service_discovery(host_name, "refresh").assert_status_code(303)
+    clients.ServiceDiscovery.start_service_discovery(host_name, "refresh").assert_status_code(
+        HTTPStatus.SEE_OTHER
+    )
 
     clients.ServiceDiscovery.wait_for_service_discovery_completion(host_name).assert_status_code(
-        204
+        HTTPStatus.NO_CONTENT
     )
 
     run_resp = clients.ServiceDiscovery.get_service_discovery_status(host_name)
 
-    run_resp.assert_status_code(200)
+    run_resp.assert_status_code(HTTPStatus.OK)
     assert run_resp.json["extensions"]["state"] == "finished"
 
 
@@ -2288,7 +2293,9 @@ def test_api_mode_matrix(
     no autochecks would pass for a mode that had become a complete no-op; asserting that it also
     updates the host's labels is the half that says it did its job.
     """
-    clients.ServiceDiscovery.start_service_discovery(str(TIER3_HOST), mode).assert_status_code(200)
+    clients.ServiceDiscovery.start_service_discovery(str(TIER3_HOST), mode).assert_status_code(
+        HTTPStatus.OK
+    )
 
     assert tier3_writes.services == ([] if expected_services is None else [expected_services])
     assert tier3_writes.host_labels == ([TIER3_HOST] if expects_host_labels else [])
@@ -2370,7 +2377,7 @@ def test_refresh_and_tabula_rasa_redirect(
     """
     resp = clients.ServiceDiscovery.start_service_discovery(str(TIER3_HOST), mode)
 
-    resp.assert_status_code(303)
+    resp.assert_status_code(HTTPStatus.SEE_OTHER)
     assert resp.headers["Location"].endswith(
         f"/objects/service_discovery_run/{TIER3_HOST}/actions/wait-for-completion/invoke"
     )
@@ -2446,7 +2453,7 @@ def test_update_service_phase_rejects_an_unknown_phase(
         expect_ok=False,
     )
 
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert resp.json["fields"]["body.target_phase"]["type"] == "literal_error"
     assert tier3_writes.services == []
 
@@ -2455,10 +2462,10 @@ def test_update_service_phase_rejects_an_unknown_phase(
 @pytest.mark.parametrize(
     "host_name, check_type, service_item, expected_status",
     (
-        (str(TIER3_HOST), "nonexistent_plugin", "/unchanged", 204),
-        (str(TIER3_HOST), TIER3_PLUGIN, "/does-not-exist", 204),
-        (str(TIER3_HOST), "nonexistent_plugin", None, 204),
-        ("no.such.host", TIER3_PLUGIN, "/unchanged", 404),
+        (str(TIER3_HOST), "nonexistent_plugin", "/unchanged", HTTPStatus.NO_CONTENT),
+        (str(TIER3_HOST), TIER3_PLUGIN, "/does-not-exist", HTTPStatus.NO_CONTENT),
+        (str(TIER3_HOST), "nonexistent_plugin", None, HTTPStatus.NO_CONTENT),
+        ("no.such.host", TIER3_PLUGIN, "/unchanged", HTTPStatus.NOT_FOUND),
     ),
     ids=["unknown-plugin", "unknown-item", "unknown-plugin-and-item", "unknown-host"],
 )
@@ -2502,7 +2509,7 @@ def test_update_service_phase_reports_success_for_a_service_that_does_not_exist(
     )
 
     resp.assert_status_code(expected_status)
-    if expected_status == 404:
+    if expected_status == HTTPStatus.NOT_FOUND:
         # Not just any 404: the contrast this test rests on is that the *host* is validated, by the
         # path parameter's converter, before the handler runs. Asserting the field pins that.
         assert "path.host_name" in resp.json["fields"]
@@ -2547,11 +2554,11 @@ def test_update_service_phase_target_matrix(
     )
 
     if phase not in _COMMAND_PHASES:
-        resp.assert_status_code(400)
+        resp.assert_status_code(HTTPStatus.BAD_REQUEST)
         assert tier3_writes.services == []
         return
 
-    resp.assert_status_code(204)
+    resp.assert_status_code(HTTPStatus.NO_CONTENT)
     if phase == _NO_OP_PHASE[source]:
         expected: list[frozenset[str]] = []
     elif phase == _COMMAND_PHASE[source]:
@@ -2587,7 +2594,7 @@ def test_update_service_phase_unstable_accepts_every_command_phase(
         target_phase=phase,
         api_version=APIVersion.UNSTABLE,
         expect_ok=False,
-    ).assert_status_code(204)
+    ).assert_status_code(HTTPStatus.NO_CONTENT)
 
 
 @pytest.mark.usefixtures("with_host", "inline_background_jobs")
@@ -2607,7 +2614,7 @@ def test_update_service_phase_unstable_rejects_non_command_phases_at_the_schema(
         api_version=APIVersion.UNSTABLE,
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert resp.json["fields"]["body.target_phase"]["type"] == "literal_error"
     assert tier3_writes.services == []
 
@@ -2675,7 +2682,7 @@ def test_update_service_phase_demands_all_four_transition_permissions(
         service_item="/unchanged",
         target_phase="monitored",
         expect_ok=False,
-    ).assert_status_code(403)
+    ).assert_status_code(HTTPStatus.FORBIDDEN)
 
     assert tier3_writes.services == []
 
@@ -2706,7 +2713,7 @@ def test_update_service_phase_refuses_without_manage_services_or_edit(
         service_item="/unchanged",
         target_phase="ignored",
         expect_ok=False,
-    ).assert_status_code(403)
+    ).assert_status_code(HTTPStatus.FORBIDDEN)
 
     assert tier3_writes.services == []
 
@@ -2732,7 +2739,7 @@ def test_the_discovery_pre_gate_and_the_transition_refuse_with_different_message
     pre_gate = clients.ServiceDiscovery.start_service_discovery(
         str(TIER3_HOST), "fix_all", expect_ok=False
     )
-    pre_gate.assert_status_code(403)
+    pre_gate.assert_status_code(HTTPStatus.FORBIDDEN)
     assert pre_gate.json["detail"] == (
         "You do not have the necessary permissions to execute this action"
     )
@@ -2740,7 +2747,7 @@ def test_the_discovery_pre_gate_and_the_transition_refuse_with_different_message
     demanded = clients.ServiceDiscovery.start_service_discovery(
         str(TIER3_HOST), "only_service_labels", expect_ok=False
     )
-    demanded.assert_status_code(403)
+    demanded.assert_status_code(HTTPStatus.FORBIDDEN)
     assert "Move to monitored services" in demanded.json["detail"]
 
     assert tier3_writes.services == []
@@ -2770,7 +2777,7 @@ def test_execute_discovery_conflicts_with_running_job(
         str(TIER3_HOST), "fix_all", expect_ok=False
     )
 
-    resp.assert_status_code(409)
+    resp.assert_status_code(HTTPStatus.CONFLICT)
     assert resp.json["detail"] == "A service discovery background job is currently running"
     assert tier3_writes.services == []
 
@@ -2799,6 +2806,6 @@ def test_update_service_phase_during_active_job(
         service_item="/unchanged",
         target_phase="ignored",
         expect_ok=False,
-    ).assert_status_code(204)
+    ).assert_status_code(HTTPStatus.NO_CONTENT)
 
     assert tier3_writes.services == []

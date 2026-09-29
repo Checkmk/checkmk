@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 import pytest
 
 from cmk.gui.watolib.timeperiods import load_timeperiod
@@ -30,7 +32,7 @@ def test_openapi_create_invalid_name(clients: ClientRegistry) -> None:
             "exceptions": [{"date": "2020-01-01"}],
         },
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -51,7 +53,7 @@ def test_openapi_create_two_time_periods_same_name(clients: ClientRegistry) -> N
             "exceptions": [{"date": "2020-01-01"}],
         },
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_openapi_time_period_invalid_active_time_ranges(
@@ -67,7 +69,7 @@ def test_openapi_time_period_invalid_active_time_ranges(
             "exceptions": [{"date": "2020-01-01"}],
         },
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -239,9 +241,11 @@ def test_openapi_timeperiod_builtin(clients: ClientRegistry) -> None:
         },
         expect_ok=False,
     )
-    assert resp.status_code == 405
+    assert resp.status_code == HTTPStatus.METHOD_NOT_ALLOWED
 
-    resp = clients.TimePeriod.delete(time_period_id="24X7", expect_ok=False).assert_status_code(405)
+    resp = clients.TimePeriod.delete(time_period_id="24X7", expect_ok=False).assert_status_code(
+        HTTPStatus.METHOD_NOT_ALLOWED
+    )
     assert resp.json["title"] == "Built-in time periods can not be deleted"
     assert resp.json["detail"] == "The built-in time period '24X7' cannot be deleted."
 
@@ -485,7 +489,7 @@ def test_openapi_timeperiod_exclude_builtin(clients: ClientRegistry) -> None:
             "exceptions": [],
             "exclude": ["24x7"],
         },
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_openapi_delete_dependent_downtime(clients: ClientRegistry) -> None:
@@ -519,7 +523,9 @@ def test_openapi_delete_dependent_downtime(clients: ClientRegistry) -> None:
         },
     )
 
-    resp = clients.TimePeriod.delete("time_period_1", expect_ok=False).assert_status_code(409)
+    resp = clients.TimePeriod.delete("time_period_1", expect_ok=False).assert_status_code(
+        HTTPStatus.CONFLICT
+    )
     assert resp.json["detail"].endswith("Time Period 2 (excluded)).")
 
 
@@ -563,7 +569,7 @@ def test_openapi_time_period_24h_is_end_of_day(clients: ClientRegistry) -> None:
             "exclude": [],
         },
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
     assert resp.json["detail"] == "These fields have problems: active_time_ranges"
     assert (
         resp.json["fields"]["active_time_ranges"]["0"]["time_ranges"]["0"]["_schema"][0]
@@ -613,7 +619,7 @@ def test_openapi_exclude_field(clients: ClientRegistry) -> None:
 
     referenced_time_period_does_not_exist = clients.TimePeriod.create(
         time_period_data=dependent_time_period, expect_ok=False
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
     assert (
         referenced_time_period_does_not_exist.json["detail"]
         == "These fields have problems: exclude"
@@ -638,7 +644,7 @@ def test_openapi_exclude_field(clients: ClientRegistry) -> None:
 
     referenced_time_period_by_alias = clients.TimePeriod.create(
         time_period_data=alias_dependent_time_period, expect_ok=False
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
     assert referenced_time_period_by_alias.json["detail"] == "These fields have problems: exclude"
     assert referenced_time_period_by_alias.json["title"] == "Bad Request"
     assert "exclude" in referenced_time_period_by_alias.json["fields"]
@@ -715,13 +721,13 @@ def test_openapi_timeperiod_update_exclude(clients: ClientRegistry) -> None:
         time_period_id="time_period_3",
         time_period_data={"exclude": ["I don't exist"]},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     clients.TimePeriod.edit(
         time_period_id="time_period_3",
         time_period_data={"exclude": "This should be a list"},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 invalid_timeperiod_names = (
@@ -746,7 +752,7 @@ def test_create_timeperiod_name_with_newline(
         },
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert (
         resp.json["fields"]["name"][0]
         == f"{timeperiod_name!r} does not match pattern '^[-a-z0-9A-Z_]+\\\\Z'."
@@ -790,7 +796,7 @@ def test_openapi_timeperiod_update_alias_in_use(clients: ClientRegistry) -> None
         time_period_id=timeperiod_name,
         time_period_data={"alias": "other_time_period_alias"},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 @pytest.mark.parametrize(

@@ -7,6 +7,7 @@
 
 import random
 import time
+from http import HTTPStatus
 from typing import Any
 
 import pytest
@@ -102,7 +103,7 @@ def test_comment_params_execption(
     with mock_livestatus:
         resp = clients.Comment.get_host(
             host_name="heute", service_description="service_1", expect_ok=False
-        ).assert_status_code(400)
+        ).assert_status_code(HTTPStatus.BAD_REQUEST)
     assert resp.json["title"] == "Invalid parameter combination"
     assert (
         resp.json["detail"]
@@ -124,14 +125,14 @@ def test_get_non_existing_comment(
     )
     with mock_livestatus:
         clients.Comment.get(comment_id=100, site_id=SITE_ID, expect_ok=False).assert_status_code(
-            404
+            HTTPStatus.NOT_FOUND
         )
 
 
 def test_get_comment_invalid_id(clients: ClientRegistry) -> None:
     resp = clients.Comment.get(
         comment_id="invalid_id", site_id=SITE_ID, expect_ok=False
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
     assert resp.json["title"] == "Not Found"
     assert resp.json["detail"] == "These fields have problems: path.comment_id"
 
@@ -425,7 +426,7 @@ def test_delete_comment_by_id(
 def test_delete_invalid_comment_ids(clients: ClientRegistry) -> None:
     resp = clients.Comment.delete(
         delete_type="by_id", comment_id="abc", site_id=SITE_ID, expect_ok=False
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
     assert resp.json["title"] == "Bad Request"
     assert resp.json["detail"] == "These fields have problems: body.by_id.comment_id"
     assert "valid integer" in resp.json["fields"]["body.by_id.comment_id"]["msg"]

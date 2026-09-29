@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 import pytest
 
 from cmk.livestatus_client.testing import MockLiveStatusConnection
@@ -34,7 +36,7 @@ def test_openapi_wato_disabled_blocks_query(
     # disable wato
     with set_config(wato_enabled=False):
         # calls to setup endpoints are forbidden
-        clients.HostConfig.get("neute", expect_ok=False).assert_status_code(403)
+        clients.HostConfig.get("neute", expect_ok=False).assert_status_code(HTTPStatus.FORBIDDEN)
         with live:
             # calls to monitoring endpoints should be allowed
             clients.Service.get_all()

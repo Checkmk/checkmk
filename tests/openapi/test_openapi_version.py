@@ -2,6 +2,8 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
+
 from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 
 
@@ -11,7 +13,7 @@ def test_version(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
         "get",
         base + "/version",
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
     )
 
     assert set(resp.json_body.keys()) == {
@@ -30,5 +32,5 @@ def test_version_404(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
         "get",
         base + "/version" + base + "/version",
         headers={"Accept": "application/json"},
-        status=404,
+        status=HTTPStatus.NOT_FOUND,
     )

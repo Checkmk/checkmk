@@ -55,7 +55,7 @@ def api_default_error_schema(status_code: ErrorStatusCodeInt, description: str) 
             ),
             "status": fields.Integer(
                 description="The HTTP status code.",
-                example=status_code,
+                example=int(status_code),
             ),
             "detail": fields.String(
                 description="Detailed information on what exactly went wrong.",

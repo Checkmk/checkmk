@@ -7,6 +7,7 @@
 # mypy: disable-error-code="no-any-return"
 
 from collections.abc import Iterable
+from http import HTTPStatus
 from typing import Any, Literal, NewType, override
 from wsgiref.types import StartResponse, WSGIEnvironment
 
@@ -84,7 +85,22 @@ class GeneralRestAPIException(HTTPException):
 class RestAPIRequestGeneralException(GeneralRestAPIException):
     def __init__(
         self,
-        status: Literal[400, 401, 403, 404, 406, 409, 415],
+        status: Literal[
+            400,
+            HTTPStatus.BAD_REQUEST,
+            401,
+            HTTPStatus.UNAUTHORIZED,
+            403,
+            HTTPStatus.FORBIDDEN,
+            404,
+            HTTPStatus.NOT_FOUND,
+            406,
+            HTTPStatus.NOT_ACCEPTABLE,
+            409,
+            HTTPStatus.CONFLICT,
+            415,
+            HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
+        ],
         title: str,
         detail: str,
         fields: FIELDS | None = None,
@@ -224,7 +240,7 @@ class RestAPIPermissionException(GeneralRestAPIException):
 class RestAPIResponseGeneralException(GeneralRestAPIException):
     def __init__(
         self,
-        status: Literal[400, 500],
+        status: Literal[400, HTTPStatus.BAD_REQUEST, 500, HTTPStatus.INTERNAL_SERVER_ERROR],
         title: str,
         detail: str,
         fields: FIELDS | None = None,

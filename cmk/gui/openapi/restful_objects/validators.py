@@ -16,6 +16,7 @@ import http.client
 import json
 import logging
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from http import HTTPStatus
 from typing import Any, Literal, NoReturn, Self
 from urllib import parse
 
@@ -293,7 +294,20 @@ class RequestDataValidator:
     @staticmethod
     def raise_formatted_pydantic_error(
         validation_error: pydantic.ValidationError,
-        status_code: Literal[400, 401, 403, 404, 406, 415] = 400,
+        status_code: Literal[
+            400,
+            HTTPStatus.BAD_REQUEST,
+            401,
+            HTTPStatus.UNAUTHORIZED,
+            403,
+            HTTPStatus.FORBIDDEN,
+            404,
+            HTTPStatus.NOT_FOUND,
+            406,
+            HTTPStatus.NOT_ACCEPTABLE,
+            415,
+            HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
+        ] = 400,
     ) -> NoReturn:
         """Convert a Pydantic validation error to a RestAPIRequestDataValidationException."""
         # the context may contain the actual exception, which is usually not serializable
@@ -306,7 +320,22 @@ class RequestDataValidator:
     @staticmethod
     def format_error_details(
         errors: Iterable[ErrorDetails],
-        status_code: Literal[400, 401, 403, 404, 406, 409, 415] = 400,
+        status_code: Literal[
+            400,
+            HTTPStatus.BAD_REQUEST,
+            401,
+            HTTPStatus.UNAUTHORIZED,
+            403,
+            HTTPStatus.FORBIDDEN,
+            404,
+            HTTPStatus.NOT_FOUND,
+            406,
+            HTTPStatus.NOT_ACCEPTABLE,
+            409,
+            HTTPStatus.CONFLICT,
+            415,
+            HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
+        ] = 400,
     ) -> RestAPIRequestGeneralException:
         """Create a RestAPIRequestGeneralException from error details."""
         error_dict = {

@@ -529,7 +529,7 @@ def _api_error_schema(
                 (
                     "status",
                     int,
-                    api_field(description="The HTTP status code.", example=status_code),
+                    api_field(description="The HTTP status code.", example=int(status_code)),
                 ),
                 (
                     "detail",

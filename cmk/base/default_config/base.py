@@ -14,6 +14,7 @@ from cmk.checkengine.fetchers.ipmi import IPMICredentials
 from cmk.checkengine.snmplib import SNMPCredentials, SNMPTiming
 from cmk.checkengine.specs.exitspec import ExitSpec
 from cmk.events.notify_types import Contact, ContactName
+from cmk.inventory.label_picker import LabelPickerRuleValue
 from cmk.inventory.trees import RawIntervalFromConfig
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.matcher import RuleSpec
@@ -146,6 +147,7 @@ inventory_check_severity = 1  # warning
 inventory_max_cachefile_age = 120  # seconds
 inventory_check_autotrigger = True  # Automatically trigger inv-check after automation-inventory
 inv_retention_intervals: list[RuleSpec[Sequence[RawIntervalFromConfig]]] = []
+inv_label_picker_configs: list[RuleSpec[LabelPickerRuleValue]] = []
 # TODO: Remove this already deprecated option
 always_cleanup_autochecks = None  # For compatiblity with old configuration
 

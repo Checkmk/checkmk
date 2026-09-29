@@ -1647,6 +1647,7 @@ allows = [
   "cmk.diskspace.config",
   "cmk.checkengine.fetchers",
   "cmk.gui",
+  "cmk.inventory",
   "cmk.licensing",
   "cmk.message_broker_certs",
   "cmk.data_backend.gui",

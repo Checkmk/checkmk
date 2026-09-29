@@ -582,6 +582,7 @@ def _mode_discover(
                 on_error=on_error,
                 autochecks_dir=cmk.utils.paths.autochecks_dir,
                 discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+                inventorized_host_labels_dir=cmk.utils.paths.inventorized_host_labels_dir,
             )
             any_failed |= not succeeded
 

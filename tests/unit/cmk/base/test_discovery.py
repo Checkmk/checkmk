@@ -52,6 +52,7 @@ from cmk.checkengine.discovery import (
     DiscoverySettingFlags,
     DiscoverySettings,
     DiscoveryValueSpecModel,
+    execute_check_discovery,
     find_plugins,
     HostLabelPlugin,
     QualifiedDiscovery,
@@ -106,6 +107,7 @@ from cmk.checkengine.sectionparser import (
 from cmk.checkengine.snmplib import SNMPRawDataElem
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.discover_plugins import PluginLocation
+from cmk.inventory.label_picker import InventorizedHostLabelsStore
 from cmk.ruleset_matcher.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.ruleset_matcher.ruleset_name import RuleSetName
 from cmk.utils.everythingtype import EVERYTHING
@@ -1716,6 +1718,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         on_error=OnError.RAISE,
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+        inventorized_host_labels_dir=cmk.utils.paths.inventorized_host_labels_dir,
     )
 
     assert succeeded is True
@@ -1758,6 +1761,7 @@ def test_commandline_discovery_reports_failure(tmp_path: Path) -> None:
         on_error=OnError.RAISE,
         autochecks_dir=tmp_path / "autochecks",
         discovered_host_labels_dir=tmp_path / "host_labels",
+        inventorized_host_labels_dir=tmp_path / "inventorized_host_labels",
     )
 
     assert succeeded is False
@@ -1804,6 +1808,7 @@ def test_commandline_discovery_reports_failed_source(tmp_path: Path) -> None:
         on_error=OnError.RAISE,
         autochecks_dir=autochecks_dir,
         discovered_host_labels_dir=tmp_path / "host_labels",
+        inventorized_host_labels_dir=tmp_path / "inventorized_host_labels",
     )
 
     assert succeeded is False
@@ -1851,6 +1856,65 @@ class _CommandlineAutochecksConfig:
 
     def service_labels(self, host_name: HostName, entry: AutocheckEntry) -> Mapping[str, str]:  # noqa: ARG002
         return {}
+
+
+def test_commandline_discovery_discovers_inventorized_host_labels(tmp_path: Path) -> None:
+    host_name = HostName("test-host")
+    InventorizedHostLabelsStore(host_name, tmp_path / "inventorized_host_labels").save(
+        {"cmk/inventory/product": "foo"}
+    )
+
+    commandline_discovery(
+        host_name=host_name,
+        clear_ruleset_matcher_caches=lambda: None,
+        parser=lambda fetched: [],  # noqa: ARG005
+        fetcher=_EmptyFetcher(),
+        section_plugins={},
+        section_error_handling=lambda *args, **kw: "error",  # noqa: ARG005
+        host_label_plugins={},
+        plugins={},
+        run_plugin_names=EVERYTHING,
+        autochecks_config=_CommandlineAutochecksConfig(),
+        enforced_services={},
+        arg_only_new=False,
+        only_host_labels=True,
+        on_error=OnError.RAISE,
+        autochecks_dir=tmp_path / "autochecks",
+        discovered_host_labels_dir=tmp_path / "host_labels",
+        inventorized_host_labels_dir=tmp_path / "inventorized_host_labels",
+    )
+
+    assert DiscoveredHostLabelsStore(host_name, tmp_path / "host_labels").load() == [
+        HostLabel("cmk/inventory/product", "foo", None)
+    ]
+
+
+def test_execute_check_discovery_ignores_inventorized_host_labels(tmp_path: Path) -> None:
+    check_results = execute_check_discovery(
+        HostName("test-host"),
+        omd_root=tmp_path,
+        autodiscovery_dir=tmp_path / "autodiscovery",
+        is_cluster=False,
+        cluster_nodes=(),
+        params=_get_params({}),
+        fetched=(),
+        parser=lambda fetched: [],  # noqa: ARG005
+        summarizer=lambda host_sections: [],  # noqa: ARG005
+        section_plugins={},
+        host_label_plugins={},
+        plugins={},
+        autochecks_config=_CommandlineAutochecksConfig(),
+        section_error_handling=lambda *args, **kw: "error",  # noqa: ARG005
+        enforced_services=frozenset(),
+        read_autochecks=lambda host_name: [],  # noqa: ARG005
+        read_discovered_host_labels=lambda host_name: [  # noqa: ARG005
+            HostLabel("cmk/inventory/product", "foo", None)
+        ],
+    )
+
+    assert [r.summary for r in check_results if "label" in r.summary] == [
+        "Host labels: all up to date"
+    ]
 
 
 _OTHER_PLUGIN_NAME = CheckPluginName("other_plugin")
@@ -1925,6 +1989,7 @@ def _run_commandline_service_discovery(
         on_error=OnError.RAISE,
         autochecks_dir=_autochecks_dir(tmp_path),
         discovered_host_labels_dir=labels_dir,
+        inventorized_host_labels_dir=tmp_path / "inventorized_host_labels",
     )
     return {e.id() for e in AutochecksStore(host_name, _autochecks_dir(tmp_path)).read()}
 
@@ -2474,6 +2539,7 @@ def test__perform_host_label_discovery_on_realhost(
             ),
             providers=scenario.providers,
             on_error=OnError.RAISE,
+            inventorized_host_labels={},
         ),
     )
 
@@ -2538,6 +2604,7 @@ def test__perform_host_label_discovery_on_cluster(
                 ),
                 providers=scenario.providers,
                 on_error=OnError.RAISE,
+                inventorized_host_labels={},
             )
             for node in nodes
         },

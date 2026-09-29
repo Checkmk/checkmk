@@ -38,6 +38,7 @@ from cmk.checkengine.sectionparser import (
     SectionPlugin,
     store_piggybacked_sections,
 )
+from cmk.inventory.label_picker import InventorizedHostLabelsStore
 from cmk.ruleset_matcher.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
 
@@ -62,6 +63,7 @@ def commandline_discovery(
     on_error: OnError,
     autochecks_dir: Path,
     discovered_host_labels_dir: Path,
+    inventorized_host_labels_dir: Path,
 ) -> bool:
     """Implementing cmk -I and cmk -II
 
@@ -108,6 +110,7 @@ def commandline_discovery(
             on_error=on_error,
             autochecks_dir=autochecks_dir,
             discovered_host_labels_dir=discovered_host_labels_dir,
+            inventorized_host_labels_dir=inventorized_host_labels_dir,
         )
 
     except Exception as e:
@@ -137,6 +140,7 @@ def _commandline_discovery_on_host(
     on_error: OnError,
     autochecks_dir: Path,
     discovered_host_labels_dir: Path,
+    inventorized_host_labels_dir: Path,
 ) -> None:
     section.section_step("Analyse discovered host labels")
 
@@ -147,7 +151,13 @@ def _commandline_discovery_on_host(
             else ()
         ),
         current=discover_host_labels(
-            real_host_name, host_label_plugins, providers=providers, on_error=on_error
+            real_host_name,
+            host_label_plugins,
+            providers=providers,
+            on_error=on_error,
+            inventorized_host_labels=InventorizedHostLabelsStore(
+                real_host_name, inventorized_host_labels_dir
+            ).load(),
         ),
     )
 

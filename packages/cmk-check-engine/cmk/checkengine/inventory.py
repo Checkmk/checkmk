@@ -100,6 +100,9 @@ class HWSWInventoryParameters:
     # These are handled by the "Check_MK" service
     fail_status: int
     status_data_inventory: bool
+    new_labels: int
+    vanished_labels: int
+    changed_labels: int
 
     @classmethod
     def from_raw(cls, raw_parameters: Mapping[str, object]) -> HWSWInventoryParameters:
@@ -110,6 +113,9 @@ class HWSWInventoryParameters:
             nw_changes=_parse_monitoring_state(raw_parameters.get("nw-changes"), 0),
             fail_status=_parse_monitoring_state(raw_parameters.get("inv-fail-status"), 1),
             status_data_inventory=bool(raw_parameters.get("status_data_inventory", False)),
+            new_labels=_parse_monitoring_state(raw_parameters.get("new-labels"), 1),
+            vanished_labels=_parse_monitoring_state(raw_parameters.get("vanished-labels"), 0),
+            changed_labels=_parse_monitoring_state(raw_parameters.get("changed-labels"), 1),
         )
 
 
@@ -543,6 +549,46 @@ def _check_fetched_data_or_trees(
         status_data_tree=status_data_tree,
         previous_tree=previous_tree,
     )
+
+
+def _host_labels_result(
+    state: int, qualifier: str, labels: Mapping[str, str]
+) -> Iterator[ActiveCheckResult]:
+    if labels:
+        yield ActiveCheckResult(
+            state=state,
+            summary=f"{qualifier} host labels: {len(labels)}",
+            details=[f"{qualifier} host label: {name}:{value}" for name, value in labels.items()],
+        )
+
+
+def check_inventorized_host_labels(
+    *,
+    parameters: HWSWInventoryParameters,
+    picked: Mapping[str, str],
+    accepted: Mapping[str, str],
+) -> Sequence[ActiveCheckResult]:
+    return [
+        *_host_labels_result(
+            parameters.new_labels,
+            "New",
+            {name: value for name, value in picked.items() if name not in accepted},
+        ),
+        *_host_labels_result(
+            parameters.vanished_labels,
+            "Vanished",
+            {name: value for name, value in accepted.items() if name not in picked},
+        ),
+        *_host_labels_result(
+            parameters.changed_labels,
+            "Changed",
+            {
+                name: f"{accepted[name]} -> {value}"
+                for name, value in picked.items()
+                if name in accepted and accepted[name] != value
+            },
+        ),
+    ]
 
 
 def _check_trees(

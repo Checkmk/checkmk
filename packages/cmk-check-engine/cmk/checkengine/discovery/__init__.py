@@ -35,7 +35,12 @@ from ._autodiscovery import (
     get_host_services_by_host_name,
     TransitionCounter,
 )
-from ._discover.host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
+from ._discover.host_labels import (
+    analyse_cluster_labels,
+    discover_host_labels,
+    HostLabelPlugin,
+    is_inventorized,
+)
 from ._discover.services import analyse_services, discover_services, find_plugins
 from ._entrypoints.active_check import execute_check_discovery
 from ._entrypoints.commandline import commandline_discovery
@@ -64,6 +69,7 @@ __all__ = [
     "ABCDiscoveryConfig",
     "commandline_discovery",
     "discover_host_labels",
+    "is_inventorized",
     "discover_services",
     "DiscoveryCheckParameters",
     "DiscoveryMode",  # in the process of being replaced by DiscoverySettings

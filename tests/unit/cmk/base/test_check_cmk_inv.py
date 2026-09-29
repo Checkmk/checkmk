@@ -24,6 +24,9 @@ from cmk.base.check_cmk_inv import parse_arguments
                 sw_changes=0,
                 sw_missing=0,
                 nw_changes=0,
+                new_labels=1,
+                vanished_labels=0,
+                changed_labels=1,
             ),
         ),
         (
@@ -43,6 +46,9 @@ from cmk.base.check_cmk_inv import parse_arguments
                 sw_changes=1,
                 sw_missing=1,
                 nw_changes=1,
+                new_labels=1,
+                vanished_labels=0,
+                changed_labels=1,
             ),
         ),
         (
@@ -54,6 +60,9 @@ from cmk.base.check_cmk_inv import parse_arguments
                 "--sw-changes=1",
                 "--sw-missing=1",
                 "--nw-changes=1",
+                "--new-labels=2",
+                "--vanished-labels=1",
+                "--changed-labels=3",
             ],
             argparse.Namespace(
                 hostname="test_host",
@@ -63,9 +72,18 @@ from cmk.base.check_cmk_inv import parse_arguments
                 sw_changes=1,
                 sw_missing=1,
                 nw_changes=1,
+                new_labels=2,
+                vanished_labels=1,
+                changed_labels=3,
             ),
         ),
     ],
 )
 def test_parse_arguments(argv: Sequence[str], expected_args: Sequence[str]) -> None:
     assert parse_arguments(argv) == expected_args
+
+
+@pytest.mark.parametrize("option", ["--new-labels", "--vanished-labels", "--changed-labels"])
+def test_parse_arguments_rejects_a_state_out_of_range(option: str) -> None:
+    with pytest.raises(SystemExit):
+        parse_arguments(["test_host", f"{option}=4"])

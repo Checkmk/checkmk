@@ -226,6 +226,7 @@ def discover_services(
         on_error=OnError.RAISE,
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+        inventorized_host_labels_dir=cmk.utils.paths.inventorized_host_labels_dir,
     )
 
     autochecks_store = AutochecksStore(hostname, cmk.utils.paths.autochecks_dir)

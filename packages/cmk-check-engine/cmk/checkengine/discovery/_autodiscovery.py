@@ -32,6 +32,7 @@ from cmk.checkengine.sectionparser import (
     store_piggybacked_sections,
 )
 from cmk.checkengine.summarize import SummarizerFunction
+from cmk.inventory.label_picker import InventorizedHostLabelsStore
 from cmk.ruleset_matcher.labels import DiscoveredHostLabelsStore, HostLabel, merge_cluster_labels
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.servicename import ServiceName
@@ -150,6 +151,7 @@ def automation_discovery(
     section_error_handling: Callable[[SectionName, Sequence[object]], str],
     autochecks_dir: Path,
     discovered_host_labels_dir: Path,
+    inventorized_host_labels_dir: Path,
 ) -> DiscoveryReport:
     logger.debug("Doing discovery with '%(settings)s'", {"settings": settings})
     results = {
@@ -191,6 +193,9 @@ def automation_discovery(
                     host_label_plugins,
                     providers=providers,
                     on_error=on_error,
+                    inventorized_host_labels=InventorizedHostLabelsStore(
+                        host_name, inventorized_host_labels_dir
+                    ).load(),
                 ),
             )
             DiscoveredHostLabelsStore(host_name, discovered_host_labels_dir).save(
@@ -492,6 +497,7 @@ def autodiscovery(
     on_error: OnError,
     autochecks_dir: Path,
     discovered_host_labels_dir: Path,
+    inventorized_host_labels_dir: Path,
 ) -> AutodiscoveryResult:
     if not _may_rediscover(
         host_name=host_name,
@@ -525,6 +531,7 @@ def autodiscovery(
         on_error=on_error,
         autochecks_dir=autochecks_dir,
         discovered_host_labels_dir=discovered_host_labels_dir,
+        inventorized_host_labels_dir=inventorized_host_labels_dir,
     )
     if result.error_text is not None:
         # for offline hosts the error message is empty. This is to remain

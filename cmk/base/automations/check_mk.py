@@ -242,6 +242,7 @@ from cmk.utils.paths import (
     counters_dir,
     data_source_cache_dir,
     discovered_host_labels_dir,
+    inventorized_host_labels_dir,
     local_agent_based_plugins_dir,
     logwatch_dir,
     omd_root,
@@ -461,6 +462,7 @@ def _automation_service_discovery(
             on_error=on_error,
             autochecks_dir=autochecks_dir,
             discovered_host_labels_dir=discovered_host_labels_dir,
+            inventorized_host_labels_dir=inventorized_host_labels_dir,
         )
 
         if results[hostname].error_text is None:
@@ -966,6 +968,7 @@ def _execute_discovery(
             timeperiods_active=checker_config.timeperiods_active,
             autochecks_dir=autochecks_dir,
             discovered_host_labels_dir=discovered_host_labels_dir,
+            inventorized_host_labels_dir=inventorized_host_labels_dir,
         )
     with tracer.span("preview.active_checks", attributes={"cmk.host_name": host_name}):
         table_with_active_checks = {
@@ -1264,6 +1267,7 @@ def _execute_autodiscovery(
                         on_error=on_error,
                         autochecks_dir=autochecks_dir,
                         discovered_host_labels_dir=base_discovered_host_labels_dir,
+                        inventorized_host_labels_dir=inventorized_host_labels_dir,
                     )
                     if not autodiscovery_result.skipped:
                         autodiscovery_queue.remove(host_name)
@@ -1638,6 +1642,11 @@ class AutomationRenameHosts:
             str(discovered_host_labels_dir), oldname + ".mk", newname + ".mk"
         ):
             actions.append("host-labels")
+
+        if self._rename_host_file(
+            str(inventorized_host_labels_dir), oldname + ".json", newname + ".json"
+        ):
+            actions.append("inventorized-host-labels")
 
         # Rename temporary files of the host
         for d in ["cache", "counters"]:
@@ -2388,6 +2397,7 @@ class AutomationDeleteHosts(ABCDeleteHosts):
             f"{autochecks_dir}/{hostname}.mk",
             f"{counters_dir / hostname}",
             f"{discovered_host_labels_dir}/{hostname}.mk",
+            f"{inventorized_host_labels_dir}/{hostname}.json",
             f"{tcp_cache_dir / hostname}",
             f"{var_dir}/persisted/{hostname}",
             f"{var_dir}/agent_deployment/{hostname}",

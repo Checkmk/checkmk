@@ -190,6 +190,7 @@ EMPTY_CONFIG = BaseConfig(
     notification_parameters={},
     inv_parameters={},
     inv_retention_intervals=[],
+    inv_label_picker_configs=[],
     periodic_discovery=[],
     check_mk_exit_status=[],
     ping_levels=[],

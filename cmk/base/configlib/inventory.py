@@ -11,6 +11,7 @@ from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.ccc.hostaddress import HostName, Hosts
 from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.checkengine.plugins import InventoryPlugin
+from cmk.inventory.label_picker import LabelPickerConfig
 from cmk.inventory.trees import RawIntervalFromConfig
 from cmk.ruleset_matcher.labels import LabelManager
 from cmk.ruleset_matcher.matcher import RulesetMatcher
@@ -23,6 +24,7 @@ class InventoryConfig:
     hwsw_parameters: Callable[[HostName], HWSWInventoryParameters]
     plugin_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]]
     retention_intervals: Callable[[HostName], Sequence[RawIntervalFromConfig]]
+    label_picker_configs: Callable[[HostName], Sequence[LabelPickerConfig]]
     # Drop the memoized per-host HW/SW parameters. Must be called whenever the
     # inputs (e.g. discovered host labels) may have changed without rebuilding
     # the config, mirroring `ConfigCache.invalidate_host_config`.
@@ -86,9 +88,21 @@ def make_inventory_config(
             for raw in entry
         ]
 
+    def label_picker_configs(host_name: HostName) -> Sequence[LabelPickerConfig]:
+        return [
+            config
+            for entry in matcher.get_host_values_all(
+                host_name,
+                loaded_config.inv_label_picker_configs,
+                label_manager.labels_of_host,
+            )
+            for config in entry["configs"]
+        ]
+
     return InventoryConfig(
         hwsw_parameters=hwsw_parameters,
         plugin_parameters=plugin_parameters,
         retention_intervals=retention_intervals,
+        label_picker_configs=label_picker_configs,
         invalidate=hwsw_cache.clear,
     )

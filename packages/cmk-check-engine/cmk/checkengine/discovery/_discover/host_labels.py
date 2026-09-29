@@ -27,6 +27,7 @@ __all__ = [
     "discover_host_labels",
     "HostLabel",
     "HostLabelPlugin",
+    "is_inventorized",
 ]
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,14 @@ class HostLabelPlugin:
     @classmethod
     def trivial(cls) -> HostLabelPlugin:
         return cls(function=lambda *a, **kw: iter(()), parameters=lambda _: None)  # noqa:ARG005
+
+
+def _inventorized_host_label(name: str, value: str) -> _HostLabel:
+    return _HostLabel(name, value, None)
+
+
+def is_inventorized(label: _HostLabel) -> bool:
+    return label.plugin_name is None
 
 
 def analyse_cluster_labels(
@@ -75,6 +84,7 @@ def discover_host_labels(
     *,
     providers: Mapping[HostKey, Provider],
     on_error: OnError,
+    inventorized_host_labels: Mapping[str, str],
 ) -> Sequence[_HostLabel]:
     """Discover host labels for a node.
 
@@ -82,6 +92,10 @@ def discover_host_labels(
     """
     # make names unique
     labels_by_name = {
+        **{
+            name: _inventorized_host_label(name, value)
+            for name, value in inventorized_host_labels.items()
+        },
         **_discover_host_labels_for_source_type(
             host_label_plugins,
             host_key=HostKey(node_name, SourceType.HOST),

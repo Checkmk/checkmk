@@ -39,6 +39,7 @@ from cmk.checkengine.fetchers.piggyback import PiggybackFetcher
 from cmk.checkengine.specs.checkresults import ServiceState
 from cmk.checkengine.submitters import ServiceDetails
 from cmk.discover_plugins import PluginLocation
+from cmk.inventory.label_picker import InventorizedHostLabelsStore
 from cmk.relay_protocols.tasks import AdHocActiveCheckTask
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, replace_macros
@@ -682,3 +683,16 @@ class TestWarnServiceNameConflicts:
         warnings = config_warnings.get_configuration(additional_warnings=())
         assert len(warnings) == 1
         assert "Check_MK Agent" in warnings[0]
+
+
+def test_delete_hosts_deletes_inventorized_host_labels() -> None:
+    host_name = HostName("test-host")
+    InventorizedHostLabelsStore(host_name, cmk.utils.paths.inventorized_host_labels_dir).save(
+        {"cmk/inventory/product": "foo"}
+    )
+
+    check_mk.automation_delete_hosts.handler(
+        CommonState(cmk.utils.paths.omd_root, None), [str(host_name)]
+    )
+
+    assert not (cmk.utils.paths.inventorized_host_labels_dir / f"{host_name}.json").exists()

@@ -22,7 +22,7 @@ from cmk.inventory.trees import ImmutableTree, MutableTree, SDKey, SDNodeName
     "parameters, expected_results",
     [
         pytest.param(
-            HWSWInventoryParameters(0, 0, 0, 0, 0, False),
+            HWSWInventoryParameters(0, 0, 0, 0, 0, False, 1, 2, 0),
             [
                 ActiveCheckResult(
                     state=0,
@@ -34,7 +34,7 @@ from cmk.inventory.trees import ImmutableTree, MutableTree, SDKey, SDNodeName
             id="OK",
         ),
         pytest.param(
-            HWSWInventoryParameters(0, 0, 1, 0, 0, False),
+            HWSWInventoryParameters(0, 0, 1, 0, 0, False, 1, 2, 0),
             [
                 ActiveCheckResult(
                     state=0,
@@ -87,7 +87,7 @@ def test__check_trees_hardware_or_software_changes() -> None:
     )
     assert list(
         _check_trees(
-            parameters=HWSWInventoryParameters(1, 2, 0, 3, 0, False),
+            parameters=HWSWInventoryParameters(1, 2, 0, 3, 0, False, 1, 2, 0),
             inventory_tree=inventory_tree,
             status_data_tree=MutableTree(),
             previous_tree=ImmutableTree(),
@@ -206,14 +206,16 @@ def test_hwsw_inventory_parameters_from_raw() -> None:
             "inv-fail-status": 2,
             "status_data_inventory": True,
         }
-    ) == HWSWInventoryParameters(1, 2, 3, 0, 2, True)
+    ) == HWSWInventoryParameters(1, 2, 3, 0, 2, True, 1, 0, 1)
 
 
 def test_hwsw_inventory_parameters_from_raw_defaults_missing_entries() -> None:
-    assert HWSWInventoryParameters.from_raw({}) == HWSWInventoryParameters(0, 0, 0, 0, 1, False)
+    assert HWSWInventoryParameters.from_raw({}) == HWSWInventoryParameters(
+        0, 0, 0, 0, 1, False, 1, 0, 1
+    )
 
 
 def test_hwsw_inventory_parameters_from_raw_defaults_an_unusable_entry() -> None:
     assert HWSWInventoryParameters.from_raw({"hw-changes": ["not a state"]}) == (
-        HWSWInventoryParameters(0, 0, 0, 0, 1, False)
+        HWSWInventoryParameters(0, 0, 0, 0, 1, False, 1, 0, 1)
     )

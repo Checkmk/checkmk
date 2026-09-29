@@ -24,6 +24,7 @@ py_library(
         "//packages/cmk-check-engine:specs",
         "//packages/cmk-check-engine/cmk/checkengine/parser",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-inventory:label_picker",
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-trace",
     ],

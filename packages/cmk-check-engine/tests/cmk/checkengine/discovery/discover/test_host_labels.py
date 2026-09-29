@@ -2,9 +2,12 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 
+from cmk.agent_based.v1 import HostLabel
+from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
+from cmk.checkengine.discovery import discover_host_labels, HostLabelPlugin
 from cmk.checkengine.discovery._discover.host_labels import (
     _all_parsing_results as all_parsing_results,
 )
@@ -18,6 +21,7 @@ from cmk.checkengine.sectionparser import (
     ResolvedResult,
     SectionPlugin,
 )
+from cmk.ruleset_matcher.labels import HostLabel as DiscoveredHostLabel
 
 
 class _FakeParser(dict[str, object]):
@@ -70,3 +74,28 @@ def test_all_parsing_results() -> None:
         ResolvedResult(section_name=SectionName("section_one"), parsed_data=1, cache_info=None),
         ResolvedResult(section_name=SectionName("section_thr"), parsed_data=3, cache_info=None),
     ]
+
+
+def _os_family_labels(section: object) -> Iterator[HostLabel]:  # noqa: ARG001
+    yield HostLabel("cmk/os_family", "linux")
+
+
+def test_discover_host_labels_prefers_plugin_labels_to_inventorized_ones() -> None:
+    host_name = HostName("host")
+    providers = {
+        HostKey(host_name, SourceType.HOST): _make_provider(
+            dict((_section("section_one", "parsed_section_one", set()),))
+        )
+    }
+
+    assert discover_host_labels(
+        host_name,
+        {
+            SectionName("section_one"): HostLabelPlugin(
+                function=_os_family_labels, parameters=lambda _host_name: None
+            )
+        },
+        providers=providers,
+        on_error=OnError.RAISE,
+        inventorized_host_labels={"cmk/os_family": "windows"},
+    ) == [DiscoveredHostLabel("cmk/os_family", "linux", SectionName("section_one"))]

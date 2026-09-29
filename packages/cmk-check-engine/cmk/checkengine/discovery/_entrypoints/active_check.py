@@ -29,6 +29,7 @@ from cmk.checkengine.discovery._discover.host_labels import (
     analyse_cluster_labels,
     discover_host_labels,
     HostLabelPlugin,
+    is_inventorized,
 )
 from cmk.checkengine.discovery._utils.filters import ServiceFilter, ServiceFilters
 from cmk.checkengine.discovery._utils.params import DiscoveryCheckParameters
@@ -89,6 +90,10 @@ class _Transition(enum.Enum):
         )
 
 
+def _discovered_by_plugins(labels: Sequence[HostLabel]) -> Sequence[HostLabel]:
+    return [label for label in labels if not is_inventorized(label)]
+
+
 def execute_check_discovery(
     host_name: HostName,
     *,
@@ -138,22 +143,25 @@ def execute_check_discovery(
                     host_label_plugins,
                     providers=providers,
                     on_error=OnError.RAISE,
+                    inventorized_host_labels={},
                 )
                 for node_name in cluster_nodes
             },
             existing_host_labels={
-                node_name: read_discovered_host_labels(node_name) for node_name in cluster_nodes
+                node_name: _discovered_by_plugins(read_discovered_host_labels(node_name))
+                for node_name in cluster_nodes
             },
         )
 
     else:
         host_labels = QualifiedDiscovery[HostLabel](
-            preexisting=read_discovered_host_labels(host_name),
+            preexisting=_discovered_by_plugins(read_discovered_host_labels(host_name)),
             current=discover_host_labels(
                 host_name,
                 host_label_plugins,
                 providers=providers,
                 on_error=OnError.RAISE,
+                inventorized_host_labels={},
             ),
         )
 

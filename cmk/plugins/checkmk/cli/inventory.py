@@ -47,6 +47,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.timeout import Timeout
 from cmk.checkengine import inventory
 from cmk.checkengine.auto_queue import AutoQueue
+from cmk.checkengine.discovery import DiscoverySettings
 from cmk.checkengine.fetcher_abc import Mode as FetchMode
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
 from cmk.checkengine.fetchers.snmp import NoSelectedSNMPSections, SNMPFetcherConfig
@@ -519,6 +520,15 @@ def _mode_inventorize_marked_hosts(
                     raw_intervals_from_config=config_cache.inventory_config.retention_intervals(
                         host_name
                     ),
+                    label_picker_configs=config_cache.inventory_config.label_picker_configs(
+                        host_name
+                    ),
+                    rediscovery=DiscoverySettings.from_vs(
+                        config_cache.discovery_check_parameters(host_name).rediscovery.get("mode")
+                    ),
+                    inventorized_host_labels_dir=cmk.utils.paths.inventorized_host_labels_dir,
+                    discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+                    autodiscovery_dir=cmk.utils.paths.autodiscovery_dir,
                 )
     except (MKTimeout, TimeoutError) as exc:
         console.verbose_no_lf(str(exc))

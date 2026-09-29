@@ -13,9 +13,15 @@ import pytest
 
 import cmk.ccc.resulttype as result
 from cmk.agent_based.v1 import Attributes, TableRow
-from cmk.base.modes.check_mk import _get_save_tree_actions, _SaveTreeActions
+from cmk.base.modes.check_mk import (
+    _get_save_tree_actions,
+    _SaveTreeActions,
+    execute_active_check_inventory,
+)
 from cmk.ccc.cpu_tracking import Snapshot
-from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
+from cmk.checkengine.auto_queue import AutoQueue
+from cmk.checkengine.discovery import DiscoverySettings
 from cmk.checkengine.fetcher_abc import FetcherFunction
 from cmk.checkengine.helper_interface import AgentRawData, FetcherType, SourceInfo, SourceType
 from cmk.checkengine.inventory import (
@@ -28,10 +34,24 @@ from cmk.checkengine.inventory import (
     ItemsOfInventoryPlugin,
 )
 from cmk.checkengine.parser import HostSections
-from cmk.checkengine.plugins import ParsedSectionName, SectionName
+from cmk.checkengine.plugins import (
+    InventoryPlugin,
+    InventoryPluginName,
+    ParsedSectionName,
+    SectionName,
+)
 from cmk.checkengine.sectionparser import SectionPlugin
 from cmk.checkengine.snmplib import SNMPRawData
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
+from cmk.discover_plugins import PluginLocation
+from cmk.inventory.label_picker import (
+    InventorizedHostLabelsStore,
+    LabelPickerConfig,
+    LabelPickerConfigAttribute,
+    LabelPickerConfigCaseConversion,
+    LabelPickerLabeling,
+    LabelPickerSource,
+)
 from cmk.inventory.serialization import (
     _serialize_retention_interval,
     deserialize_tree,
@@ -48,6 +68,7 @@ from cmk.inventory.trees import (
     SDNodeName,
     SDRowIdent,
 )
+from cmk.ruleset_matcher.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.everythingtype import EVERYTHING
 
 
@@ -1556,3 +1577,188 @@ def test_add_rows_with_different_key_columns() -> None:
         {"another-ident": "Another ident 3", "ident": "Ident 3", "key": "Key 3"},
     ]:
         assert row in rows
+
+
+class _ProductFetcher(FetcherFunction):
+    def __init__(self, raw_data: result.Result[AgentRawData, Exception]) -> None:
+        self._raw_data = raw_data
+
+    @override
+    def __call__(
+        self, host_name: HostName, *, ip_address: HostAddress | None
+    ) -> Sequence[tuple[SourceInfo, result.Result[AgentRawData, Exception], Snapshot]]:
+        return [
+            (
+                SourceInfo(host_name, None, "ident", FetcherType.TCP, SourceType.HOST),
+                self._raw_data,
+                Snapshot.null(),
+            )
+        ]
+
+
+def _parse_product(
+    fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
+) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]:
+    return [
+        (source_info, res.map(lambda ok: HostSections({SectionName("data"): ok})))
+        for source_info, res in fetched
+    ]
+
+
+_PRODUCT_LABEL_PICKER_CONFIG = LabelPickerConfig(
+    source=LabelPickerSource(
+        path="hardware.system",
+        attributes=[
+            LabelPickerConfigAttribute(
+                label_name="product",
+                key_match="product",
+                value_match=("use_value", None),
+            )
+        ],
+        columns=[],
+    ),
+    labeling=LabelPickerLabeling(
+        label_prefix="cmk/inventory",
+        case_conversion=LabelPickerConfigCaseConversion(
+            label="no_conversion", value="no_conversion"
+        ),
+    ),
+)
+
+
+def _rediscovery(*, update_host_labels: bool) -> DiscoverySettings:
+    return DiscoverySettings(
+        update_host_labels=update_host_labels,
+        add_new_services=False,
+        remove_vanished_services=False,
+        update_changed_service_labels=False,
+        update_changed_service_parameters=False,
+    )
+
+
+def _execute_active_check_inventory(
+    host_name: HostName,
+    tmp_path: Path,
+    *,
+    raw_data: result.Result[AgentRawData, Exception] = result.OK(AgentRawData(b"<<<data>>>")),
+    label_picker_configs: Sequence[LabelPickerConfig] = (_PRODUCT_LABEL_PICKER_CONFIG,),
+    rediscovery: DiscoverySettings = _rediscovery(update_host_labels=False),
+) -> Sequence[ActiveCheckResult]:
+    return execute_active_check_inventory(
+        host_name,
+        hosts_config=Hosts(hosts=[host_name], clusters={}, shadow_hosts=[], host_paths={}),
+        fetcher=_ProductFetcher(raw_data),
+        parser=_parse_product,
+        summarizer=lambda *args, **kwargs: [],  # noqa: ARG005
+        section_plugins={
+            SectionName("data"): SectionPlugin(
+                supersedes=set(),
+                parse_function=lambda *args, **kw: object,  # noqa: ARG005
+                parsed_section_name=ParsedSectionName("data"),
+            )
+        },
+        inventory_plugins={
+            InventoryPluginName("test_inv"): InventoryPlugin(
+                name=InventoryPluginName("test_inv"),
+                sections=[ParsedSectionName("data")],
+                function=lambda **_kw: [
+                    Attributes(path=["hardware", "system"], inventory_attributes={"product": "foo"})
+                ],
+                ruleset_name=None,
+                defaults={},
+                location=PluginLocation("test", "test_inv"),
+            )
+        },
+        inventory_parameters=lambda *args, **kw: {},  # noqa: ARG005
+        parameters=HWSWInventoryParameters.from_raw({}),
+        raw_intervals_from_config=(),
+        label_picker_configs=label_picker_configs,
+        rediscovery=rediscovery,
+        inventorized_host_labels_dir=tmp_path / "inventorized_host_labels",
+        discovered_host_labels_dir=tmp_path / "discovered_host_labels",
+        autodiscovery_dir=tmp_path / "autodiscovery",
+    )
+
+
+def _label_results(results: Sequence[ActiveCheckResult]) -> Sequence[tuple[int, str]]:
+    return [(r.state, r.summary) for r in results if "host label" in r.summary]
+
+
+def test_execute_active_check_inventory_stores_picked_labels(tmp_path: Path) -> None:
+    host_name = HostName("my-host")
+
+    _execute_active_check_inventory(host_name, tmp_path)
+
+    assert InventorizedHostLabelsStore(host_name, tmp_path / "inventorized_host_labels").load() == {
+        "cmk/inventory/product": "foo"
+    }
+
+
+def test_execute_active_check_inventory_keeps_labels_when_processing_fails(tmp_path: Path) -> None:
+    host_name = HostName("my-host")
+    store = InventorizedHostLabelsStore(host_name, tmp_path / "inventorized_host_labels")
+    store.save({"cmk/inventory/product": "bar"})
+
+    _execute_active_check_inventory(host_name, tmp_path, raw_data=result.Error(Exception()))
+
+    assert store.load() == {"cmk/inventory/product": "bar"}
+
+
+def test_execute_active_check_inventory_reports_labels_not_accepted_yet(tmp_path: Path) -> None:
+    assert _label_results(_execute_active_check_inventory(HostName("my-host"), tmp_path)) == [
+        (1, "New host labels: 1")
+    ]
+
+
+def test_execute_active_check_inventory_reports_changed_labels(tmp_path: Path) -> None:
+    host_name = HostName("my-host")
+    DiscoveredHostLabelsStore(host_name, tmp_path / "discovered_host_labels").save(
+        [HostLabel("cmk/inventory/product", "bar", None)]
+    )
+
+    assert _label_results(_execute_active_check_inventory(host_name, tmp_path)) == [
+        (1, "Changed host labels: 1")
+    ]
+
+
+def test_execute_active_check_inventory_accepted_labels_are_up_to_date(tmp_path: Path) -> None:
+    host_name = HostName("my-host")
+    DiscoveredHostLabelsStore(host_name, tmp_path / "discovered_host_labels").save(
+        [HostLabel("cmk/inventory/product", "foo", None)]
+    )
+
+    assert not _label_results(_execute_active_check_inventory(host_name, tmp_path))
+
+
+def test_execute_active_check_inventory_ignores_labels_of_discovery_plugins(tmp_path: Path) -> None:
+    host_name = HostName("my-host")
+    DiscoveredHostLabelsStore(host_name, tmp_path / "discovered_host_labels").save(
+        [
+            HostLabel("cmk/inventory/product", "foo", None),
+            HostLabel("cmk/os_family", "linux", "check_mk"),
+        ]
+    )
+
+    assert not _label_results(_execute_active_check_inventory(host_name, tmp_path))
+
+
+def test_execute_active_check_inventory_keeps_reporting_vanished_labels(tmp_path: Path) -> None:
+    host_name = HostName("my-host")
+    DiscoveredHostLabelsStore(host_name, tmp_path / "discovered_host_labels").save(
+        [HostLabel("cmk/inventory/product", "foo", None)]
+    )
+    _execute_active_check_inventory(host_name, tmp_path, label_picker_configs=())
+
+    assert _label_results(
+        _execute_active_check_inventory(host_name, tmp_path, label_picker_configs=())
+    ) == [(0, "Vanished host labels: 1")]
+
+
+def test_execute_active_check_inventory_schedules_rediscovery(tmp_path: Path) -> None:
+    host_name = HostName("my-host")
+
+    _execute_active_check_inventory(
+        host_name, tmp_path, rediscovery=_rediscovery(update_host_labels=True)
+    )
+
+    assert list(AutoQueue(tmp_path / "autodiscovery")) == [host_name]

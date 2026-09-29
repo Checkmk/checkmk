@@ -7,7 +7,7 @@ import dataclasses
 import itertools
 import logging
 import sys
-from collections.abc import Callable, Container, Iterable, Mapping, Sequence
+from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from contextlib import suppress
 from pathlib import Path
 from typing import Final, Literal, NamedTuple, TypedDict
@@ -49,6 +49,7 @@ from cmk.checkengine.checking import (
     execute_checkmk_checks,
     make_timing_results,
 )
+from cmk.checkengine.discovery import DiscoverySettings, is_inventorized
 from cmk.checkengine.fetcher_abc import FetcherFunction
 from cmk.checkengine.fetcher_abc import Mode as FetchMode
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
@@ -84,6 +85,7 @@ from cmk.checkengine.submitters import get_submitter
 from cmk.checkengine.summarize import SummarizerFunction
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 from cmk.cli.internal import CLIOption
+from cmk.inventory.label_picker import InventorizedHostLabelsStore, LabelPickerConfig, pick_labels
 from cmk.inventory.paths import InventoryPaths
 from cmk.inventory.store import InventoryStore, make_meta
 from cmk.inventory.trees import (
@@ -92,7 +94,7 @@ from cmk.inventory.trees import (
     RawIntervalFromConfig,
     SDPath,
 )
-from cmk.ruleset_matcher.labels import LabelManager
+from cmk.ruleset_matcher.labels import DiscoveredHostLabelsStore, LabelManager
 from cmk.ruleset_matcher.matcher import (
     BundledHostRulesetMatcher,
     RulesetMatcher,
@@ -714,6 +716,18 @@ def _get_save_tree_actions(
     )
 
 
+def _schedule_host_labels_rediscovery(
+    host_name: HostName,
+    *,
+    labels_differ: bool,
+    rediscovery: DiscoverySettings,
+    autodiscovery_dir: Path,
+) -> Iterator[ActiveCheckResult]:
+    if labels_differ and rediscovery.update_host_labels:
+        AutoQueue(autodiscovery_dir).add(host_name)
+        yield ActiveCheckResult(state=0, summary="Rediscovery scheduled")
+
+
 def execute_active_check_inventory(
     host_name: HostName,
     *,
@@ -726,6 +740,11 @@ def execute_active_check_inventory(
     inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
     parameters: HWSWInventoryParameters,
     raw_intervals_from_config: Sequence[RawIntervalFromConfig],
+    label_picker_configs: Sequence[LabelPickerConfig],
+    rediscovery: DiscoverySettings,
+    inventorized_host_labels_dir: Path,
+    discovered_host_labels_dir: Path,
+    autodiscovery_dir: Path,
 ) -> Sequence[ActiveCheckResult]:
     inv_store = InventoryStore(cmk.utils.paths.omd_root)
     previous_tree = inv_store.load_previous_inventory_tree(host_name=host_name)
@@ -782,4 +801,28 @@ def execute_active_check_inventory(
                 meta=make_meta(do_archive=save_tree_actions.do_archive),
             )
 
-    return result.check_results
+    if host_name in hosts_config.clusters:
+        return result.check_results
+
+    labels_store = InventorizedHostLabelsStore(host_name, inventorized_host_labels_dir)
+    if not (result.processing_failed or result.no_data_or_files):
+        labels_store.save(pick_labels(result.inventory_tree, label_picker_configs))
+    label_results = inventory.check_inventorized_host_labels(
+        parameters=parameters,
+        picked=labels_store.load(),
+        accepted={
+            label.name: label.value
+            for label in DiscoveredHostLabelsStore(host_name, discovered_host_labels_dir).load()
+            if is_inventorized(label)
+        },
+    )
+    return [
+        *result.check_results,
+        *label_results,
+        *_schedule_host_labels_rediscovery(
+            host_name,
+            labels_differ=bool(label_results),
+            rediscovery=rediscovery,
+            autodiscovery_dir=autodiscovery_dir,
+        ),
+    ]

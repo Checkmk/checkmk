@@ -37,6 +37,20 @@ py_library(
 )
 
 py_library(
+    name = "label_picker",
+    srcs = ["cmk/inventory/label_picker.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":model",
+        ":package",
+        "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-ccc:regex",
+        "//packages/cmk-ccc:store",
+    ],
+)
+
+py_library(
     name = "paths",
     srcs = ["cmk/inventory/paths.py"],
     imports = ["."],
@@ -102,6 +116,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":cleanup",
+        ":label_picker",
         ":model",
         ":package",
         ":paths",
@@ -115,6 +130,7 @@ py_doc_test(
     size = "small",
     srcs = [
         ":cleanup",
+        ":label_picker",
         ":model",
         ":paths",
         ":store",
@@ -156,6 +172,7 @@ py_wheel(
     deps = [
         ":cleanup",
         ":inventory_py_typed",
+        ":label_picker",
         ":model",
         ":package",
         ":paths",
@@ -189,6 +206,7 @@ py_requirements_test(
     name = "requirements-test",
     libs = [
         ":cleanup",
+        ":label_picker",
         ":model",
         ":paths",
         ":plugins",

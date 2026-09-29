@@ -32,6 +32,7 @@ from cmk.ccc.cpu_tracking import CPUTracker
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checking import make_timing_results
+from cmk.checkengine.discovery import DiscoverySettings
 from cmk.checkengine.fetcher_abc import Mode as FetchMode
 from cmk.checkengine.fetcher_utils.secrets import StoredSecrets
 from cmk.checkengine.fetchers.snmp import NoSelectedSNMPSections, SNMPFetcherConfig
@@ -54,6 +55,8 @@ from cmk.utils.ip_lookup import (
 )
 
 logger = logging.getLogger(__name__)
+
+_MONITORING_STATES = (0, 1, 2, 3)
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -110,6 +113,30 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         help="State when networking changes are detected",
     )
 
+    parser.add_argument(
+        "--new-labels",
+        type=int,
+        choices=_MONITORING_STATES,
+        default=1,
+        help="State when new inventory host labels are detected",
+    )
+
+    parser.add_argument(
+        "--vanished-labels",
+        type=int,
+        choices=_MONITORING_STATES,
+        default=0,
+        help="State when vanished inventory host labels are detected",
+    )
+
+    parser.add_argument(
+        "--changed-labels",
+        type=int,
+        choices=_MONITORING_STATES,
+        default=1,
+        help="State when changed inventory host labels are detected",
+    )
+
     return parser.parse_args(argv)
 
 
@@ -122,6 +149,9 @@ def main(argv: Sequence[str]) -> int:
         nw_changes=args.nw_changes,
         fail_status=args.inv_fail_status,
         status_data_inventory=False,
+        new_labels=args.new_labels,
+        vanished_labels=args.vanished_labels,
+        changed_labels=args.changed_labels,
     )
 
     # This is not race condition free, but we can not resolve the latest link:
@@ -269,6 +299,15 @@ def _inventory_as_check(
                     raw_intervals_from_config=config_cache.inventory_config.retention_intervals(
                         hostname
                     ),
+                    label_picker_configs=config_cache.inventory_config.label_picker_configs(
+                        hostname
+                    ),
+                    rediscovery=DiscoverySettings.from_vs(
+                        config_cache.discovery_check_parameters(hostname).rediscovery.get("mode")
+                    ),
+                    inventorized_host_labels_dir=cmk.utils.paths.inventorized_host_labels_dir,
+                    discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+                    autodiscovery_dir=cmk.utils.paths.autodiscovery_dir,
                 )
             check_results = [
                 *check_results,

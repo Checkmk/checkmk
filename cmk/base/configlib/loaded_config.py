@@ -35,6 +35,7 @@ from cmk.events.notify_types import (
     NotificationPluginNameStr,
     NotifyPluginParamsDict,
 )
+from cmk.inventory.label_picker import LabelPickerRuleValue
 from cmk.inventory.trees import RawIntervalFromConfig
 from cmk.rrd import RRDObjectConfig
 from cmk.ruleset_matcher.labels import Labels
@@ -244,6 +245,7 @@ class BaseConfig:  # type: ignore[explicit-any]
     notification_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]]
     inv_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]]
     inv_retention_intervals: Sequence[RuleSpec[Sequence[RawIntervalFromConfig]]]
+    inv_label_picker_configs: Sequence[RuleSpec[LabelPickerRuleValue]]
     periodic_discovery: Sequence[RuleSpec[Any]]
     check_mk_exit_status: Sequence[RuleSpec[Any]]
     ping_levels: Sequence[RuleSpec[Any]]

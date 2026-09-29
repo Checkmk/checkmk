@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
+from http import HTTPStatus
 from wsgiref.types import WSGIApplication
 
 from flask import Blueprint, current_app, make_response, Response, send_from_directory
@@ -83,7 +84,7 @@ def discover_receiver(site: str, version: str) -> Response:  # noqa: ARG001
     We report the agent receivers port on this unprotected URL.
     We don't give away information here that an attacker could not find out with a port scan.
     """
-    return make_response(f"{_get_receiver_port()}", 200)
+    return make_response(f"{_get_receiver_port()}", HTTPStatus.OK)
 
 
 __all__ = ["rest_api"]

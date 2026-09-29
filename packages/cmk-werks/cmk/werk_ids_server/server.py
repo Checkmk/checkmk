@@ -5,6 +5,7 @@
 
 import logging
 import secrets
+from http import HTTPStatus
 
 from flask import current_app, Flask, jsonify, request, Response
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -34,12 +35,12 @@ def _auth() -> Response | None:
     secret = current_app.config["secret_file"].read_text().strip()
     if not secret:
         _logger.error("Empty secret in %(path)r", {"path": str(current_app.config["secret_file"])})
-        return _error(500, "Server misconfigured.")
+        return _error(HTTPStatus.INTERNAL_SERVER_ERROR, "Server misconfigured.")
     auth = request.headers.get("Authorization", "")
     if not auth.startswith("Bearer ") or not secrets.compare_digest(
         auth.removeprefix("Bearer "), secret
     ):
-        return _error(401, "Invalid or missing authorization.")
+        return _error(HTTPStatus.UNAUTHORIZED, "Invalid or missing authorization.")
     return None
 
 
@@ -58,7 +59,9 @@ def reserve_ids() -> Response:
     data = request.get_json(silent=True) or {}
     local_werk_ids_count = data.get("local_werk_ids_count")
     if not isinstance(local_werk_ids_count, int) or local_werk_ids_count < 0:
-        return _error(400, "Field 'local_werk_ids_count' must be a non-negative integer.")
+        return _error(
+            HTTPStatus.BAD_REQUEST, "Field 'local_werk_ids_count' must be a non-negative integer."
+        )
 
     to_be_reserved = _MAX_RESERVABLE_IDS - local_werk_ids_count
     if to_be_reserved <= 0:

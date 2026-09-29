@@ -18,6 +18,7 @@ import enum
 import logging
 from collections import defaultdict
 from collections.abc import Mapping
+from http import HTTPStatus
 from itertools import islice
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -141,9 +142,11 @@ def _upload_one(*, crash_report_url: str, name: str, mail: str, crash_dir: Path)
     resp = requests.post(
         crash_report_url, data=payload, timeout=_POST_TIMEOUT, allow_redirects=False
     )
-    if resp.status_code == 429:  # "come back later" - must not be marked like the other 4xx
+    if (
+        resp.status_code == HTTPStatus.TOO_MANY_REQUESTS
+    ):  # "come back later" - must not be marked like the other 4xx
         resp.raise_for_status()
-    if resp.status_code == 200:
+    if resp.status_code == HTTPStatus.OK:
         return _UploadOutcome.SUCCESS if resp.content.startswith(b"OK") else _UploadOutcome.REJECTED
     if 400 <= resp.status_code < 500:  # includes 413 (payload too large)
         return _UploadOutcome.REJECTED

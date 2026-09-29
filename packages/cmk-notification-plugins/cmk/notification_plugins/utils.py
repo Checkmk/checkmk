@@ -14,6 +14,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Container, Iterable, Mapping
 from dataclasses import dataclass
 from email.utils import formataddr
+from http import HTTPStatus
 from http.client import responses as http_responses
 from quopri import encodestring
 from typing import NamedTuple, NoReturn, override
@@ -385,7 +386,7 @@ def post_request(
 
 
 def process_by_status_code(
-    response: requests.Response, success_code: int | Container[int] = 200
+    response: requests.Response, success_code: int | Container[int] = HTTPStatus.OK
 ) -> int:
     status_code = response.status_code
     summary = f"{status_code}: {http_responses[status_code]}"

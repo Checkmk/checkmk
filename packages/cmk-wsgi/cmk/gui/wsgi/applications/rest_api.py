@@ -16,6 +16,7 @@ import urllib.parse
 from collections.abc import Callable, Mapping
 from datetime import datetime, UTC
 from hashlib import sha256
+from http import HTTPStatus
 from pathlib import Path
 from typing import Any, Literal, NotRequired, override, TYPE_CHECKING, TypedDict
 from wsgiref.types import StartResponse, WSGIApplication, WSGIEnvironment
@@ -98,7 +99,7 @@ ARGS_KEY = "CHECK_MK_REST_API_ARGS"
 logger = logging.getLogger("cmk.gui.wsgi.rest_api")
 
 EXCEPTION_STATUS: dict[type[Exception], int] = {
-    MKUserError: 400,
+    MKUserError: HTTPStatus.BAD_REQUEST,
 }
 
 PathArgs = Mapping[str, Any]
@@ -192,7 +193,7 @@ def crash_report_response(exc: Exception) -> WSGIApplication:
         )
 
     return problem(
-        status=500,
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
         title="Internal Server Error",
         detail=f"{crash.crash_info['exc_type']}: {crash_msg}. Crash report generated. Please submit.",
         ext=ext_info,
@@ -387,7 +388,7 @@ def _serve_spec(
         case "json":
             content_type = "application/json"
 
-    response = Response(status=200)
+    response = Response(status=HTTPStatus.OK)
     response.data = _serialize_spec_cached(target, url, extension, version)
     response.content_type = content_type  # type: ignore[possibly-undefined]
     response.freeze()
@@ -782,7 +783,7 @@ class CheckmkRESTAPI(AbstractWSGIApp):
                 and not isinstance(session.session.user, LoggedInSuperUser)
             ):
                 raise RestAPIForbiddenException(
-                    title=http.client.responses[403],
+                    title=HTTPStatus.FORBIDDEN.phrase,
                     detail="This endpoint is reserved for Checkmk.",
                 )
 
@@ -821,7 +822,7 @@ class CheckmkRESTAPI(AbstractWSGIApp):
             if self.debug and not self.testing:
                 raise
             response = problem(
-                status=EXCEPTION_STATUS.get(type(exc), 500),
+                status=EXCEPTION_STATUS.get(type(exc), HTTPStatus.INTERNAL_SERVER_ERROR),
                 title="An exception occurred.",
                 detail=str(exc),
             )

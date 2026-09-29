@@ -12,6 +12,7 @@ import traceback
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
+from http import HTTPStatus
 from pathlib import Path
 from typing import Final, Protocol
 
@@ -180,9 +181,9 @@ class WerkIDsClient:
             return ServerStatus.UNREACHABLE
 
         match response.status_code:
-            case 200:
+            case HTTPStatus.OK:
                 return ServerStatus.OK
-            case 401 | 403:
+            case HTTPStatus.UNAUTHORIZED | HTTPStatus.FORBIDDEN:
                 return ServerStatus.UNAUTHORIZED
             case _:
                 return ServerStatus.ERROR
@@ -224,7 +225,7 @@ class WerkIDsClient:
             # descriptive message when none are left.
             return []
 
-        if response.status_code == 200:
+        if response.status_code == HTTPStatus.OK:
             reserved_werk_ids = response.json()["reserved_werk_ids"]
             return [int(i) for i in reserved_werk_ids]
 

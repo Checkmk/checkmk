@@ -22,6 +22,7 @@ import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
+from http import HTTPStatus
 from io import TextIOWrapper
 from pathlib import Path
 from typing import assert_never, cast, Final, override
@@ -2488,7 +2489,7 @@ class ModeBackupRestore(WatoMode[object]):
             html.button("upload", _("Start restore"))
             html.hidden_fields()
         html.footer()
-        return FinalizeRequest(code=200)
+        return FinalizeRequest(code=HTTPStatus.OK)
 
     def _fs_key(self) -> Dictionary:
         return Dictionary(

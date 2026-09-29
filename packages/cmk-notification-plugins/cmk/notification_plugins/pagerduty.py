@@ -9,6 +9,8 @@ Send notification messages to PagerDuty
 
 """
 
+from http import HTTPStatus
+
 from cmk.notification_plugins.utils import (
     get_password_from_env_or_context,
     host_url_from_context,
@@ -92,4 +94,4 @@ def _pagerduty_msg(context: dict[str, str]) -> dict[str, object]:
 def main() -> int:
     # PagerDuty replies with 202 because the request is further processed
     # by them. Thus their reply only includes field validation checks.
-    return process_by_status_code(post_request(_pagerduty_msg), success_code=202)
+    return process_by_status_code(post_request(_pagerduty_msg), success_code=HTTPStatus.ACCEPTED)

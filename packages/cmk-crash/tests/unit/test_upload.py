@@ -12,6 +12,7 @@ import io
 import json
 import tarfile
 import uuid as _uuid
+from http import HTTPStatus
 from pathlib import Path
 from urllib.parse import parse_qs
 
@@ -101,7 +102,7 @@ def test_crash_dir_without_crash_info_skipped(tmp_path: Path) -> None:
     """A UUID dir with no crash.info is not a complete crash: the uploader skips it
     even though the enumeration mechanism yields it."""
     (tmp_path / "check" / _FAKE_UUID_1).mkdir(parents=True)
-    responses.add(responses.POST, _CRASH_URL, body=b"OK", status=200)
+    responses.add(responses.POST, _CRASH_URL, body=b"OK", status=HTTPStatus.OK)
     run_batch(
         crash_report_url=_CRASH_URL,
         base_path=tmp_path,
@@ -114,7 +115,7 @@ def test_crash_dir_without_crash_info_skipped(tmp_path: Path) -> None:
 @responses.activate
 def test_200_ok_posts_correct_fields(tmp_path: Path) -> None:
     _make_crash_dir(tmp_path, "check", _FAKE_UUID_1)
-    responses.add(responses.POST, _CRASH_URL, body=b"OK abc123", status=200)
+    responses.add(responses.POST, _CRASH_URL, body=b"OK abc123", status=HTTPStatus.OK)
     run_batch(
         crash_report_url=_CRASH_URL,
         base_path=tmp_path,
@@ -131,7 +132,7 @@ def test_200_ok_posts_correct_fields(tmp_path: Path) -> None:
 def test_crashdump_packs_all_files(tmp_path: Path) -> None:
     crash_dir = _make_crash_dir(tmp_path, "check", _FAKE_UUID_1)
     (crash_dir / "agent_output").write_bytes(b"hi")
-    responses.add(responses.POST, _CRASH_URL, body=b"OK abc123", status=200)
+    responses.add(responses.POST, _CRASH_URL, body=b"OK abc123", status=HTTPStatus.OK)
     run_batch(
         crash_report_url=_CRASH_URL,
         base_path=tmp_path,
@@ -150,7 +151,7 @@ def test_crashdump_skips_dotfiles(tmp_path: Path) -> None:
     # the whole crash dir before we even get to packing it.
     crash_dir = _make_crash_dir(tmp_path, "check", _FAKE_UUID_1)
     (crash_dir / ".hidden").write_bytes(b"secret")
-    responses.add(responses.POST, _CRASH_URL, body=b"OK abc123", status=200)
+    responses.add(responses.POST, _CRASH_URL, body=b"OK abc123", status=HTTPStatus.OK)
     run_batch(
         crash_report_url=_CRASH_URL,
         base_path=tmp_path,
@@ -164,11 +165,13 @@ def test_crashdump_skips_dotfiles(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     ("status", "body", "terminal"),
     [
-        pytest.param(200, b"OK abc123", True, id="200-ok-success"),
-        pytest.param(200, b"FAIL: duplicate", True, id="200-non-ok-rejected"),
-        pytest.param(400, b"bad request", True, id="4xx-rejected"),
-        pytest.param(413, b"too large", True, id="413-rejected"),
-        pytest.param(500, b"internal error", False, id="5xx-transient"),
+        pytest.param(HTTPStatus.OK, b"OK abc123", True, id="200-ok-success"),
+        pytest.param(HTTPStatus.OK, b"FAIL: duplicate", True, id="200-non-ok-rejected"),
+        pytest.param(HTTPStatus.BAD_REQUEST, b"bad request", True, id="4xx-rejected"),
+        pytest.param(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, b"too large", True, id="413-rejected"),
+        pytest.param(
+            HTTPStatus.INTERNAL_SERVER_ERROR, b"internal error", False, id="5xx-transient"
+        ),
     ],
 )
 def test_response_classification_marks_only_terminal_outcomes(
@@ -196,7 +199,9 @@ def test_rate_limited_stops_batch_and_keeps_crashes_unmarked(tmp_path: Path) -> 
     the rest of the batch would walk into the same limit."""
     _make_crash_dir(tmp_path, "check", _FAKE_UUID_1)
     _make_crash_dir(tmp_path, "check", _FAKE_UUID_2)
-    responses.add(responses.POST, _CRASH_URL, body=b"slow down", status=429)
+    responses.add(
+        responses.POST, _CRASH_URL, body=b"slow down", status=HTTPStatus.TOO_MANY_REQUESTS
+    )
     run_batch(
         crash_report_url=_CRASH_URL,
         base_path=tmp_path,
@@ -244,7 +249,7 @@ def test_two_runs_drain_10_dir_backlog(tmp_path: Path) -> None:
     the queue drains instead of re-uploading the same 50 dirs forever."""
     uuids = _make_10_crash_dirs(tmp_path)
     for _ in range(60):
-        responses.add(responses.POST, _CRASH_URL, body=b"OK x", status=200)
+        responses.add(responses.POST, _CRASH_URL, body=b"OK x", status=HTTPStatus.OK)
 
     run_batch(
         crash_report_url=_CRASH_URL,
@@ -273,7 +278,7 @@ def test_rejected_crash_not_retried(tmp_path: Path) -> None:
     """REJECTED is also terminal: retrying a permanent 4xx would starve the queue
     just like an unmarked SUCCESS would."""
     _make_crash_dir(tmp_path, "check", _FAKE_UUID_1)
-    responses.add(responses.POST, _CRASH_URL, body=b"bad request", status=400)
+    responses.add(responses.POST, _CRASH_URL, body=b"bad request", status=HTTPStatus.BAD_REQUEST)
     run_batch(
         crash_report_url=_CRASH_URL,
         base_path=tmp_path,
@@ -297,8 +302,10 @@ def test_rejected_crash_not_retried(tmp_path: Path) -> None:
 def test_transient_crash_is_retried(tmp_path: Path) -> None:
     """TRANSIENT (5xx) must NOT be marked, so it is retried next tick."""
     _make_crash_dir(tmp_path, "check", _FAKE_UUID_1)
-    responses.add(responses.POST, _CRASH_URL, body=b"internal error", status=500)
-    responses.add(responses.POST, _CRASH_URL, body=b"OK abc", status=200)
+    responses.add(
+        responses.POST, _CRASH_URL, body=b"internal error", status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
+    responses.add(responses.POST, _CRASH_URL, body=b"OK abc", status=HTTPStatus.OK)
     run_batch(
         crash_report_url=_CRASH_URL,
         base_path=tmp_path,

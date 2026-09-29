@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+from http import HTTPStatus
 
 import requests
 
@@ -130,7 +131,7 @@ def send_push_notification(
         sys.stdout.write("POST request to server failed: %s\n" % api_url)
         return 1
 
-    if response.status_code not in [200, 204]:
+    if response.status_code not in [HTTPStatus.OK, HTTPStatus.NO_CONTENT]:
         sys.stdout.write(
             f"Failed to send notification. Status: {response.status_code}, Response: {response.text}\n"
         )

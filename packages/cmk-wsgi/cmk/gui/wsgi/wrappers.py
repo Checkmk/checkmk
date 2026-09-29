@@ -6,6 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
+from http import HTTPStatus
 from typing import Any, override
 
 from cmk.gui.openapi.utils import ProblemException
@@ -50,4 +51,4 @@ class ParameterDict(dict):
             if isinstance(rv, dict):
                 rv = ParameterDict(rv)
             return rv
-        raise ProblemKeyError(400, "Bad request", f"Parameter missing: {key!r}")
+        raise ProblemKeyError(HTTPStatus.BAD_REQUEST, "Bad request", f"Parameter missing: {key!r}")

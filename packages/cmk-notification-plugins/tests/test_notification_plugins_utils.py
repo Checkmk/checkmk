@@ -9,6 +9,7 @@
 import binascii
 import json
 from collections.abc import Mapping, Sequence
+from http import HTTPStatus
 from unittest.mock import Mock, patch
 
 import pytest
@@ -383,13 +384,13 @@ def test_escape_context(input_context: dict[str, str], expected_context: Mapping
     "response, matchers, expected_exit_msg, expected_exit_code",
     [
         (
-            Mock(requests.models.Response, status_code=200, text="whatever"),
+            Mock(requests.models.Response, status_code=HTTPStatus.OK, text="whatever"),
             [],
             "Details for Status Code are not defined\n200: OK\n",
             3,
         ),
         (
-            Mock(requests.models.Response, status_code=200, text="whatever"),
+            Mock(requests.models.Response, status_code=HTTPStatus.OK, text="whatever"),
             [
                 (
                     utils.StatusCodeMatcher(range=(400, 500)),
@@ -400,7 +401,7 @@ def test_escape_context(input_context: dict[str, str], expected_context: Mapping
             3,
         ),
         (
-            Mock(requests.models.Response, status_code=200, text="whatever"),
+            Mock(requests.models.Response, status_code=HTTPStatus.OK, text="whatever"),
             [
                 (
                     utils.StatusCodeMatcher(range=(200, 300)),
@@ -411,7 +412,7 @@ def test_escape_context(input_context: dict[str, str], expected_context: Mapping
             0,
         ),
         (
-            Mock(requests.models.Response, status_code=201, text="whatever"),
+            Mock(requests.models.Response, status_code=HTTPStatus.CREATED, text="whatever"),
             [
                 (
                     utils.StatusCodeMatcher(range=(200, 300)),
@@ -422,7 +423,9 @@ def test_escape_context(input_context: dict[str, str], expected_context: Mapping
             0,
         ),
         (
-            Mock(requests.models.Response, status_code=300, text="whatever"),
+            Mock(
+                requests.models.Response, status_code=HTTPStatus.MULTIPLE_CHOICES, text="whatever"
+            ),
             [
                 (
                     utils.StatusCodeMatcher(range=(200, 300)),
@@ -435,7 +438,7 @@ def test_escape_context(input_context: dict[str, str], expected_context: Mapping
         (
             Mock(
                 requests.models.Response,
-                status_code=200,
+                status_code=HTTPStatus.OK,
                 text="whatever",
                 json=lambda: {"code": "all good"},
             ),
@@ -451,7 +454,7 @@ def test_escape_context(input_context: dict[str, str], expected_context: Mapping
         (
             Mock(
                 requests.models.Response,
-                status_code=200,
+                status_code=HTTPStatus.OK,
                 text="whatever",
                 json=lambda: {"code": "all good"},
             ),
@@ -467,7 +470,7 @@ def test_escape_context(input_context: dict[str, str], expected_context: Mapping
         (
             Mock(
                 requests.models.Response,
-                status_code=200,
+                status_code=HTTPStatus.OK,
                 text="whatever",
                 json=lambda: {"code": "all good"},
             ),
@@ -483,7 +486,7 @@ def test_escape_context(input_context: dict[str, str], expected_context: Mapping
         (
             Mock(
                 requests.models.Response,
-                status_code=200,
+                status_code=HTTPStatus.OK,
                 text="whatever",
                 json=lambda: {"code": "all good"},
             ),
@@ -501,7 +504,7 @@ def test_escape_context(input_context: dict[str, str], expected_context: Mapping
         (
             Mock(
                 requests.models.Response,
-                status_code=400,
+                status_code=HTTPStatus.BAD_REQUEST,
                 text="whatever",
                 json=lambda: {"code": "all good"},
             ),

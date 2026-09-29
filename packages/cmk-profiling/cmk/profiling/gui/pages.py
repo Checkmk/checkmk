@@ -10,6 +10,7 @@ import pstats
 import tempfile
 from collections.abc import Collection
 from dataclasses import asdict
+from http import HTTPStatus
 from typing import override
 
 import cmk.utils.paths
@@ -400,7 +401,7 @@ class PageProfileData(Page):
         profile_path = store.get_profile(profile_id)
         response.set_content_type("application/json")
         if profile_path is None:
-            response.status_code = 404
+            response.status_code = HTTPStatus.NOT_FOUND
             response.set_data(json.dumps({"error": "Profile not found"}))
             return
 

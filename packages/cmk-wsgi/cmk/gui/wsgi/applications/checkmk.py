@@ -11,6 +11,7 @@ import http.client as http_client
 import json
 import traceback
 from collections.abc import Callable
+from http import HTTPStatus
 from typing import override
 from wsgiref.types import StartResponse, WSGIEnvironment
 
@@ -134,7 +135,8 @@ def _render_exception(ctx: pages.PageContext, e: Exception, title: str) -> Respo
     status_code: int | None = e.status if isinstance(e, MKHTTPException) else None
     if _is_ajax_request():
         return _json_error_response(
-            f"{title}: {e}" if title else str(e), status_code=status_code if status_code else 200
+            f"{title}: {e}" if title else str(e),
+            status_code=status_code if status_code else HTTPStatus.OK,
         )
 
     if plain_error():
@@ -226,7 +228,7 @@ def _is_ajax_request() -> bool:
     return request.has_var("_ajaxid")
 
 
-def _json_error_response(error_message: str, status_code: int = 200) -> Response:
+def _json_error_response(error_message: str, status_code: int = HTTPStatus.OK) -> Response:
     """Return a JSON error response for AJAX endpoints"""
     resp = Response(
         response=json.dumps({"result_code": 1, "result": error_message, "severity": "error"}),

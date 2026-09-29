@@ -59,6 +59,7 @@ const patternMap = {
 }
 
 function getPrefix(relativePath) {
+  relativePath = relativePath.replace('src/nonfree/', 'src/')
   const folderName = relativePath.split('/')[1]
   for (let [key, value] of Object.entries(patternMap)) {
     if (relativePath.startsWith(value)) {

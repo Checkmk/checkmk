@@ -17,12 +17,12 @@ from cmk.update_config.registry import update_action_registry
 LOGGER = logging.getLogger("test")
 
 
-@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture
 def _experimental_flags_config_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setattr(global_config, "EXPERIMENTAL_FLAGS_CONFIG_DIR", tmp_path)
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "_experimental_flags_config_dir")
 def test_removes_flags_that_no_longer_exist(tmp_path: Path) -> None:
     config_file = tmp_path / CONFIG_FILENAME
     config_file.write_text('{"already_removed_flag": true, "exp_trial_mode_selection": true}')
@@ -32,7 +32,7 @@ def test_removes_flags_that_no_longer_exist(tmp_path: Path) -> None:
     assert json.loads(config_file.read_text()) == {"exp_trial_mode_selection": True}
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "_experimental_flags_config_dir")
 def test_does_not_create_config_file_when_missing(tmp_path: Path) -> None:
     config_file = tmp_path / CONFIG_FILENAME
 

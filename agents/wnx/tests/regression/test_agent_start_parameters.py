@@ -82,6 +82,7 @@ def expected_output_engine(request, testconfig):
             r"# Environment Variables:",
             r"# MK_LOCALDIR=\.?",
             r"# MK_STATEDIR=\.?",
+            r"# MK_LIBDIR=\.?",
             r"# MK_PLUGINSDIR=\.?",
             r"# MK_TEMPDIR=\.?",
             r"# MK_LOGDIR=\.?",

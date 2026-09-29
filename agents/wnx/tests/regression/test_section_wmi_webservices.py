@@ -36,7 +36,7 @@ def testconfig_engine(request, make_yaml_config):
     if Globals.alone:
         make_yaml_config["global"]["sections"] = request.param[0]
     else:
-        make_yaml_config["global"]["sections"] = [request.param[0], "%s systemtime"]
+        make_yaml_config["global"]["sections"] = [request.param[0], "systemtime"]
     return make_yaml_config
 
 

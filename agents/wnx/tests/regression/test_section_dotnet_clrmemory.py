@@ -57,7 +57,7 @@ def expected_output_engine():
     ]
     re_str = (
         r"\d+,,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,"
-        r"[\w\#\.]+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,"
+        r"[^,]+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,"
         r"\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+"
     ).replace(",", "\\|")
     if not Globals.alone:

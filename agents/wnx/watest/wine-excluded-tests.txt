@@ -30,7 +30,6 @@ WmiWrapperFixture.Table
 WmiWrapperFixture.TablePostProcess
 
 # Event log (stub implementation under Wine)
-LogWatchEventTest.DumpEventLog
 LogWatchEventTest.GetLastPos
 LogWatchEventTest.RegPresence
 LogWatchEventTest.TestFilterIds

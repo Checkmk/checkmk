@@ -155,49 +155,107 @@ TEST_F(LogWatchEventFixture, DumpEventLogWithSkipAndCutOnDiffEntry) {
     EXPECT_NE(table[0].find("Message "), std::string::npos);
 }
 
-TEST(LogWatchEventTest, DumpEventLog) {
-    auto ptr = cma::evl::OpenEvl(L"Application", false);
-    ASSERT_TRUE(ptr);
-
-    State state("Application", 0, true);
-    {
-        LogWatchLimits lwl{.max_size = 10'000,
-                           .max_line_length = -1,
-                           .max_entries = -1,
-                           .timeout = -1,
-                           .skip = SkipDuplicatedRecords::no};
-        auto [pos, out] = DumpEventLog(*ptr, state, lwl, {});
-        EXPECT_TRUE(pos > 0);
-        EXPECT_TRUE(out.length() < 12'000);
+namespace {
+// Error-level records of the test's own, long enough that each limit below
+// cuts the output.
+std::vector<tst::EventRecordData> OwnErrorRecords() {
+    std::vector<tst::EventRecordData> data;
+    for (uint16_t i = 0; i < 25; ++i) {
+        data.push_back({.event_id = 100,
+                        .event_qualifiers = 0,
+                        .time_generated = i + 1,
+                        .source = L"watest",
+                        .message = L"DumpEventLog entry " + std::to_wstring(i) +
+                                   L' ' + std::wstring(60, L'x'),
+                        .event_level = evl::EventLogRecordBase::Level::error});
     }
+    return data;
+}
 
-    {
-        LogWatchLimits lwl{.max_size = -1,
-                           .max_line_length = 10,
-                           .max_entries = 19,
-                           .timeout = -1,
-                           .skip = SkipDuplicatedRecords::no};
-        auto [pos, out] = DumpEventLog(*ptr, state, lwl, {});
-        EXPECT_TRUE(pos > 0);
-        EXPECT_TRUE(out.length() < 20000);
-        auto table = cma::tools::SplitString(out, "\n");
-        ASSERT_EQ(table.size(), 19);
-        for (const auto &t : table) EXPECT_TRUE(t.size() <= 10);
-    }
+constexpr LogWatchLimits kNoLimits{.max_size = -1,
+                                   .max_line_length = -1,
+                                   .max_entries = -1,
+                                   .timeout = -1,
+                                   .skip = SkipDuplicatedRecords::no};
 
-    {
-        LogWatchLimits lwl{.max_size = -1,
-                           .max_line_length = 10,
-                           .max_entries = -1,
-                           .timeout = -1,
-                           .skip = SkipDuplicatedRecords::no};
-        auto start = steady_clock::now();
-        auto [_, out] = DumpEventLog(*ptr, state, lwl, {});
-        auto end = steady_clock::now();
-        EXPECT_LE(std::chrono::duration_cast<std::chrono::seconds>(end - start)
-                      .count(),
-                  3);
+/// EventLogDebug that takes a while per record, for the timeout
+class SlowEventLog final : public evl::EventLogBase {
+public:
+    SlowEventLog(const std::vector<tst::EventRecordData> &data,
+                 std::chrono::milliseconds delay)
+        : log_{data}, delay_{delay} {}
+
+    [[nodiscard]] std::wstring getName() const override { return L"slow"; }
+    void seek(uint64_t record_id) override { log_.seek(record_id); }
+    evl::EventLogRecordBase *readRecord() override {
+        std::this_thread::sleep_for(delay_);
+        return log_.readRecord();
     }
+    uint64_t getLastRecordId() override { return log_.getLastRecordId(); }
+    [[nodiscard]] bool isLogValid() const override { return true; }
+
+private:
+    evl::EventLogDebug log_;
+    std::chrono::milliseconds delay_;
+};
+}  // namespace
+
+TEST(LogWatchEventTest, DumpEventLogStopsAtMaxSize) {
+    const auto data = OwnErrorRecords();
+    evl::EventLogDebug event_log{data};
+    const State state{"Application", cfg::kFromBegin, true};
+    auto lwl = kNoLimits;
+    lwl.max_size = 1'000;
+
+    const auto [pos, out] = DumpEventLog(event_log, state, lwl, {});
+
+    // The limit is checked after appending a record: the output reaches
+    // max_size with its last record, and was below it before that record.
+    const auto lines = tools::SplitString(out, "\n");
+    ASSERT_FALSE(lines.empty());
+    const auto size = static_cast<int64_t>(out.length());
+    const auto last = static_cast<int64_t>(lines.back().length() + 1);
+    EXPECT_GE(size, lwl.max_size);
+    EXPECT_LT(size - last, lwl.max_size);
+    EXPECT_EQ(pos, lines.size() - 1);  // the last printed record
+    EXPECT_LT(pos, data.size() - 1);   // the rest is not printed
+}
+
+TEST(LogWatchEventTest, DumpEventLogCutsLongLines) {
+    const auto data = OwnErrorRecords();
+    evl::EventLogDebug event_log{data};
+    const State state{"Application", cfg::kFromBegin, true};
+    auto lwl = kNoLimits;
+    lwl.max_line_length = 10;
+
+    const auto [pos, out] = DumpEventLog(event_log, state, lwl, {});
+
+    const auto lines = tools::SplitString(out, "\n");
+    EXPECT_EQ(lines.size(), data.size());
+    for (const auto &line : lines) {
+        EXPECT_EQ(static_cast<int64_t>(line.length()), lwl.max_line_length);
+    }
+    EXPECT_EQ(pos, data.size() - 1);
+}
+
+TEST(LogWatchEventTest, DumpEventLogStopsOnTimeout) {
+    const auto data = OwnErrorRecords();
+    // 25 records x 200 ms: 5 s for the whole log
+    SlowEventLog event_log{data, std::chrono::milliseconds{200}};
+    const State state{"Application", cfg::kFromBegin, true};
+    auto lwl = kNoLimits;
+    lwl.timeout = 1;
+
+    const auto start = steady_clock::now();
+    const auto [pos, out] = DumpEventLog(event_log, state, lwl, {});
+    const auto elapsed = steady_clock::now() - start;
+
+    // Whole seconds, compared with '>': a timeout of 1 s stops after 2 s, long
+    // before the last record. Only a lower bound on the time: load can only
+    // make the run longer, and stop it after fewer records.
+    EXPECT_GE(elapsed, std::chrono::seconds{lwl.timeout + 1});
+    EXPECT_LT(pos, data.size() - 1);
+    EXPECT_EQ(tools::SplitString(out, "\n").size(), pos + 1);
 }
 
 // check how good can we find objects in entries

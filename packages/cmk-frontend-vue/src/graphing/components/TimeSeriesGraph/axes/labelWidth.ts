@@ -16,13 +16,11 @@ interface LabelFont {
 
 const fontByReference = new WeakMap<Element, LabelFont>()
 const widthByFontAndText = new Map<string, number>()
-let sharedContext: CanvasRenderingContext2D | null | undefined
+let canvas: HTMLCanvasElement | undefined
 
 function measurementContext(): CanvasRenderingContext2D | null {
-  if (sharedContext === undefined) {
-    sharedContext = document.createElement('canvas').getContext('2d')
-  }
-  return sharedContext
+  canvas ??= document.createElement('canvas')
+  return canvas.getContext('2d')
 }
 
 function labelFont(reference: Element | null): LabelFont {

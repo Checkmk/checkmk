@@ -10,6 +10,7 @@ import dataclasses
 import json
 from collections.abc import Iterator
 from dataclasses import dataclass
+from http import HTTPStatus
 from typing import Annotated, cast, override
 from unittest.mock import MagicMock
 
@@ -310,7 +311,7 @@ def test_handle_endpoint_request_empty_handler(permission_validator: PermissionV
         is_testing=False,
     )
 
-    assert response.status_code == 204, response.get_data(as_text=True)
+    assert response.status_code == HTTPStatus.NO_CONTENT, response.get_data(as_text=True)
     assert response.get_data() == b""
     assert dict(response.headers) == {}
 
@@ -338,7 +339,7 @@ def test_handle_endpoint_request_missing_parameters_header(
         )
 
     response = exc_info.value.to_problem()
-    assert response.status_code == 400, response.get_data(as_text=True)
+    assert response.status_code == HTTPStatus.BAD_REQUEST, response.get_data(as_text=True)
     response_json = response.get_json()
     assert "headers.header_param" in response_json["detail"]
     assert response_json["fields"]["headers.header_param"]["type"] == "missing"
@@ -369,7 +370,7 @@ def test_handle_endpoint_request_missing_parameters_query(
         )
 
     response = exc_info.value.to_problem()
-    assert response.status_code == 400, response.get_data(as_text=True)
+    assert response.status_code == HTTPStatus.BAD_REQUEST, response.get_data(as_text=True)
     response_json = response.get_json()
     assert "query.query_param" in response_json["detail"]
     assert response_json["fields"]["query.query_param"]["type"] == "missing"
@@ -400,7 +401,7 @@ def test_handle_endpoint_request_missing_parameters_path(
         )
 
     response = exc_info.value.to_problem()
-    assert response.status_code == 404, response.get_data(as_text=True)
+    assert response.status_code == HTTPStatus.NOT_FOUND, response.get_data(as_text=True)
     response_json = response.get_json()
     assert "path.path_param" in response_json["detail"]
     assert response_json["fields"]["path.path_param"]["type"] == "missing"
@@ -435,7 +436,7 @@ def test_handle_endpoint_request_missing_parameters_body(
         )
 
     response = exc_info.value.to_problem()
-    assert response.status_code == 400, response.get_data(as_text=True)
+    assert response.status_code == HTTPStatus.BAD_REQUEST, response.get_data(as_text=True)
     response_json = response.get_json()
     assert "body.body_field" in response_json["detail"]
     assert response_json["fields"]["body.body_field"]["type"] == "missing"
@@ -477,7 +478,7 @@ def test_handle_endpoint_request_complex_handler(
         is_testing=False,
     )
 
-    assert response.status_code == 200, response.get_data(as_text=True)
+    assert response.status_code == HTTPStatus.OK, response.get_data(as_text=True)
     assert response.get_data() == b'{"body_field":123}'
     assert dict(response.headers) == {
         "Content-Type": "application/json",
@@ -515,7 +516,7 @@ def test_handle_endpoint_request_runs_config_hooks_on_write(
         wato_use_git=wato_use_git,
     )
 
-    assert response.status_code == 204, response.get_data(as_text=True)
+    assert response.status_code == HTTPStatus.NO_CONTENT, response.get_data(as_text=True)
     update_config_generation.assert_called_once_with()
     assert do_git_commit.call_count == expected_git_calls
 
@@ -616,7 +617,7 @@ def test_handle_endpoint_request_permissions() -> None:
         wato_use_git=False,
         is_testing=False,
     )
-    assert response.status_code == 204, response.get_data(as_text=True)
+    assert response.status_code == HTTPStatus.NO_CONTENT, response.get_data(as_text=True)
 
 
 @pytest.mark.usefixtures("request_context", "with_admin_login")
@@ -698,7 +699,7 @@ def test_handle_endpoint_request_permission_denied_is_forbidden(
         )
 
     response = exc_info.value.to_problem()
-    assert response.status_code == 403, response.get_data(as_text=True)
+    assert response.status_code == HTTPStatus.FORBIDDEN, response.get_data(as_text=True)
     assert "lack the permission" in response.get_json()["detail"]
 
 
@@ -787,7 +788,7 @@ def test_handle_endpoint_output_etag(permission_validator: PermissionValidator) 
     etag = ETag({"key": "value"})
 
     def handler() -> ApiResponse[None]:
-        return ApiResponse(body=None, status_code=204, etag=etag)
+        return ApiResponse(body=None, status_code=HTTPStatus.NO_CONTENT, etag=etag)
 
     request_endpoint = RequestEndpointFactory.build(
         handler=handler, content_type=None, etag="output"
@@ -880,7 +881,7 @@ def test_handle_endpoint_request_union_body_dispatches(
             wato_use_git=False,
             is_testing=False,
         )
-        assert response.status_code == 200, response.get_data(as_text=True)
+        assert response.status_code == HTTPStatus.OK, response.get_data(as_text=True)
         assert response.get_data() == expected
 
 
@@ -910,5 +911,5 @@ def test_handle_endpoint_request_type_alias_body(
         wato_use_git=False,
         is_testing=False,
     )
-    assert response.status_code == 200, response.get_data(as_text=True)
+    assert response.status_code == HTTPStatus.OK, response.get_data(as_text=True)
     assert response.get_data() == b'{"a_field":"world"}'

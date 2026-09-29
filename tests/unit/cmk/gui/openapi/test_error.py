@@ -5,6 +5,7 @@
 
 
 import json
+from http import HTTPStatus
 
 from cmk.gui.openapi.restful_objects.api_error import ApiError
 from cmk.gui.openapi.utils import EXT, FIELDS, problem
@@ -40,7 +41,7 @@ def test_openapi_error_response() -> None:
 
     problem_response = problem(
         detail="Experienced an error",
-        status=500,
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
         title="Internal Server Error",
         fields=fields,
         ext=EXT({"error_type": "internal_error"}),
@@ -55,7 +56,7 @@ def test_openapi_error_response() -> None:
 
     assert dumped["detail"] == "Experienced an error"
     assert dumped["ext"] == {"error_type": "internal_error"}
-    assert dumped["status"] == 500
+    assert dumped["status"] == HTTPStatus.INTERNAL_SERVER_ERROR
     assert dumped["title"] == "Internal Server Error"
     assert dumped["fields"]["entries"]["0"]["attributes"]["_schema"]["locked_by"] == {
         "instance_id": ["Missing data for required field."],

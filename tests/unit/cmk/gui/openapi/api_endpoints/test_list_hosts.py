@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from http import HTTPStatus
 
 import pytest
 
@@ -35,5 +36,5 @@ def test_list_hosts_does_not_commit_the_setup_git_repo(
             headers={"Accept": "application/json", "Content-Type": "application/json"},
         )
 
-    assert resp.status_code == 200, resp.text
+    assert resp.status_code == HTTPStatus.OK, resp.text
     assert setup_git_commit_subjects(config_dir) == ["Initialized GIT for Checkmk"]

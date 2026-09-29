@@ -6,6 +6,7 @@
 import json
 import shutil
 from collections.abc import Mapping
+from http import HTTPStatus
 
 import pytest
 
@@ -48,7 +49,7 @@ def test_create_javascript_crash_report(clients: ClientRegistry) -> None:
     response = clients.JavascriptCrashReport.create(_BODY)
     _pop_stored_crash_infos()
 
-    assert response.status_code == 201
+    assert response.status_code == HTTPStatus.CREATED
     assert response.json["domainType"] == "javascript_crash_report"
     assert response.json["extensions"]["crash_type"] == "javascript"
     assert response.json["extensions"]["crash_report_url"] == (
@@ -122,7 +123,7 @@ def test_create_javascript_crash_report_requires_the_error_identity(
 
     response = clients.JavascriptCrashReport.create(body, expect_ok=False)
 
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert _pop_stored_crash_infos() == []
 
 
@@ -141,11 +142,11 @@ def test_create_javascript_crash_report_field_length_limits(
     clients: ClientRegistry, field: str, max_length: int
 ) -> None:
     accepted = clients.JavascriptCrashReport.create({**_BODY, field: "a" * max_length})
-    assert accepted.status_code == 201
+    assert accepted.status_code == HTTPStatus.CREATED
     assert len(_pop_stored_crash_infos()) == 1
 
     rejected = clients.JavascriptCrashReport.create(
         {**_BODY, field: "a" * (max_length + 1)}, expect_ok=False
     )
-    assert rejected.status_code == 400
+    assert rejected.status_code == HTTPStatus.BAD_REQUEST
     assert _pop_stored_crash_infos() == []

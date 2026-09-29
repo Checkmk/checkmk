@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from http import HTTPStatus
 
 import pytest
 
@@ -16,26 +17,34 @@ from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 
 def test_may_fail_catches_value_error() -> None:
-    with pytest.raises(ProblemException) as exc_info, may_fail(ValueError, status=404):
+    with (
+        pytest.raises(ProblemException) as exc_info,
+        may_fail(ValueError, status=HTTPStatus.NOT_FOUND),
+    ):
         raise ValueError("Nothing to see here, move along.")
     data = json.loads(exc_info.value.to_problem().data)
-    assert data["status"] == 404
+    assert data["status"] == HTTPStatus.NOT_FOUND
     assert data["detail"] == "Nothing to see here, move along."
 
 
 def test_may_fail_catches_mk_user_error() -> None:
     with pytest.raises(ProblemException) as exc_info, may_fail(MKUserError):
-        raise MKUserError(None, "There is an activation already running.", status=409)
+        raise MKUserError(
+            None, "There is an activation already running.", status=HTTPStatus.CONFLICT
+        )
     data = json.loads(exc_info.value.to_problem().data)
-    assert data["status"] == 409
+    assert data["status"] == HTTPStatus.CONFLICT
     assert data["detail"] == "There is an activation already running."
 
 
 def test_may_fail_catches_mk_auth_exception() -> None:
-    with pytest.raises(ProblemException) as exc_info, may_fail(MKAuthException, status=401):
+    with (
+        pytest.raises(ProblemException) as exc_info,
+        may_fail(MKAuthException, status=HTTPStatus.UNAUTHORIZED),
+    ):
         raise MKAuthException("These are not the droids that you are looking for.")
     data = json.loads(exc_info.value.to_problem().data)
-    assert data["status"] == 401
+    assert data["status"] == HTTPStatus.UNAUTHORIZED
     assert data["detail"] == "These are not the droids that you are looking for."
 
 
@@ -47,4 +56,4 @@ def test_get_site_id_for_host_unknown_host(mock_livestatus: MockLiveStatusConnec
         with pytest.raises(ProblemException) as exc_info:
             get_site_id_for_host(sites.live(), "nonexistent.example.com")
     data = json.loads(exc_info.value.to_problem().data)
-    assert data["status"] == 404
+    assert data["status"] == HTTPStatus.NOT_FOUND

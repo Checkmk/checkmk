@@ -5,6 +5,7 @@
 
 
 import json
+from http import HTTPStatus
 from typing import get_args
 
 import pytest
@@ -256,7 +257,7 @@ def test_no_config_generation_on_certain_posts(
                 }
             ),
             headers={"Accept": "application/json"},
-            status=204,
+            status=HTTPStatus.NO_CONTENT,
         )
     # we have a post request, but explitily said so in the endpoint to not update_config,
     # so we expect update_config not to be called

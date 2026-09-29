@@ -12,6 +12,7 @@ download and registration.
 
 import datetime as dt
 from collections.abc import Iterator
+from http import HTTPStatus
 
 import pytest
 
@@ -116,7 +117,7 @@ class TestCreateAgentDownloadToken:
         distributed_sites: None,  # noqa: ARG002
     ) -> None:
         resp = clients.Agent.create_download_token()
-        resp.assert_status_code(201)
+        resp.assert_status_code(HTTPStatus.CREATED)
         token_id = resp.json["id"]
         stored = get_token_store().verify(f"0:{token_id}", now=dt.datetime.now(dt.UTC))
         assert isinstance(stored.details, AgentDownloadToken)
@@ -127,7 +128,7 @@ class TestCreateAgentDownloadToken:
         distributed_sites: None,  # noqa: ARG002
     ) -> None:
         resp = clients.Agent.create_download_token(body={"site_id": "NO_SITE"})
-        resp.assert_status_code(201)
+        resp.assert_status_code(HTTPStatus.CREATED)
         token_id = resp.json["id"]
         stored = get_token_store().verify(f"0:{token_id}", now=dt.datetime.now(dt.UTC))
         assert isinstance(stored.details, AgentDownloadToken)
@@ -164,7 +165,7 @@ class TestCreateAgentDownloadToken:
 
         resp = clients.Agent.create_download_token(body={"site_id": REMOTE_SITE})
 
-        resp.assert_status_code(201)
+        resp.assert_status_code(HTTPStatus.CREATED)
         assert resp.json["id"] == "forwarded-token-id"
         assert resp.json["extensions"]["expires_at"].startswith("2026-05-04")
         assert captured["site_id"] == REMOTE_SITE
@@ -182,7 +183,7 @@ class TestCreateAgentDownloadToken:
         resp = clients.Agent.create_download_token(
             body={"site_id": "does_not_exist"}, expect_ok=False
         )
-        resp.assert_status_code(400)
+        resp.assert_status_code(HTTPStatus.BAD_REQUEST)
         assert "does_not_exist" in resp.json["detail"]
 
     def test_remote_without_login_returns_502(
@@ -193,7 +194,7 @@ class TestCreateAgentDownloadToken:
         resp = clients.Agent.create_download_token(
             body={"site_id": UNCONNECTED_SITE}, expect_ok=False
         )
-        resp.assert_status_code(502)
+        resp.assert_status_code(HTTPStatus.BAD_GATEWAY)
         assert "not logged" in resp.json["detail"].lower()
 
 
@@ -208,7 +209,7 @@ class TestCreateAgentRegistrationToken:
         resp = clients.Agent.create_registration_token(
             body={"host": "heute", "comment": "from test"}
         )
-        resp.assert_status_code(201)
+        resp.assert_status_code(HTTPStatus.CREATED)
         token_id = resp.json["id"]
         stored = get_token_store().verify(f"0:{token_id}", now=dt.datetime.now(dt.UTC))
         assert isinstance(stored.details, AgentRegistrationToken)
@@ -246,7 +247,7 @@ class TestCreateAgentRegistrationToken:
             body={"host": "heute", "comment": "remote", "site_id": REMOTE_SITE}
         )
 
-        resp.assert_status_code(201)
+        resp.assert_status_code(HTTPStatus.CREATED)
         assert resp.json["id"] == "forwarded-reg-token"
         assert resp.json["extensions"]["host_name"] == "heute"
         assert resp.json["extensions"]["comment"] == "remote"
@@ -262,5 +263,5 @@ class TestCreateAgentRegistrationToken:
             body={"host": "heute", "comment": "x", "site_id": "does_not_exist"},
             expect_ok=False,
         )
-        resp.assert_status_code(400)
+        resp.assert_status_code(HTTPStatus.BAD_REQUEST)
         assert "does_not_exist" in resp.json["detail"]

@@ -6,6 +6,7 @@
 # ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
 from collections.abc import Iterator, Mapping
+from http import HTTPStatus
 
 import pytest
 
@@ -41,7 +42,7 @@ def create_disabled_legacy_stub(fresh_app_instance: None) -> Iterator[WrappedEnd
         skip_locking=True,
     )
     def _real(param: Mapping[str, object]) -> Response:
-        return Response(status=204)
+        return Response(status=HTTPStatus.NO_CONTENT)
 
     stub = disabled_legacy(_real, _DETAIL)
     endpoint_registry.register(stub)
@@ -74,16 +75,16 @@ def create_disabled_versioned_stub(fresh_app_instance: None) -> Iterator[Version
 @pytest.mark.usefixtures("disabled_legacy_stub")
 def test_disabled_legacy_stub_returns_403(clients: ClientRegistry) -> None:
     resp = clients.DisabledEndpointStub.get_legacy(expect_ok=False)
-    resp.assert_status_code(403)
+    resp.assert_status_code(HTTPStatus.FORBIDDEN)
     assert resp.json["title"] == "Feature not available"
     assert resp.json["detail"] == _DETAIL
-    assert resp.json["status"] == 403
+    assert resp.json["status"] == HTTPStatus.FORBIDDEN
 
 
 @pytest.mark.usefixtures("disabled_versioned_stub")
 def test_disabled_versioned_stub_returns_403(clients: ClientRegistry) -> None:
     resp = clients.DisabledEndpointStub.get_versioned(expect_ok=False)
-    resp.assert_status_code(403)
+    resp.assert_status_code(HTTPStatus.FORBIDDEN)
     assert resp.json["title"] == "Feature not available"
     assert resp.json["detail"] == _DETAIL
-    assert resp.json["status"] == 403
+    assert resp.json["status"] == HTTPStatus.FORBIDDEN

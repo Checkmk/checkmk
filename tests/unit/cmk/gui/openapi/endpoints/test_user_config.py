@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator
+from http import HTTPStatus
 
 import pytest
 from pytest_mock import MockerFixture
@@ -61,7 +62,7 @@ def test_edit_user_credentials_blocked_on_remote_site(
         expect_ok=False,
         customer=None,
     )
-    response.assert_status_code(403)
+    response.assert_status_code(HTTPStatus.FORBIDDEN)
     assert response.json["title"] == "Not allowed on remote site"
 
 
@@ -90,7 +91,7 @@ def test_trigger_user_sync(clients: ClientRegistry, mocker: MockerFixture) -> No
     start_mock = mocker.patch.object(UserSyncBackgroundJob, "start", return_value=result.OK(None))
 
     resp = clients.User.trigger_user_sync()
-    assert resp.status_code == 303
+    assert resp.status_code == HTTPStatus.SEE_OTHER
     assert "/objects/background_job/" in resp.headers["Location"]
     start_mock.assert_called_once()
 
@@ -103,4 +104,4 @@ def test_trigger_user_sync_already_running(clients: ClientRegistry, mocker: Mock
     )
 
     resp = clients.User.trigger_user_sync(expect_ok=False)
-    assert resp.status_code == 409
+    assert resp.status_code == HTTPStatus.CONFLICT

@@ -12,6 +12,7 @@ discriminated-union round-trip, complementing the shape contract test
 
 from collections.abc import Iterator
 from contextlib import contextmanager
+from http import HTTPStatus
 
 import pytest
 
@@ -134,12 +135,12 @@ def test_create_show_list_delete(clients: ClientRegistry) -> None:
     assert any(entry["id"] == "map1" for entry in listed.json["value"])
 
     clients.Maps.delete("map1", etag="valid_etag")
-    clients.Maps.get("map1", expect_ok=False).assert_status_code(404)
+    clients.Maps.get("map1", expect_ok=False).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_create_duplicate_returns_409(clients: ClientRegistry) -> None:
     clients.Maps.create(config=_STATIC_MAP)
-    clients.Maps.create(config=_STATIC_MAP, expect_ok=False).assert_status_code(409)
+    clients.Maps.create(config=_STATIC_MAP, expect_ok=False).assert_status_code(HTTPStatus.CONFLICT)
 
 
 def test_update_roundtrip_with_valid_etag(clients: ClientRegistry) -> None:
@@ -154,17 +155,17 @@ def test_update_with_stale_etag_returns_412(clients: ClientRegistry) -> None:
     clients.Maps.create(config=_STATIC_MAP)
     clients.Maps.edit(
         "map1", config=_STATIC_MAP, etag="invalid_etag", expect_ok=False
-    ).assert_status_code(412)
+    ).assert_status_code(HTTPStatus.PRECONDITION_FAILED)
 
 
 def test_update_missing_returns_404(clients: ClientRegistry) -> None:
     clients.Maps.edit(
         "does-not-exist", config=_map("does-not-exist"), etag="star", expect_ok=False
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_delete_missing_returns_404(clients: ClientRegistry) -> None:
-    clients.Maps.delete("does-not-exist", expect_ok=False).assert_status_code(404)
+    clients.Maps.delete("does-not-exist", expect_ok=False).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_presentation_map_discriminated_union_roundtrips(clients: ClientRegistry) -> None:
@@ -185,7 +186,7 @@ def test_show_map_with_unrepresentable_stored_spec_returns_clean_409(
 
     monkeypatch.setattr(utils, "map_from_spec", _raise_validation_error)
     resp = clients.Maps.get("map1", expect_ok=False)
-    resp.assert_status_code(409)
+    resp.assert_status_code(HTTPStatus.CONFLICT)
     assert "cannot be represented" in resp.json["title"]
 
 
@@ -262,7 +263,7 @@ def test_customizing_a_builtin_creates_an_own_override(clients: ClientRegistry) 
 
 def test_deleting_a_builtin_is_refused(clients: ClientRegistry) -> None:
     assert clients.Maps.get("all_hosts").json["extensions"]["is_builtin"] is True
-    clients.Maps.delete("all_hosts", expect_ok=False).assert_status_code(403)
+    clients.Maps.delete("all_hosts", expect_ok=False).assert_status_code(HTTPStatus.FORBIDDEN)
 
 
 def test_update_with_mismatched_config_name_returns_400(clients: ClientRegistry) -> None:
@@ -271,7 +272,7 @@ def test_update_with_mismatched_config_name_returns_400(clients: ClientRegistry)
     # (which would also get GUI-signed under that wrong name for the daemon).
     clients.Maps.create(config=_STATIC_MAP)
     clients.Maps.edit("map1", config=_map("map2"), etag="star", expect_ok=False).assert_status_code(
-        400
+        HTTPStatus.BAD_REQUEST
     )
 
 
@@ -283,12 +284,12 @@ def test_publish_without_targets_returns_400(clients: ClientRegistry, scope: str
         config=_STATIC_MAP,
         visibility={"publish": scope, "hide_in_monitor_menu": False},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
     clients.Maps.create(
         config=_STATIC_MAP,
         visibility={"publish": scope, "groups": [], "hide_in_monitor_menu": False},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_object_rejects_null_for_non_nullable_line_fields(clients: ClientRegistry) -> None:
@@ -299,7 +300,7 @@ def test_object_rejects_null_for_non_nullable_line_fields(clients: ClientRegistr
         "map1",
         objects=[_host_object("o1", obj_type="line", line={"perfdata_label": None})],
     )
-    clients.Maps.create(config=map_spec, expect_ok=False).assert_status_code(400)
+    clients.Maps.create(config=map_spec, expect_ok=False).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 # Pagetype permission model (own / foreign-in-place / built-in override) across
@@ -384,7 +385,7 @@ def test_admin_edits_foreign_map_in_place(
 
 def test_admin_deletes_foreign_map(clients: ClientRegistry, map_owned_by_user: str) -> None:
     clients.Maps.delete(map_owned_by_user, etag="star")
-    clients.Maps.get(map_owned_by_user, expect_ok=False).assert_status_code(404)
+    clients.Maps.get(map_owned_by_user, expect_ok=False).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_normal_user_may_view_but_not_edit_or_delete_foreign_map(
@@ -401,8 +402,10 @@ def test_normal_user_may_view_but_not_edit_or_delete_foreign_map(
         assert shown.json["extensions"]["can_delete"] is False
         clients.Maps.edit(
             admin_shared_map, config=_map("shared", alias="X"), etag="star", expect_ok=False
-        ).assert_status_code(403)
-        clients.Maps.delete(admin_shared_map, etag="star", expect_ok=False).assert_status_code(403)
+        ).assert_status_code(HTTPStatus.FORBIDDEN)
+        clients.Maps.delete(admin_shared_map, etag="star", expect_ok=False).assert_status_code(
+            HTTPStatus.FORBIDDEN
+        )
 
 
 def test_guest_may_not_create_map(
@@ -413,7 +416,9 @@ def test_guest_may_not_create_map(
     # ``maps.use`` grants viewing; creating still needs the pagetype edit grant
     # (``general.edit_map``), which the guest role lacks.
     with _acting_as(clients, with_automation_user_guest, with_automation_user):
-        clients.Maps.create(config=_map("g1"), expect_ok=False).assert_status_code(403)
+        clients.Maps.create(config=_map("g1"), expect_ok=False).assert_status_code(
+            HTTPStatus.FORBIDDEN
+        )
 
 
 def test_authoring_settings_are_served_to_the_spa(clients: ClientRegistry) -> None:

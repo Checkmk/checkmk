@@ -5,8 +5,8 @@
  */
 import type { CmkApiError } from 'cmk-ui-library/lib/error'
 import { createClient, unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
 
 const EXAMPLE_DATA = {
   some_random_playload: 123
@@ -40,17 +40,14 @@ const restHandlers = [
   })
 ]
 
-const server = setupServer(...restHandlers)
+useMswServer(...restHandlers)
 let client: ReturnType<typeof createClient>
 
 beforeAll(() => {
-  // NOTE: server.listen must be called before `createClient` is used to ensure
-  // the msw can inject its version of `fetch` to intercept the requests.
-  server.listen({ onUnhandledRequest: 'error' })
+  // NOTE: the server, registered above, must listen before `createClient` is used
+  // to ensure the msw can inject its version of `fetch` to intercept the requests.
   client = createClient({ baseUrl: BASE_URL })
 })
-afterAll(() => server.close())
-afterEach(() => server.resetHandlers())
 
 test('simple get', async () => {
   /* @ts-expect-error Testing mock endpoint */

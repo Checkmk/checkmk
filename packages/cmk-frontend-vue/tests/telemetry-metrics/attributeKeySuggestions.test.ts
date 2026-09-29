@@ -3,9 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, expect, test, vi } from 'vitest'
+import { expect, test, vi } from 'vitest'
 
 import type { KeySection } from '@/telemetry-metrics/attribute-kind'
 import { KEY_IDENTS, buildAutocompleteContext } from '@/telemetry-metrics/attributeFilterAdapter'
@@ -21,7 +21,7 @@ const KEYS_BY_KIND: Record<string, string[]> = {
 
 const API_BASE = `${location.protocol}//${location.host}/api/internal`
 
-const server = setupServer(
+useMswServer(
   http.post(`${API_BASE}/objects/autocomplete/:ident`, async ({ params, request }) => {
     const keys = KEYS_BY_KIND[params.ident as string] ?? []
     const { value: query } = (await request.json()) as { value: string }
@@ -29,10 +29,6 @@ const server = setupServer(
     return HttpResponse.json({ choices: matching.map((key) => ({ id: key, value: key })) })
   })
 )
-
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-afterEach(() => server.resetHandlers())
-afterAll(() => server.close())
 
 function keySuggestions(): (query: string) => Promise<KeySection[]> {
   const { querySuggestions } = useAttributeKeySuggestions(() =>

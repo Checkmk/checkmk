@@ -9,8 +9,8 @@ import type {
   SingleChoiceEditable,
   ValidationMessage
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
 
 import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/dispatch'
 import FormSingleChoiceEditable from '@/form/private/forms/FormSingleChoiceEditable/FormSingleChoiceEditable.vue'
@@ -30,7 +30,7 @@ const mockSchema: Dictionary = {
 
 const BASE = `${location.protocol}//${location.host}/api/internal`
 
-const server = setupServer(
+const server = useMswServer(
   http.get(`${BASE}/domain-types/notification_parameter/collections/:entity_type_specifier`, () =>
     HttpResponse.json({
       value: [
@@ -49,11 +49,8 @@ const server = setupServer(
   )
 )
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }))
-afterAll(() => server.close())
 afterEach(() => {
   cleanup()
-  server.resetHandlers()
 })
 
 function makeSpec(overrides: Partial<SingleChoiceEditable> = {}): SingleChoiceEditable {

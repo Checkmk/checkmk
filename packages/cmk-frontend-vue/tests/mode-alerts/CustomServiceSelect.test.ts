@@ -5,9 +5,9 @@
  */
 import { userEvent } from '@testing-library/user-event'
 import { cleanup, render, screen, waitFor } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, expect, test } from 'vitest'
+import { afterEach, expect, test } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
 import CustomServiceSelect from '@/mode-alerts/CustomServiceSelect.vue'
@@ -23,7 +23,7 @@ const DISCOVERED: Array<[string, string]> = [
 
 let sentPattern: string | null = null
 
-const server = setupServer(
+useMswServer(
   http.post(ENDPOINT, async ({ request }) => {
     const body = (await request.json()) as {
       query: { expr: Array<{ left: string; right: string }> }
@@ -40,13 +40,10 @@ const server = setupServer(
   })
 )
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => {
   cleanup()
   sentPattern = null
-  server.resetHandlers()
 })
-afterAll(() => server.close())
 
 function renderSelect(matchType: ServiceNameMatch = 'exact') {
   const serviceName = ref<string | null>(null)

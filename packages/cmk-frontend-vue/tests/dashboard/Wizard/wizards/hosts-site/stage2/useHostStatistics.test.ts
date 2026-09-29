@@ -4,9 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { defineComponent, h } from 'vue'
 
 import type { HostStatisticsContent } from '@/dashboard/components/Wizard/types'
@@ -58,7 +58,7 @@ const CUSTOM: HostStatisticsContent['contextual_link'] = {
   ]
 }
 
-const server = setupServer(
+useMswServer(
   http.post(`${API}/compute-widget-titles/invoke`, () =>
     HttpResponse.json({ extensions: { titles: { preview_widget: 'Host statistics' } } })
   ),
@@ -85,10 +85,6 @@ async function openHostStatistics(currentSpec: WidgetSpec): Promise<UseHostStati
   )
   return handler!
 }
-
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-afterEach(() => server.resetHandlers())
-afterAll(() => server.close())
 
 describe('useHostStatistics', () => {
   it('keeps the stored custom link of an edited widget', async () => {

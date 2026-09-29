@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { cleanup, render, screen, waitFor } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, delay, http } from 'msw'
-import { setupServer } from 'msw/node'
 import { defineComponent, ref } from 'vue'
 
 import ConfigureGeneralProperties, {
@@ -26,10 +26,7 @@ const SITES: RawSite[] = [
   { id: 'remote2', title: 'Remote Site 2', extensions: { logged_in: true } }
 ]
 
-const server = setupServer()
-
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-afterAll(() => server.close())
+const server = useMswServer()
 
 /** Counts the site-list requests that actually reached the backend. */
 let siteRequests = 0
@@ -104,7 +101,6 @@ describe('ConfigureGeneralProperties', () => {
 
   afterEach(() => {
     cleanup()
-    server.resetHandlers()
     _resetCaches()
   })
 

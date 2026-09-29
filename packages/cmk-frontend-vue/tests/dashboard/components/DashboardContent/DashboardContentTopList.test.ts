@@ -4,9 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen, waitFor } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick } from 'vue'
 
 import DashboardContentTopList from '@/dashboard/components/DashboardContent/DashboardContentTopList.vue'
@@ -66,7 +66,7 @@ function props(content: Partial<TopListContent> = {}) {
 let answer: () => ComputedTopList = () => topList()
 let requests: unknown[] = []
 
-const server = setupServer(
+useMswServer(
   http.post(ENDPOINT, async ({ request }) => {
     requests.push(await request.json())
     return HttpResponse.json({ domainType: 'widget-compute', value: answer() })
@@ -97,17 +97,14 @@ async function renderWidget(
   return rendered
 }
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 beforeEach(() => {
   vi.stubGlobal('ResizeObserver', FakeResizeObserver)
 })
 afterEach(() => {
   answer = () => topList()
   requests = []
-  server.resetHandlers()
   FakeResizeObserver.instances = []
 })
-afterAll(() => server.close())
 
 function columnHeaders(): (string | null)[] {
   return [...document.querySelectorAll('th')].map((th) => th.textContent!.trim())

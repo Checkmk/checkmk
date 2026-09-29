@@ -5,8 +5,8 @@
  */
 import { userEvent } from '@testing-library/user-event'
 import { cleanup, render, screen } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
 
 import QuickSetupAsync from '@/quick-setup/QuickSetupAsync.vue'
 import type { Action, QuickSetupGuidedResponse } from '@/quick-setup/rest-api/response_schemas'
@@ -15,7 +15,7 @@ import { wrapInSuspense } from '../dashboard/utils'
 
 const api = `${location.origin}/api/1.0/objects`
 const setupUrl = `${api}/quick_setup/kubernetes`
-const server = setupServer()
+const server = useMswServer()
 const back = { id: 'back', label: 'Back', aria_label: 'Back' }
 const action = (id: string, label: string): Action => ({
   id,
@@ -23,7 +23,6 @@ const action = (id: string, label: string): Action => ({
   load_wait_label: 'Preparing'
 })
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 beforeEach(() => {
   // Vue logs this once when mounting an async component in Suspense.
   vi.spyOn(console, 'info').mockImplementation((message: unknown) => {
@@ -32,9 +31,7 @@ beforeEach(() => {
 })
 afterEach(() => {
   cleanup()
-  server.resetHandlers()
 })
-afterAll(() => server.close())
 
 async function startDeployment() {
   let pullSelected = false

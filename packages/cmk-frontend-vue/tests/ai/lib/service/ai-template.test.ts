@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { Legal } from 'cmk-shared-typing/typescript/ai_button'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { type Mock, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { AiApiClient, type InfoResponse, type StreamEvent } from '@/ai/lib/ai-api-client'
 import {
@@ -40,9 +40,9 @@ const LEGAL: Legal = {
 
 const ACTION: AiActionButton = { action_id: 'explain', action_name: 'Explain' }
 
-let mockGetInfo: ReturnType<typeof vi.fn>
-let mockGetUserActions: ReturnType<typeof vi.fn>
-let mockStreamInference: ReturnType<typeof vi.fn>
+let mockGetInfo: Mock
+let mockGetUserActions: Mock
+let mockStreamInference: Mock
 
 type StreamCallbacks = {
   onEvent: (event: StreamEvent) => void

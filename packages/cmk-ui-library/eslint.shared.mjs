@@ -206,6 +206,13 @@ export function checkmkVueTestConfig(packageDir) {
               message:
                 'Use @testing-library/vue instead of @vue/test-utils. ' +
                 'See https://wiki.lan.checkmk.net/spaces/DEV/pages/149528812/All+things+Vue'
+            },
+            {
+              name: 'msw/node',
+              importNames: ['setupServer'],
+              message:
+                "Use useMswServer from 'cmk-ui-library/vitest.msw', which also resets the " +
+                'handlers after each test and fails on unhandled requests.'
             }
           ],
           patterns: [...RESTRICTED_IMPORT_PATTERNS]

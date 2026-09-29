@@ -5,9 +5,9 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import ContextualLinkTargetPicker from '@/dashboard/components/Wizard/components/ContextualLink/ContextualLinkTargetPicker.vue'
 import type { VisualLocation } from '@/dashboard/components/Wizard/components/ContextualLink/contextualLink'
@@ -31,7 +31,7 @@ function dashboard(name: string, title: string, restrictedToSingle: string[]) {
   }
 }
 
-const server = setupServer(
+useMswServer(
   http.get(`${API}/domain-types/dashboard_metadata/collections/all`, () =>
     HttpResponse.json({
       domainType: 'dashboard_metadata',
@@ -41,10 +41,6 @@ const server = setupServer(
     })
   )
 )
-
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-afterEach(() => server.resetHandlers())
-afterAll(() => server.close())
 
 function renderPicker(target: VisualLocation, singleInfos: string[]) {
   render(ContextualLinkTargetPicker, { props: { modelValue: target, singleInfos } })

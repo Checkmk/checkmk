@@ -6,9 +6,9 @@
 import { userEvent } from '@testing-library/user-event'
 import { render, screen, waitFor, within } from '@testing-library/vue'
 import type { ScopeChoice } from 'cmk-shared-typing/typescript/mode_host_relation_detection'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, expect, test, vi } from 'vitest'
+import { expect, test, vi } from 'vitest'
 
 import ModeHostRelationDetectionApp from '@/mode-host-relation-detection/ModeHostRelationDetectionApp.vue'
 
@@ -35,13 +35,7 @@ const ACCEPT_URL = `${ROOT}/domain-types/host_relation_detection/actions/accept/
 const STATUS_URL = `${ROOT}/objects/host_relation_detection/:job_id`
 const ROWS_URL = `${ROOT}/objects/host_relation_detection/:job_id/collections/rows`
 
-const server = setupServer()
-
-beforeAll(() => {
-  server.listen({ onUnhandledRequest: 'error' })
-})
-afterEach(() => server.resetHandlers())
-afterAll(() => server.close())
+const server = useMswServer()
 
 const ILO = {
   word: 'ilo',

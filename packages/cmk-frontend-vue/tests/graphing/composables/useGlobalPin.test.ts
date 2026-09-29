@@ -3,9 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { expect, test, vi } from 'vitest'
+import { type Mock, expect, test, vi } from 'vitest'
 import { nextTick } from 'vue'
 
+import type { loadGraphPin, saveGraphPin } from '@/graphing/api/graphPin'
 import type { GlobalPin } from '@/graphing/composables/useGlobalPin'
 
 vi.mock('@/graphing/api/graphPin', () => ({
@@ -18,8 +19,8 @@ vi.mock('@/graphing/api/graphPin', () => ({
 async function freshGlobalPin(): Promise<{
   globalPin: GlobalPin
   otherGlobalPin: GlobalPin
-  loadGraphPin: ReturnType<typeof vi.fn>
-  saveGraphPin: ReturnType<typeof vi.fn>
+  loadGraphPin: Mock<typeof loadGraphPin>
+  saveGraphPin: Mock<typeof saveGraphPin>
 }> {
   vi.resetModules()
   const api = await import('@/graphing/api/graphPin')

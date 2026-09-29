@@ -5,9 +5,9 @@
  */
 import { userEvent } from '@testing-library/user-event'
 import { cleanup, render, screen, waitFor } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, expect, test } from 'vitest'
+import { afterEach, expect, test } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
 import AssignHostStep from '@/mode-custom-services/steps/AssignHostStep.vue'
@@ -21,7 +21,7 @@ const HOSTS: Array<[string, string]> = [
   ['db01', 'db01 (10.0.0.2)']
 ]
 
-const server = setupServer(
+useMswServer(
   http.post(`${API_BASE}/objects/autocomplete/:ident`, async ({ request }) => {
     const { value: query } = (await request.json()) as { value: string }
     const matching = HOSTS.filter(([, label]) => !query || label.includes(query))
@@ -29,12 +29,9 @@ const server = setupServer(
   })
 )
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => {
   cleanup()
-  server.resetHandlers()
 })
-afterAll(() => server.close())
 
 function renderStep(serviceName = '', hostName: string | null = null) {
   const service = ref(serviceName)

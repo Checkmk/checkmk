@@ -5,13 +5,13 @@
  */
 import { Api } from 'cmk-ui-library/lib/api-client'
 import { StaleSession, StaleSessionError } from 'cmk-ui-library/lib/staleSession'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest'
+import { beforeEach, vi } from 'vitest'
 
 const SITE = 'http://localhost:3000/mysite/check_mk/'
 
-const server = setupServer(
+useMswServer(
   http.get(`${SITE}sidebar_snapin.py`, () =>
     HttpResponse.redirect(`${SITE}login.py?_origtarget=sidebar_snapin.py`, 302)
   ),
@@ -22,16 +22,9 @@ const server = setupServer(
   })
 )
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-afterAll(() => server.close())
-
 beforeEach(() => {
   delete (window as unknown as Record<string, unknown>)[StaleSession.REPORTED_KEY]
   vi.spyOn(console, 'warn').mockImplementation(() => {})
-})
-
-afterEach(() => {
-  server.resetHandlers()
 })
 
 test('a request redirected to the login page fails as a stale session', async () => {

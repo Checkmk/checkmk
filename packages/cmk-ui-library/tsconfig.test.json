@@ -7,7 +7,8 @@
     "components/**/*",
     "tests/**/*",
     "vitest.shared-setup.ts",
-    "vitest.shared.ts"
+    "vitest.shared.ts",
+    "vitest.msw.ts"
   ],
   // i18nString.ts strongly types TranslatedString; tests use the weak variant
   // mapped in via weaki18nString.d.ts below.

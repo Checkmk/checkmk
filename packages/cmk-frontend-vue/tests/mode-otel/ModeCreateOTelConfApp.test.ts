@@ -4,19 +4,15 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
 
 import ModeCreateOTelConfApp from '@/mode-otel/ModeCreateOTelConfApp.vue'
 import { _resetCaches } from '@/mode-otel/otel-configuration-steps/ConfigureGeneralProperties.vue'
 
 const API_BASE = `${location.protocol}//${location.host}/api/internal`
 
-const server = setupServer()
-
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-afterEach(() => server.resetHandlers())
-afterAll(() => server.close())
+const server = useMswServer()
 
 /**
  * Answer every collection the wizard loads on mount with an empty list. No sites

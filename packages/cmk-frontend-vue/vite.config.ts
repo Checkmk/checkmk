@@ -61,6 +61,9 @@ export default defineConfig(({ command }) => {
     resolve: {
       alias: {
         '@': path.resolve('./src'),
+        // Test-only file of cmk-ui-library, kept out of its package; must precede the
+        // package alias, which would claim it first.
+        'cmk-ui-library/vitest.msw': path.resolve('../cmk-ui-library/vitest.msw.ts'),
         'cmk-ui-library': path.resolve('./node_modules/cmk-ui-library'),
         '@ucl': path.resolve('./ui-component-library'),
         '@tests': path.resolve('./tests'),

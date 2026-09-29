@@ -5,9 +5,9 @@
  */
 import { userEvent } from '@testing-library/user-event'
 import { cleanup, render, screen, waitFor } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest'
+import { afterEach, describe, expect, test } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
 import ConfigureNameStep from '@/mode-custom-services/steps/ConfigureNameStep.vue'
@@ -15,14 +15,9 @@ import ConfigureNameStep from '@/mode-custom-services/steps/ConfigureNameStep.vu
 const API_BASE = `${location.protocol}//${location.host}/api/internal`
 const LIST_URL = `${API_BASE}/domain-types/custom_service/collections/all`
 
-const server = setupServer()
+const server = useMswServer()
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-afterEach(() => {
-  cleanup()
-  server.resetHandlers()
-})
-afterAll(() => server.close())
+afterEach(() => cleanup())
 
 function serveExisting(ids: string[]) {
   server.use(

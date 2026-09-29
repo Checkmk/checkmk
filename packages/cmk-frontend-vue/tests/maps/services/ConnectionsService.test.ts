@@ -3,9 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import { ConnectionsApi } from '@/maps/api/connections'
 import { createMapsDaemonClient } from '@/maps/api/transport'
@@ -30,13 +30,9 @@ const sampleConnection: ConnectionConfig = {
   automation_secret: null
 }
 
-const server = setupServer(
+const server = useMswServer(
   http.get('*/api/v1/connections', () => HttpResponse.json([sampleConnection]))
 )
-
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-afterEach(() => server.resetHandlers())
-afterAll(() => server.close())
 
 function newService(): ConnectionsService {
   return new ConnectionsService(

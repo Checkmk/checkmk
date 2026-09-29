@@ -4,9 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { CmkApiError } from 'cmk-ui-library/lib/error'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, expect, test } from 'vitest'
+import { afterEach, expect, test } from 'vitest'
 
 import {
   MAX_MATCHES,
@@ -37,7 +37,7 @@ function entries(): Array<{ extensions: { host_name: string; description: string
   }))
 }
 
-const server = setupServer(
+const server = useMswServer(
   http.post(ENDPOINT, async ({ request }) => {
     sentBody = (await request.json()) as RequestBody
     return HttpResponse.json({ id: 'all', links: [], value: entries() })
@@ -48,13 +48,10 @@ function conditionOn(field: string): Condition | undefined {
   return sentBody?.query.expr.find((condition) => condition.left === field)
 }
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => {
   sentBody = null
   matching = []
-  server.resetHandlers()
 })
-afterAll(() => server.close())
 
 test('an exact match asks livestatus for string equality on the service name', async () => {
   await searchCustomServices('exact', 'HTTP request duration')

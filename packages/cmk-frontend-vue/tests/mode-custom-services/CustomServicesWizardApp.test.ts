@@ -7,9 +7,9 @@
 // the update endpoint. Both endpoints are stubbed at the network boundary (MSW).
 import { userEvent } from '@testing-library/user-event'
 import { cleanup, render, screen, waitFor } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, expect, test } from 'vitest'
+import { afterEach, expect, test } from 'vitest'
 
 import CustomServicesWizardApp from '@/mode-custom-services/CustomServicesWizardApp.vue'
 
@@ -44,7 +44,7 @@ let lastBody: unknown = null
 let lastIfMatch: string | null = null
 let listRequests = 0
 
-const server = setupServer(
+const server = useMswServer(
   http.get(OBJECT_URL, () =>
     HttpResponse.json(
       {
@@ -81,16 +81,13 @@ const server = setupServer(
   )
 )
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => {
   cleanup()
   updateRequests = 0
   lastBody = null
   lastIfMatch = null
   listRequests = 0
-  server.resetHandlers()
 })
-afterAll(() => server.close())
 
 function renderWizard(configurationName: string | null = 'http_duration_on_web01') {
   return render(CustomServicesWizardApp, {

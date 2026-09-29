@@ -6,8 +6,8 @@
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ErrorResponse, Response, WarningResponse } from 'cmk-ui-library/components/CmkSuggestions'
 import { fetchSuggestions } from 'cmk-ui-library/components/FormAutocompleter/autocompleter'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
 
 // The component library talks to the autocompleter over the REST API. Mocking
 // the transport here rather than the module keeps the request itself under
@@ -16,17 +16,14 @@ const ROUTE = '*/api/internal/objects/autocomplete/:autocomplete_id'
 
 let lastRequest: { id: string; body: unknown } | null = null
 
-const server = setupServer(
+const server = useMswServer(
   http.post(ROUTE, async ({ request, params }) => {
     lastRequest = { id: params['autocomplete_id'] as string, body: await request.json() }
     return HttpResponse.json({ choices: [{ id: 'linux01', value: 'Linux 01' }] })
   })
 )
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-afterAll(() => server.close())
 afterEach(() => {
-  server.resetHandlers()
   lastRequest = null
 })
 

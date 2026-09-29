@@ -4,9 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import DashboardContentStats from '@/dashboard/components/DashboardContent/figures/DashboardContentStats.vue'
@@ -36,7 +36,7 @@ const PROPS = makeContentProps<StatsContent>({
 let answer: () => Response = () =>
   HttpResponse.json({ domainType: 'widget-compute', value: HOST_STATS })
 
-const server = setupServer(http.post(ENDPOINT, () => answer()))
+useMswServer(http.post(ENDPOINT, () => answer()))
 
 async function renderWidget(): Promise<void> {
   render(DashboardContentStats, { props: PROPS })
@@ -44,7 +44,6 @@ async function renderWidget(): Promise<void> {
   deliverSize(400, 200)
 }
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 beforeEach(() => {
   vi.stubGlobal('ResizeObserver', FakeResizeObserver)
   Object.defineProperty(SVGElement.prototype, 'getBBox', {
@@ -55,10 +54,8 @@ beforeEach(() => {
 afterEach(() => {
   Reflect.deleteProperty(SVGElement.prototype, 'getBBox')
   answer = () => HttpResponse.json({ domainType: 'widget-compute', value: HOST_STATS })
-  server.resetHandlers()
   FakeResizeObserver.instances = []
 })
-afterAll(() => server.close())
 
 describe('DashboardContentStats', () => {
   it('draws the counts as delivered by the backend', async () => {

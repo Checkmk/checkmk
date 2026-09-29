@@ -5,9 +5,9 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { defineComponent, h } from 'vue'
 
 import TimeRangeSource from '@/dashboard/components/TimeRange/TimeRangeSource.vue'
@@ -16,7 +16,7 @@ import {
   useTimeRangeSource
 } from '@/dashboard/components/TimeRange/useTimeRangeSource'
 
-const server = setupServer(
+useMswServer(
   http.get('*/domain-types/graph_timerange/collections/all', () => HttpResponse.json({ value: [] }))
 )
 
@@ -37,10 +37,6 @@ function renderSource(current: TimeRangeSourceModel | null) {
   render(wrapper)
   return source
 }
-
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-afterEach(() => server.resetHandlers())
-afterAll(() => server.close())
 
 describe('TimeRangeSource', () => {
   it('selects the dashboard time range for a new widget', () => {

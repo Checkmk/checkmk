@@ -5,8 +5,8 @@
  */
 import { userEvent } from '@testing-library/user-event'
 import { cleanup, render, screen, waitFor } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
 import { defineComponent, ref } from 'vue'
 
 import { KEY_IDENTS, buildAutocompleteContext } from '@/telemetry-metrics/attributeFilterAdapter'
@@ -22,7 +22,7 @@ const KEY_SUGGESTIONS: Record<string, string[]> = {
 
 const API_BASE = `${location.protocol}//${location.host}/api/internal`
 
-const server = setupServer(
+useMswServer(
   http.post(`${API_BASE}/objects/autocomplete/:ident`, async ({ params, request }) => {
     const ident = params.ident as string
     const { value: query } = (await request.json()) as { value: string }
@@ -32,12 +32,9 @@ const server = setupServer(
   })
 )
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => {
   cleanup()
-  server.resetHandlers()
 })
-afterAll(() => server.close())
 
 function renderWidget(initial: Partial<GroupByModel> = {}) {
   const model = ref<GroupByModel>({ function: 'avg', params: {}, keys: [], ...initial })

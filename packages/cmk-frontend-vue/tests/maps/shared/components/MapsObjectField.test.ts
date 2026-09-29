@@ -6,13 +6,13 @@
 import userEvent from '@testing-library/user-event'
 import { cleanup, render, screen, waitFor } from '@testing-library/vue'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import MapsObjectField from '@/maps/shared/components/MapsObjectField.vue'
 import type { MonitoringObjectKind } from '@/maps/shared/monitoringAutocompleters'
 
-import { useMswServer } from '../../support/http'
 import { mapsGlobal } from '../../support/services'
 
 const API_BASE = `${location.protocol}//${location.host}/api/internal`

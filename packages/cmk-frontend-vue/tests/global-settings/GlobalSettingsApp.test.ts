@@ -12,9 +12,9 @@ import type {
   GlobalSettingsTopic
 } from 'cmk-shared-typing/typescript/global_settings'
 import type { SingleChoiceEditable } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/dispatch'
 
@@ -171,7 +171,7 @@ let booleanServerValue: { value: boolean; origin: GlobalSettingsOrigin } = {
   origin: 'factory'
 }
 
-const server = setupServer(
+const server = useMswServer(
   http.get(SETTING_URL, () => {
     requests.push({ method: 'GET', ifMatch: null, body: null })
     return HttpResponse.json(
@@ -204,14 +204,11 @@ const server = setupServer(
   })
 )
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => {
   requests = []
   serverValue = { value: 15, origin: 'global' }
   booleanServerValue = { value: false, origin: 'factory' }
-  server.resetHandlers()
 })
-afterAll(() => server.close())
 
 async function openEditor() {
   render(GlobalSettingsApp, { props: data })

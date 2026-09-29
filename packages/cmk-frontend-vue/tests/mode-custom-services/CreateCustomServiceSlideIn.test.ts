@@ -5,9 +5,9 @@
  */
 import { userEvent } from '@testing-library/user-event'
 import { cleanup, render, screen, waitFor } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, expect, test } from 'vitest'
+import { afterEach, expect, test } from 'vitest'
 
 import CreateCustomServiceSlideIn from '@/mode-custom-services/CreateCustomServiceSlideIn.vue'
 import { type ServiceModel, emptyService } from '@/mode-custom-services/types'
@@ -18,7 +18,7 @@ const AUTOCOMPLETE_URL = `${location.protocol}//${location.host}/api/internal/ob
 let createRequests = 0
 let lastBody: unknown = null
 
-const server = setupServer(
+const server = useMswServer(
   http.post(CREATE_URL, async ({ request }) => {
     createRequests += 1
     lastBody = await request.json()
@@ -33,14 +33,11 @@ const server = setupServer(
   )
 )
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => {
   cleanup()
   createRequests = 0
   lastBody = null
-  server.resetHandlers()
 })
-afterAll(() => server.close())
 
 function initialModel(overrides: Partial<ServiceModel> = {}): ServiceModel {
   return {

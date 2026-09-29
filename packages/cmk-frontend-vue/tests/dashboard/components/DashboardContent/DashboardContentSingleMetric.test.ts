@@ -5,9 +5,9 @@
  */
 import { fromDate } from '@internationalized/date'
 import { render, screen, waitFor } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick } from 'vue'
 
 import DashboardContentSingleMetric from '@/dashboard/components/DashboardContent/DashboardContentSingleMetric.vue'
@@ -94,7 +94,7 @@ const FIXED_WINDOW: SingleMetricContent = {
 let answer: () => ComputedSingleMetric = () => singleMetric()
 let requests: unknown[] = []
 
-const server = setupServer(
+useMswServer(
   http.post(ENDPOINT, async ({ request }) => {
     requests.push(await request.json())
     return HttpResponse.json({ domainType: 'widget-compute', value: answer() })
@@ -126,17 +126,14 @@ async function renderWidget(
   }
 }
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 beforeEach(() => {
   vi.stubGlobal('ResizeObserver', FakeResizeObserver)
 })
 afterEach(() => {
   answer = () => singleMetric()
   requests = []
-  server.resetHandlers()
   FakeResizeObserver.instances = []
 })
-afterAll(() => server.close())
 
 describe('DashboardContentSingleMetric', () => {
   it('requests the explicit widget with the dashboard time range', async () => {

@@ -3,13 +3,14 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ImagesApi } from '@/maps/api/images'
 import { TicketApi, checkmkLoginUrl, checkmkLogoutUrl } from '@/maps/api/ticket'
 
-import { type SeenRequest, snapshot, useMswServer } from '../support/http'
+import { type SeenRequest, snapshot } from '../support/http'
 import { fullCapabilities } from '../support/services'
 
 const sampleTicket = {

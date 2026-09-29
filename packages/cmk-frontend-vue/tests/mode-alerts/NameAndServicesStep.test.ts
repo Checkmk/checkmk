@@ -9,9 +9,9 @@ import {
   type WizardContext,
   wizardContextProvider
 } from 'cmk-ui-library/components/CmkWizard/utils.ts'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, expect, test, vi } from 'vitest'
+import { afterEach, expect, test, vi } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
 import NameAndServicesStep from '@/mode-alerts/steps/NameAndServicesStep.vue'
@@ -33,15 +33,12 @@ function collection(services: Array<[string, string]>) {
   }
 }
 
-const server = setupServer(http.post(ENDPOINT, () => HttpResponse.json(collection(matching))))
+const server = useMswServer(http.post(ENDPOINT, () => HttpResponse.json(collection(matching))))
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => {
   cleanup()
   matching = []
-  server.resetHandlers()
 })
-afterAll(() => server.close())
 
 function renderStep(alert: Partial<AlertModel> = {}) {
   const model = ref<AlertModel>({ ...emptyAlert(), ...alert })

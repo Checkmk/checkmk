@@ -6,8 +6,8 @@
 import { userEvent } from '@testing-library/user-event'
 import { cleanup, render, screen, waitFor, within } from '@testing-library/vue'
 import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, delay, http } from 'msw'
-import { setupServer } from 'msw/node'
 import { defineComponent, ref } from 'vue'
 
 import FormTelemetryMetricsAttributes from '@/telemetry-metrics/FormTelemetryMetricsAttributes.vue'
@@ -22,7 +22,7 @@ const KEY_SUGGESTIONS: Record<string, string[]> = {
 
 const API_BASE = `${location.protocol}//${location.host}/api/internal`
 
-const server = setupServer(
+const server = useMswServer(
   http.post(`${API_BASE}/objects/autocomplete/:ident`, async ({ params, request }) => {
     const ident = params.ident as string
     const { value: query } = (await request.json()) as { value: string }
@@ -32,12 +32,9 @@ const server = setupServer(
   })
 )
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => {
   cleanup()
-  server.resetHandlers()
 })
-afterAll(() => server.close())
 
 type AttributeFilterModel = ReturnType<typeof ref<AttributeFilter | null | undefined>>
 

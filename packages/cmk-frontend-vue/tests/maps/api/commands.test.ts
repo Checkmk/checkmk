@@ -3,12 +3,13 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
 import { describe, expect, it, vi } from 'vitest'
 
 import { CommandsApi } from '@/maps/api/commands'
 
-import { type SeenRequest, snapshot, useMswServer } from '../support/http'
+import { type SeenRequest, snapshot } from '../support/http'
 
 vi.mock('cmk-ui-library/lib/rest-api-client/client', async (importOriginal) => {
   const { interceptableRestClient } = await import('../support/http')

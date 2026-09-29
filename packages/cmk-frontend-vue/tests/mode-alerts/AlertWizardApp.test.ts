@@ -5,9 +5,9 @@
  */
 import { userEvent } from '@testing-library/user-event'
 import { cleanup, render, screen, waitFor } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, expect, test } from 'vitest'
+import { afterEach, expect, test } from 'vitest'
 
 import AlertWizardApp from '@/mode-alerts/AlertWizardApp.vue'
 
@@ -15,7 +15,7 @@ const API_BASE = `${location.protocol}//${location.host}/api/internal`
 const ENDPOINT = `${API_BASE}/domain-types/service/collections/all`
 const CREATE_ENDPOINT = `${API_BASE}/domain-types/telemetry_alert/collections/all`
 
-const server = setupServer(
+const server = useMswServer(
   http.post(ENDPOINT, () =>
     HttpResponse.json({
       id: 'all',
@@ -25,12 +25,9 @@ const server = setupServer(
   )
 )
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => {
   cleanup()
-  server.resetHandlers()
 })
-afterAll(() => server.close())
 
 function renderApp() {
   render(AlertWizardApp)

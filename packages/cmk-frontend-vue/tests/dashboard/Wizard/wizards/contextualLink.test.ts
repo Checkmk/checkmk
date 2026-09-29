@@ -5,9 +5,9 @@
  */
 import { render } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
 import type {
@@ -111,7 +111,7 @@ function storedProps(content: WidgetContentType): WidgetProps {
 
 const API = `${location.protocol}//${location.host}/api/internal/domain-types/dashboard/actions`
 
-const server = setupServer(
+useMswServer(
   http.post(`${API}/compute-widget-titles/invoke`, () =>
     HttpResponse.json({ extensions: { titles: { preview_widget: 'Widget' } } })
   ),
@@ -171,10 +171,6 @@ async function submittedLink(handler: UseWidgetHandler): Promise<unknown> {
   const { content } = await handler.getSubmitProps()
   return 'contextual_link' in content ? content.contextual_link : undefined
 }
-
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-afterEach(() => server.resetHandlers())
-afterAll(() => server.close())
 
 describe.each(WIZARDS)('$name', ({ openWizard, storedContent }) => {
   it('submits the default link for a new widget, so the widget takes its built-in link', async () => {

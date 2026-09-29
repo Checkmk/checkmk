@@ -4,9 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { defineComponent, h } from 'vue'
 
 import type { GaugeContent } from '@/dashboard/components/Wizard/types'
@@ -39,7 +39,7 @@ const CONSTANTS: DashboardConstants = {
   }
 }
 
-const server = setupServer(
+useMswServer(
   http.post(`${API}/compute-widget-titles/invoke`, () =>
     HttpResponse.json({ extensions: { titles: { preview_widget: 'Gauge' } } })
   ),
@@ -90,10 +90,6 @@ async function submittedTimeRange(handler: UseGauge): Promise<GaugeContent['time
   }
   return content.time_range
 }
-
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-afterEach(() => server.resetHandlers())
-afterAll(() => server.close())
 
 describe('useGauge', () => {
   it('shows the current value for a new gauge', async () => {

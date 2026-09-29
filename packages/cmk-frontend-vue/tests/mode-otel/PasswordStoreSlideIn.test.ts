@@ -8,8 +8,8 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/vue'
 import { flushPromises } from '@vue/test-utils'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import type { Catalog } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
 
 import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/dispatch'
 
@@ -136,10 +136,7 @@ const schemaWithCascadingOwner: Catalog = {
 const FORM_SPEC_URL = `${location.protocol}//${location.host}/api/internal/domain-types/form_spec/collections/:entity_type`
 const LIST_PASSWORDS_URL = `${location.protocol}//${location.host}/api/internal/domain-types/passwordstore_password/collections/:entity_type_specifier`
 
-const server = setupServer()
-
-beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }))
-afterAll(() => server.close())
+const server = useMswServer()
 
 function mockFormSpec(overrideDefaultValues: Record<string, unknown> = defaultValues) {
   server.use(
@@ -167,7 +164,6 @@ function mockListPasswords(existingIds: string[] = []) {
 describe('PasswordStoreSlideIn', () => {
   afterEach(() => {
     cleanup()
-    server.resetHandlers()
   })
 
   test('fetches the form spec from the passwordstore_password endpoint', async () => {

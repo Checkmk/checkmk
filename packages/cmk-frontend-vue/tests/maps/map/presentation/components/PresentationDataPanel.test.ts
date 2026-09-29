@@ -5,12 +5,12 @@
  */
 import userEvent from '@testing-library/user-event'
 import { cleanup, render, screen, waitFor } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import PresentationDataPanel from '@/maps/map/presentation/components/PresentationDataPanel.vue'
 
-import { useMswServer } from '../../../support/http'
 import { mapsGlobal } from '../../../support/services'
 
 const API_BASE = `${location.protocol}//${location.host}/api/internal`

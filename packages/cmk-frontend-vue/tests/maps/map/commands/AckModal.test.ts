@@ -5,6 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -13,7 +14,7 @@ import AckModal from '@/maps/map/commands/AckModal.vue'
 import type { MapElement } from '@/maps/types/api'
 
 import { anObject } from '../../support/fixtures'
-import { type SeenRequest, snapshot, useMswServer } from '../../support/http'
+import { type SeenRequest, snapshot } from '../../support/http'
 import { fakeMapsServices, provideServices } from '../../support/services'
 
 const CHECKMK_URL = 'https://cmk.example.com/site'

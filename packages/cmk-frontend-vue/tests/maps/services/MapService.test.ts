@@ -3,9 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, delay, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { MapConfigApi } from '@/maps/api/mapConfig'
 import { MapStatesApi } from '@/maps/api/mapStates'
@@ -145,7 +145,7 @@ let getCalls: string[]
 let saveRequests: { config: MapConfig; visibility?: unknown }[]
 let deletedNames: string[]
 
-const server = setupServer(
+const server = useMswServer(
   http.get('*/api/internal/domain-types/map/collections/all', () => {
     listCalls += 1
     return HttpResponse.json(listResponse)
@@ -167,10 +167,6 @@ const server = setupServer(
     return new HttpResponse(null, { status: 204 })
   })
 )
-
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-afterEach(() => server.resetHandlers())
-afterAll(() => server.close())
 
 beforeEach(() => {
   listCalls = 0

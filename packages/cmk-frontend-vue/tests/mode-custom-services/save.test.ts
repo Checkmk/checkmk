@@ -8,9 +8,9 @@
 // assert only the observable outcome (written / error surfaced / guarded).
 import type { ConsolidationFunction } from 'cmk-shared-typing/typescript/consolidation'
 import { CmkApiError } from 'cmk-ui-library/lib/error'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest'
+import { afterEach, describe, expect, test } from 'vitest'
 
 import { createCustomService, updateCustomService } from '@/mode-custom-services/save'
 import { emptyService } from '@/mode-custom-services/types'
@@ -33,7 +33,7 @@ function completeModel() {
   }
 }
 
-const server = setupServer(
+const server = useMswServer(
   http.post(CREATE_URL, async ({ request }) => {
     createRequests += 1
     lastBody = await request.json()
@@ -55,15 +55,12 @@ const server = setupServer(
   })
 )
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => {
   createRequests = 0
   updateRequests = 0
   lastBody = null
   lastIfMatch = null
-  server.resetHandlers()
 })
-afterAll(() => server.close())
 
 describe('createCustomService', () => {
   test('persists the service and reports success', async () => {

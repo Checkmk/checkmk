@@ -328,6 +328,7 @@ vue_library(
 js_library(
     name = "test_ts",
     srcs = glob(["tests/**/*.ts"]) + [":tsconfig"],
+    deps = ["//packages/cmk-ui-library:vitest_msw"],
 )
 
 TYPE_CHECK_DATA = TOOLING + TYPE_CHECK_SRCS + [":src_nonfree"]

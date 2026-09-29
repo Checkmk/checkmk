@@ -6,9 +6,9 @@
 // Loading a custom service for editing, with the show endpoint stubbed at the network boundary
 // (MSW). The ETag it returns is what the update's optimistic locking depends on.
 import { CmkApiError, CmkSimpleError } from 'cmk-ui-library/lib/error'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest'
+import { describe, expect, test } from 'vitest'
 
 import { loadCustomServiceDefinition } from '@/mode-custom-services/api'
 
@@ -33,13 +33,9 @@ function serviceObject() {
   }
 }
 
-const server = setupServer(
+const server = useMswServer(
   http.get(OBJECT_URL, () => HttpResponse.json(serviceObject(), { headers: { ETag: 'etag-1' } }))
 )
-
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-afterEach(() => server.resetHandlers())
-afterAll(() => server.close())
 
 describe('loadCustomServiceDefinition', () => {
   test('returns the stored service and the etag from the response header', async () => {

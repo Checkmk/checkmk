@@ -5,9 +5,9 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitForElementToBeRemoved } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import SelectorView from '@/dashboard/components/selectors/SelectorView.vue'
 import type { ViewModel } from '@/dashboard/types/api'
@@ -35,7 +35,7 @@ const OWN_ALLHOSTS = view('allhosts', 'All hosts', 'harry')
 const HOST_VIEW = view('host', 'Single host', '', ['host'])
 const SERVICE_VIEW = view('service', 'Single service', '', ['service', 'host'])
 
-const server = setupServer(
+useMswServer(
   http.get(`${API}/domain-types/view/collections/all`, ({ request }) => {
     const allOwners = new URL(request.url).searchParams.get('all_owners') === 'true'
     return HttpResponse.json({
@@ -64,10 +64,6 @@ const server = setupServer(
     })
   )
 )
-
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-afterEach(() => server.resetHandlers())
-afterAll(() => server.close())
 
 async function renderLoaded(props: Record<string, unknown>): Promise<HTMLElement> {
   render(SelectorView, { props: { readOnly: false, selectedView: null, ...props } })

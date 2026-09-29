@@ -10,6 +10,7 @@ vue_package(
         ":node_modules/@testing-library",
         ":node_modules/msw",
         ":node_modules/vue-component-type-helpers",
+        ":vitest_msw",
         ":vitest_shared",
         ":vitest_shared_setup",
         "//packages/cmk-frontend:theme_images",
@@ -35,6 +36,16 @@ js_library(
     visibility = ["//packages/cmk-frontend-vue:__pkg__"],
     deps = [
         ":node_modules/@testing-library",
+        "//:node_modules/vitest",
+    ],
+)
+
+js_library(
+    name = "vitest_msw",
+    srcs = ["vitest.msw.ts"],
+    visibility = ["//packages/cmk-frontend-vue:__pkg__"],
+    deps = [
+        ":node_modules/msw",
         "//:node_modules/vitest",
     ],
 )

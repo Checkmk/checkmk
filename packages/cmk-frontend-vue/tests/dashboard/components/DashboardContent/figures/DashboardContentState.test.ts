@@ -4,9 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen, waitFor } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import DashboardContentState from '@/dashboard/components/DashboardContent/figures/DashboardContentState.vue'
@@ -37,7 +37,7 @@ let answer: () => Response = () =>
   HttpResponse.json({ domainType: 'widget-compute', value: HOST_STATE })
 let requests: unknown[] = []
 
-const server = setupServer(
+useMswServer(
   http.post(ENDPOINT, async ({ request }) => {
     requests.push(await request.json())
     return answer()
@@ -51,17 +51,14 @@ async function renderWidget(props: ContentProps<StateContent> = makeContentProps
   return rendered
 }
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 beforeEach(() => {
   vi.stubGlobal('ResizeObserver', FakeResizeObserver)
 })
 afterEach(() => {
   answer = () => HttpResponse.json({ domainType: 'widget-compute', value: HOST_STATE })
   requests = []
-  server.resetHandlers()
   FakeResizeObserver.instances = []
 })
-afterAll(() => server.close())
 
 describe('DashboardContentState', () => {
   it('requests the explicit widget', async () => {

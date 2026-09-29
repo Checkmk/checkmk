@@ -4,9 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { CmkApiError } from 'cmk-ui-library/lib/error'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { TicketApi } from '@/maps/api/ticket'
 import { MapsAuthService } from '@/maps/services/MapsAuthService'
@@ -40,16 +40,12 @@ const TICKET_ENDPOINT = '*/api/internal/domain-types/maps_ticket/collections/all
 
 let ticketCalls: number
 
-const server = setupServer(
+const server = useMswServer(
   http.get(TICKET_ENDPOINT, () => {
     ticketCalls += 1
     return HttpResponse.json(sampleTicket)
   })
 )
-
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-afterEach(() => server.resetHandlers())
-afterAll(() => server.close())
 
 const originalLocation = window.location
 let assignMock: ReturnType<typeof vi.fn>

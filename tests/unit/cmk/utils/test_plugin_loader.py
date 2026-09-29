@@ -14,7 +14,7 @@ import pytest
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
 
-@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture
 def add_tmp_path_to_sys_path(tmp_path: Path) -> Iterator[Path]:
     sys.path.insert(0, str(tmp_path))
     try:
@@ -50,6 +50,7 @@ def fixture_tmp_package(tmp_path: Path, package_type: str) -> str:
     return package_name
 
 
+@pytest.mark.usefixtures("add_tmp_path_to_sys_path")
 def test_load_plugins_with_exceptions(tmp_package: str) -> None:
     assert not list(load_plugins_with_exceptions(f"{tmp_package}.plugins.abc"))
     imported = [n for n in sys.modules if n.startswith(tmp_package)]
@@ -86,6 +87,7 @@ def fixture_exc_package(tmp_path: Path, package_type: str) -> str:
     return package_name
 
 
+@pytest.mark.usefixtures("add_tmp_path_to_sys_path")
 def test_load_plugins_with_exceptions_handle_exception(exc_package: str) -> None:
     package_name = exc_package
     errors = list(load_plugins_with_exceptions(package_name))
@@ -126,6 +128,7 @@ def fixture_import_error_package(tmp_path: Path, package_type: str) -> str:
     return package_name
 
 
+@pytest.mark.usefixtures("add_tmp_path_to_sys_path")
 def test_load_plugins_with_exceptions_handle_import_error(import_error_package: str) -> None:
     package_name = import_error_package
     errors = list(load_plugins_with_exceptions(package_name))

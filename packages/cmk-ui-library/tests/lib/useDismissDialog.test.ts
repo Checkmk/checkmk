@@ -7,7 +7,7 @@ import { render } from '@testing-library/vue'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { useDismissDialog } from 'cmk-ui-library/lib/useDismissDialog'
 import type { DismissableWarning } from 'cmk-ui-library/lib/userConfig'
-import { type MockInstance, afterEach, beforeAll, beforeEach, vi } from 'vitest'
+import { type MockInstance, afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest'
 import { defineComponent, nextTick } from 'vue'
 
 const DISMISS_ENDPOINT = '/domain-types/user_config/actions/dismiss-warning/invoke'
@@ -17,6 +17,10 @@ let postSpy: MockInstance<typeof client.POST>
 
 beforeAll(() => {
   Object.defineProperty(document, 'cookie', { get: mockCookie, configurable: true })
+})
+
+afterAll(() => {
+  Reflect.deleteProperty(document, 'cookie')
 })
 
 beforeEach(() => {

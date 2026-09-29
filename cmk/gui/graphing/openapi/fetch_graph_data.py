@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Mapping
+from http import HTTPStatus
 
 from cmk.graphing_engine import Graph
 from cmk.graphing_engine import TimeRange as EngineTimeRange
@@ -61,13 +62,13 @@ def _evaluated_or_problem(evaluate: Callable[[], EvaluatedGraphs]) -> EvaluatedG
         return evaluate()
     except MKLivestatusException as exc:
         raise ProblemException(
-            status=503,
+            status=HTTPStatus.SERVICE_UNAVAILABLE,
             title="Monitoring data source unavailable",
             detail=str(exc),
         ) from exc
     except Exception as exc:
         raise ProblemException(
-            status=500,
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
             title="Graph evaluation failed",
             detail=f"Failed to evaluate graph: {exc}",
         ) from exc
@@ -81,7 +82,7 @@ def _single_graph_response(
 ) -> GraphFetchResponse:
     if len(evaluated.graphs) != 1:
         raise ProblemException(
-            status=500,
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
             title="Graph evaluation failed",
             detail=f"Expected exactly one graph to be evaluated, but got {len(evaluated.graphs)}",
         )

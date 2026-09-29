@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -70,14 +72,14 @@ def clone_as_relative_grid_dashboard_v1(
 
     if (owner, body.dashboard_id) in get_all_dashboards():
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Dashboard ID already exists",
             detail=f"A dashboard with ID '{body.dashboard_id}' already exists for you.",
         )
 
     if not dashboard_uses_relative_grid(dashboard_to_clone):
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Invalid dashboard layout",
             detail=f"The dashboard with ID '{body.reference_dashboard_id}' is not a relative grid dashboard.",
         )
@@ -97,7 +99,7 @@ def clone_as_relative_grid_dashboard_v1(
         serialize_relative_grid_dashboard(
             body.dashboard_id, RelativeGridDashboardResponse.from_internal(cloned_dashboard)
         ),
-        status_code=201,
+        status_code=HTTPStatus.CREATED,
     )
 
 

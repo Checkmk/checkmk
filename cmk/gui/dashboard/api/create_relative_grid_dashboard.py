@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -47,7 +49,7 @@ def create_relative_grid_dashboard_v1(
         serialize_relative_grid_dashboard(
             body.dashboard_id, RelativeGridDashboardResponse.from_internal(internal)
         ),
-        status_code=201,
+        status_code=HTTPStatus.CREATED,
     )
 
 

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.gui.ldap_integration._diagnostics import diagnostic_tests
@@ -86,7 +87,9 @@ def test_ldap_connection_v1(
 
     connection = get_connection(ldap_connection_id)
     if not isinstance(connection, LDAPUserConnector):
-        raise ProblemException(404, f"The LDAP connection '{ldap_connection_id}' does not exist.")
+        raise ProblemException(
+            HTTPStatus.NOT_FOUND, f"The LDAP connection '{ldap_connection_id}' does not exist."
+        )
 
     servers = []
     try:

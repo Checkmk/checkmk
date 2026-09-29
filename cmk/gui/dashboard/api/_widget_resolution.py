@@ -6,6 +6,7 @@
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
+from http import HTTPStatus
 from typing import assert_never
 
 import cmk.web.utils.permission_verification as permissions
@@ -92,10 +93,14 @@ def resolve_widget[C: BaseWidgetContent](
         with _resolve(api_context, source, accepted_types, built_in_link) as widget:
             yield widget
     except (MKMissingDataError, MKUserError, WidgetRenderError) as exc:
-        raise ProblemException(status=404, title="No data available", detail=str(exc)) from exc
+        raise ProblemException(
+            status=HTTPStatus.NOT_FOUND, title="No data available", detail=str(exc)
+        ) from exc
     except MKLivestatusException as exc:
         raise ProblemException(
-            status=503, title="Monitoring data source unavailable", detail=str(exc)
+            status=HTTPStatus.SERVICE_UNAVAILABLE,
+            title="Monitoring data source unavailable",
+            detail=str(exc),
         ) from exc
 
 
@@ -113,7 +118,7 @@ def _resolve[C: BaseWidgetContent](
 
     if api_context.token is not None:
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Forbidden",
             detail="A token caller may only name a saved widget.",
         )
@@ -155,13 +160,15 @@ def _resolve_saved(
     except InvalidWidgetError as exc:
         if exc.disable_token:
             disable_dashboard_token_by_id(token.token_id)
-        raise ProblemException(status=404, title="Widget not found", detail=str(exc)) from exc
+        raise ProblemException(
+            status=HTTPStatus.NOT_FOUND, title="Widget not found", detail=str(exc)
+        ) from exc
 
 
 def _check_accepted(internal_type: str, accepted_types: frozenset[str]) -> None:
     if internal_type not in accepted_types:
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Widget type not supported",
             detail=f"This endpoint does not compute widgets of the type {internal_type!r}.",
         )

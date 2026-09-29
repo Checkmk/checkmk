@@ -11,6 +11,7 @@ so any registered host icon (HW/SW inventory, notes, custom actions, ...) shows 
 automatically and stays permission-gated, exactly like in the legacy view.
 """
 
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.site import SiteId
@@ -116,7 +117,7 @@ def get_host_action_menu(
         row = query_icon_row("host", hostname, site_id)
     except MKLivestatusNotFoundError:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="The requested host was not found",
             detail=f"The host {hostname!r} was not found on site {site_id!r}",
         ) from None

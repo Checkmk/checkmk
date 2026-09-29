@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Annotated, Literal
 
 from cmk import fields
@@ -75,7 +76,7 @@ def download_agent(params: Mapping[str, object]) -> Response:
 
     with open(agent_path, mode="rb") as f:
         response.data = f.read()
-    response.status_code = 200
+    response.status_code = HTTPStatus.OK
     return response
 
 
@@ -97,13 +98,13 @@ def download_agent_by_token(
     """Download the Checkmk agent via a one-time download token."""
     if not api_context.token:
         raise ProblemException(
-            status=401,
+            status=HTTPStatus.UNAUTHORIZED,
             title="Authentication required",
             detail="This endpoint requires token authentication.",
         )
     if not isinstance(api_context.token.details, AgentDownloadToken):
         raise ProblemException(
-            status=401,
+            status=HTTPStatus.UNAUTHORIZED,
             title="Authentication required",
             detail="Incorrect token provided. Please provide an agent download token.",
         )
@@ -126,7 +127,7 @@ def download_agent_by_token(
     response.set_content_disposition(ContentDispositionType.ATTACHMENT, agent_path.name)
     with open(agent_path, mode="rb") as f:
         response.data = f.read()
-    response.status_code = 200
+    response.status_code = HTTPStatus.OK
     return response
 
 

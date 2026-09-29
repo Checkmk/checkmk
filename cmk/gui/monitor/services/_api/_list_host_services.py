@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence, Set
+from http import HTTPStatus
 from typing import Annotated, Self
 
 from annotated_types import Interval
@@ -291,7 +292,7 @@ def _handle_list_services(
 ) -> HostServicesResponse:
     if not host_services_repo.host_exists(hostname):
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="The requested host was not found",
             detail=f"The host {hostname!r} was not found on site {site_id!r}",
         ) from None

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.site import SiteId
@@ -61,13 +62,13 @@ def translate_metric_names_v1(body: TranslateMetricNamesRequest) -> MetricNameMa
         )()
     except MKLivestatusException as exc:
         raise ProblemException(
-            status=503,
+            status=HTTPStatus.SERVICE_UNAVAILABLE,
             title="Monitoring data source unavailable",
             detail=str(exc),
         ) from exc
     except Exception as exc:
         raise ProblemException(
-            status=500,
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
             title="Metric name translation failed",
             detail=f"Failed to translate the metric names: {exc}",
         ) from exc

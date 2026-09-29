@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.gui.openapi.framework import (
@@ -48,7 +49,7 @@ def show_relative_grid_dashboard_v1(
     dashboard = get_dashboard_for_read(owner, dashboard_id)
     if not dashboard_uses_relative_grid(dashboard):
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Invalid dashboard layout",
             detail=f"The dashboard with ID '{dashboard_id}' is not a relative grid dashboard.",
         )

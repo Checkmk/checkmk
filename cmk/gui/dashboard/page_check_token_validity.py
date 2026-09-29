@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import override
 
 from cmk.gui import http
@@ -24,5 +25,5 @@ class CheckTokenValidityPage(DashboardTokenAuthenticatedJsonPage):
     @override
     def _handle_exception(self, exception: Exception, ctx: PageContext) -> None:
         if isinstance(exception, MKUserError):
-            http.response.status_code = 403
+            http.response.status_code = HTTPStatus.FORBIDDEN
         super()._handle_exception(exception, ctx)

@@ -2,6 +2,8 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
+
 from pydantic_core import ErrorDetails
 
 from cmk.gui.dashboard.token_util import (
@@ -52,7 +54,7 @@ def create_dashboard_token_v1(
         )
     except DashboardTokenAlreadyExists:
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Dashboard token already exists",
             detail="A token for this dashboard already exists, cannot create another one.",
         )
@@ -88,7 +90,7 @@ def create_dashboard_token_v1(
             extensions=DashboardTokenMetadata.from_internal(token),
             links=[],
         ),
-        status_code=201,
+        status_code=HTTPStatus.CREATED,
     )
 
 

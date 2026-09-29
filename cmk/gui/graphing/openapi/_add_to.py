@@ -5,6 +5,7 @@
 
 
 from collections.abc import Mapping
+from http import HTTPStatus
 
 from cmk.graphing_engine import Graph
 from cmk.gui.graphing._decoding import ensure_type
@@ -18,7 +19,7 @@ def parse_built_graph(internal: Mapping[str, object]) -> Graph:
     serialized = ensure_type(internal["graphs"], list)
     if len(serialized) != 1:
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Not a single graph",
             detail=f"Expected exactly one graph, got {len(serialized)}.",
         )
@@ -27,7 +28,7 @@ def parse_built_graph(internal: Mapping[str, object]) -> Graph:
         dispatcher = graph_dispatcher_registry[ensure_type(graph["kind"], str)]
     except KeyError as exc:
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Unknown graph kind",
             detail=f"There is no graph kind {exc}.",
         ) from exc
@@ -39,7 +40,7 @@ def parse_specification(specification: Mapping[str, object]) -> GraphSpecificati
         return parse_graph_specification(dict(specification))
     except (ValueError, TypeError, KeyError) as exc:
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Invalid graph specification",
             detail=f"Cannot parse the graph specification: {exc}",
         ) from exc
@@ -64,7 +65,7 @@ class AddableGraph:
         parsed = parse_specification(specification)
         if (stored := parsed.for_storage()) is None:
             raise ProblemException(
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
                 title="Graph cannot be added",
                 detail=(
                     f"Graphs of type '{parsed.graph_type}' offer no add-to action. Only graphs "

@@ -15,6 +15,7 @@ by class name across every endpoint family, where the hosts action menu already 
 unprefixed names.
 """
 
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.site import SiteId
@@ -123,7 +124,7 @@ def get_service_action_menu(
         row = query_icon_row("service", hostname, site_id, ServiceName(service_name))
     except MKLivestatusNotFoundError:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="The requested service was not found",
             detail=(
                 f"The service {service_name!r} of host {hostname!r} was not found on site "

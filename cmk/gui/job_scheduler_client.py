@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Final
 
 import requests
@@ -58,7 +59,7 @@ class JobSchedulerClient:
                 )
             )
 
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             return result.Error(
                 StartupError(
                     _("Got response: HTTP %(status_code)s: %(text)s")

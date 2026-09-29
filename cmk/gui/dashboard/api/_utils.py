@@ -253,7 +253,7 @@ def get_dashboard_for_edit(owner: UserId | ApiOmitted, dashboard_id: str) -> Das
     dashboards = get_all_dashboards()
     if key not in dashboards:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="Dashboard not found",
             detail=f"The dashboard with ID '{dashboard_id}' does not exist for user '{dashboard_owner}'.",
         )
@@ -274,7 +274,7 @@ def get_dashboard_for_read(owner: DashboardOwnerWithBuiltin, dashboard_id: str) 
 
     if dashboard is None:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="Dashboard not found",
             detail=f"The dashboard with ID '{dashboard_id}' does not exist{owner_msg} or you do not have permission to view it.",
         )
@@ -352,7 +352,7 @@ def save_dashboard_to_file(
     if old_dashboard_id and old_dashboard_id != dashboard_id:
         if (user_id, dashboard_id) in store.all:
             raise ProblemException(
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
                 title="Dashboard ID already in use",
                 detail=f"A dashboard with ID '{dashboard_id}' already exists for user '{user_id}'.",
             )
@@ -504,13 +504,13 @@ def validated_dashboard_token(token: AuthToken | None) -> tuple[AuthToken, Dashb
     """
     if token is None:
         raise ProblemException(
-            status=401,
+            status=HTTPStatus.UNAUTHORIZED,
             title="Authentication required",
             detail="This endpoint requires token authentication.",
         )
     if not isinstance(token.details, DashboardToken) or token.details.disabled:
         raise ProblemException(
-            status=401,
+            status=HTTPStatus.UNAUTHORIZED,
             title="Authentication required",
             detail="The provided token is not valid for dashboard access.",
         )

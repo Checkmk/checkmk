@@ -12,6 +12,7 @@ cannot reach any data the dashboard does not already show, and an edited widget 
 without the token going stale.
 """
 
+from http import HTTPStatus
 from typing import cast
 
 from cmk.gui.dashboard.graph_widget_discovery import discover_widget_graphs, GRAPH_WIDGET_TYPES
@@ -86,7 +87,7 @@ def fetch_widget_graph_data_v1(
         # The widget renders the first discovered graph, so that is the one to fetch.
         if not discovered.graphs:
             raise ProblemException(
-                status=404,
+                status=HTTPStatus.NOT_FOUND,
                 title="No graph data available",
                 detail=discovered.no_data_message or "The widget has no graph to fetch.",
             )

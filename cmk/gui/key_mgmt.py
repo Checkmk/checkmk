@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from http import HTTPStatus
 from typing import Literal, override
 
 from dateutil.relativedelta import relativedelta
@@ -346,7 +347,7 @@ class ModeUploadKey(WatoMode[object]):
 
             return HTTPRedirect(
                 makeuri_contextless(request, [("mode", self.back_mode)], filename="wato.py"),
-                code=302,
+                code=HTTPStatus.FOUND,
             )
         return None
 
@@ -523,7 +524,7 @@ class ModeDownloadKey(WatoMode[object]):
                 raise MKUserError("key_p_passphrase", _("Invalid pass phrase"))
 
             self._send_download(keys, key_id)
-            return FinalizeRequest(code=200)
+            return FinalizeRequest(code=HTTPStatus.OK)
         return None
 
     def _send_download(self, keys: KeypairMap, key_id: KeyId) -> None:

@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.gui.dashboard.store import get_all_dashboards
@@ -56,7 +57,7 @@ def edit_relative_grid_dashboard_v1(
     dashboards = get_all_dashboards()
     if key not in dashboards:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="Dashboard not found",
             detail=f"The dashboard with ID '{dashboard_id}' does not exist for user '{user_id}'.",
         )

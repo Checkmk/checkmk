@@ -2,11 +2,13 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import contextlib
 import datetime as dt
 import json
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
+from http import HTTPStatus
 from typing import cast, override
 
 from dateutil.relativedelta import relativedelta
@@ -110,7 +112,7 @@ def edit_dashboard_auth_token(
         raise DashboardTokenNotFound(
             varname=None,
             message=_("No token for this dashboard exists."),
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
         )
 
     if token_store is None:

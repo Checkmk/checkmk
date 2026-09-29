@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
 from cmk.gui.openapi.framework import (
@@ -69,13 +71,13 @@ def discover_template_graphs_v1(
         )
     except MKLivestatusException as exc:
         raise ProblemException(
-            status=503,
+            status=HTTPStatus.SERVICE_UNAVAILABLE,
             title="Monitoring data source unavailable",
             detail=str(exc),
         ) from exc
     except Exception as exc:
         raise ProblemException(
-            status=500,
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
             title="Graph discovery failed",
             detail=f"Failed to discover graphs: {exc}",
         ) from exc

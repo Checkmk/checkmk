@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from cmk.gui.agent_registration.token_util import (
     issue_agent_registration_token,
     reject_if_cluster_host,
@@ -50,7 +52,7 @@ def create_agent_registration_token_v1(
         site_config = api_context.config.sites.get(body.site_id)
         if site_config is None:
             raise ProblemException(
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
                 title="Unknown site",
                 detail=_('No site with ID "%(site_id)s" is configured.')
                 % {"site_id": body.site_id},
@@ -81,7 +83,7 @@ def create_agent_registration_token_v1(
                     ),
                     links=[],
                 ),
-                status_code=201,
+                status_code=HTTPStatus.CREATED,
             )
 
     token = issue_agent_registration_token(
@@ -99,7 +101,7 @@ def create_agent_registration_token_v1(
             extensions=AgentRegistrationTokenMetadata.from_internal(token),
             links=[],
         ),
-        status_code=201,
+        status_code=HTTPStatus.CREATED,
     )
 
 

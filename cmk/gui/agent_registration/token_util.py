@@ -5,6 +5,7 @@
 import contextlib
 import datetime as dt
 from collections.abc import Generator
+from http import HTTPStatus
 
 from dateutil.relativedelta import relativedelta
 from pydantic_core import ErrorDetails
@@ -72,7 +73,7 @@ def reject_if_cluster_host(host: Host) -> None:
     """
     if host.is_cluster():
         raise ProblemException(
-            status=405,
+            status=HTTPStatus.METHOD_NOT_ALLOWED,
             title="Cannot register cluster hosts",
             detail="This host is a cluster host. Register its nodes instead.",
         )

@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from http import HTTPStatus
+
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.graphing.openapi._add_to import AddableGraph
@@ -34,7 +36,7 @@ def add_to_visual_v1(api_context: ApiContext, body: AddToRequest) -> AddToVisual
     addable = AddableGraph.parse(body.specification)
     if body.family not in _GRAPH_TARGET_VISUAL_TYPES:
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Cannot add a graph to this visual type",
             detail=(
                 f"Graphs cannot be added to '{body.family}'. Supported visual types: "
@@ -45,7 +47,7 @@ def add_to_visual_v1(api_context: ApiContext, body: AddToRequest) -> AddToVisual
         visual_type = visual_type_registry[body.family]()
     except KeyError:
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Unknown visual type",
             detail=(
                 f"There is no visual type '{body.family}'. Known types: "
@@ -65,13 +67,13 @@ def add_to_visual_v1(api_context: ApiContext, body: AddToRequest) -> AddToVisual
         )
     except MKAuthException as exc:
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Not allowed to add to this visual",
             detail=str(exc),
         ) from exc
     except (MKUserError, MKGeneralException) as exc:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="Visual not found",
             detail=str(exc),
         ) from exc
@@ -81,7 +83,7 @@ def add_to_visual_v1(api_context: ApiContext, body: AddToRequest) -> AddToVisual
     reported = response.get_data(as_text=True)
     if not reported.startswith("OK "):
         raise ProblemException(
-            status=500,
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
             title="Add-to-visual action produced no redirect target",
             detail=f"Unexpected response from the visual type handler: {reported!r}",
         )

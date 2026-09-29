@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 import pytest
 import time_machine
 
@@ -114,7 +116,7 @@ def _expect_event_query(
 class TestMonitorHostEventsQueryParamValidation:
     def test_unknown_site_is_rejected(self, clients: ClientRegistry) -> None:
         resp = clients.MonitorHosts.get_events(_HOSTNAME, site_id="no-such-site", expect_ok=False)
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
     @pytest.mark.parametrize(
         "time_window_days",
@@ -127,7 +129,7 @@ class TestMonitorHostEventsQueryParamValidation:
         resp = clients.MonitorHosts.get_events(
             _HOSTNAME, site_id=_SITE_ID, time_window_days=time_window_days, expect_ok=False
         )
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
     @pytest.mark.parametrize(
         "limit",
@@ -140,7 +142,7 @@ class TestMonitorHostEventsQueryParamValidation:
         resp = clients.MonitorHosts.get_events(
             _HOSTNAME, site_id=_SITE_ID, limit=limit, expect_ok=False
         )
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
 
 class TestMonitorHostEvents:
@@ -153,7 +155,7 @@ class TestMonitorHostEvents:
         with mock_livestatus(expect_status_query=True):
             resp = clients.MonitorHosts.get_events(_HOSTNAME, site_id=_SITE_ID, expect_ok=False)
 
-        assert resp.status_code == 404
+        assert resp.status_code == HTTPStatus.NOT_FOUND
 
     @time_machine.travel(_NOW)
     def test_events_of_a_host_include_its_services(
@@ -167,7 +169,7 @@ class TestMonitorHostEvents:
         with mock_livestatus(expect_status_query=True):
             resp = clients.MonitorHosts.get_events(_HOSTNAME, site_id=_SITE_ID)
 
-        assert resp.status_code == 200
+        assert resp.status_code == HTTPStatus.OK
         assert [event["service_name"] for event in resp.json["events"]] == [
             "CPU load",
             None,

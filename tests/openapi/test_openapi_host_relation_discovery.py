@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
+from http import HTTPStatus
 
 import pytest
 
@@ -208,19 +209,19 @@ def test_a_finding_that_could_not_find_anything_is_refused(
 ) -> None:
     resp = clients.HostRelationDiscovery.scan([finding], expect_ok=False)
 
-    assert resp.status_code == 400
+    assert resp.status_code == HTTPStatus.BAD_REQUEST
 
 
 def test_a_scan_that_looks_for_nothing_is_refused(clients: ClientRegistry) -> None:
     resp = clients.HostRelationDiscovery.scan([], expect_ok=False)
 
-    assert resp.status_code == 400
+    assert resp.status_code == HTTPStatus.BAD_REQUEST
 
 
 def test_two_findings_under_one_id_are_refused(clients: ClientRegistry) -> None:
     resp = clients.HostRelationDiscovery.scan([_ILO, _ILO], expect_ok=False)
 
-    assert resp.status_code == 400
+    assert resp.status_code == HTTPStatus.BAD_REQUEST
 
 
 @pytest.mark.usefixtures("inline_background_jobs")
@@ -300,19 +301,19 @@ def test_an_answer_the_scan_did_not_ask_for_is_refused(clients: ClientRegistry) 
         scan_id, ["word:ilo"], answers={"management|a,b": "a"}, expect_ok=False
     )
 
-    assert resp.status_code == 400
+    assert resp.status_code == HTTPStatus.BAD_REQUEST
 
 
 def test_a_scan_that_does_not_exist_cannot_be_stored_from(clients: ClientRegistry) -> None:
     resp = clients.HostRelationDiscovery.accept("relation_scan-gone", ["word:ilo"], expect_ok=False)
 
-    assert resp.status_code == 404
+    assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
 def test_a_job_of_another_feature_is_not_shown_here(clients: ClientRegistry) -> None:
     resp = clients.HostRelationDiscovery.show("parent_scan", expect_ok=False)
 
-    assert resp.status_code == 404
+    assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
 def test_the_words_a_fleet_is_named_by_are_suggested_before_anything_is_asked(
@@ -345,7 +346,7 @@ def test_a_word_the_user_typed_is_reported_even_if_no_host_carries_it(
 def test_a_typed_word_no_host_name_could_carry_is_refused(clients: ClientRegistry) -> None:
     resp = clients.HostRelationDiscovery.suggest(words=["my-board"], expect_ok=False)
 
-    assert resp.status_code == 400
+    assert resp.status_code == HTTPStatus.BAD_REQUEST
 
 
 def test_a_label_that_pairs_hosts_is_suggested_with_what_tells_them_apart(
@@ -392,7 +393,7 @@ def test_looking_in_the_names_alone_leaves_the_labels_unread(clients: ClientRegi
 def test_a_suggestion_has_to_look_somewhere(clients: ClientRegistry) -> None:
     resp = clients.HostRelationDiscovery.suggest(look_in=[], expect_ok=False)
 
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 @pytest.mark.usefixtures("inline_background_jobs")

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from http import HTTPStatus
 from urllib.parse import urljoin
 from uuid import UUID
 
@@ -33,7 +34,7 @@ def test_openapi_host_link_uuid_400(aut_user_auth_wsgi_app: WebTestAppForCMK) ->
         "put",
         _URL_LINK_UUID,
         params=json.dumps({"uuid": "abc-123"}),
-        status=400,
+        status=HTTPStatus.BAD_REQUEST,
         headers={"Accept": "application/json"},
         content_type="application/json; charset=utf-8",
     )
@@ -53,7 +54,7 @@ def test_link_with_uuid_403(
             "put",
             _URL_LINK_UUID,
             params=json.dumps({"uuid": "1409ac78-6548-4138-9285-12484409ddf2"}),
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             headers={"Accept": "application/json"},
             content_type="application/json; charset=utf-8",
         ).json_body["detail"]
@@ -69,7 +70,7 @@ def test_openapi_host_link_uuid_204(aut_user_auth_wsgi_app: WebTestAppForCMK) ->
         "put",
         _URL_LINK_UUID,
         params=json.dumps({"uuid": str(uuid)}),
-        status=204,
+        status=HTTPStatus.NO_CONTENT,
         headers={"Accept": "application/json"},
         content_type="application/json; charset=utf-8",
     )
@@ -89,7 +90,7 @@ def test_openapi_show_host_ok(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     assert aut_user_auth_wsgi_app.call_method(
         "get",
         urljoin(_HOST_CONFIG_INTERNAL_BASE, "heute"),
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
     ).json_body == {
         "site": "NO_SITE",
@@ -103,14 +104,14 @@ def test_openapi_show_host_cluster_ok(aut_user_auth_wsgi_app: WebTestAppForCMK) 
         "post",
         urljoin(_API_BASE, "domain-types/host_config/collections/clusters"),
         params='{"host_name": "my-cluster", "folder": "/", "nodes": ["heute"]}',
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
         content_type='application/json; charset="utf-8"',
     )
     assert aut_user_auth_wsgi_app.call_method(
         "get",
         urljoin(_HOST_CONFIG_INTERNAL_BASE, "my-cluster"),
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
     ).json_body == {
         "site": "NO_SITE",
@@ -123,7 +124,7 @@ def test_openapi_show_host_missing(aut_user_auth_wsgi_app: WebTestAppForCMK) -> 
         "get",
         urljoin(_HOST_CONFIG_INTERNAL_BASE, "missing"),
         headers={"Accept": "application/json"},
-        status=404,
+        status=HTTPStatus.NOT_FOUND,
     )
 
 
@@ -141,7 +142,7 @@ def test_openapi_show_host_403(
             "get",
             urljoin(_HOST_CONFIG_INTERNAL_BASE, "heute"),
             headers={"Accept": "application/json"},
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
         ).json_body["detail"]
         == "You do not have read access to the host heute"
     )
@@ -155,7 +156,7 @@ def test_openapi_host_register_ok(aut_user_auth_wsgi_app: WebTestAppForCMK) -> N
         "put",
         _URL_REGISTER,
         params=json.dumps({"uuid": str(uuid)}),
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
         content_type="application/json; charset=utf-8",
     )
@@ -176,7 +177,7 @@ def test_openapi_host_register_missing(aut_user_auth_wsgi_app: WebTestAppForCMK)
     aut_user_auth_wsgi_app.put(
         urljoin(_HOST_CONFIG_INTERNAL_BASE, "not-existant/actions/register/invoke"),
         params=json.dumps({"uuid": "1409ac78-6548-4138-9285-12484409ddf2"}),
-        status=404,
+        status=HTTPStatus.NOT_FOUND,
         headers={"Accept": "application/json"},
         content_type="application/json; charset=utf-8",
     )
@@ -187,7 +188,7 @@ def test_openapi_host_register_bad_uuid(aut_user_auth_wsgi_app: WebTestAppForCMK
     aut_user_auth_wsgi_app.put(
         _URL_REGISTER,
         params=json.dumps({"uuid": "abc-123"}),
-        status=400,
+        status=HTTPStatus.BAD_REQUEST,
         headers={"Accept": "application/json"},
         content_type="application/json; charset=utf-8",
     )
@@ -199,7 +200,7 @@ def test_openapi_host_register_cluster(aut_user_auth_wsgi_app: WebTestAppForCMK)
         "post",
         urljoin(_API_BASE, "domain-types/host_config/collections/clusters"),
         params='{"host_name": "my-cluster", "folder": "/", "nodes": ["example.com"]}',
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
         content_type='application/json; charset="utf-8"',
     )
@@ -207,7 +208,7 @@ def test_openapi_host_register_cluster(aut_user_auth_wsgi_app: WebTestAppForCMK)
         "put",
         urljoin(_HOST_CONFIG_INTERNAL_BASE, "my-cluster/actions/register/invoke"),
         params=json.dumps({"uuid": "1409ac78-6548-4138-9285-12484409ddf2"}),
-        status=405,
+        status=HTTPStatus.METHOD_NOT_ALLOWED,
         headers={"Accept": "application/json"},
         content_type="application/json; charset=utf-8",
     )
@@ -220,7 +221,7 @@ def test_openapi_host_register_wrong_site(aut_user_auth_wsgi_app: WebTestAppForC
         "post",
         urljoin(_API_BASE, "domain-types/host_config/collections/all"),
         params='{"host_name": "my-host", "folder": "/", "attributes": {"site": "some-site"}}',
-        status=400,
+        status=HTTPStatus.BAD_REQUEST,
         headers={"Accept": "application/json"},
         content_type='application/json; charset="utf-8"',
     )

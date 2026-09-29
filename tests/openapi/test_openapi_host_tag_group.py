@@ -6,6 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 
 import json
+from http import HTTPStatus
 from typing import Any, Literal
 
 import pytest
@@ -28,7 +29,7 @@ def test_openapi_host_tag_group_update(
         title="foobar",
         tags=[{"id": "pod", "title": "Pod"}],
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     resp = aut_user_auth_wsgi_app.call_method(
         "post",
@@ -47,7 +48,7 @@ def test_openapi_host_tag_group_update(
             }
         ),
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
         content_type="application/json",
     )
 
@@ -65,7 +66,7 @@ def test_openapi_host_tag_group_update(
             }
         ),
         headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
         content_type="application/json",
     )
 
@@ -73,7 +74,7 @@ def test_openapi_host_tag_group_update(
         "get",
         base + "/objects/host_tag_group/foo",
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
     )
     assert resp.json["extensions"] == {
         "tags": [{"id": "tutu", "title": "something", "aux_tags": []}],
@@ -91,7 +92,7 @@ def test_openapi_host_tag_group_get_collection(aut_user_auth_wsgi_app: WebTestAp
         "get",
         base + "/domain-types/host_tag_group/collections/all",
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
     )
     assert len(col_resp.json_body["value"]) == builtin_groups_count
 
@@ -117,7 +118,7 @@ def test_openapi_host_tag_group_delete(aut_user_auth_wsgi_app: WebTestAppForCMK)
             }
         ),
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
         content_type="application/json",
     )
 
@@ -126,7 +127,7 @@ def test_openapi_host_tag_group_delete(aut_user_auth_wsgi_app: WebTestAppForCMK)
         base + "/objects/host_tag_group/foo",
         params=json.dumps({}),
         headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
-        status=204,
+        status=HTTPStatus.NO_CONTENT,
         content_type="application/json",
     )
 
@@ -134,7 +135,7 @@ def test_openapi_host_tag_group_delete(aut_user_auth_wsgi_app: WebTestAppForCMK)
         "get",
         base + "/objects/host_tag_group/foo",
         headers={"Accept": "application/json"},
-        status=404,
+        status=HTTPStatus.NOT_FOUND,
     )
 
 
@@ -154,7 +155,7 @@ def test_openapi_host_tag_group_invalid_id(aut_user_auth_wsgi_app: WebTestAppFor
             }
         ),
         headers={"Accept": "application/json"},
-        status=400,
+        status=HTTPStatus.BAD_REQUEST,
         content_type="application/json",
     )
 
@@ -167,7 +168,7 @@ def test_openapi_host_tag_group_built_in(aut_user_auth_wsgi_app: WebTestAppForCM
         "get",
         base + "/domain-types/host_tag_group/collections/all",
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
     )
     built_in_tags = [tag_group.title for tag_group in BuiltinTagConfig().tag_groups]
     assert all(
@@ -178,7 +179,7 @@ def test_openapi_host_tag_group_built_in(aut_user_auth_wsgi_app: WebTestAppForCM
         "get",
         base + "/objects/host_tag_group/agent",
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
     )
 
     _resp = aut_user_auth_wsgi_app.call_method(
@@ -195,7 +196,7 @@ def test_openapi_host_tag_group_built_in(aut_user_auth_wsgi_app: WebTestAppForCM
             }
         ),
         headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
-        status=405,
+        status=HTTPStatus.METHOD_NOT_ALLOWED,
         content_type="application/json",
     )
 
@@ -204,7 +205,7 @@ def test_openapi_host_tag_group_built_in(aut_user_auth_wsgi_app: WebTestAppForCM
         base + "/objects/host_tag_group/agent",
         params=json.dumps({}),
         headers={"Accept": "application/json"},
-        status=405,
+        status=HTTPStatus.METHOD_NOT_ALLOWED,
         content_type="application/json",
     )
 
@@ -225,7 +226,7 @@ def test_openapi_host_tag_group_update_use_case(aut_user_auth_wsgi_app: WebTestA
             }
         ),
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
         content_type="application/json",
     )
 
@@ -241,7 +242,7 @@ def test_openapi_host_tag_group_update_use_case(aut_user_auth_wsgi_app: WebTestA
             }
         ),
         headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
         content_type="application/json",
     )
 
@@ -249,7 +250,7 @@ def test_openapi_host_tag_group_update_use_case(aut_user_auth_wsgi_app: WebTestA
         "get",
         base + "/objects/host_tag_group/group_id999",
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
     )
 
 
@@ -272,7 +273,7 @@ def test_openapi_host_tag_with_only_one_option(
             }
         ),
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
         content_type="application/json",
     )
 
@@ -291,7 +292,7 @@ def test_openapi_host_tag_with_only_one_option(
         expect_ok=False,
     )
 
-    res.assert_status_code(400)
+    res.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert res.json["detail"].startswith("These fields have problems")
     assert "Invalid value for tag-group" in str(res.json["fields"])
 
@@ -309,7 +310,7 @@ def test_openapi_host_tag_groups_all_props_in_schema(
         "get",
         base + "/domain-types/host_tag_group/collections/all",
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
     )
     first_tag = resp.json["value"][0]
     assert "title" in first_tag
@@ -333,7 +334,7 @@ def test_openapi_host_tags_groups_without_topic_and_tags(
             }
         ),
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
         content_type="application/json",
     )
 
@@ -341,7 +342,7 @@ def test_openapi_host_tags_groups_without_topic_and_tags(
         "get",
         base + "/objects/host_tag_group/group_id999",
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
     )
 
     assert individual_resp.json["extensions"]["topic"] == "Tags"
@@ -350,7 +351,7 @@ def test_openapi_host_tags_groups_without_topic_and_tags(
     aut_user_auth_wsgi_app.get(
         base + "/domain-types/host_tag_group/collections/all",
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
     )
 
 
@@ -403,7 +404,7 @@ def test_openapi_delete_dependant_host_tag(  # type: ignore[misc]
         ident="group_id999",
         expect_ok=False,
         **delete_options,
-    ).assert_status_code(401)
+    ).assert_status_code(HTTPStatus.UNAUTHORIZED)
 
     assert resp.json["detail"].startswith(
         "The host tag group you intend to delete is used in the following occurrences: hosts (example.com)."
@@ -448,7 +449,9 @@ def test_openapi_delete_host_tag_mode(
     assert "tag_group_id999" not in resp.json["extensions"]["attributes"]
 
     if mode == "delete":
-        clients.Rule.get(rule_id=rule_resp.json["id"], expect_ok=False).assert_status_code(404)
+        clients.Rule.get(rule_id=rule_resp.json["id"], expect_ok=False).assert_status_code(
+            HTTPStatus.NOT_FOUND
+        )
 
     else:  # mode == "remove"
         resp = clients.Rule.get(rule_id=rule_resp.json["id"])
@@ -469,7 +472,7 @@ def test_openapi_delete_host_tag_repair_and_mode_not_compatible(
         repair=True,
         mode="delete",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     assert resp.json["detail"].startswith("Cannot use both repair and mode")
 
@@ -496,7 +499,7 @@ def test_host_tag_group_ident_with_newline(
         expect_ok=False,
     )
 
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert resp.json["fields"]["id"][0].startswith(f"Invalid tag ID: {group_id!r}")
 
 
@@ -517,7 +520,7 @@ def test_openapi_host_tag_group_creation_when_aux_tag_exists(
         title="test",
         tags=[{"id": "test", "title": "test"}],
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_openapi_identifiation_field(clients: ClientRegistry) -> None:
@@ -554,7 +557,7 @@ def test_id_already_in_use_by_custom_tag_group(clients: ClientRegistry) -> None:
             {"id": "beta", "title": "Beta site"},
         ],
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     assert (
         f"The specified tag group id is already in use: '{custom_tag_group}'"
@@ -574,7 +577,7 @@ def test_id_already_in_use_by_builtin_tag_group(clients: ClientRegistry) -> None
             {"id": "beta", "title": "Beta site"},
         ],
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     assert (
         f"The specified tag group id is already in use: '{builtin_tag_group}'"
@@ -602,7 +605,7 @@ def test_id_already_in_use_by_custom_aux_tag(clients: ClientRegistry) -> None:
             {"id": "beta", "title": "Beta site"},
         ],
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     assert (
         f"The specified tag group id is already in use: '{custom_aux_tag}'"
@@ -622,7 +625,7 @@ def test_id_in_use_by_builtin_aux_tag(clients: ClientRegistry) -> None:
             {"id": "beta", "title": "Beta site"},
         ],
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     assert (
         f"The specified tag group id is already in use: '{builtin_aux_tag}'"

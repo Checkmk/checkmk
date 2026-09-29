@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from http import HTTPStatus
 
 import pytest
 
@@ -62,7 +63,7 @@ def test_openapi_get_graph_graph(
             url=GRAPH_ENDPOINT_GET,
             content_type="application/json",
             headers={"Accept": "application/json"},
-            status=200,
+            status=HTTPStatus.OK,
             params=json.dumps(
                 {
                     "site": "NO_SITE",
@@ -105,7 +106,7 @@ def test_openapi_get_graph_unknown_graph_id_is_a_bad_request(
             url=GRAPH_ENDPOINT_GET,
             content_type="application/json",
             headers={"Accept": "application/json"},
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             params=json.dumps(
                 {
                     "site": "NO_SITE",
@@ -163,7 +164,7 @@ def test_openapi_get_graph_metric(
             url=GRAPH_ENDPOINT_GET,
             content_type="application/json",
             headers={"Accept": "application/json"},
-            status=200,
+            status=HTTPStatus.OK,
             params=json.dumps(
                 {
                     "site": "NO_SITE",

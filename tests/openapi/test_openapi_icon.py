@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from pytest_mock import MockerFixture
 
 from cmk.gui.icons import IconData
@@ -46,7 +48,7 @@ def test_list_icons(clients: ClientRegistry, mocker: MockerFixture) -> None:
     )
 
     resp = clients.IconClient.get_all()
-    assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.OK, f"Expected 200, got {resp.status_code} {resp.body!r}"
     assert len(resp.json["value"]) == 3, "Expected exactly three icons to be returned"
 
     icons_by_id = {icon["id"]: icon for icon in resp.json["value"]}
@@ -76,7 +78,7 @@ def test_list_icons_user_overwrites_built_in(
     )
 
     resp = clients.IconClient.get_all()
-    assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.OK, f"Expected 200, got {resp.status_code} {resp.body!r}"
     assert len(resp.json["value"]) == 1, "Expected exactly one icon to be returned"
     icon = resp.json["value"][0]
     assert icon["id"] == icon_name
@@ -94,7 +96,7 @@ def test_list_icon_emblems(clients: ClientRegistry, mocker: MockerFixture) -> No
     )
 
     resp = clients.IconClient.get_all_emblems()
-    assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.OK, f"Expected 200, got {resp.status_code} {resp.body!r}"
     assert len(resp.json["value"]) == 2, "Expected exactly two icon emblems to be returned"
 
     emblems_by_id = {emblem["id"]: emblem for emblem in resp.json["value"]}
@@ -104,6 +106,6 @@ def test_list_icon_emblems(clients: ClientRegistry, mocker: MockerFixture) -> No
 
 def test_list_icon_categories(clients: ClientRegistry) -> None:
     resp = clients.IconClient.get_all_categories()
-    assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.OK, f"Expected 200, got {resp.status_code} {resp.body!r}"
     # should be at least the default builtin and user categories
     assert len(resp.json["value"]) >= 2, "Expected at least two icon categories to be returned"

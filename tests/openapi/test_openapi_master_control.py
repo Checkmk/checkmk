@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
+from http import HTTPStatus
 
 from cmk.ccc.user import UserId
 from cmk.livestatus_client.testing import MockLiveStatusConnection
@@ -126,7 +127,7 @@ def test_openapi_disable_notifications(
     with mock_livestatus:
         resp = clients.MasterControl.edit("NO_SITE", {"notifications": False})
 
-    assert resp.status_code == 204
+    assert resp.status_code == HTTPStatus.NO_CONTENT
 
 
 def test_openapi_enable_notifications(
@@ -138,7 +139,7 @@ def test_openapi_enable_notifications(
     with mock_livestatus:
         resp = clients.MasterControl.edit("NO_SITE", {"notifications": True})
 
-    assert resp.status_code == 204
+    assert resp.status_code == HTTPStatus.NO_CONTENT
 
 
 def test_openapi_disable_service_checks(
@@ -150,7 +151,7 @@ def test_openapi_disable_service_checks(
     with mock_livestatus:
         resp = clients.MasterControl.edit("NO_SITE", {"service_checks": False})
 
-    assert resp.status_code == 204
+    assert resp.status_code == HTTPStatus.NO_CONTENT
 
 
 def test_openapi_disable_host_checks(
@@ -162,7 +163,7 @@ def test_openapi_disable_host_checks(
     with mock_livestatus:
         resp = clients.MasterControl.edit("NO_SITE", {"host_checks": False})
 
-    assert resp.status_code == 204
+    assert resp.status_code == HTTPStatus.NO_CONTENT
 
 
 def test_openapi_disable_flap_detection(
@@ -174,7 +175,7 @@ def test_openapi_disable_flap_detection(
     with mock_livestatus:
         resp = clients.MasterControl.edit("NO_SITE", {"flap_detection": False})
 
-    assert resp.status_code == 204
+    assert resp.status_code == HTTPStatus.NO_CONTENT
 
 
 def test_openapi_disable_event_handlers(
@@ -186,7 +187,7 @@ def test_openapi_disable_event_handlers(
     with mock_livestatus:
         resp = clients.MasterControl.edit("NO_SITE", {"event_handlers": False})
 
-    assert resp.status_code == 204
+    assert resp.status_code == HTTPStatus.NO_CONTENT
 
 
 def test_openapi_disable_performance_data(
@@ -198,7 +199,7 @@ def test_openapi_disable_performance_data(
     with mock_livestatus:
         resp = clients.MasterControl.edit("NO_SITE", {"performance_data": False})
 
-    assert resp.status_code == 204
+    assert resp.status_code == HTTPStatus.NO_CONTENT
 
 
 def test_openapi_update_empty_body_sends_no_command(
@@ -210,14 +211,14 @@ def test_openapi_update_empty_body_sends_no_command(
     with mock_livestatus(expect_status_query=False):
         resp = clients.MasterControl.edit("NO_SITE", {})
 
-    assert resp.status_code == 204
+    assert resp.status_code == HTTPStatus.NO_CONTENT
 
 
 def test_openapi_show_master_control_unknown_site(
     clients: ClientRegistry,
 ) -> None:
     resp = clients.MasterControl.get("not_a_site", expect_ok=False)
-    assert resp.status_code == 404
+    assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
 def test_openapi_master_control_insufficient_permissions(
@@ -226,4 +227,4 @@ def test_openapi_master_control_insufficient_permissions(
 ) -> None:
     clients.MasterControl.set_credentials(*with_user)
     resp = clients.MasterControl.get_all(expect_ok=False)
-    assert resp.status_code in (401, 403)
+    assert resp.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN)

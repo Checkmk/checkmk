@@ -5,6 +5,7 @@
 
 import time
 from collections.abc import Iterator
+from http import HTTPStatus
 
 import pytest
 import time_machine
@@ -41,7 +42,7 @@ class TestMonitorHostServicesAuth:
             hostname=_HOSTNAME, site_id=_SITE_ID, limit=_LIMIT, expect_ok=False
         )
 
-        assert resp.status_code == 401
+        assert resp.status_code == HTTPStatus.UNAUTHORIZED
         assert "credentials" in resp.json["detail"]
 
     def test_normal_user_is_permitted(
@@ -70,7 +71,7 @@ class TestMonitorHostServicesAuth:
                 hostname=_HOSTNAME, site_id=_SITE_ID, limit=_LIMIT, expect_ok=False
             )
 
-        assert resp.status_code == 404
+        assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
 class TestMonitorHostServicesQueryParamValidation:
@@ -78,7 +79,7 @@ class TestMonitorHostServicesQueryParamValidation:
         resp = clients.MonitorHosts.list_host_services(
             hostname=_HOSTNAME, site_id="no-such-site", limit=_LIMIT, expect_ok=False
         )
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
     @pytest.mark.parametrize(
         "sort",
@@ -94,7 +95,7 @@ class TestMonitorHostServicesQueryParamValidation:
         resp = clients.MonitorHosts.list_host_services(
             hostname=_HOSTNAME, site_id=_SITE_ID, limit=_LIMIT, sort=sort, expect_ok=False
         )
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
     @pytest.mark.parametrize(
         "filters",
@@ -140,7 +141,7 @@ class TestMonitorHostServicesQueryParamValidation:
         resp = clients.MonitorHosts.list_host_services(
             hostname=_HOSTNAME, site_id=_SITE_ID, limit=_LIMIT, filters=filters, expect_ok=False
         )
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
 
 class TestMonitorHostServicesFilters:
@@ -406,7 +407,7 @@ class TestMonitorHostServices:
                 hostname="no-such-host", site_id=_SITE_ID, limit=_LIMIT, expect_ok=False
             )
 
-        assert resp.status_code == 404
+        assert resp.status_code == HTTPStatus.NOT_FOUND
 
     @time_machine.travel("2026-07-13 11:39:00+00:00", tick=False)
     def test_services(
@@ -1886,7 +1887,7 @@ class TestMonitorServiceOverview:
                 expect_ok=False,
             )
 
-        assert resp.status_code == 404
+        assert resp.status_code == HTTPStatus.NOT_FOUND
 
     def test_unknown_site_is_rejected(self, clients: ClientRegistry) -> None:
         resp = clients.MonitorHosts.get_service_overview(
@@ -1895,7 +1896,7 @@ class TestMonitorServiceOverview:
             service_name=_SERVICE_DESCRIPTION,
             expect_ok=False,
         )
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
     def test_invalid_credentials(self, clients: ClientRegistry) -> None:
         client = clients.MonitorHosts
@@ -1908,7 +1909,7 @@ class TestMonitorServiceOverview:
             expect_ok=False,
         )
 
-        assert resp.status_code == 401
+        assert resp.status_code == HTTPStatus.UNAUTHORIZED
         assert "credentials" in resp.json["detail"]
 
 
@@ -1982,7 +1983,7 @@ class TestMonitorHostServicesReschedule:
             expect_ok=False,
         )
 
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
     def test_invalid_credentials(self, clients: ClientRegistry) -> None:
         client = clients.MonitorHosts
@@ -1993,7 +1994,7 @@ class TestMonitorHostServicesReschedule:
             expect_ok=False,
         )
 
-        assert resp.status_code == 401
+        assert resp.status_code == HTTPStatus.UNAUTHORIZED
         assert "credentials" in resp.json["detail"]
 
 
@@ -2006,7 +2007,7 @@ class TestMonitorServiceActionMenu:
             expect_ok=False,
         )
 
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
     def test_missing_service_returns_404(
         self,
@@ -2032,7 +2033,7 @@ class TestMonitorServiceActionMenu:
                 expect_ok=False,
             )
 
-        assert resp.status_code == 404
+        assert resp.status_code == HTTPStatus.NOT_FOUND
 
     def test_invalid_credentials(self, clients: ClientRegistry) -> None:
         client = clients.MonitorHosts
@@ -2045,7 +2046,7 @@ class TestMonitorServiceActionMenu:
             expect_ok=False,
         )
 
-        assert resp.status_code == 401
+        assert resp.status_code == HTTPStatus.UNAUTHORIZED
         assert "credentials" in resp.json["detail"]
 
 

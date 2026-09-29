@@ -5,6 +5,7 @@
 
 import json
 import time
+from http import HTTPStatus
 
 import pytest
 import time_machine
@@ -32,7 +33,7 @@ class TestMonitorHostsAuth:
 
         resp = client.list_all(limit=100, expect_ok=False)
 
-        assert resp.status_code == 401
+        assert resp.status_code == HTTPStatus.UNAUTHORIZED
         assert "credentials" in resp.json["detail"]
 
     def test_normal_user_is_permitted(
@@ -60,17 +61,17 @@ class TestMonitorHostsAuth:
         with mock_livestatus(expect_status_query=True):
             resp = client.list_all(limit=_LIMIT)
 
-        assert resp.status_code == 200
+        assert resp.status_code == HTTPStatus.OK
 
 
 class TestMonitorHostsQueryParamValidation:
     def test_limit_lower_bound(self, clients: ClientRegistry) -> None:
         resp = clients.MonitorHosts.list_all(limit=-1, expect_ok=False)
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
     def test_limit_upper_bound(self, clients: ClientRegistry) -> None:
         resp = clients.MonitorHosts.list_all(limit=1_000_000, expect_ok=False)
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
     @pytest.mark.parametrize(
         "sort",
@@ -82,7 +83,7 @@ class TestMonitorHostsQueryParamValidation:
     )
     def test_invalid_sort_params(self, clients: ClientRegistry, sort: list[str]) -> None:
         resp = clients.MonitorHosts.list_all(limit=100, sort=sort, expect_ok=False)
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
     @pytest.mark.parametrize(
         "filters",
@@ -192,7 +193,7 @@ class TestMonitorHostsQueryParamValidation:
         filters: dict[str, object],
     ) -> None:
         resp = clients.MonitorHosts.list_all(limit=1000, filters=filters, expect_ok=False)
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
 
 class TestMonitorHosts:
@@ -971,7 +972,7 @@ class TestMonitorHostOverviewAuth:
 
         resp = client.get(hostname="heute", site_id=_SITE_ID, expect_ok=False)
 
-        assert resp.status_code == 401
+        assert resp.status_code == HTTPStatus.UNAUTHORIZED
         assert "credentials" in resp.json["detail"]
 
     def test_normal_user_is_permitted(
@@ -998,13 +999,13 @@ class TestMonitorHostOverviewAuth:
         with mock_livestatus(expect_status_query=True):
             resp = client.get(hostname="heute", site_id=_SITE_ID, expect_ok=False)
 
-        assert resp.status_code == 404
+        assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
 class TestMonitorHostOverviewQueryParamValidation:
     def test_unknown_site_is_rejected(self, clients: ClientRegistry) -> None:
         resp = clients.MonitorHosts.get(hostname="heute", site_id="no-such-site", expect_ok=False)
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
 
 class TestMonitorHostActionMenuAuth:
@@ -1014,7 +1015,7 @@ class TestMonitorHostActionMenuAuth:
 
         resp = client.action_menu(hostname="heute", site_id=_SITE_ID, expect_ok=False)
 
-        assert resp.status_code == 401
+        assert resp.status_code == HTTPStatus.UNAUTHORIZED
         assert "credentials" in resp.json["detail"]
 
     def test_normal_user_is_permitted(
@@ -1042,7 +1043,7 @@ class TestMonitorHostActionMenuAuth:
         with mock_livestatus(expect_status_query=True):
             resp = client.action_menu(hostname="heute", site_id=_SITE_ID, expect_ok=False)
 
-        assert resp.status_code == 404
+        assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
 class TestMonitorHostActionMenuQueryParamValidation:
@@ -1050,7 +1051,7 @@ class TestMonitorHostActionMenuQueryParamValidation:
         resp = clients.MonitorHosts.action_menu(
             hostname="heute", site_id="no-such-site", expect_ok=False
         )
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
 
 class TestMonitorHostActionMenu:
@@ -1071,7 +1072,7 @@ class TestMonitorHostActionMenu:
                 hostname="no-such-host", site_id=_SITE_ID, expect_ok=False
             )
 
-        assert resp.status_code == 404
+        assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
 class TestMonitorHostOverview:
@@ -1288,7 +1289,7 @@ class TestMonitorHostOverview:
                 hostname="no-such-host", site_id=_SITE_ID, expect_ok=False
             )
 
-        assert resp.status_code == 404
+        assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
 class TestMonitorHostsReschedule:

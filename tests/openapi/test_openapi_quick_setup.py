@@ -6,6 +6,7 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Callable, Sequence
+from http import HTTPStatus
 
 import pytest
 
@@ -204,7 +205,7 @@ def test_failing_validate(clients: ClientRegistry) -> None:
         stages=[{"form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: 5}}}],
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert resp.json["validation_errors"] == {
         "stage_index": 0,
         "formspec_errors": {
@@ -261,7 +262,7 @@ def test_failing_validate_host_path(clients: ClientRegistry) -> None:
         stages=[{"form_data": {"host_data": {"host_path": "#invalid_host_path#"}}}],
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert resp.json["validation_errors"] == {
         "stage_index": 0,
         "formspec_errors": {
@@ -300,7 +301,7 @@ def test_quick_setup_save(clients: ClientRegistry) -> None:
         quick_setup_id="quick_setup_test",
         payload={"button_id": "save", "stages": []},
     )
-    resp.assert_status_code(201)
+    resp.assert_status_code(HTTPStatus.CREATED)
     assert resp.json["redirect_url"] == "http://save/url"
 
 
@@ -325,7 +326,7 @@ def test_quick_setup_save_action_exists(clients: ClientRegistry) -> None:
         quick_setup_id="quick_setup_test",
         payload={"button_id": "some_nonexistent_id", "stages": []},
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 @pytest.mark.parametrize(
@@ -393,7 +394,7 @@ def test_unique_id_must_be_unique(
         stages=[{"form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: "I_should_be_unique"}}}],
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert len(resp.json["validation_errors"]["stage_errors"]) == 1
 
 
@@ -489,7 +490,7 @@ def test_get_quick_setup_overview_prefilled(clients: ClientRegistry) -> None:
     resp = clients.QuickSetup.get_overview_mode_or_guided_mode(
         quick_setup_id="quick_setup_test", mode="overview", object_id="obj3", expect_ok=False
     )
-    resp.assert_status_code(404)
+    resp.assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_quick_setup_edit(clients: ClientRegistry) -> None:
@@ -516,7 +517,7 @@ def test_quick_setup_edit(clients: ClientRegistry) -> None:
         payload={"button_id": "save", "stages": []},
         object_id="obj1",
     )
-    resp.assert_status_code(201)
+    resp.assert_status_code(HTTPStatus.CREATED)
     assert resp.json["redirect_url"] == "http://save/url"
 
 
@@ -668,7 +669,7 @@ def test_validation_on_save_all(  # type: ignore[misc]
         },
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert resp.json["all_stage_errors"] == expected_errors
 
 
@@ -829,7 +830,7 @@ def test_fail_validate_permission(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
 
-    assert resp.status_code == 403
+    assert resp.status_code == HTTPStatus.FORBIDDEN
     assert resp.json["title"] == "Action not allowed"
     assert (
         resp.json["detail"]
@@ -839,11 +840,11 @@ def test_fail_validate_permission(clients: ClientRegistry) -> None:
 
 def test_stage_action_result_should_return_404(clients: ClientRegistry) -> None:
     resp = clients.QuickSetup.get_stage_action_result("foo", expect_ok=False)
-    assert resp.status_code == 404
+    assert resp.status_code == HTTPStatus.NOT_FOUND
     assert resp.json["detail"] == "Background job 'foo' not found"
 
 
 def test_action_result_should_return_404(clients: ClientRegistry) -> None:
     resp = clients.QuickSetup.get_action_result("foo", expect_ok=False)
-    assert resp.status_code == 404
+    assert resp.status_code == HTTPStatus.NOT_FOUND
     assert resp.json["detail"] == "Background job 'foo' not found"

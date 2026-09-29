@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 import pytest
 
 from cmk.gui.watolib.password_store import PasswordStore
@@ -20,7 +22,7 @@ def test_openapi_password(clients: ClientRegistry) -> None:
         shared=["all"],
         editable_by="admin",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     clients.Password.create(
         ident="foo:invalid",
@@ -29,7 +31,7 @@ def test_openapi_password(clients: ClientRegistry) -> None:
         shared=["all"],
         editable_by="admin",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     clients.Password.create(
         ident="foo",
@@ -39,7 +41,7 @@ def test_openapi_password(clients: ClientRegistry) -> None:
         editable_by="admin",
     )
 
-    clients.Password.edit("fooz", expect_ok=False).assert_status_code(404)
+    clients.Password.edit("fooz", expect_ok=False).assert_status_code(HTTPStatus.NOT_FOUND)
     clients.Password.edit("foo", title="foobu", comment="Something but nothing random")
 
     resp = clients.Password.get("foo")
@@ -88,10 +90,10 @@ def test_openapi_password_delete(clients: ClientRegistry) -> None:
     resp = clients.Password.get_all()
     assert len(resp.json["value"]) == 1
 
-    clients.Password.delete("invalid", expect_ok=False).assert_status_code(404)
-    clients.Password.delete("test").assert_status_code(204)
+    clients.Password.delete("invalid", expect_ok=False).assert_status_code(HTTPStatus.NOT_FOUND)
+    clients.Password.delete("test").assert_status_code(HTTPStatus.NO_CONTENT)
 
-    clients.Password.get("test", expect_ok=False).assert_status_code(404)
+    clients.Password.get("test", expect_ok=False).assert_status_code(HTTPStatus.NOT_FOUND)
     resp = clients.Password.get_all()
     assert len(resp.json["value"]) == 0
 
@@ -109,8 +111,10 @@ def test_openapi_password_etag(clients: ClientRegistry) -> None:
 
     clients.Password.edit(
         ident, title="Updated", expect_ok=False, etag="invalid_etag"
-    ).assert_status_code(412)
-    clients.Password.delete(ident, expect_ok=False, etag="invalid_etag").assert_status_code(412)
+    ).assert_status_code(HTTPStatus.PRECONDITION_FAILED)
+    clients.Password.delete(ident, expect_ok=False, etag="invalid_etag").assert_status_code(
+        HTTPStatus.PRECONDITION_FAILED
+    )
 
     clients.Password.edit(ident, title="Updated", etag="valid_etag")
     clients.Password.delete(ident, etag="valid_etag")
@@ -167,7 +171,7 @@ def test_password_min_length_create(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
 
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert resp.json["fields"]["body.password"]["type"] == "string_too_short"
 
 
@@ -189,7 +193,7 @@ def test_password_min_length_update(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
 
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert resp.json["fields"]["body.password.constrained-str"]["type"] == "string_too_short"
 
 
@@ -203,7 +207,7 @@ def test_password_identifier_regex(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
 
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert (
         resp.json["fields"]["body.ident"]["msg"]
         == "Value error, 'abcℕ' does not match pattern. An identifier must only consist of letters, digits, dash and underscore and it must start with a letter or underscore."
@@ -255,7 +259,7 @@ def test_delete_own_password_does_not_delete_other_passwords(
     clients.Password.set_credentials(*with_automation_user_not_admin)
 
     # Normal user deletes their own password – this must not affect other passwords.
-    clients.Password.delete("user_pw").assert_status_code(204)
+    clients.Password.delete("user_pw").assert_status_code(HTTPStatus.NO_CONTENT)
 
     # Switch back to admin and verify the admin password still exists.
     # Before the fix, the admin's password was deleted as a side effect.
@@ -297,4 +301,4 @@ def test_normal_user_cannot_delete_another_users_password(
     # and is not shared with them, so it is not visible and the deletion must be rejected.
     # The password appears non-existent to this user (404), since visibility is filtered.
     clients.Password.set_credentials(*with_automation_user_not_admin)
-    clients.Password.delete("admin_pw", expect_ok=False).assert_status_code(404)
+    clients.Password.delete("admin_pw", expect_ok=False).assert_status_code(HTTPStatus.NOT_FOUND)

@@ -66,14 +66,14 @@ Context "mk_inventory.ps1 Tests" {
             Mock Test-Path { $false }
             Mock New-Item {}
             { CreateTimestamp } | Should -Not -Throw
-            Assert-MockCalled New-Item -Times 0
+            Should -Invoke New-Item -Times 0
         }
 
         It "creates a new timestamp file if it does not exist" {
             Mock Test-Path { $false }
             Mock New-Item {}
             CreateTimestamp
-            Assert-MockCalled New-Item -ParameterFilter { $Path -like "*mk_inventory._myhost*" } -Times 1
+            Should -Invoke New-Item -ParameterFilter { $Path -like "*mk_inventory._myhost*" } -Times 1
         }
 
         It "exits if timestamp is too young" {
@@ -442,13 +442,13 @@ Context "mk_inventory.ps1 Tests" {
 
             $result = GetSoftwareFromFilesystem
 
-            Assert-MockCalled Test-Path -ParameterFilter { $Path -eq "C:\Path1" -and $PathType -eq "Container" } -Times 1
-            Assert-MockCalled Test-Path -ParameterFilter { $Path -eq "C:\Path2" -and $PathType -eq "Container" } -Times 1
-            Assert-MockCalled Test-Path -ParameterFilter { $Path -eq "C:\Path3" -and $PathType -eq "Container" } -Times 1
+            Should -Invoke Test-Path -ParameterFilter { $Path -eq "C:\Path1" -and $PathType -eq "Container" } -Times 1
+            Should -Invoke Test-Path -ParameterFilter { $Path -eq "C:\Path2" -and $PathType -eq "Container" } -Times 1
+            Should -Invoke Test-Path -ParameterFilter { $Path -eq "C:\Path3" -and $PathType -eq "Container" } -Times 1
 
-            Assert-MockCalled RecurseFolderForExecs -ParameterFilter { $folderPath -eq "C:\Path1" } -Times 1
-            Assert-MockCalled RecurseFolderForExecs -ParameterFilter { $folderPath -eq "C:\Path3" } -Times 1
-            Assert-MockCalled RecurseFolderForExecs -ParameterFilter { $folderPath -eq "C:\Path2" } -Times 0
+            Should -Invoke RecurseFolderForExecs -ParameterFilter { $folderPath -eq "C:\Path1" } -Times 1
+            Should -Invoke RecurseFolderForExecs -ParameterFilter { $folderPath -eq "C:\Path3" } -Times 1
+            Should -Invoke RecurseFolderForExecs -ParameterFilter { $folderPath -eq "C:\Path2" } -Times 0
 
             $result | Should -Contain "output for C:\Path1"
             $result | Should -Contain "output for C:\Path3"

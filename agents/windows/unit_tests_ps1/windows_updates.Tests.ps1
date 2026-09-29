@@ -3,14 +3,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 BeforeAll {
+    # The plugin switches the console to UTF-16 at load time; restore it
+    # so the rest of the run's output stays readable.
+    $consoleEncoding = [Console]::OutputEncoding
     $scriptPath = Join-Path $PSScriptRoot "..\plugins\windows_updates.ps1"
     . $scriptPath
+    [Console]::OutputEncoding = $consoleEncoding
 }
 
 Describe "ReadFromRegistry" {
     Context "When registry key exists" {
         It "returns the registry value" {
-            Mock Get-ItemProperty { @{ '(default)' = 'test_value' } }
+            Mock Get-ItemProperty { [PSCustomObject]@{ '(default)' = 'test_value' } }
             ReadFromRegistry -RegistryKey "HKLM:\Test" -Default "default_val" | Should -Be "test_value"
         }
     }

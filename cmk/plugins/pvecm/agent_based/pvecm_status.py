@@ -89,6 +89,14 @@ def check_pvecm_status(section: Section) -> CheckResult:
     if "cman_tool" in section and "cannot open connection to cman" in section["cman_tool"]:
         yield Result(state=State.CRIT, summary="Cluster management tool: %s" % section["cman_tool"])
 
+    elif missing := [
+        key for key in ("nodes", "quorum", "expected votes", "total votes") if key not in section
+    ]:
+        yield Result(
+            state=State.UNKNOWN,
+            summary=f"Cannot evaluate cluster state, missing in agent output: {', '.join(missing)}",
+        )
+
     else:
         name = section.get("cluster name", section.get("quorum provider", "unknown"))
 

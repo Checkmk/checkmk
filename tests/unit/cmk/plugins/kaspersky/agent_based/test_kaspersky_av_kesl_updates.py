@@ -18,7 +18,7 @@ from cmk.plugins.kaspersky.agent_based.kaspersky_av_kesl_updates import (
 )
 
 
-@pytest.fixture(scope="module", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture(scope="module")
 def set_fixed_timezone() -> Iterator[None]:
     with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("UTC"))):
         yield
@@ -41,10 +41,12 @@ def set_fixed_timezone() -> Iterator[None]:
         ),
     ],
 )
+@pytest.mark.usefixtures("set_fixed_timezone")
 def test_check_kaskpersky_av_client(section: Section, results: Sequence[Result]) -> None:
     assert list(check_kaspersky_av_kesl_updates(section)) == results
 
 
+@pytest.mark.usefixtures("set_fixed_timezone")
 def test_check_kaskpersky_av_client_newer_agent_keys() -> None:
     # Kaspersky Endpoint Security 12.3 for Linux emits "Application databases
     # loaded" instead of "Anti-virus databases loaded" and no longer emits

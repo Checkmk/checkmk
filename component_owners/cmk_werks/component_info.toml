@@ -1,0 +1,23 @@
+type = "Component"
+display_name = "Werks"
+previous_name = "developer_tools_werks"
+members_required = 2
+tier = 3
+description = """
+Werks, Checkmk's changelog entries: how they are written, validated and
+collected, and how a site shows them to its users (packages/cmk-werks).
+
+Belongs here:
+- The werk file format: parsing, validation, the models and rendering to
+  markdown and HTML (cmk.werks.tool)
+- The werk command: creating, editing, listing and picking werks, and the
+  status and ID log of a developer's werk setup
+- Reserving werk IDs, and the werk ID server that hands them out centrally
+  (cmk.werk_ids_server)
+- Collecting the werks of all branches and products into release data, and
+  burning the version into werks at release time
+- Werks inside a site: loading them, storing acknowledgements and the werk
+  detail page (cmk.werks.site, cmk.werks.web)
+- The werks overview in the GUI (cmk/gui/werks.py), release announcements
+  and werk mails (cmk/utils/werks) and the update-config werk action
+"""

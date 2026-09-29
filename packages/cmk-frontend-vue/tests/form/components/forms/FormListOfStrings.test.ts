@@ -6,22 +6,13 @@
 import userEvent from '@testing-library/user-event'
 import { fireEvent, screen, waitFor } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { Response } from 'cmk-ui-library/components/CmkSuggestions'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
+
+import { restAutocompleter } from '@tests/lib/autocompleters'
 
 import { renderForm } from '../cmk-form-helper'
 
-vi.mock(
-  import('cmk-ui-library/components/FormAutocompleter/autocompleter'),
-  async (importOriginal) => {
-    const mod = await importOriginal()
-    return {
-      ...mod,
-      fetchSuggestions: vi.fn(async () => {
-        return new Response([])
-      })
-    }
-  }
-)
+useMswServer(restAutocompleter(() => []))
 
 const stringFormSpecWithAutocompleter: FormSpec.String = {
   type: 'string',

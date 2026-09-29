@@ -5,9 +5,11 @@
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { Response } from 'cmk-ui-library/components/CmkSuggestions'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 
 import FormString from '@/form/private/forms/FormString.vue'
+
+import { restAutocompleter } from '@tests/lib/autocompleters'
 
 import { renderForm } from '../cmk-form-helper'
 
@@ -130,21 +132,11 @@ test('FormString displays required', async () => {
   screen.getByText('(required)')
 })
 
-vi.mock(
-  import('cmk-ui-library/components/FormAutocompleter/autocompleter'),
-  async (importOriginal) => {
-    const mod = await importOriginal() // type is inferred
-    return {
-      ...mod,
-      fetchSuggestions: vi.fn(async (_config: unknown, _v: string) => {
-        await new Promise((resolve) => setTimeout(resolve, 100))
-        return new Response([
-          { name: 'val1', title: 'Value 1' },
-          { name: 'val2', title: 'Value 2' }
-        ])
-      })
-    }
-  }
+useMswServer(
+  restAutocompleter(() => [
+    ['val1', 'Value 1'],
+    ['val2', 'Value 2']
+  ])
 )
 
 test('FormString with autocompleter loads value', async () => {

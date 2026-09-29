@@ -3,12 +3,12 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen, within } from '@testing-library/vue'
-import { Response } from 'cmk-ui-library/components/CmkSuggestions'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { beforeEach, expect, test, vi } from 'vitest'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
+import { beforeEach, expect, test } from 'vitest'
 import { defineComponent, h } from 'vue'
 
 import RrdQueryForm from '@/graphing/designer/components/forms/RrdQueryForm.vue'
@@ -16,22 +16,23 @@ import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
 import { type DraftRRDQueryItem, newRrdQueryDraft } from '@/graphing/designer/drafts'
 import { validateRow } from '@/graphing/designer/validation'
 
+import { type AutocompleteRequest, restAutocompleter } from '@tests/lib/autocompleters'
+
 import { filterDefinitions } from '../fixtures'
 
-const mocks = vi.hoisted(() => ({ fetchSuggestions: vi.fn() }))
+const autocompleteRequests: AutocompleteRequest[] = []
 
-vi.mock(
-  import('cmk-ui-library/components/FormAutocompleter/autocompleter'),
-  async (importOriginal) => {
-    const mod = await importOriginal()
-    return { ...mod, fetchSuggestions: mocks.fetchSuggestions }
-  }
+useMswServer(
+  restAutocompleter((request) => {
+    autocompleteRequests.push(request)
+    return []
+  })
 )
 
 const PALETTE: readonly string[] = ['#28a2f3', '#ff8400']
 
 beforeEach(() => {
-  mocks.fetchSuggestions.mockReset().mockResolvedValue(new Response([]))
+  autocompleteRequests.length = 0
 })
 
 function renderQueryForm(
@@ -154,11 +155,12 @@ test('the metric autocompleter resolves suggestions independent of an exact host
 
   await fireEvent.click(await screen.findByTitle('Select service metric'))
 
-  const lastCall = mocks.fetchSuggestions.mock.calls.at(-1)
-  expect(lastCall).toBeDefined()
-  const [autocompleter] = lastCall!
-  expect(autocompleter.data.ident).toBe('monitored_metrics')
-  expect(autocompleter.data.params.show_independent_of_context).toBe(true)
+  await waitFor(() =>
+    expect(autocompleteRequests.at(-1)).toMatchObject({
+      ident: 'monitored_metrics',
+      parameters: { show_independent_of_context: true }
+    })
+  )
 })
 
 test('changing the consolidation updates the row', async () => {

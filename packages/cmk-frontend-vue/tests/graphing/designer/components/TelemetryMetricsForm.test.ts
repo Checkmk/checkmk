@@ -6,9 +6,8 @@
 import { userEvent } from '@testing-library/user-event'
 import { render, screen, waitFor, within } from '@testing-library/vue'
 import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
-import { Response } from 'cmk-ui-library/components/CmkSuggestions'
-import client from 'cmk-ui-library/lib/rest-api-client/client'
-import { expect, test, vi } from 'vitest'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
+import { expect, test } from 'vitest'
 import { defineComponent, h } from 'vue'
 
 import TelemetryMetricsForm from '@/graphing/designer/components/forms/TelemetryMetricsForm.vue'
@@ -18,25 +17,13 @@ import {
   newTelemetryMetricsDraft
 } from '@/graphing/designer/drafts'
 
-const mocks = vi.hoisted(() => ({ fetchSuggestions: vi.fn() }))
+import { restAutocompleter } from '@tests/lib/autocompleters'
 
-vi.mock(
-  import('cmk-ui-library/components/FormAutocompleter/autocompleter'),
-  async (importOriginal) => {
-    const mod = await importOriginal()
-    return { ...mod, fetchSuggestions: mocks.fetchSuggestions }
-  }
-)
+useMswServer(restAutocompleter(() => []))
 
 const PALETTE: readonly string[] = ['#28a2f3', '#ff8400']
 
 function renderForm(seed: DraftTelemetryMetricsItem) {
-  mocks.fetchSuggestions.mockResolvedValue(new Response([]))
-  vi.spyOn(client, 'POST').mockResolvedValue({
-    data: { choices: [] },
-    error: undefined,
-    response: new globalThis.Response(null, { status: 200 })
-  } as never)
   const store = useGraphItems(PALETTE)
   store.replaceAll([seed])
   const harness = defineComponent({

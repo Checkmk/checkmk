@@ -3,8 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { CalendarDate } from '@internationalized/date'
-import * as intl from '@internationalized/date'
+import type { CalendarDate } from '@internationalized/date'
+import { resetLocalTimeZone, setLocalTimeZone } from '@internationalized/date'
 import { fireEvent, waitFor } from '@testing-library/vue'
 import CmkDatePicker from 'cmk-ui-library/components/date-time/CmkDatePicker.vue'
 import type { DateTimePickerSettings } from 'cmk-ui-library/components/date-time/types'
@@ -13,13 +13,6 @@ import { nextTick } from 'vue'
 
 import { TZ_TOKYO, TZ_UTC } from './dateTimeTestFixtures'
 import { lastValue, renderModelPicker } from './pickerTestHarness'
-
-// Mock `today` so the calendar always opens on a known month (June 2026) and clicking a day yields
-// a deterministic date.
-vi.mock('@internationalized/date', async (importOriginal) => {
-  const actual = await importOriginal<typeof intl>()
-  return { ...actual, today: vi.fn(actual.today), getLocalTimeZone: vi.fn(actual.getLocalTimeZone) }
-})
 
 // ISO date format so the rendered segments never depend on the host locale.
 const SETTINGS: DateTimePickerSettings = {
@@ -46,9 +39,16 @@ const clickDay = (view: PickerView, day: string) =>
   fireEvent.click(view.getByRole('button', { name: new RegExp(`\\b${day},`) }))
 const apply = (view: PickerView) => fireEvent.click(view.getByRole('button', { name: 'Apply' }))
 
+// A known today, so the calendar always opens on June 2026 and clicking a day yields a
+// deterministic date.
 beforeEach(() => {
-  vi.mocked(intl.today).mockReturnValue(new CalendarDate(2026, 6, 10))
-  vi.mocked(intl.getLocalTimeZone).mockReturnValue(TZ_UTC)
+  vi.setSystemTime(new Date('2026-06-10T12:00:00Z'))
+  setLocalTimeZone(TZ_UTC)
+})
+
+afterEach(() => {
+  vi.useRealTimers()
+  resetLocalTimeZone()
 })
 
 describe('CmkDatePicker', () => {

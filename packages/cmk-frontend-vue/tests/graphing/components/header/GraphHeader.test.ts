@@ -3,16 +3,19 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type * as intl from '@internationalized/date'
+import { resetLocalTimeZone, setLocalTimeZone } from '@internationalized/date'
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 
 import GraphHeader from '@/graphing/components/header/GraphHeader.vue'
 import type { BurgerMenuGroup } from '@/graphing/types'
 
-vi.mock('@internationalized/date', async (importOriginal) => {
-  const actual = await importOriginal<typeof intl>()
-  return { ...actual, getLocalTimeZone: () => 'UTC' }
+beforeEach(() => {
+  setLocalTimeZone('UTC')
+})
+
+afterEach(() => {
+  resetLocalTimeZone()
 })
 
 const JUNE_15_NOON_UTC = 1781524800

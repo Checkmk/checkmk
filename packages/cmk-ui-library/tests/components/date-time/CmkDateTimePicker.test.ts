@@ -4,12 +4,12 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import {
-  CalendarDate,
   CalendarDateTime,
   type ZonedDateTime,
+  resetLocalTimeZone,
+  setLocalTimeZone,
   toZoned
 } from '@internationalized/date'
-import * as intl from '@internationalized/date'
 import { fireEvent, within } from '@testing-library/vue'
 import CmkDateTimePicker from 'cmk-ui-library/components/date-time/CmkDateTimePicker.vue'
 import { timeZoneRegionLabel } from 'cmk-ui-library/components/date-time/dateTimeUtils'
@@ -19,12 +19,6 @@ import { nextTick } from 'vue'
 
 import { TZ_BERLIN, TZ_TOKYO, TZ_UTC } from './dateTimeTestFixtures'
 import { lastValue, renderModelPicker } from './pickerTestHarness'
-
-// Mock `today` so a null-model calendar opens on a known month (June 2026).
-vi.mock('@internationalized/date', async (importOriginal) => {
-  const actual = await importOriginal<typeof intl>()
-  return { ...actual, today: vi.fn(actual.today), getLocalTimeZone: vi.fn(actual.getLocalTimeZone) }
-})
 
 const SETTINGS: DateTimePickerSettings = {
   hourCycle: 24,
@@ -66,9 +60,15 @@ async function setTime(view: PickerView, hour: number, minute: number): Promise<
   await nextTick()
 }
 
+// A known today, so a null-model calendar opens on June 2026.
 beforeEach(() => {
-  vi.mocked(intl.today).mockReturnValue(new CalendarDate(2026, 6, 10))
-  vi.mocked(intl.getLocalTimeZone).mockReturnValue(TZ_UTC)
+  vi.setSystemTime(new Date('2026-06-10T12:00:00Z'))
+  setLocalTimeZone(TZ_UTC)
+})
+
+afterEach(() => {
+  vi.useRealTimers()
+  resetLocalTimeZone()
 })
 
 describe('CmkDateTimePicker', () => {
@@ -143,10 +143,6 @@ describe('CmkDateTimePicker', () => {
 })
 
 describe('CmkDateTimePicker — timezone readouts', () => {
-  afterEach(() => {
-    vi.useRealTimers()
-  })
-
   test('the open flyout names the picked zone and the current server time', async () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-06-10T10:00:00Z'))

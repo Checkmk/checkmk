@@ -3,8 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { CalendarDate } from '@internationalized/date'
-import * as intl from '@internationalized/date'
+import { resetLocalTimeZone, setLocalTimeZone } from '@internationalized/date'
 import { userEvent } from '@testing-library/user-event'
 import { fireEvent, render, screen, within } from '@testing-library/vue'
 import { beforeEach, expect, test, vi } from 'vitest'
@@ -13,14 +12,6 @@ import { defineComponent, nextTick, ref } from 'vue'
 import type { ColumnFilterNode } from '@/monitoring/shared/api/types'
 import FilterDateTimeRange from '@/monitoring/shared/components/filter/FilterDateTimeRange.vue'
 import type { DateTimeRangeFilter } from '@/monitoring/shared/components/filter/types'
-
-// The component reads the browser zone to convert between the picked wall clock and the stored
-// instant, so pinning it to UTC keeps the expected unix timestamps machine-independent. `today`
-// decides which month an empty picker opens on.
-vi.mock('@internationalized/date', async (importOriginal) => {
-  const actual = await importOriginal<typeof intl>()
-  return { ...actual, today: vi.fn(actual.today), getLocalTimeZone: vi.fn(actual.getLocalTimeZone) }
-})
 
 const definition: DateTimeRangeFilter<'last_check'> = {
   type: 'date-time-range',
@@ -67,9 +58,17 @@ async function pick(name: 'From' | 'To', day: number, hour: number, minute: numb
   await userEvent.click(view.getByRole('button', { name: 'Apply' }))
 }
 
+// The component reads the browser zone to convert between the picked wall clock and the stored
+// instant, so pinning it to UTC keeps the expected unix timestamps machine-independent. Today
+// decides which month an empty picker opens on.
 beforeEach(() => {
-  vi.mocked(intl.today).mockReturnValue(new CalendarDate(2026, 6, 10))
-  vi.mocked(intl.getLocalTimeZone).mockReturnValue('UTC')
+  vi.setSystemTime(new Date('2026-06-10T12:00:00Z'))
+  setLocalTimeZone('UTC')
+})
+
+afterEach(() => {
+  vi.useRealTimers()
+  resetLocalTimeZone()
 })
 
 test('a lone lower bound produces a single gte condition', async () => {

@@ -3,8 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { CalendarDate } from '@internationalized/date'
-import * as intl from '@internationalized/date'
+import { CalendarDate, resetLocalTimeZone, setLocalTimeZone } from '@internationalized/date'
 import {
   defaultYearRange,
   monthFromIndex,
@@ -15,9 +14,9 @@ import {
 import type { Weekday } from 'cmk-ui-library/components/date-time/types'
 import { describe, expect, test, vi } from 'vitest'
 
-vi.mock('@internationalized/date', async (importOriginal) => {
-  const actual = await importOriginal<typeof intl>()
-  return { ...actual, today: vi.fn(actual.today), getLocalTimeZone: vi.fn(actual.getLocalTimeZone) }
+afterEach(() => {
+  vi.useRealTimers()
+  resetLocalTimeZone()
 })
 
 describe('monthIndex / monthFromIndex', () => {
@@ -99,9 +98,9 @@ describe('defaultYearRange', () => {
   test('explicit reference 2', () => {
     expect(defaultYearRange(2000)).toEqual([1980, 2002])
   })
-  test('default arg uses today (mocked)', () => {
-    vi.mocked(intl.today).mockReturnValue(new CalendarDate(2026, 6, 10))
-    vi.mocked(intl.getLocalTimeZone).mockReturnValue('Europe/Berlin')
+  test('default arg uses today', () => {
+    vi.setSystemTime(new Date('2026-06-10T12:00:00Z'))
+    setLocalTimeZone('Europe/Berlin')
     expect(defaultYearRange()).toEqual([2006, 2028])
   })
 })

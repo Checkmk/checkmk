@@ -3,8 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { CalendarDate } from '@internationalized/date'
-import * as intl from '@internationalized/date'
+import { CalendarDate, resetLocalTimeZone, setLocalTimeZone } from '@internationalized/date'
 import { fireEvent, render } from '@testing-library/vue'
 import CalendarGrid from 'cmk-ui-library/components/date-time/private/calendar/CalendarGrid.vue'
 import type { CalendarSelection } from 'cmk-ui-library/components/date-time/private/calendar/types'
@@ -13,11 +12,6 @@ import { nextTick } from 'vue'
 
 import { makeSettings } from '../../dateTimeTestFixtures'
 import { lastValue } from '../../pickerTestHarness'
-
-vi.mock('@internationalized/date', async (importOriginal) => {
-  const actual = await importOriginal<typeof intl>()
-  return { ...actual, today: vi.fn(actual.today), getLocalTimeZone: vi.fn(actual.getLocalTimeZone) }
-})
 
 // Sunday-first, UTC; matches the assertions below that key off weekday 0 = Sunday.
 const BASE_PROPS = {
@@ -79,7 +73,13 @@ function lastEmittedDate(
 beforeEach(() => {
   vi.spyOn(navigator, 'language', 'get').mockReturnValue('en-US')
   // A "today" far away from the dates under test so it never collides accidentally.
-  vi.mocked(intl.today).mockReturnValue(new CalendarDate(2000, 1, 1))
+  vi.setSystemTime(new Date('2000-01-01T12:00:00Z'))
+  setLocalTimeZone('UTC')
+})
+
+afterEach(() => {
+  vi.useRealTimers()
+  resetLocalTimeZone()
 })
 
 describe('CalendarGrid', () => {
@@ -123,7 +123,7 @@ describe('CalendarGrid', () => {
   })
 
   test('isToday exactly one', () => {
-    vi.mocked(intl.today).mockReturnValue(new CalendarDate(2026, 6, 10))
+    vi.setSystemTime(new Date('2026-06-10T12:00:00Z'))
     const view = mountSingle({ displayDate: new CalendarDate(2026, 6, 1) })
     const todayButtons = Array.from(
       view.container.querySelectorAll<HTMLElement>('.cmk-calendar-grid__day--today')

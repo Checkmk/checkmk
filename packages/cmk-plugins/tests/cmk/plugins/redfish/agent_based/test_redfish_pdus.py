@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import Result, State, StringTable
+from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.plugins.redfish.agent_based.redfish_pdus import (
     check_redfish_pdus,
     discovery_redfish_pdus,
@@ -17,7 +17,7 @@ from cmk.plugins.redfish.lib import parse_redfish_multiple
 
 
 def _make_pdu_entry(
-    pdu_id: str,
+    pdu_id: str | int,
     *,
     manufacturer: str = "Raritan",
     model: str = "PX4-559A-E8",
@@ -119,3 +119,21 @@ def test_missing_id_falls_back_to_key() -> None:
 
     results = list(check_redfish_pdus(services[0].item, parsed))
     assert len(results) > 0
+
+
+def test_numeric_id_is_discovered_and_checked() -> None:
+    # Some PDU firmware sends "Id": 1 instead of the schema's string "1".
+    parsed = parse_redfish_multiple(_make_string_table(_make_pdu_entry(1)))
+
+    assert list(discovery_redfish_pdus(parsed)) == [Service(item="1")]
+    assert list(check_redfish_pdus("1", parsed)) == [
+        Result(
+            state=State.OK,
+            summary="Firmware: 4.2.0.5-50274, Serial: R2AB0001172, "
+            "Model: PX4-559A-E8, Manufacturer: Raritan",
+        ),
+        Result(
+            state=State.OK,
+            notice="Component State: Normal, This resource is enabled., Rollup State: Normal",
+        ),
+    ]

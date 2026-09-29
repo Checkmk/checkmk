@@ -20,6 +20,8 @@ SectionSystem = Mapping[str, Mapping[str, Any]]
 Levels = tuple[Literal["fixed"], tuple[float, float]]
 RedfishAPIData = Mapping[str, Any]
 
+_IDENTIFIER_KEYS = ("Id", "MemberId")
+
 
 @dataclass(frozen=True)
 class Section:
@@ -160,6 +162,13 @@ def parse_redfish(string_table: StringTable) -> RedfishAPIData:
         return {}
 
 
+def _stringify_identifiers(obj: dict[str, Any]) -> dict[str, Any]:
+    for key in _IDENTIFIER_KEYS:
+        if (value := obj.get(key)) is not None:
+            obj[key] = str(value)
+    return obj
+
+
 def parse_redfish_multiple(string_table: StringTable) -> RedfishAPIData:
     """parse list of device dictionaries to one dictionary"""
     hpe_matches = [
@@ -169,7 +178,7 @@ def parse_redfish_multiple(string_table: StringTable) -> RedfishAPIData:
 
     parsed: dict[str, Mapping[str, Any]] = {}
     for line in string_table:
-        entry = json.loads(line[0])
+        entry = json.loads(line[0], object_hook=_stringify_identifiers)
         # error entry
         # {"error": "Storage data could not be fetched\n"}
         if entry.get("error"):

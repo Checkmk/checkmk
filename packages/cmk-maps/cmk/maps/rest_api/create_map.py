@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
@@ -42,7 +44,7 @@ def create_map_v1(api_context: ApiContext, body: MapRequest) -> ApiResponse[MapO
     # "Add map" entry and the update endpoint require.
     if not user.may("general.edit_map"):
         raise RestAPIRequestGeneralException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="You are not allowed to create maps.",
             detail="Creating maps requires the 'Customize and use maps' permission.",
         )
@@ -52,7 +54,7 @@ def create_map_v1(api_context: ApiContext, body: MapRequest) -> ApiResponse[MapO
     name = body.config.name
     if not is_valid_map_name(name):
         raise RestAPIRequestGeneralException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Invalid map name",
             detail="A map name may only contain letters, digits, underscore and hyphen.",
         )
@@ -78,7 +80,7 @@ def create_map_v1(api_context: ApiContext, body: MapRequest) -> ApiResponse[MapO
         # A failed store write (disk full, unwritable profile) would otherwise
         # surface as an uncaught 500 with a crash report; answer a clean error.
         raise ProblemException(
-            status=500,
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
             title="The map could not be stored.",
             detail=str(exc),
         ) from exc
@@ -87,14 +89,14 @@ def create_map_v1(api_context: ApiContext, body: MapRequest) -> ApiResponse[MapO
         # distinct status (not the 400 used for an invalid name) lets clients tell
         # "name taken" from "name malformed" — the SPA surfaces each differently.
         raise RestAPIRequestGeneralException(
-            status=409,
+            status=HTTPStatus.CONFLICT,
             title=f"The map {name!r} already exists.",
             detail="Use the update endpoint to modify an existing map.",
         )
     page = get_own_map(user_id, name)
     assert page is not None
     return ApiResponse(
-        status_code=200,
+        status_code=HTTPStatus.OK,
         body=serialize_map(page, can_edit=page.may_edit(), can_delete=page.may_delete()),
         etag=map_etag(page),
     )

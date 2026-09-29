@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.site import omd_site, SiteId
@@ -100,7 +101,7 @@ def edit_site_connection_v1(
         )
     except MKUserError as exc:
         raise RestAPIRequestGeneralException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="User Error",
             detail=str(exc),
         )

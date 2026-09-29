@@ -11,6 +11,7 @@ mirror and the opaque ``map_spec`` dict that the pagetype store persists.
 
 import json
 from collections.abc import Callable, Mapping
+from http import HTTPStatus
 
 from pydantic import TypeAdapter, ValidationError
 
@@ -297,7 +298,7 @@ def validate_visibility(visibility: MapVisibility) -> None:
         groups = visibility.groups if isinstance(visibility.groups, list) else []
         if not groups:
             raise RestAPIRequestGeneralException(
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
                 title="Missing share targets",
                 detail=f"Sharing to {visibility.publish!r} requires at least one entry in 'groups'.",
             )

@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 from typing import Annotated
 
 from pydantic import AfterValidator
@@ -58,14 +59,14 @@ def delete_password_v1(
 
     if is_locked_by_config_bundle(password.get("locked_by")):
         raise RestAPIRequestGeneralException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title=f'The password "{name}" is locked by Quick setup.',
             detail="Locked passwords cannot be removed.",
         )
 
     if is_locked_by_oauth2_connection(password.get("locked_by")):
         raise RestAPIRequestGeneralException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title=f'The password "{name}" is locked by an OAuth2 connection.',
             detail="Locked passwords cannot be removed.",
         )

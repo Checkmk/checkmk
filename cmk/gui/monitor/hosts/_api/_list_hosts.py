@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Callable, Sequence, Set
+from http import HTTPStatus
 from typing import Annotated, Self
 
 from annotated_types import Interval
@@ -329,7 +330,7 @@ def list_hosts(
             )
         except ValueError as exc:
             raise RestAPIRequestGeneralException(
-                status=400, title="Invalid filter", detail=str(exc)
+                status=HTTPStatus.BAD_REQUEST, title="Invalid filter", detail=str(exc)
             ) from exc
 
     customer_of = customer_resolver(sites=api_context.config.sites)

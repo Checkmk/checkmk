@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.gui import sites
@@ -53,7 +54,7 @@ def update_and_acknowledge_event(
 
     if not results:
         raise RestAPIRequestGeneralException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="The requested event was not found",
             detail=f"Could not find event with id {event_id}.",
         )

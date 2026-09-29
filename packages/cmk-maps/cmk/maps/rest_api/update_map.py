@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -51,7 +52,7 @@ def update_map_v1(
     # its payload (and get GUI-signed under that mismatched name).
     if body.config.name != name:
         raise RestAPIRequestGeneralException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Map name mismatch",
             detail=f"The body's config.name {body.config.name!r} must match the path name {name!r}.",
         )
@@ -66,7 +67,7 @@ def update_map_v1(
     page = get_permitted_map(name)
     if page is None:
         raise RestAPIRequestGeneralException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title=f"The map {name!r} does not exist.",
             detail="No map with this name is visible to you.",
         )
@@ -74,7 +75,7 @@ def update_map_v1(
     if owner and str(owner) != str(user_id):
         if not page.may_edit():
             raise RestAPIRequestGeneralException(
-                status=403,
+                status=HTTPStatus.FORBIDDEN,
                 title=f"You are not allowed to edit the map {name!r}.",
                 detail="Editing a foreign map requires the 'edit foreign maps' permission.",
             )
@@ -82,7 +83,7 @@ def update_map_v1(
     else:
         if not user.may("general.edit_map"):
             raise RestAPIRequestGeneralException(
-                status=403,
+                status=HTTPStatus.FORBIDDEN,
                 title=f"You are not allowed to edit the map {name!r}.",
                 detail="Creating or customizing maps requires the edit permission.",
             )
@@ -114,14 +115,14 @@ def update_map_v1(
         # A failed store write (disk full, unwritable profile) would otherwise
         # surface as an uncaught 500 with a crash report; answer a clean error.
         raise ProblemException(
-            status=500,
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
             title="The map could not be stored.",
             detail=str(exc),
         ) from exc
     updated = get_own_map(target_owner, name)
     assert updated is not None
     return ApiResponse(
-        status_code=200,
+        status_code=HTTPStatus.OK,
         body=serialize_map(updated, can_edit=updated.may_edit(), can_delete=updated.may_delete()),
         etag=map_etag(updated),
     )

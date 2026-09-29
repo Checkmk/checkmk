@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.gui.logged_in import user
@@ -41,13 +42,13 @@ def delete_map_v1(
     page = get_permitted_map(name)
     if page is None:
         raise RestAPIRequestGeneralException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title=f"The map {name!r} does not exist.",
             detail="No map with this name is visible to you.",
         )
     if not page.may_delete():
         raise RestAPIRequestGeneralException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title=f"You are not allowed to delete the map {name!r}.",
             detail="Deleting this map requires ownership or the 'delete foreign maps' permission.",
         )

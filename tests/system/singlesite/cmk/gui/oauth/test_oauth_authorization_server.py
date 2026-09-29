@@ -11,6 +11,7 @@ Verify that the RFC 8414 metadata document is served at
 """
 
 import logging
+from http import HTTPStatus
 
 import pytest
 import requests
@@ -29,7 +30,7 @@ def test_oauth_authorization_server_metadata_is_served(site: Site) -> None:
     response = requests.get(url, timeout=30)
     logger.info("GET %s -> %d", url, response.status_code)
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     issuer = response.json()["issuer"]
     assert issuer.endswith(f"/oauth-{site.id}"), issuer
 
@@ -48,7 +49,7 @@ def test_oauth_authorization_server_metadata_supports_cors(site: Site) -> None:
 
     get_response = requests.get(url, headers={"Origin": "http://client.example.com"}, timeout=30)
     logger.info("GET %s -> %d", url, get_response.status_code)
-    assert get_response.status_code == 200
+    assert get_response.status_code == HTTPStatus.OK
     assert get_response.headers["access-control-allow-origin"] == "*"
 
     preflight = requests.options(
@@ -61,6 +62,6 @@ def test_oauth_authorization_server_metadata_supports_cors(site: Site) -> None:
         timeout=30,
     )
     logger.info("OPTIONS %s -> %d", url, preflight.status_code)
-    assert preflight.status_code == 200
+    assert preflight.status_code == HTTPStatus.OK
     assert preflight.headers["access-control-allow-origin"] == "*"
     assert "mcp-protocol-version" in preflight.headers["access-control-allow-headers"].lower()

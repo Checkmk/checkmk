@@ -16,6 +16,7 @@ Maps ships in every edition (including cloud).
 """
 
 from collections.abc import Iterator
+from http import HTTPStatus
 
 import pytest
 import requests
@@ -114,7 +115,7 @@ def test_maps_health_through_proxy(site: Site, maps_on: None) -> None:
     # The Apache reverse proxy forwards /<site>/check_mk/maps/api to the daemon's
     # Unix socket; /api/health is the anonymous liveness probe.
     response = requests.get(_maps_url(site, "/api/health"), timeout=_TIMEOUT)
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {"status": "ok"}
 
 
@@ -127,7 +128,7 @@ def test_maps_daemon_survives_reload(site: Site, maps_on: None) -> None:
     statuses = site.get_omd_service_names_and_statuses("maps")
     assert statuses.get("maps") == 0, f"maps daemon not running after reload: {statuses}"
     health = requests.get(_maps_url(site, "/api/health"), timeout=_TIMEOUT)
-    assert health.status_code == 200
+    assert health.status_code == HTTPStatus.OK
     assert health.json() == {"status": "ok"}
 
 
@@ -136,7 +137,7 @@ def test_maps_api_rejects_request_without_ticket(site: Site, maps_on: None) -> N
     # Basic-auth realm; the daemon authenticates the signed ticket itself, so an
     # API call without one must be rejected rather than served anonymously.
     response = requests.get(_maps_url(site, "/api/v1/connections"), timeout=_TIMEOUT)
-    assert response.status_code == 401
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
 
 
 def test_maps_ticket_handshake_end_to_end(site: Site, maps_on: None) -> None:
@@ -145,7 +146,7 @@ def test_maps_ticket_handshake_end_to_end(site: Site, maps_on: None) -> None:
         headers={"X-Maps-Ticket": _maps_ticket(site)},
         timeout=_TIMEOUT,
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert isinstance(response.json(), list)
 
 
@@ -193,7 +194,7 @@ def test_maps_daemon_object_details_for_host(site: Site, monitored_host: str) ->
         headers={"X-Maps-Ticket": _maps_ticket(site)},
         timeout=_TIMEOUT,
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     body = response.json()
     assert body["type"] == "host"
     assert body["host_name"] == monitored_host
@@ -211,7 +212,7 @@ def test_maps_daemon_metric_history_through_proxy(site: Site, monitored_host: st
         headers={"X-Maps-Ticket": _maps_ticket(site)},
         timeout=_TIMEOUT,
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     body = response.json()
     assert isinstance(body["series"], dict)
     assert isinstance(body["titles"], dict)
@@ -234,11 +235,11 @@ def test_maps_rest_map_crud_round_trip(site: Site) -> None:
         api_version=APIVersion.UNSTABLE,
         json={"config": _map_config(site, _CRUD_MAP, alias="Crud")},
     )
-    assert created.status_code == 200, created.text
+    assert created.status_code == HTTPStatus.OK, created.text
     assert created.json()["extensions"]["is_builtin"] is False
     try:
         shown = site.openapi.get(obj, api_version=APIVersion.UNSTABLE)
-        assert shown.status_code == 200
+        assert shown.status_code == HTTPStatus.OK
         assert shown.json()["extensions"]["config"]["alias"] == "Crud"
 
         listed = site.openapi.get(collection, api_version=APIVersion.UNSTABLE)
@@ -252,7 +253,7 @@ def test_maps_rest_map_crud_round_trip(site: Site) -> None:
             api_version=APIVersion.UNSTABLE,
             json={"config": _map_config(site, _CRUD_MAP, alias="Dup")},
         )
-        assert duplicate.status_code == 409, duplicate.text
+        assert duplicate.status_code == HTTPStatus.CONFLICT, duplicate.text
 
         edited = site.openapi.put(
             obj,
@@ -260,7 +261,7 @@ def test_maps_rest_map_crud_round_trip(site: Site) -> None:
             json={"config": _map_config(site, _CRUD_MAP, alias="Renamed")},
             headers=star,
         )
-        assert edited.status_code == 200
+        assert edited.status_code == HTTPStatus.OK
         assert (
             site.openapi.get(obj, api_version=APIVersion.UNSTABLE).json()["extensions"]["config"][
                 "alias"
@@ -269,9 +270,11 @@ def test_maps_rest_map_crud_round_trip(site: Site) -> None:
         )
     finally:
         deleted = site.openapi.delete(obj, api_version=APIVersion.UNSTABLE, headers=star)
-        assert deleted.status_code == 204
+        assert deleted.status_code == HTTPStatus.NO_CONTENT
 
-    assert site.openapi.get(obj, api_version=APIVersion.UNSTABLE).status_code == 404
+    assert (
+        site.openapi.get(obj, api_version=APIVersion.UNSTABLE).status_code == HTTPStatus.NOT_FOUND
+    )
 
 
 def test_maps_rest_builtin_map_delete_rejected(site: Site) -> None:
@@ -285,7 +288,7 @@ def test_maps_rest_builtin_map_delete_rejected(site: Site) -> None:
     response = site.openapi.delete(
         "objects/map/all_hosts", api_version=APIVersion.UNSTABLE, headers={"If-Match": "*"}
     )
-    assert response.status_code == 403
+    assert response.status_code == HTTPStatus.FORBIDDEN
 
 
 def test_maps_csp_allows_openstreetmap_tiles(site: Site, web: CMKWebSession) -> None:

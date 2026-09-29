@@ -2,6 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
+
 import pytest
 
 from tests.testlib.system.site import Site
@@ -12,7 +14,7 @@ def test_www_dir(site: Site) -> None:
     web = CMKWebSession(site)
 
     # unauthenticated = denied
-    web.get("/%s/testfile.html" % site.id, expected_code=401)
+    web.get("/%s/testfile.html" % site.id, expected_code=HTTPStatus.UNAUTHORIZED)
 
     try:
         site.write_file("var/www/testfile.html", "123")
@@ -24,7 +26,7 @@ def test_www_dir(site: Site) -> None:
 def test_checkmk_htdocs(site: Site) -> None:
     web = CMKWebSession(site)
 
-    web.get(f"/{site.id}/check_mk/local/foobar.txt", expected_code=404)
+    web.get(f"/{site.id}/check_mk/local/foobar.txt", expected_code=HTTPStatus.NOT_FOUND)
 
     try:
         site.write_file("local/share/check_mk/web/htdocs/foobar.txt", "123")
@@ -106,7 +108,7 @@ def test_cmk_relay_msi_access(site: Site) -> None:
     web = CMKWebSession(site)
     response = web.get(f"/{site.id}/check_mk/relays/CheckmkRelayInstaller.msi")
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.headers["Content-Type"] == "application/x-msi"
     # Verify the body is a genuine MSI (OLE compound document magic).
     assert response.content[:8] == _MSI_OLE_MAGIC
@@ -114,7 +116,7 @@ def test_cmk_relay_msi_access(site: Site) -> None:
 
 def test_cmk_local_agents_access(site: Site) -> None:
     web = CMKWebSession(site)
-    body = web.get("/%s/check_mk/local/agents" % site.id, expected_code=404).text
+    body = web.get("/%s/check_mk/local/agents" % site.id, expected_code=HTTPStatus.NOT_FOUND).text
     assert "Not Found" in body
 
 
@@ -148,13 +150,13 @@ def test_cmk_webapi_removed(site: Site) -> None:
     legacy webapi endpoint. It documents what apache.conf does today, not a
     business requirement, and may be deleted if those requirements change."""
     web = CMKWebSession(site)
-    web.get("/%s/check_mk/webapi.py" % site.id, expected_code=410)
-    web.get("/%s/check_mk/webapi.py?foo=bar" % site.id, expected_code=410)
+    web.get("/%s/check_mk/webapi.py" % site.id, expected_code=HTTPStatus.GONE)
+    web.get("/%s/check_mk/webapi.py?foo=bar" % site.id, expected_code=HTTPStatus.GONE)
 
 
 def test_cmk_pnp_template_removed(site: Site) -> None:
     web = CMKWebSession(site)
-    web.get("/%s/check_mk/pnp_template.py" % site.id, expected_code=404)
+    web.get("/%s/check_mk/pnp_template.py" % site.id, expected_code=HTTPStatus.NOT_FOUND)
 
 
 def test_cmk_ajax_graph_images(site: Site) -> None:
@@ -171,19 +173,19 @@ def test_cmk_ajax_graph_images(site: Site) -> None:
 def test_trace_disabled(site: Site) -> None:
     web = CMKWebSession(site)
     # TRACE is disabled by using "TraceEnable Off" in apache config
-    web.request("TRACE", "/", expected_code=405)
+    web.request("TRACE", "/", expected_code=HTTPStatus.METHOD_NOT_ALLOWED)
 
 
 def test_track_disabled(site: Site) -> None:
     web = CMKWebSession(site)
     # all methods but GET, POST, HEAD are disabled in the apache config.
-    web.request("TRACK", "/", expected_code=405)
+    web.request("TRACK", "/", expected_code=HTTPStatus.METHOD_NOT_ALLOWED)
 
 
 def test_options_disabled(site: Site) -> None:
     web = CMKWebSession(site)
     # all methods but GET, POST, HEAD are disabled in the apache config.
-    web.request("OPTIONS", "/", expected_code=405)
+    web.request("OPTIONS", "/", expected_code=HTTPStatus.METHOD_NOT_ALLOWED)
 
 
 def test_content_security_policy_header(site: Site) -> None:
@@ -220,7 +222,7 @@ def test_content_security_policy_header(site: Site) -> None:
     assert response.headers.get("Content-Security-Policy") is None
 
     # No CSP for Apache-generated error responses (do not reach the wsgi app)
-    response = web.request("OPTIONS", "/", expected_code=405)
+    response = web.request("OPTIONS", "/", expected_code=HTTPStatus.METHOD_NOT_ALLOWED)
     assert response.headers.get("Content-Security-Policy") is None
 
     # Apache fallback: a document served directly by Apache (not the wsgi app)

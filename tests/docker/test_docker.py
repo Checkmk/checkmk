@@ -7,6 +7,7 @@
 import contextlib
 import logging
 import os
+from http import HTTPStatus
 from pathlib import Path
 from random import randint, sample
 
@@ -291,7 +292,7 @@ def test_redirects_work_with_custom_port(client: docker.DockerClient) -> None:
     ):
         # Use explicit port
         response = requests.get("http://%s" % address_txt, allow_redirects=False, timeout=10)
-        assert response.status_code == 302
+        assert response.status_code == HTTPStatus.FOUND
         assert response.headers["Location"] == "http://%s/cmk/" % address_txt
 
         # Use explicit port and host header with port
@@ -303,7 +304,7 @@ def test_redirects_work_with_custom_port(client: docker.DockerClient) -> None:
             },
             timeout=10,
         )
-        assert response.status_code == 302
+        assert response.status_code == HTTPStatus.FOUND
         assert response.headers["Location"] == "http://%s/cmk/" % address_txt
 
         # Use explicit port and host header without port
@@ -315,7 +316,7 @@ def test_redirects_work_with_custom_port(client: docker.DockerClient) -> None:
             },
             timeout=10,
         )
-        assert response.status_code == 302
+        assert response.status_code == HTTPStatus.FOUND
         assert response.headers["Location"] == "http://%s/cmk/" % address[0]
 
 
@@ -326,7 +327,7 @@ def test_http_access_login_screen(checkmk: CheckmkApp) -> None:
         timeout=10,
     )
 
-    assert response.status_code == 200, "Invalid HTTP status code!"
+    assert response.status_code == HTTPStatus.OK, "Invalid HTTP status code!"
     assert 'name="_login"' in response.text, "Login field not found!"
 
 

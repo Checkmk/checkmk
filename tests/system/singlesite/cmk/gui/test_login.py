@@ -10,6 +10,7 @@ import contextlib
 from ast import literal_eval
 from collections.abc import Callable, Iterator
 from datetime import datetime
+from http import HTTPStatus
 
 import pytest
 
@@ -194,7 +195,7 @@ def test_human_user_restapi(site: Site) -> None:
             "_username": username,
             "_secret": password,
         },
-        expected_code=401,
+        expected_code=HTTPStatus.UNAUTHORIZED,
     )
     assert not session.is_logged_in()
 
@@ -243,7 +244,7 @@ def test_failed_login_counter_human(site: Site) -> None:
         session.get(
             f"/{site.id}/check_mk/api/1.0/version",
             headers={"Authorization": f"Bearer {username} wrong_password"},
-            expected_code=401,
+            expected_code=HTTPStatus.UNAUTHORIZED,
         )
         assert _get_failed_logins(site, username) == 1, (
             "failed attempts increased by login with bearer token"
@@ -252,7 +253,7 @@ def test_failed_login_counter_human(site: Site) -> None:
         session.get(
             f"/{site.id}/check_mk/api/1.0/version",
             auth=(username, "wrong_password"),
-            expected_code=401,
+            expected_code=HTTPStatus.UNAUTHORIZED,
         )
         assert _get_failed_logins(site, username) == 2, (
             "failed attempts increased by login with basic token"
@@ -282,14 +283,14 @@ def test_failed_login_counter_automation(with_automation_user: tuple[str, str], 
         session.get(
             f"/{site.id}/check_mk/api/1.0/version",
             headers={"Authorization": f"Bearer {username} wrong_password"},
-            expected_code=401,
+            expected_code=HTTPStatus.UNAUTHORIZED,
         )
         assert _get_failed_logins(site, username) == 0
 
         session.get(
             f"/{site.id}/check_mk/api/1.0/version",
             auth=(username, "wrong_password"),
-            expected_code=401,
+            expected_code=HTTPStatus.UNAUTHORIZED,
         )
         assert _get_failed_logins(site, username) == 0
 
@@ -336,7 +337,7 @@ def test_local_secret_permissions(site: Site) -> None:
             "Authorization": f"InternalToken {b64_token}",
         },
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert isinstance(response.json()["lifetime_in_months"], int)
 
     response = session.get(
@@ -345,7 +346,7 @@ def test_local_secret_permissions(site: Site) -> None:
             "Authorization": f"InternalToken {b64_token}",
         },
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
 
 
 @contextlib.contextmanager
@@ -438,7 +439,7 @@ def test_rest_api_basic_auth_denied_by_auth_config(  # type: ignore[misc] #mypy 
         response = session.get(
             f"/{site.id}/check_mk/api/1.0/version",
             auth=(ADMIN_USER, password),
-            expected_code=401,
+            expected_code=HTTPStatus.UNAUTHORIZED,
         )
         assert not session.is_logged_in()
         assert response.json()["detail"] == expected_error_msg
@@ -481,7 +482,7 @@ def test_rest_api_bearer_auth_denied_by_auth_config(  # type: ignore[misc]
             headers={
                 "Authorization": f"Bearer {ADMIN_USER} {site.admin_password}",
             },
-            expected_code=401,
+            expected_code=HTTPStatus.UNAUTHORIZED,
         )
         assert not session.is_logged_in()
         assert response.json()["detail"] == expected_error_msg
@@ -528,7 +529,7 @@ def test_remote_user_denied_by_additional_auth_configs(  # type: ignore[misc]
             headers={
                 "X-Remote-User": user,
             },
-            expected_code=401,
+            expected_code=HTTPStatus.UNAUTHORIZED,
         )
         assert not session.is_logged_in()
 
@@ -541,7 +542,7 @@ def test_remote_user_denied_by_additional_auth_configs(  # type: ignore[misc]
             ["auth_by_http_header = 'X-Remote-User'"],
             "fake_user",
             "Two-factor authentication is required.",
-            200,
+            HTTPStatus.OK,
             id="2fa_auth_required_invalid_user",
         ),
         pytest.param(
@@ -549,7 +550,7 @@ def test_remote_user_denied_by_additional_auth_configs(  # type: ignore[misc]
             ["auth_by_http_header = 'X-Remote-User'"],
             "fake_user",
             "Password change is required.",
-            200,
+            HTTPStatus.OK,
             id="password_change_required_invalid_user",
         ),
         pytest.param(
@@ -557,7 +558,7 @@ def test_remote_user_denied_by_additional_auth_configs(  # type: ignore[misc]
             ["require_two_factor_all_users = True", "auth_by_http_header = 'X-Remote-User'"],
             "fake_user",
             "Two-factor setup is required for user.",
-            401,
+            HTTPStatus.UNAUTHORIZED,
             id="2fa_setup_required_invalid_user",
         ),
     ],
@@ -587,7 +588,7 @@ def test_invalid_remote_user_not_denied_by_additional_auth_configs(  # type: ign
             expected_code=expected_code,
         )
         assert not session.is_logged_in()
-        if response.status_code == 401:
+        if response.status_code == HTTPStatus.UNAUTHORIZED:
             assert response.json()["detail"] == expected_error_msg
 
 
@@ -625,7 +626,7 @@ def test_rest_api_access_allowed_by_cookie_without_2fa(site: Site) -> None:
     session.get(
         f"/{site.id}/check_mk/api/1.0/version",
         cookies=_get_site_auth_cookie(site, username),
-        expected_code=200,
+        expected_code=HTTPStatus.OK,
     )
     assert session.is_logged_in()
 
@@ -656,7 +657,7 @@ def test_rest_api_access_denied_by_cookie_without_2fa(site: Site) -> None:
         response = session.get(
             f"/{site.id}/check_mk/api/1.0/version",
             cookies=_get_site_auth_cookie(site, username),
-            expected_code=401,
+            expected_code=HTTPStatus.UNAUTHORIZED,
         )
         assert response.json()["detail"] == "Two-factor authentication is required."
 
@@ -700,14 +701,14 @@ def test_rest_api_access_allowed_by_cookie_2fa(site: Site) -> None:
                 "_totp_code": otp_value,
             },
             allow_redirects=True,
-            expected_code=200,
+            expected_code=HTTPStatus.OK,
         )
 
         # Generated cookie for latest user session should now work.
         session.get(
             f"/{site.id}/check_mk/api/1.0/version",
             cookies=_get_site_auth_cookie(site, username),
-            expected_code=200,
+            expected_code=HTTPStatus.OK,
         )
         assert session.is_logged_in()
 

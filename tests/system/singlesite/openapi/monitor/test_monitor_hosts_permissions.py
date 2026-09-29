@@ -22,6 +22,7 @@ connection can assert on the exact query text.
 """
 
 from collections.abc import Iterator
+from http import HTTPStatus
 
 import pytest
 import requests
@@ -152,8 +153,8 @@ def test_carriage_return_cannot_bypass_host_visibility(
     baseline = _list_hosts(site, "h-")
     injected = _list_hosts(site, _CR_INJECTION_PAYLOAD)
 
-    assert baseline.status_code == 200
+    assert baseline.status_code == HTTPStatus.OK
     assert baseline.json()["meta"]["matched"] == 1
 
-    assert injected.status_code == 200
+    assert injected.status_code == HTTPStatus.OK
     assert injected.json()["meta"]["matched"] == 0

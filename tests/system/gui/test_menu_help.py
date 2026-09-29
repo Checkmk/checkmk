@@ -5,6 +5,7 @@
 import re
 from collections.abc import Iterator
 from dataclasses import dataclass
+from http import HTTPStatus
 
 import pytest
 from playwright.sync_api import Page, Request, Route
@@ -112,7 +113,7 @@ def test_help_menu(
     ):
         getattr(dashboard_page.main_menu, help_menu_button.name).click()
         with handle_playwright_timeouterror(pw_timeout_msg):
-            assert matched_response.value.status in (200, 301), (
+            assert matched_response.value.status in (HTTPStatus.OK, HTTPStatus.MOVED_PERMANENTLY), (
                 f"Unexpected response status code: {matched_response.value.status}, "
                 f"response url: {matched_response.value.url}"
             )

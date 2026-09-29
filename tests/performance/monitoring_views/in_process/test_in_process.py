@@ -33,8 +33,9 @@ Or one shape of it::
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
-from time import perf_counter
 from dataclasses import dataclass
+from http import HTTPStatus
+from time import perf_counter
 from typing import Literal
 
 import pytest
@@ -52,13 +53,13 @@ from tests.performance.monitoring_views.in_process.fleet import (
 from tests.performance.monitoring_views.livestatus_fake import EstateShape, QueryLog, RowFactory
 from tests.performance.monitoring_views.report import Measurement, Report
 from tests.performance.monitoring_views.scenarios import (
-    HttpCaller,
     ALL_HOSTS_CLASSIC,
     ALL_HOSTS_VUE,
     API_ROOT,
     COMPARISONS,
     HOST_SERVICES_CLASSIC,
     HOST_SERVICES_VUE,
+    HttpCaller,
     LimitTier,
     Page,
     PageContext,
@@ -103,9 +104,9 @@ class Probe:
 
     def _call(self, method: Literal["get", "post"], url: str, *, body: str | None = None) -> None:
         response = (
-            self.app.get(url, status=200)
+            self.app.get(url, status=HTTPStatus.OK)
             if method == "get"
-            else self.app.post(url, data=body, headers=_JSON_HEADERS, status=200)
+            else self.app.post(url, data=body, headers=_JSON_HEADERS, status=HTTPStatus.OK)
         )
         # A page that errors is fast, and an unnoticed error would be reported as a good
         # measurement. The status check above catches most of it; this catches the classic
@@ -434,7 +435,7 @@ def test_one_request_carries_the_whole_listing(
         _listing_url(page, remote_count),
         data='{"limit": 1000}',
         headers=_JSON_HEADERS,
-        status=200,
+        status=HTTPStatus.OK,
     )
     meta = response.json["meta"]
 

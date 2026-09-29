@@ -6,6 +6,7 @@
 import logging
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
+from http import HTTPStatus
 
 import pytest
 
@@ -63,7 +64,7 @@ def _monitored_host_labels(central_site: Site, host_name: str) -> Mapping[str, s
     response = central_site.openapi.get(
         f"/objects/host/{host_name}", params={"columns": ["labels"]}
     )
-    if response.status_code == 404:
+    if response.status_code == HTTPStatus.NOT_FOUND:
         return None
     response.raise_for_status()
     return {str(k): str(v) for k, v in response.json()["extensions"]["labels"].items()}

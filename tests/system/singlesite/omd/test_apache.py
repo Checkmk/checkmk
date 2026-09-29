@@ -5,6 +5,7 @@
 
 import re
 import uuid
+from http import HTTPStatus
 
 import pytest
 import requests
@@ -22,7 +23,7 @@ def test_http_methods(site: Site) -> None:
     response = requests.request(
         "PROPFIND", site.internal_url, timeout=5, headers={"User-Agent": user_agent}
     )
-    assert response.status_code == 405
+    assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED
 
     apache_log_file = site.read_file("var/log/apache/access_log")
     for line in apache_log_file.splitlines():
@@ -35,11 +36,11 @@ def test_http_methods(site: Site) -> None:
 @pytest.mark.parametrize(
     ["size", "status_code"],
     [
-        pytest.param(1024 * 1024 * (100 - 1), 400, id="under_limit"),
-        pytest.param(1024 * 1024 * 100, 413, id="at_limit"),
+        pytest.param(1024 * 1024 * (100 - 1), HTTPStatus.BAD_REQUEST, id="under_limit"),
+        pytest.param(1024 * 1024 * 100, HTTPStatus.REQUEST_ENTITY_TOO_LARGE, id="at_limit"),
         # Any size above the 100MB limit proves the 413; a much larger payload
         # OOMed the CI container via requests' in-memory multipart encoding (CMK-39435).
-        pytest.param(1024 * 1024 * (100 + 1), 413, id="over_limit"),
+        pytest.param(1024 * 1024 * (100 + 1), HTTPStatus.REQUEST_ENTITY_TOO_LARGE, id="over_limit"),
     ],
 )
 def test_upload_limit(site: Site, web: CMKWebSession, size: int, status_code: int) -> None:

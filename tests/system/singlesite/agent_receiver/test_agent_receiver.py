@@ -124,7 +124,7 @@ def test_failing_pairing_no_uuid(agent_receiver_url: str, site: Site) -> None:
         json={"csr": csr.dump_pem().str},
         verify=False,
     )
-    assert agent_receiver_response.status_code == 400
+    assert agent_receiver_response.status_code == HTTPStatus.BAD_REQUEST
 
 
 @pytest.mark.skip_if_faked_artifacts
@@ -157,7 +157,7 @@ def test_register_existing_non_existing(
         },
         verify=False,
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json()["detail"] == "Host non-existing does not exist."
 
     response = requests.post(
@@ -170,7 +170,7 @@ def test_register_existing_non_existing(
         },
         verify=False,
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 @pytest.mark.skip_if_faked_artifacts
@@ -189,7 +189,7 @@ def test_register_with_hostname_non_existing(
         },
         verify=False,
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json()["detail"] == "Host non-existing does not exist."
 
     response = requests.post(
@@ -201,7 +201,7 @@ def test_register_with_hostname_non_existing(
         },
         verify=False,
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 UNSUPPORTED_VERSIONS = (ssl.TLSVersion.SSLv3, ssl.TLSVersion.TLSv1, ssl.TLSVersion.TLSv1_1)

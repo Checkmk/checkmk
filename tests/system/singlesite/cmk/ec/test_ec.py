@@ -14,6 +14,7 @@ import subprocess
 import time
 import uuid
 from collections.abc import Iterator
+from http import HTTPStatus
 from pathlib import Path
 
 import pytest
@@ -249,7 +250,7 @@ def _setup_ec(site: Site) -> Iterator[tuple[str, str, State]]:
             },
         )
 
-        assert resp.status_code == 204, pprint.pformat(resp.json())
+        assert resp.status_code == HTTPStatus.NO_CONTENT, pprint.pformat(resp.json())
 
 
 @pytest.fixture(name="restart_site", scope="module")

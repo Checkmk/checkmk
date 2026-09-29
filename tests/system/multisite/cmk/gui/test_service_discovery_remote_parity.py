@@ -35,6 +35,7 @@ import logging
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
+from http import HTTPStatus
 
 import pytest
 
@@ -756,7 +757,7 @@ def _remote_cluster(
                 "attributes": {"site": remote_site.id},
             },
         )
-        assert response.status_code == 200, response.text
+        assert response.status_code == HTTPStatus.OK, response.text
 
         node.site.makedirs(_AGENT_OUTPUT_DIR)
         node.site.write_file(node.agent_output, _agent_output())

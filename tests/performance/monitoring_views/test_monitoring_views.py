@@ -32,6 +32,7 @@ import logging
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import ExitStack
 from dataclasses import dataclass
+from http import HTTPStatus
 from time import time
 from typing import Literal
 from urllib.parse import urljoin
@@ -97,7 +98,7 @@ class SiteProbe:
                 headers={"Content-Type": "application/json", "Accept": "application/json"},
             )
         )
-        assert response.status_code == 200, (
+        assert response.status_code == HTTPStatus.OK, (
             f"{method.upper()} {target} -> {response.status_code}: {response.text[:400]}"
         )
 
@@ -339,7 +340,7 @@ def _assert_fleet_is_being_read(
         timeout=120,
         headers={"Content-Type": "application/json", "Accept": "application/json"},
     )
-    assert response.status_code == 200, f"could not read the fleet: {response.text[:400]}"
+    assert response.status_code == HTTPStatus.OK, f"could not read the fleet: {response.text[:400]}"
 
     total = int(response.json()["meta"]["total"])
     logger.info("The central site sees %d hosts across the fleet", total)

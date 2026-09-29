@@ -48,6 +48,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from email.parser import BytesParser
 from email.policy import HTTP as HTTP_POLICY
+from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import override
@@ -132,7 +133,7 @@ class _AutomationHTTPHandler(BaseHTTPRequestHandler):
     def log_message(self, format: str, *args: object) -> None:
         logger.debug("mock-http: %s", format % args)
 
-    def _respond(self, body: bytes, status: int = 200) -> None:
+    def _respond(self, body: bytes, status: int = HTTPStatus.OK) -> None:
         self.send_response(status)
         self.send_header("Content-Type", "text/plain; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
@@ -173,12 +174,12 @@ class _AutomationHTTPHandler(BaseHTTPRequestHandler):
         parts = parsed.path.strip("/").split("/")
         # expected paths: <site_id>/check_mk/login.py | <site_id>/check_mk/automation.py
         if len(parts) < 3 or parts[1] != "check_mk":
-            self._respond(b"Unknown path", status=404)
+            self._respond(b"Unknown path", status=HTTPStatus.NOT_FOUND)
             return
         site_id, page = parts[0], parts[2]
         state = self.server.sites.get(site_id)
         if state is None:
-            self._respond(b"Unknown site", status=404)
+            self._respond(b"Unknown site", status=HTTPStatus.NOT_FOUND)
             return
 
         if page == "login.py":
@@ -194,12 +195,12 @@ class _AutomationHTTPHandler(BaseHTTPRequestHandler):
             return
 
         if page != "automation.py":
-            self._respond(b"Unknown page", status=404)
+            self._respond(b"Unknown page", status=HTTPStatus.NOT_FOUND)
             return
 
         params = self._read_request_params()
         if params.get("secret") != _LOGIN_SECRET:
-            self._respond(b"Invalid automation secret.", status=401)
+            self._respond(b"Invalid automation secret.", status=HTTPStatus.UNAUTHORIZED)
             return
 
         command = query.get("command", "")
@@ -208,7 +209,7 @@ class _AutomationHTTPHandler(BaseHTTPRequestHandler):
             self._respond(self._execute(state, command, params).encode())
         except Exception:
             logger.exception("mock site %s: command %s failed", site_id, command)
-            self._respond(b"Mock remote site error", status=500)
+            self._respond(b"Mock remote site error", status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
     def _execute(self, state: _MockSiteState, command: str, params: dict[str, object]) -> str:
         if command == "get-config-sync-state":

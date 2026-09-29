@@ -18,6 +18,8 @@ The remaining surfaces need no browser test of their own: each renders the same
 `cmk-graph-group`, so the skeleton follows from `GraphGroup`.
 """
 
+from http import HTTPStatus
+
 import pytest
 from playwright.sync_api import expect, Route
 
@@ -155,7 +157,9 @@ def test_failed_fetch_shows_the_error_notice(
     The broken-graph checks elsewhere only assert that no notice is present, which a stale
     selector satisfies as well; this is what keeps that selector pointing at the notice.
     """
-    dashboard_page.page.route(_GRAPH_DATA_URL, lambda route: route.fulfill(status=500))
+    dashboard_page.page.route(
+        _GRAPH_DATA_URL, lambda route: route.fulfill(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    )
 
     graphs = _open_service_graphs(dashboard_page, graph_hosts_with_varying_data[0])
 

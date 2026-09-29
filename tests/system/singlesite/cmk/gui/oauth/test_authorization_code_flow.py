@@ -24,6 +24,7 @@ import base64
 import hashlib
 import logging
 import secrets
+from http import HTTPStatus
 from urllib.parse import parse_qs, urlsplit
 
 import pytest
@@ -50,7 +51,7 @@ def _register_client(site: Site) -> str:
         timeout=30,
     )
     logger.info("POST %s -> %d", url, response.status_code)
-    assert response.status_code == 201
+    assert response.status_code == HTTPStatus.CREATED
     client_id = response.json()["client_id"]
     assert isinstance(client_id, str) and client_id
     return client_id
@@ -71,7 +72,7 @@ def _get_consent_page(
     code_challenge: str,
     state: str,
     redirect_uri: str = _REDIRECT_URI,
-    expected_code: int = 200,
+    expected_code: int = HTTPStatus.OK,
 ) -> requests.Response:
     return web.get(
         _AUTHORIZE_ENDPOINT_PATH,
@@ -160,7 +161,7 @@ def test_full_authorization_code_flow_with_pkce(site: Site, web: CMKWebSession) 
         timeout=30,
     )
     logger.info("POST %s -> %d", token_url, token_response.status_code)
-    assert token_response.status_code == 200
+    assert token_response.status_code == HTTPStatus.OK
     token_body = token_response.json()
     assert token_body["access_token"]
     assert token_body["token_type"] == "Bearer"
@@ -199,7 +200,7 @@ def test_authorize_returns_400_for_unknown_client_id(web: CMKWebSession) -> None
         client_id="never-registered-client",
         code_challenge=code_challenge,
         state=state,
-        expected_code=400,
+        expected_code=HTTPStatus.BAD_REQUEST,
     )
 
 
@@ -218,5 +219,5 @@ def test_authorize_returns_400_for_redirect_uri_not_registered_to_client(
         code_challenge=code_challenge,
         state=state,
         redirect_uri="https://attacker.example/callback",
-        expected_code=400,
+        expected_code=HTTPStatus.BAD_REQUEST,
     )

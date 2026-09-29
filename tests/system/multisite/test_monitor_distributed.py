@@ -15,6 +15,7 @@ invisible below this tier.
 
 import logging
 from collections.abc import Iterator, Mapping
+from http import HTTPStatus
 from typing import cast, TypedDict
 
 import pytest
@@ -152,7 +153,7 @@ def _list_hosts(
     if filters is not None:
         body["filter"] = filters
     response = site.openapi.post("monitor/hosts", api_version=APIVersion.INTERNAL, json=body)
-    assert response.status_code == 200, f"{response.status_code}: {response.text}"
+    assert response.status_code == HTTPStatus.OK, f"{response.status_code}: {response.text}"
     return cast(_HostsPage, response.json())
 
 
@@ -340,7 +341,7 @@ def test_the_overview_reaches_the_site_that_owns_the_host(
 
     response = _host_overview(central_site, host_name, remote_site.id)
 
-    assert response.status_code == 200, f"{response.status_code}: {response.text}"
+    assert response.status_code == HTTPStatus.OK, f"{response.status_code}: {response.text}"
     overview = response.json()
     assert overview["name"] == host_name
     assert overview["site_id"] == remote_site.id
@@ -361,7 +362,7 @@ def test_the_overview_and_the_feed_agree_on_a_remote_host_service_counts(
     host_name = _REMOTE_HOSTS[0]
 
     response = _host_overview(central_site, host_name, remote_site.id)
-    assert response.status_code == 200, f"{response.status_code}: {response.text}"
+    assert response.status_code == HTTPStatus.OK, f"{response.status_code}: {response.text}"
     overview = response.json()
     row = next(
         host
@@ -394,7 +395,7 @@ def test_the_overview_is_not_found_when_the_named_site_does_not_monitor_the_host
     """
     response = _host_overview(central_site, _REMOTE_HOSTS[0], central_site.id)
 
-    assert response.status_code == 404, f"{response.status_code}: {response.text}"
+    assert response.status_code == HTTPStatus.NOT_FOUND, f"{response.status_code}: {response.text}"
 
 
 @pytest.mark.usefixtures("hosts_per_site")

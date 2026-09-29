@@ -11,7 +11,7 @@ import pytest
 from cmk.special_agents.v0_unstable.misc import DataCache
 
 
-@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture
 def _patch_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(tmp_path))
 
@@ -31,6 +31,7 @@ class KeksDose(DataCache):
         return "live data"
 
 
+@pytest.mark.usefixtures("_patch_env")
 def test_datacache_timestamp() -> None:
     tcache = KeksDose(host_name="myhost", agent="agent_smith", key="test")
 
@@ -40,7 +41,7 @@ def test_datacache_timestamp() -> None:
     assert isinstance(tcache.cache_timestamp, float)
 
 
-@pytest.mark.usefixtures("tmp_path")
+@pytest.mark.usefixtures("tmp_path", "_patch_env")
 def test_datacache_valid(monkeypatch: pytest.MonkeyPatch) -> None:
     tcache = KeksDose(host_name="myhost", agent="agent_smith", key="test")
     tcache._write_to_cache("cached data")  # noqa: SLF001
@@ -60,7 +61,7 @@ def test_datacache_valid(monkeypatch: pytest.MonkeyPatch) -> None:
     assert tcache.get_data(True) == "live data"
 
 
-@pytest.mark.usefixtures("tmp_path")
+@pytest.mark.usefixtures("tmp_path", "_patch_env")
 def test_datacache_validity(monkeypatch: pytest.MonkeyPatch) -> None:
     tcache = KeksDose(host_name="myhost", agent="agent_smith", key="test")
     tcache._write_to_cache("cached data")  # noqa: SLF001

@@ -94,6 +94,7 @@ from cmk.base.automations.automations import (
     Automation,
     CommonState,
     MKAutomationError,
+    NoState,
 )
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.checkers import (
@@ -2391,7 +2392,7 @@ class ABCDeleteHosts:
 class AutomationDeleteHosts(ABCDeleteHosts):
     def execute(
         self,
-        _state: CommonState,
+        _state: NoState,
         args: list[str],
     ) -> DeleteHostsResult:
         self._execute(args)
@@ -2447,7 +2448,7 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts):
 
     def execute(
         self,
-        _state: CommonState,
+        _state: NoState,
         args: list[str],
     ) -> DeleteHostsKnownRemoteResult:
         self._execute(args)
@@ -2662,7 +2663,7 @@ def _execute_silently(
 
 
 def _automation_get_configuration(
-    _state: CommonState,
+    _state: NoState,
     _args: object,
 ) -> GetConfigurationResult:
     """Automation call to get the default configuration"""
@@ -2682,7 +2683,7 @@ def _automation_get_configuration(
 
 
 def _automation_get_check_information(
-    _state: CommonState,
+    _state: NoState,
     args: list[str],  # noqa: ARG001
 ) -> GetCheckInformationResult:
     man_page_path_map = man_pages.make_man_page_path_map(
@@ -2726,7 +2727,7 @@ def _get_man_page_title(man_page_path_map: Mapping[str, Path], plugin_name: Chec
 
 
 def _automation_get_section_information(
-    _state: CommonState,
+    _state: NoState,
     args: object,  # noqa: ARG001
 ) -> GetSectionInformationResult:
     plugins = load_all_plugins(raise_errors=cmk.ccc.debug.enabled())
@@ -2854,7 +2855,7 @@ def get_special_agent_commandline(
 
 
 def _automation_diag_special_agent(
-    _state: CommonState,
+    _state: NoState,
     args: list[str],  # noqa: ARG001
 ) -> DiagSpecialAgentResult:
     diag_special_agent_input = DiagSpecialAgentInput.deserialize(sys.stdin.read())
@@ -2933,7 +2934,7 @@ def _execute_diag_special_agent(
 
 
 def _automation_ping_host(
-    _state: CommonState,
+    _state: NoState,
     args: list[str],  # noqa: ARG001
 ) -> PingHostResult:
     ping_host_input = PingHostInput.deserialize(sys.stdin.read())
@@ -2974,7 +2975,7 @@ def _execute_ping(ip_or_dns_name: str, base_cmd: PingHostCmd) -> tuple[int, str]
 
 
 def _automation_diag_cmk_agent(
-    _state: CommonState,
+    _state: NoState,
     args: list[str],  # noqa: ARG001
 ) -> DiagCmkAgentResult:
     diag_cmk_agent_input = DiagCmkAgentInput.deserialize(sys.stdin.read())
@@ -4291,13 +4292,13 @@ automation_analyze_host_rule_effectiveness = Automation(
 )
 automation_delete_hosts = Automation(
     name=AutomationID("delete-hosts"),
-    state_factory=CommonState,
+    state_factory=NoState,
     handler=AutomationDeleteHosts().execute,
     result=DeleteHostsResult,
 )
 automation_delete_hosts_known_remote = Automation(
     name=AutomationID("delete-hosts-known-remote"),
-    state_factory=CommonState,
+    state_factory=NoState,
     handler=AutomationDeleteHostsKnownRemote().execute,
     result=DeleteHostsKnownRemoteResult,
 )
@@ -4315,19 +4316,19 @@ automation_reload = Automation(
 )
 automation_get_configuration = Automation(
     name=AutomationID("get-configuration"),
-    state_factory=CommonState,
+    state_factory=NoState,
     handler=_automation_get_configuration,
     result=GetConfigurationResult,
 )
 automation_get_check_information = Automation(
     name=AutomationID("get-check-information"),
-    state_factory=CommonState,
+    state_factory=NoState,
     handler=_automation_get_check_information,
     result=GetCheckInformationResult,
 )
 automation_get_section_information = Automation(
     name=AutomationID("get-section-information"),
-    state_factory=CommonState,
+    state_factory=NoState,
     handler=_automation_get_section_information,
     result=GetSectionInformationResult,
 )
@@ -4339,19 +4340,19 @@ automation_scan_parents = Automation(
 )
 automation_diag_special_agent = Automation(
     name=AutomationID("diag-special-agent"),
-    state_factory=CommonState,
+    state_factory=NoState,
     handler=_automation_diag_special_agent,
     result=DiagSpecialAgentResult,
 )
 automation_ping_host = Automation(
     name=AutomationID("ping-host"),
-    state_factory=CommonState,
+    state_factory=NoState,
     handler=_automation_ping_host,
     result=PingHostResult,
 )
 automation_diag_cmk_agent = Automation(
     name=AutomationID("diag-cmk-agent"),
-    state_factory=CommonState,
+    state_factory=NoState,
     handler=_automation_diag_cmk_agent,
     result=DiagCmkAgentResult,
 )

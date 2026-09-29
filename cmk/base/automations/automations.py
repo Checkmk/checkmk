@@ -81,12 +81,27 @@ class Automation[StateT: AutomationState, ResultT: ABCAutomationResult]:
 type DiscoveredAutomation = Automation[Any, ABCAutomationResult]  # type: ignore[explicit-any]
 
 
+class NoState:
+    """The state of an automation that needs none.
+
+    Such an automation reads nothing but its arguments and its standard input,
+    or loads what it needs itself. Naming this class as the factory spares it
+    deriving anything from the configuration.
+    """
+
+    def __init__(self, *_a: object) -> None:
+        pass
+
+    def update(self, *_a: object) -> None:
+        pass
+
+
 class CommonState:
-    """The one state all automations share for now.
+    """The state most automations share for now.
 
     It derives what the handlers used to get passed from the raw configuration.
-    All automations name this class as their factory, so the engine builds it
-    once. Automations will move to states of their own, one by one.
+    The automations that need it name this class as their factory, so the engine
+    builds it once. They will move to states of their own, one by one.
     """
 
     def __init__(self, omd_root: Path, raw_config: Mapping[str, object]) -> None:

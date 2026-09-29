@@ -28,6 +28,7 @@ from cmk.base.automations.automations import (
     AutomationError,
     Automations,
     DiscoveredAutomation,
+    NoState,
 )
 from cmk.base.config import LoadingResult
 from cmk.ccc.exceptions import MKGeneralException
@@ -204,6 +205,19 @@ def test_execution_before_the_first_update_fails() -> None:
     engine = Automations([_automation("a", _RecordingFactory())])
 
     assert engine.execute(AutomationID("a"), []) is AutomationError.KNOWN_ERROR
+
+
+def test_an_automation_without_state_needs_no_configuration() -> None:
+    def handle(_state: NoState, _args: list[str]) -> _Result:
+        return _Result()
+
+    engine = Automations(
+        [Automation(name=AutomationID("a"), state_factory=NoState, handler=handle, result=_Result)]
+    )
+    # Nothing can be derived from an empty mapping: a state that tried would fail.
+    engine.update(Path("/old"), {})
+
+    assert isinstance(engine.execute(AutomationID("a"), []), _Result)
 
 
 def test_only_automations_that_ask_for_it_read_the_configuration_under_lock() -> None:

@@ -7,7 +7,7 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, fields, replace
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import NoReturn, override
 
@@ -26,7 +26,7 @@ from cmk.automations import results as automation_results
 from cmk.automations.results import DiagHostResult
 from cmk.base import config
 from cmk.base.automations import check_mk
-from cmk.base.automations.automations import CommonState
+from cmk.base.automations.automations import NoState
 from cmk.base.community_app import make_app
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -674,15 +674,13 @@ class TestWarnServiceNameConflicts:
 
 def test_delete_hosts_deletes_inventorized_host_labels() -> None:
     host_name = HostName("test-host")
-    # asdict would recurse. I think it doesn't matter, but this is correct:
-    raw_config = {f.name: getattr(EMPTY_CONFIG, f.name) for f in fields(EMPTY_CONFIG)}
 
     InventorizedHostLabelsStore(host_name, cmk.utils.paths.inventorized_host_labels_dir).save(
         {"cmk/inventory/product": "foo"}
     )
 
     check_mk.automation_delete_hosts.handler(
-        CommonState(cmk.utils.paths.omd_root, raw_config), [str(host_name)]
+        NoState(cmk.utils.paths.omd_root, {}), [str(host_name)]
     )
 
     assert not (cmk.utils.paths.inventorized_host_labels_dir / f"{host_name}.json").exists()

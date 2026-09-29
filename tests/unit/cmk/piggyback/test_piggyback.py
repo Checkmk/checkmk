@@ -364,6 +364,121 @@ def test_remove_folder_if_empty_tolerates_vanished_folder(tmp_path: Path) -> Non
     _remove_folder_if_empty(tmp_path / "vanished")
 
 
+@pytest.mark.skip(
+    reason="move_for_host_rename returns a tuple of characters and never moves the files a host is the source of"
+)
+def test_renaming_a_piggybacked_host_moves_its_data() -> None:
+    backend.store_piggyback_raw_data(
+        HostAddress("source1"),
+        {HostAddress("old-host"): _PAYLOAD},
+        message_timestamp=_REF_TIME,
+        contact_timestamp=_REF_TIME,
+        omd_root=cmk.utils.paths.omd_root,
+    )
+
+    actions = backend.move_for_host_rename(cmk.utils.paths.omd_root, "old-host", "new-host")
+
+    # piggyback/old-host/ -> piggyback/new-host/:   piggyback-load
+    assert actions == ("piggyback-load",)
+    assert not backend.get_messages_for(HostAddress("old-host"), cmk.utils.paths.omd_root)
+    moved = _get_only_raw_data_element(HostAddress("new-host"))
+    assert moved.meta.source == HostAddress("source1")
+    assert moved.meta.piggybacked == HostAddress("new-host")
+    assert moved.raw_data == b"pay\nload\n"
+
+
+@pytest.mark.skip(
+    reason="move_for_host_rename returns a tuple of characters and never moves the files a host is the source of"
+)
+def test_renaming_a_source_host_keeps_it_the_source_of_its_piggybacked_hosts() -> None:
+    backend.store_piggyback_raw_data(
+        HostAddress("old-source"),
+        {HostAddress("test-host"): _PAYLOAD, HostAddress("test-host2"): _PAYLOAD},
+        message_timestamp=_REF_TIME,
+        contact_timestamp=_REF_TIME,
+        omd_root=cmk.utils.paths.omd_root,
+    )
+
+    actions = backend.move_for_host_rename(cmk.utils.paths.omd_root, "old-source", "new-source")
+
+    # piggyback/test-host/old-source  -> piggyback/test-host/new-source:    piggyback-pig
+    # piggyback/test-host2/old-source -> piggyback/test-host2/new-source:   piggyback-pig
+    # piggyback_sources/old-source    -> piggyback_sources/new-source:      piggyback-pig
+    assert actions == ("piggyback-pig", "piggyback-pig", "piggyback-pig")
+    assert backend.get_all_current_piggyback_sources(cmk.utils.paths.omd_root) == {
+        HostAddress("new-source")
+    }
+    # the status file is only observable through last_contact, which is None without it
+    assert _get_only_raw_data_element(HostAddress("test-host")).meta.last_contact is not None
+
+
+@pytest.mark.skip(
+    reason="move_for_host_rename returns a tuple of characters and never moves the files a host is the source of"
+)
+def test_renaming_a_host_that_is_source_and_piggybacked_moves_both_sides() -> None:
+    backend.store_piggyback_raw_data(
+        HostAddress("peer"),
+        {HostAddress("old-host"): _PAYLOAD},
+        message_timestamp=_REF_TIME,
+        contact_timestamp=_REF_TIME,
+        omd_root=cmk.utils.paths.omd_root,
+    )
+    backend.store_piggyback_raw_data(
+        HostAddress("old-host"),
+        {HostAddress("peer"): _PAYLOAD},
+        message_timestamp=_REF_TIME,
+        contact_timestamp=_REF_TIME,
+        omd_root=cmk.utils.paths.omd_root,
+    )
+
+    actions = backend.move_for_host_rename(cmk.utils.paths.omd_root, "old-host", "new-host")
+
+    # piggyback/old-host/        -> piggyback/new-host/:          piggyback-load
+    # piggyback/peer/old-host    -> piggyback/peer/new-host:      piggyback-pig
+    # piggyback_sources/old-host -> piggyback_sources/new-host:   piggyback-pig
+    assert sorted(actions) == ["piggyback-load", "piggyback-pig", "piggyback-pig"]
+    assert _get_only_raw_data_element(HostAddress("new-host")).meta.source == HostAddress("peer")
+    assert _get_only_raw_data_element(HostAddress("peer")).meta.source == HostAddress("new-host")
+
+
+@pytest.mark.parametrize(
+    "renamed_host, expected_source, expected_piggybacked",
+    [
+        pytest.param("piggybacked", "source", "renamed", id="rename piggybacked host"),
+        pytest.param(
+            "source",
+            "renamed",
+            "piggybacked",
+            id="rename source host",
+            marks=pytest.mark.skip(
+                reason="move_for_host_rename returns a tuple of characters and never moves the files a host is the source of"
+            ),
+        ),
+    ],
+)
+def test_renaming_a_host_preserves_the_piggyback_timestamps(
+    renamed_host: str, expected_source: str, expected_piggybacked: str
+) -> None:
+    backend.store_piggyback_raw_data(
+        HostAddress("source"),
+        {HostAddress("piggybacked"): _PAYLOAD},
+        message_timestamp=_REF_TIME,
+        contact_timestamp=_REF_TIME + 10.0,
+        omd_root=cmk.utils.paths.omd_root,
+    )
+
+    backend.move_for_host_rename(cmk.utils.paths.omd_root, renamed_host, "renamed")
+
+    moved = _get_only_raw_data_element(HostAddress(expected_piggybacked)).meta
+    assert moved.source == HostAddress(expected_source)
+    assert moved.last_update == int(_REF_TIME)
+    assert moved.last_contact == int(_REF_TIME + 10.0)
+
+
+def test_renaming_a_host_without_piggyback_data_reports_no_action() -> None:
+    assert backend.move_for_host_rename(cmk.utils.paths.omd_root, "old-host", "new-host") == ()
+
+
 class TestPiggybackMetaData:
     def test_serialization_roundtrip(self) -> None:
         pmd = backend.PiggybackMetaData(

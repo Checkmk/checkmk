@@ -40,9 +40,17 @@ const metricList = suggestionList(
 
 // A metric picked for another object is almost always invalid, so a changed
 // binding resets it. Connection and object-type switches null the host/service
-// too, so this one watcher covers every binding change.
+// too, so this one watcher covers every binding change. The display mode is
+// watched too: a new element starts as an icon, and switching it to a gadget
+// has to load the suggestions skipped until then.
 watch(
-  () => [props.element.id, props.element.host_name, props.element.service_description] as const,
+  () =>
+    [
+      props.element.id,
+      props.element.host_name,
+      props.element.service_description,
+      props.element.display.mode
+    ] as const,
   async (curr, prev) => {
     const bindingChanged =
       prev !== undefined && prev[0] === curr[0] && (prev[1] !== curr[1] || prev[2] !== curr[2])

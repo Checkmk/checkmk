@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
@@ -200,9 +201,13 @@ function onDragStart(e: DragEvent, payload: BindingDropPayload): void {
   <aside class="maps-presentation-data-panel" @pointerdown.stop>
     <div class="maps-presentation-data-panel__head">
       <span class="maps-presentation-data-panel__title">{{ _t('Data browser') }}</span>
-      <button class="maps-presentation-data-panel__x" :title="_t('Close')" @click="emit('close')">
-        {{ untranslated('×') }}
-      </button>
+      <CmkIconButton
+        name="close"
+        size="small"
+        :title="_t('Close')"
+        :aria-label="_t('Close')"
+        @click="emit('close')"
+      />
     </div>
     <CmkTabs
       :model-value="tab"
@@ -236,16 +241,15 @@ function onDragStart(e: DragEvent, payload: BindingDropPayload): void {
               draggable="true"
               @dragstart="onDragStart($event, { kind: 'host', name: row.name })"
             >
-              <button
+              <CmkIconButton
                 class="maps-presentation-data-panel__chev"
-                :class="{ 'maps-presentation-data-panel__chev--open': expanded.has(row.name) }"
+                name="tree-closed"
+                size="xsmall"
+                :rotate="expanded.has(row.name) ? 90 : 0"
                 :title="expanded.has(row.name) ? _t('Collapse') : _t('Show services')"
+                :aria-label="expanded.has(row.name) ? _t('Collapse') : _t('Show services')"
                 @click.stop="toggleHost(row.name)"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <path d="M9 6l6 6-6 6" />
-                </svg>
-              </button>
+              />
               <span
                 v-if="stateDotFor({ kind: 'host', name: row.name })"
                 class="maps-presentation-data-panel__dot"
@@ -356,14 +360,6 @@ function onDragStart(e: DragEvent, payload: BindingDropPayload): void {
   font-size: var(--font-size-large);
 }
 
-.maps-presentation-data-panel__x {
-  border: none;
-  background: transparent;
-  color: inherit;
-  font-size: var(--font-size-xxlarge);
-  cursor: pointer;
-}
-
 .maps-presentation-data-panel__tabs {
   padding: 8px 12px 0;
 }
@@ -412,27 +408,11 @@ function onDragStart(e: DragEvent, payload: BindingDropPayload): void {
   color: var(--font-color);
 }
 
+/* Keeps the 16px column the service rows are indented against. */
 .maps-presentation-data-panel__chev {
-  display: inline-flex;
-  align-items: center;
   justify-content: center;
   width: 16px;
-  height: 16px;
   flex-shrink: 0;
-  border: none;
-  background: transparent;
-  color: var(--font-color-dimmed);
-  cursor: pointer;
-  transition: transform 0.12s ease;
-}
-
-.maps-presentation-data-panel__chev svg {
-  width: 10px;
-  height: 10px;
-}
-
-.maps-presentation-data-panel__chev--open {
-  transform: rotate(90deg);
 }
 
 .maps-presentation-data-panel__dot {

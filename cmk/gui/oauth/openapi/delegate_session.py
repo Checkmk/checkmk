@@ -6,6 +6,7 @@
 import http.client
 from collections.abc import Callable
 from datetime import datetime, timedelta, UTC
+from http import HTTPStatus
 from typing import Final
 
 from cmk.ccc.user import UserId
@@ -143,7 +144,7 @@ def make_delegate_session_endpoint(delegation_enabled: Callable[[], bool]) -> Ve
         behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
         versions={
             APIVersion.INTERNAL: EndpointHandler(
-                handler=delegate_session_v1, additional_status_codes=[404]
+                handler=delegate_session_v1, additional_status_codes=[HTTPStatus.NOT_FOUND]
             )
         },
     )

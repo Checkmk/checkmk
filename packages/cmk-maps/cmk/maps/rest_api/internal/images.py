@@ -10,6 +10,7 @@ The work itself lives in :mod:`cmk.maps.gui._images`; an upload carries its file
 base64-encoded in the body (see ``_base64_decoder``).
 """
 
+from http import HTTPStatus
 from typing import Annotated
 
 from pydantic import TypeAdapter
@@ -127,7 +128,7 @@ def delete_image_v1(
     if blocking := delete_image(name, force):
         usage = [_usage(entry) for entry in blocking]
         raise ProblemException(
-            status=409,
+            status=HTTPStatus.CONFLICT,
             title=f"The image {name!r} is still in use.",
             detail="Repeat with 'force' to delete it and leave those maps without it.",
             ext=EXT({"usage": _USAGE_ADAPTER.dump_python(usage, mode="json", by_alias=True)}),
@@ -184,6 +185,8 @@ ENDPOINT_DELETE_IMAGE = VersionedEndpoint(
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
     behavior=NO_CONFIG_CHANGE,
     versions={
-        APIVersion.INTERNAL: EndpointHandler(handler=delete_image_v1, additional_status_codes=[409])
+        APIVersion.INTERNAL: EndpointHandler(
+            handler=delete_image_v1, additional_status_codes=[HTTPStatus.CONFLICT]
+        )
     },
 )

@@ -12,6 +12,7 @@ REST-API.
 """
 
 from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Any
 
 import cmk.product_usage.collectors.grafana as grafana_collector
@@ -104,7 +105,7 @@ def get_graph(params: Mapping[str, Any]) -> Response:
         )
         if (requested := next(iter(built_graphs), None)) is None:
             return problem(
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
                 title="Bad Request",
                 detail="The requested graph does not exist",
             )
@@ -119,21 +120,21 @@ def get_graph(params: Mapping[str, Any]) -> Response:
 
     except MKUserError as e:
         return problem(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Bad Request",
             detail=e.message,
         )
 
     except (MKGraphNotFound, MKMissingDataError, MKLivestatusNotFoundError) as e:
         return problem(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Bad Request",
             detail=str(e),
         )
 
     if (evaluated_graph := next(iter(evaluated.graphs), None)) is None:
         return problem(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Bad Request",
             detail="The requested graph does not exist",
         )

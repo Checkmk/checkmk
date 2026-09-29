@@ -10,6 +10,7 @@ import contextlib
 import http.client
 import json
 from collections.abc import Callable, Iterator, Mapping, Sequence
+from http import HTTPStatus
 from typing import Any, Literal
 
 from cmk.ccc import version
@@ -55,7 +56,7 @@ def complement_customer(details: dict[str, Any]) -> dict[str, Any]:
 def serve_group(group: GroupSpec, serializer: Callable[[GroupSpec], DomainObject]) -> Response:
     response = Response()
     response.set_data(json.dumps(serializer(group)))
-    if response.status_code != 204:
+    if response.status_code != HTTPStatus.NO_CONTENT:
         response.set_content_type("application/json")
     return constructors.response_with_etag_created_from_dict(response, group)
 
@@ -142,7 +143,7 @@ def prepare_groups(group_type: GroupType, entries: list[dict[str, Any]]) -> Grou
 
     if already_existing:
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title=f"Some {group_type} groups already exist",
             detail=f"The following {group_type} group names already exist: {', '.join(already_existing)}",
         )
@@ -153,7 +154,7 @@ def prepare_groups(group_type: GroupType, entries: list[dict[str, Any]]) -> Grou
 def fetch_group(
     ident: str,
     group_type: GroupType,
-    status: int = 404,
+    status: int = HTTPStatus.NOT_FOUND,
     message: str | None = None,
 ) -> GroupSpec:
     groups = load_group_information()[group_type]
@@ -165,7 +166,7 @@ def fetch_group(
 def fetch_specific_groups(
     idents: list[str],
     group_type: GroupType,
-    status: int = 404,
+    status: int = HTTPStatus.NOT_FOUND,
     message: str | None = None,
 ) -> list[GroupSpec]:
     groups = load_group_information()[group_type]
@@ -211,7 +212,7 @@ def may_fail(
         if isinstance(exc, MKHTTPException):
             status = exc.status
         elif status is None:
-            status = 400
+            status = HTTPStatus.BAD_REQUEST
         raise ProblemException(
             status=status,
             title="The operation has failed.",
@@ -295,7 +296,7 @@ def get_site_id_for_host(connection: MultiSiteConnection, host_name: str) -> Sit
             )
         except ValueError:
             raise ProblemException(
-                status=404,
+                status=HTTPStatus.NOT_FOUND,
                 title="The requested host was not found",
                 detail=f"Could not find exactly one host with the name {host_name!r} "
                 "in the monitoring.",
@@ -345,7 +346,7 @@ def mutually_exclusive_fields[T](
             return value
 
         raise GeneralRestAPIException(
-            status=500,
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
             title="Internal error",
             detail=f"Field `{field}` must be of type `{expected_type.__name__}`, but got `{type(value).__name__}`",
         )

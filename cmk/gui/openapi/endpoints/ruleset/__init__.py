@@ -8,6 +8,7 @@
 """Rulesets"""
 
 from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Any
 
 from cmk.gui.config import active_config
@@ -109,7 +110,7 @@ def show_ruleset(param: Mapping[str, Any]) -> Response:
     ruleset_problem = problem(
         title="Unknown ruleset.",
         detail=f"The ruleset of name {ruleset_name!r} is not known.",
-        status=404,
+        status=HTTPStatus.NOT_FOUND,
     )
     try:
         ruleset = SingleRulesetRecursively.load_single_ruleset_recursively(

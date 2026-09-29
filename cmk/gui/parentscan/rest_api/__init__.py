@@ -16,6 +16,7 @@ Additional information about the parents and the parent scan can be found in the
 """
 
 from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Any, assert_never
 
 from cmk.gui.background_job.job import BackgroundJob
@@ -42,7 +43,7 @@ from cmk.web.utils import permission_verification as permissions
     constructors.domain_type_action_href("parent_scan", "start"),
     "cmk/start",
     method="post",
-    additional_status_codes=[409],
+    additional_status_codes=[HTTPStatus.CONFLICT],
     request_schema=ParentScan,
     response_schema=BackgroundJobStatusObject,
     permissions_required=permissions.AllPerm(

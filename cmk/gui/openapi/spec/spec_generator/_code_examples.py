@@ -15,6 +15,7 @@ import functools
 import json
 import re
 from collections.abc import Mapping, Sequence
+from http import HTTPStatus
 from typing import Any, cast, NamedTuple
 
 import jinja2
@@ -582,28 +583,33 @@ def formatted_if_statement_for_responses(
     # response carries the status code of the redirect target, not the 3xx.
     # we simply add all potentially relevant success status codes for such cases
     if any(300 <= code < 400 for code in expected_response_status_codes):
-        if 200 not in expected_response_status_codes:
-            expected_response_status_codes.append(200)
-        if 204 not in expected_response_status_codes:
-            expected_response_status_codes.append(204)
+        if HTTPStatus.OK not in expected_response_status_codes:
+            expected_response_status_codes.append(HTTPStatus.OK)
+        if HTTPStatus.NO_CONTENT not in expected_response_status_codes:
+            expected_response_status_codes.append(HTTPStatus.NO_CONTENT)
 
-    if 200 in expected_response_status_codes and 201 in expected_response_status_codes:
+    if (
+        HTTPStatus.OK in expected_response_status_codes
+        and HTTPStatus.CREATED in expected_response_status_codes
+    ):
         unknown_success = True
-        expected_response_status_codes.remove(201)
+        expected_response_status_codes.remove(HTTPStatus.CREATED)
     else:
         unknown_success = False
 
     for status_code in sorted(expected_response_status_codes):
         if status_code < 400:
             status_check = (
-                "in (200, 201)" if status_code == 200 and unknown_success else f"== {status_code}"
+                "in (200, 201)"
+                if status_code == HTTPStatus.OK and unknown_success
+                else f"== {status_code}"
             )
             if len(formatted_str) == 0:
                 formatted_str += f"if resp.{status_code_field} {status_check}:\n"
             else:
                 formatted_str += f"elif resp.{status_code_field} {status_check}:\n"
 
-            if status_code in (200, 201):
+            if status_code in (HTTPStatus.OK, HTTPStatus.CREATED):
                 if downloadable:
                     formatted_str += "    file_name = resp.headers['content-disposition'].split('filename=')[1].strip('\"')\n"
                     formatted_str += "    with open(file_name, 'wb') as out_file:\n"
@@ -618,7 +624,7 @@ def formatted_if_statement_for_responses(
 
                 else:
                     formatted_str += retrieve_data_code
-            elif status_code == 204:
+            elif status_code == HTTPStatus.NO_CONTENT:
                 formatted_str += "    print('Done')\n"
             elif status_code >= 300:
                 formatted_str += "    print('Redirected to', resp.headers['location'])\n"

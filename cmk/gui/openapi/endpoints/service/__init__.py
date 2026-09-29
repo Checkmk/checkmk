@@ -24,6 +24,7 @@ For a detailed list of columns, have a look at the [services table](#section/Tab
 """
 
 from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Any
 
 from cmk import fields
@@ -144,7 +145,7 @@ def show_service(params: Mapping[str, Any]) -> Response:
         service = q.fetchone(live)
     except ValueError:
         return problem(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="The requested service was not found",
             detail=f"The service name {service_description} did not match any service",
         )

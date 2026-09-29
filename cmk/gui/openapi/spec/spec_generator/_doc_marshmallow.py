@@ -9,6 +9,7 @@
 import hashlib
 import http.client
 from collections.abc import Iterator, Mapping, Sequence
+from http import HTTPStatus
 from types import ModuleType
 
 from apispec import APISpec
@@ -345,74 +346,112 @@ class MarshmallowResponses:
 
         # Always include 406
         responses["406"] = MarshmallowResponses._error_response_path_item(
-            status_descriptions, error_schemas, 406, DefaultStatusCodeDescription.Code406
+            status_descriptions,
+            error_schemas,
+            HTTPStatus.NOT_ACCEPTABLE,
+            DefaultStatusCodeDescription.Code406,
         )
 
         # 3xx responses
-        if 302 in expected_status_codes:
+        if HTTPStatus.FOUND in expected_status_codes:
             responses["302"] = MarshmallowResponses._path_item(
-                status_descriptions, 302, DefaultStatusCodeDescription.Code302.value
+                status_descriptions, HTTPStatus.FOUND, DefaultStatusCodeDescription.Code302.value
             )
 
-        if 303 in expected_status_codes:
+        if HTTPStatus.SEE_OTHER in expected_status_codes:
             responses["303"] = MarshmallowResponses._path_item(
-                status_descriptions, 303, DefaultStatusCodeDescription.Code302.value
+                status_descriptions,
+                HTTPStatus.SEE_OTHER,
+                DefaultStatusCodeDescription.Code302.value,
             )
 
         # 4xx responses
-        if 401 in expected_status_codes:
+        if HTTPStatus.UNAUTHORIZED in expected_status_codes:
             responses["401"] = MarshmallowResponses._error_response_path_item(
-                status_descriptions, error_schemas, 401, DefaultStatusCodeDescription.Code401
+                status_descriptions,
+                error_schemas,
+                HTTPStatus.UNAUTHORIZED,
+                DefaultStatusCodeDescription.Code401,
             )
 
-        if 403 in expected_status_codes:
+        if HTTPStatus.FORBIDDEN in expected_status_codes:
             responses["403"] = MarshmallowResponses._error_response_path_item(
-                status_descriptions, error_schemas, 403, DefaultStatusCodeDescription.Code403
+                status_descriptions,
+                error_schemas,
+                HTTPStatus.FORBIDDEN,
+                DefaultStatusCodeDescription.Code403,
             )
 
-        if 404 in expected_status_codes:
+        if HTTPStatus.NOT_FOUND in expected_status_codes:
             responses["404"] = MarshmallowResponses._error_response_path_item(
-                status_descriptions, error_schemas, 404, DefaultStatusCodeDescription.Code404
+                status_descriptions,
+                error_schemas,
+                HTTPStatus.NOT_FOUND,
+                DefaultStatusCodeDescription.Code404,
             )
 
-        if 405 in expected_status_codes:
+        if HTTPStatus.METHOD_NOT_ALLOWED in expected_status_codes:
             responses["405"] = MarshmallowResponses._error_response_path_item(
-                status_descriptions, error_schemas, 405, DefaultStatusCodeDescription.Code405
+                status_descriptions,
+                error_schemas,
+                HTTPStatus.METHOD_NOT_ALLOWED,
+                DefaultStatusCodeDescription.Code405,
             )
 
-        if 409 in expected_status_codes:
+        if HTTPStatus.CONFLICT in expected_status_codes:
             responses["409"] = MarshmallowResponses._error_response_path_item(
-                status_descriptions, error_schemas, 409, DefaultStatusCodeDescription.Code409
+                status_descriptions,
+                error_schemas,
+                HTTPStatus.CONFLICT,
+                DefaultStatusCodeDescription.Code409,
             )
 
-        if 400 in expected_status_codes:
+        if HTTPStatus.BAD_REQUEST in expected_status_codes:
             responses["400"] = MarshmallowResponses._error_response_path_item(
-                status_descriptions, error_schemas, 400, DefaultStatusCodeDescription.Code400
+                status_descriptions,
+                error_schemas,
+                HTTPStatus.BAD_REQUEST,
+                DefaultStatusCodeDescription.Code400,
             )
 
-        if 412 in expected_status_codes:
+        if HTTPStatus.PRECONDITION_FAILED in expected_status_codes:
             responses["412"] = MarshmallowResponses._error_response_path_item(
-                status_descriptions, error_schemas, 412, DefaultStatusCodeDescription.Code412
+                status_descriptions,
+                error_schemas,
+                HTTPStatus.PRECONDITION_FAILED,
+                DefaultStatusCodeDescription.Code412,
             )
 
-        if 415 in expected_status_codes:
+        if HTTPStatus.UNSUPPORTED_MEDIA_TYPE in expected_status_codes:
             responses["415"] = MarshmallowResponses._error_response_path_item(
-                status_descriptions, error_schemas, 415, DefaultStatusCodeDescription.Code415
+                status_descriptions,
+                error_schemas,
+                HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
+                DefaultStatusCodeDescription.Code415,
             )
 
-        if 422 in expected_status_codes:
+        if HTTPStatus.UNPROCESSABLE_ENTITY in expected_status_codes:
             responses["422"] = MarshmallowResponses._error_response_path_item(
-                status_descriptions, error_schemas, 422, DefaultStatusCodeDescription.Code422
+                status_descriptions,
+                error_schemas,
+                HTTPStatus.UNPROCESSABLE_ENTITY,
+                DefaultStatusCodeDescription.Code422,
             )
 
-        if 423 in expected_status_codes:
+        if HTTPStatus.LOCKED in expected_status_codes:
             responses["423"] = MarshmallowResponses._error_response_path_item(
-                status_descriptions, error_schemas, 423, DefaultStatusCodeDescription.Code423
+                status_descriptions,
+                error_schemas,
+                HTTPStatus.LOCKED,
+                DefaultStatusCodeDescription.Code423,
             )
 
-        if 428 in expected_status_codes:
+        if HTTPStatus.PRECONDITION_REQUIRED in expected_status_codes:
             responses["428"] = MarshmallowResponses._error_response_path_item(
-                status_descriptions, error_schemas, 428, DefaultStatusCodeDescription.Code428
+                status_descriptions,
+                error_schemas,
+                HTTPStatus.PRECONDITION_REQUIRED,
+                DefaultStatusCodeDescription.Code428,
             )
 
         return responses
@@ -429,7 +468,7 @@ class MarshmallowResponses:
         responses: ResponseType = {}
 
         # 2xx responses
-        if 200 in expected_status_codes:
+        if HTTPStatus.OK in expected_status_codes:
             if content_type is None:
                 raise ValueError("Content-Type must be set for 200 responses.")
             if response_schema:
@@ -448,15 +487,17 @@ class MarshmallowResponses:
 
             responses["200"] = MarshmallowResponses._path_item(
                 status_descriptions,
-                200,
+                HTTPStatus.OK,
                 DefaultStatusCodeDescription.Code200.value,
                 content=content,
                 headers=response_headers,
             )
 
-        if 204 in expected_status_codes:
+        if HTTPStatus.NO_CONTENT in expected_status_codes:
             responses["204"] = MarshmallowResponses._path_item(
-                status_descriptions, 204, DefaultStatusCodeDescription.Code204.value
+                status_descriptions,
+                HTTPStatus.NO_CONTENT,
+                DefaultStatusCodeDescription.Code204.value,
             )
 
         return responses

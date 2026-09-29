@@ -15,8 +15,8 @@ You can find an introduction to time periods in the
 """
 
 import datetime as dt
-import http.client
 from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Any, cast
 
 from cmk.ccc.site import omd_site, SiteId
@@ -74,7 +74,7 @@ RW_PERMISSIONS = permissions.AllPerm(
 
 def time_period_not_found_problem(time_period_id: str) -> Response:
     return problem(
-        status=404,
+        status=HTTPStatus.NOT_FOUND,
         title="The requested time period was not found",
         detail=f"Could not find a time period with id {time_period_id}.",
     )
@@ -134,7 +134,7 @@ def create_timeperiod(params: Mapping[str, Any]) -> Response:
     method="put",
     path_params=[TIMEPERIOD_NAME_FIELD],
     etag="both",
-    additional_status_codes=[405],
+    additional_status_codes=[HTTPStatus.METHOD_NOT_ALLOWED],
     request_schema=UpdateTimePeriod,
     response_schema=TimePeriodResponse,
     permissions_required=RW_PERMISSIONS,
@@ -147,12 +147,14 @@ def update_timeperiod(params: Mapping[str, Any]) -> Response:
     name = params["name"]
     if name == "24X7":
         raise ProblemException(
-            405, http.client.responses[405], "You cannot change the built-in time period"
+            HTTPStatus.METHOD_NOT_ALLOWED,
+            HTTPStatus.METHOD_NOT_ALLOWED.phrase,
+            "You cannot change the built-in time period",
         )
 
     if _is_alias_in_use(body.get("alias"), name):
         return problem(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Bad Request",
             detail="These fields have problems: alias",
             fields=FIELDS({"alias": f"Timeperiod alias '{body['alias']}' already exists"}),
@@ -195,7 +197,7 @@ def update_timeperiod(params: Mapping[str, Any]) -> Response:
     etag="input",
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
-    additional_status_codes=[405, 409],
+    additional_status_codes=[HTTPStatus.METHOD_NOT_ALLOWED, HTTPStatus.CONFLICT],
 )
 def delete(params: Mapping[str, Any]) -> Response:
     """Delete a time period"""
@@ -218,18 +220,18 @@ def delete(params: Mapping[str, Any]) -> Response:
         return time_period_not_found_problem(name)
     except TimePeriodBuiltInError:
         return problem(
-            status=405,
+            status=HTTPStatus.METHOD_NOT_ALLOWED,
             title="Built-in time periods can not be deleted",
             detail=f"The built-in time period '{name}' cannot be deleted.",
         )
     except TimePeriodInUseError as e:
         return problem(
-            status=409,
+            status=HTTPStatus.CONFLICT,
             title="The time period is still in use",
             detail=f"The time period is still in use ({', '.join(u[0] for u in e.usages)}).",
         )
 
-    return Response(status=204)
+    return Response(status=HTTPStatus.NO_CONTENT)
 
 
 @Endpoint(

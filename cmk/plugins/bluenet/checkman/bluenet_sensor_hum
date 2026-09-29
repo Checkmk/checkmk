@@ -1,4 +1,4 @@
-title: Bachmann Bluenet Monitored Power Distribution Unit: Humidity
+title: Bachmann Bluenet: Monitored PDU Humidity
 agents: snmp
 catalog: hw/environment/bachmann
 license: GPLv2

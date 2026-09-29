@@ -3,24 +3,20 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render, screen } from '@testing-library/vue'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { defineComponent, h } from 'vue'
+import { render, screen, waitFor } from '@testing-library/vue'
+import { HttpResponse, http } from 'msw'
+import { setupServer } from 'msw/node'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { defineComponent, h, nextTick } from 'vue'
 
 import DashboardContentTopList from '@/dashboard/components/DashboardContent/DashboardContentTopList.vue'
 import { useProvideIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import type { ComputedTopList, TopListContent } from '@/dashboard/types/widget'
 
 import { makeContentProps } from '@tests/dashboard/contentProps'
+import { FakeResizeObserver, deliverSize } from '@tests/lib/fakeResizeObserver'
 
-import { flushPromises } from '../../utils.ts'
-
-const computeTopListData = vi.fn()
-vi.mock('@/dashboard/utils.ts', () => ({
-  dashboardAPI: {
-    computeTopListData: (...args: unknown[]) => computeTopListData(...args)
-  }
-}))
+const ENDPOINT = `${location.protocol}//${location.host}/api/internal/domain-types/dashboard/actions/compute-top-list/invoke`
 
 function topList(overrides: Partial<ComputedTopList> = {}): ComputedTopList {
   return {
@@ -67,32 +63,72 @@ function props(content: Partial<TopListContent> = {}) {
   )
 }
 
+let answer: () => ComputedTopList = () => topList()
+let requests: unknown[] = []
+
+const server = setupServer(
+  http.post(ENDPOINT, async ({ request }) => {
+    requests.push(await request.json())
+    return HttpResponse.json({ domainType: 'widget-compute', value: answer() })
+  })
+)
+
 async function renderWidget(
   content: Partial<TopListContent> = {},
   { isPublicDashboard = false } = {}
 ) {
   const componentProps = props(content)
   const wrapper = defineComponent({
-    setup() {
+    props: { tick: { type: Number, required: true } },
+    setup(wrapperProps) {
       if (isPublicDashboard) {
         useProvideIsPublicDashboard()
       }
-      return () => h(DashboardContentTopList, componentProps as never)
+      return () =>
+        h(DashboardContentTopList, { ...componentProps, tick: wrapperProps.tick } as never)
     }
   })
-  const rendered = render(wrapper)
-  await flushPromises()
+  const rendered = render(wrapper, { props: { tick: 0 } })
+  await nextTick()
+  deliverSize(400, 200)
+  await waitFor(() =>
+    expect(rendered.container.querySelector('.db-content-top-list__scroll')).not.toBeNull()
+  )
   return rendered
 }
+
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
+beforeEach(() => {
+  vi.stubGlobal('ResizeObserver', FakeResizeObserver)
+})
+afterEach(() => {
+  answer = () => topList()
+  requests = []
+  server.resetHandlers()
+  FakeResizeObserver.instances = []
+  vi.unstubAllGlobals()
+})
+afterAll(() => server.close())
 
 function columnHeaders(): (string | null)[] {
   return [...document.querySelectorAll('th')].map((th) => th.textContent!.trim())
 }
 
 describe('DashboardContentTopList', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    computeTopListData.mockResolvedValue({ value: topList() })
+  it('requests the explicit widget', async () => {
+    await renderWidget()
+
+    expect(requests).toEqual([
+      { source: { type: 'explicit', content: props().content, context: {} } }
+    ])
+  })
+
+  it('fetches again on a refresh tick', async () => {
+    const { rerender } = await renderWidget()
+
+    await rerender({ tick: 1 })
+
+    await waitFor(() => expect(requests).toHaveLength(2))
   })
 
   it('renders host, service and the metric column', async () => {
@@ -140,12 +176,10 @@ describe('DashboardContentTopList', () => {
 
   it('fills the bar of a lone entry, whose automatic range has no span', async () => {
     const single = topList()
-    computeTopListData.mockResolvedValue({
-      value: {
-        ...single,
-        value_range: { min_value: 20, max_value: 20 },
-        entries: [single.entries[0]!]
-      }
+    answer = () => ({
+      ...single,
+      value_range: { min_value: 20, max_value: 20 },
+      entries: [single.entries[0]!]
     })
     const { container } = await renderWidget()
 
@@ -154,14 +188,14 @@ describe('DashboardContentTopList', () => {
   })
 
   it('renders the placeholder when there are no entries', async () => {
-    computeTopListData.mockResolvedValue({ value: topList({ entries: [] }) })
+    answer = () => topList({ entries: [] })
     await renderWidget()
     expect(screen.getByText('No entries')).toBeInTheDocument()
   })
 
   it('renders the conflicting-metrics table when the backend reports errors', async () => {
-    computeTopListData.mockResolvedValue({
-      value: topList({
+    answer = () =>
+      topList({
         errors: [
           {
             site_id: 'heute',
@@ -171,7 +205,6 @@ describe('DashboardContentTopList', () => {
           }
         ]
       })
-    })
     await renderWidget()
     expect(columnHeaders()).toEqual([
       'Host',

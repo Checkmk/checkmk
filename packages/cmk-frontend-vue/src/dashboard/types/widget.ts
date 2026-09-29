@@ -8,7 +8,6 @@ import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 
 export type ComputedWidgetSpecResponse =
   components['schemas']['ComputedWidgetResponse_ComputedWidgetSpec_']
-export type ComputedTopListResponse = components['schemas']['ComputedWidgetResponse_TopList_']
 export type ComputedTopList = components['schemas']['TopList']
 export type TopListEntry = components['schemas']['TopListEntry']
 export type TopListError = components['schemas']['TopListError']

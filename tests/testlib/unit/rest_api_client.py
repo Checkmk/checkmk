@@ -33,7 +33,7 @@ from cmk.gui.openapi.framework import APIVersion
 from cmk.gui.openapi.restful_objects.type_defs import DomainType
 from cmk.gui.rest_api_types.notifications_rule_types import APINotificationRule
 from cmk.gui.rest_api_types.site_connection import SiteConfig
-from cmk.gui.type_defs import DismissableWarning, VisualContext
+from cmk.gui.type_defs import DismissableWarning
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 from cmk.utils import paths
 
@@ -4821,12 +4821,18 @@ class DashboardClient(RestApiClient):
         )
 
     def compute_top_list(
-        self, top_list_config: dict[str, Any], context: VisualContext, _ok: bool = True
+        self,
+        body: dict[str, Any],
+        headers: Mapping[str, str] | None = None,
+        expect_ok: bool = True,
     ) -> Response:
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/actions/compute-top-list/invoke",
-            body={"content": top_list_config, "context": context},
+            body=body,
+            headers=headers,
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
         )
 
     def compute_single_metric(

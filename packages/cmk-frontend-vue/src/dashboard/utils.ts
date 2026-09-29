@@ -38,7 +38,7 @@ import type {
   ComputedNetworkFlowTrendChartResponse,
   ComputedSingleMetric,
   ComputedTimelineCountResponse,
-  ComputedTopListResponse,
+  ComputedTopList,
   ComputedWidgetResponse,
   ComputedWidgetSpecResponse,
   EffectiveWidgetFilterContext,
@@ -309,14 +309,15 @@ export const dashboardAPI = {
       })
     )
   },
-  computeTopListData: async (
-    content: TopListContent,
-    context: VisualContext
-  ): Promise<ComputedTopListResponse> => {
+  computeTopList: async (
+    body: { source: WidgetSource<TopListContent> },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<ComputedTopList>> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-top-list/invoke', {
         ...CONTENT_TYPE_HEADER,
-        body: { content, context }
+        headers,
+        body
       })
     )
   },

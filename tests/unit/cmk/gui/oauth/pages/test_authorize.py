@@ -7,6 +7,7 @@ import logging
 import re
 from collections.abc import Iterator
 from html import unescape
+from http import HTTPStatus
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 from urllib.parse import parse_qs, urlsplit
@@ -158,7 +159,7 @@ class TestOAuthAuthorizePage:
                 )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             body = response.get_data(as_text=True)
             assert "<form" in body
             assert 'name="_authorize"' in body
@@ -176,7 +177,7 @@ class TestOAuthAuthorizePage:
                 )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             body = response.get_data(as_text=True)
 
         assert "My Test App" in body
@@ -193,7 +194,7 @@ class TestOAuthAuthorizePage:
                 )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             body = response.get_data(as_text=True)
 
         assert client_id in body
@@ -212,7 +213,7 @@ class TestOAuthAuthorizePage:
                 )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             body = response.get_data(as_text=True)
 
         assert '<a href="http://evil.example">' not in body
@@ -232,7 +233,7 @@ class TestOAuthAuthorizePage:
                 )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
 
     @pytest.mark.parametrize("method", ["PUT", "DELETE"])
     def test_rejects_the_verbs_the_endpoint_does_not_define(
@@ -250,7 +251,7 @@ class TestOAuthAuthorizePage:
                 )
             )
 
-            assert response.status_code == 405
+            assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED
 
     @pytest.mark.usefixtures("patch_theme")
     def test_consent_page_offers_the_wider_scope_too(
@@ -268,7 +269,7 @@ class TestOAuthAuthorizePage:
                 )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             body = response.get_data(as_text=True)
 
         assert _offered_and_selected_scopes(body) == {"read": True, "write": False}
@@ -300,7 +301,7 @@ class TestOAuthAuthorizePage:
                 )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             body = response.get_data(as_text=True)
 
         # Preselected as requested, so approving an untouched form grants what
@@ -377,7 +378,7 @@ class TestOAuthAuthorizePage:
                     )
                 )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             target_url = _extract_redirect_target(response.get_data(as_text=True))
 
         parts = urlsplit(target_url)
@@ -432,7 +433,7 @@ class TestOAuthAuthorizePage:
                     )
                 )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             target_url = _extract_redirect_target(response.get_data(as_text=True))
 
         parts = urlsplit(target_url)
@@ -491,7 +492,7 @@ class TestOAuthAuthorizePage:
                     )
                 )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             body = response.get_data(as_text=True)
             assert 'http-equiv="refresh"' in body
 
@@ -559,7 +560,7 @@ class TestOAuthAuthorizePage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
 
     @pytest.mark.parametrize(
         "overrides, error",
@@ -608,7 +609,7 @@ class TestOAuthAuthorizePage:
                 )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             target_url = _extract_redirect_target(response.get_data(as_text=True))
 
         query = parse_qs(urlsplit(target_url).query)

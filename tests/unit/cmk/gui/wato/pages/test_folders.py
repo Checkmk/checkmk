@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator
+from http import HTTPStatus
 
 import pytest
 
@@ -53,16 +54,22 @@ def test_ajax_call(logged_in_wsgi_app: WebTestAppForCMK) -> None:
     ajax_page = "/NO_SITE/check_mk/ajax_popup_move_to_folder.py"
     app = logged_in_wsgi_app
     resp = app.get(
-        f"{ajax_page}?ident=test2&what=folder&_ajaxid=1611222306&back_url=wato.py", status=400
+        f"{ajax_page}?ident=test2&what=folder&_ajaxid=1611222306&back_url=wato.py",
+        status=HTTPStatus.BAD_REQUEST,
     )
     assert "Move this folder to" in resp.text, resp.text
     assert "No Setup folder test2." in resp.text, resp.text
 
-    resp = app.get(f"{ajax_page}?ident=test2&what=folder&back_url=wato.py", status=400)
+    resp = app.get(
+        f"{ajax_page}?ident=test2&what=folder&back_url=wato.py", status=HTTPStatus.BAD_REQUEST
+    )
     assert "Move this folder to" in resp.text, resp.text
     assert "No Setup folder test2." in resp.text, resp.text
 
-    app.get(f"{ajax_page}/{ajax_page}?ident=test2&what=folder&back_url=wato.py", status=404)
+    app.get(
+        f"{ajax_page}/{ajax_page}?ident=test2&what=folder&back_url=wato.py",
+        status=HTTPStatus.NOT_FOUND,
+    )
 
 
 @pytest.mark.usefixtures("patch_theme", "mock_livestatus")
@@ -73,4 +80,4 @@ def test_ajax_call_2(wsgi_app: WebTestAppForCMK, auth_request: Request) -> None:
     wsgi_app.get(auth_request)  # to get the cookie
 
     resp = wsgi_app.get(f"{ajax_page}/{ajax_page}?ident=test2&what=folder&back_url=wato.py")
-    assert resp.status_code == 404, resp.location
+    assert resp.status_code == HTTPStatus.NOT_FOUND, resp.location

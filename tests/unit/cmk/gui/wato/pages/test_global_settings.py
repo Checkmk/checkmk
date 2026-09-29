@@ -5,6 +5,7 @@
 
 import json
 from collections.abc import Iterator
+from http import HTTPStatus
 
 import pytest
 
@@ -54,7 +55,7 @@ def fixture_frontend_vue_manifest() -> Iterator[None]:
 def test_a_retired_mode_redirects_to_its_settings_page(
     logged_in_admin_wsgi_app: WebTestAppForCMK, old_url: str, new_url: str
 ) -> None:
-    response = logged_in_admin_wsgi_app.get(f"/NO_SITE/check_mk/{old_url}", status=302)
+    response = logged_in_admin_wsgi_app.get(f"/NO_SITE/check_mk/{old_url}", status=HTTPStatus.FOUND)
 
     assert response.headers["Location"] == new_url
 
@@ -71,7 +72,7 @@ def test_a_stale_action_url_redirects_without_recording_a_change(
 
     logged_in_admin_wsgi_app.get(
         "/NO_SITE/check_mk/wato.py?mode=globalvars&_action=toggle&_varname=debug&_transid=stale",
-        status=302,
+        status=HTTPStatus.FOUND,
     )
 
     assert _config_generation() == generation_before

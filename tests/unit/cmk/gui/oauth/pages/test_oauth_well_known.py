@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 import pytest
 from werkzeug.test import create_environ
 
@@ -26,7 +28,7 @@ class TestOAuthAuthorizationServerMetadataPage:
             )
         )
 
-        assert response.status_code == 200
+        assert response.status_code == HTTPStatus.OK
         assert response.json == {
             "issuer": "http://localhost/oauth-NO_SITE",
             "authorization_endpoint": "http://localhost/oauth-NO_SITE/authorize",

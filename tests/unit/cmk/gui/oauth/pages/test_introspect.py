@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from datetime import datetime, timedelta, UTC
+from http import HTTPStatus
 
 import pytest
 import time_machine
@@ -62,7 +63,7 @@ class TestOAuthIntrospectPage:
                 )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             assert response.json == {"active": True, "exp": int(expires_at.timestamp())}
 
     def test_reports_an_expired_token_as_inactive(
@@ -81,7 +82,7 @@ class TestOAuthIntrospectPage:
                 )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             assert response.json == {"active": False}
 
     @pytest.mark.parametrize(
@@ -102,7 +103,7 @@ class TestOAuthIntrospectPage:
                 )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             assert response.json == {"active": False}
 
     def test_reports_a_token_of_a_deleted_user_as_inactive(
@@ -122,7 +123,7 @@ class TestOAuthIntrospectPage:
                 )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             assert response.json == {"active": False}
 
     def test_reports_a_token_of_a_locked_user_as_inactive(
@@ -141,7 +142,7 @@ class TestOAuthIntrospectPage:
                     )
                 )
 
-                assert response.status_code == 200
+                assert response.status_code == HTTPStatus.OK
                 assert response.json == {"active": False}
 
     @pytest.mark.parametrize("data", [{}, {"token": ""}], ids=["missing", "empty"])
@@ -158,7 +159,7 @@ class TestOAuthIntrospectPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_request"}
 
     def test_ignores_a_token_in_the_query_string(
@@ -176,7 +177,7 @@ class TestOAuthIntrospectPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_request"}
 
     def test_returns_405_when_method_is_not_post(self, flask_app: Flask) -> None:
@@ -188,7 +189,7 @@ class TestOAuthIntrospectPage:
                 )
             )
 
-            assert response.status_code == 405
+            assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED
 
     def test_rejects_a_non_form_content_type(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(
@@ -203,5 +204,5 @@ class TestOAuthIntrospectPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_request"}

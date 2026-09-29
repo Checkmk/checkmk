@@ -7,6 +7,7 @@
 import datetime
 import threading
 from collections.abc import Generator
+from http import HTTPStatus
 from typing import override
 
 import pytest
@@ -41,13 +42,13 @@ def test_flask_request_memoize(wsgi_app: WebTestAppForCMK) -> None:
 
     # Only Checkmk and REST API Blueprint requests trigger the cache eviction.
     resp = wsgi_app.get("/")
-    assert resp.status_code == 404
+    assert resp.status_code == HTTPStatus.NOT_FOUND
 
     assert prev == cached_function()
 
     # After another request, the cache is evicted.
     resp = wsgi_app.get("/NO_SITE/check_mk/login.py")
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     assert prev != cached_function()
 
 
@@ -89,7 +90,7 @@ def test_request_memoize_request_integration(
     page_registry.register(PageEndpoint("my_page", PageClass()))
 
     # Try a first request. Memoization within this request is tested in page() above.
-    logged_in_wsgi_app.get("/NO_SITE/check_mk/my_page.py", status=200)
+    logged_in_wsgi_app.get("/NO_SITE/check_mk/my_page.py", status=HTTPStatus.OK)
 
     # After the request has ended we get the new value
     mock.return_value = 2
@@ -99,7 +100,7 @@ def test_request_memoize_request_integration(
 
     # And now try a second request
     mock.return_value = 1
-    logged_in_wsgi_app.get("/NO_SITE/check_mk/my_page.py", status=200)
+    logged_in_wsgi_app.get("/NO_SITE/check_mk/my_page.py", status=HTTPStatus.OK)
 
     page_registry.unregister("my_page")
 
@@ -171,7 +172,7 @@ def test_threaded_memoize(
 
     page_registry.register(PageEndpoint("my_page", PageClass()))
 
-    logged_in_wsgi_app.get("/NO_SITE/check_mk/my_page.py", status=200)
+    logged_in_wsgi_app.get("/NO_SITE/check_mk/my_page.py", status=HTTPStatus.OK)
     # Note: Even after the get request from the line above, no request end has been called yet
     # Check both event types
     for clear_event in ["request-end", "request-context-exit"]:

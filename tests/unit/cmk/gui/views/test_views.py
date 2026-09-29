@@ -7,6 +7,7 @@
 
 
 from collections.abc import Mapping
+from http import HTTPStatus
 
 import pytest
 
@@ -578,6 +579,6 @@ def test_view_page(
     )
     live.expect_query("GET hosts\nColumns: filename\nStats: state >= 0")
     with live():
-        resp = wsgi_app.get("/NO_SITE/check_mk/view.py?view_name=allhosts", status=200)
+        resp = wsgi_app.get("/NO_SITE/check_mk/view.py?view_name=allhosts", status=HTTPStatus.OK)
         assert "heute" in resp.text
         assert "query=null" not in resp.text

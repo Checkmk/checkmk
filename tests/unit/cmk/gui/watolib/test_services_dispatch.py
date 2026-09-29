@@ -39,6 +39,7 @@ import contextlib
 import dataclasses
 import json
 from collections.abc import Callable, Generator, Iterator, Mapping, Sequence
+from http import HTTPStatus
 from typing import override
 from unittest import mock
 from unittest.mock import MagicMock
@@ -1283,7 +1284,7 @@ def test_update_during_active_job_writes_nothing_and_says_nothing(
     """Today: the requested change is discarded and the endpoint answers 204 anyway."""
     mocker.patch.object(ServiceDiscoveryBackgroundJob, "is_active", return_value=True)
 
-    assert update_ignored_phase(sample_host) == 204
+    assert update_ignored_phase(sample_host) == HTTPStatus.NO_CONTENT
 
     assert transport.commands == []
     assert pending_changes.recorded == []
@@ -1316,7 +1317,7 @@ def test_update_service_phase_demands_manage_services_and_edit(
     """
     transport.preview = preview_result([entry(DiscoveryState.MONITORED)])
 
-    assert update_ignored_phase(sample_host) == 204
+    assert update_ignored_phase(sample_host) == HTTPStatus.NO_CONTENT
 
     assert {"wato.edit", "wato.services"} <= set(demanded_permissions)
     assert "wato.edit" in UPDATE_PHASE_PERMISSIONS
@@ -1417,7 +1418,7 @@ def test_update_service_phase_leaves_the_discovery_failed_flag_set(
     transport.preview = preview_result([entry(DiscoveryState.MONITORED)])
     sample_host.set_discovery_failed(pprint_value=False, acting_user=user)
 
-    assert update_ignored_phase(sample_host) == 204
+    assert update_ignored_phase(sample_host) == HTTPStatus.NO_CONTENT
 
     assert "set-autochecks-v2" in transport.commands
     assert sample_host.discovery_failed() is True
@@ -1438,7 +1439,7 @@ def test_update_service_phase_clears_the_discovery_failed_flag(
     transport.preview = preview_result([entry(DiscoveryState.MONITORED)])
     sample_host.set_discovery_failed(pprint_value=False, acting_user=user)
 
-    assert update_ignored_phase(sample_host) == 204
+    assert update_ignored_phase(sample_host) == HTTPStatus.NO_CONTENT
 
     assert "set-autochecks-v2" in transport.commands
     assert sample_host.discovery_failed() is False

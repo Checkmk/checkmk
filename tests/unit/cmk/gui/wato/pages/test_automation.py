@@ -6,6 +6,7 @@
 import ast
 from collections.abc import Sequence
 from dataclasses import dataclass
+from http import HTTPStatus
 from typing import override
 
 import pytest
@@ -232,11 +233,11 @@ def test_automation_login(
                 "_origtarget": origtarget,
             },
         )
-        assert login_resp.status_code == 302
+        assert login_resp.status_code == HTTPStatus.FOUND
         assert login_resp.location == origtarget
 
         resp = client.get(f"/NO_SITE/check_mk/{origtarget}")
-        assert resp.status_code == 200
+        assert resp.status_code == HTTPStatus.OK
         assert ast.literal_eval(resp.text) == {
             "version": cmk_version.__version__,
             "edition_short": test_edition.short,

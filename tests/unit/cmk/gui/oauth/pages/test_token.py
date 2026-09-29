@@ -6,6 +6,7 @@
 import base64
 import hashlib
 import urllib.parse
+from http import HTTPStatus
 
 import pytest
 from flask import Flask
@@ -83,7 +84,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             assert isinstance(response.json, dict)
             assert response.json["token_type"] == "Bearer"
             access_token = response.json["access_token"]
@@ -158,7 +159,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_grant"}
 
     @pytest.mark.usefixtures("clean_redis")
@@ -200,7 +201,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 405
+            assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED
 
     def test_rejects_a_non_form_content_type(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(
@@ -215,7 +216,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_request"}
 
     @pytest.mark.usefixtures("clean_redis")
@@ -233,7 +234,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
 
     def test_ignores_a_grant_type_in_the_query_string(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(
@@ -248,7 +249,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_request"}
 
     def test_rejects_a_missing_grant_type(self, flask_app: Flask) -> None:
@@ -260,7 +261,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_request"}
 
     def test_treats_an_empty_grant_type_as_missing(self, flask_app: Flask) -> None:
@@ -272,7 +273,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_request"}
 
     @pytest.mark.parametrize("grant_type", ["refresh_token", "client_credentials", "no-such-grant"])
@@ -285,7 +286,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "unsupported_grant_type"}
 
     @pytest.mark.parametrize("param", ["code", "client_id", "code_verifier"])
@@ -299,7 +300,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_request"}
 
     @pytest.mark.parametrize("param", ["code", "client_id", "code_verifier"])
@@ -314,7 +315,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_request"}
 
     @pytest.mark.parametrize(
@@ -335,7 +336,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_request"}
 
     @pytest.mark.parametrize(
@@ -358,7 +359,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_request"}
 
     @pytest.mark.usefixtures("clean_redis")
@@ -379,7 +380,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
 
     @pytest.mark.usefixtures("clean_redis")
     def test_rejects_a_wrong_code_verifier(self, flask_app: Flask) -> None:
@@ -394,7 +395,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_grant"}
 
     @pytest.mark.usefixtures("clean_redis")
@@ -410,7 +411,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_grant"}
 
     @pytest.mark.usefixtures("clean_redis")
@@ -427,7 +428,7 @@ class TestOAuthTokenPage:
                     config=Config(), request=request, transactions=transactions, session=session
                 )
             )
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_grant"}
 
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
@@ -438,7 +439,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_grant"}
 
     @pytest.mark.usefixtures("clean_redis")
@@ -454,7 +455,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_grant"}
 
     @pytest.mark.usefixtures("clean_redis")
@@ -472,7 +473,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_grant"}
 
     @pytest.mark.usefixtures("clean_redis")
@@ -491,7 +492,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
 
     @pytest.mark.usefixtures("clean_redis")
     def test_rejects_a_resource_that_does_not_match_the_stored_one(self, flask_app: Flask) -> None:
@@ -507,7 +508,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_grant"}
 
     @pytest.mark.usefixtures("clean_redis")
@@ -524,7 +525,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
 
     @pytest.mark.usefixtures("clean_redis")
     def test_rejects_a_resource_when_none_was_bound(self, flask_app: Flask) -> None:
@@ -540,7 +541,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_grant"}
 
     @pytest.mark.usefixtures("clean_redis")
@@ -557,7 +558,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
 
     @pytest.mark.usefixtures("clean_redis")
     def test_ignores_a_scope_parameter(self, flask_app: Flask) -> None:
@@ -574,7 +575,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
 
     @pytest.mark.usefixtures("clean_redis")
     def test_rejects_an_unknown_code(self, flask_app: Flask) -> None:
@@ -586,7 +587,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_grant"}
 
     @pytest.mark.usefixtures("clean_redis")
@@ -599,7 +600,7 @@ class TestOAuthTokenPage:
                     config=Config(), request=request, transactions=transactions, session=session
                 )
             )
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
 
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
@@ -609,7 +610,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_grant"}
 
     @pytest.mark.usefixtures("clean_redis")
@@ -623,7 +624,7 @@ class TestOAuthTokenPage:
                     )
                 )
 
-            assert response.status_code == 500
+            assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
             assert b"access_token" not in response.get_data()
 
     @pytest.mark.usefixtures("clean_redis")
@@ -658,7 +659,7 @@ class TestOAuthTokenPage:
                 )
             )
 
-            assert response.status_code == 500
+            assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
 
         mock_log.assert_called_once()
 

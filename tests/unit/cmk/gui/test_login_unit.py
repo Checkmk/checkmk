@@ -13,6 +13,7 @@ from ast import literal_eval
 from base64 import b64encode
 from collections.abc import Callable, Generator, Iterator
 from datetime import datetime, timedelta, UTC
+from http import HTTPStatus
 from http.cookies import SimpleCookie
 from typing import Literal
 
@@ -106,7 +107,7 @@ def test_login_two_factor_redirect(wsgi_app: WebTestAppForCMK) -> None:
     }
     with create_and_destroy_user(custom_attrs=custom_attrs, config=active_config) as user_tuple:
         resp = wsgi_app.login(user_tuple[0], user_tuple[1])
-        assert resp.status_code == 302
+        assert resp.status_code == HTTPStatus.FOUND
         assert resp.location.startswith("user_login_two_factor.py")
 
 
@@ -117,7 +118,7 @@ def test_login_forced_password_change(wsgi_app: WebTestAppForCMK) -> None:
     }
     with create_and_destroy_user(custom_attrs=custom_attrs, config=active_config) as user_tuple:
         resp = wsgi_app.login(user_tuple[0], user_tuple[1])
-        assert resp.status_code == 302
+        assert resp.status_code == HTTPStatus.FOUND
         assert resp.location.startswith("user_change_pw.py")
 
 
@@ -139,7 +140,7 @@ def test_login_two_factor_has_precedence_over_password_change(wsgi_app: WebTestA
     }
     with create_and_destroy_user(custom_attrs=custom_attrs, config=active_config) as user_tuple:
         resp = wsgi_app.login(user_tuple[0], user_tuple[1])
-        assert resp.status_code == 302
+        assert resp.status_code == HTTPStatus.FOUND
         assert resp.location.startswith("user_login_two_factor.py")
 
 
@@ -152,7 +153,7 @@ def test_login_with_cookies(wsgi_app: WebTestAppForCMK, with_user: tuple[UserId,
 
     # We see if we can access the login page.
     response = wsgi_app.get(login_page_url)
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
 
     # We try to log in
     response = wsgi_app.post(
@@ -164,7 +165,7 @@ def test_login_with_cookies(wsgi_app: WebTestAppForCMK, with_user: tuple[UserId,
     # index.py now redirects to the user's start URL (dashboard.py by default)
     # rather than rendering the historic frameset / iframe page.
     response = wsgi_app.get("/NO_SITE/check_mk/index.py")
-    assert response.status_code == 302
+    assert response.status_code == HTTPStatus.FOUND
 
     test_environ = create_environ("/NO_SITE/", method="GET")
     wsgi_app._add_cookies_to_wsgi(test_environ)  # noqa: SLF001

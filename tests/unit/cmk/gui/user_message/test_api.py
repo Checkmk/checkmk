@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
@@ -10,10 +12,14 @@ from tests.testlib.unit.rest_api_client import ClientRegistry
 def test_acknowledge_non_existing_message(clients: ClientRegistry) -> None:
     resp = clients.UserMessage.acknowledge(message_id="non_existing", expect_ok=False)
 
-    assert resp.status_code == 404, f"Expected 404, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.NOT_FOUND, (
+        f"Expected 404, got {resp.status_code} {resp.body!r}"
+    )
 
 
 def test_delete_non_existing_message(clients: ClientRegistry) -> None:
     resp = clients.UserMessage.delete(message_id="non_existing", expect_ok=False)
 
-    assert resp.status_code == 404, f"Expected 404, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.NOT_FOUND, (
+        f"Expected 404, got {resp.status_code} {resp.body!r}"
+    )

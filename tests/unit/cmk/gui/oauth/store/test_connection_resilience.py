@@ -11,6 +11,7 @@ unauthenticated rather than reaching the unhandled-exception path.
 """
 
 from datetime import datetime, timedelta, UTC
+from http import HTTPStatus
 
 from cmk.ccc.user import UserId
 from cmk.gui.oauth.store.client_store import get_client_store
@@ -49,7 +50,7 @@ def test_a_damaged_database_does_not_authenticate_anyone(
     response = wsgi_app.get(
         "/NO_SITE/check_mk/api/1.0/version",
         headers={"Accept": "application/json", "Authorization": f"Bearer {token.ok}"},
-        status=401,
+        status=HTTPStatus.UNAUTHORIZED,
     )
 
     # The database path and the sqlite error stay in the log: this response

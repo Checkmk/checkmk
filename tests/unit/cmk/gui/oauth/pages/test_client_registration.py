@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 import pytest
 from flask import Flask
 
@@ -32,7 +34,7 @@ class TestOAuthClientRegistrationPage:
                 )
             )
 
-            assert response.status_code == 201
+            assert response.status_code == HTTPStatus.CREATED
             assert isinstance(response.json, dict)
             client_id = response.json["client_id"]
             assert isinstance(client_id, str)
@@ -54,7 +56,7 @@ class TestOAuthClientRegistrationPage:
                 )
             )
 
-            assert response.status_code == 201
+            assert response.status_code == HTTPStatus.CREATED
             assert isinstance(response.json, dict)
             for field, value in submitted.items():
                 assert response.json[field] == value
@@ -91,7 +93,7 @@ class TestOAuthClientRegistrationPage:
                 )
             )
 
-            assert response.status_code == 405
+            assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED
 
     def test_returns_400_when_no_body_is_sent(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(method="POST"):
@@ -102,7 +104,7 @@ class TestOAuthClientRegistrationPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert isinstance(response.json, dict)
             assert response.json["error"] == "invalid_redirect_uri"
             assert response.json["error_description"]
@@ -116,7 +118,7 @@ class TestOAuthClientRegistrationPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert isinstance(response.json, dict)
             assert response.json["error"] == "invalid_redirect_uri"
 
@@ -129,7 +131,7 @@ class TestOAuthClientRegistrationPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert isinstance(response.json, dict)
             assert response.json["error"] == "invalid_redirect_uri"
 
@@ -146,7 +148,7 @@ class TestOAuthClientRegistrationPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert isinstance(response.json, dict)
             assert response.json["error"] == "invalid_redirect_uri"
             assert "javascript:alert(1)" in response.json["error_description"]
@@ -163,7 +165,7 @@ class TestOAuthClientRegistrationPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert isinstance(response.json, dict)
             assert response.json["error"] == "invalid_redirect_uri"
 
@@ -179,7 +181,7 @@ class TestOAuthClientRegistrationPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert isinstance(response.json, dict)
             assert response.json["error"] == "invalid_client_metadata"
 
@@ -222,7 +224,7 @@ class TestOAuthClientRegistrationPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert isinstance(response.json, dict)
             assert response.json["error"] == "invalid_client_metadata"
 
@@ -238,7 +240,7 @@ class TestOAuthClientRegistrationPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert isinstance(response.json, dict)
             assert response.json["error"] == "invalid_redirect_uri"
 
@@ -257,6 +259,6 @@ class TestOAuthClientRegistrationPage:
                 )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert isinstance(response.json, dict)
             assert response.json["error"] == "invalid_client_metadata"

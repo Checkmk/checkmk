@@ -9,13 +9,14 @@ import logging
 import sys
 import time
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from http import HTTPStatus
 from pathlib import Path
 from typing import NoReturn, override
 
 import fakeredis
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 from starlette import status
@@ -326,7 +327,6 @@ async def test_reloader_single_change(mocker: MockerFixture, cache: Cache) -> No
     mock_reload_callback = mocker.MagicMock()
     state = _State(
         last_reload_at=1,
-        automation_or_reload_lock=asyncio.Lock(),
         engine=_DummyAutomationEngineSuccess(),
         omd_root=Path("/dev/null"),
         reload_config=mock_reload_callback,
@@ -371,7 +371,6 @@ async def test_reloader_two_changes(mocker: MockerFixture, cache: Cache) -> None
     mock_reload_callback = mocker.MagicMock()
     state = _State(
         last_reload_at=1,
-        automation_or_reload_lock=asyncio.Lock(),
         engine=_DummyAutomationEngineSuccess(),
         omd_root=Path("/dev/null"),
         reload_config=mock_reload_callback,
@@ -419,12 +418,11 @@ async def test_reloader_two_changes(mocker: MockerFixture, cache: Cache) -> None
 
 
 @pytest.mark.asyncio
-async def test_reloader_takes_state_into_account(mocker: MockerFixture, cache: Cache) -> None:
+async def test_reloader_takes_state_into_account(mocker: MockerFixture) -> None:
     mock_reload_callback = mocker.MagicMock()
-    lock = _LockWithCounter()
+    cache = _RecordingCache.setup(client=fakeredis.FakeRedis())
     state = _State(
         last_reload_at=1,
-        automation_or_reload_lock=lock,
         engine=_DummyAutomationEngineSuccess(),
         omd_root=Path("/dev/null"),
         reload_config=mock_reload_callback,
@@ -462,8 +460,53 @@ async def test_reloader_takes_state_into_account(mocker: MockerFixture, cache: C
 
     reloader_task.cancel()
     mock_reload_callback.assert_not_called()
-    assert state.last_reload_at == 3
-    assert lock.counter == 1
+    assert cache.reload_decisions == [3]
+
+
+def _make_state(cache: Cache) -> _State:
+    return _State(
+        engine=_DummyAutomationEngineSuccess(),
+        omd_root=Path("/dev/null"),
+        reload_config=lambda: pytest.fail("unexpected reload"),
+        last_reload_at=0,
+        loading_result=None,
+        changes_cache=cache,
+    )
+
+
+@pytest.mark.asyncio
+async def test_exclusive_rejects_overlapping_work(cache: Cache) -> None:
+    state = _make_state(cache)
+
+    with (
+        state.exclusive(),
+        pytest.raises(RuntimeError, match="must not overlap"),
+        state.exclusive(),
+    ):
+        pass
+
+
+@pytest.mark.asyncio
+async def test_exclusive_rejects_work_off_the_event_loop_thread(cache: Cache) -> None:
+    state = _make_state(cache)
+
+    def enter_exclusive() -> None:
+        with state.exclusive():
+            pass
+
+    with pytest.raises(RuntimeError, match="must run on the event loop thread"):
+        await asyncio.to_thread(enter_exclusive)
+
+
+@pytest.mark.asyncio
+async def test_exclusive_is_released_after_failed_work(cache: Cache) -> None:
+    state = _make_state(cache)
+
+    with pytest.raises(ValueError), state.exclusive():
+        raise ValueError
+
+    with state.exclusive():
+        pass
 
 
 @dataclass
@@ -485,15 +528,16 @@ async def _wait_for_mock_delay(state: _MockDelayState, expected_call_count: int)
         await asyncio.sleep(0.01)
 
 
-class _LockWithCounter(asyncio.Lock):
-    def __init__(self) -> None:
-        super().__init__()
-        self.counter = 0
+@dataclass(frozen=True)
+class _RecordingCache(Cache):
+    """A cache that records the last reload time of every reload decision."""
+
+    reload_decisions: list[float] = field(default_factory=list)
 
     @override
-    async def __aenter__(self) -> None:
-        self.counter += 1
-        return await super().__aenter__()
+    def reload_required(self, last_reload: float) -> bool:
+        self.reload_decisions.append(last_reload)
+        return super().reload_required(last_reload)
 
 
 class FailingCache(Cache):
@@ -537,3 +581,161 @@ def test_automation_cache_error_on_stale_config() -> None:
         stdout="stdout_success",
         stderr="stderr_success",
     )
+
+
+def _guard_is_held(state: _State) -> bool:
+    try:
+        with state.exclusive():
+            return False
+    except RuntimeError as error:
+        if "must not overlap" in str(error):
+            return True
+        raise
+
+
+def _state_of(client: TestClient) -> _State:
+    assert isinstance(client.app, FastAPI)
+    state: _State = client.app.state.dependencies.state
+    return state
+
+
+class _GuardProbingEngine:
+    def __init__(self) -> None:
+        self.state: _State | None = None
+        self.guard_held: list[bool] = []
+
+    def update(
+        self,
+        omd_root: Path,
+        loading_result: LoadingResult | None,
+    ) -> None:
+        pass
+
+    def execute(
+        self,
+        cmd: str,  # noqa: ARG002
+        args: list[str],  # noqa: ARG002
+    ) -> _DummyAutomationResult:
+        assert self.state is not None
+        self.guard_held.append(_guard_is_held(self.state))
+        return _DummyAutomationResult()
+
+
+def test_automation_runs_under_the_guard(mocker: MockerFixture, cache: Cache) -> None:
+    engine = _GuardProbingEngine()
+    client = _make_test_client(
+        engine,
+        cache,
+        mocker.MagicMock(),
+        lambda config_cache, hosts_config: None,  # noqa: ARG005
+    )
+    engine.state = _state_of(client)
+
+    with client:
+        client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
+
+    assert engine.guard_held == [True]
+
+
+def test_initial_load_runs_under_the_guard(mocker: MockerFixture, cache: Cache) -> None:
+    guard_held: list[bool] = []
+
+    def reload_config() -> LoadingResult:
+        guard_held.append(_guard_is_held(state))
+        loading_result: LoadingResult = mocker.MagicMock()
+        return loading_result
+
+    client = _make_test_client(
+        _DummyAutomationEngineSuccess(),
+        cache,
+        reload_config,
+        lambda config_cache, hosts_config: None,  # noqa: ARG005
+    )
+    state = _state_of(client)
+
+    with client:
+        pass
+
+    assert guard_held == [True]
+
+
+@pytest.mark.asyncio
+async def test_reload_by_the_reloader_runs_under_the_guard(
+    mocker: MockerFixture, cache: Cache
+) -> None:
+    guard_held: list[bool] = []
+
+    def reload_config() -> LoadingResult:
+        guard_held.append(_guard_is_held(state))
+        loading_result: LoadingResult = mocker.MagicMock()
+        return loading_result
+
+    state = _State(
+        engine=_DummyAutomationEngineSuccess(),
+        omd_root=Path("/dev/null"),
+        last_reload_at=1,
+        reload_config=reload_config,
+        loading_result=None,
+        changes_cache=cache,
+    )
+    mock_delay_state = _MockDelayState(
+        call_counter=0,
+        current_delay=0.0,
+        wake_up=asyncio.Event(),
+    )
+    reloader_task = asyncio.create_task(
+        _reloader_task(
+            config=ReloaderConfig(
+                active=True,
+                poll_interval=0.0,
+                cooldown_interval=0.0,
+            ),
+            state=state,
+            delayer_factory=lambda delay: _mock_delay(mock_delay_state, delay),
+            logger=logging.getLogger(),
+        )
+    )
+
+    # poll
+    await _wait_for_mock_delay(mock_delay_state, 1)
+    cache.store_last_detected_change(state.last_reload_at + 1)
+    mock_delay_state.wake_up.set()
+    # cooldown
+    await _wait_for_mock_delay(mock_delay_state, 2)
+    mock_delay_state.wake_up.set()
+    # next poll
+    await _wait_for_mock_delay(mock_delay_state, 3)
+
+    reloader_task.cancel()
+    assert guard_held == [True]
+
+
+class _CrashingCache(Cache):
+    """A cache that fails in a way the reloader does not handle."""
+
+    @override
+    def get_last_detected_change(self) -> NoReturn:
+        raise ValueError("unexpected failure")
+
+
+def test_reloader_crash_is_logged(mocker: MockerFixture, caplog: pytest.LogCaptureFixture) -> None:
+    def reloader_crash_logged() -> bool:
+        return any(
+            record.levelno == logging.CRITICAL and record.getMessage() == "Reloader stopped"
+            for record in caplog.records
+        )
+
+    with _make_test_client(
+        _DummyAutomationEngineSuccess(),
+        _CrashingCache(fakeredis.FakeRedis()),
+        mocker.MagicMock(),
+        lambda config_cache, hosts_config: None,  # noqa: ARG005
+        reloader_config=ReloaderConfig(
+            active=True,
+            poll_interval=0.0,
+            cooldown_interval=0.0,
+        ),
+    ):
+        wait_until(reloader_crash_logged, timeout=1, interval=0.01)
+
+    assert reloader_crash_logged()

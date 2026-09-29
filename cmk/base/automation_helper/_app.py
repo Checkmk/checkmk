@@ -10,7 +10,7 @@ import sys
 import time
 from collections.abc import AsyncGenerator, Awaitable, Callable, Iterator
 from contextlib import asynccontextmanager, contextmanager, redirect_stderr, redirect_stdout
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import assert_never, Protocol
 
@@ -44,7 +44,6 @@ class AutomationEngine(Protocol):
 
 @dataclass
 class _State:
-    automation_or_reload_lock: asyncio.Lock
     engine: AutomationEngine
     omd_root: Path
     reload_config: Callable[
@@ -54,6 +53,29 @@ class _State:
     last_reload_at: float
     loading_result: config.LoadingResult | None
     changes_cache: Cache
+    _busy: bool = field(default=False, init=False)
+
+    @contextmanager
+    def exclusive(self) -> Iterator[None]:
+        """Guard automations and reloads, which must never overlap.
+
+        They are serialized by running synchronously on the worker's event loop thread.
+        Fail loudly if they run elsewhere (e.g. a plain `def` endpoint, which FastAPI runs
+        in a threadpool) or overlap (e.g. because the guarded work awaits).
+        """
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            raise RuntimeError(
+                "Automations and reloads must run on the event loop thread"
+            ) from None
+        if self._busy:
+            raise RuntimeError("Automations and reloads must not overlap")
+        self._busy = True
+        try:
+            yield
+        finally:
+            self._busy = False
 
     def load(self) -> None:
         """Reload the configuration and hand it to the engine.
@@ -122,7 +144,6 @@ def make_application(
         config=config,
         clear_caches_before_each_call=clear_caches_before_each_call,
         state=_State(
-            automation_or_reload_lock=asyncio.Lock(),
             engine=engine,
             omd_root=omd_root,
             reload_config=reload_config,
@@ -137,7 +158,7 @@ def make_application(
         request: Request, payload: AutomationPayload
     ) -> AutomationResponse:
         dependencies: _ApplicationDependencies = request.app.state.dependencies
-        async with dependencies.state.automation_or_reload_lock:
+        with dependencies.state.exclusive():
             return _execute_automation_endpoint(
                 payload,
                 dependencies.clear_caches_before_each_call,
@@ -163,12 +184,13 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None]:
     ):
         logger = dependencies.log_manager.get_logger("automation.reloader")
         # Continue on error. Either the reloader can fix it, or we will raise in the automation endpoint.
-        try:
-            dependencies.state.load()
-        except SystemExit:
-            logger.warning("Failed to reload configuration. Shutting down")
-        except Exception:
-            logger.exception("Error reloading configuration")
+        with dependencies.state.exclusive():
+            try:
+                dependencies.state.load()
+            except SystemExit:
+                logger.warning("Failed to reload configuration. Shutting down")
+            except Exception:
+                logger.exception("Error reloading configuration")
 
         reloader_task = asyncio.create_task(
             _reloader_task(
@@ -179,10 +201,17 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None]:
             if dependencies.config.reloader_config.active
             else asyncio.sleep(0),
         )
+        # Nobody awaits the reloader, so log if it dies instead of letting it stop silently.
+        reloader_task.add_done_callback(lambda task: _log_reloader_crash(task, logger))
 
         yield
 
     reloader_task.cancel()
+
+
+def _log_reloader_crash(task: asyncio.Task[None], logger: logging.Logger) -> None:
+    if not task.cancelled() and (error := task.exception()) is not None:
+        logger.critical("Reloader stopped", exc_info=error)
 
 
 async def _reloader_task(
@@ -223,7 +252,7 @@ async def _reloader_task(
             cached_last_change = _get_last_change()
 
             if cached_last_change == last_change:
-                async with state.automation_or_reload_lock:
+                with state.exclusive():
                     # Do not let the reloader fail (and stop).
                     # We will try again on the next change, and report failure in the automation endpoint.
                     try:
@@ -233,24 +262,23 @@ async def _reloader_task(
                         logger.error("Failed to reload configuration. Shutting down")  # noqa: TRY400
                     except Exception:
                         logger.exception("Error reloading configuration")
-                    break
+                break
 
-            else:
-                # More changes arrived mid-cooldown (e.g. a bulk activation still in
-                # progress). Wait only for the gap between the two observed changes
-                # instead of resetting the full cooldown, so we still reload promptly
-                # once the burst settles rather than deferring indefinitely in busy
-                # environments (CMK-21331). abs() guards against the timestamp jumping
-                # backwards on a cache reset.
-                current_cooldown = min(
-                    abs(cached_last_change - last_change),
-                    config.cooldown_interval,
-                )
-                last_change = cached_last_change
-                logger.info(
-                    "Change detected %(seconds_ago).2f seconds ago",
-                    {"seconds_ago": time.time() - last_change},
-                )
+            # More changes arrived mid-cooldown (e.g. a bulk activation still in
+            # progress). Wait only for the gap between the two observed changes
+            # instead of resetting the full cooldown, so we still reload promptly
+            # once the burst settles rather than deferring indefinitely in busy
+            # environments (CMK-21331). abs() guards against the timestamp jumping
+            # backwards on a cache reset.
+            current_cooldown = min(
+                abs(cached_last_change - last_change),
+                config.cooldown_interval,
+            )
+            last_change = cached_last_change
+            logger.info(
+                "Change detected %(seconds_ago).2f seconds ago",
+                {"seconds_ago": time.time() - last_change},
+            )
 
 
 def _execute_automation_endpoint(

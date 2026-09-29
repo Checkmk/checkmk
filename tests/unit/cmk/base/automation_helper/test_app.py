@@ -33,7 +33,6 @@ from cmk.base.automation_helper._app import (
 from cmk.base.automation_helper._cache import Cache, CacheError
 from cmk.base.automation_helper._config import Config, ReloaderConfig, ServerConfig, WatcherConfig
 from cmk.base.automations.automations import AutomationError
-from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.config import ConfigCache, LoadingResult, make_host_tags, make_hosts_config
 from cmk.ccc.hostaddress import Hosts
 from cmk.ccc.version import Version
@@ -55,7 +54,7 @@ class _DummyAutomationResult(ABCAutomationResult):
 class _DummyAutomationEngineSuccess:
     def execute(
         self,
-        app: CheckmkBaseApp,  # noqa: ARG002
+        omd_root: Path,  # noqa: ARG002
         cmd: str,  # noqa: ARG002
         args: list[str],  # noqa: ARG002
         loading_result: LoadingResult | None,  # noqa: ARG002
@@ -68,7 +67,7 @@ class _DummyAutomationEngineSuccess:
 class _DummyAutomationEngineFailure:
     def execute(
         self,
-        app: CheckmkBaseApp,  # noqa: ARG002
+        omd_root: Path,  # noqa: ARG002
         cmd: str,  # noqa: ARG002
         args: list[str],  # noqa: ARG002
         loading_result: LoadingResult | None,  # noqa: ARG002
@@ -81,7 +80,7 @@ class _DummyAutomationEngineFailure:
 class _DummyAutomationEngineSystemExit:
     def execute(
         self,
-        app: CheckmkBaseApp,  # noqa: ARG002
+        omd_root: Path,  # noqa: ARG002
         cmd: str,  # noqa: ARG002
         args: list[str],  # noqa: ARG002
         loading_result: LoadingResult | None,  # noqa: ARG002

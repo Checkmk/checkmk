@@ -50,9 +50,8 @@ from cmk.automations.results import (
     NotificationTestResult,
 )
 from cmk.automations.types import AutomationID
-from cmk.base import config, events
-from cmk.base.automations.automations import Automation, load_config
-from cmk.base.base_app import CheckmkBaseApp
+from cmk.base import events
+from cmk.base.automations.automations import Automation, CommonState, load_config
 from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
@@ -758,11 +757,10 @@ def _notify_keepalive(
 
 
 def _automation_notification_replay(
-    app: CheckmkBaseApp,
+    state: CommonState,
     args: list[str],
-    loading_result: config.LoadingResult | None,
 ) -> NotificationReplayResult:
-    loading_result = loading_result or load_config()
+    loading_result = state.loading_result or load_config()
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
     nr = args[0]
@@ -771,7 +769,7 @@ def _automation_notification_replay(
         make_ensure_nagios(loading_result.loaded_config.monitoring_core),
         int(nr),
         notification_config=make_notification_config(
-            app.edition,
+            state.app.edition,
             loading_result.loaded_config,
             loading_result.config_cache.ruleset_matcher,
             loading_result.config_cache.label_manager,
@@ -787,11 +785,10 @@ def _automation_notification_replay(
 
 
 def _automation_notification_analyse(
-    app: CheckmkBaseApp,
+    state: CommonState,
     args: list[str],
-    loading_result: config.LoadingResult | None,
 ) -> NotificationAnalyseResult:
-    loading_result = loading_result or load_config()
+    loading_result = state.loading_result or load_config()
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
     nr = args[0]
@@ -801,7 +798,7 @@ def _automation_notification_analyse(
             make_ensure_nagios(loading_result.loaded_config.monitoring_core),
             int(nr),
             notification_config=make_notification_config(
-                app.edition,
+                state.app.edition,
                 loading_result.loaded_config,
                 loading_result.config_cache.ruleset_matcher,
                 loading_result.config_cache.label_manager,
@@ -817,14 +814,13 @@ def _automation_notification_analyse(
 
 
 def _automation_notification_test(
-    app: CheckmkBaseApp,
+    state: CommonState,
     args: list[str],
-    loading_result: config.LoadingResult | None,
 ) -> NotificationTestResult:
     context = json.loads(args[0])
     dispatch = args[1]
 
-    loading_result = loading_result or load_config()
+    loading_result = state.loading_result or load_config()
     ensure_nagios = make_ensure_nagios(loading_result.loaded_config.monitoring_core)
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
@@ -834,7 +830,7 @@ def _automation_notification_test(
             http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
             ensure_nagios,
             notification_config=make_notification_config(
-                app.edition,
+                state.app.edition,
                 loading_result.loaded_config,
                 loading_result.config_cache.ruleset_matcher,
                 loading_result.config_cache.label_manager,
@@ -851,14 +847,12 @@ def _automation_notification_test(
 
 
 def _automation_get_bulks(
-    _app: object,
+    state: CommonState,
     args: list[str],
-    loading_result: config.LoadingResult | None,
 ) -> NotificationGetBulksResult:
     only_ripe = args[0] == "1"
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
-    if loading_result is None:
-        loading_result = load_config()
+    loading_result = state.loading_result or load_config()
     return NotificationGetBulksResult(
         _find_bulks(
             only_ripe,

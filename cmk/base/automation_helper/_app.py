@@ -24,9 +24,7 @@ from cmk.automations.models.helper import AutomationPayload, AutomationResponse
 from cmk.automations.results import ABCAutomationResult
 from cmk.automations.types import AutomationID
 from cmk.base import config
-from cmk.base.app import make_app
 from cmk.base.automations.automations import AutomationError
-from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.config import ConfigCache
 from cmk.ccc import version as cmk_version
 from cmk.ccc.hostaddress import Hosts
@@ -41,7 +39,7 @@ from ._tracer import TRACER
 class AutomationEngine(Protocol):
     def execute(
         self,
-        app: CheckmkBaseApp,
+        omd_root: Path,
         cmd: AutomationID,
         args: list[str],
         loading_result: config.LoadingResult | None,
@@ -307,7 +305,7 @@ def _execute_automation_endpoint(
         try:
             automation_start_time = time.time()
             result_or_error_code: ABCAutomationResult | int = engine.execute(
-                make_app(omd_root),
+                omd_root,
                 payload.name,
                 list(payload.args),
                 state.loading_result,

@@ -14,6 +14,7 @@ py_library(
     deps = [
         "//cmk/automations",
         "//cmk/base:active-check-result",
+        "//cmk/base:app",
         "//cmk/base:base-app",
         "//cmk/base:checkers",
         "//cmk/base:parent-scan",

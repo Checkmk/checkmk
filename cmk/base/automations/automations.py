@@ -9,6 +9,7 @@ import sys
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from contextlib import contextmanager, nullcontext, redirect_stdout
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Final
 
 import cmk.ccc.debug
@@ -16,6 +17,7 @@ from cmk import trace
 from cmk.automations.results import ABCAutomationResult
 from cmk.automations.types import AutomationID
 from cmk.base import config
+from cmk.base.app import make_app
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.timeout import Timeout
@@ -39,15 +41,20 @@ class AutomationError(enum.IntEnum):
 @dataclass(frozen=True)
 class Automation:
     name: AutomationID
-    handler: Callable[
-        [
-            CheckmkBaseApp,
-            list[str],
-            config.LoadingResult | None,
-        ],
-        ABCAutomationResult,
-    ]
+    handler: Callable[[CommonState, list[str]], ABCAutomationResult]
     result: type[ABCAutomationResult]
+
+
+class CommonState:
+    """The one state all automations share for now.
+
+    It holds what the engine used to pass to every handler. Automations will
+    move to states of their own, one by one.
+    """
+
+    def __init__(self, omd_root: Path, loading_result: config.LoadingResult | None) -> None:
+        self.app: CheckmkBaseApp = make_app(omd_root)
+        self.loading_result = loading_result
 
 
 def discover_automations() -> Iterable[Automation]:
@@ -78,7 +85,7 @@ class Automations:
     # automation helper.
     def execute(
         self,
-        app: CheckmkBaseApp,
+        omd_root: Path,
         cmd: AutomationID,
         args: list[str],
         loading_result: config.LoadingResult | None = None,
@@ -89,11 +96,11 @@ class Automations:
             if timeout is None
             else Timeout(timeout, message="Action timed out after %s seconds." % timeout)
         ):
-            return self._execute(app, cmd, remaining_args, loading_result)
+            return self._execute(omd_root, cmd, remaining_args, loading_result)
 
     def _execute(
         self,
-        app: CheckmkBaseApp,
+        omd_root: Path,
         cmd: AutomationID,
         args: list[str],
         loading_result: config.LoadingResult | None,
@@ -108,8 +115,9 @@ class Automations:
                     f" (available: {', '.join(sorted(self._automations))})"
                 )
 
+            state = CommonState(omd_root, loading_result)
             with tracer.span(f"execute_automation[{cmd}]"), _stdout_only_on_failure():
-                result = automation.handler(app, args, loading_result)
+                result = automation.handler(state, args)
 
         except (MKGeneralException, MKTimeout) as e:
             logger.error(  # noqa: TRY400

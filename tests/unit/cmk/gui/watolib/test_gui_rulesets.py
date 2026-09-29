@@ -15,12 +15,13 @@ from unittest.mock import patch
 
 import pytest
 
+import cmk.utils.paths
 from cmk.automations.results import ABCAutomationResult
+from cmk.base.automations.automations import CommonState
 from cmk.base.automations.check_mk import (
     automation_analyze_host_rule_effectiveness,
     automation_analyze_host_rule_matches,
 )
-from cmk.base.community_app import make_app
 from cmk.base.config import LoadingResult, make_host_tags
 from cmk.ccc.hostaddress import HostName, Hosts
 from cmk.ccc.site import SiteId
@@ -145,7 +146,9 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))
-            return automation_analyze_host_rule_matches.handler(make_app(), [h], loading_result)
+            return automation_analyze_host_rule_matches.handler(
+                CommonState(cmk.utils.paths.omd_root, loading_result), [h]
+            )
 
     monkeypatch.setattr(rulesets, "analyze_host_rule_matches", analyze_with_matcher)
 
@@ -293,7 +296,7 @@ def fixture_inline_analyze_host_rule_effectiveness_automation(
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))
             return automation_analyze_host_rule_effectiveness.handler(
-                make_app(), [], loading_result
+                CommonState(cmk.utils.paths.omd_root, loading_result), []
             )
 
     monkeypatch.setattr(

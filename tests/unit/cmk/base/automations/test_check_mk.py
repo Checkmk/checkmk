@@ -27,6 +27,7 @@ from cmk.automations import results as automation_results
 from cmk.automations.results import DiagHostResult
 from cmk.base import config
 from cmk.base.automations import check_mk
+from cmk.base.automations.automations import CommonState
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.community_app import make_app
 from cmk.base.config import ConfigCache, ObjectAttributes
@@ -73,13 +74,12 @@ def _prepare(
     relay_id: str | None,
     loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
     service_attrs: ObjectAttributes | None = None,
-) -> tuple[CheckmkBaseApp, ConfigCache, config.LoadingResult]:
+) -> tuple[ConfigCache, config.LoadingResult]:
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
     monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *a, **kw: _HOST_ATTRS)  # noqa: ARG005
     monkeypatch.setattr(check_mk, "get_service_attributes", lambda *a, **kw: service_attrs or {})  # noqa: ARG005
     monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a, **kw: {})  # noqa: ARG005
     monkeypatch.setattr(config, "get_relay_id", lambda *a, **kw: relay_id)  # noqa: ARG005
-    app = make_app()
     config_cache = config.ConfigCache(
         EMPTY_CONFIG,
         config.make_hosts_config(EMPTY_CONFIG),
@@ -94,7 +94,14 @@ def _prepare(
         host_tags=config.make_host_tags(EMPTY_CONFIG, config.make_hosts_config(EMPTY_CONFIG)),
         config_cache=config_cache,
     )
-    return app, config_cache, loading_result
+    return config_cache, loading_result
+
+
+def _state_with_app(app: CheckmkBaseApp, loading_result: config.LoadingResult) -> CommonState:
+    """A state whose app the test controls, e.g. to fake the fetcher trigger."""
+    state = CommonState(cmk.utils.paths.omd_root, loading_result)
+    state.app = app
+    return state
 
 
 class _MockFetcherTrigger(PlainFetcherTrigger):
@@ -156,21 +163,23 @@ class TestAutomationDiagHost:
             make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data.encode(), Path("/")),  # noqa: ARG005
         )
         assert check_mk.AutomationDiagHost().execute(
-            app,
-            args,
-            config.LoadingResult(
-                loaded_config=loaded_config,
-                hosts_config=hosts_config,
-                host_tags=config.make_host_tags(loaded_config, hosts_config),
-                config_cache=ConfigCache(
-                    loaded_config,
-                    hosts_config,
-                    config.make_host_tags(loaded_config, hosts_config),
-                    autochecks_dir=cmk.utils.paths.autochecks_dir,
-                    discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
-                    builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+            _state_with_app(
+                app,
+                config.LoadingResult(
+                    loaded_config=loaded_config,
+                    hosts_config=hosts_config,
+                    host_tags=config.make_host_tags(loaded_config, hosts_config),
+                    config_cache=ConfigCache(
+                        loaded_config,
+                        hosts_config,
+                        config.make_host_tags(loaded_config, hosts_config),
+                        autochecks_dir=cmk.utils.paths.autochecks_dir,
+                        discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+                        builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+                    ),
                 ),
             ),
+            args,
         ) == DiagHostResult(
             0,
             raw_data,
@@ -302,7 +311,6 @@ def test_automation_active_check(  # type: ignore[misc]
     monkeypatch.setattr(check_mk, "get_service_attributes", lambda *a, **kw: service_attrs)  # noqa: ARG005
     monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a, **kw: {})  # noqa: ARG005
 
-    app = make_app()
     config_cache = config.ConfigCache(
         EMPTY_CONFIG,
         config.make_hosts_config(EMPTY_CONFIG),
@@ -316,16 +324,18 @@ def test_automation_active_check(  # type: ignore[misc]
     active_check = AutomationActiveCheckTestable()
     assert (
         active_check.execute(
-            app,
-            active_check_args,
-            config.LoadingResult(
-                loaded_config=EMPTY_CONFIG,
-                hosts_config=config.make_hosts_config(EMPTY_CONFIG),
-                host_tags=config.make_host_tags(
-                    EMPTY_CONFIG, config.make_hosts_config(EMPTY_CONFIG)
+            CommonState(
+                cmk.utils.paths.omd_root,
+                config.LoadingResult(
+                    loaded_config=EMPTY_CONFIG,
+                    hosts_config=config.make_hosts_config(EMPTY_CONFIG),
+                    host_tags=config.make_host_tags(
+                        EMPTY_CONFIG, config.make_hosts_config(EMPTY_CONFIG)
+                    ),
+                    config_cache=config_cache,
                 ),
-                config_cache=config_cache,
             ),
+            active_check_args,
         )
         == expected_result
     )
@@ -382,7 +392,6 @@ def test_automation_active_check_invalid_args(  # type: ignore[misc]
     loaded_config = replace(
         EMPTY_CONFIG, ipaddresses={HostName("my_host"): HostAddress("127.0.0.1")}
     )
-    app = make_app()
     config_cache = config.ConfigCache(
         loaded_config,
         config.make_hosts_config(loaded_config),
@@ -397,14 +406,18 @@ def test_automation_active_check_invalid_args(  # type: ignore[misc]
 
     active_check = check_mk.AutomationActiveCheck()
     active_check.execute(
-        app,
-        active_check_args,
-        config.LoadingResult(
-            loaded_config=loaded_config,
-            hosts_config=config.make_hosts_config(loaded_config),
-            host_tags=config.make_host_tags(loaded_config, config.make_hosts_config(loaded_config)),
-            config_cache=config_cache,
+        CommonState(
+            cmk.utils.paths.omd_root,
+            config.LoadingResult(
+                loaded_config=loaded_config,
+                hosts_config=config.make_hosts_config(loaded_config),
+                host_tags=config.make_host_tags(
+                    loaded_config, config.make_hosts_config(loaded_config)
+                ),
+                config_cache=config_cache,
+            ),
         ),
+        active_check_args,
     )
 
     assert error_message == capsys.readouterr().err
@@ -428,28 +441,32 @@ class _RecordingAutomation(check_mk.AutomationActiveCheck):
 
 
 def test_active_check_on_relay_host_routes_to_relay(monkeypatch: pytest.MonkeyPatch) -> None:
-    app, config_cache, lr = _prepare(monkeypatch, relay_id="relay-1", loaded_active_checks={})
+    config_cache, lr = _prepare(monkeypatch, relay_id="relay-1", loaded_active_checks={})
     monkeypatch.setattr(
         config_cache,
         "active_check_services",
         lambda *a, **kw: iter([_FakeServiceData("My svc", ("check_httpv2", "-u", "http://x"))]),  # noqa: ARG005
     )
     auto = _RecordingAutomation()
-    result = auto.execute(app, ["my_host", "my_active_check", "My svc"], lr)
+    result = auto.execute(
+        CommonState(cmk.utils.paths.omd_root, lr), ["my_host", "my_active_check", "My svc"]
+    )
     assert result == automation_results.ActiveCheckResult(state=0, output="relay output")
     assert auto.calls["relay"] == ("relay-1", "my_host", "check_httpv2 -u http://x")
     assert "local" not in auto.calls
 
 
 def test_active_check_on_non_relay_host_runs_locally(monkeypatch: pytest.MonkeyPatch) -> None:
-    app, config_cache, lr = _prepare(monkeypatch, relay_id=None, loaded_active_checks={})
+    config_cache, lr = _prepare(monkeypatch, relay_id=None, loaded_active_checks={})
     monkeypatch.setattr(
         config_cache,
         "active_check_services",
         lambda *a, **kw: iter([_FakeServiceData("My svc", ("check_httpv2", "-u", "http://x"))]),  # noqa: ARG005
     )
     auto = _RecordingAutomation()
-    result = auto.execute(app, ["my_host", "my_active_check", "My svc"], lr)
+    result = auto.execute(
+        CommonState(cmk.utils.paths.omd_root, lr), ["my_host", "my_active_check", "My svc"]
+    )
     assert result == automation_results.ActiveCheckResult(state=0, output="local output")
     assert auto.calls["local"] == "check_httpv2 -u http://x"
     assert "relay" not in auto.calls
@@ -459,7 +476,7 @@ def test_active_check_site_side_only_on_relay_host_runs_locally(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # cmk_inv is site-side-only: even on a relay host it must run on the site, not the relay.
-    app, config_cache, lr = _prepare(monkeypatch, relay_id="relay-1", loaded_active_checks={})
+    config_cache, lr = _prepare(monkeypatch, relay_id="relay-1", loaded_active_checks={})
     monkeypatch.setattr(
         config_cache,
         "active_check_services",
@@ -469,9 +486,8 @@ def test_active_check_site_side_only_on_relay_host_runs_locally(
     )
     auto = _RecordingAutomation()
     result = auto.execute(
-        app,
+        CommonState(cmk.utils.paths.omd_root, lr),
         ["my_host", "cmk_inv", "Check_MK HW/SW Inventory"],
-        lr,
     )
     assert result == automation_results.ActiveCheckResult(state=0, output="local output")
     assert auto.calls["local"] == "check_cmk_inv --inv"
@@ -479,7 +495,7 @@ def test_active_check_site_side_only_on_relay_host_runs_locally(
 
 
 def test_active_check_unsupported_on_relay_reports_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
-    app, config_cache, lr = _prepare(
+    config_cache, lr = _prepare(
         monkeypatch, relay_id="relay-1", loaded_active_checks={_TEST_LOCATION: MOCK_PLUGIN}
     )
     monkeypatch.setattr(
@@ -490,9 +506,8 @@ def test_active_check_unsupported_on_relay_reports_unknown(monkeypatch: pytest.M
         ],
     )
     result = AutomationActiveCheckTestable().execute(
-        app,
+        CommonState(cmk.utils.paths.omd_root, lr),
         ["my_host", "my_active_check", "Active check of my_host"],
-        lr,
     )
     assert result == automation_results.ActiveCheckResult(
         state=3, output="UNKNOWN - Active check 'my_active_check' is not supported on relays"

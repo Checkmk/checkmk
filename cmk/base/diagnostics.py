@@ -22,7 +22,7 @@ import cmk.livestatus_client as livestatus
 import cmk.utils.paths
 from cmk.automations.results import CreateDiagnosticsDumpResult, CreateDiagnosticsDumpV2Result
 from cmk.automations.types import AutomationID
-from cmk.base.automations.automations import Automation, load_config
+from cmk.base.automations.automations import Automation, CommonState, load_config
 from cmk.base.config import LoadingResult
 from cmk.ccc import tty
 from cmk.ccc.hostaddress import HostName
@@ -58,9 +58,8 @@ SUFFIX = ".tar.gz"
 
 
 def handler(
-    _app: object,
+    state: CommonState,
     args: DiagnosticsCLParameters,
-    loading_result: LoadingResult | None,
 ) -> CreateDiagnosticsDumpResult:
     buf = io.StringIO()
     with redirect_stdout(buf), redirect_stderr(buf):
@@ -69,7 +68,7 @@ def handler(
             omd_root=cmk.utils.paths.omd_root,
             diagnostics_dir=cmk.utils.paths.diagnostics_dir,
             parameters=deserialize_cl_parameters(args),
-            loading_result=loading_result,
+            loading_result=state.loading_result,
         )
         return CreateDiagnosticsDumpResult(
             output=buf.getvalue(),
@@ -86,9 +85,8 @@ automation_create_diagnostics_dump = Automation(
 
 
 def handler_v2(
-    _app: object,
+    state: CommonState,
     args: Sequence[str],
-    loading_result: LoadingResult | None,
 ) -> CreateDiagnosticsDumpV2Result:
     buf = io.StringIO()
     with redirect_stdout(buf), redirect_stderr(buf):
@@ -97,7 +95,7 @@ def handler_v2(
             omd_root=cmk.utils.paths.omd_root,
             diagnostics_dir=cmk.utils.paths.diagnostics_dir,
             selection=(DumpSelection.deserialize(args[0]) if args else DumpSelection(plugins=())),
-            loading_result=loading_result,
+            loading_result=state.loading_result,
         )
         return CreateDiagnosticsDumpV2Result(
             output=buf.getvalue(),

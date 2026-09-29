@@ -11,7 +11,6 @@ from pathlib import Path
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk import trace
-from cmk.base.app import make_app
 from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
 from cmk.profiling import backend as profiling
 
@@ -21,7 +20,6 @@ tracer = trace.get_tracer()
 def _mode_automation(
     omd_root: Path, _global_options: GlobalOptions, _options: Options, args: Args
 ) -> int:
-    app = make_app(omd_root)
     from cmk.automations.types import AutomationID
     from cmk.base.automations.automations import (
         AutomationError,
@@ -43,7 +41,7 @@ def _mode_automation(
         },
     ):
         try:
-            result = automations.execute(app, name, automation_args)
+            result = automations.execute(omd_root, name, automation_args)
         finally:
             profiling.output_profile(cmk.utils.paths.profiles_dir)
         if isinstance(result, AutomationError):

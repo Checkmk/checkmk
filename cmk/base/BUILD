@@ -156,11 +156,9 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        ":base-app",
         ":events",
         "//cmk/automations",
         "//cmk/base/automations",
-        "//cmk/base/config",
         "//cmk/utils",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",

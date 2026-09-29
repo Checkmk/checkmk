@@ -11,12 +11,13 @@ from io import StringIO
 
 import pytest
 
+import cmk.utils.paths
 from cmk.automations.results import ABCAutomationResult
+from cmk.base.automations.automations import CommonState
 from cmk.base.automations.check_mk import (
     automation_analyze_host_rule_matches,
     automation_analyze_service_rule_matches,
 )
-from cmk.base.community_app import make_app
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
@@ -61,7 +62,9 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))
-            return automation_analyze_host_rule_matches.handler(make_app(), [h], None)
+            return automation_analyze_host_rule_matches.handler(
+                CommonState(cmk.utils.paths.omd_root, None), [h]
+            )
 
     monkeypatch.setattr(rulesets, "analyze_host_rule_matches", analyze_with_matcher)
 
@@ -187,7 +190,7 @@ def fixture_mock_analyze_service_rule_matches_automation(monkeypatch: pytest.Mon
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr((rules, service_labels))))
             return automation_analyze_service_rule_matches.handler(
-                make_app(), [host_name, service_or_item], None
+                CommonState(cmk.utils.paths.omd_root, None), [host_name, service_or_item]
             )
 
     monkeypatch.setattr(rulesets, "analyze_service_rule_matches", analyze_with_matcher)

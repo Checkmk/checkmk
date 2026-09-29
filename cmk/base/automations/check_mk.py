@@ -92,6 +92,7 @@ from cmk.base.automations._environment import (
 )
 from cmk.base.automations.automations import (
     Automation,
+    CommonState,
     load_config,
     MKAutomationError,
 )
@@ -308,9 +309,8 @@ def _extract_directive(directive: str, args: list[str]) -> tuple[bool, list[str]
 
 
 def _automation_service_discovery(
-    app: CheckmkBaseApp,
+    state: CommonState,
     args: list[str],
-    loading_result: config.LoadingResult | None,
 ) -> ServiceDiscoveryResult:
     """Does discovery for a list of hosts. For possible values see DiscoverySettings
     Hosts on the list that are offline (unmonitored) will be skipped."""
@@ -328,7 +328,7 @@ def _automation_service_discovery(
     settings = DiscoverySettings.from_automation_arg(args[0])
     hostnames = [HostName(h) for h in islice(args, 1, None)]
 
-    env = AutomationEnvironment.create(app, loading_result)
+    env = AutomationEnvironment.create(state.app, state.loading_result)
     plugins = env.plugins
     config_cache = env.config_cache
     hosts_config = env.hosts_config
@@ -475,13 +475,12 @@ def _automation_service_discovery(
 
 
 def _automation_special_agent_discovery_preview(
-    app: CheckmkBaseApp,
+    state: CommonState,
     args: list[str],  # noqa: ARG001
-    loading_result: config.LoadingResult | None,
 ) -> ServiceDiscoveryPreviewResult:
     run_settings = DiagSpecialAgentInput.deserialize(sys.stdin.read())
 
-    env = AutomationEnvironment.create(app, loading_result)
+    env = AutomationEnvironment.create(state.app, state.loading_result)
 
     file_cache_options = FileCacheOptions(use_outdated=False, use_only_cache=False)
     ad_hoc_secrets = AdHocSecrets(
@@ -542,9 +541,8 @@ def _automation_special_agent_discovery_preview(
 
 
 def _automation_discovery_preview(
-    app: CheckmkBaseApp,
+    state: CommonState,
     args: list[str],
-    loading_result: config.LoadingResult | None,
 ) -> ServiceDiscoveryPreviewResult:
     prevent_fetching, args = _extract_directive("@nofetch", args)
     raise_errors, args = _extract_directive("@raiseerrors", args)
@@ -553,7 +551,7 @@ def _automation_discovery_preview(
     # We intend to report the config warnings. Clear the global state :-(
     config_warnings.initialize()
 
-    env = AutomationEnvironment.create(app, loading_result)
+    env = AutomationEnvironment.create(state.app, state.loading_result)
     if host_name not in env.hosts_config.all_configured_hosts:
         # There is no configuration to discover from, hence no data source to contact.
         # An empty preview would be indistinguishable from a host without services.
@@ -1029,11 +1027,10 @@ def _warn_service_name_conflicts(host_name: HostName, check_preview: CheckPrevie
 
 
 def _automation_autodiscovery(
-    app: CheckmkBaseApp,
+    state: CommonState,
     args: list[str],  # noqa: ARG001
-    loading_result: config.LoadingResult | None,
 ) -> AutodiscoveryResult:
-    return AutodiscoveryResult(*_execute_autodiscovery(app, loading_result))
+    return AutodiscoveryResult(*_execute_autodiscovery(state.app, state.loading_result))
 
 
 def _make_configured_notify_relay(
@@ -1438,13 +1435,12 @@ def _make_get_effective_host_of_autocheck_callback(
 # The last version to support the old 'set-autochecks' was 2.4
 # Consider changing the name back to 'set-autochecks' in 2.6
 def _automation_set_autochecks_v2(
-    app: CheckmkBaseApp,
+    state: CommonState,
     args: list[str],  # noqa: ARG001
-    loading_result: config.LoadingResult | None,
 ) -> SetAutochecksV2Result:
     set_autochecks_input = SetAutochecksInput.deserialize(sys.stdin.read())
 
-    env = AutomationEnvironment.create(app, loading_result)
+    env = AutomationEnvironment.create(state.app, state.loading_result)
 
     service_descriptions: Mapping[tuple[HostName, CheckPluginName, str | None], ServiceName] = {
         (host, autocheck_entry.check_plugin_name, autocheck_entry.item): service_name
@@ -1498,9 +1494,8 @@ def _automation_set_autochecks_v2(
 
 
 def _automation_update_host_labels(
-    _app: object,
+    state: CommonState,
     args: list[str],
-    loading_result: config.LoadingResult | None,
 ) -> UpdateHostLabelsResult:
     """Set the new collection of discovered host labels"""
     hostname = HostName(args[0])
@@ -1511,8 +1506,7 @@ def _automation_update_host_labels(
         ]
     )
 
-    if loading_result is None:
-        loading_result = load_config()
+    loading_result = state.loading_result or load_config()
     _trigger_discovery_check(
         loading_result.config_cache,
         loading_result.hosts_config,
@@ -1535,13 +1529,12 @@ class AutomationRenameHosts:
     # [("old1", "new1"), ("old2", "new2")])
     def execute(
         self,
-        app: CheckmkBaseApp,
+        state: CommonState,
         args: list[str],  # noqa: ARG002
-        loading_result: config.LoadingResult | None,
     ) -> RenameHostsResult:
         renamings: list[HistoryFilePair] = ast.literal_eval(sys.stdin.read())
 
-        env = AutomationEnvironment.create(app, loading_result)
+        env = AutomationEnvironment.create(state.app, state.loading_result)
 
         actions: list[str] = []
 
@@ -1557,8 +1550,8 @@ class AutomationRenameHosts:
             if self._finished_history_files[(oldname, newname)]:
                 actions.append("history")
 
-        core, core_client = app.create_core(
-            app.edition,
+        core, core_client = state.app.create_core(
+            state.app.edition,
             env.ruleset_matcher,
             env.label_manager,
             env.loaded_config,
@@ -1603,7 +1596,7 @@ class AutomationRenameHosts:
                             service_dependencies=env.loaded_config.service_dependencies,
                         ),
                         notify_relay=_make_configured_notify_relay(bool(env.loaded_config.relays)),
-                        licensing_handler_factory=app.licensing_handler_factory,
+                        licensing_handler_factory=state.app.licensing_handler_factory,
                     ),
                     action=CoreAction.START,
                     hosts_to_update=None,
@@ -1867,13 +1860,12 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);{oldregex};/\1 NOTIFICATION: \2;{newname}
 
 
 def _automation_get_service_labels(
-    app: CheckmkBaseApp,
+    state: CommonState,
     args: list[str],
-    loading_result: config.LoadingResult | None,
 ) -> GetServicesLabelsResult:
     host_name, services = HostName(args[0]), args[1:]
 
-    env = AutomationEnvironment.create(app, loading_result)
+    env = AutomationEnvironment.create(state.app, state.loading_result)
     env.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
 
     # I think we might be computing something here that the caller already knew.
@@ -1895,14 +1887,13 @@ def _automation_get_service_labels(
 
 
 def _automation_get_service_name(
-    app: CheckmkBaseApp,
+    state: CommonState,
     args: list[str],
-    loading_result: config.LoadingResult | None,
 ) -> GetServiceNameResult:
     host_name = HostName(args[0])
     service_id = ServiceID(CheckPluginName(args[1]), ast.literal_eval(args[2]))
 
-    env = AutomationEnvironment.create(app, loading_result)
+    env = AutomationEnvironment.create(state.app, state.loading_result)
     env.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
 
     return GetServiceNameResult(
@@ -1940,14 +1931,13 @@ class ServiceSearchContext:
 class AutomationAnalyseServices:
     def execute(
         self,
-        app: CheckmkBaseApp,
+        state: CommonState,
         args: list[str],
-        loading_result: config.LoadingResult | None,
     ) -> AnalyseServiceResult:
         host_name = HostName(args[0])
         servicedesc = args[1]
 
-        env = AutomationEnvironment.create(app, loading_result)
+        env = AutomationEnvironment.create(state.app, state.loading_result)
         env.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
 
         sctx = ServiceSearchContext(
@@ -2187,14 +2177,12 @@ class AutomationAnalyseServices:
 
 
 def _automation_analyse_host(
-    _app: object,
+    state: CommonState,
     args: list[str],
-    loading_result: config.LoadingResult | None,
 ) -> AnalyseHostResult:
     host_name = HostName(args[0])
 
-    if loading_result is None:
-        loading_result = load_config()
+    loading_result = state.loading_result or load_config()
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
 
@@ -2206,16 +2194,14 @@ def _automation_analyse_host(
 
 
 def _automation_analyze_host_rule_matches(
-    _app: object,
+    state: CommonState,
     args: list[str],
-    loading_result: config.LoadingResult | None,
 ) -> AnalyzeHostRuleMatchesResult:
     host_name = HostName(args[0])
     # We read the list of rules from stdin since it could be too much for the command line
     match_rules = ast.literal_eval(sys.stdin.read())
 
-    if loading_result is None:
-        loading_result = load_config()
+    loading_result = state.loading_result or load_config()
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
 
@@ -2237,9 +2223,8 @@ def _automation_analyze_host_rule_matches(
 
 
 def _automation_analyze_service_rule_matches(
-    _app: object,
+    state: CommonState,
     args: list[str],
-    loading_result: config.LoadingResult | None,
 ) -> AnalyzeServiceRuleMatchesResult:
     host_name = HostName(args[0])
     # This is not necessarily a service description. Can also be an item name when matching
@@ -2249,8 +2234,7 @@ def _automation_analyze_service_rule_matches(
     # We read the list of rules from stdin since it could be too much for the command line
     match_rules, service_labels = ast.literal_eval(sys.stdin.read())
 
-    if loading_result is None:
-        loading_result = load_config()
+    loading_result = state.loading_result or load_config()
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
 
@@ -2278,15 +2262,13 @@ def _automation_analyze_service_rule_matches(
 
 
 def _automation_analyze_host_rule_effectiveness(
-    _app: object,
+    state: CommonState,
     args: list[str],  # noqa: ARG001
-    loading_result: config.LoadingResult | None,
 ) -> AnalyzeHostRuleEffectivenessResult:
     # We read the list of rules from stdin since it could be too much for the command line
     match_rules = ast.literal_eval(sys.stdin.read())
 
-    if loading_result is None:
-        loading_result = load_config()
+    loading_result = state.loading_result or load_config()
 
     hosts_config = loading_result.hosts_config
     config_cache = loading_result.config_cache
@@ -2380,9 +2362,8 @@ class ABCDeleteHosts:
 class AutomationDeleteHosts(ABCDeleteHosts):
     def execute(
         self,
-        app: CheckmkBaseApp,  # noqa: ARG002
+        _state: CommonState,
         args: list[str],
-        loading_result: config.LoadingResult | None,  # noqa: ARG002
     ) -> DeleteHostsResult:
         self._execute(args)
         return DeleteHostsResult()
@@ -2436,9 +2417,8 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts):
 
     def execute(
         self,
-        app: CheckmkBaseApp,  # noqa: ARG002
+        _state: CommonState,
         args: list[str],
-        loading_result: config.LoadingResult | None,  # noqa: ARG002
     ) -> DeleteHostsKnownRemoteResult:
         self._execute(args)
         return DeleteHostsKnownRemoteResult()
@@ -2479,20 +2459,19 @@ class AutomationRestart:
 
     def execute(
         self,
-        app: CheckmkBaseApp,
+        state: CommonState,
         args: list[str],
-        loading_result: config.LoadingResult | None,
     ) -> RestartResult:
         nodes = {HostName(hn) for hn in args} if args else None
 
-        env = AutomationEnvironment.create(app, loading_result)
+        env = AutomationEnvironment.create(state.app, state.loading_result)
         # Rebuild hosts_config from the loaded config rather than reading
         # env.hosts_config: the restart path historically uses make_hosts_config
         # here, preserving compatibility with shadow-host handling.
         hosts_config = config.make_hosts_config(env.loaded_config)
 
-        monitoring_core, core_client = app.create_core(
-            app.edition,
+        monitoring_core, core_client = state.app.create_core(
+            state.app.edition,
             env.ruleset_matcher,
             env.label_manager,
             env.loaded_config,
@@ -2512,7 +2491,7 @@ class AutomationRestart:
                 service_dependencies=env.loaded_config.service_dependencies,
             ),
             notify_relay=_make_configured_notify_relay(bool(env.loaded_config.relays)),
-            licensing_handler_factory=app.licensing_handler_factory,
+            licensing_handler_factory=state.app.licensing_handler_factory,
         )
 
         return _execute_silently(
@@ -2567,11 +2546,10 @@ class AutomationReload(AutomationRestart):
     @override
     def execute(
         self,
-        app: CheckmkBaseApp,
+        state: CommonState,
         args: list[str],
-        loading_result: config.LoadingResult | None,
     ) -> ReloadResult:
-        return ReloadResult(super().execute(app, args, loading_result).config_warnings)
+        return ReloadResult(super().execute(state, args).config_warnings)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -2653,9 +2631,8 @@ def _execute_silently(
 
 
 def _automation_get_configuration(
-    _app: object,
+    _state: CommonState,
     _args: object,
-    _loading_result: object,
 ) -> GetConfigurationResult:
     """Automation call to get the default configuration"""
     # We read the list of variable names from stdin since
@@ -2674,9 +2651,8 @@ def _automation_get_configuration(
 
 
 def _automation_get_check_information(
-    app: CheckmkBaseApp,  # noqa: ARG001
+    _state: CommonState,
     args: list[str],  # noqa: ARG001
-    loading_result: config.LoadingResult | None,  # noqa: ARG001
 ) -> GetCheckInformationResult:
     man_page_path_map = man_pages.make_man_page_path_map(
         discover_families(raise_errors=cmk.ccc.debug.enabled()), PluginGroup.CHECKMAN.value
@@ -2719,9 +2695,8 @@ def _get_man_page_title(man_page_path_map: Mapping[str, Path], plugin_name: Chec
 
 
 def _automation_get_section_information(
-    app: CheckmkBaseApp,  # noqa: ARG001
+    _state: CommonState,
     args: object,  # noqa: ARG001
-    loading_result: config.LoadingResult | None,  # noqa: ARG001
 ) -> GetSectionInformationResult:
     plugins = config.load_all_plugins()
     section_infos = {
@@ -2745,9 +2720,8 @@ def _automation_get_section_information(
 
 
 def _automation_scan_parents(
-    app: CheckmkBaseApp,
+    state: CommonState,
     args: list[str],
-    loading_result: config.LoadingResult | None,
 ) -> ScanParentsResult:
     settings = {
         "timeout": int(args[0]),
@@ -2759,7 +2733,7 @@ def _automation_scan_parents(
     if not cmk.base.parent_scan.traceroute_available():
         raise MKAutomationError("Cannot find binary <tt>traceroute</tt> in search path.")
 
-    env = AutomationEnvironment.create(app, loading_result)
+    env = AutomationEnvironment.create(state.app, state.loading_result)
 
     hosts_config = config.make_hosts_config(env.loaded_config)
 
@@ -2849,9 +2823,8 @@ def get_special_agent_commandline(
 
 
 def _automation_diag_special_agent(
-    app: CheckmkBaseApp,  # noqa: ARG001
+    _state: CommonState,
     args: list[str],  # noqa: ARG001
-    loading_result: config.LoadingResult | None,  # noqa: ARG001
 ) -> DiagSpecialAgentResult:
     diag_special_agent_input = DiagSpecialAgentInput.deserialize(sys.stdin.read())
     return DiagSpecialAgentResult(
@@ -2929,9 +2902,8 @@ def _execute_diag_special_agent(
 
 
 def _automation_ping_host(
-    app: CheckmkBaseApp,  # noqa: ARG001
+    _state: CommonState,
     args: list[str],  # noqa: ARG001
-    loaded_config: config.LoadingResult | None,  # noqa: ARG001
 ) -> PingHostResult:
     ping_host_input = PingHostInput.deserialize(sys.stdin.read())
     return PingHostResult(*_execute_ping(ping_host_input.ip_or_dns_name, ping_host_input.base_cmd))
@@ -2971,9 +2943,8 @@ def _execute_ping(ip_or_dns_name: str, base_cmd: PingHostCmd) -> tuple[int, str]
 
 
 def _automation_diag_cmk_agent(
-    app: CheckmkBaseApp,  # noqa: ARG001
+    _state: CommonState,
     args: list[str],  # noqa: ARG001
-    _loading_result: config.LoadingResult | None,
 ) -> DiagCmkAgentResult:
     diag_cmk_agent_input = DiagCmkAgentInput.deserialize(sys.stdin.read())
     host_name = diag_cmk_agent_input.host_name
@@ -3064,12 +3035,11 @@ def _automation_diag_cmk_agent(
 
 
 def _automation_diag_snmp(
-    _app: object,
+    state: CommonState,
     args: list[str],  # noqa: ARG001
-    loading_result: config.LoadingResult | None,
 ) -> DiagSnmpResult:
     diag_input = DiagSnmpInput.deserialize(sys.stdin.read())
-    loading_result = loading_result or load_config()
+    loading_result = state.loading_result or load_config()
     ip_address = diag_input.ip_address
 
     if not ip_address:
@@ -3185,16 +3155,15 @@ def _automation_diag_snmp(
 class AutomationDiagHost:
     def execute(
         self,
-        app: CheckmkBaseApp,
+        state: CommonState,
         args: list[str],
-        loading_result: config.LoadingResult | None,
     ) -> DiagHostResult:
         host_name = HostName(args[0])
         test, ipaddress, snmp_community = args[1:4]
         ipaddress = HostAddress(ipaddress)
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
 
-        env = AutomationEnvironment.create(app, loading_result)
+        env = AutomationEnvironment.create(state.app, state.loading_result)
         env.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
         ip_address_of_bare = ip_lookup.make_lookup_ip_address(env.ip_lookup_config)
 
@@ -3244,7 +3213,7 @@ class AutomationDiagHost:
             if test == "agent":
                 return DiagHostResult(
                     *self._execute_agent(
-                        app,
+                        state.app,
                         env.hosts_config,
                         env.loaded_config,
                         env.config_cache,
@@ -3679,14 +3648,13 @@ def _relay_wait_timeout(task: AdHocActiveCheckTask) -> float:
 class AutomationActiveCheck:
     def execute(
         self,
-        app: CheckmkBaseApp,
+        state: CommonState,
         args: list[str],
-        loading_result: config.LoadingResult | None,
     ) -> ActiveCheckResult:
         host_name = HostName(args[0])
         plugin, item = args[1:]
 
-        env = AutomationEnvironment.create(app, loading_result)
+        env = AutomationEnvironment.create(state.app, state.loading_result)
         ip_family = env.ip_lookup_config.default_address_family(host_name)
         core_objects_config = config.CoreObjectsConfig(
             env.loaded_config, env.ruleset_matcher, env.label_manager
@@ -3892,11 +3860,10 @@ class AutomationActiveCheck:
 
 
 def _automation_update_passwords_merged_file(
-    _app: object,
+    state: CommonState,
     args: list[str],  # noqa: ARG001
-    loading_result: config.LoadingResult | None,
 ) -> UpdatePasswordsMergedFileResult:
-    loading_result = loading_result or load_config()
+    loading_result = state.loading_result or load_config()
     cmk.utils.password_store.save(
         {k: s.reveal() for k, s in loading_result.config_cache.collect_passwords().items()},
         cmk.utils.password_store.pending_secrets_path_site(),
@@ -3905,11 +3872,10 @@ def _automation_update_passwords_merged_file(
 
 
 def _automation_update_dns_cache(
-    app: CheckmkBaseApp,
+    state: CommonState,
     args: list[str],  # noqa: ARG001
-    loading_result: config.LoadingResult | None,
 ) -> UpdateDNSCacheResult:
-    env = AutomationEnvironment.create(app, loading_result)
+    env = AutomationEnvironment.create(state.app, state.loading_result)
 
     return UpdateDNSCacheResult(
         *ip_lookup.update_dns_cache(
@@ -3954,9 +3920,8 @@ def _execute_snmp_walk(snmp_config: SNMPHostConfig, backend: SNMPBackend) -> tup
 
 
 def _automation_get_agent_output(
-    app: CheckmkBaseApp,
+    state: CommonState,
     args: list[str],
-    loading_result: config.LoadingResult | None,
 ) -> GetAgentOutputResult:
     # Only honoured for agent sources: the SNMP branch always does a live walk,
     # as there is no cache holding a full walk.
@@ -3976,7 +3941,7 @@ def _automation_get_agent_output(
     # For SNMP we are not getting the output we would get during checking, but a walk.
 
     # This loads the pending config:
-    env = AutomationEnvironment.create(app, loading_result)
+    env = AutomationEnvironment.create(state.app, state.loading_result)
     hosts_config = config.make_hosts_config(env.loaded_config)
 
     ip_stack_config = env.ip_lookup_config.ip_stack_config(hostname)
@@ -4188,12 +4153,11 @@ def _automation_get_agent_output(
 
 
 def _automation_find_unknown_check_parameter_rule_sets(
-    _app: object,
+    state: CommonState,
     args: list[str],  # noqa: ARG001
-    loaded_config: config.LoadingResult | None,
 ) -> UnknownCheckParameterRuleSetsResult:
     plugins = config.load_all_plugins()
-    loaded_config = loaded_config or load_config()
+    loaded_config = state.loading_result or load_config()
     known_check_rule_sets = {
         str(plugin.check_ruleset_name)
         for plugin in plugins.check_plugins.values()

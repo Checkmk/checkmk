@@ -17,9 +17,10 @@ import pytest
 import time_machine
 from pytest_mock import MockerFixture
 
+import cmk.utils.paths
 from cmk.automations.results import ABCAutomationResult
+from cmk.base.automations.automations import CommonState
 from cmk.base.automations.check_mk import automation_analyze_host_rule_matches
-from cmk.base.community_app import make_app
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.config import Config, get_default_config, make_config_object
@@ -248,7 +249,9 @@ def fixture_mock_analyze_host_rule_matches_automation(
         debug: bool,
     ) -> ABCAutomationResult:
         with mocker.patch("sys.stdin", StringIO(repr(r))):
-            return automation_analyze_host_rule_matches.handler(make_app(), [h], None)
+            return automation_analyze_host_rule_matches.handler(
+                CommonState(cmk.utils.paths.omd_root, None), [h]
+            )
 
     return mocker.patch.object(
         automatic_host_removal, "analyze_host_rule_matches", analyze_with_matcher

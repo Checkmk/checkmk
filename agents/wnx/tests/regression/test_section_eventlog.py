@@ -203,7 +203,7 @@ def with_statefile(request):
     yield
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def verify_eventstate():
     yield
     if platform.system() == "Windows":
@@ -228,7 +228,7 @@ def verify_eventstate():
 
 
 # disabled tests
-@pytest.mark.usefixtures("no_statefile")
+@pytest.mark.usefixtures("no_statefile", "verify_eventstate")
 def test_section_eventlog__no_statefile__no_events(
     request, testconfig, expected_output_no_events, actual_output, testfile
 ):
@@ -236,7 +236,7 @@ def test_section_eventlog__no_statefile__no_events(
     local_test(expected_output_no_events, actual_output, testfile, request.node.name)
 
 
-@pytest.mark.usefixtures("with_statefile", "create_events")
+@pytest.mark.usefixtures("with_statefile", "create_events", "verify_eventstate")
 def test_section_eventlog__application_warnings(
     request, testconfig, expected_output_application_events, actual_output, testfile
 ):

@@ -43,10 +43,10 @@ defineExpose({ focus })
     <div
       class="graphing-transformation-editor__label graphing-transformation-editor__label--transformation"
     >
-      <CmkHeading type="h4">{{ _t('Transformation') }}</CmkHeading>
+      <CmkHeading type="h4">{{ _t('Percentile') }}</CmkHeading>
       <CmkHelpText
         :help="_t('Applies a percentile transformation to the selected metric.')"
-        :aria-label="_t('Help: Transformation')"
+        :aria-label="_t('Help: Percentile')"
       />
     </div>
     <CmkDropdown
@@ -69,8 +69,8 @@ defineExpose({ focus })
       class="graphing-transformation-editor__control--percentile"
       width="fill"
       :options="percentileOptions"
-      :label="_t('Transformation')"
-      :input-hint="_t('Percentile')"
+      :label="_t('Percentile')"
+      :input-hint="_t('Select a percentile')"
     />
     <CmkInlineValidation
       v-if="errors?.length"

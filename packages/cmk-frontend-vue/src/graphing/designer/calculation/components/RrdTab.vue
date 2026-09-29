@@ -86,7 +86,7 @@ const {
 
 const modeOptions: ToggleButtonOption[] = [
   { label: _t('Operations'), value: 'operations' },
-  { label: _t('Transformation'), value: 'transformation' }
+  { label: _t('Percentile'), value: 'transformation' }
 ]
 
 const calculateLabelVariants = [_t('Calculate & add'), _t('Calculate & update')]

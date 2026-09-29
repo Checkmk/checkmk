@@ -6,7 +6,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkSlideInDialog from 'cmk-ui-library/components/CmkSlideInDialog.vue'
-import CmkTabs, { CmkTab, CmkTabContent } from 'cmk-ui-library/components/CmkTabs'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { ref } from 'vue'
 
@@ -34,23 +33,14 @@ const emit = defineEmits<{
   close: []
 }>()
 
-type Tab = 'rrd' | 'telemetry_metrics'
-const activeTab = ref<Tab>('rrd')
-
 const rrdTabRef = ref<InstanceType<typeof RrdTab> | null>(null)
-
-function onTabChange(value: string | number): void {
-  if (value === 'rrd' || value === 'telemetry_metrics') {
-    activeTab.value = value
-  }
-}
 </script>
 
 <template>
   <CmkSlideInDialog
     :open="open"
     size="small"
-    :header="{ title: _t('Calculate metrics'), closeButton: true }"
+    :header="{ title: _t('Calculate Checkmk RRD metrics'), closeButton: true }"
     :initial-focus-target="rrdTabRef ?? undefined"
     @close="emit('close')"
   >
@@ -60,27 +50,16 @@ function onTabChange(value: string | number): void {
           {{ _t('Preview in graph') }}
         </CmkButton>
       </div>
-      <CmkTabs :model-value="activeTab" @update:model-value="onTabChange">
-        <template #tabs>
-          <CmkTab id="rrd">{{ _t('CMK RRD data') }}</CmkTab>
-        </template>
-        <template #tab-contents>
-          <CmkTabContent id="rrd" spacing="none">
-            <div class="graphing-metrics-calculation-slideout__tab">
-              <RrdTab
-                ref="rrdTabRef"
-                :editing="editing"
-                :items="items"
-                :next-id="nextId"
-                :next-color="nextColor"
-                @add="(draft, refVisibility) => emit('add', draft, refVisibility)"
-                @update="(id, draft, refVisibility) => emit('update', id, draft, refVisibility)"
-                @delete="emit('delete', $event)"
-              />
-            </div>
-          </CmkTabContent>
-        </template>
-      </CmkTabs>
+      <RrdTab
+        ref="rrdTabRef"
+        :editing="editing"
+        :items="items"
+        :next-id="nextId"
+        :next-color="nextColor"
+        @add="(draft, refVisibility) => emit('add', draft, refVisibility)"
+        @update="(id, draft, refVisibility) => emit('update', id, draft, refVisibility)"
+        @delete="emit('delete', $event)"
+      />
     </div>
   </CmkSlideInDialog>
 </template>
@@ -88,9 +67,5 @@ function onTabChange(value: string | number): void {
 <style scoped>
 .graphing-metrics-calculation-slideout__actions {
   margin-bottom: var(--dimension-7);
-}
-
-.graphing-metrics-calculation-slideout__tab {
-  padding: var(--dimension-7);
 }
 </style>

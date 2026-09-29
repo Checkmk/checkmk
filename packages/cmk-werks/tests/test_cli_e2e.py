@@ -187,6 +187,25 @@ def test_blame_without_an_id_blames_the_last_werk(tmp_path: Path) -> None:
     assert "some_title" in output
 
 
+def test_pick_without_commit_names_the_commit_to_reuse(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    write_secret(home)
+    write_stash(home, [11111, 11112])
+
+    repo_path = tmp_path / "repo"
+    repo = initialize_werks_project(repo_path, first_free=11_111)
+    _create_werk(home, repo_path)
+    base = repo.head.commit.hexsha
+    _create_werk(home, repo_path, title=b"picked_title")
+    picked = repo.head.commit.hexsha
+    repo.git.checkout("-b", "stable", base)
+
+    _returncode, output = call_output("pick", "--no-commit", picked, home=home, cwd=repo_path)
+
+    assert f"git commit -C '{picked}'" in output
+
+
 def test_commit_config(tmp_path: Path) -> None:
     home = tmp_path / "home"
     home.mkdir()

@@ -1114,7 +1114,7 @@ def werk_cherry_pick(
             subprocess.run(["git", "commit", "--no-edit", "--amend"], check=True)
         else:
             sys.stdout.write("We don't commit yet. Here is the status:\n")
-            sys.stdout.write("Please commit with git commit -C '{commit_id}'\n\n")
+            sys.stdout.write(f"Please commit with git commit -C '{commit_id}'\n\n")
             subprocess.run(["git", "status"], check=True)
 
 

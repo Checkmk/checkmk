@@ -5,19 +5,29 @@
  */
 import usei18n from 'cmk-ui-library/lib/i18n'
 
-import { type SaveResult, saveCustomServiceDefinition } from './api'
-import { aggregationProblem, buildCustomServiceDefinition } from './definition'
+import { type SaveResult, saveCustomServiceDefinition, updateCustomServiceDefinition } from './api'
+import {
+  aggregationProblem,
+  buildCustomServiceDefinition,
+  buildCustomServiceUpdate
+} from './definition'
 import type { ServiceModel } from './types'
 
 const { _t } = usei18n()
 
 export type { SaveResult }
 
-export async function createCustomService(model: ServiceModel): Promise<SaveResult> {
-  if (model.metricName === null) {
+type CompleteModel = ServiceModel & { metricName: string; hostName: string }
+
+type Validated = { ok: true; model: CompleteModel } | { ok: false; error: string }
+
+/** What the endpoint would reject, refused here so the reason names the field. */
+function validate(model: ServiceModel): Validated {
+  const { metricName, hostName } = model
+  if (metricName === null) {
     return { ok: false, error: _t('No metric selected.') }
   }
-  if (model.hostName === null || model.hostName.trim() === '') {
+  if (hostName === null || hostName.trim() === '') {
     return { ok: false, error: _t('Please assign the custom service to a host.') }
   }
   switch (aggregationProblem(model.consolidation)) {
@@ -26,12 +36,29 @@ export async function createCustomService(model: ServiceModel): Promise<SaveResu
     case 'thresholds_out_of_order':
       return { ok: false, error: _t('The lower threshold must be below the upper threshold.') }
   }
+  return { ok: true, model: { ...model, metricName, hostName } }
+}
 
-  return await saveCustomServiceDefinition(
-    buildCustomServiceDefinition({
-      ...model,
-      metricName: model.metricName,
-      hostName: model.hostName
-    })
+export async function createCustomService(model: ServiceModel): Promise<SaveResult> {
+  const validated = validate(model)
+  if (!validated.ok) {
+    return validated
+  }
+  return await saveCustomServiceDefinition(buildCustomServiceDefinition(validated.model))
+}
+
+export async function updateCustomService(
+  configurationName: string,
+  model: ServiceModel,
+  etag: string
+): Promise<SaveResult> {
+  const validated = validate(model)
+  if (!validated.ok) {
+    return validated
+  }
+  return await updateCustomServiceDefinition(
+    configurationName,
+    buildCustomServiceUpdate(validated.model),
+    etag
   )
 }

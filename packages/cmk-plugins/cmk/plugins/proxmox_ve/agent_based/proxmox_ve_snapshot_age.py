@@ -6,6 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 
 import datetime
+import json
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -28,8 +29,10 @@ class SectionSnapshots(BaseModel, frozen=True):
     snaptimes: Sequence[int] = Field(alias="snaptimes", default_factory=list)
 
 
-def parse_proxmox_ve_snapshot_age(string_table: StringTable) -> SectionSnapshots:
-    return SectionSnapshots.model_validate_json(string_table[0][0])
+def parse_proxmox_ve_snapshot_age(string_table: StringTable) -> SectionSnapshots | None:
+    if (raw := json.loads(string_table[0][0])) is None:
+        return None
+    return SectionSnapshots.model_validate(raw)
 
 
 def _check_proxmox_ve_snapshot_age_testable(

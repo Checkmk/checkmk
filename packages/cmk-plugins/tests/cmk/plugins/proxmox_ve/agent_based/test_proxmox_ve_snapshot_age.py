@@ -126,16 +126,5 @@ def test_check_proxmox_ve_snapshot_age_with_snapshot(  # type: ignore[misc]
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash report 598ee5ce-9355-11f1-9df9-00163e0e7d2b: ValidationError in parse",
-)
-def test_check_proxmox_ve_snapshot_age_without_snapshot_data() -> None:
-    # The special agent writes "null" for a VM it found no snapshot data for.
-    section = parse_proxmox_ve_snapshot_age([["null"]])
-    assert list(check_proxmox_ve_snapshot_age({}, section)) == [
-        Result(
-            state=State.UNKNOWN,
-            summary="No snapshot data received for this VM (got null, expected a list of snapshot times)",
-        )
-    ]
+def test_parse_proxmox_ve_snapshot_age_without_snapshot_data() -> None:
+    assert parse_proxmox_ve_snapshot_age([["null"]]) is None

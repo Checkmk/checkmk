@@ -21,12 +21,13 @@ HOURS = 3600
 DAYS = 24 * HOURS
 
 
-@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture
 def fix_localaity(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(time, "localtime", time.gmtime)
     monkeypatch.setattr(time, "mktime", calendar.timegm)
 
 
+@pytest.mark.usefixtures("fix_localaity")
 def test_layout_timeline_choords_hour_scale() -> None:
     # hour scale: less than 12 hours
     time_range = (TEST_REFERENCE_TIME - 5.4 * HOURS, TEST_REFERENCE_TIME + 6.5 * HOURS)
@@ -47,6 +48,7 @@ def test_layout_timeline_choords_hour_scale() -> None:
     ]
 
 
+@pytest.mark.usefixtures("fix_localaity")
 def test_layout_timeline_choords_2hour_scale() -> None:
     # 2hour scale: less than 24 hours
     time_range = (TEST_REFERENCE_TIME - 10.4 * HOURS, TEST_REFERENCE_TIME + 13.5 * HOURS)
@@ -67,6 +69,7 @@ def test_layout_timeline_choords_2hour_scale() -> None:
     ]
 
 
+@pytest.mark.usefixtures("fix_localaity")
 def test_layout_timeline_choords_6hour_scale() -> None:
     # 6hour scale: less than 48 hours
     time_range = (TEST_REFERENCE_TIME - 30.1 * HOURS, TEST_REFERENCE_TIME + 17.8 * HOURS)
@@ -83,6 +86,7 @@ def test_layout_timeline_choords_6hour_scale() -> None:
     ]
 
 
+@pytest.mark.usefixtures("fix_localaity")
 def test_layout_timeline_choords_weeks_scale() -> None:
     # weeks scale: less than 60 days
     time_range = (TEST_REFERENCE_TIME - 32.08 * DAYS, TEST_REFERENCE_TIME + 27.5 * DAYS)
@@ -99,6 +103,7 @@ def test_layout_timeline_choords_weeks_scale() -> None:
     ]
 
 
+@pytest.mark.usefixtures("fix_localaity")
 def test_layout_timeline_choords_months_scale() -> None:
     time_range = (TEST_REFERENCE_TIME - 128.234 * DAYS, TEST_REFERENCE_TIME + 32 * DAYS)
 

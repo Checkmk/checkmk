@@ -14,11 +14,12 @@ TEST_AGENT = "test_agent"
 TEST_HOST = "test_host"
 
 
-@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture
 def patch_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(tmp_path))
 
 
+@pytest.mark.usefixtures("patch_env")
 class TestStorage:
     @pytest.mark.parametrize(
         "program_ident,host",

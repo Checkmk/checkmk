@@ -119,6 +119,7 @@ sh_library(
         "bazel_mypy.sh",
         "bazel_test_ci.sh",
         "bazel_test_post_archive_xunit.sh",
+        "build_qemu.sh",
         "build_wine.sh",
         "check_community_edition_all_free.sh",
         "create_unsign_msi_patch.sh",

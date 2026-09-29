@@ -5136,6 +5136,32 @@ class CustomServiceClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def edit(
+        self,
+        configuration_name: str,
+        host_assignment: Mapping[str, Any],
+        configuration: Mapping[str, Any],
+        etag: IF_MATCH_HEADER_OPTIONS | str = "star",
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{configuration_name}",
+            body={
+                "host_assignment": dict(host_assignment),
+                "configuration": dict(configuration),
+            },
+            headers=self._etag_header(configuration_name, etag),
+            expect_ok=expect_ok,
+        )
+
+    def _etag_header(
+        self, configuration_name: str, etag: IF_MATCH_HEADER_OPTIONS | str
+    ) -> Mapping[str, str] | None:
+        if etag == "valid_etag":
+            return {"If-Match": self.get(configuration_name).headers["ETag"]}
+        return _if_match_header(etag)
+
     def delete(self, configuration_name: str, expect_ok: bool = True) -> Response:
         return self.request(
             "delete",

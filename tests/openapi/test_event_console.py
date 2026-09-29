@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="explicit-any"
 
+from http import HTTPStatus
 from time import time
 from typing import Any
 
@@ -170,7 +171,7 @@ def test_get_ec_event_by_str_id(clients: ClientRegistry) -> None:
         site_id="NO_SITE",
         expect_ok=False,
     )
-    resp.assert_status_code(404)
+    resp.assert_status_code(HTTPStatus.NOT_FOUND)
     assert resp.json["fields"]["path.event_id"]["type"] == "int_parsing"
 
 
@@ -189,10 +190,10 @@ def test_get_ec_event_that_doesnt_exist_by_id(
             site_id="NO_SITE",
             expect_ok=False,
         )
-        resp.assert_status_code(404)
+        resp.assert_status_code(HTTPStatus.NOT_FOUND)
         assert resp.json == {
             "title": "The requested event was not found",
-            "status": 404,
+            "status": HTTPStatus.NOT_FOUND,
             "detail": "Could not find event with id 20.",
         }
 
@@ -271,7 +272,7 @@ def test_delete_event_no_params(clients: ClientRegistry) -> None:
         site_id="NO_SITE",
         filter_type="params",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_change_existing_event_state_by_id(
@@ -311,7 +312,7 @@ def test_change_non_existing_event_state_by_id(
             site_id="NO_SITE",
             new_state="warning",
             expect_ok=False,
-        ).assert_status_code(404)
+        ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_change_existing_event_states_query_filter(
@@ -369,7 +370,7 @@ def test_change_existing_event_states_no_filters(
         filter_type="params",
         new_state="unknown",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_update_and_acknowledge_by_id(
@@ -434,7 +435,7 @@ def test_update_and_acknowledge_non_existing_event_by_id(
             change_comment="testcontact",
             change_contact="testcomment",
             expect_ok=False,
-        ).assert_status_code(404)
+        ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_update_and_acknowledge_query_filter(

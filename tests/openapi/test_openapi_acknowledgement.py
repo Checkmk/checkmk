@@ -5,6 +5,7 @@
 
 import datetime as dt
 import json
+from http import HTTPStatus
 
 import pytest
 
@@ -77,7 +78,9 @@ def test_openapi_acknowledge_all_services(
             ),
             headers={"Accept": "application/json"},
             content_type="application/json",
-            status=(204 if acknowledgement_sent else 422),
+            status=(
+                HTTPStatus.NO_CONTENT if acknowledgement_sent else HTTPStatus.UNPROCESSABLE_ENTITY
+            ),
         )
 
 
@@ -160,7 +163,7 @@ def test_openapi_acknowledge_specific_service(
             ),
             headers={"Accept": "application/json"},
             content_type="application/json",
-            status=204,
+            status=HTTPStatus.NO_CONTENT,
         )
 
 
@@ -223,7 +226,9 @@ def test_openapi_acknowledge_host(
             ),
             headers={"Accept": "application/json"},
             content_type="application/json",
-            status=204 if acknowledgement_sent else 422,
+            status=HTTPStatus.NO_CONTENT
+            if acknowledgement_sent
+            else HTTPStatus.UNPROCESSABLE_ENTITY,
         )
 
 
@@ -288,7 +293,7 @@ def test_openapi_bulk_acknowledge(
             ),
             headers={"Accept": "application/json"},
             content_type="application/json",
-            status=204,
+            status=HTTPStatus.NO_CONTENT,
         )
 
 
@@ -339,7 +344,7 @@ def test_openapi_acknowledge_servicegroup(
                 }
             ),
             headers={"Accept": "application/json"},
-            status=204,
+            status=HTTPStatus.NO_CONTENT,
         )
 
 
@@ -386,7 +391,7 @@ def test_openapi_acknowledge_hostgroup(
                 }
             ),
             headers={"Accept": "application/json"},
-            status=204,
+            status=HTTPStatus.NO_CONTENT,
         )
 
     with live(expect_status_query=False):
@@ -404,7 +409,7 @@ def test_openapi_acknowledge_hostgroup(
                 }
             ),
             headers={"Accept": "application/json"},
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
         )
 
     # Test created but not monitored
@@ -425,7 +430,7 @@ def test_openapi_acknowledge_hostgroup(
                 }
             ),
             headers={"Accept": "application/json"},
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
         )
 
 
@@ -472,7 +477,7 @@ def test_openapi_acknowledge_host_with_query(
                 }
             ),
             headers={"Accept": "application/json"},
-            status=204,
+            status=HTTPStatus.NO_CONTENT,
         )
 
 
@@ -514,7 +519,7 @@ def test_openapi_acknowledge_host_with_non_matching_query(
                 }
             ),
             headers={"Accept": "application/json"},
-            status=422,
+            status=HTTPStatus.UNPROCESSABLE_ENTITY,
         )
 
 
@@ -566,7 +571,7 @@ def test_openapi_acknowledge_host_with_expire_on(
                 }
             ),
             headers={"Accept": "application/json"},
-            status=204,
+            status=HTTPStatus.NO_CONTENT,
         )
 
 

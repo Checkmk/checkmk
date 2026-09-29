@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="explicit-any"
 
+from http import HTTPStatus
 from time import time
 from typing import Any
 
@@ -228,7 +229,7 @@ def test_get_ec_event_that_does_not_exist(
     with mock_livestatus:
         clients.HistoricalEventConsole.get(
             event_id="7", site_id="NO_SITE", expect_ok=False
-        ).assert_status_code(404)
+        ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_get_all_ec_events(
@@ -383,7 +384,7 @@ def test_get_all_ec_events_invalid_json_query(
     with mock_livestatus(expect_status_query=False):
         clients.HistoricalEventConsole.get_all(
             query="not valid json", expect_ok=False
-        ).assert_status_code(400)
+        ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_get_all_ec_events_query_invalid_column(
@@ -394,4 +395,4 @@ def test_get_all_ec_events_query_invalid_column(
         clients.HistoricalEventConsole.get_all(
             query='{"op": "=", "left": "nonexistent_column", "right": "value"}',
             expect_ok=False,
-        ).assert_status_code(400)
+        ).assert_status_code(HTTPStatus.BAD_REQUEST)

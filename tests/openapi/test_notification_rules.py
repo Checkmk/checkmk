@@ -7,6 +7,7 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Generator, Iterator
+from http import HTTPStatus
 from typing import Any, cast, get_args, Literal
 
 import pytest
@@ -158,7 +159,7 @@ def test_move_unknown_notification_rule(clients: ClientRegistry) -> None:
         position="top_of_list",
         expect_ok=False,
     )
-    resp.assert_status_code(404)
+    resp.assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_move_notification_rule_before_unknown_rule(clients: ClientRegistry) -> None:
@@ -169,7 +170,7 @@ def test_move_notification_rule_before_unknown_rule(clients: ClientRegistry) -> 
         dest_rule_id="5425d554-5741-4bbf-b907-1a391dfab5bb",
         expect_ok=False,
     )
-    resp.assert_status_code(404)
+    resp.assert_status_code(HTTPStatus.NOT_FOUND)
     assert _rule_order(clients) == rule_ids
 
 
@@ -181,7 +182,7 @@ def test_move_notification_rule_relative_to_itself(clients: ClientRegistry) -> N
         dest_rule_id=rule_ids[1],
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert _rule_order(clients) == rule_ids
 
 
@@ -192,7 +193,7 @@ def test_move_notification_rule_without_destination(clients: ClientRegistry) -> 
         position="before_specific_rule",
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_create_notification_rule(clients: ClientRegistry) -> None:
@@ -238,7 +239,7 @@ def test_create_rule_delete_rule(clients: ClientRegistry) -> None:
     clients.RuleNotification.get(
         rule_id=r1.json["id"],
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def _group_entry(name: str, alias: str) -> dict[str, str]:
@@ -547,7 +548,7 @@ def test_create_and_update_rule_with_conditions_data_400(
         rule_id=r1.json["id"],
         rule_config=config,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 rule_properties_testdata: list[APIRuleProperties] = [
@@ -1597,7 +1598,7 @@ def test_pushover_key_regex(
     }
 
     r = clients.RuleNotification.create(rule_config=config, expect_ok=False)
-    r.assert_status_code(400)
+    r.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert r.json["fields"]["rule_config"]["notification_method"]["notify_plugin"][
         "plugin_params"
     ] == {
@@ -1854,7 +1855,7 @@ def test_bulking_400(
         rule_config=config,
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
 
     plugin_name = config["notification_method"]["notify_plugin"]["plugin_params"]["plugin_name"]
     assert resp.json["title"] == "Building bulks is not allowed"
@@ -1877,7 +1878,7 @@ def test_create_notification_with_invalid_custom_plugin(
     }
 
     resp = clients.RuleNotification.create(rule_config=config, expect_ok=False)
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
 
     assert resp.json["fields"]["rule_config"]["notification_method"]["notify_plugin"] == {
         "plugin_params": {"_schema": ["my_cool_plugin does not exist"]}
@@ -1933,7 +1934,7 @@ def test_create_notification_custom_plugin_invalid_list_config(  # type: ignore[
     }
 
     resp = clients.RuleNotification.create(rule_config=config, expect_ok=False)
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
 
     assert (
         resp.json["fields"]["rule_config"]["notification_method"]["notify_plugin"]["plugin_params"]
@@ -2151,7 +2152,7 @@ def test_create_notification_custom_plugin_invalid_dict_config(  # type: ignore[
     }
 
     resp = clients.RuleNotification.create(rule_config=config, expect_ok=False)
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
 
     assert (
         resp.json["fields"]["rule_config"]["notification_method"]["notify_plugin"]["plugin_params"]
@@ -2301,7 +2302,7 @@ def test_forbid_explicit_email_addresses_in_a_create_notification_request_in_clo
     }
 
     resp = clients.RuleNotification.create(rule_config=config, expect_ok=False)
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
 
     assert "explicit_email_addresses" in resp.json["fields"]["rule_config"]["contact_selection"]
     assert (

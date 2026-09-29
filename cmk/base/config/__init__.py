@@ -10,8 +10,6 @@ from ._impl import ConfigCache as ConfigCache
 from ._impl import CoreObjectsConfig as CoreObjectsConfig
 from ._impl import EnforcedServicesTable as EnforcedServicesTable
 from ._impl import FilterMode as FilterMode
-from ._impl import get_config_file_paths as get_config_file_paths
-from ._impl import get_default_config as get_default_config
 from ._impl import get_relay_id as get_relay_id
 from ._impl import get_ssc_host_config as get_ssc_host_config
 from ._impl import handle_ip_lookup_failure as handle_ip_lookup_failure
@@ -22,7 +20,6 @@ from ._impl import IgnoredActiveServices as IgnoredActiveServices
 from ._impl import iter_skipped_services_warnings as iter_skipped_services_warnings
 from ._impl import load as load
 from ._impl import load_all_plugins as load_all_plugins
-from ._impl import load_raw_config as load_raw_config
 from ._impl import load_resource_cfg_macros as load_resource_cfg_macros
 from ._impl import LoadingResult as LoadingResult
 from ._impl import make_clustering_config as make_clustering_config
@@ -39,3 +36,6 @@ from ._impl import SERVICE_RETRY_INTERVAL as SERVICE_RETRY_INTERVAL
 from ._impl import ServiceDependsOn as ServiceDependsOn
 from ._impl import ServicegroupName as ServicegroupName
 from ._impl import SMARTPING_CHECK_INTERVAL as SMARTPING_CHECK_INTERVAL
+from ._load_raw import get_config_file_paths as get_config_file_paths
+from ._load_raw import get_default_config as get_default_config
+from ._load_raw import load_raw_config as load_raw_config

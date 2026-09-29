@@ -86,6 +86,7 @@ py_cmk_test(
     srcs = glob(["tests/**/*.py"]),
     deps = [
         ":cmk-werk-ids-server",
+        ":site",
         ":tool",
         requirement("flask"),
         requirement("gitpython"),

@@ -30,5 +30,18 @@ test_checkmk_uptime() {
 
 }
 
+test_section_uptime_parses_days_without_trailing_comma() {
+
+    uptime() { echo "01:12:23  up 96 days  7:43,  1 user,  load average: 31.05, 34.93, 39.02"; }
+    assertEquals $'<<<uptime>>>\n8322180' "$(section_uptime)"
+
+    uptime() { echo "01:34AM  up 35 days 1 hr,  0 users,  load average: 0.89, 1.15, 1.19"; }
+    assertEquals $'<<<uptime>>>\n3027600' "$(section_uptime)"
+
+    uptime() { echo "08:45AM  up 76 days  34 mins, 1 user,  load average: 2.25, 2.43, 2.61"; }
+    assertEquals $'<<<uptime>>>\n6568440' "$(section_uptime)"
+
+}
+
 # shellcheck disable=SC1090
 . "$UNIT_SH_SHUNIT2"

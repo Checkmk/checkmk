@@ -12,7 +12,7 @@ from cmk.plugins.f5_bigip.agent_based.f5_bigip_cluster import CONFIG_SYNC_DEFAUL
 from cmk.plugins.f5_bigip.rulesets.f5_bigip_cluster_v11 import rule_spec_f5_bigip_cluster_v11
 
 
-@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture
 def _register_form_spec_visitors() -> None:
     registration.register()
 
@@ -57,12 +57,14 @@ def _migrate(rule: Mapping[str, object]) -> object:
         ),
     ],
 )
+@pytest.mark.usefixtures("_register_form_spec_visitors")
 def test_rule_spec_f5_bigip_cluster_v11_migration(
     rule: Mapping[str, object], expected: Mapping[str, object]
 ) -> None:
     assert _migrate(rule) == expected
 
 
+@pytest.mark.usefixtures("_register_form_spec_visitors")
 def test_rule_spec_f5_bigip_cluster_v11_covers_the_check_defaults() -> None:
     """Every parameter the check reads has to be configurable."""
     assert set(rule_spec_f5_bigip_cluster_v11.parameter_form().elements) == set(

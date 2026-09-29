@@ -19,7 +19,7 @@ from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 # Mocking wato_audit.log as its contents are not used in these tests and accessing it causes flaky results.
-@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture
 def mock_log_audit_file(mocker: MockerFixture) -> Iterator[None]:
     mocker.patch("cmk.gui.watolib.audit_log.log_audit")
     yield
@@ -49,11 +49,13 @@ def _create_ldap_connection(ldap_id: str) -> None:
     active_config.user_connections = [ldap_config]
 
 
+@pytest.mark.usefixtures("mock_log_audit_file")
 def test_test_non_existing_connection(clients: ClientRegistry) -> None:
     resp = clients.LdapConnection.test_connection("non_existing", expect_ok=False)
     assert resp.status_code == 404
 
 
+@pytest.mark.usefixtures("mock_log_audit_file")
 def test_test_connection_returns_structured_results(
     clients: ClientRegistry, mocker: MockerFixture
 ) -> None:
@@ -86,6 +88,7 @@ def test_test_connection_returns_structured_results(
     }
 
 
+@pytest.mark.usefixtures("mock_log_audit_file")
 def test_test_connection_handles_test_exceptions(
     clients: ClientRegistry, mocker: MockerFixture
 ) -> None:

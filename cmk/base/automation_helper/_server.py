@@ -14,6 +14,8 @@ from cmk.ccc.log import CMKFormatter
 
 from ._config import ServerConfig
 
+_BACKLOG = 2048
+
 
 def run(
     config: ServerConfig,
@@ -27,6 +29,7 @@ def run(
             application_factory_import_path,
             factory=True,
             fd=socket_file_descriptor,
+            backlog=_BACKLOG,
             workers=config.num_workers,
             timeout_graceful_shutdown=30,
             log_config={
@@ -79,6 +82,9 @@ def _provide_unix_socket(path: Path, permissions: int) -> Generator[int]:
             path.unlink(missing_ok=True)  # Handle stale socket files
             sock.bind(str(path))
             path.chmod(permissions)
+            # Listen right away: uvicorn only does so once the workers have loaded the
+            # configuration. Until then, clients must be queued, not refused.
+            sock.listen(_BACKLOG)
             yield sock.fileno()
     finally:
         path.unlink(missing_ok=True)

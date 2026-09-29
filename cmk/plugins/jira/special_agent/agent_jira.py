@@ -22,6 +22,7 @@ from jira.exceptions import JIRAError
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
+from cmk.server_side_programs.v1 import configure_logging
 
 LOGGER = logging.getLogger(__name__)
 
@@ -244,8 +245,7 @@ def setup_logging(verbosity: int) -> None:
     else:
         logging.disable(logging.CRITICAL)
         lvl = logging.CRITICAL
-    # astrein: disable=logging-formatter
-    logging.basicConfig(level=lvl, format="%(asctime)s %(levelname)s %(message)s")
+    configure_logging(lvl)
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:

@@ -67,7 +67,7 @@ from cmk.plugins.azure_v2.special_agent.azure_metrics import (
     Intervals,
     OPTIONAL_METRICS,
 )
-from cmk.server_side_programs.v1 import report_agent_crashes, vcrtrace
+from cmk.server_side_programs.v1 import configure_logging, report_agent_crashes, vcrtrace
 
 type ResourceId = str
 
@@ -3025,10 +3025,8 @@ async def main_async(args: argparse.Namespace, selector: Selector) -> int:
 
 
 def _setup_logging(verbose: int) -> None:
-    logging.basicConfig(  # astrein: disable=logging-formatter
-        level={0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}.get(verbose, logging.DEBUG),
-        format="%(levelname)s %(asctime)s %(name)s - %(funcName)s: %(message)s",
-        force=True,
+    configure_logging(
+        {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}.get(verbose, logging.DEBUG)
     )
 
     if verbose == 2:

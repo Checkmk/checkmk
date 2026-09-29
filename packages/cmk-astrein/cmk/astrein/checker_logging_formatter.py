@@ -17,6 +17,9 @@ _EXCLUDED_GLOBS = (
     "agents/plugins/*",
     "**/cmk/plugins/*/agents/*",
     "non-free/packages/cmk-update-agent/**",
+    # Cannot import cmk.ccc; they log via cmk.server_side_programs.v1.configure_logging.
+    "packages/cmk-plugins/**",
+    "packages/cmk-plugin-apis/**",
     "**/tests/**",
     "**/testlib/**",
     "doc/**",  # standalone example scripts for customers, also excluded from ruff

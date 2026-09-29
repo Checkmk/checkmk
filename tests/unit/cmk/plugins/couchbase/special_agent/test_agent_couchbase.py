@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+import logging
 import sys
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from http import HTTPStatus
 
 import pytest
@@ -14,6 +15,20 @@ import responses
 
 from cmk.password_store.v1 import resolve_secret_option
 from cmk.plugins.couchbase.special_agent import agent_couchbase
+
+
+@pytest.fixture(name="restore_root_logger")
+def fixture_restore_root_logger() -> Iterator[None]:
+    # The agent replaces the root logger's handlers with one bound to the
+    # current, test-local stderr. Left in place, it breaks later tests.
+    root = logging.getLogger()
+    handlers, level = root.handlers[:], root.level
+    yield
+    root.handlers[:] = handlers
+    root.setLevel(level)
+
+
+pytestmark = pytest.mark.usefixtures("restore_root_logger")
 
 HOST = "couchbase.example.com"
 PORT = 8091

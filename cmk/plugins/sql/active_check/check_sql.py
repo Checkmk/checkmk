@@ -28,6 +28,7 @@ from collections.abc import Sequence
 from typing import Any, NoReturn
 
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
+from cmk.server_side_programs.v1 import configure_logging
 
 LOG = logging.getLogger(__name__)
 
@@ -187,13 +188,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     args = parser.parse_args(argv[1:])
 
     # LOGGING
-    fmt = "%(message)s"
-    if args.verbose > 1:
-        fmt = "%(levelname)s: %(lineno)s: " + fmt
-        if args.dbms == "mssql":
-            os.environ["TDSDUMP"] = "stdout"
-    # astrein: disable=logging-formatter
-    logging.basicConfig(level=max(30 - 10 * args.verbose, 0), format=fmt)
+    if args.verbose > 1 and args.dbms == "mssql":
+        os.environ["TDSDUMP"] = "stdout"
+    configure_logging(max(30 - 10 * args.verbose, 0))
 
     # V-VERBOSE INFO
     for key, val in vars(args).items():

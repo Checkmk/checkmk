@@ -193,6 +193,7 @@ py_library(
         "cmk/server_side_programs/v1/__init__.py",
         "cmk/server_side_programs/v1/_crash_reporting.py",
         "cmk/server_side_programs/v1/_host_name_validation.py",
+        "cmk/server_side_programs/v1/_logging.py",
         "cmk/server_side_programs/v1/_storage.py",
         "cmk/server_side_programs/v1/_vcrtrace.py",
         "cmk/server_side_programs/v1_unstable/__init__.py",

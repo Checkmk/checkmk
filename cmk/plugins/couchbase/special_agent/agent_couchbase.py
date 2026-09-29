@@ -21,7 +21,7 @@ from typing import Any
 import requests
 
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1 import report_agent_crashes, vcrtrace
+from cmk.server_side_programs.v1 import configure_logging, report_agent_crashes, vcrtrace
 
 __version__ = "3.0.0b1"
 
@@ -190,14 +190,10 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
 
 
 def set_up_logging(verbosity: int) -> None:
-    fmt = "%(levelname)s: %(message)s"
     if verbosity >= 2:
-        fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s %(message)s"
-        lvl = logging.DEBUG
+        configure_logging(logging.DEBUG)
     else:
-        lvl = logging.INFO if verbosity else logging.WARNING
-
-    logging.basicConfig(level=lvl, format=fmt)  # astrein: disable=logging-formatter
+        configure_logging(logging.INFO if verbosity else logging.WARNING)
 
 
 class CouchbaseClient:

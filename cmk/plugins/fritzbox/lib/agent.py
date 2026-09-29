@@ -41,7 +41,7 @@ from typing import Final
 
 import requests
 
-from cmk.server_side_programs.v1 import vcrtrace
+from cmk.server_side_programs.v1 import configure_logging, vcrtrace
 
 LOGGER = logging.getLogger(__name__)
 
@@ -112,10 +112,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
 
 
 def setup_logging(verbose: bool) -> None:
-    logging.basicConfig(  # astrein: disable=logging-formatter
-        level=logging.DEBUG if verbose else logging.ERROR,
-        format="%(levelname)s: %(message)s",
-    )
+    configure_logging(logging.DEBUG if verbose else logging.ERROR)
 
 
 class FritzConnection:

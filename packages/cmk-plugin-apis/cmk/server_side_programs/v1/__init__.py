@@ -26,12 +26,14 @@ from ._crash_reporting import report_check_crashes as report_check_crashes
 from ._host_name_validation import (
     HostnameValidationAdapter as HostnameValidationAdapter,
 )
+from ._logging import configure_logging as configure_logging
 from ._storage import Storage as Storage
 from ._vcrtrace import vcrtrace as vcrtrace
 
 __all__ = [
     "HostnameValidationAdapter",
     "Storage",
+    "configure_logging",
     "vcrtrace",
     "report_agent_crashes",
     "report_check_crashes",

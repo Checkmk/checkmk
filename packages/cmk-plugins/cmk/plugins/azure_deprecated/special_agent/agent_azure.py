@@ -37,7 +37,7 @@ import requests
 
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.azure_deprecated.http_proxies import deserialize_proxy_config, ProxyConfig
-from cmk.server_side_programs.v1 import vcrtrace
+from cmk.server_side_programs.v1 import configure_logging, vcrtrace
 
 from ._data_cache import DataCache
 
@@ -392,22 +392,18 @@ def parse_arguments(argv: Sequence[str]) -> Args:
     # LOGGING
     if args.verbose and args.verbose >= 3:
         # this will show third party log messages as well
-        fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s"
         lvl = logging.DEBUG
     elif args.verbose and args.verbose == 2:
         # be verbose, but silence msrest, urllib3 and requests_oauthlib
-        fmt = "%(levelname)s: %(funcName)s: %(lineno)s: %(message)s"
         lvl = logging.DEBUG
         logging.getLogger("msrest").setLevel(logging.WARNING)
         logging.getLogger("urllib3").setLevel(logging.WARNING)
         logging.getLogger("requests_oauthlib").setLevel(logging.WARNING)
     elif args.verbose:
-        fmt = "%(levelname)s: %(funcName)s: %(message)s"
         lvl = logging.INFO
     else:
-        fmt = "%(levelname)s: %(message)s"
         lvl = logging.WARNING
-    logging.basicConfig(level=lvl, format=fmt)  # astrein: disable=logging-formatter
+    configure_logging(lvl)
 
     # V-VERBOSE INFO
     for key, value in vars(args).items():

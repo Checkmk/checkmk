@@ -75,7 +75,7 @@ from cmk.plugins.kube.common import (
 )
 from cmk.plugins.kube.prometheus_api import ResponseSuccess
 from cmk.plugins.kube.schemata import api, section
-from cmk.server_side_programs.v1 import report_agent_crashes, vcrtrace
+from cmk.server_side_programs.v1 import configure_logging, report_agent_crashes, vcrtrace
 
 __version__ = "3.0.0b1"
 
@@ -322,8 +322,7 @@ def setup_logging(verbosity: int) -> None:
     else:
         logging.disable(logging.CRITICAL)
         lvl = logging.CRITICAL
-    # astrein: disable=logging-formatter
-    logging.basicConfig(level=lvl, format="%(asctime)s %(levelname)s %(message)s")
+    configure_logging(lvl)
 
 
 @dataclass(frozen=True)

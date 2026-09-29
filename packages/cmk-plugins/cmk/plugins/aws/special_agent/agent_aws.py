@@ -23,7 +23,7 @@ import botocore
 
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.aws.constants import AWS_REGIONS
-from cmk.server_side_programs.v1 import report_agent_crashes, vcrtrace
+from cmk.server_side_programs.v1 import configure_logging, report_agent_crashes, vcrtrace
 
 from .config import (
     AGENT,
@@ -400,10 +400,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
 
 def _setup_logging(opt_debug: bool, opt_verbose: int) -> None:
     logging.getLogger().disabled = not (opt_debug or opt_verbose)
-    logging.basicConfig(  # astrein: disable=logging-formatter
-        level=logging.DEBUG if opt_verbose > 1 else logging.INFO,
-        format="%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s",
-    )
+    configure_logging(logging.DEBUG if opt_verbose > 1 else logging.INFO)
 
 
 def _create_anonymous_session(

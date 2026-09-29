@@ -24,7 +24,7 @@ import requests
 import urllib3
 
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1 import report_agent_crashes, vcrtrace
+from cmk.server_side_programs.v1 import configure_logging, report_agent_crashes, vcrtrace
 
 __version__ = "3.0.0b1"
 
@@ -103,11 +103,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
 
 
 def setup_logging(debug: bool) -> None:
-    logging.basicConfig(  # astrein: disable=logging-formatter
-        level=logging.DEBUG if debug else logging.WARNING,
-        stream=sys.stderr,
-        format="%(asctime)s %(levelname)s %(name)s %(message)s",
-    )
+    configure_logging(logging.DEBUG if debug else logging.WARNING)
     if debug:
         # Surface the wire-level request/response path (still on stderr).
         logging.getLogger("urllib3").setLevel(logging.DEBUG)

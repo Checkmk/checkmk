@@ -1,0 +1,27 @@
+# WARNING: hdr_check: cannot read SQL file 'hdr_check.sql': No such file or directory (os error 2)
+# --- Known environment variables defined in legacy config ---
+# DBUSER ***
+# SQLS.hdr_check.SQLS_SECTION_NAME my_section
+# SQLS.hdr_check.SQLS_SECTION_SEP 124
+# SQLS.hdr_check.SQLS_SIDS PROD1
+# SQLS.hdr_check.SQLS_SQL hdr_check.sql
+# SQLS_SECTIONS hdr_check
+# WARNING: hdr_check: cannot read SQL file 'hdr_check.sql': No such file or directory (os error 2)
+# --- Unified Config ---
+---
+oracle:
+  main:
+    connection:
+      hostname: localhost
+      port: 1521
+    authentication:
+      username: "user"
+      password: "pass"
+      type: standard
+    instances:
+      - sid: PROD1
+        custom_metrics:
+          - hdr_check:
+              path: hdr_check.sql
+              header_name: my_section
+              header_sep: 124

@@ -131,6 +131,7 @@ def _schedule_check_and_discover(site: Site, hostname_source: str, hostname_pigg
     site.openapi.service_discovery.run_discovery_and_wait_for_completion(hostname_piggyback)
 
 
+@pytest.mark.medium_test_chain
 def test_piggyback_services_source_remote(piggyback_env_two_site_setup: tuple[Site, Site]) -> None:
     """
     Service for host _HOSTNAME_PIGGYBACKED, generated on site central_site, is monitored on remote_site
@@ -483,25 +484,6 @@ def _create_and_rename_host(
     finally:
         source_site.openapi.hosts.delete(hostname_piggyback)
         source_site.openapi.changes.activate_and_wait_for_completion()
-
-
-@pytest.mark.medium_test_chain
-def test_piggyback_rename_host(piggyback_env_two_site_setup: tuple[Site, Site]) -> None:
-    """
-    Scenario: Host renaming triggers piggyback config re-distribution
-    - host "other_host" is created on remote_site
-    - host "other_host" is renamed to _HOSTNAME_PIGGYBACKED
-    - piggyback data for _HOSTNAME_PIGGYBACKED is monitored on remote_site
-    """
-    central_site, remote_site = piggyback_env_two_site_setup
-    _HOSTNAME_PIGGYBACKED = "piggybacked_host_rename"
-    with _setup_piggyback_host_and_check(
-        central_site, remote_site.id, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
-    ):
-        _schedule_check_and_discover(central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
-        piggybacked_service_discovered(
-            central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
-        )
 
 
 @contextmanager

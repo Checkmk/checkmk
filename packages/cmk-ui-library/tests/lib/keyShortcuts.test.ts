@@ -8,7 +8,7 @@ import { type KeyShortcut, KeyShortcutService } from 'cmk-ui-library/lib/keyShor
 import { type KeyboardHelpEntry, getKeyboardHelp } from 'cmk-ui-library/lib/keyboardHelp'
 import { afterEach, expect, test, vi } from 'vitest'
 
-const shortcuts = new KeyShortcutService(window)
+const shortcuts = new KeyShortcutService(window, null, document.getElementsByTagName('iframe'))
 let registered: string[] = []
 
 function t(value: string): TranslatedString {
@@ -135,4 +135,29 @@ test('getShortCutInfo spells out the modifiers', () => {
   expect(KeyShortcutService.getShortCutInfo({ key: ['k'], ctrl: true, shift: true })).toBe(
     'Ctrl + Shift + K'
   )
+})
+
+test('a key held while the window loses focus counts as released', () => {
+  const escape = on({ key: ['Escape'] })
+  const button = element<HTMLButtonElement>('<button type="button"></button>')
+
+  button.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+  window.dispatchEvent(new FocusEvent('blur'))
+  press(button, 'a')
+
+  expect(escape).toHaveBeenCalledTimes(1)
+})
+
+test('a key held while a listened-to iframe loses focus counts as released', async () => {
+  const escape = on({ key: ['Escape'] })
+  const frame = element<HTMLIFrameElement>('<iframe></iframe>')
+  // The service attaches its listeners to an added iframe from a MutationObserver callback
+  await Promise.resolve()
+  const body = frame.contentDocument!.body
+
+  body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+  frame.contentWindow!.dispatchEvent(new FocusEvent('blur'))
+  press(body, 'a')
+
+  expect(escape).toHaveBeenCalledTimes(1)
 })

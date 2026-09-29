@@ -112,6 +112,7 @@ export class KeyShortcutService {
   private helpUnregisters = new Map<string, () => void>()
   private readonly boundHandleKeyDown: (e: KeyboardEvent) => void
   private readonly boundHandleKeyUp: (e: KeyboardEvent) => void
+  private readonly boundReleaseKeys: () => void
   private iframeObserver: MutationObserver | null = null
 
   constructor(
@@ -121,6 +122,7 @@ export class KeyShortcutService {
   ) {
     this.boundHandleKeyDown = this.handleKeyDown.bind(this)
     this.boundHandleKeyUp = this.handleKeyUp.bind(this)
+    this.boundReleaseKeys = this.releaseKeys.bind(this)
     this.initListeners()
   }
 
@@ -206,6 +208,7 @@ export class KeyShortcutService {
   private initListeners() {
     this.window.addEventListener('keydown', this.boundHandleKeyDown)
     this.window.addEventListener('keyup', this.boundHandleKeyUp)
+    this.window.addEventListener('blur', this.boundReleaseKeys)
 
     if (this.listenTo) {
       this.observeIframes()
@@ -251,6 +254,7 @@ export class KeyShortcutService {
     try {
       contentWindow.addEventListener('keydown', this.boundHandleKeyDown)
       contentWindow.addEventListener('keyup', this.boundHandleKeyUp)
+      contentWindow.addEventListener('blur', this.boundReleaseKeys)
     } catch {
       return
     }
@@ -285,6 +289,11 @@ export class KeyShortcutService {
 
   private handleKeyUp(e: KeyboardEvent): void {
     this.setKeyState(e.key, false)
+  }
+
+  // A window that loses focus gets no keyup for the keys still held, e.g. after alt-tab.
+  private releaseKeys(): void {
+    this.keyStates = {}
   }
 
   private shortcutKeysPressed(keys: string[]): boolean {

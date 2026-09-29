@@ -267,6 +267,14 @@ def make_pending_changes(
     )
 
 
+def _change_scope(config_variable: ConfigVariable, sites: Sequence[SiteId] | None) -> ChangeScope:
+    if sites is None:
+        return ChangeScope.all_activation_sites()
+    if config_variable.always_affects_local_site():
+        return ChangeScope.sites_and_local_site(sites)
+    return ChangeScope.sites(sites)
+
+
 def add_global_settings_change(
     config_variable: ConfigVariable,
     *,
@@ -288,7 +296,7 @@ def add_global_settings_change(
                 for d in config_variable.all_domains()
             },
         ),
-        ChangeScope.all_activation_sites() if sites is None else ChangeScope.sites(sites),
+        _change_scope(config_variable, sites),
     )
 
 

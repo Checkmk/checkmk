@@ -386,6 +386,7 @@ class ConfigVariable:
         allow_reset: bool = True,
         in_global_settings: bool = True,
         hints: Callable[[], Sequence[ConfigVariableHint]] = tuple,
+        always_affects_local_site: bool = False,
     ) -> None:
         self._group = group
         self._primary_domain_ident = primary_domain.ident()
@@ -396,6 +397,7 @@ class ConfigVariable:
         self._allow_reset = allow_reset
         self._in_global_settings = in_global_settings
         self._hints = hints
+        self._always_affects_local_site = always_affects_local_site
         self._idents_of_affected_domains = [self._primary_domain_ident]
 
     def group(self) -> ConfigVariableGroup:
@@ -445,6 +447,9 @@ class ConfigVariable:
     def hints(self) -> Sequence[ConfigVariableHint]:
         domain_hint = self.primary_domain().hint()
         return [*([ConfigVariableHint(domain_hint)] if domain_hint else []), *self._hints()]
+
+    def always_affects_local_site(self) -> bool:
+        return self._always_affects_local_site
 
     def add_config_domain_affected_by_change(
         self,

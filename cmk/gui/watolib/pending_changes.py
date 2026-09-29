@@ -52,6 +52,7 @@ class Change:
 class _ScopeKind(Enum):
     ALL_ACTIVATION_SITES = "all_activation_sites"
     EXPLICIT_SITES = "explicit_sites"
+    EXPLICIT_SITES_AND_LOCAL_SITE = "explicit_sites_and_local_site"
     LOCAL_SITE = "local_site"
 
 
@@ -65,6 +66,7 @@ class ChangeScope:
     * :meth:`sites` - a caller-specified set, intersected with the
       activation sites at record time. If the intersection drops sites, the
       local site is added so the change is still logged somewhere.
+    * :meth:`sites_and_local_site` - like :meth:`sites`, plus the local site.
     * :meth:`local_site` - only the local site.
     """
 
@@ -78,6 +80,12 @@ class ChangeScope:
     @classmethod
     def sites(cls, site_ids: Iterable[SiteId]) -> ChangeScope:
         return cls(kind=_ScopeKind.EXPLICIT_SITES, explicit_sites=frozenset(site_ids))
+
+    @classmethod
+    def sites_and_local_site(cls, site_ids: Iterable[SiteId]) -> ChangeScope:
+        return cls(
+            kind=_ScopeKind.EXPLICIT_SITES_AND_LOCAL_SITE, explicit_sites=frozenset(site_ids)
+        )
 
     @classmethod
     def local_site(cls) -> ChangeScope:
@@ -171,6 +179,8 @@ class PendingChanges:
         if scope.kind is _ScopeKind.LOCAL_SITE:
             return frozenset({self._local_site})
         intersected = scope.explicit_sites & valid
+        if scope.kind is _ScopeKind.EXPLICIT_SITES_AND_LOCAL_SITE:
+            return intersected | {self._local_site}
         if len(intersected) != len(scope.explicit_sites):
             # A caller-supplied site was filtered out (e.g. a remote site
             # name that the local instance does not know). Make sure the

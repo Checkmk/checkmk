@@ -183,12 +183,8 @@ def make_host_breadcrumb(host_name: HostName, user_permissions: UserPermissions)
     breadcrumb.append(
         BreadcrumbItem(
             title=_u(str(allhosts_view_spec["title"])),
-            url=makeuri_contextless(
-                request,
-                [("view_name", "allhosts")],
-                filename="view.py",
-            ),
-            id=None,
+            url=makeuri_contextless(request, [], filename="monitor_all_hosts.py"),
+            id="monitor_all_hosts",
         )
     )
 

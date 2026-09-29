@@ -40,12 +40,13 @@ _SECTION = parse_ucs_c_rack_server_temp(
 )
 
 
-@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture
 def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     # Without previous readings the temperature helper reports no trends.
     monkeypatch.setattr(ucs_c_rack_server_temp, "get_value_store", dict)
 
 
+@pytest.mark.usefixtures("_empty_value_store")
 def test_parse_ucs_c_rack_server_temp() -> None:
     assert _SECTION == {
         "Rack Unit 1 CPU 1": 58.4,
@@ -54,6 +55,7 @@ def test_parse_ucs_c_rack_server_temp() -> None:
     }
 
 
+@pytest.mark.usefixtures("_empty_value_store")
 def test_discover_ucs_c_rack_server_temp() -> None:
     assert list(discover_ucs_c_rack_server_temp(_SECTION)) == [
         Service(item="Rack Unit 1 CPU 1"),
@@ -62,6 +64,7 @@ def test_discover_ucs_c_rack_server_temp() -> None:
     ]
 
 
+@pytest.mark.usefixtures("_empty_value_store")
 def test_check_ucs_c_rack_server_temp_without_levels() -> None:
     results = list(
         check_ucs_c_rack_server_temp("Rack Unit 1 Memory Array 1 Memory DIMM 1", {}, _SECTION)
@@ -72,6 +75,7 @@ def test_check_ucs_c_rack_server_temp_without_levels() -> None:
     ]
 
 
+@pytest.mark.usefixtures("_empty_value_store")
 def test_check_ucs_c_rack_server_temp_above_levels() -> None:
     results = list(
         check_ucs_c_rack_server_temp("Rack Unit 1 CPU 1", {"levels": (45.0, 55.0)}, _SECTION)
@@ -82,5 +86,6 @@ def test_check_ucs_c_rack_server_temp_above_levels() -> None:
     ]
 
 
+@pytest.mark.usefixtures("_empty_value_store")
 def test_check_ucs_c_rack_server_temp_vanished_item() -> None:
     assert not list(check_ucs_c_rack_server_temp("Rack Unit 2 CPU 1", {}, _SECTION))

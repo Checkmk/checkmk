@@ -75,3 +75,5 @@ class MetricsRecord(BaseModel, frozen=True):
         AggregatedInstantGauge | AggregatedInstantSum | AggregatedInstantHistogram,
         Field(discriminator="type"),
     ]
+    newest_sample_time: float | None = None
+    """Time of the newest sample in the lookback window in unix seconds."""

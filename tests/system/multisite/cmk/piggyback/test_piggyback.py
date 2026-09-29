@@ -10,15 +10,17 @@ from contextlib import contextmanager
 
 import pytest
 
-from cmk.piggyback.backend._paths import source_status_dir
+from cmk.piggyback.backend._paths import payload_dir, source_status_dir
 from cmk.piggyback.hub import RELATIVE_CONFIG_PATH
 from tests.system.multisite.cmk.piggyback.piggyback_test_helper import (
     CMK_TRACK_TIMEOUT,
     create_local_check,
+    discovered_service_phases,
     get_piggybacked_service_time,
     piggyback_hub_log_level,
     piggybacked_data_gets_updated,
     piggybacked_service_discovered,
+    piggybacked_service_name,
     set_omd_config_piggyback_hub,
 )
 from tests.system.multisite.utils import await_broker_ready
@@ -362,7 +364,9 @@ def test_config_sync_source_remote_remote_diff_customer(
         _wait_for_config_redistributed(piggyback_env_three_site_setup, config_mtimes_ms)
 
 
-def test_config_sync_rename_host(piggyback_env_two_site_setup: tuple[Site, Site]) -> None:
+def test_renaming_a_piggybacked_host_redistributes_config(
+    piggyback_env_two_site_setup: tuple[Site, Site],
+) -> None:
     """
     Scenario: Host renaming triggers piggyback config re-distribution
     """
@@ -498,6 +502,129 @@ def test_piggyback_rename_host(piggyback_env_two_site_setup: tuple[Site, Site]) 
         piggybacked_service_discovered(
             central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
         )
+
+
+@contextmanager
+def _cleanup_piggyback_files(
+    sites: Sequence[Site],
+    *,
+    piggybacked_hosts: Sequence[str] = (),
+    source_hosts: Sequence[str] = (),
+) -> Iterator[None]:
+    try:
+        yield
+    finally:
+        for site in sites:
+            for hostname in piggybacked_hosts:
+                site.delete_dir(payload_dir(site.root) / hostname)
+            for hostname in source_hosts:
+                site.delete_file(source_status_dir(site.root) / hostname)
+
+
+@contextmanager
+def _cleanup_hosts(central_site: Site, *hostnames: str) -> Iterator[None]:
+    try:
+        yield
+    finally:
+        central_site.openapi.hosts.bulk_delete(list(hostnames), ignore_missing=True)
+        central_site.openapi.changes.activate_and_wait_for_completion()
+
+
+def _rename_host(central_site: Site, hostname_old: str, hostname_new: str) -> str:
+    summary = central_site.openapi.hosts.rename_and_wait_for_completion(
+        hostname_old=hostname_old, hostname_new=hostname_new, etag="*"
+    )
+    central_site.openapi.changes.activate_and_wait_for_completion()
+    return summary
+
+
+@pytest.mark.skip(
+    reason="move_for_host_rename returns a tuple of characters and never moves the files a host is the source of"
+)
+def test_renaming_a_piggybacked_host_keeps_its_piggybacked_service(
+    piggyback_env_two_site_setup: tuple[Site, Site],
+) -> None:
+    """A renamed piggybacked host is still fed by its source"""
+    central_site, remote_site = piggyback_env_two_site_setup
+    _HOSTNAME_PIGGYBACKED = "piggybacked_host_to_rename"
+    _HOSTNAME_RENAMED = "piggybacked_host_renamed"
+    with (
+        _cleanup_piggyback_files(
+            (central_site, remote_site),
+            piggybacked_hosts=(_HOSTNAME_PIGGYBACKED, _HOSTNAME_RENAMED),
+        ),
+        _cleanup_hosts(central_site, _HOSTNAME_PIGGYBACKED, _HOSTNAME_RENAMED),
+        create_local_check(central_site, [_HOSTNAME_SOURCE_CENTRAL], [_HOSTNAME_PIGGYBACKED]),
+    ):
+        central_site.openapi.hosts.create(
+            hostname=_HOSTNAME_PIGGYBACKED,
+            attributes={
+                "site": remote_site.id,
+                "tag_address_family": "no-ip",
+                "tag_agent": "no-agent",
+                "tag_piggyback": "piggyback",
+            },
+        )
+        central_site.openapi.changes.activate_and_wait_for_completion()
+        _schedule_check_and_discover(central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
+        central_site.openapi.changes.activate_and_wait_for_completion()
+
+        summary = _rename_host(central_site, _HOSTNAME_PIGGYBACKED, _HOSTNAME_RENAMED)
+        central_site.openapi.service_discovery.run_discovery_and_wait_for_completion(
+            _HOSTNAME_RENAMED
+        )
+        piggybacked_service_discovered(central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_RENAMED)
+        assert "Piggyback information from other host" in summary
+
+
+@pytest.mark.skip(
+    reason="move_for_host_rename returns a tuple of characters and never moves the files a host is the source of"
+)
+def test_renaming_a_source_host_keeps_delivering_the_piggybacked_service(
+    piggyback_env_two_site_setup: tuple[Site, Site],
+) -> None:
+    """A renamed source host does not orphan the data it delivered to a host on its own site"""
+    # Copies the hub distributed to other sites are not moved, they expire by their maximum age.
+    central_site, _remote_site = piggyback_env_two_site_setup
+    _HOSTNAME_SOURCE = "source_central_host_to_rename"
+    _HOSTNAME_RENAMED = "source_central_host_renamed"
+    _HOSTNAME_PIGGYBACKED = "piggybacked_host_source_renamed"
+    with (
+        _cleanup_piggyback_files(
+            (central_site,),
+            piggybacked_hosts=(_HOSTNAME_PIGGYBACKED,),
+            source_hosts=(_HOSTNAME_SOURCE, _HOSTNAME_RENAMED),
+        ),
+        _cleanup_hosts(central_site, _HOSTNAME_SOURCE, _HOSTNAME_RENAMED),
+        _setup_piggyback_host_and_check(
+            central_site, central_site.id, _HOSTNAME_SOURCE, _HOSTNAME_PIGGYBACKED
+        ),
+    ):
+        central_site.openapi.hosts.create(
+            hostname=_HOSTNAME_SOURCE,
+            attributes={
+                "site": central_site.id,
+                "ipaddress": "127.0.0.1",
+                "tag_agent": "cmk-agent",
+            },
+            bake_agent=False,
+        )
+        central_site.openapi.changes.activate_and_wait_for_completion()
+        _schedule_check_and_discover(central_site, _HOSTNAME_SOURCE, _HOSTNAME_PIGGYBACKED)
+        central_site.openapi.changes.activate_and_wait_for_completion()
+
+        summary = _rename_host(central_site, _HOSTNAME_SOURCE, _HOSTNAME_RENAMED)
+        central_site.schedule_check(_HOSTNAME_RENAMED, "Check_MK")
+        central_site.openapi.service_discovery.run_discovery_and_wait_for_completion(
+            _HOSTNAME_PIGGYBACKED, mode="refresh"
+        )
+
+        phases = discovered_service_phases(central_site, _HOSTNAME_PIGGYBACKED)
+        # The service name carries the source name, so the service from the old name stops
+        # being fed and the one from the new name appears.
+        assert phases[piggybacked_service_name(_HOSTNAME_RENAMED)] == "undecided"
+        assert phases[piggybacked_service_name(_HOSTNAME_SOURCE)] == "vanished"
+        assert "Piggyback information for other hosts" in summary
 
 
 def _piggybacked_service_gets_updated(

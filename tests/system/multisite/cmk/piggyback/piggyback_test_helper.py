@@ -6,7 +6,7 @@
 
 import signal
 import subprocess
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager, ExitStack
 from types import FrameType
 from typing import Final, IO, Literal
@@ -64,6 +64,27 @@ def get_piggybacked_service_time(
     return int(service_time_txt)
 
 
+def discovered_service_phases(central_site: Site, hostname: str) -> Mapping[str, str]:
+    """The phase ('monitored', 'vanished', 'undecided', ...) of each service on 'hostname'."""
+    services = central_site.openapi.service_discovery.get_discovery_result(hostname)["extensions"]
+    if not isinstance(services, dict) or not isinstance(
+        (check_table := services["check_table"]), dict
+    ):
+        raise TypeError("Expected 'extensions' and its nested fields to be a dictionary")
+
+    phases = {}
+    for name, entry in check_table.items():
+        if not isinstance(entry, dict) or not isinstance((extensions := entry["extensions"]), dict):
+            raise TypeError("Expected every check table entry and its extensions to be a dict")
+        phases[str(name)] = str(extensions["service_phase"])
+    return phases
+
+
+def piggybacked_service_name(source_hostname: str) -> str:
+    """The service `create_local_check` produces for data coming from 'source_hostname'."""
+    return f"local-Local service piggybacked from {source_hostname}"
+
+
 def piggybacked_service_discovered(
     central_site: Site, source_hostname: str, piggybacked_hostname: str
 ) -> None:
@@ -73,17 +94,12 @@ def piggybacked_service_discovered(
         AssertionError: when expected service is not discovered within the provided host.
         TypeError: when REST-API response to `service_discovery.get_discovery_result` changes.
     """
-    services = central_site.openapi.service_discovery.get_discovery_result(piggybacked_hostname)[
-        "extensions"
-    ]
-    if isinstance(services, dict) and isinstance((check_table := services["check_table"]), dict):
-        expected_service = f"local-Local service piggybacked from {source_hostname}"
-        assert expected_service in check_table, (
-            f"Missing service '{expected_service}' on host '{piggybacked_hostname}'. "
-            f"List of discovered services:\n{sorted(check_table)}"
-        )
-        return
-    raise TypeError("Expected 'extensions' and its nested fields to be a dictionary")
+    discovered = set(discovered_service_phases(central_site, piggybacked_hostname))
+    expected_service = piggybacked_service_name(source_hostname)
+    assert expected_service in discovered, (
+        f"Missing service '{expected_service}' on host '{piggybacked_hostname}'. "
+        f"List of discovered services:\n{sorted(discovered)}"
+    )
 
 
 @contextmanager

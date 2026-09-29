@@ -933,7 +933,8 @@ class HostsAPI(BaseAPI):
         hostname_new: str,
         etag: str,
         timeout: int = 120,
-    ) -> None:
+    ) -> str:
+        """Rename the host and return the summary the rename job reported."""
         logger.info(
             "Rename host %s to %s and wait %ds for completion...",
             hostname_old,
@@ -948,6 +949,7 @@ class HostsAPI(BaseAPI):
         response = self.session.background_jobs.show("rename-hosts")
         if response["extensions"]["status"]["state"] != "finished":
             raise AssertionError(f"Rename job failed: {response}")
+        return "\n".join(response["extensions"]["status"]["log_info"]["JobResult"])
 
 
 class HostGroupsAPI(BaseAPI):

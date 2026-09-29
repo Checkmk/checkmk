@@ -15,6 +15,10 @@ import { computed, ref, watch } from 'vue'
 import { useGlobalRefresh } from '../GlobalTimePicker/globalTimeState'
 import { pad2 } from '../utils/timeFormat'
 
+const { lastRefreshPosition } = defineProps<{
+  lastRefreshPosition: 'top' | 'left'
+}>()
+
 const {
   refreshIntervalSeconds,
   refreshPaused,
@@ -77,7 +81,13 @@ const lastRefreshLabel = computed(() => {
 </script>
 
 <template>
-  <div class="graphing-global-refresh-control">
+  <div
+    class="graphing-global-refresh-control"
+    :class="{
+      'graphing-global-refresh-control--last-refresh-top': lastRefreshPosition === 'top',
+      'graphing-global-refresh-control--last-refresh-left': lastRefreshPosition === 'left'
+    }"
+  >
     <span
       v-if="refreshPaused && lastRefreshLabel"
       class="graphing-global-refresh-control__last-refresh"
@@ -114,21 +124,32 @@ const lastRefreshLabel = computed(() => {
 .graphing-global-refresh-control {
   position: relative;
   display: inline-flex;
-  flex-direction: column;
-  align-items: flex-end;
   font-size: var(--font-size-normal);
   color: var(--font-color);
 }
 
+.graphing-global-refresh-control--last-refresh-top {
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.graphing-global-refresh-control--last-refresh-left {
+  align-items: center;
+  gap: var(--dimension-4);
+}
+
+.graphing-global-refresh-control__last-refresh {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 /* Out of flow: in flow this makes the control taller when the refresh is off, and the host
    centres it in a fixed-height row, so the pill would slide out of line with the picker. */
-.graphing-global-refresh-control__last-refresh {
+.graphing-global-refresh-control--last-refresh-top .graphing-global-refresh-control__last-refresh {
   position: absolute;
   right: 0;
   bottom: 100%;
   margin-bottom: var(--dimension-3);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
 }
 
 .graphing-global-refresh-control__pill {

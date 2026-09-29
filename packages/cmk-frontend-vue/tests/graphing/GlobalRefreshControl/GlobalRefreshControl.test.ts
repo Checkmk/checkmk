@@ -21,7 +21,7 @@ afterEach(() => {
 })
 
 test('starts in the paused state showing "Refresh off" and Resume', () => {
-  render(GlobalRefreshControl)
+  render(GlobalRefreshControl, { props: { lastRefreshPosition: 'top' } })
 
   expect(screen.getByText('Refresh off')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: /Resume/ })).toBeInTheDocument()
@@ -31,7 +31,7 @@ test('starts in the paused state showing "Refresh off" and Resume', () => {
 test('live state shows the badge and the interval dropdown', () => {
   useGlobalRefresh().resumeRefresh()
 
-  render(GlobalRefreshControl)
+  render(GlobalRefreshControl, { props: { lastRefreshPosition: 'top' } })
 
   expect(screen.getByText('Live refresh')).toBeInTheDocument()
   expect(screen.getByRole('combobox', { name: 'Refresh interval' })).toBeInTheDocument()
@@ -41,7 +41,7 @@ test('live state shows the badge and the interval dropdown', () => {
 test('selecting another interval stores it unpaused', async () => {
   const user = userEvent.setup()
   useGlobalRefresh().resumeRefresh()
-  render(GlobalRefreshControl)
+  render(GlobalRefreshControl, { props: { lastRefreshPosition: 'top' } })
 
   await user.click(screen.getByRole('combobox', { name: 'Refresh interval' }))
   await user.click(await screen.findByText('60 sec'))
@@ -53,7 +53,7 @@ test('selecting another interval stores it unpaused', async () => {
 test('"Turn off" pauses and keeps the interval', async () => {
   const user = userEvent.setup()
   useGlobalRefresh().resumeRefresh()
-  render(GlobalRefreshControl)
+  render(GlobalRefreshControl, { props: { lastRefreshPosition: 'top' } })
 
   await user.click(screen.getByRole('combobox', { name: 'Refresh interval' }))
   await user.click(await screen.findByText('Turn off'))
@@ -65,7 +65,7 @@ test('"Turn off" pauses and keeps the interval', async () => {
 test('paused state shows the time of the last refresh tick', async () => {
   vi.useFakeTimers()
   vi.setSystemTime(new Date(2026, 6, 9, 10, 33, 49))
-  render(GlobalRefreshControl)
+  render(GlobalRefreshControl, { props: { lastRefreshPosition: 'top' } })
   useGlobalRefresh().resumeRefresh()
 
   vi.advanceTimersByTime(30_000)
@@ -79,7 +79,7 @@ test('paused state shows the time of the last refresh tick', async () => {
 test('the last refresh time stays put while paused instead of following the clock', async () => {
   vi.useFakeTimers()
   vi.setSystemTime(new Date(2026, 6, 9, 10, 33, 49))
-  render(GlobalRefreshControl)
+  render(GlobalRefreshControl, { props: { lastRefreshPosition: 'top' } })
   useGlobalRefresh().resumeRefresh()
   vi.advanceTimersByTime(30_000)
   useGlobalRefresh().pauseRefresh()
@@ -94,7 +94,7 @@ test('the last refresh time stays put while paused instead of following the cloc
 })
 
 test('the last refresh time is omitted when never refreshed', () => {
-  render(GlobalRefreshControl)
+  render(GlobalRefreshControl, { props: { lastRefreshPosition: 'top' } })
 
   expect(screen.queryByText(/Last refresh/)).not.toBeInTheDocument()
 })
@@ -102,7 +102,7 @@ test('the last refresh time is omitted when never refreshed', () => {
 test('picking an interval changes the rhythm, not the data on screen', async () => {
   const user = userEvent.setup()
   useGlobalRefresh().resumeRefresh()
-  render(GlobalRefreshControl)
+  render(GlobalRefreshControl, { props: { lastRefreshPosition: 'top' } })
   const ticksBefore = useGlobalRefresh().refreshTick.value
 
   await user.click(screen.getByRole('combobox', { name: 'Refresh interval' }))
@@ -113,7 +113,7 @@ test('picking an interval changes the rhythm, not the data on screen', async () 
 
 test('Resume goes live, keeping the interval that was chosen before', async () => {
   const chosenInterval = useGlobalRefresh().refreshIntervalSeconds.value
-  render(GlobalRefreshControl)
+  render(GlobalRefreshControl, { props: { lastRefreshPosition: 'top' } })
 
   await fireEvent.click(screen.getByRole('button', { name: /Resume/ }))
 

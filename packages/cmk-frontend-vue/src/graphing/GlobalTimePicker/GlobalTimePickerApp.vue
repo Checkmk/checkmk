@@ -35,6 +35,7 @@ initGlobalRefresh({
     <template #aside>
       <GlobalRefreshControl
         class="graphing-global-time-picker-app__refresh"
+        last-refresh-position="top"
         @resume="returnToLiveMonitoring"
       />
     </template>

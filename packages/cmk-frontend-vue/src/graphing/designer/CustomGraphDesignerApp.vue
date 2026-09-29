@@ -359,10 +359,9 @@ const saveFailureButtons = computed(() => {
           class="graphing-custom-graph-designer-app__breadcrumb"
           :items="activeBreadcrumb"
         />
-        <GlobalRefreshControl
-          class="graphing-custom-graph-designer-app__refresh"
-          @resume="returnToLiveMonitoring"
-        />
+        <div class="graphing-custom-graph-designer-app__refresh">
+          <GlobalRefreshControl last-refresh-position="left" @resume="returnToLiveMonitoring" />
+        </div>
       </div>
 
       <DesignerHeader

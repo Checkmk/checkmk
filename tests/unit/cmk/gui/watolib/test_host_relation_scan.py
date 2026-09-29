@@ -121,6 +121,14 @@ def test_a_finding_that_is_not_accepted_stores_nothing() -> None:
     ]
 
 
+def test_a_finding_the_scan_did_not_read_is_refused() -> None:
+    """Storing nothing for it would pass for a finding without relations; the client is told."""
+    result = _scan([_relation("a-ilo", "a")])
+
+    with pytest.raises(ValueError, match="word:nope"):
+        accepted_pairs(result, AcceptedScan(scan_id="s", findings=["word:ilo", "word:nope"]))
+
+
 def test_a_relation_taken_out_is_not_stored() -> None:
     result = _scan([_relation("a-ilo", "a"), _relation("b-ilo", "b")])
 

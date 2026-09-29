@@ -495,10 +495,13 @@ class AcceptedScan(BaseModel, frozen=True):
 def accepted_pairs(result: ScanResult, accepted: AcceptedScan) -> list[tuple[str, HostPair]]:
     """Every relation ``accepted`` stands for, with the finding it came from.
 
-    A ``ValueError`` for an answer the scan cannot have offered - a group or a claim it did not
-    make, or a host that is not a member: the client is told, rather than something else stored.
+    A ``ValueError`` for an answer the scan cannot have offered - a finding it did not read, a
+    group or a claim it did not make, or a host that is not a member: the client is told, rather
+    than something else stored.
     """
     findings = set(accepted.findings)
+    if unread := sorted(findings - set(result.findings)):
+        raise ValueError(f"The scan read no finding {unread[0]!r}.")
     excluded = set(accepted.excluded)
     pairs = [
         (row.finding, row.pair())

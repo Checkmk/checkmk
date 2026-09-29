@@ -10,9 +10,11 @@ import CmkWizard, { CmkWizardButton, CmkWizardStep } from 'cmk-ui-library/compon
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
-import { createCustomService } from './save'
+import { loadCustomServiceDefinition } from './api'
+import { serviceModelFrom } from './definition'
+import { type SaveResult, createCustomService, updateCustomService } from './save'
 import AssignHostStep from './steps/AssignHostStep.vue'
 import DefineMetricStep from './steps/DefineMetricStep.vue'
 import { type ServiceModel, emptyService, isMetricSelected, isReadyToCreate } from './types'
@@ -25,13 +27,17 @@ const currentStep = ref(1)
 const model = ref<ServiceModel>(emptyService())
 const saving = ref(false)
 const saveError = ref<string | null>(null)
+const editETag = ref<string | null>(null)
+const loading = ref(props.configuration_name !== null)
+const loadError = ref<string | null>(null)
 
 // A metric must be selected before the host-assignment step can be reached.
 const step1Valid = computed(() => isMetricSelected(model.value))
 // A service name and a target host are both required before the service can be created.
 const step2Valid = computed(() => isReadyToCreate(model.value))
 
-// Default the service name to the selected metric name (editable in step 2).
+// Default the service name to the selected metric name (editable in step 2). A loaded service
+// always brings its own name along, so prefilling never trips this.
 watch(
   () => model.value.metricName,
   (metric) => {
@@ -41,24 +47,69 @@ watch(
   }
 )
 
+onMounted(async () => {
+  const configurationName = props.configuration_name
+  if (configurationName === null) {
+    return
+  }
+  try {
+    const result = await loadCustomServiceDefinition(configurationName)
+    if (!result.ok) {
+      loadError.value = result.error
+      return
+    }
+    model.value = serviceModelFrom(result.extensions)
+    editETag.value = result.etag
+  } catch {
+    loadError.value = _t('Failed to load the custom service.')
+  } finally {
+    loading.value = false
+  }
+})
+
 async function validateStep1(): Promise<boolean> {
   return step1Valid.value
 }
 
+const editing = computed(() => props.configuration_name !== null)
+
+const finishLabel = computed(() =>
+  editing.value ? _t('Save & activate changes') : _t('Create & activate changes')
+)
+
+const failureMessage = computed(() =>
+  editing.value
+    ? _t('Failed to save the custom service.')
+    : _t('Failed to create the custom service.')
+)
+
+async function persist(): Promise<SaveResult> {
+  const configurationName = props.configuration_name
+  if (configurationName === null) {
+    return await createCustomService(model.value)
+  }
+  // Only a failed load leaves no ETag, and that hides the wizard. Never write without one: a
+  // wildcard would overwrite a concurrent change.
+  if (editETag.value === null) {
+    return { ok: false }
+  }
+  return await updateCustomService(configurationName, model.value, editETag.value)
+}
+
 // Persist the custom service, then go to the full activate-changes page so the
 // user can apply the pending change.
-async function createService(): Promise<void> {
+async function saveService(): Promise<void> {
   saveError.value = null
   saving.value = true
   try {
-    const result = await createCustomService(model.value)
+    const result = await persist()
     if (!result.ok) {
-      saveError.value = result.error ?? _t('Failed to create the custom service.')
+      saveError.value = result.error ?? failureMessage.value
       return
     }
     window.location.href = props.activate_changes_url
   } catch {
-    saveError.value = _t('Failed to create the custom service.')
+    saveError.value = failureMessage.value
   } finally {
     saving.value = false
   }
@@ -67,7 +118,8 @@ async function createService(): Promise<void> {
 
 <template>
   <div class="mode-custom-services-custom-services-wizard-app">
-    <CmkWizard v-model="currentStep" mode="guided">
+    <CmkAlert v-if="loadError" variant="error" :text="untranslated(loadError)" />
+    <CmkWizard v-else-if="!loading" v-model="currentStep" mode="guided">
       <CmkWizardStep :index="1" :is-completed="() => currentStep > 1">
         <template #header>
           <CmkHeading type="h3">{{ _t('Define metric') }}</CmkHeading>
@@ -100,9 +152,9 @@ async function createService(): Promise<void> {
         <template #actions>
           <CmkWizardButton
             type="finish"
-            :override-label="_t('Create & activate changes')"
+            :override-label="finishLabel"
             :disabled="!step2Valid || saving"
-            @click="createService"
+            @click="saveService"
           />
           <CmkWizardButton type="previous" />
         </template>

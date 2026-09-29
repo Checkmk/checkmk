@@ -52,8 +52,8 @@ const {
 const button = useTemplateRef<HTMLButtonElement>('button')
 
 defineExpose({
-  focus: () => {
-    button.value?.focus()
+  focus: (options?: FocusOptions) => {
+    button.value?.focus(options)
   }
 })
 defineEmits(['click'])

@@ -27,8 +27,8 @@ const percentile = defineModel<string | null>('percentile', { required: true })
 
 const metricRef = ref<InstanceType<typeof CmkDropdown> | null>(null)
 
-function focus(): void {
-  metricRef.value?.focus()
+function focus(options?: FocusOptions): void {
+  metricRef.value?.focus(options)
 }
 defineExpose({ focus })
 </script>

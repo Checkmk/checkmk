@@ -73,8 +73,8 @@ const describedByIds = computed(() => {
 const inputRef = ref<HTMLInputElement | null>(null)
 
 defineExpose({
-  focus: () => {
-    inputRef.value?.focus()
+  focus: (options?: FocusOptions) => {
+    inputRef.value?.focus(options)
   }
 })
 

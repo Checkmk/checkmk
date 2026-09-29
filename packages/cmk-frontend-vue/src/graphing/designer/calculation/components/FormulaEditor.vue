@@ -23,10 +23,10 @@ const emit = defineEmits<{ submit: [] }>()
 const labelId = useId()
 
 // CmkInput is a generic SFC, so `InstanceType<typeof CmkInput>` is not usable; we only need focus().
-const inputRef = ref<{ focus: () => void } | null>(null)
+const inputRef = ref<{ focus: (options?: FocusOptions) => void } | null>(null)
 
-function focus(): void {
-  inputRef.value?.focus()
+function focus(options?: FocusOptions): void {
+  inputRef.value?.focus(options)
 }
 
 defineExpose({ focus })

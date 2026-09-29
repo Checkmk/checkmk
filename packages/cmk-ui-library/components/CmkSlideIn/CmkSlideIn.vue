@@ -77,7 +77,7 @@ watch(
       await nextTick(() => {
         const target = props.initialFocusTarget ?? dialogContentRef.value?.$el
         if (target && typeof (target as Partial<Focusable>).focus === 'function') {
-          ;(target as Focusable).focus({ focusVisible: false })
+          ;(target as Focusable).focus({ focusVisible: false, preventScroll: true })
         }
       })
     }

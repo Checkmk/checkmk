@@ -115,11 +115,11 @@ const alert = computed<SectionAlert | null>(() => {
 const formulaEditorRef = ref<InstanceType<typeof FormulaEditor> | null>(null)
 const transformationEditorRef = ref<InstanceType<typeof TransformationEditor> | null>(null)
 
-function focus(): void {
+function focus(options?: FocusOptions): void {
   if (mode.value === 'operations') {
-    formulaEditorRef.value?.focus()
+    formulaEditorRef.value?.focus(options)
   } else {
-    transformationEditorRef.value?.focus()
+    transformationEditorRef.value?.focus(options)
   }
 }
 defineExpose({ focus })

@@ -235,8 +235,8 @@ defineExpose({
       suppressNextClickOutside.value = false
     }, 0)
   },
-  focus: () => {
-    comboboxButtonRef.value?.focus()
+  focus: (options?: FocusOptions) => {
+    comboboxButtonRef.value?.focus(options)
   },
   isOpen: () => suggestionsShown.value
 })

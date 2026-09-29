@@ -177,3 +177,26 @@ def _expected(temp: float, threshold: float | None) -> list[Result | Metric]:
 def test_check_hp_proliant_temp(item: str, expected_results: Sequence[Result | Metric]) -> None:
     parsed = parse_hp_proliant_temp(_STRING_TABLE)
     assert list(check_hp_proliant_temp(item, {}, parsed)) == expected_results
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=ValueError,
+    reason="Crash report fcbc9244-6b11-11f1-be8d-005056b907f2: ValueError in _format_hp_proliant_name",
+)
+def test_hp_proliant_temp_ignores_rows_without_sensor() -> None:
+    # The iLO returns rows where only the status column is filled.
+    section = parse_hp_proliant_temp(
+        [
+            ["1", "11", "20", "42", "2"],
+            ["", "", "", "", "2"],
+            ["4", "7", "33", "90", "2"],
+        ]
+    )
+    assert list(discover_hp_proliant_temp(section)) == [
+        Service(item="1 (ambient)"),
+        Service(item="4 (memory)"),
+    ]
+    assert list(check_hp_proliant_temp("4 (memory)", {}, section))[0] == Metric(
+        "temp", 33.0, levels=(90.0, 90.0)
+    )

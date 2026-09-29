@@ -10,6 +10,7 @@ def werk_text(
     version: str | None = "2.5.0",
     edition: str = "community",
     component: str = "core",
+    werk_class: str = "fix",
 ) -> str:
     version_row = "" if version is None else f"version | {version}\n"
     return f"""[//]: # (werk v3)
@@ -18,7 +19,7 @@ def werk_text(
 key | value
 --- | ---
 date | 2026-01-01T00:00:00+00:00
-{version_row}class | fix
+{version_row}class | {werk_class}
 edition | {edition}
 component | {component}
 level | 1

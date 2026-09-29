@@ -17,6 +17,7 @@ from cmk.ruleset_matcher.labels import (
     BuiltinHostLabelsStore,
     BuiltinLabelsKey,
     DiscoveredHostLabelsStore,
+    HostLabel,
     LabelManager,
     update_builtin_host_labels,
 )
@@ -58,6 +59,14 @@ def test_discovered_host_labels_store_load_default(discovered_host_labels_dir: P
     store = DiscoveredHostLabelsStore(HostName("host"), discovered_host_labels_dir)
     assert not store.file_path.exists()
     assert not store.load()
+
+
+def test_discovered_host_labels_store_keeps_missing_plugin_name(
+    discovered_host_labels_dir: Path,
+) -> None:
+    store = DiscoveredHostLabelsStore(HostName("host"), discovered_host_labels_dir)
+    store.save([HostLabel("name", "value", None)])
+    assert store.load() == [HostLabel("name", "value", None)]
 
 
 class _LabelConfig(ABCLabelConfig):

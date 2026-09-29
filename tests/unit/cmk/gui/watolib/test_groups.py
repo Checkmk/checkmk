@@ -15,7 +15,7 @@ from cmk.gui.watolib.groups_io import contact_group_usage_finder_registry
 from cmk.gui.wsgi.app import application_and_request_context
 
 
-@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture
 def patch_config_paths(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     cmk_confd = tmp_path / "check_mk" / "conf.d"
     monkeypatch.setattr(cmk.utils.paths, "check_mk_config_dir", cmk_confd)
@@ -26,7 +26,7 @@ def patch_config_paths(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     (gui_confd / "wato").mkdir(parents=True)
 
 
-@pytest.mark.usefixtures("tmp_path")
+@pytest.mark.usefixtures("patch_config_paths")
 def test_load_group_information_empty() -> None:
     with application_and_request_context(), SuperUserContext():
         assert groups_io.load_contact_group_information() == {}
@@ -34,7 +34,7 @@ def test_load_group_information_empty() -> None:
         assert groups_io.load_service_group_information() == {}
 
 
-@pytest.mark.usefixtures("tmp_path")
+@pytest.mark.usefixtures("patch_config_paths")
 def test_load_group_information() -> None:
     with open(cmk.utils.paths.check_mk_config_dir / "wato/groups.mk", "w") as f:
         f.write(

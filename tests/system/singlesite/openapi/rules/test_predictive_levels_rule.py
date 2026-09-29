@@ -48,7 +48,6 @@ def setup_test_environment_fixture(site: Site) -> Generator:
         yield
 
 
-@pytest.mark.xfail(reason="CMK-29702: Flake")
 @pytest.mark.skip_if_edition("cloud")
 @pytest.mark.parametrize("config", PERIOD_CONFIGS)
 @pytest.mark.usefixtures("setup_test_environment_fixture")

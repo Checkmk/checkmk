@@ -76,7 +76,7 @@ def test_stash_free_id_removes_it() -> None:
 
 def test_stash_free_id_unknown_raises() -> None:
     stash = Stash(ids=[1, 2])
-    with pytest.raises(RuntimeError, match="Could not find werk_id"):
+    with pytest.raises(RuntimeError, match="Could not find werk_id 00099 in the stash"):
         stash.free_id(WerkId(99))
 
 

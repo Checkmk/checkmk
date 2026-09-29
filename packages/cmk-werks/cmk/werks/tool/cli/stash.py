@@ -36,19 +36,15 @@ class Stash(BaseModel):
         """
         remove id from stash
         """
-        removed = False
-        if werk_id.id in self.ids:
-            removed = True
-            self.ids.remove(werk_id.id)
-            if not self.ids:
-                sys.stderr.write(
-                    f"\n{TTY_RED}This was your last reserved ID{TTY_NORMAL}\n"
-                    "Please ensure that you're in the VPN and the werk IDs server is "
-                    "reachable when you create your next Werk.\n\n"
-                )
-
-        if not removed:
-            raise RuntimeError(f"Could not find werk_id {werk_id} in any project.")
+        if werk_id.id not in self.ids:
+            raise RuntimeError(f"Could not find werk_id {werk_id} in the stash.")
+        self.ids.remove(werk_id.id)
+        if not self.ids:
+            sys.stderr.write(
+                f"\n{TTY_RED}This was your last reserved ID{TTY_NORMAL}\n"
+                "Please ensure that you're in the VPN and the werk IDs server is "
+                "reachable when you create your next Werk.\n\n"
+            )
 
     def add_ids(self, werk_ids: Sequence[WerkId]) -> None:
         """

@@ -54,7 +54,7 @@ class Principal:
     Per-map view/edit authorization is deliberately NOT done here. The GUI holds
     the pagetype + RBAC context and is the single authority: it only hands the
     SPA maps the user may see (``get_permitted_map``) and re-checks edit on save
-    (``general.edit_map`` in ``AjaxMapsSave``). Every Livestatus query the daemon
+    (``general.edit_map`` in the map REST endpoints). Every Livestatus query the daemon
     runs is additionally bound to the user's contact-group scope (``auth_user``),
     so a map the user registers can never surface monitoring data beyond that
     scope. The daemon therefore carries only what it genuinely needs: the

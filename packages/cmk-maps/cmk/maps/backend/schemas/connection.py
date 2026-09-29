@@ -49,8 +49,8 @@ def _validate_socket_path(value: str | None) -> str | None:
 
     Defense in depth: the FormSpec / API endpoints are already admin-gated, but
     the path is fed to the Livestatus client without any further check. Without
-    these rules a careless admin could probe arbitrary files (``/etc/shadow``)
-    via the connection-test endpoint, or break the connection-storage layer
+    these rules a careless admin could point the client at arbitrary files
+    (``/etc/shadow``), or break the connection-storage layer
     with a path containing NULs.
     """
     if value is None or value == "":

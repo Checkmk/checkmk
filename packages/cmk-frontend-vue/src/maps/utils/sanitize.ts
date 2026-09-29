@@ -7,7 +7,7 @@ import sanitizeHtml from 'sanitize-html'
 
 // Single source for every URL sink fed by map data (template hrefs here,
 // click navigation in mapNavigation.ts). Mirrors the backend allowlist in
-// backend/app/schemas/_validators.py — keep the three in sync. The remote
+// cmk/maps/shared/validators.py — keep the three in sync. The remote
 // access schemes (ssh/rdp/…) are user-mediated OS handlers monitoring maps
 // traditionally link on host objects; none of them is script-capable.
 export const SAFE_URL_SCHEMES = [

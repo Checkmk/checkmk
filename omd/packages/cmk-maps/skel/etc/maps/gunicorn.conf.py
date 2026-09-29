@@ -42,10 +42,10 @@ umask = 0o117
 
 # Single worker by design: the daemon keeps per-process in-memory state that is
 # NOT shared across workers — SSE subscribers + broadcast tasks (core/sse.py,
-# api/v1/states.py), delta/dead-site snapshots, the BI compile cache
-# (integrations/checkmk.py) and the per-connection Livestatus caches. With >1
-# worker these fragment per process and maps break (duplicate broadcasts,
-# missing deltas). Do not raise without making that state shared.
+# api/v1/states.py), delta/dead-site snapshots, the rate limiters and the
+# per-connection Livestatus caches. With >1 worker these fragment per process
+# and maps break (duplicate broadcasts, missing deltas, per-worker limits). Do
+# not raise without making that state shared.
 workers = 1
 
 # gunicorn reads these module globals as its own settings. accesslog/errorlog
@@ -55,7 +55,7 @@ accesslog = str(log_dir / "access.log")
 errorlog = str(log_dir / "error.log")
 # Consumed by gunicorn's access logger to build each line (independent of the
 # handler): log the method + path only, NOT "%(r)s" (the full request line).
-# SSE and <img> requests carry the signed Maps ticket in ?token=, and the access
+# SSE requests carry the Maps stream token in ?token=, and the access
 # log is long-lived + part of `omd backup` — a logged token would be replayable
 # for its TTL. %(U)s is the path without the query string.
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(m)s %(U)s" %(s)s %(b)s "%(f)s" "%(a)s"'

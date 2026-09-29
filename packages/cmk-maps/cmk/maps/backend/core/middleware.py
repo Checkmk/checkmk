@@ -38,7 +38,7 @@ class SecurityHeadersMiddleware:
                     (b"x-content-type-options", b"nosniff"),
                     (b"x-frame-options", b"SAMEORIGIN"),
                     # no-referrer (not strict-origin-when-cross-origin) so the
-                    # signed ticket carried in ``?token=`` on SSE / <img> URLs
+                    # stream token carried in ``?token=`` on SSE URLs
                     # never leaks via the Referer header to same-origin assets.
                     (b"referrer-policy", b"no-referrer"),
                     (b"x-xss-protection", b"1; mode=block"),

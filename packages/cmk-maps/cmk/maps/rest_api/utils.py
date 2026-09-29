@@ -345,8 +345,7 @@ def _list_view(value: object) -> MapView:
 
     A single map with a view the union can't represent (a legacy / imported
     ``type``, or a half-written spec) must not 500 the whole collection, so fall
-    back to an empty static view — matching the tolerant raw-dict passthrough of
-    the page-hydrated home list (``store.map_to_read``)."""
+    back to an empty static view."""
     try:
         prepared = _nest_view(value) if isinstance(value, dict) and value else {"type": "static"}
         return _MAP_VIEW_ADAPTER.validate_python(prepared)
@@ -397,10 +396,9 @@ def resolve_map_link_titles(
 
 def serialize_map(page: MapPage, *, can_edit: bool, can_delete: bool) -> MapObject:
     cfg = page.config
-    # Fold the authoritative pagetype name into the config, exactly as the GUI
-    # ``_pages._signed_map`` path does, so a stored spec whose ``name`` drifted
-    # from the pagetype key (a clone/rename/migration) can't be signed — and thus
-    # relayed to the daemon — under a foreign map name.
+    # Fold the authoritative pagetype name into the config, so a stored spec
+    # whose ``name`` drifted from the pagetype key (a clone/rename/migration)
+    # can't be signed — and thus relayed to the daemon — under a foreign map name.
     spec = {**dict(cfg.map_spec), "name": cfg.name}
     # Sign the resolved config so the SPA can relay {config_b64, sig} to the Maps
     # daemon's register endpoint (verified there against the ticket's owner) — the

@@ -112,13 +112,13 @@ async def rate_limited_read(current_user: Principal = Depends(get_current_user))
 
 
 def can_configure(principal: Principal) -> bool:
-    """Manage connections, images and global settings."""
+    """Read the full connection details (Checkmk's ``maps.configure``)."""
     return principal.configure
 
 
 def can_create_map(principal: Principal) -> bool:
-    """Create or delete maps — Checkmk's ``general.edit_map`` (per-map edit rights
-    are enforced by the GUI on save)."""
+    """Register unsigned editor previews and read the connection list — Checkmk's
+    ``general.edit_map`` (per-map edit rights are enforced by the GUI on save)."""
     return principal.may_edit
 
 

@@ -255,9 +255,10 @@ def connections_list_spec(
     """The WATO global: the list of monitoring connections Maps queries.
 
     Each entry carries a stable ``id`` (referenced by maps) plus the
-    single-connection fields. The ``automation_secret`` rides the Checkmk
-    password store (the ``Password`` form spec), so global.mk holds only a
-    reference; the daemon resolves it via ``cmk.utils.password_store``.
+    single-connection fields. The ``automation_secret`` is a ``Password`` form
+    spec: a stored password leaves only a reference in global.mk, an explicit
+    one is kept there in plain text; the daemon resolves both via
+    ``cmk.utils.password_store``.
     """
     default_metric_source = "rest_api" if monitoring_core == "nagios" else "livestatus"
     return List(

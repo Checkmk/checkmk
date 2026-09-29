@@ -825,10 +825,10 @@ allows = [
 ]
 
 # Pure shared domain layer (state/severity maps, row extractors, geo resolver,
-# filter allow-list, perf parser, autocomplete builder, ticket protocol,
-# config-var names). A top-level sibling of backend/gui/rest_api so none of them
-# reach into another's package; it depends on nothing but stdlib (mirrors
-# cmk.dcd.protocols / cmk.liveproxyd.shared).
+# filter allow-list, perf parser, URL/colour/asset validators, map vocabulary,
+# ticket protocol, config-var names). A top-level sibling of
+# backend/gui/rest_api so none of them reach into another's package; it depends
+# on nothing but stdlib (mirrors cmk.dcd.protocols / cmk.liveproxyd.shared).
 [components."cmk.maps.shared"]
 allows = ["@ccc", "cmk.utils"]
 

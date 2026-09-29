@@ -940,9 +940,8 @@ class MapListEntry:
 
     Carries the map-level display fields the SPA list needs (the card
     thumbnails read ``view``, the settings modal edits ``click_action`` and the
-    templates), matching ``cmk.maps.gui.store.map_to_read`` so the runtime
-    list endpoint and the page-hydrated home view agree on one row shape. The
-    map-level fields are already flat and few, so this projection is not grouped.
+    templates). The map-level fields are already flat and few, so this
+    projection is not grouped.
     """
 
     name: str = api_field(description="Unique map name.", example="datacenter-muc")

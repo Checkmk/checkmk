@@ -60,8 +60,8 @@ _broadcast_tasks: dict[str, asyncio.Task[None]] = {}
 # dying/recovering must reach clients even when no node-level delta exists.
 _dead_sites_snapshots: dict[tuple[str, str | None], list[str]] = {}
 
-# Heartbeat cadence for SSE keepalives. Sized below typical Apache ProxyTimeout
-# (60 s default in OMD) so the stream doesn't get torn down on idle maps.
+# Heartbeat cadence for SSE keepalives. Sized below the 120 s proxy timeout of
+# the system Apache in front of the site, so idle streams are not torn down.
 _SSE_KEEPALIVE_INTERVAL = 30.0
 
 

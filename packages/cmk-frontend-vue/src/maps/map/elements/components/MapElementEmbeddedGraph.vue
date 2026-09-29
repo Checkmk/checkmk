@@ -95,8 +95,8 @@ const source = computed(() => {
   />
   <!-- No allow-same-origin: together with allow-scripts it would void the
        sandbox for same-origin content. An embedded graph needs to render and
-       run its own scripts, never to reach our origin — cookies, the session
-       token in sessionStorage, the parent DOM. -->
+       run its own scripts, never to reach our origin — cookies, the parent
+       DOM. -->
   <iframe
     v-else
     :src="embeddable"

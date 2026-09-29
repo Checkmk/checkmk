@@ -80,6 +80,11 @@ def check_pvecm_status(_no_item, _no_params, parsed):
     if "cman_tool" in parsed and "cannot open connection to cman" in parsed["cman_tool"]:
         yield 2, "Cluster management tool: %s" % parsed["cman_tool"]
 
+    elif missing := [
+        key for key in ("nodes", "quorum", "expected votes", "total votes") if key not in parsed
+    ]:
+        yield 3, f"Cannot evaluate cluster state, missing in agent output: {', '.join(missing)}"
+
     else:
         name = parsed.get("cluster name", parsed.get("quorum provider", "unknown"))
 

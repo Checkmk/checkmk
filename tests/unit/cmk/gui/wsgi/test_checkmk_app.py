@@ -6,6 +6,7 @@
 # ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
 from collections.abc import Callable, Iterator
+from http import HTTPStatus
 
 import pytest
 
@@ -67,8 +68,8 @@ def test_oserror_wsgi_from_page_handler_returns_400(
 
     monkeypatch.setattr(checkmk_app, "ensure_authentication", _no_auth)
 
-    resp = wsgi_app.get(f"/NO_SITE/check_mk/{OS_ERROR_WSGI_PAGE}.py", status=400)
-    assert resp.status_code == 400
+    resp = wsgi_app.get(f"/NO_SITE/check_mk/{OS_ERROR_WSGI_PAGE}.py", status=HTTPStatus.BAD_REQUEST)
+    assert resp.status_code == HTTPStatus.BAD_REQUEST
 
 
 @pytest.mark.usefixtures("oserror_pages")
@@ -119,14 +120,14 @@ def _csp_pages() -> Iterator[None]:
 @pytest.mark.usefixtures("csp_pages")
 def test_csp_default_legacy_policy_is_applied(logged_in_wsgi_app: WebTestAppForCMK) -> None:
     """A page that sets no policy gets the legacy CSP from the central hook."""
-    resp = logged_in_wsgi_app.get(f"/NO_SITE/check_mk/{CSP_PAGE}.py", status=200)
+    resp = logged_in_wsgi_app.get(f"/NO_SITE/check_mk/{CSP_PAGE}.py", status=HTTPStatus.OK)
     assert resp.headers["Content-Security-Policy"] == LEGACY_CONTENT_SECURITY_POLICY.serialize()
 
 
 @pytest.mark.usefixtures("csp_pages")
 def test_csp_page_can_opt_into_strict_policy(logged_in_wsgi_app: WebTestAppForCMK) -> None:
     """A page that opts into the strict policy keeps it; the hook does not overwrite it."""
-    resp = logged_in_wsgi_app.get(f"/NO_SITE/check_mk/{CSP_STRICT_PAGE}.py", status=200)
+    resp = logged_in_wsgi_app.get(f"/NO_SITE/check_mk/{CSP_STRICT_PAGE}.py", status=HTTPStatus.OK)
     assert resp.headers["Content-Security-Policy"] == STRICT_CONTENT_SECURITY_POLICY.serialize()
 
 
@@ -156,27 +157,30 @@ def test_request_timeout_returns_503(
     content-type 200-OK shaped output either way.
     """
     resp = logged_in_wsgi_app.get(
-        f"/NO_SITE/check_mk/{REQUEST_TIMEOUT_PAGE}.py?output_format=csv_export", status=503
+        f"/NO_SITE/check_mk/{REQUEST_TIMEOUT_PAGE}.py?output_format=csv_export",
+        status=HTTPStatus.SERVICE_UNAVAILABLE,
     )
-    assert resp.status_code == 503
+    assert resp.status_code == HTTPStatus.SERVICE_UNAVAILABLE
 
 
 def test_request_timeout_plain_error_returns_503(
     logged_in_wsgi_app: WebTestAppForCMK, request_timeout_page: None
 ) -> None:
     resp = logged_in_wsgi_app.get(
-        f"/NO_SITE/check_mk/{REQUEST_TIMEOUT_PAGE}.py?_plain_error=1", status=503
+        f"/NO_SITE/check_mk/{REQUEST_TIMEOUT_PAGE}.py?_plain_error=1",
+        status=HTTPStatus.SERVICE_UNAVAILABLE,
     )
-    assert resp.status_code == 503
+    assert resp.status_code == HTTPStatus.SERVICE_UNAVAILABLE
 
 
 def test_request_timeout_ajax_returns_503(
     logged_in_wsgi_app: WebTestAppForCMK, request_timeout_page: None
 ) -> None:
     resp = logged_in_wsgi_app.get(
-        f"/NO_SITE/check_mk/{REQUEST_TIMEOUT_PAGE}.py?_ajaxid=1", status=503
+        f"/NO_SITE/check_mk/{REQUEST_TIMEOUT_PAGE}.py?_ajaxid=1",
+        status=HTTPStatus.SERVICE_UNAVAILABLE,
     )
-    assert resp.status_code == 503
+    assert resp.status_code == HTTPStatus.SERVICE_UNAVAILABLE
 
 
 CSV_EXPORT_TIMEOUT_PAGE = "test_csv_export_timeout_page"
@@ -211,9 +215,10 @@ def test_request_timeout_during_csv_export_resets_response(
     their own opaque native error screen instead of the actual message.
     """
     resp = logged_in_wsgi_app.get(
-        f"/NO_SITE/check_mk/{CSV_EXPORT_TIMEOUT_PAGE}.py?output_format=csv_export", status=503
+        f"/NO_SITE/check_mk/{CSV_EXPORT_TIMEOUT_PAGE}.py?output_format=csv_export",
+        status=HTTPStatus.SERVICE_UNAVAILABLE,
     )
-    assert resp.status_code == 503
+    assert resp.status_code == HTTPStatus.SERVICE_UNAVAILABLE
     assert resp.headers["Content-Type"] == "text/html; charset=utf-8"
     assert "Content-Disposition" not in resp.headers
     assert b"partial,csv,row" not in resp.body
@@ -253,9 +258,9 @@ def _error_status_pages_fixture() -> Iterator[None]:
 @pytest.mark.parametrize(
     "page_name,expected_status",
     [
-        (MK_USER_ERROR_PAGE, 400),
-        (MK_AUTH_EXCEPTION_PAGE, 401),
-        (MK_NOT_FOUND_PAGE, 404),
+        (MK_USER_ERROR_PAGE, HTTPStatus.BAD_REQUEST),
+        (MK_AUTH_EXCEPTION_PAGE, HTTPStatus.UNAUTHORIZED),
+        (MK_NOT_FOUND_PAGE, HTTPStatus.NOT_FOUND),
     ],
 )
 def test_mkhttpexception_status_propagates_in_plain_render_branch(

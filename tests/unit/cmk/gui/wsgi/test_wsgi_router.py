@@ -8,6 +8,7 @@
 import importlib.util
 import os.path
 import types
+from http import HTTPStatus
 from importlib._bootstrap_external import SourceFileLoader
 from typing import override
 
@@ -91,20 +92,22 @@ def test_request_url(flask_app: flask.Flask) -> None:
 def test_webserver_auth(wsgi_app: WebTestAppForCMK, with_user: tuple[UserId, str]) -> None:
     username, _ = with_user
     wsgi_app.get(
-        "/NO_SITE/check_mk/api/1.0/version", headers={"Accept": "application/json"}, status=401
+        "/NO_SITE/check_mk/api/1.0/version",
+        headers={"Accept": "application/json"},
+        status=HTTPStatus.UNAUTHORIZED,
     )
 
     wsgi_app.get(
         "/NO_SITE/check_mk/api/1.0/version",
         headers={"Accept": "application/json"},
-        status=401,
+        status=HTTPStatus.UNAUTHORIZED,
         extra_environ={"REMOTE_USER": "unknown_random_dude"},
     )
 
     wsgi_app.get(
         "/NO_SITE/check_mk/api/1.0/version",
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
         extra_environ={"REMOTE_USER": str(username)},
     )
 
@@ -112,7 +115,7 @@ def test_webserver_auth(wsgi_app: WebTestAppForCMK, with_user: tuple[UserId, str
     wsgi_app.get(
         "/NO_SITE/check_mk/api/1.0/version",
         headers={"Accept": "application/json"},
-        status=401,
+        status=HTTPStatus.UNAUTHORIZED,
         extra_environ={"REMOTE_USER": str(username)},
     )
 
@@ -120,7 +123,9 @@ def test_webserver_auth(wsgi_app: WebTestAppForCMK, with_user: tuple[UserId, str
 @pytest.mark.usefixtures("patch_theme")
 def test_normal_auth(base: str, wsgi_app: WebTestAppForCMK, with_user: tuple[UserId, str]) -> None:
     username, password = with_user
-    wsgi_app.get(f"{base}/version", headers={"Accept": "application/json"}, status=401)
+    wsgi_app.get(
+        f"{base}/version", headers={"Accept": "application/json"}, status=HTTPStatus.UNAUTHORIZED
+    )
 
     # Add a failing Basic Auth to check if the other types will succeed.
     wsgi_app.set_authorization(("Basic", ("foobazbar", "foobazbar")))
@@ -131,7 +136,9 @@ def test_normal_auth(base: str, wsgi_app: WebTestAppForCMK, with_user: tuple[Use
 
     wsgi_app.set_authorization(None)
     wsgi_app.get(
-        "/NO_SITE/check_mk/api/1.0/version", headers={"Accept": "application/json"}, status=200
+        "/NO_SITE/check_mk/api/1.0/version",
+        headers={"Accept": "application/json"},
+        status=HTTPStatus.OK,
     )
 
 
@@ -141,7 +148,9 @@ def test_openapi_version(
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
     resp = wsgi_app.get(
-        "/NO_SITE/check_mk/api/1.0/version", headers={"Accept": "application/json"}, status=200
+        "/NO_SITE/check_mk/api/1.0/version",
+        headers={"Accept": "application/json"},
+        status=HTTPStatus.OK,
     )
     assert resp.json["site"] == omd_site()
 
@@ -154,7 +163,7 @@ def test_openapi_app_exception(
     resp = wsgi_app.get(
         "/NO_SITE/check_mk/api/1.0/version?fail=1",
         headers={"Accept": "application/json"},
-        status=500,
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
     )
     resp.assert_rest_api_crash()
     assert "detail" in resp.json
@@ -165,19 +174,19 @@ def test_openapi_app_exception(
 
 
 def test_cmk_automation(wsgi_app: WebTestAppForCMK) -> None:
-    response = wsgi_app.get("/NO_SITE/check_mk/automation.py", status=200)
+    response = wsgi_app.get("/NO_SITE/check_mk/automation.py", status=HTTPStatus.OK)
     assert response.text == "Missing secret for automation command."
 
 
 def test_options_disabled(wsgi_app: WebTestAppForCMK) -> None:
     # Should be 403 in integration test.
-    wsgi_app.options("/", status=404)
+    wsgi_app.options("/", status=HTTPStatus.NOT_FOUND)
 
 
 @pytest.mark.usefixtures("suppress_license_expiry_header", "patch_theme", "suppress_license_banner")
 def test_pnp_template(wsgi_app: WebTestAppForCMK) -> None:
     # This got removed some time ago and "Not found" pages are 404 now.
-    resp = wsgi_app.get("/NO_SITE/check_mk/pnp_template.py", status=404)
+    resp = wsgi_app.get("/NO_SITE/check_mk/pnp_template.py", status=HTTPStatus.NOT_FOUND)
     assert "Page not found" in resp.text
     assert "page_menu_bar" in resp.text
 
@@ -198,7 +207,7 @@ def test_ajax_return_401_when_unauthorized(
     wsgi_app.get(
         URL,
         headers={"Accept": "application/json"},
-        status=401,
+        status=HTTPStatus.UNAUTHORIZED,
         extra_environ={"REMOTE_USER": str(username)},
     )
 

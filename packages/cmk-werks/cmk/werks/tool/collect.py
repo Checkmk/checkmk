@@ -191,22 +191,9 @@ def main(config: Config, repo_path: Path, branches: Mapping[str, str]) -> None:
 
         werk_dict = {k: v for k, v in werk.to_json_dict().items() if v is not None}
         werk_dict.pop("version", None)
-        website_werk: WebsiteWerkV2 | WebsiteWerkV3
-        if werk_dict["__version__"] == "2":
-            website_werk = WebsiteWerkV2(
-                versions=versions,
-                product=config.flavor,
-                **werk_dict,  # type: ignore[arg-type]
-            )
-        elif werk_dict["__version__"] == "3":
-            website_werk = WebsiteWerkV3(
-                versions=versions,
-                product=config.flavor,
-                **werk_dict,  # type: ignore[arg-type]
-            )
-        else:
-            raise RuntimeError
-        all_werks_by_id[str(werk_id)] = website_werk
+        all_werks_by_id[str(werk_id)] = WebsiteWerkV3.model_validate(
+            werk_dict | {"versions": versions, "product": config.flavor}
+        )
 
     if not all_werks_by_id:
         raise RuntimeError("Expected to collect at least one Werk, but it's completely empty.")

@@ -367,8 +367,8 @@ def test_a_label_that_pairs_hosts_is_suggested_with_what_tells_them_apart(
     (value,) = resp.json["values"]
     assert (value["source"], value["name"], value["groups"]) == ("label", "cmdb/sn", 3)
     assert value["examples"] == [
-        {"value": "S-0", "hosts": ["w-0b", "w-0s"]},
-        {"value": "S-1", "hosts": ["w-1b", "w-1s"]},
+        {"value": "S-0", "hosts": ["w-0b", "w-0s"], "size": 2},
+        {"value": "S-1", "hosts": ["w-1b", "w-1s"], "size": 2},
     ]
     assert (value["told_apart"]["by"], value["told_apart"]["name"]) == ("value", "cmdb/kind")
     assert [counted["value"] for counted in value["told_apart"]["values"]] == ["board", "server"]

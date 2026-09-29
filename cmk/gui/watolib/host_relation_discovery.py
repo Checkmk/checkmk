@@ -877,6 +877,9 @@ _WORD_LIMIT: Final = 8
 #: How many real pairs a finding shows to say what it means.
 _EXAMPLE_LIMIT: Final = 2
 
+#: How many hosts sharing a value an example names: a chassis has dozens, a category hundreds.
+_EXAMPLE_HOSTS: Final = 4
+
 #: How many values a label must share out a handful of hosts at a time to read as an identity.
 #: Two such values are as likely a category - board and server, two locations - as a serial.
 _MACHINE_MIN: Final = 3
@@ -941,6 +944,17 @@ TellApart = NamesTellApart | ValueTellsApart | None
 
 
 @dataclass(frozen=True, kw_only=True)
+class ValueExample:
+    """One value of a finding, with a few of the hosts sharing it."""
+
+    value: str
+    hosts: Sequence[HostName]
+    """The first of them by name."""
+    size: int
+    """How many hosts share it."""
+
+
+@dataclass(frozen=True, kw_only=True)
 class ValueFinding:
     """A label or attribute whose values each sit on a handful of hosts: a serial number."""
 
@@ -948,8 +962,8 @@ class ValueFinding:
     groups: int
     """How many values are each shared by a handful of hosts - the ones that can pair them."""
     largest_group: int
-    examples: Sequence[tuple[str, Sequence[HostName]]]
-    """A few of the values, each with the hosts sharing it."""
+    examples: Sequence[ValueExample]
+    """A few of the values."""
     too_wide: int = 0
     """How many values are shared by more hosts than one machine has. These pair nothing, and
     a finding that has only such values is a category rather than an identity."""
@@ -1167,7 +1181,7 @@ def _value_findings(
             groups=len(machines),
             largest_group=max((len(members) for _value, members in [*machines, *wider]), default=0),
             # What a value that pairs nothing looks like is what the user has to see to believe it.
-            examples=_first_groups(machines or wider),
+            examples=_first_groups(machines or wider, inside),
             too_wide=len(wider),
             told_apart=telling.told_apart(where, machines) if machines else None,
         )
@@ -1176,11 +1190,26 @@ def _value_findings(
 
 
 def _first_groups(
-    groups: Sequence[tuple[str, Sequence[HostName]]],
-) -> list[tuple[str, list[HostName]]]:
-    """The groups whose members sort first, without sorting all of them."""
+    groups: Sequence[tuple[str, Sequence[HostName]]], inside: frozenset[HostName]
+) -> list[ValueExample]:
+    """The groups whose members sort first, without sorting all of them.
+
+    An example names the hosts in scope first: they are what made the group count.
+    """
     first = heapq.nsmallest(_EXAMPLE_LIMIT, groups, key=lambda group: min(group[1]))
-    return sorted(((value, sorted(members)) for value, members in first), key=lambda g: g[1])
+    examples = [
+        ValueExample(
+            value=value,
+            hosts=heapq.nsmallest(
+                _EXAMPLE_HOSTS,
+                members,
+                key=lambda name: (name not in inside, name),
+            ),
+            size=len(members),
+        )
+        for value, members in first
+    ]
+    return sorted(examples, key=lambda example: example.hosts[0])
 
 
 #: What splits a value into the words it is made of: "mgmt-board" reads as "mgmt" and "board".

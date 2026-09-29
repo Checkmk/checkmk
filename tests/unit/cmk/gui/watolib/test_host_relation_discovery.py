@@ -54,6 +54,7 @@ from cmk.gui.watolib.host_relation_discovery import (
     SharedLabel,
     suggest_evidence,
     Suggestions,
+    ValueExample,
     ValueReason,
     ValueTellsApart,
 )
@@ -1789,8 +1790,8 @@ def test_a_label_whose_values_each_sit_on_two_hosts_is_suggested() -> None:
     assert finding.where == SharedLabel("cmdb/sn")
     assert (finding.groups, finding.largest_group) == (3, 2)
     assert finding.examples == [
-        ("S-1", [HostName("w-4711"), HostName("w-4712")]),
-        ("S-2", [HostName("w-4713"), HostName("w-4714")]),
+        ValueExample(value="S-1", hosts=[HostName("w-4711"), HostName("w-4712")], size=2),
+        ValueExample(value="S-2", hosts=[HostName("w-4713"), HostName("w-4714")], size=2),
     ]
 
 
@@ -1861,7 +1862,7 @@ def test_a_value_the_user_added_is_reported_however_widely_it_is_shared() -> Non
         2,
         8,
     )
-    assert sorted(value for value, _hosts in finding.examples) == ["ber", "muc"]
+    assert sorted(example.value for example in finding.examples) == ["ber", "muc"]
 
 
 def test_a_value_the_user_added_that_no_two_hosts_share_is_reported_as_such() -> None:
@@ -2129,4 +2130,40 @@ def test_a_value_the_user_added_says_how_many_of_its_values_are_too_widely_share
     (finding,) = _suggested(hosts, values=[SharedLabel("cmdb/kind")]).values
 
     assert (finding.groups, finding.too_wide, finding.told_apart) == (0, 2, None)
-    assert [value for value, _hosts in finding.examples] == ["board", "server"]
+    assert [example.value for example in finding.examples] == ["board", "server"]
+
+
+def test_an_example_under_a_scope_names_its_hosts_in_scope_first(tree: FolderTree) -> None:
+    """The host in scope is what made the value count, so it is the one the page has to show."""
+    labels = HostAttributes({"labels": {"chassis": "C-7"}})
+    for name in ("a-srv", "b-srv", "c-srv", "d-srv", "e-srv"):
+        _create_host(tree.root_folder(), name, labels)
+    _create_host(_subfolder(tree.root_folder(), "oob"), "z-board", labels)
+    tree.invalidate_caches()
+
+    (finding,) = scan_for_evidence(
+        tree,
+        attribute_names=[],
+        acting_user=_SUPERUSER,
+        values=[SharedLabel("chassis")],
+        in_names=False,
+        scope=Scope(folder="oob"),
+    ).values
+
+    assert finding.examples[0].hosts[0] == HostName("z-board")
+
+
+def test_an_example_names_a_few_of_the_hosts_sharing_its_value_and_counts_them_all() -> None:
+    """A category shared by thousands of hosts is shown by four of them - the page names no more."""
+    hosts = [
+        _scanned(f"w-{index:02}", labels={"cmdb/kind": "board" if index < 30 else "server"})
+        for index in range(60)
+    ]
+
+    (finding,) = _suggested(hosts, values=[SharedLabel("cmdb/kind")]).values
+
+    assert finding.examples[0] == ValueExample(
+        value="board",
+        hosts=[HostName("w-00"), HostName("w-01"), HostName("w-02"), HostName("w-03")],
+        size=30,
+    )

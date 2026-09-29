@@ -18,6 +18,7 @@ export type FindingSummary = components['schemas']['FindingSummaryModel']
 export type Suggestions = components['schemas']['SuggestionsModel']
 export type WordFinding = components['schemas']['WordFindingModel']
 export type ValueFinding = components['schemas']['ValueFindingModel']
+export type ValueExample = components['schemas']['ValueExampleModel']
 export type FindingRequest = components['schemas']['FindingModel']
 export type AcceptRequest = components['schemas']['AcceptRequestModel']
 /** A host label or custom host attribute, by name. */

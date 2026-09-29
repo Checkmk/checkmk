@@ -26,6 +26,7 @@ import type {
   LookIn,
   SharedValue,
   ValueChoice,
+  ValueExample,
   ValueFinding,
   WordChoice,
   WordFinding
@@ -78,9 +79,6 @@ const addingOpen = ref(false)
 /** What the user added last, to say next to the field where it went. */
 const added = ref('')
 const addValueId = useId()
-
-/** How many hosts of a shared value an example names: a chassis has dozens, a category hundreds. */
-const EXAMPLE_HOSTS = 4
 
 const inNames = computed(() => props.lookIn.includes('names'))
 const inValues = computed(() => props.lookIn.includes('values'))
@@ -290,13 +288,14 @@ function tooWide(finding: ValueFinding): TranslatedString {
   )
 }
 
-function exampleHosts(hosts: string[]): string {
-  return hosts.length > EXAMPLE_HOSTS
-    ? _tn('%{hosts} and 1 more', '%{hosts} and %{count} more', hosts.length - EXAMPLE_HOSTS, {
-        hosts: hosts.slice(0, EXAMPLE_HOSTS).join(', '),
-        count: hosts.length - EXAMPLE_HOSTS
+function exampleHosts(example: ValueExample): string {
+  const unnamed = example.size - example.hosts.length
+  return unnamed > 0
+    ? _tn('%{hosts} and 1 more', '%{hosts} and %{count} more', unnamed, {
+        hosts: example.hosts.join(', '),
+        count: unnamed
       })
-    : hosts.join(', ')
+    : example.hosts.join(', ')
 }
 
 function coverage(groups: number, finding: ValueFinding): TranslatedString {
@@ -503,7 +502,7 @@ function addValue(picked: string | null): void {
                     />
                   </span>
                   <span class="mode-host-relation-discovery-finding-list__hosts">{{
-                    exampleHosts(example.hosts)
+                    exampleHosts(example)
                   }}</span>
                   &ensp;
                 </template>

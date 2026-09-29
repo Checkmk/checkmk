@@ -222,8 +222,9 @@ class WordFindingModel:
 class ValueExampleModel:
     value: str = api_field(description="The value the hosts share.", example="S-1")
     hosts: list[AnnotatedHostName] = api_field(
-        description="The hosts sharing it.", example=["w-4711", "w-4712"]
+        description="The first few of the hosts sharing it, by name.", example=["w-4711", "w-4712"]
     )
+    size: int = api_field(description="How many hosts share it.", example=2)
 
 
 @api_model
@@ -324,7 +325,7 @@ class SuggestionsModel:
                 "name": "cmdb/sn",
                 "groups": 40,
                 "largest_group": 2,
-                "examples": [{"value": "S-1", "hosts": ["w-4711", "w-4712"]}],
+                "examples": [{"value": "S-1", "hosts": ["w-4711", "w-4712"], "size": 2}],
                 "too_wide": 0,
                 "told_apart": None,
             }

@@ -259,8 +259,10 @@ def as_suggestions_model(found: Suggestions) -> SuggestionsModel:
                 groups=finding.groups,
                 largest_group=finding.largest_group,
                 examples=[
-                    ValueExampleModel(value=value, hosts=list(hosts))
-                    for value, hosts in finding.examples
+                    ValueExampleModel(
+                        value=example.value, hosts=list(example.hosts), size=example.size
+                    )
+                    for example in finding.examples
                 ],
                 too_wide=finding.too_wide,
                 told_apart=_told_apart_model(finding.told_apart),

@@ -62,7 +62,7 @@ const SERIAL = {
   name: 'cmdb/sn',
   groups: 3,
   largest_group: 2,
-  examples: [{ value: 'S-1', hosts: ['w-4711', 'w-4712'] }],
+  examples: [{ value: 'S-1', hosts: ['w-4711', 'w-4712'], size: 2 }],
   too_wide: 0,
   told_apart: {
     by: 'value',
@@ -771,7 +771,7 @@ test('a value the user adds means nothing until the user says what it is', async
     groups: 0,
     largest_group: 400,
     too_wide: 2,
-    examples: [{ value: 'board', hosts: Array.from({ length: 400 }, (_u, at) => `w-${at}a`) }],
+    examples: [{ value: 'board', hosts: ['w-0a', 'w-1a', 'w-2a', 'w-3a'], size: 400 }],
     told_apart: null
   }
   server.use(

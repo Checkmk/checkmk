@@ -42,6 +42,16 @@ cd packages/mk-oracle
 MK_ORACLE_UPDATE_CORPUS=1 cargo test --test test_mk_oracle_bin migration_corpus
 ```
 
+Without a local cargo toolchain, Bazel works when the test runs outside
+the sandbox, so the writes follow the runfiles symlinks into the source
+tree (a new case needs an empty `.yaml` placeholder to get a symlink):
+
+```
+bazel test //packages/mk-oracle:mk-oracle-bin-test_tests/test_mk_oracle_bin_test \
+  --test_arg=migration_corpus --test_env=MK_ORACLE_UPDATE_CORPUS=1 \
+  --spawn_strategy=local --nocache_test_results
+```
+
 Then review the golden-file diff — it is the user-visible behavior
 change of the migrator.
 

@@ -1,0 +1,30 @@
+# WARNING: SID 'PRODDB' is declared by more than one legacy variable; every entry is migrated, so the instance is queried once per entry. Remove the redundant entry, or give the instances a piggyback host if they are different databases
+# --- Known environment variables defined in legacy config ---
+# DBUSER ***
+# DBUSER_proddb ***
+# REMOTE_INSTANCE_proddb ***
+# WARNING: SID 'PRODDB' is declared by more than one legacy variable; every entry is migrated, so the instance is queried once per entry. Remove the redundant entry, or give the instances a piggyback host if they are different databases
+# --- Unified Config ---
+---
+oracle:
+  main:
+    authentication:
+      username: ""
+      password: ""
+      type: wallet
+    instances:
+      - sid: PRODDB
+        authentication:
+          username: "sys"
+          password: "secret"
+          type: standard
+          role: sysdba
+      - sid: PRODDB
+        connection:
+          hostname: 10.201.4.215
+          port: 1521
+        authentication:
+          username: "sys"
+          password: "secret"
+          type: standard
+          role: sysdba

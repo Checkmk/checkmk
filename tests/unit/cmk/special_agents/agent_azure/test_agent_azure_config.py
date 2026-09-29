@@ -110,6 +110,10 @@ def test_parse_arguments(
     assert caplog.messages == expected_log
 
 
+def test_parse_arguments_secret_starting_with_dash() -> None:
+    assert parse_arguments([*ARGV, "--secret=-s3cr3t~"]).secret == "-s3cr3t~"
+
+
 @pytest.mark.parametrize(
     "config,error_type,error_message",
     [

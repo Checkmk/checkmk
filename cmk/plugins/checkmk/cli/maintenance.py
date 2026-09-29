@@ -35,7 +35,7 @@ def _mode_update_dns_cache(
     _omd_root: Path, global_options: GlobalOptions, _options: Options, _args: Args
 ) -> int:
     set_fake_dns(global_options.fake_dns)
-    loading_result = config.load()
+    loading_result = config.load(validate_hosts=True)
     config_cache = loading_result.config_cache
     hosts_config = loading_result.hosts_config
     ip_lookup_config = config_cache.ip_lookup_config()
@@ -75,7 +75,7 @@ cli_command_update_dns_cache = CLICommand(
 def _mode_cleanup_piggyback(
     _omd_root: Path, _global_options: GlobalOptions, _options: Options, _args: Args
 ) -> int:
-    loaded_config = config.load().loaded_config
+    loaded_config = config.load(validate_hosts=True).loaded_config
     piggyback_backend.cleanup_piggyback_files(
         loaded_config.piggyback_max_cachefile_age,
         (r["value"] for r in loaded_config.piggybacked_host_files),
@@ -107,7 +107,7 @@ def _mode_flush(
 ) -> int:
     hosts = host_addresses(args)
     plugins = load_checks()
-    loading_result = config.load()
+    loading_result = config.load(validate_hosts=True)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     hosts_config = loading_result.hosts_config

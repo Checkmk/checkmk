@@ -2821,7 +2821,7 @@ cmc_host_rrd_config = [
     _add_host_in_folder(wato_lvl2_folder, "lvl2-host")
     _add_rule_in_folder(wato_lvl2_folder, "LVL2")
 
-    yield config.load().loaded_config
+    yield config.load(validate_hosts=True).loaded_config
 
     # Cleanup after the test. Would be better to use a dedicated test directory
     cmk.utils.paths.main_config_file.unlink()
@@ -2912,7 +2912,7 @@ def test_explicit_setting_loading() -> None:
         for foldername, setting, values in settings:
             _add_explicit_setting_in_folder(wato_main_folder / foldername, setting, values)
 
-        loading_result = config.load()
+        loading_result = config.load(validate_hosts=True)
         explicit_host_conf = loading_result.loaded_config.explicit_host_conf
         assert explicit_host_conf["parents"][HostName("hostA")] == "setting1"
         assert explicit_host_conf["parents"][HostName("hostB")] == "setting2"

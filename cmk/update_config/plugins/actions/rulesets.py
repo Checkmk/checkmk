@@ -28,7 +28,7 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 class UpdateRulesets(UpdateAction):
     @override
     def __call__(self, logger: Logger) -> None:
-        loading_result = base_config.load()
+        loading_result = base_config.load(validate_hosts=True)
         pending_changes = PendingChanges(
             activation_sites=all_activation_sites(active_config.sites),
             local_site=omd_site(),

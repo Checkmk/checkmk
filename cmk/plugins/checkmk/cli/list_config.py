@@ -82,7 +82,7 @@ def _list_all_hosts(
 def _mode_list_hosts(
     _omd_root: Path, _global_options: GlobalOptions, options: Options, args: Args
 ) -> int:
-    loading_result = config.load()
+    loading_result = config.load(validate_hosts=True)
     config_cache = loading_result.config_cache
     core_objects_config = config.CoreObjectsConfig(
         loading_result.loaded_config,
@@ -158,7 +158,7 @@ def _list_all_hosts_with_tags(
 def _mode_list_tag(
     _omd_root: Path, _global_options: GlobalOptions, _options: Options, args: Args
 ) -> int:
-    loading_result = config.load()
+    loading_result = config.load(validate_hosts=True)
     hosts = _list_all_hosts_with_tags(
         tuple(TagID(_) for _ in args),
         loading_result.config_cache,

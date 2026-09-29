@@ -58,10 +58,7 @@ def _mode_notify(
         raise_mkterminate_on_sigint()
 
     with store.lock_checkmk_configuration(cmk.utils.paths.configuration_lockfile):
-        loading_result = config.load(
-            with_conf_d=True,
-            validate_hosts=False,
-        )
+        loading_result = config.load(validate_hosts=False)
 
     exit_status = do_notify(
         options,

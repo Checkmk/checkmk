@@ -631,11 +631,8 @@ class LoadingResult:
     config_cache: ConfigCache
 
 
-def load(
-    with_conf_d: bool = True,
-    validate_hosts: bool = True,
-) -> LoadingResult:
-    raw_config = load_raw_config(with_conf_d=with_conf_d)
+def load(validate_hosts: bool) -> LoadingResult:
+    raw_config = load_raw_config(with_conf_d=True)
 
     loading_result = perform_post_config_loading_actions(
         raw_config,
@@ -645,23 +642,27 @@ def load(
     )
 
     if validate_hosts:
-        hosts_config = loading_result.hosts_config
-        if duplicates := sorted(
-            hosts_config.duplicates(
-                lambda hn: (
-                    loading_result.config_cache.is_active(hn)
-                    and loading_result.config_cache.is_online(hn)
-                )
-            )
-        ):
-            # TODO: Raise an exception
-            console.error(
-                f"Error in configuration: duplicate hosts: {', '.join(duplicates)}",
-                file=sys.stderr,
-            )
-            sys.exit(3)
+        exit_on_duplicate_hosts(loading_result)
 
     return loading_result
+
+
+def exit_on_duplicate_hosts(loading_result: LoadingResult) -> None:
+    hosts_config = loading_result.hosts_config
+    if duplicates := sorted(
+        hosts_config.duplicates(
+            lambda hn: (
+                loading_result.config_cache.is_active(hn)
+                and loading_result.config_cache.is_online(hn)
+            )
+        )
+    ):
+        # TODO: Raise an exception
+        console.error(
+            f"Error in configuration: duplicate hosts: {', '.join(duplicates)}",
+            file=sys.stderr,
+        )
+        sys.exit(3)
 
 
 def perform_post_config_loading_actions(  # type: ignore[explicit-any]

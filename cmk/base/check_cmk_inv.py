@@ -142,7 +142,7 @@ def _inventory_as_check(
     hostname: HostName,
     plugins: AgentBasedPlugins,
 ) -> ServiceState:
-    loading_result = config.load()
+    loading_result = config.load(validate_hosts=True)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager

@@ -29,7 +29,7 @@ def main() -> int:
             config.load_all_plugins()
             # Watch out: always load the plugins before loading the config.
             # The validation step will not be executed otherwise.
-            config.load()
+            config.load(validate_hosts=True)
 
             result = validate_mk_files(make_folder_tree(active_config))
 

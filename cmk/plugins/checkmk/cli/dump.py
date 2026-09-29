@@ -75,7 +75,7 @@ def _mode_dump_agent(
         raise MKBailOut("Unknown SNMP backend") from exc
 
     plugins = load_checks()
-    loading_result = config.load()
+    loading_result = config.load(validate_hosts=True)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -306,7 +306,7 @@ def _mode_dump_hosts(
     hostlist: Iterable[HostName] = host_addresses(args)
     logger = logging.getLogger("cmk.base.modes")  # this might go nowhere.
     plugins = load_checks()
-    loading_result = config.load()
+    loading_result = config.load(validate_hosts=True)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager

@@ -49,7 +49,7 @@ def resolve_proxy_config(proxy_setting: ProxySetting) -> ProxyConfig:
     # disabled and not-due runs cheap and free of cmk.base imports.
     from cmk.base.config import load
 
-    base_config = load()
+    base_config = load(validate_hosts=True)
 
     return get_proxy_config(
         proxy_setting=proxy_setting,

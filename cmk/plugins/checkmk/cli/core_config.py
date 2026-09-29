@@ -51,7 +51,7 @@ def _mode_dump_nagios_config(
     from cmk.base.core.nagios._create_config import NagiosCoreConfig
 
     plugins = load_checks()
-    loading_result = config.load()
+    loading_result = config.load(validate_hosts=True)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -189,7 +189,7 @@ def _mode_update(
     app = make_app(omd_root)
     set_fake_dns(global_options.fake_dns)
     plugins = load_checks()
-    loading_result = config.load()
+    loading_result = config.load(validate_hosts=True)
     loaded_config = loading_result.loaded_config
     raw_config = {f.name: getattr(loaded_config, f.name) for f in fields(loaded_config)}
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -314,7 +314,7 @@ def _mode_restart(
     set_fake_dns(global_options.fake_dns)
     args = host_addresses(raw_host_names)
     plugins = load_checks()
-    loading_result = config.load()
+    loading_result = config.load(validate_hosts=True)
     loaded_config = loading_result.loaded_config
     raw_config = {f.name: getattr(loaded_config, f.name) for f in fields(loaded_config)}
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -432,7 +432,7 @@ def _mode_reload(
     set_fake_dns(global_options.fake_dns)
     args = host_addresses(raw_host_names)
     plugins = load_checks()
-    loading_result = config.load()
+    loading_result = config.load(validate_hosts=True)
     loaded_config = loading_result.loaded_config
     raw_config = {f.name: getattr(loaded_config, f.name) for f in fields(loaded_config)}
     ruleset_matcher = loading_result.config_cache.ruleset_matcher

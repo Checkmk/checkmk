@@ -110,7 +110,7 @@ def _mode_inventory(
         raise MKBailOut("Unknown SNMP backend") from exc
 
     plugins = load_checks()
-    loading_result = config.load()
+    loading_result = config.load(validate_hosts=True)
     loaded_config = loading_result.loaded_config
     host_tags = loading_result.host_tags
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -356,7 +356,7 @@ def _mode_inventorize_marked_hosts(
     latest_config_path = VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root)
 
     plugins = load_checks()
-    loading_result = config.load()
+    loading_result = config.load(validate_hosts=True)
     loaded_config = loading_result.loaded_config
     hosts_config = loading_result.hosts_config
     host_tags = loading_result.host_tags

@@ -45,7 +45,7 @@ const isPublicDashboard = useInjectIsPublicDashboard()
       role="heading"
     >
       <a
-        v-if="generalSettings.title?.url && !isScrollablePreview && !isPublicDashboard"
+        v-if="generalSettings.title?.url && !isPublicDashboard"
         :href="generalSettings.title.url"
         >{{ effectiveTitle }}</a
       >

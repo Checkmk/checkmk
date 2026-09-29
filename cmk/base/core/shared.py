@@ -337,7 +337,10 @@ def _verify_cluster_address_family(
     address_family = cluster_host_family
     mixed = False
     for nodename in nodes:
-        family = str(address_family_lookup(nodename).name)
+        if address_family_lookup(nodename) is IPStackConfig.NO_IP:
+            family = IPStackConfig.NO_IP.name
+        else:
+            family = "IPv6" if default_address_family(nodename) is socket.AF_INET6 else "IPv4"
         address_families.append(f"{nodename}: {family}")
         if address_family is None:
             address_family = family

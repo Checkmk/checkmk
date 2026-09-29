@@ -51,7 +51,7 @@ from cmk.automations.results import (
 )
 from cmk.automations.types import AutomationID
 from cmk.base import events
-from cmk.base.automations.automations import Automation, CommonState
+from cmk.base.automations.automations import Automation, BaseConfigState, CommonState
 from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
@@ -847,16 +847,15 @@ def _automation_notification_test(
 
 
 def _automation_get_bulks(
-    state: CommonState,
+    state: BaseConfigState,
     args: list[str],
 ) -> NotificationGetBulksResult:
     only_ripe = args[0] == "1"
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
-    loading_result = state.loading_result
     return NotificationGetBulksResult(
         _find_bulks(
             only_ripe,
-            bulk_interval=loading_result.loaded_config.notification_bulk_interval,
+            bulk_interval=state.loaded_config.notification_bulk_interval,
             timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
                 livestatus.get_optional_timeperiods_active_map, log=logger.warning
             ),
@@ -884,7 +883,7 @@ automation_notification_test = Automation(
 )
 automation_notification_get_bulks = Automation(
     name=AutomationID("notification-get-bulks"),
-    state_factory=CommonState,
+    state_factory=BaseConfigState,
     handler=_automation_get_bulks,
     result=NotificationGetBulksResult,
 )

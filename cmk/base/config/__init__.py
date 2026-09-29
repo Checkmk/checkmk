@@ -21,6 +21,7 @@ from ._impl import iter_skipped_services_warnings as iter_skipped_services_warni
 from ._impl import load as load
 from ._impl import load_resource_cfg_macros as load_resource_cfg_macros
 from ._impl import LoadingResult as LoadingResult
+from ._impl import make_base_config as make_base_config
 from ._impl import make_clustering_config as make_clustering_config
 from ._impl import make_host_tags as make_host_tags
 from ._impl import make_hosts_config as make_hosts_config

@@ -96,6 +96,20 @@ class NoState:
         pass
 
 
+class BaseConfigState:
+    """The state of an automation that needs the base configuration only.
+
+    It picks the configuration values from the raw configuration, and derives
+    nothing below them: no hosts, no rulesets, no caches.
+    """
+
+    def __init__(self, _omd_root: Path, raw_config: Mapping[str, object]) -> None:
+        self.loaded_config = config.make_base_config(raw_config)
+
+    def update(self, _omd_root: Path, raw_config: Mapping[str, object]) -> None:
+        self.loaded_config = config.make_base_config(raw_config)
+
+
 class CommonState:
     """The state most automations share for now.
 

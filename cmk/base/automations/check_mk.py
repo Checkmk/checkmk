@@ -92,6 +92,7 @@ from cmk.base.automations._environment import (
 )
 from cmk.base.automations.automations import (
     Automation,
+    BaseConfigState,
     CommonState,
     MKAutomationError,
     NoState,
@@ -4187,11 +4188,10 @@ def _automation_get_agent_output(
 
 
 def _automation_find_unknown_check_parameter_rule_sets(
-    state: CommonState,
+    state: BaseConfigState,
     args: list[str],  # noqa: ARG001
 ) -> UnknownCheckParameterRuleSetsResult:
     plugins = load_all_plugins(raise_errors=cmk.ccc.debug.enabled())
-    loaded_config = state.loading_result
     known_check_rule_sets = {
         str(plugin.check_ruleset_name)
         for plugin in plugins.check_plugins.values()
@@ -4200,7 +4200,7 @@ def _automation_find_unknown_check_parameter_rule_sets(
     return UnknownCheckParameterRuleSetsResult(
         [
             rule_set
-            for rule_set in loaded_config.loaded_config.checkgroup_parameters
+            for rule_set in state.loaded_config.checkgroup_parameters
             if rule_set not in known_check_rule_sets
         ]
     )
@@ -4394,7 +4394,7 @@ automation_get_agent_output = Automation(
 )
 automation_find_unknown_check_parameter_rule_sets = Automation(
     name=AutomationID("find-unknown-check-parameter-rule-sets"),
-    state_factory=CommonState,
+    state_factory=BaseConfigState,
     handler=_automation_find_unknown_check_parameter_rule_sets,
     result=UnknownCheckParameterRuleSetsResult,
 )

@@ -636,6 +636,15 @@ def exit_on_duplicate_hosts(loading_result: LoadingResult) -> None:
         sys.exit(3)
 
 
+def make_base_config(loaded_context: Mapping[str, Any]) -> BaseConfig:  # type: ignore[explicit-any]
+    """Pick the base configuration from what load_raw_config() read.
+
+    This is the cheap part of the post-loading actions: it derives nothing below
+    the configuration, and touches no caches.
+    """
+    return BaseConfig(**{f.name: loaded_context[f.name] for f in dataclasses.fields(BaseConfig)})
+
+
 def perform_post_config_loading_actions(  # type: ignore[explicit-any]
     loaded_context: Mapping[str, Any],
     *,
@@ -646,9 +655,7 @@ def perform_post_config_loading_actions(  # type: ignore[explicit-any]
 ) -> LoadingResult:
     """These tasks must be performed after loading the Check_MK base configuration"""
     return make_loading_result(
-        BaseConfig(
-            **{f.name: loaded_context[f.name] for f in dataclasses.fields(BaseConfig)},
-        ),
+        make_base_config(loaded_context),
         autochecks_dir=autochecks_dir,
         discovered_host_labels_dir=discovered_host_labels_dir,
         builtin_host_labels_file=builtin_host_labels_file,

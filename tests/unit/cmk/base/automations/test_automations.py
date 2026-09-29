@@ -7,7 +7,7 @@ import ast
 import io
 import sys
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from pathlib import Path
 from typing import override
 
@@ -27,6 +27,7 @@ from cmk.base.automations.automations import (
     Automation,
     AutomationError,
     Automations,
+    BaseConfigState,
     DiscoveredAutomation,
     NoState,
 )
@@ -218,6 +219,14 @@ def test_an_automation_without_state_needs_no_configuration() -> None:
     engine.update(Path("/old"), {})
 
     assert isinstance(engine.execute(AutomationID("a"), []), _Result)
+
+
+def test_base_config_state_picks_the_base_configuration() -> None:
+    raw_config = {f.name: getattr(EMPTY_CONFIG, f.name) for f in fields(EMPTY_CONFIG)} | {
+        "FOLDER_PATH": None,  # read by load_raw_config(), but no base configuration
+    }
+
+    assert BaseConfigState(Path("/old"), raw_config).loaded_config == EMPTY_CONFIG
 
 
 def test_only_automations_that_ask_for_it_read_the_configuration_under_lock() -> None:

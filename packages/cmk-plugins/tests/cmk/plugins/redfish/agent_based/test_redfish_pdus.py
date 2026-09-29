@@ -123,9 +123,6 @@ def test_missing_id_falls_back_to_key() -> None:
     assert len(results) > 0
 
 
-@pytest.mark.xfail(
-    strict=True, reason="Crash report 2c01512a-b4fa-11f1-b7b6-c32a9431e1ca: TypeError"
-)
 def test_numeric_id_is_discovered_and_checked() -> None:
     # Some PDU firmware sends "Id": 1 instead of the schema's string "1".
     parsed = parse_redfish_multiple(_make_string_table(_make_pdu_entry(1)))

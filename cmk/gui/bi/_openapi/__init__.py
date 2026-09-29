@@ -17,9 +17,9 @@ You can find an introduction to BI in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/bi.html).
 """
 
-import http.client
 from collections.abc import Mapping
 from contextlib import suppress
+from http import HTTPStatus
 from typing import Any
 
 from cmk import fields
@@ -74,7 +74,7 @@ BI_PACK_ID = {
 
 
 def _make_error(message: str) -> ProblemException:
-    return ProblemException(404, http.client.responses[404], message)
+    return ProblemException(HTTPStatus.NOT_FOUND, HTTPStatus.NOT_FOUND.phrase, message)
 
 
 #   .--Rules---------------------------------------------------------------.
@@ -226,7 +226,7 @@ def _update_bi_rule(params: Mapping[str, Any], must_exist: bool) -> Response:
     convert_response=False,
     output_empty=True,
     permissions_required=RW_BI_RULES_WITH_OPTIONAL_ADMIN_PERMISSION,
-    additional_status_codes=[409],
+    additional_status_codes=[HTTPStatus.CONFLICT],
 )
 def delete_bi_rule(params: Mapping[str, Any]) -> Response:
     """Delete BI rule"""
@@ -254,10 +254,12 @@ def delete_bi_rule(params: Mapping[str, Any]) -> Response:
     try:
         bi_packs.delete_rule(params["rule_id"])
     except (DeleteErrorUsedByRule, DeleteErrorUsedByAggregation) as e:
-        raise ProblemException(status=409, title=http.client.responses[409], detail=e.args[0])
+        raise ProblemException(
+            status=HTTPStatus.CONFLICT, title=HTTPStatus.CONFLICT.phrase, detail=e.args[0]
+        )
     bi_packs.save_config()
     reset_compile_bi_aggregations_scheduling()
-    return Response(status=204)
+    return Response(status=HTTPStatus.NO_CONTENT)
 
 
 #   .--Aggregations--------------------------------------------------------.
@@ -311,7 +313,7 @@ class BIAggregationStateResponseSchema(Schema):
     tag_group="Monitoring",
     skip_locking=True,
     update_config_generation=False,
-    additional_status_codes=[403, 503],
+    additional_status_codes=[HTTPStatus.FORBIDDEN, HTTPStatus.SERVICE_UNAVAILABLE],
 )
 def bi_aggregation_state_post(params: Mapping[str, Any]) -> Response:
     """Get the state of BI aggregations"""
@@ -335,7 +337,7 @@ def bi_aggregation_state_post(params: Mapping[str, Any]) -> Response:
     response_schema=BIAggregationStateResponseSchema,
     permissions_required=RO_PERMISSIONS,
     tag_group="Monitoring",
-    additional_status_codes=[403, 503],
+    additional_status_codes=[HTTPStatus.FORBIDDEN, HTTPStatus.SERVICE_UNAVAILABLE],
 )
 def bi_aggregation_state_get(params: Mapping[str, Any]) -> Response:
     """Get the state of BI aggregations"""
@@ -356,8 +358,8 @@ def _aggregation_state(
         # Not compiled yet (e.g. right after a site restart, since the compilation cache lives
         # in tmpfs). Signal "no data yet" instead of pretending no aggregations exist.
         raise ProblemException(
-            status=503,
-            title=http.client.responses[503],
+            status=HTTPStatus.SERVICE_UNAVAILABLE,
+            title=HTTPStatus.SERVICE_UNAVAILABLE.phrase,
             detail="BI aggregations have not been compiled yet. Retry later.",
         )
     bi_aggregation_filter = BIAggregationFilter(
@@ -551,7 +553,7 @@ def delete_bi_aggregation(params: Mapping[str, Any]) -> Response:
     bi_packs.delete_aggregation(bi_aggregation.id)
     bi_packs.save_config()
     reset_compile_bi_aggregations_scheduling()
-    return Response(status=204)
+    return Response(status=HTTPStatus.NO_CONTENT)
 
 
 #   .--Packs---------------------------------------------------------------.
@@ -684,7 +686,7 @@ def delete_bi_pack(params: Mapping[str, Any]) -> Response:
     bi_packs.delete_pack(pack_id)
     bi_packs.save_config()
     reset_compile_bi_aggregations_scheduling()
-    return Response(status=204)
+    return Response(status=HTTPStatus.NO_CONTENT)
 
 
 class BIPackEndpointSchema(Schema):

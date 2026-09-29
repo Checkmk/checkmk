@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.site import SiteId
@@ -68,7 +69,7 @@ def get_stage_action_result_v1(
             action_result = StageActionResult.load_from_job_result(job_id=job_id)
         except MKJobNotFoundException:
             raise ProblemException(
-                status=404,
+                status=HTTPStatus.NOT_FOUND,
                 title="Job not found",
                 detail=f"Background job '{job_id}' not found",
             )
@@ -76,7 +77,7 @@ def get_stage_action_result_v1(
     quick_setup = quick_setup_registry.get(action_result.quick_setup_id)
     if quick_setup is None:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="Quick setup not found",
             detail=f"Quick setup with id '{action_result.quick_setup_id}' does not exist.",
         )
@@ -89,7 +90,7 @@ def get_stage_action_result_v1(
         user.may(perm) for perm in stage_action.permissions
     ):
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Action not allowed",
             detail=(
                 f"Action with id '{action_result.action_id}' requires "
@@ -113,7 +114,7 @@ ENDPOINT_GET_STAGE_ACTION_RESULT = VersionedEndpoint(
     behavior=EndpointBehavior(skip_locking=True),
     versions={
         APIVersion.V1: EndpointHandler(
-            handler=get_stage_action_result_v1, additional_status_codes=[403]
+            handler=get_stage_action_result_v1, additional_status_codes=[HTTPStatus.FORBIDDEN]
         )
     },
 )

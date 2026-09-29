@@ -2,6 +2,8 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
+
 from cmk.ccc.site import omd_site
 from cmk.gui.i18n import _
 from cmk.gui.openapi.framework import (
@@ -91,7 +93,7 @@ def update_global_setting_v1(
         body=GlobalSettingModel(
             varname=varname, value=json_value, spec=spec, origin=GlobalSettingsOrigin.global_
         ),
-        status_code=200,
+        status_code=HTTPStatus.OK,
         etag=global_setting_etag(varname, new_value, GlobalSettingsOrigin.global_),
     )
 
@@ -108,8 +110,8 @@ ENDPOINT_UPDATE_GLOBAL_SETTING = VersionedEndpoint(
     versions={
         APIVersion.INTERNAL: EndpointHandler(
             handler=update_global_setting_v1,
-            error_schemas={422: GlobalSettingValidation422},
-            additional_status_codes=[422],
+            error_schemas={HTTPStatus.UNPROCESSABLE_ENTITY: GlobalSettingValidation422},
+            additional_status_codes=[HTTPStatus.UNPROCESSABLE_ENTITY],
         )
     },
 )

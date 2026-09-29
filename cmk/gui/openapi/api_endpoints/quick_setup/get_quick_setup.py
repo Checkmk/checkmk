@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated, Literal
 
 from cmk.gui import i18n
@@ -55,7 +56,7 @@ def get_quick_setup_v1(
     quick_setup = quick_setup_registry.get(quick_setup_id)
     if quick_setup is None:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="Quick setup not found",
             detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
         )
@@ -63,7 +64,7 @@ def get_quick_setup_v1(
     permissions = get_all_permissions(quick_setup)
     if permissions is not None and not all(user.may(perm) for perm in permissions):
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Action not allowed",
             detail=f"Requires {', '.join(repr(p) for p in permissions)} permissions.",
         )
@@ -73,7 +74,7 @@ def get_quick_setup_v1(
         prefill_data = quick_setup.load_data(object_id)
         if not prefill_data:
             raise ProblemException(
-                status=404,
+                status=HTTPStatus.NOT_FOUND,
                 title="Object not found",
                 detail=f"Object with id '{object_id}' does not exist.",
             )
@@ -82,7 +83,7 @@ def get_quick_setup_v1(
         # The overview mode has no stage actions that could re-evaluate the stage conditions.
         if quick_setup.has_conditional_stages:
             raise ProblemException(
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
                 title="Overview mode not available",
                 detail=(
                     f"Quick setup with id '{quick_setup_id}' has conditional stages. The overview "
@@ -117,6 +118,8 @@ ENDPOINT_GET_QUICK_SETUP = VersionedEndpoint(
     ),
     behavior=EndpointBehavior(skip_locking=True),
     versions={
-        APIVersion.V1: EndpointHandler(handler=get_quick_setup_v1, additional_status_codes=[403])
+        APIVersion.V1: EndpointHandler(
+            handler=get_quick_setup_v1, additional_status_codes=[HTTPStatus.FORBIDDEN]
+        )
     },
 )

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.hostaddress import HostName
@@ -169,7 +170,7 @@ ENDPOINT_BULK_UPDATE_HOST = VersionedEndpoint(
     versions={
         APIVersion.V1: EndpointHandler(
             handler=bulk_update_hosts_v1,
-            error_schemas={400: BulkHostActionWithFailedHostsModel},
+            error_schemas={HTTPStatus.BAD_REQUEST: BulkHostActionWithFailedHostsModel},
         )
     },
 )

@@ -2,6 +2,8 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
+
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -38,13 +40,13 @@ def bulk_delete_host_group_v1(api_context: ApiContext, body: BulkDeleteHostGroup
             )
         except GroupInUseException as exc:
             raise ProblemException(
-                status=409,
+                status=HTTPStatus.CONFLICT,
                 title="Group in use problem",
                 detail=str(exc),
             ) from exc
         except UnknownGroupException as exc:
             raise ProblemException(
-                status=404,
+                status=HTTPStatus.NOT_FOUND,
                 title="Unknown group problem",
                 detail=str(exc),
             ) from exc
@@ -62,7 +64,7 @@ ENDPOINT_BULK_DELETE_HOST_GROUP = VersionedEndpoint(
     versions={
         APIVersion.V1: EndpointHandler(
             handler=bulk_delete_host_group_v1,
-            additional_status_codes=[404, 409],
+            additional_status_codes=[HTTPStatus.NOT_FOUND, HTTPStatus.CONFLICT],
         )
     },
 )

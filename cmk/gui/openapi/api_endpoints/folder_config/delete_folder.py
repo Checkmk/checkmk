@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 from typing import Annotated, Literal
 
 from cmk.gui.openapi.framework import (
@@ -42,14 +43,14 @@ def delete_folder_v1(
     parent = folder.parent()
     if parent is None:
         raise ProblemException(
-            status=401,
+            status=HTTPStatus.UNAUTHORIZED,
             title="Problem deleting folder.",
             detail="Deleting the root folder is not permitted.",
         )
 
     if delete_mode != "recursive" and (not folder.is_empty() or folder.is_referenced()):
         raise ProblemException(
-            status=409,
+            status=HTTPStatus.CONFLICT,
             title="Problem deleting folder.",
             detail=(
                 "Folder is not empty or is referenced by another object. Use the force parameter "
@@ -63,7 +64,7 @@ def delete_folder_v1(
         pending_changes=make_pending_changes(api_context),
         acting_user=api_context.user,
     )
-    return ApiResponse(body=None, status_code=204)
+    return ApiResponse(body=None, status_code=HTTPStatus.NO_CONTENT)
 
 
 ENDPOINT_DELETE_FOLDER = VersionedEndpoint(
@@ -78,7 +79,7 @@ ENDPOINT_DELETE_FOLDER = VersionedEndpoint(
     versions={
         APIVersion.V1: EndpointHandler(
             handler=delete_folder_v1,
-            additional_status_codes=[409],
+            additional_status_codes=[HTTPStatus.CONFLICT],
         )
     },
 )

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import itertools
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.hostaddress import HostName
@@ -142,7 +143,7 @@ ENDPOINT_BULK_CREATE_HOST = VersionedEndpoint(
     versions={
         APIVersion.V1: EndpointHandler(
             handler=bulk_create_host_v1,
-            error_schemas={400: BulkHostActionWithFailedHostsModel},
+            error_schemas={HTTPStatus.BAD_REQUEST: BulkHostActionWithFailedHostsModel},
         )
     },
 )

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated, assert_never
 
 from pydantic import Discriminator
@@ -86,7 +87,7 @@ def move_notification_rule_v1(
         pprint_value=api_context.config.wato_pprint_config,
         pending_changes=make_pending_changes(api_context),
     )
-    return ApiResponse(body=None, status_code=204)
+    return ApiResponse(body=None, status_code=HTTPStatus.NO_CONTENT)
 
 
 ENDPOINT_MOVE_NOTIFICATION_RULE = VersionedEndpoint(
@@ -101,7 +102,7 @@ ENDPOINT_MOVE_NOTIFICATION_RULE = VersionedEndpoint(
     versions={
         APIVersion.V1: EndpointHandler(
             handler=move_notification_rule_v1,
-            status_descriptions={204: "The notification rule was moved."},
+            status_descriptions={HTTPStatus.NO_CONTENT: "The notification rule was moved."},
         )
     },
 )

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated, assert_never
 
 from pydantic import Discriminator
@@ -96,14 +97,14 @@ def create_service_related_downtime_v1(
                 )
             except QueryException:
                 raise ProblemException(
-                    status=422,
+                    status=HTTPStatus.UNPROCESSABLE_ENTITY,
                     title="Query did not match any service",
                     detail="The provided query returned an empty list so no downtime was set",
                 )
         case _:
             assert_never(body)
 
-    return ApiResponse(body=None, status_code=204)
+    return ApiResponse(body=None, status_code=HTTPStatus.NO_CONTENT)
 
 
 ENDPOINT_CREATE_SERVICE_DOWNTIME = VersionedEndpoint(
@@ -119,9 +120,9 @@ ENDPOINT_CREATE_SERVICE_DOWNTIME = VersionedEndpoint(
     versions={
         APIVersion.V1: EndpointHandler(
             handler=create_service_related_downtime_v1,
-            additional_status_codes=[422],
+            additional_status_codes=[HTTPStatus.UNPROCESSABLE_ENTITY],
             status_descriptions={
-                204: "Create service related downtimes commands have been sent to Livestatus. "
+                HTTPStatus.NO_CONTENT: "Create service related downtimes commands have been sent to Livestatus. "
                 + LIVESTATUS_GENERIC_EXPLANATION
             },
         )

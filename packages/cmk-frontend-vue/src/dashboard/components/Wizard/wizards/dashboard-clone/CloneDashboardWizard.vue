@@ -75,8 +75,10 @@ const clonedDashboardId =
 
 const avoidInitialCollision = props.referenceDashboardType === DashboardOwnerType.CUSTOM
 
-const clonedSettings = props.referenceDashboardGeneralSettings
-clonedSettings.title.text = clonedDashboardName
+const clonedSettings: DashboardGeneralSettings = {
+  ...props.referenceDashboardGeneralSettings,
+  title: { ...props.referenceDashboardGeneralSettings.title, text: clonedDashboardName }
+}
 
 const {
   name,

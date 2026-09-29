@@ -75,7 +75,6 @@ const defaultGeneralSettings = {
 
 const defaultProps = {
   referenceDashboardId: 'my_dashboard',
-  referenceDashboardGeneralSettings: { ...defaultGeneralSettings },
   referenceDashboardRestrictedToSingle: [] as string[],
   referenceDashboardLayoutType: DashboardLayout.RESPONSIVE_GRID,
   referenceDashboardType: DashboardOwnerType.BUILT_IN,
@@ -84,13 +83,23 @@ const defaultProps = {
 }
 
 async function renderWizard(
-  props: Partial<typeof defaultProps> & { preselectedLayout?: DashboardLayout } = {},
+  props: Partial<
+    typeof defaultProps & {
+      referenceDashboardGeneralSettings: typeof defaultGeneralSettings
+      preselectedLayout: DashboardLayout
+    }
+  > = {},
   callbacks: {
     onCloneDashboard?: (...args: unknown[]) => void
     onCancelClone?: () => void
   } = {}
 ) {
-  const mergedProps = { ...defaultProps, ...props, ...callbacks }
+  const mergedProps = {
+    ...defaultProps,
+    referenceDashboardGeneralSettings: structuredClone(defaultGeneralSettings),
+    ...props,
+    ...callbacks
+  }
   render(wrapInSuspense(CloneDashboardWizard, { props: mergedProps }))
   await flushPromises()
 }
@@ -220,6 +229,17 @@ describe('CloneDashboardWizard', () => {
         'custom_dash_clone',
         true
       )
+    })
+
+    it('leaves the title of the reference dashboard untouched', async () => {
+      const referenceDashboardGeneralSettings = structuredClone(defaultGeneralSettings)
+
+      await renderWizard({
+        referenceDashboardType: DashboardOwnerType.CUSTOM,
+        referenceDashboardGeneralSettings
+      })
+
+      expect(referenceDashboardGeneralSettings.title.text).toBe('My Dashboard')
     })
   })
 

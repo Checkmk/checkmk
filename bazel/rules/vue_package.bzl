@@ -205,5 +205,5 @@ def vue_package(name, deps = [], test_deps = []):
     vitest_test(
         name = "unit-test",
         data = _test_data,
-        workers = 2,
+        shard_count = 4,
     )

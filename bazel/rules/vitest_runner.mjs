@@ -8,7 +8,7 @@ import process from 'node:process'
 import { parseCLI, startVitest } from 'vitest/node'
 
 const { filter, options } = parseCLI(['vitest', 'run', ...process.argv.slice(2)])
-options.maxWorkers ??= Number(process.env.BAZEL_VITEST_WORKERS)
+options.maxWorkers ??= 1
 if (options.exclude) {
   options.cliExclude = [options.exclude].flat()
   delete options.exclude

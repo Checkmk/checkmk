@@ -348,8 +348,7 @@ vitest_test(
     name = "unit-test",
     timeout = "long",
     data = TEST_DATA,
-    shard_count = 2,
-    workers = 3,
+    shard_count = 8,
 )
 
 # One target per tsconfig project: they have no cross-references, so a single

@@ -1802,7 +1802,7 @@ allows = [
 allows = []
 
 [components."cmk.testlib.ai_control_plane"]
-allows = ["cmk.ai_control_plane"]
+allows = ["@ccc", "cmk.ai_control_plane", "cmk.password_store.v1"]
 
 [components."cmk.testlib.ai_control_plane.fake_provider"]
 allows = []

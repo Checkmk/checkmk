@@ -24,6 +24,7 @@ interface CreateDashboardWizardProps {
   referenceDashboardType: DashboardOwnerType
   availableLayouts: DashboardLayout[]
   loggedInUser: string
+  preselectedLayout?: DashboardLayout | undefined
 }
 
 const { _t } = usei18n()
@@ -65,6 +66,7 @@ const cancel = () => {
         :reference-dashboard-layout-type="referenceDashboardLayoutType"
         :reference-dashboard-type="referenceDashboardType"
         :logged-in-user="loggedInUser"
+        :preselected-layout="preselectedLayout"
         @clone-dashboard="(...args) => emit('clone-dashboard', ...args)"
         @cancel-clone="cancel"
       />

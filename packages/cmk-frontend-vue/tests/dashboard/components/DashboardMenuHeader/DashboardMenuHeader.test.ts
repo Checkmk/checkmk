@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { CalendarDateTime, type ZonedDateTime, toZoned } from '@internationalized/date'
+import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time/types.ts'
@@ -66,6 +67,7 @@ const activeToken: DashboardTokenModel = {
 interface RenderProps {
   selectedDashboard?: SelectedDashboard | null
   canEditDashboard?: boolean
+  canCloneAsResponsive?: boolean
   linkUserGuide?: string
   isEditMode?: boolean
   publicToken?: DashboardTokenModel | null
@@ -81,6 +83,7 @@ function renderHeader(props: RenderProps = {}) {
     props: {
       selectedDashboard: customDashboard,
       canEditDashboard: true,
+      canCloneAsResponsive: false,
       linkUserGuide: 'https://docs.checkmk.com',
       isEditMode: false,
       publicToken: null,
@@ -140,6 +143,27 @@ describe('DashboardMenuHeader', () => {
       renderHeader()
       expect(screen.getByText('Share')).toBeInTheDocument()
       expect(screen.getByText('Settings')).toBeInTheDocument()
+    })
+  })
+
+  describe('clone as responsive entry', () => {
+    it('offers cloning as a responsive dashboard in the settings menu when possible', async () => {
+      const user = userEvent.setup()
+      renderHeader({ canCloneAsResponsive: true })
+
+      await user.click(screen.getByText('Settings'))
+
+      expect(screen.getByText('Clone as responsive dashboard')).toBeInTheDocument()
+    })
+
+    it('offers only the plain clone in the settings menu when cloning as responsive is not possible', async () => {
+      const user = userEvent.setup()
+      renderHeader({ canCloneAsResponsive: false })
+
+      await user.click(screen.getByText('Settings'))
+
+      expect(screen.getByText('Clone dashboard')).toBeInTheDocument()
+      expect(screen.queryByText('Clone as responsive dashboard')).not.toBeInTheDocument()
     })
   })
 

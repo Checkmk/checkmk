@@ -84,7 +84,7 @@ const defaultProps = {
 }
 
 async function renderWizard(
-  props: Partial<typeof defaultProps> = {},
+  props: Partial<typeof defaultProps> & { preselectedLayout?: DashboardLayout } = {},
   callbacks: {
     onCloneDashboard?: (...args: unknown[]) => void
     onCancelClone?: () => void
@@ -249,6 +249,15 @@ describe('CloneDashboardWizard', () => {
       await renderWizard(anchoredReference)
 
       expect(screen.getByRole('radio', { name: 'Anchored' })).toBeChecked()
+    })
+
+    it('selects the responsive layout when it is preselected', async () => {
+      await renderWizard({
+        ...anchoredReference,
+        preselectedLayout: DashboardLayout.RESPONSIVE_GRID
+      })
+
+      expect(screen.getByRole('radio', { name: 'Responsive' })).toBeChecked()
     })
 
     it('shows no conversion note while the anchored layout stays selected', async () => {

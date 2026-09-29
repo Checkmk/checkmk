@@ -99,6 +99,7 @@ const openAddWidgetDialog = ref(false)
 const addWidgetDialogGroupKey = ref<string | null>(null)
 const openDashboardCreationDialog = ref(props.mode === 'create')
 const openDashboardCloneDialog = ref(props.mode === 'clone')
+const cloneWizardPreselectedLayout = ref<DashboardLayout | undefined>(undefined)
 const isCloning = ref(false)
 const openDashboardShareDialog = ref(false)
 const openWizard = ref(false)
@@ -553,6 +554,17 @@ function readRelativeGridWidgetOrder(): string[] | null {
   return dashboardComponent.value?.getRelativeGridWidgetOrder() ?? null
 }
 
+const openCloneWizard = (preselectedLayout?: DashboardLayout) => {
+  cloneWizardPreselectedLayout.value = preselectedLayout
+  openDashboardCloneDialog.value = true
+}
+
+const canCloneAsResponsive = computed(
+  () =>
+    dashboardsManager.activeDashboard.value?.model.content.layout.type === 'relative_grid' &&
+    props.available_layouts.includes(DashboardLayout.RESPONSIVE_GRID)
+)
+
 const dashboardHasFilters = computed(
   () =>
     Object.keys(dashboardsManager.activeDashboard.value?.model?.filter_context?.filters || {})
@@ -667,6 +679,7 @@ const { refreshTick } = useGlobalRefresh()
           :can-edit-dashboard="
             dashboardsManager.activeDashboard.value?.metadata?.is_editable ?? false
           "
+          :can-clone-as-responsive="canCloneAsResponsive"
           :link-user-guide="props.links.user_guide"
           :public-token="dashboardsManager.activeDashboard.value?.model.public_token ?? null"
           :is-empty-dashboard="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
@@ -675,7 +688,8 @@ const { refreshTick } = useGlobalRefresh()
           @open-runtime-filter="openRuntimeFilters"
           @open-filter-settings="openFilterSettings"
           @open-settings="openDashboardSettings = true"
-          @open-clone-workflow="openDashboardCloneDialog = true"
+          @open-clone-workflow="openCloneWizard()"
+          @open-responsive-clone-workflow="openCloneWizard(DashboardLayout.RESPONSIVE_GRID)"
           @open-widget-workflow="showAddWidgetDialog()"
           @open-share-workflow="openDashboardShareDialog = true"
           @save="saveDashboard"
@@ -711,6 +725,7 @@ const { refreshTick } = useGlobalRefresh()
           "
           :reference-dashboard-type="dashboardsManager.activeDashboard.value!.model.type"
           :logged-in-user="logged_in_user"
+          :preselected-layout="cloneWizardPreselectedLayout"
           @clone-dashboard="(...args) => cloneDashboard(...args)"
           @cancel-clone="openDashboardCloneDialog = false"
         />

@@ -38,6 +38,7 @@ interface CreateDashboardWizardProps {
   referenceDashboardType: DashboardOwnerType
   availableLayouts: DashboardLayout[]
   loggedInUser: string
+  preselectedLayout?: DashboardLayout | undefined
 }
 
 const props = defineProps<CreateDashboardWizardProps>()
@@ -100,7 +101,10 @@ const {
 )
 createUniqueId.value = false
 
-const dashboardLayout = ref<DashboardLayout>(props.referenceDashboardLayoutType)
+const initialLayout =
+  cloneAvailableLayouts.find((layout) => layout === props.preselectedLayout) ??
+  props.referenceDashboardLayoutType
+const dashboardLayout = ref<DashboardLayout>(initialLayout)
 
 const isConvertingToResponsive = computed(
   () => isAnchoredReference && dashboardLayout.value === DashboardLayout.RESPONSIVE_GRID

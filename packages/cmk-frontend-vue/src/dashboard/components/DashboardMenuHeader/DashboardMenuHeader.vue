@@ -32,6 +32,7 @@ import type { SelectedDashboard } from './types'
 interface Props {
   selectedDashboard: SelectedDashboard | null
   canEditDashboard: boolean
+  canCloneAsResponsive: boolean
   linkUserGuide: string
   isEditMode: boolean
   publicToken: DashboardTokenModel | null
@@ -50,6 +51,7 @@ const emit = defineEmits<{
   'open-filter-settings': []
   'open-settings': []
   'open-clone-workflow': []
+  'open-responsive-clone-workflow': []
   'open-share-workflow': []
   'open-widget-workflow': []
   save: []
@@ -224,6 +226,11 @@ const copyInternalDashboardLink = async (): Promise<void> => {
               hidden: isBuiltInDashboard || !canEditDashboard
             },
             { label: _t('Clone dashboard'), action: () => emit('open-clone-workflow') },
+            {
+              label: _t('Clone as responsive dashboard'),
+              action: () => emit('open-responsive-clone-workflow'),
+              hidden: !canCloneAsResponsive
+            },
             {
               label: _t('Dashboard user guide'),
               url: linkUserGuide,

@@ -72,6 +72,8 @@ def manage_spoolfile(request):
         os.unlink(filename)
 
 
+# An outdated spool file alone makes the agent send nothing at all.
+@pytest.mark.agent_output_may_be_empty
 def test_section_spool(request, testconfig, expected_output, actual_output, testfile) -> None:
     # request.node.name gives test name
     local_test(expected_output, actual_output, testfile, request.node.name)

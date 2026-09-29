@@ -3,19 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import asyncio
 import os
 import platform
 import subprocess
 import sys
-import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Final, NamedTuple
 
-import telnetlib3  # type: ignore[import-untyped]
 import yaml
+from testlib.agent_output import read_agent_output  # type: ignore[import-not-found]
 
 # check_mk section, example of output
 # <<<check_mk>>>
@@ -85,47 +83,6 @@ def create_legacy_pull_file(directory: Path) -> None:
         f.write("Created by integration tests")
 
 
-_result = ""
-
-
-async def _telnet_shell(reader: telnetlib3.TelnetReader, _: telnetlib3.TelnetWriter) -> None:
-    global _result
-    while True:
-        data = await reader.read(1024)
-        if not data:
-            break
-        # On Windows `reader.read` "unexpectedly" returns str( instead of bytes) due to telnetlib3
-        # strange implementation. Itis allowed but rather difficult to deteremine and myoy can't guess it.
-        # We do not want to improve it, but we want to be able to test it. So we just ignore type here.
-        # Additionally this test is ASCII only, so it is not a problem.
-        _result += data
-
-
-def _read_client_data(host: str, port: int) -> None:
-    loop = asyncio.get_event_loop()
-    coro = telnetlib3.open_connection(host, port, shell=_telnet_shell)
-    _, writer = loop.run_until_complete(coro)
-    loop.run_until_complete(writer.protocol.waiter_closed)
-
-
-def _get_data_using_telnet(host: str, port: int) -> list[str]:
-    # overloaded CI Node may delay start/init of the agent process
-    # we must retry connection few times to avoid complaints
-    global _result
-    _result = ""
-    for _ in range(5):
-        try:
-            _read_client_data(host, port)
-            if _result:
-                return _result.splitlines()
-            time.sleep(2)
-        except Exception as _:
-            # print('No connect, waiting for agent')
-            time.sleep(2)
-
-    return []
-
-
 def get_path_from_env(env: str) -> Path:
     env_value = os.getenv(env)
     assert env_value is not None
@@ -164,7 +121,7 @@ def obtain_agent_data(
         ) as p,
     ):
         try:
-            result = _get_data_using_telnet(_HOST, INTEGRATION_PORT)
+            result: list[str] = read_agent_output(_HOST, INTEGRATION_PORT).splitlines()
         finally:
             # NOTE. we MUST kill both processes (as a _tree_!): we do not need it.
             # Any graceful killing may require a lot of time and gives nothing to testing.

@@ -3,16 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-
 from cmk.agent_based.v2 import Service
 from cmk.plugins.acme.agent_based.acme_voltage import discover_acme_voltage, parse_acme_voltage
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash report 88b0e00e-9b4e-11f1-90fa-005056a8b5b9: ValueError in discover_acme_voltage",
-)
 def test_discover_acme_voltage_skips_sensors_not_present() -> None:
     section = parse_acme_voltage(
         [
@@ -22,7 +16,7 @@ def test_discover_acme_voltage_skips_sensors_not_present() -> None:
         ]
     )
     assert section is not None
-    assert list(discover_acme_voltage(section)) == [  # type: ignore[arg-type]
+    assert list(discover_acme_voltage(section)) == [
         Service(item="MAIN 1.20V"),
         Service(item="PHY 3.30V"),
     ]

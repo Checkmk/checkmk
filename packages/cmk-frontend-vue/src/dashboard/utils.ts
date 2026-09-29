@@ -36,7 +36,7 @@ import type {
   ComputedNetworkFlowKpiStatCardResponse,
   ComputedNetworkFlowTopTableResponse,
   ComputedNetworkFlowTrendChartResponse,
-  ComputedSingleMetricResponse,
+  ComputedSingleMetric,
   ComputedTimelineCountResponse,
   ComputedTopListResponse,
   ComputedWidgetResponse,
@@ -55,7 +55,8 @@ import type {
   VisualContext,
   WidgetAvailableInventory,
   WidgetContent,
-  WidgetSource
+  WidgetSource,
+  WidgetTimeRange
 } from '@/dashboard/types/widget.ts'
 
 import type { ComputeWidgetTitlesRequest, ComputeWidgetTitlesResponse } from './types/api'
@@ -319,31 +320,15 @@ export const dashboardAPI = {
       })
     )
   },
-  computeSingleMetricData: async (
-    content: SingleMetricContent,
-    context: VisualContext
-  ): Promise<ComputedSingleMetricResponse> => {
+  computeSingleMetric: async (
+    body: { source: WidgetSource<SingleMetricContent>; time_range: WidgetTimeRange },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<ComputedSingleMetric>> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-single-metric/invoke', {
         ...CONTENT_TYPE_HEADER,
-        body: { content, context }
-      })
-    )
-  },
-  /**
-   * The same data on a shared (token-authenticated) dashboard. The widget configuration is
-   * deliberately not sent: the endpoint re-reads the named widget from the dashboard the token
-   * was issued for, so a token holder cannot reach anything the dashboard does not show.
-   */
-  computeSharedSingleMetricData: async (
-    widgetId: string,
-    cmkToken: string
-  ): Promise<ComputedSingleMetricResponse> => {
-    return unwrap(
-      await client.POST('/domain-types/dashboard/actions/compute-shared-single-metric/invoke', {
-        ...CONTENT_TYPE_HEADER,
-        headers: { Authorization: `CMK-TOKEN ${cmkToken}` },
-        body: { widget_id: widgetId }
+        headers,
+        body
       })
     )
   },

@@ -12,8 +12,6 @@ export type ComputedTopListResponse = components['schemas']['ComputedWidgetRespo
 export type ComputedTopList = components['schemas']['TopList']
 export type TopListEntry = components['schemas']['TopListEntry']
 export type TopListError = components['schemas']['TopListError']
-export type ComputedSingleMetricResponse =
-  components['schemas']['ComputedWidgetResponse_SingleMetric_']
 export type ComputedSingleMetric = components['schemas']['SingleMetric']
 export type ComputedTimelineCountResponse =
   components['schemas']['ComputedWidgetResponse_TimelineCount_']
@@ -61,6 +59,7 @@ export interface ComputedWidgetResponse<T> {
 }
 
 export type SavedWidgetContent = components['schemas']['SavedWidgetContent']
+export type WidgetTimeRange = components['schemas']['WidgetTimeRange']
 export type ResolvedLink = components['schemas']['ResolvedLink']
 export type LinkProperties = components['schemas']['LinkProperties']
 export type FilterResult = components['schemas']['FilterResult']

@@ -3,24 +3,27 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render } from '@testing-library/vue'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { defineComponent, h } from 'vue'
+import { fromDate } from '@internationalized/date'
+import { render, screen, waitFor } from '@testing-library/vue'
+import { HttpResponse, http } from 'msw'
+import { setupServer } from 'msw/node'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { defineComponent, h, nextTick } from 'vue'
 
 import DashboardContentSingleMetric from '@/dashboard/components/DashboardContent/DashboardContentSingleMetric.vue'
+import type { ContentProps } from '@/dashboard/components/DashboardContent/types'
 import { useProvideIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import type { ComputedSingleMetric, SingleMetricContent } from '@/dashboard/types/widget'
 
 import { makeContentProps } from '@tests/dashboard/contentProps'
+import { FakeResizeObserver, deliverSize } from '@tests/lib/fakeResizeObserver'
 
-import { flushPromises } from '../../utils.ts'
+const ENDPOINT = `${location.protocol}//${location.host}/api/internal/domain-types/dashboard/actions/compute-single-metric/invoke`
 
-const computeSingleMetricData = vi.fn()
-vi.mock('@/dashboard/utils.ts', () => ({
-  dashboardAPI: {
-    computeSingleMetricData: (...args: unknown[]) => computeSingleMetricData(...args)
-  }
-}))
+const OTHER_RANGE = {
+  from: fromDate(new Date('2026-01-02T00:00:00Z'), 'UTC'),
+  to: fromDate(new Date('2026-01-02T01:00:00Z'), 'UTC')
+}
 
 function singleMetric(overrides: Partial<ComputedSingleMetric> = {}): ComputedSingleMetric {
   return {
@@ -40,54 +43,109 @@ function singleMetric(overrides: Partial<ComputedSingleMetric> = {}): ComputedSi
       { timestamp: 180, value: 30 }
     ],
     stale: false,
-    url: 'view.py?view_name=service',
+    links: [
+      {
+        title: 'Service',
+        location: { type: 'views', name: 'service' },
+        include_context: false,
+        include_time_range: false,
+        show_filter_form: false
+      }
+    ],
+    link_properties: {
+      links: [
+        {
+          siteopt: { status: 'encoded', variables: { site: 'heute' } },
+          host: { status: 'encoded', variables: { host: 'myhost' } },
+          service: { status: 'encoded', variables: { service: 'CPU load' } }
+        }
+      ]
+    },
     ...overrides
   }
 }
 
-function props(content: Partial<SingleMetricContent> = {}) {
-  return makeContentProps(
-    {
-      type: 'single_metric' as const,
-      metric: 'load1',
-      time_range: 'current' as const,
-      display_range: 'automatic' as const,
-      show_display_range_limits: false,
-      ...content
-    },
-    {
-      widget_id: 'w1',
-      general_settings: {
-        title: { text: 'Single metric', render_mode: 'with_background' },
-        render_background: true
-      },
-      effectiveTitle: 'CPU load'
-    }
-  )
+const CURRENT_VALUE: SingleMetricContent = {
+  type: 'single_metric',
+  metric: 'load1',
+  time_range: 'current',
+  display_range: 'automatic',
+  show_display_range_limits: false,
+  show_delta: true
 }
 
+const FOLLOWS_DASHBOARD: SingleMetricContent = {
+  ...CURRENT_VALUE,
+  time_range: { type: 'window', window: 'dashboard', consolidation: 'average' }
+}
+
+const FIXED_WINDOW: SingleMetricContent = {
+  ...CURRENT_VALUE,
+  time_range: {
+    type: 'window',
+    window: { type: 'predefined', value: 'last_4_hours' },
+    consolidation: 'average'
+  }
+}
+
+let answer: () => ComputedSingleMetric = () => singleMetric()
+let requests: unknown[] = []
+
+const server = setupServer(
+  http.post(ENDPOINT, async ({ request }) => {
+    requests.push(await request.json())
+    return HttpResponse.json({ domainType: 'widget-compute', value: answer() })
+  })
+)
+
 async function renderWidget(
-  content: Partial<SingleMetricContent> = {},
+  props: ContentProps<SingleMetricContent> = makeContentProps(CURRENT_VALUE),
   { isPublicDashboard = false } = {}
 ) {
-  const componentProps = props(content)
   const wrapper = defineComponent({
-    setup() {
+    props: { widgetProps: { type: Object, required: true } },
+    setup(wrapperProps) {
       if (isPublicDashboard) {
         useProvideIsPublicDashboard()
       }
-      return () => h(DashboardContentSingleMetric, componentProps as never)
+      return () => h(DashboardContentSingleMetric, wrapperProps.widgetProps as never)
     }
   })
-  const rendered = render(wrapper)
-  await flushPromises()
-  return rendered
+  const rendered = render(wrapper, { props: { widgetProps: props } })
+  await nextTick()
+  deliverSize(400, 200)
+  await screen.findByText('801.84')
+  return {
+    ...rendered,
+    rerender: async (next: ContentProps<SingleMetricContent>) => {
+      await rendered.rerender({ widgetProps: next })
+    }
+  }
 }
 
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
+beforeEach(() => {
+  vi.stubGlobal('ResizeObserver', FakeResizeObserver)
+})
+afterEach(() => {
+  answer = () => singleMetric()
+  requests = []
+  server.resetHandlers()
+  FakeResizeObserver.instances = []
+  vi.unstubAllGlobals()
+})
+afterAll(() => server.close())
+
 describe('DashboardContentSingleMetric', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    computeSingleMetricData.mockResolvedValue({ value: singleMetric() })
+  it('requests the explicit widget with the dashboard time range', async () => {
+    await renderWidget()
+
+    expect(requests).toEqual([
+      {
+        source: { type: 'explicit', content: CURRENT_VALUE, context: {} },
+        time_range: { start: '2026-01-01T00:00:00.000Z', end: '2026-01-01T01:00:00.000Z' }
+      }
+    ])
   })
 
   it('shows the value and its unit as delivered by the backend', async () => {
@@ -107,24 +165,34 @@ describe('DashboardContentSingleMetric', () => {
     ).toBe('#3CC2FF')
   })
 
-  it('links the value into the service view', async () => {
+  it('links the value to the resolved link with its native key', async () => {
     const { container } = await renderWidget()
 
-    expect(container.querySelector('a')).toHaveAttribute('href', 'view.py?view_name=service')
+    expect(container.querySelector('a')).toHaveAttribute(
+      'href',
+      'view.py?view_name=service&site=heute&host=myhost&service=CPU+load&filled_in=filter&_show_filter_form=0'
+    )
+  })
+
+  it('does not link the value without a resolved link', async () => {
+    answer = () => singleMetric({ links: [], link_properties: { links: [] } })
+
+    const { container } = await renderWidget()
+
+    expect(container.querySelector('a')).toBeNull()
   })
 
   it('does not link the value on a public dashboard', async () => {
-    const { container } = await renderWidget({}, { isPublicDashboard: true })
+    const { container } = await renderWidget(makeContentProps(CURRENT_VALUE), {
+      isPublicDashboard: true
+    })
 
     expect(container.querySelector('a')).toBeNull()
   })
 
   it('shows the service state when the backend reports one', async () => {
-    computeSingleMetricData.mockResolvedValue({
-      value: singleMetric({
-        state: { severity: 'warn', tint_background: true }
-      })
-    })
+    answer = () => singleMetric({ state: { severity: 'warn', tint_background: true } })
+
     const { container } = await renderWidget()
 
     expect(container.querySelector('.db-cmk-kpi-stat-card__state')).toHaveTextContent('WARN')
@@ -134,9 +202,8 @@ describe('DashboardContentSingleMetric', () => {
   })
 
   it('labels the range ends when the backend reports them', async () => {
-    computeSingleMetricData.mockResolvedValue({
-      value: singleMetric({ range_limits: { minimum: '0 B', maximum: '1.00 TB' } })
-    })
+    answer = () => singleMetric({ range_limits: { minimum: '0 B', maximum: '1.00 TB' } })
+
     const { container } = await renderWidget()
 
     expect(container.querySelector('.db-cmk-kpi-stat-card__range--minimum')).toHaveTextContent(
@@ -148,8 +215,8 @@ describe('DashboardContentSingleMetric', () => {
   })
 
   it('scales the comparison value like the value itself', async () => {
-    computeSingleMetricData.mockResolvedValue({
-      value: singleMetric({
+    answer = () =>
+      singleMetric({
         series: [
           { timestamp: 0, value: 1_000_000 },
           { timestamp: 60, value: 3_000_000 },
@@ -157,7 +224,7 @@ describe('DashboardContentSingleMetric', () => {
           { timestamp: 180, value: 4_000_000 }
         ]
       })
-    })
+
     const { container } = await renderWidget()
 
     expect(container.querySelector('.db-cmk-kpi-stat-card__delta-comparison')).toHaveTextContent(
@@ -165,26 +232,39 @@ describe('DashboardContentSingleMetric', () => {
     )
   })
 
-  it('reloads on its own, as the figure it replaces did', async () => {
-    vi.useFakeTimers()
-    try {
-      await renderWidget()
-      expect(computeSingleMetricData).toHaveBeenCalledTimes(1)
-
-      await vi.advanceTimersByTimeAsync(60_000)
-      expect(computeSingleMetricData).toHaveBeenCalledTimes(2)
-    } finally {
-      vi.useRealTimers()
-    }
-  })
-
   it('gives the whole widget to the value for the current value alone', async () => {
-    computeSingleMetricData.mockResolvedValue({ value: singleMetric({ series: [] }) })
+    answer = () => singleMetric({ series: [] })
+
     const { container } = await renderWidget()
 
     expect(container.querySelector('.db-kpi-spark-line')).toBeNull()
     expect(container.querySelector('.db-cmk-kpi-stat-card')).toHaveClass(
       'db-cmk-kpi-stat-card--value-only'
     )
+  })
+
+  it('fetches again on a refresh tick', async () => {
+    const { rerender } = await renderWidget(makeContentProps(FIXED_WINDOW))
+
+    await rerender(makeContentProps(FIXED_WINDOW, { tick: 1 }))
+
+    await waitFor(() => expect(requests).toHaveLength(2))
+  })
+
+  it('fetches again when the dashboard range changes and the widget follows it', async () => {
+    const { rerender } = await renderWidget(makeContentProps(FOLLOWS_DASHBOARD))
+
+    await rerender(makeContentProps(FOLLOWS_DASHBOARD, { range: OTHER_RANGE }))
+
+    await waitFor(() => expect(requests).toHaveLength(2))
+  })
+
+  it('does not fetch again when the dashboard range changes under a fixed window', async () => {
+    const { rerender } = await renderWidget(makeContentProps(FIXED_WINDOW))
+
+    await rerender(makeContentProps(FIXED_WINDOW, { range: OTHER_RANGE }))
+    await rerender(makeContentProps(FIXED_WINDOW, { range: OTHER_RANGE, tick: 1 }))
+
+    await waitFor(() => expect(requests).toHaveLength(2))
   })
 })

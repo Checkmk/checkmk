@@ -5,10 +5,14 @@
 
 """Shared helpers for dashboard API tests across editions."""
 
-from collections.abc import Mapping
+import datetime as dt
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
+from dataclasses import dataclass
 
 import pytest
 
+from cmk.ccc.user import UserId
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
@@ -61,6 +65,41 @@ def create_widget(content: dict[str, object]) -> dict[str, object]:
         "content": content,
         "filters": {},
     }
+
+
+@dataclass(frozen=True)
+class SavedWidget:
+    source: dict[str, object]
+    headers: dict[str, str]
+
+
+@contextmanager
+def dashboard_widget_token(
+    clients: ClientRegistry, owner: UserId, content: dict[str, object]
+) -> Iterator[SavedWidget]:
+    """A dashboard with one widget and a token for it, as a saved-arm request needs them."""
+    dashboard_id = "token_dashboard"
+    created = clients.DashboardClient.create_relative_grid_dashboard(
+        create_dashboard_payload(dashboard_id, {"widget": create_widget(content)})
+    )
+    token = clients.DashboardClient.create_dashboard_token(
+        {
+            "dashboard_owner": owner,
+            "dashboard_id": dashboard_id,
+            "comment": "Widget token",
+            "expires_at": (dt.datetime.now(dt.UTC) + dt.timedelta(days=1)).isoformat(),
+        }
+    )
+    try:
+        yield SavedWidget(
+            source={
+                "type": "saved",
+                "widget_id": next(iter(created.json["extensions"]["widgets"])),
+            },
+            headers={"Authorization": f"CMK-TOKEN 0:{token.json['id']}"},
+        )
+    finally:
+        clients.DashboardClient.delete(dashboard_id)
 
 
 def check_widget_create(

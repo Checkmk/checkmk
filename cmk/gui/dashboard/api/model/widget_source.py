@@ -45,3 +45,7 @@ class WidgetTimeRange:
     def __post_init__(self) -> None:
         if self.start >= self.end:
             raise ValueError("The start of the time range must be before its end.")
+
+    def as_epoch_range(self) -> tuple[int, int]:
+        """The start and the end in Unix epoch seconds."""
+        return int(self.start.timestamp()), int(self.end.timestamp())

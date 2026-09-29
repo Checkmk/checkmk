@@ -3,18 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import datetime as dt
-from collections.abc import Generator
+from collections.abc import Iterator
 
 import pytest
 
 from cmk.ccc.user import UserId
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.unit.rest_api_client import ClientRegistry, Response
-from tests.unit.cmk.gui.helpers.dashboard_api_test_helper import (
-    create_dashboard_payload,
-    create_widget,
-)
+from tests.unit.cmk.gui.helpers.dashboard_api_test_helper import dashboard_widget_token, SavedWidget
 
 _HOSTS = [
     {"state": 0, "scheduled_downtime_depth": 0, "custom_variable_names": [], "host_name": "web01"},
@@ -142,52 +138,29 @@ def _counts(response: Response) -> list[int]:
     return [part["count"] for part in response.json["value"]["parts"]]
 
 
-@pytest.fixture(name="stats_widget_token")
-def fixture_stats_widget_token(
+@pytest.fixture(name="saved_stats_widget")
+def fixture_saved_stats_widget(
     clients: ClientRegistry, with_automation_user: tuple[UserId, str]
-) -> Generator[tuple[str, str]]:
-    """A user dashboard with one host statistics widget and a token for it."""
-    dashboard_id = "stats_dashboard"
-    created = clients.DashboardClient.create_relative_grid_dashboard(
-        create_dashboard_payload(
-            dashboard_id,
-            {
-                "stats_widget": create_widget(
-                    {
-                        "type": "host_stats",
-                        "contextual_link": {
-                            "type": "inherited",
-                            "location": {"type": "views", "name": "allhosts"},
-                            "include_context": True,
-                            "include_time_range": False,
-                            "show_filter_form": True,
-                        },
-                    }
-                )
-            },
-        )
-    )
-    token = clients.DashboardClient.create_dashboard_token(
-        {
-            "dashboard_owner": with_automation_user[0],
-            "dashboard_id": dashboard_id,
-            "comment": "Stats token",
-            "expires_at": (dt.datetime.now(dt.UTC) + dt.timedelta(days=1)).isoformat(),
-        }
-    )
-    yield next(iter(created.json["extensions"]["widgets"])), token.json["id"]
-    clients.DashboardClient.delete(dashboard_id)
-
-
-def _saved(
-    clients: ClientRegistry, live: MockLiveStatusConnection, widget_id: str, token_id: str
-) -> Response:
-    return _compute_hosts(
+) -> Iterator[SavedWidget]:
+    with dashboard_widget_token(
         clients,
-        live,
-        {"source": {"type": "saved", "widget_id": widget_id}},
-        headers={"Authorization": f"CMK-TOKEN 0:{token_id}"},
-    )
+        with_automation_user[0],
+        {
+            "type": "host_stats",
+            "contextual_link": {
+                "type": "inherited",
+                "location": {"type": "views", "name": "allhosts"},
+                "include_context": True,
+                "include_time_range": False,
+                "show_filter_form": True,
+            },
+        },
+    ) as saved:
+        yield saved
+
+
+def _saved(clients: ClientRegistry, live: MockLiveStatusConnection, saved: SavedWidget) -> Response:
+    return _compute_hosts(clients, live, {"source": saved.source}, headers=saved.headers)
 
 
 def test_a_host_statistics_widget_answers_one_value(
@@ -259,11 +232,11 @@ def test_a_host_statistics_widget_answers_one_value(
 def test_both_arms_answer_the_same_counts(
     clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
-    stats_widget_token: tuple[str, str],
+    saved_stats_widget: SavedWidget,
 ) -> None:
     explicit = _compute_hosts(clients, mock_livestatus, _explicit({"type": "host_stats"}))
 
-    saved = _saved(clients, mock_livestatus, *stats_widget_token)
+    saved = _saved(clients, mock_livestatus, saved_stats_widget)
 
     assert _counts(saved) == _counts(explicit)
     assert saved.json["value"]["total"]["count"] == explicit.json["value"]["total"]["count"]
@@ -272,9 +245,9 @@ def test_both_arms_answer_the_same_counts(
 def test_the_saved_arm_answers_empty_links(
     clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
-    stats_widget_token: tuple[str, str],
+    saved_stats_widget: SavedWidget,
 ) -> None:
-    value = _saved(clients, mock_livestatus, *stats_widget_token).json["value"]
+    value = _saved(clients, mock_livestatus, saved_stats_widget).json["value"]
 
     assert value["links"] == []
     assert [part["link_properties"] for part in value["parts"]] == [{"links": []}] * 4

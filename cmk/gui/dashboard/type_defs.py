@@ -116,7 +116,12 @@ class MetricFixedWindow(TypedDict):
     rrd_consolidation: Literal["average", "min", "max"]
 
 
-type MetricTimeRange = MetricCurrentValue | MetricFixedWindow
+class MetricDashboardWindow(TypedDict):
+    type: Literal["dashboard"]
+    rrd_consolidation: Literal["average", "min", "max"]
+
+
+type MetricTimeRange = MetricCurrentValue | MetricFixedWindow | MetricDashboardWindow
 type MetricDisplayRangeFixed = tuple[Literal["fixed"], tuple[str, tuple[float, float]]]
 type MetricDisplayRangeWithAutomatic = MetricDisplayRangeFixed | Literal["automatic"]
 type StatusDisplay = None | tuple[Literal["background"], Literal["all", "not_ok"]]

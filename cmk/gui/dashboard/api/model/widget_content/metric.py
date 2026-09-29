@@ -5,15 +5,18 @@
 
 
 from abc import ABC
+from collections.abc import Iterable, Mapping
 from typing import Annotated, assert_never, Literal, override, Self
 
 from pydantic import Discriminator
+from pydantic_core import ErrorDetails
 
 from cmk.gui.dashboard.type_defs import (
     AverageScatterplotDashletConfig,
     BarplotDashletConfig,
     GaugeDashletConfig,
     MetricCurrentValue,
+    MetricDashboardWindow,
     MetricDisplayRangeFixed,
     MetricDisplayRangeWithAutomatic,
     MetricFixedWindow,
@@ -30,12 +33,14 @@ from cmk.gui.graphing import (
     id_from_unit_spec,
     metrics_from_api,
 )
+from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import (
     ColorHex,
     timerange_from_internal,
     TimerangeModel,
 )
+from cmk.gui.type_defs import DashboardEmbeddedViewSpec
 from cmk.gui.unit_formatter import AutoPrecision
 
 from ._base import BaseWidgetContent
@@ -118,10 +123,15 @@ def _metric_display_range_to_internal(
     assert_never(value)
 
 
+type MetricWindowModel = Literal["dashboard"] | TimerangeModel
+
+
 @api_model
 class MetricTimeRangeWindow:
     type: Literal["window"] = api_field(description="Select values over a range of time.")
-    window: TimerangeModel = api_field(description="Time range to select values from.")
+    window: MetricWindowModel = api_field(
+        description="Time range to select values from, or `dashboard` to follow the dashboard."
+    )
     consolidation: Literal["average", "minimum", "maximum"] = api_field(
         description="How to consolidate the values over the time range.",
     )
@@ -150,18 +160,23 @@ class MetricTimeRangeWindow:
         assert_never(self.consolidation)
 
     @classmethod
-    def from_internal(cls, config: MetricFixedWindow) -> Self:
+    def from_internal(cls, config: MetricFixedWindow | MetricDashboardWindow) -> Self:
         return cls(
             type="window",
-            window=timerange_from_internal(config["window"]),
+            window=(
+                "dashboard"
+                if config["type"] == "dashboard"
+                else timerange_from_internal(config["window"])
+            ),
             consolidation=cls.consolidation_from_internal(config["rrd_consolidation"]),
         )
 
-    def to_internal(self) -> MetricFixedWindow:
+    def to_internal(self) -> MetricFixedWindow | MetricDashboardWindow:
+        consolidation = self.consolidation_to_internal()
+        if self.window == "dashboard":
+            return MetricDashboardWindow(type="dashboard", rrd_consolidation=consolidation)
         return MetricFixedWindow(
-            type="range",
-            window=self.window.to_internal(),
-            rrd_consolidation=self.consolidation_to_internal(),
+            type="range", window=self.window.to_internal(), rrd_consolidation=consolidation
         )
 
 
@@ -304,6 +319,24 @@ class GaugeContent(_BaseMetricContent):
             time_range=_metric_time_range_to_internal(self.time_range),
             status_display=_metric_status_display_to_internal(self.status_display),
         )
+
+    @override
+    def iter_validation_errors(
+        self,
+        location: tuple[str | int, ...],
+        context: ApiContext,
+        *,
+        embedded_views: Mapping[str, DashboardEmbeddedViewSpec],
+    ) -> Iterable[ErrorDetails]:
+        if isinstance(self.time_range, MetricTimeRangeWindow) and (
+            self.time_range.window == "dashboard"
+        ):
+            yield ErrorDetails(
+                type="value_error",
+                msg="The gauge does not follow the dashboard time range yet.",
+                loc=location + ("time_range", "window"),
+                input=self.time_range.window,
+            )
 
 
 @api_model

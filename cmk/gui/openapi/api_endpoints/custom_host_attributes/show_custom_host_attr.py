@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.gui.logged_in import user
@@ -44,7 +45,7 @@ def show_custom_host_attr_v1(
     user.need_permission("wato.custom_attributes")
     attr, _all_attrs = find_attr_or_raise(name, lock=False)
     return ApiResponse(
-        status_code=200,
+        status_code=HTTPStatus.OK,
         body=serialize_attr(attr),
         etag=attr_etag(attr),
     )

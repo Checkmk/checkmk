@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from cmk.ccc.site import omd_site
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.api_endpoints.password.endpoint_family import PASSWORD_FAMILY
@@ -62,7 +64,7 @@ def create_password_v1(
     )
     password = load_password(api_context.user, ident)
     return ApiResponse(
-        status_code=200,
+        status_code=HTTPStatus.OK,
         body=serialize_password(ident, password),
         etag=password_etag(ident, password),
     )

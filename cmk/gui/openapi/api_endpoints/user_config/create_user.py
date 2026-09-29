@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import cast
 
 from cmk.ccc.user import UserId
@@ -82,7 +83,7 @@ def create_user_v1(api_context: ApiContext, body: CreateUserModel) -> ApiRespons
     )
     user_spec = load_user(username)
     return ApiResponse(
-        status_code=200,
+        status_code=HTTPStatus.OK,
         body=serialize_user(username, user_spec),
         etag=user_etag(user_spec),
     )

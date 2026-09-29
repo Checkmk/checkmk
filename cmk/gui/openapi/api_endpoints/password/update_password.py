@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 from typing import Annotated
 
 from pydantic import AfterValidator
@@ -77,7 +78,7 @@ def update_password_v1(
     )
     password = load_password(api_context.user, name)
     return ApiResponse(
-        status_code=200,
+        status_code=HTTPStatus.OK,
         body=serialize_password(name, password),
         etag=password_etag(name, password),
     )

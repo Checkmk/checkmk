@@ -6,6 +6,7 @@
 import copy
 import dataclasses
 from collections.abc import Mapping, Sequence
+from http import HTTPStatus
 from typing import Literal
 
 from cmk.ccc.site import omd_site
@@ -293,7 +294,7 @@ def validate_value(ruleset: Ruleset, value: RuleValue) -> None:
             ruleset.rulespec.form_spec, VisitorOptions(migrate_values=False, mask_values=False)
         ).validate(RawDiskData(value)):
             raise ProblemException(
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
                 title=f"Problem in field {'.'.join(problems[0].location)}",
                 detail=problems[0].message,
             )
@@ -313,14 +314,16 @@ def validate_value(ruleset: Ruleset, value: RuleValue) -> None:
             field_name = strip_tags(exc.varname.replace("_p_", ""))
             title = f"Problem in (sub-)field {field_name!r}"
 
-        raise ProblemException(status=400, title=title, detail=strip_tags(exc.message))
+        raise ProblemException(
+            status=HTTPStatus.BAD_REQUEST, title=title, detail=strip_tags(exc.message)
+        )
 
     # Reject values that are not already in the current format. The legacy valuespec
     # validates the migrated value, so a value in an outdated format can pass validation
     # above. We deep-copy before migrating because some migrations mutate their input.
     if valuespec.transform_value(copy.deepcopy(value)) != value:
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Outdated value format",
             detail=(
                 "The provided 'value_raw' is in an outdated format. Please migrate it to the "
@@ -351,7 +354,7 @@ def get_rule_by_id(
                 )
 
     raise ProblemException(
-        status=404,
+        status=HTTPStatus.NOT_FOUND,
         title="Unknown rule.",
         detail=f"Rule with UUID '{rule_uuid}' was not found.",
     )
@@ -370,7 +373,7 @@ def validate_rule_move(lhs: RuleEntry, rhs: RuleEntry) -> None:
 
 def retrieve_from_rulesets(rulesets: RulesetCollection, ruleset_name: str) -> Ruleset:
     ruleset_exception = ProblemException(
-        status=400,
+        status=HTTPStatus.BAD_REQUEST,
         title="Unknown ruleset.",
         detail=f"The ruleset of name {ruleset_name!r} is not known.",
     )

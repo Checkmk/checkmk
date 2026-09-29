@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.gui.logged_in import user
@@ -71,7 +72,7 @@ def edit_rule_v1(
         and rule_entry.rule.conditions != new_rule.conditions
     ):
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Rule is managed by Quick setup",
             detail="Conditions cannot be modified for rules managed by Quick setup.",
         )
@@ -84,7 +85,7 @@ def edit_rule_v1(
     new_rule_entry = get_rule_by_id(make_folder_tree(api_context.config), rule_id)
     return ApiResponse(
         body=serialize_rule(new_rule_entry, api_context),
-        status_code=200,
+        status_code=HTTPStatus.OK,
         etag=rule_etag(new_rule_entry.rule),
     )
 

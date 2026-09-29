@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.hostaddress import HostName
@@ -100,7 +101,7 @@ def create_cluster_host_v1(
         serialize_host(
             host, api_context=api_context, compute_effective_attributes=False, compute_links=True
         ),
-        status_code=200,
+        status_code=HTTPStatus.OK,
         etag=host_etag(host),
     )
 

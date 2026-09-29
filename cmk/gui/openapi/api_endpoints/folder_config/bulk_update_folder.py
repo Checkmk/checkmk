@@ -2,6 +2,8 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
+
 from cmk.gui.openapi.api_endpoints.host_config._utils import deprecated_attributes_error
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -84,7 +86,9 @@ def bulk_update_folders_v1(
         reasons.append(f"The following folders were not updated: {'; '.join(deprecated_folders)}")
     if reasons:
         raise ProblemException(
-            status=400, title="Some folders were not updated", detail=" ".join(reasons)
+            status=HTTPStatus.BAD_REQUEST,
+            title="Some folders were not updated",
+            detail=" ".join(reasons),
         )
 
     return serialize_folders_collection(folders, show_hosts=False, api_context=api_context)

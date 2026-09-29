@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
+from http import HTTPStatus
 from typing import cast
 
 from cmk.ccc.i18n import _
@@ -203,7 +204,7 @@ def complete_quick_setup_action(
     quick_setup = quick_setup_registry.get(quick_setup_id)
     if quick_setup is None:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="Quick setup not found",
             detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
         )
@@ -212,14 +213,14 @@ def complete_quick_setup_action(
     action = next((a for a in quick_setup.actions if a.id == action_id), None)
     if action is None:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="Action not found",
             detail=f"Action with id '{action_id}' does not exist.",
         )
 
     if action.permissions is not None and not all(user.may(perm) for perm in action.permissions):
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Action not allowed",
             detail=f"Action with id '{action_id}' requires {', '.join(repr(p) for p in action.permissions)} permissions.",
         )
@@ -244,7 +245,7 @@ def complete_quick_setup_action(
                     all_stage_errors=list(add_summary_error_message(errors)),
                 )
             ),
-            status_code=400,
+            status_code=HTTPStatus.BAD_REQUEST,
         )
 
     if isinstance(action, QuickSetupBackgroundAction):
@@ -271,7 +272,7 @@ def complete_quick_setup_action(
             )
         except AlreadyRunningError:
             raise ProblemException(
-                status=429,
+                status=HTTPStatus.TOO_MANY_REQUESTS,
                 title="Cannot start action",
                 detail="Another Quick setup action already running.",
             )
@@ -296,7 +297,7 @@ def complete_quick_setup_action(
     if not result.redirect_url and not result.all_stage_errors:
         raise ValueError("The Quick setup action did not return a result")
 
-    status_code = 201 if result.all_stage_errors is None else 400
+    status_code = HTTPStatus.CREATED if result.all_stage_errors is None else HTTPStatus.BAD_REQUEST
     return ApiResponse(
         body=convert_complete_response(result),
         status_code=status_code,

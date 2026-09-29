@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 import cmk.ccc.version_info as cmk_version_info
 import cmk.utils.paths
 from cmk.crash import CrashReportStore, make_crash_report_base_path
@@ -66,7 +68,7 @@ def create_javascript_crash_report_v1(
                 crash_report_url=crash.url(),
             ),
         ),
-        status_code=201,
+        status_code=HTTPStatus.CREATED,
     )
 
 

@@ -6,6 +6,7 @@
 import dataclasses
 import json
 from dataclasses import asdict
+from http import HTTPStatus
 from typing import Annotated
 
 from pydantic import AfterValidator
@@ -117,7 +118,7 @@ GlobalSettingVarName = Annotated[
 def ensure_setup_access(api_context: ApiContext) -> None:
     if not api_context.config.wato_enabled:
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Setup is disabled",
             detail="This endpoint is currently disabled via the "
             "'Disable remote configuration' option in 'Distributed Monitoring'. "
@@ -125,7 +126,7 @@ def ensure_setup_access(api_context: ApiContext) -> None:
         )
     if not api_context.config.is_provider_site:
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Not the central site of the provider",
             detail="Checkmk can only be configured on the managers central site.",
         )
@@ -134,7 +135,7 @@ def ensure_setup_access(api_context: ApiContext) -> None:
 def ensure_changes_allowed(api_context: ApiContext) -> None:
     if read_only.blocks_changes(api_context.config.wato_read_only):
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Setup is in read-only mode",
             detail=strip_tags(read_only.message(api_context.config.wato_read_only)),
         )
@@ -162,7 +163,7 @@ def value_from_json(form_spec: FormSpec[object], varname: str, json_value: objec
     if problems := visitor.validate(RawFrontendData(json_value)):
         errors = FormSpecValidationErrorsModel.from_messages(problems)
         raise ProblemException(
-            status=422,
+            status=HTTPStatus.UNPROCESSABLE_ENTITY,
             title="Validation error.",
             detail=f"The value of {varname!r} does not match the schema of this setting.",
             ext=EXT(dataclasses.asdict(errors)),

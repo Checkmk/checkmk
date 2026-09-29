@@ -2,6 +2,8 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
+
 from cmk.gui.openapi.endpoints.utils import fetch_group
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -38,7 +40,7 @@ def create_host_group_v1(
     )
     group = fetch_group(body.name, "host")
     return ApiResponse(
-        status_code=200,
+        status_code=HTTPStatus.OK,
         body=serialize_host_group(api_context, group),
         etag=host_group_etag(group),
     )

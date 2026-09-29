@@ -6,6 +6,7 @@
 """What the discovery endpoints have in common."""
 
 from collections.abc import Mapping
+from http import HTTPStatus
 from typing import assert_never
 
 from cmk.ccc.hostaddress import HostName
@@ -143,12 +144,12 @@ def parsed_scope(model: ScopeModel | ApiOmitted) -> ScopeArgs:
 
 
 def invalid_request(detail: str) -> ProblemException:
-    return ProblemException(status=400, title="Invalid request", detail=detail)
+    return ProblemException(status=HTTPStatus.BAD_REQUEST, title="Invalid request", detail=detail)
 
 
 def unknown_job(job_id: str) -> ProblemException:
     return ProblemException(
-        status=404,
+        status=HTTPStatus.NOT_FOUND,
         title="Unknown scan or run",
         detail=f"There is no relation discovery scan or run of yours with the ID '{job_id}'.",
     )

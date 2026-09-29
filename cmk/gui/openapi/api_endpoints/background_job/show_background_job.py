@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.site import omd_site, SiteId
@@ -72,7 +73,7 @@ def show_background_job_v1(
 
     if resolved_site_id not in api_context.config.sites:
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Unknown site",
             detail=f"No site with the ID '{resolved_site_id}' is configured",
         )
@@ -96,7 +97,7 @@ def show_background_job_v1(
 
     if not snapshot.exists:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="The requested background job does not exist",
             detail=f"Could not find a background job with the ID '{job_id}' on site {resolved_site_id}",
         )

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from cmk.ccc.site import omd_site
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
@@ -55,7 +57,9 @@ def accept_host_relations(api_context: ApiContext, body: AcceptRequestModel) -> 
         raise unknown_job(body.scan_id) from exc
     if scanned is None:
         raise ProblemException(
-            status=409, title="The scan has not finished", detail="Wait for it, or scan again."
+            status=HTTPStatus.CONFLICT,
+            title="The scan has not finished",
+            detail="Wait for it, or scan again.",
         )
     try:
         accepted_pairs(scanned, accepted)
@@ -82,7 +86,7 @@ def accept_host_relations(api_context: ApiContext, body: AcceptRequestModel) -> 
         )
     ).is_error():
         raise ProblemException(
-            status=409,
+            status=HTTPStatus.CONFLICT,
             title="Could not start storing the relations",
             detail=str(result.error),
         )

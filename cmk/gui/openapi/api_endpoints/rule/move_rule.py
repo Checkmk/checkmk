@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated, assert_never
 
 from pydantic import Discriminator
@@ -55,7 +56,7 @@ def move_rule_v1(
 
     if is_locked_by_config_bundle(source_entry.rule.locked_by):
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Rule is managed by Quick setup",
             detail="Rules managed by Quick setup cannot be moved.",
         )

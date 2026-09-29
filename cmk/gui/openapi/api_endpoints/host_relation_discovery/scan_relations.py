@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from cmk.gui.config import active_config
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -49,7 +51,7 @@ def scan_host_relations(api_context: ApiContext, body: ScanRequestModel) -> Rela
         )
     ).is_error():
         raise ProblemException(
-            status=409, title="Could not start the scan", detail=str(result.error)
+            status=HTTPStatus.CONFLICT, title="Could not start the scan", detail=str(result.error)
         )
     return RelationJobModel(job_id=job.get_job_id())
 

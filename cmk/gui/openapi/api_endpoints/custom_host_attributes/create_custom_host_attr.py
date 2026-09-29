@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -41,7 +43,7 @@ def create_custom_host_attr_v1(
     all_attrs = load_custom_attrs_from_mk_file(lock=True)
     if any(a["name"] == body.name for a in all_attrs["host"]):
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Name already in use",
             detail=f"An attribute with the name {body.name!r} already exists.",
             fields=FIELDS(
@@ -65,7 +67,7 @@ def create_custom_host_attr_v1(
         pprint_value=api_context.config.wato_pprint_config,
     )
     return ApiResponse(
-        status_code=200,
+        status_code=HTTPStatus.OK,
         body=serialize_attr(new_attr),
         etag=attr_etag(new_attr),
     )

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from http import HTTPStatus
 from typing import Final, get_type_hints
 
 from cmk.ccc.hostaddress import HostName
@@ -236,7 +237,7 @@ def bulk_host_action_response(
         success_bytes = json_dump_without_omitted(HostConfigCollectionModel, host_collection)
         success_dict = json.loads(success_bytes)
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Some actions failed",
             detail=f"Some of the actions were performed but the following were faulty and "
             f"were skipped: {', '.join(failed_hosts)}.",
@@ -290,5 +291,5 @@ def reject_deprecated_attributes(
 ) -> None:
     if (error := deprecated_attributes_error(stored, attributes)) is not None:
         raise ProblemException(
-            status=400, title="Deprecated attributes cannot be set", detail=error
+            status=HTTPStatus.BAD_REQUEST, title="Deprecated attributes cannot be set", detail=error
         )

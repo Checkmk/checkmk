@@ -8,6 +8,7 @@
 import datetime as dt
 import re
 from collections.abc import Mapping, Sequence
+from http import HTTPStatus
 from ipaddress import IPv4Network
 from typing import Annotated, Literal, override, Self
 
@@ -191,7 +192,7 @@ class SNMPv3AuthNoPrivacyModel:
     def to_internal(self) -> tuple[Literal["authNoPriv"], str, str, str]:
         if isinstance(self.auth_password, ApiOmitted):
             raise ProblemException(
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
                 title="Missing SNMPv3 authentication pass phrase.",
                 detail="The 'auth_password' field is required for SNMPv3 authNoPriv credentials.",
             )
@@ -246,7 +247,7 @@ class SNMPv3AuthPrivacyModel:
                 if isinstance(value, ApiOmitted)
             ]
             raise ProblemException(
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
                 title="Missing SNMPv3 pass phrase(s).",
                 detail=f"The following field(s) are required for SNMPv3 authPriv credentials: {', '.join(missing)}.",
             )
@@ -293,7 +294,7 @@ class SNMPCredentialsConverter:
             case SNMPCommunityModel():
                 if isinstance(field.community, ApiOmitted):
                     raise ProblemException(
-                        status=400,
+                        status=HTTPStatus.BAD_REQUEST,
                         title="Missing SNMP community.",
                         detail="The 'community' field is required for SNMP v1/v2 credentials.",
                     )

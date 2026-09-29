@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.gui.autocompleters import autocompleter_registry, AutocompleterBackendWarning
@@ -50,7 +51,9 @@ def show_autocomplete_v1(
         logger.error(
             "Autocompleter %(autocomplete_id)r not found", {"autocomplete_id": autocomplete_id}
         )
-        raise ProblemException(status=404, title=f"Autocompleter {autocomplete_id} not found.")
+        raise ProblemException(
+            status=HTTPStatus.NOT_FOUND, title=f"Autocompleter {autocomplete_id} not found."
+        )
 
     try:
         choices = function(active_config, body.value, body.parameters)
@@ -69,13 +72,15 @@ def show_autocomplete_v1(
             "Autocompleter %(internal_autocompleter)r received invalid input",
             {"internal_autocompleter": internal_autocompleter},
         )
-        raise ProblemException(status=400, title="Invalid input", detail=str(e))
+        raise ProblemException(status=HTTPStatus.BAD_REQUEST, title="Invalid input", detail=str(e))
     except KeyError as e:
         logger.exception(
             "Autocompleter %(internal_autocompleter)r missing field",
             {"internal_autocompleter": internal_autocompleter},
         )
-        raise ProblemException(status=400, title="Missing field", detail=f"Missing field: {e}")
+        raise ProblemException(
+            status=HTTPStatus.BAD_REQUEST, title="Missing field", detail=f"Missing field: {e}"
+        )
 
     return AutocompleteResponseModel(
         choices=[AutocompleteChoiceModel(id=k, value=v) for k, v in choices],

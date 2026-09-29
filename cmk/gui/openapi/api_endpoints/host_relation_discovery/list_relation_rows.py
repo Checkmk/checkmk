@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated, Literal
 
 from annotated_types import Ge, Le
@@ -112,7 +113,9 @@ def list_relation_rows(
         if not is_scan(job_id):
             if part != "failed":
                 raise ProblemException(
-                    status=400, title="Invalid request", detail="A run lists what failed only."
+                    status=HTTPStatus.BAD_REQUEST,
+                    title="Invalid request",
+                    detail="A run lists what failed only.",
                 )
             if (done := load_run(job_id)) is None:
                 raise _not_finished()
@@ -150,7 +153,9 @@ def list_relation_rows(
             )
         case "failed":
             raise ProblemException(
-                status=400, title="Invalid request", detail="A scan has not stored anything."
+                status=HTTPStatus.BAD_REQUEST,
+                title="Invalid request",
+                detail="A scan has not stored anything.",
             )
 
 
@@ -173,7 +178,9 @@ def _page(
 
 def _not_finished() -> ProblemException:
     return ProblemException(
-        status=409, title="Not finished yet", detail="Ask again once the job has finished."
+        status=HTTPStatus.CONFLICT,
+        title="Not finished yet",
+        detail="Ask again once the job has finished.",
     )
 
 

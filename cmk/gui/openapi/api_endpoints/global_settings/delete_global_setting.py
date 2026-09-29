@@ -2,6 +2,8 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
+
 from cmk.ccc.site import omd_site
 from cmk.gui.i18n import _
 from cmk.gui.openapi.framework import (
@@ -55,7 +57,7 @@ def delete_global_setting_v1(
     ensure_changes_allowed(api_context)
     if not config_variable.allow_reset():
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Cannot reset configuration variable",
             detail=f"The configuration variable {varname!r} cannot be reset to its default value.",
         )

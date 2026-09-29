@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -62,7 +64,7 @@ def create_rule_v1(api_context: ApiContext, body: CreateRuleModel) -> ApiRespons
     rule_entry = get_rule_by_id(make_folder_tree(api_context.config), rule.id)
     return ApiResponse(
         body=serialize_rule(rule_entry, api_context),
-        status_code=200,
+        status_code=HTTPStatus.OK,
         etag=rule_etag(rule_entry.rule),
     )
 

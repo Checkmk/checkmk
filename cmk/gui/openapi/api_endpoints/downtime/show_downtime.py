@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.site import SiteId
@@ -64,7 +65,7 @@ def show_downtime_v1(
         downtime = q.fetchone(live, True, site_id)
     except ValueError:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="The requested downtime was not found",
             detail=f"The downtime id {downtime_id} did not match any downtime",
         )

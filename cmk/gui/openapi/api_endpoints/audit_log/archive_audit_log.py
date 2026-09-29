@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     APIVersion,
@@ -35,7 +37,7 @@ def archive_audit_log_v1() -> ApiResponse[None]:
     user.need_permission("wato.auditlog")
     user.need_permission("wato.clear_auditlog")
     AuditLogStore().clear()
-    return ApiResponse(body=None, status_code=204)
+    return ApiResponse(body=None, status_code=HTTPStatus.NO_CONTENT)
 
 
 ENDPOINT_ARCHIVE_AUDIT_LOG = VersionedEndpoint(

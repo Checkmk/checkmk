@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.gui.openapi.framework import (
@@ -56,7 +57,7 @@ def update_host_v1(
 
     if not validate_host_attributes_for_quick_setup(host, body):
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title=f'The host "{host.name()}" is locked by Quick setup.',
             detail="Cannot modify locked attributes.",
         )
@@ -91,7 +92,7 @@ def update_host_v1(
     if body.remove_attributes:
         if unexposed := sorted(set(body.remove_attributes) & set(UNREMOVABLE_HOST_ATTRIBUTES)):
             raise ProblemException(
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
                 title="Some attributes cannot be removed",
                 detail=f"The following attributes are not managed through the API: {', '.join(unexposed)}",
             )
@@ -110,7 +111,7 @@ def update_host_v1(
 
         if faulty_attributes:
             raise ProblemException(
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
                 title="Some attributes were not removed",
                 detail=f"The following attributes were not removed since they didn't exist: {', '.join(faulty_attributes)}",
             )
@@ -119,7 +120,7 @@ def update_host_v1(
         body=serialize_host(
             host, api_context=api_context, compute_effective_attributes=False, compute_links=True
         ),
-        status_code=200,
+        status_code=HTTPStatus.OK,
         etag=host_etag(host),
     )
 

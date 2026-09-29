@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime as dt
+from http import HTTPStatus
 
 from dateutil.relativedelta import relativedelta
 
@@ -63,7 +64,7 @@ def create_agent_download_token_v1(
         site_config = api_context.config.sites.get(body.site_id)
         if site_config is None:
             raise ProblemException(
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
                 title="Unknown site",
                 detail=_('No site with ID "%(site_id)s" is configured.')
                 % {"site_id": body.site_id},
@@ -88,7 +89,7 @@ def create_agent_download_token_v1(
                     ),
                     links=[],
                 ),
-                status_code=201,
+                status_code=HTTPStatus.CREATED,
             )
 
     token = _issue_agent_download_token(expiration_time=body.expires_at)
@@ -99,7 +100,7 @@ def create_agent_download_token_v1(
             extensions=AgentDownloadTokenMetadata.from_internal(token),
             links=[],
         ),
-        status_code=201,
+        status_code=HTTPStatus.CREATED,
     )
 
 

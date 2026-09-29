@@ -5,6 +5,7 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from http import HTTPStatus
 
 from cmk.ccc.site import SiteId
 from cmk.gui.openapi.framework.model.constructors import generate_links
@@ -130,7 +131,7 @@ def read_master_control_state(live: MultiSiteConnection, site_id: SiteId) -> Res
         return Query(status_columns()).fetchone(live, include_site_ids=True, only_site=site_id)
     except ValueError:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="Master control state unavailable",
             detail=f"Could not read the master control state of site {site_id!r}. "
             "The site may be unreachable.",

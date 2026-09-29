@@ -2,6 +2,8 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
+
 from cmk.gui.openapi.api_endpoints.host_config._utils import reject_deprecated_attributes
 from cmk.gui.openapi.api_endpoints.models.folder_models import FolderModel
 from cmk.gui.openapi.framework import (
@@ -32,7 +34,7 @@ def create_folder_v1(api_context: ApiContext, body: CreateFolderModel) -> ApiRes
 
     if name is not None and parent_folder.has_subfolder(name):
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="The folder could not be created.",
             detail=f"A folder with name {name!r} already exists.",
         )
@@ -53,7 +55,7 @@ def create_folder_v1(api_context: ApiContext, body: CreateFolderModel) -> ApiRes
     )
     return ApiResponse(
         body=serialize_folder(folder, show_hosts=False, api_context=api_context),
-        status_code=200,
+        status_code=HTTPStatus.OK,
         etag=folder_etag(folder),
     )
 

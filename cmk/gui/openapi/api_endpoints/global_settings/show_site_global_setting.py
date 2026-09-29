@@ -2,6 +2,8 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
+
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -60,7 +62,7 @@ def show_site_global_setting_v1(
         body=SiteGlobalSettingModel(
             site_id=site_id, varname=varname, value=json_value, spec=spec, origin=origin
         ),
-        status_code=200,
+        status_code=HTTPStatus.OK,
         etag=site_global_setting_etag(site_id, varname, value, origin),
     )
 

@@ -1405,7 +1405,7 @@ them into the `Ruleset.analyse_ruleset` call that reaches this automation. One c
 beside one deliberately local is the design, not an oversight.
 
 **A scoping note, not part of the argument — `with_foreign_hosts` is a self-correcting fallback.**
-The handler also calls `set_all_processed_hosts({host_name})`
+The handler also runs inside `processed_hosts({host_name})`
 (`check_mk.py:_automation_analyze_service_rule_matches`), which makes `with_foreign_hosts` come out
 `False`. Either value is safe, and that is the point: `False` narrows the candidate scope to the
 processed set, `True` widens it to `_all_configured_hosts`, and the host under analysis is in both,

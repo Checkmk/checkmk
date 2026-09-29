@@ -561,101 +561,101 @@ def _automation_discovery_preview(
     label_manager = env.label_manager
     ip_lookup_config = env.ip_lookup_config
 
-    env.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
-    ip_address_of_with_fallback = env.ip_address_of(on_failure=IPLookupFailureMode.HANDLE)
-    on_error = OnError.RAISE if raise_errors else OnError.WARN
-    file_cache_options = FileCacheOptions(
-        use_outdated=prevent_fetching, use_only_cache=prevent_fetching
-    )
+    with env.ruleset_matcher.ruleset_optimizer.processed_hosts({host_name}):
+        ip_address_of_with_fallback = env.ip_address_of(on_failure=IPLookupFailureMode.HANDLE)
+        on_error = OnError.RAISE if raise_errors else OnError.WARN
+        file_cache_options = FileCacheOptions(
+            use_outdated=prevent_fetching, use_only_cache=prevent_fetching
+        )
 
-    # We might be checking a cluster, but the relay ID is the same for all nodes.
-    relay_id = config.get_relay_id(label_manager.labels_of_host(host_name))
-    secrets_config_relay = AdHocSecrets(
-        path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
-            cmk.utils.paths.relative_tmp_dir
-        ),
-        secrets=(
-            secrets := load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
-        ),
-    )
-    secrets_config_site = StoredSecrets(
-        path=cmk.utils.password_store.pending_secrets_path_site(),
-        secrets=secrets,
-    )
-
-    fetcher = CMKFetcher(
-        config_cache,
-        env.host_tags,
-        get_relay_id=lambda hn: relay_id,  # noqa: ARG005
-        make_trigger=lambda relay_id: env.make_fetcher_trigger(
-            relay_id, config_source=ConfigSource.PENDING
-        ),
-        source_config=config_cache.make_source_config(
-            env.service_configurer,
-            ip_address_of_with_fallback,
-            env.passive_service_name_config,
-            env.enforced_services_table,
-            SNMPFetcherConfig(
-                on_error=on_error,
-                missing_sys_description=config_cache.missing_sys_description,
-                selected_sections=NoSelectedSNMPSections(),
-                backend_override=None,
-                base_path=cmk.utils.paths.omd_root,
-                relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
-                relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
-                caching_config=make_parsed_snmp_fetch_intervals_config(
-                    env.loaded_config,
-                    env.ruleset_matcher,
-                    label_manager.labels_of_host,
-                ),
-                relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
+        # We might be checking a cluster, but the relay ID is the same for all nodes.
+        relay_id = config.get_relay_id(label_manager.labels_of_host(host_name))
+        secrets_config_relay = AdHocSecrets(
+            path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
+                cmk.utils.paths.relative_tmp_dir
             ),
-        ),
-        plugins=env.plugins,
-        clusters=env.hosts_config.clusters,
-        default_address_family=ip_lookup_config.default_address_family,
-        file_cache_options=file_cache_options,
-        force_snmp_cache_refresh=not prevent_fetching,
-        get_ip_stack_config=ip_lookup_config.ip_stack_config,
-        ip_address_of=ip_address_of_with_fallback,
-        ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
-        mode=Mode.DISCOVERY,
-        simulation_mode=env.loaded_config.simulation_mode,
-        secrets_config_relay=secrets_config_relay,
-        secrets_config_site=secrets_config_site,
-        # avoid using cache unless prevent_fetching is set (-> fetch new data for rescan
-        # and tabula rasa)
-        max_cachefile_age=MaxAge.zero(),
-    )
-    hosts_config = config.make_hosts_config(env.loaded_config)
-    ip_family = ip_lookup_config.default_address_family(host_name)
-    ip_address = (
-        None
-        if host_name in hosts_config.clusters
-        or ip_lookup_config.ip_stack_config(host_name) is ip_lookup.IPStackConfig.NO_IP
-        # We *must* do the lookup *before* calling `get_host_attributes()`
-        # because...  I don't know... global variables I guess.  In any case,
-        # doing it the other way around breaks one integration test.
-        # note (mo): The behavior of repeated lookups changed. The above _might_ not be true anymore.
-        else ip_address_of_with_fallback(host_name, ip_family)
-    )
-    return _get_discovery_preview(
-        host_name,
-        ip_lookup_config.default_address_family,
-        ip_lookup_config.ip_stack_config,
-        on_error,
-        fetcher,
-        file_cache_options,
-        env.loaded_config,
-        active_service_name_config=env.final_service_name_config,
-        passive_service_name_config=env.passive_service_name_config,
-        config_cache=config_cache,
-        plugins=env.plugins,
-        ip_address_of=ip_address_of_with_fallback,
-        ip_address=ip_address,
-        secrets_config=secrets_config_relay if relay_id else secrets_config_site,
-        for_relay=relay_id is not None,
-    )
+            secrets=(
+                secrets := load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
+            ),
+        )
+        secrets_config_site = StoredSecrets(
+            path=cmk.utils.password_store.pending_secrets_path_site(),
+            secrets=secrets,
+        )
+
+        fetcher = CMKFetcher(
+            config_cache,
+            env.host_tags,
+            get_relay_id=lambda hn: relay_id,  # noqa: ARG005
+            make_trigger=lambda relay_id: env.make_fetcher_trigger(
+                relay_id, config_source=ConfigSource.PENDING
+            ),
+            source_config=config_cache.make_source_config(
+                env.service_configurer,
+                ip_address_of_with_fallback,
+                env.passive_service_name_config,
+                env.enforced_services_table,
+                SNMPFetcherConfig(
+                    on_error=on_error,
+                    missing_sys_description=config_cache.missing_sys_description,
+                    selected_sections=NoSelectedSNMPSections(),
+                    backend_override=None,
+                    base_path=cmk.utils.paths.omd_root,
+                    relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
+                    relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
+                    caching_config=make_parsed_snmp_fetch_intervals_config(
+                        env.loaded_config,
+                        env.ruleset_matcher,
+                        label_manager.labels_of_host,
+                    ),
+                    relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
+                ),
+            ),
+            plugins=env.plugins,
+            clusters=env.hosts_config.clusters,
+            default_address_family=ip_lookup_config.default_address_family,
+            file_cache_options=file_cache_options,
+            force_snmp_cache_refresh=not prevent_fetching,
+            get_ip_stack_config=ip_lookup_config.ip_stack_config,
+            ip_address_of=ip_address_of_with_fallback,
+            ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+            mode=Mode.DISCOVERY,
+            simulation_mode=env.loaded_config.simulation_mode,
+            secrets_config_relay=secrets_config_relay,
+            secrets_config_site=secrets_config_site,
+            # avoid using cache unless prevent_fetching is set (-> fetch new data for rescan
+            # and tabula rasa)
+            max_cachefile_age=MaxAge.zero(),
+        )
+        hosts_config = config.make_hosts_config(env.loaded_config)
+        ip_family = ip_lookup_config.default_address_family(host_name)
+        ip_address = (
+            None
+            if host_name in hosts_config.clusters
+            or ip_lookup_config.ip_stack_config(host_name) is ip_lookup.IPStackConfig.NO_IP
+            # We *must* do the lookup *before* calling `get_host_attributes()`
+            # because...  I don't know... global variables I guess.  In any case,
+            # doing it the other way around breaks one integration test.
+            # note (mo): The behavior of repeated lookups changed. The above _might_ not be true anymore.
+            else ip_address_of_with_fallback(host_name, ip_family)
+        )
+        return _get_discovery_preview(
+            host_name,
+            ip_lookup_config.default_address_family,
+            ip_lookup_config.ip_stack_config,
+            on_error,
+            fetcher,
+            file_cache_options,
+            env.loaded_config,
+            active_service_name_config=env.final_service_name_config,
+            passive_service_name_config=env.passive_service_name_config,
+            config_cache=config_cache,
+            plugins=env.plugins,
+            ip_address_of=ip_address_of_with_fallback,
+            ip_address=ip_address,
+            secrets_config=secrets_config_relay if relay_id else secrets_config_site,
+            for_relay=relay_id is not None,
+        )
 
 
 def _get_discovery_preview(
@@ -1866,24 +1866,23 @@ def _automation_get_service_labels(
     host_name, services = HostName(args[0]), args[1:]
 
     env = AutomationEnvironment.create(state.app, state.loading_result)
-    env.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
+    with env.ruleset_matcher.ruleset_optimizer.processed_hosts({host_name}):
+        # I think we might be computing something here that the caller already knew.
+        discovered_services = env.service_configurer.configure_autochecks(
+            host_name, AutochecksStore(host_name, cmk.utils.paths.autochecks_dir).read()
+        )
+        discovered_labels = {s.description: s.labels for s in discovered_services}
 
-    # I think we might be computing something here that the caller already knew.
-    discovered_services = env.service_configurer.configure_autochecks(
-        host_name, AutochecksStore(host_name, cmk.utils.paths.autochecks_dir).read()
-    )
-    discovered_labels = {s.description: s.labels for s in discovered_services}
-
-    return GetServicesLabelsResult(
-        {
-            service: env.label_manager.labels_of_service(
-                host_name,
-                service,
-                discovered_labels.get(service, {}),
-            )
-            for service in services
-        }
-    )
+        return GetServicesLabelsResult(
+            {
+                service: env.label_manager.labels_of_service(
+                    host_name,
+                    service,
+                    discovered_labels.get(service, {}),
+                )
+                for service in services
+            }
+        )
 
 
 def _automation_get_service_name(
@@ -1894,19 +1893,18 @@ def _automation_get_service_name(
     service_id = ServiceID(CheckPluginName(args[1]), ast.literal_eval(args[2]))
 
     env = AutomationEnvironment.create(state.app, state.loading_result)
-    env.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
-
-    return GetServiceNameResult(
-        service_name=env.passive_service_name_config(
-            host_name,
-            service_id,
-            (
-                None
-                if (p := get_check_plugin(service_id.name, env.plugins.check_plugins)) is None
-                else p.service_name
-            ),
+    with env.ruleset_matcher.ruleset_optimizer.processed_hosts({host_name}):
+        return GetServiceNameResult(
+            service_name=env.passive_service_name_config(
+                host_name,
+                service_id,
+                (
+                    None
+                    if (p := get_check_plugin(service_id.name, env.plugins.check_plugins)) is None
+                    else p.service_name
+                ),
+            )
         )
-    )
 
 
 @dataclass
@@ -1938,41 +1936,41 @@ class AutomationAnalyseServices:
         servicedesc = args[1]
 
         env = AutomationEnvironment.create(state.app, state.loading_result)
-        env.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
-
-        sctx = ServiceSearchContext(
-            env=env,
-            host_name=host_name,
-            host_ip_stack_config=env.ip_lookup_config.ip_stack_config(host_name),
-            host_ip_family=env.ip_lookup_config.default_address_family(host_name),
-            ip_address_of=env.ip_address_of(on_failure=IPLookupFailureMode.HANDLE),
-            timeperiod_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
-                livestatus.get_optional_timeperiods_active_map, log=logger.warning
-            ).get,
-            for_relay=config.get_relay_id(env.label_manager.labels_of_host(host_name)) is not None,
-        )
-
-        return (
-            AnalyseServiceResult(
-                service_info=found.service_info,
-                labels=env.label_manager.labels_of_service(
-                    host_name,
-                    servicedesc,
-                    found.discovered_labels,
-                ),
-                label_sources=env.label_manager.label_sources_of_service(
-                    host_name,
-                    servicedesc,
-                    found.discovered_labels,
-                ),
+        with env.ruleset_matcher.ruleset_optimizer.processed_hosts({host_name}):
+            sctx = ServiceSearchContext(
+                env=env,
+                host_name=host_name,
+                host_ip_stack_config=env.ip_lookup_config.ip_stack_config(host_name),
+                host_ip_family=env.ip_lookup_config.default_address_family(host_name),
+                ip_address_of=env.ip_address_of(on_failure=IPLookupFailureMode.HANDLE),
+                timeperiod_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+                    livestatus.get_optional_timeperiods_active_map, log=logger.warning
+                ).get,
+                for_relay=config.get_relay_id(env.label_manager.labels_of_host(host_name))
+                is not None,
             )
-            if (found := self._search_service(sctx, env.hosts_config, servicedesc))
-            else AnalyseServiceResult(
-                service_info={},
-                labels={},
-                label_sources={},
+
+            return (
+                AnalyseServiceResult(
+                    service_info=found.service_info,
+                    labels=env.label_manager.labels_of_service(
+                        host_name,
+                        servicedesc,
+                        found.discovered_labels,
+                    ),
+                    label_sources=env.label_manager.label_sources_of_service(
+                        host_name,
+                        servicedesc,
+                        found.discovered_labels,
+                    ),
+                )
+                if (found := self._search_service(sctx, env.hosts_config, servicedesc))
+                else AnalyseServiceResult(
+                    service_info={},
+                    labels={},
+                    label_sources={},
+                )
             )
-        )
 
     def _search_service(
         self,
@@ -2186,11 +2184,11 @@ def _automation_analyse_host(
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
 
-    ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
-    return AnalyseHostResult(
-        label_manager.labels_of_host(host_name),
-        label_manager.label_sources_of_host(host_name),
-    )
+    with ruleset_matcher.ruleset_optimizer.processed_hosts({host_name}):
+        return AnalyseHostResult(
+            label_manager.labels_of_host(host_name),
+            label_manager.label_sources_of_host(host_name),
+        )
 
 
 def _automation_analyze_host_rule_matches(
@@ -2205,21 +2203,22 @@ def _automation_analyze_host_rule_matches(
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
 
-    ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
-
-    return AnalyzeHostRuleMatchesResult(
-        {
-            rules[0]["id"]: list(
-                ruleset_matcher.get_host_values_all(host_name, rules, label_manager.labels_of_host)
-            )
-            # The caller needs to get one result per rule. For this reason we can not just use
-            # the list of rules with the ruleset matching functions but have to execute rule
-            # matching for the rules individually. If we would use the provided list of rules,
-            # then the not matching rules would not be represented in the result and we would
-            # not know which matched value is related to which rule.
-            for rules in match_rules
-        }
-    )
+    with ruleset_matcher.ruleset_optimizer.processed_hosts({host_name}):
+        return AnalyzeHostRuleMatchesResult(
+            {
+                rules[0]["id"]: list(
+                    ruleset_matcher.get_host_values_all(
+                        host_name, rules, label_manager.labels_of_host
+                    )
+                )
+                # The caller needs to get one result per rule. For this reason we can not just use
+                # the list of rules with the ruleset matching functions but have to execute rule
+                # matching for the rules individually. If we would use the provided list of rules,
+                # then the not matching rules would not be represented in the result and we would
+                # not know which matched value is related to which rule.
+                for rules in match_rules
+            }
+        )
 
 
 def _automation_analyze_service_rule_matches(
@@ -2238,27 +2237,26 @@ def _automation_analyze_service_rule_matches(
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
 
-    ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
-
-    return AnalyzeServiceRuleMatchesResult(
-        {
-            rules[0]["id"]: list(
-                ruleset_matcher._get_service_ruleset_values(  # noqa: SLF001
-                    host_name,
-                    service_or_item,
-                    service_labels,
-                    rules,
-                    label_manager.labels_of_host,
+    with ruleset_matcher.ruleset_optimizer.processed_hosts({host_name}):
+        return AnalyzeServiceRuleMatchesResult(
+            {
+                rules[0]["id"]: list(
+                    ruleset_matcher._get_service_ruleset_values(  # noqa: SLF001
+                        host_name,
+                        service_or_item,
+                        service_labels,
+                        rules,
+                        label_manager.labels_of_host,
+                    )
                 )
-            )
-            # The caller needs to get one result per rule. For this reason we can not just
-            # use the list of rules with the ruleset matching functions but have to execute
-            # rule matching for the rules individually. If we would use the provided list of
-            # rules, then the not matching rules would not be represented in the result and
-            # we would not know which matched value is related to which rule.
-            for rules in match_rules
-        }
-    )
+                # The caller needs to get one result per rule. For this reason we can not just
+                # use the list of rules with the ruleset matching functions but have to execute
+                # rule matching for the rules individually. If we would use the provided list of
+                # rules, then the not matching rules would not be represented in the result and
+                # we would not know which matched value is related to which rule.
+                for rules in match_rules
+            }
+        )
 
 
 def _automation_analyze_host_rule_effectiveness(
@@ -3164,120 +3162,126 @@ class AutomationDiagHost:
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
 
         env = AutomationEnvironment.create(state.app, state.loading_result)
-        env.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
-        ip_address_of_bare = ip_lookup.make_lookup_ip_address(env.ip_lookup_config)
+        with env.ruleset_matcher.ruleset_optimizer.processed_hosts({host_name}):
+            ip_address_of_bare = ip_lookup.make_lookup_ip_address(env.ip_lookup_config)
 
-        # In 1.5 the tcp connect timeout has been added. The automation may
-        # be called from a remote site with an older version. For this reason
-        # we need to deal with the old args.
-        if len(args) == 14:
-            tcp_connect_timeout = None
-            cmd = args[7]
-        else:
-            tcp_connect_timeout = float(args[7])
-            cmd = args[8]
-
-        snmpv3_use = None
-        snmpv3_auth_proto = None
-        snmpv3_security_name = None
-        snmpv3_security_password = None
-        snmpv3_privacy_proto = None
-        snmpv3_privacy_password = None
-
-        if len(args) > 9:
-            snmpv3_use = args[9]
-            if snmpv3_use in ["authNoPriv", "authPriv"]:
-                snmpv3_auth_proto, snmpv3_security_name, snmpv3_security_password = args[10:13]
+            # In 1.5 the tcp connect timeout has been added. The automation may
+            # be called from a remote site with an older version. For this reason
+            # we need to deal with the old args.
+            if len(args) == 14:
+                tcp_connect_timeout = None
+                cmd = args[7]
             else:
-                snmpv3_security_name = args[11]
-            if snmpv3_use == "authPriv":
-                snmpv3_privacy_proto, snmpv3_privacy_password = args[13:15]
+                tcp_connect_timeout = float(args[7])
+                cmd = args[8]
 
-        # No caching option over commandline here.
-        file_cache_options = FileCacheOptions()
+            snmpv3_use = None
+            snmpv3_auth_proto = None
+            snmpv3_security_name = None
+            snmpv3_security_password = None
+            snmpv3_privacy_proto = None
+            snmpv3_privacy_password = None
 
-        ip_family = env.ip_lookup_config.default_address_family(host_name)
+            if len(args) > 9:
+                snmpv3_use = args[9]
+                if snmpv3_use in ["authNoPriv", "authPriv"]:
+                    snmpv3_auth_proto, snmpv3_security_name, snmpv3_security_password = args[10:13]
+                else:
+                    snmpv3_security_name = args[11]
+                if snmpv3_use == "authPriv":
+                    snmpv3_privacy_proto, snmpv3_privacy_password = args[13:15]
 
-        if not ipaddress:
-            if env.ip_lookup_config.ip_stack_config(host_name) is ip_lookup.IPStackConfig.NO_IP:
-                raise MKGeneralException("Host is configured as No-IP host: %s" % host_name)
+            # No caching option over commandline here.
+            file_cache_options = FileCacheOptions()
+
+            ip_family = env.ip_lookup_config.default_address_family(host_name)
+
+            if not ipaddress:
+                if env.ip_lookup_config.ip_stack_config(host_name) is ip_lookup.IPStackConfig.NO_IP:
+                    raise MKGeneralException("Host is configured as No-IP host: %s" % host_name)
+                try:
+                    ipaddress = ip_address_of_bare(host_name, ip_family)
+                except Exception:
+                    raise MKGeneralException(
+                        "Cannot resolve host name %s into IP address" % host_name
+                    )
+
             try:
-                ipaddress = ip_address_of_bare(host_name, ip_family)
-            except Exception:
-                raise MKGeneralException("Cannot resolve host name %s into IP address" % host_name)
+                if test == "ping":
+                    return DiagHostResult(*self._execute_ping(ipaddress, ip_family))
 
-        try:
-            if test == "ping":
-                return DiagHostResult(*self._execute_ping(ipaddress, ip_family))
-
-            if test == "agent":
-                return DiagHostResult(
-                    *self._execute_agent(
-                        state.app,
-                        env.hosts_config,
-                        env.loaded_config,
-                        env.config_cache,
-                        env.host_tags,
-                        env.label_manager,
-                        env.passive_service_name_config,
-                        env.service_configurer,
-                        env.plugins,
-                        host_name,
-                        ipaddress,
-                        agent_port=agent_port,
-                        cmd=cmd,
-                        tcp_connect_timeout=tcp_connect_timeout,
-                        file_cache_options=file_cache_options,
-                        # This is needed because we might need more than just the primary IP address
-                        # Also: This class might write to console. The de-serializer of the automation call will
-                        # not be able to handle this I think? At best it will ignore it. We should fix this.
-                        ip_address_of=env.ip_address_of(on_failure=IPLookupFailureMode.HANDLE),
+                if test == "agent":
+                    return DiagHostResult(
+                        *self._execute_agent(
+                            state.app,
+                            env.hosts_config,
+                            env.loaded_config,
+                            env.config_cache,
+                            env.host_tags,
+                            env.label_manager,
+                            env.passive_service_name_config,
+                            env.service_configurer,
+                            env.plugins,
+                            host_name,
+                            ipaddress,
+                            agent_port=agent_port,
+                            cmd=cmd,
+                            tcp_connect_timeout=tcp_connect_timeout,
+                            file_cache_options=file_cache_options,
+                            # This is needed because we might need more than just the primary IP address
+                            # Also: This class might write to console. The de-serializer of the automation call will
+                            # not be able to handle this I think? At best it will ignore it. We should fix this.
+                            ip_address_of=env.ip_address_of(on_failure=IPLookupFailureMode.HANDLE),
+                        )
                     )
+
+                if test == "traceroute":
+                    return DiagHostResult(*self._execute_traceroute(ipaddress, ip_family))
+
+                if test.startswith("snmp"):
+                    if env.loaded_config.simulation_mode:
+                        raise FetcherError(
+                            "Simulation mode enabled. Not trying to contact snmp datasource"
+                        )
+                    return DiagHostResult(
+                        *self._execute_snmp(
+                            env.config_cache,
+                            test,
+                            env.config_cache.make_snmp_config(
+                                host_name,
+                                ip_family,
+                                ipaddress,
+                                SourceType.HOST,
+                                backend_override=None,
+                            ),
+                            host_name,
+                            ipaddress,
+                            snmp_community,
+                            snmp_timeout,
+                            snmp_retries,
+                            snmpv3_use,
+                            snmpv3_auth_proto,
+                            snmpv3_security_name,
+                            snmpv3_security_password,
+                            snmpv3_privacy_proto,
+                            snmpv3_privacy_password,
+                            env.loaded_config.snmp_default_community,
+                            env.loaded_config.explicit_snmp_communities,
+                        )
+                    )
+
+                return DiagHostResult(
+                    1,
+                    "Command not implemented",
                 )
 
-            if test == "traceroute":
-                return DiagHostResult(*self._execute_traceroute(ipaddress, ip_family))
-
-            if test.startswith("snmp"):
-                if env.loaded_config.simulation_mode:
-                    raise FetcherError(
-                        "Simulation mode enabled. Not trying to contact snmp datasource"
-                    )
+            except Exception as e:
+                if cmk.ccc.debug.enabled():
+                    raise
                 return DiagHostResult(
-                    *self._execute_snmp(
-                        env.config_cache,
-                        test,
-                        env.config_cache.make_snmp_config(
-                            host_name, ip_family, ipaddress, SourceType.HOST, backend_override=None
-                        ),
-                        host_name,
-                        ipaddress,
-                        snmp_community,
-                        snmp_timeout,
-                        snmp_retries,
-                        snmpv3_use,
-                        snmpv3_auth_proto,
-                        snmpv3_security_name,
-                        snmpv3_security_password,
-                        snmpv3_privacy_proto,
-                        snmpv3_privacy_password,
-                        env.loaded_config.snmp_default_community,
-                        env.loaded_config.explicit_snmp_communities,
-                    )
+                    1,
+                    str(e),
                 )
-
-            return DiagHostResult(
-                1,
-                "Command not implemented",
-            )
-
-        except Exception as e:
-            if cmk.ccc.debug.enabled():
-                raise
-            return DiagHostResult(
-                1,
-                str(e),
-            )
 
     def _execute_ping(
         self,
@@ -3660,90 +3664,91 @@ class AutomationActiveCheck:
             env.loaded_config, env.ruleset_matcher, env.label_manager
         )
 
-        env.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
-
-        # Maybe we add some meaningfull error handling here someday?
-        # This reflects the effetive behavior when the error handler was inroduced.
-        ip_address_of = ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(env.ip_lookup_config),
-            allow_empty=env.hosts_config.clusters,
-            error_handler=lambda *a, **kw: None,  # noqa: ARG005
-        )
-
-        if plugin == "custom":
-            for entry in env.config_cache.custom_checks(host_name):
-                if entry["service_description"] != item:
-                    continue
-
-                command_line = self._replace_macros(
-                    host_name,
-                    ip_family,
-                    entry["service_description"],
-                    entry.get("command_line", ""),
-                    ip_address_of,
-                    discovered_labels={},
-                    config_cache=env.config_cache,
-                    core_objects_config=core_objects_config,
-                )
-                if command_line:
-                    cmd = autodetect_plugin(command_line)
-                    return ActiveCheckResult(*self._execute_check_plugin(cmd))
-
-                return ActiveCheckResult(
-                    -1,
-                    "Passive check - cannot be executed",
-                )
-
-        host_attrs = env.config_cache.get_host_attributes(host_name, ip_family, ip_address_of)
-
-        secrets_config = StoredSecrets(
-            path=(p := cmk.utils.password_store.pending_secrets_path_site()),
-            secrets=load_secrets_file(p),
-        )
-        relay_id = config.get_relay_id(env.label_manager.labels_of_host(host_name))
-        try:
-            for service_data in env.config_cache.active_check_services(
-                host_name,
-                env.ip_lookup_config.ip_stack_config(host_name),
-                ip_family,
-                host_attrs,
-                FinalServiceNameConfig(
-                    env.ruleset_matcher,
-                    illegal_chars=env.loaded_config.cmc_illegal_chars
-                    if env.loaded_config.monitoring_core == "cmc"
-                    else env.loaded_config.nagios_illegal_chars,
-                    translations=env.loaded_config.service_description_translation,
-                ),
-                ip_address_of,
-                secrets_config=secrets_config,
-                single_plugin=plugin,
-                for_relay=relay_id is not None,
-                raise_on_unsupported=relay_id is not None,
-            ):
-                if service_data.description != item:
-                    continue
-
-                command_line = self._replace_service_macros(
-                    host_name,
-                    service_data.description,
-                    env.label_manager.labels_of_service(host_name, service_data.description, {}),
-                    " ".join(service_data.command),
-                    core_objects_config=core_objects_config,
-                )
-                if relay_id is not None and plugin not in SITE_SIDE_ONLY_ACTIVE_CHECKS:
-                    return ActiveCheckResult(
-                        *self._execute_check_plugin_on_relay(relay_id, host_name, command_line)
-                    )
-                return ActiveCheckResult(*self._execute_check_plugin(command_line))
-        except NotSupportedError:
-            return ActiveCheckResult(
-                3, f"UNKNOWN - Active check {plugin!r} is not supported on relays"
+        with env.ruleset_matcher.ruleset_optimizer.processed_hosts({host_name}):
+            # Maybe we add some meaningfull error handling here someday?
+            # This reflects the effetive behavior when the error handler was inroduced.
+            ip_address_of = ip_lookup.ConfiguredIPLookup(
+                ip_lookup.make_lookup_ip_address(env.ip_lookup_config),
+                allow_empty=env.hosts_config.clusters,
+                error_handler=lambda *a, **kw: None,  # noqa: ARG005
             )
 
-        return ActiveCheckResult(
-            None,
-            "Failed to compute check result",
-        )
+            if plugin == "custom":
+                for entry in env.config_cache.custom_checks(host_name):
+                    if entry["service_description"] != item:
+                        continue
+
+                    command_line = self._replace_macros(
+                        host_name,
+                        ip_family,
+                        entry["service_description"],
+                        entry.get("command_line", ""),
+                        ip_address_of,
+                        discovered_labels={},
+                        config_cache=env.config_cache,
+                        core_objects_config=core_objects_config,
+                    )
+                    if command_line:
+                        cmd = autodetect_plugin(command_line)
+                        return ActiveCheckResult(*self._execute_check_plugin(cmd))
+
+                    return ActiveCheckResult(
+                        -1,
+                        "Passive check - cannot be executed",
+                    )
+
+            host_attrs = env.config_cache.get_host_attributes(host_name, ip_family, ip_address_of)
+
+            secrets_config = StoredSecrets(
+                path=(p := cmk.utils.password_store.pending_secrets_path_site()),
+                secrets=load_secrets_file(p),
+            )
+            relay_id = config.get_relay_id(env.label_manager.labels_of_host(host_name))
+            try:
+                for service_data in env.config_cache.active_check_services(
+                    host_name,
+                    env.ip_lookup_config.ip_stack_config(host_name),
+                    ip_family,
+                    host_attrs,
+                    FinalServiceNameConfig(
+                        env.ruleset_matcher,
+                        illegal_chars=env.loaded_config.cmc_illegal_chars
+                        if env.loaded_config.monitoring_core == "cmc"
+                        else env.loaded_config.nagios_illegal_chars,
+                        translations=env.loaded_config.service_description_translation,
+                    ),
+                    ip_address_of,
+                    secrets_config=secrets_config,
+                    single_plugin=plugin,
+                    for_relay=relay_id is not None,
+                    raise_on_unsupported=relay_id is not None,
+                ):
+                    if service_data.description != item:
+                        continue
+
+                    command_line = self._replace_service_macros(
+                        host_name,
+                        service_data.description,
+                        env.label_manager.labels_of_service(
+                            host_name, service_data.description, {}
+                        ),
+                        " ".join(service_data.command),
+                        core_objects_config=core_objects_config,
+                    )
+                    if relay_id is not None and plugin not in SITE_SIDE_ONLY_ACTIVE_CHECKS:
+                        return ActiveCheckResult(
+                            *self._execute_check_plugin_on_relay(relay_id, host_name, command_line)
+                        )
+                    return ActiveCheckResult(*self._execute_check_plugin(command_line))
+            except NotSupportedError:
+                return ActiveCheckResult(
+                    3, f"UNKNOWN - Active check {plugin!r} is not supported on relays"
+                )
+
+            return ActiveCheckResult(
+                None,
+                "Failed to compute check result",
+            )
 
     # Simulate replacing some of the more important macros of host and service. We
     # cannot use dynamic macros, of course. Note: this will not work

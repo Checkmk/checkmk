@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Generator
-
 import pytest
 
 import cmk.ccc.version as cmk_version
@@ -16,15 +14,8 @@ from cmk.gui.watolib.config_sync import (
     ReplicationPathType,
 )
 from cmk.livestatus_client import SiteConfiguration
-from tests.testlib.common.utils import reset_registries
 
 EDITION = cmk_version.Edition.COMMUNITY
-
-
-@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
-def restore_orig_replication_paths() -> Generator[None]:
-    with reset_registries([replication_path_registry]):
-        yield
 
 
 def _expected_replication_paths() -> list[ReplicationPath]:

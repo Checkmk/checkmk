@@ -866,21 +866,25 @@ def _automation_get_bulks(
 
 automation_notification_replay = Automation(
     name=AutomationID("notification-replay"),
+    state_factory=CommonState,
     handler=_automation_notification_replay,
     result=NotificationReplayResult,
 )
 automation_notification_analyse = Automation(
     name=AutomationID("notification-analyse"),
+    state_factory=CommonState,
     handler=_automation_notification_analyse,
     result=NotificationAnalyseResult,
 )
 automation_notification_test = Automation(
     name=AutomationID("notification-test"),
+    state_factory=CommonState,
     handler=_automation_notification_test,
     result=NotificationTestResult,
 )
 automation_notification_get_bulks = Automation(
     name=AutomationID("notification-get-bulks"),
+    state_factory=CommonState,
     handler=_automation_get_bulks,
     result=NotificationGetBulksResult,
 )

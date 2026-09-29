@@ -34,21 +34,19 @@ from ._config import Config, ReloaderConfig
 from ._tracer import TRACER
 
 
-# NOTE: A protocol with a single method can be replaced by a Callable, there is no need for a "self"
-# or the concrete name.
 class AutomationEngine(Protocol):
+    def update(self, omd_root: Path, loading_result: config.LoadingResult | None) -> None: ...
+
     def execute(
-        self,
-        omd_root: Path,
-        cmd: AutomationID,
-        args: list[str],
-        loading_result: config.LoadingResult | None,
+        self, cmd: AutomationID, args: list[str]
     ) -> ABCAutomationResult | AutomationError: ...
 
 
 @dataclass
 class _State:
     automation_or_reload_lock: asyncio.Lock
+    engine: AutomationEngine
+    omd_root: Path
     reload_config: Callable[
         [],
         config.LoadingResult,
@@ -58,13 +56,14 @@ class _State:
     changes_cache: Cache
 
     def load(self) -> None:
-        """Reload the configuration.
+        """Reload the configuration and hand it to the engine.
 
         Raises on failure; callers decide whether to continue or report the error.
         """
         # Do not yet set `self.last_reload_at`. We don't know if we succeed.
         time_right_before_reload = time.time()
         self.loading_result = self.reload_config()
+        self.engine.update(self.omd_root, self.loading_result)
         self.last_reload_at = time_right_before_reload
 
     def reload_if_required(self) -> bool:
@@ -80,7 +79,6 @@ class _State:
 
 @dataclass(frozen=True)
 class _ApplicationDependencies:
-    automation_engine: AutomationEngine
     config: Config
     clear_caches_before_each_call: Callable[[ConfigCache, Hosts], None]
     state: _State
@@ -121,11 +119,12 @@ def make_application(
         )
 
     app.state.dependencies = _ApplicationDependencies(
-        automation_engine=engine,
         config=config,
         clear_caches_before_each_call=clear_caches_before_each_call,
         state=_State(
             automation_or_reload_lock=asyncio.Lock(),
+            engine=engine,
+            omd_root=omd_root,
             reload_config=reload_config,
             last_reload_at=0,
             loading_result=None,
@@ -140,9 +139,7 @@ def make_application(
         dependencies: _ApplicationDependencies = request.app.state.dependencies
         async with dependencies.state.automation_or_reload_lock:
             return _execute_automation_endpoint(
-                omd_root,
                 payload,
-                dependencies.automation_engine,
                 dependencies.clear_caches_before_each_call,
                 dependencies.state,
                 dependencies.log_manager,
@@ -257,9 +254,7 @@ async def _reloader_task(
 
 
 def _execute_automation_endpoint(
-    omd_root: Path,
     payload: AutomationPayload,
-    engine: AutomationEngine,
     clear_caches_before_each_call: Callable[[ConfigCache, Hosts], None],
     state: _State,
     log_manager: LoggingManager,
@@ -304,11 +299,8 @@ def _execute_automation_endpoint(
             )
         try:
             automation_start_time = time.time()
-            result_or_error_code: ABCAutomationResult | int = engine.execute(
-                omd_root,
-                payload.name,
-                list(payload.args),
-                state.loading_result,
+            result_or_error_code: ABCAutomationResult | int = state.engine.execute(
+                payload.name, list(payload.args)
             )
             automation_end_time = time.time()
         except SystemExit as system_exit:

@@ -32,7 +32,7 @@ def _mode_automation(
         raise MKAutomationError("You need to provide arguments")
 
     name, automation_args = AutomationID(args[0]), list(args[1:])
-    automations = Automations(discover_automations())
+    automations = Automations(discover_automations(), omd_root=omd_root, loading_result=None)
     with tracer.span(
         f"mode_automation[{name}]",
         attributes={
@@ -41,7 +41,7 @@ def _mode_automation(
         },
     ):
         try:
-            result = automations.execute(omd_root, name, automation_args)
+            result = automations.execute(name, automation_args)
         finally:
             profiling.output_profile(cmk.utils.paths.profiles_dir)
         if isinstance(result, AutomationError):

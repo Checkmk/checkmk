@@ -52,12 +52,17 @@ class _DummyAutomationResult(ABCAutomationResult):
 
 
 class _DummyAutomationEngineSuccess:
+    def update(
+        self,
+        omd_root: Path,
+        loading_result: LoadingResult | None,
+    ) -> None:
+        pass
+
     def execute(
         self,
-        omd_root: Path,  # noqa: ARG002
         cmd: str,  # noqa: ARG002
         args: list[str],  # noqa: ARG002
-        loading_result: LoadingResult | None,  # noqa: ARG002
     ) -> _DummyAutomationResult:
         sys.stdout.write("stdout_success")
         sys.stderr.write("stderr_success")
@@ -65,12 +70,17 @@ class _DummyAutomationEngineSuccess:
 
 
 class _DummyAutomationEngineFailure:
+    def update(
+        self,
+        omd_root: Path,
+        loading_result: LoadingResult | None,
+    ) -> None:
+        pass
+
     def execute(
         self,
-        omd_root: Path,  # noqa: ARG002
         cmd: str,  # noqa: ARG002
         args: list[str],  # noqa: ARG002
-        loading_result: LoadingResult | None,  # noqa: ARG002
     ) -> AutomationError:
         sys.stdout.write("stdout_failure")
         sys.stderr.write("stderr_failure")
@@ -78,16 +88,30 @@ class _DummyAutomationEngineFailure:
 
 
 class _DummyAutomationEngineSystemExit:
+    def update(
+        self,
+        omd_root: Path,
+        loading_result: LoadingResult | None,
+    ) -> None:
+        pass
+
     def execute(
         self,
-        omd_root: Path,  # noqa: ARG002
         cmd: str,  # noqa: ARG002
         args: list[str],  # noqa: ARG002
-        loading_result: LoadingResult | None,  # noqa: ARG002
     ) -> AutomationError:
         sys.stdout.write("stdout_system_exit")
         sys.stderr.write("stderr_system_exit")
         raise SystemExit(1)
+
+
+class _RecordingAutomationEngine(_DummyAutomationEngineSuccess):
+    def __init__(self) -> None:
+        self.updates: list[tuple[Path, LoadingResult | None]] = []
+
+    @override
+    def update(self, omd_root: Path, loading_result: LoadingResult | None) -> None:
+        self.updates.append((omd_root, loading_result))
 
 
 _EXAMPLE_AUTOMATION_PAYLOAD = AutomationPayload(
@@ -122,7 +146,6 @@ def _make_test_client(
     )
     return TestClient(
         make_application(
-            # The application is never built: no automation in these tests reaches it.
             omd_root=dev_null,
             engine=engine,
             cache=cache,
@@ -256,6 +279,21 @@ def test_automation_reloads_if_necessary(mocker: MockerFixture, cache: Cache) ->
     mock_clear_caches_before_each_call.assert_called_once()
 
 
+def test_reloaded_configuration_reaches_the_engine(mocker: MockerFixture, cache: Cache) -> None:
+    initial, reloaded = mocker.MagicMock(), mocker.MagicMock()
+    engine = _RecordingAutomationEngine()
+    with _make_test_client(
+        engine,
+        cache,
+        mocker.MagicMock(side_effect=[initial, reloaded]),
+        mocker.MagicMock(),
+    ) as client:
+        cache.store_last_detected_change(time.time())
+        client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
+
+    assert [loading_result for _omd_root, loading_result in engine.updates] == [initial, reloaded]
+
+
 def test_health_check(cache: Cache) -> None:
     loaded_config = EMPTY_CONFIG
     with _make_test_client(
@@ -288,6 +326,8 @@ async def test_reloader_single_change(mocker: MockerFixture, cache: Cache) -> No
     state = _State(
         last_reload_at=1,
         automation_or_reload_lock=asyncio.Lock(),
+        engine=_DummyAutomationEngineSuccess(),
+        omd_root=Path("/dev/null"),
         reload_config=mock_reload_callback,
         loading_result=None,
         changes_cache=cache,
@@ -331,6 +371,8 @@ async def test_reloader_two_changes(mocker: MockerFixture, cache: Cache) -> None
     state = _State(
         last_reload_at=1,
         automation_or_reload_lock=asyncio.Lock(),
+        engine=_DummyAutomationEngineSuccess(),
+        omd_root=Path("/dev/null"),
         reload_config=mock_reload_callback,
         loading_result=None,
         changes_cache=cache,
@@ -382,6 +424,8 @@ async def test_reloader_takes_state_into_account(mocker: MockerFixture, cache: C
     state = _State(
         last_reload_at=1,
         automation_or_reload_lock=lock,
+        engine=_DummyAutomationEngineSuccess(),
+        omd_root=Path("/dev/null"),
         reload_config=mock_reload_callback,
         loading_result=None,
         changes_cache=cache,

@@ -10,7 +10,7 @@ from collections.abc import Callable, Iterable, Iterator, Mapping
 from contextlib import contextmanager, nullcontext, redirect_stdout
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Any, Final, Protocol
 
 import cmk.ccc.debug
 from cmk import trace
@@ -38,17 +38,46 @@ class AutomationError(enum.IntEnum):
     UNKNOWN_ERROR = 2
 
 
-@dataclass(frozen=True)
-class Automation:
+class AutomationState(Protocol):
+    """Whatever an automation needs to have ready before it runs.
+
+    The engine builds it with the automation's :attr:`Automation.state_factory`,
+    keeps it alive between calls and hands it the new arguments via
+    :meth:`update` whenever they change.
+    """
+
+    def update(self, omd_root: Path, loading_result: config.LoadingResult | None) -> None: ...
+
+
+type StateFactory[StateT: AutomationState] = Callable[[Path, config.LoadingResult | None], StateT]
+
+
+@dataclass(frozen=True, kw_only=True)
+class Automation[StateT: AutomationState, ResultT: ABCAutomationResult]:
+    """An action the backend performs on request, selected by its :attr:`name`."""
+
     name: AutomationID
-    handler: Callable[[CommonState, list[str]], ABCAutomationResult]
-    result: type[ABCAutomationResult]
+    state_factory: StateFactory[StateT]
+    """Produce the state :attr:`handler` runs against, ready for the given arguments.
+
+    The engine calls each distinct factory once and keeps what it returns:
+    automations that name the same factory share the same state.
+    """
+    handler: Callable[[StateT, list[str]], ResultT]
+    result: type[ResultT]
+
+
+# The engine is deliberately blind to the state type: it only ever hands a state
+# back to the very handler that declared it, and the plug-in built both halves
+# together. There is no single state type to name here, so Any is the honest one.
+type DiscoveredAutomation = Automation[Any, ABCAutomationResult]  # type: ignore[explicit-any]
 
 
 class CommonState:
     """The one state all automations share for now.
 
-    It holds what the engine used to pass to every handler. Automations will
+    It holds what the engine used to pass to every handler. All automations name
+    this class as their factory, so the engine builds it once. Automations will
     move to states of their own, one by one.
     """
 
@@ -56,8 +85,14 @@ class CommonState:
         self.app: CheckmkBaseApp = make_app(omd_root)
         self.loading_result = loading_result
 
+    def update(self, omd_root: Path, loading_result: config.LoadingResult | None) -> None:
+        # The site, and with it the app, does not change while we run. We rebuild the
+        # app anyway, so that the state is derived from its arguments alone.
+        self.app = make_app(omd_root)
+        self.loading_result = loading_result
 
-def discover_automations() -> Iterable[Automation]:
+
+def discover_automations() -> Iterable[DiscoveredAutomation]:
     discovery_result = discover_plugins_from_modules(
         plugin_prefixes={Automation: "automation_"},
         module_names_by_priority=[
@@ -75,36 +110,61 @@ def discover_automations() -> Iterable[Automation]:
 
 
 class Automations:
-    def __init__(self, plugins: Iterable[Automation]) -> None:
+    """Hold the automations and the states they run against.
+
+    A state is built by its factory the first time an automation naming that
+    factory runs, and then kept, so that a long-lived engine (the automation
+    helper) only has to :meth:`update` it. A short-lived one (``cmk --automation``)
+    builds the single state its command needs and nothing else.
+    """
+
+    def __init__(
+        self,
+        plugins: Iterable[DiscoveredAutomation],
+        *,
+        omd_root: Path,
+        loading_result: config.LoadingResult | None,
+    ) -> None:
         super().__init__()
-        self._automations: Final[Mapping[AutomationID, Automation]] = {
+        self._automations: Final[Mapping[AutomationID, DiscoveredAutomation]] = {
             automation.name: automation for automation in plugins
         }
+        self._states_by_factory: Final[dict[StateFactory[AutomationState], AutomationState]] = {}
+        self._omd_root = omd_root
+        self._loading_result = loading_result
+
+    def update(self, omd_root: Path, loading_result: config.LoadingResult | None) -> None:
+        """Hand the new arguments to every state that exists.
+
+        States that were never built are left alone: they will be built from the
+        new arguments when they are needed.
+        """
+        self._omd_root = omd_root
+        self._loading_result = loading_result
+        for state in self._states_by_factory.values():
+            state.update(omd_root, loading_result)
+
+    def _get_state(self, automation: DiscoveredAutomation) -> AutomationState:
+        try:
+            return self._states_by_factory[automation.state_factory]
+        except KeyError:
+            return self._states_by_factory.setdefault(
+                automation.state_factory,
+                automation.state_factory(self._omd_root, self._loading_result),
+            )
 
     # Called either via the CLI's "cmk --automation" mode or via the "/automation" endpoint of the
     # automation helper.
-    def execute(
-        self,
-        omd_root: Path,
-        cmd: AutomationID,
-        args: list[str],
-        loading_result: config.LoadingResult | None = None,
-    ) -> ABCAutomationResult | AutomationError:
+    def execute(self, cmd: AutomationID, args: list[str]) -> ABCAutomationResult | AutomationError:
         remaining_args, timeout = self._extract_timeout_from_args(args)
         with (
             nullcontext()
             if timeout is None
             else Timeout(timeout, message="Action timed out after %s seconds." % timeout)
         ):
-            return self._execute(omd_root, cmd, remaining_args, loading_result)
+            return self._execute(cmd, remaining_args)
 
-    def _execute(
-        self,
-        omd_root: Path,
-        cmd: AutomationID,
-        args: list[str],
-        loading_result: config.LoadingResult | None,
-    ) -> ABCAutomationResult | AutomationError:
+    def _execute(self, cmd: AutomationID, args: list[str]) -> ABCAutomationResult | AutomationError:
         # TODO: Disentangle this control flow mess
         try:
             try:
@@ -115,7 +175,7 @@ class Automations:
                     f" (available: {', '.join(sorted(self._automations))})"
                 )
 
-            state = CommonState(omd_root, loading_result)
+            state = self._get_state(automation)
             with tracer.span(f"execute_automation[{cmd}]"), _stdout_only_on_failure():
                 result = automation.handler(state, args)
 

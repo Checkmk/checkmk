@@ -4174,151 +4174,193 @@ def _automation_find_unknown_check_parameter_rule_sets(
 
 automation_service_discovery = Automation(
     name=AutomationID("service-discovery"),
+    state_factory=CommonState,
     handler=_automation_service_discovery,
     result=ServiceDiscoveryResult,
 )
 automation_special_agent_discovery_preview = Automation(
     name=AutomationID("special-agent-discovery-preview"),
+    state_factory=CommonState,
     handler=_automation_special_agent_discovery_preview,
     result=ServiceDiscoveryPreviewResult,
 )
 automation_service_discovery_preview = Automation(
     name=AutomationID("service-discovery-preview"),
+    state_factory=CommonState,
     handler=_automation_discovery_preview,
     result=ServiceDiscoveryPreviewResult,
 )
 automation_autodiscovery = Automation(
     name=AutomationID("autodiscovery"),
+    state_factory=CommonState,
     handler=_automation_autodiscovery,
     result=AutodiscoveryResult,
 )
 automation_set_autochecks_v2 = Automation(
     name=AutomationID("set-autochecks-v2"),
+    state_factory=CommonState,
     handler=_automation_set_autochecks_v2,
     result=SetAutochecksV2Result,
 )
 automation_update_host_labels = Automation(
     name=AutomationID("update-host-labels"),
+    state_factory=CommonState,
     handler=_automation_update_host_labels,
     result=UpdateHostLabelsResult,
 )
 automation_rename_hosts = Automation(
     name=AutomationID("rename-hosts"),
+    state_factory=CommonState,
     handler=AutomationRenameHosts().execute,
     result=RenameHostsResult,
 )
 automation_get_services_labels = Automation(
     name=AutomationID("get-services-labels"),
+    state_factory=CommonState,
     handler=_automation_get_service_labels,
     result=GetServicesLabelsResult,
 )
 automation_get_service_name = Automation(
     name=AutomationID("get-service-name"),
+    state_factory=CommonState,
     handler=_automation_get_service_name,
     result=GetServiceNameResult,
 )
 automation_analyse_service = Automation(
     name=AutomationID("analyse-service"),
+    state_factory=CommonState,
     handler=AutomationAnalyseServices().execute,
     result=AnalyseServiceResult,
 )
 automation_analyse_host = Automation(
-    name=AutomationID("analyse-host"), handler=_automation_analyse_host, result=AnalyseHostResult
+    name=AutomationID("analyse-host"),
+    state_factory=CommonState,
+    handler=_automation_analyse_host,
+    result=AnalyseHostResult,
 )
 automation_analyze_host_rule_matches = Automation(
     name=AutomationID("analyze-host-rule-matches"),
+    state_factory=CommonState,
     handler=_automation_analyze_host_rule_matches,
     result=AnalyzeHostRuleMatchesResult,
 )
 automation_analyze_service_rule_matches = Automation(
     name=AutomationID("analyze-service-rule-matches"),
+    state_factory=CommonState,
     handler=_automation_analyze_service_rule_matches,
     result=AnalyzeServiceRuleMatchesResult,
 )
 automation_analyze_host_rule_effectiveness = Automation(
     name=AutomationID("analyze-host-rule-effectiveness"),
+    state_factory=CommonState,
     handler=_automation_analyze_host_rule_effectiveness,
     result=AnalyzeHostRuleEffectivenessResult,
 )
 automation_delete_hosts = Automation(
     name=AutomationID("delete-hosts"),
+    state_factory=CommonState,
     handler=AutomationDeleteHosts().execute,
     result=DeleteHostsResult,
 )
 automation_delete_hosts_known_remote = Automation(
     name=AutomationID("delete-hosts-known-remote"),
+    state_factory=CommonState,
     handler=AutomationDeleteHostsKnownRemote().execute,
     result=DeleteHostsKnownRemoteResult,
 )
 automation_restart = Automation(
-    name=AutomationID("restart"), handler=AutomationRestart().execute, result=RestartResult
+    name=AutomationID("restart"),
+    state_factory=CommonState,
+    handler=AutomationRestart().execute,
+    result=RestartResult,
 )
 automation_reload = Automation(
-    name=AutomationID("reload"), handler=AutomationReload().execute, result=ReloadResult
+    name=AutomationID("reload"),
+    state_factory=CommonState,
+    handler=AutomationReload().execute,
+    result=ReloadResult,
 )
 automation_get_configuration = Automation(
     name=AutomationID("get-configuration"),
+    state_factory=CommonState,
     handler=_automation_get_configuration,
     result=GetConfigurationResult,
 )
 automation_get_check_information = Automation(
     name=AutomationID("get-check-information"),
+    state_factory=CommonState,
     handler=_automation_get_check_information,
     result=GetCheckInformationResult,
 )
 automation_get_section_information = Automation(
     name=AutomationID("get-section-information"),
+    state_factory=CommonState,
     handler=_automation_get_section_information,
     result=GetSectionInformationResult,
 )
 automation_scan_parents = Automation(
-    name=AutomationID("scan-parents"), handler=_automation_scan_parents, result=ScanParentsResult
+    name=AutomationID("scan-parents"),
+    state_factory=CommonState,
+    handler=_automation_scan_parents,
+    result=ScanParentsResult,
 )
 automation_diag_special_agent = Automation(
     name=AutomationID("diag-special-agent"),
+    state_factory=CommonState,
     handler=_automation_diag_special_agent,
     result=DiagSpecialAgentResult,
 )
 automation_ping_host = Automation(
-    name=AutomationID("ping-host"), handler=_automation_ping_host, result=PingHostResult
+    name=AutomationID("ping-host"),
+    state_factory=CommonState,
+    handler=_automation_ping_host,
+    result=PingHostResult,
 )
 automation_diag_cmk_agent = Automation(
     name=AutomationID("diag-cmk-agent"),
+    state_factory=CommonState,
     handler=_automation_diag_cmk_agent,
     result=DiagCmkAgentResult,
 )
 automation_diag_snmp = Automation(
     name=AutomationID("diag-snmp"),
+    state_factory=CommonState,
     handler=_automation_diag_snmp,
     result=DiagSnmpResult,
 )
 automation_diag_host = Automation(
     name=AutomationID("diag-host"),
+    state_factory=CommonState,
     handler=AutomationDiagHost().execute,
     result=DiagHostResult,
 )
 automation_active_check = Automation(
     name=AutomationID("active-check"),
+    state_factory=CommonState,
     handler=AutomationActiveCheck().execute,
     result=ActiveCheckResult,
 )
 automation_update_passwords_merged_file = Automation(
     name=AutomationID("update-passwords-merged-file"),
+    state_factory=CommonState,
     handler=_automation_update_passwords_merged_file,
     result=UpdatePasswordsMergedFileResult,
 )
 automation_update_dns_cache = Automation(
     name=AutomationID("update-dns-cache"),
+    state_factory=CommonState,
     handler=_automation_update_dns_cache,
     result=UpdateDNSCacheResult,
 )
 automation_get_agent_output = Automation(
     name=AutomationID("get-agent-output"),
+    state_factory=CommonState,
     handler=_automation_get_agent_output,
     result=GetAgentOutputResult,
 )
 automation_find_unknown_check_parameter_rule_sets = Automation(
     name=AutomationID("find-unknown-check-parameter-rule-sets"),
+    state_factory=CommonState,
     handler=_automation_find_unknown_check_parameter_rule_sets,
     result=UnknownCheckParameterRuleSetsResult,
 )

@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+from dataclasses import dataclass, field
+from pathlib import Path
 from typing import override
 
 import pytest
@@ -127,32 +129,133 @@ class _Result(ABCAutomationResult):
         return SerializedResult("dummy")
 
 
+@dataclass
+class _RecordingState:
+    built_for: Path
+    updated_for: list[Path] = field(default_factory=list)
+
+    def update(self, omd_root: Path, _loading_result: LoadingResult | None) -> None:
+        self.updated_for.append(omd_root)
+
+
+@dataclass(eq=False)  # hashed by identity: the engine keys states by factory
+class _RecordingFactory:
+    built: list[_RecordingState] = field(default_factory=list)
+
+    def __call__(self, omd_root: Path, _loading_result: LoadingResult | None) -> _RecordingState:
+        self.built.append(state := _RecordingState(built_for=omd_root))
+        return state
+
+
+def _handle(_state: _RecordingState, _args: list[str]) -> _Result:
+    return _Result()
+
+
+def _automation(
+    name: str, state_factory: _RecordingFactory
+) -> Automation[_RecordingState, _Result]:
+    return Automation(
+        name=AutomationID(name),
+        state_factory=state_factory,
+        handler=_handle,
+        result=_Result,
+    )
+
+
+def test_state_is_built_once_on_first_execution() -> None:
+    factory = _RecordingFactory()
+    engine = Automations([_automation("a", factory)], omd_root=Path("/old"), loading_result=None)
+
+    engine.execute(AutomationID("a"), [])
+    engine.execute(AutomationID("a"), [])
+
+    assert len(factory.built) == 1
+
+
+def test_automations_naming_the_same_factory_share_one_state() -> None:
+    factory = _RecordingFactory()
+    engine = Automations(
+        [_automation("a", factory), _automation("b", factory)],
+        omd_root=Path("/old"),
+        loading_result=None,
+    )
+
+    engine.execute(AutomationID("a"), [])
+    engine.execute(AutomationID("b"), [])
+
+    assert len(factory.built) == 1
+
+
+def test_update_reaches_the_built_states() -> None:
+    factory = _RecordingFactory()
+    engine = Automations([_automation("a", factory)], omd_root=Path("/old"), loading_result=None)
+    engine.execute(AutomationID("a"), [])
+
+    engine.update(Path("/new"), None)
+
+    assert factory.built[0].updated_for == [Path("/new")]
+
+
+def test_update_leaves_unbuilt_states_alone() -> None:
+    factory = _RecordingFactory()
+    engine = Automations([_automation("a", factory)], omd_root=Path("/old"), loading_result=None)
+
+    engine.update(Path("/new"), None)
+
+    assert not factory.built
+
+
+def test_state_built_after_update_uses_the_new_arguments() -> None:
+    factory = _RecordingFactory()
+    engine = Automations([_automation("a", factory)], omd_root=Path("/old"), loading_result=None)
+
+    engine.update(Path("/new"), None)
+    engine.execute(AutomationID("a"), [])
+
+    assert [state.built_for for state in factory.built] == [Path("/new")]
+
+
 def test_handler_output_does_not_reach_stdout(capsys: pytest.CaptureFixture[str]) -> None:
-    def chatty_handler(_state: CommonState, _args: list[str]) -> _Result:
+    def chatty_handler(_state: _RecordingState, _args: list[str]) -> _Result:
         sys.stdout.write("chatter")
         return _Result()
 
     engine = Automations(
-        [Automation(name=AutomationID("chatty"), handler=chatty_handler, result=_Result)]
+        [
+            Automation(
+                name=AutomationID("chatty"),
+                state_factory=_RecordingFactory(),
+                handler=chatty_handler,
+                result=_Result,
+            )
+        ],
+        omd_root=Path("/old"),
+        loading_result=None,
     )
 
-    engine.execute(cmk.utils.paths.omd_root, AutomationID("chatty"), [])
+    engine.execute(AutomationID("chatty"), [])
 
     assert capsys.readouterr().out == ""
 
 
 @pytest.mark.usefixtures("disable_debug")
 def test_output_of_a_failing_handler_reaches_stdout(capsys: pytest.CaptureFixture[str]) -> None:
-    def failing_handler(_state: CommonState, _args: list[str]) -> _Result:
+    def failing_handler(_state: _RecordingState, _args: list[str]) -> _Result:
         sys.stdout.write("chatter")
         raise MKGeneralException("broken")
 
     engine = Automations(
-        [Automation(name=AutomationID("failing"), handler=failing_handler, result=_Result)]
+        [
+            Automation(
+                name=AutomationID("failing"),
+                state_factory=_RecordingFactory(),
+                handler=failing_handler,
+                result=_Result,
+            )
+        ],
+        omd_root=Path("/old"),
+        loading_result=None,
     )
 
-    assert (
-        engine.execute(cmk.utils.paths.omd_root, AutomationID("failing"), [])
-        is AutomationError.KNOWN_ERROR
-    )
+    assert engine.execute(AutomationID("failing"), []) is AutomationError.KNOWN_ERROR
     assert capsys.readouterr().out == "chatter"

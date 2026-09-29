@@ -79,6 +79,7 @@ def handler(
 
 automation_create_diagnostics_dump = Automation(
     name=AutomationID("create-diagnostics-dump"),
+    state_factory=CommonState,
     handler=handler,
     result=CreateDiagnosticsDumpResult,
 )
@@ -106,6 +107,7 @@ def handler_v2(
 
 automation_create_diagnostics_dump_v2 = Automation(
     name=AutomationID("create-diagnostics-dump-v2"),
+    state_factory=CommonState,
     handler=handler_v2,
     result=CreateDiagnosticsDumpV2Result,
 )

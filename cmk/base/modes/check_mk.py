@@ -456,212 +456,220 @@ def run_checking(
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
-    ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
-    selected_sections, run_plugin_names = extract_plugin_selection(
-        detect_plugins=options.get("detect-plugins"),
-        detect_sections=options.get("detect-sections"),
-        selected_plugins=options.get("plugins"),
-        plugins=plugins.check_plugins,
-        sections=itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
-        type_=CheckPluginName,
-    )
-
-    service_name_config = make_passive_service_name_config(
-        loaded_config, ruleset_matcher, label_manager
-    )
-    service_configurer = config_cache.make_service_configurer(
-        plugins.check_plugins, service_name_config
-    )
-    clustering = config.make_clustering_config(
-        loaded_config, hosts_config, ruleset_matcher, label_manager
-    )
-    service_level_config = make_service_level_config(loaded_config, ruleset_matcher, label_manager)
-    exit_code_spec = make_exit_code_spec(loaded_config, ruleset_matcher, label_manager)
-    only_from = make_only_from_config(loaded_config, ruleset_matcher, label_manager)
-    inventory_config = make_inventory_config(
-        loaded_config, ruleset_matcher, label_manager, hosts_config
-    )
-    enforced_service_table = config.EnforcedServicesTable(
-        BundledHostRulesetMatcher(
-            loaded_config.static_checks,
-            ruleset_matcher,
-            label_manager.labels_of_host,
-        ),
-        service_name_config,
-        plugins.check_plugins,
-        label_manager.labels_of_service,
-    )
-    logger = logging.getLogger("cmk.base.checking")
-    fetcher = CMKFetcher(
-        config_cache,
-        host_tags,
-        get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=lambda relay_id: app.make_fetcher_trigger(relay_id, trusted_ca_file),
-        source_config=config_cache.make_source_config(
-            service_configurer,
-            ip_address_of,
-            service_name_config,
-            enforced_service_table,
-            SNMPFetcherConfig(
-                on_error=OnError.RAISE,
-                missing_sys_description=config_cache.missing_sys_description,
-                selected_sections=(
-                    NoSelectedSNMPSections()
-                    if selected_sections is NO_SELECTION
-                    else frozenset(
-                        SNMPSectionName(n) for n in selected_sections if n in plugins.snmp_sections
-                    )
-                ),
-                backend_override=snmp_backend_override,
-                base_path=cmk.utils.paths.omd_root,
-                relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
-                relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
-                relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
-                caching_config=make_parsed_snmp_fetch_intervals_config(
-                    loaded_config, ruleset_matcher, label_manager.labels_of_host
-                ),
-                force_stored_walks=bool(options.get("usewalk", False)),
+    with ruleset_matcher.ruleset_optimizer.processed_hosts({hostname}):
+        selected_sections, run_plugin_names = extract_plugin_selection(
+            detect_plugins=options.get("detect-plugins"),
+            detect_sections=options.get("detect-sections"),
+            selected_plugins=options.get("plugins"),
+            plugins=plugins.check_plugins,
+            sections=itertools.chain(
+                plugins.agent_sections.values(), plugins.snmp_sections.values()
             ),
-        ),
-        plugins=plugins,
-        clusters=hosts_config.clusters,
-        default_address_family=ip_lookup_config.default_address_family,
-        file_cache_options=file_cache_options,
-        force_snmp_cache_refresh=False,
-        get_ip_stack_config=ip_lookup_config.ip_stack_config,
-        ip_address_of=ip_address_of,
-        ip_address_of_mandatory=forced_ip_lookup()
-        or ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        ip_address_of_mgmt=forced_ip_lookup()
-        or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
-        mode=(
-            FetchMode.CHECKING if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
-        ),
-        simulation_mode=loaded_config.simulation_mode,
-        secrets_config_relay=secrets_config_relay,
-        secrets_config_site=secrets_config_site,
-    )
-    parser = CMKParser(
-        config.make_parser_config(
-            loaded_config,
-            ruleset_matcher,
-            label_manager,
-            ip_address_of=config_cache.primary_ip_address_of,
-        ),
-        selected_sections=selected_sections,
-        keep_outdated=file_cache_options.keep_outdated,
-    )
-    checker_config = CheckerConfig(
-        only_from=only_from,
-        effective_service_level=service_level_config.effective,
-        get_clustered_service_configuration=clustering.get_clustered_service_configuration,
-        nodes=lambda hn: hosts_config.clusters.get(hn, ()),
-        effective_host=clustering.effective_host,
-        get_snmp_backend=config_cache.get_snmp_backend,
-        timeperiods_active=timeperiod.TimeperiodActiveCoreLookup(
-            livestatus.get_optional_timeperiods_active_map, logger.warning
-        ),
-    )
-    summarizer = CMKSummarizer(
-        hostname,
-        config_cache.summary_config,
-        override_non_ok_state=None,
-    )
-    dry_run = options.get("no-submit", False)
-    error_handler = CheckResultErrorHandler(
-        exit_code_spec(hostname),
-        host_name=hostname,
-        service_name="Check_MK",
-        plugin_name="mk",
-        is_cluster=hostname in hosts_config.clusters,
-        snmp_backend=config_cache.get_snmp_backend(hostname),
-        keepalive=False,
-    )
-
-    checks_result: Sequence[ActiveCheckResult] = []
-    with (
-        error_handler,
-        set_value_store_manager(
-            ValueStoreManager(
-                hostname, AllValueStoresStore(cmk.utils.paths.counters_dir / hostname)
-            ),
-            store_changes=not dry_run,
-        ) as value_store_manager,
-    ):
-        console.debug(f"Checkmk version {cmk_version.__version__}")
-        fetched = fetcher(hostname, ip_address=ipaddress)
-        check_plugins = CheckerPluginMapper(
-            checker_config,
-            plugins.check_plugins,
-            value_store_manager,
-            clusters=hosts_config.clusters,
-            rtc_package=None,
-            omd_root=cmk.utils.paths.omd_root,
+            type_=CheckPluginName,
         )
-        with CPUTracker(console.debug) as tracker:
-            checks_result = execute_checkmk_checks(
-                hostname=hostname,
-                omd_root=cmk.utils.paths.omd_root,
-                fetched=((f[0], f[1]) for f in fetched),
-                parser=parser,
-                summarizer=summarizer,
-                section_plugins=SectionPluginMapper(
-                    {**plugins.agent_sections, **plugins.snmp_sections}
-                ),
-                section_error_handling=lambda section_name, raw_data: create_section_crash_dump(
-                    operation="parsing",
-                    section_name=section_name,
-                    section_content=raw_data,
-                    host_name=hostname,
-                    rtc_package=None,
-                ),
-                check_plugins=check_plugins,
-                inventory_plugins=plugins.inventory_plugins,
-                inventory_parameters=inventory_config.plugin_parameters,
-                params=inventory_config.hwsw_parameters(hostname),
-                services=config_cache.configured_services(
-                    hostname,
-                    plugins.check_plugins,
-                    service_configurer,
-                    service_name_config,
-                    enforced_service_table,
-                    service_depends_on,
-                ),
-                run_plugin_names=run_plugin_names,
-                get_check_period=lambda service_name, service_labels: timeperiod.TimeperiodName(
-                    config_cache.check_period_of_passive_service(
-                        hostname, service_name, service_labels
-                    )
-                ),
-                submitter=get_submitter(
-                    check_submission=loaded_config.check_submission,
-                    monitoring_core=monitoring_core,
-                    dry_run=dry_run,
-                    host_name=hostname,
-                    perfdata_format=loaded_config.perfdata_format,
-                    show_perfdata=options.get("perfdata", False),
-                ),
-                exit_spec=exit_code_spec(hostname),
-                timeperiods_active=checker_config.timeperiods_active,
-            )
 
-        checks_result = [
-            *checks_result,
-            make_timing_results(
-                tracker.duration,
-                tuple((f[0], f[2]) for f in fetched),
-                perfdata_with_times=loaded_config.check_mk_perfdata_with_times,
+        service_name_config = make_passive_service_name_config(
+            loaded_config, ruleset_matcher, label_manager
+        )
+        service_configurer = config_cache.make_service_configurer(
+            plugins.check_plugins, service_name_config
+        )
+        clustering = config.make_clustering_config(
+            loaded_config, hosts_config, ruleset_matcher, label_manager
+        )
+        service_level_config = make_service_level_config(
+            loaded_config, ruleset_matcher, label_manager
+        )
+        exit_code_spec = make_exit_code_spec(loaded_config, ruleset_matcher, label_manager)
+        only_from = make_only_from_config(loaded_config, ruleset_matcher, label_manager)
+        inventory_config = make_inventory_config(
+            loaded_config, ruleset_matcher, label_manager, hosts_config
+        )
+        enforced_service_table = config.EnforcedServicesTable(
+            BundledHostRulesetMatcher(
+                loaded_config.static_checks,
+                ruleset_matcher,
+                label_manager.labels_of_host,
             ),
-        ]
+            service_name_config,
+            plugins.check_plugins,
+            label_manager.labels_of_service,
+        )
+        logger = logging.getLogger("cmk.base.checking")
+        fetcher = CMKFetcher(
+            config_cache,
+            host_tags,
+            get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
+            make_trigger=lambda relay_id: app.make_fetcher_trigger(relay_id, trusted_ca_file),
+            source_config=config_cache.make_source_config(
+                service_configurer,
+                ip_address_of,
+                service_name_config,
+                enforced_service_table,
+                SNMPFetcherConfig(
+                    on_error=OnError.RAISE,
+                    missing_sys_description=config_cache.missing_sys_description,
+                    selected_sections=(
+                        NoSelectedSNMPSections()
+                        if selected_sections is NO_SELECTION
+                        else frozenset(
+                            SNMPSectionName(n)
+                            for n in selected_sections
+                            if n in plugins.snmp_sections
+                        )
+                    ),
+                    backend_override=snmp_backend_override,
+                    base_path=cmk.utils.paths.omd_root,
+                    relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
+                    relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
+                    relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
+                    caching_config=make_parsed_snmp_fetch_intervals_config(
+                        loaded_config, ruleset_matcher, label_manager.labels_of_host
+                    ),
+                    force_stored_walks=bool(options.get("usewalk", False)),
+                ),
+            ),
+            plugins=plugins,
+            clusters=hosts_config.clusters,
+            default_address_family=ip_lookup_config.default_address_family,
+            file_cache_options=file_cache_options,
+            force_snmp_cache_refresh=False,
+            get_ip_stack_config=ip_lookup_config.ip_stack_config,
+            ip_address_of=ip_address_of,
+            ip_address_of_mandatory=forced_ip_lookup()
+            or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+            ip_address_of_mgmt=forced_ip_lookup()
+            or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+            mode=(
+                FetchMode.CHECKING
+                if selected_sections is NO_SELECTION
+                else FetchMode.FORCE_SECTIONS
+            ),
+            simulation_mode=loaded_config.simulation_mode,
+            secrets_config_relay=secrets_config_relay,
+            secrets_config_site=secrets_config_site,
+        )
+        parser = CMKParser(
+            config.make_parser_config(
+                loaded_config,
+                ruleset_matcher,
+                label_manager,
+                ip_address_of=config_cache.primary_ip_address_of,
+            ),
+            selected_sections=selected_sections,
+            keep_outdated=file_cache_options.keep_outdated,
+        )
+        checker_config = CheckerConfig(
+            only_from=only_from,
+            effective_service_level=service_level_config.effective,
+            get_clustered_service_configuration=clustering.get_clustered_service_configuration,
+            nodes=lambda hn: hosts_config.clusters.get(hn, ()),
+            effective_host=clustering.effective_host,
+            get_snmp_backend=config_cache.get_snmp_backend,
+            timeperiods_active=timeperiod.TimeperiodActiveCoreLookup(
+                livestatus.get_optional_timeperiods_active_map, logger.warning
+            ),
+        )
+        summarizer = CMKSummarizer(
+            hostname,
+            config_cache.summary_config,
+            override_non_ok_state=None,
+        )
+        dry_run = options.get("no-submit", False)
+        error_handler = CheckResultErrorHandler(
+            exit_code_spec(hostname),
+            host_name=hostname,
+            service_name="Check_MK",
+            plugin_name="mk",
+            is_cluster=hostname in hosts_config.clusters,
+            snmp_backend=config_cache.get_snmp_backend(hostname),
+            keepalive=False,
+        )
 
-    if error_handler.result is not None:
-        checks_result = (error_handler.result,)
+        checks_result: Sequence[ActiveCheckResult] = []
+        with (
+            error_handler,
+            set_value_store_manager(
+                ValueStoreManager(
+                    hostname, AllValueStoresStore(cmk.utils.paths.counters_dir / hostname)
+                ),
+                store_changes=not dry_run,
+            ) as value_store_manager,
+        ):
+            console.debug(f"Checkmk version {cmk_version.__version__}")
+            fetched = fetcher(hostname, ip_address=ipaddress)
+            check_plugins = CheckerPluginMapper(
+                checker_config,
+                plugins.check_plugins,
+                value_store_manager,
+                clusters=hosts_config.clusters,
+                rtc_package=None,
+                omd_root=cmk.utils.paths.omd_root,
+            )
+            with CPUTracker(console.debug) as tracker:
+                checks_result = execute_checkmk_checks(
+                    hostname=hostname,
+                    omd_root=cmk.utils.paths.omd_root,
+                    fetched=((f[0], f[1]) for f in fetched),
+                    parser=parser,
+                    summarizer=summarizer,
+                    section_plugins=SectionPluginMapper(
+                        {**plugins.agent_sections, **plugins.snmp_sections}
+                    ),
+                    section_error_handling=lambda section_name, raw_data: create_section_crash_dump(
+                        operation="parsing",
+                        section_name=section_name,
+                        section_content=raw_data,
+                        host_name=hostname,
+                        rtc_package=None,
+                    ),
+                    check_plugins=check_plugins,
+                    inventory_plugins=plugins.inventory_plugins,
+                    inventory_parameters=inventory_config.plugin_parameters,
+                    params=inventory_config.hwsw_parameters(hostname),
+                    services=config_cache.configured_services(
+                        hostname,
+                        plugins.check_plugins,
+                        service_configurer,
+                        service_name_config,
+                        enforced_service_table,
+                        service_depends_on,
+                    ),
+                    run_plugin_names=run_plugin_names,
+                    get_check_period=lambda service_name, service_labels: timeperiod.TimeperiodName(
+                        config_cache.check_period_of_passive_service(
+                            hostname, service_name, service_labels
+                        )
+                    ),
+                    submitter=get_submitter(
+                        check_submission=loaded_config.check_submission,
+                        monitoring_core=monitoring_core,
+                        dry_run=dry_run,
+                        host_name=hostname,
+                        perfdata_format=loaded_config.perfdata_format,
+                        show_perfdata=options.get("perfdata", False),
+                    ),
+                    exit_spec=exit_code_spec(hostname),
+                    timeperiods_active=checker_config.timeperiods_active,
+                )
 
-    check_result = ActiveCheckResult.from_subresults(*checks_result)
-    with suppress(IOError):
-        sys.stdout.write(check_result.as_text() + "\n")
-        sys.stdout.flush()
-    return check_result.state
+            checks_result = [
+                *checks_result,
+                make_timing_results(
+                    tracker.duration,
+                    tuple((f[0], f[2]) for f in fetched),
+                    perfdata_with_times=loaded_config.check_mk_perfdata_with_times,
+                ),
+            ]
+
+        if error_handler.result is not None:
+            checks_result = (error_handler.result,)
+
+        check_result = ActiveCheckResult.from_subresults(*checks_result)
+        with suppress(IOError):
+            sys.stdout.write(check_result.as_text() + "\n")
+            sys.stdout.flush()
+        return check_result.state
 
 
 class _SaveTreeActions(NamedTuple):

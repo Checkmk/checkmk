@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The HW/SW inventory commands: --inventory and --inventorize-marked-hosts."""
 
+import contextlib
 import dataclasses
 import itertools
 import time
@@ -142,7 +143,6 @@ def _mode_inventory(
         hostnames = config.parse_hostname_list(
             config_cache, hosts_config, host_tags, args, with_clusters=True
         )
-        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hostnames))
         console.verbose(f"Doing HW/SW Inventory on: {', '.join(hostnames)}")
     else:
         # No hosts specified: do all hosts and force caching
@@ -155,156 +155,169 @@ def _mode_inventory(
         )
         console.verbose("Doing HW/SW Inventory on all hosts")
 
-    if "force" in options:
-        file_cache_options = dataclasses.replace(file_cache_options, keep_outdated=True)
+    with (
+        config_cache.ruleset_matcher.ruleset_optimizer.processed_hosts(hostnames)
+        if args
+        else contextlib.nullcontext()
+    ):
+        if "force" in options:
+            file_cache_options = dataclasses.replace(file_cache_options, keep_outdated=True)
 
-    selected_sections, run_plugin_names = extract_plugin_selection(
-        detect_plugins=options.get("detect-plugins"),
-        detect_sections=options.get("detect-sections"),
-        selected_plugins=options.get("plugins"),
-        plugins=plugins.inventory_plugins,
-        sections=itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
-        type_=InventoryPluginName,
-    )
-    fetcher = CMKFetcher(
-        config_cache,
-        host_tags,
-        get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=lambda relay_id: app.make_fetcher_trigger(
-            relay_id, cmk.utils.paths.trusted_ca_file
-        ),
-        source_config=config_cache.make_source_config(
-            config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
-            ip_address_of,
-            service_name_config,
-            enforced_service_table,
-            SNMPFetcherConfig(
-                on_error=OnError.RAISE,
-                missing_sys_description=config_cache.missing_sys_description,
-                selected_sections=(
-                    NoSelectedSNMPSections()
-                    if selected_sections is NO_SELECTION
-                    else frozenset(
-                        SNMPSectionName(n) for n in selected_sections if n in plugins.snmp_sections
+        selected_sections, run_plugin_names = extract_plugin_selection(
+            detect_plugins=options.get("detect-plugins"),
+            detect_sections=options.get("detect-sections"),
+            selected_plugins=options.get("plugins"),
+            plugins=plugins.inventory_plugins,
+            sections=itertools.chain(
+                plugins.agent_sections.values(), plugins.snmp_sections.values()
+            ),
+            type_=InventoryPluginName,
+        )
+        fetcher = CMKFetcher(
+            config_cache,
+            host_tags,
+            get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
+            make_trigger=lambda relay_id: app.make_fetcher_trigger(
+                relay_id, cmk.utils.paths.trusted_ca_file
+            ),
+            source_config=config_cache.make_source_config(
+                config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
+                ip_address_of,
+                service_name_config,
+                enforced_service_table,
+                SNMPFetcherConfig(
+                    on_error=OnError.RAISE,
+                    missing_sys_description=config_cache.missing_sys_description,
+                    selected_sections=(
+                        NoSelectedSNMPSections()
+                        if selected_sections is NO_SELECTION
+                        else frozenset(
+                            SNMPSectionName(n)
+                            for n in selected_sections
+                            if n in plugins.snmp_sections
+                        )
+                    ),
+                    backend_override=snmp_backend_override,
+                    base_path=cmk.utils.paths.omd_root,
+                    relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
+                    relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
+                    relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
+                    caching_config=make_parsed_snmp_fetch_intervals_config(
+                        loaded_config, ruleset_matcher, label_manager.labels_of_host
+                    ),
+                    force_stored_walks=bool(options.get("usewalk", False)),
+                ),
+            ),
+            plugins=plugins,
+            clusters=hosts_config.clusters,
+            default_address_family=ip_lookup_config.default_address_family,
+            file_cache_options=file_cache_options,
+            force_snmp_cache_refresh=False,
+            get_ip_stack_config=ip_lookup_config.ip_stack_config,
+            ip_address_of=ip_address_of,
+            ip_address_of_mandatory=forced_ip_lookup()
+            or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+            ip_address_of_mgmt=forced_ip_lookup()
+            or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+            mode=(
+                FetchMode.INVENTORY
+                if selected_sections is NO_SELECTION
+                else FetchMode.FORCE_SECTIONS
+            ),
+            simulation_mode=loaded_config.simulation_mode,
+            secrets_config_relay=AdHocSecrets(
+                path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
+                    cmk.utils.paths.relative_tmp_dir
+                ),
+                secrets=(
+                    secrets := load_secrets_file(
+                        cmk.utils.password_store.pending_secrets_path_site()
                     )
                 ),
-                backend_override=snmp_backend_override,
-                base_path=cmk.utils.paths.omd_root,
-                relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
-                relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
-                relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
-                caching_config=make_parsed_snmp_fetch_intervals_config(
-                    loaded_config, ruleset_matcher, label_manager.labels_of_host
-                ),
-                force_stored_walks=bool(options.get("usewalk", False)),
             ),
-        ),
-        plugins=plugins,
-        clusters=hosts_config.clusters,
-        default_address_family=ip_lookup_config.default_address_family,
-        file_cache_options=file_cache_options,
-        force_snmp_cache_refresh=False,
-        get_ip_stack_config=ip_lookup_config.ip_stack_config,
-        ip_address_of=ip_address_of,
-        ip_address_of_mandatory=forced_ip_lookup()
-        or ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        ip_address_of_mgmt=forced_ip_lookup()
-        or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
-        mode=(
-            FetchMode.INVENTORY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
-        ),
-        simulation_mode=loaded_config.simulation_mode,
-        secrets_config_relay=AdHocSecrets(
-            path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
-                cmk.utils.paths.relative_tmp_dir
+            secrets_config_site=StoredSecrets(
+                path=cmk.utils.password_store.pending_secrets_path_site(), secrets=secrets
             ),
-            secrets=(
-                secrets := load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
+        )
+        parser = CMKParser(
+            config.make_parser_config(
+                loaded_config,
+                ruleset_matcher,
+                label_manager,
+                ip_address_of=config_cache.primary_ip_address_of,
             ),
-        ),
-        secrets_config_site=StoredSecrets(
-            path=cmk.utils.password_store.pending_secrets_path_site(), secrets=secrets
-        ),
-    )
-    parser = CMKParser(
-        config.make_parser_config(
-            loaded_config,
-            ruleset_matcher,
-            label_manager,
-            ip_address_of=config_cache.primary_ip_address_of,
-        ),
-        selected_sections=selected_sections,
-        keep_outdated=file_cache_options.keep_outdated,
-    )
-
-    section_plugins = SectionPluginMapper({**plugins.agent_sections, **plugins.snmp_sections})
-    inventory_plugins = plugins.inventory_plugins
-
-    inv_store = InventoryStore(cmk.utils.paths.omd_root)
-
-    for hostname in hostnames:
-
-        def section_error_handling(
-            section_name: SectionName,
-            raw_data: Sequence[object],
-            host_name: HostName = hostname,
-        ) -> str:
-            return create_section_crash_dump(
-                operation="parsing",
-                section_name=section_name,
-                section_content=raw_data,
-                host_name=host_name,
-                rtc_package=None,
-            )
-
-        parameters = config_cache.inventory_config.hwsw_parameters(hostname)
-        raw_intervals_from_config = config_cache.inventory_config.retention_intervals(hostname)
-        summarizer = CMKSummarizer(
-            hostname,
-            config_cache.summary_config,
-            override_non_ok_state=parameters.fail_status,
+            selected_sections=selected_sections,
+            keep_outdated=file_cache_options.keep_outdated,
         )
 
-        section.section_begin(hostname)
-        section.section_step("Inventorizing")
-        try:
-            previous_tree = inv_store.load_previous_inventory_tree(host_name=hostname)
-            if hostname in hosts_config.clusters:
-                check_results = inventory.inventorize_cluster(
-                    hosts_config.clusters[hostname],
-                    parameters=parameters,
-                    previous_tree=previous_tree,
-                ).check_results
-            else:
-                check_results = inventory.inventorize_host(
-                    hostname,
-                    omd_root=cmk.utils.paths.omd_root,
-                    fetcher=fetcher,
-                    parser=parser,
-                    summarizer=summarizer,
-                    inventory_parameters=config_cache.inventory_config.plugin_parameters,
-                    section_plugins=section_plugins,
-                    section_error_handling=section_error_handling,
-                    inventory_plugins=inventory_plugins,
-                    run_plugin_names=run_plugin_names,
-                    parameters=parameters,
-                    raw_intervals_from_config=raw_intervals_from_config,
-                    previous_tree=previous_tree,
-                ).check_results
+        section_plugins = SectionPluginMapper({**plugins.agent_sections, **plugins.snmp_sections})
+        inventory_plugins = plugins.inventory_plugins
 
-            check_result = ActiveCheckResult.from_subresults(*check_results)
-            if check_result.state:
-                section.section_error(check_result.summary)
-            else:
-                section.section_success(check_result.summary)
+        inv_store = InventoryStore(cmk.utils.paths.omd_root)
 
-        except Exception as e:
-            if cmk.ccc.debug.enabled():
-                raise
-            section.section_error("%s" % e)
-        finally:
-            cmk.ccc.cleanup.cleanup_globals()
-    return 0
+        for hostname in hostnames:
+
+            def section_error_handling(
+                section_name: SectionName,
+                raw_data: Sequence[object],
+                host_name: HostName = hostname,
+            ) -> str:
+                return create_section_crash_dump(
+                    operation="parsing",
+                    section_name=section_name,
+                    section_content=raw_data,
+                    host_name=host_name,
+                    rtc_package=None,
+                )
+
+            parameters = config_cache.inventory_config.hwsw_parameters(hostname)
+            raw_intervals_from_config = config_cache.inventory_config.retention_intervals(hostname)
+            summarizer = CMKSummarizer(
+                hostname,
+                config_cache.summary_config,
+                override_non_ok_state=parameters.fail_status,
+            )
+
+            section.section_begin(hostname)
+            section.section_step("Inventorizing")
+            try:
+                previous_tree = inv_store.load_previous_inventory_tree(host_name=hostname)
+                if hostname in hosts_config.clusters:
+                    check_results = inventory.inventorize_cluster(
+                        hosts_config.clusters[hostname],
+                        parameters=parameters,
+                        previous_tree=previous_tree,
+                    ).check_results
+                else:
+                    check_results = inventory.inventorize_host(
+                        hostname,
+                        omd_root=cmk.utils.paths.omd_root,
+                        fetcher=fetcher,
+                        parser=parser,
+                        summarizer=summarizer,
+                        inventory_parameters=config_cache.inventory_config.plugin_parameters,
+                        section_plugins=section_plugins,
+                        section_error_handling=section_error_handling,
+                        inventory_plugins=inventory_plugins,
+                        run_plugin_names=run_plugin_names,
+                        parameters=parameters,
+                        raw_intervals_from_config=raw_intervals_from_config,
+                        previous_tree=previous_tree,
+                    ).check_results
+
+                check_result = ActiveCheckResult.from_subresults(*check_results)
+                if check_result.state:
+                    section.section_error(check_result.summary)
+                else:
+                    section.section_success(check_result.summary)
+
+            except Exception as e:
+                if cmk.ccc.debug.enabled():
+                    raise
+                section.section_error("%s" % e)
+            finally:
+                cmk.ccc.cleanup.cleanup_globals()
+        return 0
 
 
 cli_command_inventory = CLICommand(

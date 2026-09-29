@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The service discovery commands: --check-discovery and --discover."""
 
+import contextlib
 import itertools
 import sys
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -131,170 +132,172 @@ def _mode_check_discovery(
         debug=cmk.ccc.debug.enabled(),
     )
 
-    ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
-    service_name_config = config_cache.make_passive_service_name_config(
-        make_final_service_name_config(loaded_config, ruleset_matcher)
-    )
-    autochecks_config = config.AutochecksConfigurer(
-        config_cache, plugins.check_plugins, service_name_config
-    )
-    enforced_services_table = config.EnforcedServicesTable(
-        BundledHostRulesetMatcher(
-            loaded_config.static_checks,
+    with ruleset_matcher.ruleset_optimizer.processed_hosts({hostname}):
+        service_name_config = config_cache.make_passive_service_name_config(
+            make_final_service_name_config(loaded_config, ruleset_matcher)
+        )
+        autochecks_config = config.AutochecksConfigurer(
+            config_cache, plugins.check_plugins, service_name_config
+        )
+        enforced_services_table = config.EnforcedServicesTable(
+            BundledHostRulesetMatcher(
+                loaded_config.static_checks,
+                ruleset_matcher,
+                label_manager.labels_of_host,
+            ),
+            service_name_config,
+            plugins.check_plugins,
+            label_manager.labels_of_service,
+        )
+
+        discovery_config = DiscoveryConfig(
             ruleset_matcher,
             label_manager.labels_of_host,
-        ),
-        service_name_config,
-        plugins.check_plugins,
-        label_manager.labels_of_service,
-    )
-
-    discovery_config = DiscoveryConfig(
-        ruleset_matcher,
-        label_manager.labels_of_host,
-        loaded_config.discovery_parameters,
-    )
-    ip_lookup_config = config_cache.ip_lookup_config()
-    ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        allow_empty=hosts_config.clusters,
-        error_handler=config.handle_ip_lookup_failure,
-    )
-    check_interval = config_cache.check_mk_check_interval(hostname)
-    discovery_file_cache_max_age = 1.5 * check_interval if file_cache_options.use_outdated else 0
-    fetcher = CMKFetcher(
-        config_cache,
-        host_tags,
-        get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=lambda relay_id: app.make_fetcher_trigger(
-            relay_id, latest_config_path / RELATIVE_PATH_TRUSTED_CAS
-        ),
-        source_config=config_cache.make_source_config(
-            config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
-            ip_address_of,
-            service_name_config,
-            enforced_services_table,
-            SNMPFetcherConfig(
-                on_error=OnError.RAISE,
-                missing_sys_description=config_cache.missing_sys_description,
-                selected_sections=NoSelectedSNMPSections(),
-                backend_override=snmp_backend_override,
-                base_path=cmk.utils.paths.omd_root,
-                relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
-                relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
-                relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
-                caching_config=make_parsed_snmp_fetch_intervals_config(
-                    loaded_config, ruleset_matcher, label_manager.labels_of_host
-                ),
-                force_stored_walks=bool(options.get("usewalk", False)),
+            loaded_config.discovery_parameters,
+        )
+        ip_lookup_config = config_cache.ip_lookup_config()
+        ip_address_of = ip_lookup.ConfiguredIPLookup(
+            forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+            allow_empty=hosts_config.clusters,
+            error_handler=config.handle_ip_lookup_failure,
+        )
+        check_interval = config_cache.check_mk_check_interval(hostname)
+        discovery_file_cache_max_age = (
+            1.5 * check_interval if file_cache_options.use_outdated else 0
+        )
+        fetcher = CMKFetcher(
+            config_cache,
+            host_tags,
+            get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
+            make_trigger=lambda relay_id: app.make_fetcher_trigger(
+                relay_id, latest_config_path / RELATIVE_PATH_TRUSTED_CAS
             ),
-        ),
-        plugins=plugins,
-        clusters=hosts_config.clusters,
-        default_address_family=ip_lookup_config.default_address_family,
-        file_cache_options=file_cache_options,
-        force_snmp_cache_refresh=False,
-        get_ip_stack_config=ip_lookup_config.ip_stack_config,
-        ip_address_of=ip_address_of,
-        ip_address_of_mgmt=forced_ip_lookup()
-        or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
-        mode=FetchMode.DISCOVERY,
-        simulation_mode=loaded_config.simulation_mode,
-        max_cachefile_age=MaxAge(
-            checking=loaded_config.check_max_cachefile_age,
-            discovery=discovery_file_cache_max_age,
-            inventory=1.5 * check_interval,
-        ),
-        secrets_config_relay=AdHocSecrets(
-            path=cmk.utils.password_store.active_secrets_path_relay(),
-            secrets=(
-                secrets := load_secrets_file(
-                    cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS)
+            source_config=config_cache.make_source_config(
+                config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
+                ip_address_of,
+                service_name_config,
+                enforced_services_table,
+                SNMPFetcherConfig(
+                    on_error=OnError.RAISE,
+                    missing_sys_description=config_cache.missing_sys_description,
+                    selected_sections=NoSelectedSNMPSections(),
+                    backend_override=snmp_backend_override,
+                    base_path=cmk.utils.paths.omd_root,
+                    relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
+                    relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
+                    relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
+                    caching_config=make_parsed_snmp_fetch_intervals_config(
+                        loaded_config, ruleset_matcher, label_manager.labels_of_host
+                    ),
+                    force_stored_walks=bool(options.get("usewalk", False)),
+                ),
+            ),
+            plugins=plugins,
+            clusters=hosts_config.clusters,
+            default_address_family=ip_lookup_config.default_address_family,
+            file_cache_options=file_cache_options,
+            force_snmp_cache_refresh=False,
+            get_ip_stack_config=ip_lookup_config.ip_stack_config,
+            ip_address_of=ip_address_of,
+            ip_address_of_mgmt=forced_ip_lookup()
+            or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+            mode=FetchMode.DISCOVERY,
+            simulation_mode=loaded_config.simulation_mode,
+            max_cachefile_age=MaxAge(
+                checking=loaded_config.check_max_cachefile_age,
+                discovery=discovery_file_cache_max_age,
+                inventory=1.5 * check_interval,
+            ),
+            secrets_config_relay=AdHocSecrets(
+                path=cmk.utils.password_store.active_secrets_path_relay(),
+                secrets=(
+                    secrets := load_secrets_file(
+                        cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS)
+                    )
+                ),
+            ),
+            secrets_config_site=StoredSecrets(
+                path=cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS),
+                secrets=secrets,
+            ),
+        )
+        parser = CMKParser(
+            config.make_parser_config(
+                loading_result.loaded_config,
+                ruleset_matcher,
+                config_cache.label_manager,
+                ip_address_of=config_cache.primary_ip_address_of,
+            ),
+            selected_sections=NO_SELECTION,
+            keep_outdated=file_cache_options.keep_outdated,
+        )
+        summarizer = CMKSummarizer(
+            hostname,
+            config_cache.summary_config,
+            override_non_ok_state=None,
+        )
+        error_handler = CheckResultErrorHandler(
+            exit_spec=config_cache.exit_code_spec(hostname),
+            host_name=hostname,
+            service_name="Check_MK Discovery",
+            plugin_name="discover",
+            is_cluster=hostname in hosts_config.clusters,
+            snmp_backend=config_cache.get_snmp_backend(hostname),
+            keepalive=False,
+        )
+
+        check_results: Sequence[ActiveCheckResult] = []
+        with error_handler:
+            fetched = fetcher(hostname, ip_address=None)
+            with CPUTracker(console.debug) as tracker:
+                check_results = execute_check_discovery(
+                    hostname,
+                    omd_root=cmk.utils.paths.omd_root,
+                    autodiscovery_dir=cmk.utils.paths.autodiscovery_dir,
+                    is_cluster=hostname in hosts_config.clusters,
+                    cluster_nodes=hosts_config.clusters.get(hostname, ()),
+                    params=config_cache.discovery_check_parameters(hostname),
+                    fetched=((f[0], f[1]) for f in fetched),
+                    parser=parser,
+                    summarizer=summarizer,
+                    section_plugins=SectionPluginMapper(
+                        {**plugins.agent_sections, **plugins.snmp_sections}
+                    ),
+                    section_error_handling=lambda section_name, raw_data: create_section_crash_dump(
+                        operation="parsing",
+                        section_name=section_name,
+                        section_content=raw_data,
+                        host_name=hostname,
+                        rtc_package=None,
+                    ),
+                    host_label_plugins=HostLabelPluginMapper(
+                        discovery_config=discovery_config,
+                        sections={**plugins.agent_sections, **plugins.snmp_sections},
+                    ),
+                    plugins=DiscoveryPluginMapper(
+                        discovery_config=discovery_config,
+                        check_plugins=plugins.check_plugins,
+                    ),
+                    autochecks_config=autochecks_config,
+                    enforced_services=enforced_services_table(hostname),
+                    read_autochecks=lambda hn: AutochecksStore(
+                        hn, cmk.utils.paths.autochecks_dir
+                    ).read(),
+                    read_discovered_host_labels=label_manager.discovered_labels_of_host,
                 )
-            ),
-        ),
-        secrets_config_site=StoredSecrets(
-            path=cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS),
-            secrets=secrets,
-        ),
-    )
-    parser = CMKParser(
-        config.make_parser_config(
-            loading_result.loaded_config,
-            ruleset_matcher,
-            config_cache.label_manager,
-            ip_address_of=config_cache.primary_ip_address_of,
-        ),
-        selected_sections=NO_SELECTION,
-        keep_outdated=file_cache_options.keep_outdated,
-    )
-    summarizer = CMKSummarizer(
-        hostname,
-        config_cache.summary_config,
-        override_non_ok_state=None,
-    )
-    error_handler = CheckResultErrorHandler(
-        exit_spec=config_cache.exit_code_spec(hostname),
-        host_name=hostname,
-        service_name="Check_MK Discovery",
-        plugin_name="discover",
-        is_cluster=hostname in hosts_config.clusters,
-        snmp_backend=config_cache.get_snmp_backend(hostname),
-        keepalive=False,
-    )
+            check_results = [
+                *check_results,
+                make_timing_results(
+                    tracker.duration,
+                    tuple((f[0], f[2]) for f in fetched),
+                    perfdata_with_times=loaded_config.check_mk_perfdata_with_times,
+                ),
+            ]
 
-    check_results: Sequence[ActiveCheckResult] = []
-    with error_handler:
-        fetched = fetcher(hostname, ip_address=None)
-        with CPUTracker(console.debug) as tracker:
-            check_results = execute_check_discovery(
-                hostname,
-                omd_root=cmk.utils.paths.omd_root,
-                autodiscovery_dir=cmk.utils.paths.autodiscovery_dir,
-                is_cluster=hostname in hosts_config.clusters,
-                cluster_nodes=hosts_config.clusters.get(hostname, ()),
-                params=config_cache.discovery_check_parameters(hostname),
-                fetched=((f[0], f[1]) for f in fetched),
-                parser=parser,
-                summarizer=summarizer,
-                section_plugins=SectionPluginMapper(
-                    {**plugins.agent_sections, **plugins.snmp_sections}
-                ),
-                section_error_handling=lambda section_name, raw_data: create_section_crash_dump(
-                    operation="parsing",
-                    section_name=section_name,
-                    section_content=raw_data,
-                    host_name=hostname,
-                    rtc_package=None,
-                ),
-                host_label_plugins=HostLabelPluginMapper(
-                    discovery_config=discovery_config,
-                    sections={**plugins.agent_sections, **plugins.snmp_sections},
-                ),
-                plugins=DiscoveryPluginMapper(
-                    discovery_config=discovery_config,
-                    check_plugins=plugins.check_plugins,
-                ),
-                autochecks_config=autochecks_config,
-                enforced_services=enforced_services_table(hostname),
-                read_autochecks=lambda hn: AutochecksStore(
-                    hn, cmk.utils.paths.autochecks_dir
-                ).read(),
-                read_discovered_host_labels=label_manager.discovered_labels_of_host,
-            )
-        check_results = [
-            *check_results,
-            make_timing_results(
-                tracker.duration,
-                tuple((f[0], f[2]) for f in fetched),
-                perfdata_with_times=loaded_config.check_mk_perfdata_with_times,
-            ),
-        ]
+        if error_handler.result is not None:
+            check_results = (error_handler.result,)
 
-    if error_handler.result is not None:
-        check_results = (error_handler.result,)
-
-    return _write_active_check_result(ActiveCheckResult.from_subresults(*check_results))
+        return _write_active_check_result(ActiveCheckResult.from_subresults(*check_results))
 
 
 cli_command_check_discovery = CLICommand(
@@ -420,157 +423,169 @@ def _mode_discover(
         # In case of discovery with host restriction, do not use the cache
         # file by default as -I and -II are used for debugging.
         file_cache_options = FileCacheOptions(disabled=True, use_outdated=False)
-        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hostnames))
     else:
         # In case of discovery without host restriction, use the cache file
         # by default. Otherwise Checkmk would have to connect to ALL hosts.
         file_cache_options = FileCacheOptions(disabled=False, use_outdated=True)
 
-    file_cache_options = handle_fetcher_options(options, defaults=file_cache_options)
-    try:
-        snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
-    except ValueError as exc:
-        raise MKBailOut("Unknown SNMP backend") from exc
+    with (
+        ruleset_matcher.ruleset_optimizer.processed_hosts(hostnames)
+        if hostnames
+        else contextlib.nullcontext()
+    ):
+        file_cache_options = handle_fetcher_options(options, defaults=file_cache_options)
+        try:
+            snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
+        except ValueError as exc:
+            raise MKBailOut("Unknown SNMP backend") from exc
 
-    on_error = OnError.RAISE if cmk.ccc.debug.enabled() else OnError.WARN
-    selected_sections, run_plugin_names = extract_plugin_selection(
-        detect_plugins=options.get("detect-plugins"),
-        detect_sections=options.get("detect-sections"),
-        selected_plugins=options.get("plugins"),
-        plugins=plugins.check_plugins,
-        sections=itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
-        type_=CheckPluginName,
-    )
-    parser = CMKParser(
-        config.make_parser_config(
-            loaded_config,
-            ruleset_matcher,
-            label_manager,
-            ip_address_of=config_cache.primary_ip_address_of,
-        ),
-        selected_sections=selected_sections,
-        keep_outdated=file_cache_options.keep_outdated,
-    )
-    fetcher = CMKFetcher(
-        config_cache,
-        host_tags,
-        get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=lambda relay_id: app.make_fetcher_trigger(
-            relay_id, cmk.utils.paths.trusted_ca_file
-        ),
-        source_config=config_cache.make_source_config(
-            config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
-            ip_address_of,
-            service_name_config,
-            enforced_services_table,
-            SNMPFetcherConfig(
-                on_error=on_error,
-                missing_sys_description=config_cache.missing_sys_description,
-                selected_sections=(
-                    NoSelectedSNMPSections()
-                    if selected_sections is NO_SELECTION
-                    else frozenset(
-                        SNMPSectionName(n) for n in selected_sections if n in plugins.snmp_sections
+        on_error = OnError.RAISE if cmk.ccc.debug.enabled() else OnError.WARN
+        selected_sections, run_plugin_names = extract_plugin_selection(
+            detect_plugins=options.get("detect-plugins"),
+            detect_sections=options.get("detect-sections"),
+            selected_plugins=options.get("plugins"),
+            plugins=plugins.check_plugins,
+            sections=itertools.chain(
+                plugins.agent_sections.values(), plugins.snmp_sections.values()
+            ),
+            type_=CheckPluginName,
+        )
+        parser = CMKParser(
+            config.make_parser_config(
+                loaded_config,
+                ruleset_matcher,
+                label_manager,
+                ip_address_of=config_cache.primary_ip_address_of,
+            ),
+            selected_sections=selected_sections,
+            keep_outdated=file_cache_options.keep_outdated,
+        )
+        fetcher = CMKFetcher(
+            config_cache,
+            host_tags,
+            get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
+            make_trigger=lambda relay_id: app.make_fetcher_trigger(
+                relay_id, cmk.utils.paths.trusted_ca_file
+            ),
+            source_config=config_cache.make_source_config(
+                config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
+                ip_address_of,
+                service_name_config,
+                enforced_services_table,
+                SNMPFetcherConfig(
+                    on_error=on_error,
+                    missing_sys_description=config_cache.missing_sys_description,
+                    selected_sections=(
+                        NoSelectedSNMPSections()
+                        if selected_sections is NO_SELECTION
+                        else frozenset(
+                            SNMPSectionName(n)
+                            for n in selected_sections
+                            if n in plugins.snmp_sections
+                        )
+                    ),
+                    backend_override=snmp_backend_override,
+                    base_path=cmk.utils.paths.omd_root,
+                    relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
+                    relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
+                    relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
+                    caching_config=make_parsed_snmp_fetch_intervals_config(
+                        loaded_config, ruleset_matcher, label_manager.labels_of_host
+                    ),
+                    force_stored_walks=bool(options.get("usewalk", False)),
+                ),
+            ),
+            plugins=plugins,
+            clusters=hosts_config.clusters,
+            default_address_family=ip_lookup_config.default_address_family,
+            file_cache_options=file_cache_options,
+            force_snmp_cache_refresh=False,
+            get_ip_stack_config=ip_lookup_config.ip_stack_config,
+            ip_address_of=ip_address_of,
+            ip_address_of_mgmt=forced_ip_lookup()
+            or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+            mode=(
+                FetchMode.DISCOVERY
+                if selected_sections is NO_SELECTION
+                else FetchMode.FORCE_SECTIONS
+            ),
+            simulation_mode=loaded_config.simulation_mode,
+            secrets_config_relay=AdHocSecrets(
+                path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
+                    cmk.utils.paths.relative_tmp_dir
+                ),
+                secrets=(
+                    secrets := load_secrets_file(
+                        cmk.utils.password_store.pending_secrets_path_site()
                     )
                 ),
-                backend_override=snmp_backend_override,
-                base_path=cmk.utils.paths.omd_root,
-                relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
-                relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
-                relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
-                caching_config=make_parsed_snmp_fetch_intervals_config(
-                    loaded_config, ruleset_matcher, label_manager.labels_of_host
-                ),
-                force_stored_walks=bool(options.get("usewalk", False)),
             ),
-        ),
-        plugins=plugins,
-        clusters=hosts_config.clusters,
-        default_address_family=ip_lookup_config.default_address_family,
-        file_cache_options=file_cache_options,
-        force_snmp_cache_refresh=False,
-        get_ip_stack_config=ip_lookup_config.ip_stack_config,
-        ip_address_of=ip_address_of,
-        ip_address_of_mgmt=forced_ip_lookup()
-        or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
-        mode=(
-            FetchMode.DISCOVERY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
-        ),
-        simulation_mode=loaded_config.simulation_mode,
-        secrets_config_relay=AdHocSecrets(
-            path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
-                cmk.utils.paths.relative_tmp_dir
+            secrets_config_site=StoredSecrets(
+                path=cmk.utils.password_store.pending_secrets_path_site(),
+                secrets=secrets,
             ),
-            secrets=(
-                secrets := load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
-            ),
-        ),
-        secrets_config_site=StoredSecrets(
-            path=cmk.utils.password_store.pending_secrets_path_site(),
-            secrets=secrets,
-        ),
-    )
-    any_failed = False
-    known_hosts = frozenset(hosts_config.all_configured_hosts)
-    for hostname in sorted(
-        _preprocess_hostnames(
-            frozenset(hostnames),
-            is_cluster=lambda hn: hn in hosts_config.clusters,
-            resolve_nodes=lambda hn: hosts_config.clusters.get(hn, ()),
-            hosts_config=hosts_config,
-            config_cache=config_cache,
-            only_host_labels="only-host-labels" in options,
         )
-    ):
-        if hostname not in known_hosts:
-            sys.stderr.write(f"unknown host: {hostname}\n")
-            any_failed = True
-            continue
-
-        def section_error_handling(
-            section_name: SectionName,
-            raw_data: Sequence[object],
-            host_name: HostName = hostname,
-        ) -> str:
-            return create_section_crash_dump(
-                operation="parsing",
-                section_name=section_name,
-                section_content=raw_data,
-                host_name=host_name,
-                rtc_package=None,
+        any_failed = False
+        known_hosts = frozenset(hosts_config.all_configured_hosts)
+        for hostname in sorted(
+            _preprocess_hostnames(
+                frozenset(hostnames),
+                is_cluster=lambda hn: hn in hosts_config.clusters,
+                resolve_nodes=lambda hn: hosts_config.clusters.get(hn, ()),
+                hosts_config=hosts_config,
+                config_cache=config_cache,
+                only_host_labels="only-host-labels" in options,
             )
+        ):
+            if hostname not in known_hosts:
+                sys.stderr.write(f"unknown host: {hostname}\n")
+                any_failed = True
+                continue
 
-        succeeded = commandline_discovery(
-            hostname,
-            clear_ruleset_matcher_caches=ruleset_matcher.clear_caches,
-            parser=parser,
-            fetcher=fetcher,
-            section_plugins=SectionPluginMapper(
-                {**plugins.agent_sections, **plugins.snmp_sections}
-            ),
-            section_error_handling=section_error_handling,
-            host_label_plugins=HostLabelPluginMapper(
-                discovery_config=discovery_config,
-                sections={**plugins.agent_sections, **plugins.snmp_sections},
-            ),
-            plugins=DiscoveryPluginMapper(
-                discovery_config=discovery_config,
-                check_plugins=plugins.check_plugins,
-            ),
-            run_plugin_names=run_plugin_names,
-            autochecks_config=config.AutochecksConfigurer(
-                config_cache, plugins.check_plugins, service_name_config
-            ),
-            enforced_services=enforced_services_table(hostname),
-            arg_only_new=options["discover"] == 1,
-            only_host_labels="only-host-labels" in options,
-            on_error=on_error,
-            autochecks_dir=cmk.utils.paths.autochecks_dir,
-            discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
-        )
-        any_failed |= not succeeded
+            def section_error_handling(
+                section_name: SectionName,
+                raw_data: Sequence[object],
+                host_name: HostName = hostname,
+            ) -> str:
+                return create_section_crash_dump(
+                    operation="parsing",
+                    section_name=section_name,
+                    section_content=raw_data,
+                    host_name=host_name,
+                    rtc_package=None,
+                )
 
-    return 1 if any_failed else 0
+            succeeded = commandline_discovery(
+                hostname,
+                clear_ruleset_matcher_caches=ruleset_matcher.clear_caches,
+                parser=parser,
+                fetcher=fetcher,
+                section_plugins=SectionPluginMapper(
+                    {**plugins.agent_sections, **plugins.snmp_sections}
+                ),
+                section_error_handling=section_error_handling,
+                host_label_plugins=HostLabelPluginMapper(
+                    discovery_config=discovery_config,
+                    sections={**plugins.agent_sections, **plugins.snmp_sections},
+                ),
+                plugins=DiscoveryPluginMapper(
+                    discovery_config=discovery_config,
+                    check_plugins=plugins.check_plugins,
+                ),
+                run_plugin_names=run_plugin_names,
+                autochecks_config=config.AutochecksConfigurer(
+                    config_cache, plugins.check_plugins, service_name_config
+                ),
+                enforced_services=enforced_services_table(hostname),
+                arg_only_new=options["discover"] == 1,
+                only_host_labels="only-host-labels" in options,
+                on_error=on_error,
+                autochecks_dir=cmk.utils.paths.autochecks_dir,
+                discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+            )
+            any_failed |= not succeeded
+
+        return 1 if any_failed else 0
 
 
 cli_command_discover = CLICommand(

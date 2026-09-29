@@ -148,144 +148,144 @@ def _inventory_as_check(
     label_manager = loading_result.config_cache.label_manager
 
     config_cache = loading_result.config_cache
-    ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
-    hosts_config = config.make_hosts_config(loaded_config)
-    service_name_config = config_cache.make_passive_service_name_config(
-        make_final_service_name_config(loaded_config, ruleset_matcher)
-    )
-    enforced_service_table = config.EnforcedServicesTable(
-        BundledHostRulesetMatcher(
-            loaded_config.static_checks, ruleset_matcher, label_manager.labels_of_host
-        ),
-        service_name_config,
-        plugins.check_plugins,
-        label_manager.labels_of_service,
-    )
-
-    ip_lookup_config = config_cache.ip_lookup_config()
-    ip_address_of_bare = make_lookup_ip_address(ip_lookup_config)
-    ip_address_of = ConfiguredIPLookup(
-        ip_address_of_bare,
-        allow_empty=hosts_config.clusters,
-        error_handler=config.handle_ip_lookup_failure,
-    )
-    file_cache_options = FileCacheOptions()
-
-    fetcher = CMKFetcher(
-        config_cache,
-        loading_result.host_tags,
-        get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=lambda relay_id: app.make_fetcher_trigger(
-            relay_id, latest_config_path / RELATIVE_PATH_TRUSTED_CAS
-        ),
-        source_config=config_cache.make_source_config(
-            config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
-            ip_address_of,
+    with ruleset_matcher.ruleset_optimizer.processed_hosts({hostname}):
+        hosts_config = config.make_hosts_config(loaded_config)
+        service_name_config = config_cache.make_passive_service_name_config(
+            make_final_service_name_config(loaded_config, ruleset_matcher)
+        )
+        enforced_service_table = config.EnforcedServicesTable(
+            BundledHostRulesetMatcher(
+                loaded_config.static_checks, ruleset_matcher, label_manager.labels_of_host
+            ),
             service_name_config,
-            enforced_service_table,
-            SNMPFetcherConfig(
-                on_error=OnError.RAISE,
-                missing_sys_description=config_cache.missing_sys_description,
-                selected_sections=NoSelectedSNMPSections(),
-                backend_override=None,
-                base_path=cmk.utils.paths.omd_root,
-                relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
-                relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
-                relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
-                caching_config=make_parsed_snmp_fetch_intervals_config(
-                    loaded_config, ruleset_matcher, label_manager.labels_of_host
+            plugins.check_plugins,
+            label_manager.labels_of_service,
+        )
+
+        ip_lookup_config = config_cache.ip_lookup_config()
+        ip_address_of_bare = make_lookup_ip_address(ip_lookup_config)
+        ip_address_of = ConfiguredIPLookup(
+            ip_address_of_bare,
+            allow_empty=hosts_config.clusters,
+            error_handler=config.handle_ip_lookup_failure,
+        )
+        file_cache_options = FileCacheOptions()
+
+        fetcher = CMKFetcher(
+            config_cache,
+            loading_result.host_tags,
+            get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
+            make_trigger=lambda relay_id: app.make_fetcher_trigger(
+                relay_id, latest_config_path / RELATIVE_PATH_TRUSTED_CAS
+            ),
+            source_config=config_cache.make_source_config(
+                config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
+                ip_address_of,
+                service_name_config,
+                enforced_service_table,
+                SNMPFetcherConfig(
+                    on_error=OnError.RAISE,
+                    missing_sys_description=config_cache.missing_sys_description,
+                    selected_sections=NoSelectedSNMPSections(),
+                    backend_override=None,
+                    base_path=cmk.utils.paths.omd_root,
+                    relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
+                    relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
+                    relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
+                    caching_config=make_parsed_snmp_fetch_intervals_config(
+                        loaded_config, ruleset_matcher, label_manager.labels_of_host
+                    ),
                 ),
             ),
-        ),
-        plugins=plugins,
-        clusters=hosts_config.clusters,
-        default_address_family=ip_lookup_config.default_address_family,
-        file_cache_options=file_cache_options,
-        force_snmp_cache_refresh=False,
-        get_ip_stack_config=ip_lookup_config.ip_stack_config,
-        ip_address_of=ip_address_of,
-        ip_address_of_mandatory=ip_address_of_bare,
-        ip_address_of_mgmt=make_lookup_mgmt_board_ip_address(ip_lookup_config),
-        mode=FetchMode.INVENTORY,
-        simulation_mode=loaded_config.simulation_mode,
-        secrets_config_relay=StoredSecrets(
-            path=cmk.utils.password_store.active_secrets_path_relay(),
-            secrets=(
-                secrets := load_secrets_file(
-                    cmk.utils.password_store.active_secrets_path_site(
-                        RELATIVE_PATH_SECRETS, config_path=latest_config_path
+            plugins=plugins,
+            clusters=hosts_config.clusters,
+            default_address_family=ip_lookup_config.default_address_family,
+            file_cache_options=file_cache_options,
+            force_snmp_cache_refresh=False,
+            get_ip_stack_config=ip_lookup_config.ip_stack_config,
+            ip_address_of=ip_address_of,
+            ip_address_of_mandatory=ip_address_of_bare,
+            ip_address_of_mgmt=make_lookup_mgmt_board_ip_address(ip_lookup_config),
+            mode=FetchMode.INVENTORY,
+            simulation_mode=loaded_config.simulation_mode,
+            secrets_config_relay=StoredSecrets(
+                path=cmk.utils.password_store.active_secrets_path_relay(),
+                secrets=(
+                    secrets := load_secrets_file(
+                        cmk.utils.password_store.active_secrets_path_site(
+                            RELATIVE_PATH_SECRETS, config_path=latest_config_path
+                        )
                     )
+                ),
+            ),
+            secrets_config_site=StoredSecrets(
+                path=cmk.utils.password_store.active_secrets_path_site(
+                    RELATIVE_PATH_SECRETS, config_path=latest_config_path
+                ),
+                secrets=secrets,
+            ),
+        )
+        parser = CMKParser(
+            config.make_parser_config(
+                loaded_config,
+                ruleset_matcher,
+                label_manager,
+                ip_address_of=config_cache.primary_ip_address_of,
+            ),
+            selected_sections=NO_SELECTION,
+            keep_outdated=file_cache_options.keep_outdated,
+        )
+        summarizer = CMKSummarizer(
+            hostname,
+            config_cache.summary_config,
+            override_non_ok_state=parameters.fail_status,
+        )
+        error_handler = CheckResultErrorHandler(
+            exit_spec=config_cache.exit_code_spec(hostname),
+            host_name=hostname,
+            service_name="Check_MK HW/SW Inventory",
+            plugin_name="check_mk_active-cmk_inv",
+            is_cluster=hostname in hosts_config.clusters,
+            snmp_backend=config_cache.get_snmp_backend(hostname),
+            keepalive=False,
+        )
+        check_results: Sequence[ActiveCheckResult] = []
+        with error_handler:
+            with CPUTracker(logger.debug) as tracker:
+                check_results = execute_active_check_inventory(
+                    hostname,
+                    hosts_config=hosts_config,
+                    fetcher=fetcher,
+                    parser=parser,
+                    summarizer=summarizer,
+                    section_plugins=SectionPluginMapper(
+                        {**plugins.agent_sections, **plugins.snmp_sections}
+                    ),
+                    inventory_plugins=plugins.inventory_plugins,
+                    inventory_parameters=config_cache.inventory_config.plugin_parameters,
+                    parameters=parameters,
+                    raw_intervals_from_config=config_cache.inventory_config.retention_intervals(
+                        hostname
+                    ),
                 )
-            ),
-        ),
-        secrets_config_site=StoredSecrets(
-            path=cmk.utils.password_store.active_secrets_path_site(
-                RELATIVE_PATH_SECRETS, config_path=latest_config_path
-            ),
-            secrets=secrets,
-        ),
-    )
-    parser = CMKParser(
-        config.make_parser_config(
-            loaded_config,
-            ruleset_matcher,
-            label_manager,
-            ip_address_of=config_cache.primary_ip_address_of,
-        ),
-        selected_sections=NO_SELECTION,
-        keep_outdated=file_cache_options.keep_outdated,
-    )
-    summarizer = CMKSummarizer(
-        hostname,
-        config_cache.summary_config,
-        override_non_ok_state=parameters.fail_status,
-    )
-    error_handler = CheckResultErrorHandler(
-        exit_spec=config_cache.exit_code_spec(hostname),
-        host_name=hostname,
-        service_name="Check_MK HW/SW Inventory",
-        plugin_name="check_mk_active-cmk_inv",
-        is_cluster=hostname in hosts_config.clusters,
-        snmp_backend=config_cache.get_snmp_backend(hostname),
-        keepalive=False,
-    )
-    check_results: Sequence[ActiveCheckResult] = []
-    with error_handler:
-        with CPUTracker(logger.debug) as tracker:
-            check_results = execute_active_check_inventory(
-                hostname,
-                hosts_config=hosts_config,
-                fetcher=fetcher,
-                parser=parser,
-                summarizer=summarizer,
-                section_plugins=SectionPluginMapper(
-                    {**plugins.agent_sections, **plugins.snmp_sections}
+            check_results = [
+                *check_results,
+                make_timing_results(
+                    tracker.duration,
+                    # FIXME: This is inconsistent with the other two calls.
+                    (),  # nothing to add here, b/c fetching is triggered further down the call stack.
+                    perfdata_with_times=loaded_config.check_mk_perfdata_with_times,
                 ),
-                inventory_plugins=plugins.inventory_plugins,
-                inventory_parameters=config_cache.inventory_config.plugin_parameters,
-                parameters=parameters,
-                raw_intervals_from_config=config_cache.inventory_config.retention_intervals(
-                    hostname
-                ),
-            )
-        check_results = [
-            *check_results,
-            make_timing_results(
-                tracker.duration,
-                # FIXME: This is inconsistent with the other two calls.
-                (),  # nothing to add here, b/c fetching is triggered further down the call stack.
-                perfdata_with_times=loaded_config.check_mk_perfdata_with_times,
-            ),
-        ]
+            ]
 
-    if error_handler.result is not None:
-        check_results = (error_handler.result,)
+        if error_handler.result is not None:
+            check_results = (error_handler.result,)
 
-    check_result = ActiveCheckResult.from_subresults(*check_results)
-    with suppress(IOError):
-        sys.stdout.write(check_result.as_text() + "\n")
-        sys.stdout.flush()
-    return check_result.state
+        check_result = ActiveCheckResult.from_subresults(*check_results)
+        with suppress(IOError):
+            sys.stdout.write(check_result.as_text() + "\n")
+            sys.stdout.flush()
+        return check_result.state
 
 
 def load_checks() -> AgentBasedPlugins:

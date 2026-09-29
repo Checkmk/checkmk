@@ -5,6 +5,7 @@
 
 #include "pch.h"
 
+#include <optional>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -21,19 +22,12 @@
 using namespace std::string_literals;
 namespace rs = std::ranges;
 
-namespace {
-bool ValidIndexOfTs(int index) {
-    return rs::any_of(tst::g_terminal_services_indexes,
-                      [index](const auto &e) { return e == index; });
-}
-}  // namespace
-
 namespace cma::provider {  // to become friendly for wtools classes
 
-auto GetIndexOfTs() {
-    uint32_t key_index = 0;
-    auto r = details::LoadWinPerfData(L"Terminal Services", key_index);
-    return key_index;
+// The "Terminal Services" index differs per machine; look it up by name with
+// the lookup LoadWinPerfData uses for a name.
+std::optional<uint32_t> GetIndexOfTs() {
+    return wtools::perf::FindPerfIndexInRegistry(L"Terminal Services");
 }
 
 TEST(WinPerf, ValidateFabricConfig) {
@@ -117,17 +111,13 @@ TEST(WinPerf, MakeWinPerfHeader) {
     EXPECT_EQ(details::MakeWinPerfHeader(L"www", L""), "<<<www_>>>\n");
 }
 
-std::pair<wtools::perf::DataSequence, uint32_t> GetKeyIndex() {
+TEST(WinPerf, MakeBodyForTSComponent) {
     const auto ts_index = GetIndexOfTs();
-    EXPECT_TRUE(ValidIndexOfTs(ts_index)) << "not supported index " << ts_index;
+    ASSERT_TRUE(ts_index.has_value()) << "no Terminal Services perf object";
 
     uint32_t key_index = 0;
-    auto result =
-        details::LoadWinPerfData(std::to_wstring(ts_index), key_index);
-    return {std::move(result), key_index};
-}
-TEST(WinPerf, MakeBodyForTSComponent) {
-    auto [result, key_index] = GetKeyIndex();
+    const auto result =
+        details::LoadWinPerfData(std::to_wstring(*ts_index), key_index);
 
     auto object = wtools::perf::FindPerfObject(result, key_index);
 
@@ -220,20 +210,18 @@ TEST(WinPerf, PhyDiskCounter) {
 
 TEST(WinPerf, TsCounterByIndex) {
     const auto index_iofts = GetIndexOfTs();
-    ASSERT_TRUE(ValidIndexOfTs(index_iofts))  // windows 10 latest
-        << "not supported index " << index_iofts << std::endl;
+    ASSERT_TRUE(index_iofts.has_value()) << "no Terminal Services perf object";
 
-    const auto x = BuildWinPerfSection(L"winperf", std::to_wstring(index_iofts),
-                                       std::to_wstring(index_iofts));
+    const auto x =
+        BuildWinPerfSection(L"winperf", std::to_wstring(*index_iofts),
+                            std::to_wstring(*index_iofts));
     ASSERT_TRUE(tools::SplitString(x, "\n").size() > 3U);
 }
 
 TEST(WinPerf, TsCounterByName) {
-    const auto index_iofts = GetIndexOfTs();
-
     uint32_t key_index = 0;
     const auto r = details::LoadWinPerfData(L"Terminal Services", key_index);
-    EXPECT_EQ(key_index, index_iofts);
+    ASSERT_NE(key_index, 0U) << "no Terminal Services perf object";
     EXPECT_TRUE(r.len_ != 0);
     EXPECT_TRUE(r.data_ != nullptr);
     EXPECT_NE(wtools::perf::FindPerfObject(r, key_index), nullptr);

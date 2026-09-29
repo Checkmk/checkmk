@@ -23,8 +23,8 @@ def check_avaya_chassis_temp(item, params, info):
     return check_temperature(int(info[0][0]), params, "avaya_chassis_temp_%s" % item)
 
 
-def parse_avaya_chassis_temp(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_avaya_chassis_temp(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["avaya_chassis_temp"] = LegacyCheckDefinition(

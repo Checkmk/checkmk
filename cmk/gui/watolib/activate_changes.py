@@ -1005,32 +1005,16 @@ def _get_domains_needing_activation(
     site_changes_activate_until: Sequence[ChangeSpec],
 ) -> DomainRequests:
     domain_settings: dict[ConfigDomainName, list[SerializedSettings]] = {}
-    omd_domain_setting_changes: list[SerializedSettings] = []
     for change in site_changes_activate_until:
         if _needs_restart(change):
             for domain_name in change["domains"]:
                 settings = get_config_domain(domain_name).get_domain_settings(change)
-                # ConfigDomainOMD needs a restart of the apache,
-                # make sure it's executed at the end
-                if domain_name == OMDDomainName:
-                    omd_domain_setting_changes.append(settings)
-                    continue
                 domain_settings.setdefault(domain_name, []).append(settings)
 
-    domain_requests = sorted(
-        (
-            get_config_domain(domain_name).get_domain_request(settings_list)
-            for (domain_name, settings_list) in domain_settings.items()
-        ),
-        key=lambda x: x.name,
-    )
-
-    if omd_domain_setting_changes:
-        domain_requests.append(
-            get_config_domain(OMDDomainName).get_domain_request(omd_domain_setting_changes)
-        )
-
-    return domain_requests
+    return [
+        get_config_domain(domain_name).get_domain_request(settings_list)
+        for (domain_name, settings_list) in domain_settings.items()
+    ]
 
 
 def _get_omd_domain_background_job_result(
@@ -3118,6 +3102,20 @@ def _save_state(activation_id: ActivationId, site_id: SiteId, state: SiteActivat
     )
 
 
+# These domains restart the site, so they activate after all others, in this order.
+_ACTIVATE_LAST: Final[Sequence[ConfigDomainName]] = (OMDDomainName,)
+
+
+def sort_for_activation(domain_requests: DomainRequests) -> list[DomainRequest]:
+    return sorted(
+        domain_requests,
+        key=lambda x: (
+            _ACTIVATE_LAST.index(x.name) if x.name in _ACTIVATE_LAST else -1,
+            x.name,
+        ),
+    )
+
+
 @tracer.instrument("execute_activate_changes")
 def execute_activate_changes(
     domain_requests: DomainRequests, is_remote_site: bool
@@ -3137,7 +3135,7 @@ def execute_activate_changes(
         if domain.ident() not in domain_names
     ]
     all_domain_requests.extend(local_requests)
-    all_domain_requests.sort(key=lambda x: x.name)
+    all_domain_requests = sort_for_activation(all_domain_requests)
 
     results: ConfigWarnings = {}
     for domain_request in all_domain_requests:

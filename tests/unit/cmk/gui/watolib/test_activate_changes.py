@@ -31,7 +31,9 @@ from cmk.gui.watolib.activate_changes import (
     ActivationCleanupJob,
     ConfigSyncFileInfo,
     default_rabbitmq_definitions,
+    sort_for_activation,
 )
+from cmk.gui.watolib.config_domain_name import DomainRequest, OMD, SITE_CERTIFICATE
 from cmk.gui.watolib.config_sync import (
     ReplicationPath,
     ReplicationPathType,
@@ -1467,3 +1469,9 @@ class TestSiteHasForeignChanges:
             assert changes.site_has_foreign_changes(self.SITE_ID) is True
         finally:
             site_changes.clear()
+
+
+def test_omd_config_changes_are_activated_after_other_domains() -> None:
+    requests = [DomainRequest(OMD), DomainRequest(SITE_CERTIFICATE)]
+
+    assert [request.name for request in sort_for_activation(requests)] == [SITE_CERTIFICATE, OMD]

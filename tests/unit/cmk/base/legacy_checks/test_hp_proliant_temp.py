@@ -1963,3 +1963,20 @@ def test_check_hp_proliant_temp(
     parsed = parse_hp_proliant_temp(string_table)
     result = list(check_hp_proliant_temp(item, params, parsed))
     assert result == expected_results
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="Crash report fcbc9244-6b11-11f1-be8d-005056b907f2: ValueError in format_hp_proliant_name",
+)
+def test_hp_proliant_temp_ignores_rows_without_sensor() -> None:
+    # The iLO returns rows where only the status column is filled.
+    section = parse_hp_proliant_temp(
+        [
+            ["1", "11", "20", "42", "2"],
+            ["", "", "", "", "2"],
+            ["4", "7", "33", "90", "2"],
+        ]
+    )
+    assert list(inventory_hp_proliant_temp(section)) == [("1 (ambient)", {}), ("4 (memory)", {})]
+    assert check_hp_proliant_temp("4 (memory)", {}, section)[0] == 0

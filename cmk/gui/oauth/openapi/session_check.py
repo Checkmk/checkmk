@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -10,6 +11,7 @@ from cmk.ccc.resulttype import Error, OK, Result
 from cmk.ccc.user import UserId
 from cmk.gui.auth import parse_and_check_cookie
 from cmk.gui.exceptions import MKAuthException
+from cmk.gui.permissions import permission_registry
 from cmk.gui.userdb import convert_idle_timeout, load_custom_attr, load_session_infos, load_user
 from cmk.gui.userdb.session import active_sessions
 from cmk.gui.utils.roles import UserPermissions
@@ -71,3 +73,14 @@ def verify_gui_session(
         return Error(SessionRejected("user may not use the GUI"))
 
     return OK(user_id)
+
+
+def held_permissions(
+    user_id: UserId, names: Iterable[str], *, user_permissions: UserPermissions
+) -> dict[str, bool]:
+    """Whether the user holds each named permission. An unregistered name is never held."""
+    # A role keeps a saved grant after its permission is gone, so check the registry too.
+    return {
+        name: name in permission_registry and user_permissions.user_may(user_id, name)
+        for name in names
+    }

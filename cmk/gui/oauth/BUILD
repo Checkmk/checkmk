@@ -43,6 +43,7 @@ py_library(
     deps = [
         ":token_verification",
         "//packages/cmk-web/cmk/web/utils",
+        requirement("annotated-types"),
         requirement("pydantic"),
         requirement("redis"),
         "//cmk/gui:auth",

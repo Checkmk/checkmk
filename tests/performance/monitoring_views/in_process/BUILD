@@ -35,6 +35,7 @@ py_cmk_test(
         "//cmk/gui:html_toolkit",
         "//cmk/gui:page_toolkit",
         "//cmk/gui/background_job/job",
+        "//cmk/gui/background_job/process",
         "//cmk/gui/data_source",
         "//cmk/gui/monitor/command",
         "//cmk/gui/monitor/hosts",

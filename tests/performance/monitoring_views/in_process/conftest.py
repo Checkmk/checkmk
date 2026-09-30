@@ -42,7 +42,8 @@ from pytest_mock import MockerFixture  # noqa: E402
 
 from cmk.ccc.site import SiteId  # noqa: E402
 from cmk.ccc.user import UserId  # noqa: E402
-from cmk.gui.background_job.job import override_default_executor, ThreadedJobExecutor  # noqa: E402
+from cmk.gui.background_job.job import override_default_executor  # noqa: E402
+from cmk.gui.background_job.process import ThreadedJobExecutor  # noqa: E402
 from cmk.gui.config import Config  # noqa: E402
 from cmk.licensing.handler import (  # noqa: E402
     LicenseState,

@@ -8,8 +8,8 @@ from ._base import override_default_executor as override_default_executor
 from ._defines import BackgroundJobDefines as BackgroundJobDefines
 from ._executor import AlreadyRunningError as AlreadyRunningError
 from ._executor import JobExecutor as JobExecutor
-from ._executor import ThreadedJobExecutor as ThreadedJobExecutor
 from ._interface import BackgroundProcessInterface as BackgroundProcessInterface
+from ._interface import JobParameters as JobParameters
 from ._interface import JobTarget as JobTarget
 from ._interface import NoArgs as NoArgs
 from ._interface import simple_job_target as simple_job_target

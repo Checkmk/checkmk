@@ -34,7 +34,8 @@ import cmk.gui.watolib.password_store  # noqa: E402
 from cmk.ccc.hostaddress import HostName  # noqa: E402
 from cmk.ccc.user import UserId  # noqa: E402
 from cmk.gui import login  # noqa: E402
-from cmk.gui.background_job.job import override_default_executor, ThreadedJobExecutor  # noqa: E402
+from cmk.gui.background_job.job import override_default_executor  # noqa: E402
+from cmk.gui.background_job.process import ThreadedJobExecutor  # noqa: E402
 from cmk.gui.config import Config  # noqa: E402
 from cmk.gui.permissions import permission_registry  # noqa: E402
 from cmk.gui.utils.roles import UserPermissions  # noqa: E402

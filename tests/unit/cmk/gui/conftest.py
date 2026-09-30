@@ -22,7 +22,8 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import http, login
-from cmk.gui.background_job.job import override_default_executor, ThreadedJobExecutor
+from cmk.gui.background_job.job import override_default_executor
+from cmk.gui.background_job.process import ThreadedJobExecutor
 from cmk.gui.config import Config
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions

@@ -34,7 +34,7 @@ from cmk.utils import config_warnings, ip_lookup
 from cmk.utils.log import console
 from cmk.utils.servicename import ServiceName
 
-from ._base_core import MonitoringConfigRequest, MonitoringCore
+from ._base_core import IntermediateMonitoringConfig, MonitoringCore
 from ._snapshot_local_dir import snapshot_local_dir
 from ._snapshot_trusted_cas import snapshot_trusted_cas
 
@@ -338,7 +338,7 @@ def _create_active_config(
             get_licensed_state_file_path(cmk.utils.paths.omd_root)
         )
         core.create_monitoring_config(
-            MonitoringConfigRequest(
+            IntermediateMonitoringConfig(
                 config_creation_context=config_creation_context,
                 passwords=passwords,
                 licensing_handler=licensing_handler,

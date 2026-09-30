@@ -27,12 +27,28 @@ tracer = trace.get_tracer()
 
 
 @dataclass(frozen=True, kw_only=True, eq=False)
-class MonitoringConfigRequest:
-    """Everything a monitoring core needs to create its configuration.
+class IntermediateMonitoringConfig:
+    """The resolved configuration every monitoring config plug-in starts from.
 
-    NOTE: This is where the engine puts pre-computed information. Today the cores
-    still do most of the computing themselves; every computation that moves out of
-    a core should arrive here as a new field.
+    The engine builds this once per activation. Each plug-in turns it into the
+    configuration of its own subsystem -- a monitoring core, the check helpers,
+    the relays -- and needs to know nothing about the others.
+
+    Two things it should be, and today is not:
+
+    It should be as simple as it can be, and typed in a self-sufficient way: data
+    that means something on its own, without reaching back into `cmk.base`. Today
+    it hands out `ConfigCache`, `CoreObjectsConfig` and a fistful of callables, so
+    a plug-in reading it still needs half of `cmk.base` to make sense of it.
+
+    It should already hold the expensive answers. Much of what the Microcore
+    configuration generation does today is not Microcore-specific: deciding which
+    hosts actually changed since the last activation and reusing the rest, walking
+    the hosts in parallel, narrowing the ruleset optimizer to the hosts being
+    worked on, and assembling the service table -- which the Nagios side then
+    assembles a second time, from the same sources in the same order. That work
+    belongs here, done once by the engine, so that no core repeats it and every
+    plug-in gets it.
     """
 
     # created by the engine per activation
@@ -72,5 +88,5 @@ class MonitoringCore(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def create_monitoring_config(self, request: MonitoringConfigRequest) -> None:
+    def create_monitoring_config(self, intermediate_config: IntermediateMonitoringConfig) -> None:
         raise NotImplementedError

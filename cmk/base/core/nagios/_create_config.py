@@ -29,7 +29,7 @@ from cmk.base.config import (
 )
 from cmk.base.configlib.loaded_config import CustomCheck
 from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
-from cmk.base.core.interface import MonitoringConfigRequest, MonitoringCore
+from cmk.base.core.interface import IntermediateMonitoringConfig, MonitoringCore
 from cmk.base.core.shared import (
     AbstractServiceID,
     autodetect_plugin,
@@ -188,36 +188,36 @@ class NagiosCore(MonitoringCore):
         return "nagios"
 
     @override
-    def create_monitoring_config(self, request: MonitoringConfigRequest) -> None:
-        self._config_cache = request.config_cache
-        self._core_objects_config = request.core_objects_config
+    def create_monitoring_config(self, intermediate_config: IntermediateMonitoringConfig) -> None:
+        self._config_cache = intermediate_config.config_cache
+        self._core_objects_config = intermediate_config.core_objects_config
         self._create_core_config(
-            request.config_creation_context.path_created,
-            request.hosts_config,
-            request.host_tags,
-            request.final_service_name_config,
-            request.passive_service_name_config,
-            request.enforced_services_table,
-            request.plugins.check_plugins,
-            request.licensing_handler,
-            request.passwords,
-            request.get_ip_stack_config,
-            request.default_address_family,
-            request.ip_address_of,
-            request.service_depends_on,
+            intermediate_config.config_creation_context.path_created,
+            intermediate_config.hosts_config,
+            intermediate_config.host_tags,
+            intermediate_config.final_service_name_config,
+            intermediate_config.passive_service_name_config,
+            intermediate_config.enforced_services_table,
+            intermediate_config.plugins.check_plugins,
+            intermediate_config.licensing_handler,
+            intermediate_config.passwords,
+            intermediate_config.get_ip_stack_config,
+            intermediate_config.default_address_family,
+            intermediate_config.ip_address_of,
+            intermediate_config.service_depends_on,
         )
         store.save_text_to_file(
-            plugin_index.make_index_file(request.config_creation_context.path_created),
-            plugin_index.create_plugin_index(request.plugins),
+            plugin_index.make_index_file(intermediate_config.config_creation_context.path_created),
+            plugin_index.create_plugin_index(intermediate_config.plugins),
         )
         self._precompile_hostchecks(
-            request.config_creation_context.path_created,
-            request.hosts_config,
-            request.passive_service_name_config,
-            request.enforced_services_table,
-            request.plugins,
-            request.get_ip_stack_config,
-            request.ip_address_of,
+            intermediate_config.config_creation_context.path_created,
+            intermediate_config.hosts_config,
+            intermediate_config.passive_service_name_config,
+            intermediate_config.enforced_services_table,
+            intermediate_config.plugins,
+            intermediate_config.get_ip_stack_config,
+            intermediate_config.ip_address_of,
             precompile_mode=(
                 PrecompileMode.DELAYED
                 if self.nagios_core_config.delay_precompile

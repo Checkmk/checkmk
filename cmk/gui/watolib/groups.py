@@ -5,8 +5,10 @@
 
 import copy
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import Any, Literal
+
+from livestatus import SiteId
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.plugin_registry import Registry
@@ -77,9 +79,10 @@ def add_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) -> 
     if name in groups:
         raise MKUserError("name", _("Sorry, there is already a group with that name"))
 
+    scope = _group_change_scope(extra_info)
     _set_group(all_groups, group_type, name, extra_info)
     _add_group_change(
-        extra_info, "edit-%sgroups" % group_type, _l("Create new %s group %s") % (group_type, name)
+        scope, "edit-%sgroups" % group_type, _l("Create new %s group %s") % (group_type, name)
     )
 
 
@@ -92,6 +95,8 @@ def edit_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) ->
         raise MKUserError("name", _("Unknown group: %s") % name)
 
     old_group_backup = copy.deepcopy(groups[name])
+    old_scope = _group_change_scope(old_group_backup)
+    new_scope = _group_change_scope(extra_info)
 
     _set_group(all_groups, group_type, name, extra_info)
     customer = customer_api()
@@ -100,7 +105,7 @@ def edit_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) ->
         new_customer = customer.get_customer_id(extra_info)
         if old_customer != new_customer:
             _add_group_change(
-                old_group_backup,
+                old_scope,
                 "edit-%sgroups" % group_type,
                 _l("Removed %sgroup %s from customer %s")
                 % (
@@ -110,7 +115,7 @@ def edit_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) ->
                 ),
             )
             _add_group_change(
-                extra_info,
+                new_scope,
                 "edit-%sgroups" % group_type,
                 _l("Moved %sgroup %s to customer %s. Additional properties may have changed.")
                 % (
@@ -121,13 +126,13 @@ def edit_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) ->
             )
         else:
             _add_group_change(
-                old_group_backup,
+                old_scope,
                 "edit-%sgroups" % group_type,
                 _l("Updated properties of %sgroup %s") % (group_type, name),
             )
     else:
         _add_group_change(
-            extra_info,
+            new_scope,
             "edit-%sgroups" % group_type,
             _l("Updated properties of %s group %s") % (group_type, name),
         )
@@ -160,15 +165,19 @@ def delete_group(name: GroupName, group_type: GroupType) -> None:
         )
 
     # Delete group
-    group = groups.pop(name)
+    scope = _group_change_scope(groups.pop(name))
     save_group_information(all_groups)
     _add_group_change(
-        group, "edit-%sgroups" % group_type, _l("Deleted %s group %s") % (group_type, name)
+        scope, "edit-%sgroups" % group_type, _l("Deleted %s group %s") % (group_type, name)
     )
 
 
-def _add_group_change(group: GroupSpec, action_name: str, text: LazyString) -> None:
-    add_change(action_name, text, sites=customer_api().customer_group_sites(group))
+def _group_change_scope(group: GroupSpec) -> Sequence[SiteId] | None:
+    return customer_api().customer_group_sites(group)
+
+
+def _add_group_change(scope: Sequence[SiteId] | None, action_name: str, text: LazyString) -> None:
+    add_change(action_name, text, sites=scope)
 
 
 def check_modify_group_permissions(group_type: GroupType) -> None:

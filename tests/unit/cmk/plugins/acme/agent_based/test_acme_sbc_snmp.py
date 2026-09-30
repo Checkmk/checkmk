@@ -3,17 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-
 from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.acme.agent_based.acme_sbc_snmp import check_acme_sbc_snmp, parse_acme_sbc_snmp
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=IndexError,
-    reason="Crash report f2584e02-9b4e-11f1-963a-005056a8b5b9: IndexError",
-)
 def test_check_acme_sbc_snmp() -> None:
     # Crash group 4889: the device delivers one row holding health score and redundancy state
     section = parse_acme_sbc_snmp([["100", "3"]])

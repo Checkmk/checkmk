@@ -40,10 +40,8 @@ class Section:
 
 def parse_acme_sbc_snmp(string_table: StringTable) -> Section | None:
     if string_table:
-        return Section(
-            score=string_table[0][1],
-            status=string_table[1][1],
-        )
+        score, status = string_table[0]
+        return Section(score=score, status=status)
     return None
 
 

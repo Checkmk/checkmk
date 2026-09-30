@@ -6,15 +6,10 @@ py_cmk_test(
     size = "small",
     srcs = glob(["**/*.py"]),
     args = ["--random-order-bucket=global"],
-    env = {"EDITION": "community"},
-    tags = [
-        # cmk.base.community_app comes from here; the linter maps it elsewhere.
-        "deballast-keep=//cmk/base:app",
-    ],
     use_project_pytest_config = True,
     visibility = ["//visibility:private"],
     deps = [
-        "//cmk/base:app",
+        "//cmk/base:base-app",
         "//cmk/plugins/checkmk/cli",
         "//tests/testlib/unit",
         "//tests/unit:conftest",

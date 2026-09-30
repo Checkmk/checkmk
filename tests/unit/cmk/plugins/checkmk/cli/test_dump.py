@@ -8,7 +8,7 @@
 
 from dataclasses import replace
 from pathlib import Path
-from typing import Any, Final, override
+from typing import Any, Final, NoReturn, override
 
 import pytest
 
@@ -16,8 +16,9 @@ import cmk.ccc.resulttype as result
 import cmk.checkengine.fetchers.snmp._fetcher as _snmp_module
 import cmk.utils.paths as cmk_paths
 from cmk.base import config
-from cmk.base.community_app import make_app
+from cmk.base.base_app import CheckmkBaseApp
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.version import Edition
 from cmk.checkengine.fetcher_abc import Fetcher, Mode
 from cmk.checkengine.fetcher_utils.secrets import FetcherSecrets
 from cmk.checkengine.fetcher_utils.trigger import PlainFetcherTrigger
@@ -58,12 +59,18 @@ def _patch_fetcher_trigger(monkeypatch: pytest.MonkeyPatch, raw_data: bytes) -> 
     The command builds its own application, so the fake has to go in where it
     does that.
     """
+
+    def _not_called(*_a: object) -> NoReturn:
+        raise AssertionError("call not expected here")
+
     monkeypatch.setattr(
         dump,
         "make_app",
-        lambda _omd_root: replace(
-            make_app(),
-            make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data),  # noqa: ARG005
+        lambda _omd_root: CheckmkBaseApp(
+            edition=Edition.COMMUNITY,
+            create_core=_not_called,
+            licensing_handler_factory=_not_called,
+            make_fetcher_trigger=lambda *_a: _MockFetcherTrigger(raw_data),
         ),
     )
 

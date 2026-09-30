@@ -9,7 +9,7 @@ import pytest
 
 from cmk.werks.tool import load_werk, parse_werk
 from cmk.werks.tool.error import WerkError
-from cmk.werks.tool.load import _format_title, load_werk_v2, load_werk_v3
+from cmk.werks.tool.load import load_werk_v2, load_werk_v3
 from cmk.werks.tool.models import WerkV2
 from cmk.werks.tool.parse import parse_werk_v2, parse_werk_v3, WerkV2ParseResult
 
@@ -261,15 +261,15 @@ this is the `description` with some *formatting.*
 @pytest.mark.parametrize(
     ("str_in", "str_out"),
     [
-        ("a < b", "a < b"),
-        ("&amp;", "&"),
-        ("&", "&"),
-        (r"\*bold*", "*bold*"),
-        (r"&lt;br/>", "<br/>"),
+        pytest.param("a < b", "a < b", id="less-than"),
+        pytest.param("&amp;", "&", id="entity"),
+        pytest.param("&", "&", id="ampersand"),
+        pytest.param(r"\*bold*", "*bold*", id="escaped-markdown"),
+        pytest.param(r"&lt;br/>", "<br/>", id="escaped-tag"),
     ],
 )
-def test_title_formatting(str_in: str, str_out: str) -> None:
-    assert _format_title(str_in) == str_out
+def test_the_title_is_loaded_as_plain_text(str_in: str, str_out: str) -> None:
+    assert load_werk(file_content=werk_text(title=str_in), file_name="1234.md").title == str_out
 
 
 def test_loading_md_werk_tags_not_in_whitelist() -> None:

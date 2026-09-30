@@ -33,11 +33,11 @@ class SectionItem(TypedDict):
     description: str
     name: str
     iftype: str
-    pktaccepted: int
-    pktblocked: int
-    pkticmp: int
-    tcp: int
-    udp: int
+    pktaccepted: int | None
+    pktblocked: int | None
+    pkticmp: int | None
+    tcp: int | None
+    udp: int | None
 
 
 Section = Sequence[SectionItem]
@@ -52,36 +52,63 @@ def discover_stormshield_packets(section: Section) -> DiscoveryResult:
 def check_stormshield_packets(item: str, section: Section) -> CheckResult:
     for section_item in section:
         if item == section_item["description"]:
+            pktaccepted = section_item["pktaccepted"]
+            pktblocked = section_item["pktblocked"]
+            pkticmp = section_item["pkticmp"]
+            tcp = section_item["tcp"]
+            udp = section_item["udp"]
+            if (
+                pktaccepted is None
+                or pktblocked is None
+                or pkticmp is None
+                or tcp is None
+                or udp is None
+            ):
+                missing = [
+                    name
+                    for name, value in (
+                        ("accepted packets", pktaccepted),
+                        ("blocked packets", pktblocked),
+                        ("ICMP packets", pkticmp),
+                        ("TCP sessions", tcp),
+                        ("UDP sessions", udp),
+                    )
+                    if value is None
+                ]
+                yield Result(
+                    state=State.UNKNOWN,
+                    summary=f"No value received for: {', '.join(missing)} (expected integer)",
+                )
+                return
+
             now = time.time()
             rate_pktaccepted = get_rate(
                 get_value_store(),
                 "acc_%s" % item,
                 now,
-                int(section_item["pktaccepted"]),
+                pktaccepted,
                 raise_overflow=True,
             )
             rate_pktblocked = get_rate(
                 get_value_store(),
                 "block_%s" % item,
                 now,
-                int(section_item["pktblocked"]),
+                pktblocked,
                 raise_overflow=True,
             )
             rate_pkticmp = get_rate(
                 get_value_store(),
                 "icmp_%s" % item,
                 now,
-                int(section_item["pkticmp"]),
+                pkticmp,
                 raise_overflow=True,
             )
-            infotext = (
-                f"[{section_item['name']}], tcp: {section_item['tcp']}, udp: {section_item['udp']}"
-            )
+            infotext = f"[{section_item['name']}], tcp: {tcp}, udp: {udp}"
             yield Result(state=State.OK, summary=infotext)
 
             perfdata = [
-                ("tcp_active_sessions", section_item["tcp"]),
-                ("udp_active_sessions", section_item["udp"]),
+                ("tcp_active_sessions", tcp),
+                ("udp_active_sessions", udp),
                 ("packages_accepted", rate_pktaccepted),
                 ("packages_blocked", rate_pktblocked),
                 ("packages_icmp_total", rate_pkticmp),
@@ -90,17 +117,21 @@ def check_stormshield_packets(item: str, section: Section) -> CheckResult:
                 yield Metric(name=p[0], value=float(str(p[1])))
 
 
+def _parse_counter(raw: str) -> int | None:
+    return int(raw) if raw else None
+
+
 def parse_stormshield_packets(string_table: StringTable) -> Section:
     return [
         SectionItem(
             description=descrip,
             name=_name,
             iftype=iftype,
-            pktaccepted=int(_pktaccepted),
-            pktblocked=int(_pktblocked),
-            pkticmp=int(_pkticmp),
-            tcp=int(_tcp),
-            udp=int(_udp),
+            pktaccepted=_parse_counter(_pktaccepted),
+            pktblocked=_parse_counter(_pktblocked),
+            pkticmp=_parse_counter(_pkticmp),
+            tcp=_parse_counter(_tcp),
+            udp=_parse_counter(_udp),
         )
         for descrip, _name, iftype, _pktaccepted, _pktblocked, _pkticmp, _tcp, _udp in string_table
     ]

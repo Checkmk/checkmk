@@ -402,6 +402,10 @@ SECTIONS: Sequence[Section] = (
     ("veeam_wan_accelerators", fetch_list("/api/v1/backupInfrastructure/wanAccelerators")),
     ("veeam_config_backup", empty_on_access_denied(fetch_object("/api/v1/configBackup"))),
     ("veeam_proxies", fetch_list("/api/v1/backupInfrastructure/proxies/states")),
+    (
+        "veeam_scaleout_repositories",
+        fetch_list("/api/v1/backupInfrastructure/scaleOutRepositories"),
+    ),
 )
 
 

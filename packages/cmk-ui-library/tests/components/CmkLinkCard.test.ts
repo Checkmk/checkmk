@@ -28,6 +28,18 @@ test('is a plain container when there is nowhere to go', () => {
   expect(container.querySelector('.cmk-link-card')?.tagName).toBe('DIV')
 })
 
+test('lets a link it carries be followed when there is nowhere to go', () => {
+  render(CmkLinkCard, {
+    props: { title: TITLE, openInNewTab: false },
+    slots: { default: '<a href="https://checkmk.com">counted services</a>' }
+  })
+  const click = new MouseEvent('click', { bubbles: true, cancelable: true })
+
+  screen.getByRole('link', { name: 'counted services' }).dispatchEvent(click)
+
+  expect(click.defaultPrevented).toBe(false)
+})
+
 test('carries what it is given below its subtitle', () => {
   render(CmkLinkCard, {
     props: { title: TITLE, openInNewTab: false },

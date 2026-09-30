@@ -47,6 +47,17 @@ const props = defineProps<CmkLinkCardProps>()
 /** A card with nowhere to go is a plain container: no hover, no focus ring, not tabbable. */
 const isLink = computed(() => props.url !== undefined || props.callback !== undefined)
 
+function onClick(event: Event): void {
+  // A plain container must not swallow the clicks of links placed inside it.
+  if (!isLink.value) {
+    return
+  }
+  if (!props.url) {
+    event.preventDefault()
+  }
+  props.callback?.()
+}
+
 const classes = computed(() => [
   cmkLinkCardVariants({ borders: props.borders, contrast: props.contrast }),
   { disabled: props.disabled }
@@ -60,16 +71,7 @@ const classes = computed(() => [
     :target="isLink && openInNewTab ? '_blank' : undefined"
     class="cmk-link-card"
     :class="classes"
-    @click="
-      (event: Event) => {
-        if (!url) {
-          event.preventDefault()
-        }
-        if (props.callback) {
-          props.callback()
-        }
-      }
-    "
+    @click="onClick"
   >
     <slot name="leading">
       <CmkIcon v-if="iconName" :name="iconName" size="xxlarge" class="cmk-link-card__icon" />

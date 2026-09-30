@@ -39,6 +39,15 @@ Plug-ins that subscribe to a single section and always monitor exactly one servi
 no longer have to write a discovery function that ignores its section and yields a
 single :class:`Service`. They can use this one instead.
 
+Added :class:`ParseFailure` and :func:`parse_as`
+************************************************
+
+A parse function puts a :class:`ParseFailure` into the parsed section in place of a
+value it could not parse, and a check function yields it like any other result.
+The service then shows the failure as an UNKNOWN result, and its details show the
+ID of a crash report.
+See :class:`ParseFailure` for an example.
+
 """
 
 from collections.abc import Callable as _Callable
@@ -126,9 +135,10 @@ from ._metrics_section import (
     SumAggregation,
 )
 from ._naming import validate_name as _validate_name
+from ._parse_failure import parse_as, ParseFailure
 
 type _DiscoveryFunction = _Callable[..., DiscoveryResult]
-type CheckResult = _Iterable[IgnoreResults | Metric | Result]
+type CheckResult = _Iterable[IgnoreResults | Metric | Result | ParseFailure]
 type _CheckFunction = _Callable[..., CheckResult]
 
 
@@ -230,6 +240,8 @@ __all__ = [
     "DatapointFilter",
     "CheckResult",
     "DiscoveryResult",
+    "parse_as",
+    "ParseFailure",
     "HostLabelGenerator",
     "InventoryResult",
     "StringByteTable",

@@ -80,6 +80,7 @@ def create_check_crash_dump(
     is_enforced: bool,
     snmp_backend: SNMPBackendEnum,
     get_agent_output: Callable[[], AgentRawData | None],
+    summary: str = "check failed",
 ) -> str:
     """Create a crash dump from an exception occurred during check execution
 
@@ -87,7 +88,7 @@ def create_check_crash_dump(
     of the check. The GUI (cmk.gui.crash_reporting) is able to parse it and send it to
     the Checkmk team.
     """
-    text = "check failed - please submit a crash report!"
+    text = f"{summary} - please submit a crash report!"
     try:
         crash = CheckCrashReport(
             crash_report_base_path=make_crash_report_base_path(cmk.utils.paths.omd_root),
@@ -111,7 +112,7 @@ def create_check_crash_dump(
         text += " (Crash-ID: %s)" % crash.ident_to_text()
         return text
     except Exception:
-        return "check failed - failed to create a crash report: %s" % traceback.format_exc()
+        return f"{summary} - failed to create a crash report: {traceback.format_exc()}"
 
 
 class CrashReportWithAgentOutput[T](ABCCrashReport[T]):

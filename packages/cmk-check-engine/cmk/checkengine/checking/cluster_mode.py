@@ -20,6 +20,7 @@ from cmk.checkengine.plugins import (
     CheckPlugin,
     FinalCheckFunction,
     FinalCheckResult,
+    ReportedParseFailure,
     ServiceID,
 )
 from cmk.checkengine.specs.checkresults import state_markers
@@ -120,8 +121,9 @@ def _cluster_check(
     unpreferred_node_state: State,
     **cluster_kwargs: Any,
 ) -> FinalCheckResult:
+    node_results = executor(check_function, cluster_kwargs)
     summarizer = Summarizer(
-        node_results=executor(check_function, cluster_kwargs),
+        node_results=node_results,
         cluster_mode=cluster_mode,
         additional_node_label=additional_nodes_label,
         selector=selector,
@@ -131,6 +133,9 @@ def _cluster_check(
         metrics_node=clusterization_parameters.get("metrics_node"),
     )
     yield from summarizer()
+    yield from (
+        failure for failures in node_results.parse_failures.values() for failure in failures
+    )
     return None
 
 
@@ -138,6 +143,7 @@ class NodeResults(NamedTuple):
     results: Mapping[HostName, Sequence[Result]]
     metrics: Mapping[HostName, Sequence[Metric | MetricV3Unstable]]
     ignore_results: Mapping[HostName, Sequence[IgnoreResults]]
+    parse_failures: Mapping[HostName, Sequence[ReportedParseFailure]]
 
 
 class Summarizer:
@@ -345,6 +351,7 @@ class NodeCheckExecutor:
         results = {}
         metrics = {}
         ignores = {}
+        parse_failures = {}
 
         for node, kwargs in self._iter_node_kwargs(cluster_kwargs):
             elements = self._consume_checkresult(
@@ -352,9 +359,10 @@ class NodeCheckExecutor:
             )
             metrics[node] = [e for e in elements if isinstance(e, (Metric, MetricV3Unstable))]
             ignores[node] = [e for e in elements if isinstance(e, IgnoreResults)]
+            parse_failures[node] = [e for e in elements if isinstance(e, ReportedParseFailure)]
             results[node] = [e for e in elements if isinstance(e, Result)]
 
-        return NodeResults(results, metrics, ignores)
+        return NodeResults(results, metrics, ignores, parse_failures)
 
     def _iter_node_kwargs(self, cluster_kwargs: _Kwargs) -> Iterable[tuple[HostName, _Kwargs]]:
         """create kwargs for every nodes check function"""
@@ -387,7 +395,7 @@ class NodeCheckExecutor:
         node: HostName,
         result_generator: FinalCheckResult,
         value_store_manager: ValueStoreManager,
-    ) -> Sequence[Result | Metric | MetricV3Unstable | IgnoreResults]:
+    ) -> Sequence[Result | Metric | MetricV3Unstable | IgnoreResults | ReportedParseFailure]:
         with value_store_manager.namespace(self._service_id, host_name=node):
             try:
                 return list(result_generator)

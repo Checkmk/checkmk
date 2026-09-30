@@ -7,10 +7,12 @@
 
 
 from collections.abc import Callable, Iterable, Mapping
+from dataclasses import dataclass
 from typing import Final, NamedTuple
 
 from cmk.agent_based.v2 import IgnoreResults, Metric, Result, Service
 from cmk.agent_based.v3_unstable import Metric as MetricV3Unstable
+from cmk.agent_based.v3_unstable import ParseFailure
 from cmk.discover_plugins import PluginLocation
 from cmk.ruleset_matcher.ruleset_name import RuleSetName
 from cmk.utils.servicename import Item
@@ -18,7 +20,22 @@ from cmk.utils.servicename import Item
 from ._common import RuleSetTypeName
 from ._sections import ParsedSectionName
 
-type FinalCheckResult = Iterable[IgnoreResults | Metric | Result | MetricV3Unstable]
+
+@dataclass(frozen=True)
+class ReportedParseFailure:
+    """A parse failure that the results already account for, and that is only reported
+
+    When a check function yields a ParseFailure, the check engine replaces it by an
+    UNKNOWN result followed by this, so that the failure still ends up in the crash
+    report.
+    """
+
+    failure: ParseFailure
+
+
+type FinalCheckResult = Iterable[
+    IgnoreResults | Metric | Result | MetricV3Unstable | ReportedParseFailure
+]
 type FinalCheckFunction = Callable[..., FinalCheckResult]
 type FinalDiscoveryResult = Iterable[Service]
 type FinalDiscoveryFunction = Callable[..., FinalDiscoveryResult]

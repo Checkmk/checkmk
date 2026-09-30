@@ -9,6 +9,7 @@ from ._check import FinalCheckFunction as FinalCheckFunction
 from ._check import FinalCheckResult as FinalCheckResult
 from ._check import FinalDiscoveryFunction as FinalDiscoveryFunction
 from ._check import FinalDiscoveryResult as FinalDiscoveryResult
+from ._check import ReportedParseFailure as ReportedParseFailure
 from ._check import ServiceID as ServiceID
 from ._combined import AgentBasedPlugins as AgentBasedPlugins
 from ._common import RuleSetTypeName as RuleSetTypeName

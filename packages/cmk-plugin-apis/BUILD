@@ -50,6 +50,7 @@ py_library(
         "cmk/agent_based/v3_unstable/_metrics_models.py",
         "cmk/agent_based/v3_unstable/_metrics_section.py",
         "cmk/agent_based/v3_unstable/_naming.py",
+        "cmk/agent_based/v3_unstable/_parse_failure.py",
     ],
     data = ["cmk/agent_based/py.typed"],
     imports = ["."],

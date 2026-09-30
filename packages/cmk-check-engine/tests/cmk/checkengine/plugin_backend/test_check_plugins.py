@@ -14,7 +14,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v1 import IgnoreResults, Metric, Result, Service, State
-from cmk.agent_based.v3_unstable import discover_one_service
+from cmk.agent_based.v3_unstable import discover_one_service, parse_as, ParseFailure
 from cmk.agent_based.v3_unstable import Metric as MetricV3Unstable
 from cmk.checkengine.plugin_backend import check_plugins
 from cmk.checkengine.plugin_backend.utils import (
@@ -26,6 +26,7 @@ from cmk.checkengine.plugins import (
     CheckPluginName,
     InventoryPluginName,
     ParsedSectionName,
+    ReportedParseFailure,
 )
 from cmk.discover_plugins import PluginLocation
 
@@ -296,6 +297,52 @@ def test_check_function_rejects_invalid_type() -> None:
     )
     with pytest.raises(TypeError):
         list(plugin.check_function(section=None))
+
+
+def _parse_failure() -> ParseFailure:
+    failure = parse_as(int, "n/a", field="speed")
+    assert isinstance(failure, ParseFailure)
+    return failure
+
+
+def test_check_function_replaces_a_parse_failure_by_an_unknown_result() -> None:
+    failure = _parse_failure()
+
+    def check_fn(section: object) -> Generator[object]:  # noqa: ARG001
+        yield failure
+
+    plugin = check_plugins.create_check_plugin(
+        **{**MINIMAL_CREATION_KWARGS, "check_function": check_fn}
+    )
+
+    assert list(plugin.check_function(section=None)) == [
+        Result(state=State.UNKNOWN, summary=str(failure)),
+        ReportedParseFailure(failure),
+    ]
+
+
+def test_a_multi_line_parse_failure_shows_its_first_line_in_the_summary() -> None:
+    def converter(_value: str) -> int:
+        raise ValueError("2 validation errors\nspeed: not a number")
+
+    failure = parse_as(converter, "n/a", field="speed")
+    assert isinstance(failure, ParseFailure)
+
+    def check_fn(section: object) -> Generator[object]:  # noqa: ARG001
+        yield failure
+
+    plugin = check_plugins.create_check_plugin(
+        **{**MINIMAL_CREATION_KWARGS, "check_function": check_fn}
+    )
+
+    assert list(plugin.check_function(section=None)) == [
+        Result(
+            state=State.UNKNOWN,
+            summary="Could not parse 'speed': 2 validation errors",
+            details="Could not parse 'speed': 2 validation errors\nspeed: not a number",
+        ),
+        ReportedParseFailure(failure),
+    ]
 
 
 def test_check_function_empty() -> None:

@@ -29,6 +29,7 @@ from cmk.agent_based.prediction_backend import (
 from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric, State
 from cmk.agent_based.v1 import Result as CheckFunctionResult
 from cmk.agent_based.v3_unstable import Metric as MetricV3Unstable
+from cmk.agent_based.v3_unstable import ParseFailure
 from cmk.base.config import ConfigCache
 from cmk.base.errorhandling import create_check_crash_dump
 from cmk.ccc.cpu_tracking import CPUTracker
@@ -73,6 +74,7 @@ from cmk.checkengine.plugins import (
     DiscoveryPlugin,
     FinalCheckResult,
     ParsedSectionName,
+    ReportedParseFailure,
     SectionName,
 )
 from cmk.checkengine.plugins import AgentSectionPlugin as AgentSectionPluginAPI
@@ -804,7 +806,7 @@ def _get_check_function(  # type: ignore[explicit-any]
     value_store_manager: ValueStoreManager,
     *,
     clusters: Container[HostName],
-) -> Callable[..., ServiceCheckResult]:
+) -> Callable[..., _Subresults]:
     assert plugin.name == service.check_plugin_name
     check_function = (
         cluster_mode.get_cluster_check_function(
@@ -818,9 +820,9 @@ def _get_check_function(  # type: ignore[explicit-any]
     )
 
     @functools.wraps(check_function)
-    def __check_function(*args: object, **kw: object) -> ServiceCheckResult:
+    def __check_function(*args: object, **kw: object) -> _Subresults:
         with value_store_manager.namespace(service.id()):
-            return _aggregate_results(_consume_check_results(check_function(*args, **kw)))
+            return _consume_check_results(check_function(*args, **kw))
 
     return __check_function
 
@@ -830,13 +832,16 @@ class _Subresults:
     ignore_results: Sequence[IgnoreResults]
     metrics: Sequence[MetricTuple]
     results: Sequence[CheckFunctionResult]
+    parse_failures: Sequence[ParseFailure]
 
 
-def _aggregate_results(subresults: _Subresults) -> ServiceCheckResult:
+def _aggregate_results(
+    subresults: _Subresults, crash_reports: Sequence[CheckFunctionResult]
+) -> ServiceCheckResult:
     # Impedance matching part of `get_check_function()`.
     ignore_results = subresults.ignore_results
     metrics = subresults.metrics
-    results = subresults.results
+    results = [*subresults.results, *crash_reports]
 
     if not ignore_results and not results:  # Check returned nothing
         return SubmittableServiceCheckResult.item_not_found()
@@ -901,6 +906,7 @@ def _consume_check_results(subresults: FinalCheckResult) -> _Subresults:
     ignore_results: list[IgnoreResults] = []
     results: list[CheckFunctionResult] = []
     perfdata: list[MetricTuple] = []
+    parse_failures: list[ParseFailure] = []
     try:
         for subr in subresults:
             match subr:
@@ -922,10 +928,12 @@ def _consume_check_results(subresults: FinalCheckResult) -> _Subresults:
                     )
                 case CheckFunctionResult():
                     results.append(subr)
+                case ReportedParseFailure():
+                    parse_failures.append(subr.failure)
     except IgnoreResultsError as exc:
-        return _Subresults([IgnoreResults(str(exc))], perfdata, results)
+        return _Subresults([IgnoreResults(str(exc))], perfdata, results, parse_failures)
 
-    return _Subresults(ignore_results, perfdata, results)
+    return _Subresults(ignore_results, perfdata, results, parse_failures)
 
 
 def _get_monitoring_data_kwargs(
@@ -998,6 +1006,53 @@ def _get_clustered_service_node_keys(
     return [HostKey(nodename, source_type) for nodename in used_nodes]
 
 
+def _report_parse_failures(
+    parse_failures: Sequence[ParseFailure],
+    host_name: HostName,
+    service: ConfiguredService,
+    *,
+    plugin_kwargs: Mapping[str, object],
+    is_cluster: bool,
+    snmp_backend: SNMPBackendEnum,
+    get_agent_output: Callable[[], AgentRawData | None],
+    debug: bool,
+) -> Sequence[CheckFunctionResult]:
+    """Create a crash report for every value the check function could not parse
+
+    The error of each failure is raised again on its own, so that its crash report
+    leads back to where the value was parsed. Its traceback is restored afterwards,
+    so that every report of the same failure has the same traceback.
+    The failures are already part of the results, so the returned results neither
+    change the state of the service nor show up in its summary.
+    """
+    if parse_failures and debug:
+        raise ExceptionGroup(
+            "Check function received data it could not parse",
+            [failure.exception for failure in parse_failures],
+        )
+    crash_reports = []
+    for failure in parse_failures:
+        parse_traceback = failure.exception.__traceback__
+        try:
+            raise failure.exception
+        except Exception:
+            crash_text = create_check_crash_dump(
+                host_name,
+                service.description,
+                plugin_name=service.check_plugin_name,
+                plugin_kwargs=plugin_kwargs,
+                is_cluster=is_cluster,
+                is_enforced=service.is_enforced,
+                snmp_backend=snmp_backend,
+                get_agent_output=get_agent_output,
+                summary=f"Could not parse {failure.field!r}",
+            )
+        finally:
+            failure.exception.__traceback__ = parse_traceback
+        crash_reports.append(CheckFunctionResult(state=State.OK, notice=crash_text))
+    return crash_reports
+
+
 def get_aggregated_result(  # type: ignore[explicit-any]
     host_name: HostName,
     is_cluster: bool,
@@ -1005,7 +1060,7 @@ def get_aggregated_result(  # type: ignore[explicit-any]
     providers: Mapping[HostKey, Provider],
     service: ConfiguredService,
     plugin: CheckPluginAPI,
-    check_function: Callable[..., ServiceCheckResult],
+    check_function: Callable[..., _Subresults],
     *,
     get_parameters: Callable[[], Mapping[str, object]],
     get_agent_output: Callable[[], AgentRawData | None],
@@ -1071,10 +1126,11 @@ def get_aggregated_result(  # type: ignore[explicit-any]
     item_kw = {} if service.item is None else {"item": service.item}
     params_kw: dict[str, object] = {}
 
+    check_result: ServiceCheckResult
     try:
         if plugin.check_default_parameters is not None:
             params_kw["params"] = get_parameters()
-        check_result = check_function(**item_kw, **params_kw, **section_kws)
+        subresults = check_function(**item_kw, **params_kw, **section_kws)
     except MKTimeout:
         raise
     except Exception:
@@ -1091,6 +1147,20 @@ def get_aggregated_result(  # type: ignore[explicit-any]
                 is_enforced=service.is_enforced,
                 snmp_backend=snmp_backend,
                 get_agent_output=get_agent_output,
+            ),
+        )
+    else:
+        check_result = _aggregate_results(
+            subresults,
+            _report_parse_failures(
+                subresults.parse_failures,
+                host_name,
+                service,
+                plugin_kwargs={**item_kw, **params_kw, **section_kws},
+                is_cluster=is_cluster,
+                snmp_backend=snmp_backend,
+                get_agent_output=get_agent_output,
+                debug=debug,
             ),
         )
 

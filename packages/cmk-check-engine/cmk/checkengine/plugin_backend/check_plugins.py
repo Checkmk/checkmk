@@ -7,11 +7,11 @@
 
 import functools
 from collections.abc import Callable, Generator, Iterable, Mapping
-from typing import get_args
 
-from cmk.agent_based.v1 import IgnoreResults, Metric, Result, Service
+from cmk.agent_based.v1 import IgnoreResults, Metric, Result, Service, State
 from cmk.agent_based.v1.register import RuleSetType
-from cmk.agent_based.v3_unstable import discover_one_service
+from cmk.agent_based.v3_unstable import discover_one_service, ParseFailure
+from cmk.agent_based.v3_unstable import Metric as MetricV3Unstable
 from cmk.checkengine.plugins import (
     CheckPlugin,
     CheckPluginName,
@@ -19,6 +19,7 @@ from cmk.checkengine.plugins import (
     FinalCheckResult,
     FinalDiscoveryFunction,
     ParsedSectionName,
+    ReportedParseFailure,
 )
 from cmk.discover_plugins import PluginLocation
 from cmk.ruleset_matcher.ruleset_name import RuleSetName
@@ -31,7 +32,10 @@ from .utils import (
     validate_ruleset_type,
 )
 
-_FINAL_CHECK_RESULT_ELEMENT_TYPE = get_args(FinalCheckResult.__value__)[0]
+type _PluginCheckResultElement = IgnoreResults | Metric | Result | MetricV3Unstable | ParseFailure
+type _PluginCheckFunction = Callable[  # type: ignore[explicit-any]
+    ..., Iterable[_PluginCheckResultElement]
+]
 
 MANAGEMENT_DESCR_PREFIX = "Management Interface: "
 
@@ -87,21 +91,35 @@ def _filter_discovery[**P](
 def _filter_check[**P](
     generator: Callable[P, Iterable[object]],
 ) -> FinalCheckFunction:
-    """Only let Result, Metric and IgnoreResults through
+    """Only let Result, Metric and IgnoreResults through, and replace ParseFailure
 
+    Each ParseFailure is replaced by an UNKNOWN result and a ReportedParseFailure.
     This allows for better typing in base code.
     """
 
     @functools.wraps(generator)
-    def filtered_generator(
-        *args: P.args, **kwargs: P.kwargs
-    ) -> Generator[Result | Metric | IgnoreResults]:
+    def filtered_generator(*args: P.args, **kwargs: P.kwargs) -> FinalCheckResult:
         for element in generator(*args, **kwargs):
-            if not isinstance(element, _FINAL_CHECK_RESULT_ELEMENT_TYPE):
+            if not isinstance(element, _PluginCheckResultElement.__value__):
                 raise TypeError("unexpected type in check function: %r" % type(element))
-            yield element
+            yield from _replace_parse_failures(element)
 
     return filtered_generator
+
+
+def _replace_parse_failures(element: _PluginCheckResultElement) -> FinalCheckResult:
+    """Replace every ParseFailure by an UNKNOWN result and a ReportedParseFailure
+
+    The UNKNOWN result sets the state, the ReportedParseFailure only carries the
+    failure on to the crash report. The error message may span several lines, so
+    the summary only shows the first one, and the details show all of them.
+    """
+    if isinstance(element, ParseFailure):
+        text = str(element)
+        yield Result(state=State.UNKNOWN, summary=text.splitlines()[0], details=text)
+        yield ReportedParseFailure(element)
+    else:
+        yield element
 
 
 def _validate_kwargs(
@@ -114,10 +132,10 @@ def _validate_kwargs(
     discovery_default_parameters: Mapping[str, object] | None,
     discovery_ruleset_name: str | None,
     discovery_ruleset_type: RuleSetType,
-    check_function: FinalCheckFunction,
+    check_function: _PluginCheckFunction,
     check_default_parameters: Mapping[str, object] | None,
     check_ruleset_name: str | None,
-    cluster_check_function: FinalCheckFunction | None,
+    cluster_check_function: _PluginCheckFunction | None,
 ) -> None:
     _validate_service_name(plugin_name, service_name)
 
@@ -176,10 +194,10 @@ def create_check_plugin(
     discovery_default_parameters: Mapping[str, object] | None = None,
     discovery_ruleset_name: str | None = None,
     discovery_ruleset_type: RuleSetType = RuleSetType.MERGED,
-    check_function: FinalCheckFunction,
+    check_function: _PluginCheckFunction,
     check_default_parameters: Mapping[str, object] | None = None,
     check_ruleset_name: str | None = None,
-    cluster_check_function: FinalCheckFunction | None = None,
+    cluster_check_function: _PluginCheckFunction | None = None,
     location: PluginLocation,
     validate_kwargs: bool = True,
 ) -> CheckPlugin:
@@ -213,7 +231,7 @@ def create_check_plugin(
     disco_func = _filter_discovery(discovery_function, requires_item)
     disco_ruleset_name = RuleSetName(discovery_ruleset_name) if discovery_ruleset_name else None
 
-    cluster_check_function = (
+    final_cluster_check_function = (
         None if cluster_check_function is None else _filter_check(cluster_check_function)
     )
 
@@ -230,7 +248,7 @@ def create_check_plugin(
         check_function=_filter_check(check_function),
         check_default_parameters=check_default_parameters,
         check_ruleset_name=RuleSetName(check_ruleset_name) if check_ruleset_name else None,
-        cluster_check_function=cluster_check_function,
+        cluster_check_function=final_cluster_check_function,
         location=location,
     )
 

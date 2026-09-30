@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import json
 import socket
 import sys
 import time
@@ -19,7 +20,9 @@ from cmk.agent_based.prediction_backend import (
     PredictionInfo,
     PredictionParameters,
 )
-from cmk.agent_based.v1 import Metric, Result, State
+from cmk.agent_based.v1 import Metric, Result, Service, State
+from cmk.agent_based.v3_unstable import CheckResult as CheckResultV3Unstable
+from cmk.agent_based.v3_unstable import DiscoveryResult, parse_as, ParseFailure
 from cmk.agent_based.v3_unstable import Metric as MetricV3Unstable
 from cmk.base import checkers
 from cmk.base.checkers import CMKFetcher
@@ -44,6 +47,7 @@ from cmk.checkengine.helper_interface import (
     SourceType,
 )
 from cmk.checkengine.parser import AgentRawDataSection, HostSections
+from cmk.checkengine.plugin_backend.check_plugins import create_check_plugin
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     CheckPlugin,
@@ -53,6 +57,7 @@ from cmk.checkengine.plugins import (
     SectionName,
 )
 from cmk.checkengine.sectionparser import (
+    make_providers,
     ParsedSectionsResolver,
     Provider,
     SectionPlugin,
@@ -67,6 +72,7 @@ from cmk.checkengine.specs.checkresults import (
 from cmk.checkengine.specs.exitspec import ExitSpec
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.summarize import SummaryConfig
+from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 from cmk.discover_plugins import PluginLocation
 from cmk.piggyback.backend import Config as PiggybackConfig
 from cmk.utils.ip_lookup import IPStackConfig
@@ -302,7 +308,7 @@ def test_aggregate_result(
     subresults: FinalCheckResult, aggregated_results: ServiceCheckResult
 ) -> None:
     assert (
-        checkers._aggregate_results(checkers._consume_check_results(subresults))  # noqa: SLF001
+        checkers._aggregate_results(checkers._consume_check_results(subresults), [])  # noqa: SLF001
         == aggregated_results
     )
 
@@ -641,8 +647,11 @@ def test_cmk_fetcher_reports_missing_ip_instead_of_the_fallback_address(
     assert res.is_error()
 
 
+_OK_SUBRESULTS = checkers._Subresults((), (), [Result(state=State.OK, summary="OK")], ())  # noqa: SLF001
+
+
 class _CheckFunction(Protocol):
-    def __call__(self, **kwargs: object) -> ServiceCheckResult: ...
+    def __call__(self, **kwargs: object) -> checkers._Subresults: ...
 
 
 def _aggregated_result_of(
@@ -741,7 +750,7 @@ def _get_aggregated_result(
     )
 
 
-def _raise(**_kwargs: object) -> ServiceCheckResult:
+def _raise(**_kwargs: object) -> checkers._Subresults:
     raise ValueError("crash")
 
 
@@ -756,11 +765,9 @@ def test_agent_output_is_not_requested_if_the_check_function_succeeds() -> None:
     def get_agent_output() -> AgentRawData | None:
         raise AssertionError("agent output requested")
 
-    aggregated = _aggregated_result_of(
-        lambda **_kwargs: SubmittableServiceCheckResult(0, "OK"), get_agent_output
-    )
+    aggregated = _aggregated_result_of(lambda **_kwargs: _OK_SUBRESULTS, get_agent_output)
 
-    assert aggregated.result == SubmittableServiceCheckResult(0, "OK")
+    assert aggregated.result == SubmittableServiceCheckResult(0, "OK\nOK", ())
 
 
 def _make_service(raw_parameters: object) -> ConfiguredService:
@@ -783,13 +790,13 @@ def test_get_aggregated_result_passes_parameters() -> None:
     host_name = HostName("host")
     received: dict[str, object] = {}
 
-    def check_function(**kwargs: object) -> ServiceCheckResult:
+    def check_function(**kwargs: object) -> checkers._Subresults:
         received.update(kwargs)
-        return SubmittableServiceCheckResult(0, "OK")
+        return _OK_SUBRESULTS
 
     result = _get_aggregated_result(host_name, _make_service({"levels": (1, 2)}), check_function)
 
-    assert result.result == SubmittableServiceCheckResult(0, "OK")
+    assert result.result == SubmittableServiceCheckResult(0, "OK\nOK", ())
     assert received["params"] == {"levels": (1, 2)}
 
 
@@ -816,12 +823,292 @@ def test_get_aggregated_result_invalid_parameters_only_affect_service(
 
     calls: list[Mapping[str, object]] = []
 
-    def check_function(**kwargs: object) -> ServiceCheckResult:
+    def check_function(**kwargs: object) -> checkers._Subresults:
         calls.append(kwargs)
-        return SubmittableServiceCheckResult(0, "OK")
+        return _OK_SUBRESULTS
 
     result = _get_aggregated_result(host_name, _make_service(raw_parameters), check_function)
 
     assert not calls
     assert result.data_received
     assert result.result == SubmittableServiceCheckResult(3, "crash dump")
+
+
+_SENSORS_SECTION = SectionName("sensors")
+_SENSORS_PLUGIN = CheckPluginName("sensors")
+_SENSOR_SERVICE = ConfiguredService(
+    _SENSORS_PLUGIN,
+    "sensor 1",
+    ServiceName("Sensor sensor 1"),
+    TimespecificParameters(),
+    {},
+    {},
+    {},
+    False,
+)
+
+type _SensorsSection = Mapping[str, Mapping[str, float | ParseFailure]]
+
+
+def _parse_sensors(readings: Mapping[str, str]) -> _SensorsSection:
+    return {
+        "sensor 1": {name: parse_as(float, value, field=name) for name, value in readings.items()}
+    }
+
+
+def _section_with_unparsable_reading() -> _SensorsSection:
+    return _parse_sensors({"humidity": "N/A", "temperature": "23.0"})
+
+
+def _section_with_valid_readings() -> _SensorsSection:
+    return _parse_sensors({"humidity": "40.0", "temperature": "23.0"})
+
+
+def _check_sensor(item: str, section: _SensorsSection) -> CheckResultV3Unstable:
+    for name, reading in section[item].items():
+        if isinstance(reading, ParseFailure):
+            yield reading
+        else:
+            yield Result(state=State.OK, summary=f"{name.title()}: {reading}")
+
+
+def _cluster_check_sensor(
+    item: str, section: Mapping[str, _SensorsSection | None]
+) -> CheckResultV3Unstable:
+    for node_section in section.values():
+        if node_section is not None:
+            yield from _check_sensor(item, node_section)
+
+
+def _discover_sensors(section: _SensorsSection) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
+
+
+def _sensors_plugin() -> CheckPlugin:
+    return create_check_plugin(
+        name=str(_SENSORS_PLUGIN),
+        sections=[str(_SENSORS_SECTION)],
+        service_name="Sensor %s",
+        discovery_function=_discover_sensors,
+        check_function=_check_sensor,
+        cluster_check_function=_cluster_check_sensor,
+        location=PluginLocation("not_relevant_for_test", "sensors"),
+    )
+
+
+def _sensors_providers(sections: Mapping[HostName, _SensorsSection]) -> Mapping[HostKey, Provider]:
+    return {
+        host_key: provider
+        for host_name, section in sections.items()
+        for host_key, provider in make_providers(
+            {HostKey(host_name, SourceType.HOST): HostSections({_SENSORS_SECTION: [["raw"]]})},
+            {
+                _SENSORS_SECTION: SectionPlugin(
+                    supersedes=set(),
+                    parse_function=lambda _raw_data, section=section: section,
+                    parsed_section_name=ParsedSectionName(str(_SENSORS_SECTION)),
+                )
+            },
+            error_handling=lambda *_args, **_kw: "error",
+            debug=False,
+        ).items()
+    }
+
+
+def _checked_sensor(
+    host_name: HostName,
+    sections: Mapping[HostName, _SensorsSection],
+    tmp_path: Path,
+    cluster_mode: Literal["native", "failover", "worst", "best"] = "native",
+    nodes: Sequence[HostName] = (),
+    debug: bool = False,
+) -> ServiceCheckResult:
+    checker = checkers.CheckerPluginMapper(
+        checkers.CheckerConfig(
+            only_from=lambda _host_name: None,
+            effective_service_level=lambda *_args: 0,
+            get_clustered_service_configuration=lambda *_args: (cluster_mode, {}),
+            nodes=lambda _host_name: nodes,
+            effective_host=lambda *_args: host_name,
+            get_snmp_backend=lambda _host_name: SNMPBackendEnum.CLASSIC,
+            timeperiods_active={},
+        ),
+        {_SENSORS_PLUGIN: _sensors_plugin()},
+        ValueStoreManager(host_name, AllValueStoresStore(tmp_path / "value_store")),
+        clusters=(host_name,) if nodes else (),
+        get_agent_output=lambda: None,
+        omd_root=tmp_path,
+        debug=debug,
+    )[_SENSORS_PLUGIN]
+    return checker.function(
+        host_name,
+        _SENSOR_SERVICE,
+        providers=_sensors_providers(sections),
+        is_preview=False,
+    ).result
+
+
+def _crash_info() -> Mapping[str, object]:
+    crash_info = pop_crash_report_file("check", "crash.info")
+    assert crash_info is not None
+    loaded: Mapping[str, object] = json.loads(crash_info)
+    return loaded
+
+
+def _checked_host(section: _SensorsSection, tmp_path: Path) -> ServiceCheckResult:
+    return _checked_sensor(HostName("host"), {HostName("host"): section}, tmp_path)
+
+
+@pytest.mark.usefixtures("patch_omd_site")
+def test_an_unparsable_value_turns_only_its_own_subresult_unknown(tmp_path: Path) -> None:
+    result = _checked_host(_section_with_unparsable_reading(), tmp_path)
+    crash_id = _crash_info()["id"]
+
+    assert result == SubmittableServiceCheckResult(
+        3,
+        "Could not parse 'humidity': could not convert string to float: 'N/A'(?), "
+        "Temperature: 23.0\n"
+        "Could not parse 'humidity': could not convert string to float: 'N/A'(?)\n"
+        "Temperature: 23.0\n"
+        "Could not parse 'humidity' - please submit a crash report! "
+        f"(Crash-ID: {crash_id})",
+        [],
+    )
+
+
+@pytest.mark.usefixtures("patch_omd_site")
+def test_every_unparsable_value_of_a_service_is_shown(tmp_path: Path) -> None:
+    result = _checked_host(_parse_sensors({"humidity": "N/A", "temperature": "hot"}), tmp_path)
+    _crash_info()
+
+    assert result.state == 3
+    assert result.output.split("\n", 1)[0] == (
+        "Could not parse 'humidity': could not convert string to float: 'N/A'(?), "
+        "Could not parse 'temperature': could not convert string to float: 'hot'(?)"
+    )
+
+
+@pytest.mark.usefixtures("patch_omd_site")
+def test_an_unparsable_value_offers_a_crash_report(tmp_path: Path) -> None:
+    result = _checked_host(_section_with_unparsable_reading(), tmp_path)
+
+    assert f"(Crash-ID: {_crash_info()['id']})" in result.output
+
+
+@pytest.mark.usefixtures("patch_omd_site")
+def test_the_crash_report_shows_only_in_the_details(tmp_path: Path) -> None:
+    summary, details = _checked_host(_section_with_unparsable_reading(), tmp_path).output.split(
+        "\n", 1
+    )
+    _crash_info()
+
+    assert "(Crash-ID: " not in summary
+    assert "(Crash-ID: " in details
+
+
+@pytest.mark.usefixtures("patch_omd_site")
+def test_the_crash_report_shows_the_traceback_of_the_parse_error(tmp_path: Path) -> None:
+    _checked_host(_section_with_unparsable_reading(), tmp_path)
+    crash_info = _crash_info()
+
+    exc_traceback = crash_info["exc_traceback"]
+    assert isinstance(exc_traceback, list)
+
+    assert crash_info["exc_type"] == "ValueError"
+    assert [frame[2] for frame in exc_traceback] == ["_report_parse_failures", "parse_as"]
+
+
+@pytest.mark.usefixtures("patch_omd_site")
+def test_a_failure_reported_again_has_the_same_traceback(tmp_path: Path) -> None:
+    section = _section_with_unparsable_reading()
+    _checked_host(section, tmp_path)
+    first = _crash_info()["exc_traceback"]
+
+    _checked_host(section, tmp_path)
+
+    assert _crash_info()["exc_traceback"] == first
+
+
+@pytest.mark.usefixtures("patch_omd_site")
+def test_an_unparsable_value_is_raised_in_debug_mode(tmp_path: Path) -> None:
+    with pytest.raises(ExceptionGroup) as excinfo:
+        _checked_sensor(
+            HostName("host"),
+            {HostName("host"): _section_with_unparsable_reading()},
+            tmp_path,
+            debug=True,
+        )
+
+    assert [type(exc) for exc in excinfo.value.exceptions] == [ValueError]
+
+
+def _checked_cluster(
+    cluster_mode: Literal["native", "failover", "worst", "best"],
+    sections: Mapping[HostName, _SensorsSection],
+    tmp_path: Path,
+) -> ServiceCheckResult:
+    return _checked_sensor(
+        HostName("cluster"),
+        sections,
+        tmp_path,
+        cluster_mode,
+        nodes=(HostName("node1"), HostName("node2")),
+    )
+
+
+def _checked_cluster_with_both_nodes(
+    cluster_mode: Literal["native", "failover", "worst", "best"], tmp_path: Path
+) -> ServiceCheckResult:
+    return _checked_cluster(
+        cluster_mode,
+        {
+            HostName("node1"): _section_with_unparsable_reading(),
+            HostName("node2"): _section_with_valid_readings(),
+        },
+        tmp_path,
+    )
+
+
+@pytest.mark.usefixtures("patch_omd_site")
+def test_an_unparsable_value_on_the_worst_node_turns_the_cluster_unknown(tmp_path: Path) -> None:
+    result = _checked_cluster_with_both_nodes("worst", tmp_path)
+    _crash_info()
+
+    assert result.state == 3
+    assert "Could not parse 'humidity'" in result.output
+
+
+@pytest.mark.usefixtures("patch_omd_site")
+def test_an_unparsable_value_on_an_ignored_node_keeps_the_cluster_state(tmp_path: Path) -> None:
+    result = _checked_cluster_with_both_nodes("best", tmp_path)
+    _crash_info()
+
+    assert result.state == 0
+    assert "Humidity: 40.0" in result.output
+
+
+@pytest.mark.usefixtures("patch_omd_site")
+def test_an_unparsable_value_on_an_ignored_node_offers_a_crash_report(tmp_path: Path) -> None:
+    result = _checked_cluster_with_both_nodes("best", tmp_path)
+
+    assert f"(Crash-ID: {_crash_info()['id']})" in result.output
+
+
+@pytest.mark.usefixtures("patch_omd_site")
+def test_an_unparsable_value_on_the_active_failover_node_turns_the_cluster_unknown(
+    tmp_path: Path,
+) -> None:
+    result = _checked_cluster(
+        "failover", {HostName("node1"): _section_with_unparsable_reading()}, tmp_path
+    )
+
+    assert f"(Crash-ID: {_crash_info()['id']})" in result.output
+    assert result.state == 3
+
+
+@pytest.mark.usefixtures("patch_omd_site")
+def test_a_native_cluster_check_function_reports_the_failures_it_yields(tmp_path: Path) -> None:
+    result = _checked_cluster_with_both_nodes("native", tmp_path)
+
+    assert f"(Crash-ID: {_crash_info()['id']})" in result.output
+    assert result.state == 3

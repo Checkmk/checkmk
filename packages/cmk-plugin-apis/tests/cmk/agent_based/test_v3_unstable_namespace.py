@@ -63,6 +63,8 @@ def test_v3_unstable() -> None:
         "HostLabel",
         "IgnoreResults",
         "IgnoreResultsError",
+        "parse_as",
+        "ParseFailure",
         "Metric",
         "OIDBytes",
         "OIDCached",

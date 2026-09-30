@@ -151,6 +151,7 @@ def test_main_dashboard_sanity_check(dashboard_page: MainDashboard) -> None:
         ),
     ),
 )
+@pytest.mark.skip(reason="CMK-38280: stats widget markup changed, locators outdated")
 def test_host_dashboard(
     dashboard_page: MainDashboard,
     dashboard_class: type[LinuxHostsDashboard | WindowsHostsDashboard],

@@ -50,7 +50,7 @@ try {
                     if (($task.HostName -match "^$($Env:Computername)$") -and ($task.AufgabenName -notlike '\Microsoft\*')){
                             Write-Host "TaskName `t: "$task.AufgabenName
                             Write-Host "Last Run Time `t: "$task.'Letzte Laufzeit'
-                            Write-Host "Next Run Time `t: "$task.'Nächste Laufzeit'
+                            Write-Host "Next Run Time `t: "$task."N$([char]0x00E4)chste Laufzeit"
                             Write-Host "Last Result `t: "$task.'Letztes Ergebnis'
                             if ($task.'Status der geplanten Aufgabe' -eq 'Aktiviert'){
                                     Write-Host "Scheduled Task State `t: Enabled"

@@ -41,7 +41,7 @@ Import-Module "C:\Program Files\DataCore\SANsymphony\DataCore.Executive.Cmdlets.
 
 Connect-DcsServer -Server $ssvhostname -UserName $ssvusername -Password $ssvpassword -Connection check_mk | Out-Null
 
-# if the connection was succesfull, we´ll go on
+# if the connection was succesfull, we'll go on
 
 if($?)  {
 	# Gather all the information we need
@@ -53,7 +53,7 @@ if($?)  {
 	$serverinfo=@(get-dcsserver -server $ssvhostname)
 	$dcsports=@(get-dcsport -Machine $ssvhostname)
 
-	# Now disconnect, we´ve got everything we need
+	# Now disconnect, we've got everything we need
 
 	Disconnect-DcsServer -Connection check_mk
 

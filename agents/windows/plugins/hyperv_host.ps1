@@ -2,7 +2,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Thanks to Andreas Döhler for the contribution.
+# Thanks to Andreas Doehler for the contribution.
 
 function Get-VMGeneralInfo {
   param

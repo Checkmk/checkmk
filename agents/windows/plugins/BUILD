@@ -83,6 +83,17 @@ TO_SIGN_SCRIPTS = [
     for n in TO_SIGN_SCRIPTS
 ]
 
+# Signatures of non-ASCII scripts break on Windows, see the script header.
+sh_test(
+    name = "signed_scripts_are_ascii",
+    size = "small",
+    srcs = ["scripts/check_ascii.sh"],
+    args = ["$(rootpath %s)" % n for n in TO_SIGN_SCRIPTS] + [
+        "$(rootpaths :msi_cmk_plugin_files)",
+    ],
+    data = TO_SIGN_SCRIPTS + [":msi_cmk_plugin_files"],
+)
+
 pkg_tar(
     name = "signed_plugins",
     srcs = [":sign_" + n.split(":")[-1] for n in TO_SIGN_SCRIPTS],

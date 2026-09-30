@@ -18,7 +18,7 @@ import CmkSkeleton from 'cmk-ui-library/components/CmkSkeleton.vue'
 import { computed } from 'vue'
 
 // Matches GraphBrush's own HEIGHT, which it derives from its track and label geometry.
-const brushHeight = '71px'
+const brushHeight = '66px'
 
 // An estimate of a typical legend, roughly a header plus five rows. The real one grows with the
 // metric count, which is not known until the data arrives.
@@ -103,7 +103,7 @@ const rootStyle = computed(() => ({
 
 .graphing-graph-skeleton__brush {
   height: v-bind(brushHeight);
-  margin-top: calc(var(--spacing) * 2);
+  margin-top: var(--dimension-4);
 }
 
 .graphing-graph-skeleton__legend {

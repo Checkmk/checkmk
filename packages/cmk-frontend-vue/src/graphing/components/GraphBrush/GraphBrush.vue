@@ -46,10 +46,10 @@ const emit = defineEmits<{
 
 const DRAG_THRESHOLD_PX = 4
 
-const STRIP_TOP = 9
+const STRIP_TOP = 4
 const STRIP_H = 32
 const STRIP_BOTTOM = STRIP_TOP + STRIP_H
-const BAR_Y = 45
+const BAR_Y = STRIP_BOTTOM + 4
 const BAR_H = 8
 const TRACK_TOP = STRIP_TOP
 const TRACK_H = BAR_Y + BAR_H - TRACK_TOP

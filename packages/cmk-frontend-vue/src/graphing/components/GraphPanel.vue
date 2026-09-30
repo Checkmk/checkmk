@@ -341,12 +341,9 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_
   min-width: 0;
 }
 
-// Visible gap separating the graph from the navigator brush, matching the legend's spacing.
-// (CmkTimeSeriesGraph now shrink-wraps its full figure, so the graph's x-axis no longer
-// overflows into this space — this margin is a clean gap, not overflow compensation.)
 .graphing-graph-panel__brush {
   display: block;
-  margin-top: calc(var(--spacing) * 2);
+  margin-top: var(--dimension-4);
 }
 
 .graphing-graph-panel__plot {

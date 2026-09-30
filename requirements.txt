@@ -3601,6 +3601,7 @@ opentelemetry-api==1.44.0 \
     --hash=sha256:94b98c893a91b88657eaac1e3ba89618cdb85be6918196705354f34728b2cdef
     # via
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-ai-control-plane/dev-requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-trace/requirements.in
     #   -r packages/cmk-wsgi/requirements.in
@@ -3717,6 +3718,7 @@ opentelemetry-sdk==1.44.0 \
     --hash=sha256:df081c4c6bcfdb1211e3e86140376792643128a25f8d72d1d27675936e7e96ad
     # via
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-ai-control-plane/dev-requirements.in
     #   -r non-free/packages/cmk-mcp/dev-requirements.in
     #   -r packages/cmk-trace/requirements.in
     #   opentelemetry-container-distro

@@ -86,6 +86,7 @@ const ownedByContactGroupForm: FormSpec.CascadingSingleChoice = {
   input_hint: '',
   no_elements_text: '',
   layout: 'vertical',
+  button_group_size: 'medium',
   elements: [
     {
       name: 'contact_group',

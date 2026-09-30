@@ -137,6 +137,7 @@ const buttonGroupButtons = computed((): Array<{ label: string; value: string }> 
         <CmkToggleButtonGroup
           v-model="selectedOption"
           :options="buttonGroupButtons"
+          :size="props.spec.button_group_size"
           class="form-cascading-single-choice__button-group"
         />
       </template>

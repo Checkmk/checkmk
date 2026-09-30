@@ -179,6 +179,7 @@ const cascadingSingleChoiceFormSpec: FormSpec.CascadingSingleChoice = {
   title: 'fooTitle',
   label: 'fooLabel',
   layout: 'horizontal',
+  button_group_size: 'medium',
   help: 'fooHelp',
   validators: [],
   input_hint: null,

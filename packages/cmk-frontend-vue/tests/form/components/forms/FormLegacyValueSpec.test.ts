@@ -26,6 +26,7 @@ const spec: FormSpec.CascadingSingleChoice = {
   label: null,
   input_hint: null,
   layout: 'vertical',
+  button_group_size: 'medium',
   elements: [
     {
       name: 'builtin',

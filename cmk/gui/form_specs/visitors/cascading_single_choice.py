@@ -9,6 +9,7 @@ from typing import assert_never, override
 
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.rulesets.internal.form_specs import (
+    ButtonGroupSize,
     CascadingSingleChoiceExtended,
     CascadingSingleChoiceLayout,
 )
@@ -118,6 +119,7 @@ class CascadingSingleChoiceVisitor(
                     _available_prefill(self.form_spec.prefill, {e.name for e in self._elements})
                 ),
                 layout=_to_shared_layout(self.form_spec.layout),
+                button_group_size=_to_shared_button_group_size(self.form_spec.button_group_size),
             ),
             (selected_name, selected_vue_value),
         )
@@ -179,3 +181,15 @@ def _to_shared_layout(
             return shared_type_defs.CascadingSingleChoiceLayout.button_group
         case _:
             assert_never(layout)
+
+
+def _to_shared_button_group_size(
+    size: ButtonGroupSize,
+) -> shared_type_defs.CascadingSingleChoiceButtonGroupSize:
+    match size:
+        case ButtonGroupSize.medium:
+            return shared_type_defs.CascadingSingleChoiceButtonGroupSize.medium
+        case ButtonGroupSize.small:
+            return shared_type_defs.CascadingSingleChoiceButtonGroupSize.small
+        case _:
+            assert_never(size)

@@ -355,6 +355,7 @@ function getCascadingSingleChoice(
       }
     ],
     layout: 'vertical',
+    button_group_size: 'medium',
     ...options
   }
 }

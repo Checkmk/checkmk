@@ -7,8 +7,10 @@ from collections.abc import Sequence
 
 from cmk.gui.form_specs import DEFAULT_VALUE, get_visitor, RawDiskData, VisitorOptions
 from cmk.rulesets.internal.form_specs import (
+    ButtonGroupSize,
     CascadingSingleChoiceElementExtended,
     CascadingSingleChoiceExtended,
+    CascadingSingleChoiceLayout,
 )
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DefaultValue, FixedValue
@@ -58,3 +60,16 @@ def test_default_value_missing_from_lazy_elements_falls_back_to_input_hint() -> 
     assert value == ("", None)
     assert isinstance(schema, shared_type_defs.CascadingSingleChoice)
     assert schema.input_hint == "Please choose"
+
+
+def test_button_group_size_reaches_the_frontend() -> None:
+    spec = CascadingSingleChoiceExtended(
+        elements=_elements("a", "b"),
+        layout=CascadingSingleChoiceLayout.button_group,
+        button_group_size=ButtonGroupSize.small,
+    )
+
+    schema, _value = get_visitor(spec, _VISITOR_OPTIONS).to_vue(DEFAULT_VALUE)
+
+    assert isinstance(schema, shared_type_defs.CascadingSingleChoice)
+    assert schema.button_group_size == shared_type_defs.CascadingSingleChoiceButtonGroupSize.small

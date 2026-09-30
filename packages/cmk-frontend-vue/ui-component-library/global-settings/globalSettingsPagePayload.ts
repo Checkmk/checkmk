@@ -106,7 +106,8 @@ export const globalSettingsPagePayload = {
                                 }
                               }
                             ],
-                            layout: 'vertical'
+                            layout: 'vertical',
+                            button_group_size: 'medium'
                           },
                           element_default_value: ['alternative_explicit', ''],
                           editable_order: true,
@@ -301,7 +302,8 @@ export const globalSettingsPagePayload = {
                               }
                             }
                           ],
-                          layout: 'vertical'
+                          layout: 'vertical',
+                          button_group_size: 'medium'
                         }
                       }
                     ],
@@ -444,7 +446,8 @@ export const globalSettingsPagePayload = {
                       }
                     }
                   ],
-                  layout: 'vertical'
+                  layout: 'vertical',
+                  button_group_size: 'medium'
                 }
               },
               {

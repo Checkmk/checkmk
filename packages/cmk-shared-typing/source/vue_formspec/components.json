@@ -742,9 +742,22 @@
               "title": "CascadingSingleChoiceLayout",
               "enum": ["vertical", "horizontal", "button_group"],
               "default": "vertical"
+            },
+            "button_group_size": {
+              "title": "CascadingSingleChoiceButtonGroupSize",
+              "enum": ["medium", "small"],
+              "default": "medium"
             }
           },
-          "required": ["type", "elements", "no_elements_text", "label", "input_hint", "layout"]
+          "required": [
+            "type",
+            "elements",
+            "no_elements_text",
+            "label",
+            "input_hint",
+            "layout",
+            "button_group_size"
+          ]
         }
       ]
     },

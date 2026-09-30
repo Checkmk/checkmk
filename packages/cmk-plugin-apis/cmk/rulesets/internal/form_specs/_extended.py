@@ -69,6 +69,11 @@ class CascadingSingleChoiceLayout(StrEnum):
     button_group = "button_group"
 
 
+class ButtonGroupSize(StrEnum):
+    medium = "medium"
+    small = "small"
+
+
 @dataclass(frozen=True, kw_only=True)
 class ListExtended[ModelT](List[ModelT]):
     prefill: DefaultValue[Sequence[ModelT]]
@@ -118,6 +123,7 @@ class CascadingSingleChoiceExtended(FormSpec[tuple[str, object]]):  # type: igno
     label: Label | None = None
     prefill: DefaultValue[str] | InputHint[Title] = InputHint(Title("Please choose"))
     layout: CascadingSingleChoiceLayout = CascadingSingleChoiceLayout.vertical
+    button_group_size: ButtonGroupSize = ButtonGroupSize.medium
 
     def __post_init__(self) -> None:
         if callable(self.elements):

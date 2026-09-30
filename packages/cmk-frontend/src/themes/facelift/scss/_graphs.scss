@@ -76,13 +76,19 @@
     > table.groupheader {
       top: -$graph-page-content-padding;
       padding-left: $spacing-double;
+      margin-bottom: 0;
+      border-radius: $theme-border-radius $theme-border-radius 0 0;
     }
 
     > table.data > tbody > tr.data {
+      background-color: transparent;
+
       > td {
         --graphing-graph-header-inline-padding: 0;
 
         padding: $spacing-double;
+        background-color: $even-tr-bg-color;
+        border-radius: 0 0 $theme-border-radius $theme-border-radius;
       }
     }
   }

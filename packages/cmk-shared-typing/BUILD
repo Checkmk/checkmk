@@ -59,6 +59,8 @@ SOURCES_COMMON = [
     "product_usage_analytics.json",
     "trial_mode_selection_props.json",
     "trial_mode_selection_request.json",
+    "trial_mode_verification_request.json",
+    "trial_mode_verification_response.json",
     "two_factor_auth.json",
 ]
 

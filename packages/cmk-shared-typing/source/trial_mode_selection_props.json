@@ -4,6 +4,7 @@
   "title": "trial_mode_selection_props",
   "properties": {
     "save_url": { "type": "string" },
+    "verification_url": { "type": "string" },
     "logout_url": { "type": "string" },
     "verify_online_url": { "type": "string" },
     "verify_offline_url": { "type": "string" },
@@ -32,6 +33,7 @@
   },
   "required": [
     "save_url",
+    "verification_url",
     "logout_url",
     "verify_online_url",
     "verify_offline_url",

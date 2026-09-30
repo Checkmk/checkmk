@@ -6,6 +6,7 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="type-arg"
 
+import functools
 from collections.abc import Iterable
 from importlib import import_module
 from typing import assert_never
@@ -44,6 +45,7 @@ ENTRY_POINT_PREFIXES = dict(v2.entry_point_prefixes()) | dict(v3_unstable.entry_
 tracer = cmk.trace.get_tracer()
 
 
+@functools.lru_cache
 @tracer.instrument("load_all_plugins")
 def load_all_plugins(
     *,

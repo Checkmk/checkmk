@@ -13,8 +13,9 @@ from cmk.checkengine.plugins import AgentBasedPlugins
 @pytest.fixture(scope="session")
 def agent_based_plugins() -> Generator[AgentBasedPlugins]:
     # Local import to have faster pytest initialization
-    from cmk.base import config
+    from cmk.ccc import debug
+    from cmk.checkengine.plugin_backend import load_all_plugins
 
-    plugins = config.load_all_plugins()
+    plugins = load_all_plugins(raise_errors=debug.enabled())
     assert not plugins.errors
     yield plugins

@@ -62,6 +62,7 @@ from cmk.checkengine.parser import (
 )
 from cmk.checkengine.plugin_backend import (
     filter_relevant_raw_sections,
+    load_all_plugins,
 )
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
@@ -107,7 +108,7 @@ tracer = trace.get_tracer()
 
 
 def load_checks() -> AgentBasedPlugins:
-    plugins = config.load_all_plugins()
+    plugins = load_all_plugins(raise_errors=cmk.ccc.debug.enabled())
     if sys.stderr.isatty():
         for error_msg in plugins.errors:
             console.error(error_msg, file=sys.stderr)

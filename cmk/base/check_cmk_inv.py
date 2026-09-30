@@ -10,6 +10,7 @@ from collections.abc import Sequence
 from contextlib import suppress
 from pathlib import Path
 
+import cmk.ccc.debug
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.base import config
@@ -38,6 +39,7 @@ from cmk.checkengine.filecache import FileCacheOptions
 from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.plugin_backend import (
+    load_all_plugins,
     load_selected_plugins,
     plugin_index,
 )
@@ -289,7 +291,7 @@ def _inventory_as_check(
 
 
 def load_checks() -> AgentBasedPlugins:
-    plugins = config.load_all_plugins()
+    plugins = load_all_plugins(raise_errors=cmk.ccc.debug.enabled())
     for error_msg in plugins.errors:
         logger.error(error_msg)
     return plugins

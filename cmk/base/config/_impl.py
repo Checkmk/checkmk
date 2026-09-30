@@ -11,7 +11,6 @@
 import contextlib
 import dataclasses
 import enum
-import functools
 import itertools
 import numbers
 import os
@@ -841,24 +840,6 @@ CLUSTER_HOSTS = tuple_rulesets.CLUSTER_HOSTS
 ALL_HOSTS = tuple_rulesets.ALL_HOSTS
 ALL_SERVICES = tuple_rulesets.ALL_SERVICES
 NEGATE = tuple_rulesets.NEGATE
-
-
-# .
-#   .--Loading-------------------------------------------------------------.
-#   |                _                    _ _                              |
-#   |               | |    ___   __ _  __| (_)_ __   __ _                  |
-#   |               | |   / _ \ / _` |/ _` | | '_ \ / _` |                 |
-#   |               | |__| (_) | (_| | (_| | | | | | (_| |                 |
-#   |               |_____\___/ \__,_|\__,_|_|_| |_|\__, |                 |
-#   |                                               |___/                  |
-#   +----------------------------------------------------------------------+
-#   | Loading of check plug-ins                                            |
-#   '----------------------------------------------------------------------'
-
-
-@functools.lru_cache
-def load_all_plugins() -> AgentBasedPlugins:
-    return agent_based_register.load_all_plugins(raise_errors=cmk.ccc.debug.enabled())
 
 
 # .

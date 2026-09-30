@@ -257,6 +257,7 @@ py_library(
         "//cmk/utils",
         "//packages/cmk-ccc:config-path",
         "//packages/cmk-ccc:cpu-tracking",
+        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-check-engine:fetchers",

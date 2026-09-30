@@ -36,7 +36,9 @@ py_library(
     deps = [
         ":validate_config",
         "//cmk/base",
+        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-wsgi",
     ],
 )

@@ -16,15 +16,13 @@ from typing import assert_never
 
 from cmk.agent_based import v2 as agent_based_v2
 from cmk.agent_based import v3_unstable as agent_based_v3_unstable
-from cmk.base.config import (  # astrein: disable=cmk-module-layer-violation
-    load_all_plugins,
-)
 from cmk.ccc import debug
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import edition
 from cmk.checkengine.plugin_backend import (  # astrein: disable=cmk-module-layer-violation
     ENTRY_POINT_PREFIXES,
     extract_known_discovery_rulesets,
+    load_all_plugins,
 )
 
 # TODO: Remove suppression for layer violation?
@@ -105,7 +103,7 @@ def to_result(step: ValidationStep, errors: Sequence[str]) -> ActiveCheckResult:
 
 
 def _validate_agent_based_plugin_loading() -> tuple[AgentBasedPlugins, ActiveCheckResult]:
-    plugins = load_all_plugins()
+    plugins = load_all_plugins(raise_errors=debug.enabled())
     return plugins, to_result(ValidationStep.AGENT_BASED_PLUGINS, plugins.errors)
 
 

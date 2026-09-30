@@ -11,8 +11,9 @@ import pytest
 from flask import Flask
 from pytest_mock import MockerFixture
 
-from cmk.base import config
+from cmk.ccc import debug
 from cmk.ccc.version import edition
+from cmk.checkengine.plugin_backend import load_all_plugins
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.utils import paths
 from tests.testlib.unit.gui.common_fixtures import (
@@ -53,4 +54,4 @@ def request_context(flask_app: Flask) -> Iterator[None]:
 def agent_based_plugins() -> AgentBasedPlugins:
     """Load all check plugins, tolerating errors from non-free edition plugins unavailable
     in the community edition (e.g. missing cmk.plugins.graylog.lib)."""
-    return config.load_all_plugins()
+    return load_all_plugins(raise_errors=debug.enabled())

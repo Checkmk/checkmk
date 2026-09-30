@@ -27,11 +27,12 @@ from functools import cached_property
 from pathlib import Path
 from typing import Literal, overload
 
+import cmk.ccc.debug
 import cmk.utils.paths
 from cmk.base import config
 from cmk.base.automations.automations import load_config
 from cmk.base.base_app import CheckmkBaseApp
-from cmk.base.config import ConfigCache, load_all_plugins
+from cmk.base.config import ConfigCache
 from cmk.base.configlib.checkengine import DiscoveryConfig
 from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.configlib.servicename import (
@@ -44,6 +45,7 @@ from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.hostaddress import HostName, Hosts
 from cmk.checkengine.checking import ServiceConfigurer
 from cmk.checkengine.fetcher_utils.trigger import FetcherTrigger
+from cmk.checkengine.plugin_backend import load_all_plugins
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.ruleset_matcher.labels import LabelManager
 from cmk.ruleset_matcher.matcher import (
@@ -112,7 +114,7 @@ class AutomationEnvironment:
 
     @property
     def plugins(self) -> AgentBasedPlugins:
-        return load_all_plugins()
+        return load_all_plugins(raise_errors=cmk.ccc.debug.enabled())
 
     @property
     def loaded_config(self) -> BaseConfig:

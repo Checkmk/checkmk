@@ -161,6 +161,7 @@ from cmk.checkengine.helper_interface import AgentRawData, FetcherType, SourceTy
 from cmk.checkengine.parser import make_parser, NO_SELECTION, parse_raw_data, SectionStore
 from cmk.checkengine.plugin_backend import (
     get_check_plugin,
+    load_all_plugins,
 )
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
@@ -2667,7 +2668,7 @@ def _automation_get_check_information(
     man_page_path_map = man_pages.make_man_page_path_map(
         discover_families(raise_errors=cmk.ccc.debug.enabled()), PluginGroup.CHECKMAN.value
     )
-    plugins = config.load_all_plugins()
+    plugins = load_all_plugins(raise_errors=cmk.ccc.debug.enabled())
 
     plugin_infos: dict[str, dict[str, object]] = {}
     for plugin in plugins.check_plugins.values():
@@ -2708,7 +2709,7 @@ def _automation_get_section_information(
     _state: CommonState,
     args: object,  # noqa: ARG001
 ) -> GetSectionInformationResult:
-    plugins = config.load_all_plugins()
+    plugins = load_all_plugins(raise_errors=cmk.ccc.debug.enabled())
     section_infos = {
         str(section_name): {
             # for now, we need only these two.
@@ -4167,7 +4168,7 @@ def _automation_find_unknown_check_parameter_rule_sets(
     state: CommonState,
     args: list[str],  # noqa: ARG001
 ) -> UnknownCheckParameterRuleSetsResult:
-    plugins = config.load_all_plugins()
+    plugins = load_all_plugins(raise_errors=cmk.ccc.debug.enabled())
     loaded_config = state.loading_result or load_config()
     known_check_rule_sets = {
         str(plugin.check_ruleset_name)

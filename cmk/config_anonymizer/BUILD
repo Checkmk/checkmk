@@ -23,6 +23,7 @@ py_library(
         "//cmk/gui/watolib:groups_io",
         "//cmk/utils",
         "//cmk/utils:redis",
+        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",

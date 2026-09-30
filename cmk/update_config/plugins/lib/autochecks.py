@@ -6,11 +6,10 @@
 from collections.abc import Callable, Generator, Iterable, Mapping
 from dataclasses import dataclass
 
-from cmk.base.config import load_all_plugins
 from cmk.ccc import debug
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery import AutochecksStore
-from cmk.checkengine.plugin_backend import get_check_plugin
+from cmk.checkengine.plugin_backend import get_check_plugin, load_all_plugins
 from cmk.checkengine.plugins import AutocheckEntry, CheckPlugin, CheckPluginName
 from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
@@ -85,7 +84,7 @@ def rewrite_yielding_errors(tree: FolderTree, *, write: bool) -> Iterable[Rewrit
     to ensure consistency.
     """
     all_rulesets = AllRulesets.load_all_rulesets(tree)
-    plugins = load_all_plugins()
+    plugins = load_all_plugins(raise_errors=debug.enabled())
     for hostname in _autocheck_hosts():
         fixed_autochecks = yield from _get_fixed_autochecks(
             hostname, all_rulesets, plugins.check_plugins

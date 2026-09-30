@@ -147,9 +147,9 @@ def clear_caches_per_function() -> Generator[None]:
 @pytest.fixture(scope="session")
 def agent_based_plugins(tmp_path_factory: pytest.TempPathFactory) -> Generator[AgentBasedPlugins]:
     # Local import to have faster pytest initialization
-    from cmk.base import config
+    from cmk.checkengine.plugin_backend import load_all_plugins
 
-    plugins = config.load_all_plugins()
+    plugins = load_all_plugins(raise_errors=cmk.ccc.debug.enabled())
     assert not plugins.errors
     yield plugins
 

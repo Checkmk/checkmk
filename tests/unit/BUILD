@@ -19,6 +19,7 @@ py_library(
     ],
     deps = [
         "//cmk/base",
+        "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-licensing",
         "//packages/cmk-livestatus-client:py_livestatus",

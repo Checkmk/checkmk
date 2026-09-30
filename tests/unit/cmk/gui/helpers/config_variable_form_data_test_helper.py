@@ -14,6 +14,7 @@ apply, see generate_config_variable_tests."""
 # mypy: disable-error-code="explicit-any"
 
 import datetime
+import functools
 import json
 import pprint
 from collections.abc import Callable, Iterator, Mapping
@@ -23,8 +24,8 @@ from typing import Any, ClassVar
 
 import pytest
 
-import cmk.base.default_config
 import cmk.utils.paths
+from cmk.base.config import get_default_config
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
@@ -134,16 +135,20 @@ class NoFactoryDefault:
 ENVIRONMENT_DERIVED_DEFAULT_DOMAINS = frozenset({"apache", "rrdcached", "omd"})
 
 
+@functools.cache
+def _core_default_config() -> Mapping[str, object]:
+    return get_default_config()
+
+
 def factory_default_disk_value(config_variable: ConfigVariable) -> object:
     """The value the GUI shows for a variable nobody has ever saved: the
     factory default of the variable's primary config domain. ConfigDomainCore
     asks the site via the get-configuration automation, whose result is the
-    module-level default config of cmk.base (see _automation_get_configuration
-    in cmk.base.automations.check_mk); the unit test reads that module
-    directly."""
+    default config of cmk.base (see _automation_get_configuration in
+    cmk.base.automations.check_mk); the unit test reads it directly."""
     domain = config_variable.primary_domain()
     if isinstance(domain, ConfigDomainCore):
-        value = getattr(cmk.base.default_config, config_variable.ident(), NoFactoryDefault())
+        value = _core_default_config().get(config_variable.ident(), NoFactoryDefault())
         return NoFactoryDefault() if callable(value) else value
     if domain.ident() in ENVIRONMENT_DERIVED_DEFAULT_DOMAINS:
         return NoFactoryDefault()

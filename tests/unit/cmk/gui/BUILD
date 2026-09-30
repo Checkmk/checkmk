@@ -34,9 +34,6 @@ py_library(
     testonly = True,
     srcs = glob(["helpers/**/*.py"]),
     imports = ["../../../.."],
-    tags = [
-        "deballast-keep=//cmk/base/config",  # provides cmk.base.default_config, whose own target is private to cmk/base
-    ],
     visibility = [
         "//tests/unit/cmk/gui:__subpackages__",
         "//tests/unit/cmk/update_config:__subpackages__",  # FIXME

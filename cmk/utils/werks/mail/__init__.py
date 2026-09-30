@@ -17,6 +17,7 @@ from email.message import EmailMessage
 from pathlib import Path
 from typing import NamedTuple
 
+from git.diff import Diff
 from git.exc import BadName, GitCommandError
 from git.objects.blob import Blob
 from git.objects.commit import Commit
@@ -205,6 +206,16 @@ def _is_werks_path(path: str | None) -> bool:
     return re.match(r".werks/\d+", path) is not None
 
 
+def _a_file(diff: Diff) -> File:
+    assert diff.a_path is not None and isinstance(diff.a_blob, Blob)
+    return File.new(diff.a_path, diff.a_blob)
+
+
+def _b_file(diff: Diff) -> File:
+    assert diff.b_path is not None and isinstance(diff.b_blob, Blob)
+    return File.new(diff.b_path, diff.b_blob)
+
+
 def get_change(commit: Commit) -> WerkCommit | None:
     def _collect():
         for diff in commit.parents[0].diff(commit):
@@ -215,27 +226,28 @@ def get_change(commit: Commit) -> WerkCommit | None:
 
             if diff.renamed_file:
                 if a_is_werk:
-                    yield WerkRemoved(File.new(diff.a_path, diff.a_blob))
+                    yield WerkRemoved(_a_file(diff))
                 if b_is_werk:
-                    yield WerkAdded(File.new(diff.b_path, diff.b_blob))
+                    yield WerkAdded(_b_file(diff))
             elif diff.deleted_file:
                 if a_is_werk:
-                    yield WerkRemoved(File.new(diff.a_path, diff.a_blob))
+                    yield WerkRemoved(_a_file(diff))
             elif diff.new_file:
                 if b_is_werk:
-                    yield WerkAdded(File.new(diff.b_path, diff.b_blob))
+                    yield WerkAdded(_b_file(diff))
             elif diff.copied_file:
                 if b_is_werk:
-                    yield WerkAdded(File.new(diff.b_path, diff.b_blob))
+                    yield WerkAdded(_b_file(diff))
             else:
                 assert diff.b_path == diff.a_path
+                b_file = _b_file(diff)
                 werk_diff = "\n".join(
                     difflib.ndiff(
-                        diff.a_blob.data_stream.read().decode("utf-8").split("\n"),
-                        diff.b_blob.data_stream.read().decode("utf-8").split("\n"),
+                        _a_file(diff).content.split("\n"),
+                        b_file.content.split("\n"),
                     )
                 )
-                yield WerkModified(File.new(diff.b_path, diff.b_blob), werk_diff)
+                yield WerkModified(b_file, werk_diff)
 
     werk_changes = list(_collect())
     if werk_changes:

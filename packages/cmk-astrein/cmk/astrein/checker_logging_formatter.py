@@ -38,8 +38,9 @@ _DICT_CONFIG_FORMAT_KEYS = frozenset({"format", "fmt", "datefmt", "class"})
 class LoggingFormatterChecker(ASTVisitorChecker):
     """Requires every log handler to format via ``cmk.ccc.log.CMKFormatter``.
 
-    Constructing a ``logging.Formatter``, or handing a format to ``logging.basicConfig``
-    or a ``dictConfig`` mapping, lets a component's log lines drift from the shared format.
+    Constructing a ``logging.Formatter``, handing a format to ``logging.basicConfig``, or
+    building a ``dictConfig`` formatter from anything but ``CMKFormatter`` lets a
+    component's log lines drift from the shared format.
 
     Naming ``logging.Formatter`` in annotations or ``isinstance`` checks is fine: the rule
     bans constructing a formatter, not the type.
@@ -137,11 +138,14 @@ class LoggingFormatterChecker(ASTVisitorChecker):
         for formatter in formatters.values:
             if not isinstance(formatter, ast.Dict):
                 continue
-            keys = _string_keyed_entries(formatter).keys()
-            if "()" not in keys or keys & _DICT_CONFIG_FORMAT_KEYS:
+            formatter_entries = _string_keyed_entries(formatter)
+            if (
+                not _names_cmk_formatter(formatter_entries.get("()"))
+                or formatter_entries.keys() & _DICT_CONFIG_FORMAT_KEYS
+            ):
                 self.add_error(
-                    "dictConfig formatters must be built by cmk.ccc.log.CMKFormatter: use "
-                    '"()": "cmk.ccc.log.CMKFormatter" (or a subclass of it) and drop the '
+                    "dictConfig formatters must be built by cmk.ccc.log.CMKFormatter: import "
+                    'the class, pass it as "()": CMKFormatter and drop the '
                     "format/fmt/datefmt/class keys.",
                     formatter,
                 )
@@ -174,6 +178,13 @@ class LoggingFormatterChecker(ASTVisitorChecker):
         return node.name == _CMKFORMATTER_NAME and self._relative_path() == PurePosixPath(
             _CMKFORMATTER_DEFINITION
         )
+
+
+def _names_cmk_formatter(node: ast.expr | None) -> bool:
+    # A dotted-path string resolves only at runtime, so it would hide a rename of the class.
+    if isinstance(node, ast.Name):
+        return node.id == _CMKFORMATTER_NAME
+    return isinstance(node, ast.Attribute) and node.attr == _CMKFORMATTER_NAME
 
 
 def _string_keyed_entries(node: ast.Dict) -> dict[str, ast.expr]:

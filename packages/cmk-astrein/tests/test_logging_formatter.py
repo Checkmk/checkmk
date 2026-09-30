@@ -159,18 +159,32 @@ _UVICORN_LOG_CONFIG = (
     "cfg = {\n"
     '    "version": 1,\n'
     '    "formatters": {\n'
-    '        "default": {"()": "uvicorn.logging.DefaultFormatter", "fmt": "%(message)s"},\n'
+    '        "default": {"()": uvicorn.logging.DefaultFormatter, "fmt": "%(message)s"},\n'
     '        "access": {"format": "%(asctime)s %(message)s"},\n'
-    '        "ours": {"()": "cmk.ccc.log.CMKFormatter", "with_process": True},\n'
+    '        "ours": {"()": CMKFormatter, "with_process": True},\n'
     "    },\n"
     "}"
 )
 
 
-def test_rejects_dict_config_formatters_with_format_or_without_factory() -> None:
+def test_anchors_errors_to_the_offending_dict_config_formatters() -> None:
     errors = _check(_UVICORN_LOG_CONFIG)
     assert [e.line for e in errors] == [4, 5]
-    assert all('"()": "cmk.ccc.log.CMKFormatter"' in e.message for e in errors)
+
+
+@pytest.mark.parametrize(
+    "formatter",
+    [
+        pytest.param('{"format": "%(message)s"}', id="no_factory"),
+        pytest.param('{"()": CMKFormatter, "fmt": "%(message)s"}', id="format_key"),
+        pytest.param('{"()": "cmk.ccc.log.CMKFormatter"}', id="dotted_path_string"),
+        pytest.param('{"()": uvicorn.logging.DefaultFormatter}', id="other_class"),
+    ],
+)
+def test_rejects_dict_config_formatter_not_built_by_cmk_formatter(formatter: str) -> None:
+    errors = _check(f'd = {{"version": 1, "formatters": {{"f": {formatter}}}}}')
+    assert len(errors) == 1
+    assert '"()": CMKFormatter' in errors[0].message
 
 
 @pytest.mark.parametrize(
@@ -179,6 +193,10 @@ def test_rejects_dict_config_formatters_with_format_or_without_factory() -> None
         pytest.param(
             'd = {"version": 1, "formatters": {"ours": {"()": CMKFormatter, "legacy": True}}}',
             id="factory_only",
+        ),
+        pytest.param(
+            'd = {"version": 1, "formatters": {"ours": {"()": log.CMKFormatter}}}',
+            id="factory_via_module",
         ),
         pytest.param('d = {"version": 1, "handlers": {}}', id="no_formatters"),
         pytest.param('d = {"formatters": {"a": {"format": "x"}}}', id="no_version"),

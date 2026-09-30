@@ -61,6 +61,13 @@ Flags are read in many processes, and many of them, like the GUI registration
 below, read a flag only once at startup. On activate changes the whole site
 is restarted for experimental flags.
 
+Distributed setups
+------------------
+
+Distributed setups are not supported yet. The flags are not synced to remote
+sites, so remote sites always run with the default flags. Changing a flag on the
+central site only affects the central site.
+
 Usage
 =====
 

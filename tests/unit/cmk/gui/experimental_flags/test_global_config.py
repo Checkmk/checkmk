@@ -17,7 +17,6 @@ from cmk.gui.watolib.config_domain_name import (
     config_variable_group_registry,
     config_variable_registry,
 )
-from cmk.gui.watolib.config_sync import replication_path_registry
 from tests.testlib.unit.gui.global_settings import patch_factory_defaults, shown_variables
 
 FLAG_NAMES = set(ExperimentalFlagConfig.model_fields)
@@ -41,7 +40,6 @@ def _register(*, show_in_global_settings: bool) -> None:
         config_domain_registry,
         config_variable_registry,
         config_variable_group_registry,
-        replication_path_registry,
         show_in_global_settings=show_in_global_settings,
     )
 

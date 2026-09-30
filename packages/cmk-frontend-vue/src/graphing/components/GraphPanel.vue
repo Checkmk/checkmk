@@ -205,6 +205,12 @@ const plotLeft = ref(CANVAS_MARGIN_LEFT)
 const valueResolution = ref<number | null>(null)
 watch(valueResolution, (resolution) => emit('update:valueResolution', resolution))
 const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_INSET_X)
+
+const legendAlignedWithPlot = computed(() =>
+  props.legendPosition === 'bottom'
+    ? { marginLeft: `${plotLeft.value}px`, width: `calc(100% - ${plotLeft.value}px)` }
+    : undefined
+)
 </script>
 
 <template>
@@ -305,6 +311,7 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_
         v-if="showLegend"
         class="graphing-graph-panel__legend"
         :class="{ 'graphing-graph-panel__legend--below-brush': interaction.brush === 'enabled' }"
+        :style="legendAlignedWithPlot"
         :metrics="legendMetrics"
         :horizontal-lines="horizontalLines ?? []"
         :shaded-regions="shadedRegions ?? []"

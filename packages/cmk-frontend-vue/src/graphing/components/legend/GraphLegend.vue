@@ -4,8 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
+import ArrowDown from 'cmk-ui-library/components/graphics/ArrowDown.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import useId from 'cmk-ui-library/lib/useId'
 import { computed, ref } from 'vue'
@@ -92,14 +92,12 @@ const scrollMaxHeight = computed(() => {
 })
 
 const displayMetrics = computed(() => orderMetricsTopToBottom(props.metrics))
-const allHidden = computed(
-  () =>
-    props.metrics.length > 0 &&
-    props.metrics.every((m) => props.hiddenMetricNames.includes(m.metadata.name))
+const anyMetricHidden = computed(() =>
+  props.metrics.some((m) => props.hiddenMetricNames.includes(m.metadata.name))
 )
 
 function toggleAll() {
-  if (allHidden.value) {
+  if (anyMetricHidden.value) {
     emit('update:hiddenMetricNames', [])
   } else {
     emit(
@@ -157,8 +155,8 @@ function toggleLine(name: string) {
           <tr class="graphing-graph-legend__header-row">
             <th class="graphing-graph-legend__header--eye">
               <GraphLegendEyeButton
-                :hidden="allHidden"
-                :title="allHidden ? _t('Show all') : _t('Hide all')"
+                :hidden="anyMetricHidden"
+                :title="anyMetricHidden ? _t('Show all') : _t('Hide all')"
                 @toggle="toggleAll"
               />
             </th>
@@ -166,7 +164,7 @@ function toggleLine(name: string) {
               <div class="graphing-graph-legend__header-meta">
                 <button
                   class="graphing-graph-legend__metric-count-btn"
-                  :title="allHidden ? _t('Show all metrics') : _t('Hide all metrics')"
+                  :title="anyMetricHidden ? _t('Show all metrics') : _t('Hide all metrics')"
                   @click="toggleAll"
                 >
                   {{ visibilityLabel }}
@@ -211,17 +209,20 @@ function toggleLine(name: string) {
                   <span class="graphing-graph-legend__title" :title="m.metadata.title">
                     {{ m.metadata.title }}
                   </span>
-                  <CmkIconButton
+                  <button
                     v-if="hasAttributes(m)"
+                    type="button"
                     class="graphing-graph-legend__attributes-toggle"
-                    :name="showsAttributes(m) ? 'chevron-up' : 'chevron-down'"
-                    primary-color="font"
-                    size="small"
+                    :class="{
+                      'graphing-graph-legend__attributes-toggle--expanded': showsAttributes(m)
+                    }"
                     :aria-expanded="showsAttributes(m)"
                     :aria-controls="attributesId(index)"
                     :aria-label="_t('Toggle attributes of %{metric}', { metric: m.metadata.title })"
                     @click="toggleAttributes(m.metadata.name)"
-                  />
+                  >
+                    <ArrowDown />
+                  </button>
                 </div>
               </td>
               <td class="graphing-graph-legend__stat">
@@ -360,13 +361,12 @@ function toggleLine(name: string) {
 }
 
 .graphing-graph-legend__metric-count-btn {
-  font-weight: var(--font-weight-bold);
+  font-weight: inherit;
   background: none;
   border: none;
   padding: 0;
   cursor: pointer;
   color: var(--font-color);
-  text-decoration: underline;
   font-size: inherit;
 
   &:hover {
@@ -390,7 +390,7 @@ function toggleLine(name: string) {
 .graphing-graph-legend__line-row td {
   position: sticky;
   bottom: 0;
-  background: var(--ux-theme-3);
+  background: var(--ux-theme-2);
 }
 
 .graphing-graph-legend__line-row:first-child td {
@@ -441,6 +441,19 @@ function toggleLine(name: string) {
 
 .graphing-graph-legend__attributes-toggle {
   flex: 0 0 auto;
+  display: flex;
+  width: var(--dimension-4);
+  height: var(--dimension-3);
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.graphing-graph-legend__attributes-toggle--expanded {
+  transform: rotate(180deg);
 }
 
 .graphing-graph-legend td.graphing-graph-legend__attributes {

@@ -93,6 +93,7 @@ bazel_env(
         "msiinfo": "@msitools//:msiinfo",
         "osslsigncode": "@osslsigncode",
         "pnpm": "@pnpm",
+        "psign": "@psign",
         "uv": "@multitool//tools/uv",
         "genhtml": "@lcov//:genhtml",
     },

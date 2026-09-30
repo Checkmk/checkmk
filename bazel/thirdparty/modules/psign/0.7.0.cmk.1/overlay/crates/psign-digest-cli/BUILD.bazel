@@ -1,0 +1,30 @@
+load("@psign_crates//:defs.bzl", "aliases", "all_crate_deps")
+load("@rules_rust//rust:defs.bzl", "rust_library")
+load("//:psign.bzl", "PSIGN_EDITION", "PSIGN_VERSION")
+
+exports_files(["Cargo.toml"])
+
+rust_library(
+    name = "psign-digest-cli",
+    # lib.rs include!s main.rs
+    srcs = glob(["src/**/*.rs"]),
+    aliases = aliases(),
+    crate_features = [
+        "artifact-signing-rest",
+        "azure-kv-sign-portable",
+        "default",
+        "timestamp-http",
+    ],
+    crate_name = "psign_digest_cli",
+    edition = PSIGN_EDITION,
+    proc_macro_deps = all_crate_deps(proc_macro = True),
+    version = PSIGN_VERSION,
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps() + [
+        "//crates/psign-authenticode-trust",
+        "//crates/psign-azure-kv-rest",
+        "//crates/psign-codesigning-rest",
+        "//crates/psign-opc-sign",
+        "//crates/psign-sip-digest",
+    ],
+)

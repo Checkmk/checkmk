@@ -44,11 +44,13 @@ const { _t } = usei18n()
 
 const legacyInstallTitle = _t('Install the legacy Checkmk agent')
 
-const toggleButtonOptions: PackageOptions = [
+const toggleButtonOptions = computed<PackageOptions>(() => [
   { label: 'RPM', value: 'rpm' },
   { label: 'DEB', value: 'deb' },
-  { label: 'TGZ', value: 'tgz' }
-]
+  ...(props.agentInstallCmds.linux_tgz && props.unbakedFallback === null
+    ? [{ label: 'TGZ', value: 'tgz' } as const]
+    : [])
+])
 const emit = defineEmits(['close'])
 const close = () => {
   emit('close')
@@ -89,7 +91,10 @@ const linuxUnbakedFallback = computed<UnbakedFallback | undefined>(() =>
     ? undefined
     : {
         intro: props.unbakedFallback.intro,
-        commands: props.unbakedFallback.commands.map((cmd) => replaceMacros(cmd, false))
+        commands: {
+          linux_deb: replaceMacros(props.unbakedFallback.commands.linux_deb, false),
+          linux_rpm: replaceMacros(props.unbakedFallback.commands.linux_rpm, false)
+        }
       }
 )
 
@@ -171,7 +176,7 @@ const tabs = computed<AgentSlideOutTabs[]>(() => [
     ),
     registrationCmd: replaceMacros(props.agentRegistrationCmds.linux, true),
     statusCmd: props.agentStatusCmds.linux,
-    toggleButtonOptions: toggleButtonOptions
+    toggleButtonOptions: toggleButtonOptions.value
   },
   {
     id: 'solaris',

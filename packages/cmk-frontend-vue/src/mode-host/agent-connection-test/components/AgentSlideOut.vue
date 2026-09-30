@@ -299,9 +299,11 @@ function getInitStep() {
                     {{ tab.unbakedFallback.intro }}
                   </CmkAlertBox>
                   <CmkCode
-                    v-for="cmd in tab.unbakedFallback.commands"
-                    :key="cmd"
-                    :code_txt="cmd"
+                    :code_txt="
+                      model === packageFormatRpm
+                        ? tab.unbakedFallback.commands.linux_rpm
+                        : tab.unbakedFallback.commands.linux_deb
+                    "
                     class="code"
                     width="fill"
                   />

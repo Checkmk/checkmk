@@ -34,12 +34,17 @@
       "type": "object",
       "properties": {
         "intro": { "type": "string" },
-        "commands": {
-          "type": "array",
-          "items": { "type": "string" }
-        }
+        "commands": { "$ref": "#/$defs/unbaked_fallback_commands" }
       },
       "required": ["intro", "commands"]
+    },
+    "unbaked_fallback_commands": {
+      "type": "object",
+      "properties": {
+        "linux_deb": { "type": "string" },
+        "linux_rpm": { "type": "string" }
+      },
+      "required": ["linux_deb", "linux_rpm"]
     },
     "agent_install_cmds": {
       "type": "object",

@@ -13,7 +13,7 @@ from cmk.gui.config import Config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.permissions import PermissionRegistry
-from cmk.gui.utils.agent import raw_linux_agent_wget_commands
+from cmk.gui.utils.agent import raw_linux_agent_commands
 from cmk.gui.utils.urls import doc_reference_url, DocReference, DocReferenceUtm
 from cmk.shared_typing.agent_slideout import (
     AgentInstallCmds,
@@ -176,7 +176,7 @@ def _community_unbaked_fallback(available: bool, version: str) -> UnbakedFallbac
         return None
     return UnbakedFallback(
         intro=_("Use the following command to download an agent package in basic configuration:"),
-        commands=raw_linux_agent_wget_commands(version),
+        commands=raw_linux_agent_commands(version),
     )
 
 

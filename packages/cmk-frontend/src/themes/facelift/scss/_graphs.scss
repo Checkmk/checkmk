@@ -80,6 +80,10 @@
       border-radius: $theme-border-radius $theme-border-radius 0 0;
     }
 
+    > table.data + table.groupheader {
+      margin-top: $spacing-double;
+    }
+
     > table.data > tbody > tr.data {
       background-color: transparent;
 

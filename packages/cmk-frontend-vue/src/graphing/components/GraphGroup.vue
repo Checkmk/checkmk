@@ -396,7 +396,7 @@ function onRetry(): void {
 
 .graphing-graph-group--column {
   flex-direction: column;
-  gap: calc(var(--spacing) * 4);
+  gap: var(--dimension-7);
 }
 
 // Fixed-width panels flow left-to-right and wrap into columns as the container width allows.

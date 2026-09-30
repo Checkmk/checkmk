@@ -6,9 +6,7 @@
 import sys
 
 from cmk.base import config
-from cmk.ccc import debug
 from cmk.ccc.version import edition as get_edition
-from cmk.checkengine.plugin_backend import load_all_plugins
 from cmk.gui import main_modules
 from cmk.gui.config import active_config
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
@@ -28,9 +26,6 @@ def main() -> int:
             return 1
 
         with disable_redis(), gui_context():
-            load_all_plugins(raise_errors=debug.enabled())
-            # Watch out: always load the plugins before loading the config.
-            # The validation step will not be executed otherwise.
             config.load(validate_hosts=True)
 
             result = validate_mk_files(make_folder_tree(active_config))

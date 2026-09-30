@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
+import tempfile
 from pathlib import Path
 from typing import Final
 from urllib.parse import quote as urlquote
@@ -58,6 +59,9 @@ class Storage:
         """
         Write text content to the storage.
 
+        The content is replaced atomically: a concurrent `read` returns either the
+        previous or the new content, never a partially written one.
+
         Args:
             key: The unique key to identify the content. It will be sanitized and used as file name.
                 After url quoting, the key must not be longer than 255 characters, otherwise a ValueError is raised.
@@ -68,7 +72,15 @@ class Storage:
         """
         path = self._get_path(key)
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content)
+        # The "%t" prefix can never be the result of URL quoting, so the temporary
+        # file never collides with a key. The replace stays inside the with, so any
+        # exception deletes the temp file instead.
+        with tempfile.NamedTemporaryFile(
+            "w", dir=path.parent, prefix="%tmp", delete_on_close=False
+        ) as tmp:
+            tmp.write(content)
+            tmp.close()
+            os.replace(tmp.name, path)
 
     def unset(self, key: str) -> None:
         """

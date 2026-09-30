@@ -68,6 +68,19 @@ class TestStorage:
         for key, expected_value in expected.items():
             assert storage.read(key, "default") == expected_value
 
+    def test_write_overwrites_existing_key(self) -> None:
+        storage = Storage(TEST_AGENT, TEST_HOST)
+        storage.write("key", "old")
+        storage.write("key", "new")
+        assert storage.read("key", None) == "new"
+
+    def test_write_leaves_no_temporary_files(self, tmp_path: Path) -> None:
+        storage = Storage(TEST_AGENT, TEST_HOST)
+        storage.write("key1", "value1")
+        storage.write("key1", "value2")
+        storage.write("key2", "value3")
+        assert sorted(p.name for p in tmp_path.rglob("*") if p.is_file()) == ["key1", "key2"]
+
     def test_unset(self) -> None:
         storage = Storage(TEST_AGENT, TEST_HOST)
         value = "hello, persistent world"

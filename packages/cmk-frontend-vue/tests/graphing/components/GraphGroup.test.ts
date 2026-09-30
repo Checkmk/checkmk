@@ -772,21 +772,19 @@ test('announces one message for the group rather than one per panel', async () =
   expect(screen.getAllByRole('alert')).toHaveLength(1)
 })
 
-test('derives the effective width from #main_page_content as container.right - group.left - 20', async () => {
+test('derives the effective width from #main_page_content as container.right - group.left', async () => {
   containerRight = 1_000
   groupLeft = 100
   const { container: containerA } = renderGroup()
   const panelA = await within(containerA as HTMLElement).findByTestId('graph-panel')
-  // 1000 (container right) - 100 (group left) - 20 (inset) = 880.
-  expect(panelA.getAttribute('data-figure-width')).toBe('880')
+  expect(panelA.getAttribute('data-figure-width')).toBe('900')
 
   // same for a different set of container width and left inset
   containerRight = 1_600
   groupLeft = 40
   const { container: containerB } = renderGroup()
   const panelB = await within(containerB as HTMLElement).findByTestId('graph-panel')
-  // 1600 - 40 - 20 = 1540.
-  expect(panelB.getAttribute('data-figure-width')).toBe('1540')
+  expect(panelB.getAttribute('data-figure-width')).toBe('1560')
 })
 
 test('clamps the derived width to zero rather than going negative when the container is narrower than the inset', async () => {

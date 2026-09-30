@@ -62,8 +62,7 @@
   }
 
   > div#main_page_content {
-    padding-top: $graph-page-content-padding;
-    padding-left: $spacing;
+    padding: $graph-page-content-padding;
   }
 
   div#data_container > div#row_info:first-child {

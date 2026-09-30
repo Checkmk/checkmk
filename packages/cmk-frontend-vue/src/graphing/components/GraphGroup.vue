@@ -82,6 +82,38 @@ const props = withDefaults(
 const groupEl = ref<HTMLElement | null>(null)
 const availableWidth = ref(0)
 
+function pixels(length: string): number {
+  return parseFloat(length) || 0
+}
+
+function contentRightEdge(element: HTMLElement): number {
+  const style = getComputedStyle(element)
+  const borderRight = pixels(style.borderRightWidth)
+  const scrollbarWidth = Math.max(
+    0,
+    element.offsetWidth - element.clientLeft - element.clientWidth - borderRight
+  )
+  return (
+    element.getBoundingClientRect().right -
+    borderRight -
+    scrollbarWidth -
+    pixels(style.paddingRight)
+  )
+}
+
+function rightInsetWithin(descendant: HTMLElement, ancestor: HTMLElement): number {
+  let inset = 0
+  for (
+    let element = descendant.parentElement;
+    element && element !== ancestor;
+    element = element.parentElement
+  ) {
+    const style = getComputedStyle(element)
+    inset += pixels(style.paddingRight) + pixels(style.borderRightWidth) + pixels(style.marginRight)
+  }
+  return inset
+}
+
 // Without figure_width the graphs fill the page, so the width comes from #main_page_content or
 // the document element as a fallback for view widget rendering (iframe, no #main_page_content)
 if (props.figure_width === undefined) {
@@ -95,7 +127,9 @@ if (props.figure_width === undefined) {
     }
     availableWidth.value = Math.max(
       0,
-      container.getBoundingClientRect().right - group.getBoundingClientRect().left - 20
+      contentRightEdge(container) -
+        group.getBoundingClientRect().left -
+        rightInsetWithin(group, container)
     )
   }
 

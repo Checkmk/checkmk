@@ -152,6 +152,7 @@
     --dashed-border-color: var(--color-mid-grey-20);
     --sticky-header-border-color: var(--color-mid-grey-10);
     --shared-dashboard-indicator-background: var(--color-daylight-grey-30);
+    --ai-purple: var(--color-purple-60);
 
     /* Form Labels Colors */
     --tag-color: var(--color-cyan-80);
@@ -310,6 +311,7 @@
     --dashed-border-color: var(--color-mid-grey-80);
     --sticky-header-border-color: var(--color-mid-grey-100);
     --shared-dashboard-indicator-background: var(--color-midnight-grey-100);
+    --ai-purple: var(--color-purple-50);
 
     /* Form Labels Colors */
     --tag-color: var(--color-cyan-80);

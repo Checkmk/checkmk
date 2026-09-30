@@ -38,10 +38,11 @@ const item: NavToggleItemType = {
   hint: 'Open the AI assistant'
 }
 
-function openState() {
+function openState(highlight?: NavToggle['highlight']) {
   const open = ref(false)
   const navToggle: NavToggle = {
     icon: 'sidebar',
+    ...(highlight !== undefined && { highlight }),
     isActive: () => open.value,
     toggle: () => {
       open.value = !open.value
@@ -93,6 +94,18 @@ describe('NavToggleItem', () => {
 
     expect(open.value).toBe(true)
     expect(swallowed).toBe(true)
+  })
+
+  test('highlights itself in the AI colour when its toggle asks for it', () => {
+    renderToggle(openState('ai').navToggle)
+
+    expect(screen.getByRole('listitem')).toHaveClass('mm-nav-toggle-item__li--highlight-ai')
+  })
+
+  test('highlights itself in the default colour when its toggle asks for none', () => {
+    renderToggle(openState().navToggle)
+
+    expect(screen.getByRole('listitem')).not.toHaveClass('mm-nav-toggle-item__li--highlight-ai')
   })
 
   test('unmounting frees its shortcut key', () => {

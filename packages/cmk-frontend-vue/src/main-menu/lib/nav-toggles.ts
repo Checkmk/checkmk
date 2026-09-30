@@ -9,6 +9,7 @@ import { shallowReactive } from 'vue'
 
 export interface NavToggle {
   icon: OneColorIcons
+  highlight?: 'default' | 'ai'
   isActive: () => boolean
   toggle: () => void
 }

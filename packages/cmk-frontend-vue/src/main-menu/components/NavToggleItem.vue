@@ -7,7 +7,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { NavToggleItem } from 'cmk-shared-typing/typescript/main_menu'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
-import type { CmkMultitoneIconColor } from 'cmk-ui-library/components/CmkIcon/types'
 import CmkKeyboardKey from 'cmk-ui-library/components/CmkKeyboardKey.vue'
 import { computed, onBeforeUnmount } from 'vue'
 
@@ -28,10 +27,6 @@ const unregisterShortcut = mainMenu.registerToggleShortcut(props.item, () =>
 onBeforeUnmount(unregisterShortcut)
 
 const active = computed(() => props.navToggle.isActive())
-
-const color = computed<CmkMultitoneIconColor>(() => {
-  return (active.value ? 'success' : 'font') as CmkMultitoneIconColor
-})
 </script>
 
 <template>
@@ -40,14 +35,15 @@ const color = computed<CmkMultitoneIconColor>(() => {
     class="mm-nav-toggle-item__li"
     :class="{
       'mm-nav-toggle-item__li--active': active,
-      'mm-nav-toggle-item__li--small': hideItemTitle
+      'mm-nav-toggle-item__li--small': hideItemTitle,
+      'mm-nav-toggle-item__li--highlight-ai': navToggle.highlight === 'ai'
     }"
     :title="item.hint || item.title"
   >
     <button type="button" :aria-pressed="active" @click="navToggle.toggle()">
       <CmkMultitoneIcon
         :name="navToggle.icon"
-        :primary-color="color"
+        :primary-color="{ custom: 'currentColor' }"
         size="large"
         class="mm-nav-toggle-item__icon"
       />
@@ -71,8 +67,15 @@ const color = computed<CmkMultitoneIconColor>(() => {
   display: flex;
   box-sizing: border-box;
 
-  &:hover {
-    border-left-color: var(--success);
+  --mm-nav-toggle-item-active-color: var(--success);
+
+  &.mm-nav-toggle-item__li--highlight-ai {
+    --mm-nav-toggle-item-active-color: var(--ai-purple);
+  }
+
+  &:hover,
+  &.mm-nav-toggle-item__li--active {
+    border-left-color: var(--mm-nav-toggle-item-active-color);
   }
 
   button {
@@ -104,10 +107,8 @@ const color = computed<CmkMultitoneIconColor>(() => {
     }
   }
 
-  &.mm-nav-toggle-item__li--active {
-    button {
-      color: var(--success);
-    }
+  &.mm-nav-toggle-item__li--active button {
+    color: var(--mm-nav-toggle-item-active-color);
   }
 
   &.mm-nav-toggle-item__li--small {

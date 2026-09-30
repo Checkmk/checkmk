@@ -6,6 +6,74 @@
 
 /* Stylesheets for graphs */
 
+/* stylelint-disable selector-id-pattern */
+#content_area:has(> cmk-global-time-picker):has(table.boxlayout.graph) {
+  padding-left: 0;
+
+  > div#top_heading,
+  > cmk-global-time-picker {
+    display: block;
+    box-sizing: border-box;
+    background-color: $graph-page-header-bg-color;
+  }
+
+  > div#top_heading {
+    padding: 0 $spacing-double;
+  }
+
+  > cmk-global-time-picker {
+    --graphing-global-time-picker-padding-bottom: var(--dimension-6);
+
+    padding-left: $titlebar-spacing-horizontal;
+    border-bottom: 1px solid $graph-page-header-border-color;
+  }
+
+  div#top_heading div.titlebar,
+  div#top_heading table.menubar,
+  div#top_heading tr#suggestions {
+    background-color: transparent;
+  }
+
+  div#top_heading table.menubar {
+    padding-bottom: 0;
+
+    td.menues,
+    td.menues div.menucontainer,
+    td.inpage_search,
+    td.shortcuts,
+    td.icon_container {
+      background-color: $graph-page-menu-bar-bg-color;
+    }
+
+    td.menues div.menucontainer,
+    td.inpage_search {
+      border-bottom-color: $graph-page-menu-bar-bg-color;
+    }
+
+    td.menues {
+      padding-left: var(--dimension-5);
+    }
+
+    td.shortcuts {
+      padding-right: var(--dimension-5);
+    }
+  }
+
+  > div#main_page_content {
+    padding-left: $spacing;
+  }
+
+  div#top_heading tr#suggestions td {
+    padding-bottom: 0;
+
+    div.suggestion {
+      margin-bottom: 0;
+    }
+  }
+}
+
+/* stylelint-enable selector-id-pattern */
+
 /* The error placeholder from render_graph_error_html is the only server-rendered
    "graph" box left; it used to take its frame from the legacy div.graph rule. */
 div.graph.brokengraph {

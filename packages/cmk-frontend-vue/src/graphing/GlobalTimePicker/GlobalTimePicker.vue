@@ -157,6 +157,7 @@ watch(activePresetId, (value) => {
   margin: 0;
   padding: var(--dimension-7);
   padding-right: var(--dimension-4);
+  padding-bottom: var(--graphing-global-time-picker-padding-bottom, var(--dimension-7));
   border: none;
   border-radius: var(--border-radius);
   background: none;
@@ -210,7 +211,7 @@ watch(activePresetId, (value) => {
   height: var(--dimension-10);
 
   /* align with the trigger's bottom padding */
-  margin-bottom: var(--dimension-7);
+  margin-bottom: var(--graphing-global-time-picker-padding-bottom, var(--dimension-7));
 }
 
 .graphing-global-time-picker--disabled .graphing-global-time-picker__band {

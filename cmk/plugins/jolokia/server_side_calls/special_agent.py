@@ -29,7 +29,7 @@ class Params(BaseModel):
 
 def _get_login_options(login: Login | None) -> tuple[()] | tuple[str, str, str, Secret, str, str]:
     return (
-        ("--user", login.user, "--password", login.password.unsafe(), "--mode", login.mode)
+        ("--user", login.user, "--password-id", login.password, "--mode", login.mode)
         if login
         else ()
     )

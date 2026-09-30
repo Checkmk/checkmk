@@ -86,6 +86,7 @@ py_library(
         "//packages/cmk-livestatus-client",
         "//packages/cmk-logwatch:config",
         "//packages/cmk-logwatch:plugins",
+        "//packages/cmk-maps:registration",
         "//packages/cmk-messaging",
         "//packages/cmk-mkp-tool",
         "//packages/cmk-plugin-apis:agent_based",

@@ -6,6 +6,9 @@ py_library(
     name = "conftest",
     testonly = True,
     srcs = ["conftest.py"],
+    tags = [
+        "deballast-keep=//packages/cmk-maps:registration",  # loaded by cmk.gui.main_modules.register via _FEATURE_PLUGIN_MODULES, which the GUI tests expect
+    ],
     visibility = ["//tests/unit/cmk/gui:__subpackages__"],
     deps = [
         "//cmk/gui:auth",
@@ -17,6 +20,7 @@ py_library(
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:password_store",
         "//packages/cmk-livestatus-client",
+        "//packages/cmk-maps:registration",
         "//tests/testlib/unit",
         requirement("flask"),
         requirement("pytest"),

@@ -699,9 +699,6 @@ py_library(
         "rulespec.py",
     ],
     imports = ["../.."],
-    tags = [
-        "deballast-keep=//packages/cmk-maps:registration",  # loaded at runtime via _FEATURE_PLUGIN_MODULES in cmk.gui.main_modules
-    ],
     visibility = [
         "//cmk:__subpackages__",
         "//non-free/packages/cmk-agent-registration-extended:__pkg__",
@@ -780,7 +777,6 @@ py_library(
         "//packages/cmk-backup:gui",
         "//packages/cmk-ccc:version",
         "//packages/cmk-licensing",
-        "//packages/cmk-maps:registration",
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-trace",

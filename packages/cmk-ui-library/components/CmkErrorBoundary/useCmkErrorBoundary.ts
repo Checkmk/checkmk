@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { StaleSession } from 'cmk-ui-library/lib/staleSession'
 import { type Component, type Ref, getCurrentInstance, h, onErrorCaptured, ref } from 'vue'
 
 import CmkErrorBoundary from './CmkErrorBoundary.vue'
@@ -35,12 +36,17 @@ export function useCmkErrorBoundary(): {
   const crashReport = ref<CrashReportState>({ status: 'none' })
   const component = currentComponentName()
   onErrorCaptured((err: Error, _instance, info: string): boolean => {
-    console.error(err)
     // Replacing a shown error re-renders what shows it; if that fails too, it would loop forever.
     if (error.value !== null) {
+      console.error(err)
       return false
     }
     error.value = err
+    if (StaleSession.caused(err)) {
+      crashReport.value = { status: 'none' }
+      return false
+    }
+    console.error(err)
     crashReport.value = { status: 'storing' }
     void crashReportApi
       .report(err, component, info)

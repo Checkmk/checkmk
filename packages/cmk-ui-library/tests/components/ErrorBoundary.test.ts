@@ -7,6 +7,7 @@ import { fireEvent, render, screen } from '@testing-library/vue'
 import { useCmkErrorBoundary } from 'cmk-ui-library/components/CmkErrorBoundary'
 import { CmkError } from 'cmk-ui-library/lib/error.ts'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
+import { StaleSessionError } from 'cmk-ui-library/lib/staleSession'
 import { defineComponent } from 'vue'
 
 const CRASH_REPORT_URL = '/domain-types/javascript_crash_report/collections/all'
@@ -237,4 +238,45 @@ test('CmkErrorBoundary keeps the first error when rendering it fails again', asy
   spy.mockRestore()
 
   screen.getAllByText('the first error', { exact: false })
+})
+
+function renderStaleSessionComponent(error: Error) {
+  const testComponent = defineComponent({
+    name: 'StaleSessionComponent',
+    setup() {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      const { CmkErrorBoundary } = useCmkErrorBoundary()
+      function throwError() {
+        throw error
+      }
+      return { CmkErrorBoundary, throwError }
+    },
+    template: `
+      <component :is=CmkErrorBoundary>
+        <button @click="throwError()">throw</button>
+      </component>
+    `
+  })
+
+  render(testComponent)
+}
+
+test('CmkErrorBoundary shows a stale session without reporting it', async () => {
+  renderStaleSessionComponent(new StaleSessionError('ajax_poll.py'))
+
+  await fireEvent.click(screen.getByRole<HTMLButtonElement>('button', { name: 'throw' }))
+
+  await screen.findByText('Your session has expired. Please log in again.')
+  expect(postSpy).not.toHaveBeenCalled()
+})
+
+test('CmkErrorBoundary does not report a stale session wrapped in another error', async () => {
+  renderStaleSessionComponent(
+    new CmkError('Could not load the data', new StaleSessionError('ajax_poll.py'))
+  )
+
+  await fireEvent.click(screen.getByRole<HTMLButtonElement>('button', { name: 'throw' }))
+
+  await screen.findByText('Could not load the data')
+  expect(postSpy).not.toHaveBeenCalled()
 })

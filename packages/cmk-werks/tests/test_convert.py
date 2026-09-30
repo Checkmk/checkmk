@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import pytest
+
 from cmk.werks.tool.convert import werkv1_to_werkv2
 
 WERK_V1_SIMPLE = """Title: Simple Title
@@ -89,6 +91,9 @@ C+:
 code
 C-:
 
+NL: first
+OM:omd start
+RP:reboot
 
 LI: check_mk_agent.aix
 LI: check_mk_agent.freebsd
@@ -133,6 +138,9 @@ content
 code
 ```
 
+1. first
+OMD[mysite]:~$ omd start
+root@linux:~# reboot
 
 * check_mk_agent.aix
 * check_mk_agent.freebsd
@@ -149,3 +157,25 @@ def test_roundtrip() -> None:
     werk2, werk_id = werkv1_to_werkv2(WERK_V1_SIMPLE, 1234)
     assert werk_id == 1234
     assert werk2 == WERK_V1_SIMPLE_RESULT
+
+
+def test_a_v1_werk_without_compatibility_is_converted_as_compatible() -> None:
+    werk_v1 = WERK_V1_SIMPLE.replace("Compatible: compat\n", "")
+
+    werk_v2, _werk_id = werkv1_to_werkv2(werk_v1, 1234)
+
+    assert "compatible | yes\n" in werk_v2
+
+
+def test_a_v1_werk_with_an_unknown_compatibility_is_rejected() -> None:
+    werk_v1 = WERK_V1_SIMPLE.replace("Compatible: compat\n", "Compatible: maybe\n")
+
+    with pytest.raises(ValueError, match="got 'maybe'"):
+        werkv1_to_werkv2(werk_v1, 1234)
+
+
+def test_a_v1_line_without_a_key_is_rejected() -> None:
+    werk_v1 = WERK_V1_SIMPLE.replace("Class: fix\n", "Class fix\n")
+
+    with pytest.raises(RuntimeError, match="Can not parse line 'Class fix' of werk 1234"):
+        werkv1_to_werkv2(werk_v1, 1234)

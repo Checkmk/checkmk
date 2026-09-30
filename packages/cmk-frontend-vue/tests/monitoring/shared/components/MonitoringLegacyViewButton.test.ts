@@ -23,3 +23,9 @@ test('navigates to the legacy view on click', async () => {
 
   expect(assign).toHaveBeenCalledWith(PROPS.url)
 })
+
+test('keeps the full title as tooltip for when the text is collapsed on small screens', () => {
+  render(MonitoringLegacyViewButton, { props: PROPS })
+
+  expect(screen.getByRole('button', { name: /classic view/ })).toHaveAttribute('title', PROPS.title)
+})

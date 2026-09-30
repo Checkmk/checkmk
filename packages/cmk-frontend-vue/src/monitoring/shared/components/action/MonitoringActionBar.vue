@@ -6,11 +6,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
 
 import ActionIcon from '@/monitoring/shared/components/cell/ActionIcon.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
+
+const { _t } = usei18n()
 
 const props = defineProps<{
   selectedCount: number
@@ -26,6 +29,9 @@ const props = defineProps<{
 const emit = defineEmits<{
   (event: 'action', action: CellAction): void
 }>()
+
+/** Shorter form of the selection label for very narrow containers. */
+const shortSelectionLabel = computed(() => _t('Selected: %{count}', { count: props.selectedCount }))
 
 const disabled = computed(() => props.selectedCount === 0)
 
@@ -45,7 +51,10 @@ function select(action: CellAction): void {
     :aria-label="label"
     :aria-disabled="disabled"
   >
-    <span class="monitoring-action-bar__selection" aria-live="polite">{{ selectionLabel }}</span>
+    <span class="monitoring-action-bar__selection" aria-live="polite">
+      <span class="monitoring-action-bar__selection-long">{{ selectionLabel }}</span>
+      <span class="monitoring-action-bar__selection-short">{{ shortSelectionLabel }}</span>
+    </span>
     <div class="monitoring-action-bar__actions">
       <CmkButton
         v-for="action in actions"
@@ -59,15 +68,19 @@ function select(action: CellAction): void {
         @click="select(action)"
       >
         <ActionIcon :icon="action.icon" />
-        {{ action.label }}
+        <span class="monitoring-action-bar__label">{{ action.label }}</span>
       </CmkButton>
     </div>
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+@use '@/assets/breakpoints' as bp;
+
 .monitoring-action-bar {
+  box-sizing: border-box;
   display: flex;
+  min-width: 0;
   align-items: center;
   gap: var(--spacing);
   padding: var(--dimension-3) var(--dimension-4);
@@ -82,11 +95,39 @@ function select(action: CellAction): void {
 
 .monitoring-action-bar__selection {
   flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .monitoring-action-bar__action {
   /* CmkButton only spaces icon from label for its `icon` prop, and the icon comes via the slot. */
   gap: var(--dimension-4);
+  position: relative;
+  white-space: nowrap;
+}
+
+/* Inside a container narrower than S only the icon is shown; the label stays available to
+   assistive technology (and as tooltip via the button title). */
+.monitoring-action-bar__selection-short {
+  display: none;
+}
+
+@include bp.container-below(s) {
+  .monitoring-action-bar__selection-short {
+    display: inline;
+  }
+
+  .monitoring-action-bar__selection-long {
+    display: none;
+  }
+
+  .monitoring-action-bar__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 
 .monitoring-action-bar__actions {

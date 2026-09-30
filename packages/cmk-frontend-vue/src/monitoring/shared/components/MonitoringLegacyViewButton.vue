@@ -22,19 +22,39 @@ function navigate(): void {
   <CmkButton
     class="monitoring-legacy-view-button"
     :size="isDefault ? 'medium' : 'small'"
+    :title="title"
     @click="navigate"
   >
     <CmkIcon name="back" class="monitoring-legacy-view-button__icon" />
-    {{ title }}
+    <span class="monitoring-legacy-view-button__label">{{ title }}</span>
   </CmkButton>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+@use '@/assets/breakpoints' as bp;
+
 .monitoring-legacy-view-button {
+  position: relative;
   white-space: nowrap;
 }
 
 .monitoring-legacy-view-button__icon {
   margin-right: var(--dimension-3);
+}
+
+/* Icon only when the title row is narrower than L (see MonitoringHeaderActions), the title stays
+   available as tooltip. */
+@include bp.container-below(l) {
+  .monitoring-legacy-view-button__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .monitoring-legacy-view-button__icon {
+    margin-right: 0;
+  }
 }
 </style>

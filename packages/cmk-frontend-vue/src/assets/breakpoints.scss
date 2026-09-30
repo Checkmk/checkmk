@@ -19,6 +19,7 @@
  *   .my-grid {
  *     @include bp.container-up(m) { ... }   // component-level @container query
  *     @include bp.viewport-up(l)  { ... }   // page-shell @media query
+ *     @include bp.container-below(s) { ... } // narrower than s; never matches without a container
  *   }
  *
  *   .my-card {
@@ -52,6 +53,14 @@ $breakpoints: (
 
 @mixin container-up($name) {
   @container (min-width: #{map.get($breakpoints, $name)}) {
+    @content;
+  }
+}
+
+/* Matches only inside a container narrower than the breakpoint. Without a container ancestor the
+   query is unknown and does not match, so components keep their full layout outside of one. */
+@mixin container-below($name) {
+  @container (width < #{map.get($breakpoints, $name)}) {
     @content;
   }
 }

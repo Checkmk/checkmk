@@ -12,15 +12,36 @@ const { _t } = usei18n()
 const props = withDefaults(defineProps<{ total?: number }>(), { total: 0 })
 
 const label = computed(() => _t('Total rows: %{total}', { total: props.total }))
+const shortLabel = computed(() => _t('Total: %{total}', { total: props.total }))
 </script>
 
 <template>
-  <p v-if="total > 0" class="monitoring-total-count">{{ label }}</p>
+  <p v-if="total > 0" class="monitoring-total-count">
+    <span class="monitoring-total-count__long">{{ label }}</span>
+    <span class="monitoring-total-count__short">{{ shortLabel }}</span>
+  </p>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+@use '@/assets/breakpoints' as bp;
+
 .monitoring-total-count {
   margin: 0;
   white-space: nowrap;
+}
+
+.monitoring-total-count__short {
+  display: none;
+}
+
+/* Inside a container narrower than S the label is shortened to "Total: N". */
+@include bp.container-below(s) {
+  .monitoring-total-count__long {
+    display: none;
+  }
+
+  .monitoring-total-count__short {
+    display: inline;
+  }
 }
 </style>

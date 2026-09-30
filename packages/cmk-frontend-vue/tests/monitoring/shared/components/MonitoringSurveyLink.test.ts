@@ -17,3 +17,12 @@ test('points at the survey and opens it in a new tab', () => {
   expect(link).toHaveAttribute('href', SURVEY_URL)
   expect(link).toHaveAttribute('target', '_blank')
 })
+
+test('keeps the full label as tooltip for when the text is collapsed on small screens', () => {
+  render(MonitoringSurveyLink, { props: { url: SURVEY_URL } })
+
+  expect(screen.getByRole('link', { name: /Give feedback/ })).toHaveAttribute(
+    'title',
+    'Give feedback on the new view'
+  )
+})

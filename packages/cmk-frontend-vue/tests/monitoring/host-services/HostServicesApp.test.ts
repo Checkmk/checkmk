@@ -33,7 +33,7 @@ let servicesPost: any
 let host: ApiHostEntry
 
 beforeEach(() => {
-  document.body.innerHTML = '<div class="titlebar"></div>'
+  document.body.innerHTML = '<div class="titlebar"><div class="titlebar-main"></div></div>'
   postSpy = vi.spyOn(client, 'POST')
   servicesPost = vi.fn()
   host = makeApiHost()
@@ -450,7 +450,7 @@ test('resetting all filters also turns off the unhandled-problems chip', async (
   renderApp()
 
   await userEvent.click(await screen.findByRole('button', { name: 'Unhandled service problems' }))
-  await userEvent.click(screen.getByRole('button', { name: 'Reset all filters' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Reset search and filters' }))
 
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
@@ -496,7 +496,7 @@ test('resetting all filters restores the full, unfiltered list', async () => {
     })
   )
 
-  await userEvent.click(screen.getByRole('button', { name: 'Reset all filters' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Reset search and filters' }))
 
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',

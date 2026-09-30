@@ -127,6 +127,9 @@ function clear(): void {
 
 .cmk-search-input__field {
   flex: 1 1 auto;
+
+  /* Avoid text overflow when reducing the width of the container. */
+  min-width: 0;
   height: 100%;
   margin: 0 var(--dimension-4) 0 0;
   padding: 0;

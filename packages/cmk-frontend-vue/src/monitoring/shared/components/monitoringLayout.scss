@@ -1,0 +1,12 @@
+/**
+ * Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+
+/* Smallest supported content width of the monitoring views; below it the app scrolls
+   horizontally as a whole instead of overlapping elements. */
+$min-content-width: 333px;
+
+/* Height of CmkSearchInput, which the toolbar's end group has to stay level with. */
+$search-input-height: 30px;

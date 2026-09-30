@@ -189,23 +189,27 @@ function onRightPaneCollapse(collapsed: boolean): void {
             @action="onBulkAction"
           />
           <div class="monitoring-split-pane__table-toolbar-end">
-            <MonitoringTotalCount :total="service.total.value" />
-            <MonitoringLimitSelector />
-            <ColumnPicker />
-            <CmkButton
-              variant="optional"
-              size="iconOnly"
-              :title="_t('Modify display options')"
-              :aria-label="_t('Modify display options')"
-              @click="toggleDisplayOptions"
-            >
-              <CmkMultitoneIcon
-                name="display-options"
-                primary-color="font"
-                :secondary-color="{ custom: 'var(--font-color-dimmed)' }"
-                size="small"
-              />
-            </CmkButton>
+            <div class="monitoring-split-pane__table-toolbar-stats">
+              <MonitoringTotalCount :total="service.total.value" />
+              <MonitoringLimitSelector />
+            </div>
+            <div class="monitoring-split-pane__table-toolbar-controls">
+              <ColumnPicker />
+              <CmkButton
+                variant="optional"
+                size="iconOnly"
+                :title="_t('Modify display options')"
+                :aria-label="_t('Modify display options')"
+                @click="toggleDisplayOptions"
+              >
+                <CmkMultitoneIcon
+                  name="display-options"
+                  primary-color="font"
+                  :secondary-color="{ custom: 'var(--font-color-dimmed)' }"
+                  size="small"
+                />
+              </CmkButton>
+            </div>
           </div>
         </div>
         <MonitoringTable
@@ -255,19 +259,29 @@ function onRightPaneCollapse(collapsed: boolean): void {
   </CmkSplitPane>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+@use '@/assets/breakpoints' as bp;
+@use './monitoringLayout' as layout;
+
 .monitoring-split-pane {
   flex: 1 1 auto;
   min-height: 0;
 }
 
 .monitoring-split-pane__left-pane {
+  /* Below this content width the toolbar can no longer keep the action bar and the total/limit
+     controls apart, so the pane stops shrinking and the panel scrolls horizontally instead. */
   box-sizing: border-box;
+  min-width: layout.$min-content-width;
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
   padding: 0 var(--dimension-5);
+
+  /* The panel is resized by dragging the split handle or opening the right pane, so the
+     responsive layout of the toolbar below must follow this element, not the viewport. */
+  container-type: inline-size;
 }
 
 .monitoring-split-pane__results-count {
@@ -288,8 +302,11 @@ function onRightPaneCollapse(collapsed: boolean): void {
   margin-bottom: var(--spacing);
 }
 
+/* The action bar and the end group always share one line: the bar gives way (its buttons wrap
+   and collapse to icons), the end group keeps its size. */
 .monitoring-split-pane__action-bar {
   flex: 0 1 auto;
+  min-width: 0;
 }
 
 .monitoring-split-pane__table-toolbar-end {
@@ -302,15 +319,28 @@ function onRightPaneCollapse(collapsed: boolean): void {
   margin-left: auto;
 }
 
-.monitoring-split-pane__table-toolbar-end > :last-child {
-  margin-left: calc(var(--dimension-3) - var(--table-toolbar-separator-gap) * 2);
+.monitoring-split-pane__table-toolbar-stats,
+.monitoring-split-pane__table-toolbar-controls {
+  display: flex;
+  align-items: center;
 }
 
-.monitoring-split-pane__table-toolbar-end > :not(:first-child, :last-child) {
+.monitoring-split-pane__table-toolbar-stats {
+  gap: calc(var(--table-toolbar-separator-gap) * 2);
+}
+
+.monitoring-split-pane__table-toolbar-controls {
+  gap: var(--dimension-3);
+}
+
+/* Separators between the total count, the row limit and the controls. */
+.monitoring-split-pane__table-toolbar-stats > :not(:first-child),
+.monitoring-split-pane__table-toolbar-controls > :first-child {
   position: relative;
 }
 
-.monitoring-split-pane__table-toolbar-end > :not(:first-child, :last-child)::before {
+.monitoring-split-pane__table-toolbar-stats > :not(:first-child)::before,
+.monitoring-split-pane__table-toolbar-controls > :first-child::before {
   content: '';
   position: absolute;
   top: 50%;
@@ -318,5 +348,20 @@ function onRightPaneCollapse(collapsed: boolean): void {
   height: var(--dimension-7);
   transform: translateY(-50%);
   border-left: 1px solid var(--font-color-dimmed);
+}
+
+/* M and smaller: the column picker and the display options button break onto their own row below
+   the total count and the row limit, and the group only takes the width of its widest row. */
+@include bp.container-below(l) {
+  .monitoring-split-pane__table-toolbar-end {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--spacing);
+  }
+
+  /* The picker now starts a row, so it needs no separator. */
+  .monitoring-split-pane__table-toolbar-controls > :first-child::before {
+    display: none;
+  }
 }
 </style>

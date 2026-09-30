@@ -14,6 +14,9 @@ let shortcuts: HTMLElement
 beforeEach(() => {
   titlebar = document.createElement('div')
   titlebar.className = 'titlebar'
+  const titlebarMain = document.createElement('div')
+  titlebarMain.className = 'titlebar-main'
+  titlebar.append(titlebarMain)
   const pageMenuBar = document.createElement('div')
   pageMenuBar.id = 'page_menu_bar'
   shortcuts = document.createElement('div')
@@ -64,4 +67,26 @@ test('keeps all actions together in one box', () => {
 
   expect(box).toContainElement(screen.getByRole('button', { name: 'back to legacy' }))
   expect(shortcuts).toContainElement(box)
+})
+
+test('marks the page heading while the actions sit in the title bar', () => {
+  const heading = document.createElement('div')
+  heading.id = 'top_heading'
+  document.body.append(heading)
+
+  const { unmount } = render(MonitoringHeaderActions)
+  expect(heading).toHaveClass('monitoring-header-actions-host')
+
+  unmount()
+  expect(heading).not.toHaveClass('monitoring-header-actions-host')
+})
+
+test('leaves the page heading alone when the actions go elsewhere', () => {
+  const heading = document.createElement('div')
+  heading.id = 'top_heading'
+  document.body.append(heading)
+
+  render(MonitoringHeaderActions, { props: { teleportTarget: '#page_menu_bar .shortcuts' } })
+
+  expect(heading).not.toHaveClass('monitoring-header-actions-host')
 })

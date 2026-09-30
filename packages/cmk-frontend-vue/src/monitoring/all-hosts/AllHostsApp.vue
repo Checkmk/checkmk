@@ -419,6 +419,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
 <style scoped>
 .monitoring-all-hosts-app {
   position: relative;
+  overflow-x: auto;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;

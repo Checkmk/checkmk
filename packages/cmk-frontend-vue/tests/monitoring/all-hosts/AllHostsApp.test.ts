@@ -20,7 +20,7 @@ import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 let postSpy: any
 
 beforeEach(() => {
-  document.body.innerHTML = '<div class="titlebar"></div>'
+  document.body.innerHTML = '<div class="titlebar"><div class="titlebar-main"></div></div>'
   postSpy = vi.spyOn(client, 'POST')
 })
 

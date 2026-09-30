@@ -96,3 +96,18 @@ test('does not emit for a disabled action even when hosts are selected', async (
 
   expect(emitted('action')).toBeUndefined()
 })
+
+test('keeps each action label as tooltip for when only the icon is shown in narrow containers', () => {
+  mountBar({ selectedCount: 1 })
+
+  expect(screen.getByRole('button', { name: 'Reschedule check' })).toHaveAttribute(
+    'title',
+    'Reschedule check'
+  )
+})
+
+test('offers a short selection label for narrow containers', () => {
+  mountBar({ selectedCount: 3 })
+
+  expect(screen.getByText('Selected: 3')).toBeInTheDocument()
+})

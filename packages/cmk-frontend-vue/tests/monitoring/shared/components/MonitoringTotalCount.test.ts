@@ -13,6 +13,12 @@ test('shows the total row count', () => {
   expect(screen.getByText('Total rows: 5151')).toBeInTheDocument()
 })
 
+test('offers a short count for narrow containers', () => {
+  render(MonitoringTotalCount, { props: { total: 5151 } })
+
+  expect(screen.getByText('Total: 5151')).toBeInTheDocument()
+})
+
 test('shows nothing when there are no rows at all', () => {
   const { container } = render(MonitoringTotalCount, { props: { total: 0 } })
 

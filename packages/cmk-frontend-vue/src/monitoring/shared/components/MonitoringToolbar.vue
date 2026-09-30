@@ -57,8 +57,13 @@ defineExpose({
             @deactivate="service.deactivateQuickFilter(chip)"
           />
         </div>
-        <CmkButton variant="text" size="small" @click="service.clearAllFilters()">
-          {{ _t('Reset all filters') }}
+        <CmkButton
+          variant="text"
+          size="small"
+          class="monitoring-toolbar__reset"
+          @click="service.clearAllFilters()"
+        >
+          {{ _t('Reset search and filters') }}
         </CmkButton>
       </div>
       <div class="monitoring-toolbar__end">
@@ -75,7 +80,10 @@ defineExpose({
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+@use '@/assets/breakpoints' as bp;
+@use './monitoringLayout' as layout;
+
 .monitoring-toolbar {
   box-sizing: border-box;
   display: flex;
@@ -85,17 +93,28 @@ defineExpose({
   padding: var(--dimension-4) var(--dimension-5);
   background: var(--ux-theme-2);
   border-bottom: 1px solid var(--sticky-header-border-color);
+
+  /* The filter row below reflows with the width of the toolbar. */
+  container-type: inline-size;
+
+  /* Narrower than this the app root scrolls horizontally instead of the countdown overlapping
+     the search. */
+  min-width: layout.$min-content-width;
 }
 
 .monitoring-toolbar__controls {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: var(--spacing);
 }
 
 .monitoring-toolbar__filters {
   display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
   align-items: center;
+  min-width: 0;
   gap: var(--spacing);
 }
 
@@ -103,17 +122,48 @@ defineExpose({
   display: flex;
   flex: 0 0 auto;
   align-items: center;
+  /* Keeps the countdown level with the search input, however many rows the filters wrap to. */
+  min-height: layout.$search-input-height;
   gap: var(--spacing);
 }
 
 .monitoring-toolbar__search {
-  flex: 1;
-  max-width: 360px;
+  flex: 0 1 360px;
+  /* Keeps the search field and its button usable when the filter row gets squeezed. */
+  min-width: 10em;
+}
+
+.monitoring-toolbar__reset {
+  white-space: nowrap;
 }
 
 .monitoring-toolbar__quick-filters {
   display: flex;
   flex-wrap: wrap;
   gap: var(--dimension-4);
+  white-space: nowrap;
+}
+
+/* Narrower than M: the quick filters and the reset button move below the search, which keeps
+   its width (an empty full-width item forces the line break). Narrower than S: the reset
+   button moves below the filters. */
+@include bp.container-below(m) {
+  .monitoring-toolbar__filters::before {
+    content: '';
+    order: 1;
+    flex-basis: 100%;
+    height: 0;
+  }
+
+  .monitoring-toolbar__quick-filters,
+  .monitoring-toolbar__reset {
+    order: 2;
+  }
+}
+
+@include bp.container-below(s) {
+  .monitoring-toolbar__quick-filters {
+    flex-basis: 100%;
+  }
 }
 </style>

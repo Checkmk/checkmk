@@ -38,7 +38,7 @@ def top_heading(
 
     writer.open_div(id_="top_heading")
     writer.open_div(class_="titlebar")
-    writer.open_div()
+    writer.open_div(class_="titlebar-main")
 
     if breadcrumb:
         BreadcrumbRenderer().show(breadcrumb)

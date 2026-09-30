@@ -82,6 +82,7 @@ from cmk.gui.rule_specs.legacy_converter import convert_to_legacy_valuespec
 from cmk.gui.search.matchers import (
     ABCMatchItemGenerator,
     MatchItem,
+    MatchItemConfig,
     MatchItemGeneratorRegistry,
     MatchItems,
 )
@@ -4793,7 +4794,9 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
 
 class MatchItemGeneratorNotificationParameter(ABCMatchItemGenerator):
     @override
-    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
+    def generate_match_items(
+        self, user_permissions: UserPermissions, _config: MatchItemConfig
+    ) -> MatchItems:
         for script_name, script_title in notification_script_choices():
             title = _("%(script_title)s") % {"script_title": script_title}
             yield MatchItem(

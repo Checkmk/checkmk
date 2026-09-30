@@ -105,7 +105,6 @@ from cmk.gui.watolib.hosts_and_folders import (
     collect_all_hosts,
     folder_from_request,
     folder_preserving_link,
-    folder_tree,
     FolderTree,
     Host,
     host_url_resolver,
@@ -161,9 +160,7 @@ def register(
     page_registry.register(
         PageEndpoint("wato_ajax_agent_receiver_port", PageAjaxAgentReceiverPort())
     )
-    match_item_generator_registry.register(
-        MatchItemGeneratorHosts("hosts", lambda: collect_all_hosts(folder_tree()))
-    )
+    match_item_generator_registry.register(MatchItemGeneratorHosts("hosts", collect_all_hosts))
 
 
 class UpdateDnsCacheLoadingContainer:

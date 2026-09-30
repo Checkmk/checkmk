@@ -36,7 +36,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import userdb
-from cmk.gui.config import get_default_config, make_config_object
+from cmk.gui.config import Config, get_default_config, make_config_object
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import Request
 from cmk.gui.logged_in import (
@@ -46,7 +46,7 @@ from cmk.gui.logged_in import (
     UserDefaultConfig,
 )
 from cmk.gui.logged_in import user as logged_in_user
-from cmk.gui.search.matchers import MatchItem
+from cmk.gui.search.matchers import MatchItem, MatchItemConfig
 from cmk.gui.utils.host_relations import RelationLink, relations_or_empty
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import hosts_and_folders
@@ -57,6 +57,7 @@ from cmk.gui.watolib.host_attributes import HostAttributes, HostContactGroupSpec
 from cmk.gui.watolib.host_match_item_generator import MatchItemGeneratorHosts
 from cmk.gui.watolib.hosts_and_folders import (
     all_folder_title_paths,
+    collect_all_hosts,
     EffectiveAttributes,
     Folder,
     folder_title_path,
@@ -886,7 +887,7 @@ def test_match_item_generator_hosts() -> None:
     assert list(
         MatchItemGeneratorHosts(
             HostName("hosts"),
-            lambda: {
+            lambda _tree: {
                 HostName("host"): {
                     "edit_url": "some_url",
                     "alias": "alias",
@@ -897,7 +898,9 @@ def test_match_item_generator_hosts() -> None:
                     "path": "",
                 },
             },
-        ).generate_match_items(UserPermissions({}, {}, {}, []))
+        ).generate_match_items(
+            UserPermissions({}, {}, {}, []), MatchItemConfig.from_config(Config())
+        )
     ) == [
         MatchItem(
             title="host",
@@ -906,6 +909,24 @@ def test_match_item_generator_hosts() -> None:
             match_texts=["host", "alias", "1.2.3.4", "5.6.7.8"],
         )
     ]
+
+
+def test_match_item_generator_hosts_finds_the_hosts_as_the_index_build_reads_them(
+    tree: FolderTree,
+) -> None:
+    """The index job builds its own tree, so it sees the hosts added since it started."""
+    tree.root_folder().create_hosts(
+        [(HostName("added"), {}, None)],
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+
+    items = MatchItemGeneratorHosts(HostName("hosts"), collect_all_hosts).generate_match_items(
+        UserPermissions({}, {}, {}, []), MatchItemConfig.from_config(Config())
+    )
+
+    assert [item.title for item in items] == ["added"]
 
 
 @dataclass

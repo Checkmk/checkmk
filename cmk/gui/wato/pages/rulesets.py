@@ -75,6 +75,7 @@ from cmk.gui.quick_setup.html import (
 from cmk.gui.search.matchers import (
     ABCMatchItemGenerator,
     MatchItem,
+    MatchItemConfig,
     MatchItemGeneratorRegistry,
     MatchItems,
 )
@@ -3665,7 +3666,9 @@ def _get_rule_render_mode() -> RenderMode:
 
 class MatchItemGeneratorUnknownRuleSets(ABCMatchItemGenerator):
     @override
-    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
+    def generate_match_items(
+        self, user_permissions: UserPermissions, _config: MatchItemConfig
+    ) -> MatchItems:
         yield MatchItem(
             title=_("Unknown rule sets"),
             topic=_("Setup"),

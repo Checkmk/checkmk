@@ -12,13 +12,14 @@ import pytest
 from pytest import MonkeyPatch
 
 import cmk.gui.watolib.rulespecs
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
 from cmk.gui.plugins.wato.utils import TimeperiodValuespec
 from cmk.gui.rule_specs.legacy_converter import GENERATED_GROUP_PREFIX
-from cmk.gui.search.matchers import MatchItem
+from cmk.gui.search.matchers import MatchItem, MatchItemConfig
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
 from cmk.gui.watolib.main_menu import main_module_registry
@@ -334,7 +335,11 @@ def test_match_item_generator_rules() -> None:
         rulespec_group_reg,
         rulespec_reg,
     )
-    assert list(match_item_generator.generate_match_items(UserPermissions({}, {}, {}, []))) == [
+    assert list(
+        match_item_generator.generate_match_items(
+            UserPermissions({}, {}, {}, []), MatchItemConfig.from_config(Config())
+        )
+    ) == [
         MatchItem(
             title="Title",
             topic="Rulespec Group",
@@ -469,7 +474,9 @@ def test_match_item_generator_rules_follows_a_language_switch(monkeypatch: Monke
     def titles() -> list[str]:
         return [
             item.title
-            for item in match_item_generator.generate_match_items(UserPermissions({}, {}, {}, []))
+            for item in match_item_generator.generate_match_items(
+                UserPermissions({}, {}, {}, []), MatchItemConfig.from_config(Config())
+            )
         ]
 
     assert titles() == ["Title en"]

@@ -7,7 +7,7 @@ from collections.abc import Callable, Iterable
 from typing import Literal, override
 
 from cmk.gui.main_menu import get_main_menu_items_prefixed_by_segment
-from cmk.gui.search.matchers import ABCMatchItemGenerator, MatchItem, MatchItems
+from cmk.gui.search.matchers import ABCMatchItemGenerator, MatchItem, MatchItemConfig, MatchItems
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing.main_menu import NavItemTopic
@@ -27,7 +27,9 @@ class MatchItemGeneratorMainMenu(ABCMatchItemGenerator):
         self._topic = topic
 
     @override
-    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
+    def generate_match_items(
+        self, user_permissions: UserPermissions, _config: MatchItemConfig
+    ) -> MatchItems:
         yield from (
             MatchItem(
                 title=main_menu_item.title,

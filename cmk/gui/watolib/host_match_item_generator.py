@@ -8,18 +8,23 @@ from typing import override
 
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.i18n import _
-from cmk.gui.search.matchers import ABCMatchItemGenerator, MatchItem, MatchItems
+from cmk.gui.search.matchers import (
+    ABCMatchItemGenerator,
+    MatchItem,
+    MatchItemConfig,
+    MatchItems,
+)
 from cmk.gui.utils.roles import UserPermissions
 
 from .host_attributes import HostAttributes
-from .hosts_and_folders import CollectedHostAttributes
+from .hosts_and_folders import CollectedHostAttributes, FolderTree, make_folder_tree
 
 
 class MatchItemGeneratorHosts(ABCMatchItemGenerator):
     def __init__(
         self,
         name: str,
-        host_collector: Callable[[], Mapping[HostName, CollectedHostAttributes]],
+        host_collector: Callable[[FolderTree], Mapping[HostName, CollectedHostAttributes]],
     ) -> None:
         super().__init__(name, provider="setup")
         self._host_collector = host_collector
@@ -45,7 +50,10 @@ class MatchItemGeneratorHosts(ABCMatchItemGenerator):
         )
 
     @override
-    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
+    def generate_match_items(
+        self, user_permissions: UserPermissions, config: MatchItemConfig
+    ) -> MatchItems:
+        hosts = self._host_collector(make_folder_tree(config))
         yield from (
             MatchItem(
                 title=host_name,
@@ -56,7 +64,7 @@ class MatchItemGeneratorHosts(ABCMatchItemGenerator):
                     *self._get_additional_match_texts(host_attributes),
                 ],
             )
-            for host_name, host_attributes in self._host_collector().items()
+            for host_name, host_attributes in hosts.items()
         )
 
     @staticmethod

@@ -32,6 +32,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.search.matchers import (
     ABCMatchItemGenerator,
     MatchItem,
+    MatchItemConfig,
     MatchItemGeneratorRegistry,
     MatchItems,
 )
@@ -426,7 +427,9 @@ class ModePatternEditor(WatoMode):
 
 class MatchItemGeneratorLogfilePatternAnalyzer(ABCMatchItemGenerator):
     @override
-    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
+    def generate_match_items(
+        self, user_permissions: UserPermissions, _config: MatchItemConfig
+    ) -> MatchItems:
         title = ModePatternEditor.title_pattern_analyzer()
         yield MatchItem(
             title=title,

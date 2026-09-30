@@ -23,8 +23,11 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/utils",
         "//cmk/gui/utils:middle",
+        "//packages/cmk-livestatus-client",
+        "//packages/cmk-ruleset-matcher",
     ],
 )
 

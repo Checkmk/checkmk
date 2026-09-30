@@ -14,7 +14,7 @@ from cmk.gui.form_specs.unstable.legacy_converter import resolve_title
 from cmk.gui.global_config import get_global_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.search.matchers import ABCMatchItemGenerator, MatchItem, MatchItems
+from cmk.gui.search.matchers import ABCMatchItemGenerator, MatchItem, MatchItemConfig, MatchItems
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
@@ -45,7 +45,9 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
         self._shows: Final = shows
 
     @override
-    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
+    def generate_match_items(
+        self, user_permissions: UserPermissions, _config: MatchItemConfig
+    ) -> MatchItems:
         # The index serves all users, so it holds every available setting and the
         # permission check happens when a user queries it.
         context = make_global_settings_context(

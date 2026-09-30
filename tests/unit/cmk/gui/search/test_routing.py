@@ -12,6 +12,7 @@ import pytest
 from cmk.gui.search._routing import CompositePermissionsHandler
 from cmk.gui.search.matchers import (
     ABCMatchItemGenerator,
+    MatchItemConfig,
     MatchItemGeneratorRegistry,
     MatchItems,
 )
@@ -21,7 +22,9 @@ from cmk.shared_typing.unified_search import ProviderName
 
 class _FakeGenerator(ABCMatchItemGenerator):
     @override
-    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
+    def generate_match_items(
+        self, user_permissions: UserPermissions, _config: MatchItemConfig
+    ) -> MatchItems:
         yield from ()
 
     @staticmethod

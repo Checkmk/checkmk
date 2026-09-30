@@ -74,6 +74,7 @@ from cmk.gui.rule_specs.legacy_converter import convert_dictionary_formspec_to_v
 from cmk.gui.search.matchers import (
     ABCMatchItemGenerator,
     MatchItem,
+    MatchItemConfig,
     MatchItemGeneratorRegistry,
     MatchItems,
 )
@@ -5514,7 +5515,9 @@ class MatchItemGeneratorECRulePacksAndRules(ABCMatchItemGenerator):
         self._rule_pack_loader = rule_pack_loader
 
     @override
-    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
+    def generate_match_items(
+        self, user_permissions: UserPermissions, _config: MatchItemConfig
+    ) -> MatchItems:
         for rule_pack in self._iter_rulepacks():
             rule_pack_title = rule_pack["title"]
             rule_pack_id = rule_pack["id"]

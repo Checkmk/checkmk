@@ -15,7 +15,7 @@ from cmk.gui.i18n import _l
 from cmk.gui.mkeventd._settings_page import event_console_settings, register
 from cmk.gui.mkeventd.config_domain import ConfigDomainEventConsole
 from cmk.gui.pages import PageRegistry
-from cmk.gui.search.matchers import MatchItemGeneratorRegistry
+from cmk.gui.search.matchers import MatchItemConfig, MatchItemGeneratorRegistry
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.config_domain_name import ConfigVariableGroup
 from tests.testlib.unit.gui.global_settings import (
@@ -54,7 +54,7 @@ def test_the_search_index_lists_only_event_console_variables() -> None:
     register(PageRegistry(), match_item_generator_registry)
 
     match_items = match_item_generator_registry["event_console_settings"].generate_match_items(
-        UserPermissions({}, {}, {}, [])
+        UserPermissions({}, {}, {}, []), MatchItemConfig.from_config(Config())
     )
 
     assert [match_item.url for match_item in match_items] == [

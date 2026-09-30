@@ -7,12 +7,13 @@ from collections.abc import Iterator
 
 import pytest
 
+from cmk.gui.config import Config
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
 from cmk.gui.global_settings.search import MatchItemGeneratorSettings
 from cmk.gui.i18n import _l
-from cmk.gui.search.matchers import MatchItem
+from cmk.gui.search.matchers import MatchItem, MatchItemConfig
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.config_domain_name import ConfigVariableGroup
 from cmk.rulesets.v1 import Title
@@ -29,7 +30,11 @@ def _match_items() -> list[MatchItem]:
         filename="global_settings.py",
         shows=lambda _config_variable: True,
     )
-    return list(generator.generate_match_items(UserPermissions({}, {}, {}, [])))
+    return list(
+        generator.generate_match_items(
+            UserPermissions({}, {}, {}, []), MatchItemConfig.from_config(Config())
+        )
+    )
 
 
 @pytest.fixture(name="test_variable")

@@ -268,6 +268,15 @@ const hoveredFormatted = computed<{ value: string; unit: string | undefined } | 
 
 const hoveredValueText = computed<string | undefined>(() => hoveredFormatted.value?.value)
 
+const displayedValue = computed(() => hoveredValueText.value ?? (hasData.value ? props.value : '—'))
+const displayedUnit = computed(() =>
+  hoveredFormatted.value ? hoveredFormatted.value.unit : props.unit
+)
+// The value, unit and comparison ellipsize in a narrow card; a tooltip recovers the full text.
+const valueTooltip = computed(() =>
+  displayedUnit.value ? `${displayedValue.value} ${displayedUnit.value}` : displayedValue.value
+)
+
 const hoveredTimeLabel = computed<string | undefined>(() => {
   const sample = hoveredSample.value
   if (!sample) {
@@ -496,18 +505,20 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
       class="db-cmk-kpi-stat-card__value-row"
       :aria-hidden="hasSparkLine ? 'true' : undefined"
     >
-      <component :is="href ? 'a' : 'span'" :href="href" class="db-cmk-kpi-stat-card__value-link">
+      <component
+        :is="href ? 'a' : 'span'"
+        :href="href"
+        :title="valueTooltip"
+        class="db-cmk-kpi-stat-card__value-link"
+      >
         <span
           class="db-cmk-kpi-stat-card__value"
           :class="{ 'db-cmk-kpi-stat-card__value--refreshing': isRefreshing && !hoveredValueText }"
         >
-          {{ hoveredValueText ?? (hasData ? value : '—') }}
+          {{ displayedValue }}
         </span>
-        <span
-          v-if="hoveredFormatted ? hoveredFormatted.unit : unit"
-          class="db-cmk-kpi-stat-card__unit"
-        >
-          {{ hoveredFormatted ? hoveredFormatted.unit : unit }}
+        <span v-if="displayedUnit" class="db-cmk-kpi-stat-card__unit">
+          {{ displayedUnit }}
         </span>
       </component>
       <div
@@ -530,7 +541,9 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
             <path d="m0 6 4-6 4 6z" fill="currentColor" />
           </svg>
           <span class="db-cmk-kpi-stat-card__delta-percent">{{ delta.percent }}</span>
-          <span class="db-cmk-kpi-stat-card__delta-comparison">{{ delta.comparisonText }}</span>
+          <span class="db-cmk-kpi-stat-card__delta-comparison" :title="delta.comparisonText">{{
+            delta.comparisonText
+          }}</span>
         </span>
       </div>
     </div>
@@ -656,7 +669,9 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
   flex-direction: column;
   align-items: flex-start;
   gap: clamp(2px, 1cqh, 6px);
+  box-sizing: border-box;
   min-width: 0;
+  max-width: 100%;
 
   /* The card itself is full-bleed, so that a tinted background and the spark
      line reach the edges of whatever box it was given; the inset lives here. */
@@ -665,9 +680,11 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
 
 .db-cmk-kpi-stat-card__value-link {
   display: inline-flex;
-  flex-shrink: 0;
   gap: clamp(4px, 1.5cqw, 10px);
   align-items: baseline;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
   text-decoration: none;
 
   &:hover {
@@ -677,8 +694,15 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
 
 .db-cmk-kpi-stat-card__value {
   font-size: clamp(18px, min(40cqh, 16cqw), 52px);
+  flex-shrink: 0;
+  max-width: 100%;
+
+  /* Horizontal only: line-height 1 leaves the hover underline outside the box. */
+  overflow-x: clip;
   font-weight: var(--font-weight-medium);
   line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 
   /* Neutral: the accent/data color belongs to the curve, not the number. */
   color: var(--font-color);
@@ -709,10 +733,15 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
   }
 }
 
+/* Truncated before the value: the number matters more than its unit. */
 .db-cmk-kpi-stat-card__unit {
+  min-width: 0;
+  overflow-x: clip;
   font-size: clamp(10px, 16cqh, 22px);
   font-weight: var(--font-weight-bold);
   color: var(--color-mid-grey-50);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* With no plot to leave room for, the value has the whole card: centered, and
@@ -750,7 +779,6 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
    reads in the same dimmed color as the stale note it swaps places with. */
 .db-cmk-kpi-stat-card__delta {
   display: inline-flex;
-  flex-shrink: 0;
   gap: clamp(2px, 1cqw, 5px);
   align-items: center;
   min-width: 0;

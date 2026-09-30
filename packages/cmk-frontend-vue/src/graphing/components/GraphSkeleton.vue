@@ -108,6 +108,10 @@ const rootStyle = computed(() => ({
 
 .graphing-graph-skeleton__legend {
   height: v-bind(legendHeight);
-  margin-top: calc(var(--spacing) * 2);
+  margin-top: var(--spacing-double);
+}
+
+.graphing-graph-skeleton__brush + .graphing-graph-skeleton__legend {
+  margin-top: var(--spacing);
 }
 </style>

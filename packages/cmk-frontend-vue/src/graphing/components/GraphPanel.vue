@@ -304,6 +304,7 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_
       <GraphLegend
         v-if="showLegend"
         class="graphing-graph-panel__legend"
+        :class="{ 'graphing-graph-panel__legend--below-brush': interaction.brush === 'enabled' }"
         :metrics="legendMetrics"
         :horizontal-lines="horizontalLines ?? []"
         :shaded-regions="shadedRegions ?? []"
@@ -365,7 +366,11 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_
 }
 
 .graphing-graph-panel__legend {
-  margin-top: calc(var(--spacing) * 2);
+  margin-top: var(--spacing-double);
+
+  &--below-brush {
+    margin-top: var(--spacing);
+  }
 
   .graphing-graph-panel__container--legend-right & {
     width: 480px;

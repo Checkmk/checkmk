@@ -8,8 +8,10 @@ import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, ref, watch } from 'vue'
 
 import type { GraphTimerange } from '@/dashboard/components/TimeRange/GraphTimeRange.vue'
-import type { TimerangeModel } from '@/dashboard/components/TimeRange/types'
-import { useTimeRange } from '@/dashboard/components/TimeRange/useTimeRange'
+import {
+  type TimeRangeSourceModel,
+  useTimeRangeSource
+} from '@/dashboard/components/TimeRange/useTimeRangeSource'
 import { useFixedDataRange } from '@/dashboard/components/Wizard/components/FixedDataRangeInput/useFixedDataRange'
 import {
   type UseWidgetVisualizationOptions,
@@ -34,6 +36,7 @@ const CONTENT_TYPE = 'gauge'
 export interface UseGauge extends UseWidgetHandler, UseWidgetVisualizationOptions {
   //Time range
   timeRangeType: Ref<TimeRangeType>
+  followDashboardTimeRange: Ref<boolean>
   timeRange: Ref<GraphTimerange>
 
   //Data settings
@@ -57,11 +60,13 @@ export const useGauge = async (
   const timeRangeType = ref<TimeRangeType>(
     !currentContent || currentContent.time_range === 'current' ? 'current' : 'window'
   )
-  const currentWindow =
+  const currentWindow: TimeRangeSourceModel | null =
     currentContent?.time_range === 'current' ? null : currentContent?.time_range?.window || null
-  const currentTimerange: TimerangeModel | null =
-    currentWindow === 'dashboard' ? null : currentWindow
-  const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(currentTimerange)
+  const {
+    followDashboard: followDashboardTimeRange,
+    timeRange,
+    widgetProps: generateTimeRangeSpec
+  } = useTimeRangeSource(currentWindow)
 
   const {
     symbol: dataRangeSymbol,
@@ -152,6 +157,7 @@ export const useGauge = async (
   watch(
     [
       timeRangeType,
+      followDashboardTimeRange,
       timeRange,
       fixedDataRangeProps,
       showServiceStatusEnabled,
@@ -170,6 +176,7 @@ export const useGauge = async (
 
   return {
     timeRangeType,
+    followDashboardTimeRange,
     timeRange,
 
     dataRangeSymbol,

@@ -5,11 +5,9 @@
 
 
 from abc import ABC
-from collections.abc import Iterable, Mapping
 from typing import Annotated, assert_never, Literal, override, Self
 
 from pydantic import Discriminator
-from pydantic_core import ErrorDetails
 
 from cmk.gui.dashboard.type_defs import (
     AverageScatterplotDashletConfig,
@@ -33,14 +31,12 @@ from cmk.gui.graphing import (
     id_from_unit_spec,
     metrics_from_api,
 )
-from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import (
     ColorHex,
     timerange_from_internal,
     TimerangeModel,
 )
-from cmk.gui.type_defs import DashboardEmbeddedViewSpec
 from cmk.gui.unit_formatter import AutoPrecision
 
 from ._base import BaseWidgetContent
@@ -319,24 +315,6 @@ class GaugeContent(_BaseMetricContent):
             time_range=_metric_time_range_to_internal(self.time_range),
             status_display=_metric_status_display_to_internal(self.status_display),
         )
-
-    @override
-    def iter_validation_errors(
-        self,
-        location: tuple[str | int, ...],
-        context: ApiContext,
-        *,
-        embedded_views: Mapping[str, DashboardEmbeddedViewSpec],
-    ) -> Iterable[ErrorDetails]:
-        if isinstance(self.time_range, MetricTimeRangeWindow) and (
-            self.time_range.window == "dashboard"
-        ):
-            yield ErrorDetails(
-                type="value_error",
-                msg="The gauge does not follow the dashboard time range yet.",
-                loc=location + ("time_range", "window"),
-                input=self.time_range.window,
-            )
 
 
 @api_model

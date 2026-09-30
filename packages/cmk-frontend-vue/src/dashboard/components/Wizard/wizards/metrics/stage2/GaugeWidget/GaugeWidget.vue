@@ -12,7 +12,7 @@ import { computed } from 'vue'
 
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
-import GraphTimeRange from '@/dashboard/components/TimeRange/GraphTimeRange.vue'
+import TimeRangeSource from '@/dashboard/components/TimeRange/TimeRangeSource.vue'
 import FixedDataRangeInput from '@/dashboard/components/Wizard/components/FixedDataRangeInput/FixedDataRangeInput.vue'
 import FieldComponent from '@/dashboard/components/Wizard/components/TableForm/FieldComponent.vue'
 import FieldDescription from '@/dashboard/components/Wizard/components/TableForm/FieldDescription.vue'
@@ -73,7 +73,10 @@ const widgetProps = computed(() => handler.value.widgetProps)
             "
           />
           <CmkIndent v-if="handler.timeRangeType.value === 'window'">
-            <GraphTimeRange v-model:selected-timerange="handler.timeRange.value" />
+            <TimeRangeSource
+              v-model:follow-dashboard="handler.followDashboardTimeRange.value"
+              v-model:selected-timerange="handler.timeRange.value"
+            />
           </CmkIndent>
         </FieldComponent>
       </TableFormRow>

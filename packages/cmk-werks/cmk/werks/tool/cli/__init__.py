@@ -495,6 +495,9 @@ def show_werk(werk: Werk) -> None:
     sys.stdout.write(f"\n{werk.content.description}\n")
 
 
+_FilterKey = Literal["edition", "component", "level", "class", "version", "compatible"]
+
+
 def main_list(args: argparse.Namespace, fmt: str) -> None:
     # arguments are tags from state, component and class. Multiple values
     # in one class are orred. Multiple types are anded.
@@ -506,24 +509,23 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:
     werks: list[Werk] = list(load_werks().values())
     versions = sorted({resolve_version(rtc, werk.content.metadata["version"]) for werk in werks})
 
-    filters: dict[str, list[str]] = {}
+    filters: dict[_FilterKey, list[str]] = {}
+    candidates: Sequence[tuple[_FilterKey, Sequence[str]]] = [
+        ("edition", [name for name, _title in get_config().editions]),
+        ("component", [name for name, _title in get_config().all_components()]),
+        ("level", [name for name, _title in get_config().levels]),
+        ("class", [name for name, _title, _prefix in get_config().classes]),
+        ("version", versions),
+        ("compatible", [name for name, _title in get_config().compatible]),
+    ]
 
     for a in args.filter:
         if a == "current":
             a = get_config().current_version
 
         hit = False
-        for tp, values in [
-            ("edition", get_config().editions),
-            ("component", get_config().all_components()),
-            ("level", get_config().levels),
-            ("class", get_config().classes),
-            ("version", versions),
-            ("compatible", get_config().compatible),
-        ]:
-            for v in values:  # type: ignore[attr-defined] # all of them are iterable.
-                if isinstance(v, tuple):
-                    v = v[0]
+        for tp, values in candidates:
+            for v in values:
                 if v.startswith(a):
                     entries = filters.get(tp, [])
                     entries.append(v)
@@ -543,7 +545,7 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:
     for werk in werks:
         skip = False
         for tp, entries in filters.items():
-            value = werk.content.metadata[tp]  # type: ignore[literal-required]
+            value = werk.content.metadata[tp]
             if tp == "edition":
                 with suppress(ValueError):
                     value = EditionV3.from_v2(EditionV2(value)).value

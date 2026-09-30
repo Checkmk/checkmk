@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._base import BackgroundJob as BackgroundJob
+from ._base import override_default_executor as override_default_executor
 from ._defines import BackgroundJobDefines as BackgroundJobDefines
 from ._executor import AlreadyRunningError as AlreadyRunningError
 from ._executor import JobExecutor as JobExecutor

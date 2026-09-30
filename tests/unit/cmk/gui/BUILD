@@ -11,6 +11,7 @@ py_library(
         "//cmk/gui:auth",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
+        "//cmk/gui/background_job/job",
         "//cmk/gui/utils:middle",
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:password_store",

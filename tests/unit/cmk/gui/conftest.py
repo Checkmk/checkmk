@@ -22,6 +22,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import http, login
+from cmk.gui.background_job.job import override_default_executor, ThreadedJobExecutor
 from cmk.gui.config import Config
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
@@ -96,8 +97,9 @@ def disable_automation_helper(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
-def execute_background_jobs_without_job_scheduler(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("_CMK_BG_JOBS_WITHOUT_JOB_SCHEDULER", "1")
+def execute_background_jobs_without_job_scheduler() -> Iterator[None]:
+    with override_default_executor(ThreadedJobExecutor):
+        yield
 
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]

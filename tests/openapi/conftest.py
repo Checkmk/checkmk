@@ -34,6 +34,7 @@ import cmk.gui.watolib.password_store  # noqa: E402
 from cmk.ccc.hostaddress import HostName  # noqa: E402
 from cmk.ccc.user import UserId  # noqa: E402
 from cmk.gui import login  # noqa: E402
+from cmk.gui.background_job.job import override_default_executor, ThreadedJobExecutor  # noqa: E402
 from cmk.gui.config import Config  # noqa: E402
 from cmk.gui.permissions import permission_registry  # noqa: E402
 from cmk.gui.utils.roles import UserPermissions  # noqa: E402
@@ -247,8 +248,9 @@ def disable_automation_helper(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
-def execute_background_jobs_without_job_scheduler(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("_CMK_BG_JOBS_WITHOUT_JOB_SCHEDULER", "1")
+def execute_background_jobs_without_job_scheduler() -> Iterator[None]:
+    with override_default_executor(ThreadedJobExecutor):
+        yield
 
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]

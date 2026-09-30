@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Final, Literal, override, Protocol, Self
 
 from cmk.ccc.plugin_registry import Registry
-from cmk.gui.type_defs import CustomHostAttrSpec
+from cmk.gui.type_defs import CustomHostAttrSpec, GraphTimerange
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.roles import UserPermissions
 from cmk.livestatus_client import SiteConfigurations
@@ -48,6 +48,9 @@ class MatchItemConfigSource(Protocol):
     @property
     def tags(self) -> TagConfig: ...
 
+    @property
+    def graph_timeranges(self) -> Sequence[GraphTimerange]: ...
+
 
 @dataclass(frozen=True)
 class MatchItemConfig:
@@ -61,6 +64,7 @@ class MatchItemConfig:
     wato_host_attrs: Sequence[CustomHostAttrSpec]
     # Kept in its serializable form for the job arguments
     tag_config: TagConfigSpec
+    graph_timeranges: Sequence[GraphTimerange]
 
     @property
     def tags(self) -> TagConfig:
@@ -73,6 +77,7 @@ class MatchItemConfig:
             wato_hide_folders_without_read_permissions=config.wato_hide_folders_without_read_permissions,
             wato_host_attrs=config.wato_host_attrs,
             tag_config=config.tags.get_dict_format(),
+            graph_timeranges=config.graph_timeranges,
         )
 
 

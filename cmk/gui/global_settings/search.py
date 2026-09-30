@@ -8,7 +8,6 @@ from typing import Final, override
 
 from cmk.ccc.site import omd_site
 from cmk.ccc.version import edition
-from cmk.gui.config import active_config
 from cmk.gui.form_specs import localize
 from cmk.gui.form_specs.unstable.legacy_converter import resolve_title
 from cmk.gui.global_config import get_global_config
@@ -46,15 +45,15 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
 
     @override
     def generate_match_items(
-        self, user_permissions: UserPermissions, _config: MatchItemConfig
+        self, user_permissions: UserPermissions, config: MatchItemConfig
     ) -> MatchItems:
         # The index serves all users, so it holds every available setting and the
         # permission check happens when a user queries it.
         context = make_global_settings_context(
             edition(paths.omd_root),
             omd_site(),
-            sites=active_config.sites,
-            graph_timeranges=active_config.graph_timeranges,
+            sites=config.sites,
+            graph_timeranges=config.graph_timeranges,
         )
         default_values = ABCConfigDomain.get_all_default_globals()
         is_activated = get_global_config().global_settings.is_activated

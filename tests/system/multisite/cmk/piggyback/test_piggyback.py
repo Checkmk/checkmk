@@ -302,7 +302,6 @@ def test_config_sync_source_remote_diff_customer(central_site: Site, remote_site
         _check_config_redistributed([central_site, remote_site], config_mtimes_ms)
 
 
-@pytest.mark.xfail(reason="CMK-35803; flake")
 @pytest.mark.skip_if_not_edition("ultimatemt")
 def test_config_sync_source_remote_remote_diff_customer(
     piggyback_env_three_site_setup: tuple[Site, Site, Site],

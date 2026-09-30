@@ -141,6 +141,44 @@ test('shows the total service count reported by the endpoint', async () => {
   expect(await screen.findByText('Total rows: 42')).toBeInTheDocument()
 })
 
+test('requests the row limit picked in the Show selector', async () => {
+  const user = userEvent.setup()
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  await user.click(await screen.findByRole('combobox', { name: 'Show:' }))
+  await user.click(await screen.findByRole('option', { name: '5000' }))
+
+  expect(servicesPost).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({ body: expect.objectContaining({ limit: 5000 }) })
+  )
+})
+
+test('requests all services for a permitted unlimited row limit in the URL', async () => {
+  window.history.replaceState(null, '', '/monitor_host_services.py?limit=all')
+  mockServices([makeApiEntry()])
+  renderApp({ may_ignore_hard_limit: true })
+
+  await screen.findByText('Total rows: 1')
+
+  expect(servicesPost).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({ body: expect.objectContaining({ limit: null }) })
+  )
+})
+
+test('does not offer all services without the permission to ignore the hard limit', async () => {
+  const user = userEvent.setup()
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  await user.click(await screen.findByRole('combobox', { name: 'Show:' }))
+
+  expect(await screen.findByRole('option', { name: '5000' })).toBeInTheDocument()
+  expect(screen.queryByRole('option', { name: 'All' })).not.toBeInTheDocument()
+})
+
 test('shows no matching count while nothing narrows the services', async () => {
   mockServices([makeApiEntry()], { matched: 42, total: 42 })
   renderApp()

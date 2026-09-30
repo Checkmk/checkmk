@@ -21,7 +21,7 @@ import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTab
 import TypeToFocusIndicator from '@/monitoring/shared/components/TypeToFocusIndicator.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
-import { ACTION_REFRESH_DELAY_MS, HOST_LIMIT_TIERS } from '@/monitoring/shared/constants'
+import { ACTION_REFRESH_DELAY_MS, LIMIT_TIERS } from '@/monitoring/shared/constants'
 import {
   displayOptionsWriter,
   readDisplayOptionsFromUrl,
@@ -154,7 +154,7 @@ const columnPinning = buildHostColumnPinning({
 
 const schema = buildTableStateSchema({
   columns,
-  limitTiers: HOST_LIMIT_TIERS,
+  limitTiers: LIMIT_TIERS,
   mayRemoveLimit: props.may_ignore_hard_limit ?? false
 })
 const initialState = readTableStateFromUrl(window.location.search, schema)

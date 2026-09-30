@@ -22,7 +22,7 @@ import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTab
 import TypeToFocusIndicator from '@/monitoring/shared/components/TypeToFocusIndicator.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
-import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
+import { ACTION_REFRESH_DELAY_MS, LIMIT_TIERS } from '@/monitoring/shared/constants'
 import {
   displayOptionsWriter,
   readDisplayOptionsFromUrl,
@@ -139,9 +139,11 @@ const columns = useHostServicesColumns({
 })
 const columnPinning = buildHostServicesColumnPinning({ includeSelect: mayActOnSelection })
 
-// The row limit is deliberately left at its single tier: this page offers no limit
-// selector, so `limit` never leaves its default and the codec never spells it out.
-const schema = buildTableStateSchema({ columns, limitTiers: [], mayRemoveLimit: false })
+const schema = buildTableStateSchema({
+  columns,
+  limitTiers: LIMIT_TIERS,
+  mayRemoveLimit: props.may_ignore_hard_limit ?? false
+})
 const initialState = readTableStateFromUrl(window.location.search, schema)
 
 const filterSchema = buildFilterUrlSchema(columns)

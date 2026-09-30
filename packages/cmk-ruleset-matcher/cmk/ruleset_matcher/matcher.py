@@ -418,7 +418,30 @@ class RulesetOptimizer:
         self.__host_ruleset_cache.clear()
         self._all_matching_hosts_match_cache.clear()
 
-    def set_all_processed_hosts(self, all_processed_hosts: set[HostName]) -> None:
+    def set_default_processed_hosts(self, all_processed_hosts: Iterable[HostName]) -> None:
+        """Set the processed hosts for the lifetime of this optimizer
+
+        This is meant for the process wide default only. To narrow the scope for
+        a specific task, use `processed_hosts`, which restores the previous scope.
+        """
+        self._apply_processed_hosts(all_processed_hosts)
+
+    def set_all_processed_hosts(self, all_processed_hosts: Iterable[HostName]) -> None:
+        # Transitional: remaining callers are migrated to `processed_hosts`.
+        self._apply_processed_hosts(all_processed_hosts)
+
+    @contextlib.contextmanager
+    def processed_hosts(self, all_processed_hosts: Iterable[HostName]) -> Iterator[None]:
+        """Restrict the precomputations to the given hosts while in this context"""
+        previous = self._all_processed_hosts, self._all_processed_hosts_similarity
+        try:
+            self._apply_processed_hosts(all_processed_hosts)
+            yield
+        finally:
+            self._change_scope(*previous)
+
+    def _apply_processed_hosts(self, all_processed_hosts: Iterable[HostName]) -> None:
+        requested = set(all_processed_hosts)
         involved_clusters: set[HostName] = set()
         involved_nodes: set[HostName] = set()
         for hostname in self._all_processed_hosts:
@@ -429,29 +452,34 @@ class RulesetOptimizer:
         for hostname in involved_clusters:
             involved_nodes.update(self._nodes_of.get(hostname, []))
 
-        nodes_and_clusters = involved_clusters | involved_nodes | all_processed_hosts
+        nodes_and_clusters = involved_clusters | involved_nodes | requested
 
         # Only add references to configured hosts
         nodes_and_clusters.intersection_update(self._all_configured_hosts)
-        self._all_processed_hosts = frozenset(nodes_and_clusters)
+        processed_hosts = frozenset(nodes_and_clusters)
 
-        # The folder host lookup includes a list of all -processed- hosts within a given
-        # folder. Any update with set_all_processed hosts invalidates this cache, because
-        # the scope of relevant hosts has changed. This is -good-, since the values in this
-        # lookup are iterated one by one later on in all_matching_hosts
+        used_groups = {self._host_grouped_ref.get(hostname, ()) for hostname in processed_hosts}
+        similarity = 1.0 * len(processed_hosts) / len(used_groups) if used_groups else 1.0
+
+        self._change_scope(processed_hosts, similarity)
+
+    def _change_scope(self, processed_hosts: frozenset[HostName], similarity: float) -> None:
+        # The folder host lookup holds the -processed- hosts within a given folder: it is
+        # the scope of every new computation in all_matching_hosts, so it always has to go.
         self._folder_host_lookup = {}
 
-        used_groups = {
-            self._host_grouped_ref.get(hostname, ()) for hostname in self._all_processed_hosts
-        }
+        # For the hosts that are not "foreign", the results are computed over the processed
+        # hosts. They must be cleared whenever the new scope contains a host the current one
+        # does not: that host used to be foreign and would be looked up in an entry that was
+        # computed without it. Otherwise the entries were computed over a superset of the
+        # new scope, so they answer correctly for every host in it.
+        if not processed_hosts <= self._all_processed_hosts:
+            self._all_matching_hosts_match_cache.clear()
+            self.__host_ruleset_cache.clear()
+            self.__service_ruleset_cache.clear()
 
-        if not used_groups:
-            self._all_processed_hosts_similarity = 1.0
-            return
-
-        self._all_processed_hosts_similarity = (
-            1.0 * len(self._all_processed_hosts) / len(used_groups)
-        )
+        self._all_processed_hosts = processed_hosts
+        self._all_processed_hosts_similarity = similarity
 
     def get_host_ruleset[TRuleValue](
         self,

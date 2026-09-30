@@ -1379,7 +1379,7 @@ class ConfigCache:
             self.label_manager,
         )
 
-        self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
+        self.ruleset_matcher.ruleset_optimizer.set_default_processed_hosts(
             {
                 hn
                 for hn in set(self._hosts_config.hosts).union(self._hosts_config.clusters)

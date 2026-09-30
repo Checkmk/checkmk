@@ -661,7 +661,7 @@ def test_write_paths_use_the_given_automation_config(
     # rather than a missed parameter, so do not "fix" it into a dispatched call. What the
     # correctness rests on is that the remote host is in the central site's `all_hosts` -- WATO
     # writes every host of the folder tree there with no site filter -- so it survives the
-    # `intersection_update(_all_configured_hosts)` inside `set_all_processed_hosts` instead of
+    # `intersection_update(_all_configured_hosts)` when narrowing the processed hosts instead of
     # landing in no candidate set and matching nothing at all. Beyond that: folder path, tags and
     # explicit labels are central data, and the service labels arrive as an argument that
     # `get_services_labels` already fetched from the owning site. Full reasoning, including the two

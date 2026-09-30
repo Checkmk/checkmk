@@ -120,7 +120,7 @@ def _reload_automation_config() -> config.LoadingResult:
 
 
 def _clear_caches_before_each_call(config_cache: ConfigCache, hosts_config: Hosts) -> None:
-    config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
+    config_cache.ruleset_matcher.ruleset_optimizer.set_default_processed_hosts(
         {
             hn
             for hn in set(hosts_config.hosts).union(hosts_config.clusters)

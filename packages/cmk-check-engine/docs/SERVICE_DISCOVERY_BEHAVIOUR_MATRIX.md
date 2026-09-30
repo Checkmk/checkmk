@@ -1384,8 +1384,8 @@ remote site" assertion carves it out on purpose. Recorded because an unexplained
 test is what invites the next reader to "fix" it.
 
 **What the argument rests on: the remote host is in the central site's configured hosts.**
-`set_all_processed_hosts` narrows its result with
-`intersection_update(self._all_configured_hosts)`, so a host absent from that set would land in no
+Narrowing the processed hosts (`matcher.py:RulesetOptimizer._apply_processed_hosts`) intersects the
+set with `self._all_configured_hosts`, so a host absent from that set would land in no
 candidate set at all and every rule would yield **silently zero matches** — the failure mode this
 has to rule out. It is ruled out because `_all_configured_hosts` is
 `frozenset(self._hosts_config.all_configured_hosts)`
@@ -1420,13 +1420,17 @@ host assigned to another site — `_update_distributed_wato_file` (`watolib/site
 onto remotes. `matcher.py:get_host_ruleset` says as much in its own comment.
 
 Two cautions about that paragraph for anyone extending it. "Pinned to `{host_name}`" would be
-wrong: `set_all_processed_hosts` iterates the **previous** set rather than its argument
-(`matcher.py:set_all_processed_hosts`), so the result is the host plus the whole cluster topology.
-And the ruleset caches are keyed on the **boolean**, not on the scope — `__host_ruleset_cache` and
-`__service_ruleset_cache` are `dict[tuple[int, bool], …]` and `_all_matching_hosts_match_cache` is
-keyed `(condition, bool)` — while `set_all_processed_hosts` invalidates only `_folder_host_lookup`.
-Two different narrow scopes therefore share one cache key, which is safe today only because
-`_clear_caches_before_each_call` wipes both ruleset caches before every automation.
+wrong: narrowing iterates the **previous** set rather than its argument
+(`matcher.py:RulesetOptimizer._apply_processed_hosts`), so the result is the host plus the whole
+cluster topology. And the ruleset caches are keyed on the **boolean**, not on the scope —
+`__host_ruleset_cache` and `__service_ruleset_cache` are `dict[tuple[int, bool], …]` and
+`_all_matching_hosts_match_cache` is keyed `(condition, bool)`. That is safe because every change
+of the scope goes through `matcher.py:RulesetOptimizer._change_scope`: whenever the new scope
+contains a host the current one does not — including when leaving `processed_hosts` restores a
+wider one — it clears these caches. When the new scope is a subset, the retained entries were
+computed over a superset of it, so they answer correctly for every host in it; they are only ever
+asked about the host in question. `_folder_host_lookup`, which holds the scope itself, is rebuilt
+on every change.
 
 **Two inputs are genuinely per-site, and only one of them is replicated.**
 
@@ -2135,7 +2139,7 @@ The **Status** column reflects the 2026-08-14 review; see §9 for detail.
 | B-F1  | `local_discovery{,_preview}` hard-code `LocalAutomationConfig()`                                                                                                                                                                                        | Mocking them erases the remote branch — the AC's forbidden pattern                                                                                                                                                                                                         | confirmed, drives test design                                                    |
 | B-F2  | 5 distinct remote asymmetries (pre-sync, central-only change, lossy wire format, double permission check, cross-site rule write)                                                                                                                        | R5 in the plan; must be re-verified at every phase exit                                                                                                                                                                                                                    | open                                                                             |
 | B-F3  | `update_service_phase` performs no job-active check; while a scan runs, `get_result` hands it an empty table, so the transition is `None` and the endpoint answers `204`                                                                                | A requested change is silently discarded. Low severity, but it shows _job-active_ being used as a proxy for _your table is still current_, in one entry point out of two                                                                                                   | ✅ **confirmed defect** → §10.18                                                 |
-| B-F4  | Rule matching (`analyze-service-rule-matches`) is central by design, not a missed parameter — it rests on the remote host being in the central site's `all_hosts`; the `set_all_processed_hosts` narrowing is a safe-either-way fallback, not a premise | Tier 2's dispatch assertion must carve it out; the residual discovered-label freshness gap is adjudicated                                                                                                                                                                  | ✅ **verified — not an asymmetry**; §6.1, §9.1                                   |
+| B-F4  | Rule matching (`analyze-service-rule-matches`) is central by design, not a missed parameter — it rests on the remote host being in the central site's `all_hosts`; the `processed_hosts()` scope narrowing is a safe-either-way fallback, not a premise | Tier 2's dispatch assertion must carve it out; the residual discovered-label freshness gap is adjudicated                                                                                                                                                                  | ✅ **verified — not an asymmetry**; §6.1, §9.1                                   |
 | B-F5  | Builtin host labels are per-site, never synced, and win the `labels_of_host` merge, so the central site reads `cmk/site = <central>` for a remote host                                                                                                  | Any GUI-side rule analysis for a host the site does not monitor mis-evaluates a `cmk/site` label condition — permanent, not a freshness window                                                                                                                             | ✅ **verified**; accepted risk, no ticket → §9.1                                 |
 | T3-F1 | `update_discovery_phase` never checks that the `ServiceID` it was given is in the check table, while the same request's `host_name` is validated by `HostConverter`                                                                                     | A phase change for a service that does not exist is answered `204` with nothing written — the endpoint treats "does not exist" as an error for one of its two identifiers and as success for the other                                                                     | ✅ **confirmed defect** → §10.19, low priority                                   |
 | §2.1  | `removed` is target-only (alive, required); `clustered_ignored` is unreachable; `legacy` / `legacy_ignored` aren't `DiscoveryState` members but are accepted by REST                                                                                    | `DiscoveryState` mixes one verb with 14 nouns; evidence for splitting source from target (Phase 3)                                                                                                                                                                         | `removed` **closed**; rest investigating                                         |

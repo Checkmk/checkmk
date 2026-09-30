@@ -27,8 +27,8 @@ const { _t } = usei18n()
 
 <template>
   <TrialModeSelectionTrialStatus
-    :badge-label="_t('Unverified trial')"
-    badge-color="warning"
+    :badge-label="_t('License activation pending')"
+    badge-color="success"
     :trial-end-timestamp="trialEndTimestamp"
     :trial-length-days="trialLengthDays"
     :saving="saving"
@@ -37,7 +37,7 @@ const { _t } = usei18n()
   >
     {{
       _t(
-        'Trial started without verification (offline site, or verification not completed after the resend cap). Full features for %{days} days from site creation, then fallback to the limited free edition (%{services} services). While the site is under %{days} days old, the dialog reappears on admin login (at most once per 48h) as another chance to verify or license.',
+        "License verification postponed. The site keeps full features for %{days} days from site creation. Verify your license before then — otherwise the site falls back to the limited free edition (%{services} services). We'll remind you every 7 days.",
         { days: `${trialLengthDays}`, services: `${freeServicesLimit}` }
       )
     }}

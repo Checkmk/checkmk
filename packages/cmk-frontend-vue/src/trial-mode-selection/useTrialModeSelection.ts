@@ -18,8 +18,8 @@ import { getCsrfToken } from '@/lib/csrf'
 const RESEND_COOLDOWN_SECONDS = 60
 
 /**
- * Screens the gate dialog can show. The customer branch is a single step, asking how the
- * license is verified; the trial branch walks choice -> email -> code -> success.
+ * Screens the gate dialog can show. The customer branch asks how the license is verified,
+ * and "Verify later" leads to pending; the trial branch walks choice -> email -> code -> success.
  * Offline sites go choice -> unreachable -> unverified; the send limit also leads to
  * unverified.
  */
@@ -29,6 +29,7 @@ export type TrialModeScreen =
   | 'email'
   | 'code'
   | 'success'
+  | 'pending'
   | 'unreachable'
   | 'unverified'
 

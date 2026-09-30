@@ -148,23 +148,17 @@ root@linux:~# reboot
 
 
 def test_convert_werk_simple() -> None:
-    text, werk_id = werkv1_to_werkv2(WERK_V1, 1234)
-    assert werk_id == 1234
-    assert text == WERK_V1_RESULT
+    assert werkv1_to_werkv2(WERK_V1, 1234) == WERK_V1_RESULT
 
 
 def test_roundtrip() -> None:
-    werk2, werk_id = werkv1_to_werkv2(WERK_V1_SIMPLE, 1234)
-    assert werk_id == 1234
-    assert werk2 == WERK_V1_SIMPLE_RESULT
+    assert werkv1_to_werkv2(WERK_V1_SIMPLE, 1234) == WERK_V1_SIMPLE_RESULT
 
 
 def test_a_v1_werk_without_compatibility_is_converted_as_compatible() -> None:
     werk_v1 = WERK_V1_SIMPLE.replace("Compatible: compat\n", "")
 
-    werk_v2, _werk_id = werkv1_to_werkv2(werk_v1, 1234)
-
-    assert "compatible | yes\n" in werk_v2
+    assert "compatible | yes\n" in werkv1_to_werkv2(werk_v1, 1234)
 
 
 def test_a_v1_werk_with_an_unknown_compatibility_is_rejected() -> None:

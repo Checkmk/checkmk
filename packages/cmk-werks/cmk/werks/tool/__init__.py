@@ -16,8 +16,8 @@ def parse_werk(file_content: str, file_name: str) -> WerkV2ParseResult | WerkV3P
         if file_content.startswith(constants.WERK_V2_START):
             return parse_werk_v2(file_content, file_name.removesuffix(".md"))
         return parse_werk_v3(file_content, file_name.removesuffix(".md"))
-    file_content, werk_id = werkv1_to_werkv2(file_content, int(file_name))
-    return parse_werk_v2(file_content, str(werk_id))  # TODO: str does not make sense!
+    werk_id = int(file_name)
+    return parse_werk_v2(werkv1_to_werkv2(file_content, werk_id), str(werk_id))
 
 
 def load_werk(*, file_content: str, file_name: str) -> WerkV3:

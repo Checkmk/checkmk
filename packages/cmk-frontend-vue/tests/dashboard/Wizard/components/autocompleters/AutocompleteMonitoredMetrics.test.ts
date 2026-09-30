@@ -28,6 +28,7 @@ const freezeLookupAfterFirstCall = (): void => {
 const selectTheMetric = async (handler: ReturnType<typeof useMetric>): Promise<void> => {
   render(AutocompleteMonitoredMetrics, {
     props: {
+      context: {},
       serviceMetrics: handler.metric.value,
       'onUpdate:serviceMetrics': (value: typeof handler.metric.value) => {
         handler.metric.value = value

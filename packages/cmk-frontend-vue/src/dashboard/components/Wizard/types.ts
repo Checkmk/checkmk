@@ -34,11 +34,6 @@ export interface ActionButtonIcon extends QuickSetupStageActionIcon {
 
 export type MetricType = 'single' | 'combined'
 
-export interface HostServiceContext {
-  host?: { host: string }
-  service?: { service: string }
-}
-
 export interface UseValidate {
   validate: () => boolean
 }

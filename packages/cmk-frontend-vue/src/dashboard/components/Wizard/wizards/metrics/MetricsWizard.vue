@@ -34,7 +34,7 @@ import StepsHeader from '../../components/StepsHeader.vue'
 import WizardContainer from '../../components/WizardContainer.vue'
 import WizardStageContainer from '../../components/WizardStageContainer.vue'
 import WizardStepsContainer from '../../components/WizardStepsContainer.vue'
-import { ElementSelection } from '../../types'
+import { type ElementSelection } from '../../types'
 import { extractConfiguredFilters } from '../../utils'
 import { type MetricSelection, getDefaultsFromGraph } from './composables/useSelectGraphTypes'
 import { useMetric } from './stage1/MetricSelector/useMetric'
@@ -82,53 +82,13 @@ const hostFilterType = ref<ElementSelection>(hostSelection)
 const serviceFilterType = ref<ElementSelection>(serviceSelection)
 const metricType = ref<MetricSelection>(metricSelection)
 
-watch([hostFilterType, serviceFilterType], ([newHostFilterType, newServiceFilterType]) => {
-  if (newHostFilterType === ElementSelection.MULTIPLE) {
-    metricHandler.host.value = null
-  }
-  if (newServiceFilterType === ElementSelection.MULTIPLE) {
-    metricHandler.service.value = null
-  }
+watch([hostFilterType, serviceFilterType], () => {
+  metricHandler.metric.value = null
 })
 
-interface PreselectedSingleFilters {
-  host: string | null
-  service: string | null
-}
-
-const _getSelectedSingleFilters = (
-  configuredFilters: ConfiguredFilters
-): PreselectedSingleFilters => {
-  const host: string | null = configuredFilters?.host?.host ?? null
-  const service: string | null = configuredFilters?.service?.service ?? null
-
-  return { host, service }
-}
-
-const preselectedFilters = _getSelectedSingleFilters(
-  widgetFilterManager.filterHandler.configuredFilters
-)
-
 const metricHandler = useMetric(
-  preselectedFilters.host,
-  preselectedFilters.service,
+  widgetFilterManager.filterHandler.configuredFilters,
   getMetricFromWidget(props.editWidgetSpec)
-)
-
-watch(
-  [widgetFilterManager.filterHandler.configuredFilters],
-  ([newConfiguredFilters]) => {
-    const { host, service } = _getSelectedSingleFilters(newConfiguredFilters)
-
-    if (host && hostFilterType.value === ElementSelection.SPECIFIC) {
-      metricHandler.host.value = host
-    }
-
-    if (service && serviceFilterType.value === ElementSelection.SPECIFIC) {
-      metricHandler.service.value = service
-    }
-  },
-  { deep: true }
 )
 
 watch([metricType], () => (metricHandler.metric.value = null))

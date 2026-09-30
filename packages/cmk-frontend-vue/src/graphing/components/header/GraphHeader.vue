@@ -13,7 +13,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
 
 import type { BurgerMenuCallable, BurgerMenuGroup, TimeRange } from '../../types.ts'
-import { isoDate, stepLabel } from '../../utils/timeFormat'
+import { isoDate, shortWeekday, stepLabel } from '../../utils/timeFormat'
 import GraphBurgerMenu from '../GraphBurgerMenu.vue'
 import type { ZoomMode } from '../TimeSeriesGraph'
 import {
@@ -87,7 +87,9 @@ const dateLabel = computed(() => {
   const timeZone = getLocalTimeZone()
   const startDate = isoDate(fromAbsolute(props.timeRange.start * 1000, timeZone))
   const endDate = isoDate(fromAbsolute(props.timeRange.end * 1000, timeZone))
-  return startDate === endDate ? startDate : `${startDate} — ${endDate}`
+  return startDate === endDate
+    ? `${shortWeekday(props.timeRange.start, timeZone)}, ${startDate}`
+    : `${startDate} — ${endDate}`
 })
 
 function withMinutesSpelledOut(label: string): string {
@@ -128,19 +130,9 @@ const { headerLineBreakLevel } = useHeaderLineBreakLevel(
   }
 )
 
-const timestampLabel = computed(() => {
-  const date = dateLabel.value ?? ''
-  return showConsolidationControl.value
-    ? _t('for %{date},', { date })
-    : props.isHoverGraph
-      ? date
-      : _t('Graph values for %{date},', { date })
-})
-
 const resolutionLabel = computed(() => {
-  const prefix = !!props.isHoverGraph || headerLineBreakLevel.value > 1 ? '@' : _t('resolution:')
   const resolution = props.timeRange ? withMinutesSpelledOut(stepLabel(props.timeRange.step)) : ''
-  return `${prefix} ${resolution}`
+  return props.isHoverGraph ? `@ ${resolution}` : _t('Resolution %{resolution}', { resolution })
 })
 </script>
 
@@ -166,26 +158,25 @@ const resolutionLabel = computed(() => {
       class="graphing-graph-header__values-and-time"
       :class="{ 'graphing-graph-header__values-and-time--second-row': headerLineBreakLevel >= 1 }"
       role="group"
-      :aria-label="_t('Graph values and time information')"
+      :aria-label="_t('Data aggregation and time information')"
     >
-      <template v-if="showConsolidationControl">
-        <span class="graphing-graph-header__values-label">{{ _t('Graph values') }}</span>
-        <CmkDropdown
-          v-model="consolidationModel"
-          :options="consolidationOptions"
-          :label="_t('Graph values')"
-          required
-          floating
-        />
-      </template>
+      <span v-if="!isHoverGraph" class="graphing-graph-header__values-label">{{
+        _t('Data aggregation')
+      }}</span>
+      <CmkDropdown
+        v-if="showConsolidationControl"
+        v-model="consolidationModel"
+        :options="consolidationOptions"
+        :label="_t('Data aggregation')"
+        required
+        floating
+      />
       <span v-if="showTimestamp && timeRange" class="graphing-graph-header__timestamp">
         <template v-if="!isHoverGraph">
-          {{ timestampLabel }}
-          <span class="graphing-graph-header__resolution">
-            {{ resolutionLabel }}
-          </span>
+          <span class="graphing-graph-header__resolution">{{ resolutionLabel }}</span>
+          {{ dateLabel }}
         </template>
-        <span v-else> {{ resolutionLabel }}, {{ timestampLabel }} </span>
+        <span v-else> {{ resolutionLabel }}, {{ dateLabel }} </span>
       </span>
     </div>
     <div

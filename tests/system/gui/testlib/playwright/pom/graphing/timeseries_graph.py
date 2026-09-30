@@ -236,21 +236,23 @@ class GraphPanel:
 
     @property
     def _values_and_time_group(self) -> Locator:
-        """The header's first group containing the consolidation function selector (the "Graph
-        values" dropdown) and the time information (date/time and resolution).
+        """The header's first group containing the consolidation function selector (the "Data
+        aggregation" dropdown) and the time information (date/time and resolution).
         """
         return self.header.get_by_role(
-            role="group", name="Graph values and time information", exact=True
+            role="group", name="Data aggregation and time information", exact=True
         )
 
     @property
     def consolidation_control(self) -> Locator:
-        """The header's consolidation function selector (the "Graph values" dropdown).
+        """The header's consolidation function selector (the "Data aggregation" dropdown).
 
         Present only when the panel was told to show it; its shown text is the currently
         selected function.
         """
-        return self._values_and_time_group.get_by_role("combobox", name="Graph values", exact=True)
+        return self._values_and_time_group.get_by_role(
+            "combobox", name="Data aggregation", exact=True
+        )
 
     def select_consolidation(self, option_label: str) -> None:
         """Open the consolidation dropdown and pick the option shown as `option_label`."""
@@ -272,7 +274,7 @@ class GraphPanel:
 
     @property
     def timestamp(self) -> Locator:
-        """The drawn window, e.g. ``for 2026-08-06 — 2026-08-07, resolution: 5 min``.
+        """The drawn window, e.g. ``Resolution 5 min 2026-08-06 — 2026-08-07``.
 
         Collapses to a single date whenever the window stays within one day. Not the
         ``.graphing-graph-timestamp`` of `GraphTimestamp.vue`: that one belongs to the

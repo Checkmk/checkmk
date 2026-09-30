@@ -727,7 +727,7 @@ test('after a value-zoom, the burger menu action includes the shown Y-axis range
 
 async function selectConsolidationFromHeaderDropdown(label: string): Promise<void> {
   const user = userEvent.setup()
-  await user.click(screen.getByRole('combobox', { name: 'Graph values' }))
+  await user.click(screen.getByRole('combobox', { name: 'Data aggregation' }))
   await user.click(await screen.findByRole('option', { name: label }))
 }
 

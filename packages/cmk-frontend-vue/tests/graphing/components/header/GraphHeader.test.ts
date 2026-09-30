@@ -39,7 +39,7 @@ test('the consolidation dropdown shows the selected function', async () => {
   })
 
   await waitFor(() =>
-    expect(screen.getByRole('combobox', { name: 'Graph values' })).toHaveTextContent('Max')
+    expect(screen.getByRole('combobox', { name: 'Data aggregation' })).toHaveTextContent('Max')
   )
 })
 
@@ -48,7 +48,7 @@ test('selecting a consolidation function shows the new selection and emits updat
   const { emitted } = render(GraphHeader, {
     props: { showConsolidation: true, consolidationFn: 'max', timeRange: AGGREGATED_TIME_RANGE }
   })
-  const dropdown = screen.getByRole('combobox', { name: 'Graph values' })
+  const dropdown = screen.getByRole('combobox', { name: 'Data aggregation' })
 
   await user.click(dropdown)
   await user.click(await screen.findByRole('option', { name: 'Min' }))
@@ -75,7 +75,7 @@ test('the consolidation functions are offered from the default downwards, each e
     global: { stubs: INLINE_TOOLTIP_STUBS }
   })
 
-  await user.click(screen.getByRole('combobox', { name: 'Graph values' }))
+  await user.click(screen.getByRole('combobox', { name: 'Data aggregation' }))
 
   const descriptionPerOption = [
     ['Max', 'Display of maximum values for each selected metric over time.'],
@@ -100,8 +100,8 @@ test('describes a same-day range with a single date and its resolution', () => {
     }
   })
 
-  expect(screen.getByText(/for 2026-06-15,/)).toBeInTheDocument()
-  expect(screen.getByText('resolution: 5 min')).toBeInTheDocument()
+  expect(screen.getByText('Mon, 2026-06-15')).toBeInTheDocument()
+  expect(screen.getByText('Resolution 5 min')).toBeInTheDocument()
 })
 
 test('describes a cross-day range as start — end', () => {
@@ -112,30 +112,30 @@ test('describes a cross-day range as start — end', () => {
     }
   })
 
-  expect(screen.getByText(/for 2026-06-14 — 2026-06-15,/)).toBeInTheDocument()
-  expect(screen.getByText('resolution: 6 h')).toBeInTheDocument()
+  expect(screen.getByText('2026-06-14 — 2026-06-15')).toBeInTheDocument()
+  expect(screen.getByText('Resolution 6 h')).toBeInTheDocument()
 })
 
-test('the time range note names the graph values while the consolidation dropdown is hidden', () => {
+test('the time range note names the data aggregation while the consolidation dropdown is hidden', () => {
   render(GraphHeader, {
     props: { showTimestamp: true, showConsolidation: true, timeRange: RAW_TIME_RANGE }
   })
 
-  expect(screen.getByText('Graph values for 2026-06-15,')).toBeInTheDocument()
+  expect(screen.getByText('Data aggregation')).toBeInTheDocument()
 })
 
-test('the time range note leaves naming the graph values to the consolidation dropdown', () => {
+test('the time range note leaves naming the data aggregation to the consolidation dropdown', () => {
   render(GraphHeader, {
     props: { showTimestamp: true, showConsolidation: true, timeRange: AGGREGATED_TIME_RANGE }
   })
 
-  expect(screen.getByText('for 2026-06-15,')).toBeInTheDocument()
+  expect(screen.getByText('Mon, 2026-06-15')).toBeInTheDocument()
 })
 
 test('omits the range note while no time range is known', () => {
   render(GraphHeader, { props: { showTimestamp: true } })
 
-  expect(screen.queryByText(/resolution:/)).not.toBeInTheDocument()
+  expect(screen.queryByText(/Data aggregation/)).not.toBeInTheDocument()
 })
 
 test('offers a zoom selector with an X and a Y mode', () => {
@@ -168,7 +168,7 @@ test('omits the consolidation dropdown unless showConsolidation is set', () => {
 test('shows the consolidation dropdown when showConsolidation is set and the data is aggregated', () => {
   render(GraphHeader, { props: { showConsolidation: true, timeRange: AGGREGATED_TIME_RANGE } })
 
-  expect(screen.getByRole('combobox', { name: 'Graph values' })).toBeInTheDocument()
+  expect(screen.getByRole('combobox', { name: 'Data aggregation' })).toBeInTheDocument()
 })
 
 test('hides the consolidation dropdown while the time range is unknown', () => {
@@ -233,7 +233,7 @@ test('draws the burger menu inside the header trailing action group', () => {
 
   const [valuesAndTimeGroup, zoomAndMenuGroup] = screen.getAllByRole('group')
 
-  expect(valuesAndTimeGroup).toHaveAccessibleName('Graph values and time information')
+  expect(valuesAndTimeGroup).toHaveAccessibleName('Data aggregation and time information')
   expect(zoomAndMenuGroup).toHaveAccessibleName('Graph zoom controls and action menu')
   expect(within(zoomAndMenuGroup!).getByRole('button')).toBeInTheDocument()
 })

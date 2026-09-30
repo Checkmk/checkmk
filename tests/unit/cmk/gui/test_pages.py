@@ -259,6 +259,7 @@ def test_registered_pages() -> None:
         expected_pages += [
             "trial_mode_selection",
             "ajax_save_trial_mode_selection",
+            "ajax_send_trial_mode_request",
         ]
 
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CLOUD:

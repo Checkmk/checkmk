@@ -34,6 +34,7 @@ function renderApp(overrides: Partial<TrialModeSelectionProps> = {}) {
   return render(TrialModeSelectionApp, {
     props: {
       save_url: 'ajax_save_trial_mode_selection.py',
+      verification_url: 'ajax_send_trial_mode_request.py',
       logout_url: 'logout.py',
       verify_online_url: 'wato.py?mode=edit_licensing_settings&online=1',
       verify_offline_url: 'wato.py?mode=licensing_offline_verification',

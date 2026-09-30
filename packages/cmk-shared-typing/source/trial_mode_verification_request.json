@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "trial_mode_verification_request",
+  "properties": {
+    "step": { "title": "VerificationStep", "enum": ["request", "verify"] },
+    "email": { "title": "EmailAddress", "type": "string" },
+    "code": { "title": "OneTimeCode", "type": "string" },
+    "salt": { "title": "Salt", "type": "string" }
+  },
+  "required": ["step", "email"]
+}

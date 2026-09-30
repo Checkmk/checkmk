@@ -114,17 +114,16 @@ def test_hosts_match_after_the_scope_is_left() -> None:
     assert _values(matcher, HOST2) == ["matched"]
 
 
-def test_hosts_match_after_the_scope_is_left_by_an_exception() -> None:
+def test_an_exception_restores_the_outer_scope() -> None:
     matcher = _make_matcher()
 
     with (
         pytest.raises(RuntimeError),
         matcher.ruleset_optimizer.processed_hosts({HOST1}),
     ):
-        assert _values(matcher, HOST1) == ["matched"]
         raise RuntimeError
 
-    assert _values(matcher, HOST2) == ["matched"]
+    assert _considered_hosts(matcher, HOST1) == {HOST1, HOST2, HOST3}
 
 
 def test_hosts_match_after_the_default_scope_grows() -> None:

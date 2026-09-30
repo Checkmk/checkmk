@@ -16,6 +16,7 @@ import TrialModeSelectionCodeEntry from './screens/TrialModeSelectionCodeEntry.v
 import TrialModeSelectionEmailEntry from './screens/TrialModeSelectionEmailEntry.vue'
 import TrialModeSelectionEndpointUnreachable from './screens/TrialModeSelectionEndpointUnreachable.vue'
 import TrialModeSelectionEntryChoice from './screens/TrialModeSelectionEntryChoice.vue'
+import TrialModeSelectionLicensePending from './screens/TrialModeSelectionLicensePending.vue'
 import TrialModeSelectionLicenseVerification from './screens/TrialModeSelectionLicenseVerification.vue'
 import TrialModeSelectionTrialVerified from './screens/TrialModeSelectionTrialVerified.vue'
 import TrialModeSelectionUnverifiedTrial from './screens/TrialModeSelectionUnverifiedTrial.vue'
@@ -65,7 +66,17 @@ const {
       :saving="saving"
       @back="goTo('choice')"
       @verify-now="verifyNow"
-      @verify-later="verifyLater"
+      @verify-later="goTo('pending')"
+    />
+
+    <TrialModeSelectionLicensePending
+      v-else-if="screen === 'pending'"
+      :trial-end-timestamp="props.trial_end_timestamp"
+      :trial-length-days="props.trial_length_days"
+      :free-services-limit="props.free_services_limit"
+      :saving="saving"
+      @back="goTo('verification')"
+      @start-monitoring="verifyLater"
     />
 
     <TrialModeSelectionEndpointUnreachable

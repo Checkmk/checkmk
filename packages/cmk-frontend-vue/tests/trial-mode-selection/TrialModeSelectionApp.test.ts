@@ -189,16 +189,41 @@ describe('TrialModeSelectionApp', () => {
       })
     })
 
-    it('persists the selection and returns to the dashboard on "Verify later"', async () => {
-      renderApp()
+    it('shows the pending license activation on "Verify later", without saving yet', async () => {
+      renderApp({ trial_end_timestamp: Date.now() / 1000 + 26 * 24 * 3600 - 300 })
       await goToLicenseVerification()
 
       await user.click(screen.getByRole('button', { name: 'Verify later' }))
+
+      expect(
+        screen.getByRole('heading', { name: 'License activation pending' })
+      ).toBeInTheDocument()
+      expect(screen.getByText('Full features · 26 days left')).toBeInTheDocument()
+      expect(mockCmkAjax).not.toHaveBeenCalled()
+    })
+
+    it('persists the selection and returns to the dashboard on "Start monitoring"', async () => {
+      renderApp()
+      await goToLicenseVerification()
+      await user.click(screen.getByRole('button', { name: 'Verify later' }))
+
+      await user.click(screen.getByRole('button', { name: 'Start monitoring' }))
 
       await waitFor(() => {
         expectCustomerSelectionSaved()
         expect(mockLocationAssign).toHaveBeenCalledWith('index.py')
       })
+    })
+
+    it('goes back to the license verification from the pending activation', async () => {
+      renderApp()
+      await goToLicenseVerification()
+      await user.click(screen.getByRole('button', { name: 'Verify later' }))
+
+      await user.click(screen.getByRole('button', { name: 'Back' }))
+
+      expect(screen.getByText('Verify your license')).toBeInTheDocument()
+      expect(mockCmkAjax).not.toHaveBeenCalled()
     })
 
     it('returns to the undecided entry choice on "Back"', async () => {

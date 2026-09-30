@@ -333,6 +333,145 @@ def start_basic_auth_http_server(
         container.exec_run(["sh", "-c", f"kill $(cat {pidfile}) 2>/dev/null || true"])
 
 
+@contextmanager
+def start_silent_tcp_server(
+    container: docker.models.containers.Container,
+    port: int,
+) -> Iterator[None]:
+    """Accept TCP connections on *port* and never answer them; stop the server on exit.
+
+    A target for timeout tests: a client that connected keeps waiting for a reply
+    until its own timeout fires or something kills it. Copies
+    ``mock_servers/silent_tcp_server.py`` into *container* and runs it in the
+    background, like :func:`start_basic_auth_http_server`.
+    """
+    script = _MOCK_SERVERS_DIR / "silent_tcp_server.py"
+    pidfile = f"/tmp/relay_component_silent_{port}.pid"
+    exit_code, output = _exec(container, ["sh", "-c", f"mkdir -p {_MOCK_SERVERS_TARGET}"])
+    if exit_code != 0:
+        raise RuntimeError(f"could not prepare {container.name} for the silent server: {output}")
+    if not copy_to_container(container, script, _MOCK_SERVERS_TARGET):
+        raise RuntimeError(f"could not copy {script.name} into {container.name}")
+    container.exec_run(
+        [
+            "sh",
+            "-c",
+            f"echo $$ > {pidfile}; exec python3 {_MOCK_SERVERS_TARGET}/{script.name} --port {port}",
+        ],
+        detach=True,
+    )
+    try:
+        _wait_until_tcp_open(container, port)
+        yield
+    finally:
+        container.exec_run(["sh", "-c", f"kill $(cat {pidfile}) 2>/dev/null || true"])
+
+
+@contextmanager
+def start_ca_signed_tls_server(
+    container: docker.models.containers.Container,
+    port: int,
+    openssl: str = _RELAY_OPENSSL,
+    *,
+    san_ip: str,
+) -> Iterator[str]:
+    """Serve a certificate signed by a throwaway private CA on *port*; yield the CA's PEM.
+
+    The twin of :func:`start_tls_server` for the trust-chain path. The leaf (CN
+    ``cert-mock-signed``, subject alternative name *san_ip*) verifies against this CA
+    only, so a client that verifies it must have been handed the CA - which is what a
+    test puts into the site's trusted certificate authorities. *openssl* as in
+    :func:`start_tls_server`.
+    """
+    ca_cert, ca_key = "/tmp/relay_component_ca.pem", "/tmp/relay_component_ca_key.pem"
+    cert, key = "/tmp/relay_component_signed_cert.pem", "/tmp/relay_component_signed_key.pem"
+    csr, ext = "/tmp/relay_component_signed.csr", "/tmp/relay_component_signed.ext"
+    pidfile = f"/tmp/relay_component_tls_{port}.pid"
+    steps: list[list[str]] = [
+        [
+            "env",
+            _OPENSSL_ENV,
+            openssl,
+            "req",
+            "-x509",
+            "-newkey",
+            "rsa:2048",
+            "-keyout",
+            ca_key,
+            "-out",
+            ca_cert,
+            "-days",
+            "1",
+            "-nodes",
+            "-subj",
+            "/CN=relay-e2e-private-ca",
+            # With OPENSSL_CONF=/dev/null no default extensions are added, and a
+            # certificate without these is not a CA to a verifier ("invalid CA").
+            "-addext",
+            "basicConstraints=critical,CA:TRUE",
+            "-addext",
+            "keyUsage=critical,keyCertSign,cRLSign",
+        ],
+        [
+            "env",
+            _OPENSSL_ENV,
+            openssl,
+            "req",
+            "-new",
+            "-newkey",
+            "rsa:2048",
+            "-keyout",
+            key,
+            "-out",
+            csr,
+            "-nodes",
+            "-subj",
+            "/CN=cert-mock-signed",
+        ],
+        ["sh", "-c", f"printf 'subjectAltName=IP:{san_ip}\\n' > {ext}"],
+        [
+            "env",
+            _OPENSSL_ENV,
+            openssl,
+            "x509",
+            "-req",
+            "-in",
+            csr,
+            "-CA",
+            ca_cert,
+            "-CAkey",
+            ca_key,
+            "-CAcreateserial",
+            "-out",
+            cert,
+            "-days",
+            "1",
+            "-extfile",
+            ext,
+        ],
+    ]
+    for argv in steps:
+        exit_code, output = _exec(container, argv)
+        if exit_code != 0:
+            raise RuntimeError(f"private CA setup failed at {' '.join(argv[:4])}: {output}")
+    container.exec_run(
+        [
+            "sh",
+            "-c",
+            (
+                f"echo $$ > {pidfile}; exec env {_OPENSSL_ENV} {openssl} s_server "
+                f"-cert {cert} -key {key} -accept {port} -www -quiet"
+            ),
+        ],
+        detach=True,
+    )
+    try:
+        _wait_until_tcp_open(container, port)
+        yield read_container_file(container, ca_cert)
+    finally:
+        container.exec_run(["sh", "-c", f"kill $(cat {pidfile}) 2>/dev/null || true"])
+
+
 def read_container_file(container: docker.models.containers.Container, path: str) -> str:
     """Return the content of *path* inside *container*."""
     exit_code, output = _exec(container, ["cat", path])

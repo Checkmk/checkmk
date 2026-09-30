@@ -437,8 +437,6 @@ const addTo = computed<AddTo | null>(() =>
   padding: var(--dimension-7);
   background: var(--ux-theme-3);
   border-radius: var(--border-radius);
-
-  --graphing-designer-body-table-overflow: auto;
 }
 
 .graphing-designer-body__preview-container {
@@ -492,8 +490,6 @@ const addTo = computed<AddTo | null>(() =>
 @media (height < 945px) {
   .graphing-designer-body {
     flex-shrink: 0;
-
-    --graphing-designer-body-table-overflow: visible;
   }
 }
 </style>

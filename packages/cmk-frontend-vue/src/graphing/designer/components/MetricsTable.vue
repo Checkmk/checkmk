@@ -322,12 +322,7 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
       </CmkButton>
     </div>
 
-    <CmkScrollContainer
-      height="auto"
-      max-height="none"
-      class="graphing-metrics-table__scroll"
-      :style="{ overflow: 'var(--graphing-designer-body-table-overflow, auto)' }"
-    >
+    <CmkScrollContainer height="auto" max-height="none" class="graphing-metrics-table__scroll">
       <EditableTable
         ref="table"
         v-model:row-selection="rowSelection"

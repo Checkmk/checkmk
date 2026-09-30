@@ -150,12 +150,7 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
 </script>
 
 <template>
-  <CmkScrollContainer
-    height="auto"
-    max-height="none"
-    class="graphing-appearance-table"
-    :style="{ overflow: 'var(--graphing-designer-body-table-overflow, auto)' }"
-  >
+  <CmkScrollContainer height="auto" max-height="none" class="graphing-appearance-table">
     <EditableTable
       :rows="[...store.items.value]"
       :columns="columns"

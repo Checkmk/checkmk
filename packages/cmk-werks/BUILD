@@ -84,6 +84,7 @@ py_cmk_test(
     # the e2e tests each run the CLI in a subprocess, which does not fit into "small"
     size = "medium",
     srcs = glob(["tests/**/*.py"]),
+    args = ["--block-network"],
     deps = [
         ":cmk-werk-ids-server",
         ":site",

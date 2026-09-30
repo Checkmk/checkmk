@@ -51,14 +51,3 @@ def vcr_cassette_dir(request: pytest.FixtureRequest) -> str:
     cassette_dir = test_dir / "cassettes" / f"{test_file}_cassettes"
     cassette_dir.mkdir(parents=True, exist_ok=True)
     return str(cassette_dir)
-
-
-def pytest_configure(config: pytest.Config) -> None:
-    """Register custom markers."""
-    config.addinivalue_line("markers", "block_network: block network access during test execution")
-
-
-@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
-def auto_block_network(request: pytest.FixtureRequest) -> None:
-    """Automatically apply block_network marker to all tests."""
-    request.node.add_marker(pytest.mark.block_network)

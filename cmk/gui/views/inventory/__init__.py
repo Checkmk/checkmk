@@ -21,8 +21,6 @@ from cmk.web.utils.icons import DynamicIcon, DynamicIconName, StaticIcon
 
 from ._data_sources import ABCDataSourceInventory, RowTableInventory
 from ._display_hints import (
-    FilterMigration,
-    find_non_canonical_filters,
     inv_display_hints,
     load_inventory_ui_plugins,
     NodeDisplayHint,
@@ -49,12 +47,10 @@ from .registry import (
 )
 
 __all__ = [
-    "FilterMigration",
     "InventoryHintSpec",
     "NodeDisplayHint",
     "OrderedColumnDisplayHintsOfView",
     "TableWithView",
-    "find_non_canonical_filters",
     "inv_display_hints",
     "load_inventory_ui_plugins",
 ]

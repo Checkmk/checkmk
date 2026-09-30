@@ -1,4 +1,5 @@
-load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
+load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@rules_python//python:defs.bzl", "py_binary")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 
 py_library(

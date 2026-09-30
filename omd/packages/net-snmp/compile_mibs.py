@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import argparse
+import sys
+from collections.abc import Sequence
 from pathlib import Path
 
 from pysmi.codegen.pysnmp import PySnmpCodeGen
@@ -15,49 +17,55 @@ from pysmi.searcher.pypackage import PyPackageSearcher
 from pysmi.searcher.stub import StubSearcher
 from pysmi.writer.pyfile import PyFileWriter
 
-parser = argparse.ArgumentParser(prog="compile", description="Compiles MIBs for use with pysnmp")
-parser.add_argument("destination_dir", type=Path)
-parser.add_argument("source_files", nargs="+", type=str)
 
-args = parser.parse_args()
-
-args.destination_dir.mkdir(parents=True)
-
-mibs = {Path(mib_path).stem: mib_path for mib_path in args.source_files}
-
-search_dirs = {Path(mib_path).parent for mib_path in args.source_files}
-
-
-def load_file(mib_name: str, _: object) -> str | None:
-    if mib_name not in mibs:
-        return None
-    with open(mibs[mib_name]) as file:
-        return file.read()
-
-
-compiler = (
-    MibCompiler(  # type: ignore[no-untyped-call]
-        SmiV1CompatParser(),
-        PySnmpCodeGen(),  # type: ignore[no-untyped-call]
-        PyFileWriter(args.destination_dir).set_options(pyCompile=False),  # type: ignore[no-untyped-call]
+def main(argv: Sequence[str]) -> None:
+    parser = argparse.ArgumentParser(
+        prog="compile", description="Compiles MIBs for use with pysnmp"
     )
-    .add_sources(
-        # Provides the just uploaded MIB module
-        CallbackReader(load_file, None),  # type: ignore[no-untyped-call]
-        # Directories containing ASN1 MIB files which may be used for dependency resolution
-        *[FileReader(search_dir) for search_dir in search_dirs],  # type: ignore[no-untyped-call]
-    )
-    .add_searchers(
-        # check for additional already compiled MIBs
-        *[PyFileSearcher(search_dir) for search_dir in search_dirs],  # type: ignore[no-untyped-call]
-        # check compiled MIBs shipped with PySNMP
-        *[PyPackageSearcher(package) for package in PySnmpCodeGen.defaultMibPackages],  # type: ignore[no-untyped-call]
-        # never recompile MIBs with MACROs
-        StubSearcher(*PySnmpCodeGen.baseMibs),  # type: ignore[no-untyped-call]
-    )
-)
+    parser.add_argument("destination_dir", type=Path)
+    parser.add_argument("source_files", nargs="+", type=str)
 
-for mib_name in mibs:
-    results = compiler.compile(mib_name, ignoreErrors=False, genTexts=True)
-    if status_failed in set(results.values()):
-        raise Exception(f"Could not compile mib {mib_name}")
+    args = parser.parse_args(argv)
+
+    args.destination_dir.mkdir(parents=True)
+
+    mibs = {Path(mib_path).stem: mib_path for mib_path in args.source_files}
+
+    search_dirs = {Path(mib_path).parent for mib_path in args.source_files}
+
+    def load_file(mib_name: str, _: object) -> str | None:
+        if mib_name not in mibs:
+            return None
+        with open(mibs[mib_name]) as file:
+            return file.read()
+
+    compiler = (
+        MibCompiler(  # type: ignore[no-untyped-call]
+            SmiV1CompatParser(),
+            PySnmpCodeGen(),  # type: ignore[no-untyped-call]
+            PyFileWriter(args.destination_dir).set_options(pyCompile=False),  # type: ignore[no-untyped-call]
+        )
+        .add_sources(
+            # Provides the just uploaded MIB module
+            CallbackReader(load_file, None),  # type: ignore[no-untyped-call]
+            # Directories containing ASN1 MIB files which may be used for dependency resolution
+            *[FileReader(search_dir) for search_dir in search_dirs],  # type: ignore[no-untyped-call]
+        )
+        .add_searchers(
+            # check for additional already compiled MIBs
+            *[PyFileSearcher(search_dir) for search_dir in search_dirs],  # type: ignore[no-untyped-call]
+            # check compiled MIBs shipped with PySNMP
+            *[PyPackageSearcher(package) for package in PySnmpCodeGen.defaultMibPackages],  # type: ignore[no-untyped-call]
+            # never recompile MIBs with MACROs
+            StubSearcher(*PySnmpCodeGen.baseMibs),  # type: ignore[no-untyped-call]
+        )
+    )
+
+    for mib_name in mibs:
+        results = compiler.compile(mib_name, ignoreErrors=False, genTexts=True)
+        if status_failed in set(results.values()):
+            raise Exception(f"Could not compile mib {mib_name}")
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

@@ -189,6 +189,7 @@ pkg_mkdirs(
 py_library(
     name = "compile_mibs_lib",
     srcs = ["compile_mibs.py"],
+    imports = ["."],
     deps = [requirement("pysmi")],
 )
 
@@ -228,6 +229,5 @@ py_cmk_test(
     size = "small",
     srcs = glob(["tests/*.py"]),
     data = ["@net-snmp//:mibs"],
-    tags = ["deballast-keep=//omd/packages/net-snmp:compile_mibs_lib"],
     deps = [":compile_mibs_lib"],
 )

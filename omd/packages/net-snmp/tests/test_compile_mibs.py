@@ -4,14 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import runpy
 import shutil
-import sys
 from pathlib import Path
 
 import pytest
-
-SCRIPT = Path(__file__).parent.parent / "compile_mibs.py"
+from compile_mibs import main
 
 TEST_MIB = """\
 CHECKMK-TEST-MIB DEFINITIONS ::= BEGIN
@@ -48,28 +45,27 @@ def _provide_base_mibs(directory: Path) -> None:
         shutil.copy(net_snmp_mibs / f"{name}.txt", directory)
 
 
-def _compile(destination: Path, sources: list[Path], monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(sys, "argv", [str(SCRIPT), str(destination), *map(str, sources)])
-    runpy.run_path(str(SCRIPT), run_name="__main__")
+def _compile(destination: Path, sources: list[Path]) -> None:
+    main([str(destination), *map(str, sources)])
 
 
 def test_mib_is_compiled_into_python_module(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path,
 ) -> None:
     mib = tmp_path / "CHECKMK-TEST-MIB.txt"
     mib.write_text(TEST_MIB)
     _provide_base_mibs(tmp_path)
     destination = tmp_path / "compiled"
 
-    _compile(destination, [mib], monkeypatch)
+    _compile(destination, [mib])
 
     compiled = (destination / "CHECKMK-TEST-MIB.py").read_text()
     assert "checkmkTestValue" in compiled
 
 
-def test_broken_mib_fails_the_compilation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_broken_mib_fails_the_compilation(tmp_path: Path) -> None:
     mib = tmp_path / "BROKEN-MIB.txt"
     mib.write_text("BROKEN-MIB DEFINITIONS ::= BEGIN\nthis is not ASN.1\nEND\n")
 
     with pytest.raises(Exception, match="Could not compile mib BROKEN-MIB"):
-        _compile(tmp_path / "compiled", [mib], monkeypatch)
+        _compile(tmp_path / "compiled", [mib])

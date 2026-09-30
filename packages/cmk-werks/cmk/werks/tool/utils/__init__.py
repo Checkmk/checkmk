@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Sequence
 from functools import partial
 from pathlib import Path
 
@@ -12,7 +12,7 @@ from pydantic import RootModel, TypeAdapter
 from cmk.ccc.version import parse_check_mk_version
 from cmk.werks.tool import load_werk
 from cmk.werks.tool.config import RuntimeConfiguration
-from cmk.werks.tool.models import Class, Compatibility, WerkV1, WerkV2, WerkV3
+from cmk.werks.tool.models import Class, Compatibility, Level, WerkV1, WerkV2, WerkV3
 
 WerksOnDisk = RootModel[dict[int, WerkV2 | WerkV3]]
 
@@ -72,11 +72,10 @@ def sort_by_version_and_component(
 # *all* translation values.
 class WerkTranslator:
     def __init__(self) -> None:
-        super().__init__()
         self._classes = {
-            "feature": "New feature",
-            "fix": "Bug fix",
-            "security": "Security fix",
+            Class.FEATURE: "New feature",
+            Class.FIX: "Bug fix",
+            Class.SECURITY: "Security fix",
         }
         self._components = {
             # Community
@@ -114,18 +113,18 @@ class WerkTranslator:
             "distros": "Linux distributions",
         }
         self._levels = {
-            1: "Trivial change",
-            2: "Prominent change",
-            3: "Major change",
+            Level.LEVEL_1: "Trivial change",
+            Level.LEVEL_2: "Prominent change",
+            Level.LEVEL_3: "Major change",
         }
 
-    def classes(self) -> list[tuple[str, str]]:
-        return list(self._classes.items())
+    def classes(self) -> Sequence[tuple[str, str]]:
+        return [(werk_class.value, title) for werk_class, title in self._classes.items()]
 
     def class_of(self, werk: WerkV3) -> str:
-        return self._classes[werk.class_.value]  # TODO: remove .value
+        return self._classes[werk.class_]
 
-    def components(self) -> list[tuple[str, str]]:
+    def components(self) -> Sequence[tuple[str, str]]:
         return list(self._components.items())
 
     def component_of(self, werk: WerkV3) -> str:
@@ -135,11 +134,11 @@ class WerkTranslator:
     def translate_component(self, component: str) -> str:
         return self._components.get(component, component)
 
-    def levels(self) -> list[tuple[int, str]]:
-        return list(self._levels.items())
+    def levels(self) -> Sequence[tuple[int, str]]:
+        return [(level.value, title) for level, title in self._levels.items()]
 
     def level_of(self, werk: WerkV3) -> str:
-        return self._levels[werk.level.value]  # TODO: remove .value
+        return self._levels[werk.level]
 
 
 def load_raw_files(werks_dir: Path) -> list[WerkV3]:

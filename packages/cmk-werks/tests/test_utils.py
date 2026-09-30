@@ -13,6 +13,7 @@ from cmk.werks.tool.utils import (
     load_precompiled_werks_file,
     resolve_version,
     sort_by_version_and_component,
+    WerkTranslator,
 )
 
 from ._werk_files import werk_text
@@ -69,3 +70,19 @@ def test_an_unreleased_version_comes_from_defines_make(tmp_path: Path) -> None:
     (tmp_path / "defines.make").write_text("VERSION := 2.5.0b1\n", encoding="utf-8")
 
     assert resolve_version(RuntimeConfiguration(tmp_path), None) == "2.5.0b1"
+
+
+def test_the_classes_are_offered_by_their_name() -> None:
+    assert WerkTranslator().classes() == [
+        ("feature", "New feature"),
+        ("fix", "Bug fix"),
+        ("security", "Security fix"),
+    ]
+
+
+def test_the_levels_are_offered_by_their_number() -> None:
+    assert WerkTranslator().levels() == [
+        (1, "Trivial change"),
+        (2, "Prominent change"),
+        (3, "Major change"),
+    ]

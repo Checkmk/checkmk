@@ -356,13 +356,6 @@ class _SDItemsSorter(_ABCItemsSorter):
         )
 
 
-def _delta_value_has_change(delta_value: SDDeltaValue) -> bool:
-    return (
-        not (delta_value.old is None and delta_value.new is None)
-        and delta_value.old != delta_value.new
-    )
-
-
 @dataclass(frozen=True)
 class _SDDeltaItemsSorter(_ABCItemsSorter):
     attributes: ImmutableDeltaAttributes
@@ -381,13 +374,13 @@ class _SDDeltaItemsSorter(_ABCItemsSorter):
                 paint_function=h.paint_function,
             )
             for k in sorted_keys
-            if (v := self.attributes.pairs.get(k)) is not None and _delta_value_has_change(v)
+            if (v := self.attributes.pairs.get(k)) is not None and v.old != v.new
             for h in (self.hint.get_attribute_hint(k),)
         ]
 
     def _filter_delta_row_keys(self) -> Iterator[SDKey]:
         for row in self.table.rows:
-            if any(_delta_value_has_change(delta_value) for delta_value in row.values()):
+            if any(v.old != v.new for v in row.values()):
                 yield from row
 
     def sort_rows(self) -> tuple[Sequence[_Column], Sequence[Sequence[_SDDeltaItem]]]:
@@ -423,7 +416,7 @@ class _SDDeltaItemsSorter(_ABCItemsSorter):
                         _sanitize(r.get(c.key) or SDDeltaValue(old=None, new=None)) for c in columns
                     ),
                 )
-                if any(_delta_value_has_change(delta_value) for delta_value in row.values())
+                if any(v.old != v.new for v in row.values())
             ],
         )
 

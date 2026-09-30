@@ -1362,9 +1362,9 @@ lxml==6.1.3 \
     #   -r _requirements_runtime.txt
     #   -r packages/cmk-werks/requirements.txt
     #   exchangelib
-markdown==3.7 \
-    --hash=sha256:2ae2471477cfd02dbbf038d5d9bc226d40def84b4fe2986e49b59b6b472bbed2 \
-    --hash=sha256:7eb6df5690b81a1d7942992c97fad2938e956e79df20cbc6186e9c3a77b1c803
+markdown==3.11 \
+    --hash=sha256:180224db6aed87ba9ce1f2781ebcd5826253de8ff637112090e24b84502bbf9f \
+    --hash=sha256:cd6c89e7eb308c8b332ed673215a52d208a43f8bacc030b1419376129408719e
     # via -r packages/cmk-werks/requirements.txt
 markupsafe==3.0.3 \
     --hash=sha256:0303439a41979d9e74d18ff5e2dd8c43ed6c6001fd40e5bf2e43f7bd9bbc523f \

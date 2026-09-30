@@ -1597,7 +1597,7 @@
           "@@rules_python~//tools/publish/requirements_linux.txt": "d576e0d8542df61396a9b38deeaa183c24135ed5e8e73bb9622f298f2671811e",
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
           "@@rules_python~//tools/publish/requirements_windows.txt": "d18538a3982beab378fd5687f4db33162ee1ece69801f9a451661b1b64286b76",
-          "@@//requirements_all_lock.txt": "5099e20218e81ba0a5ad84a2340865237b441ebfab8d357221df45a370cdacb2",
+          "@@//requirements_all_lock.txt": "0e366496bce72a99382c64e1c3e27f757c78e5b0591a5fb2211ec7f65d5978bd",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5",
           "@@rules_python~//tools/publish/requirements_darwin.txt": "095d4a4f3d639dce831cd493367631cd51b53665292ab20194bac2c0c6458fa8"
@@ -2795,7 +2795,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "filelock==4.0.7 --hash=sha256:a93c4d93269b339a6af4848342c7e940d0f9928ad95eff64764699e5f1bf8a6a --hash=sha256:da5915714a70b55d167fdc7e251ad91302b0a36816fb574dfafae8f4f2c9bb21"
+              "requirement": "filelock==4.0.8 --hash=sha256:325ff22f358c18443b1fcdfa0a7aa3faec4b500c2807c554719da4567b533d31 --hash=sha256:733d9b6b153fc63672f86104324186818b6bbe9dd7db84e9bb9887b6a04a2775"
             }
           },
           "cmk_requirements_312_flake8": {
@@ -3900,7 +3900,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "markdown==3.7 --hash=sha256:2ae2471477cfd02dbbf038d5d9bc226d40def84b4fe2986e49b59b6b472bbed2 --hash=sha256:7eb6df5690b81a1d7942992c97fad2938e956e79df20cbc6186e9c3a77b1c803"
+              "requirement": "markdown==3.11 --hash=sha256:180224db6aed87ba9ce1f2781ebcd5826253de8ff637112090e24b84502bbf9f --hash=sha256:cd6c89e7eb308c8b332ed673215a52d208a43f8bacc030b1419376129408719e"
             }
           },
           "cmk_requirements_312_markdown_it_py": {
@@ -7878,7 +7878,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "virtualenv==21.14.1 --hash=sha256:6fd04089fc0dc33549e7abdff70fc3b63d4e15799f2dbf3281f80d13b9fce522 --hash=sha256:719b189804e66678017d9f63bbfc590c44f6b96ab4829513806394f9b375929c"
+              "requirement": "virtualenv==21.14.2 --hash=sha256:571930928b11e43db690073ad8228162eca8a3f8fd3a87acdeae07df7dd57068 --hash=sha256:6a8b7fd4e4ee00ebcdc1c5ee8cffd035d1fe130e354e8c9a44f510aac8affdc1"
             }
           },
           "cmk_requirements_312_watchdog": {

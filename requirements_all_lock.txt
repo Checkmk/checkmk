@@ -1021,9 +1021,9 @@ fido2==1.2.0 \
     --hash=sha256:e39f95920122d64283fda5e5581d95a206e704fa42846bfa4662f86aa0d3333b \
     --hash=sha256:f7c8ee62e359aa980a45773f9493965bb29ede1b237a9218169dbfe60c80e130
     # via -r requirements_all.txt
-filelock==4.0.7 \
-    --hash=sha256:a93c4d93269b339a6af4848342c7e940d0f9928ad95eff64764699e5f1bf8a6a \
-    --hash=sha256:da5915714a70b55d167fdc7e251ad91302b0a36816fb574dfafae8f4f2c9bb21
+filelock==4.0.8 \
+    --hash=sha256:325ff22f358c18443b1fcdfa0a7aa3faec4b500c2807c554719da4567b533d31 \
+    --hash=sha256:733d9b6b153fc63672f86104324186818b6bbe9dd7db84e9bb9887b6a04a2775
     # via
     #   python-discovery
     #   virtualenv
@@ -2210,9 +2210,9 @@ lxml==6.1.3 \
     #   -r requirements_all.txt
     #   exchangelib
     #   svglib
-markdown==3.7 \
-    --hash=sha256:2ae2471477cfd02dbbf038d5d9bc226d40def84b4fe2986e49b59b6b472bbed2 \
-    --hash=sha256:7eb6df5690b81a1d7942992c97fad2938e956e79df20cbc6186e9c3a77b1c803
+markdown==3.11 \
+    --hash=sha256:180224db6aed87ba9ce1f2781ebcd5826253de8ff637112090e24b84502bbf9f \
+    --hash=sha256:cd6c89e7eb308c8b332ed673215a52d208a43f8bacc030b1419376129408719e
     # via -r requirements_all.txt
 markdown-it-py==4.2.0 \
     --hash=sha256:04a21681d6fbb623de53f6f364d352309d4094dd4194040a10fd51833e418d49 \
@@ -5028,9 +5028,9 @@ vcrpy==8.2.1 \
     --hash=sha256:7ce58c9e2792b246f79d6f4b3e9660676cc6f853be17e1547305b4437ab1ff85 \
     --hash=sha256:d73a6e4eb6dae8148e659764b7a00e68cc51ba29ba9e6a85e1f0790ad96b97df
     # via -r requirements_all.txt
-virtualenv==21.14.1 \
-    --hash=sha256:6fd04089fc0dc33549e7abdff70fc3b63d4e15799f2dbf3281f80d13b9fce522 \
-    --hash=sha256:719b189804e66678017d9f63bbfc590c44f6b96ab4829513806394f9b375929c
+virtualenv==21.14.2 \
+    --hash=sha256:571930928b11e43db690073ad8228162eca8a3f8fd3a87acdeae07df7dd57068 \
+    --hash=sha256:6a8b7fd4e4ee00ebcdc1c5ee8cffd035d1fe130e354e8c9a44f510aac8affdc1
     # via pre-commit
 watchdog==6.0.0 \
     --hash=sha256:07df1fdd701c5d4c8e55ef6cf55b8f0120fe1aef7ef39a1c6fc6bc2e606d517a \

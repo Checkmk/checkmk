@@ -13,6 +13,17 @@ filegroup(
     tags = ["lint-with-psscriptanalyzer"],
 )
 
+# --cache skips the files that are unchanged since prettier last found them
+# formatted. format_dispatch provides a cache directory per target and language:
+# - prettier keys its entries by the resolved options, which include the path of
+#   the import-sorting plugin that prettier.config.cjs require.resolve()s. That
+#   path lies in the runfiles tree of the calling target, so e.g. //:format and
+#   //:format.check would invalidate each other's entries.
+# - prettier loads its cache file at start and rewrites it on exit, so languages
+#   running in parallel would drop each other's entries.
+# The "content" strategy compares only the file size before prettier 3.9.0
+# (https://github.com/prettier/prettier/issues/18913); "metadata" compares size
+# and mtime.
 prettier_bin.prettier_binary(
     name = "prettier",
     data = ["//bazel/tools:prettierrc"],
@@ -21,6 +32,9 @@ prettier_bin.prettier_binary(
         "--config=\"$$JS_BINARY__RUNFILES\"/$(rlocationpath //bazel/tools:prettierrc)",
         "--ignore-path=\"$$BUILD_WORKSPACE_DIRECTORY/.prettierignore\"",
         "--log-level=warn",
+        "--cache",
+        "--cache-location=\"$${FORMAT_CACHE_DIR:-$$BUILD_WORKSPACE_DIRECTORY/.format_cache}/prettier\"",
+        "--cache-strategy=metadata",
     ],
 )
 

@@ -92,6 +92,7 @@ def format_dispatch(name, languages, fix_target, visibility):
             srcs = [Label(":format_dispatch.sh")],
             data = [table, _FORMAT_SH] + {tool: None for tool in tools.values()}.keys(),
             env = {
+                "FORMAT_CACHE": ".format_cache/{}/{}".format(native.package_name(), target),
                 "FORMAT_FIX_TARGET": fix_target,
                 "FORMAT_LANGS": "$(rlocationpath :{})".format(table),
                 "FORMAT_MODE": mode,

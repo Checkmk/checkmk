@@ -11,6 +11,10 @@
 #   FORMAT_SH          runfiles path of rules_lint's format.sh
 #   FORMAT_MODE        "fix" or "check"
 #   FORMAT_FIX_TARGET  target to suggest when a check fails
+#   FORMAT_CACHE       workspace-relative directory for the formatters' caches
+#
+# Each formatter runs with FORMAT_CACHE_DIR set to an absolute directory of its
+# own below FORMAT_CACHE, one per language, where it may keep a cache.
 
 set -eo pipefail
 
@@ -35,7 +39,7 @@ set -eo pipefail
 }
 # --- end runfiles.bash initialization v3 ---
 
-: "${FORMAT_LANGS:?}" "${FORMAT_SH:?}" "${FORMAT_MODE:?}" "${FORMAT_FIX_TARGET:?}"
+: "${FORMAT_LANGS:?}" "${FORMAT_SH:?}" "${FORMAT_MODE:?}" "${FORMAT_FIX_TARGET:?}" "${FORMAT_CACHE:?}"
 runfiles_export_envvars
 
 # Sourcing format.sh defines ls-files and process_args_in_batches, changes into
@@ -56,6 +60,7 @@ format_language() { # <language> <tool> <flags> [<path>...]
         echo >&2 "cannot locate binary $tool"
         exit 1
     }
+    export FORMAT_CACHE_DIR="$BUILD_WORKSPACE_DIRECTORY/$FORMAT_CACHE/$language"
     process_args_in_batches "$language" "$bin" "$flags" "$@"
 }
 

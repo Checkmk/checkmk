@@ -101,6 +101,11 @@ does not enforce coding rules, run static analysis, or sort Python imports.
 `//:format` handles multiple languages based on file extension (Python via ruff,
 shell via shfmt, etc.).
 
+prettier (JavaScript, TypeScript, Vue, JSON, Markdown, CSS, HTML) skips the
+files it found formatted before and whose size and modification time are
+unchanged. Its caches live in `.format_cache/`; delete that directory to make
+prettier look at every file again.
+
 ### Linting
 
 ```console

@@ -169,6 +169,21 @@ def _parameter_valuespec_checkmk_agent() -> Dictionary:
                 ),
             ),
             (
+                "updater_host_name_mismatch",
+                MonitoringState(
+                    title=_("State in case of host name mismatch with the agent updater"),
+                    help=_(
+                        "The agent updater is registered with one site under one host name."
+                        " This state is used when that host name differs from the name of the"
+                        " host in Checkmk. A host that is monitored by several sites may have a"
+                        " different name on each site. On the sites that do not serve the agent"
+                        " updates of such a host, set this state to <i>OK</i>. The mismatch is"
+                        " then only shown in the service details."
+                    ),
+                    default_value=1,
+                ),
+            ),
+            (
                 "versions_plugins",
                 Dictionary(
                     title=_("Agent plug-ins: versions"),

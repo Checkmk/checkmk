@@ -182,7 +182,6 @@ rust_library(
 rust_test_suite(
     name = "mk-oracle-lib-test-external",
     srcs = [
-        "tests/test_mk_oracle_bin.rs",
         "tests/test_ora_discovery.rs",
         "tests/test_ora_no_db.rs",
         "tests/test_ora_with_db.rs",
@@ -200,14 +199,8 @@ rust_test_suite(
     ]),
     crate_features = ["build_system_bazel"],
     data = [
-        "references/output-multiple.cfg",
-        "references/output-multiple.ps1",
-        "references/output-optional.cfg",
-        "references/output-optional.ps1",
-        "references/output-xe-no-tnsalias.cfg",
         "tests/files/mk_oracle_main.cfg",
     ] + glob([
-        "tests/files/migration_corpus/**",
         "tests/files/mk_oracle.d/**",
     ]),
     env_inherit = [
@@ -226,6 +219,28 @@ rust_test_suite(
         ":mk-oracle",
         ":mk-oracle-lib",
         ":mk-oracle-tests-common",
+        "@host_crates//:assert_cmd",
+        "@host_crates//:tempfile",
+    ],
+)
+
+# Tests of the built binary (CLI, config migration): they need neither a
+# database nor an OCI client, so they are not tagged "component" and run
+# with the unit tests in CI.
+rust_test_suite(
+    name = "mk-oracle-bin-test",
+    srcs = ["tests/test_mk_oracle_bin.rs"],
+    crate_features = ["build_system_bazel"],
+    data = [
+        "references/output-multiple.cfg",
+        "references/output-multiple.ps1",
+        "references/output-optional.cfg",
+        "references/output-optional.ps1",
+        "references/output-xe-no-tnsalias.cfg",
+    ] + glob(["tests/files/migration_corpus/**"]),
+    deps = all_crate_deps() + [
+        ":mk-oracle",
+        ":mk-oracle-lib",
         "@host_crates//:assert_cmd",
         "@host_crates//:tempfile",
     ],

@@ -83,7 +83,7 @@ const {
       :domain="props.verification_domain"
       @back="goTo('choice')"
       @retry="startTrial"
-      @continue-offline="openUnverifiedTrial"
+      @continue-offline="openUnverifiedTrial('offline')"
     />
 
     <TrialModeSelectionUnverifiedTrial
@@ -113,7 +113,7 @@ const {
       @back="goTo('email')"
       @resend="resendCode"
       @verified="goTo('success')"
-      @continue-unverified="openUnverifiedTrial"
+      @continue-unverified="openUnverifiedTrial('code_entry_error')"
     />
 
     <TrialModeSelectionTrialVerified

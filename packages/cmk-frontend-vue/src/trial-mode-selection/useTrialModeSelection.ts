@@ -6,6 +6,7 @@
 import { type TrialModeSelectionProps } from 'cmk-shared-typing/typescript/trial_mode_selection_props'
 import {
   type TrialModeSelectionRequest,
+  type UnverifiedTrialReason,
   type VerificationMode
 } from 'cmk-shared-typing/typescript/trial_mode_selection_request'
 import { cmkAjax } from 'cmk-ui-library/lib/ajax'
@@ -135,9 +136,12 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
 
   /** Screen that Back on the unverified trial returns to. */
   let unverifiedOpenedFrom: TrialModeScreen = 'choice'
+  /** Why the trial continues unverified, saved with the selection. */
+  let unverifiedReason: UnverifiedTrialReason | undefined
 
-  function openUnverifiedTrial(): void {
+  function openUnverifiedTrial(reason: UnverifiedTrialReason): void {
     unverifiedOpenedFrom = screen.value
+    unverifiedReason = reason
     goTo('unverified')
   }
 
@@ -202,7 +206,13 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
   }
 
   function recordUnverifiedTrial(): Promise<void> {
-    return persistAndLeave({ selection: 'unverified_trial' }, 'index.py')
+    return persistAndLeave(
+      {
+        selection: 'unverified_trial',
+        ...(unverifiedReason ? { unverified_reason: unverifiedReason } : {})
+      },
+      'index.py'
+    )
   }
 
   function verifyNow(mode: VerificationMode): Promise<void> {

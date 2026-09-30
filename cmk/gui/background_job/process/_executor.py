@@ -43,13 +43,11 @@ class RunningJob:
 
 
 class ThreadedJobExecutor(JobExecutor):
-    job_initializiation_lock = threading.Lock()
-    running_jobs: dict[str, RunningJob] = {}
-    _job_executions: Counter[str] = Counter()
-
     def __init__(self, logger: logging.Logger) -> None:
         self._logger = logger
         self._start_lock = threading.Lock()
+        self.running_jobs: dict[str, RunningJob] = {}
+        self._job_executions: Counter[str] = Counter()
 
     @tracer.instrument()
     @override
@@ -67,10 +65,7 @@ class ThreadedJobExecutor(JobExecutor):
         get_current_span().set_attribute("cmk.job_id", job_id)
 
         with self._start_lock:
-            if (
-                job_id in ThreadedJobExecutor.running_jobs
-                and ThreadedJobExecutor.running_jobs[job_id].thread.is_alive()
-            ):
+            if job_id in self.running_jobs and self.running_jobs[job_id].thread.is_alive():
                 return result.Error(AlreadyRunningError(f"Background Job {job_id} already running"))
 
             self._initialize_work_dir(work_dir, initial_status_args)
@@ -92,8 +87,8 @@ class ThreadedJobExecutor(JobExecutor):
                 ),
                 name=f"bg-{job_id}",
             )
-            ThreadedJobExecutor._job_executions[type_id] += 1
-            ThreadedJobExecutor.running_jobs[job_id] = RunningJob(
+            self._job_executions[type_id] += 1
+            self.running_jobs[job_id] = RunningJob(
                 thread=p,
                 stop_event=stop_event,
                 started_at=int(time.time()),
@@ -133,10 +128,10 @@ class ThreadedJobExecutor(JobExecutor):
     def terminate(self, job_id: str) -> result.Result[None, StartupError]:
         try:
             self._logger.debug("Stop job %(job_id)s using stop event", {"job_id": job_id})
-            ThreadedJobExecutor.running_jobs[job_id].stop_event.set()
+            self.running_jobs[job_id].stop_event.set()
             self._logger.debug("Wait for job to finish")
-            ThreadedJobExecutor.running_jobs[job_id].thread.join()
-            del ThreadedJobExecutor.running_jobs[job_id]
+            self.running_jobs[job_id].thread.join()
+            del self.running_jobs[job_id]
         except KeyError:
             pass
         return result.OK(None)
@@ -144,21 +139,20 @@ class ThreadedJobExecutor(JobExecutor):
     @override
     def is_alive(self, job_id: str) -> result.Result[bool, StartupError]:
         try:
-            return result.OK(bool(ThreadedJobExecutor.running_jobs[job_id].thread.is_alive()))
+            return result.OK(bool(self.running_jobs[job_id].thread.is_alive()))
         except KeyError:
             return result.OK(False)
 
     @override
     def all_running_jobs(self) -> dict[str, int]:
-        ThreadedJobExecutor.clean_up_finished_jobs()
-        return {job_id: job.started_at for job_id, job in ThreadedJobExecutor.running_jobs.items()}
+        self.clean_up_finished_jobs()
+        return {job_id: job.started_at for job_id, job in self.running_jobs.items()}
 
-    @classmethod
-    def clean_up_finished_jobs(cls) -> None:
-        for job_id, job in list(cls.running_jobs.items()):
+    def clean_up_finished_jobs(self) -> None:
+        for job_id, job in list(self.running_jobs.items()):
             if not job.thread.is_alive():
-                del cls.running_jobs[job_id]
+                del self.running_jobs[job_id]
 
     @override
     def job_executions(self) -> dict[str, int]:
-        return dict(ThreadedJobExecutor._job_executions)
+        return dict(self._job_executions)

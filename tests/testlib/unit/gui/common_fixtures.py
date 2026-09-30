@@ -6,6 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 
 
+import logging
 import typing
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -25,6 +26,8 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import hooks, http, main_modules
+from cmk.gui.background_job.job import override_default_executor
+from cmk.gui.background_job.process import ThreadedJobExecutor
 from cmk.gui.config import active_config, Config
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.hosts_and_folders import folder_tree
@@ -50,6 +53,26 @@ def create_flask_app() -> Iterator[Flask]:
         app.preprocess_request()
         yield app
         app.process_response(http.Response())
+
+
+def run_background_jobs_in_threads() -> Iterator[None]:
+    """Run background jobs in threads of an executor owned by the current test.
+
+    The executor tracks the running jobs, so they don't leak into the next test. Jobs still
+    running when the test ends are stopped. If they don't stop in time, the test fails.
+    """
+    executor = ThreadedJobExecutor(logging.getLogger(__name__))
+    with override_default_executor(lambda _logger: executor):
+        yield
+
+    # Tests that run the jobs inline never start the threads, so only look at the live ones.
+    alive = [job for job in executor.running_jobs.values() if job.thread.is_alive()]
+    for job in alive:
+        job.stop_event.set()
+    for job in alive:
+        job.thread.join(timeout=10)
+    if leaked := sorted(executor.all_running_jobs()):
+        pytest.fail(f"Background jobs still running after the test: {', '.join(leaked)}")
 
 
 def create_wsgi_app(flask_app: Flask) -> Iterator[WebTestAppForCMK]:

@@ -40,8 +40,6 @@ from pytest_mock import MockerFixture  # noqa: E402
 
 from cmk.ccc.site import SiteId  # noqa: E402
 from cmk.ccc.user import UserId  # noqa: E402
-from cmk.gui.background_job.job import override_default_executor  # noqa: E402
-from cmk.gui.background_job.process import ThreadedJobExecutor  # noqa: E402
 from cmk.gui.config import Config  # noqa: E402
 from cmk.licensing.handler import (  # noqa: E402
     LicenseState,
@@ -76,6 +74,7 @@ from tests.testlib.unit.gui.common_fixtures import (  # noqa: E402
     perform_gui_cleanup_after_test,
     perform_load_config,
     perform_load_plugins,
+    run_background_jobs_in_threads,
     set_config_context,
     validate_background_job_annotation,
 )
@@ -249,8 +248,7 @@ def disable_automation_helper(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def execute_background_jobs_without_job_scheduler() -> Iterator[None]:
-    with override_default_executor(ThreadedJobExecutor):
-        yield
+    yield from run_background_jobs_in_threads()
 
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]

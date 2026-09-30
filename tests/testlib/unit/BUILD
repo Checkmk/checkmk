@@ -20,6 +20,8 @@ py_library(
         "//cmk/gui:app",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
+        "//cmk/gui/background_job/job",
+        "//cmk/gui/background_job/process",
         "//cmk/gui/graphing",
         "//cmk/gui/mkeventd",
         "//cmk/gui/openapi:openapi_init",

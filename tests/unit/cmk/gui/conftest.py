@@ -22,8 +22,6 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import http, login
-from cmk.gui.background_job.job import override_default_executor
-from cmk.gui.background_job.process import ThreadedJobExecutor
 from cmk.gui.config import Config
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
@@ -40,6 +38,7 @@ from tests.testlib.unit.gui.common_fixtures import (
     perform_load_config,
     perform_load_plugins,
     RemoteAutomation,
+    run_background_jobs_in_threads,
     set_config_context,
     suppress_remote_automation_calls_patches,
     validate_background_job_annotation,
@@ -99,8 +98,7 @@ def disable_automation_helper(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def execute_background_jobs_without_job_scheduler() -> Iterator[None]:
-    with override_default_executor(ThreadedJobExecutor):
-        yield
+    yield from run_background_jobs_in_threads()
 
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]

@@ -82,8 +82,6 @@ test('an event is listed with its icon, event, service, state information and ou
   mountTab({ events: [makeEvent()] })
   await flushVirtualizer()
 
-  // Cell text carries zero-width breaks (`useSoftBreak`), so the cells are matched by
-  // the raw value they keep in their `title` - as the other row tests do.
   expect(screen.getByRole('img', { name: 'Service alert' })).toBeInTheDocument()
   expect(screen.getByTitle('SERVICE ALERT')).toBeInTheDocument()
   expect(screen.getByTitle('CPU load')).toBeInTheDocument()
@@ -201,8 +199,6 @@ test('a service event links its service cell to the legacy service event history
   mountTab({ events: [makeEvent()] })
   await flushVirtualizer()
 
-  // The service name carries zero-width breaks (`useSoftBreak`), so it is matched via its
-  // `title` - as the other row tests do - rather than by role name.
   const link = screen.getByTitle('CPU load').closest('a')
 
   expect(link).toHaveAttribute('href', SERVICE_LINK)

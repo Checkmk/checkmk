@@ -24,6 +24,24 @@ test('renders the value as cell text', () => {
   expect(screen.getByTitle('web-1')).toBeInTheDocument()
 })
 
+test.each([
+  'kube_agent_health_v1',
+  '0.10.19-eu-central-1-i-07e18888b42c123a7',
+  'averyveryverylongunbrokenservicenamewithoutseparators'
+])('renders %s as cell text without adding characters', (value) => {
+  const { container } = mountCell(value)
+
+  expect(container.querySelector('.monitoring-string-cell__text')?.textContent).toBe(value)
+})
+
+test('renders plugin output as cell text without adding characters', () => {
+  const { container } = mountCell('OK - kube_agent_health_v1 is fine', { stateMarkers: true })
+
+  expect(container.querySelector('.monitoring-string-cell__text')?.textContent).toBe(
+    'OK - kube_agent_health_v1 is fine'
+  )
+})
+
 test('repeats no value on hover that fits the cell, when told to title only a cut one', async () => {
   mountCell('fe80::1', { titleOnlyWhenCut: true })
 

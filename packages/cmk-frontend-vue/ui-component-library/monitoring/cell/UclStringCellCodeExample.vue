@@ -13,7 +13,6 @@ import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
       <tr>
         <StringCell
           value="example.host.checkmk.com / Filesystem /var/log — long_descriptive_label"
-          :hard-break-every="15"
           :linked-to="{ href: 'https://checkmk.com', target: '_blank', variant: 'icon' }"
         />
       </tr>

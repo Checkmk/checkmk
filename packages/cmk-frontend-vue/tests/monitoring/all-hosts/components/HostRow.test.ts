@@ -426,6 +426,5 @@ test('renders the contact groups of a host, sorted alphabetically', () => {
 test('renders the customer of a host', () => {
   mountRow(makeHost({ customer: 'Customer A' }))
 
-  // Asserted through the title: the cell breaks long values with zero-width spaces.
-  expect(screen.getByTitle('Customer A')).toBeInTheDocument()
+  expect(screen.getByText('Customer A')).toBeInTheDocument()
 })

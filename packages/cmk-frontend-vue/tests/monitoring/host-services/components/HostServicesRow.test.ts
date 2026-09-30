@@ -14,8 +14,6 @@ import type { HostServiceEntry } from '@/monitoring/shared/api/types'
 import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
-const ZERO_WIDTH_SPACE = String.fromCharCode(0x200b)
-
 // 'abs' keeps assertions comparable to plain `formatTimestamp`, independent of how old
 // a fixture's timestamp happens to be relative to the real clock the test runs under.
 const DISPLAY_OPTIONS: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'abs' }
@@ -326,8 +324,7 @@ test('leaves the perfometer cell empty for a service without performance data', 
 test('renders the two timestamps as formatted date-time strings', () => {
   const { container } = mountRow(makeService())
 
-  const cellText = (td: Element): string =>
-    (td.textContent ?? '').split(ZERO_WIDTH_SPACE).join('').trim()
+  const cellText = (td: Element): string => (td.textContent ?? '').trim()
   const tds = Array.from(container.querySelectorAll('td'))
   expect(cellText(tds[5]!)).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)
   expect(cellText(tds[6]!)).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)
@@ -336,8 +333,7 @@ test('renders the two timestamps as formatted date-time strings', () => {
 test('dashes out the last check of a service that has never been checked', () => {
   const { container } = mountRow(makeService({ last_check: null }))
 
-  const cellText = (td: Element): string =>
-    (td.textContent ?? '').split(ZERO_WIDTH_SPACE).join('').trim()
+  const cellText = (td: Element): string => (td.textContent ?? '').trim()
   const tds = Array.from(container.querySelectorAll('td'))
   expect(cellText(tds[6]!)).toBe('–')
 })

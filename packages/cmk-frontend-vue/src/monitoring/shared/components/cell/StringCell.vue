@@ -9,12 +9,10 @@ import { computed, ref } from 'vue'
 
 import PluginOutput from '../PluginOutput.vue'
 import BaseCell, { type CellLink, type CellVerticalAlign } from './BaseCell.vue'
-import { useSoftBreak } from './base/useSoftBreak'
 
 const props = withDefaults(
   defineProps<{
     value: string | undefined
-    hardBreakEvery?: number
     linkedTo?: CellLink | undefined
     columnId?: string | undefined
     emptyLabel?: string | undefined
@@ -25,17 +23,14 @@ const props = withDefaults(
     /** Renders the state markers a check embeds in its output, for a cell showing one. */
     stateMarkers?: boolean | undefined
   }>(),
-  { hardBreakEvery: 15, linkedTo: undefined }
+  { linkedTo: undefined }
 )
 
 const emit = defineEmits<{
   (event: 'click', payload: MouseEvent): void
 }>()
 
-const display = useSoftBreak(
-  () => props.value ?? props.emptyLabel ?? 'n/a',
-  () => props.hardBreakEvery
-)
+const display = computed(() => props.value ?? props.emptyLabel ?? 'n/a')
 
 const cut = ref(false)
 const title = computed(() => (!props.titleOnlyWhenCut || cut.value ? props.value : undefined))
@@ -65,11 +60,7 @@ function measureCut(event: MouseEvent): void {
         }"
         @mouseenter="titleOnlyWhenCut && measureCut($event)"
       >
-        <PluginOutput
-          v-if="stateMarkers && value"
-          :output="value"
-          :hard-break-every="hardBreakEvery"
-        />
+        <PluginOutput v-if="stateMarkers && value" :output="value" />
         <template v-else>{{ display }}</template>
       </span>
     </template>
@@ -86,8 +77,7 @@ function measureCut(event: MouseEvent): void {
   min-width: 0;
   box-sizing: border-box;
   overflow: hidden;
-  overflow-wrap: normal;
-  word-break: normal;
+  overflow-wrap: anywhere;
 
   &.monitoring-string-cell__text--empty-string {
     font-style: italic;

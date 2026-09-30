@@ -34,7 +34,7 @@ const fixture = defineComponent({
           h('button', { type: 'button', hidden: true }, 'cpuhidden'),
           h('button', { type: 'button', style: { display: 'none' } }, 'cpushown'),
           h('button', { type: 'button' }, 'dbnode'),
-          h('button', { type: 'button' }, 'cpu-\u200Bnode'),
+          h('button', { type: 'button' }, 'cpu-node'),
           h('input', { type: 'text', 'aria-label': 'Search' }),
           h(
             'output',
@@ -86,7 +86,7 @@ test('a text match beats a label-only match, then Down and Right walk on and wra
   await userEvent.keyboard('{ArrowDown}')
   expect(button('CPU load')).toHaveFocus()
   await userEvent.keyboard('{ArrowRight}')
-  expect(button(/cpu-.node/)).toHaveFocus()
+  expect(button('cpu-node')).toHaveFocus()
   await userEvent.keyboard('{ArrowDown}')
   expect(screen.getByRole('checkbox', { name: 'Select host cpunode' })).toHaveFocus()
   await userEvent.keyboard('{ArrowDown}')
@@ -116,15 +116,6 @@ test('hidden elements are never matches', async () => {
 
   await userEvent.keyboard('cpushown')
   expect(await state()).toBe('cpushown|-1|0')
-})
-
-test('zero-width spaces in the text do not break a match', async () => {
-  render(fixture)
-
-  await userEvent.keyboard('cpu-n')
-
-  expect(button(/cpu-.node/)).toHaveFocus()
-  expect(await state()).toBe('cpu-n|0|1')
 })
 
 test('Backspace shortens the buffer and searches again; emptying it ends the search', async () => {

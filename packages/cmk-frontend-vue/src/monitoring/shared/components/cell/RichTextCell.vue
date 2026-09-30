@@ -8,12 +8,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed, useSlots } from 'vue'
 
 import BaseCell, { type CellLink, type CellVerticalAlign } from './BaseCell.vue'
-import { useSoftBreak } from './base/useSoftBreak'
 
 const props = withDefaults(
   defineProps<{
     value?: string | undefined
-    hardBreakEvery?: number
     linkedTo?: CellLink | undefined
     columnId?: string | undefined
     emptyLabel?: string | undefined
@@ -22,7 +20,7 @@ const props = withDefaults(
     noWrap?: boolean | undefined
     title?: string | undefined
   }>(),
-  { value: undefined, hardBreakEvery: 15, linkedTo: undefined }
+  { value: undefined, linkedTo: undefined }
 )
 
 const emit = defineEmits<{
@@ -31,10 +29,7 @@ const emit = defineEmits<{
 
 const slots = useSlots()
 
-const display = useSoftBreak(
-  () => props.value ?? props.emptyLabel ?? 'n/a',
-  () => props.hardBreakEvery
-)
+const display = computed(() => props.value ?? props.emptyLabel ?? 'n/a')
 
 const isEmpty = computed(
   () => slots.default === undefined && (props.value === undefined || props.value === '')
@@ -73,8 +68,7 @@ const isEmpty = computed(
   min-width: 0;
   box-sizing: border-box;
   overflow: hidden;
-  overflow-wrap: normal;
-  word-break: normal;
+  overflow-wrap: anywhere;
 
   &.monitoring-rich-text-cell__content--empty {
     font-style: italic;

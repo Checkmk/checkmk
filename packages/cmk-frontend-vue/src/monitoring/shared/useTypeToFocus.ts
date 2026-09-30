@@ -35,13 +35,8 @@ export interface TypeToFocus {
   count: Readonly<Ref<number>>
 }
 
-/** Cells soft-break their text with zero-width spaces; those must not break a match. */
 function normalise(text: string | null | undefined): string {
-  return (text ?? '')
-    .replace(/[\u200B-\u200D\uFEFF]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase()
+  return (text ?? '').replace(/\s+/g, ' ').trim().toLowerCase()
 }
 
 /** Visible-text matches first, label-only matches second, each in DOM order. */

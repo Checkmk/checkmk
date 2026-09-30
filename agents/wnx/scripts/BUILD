@@ -22,3 +22,19 @@ filegroup(
     ],
     tags = ["lint-with-psscriptanalyzer"],
 )
+
+sh_binary(
+    name = "sign_azure",
+    srcs = ["sign_azure.sh"],
+    data = [
+        "//tests/packaging:signing_roots",
+        "@osslsigncode",
+        "@psign",
+    ],
+    env = {
+        "SIGN_AZURE_OSSLSIGNCODE": "$(rlocationpath @osslsigncode)",
+        "SIGN_AZURE_PSIGN": "$(rlocationpath @psign)",
+        "SIGN_AZURE_ROOTS": "$(rlocationpaths //tests/packaging:signing_roots)",
+    },
+    deps = ["@bazel_tools//tools/bash/runfiles"],
+)

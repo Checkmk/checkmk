@@ -3,21 +3,19 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fromDate, getLocalTimeZone, toCalendarDate } from '@internationalized/date'
 import { type TrialModeSelectionProps } from 'cmk-shared-typing/typescript/trial_mode_selection_props'
 import {
   type TrialModeSelectionRequest,
   type VerificationMode
 } from 'cmk-shared-typing/typescript/trial_mode_selection_request'
 import { cmkAjax } from 'cmk-ui-library/lib/ajax'
-import { computed, onScopeDispose, ref } from 'vue'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
+import { onScopeDispose, ref } from 'vue'
 
 import { getCsrfToken } from '@/lib/csrf'
 
 /** Seconds a resend stays unavailable after a code has been sent. */
 const RESEND_COOLDOWN_SECONDS = 60
-/** Max codes per email address per day. */
-const SEND_LIMIT = 5
 
 /**
  * Screens the gate dialog can show. The customer branch is a single step, asking how the
@@ -52,6 +50,14 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
   const saveFailed = ref(false)
 
   /**
+   * In case of an error requesting or verifying a code, contains a localised
+   * error user-readable error message. Otherwise empty.
+   */
+  const errorMessage = ref(untranslated(''))
+  /** True iff a "send code to my email" request is currently in flight. */
+  const sendRequestInFlight = ref(false)
+
+  /**
    * Seconds left before another code may be requested. Kept here rather than on the code
    * screen, so stepping back to the address and forward again does not reset it - going
    * back never consumes a send, and must not buy a fresh cooldown either.
@@ -72,19 +78,6 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
   /** Ticks `now` every second, so the limit countdown updates and resets at midnight. */
   const clock = setInterval(() => (now.value = Date.now()), 1000)
   onScopeDispose(() => clearInterval(clock))
-
-  /** Seconds until midnight in the browser's time zone once the limit is reached, otherwise 0. */
-  const sendLimitResetsIn = computed(() => {
-    const timeZone = getLocalTimeZone()
-    const today = toCalendarDate(fromDate(new Date(now.value), timeZone))
-    const todayStart = today.toDate(timeZone).getTime()
-    const sent = sendTimes.value[lastSentTo.value] ?? []
-    if (sent.filter((time) => time >= todayStart).length < SEND_LIMIT) {
-      return 0
-    }
-    const nextMidnight = today.add({ days: 1 }).toDate(timeZone).getTime()
-    return Math.ceil((nextMidnight - now.value) / 1000)
-  })
 
   function recordSend(): void {
     now.value = Date.now()
@@ -165,7 +158,7 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
     const address = email.value.toLowerCase()
     const newAddress = address !== lastSentTo.value
     lastSentTo.value = address
-    if ((newAddress || resendCooldown.value <= 0) && sendLimitResetsIn.value === 0) {
+    if (newAddress || resendCooldown.value <= 0) {
       recordSend()
     }
     goTo('code')
@@ -204,9 +197,7 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
   }
 
   function resendCode(): void {
-    if (sendLimitResetsIn.value === 0) {
-      recordSend()
-    }
+    recordSend()
   }
 
   function recordUnverifiedTrial(): Promise<void> {
@@ -230,7 +221,8 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
     saving,
     saveFailed,
     resendCooldown,
-    sendLimitResetsIn,
+    sendRequestInFlight,
+    errorMessage,
     startTrial,
     openUnverifiedTrial,
     leaveUnverifiedTrial,

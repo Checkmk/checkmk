@@ -29,7 +29,8 @@ const {
   saving,
   saveFailed,
   resendCooldown,
-  sendLimitResetsIn,
+  sendRequestInFlight,
+  errorMessage,
   startTrial,
   openUnverifiedTrial,
   leaveUnverifiedTrial,
@@ -96,7 +97,8 @@ const {
       v-else-if="screen === 'code'"
       :email="email"
       :resend-cooldown="resendCooldown"
-      :send-limit-resets-in="sendLimitResetsIn"
+      :error-message="errorMessage"
+      :send-request-in-flight="sendRequestInFlight"
       @back="goTo('email')"
       @resend="resendCode"
       @verified="goTo('success')"

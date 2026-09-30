@@ -9,6 +9,7 @@ import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import useId from 'cmk-ui-library/lib/useId'
 import { computed, nextTick, onMounted, ref } from 'vue'
 
@@ -19,12 +20,14 @@ import TrialModeSelectionDialogFooter from '../components/TrialModeSelectionDial
 import TrialModeSelectionScreenHeading from '../components/TrialModeSelectionScreenHeading.vue'
 import TrialModeSelectionStepIndicator from '../components/TrialModeSelectionStepIndicator.vue'
 
-const { email, resendCooldown, sendLimitResetsIn } = defineProps<{
+const { email, resendCooldown, errorMessage, sendRequestInFlight } = defineProps<{
   email: string
   /** Seconds left before another code may be requested; 0 means it is available. */
   resendCooldown: number
-  /** Seconds until the send limit resets; 0 if not reached. */
-  sendLimitResetsIn: number
+  /** Error message if there was an issue sending or verifying the code. Empty if no error. */
+  errorMessage: TranslatedString
+  /** Indicates that a request to send (or re-send) a code is currently in-flight. */
+  sendRequestInFlight: boolean
 }>()
 
 const emit = defineEmits<{
@@ -34,7 +37,7 @@ const emit = defineEmits<{
   continueUnverified: []
 }>()
 
-const { _t, _tn } = usei18n()
+const { _t } = usei18n()
 
 const codeInput = ref<InstanceType<typeof OtpInput> | null>(null)
 const codeLabelId = useId()
@@ -47,21 +50,11 @@ const codeLabelId = useId()
 const code = ref('')
 
 const isComplete = computed(() => code.value.length === DIGIT_COUNT)
-const limitReached = computed(() => sendLimitResetsIn > 0)
-const canResend = computed(() => resendCooldown <= 0 && !limitReached.value)
-
-const limitResetsIn = computed(() => {
-  const hours = Math.ceil(sendLimitResetsIn / 3600)
-  if (hours > 1) {
-    return _tn('%{n} hour', '%{n} hours', hours, { n: `${hours}` })
-  }
-  const minutes = Math.ceil(sendLimitResetsIn / 60)
-  return _tn('%{n} minute', '%{n} minutes', minutes, { n: `${minutes}` })
-})
+const canResend = computed(() => resendCooldown <= 0)
 
 // No countdown at the limit: the button stays disabled until midnight, not for 60 s.
 const resendLabel = computed(() =>
-  resendCooldown > 0 && !limitReached.value
+  resendCooldown > 0
     ? _t('Resend code (%{countdown})', { countdown: formatCountdown(resendCooldown) })
     : _t('Resend code')
 )
@@ -124,28 +117,28 @@ onMounted(() => codeInput.value?.focus())
     </div>
 
     <CmkAlert
-      v-if="limitReached"
+      v-if="errorMessage"
       variant="warning"
-      class="trial-mode-selection-code-entry__limit"
-      :text="
-        _t(
-          'Too many codes requested for this address. Try again in %{time}, go back to use a different email address, or continue without verification as an unverified trial.',
-          { time: limitResetsIn }
-        )
-      "
+      class="trial-mode-selection-code-entry__error-box"
+      :text="errorMessage"
     />
 
     <div class="trial-mode-selection-code-entry__resend">
       <CmkParagraph class="trial-mode-selection-code-entry__resend-question">
         {{ _t("Didn't receive it?") }}
       </CmkParagraph>
-      <CmkButton variant="optional" size="small" :disabled="!canResend" @click="resend">
+      <CmkButton
+        variant="optional"
+        size="small"
+        :disabled="!canResend || sendRequestInFlight"
+        @click="resend"
+      >
         {{ resendLabel }}
       </CmkButton>
     </div>
 
     <TrialModeSelectionDialogFooter @back="emit('back')">
-      <CmkButton v-if="limitReached" variant="secondary" @click="emit('continueUnverified')">
+      <CmkButton v-if="errorMessage" variant="secondary" @click="emit('continueUnverified')">
         {{ _t('Continue without verification') }}
       </CmkButton>
       <CmkButton variant="success" :disabled="!isComplete" @click="verify">
@@ -165,7 +158,7 @@ onMounted(() => codeInput.value?.focus())
   margin: var(--dimension-4) 0 var(--dimension-6);
 }
 
-.trial-mode-selection-code-entry__limit {
+.trial-mode-selection-code-entry__error-box {
   margin-bottom: var(--dimension-6);
 }
 

@@ -593,37 +593,6 @@ describe('TrialModeSelectionApp', () => {
       }
     }
 
-    it('offers continuing unverified once the send limit is used up', async () => {
-      renderApp()
-      await reachCodeStep()
-      expect(
-        screen.queryByRole('button', { name: 'Continue without verification' })
-      ).not.toBeInTheDocument()
-      expect(screen.queryByText(/Too many codes requested/)).not.toBeInTheDocument()
-
-      await useUpSends()
-
-      expect(screen.getByText(/Too many codes requested for this address/)).toBeInTheDocument()
-      await vi.advanceTimersByTimeAsync(60_000)
-      expect(resendButton()).toBeDisabled()
-      expect(resendButton()).toHaveTextContent(/^Resend code$/)
-
-      await user.click(screen.getByRole('button', { name: 'Continue without verification' }))
-
-      expect(screen.getByRole('heading', { name: 'Unverified trial' })).toBeInTheDocument()
-    })
-
-    it('goes back to the code from the unverified trial', async () => {
-      renderApp()
-      await reachCodeStep()
-      await useUpSends()
-      await user.click(screen.getByRole('button', { name: 'Continue without verification' }))
-
-      await user.click(screen.getByRole('button', { name: 'Back' }))
-
-      expect(screen.getByText('Enter your verification code')).toBeInTheDocument()
-    })
-
     it('still verifies a code already delivered once the send limit is used up', async () => {
       renderApp()
       await reachCodeStep()
@@ -634,70 +603,6 @@ describe('TrialModeSelectionApp', () => {
       await user.type(codeDigits()[5]!, '2')
 
       expect(screen.getByText('Trial verified')).toBeInTheDocument()
-    })
-
-    it('counts down to midnight in the browser time zone, when the limit resets', async () => {
-      // Fixed zone and UTC instants, so the result is the same on every machine.
-      // Auckland is UTC+12 on these days, far from UTC, so a UTC midnight would fail.
-      zone.current = 'Pacific/Auckland'
-      vi.setSystemTime(Date.UTC(2026, 8, 24, 22, 0, 0)) // 25 Sep, 10:00 in Auckland
-      renderApp()
-      await reachCodeStep()
-      await useUpSends()
-
-      expect(screen.getByText(/Try again in 14 hours,/)).toBeInTheDocument()
-
-      vi.setSystemTime(Date.UTC(2026, 8, 25, 11, 30, 0)) // 25 Sep, 23:30 in Auckland
-      await vi.advanceTimersByTimeAsync(1000)
-      expect(screen.getByText(/Try again in 30 minutes,/)).toBeInTheDocument()
-
-      vi.setSystemTime(Date.UTC(2026, 8, 25, 12, 0, 0)) // 26 Sep, 00:00 in Auckland
-      await vi.advanceTimersByTimeAsync(1000)
-      expect(screen.queryByText(/Too many codes requested/)).not.toBeInTheDocument()
-      expect(resendButton()).toBeEnabled()
-    })
-
-    it('gives a different address sends of its own', async () => {
-      renderApp()
-      await reachCodeStep()
-      await useUpSends()
-
-      await user.click(screen.getByRole('button', { name: 'Back' }))
-      await user.clear(screen.getByLabelText('Email address'))
-      await user.type(screen.getByLabelText('Email address'), 'john.doe@example.com')
-      await user.click(screen.getByRole('button', { name: 'Send code' }))
-
-      expect(screen.queryByText(/Too many codes requested/)).not.toBeInTheDocument()
-      await vi.advanceTimersByTimeAsync(60_000)
-      expect(resendButton()).toBeEnabled()
-    })
-
-    it('counts an address in any letter case as the same address', async () => {
-      renderApp()
-      await reachCodeStep()
-      await useUpSends()
-
-      await user.click(screen.getByRole('button', { name: 'Back' }))
-      await user.clear(screen.getByLabelText('Email address'))
-      await user.type(screen.getByLabelText('Email address'), 'Jane.Doe@Example.com')
-      await user.click(screen.getByRole('button', { name: 'Send code' }))
-
-      expect(screen.getByText(/Too many codes requested for this address/)).toBeInTheDocument()
-    })
-
-    it('keeps the limit of an address after switching to another one and back', async () => {
-      renderApp()
-      await reachCodeStep()
-      await useUpSends()
-
-      for (const address of ['john.doe@example.com', 'jane.doe@example.com']) {
-        await user.click(screen.getByRole('button', { name: 'Back' }))
-        await user.clear(screen.getByLabelText('Email address'))
-        await user.type(screen.getByLabelText('Email address'), address)
-        await user.click(screen.getByRole('button', { name: 'Send code' }))
-      }
-
-      expect(screen.getByText(/Too many codes requested for this address/)).toBeInTheDocument()
     })
 
     it('empties the boxes on a resend, the previous code being dead', async () => {

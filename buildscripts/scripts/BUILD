@@ -31,8 +31,8 @@ py_binary(
 )
 
 py_binary(
-    name = "build-cmk-container",
-    srcs = ["build-cmk-container.py"],
+    name = "build_cmk_container",
+    srcs = ["build_cmk_container.py"],
     deps = [
         ":lib",
         "//packages/cmk-ccc:tar-archive",
@@ -65,8 +65,8 @@ py_binary(
 )
 
 py_binary(
-    name = "unpublish-container-image",
-    srcs = ["unpublish-container-image.py"],
+    name = "unpublish_container_image",
+    srcs = ["unpublish_container_image.py"],
     deps = [
         ":lib",
         "//packages/cmk-ccc:version",
@@ -127,23 +127,19 @@ py_cmk_test(
     size = "small",
     srcs = glob(["tests/*.py"]),
     imports = ["."],
-    tags = [
-        "deballast-keep=//buildscripts/scripts:build-cmk-container",
-        "deballast-keep=//buildscripts/scripts:unpublish-container-image",
-    ],
     deps = [
         requirement("azure-mgmt-compute"),
         requirement("docker"),
         requirement("requests"),
         ":assert_build_artifacts",
-        ":build-cmk-container",
+        ":build_cmk_container",
         ":check_thirdparty_modules",
         ":collect_mypy_lib",
         ":collect_rust_tests_lib",
         ":get_distros",
         ":lib",
         ":publish_cloud_images",
-        ":unpublish-container-image",
+        ":unpublish_container_image",
         ":validate_changes",
     ],
 )

@@ -193,7 +193,7 @@ void main() {
                     /// `download` inside the checkout_dir
                     sh("""
                         scripts/run-uvenv python \
-                        buildscripts/scripts/build-cmk-container.py \
+                        buildscripts/scripts/build_cmk_container.py \
                         --branch=${branch_name} \
                         --edition=${params.EDITION} \
                         --version=${cmk_version} \
@@ -283,7 +283,7 @@ void main() {
                     withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
                         sh("""
                             scripts/run-uvenv python \
-                            buildscripts/scripts/build-cmk-container.py \
+                            buildscripts/scripts/build_cmk_container.py \
                             --branch=${branch_name} \
                             --edition=${params.EDITION} \
                             --version=${cmk_version} \
@@ -298,7 +298,7 @@ void main() {
                 smart_stage(name: "Push images", condition: push_to_registry) {
                     sh("""
                         scripts/run-uvenv python \
-                        buildscripts/scripts/build-cmk-container.py \
+                        buildscripts/scripts/build_cmk_container.py \
                         --branch=${branch_name} \
                         --edition=${params.EDITION} \
                         --version=${cmk_version} \

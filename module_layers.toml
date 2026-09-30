@@ -2172,7 +2172,7 @@ allows = [
 # Files that depend on more than one component, yet we do not want to
 # add all those dependencies to one of those components.
 
-[file_dependencies."buildscripts/scripts/build-cmk-container.py"]
+[file_dependencies."buildscripts/scripts/build_cmk_container.py"]
 allows = ["@ccc"]
 
 [file_dependencies."buildscripts/scripts/assert_build_artifacts.py"]
@@ -2181,7 +2181,7 @@ allows = ["@ccc"]
 [file_dependencies."buildscripts/scripts/publish_cloud_images.py"]
 allows = ["@ccc"]
 
-[file_dependencies."buildscripts/scripts/unpublish-container-image.py"]
+[file_dependencies."buildscripts/scripts/unpublish_container_image.py"]
 allows = ["@ccc"]
 
 [file_dependencies."buildscripts/scripts/lib/registry.py"]

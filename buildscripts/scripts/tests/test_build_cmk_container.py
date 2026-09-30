@@ -5,7 +5,7 @@
 
 import argparse
 import gzip
-import importlib.util
+import importlib
 import io
 import shutil
 import sys
@@ -102,11 +102,9 @@ def fixture_script(
     """The script connects to docker and creates its work dir on import, so it is loaded
     per test with the fake client in place and a fresh working directory."""
     monkeypatch.chdir(tmp_path)
-    path = Path(__file__).parent.parent / "build-cmk-container.py"
-    spec = importlib.util.spec_from_file_location("build_cmk_container", path)
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    import build_cmk_container  # the module has side effects on import, hence local
+
+    module = importlib.reload(build_cmk_container)
     assert module.docker_client is docker_client
     return module
 
@@ -323,7 +321,7 @@ def test_build_image_prepares_context_and_tags_result(
 
 
 def _run_main(script: ModuleType, argv: Sequence[str], monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(sys, "argv", ["build-cmk-container.py", *argv])
+    monkeypatch.setattr(sys, "argv", ["build_cmk_container.py", *argv])
     script.main()
 
 

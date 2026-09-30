@@ -16,7 +16,7 @@ may require the following env variables
 - DOCKER_PASSPHRASE=eatingHands
 
 scripts/run-uvenv python \
-buildscripts/scripts/build-cmk-container.py \
+buildscripts/scripts/build_cmk_container.py \
 --branch=master \
 --edition=pro \
 --version=2023.10.17 \
@@ -31,7 +31,7 @@ may require the following env variables
 - INTERNAL_DEPLOY_DEST=user@some-domain.tld:/path/
 
 scripts/run-uvenv python \
-buildscripts/scripts/build-cmk-container.py \
+buildscripts/scripts/build_cmk_container.py \
 --branch=2.2.0 \
 --edition=pro \
 --version=2.2.0p16 \

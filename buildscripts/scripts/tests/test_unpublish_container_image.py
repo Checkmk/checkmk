@@ -3,29 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import importlib.util
 from collections.abc import Iterator, Sequence
-from pathlib import Path
 from types import ModuleType
 from typing import override
 
 import pytest
+import unpublish_container_image
 
 from buildscripts.scripts.lib.registry import Credentials, DockerImage, Registry
 
 
-def _load_script() -> ModuleType:
-    path = Path(__file__).parent.parent / "unpublish-container-image.py"
-    spec = importlib.util.spec_from_file_location("unpublish_container_image", path)
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
 @pytest.fixture(name="script", scope="module")
 def fixture_script() -> ModuleType:
-    return _load_script()
+    return unpublish_container_image
 
 
 class _FakeRegistry(Registry):

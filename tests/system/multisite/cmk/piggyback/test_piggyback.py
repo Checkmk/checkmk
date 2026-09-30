@@ -13,6 +13,7 @@ import pytest
 from cmk.piggyback.backend._paths import source_status_dir
 from cmk.piggyback.hub import RELATIVE_CONFIG_PATH
 from tests.system.multisite.cmk.piggyback.piggyback_test_helper import (
+    CMK_TRACK_TIMEOUT,
     create_local_check,
     get_piggybacked_service_time,
     piggyback_hub_log_level,
@@ -706,7 +707,13 @@ def test_piggyback_status_file_deletion_transport(
         )
 
         # then
-        assert (
-            remote_site.file_exists(source_status_dir(remote_site.root) / _HOSTNAME_SOURCE_CENTRAL)
-            is False
+        wait_until(
+            lambda: (
+                not remote_site.file_exists(
+                    source_status_dir(remote_site.root) / _HOSTNAME_SOURCE_CENTRAL
+                )
+            ),
+            timeout=CMK_TRACK_TIMEOUT,
+            interval=1,
+            condition_name=f"source status file removed on site {remote_site.id}",
         )

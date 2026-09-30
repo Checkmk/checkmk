@@ -3,20 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-
-from cmk.agent_based.v2 import Service
+from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.stormshield.agent_based.stormshield_packets import (
+    check_stormshield_packets,
     discover_stormshield_packets,
     parse_stormshield_packets,
 )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason="Crash report 8e628742-9c97-11f1-a15d-bc241159152b: ValueError",
-)
 def test_discover_stormshield_packets_with_empty_counters() -> None:
     # Crash group 4893: an SSL VPN interface reports empty packet counters
     section = parse_stormshield_packets(
@@ -26,3 +20,15 @@ def test_discover_stormshield_packets_with_empty_counters() -> None:
         ]
     )
     assert list(discover_stormshield_packets(section)) == [Service(item="out")]
+
+
+def test_check_stormshield_packets_with_empty_counters() -> None:
+    section = parse_stormshield_packets(
+        [["out", "eth0", "Ethernet", "", "10", "", "3", "2"]],
+    )
+    assert list(check_stormshield_packets("out", section)) == [
+        Result(
+            state=State.UNKNOWN,
+            summary="No value received for: accepted packets, ICMP packets (expected integer)",
+        )
+    ]

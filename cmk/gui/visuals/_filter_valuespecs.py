@@ -49,8 +49,8 @@ def FilterChoices(infos: SingleInfos, title: str, help: str) -> DualListChoice: 
     def _info_filter_choices(infos: SingleInfos) -> Iterator[tuple[str, str]]:
         for info in infos:
             info_title = visual_info_registry[info]().title
-            for key, filter_ in VisualFilterList.get_choices(info):
-                yield (key, f"{info_title}: {filter_.title()}")
+            for key, filter_ in _sorted_filters_allowed_for_info(info, ()):
+                yield (key, f"{info_title}: {filter_.title}")
 
     return DualListChoice(
         choices=list(_info_filter_choices(infos)),
@@ -166,18 +166,10 @@ class VisualFilterList(ListOfMultiple):
     def get_choices(
         cls, info: str, ignored_context_choices: Sequence[str] = ()
     ) -> Sequence[tuple[str, VisualFilter]]:
-        return sorted(
-            cls._get_filter_specs(info, ignored_context_choices),
-            key=lambda x: (x[1]._filter.sort_index, x[1].title()),  # noqa: SLF001
-        )
-
-    @classmethod
-    def _get_filter_specs(
-        cls, info: str, ignored_context_choices: Sequence[str]
-    ) -> Iterator[tuple[str, VisualFilter]]:
-        for fname, filter_ in filters_allowed_for_info(info):
-            if fname not in ignored_context_choices:
-                yield fname, VisualFilter(name=fname, title=filter_.title)
+        return [
+            (fname, VisualFilter(name=fname, title=filter_.title))
+            for fname, filter_ in _sorted_filters_allowed_for_info(info, ignored_context_choices)
+        ]
 
     def __init__(
         self,
@@ -236,6 +228,19 @@ def filters_allowed_for_info(info: str) -> Iterator[tuple[str, Filter]]:
     for fname, filt in filter_registry.items():
         if filt.info is None or info == filt.info:  # type: ignore[redundant-expr]
             yield fname, filt
+
+
+def _sorted_filters_allowed_for_info(
+    info: str, ignored_filters: Sequence[str]
+) -> list[tuple[str, Filter]]:
+    return sorted(
+        (
+            (fname, filter_)
+            for fname, filter_ in filters_allowed_for_info(info)
+            if fname not in ignored_filters
+        ),
+        key=lambda x: (x[1].sort_index, x[1].title),
+    )
 
 
 def filters_allowed_for_infos(info_list: SingleInfos) -> dict[str, Filter]:

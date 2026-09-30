@@ -30,7 +30,6 @@ def test_load_history(tmp_path: Path) -> None:
 
     history = HistoryStore(tmp_path).load(
         host_name,
-        history_paths_filter=lambda paths: paths,
         delta_tree_filters=None,
     )
     assert len(history.entries) == 6
@@ -63,7 +62,6 @@ def test_load_history_only_from_archive_files(tmp_path: Path) -> None:
 
     history = HistoryStore(tmp_path).load(
         host_name,
-        history_paths_filter=lambda paths: paths,
         delta_tree_filters=None,
     )
     assert len(history.entries) == 3
@@ -87,7 +85,6 @@ def test_load_history_reads_the_counts_from_the_delta_cache(tmp_path: Path) -> N
 
     history = HistoryStore(tmp_path).load(
         HostName("hostname"),
-        history_paths_filter=lambda paths: paths,
         delta_tree_filters=None,
     )
 
@@ -100,7 +97,6 @@ def test_load_history_reports_a_delta_cache_file_with_an_unknown_name(tmp_path: 
 
     history = HistoryStore(tmp_path).load(
         HostName("hostname"),
-        history_paths_filter=lambda paths: paths,
         delta_tree_filters=None,
     )
 
@@ -113,7 +109,6 @@ def test_load_history_reports_an_unreadable_delta_cache_file(tmp_path: Path) -> 
 
     history = HistoryStore(tmp_path).load(
         HostName("hostname"),
-        history_paths_filter=lambda paths: paths,
         delta_tree_filters=None,
     )
 
@@ -127,7 +122,6 @@ def test_load_history_reports_an_empty_legacy_delta_cache_file(tmp_path: Path) -
 
     history = HistoryStore(tmp_path).load(
         HostName("hostname"),
-        history_paths_filter=lambda paths: paths,
         delta_tree_filters=None,
     )
 
@@ -158,10 +152,38 @@ def test_load_history_drops_the_entries_without_filtered_changes(tmp_path: Path)
 
     history = HistoryStore(tmp_path).load(
         HostName("hostname"),
-        history_paths_filter=lambda paths: paths,
         delta_tree_filters=[
             SDFilterChoice(path=(SDNodeName("node"),), pairs="all", columns="all", nodes="all")
         ],
     )
 
     assert [e.current_timestamp for e in history.entries] == [0]
+
+
+def _save_archive(tmp_path: Path, count: int) -> None:
+    for idx in range(count):
+        cmk.ccc.store.save_object_to_file(
+            tmp_path / f"var/check_mk/inventory_archive/hostname/{idx}", raw_tree(f"val-{idx}")
+        )
+
+
+def test_load_latest_history_loads_only_the_newest_entry(tmp_path: Path) -> None:
+    _save_archive(tmp_path, 3)
+
+    history = HistoryStore(tmp_path).load_latest(HostName("hostname"), delta_tree_filters=None)
+
+    assert [e.current_timestamp for e in history.entries] == [2]
+
+
+def test_load_history_at_a_timestamp_loads_only_its_entry(tmp_path: Path) -> None:
+    _save_archive(tmp_path, 3)
+
+    history = HistoryStore(tmp_path).load_at(HostName("hostname"), 1, delta_tree_filters=None)
+
+    assert history is not None and [e.current_timestamp for e in history.entries] == [1]
+
+
+def test_load_history_at_an_unknown_timestamp_finds_nothing(tmp_path: Path) -> None:
+    _save_archive(tmp_path, 3)
+
+    assert HistoryStore(tmp_path).load_at(HostName("hostname"), 5, delta_tree_filters=None) is None

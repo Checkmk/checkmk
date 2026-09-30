@@ -5,7 +5,7 @@
 
 import contextlib
 import json
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -277,16 +277,9 @@ class HistoryStore:
         )
         delta_cache_tree.legacy.unlink(missing_ok=True)
 
-    def load(
-        self,
-        host_name: HostName,
-        *,
-        history_paths_filter: Callable[
-            [Sequence[HistoryDeltaPath | HistoryArchivePath]],
-            Sequence[HistoryDeltaPath | HistoryArchivePath],
-        ],
-        delta_tree_filters: Sequence[SDFilterChoice] | None,
-    ) -> History:
+    def _collect_paths(
+        self, host_name: HostName
+    ) -> tuple[Sequence[HistoryDeltaPath | HistoryArchivePath], set[Path]]:
         paths = []
         corrupted: set[Path] = set()
         for path_result in self._collect_history_paths(host_name=host_name):
@@ -294,9 +287,18 @@ class HistoryStore:
                 paths.append(path_result.ok)
             else:
                 corrupted.add(path_result.error)
+        return paths, corrupted
 
+    def _load_entries(
+        self,
+        host_name: HostName,
+        paths: Sequence[HistoryDeltaPath | HistoryArchivePath],
+        corrupted_paths: set[Path],
+        delta_tree_filters: Sequence[SDFilterChoice] | None,
+    ) -> History:
         entries = []
-        for path in history_paths_filter(paths):
+        corrupted = set(corrupted_paths)
+        for path in paths:
             if (entry_result := self._load_history_entry(host_name=host_name, path=path)).is_ok():
                 entries.append(entry_result.ok)
             else:
@@ -317,3 +319,27 @@ class HistoryStore:
             ],
             corrupted=list(corrupted),
         )
+
+    def load(
+        self, host_name: HostName, *, delta_tree_filters: Sequence[SDFilterChoice] | None
+    ) -> History:
+        paths, corrupted = self._collect_paths(host_name)
+        return self._load_entries(host_name, paths, corrupted, delta_tree_filters)
+
+    def load_latest(
+        self, host_name: HostName, *, delta_tree_filters: Sequence[SDFilterChoice] | None
+    ) -> History:
+        paths, corrupted = self._collect_paths(host_name)
+        return self._load_entries(host_name, paths[-1:], corrupted, delta_tree_filters)
+
+    def load_at(
+        self,
+        host_name: HostName,
+        timestamp: int,
+        *,
+        delta_tree_filters: Sequence[SDFilterChoice] | None,
+    ) -> History | None:
+        paths, corrupted = self._collect_paths(host_name)
+        if not (found := [p for p in paths if p.current_timestamp == timestamp]):
+            return None
+        return self._load_entries(host_name, found[:1], corrupted, delta_tree_filters)

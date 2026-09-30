@@ -7,6 +7,7 @@ import argparse
 import os
 import re
 import sys
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 from . import load_werk
@@ -15,22 +16,11 @@ from .constants import NON_WERK_FILES_IN_WERK_FOLDER
 
 
 def main(
-    werks_to_check: list[Path],
+    werks_to_check: Sequence[Path],
     werks_config: Path,
     defines_make: Path,
     version_regex: re.Pattern[str],
 ) -> None:
-    if werks_to_check:
-        pass
-    elif changed_werk_files := os.environ.get("CHANGED_WERK_FILES"):
-        werks_to_check = [Path(line) for line in changed_werk_files.split(" ") if line]
-    else:
-        werks_to_check = [
-            path
-            for path in Path(".werks").iterdir()
-            if path.name.isdigit() or path.name.endswith(".md")
-        ]
-
     current_version = try_load_current_version_from_defines_make(defines_make)
     config = load_config(werks_config, current_version=current_version)
     choices_component = {e[0] for e in config.all_components()}
@@ -57,7 +47,7 @@ def main(
     sys.stdout.write(f"Successfully validated {len(werks_to_check)} werks\n")
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--version-regex",
@@ -83,9 +73,32 @@ def parse_args() -> argparse.Namespace:
         nargs="*",
         type=Path,
     )
-    return parser.parse_args()
+    return parser.parse_args(argv)
+
+
+def _werks_to_check(
+    werk_paths: Sequence[Path], changed_werk_files: str | None, working_dir: Path
+) -> Sequence[Path]:
+    if werk_paths:
+        return [working_dir / path for path in werk_paths]
+    if changed_werk_files:
+        return [working_dir / line for line in changed_werk_files.split(" ") if line]
+    return [
+        path
+        for path in (working_dir / ".werks").iterdir()
+        if path.name.isdigit() or path.name.endswith(".md")
+    ]
+
+
+def run(argv: Sequence[str], environ: Mapping[str, str], working_dir: Path) -> None:
+    args = parse_args(argv)
+    main(
+        _werks_to_check(args.werk_paths, environ.get("CHANGED_WERK_FILES"), working_dir),
+        working_dir / args.werk_config,
+        working_dir / args.defines_make,
+        args.version_regex,
+    )
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    main(args.werk_paths, args.werk_config, args.defines_make, args.version_regex)
+    run(sys.argv[1:], os.environ, Path.cwd())

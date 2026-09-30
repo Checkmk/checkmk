@@ -259,9 +259,6 @@ def load_or_update_stash(
 ) -> Stash:
     stash = load_stash_from_file(paths)
 
-    if not paths.secret_file.exists():
-        bail_out(f"No such secret file {paths.secret_file}")
-
     local_werk_ids_count = stash.count()
     _ensure_stash_file_writable(paths)
 

@@ -321,7 +321,6 @@ def test_config_sync_source_remote_diff_customer(central_site: Site, remote_site
         _wait_for_config_redistributed([central_site, remote_site], config_mtimes_ms)
 
 
-@pytest.mark.xfail(raises=TimeoutError, strict=False, reason="CMK-37537; flake")
 @pytest.mark.skip_if_not_edition("ultimatemt")
 def test_config_sync_source_remote_remote_diff_customer(
     piggyback_env_three_site_setup: tuple[Site, Site, Site],

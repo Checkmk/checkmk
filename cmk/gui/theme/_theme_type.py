@@ -117,8 +117,10 @@ class Theme:
     def _url(self, rel_url: str) -> str:
         # find out which theme holds the file:
         for theme in [self._theme, "facelift"]:
-            path = self._web_dir / "htdocs/themes" / theme / rel_url
-            if path.exists():
+            if any(
+                (base_dir / "htdocs/themes" / theme / rel_url).exists()
+                for base_dir in [self._local_web_dir, self._web_dir]
+            ):
                 break
         # still return the url even if the file does not exist
         return f"themes/{theme}/{rel_url}"

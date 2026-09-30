@@ -182,6 +182,9 @@ single_version_override(
         "//bazel/patches:rules_lint-stylelint-capture-stdout.patch",
         # Carried locally — no upstream PR yet.
         "//bazel/patches:rules_lint-clang_tidy_builtin_include_dir.patch",
+        # Carried locally — no upstream PR yet. Follow-up to
+        # https://github.com/aspect-build/rules_lint/pull/622
+        "//bazel/patches:rules_lint-batch_shebang_detection.patch",
     ],
     version = "2.0.0",
 )

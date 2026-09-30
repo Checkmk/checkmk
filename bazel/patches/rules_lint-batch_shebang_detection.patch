@@ -1,0 +1,79 @@
+diff --git a/format/private/format.sh b/format/private/format.sh
+index b157872..05c8bf8 100755
+--- a/format/private/format.sh
++++ b/format/private/format.sh
+@@ -107,6 +107,18 @@ function process_args_in_batches() {
+     fi
+ }
+ 
++# Prints those of the files listed on stdin, one per line, whose first line
++# matches the extended regular expression $1. A single awk process reads them
++# all, instead of one `head | grep` pipeline per file.
++function first-line-matches {
++    local file
++    while IFS= read -r file; do
++        if [ -f "$file" ]; then
++            echo "$file"
++        fi
++    done | awk -v re="$1" '(getline line < $0) > 0 && line ~ re { print } { close($0) }'
++}
++
+ # Exports a function that is similar to 'git ls-files'
+ # ls-files <language> [<file>...]
+ function ls-files {
+@@ -175,7 +187,7 @@ function ls-files {
+ 
+     shebang_re=
+     case "$language" in
+-      'Shell') shebang_re='^#![ \t]*/(usr/)?bin/(env[ \t]+)?(sh|bash|mksh|bats|zsh)(\s|$)' ;;
++      'Shell') shebang_re='^#![[:blank:]]*/(usr/)?bin/(env[[:blank:]]+)?(sh|bash|mksh|bats|zsh)([[:space:]]|$)' ;;
+     esac
+ 
+     if [ "$#" -eq 0 ]; then
+@@ -192,17 +204,15 @@ function ls-files {
+         })
+ 
+         if [ -n "$shebang_re" ]; then
+-            for candidate in $(git ls-files -t --cached --modified --other --exclude-standard | grep -v ^S | cut -f2- -d' ' | grep -v '\.' | {
++            shebang_files=$(git ls-files -t --cached --modified --other --exclude-standard | grep -v ^S | cut -f2- -d' ' | grep -v '\.' | {
+                 grep -vFxf \
+                 <(git ls-files --deleted) \
+                 || true;
+-            }); do
+-                [ -f "$candidate" ] || continue
+-                if head -n 1 "$candidate" | grep -E -q "$shebang_re"; then
+-                    # files should be returned newline separated to avoid a "File name too long" error
+-                    files+=$'\n'"$candidate"
+-                fi
+-            done
++            } | first-line-matches "$shebang_re")
++            if [ -n "$shebang_files" ]; then
++                # files should be returned newline separated to avoid a "File name too long" error
++                files+=$'\n'"$shebang_files"
++            fi
+         fi
+     else
+         # When given arguments, they are glob patterns of the superset of files to format.
+@@ -218,17 +228,13 @@ function ls-files {
+           find_args+=("-name" "${patterns[$i]}")
+         done
+         [ ${#patterns[@]} -ne 0 ] && find_args+=(')' "-print")
++        files=$(find "$@" "${find_args[@]}")
+         if [ -n "$shebang_re" ]; then
+-          [ ${#patterns[@]} -ne 0 ] && find_args+=('-or')
+-          find_args+=(
+-            '('
+-            "-type" "f" "-and"
+-            "!" "-name" "*.*"
+-            "-exec" "sh" "-c" "head -n1 \"\$1\" | grep -Eq \"$shebang_re\"" "_" "{}" ";"
+-            ')' "-print"
+-          )
++          shebang_files=$(find "$@" -type f ! -name '*.*' | first-line-matches "$shebang_re")
++          if [ -n "$shebang_files" ]; then
++            files+=$'\n'"$shebang_files"
++          fi
+         fi
+-        files=$(find "$@" "${find_args[@]}")
+     fi
+ 
+     # Apply exclusion patterns using bash glob matching

@@ -24,6 +24,7 @@ import json
 import time
 from collections.abc import AsyncIterator, Iterator
 from http import HTTPStatus
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -59,19 +60,9 @@ class _FakeSecret:
         return hmac.new(_KEY, msg, hashlib.sha256).digest()
 
 
-class _FakeSiteInternalSecret:
-    @property
-    def secret(self) -> _FakeSecret:
-        return _FakeSecret()
-
-
 @pytest.fixture
-def _shared_secret(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Let ``principal_from_token`` fail closed to None on a bad token instead of
-    raising FileNotFoundError for the missing site secret."""
-    monkeypatch.setattr(
-        "cmk.maps.backend.core.auth.SiteInternalSecret", _FakeSiteInternalSecret, raising=True
-    )
+def _shared_secret(site_secret_file: Path) -> None:
+    site_secret_file.write_bytes(_KEY)
 
 
 @pytest.fixture

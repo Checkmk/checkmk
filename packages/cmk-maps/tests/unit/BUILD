@@ -13,6 +13,8 @@ py_cmk_test(
     # mypy, independent of pytest's import mode.
     imports = ["."],
     deps = [
+        "//cmk/utils:paths",
+        "//packages/cmk-crypto",
         "//packages/cmk-maps:backend",
         requirement("fastapi"),
         requirement("httpx"),

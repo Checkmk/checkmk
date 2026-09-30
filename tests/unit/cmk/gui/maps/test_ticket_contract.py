@@ -17,10 +17,8 @@ one secret), so any drift fails CI — unlike
 encoding on the daemon side only.
 """
 
-import hashlib
-import hmac
 import time
-from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
 
@@ -30,6 +28,7 @@ from cmk.maps.backend.core import auth
 from cmk.maps.gui import _tickets
 from cmk.maps.shared import ticket as maps_ticket
 from cmk.maps.shared.ticket import CommandVerb, MapClaim, TicketCapabilities
+from cmk.utils import paths
 
 _KEY = b"0123456789abcdef0123456789abcdef"
 
@@ -60,24 +59,12 @@ def _caps(
     )
 
 
-class _FakeSecret:
-    def hmac(self, msg: bytes) -> bytes:
-        return hmac.new(_KEY, msg, hashlib.sha256).digest()
-
-
-class _FakeSiteInternalSecret:
-    @property
-    def secret(self) -> _FakeSecret:
-        return _FakeSecret()
-
-
 @pytest.fixture(name="shared_secret")
-def fixture_shared_secret(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    """Both sides sign/verify with the same site-internal secret in production;
-    fake it identically here so the test pins the encoding, not the key."""
-    monkeypatch.setattr(_tickets, "SiteInternalSecret", _FakeSiteInternalSecret)
-    monkeypatch.setattr(auth, "SiteInternalSecret", _FakeSiteInternalSecret)
-    yield
+def fixture_shared_secret(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Point GUI and daemon at one secret file, as in production."""
+    secret_file = tmp_path / "site_internal.secret"
+    secret_file.write_bytes(_KEY)
+    monkeypatch.setattr(paths, "site_internal_secret_file", secret_file)
 
 
 def test_both_sides_route_through_the_shared_wire_protocol() -> None:

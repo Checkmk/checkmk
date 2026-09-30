@@ -14,25 +14,26 @@ The ticket/map-config wire format lives in :mod:`cmk.maps.shared.ticket`, which
 the minting side (``cmk.maps.gui._tickets``) imports too — so the byte-for-byte
 token format is owned in one place. This module adds the daemon's concerns on
 top: caching the site-internal secret and turning the validated claims into a
-:class:`Principal`. The HMAC key is Checkmk's
-:class:`~cmk.utils.local_secrets.SiteInternalSecret`, so both sides derive the
-same key from ``etc/site_internal.secret``.
+:class:`Principal`. The HMAC key is the site-internal secret in
+``etc/site_internal.secret``, which the GUI reads through
+:class:`~cmk.utils.local_secrets.SiteInternalSecret`.
 """
 
 from __future__ import annotations
 
 import functools
+import hmac
 from dataclasses import dataclass, field
 
 from cmk.maps.shared.ticket import (
     decode_ticket,
+    HmacFn,
     InvalidTicket,
     STREAM_TICKET_AUDIENCE,
     TICKET_AUDIENCE,
     verify_config,
 )
 from cmk.utils import paths
-from cmk.utils.local_secrets import SiteInternalSecret
 
 __all__ = [
     "InvalidTicket",
@@ -142,25 +143,35 @@ def _principal_from_caps(name: str, caps: dict[str, object], map_claim: object =
     )
 
 
+# ``LocalSecret.regenerate`` always writes 32 bytes; anything else is a rewrite in progress.
+_SITE_SECRET_SIZE = 32
+
+
 @functools.lru_cache(maxsize=1)
-def _site_secret_for_mtime(_mtime: float | None) -> SiteInternalSecret:
-    return SiteInternalSecret()
+def _site_hmac_for_file(_key: tuple[int, int, int]) -> HmacFn:
+    # Read-only on purpose: ``SiteInternalSecret()`` writes its own secret into an
+    # empty file, racing omd's rewrite.
+    try:
+        value = paths.site_internal_secret_file.read_bytes()
+    except OSError as exc:
+        raise InvalidTicket("site-internal secret is not readable") from exc
+    if len(value) != _SITE_SECRET_SIZE:
+        raise InvalidTicket("site-internal secret is being rotated")
+    # Same HMAC-SHA256 as ``cmk.crypto.secrets.Secret.hmac``, which the GUI signs with.
+    return functools.partial(hmac.digest, value, digest="sha256")
 
 
-def _site_secret() -> SiteInternalSecret:
-    """Return the site-internal secret, re-reading its file only on rotation.
+def _site_hmac() -> HmacFn:
+    """HMAC with the site-internal secret, cached across routes and SSE ticks until the file changes.
 
-    ``SiteInternalSecret()`` reads its file on every construction. ``validate_ticket``
-    is a dependency on ~every route and ``verify_map_config``/``validate_ticket``
-    run on every SSE keepalive tick, so constructing it per call serialises the
-    event loop on filesystem latency for a per-site-static value. Cache it, keyed
-    on the file mtime so a rotation is still picked up without a daemon restart.
+    Keyed on inode, mtime and size: omd truncates and rewrites the file in place,
+    usually within one coarse mtime tick.
     """
     try:
-        mtime: float | None = paths.site_internal_secret_file.stat().st_mtime
-    except OSError:
-        mtime = None
-    return _site_secret_for_mtime(mtime)
+        st = paths.site_internal_secret_file.stat()
+    except OSError as exc:
+        raise InvalidTicket("site-internal secret is not readable") from exc
+    return _site_hmac_for_file((st.st_ino, st.st_mtime_ns, st.st_size))
 
 
 def _principal_from_claims(data: dict[str, object]) -> Principal:
@@ -185,7 +196,7 @@ def validate_ticket(token: str, *, now: float | None = None) -> Principal:
     presented in the header is rejected. Raises :class:`InvalidTicket` on any
     structural, signature, audience or expiry problem.
     """
-    data = decode_ticket(token, _site_secret().secret.hmac, audience=TICKET_AUDIENCE, now=now)
+    data = decode_ticket(token, _site_hmac(), audience=TICKET_AUDIENCE, now=now)
     return _principal_from_claims(data)
 
 
@@ -197,9 +208,7 @@ def validate_stream_ticket(token: str, *, now: float | None = None) -> Principal
     endpoint, and an API ticket presented as ``?token=`` is rejected. The token
     carries only the read/scope caps; the daemon's SSE path consumes nothing more.
     """
-    data = decode_ticket(
-        token, _site_secret().secret.hmac, audience=STREAM_TICKET_AUDIENCE, now=now
-    )
+    data = decode_ticket(token, _site_hmac(), audience=STREAM_TICKET_AUDIENCE, now=now)
     return _principal_from_claims(data)
 
 
@@ -214,4 +223,4 @@ def verify_map_config(config_b64: str, sig: str, *, owner: str) -> dict[str, obj
     broadcast loop. Raises :class:`InvalidTicket` on any decode, signature or
     JSON problem.
     """
-    return verify_config(config_b64, sig, _site_secret().secret.hmac, owner=owner)
+    return verify_config(config_b64, sig, _site_hmac(), owner=owner)

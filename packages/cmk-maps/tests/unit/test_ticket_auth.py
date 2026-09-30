@@ -18,6 +18,7 @@ import hashlib
 import hmac
 import json
 import time
+from pathlib import Path
 
 import pytest
 
@@ -45,12 +46,6 @@ class _FakeSecret:
         return hmac.new(_KEY, msg, hashlib.sha256).digest()
 
 
-class _FakeSiteInternalSecret:
-    @property
-    def secret(self) -> _FakeSecret:
-        return _FakeSecret()
-
-
 def _b64url(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).decode("ascii").rstrip("=")
 
@@ -74,10 +69,8 @@ def _mint(
 
 
 @pytest.fixture
-def _shared_secret(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(
-        "cmk.maps.backend.core.auth.SiteInternalSecret", _FakeSiteInternalSecret, raising=True
-    )
+def _shared_secret(site_secret_file: Path) -> None:
+    site_secret_file.write_bytes(_KEY)
 
 
 def test_mint_mirror_matches_shared_encoder() -> None:

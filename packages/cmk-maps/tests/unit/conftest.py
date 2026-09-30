@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -18,6 +19,16 @@ from cmk.maps.backend.connections.base import ConnectionBase
 from cmk.maps.backend.core.auth import Principal
 from cmk.maps.backend.core.ratelimit import rest_read_limiter, ws_connect_limiter
 from cmk.maps.backend.services import map_service, state_service
+from cmk.utils import paths
+
+
+@pytest.fixture
+def site_secret_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """An empty site-internal secret file the daemon reads instead of the site's."""
+    secret_file = tmp_path / "site_internal.secret"
+    secret_file.write_bytes(b"")
+    monkeypatch.setattr(paths, "site_internal_secret_file", secret_file)
+    return secret_file
 
 
 @pytest.fixture

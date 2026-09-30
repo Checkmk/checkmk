@@ -116,7 +116,7 @@ export class Api {
       url = this.baseUrl + url
     }
 
-    const res = await fetch(url, options)
+    const res = await cmkFetch(url, options)
 
     const json = await res.json()
     if (!('result' in json)) {

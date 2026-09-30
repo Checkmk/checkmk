@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
 from collections import Counter
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
@@ -30,14 +28,14 @@ def test_graphing_plugins_load_without_errors() -> None:
 
 
 def test_translations_to_be_standalone() -> None:
-    by_module: dict[str, Counter] = {}
+    by_module: dict[str, Counter[Literal["translations", "rest"]]] = {}
     for plugin_location, plugin in graphing_plugins().plugins.items():
         counter = by_module.setdefault(plugin_location.module, Counter())
         match plugin:
             case translations_api.Translation():
                 counter.update(["translations"])
             case _:
-                counter.update(["others"])
+                counter.update(["rest"])
     for module, counter in by_module.items():
         if counter["translations"]:
             assert not counter["rest"], (

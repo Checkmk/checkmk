@@ -6,13 +6,16 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
+import os
 import time
 from collections.abc import Mapping, Sequence
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
 import pytest
+import time_machine
 
 import livestatus
 
@@ -30,7 +33,9 @@ from cmk.utils.licensing.usage import (
     _serialize_dump,
     CLOUD_SERVICE_PREFIXES,
     get_license_usage_report_file_path,
+    get_license_usage_report_validity,
     HostsOrServicesCloudCounter,
+    LicenseUsageReportValidity,
     load_raw_license_usage_report,
     LocalLicenseUsageHistory,
     Now,
@@ -1157,3 +1162,33 @@ def test_save_load_extensions(expected_extensions: LicenseUsageExtensions) -> No
 def test_LicenseUsageExtensions_parse(expected_ntop_enabled: bool) -> None:
     extensions = _parse_extensions(LicenseUsageExtensions(ntop=expected_ntop_enabled).for_report())
     assert extensions.ntop is expected_ntop_enabled
+
+
+@pytest.mark.parametrize(
+    "age_in_days, expected_validity",
+    [
+        pytest.param(2, LicenseUsageReportValidity.recent_enough, id="2 days"),
+        pytest.param(3, LicenseUsageReportValidity.older_than_three_days, id="3 days"),
+        pytest.param(59, LicenseUsageReportValidity.older_than_three_days, id="59 days"),
+        pytest.param(60, LicenseUsageReportValidity.older_than_sixty_days, id="60 days"),
+    ],
+)
+def test_get_license_usage_report_validity(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    age_in_days: int,
+    expected_validity: LicenseUsageReportValidity,
+) -> None:
+    # The licensing directory is shared by the whole test session; keep this report private.
+    monkeypatch.setattr("cmk.utils.licensing.usage.licensing_dir", tmp_path)
+    now = 1_700_000_000
+    report_file_path = get_license_usage_report_file_path()
+    # An empty report makes the function record a new sample instead of checking the age.
+    report_file_path.write_text("non-empty")
+    last_update = now - age_in_days * 86400
+    os.utime(report_file_path, (last_update, last_update))
+
+    with time_machine.travel(now, tick=False):
+        validity = get_license_usage_report_validity()
+
+    assert validity is expected_validity

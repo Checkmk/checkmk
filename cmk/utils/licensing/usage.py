@@ -527,7 +527,7 @@ def deserialize_dump(raw_dump: bytes) -> object:
 
 
 class LicenseUsageReportValidity(Enum):
-    older_than_five_days = auto()
+    older_than_sixty_days = auto()
     older_than_three_days = auto()
     recent_enough = auto()
 
@@ -548,9 +548,9 @@ def get_license_usage_report_validity() -> LicenseUsageReportValidity:
 
         # TODO use max. sample time
         age = time.time() - report_file_path.stat().st_mtime
-        if age >= 432000:
-            # crit if greater than five days: block activate changes
-            return LicenseUsageReportValidity.older_than_five_days
+        if age >= 5184000:
+            # crit if greater than sixty days: block activate changes
+            return LicenseUsageReportValidity.older_than_sixty_days
 
         if age >= 259200:
             # warn if greater than three days: warn during activating changes

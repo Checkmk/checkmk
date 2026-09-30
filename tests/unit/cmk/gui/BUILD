@@ -180,7 +180,6 @@ py_cmk_test(
     ],
     env = {"EDITION": "community"},
     tags = [
-        "deballast-keep=//cmk/gui/background_job/process:process",  # background jobs launched at runtime via the inline_background_jobs fixture
         "deballast-keep=//packages/cmk-plugins/cmk/plugins/kube:kube",  # rulesets loaded at runtime for Kubernetes Quick Setup persistence tests
     ],
     use_project_pytest_config = True,
@@ -194,7 +193,6 @@ py_cmk_test(
         "//cmk/gui:painter_options",
         "//cmk/gui:session_context",
         "//cmk/gui:visual_link",
-        "//cmk/gui/background_job/process",
         "//cmk/gui/data_source",
         "//cmk/gui/experimental_flags",
         "//cmk/gui/form_specs",
@@ -509,9 +507,6 @@ py_cmk_test(
     env = {
         "EDITION": "community",
     },
-    tags = [
-        "deballast-keep=//cmk/gui/background_job/process:process",  # background jobs launched at runtime via the inline_background_jobs fixture
-    ],
     use_project_pytest_config = True,
     deps = [
         ":compare_html",
@@ -528,7 +523,6 @@ py_cmk_test(
         "//cmk/gui:view_toolkit",
         "//cmk/gui/availability",
         "//cmk/gui/background_job/job",
-        "//cmk/gui/background_job/process",
         "//cmk/gui/cmkcert",
         "//cmk/gui/dashboard",
         "//cmk/gui/graphing",

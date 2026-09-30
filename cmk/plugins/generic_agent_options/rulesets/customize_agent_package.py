@@ -25,7 +25,7 @@ from cmk.rulesets.v1.rule_specs import AgentConfig
 
 def _deployment_mode_form() -> CascadingSingleChoice:
     return CascadingSingleChoice(
-        title=Title("Customize user"),
+        title=Title("Customize user (Linux only)"),
         help_text=Help(
             "By default, the Checkmk agent runs under root. The Agent Controller, if deployed, runs"
             " under the fixed user <i>cmk-agent</i>, which will be created automatically, if it"
@@ -188,7 +188,7 @@ def _agent_controller_arch_form() -> SingleChoice:
     #   "arm"         → ships cmk-agent-ctl-aarch64 (ARM64 binary only)
     #   "x86_and_arm" → ships both binaries, installation scripts pick the right one at runtime
     return SingleChoice(
-        title=Title("Architecture of the systems where the agent will be deployed"),
+        title=Title("Architecture of the systems where the agent will be deployed (Linux only)"),
         help_text=Help(
             "The Linux Agent Controller is available as x86 64-bit (x86-64)"
             " and ARM 64-bit (aarch64) executables.\n"
@@ -245,7 +245,7 @@ def _migrate(obj: object) -> Mapping[str, object]:
 
 rule_spec_customize_agent_package = AgentConfig(
     name="customize_agent_package",
-    title=Title("Customize agent package (Linux)"),
+    title=Title("Customize agent package (Linux; Solaris and AIX: experimental)"),
     topic=TOPIC_LINUX_UNIX_AGENT_OPTIONS,
     parameter_form=_parameter_form,
 )

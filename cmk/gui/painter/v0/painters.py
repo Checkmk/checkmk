@@ -6494,7 +6494,7 @@ class AbstractColumnSpecificMetric(Painter):
                     "metric",
                     DropdownChoice(
                         title=_("Show metric"),
-                        choices=self._metric_choices(),
+                        choices=self.metric_choices(),
                         help=_("If available, the following metric will be shown"),
                     ),
                 ),
@@ -6505,7 +6505,7 @@ class AbstractColumnSpecificMetric(Painter):
 
     @classmethod
     @request_memoize()
-    def _metric_choices(cls) -> list[tuple[str, str]]:
+    def metric_choices(cls) -> list[tuple[str, str]]:
         return sorted(
             (
                 (metric_id, metric_title)

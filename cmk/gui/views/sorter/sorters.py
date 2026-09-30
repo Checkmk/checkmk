@@ -10,14 +10,27 @@ from collections.abc import Mapping, Sequence
 from functools import partial
 from typing import Literal
 
+from cmk.graphing_engine import MetricName
 from cmk.gui.config import Config
+from cmk.gui.graphing import (
+    evaluated_metrics,
+    EvaluatedMetric,
+    registered_metrics,
+    registered_translations,
+)
+from cmk.gui.hooks import request_memoize
 from cmk.gui.http import Request
 from cmk.gui.i18n import _, _l
+from cmk.gui.log import logger
 from cmk.gui.painter.v0.helpers import get_tag_groups
-from cmk.gui.painter.v0.painters import _get_docker_container_status_outputs
+from cmk.gui.painter.v0.painters import (
+    _get_docker_container_status_outputs,
+    AbstractColumnSpecificMetric,
+)
 from cmk.gui.painter.v1.helpers import get_perfdata_nth_value
 from cmk.gui.type_defs import ColumnSpec, Row
 from cmk.gui.utils.misc import savefloat
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.gui.valuespec import Dictionary, DropdownChoice
 from cmk.gui.view_utils import cmp_service_name_equiv, get_labels
 
@@ -55,6 +68,8 @@ def register_sorters(registry: SorterRegistry) -> None:
     registry.register(SorterSvcPerfVal09)
     registry.register(SorterSvcPerfVal10)
     registry.register(SorterCustomHostVariable)
+    registry.register(SorterServiceSpecificMetric)
+    registry.register(SorterHostSpecificMetric)
     registry.register(SorterHostIpv4Address)
     registry.register(SorterHostIpv6Address)
     registry.register(SorterHostIpAddresses)
@@ -580,6 +595,95 @@ SorterCustomHostVariable = ParameterizedSorter(
     columns=["host_custom_variable_names", "host_custom_variable_values"],
     sort_function=_sort_host_custom_variable,
     parameter_valuespec=_sort_host_custom_variable_parameter_valuespec,
+)
+
+
+def _missing_first_sort_key(metric: EvaluatedMetric | None) -> tuple[bool, float]:
+    if metric is None or (value := metric.performance_data.value) is None:
+        return (False, 0.0)
+    return (True, value)
+
+
+@request_memoize(maxsize=None)
+def _specific_metric_sort_key(
+    perf_data: str, check_command: str, metric_name: MetricName, debug: bool
+) -> tuple[bool, float]:
+    return _missing_first_sort_key(
+        evaluated_metrics(
+            perf_data,
+            check_command,
+            registered_metrics=registered_metrics(),
+            registered_translations=registered_translations(),
+            temperature_unit=TemperatureUnit.CELSIUS,
+            debug=debug,
+        ).get(metric_name)
+    )
+
+
+def _sort_specific_metric(
+    perf_data_column: str,
+    check_command_column: str,
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, object] | None,
+    config: Config,
+    request: Request,  # noqa: ARG001
+) -> int:
+    assert parameters is not None
+    metric_name = MetricName(str(parameters["metric"]))
+
+    def _sort_key(row: Row) -> tuple[bool, float]:
+        return _specific_metric_sort_key(
+            row.get(perf_data_column, ""),
+            row.get(check_command_column, ""),
+            metric_name,
+            config.debug,
+        )
+
+    try:
+        k1, k2 = _sort_key(r1), _sort_key(r2)
+        return (k1 > k2) - (k1 < k2)
+    except Exception:
+        logger.exception("error sorting specific metric values")
+        if config.debug:
+            raise
+        return 0
+
+
+def _sort_specific_metric_parameter_valuespec(
+    config: Config,  # noqa: ARG001
+    painters: Sequence[ColumnSpec],  # noqa: ARG001
+) -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "metric",
+                DropdownChoice(
+                    title=_("Metric"),
+                    choices=AbstractColumnSpecificMetric.metric_choices(),
+                ),
+            ),
+        ],
+        title=_("Options"),
+        optional_keys=[],
+    )
+
+
+SorterServiceSpecificMetric = ParameterizedSorter(
+    ident="service_specific_metric",
+    title=_l("Service metric"),
+    columns=["service_perf_data", "service_check_command"],
+    sort_function=partial(_sort_specific_metric, "service_perf_data", "service_check_command"),
+    parameter_valuespec=_sort_specific_metric_parameter_valuespec,
+)
+
+SorterHostSpecificMetric = ParameterizedSorter(
+    ident="host_specific_metric",
+    title=_l("Host metric"),
+    columns=["host_perf_data", "host_check_command"],
+    sort_function=partial(_sort_specific_metric, "host_perf_data", "host_check_command"),
+    parameter_valuespec=_sort_specific_metric_parameter_valuespec,
 )
 
 

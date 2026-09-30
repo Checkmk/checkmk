@@ -15,7 +15,7 @@ from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, PainterName, PainterParameters, SorterName, SorterSpec
 from cmk.gui.utils.roles import UserPermissions
 
-from .sorter import ParameterizedSorter, Sorter
+from .sorter import ParameterizedSorter, Sorter, sorter_parameter_ident
 
 
 def compute_sort_url_parameter(
@@ -67,6 +67,8 @@ def compute_sort_url_parameter(
     sorter: SorterName | tuple[SorterName, PainterParameters]
     if isinstance(registered_sorters[sorter_name], ParameterizedSorter):
         assert painter_parameters is not None
+        if sorter_parameter_ident(painter_parameters) is None:
+            return _encode_sorter_url(sorters)
         sorter = (painter_name, painter_parameters)
     else:
         sorter = sorter_name
@@ -180,8 +182,7 @@ def _encode_sorter_url(sorters: Iterable[SorterSpec]) -> str:
         sorter_name = s.sorter
         if isinstance(sorter_name, tuple):
             sorter_name, params = sorter_name
-            ident = params.get("ident", params.get("uuid", ""))
-            if not ident:
+            if (ident := sorter_parameter_ident(params)) is None:
                 raise ValueError(f"Parameterized sorter without ident: {s!r}")
             sorter_name = f"{sorter_name}:{ident}"
         url = ("-" if s.negate else "") + sorter_name

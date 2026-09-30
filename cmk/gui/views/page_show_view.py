@@ -53,7 +53,7 @@ from cmk.web.utils.urls import makeuri_contextless
 from . import availability
 from .exporter import exporter_registry
 from .row_post_processing import post_process_rows
-from .sorter import SorterEntry, SorterProtocol
+from .sorter import sorter_parameter_ident, SorterEntry, SorterProtocol
 from .store import get_all_views, get_permitted_views
 
 
@@ -607,8 +607,7 @@ def _sorter_parameters_by_ident(
         if (
             isinstance(sorter, tuple)
             and sorter[0] == sorter_name
-            # Consolidate "uuid" to "ident" for a cleaner handling here
-            and sorter[1].get("ident", sorter[1].get("uuid")) == ident
+            and sorter_parameter_ident(sorter[1]) == ident
         ):
             return sorter[1]
 
@@ -616,7 +615,7 @@ def _sorter_parameters_by_ident(
         if (params := cell.painter_parameters()) is None:
             params = {}
 
-        if cell.painter_name() == sorter_name and params.get("ident", params.get("uuid")):
+        if cell.painter_name() == sorter_name and sorter_parameter_ident(params) == ident:
             return params
 
     return None

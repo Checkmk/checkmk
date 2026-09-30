@@ -4,7 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from .base import ParameterizedSorter, Sorter, SorterEntry, SorterProtocol
+from .base import (
+    ParameterizedSorter,
+    Sorter,
+    sorter_parameter_ident,
+    SorterEntry,
+    SorterProtocol,
+)
 from .helpers import (
     cmp_custom_variable,
     cmp_ec_sl_simple_number,
@@ -44,6 +50,7 @@ __all__ = [
     "compare_ips",
     "declare_simple_sorter",
     "declare_1to1_sorter",
+    "sorter_parameter_ident",
     "sorter_registry",
     "register_sorters",
     "register_sorter",

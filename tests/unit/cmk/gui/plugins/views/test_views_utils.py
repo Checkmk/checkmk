@@ -14,7 +14,14 @@ from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0 import Cell, Painter, PainterRegistry, register_painter, registry
+from cmk.gui.painter.v0 import (
+    all_painters,
+    Cell,
+    Painter,
+    PainterRegistry,
+    register_painter,
+    registry,
+)
 from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.theme.current_theme import theme
@@ -51,11 +58,62 @@ def view_spec_fixture(request_context: None) -> ViewSpec:
                 SorterSpec(sorter="site", negate=False),
             ],
         ),
+        (
+            "-service_specific_metric:util~CPU utilization",
+            [
+                SorterSpec(
+                    sorter=("service_specific_metric", {"metric": "util"}),
+                    negate=True,
+                    join_key="CPU utilization",
+                ),
+            ],
+        ),
     ],
 )
 def test_url_sorters_parse_encode(url: str, sorters: Sequence[SorterSpec]) -> None:
     assert _parse_url_sorters(sorters, [], url) == sorters
     assert _encode_sorter_url(sorters) == url
+
+
+def test_encode_sorter_url_rejects_empty_ident_of_first_present_key() -> None:
+    sorter = SorterSpec(sorter=("svc_metrics_hist", {"uuid": "", "metric": "util"}), negate=False)
+    with pytest.raises(ValueError):
+        _encode_sorter_url([sorter])
+
+
+@pytest.mark.usefixtures("request_context")
+def test_parse_url_sorters_resolves_parameters_from_matching_cell() -> None:
+    registered_painters = all_painters(active_config.tags.tag_groups)
+    user_permissions = UserPermissions({}, {}, {}, [])
+    cells = [
+        Cell(
+            ColumnSpec(
+                name="service_specific_metric",
+                parameters={"metric": "util"},
+                join_value="CPU utilization",
+            ),
+            None,
+            registered_painters,
+            user_permissions,
+        ),
+        Cell(
+            ColumnSpec(
+                name="service_specific_metric",
+                parameters={"metric": "mem_used"},
+                join_value="Memory",
+            ),
+            None,
+            registered_painters,
+            user_permissions,
+        ),
+    ]
+    assert _parse_url_sorters([], cells, "service_specific_metric:mem_used~Memory") == [
+        SorterSpec(
+            sorter=("service_specific_metric", {"metric": "mem_used"}),
+            negate=False,
+            join_key="Memory",
+        )
+    ]
 
 
 @pytest.mark.parametrize(

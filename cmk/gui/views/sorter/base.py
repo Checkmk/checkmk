@@ -70,6 +70,16 @@ class Sorter:
         return str(self._title)
 
 
+_SORTER_IDENT_KEYS = ("ident", "uuid", "metric")
+
+
+def sorter_parameter_ident(parameters: Mapping[str, object]) -> str | None:
+    for key in _SORTER_IDENT_KEYS:
+        if key in parameters:
+            return str(value) if (value := parameters[key]) else None
+    return None
+
+
 class ParameterizedSorter(Sorter):
     def __init__(
         self,

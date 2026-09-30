@@ -56,6 +56,7 @@ py_library(
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-graphing-engine",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-web/cmk/web/utils",
     ],

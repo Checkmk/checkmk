@@ -17,6 +17,7 @@ from cmk.gui.form_specs import (
     RawFrontendData,
     VisitorOptions,
 )
+from cmk.gui.form_specs.visitors._utils import option_id
 from cmk.gui.utils.host_relation_kinds import RELATION_KINDS
 from cmk.gui.utils.host_relations import (
     RelationDirection,
@@ -41,40 +42,75 @@ from tests.unit.cmk.gui.watolib.host_relations_fakes import fake_hosts, FakeHost
 _VISITOR_OPTIONS = VisitorOptions(migrate_values=False, mask_values=False)
 
 
-def test_the_form_offers_every_end_of_every_kind_in_one_row() -> None:
+def _row() -> shared_type_defs.Dictionary:
     spec, _value = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS).to_vue(DEFAULT_VALUE)
     assert isinstance(spec, shared_type_defs.List)
-    row = spec.element_template
-    assert isinstance(row, shared_type_defs.CascadingSingleChoice)
-    assert row.layout == shared_type_defs.CascadingSingleChoiceLayout.horizontal
-    assert [element.name for element in row.elements] == [
-        f"{kind.id}_{direction}"
-        for kind in RELATION_KINDS.values()
-        for direction in kind.directions()
+    assert isinstance(spec.element_template, shared_type_defs.Dictionary)
+    return spec.element_template
+
+
+def _field(name: str) -> shared_type_defs.DictionaryElement:
+    return next(element for element in _row().elements if element.name == name)
+
+
+def _choice(name: str) -> shared_type_defs.SingleChoice:
+    spec = _field(name).parameter_form
+    assert isinstance(spec, shared_type_defs.SingleChoice)
+    return spec
+
+
+def _direction_toggle() -> shared_type_defs.CascadingSingleChoice:
+    spec = _field("direction").parameter_form
+    assert isinstance(spec, shared_type_defs.CascadingSingleChoice)
+    return spec
+
+
+def _submitted_row(kind: str, direction: str, host: str) -> dict[str, object]:
+    """A row as the dialog submits it: a single choice sends the id of the selected option, the
+    direction toggle the selected direction with the empty value of its element."""
+    return {"kind": option_id(kind), "direction": [direction, None], "host": host}
+
+
+def test_a_row_asks_for_type_direction_and_host_side_by_side() -> None:
+    row = _row()
+    assert [(element.name, element.required) for element in row.elements] == [
+        ("kind", True),
+        ("direction", True),
+        ("host", True),
     ]
+    assert {element.group.layout for element in row.elements if element.group} == {
+        shared_type_defs.DictionaryGroupLayout.horizontal
+    }
+    assert all(element.parameter_form.help for element in row.elements)
 
 
-def test_the_form_offers_both_ends_of_the_management_relation() -> None:
-    """Pinned separately: the names above are derived, these are what the dialog submits."""
-    spec, _value = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS).to_vue(DEFAULT_VALUE)
-    assert isinstance(spec, shared_type_defs.List)
-    row = spec.element_template
-    assert isinstance(row, shared_type_defs.CascadingSingleChoice)
-    assert [element.name for element in row.elements] == [
-        "management_parent",
-        "management_child",
-    ]
+def test_the_type_is_the_one_kind_there_is_and_cannot_be_changed() -> None:
+    kind = _choice("kind")
+    assert [element.name for element in kind.elements] == [option_id("management")]
+    assert [element.title for element in kind.elements] == ["Management board"]
+    assert kind.frozen is True
+    assert _field("kind").default_value == option_id("management")
 
 
-def test_the_form_titles_read_as_a_sentence_about_the_host_being_edited() -> None:
-    spec, _value = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS).to_vue(DEFAULT_VALUE)
-    assert isinstance(spec, shared_type_defs.List)
-    row = spec.element_template
-    assert isinstance(row, shared_type_defs.CascadingSingleChoice)
-    assert [element.title for element in row.elements] == [
+def test_the_direction_reads_as_a_sentence_about_the_host_being_edited() -> None:
+    direction = _direction_toggle()
+    assert [element.name for element in direction.elements] == ["parent", "child"]
+    assert [element.title for element in direction.elements] == [
         "is management board of",
         "is OS host of",
     ]
+
+
+def test_the_direction_is_a_toggle_at_the_height_of_the_fields_next_to_it() -> None:
+    direction = _direction_toggle()
+    assert direction.layout == shared_type_defs.CascadingSingleChoiceLayout.button_group
+    assert (
+        direction.button_group_size == shared_type_defs.CascadingSingleChoiceButtonGroupSize.small
+    )
+
+
+def test_a_new_row_makes_this_host_the_management_board() -> None:
+    assert _field("direction").default_value == ("parent", None)
 
 
 def test_the_form_round_trips_stored_links() -> None:
@@ -101,8 +137,12 @@ def test_the_form_leaves_out_a_link_it_cannot_offer_a_row_for() -> None:
 
 
 def test_the_form_stores_the_rows_the_dialog_submits() -> None:
-    """The dialog sends the (relation type, host name) pairs the cascading choice produces."""
-    rows = RawFrontendData([["management_parent", "mgmt1"], ["management_child", "os1"]])
+    rows = RawFrontendData(
+        [
+            _submitted_row("management", "parent", "mgmt1"),
+            _submitted_row("management", "child", "os1"),
+        ]
+    )
     visitor = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS)
     assert visitor.validate(rows) == []
     assert visitor.to_disk(rows) == [
@@ -112,15 +152,17 @@ def test_the_form_stores_the_rows_the_dialog_submits() -> None:
 
 
 def test_the_form_asks_for_a_host_the_row_is_missing() -> None:
-    """The dialog submits the empty name the choice defaults to."""
+    """The dialog submits the empty name the host field defaults to."""
     visitor = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS)
-    messages = visitor.validate(RawFrontendData([["management_child", ""]]))
+    messages = visitor.validate(RawFrontendData([_submitted_row("management", "child", "")]))
     assert [message.message for message in messages] == ["Select the host this relation points to."]
 
 
 def test_the_form_rejects_a_host_name_that_cannot_be_stored() -> None:
     visitor = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS)
-    messages = visitor.validate(RawFrontendData([["management_child", "no spaces"]]))
+    messages = visitor.validate(
+        RawFrontendData([_submitted_row("management", "child", "no spaces")])
+    )
     assert [message.message for message in messages] == ["This is not a usable host name."]
 
 

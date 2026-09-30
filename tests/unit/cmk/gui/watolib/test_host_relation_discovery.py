@@ -402,6 +402,7 @@ def _a_second_kind() -> RelationKind:
     """
     return DirectedRelationKind(
         id="clustering",
+        title=_l("Clustering"),
         parent=RelationEnd(row=_l("is cluster node of"), noun=_l("Cluster node")),
         child=RelationEnd(row=_l("is cluster of"), noun=_l("Cluster")),
         name_evidence=NameEvidence(tokens=("node",), direction="parent"),

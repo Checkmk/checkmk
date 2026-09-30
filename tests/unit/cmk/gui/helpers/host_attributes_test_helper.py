@@ -17,6 +17,7 @@ import pytest
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
+from cmk.gui.form_specs.visitors._utils import option_id
 from cmk.gui.http import request
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.watolib.host_attributes import (
@@ -463,11 +464,14 @@ Case = CasePass | CaseFail
 BASE_FORM_SPEC_CASES: Mapping[str, list[Case]] = {
     "relations": [
         CasePass("no-relations", []),
-        # Stored as a mapping, edited as the (relation type, host name) pair the choice produces.
+        # Edited as the stored mapping, but a single choice submits the id of its option and the
+        # direction toggle the selected direction with the empty value of its element.
         CasePass(
             "a-link",
             [{"kind": "management", "direction": "parent", "host": "board"}],
-            submitted=[["management_parent", "board"]],
+            submitted=[
+                {"kind": option_id("management"), "direction": ["parent", None], "host": "board"}
+            ],
         ),
         CaseFail("not-a-list", "management_parent"),
         CaseFail("without-host", [{"kind": "management", "direction": "parent", "host": ""}]),

@@ -25,10 +25,11 @@ def test_the_kinds_this_version_knows() -> None:
 
 
 def test_a_kind_id_has_to_be_an_identifier() -> None:
-    """It ends up in an element name of the host dialog, which rejects anything else."""
+    """It ends up in the name of a relation end, which rejects anything else."""
     with pytest.raises(ValueError):
         DirectedRelationKind(
             id="management board",
+            title=_l("title"),
             parent=RelationEnd(row=_l("row"), noun=_l("noun")),
             child=RelationEnd(row=_l("row"), noun=_l("noun")),
         )
@@ -53,7 +54,7 @@ def test_a_directed_kind_has_no_symmetric_end() -> None:
 
 def test_a_symmetric_kind_reads_the_same_from_both_sides() -> None:
     peer = RelationEnd(row=_l("is peer of"), noun=_l("Peer"))
-    kind = SymmetricRelationKind(id="peering", peer=peer)
+    kind = SymmetricRelationKind(id="peering", title=_l("Peering"), peer=peer)
 
     assert tuple(kind.directions()) == ("symmetric",)
     assert kind.end("symmetric") is peer
@@ -61,7 +62,9 @@ def test_a_symmetric_kind_reads_the_same_from_both_sides() -> None:
 
 @pytest.mark.parametrize("direction", ["parent", "child"])
 def test_a_symmetric_kind_has_no_directed_end(direction: RelationDirection) -> None:
-    kind = SymmetricRelationKind(id="peering", peer=RelationEnd(row=_l("row"), noun=_l("noun")))
+    kind = SymmetricRelationKind(
+        id="peering", title=_l("title"), peer=RelationEnd(row=_l("row"), noun=_l("noun"))
+    )
 
     with pytest.raises(ValueError):
         kind.end(direction)

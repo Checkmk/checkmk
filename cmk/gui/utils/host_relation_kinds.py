@@ -60,13 +60,13 @@ class NameEvidence:
 class RelationEnd:
     """How the host sitting at one end of a relation is worded.
 
-    Both readings are needed because the GUI uses both: a row of the host dialog is a sentence
-    about the host being edited, while a card in the monitoring and the message refusing a
-    contradiction name the host itself.
+    Both readings are needed because the GUI uses both: the direction of a row in the host dialog
+    is a sentence about the host being edited, while a card in the monitoring and the message
+    refusing a contradiction name the host itself.
     """
 
     row: LazyString
-    """The dialog row, read towards the related host: "is management board of"."""
+    """The direction of a dialog row, read towards the related host: "is management board of"."""
 
     noun: LazyString
     """The host sitting at this end: "Management board"."""
@@ -83,6 +83,7 @@ class DirectedRelationKind:
     """
 
     id: str
+    title: LazyString
     parent: RelationEnd
     child: RelationEnd
     name_evidence: NameEvidence | None = None
@@ -112,6 +113,7 @@ class SymmetricRelationKind:
     """
 
     id: str
+    title: LazyString
     peer: RelationEnd
     name_evidence: NameEvidence | None = None
 
@@ -144,7 +146,7 @@ def _validate_name_evidence(
 
 
 def _validate_kind_id(kind_id: str) -> None:
-    """A kind id ends up in an element name of the host dialog, which has to be an identifier."""
+    """A kind id ends up in the name of a relation end, which has to be an identifier."""
     if not kind_id.isidentifier():
         raise ValueError(f"Relation kind id must be an identifier: {kind_id!r}")
 
@@ -156,6 +158,7 @@ RELATION_KINDS: Final[Mapping[str, RelationKind]] = {
     for kind in (
         DirectedRelationKind(
             id="management",
+            title=_l("Management board"),
             parent=RelationEnd(row=_l("is management board of"), noun=_l("Management board")),
             child=RelationEnd(row=_l("is OS host of"), noun=_l("OS host")),
             # What vendors call the board that sits in a host, as it turns up in host

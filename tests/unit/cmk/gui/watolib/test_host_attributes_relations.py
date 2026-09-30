@@ -16,6 +16,7 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.visitors._utils import option_id
 from cmk.gui.http import request
 from cmk.gui.watolib.builtin_attributes import HostAttributeRelations
 from cmk.gui.watolib.form_spec_generators import create_host_attributes_selection
@@ -55,7 +56,10 @@ def test_validate_input_does_not_care_which_host_it_is_about() -> None:
 def test_a_row_without_a_host_is_reported_at_the_field() -> None:
     """collect_attributes() reads the form before it validates it, so the refusal has to come out
     of from_html_vars() as a user error - otherwise the save ends in a crash report."""
-    request.set_var("relations", json.dumps([["management_child", ""]]))
+    request.set_var(
+        "relations",
+        json.dumps([{"kind": option_id("management"), "direction": ["child", None], "host": ""}]),
+    )
 
     with pytest.raises(MKUserError, match="Select the host this relation points to"):
         HostAttributeRelations().from_html_vars("")

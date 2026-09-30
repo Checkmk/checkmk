@@ -1,0 +1,22 @@
+{
+  "integrity": "sha256-vhzKBPh1uMJKguwbqGuuLktPjjOPsc0GOLnkdGnkJ1A=",
+  "strip_prefix": "psign-0.7.0",
+  "url": "https://github.com/Devolutions/psign/archive/refs/tags/v0.7.0.tar.gz",
+  "overlay": {
+    "BUILD.bazel": "sha256-pOFrUuwf8asL8KWGyko/b9RccZ46l8g/4QYAFbTI5AU=",
+    "Cargo.Bazel.lock": "sha256-DrJy+MmboytdQ7J2dH7H9LUiMRlTGfAEoUNJ1PibSzc=",
+    "MODULE.bazel": "sha256-VxbdQPeDiOuLLobKMjwN1OIA+v/MCVgSpMTJw+34jPM=",
+    "crates/psign-authenticode-trust/BUILD.bazel": "sha256-GJhQiln8YZwGG9xI73ATStEId9XmjtkCU2d/xVGDGnE=",
+    "crates/psign-azure-kv-rest/BUILD.bazel": "sha256-scRv6PuwWd9kF9ggYiysLTuXXux9o6SE/07Hbbhm8QE=",
+    "crates/psign-codesigning-rest/BUILD.bazel": "sha256-SuAEm54aL5Vjvs0vmBpvfxdpMj5eYFa5D9sDYUiw7Gc=",
+    "crates/psign-digest-cli/BUILD.bazel": "sha256-meV1/5KI6+oR4d7BSX69VDqMXWryzrogeIhlncjgVUs=",
+    "crates/psign-opc-sign/BUILD.bazel": "sha256-Ta6ZFnO6Yk5g/15/IgCsAicaLHL71CJuNfPVd8K+91g=",
+    "crates/psign-portable-core/BUILD.bazel": "sha256-wx4cWPf9UCNJHqAyhQVwEmKZkmAiywFBQSanMTBtYcQ=",
+    "crates/psign-sip-digest/BUILD.bazel": "sha256-1MNk3YjPmIsT+DBgWwCoB30g8aGbeppRareJhemQbGU=",
+    "psign.bzl": "sha256-rpLo27x+uFpa5IpEgnWutXMC3FYg/ivQv3GTlcQkMcw="
+  },
+  "patches": {
+    "0001-artifact-signing-correlation-id-for-scripts.patch": "sha256-OtJBIZ+1fKiXPDM2QcsgOv8+w6w8W5RJPGqiW+FlOYo="
+  },
+  "patch_strip": 1
+}

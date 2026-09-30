@@ -1,0 +1,75 @@
+load("@psign_crates//:defs.bzl", "aliases", "all_crate_deps")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+load("//:psign.bzl", "PSIGN_EDITION", "PSIGN_VERSION")
+
+exports_files([
+    "Cargo.Bazel.lock",
+    "Cargo.lock",
+    "Cargo.toml",
+])
+
+# build.rs only embeds a Windows version resource; not needed on Linux.
+rust_library(
+    name = "psign_lib",
+    srcs = glob(
+        ["src/**/*.rs"],
+        exclude = [
+            "src/bin/**",
+            "src/main.rs",
+        ],
+    ),
+    aliases = aliases(),
+    crate_features = [
+        "artifact-signing-rest",
+        "azure-kv-sign",
+        "default",
+        "timestamp-http",
+        "timestamp-server",
+    ],
+    crate_name = "psign",
+    edition = PSIGN_EDITION,
+    proc_macro_deps = all_crate_deps(proc_macro = True),
+    version = PSIGN_VERSION,
+    deps = all_crate_deps() + [
+        "//crates/psign-authenticode-trust",
+        "//crates/psign-azure-kv-rest",
+        "//crates/psign-codesigning-rest",
+        "//crates/psign-digest-cli",
+        "//crates/psign-opc-sign",
+        "//crates/psign-portable-core",
+        "//crates/psign-sip-digest",
+    ],
+)
+
+rust_binary(
+    name = "psign-tool",
+    srcs = ["src/main.rs"],
+    aliases = aliases(),
+    crate_features = [
+        "artifact-signing-rest",
+        "azure-kv-sign",
+        "default",
+        "timestamp-http",
+        "timestamp-server",
+    ],
+    edition = PSIGN_EDITION,
+    proc_macro_deps = all_crate_deps(proc_macro = True),
+    version = PSIGN_VERSION,
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps() + [
+        ":psign_lib",
+        "//crates/psign-authenticode-trust",
+        "//crates/psign-azure-kv-rest",
+        "//crates/psign-codesigning-rest",
+        "//crates/psign-digest-cli",
+        "//crates/psign-opc-sign",
+        "//crates/psign-portable-core",
+        "//crates/psign-sip-digest",
+    ],
+)
+
+alias(
+    name = "psign",
+    actual = ":psign-tool",
+    visibility = ["//visibility:public"],
+)

@@ -148,6 +148,7 @@ bazel_env(
         "osslsigncode": "@osslsigncode",
         "plantuml": "@plantuml",
         "pnpm": "@pnpm",
+        "psign": "@psign",
         "py_import_cycles": ":py-import-cycles",
         "stylelint": ":stylelint",
         "uv": "@multitool//tools/uv",

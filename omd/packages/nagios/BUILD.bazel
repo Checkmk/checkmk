@@ -86,7 +86,8 @@ set_runpath(
 
 py_library(
     name = "merge-nagios-config_lib",
-    srcs = ["merge-nagios-config.py"],
+    srcs = ["merge_nagios_config.py"],
+    imports = ["."],
 )
 
 pkg_files(
@@ -187,6 +188,5 @@ py_cmk_test(
     name = "unit",
     size = "small",
     srcs = glob(["tests/*.py"]),
-    tags = ["deballast-keep=//omd/packages/nagios:merge-nagios-config_lib"],
     deps = [":merge-nagios-config_lib"],
 )

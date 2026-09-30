@@ -40,7 +40,7 @@ from ._painters import (
 from ._sorter import attribute_sorter_from_hint, column_sorter_from_hint, SorterFromHint
 from ._tree_renderer import make_table_view_name_of_host
 from .registry import (
-    inv_paint_funtions,
+    inv_paint_functions,
     inventory_displayhints,
     InventoryHintSpec,
     InvPaintFunction,
@@ -59,7 +59,7 @@ __all__ = [
 def register_inv_paint_functions(mapping: Mapping[str, object]) -> None:
     for k, v in mapping.items():
         if k.startswith(PAINT_FUNCTION_NAME_PREFIX) and callable(v):
-            inv_paint_funtions.register(InvPaintFunction(name=k, func=v))
+            inv_paint_functions.register(InvPaintFunction(name=k, func=v))
 
 
 def _register_painter(

@@ -83,7 +83,7 @@ __all__ = ["SDPath"]
 
 from ._paint_functions import inv_paint_generic
 from .registry import (
-    inv_paint_funtions,
+    inv_paint_functions,
     InventoryHintSpec,
     PaintFunction,
     SortFunction,
@@ -775,8 +775,8 @@ def _get_paint_function(legacy_hint: InventoryHintSpec) -> tuple[str, PaintFunct
     # FIXME At the moment  we need it to get tdclass: Clean this up one day.
     if "paint" in legacy_hint:
         data_type = legacy_hint["paint"]
-        return data_type, inv_paint_funtions[PAINT_FUNCTION_NAME_PREFIX + data_type]["func"]
-    return "str", inv_paint_funtions["inv_paint_generic"]["func"]
+        return data_type, inv_paint_functions[PAINT_FUNCTION_NAME_PREFIX + data_type]["func"]
+    return "str", inv_paint_functions["inv_paint_generic"]["func"]
 
 
 def _make_sort_function_of_legacy_hint(legacy_hint: InventoryHintSpec) -> SortFunction:
@@ -1267,7 +1267,7 @@ class NodeDisplayHint:
                 short_title=title,
                 long_title=long_title,
                 paint_function=_wrap_paint_function(
-                    inv_paint_funtions["inv_paint_generic"]["func"]
+                    inv_paint_functions["inv_paint_generic"]["func"]
                 ),
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter=_make_attribute_filter_from_legacy_hint(
@@ -1290,7 +1290,7 @@ class NodeDisplayHint:
                 short_title=title,
                 long_title=_make_long_title(self.title if self.path else "", title),
                 paint_function=_wrap_paint_function(
-                    inv_paint_funtions["inv_paint_generic"]["func"]
+                    inv_paint_functions["inv_paint_generic"]["func"]
                 ),
             )
 

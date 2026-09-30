@@ -16,7 +16,7 @@ from cmk.web.utils.escaping import escape_text
 from .registry import InvPaintFunction, InvPaintFunctions, PaintResult
 
 
-def register(inv_paint_funtions: InvPaintFunctions) -> None:
+def register(inv_paint_functions: InvPaintFunctions) -> None:
     for paint_function in [
         inv_paint_generic,
         inv_paint_hz,
@@ -47,8 +47,8 @@ def register(inv_paint_funtions: InvPaintFunctions) -> None:
         inv_paint_service_status,
     ]:
         # Do no overwrite paint functions from plugins
-        if paint_function.__name__ not in inv_paint_funtions:
-            inv_paint_funtions.register(
+        if paint_function.__name__ not in inv_paint_functions:
+            inv_paint_functions.register(
                 InvPaintFunction(name=paint_function.__name__, func=paint_function)
             )
 

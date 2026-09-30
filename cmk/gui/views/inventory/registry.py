@@ -71,4 +71,4 @@ class InvPaintFunctions(Registry[InvPaintFunction]):
         return instance["name"]
 
 
-inv_paint_funtions = InvPaintFunctions()
+inv_paint_functions = InvPaintFunctions()

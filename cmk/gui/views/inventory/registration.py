@@ -25,7 +25,7 @@ from ._painters import (
 )
 from ._row_post_processor import inventory_row_post_processor
 from ._tree_renderer import ajax_inv_render_tree
-from .registry import inv_paint_funtions
+from .registry import inv_paint_functions
 
 
 def register(
@@ -36,7 +36,7 @@ def register(
     multisite_builtin_views: dict[ViewName, ViewSpec],
     row_post_processor_registry: RowPostProcessorRegistry,
 ) -> None:
-    _paint_functions.register(inv_paint_funtions)
+    _paint_functions.register(inv_paint_functions)
     page_registry.register(PageEndpoint("ajax_inv_render_tree", ajax_inv_render_tree))
     data_source_registry_.register(DataSourceInventoryHistory)
     painter_registry_.register(PainterInventoryTree)

@@ -22,6 +22,7 @@ from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     AzureResourceGroup,
     AzureSubscription,
     filter_tags,
+    get_otel_only_resources,
     get_resource_groups,
     get_resource_host_labels_section,
     process_app_registrations,
@@ -219,6 +220,55 @@ def test_get_resource_host_labels_section(
 
     assert labels_section._cont == expected_result[0]  # noqa: SLF001
     assert labels_section._piggytargets == expected_result[1]  # noqa: SLF001
+
+
+@pytest.mark.parametrize(
+    "otel_resource_types, monitored_services, expected_names",
+    [
+        pytest.param(
+            ["microsoft.app/containerapps"],
+            [],
+            ["my_app"],
+            id="host for every resource of an OTel type, matched ignoring case",
+        ),
+        pytest.param(
+            ["Microsoft.App/containerApps", "Microsoft.Storage/storageAccounts"],
+            ["Microsoft.Storage/storageAccounts"],
+            ["my_app"],
+            id="no second host for a type the special agent monitors itself",
+        ),
+    ],
+)
+def test_get_otel_only_resources(
+    otel_resource_types: Sequence[str],
+    monitored_services: Sequence[str],
+    expected_names: Sequence[str],
+) -> None:
+    resources = [
+        AzureResource(
+            {
+                "id": f"{name}_id",
+                "name": name,
+                "type": resource_type,
+                "location": "westeurope",
+                "tags": {},
+                "group": "my_group",
+            },
+            TagsImportPatternOption.import_all,
+            fake_azure_subscription(),
+            UniqueHostnamesConfig(),
+        )
+        for name, resource_type in [
+            ("my_app", "Microsoft.App/containerApps"),
+            ("my_storage", "Microsoft.Storage/storageAccounts"),
+            ("my_vm", "Microsoft.Compute/virtualMachines"),
+        ]
+    ]
+
+    assert [
+        resource.name
+        for resource in get_otel_only_resources(resources, otel_resource_types, monitored_services)
+    ] == expected_names
 
 
 @pytest.mark.parametrize(
@@ -1524,6 +1574,11 @@ def test_azure_resource(  # type: ignore[misc]
             RESOURCE_DATA_DIFFERENT_TYPE,
             "azr_vm_storage_account_1_6bba70d5",
             id="long hostname for virtual machine (different abbreviation and hash)",
+        ),
+        pytest.param(
+            {**RESOURCE_DATA, "type": "Microsoft.App/containerApps"},
+            "azr_containerapps_storage_account_1_fd882bda",
+            id="long hostname for type without abbreviation (short type as prefix)",
         ),
     ],
 )

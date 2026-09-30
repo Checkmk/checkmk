@@ -41,6 +41,7 @@ from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_optio
 from cmk.plugins.azure_v2.lib import (
     compute_unique_name_hash,
     get_params_from_azure_id,
+    get_resource_type_abbreviation,
     RESOURCE_TYPE_ABBREVIATIONS,
     short_resource_type,
 )
@@ -80,10 +81,6 @@ LOGGER = logging.getLogger(f"agent_{AGENT}")
 NOW = datetime.datetime.now(tz=datetime.UTC)
 
 SECRET_OPTION = "secret"
-
-
-class ResourceTypeNotKnownError(RuntimeError):
-    pass
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -936,20 +933,13 @@ class AzureResource(_AzureEntity):
     @override
     def _unique_name(self) -> str:
         resource_type = self.info.get("type", "")
-        fetched = FetchedResource.from_type(resource_type)
-
-        if fetched is None:
-            raise ResourceTypeNotKnownError(
-                f"Unsupported resource type for unique name generation: {resource_type}"
-            )
-
         return self._compute_unique_name(
             (
                 self.subscription.id,
                 self.group,
                 self.info["type"],
             ),
-            fetched.abbreviation,
+            get_resource_type_abbreviation(resource_type) or short_resource_type(resource_type),
         )
 
     @override
@@ -2137,6 +2127,21 @@ def get_resource_host_labels_section(
     return AzureLabelsSection(resource.piggytarget, labels=labels, tags=resource_tags)
 
 
+def get_otel_only_resources(
+    selected_resources: Sequence[AzureResource],
+    otel_resource_types: Iterable[str],
+    monitored_services: Iterable[str],
+) -> list[AzureResource]:
+    otel_types_lower = {t.lower() for t in otel_resource_types} - {
+        s.lower() for s in monitored_services
+    }
+    return [
+        resource
+        for resource in selected_resources
+        if resource.info["type"].lower() in otel_types_lower
+    ]
+
+
 def write_resource_groups_sections(resource_groups: Mapping[str, AzureResourceGroup]) -> None:
     # for inventory purposes
     for group_name, resource in resource_groups.items():
@@ -2711,6 +2716,7 @@ async def process_single_resources(
     subscription: AzureSubscription,
     groups_with_monitored_resources: Mapping[str, AzureResourceGroup],
     monitored_resources: Mapping[ResourceId, AzureResource],
+    otel_resources: list[AzureResource],
 ) -> Sequence[AzureSection]:
     processed_resources: list[AzureResource] = []
     tasks: set[Coroutine[Any, Any, AzureResource] | Coroutine[Any, Any, list[AzureResource]]] = (
@@ -2752,7 +2758,9 @@ async def process_single_resources(
             assert isinstance(resource_async, list)
             processed_resources.extend(resource_async)
 
-    return _gather_sections_from_resources(processed_resources, groups_with_monitored_resources)
+    return _gather_sections_from_resources(
+        [*processed_resources, *otel_resources], groups_with_monitored_resources
+    )
 
 
 async def process_resources(
@@ -2772,7 +2780,10 @@ async def process_resources(
         for r in selected_resources
         if r.info["type"].lower() in monitored_services_lower
     }
-    resources_groups = {r.group for r in monitored_resources_by_id.values()}
+    otel_resources = get_otel_only_resources(
+        selected_resources, args.otel_resource_types, monitored_services
+    )
+    resources_groups = {r.group for r in [*monitored_resources_by_id.values(), *otel_resources]}
     groups_with_monitored_resources = {
         group_name: group
         for group_name, group in monitored_groups.items()
@@ -2804,6 +2815,7 @@ async def process_resources(
             subscription,
             groups_with_monitored_resources,
             monitored_resources_by_id,
+            otel_resources,
         ),
     }
 

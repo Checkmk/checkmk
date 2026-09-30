@@ -8,6 +8,8 @@
 
 /* stylelint-disable selector-id-pattern */
 #content_area:has(> cmk-global-time-picker):has(table.boxlayout.graph) {
+  $graph-page-content-padding: $spacing-double;
+
   padding-left: 0;
 
   > div#top_heading,
@@ -60,7 +62,21 @@
   }
 
   > div#main_page_content {
+    padding-top: $graph-page-content-padding;
     padding-left: $spacing;
+  }
+
+  div#data_container > div#row_info:first-child {
+    height: $graph-page-content-padding;
+    margin-top: -$graph-page-content-padding;
+    padding: 0;
+    line-height: $graph-page-content-padding;
+  }
+
+  table.boxlayout.graph td.boxcolumn {
+    > table.groupheader {
+      top: -$graph-page-content-padding;
+    }
   }
 
   div#top_heading tr#suggestions td {

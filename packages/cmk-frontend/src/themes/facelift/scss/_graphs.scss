@@ -7,6 +7,16 @@
 /* Stylesheets for graphs */
 
 /* stylelint-disable selector-id-pattern */
+#content_area:has(> cmk-global-time-picker) {
+  table.data.single > tbody > tr.data > td:has(> cmk-graph-group) {
+    --graphing-graph-header-inline-padding: 0;
+
+    padding: $spacing-double;
+    background-color: $even-tr-bg-color;
+    border-radius: $theme-border-radius;
+  }
+}
+
 #content_area:has(> cmk-global-time-picker):has(table.boxlayout.graph) {
   $graph-page-content-padding: $spacing-double;
 

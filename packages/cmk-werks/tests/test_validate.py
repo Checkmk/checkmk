@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
 
-from cmk.werks.tool.validate import main
+from cmk.werks.tool.validate import main, run
 
 from ._werk_files import werk_text
 
@@ -74,3 +75,50 @@ def test_a_file_that_is_no_werk_is_skipped(
     _validate(tmp_path, [readme])
 
     assert f"WARNING: NOT CHECKING {readme} as it's not a werk." in capsys.readouterr().out
+
+
+def _repository(tmp_path: Path, werk_names: Sequence[str]) -> Path:
+    werks_dir = tmp_path / ".werks"
+    werks_dir.mkdir()
+    (werks_dir / "config").write_text(_CONFIG, encoding="utf-8")
+    (tmp_path / "defines.make").write_text("VERSION := 2.5.0\n", encoding="utf-8")
+    for name in werk_names:
+        (werks_dir / name).write_text(werk_text(), encoding="utf-8")
+    return tmp_path
+
+
+def test_run_validates_the_given_werks(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    repo = _repository(tmp_path, ["1.md", "2.md"])
+
+    run([".werks/1.md"], {}, repo)
+
+    assert capsys.readouterr().out == "Successfully validated 1 werks\n"
+
+
+def test_run_validates_the_werks_changed_in_ci(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    repo = _repository(tmp_path, ["1.md", "2.md", "3.md"])
+
+    run([], {"CHANGED_WERK_FILES": ".werks/1.md .werks/2.md"}, repo)
+
+    assert capsys.readouterr().out == "Successfully validated 2 werks\n"
+
+
+def test_run_validates_every_werk_without_a_choice(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    repo = _repository(tmp_path, ["1.md", "2.md", "3.md"])
+
+    run([], {}, repo)
+
+    assert capsys.readouterr().out == "Successfully validated 3 werks\n"
+
+
+def test_run_checks_the_version_against_the_given_pattern(tmp_path: Path) -> None:
+    repo = _repository(tmp_path, ["1.md"])
+
+    with pytest.raises(RuntimeError) as excinfo:
+        run(["--version-regex", "^3", ".werks/1.md"], {}, repo)
+
+    assert "Version '2.5.0' is not valid" in str(excinfo.value.__cause__)

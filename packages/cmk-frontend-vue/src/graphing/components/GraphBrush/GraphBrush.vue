@@ -512,19 +512,20 @@ onBeforeUnmount(() => {
 }
 
 .graphing-graph-brush__range {
-  fill: var(--font-color);
+  fill: var(--graphing-brush-extent-color);
   font-size: var(--font-size-normal);
-  opacity: 0.7;
   pointer-events: none;
 }
 
 body[data-theme='facelift'] .graphing-graph-brush {
   --graphing-brush-track-stroke: var(--color-mid-grey-10);
   --graphing-brush-bar-stroke: var(--color-corporate-green-70);
+  --graphing-brush-extent-color: var(--color-mid-grey-100);
 }
 
 body[data-theme='modern-dark'] .graphing-graph-brush {
   --graphing-brush-track-stroke: var(--color-mid-grey-90);
   --graphing-brush-bar-stroke: var(--color-corporate-green-50);
+  --graphing-brush-extent-color: var(--color-mid-grey-0);
 }
 </style>

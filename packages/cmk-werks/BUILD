@@ -93,7 +93,6 @@ py_cmk_test(
         requirement("gitpython"),
         requirement("requests"),
         requirement("rich"),
-        requirement("vcrpy"),
         requirement("pytest-recording"),
     ],
 )

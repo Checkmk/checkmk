@@ -41,13 +41,19 @@ _HOOK_HEADER = (
 
 
 class ApacheSettings(NamedTuple):
+    mode: str
     tcp_addr: str
     tcp_port: str
     forwarded_headers: str
 
+    @property
+    def proxies_site(self) -> bool:
+        return self.mode != "none"
+
 
 def apache_settings(config: Config) -> ApacheSettings:
     return ApacheSettings(
+        mode=config["APACHE_MODE"],
         tcp_addr=config["APACHE_TCP_ADDR"],
         tcp_port=config["APACHE_TCP_PORT"],
         forwarded_headers=config["APACHE_FORWARDED_HEADERS"],
@@ -114,14 +120,16 @@ def register_with_system_apache(
     """Apply the site specific configuration to the system global apache
 
     Basically update the apache configuration to register the mod_proxy configuration
-    and the reload or restart the system apache.
+    and the reload or restart the system apache. With APACHE_MODE 'none' the hook has no
+    mod_proxy configuration, but the site stays registered (see omdlib.sites.is_disabled).
 
     Root permissions are needed to make this work.
     """
-    if (err := apache_TCP_addr_has_error(settings.tcp_addr)) is not None:
-        sys.exit(f"Invalid value for '{settings.tcp_addr}' for 'APACHE_TCP_ADDR'. {err}\n")
-    if (err := apache_network_port_has_error(settings.tcp_port)) is not None:
-        sys.exit(f"Invalid value for '{settings.tcp_port}' for 'APACHE_TCP_PORT'. {err}\n")
+    if settings.proxies_site:
+        if (err := apache_TCP_addr_has_error(settings.tcp_addr)) is not None:
+            sys.exit(f"Invalid value for '{settings.tcp_addr}' for 'APACHE_TCP_ADDR'. {err}\n")
+        if (err := apache_network_port_has_error(settings.tcp_port)) is not None:
+            sys.exit(f"Invalid value for '{settings.tcp_port}' for 'APACHE_TCP_PORT'. {err}\n")
 
     create_apache_hook(apache_config, site_name, settings)
     apply_apache_config(version_info, apache_reload, verbose)
@@ -265,6 +273,8 @@ def _forwarded_headers_directives(forwarded_headers: str) -> str:
 
 
 def _render_apache_hook(site_name: str, settings: ApacheSettings) -> str:
+    if not settings.proxies_site:
+        return _HOOK_HEADER
     return _HOOK_HEADER + _render_proxy_config(
         site_name, settings.tcp_addr, settings.tcp_port, settings.forwarded_headers
     )

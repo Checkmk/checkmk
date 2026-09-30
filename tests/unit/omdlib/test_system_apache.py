@@ -9,6 +9,7 @@ from pathlib import Path
 
 from pytest_mock import MockerFixture
 
+from omdlib.sites import is_disabled
 from omdlib.system_apache import (
     ApacheSettings,
     create_apache_hook,
@@ -114,9 +115,12 @@ def test_create_apache_hook_manual_forwarded_headers_skips_the_directives(
 def _settings(
     addr: str = "127.0.0.1",
     port: str = "5000",
+    mode: str = "own",
     forwarded_headers: str = "auto",
 ) -> ApacheSettings:
-    return ApacheSettings(tcp_addr=addr, tcp_port=port, forwarded_headers=forwarded_headers)
+    return ApacheSettings(
+        mode=mode, tcp_addr=addr, tcp_port=port, forwarded_headers=forwarded_headers
+    )
 
 
 def test_unregister_from_system_apache(tmp_path: Path, mocker: MockerFixture) -> None:
@@ -132,6 +136,38 @@ def test_unregister_from_system_apache(tmp_path: Path, mocker: MockerFixture) ->
     unregister_from_system_apache(version_info, apache_config, apache_reload=True, verbose=False)
     assert not apache_config.exists()
     reload_apache.assert_called_once_with(["/usr/sbin/apachectl", "graceful"])
+
+
+def test_register_with_mode_none_keeps_the_site_enabled(
+    tmp_path: Path, mocker: MockerFixture
+) -> None:
+    version_info = VersionInfo(tmp_path)
+    version_info.APACHE_CTL = "/usr/sbin/apachectl"
+    mocker.patch("subprocess.call", return_value=0)
+    apache_config = tmp_path / "omd/apache/unit.conf"
+
+    register_with_system_apache(
+        version_info, apache_config, "unit", _settings(mode="none"), True, False
+    )
+
+    assert not is_disabled(apache_config)
+
+
+def test_register_with_mode_none_replaces_the_proxy_configuration(
+    tmp_path: Path, mocker: MockerFixture
+) -> None:
+    version_info = VersionInfo(tmp_path)
+    version_info.APACHE_CTL = "/usr/sbin/apachectl"
+    mocker.patch("subprocess.call", return_value=0)
+    apache_config = tmp_path / "omd/apache/unit.conf"
+    apache_config.parent.mkdir(parents=True)
+    create_apache_hook(apache_config, "unit", _settings())
+
+    register_with_system_apache(
+        version_info, apache_config, "unit", _settings(mode="none"), True, False
+    )
+
+    assert "ProxyPass" not in apache_config.read_text()
 
 
 def test_delete_apache_hook(tmp_path: Path) -> None:

@@ -2161,27 +2161,14 @@ def main_update_apache_config(
     _options: object,
 ) -> None:
     site_paths = SitePaths.from_site_name(site_name)
-    config = read_site_config(site_paths.home)
-    if _is_apache_enabled(config):
-        register_with_system_apache(
-            version_info,
-            site_paths.apache_conf,
-            site_name,
-            apache_settings(config),
-            True,
-            verbose=global_opts.verbose,
-        )
-    else:
-        unregister_from_system_apache(
-            version_info,
-            SitePaths.from_site_name(site_name).apache_conf,
-            apache_reload=True,
-            verbose=global_opts.verbose,
-        )
-
-
-def _is_apache_enabled(config: Config) -> bool:
-    return config["APACHE_MODE"] != "none"
+    register_with_system_apache(
+        version_info,
+        site_paths.apache_conf,
+        site_name,
+        apache_settings(read_site_config(site_paths.home)),
+        True,
+        verbose=global_opts.verbose,
+    )
 
 
 def _get_conflict_mode(options: CommandOptions) -> Skeleton:

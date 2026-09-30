@@ -6,6 +6,8 @@
 
 import os
 
+from cmk.ccc.log import CMKFormatter
+
 # Get OMD_ROOT from environment
 omd_root = os.environ.get("OMD_ROOT", "")
 log_dir = os.path.join(omd_root, "var/log/agent-receiver")
@@ -31,11 +33,11 @@ logconfig_dict = {
     "disable_existing_loggers": False,
     "formatters": {
         "generic": {
-            "()": "cmk.ccc.log.CMKFormatter",
+            "()": CMKFormatter,
             "with_process": True,
         },
         "access": {
-            "()": "cmk.ccc.log.CMKFormatter",
+            "()": CMKFormatter,
         },
     },
     "handlers": {

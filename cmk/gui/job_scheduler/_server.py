@@ -12,6 +12,8 @@ import uvicorn
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+from cmk.ccc.log import CMKFormatter
+
 
 class ServerConfig(BaseModel, frozen=True):
     unix_socket: Path
@@ -39,12 +41,12 @@ def run_server(config: ServerConfig, app: FastAPI, logger: Logger) -> None:
                     "disable_existing_loggers": False,
                     "formatters": {
                         "default": {
-                            "()": "cmk.ccc.log.CMKFormatter",
+                            "()": CMKFormatter,
                             "with_process": True,
                             "with_thread": True,
                         },
                         "access": {
-                            "()": "cmk.ccc.log.CMKFormatter",
+                            "()": CMKFormatter,
                         },
                     },
                     "handlers": {

@@ -201,6 +201,7 @@ py_binary(
     name = "gunicorn_conf",
     srcs = ["skel/etc/agent-receiver/gunicorn.conf.py"],
     main = "skel/etc/agent-receiver/gunicorn.conf.py",
+    deps = ["//packages/cmk-ccc:log"],
 )
 
 sh_library(

@@ -783,6 +783,7 @@ defineExpose({ showMaxZoomHint })
     z-index: 2;
     height: var(--dimension-8);
     gap: var(--dimension-3);
+    font-weight: var(--font-weight-default);
   }
 
   .graphing-time-series-graph__reset-icon {

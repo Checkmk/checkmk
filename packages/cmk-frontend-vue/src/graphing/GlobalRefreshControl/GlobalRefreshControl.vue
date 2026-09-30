@@ -211,5 +211,6 @@ body[data-theme='modern-dark'] {
 .graphing-global-refresh-control__resume {
   margin-left: var(--dimension-3);
   gap: var(--dimension-3);
+  font-weight: var(--font-weight-default);
 }
 </style>

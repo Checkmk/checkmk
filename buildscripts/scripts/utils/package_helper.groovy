@@ -174,6 +174,19 @@ void provide_agent_binaries(Map args) {
                 )
                 """.stripIndent(),
         ],
+        "winagt-build-linux": [
+            // Cross builds the Windows agent artifacts on Linux. Nothing consumes
+            // its outputs yet, it is triggered alongside winagt-build only so that
+            // a change breaking the Linux build fails here. Keyed on the git ref,
+            // not on dependency paths: its Bazel inputs span the whole tree.
+            // Never downloaded: its outputs carry the same file names as
+            // winagt-build's, and must not end up in a package in their place.
+            relative_job_name: "${branch_base_folder(false)}/winagt-build-linux",
+            condition: ! test_binaries_only,
+            retry: 1,
+            additional_build_params: [],
+            fetch_artifacts: false,
+        ],
         "relay-msi": [
             // Windows-built relay MSI. Only the cloud/ultimate/ultimatemt editions ship
             // it (see relay_install_pkg gating in omd/BUILD), so skip the fetch for any
@@ -223,6 +236,8 @@ void provide_agent_binaries(Map args) {
     def stages = upstream_job_details.collectEntries { job_name, details ->
         [("${job_name}".toString()) : {
             def run_condition = details["condition"];
+            // download and move this job's artifacts unless specified differently
+            def fetch_artifacts = details.fetch_artifacts == null ? true : details.fetch_artifacts.asBoolean();
             def build_instance = null;
 
             if (! run_condition) {
@@ -274,7 +289,7 @@ void provide_agent_binaries(Map args) {
                     ]
                 }
 
-                if (move_artifacts) {
+                if (move_artifacts && fetch_artifacts) {
                     // specify to download artifacts to desired destination
                     this_parameters += [
                         download: true,
@@ -287,7 +302,7 @@ void provide_agent_binaries(Map args) {
 
             smart_stage(
                 name: "Move artifacts around",
-                condition: run_condition && build_instance && move_artifacts,
+                condition: run_condition && build_instance && move_artifacts && fetch_artifacts,
                 raiseOnError: true,
             ) {
                 // prevent "_tmp" directories created by the Jenkins groovy dir() command

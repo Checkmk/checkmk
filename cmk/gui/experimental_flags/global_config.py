@@ -44,9 +44,6 @@ from cmk.utils.paths import default_config_dir, omd_root
 EXPERIMENTAL_FLAGS_CONFIG_ID: Final = EXPERIMENTAL_FLAGS
 EXPERIMENTAL_FLAGS_CONFIG_DIR: Final = default_config_dir
 EXPERIMENTAL_FLAGS_STAGED_FILENAME: Final = "_pending_release_flag.json"
-EXPERIMENTAL_FLAGS_CONFIG_FILE_RELATIVE: Final = (
-    EXPERIMENTAL_FLAGS_CONFIG_DIR.relative_to(omd_root) / EXPERIMENTAL_FLAGS_CONFIG_FILENAME
-)
 
 
 def is_development_site(environ: Mapping[str, str] = os.environ) -> bool:
@@ -70,6 +67,9 @@ class ConfigDomainExperimentalFlags(ABCConfigDomain):
     ``save`` and ``load_full_config`` to use JSON instead.
     """
 
+    # Distributed setups are not supported yet: nothing is synced to remote sites,
+    # so they keep the default flags.
+    needs_sync = False
     always_activate = True
     _flags_changed = False
 
@@ -127,6 +127,12 @@ class ConfigDomainExperimentalFlags(ABCConfigDomain):
         filename.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         config = ExperimentalFlagConfig.model_validate(dict(settings))
         store.save_text_to_file(filename, config.model_dump_json(indent=2))
+
+    @override
+    def save_site_globals(
+        self, settings: GlobalSettings, custom_site_path: str | None = None
+    ) -> None:
+        pass
 
     @override
     def create_artifacts(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:

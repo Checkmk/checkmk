@@ -9,17 +9,8 @@ import pytest
 from cmk.gui.type_defs import Rows
 from cmk.gui.view import View
 from cmk.gui.views.inventory._row_post_processor import _add_inventory_data
-from cmk.gui.views.row_post_processing import post_process_rows, row_post_processor_registry
+from cmk.gui.views.row_post_processing import post_process_rows
 from cmk.inventory.trees import ImmutableTree
-
-
-def test_post_processor_registrations() -> None:
-    names = [f.__name__ for f in row_post_processor_registry.values()]
-    expected = [
-        "inventory_row_post_processor",
-        "join_service_row_post_processor",
-    ]
-    assert sorted(names) == sorted(expected)
 
 
 def test_post_process_rows_not_failing_on_empty_rows(view: View) -> None:

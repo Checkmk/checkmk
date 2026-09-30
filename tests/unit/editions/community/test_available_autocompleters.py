@@ -7,9 +7,8 @@ import pytest
 
 from cmk.gui.autocompleters import autocompleter_registry
 
-pytestmark = pytest.mark.usefixtures("load_plugins")
 
-
+@pytest.mark.usefixtures("load_gui_plugins")
 def test_builtin_autocompleters_registered() -> None:
     registered = autocompleter_registry.keys()
     expected = [

@@ -35,32 +35,6 @@ from tests.testlib.common.utils import wait_until
 tracer = get_tracer()
 
 
-@pytest.mark.usefixtures("load_plugins")
-def test_registered_background_jobs() -> None:
-    expected_jobs = [
-        "ActivateChangesSchedulerBackgroundJob",
-        "ParentScanBackgroundJob",
-        "RenameHostsBackgroundJob",
-        "RenameHostBackgroundJob",
-        "FetchAgentOutputBackgroundJob",
-        "OMDConfigChangeBackgroundJob",
-        "BulkDiscoveryBackgroundJob",
-        "UserSyncBackgroundJob",
-        "ServiceDiscoveryBackgroundJob",
-        "CheckmkAutomationBackgroundJob",
-        "DiagnosticsDumpBackgroundJob",
-        "SearchIndexBackgroundJob",
-        "AutodiscoveryBackgroundJob",
-        "QuickSetupStageActionBackgroundJob",
-        "QuickSetupActionBackgroundJob",
-        "ProfileReplicationBackgroundJob",
-        "RelationDiscoveryBackgroundJob",
-        "RelationScanBackgroundJob",
-    ]
-
-    assert sorted(job_registry.keys()) == sorted(expected_jobs)
-
-
 def test_registered_background_jobs_attributes() -> None:
     for job_class in job_registry.values():
         assert isinstance(job_class.job_prefix, str)

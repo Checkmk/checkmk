@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
 
 
+@pytest.mark.usefixtures("load_gui_plugins")
 def test_group_usage_finder_registry_entries() -> None:
     expected = [
         "find_timeperiod_usage_in_ec_rules",

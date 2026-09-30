@@ -11,7 +11,6 @@ import pytest
 import cmk.utils.paths
 from cmk.gui.session_context import SuperUserContext
 from cmk.gui.watolib import groups_io
-from cmk.gui.watolib.groups_io import contact_group_usage_finder_registry
 from cmk.gui.wsgi.app import application_and_request_context
 
 
@@ -112,18 +111,3 @@ multisite_contactgroups = {
                 "inventory_paths": "allow_all",
             }
         }
-
-
-def test_group_usage_finder_registry_entries() -> None:
-    expected = [
-        "find_usages_of_contact_group_in_dashboards",
-        "find_usages_of_contact_group_in_default_user_profile",
-        "find_usages_of_contact_group_in_ec_rules",
-        "find_usages_of_contact_group_in_hosts_and_folders",
-        "find_usages_of_contact_group_in_mkeventd_notify_contactgroup",
-        "find_usages_of_contact_group_in_notification_rules",
-        "find_usages_of_contact_group_in_users",
-    ]
-
-    registered = [f.__name__ for f in contact_group_usage_finder_registry.values()]
-    assert sorted(registered) == sorted(expected)

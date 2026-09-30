@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
 from cmk.gui.rule_specs.legacy_converter import GENERATED_GROUP_PREFIX
@@ -120,3 +122,110 @@ def test_rulespec_get_all_groups() -> None:
         "inventory",
         "eventconsole",
     }
+
+
+@pytest.mark.usefixtures("load_gui_plugins")
+@pytest.mark.parametrize(
+    "term,result",
+    [
+        (
+            "host_monconf",
+            [
+                "host_monconf",
+                "host_monconf/host_checks",
+                "host_monconf/host_notifications",
+                "host_monconf/host_various",
+            ],
+        ),
+        (
+            "monconf",
+            [
+                "monconf",
+                "monconf/applications",
+                "monconf/environment",
+                "monconf/hardware",
+                "monconf/networking",
+                "monconf/notifications",
+                "monconf/os",
+                "monconf/printers",
+                "monconf/service_checks",
+                "monconf/storage",
+                "monconf/various",
+                "monconf/virtualization",
+            ],
+        ),
+        ("monconf/various", ["monconf/various"]),
+        (
+            "agent",
+            [
+                "agent",
+                "agent/check_mk_agent",
+                "agent/general_settings",
+            ],
+        ),
+    ],
+)
+def test_rulespec_get_matching_group_names(term: str, result: Sequence[str]) -> None:
+    actual_names = [
+        g
+        for g in rulespec_group_registry.get_matching_group_names(term)
+        if not _is_dynamically_generated_group(g)
+    ]
+    assert sorted(actual_names) == sorted(result)
+
+
+@pytest.mark.usefixtures("load_gui_plugins")
+def test_rulespec_get_main_groups() -> None:
+    main_group_names = [g_class().name for g_class in rulespec_group_registry.get_main_groups()]
+    assert sorted(main_group_names) == sorted(
+        [
+            "activechecks",
+            "monconf",
+            "host_monconf",
+            "agent",
+            "agents",
+            "checkparams",
+            "static",
+            "datasource_programs",
+            "inventory",
+            "eventconsole",
+            "custom_checks",
+            "snmp",
+            "vm_cloud_container",
+        ]
+    )
+
+
+@pytest.mark.usefixtures("load_gui_plugins")
+def test_rulespec_get_host_groups() -> None:
+    expected_rulespec_host_groups = [
+        "checkparams",
+        "checkparams/discovery",
+        "checkparams/inventory_and_check_mk_settings",
+        "host_monconf/host_checks",
+        "host_monconf/host_notifications",
+        "host_monconf/host_various",
+        "agent/general_settings",
+        "agent/check_mk_agent",
+        "agents/generic_options",
+        "datasource_programs",
+        "datasource_programs/apps",
+        "datasource_programs/cloud",
+        "datasource_programs/container",
+        "datasource_programs/custom",
+        "datasource_programs/hw",
+        "datasource_programs/os",
+        "datasource_programs/testing",
+        "inventory",
+        "eventconsole",
+        "custom_checks",
+        "snmp",
+        "vm_cloud_container",
+    ]
+
+    group_names = [
+        g
+        for g in rulespec_group_registry.get_host_rulespec_group_names(True)
+        if not _is_dynamically_generated_group(g)
+    ]
+    assert sorted(group_names) == sorted(expected_rulespec_host_groups)

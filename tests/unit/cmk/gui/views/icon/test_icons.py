@@ -15,55 +15,12 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views import legacy_plugins
 from cmk.gui.views.icon import (
     Icon,
-    icon_and_action_registry,
     IconConfig,
 )
 from cmk.gui.views.icon import registry as icon_registry
 from cmk.gui.views.icon.base import IconSpec as IconSpecUnion
 from cmk.ruleset_matcher.tags import TagID
 from cmk.web.utils.icons import DynamicIconName
-
-
-def test_builtin_icons_and_actions() -> None:
-    expected_icons_and_actions = [
-        "action_menu",
-        "aggregation_checks",
-        "aggregations",
-        "check_manpage",
-        "check_period",
-        "crashed_check",
-        "custom_action",
-        "download_agent_output",
-        "download_snmp_walk",
-        "icon_image",
-        "inventory",
-        "inventory_history",
-        "logwatch",
-        "mkeventd",
-        "network_topology",
-        "notes",
-        "parent_child_topology",
-        "perfgraph",
-        "prediction",
-        "reschedule",
-        "rule_editor",
-        "stars",
-        "status_acknowledged",
-        "status_active_checks",
-        "status_comments",
-        "status_downtimes",
-        "status_flapping",
-        "status_notification_period",
-        "status_notifications_enabled",
-        "status_passive_checks",
-        "status_service_period",
-        "status_stale",
-        "wato",
-    ]
-
-    legacy_plugins.register_legacy_icons()
-    builtin_icons = sorted(icon_and_action_registry.keys())
-    assert builtin_icons == sorted(expected_icons_and_actions)
 
 
 def test_legacy_icon_plugin(monkeypatch: pytest.MonkeyPatch) -> None:

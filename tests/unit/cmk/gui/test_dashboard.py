@@ -62,26 +62,6 @@ def fixture_dummy_config() -> DummyDashletConfig:
     )
 
 
-@pytest.mark.usefixtures("reset_dashlet_registry")
-def test_dashlet_registry_plugins() -> None:
-    expected_plugins = [
-        "hoststats",
-        "servicestats",
-        "eventstats",
-        "notify_failed_notifications",
-        "url",
-        "pnpgraph",
-        "view",
-        "embedded_view",
-        "linked_view",
-        "user_messages",
-        "nodata",
-        "snapin",
-    ]
-
-    assert sorted(dashlet_registry.keys()) == sorted(expected_plugins)
-
-
 @pytest.mark.usefixtures("request_context")
 def test_dashlet_type_defaults() -> None:
     assert not Dashlet.single_infos()

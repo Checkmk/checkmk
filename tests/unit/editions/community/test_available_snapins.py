@@ -7,9 +7,8 @@ import pytest
 
 from cmk.gui.sidebar import snapin_registry
 
-pytestmark = pytest.mark.usefixtures("load_plugins")
 
-
+@pytest.mark.usefixtures("load_gui_plugins")
 def test_registered_snapins() -> None:
     expected_snapins = [
         "a_welcome",
@@ -37,6 +36,7 @@ def test_registered_snapins() -> None:
     assert sorted(snapin_registry.keys()) == sorted(expected_snapins)
 
 
+@pytest.mark.usefixtures("load_gui_plugins")
 def test_refresh_snapins() -> None:
     expected_refresh_snapins = [
         "admin_mini",

@@ -62,6 +62,20 @@ def _considered_hosts(matcher: RulesetMatcher, host_name: HostName) -> set[HostN
     return labels_of_host.hosts
 
 
+def test_narrowing_adds_only_the_related_clusters_and_nodes() -> None:
+    c1, c2 = HostName("c1"), HostName("c2")
+    matcher = RulesetMatcher(
+        host_tags={hn: {} for hn in (HOST1, HOST2, HOST3, c1, c2)},
+        host_paths={},
+        all_configured_hosts=frozenset((HOST1, HOST2, HOST3, c1, c2)),
+        clusters_of={HOST1: [c1], HOST2: [c1], HOST3: [c2]},
+        nodes_of={c1: [HOST1, HOST2], c2: [HOST3]},
+    )
+
+    with matcher.ruleset_optimizer.processed_hosts({HOST1}):
+        assert _considered_hosts(matcher, HOST1) == {HOST1, HOST2, c1}
+
+
 def test_narrowed_scope_considers_only_its_hosts() -> None:
     matcher = _make_matcher()
     # Build a candidate set for the full scope, which narrowing must not reuse.

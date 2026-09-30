@@ -1420,9 +1420,9 @@ host assigned to another site — `_update_distributed_wato_file` (`watolib/site
 onto remotes. `matcher.py:get_host_ruleset` says as much in its own comment.
 
 Two cautions about that paragraph for anyone extending it. "Pinned to `{host_name}`" would be
-wrong: narrowing iterates the **previous** set rather than its argument
-(`matcher.py:RulesetOptimizer._apply_processed_hosts`), so the result is the host plus the whole
-cluster topology. And the ruleset caches are keyed on the **boolean**, not on the scope —
+wrong: narrowing adds the clusters of the host and the nodes of those clusters
+(`matcher.py:RulesetOptimizer._apply_processed_hosts`), so the result is the host plus its cluster
+relatives. And the ruleset caches are keyed on the **boolean**, not on the scope —
 `__host_ruleset_cache` and `__service_ruleset_cache` are `dict[tuple[int, bool], …]` and
 `_all_matching_hosts_match_cache` is keyed `(condition, bool)`. That is safe because every change
 of the scope goes through `matcher.py:RulesetOptimizer._change_scope`: whenever the new scope

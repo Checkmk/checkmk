@@ -444,7 +444,7 @@ class RulesetOptimizer:
         requested = set(all_processed_hosts)
         involved_clusters: set[HostName] = set()
         involved_nodes: set[HostName] = set()
-        for hostname in self._all_processed_hosts:
+        for hostname in requested:
             involved_nodes.update(self._nodes_of.get(hostname, []))
             involved_clusters.update(self._clusters_of.get(hostname, []))
 

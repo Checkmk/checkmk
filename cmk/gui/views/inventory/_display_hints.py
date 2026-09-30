@@ -79,8 +79,6 @@ from cmk.inventory_ui.v1 import Unit as UnitFromAPI
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIconName
 
-__all__ = ["SDPath"]
-
 from ._paint_functions import inv_paint_generic
 from .registry import (
     inv_paint_functions,

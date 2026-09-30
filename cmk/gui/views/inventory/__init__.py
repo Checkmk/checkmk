@@ -21,6 +21,7 @@ from cmk.web.utils.icons import DynamicIcon, DynamicIconName, StaticIcon
 
 from ._data_sources import ABCDataSourceInventory, RowTableInventory
 from ._display_hints import (
+    AttributeDisplayHint,
     inv_display_hints,
     load_inventory_ui_plugins,
     NodeDisplayHint,
@@ -47,6 +48,7 @@ from .registry import (
 )
 
 __all__ = [
+    "AttributeDisplayHint",
     "InventoryHintSpec",
     "NodeDisplayHint",
     "OrderedColumnDisplayHintsOfView",

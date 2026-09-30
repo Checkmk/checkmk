@@ -37,14 +37,14 @@ vi.mock('@/dashboard/components/DashboardContent/cmk_figures.ts', () => ({
 }))
 
 const baseProps = makeContentProps(
-  { type: 'gauge' },
+  { type: 'barplot' },
   {
     widget_id: 'w1',
     general_settings: {
-      title: { text: 'Gauge', render_mode: 'with_background' },
+      title: { text: 'Bar chart', render_mode: 'with_background' },
       render_background: true
     },
-    effectiveTitle: 'Gauge'
+    effectiveTitle: 'Bar chart'
   }
 )
 
@@ -158,7 +158,7 @@ test('a new title with the same filters does not refetch the figure', async () =
   // What the dashboard hands down once the widget titles arrive: equal values, new objects.
   await rerender({
     ...baseProps,
-    effectiveTitle: 'Gauge of main',
+    effectiveTitle: 'Bar chart of main',
     effective_filter_context: { uses_infos: [], filters: {}, context: {} }
   } as never)
   await nextTick()

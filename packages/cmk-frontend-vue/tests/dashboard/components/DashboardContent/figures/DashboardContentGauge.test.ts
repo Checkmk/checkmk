@@ -1,0 +1,148 @@
+/**
+ * Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+import { fromDate } from '@internationalized/date'
+import { render, screen, waitFor } from '@testing-library/vue'
+import { HttpResponse, http } from 'msw'
+import { setupServer } from 'msw/node'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { nextTick } from 'vue'
+
+import DashboardContentGauge from '@/dashboard/components/DashboardContent/figures/DashboardContentGauge.vue'
+import type { ContentProps } from '@/dashboard/components/DashboardContent/types'
+import type { Gauge, GaugeContent } from '@/dashboard/types/widget'
+
+import { makeContentProps } from '@tests/dashboard/contentProps'
+import { FakeResizeObserver, deliverSize } from '@tests/lib/fakeResizeObserver'
+
+const ENDPOINT = `${location.protocol}//${location.host}/api/internal/domain-types/dashboard/actions/compute-gauge/invoke`
+
+const OTHER_RANGE = {
+  from: fromDate(new Date('2026-01-02T00:00:00Z'), 'UTC'),
+  to: fromDate(new Date('2026-01-02T01:00:00Z'), 'UTC')
+}
+
+const GAUGE: Gauge = {
+  links: [],
+  link_properties: { links: [] },
+  value: 42,
+  unit_format: {
+    notation: 'decimal',
+    symbol: '',
+    precision: { type: 'auto', digits: 2 },
+    convertible: false
+  },
+  range: { minimum: 0, maximum: 100 },
+  samples: [],
+  status: null
+}
+
+const CURRENT_VALUE: GaugeContent = {
+  type: 'gauge',
+  metric: 'load1',
+  time_range: 'current',
+  display_range: { type: 'fixed', unit: '%', minimum: 0, maximum: 100 }
+}
+
+const FOLLOWS_DASHBOARD: GaugeContent = {
+  ...CURRENT_VALUE,
+  time_range: { type: 'window', window: 'dashboard', consolidation: 'average' }
+}
+
+const FIXED_WINDOW: GaugeContent = {
+  ...CURRENT_VALUE,
+  time_range: {
+    type: 'window',
+    window: { type: 'predefined', value: 'last_4_hours' },
+    consolidation: 'average'
+  }
+}
+
+let answer: () => Response = () => HttpResponse.json({ domainType: 'widget-compute', value: GAUGE })
+let requests: unknown[] = []
+
+const server = setupServer(
+  http.post(ENDPOINT, async ({ request }) => {
+    requests.push(await request.json())
+    return answer()
+  })
+)
+
+async function renderWidget(props: ContentProps<GaugeContent> = makeContentProps(CURRENT_VALUE)) {
+  const rendered = render(DashboardContentGauge, { props })
+  await nextTick()
+  deliverSize(400, 200)
+  return rendered
+}
+
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
+beforeEach(() => {
+  vi.stubGlobal('ResizeObserver', FakeResizeObserver)
+})
+afterEach(() => {
+  answer = () => HttpResponse.json({ domainType: 'widget-compute', value: GAUGE })
+  requests = []
+  server.resetHandlers()
+  FakeResizeObserver.instances = []
+  vi.unstubAllGlobals()
+})
+afterAll(() => server.close())
+
+describe('DashboardContentGauge', () => {
+  it('requests the explicit widget with the dashboard time range', async () => {
+    await renderWidget()
+
+    await waitFor(() =>
+      expect(requests).toEqual([
+        {
+          source: { type: 'explicit', content: CURRENT_VALUE, context: {} },
+          time_range: { start: '2026-01-01T00:00:00.000Z', end: '2026-01-01T01:00:00.000Z' }
+        }
+      ])
+    )
+  })
+
+  it('draws the value as delivered by the backend', async () => {
+    await renderWidget()
+
+    expect(await screen.findByText('42')).toBeInTheDocument()
+  })
+
+  it('fetches again on a refresh tick', async () => {
+    const { rerender } = await renderWidget(makeContentProps(FIXED_WINDOW))
+    await screen.findByText('42')
+
+    await rerender(makeContentProps(FIXED_WINDOW, { tick: 1 }))
+
+    await waitFor(() => expect(requests).toHaveLength(2))
+  })
+
+  it('fetches again when the dashboard range changes and the widget follows it', async () => {
+    const { rerender } = await renderWidget(makeContentProps(FOLLOWS_DASHBOARD))
+    await screen.findByText('42')
+
+    await rerender(makeContentProps(FOLLOWS_DASHBOARD, { range: OTHER_RANGE }))
+
+    await waitFor(() => expect(requests).toHaveLength(2))
+  })
+
+  it('does not fetch again when the dashboard range changes under a fixed window', async () => {
+    const { rerender } = await renderWidget(makeContentProps(FIXED_WINDOW))
+    await screen.findByText('42')
+
+    await rerender(makeContentProps(FIXED_WINDOW, { range: OTHER_RANGE }))
+    await rerender(makeContentProps(FIXED_WINDOW, { range: OTHER_RANGE, tick: 1 }))
+
+    await waitFor(() => expect(requests).toHaveLength(2))
+  })
+
+  it('shows the no-data notice on a 404', async () => {
+    answer = () => HttpResponse.json({ title: 'No data available', status: 404 }, { status: 404 })
+
+    await renderWidget()
+
+    expect(await screen.findByText('No data available')).toBeInTheDocument()
+  })
+})

@@ -30,7 +30,6 @@ from cmk.gui.dashboard.type_defs import (
     CombinedGraphDashletConfig,
     CustomGraphDashletConfig,
     EventBarChartDashletConfig,
-    GaugeDashletConfig,
     HostStateSummaryDashletConfig,
     InventoryDashletConfig,
     ProblemsGraphDashletConfig,
@@ -51,7 +50,6 @@ from .model.widget_content.inventory import InventoryContent
 from .model.widget_content.metric import (
     AverageScatterplotContent,
     BarplotContent,
-    GaugeContent,
     SingleMetricContent,
 )
 from .model.widget_content.overview import AlertOverviewContent, SiteOverviewContent
@@ -64,7 +62,6 @@ type FigureContent = Annotated[
     | AlertTimelineContent
     | AverageScatterplotContent
     | BarplotContent
-    | GaugeContent
     | HostStateContent
     | HostStateSummaryContent
     | InventoryContent
@@ -81,7 +78,6 @@ type FigureDashletConfig = (
     | AverageScatterplotDashletConfig
     | BarplotDashletConfig
     | EventBarChartDashletConfig
-    | GaugeDashletConfig
     | StateDashletConfig
     | HostStateSummaryDashletConfig
     | InventoryDashletConfig

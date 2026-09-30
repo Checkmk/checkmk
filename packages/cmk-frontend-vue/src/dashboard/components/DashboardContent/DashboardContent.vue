@@ -22,6 +22,7 @@ import DashboardContentNetworkFlowDonut from './NetworkFlow/DashboardContentNetw
 import DashboardContentNetworkFlowKpiStatCard from './NetworkFlow/DashboardContentNetworkFlowKpiStatCard.vue'
 import DashboardContentNetworkFlowTopTable from './NetworkFlow/DashboardContentNetworkFlowTopTable.vue'
 import DashboardContentNetworkFlowTrendChart from './NetworkFlow/DashboardContentNetworkFlowTrendChart.vue'
+import DashboardContentGauge from './figures/DashboardContentGauge.vue'
 import DashboardContentStats from './figures/DashboardContentStats.vue'
 import { CONTENT_FIGURE_TYPES, NTOP_TYPES } from './types.ts'
 </script>
@@ -83,6 +84,8 @@ function contentToComponent(content: WidgetContent): Component {
       return DashboardContentTimeSeriesGraph
     case ['host_stats', 'service_stats', 'event_stats'].includes(contentType):
       return DashboardContentStats
+    case contentType === 'gauge':
+      return DashboardContentGauge
     case CONTENT_FIGURE_TYPES.includes(contentType):
       return DashboardContentFigure
     case NTOP_TYPES.includes(contentType):

@@ -159,6 +159,7 @@ CmkEndpointName = Literal[
     "cmk/compute",
     "cmk/compute_dashboard_widget_titles",
     "cmk/compute-list",
+    "cmk/compute_gauge",
     "cmk/compute_network_flow_autonomous_system_context",
     "cmk/compute_network_flow_donut",
     "cmk/compute_network_flow_donut_other_breakdown",

@@ -42,6 +42,8 @@ import type {
   ComputedWidgetResponse,
   ComputedWidgetSpecResponse,
   EffectiveWidgetFilterContext,
+  Gauge,
+  GaugeContent,
   NetworkFlowDonutContent,
   NetworkFlowKpiStatCardContent,
   NetworkFlowTopTableContent,
@@ -315,6 +317,18 @@ export const dashboardAPI = {
   ): Promise<ComputedWidgetResponse<ComputedTopList>> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-top-list/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
+  computeGauge: async (
+    body: { source: WidgetSource<GaugeContent>; time_range: WidgetTimeRange },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<Gauge>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-gauge/invoke', {
         ...CONTENT_TYPE_HEADER,
         headers,
         body

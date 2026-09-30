@@ -190,8 +190,8 @@ def test_dep_is_used_prefix_must_be_proper() -> None:
 def test_dep_is_used_naming_a_package_does_not_reach_the_modules_inside_it() -> None:
     # Whether `import cmk.gui.plugins.views` reaches `...views.icons.utils` is
     # decided by that package's __init__.py - content of a dep, not visible
-    # here. `//cmk/gui/plugins/views:views` carries a deballast-keep tag on its
-    # consumers instead.
+    # here. A dep used only that way needs a deballast-keep tag on its
+    # consumers.
     assert not dep_is_used(
         {"cmk.gui.plugins.views.icons.utils"},
         imports_in_tree(ast.parse("import cmk.gui.plugins.views")),

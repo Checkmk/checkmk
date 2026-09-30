@@ -30,14 +30,13 @@ This is a src-import-vs-declared-dep check with the following implemented:
   particular module inside it depends on what that package's `__init__.py`
   imports - a dep's file content, which the aspect does not ship. Deps
   reachable only that way, or only at runtime, are declared with
-  `deballast-keep`. `//cmk/gui/plugins/views:views` is one: it ships a single
-  empty `icons/utils.py`, so the only thing it contributes is the existence of
-  the `cmk.gui.plugins.views[.icons]` import paths, which
-  `cmk/gui/views/__init__.py` imports and fills by name injection for pre-2.1
-  plug-ins.
-- Namespace-shim deps (whose Python srcs are all `__init__.py` or generated
-  `_namespace.py` files) are treated as implicitly used. They provide runtime
-  package structure rather than anything AST-visible. (e.g.
+  `deballast-keep`.
+- Namespace-shim deps (whose Python srcs are all `__init__.py` or
+  `_namespace.py` files, generated or checked in) are treated as implicitly
+  used. They provide runtime package structure rather than anything
+  AST-visible. (e.g. `//cmk/gui/plugins/views:views`, whose only file
+  materializes the `cmk.gui.plugins.views[.icons]` packages that
+  `cmk.gui.views.legacy_plugins` fills by name injection,
   `//packages/cmk-ccc:_init`, `//cmk/gui/plugins/wato/check_parameters:stub`)
 - pytest conftest deps (targets with at least one `conftest.py` src) are
   treated as implicitly used.

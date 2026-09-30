@@ -65,6 +65,7 @@ interface Props {
   agentSlideout: AgentSlideout
   setupError: boolean
   isRegistered: boolean
+  mayDiagHost: boolean
 }
 
 const props = defineProps<Props>()
@@ -356,6 +357,9 @@ const slideOutTitle = computed(() => {
   return _t('Install Checkmk agent')
 })
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
+declare let global_csrf_token: string
+
 type AutomationResponse = {
   output: string
   status_code: number
@@ -378,7 +382,8 @@ async function callAjax(url: string, { method }: AjaxOptions): Promise<void> {
       address_family: props.ipAddressFamilySelectElement.value ?? 'ip-v4-only',
       agent_port: String(agentPort.value),
       timeout: '5',
-      site_id: siteId.value
+      site_id: siteId.value,
+      _csrf_token: global_csrf_token
     })
 
     const postData = postDataRaw.toString()
@@ -542,7 +547,7 @@ const showSettings = ref(false)
       {{ _t('Install & register agent') }}
     </CmkButton>
 
-    <template v-else-if="!isPushMode">
+    <template v-else-if="!isPushMode && mayDiagHost">
       <span v-if="!isLoading && !isSuccess && !isError" class="test-controls">
         <CmkButton
           type="button"

@@ -4,6 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
+declare let global_csrf_token: string
+
 export const DEFAULT_AGENT_RECEIVER_PORT = 8000
 
 export interface AgentReceiverPortResult {
@@ -14,7 +17,7 @@ export interface AgentReceiverPortResult {
 export async function fetchAgentReceiverPort(siteId: string): Promise<AgentReceiverPortResult> {
   try {
     const res = await fetch(
-      `wato_ajax_agent_receiver_port.py?site_id=${encodeURIComponent(siteId)}`
+      `wato_ajax_agent_receiver_port.py?site_id=${encodeURIComponent(siteId)}&_csrf_token=${encodeURIComponent(global_csrf_token)}`
     )
     if (res.ok) {
       const data = await res.json()

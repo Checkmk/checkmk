@@ -28,6 +28,7 @@ const props = defineProps<{
   agent_slideout: AgentSlideout
   host_name: string
   is_registered: boolean
+  may_diag_host: boolean
 }>()
 
 const setupError: Ref<boolean> = ref(!!document.querySelector('.wato .error'))
@@ -131,6 +132,7 @@ function getElementBySelector<T>(selector: string): T {
 <template>
   <PingHost
     v-if="
+      may_diag_host &&
       formElement &&
       hostnameInputElement &&
       siteSelectElement &&
@@ -207,5 +209,6 @@ function getElementBySelector<T>(selector: string): T {
     :agent-slideout="agent_slideout"
     :setup-error="setupError"
     :is-registered="is_registered"
+    :may-diag-host="may_diag_host"
   ></AgentConnectionTest>
 </template>

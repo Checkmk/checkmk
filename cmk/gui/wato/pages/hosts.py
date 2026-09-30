@@ -12,6 +12,7 @@
 
 import abc
 from collections.abc import Collection, Iterator, Sequence
+from contextlib import suppress
 from dataclasses import asdict
 from typing import Final, Literal, overload, override
 from urllib.parse import unquote
@@ -53,6 +54,7 @@ from cmk.gui.utils.agent_commands import (
     get_server_per_site,
 )
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.transaction_manager import transactions
@@ -461,6 +463,7 @@ class ABCHostMode(WatoMode, abc.ABC):
                         if self._mode == "edit"
                         else False
                     ),
+                    may_diag_host=user.may("wato.diag_host"),
                 )
             ),
         )
@@ -1125,9 +1128,16 @@ class ModeCreateCluster(CreateHostMode):
             raise MKGeneralException(_("Can not clone a regular host as cluster host"))
 
 
+def _need_diag_host_permission() -> None:
+    check_csrf_token()
+    if not user.may("wato.diag_host"):
+        raise MKAuthException(_("You are not permitted to perform this action."))
+
+
 class PageAjaxPingHost(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
+        _need_diag_host_permission()
         site_id = request.get_validated_type_input(SiteId, "site_id", deflt=omd_site())
         cmd = request.get_validated_type_input(PingHostCmd, "cmd", PingHostCmd.PING)
         ip_or_dns_name: HostName | str = unquote(
@@ -1168,7 +1178,11 @@ class PageAjaxPingHost(AjaxPage):
 class PageAjaxDiagCmkAgent(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
+        _need_diag_host_permission()
         api_request = ctx.request.get_request()
+        with suppress(ValueError):
+            if host := Host.host(HostName(api_request["host_name"])):
+                host.permissions.need_permission("read")
         result = diag_cmk_agent(
             automation_config=make_automation_config(ctx.config.sites[api_request["site_id"]]),
             diag_cmk_agent_input=DiagCmkAgentInput(
@@ -1190,6 +1204,8 @@ class PageAjaxDiagCmkAgent(AjaxPage):
 class PageAjaxAgentReceiverPort(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
+        check_csrf_token()
+        user.need_permission("wato.use")
         site_id = SiteId(ctx.request.get_str_input_mandatory("site_id"))
         site_config = ctx.config.sites[site_id]
         if site_is_local(site_config):

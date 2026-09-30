@@ -14,6 +14,9 @@ import usePersistentRef from '@/lib/usePersistentRef'
 
 import CmkAlertBox, { type Variants } from '@/components/CmkAlertBox.vue'
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
+declare let global_csrf_token: string
+
 const props = defineProps<{
   i18n: I18NPingHost
   formElement: HTMLFormElement
@@ -319,7 +322,8 @@ async function callAJAX(
       params: {
         site_id: siteId ? encodeURIComponent(siteId) : undefined,
         ip_or_dns_name: currentInput,
-        cmd: cmd
+        cmd: cmd,
+        _csrf_token: global_csrf_token
       }
     })
     .then((response) => {

@@ -26,7 +26,8 @@
     "i18n_ping_host": { "$ref": "#/$defs/i18n_ping_host" },
     "host_name": { "type": "string" },
     "agent_slideout": { "$ref": "agent_slideout.json" },
-    "is_registered": { "type": "boolean" }
+    "is_registered": { "type": "boolean" },
+    "may_diag_host": { "type": "boolean" }
   },
   "required": [
     "form_keys",
@@ -36,7 +37,8 @@
     "i18n_ping_host",
     "agent_slideout",
     "host_name",
-    "is_registered"
+    "is_registered",
+    "may_diag_host"
   ],
   "$defs": {
     "i18n_ping_host": {

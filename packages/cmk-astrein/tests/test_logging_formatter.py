@@ -156,6 +156,8 @@ def test_allows_basic_config_without_format() -> None:
 
 
 _UVICORN_LOG_CONFIG = (
+    "import uvicorn.logging\n"
+    "from cmk.ccc.log import CMKFormatter\n"
     "cfg = {\n"
     '    "version": 1,\n'
     '    "formatters": {\n'
@@ -169,20 +171,36 @@ _UVICORN_LOG_CONFIG = (
 
 def test_anchors_errors_to_the_offending_dict_config_formatters() -> None:
     errors = _check(_UVICORN_LOG_CONFIG)
-    assert [e.line for e in errors] == [4, 5]
+    assert [e.line for e in errors] == [6, 7]
+
+
+def _dict_config(imports: str, formatter: str) -> str:
+    return f'{imports}\nd = {{"version": 1, "formatters": {{"f": {formatter}}}}}'
 
 
 @pytest.mark.parametrize(
-    "formatter",
+    "imports, formatter",
     [
-        pytest.param('{"format": "%(message)s"}', id="no_factory"),
-        pytest.param('{"()": CMKFormatter, "fmt": "%(message)s"}', id="format_key"),
-        pytest.param('{"()": "cmk.ccc.log.CMKFormatter"}', id="dotted_path_string"),
-        pytest.param('{"()": uvicorn.logging.DefaultFormatter}', id="other_class"),
+        pytest.param("", '{"format": "%(message)s"}', id="no_factory"),
+        pytest.param(
+            "from cmk.ccc.log import CMKFormatter",
+            '{"()": CMKFormatter, "fmt": "%(message)s"}',
+            id="format_key",
+        ),
+        pytest.param("", '{"()": "cmk.ccc.log.CMKFormatter"}', id="dotted_path_string"),
+        pytest.param(
+            "import uvicorn.logging", '{"()": uvicorn.logging.DefaultFormatter}', id="other_class"
+        ),
+        pytest.param("class CMKFormatter: ...", '{"()": CMKFormatter}', id="local_lookalike"),
+        pytest.param(
+            "from mylib.log import CMKFormatter", '{"()": CMKFormatter}', id="other_module"
+        ),
     ],
 )
-def test_rejects_dict_config_formatter_not_built_by_cmk_formatter(formatter: str) -> None:
-    errors = _check(f'd = {{"version": 1, "formatters": {{"f": {formatter}}}}}')
+def test_rejects_dict_config_formatter_not_built_by_cmk_formatter(
+    imports: str, formatter: str
+) -> None:
+    errors = _check(_dict_config(imports, formatter))
     assert len(errors) == 1
     assert '"()": CMKFormatter' in errors[0].message
 
@@ -191,12 +209,25 @@ def test_rejects_dict_config_formatter_not_built_by_cmk_formatter(formatter: str
     "code",
     [
         pytest.param(
-            'd = {"version": 1, "formatters": {"ours": {"()": CMKFormatter, "legacy": True}}}',
-            id="factory_only",
+            _dict_config("from cmk.ccc.log import CMKFormatter as F", '{"()": F}'),
+            id="aliased_class",
         ),
         pytest.param(
-            'd = {"version": 1, "formatters": {"ours": {"()": log.CMKFormatter}}}',
-            id="factory_via_module",
+            _dict_config("from cmk.ccc import log", '{"()": log.CMKFormatter}'),
+            id="module_from_package",
+        ),
+        pytest.param(
+            _dict_config("import cmk.ccc.log", '{"()": cmk.ccc.log.CMKFormatter}'),
+            id="dotted_module",
+        ),
+        pytest.param(
+            _dict_config("import cmk.ccc.log as L", '{"()": L.CMKFormatter}'), id="aliased_module"
+        ),
+        pytest.param(
+            _dict_config(
+                "from cmk.ccc.log import CMKFormatter", '{"()": CMKFormatter, "legacy": True}'
+            ),
+            id="factory_with_options",
         ),
         pytest.param('d = {"version": 1, "handlers": {}}', id="no_formatters"),
         pytest.param('d = {"formatters": {"a": {"format": "x"}}}', id="no_version"),

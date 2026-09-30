@@ -9,6 +9,7 @@ from pathlib import Path, PurePosixPath
 from typing import override
 
 from cmk.astrein.framework import ASTVisitorChecker
+from cmk.astrein.module_layers_config import compute_module_name
 
 #: Repo-relative glob patterns (``PurePosixPath.full_match``) the checker skips.
 _EXCLUDED_GLOBS = (
@@ -30,10 +31,11 @@ _EXCLUDED_GLOBS = (
 #: entry, so individual files can be migrated ahead of their surrounding tree.
 _INCLUDED_GLOBS: tuple[str, ...] = ()
 
-_FORMATTER = "Formatter"
-_BASIC_CONFIG = "basicConfig"
-_CMKFORMATTER_NAME = "CMKFormatter"
-_CMKFORMATTER_DEFINITION = "packages/cmk-ccc/cmk/ccc/log.py"
+#: Fully qualified name of the formatter every Checkmk log handler must use.
+_CMKFORMATTER = "cmk.ccc.log.CMKFormatter"
+_CMKFORMATTER_CLASS = _CMKFORMATTER.rpartition(".")[2]
+_LOGGING_FORMATTER = "logging.Formatter"
+_LOGGING_BASIC_CONFIG = "logging.basicConfig"
 _BASIC_CONFIG_FORMAT_KEYWORDS = frozenset({"format", "datefmt"})
 _DICT_CONFIG_FORMAT_KEYS = frozenset({"format", "fmt", "datefmt", "class"})
 
@@ -61,9 +63,8 @@ class LoggingFormatterChecker(ASTVisitorChecker):
         super().__init__(file_path, repo_root, source_code)
         self._excluded_globs = excluded_globs
         self._included_globs = included_globs
-        self._logging_names: set[str] = set()
-        self._formatter_names: set[str] = set()
-        self._basic_config_names: set[str] = set()
+        self._module_name = str(compute_module_name(file_path, repo_root))
+        self._imported_names: dict[str, str] = {}
 
     @override
     def checker_id(self) -> str:
@@ -72,39 +73,37 @@ class LoggingFormatterChecker(ASTVisitorChecker):
     @override
     def visit_Import(self, node: ast.Import) -> None:
         for alias in node.names:
-            if alias.name == "logging":
-                self._logging_names.add(alias.asname or "logging")
-            elif alias.name.startswith("logging.") and alias.asname is None:
+            if alias.asname is None:
                 # `import logging.config` binds the top-level package name.
-                self._logging_names.add("logging")
+                top_level = alias.name.partition(".")[0]
+                self._imported_names[top_level] = top_level
+            else:
+                self._imported_names[alias.asname] = alias.name
         self.generic_visit(node)
 
     @override
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
-        if node.module == "logging":
+        if node.level == 0 and node.module is not None:
             for alias in node.names:
-                if alias.name == _FORMATTER:
-                    self._formatter_names.add(alias.asname or alias.name)
-                elif alias.name == _BASIC_CONFIG:
-                    self._basic_config_names.add(alias.asname or alias.name)
+                self._imported_names[alias.asname or alias.name] = f"{node.module}.{alias.name}"
         self.generic_visit(node)
 
     @override
     def visit_Call(self, node: ast.Call) -> None:
         if self._is_included():
-            if self._resolves_to(node.func, _FORMATTER, self._formatter_names):
+            if self._qualified_name(node.func) == _LOGGING_FORMATTER:
                 self.add_error(
-                    "Do not construct logging.Formatter. Use cmk.ccc.log.CMKFormatter so all "
-                    "Checkmk logs share one format; CMKFormatter(message_only=True) renders "
-                    "the bare message for interactive console output.",
+                    f"Do not construct logging.Formatter. Use {_CMKFORMATTER} so all "
+                    f"Checkmk logs share one format; {_CMKFORMATTER_CLASS}(message_only=True) "
+                    "renders the bare message for interactive console output.",
                     node,
                 )
-            elif self._resolves_to(node.func, _BASIC_CONFIG, self._basic_config_names) and any(
+            elif self._qualified_name(node.func) == _LOGGING_BASIC_CONFIG and any(
                 kw.arg in _BASIC_CONFIG_FORMAT_KEYWORDS for kw in node.keywords
             ):
                 self.add_error(
                     "Do not pass format= or datefmt= to logging.basicConfig. Build the handler "
-                    "yourself, call handler.setFormatter(cmk.ccc.log.CMKFormatter()) and pass "
+                    f"yourself, call handler.setFormatter({_CMKFORMATTER}()) and pass "
                     "handlers=[handler] to basicConfig.",
                     node,
                 )
@@ -112,11 +111,11 @@ class LoggingFormatterChecker(ASTVisitorChecker):
 
     @override
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
-        if self._is_included() and not self._defines_cmk_formatter(node):
+        if self._is_included() and f"{self._module_name}.{node.name}" != _CMKFORMATTER:
             for base in node.bases:
-                if self._resolves_to(base, _FORMATTER, self._formatter_names):
+                if self._qualified_name(base) == _LOGGING_FORMATTER:
                     self.add_error(
-                        "Do not subclass logging.Formatter. Subclass cmk.ccc.log.CMKFormatter "
+                        f"Do not subclass logging.Formatter. Subclass {_CMKFORMATTER} "
                         "instead so the shared Checkmk log format stays the base of every "
                         "formatter.",
                         node,
@@ -142,26 +141,26 @@ class LoggingFormatterChecker(ASTVisitorChecker):
             if not isinstance(formatter, ast.Dict):
                 continue
             formatter_entries = _string_keyed_entries(formatter)
+            # A dotted-path string resolves only at runtime, so it would hide a rename.
             if (
-                not _names_cmk_formatter(formatter_entries.get("()"))
+                (factory := formatter_entries.get("()")) is None
+                or self._qualified_name(factory) != _CMKFORMATTER
                 or formatter_entries.keys() & _DICT_CONFIG_FORMAT_KEYS
             ):
                 self.add_error(
-                    "dictConfig formatters must be built by cmk.ccc.log.CMKFormatter: import "
-                    'the class, pass it as "()": CMKFormatter and drop the '
+                    f"dictConfig formatters must be built by {_CMKFORMATTER}: import the "
+                    f'class, pass it as "()": {_CMKFORMATTER_CLASS} and drop the '
                     "format/fmt/datefmt/class keys.",
                     formatter,
                 )
 
-    def _resolves_to(self, node: ast.expr, attr: str, direct_names: set[str]) -> bool:
+    def _qualified_name(self, node: ast.expr) -> str | None:
+        """Resolve a name or attribute chain through the file's imports."""
         if isinstance(node, ast.Name):
-            return node.id in direct_names
-        return (
-            isinstance(node, ast.Attribute)
-            and node.attr == attr
-            and isinstance(node.value, ast.Name)
-            and node.value.id in self._logging_names
-        )
+            return self._imported_names.get(node.id)
+        if isinstance(node, ast.Attribute) and (base := self._qualified_name(node.value)):
+            return f"{base}.{node.attr}"
+        return None
 
     def _relative_path(self) -> PurePosixPath | None:
         try:
@@ -176,18 +175,6 @@ class LoggingFormatterChecker(ASTVisitorChecker):
         if any(relative_path.full_match(glob) for glob in self._included_globs):
             return True
         return not any(relative_path.full_match(glob) for glob in self._excluded_globs)
-
-    def _defines_cmk_formatter(self, node: ast.ClassDef) -> bool:
-        return node.name == _CMKFORMATTER_NAME and self._relative_path() == PurePosixPath(
-            _CMKFORMATTER_DEFINITION
-        )
-
-
-def _names_cmk_formatter(node: ast.expr | None) -> bool:
-    # A dotted-path string resolves only at runtime, so it would hide a rename of the class.
-    if isinstance(node, ast.Name):
-        return node.id == _CMKFORMATTER_NAME
-    return isinstance(node, ast.Attribute) and node.attr == _CMKFORMATTER_NAME
 
 
 def _string_keyed_entries(node: ast.Dict) -> dict[str, ast.expr]:

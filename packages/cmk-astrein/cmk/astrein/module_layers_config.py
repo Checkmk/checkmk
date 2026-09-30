@@ -10,6 +10,7 @@ declaratively in module_layers.toml at the repository root and loaded
 by ``load_config``.
 """
 
+import contextlib
 import tomllib
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -86,6 +87,36 @@ class ImportCheckerProtocol(Protocol):
 
 def is_prefix_of[T](x: Sequence[T], y: Sequence[T]) -> bool:
     return x == y[: len(x)]
+
+
+def compute_module_name(file_path: Path, repo_root: Path) -> ModuleName:
+    """Compute module name from file path"""
+    # Due to our symlinks and pasting magic, we need to compute the
+    # real module name from the file path of the module.
+    # Emacs' flycheck stores files to be checked in a temporary file with a prefix.
+    p = ModulePath(
+        file_path.with_name(file_path.name.removeprefix("flycheck_").removesuffix(".py"))
+    )
+
+    # Try to make it relative to repo_root
+    # If File is outside repo, use as-is
+    with contextlib.suppress(ValueError):
+        p = ModulePath(p.relative_to(repo_root))
+
+    if p.is_below("cmk"):
+        return ModuleName(".".join(p.parts))
+
+    if p.is_below("omd/packages/omd/omdlib"):
+        return ModuleName(".".join(p.parts[3:]))
+
+    if p.is_below("packages"):
+        return ModuleName(".".join(p.parts[2:]))
+
+    if p.is_below("non-free/packages"):
+        return ModuleName(".".join(p.parts[3:]))
+
+    # For all modules which don't live below cmk after mangling, just assume a toplevel module.
+    return ModuleName(p.parts[-1] if p.parts else file_path.stem)
 
 
 def get_absolute_importee(

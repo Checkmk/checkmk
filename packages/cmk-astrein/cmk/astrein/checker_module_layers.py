@@ -6,13 +6,13 @@
 """Checker to prevent disallowed imports of modules."""
 
 import ast
-import contextlib
 from pathlib import Path
 from typing import override
 
 from cmk.astrein.framework import ASTVisitorChecker
 from cmk.astrein.module_layers_config import (
     Component,
+    compute_module_name,
     get_absolute_importee,
     ModuleLayersConfig,
     ModuleName,
@@ -38,7 +38,7 @@ class ModuleLayersChecker(ASTVisitorChecker):
         self._config = config
 
         # Compute module name from file path
-        self.module_name = self._compute_module_name()
+        self.module_name = compute_module_name(file_path, repo_root)
 
         # Check if this is a package
         self.is_package = file_path.name == "__init__.py"
@@ -56,37 +56,6 @@ class ModuleLayersChecker(ASTVisitorChecker):
     @override
     def checker_id(self) -> str:
         return "cmk-module-layer-violation"
-
-    def _compute_module_name(self) -> ModuleName:
-        """Compute module name from file path"""
-        # Due to our symlinks and pasting magic, we need to compute the
-        # real module name from the file path of the module.
-        # Emacs' flycheck stores files to be checked in a temporary file with a prefix.
-        p = ModulePath(
-            self.file_path.with_name(
-                self.file_path.name.removeprefix("flycheck_").removesuffix(".py")
-            )
-        )
-
-        # Try to make it relative to repo_root
-        # If File is outside repo, use as-is
-        with contextlib.suppress(ValueError):
-            p = ModulePath(p.relative_to(self.repo_root))
-
-        if p.is_below("cmk"):
-            return ModuleName(".".join(p.parts))
-
-        if p.is_below("omd/packages/omd/omdlib"):
-            return ModuleName(".".join(p.parts[3:]))
-
-        if p.is_below("packages"):
-            return ModuleName(".".join(p.parts[2:]))
-
-        if p.is_below("non-free/packages"):
-            return ModuleName(".".join(p.parts[3:]))
-
-        # For all modules which don't live below cmk after mangling, just assume a toplevel module.
-        return ModuleName(p.parts[-1] if p.parts else self.file_path.stem)
 
     @override
     def visit_Import(self, node: ast.Import) -> None:

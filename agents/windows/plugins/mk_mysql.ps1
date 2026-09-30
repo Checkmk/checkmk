@@ -340,7 +340,7 @@ function OutputInfosForTheInstance {
     $cmd = GetSqlExePathFromCmd $replacedInstanceCmd
 
     if (-not $cmd) {
-        # GetSqlExePathFromCmd found no mysql.exe in the service command — this
+        # GetSqlExePathFromCmd found no mysql.exe in the service command - this
         # happens when the daemon is registered under an unexpected name or path
         # that our substitution did not cover.
         Write-Output "<<<mysql>>>"

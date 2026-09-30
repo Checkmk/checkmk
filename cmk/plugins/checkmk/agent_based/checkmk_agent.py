@@ -418,8 +418,8 @@ def _check_cmk_agent_update(
         )
         if (checkmk_host_name := params["host_name"]) != update_agent_host_name:
             yield Result(
-                state=State.CRIT,
-                summary=f"Hostname defined in Checkmk ({checkmk_host_name}) and cmk-update-agent configuration ({update_agent_host_name}) do not match",
+                state=State(params["updater_host_name_mismatch"]),
+                notice=f"Hostname defined in Checkmk ({checkmk_host_name}) and cmk-update-agent configuration ({update_agent_host_name}) do not match",
             )
 
     if aghash := section.aghash:
@@ -636,6 +636,7 @@ check_plugin_checkmk_agent = CheckPlugin(
         "agent_version_missmatch": 1,
         "restricted_address_mismatch": 1,
         "legacy_pull_mode": 1,
+        "updater_host_name_mismatch": 1,
         # This next entry will be postprocessed by the backend.
         # The "only_from" configuration is not a check parameter but it is configured as an Agent Bakery rule,
         # and controls the *deployment* of the only_from setting.

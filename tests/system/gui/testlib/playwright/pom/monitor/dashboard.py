@@ -6,7 +6,7 @@ import logging
 import re
 from enum import StrEnum
 from re import Pattern
-from typing import Literal, override
+from typing import override
 
 from playwright.sync_api import expect, Locator
 
@@ -215,18 +215,19 @@ class BaseDashboard(CmkPage):
     def delete_widget_button(self, widget_title: str) -> Locator:
         return self.get_widget(widget_title).get_by_role("button", name="Delete widget")
 
-    def get_chart_widget_hexagon(
-        self, widget_title: str, *, status: Literal["ok", "downtime", "unknown", "critical"] = "ok"
-    ) -> Locator:
-        return self.get_widget(widget_title).locator(f"path.hexagon.{status}")
+    def get_chart_widget_hexagon(self, widget_title: str) -> Locator:
+        return self.get_widget(widget_title).get_by_role("img", name=re.compile(r"^(Up|OK): \d+$"))
 
     def get_chart_widget_total_value(self, widget_title: str) -> int:
-        widget = self.get_widget(widget_title)
-        total_count = widget.get_by_role("row", name="Total").locator("a.count")
+        total_link = self.get_widget(widget_title).get_by_role(
+            "link", name=re.compile(r"^\d+ Total$")
+        )
         expect(
-            total_count, message=f"Total count of chart widget '{widget_title}' is not shown"
-        ).to_have_text(re.compile(r"\d+"))
-        return int(total_count.inner_text())
+            total_link, message=f"Total count of chart widget '{widget_title}' is not shown"
+        ).to_be_visible()
+        match = re.search(r"\d+", total_link.text_content() or "")
+        assert match, f"Total count of chart widget '{widget_title}' is not a number"
+        return int(match.group())
 
 
 class MainDashboard(BaseDashboard):

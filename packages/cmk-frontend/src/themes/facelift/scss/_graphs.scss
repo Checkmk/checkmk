@@ -75,6 +75,15 @@
   table.boxlayout.graph td.boxcolumn {
     > table.groupheader {
       top: -$graph-page-content-padding;
+      padding-left: $spacing-double;
+    }
+
+    > table.data > tbody > tr.data {
+      > td {
+        --graphing-graph-header-inline-padding: 0;
+
+        padding: $spacing-double;
+      }
     }
   }
 

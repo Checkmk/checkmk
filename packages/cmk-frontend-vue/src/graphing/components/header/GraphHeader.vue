@@ -222,7 +222,7 @@ const resolutionLabel = computed(() => {
   justify-content: space-between;
   column-gap: var(--graphing-graph-header-gap);
   row-gap: var(--dimension-6);
-  padding: var(--dimension-4) var(--spacing-double);
+  padding: var(--dimension-4) var(--graphing-graph-header-inline-padding, var(--spacing-double));
   background: var(--ux-theme-3);
   border-radius: var(--border-radius);
 }

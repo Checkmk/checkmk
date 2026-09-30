@@ -569,7 +569,7 @@ class ModeActivateChanges(WatoMode):
             # TODO: move to CCE handler to avoid is_ultimate_edition check
             license_usage_report_valid = (
                 self._license_usage_report_validity
-                != LicenseUsageReportValidity.older_than_five_days
+                != LicenseUsageReportValidity.older_than_sixty_days
             )
             block_effect = get_licensing_user_effect(
                 paths.omd_root,
@@ -725,18 +725,17 @@ class ModeActivateChanges(WatoMode):
         if edition_has_enforced_licensing(self._edition):
             if (
                 self._license_usage_report_validity
-                == LicenseUsageReportValidity.older_than_five_days
+                == LicenseUsageReportValidity.older_than_sixty_days
             ):
                 _show_activation_state_messages(
-                    "",
+                    _("Activation not possible because of the following licensing issues:"),
                     _(
-                        "The license usage history is older than five days. In order to have a"
-                        " reliable average of the number of services the license usage report must"
-                        " contain a significant number of license usage samples. Please execute"
-                        " the following command as site user 'cmk-update-license-usage --force' in"
-                        " order to solve this situation."
+                        "The license usage history is older than 60 days, so activating changes"
+                        " is blocked. Something is wrong on this site: please contact Checkmk"
+                        " support. As a temporary fix, run 'cmk-update-license-usage --force' as"
+                        " site user."
                     ),
-                    ActivationState.WARNING,
+                    ActivationState.ERROR,
                 )
             elif (
                 self._license_usage_report_validity
@@ -744,7 +743,12 @@ class ModeActivateChanges(WatoMode):
             ):
                 _show_activation_state_messages(
                     "",
-                    _("The license usage history was updated at least three days ago."),
+                    _(
+                        "The license usage history is older than three days, and activating"
+                        " changes will be blocked once it is older than 60 days. Something is"
+                        " wrong on this site: please contact Checkmk support. As a temporary fix,"
+                        " run 'cmk-update-license-usage --force' as site user."
+                    ),
                     ActivationState.WARNING,
                 )
 

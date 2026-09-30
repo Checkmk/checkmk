@@ -78,9 +78,10 @@ def add_group(
     if name in groups:
         raise MKUserError("name", _("Sorry, there is already a group with that name"))
 
+    scope = _group_change_scope(extra_info)
     _set_group(all_groups, group_type, name, extra_info, pprint_value)
     _add_group_change(
-        extra_info,
+        scope,
         "edit-%sgroups" % group_type,
         _l("Create new %(group_type)s group %(name)s") % {"group_type": group_type, "name": name},
         pending_changes=pending_changes,
@@ -103,6 +104,8 @@ def edit_group(
         raise MKUserError("name", _("Unknown group: %(name)s") % {"name": name})
 
     old_group_backup = copy.deepcopy(groups[name])
+    old_scope = _group_change_scope(old_group_backup)
+    new_scope = _group_change_scope(extra_info)
 
     _set_group(all_groups, group_type, name, extra_info, pprint_value)
     customer = customer_api()
@@ -111,7 +114,7 @@ def edit_group(
         new_customer = customer.get_customer_id(extra_info)
         if old_customer != new_customer:
             _add_group_change(
-                old_group_backup,
+                old_scope,
                 "edit-%sgroups" % group_type,
                 _l("Removed %(group_type)sgroup %(name)s from customer %(customer)s")
                 % {
@@ -122,7 +125,7 @@ def edit_group(
                 pending_changes=pending_changes,
             )
             _add_group_change(
-                extra_info,
+                new_scope,
                 "edit-%sgroups" % group_type,
                 _l(
                     "Moved %(group_type)sgroup %(name)s to customer %(customer)s. Additional properties may have changed."
@@ -136,7 +139,7 @@ def edit_group(
             )
         else:
             _add_group_change(
-                old_group_backup,
+                old_scope,
                 "edit-%sgroups" % group_type,
                 _l("Updated properties of %(group_type)sgroup %(name)s")
                 % {"group_type": group_type, "name": name},
@@ -144,7 +147,7 @@ def edit_group(
             )
     else:
         _add_group_change(
-            extra_info,
+            new_scope,
             "edit-%sgroups" % group_type,
             _l("Updated properties of %(group_type)s group %(name)s")
             % {"group_type": group_type, "name": name},
@@ -186,25 +189,28 @@ def delete_group(
         )
 
     # Delete group
-    group = groups.pop(name)
+    scope = _group_change_scope(groups.pop(name))
     save_group_information(all_groups, pprint_value)
     _add_group_change(
-        group,
+        scope,
         "edit-%sgroups" % group_type,
         _l("Deleted %(group_type)s group %(name)s") % {"group_type": group_type, "name": name},
         pending_changes=pending_changes,
     )
 
 
+def _group_change_scope(group: GroupSpec) -> ChangeScope:
+    sites = customer_api().customer_group_sites(group)
+    return ChangeScope.all_activation_sites() if sites is None else ChangeScope.sites(sites)
+
+
 def _add_group_change(
-    group: GroupSpec,
+    scope: ChangeScope,
     action_name: str,
     text: LazyString,
     *,
     pending_changes: PendingChanges,
 ) -> None:
-    sites = customer_api().customer_group_sites(group)
-    scope = ChangeScope.all_activation_sites() if sites is None else ChangeScope.sites(sites)
     pending_changes.add(
         Change(
             action_name=action_name,

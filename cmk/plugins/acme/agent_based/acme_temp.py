@@ -50,19 +50,20 @@ def discover_acme_temp(section: Section) -> DiscoveryResult:
         ]
 
 
-def check_acme_temp(item: str, params: TempParamType, section: StringTable) -> CheckResult:
-    for descr, value_str, state in section:
-        if item == descr:
-            dev_state, dev_state_readable = ACME_ENVIRONMENT_STATES[state]
+def check_acme_temp(item: str, params: TempParamType, section: Section) -> CheckResult:
+    if (entry := section.get(item)) is None:
+        return
+    value_str, state = entry
+    dev_state, dev_state_readable = ACME_ENVIRONMENT_STATES[state]
 
-            yield from check_temperature(
-                float(value_str),
-                params,
-                unique_name="acme_temp.%s" % item,
-                value_store=get_value_store(),
-                dev_status=int(dev_state),
-                dev_status_name=dev_state_readable,
-            )
+    yield from check_temperature(
+        float(value_str),
+        params,
+        unique_name="acme_temp.%s" % item,
+        value_store=get_value_store(),
+        dev_status=int(dev_state),
+        dev_status_name=dev_state_readable,
+    )
 
 
 def parse_acme_temp(string_table: StringTable) -> Section | None:

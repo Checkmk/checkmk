@@ -61,6 +61,9 @@ function singleMetric(overrides: Partial<ComputedSingleMetric> = {}): ComputedSi
         }
       ]
     },
+    state: null,
+    range_limits: null,
+    range: null,
     ...overrides
   }
 }

@@ -1520,7 +1520,7 @@ class GraphClient(RestApiClient):
 
 class CustomGraphClient(RestApiClient):
     domain: DomainType = "custom_graph"
-    default_version = APIVersion.INTERNAL
+    default_version = APIVersion.UNSTABLE
 
     def create(
         self,
@@ -1652,6 +1652,7 @@ class CustomGraphClient(RestApiClient):
                 "consolidation_function": consolidation_function,
             },
             expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
         )
 
     def _set_etag_header(

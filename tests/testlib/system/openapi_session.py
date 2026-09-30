@@ -2568,9 +2568,10 @@ class CustomGraphAPI(BaseAPI):
         *,
         public: bool = False,
     ) -> dict[str, object]:
-        return self._post_internal_action(
+        response = self.session.post(
             "domain-types/custom_graph/collections/all",
-            {
+            api_version=APIVersion.UNSTABLE,
+            json={
                 "name": name,
                 "title": title,
                 "metadata": {
@@ -2583,11 +2584,19 @@ class CustomGraphAPI(BaseAPI):
                 },
             },
         )
+        if not response.ok:
+            raise UnexpectedResponse.from_response(response)
+        parsed = response.json()
+        if not isinstance(parsed, dict):
+            raise UnexpectedResponse(
+                response.status_code, f"expected a JSON object, got {parsed!r}"
+            )
+        return parsed
 
     def delete(self, name: str) -> None:
         response = self.session.delete(
             f"objects/custom_graph/{name}",
-            api_version=APIVersion.INTERNAL,
+            api_version=APIVersion.UNSTABLE,
             headers={"If-Match": "*"},
         )
         if response.status_code != HTTPStatus.NO_CONTENT:

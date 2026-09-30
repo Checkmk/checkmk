@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import html
+from collections.abc import Mapping
 
 import lxml.html
 from pydantic import ValidationError
@@ -42,33 +43,30 @@ VALID_TAGS = {
 }
 
 
-def load_werk_v3(parsed: WerkV3ParseResult) -> WerkV3:
-    # TODO: c&p from v2
+def _werk_data(parsed: WerkV2ParseResult | WerkV3ParseResult) -> Mapping[str, object]:
     description = markdown_to_html(parsed.description)
     _check_html(description)
-    werk = {**parsed.metadata, "__version__": "3", "description": description}
+    return {**parsed.metadata, "description": description}
 
+
+def _validated[WerkModel: (WerkV2, WerkV3)](
+    model: type[WerkModel], data: Mapping[str, object]
+) -> WerkModel:
     try:
-        result = WerkV3.model_validate(werk)
+        result = model.model_validate(data)
         result.title = _format_title(result.title)
     except (ValidationError, WerkError) as e:
-        raise WerkError(f"Error validating werk:\n{werk}\nerror:\n{e}") from e
+        raise WerkError(f"Error validating werk:\n{data}\nerror:\n{e}") from e
 
     return result
+
+
+def load_werk_v3(parsed: WerkV3ParseResult) -> WerkV3:
+    return _validated(WerkV3, _werk_data(parsed))
 
 
 def load_werk_v2(parsed: WerkV2ParseResult) -> WerkV2:
-    description = markdown_to_html(parsed.description)
-    _check_html(description)
-    werk = {**parsed.metadata, "__version__": "2", "description": description}
-
-    try:
-        result = WerkV2.model_validate(werk)
-        result.title = _format_title(result.title)
-    except (ValidationError, WerkError) as e:
-        raise WerkError(f"Error validating werk:\n{werk}\nerror:\n{e}") from e
-
-    return result
+    return _validated(WerkV2, _werk_data(parsed))
 
 
 def _format_title(string: str) -> str:

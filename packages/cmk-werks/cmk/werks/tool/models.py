@@ -6,9 +6,9 @@
 
 import datetime
 from enum import Enum
-from typing import Literal, Self
+from typing import Annotated, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, TypeAdapter
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, TypeAdapter
 
 from .markup import markdown_to_html, nowiki_to_markdown
 
@@ -47,6 +47,20 @@ class Level(Enum):
     LEVEL_3 = 3
 
 
+def _parse_level(v: object) -> Level:
+    if isinstance(v, Level):
+        return v
+    try:
+        if not isinstance(v, int | float | str):
+            raise ValueError(v)
+        return Level(int(v))
+    except ValueError as e:
+        raise ValueError(f"Expected level to be in (1, 2, 3). Got {v} instead") from e
+
+
+_ParsedLevel = Annotated[Level, BeforeValidator(_parse_level)]
+
+
 class Compatibility(Enum):
     COMPATIBLE = "yes"
     NOT_COMPATIBLE = "no"
@@ -68,22 +82,12 @@ class WerkV3Base(BaseModel):
     id: int
     class_: Class = Field(alias="class")
     component: str
-    level: Level
+    level: _ParsedLevel
     date: datetime.datetime
     compatible: Compatibility
     edition: EditionV3
     description: str
     title: str
-
-    @field_validator("level", mode="before")
-    @classmethod
-    def parse_level(cls, v: str) -> Level:
-        if isinstance(v, Level):
-            return v
-        try:
-            return Level(int(v))
-        except ValueError as e:
-            raise ValueError(f"Expected level to be in (1, 2, 3). Got {v} instead") from e
 
     def to_json_dict(self) -> dict[str, object]:
         return self.model_dump(by_alias=True, mode="json")
@@ -99,22 +103,12 @@ class WerkV2Base(BaseModel):
     id: int
     class_: Class = Field(alias="class")
     component: str
-    level: Level
+    level: _ParsedLevel
     date: datetime.datetime
     compatible: Compatibility
     edition: EditionV2
     description: str
     title: str
-
-    @field_validator("level", mode="before")
-    @classmethod
-    def parse_level(cls, v: str) -> Level:
-        if isinstance(v, Level):
-            return v
-        try:
-            return Level(int(v))
-        except ValueError as e:
-            raise ValueError(f"Expected level to be in (1, 2, 3). Got {v} instead") from e
 
     def to_json_dict(self) -> dict[str, object]:
         return self.model_dump(by_alias=True, mode="json")

@@ -357,7 +357,7 @@ describe('TrialModeSelectionApp', () => {
       ).toBeInTheDocument()
     })
 
-    it('records the unverified trial and leaves for the dashboard on Start monitoring', async () => {
+    it('records the offline trial and leaves for the dashboard on Start monitoring', async () => {
       renderApp({ offline: true })
       await continueOffline()
 
@@ -366,6 +366,7 @@ describe('TrialModeSelectionApp', () => {
       await waitFor(() => {
         expect(mockCmkAjax).toHaveBeenCalledExactlyOnceWith('ajax_save_trial_mode_selection.py', {
           selection: 'unverified_trial',
+          unverified_reason: 'offline',
           _csrf_token: 'the-csrf-token'
         })
         expect(mockLocationAssign).toHaveBeenCalledWith('index.py')

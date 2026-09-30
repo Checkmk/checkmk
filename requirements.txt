@@ -3153,6 +3153,7 @@ opentelemetry-api==1.44.0 \
     # via
     #   -c constraints.txt
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-ai-control-plane/dev-requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-trace/requirements.in
     #   mcp
@@ -3269,6 +3270,7 @@ opentelemetry-sdk==1.44.0 \
     # via
     #   -c constraints.txt
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-ai-control-plane/dev-requirements.in
     #   -r non-free/packages/cmk-mcp/dev-requirements.in
     #   -r packages/cmk-trace/requirements.in
     #   opentelemetry-container-distro

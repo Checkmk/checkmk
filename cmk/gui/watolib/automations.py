@@ -500,48 +500,51 @@ def get_url_raw(
 
 
 def _verify_compatibility(response: requests.Response) -> None:
-    """Ensure we are compatible with the remote site
+    """Ensure the contacted site is not on an older major version and our license allows the call
 
-    In distributed setups the sync from a newer major version central site to an older central site
-    is not allowed. Since 2.1.0 the remote site is performing most of the validations. But in case
-    the newer site is the central site and the remote site is the older, e.g. 2.1.0 to 2.0.0, there
-    is no validation logic on the remote site. To ensure the validation is also performed in this
-    case, we execute the validation logic also in the central site when receiving the answer to the
-    remote call before processing it's content.
-
-    Since 2.0.0p13 the remote site answers with x-checkmk-version, x-checkmk-edition headers.
+    All other compatibility checks are done by the remote site, see verify_request_compatibility.
     """
-    central_version = cmk_version.__version__
-    central_edition_short = cmk_version.edition(paths.omd_root).short
-    central_license_state = get_license_state(paths.omd_root)
+    if not (peer_version_str := response.headers.get("x-checkmk-version", "")):
+        return
 
-    remote_version = response.headers.get("x-checkmk-version", "")
-    remote_edition_short = response.headers.get("x-checkmk-edition", "")
+    local_version = cmk_version.Version.from_str(cmk_version.__version__)
+    peer_version = cmk_version.Version.from_str(peer_version_str)
 
-    if not remote_version or not remote_edition_short:
-        return  # No validation
+    if (
+        local_version.base is not None
+        and peer_version.base is not None
+        and local_version.base > peer_version.base
+    ):
+        raise MKGeneralException(
+            _(
+                "This site (%(local)s) is newer than the site it contacted (%(peer)s). "
+                "The contacted site must be updated to %(local_base)s or newer."
+            )
+            % {"local": local_version, "peer": peer_version, "local_base": local_version.base}
+        )
 
+    if not (peer_edition_short := response.headers.get("x-checkmk-edition", "")):
+        return
+
+    local_edition = cmk_version.edition(paths.omd_root)
+    local_license_state = get_license_state(paths.omd_root)
     if not isinstance(
-        compatibility := _compatible_with_central_site(
-            central_version,
-            central_edition_short,
-            central_license_state,
-            remote_version,
-            remote_edition_short,
+        compatibility := is_distributed_setup_compatible_for_licensing(
+            central_edition=local_edition,
+            central_license_state=local_license_state,
+            remote_edition=_edition_from_short(peer_edition_short),
             remote_license_state=None,
             is_replication_enabled=True,
         ),
-        cmk_version.VersionsCompatible,
+        LicensingCompatible,
     ):
         raise MKGeneralException(
             make_incompatible_info(
-                central_version,
-                central_edition_short,
-                central_license_state,
-                remote_version,
-                remote_edition_short,
-                # Note: Remote license state compatibility check was never implemented correctly.
-                # We plan to clean up these checks in CMK-38403.
+                cmk_version.__version__,
+                local_edition.short,
+                local_license_state,
+                peer_version_str,
+                peer_edition_short,
                 remote_license_state=None,
                 compatibility=compatibility,
             )

@@ -8,7 +8,12 @@ from typing import Annotated
 from pydantic import BaseModel, ConfigDict
 
 from cmk.ccc.version import __version__, Version
-from cmk.flags import experimental_field, ExperimentalFlagConfig, load_experimental_flags
+from cmk.flags import (
+    CONFIG_FILENAME,
+    experimental_field,
+    ExperimentalFlagConfig,
+    load_experimental_flags,
+)
 
 _REQUIRED_METADATA = ("description", "remove_ticket", "remove_after", "owner")
 
@@ -52,7 +57,12 @@ def test_no_expired_flags() -> None:
 
 
 def test_load_returns_config_when_file_missing(tmp_path: Path) -> None:
-    assert isinstance(load_experimental_flags(tmp_path), ExperimentalFlagConfig)
+    assert load_experimental_flags(tmp_path) == ExperimentalFlagConfig()
+
+
+def test_load_returns_config_when_file_is_malformed(tmp_path: Path) -> None:
+    (tmp_path / CONFIG_FILENAME).write_text("lol wrong")
+    assert load_experimental_flags(tmp_path) == ExperimentalFlagConfig()
 
 
 def test_load_ignores_unknown_flags(tmp_path: Path) -> None:

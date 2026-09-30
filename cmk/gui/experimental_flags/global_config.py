@@ -22,7 +22,7 @@ from pydantic.fields import FieldInfo
 
 from cmk.ccc import store
 from cmk.flags import CONFIG_FILENAME as EXPERIMENTAL_FLAGS_CONFIG_FILENAME
-from cmk.flags import ExperimentalFlagConfig
+from cmk.flags import ExperimentalFlagConfig, load_experimental_flags
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.config_domain_name import (
@@ -92,10 +92,8 @@ class ConfigDomainExperimentalFlags(ABCConfigDomain):
         filename = self.config_file(site_specific)
         if custom_site_path:
             filename = Path(custom_site_path) / filename.relative_to(omd_root)
-        if not filename.exists():
-            return {}
-        raw = store.load_text_from_file(filename, default="{}")
-        return dict(ExperimentalFlagConfig.model_validate_json(raw).model_dump(exclude_unset=True))
+        config = load_experimental_flags(filename.parent)
+        return dict(config.model_dump(exclude_unset=True))
 
     @override
     def save(

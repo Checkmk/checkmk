@@ -115,6 +115,6 @@ def load_experimental_flags(config_dir: Path) -> ExperimentalFlagConfig:
     """Read the experimental flags from ``config_dir``, defaulting to all-off."""
     try:
         raw = (config_dir / CONFIG_FILENAME).read_text()
-    except FileNotFoundError:
+        return ExperimentalFlagConfig.model_validate_json(raw)
+    except Exception:
         return ExperimentalFlagConfig()
-    return ExperimentalFlagConfig.model_validate_json(raw)

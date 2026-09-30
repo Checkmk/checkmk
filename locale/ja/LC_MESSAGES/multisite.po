@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-09-16 17:31+0000\n"
+"PO-Revision-Date: 2026-09-29 06:07+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -2387,13 +2387,12 @@ msgstr "このルールパックの説明的なタイトル"
 msgid "A descriptive title of this action."
 msgstr "このアクションの説明的なタイトル。"
 
-#, fuzzy
 msgid ""
 "A destination address may only contain letters, numbers, dashes, "
 "underscores, dots and colons."
 msgstr ""
-"有効なサービス名には、文字、数字、ダッシュ、アンダースコア、スペース、および"
-"ドットのみを含めることができます。"
+"有効なサービス名には、文字、数字、ダッシュ、アンダースコア、ドット、アット"
+"マークを含めることができます。"
 
 msgid "A direct link to all groups of BI aggregations"
 msgstr "BI集計のすべてのグループへの直接リンク"
@@ -2434,6 +2433,8 @@ msgstr ""
 #, python-format
 msgid "A graph of type '%(graph_type)s' cannot be added to a graph collection."
 msgstr ""
+"「%(graph_type)s」タイプのグラフは、グラフコレクションに追加することはできま"
+"せん。"
 
 msgid "A graphical user interface (GUI) view"
 msgstr "グラフィカルユーザーインターフェース（GUI）ビュー"
@@ -2873,9 +2874,8 @@ msgstr "AIアシスタンス"
 msgid "AI features"
 msgstr "AI機能"
 
-#, fuzzy
 msgid "AI provider"
-msgstr "レベルを提供する"
+msgstr "AIプロバイダー"
 
 msgid "AIX"
 msgstr "AIX"
@@ -3329,6 +3329,8 @@ msgid ""
 "Absolute path on the monitored host to a PEM file containing the CA "
 "certificate(s) to trust. Only these CAs are trusted."
 msgstr ""
+"監視対象ホスト上の、信頼するCA証明書を含むPEMファイルへの絶対パス。信頼される"
+"のはこれらのCAのみです。"
 
 msgid "Absolute path to catalog ZIP file"
 msgstr "カタログZIPファイルの絶対パス"
@@ -6962,9 +6964,8 @@ msgstr "別のセッションがアクティブです"
 msgid "Answer seizure ratio"
 msgstr "通話成功率"
 
-#, fuzzy
 msgid "Anthropic"
-msgstr "トピックの追加"
+msgstr "Anthropic"
 
 msgid "AntiVirus last update age"
 msgstr "アンチウイルスの最終更新期間"
@@ -6976,11 +6977,15 @@ msgid ""
 "Any application using the selected tokens will no longer be able to access "
 "the API with them."
 msgstr ""
+"選択されたトークンを使用しているアプリケーションは、それらを使用してAPIにアク"
+"セスできなくなります。"
 
 msgid ""
 "Any application using this token will no longer be able to access the API "
 "with it."
 msgstr ""
+"選択されたトークンを使用しているアプリケーションは、それらを使用してAPIにアク"
+"セスできなくなります。"
 
 msgid ""
 "Any certificate should expire at some point. Usual values are within 90 and "
@@ -9999,9 +10004,8 @@ msgstr "一括発見"
 msgid "Bulk discovery currently running in <a href=\"%s\">background</a>."
 msgstr "現在<a href=\"%s\">バックグラウンド</a>で実行されている一括検出。"
 
-#, fuzzy
 msgid "Bulk discovery finished"
-msgstr "一括検出が終了しました。"
+msgstr "一括検出が完了しました"
 
 msgid "Bulk discovery finished."
 msgstr "一括検出が終了しました。"
@@ -17518,9 +17522,6 @@ msgstr "顧客"
 msgid "Custom metrics (%s):"
 msgstr "Custom メトリクス(%s):"
 
-msgid "Custom metrics cache age"
-msgstr "カスタムメトリックのキャッシュ有効期間"
-
 #, python-format
 msgid "Custom notification table for user %s"
 msgstr "ユーザー %s のカスタム通知テーブル"
@@ -21684,9 +21685,8 @@ msgstr "TLS証明書を検証する"
 msgid "Do not validate server certificate during port query"
 msgstr "ポート照会時にサーバー証明書を検証しない"
 
-#, fuzzy
 msgid "Do not verify the server certificate"
-msgstr "サーバー証明書を確認する"
+msgstr "サーバー証明書の検証を行わない"
 
 msgid "Do now show reserved space"
 msgstr "予約済みのスペースを表示する"
@@ -23171,10 +23171,9 @@ msgstr "レプリケーションを有効にする"
 msgid "Enable Caching"
 msgstr "キャッシュを有効にする"
 
-#, fuzzy
 msgid "Enable Checkmk's AI assistant, powered by the AI control plane daemon."
 msgstr ""
-"AIエージェントエンジンデーモンによって駆動されるCheckmkのAIアシスタントを有効"
+"AIコントロールプレーンデーモンによって駆動されるCheckmkのAIアシスタントを有効"
 "にします。"
 
 #, fuzzy
@@ -23739,9 +23738,8 @@ msgstr "変更を強制する"
 msgid "Enforce for all users"
 msgstr "すべてのユーザーに適用"
 
-#, fuzzy
 msgid "Enforce lower case user IDs."
-msgstr "小文字のユーザーIDを適用します。"
+msgstr "ユーザーIDは小文字のみとする。"
 
 msgid "Enforce primary address family"
 msgstr "プライマリアドレスファミリを強制する"
@@ -23769,7 +23767,6 @@ msgstr "施行されたサービス"
 msgid "Enforced services"
 msgstr "施行されたサービス"
 
-#, fuzzy
 msgid "Engaged alerts"
 msgstr "エンゲージドアラート"
 
@@ -23979,33 +23976,27 @@ msgstr "ユーザーネームを入力してください"
 msgid "Enter your message here"
 msgstr "メッセージを入力してください"
 
-#, fuzzy
 msgid "Enterasys LSNAT bindings"
 msgstr "Enterasys LSNAT バインディング"
 
 msgid "Enterasys power supply settings"
 msgstr "Enterasys電源設定"
 
-#, fuzzy
 msgid "Enterasys switch: temperature"
 msgstr "Enterasysスイッチ:温度"
 
 msgid "Enterprise feature"
 msgstr "エンタープライズ機能"
 
-#, fuzzy
 msgid "Entersekt HTTP EMR errors"
 msgstr "Entersekt HTTP EMRエラー"
 
-#, fuzzy
 msgid "Entersekt HTTP ecert errors"
 msgstr "Entersekt HTTP Ecertエラー"
 
-#, fuzzy
 msgid "Entersekt SOAP service errors"
-msgstr "Entersekt Soapサービスエラー"
+msgstr "Entersekt SOAP サービスエラー"
 
-#, fuzzy
 msgid "Entersekt certificate expiration"
 msgstr "Entersekt 証明書の有効期限"
 
@@ -24046,13 +24037,11 @@ msgstr "環境変数"
 msgid "Environment dependency handling"
 msgstr "環境依存性の処理"
 
-#, fuzzy
 msgid "Environment metrics"
-msgstr "Environment Sensors"
+msgstr "環境メトリック"
 
-#, fuzzy
 msgid "Environment sensors"
-msgstr "Environment Sensors"
+msgstr "環境センサー"
 
 #, fuzzy
 msgid "Environment source"
@@ -24123,9 +24112,8 @@ msgstr ""
 msgid "Error rate"
 msgstr "エラーレート"
 
-#, fuzzy
 msgid "Error rate over the last 5 minutes"
-msgstr "過去60分間のログスイッチ"
+msgstr "過去5分間のエラー発生率"
 
 #, fuzzy
 msgid "Error rate over the last day"
@@ -24194,13 +24182,11 @@ msgstr "集約されたCRIT状態に基づいてダウンタイムをエスカ�
 msgid "Escalate downtimes based on aggregated WARN state"
 msgstr "集約されたWARN状態に基づいてダウンタイムをエスカレーションします"
 
-#, fuzzy
 msgid "Escalation name"
-msgstr "エスカレーション"
+msgstr "エスカレーション名"
 
-#, fuzzy
 msgid "Escalation policy"
-msgstr "エスカレーション"
+msgstr "エスカレーションポリシー"
 
 msgid "Escalations"
 msgstr "エスカレーション"
@@ -24262,7 +24248,6 @@ msgstr "新しいプロセスの推定RAM"
 msgid "Estimated remaining health of the disk based on other readings."
 msgstr "他の読み取り値から推定されるディスクの残量。"
 
-#, fuzzy
 msgid "Etherbox / MessPC: sensor temperature"
 msgstr "Etherbox/MessPC: センサーの温度"
 
@@ -24272,19 +24257,15 @@ msgstr "イーサボックスの煙"
 msgid "Etherbox voltage"
 msgstr "Etherboxの電圧"
 
-#, fuzzy
 msgid "Ethernet jitter"
 msgstr "イーサネットジッター"
 
-#, fuzzy
 msgid "Ethernet ping"
 msgstr "イーサネットping"
 
-#, fuzzy
 msgid "Evaluation of PDisk states"
 msgstr "PDisk状態の評価"
 
-#, fuzzy
 msgid "Evaluation of VDrive states"
 msgstr "VDrive状態の評価"
 
@@ -24366,19 +24347,15 @@ msgstr "イベントコンソールの設定"
 msgid "Event Console: SNMP traps"
 msgstr "イベントコンソール:SNMPトラップ"
 
-#, fuzzy
 msgid "Event Console: current events"
 msgstr "イベントコンソール: 現在のイベント"
 
-#, fuzzy
 msgid "Event Console: event history"
 msgstr "イベントコンソール: イベント履歴"
 
-#, fuzzy
 msgid "Event Console: generic"
 msgstr "イベントコンソール: 汎用"
 
-#, fuzzy
 msgid "Event Console: logging & diagnose"
 msgstr "イベントコンソール:ログと診断"
 
@@ -24429,7 +24406,6 @@ msgstr "イベントの詳細"
 msgid "Event handlers"
 msgstr "イベントハンドラー"
 
-#, fuzzy
 msgid "Event history"
 msgstr "イベント履歴"
 
@@ -24455,9 +24431,8 @@ msgstr "イベントアイコン"
 msgid "Event information updated by user"
 msgstr "ユーザーが更新したイベント情報"
 
-#, fuzzy
 msgid "Event log"
-msgstr "イベントログ:"
+msgstr "イベントログ"
 
 #, fuzzy
 msgid "Event log:"
@@ -24473,7 +24448,6 @@ msgstr ""
 msgid "Event processing time"
 msgstr "イベント処理時間"
 
-#, fuzzy
 msgid "Event simulator"
 msgstr "イベントシミュレータ"
 
@@ -24486,7 +24460,6 @@ msgstr "イベント統計"
 msgid "Event subscriptions"
 msgstr "イベントサブスクリプション"
 
-#, fuzzy
 msgid ""
 "Event was archived because no rule matched and archiving is activated in the "
 "'Global settings'."
@@ -24530,22 +24503,18 @@ msgstr "直近4時間の出来事（ダッシュボード用）"
 msgid "Events of the last 4 hours."
 msgstr "直近4時間のイベント。"
 
-#, fuzzy
 msgid "Events: host name"
 msgstr "イベント：ホスト名"
 
-#, fuzzy
 msgid "Events: syslog application"
 msgstr "イベント: Syslogアプリケーション"
 
-#, fuzzy
 msgid "Events: syslog facility"
 msgstr "イベント:Syslogファシリティ"
 
 msgid "Every day"
 msgstr "毎日"
 
-#, fuzzy
 msgid ""
 "Every time the plug-in is executed, it gathers all relevant messages since "
 "its last execution. It then puts these messages in a bundle and stores it on "
@@ -24626,7 +24595,6 @@ msgstr "PromQLクエリの例: up{job=\"node_exporter\"}"
 msgid "Example configuration for systemd"
 msgstr "systemdの設定例"
 
-#, fuzzy
 msgid "Example configurations"
 msgstr "構成例"
 
@@ -24770,9 +24738,8 @@ msgstr "サービス名からボリュームを除外する"
 msgid "Excluded hosts"
 msgstr "除外されたホスト"
 
-#, fuzzy
 msgid "Excluded sections"
-msgstr "有効なセクション"
+msgstr "除外セクション"
 
 msgid "Excluded services"
 msgstr "除外されたサービス"
@@ -24826,9 +24793,8 @@ msgstr "特定のユーザーとしてプランを実行"
 msgid "Execute plug-ins in general"
 msgstr "プラグイン全般の実行"
 
-#, fuzzy
 msgid "Execute shell script"
-msgstr "シェルスクリプトを実行する"
+msgstr "シェルスクリプトの実行"
 
 msgid ""
 "Execute the network scan in the Checkmk user context of the chosen user. "
@@ -24844,7 +24810,7 @@ msgid "Execute this schedule now in background job"
 msgstr "このスケジュールをバックグラウンドジョブで今すぐ実行します"
 
 msgid "Execution configuration"
-msgstr "実行構成"
+msgstr "実行設定"
 
 msgid "Execution has been triggered"
 msgstr "実行がトリガーされました"
@@ -24863,7 +24829,6 @@ msgstr "この %s の実行履歴"
 msgid "Execution interval"
 msgstr "実行間隔"
 
-#, fuzzy
 msgid "Execution mode"
 msgstr "実行モード"
 
@@ -24914,11 +24879,9 @@ msgstr "すべてのアドレスを期待する"
 msgid "Expect at least one of the addresses"
 msgstr "少なくとも1つのアドレスが必要です"
 
-#, fuzzy
 msgid "Expect authoritative"
-msgstr "権威を期待する"
+msgstr "信頼性の高い情報を期待する"
 
-#, fuzzy
 msgid "Expect authoritative DNS server"
 msgstr "信頼できるDNSサーバーを期待する"
 
@@ -24947,16 +24910,14 @@ msgstr "期待されるDC"
 msgid "Expected DNS answers"
 msgstr "期待されるDNSの回答"
 
-#, fuzzy
 msgid "Expected VM generation"
-msgstr "予想される経路の状況"
+msgstr "予想されるVMの生成"
 
 msgid "Expected active paths"
 msgstr "予想されるアクティブパス"
 
-#, fuzzy
 msgid "Expected auto-extend setting"
-msgstr "予想される自動拡張設定"
+msgstr "予想される自動延長設定"
 
 msgid "Expected cluster type."
 msgstr "予想されるクラスタータイプ。"
@@ -25026,7 +24987,6 @@ msgstr "期待される特定のゲートウェイフォルダ"
 msgid "Expected state"
 msgstr "期待される状態"
 
-#, fuzzy
 msgid "Expected string"
 msgstr "期待される文字列"
 
@@ -25041,9 +25001,8 @@ msgstr "期待される状態"
 msgid "Expected virtual switch name"
 msgstr "予想されるフラグの状態"
 
-#, fuzzy
 msgid "Experimental flags (for testing only)"
-msgstr "エンタープライズ機能"
+msgstr "実験的フラグ（テスト用のみ）"
 
 msgid "Expiration date"
 msgstr "有効期限なし"
@@ -25146,7 +25105,6 @@ msgstr "明示的な番号"
 msgid "Explicit port number"
 msgstr "明示的なポート番号"
 
-#, fuzzy
 msgid "Explicit queue names"
 msgstr "明示的なキュー名"
 
@@ -25216,7 +25174,6 @@ msgid ""
 "Export file to create, containing <tt>&lt;HOST&gt;</tt> for the host name"
 msgstr "作成するエクスポートファイル、ホスト名に<tt>&lt;HOST&gt;</tt>を含む"
 
-#, fuzzy
 msgid "Export list of software packages as CSV file"
 msgstr "ソフトウェアパッケージのリストをCSVファイルとしてエクスポート"
 
@@ -25324,13 +25281,11 @@ msgstr ""
 msgid "Extreme Networks ExtremeCloud IQ"
 msgstr "Extreme Networks ExtremeCloud IQ"
 
-#, fuzzy
 msgid "ExtremeCloud IQ password"
-msgstr "ユーザーパスワードを入力"
+msgstr "ExtremeCloud IQ パスワード"
 
-#, fuzzy
 msgid "ExtremeCloud IQ username"
-msgstr "ユーザーネームを入力してください"
+msgstr "ExtremeCloud IQ ユーザー名"
 
 msgid "Extremes only"
 msgstr "極端な場合のみ"
@@ -25350,16 +25305,14 @@ msgstr "F5ロードバランサープール"
 msgid "F5 load balancer source NAT"
 msgstr "F5ロードバランサーソースNAT"
 
-#, fuzzy
 msgid "F5OS CPU utilization averages"
-msgstr "CPU利用率(平均)"
+msgstr "F5OS の CPU 利用率の平均値"
 
 msgid "F5OS PSU power"
 msgstr "F5OS PSU 電源"
 
-#, fuzzy
 msgid "F5OS platform temperature"
-msgstr "バッテリー温度"
+msgstr "F5OS プラットフォームの温度"
 
 msgid "FAULTED"
 msgstr "故障"
@@ -25379,7 +25332,6 @@ msgstr "FB メモリー使用量(used)"
 msgid "FB memory utilization"
 msgstr "FB メモリ使用率"
 
-#, fuzzy
 msgid "FC ports"
 msgstr "FCポート"
 
@@ -25501,9 +25453,8 @@ msgstr "プロキシからの予期しない相互作用が原因で失敗した
 msgid "Failed certificate validations"
 msgstr "失敗した証明書の検証"
 
-#, fuzzy
 msgid "Failed concurrent connections"
-msgstr "失敗した接続"
+msgstr "失敗した同時接続"
 
 msgid "Failed connections"
 msgstr "失敗した接続"
@@ -25885,18 +25836,15 @@ msgstr "落下"
 msgid "False"
 msgstr "False"
 
-#, fuzzy
 msgid "Fan and temperatures"
 msgstr "ファンと温度"
 
-#, fuzzy
 msgid "Fan name"
 msgstr "ファン名"
 
 msgid "Fan speed"
 msgstr "ファン回転速度"
 
-#, fuzzy
 msgid "Fan speed of hardware devices"
 msgstr "ハードウェアデバイスのファン速度"
 
@@ -25909,11 +25857,9 @@ msgstr "ファン"
 msgid "Favorite entry of user"
 msgstr "ユーザーのお気に入りのエントリ"
 
-#, fuzzy
 msgid "Favorite hosts"
 msgstr "お気に入りホスト"
 
-#, fuzzy
 msgid "Favorite services"
 msgstr "お気に入りサービス"
 
@@ -26045,9 +25991,8 @@ msgstr "各セクションの設定値を取得"
 msgid "Fetching sync state"
 msgstr "同期状態の取得"
 
-#, fuzzy
 msgid "Fibre Channel ports (FCMGMT MIB)"
-msgstr "ファイバチャネルポート(FCMGMT MIB)"
+msgstr "ファイバーチャネルポート(FCMGMT MIB)"
 
 #, fuzzy
 msgid "Fibre channel interfaces"
@@ -26103,7 +26048,6 @@ msgstr ""
 "リモートストレージのファイルダウンロードテストに失敗しました。元のエラーメッ"
 "セージ: %s"
 
-#, fuzzy
 msgid "File group name"
 msgstr "ファイルグループ名"
 
@@ -26156,7 +26100,6 @@ msgstr "ファイルが開かれました"
 msgid "File or filegroup backup"
 msgstr "ファイルまたはファイルグループのバックアップ"
 
-#, fuzzy
 msgid "File parsing settings"
 msgstr "ファイル解析設定"
 
@@ -26252,7 +26195,6 @@ msgstr "ファイルハンドラー"
 msgid "Fileinfo"
 msgstr "Fileinfo"
 
-#, fuzzy
 msgid "Filer disk levels (NetApp, IBM SVC)"
 msgstr "ファイラーディスクレベル(NetApp、IBM SVC)"
 
@@ -26306,7 +26248,6 @@ msgstr "ホスト名で %s の選択範囲をフィルタリング: "
 msgid "Filter %s selection by service: "
 msgstr "%sの選択をサービスでフィルタリングします。 "
 
-#, fuzzy
 msgid "Filter / search"
 msgstr "フィルタ/検索"
 
@@ -26468,29 +26409,23 @@ msgstr "終了しました"
 msgid "Finished."
 msgstr "終了しました。"
 
-#, fuzzy
 msgid "FireEye active VMs"
-msgstr "FireeyeアクティブVM"
+msgstr "FireEyeの稼働中のVM"
 
-#, fuzzy
 msgid "FireEye licenses"
-msgstr "Fireeyeライセンス"
+msgstr "FireEyeライセンス"
 
-#, fuzzy
 msgid "FireEye mail queues"
-msgstr "Fireeyeメールキュー"
+msgstr "FireEyeメールキュー"
 
-#, fuzzy
 msgid "FireEye mail rate average"
-msgstr "Fireeyeメールレート平均"
+msgstr "FireEyeメールレート平均"
 
-#, fuzzy
 msgid "FireEye quarantine usage"
-msgstr "Fireeye使用量"
+msgstr "FireEyeの隔離機能の使用状況"
 
-#, fuzzy
 msgid "FireEye security content"
-msgstr "Fireeyeセキュリティコンテンツ"
+msgstr "FireEyeセキュリティコンテンツ"
 
 #, fuzzy
 msgid "Firewall SNAT port utilization"
@@ -26503,9 +26438,8 @@ msgstr "ファイアウォール接続"
 msgid "Firewall health"
 msgstr "ファイアウォールインターフェース"
 
-#, fuzzy
 msgid "Firewall interfaces"
-msgstr "ファイアウォールインターフェース"
+msgstr "ファイアウォールインターフェイス"
 
 #, fuzzy
 msgid "Firewall latency"
@@ -26518,7 +26452,6 @@ msgstr "FCP 読み取りスループット"
 msgid "Firmware"
 msgstr "ファームウェア"
 
-#, fuzzy
 msgid "Firmware versions"
 msgstr "Firmwareのバージョン"
 
@@ -26540,7 +26473,6 @@ msgstr "最初のイベント発生"
 msgid "First page"
 msgstr "1ページ目"
 
-#, fuzzy
 msgid "First seen"
 msgstr "最初に見た"
 
@@ -26601,11 +26533,9 @@ msgstr "サービスのフラップ検出設定"
 msgid "Flapping"
 msgstr "フラッピング"
 
-#, fuzzy
 msgid "Flash space usage"
-msgstr "フラッシュスペースの使用量"
+msgstr "フラッシュ領域の使用状況"
 
-#, fuzzy
 msgid "FlashCache: Flash cache configuration"
 msgstr "FlashCache:フラッシュキャッシュの設定"
 
@@ -26615,9 +26545,8 @@ msgstr "フラッシュバック"
 msgid "Flat"
 msgstr "フラット"
 
-#, fuzzy
 msgid "Flex. duration"
-msgstr "フレックスデュレーション"
+msgstr "期間の柔軟性"
 
 msgid "Flexible downtime"
 msgstr "柔軟なダウンタイム"
@@ -26632,7 +26561,6 @@ msgstr "柔軟なダウンタイムオプション:"
 msgid "Float field cannot be empty"
 msgstr "入力を空にすることはできません"
 
-#, fuzzy
 msgid "Flow-controlled connections"
 msgstr "フロー制御接続"
 
@@ -26695,7 +26623,6 @@ msgstr "フォルダパスがありません"
 msgid "Folder properties"
 msgstr "フォルダのプロパティ"
 
-#, fuzzy
 msgid "Folder selection"
 msgstr "フォルダの選択"
 
@@ -26785,18 +26712,17 @@ msgstr ""
 msgid "For NFS enter the name of the mount point."
 msgstr "NFSの場合は、マウントポイントの名前を入力します。"
 
-#, fuzzy
 msgid ""
 "For a summarized throughput of all disks, specify <tt>SUMMARY</tt>. A per-"
 "disk I/O is specified by the drive letter, a colon and a slash on Windows "
 "(e.g. <tt>C:/</tt>) or by the device name on Linux/Unix (e.g. <tt>/dev/sda</"
 "tt>)."
 msgstr ""
-"すべてのディスクのスループットを要約するには、<tt>SUMMARY</tt>を指定します。"
-"ディスクごとのIOは、Windowsではドライブ文字、コロン、スラッシュで指定されます"
-"(<tt>C:/</tt>など)。またはLinux/UNIXのデバイス名(例:<tt>/dev/sda</tt>)。"
+"すべてのディスクのスループットを要約するには、<tt>SUMMARY(概要)</tt>を指定し"
+"ます。ディスクごとのI/Oは、Windowsではドライブ文字、コロン、スラッシュで指定"
+"されます（例：<tt>C:/</tt>）。Linux/Unixではデバイス名で指定します（例：<tt>/"
+"dev/sda</tt>）。"
 
-#, fuzzy
 msgid ""
 "For a summarized throughput of all disks, specify <tt>SUMMARY</tt>. For a "
 "sum of read or write throughput, write <tt>read</tt> or <tt>write</tt> resp. "
@@ -26810,7 +26736,6 @@ msgstr ""
 "コロン、スラッシュ（例：<tt>C:/</tt>）、Linux/UNIXではデバイス名（例：<tt>/"
 "dev/sda</tt>）で指定されます。"
 
-#, fuzzy
 msgid ""
 "For agent-based checks Checkmk allows you to specify an alternative program "
 "that should be called by Checkmk instead of connecting the agent via TCP. "
@@ -26891,37 +26816,34 @@ msgstr ""
 "要があります。これを行うには、まず検証リクエストをダウンロードする必要があり"
 "ます。"
 
-#, fuzzy
 msgid ""
 "For running Checkmk based checks, the Checkmk Micro Core keeps a pool of "
 "specialized helper processes for fetching the needed information from the "
 "monitored systems. The size of this pool is configured here."
 msgstr ""
-"Checkmk ベースのチェックを実行するために、Micro Core は監視対象システムから必"
-"要な情報をフェッチする専用のヘルパープロセスのプールを保持します。このプール"
-"のサイズはここで設定します。"
+"Checkmk ベースのチェックを実行するために、Checkmk Micro Core は監視対象システ"
+"ムから必要な情報を取得するための専用ヘルパープロセスのプールを保持していま"
+"す。このプールのサイズはここで設定します。"
 
-#, fuzzy
 msgid ""
 "For running Checkmk based checks, the Checkmk Micro Core keeps a pool of "
 "specialized helper processes for interpreting and evaluating the information "
 "gathered by the fetcher helpers."
 msgstr ""
-"Checkmkベースのチェックを実行するために、Micro Coreは、フェッチャーヘルパーに"
-"よって収集された情報を解釈および評価するための特殊なヘルパープロセスのプール"
-"を保持します。"
+"Checkmkベースのチェックを実行するために、Checkmk Micro Coreは、フェッチャーヘ"
+"ルパーによって収集された情報を解釈および評価するための専用ヘルパープロセスの"
+"プールを保持しています。"
 
-#, fuzzy
 msgid ""
 "For running Checkmk based checks, the Checkmk Micro Core keeps a pool of "
 "specialized helpers that speed up Checkmk by avoiding process creations. The "
 "size of this pool is configured here. This is identical with the maximum "
 "number of concurrent real-time checks."
 msgstr ""
-"CheckmkベースのチェックをMicro Core経由で実行するために、Micro Coreはプロセス"
-"の生成を回避してCheckmkを高速化する特化型ヘルパーのプールを保持しています。こ"
-"のプールのサイズはここで設定します。これは、リアルタイムチェックの最大同時実"
-"行数と同じです。"
+"CheckmkベースのチェックをCheckmk Micro Core経由で実行するために、Checkmk "
+"Micro Coreはプロセスの生成を回避してCheckmkの処理を高速化する、専用のヘルパー"
+"のプールを保持しています。このプールのサイズはここで設定します。これは、リア"
+"ルタイムチェックの最大同時実行数と同じです。"
 
 msgid ""
 "For sake of optimal performance Checkmk Micro Core keeps all current state "
@@ -27003,15 +26925,14 @@ msgstr ""
 "い。ラベルフィールドでは、明示的に設定されたラベルのみを検索し、ホストの有効"
 "なラベルは検索しません。"
 
-#, fuzzy
 msgid ""
 "For these hosts, there is a new agent available that is not yet installed. "
 "This simply means that the target agent configuration hash does not match "
 "the hash of the configuration that is currently installed."
 msgstr ""
-"これらのホストには、まだインストールされていない新しいエージェントが利用可能"
-"です。これは単に、ターゲットエージェントの構成ハッシュが現在インストールされ"
-"ている構成と一致しないことを意味します。"
+"これらのホストには、まだインストールされていない新しいエージェントがありま"
+"す。これは単に、対象のターゲットエージェントの設定のハッシュが、現在インス"
+"トールされている設定のハッシュと一致しないことを意味します。"
 
 msgid "For these states:"
 msgstr "これらの状態の場合:"
@@ -27130,29 +27051,23 @@ msgstr "タイムスタンプを次のようにフォーマットします"
 msgid "FortiGate HighAvailability"
 msgstr "FortiGate 高可用性"
 
-#, fuzzy
 msgid "FortiGate IPSec VPN tunnels"
 msgstr "Fortigate IPSec VPNトンネル"
 
-#, fuzzy
 msgid "FortiGate SSL VPN"
-msgstr "SSLVPNを強化する"
+msgstr "FortiGate SSL VPN"
 
-#, fuzzy
 msgid "FortiGate active sessions"
-msgstr "アクティブセッションを促進する"
+msgstr "FortiGateアクティブセッション"
 
-#, fuzzy
 msgid "FortiGate cluster active sessions"
-msgstr "Fortigate クラスターアクティブセッション"
+msgstr "FortiGate クラスターアクティブセッション"
 
-#, fuzzy
 msgid "FortiGate node memory"
-msgstr "ノードメモリを強化する"
+msgstr "FortiGate ノードのメモリ"
 
-#, fuzzy
 msgid "FortiGate signatures"
-msgstr "Fortigateの署名"
+msgstr "FortiGate の署名"
 
 msgid "FortiSandbox software"
 msgstr "FortiSandbox ソフトウェア"
@@ -27160,15 +27075,12 @@ msgstr "FortiSandbox ソフトウェア"
 msgid "Fortinet"
 msgstr "Fortinet"
 
-#, fuzzy
 msgid "Fortinet FortiAuthenticator authentication failures"
 msgstr "Fortinet FortiAuthenticatorの認証失敗"
 
-#, fuzzy
 msgid "Fortinet FortiGate AntiVirus detections"
 msgstr "Fortinet FortiGateアンチウイルス検出"
 
-#, fuzzy
 msgid "Fortinet FortiGate IPS detections"
 msgstr "Fortinet FortiGate IPS 検出"
 
@@ -27181,7 +27093,6 @@ msgstr "Fortinet FortiMail ディスク使用量"
 msgid "Fortinet FortiMail queue length"
 msgstr "Fortinet FortiMail キューの長さ"
 
-#, fuzzy
 msgid "Fortinet FortiSandbox queue length"
 msgstr "Fortinet FortiSandboxキューの長さ"
 
@@ -27401,7 +27312,6 @@ msgstr "金曜日"
 msgid "Fritz"
 msgstr "Fritz"
 
-#, fuzzy
 msgid "Fritz!Box devices"
 msgstr "Fritz！Boxデバイス"
 
@@ -27470,9 +27380,8 @@ msgstr "From: %s"
 msgid "From: email address"
 msgstr "差出人:メールアドレス"
 
-#, fuzzy
 msgid "Front matter template"
-msgstr "これはフロントマターテンプレートです"
+msgstr "フロントマターテンプレート"
 
 #, fuzzy
 msgid "Front-end port"
@@ -27490,7 +27399,6 @@ msgstr "FujitsuストレージCAポートの発見"
 msgid "Full"
 msgstr "フル"
 
-#, fuzzy
 msgid "Full - including RRA configuration"
 msgstr "フル - RRA構成を含む"
 
@@ -27504,7 +27412,6 @@ msgstr "ルールのアクティブ化"
 msgid "Full controller status"
 msgstr "フルコントローラーステータス"
 
-#, fuzzy
 msgid "Full description"
 msgstr "完全な説明"
 
@@ -27773,7 +27680,6 @@ msgstr "汎用SSD (gp2) スペース"
 msgid "General purpose SSD (gp3) space"
 msgstr "汎用SSD (gp3) スペース"
 
-#, fuzzy
 msgid "General settings"
 msgstr "一般設定"
 
@@ -28444,7 +28350,6 @@ msgstr "HH:MM:SS"
 msgid "HP MSA power supply voltage levels"
 msgstr "HPMSA電源電圧レベル"
 
-#, fuzzy
 msgid "HP MSA via web interface"
 msgstr "Webインターフェイスを介したHP MSA"
 
@@ -28486,7 +28391,6 @@ msgstr "HTTP"
 msgid "HTTP 2XX errors"
 msgstr "HTTP 2XX エラー"
 
-#, fuzzy
 msgid "HTTP 3/4/5XX errors"
 msgstr "HTTP 3/4/5XXエラー"
 
@@ -28499,7 +28403,6 @@ msgstr "HTTP 4XX エラー"
 msgid "HTTP 500 errors"
 msgstr "HTTP 500エラー"
 
-#, fuzzy
 msgid "HTTP 500/2/3/4 errors"
 msgstr "HTTP 500/2/3/4エラー"
 
@@ -28557,7 +28460,6 @@ msgstr "HTTP固定応答"
 msgid "HTTP method"
 msgstr "HTTPメソッド"
 
-#, fuzzy
 msgid "HTTP parameters"
 msgstr "HTTPパラメータ"
 
@@ -28597,20 +28499,17 @@ msgstr "HTTP(S)ロードバランサー"
 msgid "HTTP, TCP, email, ..."
 msgstr "HTTP, TCP, Eメール, ..."
 
-#, fuzzy
 msgid "HTTP-based OTLP receiver"
-msgstr "HTTPベースの受信機"
+msgstr "HTTPベースのOTLPレシーバー:"
 
-#, fuzzy
 msgid "HTTP: active requests"
 msgstr "HTTP: アクティブリクエスト"
 
 msgid "HTTPS"
 msgstr "HTTPS"
 
-#, fuzzy
 msgid "HTTPS proxy"
-msgstr "HTTPプロキシ"
+msgstr "HTTPSプロキシ"
 
 msgid "HW containers"
 msgstr "HWコンテナ"
@@ -28689,7 +28588,6 @@ msgstr "処理された接続"
 msgid "Handled connections per second"
 msgstr "1秒あたりの処理された接続"
 
-#, fuzzy
 msgid "Handled requests"
 msgstr "処理されたリクエスト"
 
@@ -28804,7 +28702,6 @@ msgid ""
 "certificates."
 msgstr "単一または複数の「認証局」証明書を含む必要があります。"
 
-#, fuzzy
 msgid "Has to contain the path to the cert key file."
 msgstr "認証キーファイルへのパスが必要です。"
 
@@ -28956,7 +28853,6 @@ msgstr ""
 "は、定義済みのインデックスとフィールドを使用してください。そうしないと、すべ"
 "てのインデックスとフィールドが検索対象となります。"
 
-#, fuzzy
 msgid ""
 "Here, a maximum severity of the node state can be set. This severity is not "
 "exceeded, even if some of the children have more severe states."
@@ -28964,7 +28860,6 @@ msgstr ""
 "ここでは、ノードの状態の最大深刻度を設定することができます。いくつかの子ノー"
 "ドがより深刻な状態であっても、この深刻度を超えることはありません。"
 
-#, fuzzy
 msgid ""
 "Here, you are able to substitute the RWVDMS name. Either you determine an "
 "exact name and the related subsitution or you enter a regex beginning with "
@@ -28986,7 +28881,6 @@ msgstr ""
 "換を決定するか、 '~'で始まる正規表現を入力します。正規表現には、置換され"
 "る'(...)'でマークされたグループが含まれている必要があります。"
 
-#, fuzzy
 msgid ""
 "Here, you are allowed to use all macros that are defined in the notification "
 "context."
@@ -29008,7 +28902,6 @@ msgstr ""
 "li><li><tt>$LONGSERVICEOUTPUT$</li><li><tt>$SERVICEPERFDATA$</"
 "li><li><tt>$EVENT_TXT$</li></ul>"
 
-#, fuzzy
 msgid ""
 "Here, you can <i>restrict</i> the list of contacts that has been built up by "
 "the previous options to those that are members of selected contact groups. "
@@ -29020,7 +28913,6 @@ msgstr ""
 "する場合、ユーザーはこれらのグループの<i>すべて</i>のメンバーである必要があり"
 "ます。"
 
-#, fuzzy
 msgid ""
 "Here, you can <i>restrict</i> the list of contacts that has been built up by "
 "the previous options to those who have certain values in certain custom "
@@ -29033,7 +28925,6 @@ msgstr ""
 "は、<i>すべての</i>マクロが一致する必要があります。一致は、マクロの値と完全に"
 "一致する必要がある正規表現です。"
 
-#, fuzzy
 msgid ""
 "Here, you can add icons, for example to use them in bookmarks or in custom "
 "actions of views. Allowed are single PNG image files with a maximum size of "
@@ -29061,15 +28952,13 @@ msgstr ""
 "CRITを返します。健康レベルは各ノードで同じであるべきなので、健康レベルを"
 "チェックするのは最初のノードだけです。"
 
-#, fuzzy
 msgid ""
 "Here, you can configure absolute levels for total restart count and last "
 "hour restarts."
 msgstr ""
-"ここでは、総際起動回数と過去1時間の再起動回数の絶対値を設定することができま"
+"ここでは、総再起動回数と過去1時間の再起動回数のしきい値を設定することができま"
 "す。"
 
-#, fuzzy
 msgid ""
 "Here, you can configure absolute levels for total restart count and restarts "
 "in the last hour."
@@ -29101,7 +28990,6 @@ msgstr ""
 "ここでは、そのサイトに適用する必要があるグローバル設定を構成できます。<b>注</"
 "b>: これは、サイトが分散セットアップの一部である場合にのみ意味があります。"
 
-#, fuzzy
 msgid ""
 "Here, you can configure levels for usage, requests utilization and limits "
 "utilization, respectively."
@@ -29109,7 +28997,6 @@ msgstr ""
 "ここでは、使用量、リクエスト使用率、制限使用率のレベルをそれぞれ設定すること"
 "ができます。"
 
-#, fuzzy
 msgid ""
 "Here, you can configure levels for usage, requests utilization, limits "
 "utilization and node utilization, respectively."
@@ -29125,26 +29012,23 @@ msgstr ""
 "ここでは、イベントユーザーを使用してメッセージのフィルタリングパラメータを設"
 "定できます"
 
-#, fuzzy
 msgid ""
 "Here, you can configure messages filtering parameters using regular "
 "expressions. The rule is case insensitive."
 msgstr ""
 "ここでは、正規表現を使用してメッセージのフィルタリングパラメータを設定できま"
-"す。このルールでは大文字と小文字は区別されません。"
+"す。ルールは大文字小文字を区別しません。"
 
 #, fuzzy
 msgid ""
 "Here, you can configure the 3.3V and 12V voltage levels for each chassis."
 msgstr "ここでは、各シャーシの3.3Vおよび12Vの電圧レベルを構成できます。"
 
-#, fuzzy
 msgid ""
 "Here, you can configure the 3.3V and 12V voltage levels for each power "
 "supply."
 msgstr "ここでは、各電源の3.3Vと12Vの電圧レベルを設定することができます。"
 
-#, fuzzy
 msgid ""
 "Here, you can configure the background color for specific states. The "
 "coloring for host in downtime overrules all other coloring."
@@ -29152,7 +29036,6 @@ msgstr ""
 "ここでは、特定の状態に対する背景色を設定できます。ダウンタイム中のホストの色"
 "は、他のすべての色付けより優先します。"
 
-#, fuzzy
 msgid "Here, you can configure the credentials to be used."
 msgstr "ここで、使用する認証情報を設定できます。"
 
@@ -29181,7 +29064,6 @@ msgstr ""
 msgid "Here, you can configure timeout settings in seconds."
 msgstr "ここでは、タイムアウト設定を秒単位で構成できます。"
 
-#, fuzzy
 msgid "Here, you can configure timeout settings."
 msgstr "ここで、タイムアウト設定を構成できます。"
 
@@ -29193,7 +29075,6 @@ msgstr ""
 "ここで、RRDファイルの作成がログに記録されるかどうかとその方法を構成できます"
 "(ログファイルvar/log/cmc.logに)"
 
-#, fuzzy
 msgid ""
 "Here, you can configure which messages should be discovered and reported "
 "from which event log. When you set the severity to <i>disabled</i> then this "
@@ -29214,12 +29095,11 @@ msgstr ""
 "エージェントは通常、そのチェックサイクルから<i>すべて</i>の新しいメッセージを"
 "送信します。これにより、Checkmkでメッセージを表示するときに便利になります。大"
 "量のログファイルでは、ネットワークとディスクリソースを節約するために、コンテ"
-"キストをオフにする必要がある場合があります。<b>注</b>:複数の構成調整エントリ"
-"がログファイルに一致する場合、最初のエントリのみが実行されます。したがって、"
-"<i>すべてのイベントログ</i>に対して複数のエントリを作成することは意味がありま"
-"せん。"
+"キストをオフにする必要がある場合があります。<b>注意</b>:複数の構成調整エント"
+"リがログファイルに一致する場合、最初のエントリのみが実行されます。したがっ"
+"て、<i>すべてのイベントログ</i>に対して複数のエントリを作成することは意味があ"
+"りません。"
 
-#, fuzzy
 msgid ""
 "Here, you can configure which performance counter objects the Windows agent "
 "should extract and provide to the Checkmk server. You can either specify "
@@ -31798,11 +31678,6 @@ msgid ""
 msgstr ""
 "組込みセクションのキャッシュファイルが、最大でどのくらいの時間（秒単位）経過"
 "していても許容されるか。"
-
-msgid ""
-"How old (in seconds) the cache file for custom metrics is allowed to be."
-msgstr ""
-"カスタムメトリックのキャッシュファイルが許容される最大経過時間（秒単位）。"
 
 msgid ""
 "How the disks are named depends on the type of hardware being used. Please "
@@ -37888,6 +37763,8 @@ msgstr ""
 msgid ""
 "Leave unset to use the default endpoint of the provider's client library."
 msgstr ""
+"プロバイダーのクライアントライブラリのデフォルトエンドポイントを使用する場合"
+"は、設定しないままにしてください。"
 
 msgid "Left"
 msgstr "左"
@@ -48080,6 +47957,9 @@ msgid ""
 "host (e.g. the Windows certificate store) and the CA bundle shipped with the "
 "Python requests library."
 msgstr ""
+"HTTPS経由で接続する場合にのみ関連します。デフォルトでは、Jolokiaサーバーの証"
+"明書は、監視対象ホストの証明書ストア（例：Windowsの証明書ストア）およびPython"
+"のrequestsライブラリに同梱されているCAバンドルに対して検証されます。"
 
 msgid ""
 "Only rename host names whose names <i>begin</i> with the regular expression "
@@ -48966,6 +48846,10 @@ msgid "Oracle databases"
 msgstr "Azureデータベース"
 
 msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
+msgstr "Oracleデータベース(Linux、Solaris、AIX、Windows)"
+
+#, fuzzy
+msgid "Oracle databases (Linux, Solaris, AIX, Windows) (Experimental)"
 msgstr "Oracleデータベース(Linux、Solaris、AIX、Windows)"
 
 #, fuzzy
@@ -53261,7 +53145,7 @@ msgid "Prometheus Quick Setup"
 msgstr "クイックセットアップ"
 
 msgid "Prometheus alerting rules (via Prometheus API)"
-msgstr ""
+msgstr "Prometheusのアラートルール（Prometheus API経由）"
 
 msgid "Prometheus custom service"
 msgstr "プロメテウスカスタムサービス"
@@ -53482,11 +53366,15 @@ msgstr "DNSホスト名またはIPアドレス"
 msgid "Proxy settings"
 msgstr "プロキシ設定"
 
+#, fuzzy
 msgid ""
 "Proxy used to reach Microsoft, both for the authorization performed here and "
 "for the recurring API calls of the services using this connection. Without "
 "this option the proxy settings of the process environment are used."
 msgstr ""
+"Microsoftへのアクセスにはプロキシが使用されます。これは、ここで行われる認証お"
+"よびこの接続を利用するサービスによる定期的なAPI呼び出しの両方に適用されます。"
+"このオプションを指定しない場合、プロセス環境のプロキシ設定が使用されます。"
 
 msgid "Public"
 msgstr "公衆"
@@ -76867,8 +76755,8 @@ msgstr ""
 msgid ""
 "This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system. "
 "Currently not all options are available in all operating systems.<br><b>Note:"
-"</b> This plug-in cannot be used together with the 'Unified Oracle plug-in "
-"(Beta)'. Please configure only one of the two."
+"</b> This plug-in cannot be used together with the 'Oracle databases (Linux, "
+"Solaris, AIX, Windows) (Experimental)'. Please configure only one of the two."
 msgstr ""
 "これにより、エージェントプラグイン<tt>mk_oracle</tt>がターゲットシステムにデ"
 "プロイされます。現在のところ、全てのOSで全てのオプションが利用できるわけでは"
@@ -81400,10 +81288,6 @@ msgstr "ユニキャストのパケットレート"
 
 msgid "Unidirectional UDP Traffic"
 msgstr "単方向UDPトラフィック"
-
-#, fuzzy
-msgid "Unified Oracle plug-in (beta)"
-msgstr "Arcserveプラグインをデプロイする"
 
 msgid ""
 "Uninstall the legacy (pre 1.6) agent after installation of the new Windows "
@@ -96976,6 +96860,9 @@ msgstr ""
 "が最も低いとは限りません。完全で並べ替え済みのリストを確認するには、検索条件"
 "を絞り込んでください。"
 
+msgid "The answer ended before it was complete."
+msgstr ""
+
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr "製品利用状況の分析を通じて、Checkmkの改善にご協力ください"
 
@@ -98008,6 +97895,18 @@ msgid ""
 msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
+
+#~ msgid "Custom metrics cache age"
+#~ msgstr "カスタムメトリックのキャッシュ有効期間"
+
+#~ msgid ""
+#~ "How old (in seconds) the cache file for custom metrics is allowed to be."
+#~ msgstr ""
+#~ "カスタムメトリックのキャッシュファイルが許容される最大経過時間（秒単位）。"
+
+#, fuzzy
+#~ msgid "Unified Oracle plug-in (beta)"
+#~ msgstr "Arcserveプラグインをデプロイする"
 
 #~ msgid "Maximum number of queries to execute per connection."
 #~ msgstr "１つの接続につき実行できるクエリの最大数。"

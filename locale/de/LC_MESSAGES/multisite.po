@@ -18354,10 +18354,6 @@ msgstr "Custom Metrics"
 msgid "Custom metrics (%s):"
 msgstr "Custom Metrics (%s):"
 
-#, fuzzy
-msgid "Custom metrics cache age"
-msgstr "Cache-Alter der Custom Metrics"
-
 #, python-format
 msgid "Custom notification table for user %s"
 msgstr "Benutzerdefinierte Benachrichtigungstabelle von Benutzer %s"
@@ -32700,10 +32696,6 @@ msgid ""
 "How old (in seconds) the cache file for built-in sections is allowed to be."
 msgstr ""
 "Wie alt (in Sekunden) die Cache-Datei für mitgelieferte Sektionen sein darf."
-
-msgid ""
-"How old (in seconds) the cache file for custom metrics is allowed to be."
-msgstr "Wie alt (in Sekunden) die Cache-Datei für Custom Metrics sein darf."
 
 msgid ""
 "How the disks are named depends on the type of hardware being used. Please "
@@ -49794,6 +49786,10 @@ msgid "Oracle databases"
 msgstr "Oracle-Datenbanken"
 
 msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
+msgstr "Oracle-Datenbanken (Linux, Solaris, AIX, Windows)"
+
+#, fuzzy
+msgid "Oracle databases (Linux, Solaris, AIX, Windows) (Experimental)"
 msgstr "Oracle-Datenbanken (Linux, Solaris, AIX, Windows)"
 
 #, fuzzy
@@ -78197,8 +78193,8 @@ msgstr ""
 msgid ""
 "This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system. "
 "Currently not all options are available in all operating systems.<br><b>Note:"
-"</b> This plug-in cannot be used together with the 'Unified Oracle plug-in "
-"(Beta)'. Please configure only one of the two."
+"</b> This plug-in cannot be used together with the 'Oracle databases (Linux, "
+"Solaris, AIX, Windows) (Experimental)'. Please configure only one of the two."
 msgstr ""
 "Dies verteilt das Agent-Plugin <tt>mk_oracle</tt> auf Ihrem Zielsystem. "
 "Derzeit sind nicht alle Optionen auf allen Betriebssystemen verfügbar."
@@ -82713,10 +82709,6 @@ msgstr "Unicast-Paketraten"
 
 msgid "Unidirectional UDP Traffic"
 msgstr "Unidirektionaler UDP-Verkehr"
-
-#, fuzzy
-msgid "Unified Oracle plug-in (beta)"
-msgstr "Unified Oracle Plugin (Beta)"
 
 msgid ""
 "Uninstall the legacy (pre 1.6) agent after installation of the new Windows "
@@ -98071,6 +98063,9 @@ msgstr ""
 "Rang. Grenzen Sie Ihre Suche ein, um eine vollständige, sortierte Liste zu "
 "erhalten."
 
+msgid "The answer ended before it was complete."
+msgstr ""
+
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr ""
 "Helfen Sie uns, Checkmk mit der Analyse der Produktnutzung zu verbessern"
@@ -99050,6 +99045,18 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#, fuzzy
+#~ msgid "Custom metrics cache age"
+#~ msgstr "Cache-Alter der Custom Metrics"
+
+#~ msgid ""
+#~ "How old (in seconds) the cache file for custom metrics is allowed to be."
+#~ msgstr "Wie alt (in Sekunden) die Cache-Datei für Custom Metrics sein darf."
+
+#, fuzzy
+#~ msgid "Unified Oracle plug-in (beta)"
+#~ msgstr "Unified Oracle Plugin (Beta)"
 
 #~ msgid "Maximum number of queries to execute per connection."
 #~ msgstr "Maximale Anzahl an Anfragen, die pro Verbindung ausgeführt werden."

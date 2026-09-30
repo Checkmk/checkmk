@@ -19044,10 +19044,6 @@ msgstr "Clients"
 msgid "Custom metrics (%s):"
 msgstr "Notes sur les services personnalisés"
 
-#, fuzzy
-msgid "Custom metrics cache age"
-msgstr "Nom du service personnalisé"
-
 #, python-format
 msgid "Custom notification table for user %s"
 msgstr "Tableau de notification personnalisé pour l'utilisateur %s"
@@ -34337,10 +34333,6 @@ msgstr ""
 
 msgid ""
 "How old (in seconds) the cache file for built-in sections is allowed to be."
-msgstr ""
-
-msgid ""
-"How old (in seconds) the cache file for custom metrics is allowed to be."
 msgstr ""
 
 msgid ""
@@ -52288,6 +52280,10 @@ msgstr "Bases de données Azure"
 
 #, fuzzy
 msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
+msgstr "Bases de données ORACLE (Linux, Solaris, AIX, Windows)"
+
+#, fuzzy
+msgid "Oracle databases (Linux, Solaris, AIX, Windows) (Experimental)"
 msgstr "Bases de données ORACLE (Linux, Solaris, AIX, Windows)"
 
 #, fuzzy
@@ -81450,8 +81446,8 @@ msgstr ""
 msgid ""
 "This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system. "
 "Currently not all options are available in all operating systems.<br><b>Note:"
-"</b> This plug-in cannot be used together with the 'Unified Oracle plug-in "
-"(Beta)'. Please configure only one of the two."
+"</b> This plug-in cannot be used together with the 'Oracle databases (Linux, "
+"Solaris, AIX, Windows) (Experimental)'. Please configure only one of the two."
 msgstr ""
 "Ceci déploiera le plugin agent <tt>mk_oracle</tt> sur votre système cible. "
 "Actuellement, toutes les options ne sont pas disponibles sur tous les "
@@ -86630,10 +86626,6 @@ msgstr "Taux de paquets unicast"
 
 msgid "Unidirectional UDP Traffic"
 msgstr "Trafic UDP unidirectionnel"
-
-#, fuzzy
-msgid "Unified Oracle plug-in (beta)"
-msgstr "Déployer le plugin Arcserve"
 
 msgid ""
 "Uninstall the legacy (pre 1.6) agent after installation of the new Windows "
@@ -102678,6 +102670,9 @@ msgid ""
 "list."
 msgstr ""
 
+msgid "The answer ended before it was complete."
+msgstr ""
+
 #, fuzzy
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr "Activer les notifications périodiques"
@@ -103572,6 +103567,14 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Custom metrics cache age"
+#~ msgstr "Nom du service personnalisé"
+
+#, fuzzy
+#~ msgid "Unified Oracle plug-in (beta)"
+#~ msgstr "Déployer le plugin Arcserve"
 
 #, fuzzy
 #~ msgid "Maximum number of queries to execute per connection."

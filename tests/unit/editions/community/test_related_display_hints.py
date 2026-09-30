@@ -5,18 +5,7 @@
 
 import pytest
 
-from cmk.ccc.version import Edition
-from cmk.gui import main_modules
 from cmk.gui.views.inventory import inv_display_hints
-
-
-@pytest.fixture(scope="module")
-def _load_gui_plugins() -> None:
-    """Run the gui edition's full plug-in registration chain so the inv-UI
-    registry is populated with the production set the snapshots assert on.
-    """
-    main_modules.register(Edition.COMMUNITY)
-
 
 _KNOWN_ATTRIBUTES_KEY_ORDERS = {
     ("networking", "interfaces"): [
@@ -869,7 +858,7 @@ _KNOWN_COLUMNS_KEY_ORDERS = {
 }
 
 
-@pytest.mark.usefixtures("_load_gui_plugins")
+@pytest.mark.usefixtures("load_gui_plugins")
 def test_related_display_hints() -> None:
     all_paths = [h.path for h in inv_display_hints]
     for hint in inv_display_hints:

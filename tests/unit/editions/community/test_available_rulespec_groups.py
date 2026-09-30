@@ -5,18 +5,8 @@
 
 import pytest
 
-from cmk.ccc.version import Edition
-from cmk.gui import main_modules
 from cmk.gui.rule_specs.legacy_converter import GENERATED_GROUP_PREFIX
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
-
-
-@pytest.fixture(scope="module")
-def _load_gui_plugins() -> None:
-    """Run the gui edition's full plug-in registration chain so the rulespec
-    registries are populated with the production set the snapshots assert on.
-    """
-    main_modules.register(Edition.COMMUNITY)
 
 
 def _is_dynamically_generated_group(group_name: str) -> bool:
@@ -24,7 +14,7 @@ def _is_dynamically_generated_group(group_name: str) -> bool:
     return group_name.rsplit("/", maxsplit=1)[-1].startswith(GENERATED_GROUP_PREFIX)
 
 
-@pytest.mark.usefixtures("_load_gui_plugins")
+@pytest.mark.usefixtures("load_gui_plugins")
 def test_rulespec_group_choices() -> None:
     assert {
         g
@@ -87,7 +77,7 @@ def test_rulespec_group_choices() -> None:
     }
 
 
-@pytest.mark.usefixtures("_load_gui_plugins")
+@pytest.mark.usefixtures("load_gui_plugins")
 def test_rulespec_get_all_groups() -> None:
     assert {
         g for g in rulespec_registry.get_all_groups() if not _is_dynamically_generated_group(g)

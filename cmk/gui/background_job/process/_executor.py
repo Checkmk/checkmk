@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-import importlib
 import logging
 import os
 import shutil
@@ -30,6 +29,8 @@ from cmk.gui.background_job.job import (
 )
 from cmk.gui.job_scheduler_client import StartupError
 from cmk.trace import get_current_span, get_tracer
+
+from ._process import run_process
 
 tracer = get_tracer()
 
@@ -75,14 +76,7 @@ class ThreadedJobExecutor(JobExecutor):
             self._initialize_work_dir(work_dir, initial_status_args)
 
             p = threading.Thread(
-                # The import hack here is done to avoid circular imports. Actually run_process is
-                # only needed in the background job. A better way to approach this, could be to
-                # launch the background job with a subprocess instead to get rid of this import
-                # hack.
-                # TODO
-                target=importlib.import_module(
-                    "cmk.gui.background_job.process._process"
-                ).run_process,
+                target=run_process,
                 args=(
                     JobParameters(
                         stop_event=(stop_event := threading.Event()),

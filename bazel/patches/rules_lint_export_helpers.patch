@@ -17,3 +17,20 @@ index 0000000..5ec52f8
 +noop_lint_action = _noop_lint_action
 +output_files = _output_files
 +should_visit = _should_visit
+diff --git a/format/formatter_binary.bzl b/format/formatter_binary.bzl
+new file mode 100644
+index 0000000..45929be
+--- /dev/null
++++ b/format/formatter_binary.bzl
+@@ -0,0 +1,11 @@
++"""Make the formatter tables available to internal tooling."""
++
++load("//format/private:formatter_binary.bzl", _CHECK_FLAGS = "CHECK_FLAGS")
++load("//format/private:formatter_binary.bzl", _FIX_FLAGS = "FIX_FLAGS")
++load("//format/private:formatter_binary.bzl", _TOOLS = "TOOLS")
++load("//format/private:formatter_binary.bzl", _to_attribute_name = "to_attribute_name")
++
++CHECK_FLAGS = _CHECK_FLAGS
++FIX_FLAGS = _FIX_FLAGS
++TOOLS = _TOOLS
++to_attribute_name = _to_attribute_name

@@ -1,8 +1,8 @@
-load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@npm//bazel/tools:npm-groovy-lint/package_json.bzl", groovy_bin = "bin")
 load("@npm//bazel/tools:prettier/package_json.bzl", prettier_bin = "bin")
 load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
 load("//bazel/rules:sh_expand_template.bzl", "sh_expand_template")
+load(":format_dispatch.bzl", "format_dispatch")
 
 # Opts the formatter's own PowerShell wrapper into PSScriptAnalyzer so we eat
 # our own dog food. Also satisfies scripts/in_bazel.sh's "every .ps1 in a
@@ -106,25 +106,27 @@ sh_binary(
     deps = ["@bazel_tools//tools/bash/runfiles"],
 )
 
-format_multirun(
+FORMATTERS = {
+    "c": "@multitool_hub//tools/clang-format",
+    "cc": "@multitool_hub//tools/clang-format",
+    "css": ":prettier",
+    "groovy": ":groovy-format",
+    "html": ":prettier",
+    "html_jinja": ":djlint",
+    "javascript": ":prettier",
+    "markdown": ":prettier",
+    "powershell": ":pwsh-format",
+    "python": "@multitool_hub//tools/ruff",
+    "rust": "@rules_rust//tools/upstream_wrapper:rustfmt",
+    "shell": ":shfmt",
+    "starlark": "@buildifier_prebuilt//:buildifier",
+    "toml": ":taplo_quiet",
+}
+
+format_dispatch(
     name = "format",
-    c = "@multitool_hub//tools/clang-format",
-    cc = "@multitool_hub//tools/clang-format",
-    css = ":prettier",
-    groovy = ":groovy-format",
-    html = ":prettier",
-    html_jinja = ":djlint",
-    javascript = ":prettier",
-    # Must be 0 (not e.g. 4) — any non-zero value means sequential execution.
-    # See https://github.com/keith/rules_multirun/issues/82
-    jobs = 0,
-    markdown = ":prettier",
-    powershell = ":pwsh-format",
-    python = "@multitool_hub//tools/ruff",
-    rust = "@rules_rust//tools/upstream_wrapper:rustfmt",
-    shell = ":shfmt",
-    starlark = "@buildifier_prebuilt//:buildifier",
-    toml = ":taplo_quiet",
+    fix_target = "//:format",
+    languages = FORMATTERS,
     visibility = ["//visibility:public"],
 )
 
@@ -134,28 +136,13 @@ alias(
     visibility = ["//visibility:public"],
 )
 
-_PER_LANGUAGE_FORMATTERS = {
-    "c": "format_C_with_clang-format",
-    "cc": "format_C++_with_clang-format",
-    "css": "format_CSS_with_prettier",
-    "groovy": "format_Groovy_with_groovy-format",
-    "html": "format_HTML_with_prettier",
-    "html_jinja": "format_HTML_Jinja_with_djlint",
-    "javascript": "format_JavaScript_with_prettier",
-    "markdown": "format_Markdown_with_prettier",
-    "powershell": "format_PowerShell_with_ps-format",
-    "python": "format_Python_with_ruff",
-    "rust": "format_Rust_with_rustfmt",
-    "shell": "format_Shell_with_shfmt",
-    "starlark": "format_Starlark_with_buildifier",
-    "toml": "format_TOML_with_taplo",
-}
-
+# One target per language, e.g. `bazel run //bazel/tools/format:python -- <paths>`.
 [
-    alias(
-        name = name,
-        actual = ":" + target,
+    format_dispatch(
+        name = language,
+        fix_target = "//bazel/tools/format:" + language,
+        languages = {language: tool},
         visibility = ["//visibility:public"],
     )
-    for name, target in _PER_LANGUAGE_FORMATTERS.items()
+    for language, tool in FORMATTERS.items()
 ]

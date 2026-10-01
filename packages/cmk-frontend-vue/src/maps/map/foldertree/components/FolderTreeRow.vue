@@ -160,7 +160,7 @@ function onContextMenu(event: MouseEvent): void {
 
     <CmkIcon
       v-if="node.kind === 'folder'"
-      :name="isOpen ? 'folder-open' : 'folder'"
+      :name="isOpen ? 'folder-open' : 'folder-closed'"
       size="medium"
       :class="{ 'maps-folder-tree-row__icon--empty': isEmptyFolder }"
     />

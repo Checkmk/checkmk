@@ -93,8 +93,8 @@ export function tileTextFill(tile: Tile): string {
   return solid ? onStateColorVar(node.state) : 'var(--font-color)'
 }
 
-export function fitLabel(text: string, width: number): string {
-  const max = Math.floor((width - 12) / CHAR_WIDTH)
+export function fitLabel(text: string, width: number, charWidth: number = CHAR_WIDTH): string {
+  const max = Math.floor((width - 12) / charWidth)
   if (max <= 1) {
     return ''
   }

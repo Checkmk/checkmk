@@ -49,8 +49,17 @@ const treemapClass = {
   body: 'maps-folder-treemap__body',
   header: 'maps-folder-treemap__header',
   label: 'maps-folder-treemap__label',
-  mark: 'maps-folder-treemap__mark'
+  mark: 'maps-folder-treemap__mark',
+  contents: 'maps-folder-treemap__contents',
+  contentsHint: 'maps-folder-treemap__contents-hint'
 } as const
+
+/** Below this (px) a folder's body has no room to say what it holds. */
+const CONTENTS_MIN_WIDTH = 90
+const CONTENTS_MIN_HEIGHT = 64
+/** Glyph advance of the host count (large, bold) and of the hint below it. */
+const CONTENTS_CHAR_WIDTH = 9
+const CONTENTS_HINT_CHAR_WIDTH = 7.5
 
 interface TileHandlers {
   activate: (tile: Tile) => void
@@ -161,6 +170,30 @@ function paintLabels(cells: Cells, text: TileText): void {
       .attr('text-anchor', 'end')
       .style('display', marks && width > 28 && height > 16 ? 'inline' : 'none')
   })
+  // A shut folder's body would otherwise be a large blank tile.
+  cells.select<SVGTextElement>(`text.${treemapClass.contents}`).each(function (tile) {
+    const width = tile.x1 - tile.x0
+    const height = tile.y1 - tile.y0
+    const contents = text.contents(tile)
+    const element = select(this)
+    const fits = width >= CONTENTS_MIN_WIDTH && height >= CONTENTS_MIN_HEIGHT
+    element.style('display', contents && fits ? 'inline' : 'none')
+    if (!contents || !fits) {
+      return
+    }
+    const middle = HEADER_HEIGHT + (height - HEADER_HEIGHT) / 2
+    element
+      .attr('x', width / 2)
+      .attr('y', middle)
+      .attr('text-anchor', 'middle')
+    element.select('tspan:first-child').text(fitLabel(contents.hosts, width, CONTENTS_CHAR_WIDTH))
+    // A cut-off hint says nothing, so it is left out rather than shortened.
+    const hint = fitLabel(contents.hint, width, CONTENTS_HINT_CHAR_WIDTH)
+    element
+      .select(`tspan.${treemapClass.contentsHint}`)
+      .attr('x', width / 2)
+      .text(hint === contents.hint ? hint : '')
+  })
 }
 
 /** Lay the tiles out, animating from wherever they were. */
@@ -195,6 +228,12 @@ export function drawTiles(
   entered.append('rect').attr('class', treemapClass.header)
   entered.append('text').attr('class', treemapClass.label)
   entered.append('text').attr('class', treemapClass.mark)
+  const contents = entered
+    .append('text')
+    .attr('class', treemapClass.contents)
+    .attr('aria-hidden', 'true')
+  contents.append('tspan')
+  contents.append('tspan').attr('class', treemapClass.contentsHint).attr('dy', '1.5em')
 
   const merged = entered.merge(cells)
   merged

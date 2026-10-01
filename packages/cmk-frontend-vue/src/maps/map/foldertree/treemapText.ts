@@ -36,6 +36,9 @@ export interface TileText {
   mark: (node: FolderTreeNode) => string
   /** What a screen reader says about the tile. */
   aria: (tile: Tile) => string
+  /** What a folder drawn without its contents holds, for the empty space
+   *  under its title bar; null for every other tile. */
+  contents: (tile: Tile) => { hosts: string; hint: string } | null
 }
 
 /** Everything the tiles say, bound to the translator and the fetch state. */
@@ -112,5 +115,18 @@ export function tileText(options: TileTextOptions): TileText {
     return `${node.title}, ${leafStateText(_t, node)}`
   }
 
-  return { label, mark, aria }
+  function contents(tile: Tile): { hosts: string; hint: string } | null {
+    const node = tile.data
+    if (node.kind !== 'folder' || node.is_empty || isExpanded(tile)) {
+      return null
+    }
+    return {
+      hosts: _tn('%{n} host', '%{n} hosts', node.host_count, { n: node.host_count }),
+      // An open folder whose tiles came out too small to draw is not one a
+      // click would open further.
+      hint: tile.culled ? _t('Too many to draw here') : _t('Click to expand')
+    }
+  }
+
+  return { label, mark, aria, contents }
 }

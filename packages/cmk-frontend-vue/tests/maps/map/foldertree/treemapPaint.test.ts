@@ -65,7 +65,8 @@ function aTree(): FolderTreeNode {
 const text: TileText = {
   label: (tile) => tile.data.title,
   mark: () => '',
-  aria: (tile) => tile.data.title
+  aria: (tile) => tile.data.title,
+  contents: () => null
 }
 
 const handlers = {

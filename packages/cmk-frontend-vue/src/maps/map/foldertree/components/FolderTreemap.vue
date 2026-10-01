@@ -346,6 +346,19 @@ useD3Cleanup(svgEl)
   font-size: 11px;
   font-weight: var(--font-weight-default);
 }
+
+.maps-folder-treemap__stage :deep(.maps-folder-treemap__contents) {
+  fill: var(--font-color);
+  font-size: var(--font-size-large);
+  font-weight: var(--font-weight-bold);
+  pointer-events: none;
+}
+
+.maps-folder-treemap__stage :deep(.maps-folder-treemap__contents-hint) {
+  fill: var(--font-color-dimmed);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-default);
+}
 /* stylelint-enable selector-pseudo-class-no-unknown */
 
 .maps-folder-treemap__empty {

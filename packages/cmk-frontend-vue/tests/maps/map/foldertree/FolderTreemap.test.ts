@@ -123,15 +123,24 @@ describe('FolderTreemap', () => {
     expect(screen.queryByRole('button', { name: /CPU load/ })).toBeNull()
   })
 
-  it('says what a click on a folder does once the pointer rests on it', async () => {
+  it('opens a folder card once the pointer rests on the folder', async () => {
     renderTreemap('')
 
     const folder = await screen.findByRole('button', { name: /Main/ })
     await fireEvent.mouseMove(folder, { clientX: 100, clientY: 100 })
-    expect(await screen.findByText(/Click to expand/)).toBeInTheDocument()
+    expect(await screen.findByText('Folder')).toBeInTheDocument()
 
     await fireEvent.mouseLeave(folder)
-    await waitFor(() => expect(screen.queryByText(/Click to expand/)).toBeNull())
+    await waitFor(() => expect(screen.queryByText('Folder')).toBeNull())
+  })
+
+  it('says in a shut folder what it holds and that a click opens it', async () => {
+    renderTreemap('')
+
+    await screen.findByRole('button', { name: /Main/ })
+
+    expect(screen.getByText('2 hosts')).toBeInTheDocument()
+    expect(screen.getByText('Click to expand')).toBeInTheDocument()
   })
 
   it('promises no expanding on a folder card while a search holds every folder open', async () => {

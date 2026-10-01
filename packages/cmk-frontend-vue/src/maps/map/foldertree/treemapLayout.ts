@@ -221,11 +221,9 @@ export function layoutTreemap(options: LayoutOptions): Tile | null {
   const laid = hierarchy<FolderTreeNode>(root, (node) =>
     isOpen(node) ? childrenOf(node) : undefined
   )
-    // Tile weights: a folder reads as a slightly larger card than a single host
-    // (a container against a leaf) without the host count dwarfing the map;
-    // empty folders are smallest, services size like hosts, and the "all OK"
-    // bundle stays host-sized so it cannot dominate. An open node contributes
-    // nothing of its own -- it grows to hold what is inside it.
+    // A shut folder weighs the square root of its hosts: it outweighs a host
+    // without dwarfing the map. The "all OK" bundle stays host-sized so it
+    // cannot dominate; an open node only holds what is inside it.
     .sum((node) => {
       if (node.kind === 'service') {
         return 1
@@ -233,7 +231,10 @@ export function layoutTreemap(options: LayoutOptions): Tile | null {
       if (node.kind === 'host' || node.ok_group) {
         return isOpen(node) ? 0 : 1
       }
-      return isOpen(node) ? 0 : node.is_empty ? 0.5 : 2
+      if (isOpen(node)) {
+        return 0
+      }
+      return node.is_empty ? 0.5 : 1 + Math.sqrt(Math.max(1, node.host_count))
     })
     // Mirror the list's order: a folder's own hosts before its subfolders, then
     // worst severity first (so problems cluster top left), then bigger first.

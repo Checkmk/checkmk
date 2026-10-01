@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._typedefs import OID, SNMPRawValue, SNMPRowInfo
+from collections.abc import Callable
+
+from ._typedefs import OID, SNMPBackend, SNMPContext, SNMPRawValue, SNMPRowInfo
 
 SNMPRowInfoForStoredWalk = list[tuple[OID, str]]
 SNMPWalkOptions = dict[str, list[OID]]
@@ -44,3 +46,29 @@ def oids_to_walk(options: SNMPWalkOptions | None = None) -> list[OID]:
         oids += options["extraoids"]
 
     return sorted(oids, key=lambda x: list(map(int, x.strip(".").split("."))))
+
+
+def walk_all_contexts_for_export(
+    oid: OID,
+    *,
+    backend: SNMPBackend,
+    on_error: Callable[[OID, SNMPContext, Exception], None],
+) -> SNMPRowInfoForStoredWalk:
+    """Walk the OID in every SNMPv3 context configured for the host
+
+    OIDs returned by several contexts are kept once. A context whose walk fails
+    is passed to `on_error` and skipped; the rows of the other contexts are kept.
+    """
+    seen: set[OID] = set()
+    rows: SNMPRowInfoForStoredWalk = []
+    for context in backend.config.snmpv3_contexts_of(None).contexts:
+        try:
+            context_rows = walk_for_export(backend.walk(oid, context=context))
+        except Exception as e:
+            on_error(oid, context, e)
+            continue
+        for row_oid, value in context_rows:
+            if row_oid not in seen:
+                seen.add(row_oid)
+                rows.append((row_oid, value))
+    return rows

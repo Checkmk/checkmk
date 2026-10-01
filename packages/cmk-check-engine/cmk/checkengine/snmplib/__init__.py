@@ -40,4 +40,5 @@ from ._typedefs import SNMPVersion as SNMPVersion
 from ._typedefs import SpecialColumn as SpecialColumn
 from ._walk import oids_to_walk as oids_to_walk
 from ._walk import SNMPRowInfoForStoredWalk as SNMPRowInfoForStoredWalk
+from ._walk import walk_all_contexts_for_export as walk_all_contexts_for_export
 from ._walk import walk_for_export as walk_for_export

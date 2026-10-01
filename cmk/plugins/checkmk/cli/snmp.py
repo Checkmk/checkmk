@@ -29,8 +29,9 @@ from cmk.checkengine.snmplib import (
     OID,
     oids_to_walk,
     SNMPBackend,
+    SNMPContext,
     SNMPHostConfig,
-    walk_for_export,
+    walk_all_contexts_for_export,
 )
 from cmk.cli.engine.commands import option_strings
 from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
@@ -139,22 +140,15 @@ _SNMPWalkOptions = dict[str, list[OID]]
 def _execute_walks_for_dump(
     oids: list[OID], *, backend: SNMPBackend
 ) -> Iterable[list[tuple[OID, str]]]:
-    context_config = backend.config.snmpv3_contexts_of(None)
     for oid in oids:
-        try:
-            console.verbose(f'Walk on "{oid}"...')
-            added_oids: set[OID] = set()
-            rows: list[tuple[OID, str]] = []
-            for context in context_config.contexts:
-                for row_oid, value in walk_for_export(backend.walk(oid, context=context)):
-                    if row_oid not in added_oids:
-                        added_oids.add(row_oid)
-                        rows.append((row_oid, value))
-            yield rows
-        except Exception as e:
-            console.error(f"Error: {e}", file=sys.stderr)
-            if cmk.ccc.debug.enabled():
-                raise
+        console.verbose(f'Walk on "{oid}"...')
+        yield walk_all_contexts_for_export(oid, backend=backend, on_error=_report_walk_error)
+
+
+def _report_walk_error(oid: OID, context: SNMPContext, e: Exception) -> None:
+    console.error(f"Error walking OID '{oid}', context '{context}': {e}", file=sys.stderr)
+    if cmk.ccc.debug.enabled():
+        raise e
 
 
 def _do_snmpwalk_on(options: _SNMPWalkOptions, filename: Path, *, backend: SNMPBackend) -> None:

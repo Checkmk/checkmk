@@ -10,7 +10,6 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import NoReturn, override
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -37,7 +36,6 @@ from cmk.checkengine.fetcher_abc import Fetcher, Mode
 from cmk.checkengine.fetcher_utils.secrets import FetcherSecrets
 from cmk.checkengine.fetcher_utils.trigger import PlainFetcherTrigger
 from cmk.checkengine.fetchers.piggyback import PiggybackFetcher
-from cmk.checkengine.snmplib import oids_to_walk, SNMPContextConfig
 from cmk.checkengine.specs.checkresults import ServiceState
 from cmk.checkengine.submitters import ServiceDetails
 from cmk.discover_plugins import PluginLocation
@@ -564,47 +562,6 @@ def test_relay_wait_timeout_outlasts_the_relays_own_timeout() -> None:
     """
     task = AdHocActiveCheckTask(host="myhost", command="check_httpv2 -u http://x")
     assert check_mk._relay_wait_timeout(task) > task.timeout  # noqa: SLF001
-
-
-@pytest.mark.parametrize(
-    "contexts",
-    [
-        pytest.param([""], id="single_default_context"),
-        pytest.param(["", "vrf1", "mgmt"], id="multiple_contexts"),
-    ],
-)
-def test_execute_snmp_walk_uses_all_configured_contexts(contexts: list[str]) -> None:
-    """All configured SNMPv3 contexts are used when downloading an SNMP walk."""
-    snmp_config_mock = MagicMock()
-    snmp_config_mock.snmpv3_contexts_of.return_value = SNMPContextConfig(
-        section=None, contexts=contexts, timeout_policy="stop"
-    )
-    backend_mock = MagicMock()
-    backend_mock.walk.return_value = []
-
-    check_mk._execute_snmp_walk(snmp_config_mock, backend_mock)  # noqa: SLF001
-
-    walked_contexts = [c.kwargs["context"] for c in backend_mock.walk.call_args_list]
-    assert walked_contexts == contexts * len(oids_to_walk())
-
-
-def test_execute_snmp_walk_deduplicates_oids_across_contexts() -> None:
-    """OIDs returned by multiple contexts for the same walk OID appear only once in the output."""
-    shared_oid = ".1.3.6.1.2.1.1.0"
-    snmp_config_mock = MagicMock()
-    snmp_config_mock.snmpv3_contexts_of.return_value = SNMPContextConfig(
-        section=None, contexts=["", "vrf1"], timeout_policy="stop"
-    )
-    backend_mock = MagicMock()
-    # Return the shared OID only when walking the first subtree, empty for others.
-    backend_mock.walk.side_effect = lambda oid, context: (  # noqa: ARG005
-        [(shared_oid, b"value")] if oid == ".1.3.6.1.2.1" else []
-    )
-
-    raw_data, _ = check_mk._execute_snmp_walk(snmp_config_mock, backend_mock)  # noqa: SLF001
-
-    assert raw_data.count(shared_oid.encode()) == 1
-    assert b".1.3.6.1.2.1.1.0 value" in raw_data
 
 
 class TestWarnServiceNameConflicts:

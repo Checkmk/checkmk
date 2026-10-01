@@ -176,12 +176,14 @@ from cmk.checkengine.snmplib import (
     BackendOIDSpec,
     BackendSNMPTree,
     get_snmp_table,
+    OID,
     oids_to_walk,
     SNMPBackend,
+    SNMPContext,
     SNMPCredentials,
     SNMPHostConfig,
     SNMPVersion,
-    walk_for_export,
+    walk_all_contexts_for_export,
 )
 from cmk.checkengine.source_builder import SourceBuilder
 from cmk.checkengine.specs.checkresults import ServiceState
@@ -3898,31 +3900,25 @@ def _automation_update_dns_cache(
     )
 
 
-def _execute_snmp_walk(snmp_config: SNMPHostConfig, backend: SNMPBackend) -> tuple[bytes, str]:
+def _execute_snmp_walk(backend: SNMPBackend) -> tuple[bytes, str]:
     """Walk all OIDs for all configured SNMPv3 contexts.
 
-    Returns (raw_data, error_output). OIDs seen in multiple contexts are deduplicated.
+    Returns (raw_data, error_output).
     """
     lines = []
-    error_output = ""
-    context_config = snmp_config.snmpv3_contexts_of(None)
+    errors = []
+
+    def on_error(walk_oid: OID, context: SNMPContext, e: Exception) -> None:
+        if cmk.ccc.debug.enabled():
+            raise e
+        errors.append(f"OID '{walk_oid}', context '{context}': {e}\n")
+
     for walk_oid in oids_to_walk():
-        added_oids: set[str] = set()
-        for context in context_config.contexts:
-            try:
-                for oid, value in walk_for_export(backend.walk(walk_oid, context=context)):
-                    if oid not in added_oids:
-                        added_oids.add(oid)
-                        lines.append(f"{oid} {value}\n".encode())
-            except Exception as e:
-                if cmk.ccc.debug.enabled():
-                    raise
-                try:
-                    error_output += f"OID '{oid}': {e}\n"  # type: ignore[possibly-undefined]
-                except UnboundLocalError:
-                    # Surprise, the exception was raised before the `oid` is assigned.
-                    error_output += f"{e}\n"
-    return b"".join(lines), error_output
+        for oid, value in walk_all_contexts_for_export(
+            walk_oid, backend=backend, on_error=on_error
+        ):
+            lines.append(f"{oid} {value}\n".encode())
+    return b"".join(lines), "".join(errors)
 
 
 def _automation_get_agent_output(
@@ -4133,7 +4129,7 @@ def _automation_get_agent_output(
             )
             backend = make_snmp_backend(snmp_config, use_cache=False)
 
-            info, walk_errors = _execute_snmp_walk(snmp_config, backend)
+            info, walk_errors = _execute_snmp_walk(backend)
             if walk_errors:
                 success = False
                 output += walk_errors

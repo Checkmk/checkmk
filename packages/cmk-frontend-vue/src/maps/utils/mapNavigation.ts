@@ -316,3 +316,46 @@ export function buildHostStateViewUrl(
     { chrome: true }
   )
 }
+
+const SERVICE_STATE_VIEW = { view: 'allservices', filter: 'svcstate', box: svcStateOn }
+const HOST_STATE_VIEW = { view: 'allhosts', filter: 'hoststate', box: hostStateOn }
+
+/** Which view, and which state filter in it, a folder's count of a state opens. */
+const FOLDER_STATE_VIEWS: Record<
+  string,
+  { view: string; filter: string; box: (state: string) => string } | undefined
+> = {
+  WARNING: SERVICE_STATE_VIEW,
+  CRITICAL: SERVICE_STATE_VIEW,
+  UNKNOWN: SERVICE_STATE_VIEW,
+  DOWN: HOST_STATE_VIEW,
+  UNREACHABLE: HOST_STATE_VIEW
+}
+
+/**
+ * Checkmk view behind a folder card's count of a state: the services in a
+ * service state, or the hosts in a host state, under the folder. "OK" gets no
+ * link, as no filter means "no problem anywhere".
+ */
+export function buildFolderStateViewUrl(
+  checkmkUrl: string | null,
+  folderPath: string,
+  state: string
+): string | null {
+  const target = FOLDER_STATE_VIEWS[state]
+  if (!checkmkUrl || !target) {
+    return null
+  }
+  return buildCheckmkViewUrl(
+    checkmkUrl,
+    target.view,
+    {
+      filled_in: 'filter',
+      wato_folder: folderPath,
+      _active: `${target.filter};wato_folder`,
+      [target.box(state)]: 'on',
+      display_options: _VIEW_LINK_DISPLAY_OPTIONS
+    },
+    { chrome: true }
+  )
+}

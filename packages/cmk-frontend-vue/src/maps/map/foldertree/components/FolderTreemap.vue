@@ -26,7 +26,13 @@ import type { FolderTreeNode } from '@/maps/types/api'
 
 import type { FolderExpansion } from '../composables/useFolderExpansion'
 import { useTileHoverIntent } from '../composables/useTileHoverIntent'
-import { type FolderQuery, hostsMatchedByAncestor, selfMatches, visibleServices } from '../filter'
+import {
+  type FolderQuery,
+  hostsMatchedByAncestor,
+  isFilterActive,
+  selfMatches,
+  visibleServices
+} from '../filter'
 import {
   type Tile,
   aggregatedChildren,
@@ -53,6 +59,9 @@ const props = defineProps<{
   servicesByHost: Record<string, FolderTreeNode[]>
   serviceLoading: ReadonlySet<string>
   serviceError: ReadonlySet<string>
+  /** Checkmk GUI base for the folder card's links; null under a filter, where
+   *  the card counts only what is shown. */
+  checkmkUrl: string | null
 }>()
 
 const emit = defineEmits<{
@@ -305,6 +314,7 @@ useD3Cleanup(svgEl)
       :click-hint="folderCard.clickHint"
       :x="folderCard.x"
       :y="folderCard.y"
+      :checkmk-url="isFilterActive(query) ? null : checkmkUrl"
       @card-enter="folderGrace.cancelClose()"
       @card-leave="folderGrace.scheduleClose()"
     />

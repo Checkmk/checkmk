@@ -14,7 +14,10 @@ import HoverCard from '@/maps/map/components/HoverCard.vue'
 import HoverCardHeadline from '@/maps/map/components/HoverCardHeadline.vue'
 import HoverPillRow, { type HoverPill, type PillTone } from '@/maps/map/components/HoverPillRow.vue'
 import type { FolderTreeNode } from '@/maps/types/api'
+import { buildFolderStateViewUrl } from '@/maps/utils/mapNavigation'
+import { stateShortWordFromToken } from '@/maps/utils/objectAria'
 import { usePointerOverlayStyle } from '@/maps/utils/overlayFrame'
+import { severityPills } from '@/maps/utils/stateColors'
 
 const props = defineProps<{
   folder: FolderTreeNode
@@ -23,6 +26,8 @@ const props = defineProps<{
   /** The pointer, in viewport coordinates. */
   x: number
   y: number
+  /** Checkmk GUI base, which makes the counts links into its views. */
+  checkmkUrl: string | null
 }>()
 
 const emit = defineEmits<{
@@ -35,25 +40,29 @@ const { _t, _tn } = usei18n()
 /** Where the card opens: off the pointer, so it does not sit under it. */
 const POINTER_OFFSET = 12
 
-// A folder's hosts by their worst state, in the words and order of the host card.
-const HOST_PILLS: { state: string; label: string; tone: PillTone }[] = [
-  { state: 'CRITICAL', label: 'CRIT', tone: 'crit' },
-  { state: 'DOWN', label: 'DOWN', tone: 'crit' },
-  { state: 'UNKNOWN', label: 'UNKN', tone: 'unknown' },
-  { state: 'UNREACHABLE', label: 'UNREACH', tone: 'unknown' },
-  { state: 'WARNING', label: 'WARN', tone: 'warn' },
-  { state: 'PENDING', label: 'PEND', tone: 'pending' }
-]
+// Only the pill tone is the card's own; order and words are the folder tree's.
+const PILL_TONE: Record<string, PillTone> = {
+  CRITICAL: 'crit',
+  DOWN: 'crit',
+  UNKNOWN: 'unknown',
+  UNREACHABLE: 'unknown',
+  WARNING: 'warn'
+}
 
 const pills = computed<HoverPill[]>(() => {
-  const counts = props.folder.severity_counts
-  const problems = HOST_PILLS.filter(({ state }) => (counts[state] ?? 0) > 0).map(
-    ({ state, label, tone }) => ({ label, tone, count: counts[state] ?? 0, url: null })
-  )
+  const problems = severityPills(props.folder.severity_counts).map(({ state, count }) => ({
+    label: stateShortWordFromToken(_t, state),
+    tone: PILL_TONE[state] ?? 'pending',
+    count,
+    // The "all OK" bundle has no folder of its own to filter on.
+    url: props.folder.ok_group
+      ? null
+      : buildFolderStateViewUrl(props.checkmkUrl, props.folder.path, state)
+  }))
   const counted = problems.reduce((sum, pill) => sum + pill.count, 0)
   const healthy = Math.max(0, props.folder.host_count - counted)
   return healthy > 0
-    ? [...problems, { label: 'OK', tone: 'ok', count: healthy, url: null }]
+    ? [...problems, { label: _t('OK'), tone: 'ok', count: healthy, url: null }]
     : problems
 })
 

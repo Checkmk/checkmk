@@ -6,6 +6,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import {
+  buildFolderStateViewUrl,
   buildServiceStateViewUrl,
   hostStateOn,
   openUrl,
@@ -65,6 +66,34 @@ describe('buildServiceStateViewUrl', () => {
 
   it('returns null for states the svcstate filter cannot express', () => {
     expect(buildServiceStateViewUrl(cmk, { host: 'web01' }, 'DOWN')).toBeNull()
+  })
+})
+
+describe('buildFolderStateViewUrl', () => {
+  const cmk = 'http://h/SITE/check_mk/'
+  const innerView = (url: string | null): URLSearchParams =>
+    new URLSearchParams(
+      (new URL(url!, 'http://h').searchParams.get('start_url') ?? '').split('?')[1] ?? ''
+    )
+
+  it('opens the services in a service state under the folder', () => {
+    const view = innerView(buildFolderStateViewUrl(cmk, 'dc/rack-1', 'WARNING'))
+    expect(view.get('view_name')).toBe('allservices')
+    expect(view.get('wato_folder')).toBe('dc/rack-1')
+    expect(view.get('st1')).toBe('on')
+    expect(view.get('_active')).toBe('svcstate;wato_folder')
+  })
+
+  it('opens the hosts in a host state under the folder', () => {
+    const view = innerView(buildFolderStateViewUrl(cmk, 'dc', 'DOWN'))
+    expect(view.get('view_name')).toBe('allhosts')
+    expect(view.get('hst1')).toBe('on')
+    expect(view.get('_active')).toBe('hoststate;wato_folder')
+  })
+
+  it('links nothing for OK, which no filter can express, or outside Checkmk', () => {
+    expect(buildFolderStateViewUrl(cmk, 'dc', 'OK')).toBeNull()
+    expect(buildFolderStateViewUrl(null, 'dc', 'CRITICAL')).toBeNull()
   })
 })
 

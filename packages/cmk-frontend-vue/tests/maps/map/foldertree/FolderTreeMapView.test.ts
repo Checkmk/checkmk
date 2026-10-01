@@ -6,7 +6,7 @@
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { defineComponent, markRaw } from 'vue'
+import { type PropType, defineComponent, markRaw } from 'vue'
 
 import { useObjectHoverMenu } from '@/maps/map/composables/useObjectHoverMenu'
 import FolderTreeMapView from '@/maps/map/foldertree/FolderTreeMapView.vue'
@@ -60,7 +60,8 @@ const hostComponent = defineComponent({
   components: { FolderTreeMapView },
   props: {
     config: { type: Object, required: false, default: null },
-    needle: { type: String, default: '' }
+    needle: { type: String, default: '' },
+    checkmkUrl: { type: String as PropType<string | null>, default: null }
   },
   setup() {
     return { hover: useObjectHoverMenu() }
@@ -70,17 +71,27 @@ const hostComponent = defineComponent({
     :error="null"
     :preview="false"
     :kiosk="false"
-    :checkmk-url="null"
+    :checkmk-url="checkmkUrl"
     :filter-needle="needle"
     :hover="hover"
   />`
 })
 
 /** The map a folder tree draws, named so a case can swap one for another. */
-function aFolderTreeMap(name: string, showServices: boolean, drawing: 'list' | 'map' = 'list') {
+function aFolderTreeMap(
+  name: string,
+  showServices: boolean,
+  drawing: 'list' | 'map' = 'list',
+  onlyHardStates = false
+) {
   return aMap({
     name,
-    view: { ...newMapView('foldertree'), default_view: drawing, show_services: showServices }
+    view: {
+      ...newMapView('foldertree'),
+      default_view: drawing,
+      show_services: showServices,
+      only_hard_states: onlyHardStates
+    }
   })
 }
 
@@ -90,10 +101,17 @@ function renderTree(
     showServices?: boolean
     tree?: FolderTreeNode
     drawing?: 'list' | 'map'
+    onlyHardStates?: boolean
+    checkmkUrl?: string
   } = {}
 ) {
   const services = fakeMapsServices()
-  const config = aFolderTreeMap('map1', options.showServices ?? false, options.drawing)
+  const config = aFolderTreeMap(
+    'map1',
+    options.showServices ?? false,
+    options.drawing,
+    options.onlyHardStates
+  )
   services.maps.currentMap.value = config
   if (options.withTree !== false) {
     services.states.folderTree.value = markRaw(options.tree ?? sampleTree())
@@ -104,7 +122,7 @@ function renderTree(
     services,
     config,
     ...render(hostComponent, {
-      props: { config },
+      props: { config, checkmkUrl: options.checkmkUrl ?? null },
       global: { ...provided, stubs: { MapSearch: true } }
     })
   }
@@ -636,6 +654,23 @@ describe('FolderTreeMapView (map mode)', () => {
 
     expect(await screen.findByText('UP')).toBeInTheDocument()
     expect(screen.getByText('Host')).toBeInTheDocument()
+  })
+
+  it('links no folder card count on a map that counts hard states only', async () => {
+    // Checkmk's views count soft states too, so a link would open more than the pill says.
+    renderTree({
+      drawing: 'map',
+      onlyHardStates: true,
+      checkmkUrl: 'http://checkmk/site/check_mk/'
+    })
+
+    await fireEvent.mouseMove(await screen.findByRole('button', { name: /^Main/ }), {
+      clientX: 100,
+      clientY: 100
+    })
+
+    expect(await screen.findByText('Folder')).toBeInTheDocument()
+    expect(screen.queryByRole('link')).toBeNull()
   })
 
   it('names a host tile by the host own state, with the worse service state beside it', async () => {

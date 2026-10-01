@@ -69,7 +69,7 @@ const services = (): Record<string, FolderTreeNode[]> => ({
   ]
 })
 
-function renderTreemap(needle: string) {
+function renderTreemap(needle: string, checkmkUrl: string | null = null, root = tree()) {
   const query: FolderQuery = {
     terms: parseFolderQuery(needle),
     problemsOnly: false,
@@ -79,7 +79,7 @@ function renderTreemap(needle: string) {
   const { global: provided } = provideServices(fakeMapsServices())
   return render(FolderTreemap, {
     props: {
-      root: tree(),
+      root,
       query,
       expansion: {
         expanded: new Set<string>(),
@@ -93,7 +93,8 @@ function renderTreemap(needle: string) {
       showServices: true,
       servicesByHost: services(),
       serviceLoading: new Set<string>(),
-      serviceError: new Set<string>()
+      serviceError: new Set<string>(),
+      checkmkUrl
     },
     global: provided
   })
@@ -153,6 +154,53 @@ describe('FolderTreemap', () => {
 
     expect(await screen.findByText('Folder')).toBeInTheDocument()
     expect(screen.queryByText(/Click to (expand|collapse)/)).toBeNull()
+  })
+
+  it('links a folder card count into Checkmk, but not once a filter has narrowed it', async () => {
+    const warned = (): FolderTreeNode =>
+      aFolderNode({
+        path: '/main',
+        title: 'Main',
+        kind: 'folder',
+        host_count: 1,
+        severity_counts: { WARNING: 1 },
+        state: 'WARNING',
+        children: [
+          aFolderNode({
+            path: '/main/rack',
+            title: 'rack',
+            kind: 'folder',
+            host_count: 1,
+            severity_counts: { WARNING: 1 },
+            state: 'WARNING',
+            children: [
+              aFolderNode({
+                path: '/main/rack/web-01',
+                title: 'web-01',
+                kind: 'host',
+                state: 'WARNING'
+              })
+            ]
+          })
+        ]
+      })
+    const cmk = 'http://checkmk/site/check_mk/'
+
+    const unfiltered = renderTreemap('', cmk, warned())
+    await fireEvent.mouseMove(await screen.findByRole('button', { name: /^Main/ }), {
+      clientX: 100,
+      clientY: 100
+    })
+    expect(await screen.findByRole('link', { name: /1 WARN/ })).toBeInTheDocument()
+    unfiltered.unmount()
+
+    renderTreemap('rack', cmk, warned())
+    await fireEvent.mouseMove(await screen.findByRole('button', { name: /^rack/ }), {
+      clientX: 100,
+      clientY: 100
+    })
+    await screen.findByText('Folder')
+    expect(screen.queryByRole('link')).toBeNull()
   })
 
   it('takes the folder card down when the folder menu opens', async () => {

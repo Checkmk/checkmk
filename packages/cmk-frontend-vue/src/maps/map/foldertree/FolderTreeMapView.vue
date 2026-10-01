@@ -69,6 +69,10 @@ const emit = defineEmits<{
 
 const view = computed(() => (props.config?.view.type === 'foldertree' ? props.config.view : null))
 const showServices = computed(() => view.value?.show_services ?? false)
+// Checkmk's views know nothing of the map's site and hard-state limits.
+const folderCountsUrl = computed(() =>
+  view.value?.only_hard_states || (view.value?.sites ?? []).length ? null : props.checkmkUrl
+)
 
 // A kiosk or wall display forces the treemap: a scrolling list cannot be the
 // ambient "always shows the status" surface such a screen is there to be.
@@ -348,6 +352,7 @@ function closeBulkModal(): void {
         :services-by-host="services.byHost.value"
         :service-loading="services.loading"
         :service-error="services.failed"
+        :checkmk-url="folderCountsUrl"
         @expand-host="services.ensure($event)"
         @select="onSelect"
         @ctx-folder="onFolderMenu"

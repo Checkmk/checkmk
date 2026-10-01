@@ -76,10 +76,6 @@ class VeeamApiError(RuntimeError):
         return str(body.get("errorCode") or ""), str(body.get("message") or "")
 
 
-class AccessDenied(VeeamApiError):
-    """The user lacks the Veeam role required for this endpoint."""
-
-
 class _TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
@@ -330,14 +326,17 @@ class VeeamClient:
             response = self._api.request("GET", path, auth=self._auth)
         if response.ok:
             return response.json()
-        error = (AccessDenied if response.status_code == HTTPStatus.FORBIDDEN else VeeamApiError)(
-            path, response
-        )
+        error = VeeamApiError(path, response)
         if error.status == HTTPStatus.UNAUTHORIZED:
             raise TerminateAgent(
                 f"The Veeam REST API rejected the session on {path}: {error.message}"
             ) from error
-        raise error
+        if error.status == HTTPStatus.FORBIDDEN:
+            raise TerminateAgent(
+                f"Access to {path} was denied (HTTP 403): {error.message} "
+                f"(the Veeam user lacks a role required for this endpoint)"
+            ) from error
+        raise TerminateAgent(str(error)) from error
 
 
 def _get_all(client: VeeamClient, path: str, limit: int | None = None) -> list[object]:
@@ -348,11 +347,11 @@ def _get_all(client: VeeamClient, path: str, limit: int | None = None) -> list[o
     while True:
         page = client.get(f"{path}?skip={skip}{page_size}")
         if not isinstance(page, dict) or "data" not in page or "pagination" not in page:
-            raise RuntimeError(f"Request to {path} did not return a paginated data list")
+            raise TerminateAgent(f"Request to {path} did not return a paginated data list")
         batch = page["data"]
         total = page["pagination"]["total"]
         if not batch and len(items) < total:
-            raise RuntimeError(
+            raise TerminateAgent(
                 f"Request to {path} returned an empty page before reaching {total} total items"
             )
         items.extend(batch)
@@ -482,19 +481,6 @@ def fetch_restore_points(limit: int = 500) -> FetchStrategy:
     return _fetch
 
 
-def empty_on_access_denied(fetch: FetchStrategy) -> FetchStrategy:
-    """For endpoints that need a higher Veeam role than monitoring requires: a user
-    without it gets an empty section, so that no services are discovered."""
-
-    def _fetch(client: VeeamClient, name: str) -> str:
-        try:
-            return fetch(client, name)
-        except AccessDenied:
-            return f"<<<{name}:sep(0)>>>\n"
-
-    return _fetch
-
-
 def write_sections(client: VeeamClient, sections: Sequence[Section]) -> None:
     for name, fetch in sections:
         sys.stdout.write(fetch(client, name))
@@ -505,20 +491,17 @@ SECTIONS: Sequence[Section] = (
     ("veeam_license", fetch_object("/api/v1/license")),
     ("veeam_backup_jobs", fetch_list("/api/v1/jobs/states")),
     ("veeam_backups", fetch_list_piggyback("/api/v1/taskSessions")),
-    ("veeam_replicas", empty_on_access_denied(fetch_list("/api/v1/replicas"))),
-    (
-        "veeam_protection_groups",
-        empty_on_access_denied(fetch_list("/api/v1/agents/protectionGroups")),
-    ),
+    ("veeam_replicas", fetch_list("/api/v1/replicas")),
+    ("veeam_protection_groups", fetch_list("/api/v1/agents/protectionGroups")),
     ("veeam_managed_servers", fetch_list("/api/v1/backupInfrastructure/managedServers")),
     ("veeam_wan_accelerators", fetch_list("/api/v1/backupInfrastructure/wanAccelerators")),
-    ("veeam_config_backup", empty_on_access_denied(fetch_object("/api/v1/configBackup"))),
+    ("veeam_config_backup", fetch_object("/api/v1/configBackup")),
     ("veeam_proxies", fetch_list("/api/v1/backupInfrastructure/proxies/states")),
     (
         "veeam_scaleout_repositories",
         fetch_list("/api/v1/backupInfrastructure/scaleOutRepositories"),
     ),
-    ("veeam_restore_points", empty_on_access_denied(fetch_restore_points())),
+    ("veeam_restore_points", fetch_restore_points()),
     (
         "veeam_repositories",
         fetch_list("/api/v1/backupInfrastructure/repositories/states"),

@@ -27,9 +27,10 @@ def _parameter_form() -> Dictionary:
             "Monitor a Veeam Backup & Replication server through its REST API. Nothing "
             "is installed on the backup server, so this also works for the Veeam "
             "software appliance, where the Checkmk agent cannot run. "
-            "The built-in <tt>Veeam Backup Viewer</tt> role is sufficient. Do not "
-            "configure an administrator account: it could also delete backups, trigger "
-            "restores and read stored encryption passwords."
+            "Use a dedicated account whose role can read the data you want to monitor; "
+            "some services require a more privileged role, and the agent stops when it "
+            "cannot read a service. Do not configure an administrator account: it could "
+            "also delete backups, trigger restores and read stored encryption passwords."
         ),
         elements={
             "connection": DictElement(

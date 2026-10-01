@@ -17,9 +17,7 @@ import time_machine
 
 from cmk.password_store.v1 import Secret
 from cmk.plugins.veeam.special_agent.agent_veeam import (
-    AccessDenied,
     create_session,
-    empty_on_access_denied,
     fetch_list,
     fetch_list_piggyback,
     fetch_object,
@@ -27,7 +25,6 @@ from cmk.plugins.veeam.special_agent.agent_veeam import (
     main,
     TerminateAgent,
     VeeamApi,
-    VeeamApiError,
     VeeamAuth,
     VeeamClient,
     write_sections,
@@ -236,7 +233,7 @@ def test_failing_endpoint_does_stop_the_other_sections(
     )
     api.get(f"{URL}/api/v1/jobs", json={"data": [], "pagination": {"total": 0}})
 
-    with pytest.raises(VeeamApiError, match="HTTP 500: boom"):
+    with pytest.raises(TerminateAgent, match="HTTP 500: boom"):
         write_sections(
             _client(_auth(storage)),
             [
@@ -268,37 +265,25 @@ def test_broken_response_on_a_data_endpoint_does_stop_the_other_sections(
     assert "<<<veeam_jobs:sep(0)>>>" not in captured.out
 
 
-def test_access_denied_on_a_role_restricted_endpoint_writes_an_empty_section(
+def test_access_denied_is_fatal(
     api: responses.RequestsMock, storage: Storage, capsys: pytest.CaptureFixture[str]
 ) -> None:
+    # The API message ends with a period; the appended note must not double it up.
     api.get(
         f"{URL}/api/v1/replicas",
         status=HTTPStatus.FORBIDDEN,
-        json={"errorCode": "Forbidden", "message": "denied"},
+        json={"errorCode": "Forbidden", "message": "Access denied."},
     )
 
-    write_sections(
-        _client(_auth(storage)),
-        [("veeam_replicas", empty_on_access_denied(fetch_list("/api/v1/replicas")))],
-    )
+    with pytest.raises(TerminateAgent) as excinfo:
+        write_sections(
+            _client(_auth(storage)), [("veeam_replicas", fetch_list("/api/v1/replicas"))]
+        )
 
-    captured = capsys.readouterr()
-    assert captured.out == "<<<veeam_replicas:sep(0)>>>\n"
-    assert captured.err == ""
-
-
-def test_access_denied_on_an_unrestricted_endpoint_is_raised(
-    api: responses.RequestsMock, storage: Storage, capsys: pytest.CaptureFixture[str]
-) -> None:
-    api.get(
-        f"{URL}/api/v1/jobs",
-        status=HTTPStatus.FORBIDDEN,
-        json={"errorCode": "Forbidden", "message": "denied"},
-    )
-
-    with pytest.raises(AccessDenied, match="HTTP 403: denied"):
-        write_sections(_client(_auth(storage)), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
-
+    message = str(excinfo.value)
+    assert "HTTP 403" in message
+    assert "lacks a role" in message
+    assert ".." not in message
     assert capsys.readouterr().out == ""
 
 
@@ -349,7 +334,9 @@ def test_empty_page_before_reaching_total_does_not_hang(
         json={"data": [], "pagination": {"total": 3}},
     )
 
-    with pytest.raises(RuntimeError, match="returned an empty page before reaching 3 total items"):
+    with pytest.raises(
+        TerminateAgent, match="returned an empty page before reaching 3 total items"
+    ):
         write_sections(_client(_auth(storage)), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
 
     assert capsys.readouterr().out == ""

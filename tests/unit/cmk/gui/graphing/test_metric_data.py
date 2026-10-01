@@ -47,6 +47,11 @@ def test_parse_performance_data_merges_rrd_only_metrics() -> None:
     assert by_name == {"live": 5.0, "rrd_only": 1.0}
 
 
+def test_parse_performance_data_names_a_metric_by_its_rrd_name() -> None:
+    parsed = parse_performance_data("'disk read:sda/1'=5", "check_mk-foo", debug=False)
+    assert list(parsed.values) == ["disk_read_sda_1"]
+
+
 # The check the translations below are registered for, as a passive check's performance data spells
 # it and as the plug-in names it.
 _CHECK_COMMAND = "check_mk-foo"

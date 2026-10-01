@@ -42,6 +42,7 @@ from ._graph_matching import (
 from ._naming import (
     HostName,
     MetricName,
+    rrd_metric_name,
     Service,
     ServiceName,
     SiteID,
@@ -175,4 +176,5 @@ __all__ = [
     "evaluate_graphs",
     "evaluate_perfometer",
     "metric_display_attributes",
+    "rrd_metric_name",
 ]

@@ -9,7 +9,7 @@ import shlex
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
-from cmk.graphing_engine import MetricName
+from cmk.graphing_engine import MetricName, rrd_metric_name
 from cmk.gui.log import logger
 
 
@@ -116,7 +116,7 @@ def _parse_perf_data(
                 continue
             lower_warning, warning = _parse_range(value_parts[0])
             lower_critical, critical = _parse_range(value_parts[1])
-            raw_perf_data[MetricName(varname)] = RawPerformanceValue(
+            raw_perf_data[rrd_metric_name(varname)] = RawPerformanceValue(
                 value=value,
                 warning=warning,
                 critical=critical,

@@ -74,7 +74,12 @@ def main() -> int:
         sys.stderr.write(f"Checking {len(files_to_check)} python files\n")
 
     return _handle_results(
-        _run_checkers(files_to_check, workspace_dir, factories),
+        _run_checkers(
+            files_to_check,
+            workspace_dir,
+            factories,
+            report_unknown_suppressions=args.checker == "all",
+        ),
         args.format,
         args.output,
     )
@@ -151,12 +156,19 @@ def _run_checkers(
     files_to_check: list[Path],
     workspace_dir: Path,
     factories: list[CheckerFactory],
+    *,
+    report_unknown_suppressions: bool = False,
 ) -> CheckerResults:
     all_errors: list[CheckerError] = []
     files_with_errors = 0
 
     for file_path in files_to_check:
-        errors = run_checkers(file_path, workspace_dir, factories)
+        errors = run_checkers(
+            file_path,
+            workspace_dir,
+            factories,
+            report_unknown_suppressions=report_unknown_suppressions,
+        )
 
         if errors:
             files_with_errors += 1

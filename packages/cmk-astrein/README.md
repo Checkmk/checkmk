@@ -48,11 +48,15 @@ bazel lint --machine //cmk/...
 Add inline comments to suppress specific violations:
 
 ```python
-# astrein: disable=localization
+# astrein: disable=localization-checker
 translated = _(variable_text)
 
-result = _(dynamic_string)  # astrein: disable=localization
+result = _(dynamic_string)  # astrein: disable=localization-checker
 ```
+
+The id is the one shown in brackets in the error message.
+A suppression that does not suppress anything is reported as `unused-suppression`, so stale suppressions get removed.
+Suppressions for checkers that did not run (`--checker <name>`) are not judged.
 
 ## LSP Server
 

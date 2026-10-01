@@ -5,6 +5,7 @@
 
 import ast
 import json
+from collections.abc import Sequence
 from pathlib import Path
 from typing import override
 
@@ -20,7 +21,7 @@ from cmk.astrein.cli import (
     _select_checkers,
     CheckerResults,
 )
-from cmk.astrein.framework import ASTVisitorChecker, CheckerError
+from cmk.astrein.framework import ASTVisitorChecker, CheckerError, Suppression
 
 
 def test_select_checkers_with_all() -> None:
@@ -207,7 +208,9 @@ def _make_checker(errors_by_file: dict[Path, list[CheckerError]]) -> type[ASTVis
             return "custom-checker"
 
         @override
-        def check(self, tree: ast.AST) -> list[CheckerError]:
+        def check(
+            self, tree: ast.AST, suppressions: Sequence[Suppression] | None = None
+        ) -> list[CheckerError]:
             return errors_by_file.get(self.file_path, [])
 
     return CustomChecker

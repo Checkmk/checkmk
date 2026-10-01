@@ -98,7 +98,6 @@ test('the state column reads as the one in the hosts listing', () => {
     stateOf(
       buildHostColumns({
         includeSelect: true,
-        includeActions: true,
         showCustomer: false,
         sites: [],
         showRelations: false

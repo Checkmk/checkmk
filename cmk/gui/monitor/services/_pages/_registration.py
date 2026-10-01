@@ -2,6 +2,9 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Callable
+
+from cmk.ccc.hostaddress import HostName
 from cmk.gui.monitor.command import DowntimeRecurrences, MonitorCommands
 from cmk.gui.pages import PageEndpoint, PageRegistry
 
@@ -15,10 +18,17 @@ def register_pages(
     recurrences: DowntimeRecurrences,
     host_menus: HostMenus,
     teleport_target: str | None,
+    may_read_host: Callable[[HostName], bool],
 ) -> None:
     page_registry.register(
         PageEndpoint(
             "monitor_host_services",
-            MonitorHostServicesPage(command_registry, recurrences, host_menus, teleport_target),
+            MonitorHostServicesPage(
+                command_registry,
+                recurrences,
+                host_menus,
+                teleport_target,
+                may_read_host=may_read_host,
+            ),
         )
     )

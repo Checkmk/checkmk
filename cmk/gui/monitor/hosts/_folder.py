@@ -38,16 +38,22 @@ from pathlib import PurePosixPath
 
 @dataclass(frozen=True, kw_only=True)
 class SetupFolders:
-    """What this domain needs from Setup: how its folders are titled.
+    """What this domain needs from Setup: how its folders are titled, and who may open a host.
 
-    Two questions rather than one mapping, because they do not cost the same: the title of one
-    folder is a lookup, while every title means walking the whole folder tree - which the column,
-    redrawn on a timer, has no business doing. They arrive as functions, so Setup answers them off
-    its own request-scoped caches and this domain holds nothing of Setup's to call them on.
+    Two questions about titles rather than one mapping, because they do not cost the same: the
+    title of one folder is a lookup, while every title means walking the whole folder tree - which
+    the column, redrawn on a timer, has no business doing. They arrive as functions, so Setup
+    answers them off its own request-scoped caches and this domain holds nothing of Setup's to call
+    them on.
+
+    Whether the user may open a host in Setup decides whether a page links there at all: Setup
+    restricts its hosts by contact group, so a user allowed into Setup may still be refused the one
+    host a row shows. The folder path, when known, spares Setup the search for the host.
     """
 
     title_of: Callable[[str], str | None]
     all_titles: Callable[[], Mapping[str, str]]
+    may_read_host: Callable[[str, str | None], bool]
 
 
 class MonitorFolders:
@@ -71,6 +77,10 @@ class MonitorFolders:
     def titles(self) -> Mapping[str, str]:
         """Every folder the user may know of, titled the way the Folder column shows it."""
         return {} if self._setup is None else self._setup.all_titles()
+
+    def may_read_host(self, host_name: str, path: str | None) -> bool:
+        """Whether the user may open the host in Setup, False while Setup is not wired."""
+        return self._setup is not None and self._setup.may_read_host(host_name, path)
 
 
 monitor_folders = MonitorFolders()

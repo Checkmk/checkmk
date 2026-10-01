@@ -6,7 +6,7 @@
 import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 
 import type { HostApi } from '@/monitoring/shared/api/hosts'
-import type { HostEntry } from '@/monitoring/shared/api/types'
+import type { HostEntry, HostOptionalField } from '@/monitoring/shared/api/types'
 import {
   MonitoringService,
   type MonitoringServiceOptions,
@@ -15,13 +15,21 @@ import {
 
 import { visibleHostFields } from '../columns'
 
+export interface HostServiceOptions extends MonitoringServiceOptions<HostEntry> {
+  /** Fields read on every fetch, whichever columns are shown, for what a row offers. */
+  rowFields?: readonly HostOptionalField[]
+}
+
 export class HostService extends MonitoringService<HostEntry> {
+  private readonly rowFields: readonly HostOptionalField[]
+
   constructor(
     private readonly api: Pick<HostApi, 'fetchHosts'>,
     shortCutService: KeyShortcutService,
-    options: MonitoringServiceOptions<HostEntry> = {}
+    options: HostServiceOptions = {}
   ) {
     super('host-service', shortCutService, options)
+    this.rowFields = options.rowFields ?? []
   }
 
   protected async fetchBatch(signal: AbortSignal): Promise<PagedResponse<HostEntry>> {
@@ -31,7 +39,10 @@ export class HostService extends MonitoringService<HostEntry> {
         sort: this.sortState.value,
         searchQuery: this.appliedSearchQuery.value,
         filter: this.filterState.value,
-        fields: visibleHostFields(this.columnVisibility.value, this.hideableColumnIds)
+        fields: [
+          ...visibleHostFields(this.columnVisibility.value, this.hideableColumnIds),
+          ...this.rowFields
+        ]
       },
       signal
     )

@@ -19,7 +19,11 @@ def _wired_to(titles: dict[str, str]) -> MonitorFolders:
     """A `MonitorFolders` reading these titles, the way Setup's functions are wired in."""
     folders = MonitorFolders()
     folders.use_setup_source(
-        SetupFolders(title_of=titles.get, all_titles=lambda: titles),
+        SetupFolders(
+            title_of=titles.get,
+            all_titles=lambda: titles,
+            may_read_host=lambda _host_name, _path: False,
+        ),
     )
     return folders
 

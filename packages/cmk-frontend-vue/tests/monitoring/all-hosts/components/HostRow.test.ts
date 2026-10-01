@@ -10,6 +10,7 @@ import { defineComponent, h } from 'vue'
 import { buildHostColumns } from '@/monitoring/all-hosts/columns'
 import HostRow from '@/monitoring/all-hosts/components/HostRow.vue'
 import type { HostEntry } from '@/monitoring/shared/api/types'
+import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 import type { DisplayOptions } from '@/monitoring/shared/types'
@@ -50,17 +51,37 @@ function makeTableRow(overrides: Partial<Row<HostEntry>> = {}): Row<HostEntry> {
   } as unknown as Row<HostEntry>
 }
 
-function mountRow(row: HostEntry, tableRow: Row<HostEntry> = makeTableRow()) {
+interface RowActionProps {
+  rowActions?: CellAction[]
+  loadActionMenu?: () => Promise<CellAction[]>
+}
+
+function mountRow(
+  row: HostEntry,
+  tableRow: Row<HostEntry> = makeTableRow(),
+  actionProps: RowActionProps = {}
+) {
   return render(
     defineComponent({
       components: { HostRow },
       render() {
         return h('table', [
-          h('tbody', [h('tr', [h(HostRow, { row, tableRow, displayOptions: DISPLAY_OPTIONS })])])
+          h('tbody', [
+            h('tr', [
+              h(HostRow, { row, tableRow, displayOptions: DISPLAY_OPTIONS, ...actionProps })
+            ])
+          ])
         ])
       }
     })
   )
+}
+
+const EDIT_HOST: CellAction = {
+  id: 'edit',
+  label: 'Edit host' as CellAction['label'],
+  icon: 'edit',
+  url: 'wato.py?mode=edit_host&host={host}'
 }
 
 test('renders host name and ip in their cells', () => {
@@ -199,12 +220,13 @@ test('renders one cell per service state with its count', () => {
 })
 
 test('renders its cells in the order the columns are defined in', () => {
-  const { container } = mountRow(makeHost())
+  const { container } = mountRow(makeHost(), makeTableRow(), {
+    loadActionMenu: () => Promise.resolve([])
+  })
 
   const rendered = Array.from(container.querySelectorAll('td')).map((td) => td.dataset['columnId'])
   const defined = buildHostColumns({
     includeSelect: true,
-    includeActions: false,
     showCustomer: true,
     sites: [],
     showRelations: true
@@ -427,4 +449,25 @@ test('renders the customer of a host', () => {
   mountRow(makeHost({ customer: 'Customer A' }))
 
   expect(screen.getByText('Customer A')).toBeInTheDocument()
+})
+
+test('offers the Setup links on a host the user may open in Setup', () => {
+  mountRow(makeHost({ setup_access: true }), makeTableRow(), { rowActions: [EDIT_HOST] })
+
+  expect(screen.getByRole('link', { name: 'Edit host' })).toHaveAttribute(
+    'href',
+    'wato.py?mode=edit_host&host=web-1'
+  )
+})
+
+test.each<{ overrides: Partial<HostEntry>; case: string }>([
+  { overrides: { setup_access: false }, case: 'restricted to other contact groups' },
+  { overrides: {}, case: 'not asked about' }
+])('offers no Setup link on a host $case', ({ overrides }) => {
+  mountRow(makeHost(overrides), makeTableRow(), {
+    rowActions: [EDIT_HOST],
+    loadActionMenu: () => Promise.resolve([])
+  })
+
+  expect(screen.queryByRole('link', { name: 'Edit host' })).not.toBeInTheDocument()
 })

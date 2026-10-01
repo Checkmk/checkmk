@@ -193,6 +193,16 @@ class HostEntry:
         default_factory=ApiOmitted,
     )
 
+    setup_access: bool | ApiOmitted = api_field(
+        description=(
+            "Whether the user may open the host in Setup, where it may be restricted to the "
+            "contact groups its permissions name. False for a host Setup does not know, such as "
+            "one added straight to the monitoring core."
+        ),
+        example=True,
+        default_factory=ApiOmitted,
+    )
+
     @classmethod
     def from_domain(cls, host: Host, fields: Set[HostOptionalField], customer: str | None) -> Self:
         def included[T](field: HostOptionalField, value: T | None) -> T | ApiOmitted:
@@ -228,6 +238,7 @@ class HostEntry:
             modes=build_host_modes(host) or ApiOmitted(),
             legacy_host_status_link=host_view_link("hoststatus", host),
             num_relations=included(HostOptionalField.NUM_RELATIONS, host.num_relations),
+            setup_access=included(HostOptionalField.SETUP_ACCESS, host.setup_access),
         )
 
 

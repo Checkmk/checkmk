@@ -55,7 +55,10 @@ def fixture_user_without_permissions(load_config: Config) -> Iterator[UserId]:
 @pytest.mark.usefixtures("user_without_permissions")
 def test_page_denied_without_legacy_view_permission() -> None:
     page = MonitorHostServicesPage(
-        MonitorCommands(monitor_command_registry), DowntimeRecurrences(), HostMenus()
+        MonitorCommands(monitor_command_registry),
+        DowntimeRecurrences(),
+        HostMenus(),
+        may_read_host=lambda _host_name: True,
     )
 
     with pytest.raises(MKAuthException):
@@ -134,9 +137,10 @@ def test_row_actions_link_the_parameters_of_the_service_in_the_row() -> None:
     config = Config()
     config.wato_enabled = True
 
-    assert [(action.ident, action.url) for action in _row_actions(config, HostName("web-1"))] == [
-        ("parameters", "wato.py?mode=object_parameters&host=web-1&service={service}")
-    ]
+    assert [
+        (action.ident, action.url)
+        for action in _row_actions(config, HostName("web-1"), setup_access=lambda: True)
+    ] == [("parameters", "wato.py?mode=object_parameters&host=web-1&service={service}")]
 
 
 @pytest.mark.usefixtures("with_user_login")
@@ -144,7 +148,7 @@ def test_row_actions_are_dropped_where_setup_is_off() -> None:
     config = Config()
     config.wato_enabled = False
 
-    assert _row_actions(config, HostName("web-1")) == []
+    assert _row_actions(config, HostName("web-1"), setup_access=lambda: True) == []
 
 
 @pytest.mark.usefixtures("user_without_permissions")
@@ -152,7 +156,15 @@ def test_row_actions_are_dropped_without_the_rulesets_permission() -> None:
     config = Config()
     config.wato_enabled = True
 
-    assert _row_actions(config, HostName("web-1")) == []
+    assert _row_actions(config, HostName("web-1"), setup_access=lambda: True) == []
+
+
+@pytest.mark.usefixtures("with_user_login")
+def test_row_actions_are_dropped_for_a_host_the_user_may_not_open_in_setup() -> None:
+    config = Config()
+    config.wato_enabled = True
+
+    assert _row_actions(config, HostName("web-1"), setup_access=lambda: False) == []
 
 
 def _build_page_menu(breadcrumb: Breadcrumb | None = None) -> PageMenu:

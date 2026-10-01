@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Callable
 from dataclasses import asdict
 from typing import override
 from urllib.parse import urlencode
@@ -60,14 +61,18 @@ _ALL_HOSTS_PERMISSION = "view.allhosts"
 _RULESETS_PERMISSION = "wato.rulesets"
 
 
-def _row_actions(config: Config, hostname: HostName) -> list[RowAction]:
+def _row_actions(
+    config: Config, hostname: HostName, *, setup_access: Callable[[], bool]
+) -> list[RowAction]:
     """The links a row offers on the service it shows.
 
     The host is the page, so it is part of the address already; the service is not, and travels as
     the `{service}` placeholder the listing resolves per row - the same shape the hosts listing
-    uses for `{host}`.
+    uses for `{host}`. Setup restricts a host to the contact groups its permissions name, so a user
+    allowed to edit rules may still be refused this host's parameters: `setup_access` says whether
+    they may open it. It is asked last, as finding the host in Setup is the costly check.
     """
-    if not config.wato_enabled or not user.may(_RULESETS_PERMISSION):
+    if not config.wato_enabled or not user.may(_RULESETS_PERMISSION) or not setup_access():
         return []
     return [
         RowAction(
@@ -87,11 +92,14 @@ class MonitorHostServicesPage(Page):
         recurrences: DowntimeRecurrences,
         host_menus: HostMenus,
         teleport_target: str | None = None,
+        *,
+        may_read_host: Callable[[HostName], bool],
     ) -> None:
         self._commands = commands
         self._recurrences = recurrences
         self._host_menus = host_menus
         self._teleport_target = teleport_target
+        self._may_read_host = may_read_host
 
     def _permitted_actions(self) -> list[MonitoringAction]:
         return [
@@ -155,7 +163,11 @@ class MonitorHostServicesPage(Page):
                         DowntimeRecurrence(recur=recurrence.recur, title=recurrence.title)
                         for recurrence in self._recurrences.offered()
                     ],
-                    row_actions=_row_actions(ctx.config, hostname),
+                    row_actions=_row_actions(
+                        ctx.config,
+                        hostname,
+                        setup_access=lambda: self._may_read_host(hostname),
+                    ),
                     acknowledge_presets_url=acknowledge_presets_url(ctx.config),
                     acknowledge_defaults=AcknowledgeDefaults(
                         sticky=ack.sticky,

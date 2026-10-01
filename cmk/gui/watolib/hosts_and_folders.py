@@ -5112,6 +5112,29 @@ def all_folder_title_paths(
     }
 
 
+def may_read_host(
+    tree: FolderTree,
+    host_name: HostName,
+    path: PathWithoutSlash | None,
+    acting_user: LoggedInUser,
+) -> bool:
+    """Whether this user may open the host in Setup, for a reader outside Setup linking to it.
+
+    False when the local Setup does not know the host, which is the ordinary case for a host added
+    straight to the monitoring core or owned by a remote site. A caller that knows the folder the
+    host is configured in passes its path, so only that folder is read: asked per table row,
+    looking the host up by name alone would scan the whole tree for every host Setup does not
+    know. Without one, the host is looked up by name.
+    """
+    if path is None:
+        host = tree.host(host_name)
+    elif (folder := tree.all_folders().get(path)) is not None:
+        host = folder.host(host_name)
+    else:
+        host = None
+    return host is not None and host.permissions.may("read", acting_user)
+
+
 def _ensure_trailing_slash(path: str) -> PathWithSlash:
     """Ensure one single trailing slash on a pathname.
 

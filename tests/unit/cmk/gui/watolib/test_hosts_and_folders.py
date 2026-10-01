@@ -63,6 +63,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_title_path,
     FolderTree,
     make_folder_tree,
+    may_read_host,
     plan_relation_mirror,
 )
 from cmk.gui.watolib.pending_changes import (
@@ -865,6 +866,48 @@ def test_the_root_folder_is_titled_whatever_its_permissions_say(tree: FolderTree
     with hide_folders_without_permission(tree, True):
         assert folder_title_path(tree, "", _SUPERUSER) == "Main"
         assert all_folder_title_paths(tree, _SUPERUSER)[""] == "Main"
+
+
+def _host_in_folder_a(tree: FolderTree) -> None:
+    three_levels(tree)
+    tree.folder("a").create_hosts(
+        [(HostName("web1"), {}, None)],
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        pytest.param("a", id="in the folder it is configured in"),
+        pytest.param(None, id="by its name alone"),
+    ],
+)
+def test_may_read_host_a_user_may_open(tree: FolderTree, path: str | None) -> None:
+    _host_in_folder_a(tree)
+
+    assert may_read_host(tree, HostName("web1"), path, _SUPERUSER)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        pytest.param("b", id="another folder"),
+        pytest.param("nowhere", id="a folder this setup does not know"),
+    ],
+)
+def test_may_not_read_host_where_the_folder_does_not_hold_it(tree: FolderTree, path: str) -> None:
+    _host_in_folder_a(tree)
+
+    assert not may_read_host(tree, HostName("web1"), path, _SUPERUSER)
+
+
+def test_may_not_read_host_outside_the_contact_groups_of_its_permissions(tree: FolderTree) -> None:
+    _host_in_folder_a(tree)
+
+    assert not may_read_host(tree, HostName("web1"), "a", LoggedInNobody())
 
 
 def test_subfolder_creation(tree: FolderTree) -> None:

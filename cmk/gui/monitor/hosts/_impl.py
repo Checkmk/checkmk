@@ -38,7 +38,12 @@ from cmk.livestatus_client.types import Column
 from cmk.ruleset_matcher.labels import BuiltinLabelsKey
 
 from ._exceptions import HostNotFoundError
-from ._folder import folder_files_matching, folder_title, MonitorFolders
+from ._folder import (
+    folder_files_matching,
+    folder_path_from_filename,
+    folder_title,
+    MonitorFolders,
+)
 from ._models import (
     Event,
     EventClass,
@@ -207,6 +212,11 @@ class LiveStatusHostRepository:
                         contact_groups=(
                             list(row["contact_groups"]) if "contact_groups" in row else None
                         ),
+                        setup_access=(
+                            self._setup_access(row["name"], row["filename"])
+                            if HostOptionalField.SETUP_ACCESS in fields
+                            else None
+                        ),
                         num_relations=(
                             None
                             if visible_relations is None
@@ -296,6 +306,16 @@ class LiveStatusHostRepository:
             relations=self._fetch_related_hosts(links[:MAX_RESOLVED_RELATIONS]),
             more_relations=len(links) > MAX_RESOLVED_RELATIONS,
         )
+
+    def _setup_access(self, hostname: str, filename: str) -> bool:
+        """Whether the user may open the host in Setup, found in the folder its file names.
+
+        A host whose file is not Setup's is no Setup host, which is said without asking Setup: by
+        name alone, it would search its whole tree for the host, for every such row.
+        """
+        if (path := folder_path_from_filename(filename)) is None:
+            return False
+        return self._folders.may_read_host(hostname, path)
 
     def _fetch_related_hosts(self, links: Sequence[ResolvedRelation]) -> tuple[RelatedHost, ...]:
         """Read the state of the hosts a host is related to, in the order they were resolved.
@@ -612,6 +632,7 @@ _OPTIONAL_COLUMNS: Mapping[HostOptionalField, tuple[Column, ...]] = {
     HostOptionalField.TAGS: (Hosts.tags,),
     HostOptionalField.CONTACTS: (Hosts.contacts,),
     HostOptionalField.CONTACT_GROUPS: (Hosts.contact_groups,),
+    HostOptionalField.SETUP_ACCESS: (Hosts.filename,),
 }
 
 # The optional field a sort column needs read, or ``None`` when every query reads it anyway.

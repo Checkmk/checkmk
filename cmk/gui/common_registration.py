@@ -8,6 +8,7 @@
 from collections.abc import Callable
 
 import cmk.gui.help
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition
 from cmk.gui import (
     activate_menu,
@@ -117,6 +118,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_title_path,
     folder_tree,
     FolderValidatorsRegistry,
+    may_read_host,
 )
 from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
 from cmk.gui.watolib.mode import ModeRegistry
@@ -258,6 +260,9 @@ def register(
         SetupFolders(
             title_of=lambda path: folder_title_path(folder_tree(), path, user),
             all_titles=lambda: all_folder_title_paths(folder_tree(), user),
+            may_read_host=lambda host_name, path: may_read_host(
+                folder_tree(), HostName(host_name), path, user
+            ),
         )
     )
     monitor_hosts_registration.register(
@@ -276,6 +281,7 @@ def register(
         downtime_recurrences,
         host_menus,
         monitoring_teleport_target,
+        lambda host_name: may_read_host(folder_tree(), host_name, None, user),
     )
     crash_reporting.register(
         page_registry,

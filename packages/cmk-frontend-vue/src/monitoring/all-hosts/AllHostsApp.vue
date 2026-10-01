@@ -89,8 +89,8 @@ const hostActions: CellAction[] = (props.actions ?? []).map((action) => ({
   icon: ACTION_ICON_OVERRIDES[action.ident] ?? (action.icon as SimpleIcons)
 }))
 
-// Always-visible inline buttons (edit host, parameters). Their url keeps the {host} placeholder,
-// resolved per row in HostRow.
+// Inline buttons linking into Setup (edit host, parameters), offered on the hosts the user may open
+// there. Their url keeps the {host} placeholder, resolved per row in HostRow.
 const rowActionButtons: CellAction[] = (props.row_actions ?? []).map((action) => ({
   id: action.ident,
   label: action.title as TranslatedString,
@@ -111,8 +111,6 @@ const rowCommands: CellAction[] = (props.actions ?? [])
     label: action.title as TranslatedString,
     icon: ACTION_ICON_OVERRIDES[action.ident] ?? (action.icon as SimpleIcons)
   }))
-
-const hasRowActions = rowActionButtons.length > 0 || rowCommands.length > 0
 
 // Checkboxes only make sense where the selection can be acted on, so the permitted-action list
 // that decides the action bar decides the select column too.
@@ -141,15 +139,11 @@ const showCustomer = props.edition === 'ultimatemt'
 
 const columns = buildHostColumns({
   includeSelect: mayActOnSelection,
-  includeActions: hasRowActions,
   showCustomer,
   sites: props.sites,
   showRelations: props.show_relations ?? false
 })
-const columnPinning = buildHostColumnPinning({
-  includeSelect: mayActOnSelection,
-  includeActions: hasRowActions
-})
+const columnPinning = buildHostColumnPinning({ includeSelect: mayActOnSelection })
 
 const schema = buildTableStateSchema({
   columns,
@@ -195,7 +189,8 @@ const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
         ]
       }
     }
-  ]
+  ],
+  rowFields: rowActionButtons.length > 0 ? ['setup_access'] : []
 })
 
 const modeColumnSize = useModeColumnWidth(() => hostService.items.value)

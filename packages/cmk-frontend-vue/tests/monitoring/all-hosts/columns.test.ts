@@ -36,7 +36,6 @@ class HostColumnService extends MonitoringService<HostEntry> {
 function hostColumns(options: Partial<HostColumnOptions> = {}): ColumnDef<HostEntry>[] {
   return buildHostColumns({
     includeSelect: true,
-    includeActions: true,
     showCustomer: false,
     sites: [],
     showRelations: false,
@@ -71,7 +70,7 @@ afterEach(() => {
 })
 
 test('no pinned column is offered in the picker', () => {
-  const pinning = buildHostColumnPinning({ includeSelect: true, includeActions: true })
+  const pinning = buildHostColumnPinning({ includeSelect: true })
   const offered = makeService().toggleableColumns.map((column) => column.id)
 
   const pinned = [...(pinning.left ?? []), ...(pinning.right ?? [])]
@@ -179,20 +178,15 @@ test('the fields of the fixed columns are never asked for, the API always sendin
   expect(requestedFields()).not.toContain('site_id')
 })
 
-test('the actions column is neither rendered nor pinned when no row action is permitted', () => {
-  expect(columnIds({ includeActions: false })).not.toContain('actions')
-  expect(
-    buildHostColumnPinning({ includeSelect: true, includeActions: false }).right
-  ).toBeUndefined()
+test('the actions column is rendered and pinned for a user permitted no command', () => {
+  // Its overflow menu lists the links every host offers, such as the parent/child topology.
+  expect(columnIds({ includeSelect: false })).toContain('actions')
+  expect(buildHostColumnPinning({ includeSelect: false }).right).toEqual(['actions'])
 })
 
 test('the select column is neither rendered nor pinned when no action is permitted', () => {
   expect(columnIds({ includeSelect: false })).not.toContain('select')
-  expect(buildHostColumnPinning({ includeSelect: false, includeActions: true }).left).toEqual([
-    'state',
-    'modes',
-    'name'
-  ])
+  expect(buildHostColumnPinning({ includeSelect: false }).left).toEqual(['state', 'modes', 'name'])
 })
 
 test('the site column filter offers the configured sites as options', () => {
@@ -215,7 +209,7 @@ test('the site column filter offers the configured sites as options', () => {
 })
 
 test('the state column filter offers the state checkboxes plus flapping/stale flags', () => {
-  const columns = hostColumns({ includeActions: true })
+  const columns = hostColumns()
   const stateColumn = columns.find((column) => columnId(column) === 'state')
 
   expect(stateColumn?.meta?.filter).toEqual({
@@ -235,7 +229,7 @@ test('the state column filter offers the state checkboxes plus flapping/stale fl
 })
 
 test('the mode column filter no longer offers flapping, which moved to the state column', () => {
-  const columns = hostColumns({ includeActions: true })
+  const columns = hostColumns()
   const modesColumn = columns.find((column) => columnId(column) === 'modes')
 
   expect(modesColumn?.meta?.filter).toEqual({

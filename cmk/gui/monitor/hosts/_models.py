@@ -154,6 +154,8 @@ class Host:
     """The related hosts themselves, resolved for the overview only."""
     more_relations: bool = False
     """Whether the host has relations beyond the ones in `relations`, i.e. the list was cut."""
+    setup_access: bool | None = None
+    """Whether the user may open the host in Setup - None when the caller did not ask."""
 
     @property
     def state_label(self) -> HostStateLabel:
@@ -177,6 +179,7 @@ class HostOptionalField(enum.StrEnum):
     TAGS = "tags"
     CONTACTS = "contacts"
     CONTACT_GROUPS = "contact_groups"
+    SETUP_ACCESS = "setup_access"
 
     @classmethod
     def options(cls) -> str:

@@ -28,7 +28,8 @@ const props = withDefaults(
   defineProps<{
     row: HostEntry
     tableRow: Row<HostEntry>
-    // Always-visible inline buttons; their url may contain a {host} placeholder resolved per row.
+    // Inline buttons linking into Setup, shown on a host the user may open there; their url may
+    // contain a {host} placeholder resolved per row.
     rowActions?: CellAction[]
     // Lazy loader for the overflow menu entries of this host.
     loadActionMenu?: ((host: HostRef) => Promise<CellAction[]>) | undefined
@@ -60,7 +61,7 @@ const SERVICE_COUNT_MIN_WIDTH = 35
 const hostRef = computed<HostRef>(() => ({ site_id: props.row.site_id, name: props.row.name }))
 
 const actionButtons = computed<CellAction[]>(() =>
-  props.rowActions.map((action) => ({
+  (props.row.setup_access === true ? props.rowActions : []).map((action) => ({
     ...action,
     url: action.url?.replace('{host}', encodeURIComponent(props.row.name))
   }))

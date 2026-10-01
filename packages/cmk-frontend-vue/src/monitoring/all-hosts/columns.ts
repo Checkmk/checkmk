@@ -31,8 +31,6 @@ export interface HostColumnOptions {
    * selection gets it - without one, ticking a row would lead nowhere.
    */
   includeSelect: boolean
-  /** Whether to render the row-action column, which needs permitted actions. */
-  includeActions: boolean
   /**
    * Whether to offer the customer column. Only hosts monitored by an edition with multi-tenancy
    * support belong to a customer, so everywhere else the column does not exist at all.
@@ -124,12 +122,11 @@ function fixUnlessHideable(column: ColumnDef<HostEntry>): ColumnDef<HostEntry> {
  * horizontally.
  */
 export function buildHostColumnPinning({
-  includeSelect,
-  includeActions
-}: Pick<HostColumnOptions, 'includeSelect' | 'includeActions'>): ColumnPinningState {
+  includeSelect
+}: Pick<HostColumnOptions, 'includeSelect'>): ColumnPinningState {
   return {
     left: [...(includeSelect ? ['select'] : []), 'state', MODE_COLUMN_ID, 'name'],
-    ...(includeActions ? { right: ['actions'] } : {})
+    right: ['actions']
   }
 }
 
@@ -142,7 +139,6 @@ export function buildHostColumnPinning({
  */
 export function buildHostColumns({
   includeSelect,
-  includeActions,
   showCustomer,
   sites,
   showRelations
@@ -518,18 +514,14 @@ export function buildHostColumns({
           } satisfies ColumnDef<HostEntry>
         ]
       : []),
-    ...(includeActions
-      ? [
-          {
-            id: 'actions',
-            header: _t('Actions'),
-            enableSorting: false,
-            minSize: 75,
-            maxSize: 75,
-            meta: { justify: 'right' }
-          } satisfies ColumnDef<HostEntry>
-        ]
-      : [])
+    {
+      id: 'actions',
+      header: _t('Actions'),
+      enableSorting: false,
+      minSize: 75,
+      maxSize: 75,
+      meta: { justify: 'right' }
+    } satisfies ColumnDef<HostEntry>
   ]
 
   return columns.map(fixUnlessHideable)

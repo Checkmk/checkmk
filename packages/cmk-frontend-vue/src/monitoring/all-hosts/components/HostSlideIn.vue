@@ -183,7 +183,7 @@ const inlineActions = computed<CellAction[]>(() => {
     edit: _t('Edit host properties'),
     parameters: _t('Show host parameters')
   }
-  const resolved = props.rowActions.map((action) => ({
+  const resolved = (host.setup_access ? props.rowActions : []).map((action) => ({
     ...action,
     label: labels[action.id] ?? action.label,
     url: action.url?.replace('{host}', encodeURIComponent(host.name))

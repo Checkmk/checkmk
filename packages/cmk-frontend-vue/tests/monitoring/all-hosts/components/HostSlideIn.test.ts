@@ -111,16 +111,25 @@ const PERMITTED_ACTIONS: CellAction[] = [
   { id: RESCHEDULE_ACTION_ID, label: untranslated(RESCHEDULE_LABEL), icon: 'reload' }
 ]
 
+const EDIT_HOST: CellAction = {
+  id: 'edit',
+  label: untranslated('Edit host'),
+  icon: 'edit',
+  url: 'wato.py?mode=edit_host&host={host}'
+}
+
 function renderSlideIn(
   actions: MonitoringActionRegistry,
   host: HostEntry | null = makeHost(),
-  permittedActions: CellAction[] = PERMITTED_ACTIONS
+  permittedActions: CellAction[] = PERMITTED_ACTIONS,
+  rowActions: CellAction[] = []
 ) {
   return render(HostSlideIn, {
     props: {
       host,
       actions,
       permittedActions,
+      rowActions,
       loadActionMenu: async () => [],
       displayOptions: DISPLAY_OPTIONS
     }
@@ -307,6 +316,20 @@ describe('HostSlideIn', () => {
     expect(screen.queryByRole('button', { name: RESCHEDULE_LABEL })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: ACK_LABEL })).not.toBeInTheDocument()
   })
+
+  it.each([
+    { setupAccess: true, shown: true },
+    { setupAccess: false, shown: false }
+  ])(
+    'links to the host in Setup only where the user may open it: $setupAccess',
+    async ({ setupAccess, shown }) => {
+      renderSlideIn(makeRegistry(vi.fn()), makeHost({ setup_access: setupAccess }), [], [EDIT_HOST])
+
+      await screen.findByText('Host details')
+
+      expect(screen.queryByRole('link', { name: 'Edit host properties' }) !== null).toBe(shown)
+    }
+  )
 
   it('leaves out a permitted action this page cannot perform', async () => {
     renderSlideIn(makeRegistry(vi.fn()), makeHost(), [

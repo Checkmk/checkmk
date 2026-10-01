@@ -151,6 +151,24 @@ describe('HostService', () => {
       )
     })
 
+    it('reads the fields a row needs whichever columns are shown', async () => {
+      const fetchHosts = vi.fn().mockResolvedValue(makeHostsResponse([], 0, 0))
+      service = new HostService({ fetchHosts }, makeKeyShortcutService(), {
+        columns: [...COLUMNS],
+        rowFields: ['setup_access']
+      })
+      await vi.advanceTimersByTimeAsync(0)
+
+      service.updateColumnVisibility({ address: false })
+      service.updateSearch('web01')
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(fetchHosts).toHaveBeenLastCalledWith(
+        expect.objectContaining({ fields: ['setup_access'] }),
+        expect.any(AbortSignal)
+      )
+    })
+
     it('fetches the field of a column that is shown again', async () => {
       const fetchHosts = vi.fn().mockResolvedValue(makeHostsResponse([], 0, 0))
       service = makeService(fetchHosts)

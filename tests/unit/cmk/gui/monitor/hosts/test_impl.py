@@ -117,7 +117,11 @@ def _folders() -> MonitorFolders:
     """A `MonitorFolders` titling two folders, the way Setup's functions are wired in."""
     folders = MonitorFolders()
     folders.use_setup_source(
-        SetupFolders(title_of=_TITLES.get, all_titles=lambda: _TITLES),
+        SetupFolders(
+            title_of=_TITLES.get,
+            all_titles=lambda: _TITLES,
+            may_read_host=lambda _host_name, _path: False,
+        ),
     )
     return folders
 
@@ -811,3 +815,87 @@ def test_fetch_does_not_crash_when_only_the_total_count_was_asked_for() -> None:
 
     assert hosts[0].num_services == 15
     assert hosts[0].num_services_ok is None
+
+
+class _SetupHostAccess:
+    """Setup's answer to who may open a host, recording what it was asked."""
+
+    def __init__(self, readable: frozenset[tuple[str, str]]) -> None:
+        self._readable = readable
+        self.asked: list[tuple[str, str | None]] = []
+
+    def may_read_host(self, host_name: str, path: str | None) -> bool:
+        self.asked.append((host_name, path))
+        return (host_name, path) in self._readable
+
+    def folders(self) -> MonitorFolders:
+        folders = MonitorFolders()
+        folders.use_setup_source(
+            SetupFolders(
+                title_of=_TITLES.get, all_titles=lambda: _TITLES, may_read_host=self.may_read_host
+            )
+        )
+        return folders
+
+
+@pytest.mark.usefixtures("request_context")
+@pytest.mark.parametrize(
+    "filename, expected",
+    [
+        pytest.param("/wato/web_dmz/hosts.mk", True, id="readable in its folder"),
+        pytest.param("/wato/network/hosts.mk", False, id="restricted in its folder"),
+    ],
+)
+def test_fetch_asks_setup_whether_the_host_may_be_opened_in_its_folder(
+    filename: str, expected: bool
+) -> None:
+    setup = _SetupHostAccess(frozenset({("web1", "web_dmz")}))
+    row = _host_row("web1", filename=filename)
+    with expect_single_query("GET hosts", tables={"hosts": [row]}) as live:
+        (host,) = LiveStatusHostRepository(connection=live, folders=setup.folders()).fetch(
+            limit=None,
+            query="",
+            sorters=[],
+            filters=HostFilter(""),
+            fields=frozenset({HostOptionalField.SETUP_ACCESS}),
+            visible_relations=None,
+        )
+
+    assert host.setup_access is expected
+
+
+@pytest.mark.usefixtures("request_context")
+def test_fetch_does_not_ask_setup_about_a_host_it_does_not_configure() -> None:
+    """Setup would search its whole tree for a host it does not know, once per such row."""
+    setup = _SetupHostAccess(frozenset())
+    row = _host_row("core_only", filename="/etc/nagios/hosts.cfg")
+    with expect_single_query("GET hosts", tables={"hosts": [row]}) as live:
+        (host,) = LiveStatusHostRepository(connection=live, folders=setup.folders()).fetch(
+            limit=None,
+            query="",
+            sorters=[],
+            filters=HostFilter(""),
+            fields=frozenset({HostOptionalField.SETUP_ACCESS}),
+            visible_relations=None,
+        )
+
+    assert host.setup_access is False
+    assert setup.asked == []
+
+
+@pytest.mark.usefixtures("request_context")
+def test_fetch_leaves_setup_access_unread_unless_asked_for() -> None:
+    setup = _SetupHostAccess(frozenset({("web1", "web_dmz")}))
+    row = _host_row("web1")
+    with expect_single_query("GET hosts", tables={"hosts": [row]}) as live:
+        (host,) = LiveStatusHostRepository(connection=live, folders=setup.folders()).fetch(
+            limit=None,
+            query="",
+            sorters=[],
+            filters=HostFilter(""),
+            fields=frozenset(),
+            visible_relations=None,
+        )
+
+    assert host.setup_access is None
+    assert setup.asked == []

@@ -291,14 +291,35 @@ div#datasources_container {
 
     table {
       margin: 5px 25px 0px;
+      /* Shrink to the longest row, so the agent hint column opens right of all rows */
+      width: auto;
+      table-layout: auto;
 
       td {
         padding-right: 5px;
         padding-bottom: 2px;
+        overflow-wrap: anywhere;
 
         b {
           margin: 0;
         }
+
+        &:first-child {
+          white-space: nowrap;
+        }
+      }
+
+      td.agent_hint {
+        padding: 0;
+      }
+
+      &:has(td.agent_hint [data-agent-hint='open']) {
+        max-width: calc(200% / 3);
+      }
+
+      /* Band from the agent row to the hint's arrow, so the hint is tied to its row */
+      tr:has(td.agent_hint [data-agent-hint='open']) td:not(.agent_hint) {
+        background-color: var(--cmk-alert-box-info-bg-color);
       }
     }
   }

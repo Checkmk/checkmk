@@ -14,7 +14,7 @@
  */
 import type { FolderTreeNode } from '@/maps/types/api'
 import { isProblemState } from '@/maps/utils/problemState'
-import { stateColorVar } from '@/maps/utils/stateColors'
+import { onStateColorVar, stateColorVar } from '@/maps/utils/stateColors'
 
 import type { Tile } from './treemapLayout'
 
@@ -78,10 +78,19 @@ export function tileStrokeWidth(tile: Tile): number {
   return isContainer(tile) && isProblemState(tile.data.state) ? 2 : 1
 }
 
-/** The title bar reads the container's worst state, louder for a problem, with
- *  the label's halo keeping it legible on either. */
+/** The title bar reads the container's worst state, louder for a problem. */
 export function headerFillOpacity(tile: Tile): number {
   return isProblemState(tile.data.state) ? 0.7 : 0.38
+}
+
+/** Text on a near-solid problem fill takes the state's contrast colour; white
+ *  on the warning yellow would not read. */
+export function tileTextFill(tile: Tile): string {
+  const node = tile.data
+  const solid = isContainer(tile)
+    ? isProblemState(node.state)
+    : !isEmptyFolder(node) && !node.stale && isProblemState(node.state)
+  return solid ? onStateColorVar(node.state) : 'var(--font-color)'
 }
 
 export function fitLabel(text: string, width: number): string {

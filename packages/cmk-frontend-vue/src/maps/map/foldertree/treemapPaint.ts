@@ -34,7 +34,8 @@ import {
   tileFill,
   tileFillOpacity,
   tileStroke,
-  tileStrokeWidth
+  tileStrokeWidth,
+  tileTextFill
 } from './treemapStyle'
 import type { TileText } from './treemapText'
 
@@ -128,7 +129,9 @@ function paintLabels(cells: Cells, text: TileText): void {
   cells.select<SVGTextElement>(`text.${treemapClass.label}`).each(function (tile) {
     const width = tile.x1 - tile.x0
     const height = tile.y1 - tile.y0
-    const label = select(this).text(fitLabel(text.label(tile), width))
+    const label = select(this)
+      .text(fitLabel(text.label(tile), width))
+      .style('fill', tileTextFill(tile))
     if (isContainer(tile)) {
       // In the title bar, next to the chevron.
       label
@@ -152,6 +155,7 @@ function paintLabels(cells: Cells, text: TileText): void {
     const marks = text.mark(tile.data)
     select(this)
       .text(marks)
+      .style('fill', tileTextFill(tile))
       .attr('x', width - 4)
       .attr('y', 13)
       .attr('text-anchor', 'end')

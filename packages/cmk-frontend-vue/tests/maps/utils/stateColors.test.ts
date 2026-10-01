@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { STATE_COLORS, stateColor } from '@/maps/utils/stateColors'
+import { STATE_COLORS, onStateColorVar, stateColor } from '@/maps/utils/stateColors'
 
 describe('STATE_COLORS', () => {
   it('defines expected host states', () => {
@@ -41,5 +41,19 @@ describe('stateColor', () => {
 
   it('returns PENDING color for unknown state string', () => {
     expect(stateColor('SOME_UNKNOWN_STATE')).toBe('#9ca3af')
+  })
+})
+
+describe('onStateColorVar', () => {
+  it('writes on a state colour as the Checkmk themes do: black on warning, white otherwise', () => {
+    expect(onStateColorVar('WARNING')).toBe('var(--black)')
+    expect(onStateColorVar('UNKNOWN')).toBe('var(--white)')
+    expect(onStateColorVar('CRITICAL')).toBe('var(--white)')
+    expect(onStateColorVar('DOWN')).toBe('var(--white)')
+  })
+
+  it('leaves text on a state that is never filled solid to the theme', () => {
+    expect(onStateColorVar('OK')).toBe('var(--font-color)')
+    expect(onStateColorVar(undefined)).toBe('var(--font-color)')
   })
 })

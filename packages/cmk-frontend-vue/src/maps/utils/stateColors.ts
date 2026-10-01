@@ -92,8 +92,23 @@ const SEVERITY_ORDER: Record<string, number> = {
   WARNING: 2
 }
 
-// States whose colour is light enough to need dark text on a filled badge.
-const LIGHT_STATES = new Set(['WARNING'])
+// Text on a state's own colour, as Checkmk's themes write it on their state
+// cells (`_status.scss`): black on the warning yellow, white on the critical
+// red and the unknown orange. Healthy and pending fills are never solid here,
+// so text on them stays the theme's.
+const ON_STATE_PROPERTY: Record<string, string> = {
+  WARNING: '--black',
+  UNKNOWN: '--white',
+  UNREACHABLE: '--white',
+  CRITICAL: '--white',
+  DOWN: '--white'
+}
+
+/** Text colour for a solid fill in the state's colour, as a token reference. */
+export function onStateColorVar(state: string | undefined): string {
+  const property = ON_STATE_PROPERTY[state ?? '']
+  return property ? `var(${property})` : 'var(--font-color)'
+}
 
 export interface SeverityPill {
   state: string
@@ -115,6 +130,6 @@ export function severityPills(counts: Record<string, number> | undefined): Sever
       state,
       count,
       bg: stateColorVar(state),
-      fg: LIGHT_STATES.has(state) ? '#1a1a1a' : '#ffffff'
+      fg: onStateColorVar(state)
     }))
 }

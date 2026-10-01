@@ -334,13 +334,8 @@ useD3Cleanup(svgEl)
 
 .maps-folder-treemap__stage :deep(.maps-folder-treemap__label),
 .maps-folder-treemap__stage :deep(.maps-folder-treemap__mark) {
-  fill: var(--font-color);
   font-weight: var(--font-weight-bold);
-  paint-order: stroke;
   pointer-events: none;
-  stroke: var(--bg-glass);
-  stroke-width: 2.5px;
-  stroke-linejoin: round;
 }
 
 .maps-folder-treemap__stage :deep(.maps-folder-treemap__label) {

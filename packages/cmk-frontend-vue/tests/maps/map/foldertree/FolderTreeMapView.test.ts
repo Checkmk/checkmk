@@ -178,6 +178,16 @@ describe('FolderTreeMapView (list mode)', () => {
     expect(screen.getByRole('button', { name: 'Toggle Map', pressed: false })).toBeInTheDocument()
   })
 
+  it('does not call an empty search result all OK', async () => {
+    const { rerender } = renderTree()
+    await waitForRows()
+
+    await rerender({ needle: 'h:nothing-is-called-this' })
+
+    expect(await screen.findByText('showing 0 hosts')).toBeInTheDocument()
+    expect(screen.queryByText(/all OK/)).toBeNull()
+  })
+
   it('renders the waiting placeholder when no folder tree arrived yet', () => {
     renderTree({ withTree: false })
 

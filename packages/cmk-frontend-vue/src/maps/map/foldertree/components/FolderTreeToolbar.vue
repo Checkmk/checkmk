@@ -102,7 +102,10 @@ function selectMode(value: string): void {
         :style="{ background: pill.bg, color: pill.fg }"
         >{{ pill.count }} {{ stateWordFromToken(_t, pill.state) }}</span
       >
-      <span v-if="!pills.length" class="maps-folder-tree-toolbar__quiet">· {{ _t('all OK') }}</span>
+      <!-- Nothing on screen is not everything being fine. -->
+      <span v-if="!pills.length && summary.hosts > 0" class="maps-folder-tree-toolbar__quiet"
+        >· {{ _t('all OK') }}</span
+      >
       <span v-if="truncated" class="maps-folder-tree-toolbar__truncated">
         {{ _t('more matches exist — refine your search') }}
       </span>

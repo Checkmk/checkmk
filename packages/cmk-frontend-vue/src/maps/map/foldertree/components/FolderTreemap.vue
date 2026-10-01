@@ -226,8 +226,9 @@ const handlers = {
   activate,
   context: (tile: Tile, x: number, y: number) => {
     // Real folders only -- the synthetic "all OK" bundle has no folder behind it.
+    // Anything else keeps the browser's own menu rather than a dead right-click.
     if (tile.data.kind !== 'folder' || tile.data.ok_group) {
-      return
+      return false
     }
     // The menu takes the card's place rather than opening beside it.
     closeCards()
@@ -235,6 +236,7 @@ const handlers = {
     // hosts that matched. The menu acts on the folder as a whole, so it is
     // handed the node out of the real tree -- the one the list emits.
     emit('ctx-folder', folderAtPath(props.root, tile.data.path) ?? tile.data, x, y)
+    return true
   },
   hover: intent.move,
   hoverEnd: (_event: MouseEvent, tile: Tile) => intent.leave(tile)

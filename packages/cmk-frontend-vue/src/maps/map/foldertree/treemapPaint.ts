@@ -63,8 +63,9 @@ const CONTENTS_HINT_CHAR_WIDTH = 7.5
 
 interface TileHandlers {
   activate: (tile: Tile) => void
-  /** A right-click that asks for the folder's own menu. */
-  context: (tile: Tile, x: number, y: number) => void
+  /** A right-click: whether the tile opened a menu of its own. One that did
+   *  not leaves the browser's, as a list row does. */
+  context: (tile: Tile, x: number, y: number) => boolean
   hover: (event: MouseEvent, tile: Tile) => void
   hoverEnd: (event: MouseEvent, tile: Tile) => void
 }
@@ -255,9 +256,10 @@ export function drawTiles(
       }
     })
     .on('contextmenu', (event: MouseEvent, tile) => {
-      event.preventDefault()
-      event.stopPropagation()
-      handlers.context(tile, event.clientX, event.clientY)
+      if (handlers.context(tile, event.clientX, event.clientY)) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
     })
     .on('mousemove', handlers.hover)
     .on('mouseleave', handlers.hoverEnd)

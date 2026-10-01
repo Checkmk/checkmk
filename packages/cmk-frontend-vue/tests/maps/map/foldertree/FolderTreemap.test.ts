@@ -164,6 +164,17 @@ describe('FolderTreemap', () => {
     expect(screen.queryByText('Folder')).toBeNull()
   })
 
+  it('leaves a host its browser menu rather than swallowing the right-click', async () => {
+    renderTreemap('datacenter')
+
+    const host = await screen.findByRole('button', { name: /^web-01/ })
+
+    const rightClick = new MouseEvent('contextmenu', { bubbles: true, cancelable: true })
+    host.dispatchEvent(rightClick)
+
+    expect(rightClick.defaultPrevented).toBe(false)
+  })
+
   it('opens the folder menu on the whole folder, not on what the filter left of it', async () => {
     // The tiles are drawn from a pruned copy of the tree, so a search that hides
     // one of the two hosts must not shrink what a folder-wide action reaches.

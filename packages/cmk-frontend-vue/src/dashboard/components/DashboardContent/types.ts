@@ -32,10 +32,8 @@ export const CONTENT_FIGURE_TYPES: string[] = [
   'alert_timeline',
   'average_scatterplot',
   'barplot',
-  'host_state_summary',
   'inventory',
   'notification_timeline',
-  'service_state_summary',
   'site_overview'
 ]
 

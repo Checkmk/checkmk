@@ -52,6 +52,8 @@ import type {
   ResponsiveGridWidgetLayouts,
   SingleMetricContent,
   StateContent,
+  StateSummary,
+  StateSummaryContent,
   Stats,
   StatsContent,
   TimelineContent,
@@ -307,6 +309,18 @@ export const dashboardAPI = {
   ): Promise<ComputedWidgetResponse<ObjectState>> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-state/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
+  computeStateSummary: async (
+    body: { source: WidgetSource<StateSummaryContent> },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<StateSummary>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-state-summary/invoke', {
         ...CONTENT_TYPE_HEADER,
         headers,
         body

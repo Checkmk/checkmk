@@ -10,16 +10,11 @@ from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.graphing_engine import PerformanceData
 from cmk.gui import sites, visuals
 from cmk.gui.exceptions import MKMissingDataError
-from cmk.gui.graphing import (
-    ConvertibleUnitSpecification,
-    EvaluatedMetric,
-    user_specific_unit,
-)
+from cmk.gui.graphing import EvaluatedMetric
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import ColumnName, VisualContext
 from cmk.gui.unit_formatter import IECFormatter, NotationFormatter
-from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.livestatus_client import LivestatusResponse
 from cmk.web.utils.urls import makeuri_contextless
 
@@ -88,13 +83,6 @@ def purge_evaluated_metric_for_js(metric: EvaluatedMetric) -> dict[str, object]:
         "bounds": _scalar_bounds_for_js(metric.performance_data),
         "unit": _formatter_for_js(metric.formatter),
     }
-
-
-def _purge_unit_spec_for_js(
-    unit_spec: ConvertibleUnitSpecification,
-    temperature_unit: TemperatureUnit,
-) -> dict[str, object]:
-    return {"unit": _formatter_for_js(user_specific_unit(unit_spec, temperature_unit).formatter)}
 
 
 def _formatter_for_js(formatter: NotationFormatter) -> dict[str, object]:

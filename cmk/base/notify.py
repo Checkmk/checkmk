@@ -20,6 +20,7 @@
 
 import contextlib
 import datetime
+import hashlib
 import io
 import itertools
 import json
@@ -1237,7 +1238,13 @@ def _process_notifications(
                     if analyse and would_notify:
                         continue
                     if entry.bulk:
-                        do_bulk_notify(entry.plugin_name, params, context, entry.bulk)
+                        do_bulk_notify(
+                            entry.plugin_name,
+                            params,
+                            context,
+                            entry.bulk,
+                            bulk_root=Path(notification_bulkdir),
+                        )
                     elif spooling in ("local", "both"):
                         create_spool_file(
                             logger,
@@ -2242,6 +2249,8 @@ def do_bulk_notify(
     params: NotifyPluginParamsDict,
     plugin_context: NotificationContext,
     bulk: NotifyBulkParameters,
+    *,
+    bulk_root: Path,
 ) -> None:
     # First identify the bulk. The following elements identify it:
     # 1. contact
@@ -2355,7 +2364,7 @@ def do_bulk_notify(
         "    --> storing for bulk notification %(bulk_path)s",
         {"bulk_path": "|".join(bulk_path)},
     )
-    bulk_dir = _create_bulk_dir(bulk_path)
+    bulk_dir = _create_bulk_dir(bulk_root, _bulk_dirname(bulk_path), bulk_path)
     notify_uuid = str(uuid.uuid4())
     filename_new = bulk_dir / f"{notify_uuid}.new"
     filename_final = bulk_dir / notify_uuid
@@ -2363,18 +2372,55 @@ def do_bulk_notify(
     filename_new.rename(filename_final)  # We need an atomic creation!
     logger.info("        - stored in %(filename)s", {"filename": filename_final})
 
+    # Only now, so that a sender that removed it while the notification was being
+    # stored cannot leave the bulk without it
+    if bulk_dir.name != (readable := _readable_bulk_dirname(bulk_path)):
+        try:
+            _ensure_bulk_id_file(bulk_dir, readable)
+        except OSError:
+            # The notification is stored, only the GUI shows the hashed name
+            logger.exception(
+                "        - cannot write bulk ID to %(bulk_dir)s:", {"bulk_dir": bulk_dir}
+            )
 
-def _create_bulk_dir(bulk_path: Sequence[str]) -> Path:
-    bulk_dir = Path(
-        notification_bulkdir,
-        bulk_path[0],
-        bulk_path[1],
-        ",".join([b.replace("/", "\\") for b in bulk_path[2:]]),
-    )
+
+# Longest file name most file systems allow (NAME_MAX)
+_MAX_BULK_DIRNAME_BYTES = 255
+_BULK_ID_FILE = ".bulk_id"
+
+
+def _readable_bulk_dirname(bulk_path: Sequence[str]) -> str:
+    return ",".join([b.replace("/", "\\") for b in bulk_path[2:]])
+
+
+def _bulk_dirname(bulk_path: Sequence[str]) -> str:
+    # The interval or time period and the count stay readable, bulk_parts() parses them.
+    # The grouping values are replaced by a hash if they would make the name too long.
+    # A time period name long enough to exceed the limit on its own still fails, the
+    # notification is then reported as failed.
+    readable = _readable_bulk_dirname(bulk_path)
+    if len(os.fsencode(readable)) <= _MAX_BULK_DIRNAME_BYTES:
+        return readable
+    interval_and_count = ",".join([b.replace("/", "\\") for b in bulk_path[2:4]])
+    digest = hashlib.sha256(repr(tuple(bulk_path[4:])).encode("utf-8")).hexdigest()
+    return f"{interval_and_count},sha256:{digest}"
+
+
+def _create_bulk_dir(bulk_root: Path, dirname: str, bulk_path: Sequence[str]) -> Path:
+    bulk_dir = bulk_root / bulk_path[0] / bulk_path[1] / dirname
     if not bulk_dir.exists():
-        bulk_dir.mkdir(parents=True)
+        bulk_dir.mkdir(parents=True, exist_ok=True)
         logger.info("        - created bulk directory %(bulk_dir)s", {"bulk_dir": bulk_dir})
     return bulk_dir
+
+
+def _ensure_bulk_id_file(bulk_dir: Path, readable: str) -> None:
+    # Lets admins map the hashed directory back to its bulk
+    if (bulk_id_file := bulk_dir / _BULK_ID_FILE).exists():
+        return
+    tmp_file = bulk_dir / f"{_BULK_ID_FILE}.{uuid.uuid4()}.new"
+    tmp_file.write_text(readable, encoding="utf-8", errors="surrogateescape")
+    tmp_file.rename(bulk_id_file)
 
 
 def bulk_parts(method_dir: str, bulk: str) -> tuple[int | None, str | None, int] | None:
@@ -2405,7 +2451,7 @@ def bulk_parts(method_dir: str, bulk: str) -> tuple[int | None, str | None, int]
 def bulk_uuids(bulk_dir: str) -> tuple[UUIDs, float]:
     uuids, oldest = [], time.time()
     for notify_uuid in os.listdir(bulk_dir):  # 4ded0fa2-f0cd-4b6a-9812-54374a04069f
-        if notify_uuid.endswith(".new"):
+        if notify_uuid.endswith(".new") or notify_uuid.startswith("."):
             continue
         if len(notify_uuid) != 36:
             logger.info(
@@ -2432,9 +2478,24 @@ def remove_if_orphaned(bulk_dir: str, max_age: float, ref_time: float | None = N
             {"bulk_dir": bulk_dir},
         )
         try:
-            os.rmdir(bulk_dir)
+            _remove_bulk_dir(bulk_dir)
         except Exception as e:
             logger.info("    -> Error removing it: %(error)s", {"error": e})
+
+
+def _remove_bulk_dir(bulk_dir: str) -> None:
+    try:
+        os.rmdir(bulk_dir)
+    except OSError:
+        # Only remove the bulk ID file (and leftovers of writing it) if no
+        # notification is left or being stored
+        entries = os.listdir(bulk_dir)
+        if not entries or any(not e.startswith(".") for e in entries):
+            raise
+        for entry in entries:
+            with suppress(FileNotFoundError):
+                os.remove(os.path.join(bulk_dir, entry))
+        os.rmdir(bulk_dir)
 
 
 def _find_bulks(
@@ -2655,7 +2716,7 @@ def notify_bulk(
 
     # Remove directory. Not necessary if emtpy
     try:
-        os.rmdir(dirname)
+        _remove_bulk_dir(dirname)
     except Exception as e:
         if not unhandled_uuids:
             logger.info(

@@ -8,7 +8,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName, HostNameValidationError
 
 
 # TODO CMK-23408
@@ -43,6 +43,12 @@ class TreePathGz:
             raise ValueError(self.legacy)
 
 
+def _file_name(host_name: HostName) -> str:
+    if not host_name:
+        raise HostNameValidationError("empty host name", raw=str(host_name))
+    return str(HostName(host_name))
+
+
 class InventoryPaths:
     def __init__(self, omd_root: Path) -> None:
         self.inventory_dir = omd_root / "var/check_mk/inventory"
@@ -57,14 +63,14 @@ class InventoryPaths:
 
     def inventory_tree(self, host_name: HostName) -> TreePath:
         return TreePath(
-            path=self.inventory_dir / f"{host_name}.json",
-            legacy=self.inventory_dir / str(host_name),
+            path=self.inventory_dir / f"{_file_name(host_name)}.json",
+            legacy=self.inventory_dir / _file_name(host_name),
         )
 
     def inventory_tree_gz(self, host_name: HostName) -> TreePathGz:
         return TreePathGz(
-            path=self.inventory_dir / f"{host_name}.json.gz",
-            legacy=self.inventory_dir / f"{host_name}.gz",
+            path=self.inventory_dir / f"{_file_name(host_name)}.json.gz",
+            legacy=self.inventory_dir / f"{_file_name(host_name)}.gz",
         )
 
     @property
@@ -73,12 +79,12 @@ class InventoryPaths:
 
     def status_data_tree(self, host_name: HostName) -> TreePath:
         return TreePath(
-            path=self.status_data_dir / f"{host_name}.json",
-            legacy=self.status_data_dir / str(host_name),
+            path=self.status_data_dir / f"{_file_name(host_name)}.json",
+            legacy=self.status_data_dir / _file_name(host_name),
         )
 
     def archive_host(self, host_name: HostName) -> Path:
-        return self.archive_dir / str(host_name)
+        return self.archive_dir / _file_name(host_name)
 
     def archive_tree(self, host_name: HostName, timestamp: int) -> TreePath:
         return TreePath(
@@ -87,7 +93,7 @@ class InventoryPaths:
         )
 
     def delta_cache_host(self, host_name: HostName) -> Path:
-        return self.delta_cache_dir / str(host_name)
+        return self.delta_cache_dir / _file_name(host_name)
 
     def delta_cache_tree(self, host_name: HostName, previous: int, current: int) -> TreePath:
         if previous < -1 or previous >= current:

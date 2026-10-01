@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
 
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName, HostNameValidationError
 from cmk.inventory.paths import (
     InventoryPaths,
     parse_archive_timestamp,
@@ -141,3 +143,23 @@ def test_tree_path_rejects_a_path_without_json_suffix() -> None:
 def test_tree_path_gz_rejects_a_misnamed_path(path: Path, legacy: Path) -> None:
     with pytest.raises(ValueError):
         TreePathGz(path=path, legacy=legacy)
+
+
+@pytest.mark.parametrize(
+    "path_of",
+    [
+        InventoryPaths.inventory_tree,
+        InventoryPaths.inventory_tree_gz,
+        InventoryPaths.status_data_tree,
+        InventoryPaths.archive_host,
+        InventoryPaths.delta_cache_host,
+    ],
+)
+@pytest.mark.parametrize(
+    "host_name", [json.loads('".."'), HostName("")], ids=["parent directory", "empty"]
+)
+def test_tree_paths_refuse_a_host_name_leaving_their_directory(
+    tmp_path: Path, path_of: Callable[[InventoryPaths, HostName], object], host_name: HostName
+) -> None:
+    with pytest.raises(HostNameValidationError):
+        path_of(InventoryPaths(tmp_path), host_name)

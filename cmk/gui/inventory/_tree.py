@@ -61,10 +61,6 @@ def _load_tree_from_file(
     if not host_name:
         return ImmutableTree()
 
-    if "/" in host_name:
-        # just for security reasons
-        return ImmutableTree()
-
     inv_store = InventoryStore(cmk.utils.paths.omd_root)
     match tree_type:
         case "inventory":
@@ -194,9 +190,6 @@ def inventory_of_host(
 
 
 def load_latest_delta_tree(history_store: HistoryStore, hostname: HostName) -> ImmutableDeltaTree:
-    if "/" in hostname:
-        return ImmutableDeltaTree()
-
     history = history_store.load_latest(hostname, delta_tree_filters=_permitted_filter_choices())
     return history.entries[0].delta_tree if history.entries else ImmutableDeltaTree()
 
@@ -211,9 +204,6 @@ def load_delta_tree(
     history_store: HistoryStore, hostname: HostName, timestamp: int
 ) -> tuple[ImmutableDeltaTree, Sequence[str]]:
     """Load inventory history and compute delta tree of a specific timestamp"""
-    if "/" in hostname:
-        return ImmutableDeltaTree(), []  # just for security reasons
-
     history = history_store.load_at(
         hostname, timestamp, delta_tree_filters=_permitted_filter_choices()
     )
@@ -231,9 +221,6 @@ def load_delta_tree(
 def get_history(
     history_store: HistoryStore, hostname: HostName
 ) -> tuple[Sequence[HistoryEntry], Sequence[str]]:
-    if "/" in hostname:
-        return [], []  # just for security reasons
-
     history = history_store.load(hostname, delta_tree_filters=_permitted_filter_choices())
     return history.entries, _sort_corrupted_history_files(
         history_store.inv_paths.archive_dir, history.corrupted

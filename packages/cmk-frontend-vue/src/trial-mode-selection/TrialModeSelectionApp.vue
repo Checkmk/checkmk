@@ -32,6 +32,7 @@ const {
   saving,
   saveFailed,
   resendCooldown,
+  emailSalt,
   sendRequestInFlight,
   errorMessage,
   startTrial,
@@ -104,10 +105,12 @@ const {
     <TrialModeSelectionCodeEntry
       v-else-if="screen === 'code'"
       :email="email"
+      :email-salt="emailSalt"
       :resend-cooldown="resendCooldown"
-      :error-message="errorMessage"
+      :send-code-error-message="errorMessage"
       :send-request-in-flight="sendRequestInFlight"
       :saving="saving"
+      :verify-url="props.verification_url"
       @back="goTo('email')"
       @resend="resendCode"
       @verified="goTo('success')"

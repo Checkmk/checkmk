@@ -247,6 +247,30 @@ test('the ad hoc duration names its two inputs and the span they belong to', () 
   expect(within(span).getByRole('spinbutton', { name: 'Minutes' })).toBeInTheDocument()
 })
 
+test.each(['Hours', 'Minutes'])('the ad hoc %s accept digits only', async (name) => {
+  const { modelValue } = mountForm({ selection: 'adhoc' })
+  const input = screen.getByRole('spinbutton', { name })
+
+  await userEvent.clear(input)
+  await userEvent.type(input, '1e-2.+5')
+
+  expect(input).toHaveValue(125)
+  expect(name === 'Hours' ? modelValue.adhocHours : modelValue.adhocMinutes).toBe(125)
+})
+
+test.each(['Hours', 'Minutes'])(
+  'pasting non-digits into the ad hoc %s is rejected',
+  async (name) => {
+    mountForm({ selection: 'adhoc', adhocHours: 3, adhocMinutes: 3 })
+    const input = screen.getByRole('spinbutton', { name })
+
+    await userEvent.click(input)
+    await userEvent.paste('1e5')
+
+    expect(input).toHaveValue(3)
+  }
+)
+
 describe('isScheduleDowntimeValid', () => {
   it('requires a non-empty comment', () => {
     expect(
@@ -266,6 +290,24 @@ describe('isScheduleDowntimeValid', () => {
           selection: 'adhoc',
           adhocHours: 0,
           adhocMinutes: 0
+        },
+        PRESETS
+      )
+    ).toBe(false)
+  })
+
+  it.each([
+    { part: 'hours', adhocHours: -1, adhocMinutes: 90 },
+    { part: 'minutes', adhocHours: 1, adhocMinutes: -30 }
+  ])('rejects an ad hoc duration with negative $part', ({ adhocHours, adhocMinutes }) => {
+    expect(
+      isScheduleDowntimeValid(
+        {
+          ...defaultScheduleDowntimeValues(PRESETS),
+          comment: 'x',
+          selection: 'adhoc',
+          adhocHours,
+          adhocMinutes
         },
         PRESETS
       )

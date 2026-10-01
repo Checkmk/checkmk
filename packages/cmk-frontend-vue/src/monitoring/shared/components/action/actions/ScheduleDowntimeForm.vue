@@ -131,6 +131,14 @@ export function adhocMinutesTotal(values: ScheduleDowntimeFormValues): number {
   return (values.adhocHours ?? 0) * 60 + (values.adhocMinutes ?? 0)
 }
 
+function adhocDurationIsValid(values: ScheduleDowntimeFormValues): boolean {
+  return (
+    (values.adhocHours ?? 0) >= 0 &&
+    (values.adhocMinutes ?? 0) >= 0 &&
+    adhocMinutesTotal(values) > 0
+  )
+}
+
 /** A custom downtime has to end after it starts. */
 export function customRangeIsOrdered(values: ScheduleDowntimeFormValues): boolean {
   return values.selection !== 'custom' || values.customRange.from.compare(values.customRange.to) < 0
@@ -141,7 +149,7 @@ export function isScheduleDowntimeValid(
   presets: readonly DowntimePresetOption[]
 ): boolean {
   const durationValid =
-    (values.selection !== 'adhoc' || adhocMinutesTotal(values) > 0) && customRangeIsOrdered(values)
+    (values.selection !== 'adhoc' || adhocDurationIsValid(values)) && customRangeIsOrdered(values)
   return (
     values.comment.trim() !== '' && durationValid && repeatsOnADayEveryMonthHas(values, presets)
   )
@@ -231,6 +239,13 @@ const emit = defineEmits<{
 
 const { _t } = usei18n()
 const adhocLabelId = useId()
+
+function rejectNonDigits(event: InputEvent): void {
+  const inserted = event.data ?? event.dataTransfer?.getData('text/plain') ?? ''
+  if (/\D/.test(inserted)) {
+    event.preventDefault()
+  }
+}
 
 const timeZone = getLocalTimeZone()
 
@@ -477,14 +492,20 @@ function selectOverflow(id: string | null): void {
             type="number"
             field-size="small"
             :unit="_t('hours')"
+            inputmode="numeric"
+            min="0"
             :aria-label="_t('Hours')"
+            @beforeinput="rejectNonDigits"
           />
           <CmkInput
             v-model="model.adhocMinutes"
             type="number"
             field-size="small"
             :unit="_t('minutes')"
+            inputmode="numeric"
+            min="0"
             :aria-label="_t('Minutes')"
+            @beforeinput="rejectNonDigits"
           />
         </div>
         <p v-else-if="untilEndDate" class="monitoring-schedule-downtime-form__preset-hint">

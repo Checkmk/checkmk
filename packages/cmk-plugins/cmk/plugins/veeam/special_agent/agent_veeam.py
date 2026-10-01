@@ -246,7 +246,7 @@ class VeeamAuth(requests.auth.AuthBase):
             return None
         return token if token.owner == self._owner else None
 
-    def _request_token(self, data: Mapping[str, str]) -> None:
+    def _request_token(self, data: Mapping[str, str]) -> _StoredToken:
         requested_at = time.time()
         response = self._api.request("POST", TOKEN_PATH, data=data)
         if not response.ok:
@@ -257,31 +257,33 @@ class VeeamAuth(requests.auth.AuthBase):
             raise TerminateAgent(
                 "The Veeam REST API returned an invalid access token response"
             ) from exc
-        self._token = _StoredToken(
+        stored = _StoredToken(
             owner=self._owner,
             access_token=token.access_token,
             refresh_token=token.refresh_token,
             expires_at=requested_at + token.expires_in,
         )
         # Store right away: the refresh token we just used is gone for good.
-        self._storage.write(TOKEN_STORAGE_KEY, self._token.model_dump_json())
+        self._storage.write(TOKEN_STORAGE_KEY, stored.model_dump_json())
+        return stored
 
-    def _refresh(self, refresh_token: str) -> bool:
+    def _refresh(self, refresh_token: str) -> _StoredToken | None:
         try:
-            self._request_token({"grant_type": "refresh_token", "refresh_token": refresh_token})
+            return self._request_token(
+                {"grant_type": "refresh_token", "refresh_token": refresh_token}
+            )
         except VeeamApiError as exc:
             if 400 <= exc.status < 500:
                 # Expired, already used or revoked. The password login will tell if it's worse.
-                return False
+                return None
             raise TerminateAgent(
                 f"Refreshing the access token at the Veeam REST API failed with HTTP "
                 f"{exc.status}: {exc.message}"
             ) from exc
-        return True
 
-    def _login(self) -> None:
+    def _login(self) -> _StoredToken:
         try:
-            self._request_token(
+            return self._request_token(
                 {
                     "grant_type": "password",
                     "username": self._user,
@@ -305,9 +307,8 @@ class VeeamAuth(requests.auth.AuthBase):
 
     def renew(self) -> None:
         """Replace the current token: spend its refresh token, fall back to the password."""
-        if self._token is not None and self._refresh(self._token.refresh_token):
-            return
-        self._login()
+        refreshed = self._refresh(self._token.refresh_token) if self._token is not None else None
+        self._token = refreshed if refreshed is not None else self._login()
 
     def authenticate(self) -> None:
         """Reuse the stored access token if it is still valid long enough, renew it otherwise."""

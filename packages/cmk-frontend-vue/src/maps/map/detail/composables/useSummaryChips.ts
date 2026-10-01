@@ -165,7 +165,7 @@ export function useSummaryChips(options: SummaryChipsOptions) {
     })
     return [
       make('DOWN', h.down, 'DOWN', 'crit'),
-      make('UNREACHABLE', h.unreachable, 'UNRCH', 'warn'),
+      make('UNREACHABLE', h.unreachable, 'UNREACH', 'warn'),
       make('UP', h.up, 'UP', 'ok')
     ].filter((chip) => chip.state === 'UP' || chip.count > 0)
   })

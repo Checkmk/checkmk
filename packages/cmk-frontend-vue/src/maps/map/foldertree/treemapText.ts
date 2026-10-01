@@ -10,7 +10,7 @@
 import type usei18n from 'cmk-ui-library/lib/i18n'
 
 import type { FolderTreeNode } from '@/maps/types/api'
-import { stateWordFromToken } from '@/maps/utils/objectAria'
+import { stateShortWordFromToken, stateWordFromToken } from '@/maps/utils/objectAria'
 import { severityPills } from '@/maps/utils/stateColors'
 
 import { leafStateText } from './objects'
@@ -63,7 +63,7 @@ export function tileText(options: TileTextOptions): TileText {
     }
     const worst = severityPills(node.severity_counts)[0]
     return worst
-      ? `${title} · ${worst.count} ${stateWord(worst.state)}`
+      ? `${title} · ${worst.count} ${stateShortWordFromToken(_t, worst.state)}`
       : `${title} · ${node.host_count}`
   }
 

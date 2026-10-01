@@ -71,6 +71,28 @@ export function stateWordFromToken(_t: TranslateFn, token: string): string {
   return known === undefined ? token : stateAriaLabel(_t, known)
 }
 
+/**
+ * The short word Checkmk's monitoring pages write for a state on screen -- CRIT,
+ * WARN, UNKN, UNREACH -- for a count or a caption. What a screen reader hears
+ * stays the full word, from ``stateWordFromToken``.
+ */
+export function stateShortWordFromToken(_t: TranslateFn, token: string): string {
+  switch (token) {
+    case 'CRITICAL':
+      return _t('CRIT')
+    case 'WARNING':
+      return _t('WARN')
+    case 'UNKNOWN':
+      return _t('UNKN')
+    case 'UNREACHABLE':
+      return _t('UNREACH')
+    case 'PENDING':
+      return _t('PEND')
+    default:
+      return token
+  }
+}
+
 export function objectAriaLabel(
   _t: TranslateFn,
   object: MapElement,

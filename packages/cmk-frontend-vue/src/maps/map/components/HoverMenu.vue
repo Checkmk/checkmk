@@ -308,7 +308,7 @@ function buildPills(summary: ServicesSummary, kind: 'hosts' | 'services'): Hover
     kind === 'hosts'
       ? ([
           { key: 'critical', label: 'DOWN', tone: 'crit', state: 'DOWN' },
-          { key: 'unknown', label: 'UNRCH', tone: 'unknown', state: 'UNREACHABLE' },
+          { key: 'unknown', label: 'UNREACH', tone: 'unknown', state: 'UNREACHABLE' },
           { key: 'pending', label: 'PEND', tone: 'pending', state: null },
           { key: 'ok', label: 'UP', tone: 'ok', state: 'UP' }
         ] as const)

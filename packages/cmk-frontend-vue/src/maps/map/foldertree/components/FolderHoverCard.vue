@@ -40,7 +40,7 @@ const HOST_PILLS: { state: string; label: string; tone: PillTone }[] = [
   { state: 'CRITICAL', label: 'CRIT', tone: 'crit' },
   { state: 'DOWN', label: 'DOWN', tone: 'crit' },
   { state: 'UNKNOWN', label: 'UNKN', tone: 'unknown' },
-  { state: 'UNREACHABLE', label: 'UNRCH', tone: 'unknown' },
+  { state: 'UNREACHABLE', label: 'UNREACH', tone: 'unknown' },
   { state: 'WARNING', label: 'WARN', tone: 'warn' },
   { state: 'PENDING', label: 'PEND', tone: 'pending' }
 ]

@@ -27,7 +27,7 @@ import { computed } from 'vue'
 import MapSearch from '@/maps/map/components/MapSearch.vue'
 import ProblemsOnlyToggle from '@/maps/map/components/ProblemsOnlyToggle.vue'
 import type { FolderTreeView } from '@/maps/types/api'
-import { stateWordFromToken } from '@/maps/utils/objectAria'
+import { stateShortWordFromToken } from '@/maps/utils/objectAria'
 import { severityPills } from '@/maps/utils/stateColors'
 
 import type { HostStats } from '../filter'
@@ -100,7 +100,7 @@ function selectMode(value: string): void {
         :key="pill.state"
         class="maps-folder-tree-toolbar__pill"
         :style="{ background: pill.bg, color: pill.fg }"
-        >{{ pill.count }} {{ stateWordFromToken(_t, pill.state) }}</span
+        >{{ pill.count }} {{ stateShortWordFromToken(_t, pill.state) }}</span
       >
       <!-- Nothing on screen is not everything being fine. -->
       <span v-if="!pills.length && summary.hosts > 0" class="maps-folder-tree-toolbar__quiet"

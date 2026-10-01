@@ -65,6 +65,7 @@ class ConditionsForLabels(TypedDict, total=False):
     match_index: list[str]
     match_alias: list[str]
     match_desc: list[str]
+    match_name: list[str]
 
 
 class LabelsConditions(TypedDict, total=False):
@@ -1195,6 +1196,7 @@ def _check_single_matching_conditions(
     match_index = matching_conditions.get("match_index")
     match_alias = matching_conditions.get("match_alias")
     match_desc = matching_conditions.get("match_desc")
+    match_name = matching_conditions.get("match_name")
     porttypes = matching_conditions.get("porttypes")
     if porttypes is not None:
         porttypes = porttypes[:]
@@ -1206,6 +1208,7 @@ def _check_single_matching_conditions(
         check_regex_match_conditions(attributes.index, match_index)
         and check_regex_match_conditions(attributes.alias, match_alias)
         and check_regex_match_conditions(attributes.descr, match_desc)
+        and check_regex_match_conditions(attributes.name, match_name)
         and (porttypes is None or attributes.type in porttypes)
         and (portstates is None or attributes.oper_status in portstates)
         and (
@@ -1376,6 +1379,9 @@ def discover_interfaces(
                         )
                         and check_regex_match_conditions(
                             interface.attributes.descr, conditions.get("match_desc")
+                        )
+                        and check_regex_match_conditions(
+                            interface.attributes.name, conditions.get("match_name")
                         )
                     ):
                         for k, v in labels_condition.get("labels", {}).items():

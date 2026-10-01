@@ -100,6 +100,10 @@ def _vs_labels_conditions():
                                 "match_desc",
                                 _vs_regex_matching("description"),
                             ),
+                            (
+                                "match_name",
+                                _vs_regex_matching("name"),
+                            ),
                         ],
                     ),
                 ),
@@ -386,6 +390,10 @@ def _vs_matching_conditions():
                         (
                             "match_desc",
                             _vs_regex_matching("description"),
+                        ),
+                        (
+                            "match_name",
+                            _vs_regex_matching("name"),
                         ),
                     ],
                 ),

@@ -36,6 +36,10 @@ export function useCmkErrorBoundary(): {
   const component = currentComponentName()
   onErrorCaptured((err: Error, _instance, info: string): boolean => {
     console.error(err)
+    // Replacing a shown error re-renders what shows it; if that fails too, it would loop forever.
+    if (error.value !== null) {
+      return false
+    }
     error.value = err
     crashReport.value = { status: 'storing' }
     void crashReportApi

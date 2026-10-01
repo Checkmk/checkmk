@@ -199,3 +199,42 @@ test('CmkErrorBoundary says so when no crash report could be stored', async () =
   await screen.findByText('No crash report could be stored for this error.', { exact: false })
   consoleSpy.mockRestore()
 })
+
+test('CmkErrorBoundary keeps the first error when rendering it fails again', async () => {
+  const failsWhileErrorIsShown = defineComponent({
+    props: { error: { type: Error, default: null } },
+    setup(props) {
+      return () => {
+        if (props.error !== null) {
+          throw new Error('rendering the error failed')
+        }
+        return null
+      }
+    }
+  })
+
+  const testComponent = defineComponent({
+    components: { FailsWhileErrorIsShown: failsWhileErrorIsShown },
+    setup() {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      const { CmkErrorBoundary, error } = useCmkErrorBoundary()
+      function throwError() {
+        throw new Error('the first error')
+      }
+      return { CmkErrorBoundary, error, throwError }
+    },
+    template: `
+      <component :is=CmkErrorBoundary>
+        <button @click="throwError()">throw</button>
+      </component>
+      <FailsWhileErrorIsShown :error="error" />
+    `
+  })
+
+  render(testComponent)
+  const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+  await fireEvent.click(screen.getByRole('button', { name: 'throw' }))
+  spy.mockRestore()
+
+  screen.getAllByText('the first error', { exact: false })
+})

@@ -19,8 +19,15 @@ export const availableFilterOptions: FilterOption[] = [
   { type: 'inline', value: 'ad:', title: 'Address', notAvailableFor: ['setup', 'customize'] },
   { type: 'inline', value: 'al:', title: 'Alias', notAvailableFor: ['setup', 'customize'] },
   { type: 'inline', value: 'tg:', title: 'Host tag', notAvailableFor: ['setup', 'customize'] },
+  { type: 'inline', value: 'hf:', title: 'Host folder', notAvailableFor: ['setup', 'customize'] },
   { type: 'inline', value: 's:', title: 'Service', notAvailableFor: ['setup', 'customize'] },
   { type: 'inline', value: 'sg:', title: 'Service group', notAvailableFor: ['setup', 'customize'] },
   { type: 'inline', value: 'sl:', title: 'Service label', notAvailableFor: ['setup', 'customize'] },
+  {
+    type: 'inline',
+    value: 'sf:',
+    title: 'Service folder',
+    notAvailableFor: ['setup', 'customize']
+  },
   { type: 'inline', value: 'st:', title: 'Service state', notAvailableFor: ['setup', 'customize'] }
 ]

@@ -60,8 +60,8 @@ class QuicksearchSnapin(SidebarSnapin):
             "Interactive search field for direct access to monitoring instances (hosts, services, "
             "host and service groups).<br>You can use the following filters: <i>h:</i> Host,<br> "
             "<i>s:</i> Service, <i>hg:</i> Host group, <i>sg:</i> Service group,<br><i>ad:</i> "
-            "Address, <i>al:</i> Alias, <i>tg:</i> Host tag, <i>hl:</i> Host label, <i>sl:</i> "
-            "Service label"
+            "Address, <i>al:</i> Alias, <i>tg:</i> Host tag, <i>hf:</i> Host folder, <i>sf:</i> "
+            "Service folder, <i>hl:</i> Host label, <i>sl:</i> Service label"
         )
 
     def show(self, config: Config) -> None:

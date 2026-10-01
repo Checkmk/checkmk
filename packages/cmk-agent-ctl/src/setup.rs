@@ -55,8 +55,33 @@ pub struct PathResolver {
     pub registry_path: PathBuf,
 }
 
+/// Deployment mode of the agent controller, selecting the on-disk directory layout.
+pub enum SetupMode {
+    /// Classic package deployment: files are deployed in a some system directory:
+    /// `/var/lib/cmk-agent`(fixed) for Linux
+    /// `%ProgramData%\checkmk\agent` for Windows.
+    Classic,
+    /// Single directory deployment, Linux only: config and runtime split below the
+    /// installation directory.
+    #[cfg(unix)]
+    SingleDir,
+}
+
 impl PathResolver {
-    pub fn from_home_dir(home_dir: &Path) -> PathResolver {
+    /// Resolve the paths of the controller's files for a given deployment mode.
+    pub fn new(mode: SetupMode, base_dir: &Path) -> PathResolver {
+        match mode {
+            SetupMode::Classic => PathResolver::from_home(base_dir),
+            #[cfg(unix)]
+            SetupMode::SingleDir => PathResolver::from_install(base_dir),
+        }
+    }
+
+    /// Classic layout: all files live directly in `home_dir`.
+    ///
+    /// `home_dir` is a fixed system directory, `/var/lib/cmk-agent` on
+    /// Linux and `%ProgramData%\checkmk\agent` on Windows.
+    fn from_home(home_dir: &Path) -> PathResolver {
         PathResolver {
             config_path: home_dir.join(constants::CONFIG_FILE),
             pre_configured_connections_path: home_dir
@@ -65,14 +90,16 @@ impl PathResolver {
         }
     }
 
+    /// Single directory deployment, Linux only: config below `package/config` and registry
+    /// below `runtime/controller`, both relative to `install_dir`.
     #[cfg(unix)]
-    pub fn from_installdir(installdir: &Path) -> PathResolver {
-        let config_dir = installdir.join("package/config");
+    fn from_install(install_dir: &Path) -> PathResolver {
+        let config_dir = install_dir.join("package/config");
         PathResolver {
             config_path: config_dir.join(constants::CONFIG_FILE),
             pre_configured_connections_path: config_dir
                 .join(constants::PRE_CONFIGURED_CONNECTIONS_FILE),
-            registry_path: installdir
+            registry_path: install_dir
                 .join("runtime/controller")
                 .join(constants::REGISTRY_FILE),
         }
@@ -208,24 +235,23 @@ fn become_user(user: UserRepr) -> AnyhowResult<unistd::User> {
     Ok(target_user)
 }
 
-#[cfg(unix)]
-fn determine_paths(user: unistd::User) -> AnyhowResult<PathResolver> {
-    Ok(PathResolver::from_home_dir(&user.dir))
-}
-
+/// Determine the Windows home directory holding all files of the controller.
+///
+/// # Returns
+///
+/// `%ProgramData%\checkmk\agent`, or the value of `DEBUG_HOME_DIR` if that is set for
+/// testing/debugging
 #[cfg(windows)]
-fn determine_paths() -> AnyhowResult<PathResolver> {
-    // Alternative home dir can be passed for testing/debug reasons
-    if let Ok(debug_home_dir) = std::env::var(constants::ENV_HOME_DIR) {
+fn detect_home_dir() -> PathBuf {
+    let home_dir = if let Ok(debug_home_dir) = std::env::var(constants::ENV_HOME_DIR) {
         info!("Using debug HOME_DIR: {}", debug_home_dir);
-        return Ok(PathResolver::from_home_dir(&PathBuf::from(debug_home_dir)));
-    }
-
-    // Normal/prod home dir
-    let program_data_path = std::env::var(constants::ENV_PROGRAM_DATA)
-        .unwrap_or_else(|_| String::from("c:\\ProgramData"));
-    let home = PathBuf::from(program_data_path + constants::WIN_AGENT_HOME_DIR);
-    Ok(PathResolver::from_home_dir(&home))
+        debug_home_dir
+    } else {
+        std::env::var(constants::ENV_PROGRAM_DATA)
+            .unwrap_or_else(|_| String::from("c:\\ProgramData"))
+            + constants::WIN_AGENT_HOME_DIR
+    };
+    PathBuf::from(home_dir)
 }
 
 #[cfg(unix)]
@@ -236,10 +262,10 @@ fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
             .unwrap_or(());
     }
 
-    if let Some(installdir) = setup_single_directory()
+    if let Some(install_dir) = setup_single_directory()
         .context("Failed to initialize under single directory deployment")?
     {
-        return Ok(PathResolver::from_installdir(&installdir));
+        return Ok(PathResolver::new(SetupMode::SingleDir, &install_dir));
     }
 
     // Alternative home dir can be passed for testing/debug reasons
@@ -248,29 +274,33 @@ fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
             "Skipping to change user and using debug HOME_DIR: {}",
             debug_home_dir
         );
-        return Ok(PathResolver::from_home_dir(Path::new(&debug_home_dir)));
+        return Ok(PathResolver::new(
+            SetupMode::Classic,
+            Path::new(&debug_home_dir),
+        ));
     }
 
     // Normal/prod home dir
-    become_user(UserRepr::Name(constants::CMK_AGENT_USER.to_owned())).context(format!(
+    let user = become_user(UserRepr::Name(constants::CMK_AGENT_USER.to_owned())).context(format!(
                 "Failed to run as user '{}'. Please execute with sufficient permissions (maybe try 'sudo').",
                 constants::CMK_AGENT_USER,
-            )).and_then(determine_paths)
+            ))?;
+    Ok(PathResolver::new(SetupMode::Classic, &user.dir))
 }
 
 #[cfg(unix)]
 fn setup_single_directory() -> AnyhowResult<Option<PathBuf>> {
-    let Some(installdir) = detect_installdir() else {
+    let Some(install_dir) = detect_install_dir() else {
         return Ok(None);
     };
 
     debug!(
         "Detected single directory deployment under {:?}. Trying to become the agent user and setting up paths accordingly, and failing otherwise.",
-        installdir
+        install_dir
     );
 
     let owning_uid = nix::unistd::Uid::from_raw(
-        std::fs::metadata(installdir.join("runtime").join("controller"))
+        std::fs::metadata(install_dir.join("runtime").join("controller"))
             .context("Could not determine agent user")?
             .uid(),
     );
@@ -280,17 +310,17 @@ fn setup_single_directory() -> AnyhowResult<Option<PathBuf>> {
         owning_uid
     ))?;
 
-    Ok(Some(installdir))
+    Ok(Some(install_dir))
 }
 
 #[cfg(unix)]
-fn detect_installdir() -> Option<PathBuf> {
+fn detect_install_dir() -> Option<PathBuf> {
     let exe = std::env::current_exe()
         .and_then(std::fs::canonicalize)
         .ok()?;
-    let installdir = exe.parent()?.parent()?.parent()?;
+    let install_dir = exe.parent()?.parent()?.parent()?;
 
-    if !installdir
+    if !install_dir
         .join("package")
         .join("config")
         .join(constants::CONFIG_FILE)
@@ -298,12 +328,11 @@ fn detect_installdir() -> Option<PathBuf> {
     {
         return None;
     };
-    Some(installdir.to_owned())
+    Some(install_dir.to_owned())
 }
 
 #[cfg(windows)]
 fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
-    let paths = determine_paths()?;
     let duplicate_level = if let cli::Mode::Daemon(_) = cli.mode {
         flexi_logger::Duplicate::None
     } else {
@@ -314,7 +343,8 @@ fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
             .write_all(format!("Failed to initialize logging: {:?}", err).as_bytes())
             .unwrap_or(());
     }
-    Ok(paths)
+
+    Ok(PathResolver::new(SetupMode::Classic, &detect_home_dir()))
 }
 
 pub fn init(args: ArgsOs) -> AnyhowResult<(cli::Cli, PathResolver)> {
@@ -340,7 +370,7 @@ mod tests {
         let home_dir = std::path::Path::new("/a/b/c");
         let config_path = std::path::Path::new("/a/b/c/").join(crate::constants::CONFIG_FILE);
         assert_eq!(
-            PathResolver::from_home_dir(home_dir).config_path,
+            PathResolver::new(SetupMode::Classic, home_dir).config_path,
             config_path
         );
     }
@@ -348,7 +378,7 @@ mod tests {
     #[cfg(windows)]
     #[test]
     fn test_windows_paths() {
-        let p = determine_paths().unwrap();
+        let p = PathResolver::new(SetupMode::Classic, &detect_home_dir());
         let home = String::from("C:\\ProgramData") + constants::WIN_AGENT_HOME_DIR;
         assert_eq!(
             p.config_path,

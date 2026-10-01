@@ -198,7 +198,7 @@ metric_log_files_total = metrics.Metric(
 )
 metric_mem_available = metrics.Metric(
     name="mem_available",
-    title=Title("Estimated RAM for new processes"),
+    title=Title("Available RAM (kernel estimate)"),
     unit=UNIT_BYTES,
     color=metrics.Color.YELLOW,
 )
@@ -207,18 +207,6 @@ metric_swap_used_percent = metrics.Metric(
     title=Title("Swap used percentage"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.DARK_GREEN,
-)
-metric_caches = metrics.Metric(
-    name="caches",
-    title=Title("Memory used by caches"),
-    unit=UNIT_BYTES,
-    color=metrics.Color.DARK_GRAY,
-)
-metric_mem_lnx_total_used = metrics.Metric(
-    name="mem_lnx_total_used",
-    title=Title("Total used memory"),
-    unit=UNIT_BYTES,
-    color=metrics.Color.GREEN,
 )
 metric_mem_fragmentation = metrics.Metric(
     name="mem_fragmentation",

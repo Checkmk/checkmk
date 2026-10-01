@@ -7,12 +7,6 @@ from cmk.graphing.v1 import graphs, metrics, Title
 
 UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
 
-metric_mem_lnx_bounce = metrics.Metric(
-    name="mem_lnx_bounce",
-    title=Title("Bounce buffers"),
-    unit=UNIT_BYTES,
-    color=metrics.Color.GREEN,
-)
 metric_mem_lnx_dirty = metrics.Metric(
     name="mem_lnx_dirty",
     title=Title("Dirty disk blocks"),
@@ -37,6 +31,12 @@ metric_mem_lnx_writeback_tmp = metrics.Metric(
     unit=UNIT_BYTES,
     color=metrics.Color.GRAY,
 )
+metric_mem_lnx_pending = metrics.Metric(
+    name="mem_lnx_pending",
+    title=Title("Pending memory"),
+    unit=UNIT_BYTES,
+    color=metrics.Color.YELLOW,
+)
 
 graph_filesystem_writeback = graphs.Graph(
     name="filesystem_writeback",
@@ -45,7 +45,9 @@ graph_filesystem_writeback = graphs.Graph(
         "mem_lnx_dirty",
         "mem_lnx_writeback",
         "mem_lnx_nfs_unstable",
-        "mem_lnx_bounce",
         "mem_lnx_writeback_tmp",
     ],
+    # see mem_linux.py: Pending is the sum of the stacked metrics
+    simple_lines=["mem_lnx_pending"],
+    optional=["mem_lnx_pending"],
 )

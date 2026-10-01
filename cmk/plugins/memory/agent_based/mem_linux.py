@@ -142,7 +142,7 @@ def _check_memory_dict(
     if "MemAvailable" in meminfo and "MemTotal" in meminfo:
         results["available"] = list(
             check_element(
-                "RAM available",
+                "Available RAM (kernel estimate)",
                 meminfo["MemTotal"] - meminfo["MemAvailable"],
                 meminfo["MemTotal"],
                 params.get("levels_available"),
@@ -218,7 +218,6 @@ def check_mem_linux(params: Mapping[str, Any], section: memory.SectionMem) -> Ch
         augmented["Dirty"]
         + augmented.get("Writeback", 0)
         + augmented.get("NFS_Unstable", 0)
-        + augmented.get("Bounce", 0)
         + augmented.get("WritebackTmp", 0)
     )
 

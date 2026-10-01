@@ -41,6 +41,12 @@ metric_shmem_pmd_mapped = Metric(
     unit=UNIT_BYTES,
     color=Color.ORANGE,
 )
+metric_mem_lnx_anon_huge_pages = Metric(
+    name="mem_lnx_anon_huge_pages",
+    title=Title("Anonymous huge pages"),
+    unit=UNIT_BYTES,
+    color=Color.LIGHT_BLUE,
+)
 
 graph_huge_pages = Graph(
     name="huge_pages_2",
@@ -50,5 +56,7 @@ graph_huge_pages = Graph(
         "file_pmd_mapped",
         "shmem_huge_pages",
         "shmem_pmd_mapped",
+        "mem_lnx_anon_huge_pages",
     ],
+    optional=["mem_lnx_anon_huge_pages"],
 )

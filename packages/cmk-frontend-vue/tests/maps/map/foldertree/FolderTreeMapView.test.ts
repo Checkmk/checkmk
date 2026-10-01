@@ -178,6 +178,21 @@ describe('FolderTreeMapView (list mode)', () => {
     expect(screen.getByRole('button', { name: 'Toggle Map', pressed: false })).toBeInTheDocument()
   })
 
+  it('takes the hover card down when its row is clicked', async () => {
+    const user = userEvent.setup()
+    renderTree()
+    await waitForRows()
+    const host = screen.getByRole('treeitem', { name: /web-01/ })
+
+    await user.hover(host)
+    await screen.findByText('Host')
+    await user.click(host)
+    await waitFor(() => expect(screen.queryByText('Host')).toBeNull())
+    await user.pointer({ target: host, coords: { clientX: 40, clientY: 10 } })
+
+    expect(screen.queryByText('Host')).toBeNull()
+  })
+
   it('does not call an empty search result all OK', async () => {
     const { rerender } = renderTree()
     await waitForRows()

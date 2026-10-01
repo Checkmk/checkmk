@@ -189,7 +189,17 @@ function clearFilter(): void {
   problemsOnly.value = false
 }
 
+// A click acts on what the card was about. The row keeps sending hovers while
+// the pointer moves on it, so the card stays down until the pointer leaves.
+let clickedNode: FolderTreeNode | null = null
+
+function takeCardDown(node: FolderTreeNode): void {
+  hover.close()
+  clickedNode = node
+}
+
 function onToggle(node: FolderTreeNode): void {
+  takeCardDown(node)
   expansion.toggle(node.path)
   if (node.kind === 'host') {
     void services.ensure(node)
@@ -201,10 +211,14 @@ function onSelect(host: string | null, node: FolderTreeNode): void {
   if (props.preview) {
     return
   }
+  takeCardDown(node)
   emit('select', folderNodeToElement(node, host), folderNodeToState(node, host))
 }
 
 function onHover(host: string | null, node: FolderTreeNode, x: number, y: number): void {
+  if (node === clickedNode) {
+    return
+  }
   hover.open(folderNodeToElement(node, host), null, {
     x: x + 12,
     y: y + 12,
@@ -215,6 +229,7 @@ function onHover(host: string | null, node: FolderTreeNode, x: number, y: number
 
 /** The pointer left a leaf; `immediate` when another card takes over at once. */
 function onHoverClear(immediate: boolean): void {
+  clickedNode = null
   if (immediate) {
     hover.close()
   } else {
@@ -346,7 +361,7 @@ function closeBulkModal(): void {
         @toggle="onToggle"
         @select="onSelect"
         @hover="onHover"
-        @hover-clear="hover.scheduleClose()"
+        @hover-clear="onHoverClear(false)"
         @ctx-folder="onFolderMenu"
       />
 

@@ -350,6 +350,73 @@ def test_discovery_ungrouped_off() -> None:
     )
 
 
+def test_discovery_ungrouped_excludes_matching_name() -> None:
+    section = [
+        interfaces.InterfaceWithCounters(
+            interfaces.Attributes(
+                index=index, descr="", alias="", name=name, type="6", oper_status="1"
+            ),
+            interfaces.Counters(),
+            0.0,
+        )
+        for index, name in (("1", "port1"), ("2", "rt0001"))
+    ]
+
+    services = interfaces.discover_interfaces(
+        [
+            {
+                "matching_conditions": (False, {"match_name": ["rt"]}),
+                "discovery_single": (False, {}),
+            },
+            {
+                "matching_conditions": (True, {}),
+                "discovery_single": (True, {"item_appearance": "name", "pad_portnumbers": True}),
+            },
+            DEFAULT_DISCOVERY_PARAMS,
+        ],
+        section,
+    )
+
+    assert [service.item for service in services] == ["port1"]
+
+
+def test_discovery_labels_conditions_match_name() -> None:
+    section = [
+        interfaces.InterfaceWithCounters(
+            interfaces.Attributes(
+                index=index, descr="", alias="", name=name, type="6", oper_status="1"
+            ),
+            interfaces.Counters(),
+            0.0,
+        )
+        for index, name in (("1", "port1"), ("2", "rt0001"))
+    ]
+
+    services = interfaces.discover_interfaces(
+        [
+            {
+                "matching_conditions": (True, {}),
+                "discovery_single": (
+                    True,
+                    {
+                        "item_appearance": "name",
+                        "pad_portnumbers": True,
+                        "labels_conditions": [
+                            {"conditions": {"match_name": ["rt"]}, "labels": {"kind": "rt"}}
+                        ],
+                    },
+                ),
+            },
+            DEFAULT_DISCOVERY_PARAMS,
+        ],
+        section,
+    )
+
+    assert [
+        service.item for service in services if ServiceLabel("kind", "rt") in service.labels
+    ] == ["rt0001"]
+
+
 def test_discovery_duplicate_index() -> None:
     assert list(
         interfaces.discover_interfaces(

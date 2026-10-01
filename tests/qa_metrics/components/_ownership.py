@@ -5,9 +5,9 @@
 
 """Resolve repository paths to the components that own them.
 
-Ownership is declared by the repository's ``OWNERS`` files and served by Gerrit's
-code-owners API, read through ``cwz``'s ``CodeOwnersClient``. This module wraps
-that client so callers get a plain immutable mapping and deal with no async,
+Ownership is declared by the repository's ``OWNERS`` files, read from Gerrit
+through ``cwz``'s ``RemoteGerritRepo`` and ``CodeOwnership``. This module wraps
+them so callers get a plain immutable mapping and deal with no async,
 credentials or ``", "``-joined component strings.
 
 Ownership comes from ``branch`` on the Gerrit server, not from the local
@@ -16,23 +16,24 @@ Data that loaded but attributes nothing is refused rather than returned, so no
 caller has to tell a failed fetch from an empty repository.
 
 It is the only place touching ``cwz``'s library API, which is not stable across
-releases -- 0.3.8 renamed both the credential helper and the data-loading method
--- so a version bump is one edit here.
+releases -- 0.3.8 renamed both the credential helper and the data-loading method, 0.4.8
+moved ownership out of ``CodeOwnersClient`` -- so a version bump is one edit here.
 """
 
 import asyncio
 from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass
 from difflib import get_close_matches
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
+from cwz.code_ownership import CodeOwnership
 from cwz.credentials import resolve_credentials
 from cwz.gerrit_utils.client import (
-    CodeOwnersClient,
     DEFAULT_BRANCH,
     DEFAULT_GERRIT_URL,
     DEFAULT_PROJECT_NAME,
     GerritClient,
+    RemoteGerritRepo,
 )
 
 
@@ -123,27 +124,30 @@ async def _resolve(
         url=gerrit_url,
         token_hint=f"{gerrit_url}/settings/#HTTPCredentials",
     )
-    async with (
-        GerritClient(gerrit_url, username, password) as gerrit_client,
-        # The CodeOwnersClient context is what persists the on-disk cache, on
-        # exit -- without it every run would refetch all ownership data.
-        CodeOwnersClient(gerrit_client, project, branch) as owners_client,
-    ):
-        await owners_client.initialize_data(cache_mode="auto")
-        components = await owners_client.all_components_info(with_code_locations=True)
-        _assert_usable(
-            component_count=len(components),
-            rule_count=sum(len(component.code_location or ()) for component in components.values()),
-        )
-        # with_code_locations loaded the OWNERS entries, so component_for_path, which
-        # would otherwise fetch every OWNERS file on its first call, costs no request.
-        return ComponentOwnership(
-            owners_by_path={
-                path: _owner_ids(await owners_client.component_for_path(str(path)))
-                for path in paths
-            },
-            component_ids=frozenset(components),
-        )
+    async with GerritClient(gerrit_url, username, password) as gerrit_client:
+        repo = RemoteGerritRepo(gerrit_client, project, branch)
+        await repo.load_cache("auto")
+        ownership = CodeOwnership(repo)
+        try:
+            components = await ownership.all_components_info(with_code_locations=True)
+            _assert_usable(
+                component_count=len(components),
+                rule_count=sum(
+                    len(component.code_location or ()) for component in components.values()
+                ),
+            )
+            # with_code_locations loaded the OWNERS entries, so component_for_path, which
+            # would otherwise fetch every OWNERS file on its first call, costs no request.
+            return ComponentOwnership(
+                owners_by_path={
+                    path: _owner_ids(await ownership.component_for_path(PurePosixPath(path)))
+                    for path in paths
+                },
+                component_ids=frozenset(components),
+            )
+        finally:
+            # Without it every run would refetch all ownership data.
+            repo.persist_cache()
 
 
 def _assert_usable(*, component_count: int, rule_count: int) -> None:

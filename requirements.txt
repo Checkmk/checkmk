@@ -758,7 +758,9 @@ charset-normalizer==3.5.1 \
 checkmk-dev-tools==2.4.3 \
     --hash=sha256:bdd855bc28738147a159fae815c44cbab787f1eea8424bdf9f04569ab9bdf7bb \
     --hash=sha256:e4e247c6470bd210e5ea8a902b7ebe6a0faec5acbd3fefce8b59a3a1487f87cd
-    # via -r tests/dev-requirements.in
+    # via
+    #   -r tests/dev-requirements.in
+    #   cmk-dev-site
 click==8.5.0 \
     --hash=sha256:255bc9599cf7748b4b1a446ccc735421bd08a2ae529a8b88597d3de5664ee360 \
     --hash=sha256:ba0d2089de75ea0310e2dde03160e6ca10009947fb95a182f9b54021bb272e34
@@ -832,9 +834,13 @@ clickhouse-connect==1.8.0 \
     # via
     #   -r non-free/packages/cmk-data-backend/requirements.in
     #   -r non-free/packages/cmk-network-flow/requirements.in
-cmk-werk-zeug==0.4.0 \
-    --hash=sha256:21a7975bf76c0698e1dc2dac5309d727dbf60d18c7c5c7bc54e088059f72847c \
-    --hash=sha256:b1a47e4d89a0f4a3b45a6e4954eb49b4c777b005519cb6bd93296998846ca396
+cmk-dev-site==1.20.0 \
+    --hash=sha256:95878d6e23dabefed966c660c9ddc92e74b9268445968c45b46293f45735db19 \
+    --hash=sha256:bf3fa962488f19458e6de49a242a133987be1c14e7d27344d631bff58035969a
+    # via cmk-werk-zeug
+cmk-werk-zeug==0.4.9 \
+    --hash=sha256:2892f3af404be4cefb4b5b3fbe390d05b1811a841b5ca5a3e9722a06980e2dc3 \
+    --hash=sha256:d5b09e4d3ddd0ea1de508886a2456a862271f53d47d508654a0f81a1dea3f906
     # via -r tests/dev-requirements.in
 contourpy==1.4.0 \
     --hash=sha256:018227e134b73090b06f911e773a526c77c9af426be29065500ce096a5accd4c \
@@ -1297,6 +1303,7 @@ fastapi==0.141.1 \
     #   -r non-free/packages/cmk-dev-ai/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-maps/requirements.in
+    #   cmk-dev-site
 feedparser==6.0.12 \
     --hash=sha256:64f76ce90ae3e8ef5d1ede0f8d3b50ce26bcce71dd8ae5e82b1cd2d4a5f94228 \
     --hash=sha256:6bbff10f5a52662c00a2e3f86a38928c37c48f77b3c511aedcd51de933549324
@@ -2072,7 +2079,6 @@ jira==3.10.5 \
     # via
     #   -r cmk/requirements.in
     #   -r tests/dev-requirements.in
-    #   cmk-werk-zeug
 jiter==0.17.0 \
     --hash=sha256:00b5a98df3e3a3e8cf7b619f4ac2f8bf975bbf3d95d02c5d17b8dbfe5c8b8245 \
     --hash=sha256:00d783a779c5664e16dbad5e3a3c3a75e128b07dd5f4765159658d9210a50ca5 \
@@ -4528,6 +4534,7 @@ pyjwt[crypto]==2.14.0 \
     --hash=sha256:ad0cef71c756a56e74863c2919cf0985f72decbcfcb550ee2f422e7c62b5eedc
     # via
     #   -r cmk/requirements.in
+    #   cmk-dev-site
     #   mcp
     #   msal
 pyleak==0.2.0 \
@@ -5032,6 +5039,7 @@ python-multipart==0.0.32 \
     --hash=sha256:ff6d3f776f16878c894e52e107296ffc890e913c611b1a4ec6c44e2821fe2e23
     # via
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   cmk-dev-site
     #   mcp
 python-slugify==8.0.4 \
     --hash=sha256:276540b79961052b66b7d116620b36518847f52d5fd9e3a70164fc8c50faa6b8 \
@@ -5368,6 +5376,7 @@ requests==2.34.2 \
     #   -r packages/cmk-plugins/requirements.in
     #   -r packages/cmk-werks/requirements.in
     #   azure-core
+    #   cmk-dev-site
     #   docker
     #   exchangelib
     #   google-api-core
@@ -6110,6 +6119,10 @@ toml==0.10.2 \
     --hash=sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b \
     --hash=sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f
     # via pipfile
+tomlkit==0.15.1 \
+    --hash=sha256:177a05aece5a8ca5266fd3c448abb47b8d352f09d477d3ca8332db4d89b24304 \
+    --hash=sha256:e25bbf38843005246210a12982776f27f99cb9be67160e14434d0c0d21ee1e97
+    # via cmk-werk-zeug
 tqdm==4.70.1 \
     --hash=sha256:c293e525e6fef9c20e8728fd4612df02a0aa31bb5fe91ecd93e123b1b7bffa73 \
     --hash=sha256:cefd0eca11b2a37a3aee776544d4f4ae913f02688135b5556b8788dfa474afc4
@@ -6469,6 +6482,7 @@ uvicorn==0.53.0 \
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-maps/requirements.in
+    #   cmk-dev-site
     #   mcp
     #   uvicorn-worker
 uvicorn-worker==0.4.0 \

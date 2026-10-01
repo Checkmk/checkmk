@@ -4115,9 +4115,13 @@
             "https://files.pythonhosted.org/packages/fc/ad/b2cdb6e78de339e0725ffe529b2def6a77139132c081a887deeb5db4a943/clickhouse_connect-1.8.0-cp312-cp312-musllinux_1_2_aarch64.whl": "sha256:5ac1edef1599039ab7aad4147c6d8c19555b5278129177f3c01860414051e5ad",
             "https://files.pythonhosted.org/packages/fe/a6/9edbc55c3deedcf84f0a77ff29dbdce025442057b344afd677626317e889/clickhouse_connect-1.8.0-cp314-cp314t-macosx_10_15_x86_64.whl": "sha256:911d1357a97005297080716ffe61a5a159a3d0b96e5c5fdd3e7f62b7876eb3a5"
           },
+          "cmk-dev-site": {
+            "https://files.pythonhosted.org/packages/46/2e/f2e79049070e8ed49d8e3f98730994ddaea8745aa8a115398f7df80a90aa/cmk_dev_site-1.20.0.tar.gz": "sha256:95878d6e23dabefed966c660c9ddc92e74b9268445968c45b46293f45735db19",
+            "https://files.pythonhosted.org/packages/dd/48/55d4711209f3c40007c475c5178f3b76ee815dd427a40397b97baee1aa86/cmk_dev_site-1.20.0-py3-none-any.whl": "sha256:bf3fa962488f19458e6de49a242a133987be1c14e7d27344d631bff58035969a"
+          },
           "cmk-werk-zeug": {
-            "https://files.pythonhosted.org/packages/96/05/6e6ebb1edaaefbc833f1dccd491b82d79b3d0aba69fabc1ab6f4c7c4843a/cmk_werk_zeug-0.4.0.tar.gz": "sha256:b1a47e4d89a0f4a3b45a6e4954eb49b4c777b005519cb6bd93296998846ca396",
-            "https://files.pythonhosted.org/packages/f7/75/bfa603a1e19ee0a50e810020a4e9fbf2f16f9b11b5ea17aad52db2afc1cd/cmk_werk_zeug-0.4.0-py3-none-any.whl": "sha256:21a7975bf76c0698e1dc2dac5309d727dbf60d18c7c5c7bc54e088059f72847c"
+            "https://files.pythonhosted.org/packages/24/64/741f04b6e359f00da0ff998ef18be0151c038b883c7e61ac5cb41ba96973/cmk_werk_zeug-0.4.9-py3-none-any.whl": "sha256:d5b09e4d3ddd0ea1de508886a2456a862271f53d47d508654a0f81a1dea3f906",
+            "https://files.pythonhosted.org/packages/ed/50/76a411288ac2bdeaadf8f82e23b1dc728093a41a7ff6666da125d176423d/cmk_werk_zeug-0.4.9.tar.gz": "sha256:2892f3af404be4cefb4b5b3fbe390d05b1811a841b5ca5a3e9722a06980e2dc3"
           },
           "colorama": {
             "https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl": "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6",
@@ -8913,6 +8917,10 @@
           "toml": {
             "https://files.pythonhosted.org/packages/44/6f/7120676b6d73228c96e17f1f794d8ab046fc910d781c8d151120c3f1569e/toml-0.10.2-py2.py3-none-any.whl": "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b",
             "https://files.pythonhosted.org/packages/be/ba/1f744cdc819428fc6b5084ec34d9b30660f6f9daaf70eead706e3203ec3c/toml-0.10.2.tar.gz": "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"
+          },
+          "tomlkit": {
+            "https://files.pythonhosted.org/packages/13/bc/8c13eb66537dce1d2bd3a57132902f38d0e7f5bb46fa9f4daed9fe9d76ee/tomlkit-0.15.1-py3-none-any.whl": "sha256:177a05aece5a8ca5266fd3c448abb47b8d352f09d477d3ca8332db4d89b24304",
+            "https://files.pythonhosted.org/packages/94/96/e07752635b98536177fa1f37671c8f3cdde2e724c6bcf6034b2cfb571565/tomlkit-0.15.1.tar.gz": "sha256:e25bbf38843005246210a12982776f27f99cb9be67160e14434d0c0d21ee1e97"
           },
           "tqdm": {
             "https://files.pythonhosted.org/packages/0d/ea/b2a5bd54b28a324dae8211928b2d730b6547500342c7e6c6dea08bd0a485/tqdm-4.70.1.tar.gz": "sha256:cefd0eca11b2a37a3aee776544d4f4ae913f02688135b5556b8788dfa474afc4",

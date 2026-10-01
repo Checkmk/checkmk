@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { render, screen, within } from '@testing-library/vue'
 import UclCmkBadge from '@ucl/components/basic-elements/CmkBadge/UclCmkBadge.vue'
 import UclCmkButton from '@ucl/components/basic-elements/CmkButton/UclCmkButton.vue'
@@ -143,6 +144,15 @@ test('CmkBadge page renders its component', () => {
 test('CmkButton page renders its component', () => {
   render(UclCmkButton, { props: { screenshotMode: false } })
   within(componentPreview()).getAllByRole('button')
+})
+
+test('CmkButton page shows the label only for the Text variant', async () => {
+  render(UclCmkButton, { props: { screenshotMode: false } })
+
+  await userEvent.click(screen.getByRole('combobox', { name: 'Variant' }))
+  await userEvent.click(await screen.findByRole('option', { name: 'Text' }))
+
+  expect(screen.getByRole('combobox', { name: 'Content' })).toHaveTextContent('Label only')
 })
 
 test('CmkChip page renders its component', () => {

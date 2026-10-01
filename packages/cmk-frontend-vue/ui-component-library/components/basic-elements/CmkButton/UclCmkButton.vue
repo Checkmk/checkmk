@@ -28,14 +28,17 @@ export const a11yData = [
   }
 ]
 
+type ButtonContent = 'iconAndLabel' | 'label' | 'iconOnly'
+type ButtonState = 'default' | 'disabled' | 'running'
+
 export const panelConfig = {
   variant: {
     type: 'list' as const,
     title: 'Variant',
     options: listOptions<ButtonVariants['variant']>({
-      optional: 'Optional',
       primary: 'Primary',
       secondary: 'Secondary',
+      optional: 'Optional',
       success: 'Success',
       warning: 'Warning',
       danger: 'Danger',
@@ -43,43 +46,67 @@ export const panelConfig = {
       text: 'Text',
       ai: 'AI'
     }),
-    initialState: 'optional' as const,
+    initialState: 'primary' as const,
     help: 'AI renders the optional button with a purple shimmer sweeping across it, marking an AI-powered action.'
+  },
+  content: {
+    type: 'list' as const,
+    title: 'Content',
+    options: [
+      {
+        title: 'Icon and label',
+        name: 'iconAndLabel',
+        hiddenWhen: (state) => state.variant === 'text'
+      },
+      { title: 'Label only', name: 'label' },
+      {
+        title: 'Icon only',
+        name: 'iconOnly',
+        hiddenWhen: (state) => state.variant !== 'optional'
+      }
+    ],
+    initialState: 'iconAndLabel' as const,
+    help: 'Icon only renders a fixed 20px square button and is only available for the Optional variant. The Text variant always shows the label only.'
   },
   size: {
     type: 'list' as const,
     title: 'Size',
-    options: listOptions<ButtonVariants['size']>({
+    options: listOptions<'medium' | 'small'>({
       medium: 'Medium',
-      small: 'Small',
-      iconOnly: 'Icon only'
+      small: 'Small'
     }),
     initialState: 'medium' as const,
-    help: 'Icon only renders a fixed 20px square button with no padding, for an icon-only button.'
+    hiddenWhen: (state) => state.content === 'iconOnly'
   },
-  disabled: {
-    type: 'boolean' as const,
-    title: 'Disabled',
-    initialState: false
+  state: {
+    type: 'list' as const,
+    title: 'State',
+    options: listOptions<ButtonState>({
+      default: 'Default',
+      disabled: 'Disabled',
+      running: 'Running'
+    }),
+    initialState: 'default' as const,
+    help: 'Running pulses the button while the action it triggers is still running.'
   },
   disabledReason: {
     type: 'string' as const,
     title: 'Disabled reason',
     initialState: '',
-    help: 'Renders the disabled button as aria-disabled with the reason as its title, so a hover still explains why the action is unavailable.'
+    help: 'Renders the disabled button as aria-disabled with the reason as its title, so a hover still explains why the action is unavailable.',
+    hiddenWhen: (state) => state.state !== 'disabled'
   },
   icon: {
     type: 'list' as const,
     title: 'Icon',
     options: [
-      { title: 'None', name: '' },
       { title: 'Acknowledge', name: 'ack' },
       { title: 'Downtime', name: 'downtime' },
       { title: 'Reload', name: 'reload' },
       { title: 'Save', name: 'save' }
     ],
-    initialState: '' as const,
-    help: 'Renders the icon left of the content, with the label spacing handled by the button.'
+    initialState: 'downtime' as const,
+    hiddenWhen: (state) => state.content === 'label'
   },
   iconSide: {
     type: 'list' as const,
@@ -88,7 +115,8 @@ export const panelConfig = {
       { title: 'Left', name: 'left' },
       { title: 'Right', name: 'right' }
     ],
-    initialState: 'left' as const
+    initialState: 'left' as const,
+    hiddenWhen: (state) => state.content !== 'iconAndLabel'
   },
   href: {
     type: 'string' as const,
@@ -115,17 +143,13 @@ export const panelConfig = {
   },
   title: {
     type: 'string' as const,
-    title: 'Title Attribute',
+    title: 'Tooltip',
     initialState: ''
-  },
-  running: {
-    type: 'boolean' as const,
-    title: 'Running',
-    initialState: false,
-    help: 'Pulses the button while the action it triggers is still running.'
   }
-} satisfies PanelConfigFor<typeof CmkButton, 'icon'> & {
-  icon: ListPropDef<SimpleIcons | ''>
+} satisfies PanelConfigFor<typeof CmkButton, 'icon' | 'disabled' | 'running'> & {
+  content: ListPropDef<ButtonContent>
+  state: ListPropDef<ButtonState>
+  icon: ListPropDef<SimpleIcons>
   iconSide: ListPropDef<'left' | 'right'>
 }
 </script>
@@ -150,16 +174,25 @@ import UclCmkButtonDev from './UclCmkButtonDev.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = new PanelStateCreator<typeof CmkButton, 'icon'>().createRef(panelConfig)
+const propState = new PanelStateCreator<
+  typeof CmkButton,
+  'icon' | 'disabled' | 'running'
+>().createRef(panelConfig)
 
 const icon = computed<ButtonIcon | undefined>(() =>
-  propState.value.icon === ''
+  propState.value.content === 'label'
     ? undefined
     : { name: propState.value.icon, side: propState.value.iconSide }
 )
 
+const size = computed(() =>
+  propState.value.content === 'iconOnly' ? 'iconOnly' : propState.value.size
+)
+
 const disabledReason = computed(() =>
-  propState.value.disabledReason ? untranslated(propState.value.disabledReason) : undefined
+  propState.value.state === 'disabled' && propState.value.disabledReason
+    ? untranslated(propState.value.disabledReason)
+    : undefined
 )
 </script>
 
@@ -170,17 +203,17 @@ const disabledReason = computed(() =>
     <UclDetailPageComponent>
       <CmkButton
         :variant="propState.variant"
-        :size="propState.size"
-        :disabled="propState.disabled"
+        :size="size"
+        :disabled="propState.state === 'disabled'"
         :disabled-reason="disabledReason"
         :href="propState.href || undefined"
         :target="propState.target || undefined"
         :download="propState.download || undefined"
         :title="propState.title"
         :icon="icon"
-        :running="propState.running"
+        :running="propState.state === 'running'"
       >
-        Click Me
+        <template v-if="propState.content !== 'iconOnly'">Click Me</template>
       </CmkButton>
 
       <template #properties>

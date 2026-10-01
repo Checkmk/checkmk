@@ -21,10 +21,16 @@ export interface StringPropDef {
   hiddenWhen?: (state: Record<string, unknown>) => boolean
 }
 
+export interface ListOption<T extends string = string> {
+  title: string
+  name: NonNullable<T>
+  hiddenWhen?: (state: Record<string, unknown>) => boolean
+}
+
 export interface ListPropDef<T extends string = string> {
   type: 'list'
   title: string
-  options: Array<{ title: string; name: NonNullable<T> }>
+  options: Array<ListOption<T>>
   initialState: T
   help?: string
   hiddenWhen?: (state: Record<string, unknown>) => boolean

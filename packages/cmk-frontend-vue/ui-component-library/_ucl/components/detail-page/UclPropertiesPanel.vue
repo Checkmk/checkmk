@@ -20,7 +20,7 @@ import CmkSwitch from 'cmk-ui-library/components/CmkSwitch.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import useId from 'cmk-ui-library/lib/useId'
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import UclMultiSelect from './UclMultiSelect.vue'
@@ -34,6 +34,23 @@ const uid = useId()
 
 const router = useRouter()
 const route = useRoute()
+
+function visibleOptions(def: ListPropDef): ListPropDef['options'] {
+  return def.options.filter((option) => !option.hiddenWhen?.(state.value))
+}
+
+watchEffect(() => {
+  for (const [configKey, configValue] of Object.entries(config)) {
+    if (configValue.type !== 'list') {
+      continue
+    }
+    const selected = configValue.options.find((option) => option.name === state.value[configKey])
+    const firstVisible = visibleOptions(configValue)[0]
+    if (selected?.hiddenWhen?.(state.value) && firstVisible) {
+      state.value[configKey] = firstVisible.name
+    }
+  }
+})
 
 const url = computed(() => {
   const urlQuery: Record<string, string | string[]> = {}
@@ -138,8 +155,8 @@ onMounted(() => {
         :component-id="`${uid}-${key}`"
         :label="def.title"
         :options="{
-          type: (def as ListPropDef).options.length > 5 ? 'filtered' : 'fixed',
-          suggestions: (def as ListPropDef).options
+          type: visibleOptions(def as ListPropDef).length > 5 ? 'filtered' : 'fixed',
+          suggestions: visibleOptions(def as ListPropDef)
         }"
         :model-value="state[key] as string"
         @update:model-value="$event !== null && (state[key] = $event)"

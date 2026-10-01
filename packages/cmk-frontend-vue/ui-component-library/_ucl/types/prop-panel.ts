@@ -33,7 +33,11 @@ export type {
   StringPropDef
 }
 
-export type Options<T> = { title: string; name: NonNullable<T> }
+export type Options<T> = {
+  title: string
+  name: NonNullable<T>
+  hiddenWhen?: (state: Record<string, unknown>) => boolean
+}
 
 /**
  * Build the option list of a `list` prop from a record keyed by the variant name.

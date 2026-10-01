@@ -16,8 +16,10 @@ import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
 from http import HTTPStatus
+from typing import override
 
 import requests
+import requests.auth
 import urllib3
 from pydantic import BaseModel, ValidationError
 
@@ -141,45 +143,44 @@ def _veeam_error(response: requests.Response) -> tuple[str, str]:
     return str(body.get("errorCode") or ""), str(body.get("message") or "")
 
 
-class VeeamClient:
+class VeeamApi:
+    """The transport for all requests to the REST API, with or without a token."""
+
     def __init__(
         self,
         session: requests.Session,
         url: str,
         *,
-        storage: Storage,
-        user: str,
-        password: Secret[str],
         cert_server_name: str | None,
         timeout: int,
     ) -> None:
         self._session = session
         self._session.headers["x-api-version"] = API_VERSION
-        self._url = url
-        self._storage = storage
-        self._user = user
-        self._password = password
-        self._owner = f"{user}@{url}"
+        self.url = url
         self._cert_server_name = cert_server_name
         self._timeout = timeout
-        self._token: _StoredToken | None = None
 
-    def _request(
-        self, method: str, path: str, data: Mapping[str, str] | None = None
+    def request(
+        self,
+        method: str,
+        path: str,
+        data: Mapping[str, str] | None = None,
+        auth: requests.auth.AuthBase | None = None,
     ) -> requests.Response:
         try:
             # Pass `verify` explicitly, otherwise REQUESTS_CA_BUNDLE would override it.
             return self._session.request(
                 method,
-                f"{self._url}{path}",
+                f"{self.url}{path}",
                 timeout=self._timeout,
                 verify=self._session.verify,
                 data=data,
+                auth=auth,
             )
         except requests.exceptions.SSLError as exc:
             if self._cert_server_name is None:
                 raise TerminateAgent(
-                    f"The TLS handshake with the Veeam backup server at {self._url} failed ({exc})"
+                    f"The TLS handshake with the Veeam backup server at {self.url} failed ({exc})"
                 ) from exc
             raise TerminateAgent(
                 f"The certificate of the Veeam backup server was rejected: it could not be "
@@ -189,13 +190,43 @@ class VeeamClient:
             ) from exc
         except requests.exceptions.Timeout as exc:
             raise TerminateAgent(
-                f"The Veeam backup server at {self._url} did not answer within "
+                f"The Veeam backup server at {self.url} did not answer within "
                 f"{self._timeout} seconds"
             ) from exc
         except requests.exceptions.ConnectionError as exc:
             raise TerminateAgent(
-                f"The Veeam backup server at {self._url} is unreachable ({exc})"
+                f"The Veeam backup server at {self.url} is unreachable ({exc})"
             ) from exc
+
+
+class VeeamAuth(requests.auth.AuthBase):
+    """Owns the access token: reuses the stored one, refreshes it, or logs in with the password.
+
+    Pass it as `auth` to each API request rather than setting it on the session, so that
+    the token requests themselves go out without it.
+    """
+
+    def __init__(
+        self,
+        api: VeeamApi,
+        *,
+        storage: Storage,
+        user: str,
+        password: Secret[str],
+    ) -> None:
+        self._api = api
+        self._storage = storage
+        self._user = user
+        self._password = password
+        self._owner = f"{user}@{api.url}"
+        self._token: _StoredToken | None = None
+
+    @override
+    def __call__(self, r: requests.PreparedRequest) -> requests.PreparedRequest:
+        # Without a token the request goes out unauthenticated; its 401 triggers renew().
+        if self._token is not None:
+            r.headers["Authorization"] = f"Bearer {self._token.access_token}"
+        return r
 
     def _load_token(self) -> _StoredToken | None:
         if (raw := self._storage.read(TOKEN_STORAGE_KEY, None)) is None:
@@ -206,13 +237,9 @@ class VeeamClient:
             return None
         return token if token.owner == self._owner else None
 
-    def _use_token(self, token: _StoredToken) -> None:
-        self._token = token
-        self._session.headers["Authorization"] = f"Bearer {token.access_token}"
-
     def _request_token(self, data: Mapping[str, str]) -> requests.Response:
         requested_at = time.time()
-        response = self._request("POST", TOKEN_PATH, data=data)
+        response = self._api.request("POST", TOKEN_PATH, data=data)
         if not response.ok:
             return response
         try:
@@ -221,15 +248,14 @@ class VeeamClient:
             raise TerminateAgent(
                 "The Veeam REST API returned an invalid access token response"
             ) from exc
-        stored = _StoredToken(
+        self._token = _StoredToken(
             owner=self._owner,
             access_token=token.access_token,
             refresh_token=token.refresh_token,
             expires_at=requested_at + token.expires_in,
         )
         # Store right away: the refresh token we just used is gone for good.
-        self._storage.write(TOKEN_STORAGE_KEY, stored.model_dump_json())
-        self._use_token(stored)
+        self._storage.write(TOKEN_STORAGE_KEY, self._token.model_dump_json())
         return response
 
     def _refresh(self, refresh_token: str) -> bool:
@@ -268,28 +294,30 @@ class VeeamClient:
             f"Login at the Veeam REST API failed with HTTP {response.status_code}: {message}"
         )
 
-    def _renew(self) -> None:
+    def renew(self) -> None:
+        """Replace the current token: spend its refresh token, fall back to the password."""
         if self._token is not None and self._refresh(self._token.refresh_token):
             return
         self._login()
 
     def authenticate(self) -> None:
         """Reuse the stored access token if it is still valid long enough, renew it otherwise."""
-        if (token := self._load_token()) is None:
-            self._login()
-            return
-        self._token = token
-        if token.expires_at - time.time() < MIN_TOKEN_VALIDITY:
-            self._renew()
-            return
-        self._use_token(token)
+        self._token = self._load_token()
+        if self._token is None or self._token.expires_at - time.time() < MIN_TOKEN_VALIDITY:
+            self.renew()
+
+
+class VeeamClient:
+    def __init__(self, api: VeeamApi, auth: VeeamAuth) -> None:
+        self._api = api
+        self._auth = auth
 
     def get(self, path: str) -> object:
-        response = self._request("GET", path)
+        response = self._api.request("GET", path, auth=self._auth)
         if response.status_code == HTTPStatus.UNAUTHORIZED:
             # The token expired mid-run or was revoked: renew it and try once more.
-            self._renew()
-            response = self._request("GET", path)
+            self._auth.renew()
+            response = self._api.request("GET", path, auth=self._auth)
         if response.status_code == HTTPStatus.UNAUTHORIZED:
             raise TerminateAgent(
                 f"The Veeam REST API rejected the session on {path}: {_veeam_error(response)[1]}"
@@ -500,17 +528,15 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         with create_session(url, cert_server_name) as session:
-            client = VeeamClient(
-                session,
-                url,
+            api = VeeamApi(session, url, cert_server_name=cert_server_name, timeout=args.timeout)
+            auth = VeeamAuth(
+                api,
                 storage=Storage(AGENT, host=args.address),
                 user=args.user,
                 password=resolve_secret_option(args, PASSWORD_OPTION),
-                cert_server_name=cert_server_name,
-                timeout=args.timeout,
             )
-            client.authenticate()
-            write_sections(client, SECTIONS)
+            auth.authenticate()
+            write_sections(VeeamClient(api, auth), SECTIONS)
     except TerminateAgent as exc:
         if args.debug:
             raise

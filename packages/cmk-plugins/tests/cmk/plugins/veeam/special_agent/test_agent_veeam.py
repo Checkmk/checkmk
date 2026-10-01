@@ -26,6 +26,8 @@ from cmk.plugins.veeam.special_agent.agent_veeam import (
     fetch_restore_points,
     main,
     TerminateAgent,
+    VeeamApi,
+    VeeamAuth,
     VeeamClient,
     write_sections,
 )
@@ -47,19 +49,23 @@ def _storage(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Storage:
     return Storage("veeam", host="veeam.example.com")
 
 
-def _client(
-    storage: Storage, cert_server_name: str | None = None, user: str = "monitoring"
-) -> VeeamClient:
-    """A client as created by one run of the agent."""
-    return VeeamClient(
-        create_session(URL, cert_server_name),
-        URL,
-        storage=storage,
-        user=user,
-        password=Secret("top-secret"),
-        cert_server_name=cert_server_name,
-        timeout=30,
+def _veeam_api(cert_server_name: str | None = None) -> VeeamApi:
+    return VeeamApi(
+        create_session(URL, cert_server_name), URL, cert_server_name=cert_server_name, timeout=30
     )
+
+
+def _auth(
+    storage: Storage, cert_server_name: str | None = None, user: str = "monitoring"
+) -> VeeamAuth:
+    """The token handling as created by one run of the agent."""
+    return VeeamAuth(
+        _veeam_api(cert_server_name), storage=storage, user=user, password=Secret("top-secret")
+    )
+
+
+def _client(auth: VeeamAuth) -> VeeamClient:
+    return VeeamClient(_veeam_api(), auth)
 
 
 def _token(name: str) -> dict[str, object]:
@@ -84,7 +90,7 @@ def test_authenticate_requests_a_token_with_the_credentials_and_api_version(
 ) -> None:
     api.post(TOKEN_URL, json=_token("first"))
 
-    _client(storage).authenticate()
+    _auth(storage).authenticate()
 
     (call,) = api.calls
     assert call.request.headers["x-api-version"] == "1.3-rev0"
@@ -100,10 +106,10 @@ def test_requests_after_authentication_use_the_token_as_bearer(
 ) -> None:
     api.post(TOKEN_URL, json=_token("first"))
     api.get(f"{URL}/api/v1/jobs", json={"data": [], "pagination": {"total": 0}})
-    client = _client(storage)
-    client.authenticate()
+    auth = _auth(storage)
+    auth.authenticate()
 
-    write_sections(client, [("veeam_jobs", fetch_list("/api/v1/jobs"))])
+    write_sections(_client(auth), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
 
     assert _bearer(api) == "Bearer first-access"
 
@@ -113,11 +119,11 @@ def test_the_token_of_the_previous_run_is_reused(
 ) -> None:
     api.post(TOKEN_URL, json=_token("first"))
     api.get(f"{URL}/api/v1/jobs", json={"data": [], "pagination": {"total": 0}})
-    _client(storage).authenticate()
+    _auth(storage).authenticate()
 
-    client = _client(storage)
-    client.authenticate()
-    write_sections(client, [("veeam_jobs", fetch_list("/api/v1/jobs"))])
+    auth = _auth(storage)
+    auth.authenticate()
+    write_sections(_client(auth), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
 
     assert len(_token_requests(api)) == 1
     assert _bearer(api) == "Bearer first-access"
@@ -130,12 +136,12 @@ def test_a_token_about_to_expire_is_refreshed_at_start(
     api.post(TOKEN_URL, json=_token("second"))
     api.get(f"{URL}/api/v1/jobs", json={"data": [], "pagination": {"total": 0}})
     with time_machine.travel(0, tick=False) as traveller:
-        _client(storage).authenticate()
+        _auth(storage).authenticate()
         traveller.shift(900 - 30)
 
-        client = _client(storage)
-        client.authenticate()
-        write_sections(client, [("veeam_jobs", fetch_list("/api/v1/jobs"))])
+        auth = _auth(storage)
+        auth.authenticate()
+        write_sections(_client(auth), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
 
     assert _token_requests(api)[-1] == {
         "grant_type": ["refresh_token"],
@@ -155,10 +161,10 @@ def test_a_rejected_refresh_token_falls_back_to_the_password(
     )
     api.post(TOKEN_URL, json=_token("second"))
     with time_machine.travel(0, tick=False) as traveller:
-        _client(storage).authenticate()
+        _auth(storage).authenticate()
         traveller.shift(900)
 
-        _client(storage).authenticate()
+        _auth(storage).authenticate()
 
     assert [r["grant_type"] for r in _token_requests(api)] == [
         ["password"],
@@ -171,9 +177,9 @@ def test_the_token_of_another_user_is_not_reused(
     api: responses.RequestsMock, storage: Storage
 ) -> None:
     api.post(TOKEN_URL, json=_token("first"))
-    _client(storage, user="monitoring").authenticate()
+    _auth(storage, user="monitoring").authenticate()
 
-    _client(storage, user="other").authenticate()
+    _auth(storage, user="other").authenticate()
 
     assert [r["username"] for r in _token_requests(api)] == [["monitoring"], ["other"]]
 
@@ -189,14 +195,34 @@ def test_a_token_rejected_mid_run_is_renewed_and_the_request_retried(
         json={"errorCode": "ExpiredToken", "message": "x"},
     )
     api.get(f"{URL}/api/v1/jobs", json={"data": [], "pagination": {"total": 0}})
-    client = _client(storage)
-    client.authenticate()
+    auth = _auth(storage)
+    auth.authenticate()
 
-    write_sections(client, [("veeam_jobs", fetch_list("/api/v1/jobs"))])
+    write_sections(_client(auth), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
 
     assert _token_requests(api)[-1]["grant_type"] == ["refresh_token"]
     assert _bearer(api) == "Bearer second-access"
     assert "<<<veeam_jobs:sep(0)>>>" in capsys.readouterr().out
+
+
+def test_the_token_request_does_not_send_the_rejected_token(
+    api: responses.RequestsMock, storage: Storage
+) -> None:
+    api.post(TOKEN_URL, json=_token("first"))
+    api.post(TOKEN_URL, json=_token("second"))
+    api.get(
+        f"{URL}/api/v1/jobs",
+        status=HTTPStatus.UNAUTHORIZED,
+        json={"errorCode": "ExpiredToken", "message": "x"},
+    )
+    api.get(f"{URL}/api/v1/jobs", json={"data": [], "pagination": {"total": 0}})
+    auth = _auth(storage)
+    auth.authenticate()
+
+    write_sections(_client(auth), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
+
+    refresh = [call.request for call in api.calls if call.request.url == TOKEN_URL][-1]
+    assert "Authorization" not in refresh.headers
 
 
 def test_failing_endpoint_does_stop_the_other_sections(
@@ -211,7 +237,7 @@ def test_failing_endpoint_does_stop_the_other_sections(
 
     with pytest.raises(RuntimeError, match="boom"):
         write_sections(
-            _client(storage),
+            _client(_auth(storage)),
             [
                 ("veeam_broken", fetch_list("/api/v1/broken")),
                 ("veeam_jobs", fetch_list("/api/v1/jobs")),
@@ -230,7 +256,7 @@ def test_broken_response_on_a_data_endpoint_does_stop_the_other_sections(
 
     with pytest.raises(requests.exceptions.ChunkedEncodingError, match="cut off"):
         write_sections(
-            _client(storage),
+            _client(_auth(storage)),
             [
                 ("veeam_broken", fetch_list("/api/v1/broken")),
                 ("veeam_jobs", fetch_list("/api/v1/jobs")),
@@ -251,7 +277,7 @@ def test_access_denied_on_a_role_restricted_endpoint_writes_an_empty_section(
     )
 
     write_sections(
-        _client(storage),
+        _client(_auth(storage)),
         [("veeam_replicas", empty_on_access_denied(fetch_list("/api/v1/replicas")))],
     )
 
@@ -270,7 +296,7 @@ def test_access_denied_on_an_unrestricted_endpoint_is_raised(
     )
 
     with pytest.raises(AccessDenied, match="HTTP 403: denied"):
-        write_sections(_client(storage), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
+        write_sections(_client(_auth(storage)), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
 
     assert capsys.readouterr().out == ""
 
@@ -284,11 +310,11 @@ def test_session_rejected_again_after_renewal_is_fatal(
         status=HTTPStatus.UNAUTHORIZED,
         json={"errorCode": "AccessDenied", "message": "x"},
     )
-    client = _client(storage)
-    client.authenticate()
+    auth = _auth(storage)
+    auth.authenticate()
 
     with pytest.raises(TerminateAgent, match="rejected the session"):
-        write_sections(client, [("veeam_jobs", fetch_list("/api/v1/jobs"))])
+        write_sections(_client(auth), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
 
 
 def test_list_section_pages_until_complete_and_writes_one_item_per_line(
@@ -305,7 +331,7 @@ def test_list_section_pages_until_complete_and_writes_one_item_per_line(
         json={"data": [{"id": 3}], "pagination": {"total": 3}},
     )
 
-    write_sections(_client(storage), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
+    write_sections(_client(_auth(storage)), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
 
     assert capsys.readouterr().out == ('<<<veeam_jobs:sep(0)>>>\n{"id": 1}\n{"id": 2}\n{"id": 3}\n')
     assert api.calls[-2].request.url == f"{URL}/api/v1/jobs?skip=0"
@@ -323,7 +349,7 @@ def test_empty_page_before_reaching_total_does_not_hang(
     )
 
     with pytest.raises(RuntimeError, match="returned an empty page before reaching 3 total items"):
-        write_sections(_client(storage), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
+        write_sections(_client(_auth(storage)), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
 
     assert capsys.readouterr().out == ""
     assert len(api.calls) == 1
@@ -336,7 +362,9 @@ def test_object_section_is_written_as_a_single_line(
 ) -> None:
     api.get(f"{URL}/api/v1/serverInfo", json={"name": "backup-server-01"})
 
-    write_sections(_client(storage), [("veeam_server_info", fetch_object("/api/v1/serverInfo"))])
+    write_sections(
+        _client(_auth(storage)), [("veeam_server_info", fetch_object("/api/v1/serverInfo"))]
+    )
 
     assert (
         capsys.readouterr().out == '<<<veeam_server_info:sep(0)>>>\n{"name": "backup-server-01"}\n'
@@ -361,7 +389,7 @@ def test_piggyback_section_groups_items_by_name(
     )
 
     write_sections(
-        _client(storage), [("veeam_backups", fetch_list_piggyback("/api/v1/taskSessions"))]
+        _client(_auth(storage)), [("veeam_backups", fetch_list_piggyback("/api/v1/taskSessions"))]
     )
 
     assert capsys.readouterr().out == (
@@ -394,7 +422,7 @@ def test_piggyback_section_drops_items_with_no_name(
     )
 
     write_sections(
-        _client(storage), [("veeam_backups", fetch_list_piggyback("/api/v1/taskSessions"))]
+        _client(_auth(storage)), [("veeam_backups", fetch_list_piggyback("/api/v1/taskSessions"))]
     )
 
     assert capsys.readouterr().out == (
@@ -441,7 +469,7 @@ def _reduce_restore_points(
         f"{URL}/api/v1/restorePoints?skip=0&limit=500",
         json={"data": points, "pagination": {"total": len(points)}},
     )
-    write_sections(_client(storage), [("veeam_restore_points", fetch_restore_points())])
+    write_sections(_client(_auth(storage)), [("veeam_restore_points", fetch_restore_points())])
     header, *lines = capsys.readouterr().out.splitlines()
     assert header == "<<<veeam_restore_points:sep(0)>>>"
     return [json.loads(line) for line in lines]
@@ -549,7 +577,7 @@ def test_wrong_credentials_are_reported(api: responses.RequestsMock, storage: St
     )
 
     with pytest.raises(TerminateAgent, match="Check the user name and password"):
-        _client(storage).authenticate()
+        _auth(storage).authenticate()
 
 
 def test_unsupported_api_version_names_the_supported_ones(
@@ -565,7 +593,7 @@ def test_unsupported_api_version_names_the_supported_ones(
     )
 
     with pytest.raises(TerminateAgent, match="versions are supported: 1.1-rev0"):
-        _client(storage).authenticate()
+        _auth(storage).authenticate()
 
 
 def test_unexpected_login_answer_reports_the_http_status(
@@ -578,7 +606,7 @@ def test_unexpected_login_answer_reports_the_http_status(
     )
 
     with pytest.raises(TerminateAgent, match="failed with HTTP 500: boom"):
-        _client(storage).authenticate()
+        _auth(storage).authenticate()
 
 
 @pytest.mark.parametrize(
@@ -594,7 +622,7 @@ def test_timeout_is_reported_as_unreachable(
     api.post(TOKEN_URL, body=timeout)
 
     with pytest.raises(TerminateAgent, match="did not answer within 30 seconds"):
-        _client(storage).authenticate()
+        _auth(storage).authenticate()
 
 
 def test_rejected_certificate_names_the_expected_host_name(
@@ -603,7 +631,7 @@ def test_rejected_certificate_names_the_expected_host_name(
     api.post(TOKEN_URL, body=requests.exceptions.SSLError("certificate verify failed"))
 
     with pytest.raises(TerminateAgent, match="against the host name 'veeam-server'"):
-        _client(storage, cert_server_name="veeam-server").authenticate()
+        _auth(storage, cert_server_name="veeam-server").authenticate()
 
 
 def test_tls_failure_without_verification_is_reported_as_handshake_failure(
@@ -612,7 +640,7 @@ def test_tls_failure_without_verification_is_reported_as_handshake_failure(
     api.post(TOKEN_URL, body=requests.exceptions.SSLError("unsupported protocol"))
 
     with pytest.raises(TerminateAgent, match="TLS handshake with the Veeam backup server"):
-        _client(storage).authenticate()
+        _auth(storage).authenticate()
 
 
 @pytest.mark.usefixtures("storage")

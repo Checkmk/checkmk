@@ -105,6 +105,7 @@
     --font-color: var(--color-conference-grey-100);
     --font-color-secondary: var(--color-conference-grey-70);
     --font-color-dimmed: var(--grey-4-dimmed);
+    --font-color-disabled: var(--color-conference-grey-70);
     --font-underline-color: var(--color-conference-grey-60);
     --font-color-light-bg: var(--font-color);
     --font-perfometer-color: var(--color-conference-grey-100);
@@ -160,26 +161,27 @@
     --tag-font-color-light: var(--color-white-100);
     --tag-font-color-dark: var(--color-conference-grey-100);
 
-    /* Cmk Toggle Button Group */
-    --toggle-button-group-active-bg-color: var(--ux-theme-8);
-    --toggle-button-group-inactive-bg-color: var(--ux-theme-0);
-    --toggle-button-group-border-color: var(--color-mid-grey-50);
-    --toggle-button-group-inactive-border-color: var(--color-mid-grey-10);
-    --toggle-button-group-active-text-color: var(--color-conference-grey-100);
-    --toggle-button-group-inactive-text-color: var(--color-conference-grey-100);
-    --toggle-button-group-disabled-text-color: var(--color-conference-grey-70);
-    --toggle-button-group-hover-bg-color: var(--color-daylight-grey-80);
+    /* Backgrounds */
+    --background-base: var(--ux-theme-0);
+    --background-selected: var(--ux-theme-8);
+    --background-subtle: var(--ux-theme-2);
+    --background-hover: var(--color-daylight-grey-80);
 
-    /* Cmk Tabs */
-    --tabs-panel-bg-color: var(--ux-theme-2);
-    --tabs-selected-border-color: var(--color-mid-grey-50);
-    --tabs-unselected-border-color: var(--color-mid-grey-10);
-    --tabs-hover-bg-color: var(--color-daylight-grey-80);
-    --tabs-error-border-color: var(--color-dark-red-50);
+    /* Borders */
+    --border-color-subtle: var(--color-mid-grey-10);
+    --border-color-default: var(--color-mid-grey-50);
+    --border-color-strong: var(--color-mid-grey-50);
 
-    /* Cmk Inline Validation */
-    --inline-error-border-color: var(--color-dark-red-50);
-    --inline-error-text-color: var(--color-dark-red-50);
+    /* Status */
+    --status-border-color-info: var(--color-dark-blue-50);
+    --status-border-color-success: var(--color-corporate-green-50);
+    --status-border-color-warning: var(--color-yellow-50);
+    --status-border-color-error: var(--color-dark-red-50);
+    --status-text-color-error: var(--color-dark-red-50);
+    --status-icon-color-info: var(--color-dark-blue-80);
+    --status-icon-color-success: var(--color-corporate-green-80);
+    --status-icon-color-warning: var(--color-yellow-80);
+    --status-icon-color-error: var(--color-dark-red-80);
 
     /* Cmk Button Variants */
     --default-button-primary-color: var(--color-corporate-green-50);
@@ -218,10 +220,6 @@
     --cmk-alert-box-success-bg-color: var(--color-corporate-green-20);
     --cmk-alert-box-info-bg-color: var(--color-dark-blue-20);
     --cmk-alert-box-loading-bg-color: var(--color-daylight-grey-40);
-    --cmk-alert-box-error-icon-color: var(--color-dark-red-80);
-    --cmk-alert-box-warning-icon-color: var(--color-yellow-80);
-    --cmk-alert-box-success-icon-color: var(--color-corporate-green-80);
-    --cmk-alert-box-info-icon-color: var(--color-dark-blue-80);
     --cmk-alert-box-text-color: var(--color-mid-grey-100);
 
     /* Keep in sync with $scrollbar-color in the legacy theme
@@ -266,6 +264,7 @@
     --font-color: var(--color-white-100);
     --font-color-secondary: var(--color-white-70);
     --font-color-dimmed: var(--white-dimmed);
+    --font-color-disabled: var(--color-white-50);
     --font-underline-color: var(--color-white-60);
     --font-color-light-bg: var(--color-mist-grey-100);
     --font-perfometer-color: var(--color-mid-grey-60);
@@ -319,26 +318,27 @@
     --tag-font-color-light: var(--color-white-100);
     --tag-font-color-dark: var(--color-conference-grey-100);
 
-    /* Cmk Toggle Button Group */
-    --toggle-button-group-active-bg-color: var(--ux-theme-8);
-    --toggle-button-group-inactive-bg-color: var(--ux-theme-0);
-    --toggle-button-group-border-color: var(--color-mid-grey-50);
-    --toggle-button-group-inactive-border-color: var(--color-mid-grey-90);
-    --toggle-button-group-active-text-color: var(--color-white-100);
-    --toggle-button-group-inactive-text-color: var(--color-white-100);
-    --toggle-button-group-disabled-text-color: var(--color-white-50);
-    --toggle-button-group-hover-bg-color: var(--color-midnight-grey-50);
+    /* Backgrounds */
+    --background-base: var(--ux-theme-0);
+    --background-selected: var(--ux-theme-8);
+    --background-subtle: var(--ux-theme-2);
+    --background-hover: var(--color-midnight-grey-50);
 
-    /* Cmk Tabs */
-    --tabs-panel-bg-color: var(--ux-theme-2);
-    --tabs-selected-border-color: var(--color-mid-grey-70);
-    --tabs-unselected-border-color: var(--color-mid-grey-90);
-    --tabs-hover-bg-color: var(--color-midnight-grey-50);
-    --tabs-error-border-color: var(--color-dark-red-40);
+    /* Borders */
+    --border-color-subtle: var(--color-mid-grey-90);
+    --border-color-default: var(--color-mid-grey-50);
+    --border-color-strong: var(--color-mid-grey-70);
 
-    /* Cmk Inline Validation */
-    --inline-error-border-color: var(--color-dark-red-40);
-    --inline-error-text-color: var(--color-dark-red-30);
+    /* Status */
+    --status-border-color-info: var(--color-dark-blue-50);
+    --status-border-color-success: var(--color-corporate-green-50);
+    --status-border-color-warning: var(--color-yellow-50);
+    --status-border-color-error: var(--color-dark-red-40);
+    --status-text-color-error: var(--color-dark-red-30);
+    --status-icon-color-info: var(--color-dark-blue-20);
+    --status-icon-color-success: var(--color-corporate-green-20);
+    --status-icon-color-warning: var(--color-yellow-20);
+    --status-icon-color-error: var(--color-dark-red-20);
 
     /* Cmk Button Variants */
     --default-button-primary-color: var(--color-corporate-green-50);
@@ -377,10 +377,6 @@
     --cmk-alert-box-success-bg-color: var(--color-corporate-green-80);
     --cmk-alert-box-info-bg-color: var(--color-dark-blue-80);
     --cmk-alert-box-loading-bg-color: var(--color-midnight-grey-60);
-    --cmk-alert-box-error-icon-color: var(--color-dark-red-20);
-    --cmk-alert-box-warning-icon-color: var(--color-yellow-20);
-    --cmk-alert-box-success-icon-color: var(--color-corporate-green-20);
-    --cmk-alert-box-info-icon-color: var(--color-dark-blue-20);
     --cmk-alert-box-text-color: var(--color-mid-grey-0);
 
     /* Keep in sync with $scrollbar-color in the legacy theme

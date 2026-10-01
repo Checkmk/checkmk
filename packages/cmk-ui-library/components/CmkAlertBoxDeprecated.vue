@@ -120,7 +120,7 @@ const alertIconName = computed(() => {
 
 const alertIconColor = computed(() => {
   const variant = props.variant && props.variant !== 'loading' ? props.variant : 'info'
-  return { custom: `var(--cmk-alert-box-${variant}-icon-color)` }
+  return { custom: `var(--status-icon-color-${variant})` }
 })
 </script>
 

@@ -51,7 +51,7 @@ const style = computed(() => {
 
 <style scoped>
 .form-multiline-text__validation-error {
-  border: 1px solid var(--inline-error-border-color);
+  border: 1px solid var(--status-border-color-error);
 }
 
 textarea:focus-visible {

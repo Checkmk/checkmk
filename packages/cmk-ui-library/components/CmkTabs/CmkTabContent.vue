@@ -24,8 +24,8 @@ defineProps<CmkTabContentProps>()
 .cmk-tab-content {
   margin-top: -1px;
   padding: var(--dimension-5);
-  background: var(--tabs-panel-bg-color);
-  border-top: 1px solid var(--tabs-selected-border-color);
+  background: var(--background-subtle);
+  border-top: 1px solid var(--border-color-strong);
   border-radius: 0 var(--dimension-3) var(--dimension-3);
 
   &:focus-visible {

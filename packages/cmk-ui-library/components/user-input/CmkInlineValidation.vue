@@ -30,7 +30,7 @@ div.cmk-inline-validation {
   flex-direction: row;
   align-items: center;
   padding: 4px 12px 4px 0;
-  color: var(--inline-error-text-color);
+  color: var(--status-text-color-error);
 
   div {
     display: inline-block;

@@ -483,7 +483,7 @@ const group = computed<ButtonVariants['group']>(() => {
 }
 
 .cmk-dropdown__validation-error {
-  border: 1px solid var(--inline-error-border-color);
+  border: 1px solid var(--status-border-color-error);
 }
 
 .cmk-dropdown__anchor {

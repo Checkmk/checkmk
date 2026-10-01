@@ -39,7 +39,7 @@ const multitoneIconName = computed<'error' | 'warning'>(() =>
 )
 
 const iconColor = computed(() => ({
-  custom: `var(--cmk-alert-box-${props.variant}-icon-color)`
+  custom: `var(--status-icon-color-${props.variant})`
 }))
 </script>
 

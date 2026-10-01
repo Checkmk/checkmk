@@ -488,7 +488,7 @@ onBeforeUnmount(() => {
 }
 
 .graphing-graph-brush__edge {
-  stroke: var(--toggle-button-group-border-color);
+  stroke: var(--border-color-default);
   stroke-width: 1;
   stroke-opacity: 0.5;
   shape-rendering: crispedges;
@@ -496,13 +496,13 @@ onBeforeUnmount(() => {
 }
 
 .graphing-graph-brush__handle {
-  fill: var(--toggle-button-group-inactive-bg-color);
-  stroke: var(--toggle-button-group-border-color);
+  fill: var(--background-base);
+  stroke: var(--border-color-default);
   cursor: ew-resize;
 }
 
 .graphing-graph-brush__handle:hover {
-  fill: color-mix(in srgb, var(--toggle-button-group-inactive-bg-color) 70%, var(--white));
+  fill: color-mix(in srgb, var(--background-base) 70%, var(--white));
 }
 
 .graphing-graph-brush__grip {

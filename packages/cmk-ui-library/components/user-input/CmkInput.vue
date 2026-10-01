@@ -141,7 +141,7 @@ immediateWatch(
 }
 
 .cmk-input--error {
-  border: 1px solid var(--inline-error-border-color);
+  border: 1px solid var(--status-border-color-error);
 }
 
 input.cmk-input--number::-webkit-outer-spin-button,

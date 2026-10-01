@@ -126,7 +126,7 @@ const passwordStoreOptions = computed(() => {
 
 <style scoped>
 .form-password__validation-error {
-  border: 1px solid var(--inline-error-border-color);
+  border: 1px solid var(--status-border-color-error);
 }
 
 input:focus-visible {

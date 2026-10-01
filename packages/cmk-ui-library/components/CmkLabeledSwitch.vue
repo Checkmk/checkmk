@@ -111,8 +111,8 @@ function toggle() {
   align-items: stretch;
   height: var(--dimension-7);
   padding: 1px;
-  background-color: var(--toggle-button-group-inactive-bg-color);
-  border: 1px solid var(--toggle-button-group-border-color);
+  background-color: var(--background-base);
+  border: 1px solid var(--border-color-default);
   border-radius: calc(var(--dimension-7) / 2);
   cursor: pointer;
 

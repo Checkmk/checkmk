@@ -177,11 +177,11 @@ function handleFocus(event: FocusEvent) {
 }
 
 .otp-input__digit--error {
-  border-color: var(--inline-error-border-color);
+  border-color: var(--status-border-color-error);
 }
 
 .otp-input__digit--error:focus {
-  border-color: var(--inline-error-border-color);
+  border-color: var(--status-border-color-error);
   background-color: var(--input-hover-bg-color);
 }
 

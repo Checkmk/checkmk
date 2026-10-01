@@ -45,7 +45,7 @@ defineProps<CmkTabProps>()
     <CmkMultitoneIcon
       v-if="variant === 'error'"
       name="error"
-      :primary-color="{ custom: 'var(--cmk-alert-box-error-icon-color)' }"
+      :primary-color="{ custom: 'var(--status-icon-color-error)' }"
       size="medium"
       class="cmk-tab__error-icon"
     />
@@ -60,11 +60,11 @@ defineProps<CmkTabProps>()
   align-items: center;
   box-sizing: border-box;
   height: var(--dimension-9);
-  background: var(--ux-theme-0);
+  background: var(--background-base);
   padding: 0 var(--dimension-6) !important;
-  border: 1px solid var(--tabs-unselected-border-color);
+  border: 1px solid var(--border-color-subtle);
   border-right-width: 0;
-  border-bottom-color: var(--tabs-selected-border-color);
+  border-bottom-color: var(--border-color-strong);
   font-weight: var(--font-weight-default);
 
   &:first-of-type {
@@ -83,12 +83,12 @@ defineProps<CmkTabProps>()
 
   &:hover:not([data-state='active']) {
     cursor: pointer;
-    background: var(--tabs-hover-bg-color);
+    background: var(--background-hover);
   }
 
   &[data-state='active'] {
     height: var(--dimension-10);
-    background: var(--tabs-panel-bg-color);
+    background: var(--background-subtle);
     border-right-width: 1px;
     border-bottom-width: 0;
     border-top-left-radius: var(--dimension-3);
@@ -97,7 +97,7 @@ defineProps<CmkTabProps>()
   }
 
   &[data-state='active'].cmk-tab__variant-default {
-    border-color: var(--tabs-selected-border-color);
+    border-color: var(--border-color-strong);
   }
 
   &[data-state='active'] + & {
@@ -107,32 +107,32 @@ defineProps<CmkTabProps>()
   &[data-disabled] {
     opacity: 0.6;
     cursor: default;
-    background: var(--ux-theme-0);
+    background: var(--background-base);
   }
 }
 
 .cmk-tab__variant-info {
-  border-top: 1px solid var(--color-dark-blue-50);
-  border-left: 1px solid var(--color-dark-blue-50);
-  border-right: 1px solid var(--color-dark-blue-50) !important;
+  border-top: 1px solid var(--status-border-color-info);
+  border-left: 1px solid var(--status-border-color-info);
+  border-right: 1px solid var(--status-border-color-info) !important;
 }
 
 .cmk-tab__variant-success {
-  border-top: 1px solid var(--color-corporate-green-50);
-  border-left: 1px solid var(--color-corporate-green-50);
-  border-right: 1px solid var(--color-corporate-green-50) !important;
+  border-top: 1px solid var(--status-border-color-success);
+  border-left: 1px solid var(--status-border-color-success);
+  border-right: 1px solid var(--status-border-color-success) !important;
 }
 
 .cmk-tab__variant-warning {
-  border-top: 1px solid var(--color-yellow-50);
-  border-left: 1px solid var(--color-yellow-50);
-  border-right: 1px solid var(--color-yellow-50) !important;
+  border-top: 1px solid var(--status-border-color-warning);
+  border-left: 1px solid var(--status-border-color-warning);
+  border-right: 1px solid var(--status-border-color-warning) !important;
 }
 
 .cmk-tab__variant-error {
-  border-top: 1px solid var(--tabs-error-border-color);
-  border-left: 1px solid var(--tabs-error-border-color);
-  border-right: 1px solid var(--tabs-error-border-color) !important;
+  border-top: 1px solid var(--status-border-color-error);
+  border-left: 1px solid var(--status-border-color-error);
+  border-right: 1px solid var(--status-border-color-error) !important;
 }
 
 .cmk-tab__error-icon {

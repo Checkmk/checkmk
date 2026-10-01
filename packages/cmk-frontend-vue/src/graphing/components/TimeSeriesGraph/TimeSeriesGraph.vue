@@ -797,7 +797,7 @@ defineExpose({ showMaxZoomHint })
     position: absolute;
     z-index: 3;
     background-color: var(--ux-theme-0);
-    border-color: var(--toggle-button-group-border-color);
+    border-color: var(--border-color-default);
 
     &:hover {
       background-image: linear-gradient(

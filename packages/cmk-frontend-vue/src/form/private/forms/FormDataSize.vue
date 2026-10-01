@@ -83,7 +83,7 @@ const magnitudeOptions = computed(() => {
 
 <style scoped>
 .form-data-size__error {
-  border: 1px solid var(--inline-error-border-color);
+  border: 1px solid var(--status-border-color-error);
 }
 
 .form-data-size__layout {

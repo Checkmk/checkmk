@@ -34,7 +34,6 @@ from cmk.gui.dashboard.type_defs import (
     InventoryDashletConfig,
     ProblemsGraphDashletConfig,
     ServiceStateSummaryDashletConfig,
-    SingleMetricDashletConfig,
     SingleTimeseriesDashletConfig,
     SiteOverviewDashletConfig,
     StateDashletConfig,
@@ -47,11 +46,7 @@ from cmk.gui.type_defs import SingleInfos, VisualContext
 
 from .model.widget import WidgetGeneralSettings, WidgetTitle
 from .model.widget_content.inventory import InventoryContent
-from .model.widget_content.metric import (
-    AverageScatterplotContent,
-    BarplotContent,
-    SingleMetricContent,
-)
+from .model.widget_content.metric import AverageScatterplotContent, BarplotContent
 from .model.widget_content.overview import AlertOverviewContent, SiteOverviewContent
 from .model.widget_content.state import HostStateContent, ServiceStateContent
 from .model.widget_content.state_summary import HostStateSummaryContent, ServiceStateSummaryContent
@@ -68,7 +63,6 @@ type FigureContent = Annotated[
     | NotificationTimelineContent
     | ServiceStateContent
     | ServiceStateSummaryContent
-    | SingleMetricContent
     | SiteOverviewContent,
     Discriminator("type"),
 ]
@@ -82,7 +76,6 @@ type FigureDashletConfig = (
     | HostStateSummaryDashletConfig
     | InventoryDashletConfig
     | ServiceStateSummaryDashletConfig
-    | SingleMetricDashletConfig
     | SiteOverviewDashletConfig
 )
 

@@ -32,6 +32,7 @@ export const iconSearchLabels: Record<string, string[]> = {
   'aggr-single': ['aggregate', 'bi', 'single tree'],
   'aggr-single-problem': ['aggregate', 'bi', 'issue', 'tree problem'],
   aggrcomp: ['aggregate', 'bi', 'component'],
+  'ai-assistant': ['sparkle', 'artificial intelligence', 'chat', 'assistant', 'magic'],
   'aix-tgz': ['ibm', 'unix', 'tarball', 'package', 'archive'],
   alert: ['notification', 'bell', 'warning'],
   'alert-ack': ['acknowledge notification', 'bell', 'confirm'],

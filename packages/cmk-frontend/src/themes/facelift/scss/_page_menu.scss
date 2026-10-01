@@ -1017,7 +1017,7 @@ body.dashboard {
 div#page_menu_popups div.side_popup {
   position: fixed;
   top: 0;
-  right: 0;
+  right: var(--main-area-inset-right, 0);
   z-index: 1000;
   width: $side-popup-width;
   height: 100vh;
@@ -1025,7 +1025,7 @@ div#page_menu_popups div.side_popup {
   border-left: $popup-border;
 
   body.side:has(#check_mk_sidebar:not(.folded, .left)) & {
-    right: $sidebar-width;
+    right: calc(#{$sidebar-width} + var(--main-area-inset-right, 0px));
   }
 
   form {
@@ -1173,7 +1173,7 @@ div#page_menu_popups div.side_popup {
   div.popup_filter_list {
     position: fixed;
     top: 0;
-    right: $side-popup-width;
+    right: calc(#{$side-popup-width} + var(--main-area-inset-right, 0px));
     display: none;
     width: 288px;
     height: 100vh;
@@ -1184,7 +1184,7 @@ div#page_menu_popups div.side_popup {
     border-left: $popup-border;
 
     body.side:has(#check_mk_sidebar:not(.folded, .left)) & {
-      right: $sidebar-width + $side-popup-width;
+      right: calc(#{$sidebar-width + $side-popup-width} + var(--main-area-inset-right, 0px));
     }
 
     &.active {

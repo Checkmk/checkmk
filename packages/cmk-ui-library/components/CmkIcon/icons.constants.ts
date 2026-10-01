@@ -750,6 +750,7 @@ export const emblems = [
 ] as const
 
 export const oneColorIcons = [
+  'ai-assistant',
   'burger-menu',
   'cancel',
   'changes',

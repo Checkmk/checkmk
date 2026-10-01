@@ -14,6 +14,7 @@ import * as callable_functions from '@/modules/callable_functions'
 import * as click_actions from '@/modules/click_actions'
 
 import * as activation from './modules/activation'
+import * as ai_assistant from './modules/ai_assistant'
 import * as ajax from './modules/ajax'
 import * as async_progress from './modules/async_progress'
 import * as availability from './modules/availability'
@@ -58,6 +59,8 @@ import * as visibility_detection from './modules/visibility_detection'
 import * as wato from './modules/wato'
 
 register()
+
+ai_assistant.reserve_panel_space_before_first_paint()
 
 $(() => {
   utils.update_header_timer()

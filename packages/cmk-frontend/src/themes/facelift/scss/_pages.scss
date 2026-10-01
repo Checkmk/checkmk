@@ -123,6 +123,10 @@ body {
     content: '';
   }
 
+  &:not(:has(#ai-panel-container)) {
+    --main-area-inset-right: 0px;
+  }
+
   &.main {
     display: flex;
     flex-direction: column;
@@ -135,6 +139,16 @@ body {
     font-weight: $font-weight-default;
     color: $font-color;
     background: $bg-color;
+
+    div#ai-panel-container {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+      margin-right: var(--main-area-inset-right, 0);
+      margin-left: var(--main-area-inset-left, 0);
+      margin-bottom: var(--main-area-inset-bottom, 0);
+    }
 
     /* Can be toggled with N/n display option */
     &.inline {

@@ -189,6 +189,28 @@ def _automation(
     )
 
 
+def test_only_automations_that_ask_for_it_read_the_configuration_under_lock() -> None:
+    engine = Automations(
+        [
+            Automation(
+                name=AutomationID("locked"),
+                state_factory=_RecordingFactory(),
+                handler=_handle,
+                result=_Result,
+                lock_configuration=True,
+            ),
+            _automation("unlocked", _RecordingFactory()),
+        ],
+        omd_root=Path("/old"),
+        loading_result=None,
+    )
+
+    assert [
+        engine.wants_configuration_lock(AutomationID(name))
+        for name in ("locked", "unlocked", "unknown")
+    ] == [True, False, False]
+
+
 def test_state_is_built_once_on_first_execution() -> None:
     factory = _RecordingFactory()
     engine = Automations([_automation("a", factory)], omd_root=Path("/old"), loading_result=None)

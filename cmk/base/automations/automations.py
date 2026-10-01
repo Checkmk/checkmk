@@ -65,6 +65,13 @@ class Automation[StateT: AutomationState, ResultT: ABCAutomationResult]:
     """
     handler: Callable[[StateT, list[str]], ResultT]
     result: type[ResultT]
+    lock_configuration: bool = False
+    """Read the configuration under the configuration lock when the CLI runs this.
+
+    The GUI holds that lock during every Setup action and calls automations from
+    within them, so this must stay off for any automation it calls that way: the
+    CLI would wait for a lock its own caller holds.
+    """
 
 
 # The engine is deliberately blind to the state type: it only ever hands a state
@@ -132,6 +139,12 @@ class Automations:
         self._states_by_factory: Final[dict[StateFactory[AutomationState], AutomationState]] = {}
         self._omd_root = omd_root
         self._loading_result = loading_result
+
+    def wants_configuration_lock(self, cmd: AutomationID) -> bool:
+        """Whether the configuration must be read under lock for this automation."""
+        return (automation := self._automations.get(cmd)) is not None and (
+            automation.lock_configuration
+        )
 
     def update(self, omd_root: Path, loading_result: config.LoadingResult | None) -> None:
         """Hand the new arguments to every state that exists.

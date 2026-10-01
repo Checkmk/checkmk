@@ -11,8 +11,6 @@ values they chose rather than whatever a check happened to measure.
 A skip reason names a skeleton's dependency, which also sets the enablement order (grep a
 constant to find every skeleton blocked on the same dependency):
 
-- ``SKIP_PENDING_GRAPH_BACKEND`` - integration tests needing the ``<cmk-graph>`` embedding;
-  enablable first.
 - ``SKIP_PENDING_GRAPH_ENGINE`` - GUI E2E tests pending the accessibility behaviour they assert.
 
 `injected_ping_rrds` is the cheapest way to get one: a no-agent host has exactly one service
@@ -55,10 +53,6 @@ from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 
-SKIP_PENDING_GRAPH_BACKEND: Final = (
-    "CMK-35973 skeleton: pending the graph backend (discovery/data REST + "
-    "<cmk-graph> embedding); enable once the backend lands."
-)
 SKIP_PENDING_GRAPH_ENGINE: Final = (
     "CMK-35973 skeleton: the engine now renders on every surface, so these are pending the "
     "accessibility behaviour they assert rather than the engine itself."

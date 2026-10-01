@@ -7,6 +7,9 @@
 # mypy: disable-error-code="no-untyped-def"
 
 import datetime
+import html
+import json
+import re
 from collections.abc import Sequence
 from functools import partial
 from pathlib import Path
@@ -393,6 +396,64 @@ def test_host_custom_attributes_leave_out_the_host_relations() -> None:
     assert "hidden-board" not in str(cell.render_for_csv_export(row, user))
     assert "hidden-board" not in str(cell.render_for_json_export(row, user))
     assert "hidden-board" not in str(cell.painter().group_by(row, cell))
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_svc_pnpgraph_embeds_a_graph_for_a_service_with_metrics(
+    live: MockLiveStatusConnection,
+) -> None:
+    assert _embedded_service_graphs(live, perf_data="x=5", metrics=["x"])
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_svc_pnpgraph_embeds_no_graph_for_a_service_without_perfdata(
+    live: MockLiveStatusConnection,
+) -> None:
+    # Also holds if the painter leaves out the empty graph group altogether.
+    assert _embedded_service_graphs(live, perf_data="", metrics=[]) == []
+
+
+def _embedded_service_graphs(
+    live: MockLiveStatusConnection, *, perf_data: str, metrics: list[str]
+) -> list[object]:
+    """The graphs of every ``cmk-graph-group`` element the service graphs cell renders."""
+    # The engine resolves the metric names with this query, the painter reads the row.
+    live.add_table(
+        "services",
+        [
+            {
+                "host_name": "abc",
+                "description": "Interface 3",
+                "perf_data": perf_data,
+                "metrics": metrics,
+                "check_command": "check_mk-foo",
+            }
+        ],
+    )
+    live.expect_query(
+        "GET services\nColumns: host_name description perf_data metrics check_command\n"
+        "Filter: host_name = abc\nFilter: description = Interface 3\nAnd: 2"
+    )
+    row = {
+        **_service_row(),
+        "service_perf_data": perf_data,
+        "service_metrics": metrics,
+        "service_check_command": "check_mk-foo",
+    }
+    (cell,) = _view_of(ColumnSpec(name="svc_pnpgraph"), "services").row_cells
+
+    with live(expect_status_query=False):
+        _tdclass, content = cell.render(
+            row,
+            partial(render_link_to_view, request=request, user_permissions=_NO_PERMISSIONS),
+            user,
+        )
+
+    return [
+        graph
+        for match in re.finditer(r'<cmk-graph-group data="([^"]*)"', str(content))
+        for graph in json.loads(html.unescape(match.group(1)))["graphs"]
+    ]
 
 
 _NO_PERMISSIONS = UserPermissions({}, {}, {}, [])

@@ -113,8 +113,8 @@ def check_cisco_redundancy(params: Mapping[str, Any], section: StringTable) -> C
     yield Result(state=state, summary=infotext)
 
 
-def parse_cisco_redundancy(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_cisco_redundancy(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 snmp_section_cisco_redundancy = SimpleSNMPSection(

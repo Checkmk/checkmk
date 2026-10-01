@@ -148,7 +148,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
 
     <div v-if="dropdownOpen" class="maps-map-search__dropdown" role="listbox" @mousedown.prevent>
       <div class="maps-map-search__dropdown-title">
-        {{ _t("Type '/' to use a search operator") }}
+        {{ _t('Search operators') }}
       </div>
       <ul class="maps-map-search__operator-list">
         <li
@@ -165,7 +165,9 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
       <div class="maps-map-search__info">
         <CmkIcon name="info-circle" size="small" class="maps-map-search__info-icon" />
         <span>{{
-          _t('Without a prefix all fields are searched. Multiple terms are AND-combined.')
+          _t(
+            "Pick one here, or type '/' in the search box. Without a prefix all fields are searched; multiple terms must all match."
+          )
         }}</span>
       </div>
     </div>

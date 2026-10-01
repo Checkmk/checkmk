@@ -24,7 +24,11 @@ from cmk.gui.openapi.utils import ProblemException
 from cmk.livestatus_client import MKLivestatusException
 from cmk.web.utils import permission_verification as permissions
 
-from .._graph_templates import discover_template_graphs, TemplateGraphSpecification
+from .._graph_templates import (
+    discover_template_graphs,
+    MKGraphMixedUnitsError,
+    TemplateGraphSpecification,
+)
 from .._user_specific_unit import get_temperature_unit
 from ._family import GRAPH_FAMILY
 from .models import GraphsDiscoverResponse
@@ -73,6 +77,12 @@ def discover_template_graphs_v1(
         raise ProblemException(
             status=HTTPStatus.SERVICE_UNAVAILABLE,
             title="Monitoring data source unavailable",
+            detail=str(exc),
+        ) from exc
+    except MKGraphMixedUnitsError as exc:
+        raise ProblemException(
+            status=HTTPStatus.UNPROCESSABLE_ENTITY,
+            title="Graph cannot be built",
             detail=str(exc),
         ) from exc
     except Exception as exc:

@@ -215,6 +215,7 @@ async function loadGraphs(description: string): Promise<ServiceGraphs> {
   return {
     graphs: discovered.graphs,
     noDataMessage: discovered.noDataMessage,
+    errorMessage: discovered.errorMessage,
     graphsLink: loaded.legacy_service_graphs_link
   }
 }

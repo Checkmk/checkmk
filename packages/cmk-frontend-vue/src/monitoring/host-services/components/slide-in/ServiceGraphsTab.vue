@@ -12,6 +12,8 @@ export interface ServiceGraphs {
   graphs: DiscoveredGraph[]
   /** Why the service has no graphs, in the backend's words. Null when it has some. */
   noDataMessage: string | null
+  /** Why the graphs of the service cannot be built, in the backend's words. Null when they can. */
+  errorMessage: string | null
   /** The legacy page holding the same graphs. */
   graphsLink: string
 }
@@ -46,11 +48,12 @@ export function toTimeSeriesGraph(shell: DiscoveredGraph, width: number): CmkTim
 </script>
 
 <script setup lang="ts">
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkHtml from 'cmk-ui-library/components/CmkHtml.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkLink from 'cmk-ui-library/components/CmkLink.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { computed, onMounted, ref } from 'vue'
 
@@ -112,7 +115,12 @@ const graphs = computed(() =>
         {{ _t('Explore all service graphs') }}
       </CmkLink>
     </div>
-    <div v-if="graphs.length === 0" class="monitoring-service-graphs-tab__empty">
+    <CmkAlert
+      v-if="data.errorMessage !== null"
+      variant="error"
+      :text="untranslated(data.errorMessage)"
+    />
+    <div v-else-if="graphs.length === 0" class="monitoring-service-graphs-tab__empty">
       <CmkParagraph v-if="data.noDataMessage === null">
         {{ _t('Checkmk has no graphs for this service.') }}
       </CmkParagraph>

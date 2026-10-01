@@ -8,7 +8,6 @@ from dataclasses import dataclass, field
 
 import pytest
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import graphs as graphs_v1
@@ -40,6 +39,7 @@ from cmk.gui.graphing import (
 from cmk.gui.graphing._built_graphs import BuiltGraph
 from cmk.gui.graphing._graph_templates import (
     _EvaluateTemplateGraphs,
+    MKGraphMixedUnitsError,
     StoredTemplateGraphSpecification,
 )
 from cmk.gui.graphing._performance_data import RawPerformanceValue
@@ -229,7 +229,7 @@ def test_template_graphs_filter_by_graph_id() -> None:
 def test_template_lifecycle_rejects_mixed_units() -> None:
     # A template graph has a single value axis, so a plugin drawing curves of different units cannot
     # share it — discovery rejects it (legacy parity).
-    with pytest.raises(MKGeneralException, match="different units"):
+    with pytest.raises(MKGraphMixedUnitsError, match="different units"):
         build_template_graphs(
             _SPEC,
             registered_graphs=[

@@ -29,7 +29,13 @@ function makeShell(overrides: Partial<DiscoveredGraph> = {}): DiscoveredGraph {
 function mountTab(data: Partial<ServiceGraphs> = {}) {
   return render(ServiceGraphsTab, {
     props: {
-      data: { graphs: [], noDataMessage: null, graphsLink: GRAPHS_LINK, ...data }
+      data: {
+        graphs: [],
+        noDataMessage: null,
+        errorMessage: null,
+        graphsLink: GRAPHS_LINK,
+        ...data
+      }
     }
   })
 }
@@ -45,6 +51,16 @@ test("the backend's own explanation wins over the general one", () => {
 
   expect(screen.getByText('The host is not monitored.')).toBeInTheDocument()
   expect(screen.queryByText('Checkmk has no graphs for this service.')).not.toBeInTheDocument()
+})
+
+test('a service whose graphs cannot be built shows why, as an error', () => {
+  mountTab({ errorMessage: 'Cannot create graph with metrics of different units' })
+
+  expect(screen.getByRole('alert')).toHaveTextContent(
+    'Cannot create graph with metrics of different units'
+  )
+  expect(screen.queryByText('Checkmk has no graphs for this service.')).not.toBeInTheDocument()
+  expect(screen.getByRole('link', { name: /Explore all service graphs/ })).toBeInTheDocument()
 })
 
 test('the tab links to the graph page of the same host and service', () => {

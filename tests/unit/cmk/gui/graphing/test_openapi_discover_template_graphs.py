@@ -17,6 +17,7 @@ from cmk.graphing_engine import Graph
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.graphing import _graph_templates as template_graphs_module
 from cmk.gui.graphing import BuiltGraph, RRDFetchMetricNames, TemplateGraphSpecification
+from cmk.gui.graphing._graph_templates import MKGraphMixedUnitsError
 from cmk.livestatus_client import MKLivestatusSocketError
 from cmk.shared_typing.cmk_time_series_graph import Precision, UnitFormat
 from tests.testlib.unit.gui.web_test_app import SetConfig
@@ -268,6 +269,35 @@ def test_discover_template_graphs_livestatus_failure_is_503(
     )
     assert resp.status_code == HTTPStatus.SERVICE_UNAVAILABLE
     assert "connection refused" in resp.json["detail"]
+
+
+def test_discover_template_graphs_mixed_units_is_422(
+    clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def _raise(*_args: object, **_kwargs: object) -> Sequence[Graph]:
+        raise MKGraphMixedUnitsError("Cannot create graph with metrics of different units")
+
+    monkeypatch.setattr(template_graphs_module, "build_template_graphs", _raise)
+    resp = clients.Graph.discover_template_graphs(
+        hostname="my-host", service_description="CPU load", expect_ok=False
+    )
+    assert resp.status_code == 422
+    assert resp.json["title"] == "Graph cannot be built"
+    assert resp.json["detail"] == "Cannot create graph with metrics of different units"
+
+
+def test_discover_template_graphs_crash_is_500(
+    clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def _raise(*_args: object, **_kwargs: object) -> Sequence[Graph]:
+        raise KeyError("unit")
+
+    monkeypatch.setattr(template_graphs_module, "build_template_graphs", _raise)
+    resp = clients.Graph.discover_template_graphs(
+        hostname="my-host", service_description="CPU load", expect_ok=False
+    )
+    assert resp.status_code == 500
+    assert resp.json["title"] == "Graph discovery failed"
 
 
 def test_discover_template_graphs_invalid_hostname_is_400(clients: ClientRegistry) -> None:

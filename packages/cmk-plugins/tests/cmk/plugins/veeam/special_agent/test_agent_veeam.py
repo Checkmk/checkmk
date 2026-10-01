@@ -27,6 +27,7 @@ from cmk.plugins.veeam.special_agent.agent_veeam import (
     main,
     TerminateAgent,
     VeeamApi,
+    VeeamApiError,
     VeeamAuth,
     VeeamClient,
     write_sections,
@@ -235,7 +236,7 @@ def test_failing_endpoint_does_stop_the_other_sections(
     )
     api.get(f"{URL}/api/v1/jobs", json={"data": [], "pagination": {"total": 0}})
 
-    with pytest.raises(RuntimeError, match="boom"):
+    with pytest.raises(VeeamApiError, match="HTTP 500: boom"):
         write_sections(
             _client(_auth(storage)),
             [

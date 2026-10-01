@@ -57,7 +57,26 @@ class TerminateAgent(RuntimeError):
     """
 
 
-class AccessDenied(RuntimeError):
+class VeeamApiError(RuntimeError):
+    """The REST API answered a request with an HTTP error."""
+
+    def __init__(self, path: str, response: requests.Response) -> None:
+        self.status = response.status_code
+        self.code, self.message = self._code_and_message(response)
+        super().__init__(f"Request to {path} failed with HTTP {self.status}: {self.message}")
+
+    @staticmethod
+    def _code_and_message(response: requests.Response) -> tuple[str, str]:
+        try:
+            body = response.json()
+        except json.JSONDecodeError:
+            return "", response.text.strip() or (response.reason or "")
+        if not isinstance(body, dict):
+            return "", str(body)
+        return str(body.get("errorCode") or ""), str(body.get("message") or "")
+
+
+class AccessDenied(VeeamApiError):
     """The user lacks the Veeam role required for this endpoint."""
 
 
@@ -131,16 +150,6 @@ def create_session(url: str, cert_server_name: str | None) -> requests.Session:
     else:
         session.mount(url, HostnameValidationAdapter(cert_server_name))
     return session
-
-
-def _veeam_error(response: requests.Response) -> tuple[str, str]:
-    try:
-        body = response.json()
-    except json.JSONDecodeError:
-        return "", response.text.strip() or (response.reason or "")
-    if not isinstance(body, dict):
-        return "", str(body)
-    return str(body.get("errorCode") or ""), str(body.get("message") or "")
 
 
 class VeeamApi:
@@ -237,11 +246,11 @@ class VeeamAuth(requests.auth.AuthBase):
             return None
         return token if token.owner == self._owner else None
 
-    def _request_token(self, data: Mapping[str, str]) -> requests.Response:
+    def _request_token(self, data: Mapping[str, str]) -> None:
         requested_at = time.time()
         response = self._api.request("POST", TOKEN_PATH, data=data)
         if not response.ok:
-            return response
+            raise VeeamApiError(TOKEN_PATH, response)
         try:
             token = _TokenResponse.model_validate_json(response.content)
         except ValidationError as exc:
@@ -256,43 +265,43 @@ class VeeamAuth(requests.auth.AuthBase):
         )
         # Store right away: the refresh token we just used is gone for good.
         self._storage.write(TOKEN_STORAGE_KEY, self._token.model_dump_json())
-        return response
 
     def _refresh(self, refresh_token: str) -> bool:
-        response = self._request_token(
-            {"grant_type": "refresh_token", "refresh_token": refresh_token}
-        )
-        if response.ok:
-            return True
-        if 400 <= response.status_code < 500:
-            # Expired, already used or revoked. The password login will tell if it's worse.
-            return False
-        raise TerminateAgent(
-            f"Refreshing the access token at the Veeam REST API failed with HTTP "
-            f"{response.status_code}: {_veeam_error(response)[1]}"
-        )
+        try:
+            self._request_token({"grant_type": "refresh_token", "refresh_token": refresh_token})
+        except VeeamApiError as exc:
+            if 400 <= exc.status < 500:
+                # Expired, already used or revoked. The password login will tell if it's worse.
+                return False
+            raise TerminateAgent(
+                f"Refreshing the access token at the Veeam REST API failed with HTTP "
+                f"{exc.status}: {exc.message}"
+            ) from exc
+        return True
 
     def _login(self) -> None:
-        response = self._request_token(
-            {"grant_type": "password", "username": self._user, "password": self._password.reveal()}
-        )
-        if response.ok:
-            return
-
-        error_code, message = _veeam_error(response)
-        if response.status_code == HTTPStatus.UNAUTHORIZED:
-            raise TerminateAgent(
-                f"Authentication at the Veeam REST API failed for user '{self._user}': "
-                f"{message}. Check the user name and password"
+        try:
+            self._request_token(
+                {
+                    "grant_type": "password",
+                    "username": self._user,
+                    "password": self._password.reveal(),
+                }
             )
-        if response.status_code == HTTPStatus.BAD_REQUEST and error_code == "NotImplemented":
+        except VeeamApiError as exc:
+            if exc.status == HTTPStatus.UNAUTHORIZED:
+                raise TerminateAgent(
+                    f"Authentication at the Veeam REST API failed for user '{self._user}': "
+                    f"{exc.message}. Check the user name and password"
+                ) from exc
+            if exc.status == HTTPStatus.BAD_REQUEST and exc.code == "NotImplemented":
+                raise TerminateAgent(
+                    f"The Veeam backup server does not support the REST API version "
+                    f"{API_VERSION}: {exc.message}"
+                ) from exc
             raise TerminateAgent(
-                f"The Veeam backup server does not support the REST API version "
-                f"{API_VERSION}: {message}"
-            )
-        raise TerminateAgent(
-            f"Login at the Veeam REST API failed with HTTP {response.status_code}: {message}"
-        )
+                f"Login at the Veeam REST API failed with HTTP {exc.status}: {exc.message}"
+            ) from exc
 
     def renew(self) -> None:
         """Replace the current token: spend its refresh token, fall back to the password."""
@@ -318,20 +327,16 @@ class VeeamClient:
             # The token expired mid-run or was revoked: renew it and try once more.
             self._auth.renew()
             response = self._api.request("GET", path, auth=self._auth)
-        if response.status_code == HTTPStatus.UNAUTHORIZED:
+        if response.ok:
+            return response.json()
+        error = (AccessDenied if response.status_code == HTTPStatus.FORBIDDEN else VeeamApiError)(
+            path, response
+        )
+        if error.status == HTTPStatus.UNAUTHORIZED:
             raise TerminateAgent(
-                f"The Veeam REST API rejected the session on {path}: {_veeam_error(response)[1]}"
-            )
-        if response.status_code == HTTPStatus.FORBIDDEN:
-            raise AccessDenied(
-                f"Request to {path} failed with HTTP 403: {_veeam_error(response)[1]}"
-            )
-        if not response.ok:
-            raise RuntimeError(
-                f"Request to {path} failed with HTTP {response.status_code}: "
-                f"{_veeam_error(response)[1]}"
-            )
-        return response.json()
+                f"The Veeam REST API rejected the session on {path}: {error.message}"
+            ) from error
+        raise error
 
 
 def _get_all(client: VeeamClient, path: str, limit: int | None = None) -> list[object]:

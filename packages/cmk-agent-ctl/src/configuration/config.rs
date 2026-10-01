@@ -9,7 +9,6 @@ use serde::Deserialize;
 use serde::Serialize;
 use serde_with::DisplayFromStr;
 use std::collections::HashMap;
-use std::ffi;
 use std::fmt;
 use std::fs;
 use std::io;
@@ -46,6 +45,14 @@ pub trait TOMLLoaderMissingSafe: TOMLLoader + Default {
         }
         Self::load(path)
     }
+}
+
+fn tmp_path_for_atomical_save(path: &Path) -> PathBuf {
+    let mut tmp_path = path.to_owned();
+    let mut extension = path.extension().unwrap_or_default().to_owned();
+    extension.push(".tmp");
+    tmp_path.set_extension(extension);
+    tmp_path
 }
 
 pub struct RegisterExistingConfig {
@@ -544,14 +551,7 @@ impl Registry {
     }
 
     fn make_tmp_path_for_save(&self) -> PathBuf {
-        let mut tmp_path = PathBuf::from(&self.path);
-        let mut ext = tmp_path
-            .extension()
-            .map(|ext| ext.to_owned())
-            .unwrap_or_else(|| ffi::OsString::from(""));
-        ext.push(".tmp");
-        tmp_path.set_extension(ext);
-        tmp_path
+        tmp_path_for_atomical_save(&self.path)
     }
 
     fn make_path_legacy_pull_marker(registry_path: impl AsRef<Path>) -> AnyhowResult<PathBuf> {
@@ -1528,6 +1528,11 @@ mod test_registry {
 
     #[test]
     fn test_tmp_path_for_save() {
+        assert_eq!(
+            tmp_path_for_atomical_save(Path::new("/a/b/agent-update-state.json")),
+            PathBuf::from("/a/b/agent-update-state.json.tmp")
+        );
+
         let reg = Registry::new(PathBuf::from("/a/b/c.json")).unwrap();
         assert_ne!(reg.path(), reg.make_tmp_path_for_save());
         assert_eq!(reg.path().parent(), reg.make_tmp_path_for_save().parent());

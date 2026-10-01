@@ -5,13 +5,8 @@
 
 """Shared support for the graphing (IGU) tests.
 
-Skip reasons for the skeletons, and RRD injection for the tests that need a graph whose
-values they chose rather than whatever a check happened to measure.
-
-A skip reason names a skeleton's dependency, which also sets the enablement order (grep a
-constant to find every skeleton blocked on the same dependency):
-
-- ``SKIP_PENDING_GRAPH_ENGINE`` - GUI E2E tests pending the accessibility behaviour they assert.
+RRD injection for the tests that need a graph whose values they chose rather than whatever a
+check happened to measure.
 
 `injected_ping_rrds` is the cheapest way to get one: a no-agent host has exactly one service
 with an RRD (PING), and the core holds its RRDs open, so it takes every host it needs in one go
@@ -53,11 +48,6 @@ from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 
-SKIP_PENDING_GRAPH_ENGINE: Final = (
-    "CMK-35973 skeleton: the engine now renders on every surface, so these are pending the "
-    "accessibility behaviour they assert rather than the engine itself."
-)
-
 # Default RRD geometry: one sample per minute over roughly a day.
 _DEFAULT_STEP_SECONDS: Final = 60
 _DEFAULT_SAMPLE_COUNT: Final = 1440
@@ -65,17 +55,6 @@ _DEFAULT_SAMPLE_COUNT: Final = 1440
 # The window the finest archive of `RRD_DEFAULT_CONFIG` covers at `_DEFAULT_STEP_SECONDS`
 # (2880 rows x 60s). Query further back than this to be served a consolidated archive.
 FINEST_ARCHIVE_SECONDS: Final = 2880 * _DEFAULT_STEP_SECONDS
-
-# Europe/Berlin DST transition instants. Pass as inject_rrd(start=...) with the
-# user timezone set to a DST zone; the test selects the historical window so the
-# rendered axis crosses the transition.
-#
-# Fall-back is the relevant one for the "no duplicate X-axis labels" regression
-# (Werk #14830): clocks go back, so local 02:00-02:59 occurs *twice* and a naive
-# axis would emit the same label twice. Spring-forward merely *skips* the hour
-# (no duplicate), so it does not exercise that regression.
-DST_FALL_BACK_BERLIN_UTC: Final = 1729990800  # 2024-10-27 01:00 UTC; local 03:00->02:00
-DST_SPRING_FORWARD_BERLIN_UTC: Final = 1711846800  # 2024-03-31 01:00 UTC; local 02:00->03:00
 
 # One sample per rrdtool update argument, so a whole window would blow up a single command
 # line - push them in bounded batches instead.

@@ -1077,6 +1077,24 @@ class AutochecksConfigurer:
         )
 
 
+def make_ruleset_matcher(
+    hosts_config: Hosts, host_tags: HostTags
+) -> ruleset_matcher.RulesetMatcher:
+    """Make a ruleset matcher for the configured hosts.
+
+    The ConfigCache holds the one the configuration's rulesets are matched with.
+    Make another one to match rules that are not part of the configuration: the
+    matcher caches its results by the identity of the ruleset.
+    """
+    return ruleset_matcher.RulesetMatcher(
+        host_tags=host_tags.host_tags_maps,
+        host_paths=hosts_config.host_paths,
+        clusters_of=hosts_config.clusters_of_nodes,
+        nodes_of=hosts_config.clusters,
+        all_configured_hosts=frozenset(hosts_config.all_configured_hosts),
+    )
+
+
 class ConfigCache:
     def __init__(
         self,
@@ -1128,13 +1146,7 @@ class ConfigCache:
 
         self.autochecks_memoizer: Final = AutochecksMemoizer(autochecks_dir)
 
-        self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
-            host_tags=self._host_tags.host_tags_maps,
-            host_paths=self._hosts_config.host_paths,
-            clusters_of=self._hosts_config.clusters_of_nodes,
-            nodes_of=self._hosts_config.clusters,
-            all_configured_hosts=frozenset(self._hosts_config.all_configured_hosts),
-        )
+        self.ruleset_matcher = make_ruleset_matcher(self._hosts_config, self._host_tags)
         self.label_manager = LabelManager(
             LabelConfig(
                 self.ruleset_matcher,

@@ -22,8 +22,7 @@ from cmk.base.automations.check_mk import (
     automation_analyze_host_rule_effectiveness,
     automation_analyze_host_rule_matches,
 )
-from cmk.base.config import LoadingResult, make_host_tags
-from cmk.ccc.hostaddress import HostName, Hosts
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.logged_in import user
 from cmk.gui.watolib import password_store, rulesets
@@ -135,14 +134,7 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
         ts = Scenario()
         ts.add_host(HostName("foobar123"), host_path="/wato/regex_check/hosts.mk")
         ts.add_host(HostName("foobar456"), host_path="/wato/regex_check/hosts.mk")
-        applied = ts.apply(monkeypatch)
-        hosts_config = Hosts(hosts=(), clusters={}, shadow_hosts=(), host_paths={})
-        loading_result = LoadingResult(
-            loaded_config=applied.loaded_config,
-            hosts_config=hosts_config,
-            host_tags=make_host_tags(applied.loaded_config, hosts_config),
-            config_cache=applied.config_cache,
-        )
+        loading_result = ts.apply(monkeypatch)
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))

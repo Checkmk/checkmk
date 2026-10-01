@@ -26,6 +26,7 @@ from ._impl import make_host_tags as make_host_tags
 from ._impl import make_hosts_config as make_hosts_config
 from ._impl import make_loading_result as make_loading_result
 from ._impl import make_parser_config as make_parser_config
+from ._impl import make_ruleset_matcher as make_ruleset_matcher
 from ._impl import ObjectAttributes as ObjectAttributes
 from ._impl import ObjectMacros as ObjectMacros
 from ._impl import parse_hostname_list as parse_hostname_list

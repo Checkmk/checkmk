@@ -2219,7 +2219,10 @@ def _automation_analyze_host_rule_matches(
     match_rules = ast.literal_eval(sys.stdin.read())
 
     loading_result = state.loading_result or load_config()
-    ruleset_matcher = loading_result.config_cache.ruleset_matcher
+    # Rules from stdin must not enter the shared matcher: it caches by id(ruleset).
+    ruleset_matcher = config.make_ruleset_matcher(
+        loading_result.hosts_config, loading_result.host_tags
+    )
     label_manager = loading_result.config_cache.label_manager
 
     with ruleset_matcher.ruleset_optimizer.processed_hosts({host_name}):
@@ -2253,7 +2256,10 @@ def _automation_analyze_service_rule_matches(
     match_rules, service_labels = ast.literal_eval(sys.stdin.read())
 
     loading_result = state.loading_result or load_config()
-    ruleset_matcher = loading_result.config_cache.ruleset_matcher
+    # Rules from stdin must not enter the shared matcher: it caches by id(ruleset).
+    ruleset_matcher = config.make_ruleset_matcher(
+        loading_result.hosts_config, loading_result.host_tags
+    )
     label_manager = loading_result.config_cache.label_manager
 
     with ruleset_matcher.ruleset_optimizer.processed_hosts({host_name}):
@@ -2289,7 +2295,8 @@ def _automation_analyze_host_rule_effectiveness(
 
     hosts_config = loading_result.hosts_config
     config_cache = loading_result.config_cache
-    ruleset_matcher = config_cache.ruleset_matcher
+    # Rules from stdin must not enter the shared matcher: it caches by id(ruleset).
+    ruleset_matcher = config.make_ruleset_matcher(hosts_config, loading_result.host_tags)
     label_manager = config_cache.label_manager
 
     host_names = list(

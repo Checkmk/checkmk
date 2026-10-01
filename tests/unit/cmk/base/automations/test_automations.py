@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ast
+import io
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -16,6 +18,7 @@ import cmk.utils.paths
 from cmk.automations.results import (
     ABCAutomationResult,
     AnalyseHostResult,
+    AnalyzeHostRuleEffectivenessResult,
     GetServicesLabelsResult,
     SerializedResult,
 )
@@ -69,6 +72,30 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
             "explicit": "ding",
         }
         | additional_labels,
+    )
+
+
+def test_rule_effectiveness_is_not_answered_from_an_earlier_call(monkeypatch: MonkeyPatch) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("test-host"))
+    state = CommonState(cmk.utils.paths.omd_root, ts.apply(monkeypatch))
+    # CPython hands the address of a freed list to the next one, so the rules of a
+    # later call may have the id of an earlier call's. Make that deterministic by
+    # handing over the very same list object, with different rules in it.
+    rules: list[list[RuleSpec[bool]]] = [
+        [{"id": "01", "value": True, "condition": {"host_name": ["test-host"]}}]
+    ]
+    monkeypatch.setattr(ast, "literal_eval", lambda _text: rules)
+    monkeypatch.setattr(sys, "stdin", io.StringIO())
+    handler = automations.automation_analyze_host_rule_effectiveness.handler
+
+    first = handler(state, [])
+    rules[0][0]["condition"] = {"host_name": ["other-host"]}
+    second = handler(state, [])
+
+    assert (first, second) == (
+        AnalyzeHostRuleEffectivenessResult({"01": True}),
+        AnalyzeHostRuleEffectivenessResult({"01": False}),
     )
 
 

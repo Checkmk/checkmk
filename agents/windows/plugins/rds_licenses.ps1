@@ -21,11 +21,11 @@
     .\rds_licenses.ps1 -server "RemoteServer"
     This will connect to "RemoteServer" and retrieve the RDS license information.
 .NOTES
-    Version: 2.5.0p15
+    Version: 2.5.0p16
     Date: 27.02.2025
 #>
 
-$CMK_VERSION = "2.5.0p15"
+$CMK_VERSION = "2.5.0p16"
 
 function Show-Help {
     Write-Error "Usage: GeneratePerDeviceReport.ps1 [-Server ServerName]"

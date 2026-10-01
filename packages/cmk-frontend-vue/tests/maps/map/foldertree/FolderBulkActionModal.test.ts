@@ -69,12 +69,43 @@ describe('FolderBulkActionModal', () => {
       )
     )
 
-    await screen.findByText('1 host without a problem left out.')
+    await screen.findByText('1 host that is up left out.')
     await user.type(screen.getByRole('textbox'), 'rack maintenance')
     await user.click(screen.getByRole('button', { name: 'Acknowledge 1 host' }))
 
     await waitFor(() => expect(commands.acknowledgeHost).toHaveBeenCalledTimes(1))
     expect(vi.mocked(commands.acknowledgeHost).mock.calls[0]![0]).toBe('web01')
+  })
+
+  it('says why there is nothing to acknowledge where no host is down', async () => {
+    // Every host is up and red for its services: "Acknowledge 0 hosts" would
+    // be a button that can never be pressed.
+    await renderModal(aRack(aHost('web01', { state: 'WARNING', own_state: 'UP' })))
+
+    expect(
+      await screen.findByText(/No host in “rack-1” is down or unreachable/)
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('textbox')).toBeNull()
+  })
+
+  it('points to the sub-folders where only they hold a host that is down', async () => {
+    const user = userEvent.setup()
+    await renderModal(
+      aRack(
+        aHost('web01'),
+        aFolderNode({
+          path: '/main/rack-1/shelf',
+          title: 'shelf',
+          children: [aHost('db01', { state: 'DOWN' })]
+        })
+      )
+    )
+
+    await user.click(await screen.findByRole('checkbox', { name: 'Include sub-folders' }))
+
+    expect(
+      await screen.findByText(/No host directly in “rack-1” is down or unreachable/)
+    ).toBeInTheDocument()
   })
 
   it('offers only what refused after a partial failure, not the whole folder', async () => {

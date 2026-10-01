@@ -14,6 +14,7 @@ will reach, and a recursion toggle that changes it, is what keeps that from
 being fired blind.
 -->
 <script setup lang="ts">
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkToggleButtonGroup from 'cmk-ui-library/components/CmkToggleButtonGroup.vue'
@@ -57,6 +58,8 @@ const persistent = ref(false)
 const { range, isValid, asIso } = useDowntimeWindow()
 
 const hosts = computed(() => folderHosts(props.folder, recursive.value))
+// Only offered where it changes something.
+const hasSubfolders = computed(() => props.folder.children.some(({ kind }) => kind === 'folder'))
 // Checkmk refuses to acknowledge a host that has no problem, and a tile that is
 // red for a failing service belongs to a host that may well be UP.
 const targets = computed<CommandTarget[]>(() =>
@@ -65,6 +68,10 @@ const targets = computed<CommandTarget[]>(() =>
     .map(({ host, site }) => ({ host, service: null, site }))
 )
 const skipped = computed(() => hosts.value.length - targets.value.length)
+// Only service problems: "Acknowledge 0 hosts" would be a dead button.
+const nothingToAcknowledge = computed(
+  () => mode.value === 'acknowledge' && hosts.value.length > 0 && targets.value.length === 0
+)
 
 const { submitting, progress, succeeded, pending, error, blocked, submit, reject } =
   useBulkCommandSubmit({
@@ -110,7 +117,23 @@ function onSubmit(): void {
   >
     <CmkToggleButtonGroup v-if="modes.length > 1" v-model="mode" :options="modes" spacing="none" />
 
-    <p class="maps-folder-bulk-action-modal__subtitle">
+    <CmkAlert
+      v-if="nothingToAcknowledge"
+      class="maps-folder-bulk-action-modal__nothing"
+      variant="info"
+      :text="
+        hasSubfolders && !recursive
+          ? _t(
+              'No host directly in “%{folder}” is down or unreachable. Include sub-folders to reach the hosts below it.',
+              { folder: folder.title }
+            )
+          : _t(
+              'No host in “%{folder}” is down or unreachable. A host that is up and red is red for its services: acknowledge those on the host.',
+              { folder: folder.title }
+            )
+      "
+    />
+    <p v-else class="maps-folder-bulk-action-modal__subtitle">
       {{
         _tn(
           'Applies to %{count} host in “%{folder}”.',
@@ -120,19 +143,16 @@ function onSubmit(): void {
         )
       }}
     </p>
-    <p v-if="skipped" class="maps-folder-bulk-action-modal__skipped">
+    <p v-if="skipped && !nothingToAcknowledge" class="maps-folder-bulk-action-modal__skipped">
       {{
-        _tn(
-          '%{count} host without a problem left out.',
-          '%{count} hosts without a problem left out.',
-          skipped,
-          { count: skipped }
-        )
+        _tn('%{count} host that is up left out.', '%{count} hosts that are up left out.', skipped, {
+          count: skipped
+        })
       }}
     </p>
-    <CmkCheckbox v-model="recursive" :label="_t('Include sub-folders')" />
+    <CmkCheckbox v-if="hasSubfolders" v-model="recursive" :label="_t('Include sub-folders')" />
 
-    <div class="maps-folder-bulk-action-modal__fields">
+    <div v-if="!nothingToAcknowledge" class="maps-folder-bulk-action-modal__fields">
       <div class="maps-folder-bulk-action-modal__field">
         <CmkLabel>{{ _t('Comment') }}</CmkLabel>
         <CmkInput v-model="comment" field-size="fill" :placeholder="`${_t('Comment')}…`" />
@@ -161,6 +181,7 @@ function onSubmit(): void {
         {{ _t('Cancel') }}
       </CmkButton>
       <CmkButton
+        v-if="!nothingToAcknowledge"
         variant="primary"
         :disabled="blocked || !comment.trim() || pending === 0"
         @click="onSubmit"
@@ -186,6 +207,14 @@ function onSubmit(): void {
   margin: var(--dimension-4) 0 var(--dimension-3);
   font-size: var(--font-size-normal);
   color: var(--font-color);
+}
+
+/* No wider than the dialog's own minimum, so switching between the two modes
+   does not resize the dialog around it. */
+.maps-folder-bulk-action-modal__nothing {
+  box-sizing: border-box;
+  max-width: 450px;
+  margin: var(--dimension-4) 0 var(--dimension-3);
 }
 
 .maps-folder-bulk-action-modal__skipped {

@@ -1020,7 +1020,7 @@ div#page_menu_popups div.side_popup {
   right: var(--main-area-inset-right, 0);
   z-index: 1000;
   width: $side-popup-width;
-  height: 100vh;
+  height: calc(100vh - var(--main-area-inset-bottom, 0px));
   padding: 0;
   border-left: $popup-border;
 
@@ -1033,7 +1033,7 @@ div#page_menu_popups div.side_popup {
     text-align: left;
 
     div.side_popup_content {
-      height: calc(100vh - 86px);
+      height: calc(100vh - 86px - var(--main-area-inset-bottom, 0px));
       overflow-x: hidden;
       overflow-y: auto;
     }
@@ -1176,7 +1176,7 @@ div#page_menu_popups div.side_popup {
     right: calc(#{$side-popup-width} + var(--main-area-inset-right, 0px));
     display: none;
     width: 288px;
-    height: 100vh;
+    height: calc(100vh - var(--main-area-inset-bottom, 0px));
     padding: 0;
     overflow: auto;
     background-color: $base-color;

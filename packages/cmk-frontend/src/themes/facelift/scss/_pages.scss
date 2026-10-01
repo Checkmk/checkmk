@@ -125,6 +125,8 @@ body {
 
   &:not(:has(#ai-panel-container)) {
     --main-area-inset-right: 0px;
+    --main-area-inset-left: 0px;
+    --main-area-inset-bottom: 0px;
   }
 
   &.main {

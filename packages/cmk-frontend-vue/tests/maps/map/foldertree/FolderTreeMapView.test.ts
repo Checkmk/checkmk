@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, markRaw } from 'vue'
 
@@ -191,6 +191,20 @@ describe('FolderTreeMapView (list mode)', () => {
     await user.pointer({ target: host, coords: { clientX: 40, clientY: 10 } })
 
     expect(screen.queryByText('Host')).toBeNull()
+  })
+
+  it('counts a folder row by the hosts the search left in it', async () => {
+    const { rerender } = renderTree()
+    await waitForRows()
+
+    await rerender({ needle: 'h:web-01' })
+
+    await waitFor(() => expect(screen.getAllByRole('treeitem')[0]).toHaveTextContent('1 host'))
+    const main = screen.getAllByRole('treeitem')[0]!
+    expect(main).not.toHaveTextContent('2 hosts')
+    // The hidden DOWN host colours it no more than it counts in it.
+    expect(within(main).getByTitle('OK')).toBeInTheDocument()
+    expect(within(main).queryByTitle('Down')).toBeNull()
   })
 
   it('does not call an empty search result all OK', async () => {

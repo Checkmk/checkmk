@@ -14,7 +14,13 @@
  */
 import type { FolderTreeNode } from '@/maps/types/api'
 
-import { type FolderQuery, selfMatches } from './filter'
+import {
+  type FolderQuery,
+  type HostStats,
+  isFilterActive,
+  selfMatches,
+  visibleHostStats
+} from './filter'
 
 /** One row. `note` rows are a host's loading/error/no-services placeholders,
  *  which keep the host as their node so depth and key still line up. */
@@ -27,6 +33,9 @@ export interface FlatRow {
   /** The owning host, for a service row. */
   hostName?: string | undefined
   note?: 'loading' | 'error' | 'empty'
+  /** For a folder under a filter: what of it is shown, which its row counts
+   *  rather than the whole folder. */
+  shown?: HostStats | undefined
 }
 
 interface RowSource {
@@ -50,7 +59,11 @@ interface RowSource {
 export function flattenTree(root: FolderTreeNode, source: RowSource): FlatRow[] {
   const rows: FlatRow[] = []
   const terms = source.query.terms
+  // Each open folder row counts its subtree; a subfolder's count is reused by
+  // the folder above it rather than walked again.
+  const shownMemo = new Map<FolderTreeNode, HostStats>()
   const searching = terms.length > 0
+  const filtering = isFilterActive(source.query)
 
   const isExpandable = (node: FolderTreeNode): boolean =>
     node.kind === 'folder' ||
@@ -91,7 +104,11 @@ export function flattenTree(root: FolderTreeNode, source: RowSource): FlatRow[] 
       depth,
       isOpen: open,
       isExpandable: isExpandable(node),
-      hostName
+      hostName,
+      shown:
+        node.kind === 'folder' && filtering
+          ? visibleHostStats(node, source.query, ancestorMatched, shownMemo)
+          : undefined
     })
     if (!open) {
       return

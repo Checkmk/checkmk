@@ -5,7 +5,13 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { layoutTreemap, tileSignature, visibleTiles } from '@/maps/map/foldertree/treemapLayout'
+import { parseFolderQuery } from '@/maps/map/foldertree/filter'
+import {
+  filteredRoot,
+  layoutTreemap,
+  tileSignature,
+  visibleTiles
+} from '@/maps/map/foldertree/treemapLayout'
 import type { FolderTreeNode } from '@/maps/types/api'
 
 import { aFolderNode } from '../../support/fixtures'
@@ -58,5 +64,66 @@ describe('tileSignature', () => {
     expect(paths(wide)).toEqual(paths(narrow))
 
     expect(tileSignature(wide)).not.toBe(tileSignature(narrow))
+  })
+})
+
+describe('filteredRoot', () => {
+  it('counts a folder by the hosts the search left in it, not by the ones it hid', () => {
+    const root = aFolderNode({
+      path: '/main',
+      title: 'Main',
+      kind: 'folder',
+      host_count: 2,
+      problem_count: 1,
+      severity_counts: { CRITICAL: 1 },
+      state: 'CRITICAL',
+      children: [
+        aFolderNode({ path: '/main/web-01', title: 'web-01', kind: 'host', state: 'WARNING' }),
+        aFolderNode({ path: '/main/db-01', title: 'db-01', kind: 'host', state: 'CRITICAL' })
+      ]
+    })
+    const query = {
+      terms: parseFolderQuery('h:web'),
+      problemsOnly: false,
+      severity: 'any' as const,
+      matchedHosts: new Set<string>()
+    }
+
+    const shown = filteredRoot(root, query, () => [])
+
+    expect(shown).toMatchObject({
+      host_count: 1,
+      severity_counts: { WARNING: 1 },
+      state: 'WARNING'
+    })
+  })
+
+  it('takes no colour from hosts the search hid when only empty folders are left', () => {
+    const root = aFolderNode({
+      path: '/prod',
+      title: 'prod',
+      kind: 'folder',
+      host_count: 1,
+      severity_counts: { CRITICAL: 1 },
+      state: 'CRITICAL',
+      children: [
+        aFolderNode({ path: '/prod/db-01', title: 'db-01', kind: 'host', state: 'CRITICAL' }),
+        aFolderNode({
+          path: '/prod/backup',
+          title: 'backup',
+          kind: 'folder',
+          is_empty: true,
+          state: 'EMPTY'
+        })
+      ]
+    })
+    const query = {
+      terms: parseFolderQuery('backup'),
+      problemsOnly: false,
+      severity: 'any' as const,
+      matchedHosts: new Set<string>()
+    }
+
+    expect(filteredRoot(root, query, () => []).state).toBe('EMPTY')
   })
 })

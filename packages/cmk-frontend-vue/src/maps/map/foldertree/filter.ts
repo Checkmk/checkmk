@@ -213,7 +213,10 @@ export interface HostStats {
 export function visibleHostStats(
   node: FolderTreeNode,
   query: FolderQuery,
-  ancestorMatched = false
+  ancestorMatched = false,
+  /** Folders already counted in this pass -- for a caller that asks about
+   *  every open folder in turn, so nested subtrees are walked once. */
+  memo?: Map<FolderTreeNode, HostStats>
 ): HostStats {
   if (node.kind === 'service') {
     return { hosts: 0, counts: {} }
@@ -224,15 +227,21 @@ export function visibleHostStats(
     }
     return { hosts: 1, counts: isProblemState(node.state) ? { [node.state]: 1 } : {} }
   }
+  const known = memo?.get(node)
+  if (known) {
+    return known
+  }
   const selfMatch = ancestorMatched || selfMatches(node, query.terms)
   const counts: Record<string, number> = {}
   let hosts = 0
   for (const child of node.children) {
-    const stats = visibleHostStats(child, query, selfMatch)
+    const stats = visibleHostStats(child, query, selfMatch, memo)
     hosts += stats.hosts
     for (const [state, count] of Object.entries(stats.counts)) {
       counts[state] = (counts[state] ?? 0) + count
     }
   }
-  return { hosts, counts }
+  const stats = { hosts, counts }
+  memo?.set(node, stats)
+  return stats
 }

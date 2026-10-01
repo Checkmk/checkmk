@@ -17,7 +17,7 @@ import { type HierarchyRectangularNode, hierarchy, treemap, treemapSquarify } fr
 
 import type { FolderTreeNode } from '@/maps/types/api'
 import { isProblemState } from '@/maps/utils/problemState'
-import { stateRank } from '@/maps/utils/stateColors'
+import { severityPills, stateRank } from '@/maps/utils/stateColors'
 
 import {
   type FolderQuery,
@@ -70,13 +70,49 @@ function pruneTree(
     .map((child) => pruneTree(child, query, servicesOf, selfMatch))
     .filter((child): child is FolderTreeNode => child !== null)
   if (kept.length) {
-    return { ...node, children: kept }
+    return withShownCounts(node, kept)
   }
   // Nothing under it survived, so the only way the folder itself still shows is
   // on its own name -- no need to walk the subtree again to be told the same.
   return selfMatch && !query.problemsOnly && node.children.length === 0
     ? { ...node, children: [] }
     : null
+}
+
+/**
+ * A folder cut down to what the filter kept, counting only that: its caption,
+ * its colour and its card then say what is on screen, as the toolbar does,
+ * rather than what the filter hid.
+ */
+function withShownCounts(node: FolderTreeNode, kept: FolderTreeNode[]): FolderTreeNode {
+  const counts: Record<string, number> = {}
+  let hosts = 0
+  const add = (state: string, count: number): void => {
+    counts[state] = (counts[state] ?? 0) + count
+  }
+  for (const child of kept) {
+    if (child.kind === 'host') {
+      hosts += 1
+      if (isProblemState(child.state)) {
+        add(child.state, 1)
+      }
+    } else if (child.kind === 'folder') {
+      hosts += child.host_count
+      Object.entries(child.severity_counts).forEach(([state, count]) => add(state, count))
+    }
+  }
+  // Ranked as the daemon ranks a folder's own state, and as its pills are.
+  const worst = severityPills(counts)[0]?.state
+  return {
+    ...node,
+    children: kept,
+    host_count: hosts,
+    problem_count: Object.values(counts).reduce((sum, count) => sum + count, 0),
+    severity_counts: counts,
+    // Nothing but empty sub-folders kept: no host on screen to take a colour
+    // from, so none from the hosts the filter hid either.
+    state: worst ?? (hosts > 0 ? 'OK' : 'EMPTY')
+  }
 }
 
 /** The root the treemap draws: the whole tree, or what the filter leaves of it. */

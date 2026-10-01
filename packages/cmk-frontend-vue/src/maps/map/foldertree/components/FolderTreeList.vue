@@ -225,6 +225,7 @@ watch(scrollEl, (element) => {
             :is-expandable="row.isExpandable"
             :multi-site="multiSite"
             :active="row.key === tabStopKey"
+            :shown="row.shown"
             :data-row-key="row.key"
             v-bind="hostNameProp(row)"
             @toggle="emit('toggle', $event)"

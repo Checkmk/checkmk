@@ -20,6 +20,7 @@ import type { FolderTreeNode } from '@/maps/types/api'
 import { stateWordFromToken } from '@/maps/utils/objectAria'
 import { type SeverityPill, severityPills, stateColorVar } from '@/maps/utils/stateColors'
 
+import type { HostStats } from '../filter'
 import { leafStateText } from '../objects'
 
 const props = defineProps<{
@@ -36,6 +37,8 @@ const props = defineProps<{
   multiSite: boolean
   /** Whether this row is the tree's one stop in the tab order. */
   active: boolean
+  /** Under a filter, what of the folder is shown -- which its counts follow. */
+  shown?: HostStats | undefined
   /** The owning host, so a service row's click can resolve it. */
   hostName?: string
 }>()
@@ -64,14 +67,26 @@ const isEmptyFolder = computed(() => {
   void props.rev
   return props.node.kind === 'folder' && props.node.is_empty
 })
+const hostCount = computed(() => {
+  void props.rev
+  return props.shown?.hosts ?? props.node.host_count
+})
 const pills = computed(() => {
   void props.rev
-  return severityPills(props.node.severity_counts)
+  return severityPills(props.shown?.counts ?? props.node.severity_counts)
+})
+// Under a filter the dot follows what is shown, as the pills do.
+const dotState = computed<string | null>(() => {
+  void props.rev
+  if (props.node.kind !== 'folder' || !props.shown) {
+    return props.node.state
+  }
+  return props.shown.hosts > 0 ? 'OK' : null
 })
 // The healthy remainder, so the pill breakdown adds up to the host count.
 const healthy = computed(() => {
   void props.rev
-  return Math.max(0, props.node.host_count - props.node.problem_count)
+  return Math.max(0, hostCount.value - pills.value.reduce((sum, pill) => sum + pill.count, 0))
 })
 
 function onClick(): void {
@@ -151,10 +166,10 @@ function onContextMenu(event: MouseEvent): void {
     />
     <CmkIcon v-else-if="node.kind === 'host'" name="host" size="medium" />
     <span
-      v-if="!isEmptyFolder && !(node.kind === 'folder' && pills.length)"
+      v-if="!isEmptyFolder && !(node.kind === 'folder' && pills.length) && dotState"
       class="maps-folder-tree-row__dot"
-      :style="{ background: stateColorVar(node.state) }"
-      :title="leafStateText(_t, node)"
+      :style="{ background: stateColorVar(dotState) }"
+      :title="dotState === node.state ? leafStateText(_t, node) : stateWord(dotState)"
     />
 
     <span
@@ -173,7 +188,7 @@ function onContextMenu(event: MouseEvent): void {
       >{{ _t('empty · 0 hosts') }}</span
     >
     <span v-else-if="node.kind === 'folder'" class="maps-folder-tree-row__meta"
-      >{{ _tn('%{n} host', '%{n} hosts', node.host_count, { n: node.host_count })
+      >{{ _tn('%{n} host', '%{n} hosts', hostCount, { n: hostCount })
       }}<template v-if="pills.length && healthy > 0">
         · {{ healthy }} {{ _t('OK') }}</template
       ></span

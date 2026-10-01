@@ -199,6 +199,77 @@ describe('FolderTreeMapView (list mode)', () => {
     expect(screen.getByRole('button', { name: 'Expand' })).toBeInTheDocument()
   })
 
+  it('is one tab stop, and the arrow keys walk the rows, up to the parent and shut', async () => {
+    const user = userEvent.setup()
+    renderTree()
+    await waitForRows()
+    const [main, first, second] = screen.getAllByRole('treeitem')
+    expect([main, first, second].map((row) => row!.tabIndex)).toEqual([0, -1, -1])
+
+    main!.focus()
+    await user.keyboard('{ArrowDown}')
+    expect(first).toHaveFocus()
+    await user.keyboard('{ArrowLeft}')
+    expect(main).toHaveFocus()
+    await user.keyboard('{ArrowLeft}')
+
+    await waitFor(() => expect(screen.getAllByRole('treeitem')).toHaveLength(1))
+  })
+
+  it('keeps the focus on an open row whose only child is a note', async () => {
+    const user = userEvent.setup()
+    renderTree({ showServices: true })
+    await waitForRows()
+    const web = screen.getByRole('treeitem', { name: /web-01/ })
+
+    web.focus()
+    await user.keyboard('{ArrowRight}')
+    await screen.findByText('No services')
+    await user.keyboard('{ArrowRight}')
+
+    expect(web).toHaveFocus()
+  })
+
+  it('leaves the arrow keys with a modifier to the browser', async () => {
+    renderTree()
+    await waitForRows()
+    const [main] = screen.getAllByRole('treeitem')
+
+    const back = new KeyboardEvent('keydown', {
+      key: 'ArrowLeft',
+      altKey: true,
+      bubbles: true,
+      cancelable: true
+    })
+    main!.dispatchEvent(back)
+
+    expect(back.defaultPrevented).toBe(false)
+  })
+
+  it('keeps the tree in the tab order after the focused row is scrolled away', async () => {
+    renderTree({
+      tree: aFolderNode({
+        path: '/main',
+        title: 'Main',
+        kind: 'folder',
+        host_count: 100,
+        children: Array.from({ length: 100 }, (_, index) =>
+          aFolderNode({ path: `/main/host-${index}`, title: `host-${index}`, kind: 'host' })
+        )
+      })
+    })
+    await screen.findAllByRole('treeitem')
+    const tree = screen.getByRole('tree')
+
+    tree.scrollTop = 2000
+    await fireEvent.scroll(tree)
+
+    await waitFor(() =>
+      expect(screen.getAllByRole('treeitem').some((row) => row.tabIndex === 0)).toBe(true)
+    )
+    expect(screen.queryByRole('treeitem', { name: /Main/ })).toBeNull()
+  })
+
   it('expands a host from its chevron by keyboard rather than opening the leaf', async () => {
     const user = userEvent.setup()
     renderTree({ showServices: true })

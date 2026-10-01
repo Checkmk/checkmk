@@ -38,7 +38,8 @@ const baseProps = {
   depth: 0,
   isOpen: false,
   isExpandable: true,
-  multiSite: false
+  multiSite: false,
+  active: true
 }
 
 describe('FolderTreeRow', () => {

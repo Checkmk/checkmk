@@ -34,6 +34,8 @@ const props = defineProps<{
   isExpandable: boolean
   /** Whether hosts are worth labelling with the site they are monitored from. */
   multiSite: boolean
+  /** Whether this row is the tree's one stop in the tab order. */
+  active: boolean
   /** The owning host, so a service row's click can resolve it. */
   hostName?: string
 }>()
@@ -113,7 +115,7 @@ function onContextMenu(event: MouseEvent): void {
       'maps-folder-tree-row--stale': node.stale
     }"
     role="treeitem"
-    tabindex="0"
+    :tabindex="active ? 0 : -1"
     :aria-level="depth + 1"
     :aria-expanded="isExpandable ? isOpen : undefined"
     :title="node.output || undefined"
@@ -133,6 +135,7 @@ function onContextMenu(event: MouseEvent): void {
       v-if="isExpandable"
       type="button"
       class="maps-folder-tree-row__chevron"
+      tabindex="-1"
       :aria-label="isOpen ? _t('Collapse') : _t('Expand')"
       @click.stop="emit('toggle', node)"
     >

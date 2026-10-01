@@ -14,7 +14,7 @@ what makes that windowing a division rather than a measurement.
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
-import { computed, ref, useTemplateRef, watch } from 'vue'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 import type { FolderTreeNode } from '@/maps/types/api'
 
@@ -82,6 +82,105 @@ function hostNameProp(row: FlatRow): { hostName?: string } {
   return row.hostName === undefined ? {} : { hostName: row.hostName }
 }
 
+// One tab stop, as in an ARIA tree: the row last focused carries it.
+const activeKey = ref<string | null>(null)
+
+// The tab stop must sit on a rendered row, or Tab skips the tree once the
+// focused row scrolls away. Only the window is searched, not the whole list.
+const tabStopKey = computed(() => {
+  const rendered = visibleRows.value.filter((row) => !row.note)
+  return rendered.find((row) => row.key === activeKey.value)?.key ?? rendered[0]?.key ?? null
+})
+
+/** The next row from `from` that can take the focus, a note row being none. */
+function step(from: number, direction: 1 | -1): number {
+  for (let index = from + direction; index >= 0 && index < props.rows.length; index += direction) {
+    if (!props.rows[index]?.note) {
+      return index
+    }
+  }
+  return -1
+}
+
+function parentOf(index: number): number {
+  const depth = props.rows[index]?.depth ?? 0
+  for (let candidate = index - 1; candidate >= 0; candidate--) {
+    const row = props.rows[candidate]
+    if (row && !row.note && row.depth < depth) {
+      return candidate
+    }
+  }
+  return -1
+}
+
+async function focusRow(index: number): Promise<void> {
+  const row = props.rows[index]
+  const element = scrollEl.value
+  if (!row || !element) {
+    return
+  }
+  activeKey.value = row.key
+  const top = index * ROW_HEIGHT
+  if (top < element.scrollTop) {
+    element.scrollTop = top
+  } else if (top + ROW_HEIGHT > element.scrollTop + element.clientHeight) {
+    element.scrollTop = top + ROW_HEIGHT - element.clientHeight
+  }
+  scrollTop.value = element.scrollTop
+  await nextTick()
+  element.querySelector<HTMLElement>(`[data-row-key="${CSS.escape(row.key)}"]`)?.focus()
+}
+
+function onKeydown(event: KeyboardEvent): void {
+  // Alt+Left/Right is the browser's back and forward.
+  if (event.altKey || event.ctrlKey || event.metaKey) {
+    return
+  }
+  const found = props.rows.findIndex((row) => row.key === activeKey.value)
+  const index = found >= 0 ? found : step(-1, 1)
+  const row = props.rows[index]
+  if (!row) {
+    return
+  }
+  let target = -1
+  switch (event.key) {
+    case 'ArrowDown':
+      target = step(index, 1)
+      break
+    case 'ArrowUp':
+      target = step(index, -1)
+      break
+    case 'Home':
+      target = step(-1, 1)
+      break
+    case 'End':
+      target = step(props.rows.length, -1)
+      break
+    case 'ArrowRight':
+      if (row.isExpandable && !row.isOpen) {
+        emit('toggle', row.node)
+      } else if (row.isOpen) {
+        // Only into a child: an open row whose only child is a note has none.
+        const next = step(index, 1)
+        target = (props.rows[next]?.depth ?? -1) > row.depth ? next : -1
+      }
+      break
+    case 'ArrowLeft':
+      if (row.isExpandable && row.isOpen) {
+        emit('toggle', row.node)
+      } else {
+        target = parentOf(index)
+      }
+      break
+    default:
+      return
+  }
+  event.preventDefault()
+  if (target >= 0) {
+    void focusRow(target)
+  }
+}
+
 // The viewport the windowing measures against. It appears on a switch back
 // from the treemap, and changes with the browser window.
 useResizeObserver(() => {
@@ -101,8 +200,10 @@ watch(scrollEl, (element) => {
     ref="scrollEl"
     class="maps-folder-tree-list"
     role="tree"
+    :aria-label="_t('Folder tree')"
     :style="{ '--maps-folder-tree-row-height': `${ROW_HEIGHT}px` }"
     @scroll="scrollTop = scrollEl?.scrollTop ?? 0"
+    @keydown="onKeydown"
   >
     <div class="maps-folder-tree-list__spacer" :style="{ height: `${totalHeight}px` }">
       <div class="maps-folder-tree-list__window" :style="{ transform: `translateY(${offset}px)` }">
@@ -123,12 +224,15 @@ watch(scrollEl, (element) => {
             :is-open="row.isOpen"
             :is-expandable="row.isExpandable"
             :multi-site="multiSite"
+            :active="row.key === tabStopKey"
+            :data-row-key="row.key"
             v-bind="hostNameProp(row)"
             @toggle="emit('toggle', $event)"
             @select="(host, node) => emit('select', host, node)"
             @hover="(host, node, x, y) => emit('hover', host, node, x, y)"
             @hover-clear="emit('hover-clear')"
             @ctx-folder="(node, x, y) => emit('ctx-folder', node, x, y)"
+            @focusin="activeKey = row.key"
           />
         </template>
       </div>

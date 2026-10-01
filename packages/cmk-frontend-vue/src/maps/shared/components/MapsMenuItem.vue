@@ -54,7 +54,9 @@ defineProps<{
   line-height: 20px;
   font-weight: inherit;
   letter-spacing: inherit;
-  color: var(--font-color-dimmed);
+
+  /* The theme's full text colour: a dimmed entry reads as a disabled one. */
+  color: var(--font-color);
   text-align: left;
   text-decoration: none;
   background: none;
@@ -66,9 +68,10 @@ defineProps<{
     background-color 0.15s;
 }
 
-/* Outweighs Checkmk's `body.main a:link`, which would paint a link entry white. */
+/* Outweighs Checkmk's `body.main a:link`, which would paint a link entry in
+   the link colour. */
 .maps-menu-item:any-link {
-  color: var(--font-color-dimmed);
+  color: var(--font-color);
 }
 
 .maps-menu-item:hover {

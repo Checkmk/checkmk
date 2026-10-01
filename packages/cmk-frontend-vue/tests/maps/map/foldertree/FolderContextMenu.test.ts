@@ -35,7 +35,8 @@ const hostComponent = defineComponent({
     :x="10"
     :y="10"
     checkmk-url="http://checkmk/site"
-    :can-command="true"
+    :can-acknowledge="true"
+    :can-downtime="true"
     @close="open = false"
   />`
 })
@@ -49,18 +50,43 @@ describe('FolderContextMenu', () => {
       within(menu)
         .getAllByRole('menuitem')
         .map((entry) => entry.textContent?.trim())
-    ).toEqual(['Folder actions', 'Open in Checkmk Setup'])
+    ).toEqual(['Acknowledge problems…', 'Schedule downtime…', 'Open in Checkmk Setup'])
+  })
+
+  it('offers only the commands the operator may send', async () => {
+    render(FolderContextMenu, {
+      props: {
+        folder: aFolderNode({
+          path: '/main/web',
+          title: 'Web servers',
+          kind: 'folder',
+          host_count: 3
+        }),
+        x: 10,
+        y: 10,
+        checkmkUrl: null,
+        canAcknowledge: false,
+        canDowntime: true
+      }
+    })
+
+    const menu = await screen.findByRole('menu', { name: 'Web servers' })
+    expect(
+      within(menu)
+        .getAllByRole('menuitem')
+        .map((entry) => entry.textContent?.trim())
+    ).toEqual(['Schedule downtime…'])
   })
 
   it('closes on Escape without the operator having to tab into it first', async () => {
     const user = userEvent.setup()
     render(hostComponent)
     // Measured invisibly first, then shown where it opens.
-    expect(await screen.findByRole('menuitem', { name: /Folder actions/ })).toBeInTheDocument()
+    expect(await screen.findByRole('menuitem', { name: /Schedule downtime/ })).toBeInTheDocument()
 
     await user.keyboard('{Escape}')
 
-    expect(screen.queryByRole('menuitem', { name: /Folder actions/ })).toBeNull()
+    expect(screen.queryByRole('menuitem', { name: /Schedule downtime/ })).toBeNull()
   })
 })
 
@@ -85,7 +111,8 @@ describe('FolderContextMenu placement', () => {
         x,
         y,
         checkmkUrl: 'http://checkmk/site',
-        canCommand: true
+        canAcknowledge: true,
+        canDowntime: true
       }
     })
     const menu = container.querySelector<HTMLElement>('.maps-menu')!

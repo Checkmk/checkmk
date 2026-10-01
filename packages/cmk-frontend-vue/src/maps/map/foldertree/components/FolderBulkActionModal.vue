@@ -34,7 +34,12 @@ import { isProblemState } from '@/maps/utils/problemState'
 
 import { folderHosts } from '../objects'
 
-const props = defineProps<{ folder: FolderTreeNode }>()
+export type FolderBulkMode = 'acknowledge' | 'downtime'
+
+const props = defineProps<{
+  folder: FolderTreeNode
+  initialMode?: FolderBulkMode | undefined
+}>()
 const emit = defineEmits<{ close: [] }>()
 
 const { _t, _tn } = usei18n()
@@ -44,7 +49,9 @@ const auth = useAuth()
 const canAcknowledge = computed(() => auth.mayCommand('acknowledge'))
 const canDowntime = computed(() => auth.mayCommand('schedule_downtime'))
 
-const mode = ref<'acknowledge' | 'downtime'>(canDowntime.value ? 'downtime' : 'acknowledge')
+const mode = ref<FolderBulkMode>(
+  props.initialMode ?? (canDowntime.value ? 'downtime' : 'acknowledge')
+)
 const modes = computed(() => [
   ...(canAcknowledge.value ? [{ label: _t('Acknowledge'), value: 'acknowledge' }] : []),
   ...(canDowntime.value ? [{ label: _t('Schedule downtime'), value: 'downtime' }] : [])

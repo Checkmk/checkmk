@@ -27,7 +27,7 @@ import { useObjectHoverMenu } from '@/maps/map/composables/useObjectHoverMenu'
 import { useAuth, useStates } from '@/maps/services/context'
 import type { FolderTreeNode, MapConfig, MapElement, ObjectState } from '@/maps/types/api'
 
-import FolderBulkActionModal from './components/FolderBulkActionModal.vue'
+import FolderBulkActionModal, { type FolderBulkMode } from './components/FolderBulkActionModal.vue'
 import FolderContextMenu from './components/FolderContextMenu.vue'
 import FolderTreeList from './components/FolderTreeList.vue'
 import FolderTreeToolbar from './components/FolderTreeToolbar.vue'
@@ -95,9 +95,8 @@ const query = computed<FolderQuery>(() => ({
   matchedHosts: services.matchedHosts.value
 }))
 
-const canCommand = computed(
-  () => auth.mayCommand('acknowledge') || auth.mayCommand('schedule_downtime')
-)
+const canAcknowledge = computed(() => auth.mayCommand('acknowledge'))
+const canDowntime = computed(() => auth.mayCommand('schedule_downtime'))
 
 const hover = useObjectHoverMenu()
 
@@ -238,7 +237,7 @@ function onHoverClear(immediate: boolean): void {
 }
 
 const folderMenu = ref<{ node: FolderTreeNode; x: number; y: number } | null>(null)
-const bulkFolder = ref<FolderTreeNode | null>(null)
+const bulk = ref<{ folder: FolderTreeNode; mode: FolderBulkMode } | null>(null)
 
 function onFolderMenu(node: FolderTreeNode, x: number, y: number): void {
   // The settings preview is not interactive, and a read-only display (click
@@ -250,8 +249,8 @@ function onFolderMenu(node: FolderTreeNode, x: number, y: number): void {
   folderMenu.value = { node, x, y }
 }
 
-function onBulkCommand(): void {
-  bulkFolder.value = folderMenu.value?.node ?? null
+function onBulkCommand(mode: FolderBulkMode): void {
+  bulk.value = folderMenu.value ? { folder: folderMenu.value.node, mode } : null
   folderMenu.value = null
 }
 
@@ -263,12 +262,12 @@ watch(
   () => {
     hover.close()
     folderMenu.value = null
-    bulkFolder.value = null
+    bulk.value = null
   }
 )
 
 function closeBulkModal(): void {
-  bulkFolder.value = null
+  bulk.value = null
   // The command's effect reaches monitoring a moment later, so closing asks the
   // state stream for a fresh picture.
   states.refreshAfterCommand()
@@ -387,11 +386,17 @@ function closeBulkModal(): void {
         :x="folderMenu.x"
         :y="folderMenu.y"
         :checkmk-url="checkmkUrl"
-        :can-command="canCommand"
+        :can-acknowledge="canAcknowledge"
+        :can-downtime="canDowntime"
         @close="folderMenu = null"
         @bulk-command="onBulkCommand"
       />
-      <FolderBulkActionModal v-if="bulkFolder" :folder="bulkFolder" @close="closeBulkModal" />
+      <FolderBulkActionModal
+        v-if="bulk"
+        :folder="bulk.folder"
+        :initial-mode="bulk.mode"
+        @close="closeBulkModal"
+      />
     </template>
 
     <MapPlaceholder v-else :message="_t('Map not found')" variant="empty" />

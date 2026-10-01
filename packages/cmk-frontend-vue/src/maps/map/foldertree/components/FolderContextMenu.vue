@@ -21,21 +21,27 @@ import MapsMenuItem from '@/maps/shared/components/MapsMenuItem.vue'
 import type { FolderTreeNode } from '@/maps/types/api'
 import { stripCheckmkBase } from '@/maps/utils/mapNavigation'
 
+import type { FolderBulkMode } from './FolderBulkActionModal.vue'
+
 const props = defineProps<{
   folder: FolderTreeNode
   /** Where the operator right-clicked. */
   x: number
   y: number
   checkmkUrl: string | null
-  /** Whether this operator may send commands at all. */
-  canCommand: boolean
+  /** Which of the folder-wide commands this operator may send. */
+  canAcknowledge: boolean
+  canDowntime: boolean
 }>()
 
-const emit = defineEmits<{ close: []; 'bulk-command': [] }>()
+const emit = defineEmits<{ close: []; 'bulk-command': [mode: FolderBulkMode] }>()
 
 const { _t } = usei18n()
 
-const offersCommands = computed(() => props.canCommand && props.folder.host_count > 0)
+const hasHosts = computed(() => props.folder.host_count > 0)
+const offersAcknowledge = computed(() => hasHosts.value && props.canAcknowledge)
+const offersDowntime = computed(() => hasHosts.value && props.canDowntime)
+const offersCommands = computed(() => offersAcknowledge.value || offersDowntime.value)
 
 // wato.py addresses a folder by its path relative to Main, which is what the
 // tree node carries.
@@ -65,9 +71,13 @@ const setupUrl = computed(() => {
     @click.stop
     @close="emit('close')"
   >
-    <MapsMenuItem v-if="offersCommands" @click="emit('bulk-command')">
-      <CmkIcon name="checkmark" size="small" />
-      <span>{{ _t('Folder actions') }}</span>
+    <MapsMenuItem v-if="offersAcknowledge" @click="emit('bulk-command', 'acknowledge')">
+      <CmkIcon name="ack" size="small" />
+      <span>{{ _t('Acknowledge problems…') }}</span>
+    </MapsMenuItem>
+    <MapsMenuItem v-if="offersDowntime" @click="emit('bulk-command', 'downtime')">
+      <CmkIcon name="downtime" size="small" />
+      <span>{{ _t('Schedule downtime…') }}</span>
     </MapsMenuItem>
     <MapsMenuItem v-if="setupUrl" :href="setupUrl" @click="emit('close')">
       <CmkIcon name="export-link" size="small" />

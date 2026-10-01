@@ -173,7 +173,9 @@ describe('FolderTreeMapView (list mode)', () => {
     // the occurrence outside the tree rows.
     const summaries = screen.getAllByText(/2 hosts/)
     expect(summaries.some((element) => element.closest('[role="treeitem"]') === null)).toBe(true)
-    expect(screen.getByText('1 DOWN')).toBeInTheDocument()
+    expect(
+      screen.getAllByText('1 DOWN').some((element) => element.closest('[role="treeitem"]') === null)
+    ).toBe(true)
     expect(screen.getByRole('button', { name: 'Toggle List', pressed: true })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Toggle Map', pressed: false })).toBeInTheDocument()
   })

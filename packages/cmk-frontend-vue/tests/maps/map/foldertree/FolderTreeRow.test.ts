@@ -71,8 +71,9 @@ describe('FolderTreeRow', () => {
       }
     })
 
-    // Pills carry their meaning in the translated tooltip.
-    expect(screen.getByTitle('2 Critical hosts')).toHaveTextContent('2')
+    // Pills say what they count in words, not by colour alone; the tooltip
+    // spells it out.
+    expect(screen.getByTitle('2 Critical hosts')).toHaveTextContent('2 CRIT')
     expect(screen.getByTitle('1 Warning host')).toHaveTextContent('1')
     // Healthy remainder: 5 hosts − 3 problems = 2 OK.
     expect(screen.getByRole('treeitem')).toHaveTextContent('2 OK')

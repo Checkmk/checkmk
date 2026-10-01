@@ -17,7 +17,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import type { FolderTreeNode } from '@/maps/types/api'
-import { stateWordFromToken } from '@/maps/utils/objectAria'
+import { stateShortWordFromToken, stateWordFromToken } from '@/maps/utils/objectAria'
 import { type SeverityPill, severityPills, stateColorVar } from '@/maps/utils/stateColors'
 
 import type { HostStats } from '../filter'
@@ -200,7 +200,7 @@ function onContextMenu(event: MouseEvent): void {
         class="maps-folder-tree-row__pill"
         :style="{ background: pill.bg, color: pill.fg }"
         :title="pillTitle(pill)"
-        >{{ pill.count }}</span
+        >{{ pill.count }} {{ stateShortWordFromToken(_t, pill.state) }}</span
       >
     </span>
 

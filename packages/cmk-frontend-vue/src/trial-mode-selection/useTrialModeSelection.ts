@@ -273,6 +273,7 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
   return {
     screen,
     email,
+    emailSalt,
     saving,
     saveFailed,
     resendCooldown,

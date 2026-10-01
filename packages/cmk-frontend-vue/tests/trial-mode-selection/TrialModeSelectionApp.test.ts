@@ -64,7 +64,7 @@ function resendButton(): HTMLElement {
 }
 
 async function reachCodeStep() {
-  mockCmkAjax.mockResolvedValue({ status: 'ok', salt: '...' })
+  mockCmkAjax.mockResolvedValue({ status: 'ok', salt: 'fAkE_sAlT' })
   await startTrial()
   await user.type(screen.getByLabelText('Email address'), 'jane.doe@example.com')
   await user.click(screen.getByRole('button', { name: 'Send code' }))
@@ -624,6 +624,22 @@ describe('TrialModeSelectionApp', () => {
       await user.type(screen.getByRole('textbox', { name: 'Digit 6 of 6' }), '{Enter}')
 
       expect(screen.getByText('Trial verified')).toBeInTheDocument()
+    })
+
+    it('sends the verify request', async () => {
+      renderApp()
+      await reachCodeStep()
+      await typeCodeOutOfOrder()
+
+      await user.type(screen.getByRole('textbox', { name: 'Digit 6 of 6' }), '{Enter}')
+
+      expect(mockCmkAjax).toHaveBeenCalledWith('ajax_send_trial_mode_request.py', {
+        step: 'verify',
+        email: 'jane.doe@example.com',
+        salt: 'fAkE_sAlT',
+        code: '424242',
+        _csrf_token: 'the-csrf-token'
+      })
     })
 
     it('puts the cursor in the first box, so the code can be typed straight away', async () => {

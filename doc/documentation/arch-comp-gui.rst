@@ -118,6 +118,7 @@ The GUI configured to
 See also
 --------
 - :doc:`arch-comp-apache`
+- :doc:`arch-comp-host-relations`
 - `User manual: User interface <https://docs.checkmk.com/latest/en/user_interface.html>`_
 
 Risks and technical debts

@@ -9,11 +9,13 @@ Backend
 backends
 backoff
 Bazel
+BMC
 cAdvisor
 changelog
 Checkmk
 checksums
 ClickHouse
+CMDB
 cmk
 CN
 codebase
@@ -42,9 +44,12 @@ hoc
 hostname
 Hostname
 hostnames
+hypervisor
 icmpreceiver
 icmpsender
 IdP
+iDRAC
+iLO
 init
 installable
 integrations

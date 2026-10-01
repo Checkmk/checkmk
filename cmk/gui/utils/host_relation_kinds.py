@@ -12,8 +12,8 @@ enumerates them.
 
 Only the ids of a kind and of a direction are stored (see :mod:`cmk.gui.utils.host_relations`),
 so the wording stays free to change and to be translated. That is also why this is a module of
-its own: the wording is lazily translated and needs ``_l``, which the stdlib-only wire-format
-module below it cannot import.
+its own: the wording is lazily translated and needs ``_l``, which the wire-format module below
+it (standard library and ``cmk.ccc`` only) cannot import.
 """
 
 from collections.abc import Callable, Iterable, Mapping, Sequence

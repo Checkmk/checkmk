@@ -242,7 +242,7 @@ function reloadPage(): void {
 .global-settings-app {
   display: flex;
   flex-direction: column;
-  padding: 0 var(--dimension-4);
+  padding: 0 var(--dimension-5);
 }
 
 .global-settings-app__header {
@@ -254,8 +254,10 @@ function reloadPage(): void {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-4);
-  padding: var(--dimension-4) 0 var(--dimension-6);
+  margin: 0 calc(-1 * var(--dimension-5)) var(--dimension-6);
+  padding: var(--dimension-4) var(--dimension-5);
   background: var(--default-bg-color);
+  border-bottom: 1px solid var(--sticky-header-border-color);
 }
 
 .global-settings-app__title-link {

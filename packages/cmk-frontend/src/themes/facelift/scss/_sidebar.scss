@@ -153,7 +153,8 @@ body.side.main {
 }
 
 #content_area:has(cmk-monitoring-all-hosts),
-#content_area:has(cmk-monitoring-host-services) {
+#content_area:has(cmk-monitoring-host-services),
+#content_area:has(cmk-global-settings) {
   padding-left: 0;
 }
 

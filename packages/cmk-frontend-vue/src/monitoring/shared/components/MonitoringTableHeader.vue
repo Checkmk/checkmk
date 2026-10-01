@@ -17,13 +17,19 @@ import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { type CSSProperties, computed, inject } from 'vue'
+import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
+import { type CSSProperties, computed, inject, onMounted, useTemplateRef } from 'vue'
 
 import type { FilterField } from '@/monitoring/shared/api/types'
 
-import { COLUMN_LAYOUT_KEY, TABLE_BORDER_SPACING_PX } from './MonitoringTableContext'
+import {
+  COLUMN_LAYOUT_KEY,
+  type HeaderFitWidths,
+  TABLE_BORDER_SPACING_PX
+} from './MonitoringTableContext'
 import FilterDropdown from './filter/FilterDropdown.vue'
 import type { ColumnFilterValue, SortDirection } from './filter/types'
+import { headerFitWidth } from './headerFit'
 
 const { _t } = usei18n()
 
@@ -36,6 +42,53 @@ defineProps<{
   headerGroups: HeaderGroup<T>[]
   disabled?: boolean
 }>()
+
+const emit = defineEmits<{
+  (event: 'fit-widths', value: HeaderFitWidths): void
+}>()
+
+const thead = useTemplateRef<HTMLElement>('thead')
+let reportedFitWidths: HeaderFitWidths = {}
+
+function measureFitWidths(): void {
+  if (!thead.value) {
+    return
+  }
+  // A column keeps what it last needed while it is hidden or not laid out, so it fits its header
+  // right away when it shows up again, before anything resizes.
+  const widths: HeaderFitWidths = { ...reportedFitWidths }
+  for (const cell of thead.value.querySelectorAll<HTMLElement>('th[data-fit-header]')) {
+    // Only the standalone label fills its cell; in the other header variants the measurement would
+    // grow with the column and keep it from ever shrinking back.
+    const label = cell.querySelector<HTMLElement>('.monitoring-table-header__label--standalone')
+    const width = label ? headerFitWidth(cell, label) : null
+    if (width !== null) {
+      widths[cell.dataset.fitHeader!] = width
+    }
+  }
+  if (!sameWidths(widths, reportedFitWidths)) {
+    reportedFitWidths = widths
+    emit('fit-widths', widths)
+  }
+}
+
+function sameWidths(a: HeaderFitWidths, b: HeaderFitWidths): boolean {
+  const keys = Object.keys(a)
+  return keys.length === Object.keys(b).length && keys.every((key) => a[key] === b[key])
+}
+
+const { observe } = useResizeObserver(measureFitWidths)
+observe(thead)
+
+onMounted(() => {
+  // measure before the observer's first async delivery.
+  measureFitWidths()
+  // A cut label keeps its box when the web font arrives, so the observer does not see its text
+  // getting wider.
+  if ('fonts' in document) {
+    void document.fonts.ready.then(measureFitWidths)
+  }
+})
 
 function filterValue(column: Column<T, unknown>): ColumnFilterValue<FilterField> | undefined {
   return column.getFilterValue() as ColumnFilterValue<FilterField> | undefined
@@ -232,7 +285,7 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
 </script>
 
 <template>
-  <thead>
+  <thead ref="thead">
     <tr v-for="headerGroup in headerGroups" :key="headerGroup.id">
       <th
         v-for="header in headerGroup.headers"
@@ -249,6 +302,7 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
         ]"
         :style="[columnStyle(header.column.columnDef), stickyStyle(header.column.id)]"
         :aria-sort="ariaSortFor(header.column.getIsSorted())"
+        :data-fit-header="header.column.columnDef.meta?.fitHeader ? header.column.id : undefined"
       >
         <div
           class="monitoring-table-header__cell-content"

@@ -8,9 +8,10 @@ import { nextTick, ref } from 'vue'
 
 import { iconListWidth } from '@/monitoring/shared/components/iconList'
 import {
-  EMPTY_MODE_COLUMN_WIDTH,
   FILLED_MODE_COLUMN_WIDTH,
   MODE_COLUMN_ID,
+  MODE_COLUMN_MAX_WIDTH,
+  MODE_COLUMN_MIN_WIDTH,
   MODE_ICONS_PER_ROW,
   sizeModeColumn,
   useModeColumnWidth
@@ -24,10 +25,10 @@ function modes(count: number): { icon_name: string }[] {
   return Array.from({ length: count }, (_, index) => ({ icon_name: `icon-${index}` }))
 }
 
-test('a listing without any mode leaves the column at its narrow width', () => {
+test('a listing without any mode leaves the column at its minimum width', () => {
   const rows = ref<Row[]>([{ modes: [] }, {}])
 
-  expect(useModeColumnWidth(() => rows.value).value).toBe(EMPTY_MODE_COLUMN_WIDTH)
+  expect(useModeColumnWidth(() => rows.value).value).toBe(MODE_COLUMN_MIN_WIDTH)
 })
 
 test('a single mode anywhere in the listing widens the column', () => {
@@ -54,20 +55,30 @@ test('the widened column keeps its width when a batch without modes arrives', as
 
 test('the widened column holds a full row of icons plus the cell padding', () => {
   expect(FILLED_MODE_COLUMN_WIDTH).toBeGreaterThan(iconListWidth(MODE_ICONS_PER_ROW))
-  expect(FILLED_MODE_COLUMN_WIDTH).toBeGreaterThan(EMPTY_MODE_COLUMN_WIDTH)
+  expect(FILLED_MODE_COLUMN_WIDTH).toBeGreaterThan(MODE_COLUMN_MIN_WIDTH)
 })
 
-test('sizing pins the mode column to the given width and leaves the others alone', () => {
+test('sizing lets the mode column grow from the given width up to its maximum', () => {
+  const sized = sizeModeColumn<Row>([{ accessorKey: MODE_COLUMN_ID }], FILLED_MODE_COLUMN_WIDTH)
+
+  expect(sized[0]).toMatchObject({
+    minSize: FILLED_MODE_COLUMN_WIDTH,
+    maxSize: MODE_COLUMN_MAX_WIDTH,
+    meta: { fitHeader: true }
+  })
+})
+
+test('sizing never makes the mode column narrower than its minimum width', () => {
+  const sized = sizeModeColumn<Row>([{ accessorKey: MODE_COLUMN_ID }], MODE_COLUMN_MIN_WIDTH - 20)
+
+  expect(sized[0]!.minSize).toBe(MODE_COLUMN_MIN_WIDTH)
+})
+
+test('sizing leaves the other columns alone', () => {
   const columns: ColumnDef<Row>[] = [
     { accessorKey: 'name', minSize: 150 },
     { accessorKey: MODE_COLUMN_ID }
   ]
 
-  const sized = sizeModeColumn(columns, EMPTY_MODE_COLUMN_WIDTH)
-
-  expect(sized[0]).toStrictEqual(columns[0])
-  expect(sized[1]).toMatchObject({
-    minSize: EMPTY_MODE_COLUMN_WIDTH,
-    maxSize: EMPTY_MODE_COLUMN_WIDTH
-  })
+  expect(sizeModeColumn(columns, MODE_COLUMN_MIN_WIDTH)[0]).toStrictEqual(columns[0])
 })

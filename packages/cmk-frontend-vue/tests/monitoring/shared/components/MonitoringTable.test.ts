@@ -21,6 +21,8 @@ import {
 } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { FetchState, MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 
+import { FakeResizeObserver } from '@tests/lib/fakeResizeObserver'
+
 const originalOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')
 const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
 
@@ -97,12 +99,30 @@ const layoutProbe = defineComponent({
   setup() {
     const columns = inject(COLUMN_LAYOUT_KEY, null)
     return () =>
-      h('td', { 'data-testid': 'layout-probe' }, [...(columns?.value.keys() ?? [])].join(','))
+      h(
+        'td',
+        {
+          'data-testid': 'layout-probe',
+          'data-widths': JSON.stringify(
+            Object.fromEntries(
+              [...(columns?.value.entries() ?? [])].map(([id, info]) => [id, info.width])
+            )
+          )
+        },
+        [...(columns?.value.keys() ?? [])].join(',')
+      )
   }
 })
 
 function probedLayout(): string {
   return screen.getAllByTestId('layout-probe')[0]!.textContent ?? ''
+}
+
+function probedWidth(columnId: string): number | null {
+  const widths = JSON.parse(
+    screen.getAllByTestId('layout-probe')[0]!.dataset.widths ?? '{}'
+  ) as Record<string, number | null>
+  return widths[columnId] ?? null
 }
 
 function mountTable(overrides: {
@@ -651,4 +671,95 @@ test('a truncated header label shows its full text as a tooltip', async () => {
   await user.hover(header)
 
   expect(header).toHaveAttribute('title', 'Name')
+})
+
+describe('a column that fits its header', () => {
+  const FIT_COLUMNS: ColumnDef<Row>[] = [
+    { id: 'mode', header: 'Mode', enableSorting: false, minSize: 56, meta: { fitHeader: true } },
+    { id: 'actions', header: 'Actions', enableSorting: false, minSize: 56 }
+  ]
+
+  // jsdom does no layout: every header cell is 60px wide, of which its label gets 20px,
+  // while the label's text needs `textWidth`.
+  let textWidth: number
+
+  function resizeHeader(): void {
+    const thead = document.querySelector('thead')!
+    FakeResizeObserver.instances.find((observer) => observer.observed.has(thead))!.fire()
+  }
+
+  beforeEach(() => {
+    textWidth = 50
+    vi.stubGlobal('ResizeObserver', FakeResizeObserver)
+    const elementRect = HTMLElement.prototype.getBoundingClientRect
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement
+    ) {
+      if (this.tagName === 'TH') {
+        return { width: 60 } as DOMRect
+      }
+      if (this.classList.contains('monitoring-table-header__label')) {
+        return { width: 20 } as DOMRect
+      }
+      return elementRect.call(this)
+    })
+    vi.spyOn(document, 'createRange').mockReturnValue({
+      selectNodeContents: () => {},
+      getBoundingClientRect: () => ({ width: textWidth }) as DOMRect
+    } as unknown as Range)
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+    FakeResizeObserver.instances = []
+  })
+
+  test('grows past its minimum width when its label would be cut', async () => {
+    mountTable({ columns: FIT_COLUMNS })
+    await nextTick()
+
+    expect(probedWidth('mode')).toBe(90)
+  })
+
+  test('leaves the columns that do not fit their header at their minimum width', async () => {
+    mountTable({ columns: FIT_COLUMNS })
+    await nextTick()
+
+    expect(probedWidth('actions')).toBe(56)
+  })
+
+  test('measures its header again once the header resizes', async () => {
+    mountTable({ columns: FIT_COLUMNS })
+    await nextTick()
+
+    textWidth = 70
+    resizeHeader()
+    await nextTick()
+
+    expect(probedWidth('mode')).toBe(110)
+  })
+
+  test('still fits its header when it is shown again after being hidden', async () => {
+    const columnVisibility = ref<VisibilityState>({})
+    mountTable({ columns: FIT_COLUMNS, columnVisibility })
+    await nextTick()
+
+    columnVisibility.value = { mode: false }
+    await nextTick()
+    resizeHeader()
+    columnVisibility.value = {}
+    await nextTick()
+
+    expect(probedWidth('mode')).toBe(90)
+  })
+
+  test('is not widened when its header can be sorted', async () => {
+    mountTable({
+      columns: [{ ...FIT_COLUMNS[0]!, accessorKey: 'name', enableSorting: true }, FIT_COLUMNS[1]!]
+    })
+    await nextTick()
+
+    expect(probedWidth('mode')).toBe(56)
+  })
 })

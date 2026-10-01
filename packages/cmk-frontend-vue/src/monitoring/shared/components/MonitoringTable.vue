@@ -26,6 +26,7 @@ import {
   COLUMN_LAYOUT_KEY,
   type ColumnJustify,
   type ColumnLayoutInfo,
+  type HeaderFitWidths,
   MONITORING_SERVICE,
   TABLE_BORDER_SPACING,
   TABLE_BORDER_SPACING_PX,
@@ -175,15 +176,24 @@ interface ColumnMetric {
   justify: ColumnJustify
 }
 
+// Reported by the header for the columns that must not cut their label.
+const headerFitWidths = ref<HeaderFitWidths>({})
+
 const columnMetrics = computed<ColumnMetric[]>(() =>
-  table.getVisibleLeafColumns().map((column) => ({
-    id: column.id,
-    min: column.columnDef.minSize ?? DEFAULT_COLUMN_MIN_SIZE,
-    max: column.columnDef.maxSize ?? DEFAULT_COLUMN_MAX_SIZE,
-    isLeftPinned: column.getIsPinned() === 'left',
-    isRightPinned: column.getIsPinned() === 'right',
-    justify: column.columnDef.meta?.justify ?? 'left'
-  }))
+  table.getVisibleLeafColumns().map((column) => {
+    const min = Math.max(
+      column.columnDef.minSize ?? DEFAULT_COLUMN_MIN_SIZE,
+      headerFitWidths.value[column.id] ?? 0
+    )
+    return {
+      id: column.id,
+      min,
+      max: Math.max(column.columnDef.maxSize ?? DEFAULT_COLUMN_MAX_SIZE, min),
+      isLeftPinned: column.getIsPinned() === 'left',
+      isRightPinned: column.getIsPinned() === 'right',
+      justify: column.columnDef.meta?.justify ?? 'left'
+    }
+  })
 )
 
 const totalMinWidth = computed(() =>
@@ -405,7 +415,11 @@ function tableRowAt(index: number): Row<T> {
       <colgroup v-if="pinningEnabled">
         <col v-for="entry in columnLayout" :key="entry.id" :style="{ width: `${entry.width}px` }" />
       </colgroup>
-      <MonitoringTableHeader :header-groups="table.getHeaderGroups()" :disabled="showEmptyState" />
+      <MonitoringTableHeader
+        :header-groups="table.getHeaderGroups()"
+        :disabled="showEmptyState"
+        @fit-widths="headerFitWidths = $event"
+      />
       <tbody>
         <tr v-if="showEmptyState">
           <td :colspan="columnLayout.length" class="monitoring-table__empty-cell">

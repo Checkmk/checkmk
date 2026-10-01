@@ -6,7 +6,8 @@
 
 import time
 from collections.abc import Callable, Mapping, Sequence
-from typing import override, TypedDict
+from dataclasses import dataclass
+from typing import override
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
@@ -343,22 +344,27 @@ class PainterInvhistChanged(Painter):
         return _paint_invhist_count(row, "changed")
 
 
-class AttributePainterFromHint(TypedDict):
+@dataclass(frozen=True, kw_only=True)
+class PainterFromHint:
     name: str
     title: str
     short: str
     tooltip_title: str
-    columns: Sequence[str]
+    columns: Sequence[ColumnName]
     options: Sequence[str]
-    params: Dictionary
+    params: Dictionary | FixedValue[PainterParameters]
     printable: bool
     load_inv: bool
     sorter: str
     paint: Callable[[Row], CellSpec]
-    export_for_python: Callable[[Row, Cell], SDValue]
+    export_for_python: Callable[[Row, Cell], object]
     export_for_csv: Callable[[Row, Cell], str | HTML]
-    export_for_json: Callable[[Row, Cell], SDValue]
-    groupby: Callable[[Row, Cell], str | HTML | None]
+    export_for_json: Callable[[Row, Cell], object]
+    group_by: Callable[[Row, Cell], str | None]
+
+
+def _no_group_value(_row: Row, _cell: Cell) -> None:
+    return None
 
 
 def _get_attributes(row: Row, path: SDPath) -> ImmutableAttributes | None:
@@ -395,8 +401,8 @@ def _paint_host_inventory_attribute(
 
 def attribute_painter_from_hint(
     path: SDPath, key: SDKey, hint: AttributeDisplayHint
-) -> AttributePainterFromHint:
-    return AttributePainterFromHint(
+) -> PainterFromHint:
+    return PainterFromHint(
         name=hint.name,
         title=hint.long_inventory_title,
         # The short titles (used in column headers) may overlap for different painters, e.g.:
@@ -430,28 +436,12 @@ def attribute_painter_from_hint(
             "" if (data := _compute_attribute_painter_data(row, path, key)) is None else str(data)
         ),
         export_for_json=lambda row, _cell: _compute_attribute_painter_data(row, path, key),
-        groupby=lambda row, _cell: (
-            r
-            if isinstance(
-                r := _paint_host_inventory_attribute(row, path, key, hint)[1], (str | HTML)
-            )
+        group_by=lambda row, _cell: (
+            str(r)
+            if isinstance(r := _paint_host_inventory_attribute(row, path, key, hint)[1], str | HTML)
             else None
         ),
     )
-
-
-class ColumnPainterFromHint(TypedDict):
-    name: str
-    title: str
-    short: str
-    tooltip_title: str
-    columns: Sequence[str]
-    params: FixedValue[PainterParameters]
-    sorter: str
-    paint: Callable[[Row], CellSpec]
-    export_for_python: Callable[[Row, Cell], SDValue]
-    export_for_csv: Callable[[Row, Cell], str | HTML]
-    export_for_json: Callable[[Row, Cell], SDValue]
 
 
 def _paint_host_inventory_column(row: Row, hint: ColumnDisplayHintOfView) -> CellSpec:
@@ -470,8 +460,8 @@ def _paint_host_inventory_column(row: Row, hint: ColumnDisplayHintOfView) -> Cel
     )
 
 
-def column_painter_from_hint(hint: ColumnDisplayHintOfView) -> ColumnPainterFromHint:
-    return ColumnPainterFromHint(
+def column_painter_from_hint(hint: ColumnDisplayHintOfView) -> PainterFromHint:
+    return PainterFromHint(
         name=hint.name,
         title=hint.long_inventory_title,
         # The short titles (used in column headers) may overlap for different painters, e.g.:
@@ -482,32 +472,20 @@ def column_painter_from_hint(hint: ColumnDisplayHintOfView) -> ColumnPainterFrom
         short=hint.short_title,
         tooltip_title=hint.long_title,
         columns=[hint.name],
+        options=[],
         # See views/painter/v0/base.py::Cell.painter_parameters
         # We have to add a dummy value here such that the painter_parameters are not None and
         # the "real" parameters, ie. _painter_params, are used.
         params=FixedValue(PainterParameters(), totext=""),
+        printable=True,
+        load_inv=False,
         sorter=hint.name,
         paint=lambda row: _paint_host_inventory_column(row, hint),
         export_for_python=lambda row, _cell: row.get(hint.name),
         export_for_csv=lambda row, _cell: "" if (data := row.get(hint.name)) is None else str(data),
         export_for_json=lambda row, _cell: row.get(hint.name),
+        group_by=_no_group_value,
     )
-
-
-class NodePainterFromHint(TypedDict):
-    name: str
-    title: str
-    short: str
-    columns: Sequence[str]
-    options: Sequence[str]
-    params: Dictionary
-    printable: bool
-    load_inv: bool
-    sorter: str
-    paint: Callable[[Row], CellSpec]
-    export_for_python: Callable[[Row, Cell], SDRawTree]
-    export_for_csv: Callable[[Row, Cell], str | HTML]
-    export_for_json: Callable[[Row, Cell], SDRawTree]
 
 
 def _compute_node_painter_data(row: Row, path: SDPath) -> ImmutableTree:
@@ -545,11 +523,12 @@ def _export_node_for_csv() -> str | HTML:
 
 def node_painter_from_hint(
     hint: NodeDisplayHint, painter_options: PainterOptions
-) -> NodePainterFromHint:
-    return NodePainterFromHint(
+) -> PainterFromHint:
+    return PainterFromHint(
         name=hint.name,
         title=hint.long_inventory_title,
         short=hint.short_title,
+        tooltip_title=hint.long_inventory_title,
         columns=["host_inventory", "host_structured_status"],
         options=["show_internal_tree_paths"],
         params=Dictionary(
@@ -579,4 +558,5 @@ def node_painter_from_hint(
         export_for_json=lambda row, _cell: serialize_tree(
             _compute_node_painter_data(row, hint.path)
         ),
+        group_by=_no_group_value,
     )

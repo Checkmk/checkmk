@@ -13,6 +13,7 @@ import { computed } from 'vue'
 const props = defineProps<{
   placeholder?: TranslatedString
   ariaLabel?: TranslatedString
+  hideSearchIcon?: boolean
 }>()
 
 const model = defineModel<string>({ default: '' })
@@ -36,7 +37,7 @@ function onEscape(event: KeyboardEvent): void {
   <CmkSearchInput
     v-model="model"
     class="monitoring-filter-search-input"
-    inline-search-icon
+    :inline-search-icon="!props.hideSearchIcon"
     :show-submit-button="false"
     :placeholder="placeholderText"
     :aria-label="ariaLabelText"

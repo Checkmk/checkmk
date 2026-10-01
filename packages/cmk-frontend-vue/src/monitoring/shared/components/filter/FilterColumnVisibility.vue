@@ -76,7 +76,12 @@ function toggleVisible(row: VisibilityRow): void {
 
 <template>
   <div class="monitoring-filter-column-visibility">
-    <FilterSearchInput v-model="searchText" />
+    <FilterSearchInput
+      v-model="searchText"
+      :placeholder="_t('Search column')"
+      :aria-label="_t('Search column')"
+      hide-search-icon
+    />
 
     <div class="monitoring-filter-column-visibility__options">
       <button
@@ -96,7 +101,7 @@ function toggleVisible(row: VisibilityRow): void {
       >
         <CmkMultitoneIcon
           :name="row.visible ? 'eye' : 'eye-crossed-out'"
-          :primary-color="{ custom: 'var(--color-mist-grey-60)' }"
+          :primary-color="{ custom: row.visible ? 'currentColor' : 'var(--color-mist-grey-60)' }"
           aria-hidden="true"
           style="pointer-events: none"
         />

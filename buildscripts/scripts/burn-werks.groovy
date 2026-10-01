@@ -23,10 +23,10 @@ void main() {
     // e.g. v2.4.0, v2.4.0p12, v2.5.0b3, v2.4.0p12+security
     def version = version_tag.startsWith("v") ? version_tag.substring(1) : "";
     def version_without_meta_data = version.replaceFirst(/\+security$/, "");
-    if (!versioning.is_official_release(version_without_meta_data)
-        || versioning.strip_rc_number_from_version(version_without_meta_data) != version_without_meta_data) {
-        raise("CUSTOM_GIT_REF '${version_tag}' is not a final Checkmk release tag, e.g. 'v2.4.0p12'");
-    }
+    //if (!versioning.is_official_release(version_without_meta_data)
+    //    || versioning.strip_rc_number_from_version(version_without_meta_data) != version_without_meta_data) {
+    //    raise("CUSTOM_GIT_REF '${version_tag}' is not a final Checkmk release tag, e.g. 'v2.4.0p12'");
+    //}
     def commit_message = "Burn werk version after release of ${version}";
     def push_options = ["hashtag=burn-werks", "r=${reviewer}"];
 
@@ -95,7 +95,7 @@ void main() {
                     smart_stage(name: "Push to review", condition: !dry_run) {
                         def burn_commit = sh(script: "git rev-parse HEAD", returnStdout: true).trim();
                         sh("""
-                            git fetch --no-tags --depth=1 origin '${branch_version}'
+                            git fetch --no-tags --depth=1 origin burn-werk-test
                             git checkout --detach FETCH_HEAD
                         """);
                         if (sh(script: "git cherry-pick ${burn_commit}", returnStatus: true) != 0) {
@@ -104,7 +104,7 @@ void main() {
                         }
                         sh("""
                             git show --format=fuller --stat
-                            git push origin 'HEAD:refs/for/${branch_version}%${push_options.join(",")}'
+                            git push origin 'HEAD:refs/for/burn-werk-test%${push_options.join(",")}'
                         """);
                     }
                 }

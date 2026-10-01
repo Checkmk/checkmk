@@ -58,10 +58,18 @@ async function goToLicenseVerification() {
   await user.click(screen.getByText("I'm an existing customer"))
 }
 
+function resendButton(): HTMLElement {
+  return screen.getByRole('button', { name: /Resend code/ })
+}
+
 async function reachCodeStep() {
+  mockCmkAjax.mockResolvedValue({ status: 'ok', salt: '...' })
   await startTrial()
   await user.type(screen.getByLabelText('Email address'), 'jane.doe@example.com')
   await user.click(screen.getByRole('button', { name: 'Send code' }))
+
+  expect(resendButton()).toHaveTextContent('Resend code (1:00)')
+  expect(resendButton()).toBeDisabled()
 }
 
 function codeDigits(): HTMLInputElement[] {
@@ -340,7 +348,7 @@ describe('TrialModeSelectionApp', () => {
 
       expect(await screen.findByRole('heading', { name: 'Unverified trial' })).toBeInTheDocument()
       expect(screen.getByText('Full features · 26 days left')).toBeInTheDocument()
-      expect(mockCmkAjax).toHaveBeenCalledExactlyOnceWith('ajax_save_trial_mode_selection.py', {
+      expect(mockCmkAjax).toHaveBeenCalledWith('ajax_save_trial_mode_selection.py', {
         selection: 'unverified_trial',
         unverified_reason: 'offline',
         _csrf_token: 'the-csrf-token'
@@ -455,17 +463,82 @@ describe('TrialModeSelectionApp', () => {
     })
 
     it('accepts a well-formed address on Enter', async () => {
+      mockCmkAjax.mockResolvedValue({ status: 'ok', salt: '...' })
       renderApp()
       await startTrial()
 
       await user.type(screen.getByLabelText('Email address'), 'jane.doe@example.com{Enter}')
 
       expect(screen.getByText('Enter your verification code')).toBeInTheDocument()
-      // Nothing leaves the site until CMK-37828 wires the send up.
-      expect(mockCmkAjax).not.toHaveBeenCalled()
+      expect(mockCmkAjax).toHaveBeenCalledWith('ajax_send_trial_mode_request.py', {
+        step: 'request',
+        email: 'jane.doe@example.com',
+        _csrf_token: 'the-csrf-token'
+      })
+      expect(resendButton()).toHaveTextContent('Resend code (1:00)')
+      expect(resendButton()).toBeDisabled()
+    })
+
+    it('sets the resend cooldown timer', async () => {
+      mockCmkAjax.mockResolvedValue({ status: 'ok', salt: '...' })
+      renderApp()
+      await startTrial()
+
+      await user.type(screen.getByLabelText('Email address'), 'jane.doe@example.com{Enter}')
+
+      expect(screen.getByText('Enter your verification code')).toBeInTheDocument()
+      expect(resendButton()).toHaveTextContent('Resend code (1:00)')
+      expect(resendButton()).toBeDisabled()
+    })
+
+    it('handles network errors when sending code', async () => {
+      renderApp()
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      mockCmkAjax.mockRejectedValue(new Error('nope'))
+      await startTrial()
+
+      await user.type(screen.getByLabelText('Email address'), 'jane.doe@example.com{Enter}')
+
+      expect(screen.getByText('Enter your verification code')).toBeInTheDocument()
+      expect(
+        screen.getByText('Unable to reach Checkmk site. Please check that it is started.')
+      ).toBeInTheDocument()
+      expect(resendButton()).toBeEnabled()
+      expect(console.error).toHaveBeenCalledWith(
+        'error requesting trial verification code',
+        new Error('nope')
+      )
+      expect(
+        screen.queryByText(
+          'We sent a 6-digit code to jane.doe@example.com. It expires after 24 hours.'
+        )
+      ).not.toBeInTheDocument()
+    })
+
+    it('handles error responses returned by the backend', async () => {
+      renderApp()
+      mockCmkAjax.mockResolvedValue({
+        status: 'error',
+        errorMessage: 'Simulated Failure (as returned by the backend).'
+      })
+      await startTrial()
+
+      await user.type(screen.getByLabelText('Email address'), 'jane.doe@example.com{Enter}')
+
+      expect(screen.getByText('Enter your verification code')).toBeInTheDocument()
+      expect(
+        screen.getByText('Simulated Failure (as returned by the backend).')
+      ).toBeInTheDocument()
+      expect(resendButton()).toBeEnabled()
+      expect(
+        screen.queryByText(
+          'We sent a 6-digit code to jane.doe@example.com. It expires after 24 hours.'
+        )
+      ).not.toBeInTheDocument()
     })
 
     it('sends the code to the address without the whitespace around it', async () => {
+      mockCmkAjax.mockResolvedValue({ status: 'ok', salt: '...' })
       renderApp()
       await startTrial()
 
@@ -585,10 +658,6 @@ describe('TrialModeSelectionApp', () => {
     afterEach(() => {
       vi.useRealTimers()
     })
-
-    function resendButton(): HTMLElement {
-      return screen.getByRole('button', { name: /Resend code/ })
-    }
 
     it('starts counting down from the first send, not from the first resend', async () => {
       renderApp()
@@ -732,7 +801,7 @@ describe('TrialModeSelectionApp', () => {
       await user.click(screen.getByRole('button', { name: 'Start monitoring' }))
 
       await waitFor(() => {
-        expect(mockCmkAjax).toHaveBeenCalledExactlyOnceWith('ajax_save_trial_mode_selection.py', {
+        expect(mockCmkAjax).toHaveBeenCalledWith('ajax_save_trial_mode_selection.py', {
           selection: 'trial',
           _csrf_token: 'the-csrf-token'
         })

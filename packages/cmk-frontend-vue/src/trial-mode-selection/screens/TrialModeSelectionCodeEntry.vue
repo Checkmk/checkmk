@@ -97,7 +97,7 @@ onMounted(() => codeInput.value?.focus())
     <TrialModeSelectionScreenHeading>
       {{ _t('Enter your verification code') }}
     </TrialModeSelectionScreenHeading>
-    <CmkParagraph class="trial-mode-selection-code-entry__subtitle">
+    <CmkParagraph v-if="!errorMessage" class="trial-mode-selection-code-entry__subtitle">
       {{
         _t('We sent a 6-digit code to %{email}. It expires after 24 hours.', {
           email

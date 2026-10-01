@@ -9,8 +9,11 @@ import {
   type UnverifiedTrialReason,
   type VerificationMode
 } from 'cmk-shared-typing/typescript/trial_mode_selection_request'
+import { type TrialModeVerificationRequest } from 'cmk-shared-typing/typescript/trial_mode_verification_request'
+import { type TrialModeVerificationResponse } from 'cmk-shared-typing/typescript/trial_mode_verification_response'
 import { cmkAjax } from 'cmk-ui-library/lib/ajax'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { onScopeDispose, ref } from 'vue'
 
 import { getCsrfToken } from '@/lib/csrf'
@@ -41,6 +44,7 @@ export type TrialModeScreen =
  * a shared singleton would carry state between tests.
  */
 export function useTrialModeSelection(props: TrialModeSelectionProps) {
+  const { _t } = usei18n()
   const screen = ref<TrialModeScreen>('choice')
   /**
    * The address a code is sent to. Kept here rather than on the email screen now that
@@ -50,6 +54,7 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
   const email = ref('')
   const saving = ref(false)
   const saveFailed = ref(false)
+  const emailSalt = ref('')
 
   /**
    * In case of an error requesting or verifying a code, contains a localised
@@ -70,22 +75,38 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
   /** When the standing cooldown runs out, as a timestamp. */
   let resendAvailableAt = 0
   let ticker: ReturnType<typeof setInterval> | undefined
-  /**
-   * When codes were sent, per address. Mocked until CMK-37828 connects the backend: the
-   * count lives only in this page, so a reload, another browser or another admin starts
-   * at 0. The backend will enforce the real limit and return when it resets.
-   */
-  const sendTimes = ref<Record<string, number[]>>({})
   const now = ref(Date.now())
   /** Ticks `now` every second, so the limit countdown updates and resets at midnight. */
   const clock = setInterval(() => (now.value = Date.now()), 1000)
   onScopeDispose(() => clearInterval(clock))
 
-  function recordSend(): void {
-    now.value = Date.now()
-    const sent = sendTimes.value[lastSentTo.value] ?? []
-    sendTimes.value[lastSentTo.value] = [...sent, now.value]
-    armResendCooldown()
+  async function sendCodeRequest(): Promise<void> {
+    cancelResendCooldown()
+    sendRequestInFlight.value = true
+    errorMessage.value = untranslated('')
+    const request: TrialModeVerificationRequest = {
+      step: 'request',
+      email: email.value
+    }
+    try {
+      const response = await cmkAjax<TrialModeVerificationResponse>(props.verification_url, {
+        ...request,
+        _csrf_token: getCsrfToken()
+      })
+      if (response.status !== 'ok' || !response.salt) {
+        errorMessage.value = response.errorMessage
+          ? untranslated(response.errorMessage)
+          : _t('Internal error. Please try again or contact Checkmk support.')
+        return
+      }
+      emailSalt.value = response.salt
+      armResendCooldown()
+    } catch (e) {
+      console.error('error requesting trial verification code', e)
+      errorMessage.value = _t('Unable to reach Checkmk site. Please check that it is started.')
+    } finally {
+      sendRequestInFlight.value = false
+    }
   }
 
   function stopTicking(): void {
@@ -117,6 +138,15 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
     }, 1000)
   }
 
+  /**
+   * Cancels the cooldown timer.
+   */
+  function cancelResendCooldown(): void {
+    resendAvailableAt = 0
+    resendCooldown.value = 0
+    stopTicking()
+  }
+
   onScopeDispose(stopTicking)
 
   function goTo(next: TrialModeScreen): void {
@@ -135,8 +165,7 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
   }
 
   /**
-   * Sends a code to the address and moves on to entering it. Nothing actually leaves the
-   * site until CMK-37828 wires this up.
+   * Sends a code to the address and moves on to entering it.
    *
    * Re-submitting the same address while the cooldown runs leaves it alone: stepping back
    * to the address and forward again is not a new send, and must not hand out a fresh
@@ -144,12 +173,15 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
    * A different address is a different rate-limit key, so it starts its own.
    */
   function sendCode(): void {
+    if (sendRequestInFlight.value) {
+      return
+    }
     // Case-insensitive, so changing the letter case is not a new address.
     const address = email.value.toLowerCase()
     const newAddress = address !== lastSentTo.value
     lastSentTo.value = address
     if (newAddress || resendCooldown.value <= 0) {
-      recordSend()
+      void sendCodeRequest()
     }
     goTo('code')
   }
@@ -216,7 +248,7 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
   }
 
   function resendCode(): void {
-    recordSend()
+    void sendCodeRequest()
   }
 
   /** Saves the unverified trial with why the verification was skipped, then shows it. */

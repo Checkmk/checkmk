@@ -102,6 +102,38 @@ test.each(['community', 'ultimatemt'] as const)(
   }
 )
 
+test('shows the listing as sorted by host name ascending before the user sorts', async () => {
+  mockHosts([makeHost()])
+  renderApp('community')
+
+  expect(await screen.findByRole('columnheader', { name: 'Host' })).toHaveAttribute(
+    'aria-sort',
+    'ascending'
+  )
+})
+
+test('asks for the hosts sorted by host name ascending before the user sorts', async () => {
+  mockHosts([makeHost()])
+  renderApp('community')
+
+  await vi.waitUntil(() => postSpy.mock.calls.length > 0)
+
+  expect(postSpy.mock.lastCall![1].body.sort).toEqual(['name:asc'])
+})
+
+test('extends the default sort by the State column when it is shift-clicked', async () => {
+  const user = userEvent.setup()
+  mockHosts([makeHost()])
+  renderApp('community')
+  const stateHeader = await screen.findByRole('button', { name: 'State' })
+
+  await user.keyboard('{Shift>}')
+  await user.click(stateHeader)
+  await user.keyboard('{/Shift}')
+
+  expect(postSpy.mock.lastCall![1].body.sort).toEqual(['name:asc', 'state:desc'])
+})
+
 test('never asks for the customer, the API deriving it from the site', async () => {
   mockHosts([makeHost({ customer: 'Customer A' })])
   renderApp('ultimatemt')

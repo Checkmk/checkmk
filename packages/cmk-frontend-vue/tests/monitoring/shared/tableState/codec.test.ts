@@ -12,6 +12,7 @@ import type { TableState, TableStateSchema } from '@/monitoring/shared/tableStat
 const schema: TableStateSchema = {
   hideable: ['alias', 'address', 'folder'],
   sortable: new Set(['name', 'state']),
+  defaultSort: [],
   defaultVisibility: { alias: false },
   offeredLimits: [1000, 5000]
 }
@@ -57,6 +58,18 @@ describe('flatTableStateCodec.encode', () => {
     expect(flatTableStateCodec.encode(state, schema).sort).toBe('state:desc,name:asc')
   })
 
+  it('omits a sort equal to the default sort', () => {
+    const sortedSchema: TableStateSchema = { ...schema, defaultSort: [{ id: 'name', desc: false }] }
+    const state: TableState = { cols: undefined, sort: [{ id: 'name', desc: false }], limit: 1000 }
+    expect(flatTableStateCodec.encode(state, sortedSchema).sort).toBeNull()
+  })
+
+  it('encodes a sort that only differs from the default sort in direction', () => {
+    const sortedSchema: TableStateSchema = { ...schema, defaultSort: [{ id: 'name', desc: false }] }
+    const state: TableState = { cols: undefined, sort: [{ id: 'name', desc: true }], limit: 1000 }
+    expect(flatTableStateCodec.encode(state, sortedSchema).sort).toBe('name:desc')
+  })
+
   it('encodes an unlimited request as "all"', () => {
     const state: TableState = { cols: undefined, sort: [], limit: null }
     expect(flatTableStateCodec.encode(state, schema).limit).toBe('all')
@@ -86,6 +99,10 @@ describe('flatTableStateCodec.decode', () => {
   it('treats an absent cols as unspecified, distinct from an empty one', () => {
     expect(flatTableStateCodec.decode(params('')).cols).toBeUndefined()
     expect(flatTableStateCodec.decode(params('?cols=')).cols).toEqual([])
+  })
+
+  it('treats an absent sort as unspecified', () => {
+    expect(flatTableStateCodec.decode(params('')).sort).toBeUndefined()
   })
 
   it('decodes limit=all', () => {
@@ -132,6 +149,11 @@ describe('round trip', () => {
       schema
     ],
     ['a non-default numeric limit', { cols: undefined, sort: [], limit: 5000 }, schema],
+    [
+      'the default sort',
+      { cols: undefined, sort: [{ id: 'name', desc: false }], limit: 1000 },
+      { ...schema, defaultSort: [{ id: 'name', desc: false }] }
+    ],
     [
       'no limit, when the schema offers it',
       { cols: undefined, sort: [], limit: null },

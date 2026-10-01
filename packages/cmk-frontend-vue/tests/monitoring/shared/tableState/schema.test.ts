@@ -43,6 +43,23 @@ describe('buildTableStateSchema', () => {
     expect(schema.sortable).toEqual(new Set(['name', 'alias']))
   })
 
+  it('has no default sort unless one is given', () => {
+    expect(
+      buildTableStateSchema({ columns, limitTiers: [1000], mayRemoveLimit: false }).defaultSort
+    ).toEqual([])
+  })
+
+  it('keeps the given default sort', () => {
+    expect(
+      buildTableStateSchema({
+        columns,
+        limitTiers: [1000],
+        mayRemoveLimit: false,
+        defaultSort: [{ id: 'name', desc: false }]
+      }).defaultSort
+    ).toEqual([{ id: 'name', desc: false }])
+  })
+
   it('hides only the columns meta.hidden marks', () => {
     const schema = buildTableStateSchema({ columns, limitTiers: [1000], mayRemoveLimit: false })
     expect(schema.defaultVisibility).toEqual({ alias: false })

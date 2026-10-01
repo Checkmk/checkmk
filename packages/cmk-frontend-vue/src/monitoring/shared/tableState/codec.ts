@@ -73,6 +73,13 @@ function columnIdsEqual(a: string[], b: string[]): boolean {
   return a.length === b.length && a.every((id, index) => id === b[index])
 }
 
+function sortEqual(a: SortingState, b: SortingState): boolean {
+  return (
+    a.length === b.length &&
+    a.every((entry, index) => entry.id === b[index]?.id && entry.desc === b[index]?.desc)
+  )
+}
+
 /**
  * The reference encoding: `cols=address,folder`, `sort=state:desc,name:asc`,
  * `limit=5000` (or `all`). Flat and human-readable, so a bookmark stays hand-editable.
@@ -89,7 +96,12 @@ export const flatTableStateCodec: TableStateCodec = {
 
     return {
       [COLS_KEY]: colsValue,
-      [SORT_KEY]: state.sort.length === 0 ? null : encodeSort(state.sort),
+      // An empty sort only exists where there is no default; elsewhere the service never
+      // lets the sort go empty, so reading the default back for it loses nothing.
+      [SORT_KEY]:
+        state.sort.length === 0 || sortEqual(state.sort, schema.defaultSort)
+          ? null
+          : encodeSort(state.sort),
       [LIMIT_KEY]: state.limit === defaultLimit ? null : encodeLimit(state.limit)
     }
   },
@@ -100,7 +112,7 @@ export const flatTableStateCodec: TableStateCodec = {
     const limit = params.get(LIMIT_KEY)
     return {
       cols: cols === null ? undefined : cols.split(',').filter((id) => id !== ''),
-      sort: sort === null ? [] : decodeSort(sort),
+      sort: sort === null ? undefined : decodeSort(sort),
       limit: limit === null ? undefined : decodeLimit(limit)
     }
   }

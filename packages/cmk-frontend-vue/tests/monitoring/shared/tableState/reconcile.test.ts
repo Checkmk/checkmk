@@ -15,12 +15,13 @@ import type { RawTableState, TableStateSchema } from '@/monitoring/shared/tableS
 const schema: TableStateSchema = {
   hideable: ['alias', 'address', 'folder'],
   sortable: new Set(['name', 'state']),
+  defaultSort: [],
   defaultVisibility: { alias: false },
   offeredLimits: [1000, 5000]
 }
 
 function raw(overrides: Partial<RawTableState> = {}): RawTableState {
-  return { cols: undefined, sort: [], limit: undefined, ...overrides }
+  return { cols: undefined, sort: undefined, limit: undefined, ...overrides }
 }
 
 describe('reconcile - cols', () => {
@@ -51,6 +52,19 @@ describe('reconcile - sort', () => {
     const { state, problems } = reconcile(raw({ sort: [{ id: 'folder', desc: false }] }), schema)
     expect(state.sort).toEqual([])
     expect(problems).toHaveLength(1)
+  })
+
+  it('falls back to the default sort when unspecified', () => {
+    const sortedSchema: TableStateSchema = { ...schema, defaultSort: [{ id: 'name', desc: false }] }
+    const { state, problems } = reconcile(raw({ sort: undefined }), sortedSchema)
+    expect(state.sort).toEqual([{ id: 'name', desc: false }])
+    expect(problems).toEqual([])
+  })
+
+  it('falls back to the default sort when no sorted column survives', () => {
+    const sortedSchema: TableStateSchema = { ...schema, defaultSort: [{ id: 'name', desc: false }] }
+    const { state } = reconcile(raw({ sort: [{ id: 'folder', desc: true }] }), sortedSchema)
+    expect(state.sort).toEqual([{ id: 'name', desc: false }])
   })
 
   it('keeps a sort on a hidden column as-is - no coupling with cols in either direction', () => {

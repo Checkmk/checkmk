@@ -1278,6 +1278,7 @@ describe('MonitoringService', () => {
       const tableStateSchema: TableStateSchema = {
         hideable: ['value'],
         sortable: new Set(['value']),
+        defaultSort: [],
         defaultVisibility: { value: false },
         offeredLimits: [42, 99]
       }
@@ -1302,6 +1303,7 @@ describe('MonitoringService', () => {
       const tableStateSchema: TableStateSchema = {
         hideable: ['phantom'],
         sortable: new Set(),
+        defaultSort: [],
         defaultVisibility: {},
         offeredLimits: [1000]
       }
@@ -1311,6 +1313,88 @@ describe('MonitoringService', () => {
       })
 
       expect(service.toggleableColumns).toEqual([{ id: 'phantom', label: 'phantom' }])
+
+      service.stopPolling()
+    })
+  })
+
+  describe('default sort', () => {
+    const tableStateSchema: TableStateSchema = {
+      hideable: [],
+      sortable: new Set(['name', 'value']),
+      defaultSort: [{ id: 'name', desc: false }],
+      defaultVisibility: {},
+      offeredLimits: [1000]
+    }
+
+    it('starts with the default sort when no initial sort is given', () => {
+      const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+        tableStateSchema
+      })
+
+      expect(service.sortState.value).toEqual([{ id: 'name', desc: false }])
+
+      service.stopPolling()
+    })
+
+    it('returns to the default sort and fetches with it once the user clears theirs', async () => {
+      const fetchedWith: SortingState[] = []
+      const service: TestService = new TestService(
+        vi.fn().mockImplementation(() => {
+          fetchedWith.push(service.sortState.value)
+          return Promise.resolve(makeResponse([], 0, 0))
+        }),
+        { tableStateSchema, initialState: { sort: [{ id: 'value', desc: true }] } }
+      )
+      await vi.advanceTimersByTimeAsync(0)
+
+      service.updateSort([])
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(fetchedWith).toEqual([[{ id: 'value', desc: true }], [{ id: 'name', desc: false }]])
+
+      service.stopPolling()
+    })
+
+    it('extends the default sort by a column added to it', () => {
+      const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+        tableStateSchema
+      })
+
+      service.updateSort([
+        { id: 'name', desc: false },
+        { id: 'value', desc: true }
+      ])
+
+      expect(service.sortState.value).toEqual([
+        { id: 'name', desc: false },
+        { id: 'value', desc: true }
+      ])
+
+      service.stopPolling()
+    })
+
+    it('keeps the default sort when it is picked again', () => {
+      const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+        tableStateSchema
+      })
+
+      service.updateSort([{ id: 'name', desc: false }])
+
+      expect(service.sortState.value).toEqual([{ id: 'name', desc: false }])
+
+      service.stopPolling()
+    })
+
+    it('leaves the listing unsorted once cleared when there is no default sort', () => {
+      const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+        tableStateSchema: { ...tableStateSchema, defaultSort: [] },
+        initialState: { sort: [{ id: 'value', desc: true }] }
+      })
+
+      service.updateSort([])
+
+      expect(service.sortState.value).toEqual([])
 
       service.stopPolling()
     })

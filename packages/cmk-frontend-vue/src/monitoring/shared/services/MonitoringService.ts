@@ -217,6 +217,8 @@ export abstract class MonitoringService<T> extends ServiceBase {
   readonly hasLoaded: Ref<boolean> = ref(false)
   readonly loadFailed: Ref<boolean> = ref(false)
   readonly sortState: Ref<SortingState> = ref<SortingState>([])
+  /** Sort the listing starts with and returns to once the user clears theirs. */
+  private readonly defaultSort: SortingState
   readonly searchQuery: Ref<string> = ref('')
   /**
    * `searchQuery` updates on every key stroke; this only changes when a search is actually
@@ -350,9 +352,8 @@ export abstract class MonitoringService<T> extends ServiceBase {
       this.applyLimit(initialState.limit)
     }
 
-    if (initialState?.sort !== undefined) {
-      this.sortState.value = initialState.sort
-    }
+    this.defaultSort = tableStateSchema?.defaultSort ?? []
+    this.sortState.value = initialState?.sort ?? [...this.defaultSort]
 
     this.tableState = computed(() => ({
       cols: columnIdsFromVisibility(this.columnVisibility.value, this.hideableColumnIds),
@@ -439,7 +440,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
   }
 
   updateSort(sortState: SortingState): void {
-    this.sortState.value = sortState
+    this.sortState.value = sortState.length === 0 ? [...this.defaultSort] : sortState
     this.offset.value = 0
     void this.fetch()
   }

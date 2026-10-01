@@ -56,13 +56,13 @@ function reconcileCols(
 }
 
 function reconcileSort(
-  raw: SortingState,
+  raw: SortingState | undefined,
   schema: TableStateSchema,
   problems: Problem[]
 ): SortingState {
   const seen = new Set<string>()
   const kept: SortingState = []
-  for (const entry of raw) {
+  for (const entry of raw ?? []) {
     if (!schema.sortable.has(entry.id)) {
       problems.push({
         dimension: 'sort',
@@ -80,7 +80,8 @@ function reconcileSort(
     seen.add(entry.id)
     kept.push(entry)
   }
-  return kept
+  // Nothing usable to sort by leaves the listing in its default order, so name that order.
+  return kept.length === 0 ? schema.defaultSort : kept
 }
 
 function largestNotExceeding(tiers: number[], limit: number): number | undefined {

@@ -149,7 +149,10 @@ const columnPinning = buildHostColumnPinning({ includeSelect: mayActOnSelection 
 const schema = buildTableStateSchema({
   columns,
   limitTiers: props.limit_tiers,
-  mayRemoveLimit: props.may_ignore_hard_limit ?? false
+  mayRemoveLimit: props.may_ignore_hard_limit ?? false,
+  // The page always sends its sort, so this is the order it lists in; the API's own default
+  // only applies to callers that send none.
+  defaultSort: [{ id: 'name', desc: false }]
 })
 const initialState = readTableStateFromUrl(window.location.search, schema)
 

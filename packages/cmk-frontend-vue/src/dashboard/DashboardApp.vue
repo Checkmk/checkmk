@@ -45,6 +45,7 @@ import CreateDashboardWizard from '@/dashboard/components/Wizard/CreateDashboard
 import WizardSelector from '@/dashboard/components/WizardSelector/WizardSelector.vue'
 import { widgetTypeToSelectorMatcher } from '@/dashboard/components/WizardSelector/utils.ts'
 import { useDashboardFilters } from '@/dashboard/composables/useDashboardFilters.ts'
+import { useDashboardTimeControl } from '@/dashboard/composables/useDashboardTimeControl'
 import { useDashboardVisualTitle } from '@/dashboard/composables/useDashboardVisualTitle.ts'
 import { useDashboardWidgets } from '@/dashboard/composables/useDashboardWidgets.ts'
 import { useDashboardsManager } from '@/dashboard/composables/useDashboardsManager.ts'
@@ -74,12 +75,11 @@ import type {
   WidgetSpec
 } from '@/dashboard/types/widget'
 import { type CloneResult, dashboardAPI, urlHandler } from '@/dashboard/utils.ts'
-import { useGlobalRefresh } from '@/graphing/GlobalTimePicker/globalTimeState.ts'
-import { useGlobalTimePickerRange } from '@/graphing/GlobalTimePicker/useGlobalTimePickerRange.ts'
 import NetworkFlowSlideIns from '@/network-flow/slide-ins/NetworkFlowSlideIns.vue'
 import { useNetworkFlowSlideIns } from '@/network-flow/slide-ins/useNetworkFlowSlideIns'
 
 import CloneSuccessAlert from './components/CloneSuccessAlert.vue'
+import DashboardRefreshControl from './components/DashboardRefreshControl.vue'
 import DashboardSettingsWizard from './components/Wizard/DashboardSettingsWizard.vue'
 import DashboardSharingWizard from './components/Wizard/wizards/dashboard-sharing/DashboardSharingWizard.vue'
 
@@ -652,20 +652,26 @@ const reviewFilters = () => {
   openDashboardFilterSettings.value = true
 }
 
-const { range } = useGlobalTimePickerRange(props.global_time_picker.default_time_range)
-const { refreshTick } = useGlobalRefresh()
+const { range, refreshTick, updateTimeRange } = useDashboardTimeControl(props.global_time_picker)
 </script>
 
 <template>
   <CmkErrorBoundary>
     <div ref="dbAppRef" :class="['db-app', { 'db-app--empty': isDashboardEmpty }]">
       <div class="db-app__header">
-        <DashboardBreadcrumb
-          :selected-dashboard="selectedDashboard ?? null"
-          :selected-dashboard-breadcrumb="selectedDashboardBreadcrumb"
-          :initial-breadcrumb="initial_breadcrumb"
-          :runtime-filters="dashboardFilters.runtimeFiltersSearchParams.value"
-        />
+        <div class="db-app__top-bar">
+          <DashboardBreadcrumb
+            :selected-dashboard="selectedDashboard ?? null"
+            :selected-dashboard-breadcrumb="selectedDashboardBreadcrumb"
+            :initial-breadcrumb="initial_breadcrumb"
+            :runtime-filters="dashboardFilters.runtimeFiltersSearchParams.value"
+          />
+
+          <div class="db-app__refresh">
+            <DashboardRefreshControl :default-time-range="global_time_picker.default_time_range" />
+          </div>
+        </div>
+
         <DashboardMenuHeader
           v-model:is-edit-mode="isDashboardEditingMode"
           v-model:range="range"
@@ -829,6 +835,7 @@ const { refreshTick } = useGlobalRefresh()
             @widget:edit="editWidget($event)"
             @widget:delete="dashboardWidgets.deleteWidget($event)"
             @widget:clone="(oldWidgetId, newLayout) => cloneWidget(oldWidgetId, newLayout)"
+            @widget:update-time-range="(_widgetId, newRange) => updateTimeRange(newRange)"
           />
         </template>
         <template v-else>
@@ -850,6 +857,23 @@ const { refreshTick } = useGlobalRefresh()
 </template>
 
 <style scoped>
+.db-app__top-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--dimension-6);
+}
+
+.db-app__refresh {
+  flex: 0 0 auto;
+  height: 0;
+  overflow: visible;
+  position: relative;
+  top: var(--dimension-7);
+  right: var(--dimension-7);
+  z-index: 3;
+}
+
 .db-app--empty {
   display: flex;
   flex-direction: column;

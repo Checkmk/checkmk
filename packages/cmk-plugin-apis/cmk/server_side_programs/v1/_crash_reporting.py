@@ -9,6 +9,8 @@ import inspect
 import json
 import os
 import pprint
+import socket
+import ssl
 import sys
 import tempfile
 import time
@@ -29,6 +31,14 @@ _SENSITIVE_KEYWORDS = ["token", "secret", "pass", "key"]
 
 _REDACTED_STRING: Final = "redacted"
 
+_NETWORK_ERRORS: Final = (
+    socket.gaierror,
+    socket.herror,
+    ConnectionError,
+    TimeoutError,
+    ssl.SSLError,
+)
+
 
 def _get_crash_report_path() -> Path | None:
     return Path(crash_path) if (crash_path := os.getenv(_SSP_CRASH_REPORT_PATH_ENV_VAR)) else None
@@ -41,7 +51,9 @@ def report_agent_crashes(
     """Decorator factory to report crashes from agents
 
     Wrapping a function with the returned decorator will catch all exceptions raised by the function
-    and create a crash report.
+    and create a crash report. Exceptions caused by network errors (name resolution, refused
+    or reset connections, timeouts, TLS failures) only print an error message, as they are
+    caused by the environment rather than by the program.
 
     Args:
         name: The name of the agent
@@ -65,7 +77,9 @@ def report_check_crashes(
     """Decorator factory to report crashes from active checks
 
     Wrapping a function with the returned decorator will catch all exceptions raised by the function
-    and create a crash report.
+    and create a crash report. Exceptions caused by network errors (name resolution, refused
+    or reset connections, timeouts, TLS failures) only print an error message, as they are
+    caused by the environment rather than by the program.
 
     Args:
         name: The name of the active check
@@ -100,6 +114,9 @@ def _report_crashes(
                 if isinstance(outer_exception, BrokenPipeError):
                     # It's very unlikely that a crash report would contain any
                     # usefull information in this case. Avoid the noise.
+                    return 1
+                if _is_caused_by_network_error(outer_exception):
+                    sys.stderr.write(f"Failed: {outer_exception}\n")
                     return 1
                 try:
                     crash = _CrashReport.from_current_exception(type_, name, version)
@@ -189,6 +206,12 @@ def _follow_exception_chain(exc: BaseException | None) -> list[BaseException]:
 
     return [exc] + _follow_exception_chain(
         exc.__context__ if exc.__cause__ is None and not exc.__suppress_context__ else exc.__cause__
+    )
+
+
+def _is_caused_by_network_error(exc: BaseException) -> bool:
+    return isinstance(exc, OSError) and any(
+        isinstance(e, _NETWORK_ERRORS) for e in _follow_exception_chain(exc)
     )
 
 

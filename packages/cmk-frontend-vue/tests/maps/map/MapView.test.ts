@@ -193,20 +193,21 @@ describe('MapView – loading / error / read-only states', () => {
     expect(screen.queryByText('Loading map…')).toBeNull()
   })
 
-  it('shows the Read-only badge for a map the user may not edit', async () => {
+  it('offers no settings, and no badge saying so, for a map the user may not edit', async () => {
     opensMap(newMapView('static'))
     services.maps.maps.value = [aListedMap({ name: 'map1', can_edit: false })]
     renderMap()
     await waitFor(() => expect(screen.getByTestId('renderer-static')).toBeInTheDocument())
-    expect(screen.getByText('Read-only')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Map settings' })).toBeNull()
+    expect(screen.queryByText('Read-only')).toBeNull()
   })
 
-  it('omits the Read-only badge for a map the user may edit', async () => {
+  it('offers the settings for a map the user may edit', async () => {
     opensMap(newMapView('static'))
     services.maps.maps.value = [aListedMap({ name: 'map1', can_edit: true })]
     renderMap()
     await waitFor(() => expect(screen.getByTestId('renderer-static')).toBeInTheDocument())
-    expect(screen.queryByText('Read-only')).toBeNull()
+    expect(screen.getByRole('button', { name: 'Map settings' })).toBeInTheDocument()
   })
 })
 

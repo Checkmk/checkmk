@@ -23,7 +23,7 @@ const { _t } = usei18n()
 
 defineProps<{
   connected: boolean
-  /** Whether this operator may edit the map: open its settings, or else see it marked read-only. */
+  /** Whether this operator may edit the map, and so open its settings. */
   canEdit?: boolean
   editing?: boolean
   /** Seconds until the next map in a rotation, or 0 when none is running. */
@@ -53,7 +53,7 @@ defineEmits<{
       <slot name="status" />
 
       <MapLiveIndicator :connected="connected" />
-      <MapModeBadges :readonly="!canEdit" :editing="editing" />
+      <MapModeBadges :editing="editing" />
       <MapRotationPill
         v-if="(rotationSeconds ?? 0) > 0"
         :seconds="rotationSeconds ?? 0"

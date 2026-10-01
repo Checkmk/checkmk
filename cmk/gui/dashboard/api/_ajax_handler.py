@@ -29,7 +29,6 @@ from cmk.gui.dashboard.type_defs import (
     CombinedGraphDashletConfig,
     CustomGraphDashletConfig,
     EventBarChartDashletConfig,
-    InventoryDashletConfig,
     ProblemsGraphDashletConfig,
     SingleTimeseriesDashletConfig,
     SiteOverviewDashletConfig,
@@ -41,7 +40,6 @@ from cmk.gui.pages import PageContext
 from cmk.gui.type_defs import SingleInfos, VisualContext
 
 from .model.widget import WidgetGeneralSettings, WidgetTitle
-from .model.widget_content.inventory import InventoryContent
 from .model.widget_content.metric import BarplotContent
 from .model.widget_content.overview import AlertOverviewContent, SiteOverviewContent
 from .model.widget_content.timeline import AlertTimelineContent, NotificationTimelineContent
@@ -50,7 +48,6 @@ type FigureContent = Annotated[
     AlertOverviewContent
     | AlertTimelineContent
     | BarplotContent
-    | InventoryContent
     | NotificationTimelineContent
     | SiteOverviewContent,
     Discriminator("type"),
@@ -60,7 +57,6 @@ type FigureDashletConfig = (
     AlertOverviewDashletConfig
     | BarplotDashletConfig
     | EventBarChartDashletConfig
-    | InventoryDashletConfig
     | SiteOverviewDashletConfig
 )
 

@@ -31,7 +31,6 @@ export const CONTENT_FIGURE_TYPES: string[] = [
   'alert_overview',
   'alert_timeline',
   'barplot',
-  'inventory',
   'notification_timeline',
   'site_overview'
 ]

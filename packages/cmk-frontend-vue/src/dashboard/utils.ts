@@ -44,6 +44,8 @@ import type {
   EffectiveWidgetFilterContext,
   Gauge,
   GaugeContent,
+  InventoryAttribute,
+  InventoryContent,
   NetworkFlowDonutContent,
   NetworkFlowKpiStatCardContent,
   NetworkFlowTopTableContent,
@@ -300,6 +302,18 @@ export const dashboardAPI = {
       await client.POST('/domain-types/dashboard/actions/compute-widget-titles/invoke', {
         ...CONTENT_TYPE_HEADER,
         body: request
+      })
+    )
+  },
+  computeInventory: async (
+    body: { source: WidgetSource<InventoryContent> },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<InventoryAttribute>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-inventory/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
       })
     )
   },

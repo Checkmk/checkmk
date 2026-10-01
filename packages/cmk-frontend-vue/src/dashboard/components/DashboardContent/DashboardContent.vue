@@ -23,6 +23,7 @@ import DashboardContentNetworkFlowKpiStatCard from './NetworkFlow/DashboardConte
 import DashboardContentNetworkFlowTopTable from './NetworkFlow/DashboardContentNetworkFlowTopTable.vue'
 import DashboardContentNetworkFlowTrendChart from './NetworkFlow/DashboardContentNetworkFlowTrendChart.vue'
 import DashboardContentGauge from './figures/DashboardContentGauge.vue'
+import DashboardContentInventory from './figures/DashboardContentInventory.vue'
 import DashboardContentState from './figures/DashboardContentState.vue'
 import DashboardContentStateSummary from './figures/DashboardContentStateSummary.vue'
 import DashboardContentStats from './figures/DashboardContentStats.vue'
@@ -92,6 +93,8 @@ function contentToComponent(content: WidgetContent): Component {
       return DashboardContentState
     case ['host_state_summary', 'service_state_summary'].includes(contentType):
       return DashboardContentStateSummary
+    case contentType === 'inventory':
+      return DashboardContentInventory
     case CONTENT_FIGURE_TYPES.includes(contentType):
       return DashboardContentFigure
     case NTOP_TYPES.includes(contentType):

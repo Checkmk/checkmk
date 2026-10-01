@@ -4885,6 +4885,21 @@ class DashboardClient(RestApiClient):
             api_version=APIVersion.INTERNAL,
         )
 
+    def compute_inventory(
+        self,
+        body: dict[str, Any],
+        headers: Mapping[str, str] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/compute-inventory/invoke",
+            body=body,
+            headers=headers,
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
     def compute_state(
         self,
         body: dict[str, Any],

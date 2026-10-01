@@ -18,7 +18,7 @@ import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkToggleButtonGroup from 'cmk-ui-library/components/CmkToggleButtonGroup.vue'
-import CmkTimeRangePicker from 'cmk-ui-library/components/date-time/CmkTimeRangePicker.vue'
+import { CmkTimeRangeDisplay, CmkTimeRangePicker } from 'cmk-ui-library/components/date-time'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -164,7 +164,21 @@ function onSubmit(): void {
       </template>
       <div v-else class="maps-folder-bulk-action-modal__field">
         <CmkLabel>{{ _t('Downtime period') }}</CmkLabel>
-        <CmkTimeRangePicker v-model="range" :label="_t('Downtime period')" />
+        <!-- Own trigger: the theme's button margin pushes the default one
+             10px past the dialog. -->
+        <CmkTimeRangePicker v-model="range" :label="_t('Downtime period')">
+          <template #trigger="{ aria, triggerRef, fields, settings, disabled }">
+            <button
+              :ref="triggerRef"
+              type="button"
+              class="maps-folder-bulk-action-modal__period"
+              :disabled="disabled"
+              v-bind="aria"
+            >
+              <CmkTimeRangeDisplay :from="fields.from" :to="fields.to" :settings="settings" />
+            </button>
+          </template>
+        </CmkTimeRangePicker>
       </div>
     </div>
 
@@ -234,5 +248,24 @@ function onSubmit(): void {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-2);
+}
+
+.maps-folder-bulk-action-modal__period {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: var(--dimension-7);
+  border: none;
+  border-radius: var(--border-radius);
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  cursor: inherit;
+
+  &:focus-visible {
+    outline: revert;
+  }
 }
 </style>

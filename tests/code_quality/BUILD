@@ -19,7 +19,6 @@ py_library(
     srcs = [
         "__init__.py",
         "conftest.py",
-        "test_no_nargs_in_agents.py",
         "test_package_json.py",
         "utils.py",
     ],

@@ -44,7 +44,6 @@ def test_check_sql_simple_ok_case() -> None:
         Secret(0),
         "--metrics=my_metric_name",
         "--text=my_additional_text",
-        "--sql-statement",
         "",
     ]
 
@@ -96,7 +95,6 @@ def test_check_sql_port_macro_invalid() -> None:
                 "--password-id",
                 Secret(0),
                 "--port=5432",
-                "--sql-statement",
                 "",
             ],
             id="port macro",
@@ -122,7 +120,6 @@ def test_check_sql_port_macro_invalid() -> None:
                 "--user=my_user",
                 "--password-id",
                 Secret(0),
-                "--sql-statement",
                 "",
             ],
             id="user macro",
@@ -148,7 +145,6 @@ def test_check_sql_port_macro_invalid() -> None:
                 "--user=hans",
                 "--password-id",
                 Secret(0),
-                "--sql-statement",
                 "SELECT column FROM table\\;",
             ],
             id="sql macro",

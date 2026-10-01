@@ -534,3 +534,53 @@ class TestMigrateMetricTimeRange:
         result = migrate_dashboard_config(dashboard)
 
         assert result["widgets"]["w1"]["time_range"] == ("age", 3600)  # type: ignore[typeddict-item]
+
+
+class TestMigrateInventoryLink:
+    def test_a_stored_link_spec_becomes_an_inherited_link(self) -> None:
+        dashboard = _responsive_dashboard(
+            {
+                "type": "inventory",
+                "inventory_path": ".hardware.cpu.cores",
+                "link_spec": ("views", "host"),
+            }
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"] == {
+            "type": "inventory",
+            "inventory_path": ".hardware.cpu.cores",
+            "contextual_link": {
+                "type": "inherited",
+                "location": ("views", "host"),
+                "include_context": False,
+                "include_time_range": False,
+                "show_filter_form": False,
+            },
+        }
+
+    def test_a_migrated_link_stays_unchanged(self) -> None:
+        widget = {
+            "type": "inventory",
+            "inventory_path": ".hardware.cpu.cores",
+            "contextual_link": {
+                "type": "inherited",
+                "location": ("dashboards", "main"),
+                "include_context": True,
+                "include_time_range": False,
+                "show_filter_form": True,
+            },
+        }
+        dashboard = _responsive_dashboard(dict(widget))
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"] == widget
+
+    def test_another_widget_type_keeps_its_link_spec(self) -> None:
+        dashboard = _responsive_dashboard({"type": "hoststats", "link_spec": ("views", "host")})
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["link_spec"] == ("views", "host")  # type: ignore[typeddict-item]

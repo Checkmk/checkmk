@@ -31,6 +31,7 @@ from .builtin_dashboards import (
     builtin_dashboards,
 )
 from .dashlet.registry import dashlet_registry
+from .legacy_visual_link import contextual_link_from_legacy_target
 from .metadata import dashboard_uses_relative_grid
 from .type_defs import (
     DashboardConfig,
@@ -242,7 +243,7 @@ def migrate_dashboard_config(dashboard: MaybeOldDashboardConfig) -> DashboardCon
             }
 
     dashboard["widgets"] = {
-        widget_id: _migrate_metric_time_range(widget)
+        widget_id: _migrate_inventory_link(_migrate_metric_time_range(widget))
         for widget_id, widget in dashboard["widgets"].items()
     }
 
@@ -269,6 +270,18 @@ def _migrate_metric_time_range(widget: DashletConfig) -> DashletConfig:
         case _:
             return widget
     return cast(DashletConfig, {**widget, "time_range": time_range})
+
+
+def _migrate_inventory_link(widget: DashletConfig) -> DashletConfig:
+    if widget["type"] != "inventory":
+        return widget
+    match cast(dict[str, object], widget).get("link_spec"):
+        case (("views" | "dashboards") as target_type, str() as target_name):
+            link = contextual_link_from_legacy_target((target_type, target_name))
+        case _:
+            return widget
+    migrated = {key: value for key, value in widget.items() if key != "link_spec"}
+    return cast(DashletConfig, {**migrated, "contextual_link": link})
 
 
 def _migrate_widgets(

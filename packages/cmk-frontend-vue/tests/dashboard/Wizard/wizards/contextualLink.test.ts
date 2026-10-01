@@ -8,11 +8,16 @@ import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import { HttpResponse, http } from 'msw'
 import { setupServer } from 'msw/node'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, ref } from 'vue'
 
-import type { UseWidgetHandler, WidgetContentType } from '@/dashboard/components/Wizard/types'
+import type {
+  UseWidgetHandler,
+  WidgetContentType,
+  WidgetProps
+} from '@/dashboard/components/Wizard/types'
 import { useHostState } from '@/dashboard/components/Wizard/wizards/hosts-site/stage2/HostState/composables/useHostState'
 import { useHostStatistics } from '@/dashboard/components/Wizard/wizards/hosts-site/stage2/HostStatistics/composables/useHostStatistics'
+import { useInventory } from '@/dashboard/components/Wizard/wizards/hw_sw_inventory/stage2/InventoryWidget/useInventory'
 import { useServiceState } from '@/dashboard/components/Wizard/wizards/services/stage2/ServiceState/composables/useServiceState'
 import { useServiceStatistics } from '@/dashboard/components/Wizard/wizards/services/stage2/ServiceStatistics/composables/useServiceStatistics'
 import { useProvideDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
@@ -52,17 +57,39 @@ const WIZARDS: LinkWizard[] = [
     type: 'service_state',
     openWizard: (stored) => useServiceState({}, stored && storedSpec(stored)),
     storedContent: (link) => ({ type: 'service_state', contextual_link: link })
+  },
+  {
+    name: 'useInventory',
+    type: 'inventory',
+    openWizard: (stored) =>
+      useInventory(ref('.hardware.cpu.cores'), {}, stored && storedProps(stored)),
+    storedContent: (link) => ({
+      type: 'inventory',
+      path: '.hardware.cpu.cores',
+      contextual_link: link
+    })
   }
 ]
+
+const GENERAL_SETTINGS: WidgetSpec['general_settings'] = {
+  title: { text: 'Widget', render_mode: 'with_background' },
+  render_background: true
+}
 
 function storedSpec(content: WidgetContentType): WidgetSpec {
   return {
     content,
     filter_context: { filters: {}, uses_infos: [] },
-    general_settings: {
-      title: { text: 'Widget', render_mode: 'with_background' },
-      render_background: true
-    }
+    general_settings: GENERAL_SETTINGS
+  }
+}
+
+function storedProps(content: WidgetContentType): WidgetProps {
+  return {
+    content,
+    effectiveTitle: 'Widget',
+    effective_filter_context: { filters: {}, uses_infos: [], restricted_to_single: [] },
+    general_settings: GENERAL_SETTINGS
   }
 }
 

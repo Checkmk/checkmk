@@ -57,8 +57,9 @@ export const useInventory = async (
     titleMacros
   } = useWidgetVisualizationProps('$DEFAULT_TITLE$', editWidget?.general_settings, CONTENT_TYPE)
 
-  const currentLinkSpec =
-    editWidget?.content?.type === 'inventory' ? editWidget.content?.link_spec : undefined
+  const currentLink =
+    editWidget?.content?.type === 'inventory' ? editWidget.content.contextual_link : undefined
+  const currentLinkSpec = currentLink?.type === 'inherited' ? currentLink.location : undefined
 
   const {
     linkType,
@@ -77,17 +78,28 @@ export const useInventory = async (
     return isTitleValid && isLinkValid
   }
 
-  const _generateContent = (): InventoryContent => {
-    const content: InventoryContent = {
-      type: CONTENT_TYPE,
-      path: inventoryPath.value ?? ''
-    }
-
+  const _contextualLink = (): InventoryContent['contextual_link'] => {
     if (linkSpec.value) {
-      content.link_spec = linkSpec.value
+      return {
+        type: 'inherited',
+        location: linkSpec.value,
+        include_context: false,
+        include_time_range: false,
+        show_filter_form: false
+      }
     }
+    if (currentLink !== undefined && currentLink.type !== 'inherited') {
+      return currentLink
+    }
+    return { type: 'default' }
+  }
 
-    return content
+  const _generateContent = (): InventoryContent => {
+    return {
+      type: CONTENT_TYPE,
+      path: inventoryPath.value ?? '',
+      contextual_link: _contextualLink()
+    }
   }
 
   const _computeWidgetProps = async (): Promise<WidgetProps> => {

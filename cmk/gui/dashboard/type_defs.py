@@ -18,7 +18,6 @@ from cmk.gui.type_defs import (
     Visual,
     VisualContext,
     VisualName,
-    VisualTypeName,
 )
 from cmk.gui.valuespec import HostStateValue, MonitoringStateValue, TimerangeValue
 
@@ -254,7 +253,7 @@ class ServiceStateSummaryDashletConfig(DashletConfig):
 
 class InventoryDashletConfig(DashletConfig):
     inventory_path: str
-    link_spec: NotRequired[tuple[VisualTypeName, VisualName]]
+    contextual_link: NotRequired[ContextualLinkConfig]
 
 
 class AlertOverviewDashletConfig(DashletConfig):

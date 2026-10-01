@@ -317,6 +317,7 @@ class TestInventoryContent:
             {
                 "type": "inventory",
                 "path": "hardware.cpu.cores",
+                "contextual_link": {"type": "default"},
             },
         )
 
@@ -325,12 +326,58 @@ class TestInventoryContent:
             {
                 "type": "inventory",
                 "path": "hardware.cpu.cores",
+                "contextual_link": {"type": "default"},
             }
         )
         assert resp.status_code == HTTPStatus.OK, (
             f"Expected 200, got {resp.status_code} {resp.body!r}"
         )
         assert resp.json["value"]["filter_context"]["uses_infos"] == ["host"]
+
+    def test_an_inherited_link_round_trips(self, clients: ClientRegistry) -> None:
+        link = {
+            "type": "inherited",
+            "location": {"type": "dashboards", "name": "main"},
+            "include_context": False,
+            "include_time_range": False,
+            "show_filter_form": False,
+        }
+        clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "inventory_dashboard",
+                {
+                    "inventory": create_widget(
+                        {"type": "inventory", "path": "hardware.cpu.cores", "contextual_link": link}
+                    )
+                },
+            )
+        )
+
+        widgets = clients.DashboardClient.get_relative_grid_dashboard("inventory_dashboard").json[
+            "extensions"
+        ]["widgets"]
+        assert next(iter(widgets.values()))["content"]["contextual_link"] == link
+
+    def test_an_explicit_default_reads_back_as_default(self, clients: ClientRegistry) -> None:
+        clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "inventory_dashboard",
+                {
+                    "inventory": create_widget(
+                        {
+                            "type": "inventory",
+                            "path": "hardware.cpu.cores",
+                            "contextual_link": {"type": "default"},
+                        }
+                    )
+                },
+            )
+        )
+
+        widgets = clients.DashboardClient.get_relative_grid_dashboard("inventory_dashboard").json[
+            "extensions"
+        ]["widgets"]
+        assert next(iter(widgets.values()))["content"]["contextual_link"] == {"type": "default"}
 
 
 class TestAlertOverviewContent:

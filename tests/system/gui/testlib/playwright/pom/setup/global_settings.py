@@ -61,9 +61,7 @@ class GlobalSettings(CmkPage):
     def toggle(self, var_name: str) -> None:
         """Toggle a setting on or off."""
         logger.info("Toggle setting: %s", var_name)
-        self.click_and_wait_for_navigation(
-            self._toggle_button(var_name), re.compile(r"wato\.py\?mode=globalvars$")
-        )
+        self._toggle_button(var_name).click()
 
 
 class EditGlobalSetting(CmkPage, ABC):

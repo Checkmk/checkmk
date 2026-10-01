@@ -12,8 +12,13 @@
  * a leaf is handed both a synthesised object and the state the tree node already
  * carries, rather than looking the state up by id and finding nothing.
  */
+import type usei18n from 'cmk-ui-library/lib/i18n'
+
 import type { FolderTreeNode, MapElement, ObjectState } from '@/maps/types/api'
 import { monitoringObjectId, newMonitoringElement, newObjectState } from '@/maps/utils/model'
+import { stateWordFromToken } from '@/maps/utils/objectAria'
+
+type TranslateFn = ReturnType<typeof usei18n>['_t']
 
 // What a leaf stands for. A host leaf is named by its own title; a service leaf
 // is named by its title on the host it was reached through.
@@ -80,4 +85,20 @@ export function folderHosts(node: FolderTreeNode, includeSubfolders: boolean): F
   }
   walk(node)
   return [...found.values()]
+}
+
+/**
+ * How a leaf's state reads in words. A tile or a dot is coloured by the worse
+ * of a host and its services; said out loud that must not turn into a state
+ * the host does not have, so a host whose service is worse reads as both.
+ */
+export function leafStateText(_t: TranslateFn, node: FolderTreeNode): string {
+  const word = (state: string): string => stateWordFromToken(_t, state)
+  if (node.own_state && node.own_state !== node.state) {
+    return _t('%{own}, worst service %{worst}', {
+      own: word(node.own_state),
+      worst: word(node.state)
+    })
+  }
+  return word(node.state)
 }

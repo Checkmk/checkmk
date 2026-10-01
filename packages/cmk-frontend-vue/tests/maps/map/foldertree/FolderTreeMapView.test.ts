@@ -447,6 +447,31 @@ describe('FolderTreeMapView (map mode)', () => {
     expect(screen.getByText('Host')).toBeInTheDocument()
   })
 
+  it('names a host tile by the host own state, with the worse service state beside it', async () => {
+    renderTree({
+      drawing: 'map',
+      tree: aFolderNode({
+        path: '/main',
+        title: 'Main',
+        kind: 'folder',
+        host_count: 1,
+        children: [
+          aFolderNode({
+            path: '/main/web-01',
+            title: 'web-01',
+            kind: 'host',
+            state: 'WARNING',
+            own_state: 'UP'
+          })
+        ]
+      })
+    })
+
+    expect(
+      await screen.findByRole('button', { name: 'web-01, Up, worst service Warning' })
+    ).toBeInTheDocument()
+  })
+
   it('keeps a host card where it opened while the pointer moves within the tile', async () => {
     // A card that followed the pointer across a large tile could never be reached.
     const { container } = renderTree({ drawing: 'map' })

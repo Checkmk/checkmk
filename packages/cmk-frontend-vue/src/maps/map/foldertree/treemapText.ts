@@ -13,6 +13,7 @@ import type { FolderTreeNode } from '@/maps/types/api'
 import { stateWordFromToken } from '@/maps/utils/objectAria'
 import { severityPills } from '@/maps/utils/stateColors'
 
+import { leafStateText } from './objects'
 import type { Tile } from './treemapLayout'
 import { isContainer, isEmptyFolder, isExpanded } from './treemapStyle'
 
@@ -108,7 +109,7 @@ export function tileText(options: TileTextOptions): TileText {
       const hosts = _tn('%{n} host', '%{n} hosts', node.host_count, { n: node.host_count })
       return `${node.title}, ${hosts}, ${breakdown(node)}`
     }
-    return `${node.title}, ${stateWord(node.state)}`
+    return `${node.title}, ${leafStateText(_t, node)}`
   }
 
   return { label, mark, aria }

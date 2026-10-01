@@ -20,6 +20,8 @@ import type { FolderTreeNode } from '@/maps/types/api'
 import { stateWordFromToken } from '@/maps/utils/objectAria'
 import { type SeverityPill, severityPills, stateColorVar } from '@/maps/utils/stateColors'
 
+import { leafStateText } from '../objects'
+
 const props = defineProps<{
   node: FolderTreeNode
   /**
@@ -149,7 +151,7 @@ function onContextMenu(event: MouseEvent): void {
       v-if="!isEmptyFolder && !(node.kind === 'folder' && pills.length)"
       class="maps-folder-tree-row__dot"
       :style="{ background: stateColorVar(node.state) }"
-      :title="stateWord(node.state)"
+      :title="leafStateText(_t, node)"
     />
 
     <span

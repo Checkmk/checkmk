@@ -63,3 +63,18 @@ def test_scp(site: Site) -> None:
     print(p.stdout)
     print(p.stderr)
     site.run(["rm", "test_scp_target"])
+
+
+def test_ssh_keygen(site: Site) -> None:
+    """
+    Ensures that ssh-keygen is working.
+
+    ssh-keygen is linked against the system OpenSSL just like ssh, but it verifies at runtime that
+    the loaded OpenSSL matches the version it was built against. With the OMD OpenSSL loaded via
+    LD_LIBRARY_PATH it aborts with "OpenSSL version mismatch" without creating a key. See also
+    SUP-30799.
+    """
+    p = site.run(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", "test_ssh_keygen_key"])
+    print(p.stdout)
+    print(p.stderr)
+    site.run(["rm", "test_ssh_keygen_key", "test_ssh_keygen_key.pub"])

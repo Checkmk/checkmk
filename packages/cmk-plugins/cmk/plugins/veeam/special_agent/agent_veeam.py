@@ -485,6 +485,10 @@ SECTIONS: Sequence[Section] = (
         fetch_list("/api/v1/backupInfrastructure/scaleOutRepositories"),
     ),
     ("veeam_restore_points", empty_on_access_denied(fetch_restore_points())),
+    (
+        "veeam_repositories",
+        fetch_list("/api/v1/backupInfrastructure/repositories/states"),
+    ),
 )
 
 

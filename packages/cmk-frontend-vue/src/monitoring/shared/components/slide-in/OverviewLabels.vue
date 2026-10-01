@@ -10,6 +10,11 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
 
 import type { LabelValue } from '@/monitoring/shared/api/types'
+import {
+  labelItemContent,
+  labelItemText,
+  labelItemValue
+} from '@/monitoring/shared/components/cell/labelCellItem'
 import { toLabelItems } from '@/monitoring/shared/labels'
 
 const DEFAULT_LIMIT = 5
@@ -34,12 +39,13 @@ const visibleItems = computed(() =>
   <div class="monitoring-overview-labels">
     <CmkTag
       v-for="item in visibleItems"
-      :key="item.text"
+      :key="labelItemText(item)"
       size="small"
       spacing="none"
       variant="fill"
       :color="item.color"
-      :content="item.text"
+      :content="labelItemContent(item)"
+      :value="labelItemValue(item)"
     />
     <CmkButton v-if="hasOverflow" size="small" variant="text" @click="expanded = !expanded">
       {{ expanded ? _t('show less') : `+${items.length - limit}` }}

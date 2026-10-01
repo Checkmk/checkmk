@@ -54,6 +54,8 @@ export interface CmkTagProps {
   variant?: Variants
   spacing?: Spacings
   content: TranslatedString
+  /** Set in bold after the content, as the value of a `key: value` label. */
+  value?: string | undefined
   /** Native tooltip, e.g. the full text when a consumer clips the tag to its column. */
   title?: string
 }
@@ -63,7 +65,10 @@ defineProps<CmkTagProps>()
 
 <template>
   <span class="cmk-tag" :class="propsCva({ size, color, variant, spacing })" :title="title">
-    {{ content }}
+    <template v-if="value !== undefined"
+      >{{ content }}: <strong>{{ value }}</strong></template
+    >
+    <template v-else>{{ content }}</template>
   </span>
 </template>
 

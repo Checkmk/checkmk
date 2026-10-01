@@ -5,23 +5,18 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
-import CmkTag, {
-  type Colors,
-  type Sizes,
-  type Variants
-} from 'cmk-ui-library/components/CmkTag.vue'
+import CmkTag, { type Sizes } from 'cmk-ui-library/components/CmkTag.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, inject, nextTick, onMounted, ref, watch } from 'vue'
 
 import { COLUMN_LAYOUT_KEY } from '../MonitoringTableContext'
 import BaseCell from './BaseCell.vue'
-
-export interface LabelCellItem {
-  text: TranslatedString
-  color?: Colors | undefined
-  variant?: Variants | undefined
-}
+import {
+  type LabelCellItem,
+  labelItemContent,
+  labelItemText,
+  labelItemValue
+} from './labelCellItem'
 
 export interface LabelCellProps {
   items: LabelCellItem[]
@@ -156,7 +151,7 @@ onMounted(() => {
 // Keyed on the entries themselves: a poll that hands the row an equal-but-new array must not
 // trigger another measuring pass.
 watch(
-  () => props.items.map((item) => item.text).join('\u0000'),
+  () => props.items.map(labelItemText).join('\u0000'),
   () => {
     expanded.value = false
     void measure()
@@ -186,15 +181,16 @@ watch(columnWidth, (width, previous) => {
       >
         <CmkTag
           v-for="(item, index) in visibleItems"
-          :key="`${index}-${item.text}`"
+          :key="`${index}-${labelItemText(item)}`"
           data-label-cell-item
           class="monitoring-label-cell__tag"
           :style="{ maxWidth: tagMaxWidth }"
-          :title="item.text"
+          :title="labelItemText(item)"
           :size="size"
           :variant="item.variant ?? 'fill'"
           :color="item.color ?? 'default'"
-          :content="item.text"
+          :content="labelItemContent(item)"
+          :value="labelItemValue(item)"
         />
         <CmkButton
           v-if="measuring || (hasOverflow && !expanded)"

@@ -20,6 +20,12 @@ export const panelConfig = {
     title: 'Content',
     initialState: 'Status Tag'
   },
+  value: {
+    type: 'string' as const,
+    title: 'Value',
+    initialState: '',
+    help: 'Set in bold after the content, as the value of a key: value label.'
+  },
   size: {
     type: 'list' as const,
     title: 'Size',
@@ -102,6 +108,7 @@ const propState = new PanelStateCreator<typeof CmkTag>().createRef(panelConfig)
     <UclDetailPageComponent>
       <CmkTag
         :content="propState.content"
+        :value="propState.value || undefined"
         :size="propState.size"
         :color="propState.color"
         :variant="propState.variant"

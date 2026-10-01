@@ -70,12 +70,12 @@ import {
 } from '@ucl/_ucl/components/detail-page'
 import type { InferPanelState } from '@ucl/_ucl/types/prop-panel'
 import type { Colors, Sizes, Variants } from 'cmk-ui-library/components/CmkTag.vue'
-import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref } from 'vue'
 
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
 import { TABLE_BORDER_SPACING } from '@/monitoring/shared/components/MonitoringTableContext'
-import LabelCell, { type LabelCellItem } from '@/monitoring/shared/components/cell/LabelCell.vue'
+import LabelCell from '@/monitoring/shared/components/cell/LabelCell.vue'
+import type { LabelCellItem } from '@/monitoring/shared/components/cell/labelCellItem'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -85,13 +85,14 @@ const propState = ref(
   ) as InferPanelState<typeof panelConfig>
 )
 
-const LONG_ENTRY = 'cmk/azure/resource_group: a-very-long-resource-group-name'
+const LONG_ENTRY = { key: 'cmk/azure/resource_group', value: 'a-very-long-resource-group-name' }
 
 const items = computed<LabelCellItem[]>(() =>
   Array.from({ length: Math.max(0, propState.value.count) }, (_unused, index) => ({
-    text: (index === 0 && propState.value.longEntry
-      ? LONG_ENTRY
-      : `cmk/label_${index + 1}: value_${index + 1}`) as TranslatedString,
+    keyValue:
+      index === 0 && propState.value.longEntry
+        ? LONG_ENTRY
+        : { key: `cmk/label_${index + 1}`, value: `value_${index + 1}` },
     color: propState.value.color as Colors,
     variant: propState.value.variant as Variants
   }))

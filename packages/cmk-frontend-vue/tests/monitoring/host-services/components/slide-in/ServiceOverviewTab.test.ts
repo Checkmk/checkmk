@@ -184,7 +184,7 @@ describe('ServiceOverviewTab', () => {
       }
     })
 
-    expect(screen.getByText('cmk/check_plugin: cpu_load')).toBeInTheDocument()
+    expect(screen.getByText(/cmk\/check_plugin:/)).toHaveTextContent('cmk/check_plugin: cpu_load')
   })
 
   it('keeps the tag and label rows when the service has neither', () => {

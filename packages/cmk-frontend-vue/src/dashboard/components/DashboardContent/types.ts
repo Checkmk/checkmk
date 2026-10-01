@@ -30,7 +30,6 @@ export type ContentPropsRecord = Readonly<Record<string, ContentProps>>
 export const CONTENT_FIGURE_TYPES: string[] = [
   'alert_overview',
   'alert_timeline',
-  'average_scatterplot',
   'barplot',
   'inventory',
   'notification_timeline',

@@ -25,7 +25,6 @@ from cmk.gui.dashboard.api.model.widget_content.graph import (
 from cmk.gui.dashboard.dashlet.dashlets.graph import TemplateGraphDashletConfig
 from cmk.gui.dashboard.type_defs import (
     AlertOverviewDashletConfig,
-    AverageScatterplotDashletConfig,
     BarplotDashletConfig,
     CombinedGraphDashletConfig,
     CustomGraphDashletConfig,
@@ -43,14 +42,13 @@ from cmk.gui.type_defs import SingleInfos, VisualContext
 
 from .model.widget import WidgetGeneralSettings, WidgetTitle
 from .model.widget_content.inventory import InventoryContent
-from .model.widget_content.metric import AverageScatterplotContent, BarplotContent
+from .model.widget_content.metric import BarplotContent
 from .model.widget_content.overview import AlertOverviewContent, SiteOverviewContent
 from .model.widget_content.timeline import AlertTimelineContent, NotificationTimelineContent
 
 type FigureContent = Annotated[
     AlertOverviewContent
     | AlertTimelineContent
-    | AverageScatterplotContent
     | BarplotContent
     | InventoryContent
     | NotificationTimelineContent
@@ -60,7 +58,6 @@ type FigureContent = Annotated[
 
 type FigureDashletConfig = (
     AlertOverviewDashletConfig
-    | AverageScatterplotDashletConfig
     | BarplotDashletConfig
     | EventBarChartDashletConfig
     | InventoryDashletConfig

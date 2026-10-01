@@ -7,21 +7,16 @@
 from collections.abc import Iterable, Mapping
 
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
-from cmk.graphing_engine import PerformanceData, Unit
+from cmk.graphing_engine import PerformanceData
 from cmk.gui import sites, visuals
-from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.graphing import (
     ConvertibleUnitSpecification,
     EvaluatedMetric,
-    get_temperature_unit,
-    unit_to_unit_format,
     user_specific_unit,
-    user_specific_unit_from_unit_format,
 )
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
 from cmk.gui.type_defs import ColumnName, VisualContext
 from cmk.gui.unit_formatter import IECFormatter, NotationFormatter
 from cmk.gui.utils.temperature_unit import TemperatureUnit
@@ -73,18 +68,6 @@ def create_service_view_url(context: Mapping[str, str]) -> str:
         ],
         filename="view.py",
     )
-
-
-def purge_metric_unit_for_js(unit: Unit) -> dict[str, object]:
-    return {
-        "bounds": {},
-        "unit": _formatter_for_js(
-            user_specific_unit_from_unit_format(
-                unit_to_unit_format(unit),
-                get_temperature_unit(user, active_config.default_temperature_unit),
-            ).formatter
-        ),
-    }
 
 
 def _scalar_bounds_for_js(performance_data: PerformanceData) -> Mapping[str, float]:

@@ -13,7 +13,6 @@ import { GaugeFigure } from './cmk_gauge'
 import { InventoryFigure } from './cmk_inventory'
 import { SiteOverview } from './cmk_site_overview'
 import { TableFigure } from './cmk_table'
-import { AverageScatterplotFigure } from './timeseries/average_scatterplot_figure'
 import { TimeseriesFigure } from './timeseries/cmk_timeseries'
 
 export function register() {
@@ -26,5 +25,4 @@ export function register() {
   figure_registry.register(InventoryFigure)
   figure_registry.register(SiteOverview)
   figure_registry.register(TimeseriesFigure)
-  figure_registry.register(AverageScatterplotFigure)
 }

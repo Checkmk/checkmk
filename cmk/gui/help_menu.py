@@ -51,7 +51,7 @@ def register(
             get_topics=_help_menu_topics(
                 learning_entries, developer_entries, about_checkmk_entries
             ),
-            shortcut=NavItemShortcut(key="h", alt=True),
+            shortcut=NavItemShortcut(key="h", alt=True, prevent_default=True),
             is_user_nav=True,
             info_line=info_line,
             popup_small=True,

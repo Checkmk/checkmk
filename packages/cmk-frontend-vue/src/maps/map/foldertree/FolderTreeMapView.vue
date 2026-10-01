@@ -99,12 +99,6 @@ const canCommand = computed(
   () => auth.mayCommand('acknowledge') || auth.mayCommand('schedule_downtime')
 )
 
-/**
- * The hover card the list opens on a leaf. It is the folder tree's own: a leaf
- * is synthesised, so it carries neither a connection nor a template a macro
- * could be expanded against, and the card is told so once here rather than the
- * page having to know it. (The treemap has its own tooltip on the tile.)
- */
 const hover = useObjectHoverMenu()
 
 const tree = computed<FolderTreeNode | null>(() => states.folderTree.value)
@@ -219,6 +213,15 @@ function onHover(host: string | null, node: FolderTreeNode, x: number, y: number
   })
 }
 
+/** The pointer left a leaf; `immediate` when another card takes over at once. */
+function onHoverClear(immediate: boolean): void {
+  if (immediate) {
+    hover.close()
+  } else {
+    hover.scheduleClose()
+  }
+}
+
 const folderMenu = ref<{ node: FolderTreeNode; x: number; y: number } | null>(null)
 const bulkFolder = ref<FolderTreeNode | null>(null)
 
@@ -331,6 +334,8 @@ function closeBulkModal(): void {
         @expand-host="services.ensure($event)"
         @select="onSelect"
         @ctx-folder="onFolderMenu"
+        @hover="onHover"
+        @hover-clear="onHoverClear"
       />
       <FolderTreeList
         v-else

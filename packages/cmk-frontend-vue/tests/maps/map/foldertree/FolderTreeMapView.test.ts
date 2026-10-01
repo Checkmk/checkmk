@@ -4,12 +4,13 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { render, screen, waitFor } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, markRaw } from 'vue'
 
 import { useObjectHoverMenu } from '@/maps/map/composables/useObjectHoverMenu'
 import FolderTreeMapView from '@/maps/map/foldertree/FolderTreeMapView.vue'
+import { HOVER_REST_MS } from '@/maps/map/foldertree/composables/useTileHoverIntent'
 import type { FolderHostService, FolderServiceSearchResult, FolderTreeNode } from '@/maps/types/api'
 
 import { aFolderNode, aMap, newMapView } from '../../support/fixtures'
@@ -76,18 +77,23 @@ const hostComponent = defineComponent({
 })
 
 /** The map a folder tree draws, named so a case can swap one for another. */
-function aFolderTreeMap(name: string, showServices: boolean) {
+function aFolderTreeMap(name: string, showServices: boolean, drawing: 'list' | 'map' = 'list') {
   return aMap({
     name,
-    view: { ...newMapView('foldertree'), default_view: 'list', show_services: showServices }
+    view: { ...newMapView('foldertree'), default_view: drawing, show_services: showServices }
   })
 }
 
 function renderTree(
-  options: { withTree?: boolean; showServices?: boolean; tree?: FolderTreeNode } = {}
+  options: {
+    withTree?: boolean
+    showServices?: boolean
+    tree?: FolderTreeNode
+    drawing?: 'list' | 'map'
+  } = {}
 ) {
   const services = fakeMapsServices()
-  const config = aFolderTreeMap('map1', options.showServices ?? false)
+  const config = aFolderTreeMap('map1', options.showServices ?? false, options.drawing)
   services.maps.currentMap.value = config
   if (options.withTree !== false) {
     services.states.folderTree.value = markRaw(options.tree ?? sampleTree())
@@ -387,5 +393,110 @@ describe('FolderTreeMapView (list mode)', () => {
     await rerender({ config: aFolderTreeMap('map2', false) })
 
     expect(screen.queryByText('Folder')).toBeNull()
+  })
+})
+
+describe('FolderTreeMapView (map mode)', () => {
+  beforeEach(() => {
+    // jsdom has no layout, so the stage reports its size the moment it is observed.
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(private readonly onResize: ResizeObserverCallback) {}
+        observe(): void {
+          this.onResize(
+            [{ contentRect: { width: 800, height: 600 } }] as unknown as ResizeObserverEntry[],
+            this as unknown as ResizeObserver
+          )
+        }
+        unobserve() {}
+        disconnect() {}
+      }
+    )
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('opens the same hover card as the list on a host tile, with the host own state', async () => {
+    // The tile is yellow for a failing service; the card speaks for the host.
+    renderTree({
+      drawing: 'map',
+      tree: aFolderNode({
+        path: '/main',
+        title: 'Main',
+        kind: 'folder',
+        host_count: 1,
+        children: [
+          aFolderNode({
+            path: '/main/web-01',
+            title: 'web-01',
+            kind: 'host',
+            state: 'WARNING',
+            own_state: 'UP'
+          })
+        ]
+      })
+    })
+
+    const tile = await screen.findByRole('button', { name: /web-01/ })
+    await fireEvent.mouseMove(tile, { clientX: 100, clientY: 100 })
+
+    expect(await screen.findByText('UP')).toBeInTheDocument()
+    expect(screen.getByText('Host')).toBeInTheDocument()
+  })
+
+  it('keeps a host card where it opened while the pointer moves within the tile', async () => {
+    // A card that followed the pointer across a large tile could never be reached.
+    const { container } = renderTree({ drawing: 'map' })
+    const tile = await screen.findByRole('button', { name: /web-01/ })
+
+    await fireEvent.mouseMove(tile, { clientX: 100, clientY: 100 })
+    const card = await waitFor(() => {
+      const element = container.ownerDocument.querySelector<HTMLElement>('.maps-hover-menu')
+      expect(element?.style.left).toBeTruthy()
+      return element!
+    })
+    const opened = { left: card.style.left, top: card.style.top }
+
+    await fireEvent.mouseMove(tile, { clientX: 140, clientY: 130 })
+
+    expect({ left: card.style.left, top: card.style.top }).toEqual(opened)
+  })
+
+  it('keeps the host card when the pointer only crosses another tile on its way to it', async () => {
+    const { container } = renderTree({ drawing: 'map' })
+    const host = await screen.findByRole('button', { name: /web-01/ })
+    await fireEvent.mouseMove(host, { clientX: 100, clientY: 100 })
+    await screen.findByText('Host')
+
+    const folder = screen.getByRole('button', { name: /^Main/ })
+    await fireEvent.mouseLeave(host)
+    await fireEvent.mouseMove(folder, { clientX: 105, clientY: 105 })
+    await fireEvent.mouseLeave(folder)
+    await fireEvent.mouseEnter(container.ownerDocument.querySelector('.maps-hover-card')!)
+    await new Promise((resolve) => setTimeout(resolve, HOVER_REST_MS + 100))
+
+    expect(screen.getByText('Host')).toBeInTheDocument()
+    expect(screen.queryByText('Folder')).toBeNull()
+  })
+
+  it('hands over from a host card to the folder card at once, never showing both', async () => {
+    renderTree({ drawing: 'map' })
+
+    await fireEvent.mouseMove(await screen.findByRole('button', { name: /web-01/ }), {
+      clientX: 100,
+      clientY: 100
+    })
+    await screen.findByText('Host')
+
+    await fireEvent.mouseMove(screen.getByRole('button', { name: /^Main/ }), {
+      clientX: 300,
+      clientY: 20
+    })
+
+    expect(await screen.findByText('Folder')).toBeInTheDocument()
+    expect(screen.queryByText('Host')).toBeNull()
   })
 })

@@ -56,7 +56,7 @@ interface TileHandlers {
   /** A right-click that asks for the folder's own menu. */
   context: (tile: Tile, x: number, y: number) => void
   hover: (event: MouseEvent, tile: Tile) => void
-  hoverEnd: () => void
+  hoverEnd: (event: MouseEvent, tile: Tile) => void
 }
 
 export interface PaintOptions {
@@ -138,8 +138,8 @@ function paintLabels(cells: Cells, text: TileText): void {
         .style('display', width > 30 ? 'inline' : 'none')
       return
     }
-    // A chip's label is centred and clipped to the tile; the full name is in
-    // the tooltip.
+    // A chip's label is centred and clipped to the tile; the full name is on
+    // the hover card.
     label
       .attr('x', width / 2)
       .attr('y', height / 2 + 4)

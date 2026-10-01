@@ -7,6 +7,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
+import HoverCard from '@/maps/map/components/HoverCard.vue'
+import HoverCardHeadline from '@/maps/map/components/HoverCardHeadline.vue'
+import HoverPillRow, { type HoverPill } from '@/maps/map/components/HoverPillRow.vue'
 import { useMetricInfo } from '@/maps/map/composables/useMetricInfo'
 import type { HoverAnchorRect } from '@/maps/map/composables/useObjectHoverMenu'
 import { displayRows, perfometerCaption } from '@/maps/map/composables/usePerfometer'
@@ -154,16 +157,6 @@ const hasMonitoring = computed(() => {
 const isNoPermission = computed(() => props.state?.state === 'NO_PERMISSION')
 const isNotFound = computed(() => props.state?.state === 'NOT_FOUND')
 
-const STATE_BG: Record<string, string> = {
-  UP: 'maps-hover-menu__dot--ok',
-  OK: 'maps-hover-menu__dot--ok',
-  DOWN: 'maps-hover-menu__dot--down',
-  CRITICAL: 'maps-hover-menu__dot--down',
-  UNREACHABLE: 'maps-hover-menu__dot--unknown',
-  UNKNOWN: 'maps-hover-menu__dot--unknown',
-  WARNING: 'maps-hover-menu__dot--warn',
-  PENDING: 'maps-hover-menu__dot--pending'
-}
 const STATE_TEXT: Record<string, string> = {
   UP: 'maps-hover-menu__state--ok',
   OK: 'maps-hover-menu__state--ok',
@@ -175,9 +168,7 @@ const STATE_TEXT: Record<string, string> = {
   PENDING: 'maps-hover-menu__state--pending'
 }
 
-const stateColor = computed(
-  () => STATE_BG[props.state?.state ?? 'PENDING'] ?? 'maps-hover-menu__dot--pending'
-)
+const dotState = computed(() => (hasMonitoring.value ? (props.state?.state ?? 'PENDING') : null))
 const stateTextColor = computed(
   () => STATE_TEXT[props.state?.state ?? 'PENDING'] ?? 'maps-hover-menu__state--pending'
 )
@@ -280,18 +271,9 @@ const nextCheckText = computed((): NextCheckText | null => {
   }
 })
 
-interface ServicePill {
-  label: string
-  count: number
-  cls: string
-  dot: string
-  /** Deep-link into the filtered Checkmk view, or null when not linkable. */
-  url: string | null
-}
-
 interface PillRow {
   label: string
-  pills: ServicePill[]
+  pills: HoverPill[]
 }
 
 const dyngroupHostSet = computed<string[] | null>(() =>
@@ -303,7 +285,7 @@ const dyngroupHostSet = computed<string[] | null>(() =>
 )
 
 // Severity-descending, so the worst state reads first.
-function buildPills(summary: ServicesSummary, kind: 'hosts' | 'services'): ServicePill[] {
+function buildPills(summary: ServicesSummary, kind: 'hosts' | 'services'): HoverPill[] {
   const hosts = dyngroupHostSet.value
   const linkFor = (state: string | null): string | null => {
     if (!state || !props.checkmkUrl) {
@@ -342,8 +324,7 @@ function buildPills(summary: ServicesSummary, kind: 'hosts' | 'services'): Servi
     .map((d) => ({
       label: d.label,
       count: summary[d.key] ?? 0,
-      cls: `maps-hover-menu__pill--${d.tone}`,
-      dot: `maps-hover-menu__pill-dot--${d.tone}`,
+      tone: d.tone,
       url: linkFor(d.state)
     }))
 }
@@ -394,7 +375,7 @@ function fmtMetricValue(m: PerfMetric): string {
 
 <template>
   <div ref="rootEl" class="maps-hover-menu" :style="positionStyle">
-    <div class="maps-hover-menu__card" @mouseenter="onCardEnter" @mouseleave="onCardLeave">
+    <HoverCard @card-enter="onCardEnter" @card-leave="onCardLeave">
       <!-- No permission: skip all templates and show only this -->
       <div v-if="isNoPermission" class="maps-hover-menu__empty">
         {{ _t('No permission') }}
@@ -418,11 +399,7 @@ function fmtMetricValue(m: PerfMetric): string {
       <!-- eslint-enable vue/no-v-html -->
 
       <template v-else>
-        <div class="maps-hover-menu__headline">
-          <span v-if="hasMonitoring" class="maps-hover-menu__dot" :class="stateColor" />
-          <div class="maps-hover-menu__name">
-            {{ displayName }}
-          </div>
+        <HoverCardHeadline :name="displayName" :subtitle="subtitleText" :state="dotState">
           <span
             v-if="hasMonitoring && state"
             class="maps-hover-menu__state"
@@ -433,10 +410,7 @@ function fmtMetricValue(m: PerfMetric): string {
           <span v-if="hasMonitoring && state && stateDuration" class="maps-hover-menu__since">
             {{ _t('since %{duration}', { duration: stateDuration }) }}
           </span>
-        </div>
-        <div class="maps-hover-menu__subtitle">
-          {{ subtitleText }}
-        </div>
+        </HoverCardHeadline>
 
         <template v-if="hasMonitoring">
           <div v-if="state">
@@ -528,22 +502,12 @@ function fmtMetricValue(m: PerfMetric): string {
           <!-- State pills, one labelled row per summary (host dyngroups show
                          both Hosts and Services); each pill deep-links to the
                          matching filtered Checkmk view. -->
-          <div v-for="row in pillRows" :key="row.label" class="maps-hover-menu__pills">
-            <span class="maps-hover-menu__pills-label">{{ row.label }}</span>
-            <component
-              :is="pill.url ? 'a' : 'span'"
-              v-for="pill in row.pills"
-              :key="pill.label"
-              class="maps-hover-menu__pill"
-              :class="[pill.cls, { 'maps-hover-menu__pill--link': pill.url }]"
-              :href="pill.url || undefined"
-              :target="pill.url ? '_blank' : undefined"
-              :rel="pill.url ? 'noopener noreferrer' : undefined"
-            >
-              <span class="maps-hover-menu__pill-dot" :class="pill.dot" />
-              {{ pill.count }} {{ pill.label }}
-            </component>
-          </div>
+          <HoverPillRow
+            v-for="row in pillRows"
+            :key="row.label"
+            :label="row.label"
+            :pills="row.pills"
+          />
 
           <div v-if="cmkPerfometer" class="maps-hover-menu__perfometer">
             <div class="maps-hover-menu__perfometer-label">
@@ -590,7 +554,7 @@ function fmtMetricValue(m: PerfMetric): string {
           </div>
         </template>
       </template>
-    </div>
+    </HoverCard>
   </div>
 </template>
 
@@ -601,32 +565,6 @@ function fmtMetricValue(m: PerfMetric): string {
   width: max-content;
   max-width: calc(100% - 16px);
   pointer-events: none;
-}
-
-a.maps-hover-menu__pill {
-  cursor: pointer;
-  text-decoration: none;
-}
-
-a.maps-hover-menu__pill:hover {
-  filter: brightness(1.25);
-  text-decoration: underline;
-}
-
-/* The card is interactive (tooltip stays while the pointer is on it; the
-   pills are links). It can overlap neighbouring objects — leaving it
-   re-schedules the close so anything underneath becomes hoverable again. */
-.maps-hover-menu__card {
-  pointer-events: auto;
-  min-width: 208px;
-  max-width: 288px;
-  padding: 14px;
-  background: var(--maps-map-view-glass);
-  backdrop-filter: blur(12px);
-  border-radius: var(--dimension-5);
-  box-shadow:
-    0 0 0 1px var(--default-border-color),
-    0 25px 50px -12px rgb(0 0 0 / 60%);
 }
 
 .maps-hover-menu__empty {
@@ -655,53 +593,6 @@ a.maps-hover-menu__pill:hover {
   font-size: var(--font-size-large);
   line-height: 20px;
   color: var(--font-color);
-}
-
-.maps-hover-menu__headline {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: var(--dimension-4);
-}
-
-.maps-hover-menu__dot {
-  align-self: center;
-  flex-shrink: 0;
-  width: 8px;
-  height: 8px;
-  border-radius: 9999px;
-}
-
-.maps-hover-menu__dot--ok {
-  background: var(--color-corporate-green-50);
-}
-
-.maps-hover-menu__dot--down {
-  background: var(--color-light-red-50);
-}
-
-.maps-hover-menu__dot--unknown {
-  background: var(--color-orange-40);
-}
-
-.maps-hover-menu__dot--warn {
-  background: var(--color-warning);
-}
-
-.maps-hover-menu__dot--pending {
-  background: var(--color-state-pending);
-}
-
-.maps-hover-menu__name {
-  overflow: hidden;
-  flex: 1;
-  min-width: 0;
-  font-size: var(--font-size-large);
-  line-height: 1.25;
-  font-weight: var(--font-weight-bold);
-  color: var(--font-color);
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .maps-hover-menu__state {
@@ -751,16 +642,6 @@ body[data-theme='modern-dark'] .maps-hover-menu__state--warn {
   flex-shrink: 0;
   font-size: var(--font-size-small);
   color: var(--font-color-dimmed);
-}
-
-.maps-hover-menu__subtitle {
-  overflow: hidden;
-  margin-top: var(--dimension-2);
-  font-size: var(--font-size-normal);
-  line-height: 16px;
-  color: var(--font-color-dimmed);
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .maps-hover-menu__attempts {
@@ -841,105 +722,6 @@ body[data-theme='modern-dark'] .maps-hover-menu__badge--downtime {
   line-height: 1.375;
   color: var(--font-color-dimmed);
   overflow-wrap: break-word;
-}
-
-.maps-hover-menu__pills {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--dimension-3);
-  margin-top: var(--spacing);
-}
-
-.maps-hover-menu__pills-label {
-  font-size: 11px;
-  font-weight: var(--font-weight-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--font-color-dimmed);
-  margin-right: var(--dimension-2);
-}
-
-.maps-hover-menu__pill {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--dimension-3);
-  padding: var(--dimension-2) 6px;
-  font-size: var(--font-size-small);
-  font-weight: var(--font-weight-bold);
-  border-radius: 9999px;
-}
-
-.maps-hover-menu__pill--crit {
-  color: var(--color-light-red-70);
-  background: color-mix(in srgb, var(--color-light-red-50) 15%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-light-red-50) 30%, transparent);
-}
-
-body[data-theme='modern-dark'] .maps-hover-menu__pill--crit {
-  color: var(--color-light-red-40);
-}
-
-.maps-hover-menu__pill--unknown {
-  color: var(--color-orange-70);
-  background: color-mix(in srgb, var(--color-orange-50) 15%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-orange-50) 30%, transparent);
-}
-
-body[data-theme='modern-dark'] .maps-hover-menu__pill--unknown {
-  color: var(--color-orange-40);
-}
-
-.maps-hover-menu__pill--warn {
-  color: var(--color-yellow-60);
-  background: color-mix(in srgb, var(--color-warning) 15%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-warning) 30%, transparent);
-}
-
-body[data-theme='modern-dark'] .maps-hover-menu__pill--warn {
-  color: var(--color-yellow-50);
-}
-
-.maps-hover-menu__pill--pending {
-  color: var(--font-color-dimmed);
-  background: color-mix(in srgb, var(--color-state-pending) 15%, transparent);
-  box-shadow: 0 0 0 1px var(--default-border-color);
-}
-
-.maps-hover-menu__pill--ok {
-  color: var(--color-corporate-green-70);
-  background: color-mix(in srgb, var(--color-corporate-green-50) 15%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-corporate-green-50) 30%, transparent);
-}
-
-body[data-theme='modern-dark'] .maps-hover-menu__pill--ok {
-  color: var(--color-corporate-green-50);
-}
-
-.maps-hover-menu__pill-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 9999px;
-}
-
-.maps-hover-menu__pill-dot--crit {
-  background: var(--color-light-red-50);
-}
-
-.maps-hover-menu__pill-dot--unknown {
-  background: var(--color-orange-40);
-}
-
-.maps-hover-menu__pill-dot--warn {
-  background: var(--color-warning);
-}
-
-.maps-hover-menu__pill-dot--pending {
-  background: var(--color-state-pending);
-}
-
-.maps-hover-menu__pill-dot--ok {
-  background: var(--color-corporate-green-50);
 }
 
 .maps-hover-menu__perfometer {

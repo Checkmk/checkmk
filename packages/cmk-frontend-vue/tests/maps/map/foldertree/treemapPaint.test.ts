@@ -65,8 +65,7 @@ function aTree(): FolderTreeNode {
 const text: TileText = {
   label: (tile) => tile.data.title,
   mark: () => '',
-  aria: (tile) => tile.data.title,
-  tooltip: (tile) => ({ title: tile.data.title, meta: '', color: 'red' })
+  aria: (tile) => tile.data.title
 }
 
 const handlers = {

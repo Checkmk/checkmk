@@ -20,10 +20,12 @@ import { useTheme } from 'cmk-ui-library/lib/useTheme'
 import { computed, ref, useTemplateRef, watch } from 'vue'
 
 import { useD3Cleanup } from '@/maps/map/composables/useD3Cleanup'
+import { useHoverGrace } from '@/maps/map/composables/useHoverGrace'
 import { useStates } from '@/maps/services/context'
 import type { FolderTreeNode } from '@/maps/types/api'
 
 import type { FolderExpansion } from '../composables/useFolderExpansion'
+import { useTileHoverIntent } from '../composables/useTileHoverIntent'
 import { type FolderQuery, hostsMatchedByAncestor, selfMatches, visibleServices } from '../filter'
 import {
   type Tile,
@@ -36,6 +38,7 @@ import {
 } from '../treemapLayout'
 import { drawTiles, recolorTiles } from '../treemapPaint'
 import { tileText } from '../treemapText'
+import FolderHoverCard from './FolderHoverCard.vue'
 
 /** The light theme's name, whose stage the tile tints have to allow for. */
 const LIGHT_THEME = 'facelift'
@@ -58,6 +61,11 @@ const emit = defineEmits<{
   /** A host was opened, so its services have to be fetched. */
   'expand-host': [FolderTreeNode]
   'ctx-folder': [FolderTreeNode, number, number]
+  /** The pointer is over a leaf, which gets the map's hover card, as in the list. */
+  hover: [host: string | null, node: FolderTreeNode, x: number, y: number]
+  /** The leaf's card goes: at once when another card takes over, else after
+   *  the grace that lets the pointer reach it. */
+  'hover-clear': [immediate: boolean]
 }>()
 
 const { _t, _tn } = usei18n()
@@ -66,9 +74,13 @@ const { theme } = useTheme()
 
 const svgEl = useTemplateRef<SVGSVGElement>('svgEl')
 const stageEl = useTemplateRef<HTMLDivElement>('stageEl')
-const tipEl = useTemplateRef<HTMLDivElement>('tipEl')
 
-const tip = ref<{ x: number; y: number; title: string; meta: string; color: string } | null>(null)
+const folderCard = ref<{
+  folder: FolderTreeNode
+  clickHint: string | null
+  x: number
+  y: number
+} | null>(null)
 
 let stage = { width: 0, height: 0 }
 let lastSignature = ''
@@ -148,6 +160,8 @@ function layout(): Tile | null {
 
 function activate(tile: Tile): void {
   const node = tile.data
+  // The click acts on what the card was about; the next rest opens a fresh one.
+  closeCards()
   if (!canExpand(node)) {
     if (node.kind === 'host') {
       emit('select', null, node)
@@ -163,17 +177,50 @@ function activate(tile: Tile): void {
   }
 }
 
-function showTip(event: MouseEvent, tile: Tile): void {
-  const bounds = stageEl.value?.getBoundingClientRect()
-  if (!bounds) {
-    return
+// Asked of the expansion, not of the drawing: a folder open but too small to
+// draw its tiles still closes on a click. During a search every folder on the
+// way to a match is open regardless, so a click there changes nothing to say.
+function folderClickHint(tile: Tile): string | null {
+  if (!canExpand(tile.data) || props.query.terms.length > 0) {
+    return null
   }
-  tip.value = {
-    x: event.clientX - bounds.left + 12,
-    y: event.clientY - bounds.top + 12,
-    ...text.value.tooltip(tile)
-  }
+  return props.expansion.expanded.has(tile.data.path)
+    ? _t('Click to collapse')
+    : _t('Click to expand')
 }
+
+const folderGrace = useHoverGrace(() => {
+  folderCard.value = null
+})
+
+function closeCards(): void {
+  intent.reset()
+  folderGrace.closeNow()
+  emit('hover-clear', true)
+}
+
+// A leaf gets the list's hover card, a folder its own; one card at a time.
+const intent = useTileHoverIntent({
+  open: (tile, x, y) => {
+    const node = tile.data
+    folderGrace.cancelClose()
+    if (node.kind === 'host' || node.kind === 'service') {
+      folderCard.value = null
+      const host = node.kind === 'service' ? (tile.parent?.data.title ?? '') : null
+      emit('hover', host, node, x, y)
+      return
+    }
+    emit('hover-clear', true)
+    folderCard.value = { folder: node, clickHint: folderClickHint(tile), x, y }
+  },
+  release: () => {
+    if (folderCard.value) {
+      folderGrace.scheduleClose()
+    } else {
+      emit('hover-clear', false)
+    }
+  }
+})
 
 const handlers = {
   activate,
@@ -182,15 +229,15 @@ const handlers = {
     if (tile.data.kind !== 'folder' || tile.data.ok_group) {
       return
     }
+    // The menu takes the card's place rather than opening beside it.
+    closeCards()
     // Under a filter the tile holds a pruned copy, whose children are only the
     // hosts that matched. The menu acts on the folder as a whole, so it is
     // handed the node out of the real tree -- the one the list emits.
     emit('ctx-folder', folderAtPath(props.root, tile.data.path) ?? tile.data, x, y)
   },
-  hover: showTip,
-  hoverEnd: () => {
-    tip.value = null
-  }
+  hover: intent.move,
+  hoverEnd: (_event: MouseEvent, tile: Tile) => intent.leave(tile)
 }
 
 function paint(animate: boolean): void {
@@ -211,29 +258,6 @@ function paint(animate: boolean): void {
   lastSignature = signature
   drawTiles(svg, tiles, { ...options, ...stage, animate, handlers })
 }
-
-// Keep the tooltip inside the stage. Its real size is only known once it is
-// rendered (it does not wrap, so it can be wide), so it flips to the other side
-// of the cursor when it would overflow. `post` runs after the DOM patch, so the
-// element measured is the one holding the current text.
-watch(
-  tip,
-  () => {
-    const element = tipEl.value
-    if (!tip.value || !element || !stage.width || !stage.height) {
-      return
-    }
-    const width = element.offsetWidth
-    const height = element.offsetHeight
-    const x =
-      tip.value.x + width + 4 > stage.width ? Math.max(4, tip.value.x - width - 24) : tip.value.x
-    const y =
-      tip.value.y + height + 4 > stage.height ? Math.max(4, tip.value.y - height - 24) : tip.value.y
-    element.style.left = `${x}px`
-    element.style.top = `${y}px`
-  },
-  { flush: 'post' }
-)
 
 // Everything the drawing depends on: the tree and its live states, the filter,
 // what is open, and the lazily-fetched services arriving or changing state.
@@ -273,16 +297,15 @@ useD3Cleanup(svgEl)
 <template>
   <div ref="stageEl" class="maps-folder-treemap">
     <svg ref="svgEl" class="maps-folder-treemap__stage" />
-    <div
-      v-if="tip"
-      ref="tipEl"
-      class="maps-folder-treemap__tip"
-      :style="{ left: `${tip.x}px`, top: `${tip.y}px` }"
-    >
-      <span class="maps-folder-treemap__tip-dot" :style="{ background: tip.color }" />
-      <strong>{{ tip.title }}</strong>
-      <span class="maps-folder-treemap__tip-meta">{{ tip.meta }}</span>
-    </div>
+    <FolderHoverCard
+      v-if="folderCard"
+      :folder="folderCard.folder"
+      :click-hint="folderCard.clickHint"
+      :x="folderCard.x"
+      :y="folderCard.y"
+      @card-enter="folderGrace.cancelClose()"
+      @card-leave="folderGrace.scheduleClose()"
+    />
     <div v-if="!drawnRoot.children.length" class="maps-folder-treemap__empty">
       {{ _t('Nothing to show here.') }}
     </div>
@@ -343,33 +366,5 @@ useD3Cleanup(svgEl)
 
   /* Never swallows a click on the tiles beneath it. */
   pointer-events: none;
-}
-
-.maps-folder-treemap__tip {
-  position: absolute;
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 5px 9px;
-  font-size: var(--font-size-normal);
-  color: var(--font-color);
-  white-space: nowrap;
-  background: var(--bg-glass);
-  border: 1px solid var(--default-border-color);
-  border-radius: 6px;
-  box-shadow: 0 2px 10px rgb(0 0 0 / 18%);
-  pointer-events: none;
-}
-
-.maps-folder-treemap__tip-dot {
-  width: 9px;
-  height: 9px;
-  flex-shrink: 0;
-  border-radius: 50%;
-}
-
-.maps-folder-treemap__tip-meta {
-  color: var(--font-color-dimmed);
 }
 </style>

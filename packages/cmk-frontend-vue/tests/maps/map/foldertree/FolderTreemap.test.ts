@@ -123,6 +123,38 @@ describe('FolderTreemap', () => {
     expect(screen.queryByRole('button', { name: /CPU load/ })).toBeNull()
   })
 
+  it('says what a click on a folder does once the pointer rests on it', async () => {
+    renderTreemap('')
+
+    const folder = await screen.findByRole('button', { name: /Main/ })
+    await fireEvent.mouseMove(folder, { clientX: 100, clientY: 100 })
+    expect(await screen.findByText(/Click to expand/)).toBeInTheDocument()
+
+    await fireEvent.mouseLeave(folder)
+    await waitFor(() => expect(screen.queryByText(/Click to expand/)).toBeNull())
+  })
+
+  it('promises no expanding on a folder card while a search holds every folder open', async () => {
+    renderTreemap('datacenter')
+
+    const folder = await screen.findByRole('button', { name: /^Datacenter/ })
+    await fireEvent.mouseMove(folder, { clientX: 100, clientY: 100 })
+
+    expect(await screen.findByText('Folder')).toBeInTheDocument()
+    expect(screen.queryByText(/Click to (expand|collapse)/)).toBeNull()
+  })
+
+  it('takes the folder card down when the folder menu opens', async () => {
+    renderTreemap('datacenter')
+    const folder = await screen.findByRole('button', { name: /^Datacenter/ })
+    await fireEvent.mouseMove(folder, { clientX: 100, clientY: 100 })
+    await screen.findByText('Folder')
+
+    await fireEvent.contextMenu(folder)
+
+    expect(screen.queryByText('Folder')).toBeNull()
+  })
+
   it('opens the folder menu on the whole folder, not on what the filter left of it', async () => {
     // The tiles are drawn from a pruned copy of the tree, so a search that hides
     // one of the two hosts must not shrink what a folder-wide action reaches.

@@ -23,6 +23,8 @@ from cmk.plugins.veeam.special_agent.agent_veeam import (
     fetch_object,
     fetch_restore_points,
     main,
+    parse_arguments,
+    SECTIONS,
     TerminateAgent,
     VeeamApi,
     VeeamAuth,
@@ -654,3 +656,39 @@ def test_unreachable_server_is_reported_with_a_non_zero_exit_code(
 
     assert exit_code == 1
     assert "is unreachable" in capsys.readouterr().err
+
+
+_MINIMAL_ARGV = ["--user", "u", "--password", "p", "--disable-cert-verification"]
+
+
+def test_sections_default_to_every_known_section() -> None:
+    args = parse_arguments([*_MINIMAL_ARGV, "veeam.example.com"])
+
+    assert args.sections == [name for name, _ in SECTIONS]
+
+
+def test_sections_can_be_restricted_to_a_comma_separated_subset() -> None:
+    args = parse_arguments(
+        [*_MINIMAL_ARGV, "--sections", "veeam_license,veeam_proxies", "veeam.example.com"]
+    )
+
+    assert args.sections == ["veeam_license", "veeam_proxies"]
+
+
+def test_an_unknown_section_is_rejected() -> None:
+    with pytest.raises(SystemExit):
+        parse_arguments([*_MINIMAL_ARGV, "--sections", "veeam_does_not_exist", "veeam.example.com"])
+
+
+@pytest.mark.usefixtures("storage")
+def test_main_fetches_only_the_selected_sections(
+    api: responses.RequestsMock, capsys: pytest.CaptureFixture[str]
+) -> None:
+    api.post(TOKEN_URL, json=_token("first"))
+    api.get(f"{URL}/api/v1/jobs/states", json={"data": [], "pagination": {"total": 0}})
+
+    exit_code = main([*_MINIMAL_ARGV, "--sections", "veeam_backup_jobs", "veeam.example.com"])
+
+    assert exit_code == 0
+    assert capsys.readouterr().out == "<<<veeam_backup_jobs:sep(0)>>>\n"
+    assert all(call.request.url != f"{URL}/api/v1/serverInfo" for call in api.calls)

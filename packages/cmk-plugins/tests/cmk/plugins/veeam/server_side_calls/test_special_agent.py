@@ -17,6 +17,7 @@ BASE_PARAMS = {
     "user": "monitoring",
     "password": Secret(1),
     "disable_cert_verification": False,
+    "sections": ["veeam_backup_jobs"],
 }
 
 
@@ -64,10 +65,27 @@ def test_certificate_is_verified_against_the_host_name_by_default() -> None:
         Secret(1),
         "--port",
         "9419",
+        "--sections",
+        "veeam_backup_jobs",
         "--cert-server-name",
         "veeam-server",
         "1.2.3.4",
     ]
+
+
+def test_selected_sections_are_passed_as_a_comma_separated_list() -> None:
+    arguments = _arguments(
+        {
+            **BASE_PARAMS,
+            "connection": ("ip_address", None),
+            "sections": ["veeam_backup_jobs", "veeam_license", "veeam_proxies"],
+        }
+    )
+
+    assert "--sections" in arguments
+    assert arguments[arguments.index("--sections") + 1] == (
+        "veeam_backup_jobs,veeam_license,veeam_proxies"
+    )
 
 
 def test_skipping_verification_disables_certificate_verification() -> None:

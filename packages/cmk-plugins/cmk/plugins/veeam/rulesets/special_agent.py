@@ -13,11 +13,35 @@ from cmk.rulesets.v1.form_specs import (
     Dictionary,
     FixedValue,
     Integer,
+    MultipleChoice,
+    MultipleChoiceElement,
     Password,
     String,
     validators,
 )
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
+
+# The section names match the agent's section registry. A service the user
+# selects but the agent cannot fetch terminates the agent (see agent_veeam.py).
+_SECTION_CHOICES = (
+    MultipleChoiceElement(
+        name="veeam_server_info", title=Title("Server information (HW/SW inventory)")
+    ),
+    MultipleChoiceElement(name="veeam_license", title=Title("License")),
+    MultipleChoiceElement(name="veeam_backup_jobs", title=Title("Backup jobs")),
+    MultipleChoiceElement(name="veeam_backups", title=Title("Backups (per protected machine)")),
+    MultipleChoiceElement(name="veeam_replicas", title=Title("Replicas")),
+    MultipleChoiceElement(name="veeam_protection_groups", title=Title("Agent protection groups")),
+    MultipleChoiceElement(name="veeam_managed_servers", title=Title("Managed servers")),
+    MultipleChoiceElement(name="veeam_wan_accelerators", title=Title("WAN accelerators")),
+    MultipleChoiceElement(name="veeam_config_backup", title=Title("Configuration backup")),
+    MultipleChoiceElement(name="veeam_proxies", title=Title("Backup proxies")),
+    MultipleChoiceElement(name="veeam_repositories", title=Title("Backup repositories")),
+    MultipleChoiceElement(
+        name="veeam_scaleout_repositories", title=Title("Scale-out repositories")
+    ),
+    MultipleChoiceElement(name="veeam_restore_points", title=Title("Restore points")),
+)
 
 
 def _parameter_form() -> Dictionary:
@@ -102,6 +126,23 @@ def _parameter_form() -> Dictionary:
                         "certificate, for example when the backup server presents a "
                         "self-signed certificate."
                     ),
+                ),
+            ),
+            "sections": DictElement(
+                required=True,
+                parameter_form=MultipleChoice(
+                    title=Title("Services to fetch"),
+                    help_text=Help(
+                        "Select which data the special agent fetches from the backup "
+                        "server. Deselect services you do not need, for example ones your "
+                        "monitoring account has no permission for. A service that is "
+                        "selected but cannot be fetched makes the agent fail, so that you "
+                        "can correct the selection or the permissions."
+                    ),
+                    elements=_SECTION_CHOICES,
+                    prefill=DefaultValue([element.name for element in _SECTION_CHOICES]),
+                    show_toggle_all=True,
+                    custom_validate=(validators.LengthInRange(min_value=1),),
                 ),
             ),
         },

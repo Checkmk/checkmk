@@ -122,6 +122,17 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         help="Do not verify the server certificate",
     )
 
+    parser.add_argument(
+        "--sections",
+        type=_parse_sections,
+        default=[name for name, _ in SECTIONS],
+        metavar="SECTION,...",
+        help=(
+            "Comma-separated list of sections to fetch (default: all). A selected "
+            "section that cannot be fetched terminates the agent."
+        ),
+    )
+
     parser.add_argument("address", help="Address of the Veeam backup server")
 
     return parser.parse_args(argv)
@@ -509,6 +520,15 @@ SECTIONS: Sequence[Section] = (
 )
 
 
+def _parse_sections(value: str) -> list[str]:
+    """Parse the `--sections` value: a comma-separated list of known section names."""
+    known = {name for name, _ in SECTIONS}
+    selected = value.split(",")
+    if unknown := [name for name in selected if name not in known]:
+        raise argparse.ArgumentTypeError(f"unknown section(s): {', '.join(unknown)}")
+    return selected
+
+
 @report_agent_crashes(AGENT, __version__)
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_arguments(sys.argv[1:] if argv is None else argv)
@@ -525,7 +545,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                 password=resolve_secret_option(args, PASSWORD_OPTION),
             )
             auth.authenticate()
-            write_sections(VeeamClient(api, auth), SECTIONS)
+            wanted = set(args.sections)
+            selected = [section for section in SECTIONS if section[0] in wanted]
+            write_sections(VeeamClient(api, auth), selected)
     except TerminateAgent as exc:
         if args.debug:
             raise

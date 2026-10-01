@@ -55,7 +55,7 @@ def _parse_voltage(v: str) -> float | None:
 def parse_win_cpuinfo(string_table: StringTable) -> _Section:
     section = _Section()
 
-    for key, value in ((k.strip(), v.strip()) for k, v in string_table):
+    for key, value in ((k.strip(), ":".join(v).strip()) for k, *v in string_table if v):
         match key:
             case "NumberOfCores":
                 if value:

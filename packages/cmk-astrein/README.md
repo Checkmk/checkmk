@@ -7,6 +7,7 @@ It was introduced as replacement for pylint. It's current core functionality is 
 
 Astrein enforces code quality rules through specialized checkers:
 
+- **argparse-nargs**: Flags multi-value `nargs` in `add_argument()` calls under `cmk/plugins` (argument injection risk; use `action="append"` instead)
 - **localization**: Validates localization function calls (e.g., `_()`, `Title()`) use literal strings and allowed HTML tags
 - **module-layers**: Enforces architectural boundaries between Checkmk components (e.g., prevents GUI from importing base internals)
 

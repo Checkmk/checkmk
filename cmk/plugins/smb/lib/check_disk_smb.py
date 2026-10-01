@@ -115,7 +115,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         metavar="PORT",
         help="Port to be used to connect to. Some Windows boxes use 139, others 445.",
     )
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--levels",
         type=float,
         nargs=2,

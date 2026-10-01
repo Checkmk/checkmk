@@ -276,7 +276,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--project-workflows-project", nargs=1, action="append", help="The full project name"
     )
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--project-workflows-workflows",
         nargs="+",
         action="append",

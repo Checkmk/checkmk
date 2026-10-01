@@ -12,6 +12,7 @@ py_library(
     name = "library",
     srcs = [
         "cmk/astrein/__init__.py",
+        "cmk/astrein/checker_argparse_nargs.py",
         "cmk/astrein/checker_key_size.py",
         "cmk/astrein/checker_localization.py",
         "cmk/astrein/checker_logging_formatter.py",

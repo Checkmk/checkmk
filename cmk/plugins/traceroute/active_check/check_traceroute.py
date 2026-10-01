@@ -152,7 +152,7 @@ def _parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         metavar="TARGET",
         help="Can be specified either as an IP address or as a domain name.",
     )
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--routers_missing_warn",
         type=str,
         nargs="*",
@@ -160,7 +160,7 @@ def _parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         help="Report WARNING if any of these routers is not used.",
         default=[],
     )
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--routers_missing_crit",
         type=str,
         nargs="*",
@@ -168,7 +168,7 @@ def _parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         help="Report CRITICAL if any of these routers is not used.",
         default=[],
     )
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--routers_found_warn",
         type=str,
         nargs="*",
@@ -176,7 +176,7 @@ def _parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         help="Report WARNING if any of these routers is used.",
         default=[],
     )
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--routers_found_crit",
         type=str,
         nargs="*",

@@ -1305,7 +1305,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         help="date when agent was executed in iso format",
         required=False,
     )
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--services",
         nargs="+",
         action="extend",

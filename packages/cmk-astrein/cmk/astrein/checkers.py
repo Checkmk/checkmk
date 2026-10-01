@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.astrein.checker_argparse_nargs import ArgparseNargsChecker
 from cmk.astrein.checker_key_size import KeySizeUnitTestChecker
 from cmk.astrein.checker_localization import (
     LocalizationChecker,
@@ -27,6 +28,7 @@ from cmk.astrein.framework import ASTVisitorChecker
 def all_checkers() -> dict[str, type[ASTVisitorChecker]]:
     return {
         "abcmeta-metaclass": ABCMetaMetaclassChecker,
+        "argparse-nargs": ArgparseNargsChecker,
         "conftest-import": ConftestImportChecker,
         "html-debug": HTMLDebugChecker,
         "key-size-unit-test": KeySizeUnitTestChecker,

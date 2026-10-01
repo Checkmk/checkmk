@@ -369,7 +369,9 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     prog, description = __doc__.split("\n\n", maxsplit=1)
     parser = argparse.ArgumentParser(prog=prog, description=description)
     parser.add_argument("--debug", action="store_true", help="Debug mode: raise Python exceptions")
+    # astrein: disable=argparse-nargs
     parser.add_argument("--secrets", default=[], nargs="*", help="List of secrets")
+    # astrein: disable=argparse-nargs
     parser.add_argument("--configs", default=[], nargs="*", help="List of configs")
     return parser.parse_args(argv)
 

@@ -398,7 +398,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         help="""Only monitor subscriptions that have the specified TAG.
               To require multiple tags, provide the option more than once.""",
     )
-    group_subscription.add_argument(
+    group_subscription.add_argument(  # astrein: disable=argparse-nargs
         "--subscriptions-require-tag-value",
         default=[],
         metavar=("TAG", "VALUE"),
@@ -448,7 +448,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         help="""Only monitor resources that have the specified TAG.
               To require multiple tags, provide the option more than once.""",
     )
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--require-tag-value",
         default=[],
         metavar=("TAG", "VALUE"),

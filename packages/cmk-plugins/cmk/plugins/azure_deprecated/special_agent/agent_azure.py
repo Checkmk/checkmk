@@ -327,7 +327,7 @@ def parse_arguments(argv: Sequence[str]) -> Args:
         help="""Only monitor resources that have the specified TAG.
               To require multiple tags, provide the option more than once.""",
     )
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--require-tag-value",
         default=[],
         metavar=("TAG", "VALUE"),
@@ -336,7 +336,7 @@ def parse_arguments(argv: Sequence[str]) -> Args:
         help="""Only monitor resources that have the specified TAG set to VALUE.
              To require multiple tags, provide the option more than once.""",
     )
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--explicit-config",
         default=[],
         nargs="*",
@@ -346,7 +346,7 @@ def parse_arguments(argv: Sequence[str]) -> Args:
              If specified, every 'group=<name>' argument starts a new group configuration,
              and every 'resource=<name>' arguments specifies a resource.""",
     )
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--services",
         default=[],
         nargs="*",

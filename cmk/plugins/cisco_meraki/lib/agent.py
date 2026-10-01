@@ -394,7 +394,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument("--cache-networks", type=float, default=36000.0)  # 10 hours
     parser.add_argument("--cache-wireless", type=float, default=1800.0)  # 30 mins
 
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--sections",
         nargs="+",
         choices=OPTIONAL_SECTIONS_CHOICES,
@@ -402,7 +402,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         help="Optional sections to be collected.",
     )
 
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--orgs",
         nargs="+",
         default=[],

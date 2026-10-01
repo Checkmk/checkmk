@@ -157,7 +157,7 @@ def parse_arguments(args: list[str]) -> argparse.Namespace:
         "the host where the Kubernetes rule has been assigned to)",
     )
     parser_add_secret_option(p, long=f"--{TOKEN_OPTION}", help="Token for that user", required=True)
-    p.add_argument(
+    p.add_argument(  # astrein: disable=argparse-nargs
         "--monitored-objects",
         type=MonitoredObject,
         nargs="+",
@@ -224,7 +224,7 @@ def parse_arguments(args: list[str]) -> argparse.Namespace:
         "response from the Kubernetes API.",
     )
     group = p.add_mutually_exclusive_group()
-    group.add_argument(
+    group.add_argument(  # astrein: disable=argparse-nargs
         "--cluster-aggregation-exclude-node-roles",
         nargs="+",
         default=["control-plane", "infra"],

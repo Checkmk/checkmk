@@ -84,7 +84,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         metavar="QUERYPARAMS",
         help="Keys/Values of form fields to be popuplated",
     )
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--levels",
         type=int,
         nargs=2,

@@ -119,7 +119,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         help="Password of user used to connect to the shares",
     )
 
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--patterns",
         type=str,
         nargs="*",

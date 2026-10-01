@@ -1275,7 +1275,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
             "to each individual subquery. (Default is %(default)s seconds)"
         ),
     )
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--fetched-resources",
         type=FetchedResource,
         nargs="+",

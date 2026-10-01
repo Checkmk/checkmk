@@ -54,6 +54,14 @@ VARIABLES:
     - NAME: CHANGED_BAZEL_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '\\.bzl$\\|BUILD\\|WORKSPACE' || true"
 
+    - NAME: CHANGED_THIRDPARTY_MODULES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^bazel/thirdparty/' || true"
+      REPLACE_NEWLINES: true
+
+    - NAME: CHANGED_THIRDPARTY_MODULE_NAMES
+      SH: "echo '${CHANGED_FILES_REL}' | sed -n 's|^bazel/thirdparty/modules/\\([^/]*\\)/.*|\\1|p' | sort -u"
+      REPLACE_NEWLINES: true
+
     - NAME: CHANGED_AGENT_PLUGINS_SRCS
       SH: "echo '${CHANGED_FILES_REL}' | grep 'tests/agent-plugin-unit/sources-list.txt' || true"
       REPLACE_NEWLINES: true
@@ -92,6 +100,17 @@ STAGES:
           done
           bazel mod graph --output=json | jq -e ".. | select(.name? == \"boringssl\")" >"${RESULTS}/results.txt" && exit 1 || true
       RESULT_CHECK_FILE_PATTERN: "results/results.txt"
+
+    # check_thirdparty_modules compares all source.json hashes with the files.
+    # The repository cache would hide a stale hash (it serves the old file by
+    # hash), so the changed modules are then fetched without it; this also
+    # checks the source archive and that the patches apply. Deleted modules
+    # are skipped.
+    - NAME: "Bazel local registry modules"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_THIRDPARTY_MODULES
+      COMMAND: "bazel run //buildscripts/scripts:check_thirdparty_modules &> ${RESULTS}/thirdparty-modules.txt || exit 1; for m in ${CHANGED_THIRDPARTY_MODULE_NAMES}; do [ -d bazel/thirdparty/modules/$m ] || continue; bazel fetch --force --repo_contents_cache= --repository_cache= --repo=@@$m+ &>> ${RESULTS}/thirdparty-modules.txt || exit 1; done; rm ${RESULTS}/thirdparty-modules.txt"
+      TEXT_ON_SKIP: "No local registry modules changed"
+      RESULT_CHECK_FILE_PATTERN: "results/thirdparty-modules.txt"
 
     - NAME: "Bazel sanity check"
       # omdlib/__init__.py is checked in in the repo but then overwritten by bazel. No way to lint the checked in file.

@@ -41,6 +41,11 @@ py_binary(
 )
 
 py_binary(
+    name = "check_thirdparty_modules",
+    srcs = ["check_thirdparty_modules.py"],
+)
+
+py_binary(
     name = "get_distros",
     srcs = ["get_distros.py"],
     deps = [":lib"],
@@ -132,6 +137,7 @@ py_cmk_test(
         requirement("requests"),
         ":assert_build_artifacts",
         ":build-cmk-container",
+        ":check_thirdparty_modules",
         ":collect_mypy_lib",
         ":collect_rust_tests_lib",
         ":get_distros",

@@ -82,9 +82,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument(
         "-m",
         "--metrics",
-        nargs="?",
+        default=None,
         metavar="METRIC_NAME",
-        const="performance_data",
         help="""Add performance data to the output. Store data with metric_name in RRD.""",
     )
     parser.add_argument(
@@ -170,10 +169,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         parser, long=f"--{PASSWORD_OPTION}", help="Password for database access.", required=False
     )
     parser.add_argument(
-        "cmd",
+        "--sql-statement",
+        dest="cmd",
         metavar="SQL-Statement|Procedure",
         type=sql_cmd_piece,
-        nargs="+",
+        required=True,
         help="""Valid SQL-Statement for the selected database.
                              The statement must return at least a number and a
                              string, plus optional performance data.
@@ -186,7 +186,6 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                              output of the SQL-Statement""",
     )
     args = parser.parse_args(argv[1:])
-    args.cmd = " ".join(args.cmd)
 
     # LOGGING
     if args.verbose > 1 and args.dbms == "mssql":

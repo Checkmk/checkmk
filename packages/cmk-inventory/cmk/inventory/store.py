@@ -17,6 +17,7 @@ from typing import Literal, TypedDict
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
 
+from .merging import merge_trees
 from .paths import InventoryPaths, parse_archive_timestamp, TreePath, TreePathGz
 from .serialization import deserialize_tree, SDRawTree, serialize_tree
 from .trees import ImmutableTree, MutableTree
@@ -270,6 +271,18 @@ class InventoryStore:
         tree_path = self.inv_paths.status_data_tree(host_name)
         tree_path.path.unlink(missing_ok=True)
         tree_path.legacy.unlink(missing_ok=True)
+
+    def load_merged_tree(
+        self, *, host_name: HostName, raw_status_data_tree: bytes
+    ) -> ImmutableTree:
+        return merge_trees(
+            self.load_inventory_tree(host_name=host_name),
+            (
+                parse_from_raw_status_data_tree(raw_status_data_tree)
+                if raw_status_data_tree
+                else self.load_status_data_tree(host_name=host_name)
+            ),
+        )
 
     def load_previous_inventory_tree(self, *, host_name: HostName) -> ImmutableTree:
         if tree := load_tree_from_tree_path(self.inv_paths.inventory_tree(host_name)):

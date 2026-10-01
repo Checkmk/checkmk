@@ -7,24 +7,20 @@ import os
 from pathlib import Path
 
 import pytest
-from pytest import MonkeyPatch
 
 import cmk.ccc.store
-import cmk.gui.inventory
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.inventory import (
     get_history,
     load_delta_tree,
     load_latest_delta_tree,
-    load_tree,
     make_filter_choices_from_permitted_paths,
 )
 from cmk.gui.watolib.groups_io import PermittedPath
 from cmk.inventory.filtering import SDFilterChoice
 from cmk.inventory.history import HistoryStore
-from cmk.inventory.serialization import deserialize_tree
-from cmk.inventory.trees import ImmutableTree, SDKey, SDNodeName
+from cmk.inventory.trees import SDKey, SDNodeName
 
 
 @pytest.mark.parametrize(
@@ -119,58 +115,6 @@ def test_make_filter_choices_from_permitted_paths(
     entry: PermittedPath, expected_filter_choice: SDFilterChoice
 ) -> None:
     assert make_filter_choices_from_permitted_paths([entry])[0] == expected_filter_choice
-
-
-@pytest.mark.parametrize(
-    "host_name, raw_status_data_tree, expected_tree",
-    [
-        (
-            None,
-            b"",
-            deserialize_tree({"loaded": "tree"}),
-        ),
-        (
-            HostName("hostname"),
-            b"",
-            deserialize_tree({"loaded": "tree"}),
-        ),
-        (
-            HostName("hostname"),
-            b"",
-            deserialize_tree({"loaded": "tree"}),
-        ),
-        (
-            HostName("hostname"),
-            b"{'deserialized': 'tree'}",
-            deserialize_tree({"deserialized": "tree"}),
-        ),
-    ],
-)
-@pytest.mark.usefixtures("request_context")
-def test_load_tree(
-    monkeypatch: MonkeyPatch,
-    host_name: HostName | None,
-    raw_status_data_tree: bytes,
-    expected_tree: ImmutableTree,
-) -> None:
-    monkeypatch.setattr(
-        cmk.gui.inventory._tree,  # noqa: SLF001
-        "_load_tree_from_file",
-        (
-            lambda *args, **kw: (  # noqa: ARG005
-                deserialize_tree({"loaded": "tree"})
-                if kw["tree_type"] == "status_data"
-                else ImmutableTree()
-            )
-        ),
-    )
-    assert (
-        load_tree(
-            host_name=host_name,
-            raw_status_data_tree=raw_status_data_tree,
-        )
-        == expected_tree
-    )
 
 
 @pytest.mark.usefixtures("request_context")

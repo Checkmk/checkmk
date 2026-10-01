@@ -23,8 +23,7 @@ from cmk.gui.watolib.groups_io import NothingOrChoices, PermittedPath
 from cmk.inventory.delta import ImmutableDeltaTree
 from cmk.inventory.filtering import filter_tree, SDFilterChoice
 from cmk.inventory.history import HistoryEntry, HistoryStore
-from cmk.inventory.merging import merge_trees
-from cmk.inventory.store import InventoryStore, parse_from_raw_status_data_tree
+from cmk.inventory.store import InventoryStore
 from cmk.inventory.trees import ImmutableTree, parse_visible_raw_path, SDKey, SDNodeName
 
 
@@ -51,22 +50,6 @@ def make_filter_choices_from_permitted_paths(
         for entry in permitted_paths
         if entry.get("visible_raw_path")
     ]
-
-
-@request_memoize(maxsize=None)
-def _load_tree_from_file(
-    *, tree_type: Literal["inventory", "status_data"], host_name: HostName | None
-) -> ImmutableTree:
-    """Load data of a host, cache it in the current HTTP request"""
-    if not host_name:
-        return ImmutableTree()
-
-    inv_store = InventoryStore(cmk.utils.paths.omd_root)
-    match tree_type:
-        case "inventory":
-            return inv_store.load_inventory_tree(host_name=host_name)
-        case "status_data":
-            return inv_store.load_status_data_tree(host_name=host_name)
 
 
 @request_memoize()
@@ -145,17 +128,14 @@ def verify_permission(site_id: SiteId | None, host_name: HostName) -> None:
         )
 
 
+@request_memoize(maxsize=None)
 def load_tree(*, host_name: HostName | None, raw_status_data_tree: bytes) -> ImmutableTree:
-    """Load inventory tree from file, status data tree from row,
-    merge these trees and returns the filtered tree"""
-    inventory_tree = _load_tree_from_file(tree_type="inventory", host_name=host_name)
-    status_data_tree = (
-        parse_from_raw_status_data_tree(raw_status_data_tree)
-        if raw_status_data_tree
-        else _load_tree_from_file(tree_type="status_data", host_name=host_name)
-    )
+    if not host_name:
+        return ImmutableTree()
 
-    merged_tree = merge_trees(inventory_tree, status_data_tree)
+    merged_tree = InventoryStore(cmk.utils.paths.omd_root).load_merged_tree(
+        host_name=host_name, raw_status_data_tree=raw_status_data_tree
+    )
     if (filters := _permitted_filter_choices()) is not None:
         return filter_tree(merged_tree, filters)
 

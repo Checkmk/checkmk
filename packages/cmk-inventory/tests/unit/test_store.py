@@ -563,3 +563,39 @@ def test_parse_from_gzipped_rejects_an_unknown_version() -> None:
                 json.dumps({"meta": {"version": "2", "do_archive": True}, "raw_tree": {}}).encode()
             )
         )
+
+
+def _tree_with(key: str, value: str) -> SDRawTree:
+    return SDRawTree(Attributes={"Pairs": {SDKey(key): value}}, Table={}, Nodes={})
+
+
+def _save_inventory_and_status_data_trees(store: InventoryStore, host_name: HostName) -> None:
+    store.save_inventory_tree(
+        host_name=host_name,
+        tree=deserialize_tree(_tree_with("inv", "1")),
+        meta=make_meta(do_archive=False),
+    )
+    store.save_status_data_tree(host_name=host_name, tree=deserialize_tree(_tree_with("file", "2")))
+
+
+def test_load_merged_tree_merges_the_status_data_file(tmp_path: Path) -> None:
+    store = InventoryStore(tmp_path)
+    _save_inventory_and_status_data_trees(store, HostName("hostname"))
+
+    assert store.load_merged_tree(
+        host_name=HostName("hostname"), raw_status_data_tree=b""
+    ) == deserialize_tree(
+        SDRawTree(Attributes={"Pairs": {SDKey("inv"): "1", SDKey("file"): "2"}}, Table={}, Nodes={})
+    )
+
+
+def test_load_merged_tree_prefers_the_raw_status_data_to_the_file(tmp_path: Path) -> None:
+    store = InventoryStore(tmp_path)
+    _save_inventory_and_status_data_trees(store, HostName("hostname"))
+
+    assert store.load_merged_tree(
+        host_name=HostName("hostname"),
+        raw_status_data_tree=json.dumps(_tree_with("raw", "3")).encode(),
+    ) == deserialize_tree(
+        SDRawTree(Attributes={"Pairs": {SDKey("inv"): "1", SDKey("raw"): "3"}}, Table={}, Nodes={})
+    )

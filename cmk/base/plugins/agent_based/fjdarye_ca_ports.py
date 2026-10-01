@@ -42,6 +42,8 @@ def parse_fjdarye_ca_ports(
 
     for ports in string_table:
         for index, mode, read_iops, write_iops, read_mb, write_mb in ports:
+            if not index:
+                continue
             mode_readable = map_modes[mode]
             port = parsed.setdefault(
                 index,

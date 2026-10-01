@@ -62,10 +62,6 @@ def test_parse_fjdarye_ca_ports(
     assert parse_fjdarye_ca_ports(string_table) == parse_result
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash report 0e77dd32-06e9-11f1-9939-005056bdaf9b: KeyError in parse_fjdarye_ca_ports",
-)
 def test_parse_fjdarye_ca_ports_ignores_empty_rows() -> None:
     # One of the two fetched SNMP tables answers with a single row of empty values.
     assert parse_fjdarye_ca_ports(

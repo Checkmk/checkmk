@@ -65,10 +65,6 @@ def test_inventorize_win_cpuinfo(section: wci._Section) -> None:
     ]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash report 64ac090e-b291-11f1-8de1-0050569bb2ad: ValueError in parse_win_cpuinfo",
-)
 def test_inventorize_win_cpuinfo_ignores_foreign_lines() -> None:
     # Another tool on the host writes its own messages into the section.
     section = wci.parse_win_cpuinfo(

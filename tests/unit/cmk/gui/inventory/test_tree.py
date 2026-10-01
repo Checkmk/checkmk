@@ -15,12 +15,13 @@ from cmk.gui.inventory import (
     get_history,
     load_delta_tree,
     load_latest_delta_tree,
+    load_tree,
     make_filter_choices_from_permitted_paths,
 )
 from cmk.gui.watolib.groups_io import PermittedPath
 from cmk.inventory.filtering import SDFilterChoice
 from cmk.inventory.history import HistoryStore
-from cmk.inventory.trees import SDKey, SDNodeName
+from cmk.inventory.trees import ImmutableTree, SDKey, SDNodeName
 
 
 @pytest.mark.parametrize(
@@ -115,6 +116,11 @@ def test_make_filter_choices_from_permitted_paths(
     entry: PermittedPath, expected_filter_choice: SDFilterChoice
 ) -> None:
     assert make_filter_choices_from_permitted_paths([entry])[0] == expected_filter_choice
+
+
+@pytest.mark.usefixtures("request_context")
+def test_load_tree_of_a_row_without_a_host_is_empty() -> None:
+    assert load_tree(host_name=HostName(""), raw_status_data_tree=b"") == ImmutableTree()
 
 
 @pytest.mark.usefixtures("request_context")

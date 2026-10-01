@@ -118,11 +118,11 @@ class RowTableInventory(ABCRowTable):
         if not (self._info_names and (info_name := self._info_names[0])):
             return
 
-        host_name = hostrow.get("host_name")
+        raw_host_name = hostrow["host_name"]
         try:
             table_rows = (
                 load_tree(
-                    host_name=host_name,
+                    host_name=HostName(raw_host_name),
                     raw_status_data_tree=hostrow.get("host_structured_status", b""),
                 )
                 .get_tree(self._inventory_path.path)
@@ -138,7 +138,7 @@ class RowTableInventory(ABCRowTable):
                         "Cannot load HW/SW inventory tree of host %(host_name)s."
                         " Please remove the corrupted file."
                     )
-                    % {"host_name": host_name},
+                    % {"host_name": raw_host_name},
                 )
             )
             return
@@ -158,7 +158,7 @@ class RowTableInventoryHistory(ABCRowTable):
 
     @override
     def _get_rows(self, hostrow: Row) -> Iterable[Row]:
-        hostname: HostName = hostrow["host_name"]
+        hostname = HostName(hostrow["host_name"])
         history, corrupted_history_files = get_history(
             HistoryStore(cmk.utils.paths.omd_root),
             hostname,

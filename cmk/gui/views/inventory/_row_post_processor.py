@@ -7,6 +7,7 @@
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 
+from cmk.ccc.hostaddress import HostName
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -72,7 +73,7 @@ def _add_inventory_data(rows: Rows) -> None:
 
         try:
             row["host_inventory"] = load_tree(
-                host_name=row["host_name"],
+                host_name=HostName(row["host_name"]),
                 raw_status_data_tree=row.get("host_structured_status", b""),
             )
         except Exception as e:

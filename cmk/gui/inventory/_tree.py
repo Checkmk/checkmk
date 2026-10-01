@@ -129,7 +129,7 @@ def verify_permission(site_id: SiteId | None, host_name: HostName) -> None:
 
 
 @request_memoize(maxsize=None)
-def load_tree(*, host_name: HostName | None, raw_status_data_tree: bytes) -> ImmutableTree:
+def load_tree(*, host_name: HostName, raw_status_data_tree: bytes) -> ImmutableTree:
     if not host_name:
         return ImmutableTree()
 

@@ -145,6 +145,8 @@ class TestFindSearchObjectExpressions:
             pytest.param("h:myhost", [("h:", 0)], id="single filter"),
             pytest.param("h:myhost s:CPU", [("h:", 0), (" s:", 8)], id="two filters"),
             pytest.param("hg:mygroup", [("hg:", 0)], id="two letter filter"),
+            pytest.param("hf:hamburg/infra", [("hf:", 0)], id="host folder filter"),
+            pytest.param("sf:hamburg/infra", [("sf:", 0)], id="service folder filter"),
             pytest.param("myhost", [], id="plain query"),
             pytest.param("", [], id="empty query"),
             pytest.param("https://myhost", [], id="url is not read as a service filter"),
@@ -191,6 +193,11 @@ class TestDetermineLivestatusTable:
             pytest.param({"st": ["ok"]}, "services", id="service state"),
             pytest.param({"hg": ["mygroup"]}, "hostgroups", id="host group"),
             pytest.param({"sg": ["mygroup"]}, "servicegroups", id="service group"),
+            pytest.param({"hf": ["hamburg"]}, "hosts", id="host folder"),
+            pytest.param({"sf": ["hamburg"]}, "services", id="service folder"),
+            pytest.param(
+                {"hf": ["hamburg"], "s": ["CPU"]}, "services", id="host folder and service"
+            ),
             pytest.param({"h": ["myhost"], "s": ["CPU"]}, "services", id="host and service"),
             pytest.param(
                 {"sg": ["mygroup"], "h": ["myhost"]},

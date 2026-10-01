@@ -1186,6 +1186,88 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
         return "", url_infos
 
 
+class FolderMatchPlugin(ABCLivestatusMatchPlugin):
+    def __init__(self, livestatus_table: LivestatusTable, name: str) -> None:
+        super().__init__(
+            ["hosts", "services"] if livestatus_table == "hosts" else ["services"],
+            livestatus_table,
+            name,
+        )
+        self._supported_views = {"host", "searchhost", "allservices", "searchsvc"}
+
+    @override
+    def get_match_topic(self) -> str:
+        if self._preferred_livestatus_table == "hosts":
+            return _("Host folder")
+        return _("Service folder")
+
+    @override
+    def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> list[LivestatusColumn]:
+        return ["filename"] if livestatus_table == "hosts" else ["host_filename"]
+
+    @override
+    def get_livestatus_filters(
+        self, livestatus_table: LivestatusTable, used_filters: UsedFilters
+    ) -> LivestatusFilterHeaders:
+        column = self.get_livestatus_columns(livestatus_table)[0]
+        filter_lines = [
+            f"Filter: {column} ~~ ^/wato/{LqSafe.sanitize(self._to_regex(entry))}[^/]*/"
+            for entry in self._entries(used_filters)
+        ]
+
+        if len(filter_lines) > 1:
+            filter_lines.append("Or: %d" % len(filter_lines))
+
+        return "\n".join(filter_lines)
+
+    @override
+    def get_matches(
+        self,
+        for_view: ViewName,
+        row: Row | None,
+        livestatus_table: LivestatusTable,
+        used_filters: UsedFilters,
+        rows: Rows,
+    ) -> Matches:
+        if for_view not in self._supported_views:
+            return None
+
+        if row:
+            if for_view == "host":
+                hostname = row["name"]
+                return hostname, [("host", hostname)]
+            return self._folder_of(row, livestatus_table), [
+                ("host", row["host_name"]),
+                ("service", row["description"]),
+            ]
+
+        if not (entries := self._entries(used_filters)):
+            return None
+        folder_pattern = self._folder_pattern(entries)
+        return folder_pattern, [("wato_folder", f"{folder_pattern}*")]
+
+    def _entries(self, used_filters: UsedFilters) -> list[str]:
+        return [entry for entry in (e.strip("/") for e in used_filters.get(self.name, [])) if entry]
+
+    @staticmethod
+    def _to_regex(entry: str) -> str:
+        return re.escape(entry).replace(r"\*", ".*")
+
+    @staticmethod
+    def _to_view_folder(entry: str) -> str:
+        return re.escape(entry).replace(r"\.", ".").replace(r"\*", "*")
+
+    def _folder_of(self, row: Row, livestatus_table: LivestatusTable) -> str:
+        path: str = row[self.get_livestatus_columns(livestatus_table)[0]]
+        return path.removeprefix("/wato/").rpartition("/")[0]
+
+    def _folder_pattern(self, entries: list[str]) -> str:
+        view_folders = [self._to_view_folder(entry) for entry in entries]
+        if len(view_folders) == 1:
+            return view_folders[0]
+        return "(%s)" % "|".join(view_folders)
+
+
 class ABCLabelMatchPlugin(ABCLivestatusMatchPlugin):
     @staticmethod
     def _input_to_key_value(inpt: str) -> Label:
@@ -1320,6 +1402,8 @@ def register(match_plugin_registry: MatchPluginRegistry) -> None:
     match_plugin_registry.register(HostMatchPlugin(livestatus_field="alias", name="al"))
     match_plugin_registry.register(HostMatchPlugin(livestatus_field="address", name="ad"))
     match_plugin_registry.register(HosttagMatchPlugin())
+    match_plugin_registry.register(FolderMatchPlugin(livestatus_table="hosts", name="hf"))
+    match_plugin_registry.register(FolderMatchPlugin(livestatus_table="services", name="sf"))
     match_plugin_registry.register(HostLabelMatchPlugin())
     match_plugin_registry.register(ServiceLabelMatchPlugin())
     match_plugin_registry.register(MonitorMenuMatchPlugin())

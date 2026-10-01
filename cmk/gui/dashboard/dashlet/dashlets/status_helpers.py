@@ -62,18 +62,6 @@ def _table_query(
     return ["site"] + list(columns), rows
 
 
-def create_host_view_url(context: Mapping[str, str]) -> str:
-    return makeuri_contextless(
-        request,
-        [
-            ("view_name", "host"),
-            ("site", context["site"]),
-            ("host", context["host_name"]),
-        ],
-        filename="view.py",
-    )
-
-
 def create_service_view_url(context: Mapping[str, str]) -> str:
     return makeuri_contextless(
         request,

@@ -5,11 +5,22 @@
 
 
 from abc import ABC
+from collections.abc import Iterable, Mapping
 from typing import Literal, override, Self
 
-from cmk.gui.dashboard.type_defs import StateDashletConfig, StatusDisplay
-from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
+from pydantic_core import ErrorDetails
 
+from cmk.gui.dashboard.type_defs import StateDashletConfig, StatusDisplay
+from cmk.gui.openapi.framework import ApiContext
+from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
+from cmk.gui.type_defs import DashboardEmbeddedViewSpec
+
+from ..contextual_link import (
+    contextual_link_from_internal,
+    contextual_link_to_internal,
+    ContextualLinkSpec,
+    iter_contextual_link_target_errors,
+)
 from ._base import BaseWidgetContent
 
 
@@ -53,13 +64,37 @@ class _BaseStateContent(BaseWidgetContent, ABC):
         description="Show a summary of the state.",
         default_factory=ApiOmitted,
     )
+    contextual_link: ContextualLinkSpec | ApiOmitted = api_field(
+        default_factory=ApiOmitted, description="Where a click on the state leads."
+    )
+
+    @override
+    def configured_contextual_link(self) -> ContextualLinkSpec | ApiOmitted:
+        return self.contextual_link
 
     @override
     def to_internal(self) -> StateDashletConfig:
-        return StateDashletConfig(
+        config = StateDashletConfig(
             type=self.internal_type(),
             status_display=_status_display_to_internal(self.status_display),
             show_summary=ApiOmitted.to_optional(self.show_summary),
+        )
+        if (link := contextual_link_to_internal(self.contextual_link)) is not None:
+            config["contextual_link"] = link
+        return config
+
+    @override
+    def iter_validation_errors(
+        self,
+        location: tuple[str | int, ...],
+        context: ApiContext,
+        *,
+        embedded_views: Mapping[str, DashboardEmbeddedViewSpec],
+    ) -> Iterable[ErrorDetails]:
+        return iter_contextual_link_target_errors(
+            self.contextual_link,
+            location + ("contextual_link",),
+            context.config.user_permissions(),
         )
 
 
@@ -78,6 +113,7 @@ class HostStateContent(_BaseStateContent):
             type="host_state",
             status_display=_status_display_from_internal(config.get("status_display")),
             show_summary=ApiOmitted.from_optional(config.get("show_summary")),
+            contextual_link=contextual_link_from_internal(config.get("contextual_link")),
         )
 
 
@@ -96,4 +132,5 @@ class ServiceStateContent(_BaseStateContent):
             type="service_state",
             status_display=_status_display_from_internal(config.get("status_display")),
             show_summary=ApiOmitted.from_optional(config.get("show_summary")),
+            contextual_link=contextual_link_from_internal(config.get("contextual_link")),
         )

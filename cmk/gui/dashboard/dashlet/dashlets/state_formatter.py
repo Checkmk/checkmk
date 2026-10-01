@@ -5,9 +5,8 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from functools import partial
 
-from cmk.gui.painter.v0.painters import host_state_short, service_state_short
+from cmk.gui.painter.v0.painters import service_state_short
 from cmk.gui.type_defs import Row
 
 
@@ -41,17 +40,3 @@ def state_map(conf: tuple[str, str] | None, row: Row, formatter: StateFormatter)
         "msg": formatter.message_template.format(status_name),
         **style,
     }
-
-
-host_map = partial(
-    state_map,
-    formatter=StateFormatter(
-        "hoststate hstate{}",
-        host_state_short,
-        "{}",
-    ),
-)
-svc_map = partial(
-    state_map,
-    formatter=ServiceStateFormatter(),
-)

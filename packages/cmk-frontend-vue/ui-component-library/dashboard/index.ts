@@ -8,11 +8,13 @@ import { Page } from '@ucl/_ucl/types/page'
 import UclCmkGaugeFigure from './CmkGaugeFigure/UclCmkGaugeFigure.vue'
 import UclCmkKpiStatCard from './CmkKpiStatCard/UclCmkKpiStatCard.vue'
 import UclCmkRankedTable from './CmkRankedTable/UclCmkRankedTable.vue'
+import UclCmkStateFigure from './CmkStateFigure/UclCmkStateFigure.vue'
 import UclCmkStatsFigure from './CmkStatsFigure/UclCmkStatsFigure.vue'
 
 export const pages: Array<Page> = [
   new Page('CmkGaugeFigure', UclCmkGaugeFigure),
   new Page('CmkKpiStatCard', UclCmkKpiStatCard),
   new Page('CmkRankedTable', UclCmkRankedTable),
+  new Page('CmkStateFigure', UclCmkStateFigure),
   new Page('CmkStatsFigure', UclCmkStatsFigure)
 ]

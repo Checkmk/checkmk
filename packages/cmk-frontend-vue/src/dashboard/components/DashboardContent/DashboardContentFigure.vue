@@ -120,7 +120,6 @@ const httpVars: Ref<FilterHTTPVars> = computed(() => {
 // the widget titles arrive, so compare what we would send.
 const httpQuery = computed(() => new URLSearchParams(httpVars.value).toString())
 
-// Resolve figure type for special cases where figure and content type are not the same
 const figureType: Ref<string> = computed(() => {
   // The timelines only reach this component in their bar chart mode; their simple number
   // is a Vue KPI stat card, dispatched in DashboardContent.
@@ -128,17 +127,6 @@ const figureType: Ref<string> = computed(() => {
     return 'timeseries'
   }
   return props.content.type
-})
-const typeMap: Record<string, string> = {
-  host_state: 'state_host',
-  service_state: 'state_service'
-}
-const legacyFigureType: Ref<string> = computed(() => {
-  const newType: string = figureType.value
-  if (newType in typeMap && typeMap[newType]) {
-    return typeMap[newType]
-  }
-  return newType
 })
 
 const updateInterval = 60
@@ -175,7 +163,7 @@ const initializeFigure = () => {
   }
 
   figure = new FigureBase(
-    legacyFigureType.value,
+    figureType.value,
     `#${figureId.value}`,
     dataEndpointUrl.value,
     httpQuery.value,
@@ -246,7 +234,7 @@ onBeforeUnmount(() => {
             {
               'db-content-figure__background': !!general_settings.render_background
             },
-            legacyFigureType
+            figureType
           ]"
           @click.capture="suppressEventOnPublicDashboard"
           @auxclick.capture="suppressEventOnPublicDashboard"

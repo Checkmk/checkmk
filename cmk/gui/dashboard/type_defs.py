@@ -241,6 +241,7 @@ class StatsDashletConfig(DashletConfig):
 class StateDashletConfig(DashletConfig):
     status_display: StatusDisplay
     show_summary: Literal["not_ok"] | None
+    contextual_link: NotRequired[ContextualLinkConfig]
 
 
 class HostStateSummaryDashletConfig(DashletConfig):

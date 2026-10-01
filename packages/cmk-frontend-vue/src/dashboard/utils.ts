@@ -48,8 +48,10 @@ import type {
   NetworkFlowKpiStatCardContent,
   NetworkFlowTopTableContent,
   NetworkFlowTrendChartContent,
+  ObjectState,
   ResponsiveGridWidgetLayouts,
   SingleMetricContent,
+  StateContent,
   Stats,
   StatsContent,
   TimelineContent,
@@ -296,6 +298,18 @@ export const dashboardAPI = {
       await client.POST('/domain-types/dashboard/actions/compute-widget-titles/invoke', {
         ...CONTENT_TYPE_HEADER,
         body: request
+      })
+    )
+  },
+  computeState: async (
+    body: { source: WidgetSource<StateContent> },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<ObjectState>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-state/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
       })
     )
   },

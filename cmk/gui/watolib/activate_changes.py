@@ -137,6 +137,7 @@ from cmk.gui.watolib.config_sync import (
 )
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.host_relations_export import export_host_relations, relations_export_path
+from cmk.gui.watolib.host_relations_export import LOGGER as relations_logger
 from cmk.gui.watolib.hosts_and_folders import (
     collect_all_hosts,
     collect_hosts,
@@ -2091,7 +2092,9 @@ class ActivateChangesManager:
             except Exception:
                 if debug:
                     raise
-                logger.exception("error exporting the host relations, keeping the last ones")
+                relations_logger.exception(
+                    "error exporting the host relations, keeping the last ones"
+                )
         try:
             if hooks.registered("pre-distribute-changes"):
                 hooks.call("pre-distribute-changes", collect_hosts(all_hosts()))

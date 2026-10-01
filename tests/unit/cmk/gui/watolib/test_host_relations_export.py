@@ -7,7 +7,7 @@
 
 import json
 import logging
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from pathlib import Path
 
 import pytest
@@ -149,13 +149,26 @@ def test_activation_exports_the_relations() -> None:
     assert RELATIONS_MACRO in relations_export_path().read_text()
 
 
-@pytest.mark.usefixtures("with_admin_login", "load_config")
-def test_activation_goes_on_when_the_relations_cannot_be_exported() -> None:
+@pytest.fixture
+def unwritable_relations_export() -> Iterator[None]:
     export_file = relations_export_path()
     export_file.mkdir(parents=True)
-    try:
+    yield
+    export_file.rmdir()
+
+
+@pytest.mark.usefixtures("with_admin_login", "load_config", "unwritable_relations_export")
+def test_activation_goes_on_when_the_relations_cannot_be_exported() -> None:
+    ActivateChangesManager()._pre_activate_changes(  # noqa: SLF001
+        SiteConfigurations({}), debug=False
+    )
+
+
+@pytest.mark.usefixtures("with_admin_login", "load_config", "unwritable_relations_export")
+def test_a_failed_export_is_logged_as_host_relations(caplog: pytest.LogCaptureFixture) -> None:
+    with caplog.at_level(logging.ERROR, logger="cmk.web.host_relations"):
         ActivateChangesManager()._pre_activate_changes(  # noqa: SLF001
             SiteConfigurations({}), debug=False
         )
-    finally:
-        export_file.rmdir()
+
+    assert any(record.name == "cmk.web.host_relations" for record in caplog.records)

@@ -47,7 +47,7 @@ from cmk.gui.watolib.config_sync import (
 )
 from cmk.gui.watolib.host_relations import RelatedHost, resolve_all_relations, ResolvedRelations
 
-_LOGGER = logger.getChild("host_relations")
+LOGGER = logger.getChild("host_relations")
 
 
 def relations_export_path() -> Path:
@@ -109,7 +109,7 @@ def export_host_relations(
     """
     resolved = resolve_all_relations(all_hosts)
     written = write_host_relations(export_file_path, resolved)
-    _LOGGER.debug(
+    LOGGER.debug(
         "Host relations export: %(hosts)d host(s) with relations, %(entries)d relation entries, "
         "%(outcome)s %(path)s.",
         {

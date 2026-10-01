@@ -63,3 +63,38 @@ def test_inventorize_win_cpuinfo(section: wci._Section) -> None:
             },
         ),
     ]
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="Crash report 64ac090e-b291-11f1-8de1-0050569bb2ad: ValueError in parse_win_cpuinfo",
+)
+def test_inventorize_win_cpuinfo_ignores_foreign_lines() -> None:
+    # Another tool on the host writes its own messages into the section.
+    section = wci.parse_win_cpuinfo(
+        [
+            ["[AGENTGATEWAY] Agent accepted rewriter-request with status", " 'OK' - 200"],
+            ["[AGENTGATEWAY] Stopping Agent Gateway"],
+            ["Architecture", " 9"],
+            ["DeviceID", " CPU0"],
+            ["Manufacturer", " GenuineIntel"],
+            ["Name", " Intel(R) Xeon(R) Platinum 8168 CPU @ 2.70GHz"],
+            ["NumberOfCores", " 1"],
+            ["NumberOfLogicalProcessors", " 1"],
+        ]
+    )
+    assert list(wci.inventorize_win_cpuinfo(section)) == [
+        Attributes(
+            path=["hardware", "cpu"],
+            inventory_attributes={
+                "arch": "x86_64",
+                "vendor": "intel",
+                "model": "Intel(R) Xeon(R) Platinum 8168 CPU @ 2.70GHz",
+                "cores_per_cpu": 1,
+                "threads_per_cpu": 1,
+                "cpus": 1,
+                "cores": 1,
+                "threads": 1,
+            },
+        ),
+    ]

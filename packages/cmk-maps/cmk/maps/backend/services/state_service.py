@@ -9,10 +9,12 @@ from __future__ import annotations
 import asyncio
 import gc
 import logging
+import re
 import time
 from collections.abc import Collection, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
+from functools import lru_cache
 from typing import TYPE_CHECKING
 
 from cmk.maps.backend.connections.base import FolderTreeData, GeoHost, ServiceRow
@@ -46,12 +48,28 @@ from cmk.maps.backend.services.settings_service import get_daemon_runtime
 from cmk.maps.shared.map_payload import ObjectType
 from cmk.maps.shared.states import CRITICAL_STATES, SEVERITY_RANK, severity_rank
 
+_NUMBER_RUNS = re.compile(r"(\d+)")
+
+
+# The folder tree is sorted on every state tick, over every host, and the names
+# barely change between ticks -- so each key is worked out once.
+@lru_cache(maxsize=1 << 18)
+def natural_key(name: str) -> tuple[int | str, ...]:
+    """Setup's ``cmk.gui.utils.sort.key_natural_sort``, which the daemon cannot import."""
+    is_symbol = not name or not name[0].isalnum()
+    is_number = bool(name) and name[0].isdigit()
+    order = 1 if is_symbol else 2 if is_number else 3
+    return (
+        order,
+        *(int(part) if part.isdecimal() else part for part in _NUMBER_RUNS.split(name.casefold())),
+    )
+
 
 def sort_folder_services(services: list[FolderHostService]) -> None:
-    """Order a foldertree host's services worst-state first, then alphabetical —
+    """Order a foldertree host's services worst-state first, then by name —
     the single ordering contract shared by the lazy expand and the search result
     so the same host's services don't reshuffle depending on how they loaded."""
-    services.sort(key=lambda s: (-severity_rank(s.state), s.name.lower()))
+    services.sort(key=lambda s: (-severity_rank(s.state), natural_key(s.name)))
 
 
 _MONITORING_TYPES: frozenset[str] = frozenset(
@@ -1111,13 +1129,13 @@ def _build_folder_tree(data: FolderTreeData, fv: FolderTreeView) -> FolderTreeNo
         # Display order: a folder's own hosts first, then its subfolders — so it
         # is obvious which hosts belong directly to this folder (e.g. Main's
         # hosts sit right under Main, before the subfolders). Within each group
-        # worst-severity first (problems float up), then alphabetical;
-        # EMPTY/PENDING sink below healthy via the -1 default.
+        # worst-severity first (problems float up), then by name as Setup
+        # orders it; EMPTY/PENDING sink below healthy via the -1 default.
         node.children.sort(
             key=lambda c: (
                 c.kind == "folder",
                 -sev_get(c.state, -1),
-                c.title.lower(),
+                natural_key(c.title),
             )
         )
 

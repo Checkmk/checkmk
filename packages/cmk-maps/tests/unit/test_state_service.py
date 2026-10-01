@@ -95,6 +95,28 @@ def test_sort_folder_services_worst_first_then_alphabetical() -> None:
     assert [s.name for s in services] == ["a-crit", "c-crit", "a-warn", "b-ok"]
 
 
+def test_sort_folder_services_reads_numbers_in_names_as_numbers() -> None:
+    services = [
+        FolderHostService(name="Disk 10", state="OK"),
+        FolderHostService(name="disk 2", state="OK"),
+        FolderHostService(name="Disk 1", state="OK"),
+    ]
+    state_service.sort_folder_services(services)
+    assert [s.name for s in services] == ["Disk 1", "disk 2", "Disk 10"]
+
+
+@pytest.mark.parametrize(
+    "names, expected",
+    [
+        (["10", "2", "1", "heute"], ["1", "2", "10", "heute"]),
+        (["host-10", "Host-9", "host-a"], ["Host-9", "host-10", "host-a"]),
+        (["b", "1", "_a", "~tmp"], ["_a", "~tmp", "1", "b"]),
+    ],
+)
+def test_natural_key_orders_as_setup_does(names: list[str], expected: list[str]) -> None:
+    assert sorted(names, key=state_service.natural_key) == expected
+
+
 @pytest.mark.parametrize(
     "slug, expected",
     [

@@ -62,6 +62,28 @@ def test_parse_fjdarye_ca_ports(
     assert parse_fjdarye_ca_ports(string_table) == parse_result
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="Crash report 0e77dd32-06e9-11f1-9939-005056bdaf9b: KeyError in parse_fjdarye_ca_ports",
+)
+def test_parse_fjdarye_ca_ports_ignores_empty_rows() -> None:
+    # One of the two fetched SNMP tables answers with a single row of empty values.
+    assert parse_fjdarye_ca_ports(
+        [
+            [["", "", "", "", "", ""]],
+            [["0", "11", "14", "22", "7", "1"]],
+        ]
+    ) == {
+        "0": {
+            "mode": "CA",
+            "read_ios": 14.0,
+            "read_throughput": 7.0 * 1024**2,
+            "write_ios": 22.0,
+            "write_throughput": 1.0 * 1024**2,
+        },
+    }
+
+
 @pytest.mark.parametrize(
     # The default parameters don't work when testing
     "section, params, discovery_result",

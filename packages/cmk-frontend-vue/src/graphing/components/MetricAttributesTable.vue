@@ -83,7 +83,7 @@ const rows = computed(() => sortedAttributes(props.attributes))
 }
 
 body[data-theme='facelift'] .graphing-metric-attributes-table {
-  --graphing-attributes-row-hover: var(--ux-theme-4);
+  --graphing-attributes-row-hover: var(--ux-theme-5);
 }
 
 body[data-theme='modern-dark'] .graphing-metric-attributes-table {

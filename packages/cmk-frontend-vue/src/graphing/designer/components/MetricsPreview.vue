@@ -29,6 +29,7 @@ const componentId = useId()
 
 const open = ref(true)
 const expandedNames = ref<string[]>([])
+const hoveredName = ref<string | null>(null)
 
 const lines = computed(() => orderMetricsTopToBottom([...metrics]))
 
@@ -39,6 +40,11 @@ function toggleAttributes(name: string): void {
 /** Guards an expanded line whose series came back without attributes. */
 function showsAttributes(metric: Metric): boolean {
   return hasAttributes(metric) && expandedNames.value.includes(metric.metadata.name)
+}
+
+function onHover(name: string | null): void {
+  hoveredName.value = name
+  emit('hoverMetrics', name === null ? [] : [name])
 }
 
 function attributesId(name: string): string {
@@ -54,8 +60,11 @@ function attributesId(name: string): string {
         <tbody>
           <template v-for="line in lines" :key="line.metadata.name">
             <tr
-              @mouseenter="emit('hoverMetrics', [line.metadata.name])"
-              @mouseleave="emit('hoverMetrics', [])"
+              :class="{
+                'graphing-metrics-preview__line--hovered': hoveredName === line.metadata.name
+              }"
+              @mouseenter="onHover(line.metadata.name)"
+              @mouseleave="onHover(null)"
             >
               <td class="graphing-metrics-preview__swatch-cell">
                 <span
@@ -85,8 +94,11 @@ function attributesId(name: string): string {
             <!-- Kept in the hovered series' region: the attributes describe that one line. -->
             <tr
               v-if="showsAttributes(line)"
-              @mouseenter="emit('hoverMetrics', [line.metadata.name])"
-              @mouseleave="emit('hoverMetrics', [])"
+              :class="{
+                'graphing-metrics-preview__line--hovered': hoveredName === line.metadata.name
+              }"
+              @mouseenter="onHover(line.metadata.name)"
+              @mouseleave="onHover(null)"
             >
               <td />
               <td
@@ -104,10 +116,23 @@ function attributesId(name: string): string {
 </template>
 
 <style scoped>
+.graphing-metrics-preview {
+  --graphing-metrics-preview-line-hover: var(--color-light-blue-0);
+}
+
+body[data-theme='modern-dark'] .graphing-metrics-preview {
+  --graphing-metrics-preview-line-hover: var(--color-dark-blue-90);
+}
+
 .graphing-metrics-preview__table {
   border-collapse: collapse;
   width: 100%;
   margin-top: var(--dimension-4);
+}
+
+/* Direct cells only: the nested attribute table keeps its own row hover. */
+.graphing-metrics-preview__line--hovered > td {
+  background-color: var(--graphing-metrics-preview-line-hover);
 }
 
 .graphing-metrics-preview__swatch-cell {

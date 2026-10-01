@@ -137,7 +137,10 @@ function onRowHover(row: DesignerItem | null): void {
   )
 }
 
+const hoveredSeries = ref<string | null>(null)
+
 function onSeriesHover(row: DesignerItem, metric: Metric | null): void {
+  hoveredSeries.value = metric === null ? null : seriesKey(row.id, metric)
   emit('hoverMetrics', metric === null || !row.visible ? [] : [metric.metadata.name])
 }
 
@@ -214,6 +217,10 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
         >
           <tr
             class="graphing-appearance-table__expanded-row"
+            :class="{
+              'graphing-appearance-table__series--hovered':
+                hoveredSeries === seriesKey(row.id, entry.metric)
+            }"
             @mouseenter="onSeriesHover(row, entry.metric)"
             @mouseleave="onSeriesHover(row, null)"
           >
@@ -245,6 +252,10 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
           </tr>
           <tr
             v-if="showsAttributes(row.id, entry.metric)"
+            :class="{
+              'graphing-appearance-table__series--hovered':
+                hoveredSeries === seriesKey(row.id, entry.metric)
+            }"
             @mouseenter="onSeriesHover(row, entry.metric)"
             @mouseleave="onSeriesHover(row, null)"
           >
@@ -266,6 +277,12 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
 .graphing-appearance-table {
   flex: 0 1 auto;
   min-height: 0;
+
+  --graphing-appearance-table-series-hover: var(--color-light-blue-0);
+}
+
+body[data-theme='modern-dark'] .graphing-appearance-table {
+  --graphing-appearance-table-series-hover: var(--color-dark-blue-90);
 }
 
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
@@ -276,6 +293,12 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
 .graphing-appearance-table__attributes {
   padding: var(--dimension-4) var(--dimension-4) var(--dimension-5) var(--dimension-8);
   background-color: var(--ux-theme-3);
+}
+
+/* Direct cells only: the nested attribute table keeps its own row hover. */
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+.graphing-appearance-table__series--hovered > :deep(td) {
+  background-color: var(--graphing-appearance-table-series-hover);
 }
 
 .graphing-appearance-table__color-swatch {

@@ -77,6 +77,7 @@ const propState = new PanelStateCreator<typeof CmkTabs, 'unmountOnHide'>().creat
           <CmkTab id="tab-3" :disabled="true" class="ucl-cmk-tabs"
             ><CmkIcon name="close" /> Disabled</CmkTab
           >
+          <CmkTab id="tab-4" variant="error" class="ucl-cmk-tabs">Error</CmkTab>
         </template>
 
         <template #tab-contents>
@@ -91,6 +92,10 @@ const propState = new PanelStateCreator<typeof CmkTabs, 'unmountOnHide'>().creat
           <CmkTabContent id="tab-3">
             <CmkHeading type="h3">Disabled</CmkHeading>
             <CmkParagraph>This content is not accessible.</CmkParagraph>
+          </CmkTabContent>
+          <CmkTabContent id="tab-4">
+            <CmkHeading type="h3">Error</CmkHeading>
+            <CmkParagraph>A tab whose content has validation errors.</CmkParagraph>
           </CmkTabContent>
         </template>
       </CmkTabs>
@@ -118,7 +123,7 @@ const propState = new PanelStateCreator<typeof CmkTabs, 'unmountOnHide'>().creat
 
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   > .cmk-icon {
-    margin-right: 16px;
+    margin-right: var(--dimension-3);
   }
 }
 

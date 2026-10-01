@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { render, screen } from '@testing-library/vue'
+import { render, screen, within } from '@testing-library/vue'
 import CmkTabs, { CmkTab, CmkTabContent } from 'cmk-ui-library/components/CmkTabs'
 import { defineComponent, onMounted, ref } from 'vue'
 
@@ -73,4 +73,40 @@ test('keeps a hidden panel mounted when unmountOnHide is off', async () => {
   await openTab('First')
   expect(screen.getByTestId('counter')).toHaveTextContent('1')
   expect(mount).toHaveBeenCalledTimes(1)
+})
+
+function renderErrorTabs() {
+  return render(
+    defineComponent({
+      components: { CmkTabs, CmkTab, CmkTabContent },
+      setup: () => ({ active: ref('fine') }),
+      template: `
+        <CmkTabs v-model="active">
+          <template #tabs>
+            <CmkTab id="fine">Fine</CmkTab>
+            <CmkTab id="broken" variant="error">Broken</CmkTab>
+          </template>
+          <template #tab-contents>
+            <CmkTabContent id="fine">Fine panel</CmkTabContent>
+            <CmkTabContent id="broken">Broken panel</CmkTabContent>
+          </template>
+        </CmkTabs>`
+    })
+  )
+}
+
+test('an error tab leads with an error icon', () => {
+  renderErrorTabs()
+
+  expect(
+    within(screen.getByRole('tab', { name: 'Broken' })).getByRole('img', { hidden: true })
+  ).toBeVisible()
+})
+
+test('a tab without errors shows no icon', () => {
+  renderErrorTabs()
+
+  expect(
+    within(screen.getByRole('tab', { name: 'Fine' })).queryByRole('img', { hidden: true })
+  ).toBeNull()
 })

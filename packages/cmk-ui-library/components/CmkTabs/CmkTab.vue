@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
+import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import { TabsTrigger } from 'reka-ui'
 
 const propsCva = cva('', {
@@ -41,6 +42,13 @@ defineProps<CmkTabProps>()
     class="cmk-tab__li"
     :class="propsCva({ variant })"
   >
+    <CmkMultitoneIcon
+      v-if="variant === 'error'"
+      name="error"
+      :primary-color="{ custom: 'var(--cmk-alert-box-error-icon-color)' }"
+      size="medium"
+      class="cmk-tab__error-icon"
+    />
     <slot />
   </TabsTrigger>
 </template>
@@ -49,35 +57,51 @@ defineProps<CmkTabProps>()
 .cmk-tab__li {
   display: flex;
   flex-direction: row;
+  align-items: center;
+  box-sizing: border-box;
+  height: var(--dimension-9);
   background: var(--ux-theme-0);
-  padding: var(--spacing-half) var(--spacing) !important;
-  border: 1px solid var(--ux-theme-7);
+  padding: 0 var(--dimension-6) !important;
+  border: 1px solid var(--tabs-unselected-border-color);
+  border-right-width: 0;
+  border-bottom-color: var(--tabs-selected-border-color);
   font-weight: var(--font-weight-default);
-  line-height: var(--form-field-height);
-  border-right: 0 solid var(--ux-theme-0);
 
   &:first-of-type {
-    border-top-left-radius: var(--border-radius);
+    border-top-left-radius: var(--dimension-3);
   }
 
   &:last-of-type {
-    border-top-right-radius: var(--border-radius);
-    border-right: 1px solid var(--ux-theme-7);
-  }
-
-  &:hover {
-    cursor: pointer;
-    background: var(--ux-theme-2);
+    border-top-right-radius: var(--dimension-3);
+    border-right-width: 1px;
   }
 
   &:focus-visible {
     outline: none;
-    border: 1px solid var(--success);
+    border-color: var(--success);
+  }
+
+  &:hover:not([data-state='active']) {
+    cursor: pointer;
+    background: var(--tabs-hover-bg-color);
   }
 
   &[data-state='active'] {
-    background: var(--ux-theme-7);
+    height: var(--dimension-10);
+    background: var(--tabs-panel-bg-color);
+    border-right-width: 1px;
+    border-bottom-width: 0;
+    border-top-left-radius: var(--dimension-3);
+    border-top-right-radius: var(--dimension-3);
     font-weight: var(--font-weight-bold);
+  }
+
+  &[data-state='active'].cmk-tab__variant-default {
+    border-color: var(--tabs-selected-border-color);
+  }
+
+  &[data-state='active'] + & {
+    border-left-width: 0;
   }
 
   &[data-disabled] {
@@ -106,8 +130,12 @@ defineProps<CmkTabProps>()
 }
 
 .cmk-tab__variant-error {
-  border-top: 1px solid var(--color-dark-red-50);
-  border-left: 1px solid var(--color-dark-red-50);
-  border-right: 1px solid var(--color-dark-red-50) !important;
+  border-top: 1px solid var(--tabs-error-border-color);
+  border-left: 1px solid var(--tabs-error-border-color);
+  border-right: 1px solid var(--tabs-error-border-color) !important;
+}
+
+.cmk-tab__error-icon {
+  margin-right: var(--dimension-3);
 }
 </style>

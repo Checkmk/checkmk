@@ -23,8 +23,10 @@ defineProps<CmkTabContentProps>()
 <style scoped>
 .cmk-tab-content {
   margin-top: -1px;
-  padding: var(--spacing);
-  border: 1px solid var(--ux-theme-7);
+  padding: var(--dimension-5);
+  background: var(--tabs-panel-bg-color);
+  border-top: 1px solid var(--tabs-selected-border-color);
+  border-radius: 0 var(--dimension-3) var(--dimension-3);
 
   &:focus-visible {
     outline: none;

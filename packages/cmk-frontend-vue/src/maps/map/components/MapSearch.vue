@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue'
@@ -110,19 +111,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
     class="maps-map-search"
     :class="{ 'maps-map-search--open': dropdownOpen, 'maps-map-search--inline': inline }"
   >
-    <svg
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      stroke-width="2"
-      class="maps-map-search__search-icon"
-    >
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 105.62 5.62a7.5 7.5 0 0011.03 11.03z"
-      />
-    </svg>
+    <CmkIcon name="search" size="small" class="maps-map-search__search-icon" />
     <input
       ref="inputRef"
       v-model="local"
@@ -174,17 +163,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
         </li>
       </ul>
       <div class="maps-map-search__info">
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          class="maps-map-search__info-icon"
-        >
-          <circle cx="12" cy="12" r="9" />
-          <line x1="12" y1="11" x2="12" y2="16" />
-          <circle cx="12" cy="8" r="0.5" fill="currentColor" />
-        </svg>
+        <CmkIcon name="info-circle" size="small" class="maps-map-search__info-icon" />
         <span>{{
           _t('Without a prefix all fields are searched. Multiple terms are AND-combined.')
         }}</span>
@@ -225,9 +204,6 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
 
 .maps-map-search__search-icon {
   flex-shrink: 0;
-  width: 12px;
-  height: 12px;
-  color: var(--font-color-dimmed);
 }
 
 .maps-map-search__input {
@@ -350,9 +326,6 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
 
 .maps-map-search__info-icon {
   flex-shrink: 0;
-  width: 14px;
-  height: 14px;
-  color: var(--color-accent, #6ea8fe);
   margin-top: var(--dimension-1);
 }
 </style>

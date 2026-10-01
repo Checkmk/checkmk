@@ -22,6 +22,7 @@ import urllib3
 from pydantic import BaseModel, ValidationError
 
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option, Secret
+from cmk.plugins.veeam.lib import parse_iso8601_epoch
 from cmk.server_side_programs.v1 import HostnameValidationAdapter, report_agent_crashes, Storage
 
 AGENT = "veeam"
@@ -305,12 +306,13 @@ class VeeamClient:
         return response.json()
 
 
-def _get_all(client: VeeamClient, path: str) -> list[object]:
+def _get_all(client: VeeamClient, path: str, limit: int | None = None) -> list[object]:
     """Fetch every page of a `data`/`pagination` endpoint and merge them."""
     items: list[object] = []
     skip = 0
+    page_size = "" if limit is None else f"&limit={limit}"
     while True:
-        page = client.get(f"{path}?skip={skip}")
+        page = client.get(f"{path}?skip={skip}{page_size}")
         if not isinstance(page, dict) or "data" not in page or "pagination" not in page:
             raise RuntimeError(f"Request to {path} did not return a paginated data list")
         batch = page["data"]
@@ -370,6 +372,82 @@ def fetch_list_piggyback(path: str) -> FetchStrategy:
     return _fetch
 
 
+_MALWARE_SEVERITY = {"Clean": 0, "Informative": 1, "Suspicious": 2, "Infected": 3}
+_UNKNOWN_MALWARE_SEVERITY = len(_MALWARE_SEVERITY)
+
+
+def _malware_severity(status: object) -> int:
+    if not isinstance(status, str):
+        return _UNKNOWN_MALWARE_SEVERITY
+    return _MALWARE_SEVERITY.get(status, _UNKNOWN_MALWARE_SEVERITY)
+
+
+def _malware_rollup(points: Sequence[Mapping[str, object]]) -> object:
+    """The worst malware status of all restore points. A missing or unknown status
+    counts as worst, so that it surfaces in the check."""
+    return max(
+        (point.get("malwareStatus") for point in points), key=_malware_severity, default=None
+    )
+
+
+def _newest(points: Sequence[Mapping[str, object]]) -> Mapping[str, object] | None:
+    dated = [
+        (epoch, point)
+        for point in points
+        if isinstance(created := point.get("creationTime"), str)
+        and (epoch := parse_iso8601_epoch(created)) is not None
+    ]
+    return max(dated, key=lambda item: item[0])[1] if dated else None
+
+
+def fetch_restore_points(limit: int = 500) -> FetchStrategy:
+    """One record per backup object, with its restore points reduced to the newest one
+    and a malware status rollup.
+
+    Forwarding every restore point would be far too much output on a mid-sized estate.
+    The restore points carry no field referencing their backup object, so they are
+    matched on name and platform. Fetching them per object
+    (/api/v1/backupObjects/{id}/restorePoints) would be exact, but costs one request
+    per backup object on every run.
+    """
+
+    def _fetch(client: VeeamClient, name: str) -> str:
+        backup_objects = _get_all(client, "/api/v1/backupObjects", limit)
+        points: dict[tuple[object, object], list[Mapping[str, object]]] = {}
+        for point in _get_all(client, "/api/v1/restorePoints", limit):
+            if isinstance(point, dict):
+                points.setdefault((point.get("name"), point.get("platformId")), []).append(point)
+
+        output = f"<<<{name}:sep(0)>>>\n"
+        for backup_object in backup_objects:
+            if not isinstance(backup_object, dict):
+                continue
+            object_points = points.get(
+                (backup_object.get("name"), backup_object.get("platformId")), []
+            )
+            newest = _newest(object_points)
+            record = {
+                "name": backup_object.get("name"),
+                "platformName": backup_object.get("platformName"),
+                "type": backup_object.get("type"),
+                "restorePointsCount": backup_object.get("restorePointsCount"),
+                "lastRestorePoint": (
+                    None
+                    if newest is None
+                    else {
+                        "creationTime": newest.get("creationTime"),
+                        "type": newest.get("type"),
+                        "malwareStatus": newest.get("malwareStatus"),
+                    }
+                ),
+                "malwareStatus": _malware_rollup(object_points),
+            }
+            output += f"{json.dumps(record)}\n"
+        return output
+
+    return _fetch
+
+
 def empty_on_access_denied(fetch: FetchStrategy) -> FetchStrategy:
     """For endpoints that need a higher Veeam role than monitoring requires: a user
     without it gets an empty section, so that no services are discovered."""
@@ -406,6 +484,7 @@ SECTIONS: Sequence[Section] = (
         "veeam_scaleout_repositories",
         fetch_list("/api/v1/backupInfrastructure/scaleOutRepositories"),
     ),
+    ("veeam_restore_points", empty_on_access_denied(fetch_restore_points())),
 )
 
 

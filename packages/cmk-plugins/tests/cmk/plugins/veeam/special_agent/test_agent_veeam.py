@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import socket
 from collections.abc import Iterator
 from http import HTTPStatus
@@ -22,6 +23,7 @@ from cmk.plugins.veeam.special_agent.agent_veeam import (
     fetch_list,
     fetch_list_piggyback,
     fetch_object,
+    fetch_restore_points,
     main,
     TerminateAgent,
     VeeamClient,
@@ -401,6 +403,142 @@ def test_piggyback_section_drops_items_with_no_name(
         '{"name": "web-server-01", "jobName": "Daily"}\n'
         "<<<<>>>>\n"
     )
+
+
+def _restore_point(**overrides: object) -> dict[str, object]:
+    return {
+        "name": "vm-1",
+        "platformId": "p",
+        "creationTime": "2026-10-01T09:00:00+00:00",
+        "type": "Increment",
+        "malwareStatus": "Clean",
+    } | overrides
+
+
+def _reduce_restore_points(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+    points: list[dict[str, object]],
+) -> list[object]:
+    api.get(
+        f"{URL}/api/v1/backupObjects?skip=0&limit=500",
+        json={
+            "data": [
+                {
+                    "id": "obj-1",
+                    "name": "vm-1",
+                    "platformId": "p",
+                    "platformName": "VMware",
+                    "type": "VM",
+                    "restorePointsCount": len(points),
+                }
+            ],
+            "pagination": {"total": 1},
+        },
+    )
+    api.get(
+        f"{URL}/api/v1/restorePoints?skip=0&limit=500",
+        json={"data": points, "pagination": {"total": len(points)}},
+    )
+    write_sections(_client(storage), [("veeam_restore_points", fetch_restore_points())])
+    header, *lines = capsys.readouterr().out.splitlines()
+    assert header == "<<<veeam_restore_points:sep(0)>>>"
+    return [json.loads(line) for line in lines]
+
+
+def test_restore_points_are_reduced_to_one_record_per_backup_object(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert _reduce_restore_points(
+        api,
+        storage,
+        capsys,
+        [_restore_point(type="Full"), _restore_point(creationTime="2026-10-01T10:00:00+00:00")],
+    ) == [
+        {
+            "name": "vm-1",
+            "platformName": "VMware",
+            "type": "VM",
+            "restorePointsCount": 2,
+            "lastRestorePoint": {
+                "creationTime": "2026-10-01T10:00:00+00:00",
+                "type": "Increment",
+                "malwareStatus": "Clean",
+            },
+            "malwareStatus": "Clean",
+        }
+    ]
+
+
+def test_restore_points_newest_is_compared_across_utc_offsets(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    (record,) = _reduce_restore_points(
+        api,
+        storage,
+        capsys,
+        [
+            _restore_point(creationTime="2026-10-01T10:00:00+02:00", type="Full"),
+            _restore_point(creationTime="2026-10-01T09:00:00+00:00", type="Increment"),
+        ],
+    )
+    assert isinstance(record, dict)
+    assert record["lastRestorePoint"]["type"] == "Increment"
+
+
+def test_restore_points_with_unparsable_time_are_not_the_newest(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    (record,) = _reduce_restore_points(
+        api,
+        storage,
+        capsys,
+        [_restore_point(creationTime="garbage", type="Full"), _restore_point(type="Increment")],
+    )
+    assert isinstance(record, dict)
+    assert record["lastRestorePoint"]["type"] == "Increment"
+
+
+def test_restore_points_on_another_platform_are_not_joined(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    (record,) = _reduce_restore_points(
+        api, storage, capsys, [_restore_point(platformId="other-platform")]
+    )
+    assert isinstance(record, dict)
+    assert record["lastRestorePoint"] is None
+    assert record["malwareStatus"] is None
+
+
+@pytest.mark.parametrize(
+    "statuses, expected",
+    [
+        pytest.param(["Clean", "Infected", "Suspicious"], "Infected", id="worst wins"),
+        pytest.param(["Infected", "SomethingNew"], "SomethingNew", id="unknown is worst"),
+        pytest.param(["Infected", None], None, id="missing is worst"),
+    ],
+)
+def test_restore_points_malware_status_rollup(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+    statuses: list[str | None],
+    expected: str | None,
+) -> None:
+    (record,) = _reduce_restore_points(
+        api, storage, capsys, [_restore_point(malwareStatus=status) for status in statuses]
+    )
+    assert isinstance(record, dict)
+    assert record["malwareStatus"] == expected
 
 
 def test_wrong_credentials_are_reported(api: responses.RequestsMock, storage: Storage) -> None:

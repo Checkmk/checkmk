@@ -1,0 +1,27 @@
+title: Veeam: Restore points
+agents: special
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the restore points of a backup object (e.g. a virtual
+ machine) of a Veeam Backup & Replication server, collected via the Veeam
+ special agent. It reports the number of restore points, the age of the
+ newest one, the platform, the object type, the type of the newest restore
+ point and the malware status.
+
+ This check is {CRIT} if the object has no restore point at all, since it
+ cannot be recovered. {WARN} and {CRIT} levels can be set for the age of the
+ newest restore point (default: 30 and 48 hours).
+
+ The malware status is the worst one across all restore points of the
+ object: {OK} if clean or informative, {WARN} if suspicious, {CRIT} if
+ infected and {UNKNOWN} for any other value. This mapping is not
+ configurable.
+
+discovery:
+ One service is created for each backup object reported by the API.
+
+item:
+ The platform and the name of the backup object, e.g. {VMware - vm-1}. The
+ name alone if the platform is unknown.

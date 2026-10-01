@@ -12,7 +12,7 @@
  * only down to the depth the map's settings ask for -- so the tree opens on an
  * overview and is drilled into on demand, rather than dumping a whole site.
  */
-import { type Ref, reactive, ref, watch } from 'vue'
+import { type ComputedRef, type Ref, computed, reactive, ref, watch } from 'vue'
 
 import type { FolderTreeNode } from '@/maps/types/api'
 
@@ -29,6 +29,10 @@ export interface FolderExpansion {
   toggle: (path: string) => void
   expandAll: () => void
   collapseAll: () => void
+  /** Whether every folder is open already, so expanding all would do nothing. */
+  fullyExpanded: ComputedRef<boolean>
+  /** Whether Main alone is open, so collapsing all would do nothing. */
+  fullyCollapsed: ComputedRef<boolean>
 }
 
 function folderPaths(node: FolderTreeNode, found: string[] = []): string[] {
@@ -60,6 +64,12 @@ export function useFolderExpansion(
     }
     node.children.forEach((child) => seed(child, depth + 1, maxDepth))
   }
+
+  // Off the tree as it last arrived rather than the one last seeded: a folder
+  // added deeper down leaves the tree's identity as it was, and would otherwise
+  // be left out of expanding all.
+  const folders = computed(() => (root.value ? folderPaths(root.value) : []))
+  const rootPath = computed(() => root.value?.path ?? null)
 
   function reseed(node: FolderTreeNode): void {
     expanded.clear()
@@ -96,9 +106,23 @@ export function useFolderExpansion(
     }
   })
 
+  // Keyed on ``version`` rather than on the set itself, as everything else
+  // reading the expansion is.
+  const fullyExpanded = computed(() => {
+    void version.value
+    return rootPath.value !== null && folders.value.every((path) => expanded.has(path))
+  })
+  // Main shut is not collapsed: collapsing all reopens it onto the overview.
+  const fullyCollapsed = computed(() => {
+    void version.value
+    return rootPath.value !== null && expanded.size === 1 && expanded.has(rootPath.value)
+  })
+
   return {
     expanded,
     version,
+    fullyExpanded,
+    fullyCollapsed,
     toggle: (path) => {
       if (expanded.has(path)) {
         expanded.delete(path)
@@ -108,17 +132,15 @@ export function useFolderExpansion(
       changed()
     },
     expandAll: () => {
-      if (root.value) {
-        folderPaths(root.value).forEach((path) => expanded.add(path))
-      }
+      folders.value.forEach((path) => expanded.add(path))
       changed()
     },
     collapseAll: () => {
       // Main stays open, so the result is the top-level overview rather than a
       // single tile with everything hidden behind it.
       expanded.clear()
-      if (root.value) {
-        expanded.add(root.value.path)
+      if (rootPath.value !== null) {
+        expanded.add(rootPath.value)
       }
       changed()
     }

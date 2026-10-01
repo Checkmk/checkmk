@@ -13,12 +13,14 @@ scroller, so anything floating would sit on top of the data instead of beside
 it. Being its own band is also what keeps it on a kiosk screen, where the
 header itself is gone.
 
-Every control here is quieter than the search beside it: the two commands are
-plain text and the view switch is Checkmk's toggle group at its small size.
+Every control here is quieter than the search beside it: Checkmk's icon
+buttons and toggle group at their small size.
 Giving all of them the search's weight would leave the bar shouting its own
 chrome at the operator instead of the map's state.
 -->
 <script setup lang="ts">
+import CmkButton from 'cmk-ui-library/components/CmkButton'
+import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkToggleButtonGroup from 'cmk-ui-library/components/CmkToggleButtonGroup.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
@@ -47,6 +49,12 @@ const props = defineProps<{
   problemsOnly: boolean
   /** A wall display, which is pinned to the treemap and has no view to choose. */
   kiosk: boolean
+  /** Whether a text search is on, which opens every folder on the way to a
+   *  match by itself. */
+  searching: boolean
+  /** Whether expanding, or collapsing, all would change anything. */
+  canExpandAll: boolean
+  canCollapseAll: boolean
 }>()
 
 const emit = defineEmits<{
@@ -66,6 +74,12 @@ const healthy = computed(() =>
     0,
     props.summary.hosts - Object.values(props.summary.counts).reduce((sum, n) => sum + n, 0)
   )
+)
+
+// A search opens every folder on the way to a match, so neither button has
+// anything to act on until it is cleared -- which the operator is told.
+const searchingHint = computed(() =>
+  props.searching ? _t('Clear the search to open and close folders yourself') : undefined
 )
 
 const modes = computed<{ label: TranslatedString; value: FolderTreeMode }[]>(() => [
@@ -131,15 +145,32 @@ function selectMode(value: string): void {
       />
     </span>
 
-    <!-- What is drawn, and how: these wrap together too. -->
-    <span class="maps-folder-tree-toolbar__group">
-      <button type="button" class="maps-folder-tree-toolbar__command" @click="emit('expand-all')">
-        {{ _t('Expand all') }}
-      </button>
-      <button type="button" class="maps-folder-tree-toolbar__command" @click="emit('collapse-all')">
-        {{ _t('Collapse all') }}
-      </button>
-
+    <!-- The view switch rightmost, as in Checkmk. -->
+    <span class="maps-folder-tree-toolbar__group maps-folder-tree-toolbar__group--view">
+      <!-- Disabled rather than hidden where they would do nothing, so the
+           other one does not slide under a second click. -->
+      <CmkButton
+        variant="text"
+        size="iconOnly"
+        :aria-label="_t('Expand all')"
+        :disabled="searching || !canExpandAll"
+        :disabled-reason="searchingHint"
+        :title="_t('Expand all folders')"
+        @click="emit('expand-all')"
+      >
+        <CmkMultitoneIcon name="chevron-down" primary-color="font" size="small" />
+      </CmkButton>
+      <CmkButton
+        variant="text"
+        size="iconOnly"
+        :aria-label="_t('Collapse all')"
+        :disabled="searching || !canCollapseAll"
+        :disabled-reason="searchingHint"
+        :title="_t('Collapse all folders except Main')"
+        @click="emit('collapse-all')"
+      >
+        <CmkMultitoneIcon name="chevron-up" primary-color="font" size="small" />
+      </CmkButton>
       <CmkToggleButtonGroup
         v-if="!kiosk"
         role="group"
@@ -184,6 +215,10 @@ function selectMode(value: string): void {
   min-width: 0;
 }
 
+.maps-folder-tree-toolbar__group--view {
+  margin-left: var(--dimension-4);
+}
+
 .maps-folder-tree-toolbar__summary {
   display: inline-flex;
   align-items: center;
@@ -207,25 +242,5 @@ function selectMode(value: string): void {
 .maps-folder-tree-toolbar__truncated {
   font-weight: var(--font-weight-bold);
   color: var(--color-state-warning);
-}
-
-/* A command, not a link: the same ghost treatment as the icon buttons in the
-   header above, so the search stays the only framed control here. */
-.maps-folder-tree-toolbar__command {
-  height: 24px;
-  padding: 0 var(--dimension-4);
-  font-size: var(--font-size-normal);
-  font-weight: var(--font-weight-default);
-  color: var(--font-color-dimmed);
-  background: none;
-  border: 0;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.maps-folder-tree-toolbar__command:hover {
-  color: var(--font-color);
-  background: var(--input-hover-bg-color);
 }
 </style>

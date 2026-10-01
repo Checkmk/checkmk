@@ -209,6 +209,85 @@ describe('FolderTreeMapView (list mode)', () => {
     expect(within(main).queryByTitle('Down')).toBeNull()
   })
 
+  it('offers expanding and collapsing all only where it would change something', async () => {
+    const user = userEvent.setup()
+    const { rerender } = renderTree({
+      tree: aFolderNode({
+        path: '/main',
+        title: 'Main',
+        kind: 'folder',
+        host_count: 1,
+        children: [
+          aFolderNode({
+            path: '/main/rack',
+            title: 'rack',
+            kind: 'folder',
+            host_count: 1,
+            children: [aFolderNode({ path: '/main/rack/web-01', title: 'web-01', kind: 'host' })]
+          })
+        ]
+      })
+    })
+    const expandAll = await screen.findByRole('button', { name: 'Expand all' })
+    const collapseAll = screen.getByRole('button', { name: 'Collapse all' })
+    expect(collapseAll).toBeDisabled()
+
+    await user.click(expandAll)
+    await waitFor(() => expect(expandAll).toBeDisabled())
+    expect(collapseAll).toBeEnabled()
+
+    // A search opens every folder on the way to a match by itself; the button
+    // stays focusable so its tooltip can say why.
+    await rerender({ needle: 'h:web' })
+    await waitFor(() => expect(collapseAll).toHaveAttribute('aria-disabled', 'true'))
+    expect(collapseAll).toHaveAccessibleDescription(
+      'Clear the search to open and close folders yourself'
+    )
+  })
+
+  it('expands a folder added deep down when expanding all', async () => {
+    const user = userEvent.setup()
+    const rack = (children: FolderTreeNode[]) =>
+      aFolderNode({ path: '/main/rack', title: 'rack', kind: 'folder', host_count: 1, children })
+    const main = (children: FolderTreeNode[]) =>
+      aFolderNode({ path: '/main', title: 'Main', kind: 'folder', host_count: 1, children })
+    const web = aFolderNode({ path: '/main/rack/web-01', title: 'web-01', kind: 'host' })
+    const { services } = renderTree({ tree: main([rack([web])]) })
+    const expandAll = await screen.findByRole('button', { name: 'Expand all' })
+    await user.click(expandAll)
+    await waitFor(() => expect(expandAll).toBeDisabled())
+
+    // Main keeps its one child, so this is the same tree with a folder more.
+    services.states.folderTree.value = markRaw(
+      main([
+        rack([
+          web,
+          aFolderNode({
+            path: '/main/rack/row',
+            title: 'row',
+            kind: 'folder',
+            host_count: 1,
+            children: [aFolderNode({ path: '/main/rack/row/db-01', title: 'db-01', kind: 'host' })]
+          })
+        ])
+      ])
+    )
+    await waitFor(() => expect(expandAll).toBeEnabled())
+    expect(screen.queryByText('db-01')).not.toBeInTheDocument()
+    await user.click(expandAll)
+    expect(await screen.findByText('db-01')).toBeInTheDocument()
+  })
+
+  it('offers collapsing all once Main itself is shut', async () => {
+    const user = userEvent.setup()
+    renderTree()
+    const collapseAll = await screen.findByRole('button', { name: 'Collapse all' })
+    expect(collapseAll).toBeDisabled()
+
+    await user.click(screen.getByRole('button', { name: 'Collapse' }))
+    await waitFor(() => expect(collapseAll).toBeEnabled())
+  })
+
   it('does not call an empty search result all OK', async () => {
     const { rerender } = renderTree()
     await waitForRows()

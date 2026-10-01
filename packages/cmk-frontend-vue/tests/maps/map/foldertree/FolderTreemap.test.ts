@@ -5,7 +5,7 @@
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import FolderTreemap from '@/maps/map/foldertree/components/FolderTreemap.vue'
 import { type FolderQuery, parseFolderQuery } from '@/maps/map/foldertree/filter'
@@ -86,7 +86,9 @@ function renderTreemap(needle: string) {
         version: ref(0),
         toggle: () => {},
         expandAll: () => {},
-        collapseAll: () => {}
+        collapseAll: () => {},
+        fullyExpanded: computed(() => false),
+        fullyCollapsed: computed(() => false)
       },
       showServices: true,
       servicesByHost: services(),

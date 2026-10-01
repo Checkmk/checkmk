@@ -5,16 +5,9 @@
 
 # mypy: disable-error-code="no-untyped-call"
 
-import pytest
-
 from cmk.base.legacy_checks.fireeye_mail import check_fireeye_mail_received
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason="Crash report b0d7751e-242d-11f0-b619-005056b5fc62: ValueError in check_fireeye_mail_received",
-)
 def test_check_fireeye_mail_received_without_time_window() -> None:
     # The appliance reports an unset statistics window together with zero mails.
     info = [["0"] * 13 + ["00/00/00 00:00:00", "00/00/00 00:00:00", "0"]]
@@ -25,5 +18,18 @@ def test_check_fireeye_mail_received_without_time_window() -> None:
             3,
             "Cannot compute rate: got time window '00/00/00 00:00:00' to"
             " '00/00/00 00:00:00' (expected MM/DD/YY HH:MM:SS)",
+        ),
+    ]
+
+
+def test_check_fireeye_mail_received_with_empty_time_window() -> None:
+    info = [["0"] * 13 + ["04/06/17 12:01:04", "04/06/17 12:01:04", "0"]]
+
+    assert list(check_fireeye_mail_received(None, {}, info)) == [
+        (0, "Mails received between 04/06/17 12:01:04 and 04/06/17 12:01:04: 0"),
+        (
+            3,
+            "Cannot compute rate: time window '04/06/17 12:01:04' to"
+            " '04/06/17 12:01:04' is empty",
         ),
     ]

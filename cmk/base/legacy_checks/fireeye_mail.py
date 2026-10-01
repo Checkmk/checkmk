@@ -277,8 +277,19 @@ check_info["fireeye_mail.statistics"] = LegacyCheckDefinition(
 def check_fireeye_mail_received(_no_item, params, info):
     start, end, received = info[0][13:16]
     yield 0, f"Mails received between {start} and {end}: {received}"
-    start_timestamp = time.mktime(time.strptime(start, "%m/%d/%y %H:%M:%S"))
-    end_timestamp = time.mktime(time.strptime(end, "%m/%d/%y %H:%M:%S"))
+    try:
+        start_timestamp = time.mktime(time.strptime(start, "%m/%d/%y %H:%M:%S"))
+        end_timestamp = time.mktime(time.strptime(end, "%m/%d/%y %H:%M:%S"))
+    except ValueError:
+        yield (
+            3,
+            f"Cannot compute rate: got time window '{start}' to '{end}'"
+            " (expected MM/DD/YY HH:MM:SS)",
+        )
+        return
+    if end_timestamp <= start_timestamp:
+        yield 3, f"Cannot compute rate: time window '{start}' to '{end}' is empty"
+        return
     rate = float(received) / (end_timestamp - start_timestamp)
     yield check_levels(rate, "mail_received_rate", params.get("rate"), unit="/s", infoname="Rate")
 

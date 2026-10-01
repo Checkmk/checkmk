@@ -7,9 +7,7 @@
 from collections.abc import Callable, Mapping
 from typing import Literal, NotRequired, override, TypedDict
 
-from cmk.utils.password_store import (  # astrein: disable=cmk-module-layer-violation
-    extract_formspec_password,
-)
+from cmk.utils.password_store import extract_formspec_password
 
 type _RulesetProxySpec = tuple[
     Literal["cmk_postprocessed"],

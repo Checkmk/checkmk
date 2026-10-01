@@ -17,11 +17,7 @@ import pytest
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 from cmk.ccc import tty
-
-# TODO: Can we remove the layer violation suppression?
-from cmk.checkengine.plugins import (  # astrein: disable=cmk-module-layer-violation
-    AgentBasedPlugins,
-)
+from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.livestatus_client.testing import (
     mock_livestatus_communication,
     MockLiveStatusConnection,
@@ -151,7 +147,7 @@ def clear_caches_per_function() -> Generator[None]:
 @pytest.fixture(scope="session")
 def agent_based_plugins(tmp_path_factory: pytest.TempPathFactory) -> Generator[AgentBasedPlugins]:
     # Local import to have faster pytest initialization
-    from cmk.base import config  # astrein: disable=cmk-module-layer-violation
+    from cmk.base import config
 
     plugins = config.load_all_plugins()
     assert not plugins.errors

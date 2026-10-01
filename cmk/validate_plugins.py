@@ -28,7 +28,7 @@ from cmk.checkengine.plugin_backend import (  # astrein: disable=cmk-module-laye
 )
 
 # TODO: Remove suppression for layer violation?
-from cmk.checkengine.plugins import (  # astrein: disable=cmk-module-layer-violation  # astrein: disable=cmk-module-layer-violation
+from cmk.checkengine.plugins import (  # astrein: disable=cmk-module-layer-violation
     AgentBasedPlugins,
     CheckPlugin,
     InventoryPlugin,

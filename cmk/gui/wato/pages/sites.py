@@ -187,7 +187,7 @@ class StatusHostFormSpecAdapter(FormSpecAdapter[tuple[SiteId, str] | None, Casca
     def form_spec(self) -> CascadingSingleChoice:
         status_host_docu_url = "https://checkmk.com/checkmk_multisite_statushost.html"
         site_elements: list[SingleChoiceElementExtended[str]] = [
-            SingleChoiceElementExtended(  # astrein: disable=localization-checker
+            SingleChoiceElementExtended(
                 name=str(sk),
                 title=Title(si.get("alias", sk)),  # astrein: disable=localization-checker
             )
@@ -986,7 +986,7 @@ class ModeEditBrokerConnection(WatoMode):
 
     def _basic_elements(self, config: Config) -> dict[str, DictElement]:
         replicated_sites_elements: list[SingleChoiceElementExtended[str]] = [
-            SingleChoiceElementExtended(  # astrein: disable=localization-checker
+            SingleChoiceElementExtended(
                 name=str(sk),
                 title=Title(si.get("alias", sk)),  # astrein: disable=localization-checker
             )

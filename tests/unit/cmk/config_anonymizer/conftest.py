@@ -11,7 +11,7 @@ import pytest
 from flask import Flask
 from pytest_mock import MockerFixture
 
-from cmk.base import config  # astrein: disable=cmk-module-layer-violation
+from cmk.base import config
 from cmk.ccc.version import edition
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.utils import paths

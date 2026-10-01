@@ -507,7 +507,7 @@ class SiteManagement:
     ) -> List[tuple[str, object]]:
         """Editable list of LDAP/SAML connection picks (the ``"list"`` form)."""
         ldap_elements = [
-            SingleChoiceElementExtended(  # astrein: disable=localization-checker
+            SingleChoiceElementExtended(
                 name=id_,
                 title=Title(label),  # astrein: disable=localization-checker
             )
@@ -526,7 +526,7 @@ class SiteManagement:
         ]
         if saml_choices is not None:
             saml_elements = [
-                SingleChoiceElementExtended(  # astrein: disable=localization-checker
+                SingleChoiceElementExtended(
                     name=id_,
                     title=Title(label),  # astrein: disable=localization-checker
                 )
@@ -598,7 +598,7 @@ class SiteManagement:
                         )
                     ],
                     elements=[
-                        MultipleChoiceElementExtended(  # astrein: disable=localization-checker
+                        MultipleChoiceElementExtended(
                             name=ident,
                             title=Title(label),  # astrein: disable=localization-checker
                         )

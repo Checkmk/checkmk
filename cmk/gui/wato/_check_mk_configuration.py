@@ -13,7 +13,7 @@ from typing import Any, Literal, override
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition
-from cmk.checkengine.snmplib import SNMPBackendEnum  # astrein: disable=cmk-module-layer-violation
+from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.form_specs import create_validation_error_for_mk_user_error

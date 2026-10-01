@@ -20,14 +20,14 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.user import UserId
-from cmk.ec.config import (  # astrein: disable=cmk-module-layer-violation
+from cmk.ec.config import (
     ECRulePackSpec,
     EventLimit,
     Rule,
     ServiceLevel,
     State,
 )
-from cmk.gui.watolib.site_changes import ChangeSpec  # astrein: disable=cmk-module-layer-violation
+from cmk.gui.watolib.site_changes import ChangeSpec
 from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)

@@ -867,7 +867,7 @@ def _excluded_sections() -> List[_NamedOption]:
                         elements=[
                             MultipleChoiceElement(
                                 name=name,
-                                title=title,  # astrein: disable=localization-checker
+                                title=title,
                             )
                             for name, title in _oracle_sections_to_exclude()
                         ],

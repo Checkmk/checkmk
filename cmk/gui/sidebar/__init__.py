@@ -21,7 +21,7 @@ from typing import Any, override
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
-from cmk.gui import pagetypes, sites
+from cmk.gui import hooks, pagetypes, sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.dashboard import DashletRegistry
@@ -524,6 +524,8 @@ class SidebarRenderer:
             )
         html.open_div(id_="content_area")
         html._main_navigation_open = True  # noqa: SLF001
+        if not nav.kiosk:
+            hooks.call("content-area-started")
 
     def render_main_navigation_close(self) -> None:
         """Close the page started by :meth:`render_main_navigation_open`.

@@ -20,7 +20,7 @@ from flask import current_app, session
 
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
-from cmk.gui import log
+from cmk.gui import hooks, log
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.dynamic_icon import resolve_icon_name
 from cmk.gui.exceptions import MKUserError
@@ -468,6 +468,7 @@ class HTMLGenerator(HTMLWriter):
             enable_page_menu_entry(self, "inline_help")
         self.write_final_javascript()
         if self._main_navigation_open:
+            hooks.call("content-area-ended")
             self.close_div()  # #content_area
             self._main_navigation_open = False
         self.close_body()

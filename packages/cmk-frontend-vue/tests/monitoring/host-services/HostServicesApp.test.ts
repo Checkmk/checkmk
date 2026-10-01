@@ -731,7 +731,7 @@ test('shows the columns the URL a link arrived on names, and asks for their fiel
   )
 })
 
-test('names the timestamp columns by when they happened once they show a point in time', async () => {
+test('keeps the age names of the timestamp columns when they show a point in time', async () => {
   window.history.replaceState(
     null,
     '',
@@ -741,9 +741,8 @@ test('names the timestamp columns by when they happened once they show a point i
   renderApp()
   await screen.findByText('Total rows: 1')
 
-  expect(screen.getByRole('columnheader', { name: 'Last state change' })).toBeInTheDocument()
-  expect(screen.getByRole('columnheader', { name: 'Last check' })).toBeInTheDocument()
-  expect(screen.queryByRole('columnheader', { name: 'State age' })).not.toBeInTheDocument()
+  expect(screen.getByRole('columnheader', { name: 'State age' })).toBeInTheDocument()
+  expect(screen.getByRole('columnheader', { name: 'Check age' })).toBeInTheDocument()
 })
 
 test('falls back to the default ordering when the URL names an unsortable column', async () => {

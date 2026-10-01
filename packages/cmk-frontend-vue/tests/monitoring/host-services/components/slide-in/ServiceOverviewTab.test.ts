@@ -90,24 +90,11 @@ describe('ServiceOverviewTab', () => {
     expect(container.textContent).toContain('load: 3.1')
   })
 
-  it('names relative timestamps as ages, and explains them on hover', () => {
-    render(ServiceOverviewTab, {
-      props: {
-        displayOptions: { ...DISPLAY_OPTIONS, timestampFormat: 'rel' },
-        data: makeOverview()
-      }
-    })
+  it('names the timestamps as ages even when they show a point in time', () => {
+    render(ServiceOverviewTab, { props: { displayOptions: DISPLAY_OPTIONS, data: makeOverview() } })
 
     expect(screen.getByText('Check age:')).toHaveAttribute('title', 'Age of the check')
     expect(screen.getByText('State age:')).toHaveAttribute('title', 'Age of the state')
-  })
-
-  it('names timestamps shown as a point in time by when they happened', () => {
-    render(ServiceOverviewTab, { props: { displayOptions: DISPLAY_OPTIONS, data: makeOverview() } })
-
-    expect(screen.getByText('Last check:')).toBeInTheDocument()
-    expect(screen.getByText('Last state change:')).toBeInTheDocument()
-    expect(screen.queryByText('Check age:')).not.toBeInTheDocument()
   })
 
   it('dashes out the next check of a passive service', () => {

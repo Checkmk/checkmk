@@ -27,7 +27,6 @@ import {
   readDisplayOptionsFromUrl,
   seedDisplayOptions
 } from '@/monitoring/shared/displayOptionsState/urlState'
-import { withTimestampHeaders } from '@/monitoring/shared/timestampLabels'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 
 import MonitoringHeaderActions from '../shared/components/MonitoringHeaderActions.vue'
@@ -212,12 +211,7 @@ const displayOptions = usePersistentRef(
   (stored) => seedDisplayOptions(initialDisplayOptions, sanitizeDisplayOptions(stored))
 )
 
-const tableColumns = computed(() =>
-  withTimestampHeaders(
-    sizeModeColumn(columns, modeColumnSize.value),
-    displayOptions.value.timestampFormat
-  )
-)
+const tableColumns = computed(() => sizeModeColumn(columns, modeColumnSize.value))
 
 const toolbar = useTemplateRef<{ focus: () => void }>('toolbar')
 

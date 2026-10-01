@@ -79,19 +79,9 @@ test('leads the counts of a relation to the related host, not to the one being s
   )
 })
 
-test('names relative timestamps as ages, and explains them on hover', () => {
-  render(HostOverviewTab, {
-    props: { data: makeData(), displayOptions: { ...DISPLAY_OPTIONS, timestampFormat: 'rel' } }
-  })
+test('names the timestamps as ages even when they show a point in time', () => {
+  render(HostOverviewTab, { props: { data: makeData(), displayOptions: DISPLAY_OPTIONS } })
 
   expect(screen.getByText('Check age')).toHaveAttribute('title', 'Age of the check')
   expect(screen.getByText('State age')).toHaveAttribute('title', 'Age of the state')
-})
-
-test('names timestamps shown as a point in time by when they happened', () => {
-  render(HostOverviewTab, { props: { data: makeData(), displayOptions: DISPLAY_OPTIONS } })
-
-  expect(screen.getByText('Last check')).toBeInTheDocument()
-  expect(screen.getByText('Last state change')).toBeInTheDocument()
-  expect(screen.queryByText('Check age')).not.toBeInTheDocument()
 })

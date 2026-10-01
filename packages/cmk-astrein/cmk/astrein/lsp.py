@@ -192,20 +192,36 @@ def get_diagnostics(
         logger.warning("repo_root not set, skipping validation")
         return None
 
-    factories = _bind_configs(list(all_checkers().values()), repo_root)
+    checker_classes = list(all_checkers().values())
+    factories = _bind_configs(checker_classes, repo_root)
+    report_unknown_suppressions = len(factories) == len(checker_classes)
     errors: list[CheckerError] = []
     try:
         if source is not None:
             with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as tmp:
                 tmp.write(source)
                 tmp.flush()
-                errors.extend(run_checkers(Path(tmp.name), repo_root, factories))
+                errors.extend(
+                    run_checkers(
+                        Path(tmp.name),
+                        repo_root,
+                        factories,
+                        report_unknown_suppressions=report_unknown_suppressions,
+                    )
+                )
         else:
             if not file_path.exists():
                 logger.warning("File does not exist: %(file_path)s", {"file_path": file_path})
                 return None
 
-            errors.extend(run_checkers(file_path, repo_root, factories))
+            errors.extend(
+                run_checkers(
+                    file_path,
+                    repo_root,
+                    factories,
+                    report_unknown_suppressions=report_unknown_suppressions,
+                )
+            )
 
         return [_checker_error_to_diagnostic(e) for e in errors]
 

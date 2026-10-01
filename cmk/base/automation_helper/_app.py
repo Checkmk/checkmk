@@ -133,7 +133,7 @@ def make_application(
             engine=engine,
             omd_root=omd_root,
             reload_config=reload_config,
-            last_reload_at=0,
+            last_reload_at=float("-inf"),
             changes_cache=cache,
         ),
         log_manager=LoggingManager(log_level=logging.NOTSET),

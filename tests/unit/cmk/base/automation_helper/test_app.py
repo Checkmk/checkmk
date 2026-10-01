@@ -276,6 +276,30 @@ def test_reloaded_configuration_reaches_the_engine(mocker: MockerFixture, cache:
     assert [raw_config for _omd_root, raw_config in engine.updates] == [initial, reloaded]
 
 
+def test_failed_first_load_is_retried_and_reported(mocker: MockerFixture, cache: Cache) -> None:
+    raw_config = mocker.MagicMock()
+    engine = _RecordingAutomationEngine()
+    with _make_test_client(
+        engine,
+        cache,
+        mocker.MagicMock(
+            side_effect=[RuntimeError("broken config"), RuntimeError("broken config"), raw_config]
+        ),
+        # Only the automations may reload here; no change is ever recorded in the cache.
+        reloader_config=ReloaderConfig(active=False, poll_interval=1.0, cooldown_interval=5.0),
+    ) as client:
+        first = AutomationResponse.model_validate(
+            client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD).json()
+        )
+        second = AutomationResponse.model_validate(
+            client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD).json()
+        )
+
+    assert first.stderr == "Error reloading configuration: broken config"
+    assert second.serialized_result_or_error_code == "dummy_serialized"
+    assert [raw_config for _omd_root, raw_config in engine.updates] == [raw_config]
+
+
 def test_health_check(cache: Cache) -> None:
     with _make_test_client(
         _DummyAutomationEngineSuccess(),

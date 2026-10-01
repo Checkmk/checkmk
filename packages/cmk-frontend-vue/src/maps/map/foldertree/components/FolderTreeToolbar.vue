@@ -116,36 +116,41 @@ function selectMode(value: string): void {
     <!-- The two filters side by side, and the input holding nothing but input:
          what to look for, and whether to look at healthy objects at all, are
          one thought in two controls. -->
-    <MapSearch
-      inline
-      :model-value="filterNeedle"
-      :placeholder="_t('Search folders, hosts, services…')"
-      :exclude-prefixes="['hg', 'sg', 'id']"
-      @update:model-value="emit('update:filterNeedle', $event)"
-    />
-    <ProblemsOnlyToggle
-      :model-value="problemsOnly"
-      :title="_t('Show only folders/hosts with problems')"
-      @update:model-value="emit('update:problemsOnly', $event)"
-    />
+    <span class="maps-folder-tree-toolbar__group">
+      <MapSearch
+        inline
+        :model-value="filterNeedle"
+        :placeholder="_t('Search folders, hosts, services…')"
+        :exclude-prefixes="['hg', 'sg', 'id']"
+        @update:model-value="emit('update:filterNeedle', $event)"
+      />
+      <ProblemsOnlyToggle
+        :model-value="problemsOnly"
+        :title="_t('Show only folders/hosts with problems')"
+        @update:model-value="emit('update:problemsOnly', $event)"
+      />
+    </span>
 
-    <button type="button" class="maps-folder-tree-toolbar__command" @click="emit('expand-all')">
-      {{ _t('Expand all') }}
-    </button>
-    <button type="button" class="maps-folder-tree-toolbar__command" @click="emit('collapse-all')">
-      {{ _t('Collapse all') }}
-    </button>
+    <!-- What is drawn, and how: these wrap together too. -->
+    <span class="maps-folder-tree-toolbar__group">
+      <button type="button" class="maps-folder-tree-toolbar__command" @click="emit('expand-all')">
+        {{ _t('Expand all') }}
+      </button>
+      <button type="button" class="maps-folder-tree-toolbar__command" @click="emit('collapse-all')">
+        {{ _t('Collapse all') }}
+      </button>
 
-    <CmkToggleButtonGroup
-      v-if="!kiosk"
-      role="group"
-      :aria-label="_t('Folder tree drawing')"
-      :model-value="mode"
-      :options="modes"
-      size="small"
-      spacing="none"
-      @update:model-value="selectMode"
-    />
+      <CmkToggleButtonGroup
+        v-if="!kiosk"
+        role="group"
+        :aria-label="_t('Folder tree drawing')"
+        :model-value="mode"
+        :options="modes"
+        size="small"
+        spacing="none"
+        @update:model-value="selectMode"
+      />
+    </span>
   </div>
 </template>
 
@@ -166,6 +171,17 @@ function selectMode(value: string): void {
 
 .maps-folder-tree-toolbar__spacer {
   flex: 1;
+}
+
+/* Controls that belong together wrap onto the next line as one, rather than
+   the search ending up on one line and its problems filter on the next. A
+   group alone on a line too narrow for it wraps inside instead of clipping. */
+.maps-folder-tree-toolbar__group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--dimension-4);
+  min-width: 0;
 }
 
 .maps-folder-tree-toolbar__summary {

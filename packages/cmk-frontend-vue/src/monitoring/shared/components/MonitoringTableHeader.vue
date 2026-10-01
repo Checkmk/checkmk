@@ -286,7 +286,7 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
 
             <CmkMultitoneIcon
               v-if="header.column.getIsSorted() !== false"
-              name="dashlet-resize"
+              name="arrow-down"
               class="monitoring-table-header__sort-icon"
               :rotate="header.column.getIsSorted() === 'asc' ? 180 : 0"
               primary-color="font"

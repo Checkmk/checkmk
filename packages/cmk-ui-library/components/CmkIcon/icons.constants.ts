@@ -794,7 +794,7 @@ export const oneColorIcons = [
   'more-actions',
   'open-details',
   'dash',
-  'dashlet-resize'
+  'arrow-down'
 ] as const
 export const twoColorIcons = ['aggr', 'experiment', 'columns', 'display-options'] as const
 

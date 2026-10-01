@@ -490,7 +490,7 @@ onBeforeUnmount(() => {
           >
             <CmkMultitoneIcon
               v-if="option.direction !== false"
-              name="dashlet-resize"
+              name="arrow-down"
               :rotate="option.direction === 'asc' ? 180 : 0"
               primary-color="font"
               aria-hidden="true"
@@ -527,7 +527,7 @@ onBeforeUnmount(() => {
             @click="pickExtendedSort(option.direction)"
           >
             <CmkMultitoneIcon
-              name="dashlet-resize"
+              name="arrow-down"
               :rotate="option.direction === 'asc' ? 180 : 0"
               primary-color="font"
               aria-hidden="true"

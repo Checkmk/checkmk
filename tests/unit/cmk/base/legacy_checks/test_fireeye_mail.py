@@ -199,11 +199,6 @@ def test_fireeye_mail_empty_info() -> None:
     assert list(fireeye_mail.discover_fireeye_mail_received(empty_info)) == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason="Crash report b0d7751e-242d-11f0-b619-005056b5fc62: ValueError in check_fireeye_mail_received",
-)
 def test_check_fireeye_mail_received_without_time_window() -> None:
     # The appliance reports an unset statistics window together with zero mails.
     info = [["0"] * 13 + ["00/00/00 00:00:00", "00/00/00 00:00:00", "0"]]

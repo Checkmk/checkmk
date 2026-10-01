@@ -102,8 +102,8 @@ def check_cisco_redundancy(_no_item, params, info):
     return state, infotext
 
 
-def parse_cisco_redundancy(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_cisco_redundancy(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["cisco_redundancy"] = LegacyCheckDefinition(

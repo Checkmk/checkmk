@@ -1315,7 +1315,7 @@ def test_inventorize_host(failed_state: int | None, expected: int) -> None:
         inventory_plugins={},
         run_plugin_names=EVERYTHING,
         parameters=HWSWInventoryParameters.from_raw(
-            {} if failed_state is None else {"inv-fail-status": failed_state}
+            {} if failed_state is None else {"fail_status": failed_state}
         ),
         raw_intervals_from_config=(),
         previous_tree=ImmutableTree(),

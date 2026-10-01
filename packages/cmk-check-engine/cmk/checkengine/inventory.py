@@ -107,15 +107,15 @@ class HWSWInventoryParameters:
     @classmethod
     def from_raw(cls, raw_parameters: Mapping[str, object]) -> HWSWInventoryParameters:
         return cls(
-            hw_changes=_parse_monitoring_state(raw_parameters.get("hw-changes"), 0),
-            sw_changes=_parse_monitoring_state(raw_parameters.get("sw-changes"), 0),
-            sw_missing=_parse_monitoring_state(raw_parameters.get("sw-missing"), 0),
-            nw_changes=_parse_monitoring_state(raw_parameters.get("nw-changes"), 0),
-            fail_status=_parse_monitoring_state(raw_parameters.get("inv-fail-status"), 1),
+            hw_changes=_parse_monitoring_state(raw_parameters.get("hw_changes"), 0),
+            sw_changes=_parse_monitoring_state(raw_parameters.get("sw_changes"), 0),
+            sw_missing=_parse_monitoring_state(raw_parameters.get("sw_missing"), 0),
+            nw_changes=_parse_monitoring_state(raw_parameters.get("nw_changes"), 0),
+            fail_status=_parse_monitoring_state(raw_parameters.get("fail_status"), 1),
             status_data_inventory=bool(raw_parameters.get("status_data_inventory", False)),
-            new_labels=_parse_monitoring_state(raw_parameters.get("new-labels"), 1),
-            vanished_labels=_parse_monitoring_state(raw_parameters.get("vanished-labels"), 0),
-            changed_labels=_parse_monitoring_state(raw_parameters.get("changed-labels"), 1),
+            new_labels=_parse_monitoring_state(raw_parameters.get("new_labels"), 1),
+            vanished_labels=_parse_monitoring_state(raw_parameters.get("vanished_labels"), 0),
+            changed_labels=_parse_monitoring_state(raw_parameters.get("changed_labels"), 1),
         )
 
 

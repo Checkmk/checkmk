@@ -15,8 +15,10 @@ import json
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
+from datetime import datetime, UTC
 from http import HTTPStatus
 from typing import override
+from urllib.parse import quote
 
 import requests
 import requests.auth
@@ -357,13 +359,22 @@ class VeeamClient:
         raise TerminateAgent(str(error)) from error
 
 
-def _get_all(client: VeeamClient, path: str, limit: int | None = None) -> list[object]:
-    """Fetch every page of a `data`/`pagination` endpoint and merge them."""
+def _get_all(
+    client: VeeamClient,
+    path: str,
+    limit: int | None = None,
+    extra_params: str = "",
+) -> list[object]:
+    """Fetch every page of a `data`/`pagination` endpoint and merge them.
+
+    `extra_params` is appended verbatim to every page's query string, e.g.
+    "&typeFilter=Backup"; it must already be percent-encoded where needed.
+    """
     items: list[object] = []
     skip = 0
     page_size = "" if limit is None else f"&limit={limit}"
     while True:
-        page = client.get(f"{path}?skip={skip}{page_size}")
+        page = client.get(f"{path}?skip={skip}{page_size}{extra_params}")
         if not isinstance(page, dict) or "data" not in page or "pagination" not in page:
             raise TerminateAgent(f"Request to {path} did not return a paginated data list")
         batch = page["data"]
@@ -394,31 +405,6 @@ def fetch_list(path: str) -> FetchStrategy:
     def _fetch(client: VeeamClient, name: str) -> str:
         items = _get_all(client, path)
         return f"<<<{name}:sep(0)>>>\n" + "".join(f"{json.dumps(item)}\n" for item in items)
-
-    return _fetch
-
-
-def fetch_list_piggyback(path: str) -> FetchStrategy:
-    """A `data`/`pagination` endpoint whose items each belong to a different host.
-
-    Each item's `name` field names the object it is about (e.g. the protected
-    machine); items are grouped by it and wrapped in a piggyback envelope. An
-    item with no name cannot be attributed to a host and is dropped.
-    """
-
-    def _fetch(client: VeeamClient, name: str) -> str:
-        groups: dict[str, list[object]] = {}
-        for item in _get_all(client, path):
-            if not isinstance(item, dict) or not (host := item.get("name")):
-                continue
-            groups.setdefault(host, []).append(item)
-
-        output = ""
-        for host, host_items in groups.items():
-            output += f"<<<<{host}>>>>\n<<<{name}:sep(0)>>>\n"
-            output += "".join(f"{json.dumps(item)}\n" for item in host_items)
-            output += "<<<<>>>>\n"
-        return output
 
     return _fetch
 
@@ -567,6 +553,112 @@ def fetch_restore_points(limit: int = 500) -> FetchStrategy:
     return _fetch
 
 
+def _job_sessions_and_window(
+    jobs: list[object],
+) -> tuple[dict[str, tuple[str, str]], str | None]:
+    """Builds `sessionId -> (job id, job name)` from each job's current session,
+    plus the earliest `lastRun` (the taskSessions window's lower bound).
+
+    Disabled jobs are excluded, like the old plug-in; a schedule-disabled job is
+    still included. Jobs that never ran don't affect the window.
+
+    TODO: a rarely-run job drags the window back every cycle; cap it (e.g. 30
+    days) if that becomes a real problem.
+    """
+    session_to_job: dict[str, tuple[str, str]] = {}
+    last_runs: list[float] = []
+    for job in jobs:
+        if not isinstance(job, dict) or job.get("status") == "Disabled":
+            continue
+        session_id, job_id, job_name = job.get("sessionId"), job.get("id"), job.get("name")
+        if isinstance(session_id, str) and isinstance(job_id, str) and isinstance(job_name, str):
+            session_to_job[session_id] = (job_id, job_name)
+        last_run = job.get("lastRun")
+        if isinstance(last_run, str) and (epoch := parse_iso8601_epoch(last_run)) is not None:
+            last_runs.append(epoch)
+
+    if not last_runs:
+        return session_to_job, None
+    return session_to_job, datetime.fromtimestamp(min(last_runs), tz=UTC).isoformat()
+
+
+def _task_creation_epoch(task: Mapping[str, object]) -> float:
+    created = task.get("creationTime")
+    if isinstance(created, str) and (epoch := parse_iso8601_epoch(created)) is not None:
+        return epoch
+    return float("-inf")
+
+
+def fetch_backups(client: VeeamClient, name: str) -> str:
+    """One record per (job, backup object) pair: the newest task session for that
+    pairing, labelled with the job's name.
+
+    Task sessions carry no job name of their own, only a `sessionId` pointing to a
+    session (GET /api/v1/sessions), whose `jobId` in turn names the job. Each job's
+    own record (GET /api/v1/jobs/states, which is also fetched for the
+    `veeam_backup_jobs` section, independently of whether that section is enabled)
+    already carries the ID of its own current session, so a task's job is resolved
+    by matching its `sessionId` directly against that, without a third endpoint.
+
+    A task whose `sessionId` does not match any job's *current* session (e.g. an
+    object that was not part of a job's most recent run) cannot be attributed to a
+    job this way and is dropped; its piggyback host then simply stops receiving
+    fresh data for this section and keeps showing its last known state, aging, via
+    Checkmk's normal piggyback/staleness handling, rather than anything this agent
+    does explicitly.
+
+    /api/v1/taskSessions holds the server's entire backup history; fetching all of
+    it every run would be both wasteful and, per the v13 reference, risky under
+    rate limiting. The request is narrowed with `createdAfterFilter`, computed from
+    the earliest `lastRun` across all jobs (see `_job_sessions_and_window`), so it
+    only reaches as far back as the least recently run job actually requires.
+
+    `sessionTypeFilter=BackupJob` is not used here: on VBR 13.0.3.63 it is accepted
+    as a valid value but silently matches nothing, even for task sessions whose own
+    `sessionType` field is "BackupJob". `sessionType` is filtered client-side instead.
+    """
+    jobs = _get_all(client, "/api/v1/jobs/states")
+    session_to_job, created_after = _job_sessions_and_window(jobs)
+    if created_after is None:
+        return ""
+
+    tasks = _get_all(
+        client,
+        "/api/v1/taskSessions",
+        extra_params=f"&typeFilter=Backup&createdAfterFilter={quote(created_after)}",
+    )
+
+    newest: dict[tuple[str, str], Mapping[str, object]] = {}
+    for task in tasks:
+        if not isinstance(task, dict) or not isinstance(object_name := task.get("name"), str):
+            continue
+        if task.get("sessionType") != "BackupJob":
+            continue
+        session_id = task.get("sessionId")
+        if not isinstance(session_id, str) or (job := session_to_job.get(session_id)) is None:
+            continue
+        key = (object_name, job[0])
+        current = newest.get(key)
+        # TODO: ties (identical creationTime) are broken arbitrarily, by whichever
+        # task is encountered last. A real tiebreak would compare `usn` (an
+        # increasing update sequence number) instead, e.g.:
+        #     task.get("usn", -1) >= current.get("usn", -1)
+        # left out for now since such collisions are assumed to be rare.
+        if current is None or _task_creation_epoch(task) >= _task_creation_epoch(current):
+            newest[key] = {**task, "jobName": job[1]}
+
+    groups: dict[str, list[Mapping[str, object]]] = {}
+    for (object_name, _job_id), task in newest.items():
+        groups.setdefault(object_name, []).append(task)
+
+    output = ""
+    for object_name, object_tasks in groups.items():
+        output += f"<<<<{object_name}>>>>\n<<<{name}:sep(0)>>>\n"
+        output += "".join(f"{json.dumps(task)}\n" for task in object_tasks)
+        output += "<<<<>>>>\n"
+    return output
+
+
 def write_sections(client: VeeamClient, sections: Sequence[Section]) -> None:
     for name, fetch in sections:
         sys.stdout.write(fetch(client, name))
@@ -576,7 +668,7 @@ SECTIONS: Sequence[Section] = (
     ("veeam_server_info", fetch_object("/api/v1/serverInfo")),
     ("veeam_license", fetch_object("/api/v1/license")),
     ("veeam_backup_jobs", fetch_list("/api/v1/jobs/states")),
-    ("veeam_backups", fetch_list_piggyback("/api/v1/taskSessions")),
+    ("veeam_backups", fetch_backups),
     ("veeam_replicas", fetch_list("/api/v1/replicas")),
     ("veeam_protection_groups", fetch_list("/api/v1/agents/protectionGroups")),
     ("veeam_managed_servers", fetch_list("/api/v1/backupInfrastructure/managedServers")),

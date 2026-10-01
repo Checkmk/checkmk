@@ -8,7 +8,7 @@ import socket
 from collections.abc import Iterator
 from http import HTTPStatus
 from pathlib import Path
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, quote
 
 import pytest
 import requests
@@ -18,8 +18,8 @@ import time_machine
 from cmk.password_store.v1 import Secret
 from cmk.plugins.veeam.special_agent.agent_veeam import (
     create_session,
+    fetch_backups,
     fetch_list,
-    fetch_list_piggyback,
     fetch_object,
     fetch_restore_points,
     main,
@@ -361,68 +361,6 @@ def test_object_section_is_written_as_a_single_line(
     )
 
 
-def test_piggyback_section_groups_items_by_name(
-    api: responses.RequestsMock,
-    storage: Storage,
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    api.get(
-        f"{URL}/api/v1/taskSessions?skip=0",
-        json={
-            "data": [
-                {"name": "web-server-01", "jobName": "Daily"},
-                {"name": "db-server-02", "jobName": "Daily"},
-                {"name": "web-server-01", "jobName": "Weekly"},
-            ],
-            "pagination": {"total": 3},
-        },
-    )
-
-    write_sections(
-        _client(_auth(storage)), [("veeam_backups", fetch_list_piggyback("/api/v1/taskSessions"))]
-    )
-
-    assert capsys.readouterr().out == (
-        "<<<<web-server-01>>>>\n"
-        "<<<veeam_backups:sep(0)>>>\n"
-        '{"name": "web-server-01", "jobName": "Daily"}\n'
-        '{"name": "web-server-01", "jobName": "Weekly"}\n'
-        "<<<<>>>>\n"
-        "<<<<db-server-02>>>>\n"
-        "<<<veeam_backups:sep(0)>>>\n"
-        '{"name": "db-server-02", "jobName": "Daily"}\n'
-        "<<<<>>>>\n"
-    )
-
-
-def test_piggyback_section_drops_items_with_no_name(
-    api: responses.RequestsMock,
-    storage: Storage,
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    api.get(
-        f"{URL}/api/v1/taskSessions?skip=0",
-        json={
-            "data": [
-                {"jobName": "Daily"},
-                {"name": "web-server-01", "jobName": "Daily"},
-            ],
-            "pagination": {"total": 2},
-        },
-    )
-
-    write_sections(
-        _client(_auth(storage)), [("veeam_backups", fetch_list_piggyback("/api/v1/taskSessions"))]
-    )
-
-    assert capsys.readouterr().out == (
-        "<<<<web-server-01>>>>\n"
-        "<<<veeam_backups:sep(0)>>>\n"
-        '{"name": "web-server-01", "jobName": "Daily"}\n'
-        "<<<<>>>>\n"
-    )
-
-
 def _restore_point(**overrides: object) -> dict[str, object]:
     return {
         "name": "ip-vm-1",
@@ -667,6 +605,195 @@ def test_restore_points_malware_status_rollup(
     )
     assert isinstance(record, dict)
     assert record["malwareStatus"] == expected
+
+
+def _job(**overrides: object) -> dict[str, object]:
+    job: dict[str, object] = {
+        "id": "job-id-1",
+        "name": "Daily_VM_Backup",
+        "status": "Enabled",
+        "sessionId": "session-1",
+        "lastRun": "2026-09-29T00:00:00+00:00",
+    }
+    job.update(overrides)
+    return job
+
+
+def _task(**overrides: object) -> dict[str, object]:
+    task: dict[str, object] = {
+        "name": "vm-1",
+        "sessionId": "session-1",
+        "sessionType": "BackupJob",
+        "creationTime": "2026-09-29T01:00:00+00:00",
+        "state": "Stopped",
+        "result": {"result": "Success"},
+    }
+    task.update(overrides)
+    return task
+
+
+def _mock_jobs(
+    api: responses.RequestsMock,
+    jobs: list[dict[str, object]],
+) -> None:
+    api.get(
+        f"{URL}/api/v1/jobs/states?skip=0",
+        json={"data": jobs, "pagination": {"total": len(jobs)}},
+    )
+
+
+def _mock_tasks(
+    api: responses.RequestsMock,
+    created_after: str,
+    tasks: list[dict[str, object]],
+) -> None:
+    query = f"skip=0&typeFilter=Backup&createdAfterFilter={quote(created_after)}"
+    api.get(
+        f"{URL}/api/v1/taskSessions?{query}",
+        json={"data": tasks, "pagination": {"total": len(tasks)}},
+    )
+
+
+def test_fetch_backups_resolves_the_job_name_via_the_session_join(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _mock_jobs(api, [_job()])
+    _mock_tasks(api, "2026-09-29T00:00:00+00:00", [_task()])
+
+    write_sections(_client(_auth(storage)), [("veeam_backups", fetch_backups)])
+
+    header, *lines = capsys.readouterr().out.splitlines()
+    assert header == "<<<<vm-1>>>>"
+    assert lines[0] == "<<<veeam_backups:sep(0)>>>"
+    (record,) = (json.loads(line) for line in lines[1:-1])
+    assert record["jobName"] == "Daily_VM_Backup"
+    assert lines[-1] == "<<<<>>>>"
+
+
+def test_fetch_backups_window_uses_the_earliest_last_run_across_jobs(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _mock_jobs(
+        api,
+        [
+            _job(
+                name="Daily_VM_Backup", sessionId="session-1", lastRun="2026-09-29T00:00:00+00:00"
+            ),
+            _job(
+                name="Weekly_VM_Backup",
+                sessionId="session-2",
+                lastRun="2026-09-20T00:00:00+00:00",
+            ),
+        ],
+    )
+    _mock_tasks(api, "2026-09-20T00:00:00+00:00", [])
+
+    write_sections(_client(_auth(storage)), [("veeam_backups", fetch_backups)])
+
+    assert capsys.readouterr().out == ""
+
+
+def test_fetch_backups_no_job_has_ever_run_skips_the_task_fetch_entirely(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _mock_jobs(api, [_job(lastRun=None)])
+
+    write_sections(_client(_auth(storage)), [("veeam_backups", fetch_backups)])
+
+    assert capsys.readouterr().out == ""
+    assert all("taskSessions" not in str(call.request.url) for call in api.calls)
+
+
+def test_fetch_backups_ignores_disabled_jobs(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _mock_jobs(
+        api,
+        [
+            _job(),
+            _job(
+                id="job-id-2",
+                name="Disabled_VM_Backup",
+                status="Disabled",
+                sessionId="session-2",
+                lastRun="2026-09-01T00:00:00+00:00",
+            ),
+        ],
+    )
+    # The window starts at the enabled job's last run, not at the disabled job's.
+    _mock_tasks(
+        api,
+        "2026-09-29T00:00:00+00:00",
+        [_task(), _task(name="vm-2", sessionId="session-2")],
+    )
+
+    write_sections(_client(_auth(storage)), [("veeam_backups", fetch_backups)])
+
+    output = capsys.readouterr().out
+    assert "<<<<vm-1>>>>" in output
+    assert "vm-2" not in output
+
+
+def test_fetch_backups_task_with_unmatched_session_is_dropped(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _mock_jobs(api, [_job(sessionId="session-current")])
+    _mock_tasks(
+        api,
+        "2026-09-29T00:00:00+00:00",
+        [_task(sessionId="session-old")],
+    )
+
+    write_sections(_client(_auth(storage)), [("veeam_backups", fetch_backups)])
+
+    assert capsys.readouterr().out == ""
+
+
+def test_fetch_backups_task_with_non_backupjob_session_type_is_dropped(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # sessionTypeFilter=BackupJob is not sent server-side (it silently matches
+    # nothing on VBR 13.0.3.63); this is filtered client-side instead.
+    _mock_jobs(api, [_job()])
+    _mock_tasks(api, "2026-09-29T00:00:00+00:00", [_task(sessionType="AgentDiscovery")])
+
+    write_sections(_client(_auth(storage)), [("veeam_backups", fetch_backups)])
+
+    assert capsys.readouterr().out == ""
+
+
+def test_fetch_backups_keeps_the_newest_task_per_object_and_job(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _mock_jobs(api, [_job()])
+    _mock_tasks(
+        api,
+        "2026-09-29T00:00:00+00:00",
+        [
+            _task(id="older", creationTime="2026-09-29T01:00:00+00:00"),
+            _task(id="newer", creationTime="2026-09-29T02:00:00+00:00"),
+        ],
+    )
+
+    write_sections(_client(_auth(storage)), [("veeam_backups", fetch_backups)])
+
+    output = capsys.readouterr().out
+    assert '"id": "newer"' in output
+    assert '"id": "older"' not in output
 
 
 def test_wrong_credentials_are_reported(api: responses.RequestsMock, storage: Storage) -> None:

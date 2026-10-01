@@ -2553,6 +2553,26 @@ class AgentClient(RestApiClient):
         )
 
 
+class AgentDeploymentInternalClient(RestApiClient):
+    domain: DomainType = "agent_deployment_internal"
+    default_version = APIVersion.INTERNAL
+
+    def status(
+        self,
+        host_name: str,
+        body: Mapping[str, Any],
+        headers: Mapping[str, str] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{host_name}/actions/status/invoke",
+            body=dict(body),
+            headers=dict(headers) if headers else None,
+            expect_ok=expect_ok,
+        )
+
+
 class DowntimeClient(RestApiClient):
     domain: DomainType = "downtime"
     type FindByType = Literal["query", "by_id", "params", "hostgroup", "servicegroup"]
@@ -5807,6 +5827,7 @@ class ClientRegistry:
     Maps: MapsClient
     Customer: CustomerClient
     Agent: AgentClient
+    AgentDeploymentInternal: AgentDeploymentInternalClient
     Downtime: DowntimeClient
     HostGroup: HostGroupClient
     ServiceGroup: ServiceGroupClient
@@ -5882,6 +5903,7 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         Maps=MapsClient(request_handler, url_prefix),
         Customer=CustomerClient(request_handler, url_prefix),
         Agent=AgentClient(request_handler, url_prefix),
+        AgentDeploymentInternal=AgentDeploymentInternalClient(request_handler, url_prefix),
         Downtime=DowntimeClient(request_handler, url_prefix),
         HostGroup=HostGroupClient(request_handler, url_prefix),
         ServiceGroup=ServiceGroupClient(request_handler, url_prefix),

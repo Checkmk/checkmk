@@ -145,6 +145,30 @@ def test_check_fireeye_mail_received_no_thresholds(
     ]
 
 
+@pytest.mark.xfail(
+    strict=True,
+    raises=ValueError,
+    reason="Crash report b0d7751e-242d-11f0-b619-005056b5fc62: ValueError in check_fireeye_mail_received",
+)
+def test_check_fireeye_mail_received_without_time_window() -> None:
+    # The appliance reports an unset statistics window together with zero mails.
+    section = [["0"] * 13 + ["00/00/00 00:00:00", "00/00/00 00:00:00", "0"]]
+
+    assert list(fireeye_mail.check_fireeye_mail_received({}, section)) == [
+        Result(
+            state=State.OK,
+            summary="Mails received between 00/00/00 00:00:00 and 00/00/00 00:00:00: 0",
+        ),
+        Result(
+            state=State.UNKNOWN,
+            summary=(
+                "Cannot compute rate: got time window '00/00/00 00:00:00' to"
+                " '00/00/00 00:00:00' (expected MM/DD/YY HH:MM:SS)"
+            ),
+        ),
+    ]
+
+
 def test_fireeye_mail_comprehensive_discovery(parsed: list[list[str]]) -> None:
     # Test that all services are discovered
     assert list(fireeye_mail.discover_fireeye_mail(parsed)) == [Service()]

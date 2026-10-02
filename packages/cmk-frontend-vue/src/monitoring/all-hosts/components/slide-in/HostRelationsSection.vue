@@ -111,6 +111,7 @@ watch(
             contrast="high"
             :title="untranslated(relation.host_name)"
             :subtitle="_t('Relation type: %{type}', { type: relation.relation_type })"
+            subtitle-color="secondary"
             :open-in-new-tab="false"
           >
             <template #leading>

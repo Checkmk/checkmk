@@ -9,6 +9,7 @@ from pathlib import Path, PurePosixPath
 from typing import override
 
 from cmk.astrein.framework import ASTVisitorChecker
+from cmk.astrein.imported_names import ImportedNames
 from cmk.astrein.module_layers_config import compute_module_name
 
 #: Repo-relative glob patterns (``PurePosixPath.full_match``) the checker skips.
@@ -64,7 +65,7 @@ class LoggingFormatterChecker(ASTVisitorChecker):
         self._excluded_globs = excluded_globs
         self._included_globs = included_globs
         self._module_name = str(compute_module_name(file_path, repo_root))
-        self._imported_names: dict[str, str] = {}
+        self._imported_names = ImportedNames()
 
     @override
     def checker_id(self) -> str:
@@ -72,33 +73,25 @@ class LoggingFormatterChecker(ASTVisitorChecker):
 
     @override
     def visit_Import(self, node: ast.Import) -> None:
-        for alias in node.names:
-            if alias.asname is None:
-                # `import logging.config` binds the top-level package name.
-                top_level = alias.name.partition(".")[0]
-                self._imported_names[top_level] = top_level
-            else:
-                self._imported_names[alias.asname] = alias.name
+        self._imported_names.record(node)
         self.generic_visit(node)
 
     @override
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
-        if node.level == 0 and node.module is not None:
-            for alias in node.names:
-                self._imported_names[alias.asname or alias.name] = f"{node.module}.{alias.name}"
+        self._imported_names.record(node)
         self.generic_visit(node)
 
     @override
     def visit_Call(self, node: ast.Call) -> None:
         if self._is_included():
-            if self._qualified_name(node.func) == _LOGGING_FORMATTER:
+            if self._imported_names.qualified_name(node.func) == _LOGGING_FORMATTER:
                 self.add_error(
                     f"Do not construct logging.Formatter. Use {_CMKFORMATTER} so all "
                     f"Checkmk logs share one format; {_CMKFORMATTER_CLASS}(message_only=True) "
                     "renders the bare message for interactive console output.",
                     node,
                 )
-            elif self._qualified_name(node.func) == _LOGGING_BASIC_CONFIG and any(
+            elif self._imported_names.qualified_name(node.func) == _LOGGING_BASIC_CONFIG and any(
                 kw.arg in _BASIC_CONFIG_FORMAT_KEYWORDS for kw in node.keywords
             ):
                 self.add_error(
@@ -113,7 +106,7 @@ class LoggingFormatterChecker(ASTVisitorChecker):
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         if self._is_included() and f"{self._module_name}.{node.name}" != _CMKFORMATTER:
             for base in node.bases:
-                if self._qualified_name(base) == _LOGGING_FORMATTER:
+                if self._imported_names.qualified_name(base) == _LOGGING_FORMATTER:
                     self.add_error(
                         f"Do not subclass logging.Formatter. Subclass {_CMKFORMATTER} "
                         "instead so the shared Checkmk log format stays the base of every "
@@ -144,7 +137,7 @@ class LoggingFormatterChecker(ASTVisitorChecker):
             # A dotted-path string resolves only at runtime, so it would hide a rename.
             if (
                 (factory := formatter_entries.get("()")) is None
-                or self._qualified_name(factory) != _CMKFORMATTER
+                or self._imported_names.qualified_name(factory) != _CMKFORMATTER
                 or formatter_entries.keys() & _DICT_CONFIG_FORMAT_KEYS
             ):
                 self.add_error(
@@ -153,14 +146,6 @@ class LoggingFormatterChecker(ASTVisitorChecker):
                     "format/fmt/datefmt/class keys.",
                     formatter,
                 )
-
-    def _qualified_name(self, node: ast.expr) -> str | None:
-        """Resolve a name or attribute chain through the file's imports."""
-        if isinstance(node, ast.Name):
-            return self._imported_names.get(node.id)
-        if isinstance(node, ast.Attribute) and (base := self._qualified_name(node.value)):
-            return f"{base}.{node.attr}"
-        return None
 
     def _relative_path(self) -> PurePosixPath | None:
         try:

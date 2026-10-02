@@ -22,6 +22,7 @@ py_library(
         "cmk/astrein/checkers.py",
         "cmk/astrein/cli.py",
         "cmk/astrein/framework.py",
+        "cmk/astrein/imported_names.py",
         "cmk/astrein/lsp.py",
         "cmk/astrein/module_layers_config.py",
         "cmk/astrein/placeholders.py",

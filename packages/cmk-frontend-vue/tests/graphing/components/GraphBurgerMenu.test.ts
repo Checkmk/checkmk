@@ -103,6 +103,26 @@ test('ArrowDown on the trigger opens the dropdown and focuses the first action',
   expect(screen.getByRole('menuitem', { name: 'Dashboard One' })).toHaveFocus()
 })
 
+test('ArrowUp on the trigger opens the dropdown and focuses the last action', async () => {
+  render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
+  await fireEvent.keyDown(screen.getByRole('button', { name: ARIA_LABEL }), { key: 'ArrowUp' })
+  expect(screen.getByRole('menuitem', { name: 'Export as JSON' })).toHaveFocus()
+})
+
+test('choosing an action returns focus to the trigger', async () => {
+  render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
+  const trigger = screen.getByRole('button', { name: ARIA_LABEL })
+  await fireEvent.click(trigger)
+  await fireEvent.click(screen.getByRole('menuitem', { name: 'Export as JSON' }))
+  expect(trigger).toHaveFocus()
+})
+
+test('names the menu after its trigger', async () => {
+  render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
+  await fireEvent.click(screen.getByRole('button', { name: ARIA_LABEL }))
+  expect(screen.getByRole('menu', { name: ARIA_LABEL })).toBeInTheDocument()
+})
+
 test('escape closes the dropdown and returns focus to the trigger', async () => {
   render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
   const trigger = screen.getByRole('button', { name: ARIA_LABEL })

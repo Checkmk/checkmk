@@ -36,6 +36,7 @@ const { groups = [], ariaLabel, scrollable = true } = defineProps<BurgerMenuProp
 const emit = defineEmits<{ doAction: [onClick: BurgerMenuCallable] }>()
 
 const isOpen = ref(false)
+let itemIndexFocusedOnOpen = 0
 const containerRef = ref<HTMLElement | null>(null)
 const triggerRef = ref<InstanceType<typeof CmkButton> | null>(null)
 
@@ -57,9 +58,22 @@ function focusItemAt(index: number) {
   items[wrappedIndex]!.focus()
 }
 
+function openMenu(itemIndexToFocus: number) {
+  itemIndexFocusedOnOpen = itemIndexToFocus
+  isOpen.value = true
+}
+
 function closeMenu() {
   isOpen.value = false
   triggerRef.value?.focus()
+}
+
+function toggleMenu() {
+  if (isOpen.value) {
+    isOpen.value = false
+  } else {
+    openMenu(0)
+  }
 }
 
 function onDocumentClick(e: MouseEvent) {
@@ -77,8 +91,7 @@ function onDocumentKeydown(e: KeyboardEvent) {
 function onTriggerKeydown(e: KeyboardEvent) {
   if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
     e.preventDefault()
-    isOpen.value = true
-    void nextTick(() => focusItemAt(e.key === 'ArrowDown' ? 0 : -1))
+    openMenu(e.key === 'ArrowDown' ? 0 : -1)
   }
 }
 
@@ -132,7 +145,7 @@ watch(isOpen, (open) => {
   if (open) {
     updateDropdownMaxHeight()
     window.addEventListener('resize', updateDropdownMaxHeight)
-    void nextTick(() => focusItemAt(0))
+    void nextTick(() => focusItemAt(itemIndexFocusedOnOpen))
   } else {
     window.removeEventListener('resize', updateDropdownMaxHeight)
   }
@@ -147,8 +160,8 @@ onUnmounted(() => {
 })
 
 function doAction(onClick: BurgerMenuCallable) {
+  closeMenu()
   emit('doAction', onClick)
-  isOpen.value = false
 }
 
 const isEmpty = computed(() => !groups?.length)
@@ -165,7 +178,7 @@ const isEmpty = computed(() => !groups?.length)
       :aria-label="ariaLabel"
       :disabled="isEmpty"
       :title="isEmpty ? _t('No action available') : undefined"
-      @click="isOpen = !isOpen"
+      @click="toggleMenu"
       @keydown="onTriggerKeydown"
     >
       <CmkMultitoneIcon name="burger-menu" primary-color="font" size="small" />
@@ -180,6 +193,7 @@ const isEmpty = computed(() => !groups?.length)
       }"
       :style="{ maxHeight: dropdownMaxHeight }"
       role="menu"
+      :aria-label="ariaLabel"
       @keydown="onDropdownKeydown"
     >
       <ul

@@ -13,7 +13,15 @@ from typing import Any, cast, get_args, Literal
 import pytest
 
 from cmk.ccc import version
-from cmk.events.notify_types import CaseStateStr, CustomPluginName, IncidentStateStr, PluginOptions
+from cmk.events.notify_types import (
+    CaseStateStr,
+    CustomPluginName,
+    ExplicitProxyAuthSpec,
+    ExplicitProxySpec,
+    IncidentStateStr,
+    PluginOptions,
+    StructuredExplicitProxy,
+)
 from cmk.gui.openapi.api_endpoints.site_management.models.config_example import (
     default_config_example as _default_config,
 )
@@ -76,6 +84,7 @@ from cmk.gui.watolib.notification_parameter import (
     notification_parameter_registry,
     register_notification_parameters,
 )
+from cmk.gui.watolib.notifications import NotificationParameterConfigFile
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.ruleset_matcher.tags import TagID
 from cmk.utils import paths
@@ -1112,7 +1121,12 @@ plugin_test_data: list[PluginType] = [
         },
         "http_proxy": {
             "state": "enabled",
-            "value": {"option": "url", "url": "http://explicit_proxy_settings"},
+            "value": {
+                "option": "manual",
+                "scheme": "http",
+                "proxy_server_name": "explicit_proxy_settings",
+                "port": 80,
+            },
         },
         "url_prefix_for_links_to_checkmk": {
             "state": "enabled",
@@ -1131,7 +1145,12 @@ plugin_test_data: list[PluginType] = [
         },
         "http_proxy": {
             "state": "enabled",
-            "value": {"option": "url", "url": "http://explicit_proxy_settings"},
+            "value": {
+                "option": "manual",
+                "scheme": "http",
+                "proxy_server_name": "explicit_proxy_settings",
+                "port": 80,
+            },
         },
         "url_prefix_for_links_to_checkmk": {
             "state": "enabled",
@@ -1165,7 +1184,12 @@ plugin_test_data: list[PluginType] = [
         "servicenow_url": "https://service_now_url_test",
         "http_proxy": {
             "state": "enabled",
-            "value": {"option": "url", "url": "http://http_proxy_test_url/here"},
+            "value": {
+                "option": "manual",
+                "scheme": "http",
+                "proxy_server_name": "http_proxy_test_url",
+                "port": 80,
+            },
         },
         "auth": {
             "option": "explicit_password",
@@ -1219,7 +1243,12 @@ plugin_test_data: list[PluginType] = [
         "servicenow_url": "https://service_now_url_test",
         "http_proxy": {
             "state": "enabled",
-            "value": {"option": "url", "url": "http://http_proxy_test_url/here"},
+            "value": {
+                "option": "manual",
+                "scheme": "http",
+                "proxy_server_name": "http_proxy_test_url",
+                "port": 80,
+            },
         },
         "auth": {
             "option": "explicit_token",
@@ -1557,6 +1586,210 @@ def test_update_notification_method(
     assert r2.json["extensions"]["rule_config"] == config
 
 
+def _slack_with_proxy(http_proxy: dict[str, Any]) -> PluginType:
+    return cast(
+        PluginType,
+        {
+            "plugin_name": "slack",
+            "webhook_url": {
+                "option": "explicit",
+                "url": "https://hooks.slack.com/services/sorry/not/real",
+            },
+            "url_prefix_for_links_to_checkmk": {
+                "state": "enabled",
+                "value": {"option": "automatic", "schema": "https"},
+            },
+            "disable_ssl_cert_verification": {"state": "enabled"},
+            "http_proxy": http_proxy,
+        },
+    )
+
+
+def _edit_rule_with_plugin(clients: ClientRegistry, plugin: PluginType) -> dict[str, Any]:
+    setup_site_data(clients)
+    config = notification_rule_request_example()
+    r1 = clients.RuleNotification.create(rule_config=config)
+    config["notification_method"]["notify_plugin"] = {
+        "option": PluginOptions.WITH_PARAMS,
+        "plugin_params": plugin,
+    }
+    del config["notification_method"]["notification_bulking"]
+    r2 = clients.RuleNotification.edit(rule_id=r1.json["id"], rule_config=config)
+    return cast(
+        dict[str, Any],
+        r2.json["extensions"]["rule_config"]["notification_method"]["notify_plugin"][
+            "plugin_params"
+        ]["http_proxy"],
+    )
+
+
+@pytest.mark.parametrize(
+    "manual_proxy",
+    [
+        pytest.param(
+            {"option": "manual", "scheme": "http", "proxy_server_name": "proxy.lan", "port": 3128},
+            id="without authentication",
+        ),
+        pytest.param(
+            {
+                "option": "manual",
+                "scheme": "socks5",
+                "proxy_server_name": "proxy.lan",
+                "port": 1080,
+                "auth": {"user": "user", "password": {"option": "explicit", "password": "s3crit"}},
+            },
+            id="explicit password",
+        ),
+        pytest.param(
+            {
+                "option": "manual",
+                "scheme": "https",
+                "proxy_server_name": "proxy.lan",
+                "port": 3128,
+                "auth": {
+                    "user": "user",
+                    "password": {"option": "store", "store_id": "some_store_id"},
+                },
+            },
+            id="stored password",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_password_file_regeneration")
+def test_manual_http_proxy_round_trip(  # type: ignore[misc]
+    clients: ClientRegistry, manual_proxy: dict[str, Any]
+) -> None:
+    http_proxy = {"state": "enabled", "value": manual_proxy}
+    assert _edit_rule_with_plugin(clients, _slack_with_proxy(http_proxy)) == http_proxy
+
+
+@pytest.mark.usefixtures("mock_password_file_regeneration")
+def test_structured_proxy_stored_by_the_setup_survives_get_and_put(clients: ClientRegistry) -> None:
+    setup_site_data(clients)
+    config = notification_rule_request_example()
+    config["notification_method"]["notify_plugin"] = {
+        "option": PluginOptions.WITH_PARAMS,
+        "plugin_params": _slack_with_proxy(
+            {"state": "enabled", "value": {"option": "environment"}}
+        ),
+    }
+    del config["notification_method"]["notification_bulking"]
+    rule_id = clients.RuleNotification.create(rule_config=config).json["id"]
+    # Store the proxy the way the Setup and the update write it
+    parameter_file = NotificationParameterConfigFile()
+    parameters = parameter_file.load_for_modification()
+    stored_proxy: StructuredExplicitProxy = (
+        "cmk_postprocessed",
+        "explicit_proxy",
+        ExplicitProxySpec(
+            scheme="http",
+            proxy_server_name="proxy.lan",
+            port=3128,
+            auth=ExplicitProxyAuthSpec(
+                user="user",
+                password=("cmk_postprocessed", "stored_password", ("some_store_id", "")),
+            ),
+        ),
+    )
+    for parameter in parameters["slack"].values():
+        parameter["parameter_properties"]["proxy_url"] = stored_proxy  # type: ignore[typeddict-unknown-key]
+    parameter_file.save(parameters, pprint_value=False)
+    expected_proxy = {
+        "state": "enabled",
+        "value": {
+            "option": "manual",
+            "scheme": "http",
+            "proxy_server_name": "proxy.lan",
+            "port": 3128,
+            "auth": {"user": "user", "password": {"option": "store", "store_id": "some_store_id"}},
+        },
+    }
+
+    rule_config = clients.RuleNotification.get(rule_id).json["extensions"]["rule_config"]
+    clients.RuleNotification.edit(rule_id=rule_id, rule_config=rule_config)
+    resaved = clients.RuleNotification.get(rule_id).json["extensions"]["rule_config"]
+
+    for got in (rule_config, resaved):
+        assert (
+            got["notification_method"]["notify_plugin"]["plugin_params"]["http_proxy"]
+            == expected_proxy
+        )
+
+
+@pytest.mark.usefixtures("mock_password_file_regeneration")
+def test_http_proxy_url_is_converted_to_manual_proxy(clients: ClientRegistry) -> None:
+    http_proxy = {
+        "state": "enabled",
+        "value": {"option": "url", "url": "http://user:s3crit@proxy.lan:3128"},
+    }
+    assert _edit_rule_with_plugin(clients, _slack_with_proxy(http_proxy)) == {
+        "state": "enabled",
+        "value": {
+            "option": "manual",
+            "scheme": "http",
+            "proxy_server_name": "proxy.lan",
+            "port": 3128,
+            "auth": {"user": "user", "password": {"option": "explicit", "password": "s3crit"}},
+        },
+    }
+
+
+@pytest.mark.usefixtures("mock_password_file_regeneration")
+def test_http_proxy_url_without_structured_form_is_rejected(clients: ClientRegistry) -> None:
+    setup_site_data(clients)
+    config = notification_rule_request_example()
+    config["notification_method"]["notify_plugin"] = {
+        "option": PluginOptions.WITH_PARAMS,
+        "plugin_params": _slack_with_proxy(
+            {"state": "enabled", "value": {"option": "url", "url": "ftp://user:pw@proxy.lan:21"}}
+        ),
+    }
+    del config["notification_method"]["notification_bulking"]
+
+    clients.RuleNotification.create(rule_config=config, expect_ok=False).assert_status_code(
+        HTTPStatus.BAD_REQUEST
+    )
+
+
+@pytest.mark.parametrize(
+    "manual_proxy",
+    [
+        pytest.param(
+            {"option": "manual", "scheme": "ftp", "proxy_server_name": "proxy.lan", "port": 21},
+            id="unsupported scheme",
+        ),
+        pytest.param(
+            {"option": "manual", "scheme": "http", "proxy_server_name": "proxy.lan", "port": 0},
+            id="invalid port",
+        ),
+        pytest.param(
+            {
+                "option": "manual",
+                "scheme": "http",
+                "proxy_server_name": "proxy.lan",
+                "port": 3128,
+                "auth": {"user": "user"},
+            },
+            id="missing password",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_password_file_regeneration")
+def test_invalid_manual_http_proxy_400(  # type: ignore[misc]
+    clients: ClientRegistry, manual_proxy: dict[str, Any]
+) -> None:
+    setup_site_data(clients)
+    config = notification_rule_request_example()
+    config["notification_method"]["notify_plugin"] = {
+        "option": PluginOptions.WITH_PARAMS,
+        "plugin_params": _slack_with_proxy({"state": "enabled", "value": manual_proxy}),
+    }
+    del config["notification_method"]["notification_bulking"]
+    clients.RuleNotification.create(rule_config=config, expect_ok=False).assert_status_code(
+        HTTPStatus.BAD_REQUEST
+    )
+
+
 invalid_pushover_keys = [
     "TwentyNineCharacters123456789",
     "FortyOneCharacters12345678901234567899012",
@@ -1612,7 +1845,12 @@ service_now: API_ServiceNowData = {
     "servicenow_url": "https://service_now_url_test",
     "http_proxy": {
         "state": "enabled",
-        "value": {"option": "url", "url": "http://http_proxy_test_url/here"},
+        "value": {
+            "option": "manual",
+            "scheme": "http",
+            "proxy_server_name": "http_proxy_test_url",
+            "port": 80,
+        },
     },
     "auth": {
         "option": "explicit_password",

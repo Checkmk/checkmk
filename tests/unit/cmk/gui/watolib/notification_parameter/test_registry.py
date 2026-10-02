@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
 from pytest import MonkeyPatch
 
+from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.valuespec import Dictionary
 from cmk.gui.watolib import rulespecs
 from cmk.gui.watolib.notification_parameter import (
@@ -43,3 +45,30 @@ def test_register_legacy_notification_parameters(
     assert cls.spec().help() == "slosh"
 
     assert RuleGroup.NotificationParameters("xyz") in rulespecs.rulespec_registry
+
+
+@pytest.mark.usefixtures("request_context")
+def test_legacy_proxy_url_is_migrated_to_the_structured_proxy() -> None:
+    visitor = get_visitor(
+        _registry.notification_parameter_registry.form_spec("slack"),
+        VisitorOptions(migrate_values=True, mask_values=False),
+    )
+
+    disk_value = visitor.to_disk(
+        RawDiskData(
+            {
+                "general": {"description": "slack", "comment": "", "docu_url": ""},
+                "parameter_properties": {
+                    "webhook_url": ("webhook_url", "https://hooks.slack.com/services/x"),
+                    "proxy_url": ("cmk_postprocessed", "explicit_proxy", "http://proxy.lan:3128"),
+                },
+            }
+        )
+    )
+
+    assert isinstance(disk_value, dict)
+    assert disk_value["parameter_properties"]["proxy_url"] == (
+        "cmk_postprocessed",
+        "explicit_proxy",
+        {"scheme": "http", "proxy_server_name": "proxy.lan", "port": 3128},
+    )

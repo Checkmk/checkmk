@@ -5,7 +5,12 @@
 
 
 from cmk.gui.watolib.password_store import passwordstore_choices_without_user
-from cmk.rulesets.internal.form_specs import SingleChoiceElementExtended, SingleChoiceExtended
+from cmk.rulesets.internal.form_specs import (
+    InternalProxy,
+    migrate_to_internal_proxy,
+    SingleChoiceElementExtended,
+    SingleChoiceExtended,
+)
 from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -14,8 +19,6 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
     FixedValue,
-    migrate_to_proxy,
-    Proxy,
     String,
 )
 from cmk.rulesets.v1.form_specs.validators import LengthInRange, MatchRegex
@@ -84,7 +87,9 @@ def form_spec() -> Dictionary:
                     help_text=Help("Ignore unverified HTTPS request warnings. Use with caution."),
                 ),
             ),
-            "proxy_url": DictElement(parameter_form=Proxy(migrate=migrate_to_proxy)),
+            "proxy_url": DictElement(
+                parameter_form=InternalProxy(migrate=migrate_to_internal_proxy)
+            ),
             "url_prefix": _get_url_prefix_setting(),
         },
     )

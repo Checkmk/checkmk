@@ -154,52 +154,115 @@ describe('POST_SAVE_ACTIONS', () => {
   })
 
   describe('enableDataBackend.execute', () => {
-    test('PATCHes the data backend update endpoint with the selected site', async () => {
-      spyOnClient('GET').mockResolvedValueOnce(makeOk({ type: 'disabled' }))
-      const patchSpy = spyOnClient('PATCH').mockResolvedValueOnce(makeNoContent())
+    const UPDATE_URL = '/domain-types/data_backend/actions/update/invoke'
+    const PLACEMENT_URL = '/domain-types/data_backend/actions/update_feature_placement/invoke'
 
-      const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableDataBackend')!
-      const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
+    function setInstance(type: 'enabled' | 'disabled') {
+      return [
+        UPDATE_URL,
+        { params: { header: JSON_HEADER }, body: { site_id: 'prod', config: { type } } }
+      ]
+    }
 
-      expect(result.ok).toBe(true)
-      expect(patchSpy).toHaveBeenCalledWith('/domain-types/data_backend/actions/update/invoke', {
-        params: { header: JSON_HEADER },
-        body: { site_id: 'prod', config: { type: 'enabled' } }
-      })
-    })
+    function placeTelemetry(location: 'local' | 'disabled') {
+      return [
+        PLACEMENT_URL,
+        {
+          params: { header: JSON_HEADER },
+          body: { site_id: 'prod', features: { telemetry: location } }
+        }
+      ]
+    }
 
-    test('returns no rollback when the data backend was already enabled', async () => {
-      spyOnClient('GET').mockResolvedValueOnce(makeOk({ type: 'enabled' }))
-      spyOnClient('PATCH').mockResolvedValueOnce(makeNoContent())
-
-      const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableDataBackend')!
-      const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
-
-      expect(result.ok).toBe(true)
-      if (result.ok) {
-        expect(result.rollback).toBeUndefined()
+    test.each([
+      {
+        name: 'enables the local instance and places telemetry on it',
+        instance: 'disabled',
+        calls: [setInstance('enabled'), placeTelemetry('local')]
+      },
+      {
+        name: 'places telemetry on an already enabled local instance',
+        instance: 'enabled',
+        calls: [placeTelemetry('local')]
       }
-    })
-
-    test('returns a rollback that disables the data backend when it was previously disabled', async () => {
-      spyOnClient('GET').mockResolvedValueOnce(makeOk({ type: 'disabled' }))
+    ])('$name', async ({ instance, calls }) => {
+      spyOnClient('GET').mockResolvedValueOnce(
+        makeOk({ type: instance, features: { telemetry: 'disabled' } })
+      )
       const patchSpy = spyOnClient('PATCH').mockResolvedValue(makeNoContent())
 
       const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableDataBackend')!
       const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
 
       expect(result.ok).toBe(true)
-      if (result.ok) {
-        expect(result.rollback).toBeDefined()
-        await result.rollback!()
-        expect(patchSpy).toHaveBeenLastCalledWith(
-          '/domain-types/data_backend/actions/update/invoke',
-          {
-            params: { header: JSON_HEADER },
-            body: { site_id: 'prod', config: { type: 'disabled' } }
-          }
+      expect(patchSpy.mock.calls).toEqual(calls)
+    })
+
+    test.each(['local', 'central'])(
+      'leaves a site alone that already stores telemetry %s',
+      async (location) => {
+        spyOnClient('GET').mockResolvedValueOnce(
+          makeOk({ type: 'enabled', features: { telemetry: location } })
         )
+        const patchSpy = spyOnClient('PATCH')
+
+        const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableDataBackend')!
+        const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
+
+        expect(result).toEqual({ ok: true })
+        expect(patchSpy).not.toHaveBeenCalled()
       }
+    )
+
+    test.each([
+      {
+        name: 'rolls back the placement and the instance it enabled',
+        instance: 'disabled',
+        rollbackCalls: [placeTelemetry('disabled'), setInstance('disabled')]
+      },
+      {
+        name: 'rolls back only the placement on an already enabled local instance',
+        instance: 'enabled',
+        rollbackCalls: [placeTelemetry('disabled')]
+      }
+    ])('$name', async ({ instance, rollbackCalls }) => {
+      spyOnClient('GET').mockResolvedValueOnce(
+        makeOk({ type: instance, features: { telemetry: 'disabled' } })
+      )
+      const patchSpy = spyOnClient('PATCH').mockResolvedValue(makeNoContent())
+
+      const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableDataBackend')!
+      const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
+      expect(result.ok).toBe(true)
+      patchSpy.mockClear()
+      if (result.ok) {
+        await result.rollback!()
+      }
+
+      expect(patchSpy.mock.calls).toEqual(rollbackCalls)
+    })
+
+    test('disables the instance it enabled when placing telemetry fails', async () => {
+      spyOnClient('GET').mockResolvedValueOnce(
+        makeOk({ type: 'disabled', features: { telemetry: 'disabled' } })
+      )
+      const patchSpy = spyOnClient('PATCH')
+        .mockResolvedValueOnce(makeNoContent())
+        .mockResolvedValueOnce(makeError(409, { title: 'Conflict', detail: 'No local instance' }))
+        .mockResolvedValueOnce(makeNoContent())
+
+      const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableDataBackend')!
+      const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
+
+      expect(result).toEqual({
+        ok: false,
+        error: { title: 'Could not enable the data backend', detail: 'No local instance' }
+      })
+      expect(patchSpy.mock.calls).toEqual([
+        setInstance('enabled'),
+        placeTelemetry('local'),
+        setInstance('disabled')
+      ])
     })
 
     test('returns a structured error when the endpoint returns a REST problem', async () => {

@@ -103,18 +103,36 @@ async function isCollectorEnabled(siteId: string): Promise<boolean> {
   return body.activation.mode === 'enabled'
 }
 
-/**
- * Returns whether the data backend is currently enabled for a site.
- * Throws on network or server errors so the calling action can fail cleanly
- * before any mutation is made.
- */
-async function isDataBackendEnabled(siteId: string): Promise<boolean> {
-  const body = unwrap(
+type DataBackendStatus = components['schemas']['_DataBackendStatus']
+
+/** Throws on network or server errors so the caller aborts before mutating. */
+async function getDataBackendStatus(siteId: string): Promise<DataBackendStatus> {
+  return unwrap(
     await client.GET('/domain-types/data_backend/actions/get/invoke', {
       params: { query: { site_id: siteId } }
     })
   )
-  return body.type === 'enabled'
+}
+
+async function setLocalDataBackendInstance(
+  siteId: string,
+  type: 'enabled' | 'disabled'
+): Promise<void> {
+  unwrap(
+    await client.PATCH('/domain-types/data_backend/actions/update/invoke', {
+      params: { header: CONTENT_TYPE_JSON },
+      body: { site_id: siteId, config: { type } }
+    })
+  )
+}
+
+async function placeTelemetry(siteId: string, location: 'local' | 'disabled'): Promise<void> {
+  unwrap(
+    await client.PATCH('/domain-types/data_backend/actions/update_feature_placement/invoke', {
+      params: { header: CONTENT_TYPE_JSON },
+      body: { site_id: siteId, features: { telemetry: location } }
+    })
+  )
 }
 
 /**
@@ -271,34 +289,41 @@ export const enableCollectorAction: PostSaveAction = {
 }
 
 /**
- * Action: enable the data backend (ClickHouse) for the selected site.
+ * Action: store the selected site's telemetry metrics in a data backend.
  *
- * Checks the current data backend state first so that rollback only disables
- * it if it was disabled before this save operation — preventing an unintended
- * side-effect on an already-enabled data backend.
+ * Enables the local instance (ClickHouse) and places telemetry on it, unless
+ * the site already stores telemetry locally or on the central site. Rollback
+ * reverts only what this run changed.
  */
 export const enableDataBackendAction: PostSaveAction = {
   key: 'enableDataBackend',
   label: () => _t('Data backend connection'),
   execute: async (ctx) => {
     try {
-      const wasEnabled = await isDataBackendEnabled(ctx.siteId)
-      unwrap(
-        await client.PATCH('/domain-types/data_backend/actions/update/invoke', {
-          params: { header: CONTENT_TYPE_JSON },
-          body: { site_id: ctx.siteId, config: { type: 'enabled' } }
-        })
-      )
-      if (wasEnabled) {
+      const status = await getDataBackendStatus(ctx.siteId)
+      if (status.features.telemetry !== 'disabled') {
         return { ok: true }
+      }
+      const enablesInstance = status.type === 'disabled'
+      if (enablesInstance) {
+        await setLocalDataBackendInstance(ctx.siteId, 'enabled')
+      }
+      try {
+        await placeTelemetry(ctx.siteId, 'local')
+      } catch (err) {
+        // The state machine only rolls back actions that succeeded.
+        if (enablesInstance) {
+          await setLocalDataBackendInstance(ctx.siteId, 'disabled')
+        }
+        throw err
       }
       return {
         ok: true,
         rollback: async () => {
-          await client.PATCH('/domain-types/data_backend/actions/update/invoke', {
-            params: { header: CONTENT_TYPE_JSON },
-            body: { site_id: ctx.siteId, config: { type: 'disabled' } }
-          })
+          await placeTelemetry(ctx.siteId, 'disabled')
+          if (enablesInstance) {
+            await setLocalDataBackendInstance(ctx.siteId, 'disabled')
+          }
         }
       }
     } catch (err) {

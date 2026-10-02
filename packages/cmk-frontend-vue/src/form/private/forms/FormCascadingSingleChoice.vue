@@ -160,7 +160,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
         />
       </template>
       <template v-if="activeElement !== null">
-        <CmkSpace size="small" />
+        <CmkSpace v-if="activeElement.spec.help" size="small" />
         <CmkHelpText :help="untranslated(activeElement.spec.help)" />
       </template>
     </div>

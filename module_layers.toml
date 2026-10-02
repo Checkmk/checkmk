@@ -1820,6 +1820,7 @@ allows = [
   "@crypto",
   "@relay_protocols",
   "cmk.check_helper_protocol",
+  "cmk.password_store",
   "cmk.relay_trigger_protocol",
 ]
 

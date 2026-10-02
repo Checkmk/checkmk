@@ -212,5 +212,8 @@ py_cmk_test(
     size = "small",
     srcs = glob(["tests/*.py"]),
     imports = ["."],
-    deps = [":extract_os_packages"],
+    deps = [
+        ":dump_fastapi_openapi_spec",
+        ":extract_os_packages",
+    ],
 )

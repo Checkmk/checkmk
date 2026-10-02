@@ -491,6 +491,29 @@ def test_ruleset_permissions_with_commandline_access(varname: str) -> None:
     assert may_edit_ruleset(varname) is False
 
 
+@pytest.mark.parametrize(
+    "permissions, expected",
+    [
+        pytest.param({"wato.rulesets"}, True, id="rulesets"),
+        pytest.param(
+            {"wato.services", "wato.service_discovery_to_ignored"},
+            True,
+            id="services_and_discovery_to_ignored",
+        ),
+        pytest.param({"wato.services"}, False, id="services_only"),
+        pytest.param({"wato.service_discovery_to_ignored"}, False, id="discovery_to_ignored_only"),
+        pytest.param(set(), False, id="none"),
+    ],
+)
+def test_may_edit_ignored_services_ruleset(
+    with_user: tuple[UserId, str], permissions: set[str], expected: bool
+) -> None:
+    with UserContext(
+        with_user[0], UserPermissions({}, {}, {}, []), explicit_permissions=permissions
+    ):
+        assert may_edit_ruleset("ignored_services") is expected
+
+
 @pytest.fixture()
 def reset_hooks() -> Iterator[None]:
     old_hooks = hooks.hooks

@@ -265,8 +265,34 @@ msgid "\"%(encoding_name)s\" is not a valid python encoding."
 msgstr "'%(encoding_name)s' ist kein gültiges Python-Encoding."
 
 #, python-format
+msgid ""
+"\"%(host)s\" carries the host attribute \"%(name)s\" with the value "
+"\"%(value)s\"."
+msgstr ""
+
+#, python-format
+msgid ""
+"\"%(host)s\" carries the host label \"%(name)s\" with the value "
+"\"%(value)s\"."
+msgstr ""
+
+#, python-format
+msgid "\"%(host)s\" has \"%(word)s\" in its name."
+msgstr ""
+
+#, python-format
 msgid "\"%(hostname)s\" is not a valid host name"
 msgstr "\"%(hostname)s\" ist kein gültiger Host-Name"
+
+#, python-format
+msgid "\"%(source)s\" and \"%(target)s\" are already related in another way."
+msgstr ""
+
+#, python-format
+msgid ""
+"\"%(word)s\" cannot be read out of a host name: a word is one whole part of "
+"it."
+msgstr ""
 
 #, fuzzy, python-format
 msgid "# %(cycle_id)s - cycle details"
@@ -491,6 +517,10 @@ msgid "%(count)d discovery parameter removed"
 msgid_plural "%(count)d discovery parameters removed"
 msgstr[0] "%(count)d entfernter Erkennungsparameter"
 msgstr[1] "%(count)d entfernte Erkennungsparameter"
+
+#, fuzzy, python-format
+msgid "%(count)d hosts looked at."
+msgstr "%{count} Host wurde ausgewählt"
 
 #, python-format
 msgid "%(count)d new label"
@@ -986,6 +1016,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy, python-format
+msgid "'%(host)s' is locked by Quick setup."
+msgstr "%(host_name)s ist durch Quick Setup gesperrt."
+
+#, fuzzy, python-format
 msgid ""
 "'%(path)s' uses %(used)s which is deprecated in Checkmk "
 "%(deprecated_version)s and removed in Checkmk %(removed_version)s. Use "
@@ -1115,8 +1149,18 @@ msgstr "(Modul ohne Namen)"
 msgid "(Version: %(version)s - no version change)"
 msgstr "(Version: %(version)s - keine Versionsänderung)"
 
+msgid "(agent-local client only)"
+msgstr ""
+
 msgid "(built-in)"
 msgstr "(mitgeliefert)"
+
+#, fuzzy
+msgid "(client file permissions are not checked)"
+msgstr "Berechtigungsprüfung für Oracle-Binärdateien %(WINDOWS_ONLY)s"
+
+msgid "(credentials come from the Oracle wallet)"
+msgstr ""
 
 #, python-format
 msgid "(default is %(port_defaults)r for %(protocol)s/TLS)"
@@ -1136,6 +1180,14 @@ msgstr "(Voreinstellungen bearbeiten)"
 
 msgid "(finished)"
 msgstr "(abgeschlossen)"
+
+#, fuzzy
+msgid "(host client first, then the agent-local client)"
+msgstr "Immer Host-Client verwenden (den agent-lokalen Client ignorieren)"
+
+#, fuzzy
+msgid "(host client only)"
+msgstr "nur Mount-Punkt"
 
 msgid "(ignore)"
 msgstr "(ignorieren)"
@@ -2855,6 +2907,9 @@ msgstr ""
 "erzwingen. Für jeden passenden Service auf den betreffenden Hosts wird ein "
 "Child-Knoten erstellt. "
 
+msgid "A relation is marked either by words or by a value, not by both."
+msgstr ""
+
 msgid ""
 "A reliable backup ensures that your monitoring environment can be restored "
 "in case of data loss.<br><br>We recommend using the <a href=\"wato.py?"
@@ -4254,6 +4309,11 @@ msgstr "Latenz aktiver Checks"
 msgid "Active checks"
 msgstr "Aktive Checks"
 
+#, fuzzy
+msgid ""
+"Active checks are disabled for this service, so it cannot be rescheduled."
+msgstr "Aktive Checks wurden für %(what)s manuell deaktiviert!"
+
 msgid "Active checks enabled"
 msgstr "Aktive Checks aktiviert"
 
@@ -4766,9 +4826,6 @@ msgstr "Neuen Endpunkt hinzufügen"
 msgid "Add new entry"
 msgstr "Neuen Eintrag hinzufügen"
 
-msgid "Add new exclude pattern"
-msgstr "Neues auszuschließendes Pattern hinzufügen"
-
 msgid ""
 "Add new folders and delete existing folders. If a folder to be deleted "
 "contains hosts then the permission to delete hosts is also required."
@@ -4780,14 +4837,8 @@ msgstr ""
 msgid "Add new group"
 msgstr "Neue Gruppe hinzufügen"
 
-msgid "Add new group or user"
-msgstr "Neue Gruppe oder neuen Benutzer hinzufügen"
-
 msgid "Add new grouping definition"
 msgstr "Neue Gruppendefinition hinzufügen"
-
-msgid "Add new include pattern"
-msgstr "Neues einzuschließendes Pattern hinzufügen"
 
 msgid "Add new label"
 msgstr "Neues Label hinzufügen"
@@ -6250,9 +6301,6 @@ msgstr "Algorithmus"
 msgid "Alias"
 msgstr "Alias"
 
-msgid "Alias Value"
-msgstr "Alias-Wert"
-
 msgid "Alias for created gateway hosts"
 msgstr "Alias für erstellte Gateway-Hosts"
 
@@ -6545,6 +6593,17 @@ msgstr "Alle Objekttypen"
 
 msgid "All odd pages"
 msgstr "Alle ungeraden Seiten"
+
+#, python-format
+msgid ""
+"All of them carry the host attribute \"%(name)s\" with the value "
+"\"%(value)s\"."
+msgstr ""
+
+#, python-format
+msgid ""
+"All of them carry the host label \"%(name)s\" with the value \"%(value)s\"."
+msgstr ""
 
 msgid "All online users"
 msgstr "Alle gerade aktiven Benutzer"
@@ -7055,6 +7114,12 @@ msgid ""
 msgstr ""
 "Erlaubt, Erweiterungspakete (MKPs) hochzuladen, zu installieren, erstellen "
 "und bearbeiten. Hinweis: MKPs enthalten ausführbaren Code."
+
+msgid ""
+"Allows to use Checkmk's AI assistant. The assistant sends the questions of "
+"the user, and the data its tools read with the permissions of the user, to "
+"the configured AI provider."
+msgstr ""
 
 msgid "Allows to use the 'Explain with AI' button."
 msgstr "Erlaubt die Nutzung des Knopfs 'Mit KI erklären'."
@@ -8356,6 +8421,10 @@ msgstr "August"
 
 msgid "Auth"
 msgstr "Auth"
+
+#, fuzzy
+msgid "Authenticate"
+msgstr "Authentifizierung"
 
 msgid "Authenticate users by incoming HTTP requests"
 msgstr "Benutzer anhand eingehender HTTP-Requests authentifizieren"
@@ -10038,6 +10107,10 @@ msgstr "Sicherungsauftrag"
 msgid "Backup modes"
 msgstr "Sicherungs-Modi"
 
+#, fuzzy
+msgid "Backup server"
+msgstr "Größe der Sicherung"
+
 msgid "Backup size"
 msgstr "Größe der Sicherung"
 
@@ -10463,6 +10536,15 @@ msgstr "Beide"
 msgid "Both - display the information for both pod and container levels"
 msgstr "Beide - zeige Informationen für Pod- und Container-Levels"
 
+#, python-format
+msgid ""
+"Both carry the host attribute \"%(name)s\" with the value \"%(value)s\"."
+msgstr ""
+
+#, python-format
+msgid "Both carry the host label \"%(name)s\" with the value \"%(value)s\"."
+msgstr ""
+
 msgid "Both conditions must match (defensive)"
 msgstr "Beide Bedingungen müssen zutreffen (defensiv)"
 
@@ -10610,6 +10692,10 @@ msgid "Build cache"
 msgstr "Build Cache"
 
 msgid "Build duration"
+msgstr "Bauzeit"
+
+#, fuzzy
+msgid "Build version"
 msgstr "Bauzeit"
 
 msgid "Building bulks"
@@ -12197,8 +12283,9 @@ msgstr ""
 "CURDEPTH_PERC: Prozentwert (CURDEPTH/MAXDEPTH) der Anzahl an Meldungen, die "
 "sich aktuell in der Warteschlange befinden."
 
-msgid "Cache age"
-msgstr "Cache-Alter"
+#, fuzzy
+msgid "Cache age for asynchronous built-in sections"
+msgstr "Cache-Alter für asynchrone Checks"
 
 msgid "Cache age for asynchronous checks"
 msgstr "Cache-Alter für asynchrone Checks"
@@ -12749,6 +12836,9 @@ msgstr "Die Fähigkeitenkarte wird unterstützt"
 msgid "Capabilities supported"
 msgstr "Unterstützte Fähigkeiten"
 
+msgid "Capacity license consumption"
+msgstr ""
+
 msgid "Capacity providers per cluster"
 msgstr "Capacity providers pro Cluster"
 
@@ -12841,6 +12931,14 @@ msgstr "Celsius"
 
 msgid "Central Event Console"
 msgstr "Zentrale Event Console"
+
+#, fuzzy
+msgid "Central data backend"
+msgstr "Metrik-Backend anfragen"
+
+#, fuzzy, python-format
+msgid "Central data backend (site %(site)s)"
+msgstr "Instanz %(site_id)s gelöscht"
 
 msgid ""
 "Central site is version >= 2.2 while remote site is an older version, please "
@@ -15767,6 +15865,10 @@ msgid ""
 "creates services from them"
 msgstr ""
 
+#, fuzzy
+msgid "Configure instances"
+msgstr "Konfiguriere Agenten"
+
 msgid "Configure levels"
 msgstr "Levels konfigurieren"
 
@@ -18631,9 +18733,6 @@ msgstr "Custom Metrics (%s):"
 msgid "Custom metrics (last 20 minutes)"
 msgstr "Custom Metrics (%s):"
 
-msgid "Custom metrics cache age"
-msgstr "Cache-Alter der Custom Metrics"
-
 #, python-format
 msgid "Custom notification table for user %(user_id)s"
 msgstr "Benutzerdefinierte Benachrichtigungstabelle von Benutzer %(user_id)s"
@@ -19242,6 +19341,10 @@ msgid "Data backend of site %(site_id)s is disabled"
 msgstr "Das Metrik-Backend der Instanz %s ist deaktiviert"
 
 #, fuzzy
+msgid "Data backend used by each feature"
+msgstr "Datenbank muss wieder hergestellt werden"
+
+#, fuzzy
 msgid "Data belonging to this host"
 msgstr "Ntop-Integration dieses Hosts"
 
@@ -19391,6 +19494,10 @@ msgstr "Datenbanksicherung"
 msgid "Database changed to emergency"
 msgstr "Datenbank in Notlage geraten"
 
+#, fuzzy
+msgid "Database content version"
+msgstr "Metrik-Backend-Verbindung"
+
 msgid "Database diff backup"
 msgstr "Datenbank diff Sicherung"
 
@@ -19440,6 +19547,10 @@ msgstr "Datenbank-Port"
 msgid "Database reclaimable size"
 msgstr "Regenerierbare Datenbankgröße"
 
+#, fuzzy
+msgid "Database schema version"
+msgstr "Datenbank-Server"
+
 msgid "Database server"
 msgstr "Datenbank-Server"
 
@@ -19463,6 +19574,10 @@ msgstr "Datenbankbenutzer"
 
 msgid "Database user credentials"
 msgstr "Anmeldedaten des Datenbankbenutzers"
+
+#, fuzzy
+msgid "Database vendor"
+msgstr "Datenbank-Server"
 
 msgid "Database/Collection name ('[DB_NAME] [COLLECTION_NAME]')"
 msgstr "Datenbank/Kollektions Name ('[DB_NAME] [COLLECTION_NAME]')"
@@ -19831,9 +19946,6 @@ msgstr "Standardzeitraum für das Reporting"
 
 msgid "Default rule pack"
 msgstr "Standard-Regelpaket"
-
-msgid "Default settings"
-msgstr "Standardeinstellungen"
 
 msgid "Default start URL"
 msgstr "Standard-Start-URL"
@@ -20886,9 +20998,6 @@ msgstr "OpenHardwareMonitor (headless) verteilen und asynchron ausführen"
 msgid "Deploy Oracle databases plug-in"
 msgstr "Oracle-Datenbank-Plugin verteilen"
 
-msgid "Deploy Oracle plug-in"
-msgstr "Oracle-Plugin verteilen"
-
 msgid "Deploy Podman plug-in"
 msgstr "Podman-Plugin verteilen"
 
@@ -20969,6 +21078,10 @@ msgstr "Das MegaRAID-Plugin verteilen"
 
 msgid "Deploy the MySQL plug-in"
 msgstr "MySQL-Plugin verteilen"
+
+#, fuzzy
+msgid "Deploy the Oracle plug-in"
+msgstr "Oracle-Plugin verteilen"
 
 msgid "Deploy the SAP HANA plug-in"
 msgstr "SAP HANA-Plugin verteilen"
@@ -21056,6 +21169,10 @@ msgstr "Das Plugin verteilen und asynchron ausführen"
 
 msgid "Deploy the plug-in and run it synchronously"
 msgstr "Das Plugin verteilen und synchron ausführen"
+
+#, fuzzy
+msgid "Deploy the plug-in without a configuration file"
+msgstr "Das %(plugin)s Plugin ohne Konfiguration verteilen"
 
 msgid "Deploy the plug-ins and run them asynchronously"
 msgstr "Die Plugins verteilen und asynchron ausführen"
@@ -21220,6 +21337,10 @@ msgstr "Erkenne Netzwerk-Parent Hosts"
 
 msgid "Detect network parents"
 msgstr "Netzwerk-Parents erkennen"
+
+#, fuzzy
+msgid "Detect related hosts"
+msgstr "Ausgewählte Hosts löschen"
 
 msgid "Detection rate"
 msgstr "Erkennungsrate"
@@ -21611,9 +21732,6 @@ msgstr "Login-Timeout deaktivieren"
 msgid "Disable this package"
 msgstr "Dieses Paket deaktivieren"
 
-msgid "Disable this section"
-msgstr "Diese Sektion deaktivieren"
-
 msgid "Disable this site"
 msgstr "Diese Instanz deaktivieren"
 
@@ -21737,6 +21855,10 @@ msgstr "Deaktivierte Aufgaben erkennen"
 
 msgid "Discover individual services for each CPU"
 msgstr "Individuelle Services für jede CPU erkennen"
+
+#, fuzzy
+msgid "Discover local instances"
+msgstr "Einzelne Schnittstellen erkennen"
 
 msgid "Discover packages"
 msgstr "Pakete erkennen"
@@ -22459,9 +22581,6 @@ msgstr "OpenHardwareMonitor (headless) nicht verteilen"
 msgid "Do not deploy Oracle databases plug-in"
 msgstr "Oracle-Datenbank-Plugin nicht verteilen"
 
-msgid "Do not deploy Oracle plug-in"
-msgstr "Oracle-Plugin nicht verteilen"
-
 msgid "Do not deploy Robotmk"
 msgstr "Robotmk nicht verteilen"
 
@@ -22510,6 +22629,10 @@ msgstr "Das MegaRAID-Plugin nicht verteilen"
 
 msgid "Do not deploy the MySQL plug-in"
 msgstr "Das MySQL-Plugin nicht verteilen"
+
+#, fuzzy
+msgid "Do not deploy the Oracle plug-in"
+msgstr "Oracle-Plugin nicht verteilen"
 
 msgid "Do not deploy the Redis plug-in"
 msgstr "Das Redis-Plugin nicht verteilen"
@@ -24387,6 +24510,10 @@ msgstr "Host-Benachrichtigungen ein"
 msgid "Enable in-memory cache for availability"
 msgstr "In-Memory-Cache für Verfügbarkeit aktivieren"
 
+#, fuzzy
+msgid "Enable local data backend instance"
+msgstr "Aktiviere diese ntopng-Instanz"
+
 msgid "Enable logging of logon failures"
 msgstr "Protokollierung von Anmeldefehlern einschalten"
 
@@ -24464,9 +24591,6 @@ msgstr "Replikation von einer Zentrale aktivieren"
 msgid "Enable row shading"
 msgstr "Zeilenschattierung einschalten"
 
-msgid "Enable service discovery"
-msgstr "Service-Erkennung aktivieren"
-
 msgid "Enable service notifications"
 msgstr "Service-Benachrichtigungen ein"
 
@@ -24480,6 +24604,12 @@ msgstr "Diese Instanz aktivieren"
 #, fuzzy
 msgid "Enable the MCP Server"
 msgstr "Den gRPC-basierten OTLP-Empfänger aktivieren"
+
+#, python-format
+msgid ""
+"Enable the local data backend instance to store these features locally: "
+"%(features)s"
+msgstr ""
 
 msgid "Enable the ntopng host filter"
 msgstr "Aktiviere den Host-Filter von ntopng"
@@ -27561,6 +27691,10 @@ msgstr "Unterschiede finden..."
 
 msgid "Find on this page ..."
 msgstr "Suche ... auf dieser Seite."
+
+#, fuzzy
+msgid "Find relations between hosts"
+msgstr "Bruchteil zwischen"
 
 msgid "Fine-tune Windows event log monitoring"
 msgstr "Monitoring des Windows Ereignisprotokolls feinjustieren"
@@ -33022,13 +33156,10 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"How old (in seconds) the cache file for built-in sections is allowed to be."
+"How old the cached output of the built-in sections marked 'async' is allowed "
+"to be."
 msgstr ""
 "Wie alt (in Sekunden) die Cache-Datei für mitgelieferte Sektionen sein darf."
-
-msgid ""
-"How old (in seconds) the cache file for custom metrics is allowed to be."
-msgstr "Wie alt (in Sekunden) die Cache-Datei für Custom Metrics sein darf."
 
 msgid "How should the Kubernetes agent connect to Checkmk?"
 msgstr ""
@@ -34769,16 +34900,6 @@ msgstr ""
 "testen"
 
 msgid ""
-"If you are running a distributed Checkmk setup with multiple sites on the "
-"same machine, please configure different port numbers per each site via the "
-"site-specific global settings to avoid port binding conflicts."
-msgstr ""
-"Wenn Sie eine verteilte Checkmk-Konfiguration mit mehreren Instanzen auf "
-"derselben Maschine betreiben, konfigurieren Sie bitte über die Instanz-"
-"spezifischen globalen Einstellungen für jede Instanz unterschiedliche "
-"Portnummern, um Konflikte bei der Portzuweisung zu vermeiden."
-
-msgid ""
 "If you are running the Event Console as a non-root (such as in an OMD site) "
 "please choose port number greater than 1024."
 msgstr ""
@@ -35635,9 +35756,6 @@ msgstr "Neustarts des Kern ignorieren, wenn kürzer als"
 
 msgid "Ignore database name"
 msgstr "Datenbankname ignorieren"
-
-msgid "Ignore database name and use instance name instead"
-msgstr "Datenbanknamen ignorieren und stattdessen den Instanznamen verwenden"
 
 msgid "Ignore default increment"
 msgstr "Standardinkrement ignorieren"
@@ -36966,6 +37084,10 @@ msgstr ""
 msgid "Installation"
 msgstr "Installation"
 
+#, fuzzy
+msgid "Installation ID"
+msgstr "Installation"
+
 msgid "Installation directories"
 msgstr "Installationsverzeichnisse"
 
@@ -37010,6 +37132,10 @@ msgstr "Instanz-Identifier"
 msgid "Instance identifier & region"
 msgstr "Instanz-Identifier & -Region"
 
+#, fuzzy
+msgid "Instance license consumption"
+msgstr "Optionen des Oracle Instant Client"
+
 msgid "Instance name"
 msgstr "Instanzname"
 
@@ -37025,12 +37151,22 @@ msgstr "Instanz, Datenbank und Dateiname"
 msgid "Instance, tablespace & backup type"
 msgstr "Instanz, Tablespace und Typ der Sicherung"
 
+#, fuzzy
+msgid "Instance-specific settings"
+msgstr "Einstellungen von Instanzen"
+
 msgid "Instances"
 msgstr "Instanzen"
 
 #, fuzzy
 msgid "Instances CRITICAL"
 msgstr "Instanz-ID"
+
+#, fuzzy
+msgid "Instances matching one of these patterns are not monitored."
+msgstr ""
+"Services, die einem dieser Pattern entsprechen, werden von der Erkennung "
+"ausgeschlossen."
 
 msgid "Instances settings"
 msgstr "Einstellungen von Instanzen"
@@ -40184,6 +40320,13 @@ msgstr "Lizenzmerkmal"
 msgid "License Usage"
 msgstr "Lizenznutzung"
 
+msgid "License and support expiry"
+msgstr ""
+
+#, fuzzy
+msgid "License consumption"
+msgstr "Durchschnittlicher Verbrauch"
+
 msgid "License details"
 msgstr "Lizenzdetails"
 
@@ -40200,6 +40343,10 @@ msgid "License expired: Renew license now to avoid site deletion."
 msgstr ""
 "Die Lizenz ist abgelaufen: Erneuern Sie Ihre Lizenz jetzt, um die Löschung "
 "der Instanz zu vermeiden."
+
+#, fuzzy
+msgid "License expiry"
+msgstr "Lizenzende"
 
 msgid "License key list"
 msgstr "Liste der Lizenzschlüssel"
@@ -40530,7 +40677,7 @@ msgid "Link target"
 msgstr "Link-Typ"
 
 msgid ""
-"Link this host to other monitored hosts. The relation type says what this "
+"Link this host to other monitored hosts. Type and direction say what this "
 "host is to the selected one - the management board of that host, for "
 "instance, or an OS host managed by it. A relation concerns both hosts, so it "
 "is stored on both: it appears here right away when someone records it on the "
@@ -40811,9 +40958,6 @@ msgstr "Livestatus Fehler"
 msgid "Livestatus is available locally"
 msgstr "Livestatus ist nur lokal verfügbar"
 
-msgid "Livestatus network traffic is encrypted"
-msgstr "Der Livestatus-Netzwerkverkehr ist verschlüsselt"
-
 msgid "Livestatus network traffic is unencrypted"
 msgstr "Livestatus-Netzwerkverkehr ist unverschlüsselt"
 
@@ -40969,6 +41113,10 @@ msgstr "Lokale Checks: Versionen"
 msgid "Local count requests"
 msgstr "Lokale Zählanforderungen"
 
+#, fuzzy, python-format
+msgid "Local data backend (site %(site)s)"
+msgstr "Das Metrik-Backend der Instanz %s ist deaktiviert"
+
 msgid "Local destination"
 msgstr "Lokales Ziel"
 
@@ -40984,6 +41132,10 @@ msgstr "Größe von Erweiterungen"
 
 msgid "Local group name"
 msgstr "Lokaler Gruppenname"
+
+#, fuzzy
+msgid "Local instances"
+msgstr "Oracle-Instanzen"
 
 msgid "Local integrated authentication (Windows)"
 msgstr "Lokal integrierte Authentifizierung (Windows)"
@@ -44302,6 +44454,10 @@ msgstr "Der Metrikpfad muss ein String sein."
 msgid "Metrics path must start with a '/'."
 msgstr "Der Metrikpfad muss mit '/' beginnen."
 
+#, fuzzy
+msgid "Metrics received by the site's OpenTelemetry collector."
+msgstr "Traces an einen anderen OpenTelemetry Collector senden"
+
 msgid "Metrics refused by data storage"
 msgstr "Die Metriken wurden vom Datenspeicher zurückgewiesen"
 
@@ -45063,6 +45219,10 @@ msgstr "Namespaces überwachen"
 msgid "Monitor namespaces matching"
 msgstr "Überwachung des Namespace-Matching"
 
+#, fuzzy
+msgid "Monitor only the databases listed below"
+msgstr "Monitoring-Host, dem diese Datenbank zugeordnet werden soll"
+
 msgid "Monitor other than Android or iOS devices"
 msgstr "Andere Geräte als Android oder iOS überwachen"
 
@@ -45209,6 +45369,10 @@ msgstr "Monitoring von Containern und Container-Orchestrationssoftware"
 
 msgid "Monitoring of forwarded log files"
 msgstr "Monitoring der weitergeleiteten Log-Dateien"
+
+#, fuzzy
+msgid "Monitoring options"
+msgstr "Windows Monitoring"
 
 msgid "Monitoring server address"
 msgstr "Server-Adresse überwachen"
@@ -47042,6 +47206,9 @@ msgstr ""
 msgid "No data."
 msgstr "Keine Daten."
 
+msgid "No databases configured explicitly; see 'Instance discovery'"
+msgstr ""
+
 msgid "No default values can be set for condition choices."
 msgstr ""
 "Für die Auswahl von Bedingungen können keine Standardwerte festgelegt werden."
@@ -47245,6 +47412,14 @@ msgstr "Kein Passwort ausgewählt"
 msgid "No pending changes."
 msgstr "Keine ausstehenden Änderungen."
 
+#, fuzzy, python-format
+msgid "No permission to edit the host \"%(host)s\"."
+msgstr "Sie haben nicht die Berechtigung, diesen %(name)s zu bearbeiten."
+
+#, fuzzy, python-format
+msgid "No permission to edit the hosts in the folder \"%(folder)s\"."
+msgstr "Die Hosts im Ordner %(folder)s sind gesperrt."
+
 #, fuzzy
 msgid "No plug-ins using an outdated API"
 msgstr "Keine Check-Plugins, welche die veraltete API verwenden"
@@ -47261,6 +47436,13 @@ msgstr "Kein Proxy"
 
 msgid "No re-executions"
 msgstr "Keine Wiederausführungen"
+
+#, fuzzy, python-format
+msgid "No relation \"%(kind)s\" can be discovered."
+msgstr "Keine Hosts zu erkennen"
+
+msgid "No relation was accepted, nothing to do."
+msgstr ""
 
 #, fuzzy
 msgid "No relations"
@@ -47296,12 +47478,6 @@ msgstr "Keine Zeilen für Aktionen ausgewählt."
 
 msgid "No rule match"
 msgstr "Keine übereinstimmende Regel"
-
-msgid ""
-"No rule set <b>State in case of restricted address mismatch</b> is configured"
-msgstr ""
-"Es ist kein Regelsatz <b>Zustand bei fehlender Übereinstimmung der Adresse</"
-"b> konfiguriert"
 
 msgid "No rules found."
 msgstr "Keine Regeln gefunden."
@@ -48040,6 +48216,10 @@ msgstr "Es wurde nichts protokolliert"
 
 msgid "Nothing was changed."
 msgstr "Es hat sich nichts geändert."
+
+msgid ""
+"Nothing would find this relation: name a word, or a value both hosts carry."
+msgstr ""
 
 msgid "Notice"
 msgstr "Hinweise"
@@ -49486,9 +49666,6 @@ msgstr "Bei allen Services"
 msgid "On all sites"
 msgstr "Auf allen Instanzen"
 
-msgid "On down host"
-msgstr "Bei Host im Zustand DOWN"
-
 #, fuzzy
 msgid "On every Agent Controller registration"
 msgstr "Bei jeder Registrierung eines Agent Controllers"
@@ -49792,6 +49969,10 @@ msgstr "Nur die ersten 20 sortierten Ergebnisse"
 msgid "Only for hosts: Set child hosts in downtime"
 msgstr "Nur für Hosts: Child Hosts in Wartungszeit setzen"
 
+#, fuzzy
+msgid "Only hosts of the same customer can be related."
+msgstr "Nur ungenutzte Parameter können gelöscht werden."
+
 msgid "Only if the status is non-OK"
 msgstr "Nur wenn der Status nicht-OK ist"
 
@@ -49811,6 +49992,14 @@ msgstr ""
 
 msgid "Only include hosts with a failed discovery check"
 msgstr "Nur Hosts mit einem gescheiterten Discovery Check einschließen"
+
+#, fuzzy
+msgid ""
+"Only instances matching one of these patterns are monitored. If no pattern "
+"is defined, all of them are."
+msgstr ""
+"Es werden nur Services gefunden, die einem dieser Pattern entsprechen. Wenn "
+"kein Pattern definiert ist, werden alle Services eingeschlossen."
 
 msgid "Only interface with these item names are put into this group."
 msgstr "Nur Schnittstellen mit diesen Namen werden in die Gruppe aufgenommen."
@@ -49899,13 +50088,6 @@ msgstr ""
 
 msgid "Only root socket"
 msgstr "Nur Root-Socket"
-
-msgid ""
-"Only services matching one of these patterns will be discovered. If no "
-"pattern is defined, all services are included."
-msgstr ""
-"Es werden nur Services gefunden, die einem dieser Pattern entsprechen. Wenn "
-"kein Pattern definiert ist, werden alle Services eingeschlossen."
 
 msgid "Only show hosts and services the user is a contact for"
 msgstr "Nur Hosts/Services zeigen, für die Benutzer Kontakt ist"
@@ -50111,6 +50293,10 @@ msgid "OpenTelemetry hosts creation options"
 msgstr "Optionen für die Erstellung von OpenTelemetry-Hosts"
 
 msgid "OpenTelemetry metric name"
+msgstr "Name der OpenTelemetry Metrik"
+
+#, fuzzy
+msgid "OpenTelemetry metrics"
 msgstr "Name der OpenTelemetry Metrik"
 
 msgid "OpenVMS processes"
@@ -50545,9 +50731,6 @@ msgstr "Oracle IOSTAT Gesamt-Schreib-Bytes"
 msgid "Oracle IOSTAT write bytes"
 msgstr "Oracle IOSTAT Schreib-Bytes"
 
-msgid "Oracle Instant Client options"
-msgstr "Optionen des Oracle Instant Client"
-
 msgid "Oracle Instant Client usage"
 msgstr "Auslastung des Oracle Instant Client"
 
@@ -50681,6 +50864,10 @@ msgstr "Oracle Puffer Trefferquote (Tachometer)"
 msgid "Oracle buffer pool statistics"
 msgstr "Oracle Bufferpool-Statistiken"
 
+#, fuzzy
+msgid "Oracle client options"
+msgstr "Optionen des Oracle Instant Client"
+
 msgid "Oracle cluster wait class"
 msgstr "Oracle Cluster Warteklasse"
 
@@ -50771,6 +50958,10 @@ msgid "Oracle databases"
 msgstr "Azure-Datenbanken"
 
 msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
+msgstr "Oracle-Datenbanken (Linux, Solaris, AIX, Windows)"
+
+#, fuzzy
+msgid "Oracle databases (Linux, Solaris, AIX, Windows) (Experimental)"
 msgstr "Oracle-Datenbanken (Linux, Solaris, AIX, Windows)"
 
 msgid "Oracle datafile backup large read bytes"
@@ -51585,6 +51776,10 @@ msgstr "Verwaltete Planeinstellungen überschreiben"
 
 msgid "Override push receiver host name"
 msgstr ""
+
+#, fuzzy
+msgid "Override the standard settings above for this database."
+msgstr "mal die Standardabweichung über der Prognose"
 
 msgid "Override unit of sensor"
 msgstr "Einheit des Sensors überschreiben"
@@ -52530,6 +52725,10 @@ msgstr "Passwörter stimmen nicht überein"
 
 msgid "Paste CRT/PEM Contents"
 msgstr "CRT/PEM-Inhalte einfügen"
+
+#, fuzzy
+msgid "Patches"
+msgstr "Batches"
 
 msgid "Path"
 msgstr "Pfad"
@@ -53490,6 +53689,10 @@ msgstr "Plan-Einstellungen"
 msgid "Plans"
 msgstr "Pläne"
 
+#, fuzzy
+msgid "Platform"
+msgstr "Datumsformat"
+
 msgid "Platform firmware level"
 msgstr "Plattform Firmware-Level"
 
@@ -54300,6 +54503,10 @@ msgstr "Plugin"
 
 msgid "Plug-in API references"
 msgstr "Plugin-API Referenzen"
+
+#, fuzzy
+msgid "Plug-in behavior"
+msgstr "Cluster-Verhalten"
 
 msgid "Plug-in file pattern"
 msgstr "Plugin-Datei-Pattern"
@@ -55389,6 +55596,10 @@ msgstr "Proxy-URL"
 msgid "Proxy host"
 msgstr "Proxy Host"
 
+#, fuzzy
+msgid "Proxy name"
+msgstr "Name der Policy"
+
 msgid "Proxy protocol"
 msgstr "Proxy-Protokoll"
 
@@ -55682,6 +55893,9 @@ msgstr "Metrik-Backend aus dem Editor für benutzerdefinierte Graphen abfragen"
 #, fuzzy
 msgid "Query the data backend"
 msgstr "Metrik-Backend anfragen"
+
+msgid "Query the instance name from the database"
+msgstr ""
 
 msgid "Query time limit"
 msgstr "Zeitbegrenzung für Abfrage"
@@ -56343,6 +56557,10 @@ msgstr "Lesende Verbindungen"
 msgid "Reading request"
 msgstr "Leseanforderung"
 
+#, fuzzy
+msgid "Reading the hosts of Setup..."
+msgstr "Host(s) in Parents umbenennen..."
+
 msgid "Reads size /s"
 msgstr "Liest die Größe pro Sekunde"
 
@@ -56910,8 +57128,16 @@ msgstr "Registrierte Modems"
 msgid "Registered phones"
 msgstr "Registrierte Telefone"
 
+#, fuzzy
+msgid "Registered with Veeam"
+msgstr "Eingetragen am "
+
 msgid "Registration"
 msgstr "Registrierung"
+
+#, fuzzy
+msgid "Registration expiration date"
+msgstr "Ablaufdatum setzen"
 
 msgid "Registration state"
 msgstr "Registrierungszustand"
@@ -57039,10 +57265,6 @@ msgid "Related Views"
 msgstr "Zusammenhängende Ansichten"
 
 #, fuzzy
-msgid "Related host"
-msgstr "Host löschen"
-
-#, fuzzy
 msgid "Related host definition"
 msgstr "Parent-Definition"
 
@@ -57051,8 +57273,16 @@ msgid "Related hosts"
 msgstr "Hosts erstellen"
 
 #, fuzzy
-msgid "Relation type"
-msgstr "Applikationstyp"
+msgid "Relation"
+msgstr "Replikation"
+
+#, fuzzy
+msgid "Relation discovery"
+msgstr "Wartet auf Erkennung"
+
+#, fuzzy, python-format
+msgid "Relation discovery finished: %(summary)s"
+msgstr "Bulk-Erkennung abgeschlossen."
 
 msgid "Relational Database Service (RDS)"
 msgstr "Relational Database Service (RDS)"
@@ -59398,6 +59628,18 @@ msgstr ""
 msgid "Running sessions"
 msgstr "Laufende Sitzungen"
 
+#, fuzzy
+msgid ""
+"Runs a data backend instance on this site. If you are running a distributed "
+"Checkmk setup with multiple sites on the same machine, please configure "
+"different port numbers per each site via the site-specific global settings "
+"to avoid port binding conflicts."
+msgstr ""
+"Wenn Sie eine verteilte Checkmk-Konfiguration mit mehreren Instanzen auf "
+"derselben Maschine betreiben, konfigurieren Sie bitte über die Instanz-"
+"spezifischen globalen Einstellungen für jede Instanz unterschiedliche "
+"Portnummern, um Konflikte bei der Portzuweisung zu vermeiden."
+
 msgid "Runtime"
 msgstr "Laufzeit"
 
@@ -59898,6 +60140,14 @@ msgstr "SQL-Datenbanken"
 
 msgid "SQL Re-Compilations/sec"
 msgstr "SQL-Rekompilationen/sec"
+
+#, fuzzy
+msgid "SQL Server edition"
+msgstr "Server-Verbindungen"
+
+#, fuzzy
+msgid "SQL Server version"
+msgstr "Treiberversion"
 
 msgid "SQL database user credentials"
 msgstr "SQL Datenbankbenutzer-Anmeldedaten"
@@ -60843,10 +61093,6 @@ msgstr "Parameter auswählen"
 msgid "Select recipient"
 msgstr "Empfänger auswählen"
 
-#, fuzzy
-msgid "Select relation type"
-msgstr "Gerätetyp auswählen"
-
 msgid "Select site"
 msgstr "Instanz auswählen"
 
@@ -61176,13 +61422,6 @@ msgid ""
 msgstr ""
 "Wählen Sie aus, welche Hyper-V-Plugins bereitgestellt werden sollen. Jedes "
 "Plugin überwacht bestimmte Aspekte Ihrer Hyper-V-Infrastruktur."
-
-#, fuzzy
-msgid ""
-"Select which data (sections) should be collected from the Oracle database."
-msgstr ""
-"Wählen Sie aus, welche Daten (Abschnitte) aus der Oracle-Datenbank erfasst "
-"werden sollen."
 
 msgid "Selected"
 msgstr "Ausgewählt"
@@ -62095,12 +62334,6 @@ msgstr "Services gruppiert nach Service-Gruppen"
 
 msgid "Services in downtime"
 msgstr "Services in Wartungszeit"
-
-msgid ""
-"Services matching one of these patterns will be excluded from discovery."
-msgstr ""
-"Services, die einem dieser Pattern entsprechen, werden von der Erkennung "
-"ausgeschlossen."
 
 #, fuzzy
 msgid "Services needing attention"
@@ -64266,6 +64499,10 @@ msgid "Socket detection method"
 msgstr "Erkennungsmethode des Sockets"
 
 #, fuzzy
+msgid "Socket license consumption"
+msgstr "Speicher E/A-Nutzung"
+
+#, fuzzy
 msgid "Socket path"
 msgstr "Socket"
 
@@ -65887,6 +66124,10 @@ msgstr ""
 msgid "Standard settings for all endpoints"
 msgstr "Standardeinstellungen für alle Endpunkte"
 
+#, fuzzy
+msgid "Standard settings for all instances"
+msgstr "Standardeinstellungen für alle Endpunkte"
+
 msgid "Standard topics"
 msgstr "Standardthemen"
 
@@ -66606,6 +66847,10 @@ msgstr "Zustand, wenn der Kollektor im Zustand 'running' ist"
 msgid "State when collector is in state stopped"
 msgstr "Zustand, wenn der Kollektor im Zustand 'stopped' ist"
 
+#, fuzzy
+msgid "State when configuration backup is disabled"
+msgstr "Zustand, wenn keine Sicherung konfiguriert ist"
+
 msgid "State when file is missing"
 msgstr "Zustand, wenn die Datei fehlt"
 
@@ -66800,6 +67045,10 @@ msgstr "Zustand, wenn Softwareänderungen gefunden wurden"
 
 msgid "State when software packages info is missing"
 msgstr "Zustand, wenn die Information über die Softwarepakete fehlt"
+
+#, fuzzy
+msgid "State when the proxy is disabled"
+msgstr "Zustand, wenn der Job im Zustand deaktiviert ist"
 
 msgid ""
 "State when updates are pending, which are neither recommended or a security "
@@ -67170,6 +67419,10 @@ msgstr ""
 "Speichern Sie Passwörter und geben Sie sie zur späteren Verwendung in Checks "
 "frei."
 
+#, fuzzy
+msgid "Store discovered relations"
+msgstr "Service-Erkennung lief am"
+
 msgid "Store in sub directory"
 msgstr "In Unterverzeichnis speichern"
 
@@ -67192,6 +67445,10 @@ msgstr "Speichere das Geheimnis im Klartext"
 msgid "Stored GUI performance profiles and flamegraphs"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Stored discovered relations of host %(host)s."
+msgstr "Update-Zustand für diesen Host"
+
 msgid "Stored location"
 msgstr "Gespeicherter Ort"
 
@@ -67206,6 +67463,10 @@ msgstr "Gespeicherte Berichte"
 
 msgid "Stored secrets for automation users"
 msgstr "Gespeicherte Geheimnisse (Secrets) für Automationsbenutzer"
+
+#, fuzzy, python-format
+msgid "Storing %(count)d relations..."
+msgstr "Mehr als %(count)d Ergebnisse"
 
 msgid "Stormshield quality"
 msgstr "Stormshield Qualität"
@@ -67529,6 +67790,10 @@ msgstr "Support"
 
 msgid "Support diagnostics"
 msgstr "Support Diagnostics"
+
+#, fuzzy
+msgid "Support expiry"
+msgstr "Support"
 
 msgid "Supporting rules"
 msgstr "Unterstützende Regeln"
@@ -71722,6 +71987,10 @@ msgstr ""
 msgid "The host is currently in downtime"
 msgstr "Host ist im Moment in Wartungszeit"
 
+#, fuzzy
+msgid "The host is gone."
+msgstr "Host war nicht erreichbar"
+
 msgid "The host is missing."
 msgstr "Der Host fehlt."
 
@@ -71796,6 +72065,10 @@ msgstr ""
 
 msgid "The host/service must have one of the selected contacts."
 msgstr "Der Host bzw. Service muss einen der ausgewählten Kontakte haben."
+
+#, fuzzy, python-format
+msgid "The hosts in the folder \"%(folder)s\" are locked."
+msgstr "Die Hosts im Ordner %(folder)s sind gesperrt."
 
 msgid ""
 "The hosts listed here have previously contacted the update server and were "
@@ -72484,6 +72757,10 @@ msgstr ""
 "Kunden zugeordnet sind, müssen Sie mindestens einen globalen Benutzer "
 "erstellen oder dem Kunden einen Benutzer zuordnen."
 
+#, fuzzy
+msgid "The monitored host at the other end of this relation."
+msgstr "Monitoring-Zustand den das Ereignis übermittelt."
+
 msgid ""
 "The monitoring core cannot be reached and the current number of services "
 "cannot be determined. If you have more than 750 services, you need to apply "
@@ -72533,6 +72810,10 @@ msgid ""
 msgstr ""
 "Der Name '%s' wird bereits verwendet. Die Namen verwalteter Roboter müssen "
 "eindeutig sein."
+
+#, python-format
+msgid "The name is \"%(host)s\" with \"%(token)s\" added."
+msgstr ""
 
 msgid ""
 "The name is the individual part of the used service name. Choose a human "
@@ -73513,6 +73794,14 @@ msgstr ""
 msgid "The refresh token for this OAuth2 connection."
 msgstr "Das Aktualisierungstoken für diese OAuth2-Verbindung."
 
+#, fuzzy, python-format
+msgid ""
+"The related host '%(host)s' does not exist or you are not permitted to see "
+"it."
+msgstr ""
+"Das Dashboard '%s' existiert nicht oder Sie haben keine Berechtigung, um es "
+"zu sehen."
+
 #, python-format
 msgid "The relation cannot be removed from '%(host)s': %(reason)s"
 msgstr ""
@@ -73520,6 +73809,12 @@ msgstr ""
 #, fuzzy, python-format
 msgid "The relation cannot be stored on '%(host)s': %(reason)s"
 msgstr "Diese Aktion kann nicht für Suchergebnisse durchgeführt werden"
+
+#, python-format
+msgid ""
+"The relation concerns '%(host)s' as well, which you cannot edit. Put the "
+"entry back to save this host."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -73873,6 +74168,9 @@ msgstr ""
 #, fuzzy
 msgid "The same shared secret will be saved in the Checkmk password store."
 msgstr "Der Name, der im Service-Namen verwendet wird"
+
+msgid "The scan is gone. Scan again."
+msgstr ""
 
 msgid "The schedule you are trying to clone does not exist."
 msgstr "Der Eintrag, den Sie klonen möchten, existiert nicht."
@@ -74932,6 +75230,11 @@ msgid "The verification cannot be started due to missing CA certificate"
 msgstr ""
 "Die Verifizierung kann nicht gestartet werden, da das CA-Zertifikat fehlt"
 
+msgid ""
+"The verification code is incorrect. Please check if you used the most recent "
+"verification code you have received from us."
+msgstr ""
+
 #, python-format
 msgid "The version of this site is not a %(edition)s"
 msgstr "Die Version dieser Instanz ist keine %(edition)s"
@@ -75126,6 +75429,10 @@ msgstr "Für diesen Check gibt es keine Handbuchseite."
 
 #, python-format
 msgid "There is no registered metric named '%(metric)s'."
+msgstr ""
+
+#, python-format
+msgid "There is no report element for '%(add_type)s', so it cannot be added."
 msgstr ""
 
 msgid "There is only one active user connector available"
@@ -75471,16 +75778,6 @@ msgid ""
 msgstr ""
 "Diese Services wurden nicht von der Erkennung gefunden, sondern manuell "
 "hinzugefügt durch die Regel <i>Erzwungene Services</i>."
-
-msgid ""
-"These settings apply to all monitored Oracle databases by default. They "
-"define the authentication, connection, and data collection options used "
-"unless overridden for a specific database in the instance list below."
-msgstr ""
-"Diese Einstellungen gelten standardmäßig für alle überwachten Oracle-"
-"Datenbanken. Sie definieren die Optionen, die für Authentifizierung, "
-"Verbindung und Datenerfassung genutzt werden, sofern sie nicht für eine "
-"bestimmte Datenbank in der folgenden Instanzliste überschrieben werden."
 
 msgid ""
 "These settings control how the <i>initial</i> scheduling of new active "
@@ -76617,7 +76914,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This is an experimental flag for testing only. It may change or be removed "
-"without notice and must not be relied on for permanent configuration."
+"without notice and must not be relied on for permanent configuration. "
+"Changing it restarts the whole site during activate changes."
 msgstr ""
 "%(description)s<br><br>Dies ist ein vorläufiges Release-Flag. Es wird in "
 "Version %(remove_after)s entfernt und sollte nicht für dauerhafte "
@@ -79638,11 +79936,24 @@ msgstr ""
 "Der Service beruht auf gecachten Agentendaten und kann nicht manuell neu "
 "eingeplant werden."
 
+#, fuzzy
+msgid "This service is checked passively and cannot be rescheduled."
+msgstr ""
+"Der Service beruht auf gecachten Agentendaten und kann nicht manuell neu "
+"eingeplant werden."
+
 msgid "This service is currently not being checked"
 msgstr "Dieser Service wird aktuell nicht überwacht"
 
 msgid "This service is flapping"
 msgstr "Dieser Service ist unstetig"
+
+#, fuzzy
+msgid ""
+"This service is monitored by a remote site and cannot be rescheduled here."
+msgstr ""
+"Der Service beruht auf gecachten Agentendaten und kann nicht manuell neu "
+"eingeplant werden."
 
 msgid "This service is stale"
 msgstr "Dieser Service ist veraltet"
@@ -80358,8 +80669,8 @@ msgstr ""
 msgid ""
 "This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system. "
 "Currently not all options are available in all operating systems.<br><b>Note:"
-"</b> This plug-in cannot be used together with the 'Unified Oracle plug-in "
-"(Beta)'. Please configure only one of the two."
+"</b> This plug-in cannot be used together with the 'Oracle databases (Linux, "
+"Solaris, AIX, Windows) (Experimental)'. Please configure only one of the two."
 msgstr ""
 "Dies verteilt das Agent-Plugin <tt>mk_oracle</tt> auf Ihrem Zielsystem. "
 "Derzeit sind nicht alle Optionen auf allen Betriebssystemen verfügbar."
@@ -80891,10 +81202,18 @@ msgstr "Zeit seit der letzten Müllsammlung"
 msgid "Time since last reported"
 msgstr "Zeit seit letzter Meldung"
 
+#, fuzzy
+msgid "Time since last successful backup"
+msgstr "Zeit seit dem letzten erfolgreichen Build"
+
 msgid "Time since last successful build"
 msgstr "Zeit seit dem letzten erfolgreichen Build"
 
 msgid "Time since last successful completion"
+msgstr "Zeit seit der letzten erfolgreichen Fertigstellung"
+
+#, fuzzy
+msgid "Time since last successful configuration backup"
 msgstr "Zeit seit der letzten erfolgreichen Fertigstellung"
 
 msgid "Time since last successful schedule"
@@ -81076,6 +81395,14 @@ msgid "Time until forced activation of changes after cycle start"
 msgstr "Zeit bis zur erzwungenen Aktivierung von Änderungen nach Zyklusstart"
 
 msgid "Time until license expiration"
+msgstr "Verbleibende Zeit bis zum Ablauf der Lizenz"
+
+#, fuzzy
+msgid "Time until license expiry"
+msgstr "Verbleibende Zeit bis zum Ablauf der Lizenz"
+
+#, fuzzy
+msgid "Time until support expiry"
 msgstr "Verbleibende Zeit bis zum Ablauf der Lizenz"
 
 msgid "Time usage by phase"
@@ -84877,6 +85204,11 @@ msgstr "Fehler beim Hochladen des Symbols: %(e)s"
 msgid "Unable to upload image: %(e)s"
 msgstr "Fehler beim Hochladen des Bilds: %(e)s"
 
+msgid ""
+"Unable to verify trial. Please try again later or use a different email "
+"address."
+msgstr ""
+
 msgid "Unaccounted turbo cycles"
 msgstr "Nicht zugeordete Turbozyklen"
 
@@ -85012,10 +85344,6 @@ msgstr "Unicast-Paketraten"
 
 msgid "Unidirectional UDP Traffic"
 msgstr "Unidirektionaler UDP-Verkehr"
-
-#, fuzzy
-msgid "Unified Oracle plug-in (beta)"
-msgstr "Unified Oracle Plugin (Beta)"
 
 #, fuzzy
 msgid "Uninitialized"
@@ -86932,6 +87260,10 @@ msgstr ""
 "sofort und ohne jegliche Socket-Konfiguration und wird empfohlen, wenn der "
 "Podman Socket-Service nicht verfügbar ist."
 
+#, fuzzy
+msgid "Use the AI assistant"
+msgstr "Diese Instanz aktivieren"
+
 msgid "Use the Checkmk username as ntopng username"
 msgstr "Verwende den Checkmk-Benutzernamen als ntopng-Benutzername"
 
@@ -87497,6 +87829,10 @@ msgstr "Verwendete Datei-Handles"
 msgid ""
 "Used for deep links into the Checkmk GUI. Leave empty to inherit the global "
 "setting."
+msgstr ""
+
+msgid ""
+"Used for every monitored database unless the database overrides it below."
 msgstr ""
 
 msgid "Used host tags"
@@ -88684,12 +89020,28 @@ msgstr "Tresore"
 msgid "Veeam Backup & Replication"
 msgstr "Umschreibe Anwendung"
 
+#, fuzzy
+msgid "Veeam Backup & Replication patches"
+msgstr "Umschreibe Anwendung"
+
 msgid "Veeam backup status (Windows)"
 msgstr "Veeam Sicherungsstatus (Windows)"
 
 #, fuzzy
 msgid "Veeam tape backup jobs"
 msgstr "VEEAM Band-Sicherungsaufträge"
+
+#, fuzzy
+msgid "Veeam: Backup proxy"
+msgstr "Umschreibe Anwendung"
+
+#, fuzzy
+msgid "Veeam: Configuration backup"
+msgstr "BI-Konfigurationspakete"
+
+#, fuzzy
+msgid "Veeam: License"
+msgstr "Lizenziert"
 
 msgid "Veeam: Time since last CDP run"
 msgstr "Veeam: Zeit seit dem letzten CDP-Lauf"
@@ -88745,6 +89097,13 @@ msgstr "Verifizierung fehlgeschlagen (%(error)s)"
 #, fuzzy
 msgid "Verification of the server certificate"
 msgstr "Das Serverzertifikat überprüfen"
+
+#, fuzzy
+msgid ""
+"Verification service is temporarily unavailable. Please try again later."
+msgstr ""
+"Fehler beim Empfang verfügbarer KI-Aktionen. Bitte versuchen Sie es später "
+"erneut."
 
 msgid "Verify SSL certificate (not verifying is insecure)"
 msgstr ""
@@ -89842,6 +90201,16 @@ msgid "What should be sent out?"
 msgstr "Was soll verschickt werden?"
 
 msgid ""
+"What the two hosts are to each other. Management board is the only relation "
+"type so far."
+msgstr ""
+
+msgid ""
+"What this host is to the selected one: its management board, or an OS host "
+"managed by it."
+msgstr ""
+
+msgid ""
 "When a new profile is saved and this count is exceeded, the oldest profiles "
 "are removed first."
 msgstr ""
@@ -90128,17 +90497,6 @@ msgid ""
 msgstr ""
 "Mit dieser Option wird in der Überschrift jeder Seite neben der Uhrzeit auch "
 "das Datum angezeigt."
-
-#, fuzzy
-msgid ""
-"When enabled, the plug-in will automatically discover local Oracle database "
-"instances. This feature only works when the plug-in is installed on the same "
-"machine where the Oracle database instances are running."
-msgstr ""
-"Wenn diese Option aktiviert ist, erkennt das Plugin automatisch lokale "
-"Oracle-Datenbankinstanzen. Diese Funktion ist nur verfügbar, wenn das Plugin "
-"auf derselben Maschine installiert ist, auf der auch die Oracle-"
-"Datenbankinstanzen ausgeführt werden."
 
 #, fuzzy
 msgid ""
@@ -91060,6 +91418,17 @@ msgid ""
 msgstr ""
 "De gefundene IP-Adresse als Host-Adresse des erzeugten Hosts konfigurieren."
 
+#, fuzzy
+msgid ""
+"Whether the plug-in looks for local Oracle database instances on its own. It "
+"does so unless this is configured otherwise, and only when it runs on the "
+"machine where the instances are running."
+msgstr ""
+"Wenn diese Option aktiviert ist, erkennt das Plugin automatisch lokale "
+"Oracle-Datenbankinstanzen. Diese Funktion ist nur verfügbar, wenn das Plugin "
+"auf derselben Maschine installiert ist, auf der auch die Oracle-"
+"Datenbankinstanzen ausgeführt werden."
+
 msgid ""
 "Whether you need the number or the name depends on the check. Just take a "
 "look to the service name."
@@ -91078,6 +91447,14 @@ msgid ""
 "individual program call, or a special agent that authenticates against an "
 "external API. No name resolution is attempted for such a host, and its host "
 "check reports UP by default."
+msgstr ""
+
+msgid ""
+"Which data to collect, and how often. An unchecked section is not queried at "
+"all. A section marked 'async' is collected by a separate agent plug-in that "
+"runs at the cache age configured above, rather than on every agent run. The "
+"instance status is not listed, because it is always collected on every agent "
+"run: stale data would hide an instance that has just gone down."
 msgstr ""
 
 msgid ""
@@ -93605,6 +93982,11 @@ msgstr ""
 "um Fallback-Benachrichtigungen erhalten zu können."
 
 msgid ""
+"You have exceeded the maximum number of attempts to enter the verification "
+"code. Please request a new one."
+msgstr ""
+
+msgid ""
 "You have no mail transfer agent installed. <tt>/usr/sbin/sendmail</tt> is "
 "missing. Please install Postfix, Qmail, Nullmailer or Sendmail."
 msgstr ""
@@ -94447,6 +94829,10 @@ msgstr ""
 "Sie die Anzahl der Dienste reduzieren, ist \"Änderungen aktivieren\" "
 "blockiert."
 
+msgid ""
+"Your verification code has expired. Please request a new verification code."
+msgstr ""
+
 msgid "ZFS file system usage"
 msgstr "Auslastung des ZFS-Dateisystems"
 
@@ -94614,6 +95000,10 @@ msgstr "erlaube Befehle und Aktionen über TCP"
 msgid "allow users to deactivate this notification"
 msgstr "Benutzern erlauben, diese Benachrichtigung zu deaktivieren"
 
+#, fuzzy
+msgid "already related"
+msgstr "Gesamte Lese-Latenz"
+
 msgid "and"
 msgstr "und"
 
@@ -94651,6 +95041,9 @@ msgstr "als E-Mail"
 
 msgid "as macro named"
 msgstr "als Makro benannt"
+
+msgid "async"
+msgstr ""
 
 msgid "at"
 msgstr "um"
@@ -94822,6 +95215,10 @@ msgstr "Kontakt-Gruppen: "
 
 msgid "content"
 msgstr "Inhalt"
+
+#, fuzzy
+msgid "could not be stored"
+msgstr "Der Basis-DN für die Gruppen konnte nicht gefunden werden."
 
 msgid "count"
 msgstr "Anzahl"
@@ -95868,6 +96265,10 @@ msgstr "keines von"
 msgid "normal connection"
 msgstr "Normale Verbindung"
 
+#, fuzzy
+msgid "not answered"
+msgstr "Antwort kopieren"
+
 msgid "not available"
 msgstr "nicht verfügbar"
 
@@ -96232,6 +96633,9 @@ msgstr "normale Datei"
 msgid "regular file or directory"
 msgstr "normale Datei oder normales Verzeichnis"
 
+msgid "related in another way"
+msgstr ""
+
 msgid "relative URI under which Jolokia is visible"
 msgstr "relative URL, unter der Jolokia sichtbar ist"
 
@@ -96455,6 +96859,10 @@ msgstr ""
 
 msgid "stopped"
 msgstr "angehalten"
+
+#, fuzzy
+msgid "stored"
+msgstr "Wiederherstellen"
 
 msgid "strict"
 msgstr "streng"
@@ -96866,6 +97274,22 @@ msgstr "Dieser Inhalt konnte nicht geladen werden."
 msgid "Toggle %{ title }"
 msgstr "%{ title } umschalten"
 
+#, fuzzy
+msgid "Autocomplete"
+msgstr "vollständig"
+
+#, fuzzy
+msgid "Move through suggestions"
+msgstr "Aggregationen verschieben"
+
+#, fuzzy
+msgid "Remove last selected value"
+msgstr "Remote-Datei"
+
+#, fuzzy
+msgid "Clear input"
+msgstr "Suchfilter"
+
 msgid "Search results"
 msgstr "Suchergebnisse"
 
@@ -96906,8 +97330,23 @@ msgstr "Vorheriges Jahr"
 msgid "Next year"
 msgstr "Nächstes Jahr"
 
+#, fuzzy
+msgid "Time picker"
+msgstr "Zeitauswahl öffnen"
+
+#, fuzzy
+msgid "Step hours or minutes"
+msgstr "Schreibelatenz"
+
+msgid "Switch between hours and minutes"
+msgstr ""
+
 msgid "Open time picker"
 msgstr "Zeitauswahl öffnen"
+
+#, fuzzy
+msgid "Dropdown"
+msgstr "heruntergefahren"
 
 msgid "selected"
 msgstr "ausgewählt"
@@ -96941,6 +97380,18 @@ msgstr "Absturzbericht"
 msgid "No crash report could be stored for this error."
 msgstr ""
 
+#, fuzzy
+msgid "Flyout"
+msgstr "Kräftebasiertes Layout"
+
+#, fuzzy
+msgid "Switch"
+msgstr "Switchover"
+
+#, fuzzy
+msgid "Toggle"
+msgstr "Namen umschalten"
+
 msgid "Drag to reorder"
 msgstr "Ziehen, um neu anzuordnen"
 
@@ -96968,11 +97419,22 @@ msgstr "Lesen aus der Zwischenablage fehlgeschlagen"
 msgid "Clear search"
 msgstr "Suche leeren"
 
+msgid "Slide-in"
+msgstr ""
+
 msgid "No services"
 msgstr "Keine Services"
 
 msgid "%{count} %{label}"
 msgstr "%{count} %{label}"
+
+#, fuzzy
+msgid "Suggestions"
+msgstr "Sektionen"
+
+#, fuzzy
+msgid "Pick suggestion"
+msgstr "Einzel-Aggregation"
 
 msgid "filter"
 msgstr "Filter"
@@ -97034,6 +97496,53 @@ msgstr ""
 msgid "Unknown Timezone"
 msgstr "Unbekannte Zeitzone"
 
+#, fuzzy
+msgid "Calendar"
+msgstr "iCalendar"
+
+#, fuzzy
+msgid "Select day"
+msgstr "Alle auswählen"
+
+#, fuzzy
+msgid "Go to previous day"
+msgstr "Zum vorherigen Schritt"
+
+#, fuzzy
+msgid "Go to next day"
+msgstr "Anfang des nächsten Tages"
+
+#, fuzzy
+msgid "Go to previous week"
+msgstr "Zum vorherigen Schritt"
+
+#, fuzzy
+msgid "Go to next week"
+msgstr " nächste Woche"
+
+#, fuzzy
+msgid "Go to start of week"
+msgstr "Anfang der nächsten Woche"
+
+msgid "Go to end of week"
+msgstr ""
+
+#, fuzzy
+msgid "Go to previous month"
+msgstr "Vorheriger Monat"
+
+#, fuzzy
+msgid "Go to next month"
+msgstr "Anfgang des nächsten Monats"
+
+#, fuzzy
+msgid "Go to previous year"
+msgstr "Vorheriges Jahr"
+
+#, fuzzy
+msgid "Go to next year"
+msgstr "Anfang des nächsten Jahres"
+
 msgid "not set"
 msgstr "nicht festgelegt"
 
@@ -97052,6 +97561,18 @@ msgstr "Speichern & anwenden"
 msgid "Saving…"
 msgstr "Wird gespeichert…"
 
+#, fuzzy
+msgid "Date and time input"
+msgstr "Tag und Zeit"
+
+#, fuzzy
+msgid "Step value"
+msgstr "Wert entfernen"
+
+#, fuzzy
+msgid "Switch segment"
+msgstr "Switchnummer"
+
 msgid "Open time selector"
 msgstr "Zeit-Auswahl öffnen"
 
@@ -97064,8 +97585,28 @@ msgstr ""
 msgid "Time selection"
 msgstr "Zeitauswahl"
 
+#, fuzzy
+msgid "Time selector"
+msgstr "Zeitauswahl"
+
+#, fuzzy
+msgid "Change value"
+msgstr "Wert des Merkmals"
+
+#, fuzzy
+msgid "Switch column"
+msgstr "In Spalte anzeigen"
+
 msgid "(required)"
 msgstr "(erforderlich)"
+
+#, fuzzy
+msgid "Filter selection"
+msgstr "Dateiauswahl"
+
+#, fuzzy
+msgid "Toggle filter"
+msgstr "Umschalten der Seitenleiste"
 
 msgid "Expand all"
 msgstr "Alle erweitern"
@@ -97172,6 +97713,34 @@ msgstr "Shift"
 msgid "Alt"
 msgstr "Alt"
 
+#, fuzzy
+msgid "Esc"
+msgstr "Sek"
+
+#, fuzzy
+msgid "Space"
+msgstr "Raumalarm"
+
+#, fuzzy
+msgid "Tab"
+msgstr "Tabelle"
+
+#, fuzzy
+msgid "Del"
+msgstr "Delta"
+
+msgid "Home"
+msgstr ""
+
+msgid "PgUp"
+msgstr ""
+
+msgid "PgDn"
+msgstr ""
+
+msgid "Menu"
+msgstr ""
+
 msgid "Copy failed: this might be due to browser security restrictions."
 msgstr ""
 "Kopie fehlgeschlagen: Dies könnte an Sicherheitsbeschränkungen des Browsers "
@@ -97256,11 +97825,54 @@ msgstr ""
 msgid "Something went wrong. Please try again later."
 msgstr "Etwas ist schief gelaufen. Bitte versuchen Sie es später erneut."
 
+#, fuzzy
+msgid "Dashboard cloned as responsive"
+msgstr "Dashboard wurde geklont."
+
 msgid "Dashboard cloned."
 msgstr "Dashboard wurde geklont."
 
+msgid "Review the layout and adjust any shifted or resized widgets if needed."
+msgstr ""
+
 msgid "Review applied filters."
 msgstr "Angewendete Filter prüfen."
+
+#, fuzzy
+msgid "KPI card"
+msgstr "API-Status"
+
+#, fuzzy
+msgid "Select previous value"
+msgstr "Einzelwert auswählen"
+
+#, fuzzy
+msgid "Select next value"
+msgstr "Einzelwert auswählen"
+
+#, fuzzy
+msgid "Jump 10 values"
+msgstr "Graphlinien"
+
+#, fuzzy
+msgid "Select first value"
+msgstr "Datei auswählen"
+
+#, fuzzy
+msgid "Select last value"
+msgstr "Wert auswählen..."
+
+#, fuzzy
+msgid "Select highest value"
+msgstr "Einzelwert auswählen"
+
+#, fuzzy
+msgid "Select lowest value"
+msgstr "Einzelwert auswählen"
+
+#, fuzzy
+msgid "Clear selection"
+msgstr "Ordnerauswahl"
 
 msgid "avg."
 msgstr ""
@@ -97309,10 +97921,6 @@ msgid "Not available on shared dashboards"
 msgstr "Nicht verfügbar auf freigegebenen Dashboards"
 
 #, fuzzy
-msgid "Failed to fetch single metric data:"
-msgstr "Fehler beim Abrufen der Topliste-Daten:"
-
-#, fuzzy
 msgid "Failed to fetch timeline data:"
 msgstr "Fehler beim Abrufen der Topliste-Daten:"
 
@@ -97337,9 +97945,6 @@ msgstr "Laden der Optionen ist fehlgeschlagen"
 msgid "This graph could not be resolved."
 msgstr "Der Basis-DN für die Gruppen konnte nicht gefunden werden."
 
-msgid "Failed to fetch top list data:"
-msgstr "Fehler beim Abrufen der Topliste-Daten:"
-
 msgid ""
 "Due to a limitation in how Checkmk handles metrics internally, the results "
 "contain conflicting metrics and this top list may be incorrect or "
@@ -97358,14 +97963,19 @@ msgstr ""
 "die in der Toplisten-Konfiguration herausgefiltert werden müssen, um das "
 "Problem zu beheben."
 
-msgid "Loading Top list content"
-msgstr "Lädt Inhalt der Topliste"
-
 msgid "Sent on"
 msgstr "Gesendet am"
 
 msgid "Expires on"
 msgstr "Läuft ab am"
+
+#, fuzzy
+msgid "Widget data could not be loaded."
+msgstr "Der Basis-DN für die Gruppen konnte nicht gefunden werden."
+
+#, fuzzy
+msgid "Loading data …"
+msgstr "Lädt…"
 
 msgid "vs. %{previousValue} prev. window"
 msgstr ""
@@ -97495,6 +98105,10 @@ msgstr "Dashboard-Einstellungen"
 msgid "Clone dashboard"
 msgstr "Dashboard klonen"
 
+#, fuzzy
+msgid "Clone as responsive dashboard"
+msgstr "Schließen & Dashboard-Filter prüfen"
+
 msgid "Dashboard user guide"
 msgstr "Dashboard-Benutzerhandbuch"
 
@@ -97548,6 +98162,9 @@ msgstr "läuft heute ab"
 
 msgid "Sharing expired on"
 msgstr "Freigabe lief ab am"
+
+msgid "On down host"
+msgstr "Bei Host im Zustand DOWN"
 
 msgid "Widget"
 msgstr "Widget"
@@ -97606,6 +98223,14 @@ msgstr "Wählen Sie aus den verfügbaren Ansichten"
 msgid "mins"
 msgstr "min"
 
+#, fuzzy
+msgid "Follow dashboard time range"
+msgstr "Zeige Graphzeitraum"
+
+#, fuzzy
+msgid "Use separate time range"
+msgstr "Zeitraum löschen"
+
 msgid "Available in Checkmk Pro or higher."
 msgstr "Verfügbar in Checkmk Pro oder höher."
 
@@ -97617,6 +98242,32 @@ msgstr ""
 "Visualisieren Sie Schlüssel-Metriken mithilfe von Diagrammen und Graphen"
 
 msgid "Visualize built-in and preconfigured custom graphs"
+msgstr ""
+"Visualisieren Sie mitgelieferte und vorkonfigurierte benutzerdefinierte "
+"Graphen"
+
+#, fuzzy
+msgid "New custom graph"
+msgstr "Neuer benutzerdefinierter Graph..."
+
+#, fuzzy
+msgid "Create and configure a new custom graph"
+msgstr "Benutzerdefinierten Graph erstellen"
+
+#, fuzzy
+msgid "Not available yet."
+msgstr "Nicht verfügbar"
+
+#, fuzzy
+msgid "Configure and edit an existing custom graph"
+msgstr "Benutzerdefinierten Graph erstellen"
+
+#, fuzzy
+msgid "Link existing custom graph"
+msgstr "Aufsteigender Zähler"
+
+#, fuzzy
+msgid "Select a pre-configured custom graph"
 msgstr ""
 "Visualisieren Sie mitgelieferte und vorkonfigurierte benutzerdefinierte "
 "Graphen"
@@ -97697,9 +98348,6 @@ msgid "This Unique ID is already in use. Please choose another one."
 msgstr ""
 "Diese eindeutige ID wird bereits verwendet. Bitte wählen Sie eine andere."
 
-msgid "Dashboard layout"
-msgstr "Dashboard-Layout"
-
 msgid ""
 "You can choose between a fixed layout or a responsive, scrollable grid "
 "layout. By default, the responsive grid layout is selected."
@@ -97707,6 +98355,9 @@ msgstr ""
 "Sie können zwischen einem festen Layout und einem responsiven, scrollbaren "
 "Rasterlayout wählen. Standardmäßig ist das responsive Rasterlayout "
 "ausgewählt."
+
+msgid "Dashboard layout"
+msgstr "Dashboard-Layout"
 
 msgid "Responsive"
 msgstr "Responsiv"
@@ -98063,6 +98714,10 @@ msgstr ""
 "Auf dem aktuellen Dashboard nicht den Zeitraumänderungen anderer Graphen "
 "folgen"
 
+#, fuzzy
+msgid "Icon selector"
+msgstr "Nichts ausgewählt"
+
 msgid "Select none"
 msgstr "Nichts auswählen"
 
@@ -98258,6 +98913,20 @@ msgstr "Es muss ein benutzerdefinierter Graph ausgewählt werden"
 
 msgid "Select a custom graph"
 msgstr "Einen benutzerdefinierten Graph auswählen"
+
+#, fuzzy
+msgid ""
+"You can choose between a fixed layout or a responsive, scrollable grid "
+"layout."
+msgstr ""
+"Sie können zwischen einem festen Layout und einem responsiven, scrollbaren "
+"Rasterlayout wählen. Standardmäßig ist das responsive Rasterlayout "
+"ausgewählt."
+
+msgid ""
+"Widget positions and sizes may shift when converting to responsive. Review "
+"after cloning."
+msgstr ""
 
 msgid "Enter description"
 msgstr "Beschreibung eingeben"
@@ -98839,6 +99508,10 @@ msgid "and not"
 msgstr "und nicht"
 
 #, fuzzy
+msgid "Fetch certificate"
+msgstr "Zertifikat prüfen"
+
+#, fuzzy
 msgid "Upload file"
 msgstr "Hochgeladene Dateien"
 
@@ -98862,8 +99535,16 @@ msgstr "Abfragen"
 msgid "No certificate fetched yet."
 msgstr "Kein Zertifikat"
 
+#, fuzzy
+msgid "Add label"
+msgstr "Neues Label hinzufügen"
+
 msgid "explicit password"
 msgstr "explizites Passwort"
+
+#, fuzzy
+msgid "Regex input"
+msgstr "Regex-Sets"
 
 msgid "Enter regex (pattern match)"
 msgstr "Regex eingeben (Pattern Match)"
@@ -98912,8 +99593,8 @@ msgid "Remove explicit setting?"
 msgstr "Entferne explizite Einstellungen"
 
 msgid ""
-"Removing the explicit value will restore the default value for this site. "
-"The value will be inherited from Global settings or the factory settings."
+"Removing the explicit value will restore the factory setting. The value will "
+"no longer be stored explicitly."
 msgstr ""
 
 #, fuzzy
@@ -98954,8 +99635,7 @@ msgstr ""
 "Formular konnte nicht validiert werden, Fehler werden im Formular angezeigt"
 
 msgid ""
-"This setting uses an explicit value and overrides the factory and Global "
-"settings value."
+"This setting is stored explicitly with a value equal to the factory setting."
 msgstr ""
 
 #, fuzzy
@@ -98996,6 +99676,14 @@ msgstr "Keine passenden Hosts gefunden."
 
 msgid "Reset search"
 msgstr "Suche zurücksetzen"
+
+#, fuzzy
+msgid "Setting switch"
+msgstr "Einstellungen"
+
+#, fuzzy
+msgid "Toggle setting"
+msgstr "Testeinstellungen"
 
 #, fuzzy
 msgid "Toggle %{title}"
@@ -99103,6 +99791,26 @@ msgstr ""
 msgid "Display of maximum values for each selected metric over time."
 msgstr ""
 "Achsenbeschriftungen für den ausgewählten/automatischen Datenbereich anzeigen"
+
+#, fuzzy
+msgid "Graph menu"
+msgstr "Graph-Legende"
+
+#, fuzzy
+msgid "Open menu and move between entries"
+msgstr "Verzögerung zwischen den Wiederholungsversuchen"
+
+#, fuzzy
+msgid "Jump to first entry"
+msgstr "Einheit des ersten Eintrags verwenden"
+
+#, fuzzy
+msgid "Jump to last entry"
+msgstr "Zeitstempel des Log-Eintrags"
+
+#, fuzzy
+msgid "Close menu"
+msgstr "Zeitreise schließen"
 
 #, fuzzy
 msgid "No action available"
@@ -99215,16 +99923,20 @@ msgid "Step forward in time"
 msgstr "Schreibelatenz"
 
 #, fuzzy
-msgid "Loading data …"
-msgstr "Lädt…"
-
-#, fuzzy
 msgid "Graph data could not be loaded."
 msgstr "Der Basis-DN für die Gruppen konnte nicht gefunden werden."
 
 #, fuzzy
 msgid "There is no data to display in this time range"
 msgstr "Perzentil innerhalb des Zeitraums"
+
+#, fuzzy
+msgid "Formula editor"
+msgstr "Formel"
+
+#, fuzzy
+msgid "Submit formula"
+msgstr "Bericht abschicken"
 
 #, fuzzy
 msgid "Formula input"
@@ -99283,9 +99995,6 @@ msgstr "Maximale Schreibelatenz"
 msgid "Wrap the whole formula in a sum"
 msgstr "Minimale Schreibelatenz"
 
-msgid "Transformation"
-msgstr "Transformation"
-
 #, fuzzy
 msgid "Calculate & add"
 msgstr "Zuletzt Aktualisiert"
@@ -99339,8 +100048,8 @@ msgid "Applies a percentile transformation to the selected metric."
 msgstr "Transformation auf geprüfte Metrik anwenden: "
 
 #, fuzzy
-msgid "Help: Transformation"
-msgstr "Transformation"
+msgid "Help: Percentile"
+msgstr "Perzentil"
 
 #, fuzzy
 msgid "Select one metric"
@@ -99354,6 +100063,10 @@ msgid ""
 "A percentile needs one metric. Add a single metric, or aggregate a query in "
 "a calculation first."
 msgstr ""
+
+#, fuzzy
+msgid "Select a percentile"
+msgstr "(Service auswählen)"
 
 msgid ""
 "A percentile needs one metric. This query selects several. Aggregate it in a "
@@ -99427,16 +100140,12 @@ msgid "Enter a percentile between 0 and 100."
 msgstr "Geben Sie ein Quantil zwischen 0 und 1 ein"
 
 #, fuzzy
-msgid "Calculate metrics"
+msgid "Calculate Checkmk RRD metrics"
 msgstr "Metriken aktivieren"
 
 #, fuzzy
 msgid "Preview in graph"
 msgstr "Vordefinierte Graphen"
-
-#, fuzzy
-msgid "CMK RRD data"
-msgstr "Daten zuordnen"
 
 msgid "Mirrored"
 msgstr "Gespiegelt"
@@ -99449,13 +100158,23 @@ msgid "Colors are assigned automatically to multi-metric queries."
 msgstr ""
 
 #, fuzzy
-msgid "Delete %{ids}?"
-msgstr "Lösche %s"
+msgid "Delete all metrics?"
+msgstr "Lösche alle Karten"
 
-msgid ""
-"The following calculations reference the selected rows and will be deleted "
-"as well:"
-msgstr ""
+#, fuzzy
+msgid "Delete metric %{names}?"
+msgid_plural "Delete metrics %{names}?"
+msgstr[0] "Service-Name auswählen"
+msgstr[1] "Service-Name auswählen"
+
+#, fuzzy
+msgid "This action can’t be undone."
+msgstr "Dieser Hintergrund-Prozess kann nicht angehalten werden"
+
+msgid "Calculations that use this metric are also deleted:"
+msgid_plural "Calculations that use these metrics are also deleted:"
+msgstr[0] ""
+msgstr[1] ""
 
 #, fuzzy
 msgid "Delete all"
@@ -99882,6 +100601,40 @@ msgstr "Zeiträume formatieren"
 msgid "More ranges"
 msgstr "Mehr Aktionen"
 
+#, fuzzy
+msgid "Time ranges"
+msgstr "Zeitraum"
+
+msgid "Keyboard"
+msgstr ""
+
+msgid "Show the cheat sheet and key hints, twice to pin"
+msgstr ""
+
+#, fuzzy
+msgid "Main menu"
+msgstr "Aktionsmenü"
+
+#, fuzzy
+msgid "Unpin the cheat sheet"
+msgstr "Standard Aussehen benutzen"
+
+#, fuzzy
+msgid "Pin the cheat sheet"
+msgstr "in der Vergangenheit!"
+
+msgid "Keyboard navigation cheat sheet"
+msgstr ""
+
+msgid ""
+"Hold Alt+K to show with the key hints, press K twice to pin, Esc or Alt+K to "
+"hide"
+msgstr ""
+
+#, fuzzy
+msgid "undocumented"
+msgstr "Dokumente"
+
 msgid "Loading content..."
 msgstr "Inhalt wird geladen..."
 
@@ -99914,10 +100667,10 @@ msgstr "Schnelle Aktivierung ausstehender Änderungen"
 msgid "Open full view"
 msgstr "Vollbild öffnen"
 
+#, fuzzy
 msgid ""
 "Changes are saved without affecting live monitoring, allowing you to review "
-"and adjust them safely.\n"
-"                Click 'Activate pending changes' to apply them."
+"and adjust them safely. Click 'Activate pending changes' to apply them."
 msgstr ""
 "Änderungen werden gespeichert, ohne das Live-Monitoring zu beeinträchtigen, "
 "sodass Sie sie sicher überprüfen und anpassen können. \n"
@@ -100032,6 +100785,14 @@ msgstr "Umschalten der Seitenleiste"
 
 msgid "Sidebar"
 msgstr "Seitenleiste"
+
+#, fuzzy
+msgid "Next entry"
+msgstr "Pro Eintrag"
+
+#, fuzzy
+msgid "Previous entry"
+msgstr "Vorheriges Jahr"
 
 msgid "Key hints"
 msgstr "Wichtige Hinweise"
@@ -101675,10 +102436,6 @@ msgid "Schedule downtime…"
 msgstr "Wartungszeiten planen"
 
 #, fuzzy
-msgid "Clear selection"
-msgstr "Ordnerauswahl"
-
-#, fuzzy
 msgid "%{n} more service"
 msgid_plural "%{n} more services"
 msgstr[0] "Erzwungener Service"
@@ -102664,10 +103421,6 @@ msgid "Match service name by"
 msgstr "Service-Labels abgleichen"
 
 #, fuzzy
-msgid "No custom service matches this name."
-msgstr "Benutzerdefinierte Serviceanmerkungen"
-
-#, fuzzy
 msgid "Matching services"
 msgstr "Services abgleichen"
 
@@ -102727,6 +103480,545 @@ msgstr "Ziele"
 #, fuzzy
 msgid "Select the metric for this service"
 msgstr "Parameter für diesen Service ansehen und bearbeiten"
+
+msgid "%{source} %{relation} %{target} (%{finding})"
+msgstr ""
+
+#, fuzzy
+msgid "The conflicts could not be read."
+msgstr "Der Basis-DN für die Gruppen konnte nicht gefunden werden."
+
+msgid "Your hosts say different things about %{first} and %{second}:"
+msgstr ""
+
+msgid "Neither - store nothing for these two"
+msgstr ""
+
+msgid "No host is named like another host plus \"%{word}\""
+msgstr ""
+
+msgid "%{count} host is named like another host plus \"%{word}\""
+msgid_plural "%{count} hosts are named like another host plus \"%{word}\""
+msgstr[0] ""
+msgstr[1] ""
+
+#, fuzzy
+msgid "host label \"%{name}\""
+msgstr "Klonen"
+
+#, fuzzy
+msgid "custom host attribute \"%{name}\""
+msgstr "Benutzerdefinierte Host-Attribute"
+
+msgid "Every value of the %{what} is shared by too many hosts to pair them"
+msgstr ""
+
+msgid "No two hosts share a value in the %{what}"
+msgstr ""
+
+msgid "1 pair of hosts shares a value in the %{what}"
+msgid_plural "%{count} pairs of hosts share a value in the %{what}"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "1 group of hosts shares a value in the %{what}"
+msgid_plural "%{count} groups of hosts share a value in the %{what}"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Remove the word \"%{word}\""
+msgstr ""
+
+#, fuzzy
+msgid "Remove \"%{name}\""
+msgstr "Name entfernen"
+
+#, fuzzy
+msgid "and 1 more"
+msgid_plural "and %{count} more"
+msgstr[0] "und %(count)s mehr"
+msgstr[1] "und %(count)s mehr"
+
+msgid "%{value} (in 1 group)"
+msgid_plural "%{value} (in %{count} groups)"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid ""
+"1 value is shared by so many hosts that it names a kind of host rather than "
+"one machine. Its hosts are left out."
+msgid_plural ""
+"%{count} values are each shared by so many hosts that they name kinds of "
+"hosts rather than one machine. Their hosts are left out."
+msgstr[0] ""
+msgstr[1] ""
+
+#, fuzzy
+msgid "%{hosts} and 1 more"
+msgid_plural "%{hosts} and %{count} more"
+msgstr[0] "Hosts und Verzeichnisse"
+msgstr[1] "Hosts und Verzeichnisse"
+
+#, fuzzy
+msgid "in %{count} of %{total} group"
+msgid_plural "in %{count} of %{total} groups"
+msgstr[0] "%{selected} von %{total} ausgewählt"
+msgstr[1] "%{selected} von %{total} ausgewählt"
+
+msgid "Enter one whole part of a host name - without \"-\", \"_\" or \".\"."
+msgstr ""
+
+msgid ""
+"Checkmk found no hosts that obviously belong together - neither one named "
+"like another plus a word, \"srv-01-ilo\" next to \"srv-01\" for example, nor "
+"hosts sharing a value such as a serial number. If your hosts are named "
+"another way, enter the word or the label below."
+msgstr ""
+
+msgid ""
+"Checkmk found no host named like another plus a word - \"srv-01-ilo\" next "
+"to \"srv-01\", for example. If your hosts are named another way, enter the "
+"word below."
+msgstr ""
+
+msgid ""
+"Checkmk found no label or attribute whose values each sit on a handful of "
+"hosts, the way a serial number does. Pick the one your hosts share below."
+msgstr ""
+
+#, fuzzy
+msgid "In the host names"
+msgstr "Neuer Host-Name"
+
+msgid ""
+"Tick every word that marks a %{noun}. The host with the word in its name is "
+"the %{noun}, the other one its %{other}."
+msgstr ""
+
+#, fuzzy
+msgid "Other words your host names use"
+msgstr "Regeln für Host-Namen"
+
+#, fuzzy
+msgid "In host labels and custom host attributes"
+msgstr "Benutzerdefinierte Host-Attribute"
+
+msgid ""
+"Tick a label or attribute if the hosts sharing one of its values are a %"
+"{noun} and its %{other}."
+msgstr ""
+
+msgid "The %{noun} is the one with \"%{words}\" in its name, %{coverage}."
+msgstr ""
+
+msgid "The %{noun} is the one with %{name}:"
+msgstr ""
+
+#, fuzzy
+msgid "Pick the value"
+msgstr "Werte filtern"
+
+msgid ""
+"Nothing in these hosts says which one is the %{noun}. You pick it for each "
+"group in the next step."
+msgstr ""
+
+msgid "Tell them apart another way"
+msgstr ""
+
+msgid "Which one is the %{noun}?"
+msgstr ""
+
+#, fuzzy
+msgid "The one Checkmk found"
+msgstr "Checkmk kennenlernen"
+
+msgid "The one with one of these words in its name: %{words}"
+msgstr ""
+
+#, fuzzy
+msgid "The one with a certain host label"
+msgstr "Schweregrad der neuen Host-Labels"
+
+#, fuzzy
+msgid "The one with a certain custom host attribute"
+msgstr "Benutzerdefiniertes Attribut des Services"
+
+msgid "I will pick it in the next step, one group at a time"
+msgstr ""
+
+#, fuzzy
+msgid "Custom host attribute"
+msgstr "Benutzerdefinierte Host-Attribute"
+
+#, fuzzy
+msgid "Choose one"
+msgstr "Einheit auswählen"
+
+#, fuzzy
+msgid "with the value"
+msgstr "ID des Wertes"
+
+msgid "Say which value the %{noun} carries to continue."
+msgstr ""
+
+#, fuzzy
+msgid "Additional indicators"
+msgstr "Zusätzliche Informationen"
+
+#, fuzzy
+msgid "A word in host names"
+msgstr "Zusätzliche Host-Namen"
+
+#, fuzzy
+msgid "Add word"
+msgstr "Neu hinzufügen"
+
+#, fuzzy
+msgid "A value hosts share"
+msgstr "Alle Hosts der Instanz"
+
+#, fuzzy
+msgid "Pick a label or attribute"
+msgstr "Wert des Attributs"
+
+#, fuzzy
+msgid "Looking for \"%{name}\" in all hosts..."
+msgstr "Log-Datei %(file_name)s auf allen Hosts"
+
+msgid "\"%{name}\" has been looked up and is listed above."
+msgstr ""
+
+msgid "1 group already related"
+msgid_plural "%{count} groups already related"
+msgstr[0] ""
+msgstr[1] ""
+
+#, fuzzy
+msgid "1 question to answer"
+msgid_plural "%{count} questions to answer"
+msgstr[0] "Zu sendende Sektionen"
+msgstr[1] "Zu sendende Sektionen"
+
+#, fuzzy
+msgid "1 in a conflict above"
+msgid_plural "%{count} in conflicts above"
+msgstr[0] "Host-Namens-Konflikt"
+msgstr[1] "Host-Namens-Konflikt"
+
+#, fuzzy
+msgid "Nothing found."
+msgstr "Nicht gefunden"
+
+#, fuzzy
+msgid "Show examples only"
+msgstr "Alle anzeigen"
+
+#, fuzzy
+msgid "Show the relation"
+msgid_plural "Show all %{count} relations"
+msgstr[0] "Zeige den Pin"
+msgstr[1] "Zeige den Pin"
+
+msgid "For one group of hosts nothing says which one is the %{noun}. Pick it:"
+msgid_plural ""
+"For %{count} groups of hosts nothing says which one is the %{noun}. Pick it "
+"for each:"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid ""
+"Rather than answering %{count} questions, go back and say how to recognise "
+"the %{noun} - by a word in its name or a label only it carries."
+msgstr ""
+
+#, fuzzy
+msgid "Back to the findings"
+msgstr "Aufgabenzustand: ausstehend"
+
+#, fuzzy
+msgid "The questions could not be read."
+msgstr "Der Basis-DN für die Gruppen konnte nicht gefunden werden."
+
+msgid "Pick the %{noun}"
+msgstr ""
+
+msgid "Which of them is the %{noun}"
+msgstr ""
+
+msgid "1 host of this group cannot be written and is left out."
+msgid_plural "%{count} hosts of this group cannot be written and are left out."
+msgstr[0] ""
+msgstr[1] ""
+
+msgid ""
+"\"srv-01-%{word}\" next to \"srv-01\", for example. Checkmk knows the usual "
+"words - %{words} - and also shows you the other words your host names use."
+msgstr ""
+
+msgid "One host named like another plus a word, for example."
+msgstr ""
+
+#, fuzzy
+msgid "Relation type"
+msgstr "Applikationstyp"
+
+#, fuzzy
+msgid "Relation indicators"
+msgstr "Ändere Kontakt:"
+
+#, fuzzy
+msgid "Host names"
+msgstr "Host-Name"
+
+#, fuzzy
+msgid "Host labels and custom host attributes"
+msgstr "Benutzerdefinierte Attribute des Hosts"
+
+msgid ""
+"A serial number or asset tag from your CMDB that both hosts carry, for "
+"example. Only needed if your host names do not say which hosts belong "
+"together."
+msgstr ""
+
+msgid ""
+"Only relations with a host in this folder or one of its subfolders are "
+"looked for. The other host can be in any folder - management boards, for "
+"example, often have a folder of their own."
+msgstr ""
+
+msgid ""
+"Only relations with a host monitored on this site are looked for. The other "
+"host can be on any site."
+msgstr ""
+
+msgid "\"%{word}\" in the name"
+msgstr ""
+
+#, fuzzy
+msgid "Host label \"%{name}\""
+msgstr "Host-Label"
+
+#, fuzzy
+msgid "Custom host attribute \"%{name}\""
+msgstr "Benutzerdefinierte Host-Attribute"
+
+msgid ""
+"Related hosts are shown together in the monitoring - a server and its "
+"management board, for example. Nothing is changed until you store."
+msgstr ""
+
+#, fuzzy
+msgid "Relation mapping"
+msgstr "Replikationsverzögerung"
+
+#, fuzzy
+msgid "The hosts could not be read."
+msgstr "Der Basis-DN für die Gruppen konnte nicht gefunden werden."
+
+msgid "To continue, say where Checkmk should look."
+msgstr ""
+
+msgid "Looking through the hosts..."
+msgstr ""
+
+#, fuzzy
+msgid "Relation proposal"
+msgstr "Replikation"
+
+#, fuzzy
+msgid "Checkmk looked at 1 host."
+msgid_plural "Checkmk looked at %{count} hosts."
+msgstr[0] "Checkmk-Instanzen des Hosts"
+msgstr[1] "Checkmk-Instanzen des Hosts"
+
+msgid "To continue, add what your hosts are related by."
+msgstr ""
+
+#, fuzzy
+msgid "To continue, tick at least one finding."
+msgstr "Bitte fügen Sie mindestens einen Service hinzu."
+
+msgid "To continue, answer the questions above."
+msgstr ""
+
+#, fuzzy
+msgid "Finding the relations..."
+msgstr "Übersetzungen werden geladen..."
+
+#, fuzzy
+msgid "Back to what was found"
+msgstr "Paket nicht gefunden"
+
+#, fuzzy
+msgid "Relation review"
+msgstr "Applikationstyp"
+
+#, fuzzy
+msgid "1 relation to store"
+msgid_plural "%{count} relations to store"
+msgstr[0] "Replikationsereignisse loggen"
+msgstr[1] "Replikationsereignisse loggen"
+
+msgid ""
+"1 host looked at. Every finding you tick is stored as a whole; untick single "
+"relations below if they are wrong."
+msgid_plural ""
+"%{count} hosts looked at. Every finding you tick is stored as a whole; "
+"untick single relations below if they are wrong."
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Needs your attention: 1 conflict"
+msgid_plural "Needs your attention: %{count} conflicts"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid ""
+"Nothing new was found: every relation is stored already or cannot be stored."
+msgstr ""
+
+msgid "To continue, choose at least one relation to store."
+msgstr ""
+
+#, fuzzy
+msgid "Findings"
+msgstr "Bindungen"
+
+#, fuzzy
+msgid "Relations to store"
+msgstr "Zu überwachende Regionen"
+
+#, fuzzy
+msgid "The relations could not be stored."
+msgstr "Der Basis-DN für die Gruppen konnte nicht gefunden werden."
+
+#, fuzzy
+msgid "Scan again"
+msgstr "Lösche Aggregationen"
+
+#, fuzzy
+msgid "Store 1 relation"
+msgid_plural "Store %{count} relations"
+msgstr[0] "Gespeicherter Ort"
+msgstr[1] "Gespeicherter Ort"
+
+#, fuzzy
+msgid "Back to the review"
+msgstr "Zurück zu Ansicht"
+
+#, fuzzy
+msgid "Stored"
+msgstr "Speichern"
+
+#, fuzzy
+msgid "Already related"
+msgstr "Datei erstellt"
+
+#, fuzzy
+msgid "Related in another way"
+msgstr "Zusammenhängende Ansichten"
+
+#, fuzzy
+msgid "Cannot be stored"
+msgstr "Dieser Hintergrund-Prozess kann nicht angehalten werden"
+
+msgid "Needs your answer"
+msgstr ""
+
+#, fuzzy
+msgid "%{count} stored"
+msgid_plural "%{count} stored"
+msgstr[0] "%{count} sec"
+msgstr[1] "%{count} sec"
+
+#, fuzzy
+msgid "%{count} new"
+msgid_plural "%{count} new"
+msgstr[0] "%{count} sec"
+msgstr[1] "%{count} sec"
+
+#, fuzzy
+msgid "%{count} already related"
+msgid_plural "%{count} already related"
+msgstr[0] "%{count} Host wurde ausgewählt"
+msgstr[1] "%{count} Hosts wurden ausgewählt"
+
+msgid "%{count} related in another way"
+msgid_plural "%{count} related in another way"
+msgstr[0] ""
+msgstr[1] ""
+
+#, fuzzy
+msgid "%{count} could not be stored"
+msgid_plural "%{count} could not be stored"
+msgstr[0] "%{count} ausgewählter Host"
+msgstr[1] "%{count} ausgewählter Host"
+
+#, fuzzy
+msgid "%{count} cannot be stored"
+msgid_plural "%{count} cannot be stored"
+msgstr[0] "Dieser Hintergrund-Prozess kann nicht angehalten werden"
+msgstr[1] "Dieser Hintergrund-Prozess kann nicht angehalten werden"
+
+#, fuzzy
+msgid "1 relation matches"
+msgid_plural "%{count} relations match"
+msgstr[0] "Erstelldatum"
+msgstr[1] "Erstelldatum"
+
+#, fuzzy
+msgid "All folders"
+msgstr "%(folder)s"
+
+#, fuzzy
+msgid "Search host names"
+msgstr "Host-Namen abgleichen"
+
+#, fuzzy
+msgid "Untick all of them"
+msgstr "Kritisch bei "
+
+#, fuzzy
+msgid "Tick all of them"
+msgstr "Titel des Baumes"
+
+#, fuzzy
+msgid "The rows could not be read."
+msgstr "Der Basis-DN für die Gruppen konnte nicht gefunden werden."
+
+#, fuzzy
+msgid "No relation matches."
+msgstr "Replikationsereignisse loggen"
+
+#, fuzzy
+msgid "Related host"
+msgstr "Host löschen"
+
+#, fuzzy
+msgid "Why"
+msgstr "Wh"
+
+#, fuzzy
+msgid "%{parent} and %{child}"
+msgstr "Parent / Child"
+
+#, fuzzy
+msgid "Previous"
+msgstr "Vorheriges Jahr"
+
+#, fuzzy
+msgid "%{first}-%{last} of %{total}"
+msgstr "%{selected} von %{total} ausgewählt"
+
+#, fuzzy
+msgid "What could not be stored"
+msgstr "Der Basis-DN für die Gruppen konnte nicht gefunden werden."
+
+msgid ""
+"Fix these in the properties of the hosts, or in the folders they are in, and "
+"scan again."
+msgstr ""
 
 msgid "Agent connection test running"
 msgstr "Test der Agentenverbindung läuft"
@@ -102892,12 +104184,6 @@ msgstr "Fehler beim Erstellen des Einmal-Tokens: ${ottError.message}"
 msgid "Try again"
 msgstr "Bitte versuchen Sie es erneut."
 
-msgid "Successfully generated one-time token"
-msgstr "Einmal-Token wurde erfolgreich erstellt"
-
-msgid "(Expires: ${ottExpiry?.toLocaleString() || 'never'})"
-msgstr "(Läuft ab: ${ottExpiry?.toLocaleString() || 'never'})"
-
 msgid "Download and install"
 msgstr "Herunterladen und installieren"
 
@@ -102912,6 +104198,12 @@ msgid "Next step: Register agent"
 msgstr "Nächster Schritt: Agent registrieren"
 
 msgid ""
+"The registration command is hidden until a token has been generated "
+"successfully. You can register with the agent_registration user instead - "
+"see \"Troubleshooting registration issues\" below."
+msgstr ""
+
+msgid ""
 "Agent registration will establish trust between the Agent Controller\n"
 "                    on the host and the Agent Receiver on the Checkmk server."
 msgstr ""
@@ -102922,12 +104214,6 @@ msgstr ""
 
 msgid "This requires the generation of a registration token."
 msgstr "Hierzu muss ein Registrierungs-Token generiert werden."
-
-msgid ""
-"The registration command is hidden until a token has been generated "
-"successfully. You can register with the agent_registration user instead - "
-"see \"Troubleshooting registration issues\" below."
-msgstr ""
 
 msgid ""
 "The agent receiver port could not be determined from the remote site. The "
@@ -104021,6 +105307,11 @@ msgstr ""
 "Führen Sie auf dem Windows-Rechner, auf dem das Relay ausgeführt werden "
 "soll, den folgenden Befehl aus in einem "
 
+msgid "Registration failed and Relay couldn't be saved."
+msgstr ""
+"Die Registrierung ist fehlgeschlagen und das Relay konnte nicht gespeichert "
+"werden."
+
 msgid "Registration results"
 msgstr "Ergebnisse der Registrierung"
 
@@ -104042,11 +105333,6 @@ msgstr "Die Registrierung wird verifiziert..."
 
 msgid "Relay registered and saved successfully!"
 msgstr "Relay registriert und erfolgreich gespeichert!"
-
-msgid "Registration failed and Relay couldn't be saved."
-msgstr ""
-"Die Registrierung ist fehlgeschlagen und das Relay konnte nicht gespeichert "
-"werden."
 
 msgid "Continue to add host"
 msgstr "Mit dem Hinzufügen des Hosts fortfahren"
@@ -104091,6 +105377,10 @@ msgstr[1] "Wartungszeit für %(count)d %(services)s planen"
 msgid "Could not schedule the downtime for the selected hosts"
 msgstr ""
 "Die Wartungszeit für die ausgewählten Hosts konnte nicht geplant werden."
+
+#, fuzzy
+msgid "Press [Enter] on a host name to open its details"
+msgstr "Bitte geben Sie einen Host-Namen ein, um die SNMP-Verbindung zu testen"
 
 msgid ""
 "Show only hosts in a problem state (DOWN or UNREACH) that are neither "
@@ -104184,8 +105474,20 @@ msgid "Number of related hosts (management board / OS host)"
 msgstr "Anzahl der erstellten Podman Pods"
 
 #, fuzzy
-msgid "Last state change"
-msgstr "Letzter Host-Zustand-Wechsel"
+msgid "Check age"
+msgstr "Checkmk-Agent"
+
+#, fuzzy
+msgid "Age of the check"
+msgstr "Check-Modus"
+
+#, fuzzy
+msgid "State age"
+msgstr "Zustandsänderung"
+
+#, fuzzy
+msgid "Age of the state"
+msgstr "Den Zustand ignorieren"
 
 msgid "Number of services in OK state"
 msgstr "Anzahl von Services im Zustand OK"
@@ -104227,12 +105529,16 @@ msgid "Select host %{name}"
 msgstr "Host %{name} auswählen"
 
 #, fuzzy
-msgid "Show status of host %{name}"
-msgstr "Status des Hosts"
+msgid "Show host state"
+msgstr "Host-Merkmale anzeigen"
 
 #, fuzzy
-msgid "Edit host %{name}"
-msgstr "Host %{name} auswählen"
+msgid "Edit host properties"
+msgstr "Eigenschaften bearbeiten"
+
+#, fuzzy
+msgid "Show host parameters"
+msgstr "Check-Parameter anzeigen"
 
 #, fuzzy
 msgid "Back to host detail view"
@@ -104332,28 +105638,28 @@ msgid "Select service %{name}"
 msgstr "Service-Name auswählen"
 
 #, fuzzy
-msgid "Show details of service %{name}"
-msgstr "Service-Name anzeigen"
+msgid "Show service details"
+msgstr "Servicedetails"
 
 #, fuzzy
-msgid "Parameters of this service"
-msgstr "Parameter für diesen Service"
+msgid "Show service parameters"
+msgstr "ServiceNow-Parameter"
 
 #, fuzzy
 msgid "Back to service detail view"
 msgstr "Ntop Host-Details"
 
 #, fuzzy
-msgid "Open the service graph page"
-msgstr "Wahl der Service-Gruppe"
+msgid "Initially showing the last %{days} days (since %{since})"
+msgstr "Ereignisse der letzten vier Stunden (für das Dashboard)"
+
+#, fuzzy
+msgid "Explore all service graphs"
+msgstr "Service-Gruppen ausschließen"
 
 #, fuzzy
 msgid "Checkmk has no graphs for this service."
 msgstr "Andere Protokolle für diesen Dienst"
-
-#, fuzzy
-msgid "Show details of host %{name}"
-msgstr "Zeit die Details eines Hosts."
 
 #, fuzzy
 msgid "Host alias:"
@@ -104372,14 +105678,6 @@ msgid "Labels:"
 msgstr "Labels"
 
 #, fuzzy
-msgid "Last check:"
-msgstr "Letzter Check"
-
-#, fuzzy
-msgid "State age:"
-msgstr "Zustandsänderung"
-
-#, fuzzy
 msgid "Current check attempt:"
 msgstr "Aktueller Checkversuch"
 
@@ -104394,6 +105692,13 @@ msgstr "Service-Zusammenfassung"
 #, fuzzy
 msgid "This check plugin reports no further details."
 msgstr "Dieses Plugin hat keine Parameter."
+
+#, fuzzy
+msgid "Host services"
+msgstr "Host/Service"
+
+msgid "Press [Enter] on a service name to open its details"
+msgstr ""
 
 msgid ""
 "Show only services in a problem state (WARN or CRIT) that are neither "
@@ -104506,6 +105811,10 @@ msgstr "Das Ablaufdatum muss in der Zukunft liegen."
 msgid "Now"
 msgstr "Nein"
 
+#, fuzzy
+msgid "The downtime has to end after it starts."
+msgstr "Das Ende-Datum muss nach dem Start-Datum liegen"
+
 msgid "A downtime repeating monthly has to start between the 1st and the 28th."
 msgstr ""
 
@@ -104516,8 +105825,13 @@ msgstr "Mehr Aktionen"
 msgid "More"
 msgstr ""
 
-msgid "Downtime time range"
-msgstr "Zeitraum der Wartungszeit"
+#, fuzzy
+msgid "Choose when the downtime starts"
+msgstr "Erster Startzeitpunkt der Wartungszeit"
+
+#, fuzzy
+msgid "Choose when the downtime ends"
+msgstr "Ende der Wartungszeit ändern"
 
 msgid "From now, for"
 msgstr "Ab jetzt, für"
@@ -104607,6 +105921,10 @@ msgid "Choose the latest date & time"
 msgstr "Tag & Zeit auswählen"
 
 #, fuzzy
+msgid "Open filter"
+msgstr "Offenen Dateien"
+
+#, fuzzy
 msgid "Sort ascending"
 msgstr "Aufsteigend"
 
@@ -104619,6 +105937,18 @@ msgstr ""
 
 msgid "Extend active sorting of %{columns} by"
 msgstr ""
+
+#, fuzzy
+msgid "Close filter"
+msgstr "Suchfilter"
+
+#, fuzzy
+msgid "Next row"
+msgstr "Nächster Lauf"
+
+#, fuzzy
+msgid "Previous row"
+msgstr "Vorheriges Jahr"
 
 #, fuzzy
 msgid "Sort by this column"
@@ -104704,10 +106034,6 @@ msgid "Show:"
 msgstr "Zeige:"
 
 #, fuzzy
-msgid "%{first}-%{last} of %{total}"
-msgstr "%{selected} von %{total} ausgewählt"
-
-#, fuzzy
 msgid "%{first}-%{last} of %{total} %{unit}"
 msgstr "%{selected} von %{total} ausgewählt"
 
@@ -104722,6 +106048,10 @@ msgstr "Nächster Schritt"
 #, fuzzy
 msgid "Rows matching your criteria: %{count}"
 msgstr "Zeilen, die Ihrer Suche entsprechen: %{count}"
+
+#, fuzzy
+msgid "This action cannot be performed on any of the selected rows."
+msgstr "Diese Aktion kann nicht für Suchergebnisse durchgeführt werden"
 
 msgid "Give feedback on the new view"
 msgstr "Geben Sie Feedback zur neuen Ansicht"
@@ -104765,6 +106095,70 @@ msgid "Pause reload countdown, next reload in %{seconds} seconds"
 msgstr ""
 
 #, fuzzy
+msgid "no match"
+msgstr "Keine Übereinstimmungen"
+
+msgid "Press [/] to search the table"
+msgstr ""
+
+msgid "Press [Enter] on a column header to sort by it"
+msgstr ""
+
+msgid ""
+"Press [Enter] on a column's filter button to filter for that column, "
+"[ArrowDown]/[ArrowUp] to move between the rows, [Escape] to close"
+msgstr ""
+
+msgid "Press [Space] on a quick filter chip to filter for unhandled problems"
+msgstr ""
+
+msgid ""
+"Press [Space] on a row's checkbox to select it, on the header checkbox to "
+"select all"
+msgstr ""
+
+msgid ""
+"Press [ArrowUp]/[ArrowDown]/[ArrowLeft]/[ArrowRight] to move the focus to "
+"the nearest clickable element, while no menu or widget uses them; with "
+"nothing focused, [ArrowUp]/[ArrowDown] scroll the table"
+msgstr ""
+
+msgid "Press [Escape] to let go of the focus"
+msgstr ""
+
+msgid ""
+"Click into the table, then press [PageUp]/[PageDown]/[Home]/[End] to scroll "
+"it"
+msgstr ""
+
+msgid ""
+"Press [ContextMenu] (or [Shift]+[F10]) to open the menu of the focused "
+"element or its row, e.g. a host's ... menu"
+msgstr ""
+
+msgid ""
+"Type letters to focus the first clickable text containing them, [ArrowDown]/"
+"[ArrowUp] for the next/previous match, [Enter] to activate it, [Escape] to "
+"clear"
+msgstr ""
+
+#, fuzzy
+msgid "Focus search"
+msgstr "Host-Suche"
+
+#, fuzzy
+msgid "Last state change"
+msgstr "Letzter Host-Zustand-Wechsel"
+
+#, fuzzy
+msgid "Donut chart"
+msgstr "Zustand nicht ändern"
+
+#, fuzzy
+msgid "Select segment"
+msgstr "Einzel-Metrik"
+
+#, fuzzy
 msgid "%{share} of shown"
 msgstr "%{selected} von %{total} ausgewählt"
 
@@ -104784,10 +106178,6 @@ msgstr ""
 msgid ""
 "%{previous} and %{change} are hidden: the widget is too narrow to carry them."
 msgstr ""
-
-#, fuzzy
-msgid "Previous"
-msgstr "Vorheriges Jahr"
 
 msgid "Visible"
 msgstr "Sichtbar"
@@ -104928,6 +106318,18 @@ msgid "No peer traffic in the last 30 minutes."
 msgstr "Logswitches in den letzten 60 Sekunden"
 
 #, fuzzy
+msgid "One-time code"
+msgstr "Kommentar zur Wartungszeit"
+
+#, fuzzy
+msgid "Clear digit"
+msgstr "Log leeren"
+
+#, fuzzy
+msgid "Move between digits"
+msgstr "Verzögerung zwischen den Wiederholungsversuchen"
+
+#, fuzzy
 msgid "Digit %{count} of %{total}"
 msgstr "%{selected} von %{total} ausgewählt"
 
@@ -105040,6 +106442,14 @@ msgstr "Geändert durch"
 #, fuzzy
 msgid "calls"
 msgstr "Eingehende Anrufe"
+
+#, fuzzy
+msgid "Hotspots table"
+msgstr "Typ der Tabelle"
+
+#, fuzzy
+msgid "Select function"
+msgstr "Option auswählen"
 
 #, fuzzy
 msgid "Self-time"
@@ -105276,14 +106686,22 @@ msgstr "Bedingung entfernen"
 msgid "Attribute operator"
 msgstr "Attribut-Operator"
 
+msgid "Attribute filter"
+msgstr "Attribut-Filter"
+
+#, fuzzy
+msgid "Move between items"
+msgstr "Verzögerung zwischen den Wiederholungsversuchen"
+
+#, fuzzy
+msgid "Leave group"
+msgstr "Gruppe entfernen"
+
 msgid "Add condition after %{key}"
 msgstr "Bedingung nach %{key} hinzufügen"
 
 msgid "Add condition after previous condition"
 msgstr "Bedingung nach vorheriger Bedingung hinzufügen"
-
-msgid "Attribute filter"
-msgstr "Attribut-Filter"
 
 msgid "Toggle connector, currently %{connector}"
 msgstr "Umschaltbarer Anschluss, derzeit %{connector}"
@@ -105541,17 +106959,32 @@ msgstr "Geben Sie beide Schwellwerte ein"
 msgid "Lower threshold must be below the upper threshold"
 msgstr "Unterer Schwellwert muss unterhalb des oberen Schwellwerts liegen"
 
+msgid "Pill"
+msgstr ""
+
+#, fuzzy
+msgid "Edit pill"
+msgstr "Benutzerprofil bearbeiten"
+
+#, fuzzy
+msgid "Remove pill"
+msgstr "Name entfernen"
+
+#, fuzzy
+msgid "Leave edit"
+msgstr "Speichern & bearbeiten"
+
 #, fuzzy
 msgid "Step %{step} of %{total}"
 msgstr "%{selected} von %{total} ausgewählt"
 
 #, fuzzy
-msgid "Resend code"
-msgstr "Codes neu erstellen"
-
-#, fuzzy
 msgid "Resend code (%{countdown})"
 msgstr "Gefundene Zeilen: %{count}"
+
+#, fuzzy
+msgid "Resend code"
+msgstr "Codes neu erstellen"
 
 #, fuzzy
 msgid "Code"
@@ -105568,9 +107001,19 @@ msgstr ""
 msgid "Verification code"
 msgstr "Verifizierung"
 
+msgid ""
+"Too many codes requested for this address. Try again in %{time}, go back to "
+"use a different email address, or continue without verification as an "
+"unverified trial."
+msgstr ""
+
 #, fuzzy
 msgid "Didn't receive it?"
 msgstr "Empfangene Daten"
+
+#, fuzzy
+msgid "Continue without verification"
+msgstr "Online-Verifizierung"
 
 #, fuzzy
 msgid "Verify"
@@ -105624,6 +107067,36 @@ msgstr ""
 #, fuzzy
 msgid "Send code"
 msgstr "Daten senden"
+
+#, fuzzy
+msgid "Connection blocked"
+msgstr "Verbindungsaufbau"
+
+#, fuzzy
+msgid "This site can't reach %{domain}"
+msgstr "Diese Instanz antwortet nicht."
+
+msgid ""
+"Email verification needs an outbound HTTPS connection to that domain. A "
+"firewall or proxy rule is the most common cause — if this site has no "
+"internet access at all, continue as an offline trial instead."
+msgstr ""
+
+#, fuzzy
+msgid "Allow outbound access to"
+msgstr "Ausgehende Pakete des NAT Gateways"
+
+msgid "TCP 443 (HTTPS)"
+msgstr ""
+
+msgid ""
+"Add the domain to your firewall or proxy allowlist, then retry. The same "
+"endpoint is used for product analytics, so allowlisting it once covers both."
+msgstr ""
+
+#, fuzzy
+msgid "Continue as offline trial"
+msgstr "Anzahl offline Hosts"
 
 msgid "Tell us how you're using this site so we can set it up correctly."
 msgstr ""
@@ -105683,6 +107156,23 @@ msgstr "Testzeitraum abgelaufen"
 #, fuzzy
 msgid "Start monitoring"
 msgstr "Synthetisches Monitoring"
+
+msgid "Unverified trial"
+msgstr ""
+
+#, fuzzy
+msgid "Full features · %{days} day left"
+msgid_plural "Full features · %{days} days left"
+msgstr[0] "läuft in %{days} Tagen ab"
+msgstr[1] "läuft in %{days} Tagen ab"
+
+msgid ""
+"Trial started without verification (offline site, or verification not "
+"completed after the resend cap). Full features for %{days} days from site "
+"creation, then fallback to the limited free edition (%{services} services). "
+"While the site is under %{days} days old, the dialog reappears on admin "
+"login (at most once per 48h) as another chance to verify or license."
+msgstr ""
 
 #, fuzzy
 msgid "Saving your selection failed. Please try again."
@@ -105841,6 +107331,10 @@ msgstr "2FA nicht möglich (Details siehe #13325)"
 msgid "Search providers"
 msgstr "Provider-Suche"
 
+#, fuzzy
+msgid "Apply filter"
+msgstr "Filter anwenden"
+
 msgid "Search operator suggestions"
 msgstr "Vorschläge für Suchoperatoren"
 
@@ -105857,6 +107351,10 @@ msgstr ""
 msgid "Note that for simplicity '*' will be substituted with '.*'."
 msgstr "Beachten Sie, dass der Einfachheit halber '*' durch '.*' ersetzt wird."
 
+#, fuzzy
+msgid "Run search"
+msgstr "Regelsuche"
+
 msgid "Search across Checkmk – Type '/' for search operators"
 msgstr "Suche in Checkmk – geben Sie '/' für Suchoperatoren ein"
 
@@ -105868,6 +107366,10 @@ msgstr "In 'Anpassen' suchen"
 
 msgid "Search in setup"
 msgstr "Suche in 'Setup'"
+
+#, fuzzy
+msgid "Insert operator"
+msgstr "Operator auswählen"
 
 msgid "Search operators"
 msgstr "Suchoperatoren"
@@ -105909,6 +107411,10 @@ msgstr ""
 "um alle Suchoperatoren zu sehen und z.B. alle Hosts mit dem gleichen Host-"
 "Label zu finden (hl:)"
 
+#, fuzzy
+msgid "Open entry"
+msgstr "Pro Eintrag"
+
 msgid "Recently viewed"
 msgstr "Zuletzt angesehen"
 
@@ -105918,6 +107424,10 @@ msgstr "Alle leeren"
 msgid "Recently searched"
 msgstr "Zuletzt gesucht"
 
+#, fuzzy
+msgid "Open result"
+msgstr "Offene Slots"
+
 msgid "Press"
 msgstr "Drücken"
 
@@ -105926,6 +107436,38 @@ msgstr "um die Host-/Service-Suche auszulösen"
 
 msgid "Group results by topic"
 msgstr "Ergebnisse nach Thema gruppieren"
+
+#, fuzzy
+msgid "Open search"
+msgstr "Suche verfeinern"
+
+#, fuzzy
+msgid "Close search"
+msgstr "Suche leeren"
+
+#, fuzzy
+msgid "Next result"
+msgstr "Nächster Schritt"
+
+#, fuzzy
+msgid "Previous result"
+msgstr "Vorheriger Schritt"
+
+#, fuzzy
+msgid "Previous action of the result"
+msgstr "Dieser Inhalt konnte nicht geladen werden."
+
+#, fuzzy
+msgid "Next action of the result"
+msgstr "Eine Kopie dieser Regel erstellen"
+
+#, fuzzy
+msgid "Previous result group"
+msgstr "Vorheriger Schritt"
+
+#, fuzzy
+msgid "Next result group"
+msgstr "Keine Ergebnisse gefunden"
 
 msgid "Add your first host"
 msgstr "Fügen Sie Ihren ersten Host hinzu"
@@ -106145,10 +107687,11 @@ msgstr ""
 msgid "Spotting pending changes"
 msgstr "Ausstehende Änderungen suchen"
 
+#, fuzzy
 msgid ""
 "If there are pending changes, you’ll see a yellow badge on the “Changes” "
-"menu item in the main navigation,\n"
-"      reminding you that your setup is not yet active."
+"menu item in the main navigation, reminding you that your setup is not yet "
+"active."
 msgstr ""
 "Wenn Änderungen ausstehen, wird im Menüpunkt \"Änderungen\" in der "
 "Hauptnavigation ein gelbes Symbol angezeigt,\n"
@@ -106250,13 +107793,13 @@ msgstr ""
 msgid "Before adjusting thresholds"
 msgstr "Vor der Anpassung von Schwellwerten"
 
+#, fuzzy
 msgid ""
-"Make sure you understand what the monitoring data is telling you.\n"
-"          If a service reports a problem, first verify and fix real issues.\n"
-"          Thresholds should help detect real problems - not hide them.\n"
-"          Poorly tuned thresholds can lead to false alarms, masking of "
-"problems,\n"
-"          and reduces trust in the monitoring system."
+"Make sure you understand what the monitoring data is telling you. If a "
+"service reports a problem, first verify and fix real issues. Thresholds "
+"should help detect real problems - not hide them. Poorly tuned thresholds "
+"can lead to false alarms, masking of problems, and reduces trust in the "
+"monitoring system."
 msgstr ""
 "Vergewissern Sie sich, dass Sie die Monitoring-Daten richtig "
 "interpretieren.\n"
@@ -106546,6 +108089,142 @@ msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
 
+#~ msgid "Add new exclude pattern"
+#~ msgstr "Neues auszuschließendes Pattern hinzufügen"
+
+#~ msgid "Add new group or user"
+#~ msgstr "Neue Gruppe oder neuen Benutzer hinzufügen"
+
+#~ msgid "Add new include pattern"
+#~ msgstr "Neues einzuschließendes Pattern hinzufügen"
+
+#~ msgid "Alias Value"
+#~ msgstr "Alias-Wert"
+
+#~ msgid "Cache age"
+#~ msgstr "Cache-Alter"
+
+#~ msgid "Custom metrics cache age"
+#~ msgstr "Cache-Alter der Custom Metrics"
+
+#~ msgid "Default settings"
+#~ msgstr "Standardeinstellungen"
+
+#~ msgid "Disable this section"
+#~ msgstr "Diese Sektion deaktivieren"
+
+#~ msgid "Enable service discovery"
+#~ msgstr "Service-Erkennung aktivieren"
+
+#~ msgid ""
+#~ "How old (in seconds) the cache file for custom metrics is allowed to be."
+#~ msgstr "Wie alt (in Sekunden) die Cache-Datei für Custom Metrics sein darf."
+
+#~ msgid "Ignore database name and use instance name instead"
+#~ msgstr ""
+#~ "Datenbanknamen ignorieren und stattdessen den Instanznamen verwenden"
+
+#~ msgid "Livestatus network traffic is encrypted"
+#~ msgstr "Der Livestatus-Netzwerkverkehr ist verschlüsselt"
+
+#~ msgid ""
+#~ "No rule set <b>State in case of restricted address mismatch</b> is "
+#~ "configured"
+#~ msgstr ""
+#~ "Es ist kein Regelsatz <b>Zustand bei fehlender Übereinstimmung der "
+#~ "Adresse</b> konfiguriert"
+
+#, fuzzy
+#~ msgid "Select relation type"
+#~ msgstr "Gerätetyp auswählen"
+
+#, fuzzy
+#~ msgid ""
+#~ "Select which data (sections) should be collected from the Oracle database."
+#~ msgstr ""
+#~ "Wählen Sie aus, welche Daten (Abschnitte) aus der Oracle-Datenbank "
+#~ "erfasst werden sollen."
+
+#~ msgid ""
+#~ "These settings apply to all monitored Oracle databases by default. They "
+#~ "define the authentication, connection, and data collection options used "
+#~ "unless overridden for a specific database in the instance list below."
+#~ msgstr ""
+#~ "Diese Einstellungen gelten standardmäßig für alle überwachten Oracle-"
+#~ "Datenbanken. Sie definieren die Optionen, die für Authentifizierung, "
+#~ "Verbindung und Datenerfassung genutzt werden, sofern sie nicht für eine "
+#~ "bestimmte Datenbank in der folgenden Instanzliste überschrieben werden."
+
+#, fuzzy
+#~ msgid "Unified Oracle plug-in (beta)"
+#~ msgstr "Unified Oracle Plugin (Beta)"
+
+#, fuzzy
+#~ msgid "Failed to fetch single metric data:"
+#~ msgstr "Fehler beim Abrufen der Topliste-Daten:"
+
+#~ msgid "Failed to fetch top list data:"
+#~ msgstr "Fehler beim Abrufen der Topliste-Daten:"
+
+#~ msgid "Loading Top list content"
+#~ msgstr "Lädt Inhalt der Topliste"
+
+#~ msgid "Transformation"
+#~ msgstr "Transformation"
+
+#, fuzzy
+#~ msgid "Help: Transformation"
+#~ msgstr "Transformation"
+
+#, fuzzy
+#~ msgid "CMK RRD data"
+#~ msgstr "Daten zuordnen"
+
+#, fuzzy
+#~ msgid "Delete %{ids}?"
+#~ msgstr "Lösche %s"
+
+#, fuzzy
+#~ msgid "No custom service matches this name."
+#~ msgstr "Benutzerdefinierte Serviceanmerkungen"
+
+#~ msgid "Successfully generated one-time token"
+#~ msgstr "Einmal-Token wurde erfolgreich erstellt"
+
+#~ msgid "(Expires: ${ottExpiry?.toLocaleString() || 'never'})"
+#~ msgstr "(Läuft ab: ${ottExpiry?.toLocaleString() || 'never'})"
+
+#, fuzzy
+#~ msgid "Show status of host %{name}"
+#~ msgstr "Status des Hosts"
+
+#, fuzzy
+#~ msgid "Edit host %{name}"
+#~ msgstr "Host %{name} auswählen"
+
+#, fuzzy
+#~ msgid "Show details of service %{name}"
+#~ msgstr "Service-Name anzeigen"
+
+#, fuzzy
+#~ msgid "Parameters of this service"
+#~ msgstr "Parameter für diesen Service"
+
+#, fuzzy
+#~ msgid "Open the service graph page"
+#~ msgstr "Wahl der Service-Gruppe"
+
+#, fuzzy
+#~ msgid "Show details of host %{name}"
+#~ msgstr "Zeit die Details eines Hosts."
+
+#, fuzzy
+#~ msgid "Last check:"
+#~ msgstr "Letzter Check"
+
+#~ msgid "Downtime time range"
+#~ msgstr "Zeitraum der Wartungszeit"
+
 #, fuzzy
 #~ msgid "No hosts available"
 #~ msgstr "Keine Optionen vorhanden"
@@ -106608,9 +108287,6 @@ msgstr ""
 #~ msgid "Hostname"
 #~ msgstr "Host-Name"
 
-#~ msgid "%{count} sec"
-#~ msgstr "%{count} sec"
-
 #~ msgid "%{count} min"
 #~ msgstr "%{count} min"
 
@@ -106659,12 +108335,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "You are not allowed to create or edit maps."
 #~ msgstr "Sie sind nicht berechtigt, Dashboards zu erstellen."
-
-#, fuzzy
-#~ msgid "%{count} service selected"
-#~ msgid_plural "%{count} services selected"
-#~ msgstr[0] "%{count} Host wurde ausgewählt"
-#~ msgstr[1] "%{count} Hosts wurden ausgewählt"
 
 #~ msgid "Metric Backend"
 #~ msgstr "Metrik-Backend"
@@ -106940,9 +108610,6 @@ msgstr ""
 
 #~ msgid "French"
 #~ msgstr "Französisch"
-
-#~ msgid "Loading translations..."
-#~ msgstr "Übersetzungen werden geladen..."
 
 #, fuzzy
 #~ msgid "Translations loaded"
@@ -108258,14 +109925,6 @@ msgstr ""
 #, python-format
 #~ msgid "No view defined with the name '%s'."
 #~ msgstr "Keine Ansicht mit dem Namen '%s' definiert."
-
-#, python-format
-#~ msgid ""
-#~ "The dashboard '%s' does not exist or you do not have permission to view "
-#~ "it."
-#~ msgstr ""
-#~ "Das Dashboard '%s' existiert nicht oder Sie haben keine Berechtigung, um "
-#~ "es zu sehen."
 
 #, python-format
 #~ msgid "The maximum allowed value is %s."
@@ -112171,9 +113830,6 @@ msgstr ""
 #~ msgid "Check HTTP service (deprecated)"
 #~ msgstr "Prüfe HTTP Service (veraltet)"
 
-#~ msgid "Clone & review dashboard filters"
-#~ msgstr "Schließen & Dashboard-Filter prüfen"
-
 #~ msgid "Clone & view list"
 #~ msgstr "Klonen & Liste ansehen"
 
@@ -112951,9 +114607,6 @@ msgstr ""
 #~ "aktiviert ist, werden beide Plugins verteilt, da je nach installierter "
 #~ "Mailman-Version nur eines von ihnen Daten erzeugt."
 
-#~ msgid "Documents"
-#~ msgstr "Dokumente"
-
 #~ msgid "Inbound packets"
 #~ msgstr "Eingehende Pakete"
 
@@ -113260,9 +114913,6 @@ msgstr ""
 #~ msgstr ""
 #~ "Verwenden und testen Sie es nach Herzenslust, aber verlassen Sie sich "
 #~ "nicht darauf in Produktion - Umfang & Funktionen können sich ändern."
-
-#~ msgid "Value of attribute"
-#~ msgstr "Wert des Attributs"
 
 #~ msgid "You have to select a valid host name computation method."
 #~ msgstr ""
@@ -114650,9 +116300,6 @@ msgstr ""
 #~ msgid "WCU"
 #~ msgstr "WCU"
 
-#~ msgid "Wh"
-#~ msgstr "Wh"
-
 #~ msgid "Write capacity units"
 #~ msgstr "Einheiten der Schreibkapazität"
 
@@ -115400,9 +117047,6 @@ msgstr ""
 #~ msgid "Missing catalog topic."
 #~ msgstr "Fehlendes Katalogthema."
 
-#~ msgid "Rules for host names"
-#~ msgstr "Regeln für Host-Namen"
-
 #~ msgid ""
 #~ "Aggregate values of several data points of an OpenTelemetry metric from "
 #~ "different time points. The aggregation function is applied to the values "
@@ -115609,10 +117253,6 @@ msgstr ""
 
 #~ msgid "No need for syncing sites"
 #~ msgstr "Synchronisierung von Instanzen nicht nötig"
-
-#, fuzzy
-#~ msgid "Some value"
-#~ msgstr "Wert entfernen"
 
 #, fuzzy
 #~ msgid "State of the host manager"
@@ -116376,9 +118016,6 @@ msgstr ""
 
 #~ msgid "API Key"
 #~ msgstr "API-Schlüssel"
-
-#~ msgid "Critical of "
-#~ msgstr "Kritisch bei "
 
 #~ msgid "Warning of "
 #~ msgstr "Warnung bei "

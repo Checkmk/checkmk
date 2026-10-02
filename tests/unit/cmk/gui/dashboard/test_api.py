@@ -1036,6 +1036,90 @@ def test_a_link_to_a_copy_of_another_owner_is_rejected_on_write(clients: ClientR
     )
 
 
+def _custom(
+    *filter_ids: str, location: dict[str, object] | None = None, title: str = "Problems"
+) -> dict[str, object]:
+    return {
+        "type": "custom",
+        "links": [
+            {
+                "title": title,
+                "location": location or {"type": "views", "name": "searchhost", "owner": None},
+                "filters": [{"filter_id": filter_id} for filter_id in filter_ids],
+                "include_context": True,
+                "include_time_range": False,
+                "show_filter_form": False,
+            }
+        ],
+    }
+
+
+@pytest.mark.parametrize(
+    "widget_type,link",
+    [
+        pytest.param("host_stats", _custom("siteopt", "hoststate"), id="host"),
+        pytest.param("service_stats", _custom("hoststate", "svcstate"), id="service"),
+    ],
+)
+def test_a_custom_link_round_trips(
+    clients: ClientRegistry, widget_type: str, link: dict[str, object]
+) -> None:
+    _write_stats_widget(clients, widget_type, link)
+
+    assert _written_link(clients) == link
+
+
+@pytest.mark.parametrize(
+    "link",
+    [
+        pytest.param({"type": "custom", "links": []}, id="no links"),
+        pytest.param(_custom("svcstate"), id="a service filter on a host widget"),
+        pytest.param(_custom(title=" "), id="a blank title"),
+    ],
+)
+def test_an_invalid_custom_link_is_rejected_on_write(
+    clients: ClientRegistry, link: dict[str, object]
+) -> None:
+    response = _write_stats_widget(clients, "host_stats", link)
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST, (
+        f"Expected 400, got {response.status_code} {response.body!r}"
+    )
+
+
+@pytest.mark.parametrize(
+    "link,field,msg",
+    [
+        pytest.param(
+            _custom("hoststate", "hoststate"),
+            "custom.links.0.filters.1",
+            "The filter 'hoststate' is listed more than once.",
+            id="a filter carried twice",
+        ),
+        pytest.param(
+            _custom(location={"type": "views", "name": "no_such_view", "owner": None}),
+            "custom.links.0.location",
+            "View 'no_such_view' does not exist or you don't have permission to see it.",
+            id="a forbidden target",
+        ),
+    ],
+)
+def test_an_invalid_custom_link_names_the_offending_field(
+    clients: ClientRegistry, link: dict[str, object], field: str, msg: str
+) -> None:
+    response = _write_stats_widget(clients, "host_stats", link)
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST, (
+        f"Expected 400, got {response.status_code} {response.body!r}"
+    )
+    assert (
+        response.json["fields"][
+            f"body.widgets.test_widget.content.host_stats.contextual_link.{field}"
+        ]["msg"]
+        == msg
+    )
+
+
 def test_an_explicit_default_reads_back_as_default(clients: ClientRegistry) -> None:
     _write_stats_widget(clients, "host_stats", {"type": "default"})
 

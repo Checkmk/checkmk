@@ -131,4 +131,23 @@ describe('useInventory', () => {
 
     expect(await submittedLink(handler)).toEqual({ type: 'default' })
   })
+
+  it('keeps a stored custom link, which it cannot edit', async () => {
+    const custom: InventoryLink = {
+      type: 'custom',
+      links: [
+        {
+          title: 'Problems',
+          location: { type: 'views', name: 'searchhost', owner: null },
+          filters: [{ filter_id: 'siteopt' }],
+          include_context: true,
+          include_time_range: false,
+          show_filter_form: false
+        }
+      ]
+    }
+    const handler = await openInventory(storedInventory(custom))
+
+    expect(await submittedLink(handler)).toEqual(custom)
+  })
 })

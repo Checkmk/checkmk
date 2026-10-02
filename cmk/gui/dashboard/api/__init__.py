@@ -11,7 +11,7 @@ from ._ajax_handler import (
     GraphDashletConfig,
     GraphRequestInternal,
 )
-from ._contextual_link_encoding import EffectiveLink, link_properties_for
+from ._contextual_link_encoding import clicked_object_values, EffectiveLink, link_properties_for
 from ._family import DASHBOARD_FAMILY
 from ._registration import register_endpoints
 from ._utils import (
@@ -75,4 +75,5 @@ __all__ = [
     "resolve_widget",
     "save_dashboard_to_file",
     "validated_dashboard_token",
+    "clicked_object_values",
 ]

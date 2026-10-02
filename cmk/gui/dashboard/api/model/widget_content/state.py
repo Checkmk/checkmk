@@ -15,11 +15,18 @@ from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.type_defs import DashboardEmbeddedViewSpec
 
+from ..context_filters import (
+    AggregateHostContextFilter,
+    AggregateServiceContextFilter,
+    host_filter_from_internal,
+    service_filter_from_internal,
+)
 from ..contextual_link import (
+    AnyContextualLinkSpec,
     contextual_link_from_internal,
     contextual_link_to_internal,
     ContextualLinkSpec,
-    iter_contextual_link_target_errors,
+    iter_contextual_link_errors,
 )
 from ._base import BaseWidgetContent
 
@@ -64,11 +71,6 @@ class _BaseStateContent(BaseWidgetContent, ABC):
         description="Show a summary of the state.",
         default_factory=ApiOmitted,
     )
-    contextual_link: ContextualLinkSpec = api_field(description="Where a click on the state leads.")
-
-    @override
-    def configured_contextual_link(self) -> ContextualLinkSpec:
-        return self.contextual_link
 
     @override
     def to_internal(self) -> StateDashletConfig:
@@ -77,7 +79,7 @@ class _BaseStateContent(BaseWidgetContent, ABC):
             status_display=_status_display_to_internal(self.status_display),
             show_summary=ApiOmitted.to_optional(self.show_summary),
         )
-        if (link := contextual_link_to_internal(self.contextual_link)) is not None:
+        if (link := contextual_link_to_internal(self.configured_contextual_link())) is not None:
             config["contextual_link"] = link
         return config
 
@@ -89,8 +91,8 @@ class _BaseStateContent(BaseWidgetContent, ABC):
         *,
         embedded_views: Mapping[str, DashboardEmbeddedViewSpec],
     ) -> Iterable[ErrorDetails]:
-        return iter_contextual_link_target_errors(
-            self.contextual_link,
+        return iter_contextual_link_errors(
+            self.configured_contextual_link(),
             location + ("contextual_link",),
             context.config.user_permissions(),
         )
@@ -99,6 +101,9 @@ class _BaseStateContent(BaseWidgetContent, ABC):
 @api_model
 class HostStateContent(_BaseStateContent):
     type: Literal["host_state"] = api_field(description="Displays the state of a host.")
+    contextual_link: ContextualLinkSpec[AggregateHostContextFilter] = api_field(
+        description="Where a click on the state leads."
+    )
 
     @classmethod
     @override
@@ -111,13 +116,22 @@ class HostStateContent(_BaseStateContent):
             type="host_state",
             status_display=_status_display_from_internal(config.get("status_display")),
             show_summary=ApiOmitted.from_optional(config.get("show_summary")),
-            contextual_link=contextual_link_from_internal(config.get("contextual_link")),
+            contextual_link=contextual_link_from_internal(
+                config.get("contextual_link"), host_filter_from_internal
+            ),
         )
+
+    @override
+    def configured_contextual_link(self) -> AnyContextualLinkSpec:
+        return self.contextual_link
 
 
 @api_model
 class ServiceStateContent(_BaseStateContent):
     type: Literal["service_state"] = api_field(description="Displays the state of a service.")
+    contextual_link: ContextualLinkSpec[AggregateServiceContextFilter] = api_field(
+        description="Where a click on the state leads."
+    )
 
     @classmethod
     @override
@@ -130,5 +144,11 @@ class ServiceStateContent(_BaseStateContent):
             type="service_state",
             status_display=_status_display_from_internal(config.get("status_display")),
             show_summary=ApiOmitted.from_optional(config.get("show_summary")),
-            contextual_link=contextual_link_from_internal(config.get("contextual_link")),
+            contextual_link=contextual_link_from_internal(
+                config.get("contextual_link"), service_filter_from_internal
+            ),
         )
+
+    @override
+    def configured_contextual_link(self) -> AnyContextualLinkSpec:
+        return self.contextual_link

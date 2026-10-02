@@ -14,7 +14,7 @@ from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_model
 from cmk.gui.type_defs import DashboardEmbeddedViewSpec
 
-from ..contextual_link import ContextualLinkDefault, ContextualLinkSpec
+from ..contextual_link import AnyContextualLinkSpec, ContextualLinkDefault
 
 
 @api_model
@@ -41,7 +41,7 @@ class BaseWidgetContent(ABC):
 
         This will then be merged with the general widget config."""
 
-    def configured_contextual_link(self) -> ContextualLinkSpec:
+    def configured_contextual_link(self) -> AnyContextualLinkSpec:
         """The link the widget configures; the default link for a widget without a link field."""
         return ContextualLinkDefault(type="default")
 

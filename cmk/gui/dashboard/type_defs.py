@@ -48,20 +48,43 @@ class ContextualLinkNoneConfig(TypedDict):
     type: Literal["none"]
 
 
+# Without an owner, the name resolves for each viewer, as on the target page.
+type ContextualLinkLocationConfig = (
+    tuple[ContextualLinkTargetType, VisualName]
+    | tuple[ContextualLinkTargetType, VisualName, UserId]
+)
+
+
 class ContextualLinkInheritedConfig(TypedDict):
     type: Literal["inherited"]
-    # Without an owner, the name resolves for each viewer, as on the target page.
-    location: (
-        tuple[ContextualLinkTargetType, VisualName]
-        | tuple[ContextualLinkTargetType, VisualName, UserId]
-    )
+    location: ContextualLinkLocationConfig
     include_context: bool
     include_time_range: bool
     show_filter_form: bool
 
 
+class ContextFilterConfig(TypedDict):
+    filter_id: FilterName
+
+
+class ContextualLinkEntryConfig(TypedDict):
+    title: str
+    location: ContextualLinkLocationConfig
+    filters: list[ContextFilterConfig]
+    include_context: bool
+    include_time_range: bool
+    show_filter_form: bool
+
+
+class ContextualLinkCustomConfig(TypedDict):
+    type: Literal["custom"]
+    links: list[ContextualLinkEntryConfig]
+
+
 # A widget in `default` mode stores no link key, so `default` has no persisted form.
-type ContextualLinkConfig = ContextualLinkNoneConfig | ContextualLinkInheritedConfig
+type ContextualLinkConfig = (
+    ContextualLinkNoneConfig | ContextualLinkInheritedConfig | ContextualLinkCustomConfig
+)
 
 
 class _DashletConfigMandatory(TypedDict):

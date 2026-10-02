@@ -16,7 +16,13 @@ from cmk.gui.dashboard.api import (
     resolve_widget,
     SavedWidgetContent,
 )
+from cmk.gui.dashboard.api.model.context_filters import (
+    AggregateHostContextFilter,
+    HostStateContextFilter,
+)
 from cmk.gui.dashboard.api.model.contextual_link import (
+    ContextualLink,
+    ContextualLinkCustom,
     ContextualLinkDefault,
     ContextualLinkInherited,
     ContextualLinkNone,
@@ -54,7 +60,9 @@ _INHERITED = ContextualLinkInherited(
 )
 
 
-def _linked(contextual_link: ContextualLinkSpec) -> HostStatsContent:
+def _linked(
+    contextual_link: ContextualLinkSpec[AggregateHostContextFilter],
+) -> HostStatsContent:
     return HostStatsContent(type="host_stats", contextual_link=contextual_link)
 
 
@@ -93,6 +101,31 @@ def test_inherited_resolves_one_link_with_its_flags() -> None:
         True,
         False,
     )
+
+
+@pytest.mark.usefixtures("load_config", "request_context")
+def test_custom_resolves_one_link_per_entry_with_its_filters() -> None:
+    entry = ContextualLink[AggregateHostContextFilter](
+        title="Down hosts",
+        location=_SEARCHHOST,
+        filters=[HostStateContextFilter(filter_id="hoststate")],
+        include_context=True,
+        include_time_range=False,
+        show_filter_form=False,
+    )
+
+    links = _links(
+        _linked(
+            ContextualLinkCustom(
+                type="custom", links=[entry, dataclasses.replace(entry, title="Other")]
+            )
+        )
+    )
+
+    assert [(link.title, link.filters) for link in links] == [
+        ("Down hosts", ["hoststate"]),
+        ("Other", ["hoststate"]),
+    ]
 
 
 @pytest.mark.usefixtures("load_config", "request_context")

@@ -12,11 +12,13 @@ from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.type_defs import DashboardEmbeddedViewSpec
 
+from ..context_filters import AggregateHostContextFilter, host_filter_from_internal
 from ..contextual_link import (
+    AnyContextualLinkSpec,
     contextual_link_from_internal,
     contextual_link_to_internal,
     ContextualLinkSpec,
-    iter_contextual_link_target_errors,
+    iter_contextual_link_errors,
 )
 from ._base import BaseWidgetContent
 
@@ -28,7 +30,7 @@ class InventoryContent(BaseWidgetContent):
         description="The path to the inventory data to display.",
         example=".software.os.type",
     )
-    contextual_link: ContextualLinkSpec = api_field(
+    contextual_link: ContextualLinkSpec[AggregateHostContextFilter] = api_field(
         description="Where a click on the inventory data leads."
     )
 
@@ -38,7 +40,7 @@ class InventoryContent(BaseWidgetContent):
         return "inventory"
 
     @override
-    def configured_contextual_link(self) -> ContextualLinkSpec:
+    def configured_contextual_link(self) -> AnyContextualLinkSpec:
         return self.contextual_link
 
     @classmethod
@@ -46,7 +48,9 @@ class InventoryContent(BaseWidgetContent):
         return cls(
             type="inventory",
             path=config["inventory_path"],
-            contextual_link=contextual_link_from_internal(config.get("contextual_link")),
+            contextual_link=contextual_link_from_internal(
+                config.get("contextual_link"), host_filter_from_internal
+            ),
         )
 
     @override
@@ -67,7 +71,7 @@ class InventoryContent(BaseWidgetContent):
         *,
         embedded_views: Mapping[str, DashboardEmbeddedViewSpec],
     ) -> Iterable[ErrorDetails]:
-        return iter_contextual_link_target_errors(
+        return iter_contextual_link_errors(
             self.contextual_link,
             location + ("contextual_link",),
             context.config.user_permissions(),

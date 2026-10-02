@@ -18,11 +18,13 @@ from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import timerange_from_internal, TimerangeModel
 from cmk.gui.type_defs import DashboardEmbeddedViewSpec
 
+from ..context_filters import AggregateHostContextFilter, host_filter_from_internal
 from ..contextual_link import (
+    AnyContextualLinkSpec,
     contextual_link_from_internal,
     contextual_link_to_internal,
     ContextualLinkSpec,
-    iter_contextual_link_target_errors,
+    iter_contextual_link_errors,
 )
 from ._base import BaseWidgetContent
 
@@ -90,7 +92,7 @@ class SiteOverviewContent(BaseWidgetContent):
     hexagon_size: Literal["default", "large"] = api_field(
         description="Defines the size of the hexagons in the widget.",
     )
-    contextual_link: ContextualLinkSpec = api_field(
+    contextual_link: ContextualLinkSpec[AggregateHostContextFilter] = api_field(
         description="Where a click on a site or a host leads."
     )
 
@@ -100,7 +102,7 @@ class SiteOverviewContent(BaseWidgetContent):
         return "site_overview"
 
     @override
-    def configured_contextual_link(self) -> ContextualLinkSpec:
+    def configured_contextual_link(self) -> AnyContextualLinkSpec:
         return self.contextual_link
 
     @classmethod
@@ -109,7 +111,9 @@ class SiteOverviewContent(BaseWidgetContent):
             type="site_overview",
             dataset=config.get("dataset") or "via_context",
             hexagon_size=config.get("box_scale") or "default",
-            contextual_link=contextual_link_from_internal(config.get("contextual_link")),
+            contextual_link=contextual_link_from_internal(
+                config.get("contextual_link"), host_filter_from_internal
+            ),
         )
 
     @override
@@ -132,7 +136,7 @@ class SiteOverviewContent(BaseWidgetContent):
         *,
         embedded_views: Mapping[str, DashboardEmbeddedViewSpec],
     ) -> Iterable[ErrorDetails]:
-        return iter_contextual_link_target_errors(
+        return iter_contextual_link_errors(
             self.contextual_link,
             location + ("contextual_link",),
             context.config.user_permissions(),

@@ -3,17 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from typing import Annotated, assert_never, Literal
 
-from pydantic import Discriminator, WithJsonSchema
+from annotated_types import MinLen
+from pydantic import Discriminator, StringConstraints, WithJsonSchema
 from pydantic_core import ErrorDetails
 
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
 from cmk.gui.dashboard.type_defs import (
+    ContextFilterConfig,
     ContextualLinkConfig,
+    ContextualLinkCustomConfig,
+    ContextualLinkEntryConfig,
     ContextualLinkInheritedConfig,
+    ContextualLinkLocationConfig,
     ContextualLinkNoneConfig,
     ContextualLinkTargetType,
 )
@@ -23,6 +28,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals.type import visual_type_registry
 
 from ...store import get_permitted_dashboards, get_permitted_dashboards_by_owners
+from .context_filters import AggregateHostContextFilter, AggregateServiceContextFilter
 
 # The request and the response share this model, so both directions state the same schema.
 _OwnerId = Annotated[AnnotatedUserId, WithJsonSchema({"type": "string"})]
@@ -67,13 +73,50 @@ class ContextualLinkInherited:
     )
 
 
-type ContextualLinkSpec = Annotated[
-    ContextualLinkNone | ContextualLinkDefault | ContextualLinkInherited,
+@api_model
+class ContextualLink[F]:
+    title: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)] = api_field(
+        description="The title of the link."
+    )
+    location: VisualLocation = api_field(description="The target visual.")
+    filters: list[F] = api_field(
+        description="The filters the link carries, each valued from the clicked element."
+    )
+    include_context: bool = api_field(
+        description="Whether the link carries the widget's effective filter context."
+    )
+    include_time_range: bool = api_field(
+        description="Whether the link carries the dashboard's time range."
+    )
+    show_filter_form: bool = api_field(
+        description="Whether the target opens with its filter form shown."
+    )
+
+
+@api_model
+class ContextualLinkCustom[F]:
+    type: Literal["custom"] = api_field(
+        description="The widget links to the configured visuals with the configured filters."
+    )
+    links: Annotated[list[ContextualLink[F]], MinLen(1)] = api_field(
+        description="The links, in the order they are offered."
+    )
+
+
+type ContextualLinkSpec[F] = Annotated[
+    ContextualLinkNone | ContextualLinkDefault | ContextualLinkInherited | ContextualLinkCustom[F],
     Discriminator("type"),
 ]
 
+type AnyContextualLinkSpec = (
+    ContextualLinkSpec[AggregateHostContextFilter]
+    | ContextualLinkSpec[AggregateServiceContextFilter]
+)
 
-def contextual_link_to_internal(link: ContextualLinkSpec) -> ContextualLinkConfig | None:
+
+def contextual_link_to_internal(
+    link: AnyContextualLinkSpec,
+) -> ContextualLinkConfig | None:
     """The stored form of a link configuration; None for a `default` link."""
     match link:
         case ContextualLinkNone():
@@ -86,13 +129,30 @@ def contextual_link_to_internal(link: ContextualLinkSpec) -> ContextualLinkConfi
                 include_time_range=link.include_time_range,
                 show_filter_form=link.show_filter_form,
             )
+        case ContextualLinkCustom():
+            return ContextualLinkCustomConfig(
+                type="custom",
+                links=[
+                    ContextualLinkEntryConfig(
+                        title=entry.title,
+                        location=_location_to_internal(entry.location),
+                        filters=[ContextFilterConfig(filter_id=f.filter_id) for f in entry.filters],
+                        include_context=entry.include_context,
+                        include_time_range=entry.include_time_range,
+                        show_filter_form=entry.show_filter_form,
+                    )
+                    for entry in link.links
+                ],
+            )
         case ContextualLinkDefault():
             return None
         case unreachable:
             assert_never(unreachable)
 
 
-def contextual_link_from_internal(config: ContextualLinkConfig | None) -> ContextualLinkSpec:
+def contextual_link_from_internal[F](
+    config: ContextualLinkConfig | None, filter_from_internal: Callable[[ContextFilterConfig], F]
+) -> ContextualLinkSpec[F]:
     """The API form of a stored link configuration."""
     if config is None:
         return ContextualLinkDefault(type="default")
@@ -106,6 +166,21 @@ def contextual_link_from_internal(config: ContextualLinkConfig | None) -> Contex
             include_time_range=config["include_time_range"],
             show_filter_form=config["show_filter_form"],
         )
+    if config["type"] == "custom":
+        return ContextualLinkCustom(
+            type="custom",
+            links=[
+                ContextualLink(
+                    title=entry["title"],
+                    location=_location_from_internal(entry["location"]),
+                    filters=[filter_from_internal(f) for f in entry["filters"]],
+                    include_context=entry["include_context"],
+                    include_time_range=entry["include_time_range"],
+                    show_filter_form=entry["show_filter_form"],
+                )
+                for entry in config["links"]
+            ],
+        )
     assert_never(config)
 
 
@@ -115,15 +190,29 @@ _TARGET_TITLES: Mapping[ContextualLinkTargetType, str] = {
 }
 
 
-def iter_contextual_link_target_errors(
-    link: ContextualLinkSpec,
+def iter_contextual_link_errors(
+    link: AnyContextualLinkSpec,
     location: tuple[str | int, ...],
     user_permissions: UserPermissions,
 ) -> Iterator[ErrorDetails]:
-    """The write-time errors of the link targets outside the writer's permitted visuals."""
+    """The write-time errors of a link: targets outside the writer's permitted visuals, and
+    filters a custom link carries twice."""
+    targets: list[tuple[tuple[str | int, ...], VisualLocation]]
     match link:
         case ContextualLinkInherited():
             targets = [(location + ("inherited", "location"), link.location)]
+        case ContextualLinkCustom():
+            targets = []
+            entries: Sequence[
+                ContextualLink[AggregateHostContextFilter]
+                | ContextualLink[AggregateServiceContextFilter]
+            ] = link.links
+            for index, entry in enumerate(entries):
+                entry_location = location + ("custom", "links", index)
+                targets.append((entry_location + ("location",), entry.location))
+                yield from _iter_duplicate_filter_errors(
+                    [f.filter_id for f in entry.filters], entry_location + ("filters",)
+                )
         case ContextualLinkNone() | ContextualLinkDefault():
             targets = []
         case unreachable:
@@ -139,6 +228,19 @@ def iter_contextual_link_target_errors(
                 ),
                 loc=target_location,
                 input=target.name,
+            )
+
+
+def _iter_duplicate_filter_errors(
+    filter_ids: Sequence[str], location: tuple[str | int, ...]
+) -> Iterator[ErrorDetails]:
+    for index, filter_id in enumerate(filter_ids):
+        if filter_id in filter_ids[:index]:
+            yield ErrorDetails(
+                type="value_error",
+                msg=f"The filter '{filter_id}' is listed more than once.",
+                loc=location + (index,),
+                input=filter_id,
             )
 
 
@@ -176,21 +278,13 @@ def _is_permitted(location: VisualLocation, user_permissions: UserPermissions) -
     return location.owner in permitted_copies(location, user_permissions)
 
 
-def _location_to_internal(
-    location: VisualLocation,
-) -> (
-    tuple[ContextualLinkTargetType, VisualName]
-    | tuple[ContextualLinkTargetType, VisualName, UserId]
-):
+def _location_to_internal(location: VisualLocation) -> ContextualLinkLocationConfig:
     if location.owner is None:
         return location.type, location.name
     return location.type, location.name, location.owner
 
 
-def _location_from_internal(
-    location: tuple[ContextualLinkTargetType, VisualName]
-    | tuple[ContextualLinkTargetType, VisualName, UserId],
-) -> VisualLocation:
+def _location_from_internal(location: ContextualLinkLocationConfig) -> VisualLocation:
     match location:
         case (target_type, name):
             return VisualLocation(type=target_type, name=name, owner=None)

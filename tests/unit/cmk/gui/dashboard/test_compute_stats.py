@@ -354,6 +354,41 @@ def test_inherited_yields_one_link_with_the_native_click_key(
     }
 
 
+def test_a_custom_link_carries_the_state_of_a_part_and_drops_its_site(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    body = _explicit(
+        {
+            "type": "host_stats",
+            "contextual_link": {
+                "type": "custom",
+                "links": [
+                    {
+                        "title": "Down hosts",
+                        "location": {"type": "views", "name": "allhosts", "owner": None},
+                        "filters": [{"filter_id": "hoststate"}, {"filter_id": "siteopt"}],
+                        "include_context": False,
+                        "include_time_range": False,
+                        "show_filter_form": False,
+                    }
+                ],
+            },
+        }
+    )
+
+    value = _compute_hosts(clients, mock_livestatus, body).json["value"]
+
+    assert [link["title"] for link in value["links"]] == ["Down hosts"]
+    assert value["parts"][3]["link_properties"] == {
+        "links": [
+            {
+                "hoststate": {"status": "encoded", "variables": {"hst1": "on"}},
+                "siteopt": {"status": "dropped", "reason": "no_value"},
+            }
+        ]
+    }
+
+
 def test_a_widget_without_a_link_field_takes_the_built_in_link(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:

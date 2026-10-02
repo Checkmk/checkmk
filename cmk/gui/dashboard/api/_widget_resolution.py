@@ -31,6 +31,7 @@ from ..type_defs import DashletConfig
 from ._contextual_link_encoding import EffectiveLink
 from ._utils import validated_dashboard_token
 from .model.contextual_link import (
+    ContextualLinkCustom,
     ContextualLinkDefault,
     ContextualLinkInherited,
     ContextualLinkNone,
@@ -198,6 +199,18 @@ def _effective_links(
                     include_time_range=inherited.include_time_range,
                     show_filter_form=inherited.show_filter_form,
                 )
+            ]
+        case ContextualLinkCustom() as custom:
+            return [
+                EffectiveLink(
+                    title=entry.title,
+                    location=entry.location,
+                    include_context=entry.include_context,
+                    include_time_range=entry.include_time_range,
+                    show_filter_form=entry.show_filter_form,
+                    filters=[f.filter_id for f in entry.filters],
+                )
+                for entry in custom.links
             ]
         case ContextualLinkDefault():
             return [] if built_in_link is None else [built_in_link]

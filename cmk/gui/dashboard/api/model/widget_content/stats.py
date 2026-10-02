@@ -13,11 +13,18 @@ from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.type_defs import DashboardEmbeddedViewSpec
 
+from ..context_filters import (
+    AggregateHostContextFilter,
+    AggregateServiceContextFilter,
+    host_filter_from_internal,
+    service_filter_from_internal,
+)
 from ..contextual_link import (
+    AnyContextualLinkSpec,
     contextual_link_from_internal,
     contextual_link_to_internal,
     ContextualLinkSpec,
-    iter_contextual_link_target_errors,
+    iter_contextual_link_errors,
 )
 from ._base import BaseWidgetContent
 
@@ -39,7 +46,7 @@ class _LinkedStatsContent(BaseWidgetContent, ABC):
         *,
         embedded_views: Mapping[str, DashboardEmbeddedViewSpec],
     ) -> Iterable[ErrorDetails]:
-        return iter_contextual_link_target_errors(
+        return iter_contextual_link_errors(
             self.configured_contextual_link(),
             location + ("contextual_link",),
             context.config.user_permissions(),
@@ -51,7 +58,9 @@ class HostStatsContent(_LinkedStatsContent):
     type: Literal["host_stats"] = api_field(
         description="Displays statistics about host states as a hexagon and a table."
     )
-    contextual_link: ContextualLinkSpec = api_field(description="Where a click on a part leads.")
+    contextual_link: ContextualLinkSpec[AggregateHostContextFilter] = api_field(
+        description="Where a click on a part leads."
+    )
 
     @classmethod
     @override
@@ -62,11 +71,13 @@ class HostStatsContent(_LinkedStatsContent):
     def from_internal(cls, config: StatsDashletConfig) -> Self:
         return cls(
             type="host_stats",
-            contextual_link=contextual_link_from_internal(config.get("contextual_link")),
+            contextual_link=contextual_link_from_internal(
+                config.get("contextual_link"), host_filter_from_internal
+            ),
         )
 
     @override
-    def configured_contextual_link(self) -> ContextualLinkSpec:
+    def configured_contextual_link(self) -> AnyContextualLinkSpec:
         return self.contextual_link
 
 
@@ -75,7 +86,9 @@ class ServiceStatsContent(_LinkedStatsContent):
     type: Literal["service_stats"] = api_field(
         description="Displays statistics about service states as a hexagon and a table."
     )
-    contextual_link: ContextualLinkSpec = api_field(description="Where a click on a part leads.")
+    contextual_link: ContextualLinkSpec[AggregateServiceContextFilter] = api_field(
+        description="Where a click on a part leads."
+    )
 
     @classmethod
     @override
@@ -86,11 +99,13 @@ class ServiceStatsContent(_LinkedStatsContent):
     def from_internal(cls, config: StatsDashletConfig) -> Self:
         return cls(
             type="service_stats",
-            contextual_link=contextual_link_from_internal(config.get("contextual_link")),
+            contextual_link=contextual_link_from_internal(
+                config.get("contextual_link"), service_filter_from_internal
+            ),
         )
 
     @override
-    def configured_contextual_link(self) -> ContextualLinkSpec:
+    def configured_contextual_link(self) -> AnyContextualLinkSpec:
         return self.contextual_link
 
 

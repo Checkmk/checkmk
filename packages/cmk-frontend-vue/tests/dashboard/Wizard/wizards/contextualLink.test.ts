@@ -25,7 +25,11 @@ import { useProvideDashboardConstants } from '@/dashboard/composables/useProvide
 import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { WidgetSpec } from '@/dashboard/types/widget'
 
-type ContextualLinkSpec = components['schemas']['ContextualLinkSpec']
+// Every link these tests store is one every widget takes.
+type ContextualLinkSpec =
+  | components['schemas']['ContextualLinkNone']
+  | components['schemas']['ContextualLinkDefault']
+  | components['schemas']['ContextualLinkInherited']
 
 interface LinkWizard {
   name: string

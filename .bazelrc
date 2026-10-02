@@ -14,6 +14,11 @@ startup --host_jvm_args=-XX:ActiveProcessorCount=8
 startup --host_jvm_args=-XX:ParallelGCThreads=4
 startup --host_jvm_args=-XX:ConcGCThreads=2
 
+# Let the server notice changes inside source directories listed in srcs, e.g. the npm packages
+# rules_js passes as directory inputs.
+# TODO: Drop with bazel 9 as it will become the default
+startup --host_jvm_args=-DBAZEL_TRACK_SOURCE_DIRECTORIES=1
+
 # enable a local disk cache: this is especially relevant for local builds without an enabled bazel-remote
 common:linux --disk_cache=~/.cache/bazel_disk_cache/
 common:linux --experimental_disk_cache_gc_max_size=100G

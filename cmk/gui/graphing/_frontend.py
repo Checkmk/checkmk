@@ -346,8 +346,9 @@ def render_engine_graph_group(
         # Only the hover preview flows its many graphs into columns; everywhere else stacks.
         "layout": "wrap" if multi_column else "column",
     }
-    # Full-width groups omit figure_width entirely so the component measures the available width
-    # itself; only a fixed-size embed (e.g. the hover popup) sends a concrete pixel width.
+    # Full-width groups (up until a frontend-defined maximum width) omit figure_width entirely so
+    # the component measures the available width itself; only a fixed-size embed (e.g. the hover
+    # popup) sends a concrete pixel width.
     if not full_width:
         data["figure_width"] = int(size.width * HTML_SIZE_PER_EX)
     return HTMLWriter.render_vue_component("cmk-graph-group", data)

@@ -36,7 +36,7 @@ import GraphPanel from './GraphPanel.vue'
 import GraphSkeleton from './GraphSkeleton.vue'
 import { clippedToNavigableTime, navigableBounds } from './TimeSeriesGraph/interaction/timeBounds'
 import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from './consolidation'
-import { CANVAS_MARGIN_HORIZONTAL } from './constants'
+import { CANVAS_MARGIN_HORIZONTAL, MAX_FIGURE_WIDTH } from './constants'
 
 const { _t } = usei18n()
 
@@ -49,8 +49,8 @@ const props = withDefaults(
     // null for graph types without a combination (e.g. template graphs).
     combination_mode?: GraphCombinationMode | null
     // Outer figure width in CSS pixels (plot area + axis margins); the RRD step resolution is
-    // derived from the resulting plot width. absent means "fill the available page width"
-    // - see effectiveWidth below.
+    // derived from the resulting plot width. if absent we fill the available page width up until a
+    // threshold of MAX_FIGURE_WIDTH - see effectiveWidth below.
     figure_width?: number
     figure_height?: number
     // Omit for the defaults below, or send the whole object.
@@ -142,7 +142,9 @@ if (props.figure_width === undefined) {
   })
 }
 
-const effectiveWidth = computed(() => props.figure_width ?? availableWidth.value)
+const effectiveWidth = computed(
+  () => props.figure_width ?? Math.min(MAX_FIGURE_WIDTH, availableWidth.value)
+)
 
 // Seeded from the backend-provided initial range, then follows the page's global time picker;
 // brush interactions, time zooms and pans on individual panels write to it directly, and that

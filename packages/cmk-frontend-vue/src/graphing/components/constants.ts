@@ -29,3 +29,5 @@ export const MIN_ZOOM_TIME_RANGE_SECONDS = 180
 export const MIN_ZOOM_SAMPLES = 3
 
 export const BOTTOM_SCREEN_MARGIN = 40
+
+export const MAX_FIGURE_WIDTH = 1440

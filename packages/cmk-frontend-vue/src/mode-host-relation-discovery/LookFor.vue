@@ -95,7 +95,11 @@ function setLookIn(where: LookIn, wanted: boolean): void {
     </LabeledRow>
 
     <LabeledRow :label="_t('Relation indicators')" :label-id="indicatorsId">
-      <div role="group" :aria-labelledby="indicatorsId">
+      <div
+        role="group"
+        :aria-labelledby="indicatorsId"
+        class="mode-host-relation-discovery-look-for__indicators"
+      >
         <CmkCheckbox
           :model-value="looksIn('names')"
           :label="_t('Host names')"
@@ -159,5 +163,12 @@ function setLookIn(where: LookIn, wanted: boolean): void {
   display: flex;
   flex-direction: column;
   gap: var(--spacing);
+}
+
+.mode-host-relation-discovery-look-for__indicators {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-half);
 }
 </style>

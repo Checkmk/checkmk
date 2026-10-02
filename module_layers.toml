@@ -1862,7 +1862,7 @@ allows = ["cmk.mcp"]
 allows = []
 
 [components."cmk.testlib.data_backend"]
-allows = ["cmk.data_backend"]
+allows = ["@ccc", "@crypto", "cmk.data_backend"]
 
 [components."cmk.testlib.network_flow"]
 allows = ["@network_flow", "cmk.network_flow.gui"]

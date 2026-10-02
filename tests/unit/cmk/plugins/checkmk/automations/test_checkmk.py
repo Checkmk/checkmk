@@ -25,6 +25,7 @@ import cmk.ccc.resulttype as result
 # We're importing it here, so that this fails the linters if that is removed.
 # TODO: implement a dedicated minimal plugin
 import cmk.plugins.monitoring_plugins.server_side_calls.ftp
+import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.automations import results as automation_results
 from cmk.automations.internal import NoState
@@ -46,14 +47,16 @@ from cmk.checkengine.fetchers.piggyback import PiggybackFetcher
 from cmk.checkengine.specs.checkresults import ServiceState
 from cmk.checkengine.submitters import ServiceDetails
 from cmk.discover_plugins import PluginLocation
+from cmk.flags import ExperimentalFlagConfig
 from cmk.inventory.label_picker import InventorizedHostLabelsStore
 from cmk.plugins.checkmk.automations import checkmk
-from cmk.relay_protocols.tasks import AdHocActiveCheckTask
+from cmk.relay_protocols.tasks import AdHocActiveCheckTask, AdHocSiteStores
 from cmk.ruleset_matcher.labels import LabelSource
 from cmk.ruleset_matcher.matcher import RuleSpec
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, replace_macros
 from cmk.utils import config_warnings
+from cmk.utils.password_store import pending_secrets_path_site
 from tests.testlib.unit.automations import make_common_state
 from tests.testlib.unit.base_configuration_scenario import Scenario
 from tests.testlib.unit.empty_config import EMPTY_CONFIG
@@ -62,6 +65,10 @@ _TEST_LOCATION = PluginLocation(
     cmk.plugins.monitoring_plugins.server_side_calls.ftp.__name__,
     "yolo",
 )
+
+# What the fake site holds as its pending trusted CAs (var/ssl/ca-certificates.crt).
+_PENDING_CA_BUNDLE = "-----BEGIN CERTIFICATE-----\npending CA\n"
+
 
 _HOST_ATTRS = {
     "alias": "my_host_alias",
@@ -90,6 +97,8 @@ def _prepare(
     monkeypatch.setattr(checkmk, "get_service_attributes", lambda *a, **kw: service_attrs or {})  # noqa: ARG005
     monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a, **kw: {})  # noqa: ARG005
     monkeypatch.setattr(config, "get_relay_id", lambda *a, **kw: relay_id)  # noqa: ARG005
+    cmk.utils.paths.trusted_ca_file.parent.mkdir(parents=True, exist_ok=True)
+    cmk.utils.paths.trusted_ca_file.write_text(_PENDING_CA_BUNDLE)
     config_cache = config.ConfigCache(
         EMPTY_CONFIG,
         config.make_hosts_config(EMPTY_CONFIG),
@@ -427,6 +436,7 @@ def test_automation_active_check_invalid_args(  # type: ignore[misc]
 class _RecordingAutomation(checkmk.AutomationActiveCheck):
     def __init__(self) -> None:
         self.calls: dict[str, str | tuple[str, str, str]] = {}
+        self.shipped_site_stores: AdHocSiteStores | None = None
 
     @override
     def _execute_check_plugin(self, commandline: str) -> tuple[ServiceState, ServiceDetails]:
@@ -435,9 +445,15 @@ class _RecordingAutomation(checkmk.AutomationActiveCheck):
 
     @override
     def _execute_check_plugin_on_relay(
-        self, relay_id: str, host: HostName, command_line: str
+        self,
+        relay_id: str,
+        host: HostName,
+        command_line: str,
+        *,
+        site_stores: AdHocSiteStores | None = None,
     ) -> tuple[ServiceState, ServiceDetails]:
         self.calls["relay"] = (relay_id, str(host), command_line)
+        self.shipped_site_stores = site_stores
         return (0, "relay output")
 
 
@@ -511,10 +527,114 @@ def test_active_check_unsupported_on_relay_reports_unknown(monkeypatch: pytest.M
     )
 
 
+def _plugin_passing_a_password(name: str) -> ActiveCheckConfig:
+    return ActiveCheckConfig(
+        name=name,
+        parameter_parser=lambda params: params,
+        commands_function=lambda params, host_config: (  # noqa: ARG005
+            ActiveCheckCommand(
+                service_description="Password check",
+                command_arguments=("--password-id", params["password"]),
+            ),
+        ),
+    )
+
+
+def _password_check_on(
+    monkeypatch: pytest.MonkeyPatch, *, relay_id: str | None, plugin: str
+) -> _RecordingAutomation:
+    """Run the automation for a check whose rule holds an explicit password."""
+    _prepare(
+        monkeypatch,
+        relay_id=relay_id,
+        loaded_active_checks={_TEST_LOCATION: _plugin_passing_a_password(plugin)},
+    )
+    password = ("cmk_postprocessed", "explicit_password", ("uuid1234", "s3cret"))
+    ts = Scenario(relay_supported_active_checks=frozenset({"httpv2"}))
+    ts.add_host(HostName("my_host"))
+    ts.set_ruleset_bundle(
+        "active_checks",
+        {
+            plugin: [
+                {
+                    "id": "01",
+                    "condition": {},
+                    "value": {"description": "Password check", "password": password},
+                }
+            ]
+        },
+    )
+    lr = ts.apply(monkeypatch)
+    # Setup's merged pending store holds the passwords of every rule, other hosts' too.
+    monkeypatch.setenv(
+        "PASSWORD_STORE_SECRET_FILE", str(cmk.utils.paths.omd_root / "etc/password_store.secret")
+    )
+    cmk.utils.password_store.save(
+        {"uuid1234": "s3cret", "uuid-of-another-host": "theirs"}, pending_secrets_path_site()
+    )
+    monkeypatch.setattr(
+        config._impl,  # noqa: SLF001
+        "load_experimental_flags",
+        lambda _config_dir: ExperimentalFlagConfig(exp_relay_active_checks=True),
+    )
+    automation = _RecordingAutomation()
+    automation.execute(make_common_state(lr), ["my_host", plugin, "Password check"])
+    return automation
+
+
+def test_discovery_page_run_on_a_relay_ships_the_pending_passwords_and_cas(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The relay gets the pending stores inline; the command refers to a per-run store.
+
+    The relay has neither the site's pending password file nor its pending CA bundle,
+    so the task carries the bundle and the passwords this host's rules refer to, no
+    others, and the password reference names the store the relay will write for this
+    run below its tmp directory, as an ad-hoc fetch does.
+    """
+    automation = _password_check_on(monkeypatch, relay_id="relay-1", plugin="httpv2")
+
+    relay_call = automation.calls["relay"]
+    assert isinstance(relay_call, tuple)
+    relay_id, _host, command = relay_call
+    assert relay_id == "relay-1"
+    assert automation.shipped_site_stores is not None
+    assert automation.shipped_site_stores.passwords is not None
+    store = automation.shipped_site_stores.passwords.path
+    assert store.startswith(str(cmk.utils.paths.relative_tmp_dir / "passwords_adhoc_")), store
+    assert command == f"check_httpv2 --password-id uuid1234:{store}"
+    assert automation.shipped_site_stores.passwords.values == {"uuid1234": "s3cret"}
+    assert automation.shipped_site_stores.ca_bundle == _PENDING_CA_BUNDLE
+
+
+def test_discovery_page_run_on_the_site_keeps_the_sites_pending_store(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A check the site runs itself refers to the site's merged store and ships nothing."""
+    automation = _password_check_on(monkeypatch, relay_id=None, plugin="httpv2")
+
+    assert "relay" not in automation.calls
+    assert automation.calls["local"] == (
+        f"check_httpv2 --password-id uuid1234:{pending_secrets_path_site()}"
+    )
+
+
+def test_discovery_page_run_of_cmk_inv_on_a_relay_host_stays_on_the_site(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """HW/SW Inventory runs on the site even for a relay host: no task, the site's store."""
+    automation = _password_check_on(monkeypatch, relay_id="relay-1", plugin="cmk_inv")
+
+    assert "relay" not in automation.calls
+    assert automation.calls["local"] == (
+        f"check_cmk_inv --password-id uuid1234:{pending_secrets_path_site()}"
+    )
+
+
 def test_execute_on_relay_import_error_is_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
     auto = checkmk.AutomationActiveCheck()
 
-    def _raise(relay_id: str, host: HostName, command: str) -> NoReturn:  # noqa: ARG001
+    def _raise(relay_id: str, host: HostName, command: str, **_kw: object) -> NoReturn:  # noqa: ARG001
         raise ImportError("enterprise package missing")
 
     monkeypatch.setattr(auto, "_submit_to_relay", _raise)
@@ -529,7 +649,7 @@ def test_execute_on_relay_submit_failure_is_unknown(monkeypatch: pytest.MonkeyPa
     auto = checkmk.AutomationActiveCheck()
     monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
 
-    def _raise(relay_id: str, host: HostName, command: str) -> NoReturn:  # noqa: ARG001
+    def _raise(relay_id: str, host: HostName, command: str, **_kw: object) -> NoReturn:  # noqa: ARG001
         raise TimeoutError("no result")
 
     monkeypatch.setattr(auto, "_submit_to_relay", _raise)

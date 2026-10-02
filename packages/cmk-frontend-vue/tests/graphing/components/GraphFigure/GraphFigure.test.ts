@@ -99,7 +99,6 @@ let postSpy: any
 beforeEach(() => {
   // The mocked pin is a module-level singleton, so it has to be cleared between tests.
   useGlobalPin().clearPin()
-  vi.clearAllMocks()
   postSpy = vi.spyOn(client, 'POST')
   postSpy.mockResolvedValue({
     data: FETCHED,
@@ -109,7 +108,6 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  vi.restoreAllMocks()
   vi.useRealTimers()
 })
 

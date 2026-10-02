@@ -5,7 +5,7 @@
  */
 import { createFastApiClient } from 'cmk-ui-library/lib/fastapi-client/client'
 import { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
-import { afterEach, describe, expect, expectTypeOf, test, vi } from 'vitest'
+import { describe, expect, expectTypeOf, test, vi } from 'vitest'
 
 interface TestPaths {
   '/thing': {
@@ -65,10 +65,6 @@ function json(body: unknown, status: number): Response {
     headers: { 'Content-Type': 'application/json' }
   })
 }
-
-afterEach(() => {
-  vi.restoreAllMocks()
-})
 
 describe('createFastApiClient', () => {
   test('resolves to the success payload', async () => {

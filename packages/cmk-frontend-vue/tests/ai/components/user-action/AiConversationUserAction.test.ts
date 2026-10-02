@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { ref } from 'vue'
 
 import AiConversationUserAction from '@/ai/components/user-action/AiConversationUserAction.vue'
@@ -50,10 +50,6 @@ function renderComponent(execUserActionButton = vi.fn()) {
   })
   return { mockTemplate }
 }
-
-afterEach(() => {
-  vi.clearAllMocks()
-})
 
 describe('AiConversationUserAction — loading state', () => {
   test('shows 3 skeletons before actions have loaded', () => {

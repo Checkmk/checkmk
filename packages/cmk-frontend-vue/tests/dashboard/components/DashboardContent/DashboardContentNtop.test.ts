@@ -5,7 +5,7 @@
  */
 import { render, screen } from '@testing-library/vue'
 import axios from 'axios'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 
 import DashboardContentNtop from '@/dashboard/components/DashboardContent/DashboardContentNtop.vue'
@@ -41,10 +41,6 @@ function renderInPublicDashboard() {
 }
 
 describe('DashboardContentNtop', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
   it('renders the "Not available" placeholder on a shared dashboard', async () => {
     renderInPublicDashboard()
     await flushPromises()

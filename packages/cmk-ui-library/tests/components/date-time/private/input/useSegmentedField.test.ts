@@ -19,7 +19,7 @@ import type {
   HourCycle,
   TimeValue
 } from 'cmk-ui-library/components/date-time/types'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { type Ref, nextTick, ref, shallowRef } from 'vue'
 
 import { DMY, MONTH_NAMES_EN, YMD } from '../../dateTimeTestFixtures'
@@ -34,10 +34,6 @@ const stubInput = (): HTMLInputElement => {
   vi.spyOn(el, 'select')
   return el
 }
-
-afterEach(() => {
-  vi.restoreAllMocks()
-})
 
 describe('clampToRange', () => {
   test.each([

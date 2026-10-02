@@ -75,8 +75,6 @@ function letterSpaceEveryElement(): void {
 }
 
 afterEach(() => {
-  vi.restoreAllMocks()
-  vi.unstubAllGlobals()
   themeLetterSpacing?.remove()
   themeLetterSpacing = null
 })

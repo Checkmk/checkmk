@@ -63,7 +63,6 @@ describe('HostApi.fetchHosts', () => {
   })
 
   afterEach(() => {
-    vi.restoreAllMocks()
     vi.useRealTimers()
   })
 

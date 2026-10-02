@@ -28,7 +28,6 @@ describe('addToContainer', () => {
   })
 
   afterEach(() => {
-    vi.restoreAllMocks()
     location.restore()
   })
 
@@ -69,7 +68,6 @@ describe('addToVisual', () => {
   })
 
   afterEach(() => {
-    vi.restoreAllMocks()
     location.restore()
   })
 
@@ -112,10 +110,6 @@ describe('graphExport', () => {
       response: new Response(null, { status: 200 })
     } as never)
     openSpy = vi.spyOn(window, 'open').mockReturnValue(null)
-  })
-
-  afterEach(() => {
-    vi.restoreAllMocks()
   })
 
   test('sends the displayed value range as y_range_min/y_range_max', async () => {

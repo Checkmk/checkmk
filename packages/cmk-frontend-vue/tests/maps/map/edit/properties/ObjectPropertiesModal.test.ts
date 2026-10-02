@@ -5,7 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick } from 'vue'
 
 import ObjectPropertiesModal from '@/maps/map/edit/properties/ObjectPropertiesModal.vue'
@@ -59,7 +59,6 @@ function renderModal(object: MapElement, extraProps: Record<string, unknown> = {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks()
   // The auth store reads this at creation; a present token keeps requireToken()
   // from throwing when the mounted autocomplete/metric loads fire.
   sessionStorage.setItem('maps_access_token', 'test-token')
@@ -273,11 +272,6 @@ describe('ObjectPropertiesModal – popover placement', () => {
     await nextTick()
     return container.querySelector<HTMLElement>('.maps-object-properties-modal__card')!.style
   }
-
-  afterEach(() => {
-    vi.restoreAllMocks()
-    vi.unstubAllGlobals()
-  })
 
   it('opens beside the object, in the frame coordinates rather than the viewport ones', async () => {
     const style = await renderPlaced(FRAME, { left: 174, top: 100, right: 274, bottom: 160 })

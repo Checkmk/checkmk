@@ -71,10 +71,6 @@ beforeEach(() => {
   vi.mocked(intl.getLocalTimeZone).mockReturnValue(TZ_UTC)
 })
 
-afterEach(() => {
-  vi.restoreAllMocks()
-})
-
 describe('CmkDateTimePicker', () => {
   test('editing only the date preserves the time of day', async () => {
     const view = renderPicker(utc(2026, 6, 10, 8, 45))

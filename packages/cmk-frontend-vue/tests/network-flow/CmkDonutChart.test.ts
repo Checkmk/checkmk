@@ -32,11 +32,6 @@ beforeEach(() => {
   vi.spyOn(performance, 'now').mockImplementation(() => now)
 })
 
-afterEach(() => {
-  vi.unstubAllGlobals()
-  vi.restoreAllMocks()
-})
-
 async function renderFrame(elapsedMs: number): Promise<void> {
   now += elapsedMs
   const pending = [...frames.entries()]

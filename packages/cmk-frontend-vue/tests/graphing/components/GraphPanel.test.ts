@@ -213,11 +213,6 @@ function plotWrapper(): HTMLElement {
 beforeEach(() => {
   vi.mocked(loadMenu).mockResolvedValue([])
   useGlobalPin().clearPin()
-  vi.clearAllMocks()
-})
-
-afterEach(() => {
-  vi.restoreAllMocks()
 })
 
 const MID_INTERVAL_REQUEST: RequestedTimeRange = { start: 1_781_524_937, end: 1_781_528_237 }

@@ -54,7 +54,6 @@ beforeEach(() => {
 
 afterEach(() => {
   resetGlobalTimeState()
-  vi.restoreAllMocks()
 })
 
 // The resize debounce registers onUnmounted, so this needs a mounted component.

@@ -5,7 +5,7 @@
  */
 import { CmkApiError } from 'cmk-ui-library/lib/error'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   getContactGroups,
@@ -34,10 +34,6 @@ function mockRefusal(status: number) {
 describe('API functions', () => {
   beforeEach(() => {
     getSpy = vi.spyOn(client, 'GET')
-  })
-
-  afterEach(() => {
-    vi.restoreAllMocks()
   })
 
   it('getContactGroups requests the contact group collection and maps id to name', async () => {

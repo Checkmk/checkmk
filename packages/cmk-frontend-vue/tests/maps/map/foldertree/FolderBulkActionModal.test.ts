@@ -5,7 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import FolderBulkActionModal from '@/maps/map/foldertree/components/FolderBulkActionModal.vue'
 import type { MapsApis } from '@/maps/services/context'
@@ -41,10 +41,6 @@ async function renderModal(folder: FolderTreeNode): Promise<MapsApis['commands']
   render(FolderBulkActionModal, { ...provideServices(services), props: { folder } })
   return services.apis.commands
 }
-
-beforeEach(() => {
-  vi.clearAllMocks()
-})
 
 describe('FolderBulkActionModal', () => {
   it('acknowledges every host in the folder', async () => {

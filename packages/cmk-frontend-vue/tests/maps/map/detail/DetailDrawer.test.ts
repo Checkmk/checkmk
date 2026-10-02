@@ -5,7 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import type { CommandVerb } from '@/maps/api/ticket'
 import DetailDrawer from '@/maps/map/detail/DetailDrawer.vue'
@@ -80,10 +80,6 @@ async function renderDrawer(props: DrawerProps, commands: CommandVerb[] = ALL_CO
   }
   return utils
 }
-
-beforeEach(() => {
-  vi.clearAllMocks()
-})
 
 describe('DetailDrawer – header rendering', () => {
   it('renders the object name, type pill, state pill and check output', async () => {

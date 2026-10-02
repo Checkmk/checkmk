@@ -8,7 +8,7 @@ import * as intl from '@internationalized/date'
 import { fireEvent, render } from '@testing-library/vue'
 import CalendarGrid from 'cmk-ui-library/components/date-time/private/calendar/CalendarGrid.vue'
 import type { CalendarSelection } from 'cmk-ui-library/components/date-time/private/calendar/types'
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import { makeSettings } from '../../dateTimeTestFixtures'
@@ -80,10 +80,6 @@ beforeEach(() => {
   vi.spyOn(navigator, 'language', 'get').mockReturnValue('en-US')
   // A "today" far away from the dates under test so it never collides accidentally.
   vi.mocked(intl.today).mockReturnValue(new CalendarDate(2000, 1, 1))
-})
-
-afterEach(() => {
-  vi.restoreAllMocks()
 })
 
 describe('CalendarGrid', () => {

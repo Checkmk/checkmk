@@ -42,7 +42,6 @@ beforeEach(() => {
 
 afterEach(() => {
   scopes.splice(0).forEach((scope) => scope.stop())
-  vi.restoreAllMocks()
   vi.useRealTimers()
 })
 

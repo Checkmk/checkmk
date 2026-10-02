@@ -40,7 +40,6 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  vi.restoreAllMocks()
   localStorage.clear()
   window.history.replaceState(null, '', '/monitor_host_services.py')
 })

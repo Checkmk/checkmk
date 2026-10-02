@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen } from '@testing-library/vue'
-import { afterEach, vi } from 'vitest'
+import { vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import GraphTitle from '@/graphing/components/header/GraphTitle.vue'
@@ -27,10 +27,6 @@ function stubTitleGeometry(root: HTMLElement, probe: HTMLElement, maxChars: numb
     }
   })
 }
-
-afterEach(() => {
-  vi.unstubAllGlobals()
-})
 
 test('renders the title text', () => {
   render(GraphTitle, { props: { title: 'CPU utilization' } })

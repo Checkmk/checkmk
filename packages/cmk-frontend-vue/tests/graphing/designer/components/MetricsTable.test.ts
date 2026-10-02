@@ -44,10 +44,6 @@ vi.mock('@/mode-custom-services/CreateCustomServiceSlideIn.vue', () => ({
   }
 }))
 
-afterEach(() => {
-  vi.restoreAllMocks()
-})
-
 const CREATE_SERVICE_LABEL = 'Create custom service'
 const EDIT_CALCULATION_LABEL = 'Edit calculation'
 

@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { Legal } from 'cmk-shared-typing/typescript/ai_button'
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { AiApiClient, type InfoResponse, type StreamEvent } from '@/ai/lib/ai-api-client'
 import {
@@ -101,10 +101,6 @@ beforeEach(() => {
       streamInference: mockStreamInference
     } as unknown as AiApiClient
   })
-})
-
-afterEach(() => {
-  vi.clearAllMocks()
 })
 
 describe('execAiAction — streaming', () => {

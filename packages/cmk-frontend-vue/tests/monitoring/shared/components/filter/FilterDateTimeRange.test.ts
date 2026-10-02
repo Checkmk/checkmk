@@ -7,7 +7,7 @@ import { CalendarDate } from '@internationalized/date'
 import * as intl from '@internationalized/date'
 import { userEvent } from '@testing-library/user-event'
 import { fireEvent, render, screen, within } from '@testing-library/vue'
-import { afterEach, beforeEach, expect, test, vi } from 'vitest'
+import { beforeEach, expect, test, vi } from 'vitest'
 import { defineComponent, nextTick, ref } from 'vue'
 
 import type { ColumnFilterNode } from '@/monitoring/shared/api/types'
@@ -70,10 +70,6 @@ async function pick(name: 'From' | 'To', day: number, hour: number, minute: numb
 beforeEach(() => {
   vi.mocked(intl.today).mockReturnValue(new CalendarDate(2026, 6, 10))
   vi.mocked(intl.getLocalTimeZone).mockReturnValue('UTC')
-})
-
-afterEach(() => {
-  vi.restoreAllMocks()
 })
 
 test('a lone lower bound produces a single gte condition', async () => {

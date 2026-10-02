@@ -26,7 +26,6 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers()
-  vi.restoreAllMocks()
   localStorage.clear()
   window.history.replaceState(null, '', '/monitor_all_hosts.py')
 })

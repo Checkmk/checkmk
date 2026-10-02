@@ -37,7 +37,6 @@ beforeEach(() => {
 
 afterEach(() => {
   FakeResizeObserver.instances = []
-  vi.unstubAllGlobals()
   vi.useRealTimers()
 })
 

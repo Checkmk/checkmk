@@ -53,8 +53,6 @@ function stubLayout(rowWidth: number): void {
   })
 }
 
-afterEach(() => vi.restoreAllMocks())
-
 function makeItems(count: number): LabelCellItem[] {
   return Array.from({ length: count }, (_unused, index) => ({
     text: `cmk/label_${index}: value` as TranslatedString

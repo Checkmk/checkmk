@@ -42,7 +42,6 @@ describe('GlobalTimePickerApp', () => {
 
   afterEach(() => {
     resetGlobalTimeState()
-    vi.unstubAllGlobals()
   })
 
   test('seeds the shared store with the default duration when empty', () => {

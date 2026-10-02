@@ -5,7 +5,7 @@
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
-import { afterEach, beforeEach, expect, test, vi } from 'vitest'
+import { beforeEach, expect, test, vi } from 'vitest'
 
 import GraphSelector, {
   type SelectableGraph
@@ -22,10 +22,6 @@ let getSpy: any
 
 beforeEach(() => {
   getSpy = vi.spyOn(client, 'GET')
-})
-
-afterEach(() => {
-  vi.restoreAllMocks()
 })
 
 function mockCollection(entries: unknown[]): void {

@@ -134,7 +134,6 @@ async function waitForRows() {
 
 describe('FolderTreeMapView (list mode)', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
     vi.stubGlobal(
       'ResizeObserver',
       class {
@@ -152,7 +151,6 @@ describe('FolderTreeMapView (list mode)', () => {
   })
 
   afterEach(() => {
-    vi.unstubAllGlobals()
     Reflect.deleteProperty(HTMLElement.prototype, 'clientHeight')
   })
 
@@ -622,10 +620,6 @@ describe('FolderTreeMapView (map mode)', () => {
         disconnect() {}
       }
     )
-  })
-
-  afterEach(() => {
-    vi.unstubAllGlobals()
   })
 
   it('opens the same hover card as the list on a host tile, with the host own state', async () => {

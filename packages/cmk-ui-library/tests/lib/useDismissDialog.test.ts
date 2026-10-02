@@ -7,7 +7,7 @@ import { render } from '@testing-library/vue'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { useDismissDialog } from 'cmk-ui-library/lib/useDismissDialog'
 import type { DismissableWarning } from 'cmk-ui-library/lib/userConfig'
-import { type MockInstance, afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest'
+import { type MockInstance, afterAll, beforeAll, beforeEach, vi } from 'vitest'
 import { defineComponent, nextTick } from 'vue'
 
 const DISMISS_ENDPOINT = '/domain-types/user_config/actions/dismiss-warning/invoke'
@@ -32,10 +32,6 @@ beforeEach(() => {
     error: undefined,
     response: new Response(null, { status: 204 })
   })
-})
-
-afterEach(() => {
-  vi.restoreAllMocks()
 })
 
 function cookieWithDismissed(...warnings: string[]): string {

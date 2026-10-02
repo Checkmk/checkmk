@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, waitFor } from '@testing-library/vue'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import HoverMenu from '@/maps/map/components/HoverMenu.vue'
 import type { HoverAnchorRect } from '@/maps/map/composables/useObjectHoverMenu'
@@ -51,10 +51,6 @@ async function renderPlaced(
 }
 
 describe('HoverMenu placement', () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
   it('opens at the pointer, in the frame coordinates rather than the viewport ones', async () => {
     const style = await renderPlaced(300, 200, { left: 270, top: 180, right: 310, bottom: 230 })
 

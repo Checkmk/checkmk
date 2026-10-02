@@ -138,7 +138,6 @@ const shownDay = (view: PickerView, which: 'From' | 'To'): string =>
   ).value
 
 afterEach(() => {
-  vi.restoreAllMocks()
   vi.useRealTimers()
 })
 

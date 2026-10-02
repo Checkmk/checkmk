@@ -45,7 +45,6 @@ function mountComposable(enabled: boolean, initialAddTo: AddTo | null) {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks()
   vi.mocked(loadMenu).mockResolvedValue([])
 })
 

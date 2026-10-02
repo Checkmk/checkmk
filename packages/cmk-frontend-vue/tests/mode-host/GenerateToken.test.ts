@@ -25,7 +25,6 @@ function mockSuccessfulTokenGeneration(expiresInSeconds: number) {
 describe('GenerateToken', () => {
   afterEach(() => {
     cleanup()
-    vi.restoreAllMocks()
   })
 
   test.each([

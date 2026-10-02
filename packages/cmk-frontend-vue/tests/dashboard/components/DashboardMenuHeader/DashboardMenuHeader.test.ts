@@ -9,7 +9,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time/types.ts'
 import { kioskMode } from 'cmk-ui-library/lib/kiosk'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import DashboardMenuHeader from '@/dashboard/components/DashboardMenuHeader/DashboardMenuHeader.vue'
 import type { SelectedDashboard } from '@/dashboard/components/DashboardMenuHeader/types'
@@ -98,10 +98,6 @@ function renderHeader(props: RenderProps = {}) {
   })
 }
 
-beforeEach(() => {
-  vi.clearAllMocks()
-})
-
 describe('DashboardMenuHeader', () => {
   describe('view mode rendering', () => {
     it('renders the Dashboard label', () => {
@@ -168,10 +164,6 @@ describe('DashboardMenuHeader', () => {
   })
 
   describe('page navigation toggle', () => {
-    afterEach(() => {
-      vi.restoreAllMocks()
-    })
-
     async function openNavigationToggle(): Promise<HTMLAnchorElement> {
       renderHeader()
       await fireEvent.click(screen.getByText('Settings'))

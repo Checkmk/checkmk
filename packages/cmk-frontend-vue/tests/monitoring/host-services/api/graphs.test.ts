@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import client from 'cmk-ui-library/lib/rest-api-client/client'
-import { afterEach, expect, test, vi } from 'vitest'
+import { expect, test, vi } from 'vitest'
 
 import { ServiceGraphsApi } from '@/monitoring/host-services/api/graphs'
 
@@ -20,10 +20,6 @@ function respondWith(status: number, body: object): void {
     response: new Response(null, { status })
   } as never)
 }
-
-afterEach(() => {
-  vi.restoreAllMocks()
-})
 
 test('a service whose graphs cannot be built is answered with the reason the backend gives', async () => {
   respondWith(422, { title: 'Graph cannot be built', detail: UNIT_MISMATCH })

@@ -49,7 +49,6 @@ async function renderWidget(type: TimelineContent['type'] = 'alert_timeline') {
 
 describe('DashboardContentTimelineCount', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
     computeTimelineCountData.mockResolvedValue({ value: { value: '42' } })
   })
 

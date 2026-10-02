@@ -35,7 +35,6 @@ beforeEach(() => {
 
 afterEach(() => {
   click.mockRestore()
-  vi.unstubAllGlobals()
 })
 
 describe('useMapExport', () => {

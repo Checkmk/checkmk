@@ -36,7 +36,6 @@ function inScope<T>(fn: () => T): { api: T; stop: () => void } {
 
 afterEach(() => {
   FakeResizeObserver.instances = []
-  vi.unstubAllGlobals()
 })
 
 describe('useResizeObserver', () => {

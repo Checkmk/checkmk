@@ -19,7 +19,6 @@ const baseProps = {
 
 afterEach(() => {
   cleanup()
-  vi.restoreAllMocks()
 })
 
 describe('VerifyRegistration', () => {

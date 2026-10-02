@@ -135,7 +135,6 @@ afterEach(() => {
   requests = []
   server.resetHandlers()
   FakeResizeObserver.instances = []
-  vi.unstubAllGlobals()
 })
 afterAll(() => server.close())
 

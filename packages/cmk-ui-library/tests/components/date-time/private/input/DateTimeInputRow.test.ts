@@ -8,7 +8,7 @@ import { fireEvent, render, screen } from '@testing-library/vue'
 import DateTimeInputRow from 'cmk-ui-library/components/date-time/private/input/DateTimeInputRow.vue'
 import type { DateTimePartsDraft } from 'cmk-ui-library/components/date-time/types'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test } from 'vitest'
 
 import { DMY, MONTH_NAMES_EN, WEEKDAY_NAMES_SHORT_EN } from '../../dateTimeTestFixtures'
 
@@ -23,10 +23,6 @@ const renderRow = (modelValue: DateTimePartsDraft) =>
       modelValue
     }
   })
-
-afterEach(() => {
-  vi.restoreAllMocks()
-})
 
 describe('DateTimeInputRow', () => {
   test('re-emits commit from the inner date-time input', async () => {

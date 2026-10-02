@@ -5,7 +5,7 @@
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import { Response } from 'cmk-ui-library/components/CmkSuggestions'
-import { afterEach, expect, test, vi } from 'vitest'
+import { expect, test, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 
 import { resolveMetricColor } from '@/graphing/designer/api'
@@ -33,10 +33,6 @@ vi.mock(
     }
   }
 )
-
-afterEach(() => {
-  vi.clearAllMocks()
-})
 
 const PALETTE: readonly string[] = ['#28a2f3', '#ff8400']
 

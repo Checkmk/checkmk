@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { resolveAssetBase, resolveDaemonBase, resolveStreamUrl } from '@/maps/utils/deploymentBase'
 
@@ -14,10 +14,6 @@ function servedAt(href: string): void {
 }
 
 describe('deployment base', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
-
   it('derives the daemon base from the Maps page it is served on', () => {
     servedAt('http://mon.example/heute/check_mk/maps.py?name=dc1')
     expect(resolveDaemonBase()).toBe('http://mon.example/heute/check_mk/maps')

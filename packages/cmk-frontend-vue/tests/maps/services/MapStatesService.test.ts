@@ -94,10 +94,6 @@ describe('MapStatesService — folder-tree delta apply', () => {
     FakeEventSource.instances = []
     vi.stubGlobal('EventSource', FakeEventSource)
   })
-  afterEach(() => {
-    vi.unstubAllGlobals()
-    vi.restoreAllMocks()
-  })
 
   const host = (path: string, state: string) => ({
     path,
@@ -236,10 +232,6 @@ describe('MapStatesService — stream credential', () => {
     FakeEventSource.instances = []
     vi.stubGlobal('EventSource', FakeEventSource)
   })
-  afterEach(() => {
-    vi.unstubAllGlobals()
-    vi.restoreAllMocks()
-  })
 
   it('passes the reduced-scope stream token as the SSE token query parameter', async () => {
     const store = newService()
@@ -253,14 +245,8 @@ describe('MapStatesService — stream credential', () => {
 
 describe('MapStatesService — BI aggregations resolve GUI-side', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
     FakeEventSource.instances = []
     vi.stubGlobal('EventSource', FakeEventSource)
-  })
-
-  afterEach(() => {
-    vi.unstubAllGlobals()
-    vi.restoreAllMocks()
   })
 
   it('merges the resolved state and tree, and keeps them across a full resend', async () => {
@@ -330,10 +316,6 @@ describe('MapStatesService — why state is missing', () => {
     FakeEventSource.instances = []
     vi.stubGlobal('EventSource', FakeEventSource)
   })
-  afterEach(() => {
-    vi.unstubAllGlobals()
-    vi.restoreAllMocks()
-  })
 
   it('records why a state fetch failed', async () => {
     const store = newService(
@@ -393,8 +375,6 @@ describe('MapStatesService — hidden tab', () => {
 
   afterEach(() => {
     vi.useRealTimers()
-    vi.unstubAllGlobals()
-    vi.restoreAllMocks()
   })
 
   it('closes the stream once the tab stays hidden and reopens it on return', async () => {

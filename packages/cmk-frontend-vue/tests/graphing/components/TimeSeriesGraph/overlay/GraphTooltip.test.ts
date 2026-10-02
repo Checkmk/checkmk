@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen } from '@testing-library/vue'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test } from 'vitest'
 
 import type {
   HoverSample,
@@ -49,10 +49,6 @@ function renderGraphTooltip(hoverState: HoverState | null): ReturnType<typeof re
 }
 
 describe('GraphTooltip', () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
   test('renders one sample per metric with label and formatted value', () => {
     renderGraphTooltip(
       makeHoverState({

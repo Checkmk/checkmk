@@ -5,12 +5,8 @@
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
 import DateTimeFlyout from 'cmk-ui-library/components/date-time/private/flyout/DateTimeFlyout.vue'
-import { afterEach, expect, test, vi } from 'vitest'
+import { expect, test } from 'vitest'
 import { defineComponent } from 'vue'
-
-afterEach(() => {
-  vi.restoreAllMocks()
-})
 
 // DateTimeFlyout is presentational: it relays v-model:open / v-model:save-checked, relabels the
 // Apply button, and emits apply/cancel. The save handler, model commit and close-on-apply now live

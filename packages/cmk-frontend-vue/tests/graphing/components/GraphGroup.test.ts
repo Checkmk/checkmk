@@ -235,7 +235,6 @@ beforeEach(() => {
 afterEach(() => {
   document.getElementById(MAIN_PAGE_CONTENT_ID)?.remove()
   resetGlobalTimeState()
-  vi.restoreAllMocks()
   vi.useRealTimers()
 })
 

@@ -42,10 +42,6 @@ beforeEach(() => {
   api.getUnacknowledgedIncompatibleWerks.mockResolvedValue(unackIncompWerks(0))
 })
 
-afterEach(() => {
-  vi.restoreAllMocks()
-})
-
 const navItems = (shortcut: NavItemShortcut): NavItems => [
   {
     id: 'setup',

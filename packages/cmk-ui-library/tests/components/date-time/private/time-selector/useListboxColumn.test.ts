@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { useListboxColumn } from 'cmk-ui-library/components/date-time/private/time-selector/useListboxColumn'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { type Ref, nextTick, ref } from 'vue'
 
 const keyEvent = (key: string): KeyboardEvent =>
@@ -26,10 +26,6 @@ const setup = (selectedValue: number) => {
   })
   return { selected, navigate, commit, scroller, listbox, column }
 }
-
-afterEach(() => {
-  vi.restoreAllMocks()
-})
 
 describe('useListboxColumn — keyboard', () => {
   test.each([

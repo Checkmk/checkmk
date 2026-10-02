@@ -6,7 +6,7 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 // eslint-disable-next-line no-restricted-imports -- TODO: migrate to @testing-library/vue, see https://wiki.lan.checkmk.net/spaces/DEV/pages/149528812/All+things+Vue
 import { flushPromises } from '@vue/test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 
 import PublicAccess from '@/dashboard/components/Wizard/wizards/dashboard-sharing/PublicAccess.vue'
@@ -123,10 +123,6 @@ const renderPublicAccess = (
   })
 
 describe('PublicAccess', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
   describe('Without a public token', () => {
     it('shows the "Generate public link" button', () => {
       renderPublicAccess()

@@ -13,15 +13,11 @@ import {
   weekdayOf
 } from 'cmk-ui-library/components/date-time/private/calendar/util'
 import type { Weekday } from 'cmk-ui-library/components/date-time/types'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 
 vi.mock('@internationalized/date', async (importOriginal) => {
   const actual = await importOriginal<typeof intl>()
   return { ...actual, today: vi.fn(actual.today), getLocalTimeZone: vi.fn(actual.getLocalTimeZone) }
-})
-
-afterEach(() => {
-  vi.restoreAllMocks()
 })
 
 describe('monthIndex / monthFromIndex', () => {

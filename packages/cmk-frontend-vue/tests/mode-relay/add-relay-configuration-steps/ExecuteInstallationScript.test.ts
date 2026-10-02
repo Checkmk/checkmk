@@ -30,7 +30,6 @@ const mockTokenResponse = {
 
 afterEach(() => {
   cleanup()
-  vi.restoreAllMocks()
 })
 
 describe('ExecuteInstallationScript', () => {

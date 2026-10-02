@@ -61,7 +61,6 @@ afterEach(() => {
   vi.runOnlyPendingTimers()
   vi.useRealTimers()
   document.body.innerHTML = ''
-  vi.clearAllMocks()
 })
 
 describe('SidebarService.snapinHasFocus', () => {

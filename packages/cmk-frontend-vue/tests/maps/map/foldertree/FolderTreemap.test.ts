@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { computed, ref } from 'vue'
 
 import FolderTreemap from '@/maps/map/foldertree/components/FolderTreemap.vue'
@@ -103,10 +103,6 @@ function renderTreemap(needle: string, checkmkUrl: string | null = null, root = 
 describe('FolderTreemap', () => {
   beforeEach(() => {
     vi.stubGlobal('ResizeObserver', StageResizeObserver)
-  })
-
-  afterEach(() => {
-    vi.unstubAllGlobals()
   })
 
   it('reveals a host services when the folder above it is what the search matched', async () => {

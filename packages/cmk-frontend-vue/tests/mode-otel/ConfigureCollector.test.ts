@@ -116,7 +116,6 @@ function renderComponent(
 describe('ConfigureCollector', () => {
   afterEach(() => {
     cleanup()
-    vi.restoreAllMocks()
   })
 
   describe('default auth method', () => {

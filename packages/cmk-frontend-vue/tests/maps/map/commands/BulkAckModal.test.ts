@@ -38,7 +38,6 @@ let services: ReturnType<typeof fakeMapsServices>
 let commands: MapsApis['commands']
 
 beforeEach(() => {
-  vi.clearAllMocks()
   services = fakeMapsServices()
   commands = services.apis.commands
 })

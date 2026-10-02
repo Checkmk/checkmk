@@ -6,7 +6,7 @@
 import * as intl from '@internationalized/date'
 import type { DateTimeSettings } from 'cmk-ui-library/components/date-time/types'
 import { useResolvedDateTimeSettings } from 'cmk-ui-library/components/date-time/useResolvedDateTimeSettings'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { ref } from 'vue'
 
 vi.mock('@internationalized/date', async (importOriginal) => {
@@ -23,10 +23,6 @@ const mockResolvedOptions = (options: Partial<Intl.ResolvedDateTimeFormatOptions
     options as Intl.ResolvedDateTimeFormatOptions
   )
 }
-
-afterEach(() => {
-  vi.restoreAllMocks()
-})
 
 describe('useResolvedDateTimeSettings — hourCycle', () => {
   test('explicit 24', () => {

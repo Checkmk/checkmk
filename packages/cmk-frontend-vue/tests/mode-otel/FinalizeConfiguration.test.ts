@@ -54,7 +54,6 @@ function renderWithActions(
 describe('FinalizeConfiguration', () => {
   afterEach(() => {
     cleanup()
-    vi.restoreAllMocks()
   })
 
   describe('initial render', () => {

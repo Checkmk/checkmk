@@ -58,10 +58,6 @@ function spyOnClient(method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'): any {
 }
 
 describe('POST_SAVE_ACTIONS', () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
   test('enableCollector action is present as the first registry entry', () => {
     expect(POST_SAVE_ACTIONS.length).toBeGreaterThanOrEqual(2)
     expect(POST_SAVE_ACTIONS[0]!.key).toBe('enableCollector')
@@ -296,10 +292,6 @@ describe('POST_SAVE_ACTIONS', () => {
 })
 
 describe('createOTelReceiverConfigAction', () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
   test('labels the checklist item and uses a stable key', () => {
     const action = createOTelReceiverConfigAction({
       id: 'cfg1',
@@ -731,10 +723,6 @@ describe('createOTelReceiverConfigAction', () => {
 })
 
 describe('createPrometheusScrapeConfigAction', () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
   test('labels the checklist item and uses a stable key', () => {
     const action = createPrometheusScrapeConfigAction({
       id: 'p1',
@@ -859,10 +847,6 @@ describe('createPrometheusScrapeConfigAction', () => {
 })
 
 describe('createOTelBundleAction', () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
   test('returns a rollback that DELETEs the bundle when the response contains a bundle_id', async () => {
     spyOnClient('POST').mockResolvedValueOnce(makeOk({ extensions: { bundle_id: 'bnd-42' } }))
     const deleteSpy = spyOnClient('DELETE').mockResolvedValueOnce(makeNoContent())
@@ -899,10 +883,6 @@ describe('createOTelBundleAction', () => {
 describe('createDCDConnectorAction', () => {
   const FOLDER_COLLECTION = '/domain-types/folder_config/collections/all'
   const DCD_COLLECTION = '/domain-types/dcd_telemetry_metrics/collections/all'
-
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
 
   function dcdAction() {
     return POST_SAVE_ACTIONS.find((a) => a.key === 'createDCDConnector')!

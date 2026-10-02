@@ -99,7 +99,6 @@ describe('PresentationCanvas', () => {
   })
   afterEach(() => {
     sessionStorage.clear()
-    vi.unstubAllGlobals()
   })
 
   it('renders one element view per document element (view mode)', () => {

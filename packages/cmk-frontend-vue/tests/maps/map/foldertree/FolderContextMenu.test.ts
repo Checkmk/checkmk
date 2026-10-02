@@ -5,7 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor, within } from '@testing-library/vue'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
 import FolderContextMenu from '@/maps/map/foldertree/components/FolderContextMenu.vue'
@@ -120,10 +120,6 @@ describe('FolderContextMenu placement', () => {
     await waitFor(() => expect(menu.style.visibility).not.toBe('hidden'))
     return menu.style
   }
-
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
 
   it('opens at the pointer, in the frame coordinates rather than the viewport ones', async () => {
     const style = await renderAt(300, 200)

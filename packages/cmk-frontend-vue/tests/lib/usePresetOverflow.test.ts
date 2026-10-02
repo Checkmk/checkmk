@@ -102,7 +102,6 @@ beforeEach(() => {
 
 afterEach(() => {
   FakeResizeObserver.instances = []
-  vi.unstubAllGlobals()
 })
 
 describe('usePresetOverflow', () => {

@@ -146,7 +146,6 @@ describe('HostSlideIn', () => {
 
   afterEach(() => {
     vi.useRealTimers()
-    vi.restoreAllMocks()
   })
 
   it('runs the reschedule action straight away, without opening a form', async () => {

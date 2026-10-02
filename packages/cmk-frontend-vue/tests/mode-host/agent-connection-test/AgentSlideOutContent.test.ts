@@ -101,8 +101,6 @@ describe('AgentSlideOutContent', () => {
 
   afterEach(() => {
     cleanup()
-    vi.restoreAllMocks()
-    vi.unstubAllGlobals()
   })
 
   test('offers the four platform tabs in a fixed order', () => {

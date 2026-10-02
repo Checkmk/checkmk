@@ -49,7 +49,6 @@ describe('useComputeWidgetTitles', () => {
 
   beforeEach(() => {
     vi.useFakeTimers()
-    vi.clearAllMocks()
     pending = []
     vi.mocked(dashboardAPI.computeWidgetTitles).mockImplementation(
       () =>

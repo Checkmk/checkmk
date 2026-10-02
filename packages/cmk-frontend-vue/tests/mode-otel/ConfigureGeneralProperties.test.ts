@@ -106,7 +106,6 @@ describe('ConfigureGeneralProperties', () => {
   afterEach(() => {
     cleanup()
     server.resetHandlers()
-    vi.restoreAllMocks()
     _resetCaches()
   })
 

@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { type Ref, nextTick, ref } from 'vue'
 
 import { useMapBulkActions } from '@/maps/home/composables/useMapBulkActions'
@@ -41,10 +41,6 @@ function setup(maps: MapRead[], viewMode: Ref<MapListView> = ref('table')) {
   )
   return { api, openSettings, viewMode, store, toast }
 }
-
-beforeEach(() => {
-  vi.clearAllMocks()
-})
 
 describe('useMapBulkActions — selection', () => {
   it('toggles a map in and out of the selection', () => {

@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { useSegmentFocus } from 'cmk-ui-library/components/date-time/private/input/useSegmentFocus'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { nextTick, ref } from 'vue'
 
 const SEGMENT_ORDER = ['day', 'month', 'year']
@@ -15,10 +15,6 @@ const stubInput = (): HTMLInputElement => {
   vi.spyOn(el, 'select')
   return el
 }
-
-afterEach(() => {
-  vi.restoreAllMocks()
-})
 
 describe('useSegmentFocus', () => {
   test('registerInput stores element', async () => {

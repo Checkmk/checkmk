@@ -56,7 +56,6 @@ function clickSave() {
 describe('ModeCreatePrometheusConfApp', () => {
   afterEach(() => {
     cleanup()
-    vi.restoreAllMocks()
     _resetCaches()
   })
 

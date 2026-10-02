@@ -5,7 +5,7 @@
  */
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { HostServicesApi } from '@/monitoring/host-services/api/services'
 import type { HostRef } from '@/monitoring/shared/api/types'
@@ -41,10 +41,6 @@ describe('HostServicesApi.fetchServices', () => {
 
   beforeEach(() => {
     postSpy = vi.spyOn(client, 'POST')
-  })
-
-  afterEach(() => {
-    vi.restoreAllMocks()
   })
 
   function mockSuccess(services: ApiServiceEntry[]): void {

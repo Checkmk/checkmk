@@ -5,7 +5,7 @@
  */
 import { render } from '@testing-library/vue'
 import { scaleLinear, scaleTime } from 'd3-scale'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
 import type { TimeRange } from '@/graphing/components/TimeSeriesGraph/types'
@@ -133,10 +133,6 @@ function committedRange(onCommit: ReturnType<typeof mountPan>['onCommit']): Time
   expect(onCommit).toHaveBeenCalledTimes(1)
   return onCommit.mock.calls[0]![0] as TimeRange
 }
-
-beforeEach(() => {
-  vi.clearAllMocks()
-})
 
 describe('usePanGesture — the end of the navigable axis', () => {
   function rangeEndingToday(spanSeconds: number): TimeRange {

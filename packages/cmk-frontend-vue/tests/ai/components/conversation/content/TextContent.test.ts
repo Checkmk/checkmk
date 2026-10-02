@@ -10,7 +10,6 @@ import TextContent from '@/ai/components/conversation/content/TextContent.vue'
 
 afterEach(() => {
   vi.useRealTimers()
-  vi.clearAllMocks()
 })
 
 function renderTextContent(props: { text: string; noAnimation?: boolean }) {

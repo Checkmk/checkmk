@@ -33,7 +33,6 @@ beforeEach(() => {
 afterEach(() => {
   cleanup()
   server.resetHandlers()
-  vi.restoreAllMocks()
 })
 afterAll(() => server.close())
 

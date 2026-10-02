@@ -58,9 +58,11 @@ const server = setupServer(http.get(DATA_URL, () => HttpResponse.json(PAYLOAD)))
 
 beforeAll(() => {
   server.listen({ onUnhandledRequest: 'error' })
-  vi.stubGlobal('ResizeObserver', FakeResizeObserver)
   Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, value: 600 })
   Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, value: 800 })
+})
+beforeEach(() => {
+  vi.stubGlobal('ResizeObserver', FakeResizeObserver)
 })
 afterEach(() => server.resetHandlers())
 afterAll(() => {

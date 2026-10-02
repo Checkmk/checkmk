@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import client from 'cmk-ui-library/lib/rest-api-client/client'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AcknowledgeApi } from '@/monitoring/shared/api/actions/acknowledge'
 
@@ -23,10 +23,6 @@ describe('AcknowledgeApi.acknowledgeHosts', () => {
 
   beforeEach(() => {
     postSpy = vi.spyOn(client, 'POST')
-  })
-
-  afterEach(() => {
-    vi.restoreAllMocks()
   })
 
   function mockNoContent(): void {
@@ -118,10 +114,6 @@ describe('AcknowledgeApi.acknowledgeServices', () => {
 
   beforeEach(() => {
     postSpy = vi.spyOn(client, 'POST')
-  })
-
-  afterEach(() => {
-    vi.restoreAllMocks()
   })
 
   function mockNoContent(): void {

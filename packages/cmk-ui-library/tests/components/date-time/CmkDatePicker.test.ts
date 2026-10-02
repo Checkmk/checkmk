@@ -8,7 +8,7 @@ import * as intl from '@internationalized/date'
 import { fireEvent, waitFor } from '@testing-library/vue'
 import CmkDatePicker from 'cmk-ui-library/components/date-time/CmkDatePicker.vue'
 import type { DateTimePickerSettings } from 'cmk-ui-library/components/date-time/types'
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import { TZ_TOKYO, TZ_UTC } from './dateTimeTestFixtures'
@@ -49,10 +49,6 @@ const apply = (view: PickerView) => fireEvent.click(view.getByRole('button', { n
 beforeEach(() => {
   vi.mocked(intl.today).mockReturnValue(new CalendarDate(2026, 6, 10))
   vi.mocked(intl.getLocalTimeZone).mockReturnValue(TZ_UTC)
-})
-
-afterEach(() => {
-  vi.restoreAllMocks()
 })
 
 describe('CmkDatePicker', () => {

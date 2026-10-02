@@ -116,7 +116,6 @@ beforeEach(() => {
 
 afterEach(() => {
   FakeResizeObserver.instances = []
-  vi.unstubAllGlobals()
 })
 
 test('level 0: every block shares one row and the title is a single line', () => {

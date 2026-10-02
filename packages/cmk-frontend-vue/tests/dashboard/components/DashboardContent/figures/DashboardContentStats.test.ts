@@ -54,7 +54,6 @@ afterEach(() => {
   answer = () => HttpResponse.json({ domainType: 'widget-compute', value: HOST_STATS })
   server.resetHandlers()
   FakeResizeObserver.instances = []
-  vi.unstubAllGlobals()
 })
 afterAll(() => server.close())
 

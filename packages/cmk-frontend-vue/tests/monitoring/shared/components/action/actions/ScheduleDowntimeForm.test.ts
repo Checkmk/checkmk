@@ -163,7 +163,6 @@ describe('a row too narrow for every duration', () => {
 
   afterEach(() => {
     FakeResizeObserver.instances = []
-    vi.unstubAllGlobals()
   })
 
   it('narrows the row further than the count cap already does', async () => {

@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import client from 'cmk-ui-library/lib/rest-api-client/client'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ServiceActionMenuApi } from '@/monitoring/host-services/api/actionMenu'
 import type { HostRef, ServiceActionMenuItem } from '@/monitoring/shared/api/types'
@@ -23,10 +23,6 @@ describe('ServiceActionMenuApi.fetchActionMenu', () => {
 
   beforeEach(() => {
     getSpy = vi.spyOn(client, 'GET')
-  })
-
-  afterEach(() => {
-    vi.restoreAllMocks()
   })
 
   function mockSuccess(items: ServiceActionMenuItem[]): void {

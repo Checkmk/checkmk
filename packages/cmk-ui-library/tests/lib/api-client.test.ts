@@ -32,7 +32,6 @@ beforeEach(() => {
 
 afterEach(() => {
   server.resetHandlers()
-  vi.restoreAllMocks()
 })
 
 test('a request redirected to the login page fails as a stale session', async () => {

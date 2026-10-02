@@ -5,7 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
 import MapsMenu from '@/maps/shared/components/MapsMenu.vue'
@@ -35,10 +35,6 @@ function entry(name: string): HTMLElement {
 }
 
 describe('MapsMenu', () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
   it('moves the focus to its first entry when it opens', async () => {
     renderMenu()
 

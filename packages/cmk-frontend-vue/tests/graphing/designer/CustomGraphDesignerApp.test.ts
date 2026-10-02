@@ -230,7 +230,6 @@ beforeEach(() => {
 
 afterEach(() => {
   resetGlobalTimeState()
-  vi.restoreAllMocks()
 })
 
 async function renderApp(overrides: Partial<CustomGraphDesigner> = {}) {

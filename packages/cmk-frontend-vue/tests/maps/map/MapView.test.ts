@@ -5,7 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 
 import type { SignedMap } from '@/maps/api/mapConfig'
@@ -110,15 +110,10 @@ beforeAll(async () => {
 
 describe('MapView – map-type dispatch', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
     services = fakeMapsServices()
     vi.stubGlobal('EventSource', FakeEventSource)
     // Point navigation at a map so the shell fetches and renders one.
     services.nav.replace({ view: 'map', name: 'map1' })
-  })
-
-  afterEach(() => {
-    vi.unstubAllGlobals()
   })
 
   it('renders the static MapCanvas for a static view', async () => {
@@ -167,14 +162,9 @@ describe('MapView – map-type dispatch', () => {
 
 describe('MapView – loading / error / read-only states', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
     services = fakeMapsServices()
     vi.stubGlobal('EventSource', FakeEventSource)
     services.nav.replace({ view: 'map', name: 'map1' })
-  })
-
-  afterEach(() => {
-    vi.unstubAllGlobals()
   })
 
   it('shows the loading spinner and no renderer while the map fetch is in flight', async () => {
@@ -213,14 +203,9 @@ describe('MapView – loading / error / read-only states', () => {
 
 describe('MapView – breadcrumb', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
     services = fakeMapsServices()
     vi.stubGlobal('EventSource', FakeEventSource)
     services.nav.replace({ view: 'map', name: 'map1' })
-  })
-
-  afterEach(() => {
-    vi.unstubAllGlobals()
   })
 
   it('links back to the map list and ends on the open map', async () => {
@@ -258,15 +243,10 @@ describe('MapView – what the settings slide-in is handed', () => {
   })
 
   beforeEach(() => {
-    vi.clearAllMocks()
     handedMap = null
     services = fakeMapsServices()
     vi.stubGlobal('EventSource', FakeEventSource)
     services.nav.replace({ view: 'map', name: 'map1' })
-  })
-
-  afterEach(() => {
-    vi.unstubAllGlobals()
   })
 
   it('carries the sharing and delete rights over from the map list', async () => {

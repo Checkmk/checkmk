@@ -5,7 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
 import WorldMapCanvas from '@/maps/map/worldmap/components/WorldMapCanvas.vue'
@@ -163,10 +163,6 @@ function renderCanvas() {
 }
 
 describe('WorldMapCanvas', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
   it('mounts a Leaflet map and puts one accessible marker per geo object on it', async () => {
     const { unmount } = render(WorldMapCanvas, {
       global: mapsGlobal(),

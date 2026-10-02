@@ -55,7 +55,6 @@ const originalLocation = window.location
 let assignMock: ReturnType<typeof vi.fn>
 
 beforeEach(() => {
-  vi.clearAllMocks()
   ticketCalls = 0
   assignMock = vi.fn()
   Object.defineProperty(window, 'location', {

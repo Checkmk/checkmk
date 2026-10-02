@@ -65,7 +65,6 @@ function clickSave() {
 describe('ModeCreateOTelConfApp', () => {
   afterEach(() => {
     cleanup()
-    vi.restoreAllMocks()
     _resetCaches()
   })
 

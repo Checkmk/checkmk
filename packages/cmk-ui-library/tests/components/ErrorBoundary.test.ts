@@ -32,10 +32,6 @@ beforeEach(() => {
   } as never)
 })
 
-afterEach(() => {
-  vi.restoreAllMocks()
-})
-
 test('CmkErrorBoundary shows full stack', async () => {
   class DemoError<T extends Error> extends CmkError<T> {
     override name = 'DemoError'

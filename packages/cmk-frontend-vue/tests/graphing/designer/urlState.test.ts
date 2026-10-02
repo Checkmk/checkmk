@@ -3,13 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { afterEach, expect, test, vi } from 'vitest'
+import { expect, test, vi } from 'vitest'
 
 import { pushUrlState, replaceUrlState } from '@/graphing/designer/urlState'
-
-afterEach(() => {
-  vi.restoreAllMocks()
-})
 
 test('replaceUrlState rewrites name, owner and the edit mode without a history entry', () => {
   const replaceSpy = vi.spyOn(window.history, 'replaceState').mockImplementation(() => {})

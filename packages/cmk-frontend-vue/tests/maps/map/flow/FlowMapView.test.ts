@@ -107,7 +107,6 @@ async function waitForNodes() {
 
 describe('FlowMapView', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
     // jsdom has no layout: getBBox / getBoundingClientRect on SVG elements
     // would throw or return zeros. d3 itself is pure JS and runs as-is.
     Object.defineProperty(SVGElement.prototype, 'getBBox', {
@@ -133,7 +132,6 @@ describe('FlowMapView', () => {
   })
 
   afterEach(() => {
-    vi.unstubAllGlobals()
     Reflect.deleteProperty(SVGElement.prototype, 'getBBox')
     Reflect.deleteProperty(SVGSVGElement.prototype, 'width')
     Reflect.deleteProperty(SVGSVGElement.prototype, 'height')

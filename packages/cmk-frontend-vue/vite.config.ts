@@ -135,6 +135,9 @@ export default defineConfig(({ command }) => {
         // enable jest-like global test APIs
         globals: true,
         environment: 'jsdom',
+        restoreMocks: true,
+        clearMocks: true,
+        unstubGlobals: true,
         pool: 'threads',
         setupFiles: ['../cmk-ui-library/vitest.shared-setup.ts', 'tests/setup-tests.ts'],
         reporters: process.env.XML_OUTPUT_FILE // variable set by bazel

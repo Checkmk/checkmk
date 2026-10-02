@@ -17,10 +17,6 @@ function renderTooltip(pointer: { clientX: number; clientY: number } | null) {
 }
 
 describe('CmkPointerTooltip', () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
   it('renders its slot beside the pointer', () => {
     renderTooltip({ clientX: 105, clientY: 205 })
 

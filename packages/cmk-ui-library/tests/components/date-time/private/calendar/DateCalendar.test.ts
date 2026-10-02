@@ -9,7 +9,7 @@ import userEvent from '@testing-library/user-event'
 import { fireEvent, render } from '@testing-library/vue'
 import DateCalendar from 'cmk-ui-library/components/date-time/private/calendar/DateCalendar.vue'
 import type { CalendarSelection } from 'cmk-ui-library/components/date-time/private/calendar/types'
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import { TZ_BERLIN, makeSettings } from '../../dateTimeTestFixtures'
@@ -82,10 +82,6 @@ beforeEach(() => {
   vi.spyOn(navigator, 'language', 'get').mockReturnValue('en-US')
   vi.mocked(intl.today).mockReturnValue(new CalendarDate(2026, 6, 10))
   vi.mocked(intl.getLocalTimeZone).mockReturnValue(TZ_BERLIN)
-})
-
-afterEach(() => {
-  vi.restoreAllMocks()
 })
 
 describe('DateCalendar selection', () => {

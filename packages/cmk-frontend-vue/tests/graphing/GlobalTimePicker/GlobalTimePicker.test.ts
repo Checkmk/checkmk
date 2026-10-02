@@ -7,7 +7,7 @@ import { CalendarDateTime, type ZonedDateTime, toZoned } from '@internationalize
 import { fireEvent, render, screen, within } from '@testing-library/vue'
 import type { CustomGraphTimeRange } from 'cmk-shared-typing/typescript/global_time_picker'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { defineComponent, h, shallowRef } from 'vue'
 
 import GlobalTimePicker from '@/graphing/GlobalTimePicker/GlobalTimePicker.vue'
@@ -115,10 +115,6 @@ function triggerText(container: Element): string {
 }
 
 describe('GlobalTimePicker', () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
   test('renders a chip per configured custom range', () => {
     const { chip } = renderPicker(rangeOfSeconds(99))
     expect(chip('Last 4 hours')).toBeInTheDocument()

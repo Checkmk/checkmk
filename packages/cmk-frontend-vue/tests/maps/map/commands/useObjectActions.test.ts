@@ -60,10 +60,6 @@ beforeEach(() => {
 })
 
 describe('useObjectActions — command dispatch', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
   it('routes forceCheck on a service to the service endpoint with host+service+site', async () => {
     seedState('o2', 'siteA')
     const { handlers } = runWithServices(services, () => useObjectActions(URL))
@@ -131,8 +127,6 @@ describe('useObjectActions — command dispatch', () => {
 })
 
 describe('useObjectActions — modal openers', () => {
-  beforeEach(() => vi.clearAllMocks())
-
   it('acknowledge/scheduleDowntime/addComment stash the object on their modal refs', () => {
     const onStart = vi.fn()
     const a = runWithServices(services, () => useObjectActions(URL, onStart))
@@ -147,10 +141,6 @@ describe('useObjectActions — modal openers', () => {
 })
 
 describe('useObjectActions — removeDowntime', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
   it('removes a sole downtime directly without opening the modal', async () => {
     vi.mocked(commands.listDowntimesHost).mockResolvedValueOnce([
       { id: 42, site_id: 'siteA' } as unknown as DowntimeEntry

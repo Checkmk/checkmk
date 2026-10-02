@@ -9,7 +9,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { defineComponent, h, nextTick, ref } from 'vue'
 
 import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/globalTimeState'
@@ -223,10 +223,6 @@ function fetchDataResponse(
 beforeEach(() => {
   useGlobalTimeRange().setActiveTimeRange(null, 'time_picker')
   vi.spyOn(client, 'POST').mockResolvedValue(fetchDataResponse())
-})
-
-afterEach(() => {
-  vi.restoreAllMocks()
 })
 
 function echoingPostSpy() {

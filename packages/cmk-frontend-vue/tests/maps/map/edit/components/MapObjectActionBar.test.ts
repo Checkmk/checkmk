@@ -5,7 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import MapObjectActionBar from '@/maps/map/edit/components/MapObjectActionBar.vue'
@@ -45,10 +45,6 @@ async function renderAbove(anchor: AnchorRect): Promise<CSSStyleDeclaration> {
 }
 
 describe('MapObjectActionBar placement', () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
   it('sits centred above the object, in the frame coordinates rather than the viewport ones', async () => {
     const style = await renderAbove({ left: 300, right: 340, top: 200, bottom: 240 })
 

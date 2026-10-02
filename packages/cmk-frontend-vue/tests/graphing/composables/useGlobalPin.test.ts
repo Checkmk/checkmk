@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { beforeEach, expect, test, vi } from 'vitest'
+import { expect, test, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import type { GlobalPin } from '@/graphing/composables/useGlobalPin'
@@ -32,10 +32,6 @@ async function freshGlobalPin(): Promise<{
     saveGraphPin: vi.mocked(api.saveGraphPin)
   }
 }
-
-beforeEach(() => {
-  vi.clearAllMocks()
-})
 
 test('starts with no pin', async () => {
   const { globalPin } = await freshGlobalPin()

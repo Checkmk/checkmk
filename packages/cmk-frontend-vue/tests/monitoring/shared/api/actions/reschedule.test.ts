@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import client from 'cmk-ui-library/lib/rest-api-client/client'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { RescheduleApi } from '@/monitoring/shared/api/actions/reschedule'
 
@@ -21,10 +21,6 @@ describe('RescheduleApi.rescheduleHosts', () => {
 
   beforeEach(() => {
     postSpy = vi.spyOn(client, 'POST')
-  })
-
-  afterEach(() => {
-    vi.restoreAllMocks()
   })
 
   function mockRescheduled(rescheduled: number): void {
@@ -65,10 +61,6 @@ describe('RescheduleApi.rescheduleServices', () => {
 
   beforeEach(() => {
     postSpy = vi.spyOn(client, 'POST')
-  })
-
-  afterEach(() => {
-    vi.restoreAllMocks()
   })
 
   function mockRescheduled(rescheduled: number): void {

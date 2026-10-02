@@ -5,7 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { type PropType, defineComponent, h } from 'vue'
 
 import type { MapsCapabilities } from '@/maps/api/ticket'
@@ -172,7 +172,6 @@ async function editForm(user: ReturnType<typeof userEvent.setup>) {
 }
 
 beforeEach(async () => {
-  vi.clearAllMocks()
   services = fakeMapsServices({}, aTicket({ capabilities }))
   saveMapMetadata = vi.spyOn(services.maps, 'saveMapMetadata').mockResolvedValue(savedMap)
   deleteMap = vi.spyOn(services.maps, 'deleteMap').mockResolvedValue(undefined)
@@ -187,8 +186,6 @@ beforeEach(async () => {
   )
   await services.auth.init()
 })
-
-afterEach(() => {})
 
 describe('MapSettingsForm – rendering', () => {
   it('titles the dialog with the map alias and name', async () => {

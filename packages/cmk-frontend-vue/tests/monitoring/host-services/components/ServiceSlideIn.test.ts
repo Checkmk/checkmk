@@ -112,7 +112,6 @@ describe('ServiceSlideIn', () => {
 
   afterEach(() => {
     vi.useRealTimers()
-    vi.restoreAllMocks()
   })
 
   it('stays closed while no service is selected', () => {

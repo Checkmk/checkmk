@@ -5,7 +5,7 @@
  */
 import { render, screen, waitFor } from '@testing-library/vue'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 
 import DashboardContentTimeSeriesGraph from '@/dashboard/components/DashboardContent/DashboardContentTimeSeriesGraph.vue'
@@ -75,10 +75,6 @@ beforeEach(() => {
     error: undefined,
     response: new Response('{}', { status: 200 })
   } as never)
-})
-
-afterEach(() => {
-  vi.restoreAllMocks()
 })
 
 function renderWidget(props: Record<string, unknown> = {}) {

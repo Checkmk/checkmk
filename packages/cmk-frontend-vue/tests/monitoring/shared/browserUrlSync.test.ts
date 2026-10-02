@@ -3,15 +3,11 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { browserUrlSync } from '@/monitoring/shared/browserUrlSync'
 
 describe('browserUrlSync', () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
   it('reads the current pathname/search/hash from window.location', () => {
     const original = window.location
     Object.defineProperty(window, 'location', {

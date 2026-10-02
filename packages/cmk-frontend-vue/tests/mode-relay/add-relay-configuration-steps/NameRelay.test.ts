@@ -22,7 +22,6 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup()
-  vi.restoreAllMocks()
 })
 
 describe('NameRelay', () => {

@@ -63,7 +63,7 @@ def update_site_global_setting_v1(
     config_variable = config_variable_registry[varname]
     need_site_write_permission(config_variable)
     ensure_changes_allowed(api_context)
-    context = global_settings_context_of(site_id, api_context)
+    context = global_settings_context_of(site_id, api_context, edits_site_specific_value=True)
     form_spec = config_variable.value_model(context)
 
     sites = load_configured_sites()

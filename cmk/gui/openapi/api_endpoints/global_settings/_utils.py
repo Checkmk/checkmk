@@ -142,7 +142,9 @@ def ensure_changes_allowed(api_context: ApiContext) -> None:
         )
 
 
-def global_settings_context_of(site_id: SiteId, api_context: ApiContext) -> GlobalSettingsContext:
+def global_settings_context_of(
+    site_id: SiteId, api_context: ApiContext, *, edits_site_specific_value: bool
+) -> GlobalSettingsContext:
     return make_global_settings_context(
         edition(paths.omd_root),
         site_id,
@@ -151,6 +153,7 @@ def global_settings_context_of(site_id: SiteId, api_context: ApiContext) -> Glob
         folder_choices=lambda: make_folder_tree(api_context.config).folder_choices_fulltitle(
             api_context.user
         ),
+        edits_site_specific_value=edits_site_specific_value,
     )
 
 

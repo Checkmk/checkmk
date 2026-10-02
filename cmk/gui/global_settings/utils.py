@@ -187,6 +187,7 @@ def _topics(
         sites=config.sites,
         graph_timeranges=config.graph_timeranges,
         folder_choices=lambda: make_folder_tree(config).folder_choices_fulltitle(acting_user),
+        edits_site_specific_value=not isinstance(scope, _GlobalScope),
     )
     default_values = dict(ABCConfigDomain.get_all_default_globals())
     is_activated = get_global_config().global_settings.is_activated

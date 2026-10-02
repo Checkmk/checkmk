@@ -403,6 +403,8 @@ class GlobalSettingsContext:
     configured_sites: SiteConfigurations
     configured_graph_timeranges: Sequence[GraphTimerange]
     folder_choices: Callable[[], Sequence[tuple[str, str]]]
+    edits_site_specific_value: bool | None = None
+    """None: the caller edits no value, so form specs apply no scope-dependent behavior."""
 
 
 @dataclass(frozen=True)

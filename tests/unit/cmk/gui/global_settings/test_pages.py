@@ -24,10 +24,13 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigDomainName,
     ConfigVariableGroup,
     ConfigVariableHint,
+    GlobalSettingsContext,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.sites import site_management_registry, SitesConfigFile
 from cmk.livestatus_client import UnixSocketInfo
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import Integer
 from cmk.shared_typing import global_settings as shared
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames
@@ -214,6 +217,28 @@ def test_the_global_page_links_the_site_that_overrides_a_variable(load_config: C
             )
         ],
     )
+
+
+@pytest.mark.usefixtures("factory_defaults", "distributed_setup", "with_admin_login")
+def test_the_form_knows_whether_it_edits_a_site_specific_value(load_config: Config) -> None:
+    def titled_by_scope(context: GlobalSettingsContext) -> Integer:
+        return Integer(
+            title=Title("site") if context.edits_site_specific_value else Title("global")
+        )
+
+    with registered(
+        ConfigVariableGroup(title=_l("Test group"), sort_index=1),
+        "test_var_a",
+        form_spec=titled_by_scope,
+    ):
+        global_spec = shown_variables(
+            global_settings(load_config, acting_user=LoggedInSuperUser())
+        )["test_var_a"].spec
+        site_spec = shown_variables(
+            site_specific_settings(load_config, omd_site(), acting_user=LoggedInSuperUser())
+        )["test_var_a"].spec
+
+    assert (global_spec.title, site_spec.title) == ("global", "site")
 
 
 @pytest.mark.usefixtures("factory_defaults", "with_admin_login")

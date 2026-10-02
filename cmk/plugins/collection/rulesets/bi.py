@@ -5,10 +5,8 @@
 
 from collections.abc import Callable, Mapping
 
-from cmk.gui import bi  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.form_specs.private import (  # pylint: disable=cmk-module-layer-violation
-    SingleChoiceElementExtended,
-    SingleChoiceExtended,
+    StringAutocompleter,
 )
 from cmk.gui.form_specs.private.user_selection import (  # pylint: disable=cmk-module-layer-violation
     UserSelection,
@@ -33,6 +31,11 @@ from cmk.rulesets.v1.form_specs import (
     validators,
 )
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
+from cmk.shared_typing.vue_formspec_components import (  # pylint: disable=cmk-module-layer-violation
+    Autocompleter,
+    AutocompleterData,
+    AutocompleterParams,
+)
 
 
 def _credential_vs() -> CascadingSingleChoice:
@@ -143,14 +146,19 @@ def _bi_aggregate() -> Dictionary:
                         "aggr_group_prefix": DictElement(
                             required=False,
                             parameter_form=List(
-                                element_template=SingleChoiceExtended(
-                                    elements=[
-                                        SingleChoiceElementExtended(
-                                            name=value,
-                                            title=Title(title),  # pylint: disable=localization-of-non-literal-string
-                                        )
-                                        for value, title in bi.aggregation_group_choices()
-                                    ],
+                                element_template=StringAutocompleter(
+                                    title=Title("Group"),
+                                    autocompleter=Autocompleter(
+                                        data=AutocompleterData(
+                                            ident="bi_aggregation_groups",
+                                            params=AutocompleterParams(
+                                                show_independent_of_context=True,
+                                                strict=False,
+                                                escape_regex=False,
+                                            ),
+                                        ),
+                                    ),
+                                    custom_validate=(validators.LengthInRange(min_value=1),),
                                 ),
                                 title=Title("By aggregation group prefix"),
                                 add_element_label=Label("Add new group"),

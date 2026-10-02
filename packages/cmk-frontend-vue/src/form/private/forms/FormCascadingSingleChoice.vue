@@ -164,7 +164,7 @@ const buttonGroupButtons = computed((): Array<{ label: string; value: string }> 
           :spec="activeElement.spec"
           :space="'before'"
         />
-        <CmkSpace size="small" />
+        <CmkSpace v-if="activeElement.spec.help" size="small" />
         <CmkHelpText :help="untranslated(activeElement.spec.help)" />
       </template>
     </div>

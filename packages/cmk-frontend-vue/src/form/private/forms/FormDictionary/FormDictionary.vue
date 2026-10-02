@@ -112,10 +112,7 @@ const componentId = useId()
         <td class="form-dictionary__dictleft">
           <div v-if="!!group.title" class="form-dictionary__group-title">{{ group?.title }}</div>
           <FormHelp v-if="group.help" :help="group.help" />
-          <div
-            class="form-dictionary__group-elems"
-            :class="dictionaryVariants({ group_layout: group.layout })"
-          >
+          <div :class="dictionaryVariants({ group_layout: group.layout })">
             <template
               v-for="dict_element in group.elems"
               :key="`${componentId}.${dict_element.dict_config.name}`"
@@ -216,12 +213,8 @@ tr:last-of-type > td > div > .form-dictionary__group_elem:last-of-type {
   margin-bottom: 0;
 }
 
-.form-dictionary__group-elems {
-  flex-direction: row;
-  gap: 0.5em;
-}
-
 .form-dictionary--horizontal-groups {
   display: flex;
+  gap: var(--dimension-4);
 }
 </style>

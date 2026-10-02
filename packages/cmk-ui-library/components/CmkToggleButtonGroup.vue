@@ -62,6 +62,7 @@ function setSelectedOption(value: string) {
       }"
       :aria-label="`Toggle ${option.label}`"
       :aria-pressed="isSelected(option.value)"
+      :data-label="option.icon === undefined ? option.label : undefined"
       :disabled="isDisabled(option.disabled)"
       :title="isDisabled(option.disabled) ? option.disabledTooltip : option.tooltip"
       @click.prevent="setSelectedOption(option.value)"
@@ -111,6 +112,19 @@ function setSelectedOption(value: string) {
   font-size: var(--font-size-normal);
   font-weight: var(--font-weight-default);
   letter-spacing: unset;
+}
+
+/* Reserves the bold width, so that selecting an option does not resize the group. */
+.cmk-toggle-button-group__toggle-option[data-label] {
+  flex-direction: column;
+
+  &::after {
+    content: attr(data-label);
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+    font-weight: var(--font-weight-bold);
+  }
 }
 
 .cmk-toggle-button-group__toggle-option:first-child {

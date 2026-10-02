@@ -27,6 +27,14 @@ const NO_MODULE_SCOPE_TRANSLATION = {
     'runs once the app is mounted.'
 }
 
+const NO_MODULE_REGISTRY_CALL = {
+  selector:
+    "CallExpression[callee.object.name='vi'][callee.property.name=/^(mock|doMock|unmock|doUnmock|resetModules)$/]",
+  message:
+    'Test files in the shared vitest project share one module registry. Add this file to ' +
+    'vitest.isolated.json so that it runs in its own worker.'
+}
+
 const NO_DEEP_I18N_IMPORT = {
   group: ['**/i18n/i18n', '**/i18n/i18n.ts'],
   message:
@@ -164,6 +172,21 @@ export function checkmkVueModuleScopeTranslationConfig(packageDir) {
     files: [`${packageDir}/**/*.{ts,tsx}`],
     rules: {
       'no-restricted-syntax': ['error', ...RESTRICTED_SYNTAX, NO_MODULE_SCOPE_TRANSLATION]
+    }
+  }
+}
+
+export function checkmkVueModuleRegistryConfig(packageDir, isolatedTests) {
+  return {
+    files: [`${packageDir}/tests/**/*.ts`],
+    ignores: [...isolatedTests, 'tests/setup-tests.ts'].map((file) => `${packageDir}/${file}`),
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        ...RESTRICTED_SYNTAX,
+        NO_MODULE_SCOPE_TRANSLATION,
+        NO_MODULE_REGISTRY_CALL
+      ]
     }
   }
 }

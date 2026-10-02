@@ -1,0 +1,10 @@
+[
+  "tests/components/FormAutocompleter.test.ts",
+  "tests/components/date-time/CmkDatePicker.test.ts",
+  "tests/components/date-time/CmkDateTimePicker.test.ts",
+  "tests/components/date-time/private/calendar/CalendarGrid.test.ts",
+  "tests/components/date-time/private/calendar/DateCalendar.test.ts",
+  "tests/components/date-time/private/calendar/util.test.ts",
+  "tests/components/date-time/useResolvedDateTimeSettings.test.ts",
+  "tests/lib/initCmkUi.test.ts"
+]

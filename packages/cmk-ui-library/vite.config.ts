@@ -10,6 +10,9 @@ import vue from '@vitejs/plugin-vue'
 import path from 'node:path'
 import { defineConfig } from 'vite'
 
+import isolatedTests from './vitest.isolated.json'
+import { testProjects } from './vitest.shared'
+
 export default defineConfig({
   plugins: [
     vue({
@@ -45,6 +48,7 @@ export default defineConfig({
     clearMocks: true,
     unstubGlobals: true,
     setupFiles: ['vitest.shared-setup.ts', 'tests/setup-tests.ts'],
+    projects: testProjects(isolatedTests),
     reporters: process.env.XML_OUTPUT_FILE // variable set by bazel
       ? [
           [

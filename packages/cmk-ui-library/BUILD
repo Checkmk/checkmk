@@ -10,6 +10,7 @@ vue_package(
         ":node_modules/@testing-library",
         ":node_modules/msw",
         ":node_modules/vue-component-type-helpers",
+        ":vitest_shared",
         ":vitest_shared_setup",
         "//packages/cmk-frontend:theme_images",
     ],
@@ -36,4 +37,10 @@ js_library(
         ":node_modules/@testing-library",
         "//:node_modules/vitest",
     ],
+)
+
+js_library(
+    name = "vitest_shared",
+    srcs = ["vitest.shared.ts"],
+    deps = ["//:node_modules/vitest"],
 )

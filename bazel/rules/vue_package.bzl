@@ -65,6 +65,7 @@ _SRC_EXCLUDES = [
     "tests/**",
     "node_modules/**",
     "vite.config.ts",
+    "vitest.shared.ts",
     "vitest.shared-setup.ts",
     "eslint.config.mjs",
 ]
@@ -148,6 +149,12 @@ def vue_package(name, deps = [], test_deps = []):
     )
 
     js_library(
+        name = "vitest_isolated",
+        srcs = native.glob(["vitest.isolated.json"], allow_empty = True),
+        visibility = ["//visibility:private"],
+    )
+
+    js_library(
         name = "eslintrc",
         srcs = ["eslint.config.mjs"] + native.glob(
             # Shared eslint building blocks a package may export (eslint.shared.mjs).
@@ -157,7 +164,10 @@ def vue_package(name, deps = [], test_deps = []):
         ),
         tags = ["no-lint"],
         visibility = ["//visibility:public"],
-        deps = [":pkg"],
+        deps = [
+            ":pkg",
+            ":vitest_isolated",
+        ],
     )
 
     native.filegroup(
@@ -181,15 +191,19 @@ def vue_package(name, deps = [], test_deps = []):
         include_types = True,
     )
 
+    js_library(
+        name = "test_ts",
+        srcs = native.glob(["tests/**/*.ts"], allow_empty = True),
+        visibility = ["//visibility:private"],
+    )
+
     _test_data = [
         ":pkg",
         ":_stylelint_test_srcs",
-    ] + native.glob(
-        ["tests/**/*.ts"],
-        allow_empty = True,
-    ) + [
+        ":test_ts",
         "tsconfig.test.json",
         "vite.config.ts",
+        ":vitest_isolated",
     ] + _ROOT_TOOLING + test_deps
 
     vue_tsc_bin.vue_tsc_test(

@@ -7,9 +7,11 @@ import { globalIgnores } from 'eslint/config'
 
 import {
   checkmkVueConfig,
+  checkmkVueModuleRegistryConfig,
   checkmkVueModuleScopeTranslationConfig,
   checkmkVueTestConfig
 } from './eslint.shared.mjs'
+import isolatedTests from './vitest.isolated.json' with { type: 'json' }
 
 export default [
   checkmkVueConfig({
@@ -18,6 +20,8 @@ export default [
   }),
 
   checkmkVueModuleScopeTranslationConfig('packages/cmk-ui-library'),
+
+  checkmkVueModuleRegistryConfig('packages/cmk-ui-library', isolatedTests),
 
   globalIgnores(['packages/cmk-ui-library/components/graphics/RnbwCursor.vue']),
 

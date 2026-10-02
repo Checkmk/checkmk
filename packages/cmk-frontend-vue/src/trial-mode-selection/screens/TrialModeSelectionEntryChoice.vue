@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { type ComponentPublicInstance, onMounted, ref } from 'vue'
+
 import usei18n from '@/lib/i18n'
 
 import CmkLinkCard from '@/components/CmkLinkCard'
@@ -23,6 +25,17 @@ const emit = defineEmits<{
 }>()
 
 const { _t } = usei18n()
+
+const trialCard = ref<ComponentPublicInstance | null>(null)
+
+// The first option takes the focus. This runs after
+// the heading's own mounted hook, which focuses the title.
+onMounted(() => {
+  const element = trialCard.value?.$el
+  if (element instanceof HTMLElement) {
+    element.focus()
+  }
+})
 </script>
 
 <template>
@@ -38,6 +51,7 @@ const { _t } = usei18n()
            rather than a `url`, which would hand the page to the browser. Neither of
            them records anything: no save can be in flight on this screen. -->
       <CmkLinkCard
+        ref="trialCard"
         icon-name="start"
         :title="_t('Start a trial')"
         :subtitle="

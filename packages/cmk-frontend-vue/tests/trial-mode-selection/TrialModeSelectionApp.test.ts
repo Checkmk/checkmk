@@ -135,7 +135,7 @@ describe('TrialModeSelectionApp', () => {
 
     await user.click(screen.getByRole('button', { name: 'Back' }))
     await waitFor(() => {
-      expect(screen.getByText('Welcome to your new Checkmk site')).toHaveFocus()
+      expect(screen.getByRole('link', { name: /Start a trial/ })).toHaveFocus()
     })
   })
 

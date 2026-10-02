@@ -34,6 +34,7 @@ class TaskResponseSerializer:
                     host=task.spec.host,
                     command=task.spec.command,
                     timeout=task.spec.timeout,
+                    site_stores=task.spec.site_stores,
                 )
             case _:  # pragma: no cover
                 assert_never(task)

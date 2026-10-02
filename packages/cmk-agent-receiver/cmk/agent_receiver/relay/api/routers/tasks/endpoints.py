@@ -99,6 +99,7 @@ async def create_task_endpoint(
                 host=request_body.spec.host,
                 command=request_body.spec.command,
                 timeout=request_body.spec.timeout,
+                site_stores=request_body.spec.site_stores,
             )
         case _:  # pragma: no cover
             assert_never(request_body.spec)

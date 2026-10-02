@@ -8,7 +8,12 @@ from http import HTTPStatus
 
 from fastapi.testclient import TestClient
 
-from cmk.relay_protocols.tasks import AdHocActiveCheckTask, TaskStatus
+from cmk.relay_protocols.tasks import (
+    AdHocActiveCheckTask,
+    AdHocPasswordStore,
+    AdHocSiteStores,
+    TaskStatus,
+)
 from cmk.testlib.agent_receiver.clients import RelayClient, SiteClient
 from cmk.testlib.agent_receiver.site_mock import SiteMock
 
@@ -73,3 +78,34 @@ def test_report_the_result_of_an_ad_hoc_active_check(
     updated = relay.get_task_list().tasks[0]
     assert updated.status is TaskStatus.FINISHED
     assert updated.result_payload == frame
+
+
+def test_site_stores_of_an_ad_hoc_active_check_reach_the_relay_unchanged(
+    test_client: TestClient,
+    site: SiteMock,
+) -> None:
+    """The receiver passes a check's site stores through as they are.
+
+    A check run from the service discovery page carries Setup's pending passwords
+    and CA bundle inline; they are in no relay configuration. The relay can only
+    use them if the receiver stores and re-emits them byte for byte.
+    """
+    relay_id = str(uuid.uuid4())
+    site.set_scenario(relay_id)
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    relay.apply_config(site.push_config([relay_id]))
+    task = AdHocActiveCheckTask(
+        host="myhost",
+        command="check_httpv2 --auth-pw-pwstore uuid1:tmp/check_mk/passwords_adhoc_1",
+        site_stores=AdHocSiteStores(
+            ca_bundle="-----BEGIN CERTIFICATE-----\nMIIB...\n-----END CERTIFICATE-----\n",
+            passwords=AdHocPasswordStore(
+                path="tmp/check_mk/passwords_adhoc_1", values={"uuid1": "s3cret"}
+            ),
+        ),
+    )
+
+    SiteClient(test_client, site.site_name).create_task(relay_id, task)
+
+    [stored] = relay.get_task_list().tasks
+    assert stored.spec == task

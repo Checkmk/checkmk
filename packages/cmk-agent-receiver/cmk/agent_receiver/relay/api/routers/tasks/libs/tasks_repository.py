@@ -19,6 +19,7 @@ from cmk.agent_receiver.relay.lib.shared_types import (
     TaskNotFoundError,
     TooManyTasksError,
 )
+from cmk.relay_protocols import tasks as tasks_protocol
 
 
 class TaskStatus(StrEnum):
@@ -49,6 +50,9 @@ class ActiveCheckSpec:
     host: str
     command: str
     timeout: float
+    # The site's pending passwords and CAs for a check run from the service discovery
+    # page; None for a forced check, which uses the relay's applied configuration.
+    site_stores: tasks_protocol.AdHocSiteStores | None = None
 
 
 Spec = FetchSpec | RelayConfigSpec | ActiveCheckSpec

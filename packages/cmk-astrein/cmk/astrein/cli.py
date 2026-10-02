@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
 
+from cmk.astrein.checker_http_status import HTTPStatusLiteralChecker, load_legacy_python_files
 from cmk.astrein.checker_module_layers import ModuleLayersChecker
 from cmk.astrein.checkers import all_checkers
 from cmk.astrein.framework import ASTVisitorChecker, CheckerError, CheckerFactory, run_checkers
@@ -90,11 +91,16 @@ def _bind_configs(
     workspace_dir: Path,
 ) -> list[CheckerFactory]:
     """Pre-load configs and bind them to checker factories that need them."""
-    config = load_config(workspace_dir / CONFIG_FILENAME)
-    return [
-        partial(ModuleLayersChecker, config=config) if cls is ModuleLayersChecker else cls
-        for cls in checker_classes
-    ]
+    bound: dict[type[ASTVisitorChecker], CheckerFactory] = {
+        ModuleLayersChecker: partial(
+            ModuleLayersChecker, config=load_config(workspace_dir / CONFIG_FILENAME)
+        ),
+        HTTPStatusLiteralChecker: partial(
+            HTTPStatusLiteralChecker,
+            legacy_python_files=load_legacy_python_files(workspace_dir),
+        ),
+    }
+    return [bound.get(cls, cls) for cls in checker_classes]
 
 
 def _select_checkers(

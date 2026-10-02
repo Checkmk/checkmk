@@ -78,6 +78,7 @@ def _get_rule_description(rule_id: str) -> str:
     descriptions = {
         "localization-checker": "Validates translation function calls use literal strings",
         "cmk-module-layer-violation": "Enforces architectural boundaries between components",
+        "http-status-literal": "Requires HTTP status codes to be http.HTTPStatus members",
         "logging-formatter": "Requires log handlers to format via cmk.ccc.log.CMKFormatter",
         "unused-suppression": "Suppression comment does not suppress anything",
         "file-read-error": "File could not be read",

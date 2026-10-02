@@ -75,7 +75,8 @@ def test_cloning_a_builtin_view_opens_the_view_editor_with_its_column_editor(
 
     with mock_livestatus():
         response = logged_in_admin_wsgi_app.get(
-            "/NO_SITE/check_mk/edit_view.py?mode=clone&load_name=allhosts&owner=", status=200
+            "/NO_SITE/check_mk/edit_view.py?mode=clone&load_name=allhosts&owner=",
+            status=200,  # astrein: disable=http-status-literal
         )
 
     assert "Add column" in response.text

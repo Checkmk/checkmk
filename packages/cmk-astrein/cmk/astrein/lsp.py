@@ -15,6 +15,11 @@ from pathlib import Path
 from lsprotocol import types as lsp
 from pygls.lsp.server import LanguageServer
 
+from cmk.astrein.checker_http_status import (
+    HTTPStatusLiteralChecker,
+    LEGACY_PYTHON_SOURCES,
+    load_legacy_python_files,
+)
 from cmk.astrein.checker_module_layers import ModuleLayersChecker
 from cmk.astrein.checkers import all_checkers
 from cmk.astrein.framework import ASTVisitorChecker, CheckerError, CheckerFactory, run_checkers
@@ -160,22 +165,32 @@ def _bind_configs(
 ) -> list[CheckerFactory]:
     """Pre-load configs and bind them to checker factories that need them.
 
-    In the LSP context the workspace may not contain a module_layers.toml,
-    so we skip the module-layers checker when the file is missing.
+    In the LSP context the workspace may not contain a checker's config file,
+    so we skip that checker when the file is missing.
     """
-    config_path = repo_root / CONFIG_FILENAME
-    if not config_path.exists():
+    bound: dict[type[ASTVisitorChecker], CheckerFactory | None] = {
+        ModuleLayersChecker: None,
+        HTTPStatusLiteralChecker: None,
+    }
+    if (repo_root / CONFIG_FILENAME).exists():
+        bound[ModuleLayersChecker] = partial(
+            ModuleLayersChecker, config=load_config(repo_root / CONFIG_FILENAME)
+        )
+    else:
         logger.warning(
             "module_layers.toml not found at %(repo_root)s, skipping module-layers checker",
             {"repo_root": repo_root},
         )
-        return [cls for cls in checker_classes if cls is not ModuleLayersChecker]
-
-    config = load_config(config_path)
-    return [
-        partial(ModuleLayersChecker, config=config) if cls is ModuleLayersChecker else cls
-        for cls in checker_classes
-    ]
+    if (repo_root / LEGACY_PYTHON_SOURCES).exists():
+        bound[HTTPStatusLiteralChecker] = partial(
+            HTTPStatusLiteralChecker, legacy_python_files=load_legacy_python_files(repo_root)
+        )
+    else:
+        logger.warning(
+            "%(sources)s not found at %(repo_root)s, skipping http-status-literal checker",
+            {"sources": LEGACY_PYTHON_SOURCES, "repo_root": repo_root},
+        )
+    return [factory for cls in checker_classes if (factory := bound.get(cls, cls)) is not None]
 
 
 def get_diagnostics(

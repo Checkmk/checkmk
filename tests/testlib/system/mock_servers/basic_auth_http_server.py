@@ -41,11 +41,11 @@ def _make_handler(expected: str, log: Path) -> type[BaseHTTPRequestHandler]:
             with log.open("a") as stream:
                 stream.write(f"{self.client_address[0]} auth={outcome} {self.requestline}\n")
             if outcome == "ok":
-                self.send_response(200)
+                self.send_response(200)  # astrein: disable=http-status-literal
                 self.end_headers()
                 self.wfile.write(b"authenticated")
                 return
-            self.send_response(401)
+            self.send_response(401)  # astrein: disable=http-status-literal
             self.send_header("WWW-Authenticate", 'Basic realm="relay-e2e"')
             self.end_headers()
 

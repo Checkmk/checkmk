@@ -140,18 +140,18 @@ def test_a_saved_source_queries_as_the_token_issuer(monkeypatch: pytest.MonkeyPa
 
 @pytest.mark.usefixtures("load_config", "request_context")
 def test_a_token_may_not_send_a_configuration() -> None:
-    assert _problem(_explicit(), token=True).code == 403
+    assert _problem(_explicit(), token=True).code == 403  # astrein: disable=http-status-literal
 
 
 def test_a_saved_source_without_a_token_is_401() -> None:
-    assert _problem(_SAVED, token=False).code == 401
+    assert _problem(_SAVED, token=False).code == 401  # astrein: disable=http-status-literal
 
 
 @pytest.mark.usefixtures("load_config", "request_context")
 def test_a_widget_type_the_endpoint_rejects_is_400(monkeypatch: pytest.MonkeyPatch) -> None:
     impersonating(monkeypatch, {WIDGET_ID: dashboard_widget("servicestats")})
 
-    assert _problem(_SAVED, token=True).code == 400
+    assert _problem(_SAVED, token=True).code == 400  # astrein: disable=http-status-literal
 
 
 def test_a_start_not_before_its_end_is_rejected() -> None:
@@ -176,6 +176,7 @@ def test_a_user_error_is_404() -> None:
 
 @pytest.mark.usefixtures("load_config", "request_context")
 def test_a_livestatus_error_is_503() -> None:
+    # astrein: disable=http-status-literal
     assert _raised_from_the_handler(MKLivestatusException("Site down")).code == 503
 
 
@@ -208,7 +209,7 @@ def test_a_dashboard_that_no_longer_resolves_retires_its_token(
     impersonating_but_unpermitted(monkeypatch)
     disabled = recording_token_retirement(monkeypatch)
 
-    assert _problem(_SAVED, token=True).code == 404
+    assert _problem(_SAVED, token=True).code == 404  # astrein: disable=http-status-literal
     assert disabled == [TOKEN_ID]
 
 

@@ -5,6 +5,7 @@
 
 
 from cmk.astrein.checker_argparse_nargs import ArgparseNargsChecker
+from cmk.astrein.checker_http_status import HTTPStatusLiteralChecker
 from cmk.astrein.checker_key_size import KeySizeUnitTestChecker
 from cmk.astrein.checker_localization import (
     LocalizationChecker,
@@ -31,6 +32,7 @@ def all_checkers() -> dict[str, type[ASTVisitorChecker]]:
         "argparse-nargs": ArgparseNargsChecker,
         "conftest-import": ConftestImportChecker,
         "html-debug": HTMLDebugChecker,
+        "http-status-literal": HTTPStatusLiteralChecker,
         "key-size-unit-test": KeySizeUnitTestChecker,
         "localization": LocalizationChecker,
         "localization-named-placeholder": LocalizationNamedPlaceholderChecker,

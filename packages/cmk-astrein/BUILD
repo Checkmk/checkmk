@@ -13,6 +13,7 @@ py_library(
     srcs = [
         "cmk/astrein/__init__.py",
         "cmk/astrein/checker_argparse_nargs.py",
+        "cmk/astrein/checker_http_status.py",
         "cmk/astrein/checker_key_size.py",
         "cmk/astrein/checker_localization.py",
         "cmk/astrein/checker_logging_formatter.py",
@@ -31,6 +32,7 @@ py_library(
     data = [
         ":py_typed",
         "//:module_layers.toml",
+        "//tests/agent-plugin-unit:sources-list.txt",
     ],
     imports = ["."],
     deps = [

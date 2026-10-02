@@ -281,7 +281,7 @@ def test_discover_template_graphs_mixed_units_is_422(
     resp = clients.Graph.discover_template_graphs(
         hostname="my-host", service_description="CPU load", expect_ok=False
     )
-    assert resp.status_code == 422
+    assert resp.status_code == 422  # astrein: disable=http-status-literal
     assert resp.json["title"] == "Graph cannot be built"
     assert resp.json["detail"] == "Cannot create graph with metrics of different units"
 
@@ -296,7 +296,7 @@ def test_discover_template_graphs_crash_is_500(
     resp = clients.Graph.discover_template_graphs(
         hostname="my-host", service_description="CPU load", expect_ok=False
     )
-    assert resp.status_code == 500
+    assert resp.status_code == 500  # astrein: disable=http-status-literal
     assert resp.json["title"] == "Graph discovery failed"
 
 

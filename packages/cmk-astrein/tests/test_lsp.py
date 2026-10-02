@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 from lsprotocol import types as lsp
 
+from cmk.astrein.checker_http_status import LEGACY_PYTHON_SOURCES
 from cmk.astrein.framework import CheckerError
 from cmk.astrein.lsp import (
     _checker_error_to_diagnostic,
@@ -154,6 +155,7 @@ def test_get_diagnostics_with_source_content(tmp_path: Path) -> None:
 
 def test_get_diagnostics_reports_unknown_suppression(tmp_path: Path) -> None:
     (tmp_path / "module_layers.toml").write_text("")
+    _write_legacy_python_sources(tmp_path)
     test_file = tmp_path / "test.py"
     test_file.write_text("import sys  # astrein: disable=does-not-exist\n")
 
@@ -165,6 +167,7 @@ def test_get_diagnostics_reports_unknown_suppression(tmp_path: Path) -> None:
 
 def test_get_diagnostics_reports_errors_in_unsaved_source(tmp_path: Path) -> None:
     (tmp_path / "module_layers.toml").write_text("")
+    _write_legacy_python_sources(tmp_path)
 
     result = get_diagnostics(
         f"file://{tmp_path}/test.py",
@@ -176,13 +179,22 @@ def test_get_diagnostics_reports_errors_in_unsaved_source(tmp_path: Path) -> Non
     assert [d.code for d in result] == ["unused-suppression"]
 
 
-def test_get_diagnostics_keeps_module_layer_suppression_without_config(tmp_path: Path) -> None:
+@pytest.mark.parametrize("checker_id", ["cmk-module-layer-violation", "http-status-literal"])
+def test_get_diagnostics_keeps_suppression_of_checker_without_config(
+    tmp_path: Path, checker_id: str
+) -> None:
     test_file = tmp_path / "test.py"
-    test_file.write_text("import sys  # astrein: disable=cmk-module-layer-violation\n")
+    test_file.write_text(f"status = 404  # astrein: disable={checker_id}\n")
 
     result = get_diagnostics(f"file://{test_file}", repo_root=tmp_path)
 
     assert result == []
+
+
+def _write_legacy_python_sources(repo_root: Path) -> None:
+    sources = repo_root / LEGACY_PYTHON_SOURCES
+    sources.parent.mkdir(parents=True)
+    sources.write_text("")
 
 
 @pytest.mark.parametrize(

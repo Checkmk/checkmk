@@ -53,6 +53,7 @@ def test_the_sites_list_counts_the_registered_variables_pushed_to_a_remote_site(
 ) -> None:
     ConfigDomainGUI().save_site_globals({"start_url": "dashboard.py", "wato_enabled": True})
 
+    # astrein: disable=http-status-literal
     response = logged_in_admin_wsgi_app.get("/NO_SITE/check_mk/wato.py?mode=sites", status=200)
 
     assert "1 specific settings" in response.text

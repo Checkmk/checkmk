@@ -1,6 +1,11 @@
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 
+exports_files(
+    ["sources-list.txt"],
+    visibility = ["//packages/cmk-astrein:__pkg__"],
+)
+
 py_cmk_test(
     name = "agent-plugin-unit",
     # https://bazel.build/reference/be/common-definitions#test.size

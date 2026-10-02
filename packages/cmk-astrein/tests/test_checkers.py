@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.astrein.checker_http_status import HTTPStatusLiteralChecker
 from cmk.astrein.checker_localization import (
     LocalizationChecker,
     LocalizationNamedPlaceholderChecker,
@@ -22,3 +23,4 @@ def test_all_checkers_returns_expected_checkers() -> None:
     assert checkers["localization-named-placeholder"] == LocalizationNamedPlaceholderChecker
     assert checkers["module-layers"] == ModuleLayersChecker
     assert checkers["conftest-import"] == ConftestImportChecker
+    assert checkers["http-status-literal"] == HTTPStatusLiteralChecker

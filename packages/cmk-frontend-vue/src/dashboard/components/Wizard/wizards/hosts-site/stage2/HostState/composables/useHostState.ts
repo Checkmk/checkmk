@@ -63,7 +63,8 @@ export const useHostState = async (
 
   const _generateContent = (): HostStateContent => {
     const content: HostStateContent = {
-      type: CONTENT_TYPE
+      type: CONTENT_TYPE,
+      contextual_link: currentContent?.contextual_link ?? { type: 'default' }
     }
 
     if (showSummaryForNonUpStates.value) {

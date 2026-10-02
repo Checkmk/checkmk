@@ -13,6 +13,7 @@ from cmk.gui.dashboard.api import (
     SavedWidgetContent,
     WidgetTimeRange,
 )
+from cmk.gui.dashboard.api.model.contextual_link import ContextualLinkDefault
 from cmk.gui.dashboard.api.model.widget_content.stats import HostStatsContent
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.logged_in import user
@@ -42,7 +43,11 @@ def _explicit(
     context: dict[str, dict[str, str]] | None = None,
 ) -> ExplicitWidgetContent[HostStatsContent]:
     return ExplicitWidgetContent(
-        type="explicit", content=HostStatsContent(type="host_stats"), context=context or {}
+        type="explicit",
+        content=HostStatsContent(
+            type="host_stats", contextual_link=ContextualLinkDefault(type="default")
+        ),
+        context=context or {},
     )
 
 

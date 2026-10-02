@@ -23,7 +23,7 @@ from cmk.gui.dashboard.api.model.contextual_link import (
     VisualLocation,
 )
 from cmk.gui.dashboard.api.model.widget_content._base import BaseWidgetContent
-from cmk.gui.dashboard.api.model.widget_content.stats import HostStatsContent
+from cmk.gui.dashboard.api.model.widget_content.stats import EventStatsContent, HostStatsContent
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
 from tests.unit.cmk.gui.helpers.dashboard_widget_resolution_test_helper import (
@@ -41,7 +41,7 @@ _BUILT_IN = EffectiveLink(
     include_time_range=False,
     show_filter_form=True,
 )
-_TYPES = frozenset({"hoststats"})
+_TYPES = frozenset({"hoststats", "eventstats"})
 
 _SEARCHHOST = VisualLocation(type="views", name="searchhost")
 _INHERITED = ContextualLinkInherited(
@@ -68,8 +68,8 @@ def _links(
 
 
 @pytest.mark.usefixtures("load_config", "request_context")
-def test_an_omitted_link_resolves_the_built_in_link() -> None:
-    assert _links(HostStatsContent(type="host_stats")) == [_BUILT_IN]
+def test_a_content_without_a_link_field_resolves_the_built_in_link() -> None:
+    assert _links(EventStatsContent(type="event_stats")) == [_BUILT_IN]
 
 
 @pytest.mark.usefixtures("load_config", "request_context")

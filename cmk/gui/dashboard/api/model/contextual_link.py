@@ -15,7 +15,7 @@ from cmk.gui.dashboard.type_defs import (
     ContextualLinkNoneConfig,
     ContextualLinkTargetType,
 )
-from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
+from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.type_defs import VisualName
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals.type import visual_type_registry
@@ -60,10 +60,8 @@ type ContextualLinkSpec = Annotated[
 ]
 
 
-def contextual_link_to_internal(
-    link: ContextualLinkSpec | ApiOmitted,
-) -> ContextualLinkConfig | None:
-    """The stored form of a link configuration; None for an omitted or `default` link."""
+def contextual_link_to_internal(link: ContextualLinkSpec) -> ContextualLinkConfig | None:
+    """The stored form of a link configuration; None for a `default` link."""
     match link:
         case ContextualLinkNone():
             return ContextualLinkNoneConfig(type="none")
@@ -75,7 +73,7 @@ def contextual_link_to_internal(
                 include_time_range=link.include_time_range,
                 show_filter_form=link.show_filter_form,
             )
-        case ContextualLinkDefault() | ApiOmitted():
+        case ContextualLinkDefault():
             return None
         case unreachable:
             assert_never(unreachable)
@@ -105,7 +103,7 @@ _TARGET_TITLES: Mapping[ContextualLinkTargetType, str] = {
 
 
 def iter_contextual_link_target_errors(
-    link: ContextualLinkSpec | ApiOmitted,
+    link: ContextualLinkSpec,
     location: tuple[str | int, ...],
     user_permissions: UserPermissions,
 ) -> Iterator[ErrorDetails]:
@@ -113,7 +111,7 @@ def iter_contextual_link_target_errors(
     match link:
         case ContextualLinkInherited():
             targets = [(location + ("inherited", "location"), link.location)]
-        case ContextualLinkNone() | ContextualLinkDefault() | ApiOmitted():
+        case ContextualLinkNone() | ContextualLinkDefault():
             targets = []
         case unreachable:
             assert_never(unreachable)

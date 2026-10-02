@@ -13,7 +13,6 @@ import cmk.web.utils.permission_verification as permissions
 from cmk.gui import visuals
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.openapi.framework import ApiContext
-from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.type_defs import SingleInfos, VisualContext
 from cmk.gui.utils.roles import UserPermissions
@@ -196,7 +195,7 @@ def _effective_links(
                     show_filter_form=inherited.show_filter_form,
                 )
             ]
-        case ContextualLinkDefault() | ApiOmitted():
+        case ContextualLinkDefault():
             return [] if built_in_link is None else [built_in_link]
         case unreachable:
             assert_never(unreachable)

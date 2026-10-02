@@ -85,6 +85,8 @@ _SERVICE_STATS_QUERY = "\n".join(
     ]
 )
 
+_DEFAULT_LINK = {"type": "default"}
+
 _ALL_HOSTS = {
     "title": "All hosts",
     "location": {"type": "views", "name": "searchhost"},
@@ -166,7 +168,11 @@ def _saved(clients: ClientRegistry, live: MockLiveStatusConnection, saved: Saved
 def test_a_host_statistics_widget_answers_one_value(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    response = _compute_hosts(clients, mock_livestatus, _explicit({"type": "host_stats"}))
+    response = _compute_hosts(
+        clients,
+        mock_livestatus,
+        _explicit({"type": "host_stats", "contextual_link": _DEFAULT_LINK}),
+    )
 
     assert response.json == {
         "domainType": "widget-compute",
@@ -234,7 +240,11 @@ def test_both_arms_answer_the_same_counts(
     mock_livestatus: MockLiveStatusConnection,
     saved_stats_widget: SavedWidget,
 ) -> None:
-    explicit = _compute_hosts(clients, mock_livestatus, _explicit({"type": "host_stats"}))
+    explicit = _compute_hosts(
+        clients,
+        mock_livestatus,
+        _explicit({"type": "host_stats", "contextual_link": _DEFAULT_LINK}),
+    )
 
     saved = _saved(clients, mock_livestatus, saved_stats_widget)
 
@@ -257,7 +267,12 @@ def test_the_saved_arm_answers_empty_links(
 def test_an_empty_result_answers_zero_counts(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    response = _compute_hosts(clients, mock_livestatus, _explicit({"type": "host_stats"}), rows=[])
+    response = _compute_hosts(
+        clients,
+        mock_livestatus,
+        _explicit({"type": "host_stats", "contextual_link": _DEFAULT_LINK}),
+        rows=[],
+    )
 
     assert _counts(response) == [0, 0, 0, 0]
     assert response.json["value"]["total"]["count"] == 0
@@ -266,7 +281,9 @@ def test_an_empty_result_answers_zero_counts(
 def test_an_explicit_source_computes_the_sent_content(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    body = _explicit({"type": "service_stats"}, {"host": {"host": "web01"}})
+    body = _explicit(
+        {"type": "service_stats", "contextual_link": _DEFAULT_LINK}, {"host": {"host": "web01"}}
+    )
 
     response = _compute_services(
         clients, mock_livestatus, body, query=_SERVICE_STATS_QUERY + "\nFilter: host_name = web01"

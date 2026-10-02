@@ -10,7 +10,7 @@ from pydantic_core import ErrorDetails
 
 from cmk.gui.dashboard.type_defs import StatsDashletConfig
 from cmk.gui.openapi.framework import ApiContext
-from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
+from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.type_defs import DashboardEmbeddedViewSpec
 
 from ..contextual_link import (
@@ -51,9 +51,7 @@ class HostStatsContent(_LinkedStatsContent):
     type: Literal["host_stats"] = api_field(
         description="Displays statistics about host states as a hexagon and a table."
     )
-    contextual_link: ContextualLinkSpec | ApiOmitted = api_field(
-        default_factory=ApiOmitted, description="Where a click on a part leads."
-    )
+    contextual_link: ContextualLinkSpec = api_field(description="Where a click on a part leads.")
 
     @classmethod
     @override
@@ -68,7 +66,7 @@ class HostStatsContent(_LinkedStatsContent):
         )
 
     @override
-    def configured_contextual_link(self) -> ContextualLinkSpec | ApiOmitted:
+    def configured_contextual_link(self) -> ContextualLinkSpec:
         return self.contextual_link
 
 
@@ -77,9 +75,7 @@ class ServiceStatsContent(_LinkedStatsContent):
     type: Literal["service_stats"] = api_field(
         description="Displays statistics about service states as a hexagon and a table."
     )
-    contextual_link: ContextualLinkSpec | ApiOmitted = api_field(
-        default_factory=ApiOmitted, description="Where a click on a part leads."
-    )
+    contextual_link: ContextualLinkSpec = api_field(description="Where a click on a part leads.")
 
     @classmethod
     @override
@@ -94,7 +90,7 @@ class ServiceStatsContent(_LinkedStatsContent):
         )
 
     @override
-    def configured_contextual_link(self) -> ContextualLinkSpec | ApiOmitted:
+    def configured_contextual_link(self) -> ContextualLinkSpec:
         return self.contextual_link
 
 

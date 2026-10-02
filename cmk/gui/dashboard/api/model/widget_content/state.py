@@ -64,12 +64,10 @@ class _BaseStateContent(BaseWidgetContent, ABC):
         description="Show a summary of the state.",
         default_factory=ApiOmitted,
     )
-    contextual_link: ContextualLinkSpec | ApiOmitted = api_field(
-        default_factory=ApiOmitted, description="Where a click on the state leads."
-    )
+    contextual_link: ContextualLinkSpec = api_field(description="Where a click on the state leads.")
 
     @override
-    def configured_contextual_link(self) -> ContextualLinkSpec | ApiOmitted:
+    def configured_contextual_link(self) -> ContextualLinkSpec:
         return self.contextual_link
 
     @override

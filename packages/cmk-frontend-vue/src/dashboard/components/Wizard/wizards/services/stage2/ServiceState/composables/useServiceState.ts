@@ -64,7 +64,8 @@ export const useServiceState = async (
 
   const _generateContent = (): ServiceStateContent => {
     const content: ServiceStateContent = {
-      type: CONTENT_TYPE
+      type: CONTENT_TYPE,
+      contextual_link: currentContent?.contextual_link ?? { type: 'default' }
     }
 
     if (showSummaryForNotOKStates.value) {

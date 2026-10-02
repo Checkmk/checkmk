@@ -28,7 +28,10 @@ const HOST_STATS: Stats = {
   total: { count: 15, link_properties: { links: [] } }
 }
 
-const PROPS = makeContentProps<StatsContent>({ type: 'host_stats' })
+const PROPS = makeContentProps<StatsContent>({
+  type: 'host_stats',
+  contextual_link: { type: 'default' }
+})
 
 let answer: () => Response = () =>
   HttpResponse.json({ domainType: 'widget-compute', value: HOST_STATS })

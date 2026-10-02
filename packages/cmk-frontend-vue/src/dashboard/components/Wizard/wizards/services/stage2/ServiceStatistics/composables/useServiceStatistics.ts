@@ -43,6 +43,11 @@ export const useServiceStatistics = async (
     titleMacros
   } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings, CONTENT_TYPE)
 
+  const currentContent =
+    currentSpec?.content?.type === CONTENT_TYPE
+      ? (currentSpec.content as ServiceStatisticsContent)
+      : null
+
   const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
@@ -51,7 +56,8 @@ export const useServiceStatistics = async (
 
   const _generateContent = (): ServiceStatisticsContent => {
     return {
-      type: CONTENT_TYPE
+      type: CONTENT_TYPE,
+      contextual_link: currentContent?.contextual_link ?? { type: 'default' }
     }
   }
 

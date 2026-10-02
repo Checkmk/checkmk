@@ -400,15 +400,18 @@ class TestPerformanceGraphContent:
         )
 
 
-@pytest.mark.parametrize("widget_type", ["host_stats", "service_stats", "event_stats"])
+@pytest.mark.parametrize(
+    "content",
+    [
+        {"type": "host_stats", "contextual_link": {"type": "default"}},
+        {"type": "service_stats", "contextual_link": {"type": "default"}},
+        {"type": "event_stats"},
+    ],
+    ids=["host_stats", "service_stats", "event_stats"],
+)
 class TestStatsContent:
-    def test_create(self, clients: ClientRegistry, widget_type: str) -> None:
-        check_widget_create(
-            clients,
-            {
-                "type": widget_type,
-            },
-        )
+    def test_create(self, clients: ClientRegistry, content: dict[str, object]) -> None:
+        check_widget_create(clients, content)
 
 
 class TestUserMessagesContent:
@@ -954,6 +957,20 @@ def test_a_link_to_a_forbidden_target_is_rejected_on_write(clients: ClientRegist
         ]["msg"]
         == "View 'no_such_view' does not exist or you don't have permission to see it."
     )
+
+
+def test_a_widget_without_its_link_is_rejected_on_write(clients: ClientRegistry) -> None:
+    response = clients.DashboardClient.create_relative_grid_dashboard(
+        create_dashboard_payload(
+            "test_dashboard", {"test_widget": create_widget({"type": "host_stats"})}
+        ),
+        expect_ok=False,
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST, (
+        f"Expected 400, got {response.status_code} {response.body!r}"
+    )
+    assert "body.widgets.test_widget.content.host_stats.contextual_link" in response.json["fields"]
 
 
 def test_an_explicit_default_reads_back_as_default(clients: ClientRegistry) -> None:

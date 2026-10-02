@@ -29,7 +29,8 @@ const HOST_STATE: ObjectState = {
 
 const CONTENT: StateContent = {
   type: 'host_state',
-  status_display: { type: 'background', for_states: 'all' }
+  status_display: { type: 'background', for_states: 'all' },
+  contextual_link: { type: 'default' }
 }
 
 let answer: () => Response = () =>

@@ -283,6 +283,7 @@ class TestStateContent:
                 "type": widget_type,
                 "status_display": {"type": "background", "for_states": "not_ok"},
                 "show_summary": "not_ok",
+                "contextual_link": {"type": "default"},
             },
         )
 

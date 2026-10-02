@@ -18,7 +18,7 @@ from cmk.gui.type_defs import DashboardEmbeddedViewSpec, VisualLinkSpec, VisualN
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals.type import visual_type_registry
 
-from ..contextual_link import ContextualLinkSpec
+from ..contextual_link import ContextualLinkDefault, ContextualLinkSpec
 
 
 @api_model
@@ -45,9 +45,9 @@ class BaseWidgetContent(ABC):
 
         This will then be merged with the general widget config."""
 
-    def configured_contextual_link(self) -> ContextualLinkSpec | ApiOmitted:
-        """The link the widget configures; omitted for a widget that configures none."""
-        return ApiOmitted()
+    def configured_contextual_link(self) -> ContextualLinkSpec:
+        """The link the widget configures; the default link for a widget without a link field."""
+        return ContextualLinkDefault(type="default")
 
     def iter_validation_errors(
         self,

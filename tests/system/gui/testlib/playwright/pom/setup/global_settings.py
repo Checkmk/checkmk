@@ -52,16 +52,22 @@ class GlobalSettings(CmkPage):
         """Search for a setting using the searchbar."""
         logger.info("Search for setting: %s", search_text)
         self._searchbar.fill(search_text)
-        self.main_area.locator().get_by_role(role="button", name="Submit").click()
+        with self.page.expect_navigation(wait_until="load"):
+            self.main_area.locator().get_by_role(role="button", name="Submit").click()
 
     def _toggle_button(self, var_name: str) -> Locator:
         self.search_settings(var_name)
         return self.main_area.locator().get_by_role("link", name="Click to toggle this setting")
 
     def toggle(self, var_name: str) -> None:
-        """Toggle a setting on or off."""
+        """Toggle a setting on or off.
+
+        Waits for the page to reload, whether the toggle was saved or rejected with an error.
+        """
         logger.info("Toggle setting: %s", var_name)
-        self._toggle_button(var_name).click()
+        toggle_button = self._toggle_button(var_name)
+        with self.page.expect_navigation(wait_until="load"):
+            toggle_button.click()
 
 
 class EditGlobalSetting(CmkPage, ABC):

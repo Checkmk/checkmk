@@ -9,10 +9,11 @@
 
 from collections.abc import Callable, Mapping
 
-from cmk.gui import bi
 from cmk.gui.form_specs.unstable import (
-    SingleChoiceElementExtended,
-    SingleChoiceExtended,
+    Autocompleter,
+    AutocompleterData,
+    AutocompleterParams,
+    StringAutocompleter,
 )
 from cmk.gui.form_specs.unstable.user_selection import (
     UserSelection,
@@ -146,16 +147,19 @@ def _bi_aggregate() -> Dictionary:
                         "aggr_group_prefix": DictElement(
                             required=False,
                             parameter_form=List(
-                                element_template=SingleChoiceExtended(
-                                    elements=[
-                                        SingleChoiceElementExtended(
-                                            name=value,
-                                            title=Title(  # astrein: disable=localization-checker
-                                                title
+                                element_template=StringAutocompleter(
+                                    title=Title("Group"),
+                                    autocompleter=Autocompleter(
+                                        data=AutocompleterData(
+                                            ident="bi_aggregation_groups",
+                                            params=AutocompleterParams(
+                                                show_independent_of_context=True,
+                                                strict=False,
+                                                escape_regex=False,
                                             ),
-                                        )
-                                        for value, title in bi.aggregation_group_choices()
-                                    ],
+                                        ),
+                                    ),
+                                    custom_validate=(validators.LengthInRange(min_value=1),),
                                 ),
                                 title=Title("By aggregation group prefix"),
                                 add_element_label=Label("Add new group"),

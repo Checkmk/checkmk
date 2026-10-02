@@ -67,14 +67,15 @@ function toEntry(
   }
 }
 
-const legend = computed<LegendEntry[]>(() => {
-  const states = props.segments.map((segment) =>
-    toEntry(segment.label, segment.count, segment.color, segment)
-  )
-  return props.total === undefined
-    ? states
-    : [toEntry(props.total.label, totalCount.value, 'default', props.total), ...states]
-})
+const legend = computed<LegendEntry[]>(() =>
+  props.segments.map((segment) => toEntry(segment.label, segment.count, segment.color, segment))
+)
+
+const totalEntry = computed<LegendEntry | undefined>(() =>
+  props.total === undefined
+    ? undefined
+    : toEntry(props.total.label, totalCount.value, 'default', props.total)
+)
 
 const ariaLabel = computed<string>(() =>
   totalCount.value === 0
@@ -87,6 +88,16 @@ const ariaLabel = computed<string>(() =>
 
 <template>
   <div class="cmk-state-count-bar" :class="`cmk-state-count-bar--size-${size}`">
+    <div v-if="totalEntry" class="cmk-state-count-bar__total">
+      <component
+        :is="totalEntry.href === undefined ? 'span' : 'a'"
+        class="cmk-state-count-bar__total-entry"
+        :href="totalEntry.href"
+        :target="totalEntry.target"
+      >
+        {{ totalEntry.label }}: {{ totalEntry.count }}
+      </component>
+    </div>
     <div class="cmk-state-count-bar__bar" role="img" :aria-label="ariaLabel">
       <template v-if="totalCount > 0">
         <div
@@ -124,6 +135,17 @@ const ariaLabel = computed<string>(() =>
   display: flex;
   flex-direction: column;
   gap: var(--dimension-4);
+}
+
+.cmk-state-count-bar__total {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.cmk-state-count-bar__total-entry {
+  color: var(--font-color);
+  text-decoration: none;
+  white-space: nowrap;
 }
 
 .cmk-state-count-bar__bar {
@@ -203,7 +225,8 @@ const ariaLabel = computed<string>(() =>
   height: var(--dimension-6);
 }
 
-a.cmk-state-count-bar__legend-entry:hover {
+a.cmk-state-count-bar__legend-entry:hover,
+a.cmk-state-count-bar__total-entry:hover {
   text-decoration: underline;
 }
 

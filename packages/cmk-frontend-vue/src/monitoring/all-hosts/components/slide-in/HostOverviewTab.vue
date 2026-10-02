@@ -49,6 +49,13 @@ const age = computed(() =>
 
 <template>
   <div class="monitoring-host-overview-tab">
+    <section class="monitoring-host-overview-tab__section">
+      <CmkHeading type="h3">{{ _t('Service summary') }}</CmkHeading>
+      <ServiceSummaryBar :counts="data.service_counts" :host="hostRef" />
+    </section>
+
+    <hr class="monitoring-host-overview-tab__divider" />
+
     <OverviewDetailList>
       <dt>{{ _t('Host name') }}</dt>
       <dd>{{ data.name }}</dd>
@@ -105,10 +112,6 @@ const age = computed(() =>
       </dd>
     </OverviewDetailList>
 
-    <section class="monitoring-host-overview-tab__section">
-      <CmkHeading type="h3">{{ _t('Service summary') }}</CmkHeading>
-      <ServiceSummaryBar :counts="data.service_counts" :host="hostRef" />
-    </section>
     <HostRelationsSection
       :relations="data.relations"
       :more-relations="data.more_relations"

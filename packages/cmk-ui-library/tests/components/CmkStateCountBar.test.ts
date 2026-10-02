@@ -68,8 +68,8 @@ test('a non-zero count links to where its segment points', () => {
   )
 })
 
-test('the total, when given, leads the legend with the summed count', () => {
-  render(CmkStateCountBar, {
+test('the total, when given, sits above the bar with the summed count', () => {
+  const { container } = render(CmkStateCountBar, {
     props: {
       segments: MIX,
       total: {
@@ -81,9 +81,10 @@ test('the total, when given, leads the legend with the summed count', () => {
 
   const total = screen.getByRole('link', { name: 'All services: 8' })
   expect(total).toHaveAttribute('href', 'monitor_host_services.py?host=web-1')
-  expect(total.compareDocumentPosition(screen.getByText('OK: 5'))).toBe(
+  expect(total.compareDocumentPosition(screen.getByRole('img'))).toBe(
     Node.DOCUMENT_POSITION_FOLLOWING
   )
+  expect(container.querySelectorAll('.cmk-state-count-bar__legend-item')).toHaveLength(5)
 })
 
 test('the legend lists the states alone when no total is given', () => {

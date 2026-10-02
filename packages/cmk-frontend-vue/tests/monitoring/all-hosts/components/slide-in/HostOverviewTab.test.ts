@@ -57,6 +57,15 @@ test('summarizes the services of the host being shown', async () => {
   expect(bar).toHaveAttribute('aria-label', '9 OK, 2 WARN, 3 CRIT, 1 UNKNOWN')
 })
 
+test('puts the service summary before the details of the host', async () => {
+  render(HostOverviewTab, { props: { data: makeData(), displayOptions: DISPLAY_OPTIONS } })
+
+  const bar = await screen.findByRole('img')
+  expect(bar.compareDocumentPosition(screen.getByText('Host name'))).toBe(
+    Node.DOCUMENT_POSITION_FOLLOWING
+  )
+})
+
 test('leads the counts of a relation to the related host, not to the one being shown', () => {
   render(HostOverviewTab, {
     props: { data: makeData({ relations: [RELATION] }), displayOptions: DISPLAY_OPTIONS }

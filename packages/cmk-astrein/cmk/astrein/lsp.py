@@ -9,7 +9,6 @@ import argparse
 import logging
 import signal
 import sys
-import tempfile
 from functools import partial
 from pathlib import Path
 
@@ -195,34 +194,18 @@ def get_diagnostics(
     checker_classes = list(all_checkers().values())
     factories = _bind_configs(checker_classes, repo_root)
     report_unknown_suppressions = len(factories) == len(checker_classes)
-    errors: list[CheckerError] = []
+    if source is None and not file_path.exists():
+        logger.warning("File does not exist: %(file_path)s", {"file_path": file_path})
+        return None
+
     try:
-        if source is not None:
-            with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as tmp:
-                tmp.write(source)
-                tmp.flush()
-                errors.extend(
-                    run_checkers(
-                        Path(tmp.name),
-                        repo_root,
-                        factories,
-                        report_unknown_suppressions=report_unknown_suppressions,
-                    )
-                )
-        else:
-            if not file_path.exists():
-                logger.warning("File does not exist: %(file_path)s", {"file_path": file_path})
-                return None
-
-            errors.extend(
-                run_checkers(
-                    file_path,
-                    repo_root,
-                    factories,
-                    report_unknown_suppressions=report_unknown_suppressions,
-                )
-            )
-
+        errors = run_checkers(
+            file_path,
+            repo_root,
+            factories,
+            source_code=source,
+            report_unknown_suppressions=report_unknown_suppressions,
+        )
         return [_checker_error_to_diagnostic(e) for e in errors]
 
     except Exception as e:

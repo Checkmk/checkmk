@@ -128,6 +128,7 @@ def run_checkers(
     repo_root: Path,
     checker_factories: list[CheckerFactory],
     *,
+    source_code: str | None = None,
     report_unknown_suppressions: bool = False,
 ) -> list[CheckerError]:
     """Run multiple checkers on a Python file.
@@ -136,23 +137,27 @@ def run_checkers(
     to produce a checker instance.  Plain checker classes work as factories;
     use ``functools.partial`` to pre-bind extra parameters.
 
+    Pass ``source_code`` to check content that differs from the file on disk,
+    e.g. an unsaved editor buffer.
+
     Unused suppressions are reported only for checkers that ran. Pass
     ``report_unknown_suppressions`` when the factories cover all checkers to
     also report suppressions naming an unknown checker.
     """
-    try:
-        source_code = file_path.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError) as e:
-        # Return a synthetic error if we can't read the file
-        return [
-            CheckerError(
-                message=f"Failed to read file: {e}",
-                line=0,
-                column=0,
-                file_path=file_path.relative_to(repo_root),
-                checker_id="file-read-error",
-            )
-        ]
+    if source_code is None:
+        try:
+            source_code = file_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as e:
+            # Return a synthetic error if we can't read the file
+            return [
+                CheckerError(
+                    message=f"Failed to read file: {e}",
+                    line=0,
+                    column=0,
+                    file_path=file_path.relative_to(repo_root),
+                    checker_id="file-read-error",
+                )
+            ]
 
     try:
         tree = ast.parse(source_code, filename=str(file_path))

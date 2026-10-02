@@ -152,6 +152,30 @@ def test_get_diagnostics_with_source_content(tmp_path: Path) -> None:
     assert len(result) == 0
 
 
+def test_get_diagnostics_reports_unknown_suppression(tmp_path: Path) -> None:
+    (tmp_path / "module_layers.toml").write_text("")
+    test_file = tmp_path / "test.py"
+    test_file.write_text("import sys  # astrein: disable=does-not-exist\n")
+
+    result = get_diagnostics(f"file://{test_file}", repo_root=tmp_path)
+
+    assert result is not None
+    assert [d.code for d in result] == ["unused-suppression"]
+
+
+def test_get_diagnostics_reports_errors_in_unsaved_source(tmp_path: Path) -> None:
+    (tmp_path / "module_layers.toml").write_text("")
+
+    result = get_diagnostics(
+        f"file://{tmp_path}/test.py",
+        repo_root=tmp_path,
+        source="import sys  # astrein: disable=does-not-exist\n",
+    )
+
+    assert result is not None
+    assert [d.code for d in result] == ["unused-suppression"]
+
+
 def test_get_diagnostics_keeps_module_layer_suppression_without_config(tmp_path: Path) -> None:
     test_file = tmp_path / "test.py"
     test_file.write_text("import sys  # astrein: disable=cmk-module-layer-violation\n")

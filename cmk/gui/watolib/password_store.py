@@ -73,14 +73,24 @@ class PasswordStore(WatoSimpleConfigFile[PasswordConfig]):
         )
 
     @override
-    def save(self, cfg: Mapping[str, PasswordConfig], pprint_value: bool) -> None:
+    def save(
+        self,
+        cfg: Mapping[str, PasswordConfig],
+        pprint_value: bool,
+        *,
+        update_merged_file: bool = True,
+    ) -> None:
         """The actual passwords are stored in a separate file for special treatment
 
-        Have a look at `cmk.utils.password_store` for further information"""
+        Have a look at `cmk.utils.password_store` for further information.
+        Callers that cannot run the automation (e.g. update actions) pass
+        update_merged_file=False and have to make sure the merged file is written later,
+        e.g. by the core config update at the end of the update."""
         meta_data, passwords = split_password_specs(cfg)
         super().save(meta_data, pprint_value)
         password_store.save(passwords, password_store.password_store_path())
-        update_passwords_merged_file()
+        if update_merged_file:
+            update_passwords_merged_file()
 
 
 def update_passwords_merged_file() -> None:

@@ -20,7 +20,7 @@ import TrialModeSelectionDialogFooter from '../components/TrialModeSelectionDial
 import TrialModeSelectionScreenHeading from '../components/TrialModeSelectionScreenHeading.vue'
 import TrialModeSelectionStepIndicator from '../components/TrialModeSelectionStepIndicator.vue'
 
-const { email, resendCooldown, errorMessage, sendRequestInFlight } = defineProps<{
+const { email, resendCooldown, errorMessage, sendRequestInFlight, saving } = defineProps<{
   email: string
   /** Seconds left before another code may be requested; 0 means it is available. */
   resendCooldown: number
@@ -28,6 +28,7 @@ const { email, resendCooldown, errorMessage, sendRequestInFlight } = defineProps
   errorMessage: TranslatedString
   /** Indicates that a request to send (or re-send) a code is currently in-flight. */
   sendRequestInFlight: boolean
+  saving: boolean
 }>()
 
 const emit = defineEmits<{
@@ -130,18 +131,23 @@ onMounted(() => codeInput.value?.focus())
       <CmkButton
         variant="optional"
         size="small"
-        :disabled="!canResend || sendRequestInFlight"
+        :disabled="!canResend || sendRequestInFlight || saving"
         @click="resend"
       >
         {{ resendLabel }}
       </CmkButton>
     </div>
 
-    <TrialModeSelectionDialogFooter @back="emit('back')">
-      <CmkButton v-if="errorMessage" variant="secondary" @click="emit('continueUnverified')">
+    <TrialModeSelectionDialogFooter :back-disabled="saving" @back="emit('back')">
+      <CmkButton
+        v-if="errorMessage"
+        variant="secondary"
+        :running="saving"
+        @click="emit('continueUnverified')"
+      >
         {{ _t('Continue without verification') }}
       </CmkButton>
-      <CmkButton variant="success" :disabled="!isComplete" @click="verify">
+      <CmkButton variant="success" :disabled="!isComplete || saving" @click="verify">
         {{ _t('Verify') }}
       </CmkButton>
     </TrialModeSelectionDialogFooter>

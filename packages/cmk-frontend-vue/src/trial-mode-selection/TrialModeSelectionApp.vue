@@ -33,13 +33,12 @@ const {
   sendRequestInFlight,
   errorMessage,
   startTrial,
-  openUnverifiedTrial,
-  leaveUnverifiedTrial,
+  continueUnverified,
   sendCode,
   resendCode,
   goTo,
   recordTrial,
-  recordUnverifiedTrial,
+  leaveForDashboard,
   verifyNow,
   verifyLater
 } = useTrialModeSelection(props)
@@ -65,7 +64,7 @@ const {
       :saving="saving"
       @back="goTo('choice')"
       @verify-now="verifyNow"
-      @verify-later="goTo('pending')"
+      @verify-later="verifyLater"
     />
 
     <TrialModeSelectionLicensePending
@@ -73,17 +72,16 @@ const {
       :trial-end-timestamp="props.trial_end_timestamp"
       :trial-length-days="props.trial_length_days"
       :free-services-limit="props.free_services_limit"
-      :saving="saving"
-      @back="goTo('verification')"
-      @start-monitoring="verifyLater"
+      @start-monitoring="leaveForDashboard"
     />
 
     <TrialModeSelectionEndpointUnreachable
       v-else-if="screen === 'unreachable'"
       :domain="props.verification_domain"
+      :saving="saving"
       @back="goTo('choice')"
       @retry="startTrial"
-      @continue-offline="openUnverifiedTrial('offline')"
+      @continue-offline="continueUnverified('offline')"
     />
 
     <TrialModeSelectionUnverifiedTrial
@@ -91,9 +89,7 @@ const {
       :trial-end-timestamp="props.trial_end_timestamp"
       :trial-length-days="props.trial_length_days"
       :free-services-limit="props.free_services_limit"
-      :saving="saving"
-      @back="leaveUnverifiedTrial"
-      @start-monitoring="recordUnverifiedTrial"
+      @start-monitoring="leaveForDashboard"
     />
 
     <TrialModeSelectionEmailEntry
@@ -110,10 +106,11 @@ const {
       :resend-cooldown="resendCooldown"
       :error-message="errorMessage"
       :send-request-in-flight="sendRequestInFlight"
+      :saving="saving"
       @back="goTo('email')"
       @resend="resendCode"
       @verified="goTo('success')"
-      @continue-unverified="openUnverifiedTrial('code_entry_error')"
+      @continue-unverified="continueUnverified('code_entry_error')"
     />
 
     <TrialModeSelectionTrialVerified

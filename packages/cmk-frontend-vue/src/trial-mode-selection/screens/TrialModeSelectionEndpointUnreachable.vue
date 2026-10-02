@@ -12,9 +12,10 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import TrialModeSelectionDialogFooter from '../components/TrialModeSelectionDialogFooter.vue'
 import TrialModeSelectionScreenHeading from '../components/TrialModeSelectionScreenHeading.vue'
 
-const { domain } = defineProps<{
+const { domain, saving } = defineProps<{
   /** Domain the site must reach to verify a trial. */
   domain: string
+  saving: boolean
 }>()
 
 const emit = defineEmits<{
@@ -65,11 +66,11 @@ const { _t } = usei18n()
       </CmkParagraph>
     </div>
 
-    <TrialModeSelectionDialogFooter @back="emit('back')">
-      <CmkButton variant="secondary" @click="emit('continueOffline')">
+    <TrialModeSelectionDialogFooter :back-disabled="saving" @back="emit('back')">
+      <CmkButton variant="secondary" :running="saving" @click="emit('continueOffline')">
         {{ _t('Continue as offline trial') }}
       </CmkButton>
-      <CmkButton variant="success" @click="emit('retry')">
+      <CmkButton variant="success" :disabled="saving" @click="emit('retry')">
         {{ _t('Retry') }}
       </CmkButton>
     </TrialModeSelectionDialogFooter>

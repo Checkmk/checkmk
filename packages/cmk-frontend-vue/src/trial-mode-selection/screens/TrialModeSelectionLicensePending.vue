@@ -8,17 +8,15 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 
 import TrialModeSelectionTrialStatus from '../components/TrialModeSelectionTrialStatus.vue'
 
-const { trialEndTimestamp, trialLengthDays, freeServicesLimit, saving } = defineProps<{
+const { trialEndTimestamp, trialLengthDays, freeServicesLimit } = defineProps<{
   /** When the trial runs out, as a timestamp. */
   trialEndTimestamp: number
   trialLengthDays: number
   /** Services the free edition monitors once the trial has ended. */
   freeServicesLimit: number
-  saving: boolean
 }>()
 
 const emit = defineEmits<{
-  back: []
   startMonitoring: []
 }>()
 
@@ -31,8 +29,6 @@ const { _t } = usei18n()
     badge-color="success"
     :trial-end-timestamp="trialEndTimestamp"
     :trial-length-days="trialLengthDays"
-    :saving="saving"
-    @back="emit('back')"
     @start-monitoring="emit('startMonitoring')"
   >
     {{

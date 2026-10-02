@@ -15,17 +15,15 @@ import { computed } from 'vue'
 import TrialModeSelectionDialogFooter from './TrialModeSelectionDialogFooter.vue'
 import TrialModeSelectionScreenHeading from './TrialModeSelectionScreenHeading.vue'
 
-const { badgeLabel, badgeColor, trialEndTimestamp, trialLengthDays, saving } = defineProps<{
+const { badgeLabel, badgeColor, trialEndTimestamp, trialLengthDays } = defineProps<{
   badgeLabel: TranslatedString
   badgeColor: Colors
   /** When the trial runs out, as a timestamp. */
   trialEndTimestamp: number
   trialLengthDays: number
-  saving: boolean
 }>()
 
 const emit = defineEmits<{
-  back: []
   startMonitoring: []
 }>()
 
@@ -57,8 +55,9 @@ const daysLeft = computed(() =>
       <slot />
     </CmkParagraph>
 
-    <TrialModeSelectionDialogFooter :back-disabled="saving" @back="emit('back')">
-      <CmkButton variant="success" :running="saving" @click="emit('startMonitoring')">
+    <!-- No way back: the decision is already saved when this screen opens. -->
+    <TrialModeSelectionDialogFooter :show-back="false">
+      <CmkButton variant="success" @click="emit('startMonitoring')">
         {{ _t('Start monitoring') }}
       </CmkButton>
     </TrialModeSelectionDialogFooter>

@@ -134,21 +134,6 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
     goTo(props.offline ? 'unreachable' : 'email')
   }
 
-  /** Screen that Back on the unverified trial returns to. */
-  let unverifiedOpenedFrom: TrialModeScreen = 'choice'
-  /** Why the trial continues unverified, saved with the selection. */
-  let unverifiedReason: UnverifiedTrialReason | undefined
-
-  function openUnverifiedTrial(reason: UnverifiedTrialReason): void {
-    unverifiedOpenedFrom = screen.value
-    unverifiedReason = reason
-    goTo('unverified')
-  }
-
-  function leaveUnverifiedTrial(): void {
-    goTo(unverifiedOpenedFrom)
-  }
-
   /**
    * Sends a code to the address and moves on to entering it. Nothing actually leaves the
    * site until CMK-37828 wires this up.
@@ -179,8 +164,18 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
     request: TrialModeSelectionRequest,
     target: string
   ): Promise<void> {
+    if (await persist(request)) {
+      window.location.assign(target)
+    }
+  }
+
+  /**
+   * Records the decision; true once it is saved, false (with the error shown) if not.
+   * `saving` stays set after a success, so nothing can be clicked while the page leaves.
+   */
+  async function persist(request: TrialModeSelectionRequest): Promise<boolean> {
     if (saving.value) {
-      return
+      return false
     }
     saving.value = true
     saveFailed.value = false
@@ -189,12 +184,31 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
         ...request,
         _csrf_token: getCsrfToken()
       })
-      window.location.assign(target)
+      return true
     } catch (e) {
       saving.value = false
       saveFailed.value = true
       console.error(e)
+      return false
     }
+  }
+
+  /**
+   * Saves the decision before its confirmation screen opens, so closing the tab there
+   * does not bring the dialog back. "Start monitoring" then only leaves for the dashboard.
+   */
+  async function persistAndConfirm(
+    request: TrialModeSelectionRequest,
+    confirmation: TrialModeScreen
+  ): Promise<void> {
+    if (await persist(request)) {
+      saving.value = false
+      goTo(confirmation)
+    }
+  }
+
+  function leaveForDashboard(): void {
+    window.location.assign('index.py')
   }
 
   function recordTrial(): Promise<void> {
@@ -205,13 +219,11 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
     recordSend()
   }
 
-  function recordUnverifiedTrial(): Promise<void> {
-    return persistAndLeave(
-      {
-        selection: 'unverified_trial',
-        ...(unverifiedReason ? { unverified_reason: unverifiedReason } : {})
-      },
-      'index.py'
+  /** Saves the unverified trial with why the verification was skipped, then shows it. */
+  function continueUnverified(reason: UnverifiedTrialReason): Promise<void> {
+    return persistAndConfirm(
+      { selection: 'unverified_trial', unverified_reason: reason },
+      'unverified'
     )
   }
 
@@ -223,7 +235,7 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
   }
 
   function verifyLater(): Promise<void> {
-    return persistAndLeave({ selection: 'customer' }, 'index.py')
+    return persistAndConfirm({ selection: 'customer' }, 'pending')
   }
 
   return {
@@ -235,13 +247,12 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
     sendRequestInFlight,
     errorMessage,
     startTrial,
-    openUnverifiedTrial,
-    leaveUnverifiedTrial,
+    continueUnverified,
     sendCode,
     resendCode,
     goTo,
     recordTrial,
-    recordUnverifiedTrial,
+    leaveForDashboard,
     verifyNow,
     verifyLater
   }

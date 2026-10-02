@@ -8,17 +8,15 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 
 import TrialModeSelectionTrialStatus from '../components/TrialModeSelectionTrialStatus.vue'
 
-const { trialEndTimestamp, trialLengthDays, freeServicesLimit, saving } = defineProps<{
+const { trialEndTimestamp, trialLengthDays, freeServicesLimit } = defineProps<{
   /** When the trial runs out, as a timestamp. */
   trialEndTimestamp: number
   trialLengthDays: number
   /** Services the free edition monitors once the trial has ended. */
   freeServicesLimit: number
-  saving: boolean
 }>()
 
 const emit = defineEmits<{
-  back: []
   startMonitoring: []
 }>()
 
@@ -31,13 +29,11 @@ const { _t } = usei18n()
     badge-color="warning"
     :trial-end-timestamp="trialEndTimestamp"
     :trial-length-days="trialLengthDays"
-    :saving="saving"
-    @back="emit('back')"
     @start-monitoring="emit('startMonitoring')"
   >
     {{
       _t(
-        'Trial started without verification (offline site, or verification not completed after the resend cap). Full features for %{days} days from site creation, then fallback to the limited free edition (%{services} services). While the site is under %{days} days old, the dialog reappears on admin login (at most once per 48h) as another chance to verify or license.',
+        'Trial started without verification. Full features for %{days} days from site creation, then fallback to the limited free edition (%{services} services). While the site is under %{days} days old, the dialog reappears on admin login (at most once per 48h) as another chance to verify or license.',
         { days: `${trialLengthDays}`, services: `${freeServicesLimit}` }
       )
     }}

@@ -189,41 +189,53 @@ describe('TrialModeSelectionApp', () => {
       })
     })
 
-    it('shows the pending license activation on "Verify later", without saving yet', async () => {
+    it('saves the customer selection and shows the pending activation on "Verify later"', async () => {
       renderApp({ trial_end_timestamp: Date.now() / 1000 + 26 * 24 * 3600 - 300 })
       await goToLicenseVerification()
 
       await user.click(screen.getByRole('button', { name: 'Verify later' }))
 
       expect(
-        screen.getByRole('heading', { name: 'License activation pending' })
+        await screen.findByRole('heading', { name: 'License activation pending' })
       ).toBeInTheDocument()
       expect(screen.getByText('Full features · 26 days left')).toBeInTheDocument()
-      expect(mockCmkAjax).not.toHaveBeenCalled()
+      expectCustomerSelectionSaved()
+      expect(mockLocationAssign).not.toHaveBeenCalled()
     })
 
-    it('persists the selection and returns to the dashboard on "Start monitoring"', async () => {
+    it('leaves for the dashboard on "Start monitoring" without saving again', async () => {
       renderApp()
       await goToLicenseVerification()
       await user.click(screen.getByRole('button', { name: 'Verify later' }))
+      await screen.findByRole('heading', { name: 'License activation pending' })
 
       await user.click(screen.getByRole('button', { name: 'Start monitoring' }))
 
-      await waitFor(() => {
-        expectCustomerSelectionSaved()
-        expect(mockLocationAssign).toHaveBeenCalledWith('index.py')
-      })
+      expect(mockLocationAssign).toHaveBeenCalledWith('index.py')
+      expect(mockCmkAjax).toHaveBeenCalledTimes(1)
     })
 
-    it('goes back to the license verification from the pending activation', async () => {
+    it('offers no way back once the license activation is pending', async () => {
       renderApp()
       await goToLicenseVerification()
       await user.click(screen.getByRole('button', { name: 'Verify later' }))
+      await screen.findByRole('heading', { name: 'License activation pending' })
 
-      await user.click(screen.getByRole('button', { name: 'Back' }))
+      expect(screen.queryByRole('button', { name: 'Back' })).not.toBeInTheDocument()
+    })
 
+    it('stays on the step and shows an error when saving "Verify later" fails', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      renderApp()
+      await goToLicenseVerification()
+      mockCmkAjax.mockRejectedValue(new Error('nope'))
+
+      await user.click(screen.getByRole('button', { name: 'Verify later' }))
+
+      expect(
+        await screen.findByText('Saving your selection failed. Please try again.')
+      ).toBeInTheDocument()
       expect(screen.getByText('Verify your license')).toBeInTheDocument()
-      expect(mockCmkAjax).not.toHaveBeenCalled()
     })
 
     it('returns to the undecided entry choice on "Back"', async () => {
@@ -322,20 +334,25 @@ describe('TrialModeSelectionApp', () => {
       expect(mockCmkAjax).not.toHaveBeenCalled()
     })
 
-    it('shows the unverified trial with the days left on Continue as offline trial', async () => {
+    it('saves the unverified trial and shows it on Continue as offline trial', async () => {
       renderApp({ offline: true, trial_end_timestamp: Date.now() / 1000 + 26 * 24 * 3600 - 300 })
       await continueOffline()
 
-      expect(screen.getByRole('heading', { name: 'Unverified trial' })).toBeInTheDocument()
+      expect(await screen.findByRole('heading', { name: 'Unverified trial' })).toBeInTheDocument()
       expect(screen.getByText('Full features · 26 days left')).toBeInTheDocument()
-      expect(mockCmkAjax).not.toHaveBeenCalled()
+      expect(mockCmkAjax).toHaveBeenCalledExactlyOnceWith('ajax_save_trial_mode_selection.py', {
+        selection: 'unverified_trial',
+        unverified_reason: 'offline',
+        _csrf_token: 'the-csrf-token'
+      })
+      expect(mockLocationAssign).not.toHaveBeenCalled()
     })
 
     it('shows no days left once the trial has ended', async () => {
       renderApp({ offline: true, trial_end_timestamp: Date.now() / 1000 - 2 * 24 * 3600 })
       await continueOffline()
 
-      expect(screen.getByRole('heading', { name: 'Unverified trial' })).toBeInTheDocument()
+      expect(await screen.findByRole('heading', { name: 'Unverified trial' })).toBeInTheDocument()
       expect(screen.queryByText(/days? left/)).not.toBeInTheDocument()
     })
 
@@ -343,34 +360,54 @@ describe('TrialModeSelectionApp', () => {
       renderApp({ offline: true, trial_end_timestamp: Date.now() / 1000 + 33 * 24 * 3600 })
       await continueOffline()
 
-      expect(screen.getByText('Full features · 30 days left')).toBeInTheDocument()
+      expect(await screen.findByText('Full features · 30 days left')).toBeInTheDocument()
     })
 
-    it('goes back to the blocked connection from the unverified trial', async () => {
+    it('offers no way back once the unverified trial is saved', async () => {
       renderApp({ offline: true })
       await continueOffline()
+      await screen.findByRole('heading', { name: 'Unverified trial' })
 
-      await user.click(screen.getByRole('button', { name: 'Back' }))
-
-      expect(
-        screen.getByRole('heading', { name: /This site can't reach analytics.checkmk.com/ })
-      ).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Back' })).not.toBeInTheDocument()
     })
 
-    it('records the offline trial and leaves for the dashboard on Start monitoring', async () => {
+    it('leaves for the dashboard on Start monitoring without saving again', async () => {
       renderApp({ offline: true })
       await continueOffline()
+      await screen.findByRole('heading', { name: 'Unverified trial' })
 
       await user.click(screen.getByRole('button', { name: 'Start monitoring' }))
 
+      expect(mockLocationAssign).toHaveBeenCalledWith('index.py')
+      expect(mockCmkAjax).toHaveBeenCalledTimes(1)
+    })
+
+    it('blocks its buttons while the offline trial is still being saved', async () => {
+      mockCmkAjax.mockReturnValue(new Promise(() => {}))
+      renderApp({ offline: true })
+
+      await continueOffline()
       await waitFor(() => {
-        expect(mockCmkAjax).toHaveBeenCalledExactlyOnceWith('ajax_save_trial_mode_selection.py', {
-          selection: 'unverified_trial',
-          unverified_reason: 'offline',
-          _csrf_token: 'the-csrf-token'
-        })
-        expect(mockLocationAssign).toHaveBeenCalledWith('index.py')
+        expect(mockCmkAjax).toHaveBeenCalledTimes(1)
       })
+
+      expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled()
+      expect(screen.getByRole('button', { name: 'Retry' })).toBeDisabled()
+    })
+
+    it('stays on the blocked connection and shows an error when saving fails', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      renderApp({ offline: true })
+      mockCmkAjax.mockRejectedValue(new Error('nope'))
+
+      await continueOffline()
+
+      expect(
+        await screen.findByText('Saving your selection failed. Please try again.')
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', { name: /This site can't reach analytics.checkmk.com/ })
+      ).toBeInTheDocument()
     })
 
     // The page sends `offline: null` until CMK-37828.

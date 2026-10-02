@@ -99,7 +99,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         type=int,
         choices=_MONITORING_STATES,
         default=0,
-        help="State when software packages info is missing",
+        help="State when software changes are detected",
     )
 
     parser.add_argument(

@@ -71,6 +71,12 @@ def test_discovery_veeam_backup_jobs() -> None:
     ]
 
 
+def test_discovered_item_is_the_sanitized_job_name() -> None:
+    section = parse_veeam_backup_jobs([[_job("Bob's nightly VMs")]])
+
+    assert list(discovery_veeam_backup_jobs(section)) == [Service(item="Bob_s_nightly_VMs")]
+
+
 def test_check_veeam_backup_jobs_success() -> None:
     section = parse_veeam_backup_jobs(STRING_TABLE)
     last_run_epoch = parse_iso8601_epoch("2019-01-21T00:10:22.473+03:00")

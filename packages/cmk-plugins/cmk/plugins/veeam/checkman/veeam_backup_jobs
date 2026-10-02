@@ -21,4 +21,5 @@ discovery:
  One service is created for each backup job reported by the API.
 
 item:
- The name of the backup job.
+ The name of the backup job, sanitized: spaces and apostrophes are replaced
+ by underscores.

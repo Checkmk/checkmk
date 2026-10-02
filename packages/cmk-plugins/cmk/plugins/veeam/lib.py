@@ -27,3 +27,7 @@ def parse_iso8601_epoch(value: str) -> float | None:
         return datetime.fromisoformat(value).timestamp()
     except ValueError:
         return None
+
+
+def sanitize_name(name: str) -> str:
+    return name.replace("'", "_").replace(" ", "_")

@@ -64,6 +64,12 @@ def test_discovery_veeam_backups() -> None:
     ]
 
 
+def test_discovered_item_is_the_sanitized_job_name() -> None:
+    section = parse_veeam_backups([[_task("Bob's nightly VMs")]])
+
+    assert list(discovery_veeam_backups(section)) == [Service(item="Bob_s_nightly_VMs")]
+
+
 def test_check_veeam_backups_success() -> None:
     section = parse_veeam_backups(STRING_TABLE)
     results = list(check_veeam_backups("Daily_VM_Backup", section))

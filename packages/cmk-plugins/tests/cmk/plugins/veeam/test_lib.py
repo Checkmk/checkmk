@@ -7,7 +7,7 @@ from datetime import datetime
 
 import pytest
 
-from cmk.plugins.veeam.lib import parse_dotnet_timespan_seconds, parse_iso8601_epoch
+from cmk.plugins.veeam.lib import parse_dotnet_timespan_seconds, parse_iso8601_epoch, sanitize_name
 
 
 @pytest.mark.parametrize(
@@ -38,3 +38,17 @@ def test_parse_iso8601_epoch(value: str, expected_epoch: float | None) -> None:
 )
 def test_parse_dotnet_timespan_seconds(duration: str, expected_seconds: float | None) -> None:
     assert parse_dotnet_timespan_seconds(duration) == expected_seconds
+
+
+@pytest.mark.parametrize(
+    "job_name, expected_item",
+    [
+        pytest.param("Nightly VMs", "Nightly_VMs", id="spaces become underscores"),
+        pytest.param("Bob's job", "Bob_s_job", id="apostrophes become underscores"),
+        pytest.param("SQL_(prod)-v2.1", "SQL_(prod)-v2.1", id="other characters are kept"),
+    ],
+)
+def test_sanitize_name_replaces_only_spaces_and_apostrophes(
+    job_name: str, expected_item: str
+) -> None:
+    assert sanitize_name(job_name) == expected_item

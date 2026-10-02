@@ -25,6 +25,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.veeam.lib import (
     parse_dotnet_timespan_seconds,
     parse_iso8601_epoch,
+    sanitize_name,
 )
 
 
@@ -60,7 +61,7 @@ def parse_veeam_backups(string_table: StringTable) -> Section:
         progress = task_dict.get("progress") or {}
         result = task_dict.get("result") or {}
         end_time = task_dict.get("endTime")
-        section[task_dict["jobName"]] = BackupTask(
+        section[sanitize_name(task_dict["jobName"])] = BackupTask(
             state=task_dict["state"],
             result=result.get("result", "None"),
             result_message=result.get("message"),

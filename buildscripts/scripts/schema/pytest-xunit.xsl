@@ -5,6 +5,24 @@
     cdata-section-elements="system-out system-err failure"/>
   <xsl:decimal-format decimal-separator="." grouping-separator=","/>
 
+  <xsl:template match="testsuites">
+    <testsuites>
+      <xsl:for-each select="@*">
+        <xsl:choose>
+          <xsl:when test="name() = 'time'">
+            <xsl:attribute name="time">
+              <xsl:value-of select="format-number(., '#.###')"/>
+            </xsl:attribute>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:copy-of select="."/>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:for-each>
+      <xsl:apply-templates select="testsuite"/>
+    </testsuites>
+  </xsl:template>
+
   <xsl:template match="testsuite">
     <testsuite>
       <xsl:if test="@name">

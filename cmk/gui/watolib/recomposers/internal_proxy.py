@@ -7,7 +7,6 @@
 
 from collections.abc import Sequence
 from typing import Any, Literal
-from urllib.parse import urlparse
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.form_specs.unstable.legacy_converter import (
@@ -15,9 +14,9 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
 )
 from cmk.gui.form_specs.visitors import DefaultValue as FrontendDefaultValue
 from cmk.gui.watolib import config_domains
-from cmk.gui.watolib.password_store import _transform_password_back as transform_password_to_disk
 from cmk.rulesets.internal.form_specs import (
     InternalProxy,
+    migrate_to_internal_proxy,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
 )
@@ -37,26 +36,8 @@ from cmk.rulesets.v1.form_specs import (
     SingleChoiceElement,
     String,
 )
-from cmk.rulesets.v1.form_specs.validators import LengthInRange, NetworkPort
+from cmk.rulesets.v1.form_specs.validators import LengthInRange, NetworkPort, NumberInRange
 from cmk.utils.http_proxy_config import ProxyAuthSpec, ProxyConfigSpec
-
-
-def _convert_url_to_explicit_proxy_dict(url: str) -> ProxyConfigSpec:
-    parts = urlparse(url)
-    proxy_dict = ProxyConfigSpec(
-        scheme=parts.scheme,
-        proxy_server_name=parts.hostname or "",
-        port=parts.port or 0,
-    )
-
-    if parts.username and parts.password:
-        proxy_dict["auth"] = ProxyAuthSpec(
-            user=parts.username,
-            password=transform_password_to_disk(("password", parts.password)),
-        )
-
-    return proxy_dict
-
 
 type DiskRepresentation = (
     tuple[
@@ -95,8 +76,10 @@ def _transform_from_disk(
         case "cmk_postprocessed", "stored_proxy", str(stored_proxy_id):
             return "global_", stored_proxy_id
 
-        case "cmk_postprocessed", "explicit_proxy", str(url):
-            return "manual", _convert_url_to_explicit_proxy_dict(url)  # type: ignore[unreachable]
+        case "cmk_postprocessed", "explicit_proxy", str():
+            # Proxy URL of a form spec without migration: convert it like the migration does
+            _, _, proxy_config = migrate_to_internal_proxy(value)  # type: ignore[unreachable]
+            return "manual", proxy_config
 
         case "cmk_postprocessed", "explicit_proxy", {
             "scheme": str(scheme),
@@ -273,7 +256,8 @@ def recompose(
                     "port": DictElement(
                         parameter_form=Integer(
                             title=Title("Port"),
-                            custom_validate=(NetworkPort(),),
+                            # Port 0 marks a proxy URL that could not be converted
+                            custom_validate=(NetworkPort(), NumberInRange(min_value=1)),
                         ),
                         required=True,
                     ),

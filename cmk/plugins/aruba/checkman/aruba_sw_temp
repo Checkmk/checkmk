@@ -1,4 +1,4 @@
-title: Aruba Switch 6100+ series: Temperature
+title: Aruba Switch: 6100+ Series Temperature
 agents: snmp
 catalog: hw/network/aruba
 license: GPLv2

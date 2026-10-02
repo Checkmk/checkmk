@@ -1692,8 +1692,8 @@ class AjaxBIRulePreview(AjaxPage):
                     entry.update(search_result)
                     modified_search_results.append(entry)
                 response.append(_finalize_preview_response(modified_search_results))
-            except MKGeneralException:
-                response.append([{"Error": _("Can not evaluate search")}])
+            except MKGeneralException as e:
+                response.append([{_("Error"): str(e)}])
 
         return {
             "title": _("Available macros and search result(s)"),
@@ -1733,8 +1733,8 @@ class AjaxBIAggregationPreview(AjaxPage):
             # Provide performance statistics/advice for bad regex and setups
             search_results = preview_bi_aggr.node.search.execute({}, compiler.bi_searcher)
             response.append(_finalize_preview_response(search_results))
-        except MKGeneralException:
-            response.append([{_("Error"): _("Can not evaluate search")}])
+        except MKGeneralException as e:
+            response.append([{_("Error"): str(e)}])
 
         return {
             "title": _("Available macros and search result(s)"),

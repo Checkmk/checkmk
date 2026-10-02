@@ -11,7 +11,11 @@ import pytest
 from pytest import param
 
 from cmk.gui.bi._config import ModeBIEditRule
-from cmk.gui.bi._valuespecs import _convert_bi_rule_from_vs, _convert_bi_rule_to_vs
+from cmk.gui.bi._valuespecs import (
+    _convert_bi_rule_from_vs,
+    _convert_bi_rule_to_vs,
+    BIConfigStateOfServiceAction,
+)
 from cmk.gui.exceptions import MKUserError
 
 from . import bi_test_data as sample_config
@@ -131,3 +135,21 @@ def test_validate_rule_id() -> None:
 
     with pytest.raises(MKUserError, match="There is already a rule with the ID <b>networking</b>."):
         edit_rule_mode._validate_rule_id("networking")  # noqa: SLF001
+
+
+@pytest.mark.parametrize(
+    "service_regex",
+    [r".*\(?Instance001\)?.*", "Service $1$", "Service $HOST_MG_1$"],
+)
+def test_state_of_service_accepts_valid_regex(service_regex: str) -> None:
+    BIConfigStateOfServiceAction.valuespec().validate_value(
+        {"host_regex": "$1$", "service_regex": service_regex}, "vs"
+    )
+
+
+@pytest.mark.parametrize("host_regex, service_regex", [("$1$", "?.(Instance001)?."), ("(", "x")])
+def test_state_of_service_rejects_invalid_regex(host_regex: str, service_regex: str) -> None:
+    with pytest.raises(MKUserError, match="Invalid regular expression"):
+        BIConfigStateOfServiceAction.valuespec().validate_value(
+            {"host_regex": host_regex, "service_regex": service_regex}, "vs"
+        )

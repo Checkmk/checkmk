@@ -114,7 +114,6 @@ BUILD_DEPS = [
     ":node_modules/css-loader",
     ":node_modules/d3",
     ":node_modules/d3-flextree",
-    ":node_modules/d3-hexbin",
     ":node_modules/d3-sankey",
     ":node_modules/element-closest-polyfill",
     ":node_modules/extract-loader",

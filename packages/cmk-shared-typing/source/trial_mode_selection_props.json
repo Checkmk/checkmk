@@ -8,6 +8,10 @@
     "logout_url": { "type": "string" },
     "verify_online_url": { "type": "string" },
     "verify_offline_url": { "type": "string" },
+    "start_monitoring_url": {
+      "type": "string",
+      "description": "Page the dialog leaves for on \"Start monitoring\"."
+    },
     "user_name": { "type": "string" },
     "edition_title": { "type": "string" },
     "trial_end_timestamp": {
@@ -37,6 +41,7 @@
     "logout_url",
     "verify_online_url",
     "verify_offline_url",
+    "start_monitoring_url",
     "user_name",
     "edition_title",
     "trial_end_timestamp",

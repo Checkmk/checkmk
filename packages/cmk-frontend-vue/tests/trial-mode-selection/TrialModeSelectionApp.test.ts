@@ -38,6 +38,7 @@ function renderApp(overrides: Partial<TrialModeSelectionProps> = {}) {
       logout_url: 'logout.py',
       verify_online_url: 'wato.py?mode=edit_licensing_settings&online=1',
       verify_offline_url: 'wato.py?mode=licensing_offline_verification',
+      start_monitoring_url: 'view.py?view_name=allhosts',
       user_name: 'cmkadmin',
       edition_title: 'Checkmk Ultimate',
       // 2026-08-13 12:00:00 UTC
@@ -211,7 +212,7 @@ describe('TrialModeSelectionApp', () => {
       expect(mockLocationAssign).not.toHaveBeenCalled()
     })
 
-    it('leaves for the dashboard on "Start monitoring" without saving again', async () => {
+    it('leaves for the page it was given on "Start monitoring" without saving again', async () => {
       renderApp()
       await goToLicenseVerification()
       await user.click(screen.getByRole('button', { name: 'Verify later' }))
@@ -219,7 +220,7 @@ describe('TrialModeSelectionApp', () => {
 
       await user.click(screen.getByRole('button', { name: 'Start monitoring' }))
 
-      expect(mockLocationAssign).toHaveBeenCalledWith('index.py')
+      expect(mockLocationAssign).toHaveBeenCalledWith('view.py?view_name=allhosts')
       expect(mockCmkAjax).toHaveBeenCalledTimes(1)
     })
 
@@ -379,14 +380,14 @@ describe('TrialModeSelectionApp', () => {
       expect(screen.queryByRole('button', { name: 'Back' })).not.toBeInTheDocument()
     })
 
-    it('leaves for the dashboard on Start monitoring without saving again', async () => {
+    it('leaves for the page it was given on Start monitoring without saving again', async () => {
       renderApp({ offline: true })
       await continueOffline()
       await screen.findByRole('heading', { name: 'Unverified trial' })
 
       await user.click(screen.getByRole('button', { name: 'Start monitoring' }))
 
-      expect(mockLocationAssign).toHaveBeenCalledWith('index.py')
+      expect(mockLocationAssign).toHaveBeenCalledWith('view.py?view_name=allhosts')
       expect(mockCmkAjax).toHaveBeenCalledTimes(1)
     })
 
@@ -794,7 +795,7 @@ describe('TrialModeSelectionApp', () => {
       expect(screen.queryByRole('button', { name: 'Back' })).not.toBeInTheDocument()
     })
 
-    it('records the trial and leaves for the dashboard on Start monitoring', async () => {
+    it('records the trial and leaves for the page it was given on Start monitoring', async () => {
       renderApp()
       await verifyTrial()
 
@@ -805,7 +806,7 @@ describe('TrialModeSelectionApp', () => {
           selection: 'trial',
           _csrf_token: 'the-csrf-token'
         })
-        expect(mockLocationAssign).toHaveBeenCalledWith('index.py')
+        expect(mockLocationAssign).toHaveBeenCalledWith('view.py?view_name=allhosts')
       })
     })
 

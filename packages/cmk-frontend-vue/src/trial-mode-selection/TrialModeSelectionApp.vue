@@ -38,7 +38,7 @@ const {
   resendCode,
   goTo,
   recordTrial,
-  leaveForDashboard,
+  startMonitoring,
   verifyNow,
   verifyLater
 } = useTrialModeSelection(props)
@@ -72,7 +72,7 @@ const {
       :trial-end-timestamp="props.trial_end_timestamp"
       :trial-length-days="props.trial_length_days"
       :free-services-limit="props.free_services_limit"
-      @start-monitoring="leaveForDashboard"
+      @start-monitoring="startMonitoring"
     />
 
     <TrialModeSelectionEndpointUnreachable
@@ -89,7 +89,7 @@ const {
       :trial-end-timestamp="props.trial_end_timestamp"
       :trial-length-days="props.trial_length_days"
       :free-services-limit="props.free_services_limit"
-      @start-monitoring="leaveForDashboard"
+      @start-monitoring="startMonitoring"
     />
 
     <TrialModeSelectionEmailEntry

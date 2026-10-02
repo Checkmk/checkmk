@@ -227,7 +227,7 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
 
   /**
    * Saves the decision before its confirmation screen opens, so closing the tab there
-   * does not bring the dialog back. "Start monitoring" then only leaves for the dashboard.
+   * does not bring the dialog back. "Start monitoring" then only leaves the dialog.
    */
   async function persistAndConfirm(
     request: TrialModeSelectionRequest,
@@ -239,12 +239,12 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
     }
   }
 
-  function leaveForDashboard(): void {
-    window.location.assign('index.py')
+  function startMonitoring(): void {
+    window.location.assign(props.start_monitoring_url)
   }
 
   function recordTrial(): Promise<void> {
-    return persistAndLeave({ selection: 'trial' }, 'index.py')
+    return persistAndLeave({ selection: 'trial' }, props.start_monitoring_url)
   }
 
   function resendCode(): void {
@@ -284,7 +284,7 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
     resendCode,
     goTo,
     recordTrial,
-    leaveForDashboard,
+    startMonitoring,
     verifyNow,
     verifyLater
   }

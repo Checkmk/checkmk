@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkLinkCard from 'cmk-ui-library/components/CmkLinkCard'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { type ComponentPublicInstance, onMounted, ref } from 'vue'
 
 import TrialModeSelectionScreenHeading from '../components/TrialModeSelectionScreenHeading.vue'
 
@@ -22,6 +23,17 @@ const emit = defineEmits<{
 }>()
 
 const { _t } = usei18n()
+
+const trialCard = ref<ComponentPublicInstance | null>(null)
+
+// The first option takes the focus. This runs after
+// the heading's own mounted hook, which focuses the title.
+onMounted(() => {
+  const element = trialCard.value?.$el
+  if (element instanceof HTMLElement) {
+    element.focus()
+  }
+})
 </script>
 
 <template>
@@ -37,6 +49,7 @@ const { _t } = usei18n()
            rather than a `url`, which would hand the page to the browser. Neither of
            them records anything: no save can be in flight on this screen. -->
       <CmkLinkCard
+        ref="trialCard"
         icon-name="start"
         :title="_t('Start a trial')"
         :subtitle="

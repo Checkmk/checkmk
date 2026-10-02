@@ -10,6 +10,7 @@ import CmkLink from 'cmk-ui-library/components/CmkLink.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
+import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import useId from 'cmk-ui-library/lib/useId'
@@ -127,7 +128,12 @@ function clearErrors(): void {
 
 <template>
   <div class="trial-mode-selection-email-entry">
-    <TrialModeSelectionStepIndicator :step="1" :total="3" :label="_t('Email')" />
+    <TrialModeSelectionStepIndicator
+      class="trial-mode-selection-email-entry__step"
+      :step="1"
+      :total="3"
+      :label="_t('Email')"
+    />
     <TrialModeSelectionScreenHeading>
       {{ _t('Verify your email address') }}
     </TrialModeSelectionScreenHeading>
@@ -139,7 +145,10 @@ function clearErrors(): void {
       }}
     </CmkParagraph>
 
-    <CmkLabel :for="emailFieldId">{{ _t('Email address') }}</CmkLabel>
+    <div class="trial-mode-selection-email-entry__label">
+      <CmkLabel :for="emailFieldId">{{ _t('Email address') }}</CmkLabel
+      ><CmkLabelRequired space="before" />
+    </div>
     <CmkInput
       :id="emailFieldId"
       v-model="email"
@@ -196,13 +205,20 @@ function clearErrors(): void {
 </template>
 
 <style scoped>
+.trial-mode-selection-email-entry__step {
+  margin-bottom: var(--dimension-5);
+}
+
 .trial-mode-selection-email-entry__subtitle {
-  color: var(--font-color-dimmed);
-  margin-bottom: var(--dimension-8);
+  margin-top: var(--dimension-4);
+  margin-bottom: var(--dimension-5);
+}
+
+.trial-mode-selection-email-entry__label {
+  margin-bottom: var(--dimension-3);
 }
 
 .trial-mode-selection-email-entry__hint {
-  color: var(--font-color-dimmed);
   font-size: var(--font-size-small);
   margin-top: var(--dimension-5);
 }

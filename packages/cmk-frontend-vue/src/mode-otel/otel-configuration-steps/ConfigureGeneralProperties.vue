@@ -29,19 +29,6 @@ export function _resetCaches(): void {
   cachedSites = null
   cachedConfigs = null
 }
-
-export function nextAvailableConfigName(existingIds: string[], prefix: string): string {
-  const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const pattern = new RegExp(`^${escapedPrefix}(\\d+)$`)
-  let max = 0
-  for (const id of existingIds) {
-    const match = pattern.exec(id)
-    if (match) {
-      max = Math.max(max, Number(match[1]))
-    }
-  }
-  return `${prefix}${max + 1}`
-}
 </script>
 
 <script setup lang="ts">
@@ -56,6 +43,12 @@ import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import useId from 'cmk-ui-library/lib/useId'
 import { computed, onMounted, ref } from 'vue'
+
+import {
+  configNameFormatErrors,
+  configNameTakenErrors,
+  nextAvailableConfigName
+} from '@/lib/configuration-name'
 
 const { _t } = usei18n()
 
@@ -153,30 +146,15 @@ onMounted(async () => {
 
 const displayErrors = ref(false)
 
-const NAME_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_-]*$/
+const configNameErrors = computed<string[]>(() =>
+  displayErrors.value ? configNameFormatErrors(configName.value) : []
+)
 
-const configNameErrors = computed<string[]>(() => {
-  if (!displayErrors.value) {
-    return []
-  }
-  if (!configName.value.trim()) {
-    return [_t('Configuration name is required but not specified.')]
-  }
-  if (!NAME_PATTERN.test(configName.value)) {
-    return [
-      _t(
-        'The name must only consist of letters, digits, dash and underscore and it must start with a letter or underscore.'
-      )
-    ]
-  }
-  return []
-})
-
-const configNameTakenErrors = ref<string[]>([])
+const configNameTaken = ref<string[]>([])
 
 const allConfigNameErrors = computed<string[]>(() => [
   ...configNameErrors.value,
-  ...configNameTakenErrors.value
+  ...configNameTaken.value
 ])
 
 const siteErrors = ref<string[]>([])
@@ -184,13 +162,6 @@ const siteErrors = ref<string[]>([])
 function validateSiteRequired(): string[] {
   if (!siteId.value) {
     return [_t('Site is required but not specified.')]
-  }
-  return []
-}
-
-function checkConfigNameAvailable(configs: OTelConfigEntry[]): string[] {
-  if (configs.some((config) => config.id === configName.value)) {
-    return [_t('A configuration with this name already exists. Choose a different name.')]
   }
   return []
 }
@@ -221,7 +192,7 @@ async function validate(): Promise<boolean> {
   try {
     configs = await fetchConfigList(true)
   } catch {
-    configNameTakenErrors.value = []
+    configNameTaken.value = []
     siteErrors.value = [
       ...requiredErrors,
       _t('Failed to validate site configuration. Please try again.')
@@ -229,7 +200,10 @@ async function validate(): Promise<boolean> {
     return false
   }
 
-  configNameTakenErrors.value = checkConfigNameAvailable(configs)
+  configNameTaken.value = configNameTakenErrors(
+    configName.value,
+    configs.map((config) => config.id).filter((id): id is string => typeof id === 'string')
+  )
   siteErrors.value = [...requiredErrors, ...checkSiteAlreadyConfigured(configs)]
 
   return allConfigNameErrors.value.length === 0 && siteErrors.value.length === 0

@@ -90,3 +90,9 @@ export async function updateCustomServiceDefinition(
     throw error
   }
 }
+
+export async function listCustomServiceNames(): Promise<string[]> {
+  return unwrap(await client.GET('/domain-types/custom_service/collections/all'))
+    .value.map((service) => service.id)
+    .filter((id): id is string => typeof id === 'string')
+}

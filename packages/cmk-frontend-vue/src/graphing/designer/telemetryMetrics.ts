@@ -14,6 +14,7 @@ export function customServiceModelFor(
   defaultTitle: string
 ): ServiceModel {
   return {
+    configurationName: '',
     metricName: item.metric_name,
     metricTypes: [],
     attributeFilter: item.attribute_filter,

@@ -15,6 +15,7 @@ import CustomServicesWizardApp from '@/mode-custom-services/CustomServicesWizard
 
 const API_BASE = `${location.protocol}//${location.host}/api/internal`
 const OBJECT_URL = `${API_BASE}/objects/custom_service/http_duration_on_web01`
+const LIST_URL = `${API_BASE}/domain-types/custom_service/collections/all`
 const AUTOCOMPLETE_URL = `${API_BASE}/objects/autocomplete/:ident`
 const METRIC_NAMES_URL = `${API_BASE}/domain-types/telemetry_metrics/actions/names_with_types/invoke`
 
@@ -41,6 +42,7 @@ const WRITTEN_EXTENSIONS = {
 let updateRequests = 0
 let lastBody: unknown = null
 let lastIfMatch: string | null = null
+let listRequests = 0
 
 const server = setupServer(
   http.get(OBJECT_URL, () =>
@@ -65,6 +67,12 @@ const server = setupServer(
       extensions: STORED_EXTENSIONS
     })
   }),
+  http.get(LIST_URL, () => {
+    listRequests += 1
+    return HttpResponse.json({
+      value: [{ id: 'http_duration_on_web01', domainType: 'custom_service' }]
+    })
+  }),
   http.post(AUTOCOMPLETE_URL, () =>
     HttpResponse.json({ choices: [{ id: 'web01', value: 'web01' }] })
   ),
@@ -79,6 +87,7 @@ afterEach(() => {
   updateRequests = 0
   lastBody = null
   lastIfMatch = null
+  listRequests = 0
   server.resetHandlers()
 })
 afterAll(() => server.close())
@@ -92,9 +101,29 @@ function renderWizard(configurationName: string | null = 'http_duration_on_web01
   })
 }
 
+async function expectActiveStep(heading: string): Promise<void> {
+  await waitFor(() =>
+    expect(screen.getByText(heading).closest('li')?.getAttribute('aria-current')).toBe('step')
+  )
+}
+
 async function goToHostStep(): Promise<void> {
   await userEvent.click(await screen.findByRole('button', { name: 'Next step' }))
+  await expectActiveStep('Define metric')
+  await userEvent.click(await screen.findByRole('button', { name: 'Next step' }))
+  await expectActiveStep('Assign to host')
 }
+
+test('shows the stored configuration name as text and passes it without a name check', async () => {
+  renderWizard()
+
+  expect(await screen.findByText('http_duration_on_web01')).toBeTruthy()
+  expect(screen.queryByDisplayValue('http_duration_on_web01')).toBeNull()
+  await userEvent.click(await screen.findByRole('button', { name: 'Next step' }))
+
+  await expectActiveStep('Define metric')
+  expect(listRequests).toBe(0)
+})
 
 test('shows the stored service name, editable', async () => {
   renderWizard()

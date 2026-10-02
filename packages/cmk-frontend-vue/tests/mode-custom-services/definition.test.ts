@@ -226,6 +226,12 @@ describe('buildCustomServiceDefinition', () => {
     })
   })
 
+  test('uses the entered configuration name', () => {
+    expect(
+      buildCustomServiceDefinition(model({ configurationName: 'my_config' })).configuration_name
+    ).toBe('my_config')
+  })
+
   test('derives the identifier from the service name and the host', () => {
     expect(buildCustomServiceDefinition(model()).configuration_name).toBe('http_duration_on_web01')
   })
@@ -270,17 +276,21 @@ describe('serviceModelFrom', () => {
       consolidation: { type: 'gauge', function: 'gauge_max', lookback_seconds: 300 }
     })
 
-    expect(serviceModelFrom(buildCustomServiceUpdate(original))).toEqual(original)
+    expect(
+      serviceModelFrom(original.configurationName, buildCustomServiceUpdate(original))
+    ).toEqual(original)
   })
 
   test('restores a model without an attribute filter or an aggregator', () => {
     const original = model({ attributeFilter: undefined, aggregator: undefined })
 
-    expect(serviceModelFrom(buildCustomServiceUpdate(original))).toEqual(original)
+    expect(
+      serviceModelFrom(original.configurationName, buildCustomServiceUpdate(original))
+    ).toEqual(original)
   })
 
   test('has no host to offer for a service assigned by host name template', () => {
-    const restored = serviceModelFrom({
+    const restored = serviceModelFrom('http_duration_on_web01', {
       host_assignment: {
         mode: 'host_name_template',
         host_name_template: '$RESOURCE_ATTR.service.name$'

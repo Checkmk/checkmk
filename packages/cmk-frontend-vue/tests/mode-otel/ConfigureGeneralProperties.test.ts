@@ -9,8 +9,7 @@ import { setupServer } from 'msw/node'
 import { defineComponent, ref } from 'vue'
 
 import ConfigureGeneralProperties, {
-  _resetCaches,
-  nextAvailableConfigName
+  _resetCaches
 } from '@/mode-otel/otel-configuration-steps/ConfigureGeneralProperties.vue'
 
 const API_BASE = `${location.protocol}//${location.host}/api/internal`
@@ -436,43 +435,5 @@ describe('ConfigureGeneralProperties', () => {
       expect(result).toBe(false)
       await screen.findByText('Failed to validate site configuration. Please try again.')
     })
-  })
-})
-
-describe('nextAvailableConfigName', () => {
-  test('returns the first slot for an empty list', () => {
-    expect(nextAvailableConfigName([], 'opentelemetry_config_')).toBe('opentelemetry_config_1')
-  })
-
-  test('returns max(existing) + 1', () => {
-    expect(
-      nextAvailableConfigName(
-        ['opentelemetry_config_1', 'opentelemetry_config_2'],
-        'opentelemetry_config_'
-      )
-    ).toBe('opentelemetry_config_3')
-  })
-
-  test('skips gaps by using the highest index, not the count', () => {
-    expect(
-      nextAvailableConfigName(
-        ['opentelemetry_config_1', 'opentelemetry_config_5'],
-        'opentelemetry_config_'
-      )
-    ).toBe('opentelemetry_config_6')
-  })
-
-  test('ignores ids that do not match the prefix or are not numbered', () => {
-    expect(
-      nextAvailableConfigName(
-        [
-          'my_custom_name',
-          'opentelemetry_config_',
-          'opentelemetry_config_2',
-          'prometheus_config_9'
-        ],
-        'opentelemetry_config_'
-      )
-    ).toBe('opentelemetry_config_3')
   })
 })

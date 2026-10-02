@@ -8,14 +8,16 @@ import type { CustomServicesWizard } from 'cmk-shared-typing/typescript/mode_cus
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkWizard, { CmkWizardButton, CmkWizardStep } from 'cmk-ui-library/components/CmkWizard'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
+import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, useTemplateRef, watch } from 'vue'
 
 import { loadCustomServiceDefinition } from './api'
 import { serviceModelFrom } from './definition'
 import { type SaveResult, createCustomService, updateCustomService } from './save'
 import AssignHostStep from './steps/AssignHostStep.vue'
+import ConfigureNameStep from './steps/ConfigureNameStep.vue'
 import DefineMetricStep from './steps/DefineMetricStep.vue'
 import { type ServiceModel, emptyService, isMetricSelected, isReadyToCreate } from './types'
 
@@ -30,14 +32,15 @@ const saveError = ref<string | null>(null)
 const editETag = ref<string | null>(null)
 const loading = ref(props.configuration_name !== null)
 const loadError = ref<string | null>(null)
+const nameStepRef = useTemplateRef<InstanceType<typeof ConfigureNameStep>>('nameStep')
 
 // A metric must be selected before the host-assignment step can be reached.
-const step1Valid = computed(() => isMetricSelected(model.value))
+const metricStepValid = computed(() => isMetricSelected(model.value))
 // A service name and a target host are both required before the service can be created.
-const step2Valid = computed(() => isReadyToCreate(model.value))
+const hostStepValid = computed(() => isReadyToCreate(model.value))
 
-// Default the service name to the selected metric name (editable in step 2). A loaded service
-// always brings its own name along, so prefilling never trips this.
+// Default the service name to the selected metric name (editable in the assign host step). A
+// loaded service always brings its own name along, so prefilling never trips this.
 watch(
   () => model.value.metricName,
   (metric) => {
@@ -58,7 +61,7 @@ onMounted(async () => {
       loadError.value = result.error
       return
     }
-    model.value = serviceModelFrom(result.extensions)
+    model.value = serviceModelFrom(configurationName, result.extensions)
     editETag.value = result.etag
   } catch {
     loadError.value = _t('Failed to load the custom service.')
@@ -67,8 +70,12 @@ onMounted(async () => {
   }
 })
 
-async function validateStep1(): Promise<boolean> {
-  return step1Valid.value
+async function validateNameStep(): Promise<boolean> {
+  return (await nameStepRef.value?.validate()) ?? false
+}
+
+async function validateMetricStep(): Promise<boolean> {
+  return metricStepValid.value
 }
 
 const editing = computed(() => props.configuration_name !== null)
@@ -122,6 +129,23 @@ async function saveService(): Promise<void> {
     <CmkWizard v-else-if="!loading" v-model="currentStep" mode="guided">
       <CmkWizardStep :index="1" :is-completed="() => currentStep > 1">
         <template #header>
+          <CmkHeading type="h3">{{ _t('General configuration properties') }}</CmkHeading>
+        </template>
+        <template #content>
+          <CmkParagraph>{{ _t('Set the custom service configuration name.') }}</CmkParagraph>
+          <ConfigureNameStep
+            ref="nameStep"
+            v-model:configuration-name="model.configurationName"
+            :read-only="editing"
+          />
+        </template>
+        <template #actions>
+          <CmkWizardButton type="next" :validation-cb="validateNameStep" />
+        </template>
+      </CmkWizardStep>
+
+      <CmkWizardStep :index="2" :is-completed="() => currentStep > 2">
+        <template #header>
           <CmkHeading type="h3">{{ _t('Define metric') }}</CmkHeading>
         </template>
         <template #content>
@@ -134,11 +158,16 @@ async function saveService(): Promise<void> {
           />
         </template>
         <template #actions>
-          <CmkWizardButton type="next" :validation-cb="validateStep1" :disabled="!step1Valid" />
+          <CmkWizardButton
+            type="next"
+            :validation-cb="validateMetricStep"
+            :disabled="!metricStepValid"
+          />
+          <CmkWizardButton type="previous" />
         </template>
       </CmkWizardStep>
 
-      <CmkWizardStep :index="2" :is-completed="() => false">
+      <CmkWizardStep :index="3" :is-completed="() => false">
         <template #header>
           <CmkHeading type="h3">{{ _t('Assign to host') }}</CmkHeading>
         </template>
@@ -153,7 +182,7 @@ async function saveService(): Promise<void> {
           <CmkWizardButton
             type="finish"
             :override-label="finishLabel"
-            :disabled="!step2Valid || saving"
+            :disabled="!hostStepValid || saving"
             @click="saveService"
           />
           <CmkWizardButton type="previous" />

@@ -81,7 +81,10 @@ function customServiceBody(
 export function buildCustomServiceDefinition(
   model: ServiceModel & { metricName: string; hostName: string }
 ): CustomServiceDefinition {
-  return { configuration_name: configurationNameFor(model), ...customServiceBody(model) }
+  return {
+    configuration_name: model.configurationName || configurationNameFor(model),
+    ...customServiceBody(model)
+  }
 }
 
 export function buildCustomServiceUpdate(
@@ -90,9 +93,13 @@ export function buildCustomServiceUpdate(
   return customServiceBody(model)
 }
 
-export function serviceModelFrom(extensions: CustomServiceExtensions): ServiceModel {
+export function serviceModelFrom(
+  configurationName: string,
+  extensions: CustomServiceExtensions
+): ServiceModel {
   const { host_assignment: assignment, configuration } = extensions
   return {
+    configurationName,
     metricName: configuration.metric_name,
     metricTypes: [],
     attributeFilter: configuration.attribute_filter,

@@ -114,9 +114,9 @@ charset-normalizer==3.4.2 \
     --hash=sha256:fcbe676a55d7445b22c10967bceaaf0ee69407fbe0ece4d032b6eb8d4565982a \
     --hash=sha256:fdb20a30fe1175ecabed17cbf7812f7b804b8a315a25f24678bcdf120a90077f
     # via requests
-checkmk-dev-tools==1.2.1 \
-    --hash=sha256:09d8bc14bf4b6012a25e38a10a31d5ed990b533b7c60b2eca754fc1b6cd2e4ab \
-    --hash=sha256:faf80c3b23dafe957b0f896218b14845fc2129813bb687b310b07f79ac78e71c
+checkmk-dev-tools==2.0.3 \
+    --hash=sha256:3f1882e1d8c14d97c4e0b118f5d00e8be86b909feb9de1d707780776e6c669cc \
+    --hash=sha256:b0adff7bd00dabe6d90e1c396d0ded00d09a671eb3e01e75c2eb0b6a636c7a1d
     # via -r omd/requirements.txt
 docutils==0.20.1 \
     --hash=sha256:96f387a2c5562db4476f09f13bbab2192e764cac08ebbf3a34a95d9b1e4a59d6 \
@@ -348,9 +348,9 @@ reactivex==4.0.4 \
     --hash=sha256:0004796c420bd9e68aad8e65627d85a8e13f293de76656165dffbcb3a0e3fb6a \
     --hash=sha256:e912e6591022ab9176df8348a653fe8c8fa7a301f26f9931c9d8c78a650e04e8
     # via influxdb-client
-requests==2.32.4 \
-    --hash=sha256:27babd3cda2a6d50b30443204ee89830707d396671944c998b5975b031ac2b2c \
-    --hash=sha256:27d0316682c8a29834d3264820024b62a36942083d52caf2f14c0591336d3422
+requests==2.34.2 \
+    --hash=sha256:2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0 \
+    --hash=sha256:f288924cae4e29463698d6d60bc6a4da69c89185ad1e0bcc4104f584e960b9ed
     # via
     #   python-jenkins
     #   sphinx

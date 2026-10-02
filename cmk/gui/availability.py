@@ -2602,7 +2602,8 @@ def get_bi_split_history_data(
                 ),
                 only_sites=list(only_sites),
                 limit=livestatus_limit,
-                auth_domain="read",
+                # Same visibility as the BI tree this history is computed for (bi.see_all)
+                auth_domain="bi",
             )
         )
     except MKLivestatusPayloadTooLargeError:
@@ -2762,37 +2763,9 @@ def create_bi_timeline_entry(
 def _compute_node_result_bundle(
     timeline_container: TimelineContainer, bi_manager: BIManager
 ) -> NodeResultBundle:
-    # Convert our status format into that needed by BI
-    status = timeline_container.states
-    services_by_host: dict[BIHostSpec, dict[str, BIServiceWithFullState]] = {}
-    hosts: dict[BIHostSpec, AVBITimelineState] = {}
-    for site_host_service, state_output in status.items():
-        site_host = BIHostSpec(site_host_service[0], site_host_service[1])
-        service = site_host_service[2]
-        state: int | None = state_output[0]
-
-        # Create an entry for hosts that are not explicitly referenced in the timeline container.
-        hosts.setdefault(site_host, (0, "", False, False))
-        if service:
-            if state == -1:
-                # Ignore pending services
-                continue
-            services_by_host.setdefault(site_host, {})
-            services_by_host[site_host][service] = BIServiceWithFullState(
-                state,
-                True,  # has_been_checked
-                state_output[1],  # output
-                state,  # hard state (we use the soft state here)
-                1,  # attempt
-                1,  # max_attempts (not relevant)
-                state_output[2],  # in_downtime
-                False,  # acknowledged
-                state_output[3],  # in_service_period
-            )
-        else:
-            hosts[site_host] = state_output
-
-    bi_manager.status_fetcher.states = _compute_status_info(hosts, services_by_host)
+    bi_manager.status_fetcher.states = _bi_status_info_from_timeline_states(
+        timeline_container.states
+    )
     compiled_aggregation = timeline_container.aggr_compiled_aggregation
     branch = timeline_container.aggr_compiled_branch
     results = compiled_aggregation.compute_branches([branch], bi_manager.status_fetcher)
@@ -2807,6 +2780,40 @@ def _compute_node_result_bundle(
         )
 
     return results[0]
+
+
+def _bi_status_info_from_timeline_states(status: AVBITimelineStates) -> BIStatusInfo:
+    services_by_host: dict[BIHostSpec, dict[str, BIServiceWithFullState]] = {}
+    hosts: dict[BIHostSpec, AVBITimelineState] = {}
+    for site_host_service, state_output in status.items():
+        site_host = BIHostSpec(site_id=site_host_service[0], host_name=site_host_service[1])
+        service = site_host_service[2]
+        state: int | None = state_output[0]
+
+        # A host only referenced through its services has no history of its own (e.g. the
+        # user is a contact of the services only): treat it as missing, not as UP outside
+        # of its service period, which would turn the whole aggregate into n/a.
+        hosts.setdefault(site_host, (-1, "", False, True))
+        if service:
+            if state == -1:
+                # Ignore pending services
+                continue
+            services_by_host.setdefault(site_host, {})
+            services_by_host[site_host][service] = BIServiceWithFullState(
+                state=state,
+                has_been_checked=True,
+                plugin_output=state_output[1],
+                hard_state=state,
+                current_attempt=1,
+                max_check_attempts=1,
+                scheduled_downtime_depth=state_output[2],
+                acknowledged=False,
+                in_service_period=state_output[3],
+            )
+        else:
+            hosts[site_host] = state_output
+
+    return _compute_status_info(hosts, services_by_host)
 
 
 def _compute_status_info(

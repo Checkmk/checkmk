@@ -23,7 +23,6 @@ import cmk.utils.paths
 from cmk.automations.results import CreateDiagnosticsDumpResult, CreateDiagnosticsDumpV2Result
 from cmk.automations.types import AutomationID
 from cmk.base.automations.automations import Automation, CommonState, load_config
-from cmk.base.config import LoadingResult
 from cmk.ccc import tty
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
@@ -57,6 +56,13 @@ DiagnosticsOptionalParameters = dict[str, Any]  # type: ignore[explicit-any]
 SUFFIX = ".tar.gz"
 
 
+def _make_raw_base_config(state: CommonState) -> Mapping[str, object]:
+    loaded_config = (
+        load_config() if state.loading_result is None else state.loading_result
+    ).loaded_config
+    return {f.name: getattr(loaded_config, f.name) for f in fields(loaded_config)}
+
+
 def handler(
     state: CommonState,
     args: DiagnosticsCLParameters,
@@ -68,7 +74,7 @@ def handler(
             omd_root=cmk.utils.paths.omd_root,
             diagnostics_dir=cmk.utils.paths.diagnostics_dir,
             parameters=deserialize_cl_parameters(args),
-            loading_result=state.loading_result,
+            raw_base_config=_make_raw_base_config(state),
         )
         return CreateDiagnosticsDumpResult(
             output=buf.getvalue(),
@@ -96,7 +102,7 @@ def handler_v2(
             omd_root=cmk.utils.paths.omd_root,
             diagnostics_dir=cmk.utils.paths.diagnostics_dir,
             selection=(DumpSelection.deserialize(args[0]) if args else DumpSelection(plugins=())),
-            loading_result=state.loading_result,
+            raw_base_config=_make_raw_base_config(state),
         )
         return CreateDiagnosticsDumpV2Result(
             output=buf.getvalue(),
@@ -118,7 +124,7 @@ def create_diagnostics_dump(
     omd_root: Path,
     diagnostics_dir: Path,
     parameters: DiagnosticsOptionalParameters,
-    loading_result: LoadingResult | None,
+    raw_base_config: Mapping[str, object],
 ) -> DiagnosticsDump:
     """Create a dump from legacy parameters (old automation wire and current CLI)"""
     selected_names, checkmk_server_host = _legacy_selection(parameters or {})
@@ -129,7 +135,7 @@ def create_diagnostics_dump(
         checkmk_server_host=checkmk_server_host,
         all_parameters=parameters or {},
         legacy_file_parameters=parameters or {},
-        loading_result=loading_result,
+        raw_base_config=raw_base_config,
     )
 
 
@@ -138,7 +144,7 @@ def create_diagnostics_dump_v2(
     omd_root: Path,
     diagnostics_dir: Path,
     selection: DumpSelection,
-    loading_result: LoadingResult | None,
+    raw_base_config: Mapping[str, object],
 ) -> DiagnosticsDump:
     return _create_dump(
         omd_root=omd_root,
@@ -150,7 +156,7 @@ def create_diagnostics_dump_v2(
             "checkmk_server_host": selection.checkmk_server_host,
         },
         legacy_file_parameters=None,
-        loading_result=loading_result,
+        raw_base_config=raw_base_config,
     )
 
 
@@ -162,10 +168,9 @@ def _create_dump(
     checkmk_server_host: str,
     all_parameters: Mapping[str, object],
     legacy_file_parameters: DiagnosticsOptionalParameters | None,
-    loading_result: LoadingResult | None,
+    raw_base_config: Mapping[str, object],
 ) -> DiagnosticsDump:
     log.logger.setLevel(logging.INFO)
-    loaded_config = (load_config() if loading_result is None else loading_result).loaded_config
     omd_config = get_omd_config(omd_root)
     logger = ConsoleLogger()
 
@@ -185,7 +190,7 @@ def _create_dump(
         omd_config=omd_config,
         site_id=omd_site(),
         all_parameters=all_parameters,
-        base_config={f.name: getattr(loaded_config, f.name) for f in fields(loaded_config)},
+        base_config=raw_base_config,
         resolve_checkmk_server_host=_make_host_resolver(checkmk_server_host),
         site_internal_auth_header=lambda: (
             "InternalToken %s" % (SiteInternalSecret().secret.b64_str)

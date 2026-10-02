@@ -10,7 +10,7 @@ line into a selection of diagnostics plug-ins.
 
 import sys
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from pathlib import Path
 from typing import Final
 
@@ -118,7 +118,10 @@ def _mode_create_diagnostics_dump(
         omd_root=cmk.utils.paths.omd_root,
         diagnostics_dir=cmk.utils.paths.diagnostics_dir,
         selection=_resolve_cli_selection(catalogue, options),
-        loading_result=loading_result,
+        raw_base_config={
+            f.name: getattr(loading_result.loaded_config, f.name)
+            for f in fields(loading_result.loaded_config)
+        },
     )
     logger = ConsoleLogger()
     logger.section_step("Creating diagnostics dump", verbose=False)

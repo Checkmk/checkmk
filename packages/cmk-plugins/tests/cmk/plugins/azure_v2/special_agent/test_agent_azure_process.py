@@ -7,6 +7,7 @@
 # mypy: disable-error-code="type-arg"
 
 import argparse
+import json
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from unittest.mock import AsyncMock
@@ -22,6 +23,7 @@ from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     AzureResourceGroup,
     AzureSubscription,
     filter_tags,
+    get_otel_identity_labels_section,
     get_otel_only_resources,
     get_resource_groups,
     get_resource_host_labels_section,
@@ -269,6 +271,67 @@ def test_get_otel_only_resources(
         resource.name
         for resource in get_otel_only_resources(resources, otel_resource_types, monitored_services)
     ] == expected_names
+
+
+@pytest.mark.parametrize(
+    "resource_group, expected_identity",
+    [
+        pytest.param(
+            "My_RG",
+            {
+                "cmk/metrics_identity/resource/azuremonitor.tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
+                "cmk/metrics_identity/resource/azuremonitor.subscription_id": "mock_subscription_id",
+                "cmk/metrics_identity/data_point/resource_group": "my_rg",
+                "cmk/metrics_identity/data_point/type": "Microsoft.Network/publicIPAddresses",
+                "cmk/metrics_identity/data_point/name": "my-public-ip",
+            },
+            id="resource group in lower case like the receiver sets it",
+        ),
+        pytest.param(
+            "",
+            {
+                "cmk/metrics_identity/resource/azuremonitor.tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
+                "cmk/metrics_identity/resource/azuremonitor.subscription_id": "mock_subscription_id",
+                "cmk/metrics_identity/data_point/type": "Microsoft.Network/publicIPAddresses",
+                "cmk/metrics_identity/data_point/name": "my-public-ip",
+            },
+            id="attribute without a value is left out",
+        ),
+        pytest.param(
+            "rg:100%",
+            {
+                "cmk/metrics_identity/resource/azuremonitor.tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
+                "cmk/metrics_identity/resource/azuremonitor.subscription_id": "mock_subscription_id",
+                "cmk/metrics_identity/data_point/resource_group": "rg%3A100%25",
+                "cmk/metrics_identity/data_point/type": "Microsoft.Network/publicIPAddresses",
+                "cmk/metrics_identity/data_point/name": "my-public-ip",
+            },
+            id="colon and percent sign are percent-encoded",
+        ),
+    ],
+)
+def test_get_otel_identity_labels_section(
+    resource_group: str,
+    expected_identity: Mapping[str, str],
+) -> None:
+    resource = AzureResource(
+        {
+            "id": "my-public-ip_id",
+            "name": "my-public-ip",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "location": "westeurope",
+            "tags": {},
+            "group": resource_group,
+        },
+        TagsImportPatternOption.import_all,
+        fake_azure_subscription(),
+        UniqueHostnamesConfig(),
+    )
+
+    section = get_otel_identity_labels_section(resource)
+
+    assert section._piggytargets == ["my-public-ip"]  # noqa: SLF001
+    assert section._cont == [json.dumps(expected_identity) + "\n"]  # noqa: SLF001
 
 
 @pytest.mark.parametrize(

@@ -2142,6 +2142,31 @@ def get_otel_only_resources(
     ]
 
 
+def get_otel_identity_labels_section(resource: AzureResource) -> _Section:
+    # The metric backend routes an OTel series to the host whose identity labels all equal
+    # the attributes the Azure receiver sets on the series.
+    # The receiver sets the resource group in lower case.
+    # A label value cannot contain a colon, the fetcher decodes "%3A" and "%25".
+    identity = {
+        "cmk/metrics_identity/resource/azuremonitor.tenant_id": resource.subscription.tenant_id,
+        "cmk/metrics_identity/resource/azuremonitor.subscription_id": resource.subscription.id,
+        "cmk/metrics_identity/data_point/resource_group": resource.group,
+        "cmk/metrics_identity/data_point/type": resource.info["type"],
+        "cmk/metrics_identity/data_point/name": resource.name,
+    }
+    section = _Section("labels", [resource.piggytarget], separator=0, options=[])
+    section.add(
+        json.dumps(
+            {
+                label: value.replace("%", "%25").replace(":", "%3A")
+                for label, value in identity.items()
+                if value
+            }
+        )
+    )
+    return section
+
+
 def write_resource_groups_sections(resource_groups: Mapping[str, AzureResourceGroup]) -> None:
     # for inventory purposes
     for group_name, resource in resource_groups.items():
@@ -2666,13 +2691,17 @@ async def _test_connection(args: argparse.Namespace) -> int:
 def _gather_sections_from_resources(
     resources: list[AzureResource],
     monitored_groups: Mapping[str, AzureResourceGroup],
-) -> Sequence[AzureSection]:
-    sections: list[AzureSection] = []
+    otel_resource_types: Iterable[str],
+) -> Sequence[_Section]:
+    otel_types_lower = {t.lower() for t in otel_resource_types}
+    sections: list[_Section] = []
     for resource in resources:
         section = AzureResourceSection(resource)
         section.add(resource.dumpinfo())
         sections.append(section)
         sections.append(get_resource_host_labels_section(resource, monitored_groups))
+        if resource.info["type"].lower() in otel_types_lower:
+            sections.append(get_otel_identity_labels_section(resource))
 
     return sections
 
@@ -2684,7 +2713,7 @@ async def process_bulk_resources(
     monitored_services: set[str],
     monitored_resources: Mapping[ResourceId, AzureResource],
     subscription: AzureSubscription,  # noqa: ARG001
-) -> Sequence[AzureSection]:
+) -> Sequence[_Section]:
     tasks = set()
     if FetchedResource.VIRTUAL_MACHINES.type in monitored_services:
         tasks.add(_collect_virtual_machines_resources(mgmt_client, monitored_resources))
@@ -2706,7 +2735,9 @@ async def process_bulk_resources(
 
         processed_resources.extend(resources_async)
 
-    return _gather_sections_from_resources(processed_resources, groups_with_monitored_resources)
+    return _gather_sections_from_resources(
+        processed_resources, groups_with_monitored_resources, args.otel_resource_types
+    )
 
 
 # TODO: test
@@ -2717,7 +2748,7 @@ async def process_single_resources(
     groups_with_monitored_resources: Mapping[str, AzureResourceGroup],
     monitored_resources: Mapping[ResourceId, AzureResource],
     otel_resources: list[AzureResource],
-) -> Sequence[AzureSection]:
+) -> Sequence[_Section]:
     processed_resources: list[AzureResource] = []
     tasks: set[Coroutine[Any, Any, AzureResource] | Coroutine[Any, Any, list[AzureResource]]] = (
         set()
@@ -2759,7 +2790,9 @@ async def process_single_resources(
             processed_resources.extend(resource_async)
 
     return _gather_sections_from_resources(
-        [*processed_resources, *otel_resources], groups_with_monitored_resources
+        [*processed_resources, *otel_resources],
+        groups_with_monitored_resources,
+        args.otel_resource_types,
     )
 
 

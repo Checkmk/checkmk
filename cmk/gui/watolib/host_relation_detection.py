@@ -61,6 +61,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     FolderTree,
     Host,
     HostEditResult,
+    parent_folder_chain,
     PathWithoutSlash,
     plan_relation_mirror,
     relation_mirror_folders,
@@ -368,21 +369,40 @@ class ScannedHost:
 
     name: HostName
     labels: Labels
-    attributes: HostAttributes
+    attributes: Mapping[str, object]
 
 
-def scanned_host(host: Host, *, read_labels: bool) -> ScannedHost:
-    """``host`` as the scan reads it.
+def scanned_hosts(hosts: Iterable[Host], *, read_labels: bool) -> list[ScannedHost]:
+    """``hosts`` as the scan reads them.
 
-    The labels are the ones Setup holds for it - its own, its folders' and the ones its
-    attributes set - not the ones the monitoring discovered. Read only when a label is what
-    the scan pairs or marks on: :meth:`Host.labels` walks the folder chain on every call.
+    Attributes and labels are what a host sets itself and what its folders set: a CMDB that
+    writes a rack or a chassis onto a folder means it for every host in it, the same as a label
+    set there. Not the defaults of the attributes nobody set - a host carries nothing it was
+    not given. What a folder sets is read once per folder: a fleet is tens of thousands of
+    hosts in a few hundred folders.
+
+    The labels are the ones Setup holds, not the ones the monitoring discovered, and are read
+    only when a label is what the scan pairs or marks on.
     """
-    return ScannedHost(
-        name=host.name(),
-        labels=host.labels() if read_labels else {},
-        attributes=host.attributes,
-    )
+    set_by_folder: dict[PathWithoutSlash, Mapping[str, object]] = {}
+
+    def _set_by(folder: Folder) -> Mapping[str, object]:
+        if (attributes := set_by_folder.get(folder.path())) is None:
+            attributes = set_by_folder[folder.path()] = {
+                name: value
+                for setting in (*parent_folder_chain(folder), folder)
+                for name, value in setting.attributes.items()
+            }
+        return attributes
+
+    return [
+        ScannedHost(
+            name=host.name(),
+            labels=host.labels() if read_labels else {},
+            attributes={**_set_by(host.folder()), **host.attributes},
+        )
+        for host in hosts
+    ]
 
 
 def at_deciding_end(host: ScannedHost, marker: EndMarker) -> bool:
@@ -827,7 +847,7 @@ def detect_relations(
     does not know yet is found as well.
     """
     all_hosts = readable_hosts(tree, acting_user=acting_user)
-    scanned = [scanned_host(host, read_labels=evidence.reads_labels) for host in all_hosts.values()]
+    scanned = scanned_hosts(all_hosts.values(), read_labels=evidence.reads_labels)
     refusal = _refusals_per_folder_pair(acting_user=acting_user)
     inside = scope.hosts_in(tree, all_hosts)
     found = _within(propose_relations(scanned, evidence=evidence), inside)
@@ -1042,7 +1062,7 @@ def scan_for_evidence(
     """:func:`suggest_evidence` for every host the user may see, read the way a scan reads them."""
     hosts = readable_hosts(tree, acting_user=acting_user)
     return suggest_evidence(
-        [scanned_host(host, read_labels=in_values) for host in hosts.values()],
+        scanned_hosts(hosts.values(), read_labels=in_values),
         attribute_names=attribute_names,
         words=words,
         values=values,

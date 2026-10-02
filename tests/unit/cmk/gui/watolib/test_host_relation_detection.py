@@ -461,7 +461,7 @@ def test_a_marked_host_is_the_one_at_the_deciding_end() -> None:
         ),
     )
 
-    assert found.groups == []
+    assert list(found.groups) == []
     assert [(str(proposal.pair.source), str(proposal.pair.target)) for proposal in found.pairs] == [
         ("w-4712", "w-4711")
     ]
@@ -950,6 +950,36 @@ def _folder_of_its_own(tree: FolderTree, name: str, contact_group: str) -> Folde
     return _subfolder(
         tree.root_folder(), name, HostAttributes({"contactgroups": _contact_groups(contact_group)})
     )
+
+
+def test_an_attribute_set_on_the_folder_counts_for_its_hosts(tree: FolderTree) -> None:
+    """Like a label of the folder: a CMDB writing a chassis onto a folder means every host in it."""
+    rack = _subfolder(tree.root_folder(), "rack", cast("HostAttributes", {"cmdb_chassis": "CH-1"}))
+    for name in ("blade-1", "blade-2"):
+        _create_host(rack, name)
+    _create_host(tree.root_folder(), "elsewhere")
+    tree.invalidate_caches()
+
+    (question,) = detect_relations(
+        tree, evidence=_evidence(shared=SharedAttribute("cmdb_chassis")), acting_user=_SUPERUSER
+    ).groups
+
+    assert set(question.proposal.members) == {HostName("blade-1"), HostName("blade-2")}
+
+
+def test_the_default_of_an_attribute_nobody_set_is_not_a_value_hosts_share(
+    tree: FolderTree,
+) -> None:
+    """Every host would carry the default; what the scan pairs on is what somebody wrote."""
+    for name in ("srv-1", "srv-2", "srv-3"):
+        _create_host(tree.root_folder(), name)
+    tree.invalidate_caches()
+
+    found = detect_relations(
+        tree, evidence=_evidence(shared=SharedAttribute("tag_criticality")), acting_user=_SUPERUSER
+    )
+
+    assert list(found.groups) == []
 
 
 def test_a_host_the_user_may_not_edit_is_reported_instead_of_offered(tree: FolderTree) -> None:

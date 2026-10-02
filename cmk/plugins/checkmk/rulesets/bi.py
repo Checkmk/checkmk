@@ -7,11 +7,11 @@
 
 from collections.abc import Callable, Mapping
 
-from cmk.bi.filesystem import get_default_site_filesystem
-from cmk.bi.packs import BIAggregationPacks
 from cmk.rulesets.internal.form_specs import (
-    SingleChoiceElementExtended,
-    SingleChoiceExtended,
+    Autocompleter,
+    AutocompleterData,
+    AutocompleterParams,
+    StringAutocompleter,
     UserSelection,
     UserSelectionFilter,
 )
@@ -33,12 +33,6 @@ from cmk.rulesets.v1.form_specs import (
     validators,
 )
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
-
-
-def _aggregation_group_choices() -> list[tuple[str, str]]:
-    bi_packs = BIAggregationPacks(get_default_site_filesystem().etc.config)
-    bi_packs.load_config()
-    return bi_packs.get_aggregation_group_choices()
 
 
 def _credential_vs() -> CascadingSingleChoice:
@@ -149,16 +143,19 @@ def _bi_aggregate() -> Dictionary:
                         "aggr_group_prefix": DictElement(
                             required=False,
                             parameter_form=List(
-                                element_template=SingleChoiceExtended(
-                                    elements=[
-                                        SingleChoiceElementExtended(
-                                            name=value,
-                                            title=Title(  # astrein: disable=localization
-                                                title
+                                element_template=StringAutocompleter(
+                                    title=Title("Group"),
+                                    autocompleter=Autocompleter(
+                                        data=AutocompleterData(
+                                            ident="bi_aggregation_groups",
+                                            params=AutocompleterParams(
+                                                show_independent_of_context=True,
+                                                strict=False,
+                                                escape_regex=False,
                                             ),
-                                        )
-                                        for value, title in _aggregation_group_choices()
-                                    ],
+                                        ),
+                                    ),
+                                    custom_validate=(validators.LengthInRange(min_value=1),),
                                 ),
                                 title=Title("By aggregation group prefix"),
                                 add_element_label=Label("Add new group"),

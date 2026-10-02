@@ -40,7 +40,6 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/bi",
         "//cmk/utils",
         "//packages/cmk-ccc:regex",
         "//packages/cmk-ccc:site",

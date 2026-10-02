@@ -5,6 +5,7 @@
 
 from datetime import timedelta
 
+from cmk.gui.autocompleters import autocompleter_registry
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
@@ -20,7 +21,7 @@ from cmk.gui.watolib.host_rename import RenameHostHook, RenameHostHookRegistry, 
 from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 
-from . import _config, _filters, _icons, _openapi, _snapins, _valuespecs
+from . import _autocompleters, _config, _filters, _icons, _openapi, _snapins, _valuespecs
 from ._cron import compile_bi_aggregations, COMPILE_BI_AGGREGATIONS_JOB_ID
 from ._host_rename import rename_host_in_bi
 from .ajax_endpoints import ajax_render_tree, ajax_save_treestate, ajax_set_assumption
@@ -121,6 +122,9 @@ def register(
     _icons.register(icon_and_action_registry)
     _snapins.register(snapin_registry)
     _valuespecs.register()
+    autocompleter_registry.register_autocompleter(
+        "bi_aggregation_groups", _autocompleters.aggregation_group_autocompleter
+    )
 
     rename_host_hook_registry.register(
         RenameHostHook(RenamePhase.SETUP, "BI aggregations", rename_host_in_bi)

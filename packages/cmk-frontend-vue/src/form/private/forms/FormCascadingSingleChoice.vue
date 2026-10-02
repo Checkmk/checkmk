@@ -13,6 +13,7 @@ import type {
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
 import FormIndent from 'cmk-ui-library/components/CmkIndent.vue'
+import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkSpace from 'cmk-ui-library/components/CmkSpace.vue'
 import CmkToggleButtonGroup from 'cmk-ui-library/components/CmkToggleButtonGroup.vue'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
@@ -128,7 +129,13 @@ const buttonGroupButtons = computed((): Array<{ label: string; value: string }> 
     :class="{ 'form-cascading-single-choice__horizontal': props.spec.layout === 'horizontal' }"
   >
     <div>
-      <FormLabel v-if="$props.spec.label" :for="componentId">
+      <!-- The label is inline; a block of its own puts it above the choice. -->
+      <div v-if="$props.spec.label && props.spec.layout === 'horizontal'">
+        <CmkLabel :for="componentId">
+          {{ props.spec.label }}
+        </CmkLabel>
+      </div>
+      <FormLabel v-else-if="$props.spec.label" :for="componentId">
         {{ props.spec.label }}
         <CmkSpace size="small" />
       </FormLabel>

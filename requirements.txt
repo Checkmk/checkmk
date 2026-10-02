@@ -1302,6 +1302,7 @@ fastapi==0.141.1 \
     #   -r non-free/packages/cmk-ai-control-plane/requirements.in
     #   -r non-free/packages/cmk-dev-ai/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-fastapi/requirements.in
     #   -r packages/cmk-maps/requirements.in
     #   cmk-dev-site
 feedparser==6.0.12 \
@@ -1885,6 +1886,7 @@ httpx2==2.12.0 \
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-fastapi/dev-requirements.in
     #   anthropic
     #   genai-prices
     #   mcp
@@ -3601,7 +3603,9 @@ openapi-schema-validator==0.9.0 \
 openapi-spec-validator==0.9.0 \
     --hash=sha256:222fecffc7714f6d0a6ad62c0e4b66cc2b7dbfafb7b93acfc6c308abbdb51af8 \
     --hash=sha256:6d648cff6490ebb799dcfe273792f2941c050158854c721f086599d845da78b8
-    # via -r cmk/requirements.in
+    # via
+    #   -r cmk/requirements.in
+    #   -r packages/cmk-fastapi/dev-requirements.in
 opentelemetry-api==1.44.0 \
     --hash=sha256:67647e5e9566edcf421166fdf022b3537f818635daa852b289e34604dc6fb33a \
     --hash=sha256:94b98c893a91b88657eaac1e3ba89618cdb85be6918196705354f34728b2cdef
@@ -4336,6 +4340,7 @@ pydantic==2.13.5 \
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-backup/requirements.in
     #   -r packages/cmk-events/requirements.in
+    #   -r packages/cmk-fastapi/requirements.in
     #   -r packages/cmk-flags/requirements.in
     #   -r packages/cmk-maps/requirements.in
     #   -r packages/cmk-messaging/requirements.in
@@ -4808,6 +4813,7 @@ pytest==9.1.1 \
     #   -r packages/cmk-diagnostics/dev-requirements.in
     #   -r packages/cmk-ec/dev-requirements.in
     #   -r packages/cmk-events/dev-requirements.in
+    #   -r packages/cmk-fastapi/dev-requirements.in
     #   -r packages/cmk-flags/dev-requirements.in
     #   -r packages/cmk-graphing-engine/dev-requirements.in
     #   -r packages/cmk-inventory/dev-requirements.in
@@ -6252,6 +6258,7 @@ typing-extensions==4.16.0 \
     --hash=sha256:481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8 \
     --hash=sha256:dc983d19a509c94dba722ee6abd33940f7c05a89e243c47e907eb4db6f1a43e5
     # via
+    #   -r packages/cmk-fastapi/requirements.in
     #   anthropic
     #   azure-core
     #   azure-identity

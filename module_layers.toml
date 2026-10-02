@@ -766,6 +766,9 @@ allows = ["@ccc", "cmk.utils.paths"]
 [components."cmk.events"]
 allows = ["@ccc", "@livestatus_client", "cmk.ruleset_matcher"]
 
+[components."cmk.fastapi"]
+allows = []
+
 [components."cmk.fetcher_encoder"]
 allows = ["cmk.checkengine.helper_interface"]
 

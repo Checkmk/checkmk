@@ -841,6 +841,7 @@ pkg_tar(
         "//packages/cmk-diagnostics:pkg_tar",
         "//packages/cmk-ec:pkg_tar",
         "//packages/cmk-events:pkg_tar",
+        "//packages/cmk-fastapi:pkg_tar",
         "//packages/cmk-flags:pkg_tar",
         "//packages/cmk-graphing-engine:pkg_tar",
         "//packages/cmk-inventory:pkg_tar",

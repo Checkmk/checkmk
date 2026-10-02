@@ -945,6 +945,7 @@ fastapi==0.141.1 \
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-ai-control-plane/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-fastapi/requirements.in
     #   -r packages/cmk-maps/requirements.in
 feedparser==6.0.12 \
     --hash=sha256:64f76ce90ae3e8ef5d1ede0f8d3b50ce26bcce71dd8ae5e82b1cd2d4a5f94228 \
@@ -3353,6 +3354,7 @@ pydantic==2.13.5 \
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-backup/requirements.in
     #   -r packages/cmk-events/requirements.in
+    #   -r packages/cmk-fastapi/requirements.in
     #   -r packages/cmk-flags/requirements.in
     #   -r packages/cmk-maps/requirements.in
     #   -r packages/cmk-messaging/requirements.in
@@ -4660,6 +4662,7 @@ typing-extensions==4.16.0 \
     --hash=sha256:dc983d19a509c94dba722ee6abd33940f7c05a89e243c47e907eb4db6f1a43e5
     # via
     #   -c requirements.txt
+    #   -r packages/cmk-fastapi/requirements.in
     #   anthropic
     #   azure-core
     #   azure-identity

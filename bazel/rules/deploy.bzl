@@ -190,6 +190,7 @@ COMMUNITY_WHEELS = [
     "//packages/cmk-diagnostics:wheel",
     "//packages/cmk-ec:wheel",
     "//packages/cmk-events:wheel",
+    "//packages/cmk-fastapi:wheel",
     "//packages/cmk-flags:wheel",
     "//packages/cmk-graphing-engine:wheel",
     "//packages/cmk-inventory:wheel",

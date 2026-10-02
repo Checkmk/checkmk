@@ -149,10 +149,13 @@ allows = [
 
 [plugin_families.violations.bakery]
 # The "cmk" commands of the bakery (cli) drive the bakery backend and need the
-# base configuration and the agent paths.
+# base configuration and the agent paths. The automations also return their
+# result types and run against the engine's common state.
 allows = [
   "@ccc",
+  "cmk.automations.results",
   "cmk.bakery",
+  "cmk.base.automations.automations",
   "cmk.base.config",
   "cmk.discover_plugins",
   "cmk.utils.log.console",
@@ -407,19 +410,12 @@ allows = []
 [components."cmk.bakery.base"]
 allows = [
   "@ccc",
-  "cmk.automations",
   "cmk.bakery",
   "cmk.bakery.base.cap",
   "cmk.bakery.shared",
   "cmk.base.api.bakery",
-  "cmk.base.automations",
-  "cmk.base.base_app",
-  "cmk.base.config",
-  "cmk.base.configlib",
-  "cmk.cli.internal",
   "cmk.base.nonfree.plugins.bakery.bakery_api",
   "cmk.base.plugins.bakery.bakery_api",
-  "cmk.checkengine",
   "cmk.crypto.certificate",
   "cmk.discover_plugins",
   "cmk.robotmk.bakery",

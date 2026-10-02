@@ -110,7 +110,6 @@ _NOT_YET_MOVED_MODULES: Final = (
     "cmk.base.diagnostics",
     "cmk.base.notify",
     "cmk.base.nonfree.notify_automation",
-    "cmk.bakery.base.automation",  # non-free
 )
 
 

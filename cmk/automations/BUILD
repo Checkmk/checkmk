@@ -15,6 +15,7 @@ py_library(
     imports = ["../.."],
     visibility = [
         "//cmk:__subpackages__",
+        "//non-free/packages/cmk-bakery:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [

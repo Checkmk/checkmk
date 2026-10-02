@@ -1,0 +1,279 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="explicit-any"
+
+from typing import Any
+
+from cmk.gui import visuals
+from cmk.gui.config import default_authorized_builtin_role_ids
+from cmk.gui.data_source import data_source_registry
+from cmk.gui.i18n import _, _u
+from cmk.gui.legacy_plugins import load_web_plugins
+from cmk.gui.painter.v0 import painter_registry, register_painter
+from cmk.gui.permissions import declare_dynamic_permissions, declare_permission
+from cmk.gui.type_defs import Perfdata, ViewSpec, VisualLinkSpec
+from cmk.gui.view_utils import cmp_service_name_equiv, get_labels, render_labels, render_tag_groups
+from cmk.gui.views.sorter import sorter_registry
+from cmk.gui.visuals.filter import filter_registry
+from cmk.gui.visuals.info import visual_info_registry
+from cmk.web.utils.speaklater import LazyText
+
+from . import exporter, icon, inventory
+from .command import register_legacy_command
+from .exporter import exporter_registry
+from .icon import Icon, icon_and_action_registry
+from .inventory import register_table_views_and_columns
+from .sorter import register_sorter
+from .store import multisite_builtin_views
+from .view_choices import format_view_title
+
+# TODO: Kept for compatibility with pre 1.6 plugins. Plugins will not be used anymore, but an error
+# will be displayed.
+multisite_commands: list[dict[str, Any]] = []
+multisite_painters: dict[str, dict[str, Any]] = {}
+multisite_sorters: dict[str, Any] = {}
+multisite_icons_and_actions: dict[str, dict[str, Any]] = {}
+
+
+def register() -> None:
+    exporter.register(exporter_registry)
+    _register_pre_21_plugin_api()
+    load_web_plugins("views", globals())
+    inventory.register_inv_paint_functions(globals())
+
+    load_web_plugins("icons", globals())
+
+    register_legacy_icons()
+
+    # TODO: Kept for compatibility with pre 1.6 plugins
+    for cmd_spec in multisite_commands:
+        register_legacy_command(cmd_spec)
+
+    # Needs to be executed after all plug-ins (built-in and local) are loaded
+    register_table_views_and_columns(
+        painter_registry,
+        sorter_registry,
+        filter_registry,
+        visual_info_registry,
+        data_source_registry,
+    )
+
+    # TODO: Kept for compatibility with pre 1.6 plugins
+    for ident, spec in multisite_painters.items():
+        register_painter(ident, spec)
+
+    # TODO: Kept for compatibility with pre 1.6 plugins
+    for ident, spec in multisite_sorters.items():
+        register_sorter(ident, spec)
+
+    visuals.declare_visual_permissions("views", _("views"))
+
+    # Declare permissions for built-in views.
+    # Be lazy with the title, it uses plugins that might not yet be loaded.
+    for name, view_spec in multisite_builtin_views.items():
+        declare_permission(
+            "view.%s" % name,
+            _lazy_view_title(name, view_spec),
+            "{} - {}".format(name, _u(str(view_spec["description"]))),
+            default_authorized_builtin_role_ids,
+        )
+
+    # Make sure that custom views also have permissions
+    declare_dynamic_permissions(lambda: visuals.declare_custom_permissions("views"))
+    declare_dynamic_permissions(lambda: visuals.declare_packaged_visuals_permissions("views"))
+
+
+def _lazy_view_title(name: str, view_spec: ViewSpec) -> LazyText:
+    return LazyText(lambda: format_view_title(name, view_spec))
+
+
+def _register_pre_21_plugin_api() -> None:
+    """Register pre 2.1 "plug-in API"
+
+    This was never an official API, but the names were used by built-in and also 3rd party plugins.
+
+    Our built-in plug-in have been changed to directly import from the .utils module. We add these old
+    names to remain compatible with 3rd party plug-ins for now.
+
+    In the moment we define an official plug-in API, we can drop this and require all plug-ins to
+    switch to the new API. Until then let's not bother the users with it.
+
+    CMK-12228
+    """
+    # Needs to be a local import to not influence the regular plug-in loading order
+    import cmk.gui.painter.v0.base as painter_base
+    import cmk.gui.painter.v0.helpers as painter_helpers
+    import cmk.gui.painter.v0.registry as gui_painter_registry
+    import cmk.gui.painter.v1.helpers as painter_v1_helpers
+    import cmk.gui.plugins.views as api_module  # astrein: disable=cmk-module-layer-violation
+    from cmk.gui import (
+        data_source,
+        display_options,
+        painter_options,
+        view_utils,
+        visual_link,
+    )
+    from cmk.gui.plugins.views import (  # astrein: disable=cmk-module-layer-violation
+        icons,
+    )
+
+    from . import command, exporter, layout, sorter, store
+
+    for name in (
+        "ABCDataSource",
+        "data_source_registry",
+        "row_id",
+        "RowTable",
+        "DataSourceLivestatus",
+        "RowTableLivestatus",
+        "query_livestatus",
+    ):
+        api_module.__dict__[name] = data_source.__dict__[name]
+
+    for name in (
+        "Exporter",
+        "exporter_registry",
+        "output_csv_headers",
+    ):
+        api_module.__dict__[name] = exporter.__dict__[name]
+
+    for name in (
+        "get_graph_timerange_from_painter_options",
+        "paint_age",
+        "painter_option_registry",
+        "PainterOption",
+        "PainterOptions",
+    ):
+        api_module.__dict__[name] = painter_options.__dict__[name]
+
+    for name in (
+        "declare_simple_sorter",
+        "declare_1to1_sorter",
+        "register_sorter",
+        "Sorter",
+        "sorter_registry",
+        "cmp_custom_variable",
+        "cmp_ip_address",
+        "cmp_num_split",
+        "cmp_simple_number",
+        "cmp_simple_string",
+        "cmp_string_list",
+        "compare_ips",
+    ):
+        api_module.__dict__[name] = sorter.__dict__[name]
+
+    api_module.__dict__["cmp_service_name_equiv"] = cmp_service_name_equiv
+
+    for name in (
+        "get_permitted_views",
+        "multisite_builtin_views",
+    ):
+        api_module.__dict__[name] = store.__dict__[name]
+
+    for name in (
+        "inventory_displayhints",
+        "InventoryHintSpec",
+    ):
+        api_module.__dict__[name] = inventory.__dict__[name]
+
+    api_module.__dict__["display_options"] = display_options.display_options
+    api_module.__dict__["view_title"] = visuals.view_title
+
+    for name in (
+        "Layout",
+        "layout_registry",
+        "group_value",
+    ):
+        api_module.__dict__[name] = layout.__dict__[name]
+
+    for name in (
+        "Command",
+        "command_group_registry",
+        "command_registry",
+        "CommandActionResult",
+        "CommandGroup",
+        "CommandSpec",
+    ):
+        api_module.__dict__[name] = command.__dict__[name]
+
+    for name in (
+        "Cell",
+        "EmptyCell",
+        "CellSpec",
+        "Painter",
+        "ExportCellContent",
+        "join_row",
+    ):
+        api_module.__dict__[name] = painter_base.__dict__[name]
+
+    for name in (
+        "painter_registry",
+        "register_painter",
+    ):
+        api_module.__dict__[name] = gui_painter_registry.__dict__[name]
+
+    for name in (
+        "format_plugin_output",
+        "get_label_sources",
+        "get_tag_groups",
+        "paint_host_list",
+        "paint_nagiosflag",
+        "render_cache_info",
+    ):
+        api_module.__dict__[name] = painter_helpers.__dict__[name]
+
+    for name in (
+        "transform_action_url",
+        "replace_action_url_macros",
+    ):
+        api_module.__dict__[name] = view_utils.__dict__[name]
+
+    for name in (
+        "get_perfdata_nth_value",
+        "is_stale",
+        "paint_stalified",
+    ):
+        api_module.__dict__[name] = painter_v1_helpers.__dict__[name]
+
+    for name in (
+        "render_link_to_view",
+        "url_to_visual",
+    ):
+        api_module.__dict__[name] = visual_link.__dict__[name]
+
+    api_module.__dict__.update(
+        {
+            "Perfdata": Perfdata,
+            "VisualLinkSpec": VisualLinkSpec,
+            "get_labels": get_labels,
+            "render_labels": render_labels,
+            "render_tag_groups": render_tag_groups,
+        }
+    )
+
+    for name in (
+        "icon_and_action_registry",
+        "Icon",
+        "IconRegistry",
+    ):
+        icons.__dict__[name] = icon.__dict__[name]
+
+
+# Transform pre 1.6 icon plugins. Deprecate this one day.
+def register_legacy_icons() -> None:
+    for icon_id, icon_spec in multisite_icons_and_actions.items():
+        icon_and_action_registry.register(
+            Icon(
+                ident=icon_id,
+                title=icon_spec.get("title", icon_id),
+                sort_index=icon_spec.get("sort_index", 30),
+                toplevel=icon_spec.get("toplevel", False),
+                columns=icon_spec.get("columns", []),
+                host_columns=icon_spec.get("host_columns", []),
+                service_columns=icon_spec.get("service_columns", []),
+                render=icon_spec["paint"],
+            )
+        )

@@ -9,10 +9,10 @@ from typing import Literal
 
 import pytest
 
-import cmk.gui.views
 from cmk.gui.config import active_config
 from cmk.gui.type_defs import BuiltinIconVisibility, IconSpec, Row
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.views import legacy_plugins
 from cmk.gui.views.icon import (
     Icon,
     icon_and_action_registry,
@@ -61,7 +61,7 @@ def test_builtin_icons_and_actions() -> None:
         "wato",
     ]
 
-    cmk.gui.views.register_legacy_icons()
+    legacy_plugins.register_legacy_icons()
     builtin_icons = sorted(icon_and_action_registry.keys())
     assert builtin_icons == sorted(expected_icons_and_actions)
 
@@ -76,10 +76,10 @@ def test_legacy_icon_plugin(monkeypatch: pytest.MonkeyPatch) -> None:
         "toplevel": True,
     }
     monkeypatch.setattr(
-        cmk.gui.views, "icon_and_action_registry", registry := icon_registry.IconRegistry()
+        legacy_plugins, "icon_and_action_registry", registry := icon_registry.IconRegistry()
     )
-    monkeypatch.setitem(cmk.gui.views.multisite_icons_and_actions, "legacy", icon)
-    cmk.gui.views.register_legacy_icons()
+    monkeypatch.setitem(legacy_plugins.multisite_icons_and_actions, "legacy", icon)
+    legacy_plugins.register_legacy_icons()
     user_permissions = UserPermissions({}, {}, {}, [])
 
     registered_icon = registry["legacy"]
@@ -127,10 +127,10 @@ def test_legacy_icon_plugin_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "paint": lambda: "bla",
     }
     monkeypatch.setattr(
-        cmk.gui.views, "icon_and_action_registry", registry := icon_registry.IconRegistry()
+        legacy_plugins, "icon_and_action_registry", registry := icon_registry.IconRegistry()
     )
-    monkeypatch.setitem(cmk.gui.views.multisite_icons_and_actions, "legacy", icon)
-    cmk.gui.views.register_legacy_icons()
+    monkeypatch.setitem(legacy_plugins.multisite_icons_and_actions, "legacy", icon)
+    legacy_plugins.register_legacy_icons()
 
     registered_icon = registry["legacy"]
     assert registered_icon.toplevel is False

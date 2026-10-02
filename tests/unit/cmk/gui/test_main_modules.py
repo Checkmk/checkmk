@@ -49,7 +49,7 @@ def test_load_legacy_wato_plugin() -> None:
 
 def test_load_legacy_views_plugin() -> None:
     write_local_plugin("views")
-    main_module = importlib.import_module("cmk.gui.views")
+    main_module = importlib.import_module("cmk.gui.views.legacy_plugins")
     assert "ding" not in main_module.__dict__
     try:
         main_module.register()

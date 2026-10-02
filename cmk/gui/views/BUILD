@@ -73,6 +73,7 @@ py_library(
         "availability.py",
         "datasource_selection.py",
         "exporter.py",
+        "legacy_plugins.py",
         "page_ajax_reschedule.py",
         "page_create_view.py",
         "page_edit_view.py",

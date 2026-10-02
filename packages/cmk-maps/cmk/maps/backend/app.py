@@ -11,10 +11,10 @@ must not reconfigure logging or install tracing instrumentation. Everything
 that touches the running site lives in :mod:`cmk.maps.backend.main`.
 """
 
-from fastapi import FastAPI
 from fastapi.middleware.gzip import GZipMiddleware
 from starlette.types import Lifespan
 
+from cmk.fastapi import FastAPI
 from cmk.maps.backend.api.v1 import (
     connections,
     maps,

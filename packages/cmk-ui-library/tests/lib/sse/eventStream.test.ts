@@ -20,12 +20,16 @@ class FakeEventSource {
 
   readyState = FakeEventSource.CONNECTING
   closed = false
-  onmessage: ((event: MessageEvent<string>) => void) | null = null
   onerror: (() => void) | null = null
   onopen: (() => void) | null = null
+  private readonly listeners = new Map<string, (event: MessageEvent<string>) => void>()
 
   constructor(readonly url: string) {
     FakeEventSource.instances.push(this)
+  }
+
+  addEventListener(name: string, listener: (event: MessageEvent<string>) => void): void {
+    this.listeners.set(name, listener)
   }
 
   close(): void {
@@ -33,10 +37,10 @@ class FakeEventSource {
     this.readyState = FakeEventSource.CLOSED
   }
 
-  /** The stream came up and delivered a frame. */
-  emit(data: string): void {
+  /** The stream came up and delivered an event. */
+  emit(name: string, data: string): void {
     this.readyState = FakeEventSource.OPEN
-    this.onmessage?.(new MessageEvent('message', { data }))
+    this.listeners.get(name)?.(new MessageEvent(name, { data }))
   }
 
   /** The stream never opened — a proxy that will not pass text/event-stream. */
@@ -57,7 +61,13 @@ class FakeEventSource {
   }
 }
 
+type TestEvent = { event: 'greeting'; data: { text: string } } | { event: 'count'; data: number }
+
 const POLL = { intervalMs: 15_000, reprobeIntervalMs: 60_000 }
+
+function ignoreEvents() {
+  return { greeting: vi.fn(), count: vi.fn() }
+}
 
 beforeEach(() => {
   FakeEventSource.instances = []
@@ -74,34 +84,75 @@ function latest(): FakeEventSource {
 }
 
 describe('the live stream', () => {
-  test('hands parsed frames to the caller', async () => {
-    const onMessage = vi.fn()
-    const stream = createEventStream({ url: () => 'https://example.invalid/sse', onMessage })
+  test('hands the parsed data of an event to the handler of its name', async () => {
+    const greetings: { text: string }[] = []
+    const counts: number[] = []
+    const stream = createEventStream<TestEvent>({
+      url: () => 'https://example.invalid/sse',
+      handlers: {
+        greeting: (data) => greetings.push(data),
+        count: (data) => counts.push(data)
+      }
+    })
 
     await stream.connect()
-    latest().emit('{"type":"state_update"}')
+    latest().emit('greeting', '{"text":"hello"}')
 
-    expect(onMessage).toHaveBeenCalledWith({ type: 'state_update' })
+    expect({ greetings, counts }).toEqual({ greetings: [{ text: 'hello' }], counts: [] })
   })
 
-  test('drops a frame that is not JSON instead of handing it on', async () => {
+  test('drops an event that is not JSON instead of handing it on', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const onMessage = vi.fn()
-    const stream = createEventStream({ url: () => 'https://example.invalid/sse', onMessage })
+    const counts: number[] = []
+    const stream = createEventStream<TestEvent>({
+      url: () => 'https://example.invalid/sse',
+      handlers: { greeting: vi.fn(), count: (data) => counts.push(data) }
+    })
 
     await stream.connect()
-    latest().emit('not-json')
+    latest().emit('count', 'not-json')
 
-    expect(onMessage).not.toHaveBeenCalled()
+    expect(counts).toEqual([])
     expect(warn).toHaveBeenCalledOnce()
     warn.mockRestore()
   })
 
+  test('takes handlers only for the names of its events', () => {
+    createEventStream<TestEvent>({
+      url: () => 'https://example.invalid/sse',
+      handlers: {
+        greeting: vi.fn(),
+        count: vi.fn(),
+        // @ts-expect-error farewell is not an event of the stream
+        farewell: vi.fn()
+      }
+    })
+  })
+
+  test('needs a handler for every event of the stream', () => {
+    createEventStream<TestEvent>({
+      url: () => 'https://example.invalid/sse',
+      // @ts-expect-error count has no handler
+      handlers: { greeting: vi.fn() }
+    })
+  })
+
+  test('types the data of each handler by its event', () => {
+    createEventStream<TestEvent>({
+      url: () => 'https://example.invalid/sse',
+      handlers: {
+        greeting: vi.fn(),
+        // @ts-expect-error a count is a number
+        count: (data: string) => data
+      }
+    })
+  })
+
   test('re-derives the URL on reconnect, so a rotated credential lands in it', async () => {
     let token = 'first'
-    const stream = createEventStream({
+    const stream = createEventStream<TestEvent>({
       url: () => `https://example.invalid/sse?token=${token}`,
-      onMessage: vi.fn()
+      handlers: ignoreEvents()
     })
 
     await stream.connect()
@@ -115,9 +166,9 @@ describe('the live stream', () => {
 
   test('leaves a dropped stream to the browser rather than falling back', async () => {
     const poll = { fetch: vi.fn(), ...POLL }
-    const stream = createEventStream({
+    const stream = createEventStream<TestEvent>({
       url: () => 'https://example.invalid/sse',
-      onMessage: vi.fn(),
+      handlers: ignoreEvents(),
       poll
     })
 
@@ -135,9 +186,9 @@ describe('the polling fallback', () => {
   test('takes over when the stream never opens', async () => {
     const poll = { fetch: vi.fn(), ...POLL }
     const onFallback = vi.fn()
-    const stream = createEventStream({
+    const stream = createEventStream<TestEvent>({
       url: () => 'https://example.invalid/sse',
-      onMessage: vi.fn(),
+      handlers: ignoreEvents(),
       poll,
       onFallback
     })
@@ -155,9 +206,9 @@ describe('the polling fallback', () => {
   test('heals back to the stream once it is reachable again', async () => {
     const poll = { fetch: vi.fn(), ...POLL }
     const onRecovered = vi.fn()
-    const stream = createEventStream({
+    const stream = createEventStream<TestEvent>({
       url: () => 'https://example.invalid/sse',
-      onMessage: vi.fn(),
+      handlers: ignoreEvents(),
       poll,
       onRecovered
     })
@@ -181,9 +232,9 @@ describe('the polling fallback', () => {
 
   test('stays on the fallback while the re-probe keeps failing', async () => {
     const poll = { fetch: vi.fn(), ...POLL }
-    const stream = createEventStream({
+    const stream = createEventStream<TestEvent>({
       url: () => 'https://example.invalid/sse',
-      onMessage: vi.fn(),
+      handlers: ignoreEvents(),
       poll
     })
 
@@ -199,9 +250,9 @@ describe('the polling fallback', () => {
   })
 
   test('is never started when the caller configured no fallback', async () => {
-    const stream = createEventStream({
+    const stream = createEventStream<TestEvent>({
       url: () => 'https://example.invalid/sse',
-      onMessage: vi.fn()
+      handlers: ignoreEvents()
     })
 
     await stream.connect()
@@ -215,9 +266,9 @@ describe('the polling fallback', () => {
 describe('disconnect', () => {
   test('closes the stream and stops every timer', async () => {
     const poll = { fetch: vi.fn(), ...POLL }
-    const stream = createEventStream({
+    const stream = createEventStream<TestEvent>({
       url: () => 'https://example.invalid/sse',
-      onMessage: vi.fn(),
+      handlers: ignoreEvents(),
       poll
     })
 
@@ -232,9 +283,9 @@ describe('disconnect', () => {
 
   test('clears the fallback flag, so a later connect starts live again', async () => {
     const poll = { fetch: vi.fn(), ...POLL }
-    const stream = createEventStream({
+    const stream = createEventStream<TestEvent>({
       url: () => 'https://example.invalid/sse',
-      onMessage: vi.fn(),
+      handlers: ignoreEvents(),
       poll
     })
 
@@ -253,9 +304,9 @@ describe('disconnect', () => {
 
   test('closing a still-connecting stream does not look like a failed connect', async () => {
     const poll = { fetch: vi.fn(), ...POLL }
-    const stream = createEventStream({
+    const stream = createEventStream<TestEvent>({
       url: () => 'https://example.invalid/sse',
-      onMessage: vi.fn(),
+      handlers: ignoreEvents(),
       poll
     })
 

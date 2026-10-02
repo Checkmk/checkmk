@@ -50,6 +50,7 @@ py_library(
         "//packages/cmk-ccc:version",
         "//packages/cmk-ccc:version-info",
         "//packages/cmk-crash:crash",
+        "//packages/cmk-fastapi",
         "//packages/cmk-livestatus-client:py_livestatus",
         "//packages/cmk-trace",
         requirement("fastapi"),

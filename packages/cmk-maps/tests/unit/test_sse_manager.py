@@ -14,7 +14,13 @@ rather than relying on pytest-asyncio.
 
 import asyncio
 
+from cmk.fastapi.sse import SentEvent
 from cmk.maps.backend.core.sse import Subscriber, SubscriptionManager
+from cmk.maps.backend.schemas.stream import StreamMessage
+
+
+def _event(data: str) -> SentEvent[StreamMessage]:
+    return SentEvent(event="state_update", raw_data=data)
 
 
 def test_subscribe_tracks_and_counts() -> None:
@@ -83,9 +89,9 @@ def test_push_delivers_message_to_each_target() -> None:
         mgr = SubscriptionManager()
         a = mgr.subscribe("map1", "a")
         b = mgr.subscribe("map1", "b")
-        mgr.push("map1", [a, b], "data: x\n\n")
-        assert a.queue.get_nowait() == "data: x\n\n"
-        assert b.queue.get_nowait() == "data: x\n\n"
+        mgr.push("map1", [a, b], _event("x"))
+        assert a.queue.get_nowait() == _event("x")
+        assert b.queue.get_nowait() == _event("x")
 
     asyncio.run(scenario())
 
@@ -97,12 +103,12 @@ def test_push_full_queue_flags_overflow() -> None:
     # resend) without blocking the broadcast loop.
     async def scenario() -> None:
         sub = Subscriber(auth_user="slow", queue=asyncio.Queue(maxsize=1))
-        sub.queue.put_nowait("old")
+        sub.queue.put_nowait(_event("old"))
         mgr = SubscriptionManager()
-        mgr.push("map1", [sub], "new")
+        mgr.push("map1", [sub], _event("new"))
         assert sub.overflowed is True
         # Nothing is silently dropped; the queue is left untouched for teardown.
-        assert sub.queue.get_nowait() == "old"
+        assert sub.queue.get_nowait() == _event("old")
 
     asyncio.run(scenario())
 
@@ -111,8 +117,8 @@ def test_push_healthy_queue_does_not_flag_overflow() -> None:
     async def scenario() -> None:
         sub = Subscriber(auth_user="ok", queue=asyncio.Queue(maxsize=2))
         mgr = SubscriptionManager()
-        mgr.push("map1", [sub], "m1")
+        mgr.push("map1", [sub], _event("m1"))
         assert sub.overflowed is False
-        assert sub.queue.get_nowait() == "m1"
+        assert sub.queue.get_nowait() == _event("m1")
 
     asyncio.run(scenario())

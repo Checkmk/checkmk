@@ -12,11 +12,11 @@ import type { MonitoringObjectsApi } from '@/maps/api/monitoringObjects'
 import { MapStatesService } from '@/maps/services/MapStatesService'
 import type { MapConfig, MapStates } from '@/maps/types/api'
 
-import { aMap, anObject } from '../support/fixtures'
+import { aMap, aTopologyNode, anObject } from '../support/fixtures'
 
 // What the connection itself does — opening, falling back to polling, healing —
 // belongs to the shared stream client and is covered there. What is maps' own is
-// what the frames mean: how a tick is merged, how a folder-tree delta is applied,
+// what the events mean: how a tick is merged, how a folder-tree delta is applied,
 // and which entries the daemon does not own.
 
 /** Minimal EventSource stand-in that lets a test drive the stream. */
@@ -25,16 +25,22 @@ class FakeEventSource {
   static readonly OPEN = 1
   static readonly CLOSED = 2
   onopen: (() => void) | null = null
-  onmessage: ((e: MessageEvent) => void) | null = null
   onerror: (() => void) | null = null
   readyState = 0
   closed = false
+  private readonly listeners = new Map<string, (e: MessageEvent<string>) => void>()
   constructor(public url: string) {
     FakeEventSource.instances.push(this)
+  }
+  addEventListener(name: string, listener: (e: MessageEvent<string>) => void) {
+    this.listeners.set(name, listener)
   }
   close() {
     this.closed = true
     this.readyState = 2
+  }
+  emit(name: string, data: unknown) {
+    this.listeners.get(name)?.(new MessageEvent(name, { data: JSON.stringify(data) }))
   }
 }
 
@@ -130,22 +136,20 @@ describe('MapStatesService — folder-tree delta apply', () => {
     children
   })
   const send = (es: FakeEventSource, folderTreeDelta: unknown) =>
-    es.onmessage?.({
-      data: JSON.stringify({
-        type: 'state_update',
-        map: 'b',
-        full: false,
-        removed_ids: [],
-        timing: [],
-        states: {
-          map_name: 'b',
-          states: [],
-          generated_at: 1,
-          connection_ok: true,
-          folder_tree_delta: folderTreeDelta
-        }
-      })
-    } as MessageEvent)
+    es.emit('state_update', {
+      type: 'state_update',
+      map: 'b',
+      full: false,
+      removed_ids: [],
+      timing: [],
+      states: {
+        map_name: 'b',
+        states: [],
+        generated_at: 1,
+        connection_ok: true,
+        folder_tree_delta: folderTreeDelta
+      }
+    })
 
   it('applies a full delta then patches changed nodes in place', async () => {
     const store = newService()
@@ -227,6 +231,38 @@ describe('MapStatesService — folder-tree delta apply', () => {
   })
 })
 
+describe('MapStatesService — topology update', () => {
+  beforeEach(() => {
+    FakeEventSource.instances = []
+    vi.stubGlobal('EventSource', FakeEventSource)
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+
+  it('takes the nodes of a full topology update as the topology', async () => {
+    const store = newService()
+    await store.connectToMap('b')
+
+    FakeEventSource.instances[0]!.emit('topology_update', {
+      type: 'topology_update',
+      map: 'b',
+      delta: {
+        full: true,
+        generated_at: 7,
+        added: [aTopologyNode({ name: 'h1' })],
+        changed: [],
+        removed: [],
+        timing: []
+      }
+    })
+
+    expect(store.topology.value.map((n) => n.name)).toEqual(['h1'])
+    expect(store.topologyReady.value).toBe(true)
+  })
+})
+
 describe('MapStatesService — stream credential', () => {
   beforeEach(() => {
     FakeEventSource.instances = []
@@ -278,16 +314,14 @@ describe('MapStatesService — BI aggregations resolve GUI-side', () => {
 
     // A full tick that omits the entry must not delete it: the daemon does not
     // stream aggregations, so it cannot be authoritative about them.
-    FakeEventSource.instances[0]!.onmessage?.({
-      data: JSON.stringify({
-        type: 'state_update',
-        map: 'map1',
-        full: true,
-        removed_ids: [],
-        timing: [],
-        states: { ...emptyStates, map_name: 'map1' }
-      })
-    } as MessageEvent)
+    FakeEventSource.instances[0]!.emit('state_update', {
+      type: 'state_update',
+      map: 'map1',
+      full: true,
+      removed_ids: [],
+      timing: [],
+      states: { ...emptyStates, map_name: 'map1' }
+    })
 
     expect(store.getState('agg1')?.state).toBe('CRITICAL')
     store.disconnect()

@@ -976,7 +976,7 @@ HTTP security headers
   img-src 'self' data:; style-src 'unsafe-inline'; sandbox``,
   ``Referrer-Policy: no-referrer``, ``X-Content-Type-Options: nosniff``,
   ``X-Frame-Options: SAMEORIGIN``, ``X-XSS-Protection: 1; mode=block``; the
-  SSE stream also ``Cache-Control: no-cache, no-store``.
+  SSE stream also ``Cache-Control: no-cache``.
 * **Static images and backgrounds** carry ``default-src 'none'; sandbox``
   (except ``.png`` and ``.jpg``, see `Handling untrusted input`_).
 * The site-wide headers of ``etc/apache/conf.d/security.conf`` are added to all

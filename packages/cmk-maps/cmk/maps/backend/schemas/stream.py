@@ -9,9 +9,9 @@ same schema as the REST endpoints: the frontend's stream types are generated fro
 it, and a field added here cannot silently miss the client.
 """
 
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from cmk.maps.backend.schemas.settings import DaemonRuntime
 from cmk.maps.backend.schemas.state import (
@@ -63,4 +63,4 @@ class TopologyUpdateMessage(BaseModel):
 
 
 # What a client has to be able to handle on the stream.
-StreamMessage = StateUpdateMessage | TopologyUpdateMessage
+StreamMessage = Annotated[StateUpdateMessage | TopologyUpdateMessage, Field(discriminator="type")]

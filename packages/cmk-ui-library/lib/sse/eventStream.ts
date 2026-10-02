@@ -3,7 +3,17 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-export interface EventStreamOptions {
+interface StreamEvent {
+  event: string
+  data: unknown
+}
+
+/** One handler per event name of `Event`, called with the parsed data of that event. */
+type EventHandlers<Event extends StreamEvent> = {
+  [Name in Event['event']]: (data: Extract<Event, { event: Name }>['data']) => void
+}
+
+export interface EventStreamOptions<Event extends StreamEvent> {
   /**
    * Builds the stream URL, including whatever credential it carries.
    *
@@ -12,8 +22,8 @@ export interface EventStreamOptions {
    * connect so a rotated credential lands in the URL of the next connection.
    */
   url: () => string | Promise<string>
-  /** Called for every frame the server sends. Frames that are not JSON never reach here. */
-  onMessage: (payload: unknown) => void
+  /** Events whose data is not JSON never reach these. */
+  handlers: EventHandlers<Event>
   /**
    * The fallback used when the stream cannot be opened at all — typically a reverse proxy that
    * buffers or blocks `text/event-stream`. Called on the interval below until the stream heals.
@@ -54,7 +64,9 @@ export interface EventStream {
  * Everything above the wire — what the frames mean, full-versus-delta, how state is applied —
  * belongs to the caller. This owns the connection and nothing else.
  */
-export function createEventStream(options: EventStreamOptions): EventStream {
+export function createEventStream<Event extends StreamEvent>(
+  options: EventStreamOptions<Event>
+): EventStream {
   let source: EventSource | null = null
   let probe: EventSource | null = null
   let pollTimer: ReturnType<typeof setInterval> | null = null
@@ -62,12 +74,15 @@ export function createEventStream(options: EventStreamOptions): EventStream {
   let polling = false
   let probing = false
 
+  function isEventName(name: string): name is Event['event'] {
+    return name in options.handlers
+  }
+
   function closeSource(): void {
     if (source) {
       // Drop the handler first: close() on a connecting EventSource fires onerror otherwise,
       // which would look like a failed connect and start the fallback we are tearing down.
       source.onerror = null
-      source.onmessage = null
       source.close()
       source = null
     }
@@ -148,15 +163,18 @@ export function createEventStream(options: EventStreamOptions): EventStream {
     const url = await options.url()
     const opened = new EventSource(url)
     source = opened
-    opened.onmessage = (event: MessageEvent<string>) => {
-      let payload: unknown
-      try {
-        payload = JSON.parse(event.data)
-      } catch (e) {
-        console.warn('Failed to parse JSON from message:', event.data, e)
-        return
-      }
-      options.onMessage(payload)
+    for (const name of Object.keys(options.handlers).filter(isEventName)) {
+      const handle = options.handlers[name]
+      opened.addEventListener(name, (message: MessageEvent<string>) => {
+        let data
+        try {
+          data = JSON.parse(message.data)
+        } catch (e) {
+          console.warn(`Failed to parse JSON from ${name} event:`, message.data, e)
+          return
+        }
+        handle(data)
+      })
     }
     opened.onerror = () => {
       // CONNECTING after an error is EventSource retrying a dropped stream on its own; only a

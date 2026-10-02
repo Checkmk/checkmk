@@ -9,8 +9,8 @@
  * Everything the SPA receives over the wire is aliased from a generated schema,
  * never declared here: the map configuration and the GUI-owned lookups from the
  * Checkmk REST API (``openapi_internal``, generated from the
- * ``cmk.maps.rest_api`` models), live state, topology and the stream frames from
- * the Maps daemon (``maps_openapi``, generated from its FastAPI app). What stays
+ * ``cmk.maps.rest_api`` models), live state and topology from the Maps daemon
+ * (``maps_openapi``, generated from its FastAPI app). What stays
  * below are the SPA's own shapes: the flat editing model the renderer works on,
  * and types for state that never leaves the browser.
  */
@@ -310,23 +310,9 @@ export type LogLevel = DaemonRuntime['log_level']
 
 export type ObjectTiming = Daemon['ObjectTiming']
 
-// The ``states`` payload of a stream ``state_update``: like MapStates, but the
-// foldertree arrives as a delta rather than the whole tree each tick.
-export type StateUpdatePayload = Omit<Daemon['StreamedMapStates'], 'folder_tree_delta'> & {
-  folder_tree_delta?: FolderTreeDelta | null
-}
-
-export type StateUpdateMessage = Omit<Daemon['StateUpdateMessage'], 'states'> & {
-  states: StateUpdatePayload
-}
-
 export type ServiceTiming = Daemon['ServiceTiming']
 export type TopologyTiming = Daemon['TopologyTiming']
 export type TopologyDelta = Daemon['TopologyDelta']
-export type TopologyUpdateMessage = Daemon['TopologyUpdateMessage']
-
-// What the stream can deliver.
-export type StreamMessage = StateUpdateMessage | TopologyUpdateMessage
 
 export type ImageEntry = Schemas['MapsImage']
 export type ImageUsageEntry = Schemas['MapsImageUsage']

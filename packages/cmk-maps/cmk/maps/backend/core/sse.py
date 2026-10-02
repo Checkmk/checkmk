@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """SSE subscription manager.
 
-Each subscriber owns an ``asyncio.Queue`` of pre-formatted SSE messages. The
-broadcast loop computes one delta per (map, auth_user) and ``put_nowait``s
-into the matching subscriber queues, so a subscriber costs no extra fetch.
+Each subscriber owns an ``asyncio.Queue`` of encoded events. The broadcast loop
+computes and encodes one delta per (map, auth_user) and ``put_nowait``s it into
+the matching subscriber queues, so a subscriber costs no extra fetch or encoding.
 """
 
 import asyncio
@@ -15,7 +15,9 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from cmk.fastapi.sse import SentEvent
     from cmk.maps.backend.integrations.checkmk import FolderScope
+    from cmk.maps.backend.schemas.stream import StreamMessage
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +33,9 @@ class Subscriber:
     auth_user: str | None
     folder_scope: FolderScope | None = None
     group_key: str | None = None
-    queue: asyncio.Queue[str] = field(default_factory=lambda: asyncio.Queue(maxsize=64))
+    queue: asyncio.Queue[SentEvent[StreamMessage]] = field(
+        default_factory=lambda: asyncio.Queue(maxsize=64)
+    )
     # Set when the client fell so far behind that its queue overflowed. The SSE
     # handler ends the stream on the next wake so the browser reconnects and gets
     # a full resend — see ``push``.
@@ -93,19 +97,21 @@ class SubscriptionManager:
             groups.setdefault(sub.group_key, []).append(sub)
         return groups
 
-    def push(self, the_map: str, targets: list[Subscriber], message: str) -> None:
-        """Put *message* into each target's queue, or flag an overflowed client.
+    def push(
+        self, the_map: str, targets: list[Subscriber], event: SentEvent[StreamMessage]
+    ) -> None:
+        """Put *event* into each target's queue, or flag an overflowed client.
 
         The stream carries incremental deltas (added/changed/removed), so silently
         dropping a payload for a slow client would leave it showing stale state
         indefinitely — there is no per-subscriber catch-up. A full queue therefore
         means the client fell too far behind: flag it so the SSE handler ends the
         stream (never blocking the broadcast loop), and the browser reconnects and
-        gets a full resend via the drop-snapshot-on-join in ``sse_map_states``.
+        gets a full resend via the drop-snapshot-on-join in ``_subscribe_to_stream``.
         """
         for sub in targets:
             try:
-                sub.queue.put_nowait(message)
+                sub.queue.put_nowait(event)
             except asyncio.QueueFull:
                 if not sub.overflowed:
                     logger.warning(

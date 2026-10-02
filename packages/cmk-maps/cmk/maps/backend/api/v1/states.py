@@ -6,14 +6,14 @@
 
 import asyncio
 import logging
-from collections.abc import AsyncIterator, Callable
-from http import HTTPStatus
-from typing import cast, Literal, override
+from collections.abc import AsyncIterator
+from dataclasses import dataclass
+from typing import cast, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
-from fastapi.responses import StreamingResponse
-from starlette.types import Receive, Scope, Send
+from fastapi.sse import EventSourceResponse
 
+from cmk.fastapi.sse import EventStream, SentEvent
 from cmk.maps.backend.api.v1.connections import auth_user_scope, build_topology_response
 from cmk.maps.backend.api.v1.deps import (
     principal_from_token,
@@ -50,6 +50,8 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+MAP_EVENTS = EventStream(StreamMessage)
+
 
 # Shared broadcast task per active map — avoids O(n²) fetch × broadcast.
 # Without this every connected client would independently fetch the topology
@@ -59,9 +61,8 @@ _broadcast_tasks: dict[str, asyncio.Task[None]] = {}
 # dying/recovering must reach clients even when no node-level delta exists.
 _dead_sites_snapshots: dict[tuple[str, str | None], list[str]] = {}
 
-# Heartbeat cadence for SSE keepalives. Sized below the 120 s proxy timeout of
-# the system Apache in front of the site, so idle streams are not torn down.
-_SSE_KEEPALIVE_INTERVAL = 30.0
+# The longest an idle stream outlives its ticket.
+_TICKET_RECHECK_INTERVAL = 30.0
 
 
 async def _fetch_topology_for_user(
@@ -112,7 +113,7 @@ def _build_states_msg(
     full: bool,
     timing: list[ObjectTiming],
     ft_delta: FolderTreeDelta | None,
-) -> str:
+) -> StateUpdateMessage:
     return StateUpdateMessage(
         map=map_name,
         states=StreamedMapStates(
@@ -131,7 +132,7 @@ def _build_states_msg(
         removed_ids=removed_ids,
         full=full,
         timing=timing,
-    ).model_dump_json()
+    )
 
 
 def _map_key(owner: str, name: str) -> str:
@@ -177,8 +178,8 @@ async def _push_topology_to(
         return
     # ``map`` carries the real map name (the SPA matches messages by it); the
     # snapshot/push key is the owner-qualified map key.
-    msg = TopologyUpdateMessage(map=cfg.name, delta=delta).model_dump_json()
-    manager.push(map_key, targets, msg)
+    msg = TopologyUpdateMessage(map=cfg.name, delta=delta)
+    manager.push(map_key, targets, MAP_EVENTS.encode(msg))
 
 
 async def _broadcast_loop(map_key: str) -> None:
@@ -258,7 +259,7 @@ async def _broadcast_loop(map_key: str) -> None:
                             msg = _build_states_msg(
                                 name, states, to_send, removed_ids, is_full, timing, ft_delta
                             )
-                            manager.push(map_key, established, msg)
+                            manager.push(map_key, established, MAP_EVENTS.encode(msg))
                         if newcomers:
                             full_ft = (
                                 FolderTreeDelta(full=True, tree=states.folder_tree)
@@ -268,7 +269,7 @@ async def _broadcast_loop(map_key: str) -> None:
                             full_msg = _build_states_msg(
                                 name, states, states.states, [], True, [], full_ft
                             )
-                            manager.push(map_key, newcomers, full_msg)
+                            manager.push(map_key, newcomers, MAP_EVENTS.encode(full_msg))
                             for s in newcomers:
                                 s.needs_full = False
                         if cfg.view.type == "flow":
@@ -503,61 +504,20 @@ async def folder_service_search(
     return FolderServiceSearchResult(matches=matches, truncated=truncated, limit=limit)
 
 
-class SseResponse(StreamingResponse):
-    """Carries the stream's media type into the schema; the body is streamed.
-
-    ``on_close`` runs however the response ends, also when the client is gone
-    before the body generator starts: that generator's own ``finally`` would
-    never run then.
-    """
-
-    media_type: str | None = "text/event-stream"
-
-    def __init__(
-        self,
-        content: AsyncIterator[bytes],
-        on_close: Callable[[], None],
-        headers: dict[str, str] | None = None,
-    ) -> None:
-        super().__init__(content, headers=headers)
-        self._on_close = on_close
-
-    @override
-    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        try:
-            await super().__call__(scope, receive, send)
-        finally:
-            self._on_close()
+@dataclass(frozen=True)
+class _StreamSubscription:
+    subscriber: Subscriber
+    token: str
 
 
-@router.get(
-    "/sse/maps/{name}",
-    # The stream's frames are not a JSON response body, so FastAPI cannot infer
-    # them — declaring them here is what puts them in the schema, and with it in
-    # the frontend's generated types.
-    response_class=SseResponse,
-    # FastAPI reads the default from the response class's __init__ otherwise,
-    # which SseResponse's own signature no longer carries.
-    status_code=status.HTTP_200_OK,
-    responses={
-        HTTPStatus.OK: {"model": StreamMessage, "description": "One state or topology frame."}
-    },
-)
-async def sse_map_states(
+async def _subscribe_to_stream(
     name: MapName,
-    request: Request,
     # Optional so a missing token fails as 401 like every other route, not as a
     # 422 that hands an unauthenticated caller the parameter schema.
     token: str | None = Query(
         None, description="Stream ticket or access token (EventSource can't set headers)"
     ),
-) -> StreamingResponse:
-    """SSE endpoint streaming state + topology updates for a map.
-
-    Authentication: ``?token=`` query parameter (EventSource cannot set custom
-    headers). The frontend obtains a short-lived stream ticket from the GUI and
-    passes it here; the daemon validates it against the site-internal secret.
-    """
+) -> AsyncIterator[_StreamSubscription]:
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     user = principal_from_token(token)
@@ -594,14 +554,6 @@ async def sse_map_states(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many concurrent streams"
         )
     sub = manager.subscribe(map_key, auth_user, folder_scope=folder_scope, group_key=group_key)
-
-    def close_stream() -> None:
-        manager.unsubscribe(map_key, sub)
-        sse_stream_limiter.release(user.name)
-
-    # The response closes the stream only once it is driven, so any failure in the
-    # setup below would leak the subscriber (queue never drained, broadcast loop
-    # never idle) and the stream slot. Unwind both on a setup error.
     try:
         # A new subscriber must not diverge from its REST first paint on anything
         # that changed before it joined (the group snapshot already absorbed those,
@@ -618,37 +570,45 @@ async def sse_map_states(
         # from the next tick's group delta on top of this full) — no group re-full.
         if cfg.view.type == "flow":
             await _push_topology_to(cfg, map_key, auth_user, [sub], force_full=True, store=False)
-    except Exception:
-        close_stream()
-        raise
 
-    async def event_stream() -> AsyncIterator[bytes]:
-        while True:
-            if await request.is_disconnected():
-                break
-            # The client fell too far behind and its queue overflowed. Its
-            # buffered deltas are now an incomplete history, so end the stream
-            # instead of streaming a corrupt state — the browser reconnects and
-            # the drop-snapshot-on-join above yields a fresh full resend.
-            if sub.overflowed:
-                break
-            # The ticket is only validated at connect; without this the loop
-            # would stream forever with frozen capabilities. Re-check it on
-            # every wake (message or keepalive, so at most one keepalive
-            # interval past expiry) and close the stream once it expires —
-            # the client reconnects with a freshly minted ticket.
-            if principal_from_token(token) is None:
-                break
-            try:
-                msg = await asyncio.wait_for(sub.queue.get(), timeout=_SSE_KEEPALIVE_INTERVAL)
-                yield f"data: {msg}\n\n".encode()
-            except TimeoutError:
-                yield b": keepalive\n\n"
+        yield _StreamSubscription(subscriber=sub, token=token)
+    finally:
+        manager.unsubscribe(map_key, sub)
+        sse_stream_limiter.release(user.name)
 
-    headers = {
-        # Apache buffers proxied responses by default; opt out so events flow
-        # through immediately.
-        "X-Accel-Buffering": "no",
-        "Cache-Control": "no-cache, no-store",
-    }
-    return SseResponse(event_stream(), headers=headers, on_close=close_stream)
+
+@router.get(
+    "/sse/maps/{name}",
+    response_class=EventSourceResponse,
+    response_description="The state and topology updates of the map.",
+)
+async def sse_map_states(
+    request: Request,
+    subscription: _StreamSubscription = Depends(_subscribe_to_stream),
+) -> AsyncIterator[SentEvent[StreamMessage]]:
+    """SSE endpoint streaming state + topology updates for a map.
+
+    Authentication: ``?token=`` query parameter (EventSource cannot set custom
+    headers). The frontend obtains a short-lived stream ticket from the GUI and
+    passes it here; the daemon validates it against the site-internal secret.
+    """
+    sub = subscription.subscriber
+    while True:
+        if await request.is_disconnected():
+            break
+        # The client fell too far behind and its queue overflowed. Its
+        # buffered deltas are now an incomplete history, so end the stream
+        # instead of streaming a corrupt state — the browser reconnects and
+        # gets a full resend as a new subscriber.
+        if sub.overflowed:
+            break
+        # The ticket is only validated at connect; without this the loop
+        # would stream forever with frozen capabilities. Close the stream once
+        # it expires — the client reconnects with a freshly minted ticket.
+        if principal_from_token(subscription.token) is None:
+            break
+        try:
+            event = await asyncio.wait_for(sub.queue.get(), timeout=_TICKET_RECHECK_INTERVAL)
+        except TimeoutError:
+            continue
+        yield event

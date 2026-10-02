@@ -3,6 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { paths } from 'cmk-shared-typing/typescript/maps_openapi'
+import type { FastApiEvent } from 'cmk-ui-library/lib/fastapi-client/client'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { type EventStream, createEventStream } from 'cmk-ui-library/lib/sse/eventStream'
 import { type Ref, type ShallowRef, markRaw, ref, shallowRef, triggerRef, watch } from 'vue'
@@ -23,13 +25,15 @@ import type {
   MetricPoint,
   MonitoringState,
   ObjectState,
-  StreamMessage,
   TopologyDelta,
   TopologyNode,
   TopologyTiming
 } from '@/maps/types/api'
 import { resolveStreamUrl } from '@/maps/utils/deploymentBase'
 import { parsePerfData } from '@/maps/utils/perf'
+
+type MapEvent = FastApiEvent<paths, '/api/v1/sse/maps/{name}'>
+type MapEventData<Name extends MapEvent['event']> = Extract<MapEvent, { event: Name }>['data']
 
 // BI integer state -> Maps MonitoringState (mirrors the daemon's BI_INT_TO_STATE
 // in cmk.maps.backend.connections.base). BI resolves GUI-side, so the SPA maps.
@@ -529,7 +533,7 @@ export class MapStatesService {
   }
 
   private async openStream(mapName: string): Promise<void> {
-    this.stream = createEventStream({
+    this.stream = createEventStream<MapEvent>({
       url: () => {
         const token = this.auth.streamToken.value
         if (!token) {
@@ -539,7 +543,10 @@ export class MapStatesService {
         }
         return resolveStreamUrl(mapName, token)
       },
-      onMessage: (payload) => this.applyStreamMessage(payload as StreamMessage),
+      handlers: {
+        state_update: (msg) => this.applyStateUpdate(msg),
+        topology_update: (msg) => this.applyTopologyUpdate(msg)
+      },
       poll: {
         fetch: () => this.refresh(),
         intervalMs: POLL_INTERVAL_MS,
@@ -606,17 +613,13 @@ export class MapStatesService {
     this.startAggregationTimer()
   }
 
-  private applyStreamMessage(msg: StreamMessage): void {
-    if (msg.type === 'state_update') {
-      this.applyStateUpdate(msg)
-    } else {
-      this.applyTopologyDelta(msg.delta)
-      this.topologyReady.value = true
-      this.lastUpdate.value = msg.delta.generated_at
-    }
+  private applyTopologyUpdate(msg: MapEventData<'topology_update'>): void {
+    this.applyTopologyDelta(msg.delta)
+    this.topologyReady.value = true
+    this.lastUpdate.value = msg.delta.generated_at
   }
 
-  private applyStateUpdate(msg: Extract<StreamMessage, { type: 'state_update' }>): void {
+  private applyStateUpdate(msg: MapEventData<'state_update'>): void {
     for (const s of msg.states.states) {
       if (this.notificationsEnabled.value) {
         notifyStateChange(s, this.states.value[s.object_id])

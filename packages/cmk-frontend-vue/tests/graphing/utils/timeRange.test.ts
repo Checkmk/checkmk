@@ -10,36 +10,35 @@ import { drawnTimeRange, minZoomSpan } from '@/graphing/utils/timeRange'
 
 describe('drawnTimeRange', () => {
   const STEP = 60
-  const GRID_BOUNDARY_BEFORE_START = 1_000_020
   const NEWEST_GRID_BOUNDARY_COVERED = 1_000_620
+  const SERVED = { start: 1_000_020, end: 1_000_740, step: STEP }
+  const LONG_AFTER_EVERY_WINDOW = 2_000_000
 
-  test('snaps a window ending mid-interval back onto the data grid', () => {
-    const endingMidInterval = { start: 1_000_037, end: 1_000_637 }
-    const served = { start: 1_000_020, end: 1_000_740, step: STEP }
+  test('draws a window that closed before the newest sample as it was requested', () => {
+    const bothEndsMidInterval = { start: 1_000_037, end: 1_000_637 }
 
-    const drawn = drawnTimeRange(endingMidInterval, served)
+    const drawn = drawnTimeRange(bothEndsMidInterval, SERVED, LONG_AFTER_EVERY_WINDOW)
 
-    expect(drawn.start).toBe(GRID_BOUNDARY_BEFORE_START)
+    expect(drawn.start).toBe(bothEndsMidInterval.start)
+    expect(drawn.end).toBe(bothEndsMidInterval.end)
+  })
+
+  test('ends a window reaching into the still open interval on the newest closed sample', () => {
+    const endingNow = { start: 1_000_037, end: 1_000_637 }
+    const now = endingNow.end
+
+    const drawn = drawnTimeRange(endingNow, SERVED, now)
+
     expect(drawn.end).toBe(NEWEST_GRID_BOUNDARY_COVERED)
   })
 
-  test('leaves a window that already sits on the grid alone', () => {
-    const onGrid = { start: GRID_BOUNDARY_BEFORE_START, end: NEWEST_GRID_BOUNDARY_COVERED }
-    const served = { start: 1_000_020, end: 1_000_680, step: STEP }
+  test('keeps a window lying inside the still open interval drawable', () => {
+    const insideTheOpenInterval = { start: 1_000_637, end: 1_000_659 }
+    const now = insideTheOpenInterval.end
 
-    const drawn = drawnTimeRange(onGrid, served)
+    const drawn = drawnTimeRange(insideTheOpenInterval, SERVED, now)
 
-    expect(drawn.start).toBe(GRID_BOUNDARY_BEFORE_START)
-    expect(drawn.end).toBe(NEWEST_GRID_BOUNDARY_COVERED)
-  })
-
-  test('keeps the span an exact multiple of the step', () => {
-    const bothEndsMidInterval = { start: 1_000_037, end: 1_000_659 }
-    const served = { start: 1_000_020, end: 1_000_740, step: STEP }
-
-    const drawn = drawnTimeRange(bothEndsMidInterval, served)
-
-    expect((drawn.end - drawn.start) % drawn.step).toBe(0)
+    expect(drawn.end).toBeGreaterThan(drawn.start)
   })
 
   test('holds the end inside the range the fetch answered with', () => {
@@ -68,30 +67,6 @@ describe('drawnTimeRange', () => {
 
     expect(drawn.start).toBe(window.start)
     expect(drawn.end).toBe(window.end)
-  })
-
-  // Both edges of a window inside one served step snap to the same boundary; the value covering
-  // the window is what there is to draw, so the window is drawn as it was asked for.
-  test('keeps a window narrower than the served step drawable', () => {
-    const insideOneStep = { start: 1_000_037, end: 1_000_059 }
-    const served = { start: 1_000_020, end: 1_000_740, step: STEP }
-
-    const drawn = drawnTimeRange(insideOneStep, served)
-
-    expect(drawn.end - drawn.start).toBeGreaterThan(0)
-  })
-
-  test('keeps a window narrower than the served step where it was asked', () => {
-    const straddlingABoundary = {
-      start: GRID_BOUNDARY_BEFORE_START - 10,
-      end: GRID_BOUNDARY_BEFORE_START + 10
-    }
-    const served = { start: 1_000_020 - STEP, end: 1_000_740, step: STEP }
-
-    const drawn = drawnTimeRange(straddlingABoundary, served)
-
-    expect(drawn.start).toBeLessThanOrEqual(straddlingABoundary.start)
-    expect(drawn.end).toBeGreaterThanOrEqual(straddlingABoundary.end)
   })
 })
 

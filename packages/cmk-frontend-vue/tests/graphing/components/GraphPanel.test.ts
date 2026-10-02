@@ -221,8 +221,6 @@ afterEach(() => {
 })
 
 const MID_INTERVAL_REQUEST: RequestedTimeRange = { start: 1_781_524_937, end: 1_781_528_237 }
-const GRID_BOUNDARY_AT_OR_BEFORE_REQUEST_START = 1_781_524_800
-const NEWEST_GRID_BOUNDARY_THE_REQUEST_COVERS = 1_781_528_100
 const RESOLUTION_OF_THE_SERVED_STEP = /5 min/
 const ANY_RESOLUTION = /min/
 
@@ -240,20 +238,11 @@ function renderPanelForRequest(overrides: Partial<GraphPanelProps> = {}) {
   })
 }
 
-test('starts the drawn window on the sample boundary at or before the one requested', () => {
+test('draws the requested window rather than the wider range the fetch answered with', () => {
   renderPanelForRequest()
 
-  expect(screen.getByTestId('view-start')).toHaveTextContent(
-    String(GRID_BOUNDARY_AT_OR_BEFORE_REQUEST_START)
-  )
-})
-
-test('ends the drawn window on the newest sample boundary the request covers', () => {
-  renderPanelForRequest()
-
-  expect(screen.getByTestId('view-end')).toHaveTextContent(
-    String(NEWEST_GRID_BOUNDARY_THE_REQUEST_COVERS)
-  )
+  expect(screen.getByTestId('view-start')).toHaveTextContent(String(MID_INTERVAL_REQUEST.start))
+  expect(screen.getByTestId('view-end')).toHaveTextContent(String(MID_INTERVAL_REQUEST.end))
 })
 
 test('states the resolution the fetch resolved once one has landed', async () => {

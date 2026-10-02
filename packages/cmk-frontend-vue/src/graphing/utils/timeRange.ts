@@ -19,22 +19,30 @@ function hasUsableStep(range: TimeRange): boolean {
   return Number.isFinite(range.step) && range.step > 0
 }
 
-// Whether the user's window is shorter than the interval between two values the backend served.
-function isNarrowerThanServedStep(requested: RequestedTimeRange, served: TimeRange): boolean {
-  return requested.end - requested.start < served.step
+function nowInSeconds(): number {
+  return Math.floor(Date.now() / 1000)
 }
 
-// A window narrower than the served step has no grid boundary of its own to snap to: snapping
-// would collapse it to nothing drawable, while the value covering it draws across it as it is.
-export function drawnTimeRange(requested: RequestedTimeRange, served: TimeRange): TimeRange {
-  const { step } = served
-  if (!hasUsableStep(served) || isNarrowerThanServedStep(requested, served)) {
-    return { start: requested.start, end: requested.end, step }
-  }
+function drawnEnd(requested: RequestedTimeRange, served: TimeRange, now: number): number {
+  const newestClosedSampleTime = snapDownToGrid(now, served.step)
+  const reachesIntoTheOpenInterval = requested.end > newestClosedSampleTime
+  const end = reachesIntoTheOpenInterval
+    ? snapDownToGrid(requested.end, served.step)
+    : requested.end
+  return Math.min(end, served.end)
+}
+
+export function drawnTimeRange(
+  requested: RequestedTimeRange,
+  served: TimeRange,
+  now: number = nowInSeconds()
+): TimeRange {
+  const end = hasUsableStep(served) ? drawnEnd(requested, served, now) : requested.end
+  const collapsesTheWindow = end <= requested.start
   return {
-    start: snapDownToGrid(requested.start, step),
-    end: Math.min(snapDownToGrid(requested.end, step), served.end),
-    step
+    start: requested.start,
+    end: collapsesTheWindow ? requested.end : end,
+    step: served.step
   }
 }
 

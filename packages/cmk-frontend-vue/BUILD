@@ -38,9 +38,7 @@ js_library(
     tags = ["no-lint"],
     visibility = ["//visibility:public"],
     deps = [
-        # eslint.config.mjs builds on cmk-ui-library's shared eslint config, and the
-        # tsconfig chain used by type-aware rules extends
-        # cmk-ui-library/tsconfig.vue-base.json, resolved via this node_modules link.
+        # Type-aware rules resolve the sources' cmk-ui-library/... imports via this link.
         ":node_modules/cmk-ui-library",
         ":vitest_isolated",
         "//packages/cmk-ui-library:eslintrc",

@@ -38,7 +38,7 @@ License headers and UCL showcase parity are checked by `//packages/cmk-frontend-
 
 This package is the template; a new package `packages/<name>` needs:
 
-1. `package.json` (real `dependencies`/`peerDependencies`), `tsconfig.json` + `tsconfig.test.json` extending `cmk-ui-library/tsconfig.vue-base.json`, `env.d.ts`, `vite.config.ts` with `testProjects` from `cmk-ui-library/vitest.shared.ts` and `cmk-ui-library/vitest.shared-setup.ts` in `setupFiles`, `eslint.config.mjs` built from `cmk-ui-library/eslint.shared.mjs`, `tests/setup-tests.ts` with only the package's own setup.
+1. `package.json` (real `dependencies`/`peerDependencies`), `tsconfig.json` + `tsconfig.test.json` extending `../cmk-ui-library/tsconfig.vue-base.json` (by relative path, as `extends` ignores `paths`), `env.d.ts`, `vite.config.ts` with `testProjects` from `cmk-ui-library/vitest.shared.ts` and `cmk-ui-library/vitest.shared-setup.ts` in `setupFiles`, `eslint.config.mjs` built from `cmk-ui-library/eslint.shared.mjs`, `tests/setup-tests.ts` with only the package's own setup.
 2. A `BUILD` modelled on this one, with its sources listed explicitly and the library named after the package directory: rules_js links `//packages/<name>:<name>` into consumers (`npm_package_target_name` in `bazel/module/js.MODULE.bazel`).
 3. Registration in: `pnpm-workspace.yaml`, `bazel/module/js.MODULE.bazel` (`npm_translate_lock` data), `.bazelignore` (`packages/<name>/node_modules`), the root `BUILD` `eslintrc` deps, and the consumer's `package.json` (`"<name>": "workspace:*"`).
 4. `bazel run @pnpm//:pnpm -- --dir "$(pwd)" install --lockfile-only` to update the lockfile.

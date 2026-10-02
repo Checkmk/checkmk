@@ -33,7 +33,14 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import has_distributed_setup_remote_sites, is_distributed_setup_remote_site
-from cmk.gui.utils.host_relations import referenced_host_names, RelationLink
+from cmk.gui.utils.host_relation_kinds import known_relations
+from cmk.gui.utils.host_relations import (
+    parse_relations_value,
+    referenced_host_names,
+    relation_key,
+    RelationDirection,
+    RelationLink,
+)
 from cmk.gui.valuespec import (
     AbsoluteDate,
     Age,
@@ -89,7 +96,7 @@ from cmk.gui.watolib.host_relations import (
     relations_or_user_error,
     with_links_the_dialog_cannot_show,
 )
-from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.hosts_and_folders import Host, plan_relation_mirror
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.translation import HostnameTranslation
 from cmk.livestatus_client import SiteConfigurations
@@ -662,24 +669,78 @@ def validate_host_parents(host: Host) -> None:
 def validate_host_relations(host: Host) -> None:
     """Report whatever is still wrong with the relations this host stores.
 
-    A counterpart can be deleted, and a contradiction can be left behind by whoever wrote the
-    other half, long after the link was stored. Rejecting either on save would leave the host
-    unsavable until someone else cleans up, so the save only refuses what it introduces itself
-    and the rest is reported like a missing parent; saving the host clears the row.
+    A counterpart can be deleted, contradict this half or lack its own - a hand written
+    "hosts.mk", or a locked host the cleanup after a deletion could not write - long after the
+    link was stored. Rejecting any of it on save would leave the host unsavable until someone
+    else cleans up, so the save only refuses what it introduces itself and the rest is reported
+    like a missing parent. A save writes only the pairs it changes, so the report says which
+    host to edit to settle it.
     """
     links = relations_or_user_error(host.attributes.get("relations", []))
 
     tree = host.folder().tree
+    counterparts: dict[HostName, Host] = {}
     for related_name in sorted(referenced_host_names(links)):
-        if tree.host(related_name) is None:
+        if (counterpart := tree.host(related_name)) is None:
             raise MKUserError(
                 None,
                 _("You defined the non-existing host '%(related_name)s' as a related host.")
                 % {"related_name": related_name},
             )
+        counterparts[related_name] = counterpart
 
     for conflict in relation_conflicts(links, host.name()):
         raise MKUserError(None, conflict.message())
+
+    # Known kinds only: what a later version wrote is not for this one to judge. Sets, since a
+    # duplicated row is the counterpart's own conflict.
+    known = known_relations(links)
+    for related_name, expected in plan_relation_mirror(host.name(), (), known).items():
+        try:
+            stored_about = _known_relations_by_counterpart(counterparts[related_name])
+        except ValueError as exc:
+            raise MKUserError(
+                None,
+                _("The relations of '%(related_name)s' are malformed: %(error)s")
+                % {"related_name": related_name, "error": exc},
+            ) from exc
+        stored = stored_about.get(host.name(), frozenset())
+        if stored == set(map(relation_key, expected)):
+            continue
+        if not stored:
+            raise MKUserError(
+                None,
+                _(
+                    "'%(related_name)s' does not store its half of the relation to this host. "
+                    "The monitoring shows the relation anyway. Add the relation on "
+                    "'%(related_name)s' to store it on both hosts."
+                )
+                % {"related_name": related_name},
+            )
+        raise MKUserError(
+            None,
+            _(
+                "'%(related_name)s' stores a different relation to this host. Change the "
+                "relation on one of the two hosts so that both agree; saving writes both."
+            )
+            % {"related_name": related_name},
+        )
+
+
+@hooks.request_memoize()
+def _known_relations_by_counterpart(
+    host: Host,
+) -> Mapping[HostName, frozenset[tuple[str, RelationDirection, HostName]]]:
+    """What ``host`` stores about each host it links to, of the kinds this version places.
+
+    Raises ``ValueError`` for a value that cannot be read: that is the counterpart's fault to
+    report, not a half it does not store. Once per request: the folder list validates every
+    host in it, and each asks the same board.
+    """
+    by_counterpart: dict[HostName, set[tuple[str, RelationDirection, HostName]]] = {}
+    for link in known_relations(parse_relations_value(host.attributes.get("relations", []))):
+        by_counterpart.setdefault(link["host"], set()).add(relation_key(link))
+    return {other: frozenset(keys) for other, keys in by_counterpart.items()}
 
 
 @hooks.request_memoize()

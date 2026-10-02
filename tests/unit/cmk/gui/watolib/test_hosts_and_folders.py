@@ -2417,6 +2417,80 @@ def test_validate_host_relations_passes_for_an_existing_host(tree: FolderTree) -
     validate_host_relations(board)
 
 
+def test_validate_host_relations_reports_a_counterpart_without_its_half(tree: FolderTree) -> None:
+    """The way a hand written "hosts.mk" leaves it: the export shows the relation on both sides,
+    but the other host's dialog does not."""
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    board = _create_host(root, "board")
+    board.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("os1")}
+    ]
+
+    with pytest.raises(MKUserError, match="'os1' does not store its half"):
+        validate_host_relations(board)
+
+
+def test_validate_host_relations_reports_a_counterpart_storing_a_different_half(
+    tree: FolderTree,
+) -> None:
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    board = _create_host(root, "board")
+    board.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("os1")}
+    ]
+    os1.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("board")}
+    ]
+    root.save_hosts(pprint_value=False, acting_user=_SUPERUSER)
+    tree.invalidate_caches()
+
+    with pytest.raises(MKUserError, match="'os1' stores a different relation"):
+        validate_host_relations(tree.load_host(HostName("board")))
+
+
+def test_validate_host_relations_reports_a_counterpart_whose_relations_cannot_be_read(
+    tree: FolderTree,
+) -> None:
+    """Not as one that stores nothing: adding the relation there would fail on the same value."""
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    board = _create_host(root, "board")
+    board.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("os1")}
+    ]
+    os1.attributes["relations"] = cast("Sequence[RelationLink]", "not-a-list")
+    root.save_hosts(pprint_value=False, acting_user=_SUPERUSER)
+    tree.invalidate_caches()
+
+    with pytest.raises(MKUserError, match="The relations of 'os1' are malformed"):
+        validate_host_relations(tree.load_host(HostName("board")))
+
+
+def test_validate_host_relations_passes_over_a_half_of_a_kind_it_does_not_know(
+    tree: FolderTree,
+) -> None:
+    """What a later version wrote next to the half is not for this one to judge."""
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    _create_host(
+        root,
+        "board",
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+    )
+    os1.attributes["relations"] = [
+        *relations_or_empty(os1.attributes["relations"]),
+        {"kind": "peering", "direction": "symmetric", "host": HostName("board")},
+    ]
+    root.save_hosts(pprint_value=False, acting_user=_SUPERUSER)
+    tree.invalidate_caches()
+
+    validate_host_relations(tree.load_host(HostName("board")))
+
+
 def test_validate_host_parents_reports_a_parent_that_is_gone(tree: FolderTree) -> None:
     root = tree.root_folder()
     host = _create_host(root, "host", HostAttributes({"parents": [HostName("gw")]}))

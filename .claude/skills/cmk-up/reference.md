@@ -90,7 +90,7 @@ sites:
 #       c1: {nodes: [h1, h2]}                # a cluster; services via rule clustered_services
 #       h7: {relations: [{host: h1, direction: parent}]}   # h7 is h1's management board
 #                                            # (child: the reverse; expect: refused when
-#                                            # Checkmk's relation discovery must say no)
+#                                            # Checkmk's relation detection must say no)
 #                                            # cached: N marks the whole section, so
 #                                            # every service of that host must say it
 #
@@ -337,17 +337,18 @@ srv-02:
 ```
 
 The public REST API cannot write relations, so cmk-up uses Checkmk's own relation
-discovery (Setup > Relation discovery, internal REST API): the hosts get labels
-`cmk-up/relation-pair-<n>` (the board's name) and `cmk-up/relation-board-<n>: yes` (on
-the board), one scan proposes exactly the declared pairs, and cmk-up accepts those -
-everything else the scan proposes is excluded. Rows: `created`, `kept` (already
-related), `refused` (Checkmk said no, as `expect: refused` declared) or `failed`.
-`--verify` reads the host custom variable `RELATIONS` of both ends.
+detection (Setup > Hosts > Related > Relation detection, internal REST API): the hosts
+get labels `cmk-up/relation-pair-<n>` (the board's name) and
+`cmk-up/relation-board-<n>: yes` (on the board), one scan proposes exactly the declared
+pairs, and cmk-up accepts those - everything else the scan proposes is excluded. Rows:
+`created`, `kept` (already related), `refused` (Checkmk said no, as `expect: refused`
+declared) or `failed`. `--verify` reads the host custom variable `RELATIONS` of both
+ends.
 
 - Declaring a relation on one end or on both is the same; both ends must agree on
   `expect`.
 - Checkmk refuses (so `expect: refused`): two hosts each claiming to be the other's
-  board (the discovery sees a conflict and stores neither), and turning around a pair
+  board (the detection sees a conflict and stores neither), and turning around a pair
   that is already related (`stored_otherwise` - it never overwrites).
 - Checkmk does not refuse a second board for an OS host.
 - Refused at load time, because no scan can propose it: a self link, a host listed as

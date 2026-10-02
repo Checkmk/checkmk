@@ -11,6 +11,7 @@ import pytest
 from cmk.gui.wato._check_mk_configuration import (
     _migrate_piggybacked_host_files,
     migrate_snmp_fetch_interval,
+    Snmpv3Contexts,
 )
 
 
@@ -172,3 +173,32 @@ def test_migrate_piggybacked_host_files(
     expected_result: Mapping[str, object],
 ) -> None:
     assert _migrate_piggybacked_host_files(rule_value) == expected_result
+
+
+@pytest.mark.parametrize(
+    ("contexts", "expected_form_value"),
+    [
+        pytest.param(["vrf1", "mgmt"], [False, ["vrf1", "mgmt"]], id="without default context"),
+        pytest.param(["vrf1", "", "mgmt"], [True, ["vrf1", "mgmt"]], id="with default context"),
+    ],
+)
+def test_snmpv3_contexts_rule_maps_the_default_context_to_the_checkbox(
+    contexts: list[str], expected_form_value: list[object]
+) -> None:
+    form_value = Snmpv3Contexts.valuespec.value_to_json((None, contexts, "stop_on_timeout"))
+
+    assert form_value == [None, expected_form_value, "stop_on_timeout"]
+
+
+def test_snmpv3_contexts_rule_keeps_existing_rules_without_default_context() -> None:
+    rule_value = (None, ["vrf1", "mgmt"], "stop_on_timeout")
+
+    assert Snmpv3Contexts.valuespec.transform_value(rule_value) == rule_value
+
+
+def test_snmpv3_contexts_rule_moves_the_default_context_first() -> None:
+    rule_value = Snmpv3Contexts.valuespec.transform_value(
+        (None, ["vrf1", "", "mgmt"], "stop_on_timeout")
+    )
+
+    assert rule_value == (None, ["", "vrf1", "mgmt"], "stop_on_timeout")

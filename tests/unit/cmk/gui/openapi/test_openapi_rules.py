@@ -9,6 +9,7 @@ from collections.abc import Iterable, Mapping
 from typing import Any
 
 import pytest
+from pytest_mock import MockerFixture
 
 from tests.testlib.unit.rest_api_client import (
     ClientRegistry,
@@ -270,6 +271,53 @@ def test_create_rule_stores_migrated_value(clients: ClientRegistry) -> None:
         "vxvm": False,
         "diskless": False,
     }
+
+
+@pytest.fixture(name="no_snmp_sections")
+def fixture_no_snmp_sections(mocker: MockerFixture) -> None:
+    # Tech debt: validating the section choice of "snmpv3_contexts" runs the
+    # get-section-information automation, which needs a check_mk binary.
+    mocker.patch(
+        "cmk.gui.wato._check_mk_configuration.get_section_information_cached",
+        return_value={},
+    )
+
+
+@pytest.mark.usefixtures("no_snmp_sections")
+def test_create_rule_accepts_the_default_snmpv3_context_as_first_context(
+    clients: ClientRegistry,
+) -> None:
+    resp = clients.Rule.create(
+        ruleset="snmpv3_contexts",
+        folder="/",
+        properties={"description": "default and vrf1", "disabled": False},
+        value_raw="(None, ['', 'vrf1'], 'stop_on_timeout')",
+        conditions={},
+    )
+
+    assert resp.json["extensions"]["value_raw"] == "(None, ['', 'vrf1'], 'stop_on_timeout')"
+
+
+@pytest.mark.usefixtures("no_snmp_sections")
+@pytest.mark.parametrize(
+    "contexts",
+    [
+        pytest.param("['vrf1', '']", id="default context not first"),
+        pytest.param("['', 'vrf1', '']", id="default context twice"),
+    ],
+)
+def test_create_rule_stores_the_default_snmpv3_context_once_as_first_context(
+    clients: ClientRegistry, contexts: str
+) -> None:
+    resp = clients.Rule.create(
+        ruleset="snmpv3_contexts",
+        folder="/",
+        properties={"description": "misplaced default context", "disabled": False},
+        value_raw=f"(None, {contexts}, 'stop_on_timeout')",
+        conditions={},
+    )
+
+    assert resp.json["extensions"]["value_raw"] == "(None, ['', 'vrf1'], 'stop_on_timeout')"
 
 
 def test_openapi_list_rules(

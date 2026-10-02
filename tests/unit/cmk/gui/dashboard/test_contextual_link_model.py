@@ -9,7 +9,9 @@ from cmk.ccc.user import UserId
 from cmk.gui.dashboard.api.model.context_filters import (
     AggregateServiceContextFilter,
     host_filter_from_internal,
+    HostNameContextFilter,
     HostStateContextFilter,
+    object_host_filter_from_internal,
     service_filter_from_internal,
     ServiceStateContextFilter,
 )
@@ -92,3 +94,14 @@ def test_a_custom_link_round_trips_its_entries() -> None:
 def test_a_service_filter_does_not_load_as_a_host_filter() -> None:
     with pytest.raises(ValueError):
         host_filter_from_internal(ContextFilterConfig(filter_id="svcstate"))
+
+
+def test_an_object_host_filter_loads_the_host_name() -> None:
+    assert object_host_filter_from_internal(
+        ContextFilterConfig(filter_id="host")
+    ) == HostNameContextFilter(filter_id="host")
+
+
+def test_the_host_name_does_not_load_as_an_aggregate_filter() -> None:
+    with pytest.raises(ValueError):
+        host_filter_from_internal(ContextFilterConfig(filter_id="host"))

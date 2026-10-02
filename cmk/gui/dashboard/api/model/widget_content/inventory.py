@@ -12,7 +12,7 @@ from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.type_defs import DashboardEmbeddedViewSpec
 
-from ..context_filters import AggregateHostContextFilter, host_filter_from_internal
+from ..context_filters import object_host_filter_from_internal, ObjectHostContextFilter
 from ..contextual_link import (
     AnyContextualLinkSpec,
     contextual_link_from_internal,
@@ -30,7 +30,7 @@ class InventoryContent(BaseWidgetContent):
         description="The path to the inventory data to display.",
         example=".software.os.type",
     )
-    contextual_link: ContextualLinkSpec[AggregateHostContextFilter] = api_field(
+    contextual_link: ContextualLinkSpec[ObjectHostContextFilter] = api_field(
         description="Where a click on the inventory data leads."
     )
 
@@ -49,7 +49,7 @@ class InventoryContent(BaseWidgetContent):
             type="inventory",
             path=config["inventory_path"],
             contextual_link=contextual_link_from_internal(
-                config.get("contextual_link"), host_filter_from_internal
+                config.get("contextual_link"), object_host_filter_from_internal
             ),
         )
 

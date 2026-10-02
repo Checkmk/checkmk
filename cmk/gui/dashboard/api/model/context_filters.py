@@ -36,6 +36,16 @@ class HostGroupContextFilter:
 
 
 @api_model
+class HostNameContextFilter:
+    filter_id: Literal["host"] = api_field(description="The name of the clicked host.")
+
+
+@api_model
+class ServiceNameContextFilter:
+    filter_id: Literal["service"] = api_field(description="The name of the clicked service.")
+
+
+@api_model
 class ServiceStateContextFilter:
     filter_id: Literal["svcstate"] = api_field(
         description="The service state of the clicked element."
@@ -63,6 +73,17 @@ type AggregateHostContextFilter = Annotated[_AggregateHostFilters, Discriminator
 # A click that yields a set of services, which also carry their hosts' filters.
 type AggregateServiceContextFilter = Annotated[_AggregateServiceFilters, Discriminator("filter_id")]
 
+# A click that yields one host: every aggregate member, plus the host itself.
+type ObjectHostContextFilter = Annotated[
+    _AggregateHostFilters | HostNameContextFilter, Discriminator("filter_id")
+]
+
+# A click that yields one service, which also carries its host's filters.
+type ObjectServiceContextFilter = Annotated[
+    _AggregateServiceFilters | HostNameContextFilter | ServiceNameContextFilter,
+    Discriminator("filter_id"),
+]
+
 
 def host_filter_from_internal(config: ContextFilterConfig) -> AggregateHostContextFilter:
     match config["filter_id"]:
@@ -86,3 +107,21 @@ def service_filter_from_internal(config: ContextFilterConfig) -> AggregateServic
             return ServiceGroupContextFilter(filter_id="optservicegroup")
         case _:
             return host_filter_from_internal(config)
+
+
+def object_host_filter_from_internal(config: ContextFilterConfig) -> ObjectHostContextFilter:
+    match config["filter_id"]:
+        case "host":
+            return HostNameContextFilter(filter_id="host")
+        case _:
+            return host_filter_from_internal(config)
+
+
+def object_service_filter_from_internal(config: ContextFilterConfig) -> ObjectServiceContextFilter:
+    match config["filter_id"]:
+        case "service":
+            return ServiceNameContextFilter(filter_id="service")
+        case "svcstate" | "optservicegroup":
+            return service_filter_from_internal(config)
+        case _:
+            return object_host_filter_from_internal(config)

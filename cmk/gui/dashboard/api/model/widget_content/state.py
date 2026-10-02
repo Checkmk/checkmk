@@ -16,10 +16,10 @@ from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.type_defs import DashboardEmbeddedViewSpec
 
 from ..context_filters import (
-    AggregateHostContextFilter,
-    AggregateServiceContextFilter,
-    host_filter_from_internal,
-    service_filter_from_internal,
+    object_host_filter_from_internal,
+    object_service_filter_from_internal,
+    ObjectHostContextFilter,
+    ObjectServiceContextFilter,
 )
 from ..contextual_link import (
     AnyContextualLinkSpec,
@@ -101,7 +101,7 @@ class _BaseStateContent(BaseWidgetContent, ABC):
 @api_model
 class HostStateContent(_BaseStateContent):
     type: Literal["host_state"] = api_field(description="Displays the state of a host.")
-    contextual_link: ContextualLinkSpec[AggregateHostContextFilter] = api_field(
+    contextual_link: ContextualLinkSpec[ObjectHostContextFilter] = api_field(
         description="Where a click on the state leads."
     )
 
@@ -117,7 +117,7 @@ class HostStateContent(_BaseStateContent):
             status_display=_status_display_from_internal(config.get("status_display")),
             show_summary=ApiOmitted.from_optional(config.get("show_summary")),
             contextual_link=contextual_link_from_internal(
-                config.get("contextual_link"), host_filter_from_internal
+                config.get("contextual_link"), object_host_filter_from_internal
             ),
         )
 
@@ -129,7 +129,7 @@ class HostStateContent(_BaseStateContent):
 @api_model
 class ServiceStateContent(_BaseStateContent):
     type: Literal["service_state"] = api_field(description="Displays the state of a service.")
-    contextual_link: ContextualLinkSpec[AggregateServiceContextFilter] = api_field(
+    contextual_link: ContextualLinkSpec[ObjectServiceContextFilter] = api_field(
         description="Where a click on the state leads."
     )
 
@@ -145,7 +145,7 @@ class ServiceStateContent(_BaseStateContent):
             status_display=_status_display_from_internal(config.get("status_display")),
             show_summary=ApiOmitted.from_optional(config.get("show_summary")),
             contextual_link=contextual_link_from_internal(
-                config.get("contextual_link"), service_filter_from_internal
+                config.get("contextual_link"), object_service_filter_from_internal
             ),
         )
 

@@ -1074,6 +1074,7 @@ def test_a_custom_link_round_trips(
     [
         pytest.param({"type": "custom", "links": []}, id="no links"),
         pytest.param(_custom("svcstate"), id="a service filter on a host widget"),
+        pytest.param(_custom("host"), id="a host name on an aggregate widget"),
         pytest.param(_custom(title=" "), id="a blank title"),
     ],
 )

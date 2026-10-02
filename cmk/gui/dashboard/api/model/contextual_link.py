@@ -28,7 +28,12 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals.type import visual_type_registry
 
 from ...store import get_permitted_dashboards, get_permitted_dashboards_by_owners
-from .context_filters import AggregateHostContextFilter, AggregateServiceContextFilter
+from .context_filters import (
+    AggregateHostContextFilter,
+    AggregateServiceContextFilter,
+    ObjectHostContextFilter,
+    ObjectServiceContextFilter,
+)
 
 # The request and the response share this model, so both directions state the same schema.
 _OwnerId = Annotated[AnnotatedUserId, WithJsonSchema({"type": "string"})]
@@ -111,6 +116,8 @@ type ContextualLinkSpec[F] = Annotated[
 type AnyContextualLinkSpec = (
     ContextualLinkSpec[AggregateHostContextFilter]
     | ContextualLinkSpec[AggregateServiceContextFilter]
+    | ContextualLinkSpec[ObjectHostContextFilter]
+    | ContextualLinkSpec[ObjectServiceContextFilter]
 )
 
 
@@ -206,6 +213,8 @@ def iter_contextual_link_errors(
             entries: Sequence[
                 ContextualLink[AggregateHostContextFilter]
                 | ContextualLink[AggregateServiceContextFilter]
+                | ContextualLink[ObjectHostContextFilter]
+                | ContextualLink[ObjectServiceContextFilter]
             ] = link.links
             for index, entry in enumerate(entries):
                 entry_location = location + ("custom", "links", index)

@@ -6,11 +6,14 @@
 
 export interface SseFrame {
   id: string | undefined
+  event: string
   data: unknown
 }
 
 /**
  * Yields the frames of a server-sent-event stream, with `data` parsed as JSON.
+ *
+ * A frame without an `event` name is a `message`, as for `EventSource`.
  *
  * Frames without data are not yielded, and a frame whose data is not JSON is skipped with a
  * warning. A frame without any field lines is taken as data, for streams that send bare JSON.
@@ -64,10 +67,8 @@ export async function* readSseFrames(
     if (trailingFrame) {
       yield trailingFrame
     }
-  } catch (e) {
-    await reader.cancel()
-    throw e
   } finally {
+    await reader.cancel().catch(() => undefined)
     reader.releaseLock()
   }
 }
@@ -78,6 +79,7 @@ function parseFrame(frame: string): SseFrame | undefined {
   const lines = frame.split('\n').filter((line) => line.trim() && !line.startsWith(':'))
   const dataLines: string[] = []
   let id: string | undefined
+  let event = ''
   let hasFields = false
   for (const line of lines) {
     const field = FIELD.exec(line)
@@ -90,6 +92,8 @@ function parseFrame(frame: string): SseFrame | undefined {
       dataLines.push(value)
     } else if (field[1] === 'id') {
       id = value
+    } else if (field[1] === 'event') {
+      event = value
     }
   }
   const data = hasFields ? dataLines : lines
@@ -97,7 +101,7 @@ function parseFrame(frame: string): SseFrame | undefined {
     return undefined
   }
   try {
-    return { id, data: JSON.parse(data.join('\n')) }
+    return { id, event: event || 'message', data: JSON.parse(data.join('\n')) }
   } catch (e) {
     console.warn('Failed to parse JSON from frame:', frame, e)
     return undefined

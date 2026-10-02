@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { createFastApiClient } from 'cmk-ui-library/lib/fastapi-client/client'
+import { type FastApiEvent, createFastApiClient } from 'cmk-ui-library/lib/fastapi-client/client'
 import { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import { describe, expect, expectTypeOf, test, vi } from 'vitest'
 
@@ -46,17 +46,51 @@ interface TestPaths {
       }
     }
   }
+  '/things/{id}/events': {
+    get: {
+      parameters: { path: { id: string } }
+      responses: {
+        200: { content: { 'text/event-stream': ThingEvent } }
+      }
+    }
+  }
 }
+
+type ThingEvent =
+  | { event: 'renamed'; data: { name: string }; id?: string }
+  | { event: 'deleted'; data: { reason: string }; id?: string }
 
 const BASE_URL = 'https://example.invalid/api/v1'
 
-function respondWith(response: () => Response): Request[] {
+function respondWith(response: (request: Request) => Response): Request[] {
   const sent: Request[] = []
   vi.spyOn(globalThis, 'fetch').mockImplementation(async (request) => {
     sent.push(request as Request)
-    return response()
+    return response(request as Request)
   })
   return sent
+}
+
+function eventStream(body: BodyInit): Response {
+  return new Response(body, { status: 200, headers: { 'Content-Type': 'text/event-stream' } })
+}
+
+function idleEventStream(signal: AbortSignal): Response {
+  return eventStream(
+    new ReadableStream<Uint8Array>({
+      start(controller) {
+        signal.addEventListener('abort', () => controller.error(signal.reason))
+      }
+    })
+  )
+}
+
+async function collect<T>(events: AsyncIterable<T>): Promise<T[]> {
+  const collected: T[] = []
+  for await (const event of events) {
+    collected.push(event)
+  }
+  return collected
 }
 
 function json(body: unknown, status: number): Response {
@@ -176,6 +210,132 @@ describe('createFastApiClient', () => {
   })
 })
 
+describe('events', () => {
+  test('yields each event with its name, data and id', async () => {
+    respondWith(() =>
+      eventStream(
+        'event: renamed\ndata: {"name":"b"}\nid: 1\n\n: ping\n\nevent: deleted\ndata: {"reason":"gone"}\nid: 2\n\n'
+      )
+    )
+    const api = createFastApiClient<TestPaths>({ baseUrl: BASE_URL })
+
+    const events = await collect(
+      api.events('/things/{id}/events', { params: { path: { id: 'a' } } })
+    )
+
+    expect(events).toEqual([
+      { event: 'renamed', data: { name: 'b' }, id: '1' },
+      { event: 'deleted', data: { reason: 'gone' }, id: '2' }
+    ])
+  })
+
+  test('yields an event sent without an id without an id key', async () => {
+    respondWith(() => eventStream('event: renamed\ndata: {"name":"b"}\n\n'))
+    const api = createFastApiClient<TestPaths>({ baseUrl: BASE_URL })
+
+    const events = await collect(
+      api.events('/things/{id}/events', { params: { path: { id: 'a' } } })
+    )
+
+    expect(events).toStrictEqual([{ event: 'renamed', data: { name: 'b' } }])
+  })
+
+  test('requests the path with its parameters filled in', async () => {
+    const sent = respondWith(() => eventStream(''))
+    const api = createFastApiClient<TestPaths>({ baseUrl: BASE_URL })
+
+    await collect(api.events('/things/{id}/events', { params: { path: { id: 'a' } } }))
+
+    expect(sent.map((request) => request.url)).toEqual([`${BASE_URL}/things/a/events`])
+  })
+
+  test.each([
+    { case: 'no headers', headers: {} },
+    { case: 'an Accept header of its own', headers: { Accept: 'application/json' } }
+  ])('asks for an event stream when init has $case', async ({ headers }) => {
+    const sent = respondWith(() => eventStream(''))
+    const api = createFastApiClient<TestPaths>({ baseUrl: BASE_URL })
+
+    await collect(api.events('/things/{id}/events', { params: { path: { id: 'a' } }, headers }))
+
+    expect(sent.map((request) => request.headers.get('Accept'))).toEqual(['text/event-stream'])
+  })
+
+  test('sends the headers of init', async () => {
+    const sent = respondWith(() => eventStream(''))
+    const api = createFastApiClient<TestPaths>({ baseUrl: BASE_URL })
+
+    await collect(
+      api.events('/things/{id}/events', {
+        params: { path: { id: 'a' } },
+        headers: { 'X-Trace': 'trace' }
+      })
+    )
+
+    expect(sent.map((request) => request.headers.get('X-Trace'))).toEqual(['trace'])
+  })
+
+  test('rejects a failed call with its detail and status', async () => {
+    respondWith(() => json({ detail: 'Thing not found' }, 404))
+    const api = createFastApiClient<TestPaths>({ baseUrl: BASE_URL })
+
+    const events = collect(api.events('/things/{id}/events', { params: { path: { id: 'a' } } }))
+
+    await expect(events).rejects.toMatchObject({
+      name: 'CmkApiError',
+      message: 'Thing not found',
+      statusCode: 404
+    })
+  })
+
+  test('a response without a body fails the stream', async () => {
+    respondWith(() => new Response(null, { status: 204 }))
+    const api = createFastApiClient<TestPaths>({ baseUrl: BASE_URL })
+
+    const events = collect(api.events('/things/{id}/events', { params: { path: { id: 'a' } } }))
+
+    await expect(events).rejects.toThrow('returned no event stream')
+  })
+
+  test('yields no event read after the signal aborted', async () => {
+    respondWith(() =>
+      eventStream(
+        'event: renamed\ndata: {"name":"b"}\nid: 1\n\nevent: renamed\ndata: {"name":"c"}\nid: 2\n\n'
+      )
+    )
+    const api = createFastApiClient<TestPaths>({ baseUrl: BASE_URL })
+    const controller = new AbortController()
+    const events = api
+      .events('/things/{id}/events', {
+        params: { path: { id: 'a' } },
+        signal: controller.signal
+      })
+      [Symbol.asyncIterator]()
+    await events.next()
+
+    controller.abort()
+
+    await expect(events.next()).rejects.toBe(controller.signal.reason)
+  })
+
+  test('aborting the signal ends an idle stream with its reason', async () => {
+    const sent = respondWith((request) => idleEventStream(request.signal))
+    const api = createFastApiClient<TestPaths>({ baseUrl: BASE_URL })
+    const controller = new AbortController()
+    const events = collect(
+      api.events('/things/{id}/events', {
+        params: { path: { id: 'a' } },
+        signal: controller.signal
+      })
+    )
+    await vi.waitFor(() => expect(sent).toHaveLength(1))
+
+    controller.abort()
+
+    await expect(events).rejects.toBe(controller.signal.reason)
+  })
+})
+
 describe('the schema types each call', () => {
   const api = createFastApiClient<TestPaths>({ baseUrl: BASE_URL })
 
@@ -200,6 +360,38 @@ describe('the schema types each call', () => {
     expectTypeOf(getThing).returns.resolves.toEqualTypeOf<{ ok: boolean }>()
     // @ts-expect-error the schema declares no such field
     void (async () => (await getThing()).missing)
+  })
+
+  test('events are typed by the schema', () => {
+    const readEvents = () => api.events('/things/{id}/events', { params: { path: { id: 'a' } } })
+
+    expectTypeOf(readEvents).returns.toEqualTypeOf<AsyncIterable<ThingEvent>>()
+  })
+
+  test('an event name with the data of another does not compile', () => {
+    const event: FastApiEvent<TestPaths, '/things/{id}/events'> = {
+      event: 'renamed',
+      // @ts-expect-error a renamed event carries a name, not a reason
+      data: { reason: 'gone' },
+      id: '1'
+    }
+
+    void event
+  })
+
+  test('events of a path missing its required parameter do not compile', () => {
+    // @ts-expect-error '/things/{id}/events' requires the id
+    void (() => api.events('/things/{id}/events'))
+  })
+
+  test('a path without typed events cannot be read as events', () => {
+    // @ts-expect-error '/events' declares no event of its stream
+    void (() => api.events('/events'))
+  })
+
+  test('a path without a GET cannot be read as events', () => {
+    // @ts-expect-error '/things' has no GET
+    void (() => api.events('/things'))
   })
 
   test('the payload cannot be passed to the REST API unwrap', () => {

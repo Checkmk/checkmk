@@ -38,6 +38,7 @@ from .type_defs import (
     DashboardName,
     DashletConfig,
     EmbeddedViewDashletConfig,
+    FixedWindow,
     MetricCurrentValue,
     MetricFixedWindow,
     MetricTimeRange,
@@ -243,7 +244,9 @@ def migrate_dashboard_config(dashboard: MaybeOldDashboardConfig) -> DashboardCon
             }
 
     dashboard["widgets"] = {
-        widget_id: _migrate_inventory_link(_migrate_metric_time_range(widget))
+        widget_id: _migrate_alert_overview_time_range(
+            _migrate_inventory_link(_migrate_metric_time_range(widget))
+        )
         for widget_id, widget in dashboard["widgets"].items()
     }
 
@@ -269,6 +272,16 @@ def _migrate_metric_time_range(widget: DashletConfig) -> DashletConfig:
             time_range = cast(MetricFixedWindow, {"type": "range", **parameters})
         case _:
             return widget
+    return cast(DashletConfig, {**widget, "time_range": time_range})
+
+
+def _migrate_alert_overview_time_range(widget: DashletConfig) -> DashletConfig:
+    if widget["type"] != "alert_overview":
+        return widget
+    raw = cast(dict[str, object], widget)
+    if "time_range" not in raw or isinstance(raw["time_range"], dict):
+        return widget
+    time_range = cast(FixedWindow, {"type": "range", "window": raw["time_range"]})
     return cast(DashletConfig, {**widget, "time_range": time_range})
 
 

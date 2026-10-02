@@ -529,11 +529,31 @@ class TestMigrateMetricTimeRange:
         assert result["widgets"]["w1"]["time_range"] == time_range  # type: ignore[typeddict-item]
 
     def test_another_widget_type_keeps_its_time_range(self) -> None:
-        dashboard = _responsive_dashboard({"type": "alert_overview", "time_range": ("age", 3600)})
+        dashboard = _responsive_dashboard({"type": "hoststats", "time_range": ("age", 3600)})
 
         result = migrate_dashboard_config(dashboard)
 
         assert result["widgets"]["w1"]["time_range"] == ("age", 3600)  # type: ignore[typeddict-item]
+
+
+class TestMigrateAlertOverviewTimeRange:
+    def test_a_stored_timerange_becomes_a_fixed_window(self) -> None:
+        dashboard = _responsive_dashboard({"type": "alert_overview", "time_range": ("age", 3600)})
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["time_range"] == {  # type: ignore[typeddict-item]
+            "type": "range",
+            "window": ("age", 3600),
+        }
+
+    def test_a_migrated_time_range_stays_unchanged(self) -> None:
+        time_range = {"type": "range", "window": "d0"}
+        dashboard = _responsive_dashboard({"type": "alert_overview", "time_range": time_range})
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["time_range"] == time_range  # type: ignore[typeddict-item]
 
 
 class TestMigrateInventoryLink:

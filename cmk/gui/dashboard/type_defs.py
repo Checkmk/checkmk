@@ -263,7 +263,7 @@ class InventoryDashletConfig(DashletConfig):
 
 
 class AlertOverviewDashletConfig(DashletConfig):
-    time_range: TimerangeValue
+    time_range: FixedWindow
     limit_objects: NotRequired[int]
 
 

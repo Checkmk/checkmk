@@ -4,7 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Literal, override, Self
 
-from cmk.gui.dashboard.type_defs import AlertOverviewDashletConfig, SiteOverviewDashletConfig
+from cmk.gui.dashboard.type_defs import (
+    AlertOverviewDashletConfig,
+    FixedWindow,
+    SiteOverviewDashletConfig,
+)
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import timerange_from_internal, TimerangeModel
 
@@ -33,7 +37,7 @@ class AlertOverviewContent(BaseWidgetContent):
     def from_internal(cls, config: AlertOverviewDashletConfig) -> Self:
         return cls(
             type="alert_overview",
-            time_range=timerange_from_internal(config["time_range"]),
+            time_range=timerange_from_internal(config["time_range"]["window"]),
             limit_objects=config.get("limit_objects", ApiOmitted()),
         )
 
@@ -41,7 +45,7 @@ class AlertOverviewContent(BaseWidgetContent):
     def to_internal(self) -> AlertOverviewDashletConfig:
         config = AlertOverviewDashletConfig(
             type=self.internal_type(),
-            time_range=self.time_range.to_internal(),
+            time_range=FixedWindow(type="range", window=self.time_range.to_internal()),
         )
         if not isinstance(self.limit_objects, ApiOmitted):
             config["limit_objects"] = self.limit_objects

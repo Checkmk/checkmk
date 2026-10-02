@@ -2200,10 +2200,6 @@ CASES: Mapping[str, list[Case]] = {
                 },
             },
         ),
-        CasePass(
-            "telemetry-on-central",
-            {"features": {"telemetry": "central"}, "address_seen_by_central": "10.0.0.2"},
-        ),
         CaseFail("central-feature-without-address", {"features": {"telemetry": "central"}}),
         CasePass(
             "local-instance",

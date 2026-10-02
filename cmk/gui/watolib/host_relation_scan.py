@@ -29,7 +29,6 @@ from cmk.ccc.user import UserId
 from cmk.gui.background_job.job import (
     AlreadyRunningError,
     BackgroundJob,
-    BackgroundJobRegistry,
     BackgroundProcessInterface,
     InitialStatusArgs,
     JobTarget,
@@ -970,9 +969,3 @@ def start_relation_linking(
             user=str(acting_user) if acting_user else None,
         ),
     )
-
-
-def register(job_registry: BackgroundJobRegistry) -> None:
-    # Registered for the housekeeping, which keeps a handful of scans rather than all of them.
-    job_registry.register(RelationScanBackgroundJob)
-    job_registry.register(RelationDetectionBackgroundJob)

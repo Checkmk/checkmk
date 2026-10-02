@@ -36,6 +36,7 @@ from . import (
     groups,
     gui_timings,
     host_diagnose,
+    host_relation_detection,
     host_rename,
     hosts,
     not_implemented,
@@ -91,6 +92,7 @@ def register(
     groups.register(mode_registry)
     gui_timings.register(page_registry)
     host_diagnose.register(page_registry, mode_registry)
+    host_relation_detection.register(mode_registry, folders.folder_menu_entry_registry)
     host_rename.register(mode_registry)
     hosts.register(mode_registry, page_registry, match_item_generator_registry)
     not_implemented.register(mode_registry)

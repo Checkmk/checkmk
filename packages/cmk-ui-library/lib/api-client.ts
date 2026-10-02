@@ -33,7 +33,7 @@ export class Api {
 
   public async option(url: string, options: ApiOptions = {}): Promise<ApiResponseBody<unknown>> {
     const params = this.prepareOptions(options, {
-      method: 'OPTION'
+      method: 'OPTIONS'
     })
 
     return this.fetch(url, params, options.exceptOnNonZeroResultCode)

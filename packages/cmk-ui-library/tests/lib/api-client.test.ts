@@ -47,27 +47,15 @@ test('a raw request with a valid session returns the ajax result', async () => {
   await expect(new Api(SITE).getRaw('ajax_fine.py')).resolves.toBe('ok')
 })
 
-interface Case {
-  call: (api: Api) => Promise<unknown>
-  method: string
-}
-
-async function expectSentMethod({ call, method }: Case) {
-  const sentMethod = await call(new Api(SITE))
-
-  expect(sentMethod).toBe(method)
-}
-
 test.each([
+  { name: 'option', call: (api: Api) => api.option('endpoint'), method: 'OPTIONS' },
   { name: 'get', call: (api: Api) => api.get('endpoint'), method: 'GET' },
   { name: 'post', call: (api: Api) => api.post('endpoint', {}), method: 'POST' },
   { name: 'put', call: (api: Api) => api.put('endpoint', {}), method: 'PUT' },
   { name: 'delete', call: (api: Api) => api.delete('endpoint'), method: 'DELETE' },
   { name: 'getRaw', call: (api: Api) => api.getRaw('endpoint'), method: 'GET' },
   { name: 'postRaw', call: (api: Api) => api.postRaw('endpoint', {}), method: 'POST' }
-])('$name sends a $method request', expectSentMethod)
-
-// The client still sends the wrong method for these calls.
-test.fails.each([
-  { name: 'option', call: (api: Api) => api.option('endpoint'), method: 'OPTIONS' }
-])('$name sends a $method request', expectSentMethod)
+])('$name sends a $method request', async ({ call, method }) => {
+  const sentMethod = await call(new Api(SITE))
+  expect(sentMethod).toBe(method)
+})

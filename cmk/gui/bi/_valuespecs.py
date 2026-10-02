@@ -27,6 +27,7 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
     Percentage,
+    RegExp,
     TextInput,
     Transform,
     Tuple,
@@ -298,12 +299,12 @@ def _bi_host_choice_vs(title):
                 (
                     "host_name_regex",
                     _("Regex for host name"),
-                    TextInput(label=_("Pattern"), size=60),
+                    RegExp(label=_("Pattern"), size=60, mode=RegExp.complete),
                 ),
                 (
                     "host_alias_regex",
                     _("Regex for host alias"),
-                    TextInput(label=_("Pattern"), size=60),
+                    RegExp(label=_("Pattern"), size=60, mode=RegExp.prefix),
                 ),
             ],
             help=_(
@@ -463,7 +464,8 @@ class BIConfigServiceSearch(BIServiceSearch, ABCBIConfigSearch):
         return [
             (
                 "service_regex",
-                TextInput(
+                RegExp(
+                    mode=RegExp.prefix,
                     title=_("Service Regex"),
                     help=_(
                         "Subexpressions enclosed in <tt>(</tt> and <tt>)</tt> will be available "
@@ -687,7 +689,8 @@ class BIConfigStateOfHostAction(actions.BIStateOfHostAction, ABCBIConfigAction):
     def get_state_of_host_choice(cls):
         return (
             "host_regex",
-            TextInput(
+            RegExp(
+                mode=RegExp.complete,
                 title=_("Host:"),
                 help=_(
                     "Either an exact host name or a regular expression exactly matching the host "
@@ -718,7 +721,8 @@ class BIConfigStateOfServiceAction(actions.BIStateOfServiceAction, ABCBIConfigAc
     def _get_state_of_service_choice(cls):
         return (
             "service_regex",
-            TextInput(
+            RegExp(
+                mode=RegExp.prefix,
                 title=_("Service Regex:"),
                 help=_(
                     "A regular expression matching the <b>beginning</b> of a service "

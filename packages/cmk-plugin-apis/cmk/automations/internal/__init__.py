@@ -100,6 +100,9 @@ class Automation[StateT: AutomationState, ResultT: AutomationResult]:
     ...         self.text = text
     ...     def serialize(self, for_cmk_version: str) -> str:
     ...         return repr(self.text)
+    ...     @staticmethod
+    ...     def automation_call() -> AutomationID:
+    ...         return AutomationID("greet")
     >>> def greet(_state: NoState, args: Sequence[str]) -> Greeting:
     ...     return Greeting(f"Hello {', '.join(args)}")
     >>> automation_greet = Automation(
@@ -135,6 +138,14 @@ class Automation[StateT: AutomationState, ResultT: AutomationResult]:
     within them, so this must stay off for any automation it calls that way: the
     CLI would wait for a lock its own caller holds.
     """
+
+    def __post_init__(self) -> None:
+        """Make sure the name matches the automation id of the result type.
+        A mismatch here will make the caller try to deserialize the wrong type.
+        """
+        rname = self.result.automation_call()
+        if not self.name == rname:
+            raise TypeError(f"Automation {self.name!r}: Mismatching ID of result type: {rname!r}")
 
 
 def entry_point_prefixes() -> Mapping[type[Automation], str]:  # type: ignore[type-arg]

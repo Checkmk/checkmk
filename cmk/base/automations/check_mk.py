@@ -77,6 +77,7 @@ from cmk.automations.results import (
     ServiceInfo,
     SetAutochecksInput,
     SetAutochecksV2Result,
+    SpecialAgentDiscoveryPreviewResult,
     SpecialAgentResult,
     UnknownCheckParameterRuleSetsResult,
     UpdateDNSCacheResult,
@@ -482,7 +483,7 @@ def _automation_service_discovery(
 def _automation_special_agent_discovery_preview(
     state: CommonState,
     args: list[str],  # noqa: ARG001
-) -> ServiceDiscoveryPreviewResult:
+) -> SpecialAgentDiscoveryPreviewResult:
     run_settings = DiagSpecialAgentInput.deserialize(sys.stdin.read())
 
     env = AutomationEnvironment.create(state.app, state.loading_result)
@@ -543,6 +544,7 @@ def _automation_special_agent_discovery_preview(
         run_settings.host_config.ip_address,
         secrets_config=ad_hoc_secrets,
         for_relay=run_settings.host_config.relay_id is not None,
+        result_type=SpecialAgentDiscoveryPreviewResult,
     )
 
 
@@ -660,10 +662,11 @@ def _automation_discovery_preview(
             ip_address=ip_address,
             secrets_config=secrets_config_relay if relay_id else secrets_config_site,
             for_relay=relay_id is not None,
+            result_type=ServiceDiscoveryPreviewResult,
         )
 
 
-def _get_discovery_preview(
+def _get_discovery_preview[PreviewT: ServiceDiscoveryPreviewResult](
     host_name: HostName,
     default_address_family: Callable[
         [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
@@ -685,7 +688,8 @@ def _get_discovery_preview(
     secrets_config: SecretsConfig,
     *,
     for_relay: bool,
-) -> ServiceDiscoveryPreviewResult:
+    result_type: type[PreviewT],
+) -> PreviewT:
     buf = io.StringIO()
 
     # TODO: Do we still need the redirects?
@@ -727,7 +731,7 @@ def _get_discovery_preview(
             ]
         )
 
-        return ServiceDiscoveryPreviewResult(
+        return result_type(
             output=buf.getvalue(),
             check_table=check_preview.table[host_name],
             nodes_check_table={h: t for h, t in check_preview.table.items() if h != host_name},
@@ -4214,7 +4218,7 @@ automation_special_agent_discovery_preview = Automation(
     name=AutomationID("special-agent-discovery-preview"),
     state_factory=CommonState,
     handler=_automation_special_agent_discovery_preview,
-    result=ServiceDiscoveryPreviewResult,
+    result=SpecialAgentDiscoveryPreviewResult,
 )
 automation_service_discovery_preview = Automation(
     name=AutomationID("service-discovery-preview"),

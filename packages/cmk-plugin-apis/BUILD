@@ -338,6 +338,15 @@ py_cmk_test(
 )
 
 py_cmk_test(
+    name = "automations-test",
+    size = "small",
+    srcs = glob(["tests/cmk/automations/**/*.py"]),
+    deps = [
+        ":automations",
+    ],
+)
+
+py_cmk_test(
     name = "cli-test",
     size = "small",
     srcs = glob(["tests/cmk/cli/**/*.py"]),

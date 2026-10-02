@@ -163,6 +163,18 @@ class _Result(AutomationResult):
         return "dummy"
 
 
+def _result_named(name: str) -> type[_Result]:
+    """A result type for the automation of the given name, as the engine demands."""
+
+    class _NamedResult(_Result):
+        @staticmethod
+        @override
+        def automation_call() -> AutomationID:
+            return AutomationID(name)
+
+    return _NamedResult
+
+
 @dataclass
 class _RecordingState(AutomationState):
     built_for: Path
@@ -193,7 +205,7 @@ def _automation(
         name=AutomationID(name),
         state_factory=state_factory,
         handler=_handle,
-        result=_Result,
+        result=_result_named(name),
     )
 
 
@@ -215,7 +227,14 @@ def test_an_automation_without_state_needs_no_configuration() -> None:
         return _Result()
 
     engine = Automations(
-        [Automation(name=AutomationID("a"), state_factory=NoState, handler=handle, result=_Result)]
+        [
+            Automation(
+                name=AutomationID("a"),
+                state_factory=NoState,
+                handler=handle,
+                result=_result_named("a"),
+            )
+        ]
     )
     # Nothing can be derived from an empty mapping: a state that tried would fail.
     engine.update(Path("/old"), {})
@@ -238,7 +257,7 @@ def test_only_automations_that_ask_for_it_read_the_configuration_under_lock() ->
                 name=AutomationID("locked"),
                 state_factory=_RecordingFactory(),
                 handler=_handle,
-                result=_Result,
+                result=_result_named("locked"),
                 lock_configuration=True,
             ),
             _automation("unlocked", _RecordingFactory()),
@@ -311,7 +330,7 @@ def test_handler_output_does_not_reach_stdout(capsys: pytest.CaptureFixture[str]
                 name=AutomationID("chatty"),
                 state_factory=_RecordingFactory(),
                 handler=chatty_handler,
-                result=_Result,
+                result=_result_named("chatty"),
             )
         ]
     )
@@ -333,7 +352,7 @@ def test_output_of_a_failing_handler_reaches_stdout(capsys: pytest.CaptureFixtur
                 name=AutomationID("failing"),
                 state_factory=_RecordingFactory(),
                 handler=failing_handler,
-                result=_Result,
+                result=_result_named("failing"),
             )
         ]
     )

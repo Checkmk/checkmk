@@ -41,7 +41,7 @@ SOURCES_COMMON = [
     "mode_create_otel_conf.json",
     "mode_custom_services.json",
     "mode_host.json",
-    "mode_host_relation_discovery.json",
+    "mode_host_relation_detection.json",
     "mode_oauth2_connection.json",
     "monitoring/all_hosts.json",
     "monitoring/host_services.json",

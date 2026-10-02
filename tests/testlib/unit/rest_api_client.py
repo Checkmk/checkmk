@@ -5561,7 +5561,7 @@ class ServiceAvailabilityClient(RestApiClient):
         )
 
 
-class HostRelationDiscoveryClient(RestApiClient):
+class HostRelationDetectionClient(RestApiClient):
     default_version = APIVersion.INTERNAL
 
     def suggest(
@@ -5574,7 +5574,7 @@ class HostRelationDiscoveryClient(RestApiClient):
     ) -> Response:
         return self.request(
             "post",
-            url="/domain-types/host_relation_discovery/actions/suggest/invoke",
+            url="/domain-types/host_relation_detection/actions/suggest/invoke",
             body={
                 "words": words or [],
                 "values": values or [],
@@ -5592,7 +5592,7 @@ class HostRelationDiscoveryClient(RestApiClient):
     ) -> Response:
         return self.request(
             "post",
-            url="/domain-types/host_relation_discovery/actions/scan/invoke",
+            url="/domain-types/host_relation_detection/actions/scan/invoke",
             body={
                 "findings": (
                     [{"id": "word:ilo", "kind": "management", "words": ["ilo", "bmc"]}]
@@ -5615,7 +5615,7 @@ class HostRelationDiscoveryClient(RestApiClient):
     ) -> Response:
         return self.request(
             "post",
-            url="/domain-types/host_relation_discovery/actions/accept/invoke",
+            url="/domain-types/host_relation_detection/actions/accept/invoke",
             body={
                 "scan_id": scan_id,
                 "findings": findings,
@@ -5629,7 +5629,7 @@ class HostRelationDiscoveryClient(RestApiClient):
     def show(self, job_id: str, expect_ok: bool = True) -> Response:
         return self.request(
             "get",
-            url=f"/objects/host_relation_discovery/{job_id}",
+            url=f"/objects/host_relation_detection/{job_id}",
             expect_ok=expect_ok,
         )
 
@@ -5638,7 +5638,7 @@ class HostRelationDiscoveryClient(RestApiClient):
     ) -> Response:
         return self.request(
             "get",
-            url=f"/objects/host_relation_discovery/{job_id}/collections/rows"
+            url=f"/objects/host_relation_detection/{job_id}/collections/rows"
             + (f"?{urllib.parse.urlencode(query)}" if query else ""),
             expect_ok=expect_ok,
         )
@@ -5904,7 +5904,7 @@ class ClientRegistry:
     HostAvailability: HostAvailabilityClient
     ServiceAvailability: ServiceAvailabilityClient
     DisabledEndpointStub: DisabledEndpointStubClient
-    HostRelationDiscovery: HostRelationDiscoveryClient
+    HostRelationDetection: HostRelationDetectionClient
     MonitorHosts: MonitorHostsClient
     CustomService: CustomServiceClient
     Alert: AlertClient
@@ -5980,7 +5980,7 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         HostAvailability=HostAvailabilityClient(request_handler, url_prefix),
         ServiceAvailability=ServiceAvailabilityClient(request_handler, url_prefix),
         DisabledEndpointStub=DisabledEndpointStubClient(request_handler, url_prefix),
-        HostRelationDiscovery=HostRelationDiscoveryClient(request_handler, url_prefix),
+        HostRelationDetection=HostRelationDetectionClient(request_handler, url_prefix),
         MonitorHosts=MonitorHostsClient(request_handler, url_prefix),
         CustomService=CustomServiceClient(request_handler, url_prefix),
         Alert=AlertClient(request_handler, url_prefix),

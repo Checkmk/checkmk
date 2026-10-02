@@ -118,7 +118,7 @@ def _related_host_choice() -> StringAutocompleter:
 
 
 def relation_choice_name(kind_id: str, direction: RelationDirection) -> str:
-    """One end of a relation kind as a single identifier, as the relation discovery names it.
+    """One end of a relation kind as a single identifier, as the relation detection names it.
 
     Joined by an underscore rather than by a separator that reads better, so that it can serve as
     an element name. That is unambiguous because a direction contains none and a kind id is an

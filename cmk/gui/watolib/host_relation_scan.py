@@ -43,11 +43,11 @@ from cmk.gui.utils.host_relations import RelationDirection
 from cmk.gui.utils.misc import gen_id
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
-from cmk.gui.watolib.host_relation_discovery import (
+from cmk.gui.watolib.host_relation_detection import (
     conflict_key,
     ConflictEntry,
-    discover_relations,
-    Discovery,
+    detect_relations,
+    Detection,
     Evidence,
     Finding,
     group_key,
@@ -274,21 +274,21 @@ _OUTCOME_ORDER: Final = {
 
 
 def scan_result(
-    discovery: Discovery, *, findings: Sequence[str], folder_of: Callable[[HostName], str]
+    detection: Detection, *, findings: Sequence[str], folder_of: Callable[[HostName], str]
 ) -> ScanResult:
-    """``discovery`` in the shape it is kept in."""
+    """``detection`` in the shape it is kept in."""
     return ScanResult(
-        hosts_scanned=discovery.hosts_scanned,
+        hosts_scanned=detection.hosts_scanned,
         findings=list(findings),
         relations=sorted(
-            (_found_relation(entry, folder_of) for entry in discovery.entries),
+            (_found_relation(entry, folder_of) for entry in detection.entries),
             key=lambda row: (_OUTCOME_ORDER[row.outcome], row.source, row.target),
         ),
         groups=sorted(
-            (_found_group(group, folder_of) for group in discovery.groups),
+            (_found_group(group, folder_of) for group in detection.groups),
             key=lambda group: (_OUTCOME_ORDER[group.outcome], group.members),
         ),
-        conflicts=[_found_conflict(conflict, folder_of) for conflict in discovery.conflicts],
+        conflicts=[_found_conflict(conflict, folder_of) for conflict in detection.conflicts],
     )
 
 
@@ -622,7 +622,7 @@ def _own_job(job_id: str, prefix: str) -> BackgroundJob:
 
 def job_of(job_id: str) -> BackgroundJob:
     """A scan or a run of the logged-in user, whichever ``job_id`` names."""
-    for prefix in (RelationScanBackgroundJob.job_prefix, RelationDiscoveryBackgroundJob.job_prefix):
+    for prefix in (RelationScanBackgroundJob.job_prefix, RelationDetectionBackgroundJob.job_prefix):
         if job_id.startswith(f"{prefix}-"):
             return _own_job(job_id, prefix)
     raise UnknownJob(job_id)
@@ -636,7 +636,7 @@ def load_scan(job_id: str) -> ScanResult | None:
 def load_run(job_id: str) -> RunResult | None:
     """What the run ``job_id`` did, or ``None`` while it is still running or if it failed."""
     return _result_store(
-        _own_job(job_id, RelationDiscoveryBackgroundJob.job_prefix), RunResult
+        _own_job(job_id, RelationDetectionBackgroundJob.job_prefix), RunResult
     ).read()
 
 
@@ -671,20 +671,20 @@ class RelationScanBackgroundJob(BackgroundJob):
         ):
             job_interface.send_progress_update(_("Reading the hosts of Setup..."))
             evidence = evidence_of(findings)
-            discovery = discover_relations(tree, evidence=evidence, acting_user=user, scope=scope)
+            detection = detect_relations(tree, evidence=evidence, acting_user=user, scope=scope)
             folders = {
                 name: host.folder().path()
                 for name, host in tree.root_folder().all_hosts_recursively().items()
             }
             _result_store(self, ScanResult).write(
                 scan_result(
-                    discovery,
+                    detection,
                     findings=[finding.id for finding in evidence.findings],
                     folder_of=lambda name: folders.get(name, ""),
                 )
             )
             job_interface.send_result_message(
-                _("%(count)d hosts looked at.") % {"count": discovery.hosts_scanned}
+                _("%(count)d hosts looked at.") % {"count": detection.hosts_scanned}
             )
 
 
@@ -751,8 +751,8 @@ def start_relation_scan(
     )
 
 
-class RelationDiscoveryBackgroundJob(BackgroundJob):
-    job_prefix = "relation_discovery"
+class RelationDetectionBackgroundJob(BackgroundJob):
+    job_prefix = "relation_detection"
     housekeeping_max_age_sec = 86400
     housekeeping_max_count = 20
 
@@ -893,7 +893,7 @@ def run_result(
     )
 
 
-class RelationDiscoveryJobArgs(BaseModel, frozen=True):
+class RelationDetectionJobArgs(BaseModel, frozen=True):
     accepted: AcceptedScan
     user_permission_config: UserPermissionSerializableConfig
     site_configs: SiteConfigurations
@@ -907,10 +907,10 @@ class RelationDiscoveryJobArgs(BaseModel, frozen=True):
     acting_user: AnnotatedUserId | None
 
 
-def relation_discovery_job_entry_point(
-    job_interface: BackgroundProcessInterface, args: RelationDiscoveryJobArgs
+def relation_detection_job_entry_point(
+    job_interface: BackgroundProcessInterface, args: RelationDetectionJobArgs
 ) -> None:
-    RelationDiscoveryBackgroundJob(job_interface.get_job_id()).do_execute(
+    RelationDetectionBackgroundJob(job_interface.get_job_id()).do_execute(
         args.accepted,
         job_interface,
         args.user_permission_config,
@@ -931,7 +931,7 @@ def relation_discovery_job_entry_point(
 
 
 def start_relation_linking(
-    job: RelationDiscoveryBackgroundJob,
+    job: RelationDetectionBackgroundJob,
     accepted: AcceptedScan,
     user_permission_config: UserPermissionSerializableConfig,
     *,
@@ -948,8 +948,8 @@ def start_relation_linking(
     """Store what the user accepted of a scan in the background, under the configuration lock."""
     return job.start(
         JobTarget(
-            callable=relation_discovery_job_entry_point,
-            args=RelationDiscoveryJobArgs(
+            callable=relation_detection_job_entry_point,
+            args=RelationDetectionJobArgs(
                 accepted=accepted,
                 user_permission_config=user_permission_config,
                 site_configs=site_configs,
@@ -975,4 +975,4 @@ def start_relation_linking(
 def register(job_registry: BackgroundJobRegistry) -> None:
     # Registered for the housekeeping, which keeps a handful of scans rather than all of them.
     job_registry.register(RelationScanBackgroundJob)
-    job_registry.register(RelationDiscoveryBackgroundJob)
+    job_registry.register(RelationDetectionBackgroundJob)

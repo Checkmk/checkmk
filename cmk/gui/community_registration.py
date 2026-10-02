@@ -79,8 +79,8 @@ from cmk.gui.wato import default_user_menu_topics
 from cmk.gui.wato import registration as wato_registration
 from cmk.gui.wato.pages import roles
 from cmk.gui.wato.pages.folders import folder_bulk_action_registry, folder_menu_entry_registry
-from cmk.gui.wato.pages.host_relation_discovery import (
-    register as host_relation_discovery_register,
+from cmk.gui.wato.pages.host_relation_detection import (
+    register as host_relation_detection_register,
 )
 from cmk.gui.watolib import host_relation_scan, network_scan
 from cmk.gui.watolib.activate_changes import (
@@ -151,7 +151,7 @@ def register(
         page_registry, rulespec_registry, mode_registry, match_item_generator_registry
     )
     host_relation_scan.register(job_registry)
-    host_relation_discovery_register(mode_registry, folder_menu_entry_registry)
+    host_relation_detection_register(mode_registry, folder_menu_entry_registry)
     parentscan_register(
         mode_registry,
         job_registry,

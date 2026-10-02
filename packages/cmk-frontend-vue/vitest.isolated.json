@@ -65,7 +65,7 @@
   "tests/maps/map/worldmap/components/WorldMapCanvas.test.ts",
   "tests/maps/services/MapService.test.ts",
   "tests/maps/services/MapsAuthService.test.ts",
-  "tests/mode-host-relation-discovery/ModeHostRelationDiscoveryApp.test.ts",
+  "tests/mode-host-relation-detection/ModeHostRelationDetectionApp.test.ts",
   "tests/monitoring/shared/components/filter/FilterDateTimeRange.test.ts",
   "tests/sidebar/SidebarApp.test.ts",
   "tests/sidebar/sidebar.test.ts",

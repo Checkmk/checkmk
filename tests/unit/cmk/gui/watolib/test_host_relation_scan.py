@@ -16,7 +16,7 @@ from cmk.ccc.site import SiteId
 from cmk.gui.background_job.job import BackgroundJobDefines, BackgroundProcessInterface
 from cmk.gui.config import Config
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
-from cmk.gui.watolib.host_relation_discovery import LinkOutcome
+from cmk.gui.watolib.host_relation_detection import LinkOutcome
 from cmk.gui.watolib.host_relation_scan import (
     accepted_pairs,
     AcceptedScan,
@@ -29,7 +29,7 @@ from cmk.gui.watolib.host_relation_scan import (
     FoundReason,
     FoundRelation,
     groups_page,
-    RelationDiscoveryBackgroundJob,
+    RelationDetectionBackgroundJob,
     relations_page,
     RowFilter,
     run_counts,
@@ -352,11 +352,11 @@ def test_a_relation_is_keyed_the_way_the_page_takes_it_out() -> None:
 
 
 def test_a_run_on_a_scan_that_is_gone_says_so(tmp_path: Path) -> None:
-    RelationDiscoveryBackgroundJob().do_execute(
+    RelationDetectionBackgroundJob().do_execute(
         AcceptedScan(scan_id="relation_scan-gone", findings=["word:ilo"]),
         BackgroundProcessInterface(
             work_dir=str(tmp_path),
-            job_id="relation_discovery-test",
+            job_id="relation_detection-test",
             logger=logging.getLogger(),
             stop_event=threading.Event(),
             gui_context=lambda _user_permissions: nullcontext(),

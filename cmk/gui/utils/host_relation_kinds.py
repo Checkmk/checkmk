@@ -7,7 +7,7 @@
 
 A kind is an object with its readings as fields, so the one table below decides what the host
 dialog offers, what a contradiction message says, what the monitoring calls a related host, and
-what the relation discovery proposes. A further kind is one more entry here; nothing else
+what the relation detection proposes. A further kind is one more entry here; nothing else
 enumerates them.
 
 Only the ids of a kind and of a direction are stored (see :mod:`cmk.gui.utils.host_relations`),
@@ -40,10 +40,10 @@ class NameEvidence:
 
     ``tokens`` are the words a name carries for it - "ilo" and "idrac" for a management
     board - and ``direction`` is the end a host carrying one of them sits at. A kind that
-    leaves this out is simply not discovered from host names; nothing else has to know.
+    leaves this out is simply not detected from host names; nothing else has to know.
 
     The words a kind declares are the ones its vendors habitually use: where a fleet's names
-    carry one, the relation discovery offers it as this kind already. What a scan reads are
+    carry one, the relation detection offers it as this kind already. What a scan reads are
     the words the user confirmed.
     """
 

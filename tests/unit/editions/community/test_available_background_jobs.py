@@ -27,6 +27,6 @@ def test_registered_background_jobs() -> None:
         "QuickSetupStageActionBackgroundJob",
         "QuickSetupActionBackgroundJob",
         "ProfileReplicationBackgroundJob",
-        "RelationDiscoveryBackgroundJob",
+        "RelationDetectionBackgroundJob",
         "RelationScanBackgroundJob",
     }

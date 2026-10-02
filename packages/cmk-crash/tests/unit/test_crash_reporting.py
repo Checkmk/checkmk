@@ -10,6 +10,7 @@ import copy
 import json
 import uuid
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
 from typing import Any, override, TypedDict
@@ -125,6 +126,37 @@ def test_format_var_for_export(input_: object, output: object) -> None:
         output = input_
 
     assert format_var_for_export(input_, maxsize=20) == output
+
+
+_PRIVATE_KEY = "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEG\n-----END PRIVATE KEY-----\n"
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(_PRIVATE_KEY, id="str"),
+        pytest.param(_PRIVATE_KEY.encode(), id="bytes"),
+        pytest.param(_PRIVATE_KEY.replace("PRIVATE", "EC PRIVATE"), id="legacy EC"),
+        pytest.param(_PRIVATE_KEY.replace("PRIVATE", "ENCRYPTED PRIVATE"), id="encrypted"),
+    ],
+)
+def test_a_private_key_is_redacted_whatever_its_variable_is_called(value: str | bytes) -> None:
+    assert format_var_for_export({"content": value}) == {"content": REDACTED_STRING}
+
+
+def test_an_object_whose_repr_holds_a_private_key_is_redacted() -> None:
+    @dataclass(frozen=True)
+    class Csr:
+        csr: str
+        private_key: bytes
+
+    assert format_var_for_export(Csr("a request", _PRIVATE_KEY.encode())) == REDACTED_STRING
+
+
+def test_a_certificate_is_not_redacted() -> None:
+    certificate = b"-----BEGIN CERTIFICATE-----\nMIIBszCCAVmgAwIBAgIU\n-----END CERTIFICATE-----\n"
+
+    assert format_var_for_export(certificate) == certificate
 
 
 def test_format_var_for_export_broken_repr() -> None:

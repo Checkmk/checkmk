@@ -28,6 +28,10 @@ SENSITIVE_KEYWORDS = ["token", "secret", "pass", "key"]
 
 REDACTED_STRING: Final = "redacted"
 
+# Ends the PEM header of every private key format (PKCS#8, encrypted or not, and the
+# legacy RSA, EC and DSA ones), and nothing that is public, such as a certificate.
+_PEM_PRIVATE_KEY_MARKER: Final = "PRIVATE KEY-----"
+
 CRASH_INFO_VERSION: Final = 2
 """Current version of the crash.info on-disk format.
 
@@ -322,22 +326,31 @@ def format_var_for_export(val: object, maxdepth: int = 4, maxsize: int = 1024 * 
                 format_var_for_export(item, maxdepth - 1, maxsize=maxsize) for item in val
             )
 
-        # Check and limit size
+        # A private key is redacted by its value, as the variable holding it can have
+        # any name.
         case str():
+            if _PEM_PRIVATE_KEY_MARKER in val:
+                return REDACTED_STRING
             return _truncate_str(val, maxsize)
+
+        case bytes():
+            if _PEM_PRIVATE_KEY_MARKER.encode() in val:
+                return REDACTED_STRING
+            return val
 
         # Preserve JSON-safe scalars as-is; pprint.pformat() handles them without calling
         # any user-defined __repr__.
-        case None | bool() | int() | float() | bytes():
+        case None | bool() | int() | float():
             return val
 
         case _:
             # Convert unknown objects to a safe string representation so that a later
             # pprint.pformat() call cannot crash on a broken __repr__ implementation.
             try:
-                return repr(val)
+                text = repr(val)
             except Exception:
                 return f"<{type(val).__name__} (repr raised an exception)>"
+            return REDACTED_STRING if _PEM_PRIVATE_KEY_MARKER in text else text
 
 
 def _key_indicates_sensitivity(key: object) -> bool:

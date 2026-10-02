@@ -105,7 +105,12 @@ def fake_paths() -> None:
     # Unit test context: load all available modules
     original_omd_root = Path(cmk.utils.paths.omd_root)
     for name, value in vars(cmk.utils.paths).items():
-        if name.startswith("_") or not isinstance(value, str | Path) or name in unpatched_paths:
+        # relative_* paths are relative by contract (see test_paths.py); keep them so.
+        if (
+            name.startswith(("_", "relative_"))
+            or not isinstance(value, str | Path)
+            or name in unpatched_paths
+        ):
             continue
 
         if not Path(value).is_relative_to(original_omd_root):

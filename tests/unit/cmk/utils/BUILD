@@ -26,6 +26,7 @@ py_cmk_test(
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-crypto",
         "//packages/cmk-plugin-apis:discover_plugins",
+        "//packages/cmk-relay-protocols",
         "//packages/cmk-wsgi",
         "//tests/testlib/unit",
         "//tests/unit:conftest",

@@ -8,7 +8,7 @@ import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, ref, watch } from 'vue'
 
 import { type GraphTimerange } from '@/dashboard/components/TimeRange/GraphTimeRange.vue'
-import { useTimeRange } from '@/dashboard/components/TimeRange/useTimeRange'
+import { useTimeRangeSource } from '@/dashboard/components/TimeRange/useTimeRangeSource'
 import {
   type UseWidgetVisualizationOptions,
   useWidgetVisualizationProps
@@ -25,14 +25,12 @@ import { determineWidgetEffectiveFilterContext } from '@/dashboard/utils'
 
 export interface UseAlertOverview extends UseWidgetHandler, UseWidgetVisualizationOptions {
   //Data settings
-  timeRangeType: Ref<TimeRangeType>
+  followDashboardTimeRange: Ref<boolean>
   timeRange: Ref<GraphTimerange>
 
   objectsEnabled: Ref<boolean>
   objectsLimit: Ref<number>
 }
-
-type TimeRangeType = 'current' | 'window'
 
 const CONTENT_TYPE = 'alert_overview'
 
@@ -41,7 +39,6 @@ export const useAlertOverview = async (
   currentSpec: WidgetSpec | null
 ): Promise<UseAlertOverview> => {
   const constants = useInjectDashboardConstants()
-  const timeRangeType = ref<TimeRangeType>('current')
   const {
     title,
     showTitle,
@@ -59,9 +56,11 @@ export const useAlertOverview = async (
     currentSpec?.content?.type === CONTENT_TYPE
       ? (currentSpec?.content as AlertOverviewContent)
       : null
-  const { timeRange, widgetProps: generateTimeRangeProps } = useTimeRange(
-    currentContent?.time_range ?? null
-  )
+  const {
+    followDashboard: followDashboardTimeRange,
+    timeRange,
+    widgetProps: generateTimeRangeProps
+  } = useTimeRangeSource(currentContent?.time_range ?? null)
 
   const objectsEnabled = ref<boolean>(!!currentContent?.limit_objects)
   const objectsLimit = ref<number>(currentContent?.limit_objects ?? 100)
@@ -104,7 +103,7 @@ export const useAlertOverview = async (
   }
 
   watch(
-    [timeRangeType, timeRange, widgetGeneralSettings, objectsEnabled, objectsLimit],
+    [followDashboardTimeRange, timeRange, widgetGeneralSettings, objectsEnabled, objectsLimit],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),
@@ -114,7 +113,7 @@ export const useAlertOverview = async (
   await _updateWidgetProps()
 
   return {
-    timeRangeType,
+    followDashboardTimeRange,
     timeRange,
     objectsEnabled,
     objectsLimit,

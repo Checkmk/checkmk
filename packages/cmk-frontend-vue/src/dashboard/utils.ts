@@ -30,6 +30,8 @@ import type {
 import { DashboardLayout, DashboardOwnerType } from '@/dashboard/types/dashboard.ts'
 import type { ContextFilter, ContextFilters, FilterOrigin } from '@/dashboard/types/filter.ts'
 import type {
+  AlertOverview,
+  AlertOverviewContent,
   ComputedNetworkFlowAutonomousSystemResponse,
   ComputedNetworkFlowDonutResponse,
   ComputedNetworkFlowHostResponse,
@@ -313,6 +315,18 @@ export const dashboardAPI = {
   ): Promise<ComputedWidgetResponse<InventoryAttribute>> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-inventory/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
+  computeAlertOverview: async (
+    body: { source: WidgetSource<AlertOverviewContent>; time_range: WidgetTimeRange },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<AlertOverview>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-alert-overview/invoke', {
         ...CONTENT_TYPE_HEADER,
         headers,
         body

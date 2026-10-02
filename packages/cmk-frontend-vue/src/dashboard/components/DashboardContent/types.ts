@@ -27,12 +27,7 @@ export interface ContentProps<T = WidgetContent> {
 export type ContentPropsRecord = Readonly<Record<string, ContentProps>>
 
 // Figure
-export const CONTENT_FIGURE_TYPES: string[] = [
-  'alert_overview',
-  'alert_timeline',
-  'barplot',
-  'notification_timeline'
-]
+export const CONTENT_FIGURE_TYPES: string[] = ['alert_timeline', 'barplot', 'notification_timeline']
 
 export type ContentFigureType = (typeof CONTENT_FIGURE_TYPES)[number]
 

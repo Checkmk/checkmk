@@ -9,6 +9,7 @@ from pydantic_core import ErrorDetails
 
 from cmk.gui.dashboard.type_defs import (
     AlertOverviewDashletConfig,
+    DashboardWindow,
     FixedWindow,
     SiteOverviewDashletConfig,
 )
@@ -31,8 +32,11 @@ class AlertOverviewContent(BaseWidgetContent):
     type: Literal["alert_overview"] = api_field(
         description="Displays hosts and services producing the most notifications"
     )
-    time_range: TimerangeModel = api_field(
-        description="The time range for which the alert overview is displayed.",
+    time_range: Literal["dashboard"] | TimerangeModel = api_field(
+        description=(
+            "The time range for which the alert overview is displayed, or `dashboard` to follow"
+            " the dashboard."
+        ),
     )
     limit_objects: int | ApiOmitted = api_field(
         description="The maximum number of objects to display in the alert overview.",
@@ -46,9 +50,14 @@ class AlertOverviewContent(BaseWidgetContent):
 
     @classmethod
     def from_internal(cls, config: AlertOverviewDashletConfig) -> Self:
+        window = config["time_range"]
         return cls(
             type="alert_overview",
-            time_range=timerange_from_internal(config["time_range"]["window"]),
+            time_range=(
+                "dashboard"
+                if window["type"] == "dashboard"
+                else timerange_from_internal(window["window"])
+            ),
             limit_objects=config.get("limit_objects", ApiOmitted()),
         )
 
@@ -56,7 +65,11 @@ class AlertOverviewContent(BaseWidgetContent):
     def to_internal(self) -> AlertOverviewDashletConfig:
         config = AlertOverviewDashletConfig(
             type=self.internal_type(),
-            time_range=FixedWindow(type="range", window=self.time_range.to_internal()),
+            time_range=(
+                DashboardWindow(type="dashboard")
+                if self.time_range == "dashboard"
+                else FixedWindow(type="range", window=self.time_range.to_internal())
+            ),
         )
         if not isinstance(self.limit_objects, ApiOmitted):
             config["limit_objects"] = self.limit_objects

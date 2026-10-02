@@ -22,6 +22,7 @@ import DashboardContentNetworkFlowDonut from './NetworkFlow/DashboardContentNetw
 import DashboardContentNetworkFlowKpiStatCard from './NetworkFlow/DashboardContentNetworkFlowKpiStatCard.vue'
 import DashboardContentNetworkFlowTopTable from './NetworkFlow/DashboardContentNetworkFlowTopTable.vue'
 import DashboardContentNetworkFlowTrendChart from './NetworkFlow/DashboardContentNetworkFlowTrendChart.vue'
+import DashboardContentAlertOverview from './figures/DashboardContentAlertOverview.vue'
 import DashboardContentGauge from './figures/DashboardContentGauge.vue'
 import DashboardContentInventory from './figures/DashboardContentInventory.vue'
 import DashboardContentSiteOverview from './figures/DashboardContentSiteOverview.vue'
@@ -98,6 +99,8 @@ function contentToComponent(content: WidgetContent): Component {
       return DashboardContentInventory
     case contentType === 'site_overview':
       return DashboardContentSiteOverview
+    case contentType === 'alert_overview':
+      return DashboardContentAlertOverview
     case CONTENT_FIGURE_TYPES.includes(contentType):
       return DashboardContentFigure
     case NTOP_TYPES.includes(contentType):

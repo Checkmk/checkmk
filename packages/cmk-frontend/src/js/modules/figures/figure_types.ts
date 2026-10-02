@@ -14,50 +14,6 @@ export interface SubplotDataData {
   data: TransformedData[]
 }
 
-//types from: cmk/gui/cee/plugins/dashboard/site_overview.py
-export interface ABCElement {
-  type: string
-  title: string
-  tooltip: string
-}
-
-export interface SiteElement extends ABCElement {
-  type: 'site_element'
-  url_add_vars: Record<string, string>
-  total: Part
-  parts: Part[]
-}
-
-export interface HostElement extends ABCElement {
-  hexagon_config: {
-    css_class: string
-    path: string
-    color?: number
-    tooltip: string
-    id: string
-  }[]
-  x: number
-  y: number
-  type: 'host_element'
-  link: string
-  host_css_class: string
-  service_css_class: string
-  has_host_problem: boolean
-  num_services: number
-  num_problems: number
-}
-
-export interface IconElement extends ABCElement {
-  type: 'icon_element'
-  css_class: string
-}
-
-interface Part {
-  title: string
-  css_class: string
-  count: number
-}
-
 interface SingleMetricDataData {
   tag: string
   last_value: boolean

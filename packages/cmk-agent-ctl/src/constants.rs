@@ -30,6 +30,9 @@ pub const UPDATER_STATE_FILE: &str = "agent-update-state.json";
 pub const AGENT_INFO_FILE: &str = "agent_info.json";
 #[cfg(windows)]
 pub const AGENT_INFO_FILE: &str = "checkmk.dat";
+/// The only platform the Windows agent package is baked for.
+#[cfg(windows)]
+pub const WINDOWS_PLATFORM: &str = "windows_msi";
 
 // ENVIRONMENT
 #[cfg(windows)]

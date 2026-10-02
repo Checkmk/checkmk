@@ -18,6 +18,7 @@ mod setup;
 pub mod site_spec;
 mod tls_server;
 pub mod types;
+pub mod updater;
 mod version;
 use anyhow::{bail, Context, Result as AnyhowResult};
 use configuration::config;

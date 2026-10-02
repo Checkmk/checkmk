@@ -47,7 +47,7 @@ pub trait TOMLLoaderMissingSafe: TOMLLoader + Default {
     }
 }
 
-fn tmp_path_for_atomical_save(path: &Path) -> PathBuf {
+pub fn tmp_path_for_atomical_save(path: &Path) -> PathBuf {
     let mut tmp_path = path.to_owned();
     let mut extension = path.extension().unwrap_or_default().to_owned();
     extension.push(".tmp");

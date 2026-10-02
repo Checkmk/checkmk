@@ -45,6 +45,9 @@ rust_library(
         "src/site_spec.rs",
         "src/tls_server.rs",
         "src/types.rs",
+        "src/updater.rs",
+        "src/updater/backend.rs",
+        "src/updater/platform.rs",
         ":version.rs",  # invalidates the cache
     ],
     aliases = aliases(),

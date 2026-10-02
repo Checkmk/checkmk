@@ -435,7 +435,28 @@ EnvironmentProxy = tuple[Literal["cmk_postprocessed"], Literal["environment_prox
 WithoutProxy = tuple[Literal["cmk_postprocessed"], Literal["no_proxy"], str]
 StoredProxy = tuple[Literal["cmk_postprocessed"], Literal["stored_proxy"], str]
 ExplicitProxy = tuple[Literal["cmk_postprocessed"], Literal["explicit_proxy"], str]
-ProxyUrl = EnvironmentProxy | WithoutProxy | StoredProxy | ExplicitProxy
+
+
+class ExplicitProxyAuthSpec(TypedDict):
+    user: str
+    password: tuple[
+        Literal["cmk_postprocessed"],
+        Literal["explicit_password", "stored_password"],
+        tuple[str, str],
+    ]
+
+
+class ExplicitProxySpec(TypedDict):
+    scheme: str
+    proxy_server_name: str
+    port: int
+    auth: NotRequired[ExplicitProxyAuthSpec]
+
+
+StructuredExplicitProxy = tuple[
+    Literal["cmk_postprocessed"], Literal["explicit_proxy"], ExplicitProxySpec
+]
+ProxyUrl = EnvironmentProxy | WithoutProxy | StoredProxy | ExplicitProxy | StructuredExplicitProxy
 
 WebhookURL = tuple[Literal["webhook_url", "store"], str]
 

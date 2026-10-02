@@ -1418,10 +1418,10 @@ class CheckboxHttpProxy:
         if option == "environment_proxy":
             r["value"] = {"option": "environment"}
 
-        if option == "explicit_proxy":
+        if option == "explicit_proxy" and isinstance(value, str):
             r["value"] = {"option": "url", "url": value}
 
-        if option == "stored_proxy":
+        if option == "stored_proxy" and isinstance(value, str):
             r["value"] = {"option": "global", "global_proxy_id": value}
 
         return r

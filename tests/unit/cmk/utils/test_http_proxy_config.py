@@ -9,6 +9,8 @@ from typing import Literal
 
 import pytest
 
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.utils import password_store
 from cmk.utils.http_proxy_config import (
     EnvironmentProxyConfig,
     ExplicitProxyConfig,
@@ -202,3 +204,110 @@ def test_http_proxy_config_from_user_setting(
         )
         == expected_result
     )
+
+
+@pytest.mark.parametrize(
+    "rulespec_value, expected_result",
+    [
+        pytest.param(
+            (
+                "cmk_postprocessed",
+                "explicit_proxy",
+                {"scheme": "http", "proxy_server_name": "proxy.lan", "port": 3128},
+            ),
+            ExplicitProxyConfig("http://proxy.lan:3128"),
+            id="without authentication",
+        ),
+        pytest.param(
+            (
+                "cmk_postprocessed",
+                "explicit_proxy",
+                {
+                    "scheme": "socks5h",
+                    "proxy_server_name": "proxy.lan",
+                    "port": 1080,
+                    "auth": {
+                        "user": "user",
+                        "password": ("cmk_postprocessed", "explicit_password", ("uuid1", "s3crit")),
+                    },
+                },
+            ),
+            ExplicitProxyConfig("socks5h://user:s3crit@proxy.lan:1080"),
+            id="explicit password",
+        ),
+    ],
+)
+def test_structured_explicit_proxy_resolves_to_its_url(
+    rulespec_value: object, expected_result: HTTPProxyConfig
+) -> None:
+    assert (
+        http_proxy_config_from_user_setting(
+            rulespec_value,  # type: ignore[arg-type]
+            {},
+        )
+        == expected_result
+    )
+
+
+def test_structured_explicit_proxy_with_stored_password() -> None:
+    password_store.save({"proxy_pw": "s3crit"}, password_store.pending_secrets_path_site())
+
+    assert http_proxy_config_from_user_setting(
+        (
+            "cmk_postprocessed",
+            "explicit_proxy",
+            {
+                "scheme": "http",
+                "proxy_server_name": "proxy.lan",
+                "port": 3128,
+                "auth": {
+                    "user": "user",
+                    "password": ("cmk_postprocessed", "stored_password", ("proxy_pw", "")),
+                },
+            },
+        ),
+        {},
+    ) == ExplicitProxyConfig("http://user:s3crit@proxy.lan:3128")
+
+
+def test_structured_explicit_proxy_with_missing_stored_password_raises() -> None:
+    with pytest.raises(MKGeneralException):
+        http_proxy_config_from_user_setting(
+            (
+                "cmk_postprocessed",
+                "explicit_proxy",
+                {
+                    "scheme": "http",
+                    "proxy_server_name": "proxy.lan",
+                    "port": 3128,
+                    "auth": {
+                        "user": "user",
+                        "password": ("cmk_postprocessed", "stored_password", ("missing", "")),
+                    },
+                },
+            ),
+            {},
+        )
+
+
+@pytest.mark.parametrize(
+    "proxy_config",
+    [
+        pytest.param({"scheme": "http", "proxy_server_name": "proxy.lan"}, id="missing port"),
+        pytest.param(
+            {
+                "scheme": "http",
+                "proxy_server_name": "proxy.lan",
+                "port": 3128,
+                "auth": {"user": "user"},
+            },
+            id="missing password",
+        ),
+    ],
+)
+def test_malformed_structured_explicit_proxy_raises(proxy_config: Mapping[str, object]) -> None:
+    with pytest.raises(ValueError):
+        http_proxy_config_from_user_setting(
+            ("cmk_postprocessed", "explicit_proxy", proxy_config),
+            {},
+        )

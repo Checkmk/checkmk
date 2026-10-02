@@ -9,11 +9,14 @@ from typing import Literal, NotRequired, override, TypedDict
 
 from cmk.utils.password_store import extract_formspec_password
 
-type _RulesetProxySpec = tuple[
-    Literal["cmk_postprocessed"],
-    Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
-    str,
-]
+type RulesetProxySpec = (
+    tuple[
+        Literal["cmk_postprocessed"],
+        Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
+        str,
+    ]
+    | tuple[Literal["cmk_postprocessed"], Literal["explicit_proxy"], Mapping[str, object]]
+)
 
 
 class ProxyAuthSpec(TypedDict):
@@ -117,9 +120,9 @@ def deserialize_http_proxy_config(serialized_config: str | None) -> HTTPProxyCon
 
 def make_http_proxy_getter(
     http_proxies: Mapping[str, HTTPProxySpec],
-) -> Callable[[tuple[str, str | None] | _RulesetProxySpec], HTTPProxyConfig]:
+) -> Callable[[tuple[str, str | None] | RulesetProxySpec], HTTPProxyConfig]:
     def get_http_proxy(
-        http_proxy: tuple[str, str | None] | _RulesetProxySpec,
+        http_proxy: tuple[str, str | None] | RulesetProxySpec,
     ) -> HTTPProxyConfig:
         """Returns a proxy config object to be used for HTTP requests
 
@@ -134,12 +137,7 @@ def make_http_proxy_getter(
 
 
 def http_proxy_config_from_user_setting(
-    rulespec_value: tuple[str, str | None]
-    | tuple[
-        Literal["cmk_postprocessed"],
-        Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
-        str,
-    ],
+    rulespec_value: tuple[str, str | None] | RulesetProxySpec,
     http_proxies_global_settings: Mapping[str, HTTPProxySpec],
 ) -> HTTPProxyConfig:
     """Returns a proxy config object to be used for HTTP requests
@@ -152,6 +150,9 @@ def http_proxy_config_from_user_setting(
     proxy_type: str
     value: str | None
     match rulespec_value:
+        case ("cmk_postprocessed", "explicit_proxy", Mapping() as proxy_spec):
+            # InternalProxy FormSpec format
+            return build_explicit_proxy_config(parse_proxy_config_spec(proxy_spec))
         case ("cmk_postprocessed", p_type, p_value):
             # FormSpec format
             assert p_type is not None  # type: ignore[comparison-overlap]
@@ -183,6 +184,35 @@ def http_proxy_config_from_user_setting(
         return NoProxyConfig()
 
     return EnvironmentProxyConfig()
+
+
+def parse_proxy_config_spec(raw: Mapping[str, object]) -> ProxyConfigSpec:
+    """Validate a structured proxy configuration (InternalProxy FormSpec)"""
+    match raw:
+        case {"scheme": str(scheme), "proxy_server_name": str(server), "port": int(port)}:
+            spec = ProxyConfigSpec(scheme=scheme, proxy_server_name=server, port=port)
+        case _:
+            raise ValueError("Invalid proxy configuration: missing scheme, server or port")
+
+    match raw.get("auth"):
+        case None:
+            pass
+        case {
+            "user": str(user),
+            "password": (
+                "cmk_postprocessed",
+                "explicit_password" | "stored_password" as password_type,
+                (str(password_id), str(password)),
+            ),
+        }:
+            spec["auth"] = ProxyAuthSpec(
+                user=user,
+                password=("cmk_postprocessed", password_type, (password_id, password)),
+            )
+        case _:
+            raise ValueError("Invalid proxy configuration: malformed authentication")
+
+    return spec
 
 
 def build_explicit_proxy_config(proxy_spec: ProxyConfigSpec) -> ExplicitProxyConfig:

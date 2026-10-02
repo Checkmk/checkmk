@@ -34,7 +34,7 @@ from cmk.events.notify_types import EventRule
 from cmk.ruleset_matcher.matcher import matches_host_tags
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.ruleset_matcher.tuple_rulesets import in_extraconf_servicelist
-from cmk.utils.http_proxy_config import HTTPProxyConfig
+from cmk.utils.http_proxy_config import HTTPProxyConfig, RulesetProxySpec
 from cmk.utils.servicename import ServiceName
 from cmk.utils.timeperiod import (
     TimeperiodActiveCoreLookup,
@@ -47,12 +47,7 @@ ContactList = list  # TODO Improve this
 # use that for function types, see https://github.com/python/mypy/issues/1641.
 Matcher = Callable[[EventRule, EventContext, bool, TimeperiodSpecs], str | None]
 
-type _RulesetProxySpec = tuple[
-    Literal["cmk_postprocessed"],
-    Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
-    str,
-]
-type ProxyGetter = Callable[[tuple[str, str | None] | _RulesetProxySpec], HTTPProxyConfig]
+type ProxyGetter = Callable[[tuple[str, str | None] | RulesetProxySpec], HTTPProxyConfig]
 
 type CoreTimeperiodsActive = Mapping[str, bool]
 

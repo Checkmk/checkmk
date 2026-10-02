@@ -3,6 +3,26 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { StatsPart } from '@/dashboard/types/widget'
+
+export interface HexagonStyle {
+  color: string
+  fillOpacity: number
+  strokeOpacity: number
+}
+
+/** The legacy colours of the nested state hexagons of the statistics and the site overview. */
+export const STATE_HEXAGON_STYLE: Record<StatsPart['category'], HexagonStyle> = {
+  up: { color: 'var(--success)', fillOpacity: 0.06, strokeOpacity: 0.9 },
+  ok: { color: 'var(--success)', fillOpacity: 0.06, strokeOpacity: 0.9 },
+  downtime: { color: 'var(--color-light-blue-50)', fillOpacity: 0.6, strokeOpacity: 1 },
+  unreachable: { color: 'var(--color-orange-50)', fillOpacity: 0.8, strokeOpacity: 1 },
+  down: { color: 'var(--color-dark-red-50)', fillOpacity: 0.8, strokeOpacity: 1 },
+  host_down: { color: 'var(--color-dark-blue-50)', fillOpacity: 0.5, strokeOpacity: 1 },
+  warning: { color: 'var(--color-yellow-50)', fillOpacity: 0.6, strokeOpacity: 1 },
+  unknown: { color: 'var(--color-orange-50)', fillOpacity: 0.8, strokeOpacity: 1 },
+  critical: { color: 'var(--color-dark-red-50)', fillOpacity: 0.8, strokeOpacity: 1 }
+}
 
 // The legacy figures size the rings by an exponent of 0.33, not by an exact cube root.
 const RING_EXPONENT = 0.33

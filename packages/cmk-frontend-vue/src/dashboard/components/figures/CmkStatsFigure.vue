@@ -10,7 +10,8 @@ import { computed, shallowRef, useTemplateRef, watchPostEffect } from 'vue'
 import ContextualLinkTrigger from '@/dashboard/components/ContextualLinkTrigger.vue'
 import type { LinkProperties, Stats, StatsPart, VisualContext } from '@/dashboard/types/widget'
 
-import { hexagonPath, nestedRings } from './lib/hexagon'
+import StateRingsHexagon, { type StateRingPart } from './lib/StateRingsHexagon.vue'
+import { STATE_HEXAGON_STYLE, hexagonPath } from './lib/hexagon'
 
 const props = defineProps<{
   value: Stats
@@ -33,24 +34,6 @@ const BOX_HEIGHT = 14
 const BOX_BORDER = 1
 const COLUMN_GAP = 6
 
-interface CategoryStyle {
-  color: string
-  fillOpacity: number
-  strokeOpacity: number
-}
-
-const STYLE: Record<StatsCategory, CategoryStyle> = {
-  up: { color: 'var(--success)', fillOpacity: 0.06, strokeOpacity: 0.9 },
-  ok: { color: 'var(--success)', fillOpacity: 0.06, strokeOpacity: 0.9 },
-  downtime: { color: 'var(--color-light-blue-50)', fillOpacity: 0.6, strokeOpacity: 1 },
-  unreachable: { color: 'var(--color-orange-50)', fillOpacity: 0.8, strokeOpacity: 1 },
-  down: { color: 'var(--color-dark-red-50)', fillOpacity: 0.8, strokeOpacity: 1 },
-  host_down: { color: 'var(--color-dark-blue-50)', fillOpacity: 0.5, strokeOpacity: 1 },
-  warning: { color: 'var(--color-yellow-50)', fillOpacity: 0.6, strokeOpacity: 1 },
-  unknown: { color: 'var(--color-orange-50)', fillOpacity: 0.8, strokeOpacity: 1 },
-  critical: { color: 'var(--color-dark-red-50)', fillOpacity: 0.8, strokeOpacity: 1 }
-}
-
 const TITLE: Record<StatsCategory, string> = {
   up: _t('Up'),
   ok: _t('OK'),
@@ -63,21 +46,9 @@ const TITLE: Record<StatsCategory, string> = {
   critical: _t('Critical')
 }
 
-interface Ring {
-  category: StatsCategory
-  path: string
-  label: string
+function ringLabel(part: StateRingPart): string {
+  return `${TITLE[part.category]}: ${part.count}`
 }
-
-const rings = computed<Ring[]>(() =>
-  nestedRings(props.value.parts, HEXAGON_RADIUS)
-    .filter(({ part }) => part.count > 0)
-    .map(({ part, radius }) => ({
-      category: part.category,
-      path: hexagonPath(radius),
-      label: `${TITLE[part.category]}: ${part.count}`
-    }))
-)
 
 interface Row {
   key: string
@@ -92,7 +63,7 @@ const rows = computed<Row[]>(() => [
     key: part.category,
     count: part.count,
     title: TITLE[part.category],
-    color: STYLE[part.category].color,
+    color: STATE_HEXAGON_STYLE[part.category].color,
     linkProperties: part.link_properties
   })),
   {
@@ -145,19 +116,12 @@ const tableOrigin = computed(() => ({
         :d="hexagonPath(HEXAGON_RADIUS)"
         aria-hidden="true"
       />
-      <template v-else>
-        <path
-          v-for="ring in rings"
-          :key="ring.category"
-          role="img"
-          :aria-label="ring.label"
-          :d="ring.path"
-          :fill="STYLE[ring.category].color"
-          :fill-opacity="STYLE[ring.category].fillOpacity"
-          :stroke="STYLE[ring.category].color"
-          :stroke-opacity="STYLE[ring.category].strokeOpacity"
-        />
-      </template>
+      <StateRingsHexagon
+        v-else
+        :parts="value.parts"
+        :radius="HEXAGON_RADIUS"
+        :ring-label="ringLabel"
+      />
     </g>
     <g ref="table" :transform="`translate(${tableOrigin.x}, ${tableOrigin.y})`">
       <ContextualLinkTrigger

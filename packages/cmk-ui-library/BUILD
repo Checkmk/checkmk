@@ -1,3 +1,4 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("//bazel/rules:link_shared_typing.bzl", "link_shared_typing")
 load("//bazel/rules:vue_package.bzl", "vue_package")
 
@@ -9,6 +10,7 @@ vue_package(
         ":node_modules/@testing-library",
         ":node_modules/msw",
         ":node_modules/vue-component-type-helpers",
+        ":vitest_shared_setup",
         "//packages/cmk-frontend:theme_images",
     ],
     deps = [
@@ -24,4 +26,10 @@ vue_package(
         ":node_modules/vite",
         ":node_modules/vue3-gettext",
     ],
+)
+
+js_library(
+    name = "vitest_shared_setup",
+    srcs = ["vitest.shared-setup.ts"],
+    visibility = ["//packages/cmk-frontend-vue:__pkg__"],
 )

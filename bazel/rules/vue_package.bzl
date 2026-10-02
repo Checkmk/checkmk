@@ -65,6 +65,7 @@ _SRC_EXCLUDES = [
     "tests/**",
     "node_modules/**",
     "vite.config.ts",
+    "vitest.shared-setup.ts",
     "eslint.config.mjs",
 ]
 

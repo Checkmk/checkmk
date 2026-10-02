@@ -329,6 +329,7 @@ TEST_DATA = TEST_TOOLING + VITE_SRCS + [
     ":test_ts",
     ":test_vue",
     "//packages/cmk-frontend:theme_images",
+    "//packages/cmk-ui-library:vitest_shared_setup",
 ]
 
 link_shared_typing()

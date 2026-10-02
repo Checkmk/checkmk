@@ -11,13 +11,6 @@ import type { HostEntry, HostMode } from '@/monitoring/shared/api/types'
 import HostHeader from '@/monitoring/shared/components/HostHeader.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionButtons.vue'
 
-beforeAll(() => {
-  // reka-ui's menu interactions rely on pointer-capture APIs that jsdom does not implement.
-  window.HTMLElement.prototype.hasPointerCapture = () => false
-  window.HTMLElement.prototype.setPointerCapture = () => {}
-  window.HTMLElement.prototype.releasePointerCapture = () => {}
-})
-
 function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
   return {
     name: 'web-1',

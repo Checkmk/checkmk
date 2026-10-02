@@ -136,7 +136,7 @@ export default defineConfig(({ command }) => {
         globals: true,
         environment: 'jsdom',
         pool: 'threads',
-        setupFiles: ['tests/setup-tests.ts'],
+        setupFiles: ['../cmk-ui-library/vitest.shared-setup.ts', 'tests/setup-tests.ts'],
         reporters: process.env.XML_OUTPUT_FILE // variable set by bazel
           ? [
               [

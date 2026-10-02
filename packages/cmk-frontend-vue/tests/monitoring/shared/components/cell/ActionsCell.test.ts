@@ -9,13 +9,6 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 import ActionsCell, { type CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 
-beforeAll(() => {
-  // reka-ui's menu interactions rely on pointer-capture APIs that jsdom does not implement.
-  window.HTMLElement.prototype.hasPointerCapture = () => false
-  window.HTMLElement.prototype.setPointerCapture = () => {}
-  window.HTMLElement.prototype.releasePointerCapture = () => {}
-})
-
 const ACTIONS: CellAction[] = [
   { id: 'reschedule', label: 'Reschedule check' as TranslatedString, icon: 'reload' },
   { id: 'acknowledge', label: 'Acknowledge' as TranslatedString, icon: 'acknowledge-test' },

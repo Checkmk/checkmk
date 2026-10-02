@@ -41,7 +41,7 @@ export default defineConfig({
     // enable jest-like global test APIs
     globals: true,
     environment: 'jsdom',
-    setupFiles: ['tests/setup-tests.ts'],
+    setupFiles: ['vitest.shared-setup.ts', 'tests/setup-tests.ts'],
     reporters: process.env.XML_OUTPUT_FILE // variable set by bazel
       ? [
           [

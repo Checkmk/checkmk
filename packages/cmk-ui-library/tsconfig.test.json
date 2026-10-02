@@ -1,6 +1,13 @@
 {
   "extends": "./tsconfig.vue-base.json",
-  "include": ["env.d.ts", "weaki18nString.d.ts", "lib/**/*", "components/**/*", "tests/**/*"],
+  "include": [
+    "env.d.ts",
+    "weaki18nString.d.ts",
+    "lib/**/*",
+    "components/**/*",
+    "tests/**/*",
+    "vitest.shared-setup.ts"
+  ],
   // i18nString.ts strongly types TranslatedString; tests use the weak variant
   // mapped in via weaki18nString.d.ts below.
   "exclude": ["lib/i18nString.ts"],

@@ -28,3 +28,14 @@ test('picking a timestamp format closes its dropdown', async () => {
 
   expect(screen.queryAllByRole('option')).toHaveLength(0)
 })
+
+test('reset returns to mixed timestamps and ISO dates', async () => {
+  const { emitted } = render(DisplayOptionsPane, {
+    props: { modelValue: { dateFormat: '%d.%m.%Y', timestampFormat: 'abs' } }
+  })
+
+  await userEvent.click(screen.getByRole('button', { name: 'Reset' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Submit' }))
+
+  expect(emitted('submit')).toEqual([[{ dateFormat: '%Y-%m-%d', timestampFormat: 'mixed' }]])
+})

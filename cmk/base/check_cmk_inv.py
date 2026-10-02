@@ -81,6 +81,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--inv-fail-status",
         type=int,
+        choices=_MONITORING_STATES,
         default=1,
         help="State when HW/SW Inventory fails",
     )
@@ -88,6 +89,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--hw-changes",
         type=int,
+        choices=_MONITORING_STATES,
         default=0,
         help="State when hardware changes are detected",
     )
@@ -95,6 +97,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--sw-changes",
         type=int,
+        choices=_MONITORING_STATES,
         default=0,
         help="State when software packages info is missing",
     )
@@ -102,6 +105,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--sw-missing",
         type=int,
+        choices=_MONITORING_STATES,
         default=0,
         help="State when software packages info is missing",
     )
@@ -109,6 +113,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--nw-changes",
         type=int,
+        choices=_MONITORING_STATES,
         default=0,
         help="State when networking changes are detected",
     )

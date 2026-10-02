@@ -83,7 +83,19 @@ def test_parse_arguments(argv: Sequence[str], expected_args: Sequence[str]) -> N
     assert parse_arguments(argv) == expected_args
 
 
-@pytest.mark.parametrize("option", ["--new-labels", "--vanished-labels", "--changed-labels"])
+@pytest.mark.parametrize(
+    "option",
+    [
+        "--inv-fail-status",
+        "--hw-changes",
+        "--sw-changes",
+        "--sw-missing",
+        "--nw-changes",
+        "--new-labels",
+        "--vanished-labels",
+        "--changed-labels",
+    ],
+)
 def test_parse_arguments_rejects_a_state_out_of_range(option: str) -> None:
     with pytest.raises(SystemExit):
         parse_arguments(["test_host", f"{option}=4"])

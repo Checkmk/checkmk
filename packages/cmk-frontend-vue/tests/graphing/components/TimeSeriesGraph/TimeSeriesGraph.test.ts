@@ -622,19 +622,19 @@ describe('TimeSeriesGraph — the pin and the plot size', () => {
   })
 })
 
-describe('TimeSeriesGraph — placing the pin by clicking the plot', () => {
-  // jsdom reports a zero-origin rect, so client coordinates are plot coordinates.
-  function pressPlot(from: { x: number; y: number }, travelPx: number): void {
-    const canvas = document.querySelector('canvas')!
-    void fireEvent.mouseDown(canvas, { button: 0, clientX: from.x, clientY: from.y })
-    if (travelPx !== 0) {
-      window.dispatchEvent(
-        new MouseEvent('mousemove', { clientX: from.x + travelPx, clientY: from.y })
-      )
-    }
-    window.dispatchEvent(new MouseEvent('mouseup', { clientX: from.x + travelPx, clientY: from.y }))
+// jsdom reports a zero-origin rect, so client coordinates are plot coordinates.
+function pressPlot(from: { x: number; y: number }, travelPx: number): void {
+  const canvas = document.querySelector('canvas')!
+  void fireEvent.mouseDown(canvas, { button: 0, clientX: from.x, clientY: from.y })
+  if (travelPx !== 0) {
+    window.dispatchEvent(
+      new MouseEvent('mousemove', { clientX: from.x + travelPx, clientY: from.y })
+    )
   }
+  window.dispatchEvent(new MouseEvent('mouseup', { clientX: from.x + travelPx, clientY: from.y }))
+}
 
+describe('TimeSeriesGraph — placing the pin by clicking the plot', () => {
   const clickPlot = (at: { x: number; y: number }): void => pressPlot(at, 0)
 
   test('a click in the plot pins the sample under the cursor', async () => {
@@ -739,5 +739,48 @@ describe('TimeSeriesGraph — placing the pin by clicking the plot', () => {
         expect(Math.max(...ticks)).toBeLessThanOrEqual(6)
       })
     })
+  })
+})
+
+describe('TimeSeriesGraph — keyboard access to the zoom reset', () => {
+  test('a drag zoom hands focus to Reset zoom', async () => {
+    const host = defineComponent({
+      components: { TimeSeriesGraph },
+      setup() {
+        const inspecting = ref(false)
+        return { inspecting, rendererProps: DEFAULT_PROPS }
+      },
+      template: `<TimeSeriesGraph
+        v-bind="rendererProps"
+        :inspecting="inspecting"
+        @zoom="inspecting = true"
+      />`
+    })
+    render(host)
+
+    pressPlot({ x: 200, y: 100 }, 80)
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Reset zoom' })).toHaveFocus())
+  })
+
+  test('Reset zoom is the tab stop right after the plot, ahead of the pan steps', () => {
+    const { container } = renderComponent({ inspecting: true, panEnabled: true })
+
+    const tabStops = Array.from(container.querySelectorAll('canvas[tabindex="0"], button'))
+    const plotIndex = tabStops.indexOf(screen.getByRole('img'))
+    expect(tabStops[plotIndex + 1]).toBe(screen.getByRole('button', { name: 'Reset zoom' }))
+    expect(
+      tabStops.indexOf(screen.getByRole('button', { name: 'Step back in time' }))
+    ).toBeGreaterThan(plotIndex + 1)
+  })
+
+  test('resetting hands focus back to the plot', async () => {
+    renderComponent({ inspecting: true })
+    const resetButton = screen.getByRole('button', { name: 'Reset zoom' })
+    resetButton.focus()
+
+    await fireEvent.click(resetButton)
+
+    expect(screen.getByRole('img')).toHaveFocus()
   })
 })

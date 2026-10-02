@@ -18,7 +18,7 @@ import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import type { NotationFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
 import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
 import { scaleLinear, scaleTime } from 'd3-scale'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from '../consolidation'
 import {
@@ -99,6 +99,7 @@ const PAN_STEP_SIZE = X_AXIS_BAND_HEIGHT - X_AXIS_TOP_RULE_HEIGHT
 const M4_BUCKETS = 4000
 
 const canvas = ref<HTMLCanvasElement | null>(null)
+const resetButton = ref<InstanceType<typeof CmkButton> | null>(null)
 const axesContainer = ref<SVGGElement | null>(null)
 
 const measureLabel = (text: string): number => measureAxisLabel(text, axesContainer.value)
@@ -243,7 +244,7 @@ const {
   xScale,
   yScale,
   plotCoords,
-  onZoom: (payload) => emit('zoom', payload),
+  onZoom: onDragZoom,
   onZoomRefused: showMaxZoomHint,
   onPlotClick: setPinAtCursor
 })
@@ -476,8 +477,14 @@ const plotAriaLabel = computed<string>(() => {
     .filter((title) => title !== '')
   return metricTitles.length > 0 ? metricTitles.join(', ') : fallbackPlotLabel
 })
+// Hands the keyboard the way back out of the zoom: Enter right after the drag resets it.
+function onDragZoom(payload: ZoomPayload): void {
+  emit('zoom', payload)
+  void nextTick(() => resetButton.value?.focus())
+}
 function onResetClick(): void {
   emit('reset')
+  canvas.value?.focus()
 }
 function onPlotKeydown(ev: KeyboardEvent): void {
   if (ev.key !== 'Home') {
@@ -648,6 +655,25 @@ defineExpose({ showMaxZoomHint })
         height: `${selectionBand.height}px`
       }"
     />
+    <!-- Ahead of the pan steps in tab order, as it sits above them. -->
+    <CmkButton
+      v-if="inspecting"
+      ref="resetButton"
+      variant="secondary"
+      size="small"
+      class="graphing-time-series-graph__reset"
+      :style="{ top: `${plotTop + 6}px`, right: `${PLOT_INSET_X + 6}px` }"
+      :title="resetLabel"
+      :aria-label="resetLabel"
+      @click="onResetClick"
+    >
+      <CmkIcon
+        name="arrows-swap"
+        class="graphing-time-series-graph__reset-icon"
+        aria-hidden="true"
+      />
+      <span>{{ resetLabel }}</span>
+    </CmkButton>
     <!-- Transparent grab strip over the x-axis labels; arms the pan drag. -->
     <div
       v-if="panAffordancesVisible"
@@ -684,23 +710,6 @@ defineExpose({ showMaxZoomHint })
         <ArrowDown class="graphing-time-series-graph__pan-caret" aria-hidden="true" />
       </CmkButton>
     </template>
-    <CmkButton
-      v-if="inspecting"
-      variant="secondary"
-      size="small"
-      class="graphing-time-series-graph__reset"
-      :style="{ top: `${plotTop + 6}px`, right: `${PLOT_INSET_X + 6}px` }"
-      :title="resetLabel"
-      :aria-label="resetLabel"
-      @click="onResetClick"
-    >
-      <CmkIcon
-        name="arrows-swap"
-        class="graphing-time-series-graph__reset-icon"
-        aria-hidden="true"
-      />
-      <span>{{ resetLabel }}</span>
-    </CmkButton>
     <!-- A zero-size anchor at the cursor; the tooltip lays the hint out beside it. -->
     <div
       v-if="maxZoomHintAt"

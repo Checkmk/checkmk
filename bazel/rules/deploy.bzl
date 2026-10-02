@@ -7,8 +7,17 @@ load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 def _update_wheels_code(ctx, f):
     return "WHEELS+=(\"$(rlocation \"{whl}\")\")".format(whl = to_rlocation_path(ctx, f))
 
+def _wheel_files(targets):
+    """The .whl files of the given targets: py_wheel targets or groups of them."""
+    return [
+        f
+        for target in targets
+        for f in target[DefaultInfo].files.to_list()
+        if f.extension == "whl"
+    ]
+
 def _deploy_python_script_impl(ctx):
-    whl_files = [whl[PyWheelInfo].wheel for whl in ctx.attr.whls]
+    whl_files = _wheel_files(ctx.attr.whls)
     update_wheels = "\n".join([_update_wheels_code(ctx, f) for f in whl_files])
 
     script_content = """\
@@ -48,7 +57,7 @@ _deploy_python_script = rule(
     implementation = _deploy_python_script_impl,
     attrs = {
         "rule_name": attr.string(mandatory = True),
-        "whls": attr.label_list(providers = [PyWheelInfo]),
+        "whls": attr.label_list(allow_files = [".whl"]),
         "_uv": attr.label(
             default = "//bazel/tools:uv",
             executable = True,
@@ -75,21 +84,21 @@ def _deploy_python_impl(name, whls, visibility):
 
 deploy_python = macro(
     attrs = {
-        "whls": attr.label_list(providers = [PyWheelInfo], configurable = True),
+        "whls": attr.label_list(allow_files = [".whl"], configurable = True),
     },
     implementation = _deploy_python_impl,
 )
 
 _ProductWheelsInfo = provider(
-    doc = "Transitive py_wheel labels found in the product's dependency graph.",
-    fields = {"labels": "depset of label strings"},
+    doc = "Transitive py_wheel files found in the product's dependency graph.",
+    fields = {"wheels": "depset of wheel Files"},
 )
 
 def _product_wheels_aspect_impl(target, ctx):
     own = []
     if PyWheelInfo in target and not target.label.workspace_name:
         # External wheels are skipped: they are not built from this repo.
-        own.append("//{}:{}".format(target.label.package, target.label.name))
+        own.append(target[PyWheelInfo].wheel)
 
     transitive = []
     for attr_name in dir(ctx.rule.attr):
@@ -104,9 +113,9 @@ def _product_wheels_aspect_impl(target, ctx):
             continue
         for dep in deps:
             if _ProductWheelsInfo in dep:
-                transitive.append(dep[_ProductWheelsInfo].labels)
+                transitive.append(dep[_ProductWheelsInfo].wheels)
 
-    return [_ProductWheelsInfo(labels = depset(own, transitive = transitive))]
+    return [_ProductWheelsInfo(wheels = depset(own, transitive = transitive))]
 
 _product_wheels_aspect = aspect(
     implementation = _product_wheels_aspect_impl,
@@ -114,11 +123,10 @@ _product_wheels_aspect = aspect(
 )
 
 def _deploy_python_drift_test_impl(ctx):
-    product = ctx.attr.product[_ProductWheelsInfo].labels.to_list()
-    deployed = [
-        "//{}:{}".format(whl.label.package, whl.label.name)
-        for whl in ctx.attr.whls
-    ]
+    # Compare wheel files rather than labels, so that a group of wheels
+    # (e.g. //packages/cmk-plugins:wheel-all) counts as all of its members.
+    product = [f.short_path for f in ctx.attr.product[_ProductWheelsInfo].wheels.to_list()]
+    deployed = [f.short_path for f in _wheel_files(ctx.attr.whls)]
 
     product_file = ctx.actions.declare_file(ctx.label.name + ".product")
     ctx.actions.write(product_file, "\n".join(sorted(product)) + "\n")
@@ -151,7 +159,7 @@ deploy_python_drift_test = rule(
             mandatory = True,
             aspects = [_product_wheels_aspect],
         ),
-        "whls": attr.label_list(providers = [PyWheelInfo]),
+        "whls": attr.label_list(allow_files = [".whl"]),
     },
     test = True,
 )
@@ -161,6 +169,9 @@ deploy_python_drift_test = rule(
 # fails with a diff when they drift. One deliberate deviation: external
 # wheels (e.g. @rrdtool) are not deployed, as they are not built
 # from this repo and thus cannot change during development.
+#
+# Entries may also be groups of wheels (e.g. //packages/cmk-plugins:wheel-all),
+# so that adding a plugin family does not require touching this file.
 #
 # These lists could be replaced by collecting the product's wheels
 # directly (see _product_wheels_aspect above).
@@ -191,45 +202,7 @@ COMMUNITY_WHEELS = [
     "//packages/cmk-mkp-tool:wheel",
     "//packages/cmk-notification-plugins:wheel",
     "//packages/cmk-plugin-apis:wheel",
-    "//packages/cmk-plugins:wheel-aws",
-    "//packages/cmk-plugins:wheel-azure_deprecated",
-    "//packages/cmk-plugins:wheel-azure_v2",
-    "//packages/cmk-plugins:wheel-bazel",
-    "//packages/cmk-plugins:wheel-cisco_prime",
-    "//packages/cmk-plugins:wheel-dell",
-    "//packages/cmk-plugins:wheel-dns",
-    "//packages/cmk-plugins:wheel-elasticsearch",
-    "//packages/cmk-plugins:wheel-form_submit",
-    "//packages/cmk-plugins:wheel-gcp",
-    "//packages/cmk-plugins:wheel-gerrit",
-    "//packages/cmk-plugins:wheel-graylog",
-    "//packages/cmk-plugins:wheel-ibm_imm",
-    "//packages/cmk-plugins:wheel-ibm_informix",
-    "//packages/cmk-plugins:wheel-ibm_mq",
-    "//packages/cmk-plugins:wheel-ibm_rsa",
-    "//packages/cmk-plugins:wheel-ibm_storage_ts",
-    "//packages/cmk-plugins:wheel-ibm_tl",
-    "//packages/cmk-plugins:wheel-ibm_xraid",
-    "//packages/cmk-plugins:wheel-ipmi",
-    "//packages/cmk-plugins:wheel-jenkins",
-    "//packages/cmk-plugins:wheel-kube",
-    "//packages/cmk-plugins:wheel-ldapcheck",
-    "//packages/cmk-plugins:wheel-lib",
-    "//packages/cmk-plugins:wheel-netapp",
-    "//packages/cmk-plugins:wheel-prism",
-    "//packages/cmk-plugins:wheel-proxmox_ve",
-    "//packages/cmk-plugins:wheel-pure_storage_fa",
-    "//packages/cmk-plugins:wheel-rabbitmq",
-    "//packages/cmk-plugins:wheel-randomds",
-    "//packages/cmk-plugins:wheel-redfish",
-    "//packages/cmk-plugins:wheel-splunk",
-    "//packages/cmk-plugins:wheel-stulz",
-    "//packages/cmk-plugins:wheel-tplink",
-    "//packages/cmk-plugins:wheel-tsm",
-    "//packages/cmk-plugins:wheel-ucs_bladecenter",
-    "//packages/cmk-plugins:wheel-veeam",
-    "//packages/cmk-plugins:wheel-viprinet",
-    "//packages/cmk-plugins:wheel-vsphere",
+    "//packages/cmk-plugins:wheel-all",
     "//packages/cmk-profiling:wheel",
     "//packages/cmk-relay-protocols:wheel",
     "//packages/cmk-ruleset-matcher:wheel",

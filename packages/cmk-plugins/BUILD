@@ -90,6 +90,14 @@ filegroup(
     ],
 ) for family in FAMILIES]
 
+# All family wheels, so that //:deploy-python need not list each family.
+filegroup(
+    name = "wheel-all",
+    srcs = [":wheel-%s" % family for family in FAMILIES],
+    tags = ["manual"],
+    visibility = ["//:__pkg__"],
+)
+
 build_test(
     name = "build_test",
     targets = ["wheel-{}".format(family) for family in FAMILIES],

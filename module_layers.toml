@@ -1597,6 +1597,7 @@ allows = [
   "cmk.data_backend.telemetry_metrics.gui",
   "cmk.otel_collector",
   "cmk.robotmk",
+  "cmk.ruleset_matcher",
   "cmk.telemetry.host_name_template",
   "cmk.update_config",
   "cmk.utils",

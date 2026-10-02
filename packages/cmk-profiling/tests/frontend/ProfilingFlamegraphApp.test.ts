@@ -8,10 +8,8 @@ import { render, screen, waitFor } from '@testing-library/vue'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
 
-import ProfilingFlamegraphApp from '@/profiling/ProfilingFlamegraphApp.vue'
-import type { HotspotData, ProfilingFlamegraphData } from '@/profiling/types'
-
-import { FakeResizeObserver } from '@tests/lib/fakeResizeObserver'
+import ProfilingFlamegraphApp from '../../frontend/ProfilingFlamegraphApp.vue'
+import type { HotspotData, ProfilingFlamegraphData } from '../../frontend/types'
 
 const DATA_URL = 'http://localhost/profile_data.py'
 
@@ -61,7 +59,14 @@ beforeAll(() => {
   Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, value: 800 })
 })
 beforeEach(() => {
-  vi.stubGlobal('ResizeObserver', FakeResizeObserver)
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+  )
 })
 afterAll(() => {
   if (originalOffsetHeight) {

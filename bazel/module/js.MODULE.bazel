@@ -18,6 +18,7 @@ npm.npm_translate_lock(
         "//bazel/tools:package.json",
         "//packages/cmk-frontend:package.json",
         "//packages/cmk-frontend-vue:package.json",
+        "//packages/cmk-profiling:package.json",
         "//packages/cmk-shared-typing:package.json",
         "//packages/cmk-ui-library:package.json",
         "//packages/cmk-werk:package.json",

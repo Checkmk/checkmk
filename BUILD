@@ -539,6 +539,7 @@ js_library(
         # fs.readdirSync, which means we need to make this dependency explicit for the sandbox
         "//packages/cmk-frontend:eslintrc",
         "//packages/cmk-frontend-vue:eslintrc",
+        "//packages/cmk-profiling:eslintrc",
         "//packages/cmk-ui-library:eslintrc",
     ],
 )

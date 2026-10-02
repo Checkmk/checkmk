@@ -6,8 +6,8 @@
 import { render, screen } from '@testing-library/vue'
 import { nextTick } from 'vue'
 
-import HotspotsTable from '@/profiling/components/HotspotsTable.vue'
-import type { HotspotData } from '@/profiling/types'
+import HotspotsTable from '../../../frontend/components/HotspotsTable.vue'
+import type { HotspotData } from '../../../frontend/types'
 
 const originalOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')
 const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')

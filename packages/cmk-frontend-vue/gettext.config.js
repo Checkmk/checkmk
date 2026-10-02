@@ -8,7 +8,9 @@ export default {
       // cmk-ui-library strings land in this package's catalog (single messages.pot);
       // the package registers no catalogs of its own.
       '../cmk-ui-library/{lib,components}/**/*.ts',
-      '../cmk-ui-library/{lib,components}/**/*.vue'
+      '../cmk-ui-library/{lib,components}/**/*.vue',
+      '../cmk-profiling/frontend/**/*.ts',
+      '../cmk-profiling/frontend/**/*.vue'
     ],
     exclude: ['../cmk-ui-library/lib/i18n/**/*'],
     parserOptions: {

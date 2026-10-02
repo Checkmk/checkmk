@@ -141,9 +141,14 @@ def check(suffix: str, abs_path: Path, rel_path: Path) -> bool:
 def test_license_headers() -> None:
     package_root = Path(__file__).resolve().parent.parent
     problems = []
-    # cmk-ui-library has no scripts/ of its own (kept minimal on purpose); its files
+    # The Vue packages bundled here have no header check of their own; their files
     # follow the same header rules and are checked from here.
-    roots = [package_root, (package_root.parent / "cmk-ui-library").resolve()]
+    roots = [
+        package_root,
+        (package_root.parent / "cmk-ui-library").resolve(),
+        (package_root.parent / "cmk-profiling/frontend").resolve(),
+        (package_root.parent / "cmk-profiling/tests/frontend").resolve(),
+    ]
     for current_root, (root, _dirs, files) in ((pr, rf) for pr in roots for rf in pr.walk()):
         relative_root = root.relative_to(current_root)
 

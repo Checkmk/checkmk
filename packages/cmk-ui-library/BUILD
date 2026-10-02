@@ -71,7 +71,7 @@ filegroup(
 js_library(
     name = "vitest_shared_setup",
     srcs = ["vitest.shared-setup.ts"],
-    visibility = ["//packages/cmk-frontend-vue:__pkg__"],
+    visibility = ["//packages:__subpackages__"],
     deps = [
         ":node_modules/@testing-library",
         "//:node_modules/vitest",
@@ -81,7 +81,7 @@ js_library(
 js_library(
     name = "vitest_msw",
     srcs = ["vitest.msw.ts"],
-    visibility = ["//packages/cmk-frontend-vue:__pkg__"],
+    visibility = ["//packages:__subpackages__"],
     deps = [
         ":node_modules/msw",
         "//:node_modules/vitest",

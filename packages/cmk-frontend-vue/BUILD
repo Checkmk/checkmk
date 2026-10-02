@@ -200,6 +200,7 @@ js_run_binary(
         ":node_modules/vue3-gettext",
         ":src_ts",
         ":src_vue",
+        "//packages/cmk-profiling",
         "//packages/cmk-ui-library",
     ] + BUNDLED_NONFREE,
     outs = ["locale/messages.pot"],
@@ -319,6 +320,7 @@ VITE_SRCS = [
 ])
 
 TYPE_CHECK_SRCS = VITE_SRCS + [
+    ":node_modules/cmk-profiling",
     "//:eslintrc",
     "env.d.ts",
     "weaki18nString.d.ts",
@@ -564,7 +566,10 @@ py_cmk_test(
         "scripts/test_license_headers.py",
         "scripts/test_ucl_parity.py",
     ],
-    data = glob(["**"]) + ["//packages/cmk-ui-library:srcs"],
+    data = glob(["**"]) + [
+        "//packages/cmk-profiling:srcs",
+        "//packages/cmk-ui-library:srcs",
+    ],
 )
 
 build_test(

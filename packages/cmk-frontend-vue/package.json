@@ -13,6 +13,7 @@
     "@tanstack/vue-virtual": "^3.13.24",
     "axios": "^1.18.1",
     "class-variance-authority": "^0.7.1",
+    "cmk-profiling": "workspace:*",
     "cmk-ui-library": "workspace:*",
     "d3-array": "^3.2.4",
     "d3-axis": "^3.0.0",

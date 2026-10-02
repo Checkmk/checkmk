@@ -352,6 +352,9 @@ importers:
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
+      cmk-profiling:
+        specifier: workspace:*
+        version: link:../cmk-profiling
       cmk-ui-library:
         specifier: workspace:*
         version: link:../cmk-ui-library
@@ -530,6 +533,37 @@ importers:
       vite-plugin-vue-devtools:
         specifier: ^8.1.1
         version: 8.1.1(vite@7.3.2(@types/node@22.19.17)(jiti@2.6.1)(sass-embedded@1.99.0)(sass@1.99.0)(terser@5.46.1)(yaml@2.8.3))(vue@3.5.32(typescript@6.0.3))
+
+  packages/cmk-profiling:
+    dependencies:
+      '@tanstack/vue-virtual':
+        specifier: ^3.13.24
+        version: 3.13.24(vue@3.5.32(typescript@6.0.3))
+      cmk-ui-library:
+        specifier: workspace:*
+        version: link:../cmk-ui-library
+    devDependencies:
+      '@testing-library/jest-dom':
+        specifier: ^6.9.1
+        version: 6.9.1
+      '@testing-library/user-event':
+        specifier: ^14.6.1
+        version: 14.6.1(@testing-library/dom@9.3.4)
+      '@testing-library/vue':
+        specifier: ^8.1.0
+        version: 8.1.0(@vue/compiler-sfc@3.5.32)(vue@3.5.32(typescript@6.0.3))
+      '@vitejs/plugin-vue':
+        specifier: ^6.0.6
+        version: 6.0.6(vite@7.3.2(@types/node@25.6.0)(jiti@2.6.1)(sass-embedded@1.99.0)(sass@1.99.0)(terser@5.46.1)(yaml@2.8.3))(vue@3.5.32(typescript@6.0.3))
+      msw:
+        specifier: ^2.13.3
+        version: 2.13.4(@types/node@25.6.0)(typescript@6.0.3)
+      vite:
+        specifier: ^7.3.2
+        version: 7.3.2(@types/node@25.6.0)(jiti@2.6.1)(sass-embedded@1.99.0)(sass@1.99.0)(terser@5.46.1)(yaml@2.8.3)
+      vue:
+        specifier: 3.5.32
+        version: 3.5.32(typescript@6.0.3)
 
   packages/cmk-shared-typing:
     devDependencies:

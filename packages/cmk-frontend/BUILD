@@ -152,10 +152,7 @@ webpack_bundle(
 copy_to_bin(
     name = "theme_images",
     srcs = glob(["src/themes/*/images/**"]),
-    visibility = [
-        "//packages/cmk-frontend-vue:__pkg__",
-        "//packages/cmk-ui-library:__pkg__",
-    ],
+    visibility = ["//packages:__subpackages__"],
 )
 
 webpack_cli_bin.webpack_cli_binary(

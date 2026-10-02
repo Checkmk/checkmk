@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import profilingElements from 'cmk-profiling/frontend/elements'
 import DynamicIconApp from 'cmk-ui-library/components/CmkIcon/CmkDynamicIcon/DynamicIconApp.vue'
 import IconApp from 'cmk-ui-library/components/CmkIcon/IconApp.vue'
 import initCmkUi from 'cmk-ui-library/lib/initCmkUi'
@@ -45,8 +46,6 @@ import HostServicesApp from './monitoring/host-services/HostServicesApp.vue'
 import MonitoringPageLinkButton from './monitoring/shared/components/MonitoringPageLinkButton.vue'
 import NotificationOverview from './notification/NotificationOverviewApp.vue'
 import ProductUsageAnalyticsApp from './product-usage-analytics/ProductUsageAnalyticsApp.vue'
-import ProfilingFlamegraphApp from './profiling/ProfilingFlamegraphApp.vue'
-import ProfilingProfilesListApp from './profiling/ProfilingProfilesListApp.vue'
 import QuickSetup from './quick-setup/QuickSetupApp.vue'
 import AgentDownload from './setup/AgentDownloadApp.vue'
 import { registerTelemetryMetricsFormComponents } from './telemetry-metrics/registerFormComponents'
@@ -58,7 +57,7 @@ import WelcomeApp from './welcome/WelcomeApp.vue'
 import WelcomeSnapin from './welcome/components/snapin/WelcomeSnapin.vue'
 
 // Inject monolithic translation catalog from cmk-frontend-vue.
-const { defineCmkComponent } = initCmkUi({ translationLoader })
+const { defineCmkComponent, defineCmkElements } = initCmkUi({ translationLoader })
 
 initializeComponentRegistry()
 registerCustomQueryFormComponents()
@@ -105,5 +104,5 @@ defineCmkComponent('cmk-date-time-picker', DateTimePickerApp)
 defineCmkComponent('cmk-global-time-picker', GlobalTimePickerApp)
 defineCmkComponent('cmk-graph-group', GraphGroup)
 defineCmkComponent('cmk-custom-graph-designer', CustomGraphDesignerApp)
-defineCmkComponent('cmk-profiling-flamegraph', ProfilingFlamegraphApp)
-defineCmkComponent('cmk-profiling-profiles-list', ProfilingProfilesListApp)
+
+defineCmkElements(profilingElements)

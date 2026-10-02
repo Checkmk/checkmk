@@ -1,0 +1,22 @@
+{
+  "name": "cmk-profiling",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "peerDependencies": {
+    "vue": "^3.5.0"
+  },
+  "dependencies": {
+    "@tanstack/vue-virtual": "^3.13.24",
+    "cmk-ui-library": "workspace:*"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/user-event": "^14.6.1",
+    "@testing-library/vue": "^8.1.0",
+    "@vitejs/plugin-vue": "^6.0.6",
+    "msw": "^2.13.3",
+    "vite": "^7.3.2",
+    "vue": "3.5.32"
+  }
+}

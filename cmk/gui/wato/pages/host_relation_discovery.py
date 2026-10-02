@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""The "Relation discovery" page: what the hosts say about each other, and what to keep.
+"""The "Relation detection" page: what the hosts say about each other, and what to keep.
 
 A thin shell around the Vue app. The page asks only which relation to look for, where, and
 in which folder or site - then it shows what it found in the hosts and lets the user confirm
@@ -47,8 +47,6 @@ from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeuri_contextless
 
-_TITLE = _("Relation discovery")
-
 
 class ModeHostRelationDiscovery(WatoMode[None]):
     @classmethod
@@ -68,7 +66,7 @@ class ModeHostRelationDiscovery(WatoMode[None]):
 
     @override
     def title(self) -> str:
-        return _TITLE
+        return _("Relation detection")
 
     @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
@@ -115,9 +113,8 @@ def _folder_page_menu_entries(_folder: Folder | SearchFolder) -> Iterator[PageMe
     # Next to the other tools that work on all of Setup rather than on the folder at hand: the
     # page reads every host, and only starts out looking for relations in this folder.
     if user.may("wato.hosts") and user.may("wato.edit_hosts"):
-        # A verb in the menu and a noun on the page, like "Detect network parent hosts".
         yield PageMenuEntry(
-            title=_("Detect related hosts"),
+            title=_("Relation detection"),
             icon_name=StaticIcon(IconNames.link),
             item=make_simple_link(
                 folder_preserving_link(request, [("mode", ModeHostRelationDiscovery.name())])

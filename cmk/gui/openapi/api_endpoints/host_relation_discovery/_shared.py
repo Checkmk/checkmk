@@ -151,7 +151,7 @@ def unknown_job(job_id: str) -> ProblemException:
     return ProblemException(
         status=HTTPStatus.NOT_FOUND,
         title="Unknown scan or run",
-        detail=f"There is no relation discovery scan or run of yours with the ID '{job_id}'.",
+        detail=f"There is no relation detection scan or run of yours with the ID '{job_id}'.",
     )
 
 

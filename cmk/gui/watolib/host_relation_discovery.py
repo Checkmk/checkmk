@@ -215,7 +215,7 @@ def relation_to_find(
     neither would read the whole fleet to find nothing.
     """
     if (kind := RELATION_KINDS.get(kind_id)) is None or kind.name_evidence is None:
-        raise ValueError(_('No relation "%(kind)s" can be discovered.') % {"kind": kind_id})
+        raise ValueError(_('No relation "%(kind)s" can be detected.') % {"kind": kind_id})
     for word in words:
         if not is_name_token(word):
             raise ValueError(
@@ -1598,7 +1598,7 @@ class _Batch:
             pending_changes.add(
                 Change(
                     action_name="discover-relations",
-                    text=_("Stored discovered relations of host %(host)s.") % {"host": name},
+                    text=_("Stored detected relations of host %(host)s.") % {"host": name},
                     object_ref=touched.host.object_ref(),
                     diff_text=diff_attributes(
                         touched.before, nodes, touched.host.attributes, nodes

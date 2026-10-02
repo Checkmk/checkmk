@@ -10,7 +10,7 @@ HOST_RELATION_DISCOVERY_FAMILY = EndpointFamily(
         """Find the relations the hosts in Setup already show - a management board named
 after the host it sits in, or two hosts carrying the same serial number - and store the
 ones that are accepted. A scan and the run storing from it are background jobs, and
-what a scan found is read a page at a time. Backs the "Relation discovery" page of the
+what a scan found is read a page at a time. Backs the "Relation detection" page of the
 Setup and is not part of the public API."""
     ),
     doc_group="Checkmk Internal",

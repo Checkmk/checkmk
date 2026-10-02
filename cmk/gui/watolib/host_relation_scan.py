@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""The relation discovery as background jobs: a scan that is kept, and a run that stores from it.
+"""The relation detection as background jobs: a scan that is kept, and a run that stores from it.
 
 A fleet of fifty thousand hosts proposes tens of thousands of relations - too many to send to a
 browser on every scan, and far too many to send back when they are accepted. So a scan is kept
@@ -759,7 +759,7 @@ class RelationDiscoveryBackgroundJob(BackgroundJob):
     @classmethod
     @override
     def gui_title(cls) -> str:
-        return _("Store discovered relations")
+        return _("Store detected relations")
 
     def __init__(self, job_id: str | None = None) -> None:
         super().__init__(job_id or f"{self.job_prefix}-{gen_id()}")
@@ -861,7 +861,7 @@ class RelationDiscoveryBackgroundJob(BackgroundJob):
         )
         _result_store(self, RunResult).write(run_result(scanned.findings, found, entries, tree))
         job_interface.send_result_message(
-            _("Relation discovery finished: %(summary)s") % {"summary": run_summary(entries)}
+            _("Relation detection finished: %(summary)s") % {"summary": run_summary(entries)}
         )
 
 

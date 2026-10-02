@@ -168,7 +168,7 @@ function scanning(scanned: Scanned = {}): { sent: unknown[] } {
         : HttpResponse.json({
             running: false,
             message: '',
-            summary: 'Relation discovery finished: 2 stored, 1 could not be stored',
+            summary: 'Relation detection finished: 2 stored, 1 could not be stored',
             scan: null,
             run: {
               findings: [
@@ -664,7 +664,7 @@ test('the result says what came of each finding, and lists what failed', async (
 
   await store(3)
 
-  await screen.findByText('Relation discovery finished: 2 stored, 1 could not be stored')
+  await screen.findByText('Relation detection finished: 2 stored, 1 could not be stored')
   screen.getByText('2 stored · 1 could not be stored')
   await screen.findByText('No permission.')
   screen.getByRole('link', { name: 'Activate changes' })

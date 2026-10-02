@@ -7,6 +7,7 @@ import json
 import time
 from collections.abc import Mapping
 from dataclasses import dataclass
+from typing import TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -15,6 +16,7 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     IgnoreResultsError,
+    LevelsT,
     Metric,
     render,
     Result,
@@ -23,6 +25,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.veeam.lib import (
+    check_backup_age,
     parse_dotnet_timespan_seconds,
     parse_iso8601_epoch,
     sanitize_name,
@@ -48,10 +51,14 @@ class BackupTask:
     transferred_size: int | None
     duration: str | None
     processing_rate: str | None
-    end_time: float | None
+    end_time: str | None
 
 
 Section = Mapping[str, BackupTask]
+
+
+class CheckParameters(TypedDict):
+    age: LevelsT[float]
 
 
 def parse_veeam_backups(string_table: StringTable) -> Section:
@@ -60,7 +67,6 @@ def parse_veeam_backups(string_table: StringTable) -> Section:
         task_dict = json.loads(line[0])
         progress = task_dict.get("progress") or {}
         result = task_dict.get("result") or {}
-        end_time = task_dict.get("endTime")
         section[sanitize_name(task_dict["jobName"])] = BackupTask(
             state=task_dict["state"],
             result=result.get("result", "None"),
@@ -70,7 +76,7 @@ def parse_veeam_backups(string_table: StringTable) -> Section:
             transferred_size=progress.get("transferredSize"),
             duration=progress.get("duration"),
             processing_rate=progress.get("processingRate"),
-            end_time=parse_iso8601_epoch(end_time) if end_time is not None else None,
+            end_time=task_dict.get("endTime"),
         )
     return section
 
@@ -112,7 +118,7 @@ def _parse_processing_rate_bps(processing_rate: str) -> float | None:
         return None
 
 
-def check_veeam_backups(item: str, section: Section) -> CheckResult:
+def check_veeam_backups(item: str, params: CheckParameters, section: Section) -> CheckResult:
     if (task := section.get(item)) is None:
         return
 
@@ -173,18 +179,20 @@ def check_veeam_backups(item: str, section: Section) -> CheckResult:
                     summary=f"FAILED TO PARSE -> Duration: ({task.duration})",
                 )
 
-        if task.end_time is not None:
-            age = time.time() - task.end_time
-            if age < 0:
-                yield Result(
-                    state=State.UNKNOWN,
-                    summary="Last backup: end time is in the future",
-                )
-            else:
-                yield Result(
-                    state=State.OK,
-                    summary=f"Last backup: {render.timespan(age)} ago",
-                )
+        if task.end_time is None:
+            yield from check_backup_age(None, params["age"])
+        elif (end_time := parse_iso8601_epoch(task.end_time)) is None:
+            # TODO: confirm whether this branch is ever actually reachable once we can
+            # test against real API responses. If it is, move the parsing into the
+            # parse function instead of guessing here.
+            yield Result(
+                state=State.UNKNOWN,
+                summary=f"FAILED TO PARSE -> End time: ({task.end_time})",
+            )
+        elif (age := time.time() - end_time) < 0:
+            yield Result(state=State.UNKNOWN, summary="Last backup: end time is in the future")
+        else:
+            yield from check_backup_age(age, params["age"])
 
 
 agent_section_veeam_backups = AgentSection(
@@ -198,4 +206,8 @@ check_plugin_veeam_backups = CheckPlugin(
     service_name="Backup %s",
     discovery_function=discovery_veeam_backups,
     check_function=check_veeam_backups,
+    check_ruleset_name="veeam_backup",
+    check_default_parameters=CheckParameters(
+        age=("fixed", (108000.0, 172800.0)),  # 30h/2d, as the agent plug-in's VEEAM Client
+    ),
 )

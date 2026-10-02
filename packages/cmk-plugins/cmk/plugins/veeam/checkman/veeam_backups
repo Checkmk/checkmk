@@ -12,6 +12,11 @@ description:
  This check is {OK} if the result of the last run is Success. It is {WARN}
  if the result is Warning. It is {CRIT} if the result is Failed.
 
+ In addition {WARN} and {CRIT} levels can be set for the time since the end
+ of the last backup, through the same {Veeam: Time since last backup} rule
+ the {VEEAM Client} service uses. The default levels are 30 hours and 2 days.
+ A finished backup without an end time is {CRIT}.
+
  While a backup is running, its age and duration are not evaluated. Size,
  speed and duration metrics use the same metric names as the {VEEAM Client}
  service, so existing graphs and thresholds carry over.

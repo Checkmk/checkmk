@@ -6,6 +6,8 @@
 import re
 from datetime import datetime
 
+from cmk.agent_based.v2 import check_levels, CheckResult, LevelsT, render, Result, State
+
 # Veeam's TimeSpan format: "[-][d.]hh:mm:ss[.fffffff]"
 _DOTNET_TIMESPAN = re.compile(
     r"^(?:(?P<days>\d+)\.)?(?P<hours>\d+):(?P<minutes>\d+):(?P<seconds>\d+)(?:\.\d+)?$"
@@ -31,3 +33,16 @@ def parse_iso8601_epoch(value: str) -> float | None:
 
 def sanitize_name(name: str) -> str:
     return name.replace("'", "_").replace(" ", "_")
+
+
+def check_backup_age(last_backup_age: float | None, levels_upper: LevelsT[float]) -> CheckResult:
+    """No age means no backup has ever completed, which is critical regardless of the levels."""
+    if last_backup_age is None:
+        yield Result(state=State.CRIT, summary="No complete backup")
+        return
+    yield from check_levels(
+        last_backup_age,
+        levels_upper=levels_upper,
+        render_func=render.timespan,
+        label="Time since last backup",
+    )

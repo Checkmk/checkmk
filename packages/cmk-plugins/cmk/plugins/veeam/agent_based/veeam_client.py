@@ -12,7 +12,6 @@ from typing import TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
-    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -24,6 +23,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.plugins.veeam.lib import check_backup_age
 
 SENTINEL_STOPTIME_RUNNING = -1.0
 
@@ -210,19 +210,10 @@ def discover_veeam_client(section: Section) -> DiscoveryResult:
 
 
 def _check_backup_age(data: VeeamClient, params: CheckParameters) -> CheckResult:
-    if data.last_backup_age is None:
-        yield Result(state=State.CRIT, summary="No complete backup")
-        return
-    elif data.last_backup_age is SENTINEL_STOPTIME_RUNNING:
+    if data.last_backup_age is SENTINEL_STOPTIME_RUNNING:
         # Backward compatible StopTime hack
         return
-
-    yield from check_levels(
-        data.last_backup_age,
-        levels_upper=params["age"],
-        render_func=render.timespan,
-        label="Time since last backup",
-    )
+    yield from check_backup_age(data.last_backup_age, params["age"])
 
 
 def check_veeam_client(item: str, params: CheckParameters, section: Section) -> CheckResult:

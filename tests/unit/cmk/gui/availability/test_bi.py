@@ -3,9 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.bi.lib import NodeComputeResult
-from cmk.bi.trees import CompiledAggrTree
-from cmk.gui.availability import create_bi_timeline_entry
+import pytest
+
+from livestatus import LivestatusResponse, LivestatusRow, Query
+
+from cmk.bi.aggregation_functions import BIAggregationFunctionWorst
+from cmk.bi.data_fetcher import BIStatusFetcher
+from cmk.bi.lib import BIAggregationComputationOptions, NodeComputeResult, SitesCallback
+from cmk.bi.rule_interface import BIRuleProperties
+from cmk.bi.trees import BICompiledLeaf, BICompiledRule, CompiledAggrTree
+from cmk.bi.type_defs import ComputationConfigDict
+from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
+from cmk.gui import availability
+from cmk.gui.availability import (
+    _bi_status_info_from_timeline_states,
+    create_bi_timeline_entry,
+    get_bi_split_history_data,
+)
 
 
 def test_create_bi_timeline_entry_site_id_is_not_empty() -> None:
@@ -41,3 +56,72 @@ def test_create_bi_timeline_entry_site_id_is_not_empty() -> None:
         ),
     )
     assert result["site"] != "", "site_id must not be empty in BI timeline entries"
+
+
+def _host_and_service_rule() -> BICompiledRule:
+    return BICompiledRule(
+        rule_id="jira",
+        pack_id="default",
+        nodes=[
+            BICompiledLeaf(host_name=HostName("jira-app"), site_id="site1"),
+            BICompiledLeaf(
+                host_name=HostName("jira-app"), service_description="Jira", site_id="site1"
+            ),
+        ],
+        required_hosts=[(SiteId("site1"), HostName("jira-app"))],
+        properties=BIRuleProperties(
+            {"title": "Jira", "comment": "", "docu_url": "", "icon": "", "state_messages": {}}
+        ),
+        aggregation_function=BIAggregationFunctionWorst(
+            {"type": "worst", "count": 1, "restrict_state": 2}
+        ),
+        node_visualization={},
+    )
+
+
+def _no_query(
+    query: Query,
+    only_sites: list[SiteId] | None = None,
+    fetch_full_data: bool = False,
+) -> LivestatusResponse:
+    return LivestatusResponse([])
+
+
+def test_aggregate_without_host_history_is_computed_from_its_services() -> None:
+    # SUP-23138: a contact of the service only gets no host history. The host must count
+    # as missing, not as UP outside of its service period (which turned the aggregate n/a).
+    status_fetcher = BIStatusFetcher(
+        SitesCallback(all_sites_with_id_and_online=list, query=_no_query, translate=str)
+    )
+    status_fetcher.states = _bi_status_info_from_timeline_states(
+        {(SiteId("site1"), HostName("jira-app"), "Jira"): (2, "CRIT", False, True)}
+    )
+
+    result = _host_and_service_rule().compute(
+        BIAggregationComputationOptions(
+            ComputationConfigDict(
+                disabled=False, use_hard_states=False, escalate_downtimes_as_warn=False
+            )
+        ),
+        status_fetcher,
+    )
+
+    assert result is not None
+    assert (result.actual_result.state, result.actual_result.in_service_period) == (2, True)
+    assert len(result.nested_results) == 1
+
+
+def test_bi_history_is_queried_with_the_bi_visibility(monkeypatch: pytest.MonkeyPatch) -> None:
+    # SUP-23138: the history must follow bi.see_all like the BI tree, not the contact
+    # assignments. Tech debt: query_livestatus is module-level and can't be injected.
+    auth_domains: list[str] = []
+
+    def _record(*_args: object, auth_domain: str, **_kwargs: object) -> list[LivestatusRow]:
+        auth_domains.append(auth_domain)
+        return []
+
+    monkeypatch.setattr(availability, "query_livestatus", _record)
+
+    get_bi_split_history_data([], (0, 1), ["host_name"], {SiteId("site1")}, "", None)
+
+    assert auth_domains == ["bi"]

@@ -146,7 +146,8 @@ def _execute_walks_for_dump(
 
 
 def _report_walk_error(oid: OID, context: SNMPContext, e: Exception) -> None:
-    console.error(f"Error walking OID '{oid}', context '{context}': {e}", file=sys.stderr)
+    where = f"context '{context}'" if context else "default context"
+    console.error(f"Error walking OID '{oid}', {where}: {e}", file=sys.stderr)
     if cmk.ccc.debug.enabled():
         raise e
 

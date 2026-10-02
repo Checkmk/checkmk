@@ -3931,7 +3931,8 @@ def _execute_snmp_walk(backend: SNMPBackend) -> tuple[bytes, str]:
     def on_error(walk_oid: OID, context: SNMPContext, e: Exception) -> None:
         if cmk.ccc.debug.enabled():
             raise e
-        errors.append(f"OID '{walk_oid}', context '{context}': {e}\n")
+        where = f"context '{context}'" if context else "default context"
+        errors.append(f"OID '{walk_oid}', {where}: {e}\n")
 
     for walk_oid in oids_to_walk():
         for oid, value in walk_all_contexts_for_export(

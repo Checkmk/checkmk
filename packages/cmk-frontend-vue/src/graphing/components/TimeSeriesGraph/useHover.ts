@@ -10,12 +10,13 @@ import { type Ref, onBeforeUnmount, ref } from 'vue'
 import type { ConsolidationFn } from '../consolidation'
 import { attributesOf } from '../metricAttributes'
 import { orderMetricsTopToBottom } from '../metricOrder'
+import { indexOfValueCovering } from './axes/timeAxis'
 import type { M4Bucket, M4Cache } from './decimation/types'
 import { type HoverSample, type HoverState, metricHitDistance } from './interaction/hover'
 import { consolidatedSampleTime, keptSamples, selectConsolidatedValue } from './render/bucket'
 import { type TimeValuePoint, clampedValueAt } from './render/polyline'
 import type { StackedColumn, StackedSeries } from './render/stacked'
-import type { Metric, UnitFormat } from './types'
+import type { Metric, TimeRange, UnitFormat } from './types'
 import { valueRenderer } from './valueRenderer'
 
 const HOVER_CLEAR_DELAY_MS = 150
@@ -92,7 +93,7 @@ const coversTime = (buckets: M4Cache, time: number): boolean =>
 interface Reading {
   value: number
   time: number
-  edge: DrawnEdge
+  edge: DrawnEdge | null
 }
 
 function indexOfClosest(distances: Array<number | null>): number {
@@ -109,6 +110,7 @@ function indexOfClosest(distances: Array<number | null>): number {
 
 export interface HoverOptions {
   metrics: () => Metric[]
+  dataTimeRange: () => TimeRange
   consolidation: () => ConsolidationFn
   valueResolution: () => number | null
   axisUnit: () => UnitFormat | null
@@ -150,6 +152,18 @@ export function useHover(options: HoverOptions) {
     return edge === null ? null : { value, time, edge }
   }
 
+  function plotStartTime(): number {
+    return options.xScale.domain()[0]!.getTime() / 1000
+  }
+
+  function readingOfValueCovering(metric: Metric, cursorTime: number): Reading | null {
+    const value = metric.data_points[indexOfValueCovering(options.dataTimeRange(), cursorTime)]
+    if (value === null || value === undefined || !Number.isFinite(value)) {
+      return null
+    }
+    return { value, time: cursorTime, edge: null }
+  }
+
   function readingAtCursor(
     metric: Metric,
     metricIndex: number,
@@ -161,8 +175,15 @@ export function useHover(options: HoverOptions) {
       return null
     }
     const consolidation = asDrawn(options.consolidation(), metric.render.inverse)
+    const firstColumnDrawnOnPlot = buckets.findIndex(
+      (bucket) => drawnTime(bucket, consolidation) >= plotStartTime()
+    )
+    const plotHoldsNoDrawnSample = firstColumnDrawnOnPlot === -1
+    if (plotHoldsNoDrawnSample) {
+      return readingOfValueCovering(metric, cursorTime)
+    }
     const columnIndex = Math.min(
-      bisectDrawnPoint[consolidation](buckets, cursorTime),
+      bisectDrawnPoint[consolidation](buckets, cursorTime, firstColumnDrawnOnPlot),
       buckets.length - 1
     )
     const bucket = buckets[columnIndex]!
@@ -188,7 +209,10 @@ export function useHover(options: HoverOptions) {
     return null
   }
 
-  function hitDistance(cursorY: number, reading: Reading, metricIndex: number): number {
+  function hitDistance(cursorY: number, reading: Reading, metricIndex: number): number | null {
+    if (reading.edge === null) {
+      return null
+    }
     const distance = metricHitDistance(
       cursorY,
       options.yScale(reading.edge.upper),
@@ -219,10 +243,13 @@ export function useHover(options: HoverOptions) {
     return {
       ...sampleBase,
       formattedValue: renderValue(reading.value),
-      drawnPoint: {
-        x: options.xScale(new Date(reading.time * 1000)),
-        y: options.yScale(reading.edge.upper)
-      },
+      drawnPoint:
+        reading.edge === null
+          ? null
+          : {
+              x: options.xScale(new Date(reading.time * 1000)),
+              y: options.yScale(reading.edge.upper)
+            },
       snapTime: reading.time
     }
   }

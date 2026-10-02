@@ -22,6 +22,10 @@ export function timestampAt(timeRange: TimeRange, valueIndex: number): number {
   return timeRange.start + (valueIndex + 1) * timeRange.step
 }
 
+export function indexOfValueCovering(timeRange: TimeRange, time: number): number {
+  return Math.ceil((time - timeRange.start) / timeRange.step) - 1
+}
+
 const SECONDS_PER_DAY = 86_400
 
 const MIN_LABEL_GAP_PX = 24

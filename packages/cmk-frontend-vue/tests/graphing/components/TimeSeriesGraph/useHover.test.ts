@@ -12,6 +12,7 @@ import type { Metric } from '@/graphing/components/TimeSeriesGraph'
 import { downsampleToColumns, m4 } from '@/graphing/components/TimeSeriesGraph/decimation/decimate'
 import type { HoverState } from '@/graphing/components/TimeSeriesGraph/interaction/hover'
 import { invertBucket } from '@/graphing/components/TimeSeriesGraph/render/bucket'
+import { composeSeries } from '@/graphing/components/TimeSeriesGraph/render/composeSeries'
 import { computeStackedSeries } from '@/graphing/components/TimeSeriesGraph/render/stacked'
 import { useHover } from '@/graphing/components/TimeSeriesGraph/useHover'
 import type { ConsolidationFn } from '@/graphing/components/consolidation'
@@ -82,31 +83,45 @@ interface HoverOverrides {
   axisUnit?: Metric['metadata']['unit'] | null
 }
 
-function mountHover(
+function renderHover(
   metrics: Metric[],
-  dataRange = TIME_RANGE,
+  dataRange: typeof TIME_RANGE,
+  scales: ReturnType<typeof makeScales>,
   overrides: HoverOverrides = {}
 ): ReturnType<typeof useHover> {
-  const consolidation = overrides.consolidation ?? 'avg'
-  const plotWidth = overrides.plotWidth ?? PLOT_WIDTH
-  const { xScale, yScale } = makeScales(plotWidth, overrides.valueDomain)
   let api!: ReturnType<typeof useHover>
   const harness = defineComponent({
     setup() {
       api = useHover({
         metrics: () => metrics,
-        consolidation: () => consolidation,
+        dataTimeRange: () => dataRange,
+        consolidation: () => overrides.consolidation ?? 'avg',
         valueResolution: () => overrides.valueResolution ?? null,
         axisUnit: () => overrides.axisUnit ?? null,
-        plotWidth: ref(plotWidth),
+        plotWidth: ref(overrides.plotWidth ?? PLOT_WIDTH),
         plotHeight: ref(PLOT_HEIGHT),
-        xScale,
-        yScale
+        xScale: scales.xScale,
+        yScale: scales.yScale
       })
       return () => h('div')
     }
   })
   render(harness)
+  return api
+}
+
+function mountHover(
+  metrics: Metric[],
+  dataRange = TIME_RANGE,
+  overrides: HoverOverrides = {}
+): ReturnType<typeof useHover> {
+  const plotWidth = overrides.plotWidth ?? PLOT_WIDTH
+  const api = renderHover(
+    metrics,
+    dataRange,
+    makeScales(plotWidth, overrides.valueDomain),
+    overrides
+  )
   // One column per plot pixel, the way the renderer composes them.
   const buckets = metrics.map((metric) =>
     downsampleToColumns(
@@ -119,6 +134,26 @@ function mountHover(
     metrics[i]!.render.inverse ? metricBuckets.map(invertBucket) : metricBuckets
   )
   api.recordDrawnGeometry(buckets, computeStackedSeries(metrics, drawnBuckets))
+  return api
+}
+
+function mountHoverOverWindow(
+  metrics: Metric[],
+  dataRange: typeof TIME_RANGE,
+  plotWindow: [number, number]
+): ReturnType<typeof useHover> {
+  const xScale = scaleTime()
+    .domain(plotWindow.map((time) => new Date(time * 1000)))
+    .range([0, PLOT_WIDTH])
+  const yScale = scaleLinear().domain([0, dataRange.end]).range([PLOT_HEIGHT, 0])
+  const api = renderHover(metrics, dataRange, { xScale, yScale }, { consolidation: 'max' })
+  const composed = composeSeries({
+    metrics,
+    cache: metrics.map((metric) => m4(metric.data_points, dataRange, 4000)),
+    visibleTimeRange: plotWindow,
+    columnCount: PLOT_WIDTH
+  })
+  api.recordDrawnGeometry(composed.bucketsOnPlot, composed.stacksOnPlot)
   return api
 }
 
@@ -421,6 +456,43 @@ describe('useHover — snapping to drawn points', () => {
       formattedValue: 'n/a',
       drawnPoint: null
     })
+  })
+})
+
+describe('useHover — a plot showing part of the fetched range', () => {
+  const RANGE_OF_FIVE_SAMPLES = { start: 0, end: 50, step: 10 }
+  const SAMPLES_VALUED_AT_THEIR_OWN_TIMESTAMP = pointsValuedAtTheirOwnTimestamp(5)
+
+  test('a window between two samples reads the value covering the cursor, at the cursor', () => {
+    const narrowerThanOneStep: [number, number] = [23, 27]
+    const timeAtThePlotMiddle = 25
+    const sampleCoveringTheWindow = 30
+    const hover = mountHoverOverWindow(
+      [makeLineMetric('coarse', SAMPLES_VALUED_AT_THEIR_OWN_TIMESTAMP)],
+      RANGE_OF_FIVE_SAMPLES,
+      narrowerThanOneStep
+    )
+
+    hover.moveHoverTo(pointAt(PLOT_WIDTH / 2, PLOT_HEIGHT / 2))
+
+    const state = hover.hoverState.value!
+    expect(state.samples[0]!.formattedValue).toBe(String(sampleCoveringTheWindow))
+    expect(state.snapTime).toBe(timeAtThePlotMiddle)
+    expect(state.samples[0]!.drawnPoint).toBeNull()
+  })
+
+  test('a cursor at the left edge snaps to the first sample on the plot, not to one before it', () => {
+    const startingNearerTheSampleBeforeIt: [number, number] = [14, 44]
+    const firstSampleOnThePlot = 20
+    const hover = mountHoverOverWindow(
+      [makeLineMetric('fine', SAMPLES_VALUED_AT_THEIR_OWN_TIMESTAMP)],
+      RANGE_OF_FIVE_SAMPLES,
+      startingNearerTheSampleBeforeIt
+    )
+
+    hover.moveHoverTo(pointAt(0, PLOT_HEIGHT / 2))
+
+    expect(hover.hoverState.value!.snapTime).toBe(firstSampleOnThePlot)
   })
 })
 

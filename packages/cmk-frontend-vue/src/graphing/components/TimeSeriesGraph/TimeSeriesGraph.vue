@@ -178,6 +178,10 @@ const valueResolution = ref<number | null>(null)
 const xScale = scaleTime()
 const yScale = scaleLinear()
 
+function timeRangeTheValuesSpan(): TimeRange {
+  return props.data_time_range ?? props.view_time_range
+}
+
 const {
   prepareValueDomain,
   valueTickLabels,
@@ -205,6 +209,7 @@ const {
   clearHoverAfterDelay
 } = useHover({
   metrics: () => props.metrics,
+  dataTimeRange: () => timeRangeTheValuesSpan(),
   consolidation: () => consolidationFn.value,
   valueResolution: () => valueResolution.value,
   axisUnit: () => props.options.y_axis?.unit ?? null,
@@ -279,7 +284,7 @@ function draw(): void {
 
   const composed = composeSeries({
     metrics: props.metrics,
-    cache: m4CacheStore.ensure(props.metrics, props.data_time_range ?? props.view_time_range),
+    cache: m4CacheStore.ensure(props.metrics, timeRangeTheValuesSpan()),
     visibleTimeRange: [props.view_time_range.start, props.view_time_range.end],
     columnCount: Math.max(1, Math.floor(plotWidth.value))
   })
@@ -344,7 +349,7 @@ function draw(): void {
     drawShadedRegions(
       axesContainer.value,
       props.shaded_regions,
-      props.data_time_range ?? props.view_time_range,
+      timeRangeTheValuesSpan(),
       xScale,
       yScale,
       { top: 0, bottom: plotHeight.value }

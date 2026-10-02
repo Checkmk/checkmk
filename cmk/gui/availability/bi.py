@@ -336,7 +336,8 @@ def get_bi_split_history_data(
             ),
             only_sites=list(only_sites),
             limit=livestatus_limit,
-            auth_domain="read",
+            # Same visibility as the BI tree this history is computed for (bi.see_all)
+            auth_domain="bi",
         )
     except MKLivestatusPayloadTooLargeError:
         # If the query fails, split the time range into two and try again
@@ -592,8 +593,10 @@ def _bi_status_info_from_timeline_states(status: AVBITimelineStates) -> BIStatus
         service = site_host_service[2]
         state: int | None = state_output[0]
 
-        # Create an entry for hosts that are not explicitly referenced in the timeline container.
-        hosts.setdefault(site_host, (0, "", 0, False))
+        # A host only referenced through its services has no history of its own (e.g. the
+        # user is a contact of the services only): treat it as missing, not as UP outside
+        # of its service period, which would turn the whole aggregate into n/a.
+        hosts.setdefault(site_host, (-1, "", 0, True))
         if service:
             if state == -1:
                 # Ignore pending services

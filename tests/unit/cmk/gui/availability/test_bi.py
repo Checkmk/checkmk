@@ -160,9 +160,6 @@ def _no_query(
     return LivestatusResponse([])
 
 
-@pytest.mark.xfail(
-    strict=True, raises=AssertionError, reason="SUP-23138: host without history counts as n/a"
-)
 def test_aggregate_without_host_history_is_computed_from_its_services() -> None:
     # SUP-23138: a contact of the service only gets no host history. The host must count
     # as missing, not as UP outside of its service period (which turned the aggregate n/a).
@@ -187,9 +184,6 @@ def test_aggregate_without_host_history_is_computed_from_its_services() -> None:
     assert len(result.nested_results) == 1
 
 
-@pytest.mark.xfail(
-    strict=True, raises=AssertionError, reason="SUP-23138: history ignores bi.see_all"
-)
 def test_bi_history_is_queried_with_the_bi_visibility(monkeypatch: pytest.MonkeyPatch) -> None:
     # SUP-23138: the history must follow bi.see_all like the BI tree, not the contact
     # assignments. Tech debt: query_livestatus is module-level and can't be injected.

@@ -129,6 +129,12 @@ const { FormEditDispatcher } = useFormEditDispatcher()
               <div
                 v-if="!dict_element.dict_config.render_only"
                 class="form-dictionary__group_elem"
+                :class="{
+                  'form-dictionary__group_elem--horizontal':
+                    dict_element.dict_config.required &&
+                    !!dict_element.dict_config.group &&
+                    group.layout === 'horizontal'
+                }"
                 role="group"
                 :aria-label="dict_element.dict_config.parameter_form.title"
               >
@@ -139,12 +145,6 @@ const { FormEditDispatcher } = useFormEditDispatcher()
                 <template v-if="titleRequired(dict_element.dict_config)">
                   <CmkLabel
                     v-if="dict_element.dict_config.required"
-                    :class="{
-                      'form-dictionary__required-without-indent': !indentRequired(
-                        dict_element.dict_config,
-                        group.layout
-                      )
-                    }"
                     :help="untranslated(dict_element.dict_config.parameter_form.help)"
                   >
                     <CmkHtml :html="dict_element.dict_config.parameter_form.title" /><FormRequired
@@ -211,13 +211,15 @@ tr:first-of-type > td > .form-dictionary__group-title {
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-tr:last-of-type > td > div > .form-dictionary__group_elem:last-of-type {
-  margin-bottom: 0;
+.form-dictionary__group_elem--horizontal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-4);
 }
 
-.form-dictionary__required-without-indent {
-  display: inline-block;
-  margin-bottom: var(--spacing-half);
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+tr:last-of-type > td > div > .form-dictionary__group_elem:last-of-type {
+  margin-bottom: 0;
 }
 
 .form-dictionary__group-elems {

@@ -14,6 +14,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from tests.testlib.pytest_helpers import flake_reporter
 from tests.testlib.pytest_helpers.flake_reporter import (
     FlakeReport,
     FlakeReporter,
@@ -61,12 +62,24 @@ def _pass_all_phases(reporter: FlakeReporter, nodeid: str) -> None:
         reporter.pytest_runtest_logreport(_report(nodeid, when, "passed"))
 
 
-def _make_reporter() -> FlakeReporter:
-    """Return a FlakeReporter with rerun tracking active (mirrors a session with --reruns=2)."""
-    reporter = FlakeReporter()
+def _configure(reruns: int) -> pytest.PytestPluginManager:
+    """Run the plugin's pytest_configure for a session with --reruns=*reruns*."""
     config = MagicMock(spec=pytest.Config)
-    config.getoption.side_effect = lambda opt, default=None: 2 if opt == "--reruns" else default
-    reporter.pytest_configure(config)
+    config.getoption.side_effect = lambda opt, default=None: (
+        reruns if opt == "--reruns" else default
+    )
+    config.pluginmanager = pluginmanager = pytest.PytestPluginManager()
+    flake_reporter.pytest_configure(config)
+    return pluginmanager
+
+
+def _registered_reporters(pluginmanager: pytest.PytestPluginManager) -> list[FlakeReporter]:
+    return [p for p in pluginmanager.get_plugins() if isinstance(p, FlakeReporter)]
+
+
+def _make_reporter() -> FlakeReporter:
+    """Return the FlakeReporter registered for a session with --reruns=2."""
+    (reporter,) = _registered_reporters(_configure(reruns=2))
     return reporter
 
 
@@ -75,15 +88,14 @@ def _simulate_rerun(
 ) -> None:
     """Feed reports for one failed attempt of *nodeid*.
 
-    Mirrors pytest: phases before the failing one pass normally; teardown
-    always runs for cleanup regardless of which phase failed.
+    Mirrors pytest-rerunfailures: phases before the failing one pass normally;
+    the failing phase is reported as "rerun" and no further phase of that
+    attempt is reported.
     """
     phases = ["setup", "call", "teardown"]
     for phase in phases[: phases.index(failing_phase)]:
         reporter.pytest_runtest_logreport(_report(nodeid, phase, "passed"))
     reporter.pytest_runtest_logreport(_report(nodeid, failing_phase, "rerun", longrepr))
-    if failing_phase != "teardown":
-        reporter.pytest_runtest_logreport(_report(nodeid, "teardown", "passed"))
 
 
 # ---------------------------------------------------------------------------
@@ -160,19 +172,19 @@ def test_empty_flakes_list_when_no_flakes_detected(tmp_path: Path) -> None:
     assert _read_report(tmp_path).flakes == []
 
 
-def test_no_report_written_when_no_output_dir_configured(tmp_path: Path) -> None:
+def test_no_report_written_when_no_output_dir_configured(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """No flakes.json is written when none of --flake-report, --junitxml, --html is set."""
+    monkeypatch.chdir(tmp_path)
     _make_reporter().pytest_sessionfinish(session=_make_session({}))
 
-    assert not (tmp_path / "flakes.json").exists()
+    assert not any(tmp_path.iterdir())
 
 
-def test_no_report_written_when_reruns_not_active(tmp_path: Path) -> None:
-    """No flakes.json is written when --reruns is not set, even with an output dir configured."""
-    reporter = FlakeReporter()  # _rerun_active stays False
-    reporter.pytest_sessionfinish(session=_make_session({"--flake-report": str(tmp_path)}))
-
-    assert not (tmp_path / "flakes.json").exists()
+def test_flakes_not_tracked_when_reruns_not_active() -> None:
+    """Without --reruns, no reporter is registered, so no flakes.json is written."""
+    assert _registered_reporters(_configure(reruns=0)) == []
 
 
 # ---------------------------------------------------------------------------

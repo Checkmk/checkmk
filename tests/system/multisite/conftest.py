@@ -19,7 +19,7 @@ from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
 from tests.system.multisite.utils import get_cre_agent_path
 from tests.testlib.common.utils2 import is_containerized, run
-from tests.testlib.pytest_helpers import flake_reporter
+from tests.testlib.pytest_helpers import flake_reporter, registration
 from tests.testlib.system.agent import (
     agent_controller_daemon,
     bake_agents,
@@ -248,4 +248,4 @@ def _run_cron() -> None:
 
 
 def pytest_addoption(pluginmanager: pytest.PytestPluginManager) -> None:
-    pluginmanager.register(flake_reporter.FlakeReporter(), flake_reporter.__name__)
+    registration.register_pytest_plugins(pluginmanager, flake_reporter)

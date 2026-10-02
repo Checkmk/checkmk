@@ -15,6 +15,9 @@ rerun by ``pytest-rerunfailures``.  When a session ends, the plugin writes
 
 If none of the above applies, or ``pytest-rerunfailures`` is not active,
 no file is written.
+
+Register this module as a pytest plugin from a conftest's ``pytest_addoption``
+(see ``tests.testlib.pytest_helpers.registration``).
 """
 
 from __future__ import annotations
@@ -30,6 +33,7 @@ from pydantic import BaseModel, Field
 logger = logging.getLogger(__name__)
 
 _FLAKES_FILENAME = "flakes.json"
+_REPORTER_PLUGIN_NAME = f"{__name__}.reporter"
 _ALL_TEST_PHASES = {"setup", "call", "teardown"}
 _TESTSUITE_DEPTH = 3  # tests/<testsuite-type>/<testsuite-name>
 
@@ -80,6 +84,29 @@ class _RerunState:
     phases_passed: set[str] = field(default_factory=set)
 
 
+def pytest_addoption(parser: pytest.Parser) -> None:
+    """Register the ``--flake-report`` CLI option."""
+    parser.addoption(
+        "--flake-report",
+        default=None,
+        metavar="DIR",
+        help=(
+            f"Directory where '{_FLAKES_FILENAME}' is written. "
+            "When omitted, the output directory falls back to: "
+            "the parent directory of --junitxml, then the parent directory of --html. "
+            "If none of these apply, no flake report is written. "
+            "When provided, takes precedence over the directories inferred from "
+            "--junitxml and --html."
+        ),
+    )
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    """Track flakes for this session, if pytest-rerunfailures is under use."""
+    if (config.getoption("--reruns", default=0) or 0) > 0:
+        config.pluginmanager.register(FlakeReporter(), _REPORTER_PLUGIN_NAME)
+
+
 class FlakeReporter:
     """Pytest plugin that tracks reruns and emits a JSON flake report."""
 
@@ -87,14 +114,6 @@ class FlakeReporter:
         # nodeid → rerun state (first failure trace + phases passed in current attempt)
         self._rerun_state: dict[str, _RerunState] = {}
         self._flakes: list[FlakeRecord] = []
-        self._rerun_active: bool = False
-
-    def pytest_configure(self, config: pytest.Config) -> None:
-        """Detect whether pytest-rerunfailures is under use.
-
-        Currently, only in medium-chain runs.
-        """
-        self._rerun_active = (config.getoption("--reruns", default=0) or 0) > 0
 
     def pytest_runtest_logreport(self, report: pytest.TestReport) -> None:
         """Detect tests that failed on one attempt but passed on a later one.
@@ -103,9 +122,6 @@ class FlakeReporter:
         records the test as a candidate flake. The test is confirmed as a flake
         only when all three test phases pass cleanly in a subsequent attempt.
         """
-        if not self._rerun_active:
-            return
-
         nodeid = report.nodeid
         test_phase = report.when
         # pytest-rerunfailures sets outcome of a phase to "rerun" at runtime;
@@ -128,26 +144,10 @@ class FlakeReporter:
                     self._flakes.append(_build_record(nodeid, state.stack_trace))
                     del self._rerun_state[nodeid]
 
-    def pytest_addoption(self, parser: pytest.Parser) -> None:
-        """Register the ``--flake-report`` CLI option."""
-        parser.addoption(
-            "--flake-report",
-            default=None,
-            metavar="DIR",
-            help=(
-                f"Directory where '{_FLAKES_FILENAME}' is written. "
-                "When omitted, the output directory falls back to: "
-                "the parent directory of --junitxml, then the parent directory of --html. "
-                "If none of these apply, no flake report is written."
-                "When provided, takes precedence over the directories inferred from "
-                "--junitxml and --html."
-            ),
-        )
-
     def pytest_sessionfinish(self, session: pytest.Session) -> None:
         """Write ``flakes.json`` according to the output-directory priority rules."""
         output_dir = _resolve_output_dir(session.config)
-        if output_dir is None or not self._rerun_active:
+        if output_dir is None:
             return
 
         report = FlakeReport(

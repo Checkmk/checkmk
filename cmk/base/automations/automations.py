@@ -19,6 +19,7 @@ from cmk.automations.internal import (
     AutomationID,
     AutomationResult,
     AutomationState,
+    entry_point_prefixes,
     StateFactory,
 )
 from cmk.base import config
@@ -26,7 +27,12 @@ from cmk.base.app import make_app
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.timeout import Timeout
-from cmk.discover_plugins import discover_plugins_from_modules
+from cmk.discover_plugins import (
+    discover_all_plugins,
+    discover_plugins_from_modules,
+    DiscoveredPlugins,
+    PluginGroup,
+)
 
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer()
@@ -96,21 +102,35 @@ def _derive_loading_result(raw_config: Mapping[str, object]) -> config.LoadingRe
         )
 
 
+# Automations that have not moved to cmk/plugins/<family>/automations/ yet. The
+# list shrinks with every move and goes away with the last one, together with
+# the second discovery call below.
+_NOT_YET_MOVED_MODULES: Final = (
+    "cmk.base.automations.check_mk",
+    "cmk.base.diagnostics",
+    "cmk.base.notify",
+    "cmk.base.nonfree.notify_automation",
+    "cmk.bakery.base.automation",  # non-free
+)
+
+
 def discover_automations() -> Iterable[DiscoveredAutomation]:
-    discovery_result = discover_plugins_from_modules(
-        plugin_prefixes={Automation: "automation_"},
-        module_names_by_priority=[
-            # TODO: We need to get rid of this hard-coded list
-            "cmk.base.automations.check_mk",
-            "cmk.base.diagnostics",
-            "cmk.base.notify",
-            "cmk.base.nonfree.notify_automation",
-            "cmk.bakery.base.automation",  # non-free
-        ],
+    discovered = discover_all_plugins(
+        PluginGroup.AUTOMATIONS,
+        entry_point_prefixes(),
         skip_wrong_types=False,
         raise_errors=True,
     )
-    return discovery_result.plugins.values()
+    not_yet_moved = discover_plugins_from_modules(
+        entry_point_prefixes(),
+        _NOT_YET_MOVED_MODULES,
+        skip_wrong_types=False,
+        raise_errors=True,
+    )
+    return DiscoveredPlugins(
+        [*discovered.errors, *not_yet_moved.errors],
+        {**discovered.plugins, **not_yet_moved.plugins},
+    ).plugins.values()
 
 
 class Automations:

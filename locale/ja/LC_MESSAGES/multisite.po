@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-09-29 06:07+0000\n"
+"PO-Revision-Date: 2026-10-01 18:31+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -6529,6 +6529,12 @@ msgid ""
 msgstr ""
 "拡張パッケージ(MKP)のアップロード、インストール、アンインストール、作成、変更"
 "を許可します。注意:MKPには実行可能コードが含まれています。"
+
+msgid ""
+"Allows to use Checkmk's AI assistant. The assistant sends the questions of "
+"the user, and the data its tools read with the permissions of the user, to "
+"the configured AI provider."
+msgstr ""
 
 msgid "Allows to use the 'Explain with AI' button."
 msgstr "「AIで説明」ボタンを使用できるようにします。"
@@ -22136,6 +22142,10 @@ msgid ""
 "port, packet size, source address or maximum hops, so two entries have to "
 "differ in at least one of those."
 msgstr ""
+"「%s」という宛先が重複しています。これはすでに%dとして設定されています。サー"
+"ビス名は、アドレスに加え、接続タイプ、IPバージョン、ポート、パケットサイズ、"
+"送信元アドレス、または最大ホップ数で異なる部分を含みます。したがって、2つのエ"
+"ントリはこれらのうち少なくとも1つで異なっている必要があります。"
 
 #, python-format
 msgid ""
@@ -23956,7 +23966,9 @@ msgstr ""
 
 msgid ""
 "Enter the technical name of the field as defined in the ServiceNow database."
-msgstr "ServiceNowデータベースで定義されているフィールドの技術名を入力します。"
+msgstr ""
+"ServiceNowデータベースで定義されているフィールドのテクニカルネームを入力しま"
+"す。"
 
 msgid ""
 "Enter the uniserve service name here (has nothing to do with service name)."
@@ -27239,9 +27251,8 @@ msgstr "空き"
 msgid "Free DHCP leases"
 msgstr "フリーDHCPース"
 
-#, fuzzy
 msgid "Free Pods: cluster"
-msgstr "空きPods: クラスター"
+msgstr "Freeポッド：クラスタ"
 
 msgid "Free SGA memory available"
 msgstr "利用可能な空きSGAメモリ"
@@ -29019,7 +29030,6 @@ msgstr ""
 "ここでは、正規表現を使用してメッセージのフィルタリングパラメータを設定できま"
 "す。ルールは大文字小文字を区別しません。"
 
-#, fuzzy
 msgid ""
 "Here, you can configure the 3.3V and 12V voltage levels for each chassis."
 msgstr "ここでは、各シャーシの3.3Vおよび12Vの電圧レベルを構成できます。"
@@ -29115,7 +29125,6 @@ msgstr ""
 "ください。カウンターを使用するには、Checkmkサーバ上で一致するチェックプラグイ"
 "ンが必要です。"
 
-#, fuzzy
 msgid ""
 "Here, you can configure which services are displayed depending on their "
 "state. This is a filter at display level not query level."
@@ -29137,7 +29146,6 @@ msgstr ""
 "CRITICALになります。同じ終了コードを複数回定義した場合、最初のエントリが使用"
 "されます。"
 
-#, fuzzy
 msgid ""
 "Here, you can define an upper limit for the run duration of last execution "
 "of the job."
@@ -29159,7 +29167,6 @@ msgstr ""
 "書きします。ディレクトリ内では、ルールの順序が重要です。つまり、リストのさら"
 "に下のルールは、さらに上のルールによって上書きされます。"
 
-#, fuzzy
 msgid ""
 "Here, you can define how many search results should be processed. The max. "
 "internal limit of Jira is 1000 results. If you want to ignore any limit, set "
@@ -29169,16 +29176,15 @@ msgstr ""
 "は 1000 件です。制限を無視したい場合は、ここで -1 を設定します。デフォルトは "
 "50 です。"
 
-#, fuzzy
 msgid ""
 "Here, you can define levels on the CPU utilization of single processes. For "
 "performance reasons CPU averaging will not be applied to to the levels of "
 "single processes."
 msgstr ""
-"ここでは、単一プロセスのCPU使用率のレベルを定義することができます。パフォーマ"
-"ンス上の理由から、単一プロセスのレベルにはCPUの平均化は適用されません。"
+"ここでは、単一プロセスのCPU使用率のレベルを定義することができます。"
+"パフォーマンス上の理由から、単一プロセスのレベルにはCPUの平均化は適用されませ"
+"ん。"
 
-#, fuzzy
 msgid ""
 "Here, you can define levels on the resident memory utilization (in "
 "percentage of total RAM) of single processes. For performance reasons "
@@ -29186,28 +29192,26 @@ msgid ""
 "processes."
 msgstr ""
 "ここでは、単一プロセスの常駐メモリ使用率（総RAMに対する割合）についてのレベル"
-"を定義できます。パフォーマンス上の理由から、単一プロセスのレベルには常駐メモ"
-"リ平均化は適用されません。"
+"を定義できます。パフォーマンス上の理由から、単一プロセスのレベルには常駐"
+"メモリ平均化は適用されません。"
 
-#, fuzzy
 msgid ""
 "Here, you can define levels on the resident memory utilization of single "
 "processes. For performance reasons resident memory averaging will not be "
 "applied to to the levels of single processes."
 msgstr ""
-"ここでは、単一プロセスの常駐メモリ使用率のレベルを定義することができます。パ"
-"フォーマンス上の理由から、単一プロセスのレベルには常駐メモリ平均化が適用され"
-"ません。"
+"ここでは、単一プロセスの常駐メモリ使用率のレベルを定義することができます。"
+"パフォーマンス上の理由から、単一プロセスのレベルには常駐メモリ平均化が適用さ"
+"れません。"
 
-#, fuzzy
 msgid ""
 "Here, you can define levels on the virtual memory utilization of single "
 "processes. For performance reasons virtual memory averaging will not be "
 "applied to to the levels of single processes."
 msgstr ""
-"ここでは、単一プロセスの仮想メモリ使用率に関するレベルを定義できます。パ"
-"フォーマンス上の理由から、単一プロセスのレベルには仮想メモリの平均化は適用さ"
-"れません。"
+"ここでは、単一プロセスの仮想メモリ使用率に関するレベルを定義できます。"
+"パフォーマンス上の理由から、単一プロセスのレベルには仮想メモリの平均化は適用"
+"されません。"
 
 #, fuzzy, python-format
 msgid ""
@@ -29225,15 +29229,13 @@ msgstr ""
 "ここでは、影響を受けるホストまたはサービスがダウンした場合のインシデントの状"
 "態を定義することができます。"
 
-#, fuzzy
 msgid ""
 "Here, you can define the state of the incident in case of an acknowledgment "
 "of the affected host or service problem."
 msgstr ""
-"ここでは、影響を受けるホストまたはサービスの問題が承認された場合のインシデン"
-"トの状態を定義できます。"
+"ここでは、影響を受けるホストまたはサービスの問題が承認された場合の"
+"インシデントの状態を定義できます。"
 
-#, fuzzy
 msgid ""
 "Here, you can define the state of the incident in case of an acknowledgment "
 "of the host or service problem."
@@ -29241,7 +29243,6 @@ msgstr ""
 "ここでは、ホストまたはサービスの問題が承認された場合のインシデントの状態を定"
 "義できます。"
 
-#, fuzzy
 msgid ""
 "Here, you can define the state of the incident in case of an ending "
 "acknowledgment of the host or service problem."
@@ -29249,18 +29250,17 @@ msgstr ""
 "ここでは、ホストまたはサービスの問題の承認が終了した場合のインシデントの状態"
 "を定義できます。"
 
-#, fuzzy
 msgid ""
 "Here, you can define tree configurations for the snap-in <i>Virtual Host-"
 "Trees</i>. These trees organize your hosts based on their values in certain "
 "host tag groups. Each host tag group you select will create one level in the "
 "tree."
 msgstr ""
-"ここでは、スナップイン<i>仮想ホスト-ツリー</i> のツリー構成を定義できます。こ"
-"れらのツリーは、特定のホストタググループの値に基づいてホストを整理します。選"
-"択したホストタググループにより、ツリーに1つのレベルが作成されます。"
+"ここでは、スナップイン<i>仮想ホスト-ツリー</i>のツリー構成を定義することがで"
+"きます。これらのツリーは、特定のホスト タグ グループ内の値に基づいてホストを"
+"整理します。選択した各ホスト タグ グループによって、ツリーに 1 つのレベルが作"
+"成されます。"
 
-#, fuzzy
 msgid ""
 "Here, you can define what index should be queried for the defined search. "
 "You can query one or multiple indices. Without this option all indices are "
@@ -29271,11 +29271,9 @@ msgstr ""
 "が照会されます。検索を高速化したい場合は、検出されていないインデックスを使用"
 "してください。"
 
-#, fuzzy
 msgid "Here, you can define which protocol to use, default is HTTPS."
-msgstr "ここで、使用するプロトコルを定義できます。デフォルトはhttpsです。"
+msgstr "ここでは、使用するプロトコルを指定できます。デフォルトはHTTPSです。"
 
-#, fuzzy
 msgid ""
 "Here, you can define which search result should be used. You can show the "
 "number of search results (count) or the summed up or average values of a "
@@ -29284,7 +29282,6 @@ msgstr ""
 "ここでは、どのような検索結果を使用するかを定義することができます。検索結果の"
 "数（count）、数値フィールドの合計値や平均値を表示することができます。"
 
-#, fuzzy
 msgid ""
 "Here, you can define which service name (item) is used for the created "
 "service. The resulting item is always prefixed with 'Elasticsearch Query'."
@@ -29306,15 +29303,13 @@ msgstr ""
 "ここでは、Kaspersky Anti Virusの検疫キュー、タスク、更新を監視するためのプラ"
 "グインをデプロイすることができます。"
 
-#, fuzzy
 msgid ""
 "Here, you can deploy a plug-in for monitoring the quarantine queue, tasks "
 "and updates of Symantec Anti Virus."
 msgstr ""
-"ここでは、Symantec Anti Virusの検疫キュー、タスク、更新を監視するためのプラグ"
-"インをデプロイすることができます。"
+"ここでは、Symantec Anti Virusの検疫キュー、タスク、更新を監視するための"
+"プラグインをデプロイすることができます。"
 
-#, fuzzy
 msgid ""
 "Here, you can enter a list of explicit host names that the rule should or "
 "should not apply to. Leave this option disabled if you want the rule to "
@@ -29327,11 +29322,10 @@ msgstr ""
 "ここでは、ルールを適用する、または適用しない明示的なホスト名のリストを入力す"
 "ることができます。与えられたタグで指定されたすべてのホストに対してルールを適"
 "用したい場合は、このオプションを無効にしたままにします。ここに入力された名前"
-"は、大文字と小文字を区別する完全一致で比較されます。また、最初の文字としてチ"
-"ルダ(<tt>~</tt>)を入力すると、正規表現を使用することもできます。その正規表現"
-"は、問題のホスト名の<i>先頭</i>に一致しなければなりません。"
+"は、大文字と小文字を区別する完全一致で比較されます。また、最初の文字として"
+"チルダ(<tt>~</tt>)を入力すると、正規表現を使用することもできます。その正規表"
+"現は、問題のホスト名の<i>先頭</i>に一致しなければなりません。"
 
-#, fuzzy
 msgid ""
 "Here, you can enter either device state number (e.g. from SNMP devices) or "
 "exact device state name and the related monitoring state."
@@ -29339,7 +29333,6 @@ msgstr ""
 "ここでは、デバイス状態番号(SNMPデバイスなど)または正確なデバイス状態名と関連"
 "する監視状態のいずれかを入力できます。"
 
-#, fuzzy
 msgid ""
 "Here, you can have the changes activated whenever services have been added "
 "or removed."
@@ -29347,7 +29340,6 @@ msgstr ""
 "ここでは、サービスが追加または削除されたときに、その変更を有効にすることがで"
 "きます。"
 
-#, fuzzy
 msgid ""
 "Here, you can impose various levels on the results reported by the "
 "mk_filestats plug-in. Note that some levels only apply to a matching output "
@@ -29355,13 +29347,12 @@ msgid ""
 "largest, oldest and newest file is reported). In order to receive the "
 "required data, you must configure the plug-in mk_filestats."
 msgstr ""
-"ここでは、mk_filstats プラグインによって報告される結果にさまざまなレベルを課"
-"すことができます。一部のレベルは、一致する出力フォーマットにのみ適用されるこ"
-"とに注意してください（例えば、最小、最大、最古、最新のファイルのみが報告され"
-"る場合、最大/最小カウントレベルは適用されません）。必要なデータを受け取るに"
-"は、プラグイン mk_filestats を設定する必要があります。"
+"ここでは、mk_filestats プラグインが報告する結果に対して、さまざまなレベルを設"
+"定できます。一部のレベルは、特定の出力形式にのみ適用される点に注意してくださ"
+"い（たとえば、最小、最大、最古、最新のファイルのみが報告される場合、最大/最小"
+"カウントレベルは適用されません）。必要なデータを受け取るには、mk_filestats "
+"プラグインを設定する必要があります。"
 
-#, fuzzy
 msgid ""
 "Here, you can impose various levels on the results reported by the "
 "mk_filstats plug-in. Note that those levels only concern about a single file."
@@ -40540,7 +40531,7 @@ msgid "Main dashboard"
 msgstr "メインダッシュボード"
 
 msgid "Main folder"
-msgstr "メインフォルダー"
+msgstr "メインフォルダ"
 
 #, fuzzy
 msgid "Main memory usage (Unix / other devices)"
@@ -45356,9 +45347,8 @@ msgstr "パスワードが提供されていません"
 msgid "No password selected"
 msgstr "パスワードが選択されていません"
 
-#, fuzzy
 msgid "No passwords configured yet"
-msgstr "まだリレーが設定されていません。"
+msgstr "まだパスワードは設定されていません"
 
 msgid "No pending changes."
 msgstr "保留中の変更はありません。"
@@ -56646,13 +56636,12 @@ msgstr "APIアクセストークン"
 msgid "Revoke tokens"
 msgstr "リフレッシュ"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Revoked %(n)d access tokens."
-msgstr "APIアクセストークン"
+msgstr "%(n)dのトークンが無効化されました。"
 
-#, fuzzy
 msgid "Revoked the access token."
-msgstr "APIアクセストークン"
+msgstr "アクセストークンを無効化しました。"
 
 msgid "Rewrite application"
 msgstr "アプリケーションを書き換える"
@@ -62883,6 +62872,13 @@ msgid ""
 "this endpoint, and silences, receivers or cluster status are not covered by "
 "this agent."
 msgstr ""
+"Prometheusサーバーのアドレスを指定してください（例："
+"<tt>prometheus.example.com:9090</tt>）。 プロトコルは含めないでください。この"
+"スペシャルエージェントは、PrometheusのHTTP API（<tt>/api/v1/rules</tt>）にク"
+"エリを送信し、アラートルールとその現在の状態を読み取ります。アラートマネー"
+"ジャインスタンス（通常はポート9093）を指定しないでください。アラートマネー"
+"ジャはこのエンドポイントを提供しておらず、サイレンス、レシーバー、またはクラ"
+"スタの状態は、このエージェントの対象外です。"
 
 msgid "Specify the application"
 msgstr "アプリケーションを指定します"
@@ -66270,6 +66266,8 @@ msgid ""
 "The API key is picked from the password store. %s if it is not stored there "
 "yet."
 msgstr ""
+"APIキーはパスワードストアから取得されます。まだ保存されていない場合は、%s を"
+"実行してください。"
 
 msgid "The ARN of the IAM role to assume"
 msgstr "引き受けるIAMロールのARN"
@@ -66793,6 +66791,8 @@ msgid ""
 "The LLM provider the AI assistant talks to. The API key is taken from the "
 "password store."
 msgstr ""
+"AIアシスタントが通信を行うLLMプロバイダー。APIキーはパスワードストアから取得"
+"されます。"
 
 msgid ""
 "The Linux RPM packages built by the Agent Bakery are packaged independently "
@@ -67353,11 +67353,15 @@ msgid ""
 "The application using this token will no longer be able to access the API "
 "with it."
 msgstr ""
+"このトークンを使用しているアプリケーションは、今後このトークンを使用してAPIに"
+"アクセスできなくなります。"
 
 msgid ""
 "The applications using the selected tokens will no longer be able to access "
 "the API with them."
 msgstr ""
+"選択されたトークンを使用しているアプリケーションは、それらを使用してAPIにアク"
+"セスできなくなります。"
 
 msgid "The aspect of the image is preserved."
 msgstr "画像のアスペクトは保持されます。"
@@ -67543,7 +67547,7 @@ msgstr ""
 
 msgid ""
 "The certificate is verified against the CAs trusted by the monitored host."
-msgstr ""
+msgstr "証明書は、監視対象のホストが信頼するCAに対して検証されます。"
 
 #, python-format
 msgid "The character <tt>%s</tt> is not allowed here."
@@ -68907,6 +68911,8 @@ msgstr "識別子は、値タイプごとに一意である必要があります
 
 msgid "The identity of the Jolokia server is not verified. This is insecure."
 msgstr ""
+"Jolokiaサーバーの身元は確認されていません。これはセキュリティ上のリスクとなり"
+"ます。"
 
 #, fuzzy
 msgid ""
@@ -73224,7 +73230,8 @@ msgstr "これはトップレベルのルールです。ルールツリーを表
 #, fuzzy
 msgid ""
 "This is an experimental flag for testing only. It may change or be removed "
-"without notice and must not be relied on for permanent configuration."
+"without notice and must not be relied on for permanent configuration. "
+"Changing it restarts the whole site during activate changes."
 msgstr ""
 "%s<br><br>これは一時的な実験的なフラグです。バージョン%sでの削除のスケジュー"
 "ルが立てられており、恒久的な設定として依存しないようにしてください。"
@@ -74197,13 +74204,12 @@ msgstr ""
 msgid "This permission is needed for the module <i>Passwords</i>."
 msgstr "この権限は<i>パスワード</i>モジュールに必要です。"
 
-#, fuzzy
 msgid ""
 "This permission is needed for the modules <b>Users</b>, <b>Roles</b>, "
 "<b>Contact groups</b> and <b>OAuth access tokens</b>"
 msgstr ""
-"この権限は、<b>ユーザー</b>, <b>役割</b>と<b>連絡先グループ</b>のモジュールで"
-"必要です"
+"この権限は、<b>ユーザー</b>, <b>ロール</b>, <b>連絡先グループ</b> および "
+"<b>OAuthアクセストークン</b>のモジュールで必要となります。"
 
 msgid ""
 "This permission is needed for the new rule based notification configuration "
@@ -83079,6 +83085,10 @@ msgstr ""
 "に推奨されます。"
 
 #, fuzzy
+msgid "Use the AI assistant"
+msgstr "AIアシスタントを有効にする"
+
+#, fuzzy
 msgid "Use the Checkmk username as ntopng username"
 msgstr "Checkmkユーザー名をntopngユーザー名として使用します"
 
@@ -83113,9 +83123,8 @@ msgstr "DNS名/IPアドレスとしてエイリアスを使用します"
 msgid "Use the catalog of check plug-ins."
 msgstr "チェックプラグインのカタログを使用します。"
 
-#, fuzzy
 msgid "Use the certificate store of the monitored host"
-msgstr "メトリックのデフォルトの色を使用します。"
+msgstr "監視対象ホストの証明書ストアを使用する"
 
 msgid "Use the credentials of an automation user"
 msgstr "automationユーザーの認証情報を使用する"
@@ -85149,7 +85158,7 @@ msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "このBIパックのルールと集計を表示および編集する"
 
 msgid "View and revoke OAuth access tokens issued to users."
-msgstr ""
+msgstr "ユーザーに発行されたOAuthトークンを確認および取り消すことができます。"
 
 #, fuzzy
 msgid "View any relay"
@@ -87114,6 +87123,16 @@ msgid ""
 "external API. No name resolution is attempted for such a host, and its host "
 "check reports UP by default."
 msgstr ""
+"Checkmkがこのホストに連絡するために使用するIPプロトコルファミリー。IPオプショ"
+"ンのいずれかを選択すると、ホストがそのファミリーのアドレスを <i>持っている</"
+"i>ことが前提となります。明示的なIPアドレスが設定されていない限り、Checkmkは"
+"DNSを介してホスト名を解決します。どちらも利用できない場合、このホストのサービ"
+"スディスカバリーおよび監視は失敗します。<br><br><b>IPなし：</b><br>ホストに"
+"ネットワークアドレスがまったくありません。 直接接続せずに監視されるホスト（た"
+"とえば、別のホストからのピギーバックデータ、プッシュエージェント、個別のプロ"
+"グラム呼び出し、または外部APIに対して認証を行う特殊なエージェントを介して監視"
+"されるホスト）には、これを選択してください。このようなホストに対しては名前解"
+"決は試みられず、デフォルトではホストチェックの結果は「UP」と報告されます。"
 
 msgid "Who"
 msgstr "WHO"
@@ -90459,7 +90478,7 @@ msgid "authentication but no privacy"
 msgstr "認証はあるがプライバシーはない"
 
 msgid "authenticator app"
-msgstr "認証アプリ"
+msgstr "authenticatorアプリ"
 
 msgid "auto"
 msgstr "オート"
@@ -92667,29 +92686,6 @@ msgid_plural "There are %{ n } apples"
 msgstr[0] "リンゴが %{ n } 個あります"
 
 #, fuzzy
-msgid "Dock to the left"
-msgstr "ルールのID"
-
-#, fuzzy
-msgid "Dock to the bottom"
-msgstr "レポートストアに移動します"
-
-#, fuzzy
-msgid "Dock to the right"
-msgstr "高さを設定する"
-
-#, fuzzy
-msgid "AI assistant"
-msgstr "AIアシスタンス"
-
-#, fuzzy
-msgid "Close"
-msgstr "クローズド"
-
-msgid "The AI assistant will live here."
-msgstr ""
-
-#, fuzzy
 msgid "Privacy Policy"
 msgstr "プライバシープロトコル"
 
@@ -92751,6 +92747,10 @@ msgid ""
 msgstr ""
 "AIの1日あたりの使用状況制限に達しました。利用枠は時間の経過とともに回復しま"
 "す。しばらくしてから再度お試しください。"
+
+#, fuzzy
+msgid "Close"
+msgstr "クローズド"
 
 msgid "What would you like the AI to do?"
 msgstr "AIに何をさせたいですか？"
@@ -96860,8 +96860,27 @@ msgstr ""
 "が最も低いとは限りません。完全で並べ替え済みのリストを確認するには、検索条件"
 "を絞り込んでください。"
 
+#, fuzzy
+msgid "Dock to the left"
+msgstr "ルールのID"
+
+#, fuzzy
+msgid "Dock to the bottom"
+msgstr "レポートストアに移動します"
+
+#, fuzzy
+msgid "Dock to the right"
+msgstr "高さを設定する"
+
+#, fuzzy
+msgid "AI assistant"
+msgstr "AIアシスタンス"
+
+msgid "The AI assistant will live here."
+msgstr "AIアシスタントはここに配置される予定です。"
+
 msgid "The answer ended before it was complete."
-msgstr ""
+msgstr "回答が途中で途切れてしまいました。"
 
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr "製品利用状況の分析を通じて、Checkmkの改善にご協力ください"

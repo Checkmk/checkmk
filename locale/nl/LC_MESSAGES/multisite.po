@@ -6946,6 +6946,12 @@ msgstr ""
 "uitbreidingspakketten (MKP's) mogelijk. Opmerking: MKP's bevatten "
 "uitvoerbare code."
 
+msgid ""
+"Allows to use Checkmk's AI assistant. The assistant sends the questions of "
+"the user, and the data its tools read with the permissions of the user, to "
+"the configured AI provider."
+msgstr ""
+
 msgid "Allows to use the 'Explain with AI' button."
 msgstr ""
 
@@ -77121,7 +77127,8 @@ msgstr "Dit is een regel van het hoogste niveau. Toon regelstructuur"
 
 msgid ""
 "This is an experimental flag for testing only. It may change or be removed "
-"without notice and must not be relied on for permanent configuration."
+"without notice and must not be relied on for permanent configuration. "
+"Changing it restarts the whole site during activate changes."
 msgstr ""
 
 msgid ""
@@ -87750,6 +87757,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Use the AI assistant"
+msgstr "Deze site inschakelen"
+
+#, fuzzy
 msgid "Use the Checkmk username as ntopng username"
 msgstr "Gebruik de Checkmk gebruikersnaam als ntopng gebruikersnaam"
 
@@ -97668,29 +97679,6 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, fuzzy
-msgid "Dock to the left"
-msgstr "ID van de regel"
-
-#, fuzzy
-msgid "Dock to the bottom"
-msgstr "Ga naar de rapport winkel"
-
-#, fuzzy
-msgid "Dock to the right"
-msgstr "Stel de hoogte in"
-
-#, fuzzy
-msgid "AI assistant"
-msgstr "Instantie"
-
-#, fuzzy
-msgid "Close"
-msgstr "Gesloten"
-
-msgid "The AI assistant will live here."
-msgstr ""
-
-#, fuzzy
 msgid "Privacy Policy"
 msgstr "Privacy-protocol"
 
@@ -97749,6 +97737,10 @@ msgid ""
 "Daily AI usage limit reached. Your quota refills over time. Try again in a "
 "little while."
 msgstr ""
+
+#, fuzzy
+msgid "Close"
+msgstr "Gesloten"
 
 msgid "What would you like the AI to do?"
 msgstr ""
@@ -101752,6 +101744,25 @@ msgid ""
 "The row limit is applied before sorting, so the hidden rows aren't "
 "necessarily the lowest-ranked. Narrow your search for a complete, sorted "
 "list."
+msgstr ""
+
+#, fuzzy
+msgid "Dock to the left"
+msgstr "ID van de regel"
+
+#, fuzzy
+msgid "Dock to the bottom"
+msgstr "Ga naar de rapport winkel"
+
+#, fuzzy
+msgid "Dock to the right"
+msgstr "Stel de hoogte in"
+
+#, fuzzy
+msgid "AI assistant"
+msgstr "Instantie"
+
+msgid "The AI assistant will live here."
 msgstr ""
 
 msgid "The answer ended before it was complete."

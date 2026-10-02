@@ -6861,6 +6861,12 @@ msgstr ""
 "Erlaubt, Erweiterungspakete (MKPs) hochzuladen, zu installieren, erstellen "
 "und bearbeiten. Hinweis: MKPs enthalten ausführbaren Code."
 
+msgid ""
+"Allows to use Checkmk's AI assistant. The assistant sends the questions of "
+"the user, and the data its tools read with the permissions of the user, to "
+"the configured AI provider."
+msgstr ""
+
 msgid "Allows to use the 'Explain with AI' button."
 msgstr "Erlaubt die Nutzung des Knopfs 'Mit KI erklären'."
 
@@ -74530,7 +74536,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This is an experimental flag for testing only. It may change or be removed "
-"without notice and must not be relied on for permanent configuration."
+"without notice and must not be relied on for permanent configuration. "
+"Changing it restarts the whole site during activate changes."
 msgstr ""
 "%s<br><br>Dies ist ein vorläufiges Release-Flag. Es wird in Version %s "
 "entfernt und sollte nicht für dauerhafte Konfigurationen verwendet werden."
@@ -84493,6 +84500,10 @@ msgstr ""
 "sofort und ohne jegliche Socket-Konfiguration und wird empfohlen, wenn der "
 "Podman Socket-Service nicht verfügbar ist."
 
+#, fuzzy
+msgid "Use the AI assistant"
+msgstr "Diese Instanz aktivieren"
+
 msgid "Use the Checkmk username as ntopng username"
 msgstr "Verwende den Checkmk-Benutzernamen als ntopng-Benutzername"
 
@@ -94294,28 +94305,6 @@ msgid_plural "There are %{ n } apples"
 msgstr[0] "Da ist %{n} Apfel"
 msgstr[1] "Da sind %{n} Äpfel"
 
-#, fuzzy
-msgid "Dock to the left"
-msgstr "Regel-ID"
-
-#, fuzzy
-msgid "Dock to the bottom"
-msgstr "Gehe zum Berichtslager"
-
-#, fuzzy
-msgid "Dock to the right"
-msgstr "Höhe festlegen"
-
-#, fuzzy
-msgid "AI assistant"
-msgstr "KI-Unterstützung"
-
-msgid "Close"
-msgstr "Schließen"
-
-msgid "The AI assistant will live here."
-msgstr ""
-
 msgid "Privacy Policy"
 msgstr "Datenschutzerklärung"
 
@@ -94371,6 +94360,9 @@ msgid ""
 msgstr ""
 "Das tägliche Nutzungslimit für KI wurde erreicht. Ihr Kontingent wird im "
 "Laufe der Zeit wieder aufgefüllt. Versuchen Sie es später erneut."
+
+msgid "Close"
+msgstr "Schließen"
 
 msgid "What would you like the AI to do?"
 msgstr "Was soll die KI tun?"
@@ -98062,6 +98054,25 @@ msgstr ""
 "die ausgeblendeten Zeilen nicht unbedingt diejenigen mit dem niedrigsten "
 "Rang. Grenzen Sie Ihre Suche ein, um eine vollständige, sortierte Liste zu "
 "erhalten."
+
+#, fuzzy
+msgid "Dock to the left"
+msgstr "Regel-ID"
+
+#, fuzzy
+msgid "Dock to the bottom"
+msgstr "Gehe zum Berichtslager"
+
+#, fuzzy
+msgid "Dock to the right"
+msgstr "Höhe festlegen"
+
+#, fuzzy
+msgid "AI assistant"
+msgstr "KI-Unterstützung"
+
+msgid "The AI assistant will live here."
+msgstr ""
 
 msgid "The answer ended before it was complete."
 msgstr ""

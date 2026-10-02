@@ -6804,6 +6804,12 @@ msgstr ""
 "Permette di caricare, installare, disinstallare, creare e modificare i "
 "pacchetti di estensione (MKP). Nota: gli MKP contengono codice eseguibile."
 
+msgid ""
+"Allows to use Checkmk's AI assistant. The assistant sends the questions of "
+"the user, and the data its tools read with the permissions of the user, to "
+"the configured AI provider."
+msgstr ""
+
 msgid "Allows to use the 'Explain with AI' button."
 msgstr ""
 
@@ -76957,7 +76963,8 @@ msgstr "Questa è una regola di primo livello. Mostra l'albero delle regole"
 
 msgid ""
 "This is an experimental flag for testing only. It may change or be removed "
-"without notice and must not be relied on for permanent configuration."
+"without notice and must not be relied on for permanent configuration. "
+"Changing it restarts the whole site during activate changes."
 msgstr ""
 
 msgid ""
@@ -87554,6 +87561,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Use the AI assistant"
+msgstr "Attivare questo sito"
+
+#, fuzzy
 msgid "Use the Checkmk username as ntopng username"
 msgstr "Utilizzare il nome utente Checkmk come nome utente ntopng"
 
@@ -97498,29 +97509,6 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, fuzzy
-msgid "Dock to the left"
-msgstr "ID della regola"
-
-#, fuzzy
-msgid "Dock to the bottom"
-msgstr "Vai al negozio di rapporti"
-
-#, fuzzy
-msgid "Dock to the right"
-msgstr "Impostare l'altezza"
-
-#, fuzzy
-msgid "AI assistant"
-msgstr "Assistenza AI"
-
-#, fuzzy
-msgid "Close"
-msgstr "Chiuso"
-
-msgid "The AI assistant will live here."
-msgstr ""
-
-#, fuzzy
 msgid "Privacy Policy"
 msgstr "Protocollo sulla privacy"
 
@@ -97579,6 +97567,10 @@ msgid ""
 "Daily AI usage limit reached. Your quota refills over time. Try again in a "
 "little while."
 msgstr ""
+
+#, fuzzy
+msgid "Close"
+msgstr "Chiuso"
 
 msgid "What would you like the AI to do?"
 msgstr ""
@@ -101582,6 +101574,25 @@ msgid ""
 "The row limit is applied before sorting, so the hidden rows aren't "
 "necessarily the lowest-ranked. Narrow your search for a complete, sorted "
 "list."
+msgstr ""
+
+#, fuzzy
+msgid "Dock to the left"
+msgstr "ID della regola"
+
+#, fuzzy
+msgid "Dock to the bottom"
+msgstr "Vai al negozio di rapporti"
+
+#, fuzzy
+msgid "Dock to the right"
+msgstr "Impostare l'altezza"
+
+#, fuzzy
+msgid "AI assistant"
+msgstr "Assistenza AI"
+
+msgid "The AI assistant will live here."
 msgstr ""
 
 msgid "The answer ended before it was complete."

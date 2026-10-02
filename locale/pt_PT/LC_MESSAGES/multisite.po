@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-09-30 07:10+0000\n"
+"PO-Revision-Date: 2026-10-01 18:31+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -6957,6 +6957,12 @@ msgid ""
 msgstr ""
 "Permite carregar, instalar, desinstalar, criar e modificar pacotes de "
 "extensão (MKPs). Nota: Os MKPs contêm código executável."
+
+msgid ""
+"Allows to use Checkmk's AI assistant. The assistant sends the questions of "
+"the user, and the data its tools read with the permissions of the user, to "
+"the configured AI provider."
+msgstr ""
 
 msgid "Allows to use the 'Explain with AI' button."
 msgstr ""
@@ -77083,7 +77089,8 @@ msgstr "Esta é uma regra de alto nível. Mostrar árvore de regras"
 
 msgid ""
 "This is an experimental flag for testing only. It may change or be removed "
-"without notice and must not be relied on for permanent configuration."
+"without notice and must not be relied on for permanent configuration. "
+"Changing it restarts the whole site during activate changes."
 msgstr ""
 
 msgid ""
@@ -87705,6 +87712,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Use the AI assistant"
+msgstr "Activar este sítio"
+
+#, fuzzy
 msgid "Use the Checkmk username as ntopng username"
 msgstr "Use o nome de usuário Checkmk como nome de usuário ntopng"
 
@@ -97584,29 +97595,6 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, fuzzy
-msgid "Dock to the left"
-msgstr "identificação da regra"
-
-#, fuzzy
-msgid "Dock to the bottom"
-msgstr "Ir para a loja de relatórios"
-
-#, fuzzy
-msgid "Dock to the right"
-msgstr "Ajuste a altura"
-
-#, fuzzy
-msgid "AI assistant"
-msgstr "Instância"
-
-#, fuzzy
-msgid "Close"
-msgstr "Fechado"
-
-msgid "The AI assistant will live here."
-msgstr ""
-
-#, fuzzy
 msgid "Privacy Policy"
 msgstr "Protocolo de privacidade"
 
@@ -97665,6 +97653,10 @@ msgid ""
 "Daily AI usage limit reached. Your quota refills over time. Try again in a "
 "little while."
 msgstr ""
+
+#, fuzzy
+msgid "Close"
+msgstr "Fechado"
 
 msgid "What would you like the AI to do?"
 msgstr ""
@@ -101667,6 +101659,25 @@ msgid ""
 "The row limit is applied before sorting, so the hidden rows aren't "
 "necessarily the lowest-ranked. Narrow your search for a complete, sorted "
 "list."
+msgstr ""
+
+#, fuzzy
+msgid "Dock to the left"
+msgstr "identificação da regra"
+
+#, fuzzy
+msgid "Dock to the bottom"
+msgstr "Ir para a loja de relatórios"
+
+#, fuzzy
+msgid "Dock to the right"
+msgstr "Ajuste a altura"
+
+#, fuzzy
+msgid "AI assistant"
+msgstr "Instância"
+
+msgid "The AI assistant will live here."
 msgstr ""
 
 msgid "The answer ended before it was complete."

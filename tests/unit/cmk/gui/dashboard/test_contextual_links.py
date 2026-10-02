@@ -62,7 +62,7 @@ def _links(
 ) -> Sequence[EffectiveLink]:
     source = ExplicitWidgetContent(type="explicit", content=content, context={})
     with resolve_widget(
-        api_context(None, user_permissions), source, _TYPES, lambda _content: _BUILT_IN
+        api_context(None, user_permissions), source, _TYPES, lambda _content, _context: _BUILT_IN
     ) as widget:
         return widget.links
 
@@ -100,7 +100,7 @@ def test_the_saved_arm_resolves_no_link(monkeypatch: pytest.MonkeyPatch) -> None
     source = SavedWidgetContent(type="saved", widget_id=WIDGET_ID)
 
     with resolve_widget(
-        api_context(dashboard_token()), source, _TYPES, lambda _content: _BUILT_IN
+        api_context(dashboard_token()), source, _TYPES, lambda _content, _context: _BUILT_IN
     ) as widget:
         assert widget.links == []
 

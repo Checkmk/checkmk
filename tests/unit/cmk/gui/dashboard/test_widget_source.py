@@ -18,6 +18,7 @@ from cmk.gui.dashboard.api.model.widget_content.stats import HostStatsContent
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.utils import ProblemException
+from cmk.gui.type_defs import VisualContext
 from cmk.livestatus_client import MKLivestatusException
 from tests.unit.cmk.gui.helpers.dashboard_widget_resolution_test_helper import (
     api_context,
@@ -35,7 +36,7 @@ _STATS_TYPES = frozenset({"hoststats"})
 _SAVED = SavedWidgetContent(type="saved", widget_id=WIDGET_ID)
 
 
-def _no_built_in_link(_content: HostStatsContent) -> None:
+def _no_built_in_link(_content: HostStatsContent, _context: VisualContext) -> None:
     return None
 
 

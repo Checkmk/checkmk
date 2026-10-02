@@ -75,7 +75,7 @@ def fetch_widget_graph_data_v1(
 ) -> GraphFetchResponse:
     """Fetch the data of a shared dashboard's graph widget over a requested time range"""
     with resolve_widget(
-        api_context, body.source, GRAPH_WIDGET_TYPES, lambda _content: None
+        api_context, body.source, GRAPH_WIDGET_TYPES, lambda _content, _context: None
     ) as widget:
         discovered = discover_widget_graphs(
             widget.config,

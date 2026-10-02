@@ -265,7 +265,7 @@ _STATS_BY_TYPE: Mapping[str, _StatsType] = {
 STATS_TYPES = frozenset(_STATS_BY_TYPE)
 
 
-def _built_in_link(content: StatsContent) -> EffectiveLink:
+def _built_in_link(content: StatsContent, _context: VisualContext) -> EffectiveLink:
     stats_type = _STATS_BY_TYPE[content.internal_type()]
     return EffectiveLink(
         title=str(stats_type.link_title),

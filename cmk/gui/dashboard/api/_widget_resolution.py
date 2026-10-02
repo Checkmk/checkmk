@@ -85,7 +85,7 @@ def resolve_widget[C: BaseWidgetContent](
     api_context: ApiContext,
     source: ExplicitWidgetContent[C] | SavedWidgetContent,
     accepted_types: frozenset[str],
-    built_in_link: Callable[[C], EffectiveLink | None],
+    built_in_link: Callable[[C, VisualContext], EffectiveLink | None],
 ) -> Iterator[ResolvedWidget]:
     """Resolve the widget a request names, and translate the failures of its computation."""
     try:
@@ -108,7 +108,7 @@ def _resolve[C: BaseWidgetContent](
     api_context: ApiContext,
     source: ExplicitWidgetContent[C] | SavedWidgetContent,
     accepted_types: frozenset[str],
-    built_in_link: Callable[[C], EffectiveLink | None],
+    built_in_link: Callable[[C, VisualContext], EffectiveLink | None],
 ) -> Iterator[ResolvedWidget]:
     if isinstance(source, SavedWidgetContent):
         with _resolve_saved(api_context, source, accepted_types) as resolved:
@@ -130,7 +130,9 @@ def _resolve[C: BaseWidgetContent](
         infos=widget.infos(),
         widget=widget,
         links=_effective_links(
-            source.content, built_in_link(source.content), api_context.config.user_permissions()
+            source.content,
+            built_in_link(source.content, source.context),
+            api_context.config.user_permissions(),
         ),
     )
 

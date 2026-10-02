@@ -30,14 +30,13 @@ function makeMetric(dataPoints: (number | null)[], render: Partial<Metric['rende
   } as unknown as Metric
 }
 
-function compose(metrics: Metric[], dataRange: TimeRange = DATA_RANGE) {
+function compose(
+  metrics: Metric[],
+  dataRange: TimeRange = DATA_RANGE,
+  visibleTimeRange: [number, number] = [dataRange.start, dataRange.end]
+) {
   const cache = createM4CacheStore(M4_BUCKETS).ensure(metrics, dataRange)
-  return composeSeries({
-    metrics,
-    cache,
-    visibleTimeRange: [dataRange.start, dataRange.end],
-    columnCount: COLUMNS
-  })
+  return composeSeries({ metrics, cache, visibleTimeRange, columnCount: COLUMNS })
 }
 
 const finiteValues = (values: number[]): number[] =>
@@ -145,6 +144,20 @@ describe('composedValueDomain', () => {
     const [, yMax] = composedValueDomain(metrics, compose(metrics), [region])
 
     expect(yMax).toBeGreaterThanOrEqual(50)
+  })
+
+  test.each([
+    ['a line', null, [20, 80]],
+    ['an area down to its base', 'g1', [0, 80]]
+  ])('spans %s as drawn across a window narrower than one step', (_kind, stack, drawnExtent) => {
+    const fallingFromOneHundredToZeroAcrossTheThirdStep = [100, 100, 0, 0]
+    const metrics = [makeMetric(fallingFromOneHundredToZeroAcrossTheThirdStep, { stack })]
+    const fourSamples = { start: 0, end: 4 * STEP, step: STEP }
+    const insideTheThirdStep: [number, number] = [2 * STEP + 2, 2 * STEP + 8]
+
+    const domain = composedValueDomain(metrics, compose(metrics, fourSamples, insideTheThirdStep))
+
+    expect(domain).toEqual(drawnExtent)
   })
 
   test('a flat positive series anchors its floor at zero rather than at the data', () => {

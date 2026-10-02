@@ -10,16 +10,19 @@
 // drift from the plot it summarises.
 import { type DomainBucket, computeYDomain } from '../axes/valueAxis'
 import { downsampleToColumns, edgeNeighbours, edgeSample, m4 } from '../decimation/decimate'
-import type { M4Cache } from '../decimation/types'
+import type { M4Bucket, M4Cache } from '../decimation/types'
 import type { Metric, ShadedRegion, TimeRange } from '../types'
-import { invertBucket } from './bucket'
-import { type AreaSeries, type StackedSeries, computeStackedSeries } from './stacked'
+import { invertBucket, keptSamples } from './bucket'
+import { connectorPolylines } from './line'
+import { type TimeValuePoint, clampedValueAt } from './polyline'
+import { type AreaSeries, type StackedSeries, bandOutlines, computeStackedSeries } from './stacked'
 
 export interface ComposedSeries {
   bucketsOnPlot: M4Cache[]
   paddedBuckets: M4Cache[]
   stacks: StackedSeries[]
   stacksOnPlot: StackedSeries[]
+  valuesDrawnOnPlot: number[][]
 }
 
 /** Strips the flanking off-plot neighbours `composeSeries` pads with. */
@@ -53,8 +56,50 @@ export function composeSeries(options: {
     bucketsOnPlot,
     paddedBuckets,
     stacks,
-    stacksOnPlot: stacks.map(onPlotSeries)
+    stacksOnPlot: stacks.map(onPlotSeries),
+    valuesDrawnOnPlot: stacks.map((series, i) =>
+      series.kind === 'area-stacked'
+        ? bandValuesDrawnOn(visibleTimeRange, series)
+        : lineValuesDrawnOn(visibleTimeRange, paddedBuckets[i]!)
+    )
   }
+}
+
+function isWithin([start, end]: [number, number], time: number): boolean {
+  return start <= time && time <= end
+}
+
+function spans(polyline: TimeValuePoint[], time: number): boolean {
+  const first = polyline[0]
+  const last = polyline[polyline.length - 1]
+  return first !== undefined && last !== undefined && isWithin([first.time, last.time], time)
+}
+
+function valuesDrawnOn(
+  plotTimeRange: [number, number],
+  polylines: TimeValuePoint[][],
+  vertices: TimeValuePoint[]
+): number[] {
+  const verticesOnPlot = vertices.filter((vertex) => isWithin(plotTimeRange, vertex.time))
+  const crossingsOfThePlotEdges = plotTimeRange.flatMap((plotEdge) => {
+    const crossing = polylines.find((polyline) => spans(polyline, plotEdge))
+    return crossing === undefined ? [] : [clampedValueAt(crossing, plotEdge)]
+  })
+  return [...verticesOnPlot.map((vertex) => vertex.value), ...crossingsOfThePlotEdges]
+}
+
+function lineValuesDrawnOn(plotTimeRange: [number, number], buckets: M4Bucket[]): number[] {
+  return valuesDrawnOn(plotTimeRange, connectorPolylines(buckets), buckets.flatMap(keptSamples))
+}
+
+function bandValuesDrawnOn(plotTimeRange: [number, number], series: AreaSeries): number[] {
+  const outlines = bandOutlines(series)
+  return (['lower', 'upper'] as const).flatMap((side) => {
+    const edge = outlines.map((outline) =>
+      outline.map((vertex) => ({ time: vertex.time, value: vertex[side] }))
+    )
+    return valuesDrawnOn(plotTimeRange, edge, edge.flat())
+  })
 }
 
 function onPlotSeries(series: StackedSeries): StackedSeries {
@@ -71,14 +116,8 @@ function mixesMirroredAndUnmirrored(metrics: Metric[]): boolean {
   return hasMirroredMetric(metrics) && metrics.some((metric) => !metric.render.inverse)
 }
 
-function areaExtent(series: AreaSeries): DomainBucket[] {
-  return series.columns.flatMap((column) =>
-    column.vertices.map((vertex) => ({
-      gap: false,
-      minValue: Math.min(vertex.lower, vertex.upper),
-      maxValue: Math.max(vertex.lower, vertex.upper)
-    }))
-  )
+function asDomainBucket(value: number): DomainBucket {
+  return { gap: false, minValue: value, maxValue: value }
 }
 
 function regionBoundBuckets(regions: ShadedRegion[]): DomainBucket[][] {
@@ -108,12 +147,7 @@ export function composedValueDomain(
     if (metric.render.hidden) {
       return []
     }
-    const series = composed.stacksOnPlot[i]!
-    return [
-      series.kind === 'area-stacked'
-        ? areaExtent(series)
-        : withoutOffPlotNeighbours(composed.paddedBuckets[i]!)
-    ]
+    return [composed.valuesDrawnOnPlot[i]!.map(asDomainBucket)]
   })
   return computeYDomain([...domainBuckets, ...regionBoundBuckets(regions)], {
     symmetric: mixesMirroredAndUnmirrored(metrics)

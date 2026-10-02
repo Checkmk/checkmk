@@ -100,8 +100,7 @@ export function drawStackedBand(
   const strokeWidth = style.strokeWidth ?? 1
   const pixelX = (vertex: StackedVertex): number => xScale(new Date(vertex.time * 1000))
 
-  for (const run of contiguousRuns(series.columns)) {
-    const vertices = run.flatMap((column) => column.vertices)
+  for (const vertices of bandOutlines(series)) {
     ctx.beginPath()
     vertices.forEach((vertex, index) => {
       if (index === 0) {
@@ -120,6 +119,10 @@ export function drawStackedBand(
     ctx.lineWidth = strokeWidth
     ctx.stroke()
   }
+}
+
+export function bandOutlines(series: AreaSeries): StackedVertex[][] {
+  return contiguousRuns(series.columns).map((run) => run.flatMap((column) => column.vertices))
 }
 
 function contiguousRuns(columns: StackedColumn[]): StackedColumn[][] {

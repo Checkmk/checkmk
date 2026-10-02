@@ -14,6 +14,7 @@ import {
 
 import type { M4Bucket } from '../decimation/types'
 import type { LineInterpolator } from '../types'
+import type { TimeValuePoint } from './polyline'
 
 function curveFor(name: LineInterpolator): CurveFactory {
   switch (name) {
@@ -24,6 +25,28 @@ function curveFor(name: LineInterpolator): CurveFactory {
     default:
       return curveLinear
   }
+}
+
+export function connectorPolylines(buckets: M4Bucket[]): TimeValuePoint[][] {
+  const polylines: TimeValuePoint[][] = []
+  let current: TimeValuePoint[] = []
+  for (const bucket of buckets) {
+    if (bucket.gap) {
+      if (current.length) {
+        polylines.push(current)
+        current = []
+      }
+      continue
+    }
+    current.push(
+      { time: bucket.firstValueTime, value: bucket.firstValue },
+      { time: bucket.lastValueTime, value: bucket.lastValue }
+    )
+  }
+  if (current.length) {
+    polylines.push(current)
+  }
+  return polylines
 }
 
 // Per-bucket: vertical min→max line (always straight; extremes preserved).
@@ -45,25 +68,12 @@ export function drawLine(
   ctx.lineWidth = lineWidth
 
   // Pass 1: connector polyline through bucket boundary points, segmented at gaps.
-  const segments: Array<Array<[number, number]>> = []
-  let current: Array<[number, number]> = []
-  for (const bucket of buckets) {
-    if (bucket.gap) {
-      if (current.length) {
-        segments.push(current)
-        current = []
-      }
-      continue
-    }
-    const xFirst = xScale(new Date(bucket.firstValueTime * 1000))
-    const yFirst = yScale(bucket.firstValue)
-    const xLast = xScale(new Date(bucket.lastValueTime * 1000))
-    const yLast = yScale(bucket.lastValue)
-    current.push([xFirst, yFirst], [xLast, yLast])
-  }
-  if (current.length) {
-    segments.push(current)
-  }
+  const segments = connectorPolylines(buckets).map((polyline) =>
+    polyline.map((point): [number, number] => [
+      xScale(new Date(point.time * 1000)),
+      yScale(point.value)
+    ])
+  )
 
   const path = d3Line<[number, number]>()
     .x((point) => point[0])

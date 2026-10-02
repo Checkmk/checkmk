@@ -10,7 +10,11 @@ import pytest
 from cmk.ccc.user import UserId
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.unit.rest_api_client import ClientRegistry, Response
-from tests.unit.cmk.gui.helpers.dashboard_api_test_helper import dashboard_widget_token, SavedWidget
+from tests.unit.cmk.gui.helpers.dashboard_api_test_helper import (
+    create_dashboard_payload,
+    dashboard_widget_token,
+    SavedWidget,
+)
 
 _HOSTS = [
     {"state": 0, "scheduled_downtime_depth": 0, "custom_variable_names": [], "host_name": "web01"},
@@ -89,7 +93,7 @@ _DEFAULT_LINK = {"type": "default"}
 
 _ALL_HOSTS = {
     "title": "All hosts",
-    "location": {"type": "views", "name": "searchhost"},
+    "location": {"type": "views", "name": "searchhost", "owner": None},
     "include_context": True,
     "include_time_range": False,
     "show_filter_form": True,
@@ -151,7 +155,7 @@ def fixture_saved_stats_widget(
             "type": "host_stats",
             "contextual_link": {
                 "type": "inherited",
-                "location": {"type": "views", "name": "allhosts"},
+                "location": {"type": "views", "name": "allhosts", "owner": None},
                 "include_context": True,
                 "include_time_range": False,
                 "show_filter_form": True,
@@ -235,6 +239,25 @@ def test_a_host_statistics_widget_answers_one_value(
     }
 
 
+def test_a_link_without_owner_takes_the_title_of_the_copy_the_name_resolves_to(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    clients.DashboardClient.create_relative_grid_dashboard(create_dashboard_payload("target", {}))
+    link = {
+        "type": "inherited",
+        "location": {"type": "dashboards", "name": "target", "owner": None},
+        "include_context": True,
+        "include_time_range": False,
+        "show_filter_form": True,
+    }
+
+    response = _compute_hosts(
+        clients, mock_livestatus, _explicit({"type": "host_stats", "contextual_link": link})
+    )
+
+    assert [link["title"] for link in response.json["value"]["links"]] == ["Test Dashboard"]
+
+
 def test_both_arms_answer_the_same_counts(
     clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
@@ -308,7 +331,7 @@ def test_inherited_yields_one_link_with_the_native_click_key(
             "type": "host_stats",
             "contextual_link": {
                 "type": "inherited",
-                "location": {"type": "views", "name": "allhosts"},
+                "location": {"type": "views", "name": "allhosts", "owner": None},
                 "include_context": False,
                 "include_time_range": False,
                 "show_filter_form": False,
@@ -318,7 +341,9 @@ def test_inherited_yields_one_link_with_the_native_click_key(
 
     value = _compute_hosts(clients, mock_livestatus, body).json["value"]
 
-    assert [link["location"] for link in value["links"]] == [{"type": "views", "name": "allhosts"}]
+    assert [link["location"] for link in value["links"]] == [
+        {"type": "views", "name": "allhosts", "owner": None}
+    ]
     assert value["parts"][3]["link_properties"] == {
         "links": [
             {
@@ -343,7 +368,7 @@ def test_a_widget_without_a_link_field_takes_the_built_in_link(
         response = clients.DashboardClient.compute_stats(_explicit({"type": "event_stats"}))
 
     assert [link["location"] for link in response.json["value"]["links"]] == [
-        {"type": "views", "name": "ec_events"}
+        {"type": "views", "name": "ec_events", "owner": None}
     ]
 
 

@@ -42,7 +42,7 @@ const CONSTANTS: DashboardConstants = {
 
 const INHERITED: InventoryLink = {
   type: 'inherited',
-  location: { type: 'dashboards', name: 'main' },
+  location: { type: 'dashboards', name: 'main', owner: null },
   include_context: false,
   include_time_range: false,
   show_filter_form: false
@@ -106,11 +106,11 @@ describe('useInventory', () => {
 
     handler.linkType.value = 'views'
     await nextTick()
-    handler.linkTarget.value = 'host'
+    handler.linkTarget.value = { name: 'host', owner: '' }
 
     expect(await submittedLink(handler)).toEqual({
       type: 'inherited',
-      location: { type: 'views', name: 'host' },
+      location: { type: 'views', name: 'host', owner: '' },
       include_context: false,
       include_time_range: false,
       show_filter_form: false
@@ -121,7 +121,7 @@ describe('useInventory', () => {
     const handler = await openInventory(storedInventory(INHERITED))
 
     expect(handler.linkType.value).toBe('dashboards')
-    expect(handler.linkTarget.value).toBe('main')
+    expect(handler.linkTarget.value).toEqual({ name: 'main', owner: null })
   })
 
   it('submits the default link once the target of a stored inherited link is cleared', async () => {

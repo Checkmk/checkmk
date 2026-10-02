@@ -71,7 +71,7 @@ const propState = new PanelStateCreator<
 
 const LINK: ResolvedLink = {
   title: 'All hosts',
-  location: { type: 'views', name: 'searchhost' },
+  location: { type: 'views', name: 'searchhost', owner: null },
   include_context: true,
   include_time_range: false,
   show_filter_form: false

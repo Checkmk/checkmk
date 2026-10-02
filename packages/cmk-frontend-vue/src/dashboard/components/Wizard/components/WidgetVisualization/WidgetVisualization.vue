@@ -12,6 +12,8 @@ import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
 
+import type { VisualCopy } from '@/dashboard/components/selectors/visualKey'
+
 import FieldComponent from '../TableForm/FieldComponent.vue'
 import FieldDescription from '../TableForm/FieldDescription.vue'
 import TableForm from '../TableForm/TableForm.vue'
@@ -55,7 +57,10 @@ const showTitleBackground = defineModel<boolean>('showTitleBackground', { requir
 const showWidgetBackground = defineModel<boolean>('showWidgetBackground', { required: true })
 
 const linkType = defineModel<string | null>('linkType', { required: false, default: undefined })
-const linkTarget = defineModel<string | null>('linkTarget', { required: false, default: undefined })
+const linkTarget = defineModel<VisualCopy | null>('linkTarget', {
+  required: false,
+  default: undefined
+})
 
 const displayLinkContent = computed(
   () => linkType.value !== undefined || linkTarget.value !== undefined

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
 from collections.abc import Sequence
 
 import pytest
@@ -36,14 +37,14 @@ from tests.unit.cmk.gui.helpers.dashboard_widget_resolution_test_helper import (
 
 _BUILT_IN = EffectiveLink(
     title="All hosts",
-    location=VisualLocation(type="views", name="searchhost"),
+    location=VisualLocation(type="views", name="searchhost", owner=None),
     include_context=True,
     include_time_range=False,
     show_filter_form=True,
 )
 _TYPES = frozenset({"hoststats", "eventstats"})
 
-_SEARCHHOST = VisualLocation(type="views", name="searchhost")
+_SEARCHHOST = VisualLocation(type="views", name="searchhost", owner=None)
 _INHERITED = ContextualLinkInherited(
     type="inherited",
     location=_SEARCHHOST,
@@ -120,5 +121,20 @@ def test_an_inherited_link_takes_the_title_of_a_readable_target(
     )
 
     [link] = _links(_linked(_INHERITED), admin_permissions)
+
+    assert link.title == "Host search"
+
+
+def test_a_link_whose_owned_copy_is_gone_takes_the_built_in_title(
+    load_config: Config, with_admin_login: UserId
+) -> None:
+    admin_permissions = UserPermissions(
+        load_config.roles, permission_registry, {with_admin_login: ["admin"]}, []
+    )
+    gone_copy = dataclasses.replace(
+        _INHERITED, location=VisualLocation(type="views", name="searchhost", owner=UserId("gone"))
+    )
+
+    [link] = _links(_linked(gone_copy), admin_permissions)
 
     assert link.title == "Host search"

@@ -26,7 +26,7 @@ function element(
     links: [
       {
         title: 'Events',
-        location: { type: 'views', name: viewName },
+        location: { type: 'views', name: viewName, owner: null },
         include_context: true,
         include_time_range: false,
         show_filter_form: false

@@ -20,10 +20,11 @@ describe('useLinkContent', () => {
     it('should initialize from provided LinkContentType', () => {
       const { linkType, linkTarget } = useLinkContent({
         type: 'views',
-        name: 'allhosts'
+        name: 'allhosts',
+        owner: null
       })
       expect(linkType.value).toBe('views')
-      expect(linkTarget.value).toBe('allhosts')
+      expect(linkTarget.value).toEqual({ name: 'allhosts', owner: null })
     })
   })
 
@@ -45,7 +46,7 @@ describe('useLinkContent', () => {
     it('should succeed when both type and target are set', () => {
       const { linkType, linkTarget, validate, linkValidationError } = useLinkContent()
       linkType.value = 'views'
-      linkTarget.value = 'allhosts'
+      linkTarget.value = { name: 'allhosts', owner: '' }
       expect(validate()).toBe(true)
       expect(linkValidationError.value).toEqual([])
     })
@@ -56,16 +57,33 @@ describe('useLinkContent', () => {
       validate()
       expect(linkValidationError.value).toHaveLength(1)
 
-      linkTarget.value = 'allhosts'
+      linkTarget.value = { name: 'allhosts', owner: '' }
       validate()
       expect(linkValidationError.value).toEqual([])
     })
   })
 
   describe('linkSpec computed', () => {
+    it('stores the owner of the copy picked', () => {
+      const { linkTarget, linkSpec } = useLinkContent({
+        type: 'views',
+        name: 'allhosts',
+        owner: 'harry'
+      })
+
+      linkTarget.value = { name: 'searchhost', owner: 'sam' }
+
+      expect(linkSpec.value).toEqual({ type: 'views', name: 'searchhost', owner: 'sam' })
+    })
+
     it('should return object with type and name when both are set', () => {
-      const { linkSpec } = useLinkContent({ type: 'views', name: 'allhosts' })
-      expect(linkSpec.value).toEqual({ type: 'views', name: 'allhosts' })
+      const { linkSpec } = useLinkContent({ type: 'views', name: 'allhosts', owner: 'harry' })
+      expect(linkSpec.value).toEqual({ type: 'views', name: 'allhosts', owner: 'harry' })
+    })
+
+    it('keeps a stored target without owner resolving by name', () => {
+      const { linkSpec } = useLinkContent({ type: 'views', name: 'allhosts', owner: null })
+      expect(linkSpec.value).toEqual({ type: 'views', name: 'allhosts', owner: null })
     })
 
     it('should return undefined when linkType is null', () => {
@@ -82,8 +100,12 @@ describe('useLinkContent', () => {
 
   describe('watcher behavior', () => {
     it('should clear linkTarget when linkType changes', async () => {
-      const { linkType, linkTarget } = useLinkContent({ type: 'views', name: 'allhosts' })
-      expect(linkTarget.value).toBe('allhosts')
+      const { linkType, linkTarget } = useLinkContent({
+        type: 'views',
+        name: 'allhosts',
+        owner: 'harry'
+      })
+      expect(linkTarget.value).toEqual({ name: 'allhosts', owner: 'harry' })
 
       linkType.value = 'dashboards'
       await nextTick()

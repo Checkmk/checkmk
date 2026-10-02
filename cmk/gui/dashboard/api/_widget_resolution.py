@@ -10,13 +10,13 @@ from http import HTTPStatus
 from typing import assert_never
 
 import cmk.web.utils.permission_verification as permissions
+from cmk.ccc.user import UserId
 from cmk.gui import visuals
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.type_defs import SingleInfos, VisualContext
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.visuals.type import visual_type_registry
 from cmk.livestatus_client import MKLivestatusException
 
 from ..dashlet import Dashlet, dashlet_registry
@@ -34,6 +34,8 @@ from .model.contextual_link import (
     ContextualLinkDefault,
     ContextualLinkInherited,
     ContextualLinkNone,
+    permitted_copies,
+    resolved_copy,
     VisualLocation,
 )
 from .model.widget_content._base import BaseWidgetContent
@@ -204,10 +206,11 @@ def _effective_links(
 
 
 def _target_title(location: VisualLocation, user_permissions: UserPermissions) -> str:
-    visual_type = visual_type_registry[location.type]()
-    visual = visual_type.permitted_visuals(visual_type.visuals(), user_permissions).get(
-        location.name
-    )
+    if location.owner is None:
+        visual = resolved_copy(location, user_permissions)
+    else:
+        copies = permitted_copies(location, user_permissions)
+        visual = copies.get(location.owner, copies.get(UserId.builtin()))
     if visual is None:
         return location.name
     return visuals.visual_title_without_context(visual, {})

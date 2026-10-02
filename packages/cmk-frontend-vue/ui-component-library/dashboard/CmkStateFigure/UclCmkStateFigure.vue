@@ -98,7 +98,7 @@ const propState = new PanelStateCreator<
 
 const LINK: ResolvedLink = {
   title: 'Service',
-  location: { type: 'views', name: 'service' },
+  location: { type: 'views', name: 'service', owner: null },
   include_context: false,
   include_time_range: false,
   show_filter_form: false

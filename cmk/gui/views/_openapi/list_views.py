@@ -20,7 +20,7 @@ from cmk.gui.openapi.framework.model.base_models import (
     TitledDomainObjectModel,
 )
 from cmk.gui.openapi.restful_objects.constructors import collection_href
-from cmk.gui.type_defs import VisualContext
+from cmk.gui.type_defs import AnnotatedUserId, VisualContext
 from cmk.gui.views.store import get_permitted_views
 
 from ._family import VIEW_FAMILY
@@ -40,6 +40,9 @@ class ViewExtensions:
         description="Active filters in the format filter_id -> (variable -> value)"
     )
     is_mobile: bool = api_field(description='Whether the view option "mobile" is set or not.')
+    owner: AnnotatedUserId = api_field(
+        description="Owner of the view, an empty string for a built-in one."
+    )
 
 
 @api_model
@@ -69,6 +72,7 @@ def list_views_v1() -> ViewCollectionModel:
                 restricted_to_single=list(view_spec["single_infos"]),
                 filters=view_spec.get("context", {}),
                 is_mobile=view_spec.get("mobile", False),
+                owner=view_spec["owner"],
             ),
             links=[],
         )

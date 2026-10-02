@@ -6,9 +6,11 @@
 from collections.abc import Iterator, Mapping
 from typing import Annotated, assert_never, Literal
 
-from pydantic import Discriminator
+from pydantic import Discriminator, WithJsonSchema
 from pydantic_core import ErrorDetails
 
+from cmk.ccc.user import UserId
+from cmk.gui import visuals
 from cmk.gui.dashboard.type_defs import (
     ContextualLinkConfig,
     ContextualLinkInheritedConfig,
@@ -16,15 +18,26 @@ from cmk.gui.dashboard.type_defs import (
     ContextualLinkTargetType,
 )
 from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.gui.type_defs import VisualName
+from cmk.gui.type_defs import AnnotatedUserId, Visual, VisualName
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals.type import visual_type_registry
+
+from ...store import get_permitted_dashboards, get_permitted_dashboards_by_owners
+
+# The request and the response share this model, so both directions state the same schema.
+_OwnerId = Annotated[AnnotatedUserId, WithJsonSchema({"type": "string"})]
 
 
 @api_model
 class VisualLocation:
     type: ContextualLinkTargetType = api_field(description="The kind of the target visual.")
     name: VisualName = api_field(description="The name of the target visual.")
+    owner: _OwnerId | None = api_field(
+        description=(
+            "The owner of the target copy, an empty string for the built-in one. With null, each"
+            " viewer opens the copy the name resolves to, as the target page does without an owner."
+        )
+    )
 
 
 @api_model
@@ -68,7 +81,7 @@ def contextual_link_to_internal(link: ContextualLinkSpec) -> ContextualLinkConfi
         case ContextualLinkInherited():
             return ContextualLinkInheritedConfig(
                 type="inherited",
-                location=(link.location.type, link.location.name),
+                location=_location_to_internal(link.location),
                 include_context=link.include_context,
                 include_time_range=link.include_time_range,
                 show_filter_form=link.show_filter_form,
@@ -116,22 +129,70 @@ def iter_contextual_link_target_errors(
         case unreachable:
             assert_never(unreachable)
     for target_location, target in targets:
-        visual_type = visual_type_registry[target.type]()
-        if target.name not in visual_type.permitted_visuals(
-            visual_type.visuals(), user_permissions
-        ):
+        if not _is_permitted(target, user_permissions):
+            of_owner = "" if target.owner is None else f" of '{target.owner}'"
             yield ErrorDetails(
                 type="value_error",
                 msg=(
-                    f"{_TARGET_TITLES[target.type]} '{target.name}' does not exist or you don't"
-                    " have permission to see it."
+                    f"{_TARGET_TITLES[target.type]} '{target.name}'{of_owner} does not exist or"
+                    " you don't have permission to see it."
                 ),
                 loc=target_location,
                 input=target.name,
             )
 
 
+def permitted_copies(
+    location: VisualLocation, user_permissions: UserPermissions
+) -> Mapping[UserId, Visual]:
+    """The copies of the target visual the user may pick, by owner.
+
+    For dashboards, this is the set the dashboard metadata lists. It comes from the logged-in
+    user's dashboard store, not from `user_permissions`, and holds every user's copy for a user
+    who may edit foreign dashboards.
+    """
+    copies: Mapping[UserId, Visual]
+    if location.type == "dashboards":
+        copies = get_permitted_dashboards_by_owners().get(location.name, {})
+    else:
+        copies = visuals.available_by_owner(
+            location.type, visual_type_registry[location.type]().visuals(), user_permissions
+        ).get(location.name, {})
+    return copies
+
+
+def resolved_copy(location: VisualLocation, user_permissions: UserPermissions) -> Visual | None:
+    """The copy the name resolves to for the logged-in user, which a link without owner opens."""
+    if location.type == "dashboards":
+        return get_permitted_dashboards().get(location.name)
+    return visuals.available(
+        location.type, visual_type_registry[location.type]().visuals(), user_permissions
+    ).get(location.name)
+
+
+def _is_permitted(location: VisualLocation, user_permissions: UserPermissions) -> bool:
+    if location.owner is None:
+        return resolved_copy(location, user_permissions) is not None
+    return location.owner in permitted_copies(location, user_permissions)
+
+
+def _location_to_internal(
+    location: VisualLocation,
+) -> (
+    tuple[ContextualLinkTargetType, VisualName]
+    | tuple[ContextualLinkTargetType, VisualName, UserId]
+):
+    if location.owner is None:
+        return location.type, location.name
+    return location.type, location.name, location.owner
+
+
 def _location_from_internal(
-    location: tuple[ContextualLinkTargetType, VisualName],
+    location: tuple[ContextualLinkTargetType, VisualName]
+    | tuple[ContextualLinkTargetType, VisualName, UserId],
 ) -> VisualLocation:
-    return VisualLocation(type=location[0], name=location[1])
+    match location:
+        case (target_type, name):
+            return VisualLocation(type=target_type, name=name, owner=None)
+        case (target_type, name, owner):
+            return VisualLocation(type=target_type, name=name, owner=owner)

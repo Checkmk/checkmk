@@ -269,7 +269,7 @@ def _built_in_link(content: StatsContent, _context: VisualContext) -> EffectiveL
     stats_type = _STATS_BY_TYPE[content.internal_type()]
     return EffectiveLink(
         title=str(stats_type.link_title),
-        location=VisualLocation(type="views", name=stats_type.view_name),
+        location=VisualLocation(type="views", name=stats_type.view_name, owner=None),
         include_context=True,
         include_time_range=False,
         show_filter_form=True,

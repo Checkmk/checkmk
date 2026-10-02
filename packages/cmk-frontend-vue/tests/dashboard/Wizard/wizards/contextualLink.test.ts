@@ -156,7 +156,7 @@ async function open(openWizard: LinkWizard['openWizard'], stored: WidgetContentT
 
 const INHERITED: ContextualLinkSpec = {
   type: 'inherited',
-  location: { type: 'views', name: 'allhosts' },
+  location: { type: 'views', name: 'allhosts', owner: null },
   include_context: false,
   include_time_range: false,
   show_filter_form: false

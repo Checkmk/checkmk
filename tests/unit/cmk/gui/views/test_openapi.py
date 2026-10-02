@@ -11,3 +11,9 @@ def test_list_views(clients: ClientRegistry) -> None:
     resp = clients.ViewClient.get_all()
     assert resp.status_code == HTTPStatus.OK, f"Expected 200, got {resp.status_code} {resp.body!r}"
     assert len(resp.json["value"]) > 0, "Expected at least one view to be returned"
+
+
+def test_list_views_reports_the_empty_owner_for_a_built_in_view(clients: ClientRegistry) -> None:
+    views = {view["id"]: view for view in clients.ViewClient.get_all().json["value"]}
+
+    assert views["allhosts"]["extensions"]["owner"] == ""

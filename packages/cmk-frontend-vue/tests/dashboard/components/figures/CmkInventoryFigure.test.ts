@@ -13,7 +13,7 @@ const ATTRIBUTE: InventoryAttribute = {
   links: [
     {
       title: 'Inventory of host',
-      location: { type: 'views', name: 'inv_host' },
+      location: { type: 'views', name: 'inv_host', owner: null },
       include_context: false,
       include_time_range: false,
       show_filter_form: false

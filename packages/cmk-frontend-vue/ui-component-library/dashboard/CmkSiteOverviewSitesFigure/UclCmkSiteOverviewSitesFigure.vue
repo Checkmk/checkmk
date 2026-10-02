@@ -73,7 +73,7 @@ const propState = new PanelStateCreator<
 
 const LINK: ResolvedLink = {
   title: 'Site',
-  location: { type: 'dashboards', name: 'site' },
+  location: { type: 'dashboards', name: 'site', owner: null },
   include_context: true,
   include_time_range: false,
   show_filter_form: false

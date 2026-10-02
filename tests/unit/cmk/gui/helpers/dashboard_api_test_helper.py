@@ -337,7 +337,7 @@ class TestInventoryContent:
     def test_an_inherited_link_round_trips(self, clients: ClientRegistry) -> None:
         link = {
             "type": "inherited",
-            "location": {"type": "dashboards", "name": "main"},
+            "location": {"type": "dashboards", "name": "main", "owner": None},
             "include_context": False,
             "include_time_range": False,
             "show_filter_form": False,
@@ -407,7 +407,7 @@ class TestSiteOverviewContent:
     def test_an_inherited_link_round_trips(self, clients: ClientRegistry) -> None:
         link = {
             "type": "inherited",
-            "location": {"type": "dashboards", "name": "main"},
+            "location": {"type": "dashboards", "name": "main", "owner": None},
             "include_context": True,
             "include_time_range": False,
             "show_filter_form": False,

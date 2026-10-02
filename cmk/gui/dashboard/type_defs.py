@@ -6,6 +6,7 @@
 from collections.abc import Sequence
 from typing import Literal, NewType, NotRequired, TypedDict
 
+from cmk.ccc.user import UserId
 from cmk.gui.type_defs import (
     ColumnSpec,
     DashboardEmbeddedViewSpec,
@@ -49,7 +50,11 @@ class ContextualLinkNoneConfig(TypedDict):
 
 class ContextualLinkInheritedConfig(TypedDict):
     type: Literal["inherited"]
-    location: tuple[ContextualLinkTargetType, VisualName]
+    # Without an owner, the name resolves for each viewer, as on the target page.
+    location: (
+        tuple[ContextualLinkTargetType, VisualName]
+        | tuple[ContextualLinkTargetType, VisualName, UserId]
+    )
     include_context: bool
     include_time_range: bool
     show_filter_form: bool

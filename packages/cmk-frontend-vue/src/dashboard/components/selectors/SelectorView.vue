@@ -9,51 +9,76 @@ import type { ButtonVariants } from 'cmk-ui-library/components/CmkDropdown/CmkDr
 import type { Suggestion } from 'cmk-ui-library/components/CmkSuggestions'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import { useDataSourcesCollection } from '@/dashboard/composables/api/useDataSourcesCollection'
 import { useViewsCollection } from '@/dashboard/composables/api/useViewsCollection'
+import type { ViewModel } from '@/dashboard/types/api'
+
+import { type VisualCopy, useCopyOptions } from './visualKey'
 
 type Width = ButtonVariants['width']
 
-const { readOnly, width = 'wide' } = defineProps<{
+const {
+  readOnly,
+  width = 'wide',
+  byOwner = false
+} = defineProps<{
   readOnly: boolean
   width?: Width
+  // Offer each copy by its owner; the model is then `selectedCopy` instead of the view name.
+  byOwner?: boolean
 }>()
-const selectedView = defineModel<string | null>('selectedView', { required: true })
+const selectedView = defineModel<string | null>('selectedView', { default: null })
+const selectedCopy = defineModel<VisualCopy | null>('selectedCopy', { default: null })
 
 const { _t } = usei18n()
-const {
-  list: viewsList,
-  ensureLoaded: ensureViewsLoaded,
-  isLoading: viewsLoading,
-  error: viewsError
-} = useViewsCollection()
+const { list: viewsList, ensureLoaded: ensureViewsLoaded, error: viewsError } = useViewsCollection()
 const {
   byId: dataSourcesById,
   ensureLoaded: ensureDataSourcesLoaded,
-  isLoading: dataSourcesLoading,
   error: dataSourcesError
 } = useDataSourcesCollection()
+
+// The dropdown waits for both loads, so it does not flash up empty before or between them.
+const loaded = ref(false)
 
 onMounted(async () => {
   await ensureViewsLoaded()
   await ensureDataSourcesLoaded()
+  loaded.value = true
 })
 
-const options = computed<Array<Suggestion>>(() =>
-  (viewsList.value ?? [])
-    .map((view) => ({
-      name: view.id!,
-      title: formatViewTitle(
-        view.title!,
-        view.id!,
-        view.extensions.data_source!,
-        view.extensions.is_mobile!
-      )
-    }))
-    .sort((a: Suggestion, b: Suggestion) => a.title.localeCompare(b.title))
+const viewTitle = (view: ViewModel): TranslatedString =>
+  formatViewTitle(view.title!, view.id!, view.extensions.data_source!, view.extensions.is_mobile!)
+const byTitle = (a: { title: string }, b: { title: string }) => a.title.localeCompare(b.title)
+
+const nameOptions = computed<Suggestion[]>(() =>
+  (viewsList.value ?? []).map((view) => ({ name: view.id!, title: viewTitle(view) })).sort(byTitle)
 )
+const { suggestions: copyOptions, key: copyKey } = useCopyOptions(selectedCopy, () =>
+  (viewsList.value ?? [])
+    .map((view) => {
+      const owner = view.extensions.owner
+      const title = viewTitle(view)
+      return {
+        copy: { name: view.id!, owner },
+        title: owner === '' ? title : untranslated(`${title} (${owner})`)
+      }
+    })
+    .sort(byTitle)
+)
+const options = computed(() => (byOwner ? copyOptions.value : nameOptions.value))
+const dropdownValue = computed<string | null>({
+  get: () => (byOwner ? copyKey.value : selectedView.value),
+  set: (key) => {
+    if (byOwner) {
+      copyKey.value = key
+    } else {
+      selectedView.value = key
+    }
+  }
+})
 
 // Copied from cmk/gui/views/view_choices.py
 // needs to be updated together until views have been migrated to vue.js
@@ -95,7 +120,7 @@ const formatViewTitle = (
 
 <template>
   <div>
-    <div v-if="viewsLoading || dataSourcesLoading" class="loading-indicator">
+    <div v-if="!loaded" class="loading-indicator">
       {{ _t('Loading...') }}
     </div>
 
@@ -105,8 +130,8 @@ const formatViewTitle = (
     </div>
 
     <CmkDropdown
-      v-if="!viewsLoading && !dataSourcesLoading && !viewsError && !dataSourcesError"
-      v-model="selectedView"
+      v-if="loaded && !viewsError && !dataSourcesError"
+      v-model="dropdownValue"
       :options="{ type: 'filtered', suggestions: options }"
       :label="_t('Select view')"
       :input-hint="_t('Choose from available views')"

@@ -7,13 +7,15 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { type Ref, computed, ref, watch } from 'vue'
 
+import type { VisualCopy } from '@/dashboard/components/selectors/visualKey'
+
 import type { InventoryLinkType, LinkContentType, UseValidate } from '../../types'
 
 const { _t } = usei18n()
 
 export interface UseLinkContent {
   linkType: Ref<string | null>
-  linkTarget: Ref<string | null>
+  linkTarget: Ref<VisualCopy | null>
   linkValidationError: Ref<TranslatedString[]>
 }
 
@@ -23,7 +25,9 @@ export interface UseLinkContentProps extends UseLinkContent, UseValidate {
 
 export const useLinkContent = (linkContent?: LinkContentType): UseLinkContentProps => {
   const linkType = ref<string | null>(linkContent?.type ?? null)
-  const linkTarget = ref<string | null>(linkContent?.name ?? null)
+  const linkTarget = ref<VisualCopy | null>(
+    linkContent ? { name: linkContent.name, owner: linkContent.owner } : null
+  )
   const linkValidationError = ref<TranslatedString[]>([])
 
   watch(linkType, () => {
@@ -42,10 +46,8 @@ export const useLinkContent = (linkContent?: LinkContentType): UseLinkContentPro
 
   const linkSpec = computed(() => {
     if (linkType.value && linkTarget.value) {
-      return {
-        type: linkType.value as InventoryLinkType,
-        name: linkTarget.value
-      }
+      const { name, owner } = linkTarget.value
+      return { type: linkType.value as InventoryLinkType, name, owner }
     }
     return undefined
   })

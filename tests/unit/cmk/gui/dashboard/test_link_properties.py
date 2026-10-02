@@ -16,7 +16,7 @@ _DOWN_PART_KEY = {
 def _link(title: str = "All hosts") -> EffectiveLink:
     return EffectiveLink(
         title=title,
-        location=VisualLocation(type="views", name="searchhost"),
+        location=VisualLocation(type="views", name="searchhost", owner=None),
         include_context=True,
         include_time_range=False,
         show_filter_form=True,

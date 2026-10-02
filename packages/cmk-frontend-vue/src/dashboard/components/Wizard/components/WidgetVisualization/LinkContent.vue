@@ -6,16 +6,16 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
 import CmkIndent from 'cmk-ui-library/components/CmkIndent.vue'
-import type { Suggestion } from 'cmk-ui-library/components/CmkSuggestions'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref, watch } from 'vue'
 
 import SelectorView from '@/dashboard/components/selectors/SelectorView.vue'
+import { type VisualCopy, useCopyOptions } from '@/dashboard/components/selectors/visualKey'
 
-import { fetchDashboards } from './api'
+import { type DashboardTarget, fetchDashboardTargets } from './api'
 
 const { _t } = usei18n()
 
@@ -24,7 +24,7 @@ interface LinkContentProps {
 }
 const props = defineProps<LinkContentProps>()
 const linkType = defineModel<string | null>('linkType', { required: true, default: null })
-const linkTarget = defineModel<string | null>('linkTarget', { required: true })
+const linkTarget = defineModel<VisualCopy | null>('linkTarget', { required: true })
 
 const linkOptions = computed(() => [
   { name: 'dashboards', title: _t('Dashboards') },
@@ -39,18 +39,27 @@ const linkEnabled = computed({
 })
 
 const isError = computed(() => props.linkValidation.length > 0)
-const dashboardTargets = ref<Suggestion[]>([])
+const dashboards = ref<DashboardTarget[]>([])
 
 watch(
   linkType,
   async (newLinkType: string | null) => {
     if (newLinkType === 'dashboards') {
-      dashboardTargets.value = await fetchDashboards()
+      dashboards.value = await fetchDashboardTargets()
     } else {
-      dashboardTargets.value = []
+      dashboards.value = []
     }
   },
   { immediate: true }
+)
+
+const { suggestions: dashboardTargets, key: dashboardKey } = useCopyOptions(linkTarget, () =>
+  dashboards.value.map((dashboard) => ({
+    copy: { name: dashboard.name, owner: dashboard.owner },
+    title: untranslated(
+      dashboard.owner === '' ? dashboard.title : `${dashboard.title} (${dashboard.owner})`
+    )
+  }))
 )
 </script>
 
@@ -68,11 +77,17 @@ watch(
       <div class="db-link-content__item">
         <CmkDropdown
           v-if="linkType === 'dashboards'"
-          v-model="linkTarget"
+          v-model="dashboardKey"
           :label="_t('Select a target')"
           :options="{ type: 'filtered', suggestions: dashboardTargets }"
         />
-        <SelectorView v-else v-model:selected-view="linkTarget" :read-only="false" width="fill" />
+        <SelectorView
+          v-else
+          v-model:selected-copy="linkTarget"
+          :read-only="false"
+          width="fill"
+          by-owner
+        />
       </div>
     </div>
     <div v-if="isError">

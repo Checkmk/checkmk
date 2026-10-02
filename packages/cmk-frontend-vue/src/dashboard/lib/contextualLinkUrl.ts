@@ -26,6 +26,10 @@ export function contextualLinkUrl(
     )
   }
   const params = new URLSearchParams({ [nameVariable]: link.location.name })
+  // Without an owner, the target page resolves the name for each viewer.
+  if (link.location.owner !== null) {
+    params.set('owner', link.location.owner)
+  }
   for (const variables of Object.values(filters)) {
     for (const [variable, value] of Object.entries(variables)) {
       params.set(variable, value)

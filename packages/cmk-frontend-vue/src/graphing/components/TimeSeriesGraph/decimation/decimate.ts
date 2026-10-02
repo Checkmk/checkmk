@@ -95,38 +95,39 @@ function gapBucketAt(time: number): M4Bucket {
   return assembleBucket(time, time, newBucketAccumulator())
 }
 
-export function edgeNeighbours(cache: M4Cache, range: [number, number]): [M4Bucket, M4Bucket] {
-  const [rangeStart, rangeEnd] = range
-
-  let before = gapBucketAt(rangeStart)
-  let after = gapBucketAt(rangeEnd)
-  for (const bucket of cache) {
-    if (bucket.gap) {
-      continue
-    }
-    if (bucket.lastValueTime < rangeStart) {
-      before = bucket
-    } else if (bucket.firstValueTime > rangeEnd) {
-      after = bucket
-      break
-    }
-  }
-  return [before, after]
+function holdsSamples(bucket: M4Bucket): boolean {
+  return bucket.endTime > bucket.startTime
 }
 
-export function edgeSample(cache: M4Cache, rangeEnd: number): M4Bucket {
+function nearestValuedSampleBefore(cache: M4Cache, time: number): M4Bucket {
+  let nearest = gapBucketAt(time)
   for (const bucket of cache) {
     if (bucket.gap) {
       continue
     }
-    if (bucket.firstValueTime === rangeEnd) {
-      return bucket
-    }
-    if (bucket.firstValueTime > rangeEnd) {
+    if (bucket.lastValueTime >= time) {
       break
     }
+    nearest = bucket
   }
-  return gapBucketAt(rangeEnd)
+  return nearest
+}
+
+function firstSampleAfter(cache: M4Cache, time: number): M4Bucket {
+  const next = cache.find((bucket) => holdsSamples(bucket) && bucket.startTime > time)
+  return next === undefined || next.gap ? gapBucketAt(time) : next
+}
+
+export function edgeNeighbours(cache: M4Cache, range: [number, number]): [M4Bucket, M4Bucket] {
+  const [rangeStart, rangeEnd] = range
+  return [nearestValuedSampleBefore(cache, rangeStart), firstSampleAfter(cache, rangeEnd)]
+}
+
+export function edgeSample(cache: M4Cache, rangeEnd: number): M4Bucket | undefined {
+  const sampleOnTheEnd = cache.find(
+    (bucket) => holdsSamples(bucket) && bucket.startTime === rangeEnd
+  )
+  return sampleOnTheEnd?.gap ? gapBucketAt(rangeEnd) : sampleOnTheEnd
 }
 
 export function downsampleToColumns(

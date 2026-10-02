@@ -20,17 +20,28 @@ import {
 } from '@/graphing/components/constants'
 
 let drawnPoints: Array<[number, number]> = []
+let drawnStrokes: Array<Array<[number, number]>> = []
 
 // jsdom implements neither a 2D canvas context nor matchMedia, both of which the graph
 // touches on mount (draw() + the devicePixelRatio watcher). Stub them so the component
 // mounts and runs its real draw path instead of throwing.
 function createCanvasContextStub(): CanvasRenderingContext2D {
   const state: Record<string | symbol, unknown> = {}
-  const recordPoint = (x: number, y: number): void => void drawnPoints.push([x, y])
+  const liftPenAndMoveTo = (x: number, y: number): void => {
+    drawnPoints.push([x, y])
+    drawnStrokes.push([[x, y]])
+  }
+  const drawLineTo = (x: number, y: number): void => {
+    drawnPoints.push([x, y])
+    drawnStrokes.at(-1)?.push([x, y])
+  }
   return new Proxy(state, {
     get: (target, prop) => {
-      if (prop === 'moveTo' || prop === 'lineTo') {
-        return recordPoint
+      if (prop === 'moveTo') {
+        return liftPenAndMoveTo
+      }
+      if (prop === 'lineTo') {
+        return drawLineTo
       }
       return prop in target ? target[prop] : () => undefined
     },
@@ -43,6 +54,7 @@ function createCanvasContextStub(): CanvasRenderingContext2D {
 
 beforeEach(() => {
   drawnPoints = []
+  drawnStrokes = []
   vi.stubGlobal(
     'matchMedia',
     vi.fn().mockReturnValue({
@@ -165,6 +177,13 @@ function plotWidthPx(): number {
   return parseFloat(document.querySelector('canvas')!.style.width)
 }
 
+function someStrokeCrossesTheRightEdge(): boolean {
+  const rightEdge = plotWidthPx()
+  return drawnStrokes.some((stroke) =>
+    stroke.some(([x], index) => index > 0 && stroke[index - 1]![0] < rightEdge && x > rightEdge)
+  )
+}
+
 function valueAxisGroup(container: Element): Element {
   const axis = container.querySelector('g.graphing-time-series-graph__y-axis')
   if (axis?.parentElement === null || axis?.parentElement === undefined) {
@@ -261,6 +280,7 @@ describe('TimeSeriesGraph', () => {
   const VIEW_TIME_RANGE = { start: 1_060, end: 1_180, step: 60 }
   const DATA_TIME_RANGE_REACHING_PAST_THE_VIEW = { start: 940, end: 1_240, step: 60 }
   const SAMPLES_REACHING_PAST_THE_VIEW = [1, 2, 3, 4, 5]
+  const VIEW_ENDING_BETWEEN_TWO_SAMPLES = { ...VIEW_TIME_RANGE, end: 1_150 }
   const COLUMN_WIDTH_PX = 1
 
   test('draws the curve out past the leading edge when the data reaches beyond it', async () => {
@@ -287,6 +307,33 @@ describe('TimeSeriesGraph', () => {
     await waitFor(() => expect(drawnPoints.length).toBeGreaterThan(0))
 
     expect(Math.max(...drawnXs())).toBeGreaterThan(plotWidthPx())
+  })
+
+  test('carries the curve on past a window end that falls between two samples', async () => {
+    const metrics = [{ ...LINE_METRIC, data_points: SAMPLES_REACHING_PAST_THE_VIEW }]
+
+    renderComponent({
+      view_time_range: VIEW_ENDING_BETWEEN_TWO_SAMPLES,
+      data_time_range: DATA_TIME_RANGE_REACHING_PAST_THE_VIEW,
+      metrics
+    })
+    await waitFor(() => expect(drawnPoints.length).toBeGreaterThan(0))
+
+    expect(someStrokeCrossesTheRightEdge()).toBe(true)
+  })
+
+  test('stops the curve at a window end whose following sample is missing', async () => {
+    const missingTheSampleAfterTheWindow = [1, 2, 3, null, 5]
+    const metrics = [{ ...LINE_METRIC, data_points: missingTheSampleAfterTheWindow }]
+
+    renderComponent({
+      view_time_range: VIEW_ENDING_BETWEEN_TWO_SAMPLES,
+      data_time_range: DATA_TIME_RANGE_REACHING_PAST_THE_VIEW,
+      metrics
+    })
+    await waitFor(() => expect(drawnPoints.length).toBeGreaterThan(0))
+
+    expect(someStrokeCrossesTheRightEdge()).toBe(false)
   })
 
   test('reaches the right edge when the newest interval has not closed yet', async () => {

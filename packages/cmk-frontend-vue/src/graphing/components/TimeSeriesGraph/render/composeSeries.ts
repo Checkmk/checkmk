@@ -35,10 +35,11 @@ export function composeSeries(options: {
 }): ComposedSeries {
   const { metrics, cache, visibleTimeRange, columnCount } = options
 
-  const bucketsOnPlot = cache.map((metricCache) => [
-    ...downsampleToColumns(metricCache, visibleTimeRange, columnCount),
-    edgeSample(metricCache, visibleTimeRange[1])
-  ])
+  const bucketsOnPlot = cache.map((metricCache) => {
+    const columns = downsampleToColumns(metricCache, visibleTimeRange, columnCount)
+    const sampleOnTheRightEdge = edgeSample(metricCache, visibleTimeRange[1])
+    return sampleOnTheRightEdge === undefined ? columns : [...columns, sampleOnTheRightEdge]
+  })
 
   // Inverse mirrors a metric below the baseline; stacking then resolves cumulative bands.
   const paddedBuckets = cache.map((metricCache, i) => {

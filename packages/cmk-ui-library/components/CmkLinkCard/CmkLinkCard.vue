@@ -156,6 +156,7 @@ body[data-theme='modern-dark'] {
 
 /* A title long enough to have no break in it wraps rather than growing the card. */
 .cmk-link-card__text-area {
+  flex: 1 1 auto;
   min-width: 0;
   overflow-wrap: anywhere;
 }

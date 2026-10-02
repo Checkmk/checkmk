@@ -107,6 +107,20 @@ test('the form is valid only with a comment', async () => {
   expect(emitted('update:valid')!.at(-1)).toEqual([true])
 })
 
+test('points out a missing comment once asked to show errors, until one is typed', async () => {
+  render(CustomNotificationForm, {
+    props: {
+      targetKind: 'host',
+      modelValue: { comment: '', forced: false, broadcast: false },
+      showErrors: true
+    }
+  })
+  expect(screen.getByText('Comment is required.')).toBeInTheDocument()
+
+  await userEvent.type(screen.getByPlaceholderText('Enter your message here'), 'Testing')
+  expect(screen.queryByText('Comment is required.')).not.toBeInTheDocument()
+})
+
 test('names the contacts of the selected services for a service', () => {
   render(CustomNotificationForm, {
     props: {

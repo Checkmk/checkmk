@@ -8,13 +8,25 @@ conditions defined in the file COPYING, which is part of this source code packag
 export interface CommentValues {
   comment: string
 }
+
+function hasComment(values: CommentValues): boolean {
+  return values.comment.trim() !== ''
+}
 </script>
 
 <script setup lang="ts">
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { watch } from 'vue'
+import { computed, watch } from 'vue'
+
+const props = withDefaults(
+  defineProps<{
+    /** Whether to point out the fields that keep the form from being submitted. */
+    showErrors?: boolean
+  }>(),
+  { showErrors: false }
+)
 
 const model = defineModel<CommentValues>({ required: true })
 
@@ -24,11 +36,14 @@ const emit = defineEmits<{
 
 const { _t } = usei18n()
 
-watch(
-  () => model.value.comment,
-  (comment) => emit('update:valid', comment.trim() !== ''),
-  { immediate: true }
+const commentErrors = computed(() =>
+  props.showErrors && !hasComment(model.value) ? [_t('Comment is required.')] : []
 )
+
+watch(model, (values) => emit('update:valid', hasComment(values)), {
+  immediate: true,
+  deep: true
+})
 </script>
 
 <template>
@@ -36,7 +51,12 @@ watch(
     <span class="monitoring-comment-form__label"
       >{{ _t('Comment') }}<CmkLabelRequired :show="true" space="before"
     /></span>
-    <CmkInput v-model="model.comment" field-size="large" :placeholder="_t('Enter a comment…')" />
+    <CmkInput
+      v-model="model.comment"
+      field-size="large"
+      :placeholder="_t('Enter a comment…')"
+      :external-errors="commentErrors"
+    />
   </label>
 </template>
 

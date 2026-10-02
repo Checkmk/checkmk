@@ -66,16 +66,21 @@ function mountPane(
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
 
-test('resolves the action by id, gates submit on a comment, and bubbles feedback', async () => {
+test('does not perform the action while its form is invalid', async () => {
   const { emitted } = mountPane('acknowledge')
 
-  const apply = screen.getByRole('button', { name: 'Acknowledge' })
-  expect(apply).toBeDisabled()
+  await userEvent.click(screen.getByRole('button', { name: 'Acknowledge' }))
+  await flush()
+
+  expect(emitted('feedback')).toBeUndefined()
+  expect(screen.getByRole('alert')).toHaveTextContent('Comment is required.')
+})
+
+test('resolves the action by id and bubbles feedback', async () => {
+  const { emitted } = mountPane('acknowledge')
 
   await userEvent.type(screen.getByPlaceholderText('Enter a comment…'), 'disk full')
-  expect(apply).toBeEnabled()
-
-  await userEvent.click(apply)
+  await userEvent.click(screen.getByRole('button', { name: 'Acknowledge' }))
   await flush()
 
   const events = emitted('feedback') as ActionFeedback[][]

@@ -12,12 +12,8 @@ import AcknowledgeForm, {
   type AcknowledgeValues
 } from '@/monitoring/shared/components/action/actions/AcknowledgeForm.vue'
 
-function mountForm(
-  overrides: Partial<AcknowledgeValues> = {},
-  targetKind: 'host' | 'service' = 'host',
-  links: { presetsUrl?: string | null; notificationRulesUrl?: string | null } = {}
-) {
-  const modelValue: AcknowledgeValues = {
+function formValues(overrides: Partial<AcknowledgeValues> = {}): AcknowledgeValues {
+  return {
     comment: '',
     expireOnEnabled: false,
     expireOn: null,
@@ -26,7 +22,20 @@ function mountForm(
     notify: true,
     ...overrides
   }
-  return render(AcknowledgeForm, { props: { modelValue, targetKind, ...links } })
+}
+
+function mountForm(
+  overrides: Partial<AcknowledgeValues> = {},
+  targetKind: 'host' | 'service' = 'host',
+  links: { presetsUrl?: string | null; notificationRulesUrl?: string | null } = {}
+) {
+  return render(AcknowledgeForm, {
+    props: { modelValue: formValues(overrides), targetKind, ...links }
+  })
+}
+
+function mountShowingErrors(overrides: Partial<AcknowledgeValues> = {}) {
+  return render(AcknowledgeForm, { props: { modelValue: formValues(overrides), showErrors: true } })
 }
 
 test('reports invalid while the comment is empty and valid once it is filled', async () => {
@@ -36,6 +45,26 @@ test('reports invalid while the comment is empty and valid once it is filled', a
 
   await userEvent.type(screen.getByPlaceholderText('Enter a comment…'), 'on it')
   expect(emitted('update:valid')?.at(-1)).toEqual([true])
+})
+
+test('keeps quiet about a missing comment until asked to show errors', () => {
+  mountForm()
+
+  expect(screen.queryByText('Comment is required.')).not.toBeInTheDocument()
+})
+
+test('points out a missing comment until one is typed', async () => {
+  mountShowingErrors()
+  expect(screen.getByText('Comment is required.')).toBeInTheDocument()
+
+  await userEvent.type(screen.getByPlaceholderText('Enter a comment…'), 'on it')
+  expect(screen.queryByText('Comment is required.')).not.toBeInTheDocument()
+})
+
+test('points out an expiry that is switched on without a date', () => {
+  mountShowingErrors({ comment: 'on it', expireOnEnabled: true, expireOn: null })
+
+  expect(screen.getByRole('alert')).toHaveTextContent('Choose an expiry date & time.')
 })
 
 test('whitespace-only comments stay invalid', async () => {

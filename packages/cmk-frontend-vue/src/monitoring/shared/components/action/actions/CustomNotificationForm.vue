@@ -17,11 +17,18 @@ import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { watch } from 'vue'
+import { computed, watch } from 'vue'
 
 import type { ActionTargetKind } from '../types'
 
-defineProps<{ targetKind: ActionTargetKind }>()
+const props = withDefaults(
+  defineProps<{
+    targetKind: ActionTargetKind
+    /** Whether to point out the fields that keep the form from being submitted. */
+    showErrors?: boolean
+  }>(),
+  { showErrors: false }
+)
 
 const model = defineModel<CustomNotificationValues>({ required: true })
 
@@ -30,6 +37,10 @@ const emit = defineEmits<{
 }>()
 
 const { _t } = usei18n()
+
+const commentErrors = computed(() =>
+  props.showErrors && model.value.comment.trim() === '' ? [_t('Comment is required.')] : []
+)
 
 watch(
   () => model.value.comment,
@@ -48,6 +59,7 @@ watch(
         v-model="model.comment"
         field-size="large"
         :placeholder="_t('Enter your message here')"
+        :external-errors="commentErrors"
       />
     </label>
     <CmkCheckbox

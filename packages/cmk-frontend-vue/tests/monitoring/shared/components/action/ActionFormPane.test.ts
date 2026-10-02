@@ -14,21 +14,38 @@ import ScheduleDowntimeForm, {
   defaultScheduleDowntimeValues
 } from '@/monitoring/shared/components/action/actions/ScheduleDowntimeForm.vue'
 
-test('renders the given form and gates submit on its validity', async () => {
-  const { emitted } = render(ActionFormPane, {
+function renderCommentPane() {
+  return render(ActionFormPane, {
     props: {
       title: 'Add comment' as TranslatedString,
       form: markRaw(CommentForm),
       initialValues: { comment: '' }
     }
   })
+}
 
+test('opens an invalid form without pointing out errors', () => {
+  renderCommentPane()
+
+  expect(screen.getByRole('button', { name: 'Apply' })).toBeEnabled()
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+})
+
+test('points out the errors instead of submitting an invalid form', async () => {
+  const { emitted } = renderCommentPane()
+
+  await userEvent.click(screen.getByRole('button', { name: 'Apply' }))
+
+  expect(emitted('submit')).toBeUndefined()
+  expect(screen.getByRole('alert')).toHaveTextContent('Comment is required.')
+})
+
+test('submits the form once its errors are fixed', async () => {
+  const { emitted } = renderCommentPane()
   const apply = screen.getByRole('button', { name: 'Apply' })
-  expect(apply).toBeDisabled()
+  await userEvent.click(apply)
 
   await userEvent.type(screen.getByRole('textbox'), 'on it')
-  expect(apply).toBeEnabled()
-
   await userEvent.click(apply)
   expect(emitted('submit')).toEqual([[{ comment: 'on it' }]])
 })

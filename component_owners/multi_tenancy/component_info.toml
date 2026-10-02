@@ -1,0 +1,25 @@
+type = "Component"
+display_name = "Multi-Tenancy"
+previous_name = "managed_services_edition"
+has_support_component = true
+members_required = 2
+tier = 1
+product_managers = ["cedric.archenoul@checkmk.com"]
+description = """
+The customer attribute of Checkmk Ultimate with Multi-Tenancy and the data
+segregation it drives: every site, host and configuration object belongs to
+one customer or to "Global", and each customer sees and receives only its own
+data (cmk/gui/nonfree/ultimatemt, cmk-multi-tenancy).
+
+Belongs here:
+- The customer attribute on the configuration objects
+- Folders and hosts taking their customer from their site, and the validation
+  of customer conflicts between them
+- Data segregation: restricting what a customer's users see to the customer's
+  own sites and objects, in views, filters, dashboards and reports
+- Distributing only the customer's configuration to its remote sites: the
+  customer snapshots, filtered global settings and Event Console rule packs,
+  the broker certificates and the piggyback hub configuration
+- Managing the customers themselves in the GUI and through the REST API, and
+  the customer host label with its update-config actions
+"""

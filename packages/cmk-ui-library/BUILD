@@ -42,5 +42,6 @@ js_library(
 js_library(
     name = "vitest_shared",
     srcs = ["vitest.shared.ts"],
+    visibility = ["//packages/cmk-frontend-vue:__pkg__"],
     deps = ["//:node_modules/vitest"],
 )

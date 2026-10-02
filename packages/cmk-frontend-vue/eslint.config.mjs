@@ -6,9 +6,11 @@
 import {
   RESTRICTED_IMPORT_PATTERNS,
   checkmkVueConfig,
+  checkmkVueModuleRegistryConfig,
   checkmkVueModuleScopeTranslationConfig,
   checkmkVueTestConfig
 } from '../cmk-ui-library/eslint.shared.mjs'
+import isolatedTests from './vitest.isolated.json' with { type: 'json' }
 
 const PACKAGE_DIR = 'packages/cmk-frontend-vue'
 
@@ -74,5 +76,7 @@ export default [
     }
   },
 
-  checkmkVueTestConfig(PACKAGE_DIR)
+  checkmkVueTestConfig(PACKAGE_DIR),
+
+  checkmkVueModuleRegistryConfig(PACKAGE_DIR, isolatedTests)
 ].flatMap(withNonfreeBoundary)

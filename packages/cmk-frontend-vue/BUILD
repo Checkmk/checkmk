@@ -41,8 +41,14 @@ js_library(
         # tsconfig chain used by type-aware rules extends
         # cmk-ui-library/tsconfig.vue-base.json, resolved via this node_modules link.
         ":node_modules/cmk-ui-library",
+        ":vitest_isolated",
         "//packages/cmk-ui-library:eslintrc",
     ],
+)
+
+js_library(
+    name = "vitest_isolated",
+    srcs = ["vitest.isolated.json"],
 )
 
 npm_link_all_packages(name = "node_modules")
@@ -237,8 +243,10 @@ TOOLING = TEST_TOOLING + [
 
 VITE_SRCS = [
     ":node_modules/cmk-ui-library",
+    "//packages/cmk-ui-library:vitest_shared",
     "package.json",
     "vite.config.ts",
+    ":vitest_isolated",
     ":demo_ts",
     ":demo_vue",
     ":demo_css",

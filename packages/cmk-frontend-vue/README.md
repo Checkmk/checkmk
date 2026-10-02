@@ -12,6 +12,12 @@ bazel run :vite [-- <ARGS>]
 bazel run :vitest [-- <ARGS>]
 ```
 
+To reproduce an order-dependent test failure:
+
+```sh
+bazel test :unit-test --test_sharding_strategy=disabled --test_arg=--project=shared --test_arg=--maxWorkers=1 --test_arg=--sequence.shuffle --test_arg=--sequence.seed=<n> --test_arg=--bail=1
+```
+
 ## IDE Support
 
 It's non trivial to set up bazel in such a way that js tooling will have

@@ -10,6 +10,9 @@ import { type RollupLog } from 'rollup'
 import { type Plugin, type UserConfig, defineConfig } from 'vite'
 import VueDevTools from 'vite-plugin-vue-devtools'
 
+import { testProjects } from '../cmk-ui-library/vitest.shared'
+import isolatedTests from './vitest.isolated.json'
+
 // Workaround for https://github.com/vitejs/vite/issues/21955
 // should be removed once the issue is closed
 function bazelManifestPathFix(): Plugin {
@@ -140,6 +143,7 @@ export default defineConfig(({ command }) => {
         unstubGlobals: true,
         pool: 'threads',
         setupFiles: ['../cmk-ui-library/vitest.shared-setup.ts', 'tests/setup-tests.ts'],
+        projects: process.env.VITEST ? testProjects(isolatedTests) : undefined,
         reporters: process.env.XML_OUTPUT_FILE // variable set by bazel
           ? [
               [

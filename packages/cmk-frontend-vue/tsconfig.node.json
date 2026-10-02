@@ -7,7 +7,8 @@
     "nightwatch.conf.*",
     "playwright.config.*",
     "ui-component-library/_ucl/vite-plugin-ucl-mcp.ts",
-    "ui-component-library/_ucl/types/prop-def.ts"
+    "ui-component-library/_ucl/types/prop-def.ts",
+    "../cmk-ui-library/vitest.shared.ts"
   ],
   "compilerOptions": {
     "composite": true,

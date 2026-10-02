@@ -59,14 +59,18 @@ export function drawFocusDots(
   dots: FocusDot[],
   strokeColor: string
 ): void {
+  let closestDot: FocusDot | null = null
   ctx.setLineDash([])
   for (const dot of dots) {
     if (dot.closest) {
-      drawClosestHalo(ctx, dot)
+      closestDot = dot
+    } else {
+      drawDot(ctx, dot, strokeColor)
     }
   }
-  for (const dot of dots) {
-    drawDot(ctx, dot, strokeColor)
+  if (closestDot !== null) {
+    drawClosestHalo(ctx, closestDot)
+    drawDot(ctx, closestDot, strokeColor)
   }
 }
 

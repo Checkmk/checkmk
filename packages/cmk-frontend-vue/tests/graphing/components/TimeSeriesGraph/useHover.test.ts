@@ -286,6 +286,45 @@ describe('useHover — hit-test', () => {
   })
 })
 
+describe('useHover — lines over areas', () => {
+  // Usage fills pixels 20–100; the limit line runs through it at pixel 70.
+  const lineInsideArea = () => [
+    makeStackedMetric('usage', constantPoints(80), 's1'),
+    makeLineMetric('limit', constantPoints(30))
+  ]
+
+  test('a cursor on a line drawn over an area singles out the line', () => {
+    const hover = mountHover(lineInsideArea())
+
+    hover.moveHoverTo(pointAt(50, 72))
+
+    const closest = hover.hoverState.value!.samples.filter((sample) => sample.isClosest)
+    expect(closest.map((sample) => sample.metricName)).toEqual(['limit'])
+  })
+
+  test('a cursor inside an area away from the line over it singles out the area', () => {
+    const hover = mountHover(lineInsideArea())
+
+    hover.moveHoverTo(pointAt(50, 40))
+
+    const closest = hover.hoverState.value!.samples.filter((sample) => sample.isClosest)
+    expect(closest.map((sample) => sample.metricName)).toEqual(['usage'])
+  })
+
+  test('of two lines next to the cursor the nearer one is singled out', () => {
+    // Pixels 70 and 74: both close to the cursor, the first one closer.
+    const hover = mountHover([
+      makeLineMetric('nearer', constantPoints(30)),
+      makeLineMetric('farther', constantPoints(26))
+    ])
+
+    hover.moveHoverTo(pointAt(50, 71))
+
+    const closest = hover.hoverState.value!.samples.filter((sample) => sample.isClosest)
+    expect(closest.map((sample) => sample.metricName)).toEqual(['nearer'])
+  })
+})
+
 describe('useHover — snapping to drawn points', () => {
   test('a cursor between two samples snaps back to the nearer one', () => {
     const hover = mountHover([makeLineMetric('sloped', pointsValuedAtTheirOwnTimestamp())])

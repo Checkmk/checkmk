@@ -19,8 +19,8 @@ import type { Metric, UnitFormat } from './types'
 import { valueRenderer } from './valueRenderer'
 
 const HOVER_CLEAR_DELAY_MS = 150
-
 const CLOSEST_METRIC_REACH_PX = 24
+const LINE_HIT_BUFFER = 6
 
 const bucketCentre = (bucket: M4Bucket): number => (bucket.startTime + bucket.endTime) / 2
 
@@ -188,12 +188,17 @@ export function useHover(options: HoverOptions) {
     return null
   }
 
-  function hitDistance(cursorY: number, reading: Reading): number {
-    return metricHitDistance(
+  function hitDistance(cursorY: number, reading: Reading, metricIndex: number): number {
+    const distance = metricHitDistance(
       cursorY,
       options.yScale(reading.edge.upper),
       options.yScale(reading.edge.lower)
     )
+    const isLine = (drawnStacks[metricIndex] ?? { kind: 'line' }).kind === 'line'
+    // Lines that render over an area are selected as closest instead of the area for cursor
+    // positions within LINE_HIT_BUFFER above and below the line (hitDistance <= 0).
+    // Nearest line still wins by comparison of the negative hitDistance values.
+    return isLine && distance <= LINE_HIT_BUFFER ? distance - LINE_HIT_BUFFER : distance
   }
 
   function toSample(metric: Metric, reading: Reading | null, isClosest: boolean): HoverSample {
@@ -241,7 +246,9 @@ export function useHover(options: HoverOptions) {
     const metricsList = options.metrics()
     const readingsAtCursor = metricsList.map((metric, i) => readingAtCursor(metric, i, cursorTime))
     const closestIdx = indexOfClosest(
-      readingsAtCursor.map((reading) => (reading === null ? null : hitDistance(cursorY, reading)))
+      readingsAtCursor.map((reading, i) =>
+        reading === null ? null : hitDistance(cursorY, reading, i)
+      )
     )
 
     const indexOfMetric = new Map(metricsList.map((metric, i) => [metric, i]))

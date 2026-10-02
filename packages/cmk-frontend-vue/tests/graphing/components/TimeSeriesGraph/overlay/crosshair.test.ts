@@ -6,8 +6,10 @@
 import { describe, expect, test, vi } from 'vitest'
 
 import {
+  type FocusDot,
   crosshairCentreX,
   drawCrosshair,
+  drawFocusDots,
   drawPinLine,
   pinLineCentreX
 } from '@/graphing/components/TimeSeriesGraph/overlay/crosshair'
@@ -81,5 +83,40 @@ describe('drawPinLine', () => {
     drawPinLine(ctx as unknown as CanvasRenderingContext2D, 382.33, 100, '#15d1a0')
 
     expect(ctx.setLineDash).toHaveBeenCalledWith([])
+  })
+})
+
+/* Records the colour of every filled dot in paint order */
+function makeFillRecordingCtx() {
+  const filledColors: string[] = []
+  const ctx = {
+    ...makeSpyCtx(),
+    arc: vi.fn(),
+    fill: vi.fn(() => filledColors.push(ctx.fillStyle))
+  }
+  return { ctx, filledColors }
+}
+
+function dotAt(y: number, color: string, closest = false): FocusDot {
+  return { x: 50, y, color, closest }
+}
+
+describe('drawFocusDots', () => {
+  test('the closest dot is painted last, overlapping any nearby dots', () => {
+    const { ctx, filledColors } = makeFillRecordingCtx()
+    const dots = [dotAt(70, '#closest', true), dotAt(68, '#line'), dotAt(20, '#area')]
+
+    drawFocusDots(ctx as unknown as CanvasRenderingContext2D, dots, '#000000')
+
+    expect(filledColors.at(-1)).toBe('#closest')
+  })
+
+  test('without a closest dot every dot is still painted', () => {
+    const { ctx, filledColors } = makeFillRecordingCtx()
+    const dots = [dotAt(70, '#line'), dotAt(20, '#area')]
+
+    drawFocusDots(ctx as unknown as CanvasRenderingContext2D, dots, '#000000')
+
+    expect(filledColors).toEqual(['#line', '#area'])
   })
 })

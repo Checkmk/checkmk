@@ -68,7 +68,7 @@ export class Api {
     options: ApiOptions = {}
   ): Promise<ApiResponseBody<unknown>> {
     const opts: RequestInit = {
-      method: 'POST'
+      method: 'PUT'
     }
     if (body !== null) {
       opts.body = JSON.stringify(body)

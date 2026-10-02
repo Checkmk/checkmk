@@ -191,7 +191,12 @@ from cmk.piggyback.backend import (
 from cmk.piggyback.backend import (
     move_for_host_rename as move_piggyback_for_host_rename,
 )
-from cmk.relay_protocols.tasks import AdHocActiveCheckTask, ResultType
+from cmk.relay_protocols.tasks import (
+    AdHocActiveCheckTask,
+    AdHocPasswordStore,
+    AdHocSiteStores,
+    ResultType,
+)
 from cmk.server_side_calls_backend import (
     config_processing,
     ExecutableFinder,
@@ -3919,11 +3924,26 @@ class AutomationActiveCheck:
             # The redirect might not be needed anymore.
             host_attrs = config_cache.get_host_attributes(host_name, ip_family, ip_address_of)
 
-        secrets_config = StoredSecrets(
-            path=(p := cmk.utils.password_store.pending_secrets_path_site()),
-            secrets=load_secrets_file(p),
-        )
         relay_id = config.get_relay_id(label_manager.labels_of_host(host_name))
+        # The relay that runs the check; None when the site runs it.
+        executing_relay = relay_id if plugin not in SITE_SIDE_ONLY_ACTIVE_CHECKS else None
+        pending_secrets = load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
+        # A check run from here uses what Setup holds right now. A relay has none of
+        # it, so its task ships the passwords and the CAs, as an ad-hoc fetch does:
+        # the command refers to a per-run store the relay writes below its tmp dir.
+        secrets_config: AdHocSecrets | StoredSecrets = (
+            AdHocSecrets(
+                path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
+                    cmk.utils.paths.relative_tmp_dir
+                ),
+                secrets=pending_secrets,
+            )
+            if executing_relay is not None
+            else StoredSecrets(
+                path=cmk.utils.password_store.pending_secrets_path_site(),
+                secrets=pending_secrets,
+            )
+        )
         try:
             for service_data in config_cache.active_check_services(
                 host_name,
@@ -3953,9 +3973,18 @@ class AutomationActiveCheck:
                     " ".join(service_data.command),
                     config_cache=config_cache,
                 )
-                if relay_id is not None and plugin not in SITE_SIDE_ONLY_ACTIVE_CHECKS:
+                if executing_relay is not None:
+                    assert isinstance(secrets_config, AdHocSecrets)
                     return ActiveCheckResult(
-                        *self._execute_check_plugin_on_relay(relay_id, host_name, command_line)
+                        *self._execute_check_plugin_on_relay(
+                            executing_relay,
+                            host_name,
+                            command_line,
+                            site_stores=AdHocSiteStores(
+                                ca_bundle=cmk.utils.paths.trusted_ca_file.read_text(),
+                                passwords=_ad_hoc_password_store(secrets_config),
+                            ),
+                        )
                     )
                 return ActiveCheckResult(*self._execute_check_plugin(command_line))
         except NotSupportedError:
@@ -4035,10 +4064,17 @@ class AutomationActiveCheck:
             return 3, "UNKNOWN - Cannot execute command: %s" % e
 
     def _execute_check_plugin_on_relay(
-        self, relay_id: str, host: HostName, command_line: str
+        self,
+        relay_id: str,
+        host: HostName,
+        command_line: str,
+        *,
+        site_stores: AdHocSiteStores | None = None,
     ) -> tuple[ServiceState, ServiceDetails]:
         try:
-            task_result = self._submit_to_relay(relay_id, host, command_line)
+            task_result = self._submit_to_relay(
+                relay_id, host, command_line, site_stores=site_stores
+            )
             if task_result.result_type is not ResultType.OK:
                 return 3, f"UNKNOWN - relay execution failed: {task_result.describe_error()}"
         except ImportError:
@@ -4062,16 +4098,31 @@ class AutomationActiveCheck:
             frame.exit_code, frame.raw_output
         )  # normalize the actual active check result
 
-    def _submit_to_relay(self, relay_id: str, host: HostName, command: str) -> "TaskResult":
+    def _submit_to_relay(
+        self,
+        relay_id: str,
+        host: HostName,
+        command: str,
+        *,
+        site_stores: AdHocSiteStores | None = None,
+    ) -> "TaskResult":
         from cmk.relay_fetcher_trigger.relay_client import (  # type: ignore[import-not-found, unused-ignore]
             Client,
         )
 
         client = Client.from_omd_config(cmk.utils.paths.omd_root)
-        task = AdHocActiveCheckTask(host=host, command=command)
+        task = AdHocActiveCheckTask(host=host, command=command, site_stores=site_stores)
         return client.submit_and_wait_for_result(  # type: ignore[no-any-return, unused-ignore]
             relay_id, task, timeout=_relay_wait_timeout(task)
         )
+
+
+def _ad_hoc_password_store(secrets: AdHocSecrets) -> AdHocPasswordStore:
+    """The pending passwords as the store the relay writes for the check."""
+    return AdHocPasswordStore(
+        path=str(secrets.path),
+        values={name: secret.reveal() for name, secret in secrets.secrets.items()},
+    )
 
 
 def automation_update_passwords_merged_file(

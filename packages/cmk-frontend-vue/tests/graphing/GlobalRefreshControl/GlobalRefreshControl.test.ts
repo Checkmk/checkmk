@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import { afterEach, beforeEach, vi } from 'vitest'
 import { nextTick } from 'vue'
 
@@ -24,17 +24,18 @@ test('starts in the paused state showing "Refresh off" and Resume', () => {
   render(GlobalRefreshControl, { props: { lastRefreshPosition: 'top' } })
 
   expect(screen.getByText('Refresh off')).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: /Resume/ })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Resume live refresh' })).toBeInTheDocument()
   expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
 })
 
-test('live state shows the badge and the interval dropdown', () => {
+test('live state shows the badge and the interval dropdown', async () => {
   useGlobalRefresh().resumeRefresh()
 
   render(GlobalRefreshControl, { props: { lastRefreshPosition: 'top' } })
 
   expect(screen.getByText('Live refresh')).toBeInTheDocument()
-  expect(screen.getByRole('combobox', { name: 'Refresh interval' })).toBeInTheDocument()
+  const intervalDropdown = screen.getByRole('combobox', { name: 'Live refresh every' })
+  await waitFor(() => expect(intervalDropdown).toHaveTextContent('30 sec'))
   expect(screen.queryByText('Refresh off')).not.toBeInTheDocument()
 })
 
@@ -43,7 +44,7 @@ test('selecting another interval stores it unpaused', async () => {
   useGlobalRefresh().resumeRefresh()
   render(GlobalRefreshControl, { props: { lastRefreshPosition: 'top' } })
 
-  await user.click(screen.getByRole('combobox', { name: 'Refresh interval' }))
+  await user.click(screen.getByRole('combobox', { name: 'Live refresh every' }))
   await user.click(await screen.findByText('60 sec'))
 
   expect(useGlobalRefresh().refreshIntervalSeconds.value).toBe(60)
@@ -55,7 +56,7 @@ test('"Turn off" pauses and keeps the interval', async () => {
   useGlobalRefresh().resumeRefresh()
   render(GlobalRefreshControl, { props: { lastRefreshPosition: 'top' } })
 
-  await user.click(screen.getByRole('combobox', { name: 'Refresh interval' }))
+  await user.click(screen.getByRole('combobox', { name: 'Live refresh every' }))
   await user.click(await screen.findByText('Turn off'))
 
   expect(useGlobalRefresh().refreshPaused.value).toBe(true)
@@ -105,7 +106,7 @@ test('picking an interval changes the rhythm, not the data on screen', async () 
   render(GlobalRefreshControl, { props: { lastRefreshPosition: 'top' } })
   const ticksBefore = useGlobalRefresh().refreshTick.value
 
-  await user.click(screen.getByRole('combobox', { name: 'Refresh interval' }))
+  await user.click(screen.getByRole('combobox', { name: 'Live refresh every' }))
   await user.click(await screen.findByText('60 sec'))
 
   expect(useGlobalRefresh().refreshTick.value).toBe(ticksBefore)

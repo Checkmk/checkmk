@@ -84,4 +84,4 @@ class GlobalTimePicker:
 
     @property
     def resume_refresh_button(self) -> Locator:
-        return self.refresh_indicator.get_by_role("button", name="Resume")
+        return self.refresh_indicator.get_by_role("button", name="Resume live refresh")

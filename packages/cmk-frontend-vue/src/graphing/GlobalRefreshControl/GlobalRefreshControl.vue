@@ -10,7 +10,7 @@ import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 
 import { useGlobalRefresh } from '../GlobalTimePicker/globalTimeState'
 import { pad2 } from '../utils/timeFormat'
@@ -51,11 +51,17 @@ const intervalOptions = computed<Suggestions>(() => ({
   ]
 }))
 
+// Each control unmounts itself when used, so the one taking its place takes the focus and its name
+// announces the new state.
+const intervalDropdown = ref<InstanceType<typeof CmkDropdown> | null>(null)
+const resumeButton = ref<InstanceType<typeof CmkButton> | null>(null)
+
 const intervalModel = computed<string | null>({
   get: () => String(refreshIntervalSeconds.value),
   set: (value) => {
     if (value === TURN_OFF) {
       pauseRefresh()
+      void nextTick(() => resumeButton.value?.focus())
     } else if (value !== null) {
       // Only rendered while the refresh runs, so this only changes the rhythm; Resume goes live.
       setRefreshIntervalSeconds(Number(value))
@@ -69,6 +75,7 @@ function resume(): void {
   // The range first: the refresh that follows draws whatever window this leaves behind.
   emit('resume')
   resumeRefresh()
+  void nextTick(() => intervalDropdown.value?.focus())
 }
 
 const lastRefreshLabel = computed(() => {
@@ -100,18 +107,27 @@ const lastRefreshLabel = computed(() => {
     >
       <span class="graphing-global-refresh-control__dot" aria-hidden="true" />
       <template v-if="!refreshPaused">
-        <span class="graphing-global-refresh-control__title">{{ _t('Live refresh') }}</span>
-        <span>{{ _t('every') }}</span>
+        <span class="graphing-global-refresh-control__title" aria-hidden="true">
+          {{ _t('Live refresh') }}
+        </span>
+        <span aria-hidden="true">{{ _t('every') }}</span>
         <CmkDropdown
+          ref="intervalDropdown"
           v-model="intervalModel"
           :options="intervalOptions"
-          :label="_t('Refresh interval')"
+          :label="_t('Live refresh every')"
           required
         />
       </template>
       <template v-else>
         <span class="graphing-global-refresh-control__title">{{ _t('Refresh off') }}</span>
-        <CmkButton size="small" class="graphing-global-refresh-control__resume" @click="resume">
+        <CmkButton
+          ref="resumeButton"
+          size="small"
+          class="graphing-global-refresh-control__resume"
+          :aria-label="_t('Resume live refresh')"
+          @click="resume"
+        >
           <CmkMultitoneIcon name="play" primary-color="success" size="small" />
           {{ _t('Resume') }}
         </CmkButton>

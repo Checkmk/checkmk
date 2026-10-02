@@ -6302,6 +6302,23 @@ SnmpExcludeSections = HostRulespec(
 )
 
 
+def _snmpv3_contexts_to_valuespec(contexts: Sequence[str]) -> tuple[bool, list[str]]:
+    # The default context is the empty context name, which a ListOfStrings cannot hold
+    return "" in contexts, [c for c in contexts if c]
+
+
+def _snmpv3_contexts_from_valuespec(value: tuple[bool, Sequence[str]]) -> list[str]:
+    use_default, names = value
+    return ([""] if use_default else []) + list(names)
+
+
+def _validate_snmpv3_contexts(contexts: Sequence[str], varprefix: str) -> None:
+    if not contexts:
+        raise MKUserError(
+            varprefix, _("Please select the default context or enter at least one context name.")
+        )
+
+
 def _valuespec_snmpv3_contexts() -> Tuple:
     return Tuple(
         title=_("SNMPv3 contexts to use in requests"),
@@ -6309,16 +6326,38 @@ def _valuespec_snmpv3_contexts() -> Tuple:
             "By default, Checkmk does not use a specific context during SNMPv3 queries, "
             "but some devices are offering their information in different SNMPv3 contexts. "
             "This rule can be used to configure, based on hosts and SNMP sections, which SNMPv3 "
-            "contexts Checkmk should ask for when getting information via SNMPv3."
+            "contexts Checkmk should ask for when getting information via SNMPv3. "
+            "The default context is only queried if it is selected here. "
+            "If several contexts return the same OIDs, only the data of the first context "
+            "is used."
         ),
         elements=[
             DropdownChoice(
                 title=_("Section name"),
                 choices=lambda: [(None, _("All SNMP sections"))] + get_snmp_section_names(),
             ),
-            ListOfStrings(
-                title=_("SNMP context names"),
-                allow_empty=False,
+            Transform(
+                Tuple(
+                    show_titles=False,
+                    elements=[
+                        Checkbox(
+                            title=_("Default context"),
+                            label=_("Query the default context (no context name)"),
+                            true_label=_("Default context"),
+                            false_label=_("No default context"),
+                            default_value=True,
+                        ),
+                        ListOfStrings(
+                            title=_("SNMP context names"),
+                            allow_empty=True,
+                            empty_text=_("No context names"),
+                        ),
+                    ],
+                ),
+                title=_("SNMP contexts"),
+                to_valuespec=_snmpv3_contexts_to_valuespec,
+                from_valuespec=_snmpv3_contexts_from_valuespec,
+                validate=_validate_snmpv3_contexts,
             ),
             DropdownChoice(
                 title=_("Error handling"),

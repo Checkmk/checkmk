@@ -33,7 +33,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import has_distributed_setup_remote_sites, is_distributed_setup_remote_site
-from cmk.gui.utils.host_relations import referenced_host_names
+from cmk.gui.utils.host_relations import referenced_host_names, RelationLink
 from cmk.gui.valuespec import (
     AbsoluteDate,
     Age,
@@ -87,6 +87,7 @@ from cmk.gui.watolib.host_relations import (
     host_relations_form_spec,
     relation_conflicts,
     relations_or_user_error,
+    with_links_the_dialog_cannot_show,
 )
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.tags import TagConfigFile
@@ -1347,7 +1348,7 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
 
 
 class HostAttributeRelations(ABCHostAttributeFormSpec):
-    """GUI-only relations between a host and its management board / OS hosts.
+    """GUI-only relations between a host and other hosts, such as its management board.
 
     Stored in ``hosts.mk`` on both hosts of a relation, but exported to the monitoring core
     elsewhere - see :mod:`cmk.gui.watolib.host_relations_export`.
@@ -1408,12 +1409,18 @@ class HostAttributeRelations(ABCHostAttributeFormSpec):
         return host_relations_form_spec()
 
     @override
+    def merge_with_stored(self, value: object, stored_value: object) -> list[RelationLink]:
+        """The form has no row for a link of a kind this version cannot place, so it is kept."""
+        return with_links_the_dialog_cannot_show(value, stored_value)
+
+    @override
     def openapi_field(self) -> Field:
         """Required of every attribute, but nothing reads this one: the host schemas list their
         fields by hand and relations are configured in Setup only."""
         return fields.List(
             fields.Dict(),
-            description="GUI-only relations between this host and its management board / OS hosts.",
+            description="GUI-only relations between this host and other hosts, such as its "
+            "management board.",
             required=False,
         )
 

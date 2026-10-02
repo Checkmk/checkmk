@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""GUI-only "Relations" between hosts (management boards <-> OS hosts).
+"""GUI-only "Relations" between hosts, such as a management board and the OS hosts it manages.
 
-This is a pure Setup/GUI feature. It links a management-board host to the OS hosts it manages
-(and vice versa) so both sides are navigable, and it is surfaced in the monitoring without ever
-changing how a host is checked or notified.
+This is a pure Setup/GUI feature. It links two hosts so both sides are navigable, and it is
+surfaced in the monitoring without ever changing how a host is checked or notified. Which kinds
+of relation there are is the table in :mod:`cmk.gui.utils.host_relation_kinds`; everything here
+works off it.
 
 Links are stored in the ``relations`` host attribute of **both** hosts, each from its own side,
 and one save writes both halves - so every host knows what it is related to by looking at itself,
@@ -41,6 +42,7 @@ from cmk.gui.utils.host_relation_kinds import (
     known_relations,
     RELATION_KINDS,
     RelationKind,
+    SymmetricRelationKind,
 )
 from cmk.gui.utils.host_relations import (
     parse_relations_value,
@@ -59,8 +61,6 @@ from cmk.rulesets.internal.form_specs import (
     CascadingSingleChoiceLayout,
     DictGroupExtended,
     DictionaryGroupLayout,
-    SingleChoiceElementExtended,
-    SingleChoiceExtended,
     StringAutocompleter,
 )
 from cmk.rulesets.v1 import Help, Label, Message, Title
@@ -127,22 +127,14 @@ def relation_choice_name(kind_id: str, direction: RelationDirection) -> str:
     return f"{kind_id}_{direction}"
 
 
-def _offered_kind() -> RelationKind:
-    """The kind every row of the dialog is of.
-
-    The type is not a choice yet, so the direction can be worded by the one kind there is. A
-    second kind makes the directions depend on the type and fails here until they do.
-    """
-    (kind,) = RELATION_KINDS.values()
-    return kind
-
-
 def _direction_to_disk(choice: object) -> object:
     assert isinstance(choice, tuple)
     return choice[0]
 
 
-def _direction_toggle(kind: RelationKind) -> TransformDataForLegacyFormatOrRecomposeFunction:
+def _direction_toggle(
+    kind: DirectedRelationKind,
+) -> TransformDataForLegacyFormatOrRecomposeFunction:
     """The direction as a toggle between the ends of the kind, stored as the plain direction.
 
     Sized small to sit at the height of the fields next to it.
@@ -151,10 +143,7 @@ def _direction_toggle(kind: RelationKind) -> TransformDataForLegacyFormatOrRecom
     return TransformDataForLegacyFormatOrRecomposeFunction(
         wrapped_form_spec=CascadingSingleChoiceExtended(
             title=Title("Direction"),
-            help_text=Help(
-                "What this host is to the selected one: its management board, or an OS "
-                "host managed by it."
-            ),
+            help_text=Help("What this host is to the selected one."),
             elements=[
                 CascadingSingleChoiceElement(
                     name=direction,
@@ -175,53 +164,96 @@ def _direction_toggle(kind: RelationKind) -> TransformDataForLegacyFormatOrRecom
     )
 
 
-def _relation_row() -> Dictionary:
-    """One row of the host dialog: the relation type, the direction and the host it applies to.
+def _direction_field(
+    kind: RelationKind,
+) -> TransformDataForLegacyFormatOrRecomposeFunction | FixedValue[str]:
+    """How a row says which end of ``kind`` the host being edited sits at.
 
-    The keys are those of a :class:`RelationLink`, so a row is the stored link. The direction
-    titles describe the end the host being edited sits at towards the selected host, so a row
-    reads left to right as "this host is management board of <related host>".
+    A symmetric kind has one end only, so there is nothing to choose: the row just reads it.
     """
-    kind = _offered_kind()
+    match kind:
+        case DirectedRelationKind():
+            return _direction_toggle(kind)
+        case SymmetricRelationKind():
+            return FixedValue[str](
+                value="symmetric",
+                title=Title("Direction"),
+                label=Label(str(kind.peer.row)),  # astrein: disable=localization-checker
+            )
+
+
+def _relation_ends(kind: RelationKind) -> Dictionary:
+    """The direction and the host of a row, once its type is ``kind``.
+
+    The keys are those of a :class:`RelationLink`. The direction titles describe the end the host
+    being edited sits at towards the selected host, so a row reads left to right as "this host
+    is management board of <related host>".
+    """
     row = DictGroupExtended(layout=DictionaryGroupLayout.horizontal)
     return Dictionary(
-        # Not rendered by the list, but names the row for screen readers.
+        # Not rendered, but names the fields for screen readers.
         title=Title("Relation"),
         elements={
-            "kind": DictElement(
-                required=True,
-                group=row,
-                parameter_form=SingleChoiceExtended[str](
-                    title=Title("Type"),
-                    help_text=Help(
-                        "What the two hosts are to each other. Management board is the only "
-                        "relation type so far."
-                    ),
-                    elements=[
-                        SingleChoiceElementExtended(
-                            name=kind.id,
-                            # Already a translatable string, held lazily by the kind.
-                            title=Title(str(kind.title)),  # astrein: disable=localization-checker
-                        )
-                    ],
-                    prefill=DefaultValue(kind.id),
-                    frozen=True,
-                ),
-            ),
             "direction": DictElement(
-                required=True, group=row, parameter_form=_direction_toggle(kind)
+                required=True, group=row, parameter_form=_direction_field(kind)
             ),
             "host": DictElement(required=True, group=row, parameter_form=_related_host_choice()),
         },
     )
 
 
-def host_relations_form_spec() -> TransformDataForLegacyFormatOrRecomposeFunction:
+def _relation_row(kinds: Mapping[str, RelationKind]) -> CascadingSingleChoiceExtended:
+    """One row of the host dialog: the relation type, and next to it the direction and the host.
+
+    The type is the choice the rest of the row hangs on: which directions there are to pick
+    from, and how they are worded, is the kind's to say. Laid out horizontally, with a label,
+    so that the type sits in line with the fields it decides and carries a title like they do.
+    """
+    return CascadingSingleChoiceExtended(
+        title=Title("Type"),
+        label=Label("Type"),
+        help_text=Help("What the two hosts are to each other."),
+        elements=[
+            CascadingSingleChoiceElement(
+                name=kind.id,
+                title=Title(str(kind.title)),  # astrein: disable=localization-checker
+                parameter_form=_relation_ends(kind),
+            )
+            for kind in kinds.values()
+        ],
+        prefill=DefaultValue(next(iter(kinds))),
+        layout=CascadingSingleChoiceLayout.horizontal,
+    )
+
+
+def _row_of(link: RelationLink) -> tuple[str, Mapping[str, object]]:
+    return link["kind"], {"direction": link["direction"], "host": link["host"]}
+
+
+def _links_of(rows: object) -> list[Mapping[str, object]]:
+    """The rows of the dialog as the links they store; the shape is the form's, not the user's."""
+    assert isinstance(rows, list)
+    links: list[Mapping[str, object]] = []
+    for row in rows:
+        assert isinstance(row, tuple)
+        kind, ends = row
+        assert isinstance(ends, Mapping)
+        links.append({"kind": kind, **ends})
+    return links
+
+
+def host_relations_form_spec(
+    kinds: Mapping[str, RelationKind] = RELATION_KINDS,
+) -> TransformDataForLegacyFormatOrRecomposeFunction:
     """FormSpec of the ``relations`` attribute: one row per relation.
 
     A row is edited as the :class:`RelationLink` it stores - the self-describing mapping the
     export and the monitoring views read. That is what a hand written "hosts.mk" shows, and a
-    named key can gain a sibling in a later version where a tuple position cannot.
+    named key can gain a sibling in a later version where a tuple position cannot. Only the
+    dialog nests the direction and the host under the type, because the type decides them.
+
+    ``kinds`` are the kinds the dialog offers. A stored link of any other kind has no row and is
+    left out here; the save puts it back (see :func:`with_links_the_dialog_cannot_show`).
     """
     return TransformDataForLegacyFormatOrRecomposeFunction(
         # "Related hosts" is taken by the section this sits in.
@@ -233,18 +265,39 @@ def host_relations_form_spec() -> TransformDataForLegacyFormatOrRecomposeFunctio
             "both: it appears here right away when someone records it on the other host, and "
             "adding or removing one here changes that host too."
         ),
-        wrapped_form_spec=List[Mapping[str, object]](
+        wrapped_form_spec=List[tuple[str, object]](
             add_element_label=Label("Add new relation"),
             remove_element_label=Label("Remove this relation"),
             no_element_label=Label("No relations"),
             editable_order=False,
-            element_template=_relation_row(),
+            element_template=_relation_row(kinds),
         ),
-        # A link of a kind or direction the dialog has no choice for cannot be shown as a row.
-        from_disk=lambda raw: known_relations(parse_relations_value(raw)),
+        from_disk=lambda raw: [
+            _row_of(link) for link in known_relations(parse_relations_value(raw), kinds=kinds)
+        ],
         # Unusable rows are kept out by the validators of the row.
-        to_disk=parse_relations_value,
+        to_disk=lambda rows: parse_relations_value(_links_of(rows)),
     )
+
+
+def with_links_the_dialog_cannot_show(
+    relations_value: object,
+    stored_value: object,
+    *,
+    kinds: Mapping[str, RelationKind] = RELATION_KINDS,
+) -> list[RelationLink]:
+    """``relations_value`` as the dialog submitted it, plus every stored link of a kind it has no
+    row for - a kind not in ``kinds``, the ones the dialog offered.
+
+    The counterpart of :func:`host_relations_form_spec` leaving such a link out: no row showed
+    it, so the user cannot have removed it. Without this, saving a host from an older version
+    would drop the relations a newer one wrote on it - and, through the mirror, their other
+    halves too. A link of a known kind with an end that kind does not have is not kept: no
+    version will ever place it, and nothing but the save could get rid of it.
+    """
+    links = relations_or_user_error(relations_value)
+    links.extend(link for link in relations_or_empty(stored_value) if link["kind"] not in kinds)
+    return links
 
 
 ResolvedRelations = dict[HostName, list[ResolvedRelation]]

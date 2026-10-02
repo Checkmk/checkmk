@@ -16,12 +16,17 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.visitors._utils import option_id
 from cmk.gui.http import request
+from cmk.gui.utils.host_relations import RelationLink
 from cmk.gui.watolib.builtin_attributes import HostAttributeRelations
 from cmk.gui.watolib.form_spec_generators import create_host_attributes_selection
-from cmk.gui.watolib.host_attributes import host_attribute_registry
+from cmk.gui.watolib.host_attributes import (
+    collect_attributes,
+    host_attribute_registry,
+    HostAttributes,
+)
 from cmk.rulesets.internal.form_specs import CascadingSingleChoiceExtended
+from tests.unit.cmk.gui.helpers.host_attributes_test_helper import submitted_relation_row
 
 
 @pytest.mark.usefixtures("request_context")
@@ -57,12 +62,63 @@ def test_a_row_without_a_host_is_reported_at_the_field() -> None:
     """collect_attributes() reads the form before it validates it, so the refusal has to come out
     of from_html_vars() as a user error - otherwise the save ends in a crash report."""
     request.set_var(
-        "relations",
-        json.dumps([{"kind": option_id("management"), "direction": ["child", None], "host": ""}]),
+        "relations", json.dumps([submitted_relation_row("management", ["child", None], "")])
     )
 
     with pytest.raises(MKUserError, match="Select the host this relation points to"):
         HostAttributeRelations().from_html_vars("")
+
+
+@pytest.mark.usefixtures("request_context")
+def test_a_saved_host_keeps_a_relation_of_a_kind_the_dialog_cannot_show() -> None:
+    """The dialog has no row for a kind of a later version, so the user cannot have removed it -
+    and it must not take the other half on the related host with it."""
+    attribute = HostAttributeRelations()
+    later: RelationLink = {"kind": "peering", "direction": "symmetric", "host": HostName("peer")}
+    request.set_var("host_change_relations", "1")
+    request.set_var(
+        "relations", json.dumps([submitted_relation_row("management", ["child", None], "board")])
+    )
+
+    attributes = collect_attributes(
+        {attribute.name(): attribute},
+        for_what="host",
+        new=False,
+        stored=HostAttributes({"relations": [later]}),
+    )
+
+    assert attributes["relations"] == [
+        {"kind": "management", "direction": "child", "host": "board"},
+        later,
+    ]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_a_saved_host_drops_a_relation_whose_kind_does_not_have_that_end() -> None:
+    """Unlike a kind of a later version, nothing will ever place it, and only the save can get
+    rid of it: the dialog has no row for it and the export skips it."""
+    attribute = HostAttributeRelations()
+    request.set_var("host_change_relations", "1")
+    request.set_var(
+        "relations", json.dumps([submitted_relation_row("management", ["child", None], "board")])
+    )
+
+    attributes = collect_attributes(
+        {attribute.name(): attribute},
+        for_what="host",
+        new=False,
+        stored=HostAttributes(
+            {
+                "relations": [
+                    {"kind": "management", "direction": "symmetric", "host": HostName("board")}
+                ]
+            }
+        ),
+    )
+
+    assert attributes["relations"] == [
+        {"kind": "management", "direction": "child", "host": "board"}
+    ]
 
 
 def test_relations_attribute_is_described_by_its_form_spec() -> None:

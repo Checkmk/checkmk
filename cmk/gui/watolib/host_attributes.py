@@ -401,6 +401,14 @@ class ABCHostAttribute(abc.ABC):
         request context (e.g. the logged in user)."""
         return None
 
+    def merge_with_stored(self, value: Any, stored_value: Any) -> Any:  # noqa: ARG002
+        """The value to store, given what the form submitted and what the object stores.
+
+        The submitted value replaces the stored one whole. An attribute whose form cannot show
+        all of a stored value overrides this to keep the part the form did not offer - the
+        user cannot have removed what they never saw."""
+        return value
+
     def effective_default_value(self, sites: SiteConfigurations) -> Any:  # noqa: ARG002
         """Return the default value used when computing effective attributes
 
@@ -1009,7 +1017,8 @@ def collect_attributes(
 
     ``stored`` are the attributes of the object being edited. The result replaces them whole, so
     an editor of an existing object has to pass them: an attribute its form does not offer is
-    kept as it is stored instead of being read from the request.
+    kept as it is stored instead of being read from the request, and an attribute whose form
+    offers only part of a value keeps the rest (see :meth:`ABCHostAttribute.merge_with_stored`).
     """
     host = HostAttributes()
     for attr in host_attributes.values():
@@ -1038,6 +1047,8 @@ def collect_attributes(
             continue
 
         value = attr.from_html_vars(varprefix)
+        if stored is not None and attrname in stored:
+            value = attr.merge_with_stored(value, stored[attrname])  # type: ignore[literal-required]
 
         if do_validate and attr.needs_validation(for_what, new):
             attr.validate_input(value, varprefix)

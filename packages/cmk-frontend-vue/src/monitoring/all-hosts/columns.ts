@@ -331,7 +331,7 @@ export function buildHostColumns({
             maxSize: 130,
             meta: {
               justify: 'right',
-              headerTitle: _t('Number of related hosts (management board / OS host)')
+              headerTitle: _t('Number of related hosts')
             }
           } satisfies ColumnDef<HostEntry>
         ]

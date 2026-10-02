@@ -186,23 +186,29 @@ RELATION_KINDS: Final[Mapping[str, RelationKind]] = {
 }
 
 
-def kind_accepts(kind_id: str, direction: RelationDirection) -> bool:
-    """Whether this version knows ``kind_id`` and that kind has such an end.
+def kind_accepts(
+    kind_id: str,
+    direction: RelationDirection,
+    *,
+    kinds: Mapping[str, RelationKind] = RELATION_KINDS,
+) -> bool:
+    """Whether ``kinds`` - by default the ones this version knows - has ``kind_id`` with such an end.
 
     Both halves are the same question for a reader: a link it cannot place is one it has to skip,
     whether the kind is from a later version or the direction does not belong to the kind it
     names.
     """
-    kind = RELATION_KINDS.get(kind_id)
+    kind = kinds.get(kind_id)
     return kind is not None and direction in kind.directions()
 
 
 def known_relations(
     links: Iterable[RelationLink],
     *,
+    kinds: Mapping[str, RelationKind] = RELATION_KINDS,
     on_unknown: Callable[[RelationLink], None] = lambda _link: None,
 ) -> list[RelationLink]:
-    """The links whose kind and direction this version can place.
+    """The links whose kind and direction ``kinds`` can place.
 
     The others are reported rather than rejected: a link of a later version must not cost a host
     the rest of its relations, the same forward-compatibility rule
@@ -210,7 +216,7 @@ def known_relations(
     """
     known = []
     for link in links:
-        if kind_accepts(link["kind"], link["direction"]):
+        if kind_accepts(link["kind"], link["direction"], kinds=kinds):
             known.append(link)
         else:
             on_unknown(link)

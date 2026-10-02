@@ -17,8 +17,13 @@ from cmk.gui.form_specs import (
     RawFrontendData,
     VisitorOptions,
 )
-from cmk.gui.form_specs.visitors._utils import option_id
-from cmk.gui.utils.host_relation_kinds import RELATION_KINDS
+from cmk.gui.i18n import _l
+from cmk.gui.utils.host_relation_kinds import (
+    RELATION_KINDS,
+    RelationEnd,
+    RelationKind,
+    SymmetricRelationKind,
+)
 from cmk.gui.utils.host_relations import (
     RelationDirection,
     RelationLink,
@@ -35,28 +40,54 @@ from cmk.gui.watolib.host_relations import (
     relations_deletion_note,
     relations_or_user_error,
     resolve_all_relations,
+    with_links_the_dialog_cannot_show,
 )
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
+from tests.unit.cmk.gui.helpers.host_attributes_test_helper import submitted_relation_row
 from tests.unit.cmk.gui.watolib.host_relations_fakes import fake_hosts, FakeHost
 
 _VISITOR_OPTIONS = VisitorOptions(migrate_values=False, mask_values=False)
 
+#: The kinds this version ships plus a symmetric one, so that the dialog can be exercised with a
+#: type that is a real choice and with an end that is none.
+_TWO_KINDS: Mapping[str, RelationKind] = {
+    **RELATION_KINDS,
+    "peering": SymmetricRelationKind(
+        id="peering",
+        title=_l("Peering"),
+        peer=RelationEnd(row=_l("is peer of"), noun=_l("Peer")),
+    ),
+}
 
-def _row() -> shared_type_defs.Dictionary:
-    spec, _value = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS).to_vue(DEFAULT_VALUE)
+
+def _list(kinds: Mapping[str, RelationKind] = RELATION_KINDS) -> shared_type_defs.List:
+    spec, _value = get_visitor(host_relations_form_spec(kinds), _VISITOR_OPTIONS).to_vue(
+        DEFAULT_VALUE
+    )
     assert isinstance(spec, shared_type_defs.List)
-    assert isinstance(spec.element_template, shared_type_defs.Dictionary)
-    return spec.element_template
-
-
-def _field(name: str) -> shared_type_defs.DictionaryElement:
-    return next(element for element in _row().elements if element.name == name)
-
-
-def _choice(name: str) -> shared_type_defs.SingleChoice:
-    spec = _field(name).parameter_form
-    assert isinstance(spec, shared_type_defs.SingleChoice)
     return spec
+
+
+def _row(
+    kinds: Mapping[str, RelationKind] = RELATION_KINDS,
+) -> shared_type_defs.CascadingSingleChoice:
+    row = _list(kinds).element_template
+    assert isinstance(row, shared_type_defs.CascadingSingleChoice)
+    return row
+
+
+def _ends(
+    kind: str, kinds: Mapping[str, RelationKind] = RELATION_KINDS
+) -> shared_type_defs.Dictionary:
+    element = next(element for element in _row(kinds).elements if element.name == kind)
+    assert isinstance(element.parameter_form, shared_type_defs.Dictionary)
+    return element.parameter_form
+
+
+def _field(
+    name: str, *, kind: str = "management", kinds: Mapping[str, RelationKind] = RELATION_KINDS
+) -> shared_type_defs.DictionaryElement:
+    return next(element for element in _ends(kind, kinds).elements if element.name == name)
 
 
 def _direction_toggle() -> shared_type_defs.CascadingSingleChoice:
@@ -65,31 +96,33 @@ def _direction_toggle() -> shared_type_defs.CascadingSingleChoice:
     return spec
 
 
-def _submitted_row(kind: str, direction: str, host: str) -> dict[str, object]:
-    """A row as the dialog submits it: a single choice sends the id of the selected option, the
-    direction toggle the selected direction with the empty value of its element."""
-    return {"kind": option_id(kind), "direction": [direction, None], "host": host}
-
-
-def test_a_row_asks_for_type_direction_and_host_side_by_side() -> None:
-    row = _row()
-    assert [(element.name, element.required) for element in row.elements] == [
-        ("kind", True),
+def test_a_row_hangs_direction_and_host_on_the_type() -> None:
+    ends = _ends("management").elements
+    assert [(element.name, element.required) for element in ends] == [
         ("direction", True),
         ("host", True),
     ]
-    assert {element.group.layout for element in row.elements if element.group} == {
+    assert {element.group.layout for element in ends if element.group} == {
         shared_type_defs.DictionaryGroupLayout.horizontal
     }
-    assert all(element.parameter_form.help for element in row.elements)
+    assert all(element.parameter_form.help for element in ends)
 
 
-def test_the_type_is_the_one_kind_there_is_and_cannot_be_changed() -> None:
-    kind = _choice("kind")
-    assert [element.name for element in kind.elements] == [option_id("management")]
-    assert [element.title for element in kind.elements] == ["Management board"]
-    assert kind.frozen is True
-    assert _field("kind").default_value == option_id("management")
+def test_the_type_sits_in_line_with_its_fields_under_a_title_of_its_own() -> None:
+    row = _row()
+    assert row.layout == shared_type_defs.CascadingSingleChoiceLayout.horizontal
+    assert row.label == "Type"
+    assert row.help
+
+
+def test_the_type_offers_the_kinds_there_are() -> None:
+    assert [element.name for element in _row().elements] == ["management"]
+    assert [element.title for element in _row().elements] == ["Management board"]
+    assert [element.name for element in _row(_TWO_KINDS).elements] == ["management", "peering"]
+
+
+def test_a_new_row_is_of_the_first_kind() -> None:
+    assert _list(_TWO_KINDS).element_default_value[0] == "management"
 
 
 def test_the_direction_reads_as_a_sentence_about_the_host_being_edited() -> None:
@@ -113,18 +146,26 @@ def test_a_new_row_makes_this_host_the_management_board() -> None:
     assert _field("direction").default_value == ("parent", None)
 
 
+def test_a_symmetric_kind_has_nothing_to_choose_for_its_direction() -> None:
+    direction = _field("direction", kind="peering", kinds=_TWO_KINDS).parameter_form
+    assert isinstance(direction, shared_type_defs.FixedValue)
+    assert (direction.value, direction.label) == ("symmetric", "is peer of")
+
+
 def test_the_form_round_trips_stored_links() -> None:
     links: RelationsValue = [
         {"kind": "management", "direction": "parent", "host": HostName("mgmt1")},
         {"kind": "management", "direction": "child", "host": HostName("os1")},
+        {"kind": "peering", "direction": "symmetric", "host": HostName("peer")},
     ]
-    visitor = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS)
+    visitor = get_visitor(host_relations_form_spec(_TWO_KINDS), _VISITOR_OPTIONS)
     assert visitor.validate(RawDiskData(links)) == []
     assert visitor.to_disk(RawDiskData(links)) == links
 
 
 def test_the_form_leaves_out_a_link_it_cannot_offer_a_row_for() -> None:
-    """A kind of a later version has no element to select, so the dialog cannot show its row."""
+    """A kind of a later version has no type to select, so the dialog cannot show its row. The
+    save carries such a link over, see test_host_attributes_relations."""
     links: RelationsValue = [
         {"kind": "peering", "direction": "symmetric", "host": HostName("peer")},
         {"kind": "management", "direction": "child", "host": HostName("os1")},
@@ -136,32 +177,44 @@ def test_the_form_leaves_out_a_link_it_cannot_offer_a_row_for() -> None:
     ]
 
 
+def test_the_save_puts_back_only_what_the_dialog_could_not_show() -> None:
+    """A link the dialog did show is the user's to keep or remove, not the save's to restore."""
+    shown: RelationLink = {"kind": "peering", "direction": "symmetric", "host": HostName("peer")}
+    hidden: RelationLink = {"kind": "rack", "direction": "symmetric", "host": HostName("rack")}
+
+    assert with_links_the_dialog_cannot_show([], [shown, hidden], kinds=_TWO_KINDS) == [hidden]
+
+
 def test_the_form_stores_the_rows_the_dialog_submits() -> None:
     rows = RawFrontendData(
         [
-            _submitted_row("management", "parent", "mgmt1"),
-            _submitted_row("management", "child", "os1"),
+            submitted_relation_row("management", ["parent", None], "mgmt1"),
+            submitted_relation_row("management", ["child", None], "os1"),
+            submitted_relation_row("peering", "symmetric", "peer"),
         ]
     )
-    visitor = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS)
+    visitor = get_visitor(host_relations_form_spec(_TWO_KINDS), _VISITOR_OPTIONS)
     assert visitor.validate(rows) == []
     assert visitor.to_disk(rows) == [
         {"kind": "management", "direction": "parent", "host": "mgmt1"},
         {"kind": "management", "direction": "child", "host": "os1"},
+        {"kind": "peering", "direction": "symmetric", "host": "peer"},
     ]
 
 
 def test_the_form_asks_for_a_host_the_row_is_missing() -> None:
     """The dialog submits the empty name the host field defaults to."""
     visitor = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS)
-    messages = visitor.validate(RawFrontendData([_submitted_row("management", "child", "")]))
+    messages = visitor.validate(
+        RawFrontendData([submitted_relation_row("management", ["child", None], "")])
+    )
     assert [message.message for message in messages] == ["Select the host this relation points to."]
 
 
 def test_the_form_rejects_a_host_name_that_cannot_be_stored() -> None:
     visitor = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS)
     messages = visitor.validate(
-        RawFrontendData([_submitted_row("management", "child", "no spaces")])
+        RawFrontendData([submitted_relation_row("management", ["child", None], "no spaces")])
     )
     assert [message.message for message in messages] == ["This is not a usable host name."]
 

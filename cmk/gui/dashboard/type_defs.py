@@ -109,14 +109,20 @@ class MetricCurrentValue(TypedDict):
     type: Literal["current"]
 
 
-class MetricFixedWindow(TypedDict):
+class FixedWindow(TypedDict):
     type: Literal["range"]
     window: TimerangeValue
+
+
+class DashboardWindow(TypedDict):
+    type: Literal["dashboard"]
+
+
+class MetricFixedWindow(FixedWindow):
     rrd_consolidation: Literal["average", "min", "max"]
 
 
-class MetricDashboardWindow(TypedDict):
-    type: Literal["dashboard"]
+class MetricDashboardWindow(DashboardWindow):
     rrd_consolidation: Literal["average", "min", "max"]
 
 

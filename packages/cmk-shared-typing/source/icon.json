@@ -601,6 +601,7 @@
         "service-to-removed",
         "service-to-unchanged",
         "service-to-undecided",
+        "shadow",
         "showbi",
         "showhide",
         "show-less",

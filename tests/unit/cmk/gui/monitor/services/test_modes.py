@@ -11,7 +11,7 @@ from cmk.gui.monitor.services._api._modes import (
     build_service_modes,
     build_service_modes_by_id,
 )
-from cmk.gui.monitor.services._models import ServiceState
+from cmk.gui.monitor.services._models import CheckType, ServiceState
 
 from .testlib import login_with, ServiceFactory, ServiceOverviewFactory
 
@@ -44,6 +44,7 @@ _NO_MODES = {
     "in_service_period": True,
     "in_check_period": True,
     "is_flapping": False,
+    "check_type": CheckType.ACTIVE,
     # A crash is read off the state and the output, so a plain OK keeps the crash icon away.
     "state": ServiceState.OK,
     "summary": "OK - everything is fine",
@@ -153,6 +154,7 @@ def test_build_service_modes_by_id_all_modes() -> None:
         in_service_period=False,
         in_check_period=False,
         is_flapping=True,
+        check_type=CheckType.SHADOW,
     )
 
     assert [
@@ -168,6 +170,7 @@ def test_build_service_modes_by_id_all_modes() -> None:
         "outofnot",
         "outof-serviceperiod",
         "pause",
+        "shadow",
     ]
 
 
@@ -187,6 +190,7 @@ def test_build_service_modes_all_modes() -> None:
         in_service_period=False,
         in_check_period=False,
         is_flapping=True,
+        check_type=CheckType.SHADOW,
     )
 
     assert [mode.icon_name for mode in build_service_modes(service)] == [
@@ -199,6 +203,7 @@ def test_build_service_modes_all_modes() -> None:
         "outofnot",
         "outof-serviceperiod",
         "pause",
+        "shadow",
     ]
 
 
@@ -207,6 +212,26 @@ def test_build_service_modes_flapping_is_not_a_mode() -> None:
     service = ServiceOverviewFactory.build(**_NO_MODES | {"is_flapping": True})
 
     assert build_service_modes(service) == []
+
+
+def test_build_service_modes_by_id_marks_a_shadow_service() -> None:
+    service = ServiceFactory.build(**_NO_MODES | {"check_type": CheckType.SHADOW})
+    modes = build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID)
+
+    assert [(mode.icon_name, mode.link) for mode in modes] == [("shadow", "")]
+    assert "remote site" in modes[0].title
+
+
+def test_build_service_modes_marks_a_shadow_service() -> None:
+    service = ServiceOverviewFactory.build(**_NO_MODES | {"check_type": CheckType.SHADOW})
+
+    assert [mode.icon_name for mode in build_service_modes(service)] == ["shadow"]
+
+
+def test_build_service_modes_by_id_passive_service_is_not_a_shadow() -> None:
+    service = ServiceFactory.build(**_NO_MODES | {"check_type": CheckType.PASSIVE})
+
+    assert build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID) == []
 
 
 _CRASHED_OUTPUT = "UNKNOWN - check failed - please submit a crash report! (Crash-ID: abc-123)"

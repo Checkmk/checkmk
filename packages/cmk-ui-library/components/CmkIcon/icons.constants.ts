@@ -492,6 +492,7 @@ import lightIconServicesGreenSvg from '~cmk-frontend/themes/facelift/images/icon
 import lightIconServicesRefreshSvg from '~cmk-frontend/themes/facelift/images/icon_services_refresh.svg?url&no-inline'
 import lightIconServicesStopPng from '~cmk-frontend/themes/facelift/images/icon_services_stop.png?url&no-inline'
 import lightIconServicesTabulaRasaSvg from '~cmk-frontend/themes/facelift/images/icon_services_tabula_rasa.svg?url&no-inline'
+import lightIconShadowPng from '~cmk-frontend/themes/facelift/images/icon_shadow.png?url&no-inline'
 import lightIconShowLessSvg from '~cmk-frontend/themes/facelift/images/icon_show_less.svg?url&no-inline'
 import lightIconShowLessGreenSvg from '~cmk-frontend/themes/facelift/images/icon_show_less_green.svg?url&no-inline'
 import lightIconShowMoreSvg from '~cmk-frontend/themes/facelift/images/icon_show_more.svg?url&no-inline'
@@ -1297,6 +1298,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   'services-refresh': lightIconServicesRefreshSvg,
   'services-stop': lightIconServicesStopPng,
   'services-tabula-rasa': lightIconServicesTabulaRasaSvg,
+  shadow: lightIconShadowPng,
   'show-less-green': lightIconShowLessGreenSvg,
   'show-more-green': lightIconShowMoreGreenSvg,
   showbi: lightIconShowbiPng,

@@ -540,6 +540,7 @@ export const iconSearchLabels: Record<string, string[]> = {
   'services-stop': ['halt checks', 'square'],
   'services-tabula-rasa': ['reset checks', 'clean slate discovery'],
   setup: ['gear', 'cog', 'config', 'settings', 'preferences'],
+  shadow: ['remote site', 'mirror', 'replica', 'not manageable'],
   share: ['send', 'distribute', 'export', 'publish'],
   'show-less': ['collapse', 'minus', 'hide details', 'fold'],
   'show-less-green': ['collapse', 'hide details', 'fold'],

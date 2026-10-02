@@ -6,7 +6,7 @@ from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework.model import api_field, api_model
 
-from .._models import Service, ServiceOverview
+from .._models import CheckType, Service, ServiceOverview
 from ._urls import (
     crash_report_link,
     host_view_link,
@@ -37,6 +37,14 @@ def _comment_title(count: int) -> str:
         "This service has %(count)d comments",
         count,
     ) % {"count": count}
+
+
+def _shadow_service_mode() -> ServiceModeInfo:
+    return ServiceModeInfo(
+        icon_name="shadow",
+        link="",
+        title=_("This object is a shadow object from a remote site. It cannot be managed here."),
+    )
 
 
 def _crashed_check_mode(service: Service, *, site_id: str) -> ServiceModeInfo:
@@ -151,6 +159,8 @@ def build_service_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
         )
     if service.check_crashed:
         modes.append(_crashed_check_mode(service, site_id=service.site_id))
+    if service.check_type is CheckType.SHADOW:
+        modes.append(_shadow_service_mode())
     return modes
 
 
@@ -243,6 +253,8 @@ def build_service_modes_by_id(
         )
     if service.check_crashed:
         modes.append(_crashed_check_mode(service, site_id=site_id))
+    if service.check_type is CheckType.SHADOW:
+        modes.append(_shadow_service_mode())
     return modes
 
 

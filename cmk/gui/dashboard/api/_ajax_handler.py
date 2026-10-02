@@ -31,7 +31,6 @@ from cmk.gui.dashboard.type_defs import (
     EventBarChartDashletConfig,
     ProblemsGraphDashletConfig,
     SingleTimeseriesDashletConfig,
-    SiteOverviewDashletConfig,
 )
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -41,23 +40,16 @@ from cmk.gui.type_defs import SingleInfos, VisualContext
 
 from .model.widget import WidgetGeneralSettings, WidgetTitle
 from .model.widget_content.metric import BarplotContent
-from .model.widget_content.overview import AlertOverviewContent, SiteOverviewContent
+from .model.widget_content.overview import AlertOverviewContent
 from .model.widget_content.timeline import AlertTimelineContent, NotificationTimelineContent
 
 type FigureContent = Annotated[
-    AlertOverviewContent
-    | AlertTimelineContent
-    | BarplotContent
-    | NotificationTimelineContent
-    | SiteOverviewContent,
+    AlertOverviewContent | AlertTimelineContent | BarplotContent | NotificationTimelineContent,
     Discriminator("type"),
 ]
 
 type FigureDashletConfig = (
-    AlertOverviewDashletConfig
-    | BarplotDashletConfig
-    | EventBarChartDashletConfig
-    | SiteOverviewDashletConfig
+    AlertOverviewDashletConfig | BarplotDashletConfig | EventBarChartDashletConfig
 )
 
 

@@ -400,8 +400,60 @@ class TestSiteOverviewContent:
                 "type": "site_overview",
                 "dataset": "sites",
                 "hexagon_size": "default",
+                "contextual_link": {"type": "default"},
             },
         )
+
+    def test_an_inherited_link_round_trips(self, clients: ClientRegistry) -> None:
+        link = {
+            "type": "inherited",
+            "location": {"type": "dashboards", "name": "main"},
+            "include_context": True,
+            "include_time_range": False,
+            "show_filter_form": False,
+        }
+        clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "site_overview_dashboard",
+                {
+                    "site_overview": create_widget(
+                        {
+                            "type": "site_overview",
+                            "dataset": "sites",
+                            "hexagon_size": "default",
+                            "contextual_link": link,
+                        }
+                    )
+                },
+            )
+        )
+
+        widgets = clients.DashboardClient.get_relative_grid_dashboard(
+            "site_overview_dashboard"
+        ).json["extensions"]["widgets"]
+        assert next(iter(widgets.values()))["content"]["contextual_link"] == link
+
+    def test_an_explicit_default_reads_back_as_default(self, clients: ClientRegistry) -> None:
+        clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "site_overview_dashboard",
+                {
+                    "site_overview": create_widget(
+                        {
+                            "type": "site_overview",
+                            "dataset": "sites",
+                            "hexagon_size": "default",
+                            "contextual_link": {"type": "default"},
+                        }
+                    )
+                },
+            )
+        )
+
+        widgets = clients.DashboardClient.get_relative_grid_dashboard(
+            "site_overview_dashboard"
+        ).json["extensions"]["widgets"]
+        assert next(iter(widgets.values()))["content"]["contextual_link"] == {"type": "default"}
 
 
 @pytest.mark.parametrize("widget_type", ["alert_timeline", "notification_timeline"])

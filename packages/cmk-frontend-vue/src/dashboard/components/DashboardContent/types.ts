@@ -31,8 +31,7 @@ export const CONTENT_FIGURE_TYPES: string[] = [
   'alert_overview',
   'alert_timeline',
   'barplot',
-  'notification_timeline',
-  'site_overview'
+  'notification_timeline'
 ]
 
 export type ContentFigureType = (typeof CONTENT_FIGURE_TYPES)[number]

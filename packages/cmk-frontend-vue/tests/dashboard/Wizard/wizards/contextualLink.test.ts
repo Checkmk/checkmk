@@ -17,6 +17,7 @@ import type {
 } from '@/dashboard/components/Wizard/types'
 import { useHostState } from '@/dashboard/components/Wizard/wizards/hosts-site/stage2/HostState/composables/useHostState'
 import { useHostStatistics } from '@/dashboard/components/Wizard/wizards/hosts-site/stage2/HostStatistics/composables/useHostStatistics'
+import { useSiteOverview } from '@/dashboard/components/Wizard/wizards/hosts-site/stage2/SiteOverview/composables/useSiteOverview'
 import { useInventory } from '@/dashboard/components/Wizard/wizards/hw_sw_inventory/stage2/InventoryWidget/useInventory'
 import { useServiceState } from '@/dashboard/components/Wizard/wizards/services/stage2/ServiceState/composables/useServiceState'
 import { useServiceStatistics } from '@/dashboard/components/Wizard/wizards/services/stage2/ServiceStatistics/composables/useServiceStatistics'
@@ -66,6 +67,17 @@ const WIZARDS: LinkWizard[] = [
     storedContent: (link) => ({
       type: 'inventory',
       path: '.hardware.cpu.cores',
+      contextual_link: link
+    })
+  },
+  {
+    name: 'useSiteOverview',
+    type: 'site_overview',
+    openWizard: (stored) => useSiteOverview({}, stored && storedSpec(stored)),
+    storedContent: (link) => ({
+      type: 'site_overview',
+      dataset: 'hosts',
+      hexagon_size: 'large',
       contextual_link: link
     })
   }

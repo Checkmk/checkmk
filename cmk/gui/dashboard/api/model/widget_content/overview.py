@@ -2,16 +2,27 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Iterable, Mapping
 from typing import Literal, override, Self
+
+from pydantic_core import ErrorDetails
 
 from cmk.gui.dashboard.type_defs import (
     AlertOverviewDashletConfig,
     FixedWindow,
     SiteOverviewDashletConfig,
 )
+from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import timerange_from_internal, TimerangeModel
+from cmk.gui.type_defs import DashboardEmbeddedViewSpec
 
+from ..contextual_link import (
+    contextual_link_from_internal,
+    contextual_link_to_internal,
+    ContextualLinkSpec,
+    iter_contextual_link_target_errors,
+)
 from ._base import BaseWidgetContent
 
 
@@ -66,11 +77,18 @@ class SiteOverviewContent(BaseWidgetContent):
     hexagon_size: Literal["default", "large"] = api_field(
         description="Defines the size of the hexagons in the widget.",
     )
+    contextual_link: ContextualLinkSpec = api_field(
+        description="Where a click on a site or a host leads."
+    )
 
     @classmethod
     @override
     def internal_type(cls) -> str:
         return "site_overview"
+
+    @override
+    def configured_contextual_link(self) -> ContextualLinkSpec:
+        return self.contextual_link
 
     @classmethod
     def from_internal(cls, config: SiteOverviewDashletConfig) -> Self:
@@ -78,6 +96,7 @@ class SiteOverviewContent(BaseWidgetContent):
             type="site_overview",
             dataset=config.get("dataset") or "via_context",
             hexagon_size=config.get("box_scale") or "default",
+            contextual_link=contextual_link_from_internal(config.get("contextual_link")),
         )
 
     @override
@@ -88,4 +107,20 @@ class SiteOverviewContent(BaseWidgetContent):
         )
         if self.dataset != "via_context":
             config["dataset"] = self.dataset
+        if (link := contextual_link_to_internal(self.contextual_link)) is not None:
+            config["contextual_link"] = link
         return config
+
+    @override
+    def iter_validation_errors(
+        self,
+        location: tuple[str | int, ...],
+        context: ApiContext,
+        *,
+        embedded_views: Mapping[str, DashboardEmbeddedViewSpec],
+    ) -> Iterable[ErrorDetails]:
+        return iter_contextual_link_target_errors(
+            self.contextual_link,
+            location + ("contextual_link",),
+            context.config.user_permissions(),
+        )

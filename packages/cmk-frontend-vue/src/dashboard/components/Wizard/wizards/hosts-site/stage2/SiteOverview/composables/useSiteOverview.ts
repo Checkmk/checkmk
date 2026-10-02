@@ -67,7 +67,8 @@ export const useSiteOverview = async (
     return {
       type: CONTENT_TYPE,
       dataset: showStateOf.value,
-      hexagon_size: hexagonSize.value === 'small' ? 'default' : 'large'
+      hexagon_size: hexagonSize.value === 'small' ? 'default' : 'large',
+      contextual_link: currentContent?.contextual_link ?? { type: 'default' }
     }
   }
 

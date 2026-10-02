@@ -150,10 +150,6 @@ div.dashlet_inner div.stats {
   }
 }
 
-div.site_overview div.dashlet_inner {
-  overflow: visible;
-}
-
 body.main.dashlet {
   padding: 8px;
   background-color: $dashlet-body-bg-color;
@@ -683,7 +679,6 @@ div.dashlet.nodata {
   }
 }
 
-div.site_overview,
 div.alert_overview {
   g.element_box:hover {
     path + path {
@@ -697,30 +692,6 @@ div.alert_overview {
       margin-bottom: 2px;
     }
 
-    td.color {
-      width: 10px;
-
-      &.critical {
-        background-color: $hexagon-critical-color;
-      }
-
-      &.unknown {
-        background-color: $hexagon-unknown-color;
-      }
-
-      &.warning {
-        background-color: $color-state-1-background;
-      }
-
-      &.downtime {
-        background-color: $hexagon-downtime-color;
-      }
-
-      &.ok {
-        background-color: $success;
-      }
-    }
-
     td.count {
       padding-left: 4px;
       text-align: right;
@@ -728,76 +699,8 @@ div.alert_overview {
     }
   }
 
-  path.hexagon.hexagon_0 {
-    stroke: $grey-3;
-  }
-
-  path.hexagon {
-    &.critical,
-    &.down {
-      fill: $hexagon-critical-color;
-      fill-opacity: 0.8;
-      stroke: $hexagon-critical-color;
-    }
-
-    &.unknown,
-    &.unreachable {
-      fill: $hexagon-unknown-color;
-      fill-opacity: 0.8;
-      stroke: $hexagon-unknown-color;
-    }
-
-    &.warning {
-      fill: $color-state-1-background;
-      fill-opacity: 0.6;
-      stroke: $color-state-1-background;
-    }
-
-    &.downtime {
-      fill: $hexagon-downtime-color;
-      fill-opacity: 0.6;
-      stroke: $hexagon-downtime-color;
-    }
-
-    &.host_down {
-      fill: $hexagon-host-down-color;
-      fill-opacity: 0.5;
-      stroke: $hexagon-host-down-color;
-    }
-
-    &.ok {
-      fill: $success;
-      fill-opacity: 0.06;
-      stroke: $success;
-      stroke-opacity: 0.9;
-    }
-  }
-
-  g.element_box.host_element path.hexagon,
-  path.hexagon.host_element {
+  g.element_box.host_element path.hexagon {
     fill-opacity: 0.8;
     stroke-opacity: 0.8;
-
-    &.ok {
-      fill: $host-hexagon-ok-stroke-color;
-      stroke: none;
-
-      + path.up:hover,
-      &:hover + path.up {
-        fill-opacity: 0.6;
-      }
-    }
-
-    &.up {
-      fill: $headline-color;
-      fill-opacity: 0.85;
-      stroke: none;
-    }
-  }
-
-  path.icon_element {
-    fill: $headline-color;
-    stroke-dasharray: 3, 3;
-    stroke: $grey-3;
   }
 }

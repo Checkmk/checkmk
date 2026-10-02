@@ -53,6 +53,8 @@ import type {
   ObjectState,
   ResponsiveGridWidgetLayouts,
   SingleMetricContent,
+  SiteOverview,
+  SiteOverviewContent,
   StateContent,
   StateSummary,
   StateSummaryContent,
@@ -311,6 +313,18 @@ export const dashboardAPI = {
   ): Promise<ComputedWidgetResponse<InventoryAttribute>> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-inventory/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
+  computeSiteOverview: async (
+    body: { source: WidgetSource<SiteOverviewContent> },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<SiteOverview>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-site-overview/invoke', {
         ...CONTENT_TYPE_HEADER,
         headers,
         body

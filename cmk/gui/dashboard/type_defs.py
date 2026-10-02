@@ -270,6 +270,7 @@ class AlertOverviewDashletConfig(DashletConfig):
 class SiteOverviewDashletConfig(DashletConfig):
     dataset: NotRequired[Literal["hosts", "sites"]]
     box_scale: NotRequired[Literal["default", "large"]]
+    contextual_link: NotRequired[ContextualLinkConfig]
 
 
 class EventBarChartRenderBarChart(TypedDict):

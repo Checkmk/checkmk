@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-10-01 18:31+0000\n"
+"PO-Revision-Date: 2026-10-02 17:31+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -7327,7 +7327,9 @@ msgstr "4月"
 msgid "Architecture"
 msgstr "アーキテクチャ"
 
-msgid "Architecture of the systems where the agent will be deployed"
+#, fuzzy
+msgid ""
+"Architecture of the systems where the agent will be deployed (Linux only)"
 msgstr "エージェントがデプロイされるシステムのアーキテクチャ"
 
 msgid "Archive"
@@ -17687,7 +17689,8 @@ msgstr "%s をカスタマイズして使用する"
 msgid "Customize GUI design"
 msgstr "GUIデザインをカスタマイズする"
 
-msgid "Customize agent package (Linux)"
+#, fuzzy
+msgid "Customize agent package (Linux; Solaris and AIX: experimental)"
 msgstr "カスタマイズエージェントパッケージ(Linux)"
 
 #, python-format
@@ -17720,7 +17723,8 @@ msgstr "時間範囲をカスタマイズ"
 msgid "Customize title"
 msgstr "タイトルをカスタマイズする"
 
-msgid "Customize user"
+#, fuzzy
+msgid "Customize user (Linux only)"
 msgstr "カスタマイズユーザー"
 
 msgid "Customized"
@@ -29181,9 +29185,8 @@ msgid ""
 "performance reasons CPU averaging will not be applied to to the levels of "
 "single processes."
 msgstr ""
-"ここでは、単一プロセスのCPU使用率のレベルを定義することができます。"
-"パフォーマンス上の理由から、単一プロセスのレベルにはCPUの平均化は適用されませ"
-"ん。"
+"ここでは、単一プロセスのCPU使用率のレベルを定義することができます。パフォーマ"
+"ンス上の理由から、単一プロセスのレベルにはCPUの平均化は適用されません。"
 
 msgid ""
 "Here, you can define levels on the resident memory utilization (in "
@@ -29192,26 +29195,26 @@ msgid ""
 "processes."
 msgstr ""
 "ここでは、単一プロセスの常駐メモリ使用率（総RAMに対する割合）についてのレベル"
-"を定義できます。パフォーマンス上の理由から、単一プロセスのレベルには常駐"
-"メモリ平均化は適用されません。"
+"を定義できます。パフォーマンス上の理由から、単一プロセスのレベルには常駐メモ"
+"リ平均化は適用されません。"
 
 msgid ""
 "Here, you can define levels on the resident memory utilization of single "
 "processes. For performance reasons resident memory averaging will not be "
 "applied to to the levels of single processes."
 msgstr ""
-"ここでは、単一プロセスの常駐メモリ使用率のレベルを定義することができます。"
-"パフォーマンス上の理由から、単一プロセスのレベルには常駐メモリ平均化が適用さ"
-"れません。"
+"ここでは、単一プロセスの常駐メモリ使用率のレベルを定義することができます。パ"
+"フォーマンス上の理由から、単一プロセスのレベルには常駐メモリ平均化が適用され"
+"ません。"
 
 msgid ""
 "Here, you can define levels on the virtual memory utilization of single "
 "processes. For performance reasons virtual memory averaging will not be "
 "applied to to the levels of single processes."
 msgstr ""
-"ここでは、単一プロセスの仮想メモリ使用率に関するレベルを定義できます。"
-"パフォーマンス上の理由から、単一プロセスのレベルには仮想メモリの平均化は適用"
-"されません。"
+"ここでは、単一プロセスの仮想メモリ使用率に関するレベルを定義できます。パ"
+"フォーマンス上の理由から、単一プロセスのレベルには仮想メモリの平均化は適用さ"
+"れません。"
 
 #, fuzzy, python-format
 msgid ""
@@ -29233,8 +29236,8 @@ msgid ""
 "Here, you can define the state of the incident in case of an acknowledgment "
 "of the affected host or service problem."
 msgstr ""
-"ここでは、影響を受けるホストまたはサービスの問題が承認された場合の"
-"インシデントの状態を定義できます。"
+"ここでは、影響を受けるホストまたはサービスの問題が承認された場合のインシデン"
+"トの状態を定義できます。"
 
 msgid ""
 "Here, you can define the state of the incident in case of an acknowledgment "
@@ -29307,8 +29310,8 @@ msgid ""
 "Here, you can deploy a plug-in for monitoring the quarantine queue, tasks "
 "and updates of Symantec Anti Virus."
 msgstr ""
-"ここでは、Symantec Anti Virusの検疫キュー、タスク、更新を監視するための"
-"プラグインをデプロイすることができます。"
+"ここでは、Symantec Anti Virusの検疫キュー、タスク、更新を監視するためのプラグ"
+"インをデプロイすることができます。"
 
 msgid ""
 "Here, you can enter a list of explicit host names that the rule should or "
@@ -29322,9 +29325,9 @@ msgstr ""
 "ここでは、ルールを適用する、または適用しない明示的なホスト名のリストを入力す"
 "ることができます。与えられたタグで指定されたすべてのホストに対してルールを適"
 "用したい場合は、このオプションを無効にしたままにします。ここに入力された名前"
-"は、大文字と小文字を区別する完全一致で比較されます。また、最初の文字として"
-"チルダ(<tt>~</tt>)を入力すると、正規表現を使用することもできます。その正規表"
-"現は、問題のホスト名の<i>先頭</i>に一致しなければなりません。"
+"は、大文字と小文字を区別する完全一致で比較されます。また、最初の文字としてチ"
+"ルダ(<tt>~</tt>)を入力すると、正規表現を使用することもできます。その正規表現"
+"は、問題のホスト名の<i>先頭</i>に一致しなければなりません。"
 
 msgid ""
 "Here, you can enter either device state number (e.g. from SNMP devices) or "
@@ -29350,8 +29353,8 @@ msgstr ""
 "ここでは、mk_filestats プラグインが報告する結果に対して、さまざまなレベルを設"
 "定できます。一部のレベルは、特定の出力形式にのみ適用される点に注意してくださ"
 "い（たとえば、最小、最大、最古、最新のファイルのみが報告される場合、最大/最小"
-"カウントレベルは適用されません）。必要なデータを受け取るには、mk_filestats "
-"プラグインを設定する必要があります。"
+"カウントレベルは適用されません）。必要なデータを受け取るには、mk_filestats プ"
+"ラグインを設定する必要があります。"
 
 msgid ""
 "Here, you can impose various levels on the results reported by the "
@@ -29361,7 +29364,6 @@ msgstr ""
 "ことができます。これらのレベルは、単一のファイルにのみ関係することに注意して"
 "ください。"
 
-#, fuzzy
 msgid ""
 "Here, you can make sure that all of your Checkmk agents are running one "
 "specific version. Agents running a different version return a non-OK state."
@@ -29370,7 +29372,6 @@ msgstr ""
 "を確認できます。別のバージョンを実行しているエージェントは、OK以外の状態を返"
 "します。"
 
-#, fuzzy
 msgid ""
 "Here, you can override the default levels for the Oracle processes check. "
 "The levels are applied on the number of used processes in percentage of the "
@@ -29379,7 +29380,6 @@ msgstr ""
 "ここで、Oracle プロセスチェックのデフォルトレベルを上書きできます。レベルは、"
 "構成された制限のパーセンテージで使用されるプロセスの数に適用されます。"
 
-#, fuzzy
 msgid ""
 "Here, you can provide CA or self-signed certificates that will be sent to "
 "the contacting agent updater alongside the remote site's URL on registration "
@@ -29391,7 +29391,6 @@ msgstr ""
 "CheckmkサイトへのHTTPS接続を確認するためにエージェントアップデーターによって"
 "使用されます。"
 
-#, fuzzy
 msgid ""
 "Here, you can see a list of all deprecated rule sets (which are not used by "
 "Checkmk anymore). If you have defined some rules here, you might have to "
@@ -29403,13 +29402,12 @@ msgstr ""
 "に移行する必要があるかもしれません。詳細については、ルールセットのリリース"
 "ノートまたはコンテキストヘルプを参照してください。"
 
-#, fuzzy
 msgid ""
 "Here, you can see all hosts that have sent an error status to the deployment "
 "server."
 msgstr ""
-"ここでは、デプロイサーバーにネガティブステータスを送信したすべてのホストを確"
-"認できます。"
+"ここでは、デプロイメントサーバーにエラーステータスを送信したすべてのホストを"
+"確認できます。"
 
 #, fuzzy, python-format
 msgid ""
@@ -29419,7 +29417,6 @@ msgstr ""
 "ここで、使用するInfluxDB接続を選択することができます。選択肢がない場合は、最"
 "初に<a href=\"%s\">%s</a>を設定する必要があります。"
 
-#, fuzzy
 msgid ""
 "Here, you can select default parameters that are being set for detected "
 "services. Note: the preferred way for setting parameters is to use the rule "
@@ -29433,7 +29430,6 @@ msgstr ""
 "ロセスの状態と数</a>を使用することです。そこでの変更はすぐにアクティブになり"
 "ますが、このルールの変更にはサービスの再検出が必要です。"
 
-#, fuzzy
 msgid ""
 "Here, you can select more metrics for InfluxDB. We will save these metrics "
 "as fields in InfluxDB."
@@ -29441,7 +29437,6 @@ msgstr ""
 "ここでは、InfluxDBで使用するメトリクスを選択することができます。これらのメト"
 "リクスはInfluxDBにfieldsとして保存します。"
 
-#, fuzzy
 msgid ""
 "Here, you can select the different tags and labels for InfluxDB. We will "
 "save these values as tags in InfluxDB."
@@ -29449,7 +29444,6 @@ msgstr ""
 "ここでは、InfluxDBのさまざまなタグやラベルを選択することができます。これらの"
 "値をタグとしてInfluxDBに保存していきます。"
 
-#, fuzzy
 msgid ""
 "Here, you can select which metrics should be send to InfluxDB. You need to "
 "select at least one entry. Otherwise, Checkmk will not send anything to "
@@ -29463,7 +29457,6 @@ msgid ""
 "Here, you can set a manual address, if the server differs from the host."
 msgstr "ここでは、サーバーがホストと異なる場合、手動でアドレスを設定できます。"
 
-#, fuzzy
 msgid ""
 "Here, you can set different WARN/CRIT levels regarding the available cooling "
 "capacity."
@@ -29471,13 +29464,12 @@ msgstr ""
 "ここでは、利用可能な冷却能力に関してさまざまな警告/クリティカルレベルを設定で"
 "きます。"
 
-#, fuzzy
 msgid ""
 "Here, you can set different WARN/CRIT levels regarding the free cooling "
 "positions."
 msgstr ""
-"ここでは、フリークーリングの位置に関するさまざまな警告/クリティカルレベルを設"
-"定できます。"
+"ここでは、フリークーリングの設定に関して、さまざまな警告/クリティカルレベルを"
+"設定できます。"
 
 #, fuzzy
 msgid ""
@@ -29495,7 +29487,6 @@ msgstr ""
 "ここでは、SIDとテーブルスペース名をドットで区切って定義することにより、明示的"
 "なテーブルスペースを設定できます(例:<b> pengt.TEMP </b>)。"
 
-#, fuzzy
 msgid ""
 "Here, you can set host labels that automatically get created when "
 "discovering the services."
@@ -29503,7 +29494,6 @@ msgstr ""
 "ここでは、サービスを検出する際に自動的に作成されるホストラベルを設定すること"
 "ができます。"
 
-#, fuzzy
 msgid "Here, you can set levels for the Oracle performance metrics."
 msgstr "ここで、Oracle パフォーマンスメトリックのレベルを設定できます。"
 
@@ -29518,11 +29508,9 @@ msgstr ""
 msgid "Here, you can set levels on the CPU utilization on single cores."
 msgstr "ここでは、各コアのCPU使用率のレベルを設定できます。"
 
-#, fuzzy
 msgid "Here, you can set levels on the steal CPU utilization."
 msgstr "ここでは、 steal CPU使用率のレベルを設定できます。"
 
-#, fuzzy
 msgid ""
 "Here, you can set the failover state for BIG-IP system of version 11.2.0"
 msgstr ""
@@ -29562,7 +29550,6 @@ msgstr ""
 "ここで、サービス名を指定できます。このパラメータが設定されていない場合、サー"
 "ビスの名前は<tt>TCP Port [PORT NUMBER]</tt>になります"
 
-#, fuzzy
 msgid ""
 "Here, you can specify alternative names that the service might have. This "
 "helps, when the exact spelling of the services can change from one version "
@@ -29571,7 +29558,6 @@ msgstr ""
 "ここでは、サービスに付けられる可能性のある代替名を指定できます。これは、サー"
 "ビスの正確なスペルをバージョンごとに変更できる場合に役立ちます。"
 
-#, fuzzy
 msgid ""
 "Here, you can specify an <tt>ORACLE_HOME</tt> for the access to the remote "
 "databases. Omitting this empty will fall back to the system <tt>ORACLE_HOME</"
@@ -29581,7 +29567,6 @@ msgstr ""
 "ます。この空を省略すると、システム<tt>ORACLE_HOME</tt>にフォールバックしま"
 "す。"
 
-#, fuzzy
 msgid ""
 "Here, you can specify an <tt>TNS_ADMIN</tt> for the access to the "
 "configuration files <tt>sqlnet.ora</tt> and <tt>tnsnames.ora</tt>. Omitting "
@@ -29591,11 +29576,9 @@ msgstr ""
 "るための<tt>TNS_ADMIN</tt>を指定することができ ます。この空白を省略すると、 "
 "<tt>/etc/check_mk</tt>にフォールバックします。"
 
-#, fuzzy
 msgid "Here, you can specify debugging options of the Checkmk check helpers."
 msgstr "ここでは、Checkmkチェックヘルパーのデバッグオプションを指定できます。"
 
-#, fuzzy
 msgid ""
 "Here, you can specify exceptional time ranges for certain dates in the form "
 "YYYY-MM-DD which are used to define more specific definitions to override "
@@ -29605,7 +29588,6 @@ msgstr ""
 "は、一致する平日に構成された時間を上書きするためのより具体的に定義するために"
 "使用されます。"
 
-#, fuzzy
 msgid ""
 "Here, you can specify explicit piggybacked host names or regex patterns to "
 "match specific piggybacked host names."
@@ -29613,15 +29595,13 @@ msgstr ""
 "ここでは、明示的なピギーバックホスト名、または特定のピギーバックホスト名と一"
 "致する正規表現パターンを指定できます。"
 
-#, fuzzy
 msgid ""
 "Here, you can specify host labels that are automatically created, when one "
 "of the systemd services is discovered."
 msgstr ""
-"ここでは、サービスを検出する際に自動的に作成されるホストラベルを設定すること"
-"ができます。"
+"ここでは、systemdサービスを検出する際に自動的に作成されるホストラベルを設定す"
+"ることができます。"
 
-#, fuzzy
 msgid ""
 "Here, you can specify levels for different policies which overrule the "
 "levels from the <i>Default levels</i> parameter. This setting only works in "
@@ -29631,14 +29611,12 @@ msgstr ""
 "シーのレベルを指定することができます。この設定は、NetApp Clustermodeセット"
 "アップでのみ機能します。"
 
-#, fuzzy
 msgid "Here, you can specify the allowed license states for Windows."
 msgstr "ここで、Windowsに許可されるライセンス状態を指定できます。"
 
 msgid "Here, you can specify the measurement unit of the network interface."
 msgstr "ここでは、ネットワークインターフェイスの測定単位を指定できます。"
 
-#, fuzzy
 msgid ""
 "Here, you can specify the subject text instead of default text 'Check_MK-"
 "Mail-Loop'."
@@ -29646,13 +29624,11 @@ msgstr ""
 "ここでは、デフォルトのテキスト\"Check_MK-Mail-Loop\"の代わりに件名のテキスト"
 "を指定できます。"
 
-#, fuzzy
 msgid ""
 "Here, you can specify the total memory usage levels for clustered hosts."
 msgstr ""
 "ここでは、クラスター化されたホストの合計メモリ使用量レベルを指定できます。"
 
-#, fuzzy
 msgid ""
 "Here, you can specify upper levels for the number of infections detected by "
 "anti-malware engine."
@@ -29660,7 +29636,6 @@ msgstr ""
 "ここでは、マルウェア対策エンジンによって検出された感染数の上位レベルを指定で"
 "きます。"
 
-#, fuzzy
 msgid ""
 "Here, you can specify which contact groups shall have precedence when both, "
 "the host of an event can be found in the monitoring and the event rule has "
@@ -29670,15 +29645,13 @@ msgstr ""
 "グループが定義されている場合に、どちらの連絡先グループを優先するかを指定でき"
 "ます。"
 
-#, fuzzy
 msgid ""
 "Here, you can specify which service level will be used when the incoming "
 "message already carries a service level."
 msgstr ""
-"ここでは、着信メッセージにすでにサービスレベルが含まれている場合に使用する"
+"ここでは、受信メッセージにすでにサービスレベルが含まれている場合に使用する"
 "サービスレベルを指定できます。"
 
-#, fuzzy
 msgid ""
 "Here, you can upload an existing certificate and private key. The key must "
 "be an RSA key and it must be password protected."
@@ -29686,7 +29659,6 @@ msgstr ""
 "ここでは、既存の証明書と秘密鍵をアップロードできます。鍵はRSA鍵で、パスワード"
 "で保護されている必要があります。"
 
-#, fuzzy
 msgid ""
 "Here, you get feedback about recent agent rollouts. If you e.g. restrict a "
 "new rollout to a known list of five hosts, then these five should appear "
@@ -29696,7 +29668,6 @@ msgstr ""
 "す。たとえば、新しいロールアウトを5つのホストの既知のリストに制限する場合、こ"
 "れらの5つは、構成された1つの更新間隔の後に遅くともここに表示されます。"
 
-#, fuzzy
 msgid ""
 "Here, you have to use macros which are defined above below <tt>Macros for "
 "joining service data or inventory tables</tt>. The joining of different "
@@ -29710,7 +29681,6 @@ msgstr ""
 msgid "Here, you need to insert the original file or path name."
 msgstr "ここで、元のファイル名またはパス名を入力する必要があります。"
 
-#, fuzzy
 msgid ""
 "Here, you see hosts that have registered for updates but have no available "
 "agent. You need to bake agents again in order to create agents for them."
@@ -29804,17 +29774,14 @@ msgstr "での高い使用率 "
 msgid "High watermark"
 msgstr "ハイ ウォーターマーク"
 
-#, fuzzy
 msgid "High: push notification alerts bypass quiet hours"
 msgstr "高:プッシュ通知アラートは静かな時間をバイパスします"
 
-#, fuzzy
 msgid "Highest Data Guard apply lag"
-msgstr "データベース適用ラグ"
+msgstr "データガードの適用遅延が最大"
 
-#, fuzzy
 msgid "Highest process usage"
-msgstr "Apacheプロセスの使用量"
+msgstr "Apacheプロセスの使用量高"
 
 #, fuzzy
 msgid "Historic Event Console event"
@@ -29845,17 +29812,14 @@ msgstr "1つの特定のイベントの履歴エントリ"
 msgid "History entries of one specific host"
 msgstr "1つの特定のホストの履歴エントリ"
 
-#, fuzzy
 msgid "History line number"
 msgstr "履歴行番号"
 
-#, fuzzy
 msgid "History log rotation: regular interval of rotations"
 msgstr "履歴ログローテーション:定期的なローテーション間隔"
 
-#, fuzzy
 msgid "History log rotation: rotate by size (limit of the size)"
-msgstr "履歴ログローテーション:サイズで回転(サイズの制限)"
+msgstr "履歴ログローテーション:サイズでローテーション(サイズの制限)"
 
 msgid "History of event"
 msgstr "イベントの履歴"
@@ -30782,7 +30746,6 @@ msgstr "ホストアラート"
 msgid "Host alias"
 msgstr "ホストエイリアス"
 
-#, fuzzy
 msgid "Host alias (regex)"
 msgstr "ホストエイリアス(正規表現)"
 
@@ -30875,14 +30838,12 @@ msgstr "ホストのコメント"
 msgid "Host configuration"
 msgstr "ホスト構成"
 
-#, fuzzy
 msgid "Host contact"
 msgstr "ホストの連絡先"
 
 msgid "Host contact (regex)"
 msgstr "ホスト連絡先(正規表現)"
 
-#, fuzzy
 msgid "Host contact group"
 msgstr "ホストの連絡先グループ"
 
@@ -30935,6 +30896,10 @@ msgstr "ホストイベント"
 msgid "Host filters"
 msgstr "ホストフィルター"
 
+#, fuzzy
+msgid "Host folder"
+msgstr "ホストとフォルダー"
+
 msgid "Host goes down"
 msgstr "ホストがダウンします"
 
@@ -30970,9 +30935,8 @@ msgstr "ホストグループ名"
 msgid "Host group of DOWN hosts"
 msgstr "UPホストのホストグループ"
 
-#, fuzzy
 msgid "Host group of PENDING"
-msgstr "保留中のホストグループ"
+msgstr "PENDINGのホストグループ"
 
 #, fuzzy
 msgid "Host group of UP hosts"
@@ -31061,7 +31025,6 @@ msgstr "ホストがフラッピングしています"
 msgid "Host is in downtime"
 msgstr "ホストがダウンタイム中"
 
-#, fuzzy
 msgid "Host is in group"
 msgstr "ホストはグループに属しています"
 
@@ -31184,15 +31147,14 @@ msgstr "コンテナに使用されるホスト名"
 msgid "Host name, IP address or host alias the event is relevant for"
 msgstr "イベントに関連するホスト名、IPアドレス、またはホストエイリアス"
 
-#, fuzzy
 msgid ""
 "Host name, IPv4 address or IPv6 address that mtr will trace the route to. "
 "The service name is built from this address plus whatever distinguishes "
 "several entries for the same address."
 msgstr ""
-"mtr が経路追跡を行うホスト名、IPv4 アドレス、または IPv6 アドレスです。この値"
-"は Checkmk 内のサービス説明としても使用されるため、ホストごとに一意である必要"
-"があります。"
+"mtrが経路追跡を行うホスト名、IPv4アドレス、またはIPv6アドレス。サービス名は、"
+"このアドレスに、同じアドレスに対する複数のエントリを区別するための情報を加え"
+"ることで構成されます。"
 
 msgid "Host name, marked red if down (deprecated)"
 msgstr "ホスト名、ダウンしている場合は赤でマーク(非推奨)"
@@ -31342,7 +31304,6 @@ msgstr "ホスト作成に成功しました"
 msgid "Host system sensor alerts"
 msgstr "ホストシステムセンサーアラート"
 
-#, fuzzy
 msgid "Host systems"
 msgstr "ホストシステム"
 
@@ -31388,7 +31349,6 @@ msgstr "ホストの親"
 msgid "Host- or DNS name"
 msgstr "ホスト名またはDNS名"
 
-#, fuzzy
 msgid "Host/service"
 msgstr "ホスト/サービス"
 
@@ -31398,7 +31358,6 @@ msgstr "ホスト/サービスグループ"
 msgid "Host/service in downtime"
 msgstr "ダウンタイム中のホスト/サービス"
 
-#, fuzzy
 msgid "Host/service state"
 msgstr "ホスト/サービスの状態"
 
@@ -31409,7 +31368,6 @@ msgstr "ホスト:"
 msgid "Host: %s"
 msgstr "ホスト: %s"
 
-#, fuzzy
 msgid "HostSets: Host set configuration"
 msgstr "ホストセット：ホストセットの設定"
 
@@ -31496,7 +31454,6 @@ msgstr ""
 "れます。これにより、システム上で実行されているすべてのDB2インスタンスのメモ"
 "リー消費に対して1つのサービスが作成されます。"
 
-#, fuzzy
 msgid "Hosts connected"
 msgstr "接続されているホスト"
 
@@ -31571,7 +31528,6 @@ msgstr "監視対象のホスト"
 msgid "Hosts to create in each folder"
 msgstr "各フォルダに作成するホスト"
 
-#, fuzzy
 msgid "Hosts using a specific SNMP backend"
 msgstr "特定のSNMPバックエンドを使用するホスト"
 
@@ -31615,7 +31571,6 @@ msgstr "ホスト: %d が作成され、 %d が変更され、 %d が削除さ�
 msgid "Hosts: %d total (%d succeeded, %d skipped, %d failed)"
 msgstr "ホスト:合計%d(%d成功、%dスキップ、%d失敗)"
 
-#, fuzzy
 msgid "Hosts: host capacity & utilization"
 msgstr "ホスト：ホストの容量と利用率"
 
@@ -31640,9 +31595,8 @@ msgstr "営業時間"
 msgid "Hours since service"
 msgstr "サービスからの時間"
 
-#, fuzzy
 msgid "Hours/minutes out of range"
-msgstr "時間/分が範囲外"
+msgstr "範囲外の時間/分"
 
 msgid "Housekeeping interval"
 msgstr "ハウスキーピング間隔"
@@ -31752,7 +31706,6 @@ msgstr "Hyper-V VM (Windows)"
 msgid "Hyper-V VM checkpoints"
 msgstr "Hyper-V VM (Windows)"
 
-#, fuzzy
 msgid "Hyper-V VM guest information (Windows)"
 msgstr "Hyper-V VMゲスト情報(Windows)"
 
@@ -31781,9 +31734,8 @@ msgstr "OMDモニタリングコア"
 msgid "Hyperthreads per CPU"
 msgstr "CPUあたりのハイパースレッド"
 
-#, fuzzy
 msgid "I/O bandwidth"
-msgstr "IO帯域幅"
+msgstr "I/O帯域幅"
 
 msgid "I/O database reads (attached) average latency"
 msgstr "I/Oデータベースの読み取り(添付)平均レイテンシ"
@@ -31794,17 +31746,14 @@ msgstr "I/Oデータベースの読み取り(リカバリ) 平均レイテンシ
 msgid "I/O database writes (attached) average latency"
 msgstr "I/O データベースの書き込み(添付)平均レイテンシ"
 
-#, fuzzy
 msgid "I/O flow"
-msgstr "IOフロー"
+msgstr "I/Oフロー"
 
-#, fuzzy
 msgid "I/O groups"
-msgstr "IOグループ"
+msgstr "I/Oグループ"
 
-#, fuzzy
 msgid "I/O latency"
-msgstr "IOレイテンシー"
+msgstr "I/O レイテンシー"
 
 msgid "I/O log writes average latency"
 msgstr "I/Oログ書き込み平均レイテンシ"
@@ -31833,7 +31782,6 @@ msgstr "IBM MQ プラグイン"
 msgid "IBM MQ queues"
 msgstr "IBM MQキュー"
 
-#, fuzzy
 msgid "IBM SVC / Storwize V3700 / V7000: status and usage of MDisksGrps"
 msgstr "IBM SVC / Storwize V3700 / V7000: MDisksGrpsのステータスと使用状況"
 
@@ -31844,45 +31792,36 @@ msgstr "IBM SVC / V7000ストレージシステム"
 msgid "IBM SVC / V7000 username"
 msgstr "IBM SVC / V7000 ユーザー名"
 
-#, fuzzy
 msgid "IBM SVC / V7000: I/O operations/sec for drives/MDisks/VDisks in total"
-msgstr "IBM SVC/V7000:ドライブ/MDisk/VDiskの合計でのIO操作/秒"
+msgstr "IBM SVC / V7000：ドライブ/Mディスク/VDisk全体のI/O操作数（秒）"
 
-#, fuzzy
 msgid "IBM SVC / V7000: cache usage in total"
 msgstr "IBM SVC/V7000: 合計でのキャッシュ使用量"
 
-#, fuzzy
 msgid "IBM SVC / V7000: disk throughput for drives/MDisks/VDisks in total"
 msgstr "IBM SVC / V7000: ドライブ/MDisk/VDiskの合計のディスクスループット"
 
-#, fuzzy
 msgid "IBM SVC / V7000: latency for drives/MDisks/VDisks in total"
 msgstr "IBM SVC / V7000:ドライブ/MDisks/VDisksの合計のレイテンシー"
 
-#, fuzzy
 msgid "IBM SVC / V7000: system info"
 msgstr "IBM SVC / V7000: システム情報"
 
 msgid "IBM SVC disk"
 msgstr "IBM SVC ディスク"
 
-#, fuzzy
 msgid "IBM SVC enclosure"
 msgstr "IBM SVC エンクロージャー"
 
-#, fuzzy
 msgid "IBM SVC hosts"
 msgstr "IBM SVC ホスト"
 
 msgid "IBM SVC licenses"
 msgstr "IBM SVC ライセンス"
 
-#, fuzzy
 msgid "IBM SVC pool capacity"
 msgstr "IBM SVCプール容量"
 
-#, fuzzy
 msgid "IBM SVC total disk latency"
 msgstr "IBM SVC合計ディスク待ち時間"
 
@@ -31892,9 +31831,8 @@ msgstr "IBM TSM: スクラッチプール内のテープの数"
 msgid "ICMP"
 msgstr "ICMP"
 
-#, fuzzy
 msgid "ICMP echo request"
-msgstr "ICMPエコー要求"
+msgstr "ICMPエコーリクエスト"
 
 msgid "ICMP jitter"
 msgstr "ICMPジッター"
@@ -31931,7 +31869,6 @@ msgstr "ルールID(完全一致)"
 msgid "ID of the channel (usually ranging from 1)"
 msgstr "チャネルのID(通常は1の範囲)"
 
-#, fuzzy
 msgid "ID of the entry"
 msgstr "エントリのID"
 
@@ -31968,9 +31905,8 @@ msgstr "IECシンボル%s"
 msgid "IGNORE"
 msgstr "無視する"
 
-#, fuzzy
 msgid "IIS application pool state settings"
-msgstr "IISアプリケーションプールの状態設定"
+msgstr "IIS アプリケーションプールの状態設定"
 
 msgid "IMAP"
 msgstr "IMAP"
@@ -32094,22 +32030,20 @@ msgstr "IP2Tel SIP/H323 fax の成功回数"
 msgid "IP2Tel Number of failed SIP/H323 calls"
 msgstr "失敗したパスの数"
 
-#, fuzzy
 msgid ""
 "IP2Tel number of No Route SIP/H323 calls. Most likely to be due to wrong "
 "number"
-msgstr "IP2Tel SIP/H323通話のNo Route数。おそらく番号が間違っていたことが原因"
+msgstr ""
+"IP2Tel ルーティングされていないSIP/H323通話の数。おそらく番号が間違っているこ"
+"とが原因"
 
-#, fuzzy
 msgid "IP2Tel number of No capability match between peers on SIP/H323 calls"
-msgstr "IP2Tel SIP/H323コールにおいて、ピア間での機能一致が確認できません"
+msgstr "IP2Tel SIP/H323通話において、ピア間での機能一致が確認できません"
 
-#, fuzzy
 msgid ""
 "IP2Tel number of established (connected and voice activated) SIP/H323 calls"
 msgstr "IP2Tel 確立された（接続済みかつ音声応答可能な）SIP/H323通話の数"
 
-#, fuzzy
 msgid "IP2Tel total duration of SIP/H323 calls"
 msgstr "IP2Tel SIP/H323 通話の合計時間"
 
@@ -32131,11 +32065,9 @@ msgstr "IPMIドライバ"
 msgid "IPMI driver type"
 msgstr "IPMIドライバタイプ"
 
-#, fuzzy
 msgid "IPMI interface"
 msgstr "IPMI インターフェース"
 
-#, fuzzy
 msgid ""
 "IPMI interface to be used. If not specified, the default interface as set at "
 "compile time will be used."
@@ -32153,7 +32085,6 @@ msgstr "IPMIセンサーの発見"
 msgid "IPMI sensors"
 msgstr "IPMIセンサー"
 
-#, fuzzy
 msgid "IPMI sensors via Freeipmi or IPMItool"
 msgstr "FreeipmiまたはIPMItoolを介したIPMIセンサー"
 
@@ -32416,14 +32347,13 @@ msgstr ""
 "から開始して、すでに存在している可能性のあるすべてのメッセージを表示できま"
 "す。"
 
-#, fuzzy
 msgid ""
 "If a node has any of these roles, then it is considered a control plane node "
 "by Checkmk. A control plane might in some cases also be a worker node."
 msgstr ""
-"ノードがこれらの役割のいずれかを持っている場合、Checkmkはそのノードをコント"
-"ロールプレーンノードと見なします。そうでない場合は、ワーカーノードとみなされ"
-"ます。"
+"ノードがこれらの役割のいずれかを担っている場合、Checkmk ではそのノードをコン"
+"トロールプレーンノードと見なします。コントロールプレーンは、場合によっては"
+"ワーカーノードを兼ねることもあります。"
 
 msgid ""
 "If a node has any of these roles, then it is considered a worker node by "
@@ -32744,7 +32674,6 @@ msgstr ""
 "果が他のノードから発信された場合、サービスは少なくともWARNING状態になります"
 "（結果自体はOKであったとしても）。"
 
-#, fuzzy
 msgid ""
 "If sections cannot be fetched or take a long time, you can configure them to "
 "be fetched not as often or not at all."
@@ -32948,16 +32877,16 @@ msgstr ""
 "は、チェックで正しいフォーム要素を識別できるように、ここにフォームの名前を入"
 "力する必要があります。"
 
+#, fuzzy
 msgid ""
 "If this Managed Robot is to be deployed on Linux and RCC is to be used, it "
 "is important to set a user context other than root using the \"Customize "
-"agent package (Linux)\" rule."
+"agent package (Linux; Solaris and AIX: experimental)\" rule."
 msgstr ""
 "このマネージドロボットをLinuxにデプロイし、RCCを使用する場合は、「エージェン"
 "トパッケージのカスタマイズ (Linux)」ルールを使用して、root以外のユーザーコン"
 "テキストを設定することが重要です。"
 
-#, fuzzy
 msgid ""
 "If this checkbox is activated, log messages received via OTLP are converted "
 "into syslog format and forwarded to the Event Console.<br>The Event Console "
@@ -32979,7 +32908,7 @@ msgstr ""
 "のログは、パフォーマンスを低下させ、イベントコンソールの有用性を低下させる可"
 "能性があります。意味のあるイベントのみを転送するように、ログのフィルタリング"
 "と事前処理を推奨します。詳細は、<a href='https://docs.checkmk.com/latest/en/"
-"ec.html#tuning'>イベントコンソールのユーザーガイドをご確認ください。</a>"
+"ec.html#tuning'>イベントコンソールのユーザーガイド</a>をご確認ください"
 
 msgid "If this error persists, please contact the Checkmk support team."
 msgstr "このエラーが続く場合は、Checkmkサポートチームまでご連絡ください。"
@@ -35637,12 +35566,14 @@ msgstr "統合チーム"
 msgid "Interactive GUI"
 msgstr "RESTAPIインタラクティブGUI"
 
+#, fuzzy
 msgid ""
 "Interactive search field for direct access to monitoring instances (hosts, "
 "services, host and service groups).<br>You can use the following filters: "
 "<i>h:</i> Host,<br> <i>s:</i> Service, <i>hg:</i> Host group, <i>sg:</i> "
 "Service group,<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Host tag, "
-"<i>hl:</i> Host label, <i>sl:</i> Service label"
+"<i>hf:</i> Host folder, <i>sf:</i> Service folder, <i>hl:</i> Host label, "
+"<i>sl:</i> Service label"
 msgstr ""
 "監視インスタンス（ホスト、サービス、ホスト及びサービスグループ）に直接アクセ"
 "スするための対話型検索フィールド。<br>次のフィルターを使用できます: <i>h:</"
@@ -59430,6 +59361,10 @@ msgid "Service filters"
 msgstr "サービスフィルター"
 
 #, fuzzy
+msgid "Service folder"
+msgstr "サービスフィルター"
+
+#, fuzzy
 msgid "Service goes into CRITICAL state"
 msgstr "サービスが不明な状態に変わる時"
 
@@ -63936,6 +63871,10 @@ msgstr "強制ログ取得が無効の場合の状態： "
 msgid "State in case of force logging is enabled: "
 msgstr "強制ログ取得が有効の場合の状態： "
 
+#, fuzzy
+msgid "State in case of host name mismatch with the agent updater"
+msgstr "更新がない場合の状態"
+
 msgid "State in case of logins are not possible: "
 msgstr "ログイン時の状態は不可能です: "
 
@@ -67294,6 +67233,15 @@ msgstr ""
 "データを安全に転送するために、HTTPSを使用することを強くお勧めします。これは、"
 "ルールセット<a href=\"%s\">Agent updater (Linux, Windows)</a>を使用して設定で"
 "きます。"
+
+msgid ""
+"The agent updater is registered with one site under one host name. This "
+"state is used when that host name differs from the name of the host in "
+"Checkmk. A host that is monitored by several sites may have a different name "
+"on each site. On the sites that do not serve the agent updates of such a "
+"host, set this state to <i>OK</i>. The mismatch is then only shown in the "
+"service details."
+msgstr ""
 
 #, python-brace-format
 msgid ""
@@ -96860,6 +96808,25 @@ msgstr ""
 "が最も低いとは限りません。完全で並べ替え済みのリストを確認するには、検索条件"
 "を絞り込んでください。"
 
+msgid "The answer ended before it was complete."
+msgstr "回答が途中で途切れてしまいました。"
+
+#, fuzzy
+msgid "Conversations"
+msgstr "接続"
+
+#, fuzzy
+msgid "New conversation"
+msgstr "新しい接続"
+
+#, fuzzy
+msgid "Conversation"
+msgstr "接続"
+
+#, fuzzy
+msgid "Ctrl+Enter to send"
+msgstr "送信する文字列"
+
 #, fuzzy
 msgid "Dock to the left"
 msgstr "ルールのID"
@@ -96876,11 +96843,9 @@ msgstr "高さを設定する"
 msgid "AI assistant"
 msgstr "AIアシスタンス"
 
-msgid "The AI assistant will live here."
-msgstr "AIアシスタントはここに配置される予定です。"
-
-msgid "The answer ended before it was complete."
-msgstr "回答が途中で途切れてしまいました。"
+#, fuzzy
+msgid "Cancelled"
+msgstr "キャンセル"
 
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr "製品利用状況の分析を通じて、Checkmkの改善にご協力ください"
@@ -97914,6 +97879,9 @@ msgid ""
 msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
+
+#~ msgid "The AI assistant will live here."
+#~ msgstr "AIアシスタントはここに配置される予定です。"
 
 #~ msgid "Custom metrics cache age"
 #~ msgstr "カスタムメトリックのキャッシュ有効期間"

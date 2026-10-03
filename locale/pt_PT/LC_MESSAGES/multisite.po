@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-10-01 18:31+0000\n"
+"PO-Revision-Date: 2026-10-02 17:31+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -7814,7 +7814,8 @@ msgstr "Abril"
 msgid "Architecture"
 msgstr "Arquitetura"
 
-msgid "Architecture of the systems where the agent will be deployed"
+msgid ""
+"Architecture of the systems where the agent will be deployed (Linux only)"
 msgstr ""
 
 msgid "Archive"
@@ -19061,7 +19062,7 @@ msgid "Customize GUI design"
 msgstr "Personalizar o design da GUI"
 
 #, fuzzy
-msgid "Customize agent package (Linux)"
+msgid "Customize agent package (Linux; Solaris and AIX: experimental)"
 msgstr "Nome dos pacotes de agentes (Linux, UNIX)"
 
 #, python-format
@@ -19097,7 +19098,7 @@ msgid "Customize title"
 msgstr "Personalizar título"
 
 #, fuzzy
-msgid "Customize user"
+msgid "Customize user (Linux only)"
 msgstr "Personalizar"
 
 msgid "Customized"
@@ -33292,6 +33293,10 @@ msgstr "Eventos de Acolhimento"
 msgid "Host filters"
 msgstr "Arquivos de log do host"
 
+#, fuzzy
+msgid "Host folder"
+msgstr "Hosts e Pastas"
+
 msgid "Host goes down"
 msgstr "Anfitrião vai abaixo"
 
@@ -35359,7 +35364,7 @@ msgstr ""
 msgid ""
 "If this Managed Robot is to be deployed on Linux and RCC is to be used, it "
 "is important to set a user context other than root using the \"Customize "
-"agent package (Linux)\" rule."
+"agent package (Linux; Solaris and AIX: experimental)\" rule."
 msgstr ""
 
 msgid ""
@@ -38081,12 +38086,14 @@ msgstr "Chave de Integração"
 msgid "Interactive GUI"
 msgstr "GUI interativa REST API"
 
+#, fuzzy
 msgid ""
 "Interactive search field for direct access to monitoring instances (hosts, "
 "services, host and service groups).<br>You can use the following filters: "
 "<i>h:</i> Host,<br> <i>s:</i> Service, <i>hg:</i> Host group, <i>sg:</i> "
 "Service group,<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Host tag, "
-"<i>hl:</i> Host label, <i>sl:</i> Service label"
+"<i>hf:</i> Host folder, <i>sf:</i> Service folder, <i>hl:</i> Host label, "
+"<i>sl:</i> Service label"
 msgstr ""
 "Campo de pesquisa interactiva para acesso directo a instâncias de "
 "monitorização (anfitriões, serviços, anfitriões e grupos de serviços)."
@@ -63022,6 +63029,10 @@ msgid "Service filters"
 msgstr "Filtros de serviço"
 
 #, fuzzy
+msgid "Service folder"
+msgstr "Filtros de serviço"
+
+#, fuzzy
 msgid "Service goes into CRITICAL state"
 msgstr "O serviço entra em estado desconhecido"
 
@@ -67687,6 +67698,10 @@ msgstr "Estado em caso de Registo Forçado está desactivado: "
 msgid "State in case of force logging is enabled: "
 msgstr "Estado em caso de Registo Forçado está activado: "
 
+#, fuzzy
+msgid "State in case of host name mismatch with the agent updater"
+msgstr "Estado em caso de atualizações ausentes"
+
 msgid "State in case of logins are not possible: "
 msgstr "Estado em caso de logins não são possíveis: "
 
@@ -71164,6 +71179,15 @@ msgstr ""
 "Para garantir que os dados sejam transportados com segurança, é altamente "
 "recomendável usar HTTPS. Isto pode ser configurado usando o conjunto de "
 "regras <a href=\"%s\">Agent updater (Linux, Windows)</a>."
+
+msgid ""
+"The agent updater is registered with one site under one host name. This "
+"state is used when that host name differs from the name of the host in "
+"Checkmk. A host that is monitored by several sites may have a different name "
+"on each site. On the sites that do not serve the agent updates of such a "
+"host, set this state to <i>OK</i>. The mismatch is then only shown in the "
+"service details."
+msgstr ""
 
 #, python-brace-format
 msgid ""
@@ -95494,7 +95518,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -96017,7 +96040,6 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -101661,6 +101683,25 @@ msgid ""
 "list."
 msgstr ""
 
+msgid "The answer ended before it was complete."
+msgstr ""
+
+#, fuzzy
+msgid "Conversations"
+msgstr "Ligações"
+
+#, fuzzy
+msgid "New conversation"
+msgstr "Novas ligações"
+
+#, fuzzy
+msgid "Conversation"
+msgstr "Ligação"
+
+#, fuzzy
+msgid "Ctrl+Enter to send"
+msgstr "Cordão para enviar"
+
 #, fuzzy
 msgid "Dock to the left"
 msgstr "identificação da regra"
@@ -101677,11 +101718,9 @@ msgstr "Ajuste a altura"
 msgid "AI assistant"
 msgstr "Instância"
 
-msgid "The AI assistant will live here."
-msgstr ""
-
-msgid "The answer ended before it was complete."
-msgstr ""
+#, fuzzy
+msgid "Cancelled"
+msgstr "Cancelado"
 
 #, fuzzy
 msgid "Help us improve Checkmk with product usage analytics"

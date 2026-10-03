@@ -7806,7 +7806,8 @@ msgstr "April"
 msgid "Architecture"
 msgstr "Architectuur"
 
-msgid "Architecture of the systems where the agent will be deployed"
+msgid ""
+"Architecture of the systems where the agent will be deployed (Linux only)"
 msgstr ""
 
 #, fuzzy
@@ -19055,7 +19056,7 @@ msgid "Customize GUI design"
 msgstr "GUI-ontwerp aanpassen"
 
 #, fuzzy
-msgid "Customize agent package (Linux)"
+msgid "Customize agent package (Linux; Solaris and AIX: experimental)"
 msgstr "Naam van agentpakketten (Linux, UNIX)"
 
 #, python-format
@@ -19091,7 +19092,7 @@ msgid "Customize title"
 msgstr "Titel aanpassen"
 
 #, fuzzy
-msgid "Customize user"
+msgid "Customize user (Linux only)"
 msgstr "Aanpassen"
 
 msgid "Customized"
@@ -33276,6 +33277,10 @@ msgstr "Gastheer Evenementen"
 msgid "Host filters"
 msgstr "Logbestanden van hosts"
 
+#, fuzzy
+msgid "Host folder"
+msgstr "Hosts en mappen"
+
 msgid "Host goes down"
 msgstr "Gastheer gaat neer"
 
@@ -35341,7 +35346,7 @@ msgstr ""
 msgid ""
 "If this Managed Robot is to be deployed on Linux and RCC is to be used, it "
 "is important to set a user context other than root using the \"Customize "
-"agent package (Linux)\" rule."
+"agent package (Linux; Solaris and AIX: experimental)\" rule."
 msgstr ""
 
 msgid ""
@@ -38071,12 +38076,14 @@ msgstr "Integratie Toets"
 msgid "Interactive GUI"
 msgstr "REST API interactieve GUI"
 
+#, fuzzy
 msgid ""
 "Interactive search field for direct access to monitoring instances (hosts, "
 "services, host and service groups).<br>You can use the following filters: "
 "<i>h:</i> Host,<br> <i>s:</i> Service, <i>hg:</i> Host group, <i>sg:</i> "
 "Service group,<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Host tag, "
-"<i>hl:</i> Host label, <i>sl:</i> Service label"
+"<i>hf:</i> Host folder, <i>sf:</i> Service folder, <i>hl:</i> Host label, "
+"<i>sl:</i> Service label"
 msgstr ""
 "Interactief zoekveld voor directe toegang tot monitoring instanties (hosts, "
 "services, host en service groepen).<br>U kunt de volgende filters gebruiken: "
@@ -63009,6 +63016,10 @@ msgid "Service filters"
 msgstr "Service Filters"
 
 #, fuzzy
+msgid "Service folder"
+msgstr "Service Filters"
+
+#, fuzzy
 msgid "Service goes into CRITICAL state"
 msgstr "Dienst gaat in onbekende toestand"
 
@@ -67666,6 +67677,10 @@ msgstr "Staat in geval van Force Logging is uitgeschakeld: "
 msgid "State in case of force logging is enabled: "
 msgstr "Staat in geval van Force Logging is ingeschakeld: "
 
+#, fuzzy
+msgid "State in case of host name mismatch with the agent updater"
+msgstr "Staat in geval van ontbrekende updates"
+
 msgid "State in case of logins are not possible: "
 msgstr "Staat in geval van logins niet mogelijk zijn: "
 
@@ -71154,6 +71169,15 @@ msgstr ""
 "wordt het sterk aangeraden om HTTPS te gebruiken. Dit kan worden "
 "geconfigureerd met de regelset <a href=\"%s\">Agent updater (Linux, "
 "Windows)</a>."
+
+msgid ""
+"The agent updater is registered with one site under one host name. This "
+"state is used when that host name differs from the name of the host in "
+"Checkmk. A host that is monitored by several sites may have a different name "
+"on each site. On the sites that do not serve the agent updates of such a "
+"host, set this state to <i>OK</i>. The mismatch is then only shown in the "
+"service details."
+msgstr ""
 
 #, python-brace-format
 msgid ""
@@ -101746,6 +101770,25 @@ msgid ""
 "list."
 msgstr ""
 
+msgid "The answer ended before it was complete."
+msgstr ""
+
+#, fuzzy
+msgid "Conversations"
+msgstr "Verbindingen"
+
+#, fuzzy
+msgid "New conversation"
+msgstr "Nieuwe verbindingen"
+
+#, fuzzy
+msgid "Conversation"
+msgstr "Aansluiting"
+
+#, fuzzy
+msgid "Ctrl+Enter to send"
+msgstr "String om te verzenden"
+
 #, fuzzy
 msgid "Dock to the left"
 msgstr "ID van de regel"
@@ -101762,11 +101805,9 @@ msgstr "Stel de hoogte in"
 msgid "AI assistant"
 msgstr "Instantie"
 
-msgid "The AI assistant will live here."
-msgstr ""
-
-msgid "The answer ended before it was complete."
-msgstr ""
+#, fuzzy
+msgid "Cancelled"
+msgstr "Geannuleerd"
 
 #, fuzzy
 msgid "Help us improve Checkmk with product usage analytics"

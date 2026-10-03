@@ -7870,7 +7870,8 @@ msgstr "Avril"
 msgid "Architecture"
 msgstr "Architecture"
 
-msgid "Architecture of the systems where the agent will be deployed"
+msgid ""
+"Architecture of the systems where the agent will be deployed (Linux only)"
 msgstr ""
 
 msgid "Archive"
@@ -19215,7 +19216,7 @@ msgid "Customize GUI design"
 msgstr "Personnaliser la conception de l'interface graphique"
 
 #, fuzzy
-msgid "Customize agent package (Linux)"
+msgid "Customize agent package (Linux; Solaris and AIX: experimental)"
 msgstr "Nom des paquets de l'agent (Linux, UNIX)"
 
 #, python-format
@@ -19251,7 +19252,7 @@ msgid "Customize title"
 msgstr "Personnaliser le titre"
 
 #, fuzzy
-msgid "Customize user"
+msgid "Customize user (Linux only)"
 msgstr "Personnaliser"
 
 msgid "Customized"
@@ -33569,6 +33570,10 @@ msgstr "Événements d'accueil"
 msgid "Host filters"
 msgstr "Fichiers journaux des hôtes"
 
+#, fuzzy
+msgid "Host folder"
+msgstr "Hôtes et dossiers"
+
 msgid "Host goes down"
 msgstr "L'hôte tombe en panne"
 
@@ -35647,7 +35652,7 @@ msgstr ""
 msgid ""
 "If this Managed Robot is to be deployed on Linux and RCC is to be used, it "
 "is important to set a user context other than root using the \"Customize "
-"agent package (Linux)\" rule."
+"agent package (Linux; Solaris and AIX: experimental)\" rule."
 msgstr ""
 
 msgid ""
@@ -38407,12 +38412,14 @@ msgstr "Clé d'intégration"
 msgid "Interactive GUI"
 msgstr "Interface graphique interactive REST API"
 
+#, fuzzy
 msgid ""
 "Interactive search field for direct access to monitoring instances (hosts, "
 "services, host and service groups).<br>You can use the following filters: "
 "<i>h:</i> Host,<br> <i>s:</i> Service, <i>hg:</i> Host group, <i>sg:</i> "
 "Service group,<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Host tag, "
-"<i>hl:</i> Host label, <i>sl:</i> Service label"
+"<i>hf:</i> Host folder, <i>sf:</i> Service folder, <i>hl:</i> Host label, "
+"<i>sl:</i> Service label"
 msgstr ""
 "Champ de recherche interactif pour un accès direct aux instances de "
 "surveillance (hôtes, services, groupes d'hôtes et de services).Vous pouvez "
@@ -63535,6 +63542,10 @@ msgid "Service filters"
 msgstr "Filtres de service"
 
 #, fuzzy
+msgid "Service folder"
+msgstr "Filtres de service"
+
+#, fuzzy
 msgid "Service goes into CRITICAL state"
 msgstr "Le service passe dans un état inconnu"
 
@@ -68242,6 +68253,10 @@ msgstr "État dans le cas où la journalisation forcée est désactivée : "
 msgid "State in case of force logging is enabled: "
 msgstr "État en cas d'activation de la journalisation forcée : "
 
+#, fuzzy
+msgid "State in case of host name mismatch with the agent updater"
+msgstr "État en cas d'absence de mise à jour"
+
 msgid "State in case of logins are not possible: "
 msgstr "État en cas d'impossibilité de se connecter : "
 
@@ -71759,6 +71774,15 @@ msgstr ""
 "HTTP ou HTTPS. Pour garantir la sécurité du transport des données, il est "
 "fortement recommandé d'utiliser HTTPS. Ceci peut être configuré en utilisant "
 "le jeu de règles <a href=\"%s\">Agent updater (Linux, Windows)</a>."
+
+msgid ""
+"The agent updater is registered with one site under one host name. This "
+"state is used when that host name differs from the name of the host in "
+"Checkmk. A host that is monitored by several sites may have a different name "
+"on each site. On the sites that do not serve the agent updates of such a "
+"host, set this state to <i>OK</i>. The mismatch is then only shown in the "
+"service details."
+msgstr ""
 
 #, python-brace-format
 msgid ""
@@ -102662,6 +102686,25 @@ msgid ""
 "list."
 msgstr ""
 
+msgid "The answer ended before it was complete."
+msgstr ""
+
+#, fuzzy
+msgid "Conversations"
+msgstr "Connexions"
+
+#, fuzzy
+msgid "New conversation"
+msgstr "Nouvelles connexions"
+
+#, fuzzy
+msgid "Conversation"
+msgstr "Connexion"
+
+#, fuzzy
+msgid "Ctrl+Enter to send"
+msgstr "Chaîne à envoyer"
+
 #, fuzzy
 msgid "Dock to the left"
 msgstr "ID de la règle"
@@ -102678,11 +102721,9 @@ msgstr "Définir la hauteur"
 msgid "AI assistant"
 msgstr "Instance"
 
-msgid "The AI assistant will live here."
-msgstr ""
-
-msgid "The answer ended before it was complete."
-msgstr ""
+#, fuzzy
+msgid "Cancelled"
+msgstr "Annulé"
 
 #, fuzzy
 msgid "Help us improve Checkmk with product usage analytics"

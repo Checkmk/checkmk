@@ -5,7 +5,7 @@
 
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable
 from typing import override
 
 from cmk.gui import site_config, sites
@@ -15,10 +15,11 @@ from cmk.gui.type_defs import ChoiceMapping, ColumnName, FilterHeader, FilterHTT
 from cmk.gui.valuespec import DualListChoice, ValueSpec
 from cmk.gui.visuals.filter import Filter, FilterGroup, FilterRegistry
 from cmk.gui.visuals.filter.components import Dropdown, DualList, FilterComponent, StaticText
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.livestatus_client import lq_logic
 from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.speaklater import LazyString
+
+from ._folder_titles import FOLDER_TITLES
 
 
 def register(filter_registry: FilterRegistry) -> None:
@@ -62,16 +63,6 @@ def _wato_folders_to_lq_regex(path: str) -> str:
     return f"{op} {path_regex}"
 
 
-def _folder_selection(folder: Folder, depth: int = 0) -> Iterator[tuple[str, str]]:
-    """The paths and titles of the folder and all folders below, indented by depth"""
-    title_prefix = ("\u00a0" * 6 * depth) + "\u2514\u2500 " if depth else ""
-
-    yield (folder.path(), title_prefix + folder.title())
-
-    for subfolder in sorted(folder.subfolders(), key=lambda x: x.title().lower()):
-        yield from _folder_selection(subfolder, depth + 1)
-
-
 class FilterWatoFolder(Filter):
     def __init__(
         self,
@@ -102,17 +93,13 @@ class FilterWatoFolder(Filter):
             active_config.sites
         )
 
-    def choices(self) -> ChoiceMapping:
+    def choices(self, request_cache: RequestCache[RequestCacheConfig]) -> ChoiceMapping:
         allowed_folders = self._fetch_folders()
         return {
             path: title
-            for path, title in _folder_selection(folder_tree().root_folder())
+            for path, title in request_cache.get(FOLDER_TITLES).selection()
             if path in allowed_folders
         }
-
-    def _folder_title(self, path: str) -> str | None:
-        folder = folder_tree().all_folders().get(path)
-        return None if folder is None else folder.title()
 
     def _fetch_folders(self) -> set[str]:
         # Note: Setup Folders that the user has not permissions to must not be visible.
@@ -137,11 +124,11 @@ class FilterWatoFolder(Filter):
 
     @override
     def components(
-        self, _request_cache: RequestCache[RequestCacheConfig]
+        self, request_cache: RequestCache[RequestCacheConfig]
     ) -> Iterable[FilterComponent]:
         yield Dropdown(
             id=self.ident,
-            choices=self.choices(),
+            choices=self.choices(request_cache),
             default_value="",  # root folder
         )
 
@@ -153,11 +140,11 @@ class FilterWatoFolder(Filter):
 
     @override
     def heading_info(
-        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+        self, value: FilterHTTPVariables, request_cache: RequestCache[RequestCacheConfig]
     ) -> str | None:
         current = value.get(self.ident)
         if current and current != "/":
-            return self._folder_title(current)
+            return request_cache.get(FOLDER_TITLES).title(current)
         return None
 
 
@@ -165,8 +152,8 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
     # Once filters are managed by a valuespec and we get more complex
     # datastuctures beyond FilterHTTPVariable there must be a back&forth
     # for data
-    def valuespec(self) -> ValueSpec:
-        choices = [(name, folder) for name, folder in self.choices().items()]
+    def valuespec(self, request_cache: RequestCache[RequestCacheConfig]) -> ValueSpec:
+        choices = [(name, folder) for name, folder in self.choices(request_cache).items()]
         return DualListChoice(choices=choices, rows=4, enlarge_active=True)
 
     def _to_list(self, value: FilterHTTPVariables) -> list[str]:
@@ -175,16 +162,16 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
         return []
 
     @override
-    def choices(self) -> ChoiceMapping:
+    def choices(self, request_cache: RequestCache[RequestCacheConfig]) -> ChoiceMapping:
         # Drop Main directory represented by empty string, because it means
         # don't filter after any folder due to recursive folder filtering.
-        return {name: folder for name, folder in super().choices().items() if name}
+        return {name: folder for name, folder in super().choices(request_cache).items() if name}
 
     @override
     def components(
-        self, _request_cache: RequestCache[RequestCacheConfig]
+        self, request_cache: RequestCache[RequestCacheConfig]
     ) -> Iterable[FilterComponent]:
-        if choices := self.choices():
+        if choices := self.choices(request_cache):
             yield DualList(
                 id=self.ident,
                 choices=choices,
@@ -198,20 +185,23 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
         return lq_logic("Filter: host_filename", regex_values, "Or")
 
     @override
-    def value(self, _request_cache: RequestCache[RequestCacheConfig]) -> FilterHTTPVariables:
+    def value(self, request_cache: RequestCache[RequestCacheConfig]) -> FilterHTTPVariables:
         """Returns the current representation of the filter settings from the HTML
         var context. This can be used to persist the filter settings."""
-        return {self.htmlvars[0]: "|".join(self.valuespec().from_html_vars(self.ident))}
+        return {
+            self.htmlvars[0]: "|".join(self.valuespec(request_cache).from_html_vars(self.ident))
+        }
 
     @override
     def heading_info(
-        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+        self, value: FilterHTTPVariables, request_cache: RequestCache[RequestCacheConfig]
     ) -> str | None:
+        folder_titles = request_cache.get(FOLDER_TITLES)
         return ", ".join(
             filter(
                 None,
                 (
-                    self._folder_title(folder)
+                    folder_titles.title(folder)
                     for folder in self._to_list(value)
                     if folder and folder != "/"
                 ),

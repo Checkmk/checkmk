@@ -391,11 +391,15 @@ def _get_combined_graphs_entry(
                 [
                     ("single_infos", ",".join(view.spec["single_infos"])),
                     ("datasource", view.datasource.ident),
-                    ("view_title", view_title(view.spec, view.context)),
+                    (
+                        "view_title",
+                        view_title(view.spec, view.context, request_cache=view.request_cache),
+                    ),
                     *visuals.context_to_uri_vars(
                         visuals.active_context_from_request(
                             view.datasource.infos,
                             view.context,
+                            view.request_cache,
                         )
                     ),
                 ],

@@ -25,6 +25,7 @@ from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.visuals.type import visual_type_registry
 from cmk.web.utils import permission_verification as permissions
+from cmk.web.utils.request_cache import RequestCache
 
 # Views are a registered visual type but cannot hold a graph: their add_visual_handler is a no-op
 # and they offer no add-to entries. Accepting them would report success while storing nothing.
@@ -64,6 +65,7 @@ def add_to_visual_v1(api_context: ApiContext, body: AddToRequest) -> AddToVisual
             None,
             addable.parameters(),
             api_context.config.user_permissions(),
+            RequestCache(api_context.config),
         )
     except MKAuthException as exc:
         raise ProblemException(

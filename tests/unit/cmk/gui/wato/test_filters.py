@@ -12,11 +12,13 @@ import pytest
 from livestatus import SiteConfigurations
 
 from cmk.ccc.site import SiteId
+from cmk.gui.config import Config
 from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.visuals.filter import FilterGroup
 from cmk.gui.wato.filters import FilterWatoFolder
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
+from cmk.web.utils.request_cache import RequestCache
 
 
 def _noop_pending_changes() -> PendingChanges:
@@ -57,7 +59,7 @@ def test_the_heading_shows_the_current_title_of_the_folder(folder_sub: Folder) -
         link_columns=[],
         group=FilterGroup.FOLDER,
     )
-    folder_filter.heading_info({"wato_folder": "sub"})
+    folder_filter.heading_info({"wato_folder": "sub"}, RequestCache(Config()))
 
     folder_sub.edit(
         "Renamed",
@@ -67,4 +69,4 @@ def test_the_heading_shows_the_current_title_of_the_folder(folder_sub: Folder) -
         acting_user=LoggedInSuperUser(),
     )
 
-    assert folder_filter.heading_info({"wato_folder": "sub"}) == "Renamed"
+    assert folder_filter.heading_info({"wato_folder": "sub"}, RequestCache(Config())) == "Renamed"

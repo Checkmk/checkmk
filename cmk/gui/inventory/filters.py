@@ -10,6 +10,7 @@ from functools import partial
 from typing import override
 
 from cmk.gui import query_filters
+from cmk.gui.config import RequestCacheConfig
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
@@ -44,6 +45,7 @@ from cmk.gui.visuals.filter.components import (
 from cmk.inventory.raw_paths import InventoryPath
 from cmk.inventory.trees import SDValue
 from cmk.inventory_ui.v1 import Comparable
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.speaklater import LazyString
 
 
@@ -132,7 +134,9 @@ class _FilterNumberRange(Filter):
         )
 
     @override
-    def display(self, value: FilterHTTPVariables) -> None:
+    def display(
+        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> None:
         # keep this in sync with components(), remove once all filter menus are switched to vue
         # this special styling is not supported by the current components
         unit_choices = [(n, c.unit) for n, c in self._unit_choices.items()]
@@ -188,7 +192,9 @@ class _FilterNumberRange(Filter):
         html.close_table()
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         unit_choices = {n: c.unit for n, c in self._unit_choices.items()}
 
         def _from() -> Iterator[TextInput | Dropdown]:
@@ -405,7 +411,9 @@ class _FilterTextRange(Filter):
         )
 
     @override
-    def display(self, value: FilterHTTPVariables) -> None:
+    def display(
+        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> None:
         # keep this in sync with components(), remove once all filter menus are switched to vue
         # this special styling is not supported by the current components
         html.write_text_permissive(self._from_label)
@@ -419,7 +427,9 @@ class _FilterTextRange(Filter):
         )
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield HorizontalGroup(
             components=[
                 TextInput(id=self.htmlvars[0], label=self._from_label),
@@ -612,7 +622,9 @@ class FilterInvtableDualChoice(Filter):
         )
 
     @override
-    def display(self, value: FilterHTTPVariables) -> None:
+    def display(
+        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> None:
         if not self._choices:
             html.write_text_permissive(_("There are no elements for selection."))
             return
@@ -679,7 +691,9 @@ class FilterInvtableDualChoice(Filter):
         )
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         if self._choices:
             yield DualList(id=self._html_var, choices=dict(self._choices))
         else:
@@ -899,7 +913,9 @@ class FilterInvHasSoftwarePackage(Filter):
         return bool(value.get(self._varprefix + "name"))
 
     @override
-    def display(self, value: FilterHTTPVariables) -> None:
+    def display(
+        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> None:
         # keep this in sync with components(), remove once all filter menus are switched to vue
         # this special styling is not supported by the current components
         html.text_input(
@@ -939,7 +955,9 @@ class FilterInvHasSoftwarePackage(Filter):
         )
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield TextInput(id=self._varprefix + "name")
         yield RadioButton(
             id=self._varprefix + "match",

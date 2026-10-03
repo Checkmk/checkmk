@@ -50,7 +50,7 @@ def view_breadcrumb(view: View) -> Breadcrumb:
         )
         breadcrumb.append(
             BreadcrumbItem(
-                title=view_title(view.spec, view.context),
+                title=view_title(view.spec, view.context, request_cache=view.request_cache),
                 url=makeuri_contextless(request, request_vars),
                 id=f"view_{view.name}",
             )
@@ -89,7 +89,7 @@ def _host_hierarchy_breadcrumb(view: View) -> Breadcrumb:
         # All other single host pages are right below the host home page
         breadcrumb.append(
             BreadcrumbItem(
-                title=view_title(view.spec, view.context),
+                title=view_title(view.spec, view.context, request_cache=view.request_cache),
                 url=makeuri_contextless(
                     request,
                     append_site_from_request(
@@ -119,7 +119,7 @@ def _host_hierarchy_breadcrumb(view: View) -> Breadcrumb:
     # All other single service pages are right below the host home page
     breadcrumb.append(
         BreadcrumbItem(
-            title=view_title(view.spec, view.context),
+            title=view_title(view.spec, view.context, request_cache=view.request_cache),
             url=makeuri_contextless(
                 request,
                 append_site_from_request(

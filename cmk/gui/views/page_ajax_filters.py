@@ -39,7 +39,9 @@ class ABCAjaxInitialFilters(AjaxPage):
             raise MKUserError(
                 "page_request_vars", _("The request is missing the filter infos to render")
             )
-        vs_filters = visuals.VisualFilterListWithAddPopup(info_list=page_request_vars["infos"])
+        vs_filters = visuals.VisualFilterListWithAddPopup(
+            info_list=page_request_vars["infos"], request_cache=request_cache
+        )
         with output_funnel.plugged():
             vs_filters.render_input(varprefix, context)
             return {"filters_html": output_funnel.drain()}

@@ -25,6 +25,7 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
+from cmk.web.utils.request_cache import RequestCache
 
 USER_PERMISSIONS = UserPermissions({}, {}, {}, [])
 
@@ -102,7 +103,7 @@ def test_dashlet_starts_at_a_sidebar_shaped_size() -> None:
 def test_dashlet_title_is_the_title_of_the_embedded_snapin() -> None:
     dashlet = SnapinDashlet(_dashlet_spec("tactical_overview"))
 
-    assert dashlet.default_display_title() == "Overview"
+    assert dashlet.default_display_title(RequestCache(Config())) == "Overview"
 
 
 @pytest.mark.usefixtures("load_config")
@@ -110,7 +111,7 @@ def test_dashlet_title_of_an_unknown_snapin() -> None:
     dashlet = SnapinDashlet(_dashlet_spec("no_such_snapin"))
 
     with pytest.raises(KeyError):
-        dashlet.default_display_title()
+        dashlet.default_display_title(RequestCache(Config()))
 
 
 def test_snapin_instance_of_a_known_snapin() -> None:

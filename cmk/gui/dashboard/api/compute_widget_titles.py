@@ -5,9 +5,11 @@
 
 from typing import Literal, override
 
+from cmk.gui.config import RequestCacheConfig
 from cmk.gui.dashboard.dashlet.registry import dashlet_registry
 from cmk.gui.dashboard.type_defs import DashletConfig
 from cmk.gui.openapi.framework import (
+    ApiContext,
     APIVersion,
     EndpointBehavior,
     EndpointDoc,
@@ -19,6 +21,7 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
+from cmk.web.utils.request_cache import RequestCache
 
 from ._family import DASHBOARD_FAMILY
 from ._utils import PERMISSIONS_DASHBOARD_READ
@@ -54,20 +57,25 @@ class ComputeWidgetTitlesResponse(DomainObjectModel):
     )
 
 
-def _compute_title(widget_request: ComputeWidgetTitleWidgetRequest) -> str:
+def _compute_title(
+    widget_request: ComputeWidgetTitleWidgetRequest, request_cache: RequestCache[RequestCacheConfig]
+) -> str:
     widget_config = widget_request.to_internal()
     widget_type = dashlet_registry[widget_config["type"]]
     widget = widget_type(widget_config)
-    return widget.compute_title()
+    return widget.compute_title(request_cache)
 
 
-def compute_widget_titles_v1(body: ComputeWidgetTitlesRequest) -> ComputeWidgetTitlesResponse:
+def compute_widget_titles_v1(
+    api_context: ApiContext, body: ComputeWidgetTitlesRequest
+) -> ComputeWidgetTitlesResponse:
     """Compute multiple widget titles."""
+    request_cache = RequestCache(api_context.config)
     return ComputeWidgetTitlesResponse(
         domainType="dashboard-widget-titles",
         extensions=ComputeWidgetTitlesExtensions(
             titles={
-                widget_id: _compute_title(widget_request)
+                widget_id: _compute_title(widget_request, request_cache)
                 for widget_id, widget_request in body.widgets.items()
             }
         ),

@@ -7,8 +7,10 @@ from typing import cast
 
 import pytest
 
+from cmk.gui.config import Config
 from cmk.gui.type_defs import Visual
 from cmk.gui.visuals import visual_title, visual_title_without_context
+from cmk.web.utils.request_cache import RequestCache
 
 # A saved visual from before the "Context information" option existed, so it carries no
 # add_context_to_title key
@@ -17,7 +19,12 @@ VISUAL_WITHOUT_ADD_CONTEXT_TO_TITLE = cast(Visual, {"title": "My view", "single_
 
 @pytest.mark.usefixtures("request_context")
 def test_visual_title_without_add_context_to_title() -> None:
-    assert visual_title("view", VISUAL_WITHOUT_ADD_CONTEXT_TO_TITLE, {}) == "My view"
+    assert (
+        visual_title(
+            "view", VISUAL_WITHOUT_ADD_CONTEXT_TO_TITLE, {}, request_cache=RequestCache(Config())
+        )
+        == "My view"
+    )
 
 
 @pytest.mark.usefixtures("request_context")

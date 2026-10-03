@@ -18,7 +18,7 @@ from urllib.parse import unquote
 
 from cmk.ccc.user import UserId
 from cmk.gui import forms
-from cmk.gui.config import Config
+from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.header import make_header
@@ -61,6 +61,7 @@ from cmk.gui.visuals.type import visual_type_registry, VisualType
 from cmk.gui.watolib.profile_replication import start_profile_replication_job
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import file_name_and_query_vars_from_url, HTTPVariable, makeuri_contextless
 
 from ._breadcrumb import visual_page_breadcrumb
@@ -251,16 +252,11 @@ def page_edit_visual(
         what,
         user_permissions,
     )
-    if mode == "clone":
-        context_specs = get_context_specs(
-            [],
-            info_handler(visual) if info_handler else list(visual_info_registry.keys()),
-        )
-    else:
-        context_specs = get_context_specs(
-            visual["single_infos"],
-            info_handler(visual) if info_handler else list(visual_info_registry.keys()),
-        )
+    context_specs = get_context_specs(
+        [] if mode == "clone" else visual["single_infos"],
+        info_handler(visual) if info_handler else list(visual_info_registry.keys()),
+        RequestCache(config),
+    )
 
     # handle case of save or try or press on search button
     save_and_go = None
@@ -421,6 +417,7 @@ def page_edit_visual(
 def get_context_specs(
     single_infos: Sequence[InfoName],
     info_keys: Sequence[InfoName],
+    request_cache: RequestCache[RequestCacheConfig],
     ignored_context_choices: Sequence[str] = (),
 ) -> list[tuple[InfoName, Transform[dict] | VisualFilterList]]:
     single_info_keys = [key for key in info_keys if key in single_infos]
@@ -440,7 +437,7 @@ def get_context_specs(
     ] + [
         (info_key, spec)
         for info_key in multi_info_keys
-        for spec in [_visual_spec_multi(info_key, ignored_context_choices)]
+        for spec in [_visual_spec_multi(info_key, request_cache, ignored_context_choices)]
         if spec is not None
     ]
 
@@ -497,11 +494,16 @@ def _visual_spec_single(info_key: InfoName) -> Transform[dict]:
 
 
 def _visual_spec_multi(
-    info_key: InfoName, ignored_context_choices: Sequence[str] = ()
+    info_key: InfoName,
+    request_cache: RequestCache[RequestCacheConfig],
+    ignored_context_choices: Sequence[str] = (),
 ) -> VisualFilterList | None:
     info = visual_info_registry[info_key]()
     filter_list = VisualFilterList(
-        [info_key], title=info.title, ignored_context_choices=ignored_context_choices
+        [info_key],
+        title=info.title,
+        ignored_context_choices=ignored_context_choices,
+        request_cache=request_cache,
     )
     filter_names = filter_list.filter_names()
     # Skip infos which have no filters available

@@ -11,7 +11,7 @@ from typing import override
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, RequestCacheConfig
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -34,6 +34,7 @@ from cmk.gui.visuals.type import VisualType
 from cmk.inventory.delta import ImmutableDeltaTree
 from cmk.inventory.history import HistoryStore
 from cmk.inventory.trees import ImmutableTree, SDPath
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import HTTPVariable
 
 _InventoryTreeCache = dict[tuple[bool, HostName, SiteId], ImmutableTree | ImmutableDeltaTree]
@@ -87,6 +88,7 @@ class VisualTypeViews(VisualType):
         context: VisualContext | None,
         parameters: dict,
         user_permissions: UserPermissions,
+        _request_cache: RequestCache[RequestCacheConfig],
     ) -> None:
         return None
 

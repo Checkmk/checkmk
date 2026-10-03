@@ -20,7 +20,7 @@ from cmk.graphing_engine import ConsolidationFunction, TimeRange
 from cmk.graphing_engine import HostName as EngineHostName
 from cmk.graphing_engine import ServiceName as EngineServiceName
 from cmk.gui import sites
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import active_config, Config, RequestCacheConfig
 from cmk.gui.dashboard.exceptions import WidgetRenderError
 from cmk.gui.dashboard.type_defs import ABCGraphDashletConfig
 from cmk.gui.exceptions import MKUserError
@@ -57,6 +57,7 @@ from cmk.gui.visuals import (
 )
 from cmk.utils.servicename import ServiceName
 from cmk.web.utils.choices import Choice
+from cmk.web.utils.request_cache import RequestCache
 
 from ..base import (
     Dashlet,
@@ -126,7 +127,7 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig](Dashlet[T]):
         self._cached_display_title: str | None = None
 
     @override
-    def default_display_title(self) -> str:
+    def default_display_title(self, _request_cache: RequestCache[RequestCacheConfig]) -> str:
         # TODO: This evaluates the graph only to substitute a title expression. Move the macro
         # resolution to the frontend, or give the engine a performance-data-only fetch for titles.
         if self._cached_display_title is None:

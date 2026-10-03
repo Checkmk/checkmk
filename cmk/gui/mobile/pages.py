@@ -8,7 +8,7 @@ from typing import override
 
 import cmk.gui.view_utils
 from cmk.gui import visuals
-from cmk.gui.config import Config
+from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
@@ -276,7 +276,9 @@ def _page_index(request: Request, config: Config) -> None:
         )
         if view_spec.get("mobile") and not view_spec.get("hidden"):
             datasource = data_source_registry[view_spec["datasource"]]()
-            context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
+            context = visuals.active_context_from_request(
+                datasource.infos, view_spec["context"], request_cache
+            )
 
             view = View(view_name, view_spec, context, user_permissions, request_cache)
             view.row_limit = row_limit
@@ -334,11 +336,14 @@ def _page_view(request: Request, config: Config, *, debug: bool) -> None:
     if not view_spec:
         raise MKUserError("view_name", "No view defined with the name '%s'." % view_name)
 
+    request_cache = RequestCache(config)
     datasource = data_source_registry[view_spec["datasource"]]()
-    context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
+    context = visuals.active_context_from_request(
+        datasource.infos, view_spec["context"], request_cache
+    )
 
     user_permissions = UserPermissions.from_config(config, permission_registry)
-    view = View(view_name, view_spec, context, user_permissions, RequestCache(config))
+    view = View(view_name, view_spec, context, user_permissions, request_cache)
     view.row_limit = get_limit(
         view_spec_row_limit=view_spec.get("row_limit", 0),
         request_limit_mode=request.get_ascii_input_mandatory("limit", "soft"),
@@ -351,7 +356,7 @@ def _page_view(request: Request, config: Config, *, debug: bool) -> None:
     view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
     view.want_checkboxes = get_want_checkboxes()
 
-    title = view_title(view.spec, view.context)
+    title = view_title(view.spec, view.context, request_cache=view.request_cache)
     mobile_html_head(title)
 
     # Need to be loaded before processing the painter_options below.
@@ -402,7 +407,7 @@ class MobileViewRenderer(ABCViewRenderer):
         if not page:
             page = "filter" if view_spec.get("mustsearch") else "data"
 
-        title = view_title(self.view.spec, self.view.context)
+        title = view_title(self.view.spec, self.view.context, request_cache=self.view.request_cache)
         navbar = [
             ("data", _("Results"), "grid", "results_button"),
             ("filter", _("Filter"), "search", ""),
@@ -427,7 +432,7 @@ class MobileViewRenderer(ABCViewRenderer):
 
         if page == "filter":
             jqm_page_header(_("Filter / search"), left_button=home, id_="filter")
-            _show_filter_form(show_filters, self.view.context)
+            _show_filter_form(show_filters, self.view.context, self.view.request_cache)
             jqm_page_navfooter(navbar, "filter", page_id)
 
         elif page == "commands":
@@ -485,7 +490,11 @@ class MobileViewRenderer(ABCViewRenderer):
             jqm_page_navfooter(navbar, "context", page_id)
 
 
-def _show_filter_form(show_filters: list[Filter], context: VisualContext) -> None:
+def _show_filter_form(
+    show_filters: list[Filter],
+    context: VisualContext,
+    request_cache: RequestCache[RequestCacheConfig],
+) -> None:
     # Sort filters
     s = sorted([(f.sort_index, f.title, f) for f in show_filters if f.available()])
 
@@ -494,7 +503,7 @@ def _show_filter_form(show_filters: list[Filter], context: VisualContext) -> Non
         for _sort_index, title, f in s:
             html.open_li(**{"data-role": "fieldcontain"})
             html.legend(title)
-            f.display(context.get(f.ident, {}))
+            f.display(context.get(f.ident, {}), request_cache)
             html.close_li()
         html.close_ul()
         html.hidden_fields()

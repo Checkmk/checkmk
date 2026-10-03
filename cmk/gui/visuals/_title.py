@@ -7,9 +7,10 @@
 
 from collections.abc import Sequence
 
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, RequestCacheConfig
 from cmk.gui.i18n import _u
 from cmk.gui.type_defs import FilterHTTPVariables, FilterName, ViewSpec, Visual, VisualContext
+from cmk.web.utils.request_cache import RequestCache
 
 from ._filter_context import get_filter, get_singlecontext_vars, get_ubiquitary_filters
 
@@ -18,10 +19,12 @@ def visual_title(
     what: str,  # noqa: ARG001
     visual: Visual,
     context: VisualContext,
+    *,
+    request_cache: RequestCache[RequestCacheConfig],
 ) -> str:
     title = visual_title_without_context(visual, context)
     if visual.get("add_context_to_title", True):
-        title = _add_context_title(context, visual["single_infos"], title)
+        title = _add_context_title(context, visual["single_infos"], title, request_cache)
     return title
 
 
@@ -35,11 +38,18 @@ def visual_title_without_context(visual: Visual, context: VisualContext) -> str:
     return title.replace("$SITE$", site_filter_vars.get("site", ""))
 
 
-def view_title(view_spec: ViewSpec, context: VisualContext) -> str:
-    return visual_title("view", view_spec, context)
+def view_title(
+    view_spec: ViewSpec, context: VisualContext, *, request_cache: RequestCache[RequestCacheConfig]
+) -> str:
+    return visual_title("view", view_spec, context, request_cache=request_cache)
 
 
-def _add_context_title(context: VisualContext, single_infos: Sequence[str], title: str) -> str:
+def _add_context_title(
+    context: VisualContext,
+    single_infos: Sequence[str],
+    title: str,
+    request_cache: RequestCache[RequestCacheConfig],
+) -> str:
     def filter_heading(
         filter_name: FilterName,
         filter_vars: FilterHTTPVariables,
@@ -49,7 +59,7 @@ def _add_context_title(context: VisualContext, single_infos: Sequence[str], titl
         except KeyError:
             return ""  # silently ignore not existing filters
 
-        return filt.heading_info(filter_vars)
+        return filt.heading_info(filter_vars, request_cache)
 
     extra_titles = [v for v in get_singlecontext_vars(context, single_infos).values() if v]
 

@@ -9,10 +9,12 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.gui import visuals
+from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.type_defs import SingleInfos, VisualContext
 from cmk.gui.visuals import filters_allowed_for_info, filters_allowed_for_infos
 from cmk.gui.visuals.filter import AjaxDropdownFilter, Filter
+from cmk.web.utils.request_cache import RequestCache
 
 
 def test_get_filter() -> None:
@@ -190,7 +192,7 @@ def test_get_missing_single_infos_missing_context() -> None:
 
 
 def test_get_context_specs_only_host_and_service_info() -> None:
-    result = visuals.get_context_specs(["host"], ["host", "service"])
+    result = visuals.get_context_specs(["host"], ["host", "service"], RequestCache(Config()))
     assert [r[0] for r in result] == [
         "host",
         "service",

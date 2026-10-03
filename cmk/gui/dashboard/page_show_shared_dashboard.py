@@ -14,7 +14,7 @@ from typing import Any, override
 
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
-from cmk.gui.config import Config
+from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.graphing import resolve_default_time_range_seconds
 from cmk.gui.graphing.openapi.models import ApiDiscoveredGraph
@@ -26,6 +26,7 @@ from cmk.gui.token_auth import AuthToken, DashboardToken, TokenId
 from cmk.gui.type_defs import VisualContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperature_unit import TemperatureUnit
+from cmk.web.utils.request_cache import RequestCache
 
 from .api import convert_internal_relative_dashboard_to_api_model_dict, DashboardConstants
 from .dashlet.dashlets.status_helpers import make_mk_missing_data_error
@@ -78,16 +79,21 @@ class SharedDashboardPageComponents:
         html.vue_component("cmk-shared-dashboard", data=page_properties)
 
 
-def _compute_widget_title(widget_config: DashletConfig) -> str:
+def _compute_widget_title(
+    widget_config: DashletConfig, request_cache: RequestCache[RequestCacheConfig]
+) -> str:
     widget_type = dashlet_registry[widget_config["type"]]
     widget = widget_type(widget_config)
-    return widget.compute_title()
+    return widget.compute_title(request_cache)
 
 
-def compute_widget_titles(board: DashboardConfig) -> dict[str, str]:
+def compute_widget_titles(
+    board: DashboardConfig, request_cache: RequestCache[RequestCacheConfig]
+) -> dict[str, str]:
     """Compute widget titles for all widgets in a dashboard."""
     return {
-        widget_id: _compute_widget_title(widget) for widget_id, widget in board["widgets"].items()
+        widget_id: _compute_widget_title(widget, request_cache)
+        for widget_id, widget in board["widgets"].items()
     }
 
 
@@ -173,13 +179,14 @@ def page_shared_dashboard(
     token_id: TokenId, token_issuer: UserId, token_details: DashboardToken, ctx: PageContext
 ) -> None:
     user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
+    request_cache = RequestCache(ctx.config)
     with impersonate_dashboard_token_issuer(
         token_issuer, token_details, user_permissions
     ) as issuer:
         board = issuer.load_dashboard()
         SharedDashboardPageComponents.verify_dashboard_referenced_token(board, token_id)
 
-        widget_titles = compute_widget_titles(board)
+        widget_titles = compute_widget_titles(board, request_cache)
         # Must run before the filter values are stripped: discovery resolves the graphs from them.
         widget_graphs = compute_widget_graphs(
             board,
@@ -193,7 +200,7 @@ def page_shared_dashboard(
         # so it needs the impersonation context
         internal_spec = convert_internal_relative_dashboard_to_api_model_dict(board)
 
-    title = visuals.visual_title("dashboard", board, board["context"])
+    title = visuals.visual_title("dashboard", board, board["context"], request_cache=request_cache)
     dashboard_properties = {
         "spec": internal_spec,
         "name": token_details.dashboard_name,

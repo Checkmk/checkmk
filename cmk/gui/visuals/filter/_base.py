@@ -10,6 +10,7 @@ from enum import Enum
 from typing import Literal, override
 
 from cmk.gui import query_filters
+from cmk.gui.config import RequestCacheConfig
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -22,6 +23,7 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.gui.utils.regex import validate_regex
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.speaklater import LazyString
 
 from .components import (
@@ -123,9 +125,11 @@ class Filter(abc.ABC):
         user in single site setups."""
         return True
 
-    def display(self, value: FilterHTTPVariables) -> None:
+    def display(
+        self, value: FilterHTTPVariables, request_cache: RequestCache[RequestCacheConfig]
+    ) -> None:
         is_first_row = True
-        for component in self.components():
+        for component in self.components(request_cache):
             if not isinstance(component, Hidden):
                 if not is_first_row:
                     html.br()
@@ -133,7 +137,9 @@ class Filter(abc.ABC):
             component.render_html(self.ident, value)
 
     @abc.abstractmethod
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         """Return the components of this filter. These will be used to render the filter and
         to provide the filter's API representation."""
         raise NotImplementedError
@@ -165,11 +171,15 @@ class Filter(abc.ABC):
             return ""
         return self.info[:-1] + "_"
 
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:  # noqa: ARG002
+    def heading_info(
+        self,
+        value: FilterHTTPVariables,  # noqa: ARG002
+        _request_cache: RequestCache[RequestCacheConfig],
+    ) -> str | None:
         """Hidden filters may contribute to the pages headers of the views"""
         return None
 
-    def value(self) -> FilterHTTPVariables:
+    def value(self, _request_cache: RequestCache[RequestCacheConfig]) -> FilterHTTPVariables:
         """Returns the current representation of the filter settings from the HTML
         var context. This can be used to persist the filter settings."""
         return {varname: request.get_str_input_mandatory(varname, "") for varname in self.htmlvars}
@@ -199,7 +209,9 @@ class FilterOption(Filter):
         )
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield RadioButton(
             id=self.query_filter.request_vars[0],
             choices=dict(self.query_filter.options),
@@ -258,7 +270,9 @@ class FilterNumberRange(Filter):  # type is int
         )
 
     @override
-    def display(self, value: FilterHTTPVariables) -> None:
+    def display(
+        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> None:
         # keep this in sync with components(), remove once all filter menus are switched to vue
         # this special styling is not supported by the current components
         html.write_text_permissive(_("From:") + "&nbsp;")
@@ -280,7 +294,9 @@ class FilterNumberRange(Filter):  # type is int
             html.write_text_permissive(" %s " % self.unit)
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         unit = f" {self.unit} " if self.unit else None
         yield HorizontalGroup(
             components=[
@@ -306,7 +322,7 @@ class FilterNumberRange(Filter):  # type is int
         return self.query_filter.filter_table(context, rows)
 
     @override
-    def value(self) -> FilterHTTPVariables:
+    def value(self, _request_cache: RequestCache[RequestCacheConfig]) -> FilterHTTPVariables:
         """Returns the current representation of the filter settings from the request context."""
         return recover_pre_2_1_range_filter_request_vars(self.query_filter)
 
@@ -338,7 +354,9 @@ class FilterTime(Filter):
         )
 
     @override
-    def display(self, value: FilterHTTPVariables) -> None:
+    def display(
+        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> None:
         # keep this in sync with components(), remove once all filter menus are switched to vue
         # this special styling is not supported by the current components
         html.open_table(class_="filtertime")
@@ -360,7 +378,9 @@ class FilterTime(Filter):
         html.close_table()
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         for what, what_label in [("from", _("From")), ("until", _("Until"))]:
             var_prefix = self.ident + "_" + what
             yield HorizontalGroup(
@@ -386,7 +406,7 @@ class FilterTime(Filter):
         return self.query_filter.filter_table(context, rows)
 
     @override
-    def value(self) -> FilterHTTPVariables:
+    def value(self, _request_cache: RequestCache[RequestCacheConfig]) -> FilterHTTPVariables:
         """Returns the current representation of the filter settings from the request context."""
         return recover_pre_2_1_range_filter_request_vars(self.query_filter)
 
@@ -426,7 +446,9 @@ class InputTextFilter(Filter):
         self._show_heading = show_heading
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         text_input = TextInput(id=self.query_filter.request_vars[0])
         if self.query_filter.negateable:
             yield HorizontalGroup(
@@ -446,7 +468,9 @@ class InputTextFilter(Filter):
         return {self.htmlvars[0]: row[self.query_filter.column]}
 
     @override
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:
+    def heading_info(
+        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> str | None:
         if self._show_heading:
             return value.get(self.query_filter.request_vars[0])
         return None
@@ -484,7 +508,9 @@ class CheckboxRowFilter(Filter):
         self.query_filter = query_filter
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield CheckboxGroup(choices=dict(self.query_filter.options))
 
     @override
@@ -524,7 +550,9 @@ class DualListFilter(Filter):
         )
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         choices = dict(self._options(self.info))
         if not choices:
             yield StaticText(text=_("There are no elements for selection."))

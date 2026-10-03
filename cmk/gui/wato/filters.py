@@ -9,7 +9,7 @@ from collections.abc import Iterable, Iterator
 from typing import override
 
 from cmk.gui import site_config, sites
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, RequestCacheConfig
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import ChoiceMapping, ColumnName, FilterHeader, FilterHTTPVariables
 from cmk.gui.valuespec import DualListChoice, ValueSpec
@@ -17,6 +17,7 @@ from cmk.gui.visuals.filter import Filter, FilterGroup, FilterRegistry
 from cmk.gui.visuals.filter.components import Dropdown, DualList, FilterComponent, StaticText
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.livestatus_client import lq_logic
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.speaklater import LazyString
 
 
@@ -135,7 +136,9 @@ class FilterWatoFolder(Filter):
         return allowed_folders
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield Dropdown(
             id=self.ident,
             choices=self.choices(),
@@ -149,7 +152,9 @@ class FilterWatoFolder(Filter):
         return ""
 
     @override
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:
+    def heading_info(
+        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> str | None:
         current = value.get(self.ident)
         if current and current != "/":
             return self._folder_title(current)
@@ -176,7 +181,9 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
         return {name: folder for name, folder in super().choices().items() if name}
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         if choices := self.choices():
             yield DualList(
                 id=self.ident,
@@ -191,13 +198,15 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
         return lq_logic("Filter: host_filename", regex_values, "Or")
 
     @override
-    def value(self) -> FilterHTTPVariables:
+    def value(self, _request_cache: RequestCache[RequestCacheConfig]) -> FilterHTTPVariables:
         """Returns the current representation of the filter settings from the HTML
         var context. This can be used to persist the filter settings."""
         return {self.htmlvars[0]: "|".join(self.valuespec().from_html_vars(self.ident))}
 
     @override
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:
+    def heading_info(
+        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> str | None:
         return ", ".join(
             filter(
                 None,

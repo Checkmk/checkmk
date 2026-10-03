@@ -16,11 +16,13 @@ import pytest
 
 from livestatus import MKLivestatusNotFoundError
 
+from cmk.gui.config import Config
 from cmk.gui.dashboard.dashlet.dashlets.graph import (
     TemplateGraphDashlet,
     TemplateGraphDashletConfig,
 )
 from cmk.gui.dashboard.exceptions import WidgetRenderError
+from cmk.web.utils.request_cache import RequestCache
 
 
 class TestGraphWidgetErrorHandling:
@@ -68,7 +70,10 @@ class TestGraphWidgetErrorHandling:
         ):
             dashlet = TemplateGraphDashlet(dashlet=mock_dashlet_spec)
 
-            assert dashlet.default_display_title() == TemplateGraphDashlet.title()
+            assert (
+                dashlet.default_display_title(RequestCache(Config()))
+                == TemplateGraphDashlet.title()
+            )
 
     @pytest.mark.usefixtures("request_context")
     def test_resolve_site_missing_host_provides_specific_message(self) -> None:

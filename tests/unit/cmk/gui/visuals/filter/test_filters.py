@@ -18,11 +18,13 @@ from pytest_mock import MockerFixture
 
 import cmk.ruleset_matcher.tags
 from cmk.gui.bi import _filters as bi_filters
+from cmk.gui.config import Config
 from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.visuals import _filters as filters
 from cmk.gui.visuals.filter import filter_registry
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from cmk.web.utils.request_cache import RequestCache
 from tests.testlib.unit.gui.web_test_app import SetConfig
 from tests.unit.cmk.gui.helpers.filter_table_test_helper import (
     filter_inv_table_tests,
@@ -670,7 +672,7 @@ def test_filters_filter(test: FilterTest, set_config: SetConfig) -> None:
         time_machine.travel(datetime.datetime(2018, 4, 15, 16, 50, tzinfo=ZoneInfo("UTC"))),
     ):
         filt = filter_registry[test.ident]
-        filter_vars = dict(filt.value())  # Default empty vars, exhaustive
+        filter_vars = dict(filt.value(RequestCache(Config())))  # Default empty vars, exhaustive
         filter_vars.update(dict(test.request_vars))
         assert filt.filter(filter_vars) == test.expected_filters
 
@@ -722,7 +724,7 @@ def test_filters_display_with_empty_request(live: MockLiveStatusConnection) -> N
         for filt in filter_registry.values():
             with output_funnel.plugged():
                 _set_expected_queries(filt.ident, live)
-                filt.display(dict.fromkeys(filt.htmlvars, ""))
+                filt.display(dict.fromkeys(filt.htmlvars, ""), RequestCache(Config()))
 
 
 # fmt: off
@@ -744,7 +746,7 @@ def test_filter_display_puts_top_level_components_on_separate_rows(
     ident: str, expected_line_breaks: int
 ) -> None:
     with output_funnel.plugged():
-        filter_registry[ident].display({})
+        filter_registry[ident].display({}, RequestCache(Config()))
         html_output = output_funnel.drain()
 
     assert html_output.count("<br") == expected_line_breaks

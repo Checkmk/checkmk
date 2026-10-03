@@ -363,6 +363,7 @@ class ABCTopologyPage(Page):
                                 context=context,
                                 page_name=page_name,
                                 reset_ajax_page="ajax_initial_topology_filters",
+                                request_cache=request_cache,
                             )
                         ),
                         name="filters",
@@ -1748,7 +1749,7 @@ def get_topology_configuration(
     layout: str | None,
     default_overlays: OverlaysConfig,
 ) -> TopologyConfiguration:
-    topology_filters = _get_topology_settings_from_filters()
+    topology_filters = _get_topology_settings_from_filters(request_cache)
     mesh_depth = int(topology_filters["topology_mesh_depth"])
     max_nodes = int(topology_filters["topology_max_nodes"])
     filter_configuration = TopologyFilterConfiguration(
@@ -1833,11 +1834,13 @@ def _get_default_layout(style: Literal["hierarchy", "radial"] = "hierarchy") -> 
     return default_layout
 
 
-def _get_topology_settings_from_filters() -> dict[str, str]:
+def _get_topology_settings_from_filters(
+    request_cache: RequestCache[RequestCacheConfig],
+) -> dict[str, str]:
     topology_values: dict[str, str] = {}
     for filter_class in (FilterTopologyMaxNodes, FilterTopologyMeshDepth):
         filter_instance = filter_class()
-        value = filter_instance.value()
+        value = filter_instance.value(request_cache)
         if not value[filter_instance.ident].isdigit():
             value = {filter_instance.ident: filter_instance.range_config.default}
         topology_values.update(value)
@@ -2091,7 +2094,9 @@ def _get_topology_context_and_filters(
     )
 
     datasource = data_source_registry[view_spec["datasource"]]()
-    context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
+    context = visuals.active_context_from_request(
+        datasource.infos, view_spec["context"], request_cache
+    )
     view = View(
         view_name,
         view_spec,

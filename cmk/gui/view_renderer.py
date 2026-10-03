@@ -127,6 +127,7 @@ def show_filter_form(view: View, show_filters: list[Filter]) -> None:
         context={f.ident: context.get(f.ident, {}) for f in show_filters if f.available()},
         page_name=view.name,
         reset_ajax_page="ajax_initial_view_filters",
+        request_cache=view.request_cache,
     )
 
 
@@ -218,14 +219,17 @@ class GUIViewRenderer(ABCViewRenderer):
         # html_head, opens <body>, the nav + sidebar, and the #content_area
         # wrapper that ``html.footer`` later closes via ``body_end``.
         if display_options.enabled(display_options.H):
-            MainNavigation.render(active_config, view_title(view_spec, self.view.context))
+            MainNavigation.render(
+                active_config,
+                view_title(view_spec, self.view.context, request_cache=self.view.request_cache),
+            )
 
         if display_options.enabled(display_options.T):
             breadcrumb = view_breadcrumb(self.view)
             top_heading(
                 html,
                 request,
-                view_title(view_spec, self.view.context),
+                view_title(view_spec, self.view.context, request_cache=self.view.request_cache),
                 breadcrumb,
                 page_menu=self._page_menu(rows, show_filters, user_permissions),
                 browser_reload=html.browser_reload,

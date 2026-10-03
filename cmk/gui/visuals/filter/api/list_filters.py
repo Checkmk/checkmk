@@ -7,6 +7,8 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Literal
 
+from cmk.gui.config import RequestCacheConfig
+from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import (
@@ -23,6 +25,7 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
 )
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.web.utils import permission_verification as permissions
+from cmk.web.utils.request_cache import RequestCache
 
 from .._base import Filter, FilterGroup
 from .._registry import filter_registry
@@ -73,11 +76,13 @@ def _filter_group_value(group: FilterGroup | None) -> str | None:
     return group.value
 
 
-def _iter_filter_models() -> Iterable[FilterDomainObject]:
+def _iter_filter_models(
+    request_cache: RequestCache[RequestCacheConfig],
+) -> Iterable[FilterDomainObject]:
     """Iterate over all filter models in the registry, correctly sorted."""
     for filter_name, filter_object in sorted(filter_registry.items(), key=_filter_sort_key):
         try:
-            components = filter_object.components()
+            components = filter_object.components(request_cache)
         except NotImplementedError:
             continue
         yield FilterDomainObject(
@@ -95,13 +100,13 @@ def _iter_filter_models() -> Iterable[FilterDomainObject]:
         )
 
 
-def list_filters_v1() -> FilterCollection:
+def list_filters_v1(api_context: ApiContext) -> FilterCollection:
     """Show all filter configurations."""
     return FilterCollection(
         domainType="visual_filter",
         id="all",
         extensions=ApiOmitted(),
-        value=list(_iter_filter_models()),
+        value=list(_iter_filter_models(RequestCache(api_context.config))),
         links=[LinkModel.create("self", collection_href("visual_filter"))],
     )
 

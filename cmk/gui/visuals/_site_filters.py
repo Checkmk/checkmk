@@ -12,11 +12,12 @@ from typing import override
 from cmk.ccc.site import SiteId
 from cmk.gui import query_filters
 from cmk.gui.autocompleters import AutocompleterRegistry
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import active_config, Config, RequestCacheConfig
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import FilterHTTPVariables, Row
 from cmk.web.utils.autocompleter_config import AutocompleterConfig
 from cmk.web.utils.choices import Choice
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.speaklater import LazyString
 
 from .filter import Filter, FilterGroup, FilterRegistry
@@ -86,7 +87,9 @@ class SiteFilter(Filter):
         self._heading_info = heading_info
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield DynamicDropdown(
             id=self.query_filter.request_vars[0],
             autocompleter=AutocompleterConfig(
@@ -96,7 +99,9 @@ class SiteFilter(Filter):
         )
 
     @override
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:
+    def heading_info(
+        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> str | None:
         return self._heading_info(value)
 
     @override
@@ -131,7 +136,9 @@ class MultipleSitesFilter(SiteFilter):
         return [x for x in value.get(self.htmlvars[0], "").strip().split("|") if x]
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         if choices := dict(self._site_choices(active_config)):
             yield DualList(
                 id=self.query_filter.request_vars[0],

@@ -11,7 +11,7 @@ import pytest
 
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
-from cmk.gui.config import Config
+from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.http import request
 from cmk.gui.type_defs import VisualContext
@@ -27,7 +27,9 @@ from cmk.web.utils.request_cache import RequestCache
 def test_get_needed_regular_columns(view: View) -> None:
     class SomeFilter(Filter):
         @override
-        def components(self) -> Iterable[FilterComponent]:
+        def components(
+            self, _request_cache: RequestCache[RequestCacheConfig]
+        ) -> Iterable[FilterComponent]:
             return []
 
         @override
@@ -92,10 +94,9 @@ def _view_opened_with(view_name: str, url_vars: Mapping[str, str]) -> View:
     for var, value in url_vars.items():
         request.set_var(var, value)
     infos = data_source_registry[view_spec["datasource"]]().infos
-    context = visuals.active_context_from_request(infos, view_spec["context"])
-    return View(
-        view_name, view_spec, context, UserPermissions({}, {}, {}, []), RequestCache(Config())
-    )
+    request_cache = RequestCache(Config())
+    context = visuals.active_context_from_request(infos, view_spec["context"], request_cache)
+    return View(view_name, view_spec, context, UserPermissions({}, {}, {}, []), request_cache)
 
 
 @pytest.mark.usefixtures("request_context")
@@ -124,7 +125,7 @@ def test_the_filter_form_round_trips_the_merged_context() -> None:
         request.set_var(var, value)
     request.set_var("_active", ";".join(sorted(f.ident for f in listed)))
 
-    resubmitted = visuals.active_context_from_request(view.datasource.infos, {})
+    resubmitted = visuals.active_context_from_request(view.datasource.infos, {}, view.request_cache)
 
     assert {ident: vars_ for ident, vars_ in resubmitted.items() if any(vars_.values())} == {
         ident: vars_ for ident, vars_ in view.context.items() if any(vars_.values())

@@ -12,7 +12,7 @@ import cmk.livestatus_client as livestatus
 from cmk.ccc.site import SiteId
 from cmk.gui import query_filters
 from cmk.gui import sites as sites
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, RequestCacheConfig
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -34,6 +34,7 @@ from cmk.web.utils.autocompleter_config import (
     AutocompleterConfig,
     GroupAutocompleterConfig,
 )
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.speaklater import LazyString
 
 from ._livestatus import get_only_sites_from_context
@@ -340,7 +341,9 @@ class IPAddressFilter(Filter):
         )
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield TextInput(
             id=self.query_filter.request_vars[0],
         )
@@ -359,7 +362,9 @@ class IPAddressFilter(Filter):
         return {self.query_filter.request_vars[0]: row["host_address"]}
 
     @override
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:
+    def heading_info(
+        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> str | None:
         return value.get(self.query_filter.request_vars[0])
 
 
@@ -715,7 +720,9 @@ class _FilterHostgroupProblems(CheckboxRowFilter):
         )
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield CheckboxGroup(
             choices=dict(self.svc_problems),
             label="Service states: ",
@@ -1365,7 +1372,9 @@ class _FilterLogState(CheckboxRowFilter):
         )
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield CheckboxGroup(
             choices=dict(self.host_states),
             label="Hosts: ",
@@ -1398,7 +1407,9 @@ class TagFilter(Filter):
         )
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield TagFilterComponent(
             display_rows=self.query_filter.count,
             variable_prefix=self.query_filter.var_prefix,
@@ -1409,7 +1420,7 @@ class TagFilter(Filter):
         return self.query_filter.filter(value)
 
     @override
-    def value(self) -> FilterHTTPVariables:
+    def value(self, _request_cache: RequestCache[RequestCacheConfig]) -> FilterHTTPVariables:
         """Returns the current representation of the filter settings from the HTML
         var context. This can be used to persist the filter settings."""
         return dict(request.itervars(self.query_filter.var_prefix))
@@ -1429,7 +1440,9 @@ class _FilterHostAuxTags(Filter):
         )
 
     @override
-    def display(self, value: FilterHTTPVariables) -> None:
+    def display(
+        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> None:
         # keep this in sync with components(), remove once all filter menus are switched to vue
         # this special styling is not supported by the current components
         for num in range(self.query_filter.count):
@@ -1449,7 +1462,9 @@ class _FilterHostAuxTags(Filter):
             html.close_nobr()
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         for num in range(self.query_filter.count):
             varname = "%s_%d" % (self.query_filter.var_prefix, num)
             negate_varname = varname + "_neg"
@@ -1493,7 +1508,9 @@ class LabelGroupFilter(Filter):
         )
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield LabelGroupFilterComponent(
             id=self.query_filter.ident,
             object_type=self.query_filter.object_type,
@@ -1504,7 +1521,7 @@ class LabelGroupFilter(Filter):
         return self.query_filter.filter(value)
 
     @override
-    def value(self) -> FilterHTTPVariables:
+    def value(self, _request_cache: RequestCache[RequestCacheConfig]) -> FilterHTTPVariables:
         """Returns the current representation of the filter settings from the HTML
         var context. This can be used to persist the filter settings."""
         return dict(request.itervars(self.query_filter.ident))
@@ -1611,7 +1628,9 @@ class CustomAttributeFilter(Filter):
         return "%s_value" % ident
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield HorizontalGroup(
             components=[
                 Dropdown(
@@ -1769,7 +1788,9 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
         )
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield StaticText(
             text=_(
                 "Used in the host and service problems graphs of the main dashboard. Not intended "

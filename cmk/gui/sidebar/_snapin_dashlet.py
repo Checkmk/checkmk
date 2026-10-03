@@ -7,7 +7,7 @@ import contextlib
 from collections.abc import Iterator
 from typing import override
 
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import active_config, Config, RequestCacheConfig
 from cmk.gui.dashboard.dashlet.base import IFrameDashlet
 from cmk.gui.dashboard.type_defs import SnapinDashletConfig
 from cmk.gui.exceptions import MKUserError
@@ -18,6 +18,7 @@ from cmk.gui.pages import Page, PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils.roles import UserPermissions
+from cmk.web.utils.request_cache import RequestCache
 
 from ..dashboard.dashlet.base import RelativeLayoutConstraints, WidgetSize
 from ._snapin import all_snapins, SidebarSnapin
@@ -52,7 +53,7 @@ class SnapinDashlet(IFrameDashlet[SnapinDashletConfig]):
         return RelativeLayoutConstraints(initial_size=WidgetSize(width=28, height=20))
 
     @override
-    def default_display_title(self) -> str:
+    def default_display_title(self, _request_cache: RequestCache[RequestCacheConfig]) -> str:
         return all_snapins(
             UserPermissions.from_config(active_config, permission_registry),
         )[self._dashlet_spec["snapin"]].title()

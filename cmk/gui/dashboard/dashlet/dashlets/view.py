@@ -10,6 +10,7 @@ from typing import cast, override, TypeVar
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
+from cmk.gui.config import RequestCacheConfig
 from cmk.gui.dashboard.dashlet.base import (
     IFrameDashlet,
     RelativeLayoutConstraints,
@@ -28,6 +29,7 @@ from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import SingleInfos, ViewSpec, VisualContext
 from cmk.gui.views.store import get_all_views, get_permitted_views
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import HTTPVariable, makeuri_contextless, requested_file_name
 
 VT = TypeVar("VT", bound=ABCViewDashletConfig)
@@ -40,6 +42,8 @@ def copy_view_into_dashlet(
     view_name: str,
     add_context: VisualContext | None = None,
     load_from_all_views: bool = False,
+    *,
+    request_cache: RequestCache[RequestCacheConfig],
 ) -> None:
     permitted_views = get_permitted_views()
 
@@ -83,7 +87,9 @@ def copy_view_into_dashlet(
         dashlet["context"] = {**dashlet["context"], **add_context}
 
     # Overwrite the views default title with the context specific title
-    dashlet["title"] = visuals.visual_title("view", view, dashlet["context"])
+    dashlet["title"] = visuals.visual_title(
+        "view", view, dashlet["context"], request_cache=request_cache
+    )
     # TODO: Shouldn't we use the self._dashlet_context_vars() here?
     name_part: list[HTTPVariable] = [("view_name", view_name)]
     singlecontext_vars = cast(
@@ -262,8 +268,10 @@ class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):
         return view_spec
 
     @override
-    def default_display_title(self) -> str:
-        return visuals.visual_title("view", self._get_view_spec(), self.context)
+    def default_display_title(self, request_cache: RequestCache[RequestCacheConfig]) -> str:
+        return visuals.visual_title(
+            "view", self._get_view_spec(), self.context, request_cache=request_cache
+        )
 
     @override
     def infos(self) -> SingleInfos:

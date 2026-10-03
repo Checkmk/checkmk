@@ -75,10 +75,13 @@ def page_show_view(
         _patch_view_context(view_spec)
 
         user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
+        request_cache = RequestCache(ctx.config)
         datasource = data_source_registry[view_spec["datasource"]]()
-        context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
+        context = visuals.active_context_from_request(
+            datasource.infos, view_spec["context"], request_cache
+        )
 
-        view = View(view_name, view_spec, context, user_permissions, RequestCache(ctx.config))
+        view = View(view_name, view_spec, context, user_permissions, request_cache)
         view.row_limit = get_limit(
             view_spec_row_limit=view_spec.get("row_limit", 0),
             request_limit_mode=request.get_ascii_input_mandatory("limit", "soft"),
@@ -255,6 +258,7 @@ def _process_availability_view(view_renderer: ABCViewRenderer, config: Config) -
             missing_single_infos=view.missing_single_infos,
             process_tracking=view.process_tracking,
             breadcrumb=breadcrumb,
+            request_cache=view.request_cache,
             filterheaders=filterheaders,
         )
 
@@ -271,6 +275,7 @@ def _process_availability_view(view_renderer: ABCViewRenderer, config: Config) -
             only_sites=view.only_sites,
             process_tracking=view.process_tracking,
             breadcrumb=breadcrumb,
+            request_cache=view.request_cache,
             aggr_rows=rows,
             escape_plugin_output=config.escape_plugin_output,
         )

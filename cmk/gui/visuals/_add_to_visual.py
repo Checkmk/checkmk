@@ -42,6 +42,7 @@ from cmk.web.utils.choices import Choice
 from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.request_cache import RequestCache
 
 
 def ajax_popup_add(ctx: PageContext) -> None:
@@ -194,6 +195,7 @@ def ajax_add_visual(ctx: PageContext) -> None:
         create_info.context,
         create_info.params,
         UserPermissions.from_config(ctx.config, permission_registry),
+        RequestCache(ctx.config),
     )
 
 

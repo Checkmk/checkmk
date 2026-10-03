@@ -12,6 +12,7 @@ from typing import cast, override
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
+from cmk.gui.config import RequestCacheConfig
 from cmk.gui.graphing import (
     GraphExportRequest,
     GraphSpecification,
@@ -25,6 +26,7 @@ from cmk.gui.type_defs import ADD_TO_GRAPH_TYPES, DashboardEmbeddedViewSpec, Vis
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals.type import VisualType
 from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.request_cache import RequestCache
 
 from .dashlet import (
     copy_view_into_dashlet,
@@ -114,6 +116,7 @@ class VisualTypeDashboards(VisualType):
         context: VisualContext | None,
         parameters: dict,
         user_permissions: UserPermissions,
+        request_cache: RequestCache[RequestCacheConfig],
     ) -> None:
         # TODO: this function really warrants some refactoring, there are more comments than code
         #  at this point (the used bits are the ones which should be refactored though)
@@ -161,6 +164,7 @@ class VisualTypeDashboards(VisualType):
                 len(dashboard["widgets"]),
                 view_name,
                 add_context=context,
+                request_cache=request_cache,
             )
 
             view_spec, embedded_view_dashlet = self._create_embedded_view_spec_and_dashlet(

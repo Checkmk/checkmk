@@ -45,7 +45,7 @@ from cmk.gui.bi.foldable_tree_renderer import (
     FoldableTreeRendererTree,
 )
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, RequestCacheConfig
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -86,6 +86,7 @@ from cmk.utils.servicename import ServiceName
 from cmk.web.utils import escaping
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import makeuri
 
 from .annotations import _handle_edit_annotations, handle_delete_annotations, show_annotations
@@ -196,6 +197,7 @@ def show_availability_page(
     missing_single_infos: set[FilterName],
     process_tracking: ViewProcessTracking,
     breadcrumb: Breadcrumb,
+    request_cache: RequestCache[RequestCacheConfig],
     filterheaders: FilterHeader,
     debug: bool,
     table_row_limit: int,
@@ -249,7 +251,7 @@ def show_availability_page(
         av_object = (None, None, request.get_str_input_mandatory("av_aggr"))
         title += av_object[2]
     else:
-        title += view_title(spec, context)
+        title += view_title(spec, context, request_cache=request_cache)
 
     title += " - " + range_title
 
@@ -888,6 +890,7 @@ def show_bi_availability(
     only_sites: list[SiteId] | None,
     process_tracking: ViewProcessTracking,
     breadcrumb: Breadcrumb,
+    request_cache: RequestCache[RequestCacheConfig],
     aggr_rows: Rows,
     debug: bool,
     escape_plugin_output: bool,
@@ -905,7 +908,7 @@ def show_bi_availability(
     avoptions = get_availability_options_from_request("bi")
     _save_availability_options_after_update(avoptions)
 
-    title = view_title(spec, context)
+    title = view_title(spec, context, request_cache=request_cache)
     if av_mode == "timeline":
         title = _("Timeline of") + " " + title
     else:

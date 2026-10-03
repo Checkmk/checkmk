@@ -8,6 +8,7 @@ import contextlib
 from collections.abc import Container, Iterable, Iterator
 from itertools import chain
 
+from cmk.gui.config import RequestCacheConfig
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.type_defs import (
@@ -18,6 +19,7 @@ from cmk.gui.type_defs import (
     Visual,
     VisualContext,
 )
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import HTTPVariable
 
 from ._filter_valuespecs import VisualFilterListWithAddPopup
@@ -157,8 +159,10 @@ def get_merged_context(*contexts: VisualContext) -> VisualContext:
     return {key: value for context in contexts for key, value in context.items()}
 
 
-def active_context_from_request(infos: SingleInfos, context: VisualContext) -> VisualContext:
-    vs_filterlist = VisualFilterListWithAddPopup(info_list=infos)
+def active_context_from_request(
+    infos: SingleInfos, context: VisualContext, request_cache: RequestCache[RequestCacheConfig]
+) -> VisualContext:
+    vs_filterlist = VisualFilterListWithAddPopup(info_list=infos, request_cache=request_cache)
     if request.has_var("_active"):
         return vs_filterlist.from_html_vars("")
 
@@ -173,12 +177,14 @@ def active_context_from_request(infos: SingleInfos, context: VisualContext) -> V
     return context
 
 
-def requested_context_from_request(infos: SingleInfos) -> VisualContext:
+def requested_context_from_request(
+    infos: SingleInfos, request_cache: RequestCache[RequestCacheConfig]
+) -> VisualContext:
     """Returns the filter context as requested by the user in the URL
 
     Differs from active_context_from_request() as it does not merge with the view context.
     """
-    vs_filterlist = VisualFilterListWithAddPopup(info_list=infos)
+    vs_filterlist = VisualFilterListWithAddPopup(info_list=infos, request_cache=request_cache)
     if request.has_var("_active"):
         return vs_filterlist.from_html_vars("")
 
@@ -213,7 +219,9 @@ def filled_context_filters(context: VisualContext) -> set[FilterName]:
     }
 
 
-def configured_context_filters(context: VisualContext) -> set[FilterName]:
+def configured_context_filters(
+    context: VisualContext, request_cache: RequestCache[RequestCacheConfig]
+) -> set[FilterName]:
     """The filters of the context whose components all hold a value."""
     configured: set[FilterName] = set()
     for filter_name, filter_context in context.items():
@@ -222,7 +230,7 @@ def configured_context_filters(context: VisualContext) -> set[FilterName]:
         if (filter_object := filter_registry.get(filter_name)) is None:
             continue
         try:
-            components = list(filter_object.components())
+            components = list(filter_object.components(request_cache))
         except NotImplementedError:
             continue
         if all(component.is_configured(filter_context) for component in components):

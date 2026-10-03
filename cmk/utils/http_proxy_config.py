@@ -6,6 +6,7 @@
 
 from collections.abc import Callable, Mapping
 from typing import Literal, NotRequired, override, TypedDict
+from urllib.parse import quote
 
 from cmk.utils.password_store import extract_formspec_password
 
@@ -216,13 +217,19 @@ def parse_proxy_config_spec(raw: Mapping[str, object]) -> ProxyConfigSpec:
 
 
 def build_explicit_proxy_config(proxy_spec: ProxyConfigSpec) -> ExplicitProxyConfig:
+    """Build the proxy URL of a structured proxy configuration
+
+    User and password are stored as they were typed. They are percent-encoded here, so
+    that characters like "@", ":" or "%" do not change the meaning of the URL.
+    """
     proxy_auth = ""
     if (auth := proxy_spec.get("auth")) is not None:
-        proxy_auth = (
-            f"{auth['user']}:{extract_formspec_password((auth['password'][0], 'explicit_password', auth['password'][2]))}@"
+        password = extract_formspec_password(
+            ("cmk_postprocessed", "explicit_password", auth["password"][2])
             if auth["password"][1] == "explicit_password"
-            else f"{auth['user']}:{extract_formspec_password((auth['password'][0], 'stored_password', auth['password'][2]))}@"
+            else ("cmk_postprocessed", "stored_password", auth["password"][2])
         )
+        proxy_auth = f"{quote(auth['user'], safe='')}:{quote(password, safe='')}@"
 
     return ExplicitProxyConfig(
         url=f"{proxy_spec['scheme']}://{proxy_auth}"

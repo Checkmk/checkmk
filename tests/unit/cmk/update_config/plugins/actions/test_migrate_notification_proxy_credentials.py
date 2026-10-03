@@ -349,7 +349,7 @@ def _write_merged_passwords() -> None:
 
 @pytest.mark.usefixtures("request_context")
 def test_the_update_moves_the_credentials_of_saved_notification_parameters() -> None:
-    url = _URL_WITH_CREDENTIALS
+    url = "http://us%40er:s3cr%3At@proxy.lan:3128"
     NotificationParameterConfigFile().save(
         _parameters(_explicit(url)),  # type: ignore[arg-type]
         pprint_value=False,
@@ -364,7 +364,7 @@ def test_the_update_moves_the_credentials_of_saved_notification_parameters() -> 
             pass
         case _:
             pytest.fail(f"Unexpected notification parameters: {saved!r}")
-    assert "notification_proxy_user_at_proxy_lan_3128_1" in PasswordStore().load_for_reading()
+    assert "notification_proxy_us_er_at_proxy_lan_3128_1" in PasswordStore().load_for_reading()
     assert http_proxy_config_from_user_setting(saved_proxy, {}).serialize() == url
 
 

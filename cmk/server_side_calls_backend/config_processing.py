@@ -6,7 +6,7 @@
 from collections.abc import Callable, Iterable, Mapping, Sequence, Set
 from dataclasses import dataclass
 from typing import Literal
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 
 from pydantic import BaseModel
 
@@ -63,7 +63,11 @@ class BackendProxy(BaseModel):
                 return secret_value
 
     def _make_url_with_auth(self, user: str, password: str) -> str:
-        return f"{self.scheme}://{user}:{password}@{self.proxy_server_name}:{self.port}"
+        # User and password are stored as typed, the URL needs them percent-encoded
+        return (
+            f"{self.scheme}://{quote(user, safe='')}:{quote(password, safe='')}"
+            f"@{self.proxy_server_name}:{self.port}"
+        )
 
 
 type GlobalProxies = Mapping[str, BackendProxy]

@@ -58,11 +58,11 @@ _PROXIES_GLOBAL_SETTINGS: Mapping[str, HTTPProxySpec] = {
             proxy_server_name="socks.proxy",
             port=443,
             auth=ProxyAuthSpec(
-                user="us%3Aer",
+                user="us:er",
                 password=(
                     "cmk_postprocessed",
                     "explicit_password",
-                    ("password", "s%40crit"),
+                    ("password", "s@crit"),
                 ),
             ),
         ),
@@ -311,3 +311,26 @@ def test_malformed_structured_explicit_proxy_raises(proxy_config: Mapping[str, o
             ("cmk_postprocessed", "explicit_proxy", proxy_config),
             {},
         )
+
+
+def test_credentials_are_encoded_in_the_proxy_url() -> None:
+    assert http_proxy_config_from_user_setting(
+        (
+            "cmk_postprocessed",
+            "explicit_proxy",
+            {
+                "scheme": "http",
+                "proxy_server_name": "proxy.lan",
+                "port": 3128,
+                "auth": {
+                    "user": "dom\\us:er",
+                    "password": (
+                        "cmk_postprocessed",
+                        "explicit_password",
+                        ("uuid1", "p@ss/w:rd%41"),
+                    ),
+                },
+            },
+        ),
+        {},
+    ) == ExplicitProxyConfig("http://dom%5Cus%3Aer:p%40ss%2Fw%3Ard%2541@proxy.lan:3128")

@@ -106,6 +106,9 @@ msgstr ""
 msgid " Activate this option"
 msgstr " Activer cette option"
 
+msgid " Choose 'No levels' to disable these thresholds."
+msgstr ""
+
 #, python-format
 msgid ""
 " Enforcing two-factor for the %(name)s role will terminate any current "
@@ -849,6 +852,10 @@ msgstr "%s restants dans votre période d'essai Checkmk"
 #, fuzzy, python-format
 msgid "%(remaining_trial_time_formatted)s left in your free trial"
 msgstr "%s restants dans votre essai gratuit"
+
+#, fuzzy, python-format
+msgid "%(resource_type)s"
+msgstr "Type de commentaire"
 
 #, python-format
 msgid "%(script_title)s"
@@ -3839,6 +3846,10 @@ msgstr "Accéder à l'agent Checkmk via TCP"
 msgid "Access analyze configuration"
 msgstr "Accès à la configuration de l'analyse"
 
+#, fuzzy
+msgid "Access by remote sites"
+msgstr "Ajouter une instance distante"
+
 msgid ""
 "Access is restricted, but no contact groups are assigned in the host's "
 "permissions."
@@ -4644,6 +4655,18 @@ msgstr "Ajoutez un commentaire ou décrivez cet hôte"
 
 msgid "Add a first row with column titles"
 msgstr "Ajouter une première ligne avec des titres de colonnes"
+
+msgid ""
+"Add a service on the cluster host for each node running a node scraper. Use "
+"these services for node-specific thresholds, graphs and notifications. "
+"Rediscover services after changing this choice."
+msgstr ""
+
+msgid ""
+"Add a service on the cluster host for each watched Kubernetes resource kind, "
+"such as Pod or DaemonSet. Use these services for separate thresholds, graphs "
+"and notifications. Rediscover services after changing this choice."
+msgstr ""
 
 msgid "Add additional folder"
 msgstr "Ajouter un dossier supplémentaire"
@@ -5551,6 +5574,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Address reachable by remote sites"
+msgstr "Ajouter une instance distante"
+
+#, fuzzy
 msgid "Address type"
 msgstr "Type d'adresse"
 
@@ -5727,6 +5754,13 @@ msgstr ""
 msgid "Affected hosts contain"
 msgstr "Les hôtes affectés contiennent"
 
+msgid "Affected node-scraper nodes"
+msgstr ""
+
+#, fuzzy
+msgid "Affected reflectors"
+msgstr "Sites affectés"
+
 msgid "Affected sites"
 msgstr "Sites affectés"
 
@@ -5790,6 +5824,14 @@ msgstr ""
 "Dans le pire des cas, la durée totale du service peut être égale au produit "
 "du nombre de tentatives et du délai d'attente. Par conséquent, vous devez "
 "fournir des valeurs combinées raisonnables pour ces deux paramètres."
+
+msgid ""
+"After an error while receiving Kubernetes object updates, keep an alert "
+"active for the selected period. Each new error restarts this period. The "
+"alert ends when the period expires; this does not confirm that the "
+"connection has recovered. Inspect the cluster-aggregator logs to investigate "
+"the underlying Kubernetes API error."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -6376,6 +6418,10 @@ msgstr ""
 msgid "Alert after being at or below the threshold for"
 msgstr "Le cluster doit avoir au moins un nœud"
 
+#, fuzzy
+msgid "Alert for a limited time"
+msgstr "Noms des règles d'alerte"
+
 msgid "Alert handler"
 msgstr "Gestionnaire d'alerte"
 
@@ -6443,6 +6489,12 @@ msgid "Alert if Acropolis disconnects from hypervisor"
 msgstr ""
 
 msgid "Alert if failover mode is different from the value configured here."
+msgstr ""
+
+msgid ""
+"Alert if the agent takes too long to obtain a complete list of Kubernetes "
+"objects. Only an unfinished list is timed; the age and duration of a "
+"completed list do not affect the service state."
 msgstr ""
 
 #, fuzzy
@@ -7259,6 +7311,14 @@ msgstr ""
 "Permet à un utilisateur de modifier les rapports programmés d'autres "
 "utilisateurs et de spécifier des adresses électroniques arbitraires comme "
 "destination des rapports."
+
+msgid ""
+"Allows for alerting on how often a node checks in with the cluster "
+"aggregator from the node's scraper. Once a payload expires from the "
+"aggregator's cache, it is considered missing and reports the specified "
+"missing payload state. It is recommended to match levels here with your "
+"collection interval and cache retention set for the in-cluster agent."
+msgstr ""
 
 msgid ""
 "Allows querying telemetry metrics from the custom graph editor. When "
@@ -8245,7 +8305,8 @@ msgstr "Avril"
 msgid "Architecture"
 msgstr "Architecture"
 
-msgid "Architecture of the systems where the agent will be deployed"
+msgid ""
+"Architecture of the systems where the agent will be deployed (Linux only)"
 msgstr ""
 
 msgid "Archive"
@@ -10726,6 +10787,10 @@ msgstr "Travail de sauvegarde"
 
 msgid "Backup modes"
 msgstr "Modes de sauvegarde"
+
+#, fuzzy
+msgid "Backup object name"
+msgstr "Temps de sauvegarde"
 
 #, fuzzy
 msgid "Backup server"
@@ -14274,6 +14339,12 @@ msgstr "Vérifier l'utilisation des aides"
 msgid "Check hosts with ping (ICMP echo request)"
 msgstr "Vérifier les hôtes avec PING (ICMP Echo Request)"
 
+msgid ""
+"Check how long the cluster aggregator has waited for each data type. Adjust "
+"these levels to your collection interval and cache retention. Missing data "
+"is evaluated separately, even when age thresholds are disabled."
+msgstr ""
+
 msgid "Check int."
 msgstr "Vérifier int."
 
@@ -15155,6 +15226,40 @@ msgstr ""
 "Choisissez les sections à envoyer comme données en temps réel. Ces choix "
 "contrôlent quels et combien de paquets seront envoyés de l'agent au serveur "
 "Checkmk."
+
+msgid ""
+"Choose the state used while a recent watch-error alert is active. This "
+"setting has no effect when 'Recent watch errors' is set to 'Do not alert'. "
+"Error details remain available in reflector services."
+msgstr ""
+
+msgid ""
+"Choose the state when a data type has never arrived or has expired from the "
+"cache, including during startup. This state applies regardless of the "
+"configured age thresholds."
+msgstr ""
+
+msgid ""
+"Choose the state when a node reports a node-scraper version different from "
+"the cluster-aggregator version. Versions that are not reported and differing "
+"Git revisions do not cause alerts."
+msgstr ""
+
+msgid ""
+"Choose the state when the agent reports no Kubernetes API reflectors. Check "
+"the cluster-aggregator deployment and its logs."
+msgstr ""
+
+msgid ""
+"Choose the state when the agent reports no nodes with node scrapers. Check "
+"whether the node-scraper DaemonSet is deployed, identified correctly and has "
+"scheduled pods."
+msgstr ""
+
+msgid ""
+"Choose the state while the agent has not yet collected a complete list of "
+"this Kubernetes resource kind. This also applies during initial startup."
+msgstr ""
 
 msgid "Choose the type of action to perform"
 msgstr "Choisissez le type d'action à effectuer"
@@ -19970,7 +20075,7 @@ msgid "Customize GUI design"
 msgstr "Personnaliser la conception de l'interface graphique"
 
 #, fuzzy
-msgid "Customize agent package (Linux)"
+msgid "Customize agent package (Linux; Solaris and AIX: experimental)"
 msgstr "Nom des paquets de l'agent (Linux, UNIX)"
 
 #, python-format
@@ -20010,7 +20115,7 @@ msgid "Customize title"
 msgstr "Personnaliser le titre"
 
 #, fuzzy
-msgid "Customize user"
+msgid "Customize user (Linux only)"
 msgstr "Personnaliser"
 
 msgid "Customized"
@@ -23066,6 +23171,14 @@ msgid "Discover a service checking the average of all CPUs"
 msgstr "Découvrez un service vérifiant la moyenne de tous les CPUs"
 
 #, fuzzy
+msgid "Discover a service per node"
+msgstr "Service dans la période de service"
+
+#, fuzzy
+msgid "Discover a service per resource kind"
+msgstr "Découvrir les services pendant la création"
+
+#, fuzzy
 msgid "Discover disabled tasks"
 msgstr "Découvrir les hôtes enregistrés"
 
@@ -23766,6 +23879,10 @@ msgstr "Ne pas ajouter d'en-têtes de colonne"
 #, fuzzy
 msgid "Do not add text"
 msgstr "Ne pas tamponner"
+
+#, fuzzy
+msgid "Do not alert"
+msgstr "Ne pas regrouper"
 
 #, fuzzy
 msgid "Do not apply this configuration"
@@ -24664,6 +24781,9 @@ msgstr "Durée de l'état CRITIQUE du service 'Check_MK'"
 
 msgid "Duration of Lambda functions"
 msgstr "Durée des fonctions Lambda"
+
+msgid "Duration of an ongoing list or relist"
+msgstr ""
 
 msgid "Duration of backup"
 msgstr "Durée de la sauvegarde"
@@ -25838,6 +25958,13 @@ msgstr "Activer la suppression automatique des hôtes"
 #, fuzzy
 msgid "Enable compatibility mode"
 msgstr "Compatibilité"
+
+msgid ""
+"Enable component services for separate diagnostics, thresholds, "
+"notifications and graphs. The cluster overview continues to alert "
+"independently, so a fault can affect both services. All services live on the "
+"cluster host. Rediscover services after changing this rule."
+msgstr ""
 
 msgid "Enable controller"
 msgstr "Activer le contrôleur"
@@ -27990,6 +28117,31 @@ msgstr "Extensions"
 msgid "Extensions in <tt>~/local/</tt> and MKPs"
 msgstr "Extensions dans <tt>~/local/</tt> et MKP"
 
+msgid "Extent status: Evacuate"
+msgstr ""
+
+msgid "Extent status: Maintenance"
+msgstr ""
+
+#, fuzzy
+msgid "Extent status: Normal"
+msgstr "Statut de MKEventd"
+
+#, fuzzy
+msgid "Extent status: Pending"
+msgstr "État de la tâche : En attente"
+
+#, fuzzy
+msgid "Extent status: Resync required"
+msgstr "est nécessaire"
+
+#, fuzzy
+msgid "Extent status: Sealed"
+msgstr "Statut de MKEventd"
+
+msgid "Extent status: Tenant evacuating"
+msgstr ""
+
 msgid "Extents"
 msgstr "Étendues"
 
@@ -28434,6 +28586,13 @@ msgstr ""
 "\"%s\". La valeur d'une règle est incompatible avec la spécification de la "
 "règle actuelle. Vous pouvez essayer de résoudre ce problème en ouvrant la "
 "règle pour la modifier et en l'enregistrant à nouveau sans la modifier."
+
+#. weblate-flags: read-only, domain-specific
+#, python-brace-format
+msgid ""
+"Failed to provision the feature {feature} for the remote site {site}. Please "
+"check the web and ui-job-scheduler logs for details."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -34336,6 +34495,10 @@ msgstr "Événements d'accueil"
 msgid "Host filters"
 msgstr "Fichiers journaux des hôtes"
 
+#, fuzzy
+msgid "Host folder"
+msgstr "dossier"
+
 msgid "Host goes down"
 msgstr "L'hôte tombe en panne"
 
@@ -34515,6 +34678,10 @@ msgstr "Paramètres de l'hôte"
 
 msgid "Host memory usage"
 msgstr "Utilisation de la mémoire de l'hôte"
+
+#, fuzzy
+msgid "Host metric"
+msgstr "Détails sur l'hôte"
 
 #, fuzzy
 msgid "Host metrics"
@@ -35173,6 +35340,9 @@ msgstr ""
 "La durée pendant laquelle les fichiers de statistiques sont conservés sur le "
 "système cible. Cette durée doit être au moins égale au double de "
 "l'intervalle de vérification."
+
+msgid "How long to alert after the most recent watch error."
+msgstr ""
 
 msgid "How many days in the past Checkmk should evaluate the measurement data"
 msgstr ""
@@ -36590,7 +36760,7 @@ msgstr ""
 msgid ""
 "If this Managed Robot is to be deployed on Linux and RCC is to be used, it "
 "is important to set a user context other than root using the \"Customize "
-"agent package (Linux)\" rule."
+"agent package (Linux; Solaris and AIX: experimental)\" rule."
 msgstr ""
 
 msgid ""
@@ -39360,12 +39530,14 @@ msgstr "Interface graphique interactive REST API"
 msgid "Interactive GUI"
 msgstr "Interface graphique interactive REST API"
 
+#, fuzzy
 msgid ""
 "Interactive search field for direct access to monitoring instances (hosts, "
 "services, host and service groups).<br>You can use the following filters: "
 "<i>h:</i> Host,<br> <i>s:</i> Service, <i>hg:</i> Host group, <i>sg:</i> "
 "Service group,<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Host tag, "
-"<i>hl:</i> Host label, <i>sl:</i> Service label"
+"<i>hf:</i> Host folder, <i>sf:</i> Service folder, <i>hl:</i> Host label, "
+"<i>sl:</i> Service label"
 msgstr ""
 "Champ de recherche interactif pour un accès direct aux instances de "
 "surveillance (hôtes, services, groupes d'hôtes et de services).Vous pouvez "
@@ -40984,11 +41156,29 @@ msgstr "Mot clé"
 msgid "KiB"
 msgstr "MiB"
 
+#, fuzzy
+msgid "Kubelet health: scrape duration"
+msgstr "Ajouter une configuration d'état"
+
+msgid "Kubelet health: time since receipt"
+msgstr ""
+
+msgid "Kubelet statistics: scrape duration"
+msgstr ""
+
+#, fuzzy
+msgid "Kubelet statistics: time since receipt"
+msgstr "Statistiques d'alerte : Nombre de récupérations"
+
 msgid "Kubelet version"
 msgstr "Version de Kubelet"
 
 msgid "Kubernetes"
 msgstr "Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes API reflectors"
+msgstr "Répliques Kubernetes"
 
 msgid "Kubernetes CPU resource utilization"
 msgstr "Utilisation des ressources CPU de Kubernetes"
@@ -41015,6 +41205,22 @@ msgstr "Kubernetes StatefulSet"
 
 #, fuzzy
 msgid "Kubernetes StatefulSets"
+msgstr "Kubernetes StatefulSet"
+
+#, fuzzy
+msgid "Kubernetes agent health"
+msgstr "Kubernetes DaemonSet"
+
+#, fuzzy
+msgid "Kubernetes agent health service discovery"
+msgstr "Exécuter la découverte des services"
+
+#, fuzzy
+msgid "Kubernetes agent node health"
+msgstr "Node Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes agent reflector health"
 msgstr "Kubernetes StatefulSet"
 
 #, fuzzy
@@ -41086,6 +41292,10 @@ msgstr "Statut des pods Kubernetes"
 
 msgid "Kubernetes replicas"
 msgstr "Répliques Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes resource kind"
+msgstr "Ressources de pods Kubernetes"
 
 #, fuzzy
 msgid "Kubernetes resource quota CPU utilization"
@@ -41455,6 +41665,10 @@ msgstr "Dernier changement"
 msgid "Last completed duration"
 msgstr "Dernière durée achevée"
 
+#, fuzzy
+msgid "Last completed list duration"
+msgstr "Dernière durée achevée"
+
 msgid "Last contact of agent updater"
 msgstr "Dernier contact de l'agent updater"
 
@@ -41590,6 +41804,10 @@ msgstr "Dernier âge mis"
 #, fuzzy
 msgid "Last reported"
 msgstr "Rapport d'accident"
+
+#, fuzzy
+msgid "Last restore point age"
+msgstr "Nom du dépôt de données"
 
 msgid "Last result"
 msgstr "Dernier résultat"
@@ -50415,6 +50633,10 @@ msgid "Node processor"
 msgstr "Processeur"
 
 #, fuzzy
+msgid "Node scrapers"
+msgstr "État du nœud"
+
+#, fuzzy
 msgid "Node sections to skip"
 msgstr "Sections à envoyer"
 
@@ -50433,6 +50655,14 @@ msgstr "État du nœud"
 
 msgid "Node utilization"
 msgstr "Utilisation des nœuds"
+
+#, fuzzy
+msgid "Node-scraper coverage"
+msgstr "Nœuds par grappe"
+
+#, fuzzy
+msgid "Node-scraper nodes"
+msgstr "Nœuds Docker"
 
 #, fuzzy
 msgid "NodePort"
@@ -52718,6 +52948,10 @@ msgstr "Unidirectionnel Non-Multicast/Non-Broadcast"
 #, fuzzy
 msgid "One-time password (OTP / TOTP)"
 msgstr "Mode d'authentification"
+
+#, fuzzy
+msgid "Ongoing list duration"
+msgstr "Durée d'initialisation"
 
 msgid "Ongoing shard info requests"
 msgstr "Demandes d'informations continues sur les shards"
@@ -56047,6 +56281,10 @@ msgstr "Conteneurs en pause aux niveaux supérieurs"
 #, fuzzy
 msgid "Pausing"
 msgstr "En pause"
+
+#, fuzzy
+msgid "Payload scrape duration"
+msgstr "Options de montage"
 
 msgid "Pd"
 msgstr "Pd"
@@ -60122,6 +60360,10 @@ msgstr "Temps de traitement des événements"
 msgid "Recent processing cycles"
 msgstr "Temps de traitement des événements"
 
+#, fuzzy
+msgid "Recent watch errors"
+msgstr "Erreurs de réception"
+
 msgid "Recently changed services"
 msgstr "Services récemment modifiés"
 
@@ -60371,6 +60613,20 @@ msgid "Refine search"
 msgstr "Affiner la recherche"
 
 msgid "Refine your search or press Enter for host/service search."
+msgstr ""
+
+#, fuzzy
+msgid "Reflector health"
+msgstr "Santé en cluster"
+
+#, fuzzy
+msgid "Reflectors"
+msgstr "Supprimer l'hôte"
+
+msgid ""
+"Reflectors maintain the cache of Kubernetes objects using lists and watches. "
+"The age of a completed list is not a freshness signal: a healthy watch can "
+"continue indefinitely without relisting."
 msgstr ""
 
 msgid "Refresh"
@@ -62119,6 +62375,10 @@ msgid "Resource pinning: Ensure monitored resources are unchanged"
 msgstr ""
 "Épinglage des ressources : Garantir que les ressources surveillées restent "
 "inchangées"
+
+#, fuzzy
+msgid "Resource types monitored via OpenTelemetry metrics"
+msgstr "Créer un service par règle d'alerte"
 
 #, fuzzy
 msgid "Resources matching tag based criteria"
@@ -64054,6 +64314,10 @@ msgstr ""
 msgid "Scale to width of page"
 msgstr "S'adapte à la largeur de la page"
 
+#, fuzzy
+msgid "Scale-out repository name"
+msgstr "Nom de sécurité"
+
 msgid "Scan QR-Code or enter secret manually"
 msgstr ""
 
@@ -64872,6 +65136,12 @@ msgid ""
 "<tt>NOT</tt> operators."
 msgstr ""
 
+msgid ""
+"Select the Azure resource types for which your OpenTelemetry collector "
+"delivers metrics. Checkmk cannot detect them, so select the same resource "
+"types as in the collector configuration."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Select the Kubernetes objects you would like to monitor. Pods controlled by "
@@ -65639,6 +65909,10 @@ msgid "Service filters"
 msgstr "Filtres de service"
 
 #, fuzzy
+msgid "Service folder"
+msgstr "Filtres de service"
+
+#, fuzzy
 msgid "Service goes into CRITICAL state"
 msgstr "Le service passe dans un état inconnu"
 
@@ -65763,6 +66037,10 @@ msgstr "en tant que macro nommée"
 
 msgid "Service limits"
 msgstr "Limites de service"
+
+#, fuzzy
+msgid "Service metric"
+msgstr "Mesures du service"
 
 #, fuzzy
 msgid "Service metrics"
@@ -67425,6 +67703,11 @@ msgstr "Afficher l'axe vertical"
 
 msgid "Show volume name in service output"
 msgstr "Afficher le nom du volume dans la sortie du service"
+
+msgid ""
+"Show when this reflector last received a resource event. Enable thresholds "
+"only for resource kinds where a long quiet period is unexpected."
+msgstr ""
 
 #, fuzzy
 msgid "Show/hide password"
@@ -70114,6 +70397,9 @@ msgstr "État et nombre de processus (uniquement SNMP)"
 msgid "State based on status of last sync attempt"
 msgstr "État en cas de statut inconnu du script de réplication"
 
+msgid "State before the first list has completed"
+msgstr ""
+
 #, fuzzy
 msgid "State change"
 msgstr "A changé"
@@ -70216,6 +70502,10 @@ msgstr "Indiquer si l'État local est désactivé"
 #, fuzzy
 msgid "State for StorCLI2 status <i>Various</i>"
 msgstr "État pour <i>Online</i>"
+
+#, fuzzy
+msgid "State for a recent watch error"
+msgstr "État sur l'erreur de lecture dure"
 
 msgid "State for connection refusal"
 msgstr "État du refus de connexion"
@@ -70491,6 +70781,10 @@ msgstr "État dans le cas où la journalisation forcée est désactivée : "
 msgid "State in case of force logging is enabled: "
 msgstr "État en cas d'activation de la journalisation forcée : "
 
+#, fuzzy
+msgid "State in case of host name mismatch with the agent updater"
+msgstr "État en cas d'absence de mise à jour"
+
 msgid "State in case of logins are not possible: "
 msgstr "État en cas d'impossibilité de se connecter : "
 
@@ -70665,6 +70959,10 @@ msgstr "État lorsque le collecteur est à l'arrêt"
 msgid "State when configuration backup is disabled"
 msgstr "État lorsque aucune sauvegarde n'est configurée"
 
+#, fuzzy
+msgid "State when expected data is missing from the cache"
+msgstr "État pour la non-concordance de la chaîne attendue"
+
 msgid "State when file is missing"
 msgstr "État lorsque le fichier est manquant"
 
@@ -70814,8 +71112,23 @@ msgstr "État lorsque aucune sauvegarde n'est configurée"
 msgid "State when no enterprise license is installed"
 msgstr "État lorsque aucune licence d'entreprise n'est installée"
 
+#, fuzzy
+msgid "State when no node-scraper nodes are reported"
+msgstr "État lorsque des mises à jour normales sont en attente"
+
+#, fuzzy
+msgid "State when no performance extents are configured"
+msgstr "État lorsque aucune sauvegarde n'est configurée"
+
 msgid "State when no ping signal from sidecar"
 msgstr "État en l'absence de signal ping du side-car"
+
+#, fuzzy
+msgid "State when no reflectors are reported"
+msgstr "État de la situation lorsque des renvois sont en cours"
+
+msgid "State when node-scraper and cluster-aggregator versions differ"
+msgstr ""
 
 msgid "State when normal updates are pending"
 msgstr "État lorsque des mises à jour normales sont en attente"
@@ -72032,6 +72345,14 @@ msgstr "Numéro de système"
 
 msgid "System Stats"
 msgstr "Statistiques du système"
+
+#, fuzzy
+msgid "System agent: scrape duration"
+msgstr "Authentification du système"
+
+#, fuzzy
+msgid "System agent: time since receipt"
+msgstr "Heure du système (synchronisation de l'heure)"
 
 #, fuzzy
 msgid "System authentication"
@@ -74198,6 +74519,15 @@ msgstr ""
 "fortement recommandé d'utiliser HTTPS. Ceci peut être configuré en utilisant "
 "le jeu de règles <a href=\"%s\">Agent updater (Linux, Windows)</a>."
 
+msgid ""
+"The agent updater is registered with one site under one host name. This "
+"state is used when that host name differs from the name of the host in "
+"Checkmk. A host that is monitored by several sites may have a different name "
+"on each site. On the sites that do not serve the agent updates of such a "
+"host, set this state to <i>OK</i>. The mismatch is then only shown in the "
+"service details."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "The agent will automatically discover Podman sockets on the system. This "
@@ -74459,6 +74789,14 @@ msgid ""
 "%(status_code)d). The remote site may have lost its registration with the "
 "central site -- log in again under *Distributed monitoring* on the central "
 "site."
+msgstr ""
+
+#. weblate-flags: read-only, domain-specific
+#, python-brace-format
+msgid ""
+"The certificate authority of the remote site {site} is not trusted here, so "
+"that site cannot reach this data backend. Trust its CA in the site "
+"connection."
 msgstr ""
 
 msgid ""
@@ -76188,17 +76526,17 @@ msgid ""
 msgstr ""
 
 msgid ""
-"The license usage history is older than five days. In order to have a "
-"reliable average of the number of services the license usage report must "
-"contain a significant number of license usage samples. Please execute the "
-"following command as site user 'cmk-update-license-usage --force' in order "
-"to solve this situation."
+"The license usage history is older than 60 days, so activating changes is "
+"blocked. Something is wrong on this site: please contact Checkmk support. As "
+"a temporary fix, run 'cmk-update-license-usage --force' as site user."
 msgstr ""
 
-#, fuzzy
-msgid "The license usage history was updated at least three days ago."
+msgid ""
+"The license usage history is older than three days, and activating changes "
+"will be blocked once it is older than 60 days. Something is wrong on this "
+"site: please contact Checkmk support. As a temporary fix, run 'cmk-update-"
+"license-usage --force' as site user."
 msgstr ""
-"L'historique de l'utilisation de la licence date de plus de cinq jours."
 
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "La limite pour le retard de transport dans <tt>v$dataguard_stats</tt>"
@@ -77606,6 +77944,13 @@ msgstr ""
 msgid "The relations of this host are malformed: %(error)s"
 msgstr "La vérification a échoué : %s"
 
+#. weblate-flags: read-only, domain-specific
+#, python-brace-format
+msgid ""
+"The remote site {site} stores data here, but this data backend is not opened "
+"to remote sites. Set the address they reach it at to let them connect."
+msgstr ""
+
 msgid ""
 "The renaming of hosts is a complex operation since a host's name is being "
 "used as a unique key in various places. It also involves stopping and "
@@ -78244,6 +78589,12 @@ msgid ""
 "The site version is %(site_version)s, but this package requires at least "
 "%(requirement)s."
 msgstr ""
+
+#, fuzzy
+msgid ""
+"The site-specific settings of other sites are managed on the central site."
+msgstr ""
+"Checkmk ne peut être configuré que sur le site central du gestionnaire."
 
 msgid "The sites initiating and accepting the connection must be specified."
 msgstr ""
@@ -79483,6 +79834,11 @@ msgid ""
 msgstr ""
 "Ces services n'ont pas été trouvés par la découverte mais ont été ajoutés "
 "manuellement par une règle de configuration <i>Services forcés</i>."
+
+msgid ""
+"These settings apply to the cluster overview. Node and reflector services "
+"have their own rules and do not change the overview's evaluation."
+msgstr ""
 
 msgid ""
 "These settings control how the <i>initial</i> scheduling of new active "
@@ -84904,11 +85260,19 @@ msgid "Time since last checkpoint"
 msgstr "Temps écoulé depuis le dernier point de contrôle"
 
 #, fuzzy
+msgid "Time since last data received"
+msgstr "Temps écoulé depuis le dernier point de contrôle"
+
+#, fuzzy
 msgid "Time since last garbage collection"
 msgstr "Temps écoulé depuis le dernier achèvement réussi"
 
 #, fuzzy
 msgid "Time since last reported"
+msgstr "Temps écoulé depuis le dernier point de contrôle"
+
+#, fuzzy
+msgid "Time since last resource event"
 msgstr "Temps écoulé depuis le dernier point de contrôle"
 
 #, fuzzy
@@ -84935,6 +85299,10 @@ msgstr "Temps écoulé depuis la dernière synchronisation"
 msgid "Time since last synchronization"
 msgstr "Temps écoulé depuis la dernière synchronisation"
 
+#, fuzzy
+msgid "Time since payload receipt"
+msgstr "Temps écoulé depuis le dernier point de contrôle"
+
 msgid "Time since the last ANALYZE"
 msgstr "Temps écoulé depuis la dernière ANALYSE"
 
@@ -84947,6 +85315,10 @@ msgstr "Le temps écoulé depuis le dernier contrôle de l'hôte"
 
 #, fuzzy
 msgid "Time since the last check of the service"
+msgstr "Le temps écoulé depuis le dernier contrôle du service"
+
+#, fuzzy
+msgid "Time since the last resource event"
 msgstr "Le temps écoulé depuis le dernier contrôle du service"
 
 #, fuzzy
@@ -93694,6 +94066,12 @@ msgstr "Packs de configuration BI"
 msgid "Veeam: License"
 msgstr "Licencié"
 
+msgid "Veeam: Restore points"
+msgstr ""
+
+msgid "Veeam: Scale-out repository"
+msgstr ""
+
 msgid "Veeam: Time since last CDP run"
 msgstr "Veeam : Temps écoulé depuis la dernière exécution du CDP"
 
@@ -94702,6 +95080,9 @@ msgstr "Avertissements :"
 
 msgid "Wasted space of tables and indexes"
 msgstr "Espace gaspillé des tables et des index"
+
+msgid "Watch errors since cluster-aggregator start"
+msgstr ""
 
 msgid "Watch the total size of the log file"
 msgstr "Surveiller la taille totale du fichier journal"
@@ -96111,6 +96492,13 @@ msgid ""
 msgstr ""
 "Configurer ou non l'adresse IP trouvée comme l'adresse IPv4 des hôtes "
 "trouvés."
+
+#. weblate-flags: read-only, domain-specific
+msgid ""
+"Whether remote sites may write into this data backend, and the address at "
+"which they reach it. Opening this binds the service beyond the loopback "
+"interface."
+msgstr ""
 
 msgid ""
 "Whether the plug-in looks for local Oracle database instances on its own. It "
@@ -103050,6 +103438,10 @@ msgstr "Expiration"
 msgid "Sharing expired on"
 msgstr "Expression de regroupement"
 
+#, fuzzy
+msgid "Service: %{state}"
+msgstr "État du service"
+
 msgid "On down host"
 msgstr "L'hôte en bas"
 
@@ -103226,16 +103618,8 @@ msgid "Select custom graph"
 msgstr "Cloner un graphique personnalisé"
 
 #, fuzzy
-msgid "Filter by host name"
-msgstr "Filtrer la sélection par nom d'hôte :"
-
-#, fuzzy
 msgid "Select service metric"
 msgstr "Mesures du service"
-
-#, fuzzy
-msgid "Filter by service"
-msgstr "Filtrer la sélection par service :"
 
 #, fuzzy
 msgid "Select option"
@@ -104148,24 +104532,12 @@ msgid "Graph (combined)"
 msgstr "Options graphiques"
 
 #, fuzzy
-msgid "Service metric"
-msgstr "Mesures du service"
+msgid "Service graph"
+msgstr "Graphiques des services"
 
 #, fuzzy
 msgid "Must select an option"
 msgstr "Connexions rejetées"
-
-msgid "Narrow dropdown options by host or service (no selection)"
-msgstr ""
-
-msgid ""
-"Use these fields to narrow down the list of available service metrics.<br /"
-">Click the Host name or Service label to clear the filter."
-msgstr ""
-
-#, fuzzy
-msgid "Service graph"
-msgstr "Graphiques des services"
 
 #, fuzzy
 msgid "Scatterplot"
@@ -104796,6 +105168,18 @@ msgstr "Ajouter une configuration d'état"
 msgid "Search settings…"
 msgstr "Recherche d'hôtes"
 
+msgid ""
+"This site is managed centrally. The overrides shown here are pushed by the "
+"managing site. A change made here takes effect after activation on this site "
+"and lasts until the managing site activates changes the next time."
+msgstr ""
+
+msgid ""
+"This site is managed centrally. The global settings shown here are pushed by "
+"the managing site. A change made here takes effect after activation on this "
+"site and lasts until the managing site activates changes the next time."
+msgstr ""
+
 #, fuzzy
 msgid "Edit site-specific setting"
 msgstr "%d Paramètres du filtre"
@@ -104863,24 +105247,16 @@ msgid "All metrics are hidden"
 msgstr "Tous les parents sont en bas"
 
 #, fuzzy
-msgid "for %{date},"
-msgstr "Pas de données"
+msgid "Resolution %{resolution}"
+msgstr "Définir la résolution"
 
 #, fuzzy
-msgid "Graph values for %{date},"
-msgstr "Accords graphiques"
-
-#, fuzzy
-msgid "resolution:"
-msgstr "Résolution DNS"
-
-#, fuzzy
-msgid "Graph values and time information"
+msgid "Data aggregation and time information"
 msgstr "Informations recueillies sur les nœuds"
 
 #, fuzzy
-msgid "Graph values"
-msgstr "Accords graphiques"
+msgid "Data aggregation"
+msgstr "agrégation"
 
 #, fuzzy
 msgid "Graph zoom controls and action menu"
@@ -106515,10 +106891,6 @@ msgid "Live"
 msgstr ""
 
 #, fuzzy
-msgid "Read-only"
-msgstr "Mode lecture seule"
-
-#, fuzzy
 msgid "Editing"
 msgstr "Edition"
 
@@ -106558,11 +106930,13 @@ msgstr "Modèle de recherche"
 msgid "Show search operators"
 msgstr "Modèle de recherche"
 
-msgid "Type '/' to use a search operator"
-msgstr ""
+#, fuzzy
+msgid "Search operators"
+msgstr "Modèle de recherche"
 
 msgid ""
-"Without a prefix all fields are searched. Multiple terms are AND-combined."
+"Pick one here, or type '/' in the search box. Without a prefix all fields "
+"are searched; multiple terms must all match."
 msgstr ""
 
 msgid "Open in new tab (full screen)"
@@ -107569,15 +107943,26 @@ msgstr "Les notifications sont désactivées"
 msgid "Folder actions — %{folder}"
 msgstr "Dossier : %(folder)s"
 
+msgid ""
+"No host directly in “%{folder}” is down or unreachable. Include sub-folders "
+"to reach the hosts below it."
+msgstr ""
+
+msgid ""
+"No host in “%{folder}” is down or unreachable. A host that is up and red is "
+"red for its services: acknowledge those on the host."
+msgstr ""
+
 msgid "Applies to %{count} host in “%{folder}”."
 msgid_plural "Applies to %{count} hosts in “%{folder}”."
 msgstr[0] ""
 msgstr[1] ""
 
-msgid "%{count} host without a problem left out."
-msgid_plural "%{count} hosts without a problem left out."
-msgstr[0] ""
-msgstr[1] ""
+#, fuzzy
+msgid "%{count} host that is up left out."
+msgid_plural "%{count} hosts that are up left out."
+msgstr[0] "Non sélectionné"
+msgstr[1] "Non sélectionné"
 
 #, fuzzy
 msgid "Include sub-folders"
@@ -107606,12 +107991,22 @@ msgstr[0] "Temps d'arrêt de l'hôte"
 msgstr[1] "Temps d'arrêt de l'hôte"
 
 #, fuzzy
-msgid "Folder actions"
-msgstr "Sélection des dossiers"
+msgid "Acknowledge problems…"
+msgstr "Reconnaître les problèmes"
 
 #, fuzzy
 msgid "Open in Checkmk Setup"
 msgstr "Contrôle de l'apprentissage"
+
+#, fuzzy
+msgid "%{n} host"
+msgid_plural "%{n} hosts"
+msgstr[0] "%d heure"
+msgstr[1] "%d heure"
+
+#, fuzzy
+msgid "Folder · empty"
+msgstr "Chemin du dossier"
 
 #, fuzzy
 msgid "Loading services…"
@@ -107624,6 +108019,14 @@ msgstr "Vous ne pouvez pas supprimer cette connexion."
 #, fuzzy
 msgid "No problem services"
 msgstr "services liés aux problèmes"
+
+#, fuzzy
+msgid "Click to collapse"
+msgstr "effondré"
+
+#, fuzzy
+msgid "Click to expand"
+msgstr "Vérifiez l'URL"
 
 #, fuzzy
 msgid "Nothing to show here."
@@ -107644,18 +108047,15 @@ msgid "empty · 0 hosts"
 msgstr "Hôtes d'importation"
 
 #, fuzzy
-msgid "%{n} host"
-msgid_plural "%{n} hosts"
-msgstr[0] "%d heure"
-msgstr[1] "%d heure"
-
-#, fuzzy
 msgid "Site unreachable — last known state"
 msgstr "l'hôte est inaccessible ou a des services inconnus"
 
 #, fuzzy
 msgid "stale"
 msgstr "Stale"
+
+msgid "Clear the search to open and close folders yourself"
+msgstr ""
 
 #, fuzzy
 msgid "List"
@@ -107676,6 +108076,13 @@ msgstr "Plus de %d résultats disponibles, veuillez affiner votre recherche."
 #, fuzzy
 msgid "Search folders, hosts, services…"
 msgstr "Services de jumelage"
+
+#, fuzzy
+msgid "Expand all folders"
+msgstr "Développez"
+
+msgid "Collapse all folders except Main"
+msgstr ""
 
 #, fuzzy
 msgid "Folder tree drawing"
@@ -107707,46 +108114,18 @@ msgstr "Correspondance des noms de processus"
 msgid "Clear filter"
 msgstr "Filtre de recherche"
 
+#, fuzzy
+msgid "%{own}, worst service %{worst}"
+msgstr "Services forcés"
+
 msgid "%{title} · empty"
 msgstr ""
 
 msgid "FLAP"
 msgstr ""
 
-#, fuzzy
-msgid "click: details"
-msgstr "Détails de la licence"
-
-msgid "services failed to load — click to retry"
+msgid "Too many to draw here"
 msgstr ""
-
-#, fuzzy
-msgid "loading services…"
-msgstr "Services en attente"
-
-#, fuzzy
-msgid "click: show services"
-msgstr "Services de l'ombre"
-
-#, fuzzy
-msgid "click: collapse"
-msgstr "effondré"
-
-msgid "click: expand"
-msgstr ""
-
-#, fuzzy
-msgid "flapping"
-msgstr "Flapping"
-
-#, fuzzy
-msgid "stale — site unreachable"
-msgstr "L'hôte n'est pas joignable"
-
-msgid "%{n} host · %{breakdown}"
-msgid_plural "%{n} hosts · %{breakdown}"
-msgstr[0] ""
-msgstr[1] ""
 
 #, fuzzy
 msgid "Delete object"
@@ -110707,6 +111086,14 @@ msgid "Labels:"
 msgstr "Étiquettes"
 
 #, fuzzy
+msgid "Check age:"
+msgstr "Agent de contrôle"
+
+#, fuzzy
+msgid "State age:"
+msgstr "A changé"
+
+#, fuzzy
 msgid "Current check attempt:"
 msgstr "Tentative de contrôle en cours"
 
@@ -110933,6 +111320,10 @@ msgstr "Vue du filtre"
 #, fuzzy
 msgid "Select all"
 msgstr "Supprimer tout"
+
+#, fuzzy
+msgid "Search column"
+msgstr "Afficher dans la colonne"
 
 msgid "Clear the filter on %{column} before hiding it"
 msgstr ""
@@ -111175,10 +111566,6 @@ msgstr ""
 #, fuzzy
 msgid "Focus search"
 msgstr "Recherche de l'hôte"
-
-#, fuzzy
-msgid "Last state change"
-msgstr "Dernier changement d'état de l'hôte"
 
 #, fuzzy
 msgid "Donut chart"
@@ -112039,6 +112426,16 @@ msgstr "Sauvegarder et tester"
 msgid "Step %{step} of %{total}"
 msgstr "%d nouvelle étiquette"
 
+#, fuzzy
+msgid "Full features · %{days} day left"
+msgid_plural "Full features · %{days} days left"
+msgstr[0] " dans %d jour(s)"
+msgstr[1] " dans %d jour(s)"
+
+#, fuzzy
+msgid "Start monitoring"
+msgstr "Recherche dans le monitoring"
+
 msgid "Resend code (%{countdown})"
 msgstr ""
 
@@ -112060,12 +112457,6 @@ msgstr ""
 #, fuzzy
 msgid "Verification code"
 msgstr "Vérification"
-
-msgid ""
-"Too many codes requested for this address. Try again in %{time}, go back to "
-"use a different email address, or continue without verification as an "
-"unverified trial."
-msgstr ""
 
 #, fuzzy
 msgid "Didn't receive it?"
@@ -112177,6 +112568,17 @@ msgid "Verify your license to activate this site."
 msgstr "n'activez pas ce %s"
 
 #, fuzzy
+msgid "License activation pending"
+msgstr "Activer les changements en attente"
+
+msgid ""
+"License verification postponed. The site keeps full features for %{days} "
+"days from site creation. Verify your license before then — otherwise the "
+"site falls back to the limited free edition (%{services} services). We'll "
+"remind you every 7 days."
+msgstr ""
+
+#, fuzzy
 msgid "Verify your license"
 msgstr "Vérifier la réponse"
 
@@ -112213,22 +112615,11 @@ msgstr ""
 msgid "Trial verified"
 msgstr "Essai expiré"
 
-#, fuzzy
-msgid "Start monitoring"
-msgstr "Recherche dans le monitoring"
-
 msgid "Unverified trial"
 msgstr ""
 
-#, fuzzy
-msgid "Full features · %{days} day left"
-msgid_plural "Full features · %{days} days left"
-msgstr[0] " dans %d jour(s)"
-msgstr[1] " dans %d jour(s)"
-
 msgid ""
-"Trial started without verification (offline site, or verification not "
-"completed after the resend cap). Full features for %{days} days from site "
+"Trial started without verification. Full features for %{days} days from site "
 "creation, then fallback to the limited free edition (%{services} services). "
 "While the site is under %{days} days old, the dialog reappears on admin "
 "login (at most once per 48h) as another chance to verify or license."
@@ -112449,10 +112840,6 @@ msgstr "Recherche dans la configuration"
 #, fuzzy
 msgid "Insert operator"
 msgstr "Connexions rejetées"
-
-#, fuzzy
-msgid "Search operators"
-msgstr "Modèle de recherche"
 
 msgid "Only available for 'Monitoring' and 'All'"
 msgstr ""
@@ -113085,6 +113472,67 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Filter by host name"
+#~ msgstr "Filtrer la sélection par nom d'hôte :"
+
+#, fuzzy
+#~ msgid "Filter by service"
+#~ msgstr "Filtrer la sélection par service :"
+
+#, fuzzy
+#~ msgid "Read-only"
+#~ msgstr "Mode lecture seule"
+
+#, fuzzy
+#~ msgid "Folder actions"
+#~ msgstr "Sélection des dossiers"
+
+#, fuzzy
+#~ msgid "click: details"
+#~ msgstr "Détails de la licence"
+
+#, fuzzy
+#~ msgid "loading services…"
+#~ msgstr "Services en attente"
+
+#, fuzzy
+#~ msgid "click: show services"
+#~ msgstr "Services de l'ombre"
+
+#, fuzzy
+#~ msgid "flapping"
+#~ msgstr "Flapping"
+
+#, fuzzy
+#~ msgid "stale — site unreachable"
+#~ msgstr "L'hôte n'est pas joignable"
+
+#, fuzzy
+#~ msgid "Last state change"
+#~ msgstr "Dernier changement d'état de l'hôte"
+
+#, fuzzy
+#~ msgid "The license usage history was updated at least three days ago."
+#~ msgstr ""
+#~ "L'historique de l'utilisation de la licence date de plus de cinq jours."
+
+#, fuzzy
+#~ msgid "for %{date},"
+#~ msgstr "Pas de données"
+
+#, fuzzy
+#~ msgid "Graph values for %{date},"
+#~ msgstr "Accords graphiques"
+
+#, fuzzy
+#~ msgid "resolution:"
+#~ msgstr "Résolution DNS"
+
+#, fuzzy
+#~ msgid "Graph values"
+#~ msgstr "Accords graphiques"
 
 #, fuzzy
 #~ msgid "Add new exclude pattern"
@@ -118297,10 +118745,6 @@ msgstr ""
 #~ msgstr "Continuer la recherche"
 
 #, fuzzy
-#~ msgid "Run a service discovery"
-#~ msgstr "Exécuter la découverte des services"
-
-#, fuzzy
 #~ msgid "Assign responsibilities"
 #~ msgstr "Filtres de service"
 
@@ -119758,9 +120202,6 @@ msgstr ""
 #~ msgstr ""
 #~ "Spécifier les niveaux en pourcentage d'utilisation du processeur de "
 #~ "stockage"
-
-#~ msgid "State on hard read error"
-#~ msgstr "État sur l'erreur de lecture dure"
 
 #~ msgid "State on hard write error"
 #~ msgstr "État sur l'erreur d'écriture dure"

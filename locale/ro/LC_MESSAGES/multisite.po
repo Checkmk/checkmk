@@ -107,6 +107,9 @@ msgstr ""
 msgid " Activate this option"
 msgstr " Activează această opțiune"
 
+msgid " Choose 'No levels' to disable these thresholds."
+msgstr ""
+
 #, python-format
 msgid ""
 " Enforcing two-factor for the %(name)s role will terminate any current "
@@ -864,6 +867,10 @@ msgstr "%s rămas în perioada de probă Checkmk"
 #, fuzzy, python-format
 msgid "%(remaining_trial_time_formatted)s left in your free trial"
 msgstr "rămasă în procesul gratuit"
+
+#, fuzzy, python-format
+msgid "%(resource_type)s"
+msgstr "Tipul de comentariu"
 
 # georgem ##############
 #, python-format
@@ -3830,6 +3837,10 @@ msgstr "Accesați Checkmk Agent prin TCP"
 msgid "Access analyze configuration"
 msgstr "Accesul analizează configurația"
 
+#, fuzzy
+msgid "Access by remote sites"
+msgstr "Adăugați o instanță la distanță"
+
 msgid ""
 "Access is restricted, but no contact groups are assigned in the host's "
 "permissions."
@@ -4632,6 +4643,18 @@ msgstr "Adaugă un comentariu sau descrie această gazdă"
 
 msgid "Add a first row with column titles"
 msgstr "Adăugați un prim rând cu titluri de coloane"
+
+msgid ""
+"Add a service on the cluster host for each node running a node scraper. Use "
+"these services for node-specific thresholds, graphs and notifications. "
+"Rediscover services after changing this choice."
+msgstr ""
+
+msgid ""
+"Add a service on the cluster host for each watched Kubernetes resource kind, "
+"such as Pod or DaemonSet. Use these services for separate thresholds, graphs "
+"and notifications. Rediscover services after changing this choice."
+msgstr ""
 
 msgid "Add additional folder"
 msgstr "Adăugați un dosar suplimentar"
@@ -5534,6 +5557,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Address reachable by remote sites"
+msgstr "Adăugați o instanță la distanță"
+
+#, fuzzy
 msgid "Address type"
 msgstr "Tipul de adresă"
 
@@ -5705,6 +5732,13 @@ msgstr ""
 msgid "Affected hosts contain"
 msgstr "Gazdele afectate conțin"
 
+msgid "Affected node-scraper nodes"
+msgstr ""
+
+#, fuzzy
+msgid "Affected reflectors"
+msgstr "Situri afectate"
+
 msgid "Affected sites"
 msgstr "Situri afectate"
 
@@ -5767,6 +5801,14 @@ msgstr ""
 "În cel mai rău caz, durata totală a serviciului poate fi egală cu produsul "
 "dintre numărul de încercări și durata de așteptare. În consecință, trebuie "
 "să furnizați valori combinate rezonabile pentru ambii parametri."
+
+msgid ""
+"After an error while receiving Kubernetes object updates, keep an alert "
+"active for the selected period. Each new error restarts this period. The "
+"alert ends when the period expires; this does not confirm that the "
+"connection has recovered. Inspect the cluster-aggregator logs to investigate "
+"the underlying Kubernetes API error."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -6351,6 +6393,10 @@ msgstr ""
 msgid "Alert after being at or below the threshold for"
 msgstr "Clusterul trebuie să aibă cel puțin un nod"
 
+#, fuzzy
+msgid "Alert for a limited time"
+msgstr "Numele regulilor de alertă"
+
 msgid "Alert handler"
 msgstr "Gestionar de alerte"
 
@@ -6417,6 +6463,12 @@ msgid "Alert if Acropolis disconnects from hypervisor"
 msgstr ""
 
 msgid "Alert if failover mode is different from the value configured here."
+msgstr ""
+
+msgid ""
+"Alert if the agent takes too long to obtain a complete list of Kubernetes "
+"objects. Only an unfinished list is timed; the age and duration of a "
+"completed list do not affect the service state."
 msgstr ""
 
 #, fuzzy
@@ -7230,6 +7282,14 @@ msgstr ""
 "Permite unui utilizator să modifice rapoartele programate ale altor "
 "utilizatori și, de asemenea, să specifice adrese de e-mail arbitrare ca "
 "destinație a rapoartelor."
+
+msgid ""
+"Allows for alerting on how often a node checks in with the cluster "
+"aggregator from the node's scraper. Once a payload expires from the "
+"aggregator's cache, it is considered missing and reports the specified "
+"missing payload state. It is recommended to match levels here with your "
+"collection interval and cache retention set for the in-cluster agent."
+msgstr ""
 
 msgid ""
 "Allows querying telemetry metrics from the custom graph editor. When "
@@ -8205,7 +8265,8 @@ msgstr "Aprilie"
 msgid "Architecture"
 msgstr "Arhitectură"
 
-msgid "Architecture of the systems where the agent will be deployed"
+msgid ""
+"Architecture of the systems where the agent will be deployed (Linux only)"
 msgstr ""
 
 msgid "Archive"
@@ -10668,6 +10729,10 @@ msgstr "Job de backup"
 
 msgid "Backup modes"
 msgstr "Moduri de backup"
+
+#, fuzzy
+msgid "Backup object name"
+msgstr "Timp de backup"
 
 #, fuzzy
 msgid "Backup server"
@@ -14239,6 +14304,12 @@ msgstr "Verificați utilizarea ajutoarelor"
 msgid "Check hosts with ping (ICMP echo request)"
 msgstr "Verificarea gazdelor cu PING (ICMP Echo Request)"
 
+msgid ""
+"Check how long the cluster aggregator has waited for each data type. Adjust "
+"these levels to your collection interval and cache retention. Missing data "
+"is evaluated separately, even when age thresholds are disabled."
+msgstr ""
+
 msgid "Check int."
 msgstr "Verificați int."
 
@@ -15112,6 +15183,40 @@ msgstr ""
 "Alegeți secțiunile care urmează să fie trimise ca date în timp real. Aceste "
 "alegeri controlează care și câte pachete vor fi trimise de la agent către "
 "serverul Checkmk."
+
+msgid ""
+"Choose the state used while a recent watch-error alert is active. This "
+"setting has no effect when 'Recent watch errors' is set to 'Do not alert'. "
+"Error details remain available in reflector services."
+msgstr ""
+
+msgid ""
+"Choose the state when a data type has never arrived or has expired from the "
+"cache, including during startup. This state applies regardless of the "
+"configured age thresholds."
+msgstr ""
+
+msgid ""
+"Choose the state when a node reports a node-scraper version different from "
+"the cluster-aggregator version. Versions that are not reported and differing "
+"Git revisions do not cause alerts."
+msgstr ""
+
+msgid ""
+"Choose the state when the agent reports no Kubernetes API reflectors. Check "
+"the cluster-aggregator deployment and its logs."
+msgstr ""
+
+msgid ""
+"Choose the state when the agent reports no nodes with node scrapers. Check "
+"whether the node-scraper DaemonSet is deployed, identified correctly and has "
+"scheduled pods."
+msgstr ""
+
+msgid ""
+"Choose the state while the agent has not yet collected a complete list of "
+"this Kubernetes resource kind. This also applies during initial startup."
+msgstr ""
 
 msgid "Choose the type of action to perform"
 msgstr "Alegeți tipul de acțiune care trebuie efectuată"
@@ -19890,7 +19995,7 @@ msgid "Customize GUI design"
 msgstr "Personalizați designul GUI"
 
 #, fuzzy
-msgid "Customize agent package (Linux)"
+msgid "Customize agent package (Linux; Solaris and AIX: experimental)"
 msgstr "Numele pachetelor agentului (Linux, UNIX)"
 
 #, python-format
@@ -19929,7 +20034,7 @@ msgid "Customize title"
 msgstr "Personalizați titlul"
 
 #, fuzzy
-msgid "Customize user"
+msgid "Customize user (Linux only)"
 msgstr "Personalizați"
 
 msgid "Customized"
@@ -22978,6 +23083,14 @@ msgstr "Descoperiți serviciile statistice RMON"
 msgid "Discover a service checking the average of all CPUs"
 msgstr "Descoperiți un serviciu care verifică media tuturor procesoarelor"
 
+#, fuzzy
+msgid "Discover a service per node"
+msgstr "Serviciul în perioada de serviciu"
+
+#, fuzzy
+msgid "Discover a service per resource kind"
+msgstr "Descoperiți serviciile în timpul creării"
+
 msgid "Discover disabled tasks"
 msgstr "Descoperiți sarcinile cu handicap"
 
@@ -23682,6 +23795,10 @@ msgstr "Nu adăugați anteturi de coloană"
 #, fuzzy
 msgid "Do not add text"
 msgstr "Nu tamponați"
+
+#, fuzzy
+msgid "Do not alert"
+msgstr "Nu aveți încredere"
 
 #, fuzzy
 msgid "Do not apply this configuration"
@@ -24567,6 +24684,9 @@ msgstr "Durata stării CRITICAL a serviciului 'Check_MK'."
 
 msgid "Duration of Lambda functions"
 msgstr "Durata funcțiilor Lambda"
+
+msgid "Duration of an ongoing list or relist"
+msgstr ""
 
 msgid "Duration of backup"
 msgstr "Durata de backup"
@@ -25732,6 +25852,13 @@ msgstr "Activați eliminarea automată a gazdei"
 #, fuzzy
 msgid "Enable compatibility mode"
 msgstr "Compatibilitate"
+
+msgid ""
+"Enable component services for separate diagnostics, thresholds, "
+"notifications and graphs. The cluster overview continues to alert "
+"independently, so a fault can affect both services. All services live on the "
+"cluster host. Rediscover services after changing this rule."
+msgstr ""
 
 msgid "Enable controller"
 msgstr "Activați controlerul"
@@ -27883,6 +28010,31 @@ msgstr "Extensii"
 msgid "Extensions in <tt>~/local/</tt> and MKPs"
 msgstr "Extinderi în <tt>~/local/</tt> și MKPs"
 
+msgid "Extent status: Evacuate"
+msgstr ""
+
+msgid "Extent status: Maintenance"
+msgstr ""
+
+#, fuzzy
+msgid "Extent status: Normal"
+msgstr "Starea MKEventd"
+
+#, fuzzy
+msgid "Extent status: Pending"
+msgstr "Starea sarcinii: În așteptare"
+
+#, fuzzy
+msgid "Extent status: Resync required"
+msgstr "este necesară"
+
+#, fuzzy
+msgid "Extent status: Sealed"
+msgstr "Starea MKEventd"
+
+msgid "Extent status: Tenant evacuating"
+msgstr ""
+
 msgid "Extents"
 msgstr "Extins"
 
@@ -28323,6 +28475,13 @@ msgstr ""
 "\"%s\". Valoarea unei reguli este incompatibilă cu specificația curentă a "
 "regulii. Puteți încerca să remediați acest lucru deschizând regula pentru "
 "editare și salvând din nou regula fără modificări."
+
+#. weblate-flags: read-only, domain-specific
+#, python-brace-format
+msgid ""
+"Failed to provision the feature {feature} for the remote site {site}. Please "
+"check the web and ui-job-scheduler logs for details."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -34166,6 +34325,10 @@ msgstr "Gazda evenimentelor"
 msgid "Host filters"
 msgstr "Fișiere jurnal gazdă"
 
+#, fuzzy
+msgid "Host folder"
+msgstr "dosar"
+
 msgid "Host goes down"
 msgstr "Gazda se prăbușește"
 
@@ -34342,6 +34505,10 @@ msgstr "Setări gazdă"
 
 msgid "Host memory usage"
 msgstr "Utilizarea memoriei gazdă"
+
+#, fuzzy
+msgid "Host metric"
+msgstr "Detalii gazdă"
 
 #, fuzzy
 msgid "Host metrics"
@@ -35001,6 +35168,9 @@ msgid ""
 msgstr ""
 "Cât timp sunt păstrate fișierele statistice pe sistemul țintă. Acest timp ar "
 "trebui să fie cel puțin dublu față de intervalul de verificare."
+
+msgid "How long to alert after the most recent watch error."
+msgstr ""
 
 msgid "How many days in the past Checkmk should evaluate the measurement data"
 msgstr "Câte zile din trecut Checkmk trebuie să evalueze datele de măsurare"
@@ -36418,7 +36588,7 @@ msgstr ""
 msgid ""
 "If this Managed Robot is to be deployed on Linux and RCC is to be used, it "
 "is important to set a user context other than root using the \"Customize "
-"agent package (Linux)\" rule."
+"agent package (Linux; Solaris and AIX: experimental)\" rule."
 msgstr ""
 
 msgid ""
@@ -39189,12 +39359,14 @@ msgstr "REST API interactiv GUI"
 msgid "Interactive GUI"
 msgstr "REST API interactiv GUI"
 
+#, fuzzy
 msgid ""
 "Interactive search field for direct access to monitoring instances (hosts, "
 "services, host and service groups).<br>You can use the following filters: "
 "<i>h:</i> Host,<br> <i>s:</i> Service, <i>hg:</i> Host group, <i>sg:</i> "
 "Service group,<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Host tag, "
-"<i>hl:</i> Host label, <i>sl:</i> Service label"
+"<i>hf:</i> Host folder, <i>sf:</i> Service folder, <i>hl:</i> Host label, "
+"<i>sl:</i> Service label"
 msgstr ""
 "Câmpul de căutare interactivă pentru acces direct la instanțele de "
 "monitorizare (gazde, servicii, grupuri de gazde și servicii).<br>Puteți "
@@ -40809,11 +40981,29 @@ msgstr "Cuvânt cheie"
 msgid "KiB"
 msgstr "MiB"
 
+#, fuzzy
+msgid "Kubelet health: scrape duration"
+msgstr "Configurația stilului selectat"
+
+msgid "Kubelet health: time since receipt"
+msgstr ""
+
+msgid "Kubelet statistics: scrape duration"
+msgstr ""
+
+#, fuzzy
+msgid "Kubelet statistics: time since receipt"
+msgstr "Statistici de alertă: Numărul de recuperări"
+
 msgid "Kubelet version"
 msgstr "Versiunea Kubelet"
 
 msgid "Kubernetes"
 msgstr "Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes API reflectors"
+msgstr "Replicile Kubernetes"
 
 msgid "Kubernetes CPU resource utilization"
 msgstr "Utilizarea resurselor CPU Kubernetes"
@@ -40840,6 +41030,22 @@ msgstr "Kubernetes StatefulSet"
 
 #, fuzzy
 msgid "Kubernetes StatefulSets"
+msgstr "Kubernetes StatefulSet"
+
+#, fuzzy
+msgid "Kubernetes agent health"
+msgstr "Kubernetes DaemonSet"
+
+#, fuzzy
+msgid "Kubernetes agent health service discovery"
+msgstr "Rulați descoperirea serviciilor"
+
+#, fuzzy
+msgid "Kubernetes agent node health"
+msgstr "Nodul Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes agent reflector health"
 msgstr "Kubernetes StatefulSet"
 
 #, fuzzy
@@ -40910,6 +41116,10 @@ msgstr "Starea podurilor Kubernetes"
 
 msgid "Kubernetes replicas"
 msgstr "Replicile Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes resource kind"
+msgstr "Resursele podurilor Kubernetes"
 
 #, fuzzy
 msgid "Kubernetes resource quota CPU utilization"
@@ -41277,6 +41487,10 @@ msgstr "Ultima modificare"
 msgid "Last completed duration"
 msgstr "Ultima durată finalizată"
 
+#, fuzzy
+msgid "Last completed list duration"
+msgstr "Ultima durată finalizată"
+
 msgid "Last contact of agent updater"
 msgstr "Ultimul contact al agentului de actualizare"
 
@@ -41412,6 +41626,10 @@ msgstr "Ultima vârstă pusă"
 #, fuzzy
 msgid "Last reported"
 msgstr "Raport de accident"
+
+#, fuzzy
+msgid "Last restore point age"
+msgstr "Numele depozitului de date"
 
 msgid "Last result"
 msgstr "Ultimul rezultat"
@@ -50189,6 +50407,10 @@ msgid "Node processor"
 msgstr "Procesor de noduri"
 
 #, fuzzy
+msgid "Node scrapers"
+msgstr "Starea nodului"
+
+#, fuzzy
 msgid "Node sections to skip"
 msgstr "Secțiuni de trimis"
 
@@ -50207,6 +50429,14 @@ msgstr "Sistem de noduri"
 
 msgid "Node utilization"
 msgstr "Utilizarea nodurilor"
+
+#, fuzzy
+msgid "Node-scraper coverage"
+msgstr "Noduri per cluster"
+
+#, fuzzy
+msgid "Node-scraper nodes"
+msgstr "Noduri Docker"
 
 #, fuzzy
 msgid "NodePort"
@@ -52473,6 +52703,10 @@ msgstr "Unidirecțional Non-Multicast/Non-Broadcast"
 #, fuzzy
 msgid "One-time password (OTP / TOTP)"
 msgstr "Codul de autentificare (OTP / TOTP)"
+
+#, fuzzy
+msgid "Ongoing list duration"
+msgstr "Durata de init"
 
 msgid "Ongoing shard info requests"
 msgstr "Cereri de informații în curs de desfășurare"
@@ -55784,6 +56018,10 @@ msgstr "Containere cu pauză la nivelurile superioare"
 
 msgid "Pausing"
 msgstr "Pauză"
+
+#, fuzzy
+msgid "Payload scrape duration"
+msgstr "Mai multe opțiuni"
 
 msgid "Pd"
 msgstr "Pd"
@@ -59826,6 +60064,10 @@ msgstr "Timpul de procesare a evenimentelor"
 msgid "Recent processing cycles"
 msgstr "Timpul de procesare a evenimentelor"
 
+#, fuzzy
+msgid "Recent watch errors"
+msgstr "Erori de recepție"
+
 msgid "Recently changed services"
 msgstr "Servicii schimbate recent"
 
@@ -60075,6 +60317,20 @@ msgid "Refine search"
 msgstr "Rafinează căutarea"
 
 msgid "Refine your search or press Enter for host/service search."
+msgstr ""
+
+#, fuzzy
+msgid "Reflector health"
+msgstr "Sănătatea clusterului"
+
+#, fuzzy
+msgid "Reflectors"
+msgstr "Ștergeți gazda"
+
+msgid ""
+"Reflectors maintain the cache of Kubernetes objects using lists and watches. "
+"The age of a completed list is not a freshness signal: a healthy watch can "
+"continue indefinitely without relisting."
 msgstr ""
 
 msgid "Refresh"
@@ -61784,6 +62040,10 @@ msgstr "Grupul de resurse"
 msgid "Resource pinning: Ensure monitored resources are unchanged"
 msgstr ""
 "Fixarea resurselor: Asigurați-vă că resursele monitorizate sunt neschimbate"
+
+#, fuzzy
+msgid "Resource types monitored via OpenTelemetry metrics"
+msgstr "Creați un serviciu pentru fiecare regulă de alertă"
 
 #, fuzzy
 msgid "Resources matching tag based criteria"
@@ -63708,6 +63968,10 @@ msgstr ""
 msgid "Scale to width of page"
 msgstr "Scala la lățimea paginii"
 
+#, fuzzy
+msgid "Scale-out repository name"
+msgstr "Denumire de securitate"
+
 msgid "Scan QR-Code or enter secret manually"
 msgstr "Scanați codul QR sau introduceți manual secretul"
 
@@ -64545,6 +64809,12 @@ msgstr ""
 "ca wildcards. Etichetele și modelele pot fi, de asemenea, combinate cu "
 "operatorii <tt>AND</tt>, <tt>OR</tt> și <tt>NOT</tt>."
 
+msgid ""
+"Select the Azure resource types for which your OpenTelemetry collector "
+"delivers metrics. Checkmk cannot detect them, so select the same resource "
+"types as in the collector configuration."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Select the Kubernetes objects you would like to monitor. Pods controlled by "
@@ -65310,6 +65580,11 @@ msgstr "Nivelul serviciilor"
 msgid "Service filters"
 msgstr "Filtre de service"
 
+# georgem ##############
+#, fuzzy
+msgid "Service folder"
+msgstr "Filtre de service"
+
 #, fuzzy
 msgid "Service goes into CRITICAL state"
 msgstr "Serviciul trece în stare necunoscută"
@@ -65443,6 +65718,11 @@ msgstr "ca macro numit"
 
 msgid "Service limits"
 msgstr "Limitele serviciului"
+
+# georgem ##############
+#, fuzzy
+msgid "Service metric"
+msgstr "Metrici de servicii"
 
 # georgem ##############
 #, fuzzy
@@ -67119,6 +67399,11 @@ msgstr "Afișați axa verticală"
 
 msgid "Show volume name in service output"
 msgstr "Afișați numele volumului în ieșirea serviciului"
+
+msgid ""
+"Show when this reflector last received a resource event. Enable thresholds "
+"only for resource kinds where a long quiet period is unexpected."
+msgstr ""
 
 #, fuzzy
 msgid "Show/hide password"
@@ -69807,6 +70092,9 @@ msgstr "Starea și numărul de procese (numai SNMP)"
 msgid "State based on status of last sync attempt"
 msgstr "Starea în cazul unei stări necunoscute din scriptul de replicare"
 
+msgid "State before the first list has completed"
+msgstr ""
+
 #, fuzzy
 msgid "State change"
 msgstr "Schimbare de stare"
@@ -69908,6 +70196,10 @@ msgstr "Stare dacă statul local este dezactivat"
 #, fuzzy
 msgid "State for StorCLI2 status <i>Various</i>"
 msgstr "Statul pentru <i>Online</i>"
+
+#, fuzzy
+msgid "State for a recent watch error"
+msgstr "Stare la eroarea de citire dură"
 
 msgid "State for connection refusal"
 msgstr "Statul pentru refuzul de conectare"
@@ -70182,6 +70474,10 @@ msgstr "Starea în cazul în care Force Logging este dezactivată: "
 msgid "State in case of force logging is enabled: "
 msgstr "Stare în cazul în care este activată opțiunea Force Logging: "
 
+#, fuzzy
+msgid "State in case of host name mismatch with the agent updater"
+msgstr "Starea în cazul în care nu se fac actualizări"
+
 msgid "State in case of logins are not possible: "
 msgstr "Declarație în cazul în care nu este posibilă autentificarea: "
 
@@ -70363,6 +70659,10 @@ msgstr "Starea când colectorul este în stare oprită"
 msgid "State when configuration backup is disabled"
 msgstr "Stare atunci când nu este configurată nicio copie de rezervă"
 
+#, fuzzy
+msgid "State when expected data is missing from the cache"
+msgstr "Starea pentru nepotrivirea șirului de caractere așteptat"
+
 msgid "State when file is missing"
 msgstr "Starea când lipsește fișierul"
 
@@ -70512,9 +70812,24 @@ msgstr "Stare atunci când nu este configurată nicio copie de rezervă"
 msgid "State when no enterprise license is installed"
 msgstr "Starea în cazul în care nu este instalată o licență de întreprindere"
 
+#, fuzzy
+msgid "State when no node-scraper nodes are reported"
+msgstr "Stare atunci când actualizările normale sunt în așteptare"
+
+#, fuzzy
+msgid "State when no performance extents are configured"
+msgstr "Stare atunci când nu este configurată nicio copie de rezervă"
+
 msgid "State when no ping signal from sidecar"
 msgstr ""
 "Stare în cazul în care nu există un semnal ping de la vehiculul lateral"
+
+#, fuzzy
+msgid "State when no reflectors are reported"
+msgstr "Statul în care se află în curs de îndepărtare"
+
+msgid "State when node-scraper and cluster-aggregator versions differ"
+msgstr ""
 
 msgid "State when normal updates are pending"
 msgstr "Stare atunci când actualizările normale sunt în așteptare"
@@ -71718,6 +72033,14 @@ msgstr "Numărul sistemului"
 
 msgid "System Stats"
 msgstr "Statistici de sistem"
+
+#, fuzzy
+msgid "System agent: scrape duration"
+msgstr "Autentificarea sistemului"
+
+#, fuzzy
+msgid "System agent: time since receipt"
+msgstr "Ora sistemului (sincronizarea timpului)"
 
 msgid "System authentication"
 msgstr "Autentificarea sistemului"
@@ -73856,6 +74179,15 @@ msgstr ""
 "utilizeze HTTPS. Acest lucru poate fi configurat cu ajutorul setului de "
 "reguli <a href=\"%s\">Agent updater (Linux, Windows)</a>."
 
+msgid ""
+"The agent updater is registered with one site under one host name. This "
+"state is used when that host name differs from the name of the host in "
+"Checkmk. A host that is monitored by several sites may have a different name "
+"on each site. On the sites that do not serve the agent updates of such a "
+"host, set this state to <i>OK</i>. The mismatch is then only shown in the "
+"service details."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "The agent will automatically discover Podman sockets on the system. This "
@@ -74114,6 +74446,14 @@ msgid ""
 "%(status_code)d). The remote site may have lost its registration with the "
 "central site -- log in again under *Distributed monitoring* on the central "
 "site."
+msgstr ""
+
+#. weblate-flags: read-only, domain-specific
+#, python-brace-format
+msgid ""
+"The certificate authority of the remote site {site} is not trusted here, so "
+"that site cannot reach this data backend. Trust its CA in the site "
+"connection."
 msgstr ""
 
 msgid ""
@@ -75841,16 +76181,17 @@ msgid ""
 msgstr ""
 
 msgid ""
-"The license usage history is older than five days. In order to have a "
-"reliable average of the number of services the license usage report must "
-"contain a significant number of license usage samples. Please execute the "
-"following command as site user 'cmk-update-license-usage --force' in order "
-"to solve this situation."
+"The license usage history is older than 60 days, so activating changes is "
+"blocked. Something is wrong on this site: please contact Checkmk support. As "
+"a temporary fix, run 'cmk-update-license-usage --force' as site user."
 msgstr ""
 
-#, fuzzy
-msgid "The license usage history was updated at least three days ago."
-msgstr "Istoricul de utilizare a licenței este mai vechi de cinci zile."
+msgid ""
+"The license usage history is older than three days, and activating changes "
+"will be blocked once it is older than 60 days. Something is wrong on this "
+"site: please contact Checkmk support. As a temporary fix, run 'cmk-update-"
+"license-usage --force' as site user."
+msgstr ""
 
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "Limita pentru decalajul de transport în <tt>v$dataguard_stats</tt>."
@@ -77252,6 +77593,13 @@ msgstr ""
 msgid "The relations of this host are malformed: %(error)s"
 msgstr "Verificarea a eșuat: %s"
 
+#. weblate-flags: read-only, domain-specific
+#, python-brace-format
+msgid ""
+"The remote site {site} stores data here, but this data backend is not opened "
+"to remote sites. Set the address they reach it at to let them connect."
+msgstr ""
+
 msgid ""
 "The renaming of hosts is a complex operation since a host's name is being "
 "used as a unique key in various places. It also involves stopping and "
@@ -77893,6 +78241,11 @@ msgid ""
 "The site version is %(site_version)s, but this package requires at least "
 "%(requirement)s."
 msgstr ""
+
+#, fuzzy
+msgid ""
+"The site-specific settings of other sites are managed on the central site."
+msgstr "Checkmk poate fi configurat numai pe site-ul central al managerilor."
 
 msgid "The sites initiating and accepting the connection must be specified."
 msgstr ""
@@ -79141,6 +79494,11 @@ msgid ""
 msgstr ""
 "Aceste servicii nu au fost găsite prin descoperire, dar au fost adăugate "
 "manual printr-o regulă de configurare <i>Servicii forțate</i>."
+
+msgid ""
+"These settings apply to the cluster overview. Node and reflector services "
+"have their own rules and do not change the overview's evaluation."
+msgstr ""
 
 msgid ""
 "These settings control how the <i>initial</i> scheduling of new active "
@@ -84547,11 +84905,19 @@ msgid "Time since last checkpoint"
 msgstr "Timp de la ultimul punct de control"
 
 #, fuzzy
+msgid "Time since last data received"
+msgstr "Timp de la ultimul punct de control"
+
+#, fuzzy
 msgid "Time since last garbage collection"
 msgstr "Timp de la ultima finalizare cu succes"
 
 #, fuzzy
 msgid "Time since last reported"
+msgstr "Timp de la ultimul punct de control"
+
+#, fuzzy
+msgid "Time since last resource event"
 msgstr "Timp de la ultimul punct de control"
 
 #, fuzzy
@@ -84578,6 +84944,10 @@ msgstr "Timp de la ultima sincronizare"
 msgid "Time since last synchronization"
 msgstr "Ora de la ultima sincronizare"
 
+#, fuzzy
+msgid "Time since payload receipt"
+msgstr "Timp de la ultimul punct de control"
+
 msgid "Time since the last ANALYZE"
 msgstr "Timpul scurs de la ultima ANALYZE"
 
@@ -84590,6 +84960,10 @@ msgstr "Timpul scurs de la ultima verificare a gazdei"
 
 #, fuzzy
 msgid "Time since the last check of the service"
+msgstr "Timpul scurs de la ultima verificare a serviciului"
+
+#, fuzzy
+msgid "Time since the last resource event"
 msgstr "Timpul scurs de la ultima verificare a serviciului"
 
 #, fuzzy
@@ -93232,6 +93606,12 @@ msgstr "Pachete de configurare BI"
 msgid "Veeam: License"
 msgstr "Licențiat"
 
+msgid "Veeam: Restore points"
+msgstr ""
+
+msgid "Veeam: Scale-out repository"
+msgstr ""
+
 msgid "Veeam: Time since last CDP run"
 msgstr "Veeam: Timpul de la ultima rulare CDP"
 
@@ -94226,6 +94606,9 @@ msgstr "Avertismente:"
 
 msgid "Wasted space of tables and indexes"
 msgstr "Spațiu irosit de tabele și indici"
+
+msgid "Watch errors since cluster-aggregator start"
+msgstr ""
 
 msgid "Watch the total size of the log file"
 msgstr "Urmăriți dimensiunea totală a fișierului jurnal"
@@ -95619,6 +96002,13 @@ msgid ""
 msgstr ""
 "Dacă se configurează sau nu adresa IP găsită ca adresă IPv4 a gazdelor "
 "găsite."
+
+#. weblate-flags: read-only, domain-specific
+msgid ""
+"Whether remote sites may write into this data backend, and the address at "
+"which they reach it. Opening this binds the service beyond the loopback "
+"interface."
+msgstr ""
 
 msgid ""
 "Whether the plug-in looks for local Oracle database instances on its own. It "
@@ -102503,6 +102893,10 @@ msgstr "Expiră la"
 msgid "Sharing expired on"
 msgstr "Expresia de grupare"
 
+#, fuzzy
+msgid "Service: %{state}"
+msgstr "Starea serviciului"
+
 msgid "On down host"
 msgstr "Pe jos gazdă"
 
@@ -102679,18 +103073,10 @@ msgstr ""
 msgid "Select custom graph"
 msgstr "Clonarea graficului personalizat"
 
-#, fuzzy
-msgid "Filter by host name"
-msgstr "Filtrați selecția %s după numele de gazdă: "
-
 # georgem ##############
 #, fuzzy
 msgid "Select service metric"
 msgstr "Metrici de servicii"
-
-#, fuzzy
-msgid "Filter by service"
-msgstr "Filtrați selecția %s în funcție de serviciu: "
 
 #, fuzzy
 msgid "Select option"
@@ -103600,25 +103986,12 @@ msgstr "Opțiuni grafice"
 
 # georgem ##############
 #, fuzzy
-msgid "Service metric"
-msgstr "Metrici de servicii"
+msgid "Service graph"
+msgstr "Grafice de servicii"
 
 #, fuzzy
 msgid "Must select an option"
 msgstr "Conexiuni respinse"
-
-msgid "Narrow dropdown options by host or service (no selection)"
-msgstr ""
-
-msgid ""
-"Use these fields to narrow down the list of available service metrics.<br /"
-">Click the Host name or Service label to clear the filter."
-msgstr ""
-
-# georgem ##############
-#, fuzzy
-msgid "Service graph"
-msgstr "Grafice de servicii"
 
 #, fuzzy
 msgid "Scatterplot"
@@ -104250,6 +104623,18 @@ msgstr "Configurația stilului selectat"
 msgid "Search settings…"
 msgstr "Căutare gazde"
 
+msgid ""
+"This site is managed centrally. The overrides shown here are pushed by the "
+"managing site. A change made here takes effect after activation on this site "
+"and lasts until the managing site activates changes the next time."
+msgstr ""
+
+msgid ""
+"This site is managed centrally. The global settings shown here are pushed by "
+"the managing site. A change made here takes effect after activation on this "
+"site and lasts until the managing site activates changes the next time."
+msgstr ""
+
 #, fuzzy
 msgid "Edit site-specific setting"
 msgstr "%d setări de Filtrare"
@@ -104315,24 +104700,16 @@ msgid "All metrics are hidden"
 msgstr "Toți părinții sunt în jos"
 
 #, fuzzy
-msgid "for %{date},"
-msgstr "Nu există date"
+msgid "Resolution %{resolution}"
+msgstr "Setați rezoluția"
 
 #, fuzzy
-msgid "Graph values for %{date},"
-msgstr "Acorduri grafice"
-
-#, fuzzy
-msgid "resolution:"
-msgstr "Rezoluția DNS"
-
-#, fuzzy
-msgid "Graph values and time information"
+msgid "Data aggregation and time information"
 msgstr "Informații colectate despre noduri"
 
 #, fuzzy
-msgid "Graph values"
-msgstr "Acorduri grafice"
+msgid "Data aggregation"
+msgstr "agregare"
 
 #, fuzzy
 msgid "Graph zoom controls and action menu"
@@ -105979,10 +106356,6 @@ msgid "Live"
 msgstr ""
 
 #, fuzzy
-msgid "Read-only"
-msgstr "Mod de numai citire"
-
-#, fuzzy
 msgid "Editing"
 msgstr "Ediție"
 
@@ -106022,11 +106395,13 @@ msgstr "Model de căutare"
 msgid "Show search operators"
 msgstr "Model de căutare"
 
-msgid "Type '/' to use a search operator"
-msgstr ""
+#, fuzzy
+msgid "Search operators"
+msgstr "Model de căutare"
 
 msgid ""
-"Without a prefix all fields are searched. Multiple terms are AND-combined."
+"Pick one here, or type '/' in the search box. Without a prefix all fields "
+"are searched; multiple terms must all match."
 msgstr ""
 
 msgid "Open in new tab (full screen)"
@@ -107037,17 +107412,28 @@ msgstr "Notificările sunt dezactivate"
 msgid "Folder actions — %{folder}"
 msgstr "Dosar: %(folder)s"
 
+msgid ""
+"No host directly in “%{folder}” is down or unreachable. Include sub-folders "
+"to reach the hosts below it."
+msgstr ""
+
+msgid ""
+"No host in “%{folder}” is down or unreachable. A host that is up and red is "
+"red for its services: acknowledge those on the host."
+msgstr ""
+
 msgid "Applies to %{count} host in “%{folder}”."
 msgid_plural "Applies to %{count} hosts in “%{folder}”."
 msgstr[0] ""
 msgstr[1] ""
 msgstr[2] ""
 
-msgid "%{count} host without a problem left out."
-msgid_plural "%{count} hosts without a problem left out."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+#, fuzzy
+msgid "%{count} host that is up left out."
+msgid_plural "%{count} hosts that are up left out."
+msgstr[0] "Nu este selectat"
+msgstr[1] "Nu este selectat"
+msgstr[2] "Nu este selectat"
 
 #, fuzzy
 msgid "Include sub-folders"
@@ -107079,12 +107465,23 @@ msgstr[1] "Timpii de întrerupere a gazdei"
 msgstr[2] "Timpii de întrerupere a gazdei"
 
 #, fuzzy
-msgid "Folder actions"
-msgstr "Selecție de dosare"
+msgid "Acknowledge problems…"
+msgstr "Recunoașteți problemele"
 
 #, fuzzy
 msgid "Open in Checkmk Setup"
 msgstr "Învățare Checkmk"
+
+#, fuzzy
+msgid "%{n} host"
+msgid_plural "%{n} hosts"
+msgstr[0] "%d oră"
+msgstr[1] "%d oră"
+msgstr[2] "%d oră"
+
+#, fuzzy
+msgid "Folder · empty"
+msgstr "Calea dosarului"
 
 #, fuzzy
 msgid "Loading services…"
@@ -107097,6 +107494,14 @@ msgstr "Nu puteți șterge această conexiune."
 #, fuzzy
 msgid "No problem services"
 msgstr "servicii cu probleme"
+
+#, fuzzy
+msgid "Click to collapse"
+msgstr "prăbușit"
+
+#, fuzzy
+msgid "Click to expand"
+msgstr "Verificați URL-ul"
 
 #, fuzzy
 msgid "Nothing to show here."
@@ -107118,19 +107523,15 @@ msgid "empty · 0 hosts"
 msgstr "Gazde de import"
 
 #, fuzzy
-msgid "%{n} host"
-msgid_plural "%{n} hosts"
-msgstr[0] "%d oră"
-msgstr[1] "%d oră"
-msgstr[2] "%d oră"
-
-#, fuzzy
 msgid "Site unreachable — last known state"
 msgstr "gazda este inaccesibilă sau are servicii necunoscute"
 
 #, fuzzy
 msgid "stale"
 msgstr "Stale"
+
+msgid "Clear the search to open and close folders yourself"
+msgstr ""
 
 #, fuzzy
 msgid "List"
@@ -107153,6 +107554,13 @@ msgstr ""
 #, fuzzy
 msgid "Search folders, hosts, services…"
 msgstr "Servicii de potrivire"
+
+#, fuzzy
+msgid "Expand all folders"
+msgstr "Extindeți"
+
+msgid "Collapse all folders except Main"
+msgstr ""
 
 #, fuzzy
 msgid "Folder tree drawing"
@@ -107184,47 +107592,18 @@ msgstr "Potrivirea numelui procesului"
 msgid "Clear filter"
 msgstr "Filtru de căutare"
 
+#, fuzzy
+msgid "%{own}, worst service %{worst}"
+msgstr "Servicii executate silit"
+
 msgid "%{title} · empty"
 msgstr ""
 
 msgid "FLAP"
 msgstr ""
 
-#, fuzzy
-msgid "click: details"
-msgstr "detalii despre licență"
-
-msgid "services failed to load — click to retry"
+msgid "Too many to draw here"
 msgstr ""
-
-#, fuzzy
-msgid "loading services…"
-msgstr "Servicii în așteptare"
-
-#, fuzzy
-msgid "click: show services"
-msgstr "Arată serviciile"
-
-#, fuzzy
-msgid "click: collapse"
-msgstr "prăbușit"
-
-msgid "click: expand"
-msgstr ""
-
-#, fuzzy
-msgid "flapping"
-msgstr "Flaps"
-
-#, fuzzy
-msgid "stale — site unreachable"
-msgstr "Gazda devine inaccesibilă"
-
-msgid "%{n} host · %{breakdown}"
-msgid_plural "%{n} hosts · %{breakdown}"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
 
 #, fuzzy
 msgid "Delete object"
@@ -110228,6 +110607,14 @@ msgid "Labels:"
 msgstr "Etichete"
 
 #, fuzzy
+msgid "Check age:"
+msgstr "Agent Checkmk"
+
+#, fuzzy
+msgid "State age:"
+msgstr "Schimbare de stare"
+
+#, fuzzy
 msgid "Current check attempt:"
 msgstr "Încercare de verificare curentă"
 
@@ -110467,6 +110854,10 @@ msgstr "Vizualizare filtru"
 #, fuzzy
 msgid "Select all"
 msgstr "Eliminați toate"
+
+#, fuzzy
+msgid "Search column"
+msgstr "Afișați în coloană"
 
 msgid "Clear the filter on %{column} before hiding it"
 msgstr ""
@@ -110709,10 +111100,6 @@ msgstr ""
 #, fuzzy
 msgid "Focus search"
 msgstr "Căutare gazdă"
-
-#, fuzzy
-msgid "Last state change"
-msgstr "Ultima schimbare de stare a gazdei"
 
 #, fuzzy
 msgid "Donut chart"
@@ -111576,6 +111963,17 @@ msgstr "Salvați și testați"
 msgid "Step %{step} of %{total}"
 msgstr "Adăugați o nouă etichetă"
 
+#, fuzzy
+msgid "Full features · %{days} day left"
+msgid_plural "Full features · %{days} days left"
+msgstr[0] " în %d zile"
+msgstr[1] " în %d zile"
+msgstr[2] " în %d zile"
+
+#, fuzzy
+msgid "Start monitoring"
+msgstr "Monitorizare sintetică"
+
 msgid "Resend code (%{countdown})"
 msgstr ""
 
@@ -111597,12 +111995,6 @@ msgstr ""
 #, fuzzy
 msgid "Verification code"
 msgstr "Verificare"
-
-msgid ""
-"Too many codes requested for this address. Try again in %{time}, go back to "
-"use a different email address, or continue without verification as an "
-"unverified trial."
-msgstr ""
 
 #, fuzzy
 msgid "Didn't receive it?"
@@ -111714,6 +112106,17 @@ msgid "Verify your license to activate this site."
 msgstr "nu activați acest %s"
 
 #, fuzzy
+msgid "License activation pending"
+msgstr "Activarea modificărilor în așteptare"
+
+msgid ""
+"License verification postponed. The site keeps full features for %{days} "
+"days from site creation. Verify your license before then — otherwise the "
+"site falls back to the limited free edition (%{services} services). We'll "
+"remind you every 7 days."
+msgstr ""
+
+#, fuzzy
 msgid "Verify your license"
 msgstr "Verificați răspunsul"
 
@@ -111750,23 +112153,11 @@ msgstr ""
 msgid "Trial verified"
 msgstr "Procesul a expirat"
 
-#, fuzzy
-msgid "Start monitoring"
-msgstr "Monitorizare sintetică"
-
 msgid "Unverified trial"
 msgstr ""
 
-#, fuzzy
-msgid "Full features · %{days} day left"
-msgid_plural "Full features · %{days} days left"
-msgstr[0] " în %d zile"
-msgstr[1] " în %d zile"
-msgstr[2] " în %d zile"
-
 msgid ""
-"Trial started without verification (offline site, or verification not "
-"completed after the resend cap). Full features for %{days} days from site "
+"Trial started without verification. Full features for %{days} days from site "
 "creation, then fallback to the limited free edition (%{services} services). "
 "While the site is under %{days} days old, the dialog reappears on admin "
 "login (at most once per 48h) as another chance to verify or license."
@@ -111992,10 +112383,6 @@ msgstr "Căutare în configurare"
 #, fuzzy
 msgid "Insert operator"
 msgstr "Conexiuni respinse"
-
-#, fuzzy
-msgid "Search operators"
-msgstr "Model de căutare"
 
 msgid "Only available for 'Monitoring' and 'All'"
 msgstr ""
@@ -112628,6 +113015,66 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Filter by host name"
+#~ msgstr "Filtrați selecția %s după numele de gazdă: "
+
+#, fuzzy
+#~ msgid "Filter by service"
+#~ msgstr "Filtrați selecția %s în funcție de serviciu: "
+
+#, fuzzy
+#~ msgid "Read-only"
+#~ msgstr "Mod de numai citire"
+
+#, fuzzy
+#~ msgid "Folder actions"
+#~ msgstr "Selecție de dosare"
+
+#, fuzzy
+#~ msgid "click: details"
+#~ msgstr "detalii despre licență"
+
+#, fuzzy
+#~ msgid "loading services…"
+#~ msgstr "Servicii în așteptare"
+
+#, fuzzy
+#~ msgid "click: show services"
+#~ msgstr "Arată serviciile"
+
+#, fuzzy
+#~ msgid "flapping"
+#~ msgstr "Flaps"
+
+#, fuzzy
+#~ msgid "stale — site unreachable"
+#~ msgstr "Gazda devine inaccesibilă"
+
+#, fuzzy
+#~ msgid "Last state change"
+#~ msgstr "Ultima schimbare de stare a gazdei"
+
+#, fuzzy
+#~ msgid "The license usage history was updated at least three days ago."
+#~ msgstr "Istoricul de utilizare a licenței este mai vechi de cinci zile."
+
+#, fuzzy
+#~ msgid "for %{date},"
+#~ msgstr "Nu există date"
+
+#, fuzzy
+#~ msgid "Graph values for %{date},"
+#~ msgstr "Acorduri grafice"
+
+#, fuzzy
+#~ msgid "resolution:"
+#~ msgstr "Rezoluția DNS"
+
+#, fuzzy
+#~ msgid "Graph values"
+#~ msgstr "Acorduri grafice"
 
 #, fuzzy
 #~ msgid "Add new exclude pattern"
@@ -117918,10 +118365,6 @@ msgstr ""
 #~ msgid "Continue setup"
 #~ msgstr "Continuați căutarea"
 
-#, fuzzy
-#~ msgid "Run a service discovery"
-#~ msgstr "Rulați descoperirea serviciilor"
-
 # georgem ##############
 #, fuzzy
 #~ msgid "Assign responsibilities"
@@ -119400,9 +119843,6 @@ msgstr ""
 #~ msgid "Specify levels in percentage of storage processor usage"
 #~ msgstr ""
 #~ "Specificați nivelurile în procente de utilizare a procesorului de stocare"
-
-#~ msgid "State on hard read error"
-#~ msgstr "Stare la eroarea de citire dură"
 
 #~ msgid "State on hard write error"
 #~ msgstr "Stare la o eroare de scriere dură"

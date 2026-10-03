@@ -304,6 +304,58 @@ def test_cannot_overwrite_existing_password(
 
 
 @pytest.mark.usefixtures("mock_update_passwords_merged_file")
+def test_cannot_overwrite_a_password_the_user_cannot_see(clients: ClientRegistry) -> None:
+    # GIVEN
+    password_store.PasswordStore().save(
+        {
+            "admin_password_id": PasswordConfig(
+                title="Admin title",
+                comment="",
+                docu_url="",
+                password="PasswordCannotBeOverwritten",
+                owned_by=None,
+                shared_with=[],
+            ),
+        },
+        pprint_value=False,
+    )
+    clients.User.create(
+        username="normal_user",
+        fullname="normal_user_alias",
+        contactgroups=["protected"],
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+        roles=["user"],
+    )
+    clients.ConfigurationEntity.set_credentials("normal_user", "supersecretish")
+
+    # WHEN
+    resp = clients.ConfigurationEntity.create_configuration_entity(
+        {
+            "entity_type": ConfigEntityType.passwordstore_password.value,
+            "entity_type_specifier": "xyz",
+            "data": {
+                "general_props": {
+                    "id": "admin_password_id",
+                    "title": "My test password overwrite attempt",
+                    "comment": "",
+                    "docu_url": "",
+                },
+                "password_props": {
+                    "password": ["wont-be-able-to-save-this", False],
+                    "owned_by": ("contact_group", option_id("protected")),
+                    "share_with": [],
+                },
+            },
+        },
+        expect_ok=False,
+    )
+
+    # THEN
+    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, resp.json
+    assert lookup(password_store_path(), "admin_password_id") == "PasswordCannotBeOverwritten"
+
+
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
 def test_create_password_existing_passwords_still_exist(
     clients: ClientRegistry, with_admin: tuple[str, str]
 ) -> None:

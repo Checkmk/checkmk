@@ -302,3 +302,37 @@ def test_normal_user_cannot_delete_another_users_password(
     # The password appears non-existent to this user (404), since visibility is filtered.
     clients.Password.set_credentials(*with_automation_user_not_admin)
     clients.Password.delete("admin_pw", expect_ok=False).assert_status_code(HTTPStatus.NOT_FOUND)
+
+
+@pytest.mark.usefixtures("mock_password_file_regeneration")
+def test_normal_user_cannot_overwrite_another_users_password(
+    clients: ClientRegistry,
+    with_automation_user_not_admin: tuple[str, str],
+) -> None:
+    """Creating a password with the ID of a password the user cannot see must not replace it"""
+    PasswordStore().save(
+        {
+            "admin_pw": PasswordConfig(
+                title="Admin Password",
+                comment="",
+                docu_url="",
+                password="admin_secret",
+                owned_by="admin",
+                shared_with=[],
+            ),
+        },
+        pprint_value=False,
+    )
+
+    clients.Password.set_credentials(*with_automation_user_not_admin)
+    clients.Password.create(
+        ident="admin_pw",
+        title="Overwrite attempt",
+        password="attacker_secret",
+        shared=[],
+        editable_by="all",
+        expect_ok=False,
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
+
+    stored = PasswordStore().load_for_reading()["admin_pw"]
+    assert (stored["password"], stored["owned_by"]) == ("admin_secret", "admin")

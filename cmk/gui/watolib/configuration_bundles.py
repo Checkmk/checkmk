@@ -24,6 +24,7 @@ from cmk.gui.watolib import check_mk_automations
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle, ConfigBundleStore
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree, Host
+from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.passwords import load_passwords, remove_password, save_password
 from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Rule, SingleRulesetRecursively
@@ -309,7 +310,8 @@ def _validate_and_prepare_create_calls(
             _prepare_create_passwords(
                 bundle_ident,
                 entities.passwords,
-                load_passwords(acting_user),
+                # Including the passwords the user may not use, see password_id_in_use()
+                PasswordStore().load_for_reading(),
                 acting_user=acting_user,
                 pprint_value=pprint_value,
                 pending_changes=pending_changes,

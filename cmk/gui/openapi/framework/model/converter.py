@@ -27,7 +27,7 @@ from cmk.gui.userdb import connection_choices, get_saml_connections
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import groups_io, tags
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
-from cmk.gui.watolib.passwords import load_passwords
+from cmk.gui.watolib.passwords import load_passwords, password_id_in_use
 from cmk.gui.watolib.userroles import role_exists, RoleID
 from cmk.livestatus_client.expressions import LqSafe
 from cmk.livestatus_client.queries import Query
@@ -442,7 +442,7 @@ class PasswordConverter:
 
     @staticmethod
     def not_exists(ident: str) -> str:
-        if ident in load_passwords(user):
+        if password_id_in_use(ident):
             raise ValueError(f'Password "{ident}" already exists.')
         return ident
 

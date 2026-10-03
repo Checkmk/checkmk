@@ -136,8 +136,13 @@ def remove_password(
     )
 
 
-def password_exists(ident: str, acting_user: LoggedInUser) -> bool:
-    return ident in load_passwords(acting_user)
+def password_id_in_use(ident: str) -> bool:
+    """Whether any password has this ID, including the passwords the user may not use
+
+    A new password has to get an ID of its own. Saving it under the ID of a password the user
+    cannot see would replace that password.
+    """
+    return ident in PasswordStore().load_for_reading()
 
 
 def load_passwords(acting_user: LoggedInUser) -> dict[str, PasswordConfig]:

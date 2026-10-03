@@ -646,3 +646,61 @@ def test_create_and_delete_config_bundle_grouped_by_a_plain_ruleset(tree: Folder
         pending_changes=_pending_changes(UserId("cmkadmin")),
     )
     assert _len_rules() == before_create_rules_count, "Expected the created rule to be deleted"
+
+
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
+def test_create_config_bundle_does_not_replace_a_password_the_user_cannot_see(
+    load_config: Config,
+) -> None:
+    PasswordStore().save(
+        {
+            "admin-pw": PasswordConfig(
+                title="Admin Password",
+                comment="",
+                docu_url="",
+                password="admin_secret",
+                owned_by="admin",
+                shared_with=[],
+            )
+        },
+        pprint_value=False,
+    )
+
+    with create_and_destroy_user(
+        automation=False, role="user", username="bundleuser", config=load_config
+    ) as (user_id, _password):
+        user_permissions = UserPermissions(
+            load_config.roles, permission_registry, {user_id: ["user"]}, []
+        )
+        bundle_id, bundle = _make_bundle(owned_by="bundleuser")
+        with (
+            login.TransactionIdContext(user_id, user_permissions),
+            pytest.raises(MKGeneralException, match="already exists"),
+        ):
+            create_config_bundle(
+                folder_tree(),
+                bundle_id,
+                bundle,
+                CreateBundleEntities(
+                    passwords=[
+                        CreatePassword(
+                            id="admin-pw",
+                            spec=PasswordConfig(
+                                title="Bundle Password",
+                                comment="",
+                                docu_url="",
+                                password="bundle_secret",
+                                owned_by=None,
+                                shared_with=[],
+                            ),
+                        )
+                    ]
+                ),
+                acting_user=user,
+                user_permissions=user_permissions,
+                pprint_value=False,
+                debug=False,
+                pending_changes=_pending_changes(user_id),
+            )
+
+    assert PasswordStore().load_for_reading()["admin-pw"]["password"] == "admin_secret"

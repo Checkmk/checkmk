@@ -49,7 +49,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     Host,
     strip_hostname_whitespace_chars,
 )
-from cmk.gui.watolib.passwords import contact_group_choices, password_exists
+from cmk.gui.watolib.passwords import contact_group_choices, load_passwords, password_id_in_use
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.gui.watolib.tags import load_tag_config_read_only
 from cmk.licensing.basics.options import OptionName
@@ -1158,11 +1158,10 @@ class PasswordIdent(base.String):
         if pattern.match(value) is None:
             raise self.make_error("pattern", name=value)
 
-        exists = password_exists(value, user)
-        if self._should_exist and not exists:
+        if self._should_exist and value not in load_passwords(user):
             raise self.make_error("should_exist", name=value)
 
-        if not self._should_exist and exists:
+        if not self._should_exist and password_id_in_use(value):
             raise self.make_error("should_not_exist", name=value)
 
 

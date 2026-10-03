@@ -27,7 +27,8 @@ from cmk.gui.exceptions import MKConfigError
 from cmk.gui.general_config import GeneralConfig
 from cmk.gui.i18n import _
 from cmk.gui.legacy_plugins import load_web_plugins
-from cmk.gui.type_defs import CustomHostAttrSpec, RoleName
+from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
+from cmk.gui.type_defs import CustomHostAttrSpec, RoleName, UserSpec
 from cmk.livestatus_client import SiteConfigurations
 from cmk.utils.keypair_store import KeypairStore
 
@@ -74,6 +75,15 @@ class RequestCacheConfig(Protocol):
 
     @property
     def sites(self) -> SiteConfigurations: ...
+
+    @property
+    def roles(self) -> Mapping[str, BuiltInUserRole | CustomUserRole]: ...
+
+    @property
+    def multisite_users(self) -> Mapping[str, UserSpec]: ...
+
+    @property
+    def default_user_profile(self) -> UserSpec: ...
 
 
 @dataclass

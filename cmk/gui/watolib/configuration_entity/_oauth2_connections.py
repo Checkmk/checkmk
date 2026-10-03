@@ -22,11 +22,12 @@ from cmk.gui.oauth2_connections.watolib.store import (
     extract_password_store_entry,
     load_oauth2_connections,
     load_usable_oauth2_connections,
+    OAuth2ConnectionsConfigFile,
     save_new_reference_to_config_file,
     save_tokens_to_passwordstore,
     update_reference,
 )
-from cmk.gui.watolib.passwords import load_passwords
+from cmk.gui.watolib.passwords import load_passwords, password_id_in_use
 from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 from cmk.utils.oauth2_connection import OAuth2Connection, OAuth2ConnectorType
@@ -68,6 +69,18 @@ def update_oauth2_connection_and_passwords_from_slidein_schema(
 
     disk_data = visitor.to_disk(data)
     assert isinstance(disk_data, dict)
+
+    # The ID comes from the request, so it may name a connection of another group
+    config_file = OAuth2ConnectionsConfigFile()
+    connections = config_file.load_for_reading()
+    if disk_data["ident"] not in connections or not (
+        user.may("wato.edit_all_passwords")
+        or disk_data["ident"] in config_file.filter_editable_entries(connections, user)
+    ):
+        raise ValidationError(
+            message=_("The OAuth2 connection does not exist or you may not edit it."),
+            field_name="data",
+        )
 
     _validate_unique_title(disk_data["title"], exclude_ident=disk_data["ident"])
 
@@ -127,6 +140,16 @@ def save_oauth2_connection_and_passwords_from_slidein_schema(
     assert isinstance(disk_data, dict)
 
     if disk_data["ident"] in load_oauth2_connections():
+        raise ValidationError(
+            message=_("This ID is already in use."),
+            field_name="data",
+        )
+    # The secrets are saved as passwords named after the connection, which must not replace
+    # existing passwords, including those the user may not use
+    if any(
+        password_id_in_use(f"{disk_data['ident']}_{entry}")
+        for entry in ("client_secret", "access_token", "refresh_token")
+    ):
         raise ValidationError(
             message=_("This ID is already in use."),
             field_name="data",

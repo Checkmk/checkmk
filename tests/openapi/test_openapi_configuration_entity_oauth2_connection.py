@@ -680,3 +680,106 @@ def test_list_oauth2_connections_editable_field_for_non_admin(
         MY_OAUTH2_CONNECTION_UUID: True,
         SECOND_OAUTH2_CONNECTION_UUID: False,
     }
+
+
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
+def test_update_oauth2_connection_of_another_group(clients: ClientRegistry) -> None:
+    """A user who may not edit a connection must not replace its settings and secrets"""
+    custom_role = clone_role(RoleID("admin"), pprint_value=False)
+    custom_role.permissions["wato.edit_all_passwords"] = False
+    all_roles = get_all_roles()
+    all_roles[RoleID(custom_role.name)] = custom_role
+    UserRolesConfigFile().save(
+        {role.name: role.to_dict() for role in all_roles.values()}, pprint_value=False
+    )
+    clients.ContactGroup.create("my_group", "My Group")
+    clients.ContactGroup.create("other_group", "Other Group")
+    clients.User.create(
+        username="oauth2_user",
+        fullname="OAuth2 User",
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+        contactgroups=["my_group"],
+        roles=[custom_role.name],
+    )
+    for ident, details in OAUTH2_CONNECTION_CONTENT.items():
+        save_oauth2_connection(
+            ident, details, pprint_value=False, pending_changes=_default_pending_changes()
+        )
+    _create_passwords_for_connection(
+        OAUTH2_CONNECTION_CONTENT[MY_OAUTH2_CONNECTION_UUID], owned_by="other_group"
+    )
+    secrets_before = password_store.PasswordStore().load_for_reading()
+    clients.ConfigurationEntity.set_credentials("oauth2_user", "supersecretish")
+
+    resp = clients.ConfigurationEntity.update_configuration_entity(
+        {
+            "entity_id": MY_OAUTH2_CONNECTION_UUID,
+            "entity_type": ConfigEntityType.oauth2_connection.value,
+            "entity_type_specifier": "microsoft_entra_id",
+            "data": {
+                "ident": MY_OAUTH2_CONNECTION_UUID,
+                "title": "My OAuth2 Connection",
+                "editable_by": ("contact_group", option_id("my_group")),
+                "shared_with": [],
+                "client_secret": ("explicit_password", "", "attacker_secret", False),
+                "access_token": ("explicit_password", "", "attacker_token", False),
+                "refresh_token": ("explicit_password", "", "attacker_token", False),
+                "client_id": MY_CLIENT_ID,
+                "tenant_id": MY_TENANT_ID,
+                "authority": option_id("global"),
+                "sites": ("all", None),
+            },
+        },
+        expect_ok=False,
+    )
+
+    assert resp.status_code == HTTPStatus.BAD_REQUEST, resp.json
+    assert password_store.PasswordStore().load_for_reading() == secrets_before
+
+
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
+def test_create_oauth2_connection_does_not_replace_existing_passwords(
+    clients: ClientRegistry, with_admin: tuple[str, str]
+) -> None:
+    """The secrets of a new connection are saved as "<ident>_client_secret" etc."""
+    my_new_uuid = str(uuid.uuid4())
+    save_password(
+        ident=f"{my_new_uuid}_client_secret",
+        config=PasswordConfig(
+            title="Existing password",
+            comment="",
+            docu_url="",
+            password="existing_secret",
+            owned_by="other_group",
+            shared_with=[],
+        ),
+        new_password=True,
+        pprint_value=False,
+        pending_changes=_default_pending_changes(),
+    )
+    clients.ConfigurationEntity.set_credentials(with_admin[0], with_admin[1])
+
+    resp = clients.ConfigurationEntity.create_configuration_entity(
+        {
+            "entity_type": ConfigEntityType.oauth2_connection.value,
+            "entity_type_specifier": "microsoft_entra_id",
+            "data": {
+                "ident": my_new_uuid,
+                "title": "My new OAuth2 Connection",
+                "editable_by": ("administrators", None),
+                "shared_with": [],
+                "client_secret": ("explicit_password", "", "new_client_secret", False),
+                "access_token": ("explicit_password", "", "new_access_token", False),
+                "refresh_token": ("explicit_password", "", "new_refresh_token", False),
+                "client_id": MY_CLIENT_ID,
+                "tenant_id": MY_TENANT_ID,
+                "authority": option_id("global"),
+                "sites": ("all", None),
+            },
+        },
+        expect_ok=False,
+    )
+
+    assert resp.status_code == HTTPStatus.BAD_REQUEST, resp.json
+    stored = password_store.PasswordStore().load_for_reading()[f"{my_new_uuid}_client_secret"]
+    assert stored["password"] == "existing_secret"

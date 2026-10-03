@@ -182,7 +182,6 @@ py_library(
     ],
     deps = [
         "//cmk/automations",
-        "//cmk/base/automations",
         "//cmk/utils",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:i18n",

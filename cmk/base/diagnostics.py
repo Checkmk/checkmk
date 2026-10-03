@@ -12,17 +12,15 @@ import traceback
 import uuid
 from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
 from contextlib import redirect_stderr, redirect_stdout
-from dataclasses import fields
 from datetime import datetime
 from functools import cache
 from pathlib import Path, PurePosixPath
-from typing import Any, Final
+from typing import Any, Final, override
 
 import cmk.livestatus_client as livestatus
 import cmk.utils.paths
-from cmk.automations.internal import Automation, AutomationID
+from cmk.automations.internal import Automation, AutomationID, AutomationState
 from cmk.automations.results import CreateDiagnosticsDumpResult, CreateDiagnosticsDumpV2Result
-from cmk.base.automations.automations import CommonState
 from cmk.ccc import tty
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
@@ -56,13 +54,21 @@ DiagnosticsOptionalParameters = dict[str, Any]  # type: ignore[explicit-any]
 SUFFIX = ".tar.gz"
 
 
-def _make_raw_base_config(state: CommonState) -> Mapping[str, object]:
-    loaded_config = state.loading_result.loaded_config
-    return {f.name: getattr(loaded_config, f.name) for f in fields(loaded_config)}
+class RawConfigState(AutomationState):
+    def __init__(self, _omd_root: object, raw_config: Mapping[str, object]) -> None:
+        self._raw_config = raw_config
+
+    @override
+    def update(self, _omd_root: object, raw_config: Mapping[str, object]) -> None:
+        self._raw_config = raw_config
+
+    @property
+    def raw_config(self) -> Mapping[str, object]:
+        return self._raw_config
 
 
 def handler(
-    state: CommonState,
+    state: RawConfigState,
     args: DiagnosticsCLParameters,
 ) -> CreateDiagnosticsDumpResult:
     buf = io.StringIO()
@@ -72,7 +78,7 @@ def handler(
             omd_root=cmk.utils.paths.omd_root,
             diagnostics_dir=cmk.utils.paths.diagnostics_dir,
             parameters=deserialize_cl_parameters(args),
-            raw_base_config=_make_raw_base_config(state),
+            raw_config=state.raw_config,
         )
         return CreateDiagnosticsDumpResult(
             output=buf.getvalue(),
@@ -83,14 +89,14 @@ def handler(
 
 automation_create_diagnostics_dump = Automation(
     name=AutomationID("create-diagnostics-dump"),
-    state_factory=CommonState,
+    state_factory=RawConfigState,
     handler=handler,
     result=CreateDiagnosticsDumpResult,
 )
 
 
 def handler_v2(
-    state: CommonState,
+    state: RawConfigState,
     args: Sequence[str],
 ) -> CreateDiagnosticsDumpV2Result:
     buf = io.StringIO()
@@ -100,7 +106,7 @@ def handler_v2(
             omd_root=cmk.utils.paths.omd_root,
             diagnostics_dir=cmk.utils.paths.diagnostics_dir,
             selection=(DumpSelection.deserialize(args[0]) if args else DumpSelection(plugins=())),
-            raw_base_config=_make_raw_base_config(state),
+            raw_config=state.raw_config,
         )
         return CreateDiagnosticsDumpV2Result(
             output=buf.getvalue(),
@@ -111,7 +117,7 @@ def handler_v2(
 
 automation_create_diagnostics_dump_v2 = Automation(
     name=AutomationID("create-diagnostics-dump-v2"),
-    state_factory=CommonState,
+    state_factory=RawConfigState,
     handler=handler_v2,
     result=CreateDiagnosticsDumpV2Result,
 )
@@ -122,7 +128,7 @@ def create_diagnostics_dump(
     omd_root: Path,
     diagnostics_dir: Path,
     parameters: DiagnosticsOptionalParameters,
-    raw_base_config: Mapping[str, object],
+    raw_config: Mapping[str, object],
 ) -> DiagnosticsDump:
     """Create a dump from legacy parameters (old automation wire and current CLI)"""
     selected_names, checkmk_server_host = _legacy_selection(parameters or {})
@@ -133,7 +139,7 @@ def create_diagnostics_dump(
         checkmk_server_host=checkmk_server_host,
         all_parameters=parameters or {},
         legacy_file_parameters=parameters or {},
-        raw_base_config=raw_base_config,
+        raw_config=raw_config,
     )
 
 
@@ -142,7 +148,7 @@ def create_diagnostics_dump_v2(
     omd_root: Path,
     diagnostics_dir: Path,
     selection: DumpSelection,
-    raw_base_config: Mapping[str, object],
+    raw_config: Mapping[str, object],
 ) -> DiagnosticsDump:
     return _create_dump(
         omd_root=omd_root,
@@ -154,7 +160,7 @@ def create_diagnostics_dump_v2(
             "checkmk_server_host": selection.checkmk_server_host,
         },
         legacy_file_parameters=None,
-        raw_base_config=raw_base_config,
+        raw_config=raw_config,
     )
 
 
@@ -166,7 +172,7 @@ def _create_dump(
     checkmk_server_host: str,
     all_parameters: Mapping[str, object],
     legacy_file_parameters: DiagnosticsOptionalParameters | None,
-    raw_base_config: Mapping[str, object],
+    raw_config: Mapping[str, object],
 ) -> DiagnosticsDump:
     log.logger.setLevel(logging.INFO)
     omd_config = get_omd_config(omd_root)
@@ -188,7 +194,7 @@ def _create_dump(
         omd_config=omd_config,
         site_id=omd_site(),
         all_parameters=all_parameters,
-        base_config=raw_base_config,
+        base_config=raw_config,
         resolve_checkmk_server_host=_make_host_resolver(checkmk_server_host),
         site_internal_auth_header=lambda: (
             "InternalToken %s" % (SiteInternalSecret().secret.b64_str)

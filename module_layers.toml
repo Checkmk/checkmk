@@ -189,8 +189,7 @@ allows = [
   "cmk.ccc.site",
   "cmk.ccc.store",
   "cmk.ccc.version_info",
-  # The "cmk --create-diagnostics-dump" command drives the dump engine.
-  "cmk.base.automations.automations",
+  "cmk.base.config",
   "cmk.base.diagnostics",
   "cmk.ccc.exceptions",
   "cmk.ccc.i18n",

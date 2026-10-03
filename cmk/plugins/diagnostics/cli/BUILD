@@ -13,7 +13,7 @@ py_library(
     ],
     deps = [
         "//cmk/base:diagnostics",
-        "//cmk/base/automations",
+        "//cmk/base/config",
         "//cmk/utils:paths",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:i18n",

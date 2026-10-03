@@ -10,12 +10,12 @@ line into a selection of diagnostics plug-ins.
 
 import sys
 from collections.abc import Mapping
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
 import cmk.utils.paths
-from cmk.base.automations.automations import load_config
+from cmk.base.config import load_raw_config
 from cmk.base.diagnostics import (
     ConsoleLogger,
     create_diagnostics_dump_v2,
@@ -106,8 +106,10 @@ def _mode_create_diagnostics_dump(
     _omd_root: Path, _global_options: GlobalOptions, parsed: Options, _args: Args
 ) -> int:
     options = _cli_selection(parsed)
+
+    raw_config = load_raw_config(with_conf_d=True)
+
     # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
-    loading_result = load_config()
     catalogue = load_plugin_catalogue(logger=ConsoleLogger())
 
     if options.list_plugins:
@@ -118,10 +120,7 @@ def _mode_create_diagnostics_dump(
         omd_root=cmk.utils.paths.omd_root,
         diagnostics_dir=cmk.utils.paths.diagnostics_dir,
         selection=_resolve_cli_selection(catalogue, options),
-        raw_base_config={
-            f.name: getattr(loading_result.loaded_config, f.name)
-            for f in fields(loading_result.loaded_config)
-        },
+        raw_config=raw_config,
     )
     logger = ConsoleLogger()
     logger.section_step("Creating diagnostics dump", verbose=False)

@@ -9,6 +9,7 @@ from http import HTTPStatus
 import requests
 
 from cmk.notification_plugins import utils
+from cmk.utils.http_proxy_config import redact_proxy_url
 
 api_url = "https://api.pushover.net/1/messages.json"
 
@@ -125,7 +126,7 @@ def send_push_notification(
             proxies=proxies,
         )
     except requests.exceptions.ProxyError:
-        sys.stdout.write("Cannot connect to proxy: %s\n" % context["PARAMETER_PROXY_URL"])
+        sys.stdout.write("Cannot connect to proxy: %s\n" % redact_proxy_url(proxy_url or ""))
         return 1
     except requests.exceptions.RequestException:
         sys.stdout.write("POST request to server failed: %s\n" % api_url)

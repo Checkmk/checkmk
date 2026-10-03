@@ -28,7 +28,7 @@ from cmk.events.notification_result import NotificationContext
 from cmk.events.notify import find_wato_folder
 from cmk.events.notify_types import PluginNotificationContext
 from cmk.utils.html import replace_state_markers
-from cmk.utils.http_proxy_config import deserialize_http_proxy_config
+from cmk.utils.http_proxy_config import deserialize_http_proxy_config, redact_proxy_url
 from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.paths import omd_root
 from cmk.web.utils.escaping import escape, escape_permissive
@@ -375,7 +375,9 @@ def post_request(
             timeout=110,
         )
     except requests.exceptions.ProxyError:
-        sys.stderr.write("Cannot connect to proxy: %s\n" % serialized_proxy_config)
+        sys.stderr.write(
+            "Cannot connect to proxy: %s\n" % redact_proxy_url(serialized_proxy_config or "")
+        )
         sys.exit(2)
     except requests.exceptions.Timeout:
         # Not expose the url in the error, as it might contain sensitive information

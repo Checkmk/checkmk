@@ -43,6 +43,7 @@ from cmk.utils.http_proxy_config import (
     EnvironmentProxyConfig,
     ExplicitProxyConfig,
     NoProxyConfig,
+    redact_proxy_url,
 )
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.paths import trusted_ca_file
@@ -73,7 +74,7 @@ class Connector:
         if host_url is not None:
             conf.host = "%s" % host_url
         if proxy_url is not None:
-            sys.stdout.write(f"Using proxy: {proxy_url}\n")
+            sys.stdout.write(f"Using proxy: {redact_proxy_url(proxy_url)}\n")
             conf.proxy = proxy_url
 
         if ignore_ssl:

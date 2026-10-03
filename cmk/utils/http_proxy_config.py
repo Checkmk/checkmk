@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import re
 from collections.abc import Callable, Mapping
 from typing import Literal, NotRequired, override, TypedDict
 from urllib.parse import quote
@@ -94,7 +95,25 @@ class ExplicitProxyConfig:
 
     @override
     def __repr__(self) -> str:
-        return f"ExplicitProxyConfig(url='{self._url}')"
+        return f"ExplicitProxyConfig(url='{redact_proxy_url(self._url)}')"
+
+
+def redact_proxy_url(url: str) -> str:
+    """Hide the credentials of a proxy URL, so that it can be logged
+
+    >>> redact_proxy_url("http://user:secret@proxy.lan:3128")
+    'http://***@proxy.lan:3128'
+    >>> redact_proxy_url("http://proxy.lan:3128")
+    'http://proxy.lan:3128'
+    """
+    # Everything up to the last "@" is hidden: a raw password may contain "/", "?", "#" or
+    # even "://", and proxy URLs have no meaningful path that could contain an "@". Only a
+    # well-formed scheme is kept.
+    head, at, host = url.rpartition("@")
+    if not at:
+        return url
+    scheme = match.group(0) if (match := re.match(r"[A-Za-z][A-Za-z0-9+.-]*://", head)) else ""
+    return f"{scheme}***@{host}"
 
 
 type HTTPProxyConfig = EnvironmentProxyConfig | NoProxyConfig | ExplicitProxyConfig

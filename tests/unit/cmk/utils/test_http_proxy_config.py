@@ -20,6 +20,7 @@ from cmk.utils.http_proxy_config import (
     NoProxyConfig,
     ProxyAuthSpec,
     ProxyConfigSpec,
+    redact_proxy_url,
 )
 
 _PROXIES_GLOBAL_SETTINGS: Mapping[str, HTTPProxySpec] = {
@@ -334,3 +335,27 @@ def test_credentials_are_encoded_in_the_proxy_url() -> None:
         ),
         {},
     ) == ExplicitProxyConfig("http://dom%5Cus%3Aer:p%40ss%2Fw%3Ard%2541@proxy.lan:3128")
+
+
+def test_proxy_url_credentials_are_not_shown_in_the_representation() -> None:
+    assert "s3crit" not in repr(ExplicitProxyConfig("http://user:s3crit@proxy.lan:3128"))
+
+
+@pytest.mark.parametrize(
+    "url, expected",
+    [
+        pytest.param(
+            "http://us%40er:s3crit@proxy.lan:3128", "http://***@proxy.lan:3128", id="with scheme"
+        ),
+        pytest.param("user:s3crit@proxy.lan:3128", "***@proxy.lan:3128", id="without scheme"),
+        pytest.param(
+            "http://user:pa/ss?s3crit@proxy.lan:3128",
+            "http://***@proxy.lan:3128",
+            id="unencoded / and ? in the password",
+        ),
+        pytest.param("user:pa://ss@proxy.lan:3128", "***@proxy.lan:3128", id=":// in the password"),
+        pytest.param("http://proxy.lan:3128", "http://proxy.lan:3128", id="no credentials"),
+    ],
+)
+def test_redact_proxy_url(url: str, expected: str) -> None:
+    assert redact_proxy_url(url) == expected

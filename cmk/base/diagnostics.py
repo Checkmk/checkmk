@@ -20,11 +20,14 @@ from typing import Any, Final, override
 import cmk.livestatus_client as livestatus
 import cmk.utils.paths
 from cmk.automations.internal import Automation, AutomationID, AutomationState
-from cmk.automations.results import CreateDiagnosticsDumpResult, CreateDiagnosticsDumpV2Result
 from cmk.ccc import tty
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
 from cmk.ccc.site import get_omd_config, omd_site
+from cmk.diagnostics.automation_types import (
+    CreateDiagnosticsDumpResult,
+    CreateDiagnosticsDumpV2Result,
+)
 from cmk.diagnostics.engine import (
     DumpSelection,
     load_diagnostics_plugins,

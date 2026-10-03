@@ -20,6 +20,10 @@ from cmk.automations.internal import AutomationID, AutomationResult
 from cmk.automations.results._base import result_type_registry
 from cmk.ccc import version as cmk_version
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.diagnostics.automation_types import (
+    CreateDiagnosticsDumpResult,
+    CreateDiagnosticsDumpV2Result,
+)
 from cmk.password_store.v1 import Secret
 from cmk.utils.http_proxy_config import HTTPProxySpec
 from cmk.utils.ip_lookup import IPStackConfig
@@ -398,31 +402,6 @@ class PingHostInput:
         )
 
 
-@dataclass
-class CreateDiagnosticsDumpResult(AutomationResult):
-    output: str
-    tarfile_path: str
-    tarfile_created: bool
-
-    @staticmethod
-    @override
-    def automation_call() -> AutomationID:
-        return AutomationID("create-diagnostics-dump")
-
-
+# The result types of the diagnostics dump live with the diagnostics package.
 result_type_registry.register(CreateDiagnosticsDumpResult)
-
-
-@dataclass
-class CreateDiagnosticsDumpV2Result(AutomationResult):
-    output: str
-    tarfile_path: str
-    tarfile_created: bool
-
-    @staticmethod
-    @override
-    def automation_call() -> AutomationID:
-        return AutomationID("create-diagnostics-dump-v2")
-
-
 result_type_registry.register(CreateDiagnosticsDumpV2Result)

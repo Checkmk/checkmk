@@ -17,6 +17,7 @@ from cmk.automations.results import SetAutochecksInput
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery import DiscoverySettings
 from cmk.checkengine.plugins import CheckPluginName
+from cmk.diagnostics.automation_types import CreateDiagnosticsDumpV2Result
 from cmk.events.notification_result import NotificationContext
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
@@ -806,7 +807,7 @@ def create_diagnostics_dump_v2(
     timeout: int,
     *,
     debug: bool,
-) -> results.CreateDiagnosticsDumpV2Result:
+) -> CreateDiagnosticsDumpV2Result:
     return _deserialize(
         _automation_serialized(
             AutomationID("create-diagnostics-dump-v2"),
@@ -816,7 +817,7 @@ def create_diagnostics_dump_v2(
             non_blocking_http=True,
             debug=debug,
         ),
-        results.CreateDiagnosticsDumpV2Result,
+        CreateDiagnosticsDumpV2Result,
         debug=debug,
     )
 

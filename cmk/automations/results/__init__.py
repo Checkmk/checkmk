@@ -49,12 +49,6 @@ from cmk.automations.results.analysis import (
     UnknownCheckParameterRuleSetsResult as UnknownCheckParameterRuleSetsResult,
 )
 from cmk.automations.results.diagnostics import (
-    CreateDiagnosticsDumpResult as CreateDiagnosticsDumpResult,
-)
-from cmk.automations.results.diagnostics import (
-    CreateDiagnosticsDumpV2Result as CreateDiagnosticsDumpV2Result,
-)
-from cmk.automations.results.diagnostics import (
     DiagCmkAgentInput as DiagCmkAgentInput,
 )
 from cmk.automations.results.diagnostics import (

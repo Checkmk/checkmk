@@ -286,6 +286,7 @@ py_library(
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//packages/cmk-crypto",
+        "//packages/cmk-diagnostics:automation_types",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-messaging",
         "//packages/cmk-plugin-apis:discover_plugins",

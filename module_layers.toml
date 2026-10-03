@@ -395,6 +395,7 @@ allows = [
   "@trace",
   "cmk.checkengine",
   "cmk.checkengine.helper_interface",
+  "cmk.diagnostics.automation_types",
   "cmk.utils.check_utils",
   "cmk.utils.config_warnings",
   "cmk.utils.http_proxy_config",
@@ -603,6 +604,7 @@ allows = ["cmk.bakery", "cmk.base.api.bakery", "cmk.utils"]
 [components."cmk.base"]
 allows = [
   "cmk.cli.engine",
+  "cmk.diagnostics.automation_types",
   "cmk.diagnostics.engine",
   "cmk.monitoring_config",
   "@ccc",
@@ -1312,6 +1314,7 @@ excludes = ["cmk.gui.nonfree.pro.plugins", "cmk.gui.plugins"]
 
 [components."cmk.gui"]
 allows = [
+  "cmk.diagnostics.automation_types",
   "cmk.diagnostics.engine",
   "@ccc",
   "@crypto",
@@ -1500,6 +1503,9 @@ allows = [
   "cmk.utils.password_store",
   "cmk.utils.paths",
 ]
+
+[components."cmk.diagnostics.automation_types"]
+allows = ["@plugin_apis"]
 
 [components."cmk.diagnostics.engine"]
 allows = ["@plugin_apis", "cmk.discover_plugins"]

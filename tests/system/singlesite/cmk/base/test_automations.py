@@ -15,6 +15,7 @@ from cmk.automations.results import SetAutochecksInput
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery import AutochecksSerializer, DiscoveryReport, DiscoverySettings
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
+from cmk.diagnostics.automation_types import CreateDiagnosticsDumpResult
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.utils.servicename import ServiceName
 from tests.testlib.common.utils2 import get_standard_linux_agent_output
@@ -694,7 +695,7 @@ def test_automation_create_diagnostics_dump(
     site: Site, additional_options: list[str] | None
 ) -> None:
     result = _execute_automation(site, "create-diagnostics-dump", additional_options)
-    assert isinstance(result, results.CreateDiagnosticsDumpResult)
+    assert isinstance(result, CreateDiagnosticsDumpResult)
     assert "+ COLLECT DIAGNOSTICS INFORMATION" in result.output
     assert result.tarfile_path.endswith(".tar.gz")
     assert "var/check_mk/diagnostics" in result.tarfile_path

@@ -31,6 +31,7 @@ py_library(
         "//packages/cmk-check-engine:specs",
         "//packages/cmk-check-engine/cmk/checkengine/discovery",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-diagnostics:automation_types",
         "//packages/cmk-events",
         "//packages/cmk-plugin-apis:automations",
         "//packages/cmk-plugin-apis:password_store",

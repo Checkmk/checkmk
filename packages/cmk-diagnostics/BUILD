@@ -22,10 +22,29 @@ py_library(
     ],
 )
 
+# The results of the diagnostics dump automations, shared by the automations
+# and their callers in the GUI. Keep deps lean.
+py_library(
+    name = "automation_types",
+    srcs = glob(["cmk/diagnostics/automation_types/**/*.py"]),
+    data = [":automation_types_py_typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = ["//packages/cmk-plugin-apis:automations"],
+)
+
 py_doc_test(
     name = "doctest",
     size = "small",
-    srcs = [":engine"],
+    srcs = [
+        ":automation_types",
+        ":engine",
+    ],
+)
+
+filegroup(
+    name = "automation_types_py_typed",
+    srcs = ["cmk/diagnostics/automation_types/py.typed"],
 )
 
 filegroup(
@@ -40,6 +59,8 @@ py_wheel(
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [
+        ":automation_types",
+        ":automation_types_py_typed",
         ":engine",
         ":engine_py_typed",
     ],
@@ -61,6 +82,7 @@ package_wheel(
 py_requirements_test(
     name = "requirements-test",
     libs = [
+        ":automation_types",
         ":engine",
     ],
     requirements_in = "requirements.in",

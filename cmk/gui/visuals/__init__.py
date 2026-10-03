@@ -83,6 +83,7 @@ from ._store import save as save
 from ._store import TVisual as TVisual
 from ._title import view_title as view_title
 from ._title import visual_title as visual_title
+from ._title import visual_title_without_context as visual_title_without_context
 from .filter import (
     api,
     Filter,

@@ -209,4 +209,4 @@ def _target_title(location: VisualLocation, user_permissions: UserPermissions) -
     )
     if visual is None:
         return location.name
-    return visuals.visual_title(location.type, visual, {}, skip_title_context=True)
+    return visuals.visual_title_without_context(visual, {})

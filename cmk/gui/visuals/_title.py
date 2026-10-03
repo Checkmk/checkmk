@@ -18,19 +18,21 @@ def visual_title(
     what: str,  # noqa: ARG001
     visual: Visual,
     context: VisualContext,
-    skip_title_context: bool = False,
 ) -> str:
+    title = visual_title_without_context(visual, context)
+    if visual.get("add_context_to_title", True):
+        title = _add_context_title(context, visual["single_infos"], title)
+    return title
+
+
+def visual_title_without_context(visual: Visual, context: VisualContext) -> str:
+    """The title of the visual, without the headings of the filters of the context"""
     title = _u(str(visual["title"]))
 
     # In case we have a site context given replace the $SITE$ macro in the titles.
     site_filter_vars = context.get("site", {})
     assert isinstance(site_filter_vars, dict)
-    title = title.replace("$SITE$", site_filter_vars.get("site", ""))
-
-    if visual.get("add_context_to_title", True) and not skip_title_context:
-        title = _add_context_title(context, visual["single_infos"], title)
-
-    return title
+    return title.replace("$SITE$", site_filter_vars.get("site", ""))
 
 
 def view_title(view_spec: ViewSpec, context: VisualContext) -> str:

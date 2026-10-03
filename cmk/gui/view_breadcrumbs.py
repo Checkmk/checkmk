@@ -16,7 +16,7 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views.store import get_permitted_views
-from cmk.gui.visuals import view_title
+from cmk.gui.visuals import view_title, visual_title_without_context
 from cmk.utils.servicename import ServiceName
 from cmk.web.utils.urls import append_site_from_request, makeuri_contextless
 
@@ -150,7 +150,7 @@ def _service_breadcrumb(host_name: HostName, service_name: ServiceName) -> Bread
     permitted_views = get_permitted_views()
     if service_view_spec := permitted_views.get("service"):
         return BreadcrumbItem(
-            title=view_title(service_view_spec, context={}),
+            title=visual_title_without_context(service_view_spec, {}),
             url=makeuri_contextless(
                 request,
                 append_site_from_request(
@@ -207,7 +207,7 @@ def make_host_breadcrumb(host_name: HostName, user_permissions: UserPermissions)
     if host_view_spec := permitted_views.get("host"):
         breadcrumb.append(
             BreadcrumbItem(
-                title=view_title(host_view_spec, context={}),
+                title=visual_title_without_context(host_view_spec, {}),
                 url=makeuri_contextless(
                     request,
                     append_site_from_request(request, [("view_name", "host"), ("host", host_name)]),

@@ -24,7 +24,7 @@ from cmk.gui.sites import SiteStatus, states
 from cmk.gui.type_defs import Visual
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.visuals import visual_title
+from cmk.gui.visuals import visual_title_without_context
 from cmk.shared_typing.main_menu import LoadingTransition as SharedLoadingTransition
 from cmk.shared_typing.main_menu import NavItemTopic, NavItemTopicEntry
 from cmk.web.utils.choices import Choice
@@ -263,9 +263,7 @@ def make_main_menu(
         entries.append(
             NavItemTopicEntry(
                 id=name,
-                title=visual_title(
-                    visual_type_name, visual, visual["context"], skip_title_context=True
-                ),
+                title=visual_title_without_context(visual, visual["context"]),
                 url=url,
                 sort_index=visual["sort_index"],
                 is_show_more=visual["is_show_more"],

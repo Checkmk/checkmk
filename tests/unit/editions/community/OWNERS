@@ -18,3 +18,4 @@ per-file test_available_pages.py=file:/component_owners/ui_monitoring/OWNERS_DEF
 per-file test_available_default_config.py=file:/component_owners/ui_monitoring/OWNERS_DEFINITION
 per-file test_available_views.py=file:/component_owners/ui_monitoring/OWNERS_DEFINITION
 per-file test_available_rulespec_groups.py=file:/component_owners/ui_setup/OWNERS_DEFINITION
+per-file test_available_quick_setups.py=file:/component_owners/quick_setup/OWNERS_DEFINITION

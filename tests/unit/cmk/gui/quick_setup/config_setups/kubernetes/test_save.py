@@ -119,6 +119,7 @@ def _save(
     )
 
 
+@pytest.mark.usefixtures("kube_v2_ruleset")
 def test_pull_saves_host_rule_and_the_deployed_password(
     settings: PullSettings, config: Config, admin: LoggedInUser
 ) -> None:
@@ -173,6 +174,7 @@ def test_pull_requires_password_store_permission_before_saving(
     assert not make_folder_tree(config).all_hosts()
 
 
+@pytest.mark.usefixtures("kube_v2_ruleset")
 def test_failed_save_removes_the_new_password_and_bundle(
     settings: PullSettings, config: Config, admin: LoggedInUser
 ) -> None:
@@ -191,6 +193,7 @@ def test_failed_save_removes_the_new_password_and_bundle(
     assert not make_folder_tree(config).all_hosts()
 
 
+@pytest.mark.usefixtures("kube_v2_ruleset")
 def test_existing_source_host_is_not_overwritten_by_another_bundle(
     settings: PullSettings, config: Config, admin: LoggedInUser
 ) -> None:

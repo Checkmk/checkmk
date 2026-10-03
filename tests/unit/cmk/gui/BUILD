@@ -181,9 +181,6 @@ py_cmk_test(
         "tests/unit/cmk/gui/watolib",
     ],
     env = {"EDITION": "community"},
-    tags = [
-        "deballast-keep=//packages/cmk-plugins/cmk/plugins/kube:kube",  # rulesets loaded at runtime for Kubernetes Quick Setup persistence tests
-    ],
     use_project_pytest_config = True,
     deps = [
         ":conftest",

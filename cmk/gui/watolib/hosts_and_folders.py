@@ -5061,11 +5061,6 @@ def get_folder_title_path(tree: FolderTree, path: PathWithoutSlash) -> list[str]
 
 
 @request_memoize()
-def get_folder_title_path_with_links(tree: FolderTree, path: PathWithoutSlash) -> list[HTML]:
-    return tree.folder(path).title_path_with_links()
-
-
-@request_memoize()
 def folder_title_path(
     tree: FolderTree, path: PathWithoutSlash, acting_user: LoggedInUser
 ) -> str | None:

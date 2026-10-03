@@ -8,7 +8,6 @@
 from collections.abc import Mapping, Sequence
 from typing import Any, override
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.http import Request
 from cmk.gui.i18n import _, _l
@@ -17,13 +16,10 @@ from cmk.gui.painter.v0 import Cell, Painter
 from cmk.gui.type_defs import ColumnName, Row, SorterName
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.sorter import Sorter
-from cmk.gui.watolib.hosts_and_folders import (
-    folder_tree,
-    get_folder_title_path,
-    get_folder_title_path_with_links,
-)
 from cmk.web.utils.html import HTML
 from cmk.web.utils.request_cache import RequestCache
+
+from ._folder_titles import FOLDER_TITLES
 
 
 class PainterHostFilename(Painter):
@@ -52,25 +48,21 @@ class PainterHostFilename(Painter):
 
 # TODO: Extremely bad idea ahead! The return type depends on a combination of
 # the values of how and with_links. :-P
-def get_wato_folder(row: Row, how: str, with_links: bool = True, *, request: Request) -> str | HTML:
+def get_wato_folder(
+    row: Row,
+    how: str,
+    with_links: bool = True,
+    *,
+    request: Request,
+    request_cache: RequestCache[RequestCacheConfig],
+) -> str | HTML:
     filename = row["host_filename"]
     if not filename.startswith("/wato/") or not filename.endswith("/hosts.mk"):
         return ""
     wato_path = filename[6:-9]
-    try:
-        title_path: list[str] | list[HTML] = (
-            get_folder_title_path_with_links(folder_tree(), wato_path)
-            if with_links
-            else get_folder_title_path(folder_tree(), wato_path)
-        )
-    except MKGeneralException:
-        # happens when a path can not be resolved using the local Setup.
-        # e.g. when having an independent site with different folder
-        # hierarchy added to the GUI.
-        # Display the raw path rather than the exception text.
-        title_path = wato_path.split("/")
-    except Exception as e:
-        return "%s" % e
+    title_path = request_cache.get(FOLDER_TITLES).title_path(wato_path, with_links)
+    if isinstance(title_path, str):
+        return title_path
 
     if how == "plain":
         return title_path[-1]
@@ -86,8 +78,10 @@ def get_wato_folder(row: Row, how: str, with_links: bool = True, *, request: Req
     return HTML.without_escaping(" / ").join(title_path[depth:])
 
 
-def paint_wato_folder(row: Row, how: str, *, request: Request) -> CellSpec:
-    return "", get_wato_folder(row, how, request=request)
+def paint_wato_folder(
+    row: Row, how: str, *, request: Request, request_cache: RequestCache[RequestCacheConfig]
+) -> CellSpec:
+    return "", get_wato_folder(row, how, request=request, request_cache=request_cache)
 
 
 class PainterWatoFolderAbs(Painter):
@@ -116,7 +110,7 @@ class PainterWatoFolderAbs(Painter):
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return paint_wato_folder(row, "abs", request=self.request)
+        return paint_wato_folder(row, "abs", request=self.request, request_cache=cell.request_cache)
 
 
 class PainterWatoFolderRel(Painter):
@@ -145,7 +139,7 @@ class PainterWatoFolderRel(Painter):
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return paint_wato_folder(row, "rel", request=self.request)
+        return paint_wato_folder(row, "rel", request=self.request, request_cache=cell.request_cache)
 
 
 class PainterWatoFolderPlain(Painter):
@@ -174,23 +168,29 @@ class PainterWatoFolderPlain(Painter):
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return paint_wato_folder(row, "plain", request=self.request)
+        return paint_wato_folder(
+            row, "plain", request=self.request, request_cache=cell.request_cache
+        )
 
 
-def cmp_wato_folder(r1: Row, r2: Row, how: str, *, request: Request) -> int:
+def cmp_wato_folder(
+    r1: Row, r2: Row, how: str, *, request: Request, request_cache: RequestCache[RequestCacheConfig]
+) -> int:
     return (
-        _get_wato_folder_text(r1, how, request=request)
-        > _get_wato_folder_text(r2, how, request=request)
+        _get_wato_folder_text(r1, how, request=request, request_cache=request_cache)
+        > _get_wato_folder_text(r2, how, request=request, request_cache=request_cache)
     ) - (
-        _get_wato_folder_text(r1, how, request=request)
-        < _get_wato_folder_text(r2, how, request=request)
+        _get_wato_folder_text(r1, how, request=request, request_cache=request_cache)
+        < _get_wato_folder_text(r2, how, request=request, request_cache=request_cache)
     )
 
 
 # NOTE: The funny str() call is only necessary because of the broken typing of
 # get_wato_folder().
-def _get_wato_folder_text(r: Row, how: str, *, request: Request) -> str:
-    return str(get_wato_folder(r, how, False, request=request))
+def _get_wato_folder_text(
+    r: Row, how: str, *, request: Request, request_cache: RequestCache[RequestCacheConfig]
+) -> str:
+    return str(get_wato_folder(r, how, False, request=request, request_cache=request_cache))
 
 
 def _sort_wato_folder_abs(
@@ -200,9 +200,9 @@ def _sort_wato_folder_abs(
     parameters: Mapping[str, Any] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,
-    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],
 ) -> int:
-    return cmp_wato_folder(r1, r2, "abs", request=request)
+    return cmp_wato_folder(r1, r2, "abs", request=request, request_cache=request_cache)
 
 
 SorterWatoFolderAbs = Sorter(
@@ -220,9 +220,9 @@ def _sort_wato_folder_rel(
     parameters: Mapping[str, Any] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,
-    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],
 ) -> int:
-    return cmp_wato_folder(r1, r2, "rel", request=request)
+    return cmp_wato_folder(r1, r2, "rel", request=request, request_cache=request_cache)
 
 
 SorterWatoFolderRel = Sorter(
@@ -240,9 +240,9 @@ def _sort_wato_folder_plain(
     parameters: Mapping[str, Any] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,
-    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],
 ) -> int:
-    return cmp_wato_folder(r1, r2, "plain", request=request)
+    return cmp_wato_folder(r1, r2, "plain", request=request, request_cache=request_cache)
 
 
 SorterWatoFolderPlain = Sorter(

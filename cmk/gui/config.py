@@ -11,7 +11,7 @@
 import copy
 import os
 import sys
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field, fields, make_dataclass
 from functools import partial
 from pathlib import Path
@@ -27,7 +27,8 @@ from cmk.gui.exceptions import MKConfigError
 from cmk.gui.general_config import GeneralConfig
 from cmk.gui.i18n import _
 from cmk.gui.legacy_plugins import load_web_plugins
-from cmk.gui.type_defs import RoleName
+from cmk.gui.type_defs import CustomHostAttrSpec, RoleName
+from cmk.livestatus_client import SiteConfigurations
 from cmk.utils.keypair_store import KeypairStore
 
 tracer = trace.get_tracer()
@@ -61,6 +62,18 @@ class RequestCacheConfig(Protocol):
     Config and the ApiConfig of the REST API satisfy it, so pages and endpoints build the caches
     the plugins read. It names what the values of the caches are built from.
     """
+
+    @property
+    def wato_hide_folders_without_read_permissions(self) -> bool: ...
+
+    @property
+    def wato_host_attrs(self) -> Sequence[CustomHostAttrSpec]: ...
+
+    @property
+    def tags(self) -> cmk.ruleset_matcher.tags.TagConfig: ...
+
+    @property
+    def sites(self) -> SiteConfigurations: ...
 
 
 @dataclass

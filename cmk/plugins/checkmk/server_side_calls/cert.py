@@ -176,7 +176,8 @@ def _proxy_args(proxy: EnvProxy | URLProxy | NoProxy) -> Iterator[str | Secret]:
                     raise ValueError(f"Unknown proxy auth settings: {auth}")
 
         case _:
-            raise ValueError(f"Unknown proxy configuration: {proxy}")
+            # The value is not part of the message, since it may contain credentials
+            raise ValueError(f"Unknown proxy configuration of type {type(proxy).__name__}")
 
 
 def _command_arguments(endpoint: CertEndpoint, host_config: HostConfig) -> Iterator[str | Secret]:

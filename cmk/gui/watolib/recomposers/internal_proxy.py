@@ -115,7 +115,8 @@ def _transform_from_disk(
             )
 
         case _:
-            raise ValueError(f"Unknown proxy configuration: {value}")
+            # The value is not part of the message, since it may contain credentials
+            raise ValueError(f"Unknown proxy configuration of type {type(value).__name__}")
 
 
 def _transform_to_disk(value: FrontendRepresentation) -> DiskRepresentation:
@@ -171,7 +172,8 @@ def _transform_to_disk(value: FrontendRepresentation) -> DiskRepresentation:
             )
 
         case _:
-            raise ValueError(f"Unknown proxy configuration: {value}")
+            # The value is not part of the message, since it may contain credentials
+            raise ValueError(f"Unknown proxy configuration of type {type(value).__name__}")
 
 
 def recompose(

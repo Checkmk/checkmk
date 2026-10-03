@@ -316,13 +316,14 @@ def transform_wato_rulesets_params(
                 if raise_errors:
                     raise
                 logger.exception(
+                    # The value is not logged, since it may contain secrets
                     "ERROR: Failed to transform rule: (Ruleset: %(ruleset_name)s, "
-                    "Folder: %(folder)s, Rule: %(rule_index)d, Value: %(value)s",
+                    "Folder: %(folder)s, Rule: %(rule_index)d, ID: %(rule_id)s",
                     {
                         "ruleset_name": ruleset.name,
                         "folder": folder.path(),
                         "rule_index": folder_index,
-                        "value": rule.value,
+                        "rule_id": rule.id,
                     },
                 )
     return migrated_rulesets
@@ -382,13 +383,14 @@ def transform_remove_null_host_tag_conditions_from_rulesets(
                 if raise_errors:
                     raise
                 logger.exception(
+                    # The value is not logged, since it may contain secrets
                     "ERROR: Failed to transform rule: (Ruleset: %(ruleset_name)s, "
-                    "Folder: %(folder)s, Rule: %(rule_index)d, Value: %(value)s",
+                    "Folder: %(folder)s, Rule: %(rule_index)d, ID: %(rule_id)s",
                     {
                         "ruleset_name": ruleset.name,
                         "folder": folder.path(),
                         "rule_index": folder_index,
-                        "value": old_rule.value,
+                        "rule_id": old_rule.id,
                     },
                 )
     return migrated_rulesets

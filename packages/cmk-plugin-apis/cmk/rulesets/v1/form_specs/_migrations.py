@@ -308,7 +308,10 @@ def migrate_to_password(
             return "cmk_postprocessed", "stored_password", (password_store_id, password)
 
         case _:
-            raise TypeError(f"Could not migrate {model!r} to Password.")
+            # The value is not part of the message, since it may contain credentials
+            raise TypeError(
+                f"Could not migrate a value of type {type(model).__name__} to Password."
+            )
 
 
 def migrate_to_proxy(
@@ -348,7 +351,8 @@ def migrate_to_proxy(
         case "cmk_postprocessed", "no_proxy", str():
             return "cmk_postprocessed", "no_proxy", ""
         case _:
-            raise TypeError(f"Could not migrate {model!r} to Proxy.")
+            # The value is not part of the message, since it may contain credentials
+            raise TypeError(f"Could not migrate a value of type {type(model).__name__} to Proxy.")
 
 
 def migrate_to_time_period(

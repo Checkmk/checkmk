@@ -208,4 +208,7 @@ def migrate_to_internal_proxy(
             )
 
         case _:
-            raise TypeError(f"Could not migrate {model!r} to Internal Proxy.\n")
+            # The value is not part of the message, since it may contain credentials
+            raise TypeError(
+                f"Could not migrate a value of type {type(model).__name__} to Internal Proxy."
+            )

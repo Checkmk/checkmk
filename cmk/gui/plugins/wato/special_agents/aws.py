@@ -59,7 +59,8 @@ def _unmigrate_password(
         case "cmk_postprocessed", "stored_password", (str(password_store_id), str(_password)):
             return "store", password_store_id
 
-    raise TypeError(f"Could not migrate {model!r} to Password.")
+    # The value is not part of the message, since it may contain credentials
+    raise TypeError(f"Could not migrate a value of type {type(model).__name__} to Password.")
 
 
 def _vs_v1_ssc_password(title: str, allow_empty: bool) -> ValueSpec:

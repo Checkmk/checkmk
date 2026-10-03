@@ -16,6 +16,7 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//non-free/packages/cmk-bakery:__pkg__",
+        "//non-free/packages/cmk-plugins-nonfree/cmk/plugins/notifications:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [

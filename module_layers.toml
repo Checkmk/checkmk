@@ -187,6 +187,7 @@ allows = [
   "cmk.base.config",
   "cmk.base.notify",
   "cmk.utils.http_proxy_config",
+  "cmk.utils.log",
   "cmk.utils.paths",
   "cmk.utils.timeperiod",
 ]
@@ -493,19 +494,6 @@ allows = [
 [components."cmk.base.api.bakery"]
 allows = ["@ccc", "cmk.bakery", "cmk.utils"]
 
-
-[components."cmk.base.nonfree.notify_automation"]
-allows = [
-  "@livestatus_client",
-  "cmk.automations",
-  "cmk.base.automations",
-  "cmk.base.base_app",
-  "cmk.base.config",
-  "cmk.base.notify",
-  "cmk.ccc.version",
-  "cmk.checkengine",
-  "cmk.utils",
-]
 
 [components."cmk.base.nonfree.cmc"]
 allows = [

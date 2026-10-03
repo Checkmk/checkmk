@@ -229,6 +229,7 @@ PRO_WHEELS = COMMUNITY_WHEELS + [
     "//non-free/packages/cmk-plugins-nonfree:wheel-checkmk",
     "//non-free/packages/cmk-plugins-nonfree:wheel-diagnostics",
     "//non-free/packages/cmk-plugins-nonfree:wheel-kube_extended",
+    "//non-free/packages/cmk-plugins-nonfree:wheel-notifications",
     "//non-free/packages/cmk-robotmk:wheel",
 ]
 

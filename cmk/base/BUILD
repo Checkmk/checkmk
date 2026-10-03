@@ -150,6 +150,7 @@ py_library(
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
         "//cmk/plugins:__subpackages__",
+        "//non-free/packages/cmk-plugins-nonfree/cmk/plugins/notifications:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [

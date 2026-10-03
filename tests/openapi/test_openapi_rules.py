@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="explicit-any"
 
+import ast
 import typing
 import urllib
 from collections.abc import Iterable
@@ -20,6 +21,7 @@ from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.watolib import rulesets
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundleStore
 from cmk.gui.watolib.configuration_bundles import create_config_bundle, CreateBundleEntities
@@ -33,6 +35,7 @@ from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
+from cmk.utils.password_store import is_ad_hoc_password_id
 from tests.testlib.unit.gui.web_test_app import SetConfig
 from tests.testlib.unit.rest_api_client import (
     ClientRegistry,
@@ -186,6 +189,44 @@ def test_openapi_value_raw_is_unaltered(clients: ClientRegistry) -> None:
     )
     resp2 = clients.Rule.get(rule_id=resp.json["id"])
     assert value_raw == resp2.json["extensions"]["value_raw"]
+
+
+@pytest.mark.parametrize(
+    "password_id, kept",
+    [
+        pytest.param("uuid067408f0-d390-4dcc-ae3c-966f278ace7d", True, id="generated ID"),
+        pytest.param("admin_secret", False, id="ID of the client's choice"),
+    ],
+)
+def test_openapi_explicit_password_keeps_only_generated_ids(
+    clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch, password_id: str, kept: bool
+) -> None:
+    # Saving a rule with secrets updates the merged password file through the cmk binary
+    monkeypatch.setattr(rulesets, "update_merged_password_file", lambda **_: None)
+    value = {
+        "servername": "activemq.example.com",
+        "port": 8161,
+        "protocol": "http",
+        "use_piggyback": False,
+        "basicauth": {
+            "username": "user",
+            "password": ("cmk_postprocessed", "explicit_password", (password_id, "my_secret")),
+        },
+    }
+    resp = clients.Rule.create(
+        ruleset=RuleGroup.SpecialAgents("activemq"),
+        value_raw=repr(value),
+        conditions={},
+        folder="~",
+        properties={"disabled": False},
+    )
+
+    saved = ast.literal_eval(
+        clients.Rule.get(rule_id=resp.json["id"]).json["extensions"]["value_raw"]
+    )
+    saved_id = saved["basicauth"]["password"][2][0]
+    assert (saved_id == password_id) is kept
+    assert is_ad_hoc_password_id(saved_id)
 
 
 def test_openapi_value_active_check_http(clients: ClientRegistry) -> None:

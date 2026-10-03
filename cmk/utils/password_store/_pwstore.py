@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import hashlib
+import re
 import secrets
 from collections.abc import Callable, Mapping
 from pathlib import Path
-from typing import Literal, NotRequired, TypedDict
+from typing import Final, Literal, NotRequired, TypedDict
 from uuid import uuid4
 
 import cmk.utils.paths
@@ -131,6 +132,16 @@ def _load(store_path: Path) -> Mapping[str, Secret[str]]:
 
 def ad_hoc_password_id() -> str:
     return f"{_PASSWORD_ID_PREFIX}{uuid4()}"
+
+
+_AD_HOC_PASSWORD_ID: Final = re.compile(
+    rf"{_PASSWORD_ID_PREFIX}[0-9a-f]{{8}}-[0-9a-f]{{4}}-4[0-9a-f]{{3}}-[89ab][0-9a-f]{{3}}-[0-9a-f]{{12}}"
+)
+
+
+def is_ad_hoc_password_id(password_id: str) -> bool:
+    """Whether the ID has the format of the IDs made by ad_hoc_password_id()"""
+    return _AD_HOC_PASSWORD_ID.fullmatch(password_id) is not None
 
 
 def extract_formspec_password(

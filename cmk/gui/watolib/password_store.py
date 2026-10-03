@@ -18,7 +18,7 @@ from cmk.gui.valuespec import DropdownChoice, Transform, ValueSpecValidateFunc
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
 from cmk.utils import password_store
-from cmk.utils.password_store import ad_hoc_password_id, PasswordConfig
+from cmk.utils.password_store import ad_hoc_password_id, is_ad_hoc_password_id, PasswordConfig
 from cmk.web.utils.choices import Choice
 
 
@@ -240,6 +240,41 @@ def postprocessable_ios_password(
         back=_transform_password_back,
         validate=validate,
     )
+
+
+def trusted_explicit_password_id(password_id: str) -> str:
+    """The ID to save an explicit password with
+
+    The ID of an explicit password comes from the request. Only an ID in the generated format
+    that no stored password has is kept. Otherwise a request could give an explicit password
+    the ID of a stored password or an ID of its own choice.
+    """
+    if is_ad_hoc_password_id(password_id) and password_id not in PasswordStore().load_for_reading():
+        return password_id
+    return ad_hoc_password_id()
+
+
+def trusted_explicit_password_ids(value: object) -> object:
+    """The value with trusted_explicit_password_id() applied to all explicit passwords"""
+
+    def _trusted(value: object) -> object:
+        match value:
+            case ("cmk_postprocessed", "explicit_password", (str(password_id), str(password))):
+                return (
+                    "cmk_postprocessed",
+                    "explicit_password",
+                    (trusted_explicit_password_id(password_id), password),
+                )
+            case dict():
+                return {k: _trusted(v) for k, v in value.items()}
+            case list():
+                return [_trusted(v) for v in value]
+            case tuple():
+                return tuple(_trusted(v) for v in value)
+            case _:
+                return value
+
+    return _trusted(value)
 
 
 def _transform_password_forth(value: object) -> tuple[str, str]:

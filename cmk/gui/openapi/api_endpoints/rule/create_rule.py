@@ -20,6 +20,7 @@ from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.utils.misc import gen_id
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
+from cmk.gui.watolib.password_store import trusted_explicit_password_ids
 from cmk.gui.watolib.rulesets import FolderRulesets
 
 from ._family import RULE_FAMILY
@@ -49,10 +50,10 @@ def create_rule_v1(api_context: ApiContext, body: CreateRuleModel) -> ApiRespons
     ruleset = retrieve_from_rulesets(rulesets, body.ruleset)
 
     validate_value(ruleset, body.value_raw)
+    # The value is stored as sent, apart from the IDs of explicit passwords
+    value = trusted_explicit_password_ids(body.value_raw)
 
-    rule = create_rule_object(
-        folder, ruleset, body.conditions, body.properties, body.value_raw, gen_id()
-    )
+    rule = create_rule_object(folder, ruleset, body.conditions, body.properties, value, gen_id())
     index = ruleset.append_rule(folder, rule)
     rulesets.save_folder(
         pprint_value=api_context.config.wato_pprint_config, debug=api_context.config.debug

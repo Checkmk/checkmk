@@ -15,7 +15,9 @@ from cmk.gui.form_specs import (
     RawFrontendData,
     VisitorOptions,
 )
+from cmk.gui.watolib.password_store import PasswordStore
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary, migrate_to_password, Password
+from cmk.utils.password_store import is_ad_hoc_password_id, PasswordConfig
 
 PasswordOnDisk = tuple[
     Literal["cmk_postprocessed"],
@@ -102,11 +104,11 @@ def test_nested_password_gets_masked(  # type: ignore[misc]
             id="migrate stored password",
         ),
         pytest.param(
-            RawDiskData(("explicit_password", "067408f0-d390-4dcc-ae3c-966f278ace7d", "abc")),
+            RawDiskData(("explicit_password", "uuid067408f0-d390-4dcc-ae3c-966f278ace7d", "abc")),
             (
                 "cmk_postprocessed",
                 "explicit_password",
-                ("067408f0-d390-4dcc-ae3c-966f278ace7d", "abc"),
+                ("uuid067408f0-d390-4dcc-ae3c-966f278ace7d", "abc"),
             ),
             id="old 3-tuple explicit password",
         ),
@@ -120,13 +122,13 @@ def test_nested_password_gets_masked(  # type: ignore[misc]
                 (
                     "cmk_postprocessed",
                     "explicit_password",
-                    ("067408f0-d390-4dcc-ae3c-966f278ace7d", "abc"),
+                    ("uuid067408f0-d390-4dcc-ae3c-966f278ace7d", "abc"),
                 )
             ),
             (
                 "cmk_postprocessed",
                 "explicit_password",
-                ("067408f0-d390-4dcc-ae3c-966f278ace7d", "abc"),
+                ("uuid067408f0-d390-4dcc-ae3c-966f278ace7d", "abc"),
             ),
             id="already migrated explicit password",
         ),
@@ -149,3 +151,39 @@ def test_password_migrates_password_on_disk(  # type: ignore[misc]
     )
     disk_visitor_password = disk_visitor.to_disk(old)
     assert new == disk_visitor_password
+
+
+_GENERATED_ID = "uuid067408f0-d390-4dcc-ae3c-966f278ace7d"
+
+
+@pytest.mark.parametrize(
+    "password_id, kept",
+    [
+        pytest.param(_GENERATED_ID, True, id="generated ID"),
+        pytest.param("admin_secret", False, id="ID of a stored password"),
+        pytest.param("my_own_id", False, id="ID of the user's choice"),
+        pytest.param("", False, id="no ID"),
+    ],
+)
+@pytest.mark.usefixtures("request_context", "mock_password_file_regeneration")
+def test_explicit_password_keeps_only_generated_ids_of_no_stored_password(
+    password_id: str, kept: bool
+) -> None:
+    PasswordStore().save(
+        {
+            "admin_secret": PasswordConfig(
+                title="", comment="", docu_url="", password="s3crit", owned_by=None, shared_with=[]
+            )
+        },
+        pprint_value=False,
+    )
+    visitor = get_visitor(Password(), VisitorOptions(migrate_values=True, mask_values=False))
+
+    _, _, (saved_id, saved_password) = cast(
+        PasswordOnDisk,
+        visitor.to_disk(RawFrontendData(("explicit_password", password_id, "my_secret", False))),
+    )
+
+    assert saved_password == "my_secret"
+    assert (saved_id == password_id) is kept
+    assert is_ad_hoc_password_id(saved_id)

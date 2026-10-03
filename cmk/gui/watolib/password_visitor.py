@@ -23,7 +23,7 @@ from cmk.gui.form_specs import (
 from cmk.gui.form_specs.visitors.validators import build_vue_validators
 from cmk.gui.i18n import _
 from cmk.gui.utils.encrypter import Encrypter
-from cmk.gui.watolib.password_store import passwordstore_choices
+from cmk.gui.watolib.password_store import passwordstore_choices, trusted_explicit_password_id
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Password
 from cmk.shared_typing import vue_formspec_components as VueComponents
@@ -146,8 +146,10 @@ class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword, VuePassword]):
     @override
     def _to_disk(self, parsed_value: ParsedPassword) -> ParsedPassword:
         postprocessed, password_type, (password_id, password) = parsed_value
-        if password_type == "explicit_password" and not password_id:
-            password_id = ad_hoc_password_id()
         if self.visitor_options.mask_values:
+            if password_type == "explicit_password" and not password_id:
+                password_id = ad_hoc_password_id()
             return (postprocessed, password_type, (password_id, "******"))
+        if password_type == "explicit_password":
+            password_id = trusted_explicit_password_id(password_id)
         return (postprocessed, password_type, (password_id, password))

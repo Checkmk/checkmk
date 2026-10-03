@@ -1972,7 +1972,7 @@ CASES: Mapping[str, list[Case]] = {
                             "password": (
                                 "cmk_postprocessed",
                                 "explicit_password",
-                                ("uuid_from_an_old_save", "hunter2"),
+                                ("uuidcc353e13-dda8-43de-9ca9-b8aca1d0def3", "hunter2"),
                             ),
                         },
                     },

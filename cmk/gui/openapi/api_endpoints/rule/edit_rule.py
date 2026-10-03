@@ -23,6 +23,7 @@ from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
+from cmk.gui.watolib.password_store import trusted_explicit_password_ids
 
 from ._family import RULE_FAMILY
 from ._utils import (
@@ -62,10 +63,10 @@ def edit_rule_v1(
     current_rule = rule_entry.rule
 
     validate_value(ruleset, body.value_raw)
+    # The value is stored as sent, apart from the IDs of explicit passwords
+    value = trusted_explicit_password_ids(body.value_raw)
 
-    new_rule = create_rule_object(
-        folder, ruleset, body.conditions, body.properties, body.value_raw, rule_id
-    )
+    new_rule = create_rule_object(folder, ruleset, body.conditions, body.properties, value, rule_id)
 
     if (
         is_locked_by_config_bundle(rule_entry.rule.locked_by)

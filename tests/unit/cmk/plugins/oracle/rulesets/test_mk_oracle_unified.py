@@ -45,7 +45,11 @@ from cmk.rulesets.v1.form_specs import (
     String,
 )
 
-PASSWORD = ("cmk_postprocessed", "explicit_password", ("uuid", "secret"))
+PASSWORD = (
+    "cmk_postprocessed",
+    "explicit_password",
+    ("uuid20191c1b-5b12-4124-933a-c780ca54f85a", "secret"),
+)
 
 _AUTH: Mapping[str, object] = {
     "auth_type": ("standard", {"username": "monitor", "password": PASSWORD}),

@@ -188,6 +188,8 @@ allows = [
 ]
 
 [plugin_families.violations.diagnostics]
+# The "cmk" command and the automations drive the dump engine in
+# cmk.base.diagnostics; the automations set up the console logging it reports to.
 allows = [
   "@livestatus_client",
   "cmk.ccc.hostaddress",
@@ -199,7 +201,9 @@ allows = [
   "cmk.ccc.exceptions",
   "cmk.ccc.i18n",
   "cmk.cli.engine",
+  "cmk.diagnostics.automation_types",
   "cmk.diagnostics.engine",
+  "cmk.utils.log",
   "cmk.utils.paths",
 ]
 

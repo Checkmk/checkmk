@@ -11,23 +11,16 @@ import textwrap
 import traceback
 import uuid
 from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
-from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime
 from functools import cache
 from pathlib import Path, PurePosixPath
-from typing import Any, Final, override
+from typing import Any, Final
 
 import cmk.livestatus_client as livestatus
-import cmk.utils.paths
-from cmk.automations.internal import Automation, AutomationID, AutomationState
 from cmk.ccc import tty
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
 from cmk.ccc.site import get_omd_config, omd_site
-from cmk.diagnostics.automation_types import (
-    CreateDiagnosticsDumpResult,
-    CreateDiagnosticsDumpV2Result,
-)
 from cmk.diagnostics.engine import (
     DumpSelection,
     load_diagnostics_plugins,
@@ -55,75 +48,6 @@ DiagnosticsCLParameters = Sequence[str]
 DiagnosticsOptionalParameters = dict[str, Any]  # type: ignore[explicit-any]
 
 SUFFIX = ".tar.gz"
-
-
-class RawConfigState(AutomationState):
-    def __init__(self, _omd_root: object, raw_config: Mapping[str, object]) -> None:
-        self._raw_config = raw_config
-
-    @override
-    def update(self, _omd_root: object, raw_config: Mapping[str, object]) -> None:
-        self._raw_config = raw_config
-
-    @property
-    def raw_config(self) -> Mapping[str, object]:
-        return self._raw_config
-
-
-def handler(
-    state: RawConfigState,
-    args: DiagnosticsCLParameters,
-) -> CreateDiagnosticsDumpResult:
-    buf = io.StringIO()
-    with redirect_stdout(buf), redirect_stderr(buf):
-        log.setup_console_logging()
-        dump = create_diagnostics_dump(
-            omd_root=cmk.utils.paths.omd_root,
-            diagnostics_dir=cmk.utils.paths.diagnostics_dir,
-            parameters=deserialize_cl_parameters(args),
-            raw_config=state.raw_config,
-        )
-        return CreateDiagnosticsDumpResult(
-            output=buf.getvalue(),
-            tarfile_path=str(dump.tarfile_path),
-            tarfile_created=dump.tarfile_created,
-        )
-
-
-automation_create_diagnostics_dump = Automation(
-    name=AutomationID("create-diagnostics-dump"),
-    state_factory=RawConfigState,
-    handler=handler,
-    result=CreateDiagnosticsDumpResult,
-)
-
-
-def handler_v2(
-    state: RawConfigState,
-    args: Sequence[str],
-) -> CreateDiagnosticsDumpV2Result:
-    buf = io.StringIO()
-    with redirect_stdout(buf), redirect_stderr(buf):
-        log.setup_console_logging()
-        dump = create_diagnostics_dump_v2(
-            omd_root=cmk.utils.paths.omd_root,
-            diagnostics_dir=cmk.utils.paths.diagnostics_dir,
-            selection=(DumpSelection.deserialize(args[0]) if args else DumpSelection(plugins=())),
-            raw_config=state.raw_config,
-        )
-        return CreateDiagnosticsDumpV2Result(
-            output=buf.getvalue(),
-            tarfile_path=str(dump.tarfile_path),
-            tarfile_created=dump.tarfile_created,
-        )
-
-
-automation_create_diagnostics_dump_v2 = Automation(
-    name=AutomationID("create-diagnostics-dump-v2"),
-    state_factory=RawConfigState,
-    handler=handler_v2,
-    result=CreateDiagnosticsDumpV2Result,
-)
 
 
 def create_diagnostics_dump(

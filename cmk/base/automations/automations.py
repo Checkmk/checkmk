@@ -107,7 +107,6 @@ def _derive_loading_result(raw_config: Mapping[str, object]) -> config.LoadingRe
 # the second discovery call below.
 _NOT_YET_MOVED_MODULES: Final = (
     "cmk.base.automations.check_mk",
-    "cmk.base.notify",
     "cmk.base.nonfree.notify_automation",
 )
 

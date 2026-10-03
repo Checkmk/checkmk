@@ -173,12 +173,16 @@ allows = [
 [plugin_families.violations.crash]
 allows = ["cmk.crash"]
 
-# The "cmk --notify" command drives the notification engine.
+# The "cmk --notify" command and the automations drive the notification engine.
+# The automations also run against the engine's states and return their result
+# types.
 [plugin_families.violations.notifications]
 allows = [
   "@ccc",
   "@livestatus_client",
   "cmk.automations.backends.helper",
+  "cmk.automations.results",
+  "cmk.base.automations.automations",
   "cmk.base.base_app",
   "cmk.base.config",
   "cmk.base.notify",

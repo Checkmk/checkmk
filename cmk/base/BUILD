@@ -154,8 +154,7 @@ py_library(
     ],
     deps = [
         ":events",
-        "//cmk/automations",
-        "//cmk/base/automations",
+        "//cmk/base/configlib",
         "//cmk/utils",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",

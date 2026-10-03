@@ -9,7 +9,7 @@
 import contextlib
 import copy
 import sys
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from types import ModuleType
 from typing import override
@@ -18,7 +18,6 @@ import cmk.ccc.debug
 import cmk.utils.paths
 from cmk.base import default_config
 from cmk.ccc.hostaddress import HostName
-from cmk.utils.caching import cache_manager
 from cmk.utils.host_storage import (
     apply_hosts_file_to_object,
     get_host_storage_loaders,
@@ -46,13 +45,8 @@ def strip_tag(tagged_hostname: str) -> HostName:
     return HostName(tagged_hostname.split("|", 1)[0])
 
 
-def strip_tags(tagged_hostlist: Iterable[str]) -> Sequence[HostName]:
-    cache = cache_manager.obtain_cache("strip_tags")
-
-    cache_id = tuple(tagged_hostlist)
-    with contextlib.suppress(KeyError):
-        return cache[cache_id]
-    return cache.setdefault(cache_id, [strip_tag(h) for h in tagged_hostlist])
+def strip_tags(tagged_hostlist: Iterable[str]) -> tuple[HostName, ...]:
+    return tuple(strip_tag(h) for h in tagged_hostlist)
 
 
 class SetFolderPathAbstract:
@@ -72,7 +66,7 @@ class SetFolderPathAbstract:
     def _set_folder_paths(self, new_hosts: Iterable[str]) -> None:
         if self._current_path is None:
             return
-        for hostname in strip_tags(new_hosts):
+        for hostname in map(strip_tag, new_hosts):
             self._collected_host_paths[hostname] = self._current_path
 
 

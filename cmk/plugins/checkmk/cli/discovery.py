@@ -397,7 +397,6 @@ def _mode_discover(
         label_manager.labels_of_host,
         loaded_config.discovery_parameters,
     )
-    hosts_config = config.make_hosts_config(loaded_config)
     service_name_config = config_cache.make_passive_service_name_config(
         make_final_service_name_config(loaded_config, ruleset_matcher)
     )

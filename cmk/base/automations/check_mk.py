@@ -535,6 +535,7 @@ def _automation_special_agent_discovery_preview(
         fetcher,
         file_cache_options,
         env.loaded_config,
+        env.hosts_config,
         env.final_service_name_config,
         env.passive_service_name_config,
         env.config_cache,
@@ -633,7 +634,7 @@ def _automation_discovery_preview(
             # and tabula rasa)
             max_cachefile_age=MaxAge.zero(),
         )
-        hosts_config = config.make_hosts_config(env.loaded_config)
+        hosts_config = env.hosts_config
         ip_family = ip_lookup_config.default_address_family(host_name)
         ip_address = (
             None
@@ -653,6 +654,7 @@ def _automation_discovery_preview(
             fetcher,
             file_cache_options,
             env.loaded_config,
+            hosts_config,
             active_service_name_config=env.final_service_name_config,
             passive_service_name_config=env.passive_service_name_config,
             config_cache=config_cache,
@@ -674,6 +676,7 @@ def _get_discovery_preview(
     fetcher: FetcherFunction,
     file_cache_options: FileCacheOptions,
     loaded_config: BaseConfig,
+    hosts_config: Hosts,
     active_service_name_config: Callable[
         [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
     ],
@@ -692,6 +695,7 @@ def _get_discovery_preview(
     with redirect_stdout(buf), redirect_stderr(buf):
         check_preview = _execute_discovery(
             loaded_config=loaded_config,
+            hosts_config=hosts_config,
             ruleset_matcher=config_cache.ruleset_matcher,
             label_manager=config_cache.label_manager,
             host_name=host_name,
@@ -832,6 +836,7 @@ def _make_compute_check_parameters_of_autocheck(
 def _execute_discovery(
     *,
     loaded_config: BaseConfig,
+    hosts_config: Hosts,
     ruleset_matcher: RulesetMatcher,
     label_manager: LabelManager,
     host_name: HostName,
@@ -861,7 +866,6 @@ def _execute_discovery(
         var_dir=cmk.utils.paths.var_dir,
         debug=cmk.ccc.debug.enabled(),
     )
-    hosts_config = config.make_hosts_config(loaded_config)
     discovery_config = DiscoveryConfig(
         ruleset_matcher,
         label_manager.labels_of_host,
@@ -1330,6 +1334,7 @@ def _execute_autodiscovery(
         env.ruleset_matcher,
         env.label_manager,
         env.loaded_config,
+        env.hosts_config,
         make_plugin_store(env.plugins),
         env.config_cache,
         env.plugins,
@@ -1569,6 +1574,7 @@ class AutomationRenameHosts:
             env.ruleset_matcher,
             env.label_manager,
             env.loaded_config,
+            env.hosts_config,
             make_plugin_store(env.plugins),
             env.config_cache,
             env.plugins,
@@ -1592,7 +1598,7 @@ class AutomationRenameHosts:
                 # In this case the configuration is already locked by the caller of the automation.
                 # If that is on the local site, we can not lock the configuration again during baking!
                 # (If we are on a remote site now, locking *would* work, but we will not bake agents anyway.)
-                hosts_config = config.make_hosts_config(env.loaded_config)
+                hosts_config = env.hosts_config
                 ip_address_of = env.ip_address_of(on_failure=IPLookupFailureMode.COLLECT)
 
                 _execute_silently(
@@ -2490,16 +2496,14 @@ class AutomationRestart:
         nodes = {HostName(hn) for hn in args} if args else None
 
         env = AutomationEnvironment.create(state.app, state.loading_result)
-        # Rebuild hosts_config from the loaded config rather than reading
-        # env.hosts_config: the restart path historically uses make_hosts_config
-        # here, preserving compatibility with shadow-host handling.
-        hosts_config = config.make_hosts_config(env.loaded_config)
+        hosts_config = env.hosts_config
 
         monitoring_core, core_client = state.app.create_core(
             state.app.edition,
             env.ruleset_matcher,
             env.label_manager,
             env.loaded_config,
+            env.hosts_config,
             make_plugin_store(env.plugins),
             env.config_cache,
             env.plugins,
@@ -2763,7 +2767,7 @@ def _automation_scan_parents(
 
     env = AutomationEnvironment.create(state.app, state.loading_result)
 
-    hosts_config = config.make_hosts_config(env.loaded_config)
+    hosts_config = env.hosts_config
 
     monitoring_host_name = env.loaded_config.monitoring_host
     monitoring_host = HostName(monitoring_host_name) if monitoring_host_name is not None else None
@@ -3972,7 +3976,7 @@ def _automation_get_agent_output(
 
     # This loads the pending config:
     env = AutomationEnvironment.create(state.app, state.loading_result)
-    hosts_config = config.make_hosts_config(env.loaded_config)
+    hosts_config = env.hosts_config
 
     ip_stack_config = env.ip_lookup_config.ip_stack_config(hostname)
     ip_family = env.ip_lookup_config.default_address_family(hostname)

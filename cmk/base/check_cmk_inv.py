@@ -186,7 +186,7 @@ def _inventory_as_check(
 
     config_cache = loading_result.config_cache
     with ruleset_matcher.ruleset_optimizer.processed_hosts({hostname}):
-        hosts_config = config.make_hosts_config(loaded_config)
+        hosts_config = loading_result.hosts_config
         service_name_config = config_cache.make_passive_service_name_config(
             make_final_service_name_config(loaded_config, ruleset_matcher)
         )

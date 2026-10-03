@@ -7,6 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from cmk.base.configlib.loaded_config import BaseConfig
+from cmk.ccc.hostaddress import Hosts
 from cmk.ccc.version import Edition
 from cmk.checkengine.fetcher_utils.trigger import FetcherTriggerFactory
 from cmk.checkengine.plugins import AgentBasedPlugins
@@ -34,6 +35,7 @@ class CheckmkBaseApp:
             RulesetMatcher,
             LabelManager,
             BaseConfig,
+            Hosts,
             SNMPPluginStore,
             ConfigCache,
             AgentBasedPlugins,

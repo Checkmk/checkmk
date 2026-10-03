@@ -79,7 +79,7 @@ def _mode_dump_agent(
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
-    hosts_config = config.make_hosts_config(loaded_config)
+    hosts_config = loading_result.hosts_config
 
     if hostname in hosts_config.clusters:
         raise MKBailOut("Can not be used with cluster hosts")

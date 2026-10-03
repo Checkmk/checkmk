@@ -83,7 +83,7 @@ def _mode_check(omd_root: Path, global_options: GlobalOptions, parsed: Options, 
         label_manager,
         plugins,
         loading_result.config_cache,
-        config.make_hosts_config(loaded_config),
+        loading_result.hosts_config,
         loading_result.host_tags,
         loaded_config.monitoring_core,
         config.ServiceDependsOn(

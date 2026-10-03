@@ -131,7 +131,7 @@ def main() -> int:
             loading_result.config_cache.label_manager,
             plugins,
             loading_result.config_cache,
-            config.make_hosts_config(loading_result.loaded_config),
+            loading_result.hosts_config,
             loading_result.host_tags,
             # NOTE: At the time of writing we do respect the "monitoring_core" setting even in
             # the raw edition (which will fail if it is set to "cmc").

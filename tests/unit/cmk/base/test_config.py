@@ -1920,7 +1920,7 @@ def test_make_hosts_config_cluster_nodes() -> None:
     hosts_config = config.make_hosts_config(_base_config())
     assert HostName("node1") not in hosts_config.clusters
     assert HostName("host1") not in hosts_config.clusters
-    assert hosts_config.clusters[HostName("cluster1")] == ["node1"]
+    assert hosts_config.clusters[HostName("cluster1")] == ("node1",)
 
 
 def test_host_config_parents(cluster_config: ConfigCache) -> None:

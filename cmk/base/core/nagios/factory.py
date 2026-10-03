@@ -7,6 +7,7 @@ from typing import assert_never
 
 from cmk.base.config import ConfigCache
 from cmk.base.configlib.loaded_config import BaseConfig
+from cmk.ccc.hostaddress import Hosts
 from cmk.ccc.version import Edition
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.checkengine.snmplib import SNMPPluginStore
@@ -22,6 +23,7 @@ def create_core(
     matcher: RulesetMatcher,  # noqa: ARG001
     label_manager: LabelManager,  # noqa: ARG001
     loaded_config: BaseConfig,
+    hosts_config: Hosts,  # noqa: ARG001
     snmp_plugin_store: SNMPPluginStore,  # noqa: ARG001
     config_cache: ConfigCache,  # noqa: ARG001
     plugins: AgentBasedPlugins,  # noqa: ARG001

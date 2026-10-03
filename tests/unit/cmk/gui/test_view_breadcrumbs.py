@@ -10,9 +10,11 @@ import pytest
 from cmk.ccc.hostaddress import HostName
 from cmk.gui import view_breadcrumbs
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.config import Config
 from cmk.gui.type_defs import ViewSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
+from cmk.web.utils.request_cache import RequestCache
 
 HOST_BREADCRUMB = Breadcrumb([BreadcrumbItem("myhost", "view.py?view_name=host", None)])
 
@@ -25,6 +27,7 @@ def _single_service_view_without_service_context() -> View:
         cast(ViewSpec, {"single_infos": ["host", "service"], "datasource": "services"}),
         {"host": {"host": "myhost"}},
         UserPermissions({}, {}, {}, []),
+        RequestCache(Config()),
     )
 
 

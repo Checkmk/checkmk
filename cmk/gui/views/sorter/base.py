@@ -7,10 +7,11 @@
 from collections.abc import Callable, Mapping, Sequence
 from typing import NamedTuple, Protocol
 
-from cmk.gui.config import Config
+from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.http import Request
 from cmk.gui.type_defs import ColumnName, ColumnSpec, Row
 from cmk.gui.valuespec import Dictionary
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.speaklater import LazyString
 
 
@@ -23,6 +24,7 @@ class SorterProtocol(Protocol):
         parameters: Mapping[str, object] | None,
         config: Config,
         request: Request,
+        request_cache: RequestCache[RequestCacheConfig],
     ) -> int:
         """The function cmp does the actual sorting. During sorting it
         will be called with two data rows as arguments and must

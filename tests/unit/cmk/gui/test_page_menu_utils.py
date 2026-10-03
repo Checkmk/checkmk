@@ -9,6 +9,7 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.gui.config import Config
 from cmk.gui.dashboard import visual_type as dashboard_visual_type
 from cmk.gui.http import request
 from cmk.gui.page_menu import PageMenuLink
@@ -19,6 +20,7 @@ from cmk.gui.view import View
 from cmk.gui.views import visual_type as views_visual_type
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.inventory.trees import SDPath
+from cmk.web.utils.request_cache import RequestCache
 
 USER_PERMISSIONS = UserPermissions({}, {}, {}, [])
 
@@ -35,7 +37,13 @@ def test_availability_points_at_the_legacy_view_not_at_the_asking_page() -> None
 
 
 def _page_menu_urls(view_name: ViewName, context: VisualContext, rows: Rows) -> dict[str, str]:
-    view = View(view_name, multisite_builtin_views[view_name], context, USER_PERMISSIONS)
+    view = View(
+        view_name,
+        multisite_builtin_views[view_name],
+        context,
+        USER_PERMISSIONS,
+        RequestCache(Config()),
+    )
     return {
         entry.name: entry.item.link.url
         for dropdown in get_context_page_menu_dropdowns(view, rows, USER_PERMISSIONS)

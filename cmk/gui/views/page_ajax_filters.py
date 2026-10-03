@@ -7,6 +7,7 @@ import abc
 from typing import override
 
 from cmk.gui import visuals
+from cmk.gui.config import RequestCacheConfig
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
@@ -14,13 +15,16 @@ from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageContext
 from cmk.gui.type_defs import VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.web.utils.request_cache import RequestCache
 
 from .store import get_permitted_views
 
 
 class ABCAjaxInitialFilters(AjaxPage):
     @abc.abstractmethod
-    def _get_context(self, page_name: str) -> VisualContext:
+    def _get_context(
+        self, page_name: str, request_cache: RequestCache[RequestCacheConfig]
+    ) -> VisualContext:
         raise NotImplementedError
 
     @override
@@ -28,7 +32,8 @@ class ABCAjaxInitialFilters(AjaxPage):
         api_request = ctx.request.get_request()
         varprefix = api_request.get("varprefix", "")
         page_name = api_request.get("page_name", "")
-        context = self._get_context(page_name)
+        request_cache = RequestCache(ctx.config)
+        context = self._get_context(page_name, request_cache)
         page_request_vars = api_request.get("page_request_vars")
         if not isinstance(page_request_vars, dict) or "infos" not in page_request_vars:
             raise MKUserError(
@@ -42,10 +47,15 @@ class ABCAjaxInitialFilters(AjaxPage):
 
 class AjaxInitialViewFilters(ABCAjaxInitialFilters):
     def get_context(self, page_name: str) -> VisualContext:
-        return self._get_context(page_name)
+        return self._view_context(page_name)
 
     @override
-    def _get_context(self, page_name: str) -> VisualContext:
+    def _get_context(
+        self, page_name: str, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> VisualContext:
+        return self._view_context(page_name)
+
+    def _view_context(self, page_name: str) -> VisualContext:
         # Obtain the visual filters and the view context
         view_name = page_name
         try:

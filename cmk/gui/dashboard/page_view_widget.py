@@ -51,6 +51,7 @@ from cmk.gui.views.store import get_permitted_views, get_view_by_name
 from cmk.gui.visuals import get_merged_context, get_only_sites_from_context
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.web.utils.escaping import escape_to_html_permissive
+from cmk.web.utils.request_cache import RequestCache
 
 __all__ = [
     "ViewWidgetIFramePage",
@@ -175,6 +176,7 @@ class ViewWidgetIFramePageHelper:
             view_spec,
             context,
             user_permissions=user_permissions,
+            request_cache=RequestCache(config),
         )
         view.row_limit = row_limit
         view.only_sites = get_only_sites_from_context(context)

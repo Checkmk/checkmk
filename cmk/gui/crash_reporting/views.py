@@ -11,7 +11,7 @@ from typing import Literal, override
 
 from cmk.crash import read_occurrences
 from cmk.gui import query_filters
-from cmk.gui.config import Config
+from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.data_source import (
     ABCDataSource,
     DataSourceLivestatus,
@@ -54,6 +54,7 @@ from cmk.livestatus_client.tables.crashreports import Crashreports
 from cmk.livestatus_client.types import escape_filename
 from cmk.web.utils import escaping
 from cmk.web.utils.html import HTML
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import makeuri_contextless
 
 from .helpers import local_files_involved_in_crash
@@ -384,6 +385,7 @@ def _sort_crash_time(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_simple_number("crash_time", r1, r2)
 
@@ -581,6 +583,7 @@ def _sort_crash_host(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_simple_string("crash_host", r1, r2)
 
@@ -600,6 +603,7 @@ def _sort_crash_item(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_simple_string("crash_item", r1, r2)
 
@@ -619,6 +623,7 @@ def _sort_crash_check_type(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_simple_string("crash_check_type", r1, r2)
 
@@ -638,6 +643,7 @@ def _sort_crash_service_name(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_simple_string("crash_service_name", r1, r2)
 
@@ -663,6 +669,7 @@ def _sort_crash_exception(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_simple_string_columns(["crash_exception", "crash_exc_value"], r1, r2)
 
@@ -682,6 +689,7 @@ def _sort_crash_ident(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_simple_string("crash_id", r1, r2)
 
@@ -707,6 +715,7 @@ def _sort_crash_source(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_crash_source("crash_exc_traceback", r1, r2)
 
@@ -726,6 +735,7 @@ def _sort_crash_type(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_simple_string("crash_type", r1, r2)
 
@@ -745,6 +755,7 @@ def _sort_crash_version(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_simple_string("crash_version", r1, r2)
 

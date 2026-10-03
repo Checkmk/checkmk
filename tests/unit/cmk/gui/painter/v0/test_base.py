@@ -95,6 +95,7 @@ def test_cell_render_html_content(input_html: str, expected_output: str) -> None
         sort_url_parameter=None,
         registered_painters=None,
         user_permissions=UserPermissions({}, {}, {}, []),
+        request_cache=None,
     )
 
     # Test with string input

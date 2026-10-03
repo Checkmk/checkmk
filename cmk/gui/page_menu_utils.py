@@ -39,6 +39,7 @@ from cmk.livestatus_client.queries import Query
 from cmk.livestatus_client.tables import Hosts
 from cmk.utils import paths
 from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import makeuri, makeuri_contextless
 
 
@@ -714,6 +715,7 @@ class LegacyHostMenus:
             view_spec,
             {"host": {"host": hostname}},
             user_permissions,
+            RequestCache(active_config),
         )
 
         dropdowns = get_context_page_menu_dropdowns(

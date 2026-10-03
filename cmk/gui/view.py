@@ -7,7 +7,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import Final
 
 from cmk.ccc.site import SiteId
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, RequestCacheConfig
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
@@ -28,6 +28,7 @@ from cmk.gui.views.layout import Layout, layout_registry
 from cmk.gui.views.sort_url import compute_sort_url_parameter
 from cmk.gui.views.sorter import all_sorters, Sorter, SorterEntry
 from cmk.gui.visuals import get_missing_single_infos_group_aware
+from cmk.web.utils.request_cache import RequestCache
 
 # A view carrying one of these is driven by the global time picker rather than the
 # pnp_timerange painter option, and must not auto-reload.
@@ -45,6 +46,7 @@ class View:
         view_spec: ViewSpec,
         context: VisualContext,
         user_permissions: UserPermissions,
+        request_cache: RequestCache[RequestCacheConfig],
     ) -> None:
         super().__init__()
         self.name = view_name
@@ -57,6 +59,7 @@ class View:
         self._warning_messages: list[str] = []
         self.process_tracking = ViewProcessTracking()
         self.user_permissions = user_permissions
+        self.request_cache = request_cache
 
     @property
     def datasource(self) -> ABCDataSource:
@@ -100,6 +103,7 @@ class View:
                         ),
                         registered_painters,
                         self.user_permissions,
+                        self.request_cache,
                     )
                 )
             elif col_type == "column":
@@ -111,6 +115,7 @@ class View:
                         ),
                         registered_painters,
                         self.user_permissions,
+                        self.request_cache,
                     )
                 )
             else:
@@ -129,6 +134,7 @@ class View:
                 self._compute_sort_url_parameter(e, registered_sorters, registered_painters),
                 registered_painters,
                 self.user_permissions,
+                self.request_cache,
             )
             for e in self.spec["group_painters"]
             if e.name in registered_painters

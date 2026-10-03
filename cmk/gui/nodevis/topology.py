@@ -31,7 +31,7 @@ from cmk.ccc.store import locked
 from cmk.ccc.user import UserId
 from cmk.gui import sites, visuals
 from cmk.gui.breadcrumb import make_current_page_breadcrumb_item, make_topic_breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import active_config, Config, RequestCacheConfig
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.exceptions import MKUserError
@@ -94,6 +94,7 @@ from cmk.gui.visuals import get_livestatus_filter_headers
 from cmk.gui.visuals.filter import Filter, FilterRegistry
 from cmk.ruleset_matcher.tags import TagID
 from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import makeuri_contextless
 
 
@@ -258,11 +259,13 @@ class ABCTopologyPage(Page):
         """Determines the hosts to be shown"""
         user.need_permission("general.parent_child_topology")
         reqvars = _RequestVars.from_request(ctx.request)
+        request_cache = RequestCache(ctx.config)
 
         self.make_ui_components(
-            UserPermissions.from_config(ctx.config, permission_registry), ctx.config
+            UserPermissions.from_config(ctx.config, permission_registry), ctx.config, request_cache
         )
         self.show_topology(
+            request_cache=request_cache,
             site_id=reqvars.site_id,
             layout=reqvars.layout,
             query_hash=reqvars.query_hash,
@@ -270,7 +273,12 @@ class ABCTopologyPage(Page):
         )
         html.footer()
 
-    def make_ui_components(self, user_permissions: UserPermissions, config: Config) -> None:
+    def make_ui_components(
+        self,
+        user_permissions: UserPermissions,
+        config: Config,
+        request_cache: RequestCache[RequestCacheConfig],
+    ) -> None:
         visual_spec = self.visual_spec()
         title = str(visual_spec["title"])
         breadcrumb = make_topic_breadcrumb(
@@ -279,7 +287,9 @@ class ABCTopologyPage(Page):
         )
         breadcrumb.append(make_current_page_breadcrumb_item(str(visual_spec["title"])))
         page_menu = PageMenu(breadcrumb=breadcrumb)
-        self._extend_display_dropdown(menu=page_menu, page_name=visual_spec["name"])
+        self._extend_display_dropdown(
+            menu=page_menu, page_name=visual_spec["name"], request_cache=request_cache
+        )
         make_header(
             html,
             title=title,
@@ -299,6 +309,7 @@ class ABCTopologyPage(Page):
     def show_topology(
         self,
         *,
+        request_cache: RequestCache[RequestCacheConfig],
         site_id: SiteId | None,
         layout: str | None,
         query_hash: str | None,
@@ -307,6 +318,7 @@ class ABCTopologyPage(Page):
         div_id = "node_visualization"
         html.div("", id_=div_id)
         topology_configuration = get_topology_configuration(
+            request_cache=request_cache,
             topology_type=self.visual_spec()["name"],
             topology_frontend_configuration=topology_frontend_configuration,
             layout=layout,
@@ -331,8 +343,10 @@ class ABCTopologyPage(Page):
     def get_default_overlays_config(cls) -> OverlaysConfig:
         pass
 
-    def _extend_display_dropdown(self, menu: PageMenu, page_name: str) -> None:
-        context, _show_filters = _get_topology_context_and_filters()
+    def _extend_display_dropdown(
+        self, menu: PageMenu, page_name: str, request_cache: RequestCache[RequestCacheConfig]
+    ) -> None:
+        context, _show_filters = _get_topology_context_and_filters(request_cache)
         display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
 
         display_dropdown.topics.insert(
@@ -454,8 +468,8 @@ class NetworkTopologyPage(ABCTopologyPage):
 
 class AjaxInitialTopologyFilters(ABCAjaxInitialFilters):
     @override
-    def _get_context(self, page_name: str) -> dict:
-        _view, show_filters = _get_topology_context_and_filters()
+    def _get_context(self, page_name: str, request_cache: RequestCache[RequestCacheConfig]) -> dict:
+        _view, show_filters = _get_topology_context_and_filters(request_cache)
         return {f.ident: {} for f in show_filters if f.available()}
 
 
@@ -473,6 +487,7 @@ class AjaxFetchTopology(AjaxPage):
                 default_overlays = ParentChildTopologyPage.get_default_overlays_config()
 
         topology_configuration = get_topology_configuration(
+            request_cache=RequestCache(ctx.config),
             topology_type=reqvars.topology_type,
             topology_frontend_configuration=reqvars.topology_frontend_configuration,
             layout=reqvars.layout,
@@ -1727,6 +1742,7 @@ def _create_filter_configuration_from_hash(
 
 def get_topology_configuration(
     *,
+    request_cache: RequestCache[RequestCacheConfig],
     topology_type: str,
     topology_frontend_configuration: str | None,
     layout: str | None,
@@ -1736,7 +1752,7 @@ def get_topology_configuration(
     mesh_depth = int(topology_filters["topology_mesh_depth"])
     max_nodes = int(topology_filters["topology_max_nodes"])
     filter_configuration = TopologyFilterConfiguration(
-        mesh_depth=mesh_depth, max_nodes=max_nodes, query=_get_query_string()
+        mesh_depth=mesh_depth, max_nodes=max_nodes, query=_get_query_string(request_cache)
     )
     # Check if the request includes a frontend_configuration -> AJAX request
     frontend_configuration = (
@@ -1828,9 +1844,11 @@ def _get_topology_settings_from_filters() -> dict[str, str]:
     return topology_values
 
 
-def _get_query_string() -> str:
+def _get_query_string(request_cache: RequestCache[RequestCacheConfig]) -> str:
     # Determine hosts from filters
-    filter_headers = "".join(get_livestatus_filter_headers(*_get_topology_context_and_filters()))
+    filter_headers = "".join(
+        get_livestatus_filter_headers(*_get_topology_context_and_filters(request_cache))
+    )
     query = "GET hosts\nColumns: name"
     if filter_headers:
         query += "\n%s" % filter_headers
@@ -2060,7 +2078,9 @@ def _convert_to_sort_tuple(name: str) -> tuple:
     return tuple(map(try_int, re.split(r"(\d+)", name)))
 
 
-def _get_topology_context_and_filters() -> tuple[Mapping[str, Mapping[str, str]], list[Filter]]:
+def _get_topology_context_and_filters(
+    request_cache: RequestCache[RequestCacheConfig],
+) -> tuple[Mapping[str, Mapping[str, str]], list[Filter]]:
     view_name = "topology_filters"
     view_spec = visuals.get_permissioned_visual(
         view_name,
@@ -2077,5 +2097,6 @@ def _get_topology_context_and_filters() -> tuple[Mapping[str, Mapping[str, str]]
         view_spec,
         context,
         UserPermissions.from_config(active_config, permission_registry),
+        request_cache,
     )
     return context, visuals.visible_filters_of_visual(view.spec, get_all_active_filters(view))

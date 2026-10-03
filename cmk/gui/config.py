@@ -16,7 +16,7 @@ from dataclasses import asdict, dataclass, field, fields, make_dataclass
 from functools import partial
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Final
+from typing import Any, Final, Protocol
 
 import cmk.ruleset_matcher.tags
 from cmk import trace
@@ -53,6 +53,14 @@ builtin_role_ids: Final[list[RoleName]] = [
     *default_authorized_builtin_role_ids,
     *default_unauthorized_builtin_role_ids,
 ]
+
+
+class RequestCacheConfig(Protocol):
+    """The config a request cache is built from
+
+    Config and the ApiConfig of the REST API satisfy it, so pages and endpoints build the caches
+    the plugins read. It names what the values of the caches are built from.
+    """
 
 
 @dataclass

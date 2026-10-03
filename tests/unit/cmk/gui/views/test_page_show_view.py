@@ -11,6 +11,7 @@ import pytest
 
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
+from cmk.gui.config import Config
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.http import request
 from cmk.gui.type_defs import VisualContext
@@ -20,6 +21,7 @@ from cmk.gui.views.page_show_view import _filter_form_filters, _get_needed_regul
 from cmk.gui.views.store import get_all_views
 from cmk.gui.visuals.filter import Filter
 from cmk.gui.visuals.filter.components import FilterComponent
+from cmk.web.utils.request_cache import RequestCache
 
 
 def test_get_needed_regular_columns(view: View) -> None:
@@ -91,7 +93,9 @@ def _view_opened_with(view_name: str, url_vars: Mapping[str, str]) -> View:
         request.set_var(var, value)
     infos = data_source_registry[view_spec["datasource"]]().infos
     context = visuals.active_context_from_request(infos, view_spec["context"])
-    return View(view_name, view_spec, context, UserPermissions({}, {}, {}, []))
+    return View(
+        view_name, view_spec, context, UserPermissions({}, {}, {}, []), RequestCache(Config())
+    )
 
 
 @pytest.mark.usefixtures("request_context")

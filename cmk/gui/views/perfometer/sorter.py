@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 
 from cmk.graphing.v1 import metrics as metrics_v1
-from cmk.gui.config import Config
+from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.graphing import (
     PerfometerFromAPI,
     perfometers_from_api,
@@ -17,6 +17,7 @@ from cmk.gui.i18n import _l
 from cmk.gui.log import logger
 from cmk.gui.type_defs import Row
 from cmk.gui.views.sorter import Sorter
+from cmk.web.utils.request_cache import RequestCache
 
 from .base import Perfometer
 
@@ -30,6 +31,7 @@ def _sort_perfometer(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     try:
         v1 = Perfometer(r1, registered_metrics_, registered_perfometers).sort_value()

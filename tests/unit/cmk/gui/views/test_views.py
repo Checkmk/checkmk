@@ -13,7 +13,7 @@ import pytest
 
 import cmk.gui.views
 from cmk.ccc.site import SiteId
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.data_source import ABCDataSource, RowTable
 from cmk.gui.display_options import display_options
 from cmk.gui.graphing import vs_graph_render_option_elements
@@ -41,6 +41,7 @@ from cmk.gui.views.graph import _LEGACY_ONLY_RENDER_OPTIONS
 from cmk.gui.views.page_show_view import get_limit
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from cmk.web.utils.request_cache import RequestCache
 from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 
 
@@ -140,6 +141,7 @@ def test_painter_export_title() -> None:
                 None,
                 registered_painters,
                 user_permissions,
+                RequestCache(Config()),
             ),
         )
         for painter in painters
@@ -184,7 +186,9 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch) -> None:
         url_renderer=RenderLink(request, response, display_options),
         user_permissions=(user_permissions := UserPermissions({}, {}, {}, [])),
     )
-    dummy_cell = Cell(ColumnSpec(name=painter.ident), None, registered_painters, user_permissions)
+    dummy_cell = Cell(
+        ColumnSpec(name=painter.ident), None, registered_painters, user_permissions, None
+    )
     assert isinstance(painter, Painter)
     assert painter.ident == "abc"
     assert painter.title(dummy_cell) == "A B C"
@@ -200,7 +204,13 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_create_view_basics() -> None:
     view_name = "allhosts"
     view_spec = multisite_builtin_views[view_name]
-    view = View(view_name, view_spec, view_spec.get("context", {}), UserPermissions({}, {}, {}, []))
+    view = View(
+        view_name,
+        view_spec,
+        view_spec.get("context", {}),
+        UserPermissions({}, {}, {}, []),
+        RequestCache(Config()),
+    )
 
     assert view.name == view_name
     assert view.spec == view_spec

@@ -7,10 +7,12 @@ import copy
 
 import pytest
 
+from cmk.gui.config import Config
 from cmk.gui.type_defs import ColumnSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views._join_service_rows import _get_needed_join_columns
+from cmk.web.utils.request_cache import RequestCache
 
 
 @pytest.mark.usefixtures("load_config")
@@ -20,7 +22,13 @@ def test_get_needed_join_columns(view: View) -> None:
         *view_spec["painters"],
         ColumnSpec(name="service_description", join_value="CPU load"),
     ]
-    view = View(view.name, view_spec, view_spec.get("context", {}), UserPermissions({}, {}, {}, []))
+    view = View(
+        view.name,
+        view_spec,
+        view_spec.get("context", {}),
+        UserPermissions({}, {}, {}, []),
+        RequestCache(Config()),
+    )
 
     columns = _get_needed_join_columns(view.join_cells, view.sorters)
 

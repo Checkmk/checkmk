@@ -48,6 +48,7 @@ from cmk.gui.visuals.filter import Filter
 from cmk.web.utils import escaping
 from cmk.web.utils.escaping import escape_text
 from cmk.web.utils.html import HTML
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import makeuri, requested_file_name
 
 HeaderButton = tuple[str, str, str] | tuple[str, str, str, str]
@@ -255,6 +256,7 @@ class PageMobileIndex(Page):
 
 def _page_index(request: Request, config: Config) -> None:
     user_permissions = UserPermissions.from_config(config, permission_registry)
+    request_cache = RequestCache(config)
     title = _("Checkmk mobile")
     mobile_html_head(title)
     jqm_page_header(
@@ -276,7 +278,7 @@ def _page_index(request: Request, config: Config) -> None:
             datasource = data_source_registry[view_spec["datasource"]]()
             context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
 
-            view = View(view_name, view_spec, context, user_permissions)
+            view = View(view_name, view_spec, context, user_permissions, request_cache)
             view.row_limit = row_limit
             view.only_sites = get_only_sites_from_context(context)
             view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
@@ -336,7 +338,7 @@ def _page_view(request: Request, config: Config, *, debug: bool) -> None:
     context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
 
     user_permissions = UserPermissions.from_config(config, permission_registry)
-    view = View(view_name, view_spec, context, user_permissions)
+    view = View(view_name, view_spec, context, user_permissions, RequestCache(config))
     view.row_limit = get_limit(
         view_spec_row_limit=view_spec.get("row_limit", 0),
         request_limit_mode=request.get_ascii_input_mandatory("limit", "soft"),

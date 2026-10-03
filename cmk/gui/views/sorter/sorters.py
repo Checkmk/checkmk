@@ -11,7 +11,7 @@ from functools import partial
 from typing import Literal
 
 from cmk.graphing_engine import MetricName
-from cmk.gui.config import Config
+from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.graphing import (
     evaluated_metrics,
     EvaluatedMetric,
@@ -33,6 +33,7 @@ from cmk.gui.utils.misc import savefloat
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.gui.valuespec import Dictionary, DropdownChoice
 from cmk.gui.view_utils import cmp_service_name_equiv, get_labels
+from cmk.web.utils.request_cache import RequestCache
 
 from .base import ParameterizedSorter, Sorter
 from .helpers import (
@@ -299,6 +300,7 @@ def _sort_service_state(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return (cmp_state_equiv(r1) > cmp_state_equiv(r2)) - (cmp_state_equiv(r1) < cmp_state_equiv(r2))
 
@@ -318,6 +320,7 @@ def _sort_host_state(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return (cmp_host_state_equiv(r1) > cmp_host_state_equiv(r2)) - (
         cmp_host_state_equiv(r1) < cmp_host_state_equiv(r2)
@@ -339,6 +342,7 @@ def _sort_site_host(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return (r1["site"] > r2["site"]) - (r1["site"] < r2["site"]) or cmp_num_split(
         "host_name", r1, r2
@@ -360,6 +364,7 @@ def _sort_host_name(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_num_split("host_name", r1, r2)
 
@@ -379,6 +384,7 @@ def _sort_site_alias(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return (config.sites[r1["site"]]["alias"] > config.sites[r2["site"]]["alias"]) - (
         config.sites[r1["site"]]["alias"] < config.sites[r2["site"]]["alias"]
@@ -400,6 +406,7 @@ def _sort_tags(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
     object_type: str,
 ) -> int:
     tag_groups_1 = sorted(get_tag_groups(r1, object_type).items())
@@ -429,6 +436,7 @@ def _sort_labels(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
     object_type: str,
 ) -> int:
     labels_1 = sorted(get_labels(r1, object_type).items())
@@ -465,6 +473,7 @@ def _sort_service_perf_val(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
     num: int,
 ) -> int:
     v1 = savefloat(get_perfdata_nth_value(r1, num - 1, True))
@@ -552,6 +561,7 @@ def _sort_host_custom_variable(
     parameters: Mapping[str, object] | None,
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     assert parameters is not None
     variable_name = str(parameters["ident"]).upper()
@@ -629,6 +639,7 @@ def _sort_specific_metric(
     parameters: Mapping[str, object] | None,
     config: Config,
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     assert parameters is not None
     metric_name = MetricName(str(parameters["metric"]))
@@ -695,6 +706,7 @@ def _sort_host_ip_addresses(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     def get_address(row: Row, ipv: Literal["ipv4", "ipv6"]) -> str:
         custom_vars = dict(
@@ -741,6 +753,7 @@ def _sort_num_problems(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return (
         r1["host_num_services"] - r1["host_num_services_ok"] - r1["host_num_services_pending"]
@@ -801,7 +814,9 @@ def _get_docker_nodes(row: Row) -> str:
 
 
 def cmp_docker_nodes(column: str, r1: Row, r2: Row) -> int:  # noqa: ARG001
-    return _sort_docker_nodes_(r1, r2, parameters=None, config=None, request=None)
+    return _sort_docker_nodes_(
+        r1, r2, parameters=None, config=None, request=None, request_cache=None
+    )
 
 
 def _sort_docker_nodes_(
@@ -811,6 +826,7 @@ def _sort_docker_nodes_(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config | None,  # noqa: ARG001
     request: Request | None,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig] | None,  # noqa: ARG001
 ) -> int:
     val1 = _get_docker_nodes(row=r1)
     val2 = _get_docker_nodes(row=r2)

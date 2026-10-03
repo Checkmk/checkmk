@@ -95,6 +95,7 @@ def test_parse_url_sorters_resolves_parameters_from_matching_cell() -> None:
             None,
             registered_painters,
             user_permissions,
+            None,
         ),
         Cell(
             ColumnSpec(
@@ -105,6 +106,7 @@ def test_parse_url_sorters_resolves_parameters_from_matching_cell() -> None:
             None,
             registered_painters,
             user_permissions,
+            None,
         ),
     ]
     assert _parse_url_sorters([], cells, "service_specific_metric:mem_used~Memory") == [
@@ -179,7 +181,7 @@ def test_group_value(monkeypatch: pytest.MonkeyPatch) -> None:
         user_permissions=(user_permissions := UserPermissions({}, {}, {}, [])),
     )
     dummy_cell: Cell = Cell(
-        ColumnSpec(name=painter.ident), None, painter_registry, user_permissions
+        ColumnSpec(name=painter.ident), None, painter_registry, user_permissions, None
     )
 
     assert group_value({"host_tags": {"networking": "dmz"}}, [dummy_cell]) == ("dmz",)

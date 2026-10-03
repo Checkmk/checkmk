@@ -10,11 +10,13 @@ import pytest
 from livestatus import LivestatusResponse, LivestatusRow, OnlySites
 
 from cmk.ccc.user import UserId
+from cmk.gui.config import Config
 from cmk.gui.type_defs import ViewSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views.inventory._data_sources import RowTableInventory, RowTableInventoryHistory
 from cmk.inventory.raw_paths import parse_internal_raw_path
+from cmk.web.utils.request_cache import RequestCache
 
 EXPECTED_INV_KEYS = [
     "site",
@@ -85,6 +87,7 @@ def fixture_view() -> View:
         view_spec,
         view_spec.get("context", {}),
         UserPermissions({}, {}, {}, []),
+        RequestCache(Config()),
     )
 
 

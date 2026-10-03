@@ -7,12 +7,14 @@ from typing import override
 
 import pytest
 
+from cmk.gui.config import Config
 from cmk.gui.painter.v0 import JoinCell, painter_registry
 from cmk.gui.type_defs import ColumnSpec, PainterParameters
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.inventory._row_post_processor import _join_inventory_rows
 from cmk.inventory.serialization import deserialize_tree
 from cmk.inventory.trees import ImmutableTree, SDNodeName
+from cmk.web.utils.request_cache import RequestCache
 
 
 @pytest.mark.usefixtures("request_context")
@@ -133,6 +135,7 @@ def test_row_post_processor() -> None:
                 "",
                 painter_registry,
                 UserPermissions({}, {}, {}, []),
+                RequestCache(Config()),
             ),
             # Match 'version'
             _FakeJoinCell(
@@ -149,6 +152,7 @@ def test_row_post_processor() -> None:
                 "",
                 painter_registry,
                 UserPermissions({}, {}, {}, []),
+                RequestCache(Config()),
             ),
             # Match 'bar', not unique
             _FakeJoinCell(
@@ -165,6 +169,7 @@ def test_row_post_processor() -> None:
                 "",
                 painter_registry,
                 UserPermissions({}, {}, {}, []),
+                RequestCache(Config()),
             ),
             # Unknown macro
             _FakeJoinCell(
@@ -181,6 +186,7 @@ def test_row_post_processor() -> None:
                 "",
                 painter_registry,
                 UserPermissions({}, {}, {}, []),
+                RequestCache(Config()),
             ),
             # Unknown node
             _FakeJoinCell(
@@ -197,6 +203,7 @@ def test_row_post_processor() -> None:
                 "",
                 painter_registry,
                 UserPermissions({}, {}, {}, []),
+                RequestCache(Config()),
             ),
         ],
         view_datasource_ident="invorainstance",

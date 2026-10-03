@@ -9,7 +9,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any, override
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.gui.config import Config
+from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.http import Request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser
@@ -23,6 +23,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     get_folder_title_path_with_links,
 )
 from cmk.web.utils.html import HTML
+from cmk.web.utils.request_cache import RequestCache
 
 
 class PainterHostFilename(Painter):
@@ -199,6 +200,7 @@ def _sort_wato_folder_abs(
     parameters: Mapping[str, Any] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_wato_folder(r1, r2, "abs", request=request)
 
@@ -218,6 +220,7 @@ def _sort_wato_folder_rel(
     parameters: Mapping[str, Any] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_wato_folder(r1, r2, "rel", request=request)
 
@@ -237,6 +240,7 @@ def _sort_wato_folder_plain(
     parameters: Mapping[str, Any] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_wato_folder(r1, r2, "plain", request=request)
 

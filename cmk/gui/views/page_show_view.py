@@ -15,7 +15,7 @@ from itertools import chain
 from cmk.ccc.cpu_tracking import CPUTracker, Snapshot
 from cmk.ccc.user import UserId
 from cmk.gui import log, visuals
-from cmk.gui.config import Config
+from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.ctx_stack import g
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
@@ -48,6 +48,7 @@ from cmk.gui.visuals import (
     get_only_sites_from_context,
 )
 from cmk.gui.visuals.filter import Filter
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import makeuri_contextless
 
 from . import availability
@@ -77,7 +78,7 @@ def page_show_view(
         datasource = data_source_registry[view_spec["datasource"]]()
         context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
 
-        view = View(view_name, view_spec, context, user_permissions)
+        view = View(view_name, view_spec, context, user_permissions, RequestCache(ctx.config))
         view.row_limit = get_limit(
             view_spec_row_limit=view_spec.get("row_limit", 0),
             request_limit_mode=request.get_ascii_input_mandatory("limit", "soft"),
@@ -319,7 +320,7 @@ def _get_view_rows(
         post_process_rows(view, all_active_filters, rows)
 
     # Sorting - use view sorters and URL supplied sorters
-    _sort_data(rows, view.sorters, config)
+    _sort_data(rows, view.sorters, config, view.request_cache)
 
     with CPUTracker(log.logger.debug) as filter_rows_tracker:
         # Apply non-Livestatus filters
@@ -659,7 +660,12 @@ def _link_to_folder_by_path(path: str) -> str:
     )
 
 
-def _sort_data(data: Rows, sorters: list[SorterEntry], config: Config) -> None:
+def _sort_data(
+    data: Rows,
+    sorters: list[SorterEntry],
+    config: Config,
+    request_cache: RequestCache[RequestCacheConfig],
+) -> None:
     """Sort data according to list of sorters."""
     if not sorters:
         return
@@ -672,6 +678,7 @@ def _sort_data(data: Rows, sorters: list[SorterEntry], config: Config) -> None:
         parameters: Mapping[str, object] | None,
         config: Config,
         req: Request,
+        request_cache: RequestCache[RequestCacheConfig],
     ) -> int:
         if row1 is None and row2 is None:  # type: ignore[unreachable]
             return 0  # type: ignore[unreachable]
@@ -685,6 +692,7 @@ def _sort_data(data: Rows, sorters: list[SorterEntry], config: Config) -> None:
             parameters=parameters,
             config=config,
             request=req,
+            request_cache=request_cache,
         )
 
     def multisort(e1: Row, e2: Row) -> int:
@@ -699,6 +707,7 @@ def _sort_data(data: Rows, sorters: list[SorterEntry], config: Config) -> None:
                     entry.parameters,
                     config,
                     request,
+                    request_cache,
                 )
             else:
                 c = neg * entry.sorter.cmp(
@@ -707,6 +716,7 @@ def _sort_data(data: Rows, sorters: list[SorterEntry], config: Config) -> None:
                     parameters=entry.parameters,
                     config=config,
                     request=request,
+                    request_cache=request_cache,
                 )
 
             if c != 0:

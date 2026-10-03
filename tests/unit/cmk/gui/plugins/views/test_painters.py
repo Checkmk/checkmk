@@ -21,7 +21,7 @@ import time_machine
 
 from cmk.ccc.user import UserId
 from cmk.gui import sites
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import all_painters
@@ -41,6 +41,7 @@ from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils.paths import default_config_dir
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIconName
+from cmk.web.utils.request_cache import RequestCache
 
 
 @pytest.fixture(name="live")
@@ -494,6 +495,7 @@ def _view_of(column: ColumnSpec, datasource: str) -> View:
         },
         context={},
         user_permissions=_NO_PERMISSIONS,
+        request_cache=RequestCache(Config()),
     )
 
 

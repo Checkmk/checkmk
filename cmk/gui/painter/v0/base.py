@@ -19,7 +19,7 @@ from typing import Any, Literal, override
 import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui import visuals
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import active_config, Config, RequestCacheConfig
 from cmk.gui.display_options import display_options
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -54,6 +54,7 @@ from cmk.gui.view_utils import (
 from cmk.web.utils import escaping
 from cmk.web.utils.escaping import replace_anchor_tags_with_urls, replace_br_with_newlines
 from cmk.web.utils.html import HTML
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import HTTPVariable, makeuri
 
 from ..v1.painter_lib import (
@@ -352,6 +353,7 @@ class Cell:
         sort_url_parameter: str | None,
         registered_painters: Mapping[str, type[Painter]] | None,
         user_permissions: UserPermissions,
+        request_cache: RequestCache[RequestCacheConfig] | None,
     ) -> None:
         self._painter_name: PainterName | None
         self._painter_params: PainterParameters | None
@@ -377,6 +379,18 @@ class Cell:
 
         self._sort_url_parameter = sort_url_parameter
         self._user_permissions = user_permissions
+        self._request_cache = request_cache
+
+    @property
+    def request_cache(self) -> RequestCache[RequestCacheConfig]:
+        """The cache of the request rendering the cell
+
+        Cells only asked for painter titles, like the EmptyCell and those of the view editor, have
+        none, so a painter reads it only when rendering or exporting a row.
+        """
+        if self._request_cache is None:
+            raise TypeError("Cell has no request cache: it is only meant for painter titles")
+        return self._request_cache
 
     def needed_columns(self, permitted_views: Mapping[ViewName, ViewSpec]) -> set[ColumnName]:
         """Get a list of columns we need to fetch in order to render this cell"""
@@ -566,6 +580,7 @@ class Cell:
                 None,
                 self._registered_painters,
                 self._user_permissions,
+                self._request_cache,
             )
             _tooltip_tdclass, tooltip_content = tooltip_cell.render_content(row, user=user)
             assert not isinstance(tooltip_content, Mapping)
@@ -730,8 +745,11 @@ class JoinCell(Cell):
         sort_url_parameter: str | None,
         registered_painters: Mapping[str, type[Painter]],
         user_permissions: UserPermissions,
+        request_cache: RequestCache[RequestCacheConfig],
     ) -> None:
-        super().__init__(column_spec, sort_url_parameter, registered_painters, user_permissions)
+        super().__init__(
+            column_spec, sort_url_parameter, registered_painters, user_permissions, request_cache
+        )
         if (join_value := column_spec.join_value) is None:
             raise ValueError
 
@@ -757,7 +775,7 @@ def join_row(row: Row, cell: Cell) -> Row:
 
 class EmptyCell(Cell):
     def __init__(self) -> None:
-        super().__init__(None, None, None, UserPermissions({}, {}, {}, []))
+        super().__init__(None, None, None, UserPermissions({}, {}, {}, []), None)
 
     @override
     def render(

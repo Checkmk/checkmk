@@ -148,7 +148,7 @@ def test_perfometer_export_contains_label() -> None:
     link wrapper produced by render(). The export methods must therefore fall
     back to the plain label instead of returning empty content (SUP-28751)."""
     painter = _make_painter()
-    cell = Cell(None, None, None, UserPermissions({}, {}, {}, []))
+    cell = Cell(None, None, None, UserPermissions({}, {}, {}, []), None)
     row = _perfometer_row()
 
     assert painter.export_for_csv(row, cell, user) == "42"

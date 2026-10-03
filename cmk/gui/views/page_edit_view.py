@@ -1011,7 +1011,7 @@ def _get_painter_plugin_title_for_choices(
     registered_painters: Mapping[str, type[Painter]],
     user_permissions: UserPermissions,
 ) -> str:
-    dummy_cell = Cell(ColumnSpec(plugin.ident), None, registered_painters, user_permissions)
+    dummy_cell = Cell(ColumnSpec(plugin.ident), None, registered_painters, user_permissions, None)
     return f"{_get_info_title(plugin)}: {plugin.list_title(dummy_cell)}"
 
 
@@ -1020,7 +1020,7 @@ def get_sorter_plugin_title_for_choices(
     registered_painters: Mapping[str, type[Painter]],
     user_permissions: UserPermissions,
 ) -> str:
-    dummy_cell = Cell(ColumnSpec(plugin.ident), None, registered_painters, user_permissions)
+    dummy_cell = Cell(ColumnSpec(plugin.ident), None, registered_painters, user_permissions, None)
     title: str
     title = plugin.title(dummy_cell) if callable(plugin.title) else plugin.title
     return f"{_get_info_title(plugin)}: {title}"

@@ -12,7 +12,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import sites
-from cmk.gui.config import Config, default_authorized_builtin_role_ids
+from cmk.gui.config import Config, default_authorized_builtin_role_ids, RequestCacheConfig
 from cmk.gui.dashboard.type_defs import DashletConfig, LinkedViewDashletConfig, ViewDashletConfig
 from cmk.gui.data_source import ABCDataSource, DataSourceRegistry, row_id, RowTableLivestatus
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -78,6 +78,7 @@ from cmk.utils.statename import short_service_state_name
 from cmk.web.utils import escaping
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import HTTPVariable, makeactionuri, makeuri_contextless, urlencode_vars
 
 from .defines import action_whats, phase_names, syslog_facilities, syslog_priorities
@@ -1836,6 +1837,7 @@ def _sort_service_level(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_custom_variable(r1, r2, "EC_SL", cmp_simple_number)
 

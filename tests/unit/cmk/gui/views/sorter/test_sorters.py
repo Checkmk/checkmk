@@ -5,10 +5,11 @@
 
 import pytest
 
-from cmk.gui.config import active_config
+from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.type_defs import Row
 from cmk.gui.views.sorter import all_sorters
+from cmk.web.utils.request_cache import RequestCache
 
 
 def _cpu_row(perf_data: str) -> Row:
@@ -32,8 +33,16 @@ def _cpu_row(perf_data: str) -> Row:
 def test_service_specific_metric_sorter_orders_by_metric_value(
     row1: Row, row2: Row, expected: int
 ) -> None:
-    sorter = all_sorters(active_config)["service_specific_metric"]
+    config = Config()
+    sorter = all_sorters(config)["service_specific_metric"]
     assert (
-        sorter.cmp(row1, row2, parameters={"metric": "util"}, config=active_config, request=request)
+        sorter.cmp(
+            row1,
+            row2,
+            parameters={"metric": "util"},
+            config=config,
+            request=request,
+            request_cache=RequestCache(config),
+        )
         == expected
     )

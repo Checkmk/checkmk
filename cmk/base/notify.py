@@ -621,7 +621,7 @@ def _locally_deliver_raw_context(
     return None
 
 
-def _notification_replay_backlog(
+def notification_replay_backlog(
     get_http_proxy: events.ProxyGetter,
     ensure_nagios: Callable[[str], object],
     nr: int,
@@ -648,7 +648,7 @@ def _notification_replay_backlog(
     )
 
 
-def _notification_analyse_backlog(
+def notification_analyse_backlog(
     get_http_proxy: events.ProxyGetter,
     ensure_nagios: Callable[[str], object],
     nr: int,
@@ -676,7 +676,7 @@ def _notification_analyse_backlog(
     )
 
 
-def _notification_test(
+def notification_test(
     raw_context: NotificationContext,
     get_http_proxy: events.ProxyGetter,
     ensure_nagios: Callable[[str], object],
@@ -765,7 +765,7 @@ def _automation_notification_replay(
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
     nr = args[0]
-    _notification_replay_backlog(
+    notification_replay_backlog(
         http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
         make_ensure_nagios(loading_result.loaded_config.monitoring_core),
         int(nr),
@@ -794,7 +794,7 @@ def _automation_notification_analyse(
 
     nr = args[0]
     return NotificationAnalyseResult(
-        _notification_analyse_backlog(
+        notification_analyse_backlog(
             http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
             make_ensure_nagios(loading_result.loaded_config.monitoring_core),
             int(nr),
@@ -826,7 +826,7 @@ def _automation_notification_test(
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
     return NotificationTestResult(
-        _notification_test(
+        notification_test(
             context,
             http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
             ensure_nagios,

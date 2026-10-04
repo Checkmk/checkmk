@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from pathlib import Path
 
 import pytest
 
@@ -26,3 +27,9 @@ def test_reported_id_follows_format(reported_id: str) -> None:
 
 def test_every_reported_id_has_a_nonempty_summary() -> None:
     assert all(all_summaries().values())
+
+
+@pytest.mark.parametrize("checker_module", sorted({checker.__module__ for checker in ALL_CHECKERS}))
+def test_checker_module_has_a_test_module(checker_module: str) -> None:
+    *packages, module_name = checker_module.removeprefix("cmk.astrein.checkers.").split(".")
+    assert Path(__file__).parent.joinpath("checkers", *packages, f"test_{module_name}.py").is_file()

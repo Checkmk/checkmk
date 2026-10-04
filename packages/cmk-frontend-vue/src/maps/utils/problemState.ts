@@ -3,10 +3,13 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { MapsCriticalState } from 'cmk-shared-typing/typescript/maps_states'
+
 const PROBLEM_STATES = new Set(['DOWN', 'UNREACHABLE', 'CRITICAL', 'WARNING', 'UNKNOWN'])
-// Mirror of CRITICAL_STATES in cmk.utils.maps_states (the shared GUI↔daemon
-// vocabulary); pinned by tests/unit/cmk/utils/test_maps_states.py.
-const CRITICAL_STATES = new Set(['DOWN', 'UNREACHABLE', 'CRITICAL'])
+// The daemon prunes the folder tree by the same states. Typed against the
+// generated union, so a state missing here or one too many fails to compile.
+const CRITICAL: Record<MapsCriticalState, true> = { CRITICAL: true, DOWN: true, UNREACHABLE: true }
+const CRITICAL_STATES: ReadonlySet<string> = new Set(Object.keys(CRITICAL))
 
 /** What counts as a "problem" for problems-only filters. 'critical' narrows to
  *  CRITICAL/DOWN/UNREACHABLE — on typical sites nearly every host carries some

@@ -37,20 +37,6 @@ import { parsePerfData } from '@/maps/utils/perf'
 type MapEvent = FastApiEvent<paths, '/api/v1/sse/maps/{name}'>
 type MapEventData<Name extends MapEvent['event']> = Extract<MapEvent, { event: Name }>['data']
 
-// BI integer state -> Maps MonitoringState (mirrors the daemon's BI_INT_TO_STATE
-// in cmk.maps.backend.connections.base). BI resolves GUI-side, so the SPA maps.
-const BI_STATE: Record<number, MonitoringState> = {
-  [-2]: 'UNKNOWN',
-  [-1]: 'PENDING',
-  0: 'OK',
-  1: 'WARNING',
-  2: 'CRITICAL',
-  3: 'UNKNOWN',
-  4: 'UNKNOWN'
-}
-function biState(n: number): MonitoringState {
-  return BI_STATE[n] ?? 'UNKNOWN'
-}
 // Depth the detail drawer needs for the full leaf list even when the icon is
 // collapsed on the canvas.
 const AGG_DRAWER_DEPTH = 10
@@ -907,7 +893,7 @@ export class MapStatesService {
         const state = raw[o.aggregation_id]
         this.states.value[o.id] = state
           ? aggregationState(o.id, {
-              state: biState(state.state),
+              state: state.state,
               output: state.output,
               acknowledged: state.acknowledged,
               in_downtime: state.in_downtime,

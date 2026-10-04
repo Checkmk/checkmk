@@ -14,6 +14,7 @@ from typing import Literal
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.maps.gui._settings import MapListView, RenderMode
 from cmk.maps.shared.map_payload import LineStyle
+from cmk.maps.shared.states import BIStateName
 from cmk.maps.shared.ticket import CommandVerb
 
 # Mirrors the ``UnitFormat`` enums in cmk-shared-typing, so the generated
@@ -286,7 +287,7 @@ class MapsAggregationTreeResponse:
 
 @api_model
 class MapsAggregationState:
-    state: int = api_field(description="The aggregation's computed state.", example=0)
+    state: BIStateName = api_field(description="The aggregation's computed state.", example="OK")
     output: str = api_field(description="The aggregation's output text.", example="")
     acknowledged: bool = api_field(description="Whether the problem is acknowledged.")
     in_downtime: bool = api_field(description="Whether the aggregation is in a downtime.")

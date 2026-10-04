@@ -32,9 +32,9 @@ export type AggregationInfo = Schemas['MapsAggregation']
 // alias types both.
 export type AggregationNode = Daemon['AggregationNode']
 
-// Per-branch BI state from the maps_aggregation show-states endpoint: the raw
-// cmk.bi result (integer state), which the states service maps into an ObjectState.
-export type AggregationStateRaw = Schemas['MapsAggregationState']
+// Per-branch BI state from the maps_aggregation show-states endpoint, already named
+// the way an ObjectState names its state.
+export type AggregationBranchState = Schemas['MapsAggregationState']
 
 // The daemon-flat object label dict. The wire ``MapObjectLabel`` also carries
 // ``border``/``max_length``, but those live as separate flat fields on

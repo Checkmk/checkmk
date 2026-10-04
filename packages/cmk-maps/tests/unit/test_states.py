@@ -5,7 +5,6 @@
 """Pins the shared GUI↔daemon Maps state vocabulary (cmk.maps.shared.states)."""
 
 from cmk.maps.shared.states import (
-    CRITICAL_STATES,
     HOST_STATE_MAP,
     SERVICE_STATE_MAP,
     SEVERITY_RANK,
@@ -42,8 +41,3 @@ def test_combined_scale_preserves_per_scale_order() -> None:
         ranks = [SEVERITY_RANK[s] for s in states]
         assert ranks == sorted(ranks)
         assert max(states, key=lambda s: SEVERITY_RANK.get(s, 0)) == states[-1]
-
-
-def test_critical_states_set() -> None:
-    # Mirrored by CRITICAL_STATES in the frontend's problemState.ts.
-    assert frozenset({"CRITICAL", "DOWN", "UNREACHABLE"}) == CRITICAL_STATES

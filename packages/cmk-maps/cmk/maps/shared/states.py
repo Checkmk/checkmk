@@ -12,12 +12,12 @@ the other (module-layer boundary), so this shared vocabulary lives in
 ``cmk.maps.shared.config_vars``. Keeping the tokens here means the wire vocabulary
 (which the frontend also renders) can't drift by a stray edit on one side.
 
-The frontend keeps its own copy of the problem-state sets
-(``packages/cmk-frontend-vue/src/maps/utils/problemState.ts``) since it can't
-import Python; ``packages/cmk-maps/tests/unit/test_states.py`` pins the two together.
+The critical states are also defined in ``cmk-shared-typing``, which generates the
+frontend's type for them; ``tests/unit/cmk/gui/maps/test_critical_states.py`` pins
+this set to that definition, since this layer may not import it.
 """
 
-from typing import Final
+from typing import Final, Literal
 
 # Livestatus integer state → the string token the SPA renders. Host and service
 # use disjoint token sets on purpose (UP/DOWN/UNREACHABLE vs OK/WARNING/...).
@@ -41,8 +41,10 @@ SEVERITY_RANK: Final[dict[str, int]] = {
     "CRITICAL": 4,
 }
 
-# The "critical" tier of the problems_severity filter (mirrored by CRITICAL_STATES
-# in the frontend's problemState.ts).
+# The state token of a BI aggregation. BI computes its states GUI-side, as integers.
+type BIStateName = Literal["PENDING", "OK", "WARNING", "CRITICAL", "UNKNOWN"]
+
+# The "critical" tier of the problems_severity filter.
 CRITICAL_STATES: Final[frozenset[str]] = frozenset({"CRITICAL", "DOWN", "UNREACHABLE"})
 
 

@@ -19,6 +19,8 @@ py_cmk_test(
         "//packages/cmk-maps:gui",
         # The map-domain REST endpoints, exercised by test_rest_api_spec.
         "//packages/cmk-maps:rest_api",
+        # Pins the daemon's critical states to the app's generated type.
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//tests/unit:conftest",
         "//tests/unit/cmk/gui:conftest",
     ],

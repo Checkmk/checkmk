@@ -10,7 +10,7 @@ from textwrap import dedent
 
 import pytest
 
-from cmk.astrein.module_layers_config import (
+from cmk.astrein.checkers.module_layers.config import (
     _build_checker,
     _build_plugin_components,
     _expand_allows,

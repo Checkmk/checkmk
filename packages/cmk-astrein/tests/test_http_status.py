@@ -9,7 +9,7 @@ from pathlib import Path, PurePosixPath
 
 import pytest
 
-from cmk.astrein.checker_http_status import (
+from cmk.astrein.checkers.http_status_literal import (
     HTTPStatusLiteralChecker,
     LEGACY_PYTHON_SOURCES,
     load_legacy_python_files,

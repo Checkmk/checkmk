@@ -9,8 +9,7 @@ import ast
 from pathlib import Path
 from typing import override
 
-from cmk.astrein.framework import ASTVisitorChecker
-from cmk.astrein.module_layers_config import (
+from cmk.astrein.checkers.module_layers.config import (
     Component,
     compute_module_name,
     get_absolute_importee,
@@ -18,6 +17,7 @@ from cmk.astrein.module_layers_config import (
     ModuleName,
     ModulePath,
 )
+from cmk.astrein.framework import ASTVisitorChecker
 
 
 class ModuleLayersChecker(ASTVisitorChecker):

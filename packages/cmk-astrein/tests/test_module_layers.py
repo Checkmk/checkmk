@@ -9,8 +9,8 @@ from typing import Protocol
 
 import pytest
 
-from cmk.astrein.checker_module_layers import ModuleLayersChecker
-from cmk.astrein.module_layers_config import (
+from cmk.astrein.checkers.module_layers.checker import ModuleLayersChecker
+from cmk.astrein.checkers.module_layers.config import (
     Component,
     CONFIG_FILENAME,
     load_config,

@@ -6,7 +6,7 @@
 import ast
 from pathlib import Path
 
-from cmk.astrein.checker_simple_patterns import PydanticTypeAdapterChecker
+from cmk.astrein.checkers.pydantic_type_adapter import PydanticTypeAdapterChecker
 from cmk.astrein.framework import CheckerError
 
 

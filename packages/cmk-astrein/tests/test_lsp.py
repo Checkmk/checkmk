@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from lsprotocol import types as lsp
 
-from cmk.astrein.checker_http_status import LEGACY_PYTHON_SOURCES
+from cmk.astrein.checkers.http_status_literal import LEGACY_PYTHON_SOURCES
 from cmk.astrein.framework import CheckerError
 from cmk.astrein.lsp import (
     _checker_error_to_diagnostic,

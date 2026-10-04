@@ -6,7 +6,7 @@
 import ast
 from pathlib import Path
 
-from cmk.astrein.checker_request_input import RequestValidatedInputChecker
+from cmk.astrein.checkers.request_input import RequestValidatedInputChecker
 from cmk.astrein.framework import CheckerError
 
 

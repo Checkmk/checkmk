@@ -8,9 +8,9 @@ from collections.abc import Sequence
 from pathlib import Path, PurePosixPath
 from typing import override
 
+from cmk.astrein.checkers._imported_names import ImportedNames
+from cmk.astrein.checkers.module_layers.config import compute_module_name
 from cmk.astrein.framework import ASTVisitorChecker
-from cmk.astrein.imported_names import ImportedNames
-from cmk.astrein.module_layers_config import compute_module_name
 
 #: Repo-relative glob patterns (``PurePosixPath.full_match``) the checker skips.
 _EXCLUDED_GLOBS = (

@@ -7,8 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from cmk.astrein.checker_simple_patterns import HTMLDebugChecker
-from cmk.astrein.framework import CheckerError, run_checkers
+from cmk.astrein.checkers.html_debug import HTMLDebugChecker
+from cmk.astrein.engine import run_checkers
+from cmk.astrein.framework import CheckerError
 
 
 def _run(

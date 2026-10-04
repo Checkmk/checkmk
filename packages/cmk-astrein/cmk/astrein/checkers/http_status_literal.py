@@ -8,8 +8,8 @@ from collections.abc import Iterator
 from pathlib import Path, PurePosixPath
 from typing import override
 
+from cmk.astrein.checkers._imported_names import ImportedNames
 from cmk.astrein.framework import ASTVisitorChecker
-from cmk.astrein.imported_names import ImportedNames
 
 #: Files that must run on Python 3.4, which lacks http.HTTPStatus.
 LEGACY_PYTHON_SOURCES = "tests/agent-plugin-unit/sources-list.txt"

@@ -15,15 +15,16 @@ from pathlib import Path
 from lsprotocol import types as lsp
 from pygls.lsp.server import LanguageServer
 
-from cmk.astrein.checker_http_status import (
+from cmk.astrein.checkers.http_status_literal import (
     HTTPStatusLiteralChecker,
     LEGACY_PYTHON_SOURCES,
     load_legacy_python_files,
 )
-from cmk.astrein.checker_module_layers import ModuleLayersChecker
-from cmk.astrein.checkers import all_checkers
-from cmk.astrein.framework import ASTVisitorChecker, CheckerError, CheckerFactory, run_checkers
-from cmk.astrein.module_layers_config import CONFIG_FILENAME, load_config
+from cmk.astrein.checkers.module_layers.checker import ModuleLayersChecker
+from cmk.astrein.checkers.module_layers.config import CONFIG_FILENAME, load_config
+from cmk.astrein.engine import run_checkers
+from cmk.astrein.framework import ASTVisitorChecker, CheckerError, CheckerFactory
+from cmk.astrein.registry import all_checkers
 
 logger = logging.getLogger(__name__)
 

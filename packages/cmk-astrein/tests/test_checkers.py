@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.astrein.checkers import ALL_CHECKERS, all_summaries
+from cmk.astrein.registry import ALL_CHECKERS, all_summaries
 
 
 def test_checker_ids_are_unique() -> None:

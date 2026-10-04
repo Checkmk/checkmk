@@ -11,9 +11,8 @@ from typing import override
 
 import pytest
 
-from cmk.astrein.checker_localization import LocalizationChecker
-from cmk.astrein.checker_module_layers import ModuleLayersChecker
-from cmk.astrein.checkers import all_checkers
+from cmk.astrein.checkers.localization import LocalizationChecker
+from cmk.astrein.checkers.module_layers.checker import ModuleLayersChecker
 from cmk.astrein.cli import (
     _collect_files,
     _handle_results,
@@ -21,7 +20,9 @@ from cmk.astrein.cli import (
     _select_checkers,
     CheckerResults,
 )
-from cmk.astrein.framework import ASTVisitorChecker, CheckerError, Suppression
+from cmk.astrein.framework import ASTVisitorChecker, CheckerError
+from cmk.astrein.registry import all_checkers
+from cmk.astrein.suppressions import Suppression
 
 
 def test_select_checkers_with_all() -> None:

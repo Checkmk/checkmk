@@ -7,7 +7,7 @@ import ast
 
 import pytest
 
-from cmk.astrein.imported_names import ImportedNames
+from cmk.astrein.checkers._imported_names import ImportedNames
 
 
 def _resolve(source: str) -> str | None:

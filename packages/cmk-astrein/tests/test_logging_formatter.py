@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.astrein.checker_logging_formatter import (
+from cmk.astrein.checkers.logging_formatter import (
     _EXCLUDED_GLOBS,
     _INCLUDED_GLOBS,
     LoggingFormatterChecker,

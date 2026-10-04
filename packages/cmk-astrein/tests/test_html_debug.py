@@ -6,7 +6,7 @@
 import ast
 from pathlib import Path
 
-from cmk.astrein.checker_simple_patterns import HTMLDebugChecker
+from cmk.astrein.checkers.html_debug import HTMLDebugChecker
 from cmk.astrein.framework import CheckerError
 
 

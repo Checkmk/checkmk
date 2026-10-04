@@ -6,7 +6,7 @@
 import ast
 from pathlib import Path
 
-from cmk.astrein.checker_simple_patterns import ABCMetaMetaclassChecker
+from cmk.astrein.checkers.abcmeta_metaclass import ABCMetaMetaclassChecker
 from cmk.astrein.framework import CheckerError
 
 

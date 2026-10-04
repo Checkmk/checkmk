@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.astrein.checker_localization import LocalizationNamedPlaceholderChecker
+from cmk.astrein.checkers.localization_named_placeholder import LocalizationNamedPlaceholderChecker
 
 
 def _errors(code: str) -> list[str]:

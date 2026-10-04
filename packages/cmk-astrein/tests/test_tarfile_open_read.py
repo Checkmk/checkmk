@@ -6,7 +6,7 @@
 import ast
 from pathlib import Path
 
-from cmk.astrein.checker_simple_patterns import TarfileOpenReadChecker
+from cmk.astrein.checkers.tarfile_open_read import TarfileOpenReadChecker
 from cmk.astrein.framework import CheckerError
 
 

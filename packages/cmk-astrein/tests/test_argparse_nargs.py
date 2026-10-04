@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.astrein.checker_argparse_nargs import ArgparseNargsChecker
+from cmk.astrein.checkers.argparse_nargs import ArgparseNargsChecker
 from cmk.astrein.framework import CheckerError
 
 _REPO_ROOT = Path("/repo")

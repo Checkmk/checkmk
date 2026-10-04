@@ -6,7 +6,7 @@
 import ast
 from pathlib import Path
 
-from cmk.astrein.checker_key_size import KeySizeUnitTestChecker
+from cmk.astrein.checkers.key_size_unit_test import KeySizeUnitTestChecker
 from cmk.astrein.framework import CheckerError
 
 _UNIT_TEST_PATH = Path("/repo/tests/unit/test_foo.py")

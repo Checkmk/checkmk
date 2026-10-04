@@ -7,7 +7,7 @@ import ast
 from collections.abc import Sequence
 from pathlib import Path
 
-from cmk.astrein.checker_simple_patterns import (
+from cmk.astrein.checkers.logging_named_placeholder import (
     _EXCLUDED_PREFIXES,
     _INCLUDED_PATHS,
     LoggingNamedPlaceholderChecker,

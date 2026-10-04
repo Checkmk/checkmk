@@ -6,7 +6,7 @@
 import ast
 from pathlib import Path
 
-from cmk.astrein.checker_simple_patterns import PillowImportChecker
+from cmk.astrein.checkers.pillow_import import PillowImportChecker
 from cmk.astrein.framework import CheckerError
 
 

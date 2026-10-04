@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from cmk.astrein.framework import CheckerError
-from cmk.astrein.sarif import format_sarif
+from cmk.astrein.output.sarif import format_sarif
 
 _SUMMARIES = {"cmk-module-layer-violation": "Enforces layers"}
 

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.astrein.checker_localization import LocalizationChecker
+from cmk.astrein.checkers.localization import LocalizationChecker
 
 
 @pytest.mark.parametrize(

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.astrein.checker_simple_patterns import ConftestImportChecker
+from cmk.astrein.checkers.conftest_import import ConftestImportChecker
 from cmk.astrein.framework import CheckerError
 
 

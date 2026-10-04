@@ -298,6 +298,7 @@ export type ConnectionConfig = Daemon['ConnectionListEntry']
 // INTERNAL REST endpoint. Not editable in the SPA.
 export type GlobalSettings = Schemas['MapsAuthoringSettings']
 export type TileSource = Schemas['MapsTileSource']
+export type MapNameRules = Schemas['MapsNameRules']
 
 export type MapListView = 'cards' | 'table'
 

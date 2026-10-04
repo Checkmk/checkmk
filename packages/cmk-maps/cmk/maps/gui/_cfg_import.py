@@ -23,6 +23,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, ungettext
 from cmk.maps.gui._settings import connection_choices
 from cmk.maps.shared.geo import bounded_view, parse_degrees
+from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH
 from cmk.maps.shared.map_payload import (
     FlowView,
     GadgetType,
@@ -51,9 +52,6 @@ MAX_CFG_BYTES = 5 * 1024 * 1024  # 5 MB
 # would balloon the draft the SPA has to hold. Real exported maps stay well below
 # this; an automap this large is unusable as a map anyway.
 _MAX_CFG_OBJECTS = 2000
-
-# Mirrors the daemon's MapConfig.name constraint.
-_MAX_MAP_NAME_LEN = 100
 
 
 # Legacy line_type integers from the .cfg map format; 20 is not a valid value.
@@ -964,7 +962,7 @@ def cfg_to_map(content: str, map_name: str) -> MapPayload:
 def map_name_from_filename(filename: str) -> str:
     """Derive a map name the store and the daemon both accept from the upload."""
     stem = re.sub(r"[^a-zA-Z0-9_\-]", "_", Path(filename).stem)
-    return stem[:_MAX_MAP_NAME_LEN] or "imported_map"
+    return stem[:MAP_NAME_MAX_LENGTH] or "imported_map"
 
 
 def _configured_connection_ids() -> list[str]:

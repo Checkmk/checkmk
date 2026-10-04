@@ -8,11 +8,13 @@ from typing import Annotated
 
 from fastapi import Path
 
+from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH, MAP_NAME_PATTERN
+
 # Map names end up in filenames (map backgrounds) and as path components
 # in Checkmk permission lookups. Restricting the character set here prevents
 # path traversal and odd permission-key lookups before the value reaches any
 # business logic.
 MapName = Annotated[
     str,
-    Path(pattern=r"^[a-zA-Z0-9_\-]+$", min_length=1, max_length=100),
+    Path(pattern=MAP_NAME_PATTERN, min_length=1, max_length=MAP_NAME_MAX_LENGTH),
 ]

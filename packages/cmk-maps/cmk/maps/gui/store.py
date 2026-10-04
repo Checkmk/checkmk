@@ -25,14 +25,13 @@ from cmk.gui.type_defs import VisualPublic
 from cmk.gui.utils.roles import UserPermissions
 from cmk.maps.gui.pagetype import MapPage
 from cmk.maps.gui.type_defs import map_config_from_spec, MapName, MapRead, MapSpec
+from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH, MAP_NAME_PATTERN
 
-# Map names are URL components and per-map permission idents (``map.<name>``), so
-# keep them to the same safe charset the daemon enforces on map names.
-_MAP_NAME_RE = re.compile(r"^[a-zA-Z0-9_\-]{1,100}$")
+_MAP_NAME_RE = re.compile(MAP_NAME_PATTERN)
 
 
 def is_valid_map_name(name: str) -> bool:
-    return bool(_MAP_NAME_RE.fullmatch(name))
+    return len(name) <= MAP_NAME_MAX_LENGTH and bool(_MAP_NAME_RE.fullmatch(name))
 
 
 @request_memoize()

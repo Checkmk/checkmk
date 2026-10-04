@@ -416,11 +416,19 @@ class MapsTileSource:
 
 
 @api_model
+class MapsNameRules:
+    """What the site accepts as a map's name, so the SPA can say so while typing."""
+
+    max_length: int = api_field(description="The longest map name the site accepts.", example=100)
+
+
+@api_model
 class MapsAuthoringSettingsResponse:
     settings: MapsAuthoringSettings = api_field(
         description="The site's effective authoring defaults."
     )
     tiles: MapsTileSource = api_field(description="The effective tile source for geo maps.")
+    map_name: MapsNameRules = api_field(description="What the site accepts as a map's name.")
 
 
 @api_model

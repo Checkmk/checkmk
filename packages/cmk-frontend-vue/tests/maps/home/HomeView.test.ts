@@ -141,6 +141,7 @@ describe('HomeView', () => {
 
   it('cuts an ID filled in from a long display name to fit', async () => {
     await renderHome([listed('prod')])
+    services.settings.mapNameMaxLength.value = 64
 
     await userEvent.click(screen.getByRole('button', { name: 'Add map' }))
     await userEvent.type(await screen.findByLabelText('Display name'), 'x'.repeat(70))

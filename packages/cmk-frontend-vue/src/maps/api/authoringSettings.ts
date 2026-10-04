@@ -11,17 +11,18 @@
  */
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
-import type { GlobalSettings, TileSource } from '@/maps/types/api'
+import type { GlobalSettings, MapNameRules, TileSource } from '@/maps/types/api'
 
-/** What the site answers: the authoring defaults and the geo maps' tile source. */
+/** What the site answers: the authoring defaults, the geo maps' tile source and its map name rules. */
 export interface AuthoringSettingsRead {
   settings: GlobalSettings
   tiles: TileSource
+  mapName: MapNameRules
 }
 
 export class AuthoringSettingsApi {
   public async fetch(): Promise<AuthoringSettingsRead> {
     const read = unwrap(await client.GET('/domain-types/maps_settings/collections/all'))
-    return { settings: read.settings, tiles: read.tiles }
+    return { settings: read.settings, tiles: read.tiles, mapName: read.map_name }
   }
 }

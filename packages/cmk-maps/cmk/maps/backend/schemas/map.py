@@ -16,6 +16,7 @@ from cmk.maps.shared.map_compat import (
     coerce_graph_metric,
     migrate_weathermap,
 )
+from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH, MAP_NAME_PATTERN
 from cmk.maps.shared.map_payload import (
     ClickAction,
     LinePerfdataLabel,
@@ -323,7 +324,7 @@ class MapConfig(BaseModel):
     # on-disk path, so an unvalidated value would allow cache poisoning / path
     # traversal via the (auth-only) register endpoint. Matches the GUI's
     # is_valid_map_name so a GUI-saved map always round-trips.
-    name: str = Field(..., min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9_\-]+$")
+    name: str = Field(..., min_length=1, max_length=MAP_NAME_MAX_LENGTH, pattern=MAP_NAME_PATTERN)
     alias: str = ""
     connection_id: str = "live_1"
     icon_size: int | None = None
@@ -361,7 +362,7 @@ class MapConfig(BaseModel):
 class MapCreate(BaseModel):
     _migrate_legacy_keys = model_validator(mode="before")(accept_legacy_backend_id)
 
-    name: str = Field(..., min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9_\-]+$")
+    name: str = Field(..., min_length=1, max_length=MAP_NAME_MAX_LENGTH, pattern=MAP_NAME_PATTERN)
     alias: str = ""
     background_image: _AssetRef = None
     background_color: str | None = None
@@ -516,7 +517,9 @@ class MapElementUpdate(BaseModel):
 
 
 class MapClone(BaseModel):
-    new_name: str = Field(..., min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9_\-]+$")
+    new_name: str = Field(
+        ..., min_length=1, max_length=MAP_NAME_MAX_LENGTH, pattern=MAP_NAME_PATTERN
+    )
     alias: str | None = None
 
 
@@ -527,7 +530,9 @@ class MapPermissionsRead(BaseModel):
     edit: list[str]
 
 
-_MapNameStr = Annotated[str, Field(min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9_\-]+$")]
+_MapNameStr = Annotated[
+    str, Field(min_length=1, max_length=MAP_NAME_MAX_LENGTH, pattern=MAP_NAME_PATTERN)
+]
 
 
 class MapBulkDelete(BaseModel):

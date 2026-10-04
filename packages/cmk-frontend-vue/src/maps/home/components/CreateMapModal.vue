@@ -56,7 +56,6 @@ const mapTypeCards = computed(() => {
   return mapTypeOptions(_t).map((o) => ({ ...o, desc: descriptions[o.name] ?? '' }))
 })
 
-const _MAX_NAME_LEN = 64
 const nameError = ref('')
 const nameWarning = ref('')
 // A name in a script without Latin letters leaves nothing to fill an ID in from.
@@ -64,16 +63,23 @@ const nothingToDerive = computed(
   () => !nameTouched.value && !form.value.name && form.value.alias.trim() !== ''
 )
 
+function nameLengthError(name: string): string {
+  const maxLength = settingsStore.mapNameMaxLength.value
+  return maxLength !== null && name.length > maxLength
+    ? _t('Map ID is too long (max %{max} characters)', { max: maxLength })
+    : ''
+}
+
+// Until the site's limit is known, the backend is left to reject an ID that is too long.
+function mapIdFromAlias(): string {
+  return mapIdFromName(form.value.alias, settingsStore.mapNameMaxLength.value ?? Infinity)
+}
+
 function onNameInput(raw: string) {
   // An emptied ID goes back to following the display name.
   nameTouched.value = raw !== ''
-  form.value.name = nameTouched.value
-    ? sanitizeMapName(raw)
-    : mapIdFromName(form.value.alias, _MAX_NAME_LEN)
-  nameError.value =
-    form.value.name.length > _MAX_NAME_LEN
-      ? _t('Map ID is too long (max %{max} characters)', { max: _MAX_NAME_LEN })
-      : ''
+  form.value.name = nameTouched.value ? sanitizeMapName(raw) : mapIdFromAlias()
+  nameError.value = nameLengthError(form.value.name)
   nameWarning.value = sanitizeStrippedChars(raw)
     ? _t('Some characters were removed (umlauts, punctuation, symbols are not allowed)')
     : ''
@@ -85,8 +91,8 @@ function onNameInput(raw: string) {
 function onAliasInput() {
   aliasTouched.value = true
   if (!nameTouched.value) {
-    form.value.name = mapIdFromName(form.value.alias, _MAX_NAME_LEN)
-    nameError.value = ''
+    form.value.name = mapIdFromAlias()
+    nameError.value = nameLengthError(form.value.name)
   }
 }
 

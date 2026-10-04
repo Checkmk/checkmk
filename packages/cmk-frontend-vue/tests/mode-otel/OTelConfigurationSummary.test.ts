@@ -45,6 +45,8 @@ interface RenderProps {
   endpointConfigAllowed?: boolean
   encryptionAllowed?: boolean
   eventConsoleAllowed?: boolean
+  grpcDefaultPort?: number
+  httpDefaultPort?: number
 }
 
 function renderSummary(props: RenderProps = {}) {
@@ -66,6 +68,8 @@ function renderSummary(props: RenderProps = {}) {
     endpointConfigAllowed: true,
     encryptionAllowed: true,
     eventConsoleAllowed: true,
+    grpcDefaultPort: 4317,
+    httpDefaultPort: 4318,
     ...props
   }
   render(OTelConfigurationSummary, { props: merged })
@@ -158,6 +162,16 @@ describe('OTelConfigurationSummary', () => {
       })
 
       expect(screen.getByText(/0\.0\.0\.0:4317/)).toBeInTheDocument()
+    })
+
+    test('a default socket resolves to the default port the page hands over', () => {
+      renderSummary({
+        grpcEnabled: true,
+        grpcEndpoint: { socketAddressType: 'default_ipv4', address: '', port: undefined },
+        grpcDefaultPort: 14317
+      })
+
+      expect(screen.getByText(/0\.0\.0\.0:14317/)).toBeInTheDocument()
     })
 
     test('default_ipv4 on HTTP resolves to 0.0.0.0:4318', () => {

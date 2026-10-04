@@ -47,7 +47,9 @@ const PROPS = {
   collector_activation_allowed: true,
   data_backend_allowed: true,
   may_create_password: true,
-  activate_changes_url: 'wato.py?mode=changelog'
+  activate_changes_url: 'wato.py?mode=changelog',
+  grpc_default_port: 4317,
+  http_default_port: 4318
 }
 
 function clickModeToggle(mode: 'Guided' | 'Overview') {

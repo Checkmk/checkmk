@@ -24,6 +24,8 @@ const httpConfig: ExporterConfig = {
 
 const baseState: CollectorSnippetInput = {
   siteName: 'mysite',
+  httpDefaultPort: 4318,
+  grpcDefaultPort: 4317,
   httpInfo: httpConfig,
   grpcInfo: null
 }

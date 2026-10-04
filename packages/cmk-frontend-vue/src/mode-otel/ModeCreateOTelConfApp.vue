@@ -28,9 +28,7 @@ import OTelConfigurationSummary from './otel-configuration-steps/OTelConfigurati
 import {
   type AuthConfig,
   type EndpointConfig,
-  type EventConsoleConfig,
-  GRPC_DEFAULT_PORT,
-  HTTP_DEFAULT_PORT
+  type EventConsoleConfig
 } from './otel-configuration-steps/otelTypes'
 import type { PasswordConfig } from './otel-configuration-steps/password_store_password.types.ts'
 import {
@@ -381,8 +379,8 @@ async function onSaveClick(): Promise<void> {
           :encryption-allowed="encryption_allowed"
           :event-console-allowed="event_console_allowed"
           :may-create-password="may_create_password"
-          :grpc-default-port="GRPC_DEFAULT_PORT"
-          :http-default-port="HTTP_DEFAULT_PORT"
+          :grpc-default-port="grpc_default_port"
+          :http-default-port="http_default_port"
         />
       </template>
       <template #actions>
@@ -417,6 +415,8 @@ async function onSaveClick(): Promise<void> {
           :http-event-console="httpEventConsole"
           :grpc-endpoint-override="grpc_receiver_endpoint_override ?? null"
           :http-endpoint-override="http_receiver_endpoint_override ?? null"
+          :grpc-default-port="grpc_default_port"
+          :http-default-port="http_default_port"
         />
       </template>
 
@@ -458,6 +458,8 @@ async function onSaveClick(): Promise<void> {
               :http-event-console="httpEventConsole"
               :grpc-password-name="passwordTitle(grpcAuth)"
               :http-password-name="passwordTitle(httpAuth)"
+              :grpc-default-port="grpc_default_port"
+              :http-default-port="http_default_port"
               :endpoint-config-allowed="endpoint_config_allowed"
               :encryption-allowed="encryption_allowed"
               :event-console-allowed="event_console_allowed"

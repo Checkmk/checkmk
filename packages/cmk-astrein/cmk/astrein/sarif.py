@@ -6,12 +6,12 @@
 """SARIF (Static Analysis Results Interchange Format) output for astrein."""
 
 import json
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 from cmk.astrein.framework import CheckerError
 
 
-def format_sarif(errors: Sequence[CheckerError]) -> str:
+def format_sarif(errors: Sequence[CheckerError], summaries: Mapping[str, str]) -> str:
     """Format errors as SARIF JSON for CI integration.
 
     SARIF is a standardized format for static analysis results that provides
@@ -24,7 +24,7 @@ def format_sarif(errors: Sequence[CheckerError]) -> str:
     rules = [
         {
             "id": rule_id,
-            "shortDescription": {"text": _get_rule_description(rule_id)},
+            "shortDescription": {"text": summaries.get(rule_id, f"Checker rule: {rule_id}")},
         }
         for rule_id in rule_ids
     ]
@@ -71,17 +71,3 @@ def format_sarif(errors: Sequence[CheckerError]) -> str:
     }
 
     return json.dumps(sarif_output, indent=2)
-
-
-def _get_rule_description(rule_id: str) -> str:
-    """Get human-readable description for a rule ID."""
-    descriptions = {
-        "localization-checker": "Validates translation function calls use literal strings",
-        "cmk-module-layer-violation": "Enforces architectural boundaries between components",
-        "http-status-literal": "Requires HTTP status codes to be http.HTTPStatus members",
-        "logging-formatter": "Requires log handlers to format via cmk.ccc.log.CMKFormatter",
-        "unused-suppression": "Suppression comment does not suppress anything",
-        "file-read-error": "File could not be read",
-        "syntax-error": "Python syntax error",
-    }
-    return descriptions.get(rule_id, f"Checker rule: {rule_id}")

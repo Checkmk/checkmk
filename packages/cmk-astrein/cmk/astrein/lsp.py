@@ -178,8 +178,8 @@ def _bind_configs(
         )
     else:
         logger.warning(
-            "module_layers.toml not found at %(repo_root)s, skipping module-layers checker",
-            {"repo_root": repo_root},
+            "module_layers.toml not found at %(repo_root)s, skipping %(checker_id)s checker",
+            {"repo_root": repo_root, "checker_id": ModuleLayersChecker.checker_id},
         )
     if (repo_root / LEGACY_PYTHON_SOURCES).exists():
         bound[HTTPStatusLiteralChecker] = partial(
@@ -187,8 +187,12 @@ def _bind_configs(
         )
     else:
         logger.warning(
-            "%(sources)s not found at %(repo_root)s, skipping http-status-literal checker",
-            {"sources": LEGACY_PYTHON_SOURCES, "repo_root": repo_root},
+            "%(sources)s not found at %(repo_root)s, skipping %(checker_id)s checker",
+            {
+                "sources": LEGACY_PYTHON_SOURCES,
+                "repo_root": repo_root,
+                "checker_id": HTTPStatusLiteralChecker.checker_id,
+            },
         )
     return [factory for cls in checker_classes if (factory := bound.get(cls, cls)) is not None]
 

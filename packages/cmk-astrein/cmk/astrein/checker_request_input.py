@@ -45,9 +45,8 @@ class RequestValidatedInputChecker(ASTVisitorChecker):
     """Detects request.var/get_str_input/get_str_input_mandatory values flowing into
     UserId/HostAddress/Hostname constructors within the same function."""
 
-    @override
-    def checker_id(self) -> str:
-        return "use-request-getvalidatedinputtype"
+    checker_id = "use-request-getvalidatedinputtype"
+    summary = "Requires request.get_validated_type_input for validated types"
 
     @override
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:

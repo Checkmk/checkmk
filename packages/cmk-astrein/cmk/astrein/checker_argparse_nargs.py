@@ -26,13 +26,12 @@ class ArgparseNargsChecker(ASTVisitorChecker):
     * positional arguments — safe when the server emits ``"--"`` before them.
     """
 
+    checker_id = "argparse-nargs"
+    summary = "Forbids multi-value argparse nargs in plugin code"
+
     def __init__(self, file_path: Path, repo_root: Path, source_code: str) -> None:
         super().__init__(file_path, repo_root, source_code)
         self._is_plugin_file = self._compute_is_plugin_file()
-
-    @override
-    def checker_id(self) -> str:
-        return "argparse-nargs"
 
     @override
     def visit_Call(self, node: ast.Call) -> None:

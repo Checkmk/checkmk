@@ -103,6 +103,9 @@ class HTTPStatusLiteralChecker(ASTVisitorChecker):
     Ordering comparisons like ``200 <= code < 300`` check a range and stay ints.
     """
 
+    checker_id = "http-status-literal"
+    summary = "Requires HTTP status codes to be http.HTTPStatus members"
+
     def __init__(
         self,
         file_path: Path,
@@ -114,10 +117,6 @@ class HTTPStatusLiteralChecker(ASTVisitorChecker):
         super().__init__(file_path, repo_root, source_code)
         self._legacy_python_files = legacy_python_files
         self._imported_names = ImportedNames()
-
-    @override
-    def checker_id(self) -> str:
-        return "http-status-literal"
 
     @override
     def visit_Module(self, node: ast.Module) -> None:

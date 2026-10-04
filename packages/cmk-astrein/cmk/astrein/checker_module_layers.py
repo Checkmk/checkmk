@@ -26,6 +26,9 @@ class ModuleLayersChecker(ASTVisitorChecker):
     Enforces architectural boundaries between different components of the
     Checkmk codebase based on the component rules in module_layers.toml."""
 
+    checker_id = "cmk-module-layer-violation"
+    summary = "Enforces architectural boundaries between components"
+
     def __init__(
         self,
         file_path: Path,
@@ -52,10 +55,6 @@ class ModuleLayersChecker(ASTVisitorChecker):
 
         # Find the component this file belongs to
         self.component = self._find_component(self.module_name, self.relative_path)
-
-    @override
-    def checker_id(self) -> str:
-        return "cmk-module-layer-violation"
 
     @override
     def visit_Import(self, node: ast.Import) -> None:

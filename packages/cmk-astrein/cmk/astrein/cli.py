@@ -15,7 +15,7 @@ from pathlib import Path
 
 from cmk.astrein.checker_http_status import HTTPStatusLiteralChecker, load_legacy_python_files
 from cmk.astrein.checker_module_layers import ModuleLayersChecker
-from cmk.astrein.checkers import all_checkers
+from cmk.astrein.checkers import all_checkers, all_summaries
 from cmk.astrein.framework import ASTVisitorChecker, CheckerError, CheckerFactory, run_checkers
 from cmk.astrein.module_layers_config import CONFIG_FILENAME, load_config
 from cmk.astrein.sarif import format_sarif
@@ -195,7 +195,7 @@ def _handle_results(
     )
 
     if output_format == "sarif":
-        output = format_sarif(results.errors)
+        output = format_sarif(results.errors, all_summaries())
         if output_file is not None:
             output_file.parent.mkdir(parents=True, exist_ok=True)
             output_file.write_text(output)

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+from typing import Final
 
 from cmk.astrein.checker_argparse_nargs import ArgparseNargsChecker
 from cmk.astrein.checker_http_status import HTTPStatusLiteralChecker
@@ -23,24 +25,33 @@ from cmk.astrein.checker_simple_patterns import (
     PydanticTypeAdapterChecker,
     TarfileOpenReadChecker,
 )
-from cmk.astrein.framework import ASTVisitorChecker
+from cmk.astrein.framework import ASTVisitorChecker, FRAMEWORK_SUMMARIES
+
+ALL_CHECKERS: Final[Sequence[type[ASTVisitorChecker]]] = (
+    ABCMetaMetaclassChecker,
+    ArgparseNargsChecker,
+    ConftestImportChecker,
+    HTMLDebugChecker,
+    HTTPStatusLiteralChecker,
+    KeySizeUnitTestChecker,
+    LocalizationChecker,
+    LocalizationNamedPlaceholderChecker,
+    LoggingFormatterChecker,
+    LoggingNamedPlaceholderChecker,
+    ModuleLayersChecker,
+    PillowImportChecker,
+    PydanticTypeAdapterChecker,
+    RequestValidatedInputChecker,
+    TarfileOpenReadChecker,
+)
 
 
 def all_checkers() -> dict[str, type[ASTVisitorChecker]]:
+    return {checker.checker_id: checker for checker in ALL_CHECKERS}
+
+
+def all_summaries() -> Mapping[str, str]:
     return {
-        "abcmeta-metaclass": ABCMetaMetaclassChecker,
-        "argparse-nargs": ArgparseNargsChecker,
-        "conftest-import": ConftestImportChecker,
-        "html-debug": HTMLDebugChecker,
-        "http-status-literal": HTTPStatusLiteralChecker,
-        "key-size-unit-test": KeySizeUnitTestChecker,
-        "localization": LocalizationChecker,
-        "localization-named-placeholder": LocalizationNamedPlaceholderChecker,
-        "logging-formatter": LoggingFormatterChecker,
-        "logging-named-placeholder": LoggingNamedPlaceholderChecker,
-        "module-layers": ModuleLayersChecker,
-        "pillow-import": PillowImportChecker,
-        "pydantic-type-adapter": PydanticTypeAdapterChecker,
-        "tarfile-open-read": TarfileOpenReadChecker,
-        "use-request-getvalidatedinputtype": RequestValidatedInputChecker,
+        **{checker.checker_id: checker.summary for checker in ALL_CHECKERS},
+        **FRAMEWORK_SUMMARIES,
     }

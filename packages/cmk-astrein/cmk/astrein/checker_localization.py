@@ -56,9 +56,8 @@ class LocalizationChecker(ASTVisitorChecker):
         f"</?({_ALLOWED_TAGS}|a|(a.*? href=.*?))>"  # unfortunately, we have to allow links at the moment
     )
 
-    @override
-    def checker_id(self) -> str:
-        return "localization-checker"
+    checker_id = "localization-checker"
+    summary = "Validates translation function calls use literal strings"
 
     @override
     def visit_Call(self, node: ast.Call) -> None:
@@ -126,9 +125,8 @@ class LocalizationNamedPlaceholderChecker(ASTVisitorChecker):
 
     _TRANSLATION_FUNCTIONS = _TRANSLATION_FUNCTIONS
 
-    @override
-    def checker_id(self) -> str:
-        return "localization-named-placeholder"
+    checker_id = "localization-named-placeholder"
+    summary = "Requires named placeholders in localized strings"
 
     @override
     def visit_Call(self, node: ast.Call) -> None:

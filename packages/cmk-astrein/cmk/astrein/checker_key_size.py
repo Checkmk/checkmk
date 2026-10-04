@@ -79,9 +79,8 @@ _RULES: tuple[_KeySizeRule, ...] = (
 class KeySizeUnitTestChecker(ASTVisitorChecker):
     """Detects crypto function calls in unit tests without small key size (1024)."""
 
-    @override
-    def checker_id(self) -> str:
-        return "key-size-unit-test"
+    checker_id = "key-size-unit-test"
+    summary = "Requires small key sizes for crypto calls in unit tests"
 
     @override
     def visit_Call(self, node: ast.Call) -> None:

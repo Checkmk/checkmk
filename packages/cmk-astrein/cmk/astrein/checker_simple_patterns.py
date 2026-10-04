@@ -16,9 +16,8 @@ from cmk.astrein.placeholders import has_positional_placeholder
 class ABCMetaMetaclassChecker(ASTVisitorChecker):
     """Detects use of `metaclass=ABCMeta` instead of inheriting from ABC."""
 
-    @override
-    def checker_id(self) -> str:
-        return "abcmeta-metaclass"
+    checker_id = "abcmeta-metaclass"
+    summary = "Requires inheriting from ABC instead of metaclass=ABCMeta"
 
     @override
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
@@ -43,9 +42,8 @@ class ABCMetaMetaclassChecker(ASTVisitorChecker):
 class HTMLDebugChecker(ASTVisitorChecker):
     """Detects calls to `html.debug(...)`."""
 
-    @override
-    def checker_id(self) -> str:
-        return "html-debug"
+    checker_id = "html-debug"
+    summary = "Forbids html.debug() calls"
 
     @override
     def visit_Call(self, node: ast.Call) -> None:
@@ -99,6 +97,9 @@ class LoggingNamedPlaceholderChecker(ASTVisitorChecker):
     messages need to be inspected here.
     """
 
+    checker_id = "logging-named-placeholder"
+    summary = "Requires named placeholders in logging calls"
+
     def __init__(
         self,
         file_path: Path,
@@ -111,10 +112,6 @@ class LoggingNamedPlaceholderChecker(ASTVisitorChecker):
         super().__init__(file_path, repo_root, source_code)
         self._excluded_prefixes = excluded_prefixes
         self._included_paths = included_paths
-
-    @override
-    def checker_id(self) -> str:
-        return "logging-named-placeholder"
 
     @override
     def visit_Call(self, node: ast.Call) -> None:
@@ -165,9 +162,8 @@ class PillowImportChecker(ASTVisitorChecker):
     (e.g. cmk.gui.utils.images for GUI code).
     """
 
-    @override
-    def checker_id(self) -> str:
-        return "pillow-import"
+    checker_id = "pillow-import"
+    summary = "Forbids direct imports of PIL"
 
     @override
     def visit_Import(self, node: ast.Import) -> None:
@@ -203,9 +199,8 @@ class PillowImportChecker(ASTVisitorChecker):
 class PydanticTypeAdapterChecker(ASTVisitorChecker):
     """Detects TypeAdapter() calls inside function/method bodies (module-level is fine)."""
 
-    @override
-    def checker_id(self) -> str:
-        return "pydantic-type-adapter"
+    checker_id = "pydantic-type-adapter"
+    summary = "Flags TypeAdapter() construction inside functions"
 
     def __init__(self, file_path: Path, repo_root: Path, source_code: str) -> None:
         super().__init__(file_path, repo_root, source_code)
@@ -246,9 +241,8 @@ class PydanticTypeAdapterChecker(ASTVisitorChecker):
 class TarfileOpenReadChecker(ASTVisitorChecker):
     """Detects tarfile.open() / TarFile.open() in read mode."""
 
-    @override
-    def checker_id(self) -> str:
-        return "tarfile-open-read"
+    checker_id = "tarfile-open-read"
+    summary = "Forbids tarfile.open() in read mode"
 
     _EXCLUDED_DIRS = frozenset({"mkp_tool", "tests", "testlib"})
 
@@ -300,9 +294,8 @@ class ConftestImportChecker(ASTVisitorChecker):
     test code belongs in a testlib module imported by its absolute path.
     """
 
-    @override
-    def checker_id(self) -> str:
-        return "conftest-import"
+    checker_id = "conftest-import"
+    summary = "Forbids imports from conftest modules"
 
     @override
     def visit_Import(self, node: ast.Import) -> None:

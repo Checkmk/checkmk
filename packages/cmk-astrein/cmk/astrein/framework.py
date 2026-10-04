@@ -9,11 +9,10 @@ import ast
 import io
 import re
 import tokenize
-from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import override
+from typing import ClassVar, Final, override
 
 
 @dataclass(frozen=True)
@@ -35,6 +34,14 @@ class CheckerError:
     @override
     def __str__(self) -> str:
         return self.format_gcc()
+
+
+FRAMEWORK_SUMMARIES: Final = {
+    "file-read-error": "File could not be read",
+    "syntax-error": "Python syntax error",
+    "unused-suppression": "Suppression comment does not suppress anything",
+}
+"""Summaries of the ids the framework reports itself."""
 
 
 _SUPPRESSION_PATTERN = re.compile(r"astrein: disable=([\w-]+)")
@@ -68,7 +75,12 @@ def parse_suppressions(source_code: str) -> Sequence[Suppression]:
     ]
 
 
-class ASTVisitorChecker(ABC, ast.NodeVisitor):
+class ASTVisitorChecker(ast.NodeVisitor):
+    checker_id: ClassVar[str]
+    """Unique id for selection, suppressions and reports."""
+    summary: ClassVar[str]
+    """One-line description of what the checker enforces."""
+
     def __init__(self, file_path: Path, repo_root: Path, source_code: str):
         self.file_path = file_path
         self.repo_root = repo_root
@@ -77,11 +89,6 @@ class ASTVisitorChecker(ABC, ast.NodeVisitor):
         self.errors: list[CheckerError] = []
         self.suppressions: Sequence[Suppression] = []
         self.used_suppressions: set[Suppression] = set()
-
-    @abstractmethod
-    def checker_id(self) -> str:
-        """Return unique identifier for this checker."""
-        ...
 
     def _find_suppression(self, node: ast.AST) -> Suppression | None:
         line = getattr(node, "lineno", None)
@@ -100,7 +107,7 @@ class ASTVisitorChecker(ABC, ast.NodeVisitor):
                 line=node.lineno if hasattr(node, "lineno") else 0,
                 column=node.col_offset if hasattr(node, "col_offset") else 0,
                 file_path=self.file_path.relative_to(self.repo_root),
-                checker_id=self.checker_id(),
+                checker_id=self.checker_id,
             )
         )
 
@@ -110,7 +117,7 @@ class ASTVisitorChecker(ABC, ast.NodeVisitor):
         """Record used suppressions; pass ``suppressions`` to share one parse across checkers."""
         if suppressions is None:
             suppressions = parse_suppressions(self.source_code)
-        self.suppressions = [s for s in suppressions if s.checker_id == self.checker_id()]
+        self.suppressions = [s for s in suppressions if s.checker_id == self.checker_id]
         self.used_suppressions = set()
         self.errors = []
         self.visit(tree)
@@ -180,7 +187,7 @@ def run_checkers(
     for factory in checker_factories:
         checker = factory(file_path, repo_root, source_code)
         all_errors.extend(checker.check(tree, suppressions))
-        ran_checker_ids.add(checker.checker_id())
+        ran_checker_ids.add(checker.checker_id)
         used_suppressions |= checker.used_suppressions
 
     for suppression in suppressions:

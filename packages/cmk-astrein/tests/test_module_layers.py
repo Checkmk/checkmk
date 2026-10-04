@@ -404,7 +404,7 @@ def test_file_without_component_rejects_cmk_imports(make_checker: _MakeChecker) 
 
 def test_checker_id_value(make_checker: _MakeChecker) -> None:
     checker = make_checker("cmk/test.py")
-    assert checker.checker_id() == "cmk-module-layer-violation"
+    assert checker.checker_id == "cmk-module-layer-violation"
 
 
 def test_is_package_detection_for_init_file(make_checker: _MakeChecker) -> None:

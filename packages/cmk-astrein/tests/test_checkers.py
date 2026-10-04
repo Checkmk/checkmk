@@ -3,24 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.astrein.checker_http_status import HTTPStatusLiteralChecker
-from cmk.astrein.checker_localization import (
-    LocalizationChecker,
-    LocalizationNamedPlaceholderChecker,
-)
-from cmk.astrein.checker_module_layers import ModuleLayersChecker
-from cmk.astrein.checker_simple_patterns import ConftestImportChecker
-from cmk.astrein.checkers import all_checkers
+from cmk.astrein.checkers import ALL_CHECKERS, all_summaries
 
 
-def test_all_checkers_returns_expected_checkers() -> None:
-    checkers = all_checkers()
+def test_checker_ids_are_unique() -> None:
+    ids = [checker.checker_id for checker in ALL_CHECKERS]
+    assert len(set(ids)) == len(ids)
 
-    assert "localization" in checkers
-    assert "localization-named-placeholder" in checkers
-    assert "module-layers" in checkers
-    assert checkers["localization"] == LocalizationChecker
-    assert checkers["localization-named-placeholder"] == LocalizationNamedPlaceholderChecker
-    assert checkers["module-layers"] == ModuleLayersChecker
-    assert checkers["conftest-import"] == ConftestImportChecker
-    assert checkers["http-status-literal"] == HTTPStatusLiteralChecker
+
+def test_every_reported_id_has_a_nonempty_summary() -> None:
+    assert all(all_summaries().values())

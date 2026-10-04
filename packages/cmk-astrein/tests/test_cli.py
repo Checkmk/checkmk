@@ -35,7 +35,7 @@ def test_select_checkers_with_all() -> None:
 
 def test_select_checkers_with_specific_checker() -> None:
     checkers = all_checkers()
-    selected = _select_checkers("localization", checkers)
+    selected = _select_checkers("localization-checker", checkers)
 
     assert len(selected) == 1
     assert selected[0] == LocalizationChecker
@@ -43,7 +43,7 @@ def test_select_checkers_with_specific_checker() -> None:
 
 def test_select_checkers_with_module_layers() -> None:
     checkers = all_checkers()
-    selected = _select_checkers("module-layers", checkers)
+    selected = _select_checkers("cmk-module-layer-violation", checkers)
 
     assert len(selected) == 1
     assert selected[0] == ModuleLayersChecker
@@ -151,9 +151,7 @@ def test_collect_files_sorts_results(tmp_path: Path) -> None:
 
 
 class HappyChecker(ASTVisitorChecker):
-    @override
-    def checker_id(self) -> str:
-        return "happy-checker"
+    checker_id = "happy-checker"
 
     @override
     def visit_Module(self, node: ast.Module) -> None: ...
@@ -203,9 +201,7 @@ def test_run_checkers_counts_files_with_errors_correctly(tmp_path: Path) -> None
 
 def _make_checker(errors_by_file: dict[Path, list[CheckerError]]) -> type[ASTVisitorChecker]:
     class CustomChecker(ASTVisitorChecker):
-        @override
-        def checker_id(self) -> str:
-            return "custom-checker"
+        checker_id = "custom-checker"
 
         @override
         def check(

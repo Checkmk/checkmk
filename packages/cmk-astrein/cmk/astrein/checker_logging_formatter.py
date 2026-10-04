@@ -52,6 +52,9 @@ class LoggingFormatterChecker(ASTVisitorChecker):
     bans constructing a formatter, not the type.
     """
 
+    checker_id = "logging-formatter"
+    summary = "Requires log handlers to format via cmk.ccc.log.CMKFormatter"
+
     def __init__(
         self,
         file_path: Path,
@@ -66,10 +69,6 @@ class LoggingFormatterChecker(ASTVisitorChecker):
         self._included_globs = included_globs
         self._module_name = str(compute_module_name(file_path, repo_root))
         self._imported_names = ImportedNames()
-
-    @override
-    def checker_id(self) -> str:
-        return "logging-formatter"
 
     @override
     def visit_Import(self, node: ast.Import) -> None:

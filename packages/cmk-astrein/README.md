@@ -8,8 +8,8 @@ It was introduced as replacement for pylint. It's current core functionality is 
 Astrein enforces code quality rules through specialized checkers:
 
 - **argparse-nargs**: Flags multi-value `nargs` in `add_argument()` calls under `cmk/plugins` (argument injection risk; use `action="append"` instead)
-- **localization**: Validates localization function calls (e.g., `_()`, `Title()`) use literal strings and allowed HTML tags
-- **module-layers**: Enforces architectural boundaries between Checkmk components (e.g., prevents GUI from importing base internals)
+- **localization-checker**: Validates localization function calls (e.g., `_()`, `Title()`) use literal strings and allowed HTML tags
+- **cmk-module-layer-violation**: Enforces architectural boundaries between Checkmk components (e.g., prevents GUI from importing base internals)
 
 ## Usage
 
@@ -17,16 +17,16 @@ Astrein enforces code quality rules through specialized checkers:
 
 ```bash
 # Check a single file
-bazel run //packages/cmk-astrein:astrein -- --checker localization cmk/gui/groups.py
+bazel run //packages/cmk-astrein:astrein -- --checker localization-checker cmk/gui/groups.py
 
 # Check a directory recursively
-bazel run //packages/cmk-astrein:astrein -- --checker module-layers cmk/gui
+bazel run //packages/cmk-astrein:astrein -- --checker cmk-module-layer-violation cmk/gui
 
 # Run all checkers
 bazel run //packages/cmk-astrein:astrein -- --checker all cmk
 
 # Specify repository root (required for module-layers)
-bazel run //packages/cmk-astrein:astrein -- --checker module-layers --repo-root . cmk/gui/main.py
+bazel run //packages/cmk-astrein:astrein -- --checker cmk-module-layer-violation --repo-root . cmk/gui/main.py
 ```
 
 ### Bazel Integration

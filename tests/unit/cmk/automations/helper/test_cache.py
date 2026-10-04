@@ -12,7 +12,7 @@ import pytest
 from fakeredis import FakeRedis
 from redis.exceptions import ConnectionError as RedisConnectionError
 
-from cmk.base.automation_helper._cache import Cache
+from cmk.automations.helper._cache import Cache
 
 
 @pytest.fixture(name="cache")

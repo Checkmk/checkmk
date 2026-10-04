@@ -10,8 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from cmk.base.automation_helper import _server
-from cmk.base.automation_helper._config import ServerConfig
+from cmk.automations.helper import _server
+from cmk.automations.helper._config import ServerConfig
 
 
 @pytest.fixture(name="short_dir")

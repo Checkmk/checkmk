@@ -44,3 +44,30 @@ py_library(
         requirement("requests"),
     ],
 )
+
+# The automation helper: a server that keeps the automation engine loaded. It is
+# a library of its own, so that the client side does not pull in its server stack.
+py_library(
+    name = "helper",
+    srcs = glob(["helper/*.py"]),
+    imports = ["../.."],
+    visibility = [
+        "//cmk/base/automation_helper:__pkg__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":automations",
+        "//packages/cmk-ccc:log",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:version",
+        "//packages/cmk-trace",
+        requirement("fastapi"),
+        requirement("opentelemetry-api"),
+        requirement("opentelemetry-sdk"),
+        requirement("opentelemetry-instrumentation-fastapi"),
+        requirement("pydantic"),
+        requirement("redis"),
+        requirement("uvicorn"),
+        requirement("watchdog"),
+    ],
+)

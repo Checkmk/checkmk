@@ -16,18 +16,19 @@ from fastapi import FastAPI
 from setproctitle import setproctitle
 
 from cmk.automations.engine import Automations, discover_automations
+from cmk.automations.helper import (
+    Cache,
+    config_from_disk_or_default_config,
+    configure_tracer,
+    make_application,
+    run_server,
+    run_watcher,
+)
 from cmk.automations.logging import LoggingManager
 from cmk.base import config
 from cmk.ccc.daemon import daemonize, pid_file_lock
 from cmk.utils.paths import omd_root
 from cmk.utils.redis import get_redis_client
-
-from ._app import make_application
-from ._cache import Cache
-from ._config import config_from_disk_or_default_config
-from ._server import run as run_server
-from ._tracer import configure_tracer
-from ._watcher import run as run_watcher
 
 _RELATIVE_RUN_DIRECTORY = Path("tmp", "run")
 _RELATIVE_LOG_DIRECTORY = Path("var", "log", "automation-helper")

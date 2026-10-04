@@ -24,7 +24,6 @@ py_cmk_test(
         "//cmk/base:active-check-result",
         "//cmk/plugins",
         "//packages/cmk-flags",
-        "//tests/testlib/common",
         "//tests/testlib/unit",
         "//tests/unit:conftest",
         requirement("pytest-mock"),

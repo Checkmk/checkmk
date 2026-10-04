@@ -6,7 +6,7 @@
 import pytest
 from fakeredis import FakeRedis
 
-from cmk.base.automation_helper._cache import Cache
+from cmk.automations.helper._cache import Cache
 
 
 @pytest.fixture(name="cache")

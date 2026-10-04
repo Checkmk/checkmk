@@ -19,8 +19,8 @@ from watchdog.events import (
     FileSystemEvent,
 )
 
-from cmk.base.automation_helper._cache import Cache
-from cmk.base.automation_helper._watcher import _AutomationWatcherHandler
+from cmk.automations.helper._cache import Cache
+from cmk.automations.helper._watcher import _AutomationWatcherHandler
 from tests.testlib.common.utils import wait_until
 
 _WATCHED_MK_PATTERN: Final = "*.mk"

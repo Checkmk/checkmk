@@ -22,17 +22,17 @@ from pytest_mock import MockerFixture
 from starlette import status
 
 from cmk.automations.engine import AutomationError
-from cmk.automations.internal import AutomationID, AutomationResult
-from cmk.automations.models.helper import AutomationPayload, AutomationResponse
-from cmk.base.automation_helper._app import (
+from cmk.automations.helper._app import (
     _reloader_task,
     _State,
     AutomationEngine,
     HealthCheckResponse,
     make_application,
 )
-from cmk.base.automation_helper._cache import Cache, CacheError
-from cmk.base.automation_helper._config import Config, ReloaderConfig, ServerConfig, WatcherConfig
+from cmk.automations.helper._cache import Cache, CacheError
+from cmk.automations.helper._config import Config, ReloaderConfig, ServerConfig, WatcherConfig
+from cmk.automations.internal import AutomationID, AutomationResult
+from cmk.automations.models.helper import AutomationPayload, AutomationResponse
 from tests.testlib.common.utils import wait_until
 
 

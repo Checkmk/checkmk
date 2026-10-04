@@ -27,12 +27,7 @@ from cmk.base.app import make_app
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.timeout import Timeout
-from cmk.discover_plugins import (
-    discover_all_plugins,
-    discover_plugins_from_modules,
-    DiscoveredPlugins,
-    PluginGroup,
-)
+from cmk.discover_plugins import discover_all_plugins, PluginGroup
 
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer()
@@ -102,28 +97,12 @@ def _derive_loading_result(raw_config: Mapping[str, object]) -> config.LoadingRe
         )
 
 
-# Automations that have not moved to cmk/plugins/<family>/automations/ yet. The
-# list shrinks with every move and goes away with the last one, together with
-# the second discovery call below.
-_NOT_YET_MOVED_MODULES: Final[tuple[str, ...]] = ()
-
-
 def discover_automations() -> Iterable[DiscoveredAutomation]:
-    discovered = discover_all_plugins(
+    return discover_all_plugins(
         PluginGroup.AUTOMATIONS,
         entry_point_prefixes(),
         skip_wrong_types=False,
         raise_errors=True,
-    )
-    not_yet_moved = discover_plugins_from_modules(
-        entry_point_prefixes(),
-        _NOT_YET_MOVED_MODULES,
-        skip_wrong_types=False,
-        raise_errors=True,
-    )
-    return DiscoveredPlugins(
-        [*discovered.errors, *not_yet_moved.errors],
-        {**discovered.plugins, **not_yet_moved.plugins},
     ).plugins.values()
 
 

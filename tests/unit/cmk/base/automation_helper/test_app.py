@@ -21,6 +21,7 @@ from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 from starlette import status
 
+from cmk.automations.engine import AutomationError
 from cmk.automations.internal import AutomationID, AutomationResult
 from cmk.automations.models.helper import AutomationPayload, AutomationResponse
 from cmk.base.automation_helper._app import (
@@ -32,7 +33,6 @@ from cmk.base.automation_helper._app import (
 )
 from cmk.base.automation_helper._cache import Cache, CacheError
 from cmk.base.automation_helper._config import Config, ReloaderConfig, ServerConfig, WatcherConfig
-from cmk.base.automations.automations import AutomationError
 from tests.testlib.common.utils import wait_until
 
 

@@ -11,7 +11,6 @@ py_library(
     ],
     deps = [
         "//cmk/automations",
-        "//cmk/base/automations",
         "//cmk/base/config",
         "//cmk/utils:paths",
         "//cmk/utils:redis",

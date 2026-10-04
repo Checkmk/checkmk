@@ -64,7 +64,6 @@ py_cmk_test(
     ] + glob(
         include = [
             "cmk/*.py",
-            "cmk/automations/**/*.py",
             "cmk/bi/**/*.py",
             "cmk/diskspace/**/*.py",
             "cmk/fields/**/*.py",

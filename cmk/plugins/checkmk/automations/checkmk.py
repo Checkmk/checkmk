@@ -39,6 +39,7 @@ import cmk.utils.paths
 import cmk.utils.timeperiod
 from cmk import trace
 from cmk.agent_based.v1.value_store import set_value_store_manager
+from cmk.automations.engine import MKAutomationError
 from cmk.automations.internal import Automation, AutomationID, NoState
 from cmk.automations.results import (
     ActiveCheckResult,
@@ -86,7 +87,6 @@ from cmk.automations.results import (
 )
 from cmk.base import config
 from cmk.base.active_check_result import normalize_active_check_result
-from cmk.base.automations.automations import MKAutomationError
 from cmk.base.automations.states import BaseConfigState, CommonState
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.checkers import (

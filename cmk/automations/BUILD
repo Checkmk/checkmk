@@ -5,6 +5,7 @@ py_library(
     name = "automations",
     srcs = [
         "client.py",
+        "engine.py",
         "logging.py",
     ] + glob([
         "backends/*.py",
@@ -22,10 +23,12 @@ py_library(
     deps = [
         "//cmk/utils",
         "//cmk/utils:unixsocket_http",
+        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:i18n",
         "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:plugin-registry",
+        "//packages/cmk-ccc:timeout",
         "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine:helper-interface",
         "//packages/cmk-check-engine:lib",
@@ -35,6 +38,7 @@ py_library(
         "//packages/cmk-diagnostics:automation_types",
         "//packages/cmk-events",
         "//packages/cmk-plugin-apis:automations",
+        "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-plugin-apis:password_store",
         "//packages/cmk-trace",
         requirement("requests"),

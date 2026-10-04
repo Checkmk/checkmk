@@ -17,13 +17,9 @@ py_library(
         "//cmk/base:base-app",
         "//cmk/base/config",
         "//cmk/utils:paths",
-        "//packages/cmk-ccc:debug",
-        "//packages/cmk-ccc:exceptions",
-        "//packages/cmk-ccc:timeout",
         "//packages/cmk-inventory:inventory",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-plugin-apis:automations",
-        "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-trace",
     ],
 )

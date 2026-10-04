@@ -415,6 +415,7 @@ allows = [
   "@trace",
   "cmk.checkengine",
   "cmk.checkengine.helper_interface",
+  "cmk.discover_plugins",
   "cmk.diagnostics.automation_types",
   "cmk.utils.check_utils",
   "cmk.utils.config_warnings",

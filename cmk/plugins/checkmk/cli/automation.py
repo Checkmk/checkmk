@@ -22,14 +22,14 @@ tracer = trace.get_tracer()
 def _mode_automation(
     omd_root: Path, _global_options: GlobalOptions, _options: Options, args: Args
 ) -> int:
-    from cmk.automations.internal import AutomationID
-    from cmk.base import config
-    from cmk.base.automations.automations import (
+    from cmk.automations.engine import (
         AutomationError,
         Automations,
         discover_automations,
         MKAutomationError,
     )
+    from cmk.automations.internal import AutomationID
+    from cmk.base import config
     from cmk.ccc import debug
     from cmk.ccc.exceptions import MKGeneralException, MKTimeout
     from cmk.ccc.store import lock_checkmk_configuration

@@ -21,7 +21,6 @@ from cmk.automations.internal import (
     entry_point_prefixes,
     StateFactory,
 )
-from cmk.base import config
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.timeout import Timeout
 from cmk.discover_plugins import discover_all_plugins, PluginGroup
@@ -166,8 +165,3 @@ def _stdout_only_on_failure() -> Iterator[None]:
     except BaseException:
         sys.stdout.write(buffer.getvalue())
         raise
-
-
-def load_config() -> config.LoadingResult:
-    with tracer.span("load_config"):
-        return config.load(validate_hosts=False)

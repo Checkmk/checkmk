@@ -14,7 +14,6 @@ py_library(
     deps = [
         "//cmk/base:app",
         "//cmk/base:dump-host",
-        "//cmk/base/automations",
         "//cmk/base/config",
         "//cmk/base/core",
         "//cmk/base/modes",

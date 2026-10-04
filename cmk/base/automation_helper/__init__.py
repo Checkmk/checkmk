@@ -15,9 +15,9 @@ from pathlib import Path
 from fastapi import FastAPI
 from setproctitle import setproctitle
 
+from cmk.automations.engine import Automations, discover_automations
 from cmk.automations.logging import LoggingManager
 from cmk.base import config
-from cmk.base.automations.automations import Automations, discover_automations
 from cmk.ccc.daemon import daemonize, pid_file_lock
 from cmk.utils.paths import omd_root
 from cmk.utils.redis import get_redis_client

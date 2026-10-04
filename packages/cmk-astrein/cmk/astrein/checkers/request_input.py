@@ -45,7 +45,7 @@ class RequestValidatedInputChecker(ASTVisitorChecker):
     """Detects request.var/get_str_input/get_str_input_mandatory values flowing into
     UserId/HostAddress/Hostname constructors within the same function."""
 
-    checker_id = "use-request-getvalidatedinputtype"
+    checker_id = "unvalidated-request-input"
     summary = "Requires request.get_validated_type_input for validated types"
 
     @override

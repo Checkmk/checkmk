@@ -42,7 +42,7 @@ def _formspec_aws() -> Dictionary:
                     elements=[
                         MultipleChoiceElement(
                             name=name.replace("-", "_"),
-                            title=Title(  # astrein: disable=localization-checker
+                            title=Title(  # astrein: disable=localization
                                 title
                             ),
                         )

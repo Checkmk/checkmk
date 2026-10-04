@@ -508,7 +508,7 @@ class SiteManagement:
         ldap_elements = [
             SingleChoiceElementExtended(
                 name=id_,
-                title=Title(label),  # astrein: disable=localization-checker
+                title=Title(label),  # astrein: disable=localization
             )
             for id_, label in ldap_choices
         ]
@@ -527,7 +527,7 @@ class SiteManagement:
             saml_elements = [
                 SingleChoiceElementExtended(
                     name=id_,
-                    title=Title(label),  # astrein: disable=localization-checker
+                    title=Title(label),  # astrein: disable=localization
                 )
                 for id_, label in saml_choices
             ]
@@ -599,7 +599,7 @@ class SiteManagement:
                     elements=[
                         MultipleChoiceElementExtended(
                             name=ident,
-                            title=Title(label),  # astrein: disable=localization-checker
+                            title=Title(label),  # astrein: disable=localization
                         )
                         for ident, label in connection_choices()
                     ],

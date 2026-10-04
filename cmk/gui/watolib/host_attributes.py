@@ -939,8 +939,8 @@ def config_based_custom_host_attribute_sync_plugins(
         )
 
         fs = StringFormSpec(
-            title=Title(attr["title"]),  # astrein: disable=localization-checker
-            help_text=Help(attr["help"]),  # astrein: disable=localization-checker
+            title=Title(attr["title"]),  # astrein: disable=localization
+            help_text=Help(attr["help"]),  # astrein: disable=localization
         )
 
         a: type[ABCHostAttributeValueSpec]
@@ -1383,13 +1383,13 @@ class ABCHostAttributeHostTagList(ABCHostAttributeTag, abc.ABC):
     def form_spec(self) -> SingleChoiceExtended:
         choices = [(k or "", v) for k, v in self._tag_group.get_tag_choices()]
         return SingleChoiceExtended(
-            title=Title(  # astrein: disable=localization-checker
+            title=Title(  # astrein: disable=localization
                 self._tag_group.title
             ),
             elements=[
                 SingleChoiceElementExtended(
                     name=choice[0],
-                    title=Title(choice[1]),  # astrein: disable=localization-checker
+                    title=Title(choice[1]),  # astrein: disable=localization
                 )
                 for choice in choices
             ],
@@ -1432,10 +1432,10 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, abc.ABC):
     def form_spec(self) -> TransformDataForLegacyFormatOrRecomposeFunction:
         return TransformDataForLegacyFormatOrRecomposeFunction(
             wrapped_form_spec=BooleanChoice(
-                title=Title(  # astrein: disable=localization-checker
+                title=Title(  # astrein: disable=localization
                     self._tag_group.title
                 ),
-                label=Label(  # astrein: disable=localization-checker
+                label=Label(  # astrein: disable=localization
                     self._tag_group.get_tag_choices()[0][1]
                 ),
             ),

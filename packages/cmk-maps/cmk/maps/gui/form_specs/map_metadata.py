@@ -78,7 +78,7 @@ def _connection_form(
         elements=[
             SingleChoiceElement(
                 name=cid,
-                title=Title(label or cid),  # astrein: disable=localization-checker
+                title=Title(label or cid),  # astrein: disable=localization
             )
             for cid, label in choices
         ],

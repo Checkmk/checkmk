@@ -377,7 +377,7 @@ def _fs_single_choice_elements[T](
     return [
         SingleChoiceElementExtended(
             name=name,
-            title=Title(choice_title),  # astrein: disable=localization-checker
+            title=Title(choice_title),  # astrein: disable=localization
         )
         for name, choice_title in choices
     ]
@@ -1132,7 +1132,7 @@ ConfigVariableVirtualHostTrees = ConfigVariable(
                             elements=lambda: [
                                 SingleChoiceElementExtended(
                                     name=name,
-                                    # astrein: disable=localization-checker
+                                    # astrein: disable=localization
                                     title=Title(choice_title),
                                 )
                                 for name, choice_title in _virtual_host_tree_choices()
@@ -1537,7 +1537,7 @@ ConfigVariableUserLocalizations = ConfigVariable(
                             elements={
                                 language: fs.DictElement(
                                     parameter_form=fs.String(
-                                        # astrein: disable=localization-checker
+                                        # astrein: disable=localization
                                         title=Title(alias),
                                     ),
                                 )
@@ -1927,7 +1927,7 @@ ConfigVariableBuiltinIconVisibility = ConfigVariable(
                             (
                                 SingleChoiceElementExtended(
                                     name=id_,
-                                    # astrein: disable=localization-checker
+                                    # astrein: disable=localization
                                     title=Title(class_.title),
                                 )
                                 for id_, class_ in icon_and_action_registry.items()
@@ -2804,7 +2804,7 @@ def _role_selection() -> MultipleChoiceExtended:
         elements=[
             MultipleChoiceElementExtended(
                 name=ident,
-                title=Title(alias),  # astrein: disable=localization-checker
+                title=Title(alias),  # astrein: disable=localization
             )
             for ident, alias in _list_roles()
         ],
@@ -2819,7 +2819,7 @@ def _contactgroup_selection() -> MultipleChoiceExtended:
         elements=[
             MultipleChoiceElementExtended(
                 name=ident,
-                title=Title(alias),  # astrein: disable=localization-checker
+                title=Title(alias),  # astrein: disable=localization
             )
             for ident, alias in _list_contactgroups()
         ],

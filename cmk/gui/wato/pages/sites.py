@@ -191,7 +191,7 @@ class StatusHostFormSpecAdapter(FormSpecAdapter[tuple[SiteId, str] | None, Casca
         site_elements: list[SingleChoiceElementExtended[str]] = [
             SingleChoiceElementExtended(
                 name=str(sk),
-                title=Title(si.get("alias", sk)),  # astrein: disable=localization-checker
+                title=Title(si.get("alias", sk)),  # astrein: disable=localization
             )
             for sk, si in self._configured_sites.items()
         ]
@@ -221,7 +221,7 @@ class StatusHostFormSpecAdapter(FormSpecAdapter[tuple[SiteId, str] | None, Casca
                     ),
                 ),
             ],
-            help_text=Help(  # astrein: disable=localization-checker
+            help_text=Help(  # astrein: disable=localization
                 _(
                     "By specifying a status host for each non-local connection, "
                     "you prevent the graphical user interface (GUI) from running into timeouts when remote sites do not respond. "
@@ -641,7 +641,7 @@ class ModeEditSite(WatoMode):
                 parameter_form=String(
                     title=Title("URL prefix"),
                     field_size=FieldSize.LARGE,
-                    help_text=Help(  # astrein: disable=localization-checker
+                    help_text=Help(  # astrein: disable=localization
                         _(
                             "The URL prefix will be prepended to links of add-ons like NagVis "
                             "when a link to such applications points to a host or "
@@ -990,7 +990,7 @@ class ModeEditBrokerConnection(WatoMode):
         replicated_sites_elements: list[SingleChoiceElementExtended[str]] = [
             SingleChoiceElementExtended(
                 name=str(sk),
-                title=Title(si.get("alias", sk)),  # astrein: disable=localization-checker
+                title=Title(si.get("alias", sk)),  # astrein: disable=localization
             )
             for sk, si in distributed_setup_remote_sites(config.sites).items()
         ]

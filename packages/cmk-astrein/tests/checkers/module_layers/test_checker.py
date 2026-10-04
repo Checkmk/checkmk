@@ -69,9 +69,9 @@ def test_no_component_masked_by_more_general_component(
 def test_inline_suppression_support(repo_root: Path, module_config: ModuleLayersConfig) -> None:
     """Test that inline suppressions are respected by the checker."""
     # Test code with suppressed and unsuppressed violations
-    source_code = """from cmk.base.config import something  # astrein: disable=cmk-module-layer-violation
+    source_code = """from cmk.base.config import something  # astrein: disable=module-layers
 
-# astrein: disable=cmk-module-layer-violation
+# astrein: disable=module-layers
 from cmk.gui.something import other
 
 from cmk.checkengine.plugins import Plugin
@@ -404,7 +404,7 @@ def test_file_without_component_rejects_cmk_imports(make_checker: _MakeChecker) 
 
 def test_checker_id_value(make_checker: _MakeChecker) -> None:
     checker = make_checker("cmk/test.py")
-    assert checker.checker_id == "cmk-module-layer-violation"
+    assert checker.checker_id == "module-layers"
 
 
 def test_is_package_detection_for_init_file(make_checker: _MakeChecker) -> None:

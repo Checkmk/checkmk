@@ -108,7 +108,7 @@ def _register_pre_21_plugin_api() -> None:
     import cmk.gui.painter.helpers as painter_helpers
     import cmk.gui.painter.legacy as painter_legacy
     import cmk.gui.painter.registry as gui_painter_registry
-    import cmk.gui.plugins.views as api_module  # astrein: disable=cmk-module-layer-violation
+    import cmk.gui.plugins.views as api_module  # astrein: disable=module-layers
     from cmk.gui import (
         data_source,
         display_options,
@@ -116,7 +116,7 @@ def _register_pre_21_plugin_api() -> None:
         view_utils,
         visual_link,
     )
-    from cmk.gui.plugins.views import (  # astrein: disable=cmk-module-layer-violation
+    from cmk.gui.plugins.views import (  # astrein: disable=module-layers
         icons,
     )
 

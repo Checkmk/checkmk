@@ -95,7 +95,7 @@ def http_proxy_reference_form_spec() -> CascadingSingleChoiceExtended:
         return [
             SingleChoiceElementExtended[str](
                 name=str(proxy["ident"]),
-                title=Title(str(proxy["title"])),  # astrein: disable=localization-checker
+                title=Title(str(proxy["title"])),  # astrein: disable=localization
             )
             for proxy in sorted(
                 settings.get("http_proxies", {}).values(), key=lambda proxy: str(proxy["title"])

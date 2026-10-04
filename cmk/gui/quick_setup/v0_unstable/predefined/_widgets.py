@@ -152,7 +152,7 @@ def site_formspec_wrapper() -> FormSpecWrapper:
                         elements=[
                             SingleChoiceElement(
                                 name=site_id,
-                                title=Title(  # astrein: disable=localization-checker
+                                title=Title(  # astrein: disable=localization
                                     title
                                 ),
                             )

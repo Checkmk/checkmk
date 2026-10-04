@@ -36,7 +36,7 @@ def test_select_checkers_with_all() -> None:
 
 def test_select_checkers_with_specific_checker() -> None:
     checkers = all_checkers()
-    selected = _select_checkers("localization-checker", checkers)
+    selected = _select_checkers("localization", checkers)
 
     assert len(selected) == 1
     assert selected[0] == LocalizationChecker
@@ -44,7 +44,7 @@ def test_select_checkers_with_specific_checker() -> None:
 
 def test_select_checkers_with_module_layers() -> None:
     checkers = all_checkers()
-    selected = _select_checkers("cmk-module-layer-violation", checkers)
+    selected = _select_checkers("module-layers", checkers)
 
     assert len(selected) == 1
     assert selected[0] == ModuleLayersChecker

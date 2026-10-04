@@ -63,7 +63,7 @@ def _default_connection_element(
                 elements=[
                     SingleChoiceElement(
                         name=cid,
-                        title=Title(label or cid),  # astrein: disable=localization-checker
+                        title=Title(label or cid),  # astrein: disable=localization
                     )
                     for cid, label in connection_choices
                 ],
@@ -235,7 +235,7 @@ def object_defaults_spec(title: Title = Title("Object defaults")) -> Dictionary:
                     elements=[
                         SingleChoiceElement(
                             name=name,
-                            title=Title(title),  # astrein: disable=localization-checker
+                            title=Title(title),  # astrein: disable=localization
                         )
                         for name, title in LINE_STYLES
                     ],

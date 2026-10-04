@@ -46,7 +46,7 @@ from pydantic import BaseModel
 from setproctitle import setthreadtitle
 
 import cmk.bi.filesystem
-import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # astrein: disable=module-layers
 import cmk.gui.watolib.automations
 import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.utils

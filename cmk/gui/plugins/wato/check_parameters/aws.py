@@ -16,7 +16,7 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
     Tuple,
 )
 from cmk.gui.form_specs.unstable.legacy_converter.generators import TupleLevels
-from cmk.plugins.aws_deprecated.constants import (  # astrein: disable=cmk-module-layer-violation
+from cmk.plugins.aws_deprecated.constants import (  # astrein: disable=module-layers
     AWS_EC2_INST_FAMILIES,
     AWS_EC2_INST_TYPES,
     AWS_EC2_LIMITS_DEFAULT,
@@ -232,7 +232,7 @@ _NO_TITLE_SUFFIXES: Mapping[str, Title] = {}
 
 
 def _http_errors_levels_title(http_err_code: str, title_suffixes: Mapping[str, Title]) -> Title:
-    title = Title(  # astrein: disable=localization-checker
+    title = Title(  # astrein: disable=localization
         f"Upper percentual levels for HTTP {http_err_code.upper()} errors"
     )
     if (suffix := title_suffixes.get(http_err_code)) is None:
@@ -248,7 +248,7 @@ def _fs_elements_http_errors(
         "levels_http_%s_perc" % http_err_code: DictElement(
             parameter_form=TupleLevels(
                 title=_http_errors_levels_title(http_err_code, title_suffixes),
-                help_text=Help(  # astrein: disable=localization-checker
+                help_text=Help(  # astrein: disable=localization
                     f"Specify levels for HTTP {http_err_code.upper()} errors in percent "
                     "which refer to the total number of requests."
                 ),
@@ -781,7 +781,7 @@ def _vs_limits_inst_types() -> List:
             elements=[
                 CascadingSingleChoiceElementExtended(
                     name=inst_type,
-                    title=Title(inst_type),  # astrein: disable=localization-checker
+                    title=Title(inst_type),  # astrein: disable=localization
                     parameter_form=fs_aws_limits(
                         Title("%(inst_type)s instances") % {"inst_type": inst_type},
                         AWS_EC2_LIMITS_SPECIAL.get(inst_type, AWS_EC2_LIMITS_DEFAULT)[0],

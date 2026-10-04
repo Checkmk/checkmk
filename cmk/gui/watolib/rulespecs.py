@@ -1232,7 +1232,7 @@ def _get_check_type_group_choice(
                 elements.append(
                     SingleChoiceElementExtended[str](
                         name=str(checkname),
-                        title=Title(  # astrein: disable=localization-checker
+                        title=Title(  # astrein: disable=localization
                             f"{checkname} - {check['title']}"
                         ),
                     )

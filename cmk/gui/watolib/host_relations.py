@@ -143,7 +143,7 @@ def _direction_choice(kind: DirectedRelationKind) -> SingleChoiceExtended[Relati
             SingleChoiceElementExtended(
                 name=direction,
                 # Already a translatable string, held lazily by the kind.
-                title=Title(  # astrein: disable=localization-checker
+                title=Title(  # astrein: disable=localization
                     str(kind.end(direction).row)
                 ),
             )
@@ -171,7 +171,7 @@ def _direction_field(
             return FixedValue[str](
                 value="symmetric",
                 title=Title("Direction"),
-                label=Label(str(kind.peer.row)),  # astrein: disable=localization-checker
+                label=Label(str(kind.peer.row)),  # astrein: disable=localization
             )
 
 
@@ -209,7 +209,7 @@ def _relation_row(kinds: Mapping[str, RelationKind]) -> CascadingSingleChoiceExt
         elements=[
             CascadingSingleChoiceElement(
                 name=kind.id,
-                title=Title(str(kind.title)),  # astrein: disable=localization-checker
+                title=Title(str(kind.title)),  # astrein: disable=localization
                 parameter_form=_relation_ends(kind),
             )
             for kind in kinds.values()

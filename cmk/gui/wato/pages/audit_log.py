@@ -441,7 +441,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
             [
                 SingleChoiceElementExtended(
                     name=f.name,
-                    title=Title(  # astrein: disable=localization-checker
+                    title=Title(  # astrein: disable=localization
                         f.name
                         if f.name != "wato_audit.log"
                         else "wato_audit.log (%s)" % _("current"),
@@ -714,7 +714,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
         ] + [
             SingleChoiceElementExtended[Any](
                 name=t.name,
-                title=Title(t.name),  # astrein: disable=localization-checker
+                title=Title(t.name),  # astrein: disable=localization
             )
             for t in ObjectRefType
         ]
@@ -727,7 +727,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
             + [
                 SingleChoiceElementExtended(
                     name=name,
-                    title=Title(name),  # astrein: disable=localization-checker
+                    title=Title(name),  # astrein: disable=localization
                 )
                 for (name, us) in users.items()
             ],

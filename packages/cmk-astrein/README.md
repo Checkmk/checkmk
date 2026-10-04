@@ -14,16 +14,16 @@ Run `bazel run //packages/cmk-astrein:astrein -- --help` for the current list.
 
 ```bash
 # Check a single file
-bazel run //packages/cmk-astrein:astrein -- --checker localization-checker cmk/gui/groups.py
+bazel run //packages/cmk-astrein:astrein -- --checker localization cmk/gui/groups.py
 
 # Check a directory recursively
-bazel run //packages/cmk-astrein:astrein -- --checker cmk-module-layer-violation cmk/gui
+bazel run //packages/cmk-astrein:astrein -- --checker module-layers cmk/gui
 
 # Run all checkers
 bazel run //packages/cmk-astrein:astrein -- --checker all cmk
 
 # Specify repository root (required for module-layers)
-bazel run //packages/cmk-astrein:astrein -- --checker cmk-module-layer-violation --repo-root . cmk/gui/main.py
+bazel run //packages/cmk-astrein:astrein -- --checker module-layers --repo-root . cmk/gui/main.py
 ```
 
 ### Bazel Integration
@@ -46,10 +46,10 @@ bazel lint --machine //cmk/...
 Add inline comments to suppress specific violations:
 
 ```python
-# astrein: disable=localization-checker
+# astrein: disable=localization
 translated = _(variable_text)
 
-result = _(dynamic_string)  # astrein: disable=localization-checker
+result = _(dynamic_string)  # astrein: disable=localization
 ```
 
 The id is the one shown in brackets in the error message.

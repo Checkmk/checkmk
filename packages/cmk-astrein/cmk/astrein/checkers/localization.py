@@ -55,7 +55,7 @@ class LocalizationChecker(ASTVisitorChecker):
         f"</?({_ALLOWED_TAGS}|a|(a.*? href=.*?))>"  # unfortunately, we have to allow links at the moment
     )
 
-    checker_id = "localization-checker"
+    checker_id = "localization"
     summary = "Validates translation function calls use literal strings"
 
     @override

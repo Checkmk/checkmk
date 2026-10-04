@@ -156,8 +156,8 @@ def _register_pre_21_plugin_api() -> None:
     CMK-12228
     """
     # Needs to be a local import to not influence the regular plug-in loading order
-    import cmk.gui.plugins.visuals as api_module  # astrein: disable=cmk-module-layer-violation
-    import cmk.gui.plugins.visuals.utils as plugin_utils  # astrein: disable=cmk-module-layer-violation
+    import cmk.gui.plugins.visuals as api_module  # astrein: disable=module-layers
+    import cmk.gui.plugins.visuals.utils as plugin_utils  # astrein: disable=module-layers
 
     for name, val in (
         ("Filter", Filter),

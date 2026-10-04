@@ -208,7 +208,7 @@ def _make_flag_config_variable(
         primary_domain=ConfigDomainExperimentalFlags,
         ident=name,
         form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
-            title=Title(name),  # astrein: disable=localization-checker
+            title=Title(name),  # astrein: disable=localization
             label=Label("Enabled"),
             help_text=help_text,
         ),

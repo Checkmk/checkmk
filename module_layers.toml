@@ -1,7 +1,7 @@
 # module_layers.toml -- Checkmk module layer architecture rules
 #
 # Defines which components may import from which other components.
-# Enforced by astrein's cmk-module-layer-violation checker.
+# Enforced by astrein's module-layers checker.
 #
 # A component is a *module prefix*, not a directory: what lives below cmk.foobar
 # belongs to component cmk.foobar, wherever on disk the file happens to sit. The

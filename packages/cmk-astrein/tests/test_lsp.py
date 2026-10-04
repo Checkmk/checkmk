@@ -179,7 +179,7 @@ def test_get_diagnostics_reports_errors_in_unsaved_source(tmp_path: Path) -> Non
     assert [d.code for d in result] == ["unused-suppression"]
 
 
-@pytest.mark.parametrize("checker_id", ["cmk-module-layer-violation", "http-status-literal"])
+@pytest.mark.parametrize("checker_id", ["module-layers", "http-status-literal"])
 def test_get_diagnostics_keeps_suppression_of_checker_without_config(
     tmp_path: Path, checker_id: str
 ) -> None:

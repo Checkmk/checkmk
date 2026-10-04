@@ -27,7 +27,7 @@ class CheckerError:
 
 class ASTVisitorChecker(ast.NodeVisitor):
     checker_id: ClassVar[str]
-    """Unique id for selection, suppressions and reports."""
+    """Unique kebab-case id naming what is checked, for selection, suppressions and reports."""
     summary: ClassVar[str]
     """One-line description of what the checker enforces."""
 

@@ -11,7 +11,7 @@ import pytest
 from cmk.astrein.framework import CheckerError
 from cmk.astrein.output.sarif import format_sarif
 
-_SUMMARIES = {"cmk-module-layer-violation": "Enforces layers"}
+_SUMMARIES = {"module-layers": "Enforces layers"}
 
 
 def _make_error(
@@ -48,14 +48,14 @@ def test_single_error() -> None:
         line=10,
         column=5,
         file_path="cmk/gui/test.py",
-        checker_id="cmk-module-layer-violation",
+        checker_id="module-layers",
     )
     result = format_sarif([error], _SUMMARIES)
     data = json.loads(result)
 
     assert len(data["runs"][0]["results"]) == 1
     result_item = data["runs"][0]["results"][0]
-    assert result_item["ruleId"] == "cmk-module-layer-violation"
+    assert result_item["ruleId"] == "module-layers"
     assert result_item["level"] == "error"
     assert result_item["message"]["text"] == "Import not allowed"
 
@@ -164,7 +164,7 @@ def test_json_indentation() -> None:
 @pytest.mark.parametrize(
     "checker_id, expected",
     [
-        ("cmk-module-layer-violation", "Enforces layers"),
+        ("module-layers", "Enforces layers"),
         ("unknown-rule-xyz", "Checker rule: unknown-rule-xyz"),
     ],
 )
@@ -182,7 +182,7 @@ def test_full_sarif_structure_with_real_error() -> None:
         line=25,
         column=10,
         file_path="cmk/ccc/version.py",
-        checker_id="cmk-module-layer-violation",
+        checker_id="module-layers",
     )
     result = format_sarif([error], _SUMMARIES)
     data = json.loads(result)
@@ -197,12 +197,12 @@ def test_full_sarif_structure_with_real_error() -> None:
     assert len(run["tool"]["driver"]["rules"]) == 1
 
     rule = run["tool"]["driver"]["rules"][0]
-    assert rule["id"] == "cmk-module-layer-violation"
+    assert rule["id"] == "module-layers"
     assert "shortDescription" in rule
 
     assert len(run["results"]) == 1
     result_item = run["results"][0]
-    assert result_item["ruleId"] == "cmk-module-layer-violation"
+    assert result_item["ruleId"] == "module-layers"
     assert result_item["level"] == "error"
     assert result_item["message"]["text"] == "Import of cmk.gui.pages not allowed in 'cmk.ccc'"
 
@@ -218,12 +218,12 @@ def test_mixed_checkers_in_one_report() -> None:
     errors = [
         _make_error(
             message="Import not allowed",
-            checker_id="cmk-module-layer-violation",
+            checker_id="module-layers",
             line=10,
         ),
         _make_error(
             message="Use literal string",
-            checker_id="localization-checker",
+            checker_id="localization",
             line=20,
         ),
         _make_error(
@@ -240,8 +240,8 @@ def test_mixed_checkers_in_one_report() -> None:
 
     rule_ids = {rule["id"] for rule in rules}
     assert rule_ids == {
-        "cmk-module-layer-violation",
-        "localization-checker",
+        "module-layers",
+        "localization",
         "file-read-error",
     }
 

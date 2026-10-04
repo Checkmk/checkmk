@@ -44,7 +44,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Text,
     Widget,
 )
-from cmk.plugins.azure_deprecated.rulesets import (  # astrein: disable=cmk-module-layer-violation
+from cmk.plugins.azure_deprecated.rulesets import (  # astrein: disable=module-layers
     azure,
 )
 from cmk.ruleset_matcher.definition import RuleGroup

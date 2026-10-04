@@ -1418,7 +1418,7 @@ def _contact_group_choice() -> Sequence[UniqueSingleChoiceElement]:
         UniqueSingleChoiceElement(
             parameter_form=SingleChoiceElementExtended(
                 name=ident,
-                title=Title(title),  # astrein: disable=localization-checker
+                title=Title(title),  # astrein: disable=localization
             ),
         )
         for ident, title in sorted_contact_group_choices()
@@ -1508,7 +1508,7 @@ def recipient(edition: Edition) -> QuickSetupStage:
                                 UniqueSingleChoiceElement(
                                     parameter_form=SingleChoiceElementExtended(
                                         name=ident,
-                                        title=Title(title),  # astrein: disable=localization-checker
+                                        title=Title(title),  # astrein: disable=localization
                                     )
                                 )
                                 for ident, title in _get_sorted_users()
@@ -1730,7 +1730,7 @@ def sending_conditions() -> QuickSetupStage:
                                             elements=[
                                                 SingleChoiceElementExtended(
                                                     name=name,
-                                                    title=Title(  # astrein: disable=localization-checker
+                                                    title=Title(  # astrein: disable=localization
                                                         title
                                                     ),
                                                 )

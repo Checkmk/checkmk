@@ -6,7 +6,7 @@
 from collections.abc import Sequence
 
 # It's OK to import centralized config load logic
-import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # astrein: disable=module-layers
 import cmk.utils.paths
 from cmk.gui.config import Config
 from cmk.gui.groups import GroupName

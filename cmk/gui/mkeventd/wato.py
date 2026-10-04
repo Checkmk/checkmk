@@ -26,7 +26,7 @@ from typing import Any, cast, Literal, overload, override
 import cmk.ccc.translations
 
 # It's OK to import centralized config load logic
-import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # astrein: disable=module-layers
 import cmk.mkp_tool
 import cmk.utils.paths
 import cmk.utils.render
@@ -4965,7 +4965,7 @@ def _contact_group_elements() -> Sequence[SingleChoiceElementExtended[str]]:
     return [
         SingleChoiceElementExtended(
             name=name,
-            title=Title(title),  # astrein: disable=localization-checker
+            title=Title(title),  # astrein: disable=localization
         )
         for name, title in sorted_contact_group_choices()
     ] + [
@@ -5037,7 +5037,7 @@ ConfigVariableEventConsoleNotifyFacility = ConfigVariable(
         elements=[
             SingleChoiceElementExtended(
                 name=value,
-                title=Title(title),  # astrein: disable=localization-checker
+                title=Title(title),  # astrein: disable=localization
             )
             for value, title in syslog_facilities
         ],

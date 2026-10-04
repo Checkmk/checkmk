@@ -45,7 +45,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Widget,
 )
 from cmk.gui.utils.doc_reference_urls import doc_reference_url
-from cmk.plugins.gcp.rulesets import gcp  # astrein: disable=cmk-module-layer-violation
+from cmk.plugins.gcp.rulesets import gcp  # astrein: disable=module-layers
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Dictionary

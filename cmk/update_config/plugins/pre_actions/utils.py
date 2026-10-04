@@ -11,7 +11,7 @@ from termios import tcflush, TCIFLUSH
 from typing import Final
 
 # It's OK to import centralized config load logic
-import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # astrein: disable=module-layers
 from cmk.ccc import version
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.gui.search import index as search_index

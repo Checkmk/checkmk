@@ -1009,7 +1009,7 @@ class ModeEditBackupJob(WatoMode[object]):
         return [
             SingleChoiceElementExtended(
                 name=ident,
-                title=Title(title),  # astrein: disable=localization-checker
+                title=Title(title),  # astrein: disable=localization
             )
             for ident, title in self.key_store.choices()
         ]
@@ -1021,7 +1021,7 @@ class ModeEditBackupJob(WatoMode[object]):
         return [
             SingleChoiceElementExtended(
                 name=target.ident,
-                title=Title(target.title),  # astrein: disable=localization-checker
+                title=Title(target.title),  # astrein: disable=localization
             )
             for target in sorted(
                 backup_config.all_targets.values(),
@@ -1991,7 +1991,7 @@ class ModeEditBackupTarget(WatoMode[object]):
                         elements=[
                             CascadingSingleChoiceElement(
                                 name=target_type.ident(),
-                                title=Title(  # astrein: disable=localization-checker
+                                title=Title(  # astrein: disable=localization
                                     target_type.title()
                                 ),
                                 parameter_form=target_type.form_spec(),

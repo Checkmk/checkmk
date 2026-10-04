@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Callable, Sequence, Set
 from http import HTTPStatus
-from typing import Annotated, Self
+from typing import Annotated, Final, Self
 
 from annotated_types import Interval
 from pydantic import PlainValidator
@@ -52,6 +52,9 @@ from ._validators import parse_host_search_query, parse_host_sort_options
 _MIN_NUMBER_OF_HOSTS = 0
 _MAX_NUMBER_OF_HOSTS = 5_000
 _DEFAULT_LIMIT = 1_000
+
+# The row limits the All hosts page offers: the default first, the maximum last.
+LIMIT_TIERS: Final = (_DEFAULT_LIMIT, _MAX_NUMBER_OF_HOSTS)
 
 _DEFAULT_SORT = (HostSort(column=HostSortColumn.NAME, direction=HostSortDirection.ASC),)
 

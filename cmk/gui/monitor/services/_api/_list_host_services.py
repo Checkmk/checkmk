@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence, Set
 from http import HTTPStatus
-from typing import Annotated, Self
+from typing import Annotated, Final, Self
 
 from annotated_types import Interval
 from pydantic import PlainValidator
@@ -54,6 +54,9 @@ from ._validators import parse_service_search_query, parse_service_sort_options
 _MIN_HOST_SVC_LIMIT = 0
 _MAX_HOST_SVC_LIMIT = 5_000
 _DEFAULT_LIMIT = 1_000
+
+# The row limits the services of a host page offers: the default first, the maximum last.
+LIMIT_TIERS: Final = (_DEFAULT_LIMIT, _MAX_HOST_SVC_LIMIT)
 
 # Requesting no sorter is not the same as requesting no order: the repository reads an empty list
 # as "the page default", which leads with Checkmk's own services.

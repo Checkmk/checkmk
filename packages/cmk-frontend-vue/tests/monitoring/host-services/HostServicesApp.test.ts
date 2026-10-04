@@ -114,6 +114,7 @@ function renderApp(overrides: Partial<MonitoringHostServicesApp> = {}) {
       host_url: 'monitor_all_hosts.py#host=web-1&site=local',
       user_id: 'cmkadmin',
       edition: 'pro',
+      limit_tiers: [1000, 5000],
       ...overrides
     } satisfies MonitoringHostServicesApp
   })
@@ -681,7 +682,7 @@ test('leaves a pristine table out of the URL', async () => {
   const params = new URLSearchParams(window.location.search)
   expect(params.get('sort')).toBeNull()
   expect(params.get('cols')).toBeNull()
-  // The page offers a single row-count tier, so the limit never leaves its default.
+  // Nothing changed the row limit, so it stays at its default and out of the URL.
   expect(params.get('limit')).toBeNull()
 })
 

@@ -71,6 +71,7 @@ function renderApp(
       site: 'local',
       sites: [{ id: 'local', alias: 'Local site' }],
       edition,
+      limit_tiers: [1000, 5000],
       ...overrides
     } satisfies MonitoringAllHostsApp
   })

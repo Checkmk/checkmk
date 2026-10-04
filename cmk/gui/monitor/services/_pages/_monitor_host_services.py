@@ -28,6 +28,7 @@ from cmk.gui.monitor.command import (
 )
 from cmk.gui.monitor.hosts._pages._monitor_all_hosts import monitor_all_hosts_visual_spec
 from cmk.gui.monitor.services._ai_explain import ai_explain
+from cmk.gui.monitor.services._api._list_host_services import LIMIT_TIERS
 from cmk.gui.monitor.services._page_menu import build_page_menu, HostMenus
 from cmk.gui.pages import Page, PageContext
 from cmk.gui.pagetypes import PagetypeTopics
@@ -151,6 +152,7 @@ class MonitorHostServicesPage(Page):
                 MonitoringHostServicesApp(
                     poll_interval_ms=ctx.config.view_option_refreshes[0] * 1000,
                     may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
+                    limit_tiers=list(LIMIT_TIERS),
                     host=hostname,
                     site=site_id,
                     host_url=host_url,

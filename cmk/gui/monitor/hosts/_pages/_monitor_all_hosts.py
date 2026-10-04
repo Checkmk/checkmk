@@ -55,6 +55,7 @@ from cmk.utils import paths
 from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless
 
+from .._api._list_hosts import LIMIT_TIERS
 from .._impl import LiveStatusHostRepository
 
 _PAGE_TITLE = _("All hosts")
@@ -182,6 +183,7 @@ class MonitorAllHostsPage(Page):
                     ],
                     row_actions=_row_actions(ctx.config),
                     may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
+                    limit_tiers=list(LIMIT_TIERS),
                     acknowledge_presets_url=acknowledge_presets_url(ctx.config),
                     acknowledge_defaults=AcknowledgeDefaults(
                         sticky=ack.sticky,

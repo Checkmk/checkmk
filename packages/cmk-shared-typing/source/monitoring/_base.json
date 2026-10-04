@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2019-09/schema",
   "type": "object",
   "title": "Monitoring - Base Structure",
+  "required": ["limit_tiers"],
   "properties": {
     "poll_interval_ms": {
       "type": "number",
@@ -20,6 +21,11 @@
     "may_ignore_hard_limit": {
       "type": "boolean",
       "default": false
+    },
+    "limit_tiers": {
+      "description": "Row limits the table offers, smallest first. The first is the default, the last the endpoint's maximum.",
+      "type": "array",
+      "items": { "type": "number" }
     },
     "downtime_recurrences": {
       "type": "array",

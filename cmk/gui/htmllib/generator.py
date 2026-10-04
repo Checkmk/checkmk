@@ -28,13 +28,13 @@
 
 import dataclasses
 import json
-import typing
 from collections.abc import Mapping
 from typing import Any, assert_never, Final, final
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.utils.output_funnel import OutputFunnel
+from cmk.shared_typing.legacy_frontend_hooks import KnownClickAction, KnownTSFunction
 from cmk.web.htmllib.builder import HtmlBuilder
 from cmk.web.utils import escaping
 from cmk.web.utils.flashed_messages import MsgType
@@ -50,105 +50,6 @@ from .tag_rendering import (
 
 TSFunctionArguments = Mapping[str, object]
 
-# See packages/cmk-frontend/src/js/modules/callable_functions.ts:callable_functions
-# The values of this Literal and the available keys in the TS dictionary MUST MATCH.
-KnownTSFunction = typing.Literal[
-    "render_qr_code",
-    "render_stats_table",
-    "insert_before",
-    "lock_and_redirect",
-    "confirm_on_form_leave",
-    # utils
-    "set_focus_by_name",
-    "set_focus_by_id",
-    "set_reload",
-    "reload_whole_page",
-    "navigate_to_page",
-    "update_row_info",
-    "set_inpage_search_result_info",
-    "update_time",
-    "fade_out_element",
-    # page_menu
-    "enable_menu_entry",
-    "enable_menu_entries",
-    "check_menu_entry_by_checkboxes",
-    "toggle_navigation_page_menu_entry",
-    "inpage_search_init",
-    "open_popup",
-    "form_submit",
-    "fetch_hot_menu_entries",
-    "init_filter_form",
-    # forms
-    "confirm_dialog_redirect",
-    "confirm_dialog_form_submit",
-    # selection
-    "set_selection_enabled",
-    "init_rowselect",
-    "update_bulk_moveto",
-    # valuespecs
-    "list_of_strings_init",
-    "listof_update_indices",
-    "listofmultiple_init",
-    "add_cascading_sub_valuespec_parameters",
-    "update_unit_selector",
-    "init_on_change_validation",
-    "remove_label_filter_hidden_fields",
-    "render_input_range",
-    # bi
-    "bi_set_rule_argument_lookup",
-    "bi_rule_preview",
-    "bi_aggregation_preview",
-    "nodevis_create_example",
-    # wato
-    "background_job_start",
-    "prepare_edit_dialog",
-    "show_element_on_click",
-    "host_diagnose_start_test",
-    "update_site_activation_state",
-    "service_discovery_start",
-    "register_delayed_active_check",
-    "fetch_site_status",
-    "wato_message",
-    "set_button_loading_state_on_click",
-    "toggle_test_notification_visibility",
-    # nodevis
-    "show_bi_aggregation",
-    "show_topology",
-    # sidebar
-    "register_search_field",
-    "fetch_nagvis_snapin_contents",
-    "speedometer_show_speed",
-    # misc
-    "submit_crash_report",
-    "enable_submit_buttons_on_nonempty_input",
-    # backup
-    "refresh_backup_job_details",
-    # figures / ntop / licensing
-    "show_figure",
-    "show_ntop_table_figure",
-    "show_ntop_host_details",
-    "show_ntop_interface_quickstats",
-    "render_license_usage_graph",
-    "replace_error_msg_with_confirm_dialog",
-    # dashboard
-    "ignore_public_dashboard_clicks",
-    "redirect_shared_dashboard",
-    "post_message_to_parent",
-    # mobile (packages/cmk-frontend/src/js/mobile.ts)
-    "mobile_disable_ajax_links",
-    "mobile_dataset_table_init",
-    "mobile_filter_form_init",
-    "mobile_command_form_init",
-]
-
-
-# See packages/cmk-frontend/src/js/modules/click_actions.ts:click_actions
-# The values of this Literal and the available keys in the TS dictionary MUST MATCH.
-KnownClickAction = typing.Literal[
-    "add_bookmark",
-    "switch_master_state",
-]
-
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class ClickAction:
@@ -161,7 +62,8 @@ class ClickAction:
 
     To add a new click action:
 
-    1. Add its name to ``KnownClickAction`` above.
+    1. Add its name to ``known_click_action`` in
+       packages/cmk-shared-typing/source/legacy_frontend_hooks.json.
     2. Implement the action under the same name in the ``click_actions``
        dictionary in packages/cmk-frontend/src/js/modules/click_actions.ts.
     3. Pass a ``ClickAction`` to an HTML helper supporting it (e.g.

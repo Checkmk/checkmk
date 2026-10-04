@@ -4,8 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 /* eslint-disable import-x/no-namespace -- Needed for exports */
+import type { KnownTSFunction } from 'cmk-shared-typing/typescript/legacy_frontend_hooks'
+
 import * as forms from './modules/forms'
 import {
+  type CallableFunction,
   init_callable_ts_functions,
   register_callable_functions
 } from './modules/ts_function_dispatcher'
@@ -45,7 +48,6 @@ $(document).ready(function () {
   })
 })
 
-// See cmk.gui.htmllib.generator:KnownTSFunction
 register_callable_functions({
   confirm_dialog_form_submit: (_node, options) =>
     forms.confirm_dialog_form_submit(options.dialog_options, options.form_id, options.cancel_url),
@@ -79,7 +81,7 @@ register_callable_functions({
       $('x').children().css('background-color', '#f84')
     })
   }
-})
+} satisfies Partial<Record<KnownTSFunction, CallableFunction>>)
 
 $(document).ready(function () {
   init_callable_ts_functions(document)

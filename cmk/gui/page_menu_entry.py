@@ -5,7 +5,8 @@
 
 from typing import Protocol
 
-from cmk.gui.htmllib.generator import KnownTSFunction, TSFunctionArguments
+from cmk.gui.htmllib.generator import TSFunctionArguments
+from cmk.shared_typing.legacy_frontend_hooks import KnownTSFunction
 
 
 class SupportsCallTSFunction(Protocol):

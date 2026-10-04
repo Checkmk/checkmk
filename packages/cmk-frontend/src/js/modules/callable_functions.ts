@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 /* eslint-disable import-x/no-namespace -- Lazily resolved to avoid import cycles */
+import type { KnownTSFunction } from 'cmk-shared-typing/typescript/legacy_frontend_hooks'
 import { select } from 'd3'
 
 import * as activation from '@/modules/activation'
@@ -43,9 +44,8 @@ const license_usage_graphs: Record<string, (num_graphs: number, aggregation: any
   free_metric_series: license_usage_timeseries_graph.render_free_metric_series_usage_graph
 }
 
-// See cmk.gui.htmllib.generator:KnownTSFunction
-// The type on the Python side and the available keys in this dictionary MUST MATCH.
-const callable_functions: { [name: string]: CallableFunction } = {
+// The mobile functions are registered by the mobile bundle, see mobile.ts.
+const callable_functions: Record<Exclude<KnownTSFunction, `mobile_${string}`>, CallableFunction> = {
   render_stats_table: render_stats_table,
   render_qr_code: render_qr_code,
   insert_before: insert_before,

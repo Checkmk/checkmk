@@ -69,6 +69,7 @@ SOURCES_SPECIAL_DATACLASSES = [
     "attribute_filter.json",
     "consolidation.json",
     "cmk_time_series_graph.json",
+    "legacy_frontend_hooks.json",
     "maps_states.json",
     "profiling_flamegraph.json",
     "service_graphs.json",

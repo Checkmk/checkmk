@@ -11,11 +11,14 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_python//python:py_test.bzl", "py_test")
 load("//bazel/rules:css_library.bzl", "css_library")
 load("//bazel/rules:dependency_info.bzl", "dependency_info")
+load("//bazel/rules:link_shared_typing.bzl", "link_shared_typing")
 load("//bazel/rules:pkg.bzl", "pkg_tar")
 
 exports_files(["package.json"])
 
 npm_link_all_packages(name = "node_modules")
+
+link_shared_typing()
 
 # The import resolver needs the path aliases, but ts_project already writes
 # tsconfig.json to this package's bin directory, so lint gets it under its own
@@ -186,10 +189,15 @@ ts_project(
     no_emit = True,
     transpiler = "tsc",
     visibility = ["//packages:__subpackages__"],
-    # "bundler" module resolution reports unresolvable side-effect imports, which
-    # the previous "node10" resolution silently ignored. Only the tests import
-    # this one, hence the addition here rather than in BUILD_DEPS.
-    deps = BUILD_DEPS + [":node_modules/fake-indexeddb"],
+    # Neither of these is in BUILD_DEPS. The sources import only types from
+    # cmk-shared-typing, which babel erases, so the bundle never needs it; a value
+    # import would have to go into BUILD_DEPS. "bundler" module resolution reports
+    # unresolvable side-effect imports, which the previous "node10" resolution
+    # silently ignored, and only the tests import fake-indexeddb.
+    deps = BUILD_DEPS + [
+        ":node_modules/cmk-shared-typing-bzl",
+        ":node_modules/fake-indexeddb",
+    ],
 )
 
 jest_cli_bin.jest_test(

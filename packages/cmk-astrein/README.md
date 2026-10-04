@@ -142,6 +142,5 @@ Checkers import only `framework.py` and each other, and nothing imports the fron
 1. Add `checkers/<name>.py` with a subclass of `ASTVisitorChecker` that sets `checker_id` and `summary`.
 2. Add it to `ALL_CHECKERS` in `registry.py`.
 3. Add `tests/checkers/test_<name>.py`.
-4. Add the new module to `srcs` in `BUILD`.
 
 Astrein, every time.

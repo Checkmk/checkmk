@@ -94,7 +94,7 @@ const commandShown = computed(() => isResolved(rendered.value.tokenState))
  */
 /** Whether the registration command needs a token at all. */
 const needsToken = computed(() =>
-  blocks.value.some((b) => requiresToken(b.command, 'registration'))
+  blocks.value.some((b) => requiresToken(b.command, 'registration', props.macros.placeholders))
 )
 
 /**

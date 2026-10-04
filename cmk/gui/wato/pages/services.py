@@ -120,6 +120,7 @@ from cmk.shared_typing.setup import (
     AgentRegistrationCmds,
     AgentSlideout,
     AgentStatusCmds,
+    CommandPlaceholders,
     UnbakedFallback,
 )
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
@@ -885,6 +886,7 @@ class DiscoveryPageRenderer:
                         agent_install_cls=AgentInstallCmds,
                         agent_registration_cls=AgentRegistrationCmds,
                         agent_status_cls=AgentStatusCmds,
+                        command_placeholders_cls=CommandPlaceholders,
                         unbaked_fallback_cls=UnbakedFallback,
                         version=version,
                         baked_agents_available=baked_agents_available(user, permission_registry),

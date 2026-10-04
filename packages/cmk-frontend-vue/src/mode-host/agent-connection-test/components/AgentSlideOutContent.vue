@@ -8,6 +8,7 @@ import {
   type AgentInstallCmds,
   type AgentRegistrationCmds,
   type AgentStatusCmds,
+  type CommandPlaceholders,
   type UnbakedFallback
 } from 'cmk-shared-typing/typescript/agent_slideout'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -34,6 +35,7 @@ const props = defineProps<{
   agentInstallCmds: AgentInstallCmds
   agentRegistrationCmds: AgentRegistrationCmds
   agentStatusCmds: AgentStatusCmds
+  commandPlaceholders: CommandPlaceholders
   closeButtonTitle: TranslatedString
   saveHost: boolean
   hostExists: boolean
@@ -70,7 +72,8 @@ const macros = computed<HostMacros>(() => ({
   hostName: props.hostName,
   siteId: props.siteId,
   downloadServer: props.siteServer || `${window.location.protocol}//${window.location.host}`,
-  registrationServer: registrationServer()
+  registrationServer: registrationServer(),
+  placeholders: props.commandPlaceholders
 }))
 
 const flavours = computed(() =>

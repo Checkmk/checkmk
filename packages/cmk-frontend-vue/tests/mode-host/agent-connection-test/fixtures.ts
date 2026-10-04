@@ -6,11 +6,22 @@
 import type {
   AgentInstallCmds,
   AgentRegistrationCmds,
-  AgentStatusCmds
+  AgentStatusCmds,
+  CommandPlaceholders
 } from 'cmk-shared-typing/typescript/agent_slideout'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 import type AgentSlideOutContent from '@/mode-host/agent-connection-test/components/AgentSlideOutContent.vue'
+
+/** The placeholders as `cmk/gui/agent_commands.py` hands them to the slideout. */
+export const commandPlaceholders: CommandPlaceholders = {
+  host_name: '{{HOSTNAME}}',
+  site: '{{SITE}}',
+  server: '{{SERVER}}',
+  download_token: '[AGENT_DOWNLOAD_OTT]',
+  registration_token: '[AGENT_REGISTRATION_OTT]',
+  registration_user_flag: '--user agent_registration'
+}
 
 /**
  * Command templates shaped like the ones the backend actually emits (see
@@ -78,6 +89,7 @@ export const contentProps: ContentProps = {
   agentInstallCmds: installCmds,
   agentRegistrationCmds: registrationCmds,
   agentStatusCmds: statusCmds,
+  commandPlaceholders,
   closeButtonTitle: 'Close & test connection' as TranslatedString,
   saveHost: false,
   hostExists: true,

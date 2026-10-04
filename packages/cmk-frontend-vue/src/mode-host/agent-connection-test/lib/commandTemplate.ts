@@ -7,10 +7,12 @@
  * Rewrites the command templates of the agent slideout for display.
  *
  * The producing ends are `cmk/gui/agent_commands.py` and, for the commercial
- * editions, `cmk/gui/nonfree/pro/agent_commands.py`. The welcome slide-in
+ * editions, `cmk/gui/nonfree/pro/agent_commands.py`; the page hands over the
+ * placeholders those templates use. The welcome slide-in
  * (`src/welcome/components/first-host/`) builds its commands in the frontend
  * and still substitutes `[AGENT_DOWNLOAD_OTT]` on its own.
  */
+import type { CommandPlaceholders } from 'cmk-shared-typing/typescript/agent_slideout'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 import type { CommandBlock } from './types'
@@ -41,21 +43,9 @@ export interface HostMacros {
   downloadServer: string
   /** `{{SERVER}}` for registration commands: `<host>:<agent-receiver-port>`. */
   registrationServer: string
+  /** The placeholders the templates carry, as the page hands them over. */
+  placeholders: CommandPlaceholders
 }
-
-const DOWNLOAD_TOKEN_MACRO = '[AGENT_DOWNLOAD_OTT]'
-
-/**
- * The registration command asks for the `agent_registration` user by default;
- * a generated token replaces that flag rather than a placeholder.
- */
-const REGISTRATION_USER_FLAG = '--user agent_registration'
-
-/**
- * A registration that is not done by `cmk-agent-ctl` (e.g. a Helm value) has no
- * user flag to replace, so it carries this placeholder instead.
- */
-const REGISTRATION_TOKEN_MACRO = '[AGENT_REGISTRATION_OTT]'
 
 export function substituteMacros(
   cmd: string | undefined,
@@ -66,20 +56,30 @@ export function substituteMacros(
     return ''
   }
   const server = scope === 'registration' ? macros.registrationServer : macros.downloadServer
+  const { placeholders } = macros
   return cmd
-    .replace(/{{HOSTNAME}}/g, macros.hostName)
-    .replace(/{{SITE}}/g, macros.siteId)
-    .replace(/{{SERVER}}/g, server)
+    .replaceAll(placeholders.host_name, macros.hostName)
+    .replaceAll(placeholders.site, macros.siteId)
+    .replaceAll(placeholders.server, server)
 }
 
-/** Whether the command cannot be run without a one-time token. */
-export function requiresToken(cmd: string | undefined, scope: CommandScope): boolean {
+/**
+ * Whether the command cannot be run without a one-time token. A registration
+ * done by `cmk-agent-ctl` asks for the registration user, which a token
+ * replaces; any other registration (e.g. a Helm value) carries a placeholder.
+ */
+export function requiresToken(
+  cmd: string | undefined,
+  scope: CommandScope,
+  placeholders: CommandPlaceholders
+): boolean {
   if (!cmd) {
     return false
   }
   return scope === 'registration'
-    ? cmd.includes(REGISTRATION_USER_FLAG) || cmd.includes(REGISTRATION_TOKEN_MACRO)
-    : cmd.includes(DOWNLOAD_TOKEN_MACRO)
+    ? cmd.includes(placeholders.registration_user_flag) ||
+        cmd.includes(placeholders.registration_token)
+    : cmd.includes(placeholders.download_token)
 }
 
 /**
@@ -94,12 +94,13 @@ export function isTokenUsable(token: TokenValue): token is string {
 export function applyToken(
   cmd: string | undefined,
   scope: CommandScope,
-  token: TokenValue
+  token: TokenValue,
+  placeholders: CommandPlaceholders
 ): RenderedCommand {
   if (!cmd) {
     return { text: '', tokenState: 'not-required' }
   }
-  if (!requiresToken(cmd, scope)) {
+  if (!requiresToken(cmd, scope, placeholders)) {
     return { text: cmd, tokenState: 'not-required' }
   }
   if (!isTokenUsable(token)) {
@@ -110,9 +111,9 @@ export function applyToken(
   const text =
     scope === 'registration'
       ? cmd
-          .replaceAll(REGISTRATION_USER_FLAG, `--ott 0:${token}`)
-          .replaceAll(REGISTRATION_TOKEN_MACRO, `0:${token}`)
-      : cmd.replaceAll(DOWNLOAD_TOKEN_MACRO, token)
+          .replaceAll(placeholders.registration_user_flag, `--ott 0:${token}`)
+          .replaceAll(placeholders.registration_token, `0:${token}`)
+      : cmd.replaceAll(placeholders.download_token, token)
   return { text, tokenState: 'ready' }
 }
 
@@ -139,7 +140,7 @@ export function renderBlocks(
   token: TokenValue = null
 ): RenderedBlocks {
   const rendered = blocks.map((block) =>
-    applyToken(substituteMacros(block.command, scope, macros), scope, token)
+    applyToken(substituteMacros(block.command, scope, macros), scope, token, macros.placeholders)
   )
   const states = rendered.map((command) => command.tokenState)
   return {
@@ -157,6 +158,10 @@ export function renderBlocks(
 }
 
 /** Whether any of these commands cannot be run without a one-time token. */
-export function blocksNeedToken(blocks: CommandBlock[], scope: CommandScope): boolean {
-  return blocks.some((block) => requiresToken(block.command, scope))
+export function blocksNeedToken(
+  blocks: CommandBlock[],
+  scope: CommandScope,
+  placeholders: CommandPlaceholders
+): boolean {
+  return blocks.some((block) => requiresToken(block.command, scope, placeholders))
 }

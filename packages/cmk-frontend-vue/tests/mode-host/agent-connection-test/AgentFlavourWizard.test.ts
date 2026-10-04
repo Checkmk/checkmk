@@ -10,11 +10,14 @@ import AgentFlavourWizard from '@/mode-host/agent-connection-test/components/Age
 import type { HostMacros } from '@/mode-host/agent-connection-test/lib/commandTemplate'
 import type { AgentFlavour } from '@/mode-host/agent-connection-test/lib/types'
 
+import { commandPlaceholders } from './fixtures'
+
 const macros: HostMacros = {
   hostName: 'test-host',
   siteId: 'test-site',
   downloadServer: 'https://monitoring.example.test',
-  registrationServer: 'monitoring.example.test:8000'
+  registrationServer: 'monitoring.example.test:8000',
+  placeholders: commandPlaceholders
 }
 
 /**

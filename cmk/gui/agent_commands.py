@@ -5,7 +5,7 @@
 
 from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass
-from typing import overload, override
+from typing import Final, overload, override
 from urllib.parse import urlparse
 
 from cmk.ccc.hostaddress import HostName
@@ -35,6 +35,9 @@ from cmk.shared_typing.mode_host import (
     AgentStatusCmds as ModeHostAgentStatusCmds,
 )
 from cmk.shared_typing.mode_host import (
+    CommandPlaceholders as ModeHostCommandPlaceholders,
+)
+from cmk.shared_typing.mode_host import (
     ModeHostServerPerSite,
 )
 from cmk.shared_typing.mode_host import (
@@ -45,6 +48,7 @@ from cmk.shared_typing.setup import AgentInstallCmds as SetupAgentInstallCmds
 from cmk.shared_typing.setup import AgentRegistrationCmds as SetupAgentRegistrationCmds
 from cmk.shared_typing.setup import AgentSlideout as SetupAgentSlideout
 from cmk.shared_typing.setup import AgentStatusCmds as SetupAgentStatusCmds
+from cmk.shared_typing.setup import CommandPlaceholders as SetupCommandPlaceholders
 from cmk.shared_typing.setup import UnbakedFallback as SetupUnbakedFallback
 from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
 
@@ -124,6 +128,16 @@ def build_agent_install_cmds(
         linux_rpm=LINUX_RPM_AGENT_INSTALL_CMD.format(version=version),
     )
 
+
+# The placeholders the agent slideout fills in, in the browser, before it shows a
+# command. The templates in this module and in the commercial editions' twin use
+# them; tests pin the templates to these.
+HOST_NAME_MACRO: Final = "{{HOSTNAME}}"
+SITE_MACRO: Final = "{{SITE}}"
+SERVER_MACRO: Final = "{{SERVER}}"
+DOWNLOAD_TOKEN_PLACEHOLDER: Final = "[AGENT_DOWNLOAD_OTT]"
+REGISTRATION_TOKEN_PLACEHOLDER: Final = "[AGENT_REGISTRATION_OTT]"
+REGISTRATION_USER_FLAG: Final = "--user agent_registration"
 
 WINDOWS_AGENT_CTL_PATH = '"C:\\Program Files (x86)\\checkmk\\service\\cmk-agent-ctl.exe"'
 
@@ -329,6 +343,7 @@ def get_agent_slideout(
     agent_install_cls: type[SetupAgentInstallCmds | ModeHostAgentInstallCmds],
     agent_registration_cls: type[SetupAgentRegistrationCmds | ModeHostAgentRegistrationCmds],
     agent_status_cls: type[SetupAgentStatusCmds | ModeHostAgentStatusCmds],
+    command_placeholders_cls: type[SetupCommandPlaceholders],
     unbaked_fallback_cls: type[SetupUnbakedFallback],
     version: str,
     baked_agents_available: bool,
@@ -346,6 +361,7 @@ def get_agent_slideout(
     agent_install_cls: type[SetupAgentInstallCmds | ModeHostAgentInstallCmds],
     agent_registration_cls: type[SetupAgentRegistrationCmds | ModeHostAgentRegistrationCmds],
     agent_status_cls: type[SetupAgentStatusCmds | ModeHostAgentStatusCmds],
+    command_placeholders_cls: type[ModeHostCommandPlaceholders],
     unbaked_fallback_cls: type[ModeHostUnbakedFallback],
     version: str,
     baked_agents_available: bool,
@@ -362,6 +378,7 @@ def get_agent_slideout(
     agent_install_cls: type,
     agent_registration_cls: type,
     agent_status_cls: type,
+    command_placeholders_cls: type,
     unbaked_fallback_cls: type,
     version: str,
     baked_agents_available: bool,
@@ -375,6 +392,14 @@ def get_agent_slideout(
         agent_install_cmds=agent_install_cls(**asdict(commands.install_cmds(version, hostname))),
         agent_registration_cmds=agent_registration_cls(**asdict(commands.registration_cmds())),
         agent_status_cmds=agent_status_cls(**asdict(commands.status_cmds())),
+        command_placeholders=command_placeholders_cls(
+            host_name=HOST_NAME_MACRO,
+            site=SITE_MACRO,
+            server=SERVER_MACRO,
+            download_token=DOWNLOAD_TOKEN_PLACEHOLDER,
+            registration_token=REGISTRATION_TOKEN_PLACEHOLDER,
+            registration_user_flag=REGISTRATION_USER_FLAG,
+        ),
         legacy_agent_url=commands.legacy_agent_url(),
         kubernetes_helm_command=build_kubernetes_helm_cmd(version),
         kubernetes_values=KUBERNETES_VALUES,

@@ -79,7 +79,9 @@ const intro = computed(() => {
   return props.spec.kind === 'external-doc' ? props.spec.msg : props.spec.intro
 })
 
-const needsToken = computed(() => blocksNeedToken(blocks.value, 'download'))
+const needsToken = computed(() =>
+  blocksNeedToken(blocks.value, 'download', props.macros.placeholders)
+)
 const rendered = computed(() => renderBlocks(blocks.value, 'download', props.macros, ott.value))
 
 /**

@@ -96,7 +96,7 @@ alias(
 
 py_cmk_test(
     name = "test",
-    srcs = glob(["tests/test_*.py"]),
+    srcs = glob(["tests/**/test_*.py"]),
     data = ["//:module_layers.toml"],
     deps = [
         ":library",

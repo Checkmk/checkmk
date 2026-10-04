@@ -15,8 +15,9 @@ import { computed, nextTick, ref, watch } from 'vue'
 import { useGlobalRefresh } from '../GlobalTimePicker/globalTimeState'
 import { pad2 } from '../utils/timeFormat'
 
-const { lastRefreshPosition } = defineProps<{
+const { lastRefreshPosition, intervalChoicesSeconds } = defineProps<{
   lastRefreshPosition: 'top' | 'left'
+  intervalChoicesSeconds: number[]
 }>()
 
 const {
@@ -36,15 +37,12 @@ watch(refreshTick, () => {
 
 const { _t } = usei18n()
 
-// Kept in sync by hand with GRAPH_REFRESH_INTERVALS_SECONDS, which backs the profile setting
-// preselecting one of these.
-const INTERVAL_CHOICES_SECONDS = [30, 60, 90]
 const TURN_OFF = 'turn-off'
 
 const intervalOptions = computed<Suggestions>(() => ({
   type: 'fixed',
   suggestions: [
-    ...[...new Set([...INTERVAL_CHOICES_SECONDS, refreshIntervalSeconds.value])]
+    ...[...new Set([...intervalChoicesSeconds, refreshIntervalSeconds.value])]
       .sort((secondsA, secondsB) => secondsA - secondsB)
       .map((seconds) => ({ name: String(seconds), title: _t('%{seconds} sec', { seconds }) })),
     { name: TURN_OFF, title: _t('Turn off') }

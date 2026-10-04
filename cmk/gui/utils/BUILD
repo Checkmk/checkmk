@@ -70,6 +70,7 @@ py_library(
         "compatibility.py",
         "confirm_with_preview.py",
         "encrypter.py",
+        "graph_refresh.py",
         "htpasswd.py",
         "json.py",
         "labels.py",

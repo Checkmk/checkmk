@@ -58,6 +58,7 @@ from cmk.gui.graphing._graph_codec import community_graph_codec
 from cmk.gui.graphing._graph_dispatch import serialize_graphs
 from cmk.gui.type_defs import GraphTimerange, PainterParameters, SizePT
 from cmk.gui.userdb.user_attributes import StartOfWeekUserAttribute
+from cmk.gui.utils.graph_refresh import GRAPH_REFRESH_INTERVALS_SECONDS
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.gui.valuespec import DropdownChoice
 from cmk.shared_typing.cmk_time_series_graph import (
@@ -205,7 +206,10 @@ def test_stored_time_range_seconds_for_a_painter_without_parameters() -> None:
 
 def test_global_time_picker_props() -> None:
     refresh = GlobalTimePickerRefresh(
-        interval_seconds=60, starts_live=True, reloads_page_content=True
+        interval_seconds=60,
+        interval_choices_seconds=[30, 60, 90],
+        starts_live=True,
+        reloads_page_content=True,
     )
 
     props = global_time_picker_props(
@@ -230,7 +234,10 @@ def test_global_time_picker_props_without_preferences() -> None:
         3600,
         first_day_of_week=None,
         refresh=GlobalTimePickerRefresh(
-            interval_seconds=None, starts_live=False, reloads_page_content=False
+            interval_seconds=None,
+            interval_choices_seconds=[30, 60, 90],
+            starts_live=False,
+            reloads_page_content=False,
         ),
     )
 
@@ -243,6 +250,13 @@ def test_global_time_picker_refresh_leaves_a_page_paused_and_self_contained() ->
 
     assert refresh.starts_live is False
     assert refresh.reloads_page_content is False
+
+
+@pytest.mark.usefixtures("request_context")
+def test_global_time_picker_refresh_offers_the_intervals_a_profile_can_preselect() -> None:
+    refresh = global_time_picker_refresh()
+
+    assert refresh.interval_choices_seconds == list(GRAPH_REFRESH_INTERVALS_SECONDS)
 
 
 def test_global_time_picker_refresh_falls_back_to_the_user_preference(

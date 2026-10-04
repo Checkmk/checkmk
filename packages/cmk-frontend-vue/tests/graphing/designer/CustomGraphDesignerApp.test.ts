@@ -174,7 +174,12 @@ const PROPS: CustomGraphDesigner = {
     default_time_range: 14400,
     server_time_zone: 'UTC',
     first_day_of_week: null,
-    refresh: { interval_seconds: null, starts_live: true, reloads_page_content: false }
+    refresh: {
+      interval_seconds: null,
+      interval_choices_seconds: [30, 60, 90],
+      starts_live: true,
+      reloads_page_content: false
+    }
   }
 }
 

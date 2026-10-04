@@ -27,10 +27,20 @@
       "type": "object",
       "properties": {
         "interval_seconds": { "type": ["number", "null"] },
+        "interval_choices_seconds": {
+          "description": "The intervals the refresh control offers, in seconds.",
+          "type": "array",
+          "items": { "type": "number" }
+        },
         "starts_live": { "type": "boolean" },
         "reloads_page_content": { "type": "boolean" }
       },
-      "required": ["interval_seconds", "starts_live", "reloads_page_content"]
+      "required": [
+        "interval_seconds",
+        "interval_choices_seconds",
+        "starts_live",
+        "reloads_page_content"
+      ]
     },
     "first_day_of_week": {
       "title": "FirstDayOfWeek",

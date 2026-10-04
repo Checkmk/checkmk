@@ -360,7 +360,11 @@ const saveFailureButtons = computed(() => {
           :items="activeBreadcrumb"
         />
         <div class="graphing-custom-graph-designer-app__refresh">
-          <GlobalRefreshControl last-refresh-position="left" @resume="returnToLiveMonitoring" />
+          <GlobalRefreshControl
+            last-refresh-position="left"
+            :interval-choices-seconds="props.time_picker.refresh.interval_choices_seconds"
+            @resume="returnToLiveMonitoring"
+          />
         </div>
       </div>
 

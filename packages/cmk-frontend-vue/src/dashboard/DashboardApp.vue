@@ -671,7 +671,10 @@ const { range, refreshTick, updateTimeRange } = useDashboardTimeControl(props.gl
           />
 
           <div class="db-app__refresh">
-            <DashboardRefreshControl :default-time-range="global_time_picker.default_time_range" />
+            <DashboardRefreshControl
+              :default-time-range="global_time_picker.default_time_range"
+              :interval-choices-seconds="global_time_picker.refresh.interval_choices_seconds"
+            />
           </div>
         </div>
 

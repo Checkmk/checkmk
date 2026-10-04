@@ -21,6 +21,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import GraphTimerange, PainterParameters, VerticalAxisWidth
+from cmk.gui.utils.graph_refresh import GRAPH_REFRESH_INTERVALS_SECONDS
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import (
     AddTo,
@@ -213,6 +214,7 @@ def global_time_picker_refresh(
 ) -> GlobalTimePickerRefresh:
     return GlobalTimePickerRefresh(
         interval_seconds=interval_seconds or user_default_refresh_time(),
+        interval_choices_seconds=list(GRAPH_REFRESH_INTERVALS_SECONDS),
         starts_live=starts_live,
         reloads_page_content=reloads_page_content,
     )

@@ -25,7 +25,12 @@ const PROPS: GlobalTimePickerProps = {
   default_time_range: 4 * HOUR,
   server_time_zone: 'Europe/Berlin',
   first_day_of_week: null,
-  refresh: { interval_seconds: null, starts_live: false, reloads_page_content: false }
+  refresh: {
+    interval_seconds: null,
+    interval_choices_seconds: [30, 60, 90],
+    starts_live: false,
+    reloads_page_content: false
+  }
 }
 
 const activeDurationSeconds = (): number => {
@@ -67,7 +72,12 @@ describe('GlobalTimePickerApp', () => {
   })
 
   test('the refresh the server described is the one the page runs', () => {
-    const fromTheServer = { interval_seconds: 60, starts_live: true, reloads_page_content: false }
+    const fromTheServer = {
+      interval_seconds: 60,
+      interval_choices_seconds: [30, 60, 90],
+      starts_live: true,
+      reloads_page_content: false
+    }
 
     render(GlobalTimePickerApp, { props: { ...PROPS, refresh: fromTheServer } })
 

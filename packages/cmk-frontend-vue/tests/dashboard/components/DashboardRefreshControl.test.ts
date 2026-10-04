@@ -38,7 +38,9 @@ describe('DashboardRefreshControl', () => {
       { from: lastFourHours.from.add({ hours: 1 }), to: lastFourHours.from.add({ hours: 2 }) },
       'external'
     )
-    render(DashboardRefreshControl, { props: { defaultTimeRange: 4 * HOUR } })
+    render(DashboardRefreshControl, {
+      props: { defaultTimeRange: 4 * HOUR, intervalChoicesSeconds: [30, 60, 90] }
+    })
 
     await userEvent.click(screen.getByRole('button', { name: /Resume/ }))
 

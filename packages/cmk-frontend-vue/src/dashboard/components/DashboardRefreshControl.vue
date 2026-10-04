@@ -9,6 +9,7 @@ import { useGlobalTimePickerRange } from '@/graphing/GlobalTimePicker/useGlobalT
 
 const props = defineProps<{
   defaultTimeRange: number
+  intervalChoicesSeconds: number[]
 }>()
 
 const { returnToLiveMonitoring } = useGlobalTimePickerRange(props.defaultTimeRange)
@@ -16,5 +17,9 @@ const { returnToLiveMonitoring } = useGlobalTimePickerRange(props.defaultTimeRan
 
 <template>
   <!-- Going live means a window ending now: a zoomed one would keep redrawing the same past. -->
-  <GlobalRefreshControl last-refresh-position="left" @resume="returnToLiveMonitoring" />
+  <GlobalRefreshControl
+    last-refresh-position="left"
+    :interval-choices-seconds="props.intervalChoicesSeconds"
+    @resume="returnToLiveMonitoring"
+  />
 </template>

@@ -22,7 +22,12 @@ function globalTimePicker(startsLive: boolean): GlobalTimePickerProps {
     default_time_range: 4 * HOUR,
     server_time_zone: 'Europe/Berlin',
     first_day_of_week: null,
-    refresh: { interval_seconds: null, starts_live: startsLive, reloads_page_content: false }
+    refresh: {
+      interval_seconds: null,
+      interval_choices_seconds: [30, 60, 90],
+      starts_live: startsLive,
+      reloads_page_content: false
+    }
   }
 }
 

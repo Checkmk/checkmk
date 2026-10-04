@@ -29,7 +29,12 @@ const testGlobalTimePicker: GlobalTimePickerProps = {
   default_time_range: 4 * 3600,
   server_time_zone: TZ,
   first_day_of_week: null,
-  refresh: { interval_seconds: null, starts_live: false, reloads_page_content: false }
+  refresh: {
+    interval_seconds: null,
+    interval_choices_seconds: [30, 60, 90],
+    starts_live: false,
+    reloads_page_content: false
+  }
 }
 
 vi.mock('@/dashboard/utils.ts', () => ({

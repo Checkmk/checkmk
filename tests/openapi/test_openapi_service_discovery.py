@@ -2475,7 +2475,7 @@ def test_update_service_phase_reports_success_for_a_service_that_does_not_exist(
     host_name: str,
     check_type: str,
     service_item: str | None,
-    expected_status: int,
+    expected_status: HTTPStatus,
 ) -> None:
     """Today: a phase change for a service not in the table is `204`; for a host, it is `404`.
 

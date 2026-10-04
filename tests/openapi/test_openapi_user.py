@@ -1350,7 +1350,7 @@ def test_openapi_create_user_edit_start_url(clients: ClientRegistry) -> None:
 def test_user_navbar_changes_action_param(
     clients: ClientRegistry,
     field_value: str,
-    expected_status_code: int,
+    expected_status_code: HTTPStatus,
 ) -> None:
     resp = clients.User.create(
         username=_random_string(10),
@@ -1561,7 +1561,7 @@ def test_start_of_week_round_trips(clients: ClientRegistry) -> None:
     ],
 )
 def test_invalid_start_of_week_is_rejected(
-    clients: ClientRegistry, start_of_week: str, expected_status_code: int
+    clients: ClientRegistry, start_of_week: str, expected_status_code: HTTPStatus
 ) -> None:
     """An unsupported start-of-week is refused rather than stored."""
     resp = clients.User.create(

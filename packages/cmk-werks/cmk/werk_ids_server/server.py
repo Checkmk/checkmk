@@ -22,7 +22,7 @@ setattr(app, "wsgi_app", ProxyFix(app.wsgi_app, x_for=1))
 _logger = logging.getLogger(__name__)
 
 
-def _error(status_code: int, message: str) -> Response:
+def _error(status_code: HTTPStatus, message: str) -> Response:
     response = jsonify({"error": message})
     response.status_code = status_code
     return response

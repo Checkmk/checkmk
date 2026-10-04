@@ -164,7 +164,7 @@ def test_a_scan_narrowed_to_a_folder_that_does_not_exist_is_refused(
 ) -> None:
     resp = clients.HostRelationDiscovery.scan([_ILO], scope={"folder": "/nope"}, expect_ok=False)
 
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_a_scan_narrowed_to_a_site_that_does_not_exist_is_refused(
@@ -172,7 +172,7 @@ def test_a_scan_narrowed_to_a_site_that_does_not_exist_is_refused(
 ) -> None:
     resp = clients.HostRelationDiscovery.scan([_ILO], scope={"site": "nowhere"}, expect_ok=False)
 
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_suggestions_narrowed_to_a_folder_that_does_not_exist_are_refused(
@@ -180,7 +180,7 @@ def test_suggestions_narrowed_to_a_folder_that_does_not_exist_are_refused(
 ) -> None:
     resp = clients.HostRelationDiscovery.suggest(scope={"folder": "/nope"}, expect_ok=False)
 
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 @pytest.mark.parametrize(

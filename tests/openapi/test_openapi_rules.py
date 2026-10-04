@@ -404,7 +404,7 @@ def test_create_rule_rejects_the_default_snmpv3_context_out_of_place(
         expect_ok=False,
     )
 
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_openapi_list_rules(

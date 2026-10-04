@@ -87,7 +87,7 @@ def test_export_rejects_an_unknown_time_zone(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
 
-    response.assert_status_code(400)
+    response.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert "time zone" in json.dumps(response.json["fields"])
 
 

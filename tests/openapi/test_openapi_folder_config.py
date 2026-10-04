@@ -1132,7 +1132,7 @@ def test_openapi_delete_folder_default_mode_recursive(clients: ClientRegistry) -
 def test_cmk_agent_connection_attribute_regression(
     clients: ClientRegistry,
     field_value: str,
-    status_code: int,
+    status_code: HTTPStatus,
 ) -> None:
     clients.Folder.create(
         folder_name="push-agent-folder",

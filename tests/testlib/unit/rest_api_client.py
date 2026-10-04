@@ -76,7 +76,7 @@ class Response:
     body: bytes | None
     headers: Mapping[str, str]  # TODO: Use werkzeug.datastructures.Headers?
 
-    def assert_status_code(self, status_code: int) -> Response:
+    def assert_status_code(self, status_code: HTTPStatus) -> Response:
         if self.status_code != status_code:
             raise AssertionError(
                 f"Expected status code {status_code}, got {self.status_code}. "

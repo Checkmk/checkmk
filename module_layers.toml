@@ -233,6 +233,13 @@ allows = [
   "cmk.profiling",
   "cmk.relay_fetcher_trigger",
   "cmk.trace",
+  # The automations drive the whole base too: the core, the configuration
+  # builder, the licensing handler and ad hoc checks on relays.
+  "cmk.check_helper_protocol",
+  "cmk.core_client",
+  "cmk.licensing.handler",
+  "cmk.monitoring_config.internal",
+  "cmk.relay_protocols",
   # The agent_controller_connections core bakelet reads the site certificate.
   "cmk.crypto",
   # "cmk --handle-alerts" works on the event types of the alert handling.

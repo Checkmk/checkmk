@@ -7,6 +7,7 @@ py_library(
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
+        "//cmk/plugins/checkmk/automations:__pkg__",
     ],
     deps = [
         "//cmk/piggyback:backend",

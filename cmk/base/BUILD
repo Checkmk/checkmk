@@ -8,6 +8,7 @@ py_library(
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
+        "//cmk/plugins/checkmk/automations:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [
@@ -44,6 +45,7 @@ py_library(
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
+        "//cmk/plugins/checkmk/automations:__pkg__",
     ],
     deps = [
         "//cmk/automations",
@@ -62,6 +64,7 @@ py_library(
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
+        "//cmk/plugins/checkmk/automations:__pkg__",
     ],
     deps = [
         "//cmk/base/config",

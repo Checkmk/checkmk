@@ -86,11 +86,6 @@ from cmk.automations.results import (
 )
 from cmk.base import config
 from cmk.base.active_check_result import normalize_active_check_result
-from cmk.base.automations._environment import (
-    AutomationEnvironment,
-    ConfigSource,
-    IPLookupFailureMode,
-)
 from cmk.base.automations.automations import BaseConfigState, CommonState, MKAutomationError
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.checkers import (
@@ -203,6 +198,11 @@ from cmk.piggyback.backend import (
 )
 from cmk.piggyback.backend import (
     move_for_host_rename as move_piggyback_for_host_rename,
+)
+from cmk.plugins.checkmk.automations._environment import (
+    AutomationEnvironment,
+    ConfigSource,
+    IPLookupFailureMode,
 )
 from cmk.relay_protocols.tasks import AdHocActiveCheckTask, ResultType
 from cmk.ruleset_matcher.labels import DiscoveredHostLabelsStore, HostLabel, LabelManager, Labels

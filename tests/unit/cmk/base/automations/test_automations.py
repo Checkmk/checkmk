@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
-import io
 import sys
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field, fields
@@ -12,9 +10,7 @@ from pathlib import Path
 from typing import override
 
 import pytest
-from pytest import MonkeyPatch
 
-import cmk.base.automations.check_mk as automations
 from cmk.automations.internal import (
     Automation,
     AutomationID,
@@ -22,134 +18,14 @@ from cmk.automations.internal import (
     AutomationState,
     NoState,
 )
-from cmk.automations.results import (
-    AnalyseHostResult,
-    AnalyzeHostRuleEffectivenessResult,
-    GetServicesLabelsResult,
-)
 from cmk.base.automations.automations import (
     AutomationError,
     Automations,
     BaseConfigState,
     DiscoveredAutomation,
 )
-from cmk.base.config import LoadingResult
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.hostaddress import HostName
-from cmk.ruleset_matcher.labels import LabelSource
-from cmk.ruleset_matcher.matcher import RuleSpec
-from tests.testlib.unit.automations import make_common_state
-from tests.testlib.unit.base_configuration_scenario import Scenario
 from tests.testlib.unit.empty_config import EMPTY_CONFIG
-
-
-def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
-    additional_labels: dict[str, str] = {}
-    additional_label_sources: dict[str, LabelSource] = {}
-
-    ts = Scenario()
-    ts.add_host(HostName("test-host"))
-    ts.set_option(
-        "host_labels",
-        {
-            "test-host": {
-                "explicit": "ding",
-            },
-        },
-    )
-    loading_result = ts.apply(monkeypatch)
-
-    label_sources: dict[str, LabelSource] = {
-        "cmk/site": "discovered",
-        "explicit": "explicit",
-    }
-    assert automations.automation_analyse_host.handler(
-        make_common_state(
-            LoadingResult(
-                loaded_config=EMPTY_CONFIG,
-                hosts_config=loading_result.hosts_config,
-                host_tags=loading_result.host_tags,
-                config_cache=loading_result.config_cache,
-            )
-        ),
-        ["test-host"],
-    ) == AnalyseHostResult(
-        label_sources=label_sources | additional_label_sources,
-        labels={
-            "cmk/site": "unit",
-            "explicit": "ding",
-        }
-        | additional_labels,
-    )
-
-
-def test_rule_effectiveness_is_not_answered_from_an_earlier_call(monkeypatch: MonkeyPatch) -> None:
-    ts = Scenario()
-    ts.add_host(HostName("test-host"))
-    state = make_common_state(ts.apply(monkeypatch))
-    # CPython hands the address of a freed list to the next one, so the rules of a
-    # later call may have the id of an earlier call's. Make that deterministic by
-    # handing over the very same list object, with different rules in it.
-    rules: list[list[RuleSpec[bool]]] = [
-        [{"id": "01", "value": True, "condition": {"host_name": ["test-host"]}}]
-    ]
-    monkeypatch.setattr(ast, "literal_eval", lambda _text: rules)
-    monkeypatch.setattr(sys, "stdin", io.StringIO())
-    handler = automations.automation_analyze_host_rule_effectiveness.handler
-
-    first = handler(state, [])
-    rules[0][0]["condition"] = {"host_name": ["other-host"]}
-    second = handler(state, [])
-
-    assert (first, second) == (
-        AnalyzeHostRuleEffectivenessResult({"01": True}),
-        AnalyzeHostRuleEffectivenessResult({"01": False}),
-    )
-
-
-def test_service_labels(monkeypatch: MonkeyPatch) -> None:
-    ts = Scenario()
-    ts.add_host(HostName("test-host"))
-    ts.set_ruleset(
-        "service_label_rules",
-        list[RuleSpec[dict[str, str]]](
-            [
-                {
-                    "condition": {"service_description": [{"$regex": "CPU load"}]},
-                    "id": "01",
-                    "value": {"label1": "val1"},
-                },
-                {
-                    "condition": {"service_description": [{"$regex": "CPU load"}]},
-                    "id": "02",
-                    "value": {"label2": "val2"},
-                },
-                {
-                    "condition": {"service_description": [{"$regex": "CPU temp"}]},
-                    "id": "03",
-                    "value": {"label1": "val1"},
-                },
-            ]
-        ),
-    )
-    loading_result = ts.apply(monkeypatch)
-
-    assert automations.automation_get_services_labels.handler(
-        make_common_state(
-            LoadingResult(
-                loaded_config=EMPTY_CONFIG,
-                hosts_config=loading_result.hosts_config,
-                host_tags=loading_result.host_tags,
-                config_cache=loading_result.config_cache,
-            )
-        ),
-        ["test-host", "CPU load", "CPU temp"],
-    ) == GetServicesLabelsResult(
-        {
-            "CPU load": {"label1": "val1", "label2": "val2"},
-            "CPU temp": {"label1": "val1"},
-        }
-    )
 
 
 class _Result(AutomationResult):

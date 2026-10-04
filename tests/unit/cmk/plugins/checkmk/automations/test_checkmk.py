@@ -6,12 +6,16 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
+import ast
+import io
+import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import NoReturn, override
 
 import pytest
+from pytest import MonkeyPatch
 
 import cmk.ccc.debug
 import cmk.ccc.resulttype as result
@@ -24,11 +28,15 @@ import cmk.plugins.monitoring_plugins.server_side_calls.ftp
 import cmk.utils.paths
 from cmk.automations import results as automation_results
 from cmk.automations.internal import NoState
-from cmk.automations.results import DiagHostResult
+from cmk.automations.results import (
+    AnalyseHostResult,
+    AnalyzeHostRuleEffectivenessResult,
+    DiagHostResult,
+    GetServicesLabelsResult,
+)
 from cmk.base import config
-from cmk.base.automations import check_mk
 from cmk.base.community_app import make_app
-from cmk.base.config import ConfigCache, ObjectAttributes
+from cmk.base.config import ConfigCache, LoadingResult, ObjectAttributes
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.discovery import CheckPreview, CheckPreviewEntry, QualifiedDiscovery
 from cmk.checkengine.fetcher_abc import Fetcher, Mode
@@ -39,7 +47,10 @@ from cmk.checkengine.specs.checkresults import ServiceState
 from cmk.checkengine.submitters import ServiceDetails
 from cmk.discover_plugins import PluginLocation
 from cmk.inventory.label_picker import InventorizedHostLabelsStore
+from cmk.plugins.checkmk.automations import checkmk
 from cmk.relay_protocols.tasks import AdHocActiveCheckTask
+from cmk.ruleset_matcher.labels import LabelSource
+from cmk.ruleset_matcher.matcher import RuleSpec
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, replace_macros
 from cmk.utils import config_warnings
@@ -76,7 +87,7 @@ def _prepare(
 ) -> tuple[ConfigCache, config.LoadingResult]:
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
     monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *a, **kw: _HOST_ATTRS)  # noqa: ARG005
-    monkeypatch.setattr(check_mk, "get_service_attributes", lambda *a, **kw: service_attrs or {})  # noqa: ARG005
+    monkeypatch.setattr(checkmk, "get_service_attributes", lambda *a, **kw: service_attrs or {})  # noqa: ARG005
     monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a, **kw: {})  # noqa: ARG005
     monkeypatch.setattr(config, "get_relay_id", lambda *a, **kw: relay_id)  # noqa: ARG005
     config_cache = config.ConfigCache(
@@ -154,7 +165,7 @@ class TestAutomationDiagHost:
             make_app(),
             make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data.encode(), Path("/")),  # noqa: ARG005
         )
-        assert check_mk.AutomationDiagHost().execute(
+        assert checkmk.AutomationDiagHost().execute(
             make_common_state(
                 config.LoadingResult(
                     loaded_config=loaded_config,
@@ -203,7 +214,7 @@ def _patch_plugin_loading(
     )
 
 
-class AutomationActiveCheckTestable(check_mk.AutomationActiveCheck):
+class AutomationActiveCheckTestable(checkmk.AutomationActiveCheck):
     @override
     def _execute_check_plugin(self, commandline: Sequence[str]) -> tuple[int, str]:
         return (0, f"Assume I ran {commandline!r}")
@@ -300,7 +311,7 @@ def test_automation_active_check(  # type: ignore[misc]
 ) -> None:
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
     monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *a, **kw: host_attrs)  # noqa: ARG005
-    monkeypatch.setattr(check_mk, "get_service_attributes", lambda *a, **kw: service_attrs)  # noqa: ARG005
+    monkeypatch.setattr(checkmk, "get_service_attributes", lambda *a, **kw: service_attrs)  # noqa: ARG005
     monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a, **kw: {})  # noqa: ARG005
 
     config_cache = config.ConfigCache(
@@ -395,7 +406,7 @@ def test_automation_active_check_invalid_args(  # type: ignore[misc]
 
     monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
 
-    active_check = check_mk.AutomationActiveCheck()
+    active_check = checkmk.AutomationActiveCheck()
     active_check.execute(
         make_common_state(
             config.LoadingResult(
@@ -413,7 +424,7 @@ def test_automation_active_check_invalid_args(  # type: ignore[misc]
     assert error_message == capsys.readouterr().err
 
 
-class _RecordingAutomation(check_mk.AutomationActiveCheck):
+class _RecordingAutomation(checkmk.AutomationActiveCheck):
     def __init__(self) -> None:
         self.calls: dict[str, str | tuple[str, str, str]] = {}
 
@@ -501,7 +512,7 @@ def test_active_check_unsupported_on_relay_reports_unknown(monkeypatch: pytest.M
 
 
 def test_execute_on_relay_import_error_is_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
-    auto = check_mk.AutomationActiveCheck()
+    auto = checkmk.AutomationActiveCheck()
 
     def _raise(relay_id: str, host: HostName, command: str) -> NoReturn:  # noqa: ARG001
         raise ImportError("enterprise package missing")
@@ -515,7 +526,7 @@ def test_execute_on_relay_import_error_is_unknown(monkeypatch: pytest.MonkeyPatc
 
 
 def test_execute_on_relay_submit_failure_is_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
-    auto = check_mk.AutomationActiveCheck()
+    auto = checkmk.AutomationActiveCheck()
     monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
 
     def _raise(relay_id: str, host: HostName, command: str) -> NoReturn:  # noqa: ARG001
@@ -538,7 +549,7 @@ def test_relay_wait_timeout_outlasts_the_relays_own_timeout() -> None:
     naming the reason - could never be read.
     """
     task = AdHocActiveCheckTask(host="myhost", command="check_httpv2 -u http://x")
-    assert check_mk._relay_wait_timeout(task) > task.timeout  # noqa: SLF001
+    assert checkmk._relay_wait_timeout(task) > task.timeout  # noqa: SLF001
 
 
 class TestWarnServiceNameConflicts:
@@ -581,7 +592,7 @@ class TestWarnServiceNameConflicts:
                 self._make_entry("Service B", "plugin_two", "new"),
             ]
         )
-        check_mk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
+        checkmk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
         assert config_warnings.get_configuration(additional_warnings=()) == []
 
     def test_passive_passive_conflict_emits_warning(self) -> None:
@@ -592,7 +603,7 @@ class TestWarnServiceNameConflicts:
                 self._make_entry("Check_MK Agent", "telemetry_custom_service", "new"),
             ]
         )
-        check_mk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
+        checkmk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
         warnings = config_warnings.get_configuration(additional_warnings=())
         assert len(warnings) == 1
         assert "Check_MK Agent" in warnings[0]
@@ -612,7 +623,7 @@ class TestWarnServiceNameConflicts:
                 self._make_entry("Check_MK Agent", "telemetry_custom_service", "new"),
             ]
         )
-        check_mk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
+        checkmk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
         warnings = config_warnings.get_configuration(additional_warnings=())
         assert len(warnings) == 1
         assert "Check_MK Agent" in warnings[0]
@@ -628,7 +639,7 @@ class TestWarnServiceNameConflicts:
                 self._make_entry("My Service", "plugin_c", "new"),
             ]
         )
-        check_mk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
+        checkmk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
         warnings = config_warnings.get_configuration(additional_warnings=())
         assert len(warnings) == 1
         assert "My Service" in warnings[0]
@@ -644,7 +655,7 @@ class TestWarnServiceNameConflicts:
                 self._make_entry("Service A", "plugin_two", "unchanged"),
             ]
         )
-        check_mk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
+        checkmk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
         assert config_warnings.get_configuration(additional_warnings=()) == []
 
     def test_active_passive_conflict_emits_warning(self) -> None:
@@ -655,7 +666,7 @@ class TestWarnServiceNameConflicts:
                 self._make_entry("Check_MK Agent", "httpv2", "active"),
             ]
         )
-        check_mk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
+        checkmk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
         warnings = config_warnings.get_configuration(additional_warnings=())
         assert len(warnings) == 1
         assert "Check_MK Agent" in warnings[0]
@@ -668,8 +679,115 @@ def test_delete_hosts_deletes_inventorized_host_labels() -> None:
         {"cmk/inventory/product": "foo"}
     )
 
-    check_mk.automation_delete_hosts.handler(
-        NoState(cmk.utils.paths.omd_root, {}), [str(host_name)]
-    )
+    checkmk.automation_delete_hosts.handler(NoState(cmk.utils.paths.omd_root, {}), [str(host_name)])
 
     assert not (cmk.utils.paths.inventorized_host_labels_dir / f"{host_name}.json").exists()
+
+
+def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
+    additional_labels: dict[str, str] = {}
+    additional_label_sources: dict[str, LabelSource] = {}
+
+    ts = Scenario()
+    ts.add_host(HostName("test-host"))
+    ts.set_option(
+        "host_labels",
+        {
+            "test-host": {
+                "explicit": "ding",
+            },
+        },
+    )
+    loading_result = ts.apply(monkeypatch)
+
+    label_sources: dict[str, LabelSource] = {
+        "cmk/site": "discovered",
+        "explicit": "explicit",
+    }
+    assert checkmk.automation_analyse_host.handler(
+        make_common_state(
+            LoadingResult(
+                loaded_config=EMPTY_CONFIG,
+                hosts_config=loading_result.hosts_config,
+                host_tags=loading_result.host_tags,
+                config_cache=loading_result.config_cache,
+            )
+        ),
+        ["test-host"],
+    ) == AnalyseHostResult(
+        label_sources=label_sources | additional_label_sources,
+        labels={
+            "cmk/site": "unit",
+            "explicit": "ding",
+        }
+        | additional_labels,
+    )
+
+
+def test_rule_effectiveness_is_not_answered_from_an_earlier_call(monkeypatch: MonkeyPatch) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("test-host"))
+    state = make_common_state(ts.apply(monkeypatch))
+    # CPython hands the address of a freed list to the next one, so the rules of a
+    # later call may have the id of an earlier call's. Make that deterministic by
+    # handing over the very same list object, with different rules in it.
+    rules: list[list[RuleSpec[bool]]] = [
+        [{"id": "01", "value": True, "condition": {"host_name": ["test-host"]}}]
+    ]
+    monkeypatch.setattr(ast, "literal_eval", lambda _text: rules)
+    monkeypatch.setattr(sys, "stdin", io.StringIO())
+    handler = checkmk.automation_analyze_host_rule_effectiveness.handler
+
+    first = handler(state, [])
+    rules[0][0]["condition"] = {"host_name": ["other-host"]}
+    second = handler(state, [])
+
+    assert (first, second) == (
+        AnalyzeHostRuleEffectivenessResult({"01": True}),
+        AnalyzeHostRuleEffectivenessResult({"01": False}),
+    )
+
+
+def test_service_labels(monkeypatch: MonkeyPatch) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("test-host"))
+    ts.set_ruleset(
+        "service_label_rules",
+        list[RuleSpec[dict[str, str]]](
+            [
+                {
+                    "condition": {"service_description": [{"$regex": "CPU load"}]},
+                    "id": "01",
+                    "value": {"label1": "val1"},
+                },
+                {
+                    "condition": {"service_description": [{"$regex": "CPU load"}]},
+                    "id": "02",
+                    "value": {"label2": "val2"},
+                },
+                {
+                    "condition": {"service_description": [{"$regex": "CPU temp"}]},
+                    "id": "03",
+                    "value": {"label1": "val1"},
+                },
+            ]
+        ),
+    )
+    loading_result = ts.apply(monkeypatch)
+
+    assert checkmk.automation_get_services_labels.handler(
+        make_common_state(
+            LoadingResult(
+                loaded_config=EMPTY_CONFIG,
+                hosts_config=loading_result.hosts_config,
+                host_tags=loading_result.host_tags,
+                config_cache=loading_result.config_cache,
+            )
+        ),
+        ["test-host", "CPU load", "CPU temp"],
+    ) == GetServicesLabelsResult(
+        {
+            "CPU load": {"label1": "val1", "label2": "val2"},
+            "CPU temp": {"label1": "val1"},
+        }
+    )

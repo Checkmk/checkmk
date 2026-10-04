@@ -18,7 +18,6 @@ import time_machine
 from pytest_mock import MockerFixture
 
 from cmk.automations.internal import AutomationResult
-from cmk.base.automations.check_mk import automation_analyze_host_rule_matches
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.config import Config, get_default_config, make_config_object
@@ -29,6 +28,7 @@ from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChan
 from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleOptions, Ruleset
 from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from cmk.plugins.checkmk.automations.checkmk import automation_analyze_host_rule_matches
 from cmk.ruleset_matcher.matcher import RuleSpec
 from cmk.ruleset_matcher.tags import get_effective_tag_config
 from cmk.utils.paths import default_config_dir

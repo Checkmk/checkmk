@@ -218,6 +218,7 @@ py_cmk_test(
         "//cmk/gui/watolib:password_store",
         "//cmk/gui/watolib:registries",
         "//cmk/gui/watolib:timeperiods",
+        "//cmk/plugins/checkmk/automations",
         "//cmk/server_side_calls_backend",
         "//cmk/utils",
         "//packages/cmk-ccc:exceptions",

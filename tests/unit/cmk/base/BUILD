@@ -21,6 +21,7 @@ py_cmk_test(
     use_project_pytest_config = True,
     visibility = ["//visibility:private"],
     deps = [
+        "//cmk/base:active-check-result",
         "//cmk/plugins",
         "//packages/cmk-flags",
         "//tests/testlib/common",

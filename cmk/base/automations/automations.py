@@ -105,7 +105,7 @@ def _derive_loading_result(raw_config: Mapping[str, object]) -> config.LoadingRe
 # Automations that have not moved to cmk/plugins/<family>/automations/ yet. The
 # list shrinks with every move and goes away with the last one, together with
 # the second discovery call below.
-_NOT_YET_MOVED_MODULES: Final = ("cmk.base.automations.check_mk",)
+_NOT_YET_MOVED_MODULES: Final[tuple[str, ...]] = ()
 
 
 def discover_automations() -> Iterable[DiscoveredAutomation]:

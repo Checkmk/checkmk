@@ -2926,7 +2926,7 @@ automation round trip for a host where nothing changed. Two spellings of the sam
    entry for which `effective_host != get_effective_host(owner, existing)` and appends the new
    services, and `_automation_set_autochecks_v2` calls it with
    `autochecks_owner == effective_host == the node` for any host that is not itself a cluster
-   (`cmk/base/automations/check_mk.py`). A clustered service's effective host is the _cluster_, so
+   (`cmk/plugins/checkmk/automations/checkmk.py`). A clustered service's effective host is the _cluster_, so
    its existing entry is carried over untouched — the write path's own `effective_host` filter is
    what protects it. The user asked to disable the service, was answered `204`, and the service goes
    on running on the cluster with nothing anywhere recording that the request was made.

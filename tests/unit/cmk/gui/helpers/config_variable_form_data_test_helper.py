@@ -145,7 +145,7 @@ def factory_default_disk_value(config_variable: ConfigVariable) -> object:
     factory default of the variable's primary config domain. ConfigDomainCore
     asks the site via the get-configuration automation, whose result is the
     default config of cmk.base (see _automation_get_configuration in
-    cmk.base.automations.check_mk); the unit test reads it directly."""
+    cmk.plugins.checkmk.automations.checkmk); the unit test reads it directly."""
     domain = config_variable.primary_domain()
     if isinstance(domain, ConfigDomainCore):
         value = _core_default_config().get(config_variable.ident(), NoFactoryDefault())

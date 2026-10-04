@@ -16,10 +16,6 @@ from unittest.mock import patch
 import pytest
 
 from cmk.automations.internal import AutomationResult
-from cmk.base.automations.check_mk import (
-    automation_analyze_host_rule_effectiveness,
-    automation_analyze_host_rule_matches,
-)
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.logged_in import user
@@ -29,6 +25,10 @@ from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.gui.watolib.rulesets import Rule, Ruleset
 from cmk.livestatus_client import SiteConfigurations
+from cmk.plugins.checkmk.automations.checkmk import (
+    automation_analyze_host_rule_effectiveness,
+    automation_analyze_host_rule_matches,
+)
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.ruleset_matcher.matcher import RulesetName, RuleSpec
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP

@@ -109,7 +109,7 @@ from cmk.base.configlib.servicename import (
     PassiveServiceNameConfig,
 )
 from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
-from cmk.base.core.interface import do_reload, do_restart
+from cmk.base.core.interface import build_and_activate_monitoring_config
 from cmk.base.core.shared import autodetect_plugin, get_service_attributes
 from cmk.base.errorhandling import create_section_crash_dump, RecordingFetcher
 from cmk.base.parent_scan import ScanConfig
@@ -1340,71 +1340,39 @@ def _execute_autodiscovery(
         env.loaded_config, env.ruleset_matcher, env.label_manager
     )
 
-    if env.loaded_config.monitoring_core == "cmc":
-        do_reload(
-            env.config_cache,
-            core_objects_config,
-            hosts_config,
-            env.host_tags,
-            env.final_service_name_config,
-            env.passive_service_name_config,
-            env.enforced_services_table,
-            env.ip_lookup_config.ip_stack_config,
-            env.ip_lookup_config.default_address_family,
-            ip_address_of,
-            ip_address_of_mgmt,
-            core,
-            core_client,
-            env.plugins,
-            locking_mode=env.loaded_config.restart_locking,
-            hosts_to_update=None,
-            service_depends_on=config.ServiceDependsOn(
-                tag_list=env.host_tags.tag_list,
-                service_dependencies=env.loaded_config.service_dependencies,
+    build_and_activate_monitoring_config(
+        CoreAction.RELOAD if env.loaded_config.monitoring_core == "cmc" else CoreAction.RESTART,
+        env.config_cache,
+        core_objects_config,
+        hosts_config,
+        env.host_tags,
+        env.final_service_name_config,
+        env.passive_service_name_config,
+        env.enforced_services_table,
+        env.ip_lookup_config.ip_stack_config,
+        env.ip_lookup_config.default_address_family,
+        ip_address_of,
+        ip_address_of_mgmt,
+        core,
+        core_client,
+        env.plugins,
+        locking_mode=env.loaded_config.restart_locking,
+        hosts_to_update=None,
+        service_depends_on=config.ServiceDependsOn(
+            tag_list=env.host_tags.tag_list,
+            service_dependencies=env.loaded_config.service_dependencies,
+        ),
+        duplicates=sorted(
+            hosts_config.duplicates(
+                lambda hn: env.config_cache.is_active(hn) and env.config_cache.is_online(hn)
             ),
-            duplicates=sorted(
-                hosts_config.duplicates(
-                    lambda hn: env.config_cache.is_active(hn) and env.config_cache.is_online(hn)
-                ),
-            ),
-            notify_relay=notify_relay,
-            licensing_handler_factory=app.licensing_handler_factory,
-            edition=app.edition,
-            loaded_config=env.loaded_config,
-            make_fetcher_trigger=app.make_fetcher_trigger,
-        )
-    else:
-        do_restart(
-            env.config_cache,
-            core_objects_config,
-            hosts_config,
-            env.host_tags,
-            env.final_service_name_config,
-            env.passive_service_name_config,
-            env.enforced_services_table,
-            env.ip_lookup_config.ip_stack_config,
-            env.ip_lookup_config.default_address_family,
-            ip_address_of,
-            ip_address_of_mgmt,
-            core,
-            core_client,
-            env.plugins,
-            service_depends_on=config.ServiceDependsOn(
-                tag_list=env.host_tags.tag_list,
-                service_dependencies=env.loaded_config.service_dependencies,
-            ),
-            locking_mode=env.loaded_config.restart_locking,
-            duplicates=sorted(
-                hosts_config.duplicates(
-                    lambda hn: env.config_cache.is_active(hn) and env.config_cache.is_online(hn)
-                ),
-            ),
-            notify_relay=notify_relay,
-            licensing_handler_factory=app.licensing_handler_factory,
-            edition=app.edition,
-            loaded_config=env.loaded_config,
-            make_fetcher_trigger=app.make_fetcher_trigger,
-        )
+        ),
+        notify_relay=notify_relay,
+        licensing_handler_factory=app.licensing_handler_factory,
+        edition=app.edition,
+        loaded_config=env.loaded_config,
+        make_fetcher_trigger=app.make_fetcher_trigger,
+    )
 
     return discovery_results, True
 
@@ -2578,7 +2546,8 @@ def _execute_silently(
     hosts_config = rctx.hosts_config
 
     try:
-        do_restart(
+        build_and_activate_monitoring_config(
+            action,
             config_cache,
             core_objects_config,
             hosts_config,
@@ -2593,7 +2562,6 @@ def _execute_silently(
             rctx.monitoring_core,
             rctx.core_client,
             env.plugins,
-            action=action,
             hosts_to_update=hosts_to_update,
             service_depends_on=rctx.service_depends_on,
             locking_mode=env.loaded_config.restart_locking,

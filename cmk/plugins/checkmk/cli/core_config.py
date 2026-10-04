@@ -326,7 +326,8 @@ def _mode_restart(
 
     core, core_client = app.create_core(loaded_config)
 
-    core_interface.do_restart(
+    core_interface.build_and_activate_monitoring_config(
+        core_interface.CoreAction.RESTART,
         loading_result.config_cache,
         core_objects_config,
         hosts_config,
@@ -435,7 +436,8 @@ def _mode_reload(
 
     core, core_client = app.create_core(loaded_config)
 
-    core_interface.do_reload(
+    core_interface.build_and_activate_monitoring_config(
+        core_interface.CoreAction.RELOAD,
         loading_result.config_cache,
         core_objects_config,
         hosts_config,

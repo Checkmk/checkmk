@@ -48,7 +48,8 @@ tracer = trace.get_tracer()
 type _LockingMode = Literal["abort", "wait"] | None
 
 
-def do_reload(
+def build_and_activate_monitoring_config(
+    action: CoreAction,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
     hosts_config: Hosts,
@@ -70,67 +71,6 @@ def do_reload(
     core_client: CoreClient,
     plugins: AgentBasedPlugins,
     *,
-    hosts_to_update: set[HostName] | None,
-    service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
-    locking_mode: _LockingMode,
-    duplicates: Sequence[HostName],
-    notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
-    licensing_handler_factory: Callable[[], LicensingHandler],
-    edition: Edition,
-    loaded_config: BaseConfig,
-    make_fetcher_trigger: FetcherTriggerFactory,
-) -> None:
-    do_restart(
-        config_cache,
-        core_objects_config,
-        hosts_config,
-        host_tags,
-        final_service_name_config,
-        passive_service_name_config,
-        enforced_services_table,
-        get_ip_stack_config,
-        default_address_family,
-        ip_address_of,
-        ip_address_of_mgmt,
-        core,
-        core_client,
-        plugins,
-        action=CoreAction.RELOAD,
-        hosts_to_update=hosts_to_update,
-        service_depends_on=service_depends_on,
-        locking_mode=locking_mode,
-        duplicates=duplicates,
-        notify_relay=notify_relay,
-        licensing_handler_factory=licensing_handler_factory,
-        edition=edition,
-        loaded_config=loaded_config,
-        make_fetcher_trigger=make_fetcher_trigger,
-    )
-
-
-def do_restart(
-    config_cache: ConfigCache,
-    core_objects_config: CoreObjectsConfig,
-    host_config: Hosts,
-    host_tags: HostTags,
-    final_service_name_config: Callable[
-        [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
-    ],
-    passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
-    enforced_services_table: Callable[
-        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
-    ],
-    get_ip_stack_config: Callable[[HostName], ip_lookup.IPStackConfig],
-    default_address_family: Callable[
-        [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
-    ],
-    ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
-    ip_address_of_mgmt: ip_lookup.IPLookupOptional,
-    core: MonitoringConfigBuilder,
-    core_client: CoreClient,
-    plugins: AgentBasedPlugins,
-    *,
-    action: CoreAction = CoreAction.RESTART,
     hosts_to_update: set[HostName] | None = None,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     locking_mode: _LockingMode,
@@ -150,7 +90,7 @@ def do_restart(
                 core_client=core_client,
                 config_cache=config_cache,
                 core_objects_config=core_objects_config,
-                hosts_config=host_config,
+                hosts_config=hosts_config,
                 host_tags=host_tags,
                 final_service_name_config=final_service_name_config,
                 passive_service_name_config=passive_service_name_config,

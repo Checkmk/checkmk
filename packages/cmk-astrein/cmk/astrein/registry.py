@@ -3,44 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+import importlib
+import inspect
+import pkgutil
+from collections.abc import Iterator, Mapping, Sequence
 from typing import Final
 
-from cmk.astrein.checkers.abcmeta_metaclass import ABCMetaMetaclassChecker
-from cmk.astrein.checkers.argparse_nargs import ArgparseNargsChecker
-from cmk.astrein.checkers.conftest_import import ConftestImportChecker
-from cmk.astrein.checkers.html_debug import HTMLDebugChecker
-from cmk.astrein.checkers.http_status_literal import HTTPStatusLiteralChecker
-from cmk.astrein.checkers.key_size_unit_test import KeySizeUnitTestChecker
-from cmk.astrein.checkers.localization import LocalizationChecker
-from cmk.astrein.checkers.localization_named_placeholder import LocalizationNamedPlaceholderChecker
-from cmk.astrein.checkers.logging_formatter import LoggingFormatterChecker
-from cmk.astrein.checkers.logging_named_placeholder import LoggingNamedPlaceholderChecker
-from cmk.astrein.checkers.module_layers.checker import ModuleLayersChecker
-from cmk.astrein.checkers.pillow_import import PillowImportChecker
-from cmk.astrein.checkers.pydantic_type_adapter import PydanticTypeAdapterChecker
-from cmk.astrein.checkers.request_input import RequestValidatedInputChecker
-from cmk.astrein.checkers.tarfile_open_read import TarfileOpenReadChecker
+from cmk.astrein import checkers
 from cmk.astrein.engine import ENGINE_SUMMARIES
 from cmk.astrein.framework import ASTVisitorChecker
 
-ALL_CHECKERS: Final[Sequence[type[ASTVisitorChecker]]] = (
-    ABCMetaMetaclassChecker,
-    ArgparseNargsChecker,
-    ConftestImportChecker,
-    HTMLDebugChecker,
-    HTTPStatusLiteralChecker,
-    KeySizeUnitTestChecker,
-    LocalizationChecker,
-    LocalizationNamedPlaceholderChecker,
-    LoggingFormatterChecker,
-    LoggingNamedPlaceholderChecker,
-    ModuleLayersChecker,
-    PillowImportChecker,
-    PydanticTypeAdapterChecker,
-    RequestValidatedInputChecker,
-    TarfileOpenReadChecker,
-)
+
+def _discover_checkers() -> Iterator[type[ASTVisitorChecker]]:
+    for module_info in pkgutil.walk_packages(checkers.__path__, f"{checkers.__name__}."):
+        module = importlib.import_module(module_info.name)
+        for _, member in inspect.getmembers(module, inspect.isclass):
+            if issubclass(member, ASTVisitorChecker) and member.__module__ == module.__name__:
+                yield member
+
+
+ALL_CHECKERS: Final[Sequence[type[ASTVisitorChecker]]] = tuple(_discover_checkers())
 
 
 def all_checkers() -> dict[str, type[ASTVisitorChecker]]:

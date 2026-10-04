@@ -129,7 +129,7 @@ cmk/astrein/
   framework.py     checker base class and the finding type
   suppressions.py  parses # astrein: disable=<id> comments
   engine.py        runs the checkers and applies suppressions
-  registry.py      lists all checkers
+  registry.py      discovers all checkers
   output/          gcc and SARIF formats
   cli.py           command line frontend, used by the Bazel aspect
   lsp.py           LSP frontend for editors
@@ -140,7 +140,6 @@ Checkers import only `framework.py` and each other, and nothing imports the fron
 ### Adding a checker
 
 1. Add `checkers/<name>.py` with a subclass of `ASTVisitorChecker` that sets `checker_id` and `summary`.
-2. Add it to `ALL_CHECKERS` in `registry.py`.
-3. Add `tests/checkers/test_<name>.py`.
+2. Add `tests/checkers/test_<name>.py`.
 
 Astrein, every time.

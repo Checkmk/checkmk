@@ -328,10 +328,6 @@ def test_bundles() -> None:
 
 
 _ALLOWED_DUPLICATE_METRIC_TITLES = {
-    "Harddrive uncorrectable errors": {
-        "harddrive_uncorrectable_erros",
-        "harddrive_uncorrectable_errors",
-    },
     "Memory used": {"memused_couchbase_bucket", "memory_used"},
     "New connections": {"new_connections", "aws_new_connections"},
     "Number of Go routines": {"bazel_cache_status_num_goroutines", "bazel_cache_go_go_goroutines"},

@@ -1521,7 +1521,7 @@ metric_nfsv4_1_ios = metrics.Metric(
 )
 metric_harddrive_uncorrectable_erros = metrics.Metric(
     name="harddrive_uncorrectable_erros",
-    title=Title("Harddrive uncorrectable errors"),
+    title=Title("Uncorrectable harddrive errors"),
     unit=UNIT_COUNTER,
     color=metrics.Color.DARK_BLUE,
 )

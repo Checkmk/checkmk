@@ -12,7 +12,6 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
-from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
 from cmk.ccc.hostaddress import HostName
 from tests.testlib.system.site import (
@@ -119,11 +118,6 @@ def _unpack_dump(dataset: str, tmpdir: Path) -> Iterator[Path]:
         yield target
     finally:
         shutil.rmtree(target)
-
-
-@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
-def instrument_requests() -> None:
-    RequestsInstrumentor().instrument()
 
 
 @pytest.fixture(scope="session", name="site")

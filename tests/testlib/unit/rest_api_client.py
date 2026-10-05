@@ -5040,10 +5040,11 @@ class ViewClient(RestApiClient):
     domain: DomainType = "view"
     default_version = APIVersion.INTERNAL
 
-    def get_all(self, expect_ok: bool = True) -> Response:
+    def get_all(self, all_owners: bool = False, expect_ok: bool = True) -> Response:
         return self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/all",
+            query_params={"all_owners": "true"} if all_owners else None,
             expect_ok=expect_ok,
         )
 

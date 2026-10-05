@@ -30,12 +30,19 @@ function view(id: string, title: string, owner: string): ViewModel {
   }
 }
 
+const BUILT_IN_ALLHOSTS = view('allhosts', 'All hosts', '')
 const OWN_ALLHOSTS = view('allhosts', 'All hosts', 'harry')
 
 const server = setupServer(
-  http.get(`${API}/domain-types/view/collections/all`, () =>
-    HttpResponse.json({ domainType: 'view', id: 'all', links: [], value: [OWN_ALLHOSTS] })
-  ),
+  http.get(`${API}/domain-types/view/collections/all`, ({ request }) => {
+    const allOwners = new URL(request.url).searchParams.get('all_owners') === 'true'
+    return HttpResponse.json({
+      domainType: 'view',
+      id: 'all',
+      links: [],
+      value: allOwners ? [BUILT_IN_ALLHOSTS, OWN_ALLHOSTS] : [OWN_ALLHOSTS]
+    })
+  }),
   http.get(`${API}/objects/constant/data_source/collections/all`, () =>
     HttpResponse.json({
       domainType: 'constant',
@@ -64,6 +71,12 @@ async function renderLoaded(props: Record<string, unknown>): Promise<HTMLElement
   return screen.getByRole('combobox', { name: 'Select view' })
 }
 
+async function openedOptions(props: Record<string, unknown>): Promise<string[]> {
+  const user = userEvent.setup()
+  await user.click(await renderLoaded(props))
+  return (await screen.findAllByRole('option')).map((option) => option.textContent ?? '')
+}
+
 describe('SelectorView', () => {
   it('hands up the picked copy with its owner', async () => {
     const { emitted } = render(SelectorView, {
@@ -78,6 +91,13 @@ describe('SelectorView', () => {
     )
 
     expect(emitted('update:selectedCopy')).toEqual([[{ name: 'allhosts', owner: 'harry' }]])
+  })
+
+  it('offers the built-in copy beside the own copy when keyed by owner', async () => {
+    const options = await openedOptions({ byOwner: true })
+
+    expect(options).toContain('Hosts - All hosts (allhosts)')
+    expect(options).toContain('Hosts - All hosts (allhosts) (harry)')
   })
 
   it('labels a stored copy that is no longer listed by its name and owner', async () => {

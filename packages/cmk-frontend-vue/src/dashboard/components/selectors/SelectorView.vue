@@ -26,14 +26,18 @@ const {
 } = defineProps<{
   readOnly: boolean
   width?: Width
-  // Offer each copy by its owner; the model is then `selectedCopy` instead of the view name.
+  // Offer every copy a user may open by its owner; the model is then `selectedCopy`.
   byOwner?: boolean
 }>()
 const selectedView = defineModel<string | null>('selectedView', { default: null })
 const selectedCopy = defineModel<VisualCopy | null>('selectedCopy', { default: null })
 
 const { _t } = usei18n()
-const { list: viewsList, ensureLoaded: ensureViewsLoaded, error: viewsError } = useViewsCollection()
+const {
+  list: viewsList,
+  ensureLoaded: ensureViewsLoaded,
+  error: viewsError
+} = useViewsCollection({ allOwners: byOwner })
 const {
   byId: dataSourcesById,
   ensureLoaded: ensureDataSourcesLoaded,

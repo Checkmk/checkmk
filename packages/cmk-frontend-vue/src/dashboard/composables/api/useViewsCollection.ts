@@ -12,9 +12,15 @@ import { useAPILoader } from './useAPILoader'
 
 export type UseViewsCollection = ReturnType<typeof useViewsCollection>
 
-export function useViewsCollection() {
+/** With `allOwners`, every copy a user may open is listed, so several views share an id. */
+export function useViewsCollection({ allOwners = false }: { allOwners?: boolean } = {}) {
   const loader = useAPILoader<ViewCollectionModel>({
-    fetcher: async () => unwrap(await client.GET('/domain-types/view/collections/all'))
+    fetcher: async () =>
+      unwrap(
+        await client.GET('/domain-types/view/collections/all', {
+          params: { query: allOwners ? { all_owners: 'true' } : {} }
+        })
+      )
   })
 
   const list = computed<ViewModel[]>(() => {

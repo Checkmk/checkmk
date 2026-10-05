@@ -126,8 +126,9 @@ function timeZoneAbbreviation(timeZone: string, at: Date): string {
  * the offset (e.g. `UTC+9`), and a zero offset as just `UTC`.
  */
 export function timeZoneShortLabel(timeZone: string, at: Date): string {
+  // CLDR 48 renders a zero offset as `GMT+0`, older versions as plain `GMT`.
   const offset =
-    timeZoneNamePart(timeZone, at, 'shortOffset', 'en-US').replace(/^GMT/, 'UTC') || 'UTC'
+    timeZoneNamePart(timeZone, at, 'shortOffset', 'en-US').replace(/^GMT(?:\+0$)?/, 'UTC') || 'UTC'
   const abbreviation = timeZoneAbbreviation(timeZone, at)
   return abbreviation ? `${abbreviation} (${offset})` : offset
 }

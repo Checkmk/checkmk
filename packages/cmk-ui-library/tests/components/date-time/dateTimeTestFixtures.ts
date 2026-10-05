@@ -18,6 +18,8 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 export const TZ_UTC = 'UTC'
 export const TZ_BERLIN = 'Europe/Berlin'
 export const TZ_TOKYO = 'Asia/Tokyo'
+export const TZ_LISBON = 'Europe/Lisbon'
+export const TZ_LONDON = 'Europe/London'
 
 /** Day-month-year order, dot-separated (e.g. German). */
 export const DMY: DateFormatParts = { order: ['day', 'month', 'year'], separator: '.' }

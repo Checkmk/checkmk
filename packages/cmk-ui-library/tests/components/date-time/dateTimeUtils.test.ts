@@ -29,11 +29,12 @@ import type {
   RangeDraft,
   TimeValue
 } from 'cmk-ui-library/components/date-time/types'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 
-import { TZ_BERLIN, TZ_TOKYO, TZ_UTC } from './dateTimeTestFixtures'
+import { TZ_BERLIN, TZ_LISBON, TZ_LONDON, TZ_TOKYO, TZ_UTC } from './dateTimeTestFixtures'
 
 const NOW = new Date('2026-06-10T10:00:00Z')
+const WINTER = new Date('2024-01-15T12:00:00Z')
 
 describe('toMeridiemHour', () => {
   test.each<{ name: string; hour: number; cycle: MeridiemCycle; expected: object }>([
@@ -147,7 +148,7 @@ describe('timeZoneShortLabel', () => {
     {
       name: 'standard time',
       tz: TZ_BERLIN,
-      at: new Date('2024-01-15T12:00:00Z'),
+      at: WINTER,
       expected: 'CET (UTC+1)'
     },
     {
@@ -157,9 +158,26 @@ describe('timeZoneShortLabel', () => {
       expected: 'CEST (UTC+2)'
     },
     { name: 'zero offset', tz: TZ_UTC, at: NOW, expected: 'UTC' },
+    { name: 'zero offset, GMT only', tz: TZ_LONDON, at: WINTER, expected: 'UTC' },
+    { name: 'zero offset with abbreviation', tz: TZ_LISBON, at: WINTER, expected: 'WET (UTC)' },
     { name: 'no English abbreviation → offset only', tz: TZ_TOKYO, at: NOW, expected: 'UTC+9' }
   ])('$name', ({ tz, at, expected }) => {
     expect(timeZoneShortLabel(tz, at)).toBe(expected)
+  })
+
+  test('zero offset as rendered by CLDR before 48', () => {
+    const formatToParts = Intl.DateTimeFormat.prototype.formatToParts
+    vi.spyOn(Intl.DateTimeFormat.prototype, 'formatToParts').mockImplementation(function (
+      this: Intl.DateTimeFormat,
+      date
+    ) {
+      return formatToParts
+        .call(this, date)
+        .map((part) =>
+          part.type === 'timeZoneName' && part.value === 'GMT+0' ? { ...part, value: 'GMT' } : part
+        )
+    })
+    expect(timeZoneShortLabel(TZ_LISBON, WINTER)).toBe('WET (UTC)')
   })
 })
 

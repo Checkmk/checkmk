@@ -145,16 +145,28 @@ rust_test(
     tags = ["manual"],
 )
 
+filegroup(
+    name = "test-registry-fixtures",
+    srcs = glob(["tests/files/windows-registry/2.5.0/*.reg"]),
+)
+
 # Runs the Windows lib test binary under the pinned Wine. The
 # registry-discovery tests expect the CI Windows node's SQL Server
-# instances in the registry; the prepare hook stages the same entries
-# into the throwaway Wine prefix from wine-test-instances.reg.
+# instances in the registry, and their own test sets; the prepare hook
+# stages both into the throwaway Wine prefix, from wine-test-instances.reg
+# and :test-registry-fixtures.
 rust_wine_test(
     name = "mk-sql-tests-wine",
     binaries = [":mk-sql-lib-test-internal-windows"],
-    data = ["wine-test-instances.reg"],
+    data = [
+        "wine-test-instances.reg",
+        ":test-registry-fixtures",
+    ],
     prepare = "wine-prepare.sh",
-    prepare_args = ["$(rootpath wine-test-instances.reg)"],
+    prepare_args = [
+        "$(rootpath wine-test-instances.reg)",
+        "$(rootpaths :test-registry-fixtures)",
+    ],
     skip_file = "wine-skipped-tests.txt",
 )
 

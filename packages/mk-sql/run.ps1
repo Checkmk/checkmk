@@ -235,6 +235,9 @@ try {
         }
         # TODO(timi): move it to CI
         .\tests\files\ci-scripts\manage-test-registry-set.ps1 --reinstall 2.5.0
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Loading the test registry failed." -ErrorAction Stop
+        }
         Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target "--" "--test-threads=4"
     }
     if ($packDoc) {

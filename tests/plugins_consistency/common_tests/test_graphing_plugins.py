@@ -333,7 +333,6 @@ _ALLOWED_DUPLICATE_METRIC_TITLES = {
     "Shared memory": {"mem_esx_shared", "mem_lnx_shmem"},
     "Storage space used": {"storage_used", "storage_percent"},
     "Streams": {"streams", "num_streams"},
-    "Total devices": {"ap_devices_total", "mobileiron_devices_total"},
     "Total size": {"fs_size", "elasticsearch_size"},
     "Total virtual memory": {"mem_lnx_total_total", "mem_total_virtual_in_bytes"},
     "Used licenses": {"licenses", "license_percentage"},

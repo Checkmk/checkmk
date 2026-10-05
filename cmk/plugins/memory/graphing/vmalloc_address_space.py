@@ -21,7 +21,7 @@ metric_mem_lnx_vmalloc_total = metrics.Metric(
 )
 metric_mem_lnx_vmalloc_used = metrics.Metric(
     name="mem_lnx_vmalloc_used",
-    title=Title("Allocated space"),
+    title=Title("Used address space"),
     unit=UNIT_BYTES,
     color=metrics.Color.PURPLE,
 )

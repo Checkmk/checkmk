@@ -328,7 +328,6 @@ def test_bundles() -> None:
 
 
 _ALLOWED_DUPLICATE_METRIC_TITLES = {
-    "Allocated space": {"mem_lnx_vmalloc_used", "allocated_size"},
     "Average consumption": {"aws_dynamodb_consumed_wcu", "aws_dynamodb_consumed_rcu"},
     "Average latency": {"latency_ave", "average_latency_s"},
     "Average usage": {

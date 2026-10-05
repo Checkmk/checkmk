@@ -32,7 +32,7 @@ import { breakpointFromInternal, breakpointToInternal, typedEntries } from './ut
 // we define this here, because the openapi schema doesn't include the breakpoint key type
 type WidgetLayoutBreakpoints = Partial<Record<ResponsiveGridBreakpoint, ResponsiveGridWidgetLayout>>
 
-function getMinimumSize(
+export function getMinimumSize(
   widgetContentType: string,
   breakpoint: ResponsiveGridBreakpoint,
   widgetConstraints: DashboardConstants['widgets']

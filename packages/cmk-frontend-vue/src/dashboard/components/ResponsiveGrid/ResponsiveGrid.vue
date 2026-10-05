@@ -20,6 +20,7 @@ import type { ResponsiveGridWidgetLayouts } from '@/dashboard/types/widget'
 import ResponsiveGridWidget from './ResponsiveGridWidget.vue'
 import { useInternalBreakpointConfig } from './composables/useInternalBreakpointConfig'
 import { useResponsiveGridLayout } from './composables/useResponsiveGridLayout'
+import { RESPONSIVE_GRID_MARGIN_PX, RESPONSIVE_GRID_ROW_HEIGHT_PX } from './composables/utils'
 import type {
   ResponsiveGridInternalArrangement,
   ResponsiveGridInternalArrangementElement,
@@ -85,7 +86,7 @@ defineEmits<{
   'widget:updateTimeRange': [widgetId: string, range: DateTimeRange]
 }>()
 
-const gridMargin = 10
+const gridMargin = RESPONSIVE_GRID_MARGIN_PX
 const internalBreakpointConfig = useInternalBreakpointConfig(
   dashboardConstants.responsive_grid_breakpoints
 )
@@ -211,7 +212,7 @@ const enterMissingRuntimeFiltersAction = useInjectMissingRuntimeFiltersAction()
         :layout="currentInternalArrangement"
         :responsive-layouts="composable.selectedLayout.value"
         :margin="[gridMargin, gridMargin]"
-        :row-height="24"
+        :row-height="RESPONSIVE_GRID_ROW_HEIGHT_PX"
         :responsive="true"
         :is-draggable="props.isEditing"
         :is-resizable="props.isEditing"

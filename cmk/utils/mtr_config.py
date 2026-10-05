@@ -60,6 +60,6 @@ def section_names(mtr_config: Sequence[Mapping[str, Any]]) -> Sequence[str]:
                 for key, render in distinguishing
                 if (value := mtr_config[nr].get(key))
             ]
-            names[nr] = "%s (%s)" % (hostname, " ".join(tokens)) if tokens else hostname
+            names[nr] = "{} ({})".format(hostname, " ".join(tokens)) if tokens else hostname
 
     return names

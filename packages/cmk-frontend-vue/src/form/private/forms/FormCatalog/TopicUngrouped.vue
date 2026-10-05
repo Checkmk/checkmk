@@ -14,6 +14,7 @@ import { onMounted, ref, watch } from 'vue'
 
 import FormEditDispatcher from '@/form/private/FormEditDispatcher/FormEditDispatcher.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
+import { helpAtTitle } from '@/form/private/rendersHelpItself'
 import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
 import { type ValidationMessages, groupNestedValidations } from '@/form/private/validation'
 
@@ -81,7 +82,7 @@ const componentId = useId()
           v-if="!element.required"
           v-model="checkedElements[element.name]!"
           class="form-topic-ungrouped__checkbox"
-          :help="untranslated(element.parameter_form.help)"
+          :help="untranslated(helpAtTitle(element.parameter_form, !!checkedElements[element.name]))"
           :label="untranslated(element.parameter_form.title)"
           label-position="left"
           dots
@@ -89,7 +90,7 @@ const componentId = useId()
         />
         <CmkLabel
           v-else-if="element.parameter_form.title.length > 0"
-          :help="untranslated(element.parameter_form.help)"
+          :help="untranslated(helpAtTitle(element.parameter_form))"
           dots
         >
           {{ element.parameter_form.title

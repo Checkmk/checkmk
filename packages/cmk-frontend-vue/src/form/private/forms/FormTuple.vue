@@ -15,6 +15,7 @@ import { ref, watch } from 'vue'
 import FormEditDispatcher from '@/form/private/FormEditDispatcher/FormEditDispatcher.vue'
 import FormLabel from '@/form/private/FormLabel.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
+import { helpAtTitle } from '@/form/private/rendersHelpItself'
 import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
 import { type ValidationMessages, groupIndexedValidations } from '@/form/private/validation'
 
@@ -69,7 +70,7 @@ const CLASS_LOOKUP: Record<FormSpec.Tuple['layout'], string> = {
           :space="'before'"
         />
         <CmkSpace size="small" />
-        <CmkHelpText :help="untranslated(element.help)" />
+        <CmkHelpText :help="untranslated(helpAtTitle(element))" />
         <CmkSpace
           v-if="spec.show_titles && element.title && spec.layout !== 'horizontal_titles_top'"
           size="small"
@@ -80,7 +81,7 @@ const CLASS_LOOKUP: Record<FormSpec.Tuple['layout'], string> = {
         v-if="!spec.show_titles && spec.layout !== 'horizontal_titles_top'"
         class="form-tuple__label"
       >
-        <CmkHelpText :help="untranslated(element.help)" />
+        <CmkHelpText :help="untranslated(helpAtTitle(element))" />
         <CmkSpace size="small" />
       </div>
       <div class="form-tuple__content">
@@ -89,7 +90,7 @@ const CLASS_LOOKUP: Record<FormSpec.Tuple['layout'], string> = {
           class="form-tuple__horizontal-help"
         >
           <div class="form-tuple__label">
-            <CmkHelpText :help="untranslated(element.help)" />
+            <CmkHelpText :help="untranslated(helpAtTitle(element))" />
           </div>
           <CmkSpace size="small" />
           <FormEditDispatcher

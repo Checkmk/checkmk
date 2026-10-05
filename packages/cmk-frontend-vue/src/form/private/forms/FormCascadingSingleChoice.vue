@@ -25,6 +25,7 @@ import { computed, ref, toRaw, watch } from 'vue'
 import FormEditDispatcher from '@/form/private/FormEditDispatcher/FormEditDispatcher.vue'
 import FormLabel from '@/form/private/FormLabel.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
+import { helpAtTitle, rendersHelpItself } from '@/form/private/rendersHelpItself'
 import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
 import { type ValidationMessages, validateValue } from '@/form/private/validation'
 
@@ -130,8 +131,8 @@ const buttonGroupButtons = computed((): Array<{ label: string; value: string }> 
   >
     <div>
       <!-- The label is inline; a block of its own puts it above the choice. -->
-      <div v-if="$props.spec.label && props.spec.layout === 'horizontal'">
-        <CmkLabel :for="componentId">
+      <div v-if="rendersHelpItself(props.spec)">
+        <CmkLabel :for="componentId" :help="untranslated(props.spec.help)">
           {{ props.spec.label }}
         </CmkLabel>
       </div>
@@ -171,8 +172,8 @@ const buttonGroupButtons = computed((): Array<{ label: string; value: string }> 
           :spec="activeElement.spec"
           :space="'before'"
         />
-        <CmkSpace v-if="activeElement.spec.help" size="small" />
-        <CmkHelpText :help="untranslated(activeElement.spec.help)" />
+        <CmkSpace v-if="helpAtTitle(activeElement.spec)" size="small" />
+        <CmkHelpText :help="untranslated(helpAtTitle(activeElement.spec))" />
       </template>
     </div>
     <CmkSpace v-if="props.spec.layout === 'horizontal'" :size="'medium'" />

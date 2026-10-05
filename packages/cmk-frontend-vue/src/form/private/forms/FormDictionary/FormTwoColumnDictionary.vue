@@ -18,6 +18,7 @@ import FormReadonly from '@/form/FormReadonly.vue'
 import FormEditDispatcher from '@/form/private/FormEditDispatcher/FormEditDispatcher.vue'
 import FormHelp from '@/form/private/FormHelp.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
+import { helpAtTitle } from '@/form/private/rendersHelpItself'
 import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
 import { type ValidationMessages, groupNestedValidations } from '@/form/private/validation'
 
@@ -112,7 +113,11 @@ const componentId = useId()
                   v-else
                   v-model="dict_element.is_active"
                   :label="untranslated(dict_element.dict_config.parameter_form.title)"
-                  :help="untranslated(dict_element.dict_config.parameter_form.help)"
+                  :help="
+                    untranslated(
+                      helpAtTitle(dict_element.dict_config.parameter_form, dict_element.is_active)
+                    )
+                  "
                   @update:model-value="
                     toggleElement(data, spec.elements, dict_element.dict_config.name)
                   "

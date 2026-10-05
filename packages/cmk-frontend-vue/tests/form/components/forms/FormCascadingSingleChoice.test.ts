@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 
@@ -328,4 +329,57 @@ test('FormCascadingSingleChoice does not poisen the template value', async () =>
 
   // but we expect that our local defaultValue is not affected by this change:
   expect(defaultValue).toEqual({ value: 'something' })
+})
+
+const specWithoutNestedHelp: FormSpec.CascadingSingleChoice = {
+  ...spec,
+  elements: [
+    {
+      name: 'stringChoice',
+      title: 'stringChoiceTitle',
+      default_value: 'bar',
+      parameter_form: { ...stringFormSpec, help: '' }
+    }
+  ]
+}
+
+test('FormCascadingSingleChoice shows its help at the label above the choice', async () => {
+  await renderForm({
+    spec: specWithoutNestedHelp,
+    data: ['stringChoice', 'some_value'],
+    backendValidation: []
+  })
+
+  await userEvent.click(screen.getByRole('button', { name: '?' }))
+
+  expect(await screen.findByRole('tooltip')).toHaveTextContent('fooHelp')
+})
+
+test('FormCascadingSingleChoice as dictionary element renders help only once', async () => {
+  const dictionarySpec: FormSpec.Dictionary = {
+    type: 'dictionary',
+    title: 'dictionary title',
+    help: '',
+    validators: [],
+    groups: [],
+    additional_static_elements: null,
+    no_elements_text: '',
+    elements: [
+      {
+        name: 'choice',
+        render_only: false,
+        required: true,
+        default_value: ['stringChoice', 'bar'],
+        parameter_form: specWithoutNestedHelp,
+        group: null
+      }
+    ]
+  }
+  await renderForm({
+    spec: dictionarySpec,
+    data: { choice: ['stringChoice', 'some_value'] },
+    backendValidation: []
+  })
+
+  expect(screen.getAllByRole('button', { name: '?' })).toHaveLength(1)
 })

@@ -11,8 +11,8 @@ from cmk.gui.dashboard.type_defs import StateDashletConfig, StatusDisplay
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 
 from ..context_filters import (
-    object_host_filter_from_internal,
-    object_service_filter_from_internal,
+    OBJECT_HOST_FILTER_ADAPTER,
+    OBJECT_SERVICE_FILTER_ADAPTER,
     ObjectHostContextFilter,
     ObjectServiceContextFilter,
 )
@@ -97,7 +97,7 @@ class HostStateContent(_BaseStateContent):
             status_display=_status_display_from_internal(config.get("status_display")),
             show_summary=ApiOmitted.from_optional(config.get("show_summary")),
             contextual_link=contextual_link_from_internal(
-                config.get("contextual_link"), object_host_filter_from_internal
+                config.get("contextual_link"), OBJECT_HOST_FILTER_ADAPTER
             ),
         )
 
@@ -125,7 +125,7 @@ class ServiceStateContent(_BaseStateContent):
             status_display=_status_display_from_internal(config.get("status_display")),
             show_summary=ApiOmitted.from_optional(config.get("show_summary")),
             contextual_link=contextual_link_from_internal(
-                config.get("contextual_link"), object_service_filter_from_internal
+                config.get("contextual_link"), OBJECT_SERVICE_FILTER_ADAPTER
             ),
         )
 

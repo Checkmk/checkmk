@@ -5,9 +5,8 @@
 
 from typing import Annotated, Literal
 
-from pydantic import Discriminator
+from pydantic import Discriminator, TypeAdapter
 
-from cmk.gui.dashboard.type_defs import ContextFilterConfig
 from cmk.gui.openapi.framework.model import api_field, api_model
 
 
@@ -85,43 +84,16 @@ type ObjectServiceContextFilter = Annotated[
 ]
 
 
-def host_filter_from_internal(config: ContextFilterConfig) -> AggregateHostContextFilter:
-    match config["filter_id"]:
-        case "siteopt":
-            return SiteContextFilter(filter_id="siteopt")
-        case "wato_folder":
-            return WatoFolderContextFilter(filter_id="wato_folder")
-        case "hoststate":
-            return HostStateContextFilter(filter_id="hoststate")
-        case "opthostgroup":
-            return HostGroupContextFilter(filter_id="opthostgroup")
-        case other:
-            raise ValueError(f"Not a host context filter: {other!r}")
-
-
-def service_filter_from_internal(config: ContextFilterConfig) -> AggregateServiceContextFilter:
-    match config["filter_id"]:
-        case "svcstate":
-            return ServiceStateContextFilter(filter_id="svcstate")
-        case "optservicegroup":
-            return ServiceGroupContextFilter(filter_id="optservicegroup")
-        case _:
-            return host_filter_from_internal(config)
-
-
-def object_host_filter_from_internal(config: ContextFilterConfig) -> ObjectHostContextFilter:
-    match config["filter_id"]:
-        case "host":
-            return HostNameContextFilter(filter_id="host")
-        case _:
-            return host_filter_from_internal(config)
-
-
-def object_service_filter_from_internal(config: ContextFilterConfig) -> ObjectServiceContextFilter:
-    match config["filter_id"]:
-        case "service":
-            return ServiceNameContextFilter(filter_id="service")
-        case "svcstate" | "optservicegroup":
-            return service_filter_from_internal(config)
-        case _:
-            return object_host_filter_from_internal(config)
+# The stored form of a filter is its API form, so each set reads back through its own union.
+AGGREGATE_HOST_FILTER_ADAPTER: TypeAdapter[AggregateHostContextFilter] = TypeAdapter(
+    AggregateHostContextFilter
+)
+AGGREGATE_SERVICE_FILTER_ADAPTER: TypeAdapter[AggregateServiceContextFilter] = TypeAdapter(
+    AggregateServiceContextFilter
+)
+OBJECT_HOST_FILTER_ADAPTER: TypeAdapter[ObjectHostContextFilter] = TypeAdapter(
+    ObjectHostContextFilter
+)
+OBJECT_SERVICE_FILTER_ADAPTER: TypeAdapter[ObjectServiceContextFilter] = TypeAdapter(
+    ObjectServiceContextFilter
+)

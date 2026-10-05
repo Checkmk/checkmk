@@ -7,7 +7,7 @@ from typing import Literal, override, Self
 from cmk.gui.dashboard.type_defs import InventoryDashletConfig
 from cmk.gui.openapi.framework.model import api_field, api_model
 
-from ..context_filters import object_host_filter_from_internal, ObjectHostContextFilter
+from ..context_filters import OBJECT_HOST_FILTER_ADAPTER, ObjectHostContextFilter
 from ..contextual_link import (
     AnyContextualLinkSpec,
     contextual_link_from_internal,
@@ -43,7 +43,7 @@ class InventoryContent(BaseWidgetContent):
             type="inventory",
             path=config["inventory_path"],
             contextual_link=contextual_link_from_internal(
-                config.get("contextual_link"), object_host_filter_from_internal
+                config.get("contextual_link"), OBJECT_HOST_FILTER_ADAPTER
             ),
         )
 

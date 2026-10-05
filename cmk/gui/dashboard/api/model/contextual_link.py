@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from typing import Annotated, assert_never, Literal
 
 from annotated_types import MinLen
-from pydantic import Discriminator, StringConstraints, WithJsonSchema
+from pydantic import Discriminator, StringConstraints, TypeAdapter, WithJsonSchema
 from pydantic_core import ErrorDetails
 
 from cmk.ccc.user import UserId
@@ -158,7 +158,7 @@ def contextual_link_to_internal(
 
 
 def contextual_link_from_internal[F](
-    config: ContextualLinkConfig | None, filter_from_internal: Callable[[ContextFilterConfig], F]
+    config: ContextualLinkConfig | None, filter_adapter: TypeAdapter[F]
 ) -> ContextualLinkSpec[F]:
     """The API form of a stored link configuration."""
     if config is None:
@@ -180,7 +180,7 @@ def contextual_link_from_internal[F](
                 ContextualLink(
                     title=entry["title"],
                     location=_location_from_internal(entry["location"]),
-                    filters=[filter_from_internal(f) for f in entry["filters"]],
+                    filters=[filter_adapter.validate_python(f) for f in entry["filters"]],
                     include_context=entry["include_context"],
                     include_time_range=entry["include_time_range"],
                     show_filter_form=entry["show_filter_form"],

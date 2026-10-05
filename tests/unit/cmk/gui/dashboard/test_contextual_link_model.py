@@ -4,15 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+from pydantic import ValidationError
 
 from cmk.ccc.user import UserId
 from cmk.gui.dashboard.api.model.context_filters import (
+    AGGREGATE_HOST_FILTER_ADAPTER,
+    AGGREGATE_SERVICE_FILTER_ADAPTER,
     AggregateServiceContextFilter,
-    host_filter_from_internal,
     HostNameContextFilter,
     HostStateContextFilter,
-    object_host_filter_from_internal,
-    service_filter_from_internal,
+    OBJECT_HOST_FILTER_ADAPTER,
     ServiceStateContextFilter,
 )
 from cmk.gui.dashboard.api.model.contextual_link import (
@@ -60,7 +61,9 @@ def test_an_inherited_link_round_trips_its_owner(location: VisualLocation) -> No
     link = _inherited(location)
 
     assert (
-        contextual_link_from_internal(contextual_link_to_internal(link), host_filter_from_internal)
+        contextual_link_from_internal(
+            contextual_link_to_internal(link), AGGREGATE_HOST_FILTER_ADAPTER
+        )
         == link
     )
 
@@ -85,23 +88,23 @@ def test_a_custom_link_round_trips_its_entries() -> None:
 
     assert (
         contextual_link_from_internal(
-            contextual_link_to_internal(link), service_filter_from_internal
+            contextual_link_to_internal(link), AGGREGATE_SERVICE_FILTER_ADAPTER
         )
         == link
     )
 
 
 def test_a_service_filter_does_not_load_as_a_host_filter() -> None:
-    with pytest.raises(ValueError):
-        host_filter_from_internal(ContextFilterConfig(filter_id="svcstate"))
+    with pytest.raises(ValidationError):
+        AGGREGATE_HOST_FILTER_ADAPTER.validate_python(ContextFilterConfig(filter_id="svcstate"))
 
 
 def test_an_object_host_filter_loads_the_host_name() -> None:
-    assert object_host_filter_from_internal(
+    assert OBJECT_HOST_FILTER_ADAPTER.validate_python(
         ContextFilterConfig(filter_id="host")
     ) == HostNameContextFilter(filter_id="host")
 
 
 def test_the_host_name_does_not_load_as_an_aggregate_filter() -> None:
-    with pytest.raises(ValueError):
-        host_filter_from_internal(ContextFilterConfig(filter_id="host"))
+    with pytest.raises(ValidationError):
+        AGGREGATE_HOST_FILTER_ADAPTER.validate_python(ContextFilterConfig(filter_id="host"))

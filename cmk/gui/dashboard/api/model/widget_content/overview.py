@@ -13,7 +13,7 @@ from cmk.gui.dashboard.type_defs import (
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import timerange_from_internal, TimerangeModel
 
-from ..context_filters import AggregateHostContextFilter, host_filter_from_internal
+from ..context_filters import AGGREGATE_HOST_FILTER_ADAPTER, AggregateHostContextFilter
 from ..contextual_link import (
     AnyContextualLinkSpec,
     contextual_link_from_internal,
@@ -106,7 +106,7 @@ class SiteOverviewContent(BaseWidgetContent):
             dataset=config.get("dataset") or "via_context",
             hexagon_size=config.get("box_scale") or "default",
             contextual_link=contextual_link_from_internal(
-                config.get("contextual_link"), host_filter_from_internal
+                config.get("contextual_link"), AGGREGATE_HOST_FILTER_ADAPTER
             ),
         )
 

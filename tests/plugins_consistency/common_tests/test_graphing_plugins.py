@@ -333,7 +333,6 @@ _ALLOWED_DUPLICATE_METRIC_TITLES = {
     "Shared memory": {"mem_esx_shared", "mem_lnx_shmem"},
     "Storage space used": {"storage_used", "storage_percent"},
     "Streams": {"streams", "num_streams"},
-    "Used licenses": {"licenses", "license_percentage"},
     "Used virtual memory": {"pagefile_used_percent", "pagefile_used"},
     "Used virtual memory (averaged)": {
         "pagefile_used_percent_avg",

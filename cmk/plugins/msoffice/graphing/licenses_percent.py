@@ -9,7 +9,7 @@ UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
 
 metric_license_percentage = metrics.Metric(
     name="license_percentage",
-    title=Title("Used licenses"),
+    title=Title("Used licenses percentage"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.ORANGE,
 )

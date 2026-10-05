@@ -31,6 +31,30 @@ export interface CommandEntry {
   openBrowser?: string
 }
 
+// The packages that link the Bazel-generated cmk-shared-typing, by the
+// `link_shared_typing()` call in their BUILD file. The `cmk.buildSharedTyping`
+// command finds the same packages.
+export function sharedTypingConsumers(wsPath: string): string[] {
+  return ['packages', path.join('non-free', 'packages')].flatMap((root) => {
+    let names: string[]
+    try {
+      names = fs.readdirSync(path.join(wsPath, root))
+    } catch {
+      return []
+    }
+    return names
+      .map((name) => path.join(root, name))
+      .filter((pkg) => {
+        try {
+          const build = fs.readFileSync(path.join(wsPath, pkg, 'BUILD'), 'utf8')
+          return /^link_shared_typing\(/m.test(build)
+        } catch {
+          return false
+        }
+      })
+  })
+}
+
 export function checkBuildStatus(wsPath: string): BuildStatus {
   const status: BuildStatus = {
     venv: { ok: false, label: 'Python venv', commandId: 'cmk.buildVenv' },
@@ -45,8 +69,8 @@ export function checkBuildStatus(wsPath: string): BuildStatus {
   const requiredBins = ['python', 'dmypy', 'ruff'].map((b) => path.join(wsPath, '.venv', 'bin', b))
   status.venv.ok = fs.existsSync(venvCfg) && requiredBins.every((p) => fs.existsSync(p))
 
-  const sharedTypingLinks = ['cmk-frontend-vue', 'cmk-ui-library'].map((pkg) =>
-    path.join(wsPath, 'packages', pkg, 'node_modules', 'cmk-shared-typing')
+  const sharedTypingLinks = sharedTypingConsumers(wsPath).map((pkg) =>
+    path.join(wsPath, pkg, 'node_modules', 'cmk-shared-typing')
   )
   status.sharedTypingTs.ok = sharedTypingLinks.every((link) => {
     try {
@@ -175,6 +199,8 @@ export function createStatusBar(
     const watchers = [
       { pattern: 'packages/cmk-shared-typing/source/**', events: ['change', 'create', 'delete'] },
       { pattern: 'packages/cmk-frontend/src/**', events: ['change', 'create', 'delete'] },
+      { pattern: 'packages/*/BUILD', events: ['change', 'create', 'delete'] },
+      { pattern: 'non-free/packages/*/BUILD', events: ['change', 'create', 'delete'] },
       { pattern: 'requirements.txt', events: ['change'] },
       { pattern: 'omd/non-free/relay/requirements.txt', events: ['change'] },
       { pattern: 'pnpm-lock.yaml', events: ['change'] },

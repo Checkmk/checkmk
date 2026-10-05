@@ -3,13 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: T201  # It's OK for test/script helpers to print()
-
 import asyncio
 import os
 import platform
 import subprocess
-import sys
 import time
 from collections.abc import Generator, Iterator
 from contextlib import contextmanager
@@ -63,23 +60,6 @@ class ExeOutput(NamedTuple):
     ret_code: int
     stdout: str
     stderr: str
-
-
-def create_protocol_file(directory: Path) -> None:
-    # block  upgrading
-    protocol_dir = directory / "config"
-    try:
-        os.makedirs(protocol_dir)
-    except OSError as e:
-        print(f"Probably folders exist: {e}")
-
-    if not protocol_dir.exists():
-        print(f"Directory {protocol_dir} doesn't exist, may be you have not enough rights")
-        sys.exit(11)
-
-    protocol_file = protocol_dir / "upgrade.protocol"
-    with open(protocol_file, "w") as f:
-        f.write("Upgraded:\n   time: '2019-05-20 18:21:53.164")
 
 
 def create_legacy_pull_file(directory: Path) -> None:

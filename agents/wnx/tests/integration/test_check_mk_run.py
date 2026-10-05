@@ -13,7 +13,19 @@ from typing import Final
 
 import pytest
 
-from .utils import CTL_STATUS_LINE, obtain_agent_data, ONLY_FROM_LINE, SECTION_COUNT, YamlDict
+from .utils import (
+    create_legacy_pull_file,
+    CTL_STATUS_LINE,
+    obtain_agent_data,
+    ONLY_FROM_LINE,
+    SECTION_COUNT,
+    YamlDict,
+)
+
+
+@pytest.fixture(name="allow_legacy_pull", scope="module")
+def allow_legacy_pull_fixture(data_dir: Path) -> None:
+    create_legacy_pull_file(data_dir)
 
 
 def _make_config(config: YamlDict, only_from: Sequence[str]) -> YamlDict:
@@ -51,6 +63,7 @@ _WMI_SECTIONS: Final = {
 _INTERNAL_SECTIONS: Final = _NOT_WMI_SECTIONS.union(_WMI_SECTIONS)
 
 
+@pytest.mark.usefixtures("allow_legacy_pull")
 @pytest.mark.parametrize(
     "only_from, description",
     [
@@ -102,6 +115,7 @@ def config_no_wmi_fixture(default_yaml_config: YamlDict) -> YamlDict:
     return default_yaml_config
 
 
+@pytest.mark.usefixtures("allow_legacy_pull")
 def test_check_mk_no_wmi(
     main_exe: Path,
     config_no_wmi: YamlDict,

@@ -14,12 +14,9 @@ import yaml
 from .utils import (
     AGENT_EXE_NAME,
     check_os,
-    create_legacy_pull_file,
-    create_protocol_file,
     get_path_from_env,
     INTEGRATION_PORT,
     YamlDict,
-    YieldFixture,
 )
 
 check_os()
@@ -74,10 +71,3 @@ def main_exe_fixture(root_dir: Path) -> Path:
 @pytest.fixture(name="default_yaml_config", scope="session")
 def default_yaml_config_fixture() -> YamlDict:
     return yaml.safe_load(_DEFAULT_CONFIG.format(INTEGRATION_PORT))
-
-
-@pytest.fixture(autouse=True, scope="session")  # ruff: ignore[pytest-fixture-autouse]
-def setup_all(data_dir: Path) -> YieldFixture[None]:
-    create_protocol_file(data_dir)
-    create_legacy_pull_file(data_dir)
-    yield

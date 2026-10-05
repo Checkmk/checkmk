@@ -405,11 +405,19 @@ class _ServiceFilter:
                 return self.is_mine(service)
 
     def is_ignored(self, service: ConfiguredService) -> bool:
-        """Determine whether the user disabled this service."""
-        return self._config_cache.check_plugin_ignored(
-            self._host_name, service.check_plugin_name
-        ) or self._config_cache.service_ignored(
+        """Determine whether the user disabled this service.
+
+        A clustered service is disabled by the rules of its cluster, not by those of the node.
+        """
+        effective_host = self._config_cache.clustering.effective_host(
             self._host_name,
+            service.description,
+            service.labels,
+        )
+        return self._config_cache.check_plugin_ignored(
+            effective_host, service.check_plugin_name
+        ) or self._config_cache.service_ignored(
+            effective_host,
             service.description,
             service.labels,
         )
@@ -490,10 +498,9 @@ def _get_clustered_services(
     nodes = hosts_config.clusters.get(cluster_name, ())
 
     if not config_cache.is_ping_host(cluster_name):
-
+        # No ignore filter here: a clustered service is disabled by the rules of the
+        # cluster, and those are applied to the cluster's check table.
         def appears_on_cluster(node_name: HostAddress, entry: AutocheckEntry) -> bool:
-            if config_cache.check_plugin_ignored(node_name, entry.check_plugin_name):
-                return False
             service_name = service_name_config(
                 node_name,
                 entry.id(),
@@ -510,7 +517,7 @@ def _get_clustered_services(
                 node_name, service_name, entry.service_labels
             )
 
-            return not config_cache.service_ignored(node_name, service_name, service_labels) and (
+            return (
                 config_cache.clustering.effective_host(node_name, service_name, service_labels)
                 == cluster_name
             )
@@ -525,7 +532,7 @@ def _get_clustered_services(
 
     yield from merge_enforced_services(
         {node_name: enforced_services_table(node_name) for node_name in nodes},
-        # similiar to appears_on_cluster, but we don't check for ignored services
+        # same as appears_on_cluster
         lambda node_name, service_name, discovered_labels: (
             config_cache.clustering.effective_host(
                 node_name,

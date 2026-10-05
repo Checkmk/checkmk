@@ -1007,3 +1007,95 @@ def test_iter_skipped_services_warnings() -> None:
         ),
         f"Skipping invalid service with empty description (plugin: df) on host {hostname}",
     ]
+
+
+_CLUSTERED_SMART = ServiceID(CheckPluginName("smart_temp"), "auto-clustered")
+
+
+def _clustered_service_check_table(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    host_name: HostName,
+    disabled_on: Sequence[HostName],
+    filter_mode: FilterMode,
+) -> HostCheckTable:
+    node = HostName("node")
+    cluster = HostName("cluster")
+    ts = Scenario()
+    ts.add_host(node)
+    ts.add_cluster(cluster, nodes=[node])
+    ts.set_ruleset(
+        "clustered_services",
+        [
+            {
+                "id": "01",
+                "condition": {
+                    "service_description": [{"$regex": "Temperature SMART auto-clustered$"}],
+                    "host_name": [node],
+                },
+                "value": True,
+            }
+        ],
+    )
+    ts.set_ruleset(
+        "ignored_services",
+        [
+            {
+                "id": "02",
+                "condition": {
+                    "service_description": [{"$regex": "Temperature SMART auto-clustered$"}],
+                    "host_name": list(disabled_on),
+                },
+                "value": True,
+            }
+        ],
+    )
+    ts.set_autochecks(node, [AutocheckEntry(*_CLUSTERED_SMART, {}, {})])
+    loading_result = ts.apply(monkeypatch)
+    config_cache = loading_result.config_cache
+    service_name_config = config_cache.make_passive_service_name_config(
+        make_final_service_name_config(loading_result.loaded_config, config_cache.ruleset_matcher)
+    )
+    return config_cache.check_table(
+        host_name,
+        _TEST_CHECK_PLUGINS,
+        config_cache.make_service_configurer(_TEST_CHECK_PLUGINS, service_name_config),
+        service_name_config,
+        lambda hn: {},  # noqa: ARG005
+        filter_mode=filter_mode,
+    )
+
+
+_DISABLED_RULE_SCOPES = [
+    pytest.param([HostName("node"), HostName("cluster")], False, id="rule matches both"),
+    pytest.param([HostName("cluster")], False, id="rule matches the cluster only"),
+    pytest.param([HostName("node")], True, id="rule matches the node only"),
+]
+
+
+@pytest.mark.parametrize("disabled_on, monitored", _DISABLED_RULE_SCOPES)
+def test_clustered_service_is_monitored_unless_disabled_on_the_cluster(
+    monkeypatch: pytest.MonkeyPatch, disabled_on: Sequence[HostName], monitored: bool
+) -> None:
+    chk_table = _clustered_service_check_table(
+        monkeypatch,
+        host_name=HostName("cluster"),
+        disabled_on=disabled_on,
+        filter_mode=FilterMode.NONE,
+    )
+
+    assert (_CLUSTERED_SMART in chk_table) is monitored
+
+
+@pytest.mark.parametrize("disabled_on, fetched", _DISABLED_RULE_SCOPES)
+def test_node_fetches_for_a_clustered_service_unless_disabled_on_the_cluster(
+    monkeypatch: pytest.MonkeyPatch, disabled_on: Sequence[HostName], fetched: bool
+) -> None:
+    chk_table = _clustered_service_check_table(
+        monkeypatch,
+        host_name=HostName("node"),
+        disabled_on=disabled_on,
+        filter_mode=FilterMode.INCLUDE_CLUSTERED,
+    )
+
+    assert (_CLUSTERED_SMART in chk_table) is fetched

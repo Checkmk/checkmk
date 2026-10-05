@@ -715,7 +715,7 @@ def test_host_label_parity(central_site: Site, remote_site: Site) -> None:
 
 
 _CLUSTERED = _SERVICES[1]  # clustered, and nothing else -- reaches §10.17
-_CLUSTERED_AND_DISABLED = _SERVICES[0]  # clustered *and* disabled -- reaches §10.13
+_CLUSTERED_AND_DISABLED = _SERVICES[0]  # clustered *and* disabled on the cluster
 _NODE_ONLY = _SERVICES[2]  # the control: discovered on the node and staying there
 
 
@@ -725,18 +725,13 @@ def _remote_cluster(
 ) -> Iterator[tuple[ParityHost, ParityHost]]:
     """A cluster and its node, both on the remote site, carrying two defects at once.
 
-    The fixture is built to reach §10.13 *and* §10.17, which need incompatible states of the same
-    row and therefore get one service each:
+    The fixture needs incompatible states of the same row and therefore gets one service each:
 
     * `_CLUSTERED_AND_DISABLED` is matched by both a *Clustered services* and a *Disabled
-      services* rule. The disabled rule carries **no host restriction** on purpose:
-      `_node_service_source` tests it on the **cluster** while `appears_on_cluster` tests it on
-      the **node**, and that asymmetry is what makes the common case the worst one.
+      services* rule. The disabled rule carries **no host restriction**, so it matches the
+      cluster, which is what disables a clustered service (werk 22416).
     * `_CLUSTERED` is matched by the clustered rule alone, so it stays a `clustered_*` row and
-      reaches `_case_clustered` rather than `_case_ignored`.
-
-    Keeping both in one fixture is what §7 asks for, and it means the expectations here move
-    twice: §10.17's fix depends on §10.13's landing first.
+      reaches `_case_clustered` with a monitored target. It carries §10.17.
     """
     folder = "/sd_parity_cluster"
     node = ParityHost("sd-cluster-node", remote_site)
@@ -793,7 +788,7 @@ def _remote_cluster(
         central_site.openapi.changes.activate_and_wait_for_completion()
 
         # The cluster has no data source of its own; its preview reads the nodes'. Scan both, as
-        # §10.13's and §10.17's reproductions both do -- and read each one once afterwards, for
+        # §10.17's reproduction does -- and read each one once afterwards, for
         # the reason `_host_pair` reads: `get_result` prefers the preview the scan stored and
         # `_load_last_preview` unlinks it, so the first read after a scan is answered from the
         # scan's table and only later ones recompute. Without this read the test's first look at
@@ -823,12 +818,8 @@ def test_clustered_services_on_a_remote_cluster(central_site: Site, remote_site:
     most likely to be written from §11's intended model instead of today's behaviour -- so each
     block below says which of the two it asserts.
 
-    Two of the three blocks are **characterizations of known defects** and are expected to change:
+    The last block is a **characterization of a known defect** and is expected to change:
 
-    * §10.13 -- `_node_service_source` returns plain `ignored` instead of `clustered_ignored` for
-      a service that is both clustered and disabled, dead since `692c918bf86` (2021) reverted werk
-      7128. The node files it under the generic "Disabled services" group, with bulk actions
-      enabled, and the cluster does not show it at all.
     * §10.17 -- targeting `ignored` on a `clustered_*` row **from the node** is accepted where the
       GUI documents it as impossible, and then does nothing: `_case_clustered` omits the entry from
       the autochecks it computes, but the write path puts it back, so the only lasting effects are
@@ -863,18 +854,16 @@ def test_clustered_services_on_a_remote_cluster(central_site: Site, remote_site:
             "the node's autochecks do not hold the cluster's service and its own"
         )
 
-        # §10.13, characterization: `clustered_ignored` has had no producer since 2021, so the
-        # row arrives as plain `ignored` and reaches `_case_ignored` rather than `_case_clustered`.
-        assert node_phases[_CLUSTERED_AND_DISABLED] == "ignored", (
+        # Intended behaviour (werk 22416): the disabled-services rule matches the cluster, so the
+        # node reports the service as disabled on the cluster, and the cluster as disabled. Neither
+        # writes it to the node's autochecks -- the assertion on `_autocheck_items` above.
+        assert node_phases[_CLUSTERED_AND_DISABLED] == "clustered_ignored", (
             f"the node reports {_CLUSTERED_AND_DISABLED} as "
-            f"{node_phases[_CLUSTERED_AND_DISABLED]!r} -- if this is now `clustered_ignored`, "
-            f"§10.13 has been fixed and this characterization should be deleted"
+            f"{node_phases[_CLUSTERED_AND_DISABLED]!r}, not as disabled on the cluster"
         )
-        # On the cluster the same service is either absent or shown as vanished, depending on
-        # whether a stale autocheck remains; there is none here, so it is simply missing. The one
-        # thing it must not be is monitored -- that would mean the disable had no effect at all.
-        assert cluster_phases.get(_CLUSTERED_AND_DISABLED) in (None, "vanished"), (
-            f"the cluster monitors {_CLUSTERED_AND_DISABLED} despite the disabled-services rule"
+        assert cluster_phases.get(_CLUSTERED_AND_DISABLED) == "ignored", (
+            f"the cluster reports {_CLUSTERED_AND_DISABLED} as "
+            f"{cluster_phases.get(_CLUSTERED_AND_DISABLED)!r} despite the disabled-services rule"
         )
 
         central_site.openapi.changes.activate_and_wait_for_completion()

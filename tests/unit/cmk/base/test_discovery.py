@@ -895,6 +895,37 @@ def test__get_post_discovery_services_drops_ignored_from_autochecks() -> None:
     assert result.services.removed == 0
 
 
+def test__get_post_discovery_services_drops_clustered_ignored_from_autochecks() -> None:
+    """Disabled clustered services are not persisted either, like disabled services."""
+    entry = AutocheckEntry(CheckPluginName("check_plugin_name"), "Ignored Item", {}, {})
+    result = DiscoveryReport()
+
+    post_discovery = get_post_discovery_autocheck_services(
+        HostName("hostname"),
+        {
+            "clustered_ignored": [
+                AutocheckServiceWithNodes(
+                    DiscoveredItem[AutocheckEntry](new=entry, previous=entry), []
+                ),
+            ],
+        },
+        ServiceFilters.accept_all(),
+        result,
+        get_service_description=lambda hn, entry: f"Test Description {entry.item}",  # noqa: ARG005
+        settings=DiscoverySettings(
+            update_host_labels=True,
+            add_new_services=True,
+            remove_vanished_services=True,
+            update_changed_service_labels=True,
+            update_changed_service_parameters=True,
+        ),
+        keep_clustered_vanished_services=True,
+    )
+
+    assert post_discovery == {}
+    assert result.clustered_ignored == 1
+
+
 def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
     return DiscoveryCheckParameters(
         commandline_only=False,

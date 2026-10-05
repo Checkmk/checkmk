@@ -406,6 +406,10 @@ def get_post_discovery_autocheck_services(
 
                         result.services.kept += 1
 
+            case "clustered_ignored":
+                # Like "ignored": disabled services are not persisted (see werk 19806).
+                result.clustered_ignored += len(discovered_services_with_nodes)
+
             case _:
                 if check_transition != "clustered_vanished" or keep_clustered_vanished_services:
                     # Silently keep clustered services
@@ -419,8 +423,6 @@ def get_post_discovery_autocheck_services(
                         result.clustered_old += len(discovered_services_with_nodes)
                     case "clustered_vanished":
                         result.clustered_vanished += len(discovered_services_with_nodes)
-                    case "clustered_ignored":
-                        result.clustered_ignored += len(discovered_services_with_nodes)
                     case _:
                         assert_never(check_transition)
 
@@ -783,11 +785,11 @@ def _node_service_source(
             return "ignored"
         return check_source
 
-    # TODO: this does not make much sense. If the service is clustered, but ignored _on that cluster_, it should be shown there.
+    # A clustered service is disabled by the rules of the cluster, not by those of the node.
     if check_source != "vanished" and (
         ignore_service(cluster_name, entry) or ignore_plugin(cluster_name, entry.check_plugin_name)
     ):
-        return "ignored"
+        return "clustered_ignored"
 
     if check_source == "vanished":
         return "clustered_vanished"
@@ -844,17 +846,9 @@ def _get_cluster_services(
             return True
         return autochecks_config.ignore_service(hn, entry)
 
+    # No ignore filter here: a clustered service is disabled by the rules of the
+    # cluster, and those are applied when the cluster's table is made.
     def appears_on_cluster(node_name: HostName, entry: AutocheckEntry) -> bool:
-        return (
-            not is_ignored(node_name, entry)
-            and autochecks_config.effective_host(node_name, entry) == host_name
-        )
-
-    def was_on_cluster(node_name: HostName, entry: AutocheckEntry) -> bool:
-        # Like appears_on_cluster but without the ignore filter: a service that
-        # previously existed on this cluster must be included in the preexisting
-        # list even when a disabled rule now matches it, so that it can surface
-        # as "vanished" rather than being silently dropped.
         return autochecks_config.effective_host(node_name, entry) == host_name
 
     nodes_discovery_results = {
@@ -874,7 +868,7 @@ def _get_cluster_services(
     clusters_discovery_result = QualifiedDiscovery(
         preexisting=merge_cluster_autochecks(
             {hn: q.preexisting for hn, q in nodes_discovery_results.items()},
-            was_on_cluster,
+            appears_on_cluster,
         ),
         current=merge_cluster_autochecks(
             {hn: q.current for hn, q in nodes_discovery_results.items()},

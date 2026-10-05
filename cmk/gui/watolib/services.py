@@ -564,8 +564,8 @@ class Discovery:
         ):
             if entry.check_source == DiscoveryState.VANISHED:
                 return DiscoveryState.REMOVED
-            if entry.check_source == DiscoveryState.IGNORED:
-                return DiscoveryState.IGNORED
+            if entry.check_source in (DiscoveryState.IGNORED, DiscoveryState.CLUSTERED_IGNORED):
+                return entry.check_source
             # entry.check_source in [DiscoveryState.MONITORED, DiscoveryState.UNDECIDED]
             return DiscoveryState.MONITORED
 
@@ -1123,7 +1123,8 @@ def _case_clustered(
     # We just display the clustered service state (OLD, NEW, VANISHED).
     # But if the user wants to disable the service on the host, this is what we do.
     # Ideally, there would be no service discovery on the cluster hosts at all.
-    if table_target != DiscoveryState.IGNORED:
+    # Disabled clustered services are not written either, like disabled services (CMK-33299).
+    if table_target not in (DiscoveryState.IGNORED, DiscoveryState.CLUSTERED_IGNORED):
         autochecks_to_save[key] = value
         saved_services.add(descr)
 

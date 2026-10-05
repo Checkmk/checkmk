@@ -110,6 +110,18 @@ class _AutochecksConfigIgnoreAll(_AutochecksConfigDummy):
         return True
 
 
+class _AutochecksConfigIgnoreOn(_AutochecksConfigDummy):
+    """AutochecksConfig where a disabled rule matches every service on the given hosts."""
+
+    def __init__(self, *, effective_host: HostName, ignored_on: Container[HostName]) -> None:
+        super().__init__(effective_host=effective_host)
+        self._ignored_on = ignored_on
+
+    @override
+    def ignore_service(self, hn: HostName, entry: AutocheckEntry) -> bool:
+        return hn in self._ignored_on
+
+
 def test_get_host_services_by_host_name_vanished_on_node() -> None:
     assert get_host_services_by_host_name(
         NODE_1,
@@ -466,6 +478,58 @@ def test_get_host_services_by_host_name_move_mutiple_nodes_and_autochecks() -> N
     }
 
 
+@pytest.mark.parametrize(
+    "ignored_on, expected",
+    [
+        pytest.param((NODE_1, CLUSTER), "clustered_ignored", id="rule matches both"),
+        pytest.param((CLUSTER,), "clustered_ignored", id="rule matches the cluster only"),
+        pytest.param((NODE_1,), "clustered_old", id="rule matches the node only"),
+    ],
+)
+def test_clustered_service_on_the_node_is_disabled_by_the_clusters_rule(
+    ignored_on: tuple[HostName, ...], expected: Transition
+) -> None:
+    assert set(
+        get_host_services_by_host_name(
+            NODE_1,
+            existing_services={NODE_1: [AUTOCHECK_1A]},
+            discovered_services={NODE_1: [AUTOCHECK_1A]},
+            is_cluster=False,
+            cluster_nodes=(),
+            autochecks_config=_AutochecksConfigIgnoreOn(
+                effective_host=CLUSTER, ignored_on=ignored_on
+            ),
+            enforced_services={},
+        )[NODE_1]
+    ) == {expected}
+
+
+@pytest.mark.parametrize(
+    "ignored_on, expected",
+    [
+        pytest.param((NODE_1, CLUSTER), "ignored", id="rule matches both"),
+        pytest.param((CLUSTER,), "ignored", id="rule matches the cluster only"),
+        pytest.param((NODE_1,), "unchanged", id="rule matches the node only"),
+    ],
+)
+def test_clustered_service_on_the_cluster_is_disabled_by_the_clusters_rule(
+    ignored_on: tuple[HostName, ...], expected: Transition
+) -> None:
+    assert set(
+        get_host_services_by_host_name(
+            CLUSTER,
+            existing_services={NODE_1: [AUTOCHECK_1A]},
+            discovered_services={NODE_1: [AUTOCHECK_1A]},
+            is_cluster=True,
+            cluster_nodes=(NODE_1,),
+            autochecks_config=_AutochecksConfigIgnoreOn(
+                effective_host=CLUSTER, ignored_on=ignored_on
+            ),
+            enforced_services={},
+        )[CLUSTER]
+    ) == {expected}
+
+
 def _setup_buffered_logging() -> StringIO:
     logger = logging.getLogger("cmk")
     buffer = StringIO()
@@ -549,17 +613,11 @@ def _classify(
     )
 
 
-def test_node_service_source_emits_exactly_eight_of_the_nine_transitions() -> None:
+def test_node_service_source_emits_every_transition() -> None:
     """Characterization of the classifier's whole output space.
 
-    `clustered_ignored` is declared in `Transition` and produced by nothing: since
-    `692c918bf86` (2021-02-05) an early `return "ignored"` has replaced a mutate-then-prefix,
-    silently reverting werk 7128. The counter, the `Transition` literal, `_case_clustered`'s match
-    arm and the GUI's "Disabled clustered services" group are all still there and all unreachable.
-
-    **§10.13 changes this set**: its fix returns `clustered_ignored` from the node branch, so this
-    assertion gains a ninth element. The paired strict-xfail below is what makes that a deliberate
-    edit rather than a mystery failure. See
+    `clustered_ignored` had no producer from `692c918bf86` (2021-02-05) until CMK-38591: an early
+    `return "ignored"` had replaced a mutate-then-prefix, silently reverting werk 7128. See
     `packages/cmk-check-engine/docs/SERVICE_DISCOVERY_BEHAVIOUR_MATRIX.md` §2.1 and §10.13.
     """
     produced = {
@@ -584,32 +642,8 @@ def test_node_service_source_emits_exactly_eight_of_the_nine_transitions() -> No
         "clustered_new",
         "clustered_old",
         "clustered_vanished",
+        "clustered_ignored",
     }
-
-
-@pytest.mark.xfail(
-    strict=True,
-    reason="CMK-38591 (§10.13) -- a disabled clustered service must be classified as "
-    "`clustered_ignored` so that it is filed under 'Disabled clustered services' on the node (no "
-    "bulk actions) and shown on the cluster, which is the host that actually manages it. Today it "
-    "lands in the generic 'Disabled services' group with bulk actions enabled, and re-enabling it "
-    "from the node writes a node-scoped rule that has no effect while reporting success",
-)
-@pytest.mark.parametrize("check_source", ["new", "unchanged", "changed"])
-def test_disabled_clustered_service_is_classified_as_clustered_ignored(
-    check_source: BasicTransition,
-) -> None:
-    assert _classify(NODE_1, check_source=check_source, service_ignored_on=(CLUSTER,)) == (
-        "clustered_ignored"
-    )
-
-
-@pytest.mark.parametrize("check_source", ["new", "unchanged", "changed"])
-def test_disabled_clustered_service_is_currently_classified_as_plain_ignored(
-    check_source: BasicTransition,
-) -> None:
-    """Today's behaviour. Not an endorsement -- see the paired strict-xfail above."""
-    assert _classify(NODE_1, check_source=check_source, service_ignored_on=(CLUSTER,)) == "ignored"
 
 
 @pytest.mark.parametrize("check_source", ["new", "unchanged", "changed"])
@@ -618,18 +652,16 @@ def test_clustered_service_is_only_disabled_by_a_rule_matching_the_cluster(
 ) -> None:
     """For a node row the classifier consults the rule on the **cluster**, not on the node.
 
-    Surprising, but correct and preserved by §10.13's fix: the cluster owns the service, so the
-    cluster's rules decide whether it is disabled. Pinned because the asymmetry against
-    `appears_on_cluster` -- which tests the rule on the *node* -- is what makes §10.13's common
-    case the worst one, and a fix that "tidies" this line would reintroduce it.
+    The cluster owns the service, so the cluster's rules decide whether it is disabled; a rule
+    matching only the node has no effect (CMK-38591).
     """
     assert _classify(NODE_1, check_source=check_source, service_ignored_on=(NODE_1,)) not in (
         "ignored",
         "clustered_ignored",
     )
-    assert _classify(NODE_1, check_source=check_source, service_ignored_on=(CLUSTER,)) in (
-        "ignored",
-        "clustered_ignored",
+    assert (
+        _classify(NODE_1, check_source=check_source, service_ignored_on=(CLUSTER,))
+        == "clustered_ignored"
     )
 
 

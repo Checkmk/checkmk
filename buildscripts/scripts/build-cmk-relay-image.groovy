@@ -78,14 +78,16 @@ void main() {
                 archiveArtifacts(artifacts: "artifacts/${cmk_version_rc_aware}/${sbom_name}")
             }
 
-            stage(name: 'Upload tarball to internal deploy dest') {
-                artifacts_helper.upload_via_rsync(
-                    "${artifact_directory}",
-                    "${cmk_version_rc_aware}",
-                    "${tarball_name}",
-                    "${INTERNAL_DEPLOY_DEST}",
-                    "${INTERNAL_DEPLOY_PORT}",
-                )
+            stage(name: 'Upload to internal deploy dest') {
+                [tarball_name, sbom_name].each { filename ->
+                    artifacts_helper.upload_via_rsync(
+                        "${artifact_directory}",
+                        "${cmk_version_rc_aware}",
+                        "${filename}",
+                        "${INTERNAL_DEPLOY_DEST}",
+                        "${INTERNAL_DEPLOY_PORT}",
+                    )
+                }
             }
 
             stage(name: 'Upload to download server') {

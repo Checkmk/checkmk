@@ -69,7 +69,7 @@
 
 @layer theme {
   body[data-theme='facelift'] {
-    /* Base colors */
+    /* Primitives: the ux-theme grey scale the blocks below build on */
     --ux-theme-0: var(--color-daylight-grey-0);
     --ux-theme-1: var(--color-daylight-grey-10);
     --ux-theme-2: var(--color-daylight-grey-20);
@@ -81,13 +81,52 @@
     --ux-theme-8: var(--color-daylight-grey-80);
     --ux-theme-9: var(--color-daylight-grey-90);
     --ux-theme-10: var(--color-daylight-grey-100);
+
+    /* Background */
+    --background-base: var(--ux-theme-0);
+    --background-subtle: var(--ux-theme-2);
+    --background-selected: var(--ux-theme-8);
+    --background-hover: var(--color-daylight-grey-80);
+    --default-bg-color: var(--ux-theme-1);
+
+    /* Text */
+    --font-color: var(--color-conference-grey-100);
+    --font-color-secondary: var(--color-conference-grey-70);
+    --font-color-dimmed: var(--grey-4-dimmed);
+    --font-color-disabled: var(--color-conference-grey-70);
+    --font-underline-color: var(--color-conference-grey-60);
+
+    /* Border */
+    --border-color-subtle: var(--color-mid-grey-10);
+    --border-color-default: var(--color-mid-grey-50);
+    --border-color-strong: var(--color-mid-grey-50);
+    --default-border-color: rgb(234 234 234);
+    --default-border-color-green: rgb(21 209 160);
+    --dashed-border-color: var(--color-mid-grey-20);
+
+    /* Status */
+    --color-warning: rgb(255 208 0);
+    --color-danger: rgb(229 63 63);
+    --status-border-color-info: var(--color-dark-blue-50);
+    --status-border-color-success: var(--color-corporate-green-50);
+    --status-border-color-warning: var(--color-yellow-50);
+    --status-border-color-error: var(--color-dark-red-50);
+    --status-text-color-error: var(--color-dark-red-50);
+    --status-icon-color-info: var(--color-dark-blue-80);
+    --status-icon-color-success: var(--color-corporate-green-80);
+    --status-icon-color-warning: var(--color-yellow-80);
+    --status-icon-color-error: var(--color-dark-red-80);
+
+    /* Interactive */
+    --default-select-hover-color: var(--success);
+    --default-select-focus-color: var(--success-dimmed);
+
+    /* Component-named variables, to be renamed onto the roles above */
     --color-popup-backdrop: rgb(0 0 0 /50%);
     --color-skeleton: var(--color-conference-grey-10);
     --color-skeleton-shimmer-0: rgb(30 38 46 / 0%);
     --color-skeleton-shimmer-1: rgb(30 38 46 / 2%);
     --color-skeleton-shimmer-2: rgb(30 38 46 / 6%);
-    --color-warning: rgb(255 208 0);
-    --color-danger: rgb(229 63 63);
     --popup-dialog-bg-color: var(--color-daylight-grey-10);
     --popup-dialog-title-color: var(--color-conference-grey-100);
     --popup-dialog-message-color: var(--color-mid-grey-100);
@@ -97,27 +136,11 @@
     --switch-on-border-color: var(--color-corporate-green-70);
     --switch-on-bg-color: var(--color-corporate-green-50);
     --switch-thumb-color: var(--color-conference-grey-90);
-
-    /* ATTENTION: No explicit rgb color definitions beyond this point. Reuse variables above */
-
-    /* Fonts */
-    --font-color: var(--color-conference-grey-100);
-    --font-color-secondary: var(--color-conference-grey-70);
-    --font-color-dimmed: var(--grey-4-dimmed);
-    --font-color-disabled: var(--color-conference-grey-70);
-    --font-underline-color: var(--color-conference-grey-60);
-
-    /* Colors */
     --default-nav-bg-color: var(--ux-theme-3);
     --default-nav-border-color: var(--ux-theme-6);
-    --default-border-color: rgb(234 234 234);
-    --default-bg-color: var(--ux-theme-1);
     --default-form-element-bg-color: var(--ux-theme-5);
     --default-form-element-border-color: var(--color-mid-grey-60);
     --default-form-element-placeholder-color: var(--color-conference-grey-50);
-    --default-select-hover-color: var(--success);
-    --default-select-focus-color: var(--success-dimmed);
-    --default-border-color-green: rgb(21 209 160);
     --default-tooltip-background-color: rgb(233 233 233);
     --default-tooltip-text-color: rgb(17 24 29);
     --custom-scroll-bar-thumb-color: rgb(88 88 88);
@@ -139,7 +162,6 @@
     --inline-help-icon-bg: rgb(12 129 238);
     --slide-in-left-part: var(--color-daylight-grey-20);
     --dropdown-arrow-color: var(--color-conference-grey-100);
-    --dashed-border-color: var(--color-mid-grey-20);
     --sticky-header-border-color: var(--color-mid-grey-10);
     --shared-dashboard-indicator-background: var(--color-daylight-grey-30);
     --ai-purple: var(--color-purple-60);
@@ -152,28 +174,6 @@
     --tag-label-color: var(--color-cyan-80);
     --tag-font-color-light: var(--color-white-100);
     --tag-font-color-dark: var(--color-conference-grey-100);
-
-    /* Backgrounds */
-    --background-base: var(--ux-theme-0);
-    --background-selected: var(--ux-theme-8);
-    --background-subtle: var(--ux-theme-2);
-    --background-hover: var(--color-daylight-grey-80);
-
-    /* Borders */
-    --border-color-subtle: var(--color-mid-grey-10);
-    --border-color-default: var(--color-mid-grey-50);
-    --border-color-strong: var(--color-mid-grey-50);
-
-    /* Status */
-    --status-border-color-info: var(--color-dark-blue-50);
-    --status-border-color-success: var(--color-corporate-green-50);
-    --status-border-color-warning: var(--color-yellow-50);
-    --status-border-color-error: var(--color-dark-red-50);
-    --status-text-color-error: var(--color-dark-red-50);
-    --status-icon-color-info: var(--color-dark-blue-80);
-    --status-icon-color-success: var(--color-corporate-green-80);
-    --status-icon-color-warning: var(--color-yellow-80);
-    --status-icon-color-error: var(--color-dark-red-80);
 
     /* Cmk Button Variants */
     --default-button-primary-color: var(--color-corporate-green-50);
@@ -223,7 +223,7 @@
   }
 
   body[data-theme='modern-dark'] {
-    /* Base colors */
+    /* Primitives: the ux-theme grey scale the blocks below build on */
     --ux-theme-0: var(--color-midnight-grey-100);
     --ux-theme-1: var(--color-midnight-grey-90);
     --ux-theme-2: var(--color-midnight-grey-80);
@@ -235,13 +235,52 @@
     --ux-theme-8: var(--color-midnight-grey-20);
     --ux-theme-9: var(--color-midnight-grey-10);
     --ux-theme-10: var(--color-midnight-grey-0);
+
+    /* Background */
+    --background-base: var(--ux-theme-0);
+    --background-subtle: var(--ux-theme-2);
+    --background-selected: var(--ux-theme-8);
+    --background-hover: var(--color-midnight-grey-50);
+    --default-bg-color: var(--ux-theme-1);
+
+    /* Text */
+    --font-color: var(--color-white-100);
+    --font-color-secondary: var(--color-white-70);
+    --font-color-dimmed: var(--white-dimmed);
+    --font-color-disabled: var(--color-white-50);
+    --font-underline-color: var(--color-white-60);
+
+    /* Border */
+    --border-color-subtle: var(--color-mid-grey-90);
+    --border-color-default: var(--color-mid-grey-50);
+    --border-color-strong: var(--color-mid-grey-70);
+    --default-border-color: rgb(38 45 52);
+    --default-border-color-green: rgb(21 209 160);
+    --dashed-border-color: var(--color-mid-grey-80);
+
+    /* Status */
+    --color-warning: rgb(255 215 3);
+    --color-danger: rgb(180 45 45);
+    --status-border-color-info: var(--color-dark-blue-50);
+    --status-border-color-success: var(--color-corporate-green-50);
+    --status-border-color-warning: var(--color-yellow-50);
+    --status-border-color-error: var(--color-dark-red-40);
+    --status-text-color-error: var(--color-dark-red-30);
+    --status-icon-color-info: var(--color-dark-blue-20);
+    --status-icon-color-success: var(--color-corporate-green-20);
+    --status-icon-color-warning: var(--color-yellow-20);
+    --status-icon-color-error: var(--color-dark-red-20);
+
+    /* Interactive */
+    --default-select-hover-color: var(--success);
+    --default-select-focus-color: var(--success-dimmed);
+
+    /* Component-named variables, to be renamed onto the roles above */
     --color-popup-backdrop: rgb(0 0 0 /50%);
     --color-skeleton: var(--color-white-0);
     --color-skeleton-shimmer-0: rgb(255 255 255 / 0%);
     --color-skeleton-shimmer-1: rgb(255 255 255 / 2%);
     --color-skeleton-shimmer-2: rgb(255 255 255 / 6%);
-    --color-warning: rgb(255 215 3);
-    --color-danger: rgb(180 45 45);
     --popup-dialog-bg-color: var(--color-midnight-grey-50);
     --popup-dialog-title-color: var(--color-white-100);
     --popup-dialog-message-color: var(--color-mid-grey-0);
@@ -251,27 +290,11 @@
     --switch-on-border-color: var(--color-corporate-green-50);
     --switch-on-bg-color: var(--color-corporate-green-50);
     --switch-thumb-color: var(--color-conference-grey-90);
-
-    /* ATTENTION: No explicit rgb color definitions beyond this point. Reuse variables above */
-
-    /* Fonts */
-    --font-color: var(--color-white-100);
-    --font-color-secondary: var(--color-white-70);
-    --font-color-dimmed: var(--white-dimmed);
-    --font-color-disabled: var(--color-white-50);
-    --font-underline-color: var(--color-white-60);
-
-    /* Colors */
     --default-nav-bg-color: rgb(17 24 29);
     --default-nav-border-color: var(--ux-theme-4);
-    --default-border-color: rgb(38 45 52);
-    --default-bg-color: var(--ux-theme-1);
     --default-form-element-bg-color: var(--ux-theme-5);
     --default-form-element-border-color: var(--color-mid-grey-60);
     --default-form-element-placeholder-color: var(--color-white-50);
-    --default-select-hover-color: var(--success);
-    --default-select-focus-color: var(--success-dimmed);
-    --default-border-color-green: rgb(21 209 160);
     --default-tooltip-background-color: rgb(17 24 29);
     --default-tooltip-text-color: var(--white);
     --custom-scroll-bar-thumb-color: rgb(224 224 228);
@@ -293,7 +316,6 @@
     --inline-help-icon-bg: rgb(6 103 193);
     --slide-in-left-part: var(--ux-theme-2);
     --dropdown-arrow-color: var(--color-white-100);
-    --dashed-border-color: var(--color-mid-grey-80);
     --sticky-header-border-color: var(--color-mid-grey-100);
     --shared-dashboard-indicator-background: var(--color-midnight-grey-100);
     --ai-purple: var(--color-purple-50);
@@ -306,28 +328,6 @@
     --tag-label-color: var(--color-cyan-80);
     --tag-font-color-light: var(--color-white-100);
     --tag-font-color-dark: var(--color-conference-grey-100);
-
-    /* Backgrounds */
-    --background-base: var(--ux-theme-0);
-    --background-selected: var(--ux-theme-8);
-    --background-subtle: var(--ux-theme-2);
-    --background-hover: var(--color-midnight-grey-50);
-
-    /* Borders */
-    --border-color-subtle: var(--color-mid-grey-90);
-    --border-color-default: var(--color-mid-grey-50);
-    --border-color-strong: var(--color-mid-grey-70);
-
-    /* Status */
-    --status-border-color-info: var(--color-dark-blue-50);
-    --status-border-color-success: var(--color-corporate-green-50);
-    --status-border-color-warning: var(--color-yellow-50);
-    --status-border-color-error: var(--color-dark-red-40);
-    --status-text-color-error: var(--color-dark-red-30);
-    --status-icon-color-info: var(--color-dark-blue-20);
-    --status-icon-color-success: var(--color-corporate-green-20);
-    --status-icon-color-warning: var(--color-yellow-20);
-    --status-icon-color-error: var(--color-dark-red-20);
 
     /* Cmk Button Variants */
     --default-button-primary-color: var(--color-corporate-green-50);

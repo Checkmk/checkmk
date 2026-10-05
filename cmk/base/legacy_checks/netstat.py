@@ -68,11 +68,19 @@ def parse_netstat(string_table):
             # Ubuntu recently deviced to use "LISTEN" instead of "LISTENING"
             if connstate == "LISTEN":
                 connstate = "LISTENING"
-
-        if len(line) == 5:
+        elif len(line) == 5:
             proto, _recv_q, _send_q, local, remote = line
             proto = "UDP"
             connstate = "LISTENING"
+        elif len(line) == 3:
+            proto, local, remote = line
+            proto = "UDP"
+            connstate = "LISTENING"
+        else:
+            continue
+
+        if not all(":" in address or "." in address for address in (local, remote)):
+            continue
 
         connections.append((proto, split_ip_address(local), split_ip_address(remote), connstate))
     return connections

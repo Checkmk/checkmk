@@ -43,6 +43,14 @@ pytestmark = pytest.mark.checks
                 ("UDP", ["127.0.0.1", "778"], ["0.0.0.0", "*"], "LISTENING"),
             ],
         ),
+        (
+            [
+                ["No", "updates", "pending"],
+                ["tcp", "0", "0", "0.0.0.0:6556", "0.0.0.0:*", "LISTENING"],
+                ["No", "updates", "pending"],
+            ],
+            [("TCP", ["0.0.0.0", "6556"], ["0.0.0.0", "*"], "LISTENING")],
+        ),
     ],
 )
 def test_parse_netstat(
@@ -52,7 +60,6 @@ def test_parse_netstat(
     assert parsed == expected_parsed
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4650: foreign line")
 def test_check_netstat_ignores_foreign_line() -> None:
     check = Check("netstat")
     parsed = check.run_parse(

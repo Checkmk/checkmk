@@ -94,6 +94,12 @@ STRING_TABLE_3 = [
         [""],
     ],
 ]
+# Cartridge flagging "Overvoltage" together with "Needs Replacement".
+STRING_TABLE_4 = [
+    STRING_TABLE_3[0],
+    STRING_TABLE_3[1],
+    [["0110000000000000"]],
+]
 
 
 # Environmental monitoring device (e.g. APC NetBotz NRM250):
@@ -158,7 +164,7 @@ STRING_TABLE_SENSORS_AND_BATTERY = [
         ),
         pytest.param(
             STRING_TABLE_3,
-            {"capacity": ("fixed", (95, 80)), "calibration_state": 0, "battery_replace_state": 0},
+            {"capacity": ("fixed", (95, 80)), "calibration_state": 0, "battery_replace_state": 1},
             [
                 Result(state=State.OK, summary="Battery status: normal"),
                 Result(state=State.OK, summary="No battery needs replacing"),
@@ -170,6 +176,41 @@ STRING_TABLE_SENSORS_AND_BATTERY = [
                 Result(state=State.WARN, summary="Battery pack cartridge 0: Needs Replacement"),
                 Result(state=State.OK, summary="Battery pack cartridge 1: OK"),
             ],
+            id="cartridge_needs_replacement_default_warn",
+        ),
+        pytest.param(
+            STRING_TABLE_3,
+            {"capacity": ("fixed", (95, 80)), "calibration_state": 0, "battery_replace_state": 2},
+            [
+                Result(state=State.OK, summary="Battery status: normal"),
+                Result(state=State.OK, summary="No battery needs replacing"),
+                Result(state=State.OK, summary="Output status: on line (calibration invalid)"),
+                Result(state=State.OK, summary="Capacity: 99.00%"),
+                Metric(name="capacity", value=99.0, boundaries=(0, 100)),
+                Result(state=State.OK, summary="Time remaining: 14 hours 23 minutes"),
+                Metric(name="runtime", value=51825.0),
+                Result(state=State.CRIT, summary="Battery pack cartridge 0: Needs Replacement"),
+                Result(state=State.OK, summary="Battery pack cartridge 1: OK"),
+            ],
+            id="cartridge_needs_replacement_configured_crit",
+        ),
+        pytest.param(
+            STRING_TABLE_4,
+            {"capacity": ("fixed", (95, 80)), "calibration_state": 0, "battery_replace_state": 0},
+            [
+                Result(state=State.OK, summary="Battery status: normal"),
+                Result(state=State.OK, summary="No battery needs replacing"),
+                Result(state=State.OK, summary="Output status: on line (calibration invalid)"),
+                Result(state=State.OK, summary="Capacity: 99.00%"),
+                Metric(name="capacity", value=99.0, boundaries=(0, 100)),
+                Result(state=State.OK, summary="Time remaining: 14 hours 23 minutes"),
+                Metric(name="runtime", value=51825.0),
+                Result(
+                    state=State.WARN,
+                    summary="Battery pack cartridge 0: Overvoltage, Needs Replacement",
+                ),
+            ],
+            id="cartridge_other_flags_stay_warn",
         ),
         pytest.param(
             STRING_TABLE_2,

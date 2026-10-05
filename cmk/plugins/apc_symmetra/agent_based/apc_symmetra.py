@@ -192,6 +192,23 @@ def discovery_apc_symmetra(section: ParsedSection) -> DiscoveryResult:
         yield Service()
 
 
+_CARTRIDGE_BITS = {
+    0: "Disconnected",
+    1: "Overvoltage",
+    2: "Needs Replacement",
+    3: "Overtemperature Critical",
+    4: "Charger",
+    5: "Temperature Sensor",
+    6: "Bus Soft Start",
+    7: "Overtemperature Warning",
+    8: "General Error",
+    9: "Communication",
+    10: "Disconnected Frame",
+    11: "Firmware Mismatch",
+}
+_CARTRIDGE_NEEDS_REPLACEMENT_BIT = 2
+
+
 def check_apc_symmetra(params: CheckParameters, section: ParsedSection) -> CheckResult:
     data = section["status"]
 
@@ -324,29 +341,23 @@ def check_apc_symmetra(params: CheckParameters, section: ParsedSection) -> Check
             label="Time remaining",
         )
 
-    cartridge_bits = {
-        0: "Disconnected",
-        1: "Overvoltage",
-        2: "Needs Replacement",
-        3: "Overtemperature Critical",
-        4: "Charger",
-        5: "Temperature Sensor",
-        6: "Bus Soft Start",
-        7: "Overtemperature Warning",
-        8: "General Error",
-        9: "Communication",
-        10: "Disconnected Frame",
-        11: "Firmware Mismatch",
-    }
     for cart_idx, bitmask in enumerate(cartridge_states):
         if not bitmask:
             continue
 
-        translated_bits = [cartridge_bits[idx] for idx, bit in enumerate(bitmask) if bit == "1"]
-        if translated_bits:
+        set_bits = [idx for idx, bit in enumerate(bitmask) if bit == "1"]
+        if set_bits:
             yield Result(
-                state=State.WARN,
-                summary=f"Battery pack cartridge {cart_idx}: {', '.join(translated_bits)}",
+                state=State.worst(
+                    *(
+                        State(params["battery_replace_state"])
+                        if idx == _CARTRIDGE_NEEDS_REPLACEMENT_BIT
+                        else State.WARN
+                        for idx in set_bits
+                    )
+                ),
+                summary=f"Battery pack cartridge {cart_idx}: "
+                f"{', '.join(_CARTRIDGE_BITS[idx] for idx in set_bits)}",
             )
         else:
             yield Result(state=State.OK, summary=f"Battery pack cartridge {cart_idx}: OK")

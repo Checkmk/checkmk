@@ -60,7 +60,9 @@ description:
 
  Battery pack cartridge:
 
- - {WARN}: If any bit indicates a deviation from normal operation (Overvoltage, Overtemperature, Firmware mismatch, ...)
+ - Depending on configuration (default: {WARN}): "needs replacement"
+
+ - {WARN}: If any other bit indicates a deviation from normal operation (Overvoltage, Overtemperature, Firmware mismatch, ...)
 
  - {OK}: In all other cases
 

@@ -61,6 +61,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     FolderTree,
     Host,
     HostEditResult,
+    need_relatable,
     parent_folder_chain,
     PathWithoutSlash,
     plan_relation_mirror,
@@ -1326,14 +1327,17 @@ class _TellingApart:
 
 
 def _refusals_per_folder_pair(*, acting_user: LoggedInUser) -> Callable[[Host, Host], str | None]:
-    """:func:`_refusal_to_write`, asked once per pair of folders rather than once per pair,
-    and then whether the user may edit each of the two hosts, asked once per host.
+    """Why a pair cannot be written, with each question asked as rarely as its answer changes.
+
+    :func:`_refusal_to_write` is asked once per pair of folders, whether the edition relates the
+    two sites once per pair of sites, and whether the user may edit a host once per host.
 
     Whether a user may write a folder is the same answer for every host in it, and a scan
     of a large fleet asks it tens of thousands of times over a handful of folders. A host can
-    still name contact groups of its own that the folder does not.
+    still name contact groups of its own that the folder does not, and a site of its own.
     """
     seen: dict[tuple[PathWithoutSlash, PathWithoutSlash], str | None] = {}
+    relatable: dict[tuple[SiteId, SiteId], str | None] = {}
     editable: dict[HostName, bool] = {}
 
     def refusal(source: Host, target: Host) -> str | None:
@@ -1342,6 +1346,11 @@ def _refusals_per_folder_pair(*, acting_user: LoggedInUser) -> Callable[[Host, H
             seen[key] = _refusal_to_write(source, target, acting_user=acting_user)
         if seen[key] is not None:
             return seen[key]
+        sites = (source.site_id(), target.site_id())
+        if sites not in relatable:
+            relatable[sites] = _refusal_to_relate(source, target)
+        if relatable[sites] is not None:
+            return relatable[sites]
         for host in (source, target):
             if (name := host.name()) not in editable:
                 editable[name] = host.permissions.may("write", acting_user)
@@ -1517,6 +1526,20 @@ def _refusal_to_write(source: Host, target: Host, *, acting_user: LoggedInUser) 
     try:
         relation_mirror_folders([source, target], acting_user=acting_user)
     except (MKAuthException, MKUserError) as refusal:
+        return strip_tags(str(refusal))
+    return None
+
+
+def _refusal_to_relate(source: Host, target: Host) -> str | None:
+    """Why the edition refuses a relation between the sites of these two hosts.
+
+    The run asks the same when it writes the other half (see
+    :func:`cmk.gui.watolib.hosts_and_folders.apply_relation_mirror`), so without this a pair
+    across customers would be proposed and only refused once the user stores it.
+    """
+    try:
+        need_relatable(source.site_id(), target)
+    except MKUserError as refusal:
         return strip_tags(str(refusal))
     return None
 

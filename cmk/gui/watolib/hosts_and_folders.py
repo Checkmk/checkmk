@@ -1426,7 +1426,7 @@ def _refusal_of(
         raise MKUserError(None, message % {"host": counterpart, "reason": exc}) from exc
 
 
-def _need_relatable(site_id: SiteId, counterpart: Host) -> None:
+def need_relatable(site_id: SiteId, counterpart: Host) -> None:
     """Let the edition refuse a relation between the hosts of these two sites."""
     folder = counterpart.folder()
     folder.validators.validate_host_relation(
@@ -1448,7 +1448,7 @@ def _need_relatable_from(
             relations_or_empty(host.attributes.get("relations", []))
         ):
             if other not in moving and (counterpart := resolve_host(other)) is not None:
-                _need_relatable(site_id, counterpart)
+                need_relatable(site_id, counterpart)
 
 
 def _inheriting_hosts_below(folder: Folder) -> Iterator[Host]:
@@ -1505,7 +1505,7 @@ def _need_relation_mirror(
             # The pair is dropped, and the host it named is gone: nothing to mirror onto.
             continue
         if links:
-            _need_relatable(site_id, counterpart)
+            need_relatable(site_id, counterpart)
         if counterpart.stores_relations_about(host_name, links):
             continue
         with _refusal_of(counterpart.name(), host_name, dropping=not links, visible=visible):

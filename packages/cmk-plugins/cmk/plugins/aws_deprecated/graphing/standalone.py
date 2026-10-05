@@ -1066,3 +1066,87 @@ metric_aws_elasticache_subnet_groups = metrics.Metric(
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_BLUE,
 )
+metric_get_requests = metrics.Metric(
+    name="get_requests",
+    title=Title("GET requests"),
+    unit=UNIT_PER_SECOND,
+    color=metrics.Color.PURPLE,
+)
+metric_get_requests_perc = metrics.Metric(
+    name="get_requests_perc",
+    title=Title("Percentage GET requests"),
+    unit=UNIT_PERCENTAGE,
+    color=metrics.Color.PURPLE,
+)
+metric_put_requests = metrics.Metric(
+    name="put_requests",
+    title=Title("PUT requests"),
+    unit=UNIT_PER_SECOND,
+    color=metrics.Color.DARK_PINK,
+)
+metric_put_requests_perc = metrics.Metric(
+    name="put_requests_perc",
+    title=Title("Percentage PUT requests"),
+    unit=UNIT_PERCENTAGE,
+    color=metrics.Color.DARK_PINK,
+)
+metric_delete_requests = metrics.Metric(
+    name="delete_requests",
+    title=Title("DELETE requests"),
+    unit=UNIT_PER_SECOND,
+    color=metrics.Color.ORANGE,
+)
+metric_delete_requests_perc = metrics.Metric(
+    name="delete_requests_perc",
+    title=Title("Percentage DELETE requests"),
+    unit=UNIT_PERCENTAGE,
+    color=metrics.Color.ORANGE,
+)
+metric_head_requests = metrics.Metric(
+    name="head_requests",
+    title=Title("HEAD requests"),
+    unit=UNIT_PER_SECOND,
+    color=metrics.Color.YELLOW,
+)
+metric_head_requests_perc = metrics.Metric(
+    name="head_requests_perc",
+    title=Title("Percentage HEAD requests"),
+    unit=UNIT_PERCENTAGE,
+    color=metrics.Color.YELLOW,
+)
+metric_post_requests = metrics.Metric(
+    name="post_requests",
+    title=Title("POST requests"),
+    unit=UNIT_PER_SECOND,
+    color=metrics.Color.YELLOW,
+)
+metric_post_requests_perc = metrics.Metric(
+    name="post_requests_perc",
+    title=Title("Percentage POST requests"),
+    unit=UNIT_PERCENTAGE,
+    color=metrics.Color.YELLOW,
+)
+metric_select_requests = metrics.Metric(
+    name="select_requests",
+    title=Title("SELECT requests"),
+    unit=UNIT_PER_SECOND,
+    color=metrics.Color.YELLOW,
+)
+metric_select_requests_perc = metrics.Metric(
+    name="select_requests_perc",
+    title=Title("Percentage SELECT requests"),
+    unit=UNIT_PERCENTAGE,
+    color=metrics.Color.YELLOW,
+)
+metric_list_requests = metrics.Metric(
+    name="list_requests",
+    title=Title("LIST requests"),
+    unit=UNIT_PER_SECOND,
+    color=metrics.Color.CYAN,
+)
+metric_list_requests_perc = metrics.Metric(
+    name="list_requests_perc",
+    title=Title("Percentage LIST requests"),
+    unit=UNIT_PERCENTAGE,
+    color=metrics.Color.CYAN,
+)

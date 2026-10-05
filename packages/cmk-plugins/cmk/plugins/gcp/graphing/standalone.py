@@ -8,6 +8,7 @@ from cmk.graphing.v1 import metrics, Title
 UNIT_COUNTER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))
 UNIT_PER_SECOND = metrics.Unit(metrics.DecimalNotation("/s"))
 UNIT_SECONDS_PER_SECOND = metrics.Unit(metrics.DecimalNotation("s/s"))
+UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
 
 metric_faas_active_instance_count = metrics.Metric(
     name="faas_active_instance_count",
@@ -56,4 +57,10 @@ metric_gcp_billable_time = metrics.Metric(
     title=Title("Billable time"),
     unit=UNIT_SECONDS_PER_SECOND,
     color=metrics.Color.DARK_PINK,
+)
+metric_disk_used_capacity = metrics.Metric(
+    name="disk_used_capacity",
+    title=Title("Used disk capacity"),
+    unit=UNIT_BYTES,
+    color=metrics.Color.ORANGE,
 )

@@ -328,12 +328,7 @@ def test_bundles() -> None:
 
 
 _ALLOWED_DUPLICATE_METRIC_TITLES = {
-    "Average consumption": {"aws_dynamodb_consumed_wcu", "aws_dynamodb_consumed_rcu"},
     "Average latency": {"latency_ave", "average_latency_s"},
-    "Average usage": {
-        "aws_dynamodb_consumed_rcu_perc",
-        "aws_dynamodb_consumed_wcu_perc",
-    },
     "Connection time": {"aws_route53_connection_time", "connection_time"},
     "Failed connections": {"connections_failed_rate", "failed_connections"},
     "GPU utilization": {"esx_gpu_utilization", "gpu_utilization"},
@@ -343,15 +338,7 @@ _ALLOWED_DUPLICATE_METRIC_TITLES = {
         "harddrive_uncorrectable_erros",
         "harddrive_uncorrectable_errors",
     },
-    "Maximum single-request consumption": {
-        "aws_dynamodb_maximum_consumed_wcu",
-        "aws_dynamodb_maximum_consumed_rcu",
-    },
     "Memory used": {"memused_couchbase_bucket", "memory_used"},
-    "Minimum single-request consumption": {
-        "aws_dynamodb_minimum_consumed_rcu",
-        "aws_dynamodb_minimum_consumed_wcu",
-    },
     "New connections": {"new_connections", "aws_new_connections"},
     "Number of Go routines": {"bazel_cache_status_num_goroutines", "bazel_cache_go_go_goroutines"},
     "Nodes": {"number_of_nodes", "aws_elasticache_nodes"},

@@ -9,14 +9,14 @@ UNIT_RCU = metrics.Unit(metrics.DecimalNotation("RCU"))
 
 metric_aws_dynamodb_minimum_consumed_rcu = metrics.Metric(
     name="aws_dynamodb_minimum_consumed_rcu",
-    title=Title("Minimum single-request consumption"),
+    title=Title("Minimum single-request read consumption"),
     unit=UNIT_RCU,
     color=metrics.Color.LIGHT_GREEN,
 )
 
 metric_aws_dynamodb_maximum_consumed_rcu = metrics.Metric(
     name="aws_dynamodb_maximum_consumed_rcu",
-    title=Title("Maximum single-request consumption"),
+    title=Title("Maximum single-request read consumption"),
     unit=UNIT_RCU,
     color=metrics.Color.ORANGE,
 )

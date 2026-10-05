@@ -761,28 +761,28 @@ metric_aws_dynamodb_write_capacity = metrics.Metric(
 
 metric_aws_dynamodb_consumed_rcu = metrics.Metric(
     name="aws_dynamodb_consumed_rcu",
-    title=Title("Average consumption"),
+    title=Title("Average read capacity consumption"),
     unit=UNIT_RCU,
     color=metrics.Color.LIGHT_BLUE,
 )
 
 metric_aws_dynamodb_consumed_rcu_perc = metrics.Metric(
     name="aws_dynamodb_consumed_rcu_perc",
-    title=Title("Average usage"),
+    title=Title("Average read capacity usage"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.LIGHT_BLUE,
 )
 
 metric_aws_dynamodb_consumed_wcu = metrics.Metric(
     name="aws_dynamodb_consumed_wcu",
-    title=Title("Average consumption"),
+    title=Title("Average write capacity consumption"),
     unit=UNIT_WCU,
     color=metrics.Color.LIGHT_BLUE,
 )
 
 metric_aws_dynamodb_consumed_wcu_perc = metrics.Metric(
     name="aws_dynamodb_consumed_wcu_perc",
-    title=Title("Average usage"),
+    title=Title("Average write capacity usage"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.LIGHT_BLUE,
 )

@@ -9,14 +9,14 @@ UNIT_WCU = metrics.Unit(metrics.DecimalNotation("WCU"))
 
 metric_aws_dynamodb_minimum_consumed_wcu = metrics.Metric(
     name="aws_dynamodb_minimum_consumed_wcu",
-    title=Title("Minimum single-request consumption"),
+    title=Title("Minimum single-request write consumption"),
     unit=UNIT_WCU,
     color=metrics.Color.LIGHT_GREEN,
 )
 
 metric_aws_dynamodb_maximum_consumed_wcu = metrics.Metric(
     name="aws_dynamodb_maximum_consumed_wcu",
-    title=Title("Maximum single-request consumption"),
+    title=Title("Maximum single-request write consumption"),
     unit=UNIT_WCU,
     color=metrics.Color.ORANGE,
 )

@@ -9,25 +9,25 @@ UNIT_COUNTER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision
 
 metric_kube_node_container_count_running = metrics.Metric(
     name="kube_node_container_count_running",
-    title=Title("Running containers"),
+    title=Title("Running Kubernetes containers"),
     unit=UNIT_COUNTER,
     color=metrics.Color.BLUE,
 )
 metric_kube_node_container_count_terminated = metrics.Metric(
     name="kube_node_container_count_terminated",
-    title=Title("Terminated containers"),
+    title=Title("Terminated Kubernetes containers"),
     unit=UNIT_COUNTER,
     color=metrics.Color.PURPLE,
 )
 metric_kube_node_container_count_total = metrics.Metric(
     name="kube_node_container_count_total",
-    title=Title("Total containers"),
+    title=Title("Total Kubernetes containers"),
     unit=UNIT_COUNTER,
     color=metrics.Color.CYAN,
 )
 metric_kube_node_container_count_waiting = metrics.Metric(
     name="kube_node_container_count_waiting",
-    title=Title("Waiting containers"),
+    title=Title("Waiting Kubernetes containers"),
     unit=UNIT_COUNTER,
     color=metrics.Color.GREEN,
 )

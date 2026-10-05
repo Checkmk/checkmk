@@ -12,6 +12,11 @@
       "type": "string",
       "description": "Page the dialog leaves for on \"Start monitoring\"."
     },
+    "initial_screen": {
+      "title": "InitialScreen",
+      "enum": ["choice", "verification"],
+      "description": "Screen the dialog opens on."
+    },
     "user_name": { "type": "string" },
     "edition_title": { "type": "string" },
     "trial_end_timestamp": {
@@ -50,6 +55,7 @@
     "verify_online_url",
     "verify_offline_url",
     "start_monitoring_url",
+    "initial_screen",
     "user_name",
     "edition_title",
     "trial_end_timestamp",

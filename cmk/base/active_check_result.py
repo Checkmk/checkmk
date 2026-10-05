@@ -16,8 +16,6 @@ pieces; the caller composes the two (decode, then normalize) rather than the
 decoder depending on this module.
 """
 
-from __future__ import annotations
-
 from typing import Final
 
 from cmk.checkengine.specs.checkresults import ServiceState

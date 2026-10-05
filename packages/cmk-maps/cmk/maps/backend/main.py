@@ -17,8 +17,6 @@ There is no SQLite database, CORS or CSRF layer — ticket auth is not ambient, 
 cross-origin forgery does not apply.
 """
 
-from __future__ import annotations
-
 import asyncio
 import logging
 import sys

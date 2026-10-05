@@ -12,8 +12,6 @@ its window arithmetic and memory pruning are pinned here rather than only
 being exercised indirectly through the route.
 """
 
-from __future__ import annotations
-
 from collections.abc import Iterator
 
 import pytest

@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Shared Pydantic/FastAPI type aliases for v1 endpoints."""
 
-from __future__ import annotations
-
 from typing import Annotated
 
 from fastapi import Path

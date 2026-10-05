@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Unit tests for the daemon's TTL cache helper."""
 
-from __future__ import annotations
-
 from cmk.maps.backend.core.ttl_cache import TtlCache
 
 

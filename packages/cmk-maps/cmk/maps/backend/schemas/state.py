@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Monitoring state schemas."""
 
-from __future__ import annotations
-
 from typing import Literal
 
 from pydantic import BaseModel, Field

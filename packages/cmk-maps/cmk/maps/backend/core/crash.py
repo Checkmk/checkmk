@@ -9,8 +9,6 @@ report store (``var/check_mk/crashes/maps/``), so they appear on the site's
 crash reports page and can be submitted like any other component's crashes.
 """
 
-from __future__ import annotations
-
 from pathlib import Path
 from typing import override
 

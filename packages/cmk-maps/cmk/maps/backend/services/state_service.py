@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Aggregate monitoring states for map objects."""
 
-from __future__ import annotations
-
 import asyncio
 import gc
 import logging

@@ -9,8 +9,6 @@ carry the hardening headers (nosniff, frame/referrer policy, and the strict
 CSP). These are pinned here so a future refactor cannot silently drop one.
 """
 
-from __future__ import annotations
-
 import asyncio
 from http import HTTPStatus
 

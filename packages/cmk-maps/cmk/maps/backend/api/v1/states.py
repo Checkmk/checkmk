@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """State endpoints + Server-Sent Events for real-time updates."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from collections.abc import AsyncIterator, Callable

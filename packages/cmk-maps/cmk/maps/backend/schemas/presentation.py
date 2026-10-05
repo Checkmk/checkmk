@@ -21,8 +21,6 @@ Kept self-contained on purpose: the module imports nothing from ``map.py`` so
 and so the whole feature reverts cleanly as one unit.
 """
 
-from __future__ import annotations
-
 import re
 from typing import Annotated, Literal
 

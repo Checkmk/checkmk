@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Models of a module that stringifies its annotations, like the generated shared typing code."""
 
-from __future__ import annotations
-
 from typing import Literal
 
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted

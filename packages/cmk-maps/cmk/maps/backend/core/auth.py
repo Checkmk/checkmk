@@ -19,8 +19,6 @@ top: caching the site-internal secret and turning the validated claims into a
 :class:`~cmk.utils.local_secrets.SiteInternalSecret`.
 """
 
-from __future__ import annotations
-
 import functools
 import hmac
 from dataclasses import dataclass, field

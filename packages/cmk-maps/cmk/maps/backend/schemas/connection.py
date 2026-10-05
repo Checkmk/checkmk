@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Pydantic schemas for monitoring connection configuration."""
 
-from __future__ import annotations
-
 from ipaddress import ip_address
 from typing import Literal
 from urllib.parse import urlparse

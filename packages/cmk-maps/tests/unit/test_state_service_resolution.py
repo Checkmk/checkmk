@@ -16,8 +16,6 @@ has no async plugin (mirrors ``test_state_service.py``). The delta encoders are
 plain ``def`` and need no wrapper.
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterator
 from typing import Literal

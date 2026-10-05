@@ -18,8 +18,6 @@ resulting :class:`Principal` carries the user's pre-resolved capabilities, so th
 daemon performs no further RBAC lookups of its own.
 """
 
-from __future__ import annotations
-
 from fastapi import Depends, HTTPException, Request, status
 
 from cmk.maps.backend.core.auth import (

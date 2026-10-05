@@ -15,8 +15,6 @@ target); the loop is bounded by unsubscribing the sole subscriber from a patched
 ``asyncio.sleep`` so it exits deterministically instead of running forever.
 """
 
-from __future__ import annotations
-
 import asyncio
 import hashlib
 import hmac

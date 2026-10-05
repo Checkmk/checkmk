@@ -9,8 +9,6 @@ broadcast loop computes one delta per (map, auth_user) and ``put_nowait``s
 into the matching subscriber queues, so a subscriber costs no extra fetch.
 """
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from dataclasses import dataclass, field

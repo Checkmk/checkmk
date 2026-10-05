@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Shared validators for user-supplied URL/color fields on maps/presentations."""
 
-from __future__ import annotations
-
 import re
 
 # Hex (#rgb/#rgba/#rrggbb/#rrggbbaa), a plain CSS named color, or "transparent".

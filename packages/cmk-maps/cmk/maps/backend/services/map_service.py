@@ -11,8 +11,6 @@ read it back (``get_map``). Nothing here reads or writes map config on disk —
 persistence lives entirely in the GUI.
 """
 
-from __future__ import annotations
-
 import threading
 from collections import OrderedDict
 

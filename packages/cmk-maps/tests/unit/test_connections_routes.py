@@ -12,8 +12,6 @@ rather than a 5xx), and that every read query is wrapped in the caller's
 Livestatus contact scope — unscoped only for see-all users.
 """
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager
 from http import HTTPStatus

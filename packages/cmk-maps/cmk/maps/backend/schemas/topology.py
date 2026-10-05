@@ -6,8 +6,6 @@
 state_service's delta computation, so the service layer never has to import
 from the API layer."""
 
-from __future__ import annotations
-
 from pydantic import BaseModel
 
 from cmk.maps.backend.schemas.state import ServicesSummary

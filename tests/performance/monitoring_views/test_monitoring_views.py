@@ -25,8 +25,6 @@ the initiative's notes; it is not carried here as a test, because it answers a q
 asked once rather than a property that regresses.
 """
 
-from __future__ import annotations
-
 import json
 import logging
 from collections.abc import Callable, Iterator, Sequence

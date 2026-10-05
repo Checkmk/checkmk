@@ -17,8 +17,6 @@ Map background images and the image library are GUI-owned now (uploaded via
 handles files or the legacy format.
 """
 
-from __future__ import annotations
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ValidationError
 

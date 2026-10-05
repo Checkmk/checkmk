@@ -11,8 +11,6 @@ of whatever log level the GUI happens to configure while it loads. So the number
 here and rendered once, through pytest's terminal summary, which always reaches the reader.
 """
 
-from __future__ import annotations
-
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 

@@ -12,8 +12,6 @@ WATO globals wins; otherwise the env-seeded defaults apply. Map/object
 authoring defaults are NOT here — they are GUI-owned (``cmk.maps.gui._settings``).
 """
 
-from __future__ import annotations
-
 import logging
 
 from cmk.maps.backend.core.config import settings

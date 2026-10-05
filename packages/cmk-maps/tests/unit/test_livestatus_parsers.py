@@ -11,8 +11,6 @@ cmk.maps.shared.perfdata, and LQL value escaping is cmk.livestatus_client's
 lqencode; see tests/unit/cmk/utils.)
 """
 
-from __future__ import annotations
-
 import pytest
 
 from cmk.maps.backend.connections.livestatus import (

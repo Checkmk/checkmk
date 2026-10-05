@@ -14,8 +14,6 @@ Pinned here: key names, which keys are mandatory, and the ``Literal`` domain of
 every key that has one. Value types and numeric constraints are not.
 """
 
-from __future__ import annotations
-
 import types
 import typing
 

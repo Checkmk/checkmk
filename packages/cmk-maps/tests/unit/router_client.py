@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Types of the ``router_client`` fixture shared by the Maps daemon route tests."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from typing import Protocol
 

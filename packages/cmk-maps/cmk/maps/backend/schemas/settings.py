@@ -9,8 +9,6 @@ Checkmk global settings the daemon reads. Map/object authoring *defaults* are
 GUI-owned (``cmk.maps.gui._settings``) and no longer modelled here.
 """
 
-from __future__ import annotations
-
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field

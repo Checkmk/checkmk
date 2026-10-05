@@ -16,8 +16,6 @@ connection that carries no configuration replication is an ordinary status-only 
 that is exactly what a monitoring page reads.
 """
 
-from __future__ import annotations
-
 import socket
 import threading
 import time

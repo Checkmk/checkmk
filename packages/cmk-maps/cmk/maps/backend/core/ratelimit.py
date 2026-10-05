@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Simple in-memory rate limiter (no external dependencies)."""
 
-from __future__ import annotations
-
 import time
 from collections import defaultdict, deque
 from threading import Lock

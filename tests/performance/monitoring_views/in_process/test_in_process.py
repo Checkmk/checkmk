@@ -30,8 +30,6 @@ Or one shape of it::
         --test_arg=--remote-latency-ms=20
 """
 
-from __future__ import annotations
-
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from http import HTTPStatus

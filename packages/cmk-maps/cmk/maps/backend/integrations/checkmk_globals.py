@@ -19,8 +19,6 @@ namespace, so a remote site's per-site override wins over the replicated central
 value.
 """
 
-from __future__ import annotations
-
 import logging
 from pathlib import Path
 

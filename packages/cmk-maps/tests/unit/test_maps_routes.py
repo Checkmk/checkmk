@@ -9,8 +9,6 @@ legacy .cfg parsing live GUI-side (the visuals store and
 ``cmk.maps.gui._cfg_import``).
 """
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from http import HTTPStatus

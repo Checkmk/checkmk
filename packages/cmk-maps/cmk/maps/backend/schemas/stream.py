@@ -9,8 +9,6 @@ same schema as the REST endpoints: the frontend's stream types are generated fro
 it, and a field added here cannot silently miss the client.
 """
 
-from __future__ import annotations
-
 from typing import Literal
 
 from pydantic import BaseModel

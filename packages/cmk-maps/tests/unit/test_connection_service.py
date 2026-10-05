@@ -14,8 +14,6 @@ Async coroutines are driven with ``asyncio.run`` — the cmk-maps test target
 has no asyncio plugin, matching ``test_state_service_resolution.py``.
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterator
 from typing import override

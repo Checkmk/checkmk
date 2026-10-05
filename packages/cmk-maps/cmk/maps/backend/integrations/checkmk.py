@@ -20,8 +20,6 @@ the signed ticket (see ``cmk.maps.backend.core.auth.Principal``), so the
 daemon never reads ``roles.mk`` / ``users.mk`` itself.
 """
 
-from __future__ import annotations
-
 import logging
 from collections.abc import Iterable
 from dataclasses import dataclass

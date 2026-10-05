@@ -10,8 +10,6 @@ Pins the exact FormSpec ("form") shape WATO writes for a connection — the
 flattens it to ConnectionConfig and resolves the secret.
 """
 
-from __future__ import annotations
-
 from cmk.maps.backend.services import connection_forms
 
 # An "explicit_password" password-store value resolves to its inline value

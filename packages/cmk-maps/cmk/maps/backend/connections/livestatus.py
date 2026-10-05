@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Livestatus connection via Checkmk's ``cmk.livestatus_client``."""
 
-from __future__ import annotations
-
 import asyncio
 import contextlib
 import logging

@@ -15,8 +15,6 @@ and single-site setups, and remote sites — the file holds the central site's
 fan-out view and is deliberately not replicated.
 """
 
-from __future__ import annotations
-
 import logging
 from pathlib import Path
 

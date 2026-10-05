@@ -10,8 +10,6 @@ database to configure. Operational tunables stay overridable via environment
 variables (set by the init script) for emergency tuning without a code change.
 """
 
-from __future__ import annotations
-
 import os
 from typing import Literal
 

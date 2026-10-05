@@ -18,8 +18,6 @@ activation): the folder-tree map then shows only folders that contain hosts,
 resolved from Livestatus alone.
 """
 
-from __future__ import annotations
-
 import logging
 from pathlib import Path
 

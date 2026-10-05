@@ -8,8 +8,6 @@ Kept as bare ASGI classes (not Starlette ``BaseHTTPMiddleware``) so header
 inspection can short-circuit without materialising a Request object.
 """
 
-from __future__ import annotations
-
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 # The daemon serves only JSON and SSE — never script-bearing HTML (the SPA is

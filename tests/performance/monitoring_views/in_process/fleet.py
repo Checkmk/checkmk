@@ -10,8 +10,6 @@ imported a second time under a different module identity, and this stack has imp
 effects (the path faking) that must happen exactly once.
 """
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 

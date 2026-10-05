@@ -11,8 +11,6 @@ Map/object authoring defaults are GUI-owned now (see the GUI-side
 ``test_settings.py``), so their flatten is no longer tested here.
 """
 
-from __future__ import annotations
-
 from pathlib import Path
 
 import pytest

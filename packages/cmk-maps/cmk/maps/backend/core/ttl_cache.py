@@ -18,8 +18,6 @@ is ``time.monotonic()`` (never wall-clock, so it is immune to clock steps);
 that need single-flight semantics wrap :meth:`get`/:meth:`set` in their own lock.
 """
 
-from __future__ import annotations
-
 import time
 from collections.abc import Callable
 

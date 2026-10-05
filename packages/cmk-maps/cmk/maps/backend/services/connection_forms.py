@@ -14,8 +14,6 @@ to plaintext via the password store (``cmk.utils.password_store`` — Flask-free
 the same mechanism the HTTP-proxy config uses).
 """
 
-from __future__ import annotations
-
 import logging
 from collections.abc import Mapping, Sequence
 

@@ -10,8 +10,6 @@ redaction. SVG safety is covered separately in the GUI's ``test_image_security``
 (image handling is GUI-owned now).
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Sequence
 from pathlib import Path

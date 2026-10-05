@@ -9,8 +9,6 @@ a tiny route behind each guard and assert the 200/403 decision at the request
 layer, plus the real ``get_current_user`` 401 path for a missing ticket.
 """
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 

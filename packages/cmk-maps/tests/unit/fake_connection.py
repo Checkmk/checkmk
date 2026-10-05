@@ -8,8 +8,6 @@ Not shipped in the daemon: exercises the connection-agnostic logic (folder-tree
 assembly, state resolution) against a real :class:`ConnectionBase` implementation
 without a live Livestatus socket."""
 
-from __future__ import annotations
-
 import math
 import time as _time
 from typing import override

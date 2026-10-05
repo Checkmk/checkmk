@@ -1,6 +1,6 @@
 type = "Component"
 display_name = "Werks"
-previous_name = "developer_tools_werks"
+previous_name = "Developer Tools: Werks"
 members_required = 2
 tier = 3
 description = """

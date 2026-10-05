@@ -1,6 +1,6 @@
 type = "Component"
 display_name = "cmk CLI"
-previous_name = "command_line_cmk"
+previous_name = "Command Line cmk"
 has_support_component = true
 members_required = 2
 tier = 2

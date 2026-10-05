@@ -30,6 +30,14 @@
       "type": "string",
       "description": "Domain the site must reach to verify a trial."
     },
+    "license_verification_reprompt_hours": {
+      "type": "integer",
+      "description": "Hours after a postponed license verification until the dialog reappears."
+    },
+    "unverified_trial_reprompt_hours": {
+      "type": "integer",
+      "description": "Hours after an unverified trial until the dialog reappears, at the soonest."
+    },
     "offline": {
       "type": "boolean",
       "description": "The site cannot reach the Checkmk servers."
@@ -47,6 +55,8 @@
     "trial_end_timestamp",
     "trial_length_days",
     "free_services_limit",
-    "verification_domain"
+    "verification_domain",
+    "license_verification_reprompt_hours",
+    "unverified_trial_reprompt_hours"
   ]
 }

@@ -170,9 +170,7 @@ def test_registered_pages() -> None:
         "monitor_host_services",
     ]
 
-    # TODO: Depending on how we call the test (single test or whole package) we
-    # see this page or we don't...
-    actual_set = {p for p in cmk.gui.pages.page_registry if p != "switch_customer"}  #
+    actual_set = set(cmk.gui.pages.page_registry)
 
     expected_set = set(expected_pages)
     differences = actual_set.symmetric_difference(expected_set)

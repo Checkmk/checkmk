@@ -17,7 +17,7 @@ import {
 import { useProvideDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import type { DashboardConstants } from '@/dashboard/types/dashboard'
 
-type InventoryLink = NonNullable<InventoryContent['contextual_link']>
+type InventoryLink = InventoryContent['contextual_link']
 
 const API = `${location.protocol}//${location.host}/api/internal/domain-types/dashboard/actions`
 

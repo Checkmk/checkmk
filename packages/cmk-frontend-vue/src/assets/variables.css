@@ -14,19 +14,19 @@
   --success-dimmed: rgb(17 188 122);
   --success-dimmed-2: rgb(13 141 91);
   --color-unknown: var(--color-orange-60);
-  --white: rgb(255 255 255);
-  --white-dimmed: rgb(255 255 255 / 50%);
+  --white: var(--color-white-100);
+  --white-dimmed: var(--color-white-50);
   --black: rgb(0 0 0);
   --grey-4-dimmed: rgb(51 51 51 / 80%);
   --error-msg-bg-color: rgb(200 50 50 / 15%);
   --form-readonly-error-bg-color: rgb(252 85 85);
-  --default-help-icon-bg-color: rgb(6 103 193);
+  --default-help-icon-bg-color: var(--color-dark-blue-50);
   --default-nav-popup-border-color: rgb(19 211 137);
   --popup-dialog-success: var(--color-corporate-green-50);
   --popup-dialog-warning: var(--color-yellow-50);
   --popup-dialog-danger: var(--color-light-red-50);
   --popup-dialog-info: var(--color-light-blue-50);
-  --border-color-purple: rgb(105 102 229);
+  --border-color-purple: var(--color-purple-60);
 
   /* Monitoring state palette, mirroring the themes' $color-state-*-background
      SCSS values. */
@@ -107,7 +107,7 @@
     --border-color-default: var(--color-mid-grey-50);
     --border-color-strong: var(--color-mid-grey-50);
     --default-border-color: rgb(234 234 234);
-    --default-border-color-green: rgb(21 209 160);
+    --default-border-color-green: var(--color-corporate-green-50);
     --dashed-border-color: var(--color-mid-grey-20);
     --border-color-separator: var(--color-mid-grey-10);
     --border-color-emphasis: var(--color-mid-grey-90);
@@ -274,13 +274,13 @@
     --border-color-default: var(--color-mid-grey-50);
     --border-color-strong: var(--color-mid-grey-70);
     --default-border-color: rgb(38 45 52);
-    --default-border-color-green: rgb(21 209 160);
+    --default-border-color-green: var(--color-corporate-green-50);
     --dashed-border-color: var(--color-mid-grey-80);
     --border-color-separator: var(--color-mid-grey-100);
     --border-color-emphasis: var(--color-mid-grey-90);
 
     /* Status */
-    --color-warning: rgb(255 215 3);
+    --color-warning: var(--color-yellow-50);
     --color-danger: rgb(180 45 45);
     --status-border-color-info: var(--color-dark-blue-50);
     --status-border-color-success: var(--color-corporate-green-50);
@@ -323,7 +323,7 @@
     --default-form-element-placeholder-color: var(--color-white-50);
     --default-tooltip-background-color: rgb(17 24 29);
     --default-tooltip-text-color: var(--white);
-    --custom-scroll-bar-thumb-color: rgb(224 224 228);
+    --custom-scroll-bar-thumb-color: var(--color-daylight-grey-50);
     --default-component-bg-color: rgb(46 44 44);
     --dropdown-chevron-indicator-color: var(--color-white-100);
     --default-dialog-bg-color: var(--ux-theme-5);
@@ -339,7 +339,7 @@
     --even-tr-bg-color: var(--ux-theme-3);
     --odd-tr-bg-color: var(--ux-theme-2);
     --inline-help-text-bg: rgb(17 24 29);
-    --inline-help-icon-bg: rgb(6 103 193);
+    --inline-help-icon-bg: var(--color-dark-blue-50);
     --slide-in-left-part: var(--ux-theme-2);
     --dropdown-arrow-color: var(--color-white-100);
     --sticky-header-border-color: var(--border-color-separator);

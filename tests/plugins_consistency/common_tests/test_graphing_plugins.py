@@ -330,7 +330,6 @@ def test_bundles() -> None:
 _ALLOWED_DUPLICATE_METRIC_TITLES = {
     "Requests per second": {"requests", "requests_per_sec", "requests_per_second"},
     "Reserved space": {"reserved_size", "reserved"},
-    "Storage space used": {"storage_used", "storage_percent"},
     "Streams": {"streams", "num_streams"},
     "Used virtual memory": {"pagefile_used_percent", "pagefile_used"},
     "Used virtual memory (averaged)": {

@@ -1581,7 +1581,7 @@ metric_storage_used = metrics.Metric(
 )
 metric_storage_percent = metrics.Metric(
     name="storage_percent",
-    title=Title("Storage space used"),
+    title=Title("Storage space used percentage"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.BLUE,
 )

@@ -9,7 +9,7 @@ UNIT_TIME = metrics.Unit(metrics.TimeNotation())
 
 metric_db_read_latency_s = metrics.Metric(
     name="db_read_latency_s",
-    title=Title("Read latency"),
+    title=Title("Database read latency"),
     unit=UNIT_TIME,
     color=metrics.Color.LIGHT_GREEN,
 )
@@ -23,7 +23,7 @@ metric_db_read_recovery_latency_s = metrics.Metric(
 
 metric_db_write_latency_s = metrics.Metric(
     name="db_write_latency_s",
-    title=Title("Write latency"),
+    title=Title("Database write latency"),
     unit=UNIT_TIME,
     color=metrics.Color.LIGHT_BLUE,
 )

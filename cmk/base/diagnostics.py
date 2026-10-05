@@ -75,6 +75,7 @@ from cmk.utils.diagnostics import (
     FILE_MAP_LICENSING,
     FILE_MAP_LOG,
     FileMapConfig,
+    OPT_AUTOCHECK_FILES,
     OPT_BI_RUNTIME_DATA,
     OPT_CHECKMK_CONFIG_FILES,
     OPT_CHECKMK_CORE_FILES,
@@ -153,6 +154,14 @@ def _make_mode_create_diagnostics_dump(
 
 def _get_diagnostics_dump_sub_options() -> list[Option]:
     sub_options = [
+        Option(
+            long_option=OPT_AUTOCHECK_FILES,
+            short_help=(
+                "Pack the autocheck files below $OMD_ROOT/var/check_mk/autochecks. "
+                "These files contain the discovery information for each host and the "
+                "parameters of each service."
+            ),
+        ),
         Option(
             long_option=OPT_LOCAL_FILES,
             short_help=(

@@ -92,6 +92,7 @@ from cmk.utils.diagnostics import (
     get_checkmk_file_info,
     get_checkmk_file_sensitivity_for_humans,
     OPT_APACHE_CONFIG,
+    OPT_AUTOCHECK_FILES,
     OPT_BI_RUNTIME_DATA,
     OPT_CHECKMK_CONFIG_FILES,
     OPT_CHECKMK_CRASH_REPORTS,
@@ -447,6 +448,19 @@ class ModeDiagnostics(WatoMode):
                     help=_(
                         "List of installed, unpacked, optional files below OMD_ROOT/local. "
                         "This also includes information about installed MKPs."
+                    ),
+                ),
+            ),
+            (
+                OPT_AUTOCHECK_FILES,
+                FixedValue(
+                    value=True,
+                    totext="",
+                    title=_("Autocheck files"),
+                    help=_(
+                        "The autocheck files below $OMD_ROOT/var/check_mk/autochecks. "
+                        "These files contain the discovery information for each host and the "
+                        "parameters of each service."
                     ),
                 ),
             ),

@@ -435,8 +435,8 @@ try {
     Invoke-UnitTest -run $testExt -name "ext" -cmdline "*ComponentExt"
     Invoke-UnitTest -run $testSimulation -name "simulation" -cmdline "*_Simulation"
     Invoke-PluginsUnitTests
-    Invoke-RegressionTest
     Invoke-IntegrationTest
+    Invoke-RegressionTest
     Write-Host "PYTHON TESTING IS DISABLED" -foreground Red
     try {
         Set-Location $repo_root

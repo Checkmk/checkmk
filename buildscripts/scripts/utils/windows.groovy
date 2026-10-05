@@ -38,8 +38,9 @@ void build(Map args) {
     }
 
     stage("Windows ${args.TARGET} build") {
-        // Windows integration test is the longest running test with just under 3 min
-        // No job should exceed 3*5 = 15 minutes
+        // test_integration is the longest running target: about 16 min on a CV
+        // node, half of it the regression suite. The job times out after 45 min,
+        // before the 60 min below (total-timeout in checkmk_ci, checkmk_2.5.0.yml).
 
         def (subdir, command, artifacts) = (
             (args.TARGET == "agent_with_sign") || (args.TARGET == "agent_with_sign_azure") ? [
@@ -110,8 +111,8 @@ void build(Map args) {
 
             (args.TARGET == "test_integration") ? [
                 "agents/wnx",
-                "call run_tests.cmd --component --integration",
-                "integration_tests_results.zip"] :
+                "call run_tests.cmd --component --regression --integration",
+                "regression_tests_results.zip,integration_tests_results.zip"] :
             raise("${args.TARGET} is not known!")
         )
 

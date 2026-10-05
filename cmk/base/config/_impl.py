@@ -17,7 +17,7 @@ import os
 import socket
 import sys
 import time
-from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Collection, Container, Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
 from typing import Any, AnyStr, assert_never, Final, Literal, NamedTuple, overload, override
 
@@ -2163,14 +2163,47 @@ class ConfigCache:
                         f"Config creation for special agent {agentname} failed on host '{host_name}': {exc}"
                     )
 
-    def collect_passwords(self) -> Mapping[str, Secret[str]]:
-        # consider making the hosts an argument. Sometimes we only need one.
+    def collect_passwords(
+        self, hosts: Collection[HostName] | None = None
+    ) -> Mapping[str, Secret[str]]:
+        """Collect the secrets required by the server side calls configuration
 
-        def _compose_filtered_ssc_rules(
-            ssc_config: Iterable[tuple[str, Sequence[RuleSpec[Mapping[str, object]]]]],
-        ) -> Sequence[tuple[str, Sequence[Mapping[str, object]]]]:
-            """Get _all_ configured rulesets (not only the ones matching any host)"""
-            return [(name, [r["value"] for r in ruleset]) for name, ruleset in ssc_config]
+        Without `hosts` this returns a superset: the secrets of _all_ configured rules,
+        plus the complete user managed password store. Consumers that resolve passwords
+        against a configuration newer than this collection need that superset, because
+        rules may start to apply before the passwords are written again (werk 17199).
+
+        With `hosts` only the secrets referenced by the given hosts' configuration are
+        returned. This is only safe for consumers using the very configuration these
+        passwords were computed from, such as the per relay secrets shipped along with
+        a relay's configuration.
+        """
+
+        if hosts is None:
+
+            def _compose_ssc_rules(
+                ssc_config: Iterable[tuple[str, Sequence[RuleSpec[Mapping[str, object]]]]],
+            ) -> Sequence[tuple[str, Sequence[Mapping[str, object]]]]:
+                return [(name, [r["value"] for r in ruleset]) for name, ruleset in ssc_config]
+
+        else:
+
+            def _compose_ssc_rules(
+                ssc_config: Iterable[tuple[str, Sequence[RuleSpec[Mapping[str, object]]]]],
+            ) -> Sequence[tuple[str, Sequence[Mapping[str, object]]]]:
+                return [
+                    (
+                        name,
+                        [
+                            value
+                            for host_name in hosts
+                            for value in self.ruleset_matcher.get_host_values_all(
+                                host_name, ruleset, self.label_manager.labels_of_host
+                            )
+                        ],
+                    )
+                    for name, ruleset in ssc_config
+                ]
 
         global_proxies_with_lookup = config_processing.GlobalProxiesWithLookup(
             global_proxies={
@@ -2179,32 +2212,26 @@ class ConfigCache:
             },
             password_lookup=make_configured_passwords_lookup(),
         )
-        return {
-            **{
-                k: Secret(s)
-                for k, s in password_store.load(password_store.password_store_path()).items()
+        extracted = extract_secrets(
+            rules_by_name=_compose_ssc_rules(
+                itertools.chain(
+                    self._loaded_config.active_checks.items(),
+                    self._loaded_config.special_agents.items(),
+                )
+            ),
+            global_proxies_with_lookup=global_proxies_with_lookup,
+            oauth2_connections={
+                ident: config_processing.OAuth2Connection(**entry)
+                for ident, entry in self._loaded_config.oauth2_connections.items()
             },
-            **extract_secrets(
-                rules_by_name=_compose_filtered_ssc_rules(
-                    self._loaded_config.active_checks.items()
-                ),
-                global_proxies_with_lookup=global_proxies_with_lookup,
-                oauth2_connections={
-                    ident: config_processing.OAuth2Connection(**entry)
-                    for ident, entry in self._loaded_config.oauth2_connections.items()
-                },
-            ).adhoc,
-            **extract_secrets(
-                rules_by_name=_compose_filtered_ssc_rules(
-                    self._loaded_config.special_agents.items()
-                ),
-                global_proxies_with_lookup=global_proxies_with_lookup,
-                oauth2_connections={
-                    ident: config_processing.OAuth2Connection(**entry)
-                    for ident, entry in self._loaded_config.oauth2_connections.items()
-                },
-            ).adhoc,
+        )
+        stored = {
+            k: Secret(s)
+            for k, s in password_store.load(password_store.password_store_path()).items()
         }
+        if hosts is not None:
+            stored = {k: v for k, v in stored.items() if k in extracted.referenced_ids}
+        return {**stored, **extracted.adhoc}
 
     def explicit_check_command(self, host_name: HostName) -> HostCheckCommand:
         def explicit_check_command_impl() -> HostCheckCommand:

@@ -70,6 +70,7 @@ from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher, RulesetMatche
 from cmk.ruleset_matcher.ruleset_name import RuleSetName
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig
+from cmk.utils import password_store
 from cmk.utils.ip_lookup import IPStackConfig, make_lookup_ip_address
 from tests.testlib.unit.base_configuration_scenario import Scenario
 from tests.testlib.unit.empty_config import EMPTY_CONFIG
@@ -3135,6 +3136,69 @@ def test_collect_passwords_includes_non_matching_rulesets(monkeypatch: MonkeyPat
     config_cache = ts.apply(monkeypatch).config_cache
 
     assert config_cache.collect_passwords() == {"uuid1234": Secret("p4ssw0rd!")}
+
+
+def test_collect_passwords_for_hosts_skips_rules_of_other_hosts(monkeypatch: MonkeyPatch) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("relay-host"))
+    ts.add_host(HostName("other-host"))
+    ts.set_ruleset_bundle(
+        "special_agents",
+        {
+            "some_special_agent": [
+                {
+                    "id": "01",
+                    "condition": {"host_name": ["relay-host"]},
+                    "value": {
+                        "secret": ("cmk_postprocessed", "explicit_password", ("uuid-mine", "mine"))
+                    },
+                },
+                {
+                    "id": "02",
+                    "condition": {"host_name": ["other-host"]},
+                    "value": {
+                        "secret": (
+                            "cmk_postprocessed",
+                            "explicit_password",
+                            ("uuid-theirs", "theirs"),
+                        )
+                    },
+                },
+            ],
+        },
+    )
+    config_cache = ts.apply(monkeypatch).config_cache
+
+    assert config_cache.collect_passwords([HostName("relay-host")]) == {"uuid-mine": Secret("mine")}
+
+
+def test_collect_passwords_for_hosts_keeps_only_referenced_stored_passwords(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    password_store.save(
+        {"referenced": "s3cr3t", "unrelated": "other"}, password_store.password_store_path()
+    )
+    ts = Scenario()
+    ts.add_host(HostName("relay-host"))
+    ts.set_ruleset_bundle(
+        "special_agents",
+        {
+            "some_special_agent": [
+                {
+                    "id": "01",
+                    "condition": {"host_name": ["relay-host"]},
+                    "value": {
+                        "secret": ("cmk_postprocessed", "stored_password", ("referenced", ""))
+                    },
+                },
+            ],
+        },
+    )
+    config_cache = ts.apply(monkeypatch).config_cache
+
+    assert config_cache.collect_passwords([HostName("relay-host")]) == {
+        "referenced": Secret("s3cr3t")
+    }
 
 
 def test_get_active_service_data_crash(

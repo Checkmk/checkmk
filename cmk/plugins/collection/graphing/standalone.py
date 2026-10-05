@@ -2129,7 +2129,7 @@ metric_iscsi_other_ops = metrics.Metric(
 )
 metric_fan_speed = metrics.Metric(
     name="fan_speed",
-    title=Title("Fan speed"),
+    title=Title("Fan rotation speed"),
     unit=UNIT_REVOLUTIONS_PER_MINUTE,
     color=metrics.Color.ORANGE,
 )

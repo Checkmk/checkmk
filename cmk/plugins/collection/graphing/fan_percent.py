@@ -9,7 +9,7 @@ UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
 
 metric_fan_perc = metrics.Metric(
     name="fan_perc",
-    title=Title("Fan speed"),
+    title=Title("Fan speed percentage"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.LIGHT_ORANGE,
 )

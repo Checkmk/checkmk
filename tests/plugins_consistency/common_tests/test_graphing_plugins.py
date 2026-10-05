@@ -328,7 +328,6 @@ def test_bundles() -> None:
 
 
 _ALLOWED_DUPLICATE_METRIC_TITLES = {
-    "Fan speed": {"fan_perc", "fan", "fan_speed"},
     "HTTP 500 errors": {"http_5xx", "aws_http_500_rate"},
     "Harddrive uncorrectable errors": {
         "harddrive_uncorrectable_erros",

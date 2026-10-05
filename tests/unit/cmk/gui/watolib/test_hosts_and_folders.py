@@ -2400,7 +2400,30 @@ def test_validate_host_relations_reports_a_host_that_is_gone(tree: FolderTree) -
     ]
 
     with pytest.raises(MKUserError, match="non-existing host 'os1'"):
-        validate_host_relations(board)
+        validate_host_relations(board, acting_user=_SUPERUSER)
+
+
+@pytest.mark.parametrize(
+    "related_host_exists",
+    [
+        pytest.param(True, id="a host the user may not see"),
+        pytest.param(False, id="a host that is gone"),
+    ],
+)
+def test_validate_host_relations_tells_a_user_who_cannot_see_all_hosts_nothing_about_it(
+    tree: FolderTree, related_host_exists: bool
+) -> None:
+    """Either report would tell whether the host exists, and the user could not settle it."""
+    if related_host_exists:
+        _create_host(_folder_of(tree, "hidden", "another_cg"), "os1")
+    board = _create_host(_folder_of(tree, "open", "cg"), "board")
+    board.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("os1")}
+    ]
+
+    validate_host_relations(
+        board, acting_user=_user_of_one_contact_group("cg", sees_all_folders=False)
+    )
 
 
 def test_validate_host_relations_passes_for_an_existing_host(tree: FolderTree) -> None:
@@ -2414,7 +2437,7 @@ def test_validate_host_relations_passes_for_an_existing_host(tree: FolderTree) -
         ),
     )
 
-    validate_host_relations(board)
+    validate_host_relations(board, acting_user=_SUPERUSER)
 
 
 def test_validate_host_relations_reports_a_counterpart_without_its_half(tree: FolderTree) -> None:
@@ -2428,7 +2451,7 @@ def test_validate_host_relations_reports_a_counterpart_without_its_half(tree: Fo
     ]
 
     with pytest.raises(MKUserError, match="'os1' does not store its half"):
-        validate_host_relations(board)
+        validate_host_relations(board, acting_user=_SUPERUSER)
 
 
 def test_validate_host_relations_reports_a_counterpart_storing_a_different_half(
@@ -2447,7 +2470,7 @@ def test_validate_host_relations_reports_a_counterpart_storing_a_different_half(
     tree.invalidate_caches()
 
     with pytest.raises(MKUserError, match="'os1' stores a different relation"):
-        validate_host_relations(tree.load_host(HostName("board")))
+        validate_host_relations(tree.load_host(HostName("board")), acting_user=_SUPERUSER)
 
 
 def test_validate_host_relations_reports_a_counterpart_whose_relations_cannot_be_read(
@@ -2465,7 +2488,7 @@ def test_validate_host_relations_reports_a_counterpart_whose_relations_cannot_be
     tree.invalidate_caches()
 
     with pytest.raises(MKUserError, match="The relations of 'os1' are malformed"):
-        validate_host_relations(tree.load_host(HostName("board")))
+        validate_host_relations(tree.load_host(HostName("board")), acting_user=_SUPERUSER)
 
 
 def test_validate_host_relations_passes_over_a_half_of_a_kind_it_does_not_know(
@@ -2488,7 +2511,7 @@ def test_validate_host_relations_passes_over_a_half_of_a_kind_it_does_not_know(
     root.save_hosts(pprint_value=False, acting_user=_SUPERUSER)
     tree.invalidate_caches()
 
-    validate_host_relations(tree.load_host(HostName("board")))
+    validate_host_relations(tree.load_host(HostName("board")), acting_user=_SUPERUSER)
 
 
 def test_validate_host_parents_reports_a_parent_that_is_gone(tree: FolderTree) -> None:
@@ -2513,7 +2536,7 @@ def test_validate_host_relations_reports_a_malformed_value(tree: FolderTree) -> 
     board.attributes["relations"] = "not-a-list"  # type: ignore[typeddict-item]
 
     with pytest.raises(MKUserError, match="malformed"):
-        validate_host_relations(board)
+        validate_host_relations(board, acting_user=_SUPERUSER)
 
 
 def test_set_relations_about_replaces_only_the_rows_of_that_pair(tree: FolderTree) -> None:

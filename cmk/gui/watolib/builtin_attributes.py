@@ -31,7 +31,7 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
 )
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.site_config import has_distributed_setup_remote_sites, is_distributed_setup_remote_site
 from cmk.gui.utils.host_relation_kinds import known_relations
 from cmk.gui.utils.host_relations import (
@@ -666,7 +666,7 @@ def validate_host_parents(host: Host) -> None:
             )
 
 
-def validate_host_relations(host: Host) -> None:
+def validate_host_relations(host: Host, *, acting_user: LoggedInUser) -> None:
     """Report whatever is still wrong with the relations this host stores.
 
     A counterpart can be deleted, contradict this half or lack its own - a hand written
@@ -675,19 +675,25 @@ def validate_host_relations(host: Host) -> None:
     else cleans up, so the save only refuses what it introduces itself and the rest is reported
     like a missing parent. A save writes only the pairs it changes, so the report says which
     host to edit to settle it.
+
+    Only a user who may see every host is told about a counterpart that is missing. For anyone
+    else a missing one and one they may not see are left alone alike: what either is reported
+    with would tell whether the host exists, and the user could do nothing about it anyway.
     """
     links = relations_or_user_error(host.attributes.get("relations", []))
 
     tree = host.folder().tree
     counterparts: dict[HostName, Host] = {}
     for related_name in sorted(referenced_host_names(links)):
-        if (counterpart := tree.host(related_name)) is None:
+        counterpart = tree.host(related_name)
+        if counterpart is not None and counterpart.permissions.may("read", acting_user):
+            counterparts[related_name] = counterpart
+        elif acting_user.may("wato.see_all_folders"):
             raise MKUserError(
                 None,
                 _("You defined the non-existing host '%(related_name)s' as a related host.")
                 % {"related_name": related_name},
             )
-        counterparts[related_name] = counterpart
 
     for conflict in relation_conflicts(links, host.name()):
         raise MKUserError(None, conflict.message())
@@ -696,6 +702,8 @@ def validate_host_relations(host: Host) -> None:
     # duplicated row is the counterpart's own conflict.
     known = known_relations(links)
     for related_name, expected in plan_relation_mirror(host.name(), (), known).items():
+        if related_name not in counterparts:
+            continue
         try:
             stored_about = _known_relations_by_counterpart(counterparts[related_name])
         except ValueError as exc:

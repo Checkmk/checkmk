@@ -7,6 +7,7 @@
 
 from collections.abc import Sequence
 from datetime import timedelta
+from functools import partial
 
 from cmk.ccc import version
 from cmk.gui import hooks
@@ -17,6 +18,7 @@ from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.form_specs.unstable import SingleChoiceEditable
 from cmk.gui.form_specs.unstable.time_specific import TimeSpecific
 from cmk.gui.form_specs.visitors import register_recomposer_function, register_visitor_class
+from cmk.gui.logged_in import user
 from cmk.rulesets.internal.form_specs import InternalProxy
 from cmk.rulesets.v1.form_specs import Password, Proxy, TimePeriod
 
@@ -165,7 +167,9 @@ def register(
     _register_autocompleters(autocompleter_registry)
     automation_background_job.register(job_registry, automation_command_registry)
     hooks.register_builtin("validate-host", builtin_attributes.validate_host_parents)
-    hooks.register_builtin("validate-host", builtin_attributes.validate_host_relations)
+    hooks.register_builtin(
+        "validate-host", partial(builtin_attributes.validate_host_relations, acting_user=user)
+    )
     hooks.register_builtin("ldap-sync-finished", handle_ldap_sync_finished)
     hooks.register_builtin("pre-activate-changes", update_builtin_host_labels_file)
     _register_form_specs()

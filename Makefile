@@ -22,7 +22,7 @@ CI ?= false
         clean dist documentation \
         format \
         help install mrproper mrclean \
-        setup setversion version openapi \
+        packages setup setversion version openapi \
         requirements.txt .venv
 
 help:
@@ -30,15 +30,7 @@ help:
 	@echo "make dist                      --> Create source tgz for later building of rpm/deb and livestatus tgz"
 	@echo "make version                   --> Switch to new version"
 
-# The .rpm/.deb are only built via Bazel now (see agents/BUILD); agents/Makefile
-# only still builds cmk-agent-ctl itself.
-$(filter %.rpm %.deb,$(SOURCE_BUILT_LINUX_AGENTS)):
-	@echo "ERROR: Should have already been built by artifact providing jobs"
-	@echo "If you don't need the artifacts, you can use "
-	@echo "'scripts/fake-artifacts' to continue with stub files"
-	@exit 1
-
-$(filter-out %.rpm %.deb,$(SOURCE_BUILT_LINUX_AGENTS)):
+$(SOURCE_BUILT_LINUX_AGENTS):
 	$(MAKE) -C agents $@
 
 ifneq ($(EDITION),community)
@@ -96,6 +88,9 @@ announcement:
 	bazel run //cmk/utils:werks_bin -- announce "$$(pwd)/.werks" $(VERSION) --format=md > $(CHECK_MK_ANNOUNCE_MD)
 	bazel run //cmk/utils:werks_bin -- announce "$$(pwd)/.werks" $(VERSION) --format=txt > $(CHECK_MK_ANNOUNCE_TXT)
 	tar -czf $(CHECK_MK_ANNOUNCE_TAR) -C $(CHECK_MK_ANNOUNCE_FOLDER) .
+
+packages:
+	$(MAKE) -C agents packages
 
 version:
 	[ "$$(head -c 6 /etc/issue)" = "Ubuntu" \

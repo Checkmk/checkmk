@@ -10,7 +10,6 @@ void main() {
     check_job_parameters([
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
         "DISABLE_CACHE",
-        "DISABLE_CMK_DISTRO_PACKAGE_SIGNING",
         ["DISTRO", true],
         ["EDITION", true],
         "FAKE_ARTIFACTS",
@@ -37,7 +36,6 @@ void main() {
     );
 
     def disable_cache = params.DISABLE_CACHE;
-    def disable_signing = params.DISABLE_CMK_DISTRO_PACKAGE_SIGNING;
     def distro = params.DISTRO;
     def edition = params.EDITION;
     def fake_artifacts = params.FAKE_ARTIFACTS;
@@ -50,41 +48,6 @@ void main() {
     def license_flag = edition == "community" ? '--//:repo_license="gpl"' : "";
     def fake_artifacts_cli_arg = fake_artifacts ? "--//:use_faked_artifacts=true" : "";
     def enable_compression = versioning.is_official_release(cmk_version_rc_aware) ? "" : "--//:low_zstd_compression=true";
-    // Faked artifacts never had a release key to sign with either.
-    def skip_agent_signing = disable_signing || fake_artifacts;
-    def disable_agent_signing_flag = skip_agent_signing ? "--//:disable_agent_package_signing=true" : "";
-
-    // Shared by "Build package" and "Validate package" - both sign the
-    // bundled check-mk-agent .rpm via agents/BUILD, and must use the exact
-    // same passphrase-file path so Bazel doesn't re-sign it a second time
-    // with a different (timestamped) signature between the two stages.
-    def release_key_credentials = [
-        file(credentialsId: "Check_MK_Release_Key", variable: "GPG_KEY_FILE"),
-        usernamePassword(
-            credentialsId: "9d7aca31-0043-4cd0-abeb-26a249d68261",
-            passwordVariable: "GPG_PASSPHRASE",
-            usernameVariable: "GPG_USERNAME",
-        ),
-    ];
-    def gpg_passphrase_file = "${WORKSPACE}/.gpg_passphrase";
-
-    // cmk-update-agent_bin (bundled for non-community editions) pulls its
-    // build image via crane, authenticated through a docker config.json
-    // built here from Nexus credentials and passed to Bazel as
-    // --//non-free/packages/cmk-update-agent:docker_config_dir, not
-    // --action_env, so unrelated targets' cache keys aren't affected.
-    // Fixed path (not mktemp) so both //omd:${package_type} and
-    // //omd:validate_${package_type} see the same value.
-    def docker_config_dir = "${WORKSPACE}/.docker_config";
-    def docker_config_setup = """
-        mkdir -p "${docker_config_dir}"
-        (
-            umask 077
-            printf '{"auths":{"%s":{"username":"%s","password":"%s"}}}' \
-                '${docker_registry_no_http}' "\$NEXUS_USERNAME" "\$NEXUS_PASSWORD" \
-                > "${docker_config_dir}/config.json"
-        )
-    """;
 
     def bazel_log_prefix = "bazel_log_";
     def causes = currentBuild.getBuildCauses();
@@ -163,132 +126,86 @@ void main() {
 
     package_helper.cleanup_provided_agent_binaries("tmp_artifacts");
 
-    def build_package = {
-        String signing_flags ->
-        stage("Build package") {
+    stage("Build package") {
+        dir("${checkout_dir}") {
+            // supplying the registry explicitly might not be needed but it looks like
+            // image.inside() will first try to use the image without registry and only
+            // if that didn't work falls back to the fully qualified name
+            inside_container(
+                image: docker.image("${docker_registry_no_http}/${distro}:${docker_tag}"),
+                pull: true,
+                args: [
+                    "--name ${container_name}",
+                    " --hostname ${distro}",
+                ],
+            ) {
+                versioning.print_image_tag();
+
+                withNexusCredentials {
+                    /// Don't use withEnv, see
+                    /// https://issues.jenkins.io/browse/JENKINS-43632
+                    artifacts_helper.withHotCache([
+                        download_dest: "~",
+                        remove_existing_cache: true,
+                        target_name: "build-omd-${package_type}",
+                        cache_prefix: versioning.distro_code(),
+                        // When we mount the shared repository cache, we won't pack the repository cache under ~/.cache
+                        // into the hot cache and therefore we dont need to consider WORKSPACE and MODULE.bazel.lock
+                        files_to_consider: [
+                            '.bazelversion',
+                            'requirements.txt',
+                            'bazel/tools/package.json',
+                        ] + (env.MOUNT_SHARED_REPOSITORY_CACHE == "1" ? [] : ['WORKSPACE', 'MODULE.bazel.lock']),
+                        disable_hot_cache: env.USE_STASHED_BAZEL_FOLDER_CMK_DISTRO_BUILD == "0",
+                    ]) {
+                        sh("""
+                            bazel build \
+                                ${fake_artifacts_cli_arg} \
+                                ${enable_compression} \
+                                --cmk_version=${cmk_version} \
+                                --cmk_edition=${edition} \
+                                ${license_flag} \
+                                --execution_log_json_file="${checkout_dir}/deps_install.json" \
+                        //omd:${package_type} \
+                        //omd/dependency_management:generate_bom_csv \
+                        //omd/dependency_management:bill_of_materials_renamed
+                        """);
+                    }
+                    sh("cp --no-preserve=mode ${checkout_dir}/bazel-bin/omd/check-mk*.${package_type} ${checkout_dir}");
+                    sh("cp ${checkout_dir}/bazel-bin/omd/dependency_management/bill-of-materials.{json,csv} ${checkout_dir}");
+                }
+                package_name = cmd_output("ls check-mk-${edition}-${cmk_version}*.${package_type}");
+                if (!package_type) {
+                    error("No package 'check-mk-${edition}-${cmk_version}*.${package_type}' found in ${checkout_dir}");
+                }
+            }
+        }
+    }
+
+    stage("Validate package") {
+        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
             dir("${checkout_dir}") {
-                // supplying the registry explicitly might not be needed but it looks like
-                // image.inside() will first try to use the image without registry and only
-                // if that didn't work falls back to the fully qualified name
                 inside_container(
                     image: docker.image("${docker_registry_no_http}/${distro}:${docker_tag}"),
-                    pull: true,
-                    args: [
-                        "--name ${container_name}",
-                        " --hostname ${distro}",
-                    ],
                 ) {
-                    versioning.print_image_tag();
-
-                    withNexusCredentials {
-                        /// Don't use withEnv, see
-                        /// https://issues.jenkins.io/browse/JENKINS-43632
-                        def hot_cache_params = [
-                            download_dest: "~",
-                            remove_existing_cache: true,
-                            target_name: "build-omd-${package_type}",
-                            cache_prefix: versioning.distro_code(),
-                            // When we mount the shared repository cache, we won't pack the repository cache under ~/.cache
-                            // into the hot cache and therefore we dont need to consider WORKSPACE and MODULE.bazel.lock
-                            files_to_consider: [
-                                '.bazelversion',
-                                'requirements.txt',
-                                'bazel/tools/package.json',
-                            ] + (env.MOUNT_SHARED_REPOSITORY_CACHE == "1" ? [] : ['WORKSPACE', 'MODULE.bazel.lock']),
-                            disable_hot_cache: env.USE_STASHED_BAZEL_FOLDER_CMK_DISTRO_BUILD == "0",
-                        ];
-
-                        artifacts_helper.withHotCache(hot_cache_params) {
-                            sh("""
-                                set -e
-                                trap 'rm -rf "${docker_config_dir}"' EXIT
-                                ${docker_config_setup}
-                                bazel build \
-                                    ${fake_artifacts_cli_arg} \
-                                    ${enable_compression} \
-                                    --cmk_version=${cmk_version} \
-                                    --cmk_edition=${edition} \
-                                    ${license_flag} \
-                                    ${signing_flags} \
-                                    --//non-free/packages/cmk-update-agent:docker_config_dir="${docker_config_dir}" \
-                                    --execution_log_json_file="${checkout_dir}/deps_install.json" \
-                            //omd:${package_type} \
-                            //omd/dependency_management:generate_bom_csv \
-                            //omd/dependency_management:bill_of_materials_renamed
-                            """);
-                        }
-                        sh("cp --no-preserve=mode ${checkout_dir}/bazel-bin/omd/check-mk*.${package_type} ${checkout_dir}");
-                        sh("cp ${checkout_dir}/bazel-bin/omd/dependency_management/bill-of-materials.{json,csv} ${checkout_dir}");
-                    }
-                    package_name = cmd_output("ls check-mk-${edition}-${cmk_version}*.${package_type}");
-                    if (!package_name) {
-                        error("No package 'check-mk-${edition}-${cmk_version}*.${package_type}' found in ${checkout_dir}");
+                    def bazel_testlogs = sh(script: "bazel info bazel-testlogs", returnStdout: true).trim();
+                    def log_src = "${bazel_testlogs}/omd/validate_${package_type}/test.log";
+                    def report_src = "${bazel_testlogs}/omd/validate_${package_type}/test.outputs/report.json";
+                    try {
+                        sh("""
+                            bazel test \
+                                ${fake_artifacts_cli_arg} \
+                                ${enable_compression} \
+                                --cmk_version=${cmk_version} \
+                                --cmk_edition=${edition} \
+                                ${license_flag} \
+                        //omd:validate_${package_type}
+                        """);
+                    } finally {
+                        sh("cp --no-preserve=mode ${log_src} ${checkout_dir}/package_validator.log");
+                        sh("cp --no-preserve=mode ${report_src} ${checkout_dir}/package_validator.report.json");
                     }
                 }
-            }
-        }
-    };
-
-    def validate_package = {
-        String signing_flags ->
-        stage("Validate package") {
-            catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                dir("${checkout_dir}") {
-                    inside_container(
-                        image: docker.image("${docker_registry_no_http}/${distro}:${docker_tag}"),
-                    ) {
-                        def bazel_testlogs = sh(script: "bazel info bazel-testlogs", returnStdout: true).trim();
-                        def log_src = "${bazel_testlogs}/omd/validate_${package_type}/test.log";
-                        def report_src = "${bazel_testlogs}/omd/validate_${package_type}/test.outputs/report.json";
-
-                        // Needs the same docker config/signing credential as
-                        // "Build package" above.
-                        withNexusCredentials {
-                            try {
-                                sh("""
-                                    set -e
-                                    trap 'rm -rf "${docker_config_dir}"' EXIT
-                                    ${docker_config_setup}
-                                    bazel test \
-                                        ${fake_artifacts_cli_arg} \
-                                        ${enable_compression} \
-                                        --cmk_version=${cmk_version} \
-                                        --cmk_edition=${edition} \
-                                        ${license_flag} \
-                                        ${signing_flags} \
-                                        --//non-free/packages/cmk-update-agent:docker_config_dir="${docker_config_dir}" \
-                                //omd:validate_${package_type}
-                                """);
-                            } finally {
-                                sh("cp --no-preserve=mode ${log_src} ${checkout_dir}/package_validator.log");
-                                sh("cp --no-preserve=mode ${report_src} ${checkout_dir}/package_validator.report.json");
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    };
-
-    if (skip_agent_signing) {
-        // Opt out of the default signed agent .rpm, so these stages don't
-        // need the release-signing credential.
-        build_package(disable_agent_signing_flag);
-        validate_package(disable_agent_signing_flag);
-    } else {
-        // Default: sign the bundled check-mk-agent .rpm (see agents/BUILD).
-        // Both stages share one passphrase file so Bazel signs it exactly
-        // once instead of producing a different signature per stage.
-        withCredentials(release_key_credentials) {
-            writeFile(file: gpg_passphrase_file, text: GPG_PASSPHRASE);
-            sh("chmod 600 ${gpg_passphrase_file}");
-            def signing_flags = "--//bazel/rules:signing_key_file=\"\$GPG_KEY_FILE\" " +
-                "--//bazel/rules:signing_key_passphrase_file=\"${gpg_passphrase_file}\"";
-            try {
-                build_package(signing_flags);
-                validate_package(signing_flags);
-            } finally {
-                sh("rm -f ${gpg_passphrase_file}");
             }
         }
     }

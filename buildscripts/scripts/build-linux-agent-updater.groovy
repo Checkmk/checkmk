@@ -1,0 +1,118 @@
+#!groovy
+
+/// file: build-linux-agent-updater.groovy
+
+void main() {
+    check_job_parameters([
+        "DISABLE_CACHE",
+        "VERSION",
+    ]);
+
+    check_environment_variables([
+        "DOCKER_REGISTRY",
+    ]);
+
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+    def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
+
+    def branch_version = versioning.get_branch_version(checkout_dir);
+    def safe_branch_name = versioning.safe_branch_name();
+    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, params.VERSION);
+    def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
+    /// Get the ID of the docker group from the node(!). This must not be
+    /// executed inside the container (as long as the IDs are different)
+    def docker_group_id = get_docker_group_id();
+
+    print(
+        """
+        |===== CONFIGURATION ===============================
+        |branch_version:........... │${branch_version}│
+        |checkout_dir:............. │${checkout_dir}│
+        |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
+        |cmk_version:.............. │${cmk_version}│
+        |docker_group_id:.......... │${docker_group_id}│
+        |docker_registry_no_http:.. │${docker_registry_no_http}│
+        |safe_branch_name:......... │${safe_branch_name}│
+        |===================================================
+        """.stripMargin());
+
+    inside_container(
+        set_docker_group_id: true,
+        privileged: true,
+    ) {
+        stage("Prepare workspace") {
+            dir("${checkout_dir}") {
+                sh("""
+                    make buildclean
+                    rm -rf ${WORKSPACE}/build
+                """);
+                versioning.set_version(cmk_version);
+            }
+        }
+
+        stage("Build agent updater binary for Linux") {
+            // crane fetches the toolchain image inside the genrule's own
+            // action, not via oci_pull, so auth goes through --action_env,
+            // not --repo_env. Credentials are shell-expanded only, never
+            // Groovy-interpolated into the command line.
+            withNexusCredentials {
+                dir("${checkout_dir}") {
+                    /* groovylint-disable LineLength */
+                    sh("""
+                        set -e
+                        docker_config_dir="\$(mktemp -d)"
+                        trap 'rm -rf "\$docker_config_dir"' EXIT
+                        (
+                            umask 077
+                            printf '{"auths":{"%s":{"username":"%s","password":"%s"}}}' \
+                                '${docker_registry_no_http}' "\$NEXUS_USERNAME" "\$NEXUS_PASSWORD" \
+                                > "\$docker_config_dir/config.json"
+                        )
+                        bazel build --action_env=DOCKER_CONFIG="\$docker_config_dir" \
+                            //non-free/packages/cmk-update-agent:cmk-update-agent_bin
+                    """);
+                    /* groovylint-enable LineLength */
+                }
+            }
+            dir("${WORKSPACE}/build") {
+                sh("cp ${checkout_dir}/bazel-bin/non-free/packages/cmk-update-agent/cmk-update-agent-built cmk-update-agent");
+            }
+        }
+
+        stage("Create and sign deb/rpm packages") {
+            dir("${checkout_dir}/agents") {
+                sh("make rpm NEW_VERSION='${cmk_version}'");
+                sh("make deb NEW_VERSION='${cmk_version}'");
+                sh("make rpm-aarch64 NEW_VERSION='${cmk_version}'");
+                sh("make deb-aarch64 NEW_VERSION='${cmk_version}'");
+            }
+            def package_name_rpm = cmd_output("find ${checkout_dir}/agents -name '*.noarch.rpm' -not -path '*/fixtures/*'");
+            def package_name_deb = cmd_output("find ${checkout_dir}/agents -name '*_all.deb' -not -path '*/fixtures/*'");
+            def package_name_rpm_aarch64 = cmd_output("find ${checkout_dir}/agents -name '*.aarch64.rpm' -not -path '*/fixtures/*'");
+            def package_name_deb_aarch64 = cmd_output("find ${checkout_dir}/agents -name '*_arm64.deb' -not -path '*/fixtures/*'");
+            package_helper.sign_package(checkout_dir, package_name_rpm);
+            package_helper.sign_package(checkout_dir, package_name_rpm_aarch64);
+            dir("${WORKSPACE}/build") {
+                sh("""
+                    cp ${package_name_rpm} .
+                    cp ${package_name_deb} .
+                    cp ${package_name_rpm_aarch64} .
+                    cp ${package_name_deb_aarch64} .
+                """);
+            }
+        }
+    }
+
+    stage("Archive artifacts") {
+        dir("${WORKSPACE}/build") {
+            show_duration("archiveArtifacts") {
+                archiveArtifacts(
+                    artifacts: "**/*",
+                    fingerprint: true,
+                );
+            }
+        }
+    }
+}
+
+return this;

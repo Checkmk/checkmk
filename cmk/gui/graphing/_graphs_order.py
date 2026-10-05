@@ -405,7 +405,6 @@ GRAPHS_ORDER = [
     "non-heap_memory_usage",
     "private_and_shared_memory",
     "harddrive_health_statistic",
-    "mem_perm_used",
     "datafile_sizes",
     "files_notification_spool",
     "used_space",

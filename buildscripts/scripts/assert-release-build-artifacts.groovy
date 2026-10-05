@@ -15,6 +15,7 @@ void main() {
     def branch_version = versioning.get_branch_version(checkout_dir);
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, params.VERSION).replaceAll("\\+security", "");
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
+    def is_rc_build = params.VERSION.contains("-rc");
 
     def use_case = params.USE_CASE.trim() ?: "daily";
 
@@ -55,7 +56,7 @@ void main() {
                         ]
                     ) {
                         withEnv(["PYTHONUNBUFFERED=1"]) {
-                            def additional_args = ("-rc" in params.VERSION) ? "--skip-docker" : "";
+                            def additional_args = is_rc_build ? "--skip-docker" : "";
                             def result = sh(
                                 script: """python3 \
                                 buildscripts/scripts/assert_build_artifacts.py \
@@ -97,7 +98,7 @@ void main() {
 
         success &= smart_stage(
             name: "Assert Docker images",
-            condition: !("-rc" in params.VERSION),
+            condition: !is_rc_build,
             raiseOnError: false,
         ) {
             def docker_file_location = "dirty_workspace/Dockerfile";

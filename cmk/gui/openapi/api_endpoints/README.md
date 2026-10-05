@@ -532,8 +532,7 @@ class CollectionModel[T, D]:
     value: list[T] = api_field(description="The objects in the collection.")
 
 
-def handler() -> CollectionModel[HostModel, Literal["host"]]:
-    ...
+def handler() -> CollectionModel[HostModel, Literal["host"]]: ...
 ```
 
 Always parameterize a generic model fully. An unparameterized `CollectionModel`
@@ -561,8 +560,12 @@ and their schema stays empty. The `@api_model` decorator rejects every form:
 
 ```python
 class Sub(CollectionModel[HostModel, Literal["host"]]): ...  # rejected
-class Sub[T](CollectionModel[T, Literal["host"]]): ...       # rejected
-class Sub(CollectionModel): ...                              # rejected
+
+
+class Sub[T](CollectionModel[T, Literal["host"]]): ...  # rejected
+
+
+class Sub(CollectionModel): ...  # rejected
 ```
 
 If you must add fields, put them into the type argument, or give the generic
@@ -581,8 +584,7 @@ declare a type alias and use the alias in the handler:
 type HostCollection = CollectionModel[HostModel, Literal["host"]]
 
 
-def handler() -> HostCollection:
-    ...
+def handler() -> HostCollection: ...
 ```
 
 The schema is then called `HostCollection`. Note that Python does not allow a

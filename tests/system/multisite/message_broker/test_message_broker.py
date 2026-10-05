@@ -43,6 +43,7 @@ def pong_received_message(stdout: IO[str], wait_for: int) -> bool:
     return False
 
 
+@pytest.mark.usefixtures("message_broker_running")
 @pytest.mark.skip_if_edition("cloud")
 class TestCMKBrokerTest:
     """Make sure our cmk-broker-test tool works"""
@@ -83,6 +84,7 @@ def _next_free_port(site: Site, key: str, port: str) -> int:
     return int(site.run(["lib/omd/next_free_port", key, port]).stdout.strip())
 
 
+@pytest.mark.usefixtures("message_broker_running")
 @pytest.mark.skip_if_edition("cloud")
 class TestMessageBroker:
     @pytest.mark.medium_test_chain
@@ -209,6 +211,7 @@ def _setup_host(site: Site, hostname: str) -> Iterator[None]:
         site.openapi.changes.activate_and_wait_for_completion()
 
 
+@pytest.mark.usefixtures("message_broker_running")
 class TestMessageBrokerChangeActivation:
     @pytest.mark.skip_if_edition("cloud")
     def test_message_broker_activation(self, central_site: Site, remote_site: Site) -> None:
@@ -246,6 +249,7 @@ def _broker_users(site: Site) -> set[str]:
     }
 
 
+@pytest.mark.usefixtures("message_broker_running")
 @pytest.mark.skip_if_edition("cloud")
 class TestRemoteLocalActivationBrokerSafety:
     def test_local_activation_on_remote_keeps_central_broker_user(
@@ -288,6 +292,7 @@ UNSUPPORTED_VERSIONS = (
 SUPPORTED_VERSIONS = (ssl.TLSVersion.TLSv1_3,)
 
 
+@pytest.mark.usefixtures("message_broker_running")
 @pytest.mark.parametrize("tls_version", UNSUPPORTED_VERSIONS, ids=lambda v: v.name)
 def test_unsupported_tls_versions(
     central_site: Site, broker_ca: Path, tls_version: ssl.TLSVersion
@@ -302,6 +307,7 @@ def test_unsupported_tls_versions(
         )
 
 
+@pytest.mark.usefixtures("message_broker_running")
 @pytest.mark.medium_test_chain
 @pytest.mark.parametrize("tls_version", SUPPORTED_VERSIONS, ids=lambda v: v.name)
 def test_supported_tls_versions(

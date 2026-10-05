@@ -11,7 +11,7 @@ from tests.system.multisite.utils import enable_rabbitmq_tracing
 from tests.testlib.system.site import Site
 
 
-@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture(scope="session")
 def message_broker_running(
     central_site: Site,
     remote_site: Site,

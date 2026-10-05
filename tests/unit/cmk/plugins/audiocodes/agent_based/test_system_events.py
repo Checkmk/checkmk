@@ -133,9 +133,6 @@ def test_check_function(
                 ),
             ],
             id="alarm without sequence number",
-            marks=pytest.mark.xfail(
-                strict=True, raises=ValueError, reason="Crash group 4935: ValueError"
-            ),
         ),
         pytest.param(
             [
@@ -151,9 +148,6 @@ def test_check_function(
                 ),
             ],
             id="alarm without severity",
-            marks=pytest.mark.xfail(
-                strict=True, raises=KeyError, reason="Crash group 4936: KeyError"
-            ),
         ),
     ],
 )

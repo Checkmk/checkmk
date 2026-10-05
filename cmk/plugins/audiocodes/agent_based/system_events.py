@@ -34,13 +34,13 @@ _READABLE_SEVERITY = {
 
 @dataclass(frozen=True)
 class ActiveAlarm:
-    sequence_number: int
+    sequence_number: int | None
     sysuptime: int
     date_and_time: datetime.datetime | None
     name: str
     description: str
     source: str
-    severity_readable: str
+    severity_readable: str | None
 
 
 @dataclass(frozen=True)
@@ -82,13 +82,13 @@ def parse_audiocodes_system_events(string_table: Sequence[StringTable]) -> Secti
         Section(
             alarms=[
                 ActiveAlarm(
-                    sequence_number=int(alarm[0]),
+                    sequence_number=int(alarm[0]) if alarm[0] else None,
                     sysuptime=int(alarm[1]),
                     date_and_time=_parse_date_and_time(alarm[2]),
                     name=alarm[3],
                     description=alarm[4],
                     source=alarm[5],
-                    severity_readable=_READABLE_SEVERITY[alarm[6]],
+                    severity_readable=_READABLE_SEVERITY.get(alarm[6]),
                 )
                 for alarm in string_table[0]
             ],
@@ -144,7 +144,11 @@ def check_audiocodes_system_events(
     results: list[Result] = []
 
     for alarm in section.alarms:
-        alarm_state = State(severity_state_mapping[alarm.severity_readable])
+        alarm_state = (
+            State.UNKNOWN
+            if alarm.severity_readable is None
+            else State(severity_state_mapping[alarm.severity_readable])
+        )
 
         if alarm_state == State.CRIT:
             number_of_critical_alarms += 1
@@ -154,9 +158,13 @@ def check_audiocodes_system_events(
             Result(
                 state=alarm_state,
                 notice=(
-                    f"Alarm #{alarm.sequence_number}: "
-                    f"Name: {alarm.name}, "
-                    f"Severity: {alarm.severity_readable}, "
+                    (
+                        "Alarm (no sequence number): "
+                        if alarm.sequence_number is None
+                        else f"Alarm #{alarm.sequence_number}: "
+                    )
+                    + f"Name: {alarm.name}, "
+                    f"Severity: {alarm.severity_readable or 'unknown'}, "
                     f"Sysuptime: {render.timespan(alarm.sysuptime)}, "
                     f"Description: {alarm.description}, "
                     f"Source: {alarm.source}"

@@ -782,7 +782,42 @@ test('a column the URL named is not written to storage until the user changes on
   expect(localStorage.getItem('monitoring-host-services-columns-local-cmkadmin-pro')).toBeNull()
 })
 
+test('requests services whose last state change is younger than the entered age', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Filter State age' }))
+  const panel = screen.getByRole('group', { name: 'Filter State age' })
+  await fireEvent.update(within(panel).getByRole('spinbutton', { name: 'Age' }), '5')
+  const before = Math.floor(Date.now() / 1000)
+  await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
+  const after = Math.floor(Date.now() / 1000)
+
+  expect(servicesPost).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({
+      body: {
+        limit: 1000,
+        filter: {
+          type: 'condition',
+          field: 'last_state_change',
+          op: 'gte',
+          value: expect.toSatisfy(
+            (value: number) => value >= before - 5 * 60 && value <= after - 5 * 60
+          )
+        },
+        fields: []
+      }
+    })
+  )
+})
+
 test('requests services whose last state change is at or after the picked instant', async () => {
+  window.history.replaceState(
+    null,
+    '',
+    '/monitor_host_services.py?host=web-1&site=local&timestamp_format=abs'
+  )
   mockServices([makeApiEntry()])
   renderApp()
 
@@ -812,6 +847,59 @@ test('requests services whose last state change is at or after the picked instan
           field: 'last_state_change',
           op: 'gte',
           value: picked
+        },
+        fields: []
+      }
+    })
+  )
+})
+
+test('a range picked as instants keeps filtering once the ages show as ages', async () => {
+  window.history.replaceState(
+    null,
+    '',
+    '/monitor_host_services.py?host=web-1&site=local&timestamp_format=abs'
+  )
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Filter State age' }))
+  const from = within(screen.getByRole('group', { name: 'Filter State age' })).getByRole('group', {
+    name: 'From'
+  })
+  await userEvent.click(within(from).getByRole('button', { name: 'Open calendar' }))
+  await userEvent.click(within(from).getByRole('button', { name: /\b1,/ }))
+  await fireEvent.update(within(from).getByRole('spinbutton', { name: 'Hours' }), '00')
+  await fireEvent.update(within(from).getByRole('spinbutton', { name: 'Minutes' }), '00')
+  await userEvent.click(within(from).getByRole('button', { name: 'Apply' }))
+  await userEvent.click(
+    within(screen.getByRole('group', { name: 'Filter State age' })).getByRole('button', {
+      name: 'Apply'
+    })
+  )
+
+  await userEvent.click(screen.getByRole('button', { name: 'Modify display options' }))
+  await userEvent.click(screen.getByRole('combobox', { name: 'Timestamp format' }))
+  await userEvent.click(screen.getByRole('option', { name: 'Relative' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Submit' }))
+
+  await userEvent.click(screen.getByRole('button', { name: 'Filter State age (active)' }))
+  const panel = screen.getByRole('group', { name: 'Filter State age' })
+  await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
+
+  const today = new Date()
+  const picked = new Date(today.getFullYear(), today.getMonth(), 1, 0, 0).getTime() / 1000
+
+  expect(servicesPost).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({
+      body: {
+        limit: 1000,
+        filter: {
+          type: 'condition',
+          field: 'last_state_change',
+          op: 'gte',
+          value: expect.toSatisfy((value: number) => Math.abs(value - picked) <= 2)
         },
         fields: []
       }

@@ -28,6 +28,7 @@ import {
   readDisplayOptionsFromUrl,
   seedDisplayOptions
 } from '@/monitoring/shared/displayOptionsState/urlState'
+import { filterTimestampsAsShown } from '@/monitoring/shared/timestampFilters'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 
 import MonitoringHeaderActions from '../shared/components/MonitoringHeaderActions.vue'
@@ -207,7 +208,10 @@ const displayOptions = usePersistentRef(
 
 const tableColumns = computed(() =>
   sizeModeColumn(
-    uncapNameWithoutSummary(columns, hostServicesService.columnVisibility.value),
+    filterTimestampsAsShown(
+      uncapNameWithoutSummary(columns, hostServicesService.columnVisibility.value),
+      displayOptions.value.timestampFormat
+    ),
     modeColumnSize.value
   )
 )

@@ -147,3 +147,33 @@ test('an existing range is decoded back into both bounds', async () => {
     ]
   })
 })
+
+test('an age the duration filter left behind is kept until a bound is edited', async () => {
+  vi.spyOn(Date, 'now').mockReturnValue(JUNE_20_1430 * 1000)
+  const ages: ColumnFilterNode<'last_check'> = {
+    type: 'and',
+    children: [
+      { type: 'age', field: 'last_check', op: 'older_than', seconds: 3600 },
+      { type: 'age', field: 'last_check', op: 'younger_than', seconds: JUNE_20_1430 - JUNE_20_0845 }
+    ]
+  }
+
+  const { model } = renderFilter(ages)
+
+  expect(model.value).toEqual(ages)
+
+  await pick('To', 20, 12, 0)
+
+  expect(model.value).toEqual({
+    type: 'and',
+    children: [
+      { type: 'condition', field: 'last_check', op: 'gte', value: JUNE_20_0845 },
+      {
+        type: 'condition',
+        field: 'last_check',
+        op: 'lte',
+        value: JUNE_20_0845 + 3 * 3600 + 15 * 60
+      }
+    ]
+  })
+})

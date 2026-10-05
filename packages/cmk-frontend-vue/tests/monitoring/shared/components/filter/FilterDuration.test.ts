@@ -5,6 +5,7 @@
  */
 import { userEvent } from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
+import { afterEach, vi } from 'vitest'
 import { type Ref, defineComponent, ref } from 'vue'
 
 import type { ColumnFilterNode } from '@/monitoring/shared/api/types'
@@ -34,6 +35,10 @@ function renderFilter(initial: ColumnFilterNode<'last_state_change'> | undefined
 }
 
 const user = userEvent.setup()
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
 
 test('"Less than" caps the age', async () => {
   const { model } = renderFilter()
@@ -171,4 +176,65 @@ test('a span reopens in the coarsest unit both of its bounds divide by', () => {
 
   expect(screen.getByRole('spinbutton', { name: 'Younger bound' })).toHaveValue(60)
   expect(screen.getByRole('spinbutton', { name: 'Older bound' })).toHaveValue(90)
+})
+
+test('a range the date-time filter left behind reopens as the ages its instants are now', () => {
+  const now = 1781965800
+  vi.spyOn(Date, 'now').mockReturnValue(now * 1000)
+  const range: ColumnFilterNode<'last_state_change'> = {
+    type: 'and',
+    children: [
+      { type: 'condition', field: 'last_state_change', op: 'gt', value: now - 2 * 3600 },
+      { type: 'condition', field: 'last_state_change', op: 'lte', value: now - 3600 }
+    ]
+  }
+
+  const { model } = renderFilter(range)
+
+  expect(screen.getByRole('button', { name: 'Toggle Between' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  )
+  expect(screen.getByRole('spinbutton', { name: 'Younger bound' })).toHaveValue(1)
+  expect(screen.getByRole('spinbutton', { name: 'Older bound' })).toHaveValue(2)
+  expect(model.value).toEqual(range)
+})
+
+test('a range the date-time filter left behind becomes ages once edited', async () => {
+  const now = 1781965800
+  vi.spyOn(Date, 'now').mockReturnValue(now * 1000)
+
+  const { model } = renderFilter({
+    type: 'and',
+    children: [
+      { type: 'condition', field: 'last_state_change', op: 'gte', value: now - 2 * 3600 },
+      { type: 'condition', field: 'last_state_change', op: 'lte', value: now - 3600 }
+    ]
+  })
+
+  await user.clear(screen.getByRole('spinbutton', { name: 'Older bound' }))
+  await user.type(screen.getByRole('spinbutton', { name: 'Older bound' }), '3')
+
+  expect(model.value).toEqual({
+    type: 'and',
+    children: [
+      { type: 'age', field: 'last_state_change', op: 'older_than', seconds: 3600 },
+      { type: 'age', field: 'last_state_change', op: 'younger_than', seconds: 3 * 3600 }
+    ]
+  })
+})
+
+test('an instant still ahead reopens as an age of zero', () => {
+  const now = 1781965800
+  vi.spyOn(Date, 'now').mockReturnValue(now * 1000)
+
+  const { filter } = renderFilter({
+    type: 'condition',
+    field: 'last_state_change',
+    op: 'lte',
+    value: now + 3600
+  })
+
+  expect(screen.getByRole('spinbutton', { name: 'Age' })).toHaveValue(0)
+  expect(filter.value?.validate()).toBe(true)
 })

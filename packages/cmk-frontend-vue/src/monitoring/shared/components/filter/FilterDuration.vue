@@ -21,6 +21,12 @@ the unit reads the same numbers in the new unit rather than converting them, so
 is the coarsest one all its bounds divide evenly by, so the numbers read back
 exactly as they were typed.
 
+A filter the date-time range editor committed - the same field, while the
+timestamps showed as points in time - reopens as the ages its instants are now.
+An instant still ahead reads as an age of zero, which matches the same past
+timestamps. The fixed instants stay in the model until the user edits, so
+reopening and applying does not turn them into a window that slides with now.
+
 The parent `FilterDropdown` owns the popover shell and Clear/Apply handling, and
 calls `validate` before it commits, which is when a negative age or an inverted
 span reports itself.
@@ -69,9 +75,17 @@ function agesOf(node: ColumnFilterNode<F> | undefined): Partial<Record<AgeOp, nu
   if (!node) {
     return ages
   }
+  const now = Math.floor(Date.now() / 1000)
   for (const bound of node.type === 'and' ? node.children : [node]) {
     if (bound.type === 'age') {
       ages[bound.op] = bound.seconds
+    } else if (bound.type === 'condition' && 'op' in bound) {
+      const age = Math.max(0, now - (bound.value as number))
+      if (bound.op === 'gte' || bound.op === 'gt') {
+        ages.younger_than = age
+      } else if (bound.op === 'lte' || bound.op === 'lt') {
+        ages.older_than = age
+      }
     }
   }
   return ages

@@ -120,7 +120,7 @@ impl UpdateState {
 /// the bakery.
 ///
 /// The bakery writes two different artifacts, located by
-/// [`crate::setup::PathResolver::agent_info_path`]:
+/// [`crate::environment::PathResolver::agent_info_path`]:
 ///
 /// * `agent_info.json` on Unix - JSON, carrying hash and platform.
 /// * `checkmk.dat` on Windows - YAML, `hash: value` line

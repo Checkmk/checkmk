@@ -7,7 +7,7 @@
 //!
 //! The integrated updater is offered for the single-directory agent deployment
 //! only - a host in the multi-directory layout keeps the Python updater. The
-//! files are located by [`crate::setup::PathResolver`].
+//! files are located by [`crate::environment::PathResolver`].
 //!
 //! Three artifacts make up the model:
 //!

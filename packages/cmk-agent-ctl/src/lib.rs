@@ -7,6 +7,7 @@ pub mod certs;
 mod cli;
 pub mod configuration;
 mod constants;
+mod environment;
 #[cfg(windows)]
 mod log_ext;
 #[cfg(windows)]
@@ -38,7 +39,7 @@ pub use setup::init;
 #[cfg(windows)]
 pub use misc::validate_elevation;
 
-pub fn run_requested_mode(cli: cli::Cli, paths: setup::PathResolver) -> AnyhowResult<()> {
+pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> AnyhowResult<()> {
     configuration::migrate::migrate_registered_connections(&paths.registry_path)?;
     agent_socket_operational(&cli.mode)?;
 

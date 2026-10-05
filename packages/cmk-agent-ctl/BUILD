@@ -24,6 +24,7 @@ rust_library(
         "src/configuration/config.rs",
         "src/configuration/migrate.rs",
         "src/constants.rs",
+        "src/environment.rs",
         "src/lib.rs",
         "src/log_ext.rs",
         "src/mailslot_transport.rs",

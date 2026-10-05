@@ -1034,7 +1034,7 @@ metric_aws_sns_topics_fifo = metrics.Metric(
 
 metric_aws_cloudfront_requests = metrics.Metric(
     name="aws_cloudfront_requests",
-    title=Title("Requests"),
+    title=Title("CloudFront requests"),
     unit=UNIT_NUMBER,
     color=metrics.Color.PURPLE,
 )

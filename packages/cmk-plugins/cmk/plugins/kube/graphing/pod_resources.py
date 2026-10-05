@@ -9,25 +9,25 @@ UNIT_COUNTER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision
 
 metric_kube_pod_allocatable = metrics.Metric(
     name="kube_pod_allocatable",
-    title=Title("Allocatable"),
+    title=Title("Allocatable pods"),
     unit=UNIT_COUNTER,
     color=metrics.Color.CYAN,
 )
 metric_kube_pod_free = metrics.Metric(
     name="kube_pod_free",
-    title=Title("Free"),
+    title=Title("Free pods"),
     unit=UNIT_COUNTER,
     color=metrics.Color.PURPLE,
 )
 metric_kube_pod_pending = metrics.Metric(
     name="kube_pod_pending",
-    title=Title("Pending"),
+    title=Title("Pending pods"),
     unit=UNIT_COUNTER,
     color=metrics.Color.GREEN,
 )
 metric_kube_pod_running = metrics.Metric(
     name="kube_pod_running",
-    title=Title("Running"),
+    title=Title("Running pods"),
     unit=UNIT_COUNTER,
     color=metrics.Color.BLUE,
 )

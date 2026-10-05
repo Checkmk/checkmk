@@ -328,21 +328,12 @@ def test_bundles() -> None:
 
 
 _ALLOWED_DUPLICATE_METRIC_TITLES = {
-    "Allocatable": {
-        "kube_memory_allocatable",
-        "kube_pod_allocatable",
-        "kube_cpu_allocatable",
-    },
     "Allocated space": {"mem_lnx_vmalloc_used", "allocated_size"},
     "Average consumption": {"aws_dynamodb_consumed_wcu", "aws_dynamodb_consumed_rcu"},
     "Average latency": {"latency_ave", "average_latency_s"},
     "Average usage": {
         "aws_dynamodb_consumed_rcu_perc",
         "aws_dynamodb_consumed_wcu_perc",
-    },
-    "Cluster utilization": {
-        "kube_cpu_cluster_allocatable_utilization",
-        "kube_memory_cluster_allocatable_utilization",
     },
     "Connection time": {"aws_route53_connection_time", "connection_time"},
     "Failed connections": {"connections_failed_rate", "failed_connections"},
@@ -352,11 +343,6 @@ _ALLOWED_DUPLICATE_METRIC_TITLES = {
     "Harddrive uncorrectable errors": {
         "harddrive_uncorrectable_erros",
         "harddrive_uncorrectable_errors",
-    },
-    "Limits": {"kube_cpu_limit", "kube_memory_limit"},
-    "Limits utilization": {
-        "kube_cpu_limit_utilization",
-        "kube_memory_limit_utilization",
     },
     "Maximum single-request consumption": {
         "aws_dynamodb_maximum_consumed_wcu",
@@ -369,10 +355,6 @@ _ALLOWED_DUPLICATE_METRIC_TITLES = {
     },
     "New connections": {"new_connections", "aws_new_connections"},
     "Number of Go routines": {"bazel_cache_status_num_goroutines", "bazel_cache_go_go_goroutines"},
-    "Node utilization": {
-        "kube_cpu_node_allocatable_utilization",
-        "kube_memory_node_allocatable_utilization",
-    },
     "Nodes": {"number_of_nodes", "aws_elasticache_nodes"},
     "Non-compliant devices": {
         "mobileiron_non_compliant",
@@ -384,12 +366,7 @@ _ALLOWED_DUPLICATE_METRIC_TITLES = {
     "Queue length": {"queue", "queue_length"},
     "Read latency": {"db_read_latency_s", "read_latency"},
     "Read operations": {"disk_read_ios", "read_ops"},
-    "Requests": {"kube_memory_request", "kube_cpu_request", "aws_cloudfront_requests"},
     "Requests per second": {"requests", "requests_per_sec", "requests_per_second"},
-    "Requests utilization": {
-        "kube_memory_request_utilization",
-        "kube_cpu_request_utilization",
-    },
     "Reserved space": {"reserved_size", "reserved"},
     "Running containers": {
         "docker_running_containers",
@@ -404,7 +381,6 @@ _ALLOWED_DUPLICATE_METRIC_TITLES = {
     "Total devices": {"ap_devices_total", "mobileiron_devices_total"},
     "Total size": {"fs_size", "elasticsearch_size"},
     "Total virtual memory": {"mem_lnx_total_total", "mem_total_virtual_in_bytes"},
-    "Usage": {"kube_cpu_usage", "pd_exclusivesnapshot", "kube_memory_usage"},
     "Used licenses": {"licenses", "license_percentage"},
     "Used virtual memory": {"pagefile_used_percent", "pagefile_used"},
     "Used virtual memory (averaged)": {

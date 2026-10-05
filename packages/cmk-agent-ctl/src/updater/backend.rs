@@ -7,7 +7,9 @@
 //! See [`crate::updater`] for what the three artifacts are and how they relate.
 
 use crate::config::{tmp_path_for_atomical_save, JSONLoader, JSONLoaderMissingSafe, TOMLLoader};
-use anyhow::{Context, Result as AnyhowResult};
+use crate::environment::PathResolver;
+use anyhow::{Context, Error, Result as AnyhowResult};
+use log::{log, Level};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io;
@@ -63,7 +65,7 @@ impl UpdaterConfig {
     /// # Returns
     ///
     /// `None` if the file does not exist, which means that agent updates are
-    /// not configured for this host.
+    /// not configured for this host. An inaccessible file counts as absent.
     ///
     /// # Errors
     ///
@@ -82,7 +84,7 @@ impl UpdaterConfig {
 ///
 /// A missing state file is equivalent to the default state, so the first run on
 /// a freshly installed host needs no bootstrapping.
-#[derive(Serialize, Deserialize, Default, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Eq, Clone)]
 pub struct UpdateState {
     /// Unix timestamp of the last check against the site.
     pub last_check: Option<u64>,
@@ -172,6 +174,117 @@ impl JSONLoader for AgentInfo {}
 #[cfg(windows)]
 const AGENT_HASH_KEY: &str = "hash";
 
+/// The three updater artifacts of this host, loaded together.
+///
+/// Fields are private: what is missing or broken is only observable through
+/// [`Updater::is_operational`] and [`Updater::summary`].
+pub struct Updater {
+    config: Option<UpdaterConfig>,
+    state: UpdateState,
+    agent_info: Option<AgentInfo>,
+    load_error: Option<Error>,
+}
+
+impl Updater {
+    pub fn new(paths: &PathResolver) -> Self {
+        let mut load_error = None;
+        let config = Self::load_or_log(
+            "updater configuration",
+            Level::Warn,
+            UpdaterConfig::load_if_configured(&paths.updater_config_path),
+            &mut load_error,
+        )
+        .flatten();
+        // Unparsable state means a broken controller: non-operational by design.
+        let state = Self::load_or_log(
+            "updater state",
+            Level::Warn,
+            UpdateState::load_missing_safe(&paths.updater_state_path).context(format!(
+                "Failed to load the updater state from {:?}",
+                paths.updater_state_path
+            )),
+            &mut load_error,
+        )
+        .unwrap_or_default();
+        let agent_info = Self::load_or_log(
+            "agent info",
+            Level::Info,
+            AgentInfo::load(&paths.agent_info_path),
+            &mut load_error,
+        );
+
+        Self {
+            config,
+            state,
+            agent_info,
+            load_error,
+        }
+    }
+
+    /// Keeps the *first* error: the artifacts fail independently, so the first
+    /// one is simply the stable choice for a line to diff across hosts.
+    fn load_or_log<T>(
+        what: &str,
+        level: Level,
+        result: AnyhowResult<T>,
+        load_error: &mut Option<Error>,
+    ) -> Option<T> {
+        match result {
+            Ok(value) => Some(value),
+            Err(error) => {
+                log!(level, "Continuing without {what}: {error:#}");
+                load_error.get_or_insert(error);
+                None
+            }
+        }
+    }
+
+    /// One-liner for logging/tracing.
+    pub fn summary(&self) -> String {
+        format!(
+            "operational: {}{}, config '{}', state {:?}, agent hash '{}'",
+            self.is_operational(),
+            self.load_error
+                .as_ref()
+                .map_or_else(String::new, |error| format!(", error '{error:#}'")),
+            self.config
+                .as_ref()
+                .map(|config| format!(
+                    "activated: {}, interval {}",
+                    config.activated, config.interval
+                ))
+                .unwrap_or_else(|| String::from("not configured")),
+            self.state,
+            self.agent_info
+                .as_ref()
+                .map_or("unknown", |info| info.hash.as_str())
+        )
+    }
+
+    /// In some cases Updater can't work, for example, when agent hash is unknown
+    /// or config file is absent/broken
+    ///
+    /// True even when the config has `activated = false`: by design.
+    pub fn is_operational(&self) -> bool {
+        self.load_error.is_none() && self.config.is_some() && self.agent_info.is_some()
+    }
+
+    pub fn signature_keys(&self) -> &[String] {
+        self.config
+            .as_ref()
+            .map_or(&[], |config| &config.signature_keys)
+    }
+
+    pub fn platform(&self) -> Option<&str> {
+        self.agent_info.as_ref().map(|info| info.platform.as_str())
+    }
+
+    /// The error of the last update attempt, not the `load_error` of this run.
+    pub fn last_error(&self) -> Option<&str> {
+        self.state.last_error.as_deref()
+    }
+}
+
 /// Write `contents` to `path`, owner-readable only from the moment the file
 /// comes into existence.
 ///
@@ -203,6 +316,7 @@ fn write_restricted(path: &Path, contents: &str) -> io::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::environment::SetupMode;
     use std::path::PathBuf;
 
     const UPDATER_CONFIG_TOML: &str = "\
@@ -221,6 +335,19 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         "\r\n",
         "hash: 0123456789abcdef\r\n",
     );
+
+    /// The agent info of the installed package, in the form the bakery writes it
+    /// for the platform under test. Both carry the same hash.
+    #[cfg(unix)]
+    const AGENT_INFO: &str = r#"{"hash": "0123456789abcdef", "platform": "linux_deb"}"#;
+    #[cfg(windows)]
+    const AGENT_INFO: &str = CHECKMK_DAT;
+    #[cfg(unix)]
+    const SETUP_MODE: SetupMode = SetupMode::SingleDir;
+    #[cfg(windows)]
+    const SETUP_MODE: SetupMode = SetupMode::Classic;
+
+    const SIGNATURE_KEY: &str = "-----BEGIN CERTIFICATE-----\nabc\n-----END CERTIFICATE-----\n";
 
     fn write(dir: &tempfile::TempDir, name: &str, content: &str) -> PathBuf {
         let path = dir.path().join(name);
@@ -442,5 +569,238 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             fs::metadata(&path).unwrap().permissions().mode() & 0o777,
             STATE_FILE_MODE
         );
+    }
+
+    /// The layout that keeps all three artifacts below one directory, so that it
+    /// can be set up in a temporary one: the single directory layout on Unix, the
+    /// classic layout on Windows, where the agent info sits in `install` below
+    /// the controller's home.
+    fn artifact_paths(dir: &tempfile::TempDir) -> PathResolver {
+        let paths = PathResolver::new(SETUP_MODE, dir.path());
+        for path in [
+            &paths.updater_config_path,
+            &paths.updater_state_path,
+            &paths.agent_info_path,
+        ] {
+            fs::create_dir_all(path.parent().unwrap()).unwrap();
+        }
+        paths
+    }
+
+    #[test]
+    fn test_updater_new_loads_the_three_artifacts() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let paths = artifact_paths(&dir);
+        fs::write(&paths.updater_config_path, UPDATER_CONFIG_TOML).unwrap();
+        UpdateState {
+            last_check: Some(1759276800),
+            ..Default::default()
+        }
+        .save(&paths.updater_state_path)
+        .unwrap();
+        fs::write(&paths.agent_info_path, AGENT_INFO).unwrap();
+
+        let updater = Updater::new(&paths);
+
+        assert!(updater.load_error.is_none());
+        assert_eq!(updater.config.unwrap().interval, 60);
+        assert_eq!(updater.state.last_check, Some(1759276800));
+        assert_eq!(updater.agent_info.unwrap().hash, "0123456789abcdef");
+    }
+
+    #[test]
+    fn test_updater_new_tolerates_missing_artifacts() {
+        let dir = tempfile::TempDir::new().unwrap();
+
+        let updater = Updater::new(&artifact_paths(&dir));
+
+        assert!(updater.config.is_none());
+        assert_eq!(updater.state, UpdateState::default());
+        assert!(updater.agent_info.is_none());
+    }
+
+    /// A missing agent info is the only load failure on a host without any
+    /// updater artifacts: config and state have a defined absent state.
+    #[test]
+    fn test_updater_new_without_artifacts_is_not_operational() {
+        let dir = tempfile::TempDir::new().unwrap();
+
+        let updater = Updater::new(&artifact_paths(&dir));
+
+        assert!(updater.load_error.is_some());
+        assert!(!updater.is_operational());
+    }
+
+    #[test]
+    fn test_updater_new_survives_a_malformed_config() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let paths = artifact_paths(&dir);
+        fs::write(&paths.updater_config_path, "interval = ").unwrap();
+
+        let updater = Updater::new(&paths);
+
+        assert!(updater.config.is_none());
+        assert!(!updater.is_operational());
+        // The agent info fails to load afterwards, but the config error is kept.
+        // The context quotes the path with `{:?}`, which escapes the separators
+        // of a Windows path, so the expectation has to be built the same way.
+        assert!(updater
+            .load_error
+            .unwrap()
+            .to_string()
+            .contains(&format!("{:?}", paths.updater_config_path)));
+    }
+
+    #[test]
+    fn test_summary_without_config_and_agent_info() {
+        let summary = Updater {
+            config: None,
+            state: UpdateState::default(),
+            agent_info: None,
+            load_error: None,
+        }
+        .summary();
+
+        assert!(summary.starts_with("operational: false, config 'not configured'"));
+        assert!(summary.contains("agent hash 'unknown'"));
+    }
+
+    #[test]
+    fn test_summary_reports_the_state() {
+        let summary = Updater {
+            state: UpdateState {
+                last_check: Some(1759276800),
+                last_error: Some(String::from("https://site.example/check_mk is unreachable")),
+                ..Default::default()
+            },
+            ..updater(some_config(), some_agent_info())
+        }
+        .summary();
+
+        assert!(summary.contains("last_check: Some(1759276800)"));
+        assert!(summary.contains("site.example"));
+    }
+
+    #[test]
+    fn test_summary_reports_the_load_error() {
+        let summary = Updater {
+            load_error: Some(Error::msg("broken artifact")),
+            ..updater(some_config(), some_agent_info())
+        }
+        .summary();
+
+        assert!(summary.starts_with("operational: false, error 'broken artifact', config '"));
+    }
+
+    #[test]
+    fn test_summary_reports_config_and_hash_but_no_signature_keys() {
+        let updater = Updater {
+            config: Some(UpdaterConfig {
+                signature_keys: vec![String::from(SIGNATURE_KEY)],
+                ..some_config().unwrap()
+            }),
+            ..updater(some_config(), some_agent_info())
+        };
+
+        let summary = updater.summary();
+
+        assert!(summary.starts_with("operational: true, config '"));
+        assert!(summary.contains("activated: true, interval 60"));
+        assert!(summary.contains("0123456789abcdef"));
+        // Carried by the updater, deliberately kept out of the log line.
+        assert_eq!(updater.signature_keys(), [String::from(SIGNATURE_KEY)]);
+        assert!(!summary.contains("BEGIN CERTIFICATE"));
+    }
+
+    #[test]
+    fn test_signature_keys_without_a_config() {
+        assert!(updater(None, some_agent_info()).signature_keys().is_empty());
+    }
+
+    #[test]
+    fn test_platform_of_the_installed_package() {
+        assert_eq!(
+            updater(some_config(), some_agent_info()).platform(),
+            Some("linux_deb")
+        );
+        assert_eq!(updater(some_config(), None).platform(), None);
+    }
+
+    #[test]
+    fn test_last_error_of_the_state() {
+        let updater = Updater {
+            state: UpdateState {
+                last_error: Some(String::from("https://site.example/check_mk is unreachable")),
+                ..Default::default()
+            },
+            ..updater(some_config(), some_agent_info())
+        };
+
+        assert_eq!(
+            updater.last_error(),
+            Some("https://site.example/check_mk is unreachable")
+        );
+    }
+
+    #[test]
+    fn test_last_error_of_a_state_without_one() {
+        assert_eq!(updater(some_config(), some_agent_info()).last_error(), None);
+    }
+
+    fn some_config() -> Option<UpdaterConfig> {
+        Some(UpdaterConfig {
+            activated: true,
+            interval: 60,
+            signature_keys: vec![],
+        })
+    }
+
+    fn some_agent_info() -> Option<AgentInfo> {
+        Some(AgentInfo {
+            hash: String::from("0123456789abcdef"),
+            platform: String::from("linux_deb"),
+        })
+    }
+
+    /// The state plays no role for [`Updater::is_operational`].
+    fn updater(config: Option<UpdaterConfig>, agent_info: Option<AgentInfo>) -> Updater {
+        Updater {
+            config,
+            state: UpdateState::default(),
+            agent_info,
+            load_error: None,
+        }
+    }
+
+    #[test]
+    fn test_is_operational_with_config_and_agent_info() {
+        assert!(updater(some_config(), some_agent_info()).is_operational());
+    }
+
+    #[test]
+    fn test_is_not_operational_without_config_or_agent_info() {
+        assert!(!updater(some_config(), None).is_operational());
+        assert!(!updater(None, some_agent_info()).is_operational());
+        assert!(!updater(None, None).is_operational());
+    }
+
+    #[test]
+    fn test_is_not_operational_after_a_load_error() {
+        let updater = Updater {
+            load_error: Some(Error::msg("broken artifact")),
+            ..updater(some_config(), some_agent_info())
+        };
+
+        assert!(!updater.is_operational());
+    }
+
+    #[test]
+    fn test_is_operational_when_not_activated() {
+        let config = UpdaterConfig {
+            activated: false,
+            ..some_config().unwrap()
+        };
+
+        assert!(updater(Some(config), some_agent_info()).is_operational());
     }
 }

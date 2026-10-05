@@ -24,7 +24,6 @@ mod version;
 use anyhow::{bail, Context, Result as AnyhowResult};
 use configuration::config;
 use configuration::config::TOMLLoaderMissingSafe;
-use log::info;
 use modes::daemon::daemon;
 use modes::delete_connection::{delete, delete_all};
 use modes::dump::dump;
@@ -50,10 +49,18 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
             &paths.registry_path
         )
     })?;
-    info!(
+    log::info!(
         "Loaded config from '{:?}', connection registry from '{:?}'",
-        &paths.config_path, &paths.registry_path
+        &paths.config_path,
+        &paths.registry_path
     );
+    // Loaded for every mode: the updater is an integral part of the controller,
+    // not a subsystem the individual modes opt into. It may be adjusted later, but
+    // the updater is _always_ present and its state is _always_ relevant.
+    let updater = updater::Updater::new(&paths);
+    // Kept at info although the default level is still warn: the default is to be
+    // raised, and the summary is then wanted on every run.
+    log::info!("Updater {}", updater.summary());
     match cli.mode {
         cli::Mode::Register(reg_opts) => registration::register_existing(
             &config::RegisterExistingConfig::new(runtime_config, reg_opts)?,

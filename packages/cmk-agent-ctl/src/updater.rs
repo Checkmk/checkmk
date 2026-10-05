@@ -16,9 +16,11 @@
 //! * [`UpdateState`] - owned and written by the controller.
 //! * [`AgentInfo`] - part of the installed agent package, read-only for the
 //!   controller.
+//!
+//! [`Updater`] loads the three of them together.
 
 mod backend;
-pub use backend::{AgentInfo, UpdateState, UpdaterConfig};
+pub use backend::{AgentInfo, UpdateState, Updater, UpdaterConfig};
 
 #[cfg(windows)]
 mod platform;

@@ -855,9 +855,8 @@ def _automation_get_bulks(
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
     loading_result = state.loading_result
     return NotificationGetBulksResult(
-        find_bulks(
+        _find_bulks(
             only_ripe,
-            bulk_root=Path(notification_bulkdir),
             bulk_interval=loading_result.loaded_config.notification_bulk_interval,
             timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
                 livestatus.get_optional_timeperiods_active_map, log=logger.warning
@@ -2499,28 +2498,13 @@ def _remove_bulk_dir(bulk_dir: str) -> None:
         os.rmdir(bulk_dir)
 
 
-def _readable_bulk_id(bulk_dir: str, dirname: str) -> str:
-    # Only hashed directory names have a bulk ID file, see _bulk_dirname()
-    if ",sha256:" not in dirname:
-        return dirname
-    try:
-        return (
-            Path(bulk_dir, _BULK_ID_FILE).read_text(encoding="utf-8", errors="surrogateescape")
-            or dirname
-        )
-    except OSError:
-        # Only cosmetic, must not keep the bulk from being sent
-        return dirname
-
-
-def find_bulks(
+def _find_bulks(
     only_ripe: bool,
     *,
-    bulk_root: Path,
     bulk_interval: int,
     timeperiods_active: _CoreTimeperiodsActive,
 ) -> NotifyBulks:
-    if not bulk_root.exists():
+    if not os.path.exists(notification_bulkdir):
         return []
 
     def listdir_visible(path: str) -> list[str]:
@@ -2528,8 +2512,8 @@ def find_bulks(
 
     bulks: NotifyBulks = []
     now = time.time()
-    for contact in listdir_visible(str(bulk_root)):
-        contact_dir = os.path.join(bulk_root, contact)
+    for contact in listdir_visible(notification_bulkdir):
+        contact_dir = os.path.join(notification_bulkdir, contact)
         for method in listdir_visible(contact_dir):
             method_dir = os.path.join(contact_dir, method)
             for bulk in listdir_visible(method_dir):
@@ -2566,17 +2550,7 @@ def find_bulks(
                         if only_ripe:
                             continue
 
-                    bulks.append(
-                        (
-                            bulk_dir,
-                            age,
-                            interval,
-                            "n.a.",
-                            count,
-                            uuids,
-                            _readable_bulk_id(bulk_dir, bulk),
-                        )
-                    )
+                    bulks.append((bulk_dir, age, interval, "n.a.", count, uuids))
                 else:
                     assert timeperiod is not None  # TODO: Improve typing of bulk_parts()
                     try:
@@ -2623,17 +2597,7 @@ def find_bulks(
                             {"bulk_dir": bulk_dir, "timeperiod": timeperiod},
                         )
 
-                    bulks.append(
-                        (
-                            bulk_dir,
-                            age,
-                            "n.a.",
-                            timeperiod,
-                            count,
-                            uuids,
-                            _readable_bulk_id(bulk_dir, bulk),
-                        )
-                    )
+                    bulks.append((bulk_dir, age, "n.a.", timeperiod, count, uuids))
     return bulks
 
 
@@ -2644,21 +2608,16 @@ def _send_ripe_bulks(
     bulk_interval: int,
     plugin_timeout: int,
 ) -> None:
-    ripe = find_bulks(
-        True,
-        bulk_root=Path(notification_bulkdir),
-        bulk_interval=bulk_interval,
-        timeperiods_active=timeperiods_active,
-    )
+    ripe = _find_bulks(True, bulk_interval=bulk_interval, timeperiods_active=timeperiods_active)
     if ripe:
         logger.info("Sending out %(num_ripe)d ripe bulk notifications", {"num_ripe": len(ripe)})
-        for bulk_dir, _age, _interval, _timeperiod, _count, uuids, _bulk_id in ripe:
+        for bulk in ripe:
             try:
-                notify_bulk(bulk_dir, uuids, get_http_proxy, plugin_timeout=plugin_timeout)
+                notify_bulk(bulk[0], bulk[-1], get_http_proxy, plugin_timeout=plugin_timeout)
             except Exception:
                 if cmk.ccc.debug.enabled():
                     raise
-                logger.exception("Error sending bulk %(bulk)s:", {"bulk": bulk_dir})
+                logger.exception("Error sending bulk %(bulk)s:", {"bulk": bulk[0]})
 
 
 def notify_bulk(

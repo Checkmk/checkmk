@@ -918,8 +918,7 @@ NotifyPluginInfo = tuple[
 NotifyAnalysisInfo = tuple[list[NotifyRuleInfo], list[NotifyPluginInfo]]
 
 UUIDs = list[tuple[float, str]]
-# directory, age, interval, time period, max count, notifications, readable bulk ID
-NotifyBulk = tuple[str, float, None | str | int, None | str | int, int, UUIDs, str]
+NotifyBulk = tuple[str, float, None | str | int, None | str | int, int, UUIDs]
 NotifyBulks = list[NotifyBulk]
 
 

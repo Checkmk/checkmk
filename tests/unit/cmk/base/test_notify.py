@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import time
 from collections.abc import Mapping
 from pathlib import Path
 from typing import cast, Final
@@ -1771,34 +1770,8 @@ def test_differing_long_grouping_values_get_separate_bulks(tmp_path: Path) -> No
     assert len(_bulk_dirs(tmp_path)) == 2
 
 
-@pytest.mark.parametrize(
-    "value",
-    [
-        pytest.param("x", id="readable directory name"),
-        pytest.param("x" * 300, id="hashed directory name"),
-    ],
-)
-def test_open_bulks_report_their_readable_id(tmp_path: Path, value: str) -> None:
-    _store_for_bulk(tmp_path, _bulk_context(value))
-
-    bulks = notify.find_bulks(False, bulk_root=tmp_path, bulk_interval=10, timeperiods_active={})
-
-    assert [bulk_id for *_, bulk_id in bulks] == [
-        (
-            f"60,10,host,{value},service,{value},sl,{value},check_type,{value},state,{value},"
-            f"ec_contact,{value},ec_comment,{value},custom,{value}"
-        )
-    ]
-
-
-def test_orphaned_hashed_bulk_directory_is_removed(tmp_path: Path) -> None:
+def test_hashed_bulk_directory_records_its_readable_id(tmp_path: Path) -> None:
     _store_for_bulk(tmp_path, _bulk_context("x" * 300))
+
     (bulk_dir,) = _bulk_dirs(tmp_path)
-    for notification in bulk_dir.glob("[!.]*"):
-        notification.unlink()
-    an_hour_ago = time.time() - 3600
-    os.utime(bulk_dir, (an_hour_ago, an_hour_ago))
-
-    notify.find_bulks(False, bulk_root=tmp_path, bulk_interval=10, timeperiods_active={})
-
-    assert not _bulk_dirs(tmp_path)
+    assert (bulk_dir / ".bulk_id").read_text().startswith(f"60,10,host,{'x' * 300},")

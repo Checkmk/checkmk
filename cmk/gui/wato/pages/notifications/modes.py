@@ -1651,11 +1651,11 @@ class ModeAnalyzeNotifications(ModeNotifications):
 
         title = _("Overdue bulk notifications!") if only_ripe else _("Open bulk notifications")
         with table_element(title=title, limit=table_row_limit) as table:
-            for directory, age, interval, timeperiod, maxcount, uuids, readable_id in bulks:
+            for directory, age, interval, timeperiod, maxcount, uuids in bulks:
                 dirparts = directory.split("/")
                 contact = dirparts[-3]
                 method = dirparts[-2]
-                bulk_id = readable_id.split(",", 2)[-1]
+                bulk_id = dirparts[-1].split(",", 2)[-1]
                 table.row()
                 table.cell(_("Contact"), contact)
                 table.cell(_("Method"), method)

@@ -62,16 +62,19 @@ from .models.response_models import (
 )
 
 #: Storing a detected relation is editing hosts, and nothing beyond it - hence no permission
-#: of its own, and the ones the host-writing endpoints declare.
+#: of its own, and the ones the host-writing endpoints declare. Finding relations asks for the
+#: same, as in the service discovery.
 PERMISSIONS = rw_permissions(
+    permissions.Perm("wato.edit"),
     permissions.Perm("wato.hosts"),
     permissions.Perm("wato.edit_hosts"),
-    # Read by the background job's own housekeeping when the job is started.
+    # Read when the state of a job is shown: whether the user may delete it.
     permissions.Optional(permissions.Perm("background_jobs.delete_jobs")),
 )
 
 
 def need_detection_permissions() -> None:
+    user.need_permission("wato.edit")
     user.need_permission("wato.hosts")
     user.need_permission("wato.edit_hosts")
 

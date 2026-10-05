@@ -57,7 +57,7 @@ class ModeHostRelationDetection(WatoMode[None]):
     @staticmethod
     @override
     def static_permissions() -> Collection[PermissionName]:
-        return ["hosts", "edit_hosts"]
+        return ["edit", "hosts", "edit_hosts"]
 
     @classmethod
     @override
@@ -112,7 +112,7 @@ def _opened_from(folders: Sequence[ScopeChoice]) -> str:
 def _folder_page_menu_entries(_folder: Folder | SearchFolder) -> Iterator[PageMenuEntry]:
     # Next to the other tools that work on all of Setup rather than on the folder at hand: the
     # page reads every host, and only starts out looking for relations in this folder.
-    if user.may("wato.hosts") and user.may("wato.edit_hosts"):
+    if user.may("wato.edit") and user.may("wato.hosts") and user.may("wato.edit_hosts"):
         yield PageMenuEntry(
             title=_("Relation detection"),
             icon_name=StaticIcon(IconNames.link),

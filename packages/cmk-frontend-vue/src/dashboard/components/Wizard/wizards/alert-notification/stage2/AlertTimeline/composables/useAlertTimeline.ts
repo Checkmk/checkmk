@@ -61,8 +61,9 @@ export const useAlertTimeline = async (
     currentSpec?.content?.type === CONTENT_TYPE
       ? (currentSpec?.content as AlertTimelineContent)
       : null
+  const storedWindow = currentContent?.render_mode?.time_range
   const { timeRange, widgetProps: generateTimeRangeProps } = useTimeRange(
-    currentContent?.render_mode?.time_range ?? null
+    storedWindow === undefined || storedWindow === 'dashboard' ? null : storedWindow
   )
 
   let initialTimeResolution: 'hour' | 'day' = 'hour'

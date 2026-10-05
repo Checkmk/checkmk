@@ -303,12 +303,12 @@ class SiteOverviewDashletConfig(DashletConfig):
 
 
 class EventBarChartRenderBarChart(TypedDict):
-    time_range: TimerangeValue
+    time_range: DashboardWindow | FixedWindow
     time_resolution: Literal["h", "d"]
 
 
 class EventBarChartRenderSimpleNumber(TypedDict):
-    time_range: TimerangeValue
+    time_range: DashboardWindow | FixedWindow
 
 
 type EventBarChartRenderMode = (

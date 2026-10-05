@@ -244,8 +244,10 @@ def migrate_dashboard_config(dashboard: MaybeOldDashboardConfig) -> DashboardCon
             }
 
     dashboard["widgets"] = {
-        widget_id: _migrate_alert_overview_time_range(
-            _migrate_inventory_link(_migrate_metric_time_range(widget))
+        widget_id: _migrate_timeline_time_range(
+            _migrate_alert_overview_time_range(
+                _migrate_inventory_link(_migrate_metric_time_range(widget))
+            )
         )
         for widget_id, widget in dashboard["widgets"].items()
     }
@@ -283,6 +285,23 @@ def _migrate_alert_overview_time_range(widget: DashletConfig) -> DashletConfig:
         return widget
     time_range = cast(FixedWindow, {"type": "range", "window": raw["time_range"]})
     return cast(DashletConfig, {**widget, "time_range": time_range})
+
+
+_TIMELINE_TYPES = frozenset({"alerts_bar_chart", "notifications_bar_chart"})
+
+
+def _migrate_timeline_time_range(widget: DashletConfig) -> DashletConfig:
+    if widget["type"] not in _TIMELINE_TYPES:
+        return widget
+    match cast(dict[str, object], widget).get("render_mode"):
+        case (str() as mode, dict() as parameters) if not isinstance(
+            parameters.get("time_range"), dict
+        ):
+            time_range = FixedWindow(type="range", window=parameters["time_range"])
+            render_mode = (mode, {**parameters, "time_range": time_range})
+        case _:
+            return widget
+    return cast(DashletConfig, {**widget, "render_mode": render_mode})
 
 
 def _migrate_inventory_link(widget: DashletConfig) -> DashletConfig:

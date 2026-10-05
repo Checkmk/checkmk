@@ -556,6 +556,48 @@ class TestMigrateAlertOverviewTimeRange:
         assert result["widgets"]["w1"]["time_range"] == time_range  # type: ignore[typeddict-item]
 
 
+class TestMigrateTimelineTimeRange:
+    @pytest.mark.parametrize(
+        "render_mode",
+        [
+            ("bar_chart", {"time_range": 90000, "time_resolution": "h"}),
+            ("simple_number", {"time_range": ("age", 3600)}),
+        ],
+    )
+    def test_a_stored_timerange_becomes_a_fixed_window(
+        self, render_mode: tuple[str, dict[str, object]]
+    ) -> None:
+        mode, parameters = render_mode
+        dashboard = _responsive_dashboard(
+            {"type": "alerts_bar_chart", "render_mode": render_mode, "log_target": "both"}
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["render_mode"] == (  # type: ignore[typeddict-item]
+            mode,
+            {**parameters, "time_range": {"type": "range", "window": parameters["time_range"]}},
+        )
+
+    def test_a_migrated_time_range_stays_unchanged(self) -> None:
+        render_mode = ("simple_number", {"time_range": {"type": "dashboard"}})
+        dashboard = _responsive_dashboard(
+            {"type": "notifications_bar_chart", "render_mode": render_mode, "log_target": "both"}
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["render_mode"] == render_mode  # type: ignore[typeddict-item]
+
+    def test_another_widget_with_a_render_mode_stays_unchanged(self) -> None:
+        widget = {"type": "hoststats", "render_mode": ("bar_chart", {"time_range": 90000})}
+        dashboard = _responsive_dashboard(dict(widget))
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"] == widget
+
+
 class TestMigrateInventoryLink:
     def test_a_stored_link_spec_becomes_an_inherited_link(self) -> None:
         dashboard = _responsive_dashboard(

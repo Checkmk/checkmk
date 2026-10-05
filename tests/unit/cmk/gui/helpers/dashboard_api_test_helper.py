@@ -501,6 +501,30 @@ class TestTimelineContent:
             },
         )
 
+    @pytest.mark.parametrize(
+        "render_mode",
+        [
+            {"type": "bar_chart", "time_range": "dashboard", "time_resolution": "day"},
+            {"type": "simple_number", "time_range": "dashboard"},
+        ],
+    )
+    def test_a_window_that_follows_the_dashboard_round_trips(
+        self, clients: ClientRegistry, widget_type: str, render_mode: dict[str, str]
+    ) -> None:
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "timeline_dashboard",
+                {
+                    "timeline": create_widget(
+                        {"type": widget_type, "render_mode": render_mode, "log_target": "host"}
+                    )
+                },
+            )
+        )
+
+        widgets = resp.json["extensions"]["widgets"]
+        assert next(iter(widgets.values()))["content"]["render_mode"] == render_mode
+
 
 @pytest.mark.parametrize("widget_type", ["ntop_alerts", "ntop_flows", "ntop_top_talkers"])
 class TestNtopContent:

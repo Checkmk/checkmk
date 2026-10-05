@@ -9,13 +9,13 @@ UNIT_PER_SECOND = metrics.Unit(metrics.DecimalNotation("/s"))
 
 metric_disk_read_ios = metrics.Metric(
     name="disk_read_ios",
-    title=Title("Read operations"),
+    title=Title("Disk read operations"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.GREEN,
 )
 metric_disk_write_ios = metrics.Metric(
     name="disk_write_ios",
-    title=Title("Write operations"),
+    title=Title("Disk write operations"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.BLUE,
 )

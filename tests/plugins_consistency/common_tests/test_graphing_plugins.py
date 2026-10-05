@@ -328,7 +328,6 @@ def test_bundles() -> None:
 
 
 _ALLOWED_DUPLICATE_METRIC_TITLES = {
-    "Read operations": {"disk_read_ios", "read_ops"},
     "Requests per second": {"requests", "requests_per_sec", "requests_per_second"},
     "Reserved space": {"reserved_size", "reserved"},
     "Running containers": {
@@ -351,7 +350,6 @@ _ALLOWED_DUPLICATE_METRIC_TITLES = {
     },
     "User": {"user", "num_user"},
     "Utilization": {"cisco_sma_queue_utilization", "generic_util"},
-    "Write operations": {"write_ops_s", "disk_write_ios"},
 }
 
 

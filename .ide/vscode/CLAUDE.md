@@ -112,7 +112,7 @@ The IDE Health jemalloc dismiss button and the cockpit dismiss-X share `dismissA
 
 The **Activity** section renders the last 50 events from a 200-entry ring buffer fed by every `log()` / `warn()` / `error()` call in `core/log.ts`. Categories are regex-derived from message prefix. The section auto-refreshes via a callback registered with `setActivityRefreshCallback`.
 
-The Cockpit re-renders fast: a 5-second interval calls a lightweight `refreshOverview()` that re-renders only the overview provider without rebuilding `_stateCache`. Configuration changes are debounced at 100 ms (was 500 ms) so settings edits land in the cockpit within ~150 ms.
+The Cockpit re-renders fast: a 5-second interval calls a lightweight `refreshOverview()` that re-renders only the overview provider without rebuilding `_stateCache`. Configuration changes are debounced at 100 ms so settings edits land in the cockpit within ~150 ms.
 
 Each section lives in its own folder under `src/sidebar/` with an `index.ts` (render + message handling + data helpers) and a `style.css`. Shared utilities live in `src/sidebar/html.ts` (esc, getNonce, wrap, renderLoading) and `src/sidebar/base.css`.
 
@@ -134,51 +134,19 @@ Each section lives in its own folder under `src/sidebar/` with an `index.ts` (re
 
 ### Modules (`src/`)
 
-| File                                | Purpose                                                                                                                                                         |
-| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sidebar.ts`                        | Sidebar orchestrator: state cache, section providers, message dispatch                                                                                          |
-| `sidebar/html.ts`                   | Shared HTML utilities: esc, getNonce, wrap (with density class), renderLoading                                                                                  |
-| `sidebar/base.css`                  | Shared CSS (cards, buttons, badges, env rows, ext-family, compact density overrides)                                                                            |
-| `sidebar/types.ts`                  | Shared sidebar type definitions, incl. `GitStateInfo`                                                                                                           |
-| `sidebar/issues.ts`                 | IssuesProvider tree + activity bar badge (consumes `enumerateIssues` + `sortIssues` + `summaryHeader`)                                                          |
-| `sidebar/overview/`                 | Cockpit section (chip rows, per-item drill-down, onboarding banner)                                                                                             |
-| `sidebar/overview/domainSummary.ts` | Shared aggregator — `enumerateIssues`, `getDomainSummary`, `sortIssues`, `summaryHeader`, `getProfileSeverity` (used by both Cockpit and Issues view)           |
-| `sidebar/activity/`                 | Activity feed section (ring-buffer-backed event log)                                                                                                            |
-| `sidebar/environment/`              | Environment section (env-grid + per-target build rows; "Build all stale" stays in the Cockpit)                                                                  |
-| `sidebar/profiles/`                 | Profiles section (cards reflect cockpit severity per family)                                                                                                    |
-| `sidebar/ideHealth/`                | IDE Health section — Settings / Extensions / Python details (Apply-All header and version banner removed; surfaced in Cockpit instead)                          |
-| `sidebar/omd/`                      | OMD Sites section (render, messages, CSS)                                                                                                                       |
-| `scm/gitState.ts`                   | Stale-while-revalidate getter for `preCommitSkipping` + `preCommitMissing` + `qaTestDataDirty`; registers `cmk.installPreCommit` + `cmk.fixQaTestDataSubmodule` |
-| `core/config.ts`                    | JSON config loading (workspace-first), variable resolution, shell escape                                                                                        |
-| `core/constants.ts`                 | Display names for families (`FAMILY_DISPLAY`) and profile labels                                                                                                |
-| `core/shell.ts`                     | `safeExec()` wrapper around `execSync`, returns empty string on failure                                                                                         |
-| `core/http.ts`                      | `waitForHttp()` — poll a URL until it answers (dev-server readiness for `openBrowser`)                                                                          |
-| `core/tasks.ts`                     | Shell task execution helpers (`runCommand`, `waitForTask`)                                                                                                      |
-| `core/log.ts`                       | Logging and error handling utilities                                                                                                                            |
-| `core/version.ts`                   | Semver parsing, `versionNewer()`, `versionAtLeast()` comparisons                                                                                                |
-| `core/versionCheck.ts`              | Version mismatch detection + "Rebuild & Install" prompt                                                                                                         |
-| `profiles/profileManager.ts`        | Language profile lifecycle (Py/UI/Rs)                                                                                                                           |
-| `profiles/profileDetector.ts`       | Auto-suggest profiles from file activity                                                                                                                        |
-| `profiles/python/mypyConfig.ts`     | Auto-generate `.mypy.ini` from `pyproject.toml`                                                                                                                 |
-| `profiles/python/dmypyHealth.ts`    | `getDmypyHealthSnapshot()` + `cmk.mypy.restartDmypy` — detect daemon vs config drift                                                                            |
-| `profiles/python/interpreter.ts`    | Python interpreter resolution                                                                                                                                   |
-| `profiles/python/snippets.ts`       | Code snippet registration                                                                                                                                       |
-| `profiles/python/bazelTest.ts`      | Bazel-based Python test runner                                                                                                                                  |
-| `build/buildStatus.ts`              | Build target staleness detection, status bar                                                                                                                    |
-| `build/bazelCache.ts`               | `getBazelCacheSnapshot()` + `cmk.bazel.cleanDiskCache` — disk-cache size vs. `cmk.bazel.cacheSizeWarnGiB`                                                       |
-| `build/settings.ts`                 | Settings mismatch detection, apply logic, context keys                                                                                                          |
-| `omd/omd.ts`                        | OMD site discovery, status, auth, service commands, site creation                                                                                               |
-| `omd/devSiteTools.ts`               | cmk-dev-site install/update detection, PyPI update check                                                                                                        |
-| `omd/proxy.ts`                      | Unix socket → TCP proxy via socat (livestatus, Redis, etc.)                                                                                                     |
-| `omd/mockAuth.ts`                   | Mock OIDC provider (`cmk-dev-site-mock-auth`) lifecycle for cloud/SaaS sites                                                                                    |
-| `setup/idePicker.ts`                | Multi-select QuickPick for IDE setup families                                                                                                                   |
-| `setup/templates.ts`                | File template creation                                                                                                                                          |
-| `scm/index.ts`                      | Barrel re-exporting all `scm/` register-functions                                                                                                               |
-| `scm/git.ts`                        | Shared git helpers (`repoRoot`, `currentBranch`)                                                                                                                |
-| `scm/gerrit.ts`                     | Gerrit push integration (status bar + push command)                                                                                                             |
-| `scm/preCommit.ts`                  | Pre-commit hook toggle + commit-in-progress status bar spinner                                                                                                  |
-| `scm/sandboxBranch.ts`              | Branch checkout quickpick + Create Sandbox Branch (git workon)                                                                                                  |
-| `whatsNew.ts`                       | "What's New" markdown preview on version upgrade (reads `changelog/v*.md`)                                                                                      |
+Orientation map; each directory's own contents are the ground truth for what currently exists.
+
+- `sidebar.ts`, `sidebar/` — sidebar orchestrator (state cache, providers, message dispatch) and one folder per section. `sidebar/overview/domainSummary.ts` is the shared aggregator used by both the Cockpit and the Issues view. Shared HTML helpers are in `sidebar/html.ts`, shared CSS in `sidebar/base.css`, shared types in `sidebar/types.ts`.
+- `core/` — config loading (workspace-first), shell/task helpers (`shell.ts`, `tasks.ts`), logging (`log.ts`), version parsing and the "Rebuild & Install" check.
+- `profiles/` — language profile lifecycle and auto-detection; `profiles/python/` holds the mypy/dmypy, interpreter, jemalloc and snippet helpers.
+- `testing/` — Bazel-based Python test runner and its VS Code test controller.
+- `build/` — build target staleness, Bazel disk-cache size, settings mismatch detection.
+- `omd/` — OMD site discovery and actions, socket proxy, mock auth, cmk-dev-site tooling.
+- `scm/` — git helpers, pre-commit toggle, Gerrit push, sandbox branches, `gitState.ts` (stale-while-revalidate git state; also registers `cmk.installPreCommit` and `cmk.fixQaTestDataSubmodule`).
+- `setup/` — IDE family picker and file templates.
+- `whatsNew.ts` — "What's New" markdown preview on version upgrade (reads `changelog/v*.md`).
+- `benchmark/` — startup benchmark and its chart view.
+- `doctor.ts` — environment diagnostics.
 
 ### Configuration (`config/`)
 
@@ -365,7 +333,6 @@ The settings section groups mismatched settings by plugin family in collapsible 
 - **Apply {Family}** button — applies all mismatches for that family (`applyFamilyMismatches` message, filtered by `family` display name)
 - **Wrench icon** — applies a single setting via `writeMismatchSetting()`
 - **Copy icon** — copies the full JSON key+value to clipboard (e.g. `{"key": value}`)
-- **Apply All** button at the top — applies all displayed mismatches across all families at once
 
 Settings are written using section-scoped `getConfiguration(section).update(leaf, ...)` with
 `ConfigurationTarget.Workspace` to handle settings owned by inactive extensions. A fallback

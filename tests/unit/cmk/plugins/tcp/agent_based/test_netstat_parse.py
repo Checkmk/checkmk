@@ -342,21 +342,56 @@ def test_parse_connection_state_raises_on_unknown_state() -> None:
         parse_connection_state("NOPE")
 
 
-@pytest.mark.xfail(strict=True, raises=TypeError, reason="Crash group 4650: TypeError")
 @pytest.mark.parametrize(
-    "foreign_line",
+    "string_table",
     [
-        pytest.param(["No", "updates", "pending", "for", "installation"], id="non-numeric"),
-        pytest.param(["Found", "3", "pending", "updates", "now"], id="numeric-second-token"),
+        pytest.param(
+            [
+                ["udp", "UNCONN", "0", "0", "10.0.0.1:53", "10.0.0.2:*"],
+                ["No", "updates", "pending", "for", "installation"],
+            ],
+            id="five_fields_after_connection",
+        ),
+        pytest.param(
+            [
+                ["udp", "UNCONN", "0", "0", "10.0.0.1:53", "10.0.0.2:*"],
+                ["Found", "3", "pending", "updates", "now"],
+            ],
+            id="five_fields_numeric_second_token_after_connection",
+        ),
+        pytest.param(
+            [
+                ["udp", "UNCONN", "0", "0", "10.0.0.1:53", "10.0.0.2:*"],
+                ["Some", "text", "here", "now"],
+            ],
+            id="four_fields_after_connection",
+        ),
+        pytest.param(
+            [
+                ["Some", "text", "here", "now"],
+                ["udp", "UNCONN", "0", "0", "10.0.0.1:53", "10.0.0.2:*"],
+            ],
+            id="four_fields_before_connection",
+        ),
+        pytest.param(
+            [
+                ["udp", "UNCONN", "0", "0", "10.0.0.1:53", "10.0.0.2:*"],
+                ["Update", "found", "at", "1.2.3", "12:00", "today"],
+            ],
+            id="six_fields_unknown_protocol",
+        ),
+        pytest.param(
+            [
+                ["Update", "1.2.3", "found", "at", "12:00", "today"],
+                ["Found", "3", "updates", "for", "1.2.3", "today"],
+                ["udp", "UNCONN", "0", "0", "10.0.0.1:53", "10.0.0.2:*"],
+            ],
+            id="six_fields_foreign_line_before_ss_connection",
+        ),
     ],
 )
-def test_parse_netstat_ignores_foreign_line(foreign_line: list[str]) -> None:
-    assert parse_netstat(
-        [
-            ["udp", "UNCONN", "0", "0", "10.0.0.1:53", "10.0.0.2:*"],
-            foreign_line,
-        ]
-    ) == [
+def test_parse_netstat_ignores_foreign_line(string_table: StringTable) -> None:
+    assert parse_netstat(string_table) == [
         Connection(
             proto="UDP",
             local_address=SplitIP("10.0.0.1", "53"),

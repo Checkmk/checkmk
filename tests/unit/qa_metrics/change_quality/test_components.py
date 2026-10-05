@@ -14,9 +14,6 @@ from tests.qa_metrics.change_quality import components
 from tests.qa_metrics.change_quality.components import (
     _any_path_missing,
     _collapse_renames,
-    _credentials,
-    _GERRIT_TOKEN_VAR,
-    _GERRIT_USER_VAR,
     _head_paths,
     _owning_components,
     _paths_to_query,
@@ -25,6 +22,7 @@ from tests.qa_metrics.change_quality.components import (
     pick_component,
 )
 from tests.qa_metrics.components import ComponentOwnership, load_ownership
+from tests.unit.qa_metrics._owners import define_component
 
 
 def _touch(root: Path, *relative: str) -> None:
@@ -63,6 +61,15 @@ def _repo_with_rename(root: Path) -> None:
     _git(root, "commit", "--quiet", "-m", "add")
     _git(root, "mv", "cmk/old.py", "cmk/new.py")
     _git(root, "commit", "--quiet", "-a", "-m", "rename")
+
+
+def _own(root: Path, path: str, component_id: str) -> None:
+    """Make ``component_id`` own exactly ``path`` in the checkout at ``root``."""
+    define_component(root, component_id)
+    (root / path).parent.mkdir(parents=True, exist_ok=True)
+    (root / path).with_name("OWNERS").write_text(
+        f"per-file {Path(path).name} = file: /component_owners/{component_id}/OWNERS_DEFINITION\n"
+    )
 
 
 # --- _collapse_renames: the parsing, exercised on the raw output --------------
@@ -344,39 +351,25 @@ def test_lookup_components_maps_every_path_to_none_when_none_resolves_at_head(
     }
 
 
-def test_lookup_components_asks_ownership_about_head_names_with_credentials(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    """The HEAD name reaches the fetch, the answer comes back under the input name."""
+def test_lookup_components_resolves_a_renamed_path_by_its_head_name(tmp_path: Path) -> None:
+    """Only the HEAD name is owned, and the answer comes back under the input name."""
     _repo_with_rename(tmp_path)
-    monkeypatch.setenv(_GERRIT_USER_VAR, "user")
-    monkeypatch.setenv(_GERRIT_TOKEN_VAR, "token")
-    asked: list[tuple[Sequence[Path], object]] = []
-
-    def fake_load_ownership(paths: Sequence[Path], **kwargs: object) -> ComponentOwnership:
-        asked.append((paths, kwargs.get("credentials")))
-        return _ownership({"cmk/new.py": ("business_intelligence",)})
-
-    monkeypatch.setattr(components, load_ownership.__name__, fake_load_ownership)
+    _own(tmp_path, "cmk/new.py", "business_intelligence")
 
     assert lookup_components(["cmk/old.py"], tmp_path) == {"cmk/old.py": "business_intelligence"}
-    assert asked == [([Path("cmk/new.py")], ("user", "token"))]
 
 
 def test_lookup_components_skips_the_rename_log_when_every_path_is_at_head(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     """Walking the history is the expensive part of an incremental run."""
+    _git(tmp_path, "init", "--quiet")
     _touch(tmp_path, "cmk/a.py")
+    _own(tmp_path, "cmk/a.py", "checkmk")
     monkeypatch.setattr(
         components,
         _rename_log.__name__,
         lambda _repo: pytest.fail("rename log read although nothing is missing"),
-    )
-    monkeypatch.setattr(
-        components,
-        load_ownership.__name__,
-        lambda _paths, **_: _ownership({"cmk/a.py": ("checkmk",)}),
     )
 
     assert lookup_components(["cmk/a.py"], tmp_path) == {"cmk/a.py": "checkmk"}
@@ -454,21 +447,3 @@ def test_pick_component_counts_a_co_owned_path_as_one_value() -> None:
         )
         == "automation_engine"
     )
-
-
-def test_credentials_returns_the_user_before_the_token() -> None:
-    """The pair becomes (username, password); swapping it 401s every CI run."""
-    assert _credentials({_GERRIT_USER_VAR: "ci-user", _GERRIT_TOKEN_VAR: "secret"}) == (
-        "ci-user",
-        "secret",
-    )
-
-
-def test_credentials_of_a_half_configured_environment_are_none() -> None:
-    """Half a pair cannot authenticate, so let cwz try its own resolution."""
-    assert _credentials({_GERRIT_USER_VAR: "ci-user"}) is None
-    assert _credentials({_GERRIT_TOKEN_VAR: "secret"}) is None
-
-
-def test_credentials_of_an_unset_environment_are_none() -> None:
-    assert _credentials({}) is None

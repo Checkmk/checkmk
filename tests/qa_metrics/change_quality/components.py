@@ -17,24 +17,16 @@ module adds on top, both specific to walking history:
 """
 
 import logging
-import os
 import subprocess
 from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Final
 
 from tests.qa_metrics.components import ComponentOwnership, load_ownership
 
 from .detect_test import is_test_path
 
 logger = logging.getLogger(__name__)
-
-# CI is headless -- no keyring, and no terminal for cwz to prompt on -- so it
-# passes the Gerrit credentials in these variables. Locally they are unset and
-# cwz falls back to ~/.netrc or the keyring.
-_GERRIT_USER_VAR: Final = "QA_GERRIT_USER"
-_GERRIT_TOKEN_VAR: Final = "QA_GERRIT_PASSWORD"
 
 
 def lookup_components(paths: Iterable[str], repo: Path) -> dict[str, str | None]:
@@ -62,7 +54,7 @@ def lookup_components(paths: Iterable[str], repo: Path) -> dict[str, str | None]
     )
     return _owning_components(
         head_name_per_path,
-        load_ownership(to_query, credentials=_credentials(os.environ)),
+        load_ownership(repo, to_query),
     )
 
 
@@ -170,16 +162,6 @@ def _collapse_renames(name_status_lines: Iterable[str]) -> dict[str, str]:
         for path in chain:
             collapsed[path] = current
     return collapsed
-
-
-def _credentials(env: Mapping[str, str]) -> tuple[str, str] | None:
-    """The CI Gerrit credentials in ``env``, or ``None`` to let cwz resolve them.
-
-    Takes the environment rather than reading it, so a test settles which half
-    of the pair is the username.
-    """
-    user, token = env.get(_GERRIT_USER_VAR), env.get(_GERRIT_TOKEN_VAR)
-    return (user, token) if user and token else None
 
 
 def _rename_log(repo: Path) -> list[str]:

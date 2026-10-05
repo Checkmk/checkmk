@@ -32,11 +32,6 @@ void main() {
                 usernameVariable: 'QA_POSTGRES_USER',
                 passwordVariable: 'QA_POSTGRES_PASSWORD'
             ),
-            usernamePassword(
-                credentialsId: 'gerrit-qa-metrics-user-and-http-password',
-                usernameVariable: 'QA_GERRIT_USER',
-                passwordVariable: 'QA_GERRIT_PASSWORD'
-            ),
         ]) {
             test_jenkins_helper.execute_test([
                 name: "Change Quality",

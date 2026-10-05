@@ -5,19 +5,19 @@
 
 """Resolve repository paths to the components that own them.
 
-Ownership is declared by the repository's ``OWNERS`` files, read from Gerrit
-through ``cwz``'s ``RemoteGerritRepo`` and ``CodeOwnership``. This module wraps
-them so callers get a plain immutable mapping and deal with no async,
-credentials or ``", "``-joined component strings.
+Ownership is declared by the repository's ``OWNERS`` files, read from a local
+checkout through ``cwz``'s ``LocalRepo`` and ``CodeOwnership``. This module wraps
+them so callers get a plain immutable mapping and deal with no async or
+``", "``-joined component strings.
 
-Ownership comes from ``branch`` on the Gerrit server, not from the local
-checkout: a source file added on a feature branch is unowned until it is merged.
-Data that loaded but attributes nothing is refused rather than returned, so no
-caller has to tell a failed fetch from an empty repository.
+Ownership is that of the checkout as it is on disk, untracked files included, so
+it matches whatever else a caller reads from the same tree. Data that loaded but
+attributes nothing is refused rather than returned, so no caller has to tell a
+broken checkout from a repository owned by no one.
 
 It is the only place touching ``cwz``'s library API, which is not stable across
-releases -- 0.3.8 renamed both the credential helper and the data-loading method, 0.4.8
-moved ownership out of ``CodeOwnersClient`` -- so a version bump is one edit here.
+releases -- 0.4.8 moved ownership out of ``CodeOwnersClient`` -- so a version bump
+is one edit here.
 """
 
 import asyncio
@@ -26,15 +26,7 @@ from dataclasses import dataclass
 from difflib import get_close_matches
 from pathlib import Path, PurePosixPath
 
-from cwz.code_ownership import CodeOwnership
-from cwz.credentials import resolve_credentials
-from cwz.gerrit_utils.client import (
-    DEFAULT_BRANCH,
-    DEFAULT_GERRIT_URL,
-    DEFAULT_PROJECT_NAME,
-    GerritClient,
-    RemoteGerritRepo,
-)
+from cwz.code_ownership import CodeOwnership, LocalRepo
 
 
 class OwnershipUnavailableError(RuntimeError):
@@ -81,73 +73,29 @@ class ComponentOwnership:
         )
 
 
-def load_ownership(
-    paths: Sequence[Path],
-    *,
-    gerrit_url: str = DEFAULT_GERRIT_URL,
-    project: str = DEFAULT_PROJECT_NAME,
-    branch: str = DEFAULT_BRANCH,
-    credentials: tuple[str, str] | None = None,
-) -> ComponentOwnership:
-    """Resolve ``paths`` (repository-relative) to their owning components.
+def load_ownership(repo_root: Path, paths: Sequence[Path]) -> ComponentOwnership:
+    """Resolve ``paths`` (relative to ``repo_root``) to their owning components.
 
-    Raises :exc:`OwnershipUnavailableError` when the fetched data attributes
-    nothing, which would otherwise read as a repository owned by no one.
-
-    ``credentials`` is a ``(username, api_token)`` pair. Passing it explicitly
-    keeps a headless caller's environment variable names out of this module;
-    without it ``cwz`` resolves them from ``~/.netrc`` or the keyring -- and
-    failing that prompts, or exits the process outright when stdout is not a
-    tty. A headless caller therefore passes them.
+    ``repo_root`` must be the toplevel of a git checkout. Raises
+    :exc:`OwnershipUnavailableError` when the checkout's data attributes nothing,
+    which would otherwise read as a repository owned by no one.
     """
-    return asyncio.run(
-        _resolve(
-            paths,
-            gerrit_url=gerrit_url,
-            project=project,
-            branch=branch,
-            credentials=credentials,
-        )
-    )
+    return asyncio.run(_resolve(CodeOwnership(LocalRepo(repo_root)), paths))
 
 
-async def _resolve(
-    paths: Sequence[Path],
-    *,
-    gerrit_url: str,
-    project: str,
-    branch: str,
-    credentials: tuple[str, str] | None,
-) -> ComponentOwnership:
-    username, password = credentials or resolve_credentials(
-        service="Gerrit",
-        url=gerrit_url,
-        token_hint=f"{gerrit_url}/settings/#HTTPCredentials",
+async def _resolve(ownership: CodeOwnership, paths: Sequence[Path]) -> ComponentOwnership:
+    components = await ownership.all_components_info(with_code_locations=True)
+    _assert_usable(
+        component_count=len(components),
+        rule_count=sum(len(component.code_location or ()) for component in components.values()),
     )
-    async with GerritClient(gerrit_url, username, password) as gerrit_client:
-        repo = RemoteGerritRepo(gerrit_client, project, branch)
-        await repo.load_cache("auto")
-        ownership = CodeOwnership(repo)
-        try:
-            components = await ownership.all_components_info(with_code_locations=True)
-            _assert_usable(
-                component_count=len(components),
-                rule_count=sum(
-                    len(component.code_location or ()) for component in components.values()
-                ),
-            )
-            # with_code_locations loaded the OWNERS entries, so component_for_path, which
-            # would otherwise fetch every OWNERS file on its first call, costs no request.
-            return ComponentOwnership(
-                owners_by_path={
-                    path: _owner_ids(await ownership.component_for_path(PurePosixPath(path)))
-                    for path in paths
-                },
-                component_ids=frozenset(components),
-            )
-        finally:
-            # Without it every run would refetch all ownership data.
-            repo.persist_cache()
+    return ComponentOwnership(
+        owners_by_path={
+            path: _owner_ids(await ownership.component_for_path(PurePosixPath(path)))
+            for path in paths
+        },
+        component_ids=frozenset(components),
+    )
 
 
 def _assert_usable(*, component_count: int, rule_count: int) -> None:

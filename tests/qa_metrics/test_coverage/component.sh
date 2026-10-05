@@ -10,8 +10,8 @@
 # in which tests are run and which files stay in the report, nothing else.
 #
 # Known limitations, all of which can make the number differ from the dashboard:
-#   * Ownership comes from the OWNERS files on Gerrit's master, so a source file
-#     added on a feature branch does not count until merged.
+#   * Ownership comes from the OWNERS files of this checkout, so a branch that
+#     changes them, or lags behind master, attributes files differently.
 #   * Selection follows Bazel's graph, so dynamically loaded code is invisible.
 #   * A test is selected for depending on the component's code, not for belonging
 #     to it, so lines only a dependent's test reaches count as covered.
@@ -48,7 +48,7 @@ Runs every test that depends on the component's code and reports coverage of the
 source files the component owns.
 
 The number can differ from the dashboard's, all for documented reasons: ownership
-comes from Gerrit's master, selection follows Bazel's graph and so misses
+comes from this checkout, selection follows Bazel's graph and so misses
 dynamically loaded code, a test counts for depending on the component's code
 rather than for belonging to it, and a co-owned file counts in full for each
 owner. See the comment at the top of this script.
@@ -90,8 +90,7 @@ fi
 # A component is a directory below component_owners/ holding both files, and
 # resolving ownership reads both. Matching the id against the directory rather
 # than a character class also keeps a name that names no component out of the
-# output paths below. Read in this checkout, so what it says is that the tree in
-# front of you is well-formed, not that the branch ownership comes from is.
+# output paths below.
 COMPONENT_OWNERS="$REPO_PATH/component_owners"
 if [[ ! -f "$COMPONENT_OWNERS/$COMPONENT/OWNERS_DEFINITION" ]]; then
     echo "Error: '$COMPONENT' is not a defined component." >&2

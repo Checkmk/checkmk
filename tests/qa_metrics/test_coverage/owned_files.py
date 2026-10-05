@@ -36,7 +36,7 @@ def main() -> None:
     args = _parse_args()
 
     try:
-        ownership = load_ownership(_tracked_python_files(args.repo_root))
+        ownership = load_ownership(args.repo_root, _tracked_python_files(args.repo_root))
     except OwnershipUnavailableError as exc:
         raise SystemExit(str(exc))
     try:

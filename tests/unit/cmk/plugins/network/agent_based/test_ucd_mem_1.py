@@ -10,8 +10,6 @@
 # test by something more appropriate.
 
 
-import pytest
-
 from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.network.agent_based.ucd_mem import (
     check_ucd_mem,
@@ -77,7 +75,6 @@ def test_ucd_mem_1_check() -> None:
     assert {"mem_used", "mem_used_percent", "swap_used"} <= metric_names
 
 
-@pytest.mark.xfail(strict=True, raises=ZeroDivisionError, reason="Crash group 4923")
 def test_check_ucd_mem_zero_total() -> None:
     section = parse_ucd_mem(
         [["0", "0", "0", "0", "0", "16000", "0", "0", "0", "1", "swap", "Running out of swap"]]

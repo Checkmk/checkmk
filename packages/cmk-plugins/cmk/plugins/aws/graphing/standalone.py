@@ -319,7 +319,7 @@ metric_aws_consumed_lcus = metrics.Metric(
 
 metric_aws_active_connections = metrics.Metric(
     name="aws_active_connections",
-    title=Title("Active connections"),
+    title=Title("Active connections per second"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.PURPLE,
 )

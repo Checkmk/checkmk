@@ -328,12 +328,6 @@ def test_bundles() -> None:
 
 
 _ALLOWED_DUPLICATE_METRIC_TITLES = {
-    "Active connections": {
-        "active",
-        "active_connections",
-        "aws_active_connections",
-        "fw_connections_active",
-    },
     "Allocatable": {
         "kube_memory_allocatable",
         "kube_pod_allocatable",

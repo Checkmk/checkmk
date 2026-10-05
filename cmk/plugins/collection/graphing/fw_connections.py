@@ -9,31 +9,31 @@ UNIT_COUNTER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision
 
 metric_fw_connections_active = metrics.Metric(
     name="fw_connections_active",
-    title=Title("Active connections"),
+    title=Title("Active firewall connections"),
     unit=UNIT_COUNTER,
     color=metrics.Color.ORANGE,
 )
 metric_fw_connections_established = metrics.Metric(
     name="fw_connections_established",
-    title=Title("Established connections"),
+    title=Title("Established firewall connections"),
     unit=UNIT_COUNTER,
     color=metrics.Color.BLUE,
 )
 metric_fw_connections_halfclosed = metrics.Metric(
     name="fw_connections_halfclosed",
-    title=Title("Half closed connections"),
+    title=Title("Half closed firewall connections"),
     unit=UNIT_COUNTER,
     color=metrics.Color.PURPLE,
 )
 metric_fw_connections_halfopened = metrics.Metric(
     name="fw_connections_halfopened",
-    title=Title("Half opened connections"),
+    title=Title("Half opened firewall connections"),
     unit=UNIT_COUNTER,
     color=metrics.Color.GREEN,
 )
 metric_fw_connections_passthrough = metrics.Metric(
     name="fw_connections_passthrough",
-    title=Title("Unoptimized connections"),
+    title=Title("Unoptimized firewall connections"),
     unit=UNIT_COUNTER,
     color=metrics.Color.PINK,
 )

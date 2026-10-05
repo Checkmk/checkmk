@@ -9,13 +9,13 @@ UNIT_NUMBER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(
 
 metric_active_connections = metrics.Metric(
     name="active_connections",
-    title=Title("Active connections"),
+    title=Title("Active database connections"),
     unit=UNIT_NUMBER,
     color=metrics.Color.PURPLE,
 )
 metric_idle_connections = metrics.Metric(
     name="idle_connections",
-    title=Title("Idle connections"),
+    title=Title("Idle database connections"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_PURPLE,
 )

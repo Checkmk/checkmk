@@ -867,6 +867,9 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "local_instance.http_port": 25962,
         "local_instance.remote_access": ("disabled", None),
         "local_instance.remote_access.disabled": None,
+        "local_instance.central_access": ("disabled", None),
+        "local_instance.central_access.disabled": None,
+        "local_instance.central_access.enabled": NoSaveableDefault(),
         "local_instance.remote_access.enabled": NoSaveableDefault(),
     },
     "mkeventd_notify_remotehost": {

@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     # cmk.crypto.certificate imports this module at runtime, so this import must stay type-only.
     from .certificate import Certificate  # py-import-cycles: ignore
 
-IssuedCertificatesComponent = Literal["agents", "relays", "messaging", "sites"]
+IssuedCertificatesComponent = Literal["agents", "relays", "messaging", "sites", "data_backend"]
 
 
 def issued_certificates_file(log_dir: Path, component: IssuedCertificatesComponent) -> Path:

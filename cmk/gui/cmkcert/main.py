@@ -26,7 +26,10 @@ from cmk.utils.certs import (
     agent_root_ca_path,
     cert_dir,
     crl_path,
+    DataBackendCA,
     initialize_agent_ca,
+    initialize_data_backend_ca,
+    initialize_data_backend_certificate,
     initialize_relay_ca,
     initialize_site_ca,
     initialize_site_certificate,
@@ -54,7 +57,7 @@ def _parse_serial_number(value: str) -> int:
 
 
 # The relay CA is created upon site creation, but cannot be rotated (yet).
-InitCertificateType = CertificateType | Literal["relay-ca"]
+InitCertificateType = CertificateType | Literal["relay-ca", "data-backend-ca", "data-backend"]
 
 
 def _parse_args(args: Sequence[str]) -> argparse.Namespace:
@@ -78,7 +81,7 @@ It is intended for internal use during site creation.
     )
     mode_init.add_argument(
         "target_certificate",
-        choices=["site", "site-ca", "agent-ca", "relay-ca"],
+        choices=["site", "site-ca", "agent-ca", "relay-ca", "data-backend-ca", "data-backend"],
         help="Specify which certificate to create.",
     )
     mode_init.add_argument(
@@ -229,6 +232,12 @@ def _certificate_path(
             return agent_root_ca_path(site_root_dir=omd_root)
         case "relay-ca":
             return RelaysCA.root_ca_path(cert_dir=cert_dir(omd_root))
+        case "data-backend-ca":
+            return DataBackendCA.root_ca_path(cert_dir=cert_dir(omd_root))
+        case "data-backend":
+            return DataBackendCA.client_certificate_path(
+                cert_dir=cert_dir(omd_root), site_id=site_id
+            )
 
 
 def _run_init(
@@ -252,6 +261,12 @@ def _run_init(
             initialize_site_certificate(site_id=site_id, omd_root=omd_root, key_size=key_size)
         case "relay-ca":
             initialize_relay_ca(site_id=site_id, omd_root=omd_root, key_size=key_size)
+        case "data-backend-ca":
+            initialize_data_backend_ca(site_id=site_id, omd_root=omd_root, key_size=key_size)
+        case "data-backend":
+            initialize_data_backend_certificate(
+                site_id=site_id, omd_root=omd_root, key_size=key_size
+            )
 
 
 def _register_licensing_handlers(edition_: Edition) -> None:

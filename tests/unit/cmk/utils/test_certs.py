@@ -18,7 +18,14 @@ from cmk.ccc.site import SiteId
 from cmk.crypto.certificate import Certificate, CertificatePEM, CertificateWithPrivateKey
 from cmk.crypto.keys import PlaintextPrivateKeyPEM, PrivateKey
 from cmk.crypto.x509 import SAN, SubjectAlternativeNames, X509Name
-from cmk.utils.certs import CN_TEMPLATE, CustomerBrokerCA, RelaysCA, RootCA, SiteCA
+from cmk.utils.certs import (
+    CN_TEMPLATE,
+    CustomerBrokerCA,
+    DataBackendCA,
+    RelaysCA,
+    RootCA,
+    SiteCA,
+)
 
 SITE_ID = SiteId("test_site")
 
@@ -378,3 +385,36 @@ def test_customer_broker_ca_create_and_load(tmp_path: Path) -> None:
     broker_ca.delete()
     assert not cert_path.exists()
     assert not key_path.exists()
+
+
+def _data_backend_client_certificate(tmp_path: Path) -> tuple[DataBackendCA, Certificate]:
+    cert_dir = tmp_path / "etc" / "ssl"
+    ca = DataBackendCA.create(cert_dir=cert_dir, site_id=SiteId("central"), key_size=1024)
+    ca.create_client_certificate(site_id=SiteId("central"), key_size=1024)
+    client = CertificateWithPrivateKey.load_combined_file_content(
+        DataBackendCA.client_certificate_path(cert_dir, SiteId("central")).read_text(),
+        passphrase=None,
+    )
+    return ca, client.certificate
+
+
+def test_the_data_backend_ca_is_loaded_as_created(tmp_path: Path) -> None:
+    cert_dir = tmp_path / "etc" / "ssl"
+    created = DataBackendCA.create(cert_dir=cert_dir, site_id=SiteId("central"), key_size=1024)
+
+    assert (
+        DataBackendCA.load(cert_dir).root_ca.certificate.dump_pem().bytes
+        == created.root_ca.certificate.dump_pem().bytes
+    )
+
+
+def test_the_data_backend_client_certificate_names_its_site(tmp_path: Path) -> None:
+    _ca, client = _data_backend_client_certificate(tmp_path)
+
+    assert client.common_name == "central"
+
+
+def test_the_data_backend_ca_signs_the_data_backend_client_certificate(tmp_path: Path) -> None:
+    ca, client = _data_backend_client_certificate(tmp_path)
+
+    client.verify_is_signed_by(ca.root_ca.certificate)

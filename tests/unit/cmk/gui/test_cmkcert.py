@@ -135,6 +135,7 @@ def _test_init(omd_root: Path, target_cert: InitCertificateType) -> None:
         "site-ca",
         "agent-ca",
         "relay-ca",
+        "data-backend-ca",
     ],
 )
 def test_init_cas(omd_root: Path, target_cert: InitCertificateType) -> None:
@@ -147,13 +148,25 @@ def test_init_site(omd_root: Path) -> None:
     _test_init(omd_root, "site")
 
 
+def test_init_data_backend(omd_root: Path) -> None:
+    _run_init(
+        omd_root=omd_root,
+        site_id=_site_id(),
+        target_certificate="data-backend-ca",
+        key_size=1024,
+    )
+    _test_init(omd_root, "data-backend")
+
+
 @pytest.mark.parametrize(
     "target_certificate",
     [
         "site-ca",
         "agent-ca",
         "relay-ca",
+        "data-backend-ca",
         "site",
+        "data-backend",
     ],
 )
 def test_init_cert_does_not_replace_existing(
@@ -176,7 +189,9 @@ def test_init_cert_does_not_replace_existing(
         "site-ca",
         "agent-ca",
         "relay-ca",
+        "data-backend-ca",
         "site",
+        "data-backend",
     ],
 )
 def test_init_if_missing_keeps_existing(

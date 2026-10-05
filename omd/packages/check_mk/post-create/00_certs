@@ -6,3 +6,5 @@ cmk-cert init site-ca
 cmk-cert init site
 cmk-cert init agent-ca
 cmk-cert init relay-ca
+cmk-cert init data-backend-ca
+cmk-cert init data-backend

@@ -328,7 +328,6 @@ def test_bundles() -> None:
 
 
 _ALLOWED_DUPLICATE_METRIC_TITLES = {
-    "Age": {"age", "kube_info_age"},
     "Active connections": {
         "active",
         "active_connections",

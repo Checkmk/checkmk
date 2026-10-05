@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import pytest
+
 from cmk.agent_based.v2 import Attributes, Result, State
 from cmk.plugins.citrix.lib_state import parse_citrix_state
 from cmk.plugins.collection.agent_based.citrix_state import (
@@ -63,6 +65,13 @@ def test_check_citrix_state_controller() -> None:
 def test_check_citrix_state_hosting_server() -> None:
     section = parse_citrix_state(STRING_TABLE)
     expected = [Result(state=State.OK, summary="rz1xen03.intern.kasse")]
+    assert list(check_citrix_state_hosting_server(section)) == expected
+
+
+@pytest.mark.xfail(strict=True, reason="Crash group 4901: ValueError")
+def test_check_citrix_state_hosting_server_not_reported() -> None:
+    section = parse_citrix_state([["HostingServer"], ["PowerState", "Off"]])
+    expected = [Result(state=State.OK, summary="No hosting server reported")]
     assert list(check_citrix_state_hosting_server(section)) == expected
 
 

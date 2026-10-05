@@ -45,7 +45,7 @@ export type TrialModeScreen =
  */
 export function useTrialModeSelection(props: TrialModeSelectionProps) {
   const { _t } = usei18n()
-  const screen = ref<TrialModeScreen>('choice')
+  const screen = ref<TrialModeScreen>(props.initial_screen)
   /**
    * The address a code is sent to. Kept here rather than on the email screen now that
    * the code screen names it and the cooldown keys on it - screens are unmounted as

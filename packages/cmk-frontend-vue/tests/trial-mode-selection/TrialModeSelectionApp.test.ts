@@ -39,6 +39,7 @@ function renderApp(overrides: Partial<TrialModeSelectionProps> = {}) {
       verify_online_url: 'wato.py?mode=edit_licensing_settings&online=1',
       verify_offline_url: 'wato.py?mode=licensing_offline_verification',
       start_monitoring_url: 'view.py?view_name=allhosts',
+      initial_screen: 'choice',
       user_name: 'cmkadmin',
       edition_title: 'Checkmk Ultimate',
       // 2026-08-13 12:00:00 UTC
@@ -151,6 +152,13 @@ describe('TrialModeSelectionApp', () => {
   })
 
   describe('license verification step', () => {
+    it('opens straight on the step when the page asks for it', () => {
+      renderApp({ initial_screen: 'verification' })
+
+      expect(screen.getByRole('heading', { name: 'Verify your license' })).toBeInTheDocument()
+      expect(screen.queryByText('Start a trial')).not.toBeInTheDocument()
+    })
+
     it('replaces the entry choice instead of adding to it', async () => {
       renderApp()
       await goToLicenseVerification()

@@ -64,7 +64,9 @@ def edit_relative_grid_dashboard_v1(
 
     old_dashboard = dashboards[key]
     embedded_views = old_dashboard.get("embedded_views", {})
-    body.validate(api_context, embedded_views=embedded_views)
+    body.validate(
+        api_context, embedded_views=embedded_views, stored_widgets=old_dashboard["widgets"]
+    )
 
     new_dashboard = body.to_internal(user_id, embedded_views, old_dashboard.get("public_token_id"))
 

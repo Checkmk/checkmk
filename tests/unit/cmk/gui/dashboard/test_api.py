@@ -1010,6 +1010,56 @@ def test_a_link_to_a_private_dashboard_of_another_user_is_accepted_with_edit_for
     assert _written_link(clients) == link
 
 
+def test_an_unchanged_link_to_a_target_gone_since_does_not_block_a_save(
+    clients: ClientRegistry, with_automation_user: tuple[UserId, str]
+) -> None:
+    clients.DashboardClient.create_relative_grid_dashboard(create_dashboard_payload("target", {}))
+    link = {
+        **_INHERITED,
+        "location": {"type": "dashboards", "name": "target", "owner": with_automation_user[0]},
+    }
+    linked_widget = create_widget({"type": "host_stats", "contextual_link": link})
+    clients.DashboardClient.create_relative_grid_dashboard(
+        create_dashboard_payload("test_dashboard", {"test_widget": linked_widget})
+    )
+    clients.DashboardClient.delete("target")
+
+    response = clients.DashboardClient.edit_relative_grid_dashboard(
+        "test_dashboard",
+        create_dashboard_payload(
+            "test_dashboard",
+            {"test_widget": linked_widget, "other_widget": create_widget({"type": "event_stats"})},
+        ),
+        expect_ok=False,
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.body
+
+
+def test_a_link_changed_to_a_forbidden_target_is_rejected_on_edit(clients: ClientRegistry) -> None:
+    _write_stats_widget(clients, "host_stats", _INHERITED)
+    forbidden = {**_INHERITED, "location": {"type": "views", "name": "no_such_view", "owner": None}}
+
+    response = clients.DashboardClient.edit_relative_grid_dashboard(
+        "test_dashboard",
+        create_dashboard_payload(
+            "test_dashboard",
+            {"test_widget": create_widget({"type": "host_stats", "contextual_link": forbidden})},
+        ),
+        expect_ok=False,
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST, (
+        f"Expected 400, got {response.status_code} {response.body!r}"
+    )
+    assert (
+        response.json["fields"][
+            "body.widgets.test_widget.content.host_stats.contextual_link.inherited.location"
+        ]["msg"]
+        == "View 'no_such_view' does not exist or you don't have permission to see it."
+    )
+
+
 def test_a_link_to_the_built_in_copy_round_trips_its_empty_owner(clients: ClientRegistry) -> None:
     link = {**_INHERITED, "location": {"type": "views", "name": "searchhost", "owner": ""}}
 

@@ -33,7 +33,7 @@ def create_relative_grid_dashboard_v1(
     api_context: ApiContext, body: RelativeGridDashboardRequest
 ) -> TypedResponse[RelativeGridDashboardDomainObject]:
     """Create a dashboard."""
-    body.validate(api_context, embedded_views={})
+    body.validate(api_context, embedded_views={}, stored_widgets={})
     user.need_permission("general.edit_dashboards")
 
     owner = user.ident

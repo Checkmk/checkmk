@@ -5,15 +5,10 @@
 
 
 from abc import ABC
-from collections.abc import Iterable, Mapping
 from typing import Literal, override, Self
 
-from pydantic_core import ErrorDetails
-
 from cmk.gui.dashboard.type_defs import StateDashletConfig, StatusDisplay
-from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
-from cmk.gui.type_defs import DashboardEmbeddedViewSpec
 
 from ..context_filters import (
     object_host_filter_from_internal,
@@ -26,7 +21,6 @@ from ..contextual_link import (
     contextual_link_from_internal,
     contextual_link_to_internal,
     ContextualLinkSpec,
-    iter_contextual_link_errors,
 )
 from ._base import BaseWidgetContent
 
@@ -82,20 +76,6 @@ class _BaseStateContent(BaseWidgetContent, ABC):
         if (link := contextual_link_to_internal(self.configured_contextual_link())) is not None:
             config["contextual_link"] = link
         return config
-
-    @override
-    def iter_validation_errors(
-        self,
-        location: tuple[str | int, ...],
-        context: ApiContext,
-        *,
-        embedded_views: Mapping[str, DashboardEmbeddedViewSpec],
-    ) -> Iterable[ErrorDetails]:
-        return iter_contextual_link_errors(
-            self.configured_contextual_link(),
-            location + ("contextual_link",),
-            context.config.user_permissions(),
-        )
 
 
 @api_model

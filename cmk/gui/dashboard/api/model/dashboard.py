@@ -5,7 +5,7 @@
 
 import datetime as dt
 from abc import ABC, abstractmethod
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from typing import Annotated, Literal, override, Self
 
 from pydantic import AfterValidator, Discriminator
@@ -15,7 +15,12 @@ from cmk.ccc.user import UserId
 from cmk.gui import userdb
 from cmk.gui.dashboard.page_edit_dashboard import dashboard_info_handler
 from cmk.gui.dashboard.token_util import get_dashboard_auth_token
-from cmk.gui.dashboard.type_defs import DashboardConfig, DashboardRelativeGridLayoutSpec, WidgetId
+from cmk.gui.dashboard.type_defs import (
+    DashboardConfig,
+    DashboardRelativeGridLayoutSpec,
+    DashletConfig,
+    WidgetId,
+)
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.converter import (
@@ -34,6 +39,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.web.utils.icons import DynamicIcon, DynamicIconName
 
+from .contextual_link import contextual_link_to_internal, iter_contextual_link_errors
 from .token import DashboardTokenModel
 from .type_defs import AnnotatedInfoName
 from .widget import BaseWidgetRequest, RelativeGridWidgetRequest, RelativeGridWidgetResponse
@@ -344,6 +350,26 @@ class BaseDashboardRequest(_BaseDashboard, ABC):
         """Iterate over all widgets that are part of this dashboard."""
         return (widget for _id, widget in self._iter_widgets_with_ids())
 
+    def _iter_contextual_link_errors(
+        self, context: ApiContext, stored_widgets: Mapping[WidgetId, DashletConfig]
+    ) -> Iterator[ErrorDetails]:
+        """The errors of the links this request sets.
+
+        A link the request leaves as stored is not checked again: it was checked for its
+        author, and the writer may not see a private copy it points to."""
+        for widget_id, widget in self._iter_widgets_with_ids():
+            link = widget.content.configured_contextual_link()
+            stored = stored_widgets.get(widget_id)
+            if stored is not None and contextual_link_to_internal(link) == stored.get(
+                "contextual_link"
+            ):
+                continue
+            yield from iter_contextual_link_errors(
+                link,
+                ("body", "widgets", widget_id, "content", widget.content.type, "contextual_link"),
+                context.config.user_permissions(),
+            )
+
     @abstractmethod
     def to_internal(
         self,
@@ -443,7 +469,11 @@ class RelativeGridDashboardRequest(BaseDashboardRequest):
     )
 
     def validate(
-        self, context: ApiContext, *, embedded_views: Mapping[str, DashboardEmbeddedViewSpec]
+        self,
+        context: ApiContext,
+        *,
+        embedded_views: Mapping[str, DashboardEmbeddedViewSpec],
+        stored_widgets: Mapping[WidgetId, DashletConfig],
     ) -> None:
         """Run additional validation that depends on the API context (or rather the config)."""
         errors = [
@@ -455,6 +485,7 @@ class RelativeGridDashboardRequest(BaseDashboardRequest):
                 embedded_views=embedded_views,
             )
         ]
+        errors.extend(self._iter_contextual_link_errors(context, stored_widgets))
         errors.extend(
             self.general_settings.iter_validation_errors(("body", "general_settings"), context)
         )

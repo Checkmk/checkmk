@@ -130,7 +130,7 @@ const FETCHED = {
   metrics: [
     {
       metadata: { name: 'cpu', title: 'CPU', unit: UNIT, color: '#ff0000' },
-      render: { stack: 'area', inverse: false, hidden: false },
+      render: { shape: 'area', stack: 'area', inverse: false, hidden: false },
       data_points: [1, 2, 3]
     }
   ],
@@ -433,7 +433,7 @@ test('a populated stack reference does not make an otherwise empty panel drawabl
       {
         ...FETCHED.metrics[0],
         metadata: { ...FETCHED.metrics[0]!.metadata, name: 'base' },
-        render: { stack: 'area', inverse: false, hidden: true },
+        render: { shape: 'area', stack: 'area', inverse: false, hidden: true },
         data_points: [1, 2, 3]
       },
       { ...FETCHED.metrics[0], data_points: [null, null, null] }

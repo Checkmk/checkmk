@@ -21,7 +21,10 @@ export type {
 // REST API, not the data-less render shell, so these mirror that endpoint's response models.
 export type Metric = components['schemas']['ApiMetric']
 export type MetricMetadata = components['schemas']['ApiMetricMetadata']
-export type MetricRender = components['schemas']['ApiMetricRender']
+export type MetricRender = Metric['render']
+export type LineRender = components['schemas']['ApiLineRender']
+export type AreaRender = components['schemas']['ApiAreaRender']
+export type BarRender = components['schemas']['ApiBarRender']
 export type HorizontalLine = components['schemas']['ApiHorizontalLine']
 export type ShadedRegion = components['schemas']['ApiShadedRegion']
 export type TimeRange = components['schemas']['ApiTimeRange']

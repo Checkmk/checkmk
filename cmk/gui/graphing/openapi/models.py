@@ -8,7 +8,7 @@ from collections.abc import Callable, Mapping
 from typing import Annotated, Literal, Self
 
 from annotated_types import Interval
-from pydantic import Json, model_validator
+from pydantic import Discriminator, Json, model_validator
 
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel
@@ -100,15 +100,46 @@ class ApiMetricMetadata:
 
 
 @api_model
-class ApiMetricRender:
-    stack: str | None = api_field(
-        description="The stack group id. None = line; unique id = area; shared id = stacked.",
+class ApiLineRender:
+    shape: Literal["line"] = api_field(description="Draws the metric as a line.")
+    inverse: bool = api_field(description="Whether the metric is mirrored.", example=False)
+    hidden: bool = api_field(
+        description="Whether the metric is drawn (used for stack baselines).", example=False
+    )
+
+
+@api_model
+class ApiAreaRender:
+    shape: Literal["area"] = api_field(description="Draws the metric as an area.")
+    stack: str = api_field(
+        description="The stack group id. A unique id draws an area; a shared id stacks them.",
         example="stack-0",
     )
     inverse: bool = api_field(description="Whether the metric is mirrored.", example=False)
     hidden: bool = api_field(
         description="Whether the metric is drawn (used for stack baselines).", example=False
     )
+
+
+@api_model
+class ApiBarRender:
+    shape: Literal["bar"] = api_field(description="Draws the metric as bars, one per bin.")
+    stack: str | None = api_field(
+        description="The stack group id the bars rest on, or null for bars of their own.",
+        example=None,
+    )
+    aggregation: Literal["sum"] = api_field(
+        description="How the data points inside one bin combine into its bar.", example="sum"
+    )
+    inverse: bool = api_field(description="Whether the metric is mirrored.", example=False)
+    hidden: bool = api_field(
+        description="Whether the metric is drawn (used for stack baselines).", example=False
+    )
+
+
+type ApiMetricRender = Annotated[
+    ApiLineRender | ApiAreaRender | ApiBarRender, Discriminator("shape")
+]
 
 
 @api_model

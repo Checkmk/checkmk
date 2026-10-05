@@ -30,7 +30,7 @@ function metric(name: string, points: (number | null)[], color = '#123456'): Met
       color,
       attributes: []
     },
-    render: { stack: null, inverse: false, hidden: false },
+    render: { shape: 'line', inverse: false, hidden: false },
     data_points: points
   }
 }

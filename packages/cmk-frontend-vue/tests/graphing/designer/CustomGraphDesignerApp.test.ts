@@ -97,7 +97,7 @@ function fetchDataResponse(series: { sourceId: string; points: number[] }[]): un
         },
         color: '#28a2f3'
       },
-      render: { stack: null, inverse: false, hidden: false },
+      render: { shape: 'line', inverse: false, hidden: false },
       data_points: points
     })),
     group_titles: [],

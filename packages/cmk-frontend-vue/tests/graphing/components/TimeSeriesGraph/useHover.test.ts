@@ -31,7 +31,7 @@ const PLOT_HEIGHT = 100
 function makeLineMetric(name: string, dataPoints: (number | null)[]): Metric {
   return {
     metadata: { name, title: name, unit: UNIT, color: '#ff0000', attributes: [] },
-    render: { stack: null, inverse: false, hidden: false },
+    render: { shape: 'line', inverse: false, hidden: false },
     data_points: dataPoints
   }
 }
@@ -48,7 +48,7 @@ function makeStackedMetric(
   hidden = false
 ): Metric {
   const metric = makeLineMetric(name, dataPoints)
-  return { ...metric, render: { ...metric.render, stack, hidden } }
+  return { ...metric, render: { shape: 'area', stack, inverse: false, hidden } }
 }
 
 function constantPoints(value: number | null): (number | null)[] {

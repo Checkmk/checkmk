@@ -83,7 +83,7 @@ const FETCHED = {
   metrics: [
     {
       metadata: { name: 'cpu', title: 'CPU utilization', unit: UNIT, color: '#ff0000' },
-      render: { stack: 'area', inverse: false, hidden: false },
+      render: { shape: 'area', stack: 'area', inverse: false, hidden: false },
       data_points: [1, 2, 3]
     }
   ],

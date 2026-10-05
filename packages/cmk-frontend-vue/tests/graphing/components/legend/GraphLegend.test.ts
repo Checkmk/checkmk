@@ -50,7 +50,7 @@ const UNIT: Metric['metadata']['unit'] = {
 function makeMetric(name: string, title: string, dataPoints: (number | null)[]): Metric {
   return {
     metadata: { name, title, unit: UNIT, color: '#ff0000', attributes: [] },
-    render: { stack: 'area', inverse: false, hidden: false },
+    render: { shape: 'area', stack: 'area', inverse: false, hidden: false },
     data_points: dataPoints
   }
 }
@@ -58,7 +58,10 @@ function makeMetric(name: string, title: string, dataPoints: (number | null)[]):
 function makeMetricWithStack(name: string, title: string, stack: string | null): Metric {
   return {
     metadata: { name, title, unit: UNIT, color: '#ff0000', attributes: [] },
-    render: { stack, inverse: false, hidden: false },
+    render:
+      stack === null
+        ? { shape: 'line', inverse: false, hidden: false }
+        : { shape: 'area', stack, inverse: false, hidden: false },
     data_points: [1]
   }
 }
@@ -66,7 +69,10 @@ function makeMetricWithStack(name: string, title: string, stack: string | null):
 function makeMirroredMetric(name: string, title: string, stack: string | null): Metric {
   return {
     metadata: { name, title, unit: UNIT, color: '#ff0000', attributes: [] },
-    render: { stack, inverse: true, hidden: false },
+    render:
+      stack === null
+        ? { shape: 'line', inverse: true, hidden: false }
+        : { shape: 'area', stack, inverse: true, hidden: false },
     data_points: [1]
   }
 }
@@ -89,7 +95,7 @@ const REQUESTS: Metric = {
       { kind: 'data_point', name: 'status', value: '304' }
     ]
   },
-  render: { stack: null, inverse: false, hidden: false },
+  render: { shape: 'line', inverse: false, hidden: false },
   data_points: [1, 2]
 }
 

@@ -522,7 +522,7 @@ function previewMetric(name: string): Metric {
       color: '#28a2f3',
       attributes: []
     },
-    render: { stack: null, inverse: false, hidden: false },
+    render: { shape: 'line', inverse: false, hidden: false },
     data_points: [1]
   }
 }

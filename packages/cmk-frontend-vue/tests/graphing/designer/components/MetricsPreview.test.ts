@@ -22,7 +22,7 @@ function metric(name: string, color = '#123456'): Metric {
       color,
       attributes: []
     },
-    render: { stack: null, inverse: false, hidden: false },
+    render: { shape: 'line', inverse: false, hidden: false },
     data_points: [1]
   }
 }

@@ -42,10 +42,10 @@ export function computeStackedSeries(
   const upperEdgeOfStack = new Map<string, EdgePerColumn>()
 
   return metrics.map((metric, metricIndex) => {
-    const stack = metric.render.stack
-    if (stack === null) {
+    if (metric.render.shape !== 'area') {
       return { kind: 'line' }
     }
+    const stack = metric.render.stack
     const buckets = metricsBuckets[metricIndex]!
     const edgeBelow = upperEdgeOfStack.get(stack) ?? buckets.map(() => [])
     const columns = buckets.map((bucket, columnIndex) =>

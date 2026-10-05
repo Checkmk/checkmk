@@ -22,8 +22,10 @@ from .._source import FetchDiagnostics
 from .._unit_format import unit_to_unit_format
 from .._user_specific_unit import apply_temperature_unit
 from .models import (
+    ApiAreaRender,
     ApiConsolidation,
     ApiHorizontalLine,
+    ApiLineRender,
     ApiMetric,
     ApiMetricAttribute,
     ApiMetricMetadata,
@@ -122,6 +124,14 @@ def _series_attributes_to_api(attributes: SeriesAttributes) -> list[ApiMetricAtt
     ]
 
 
+def _render_to_api(drawn: DrawnCurve[EvaluatedCurve]) -> ApiMetricRender:
+    if drawn.stack is None:
+        return ApiLineRender(shape="line", inverse=drawn.mirrored, hidden=drawn.hidden)
+    return ApiAreaRender(
+        shape="area", stack=drawn.stack, inverse=drawn.mirrored, hidden=drawn.hidden
+    )
+
+
 def curve_to_api_metric(
     drawn: DrawnCurve[EvaluatedCurve], temperature_unit: TemperatureUnit
 ) -> ApiMetric:
@@ -135,7 +145,7 @@ def curve_to_api_metric(
             color=curve.attributes.color,
             attributes=_series_attributes_to_api(curve.series_attributes),
         ),
-        render=ApiMetricRender(stack=drawn.stack, inverse=drawn.mirrored, hidden=drawn.hidden),
+        render=_render_to_api(drawn),
         data_points=[
             None if value is None else conversion(value) for value in curve.time_series.values
         ],

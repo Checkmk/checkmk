@@ -197,7 +197,7 @@ function metric(
       unit,
       color: '#28a2f3'
     },
-    render: { stack: null, inverse: false, hidden: false },
+    render: { shape: 'line', inverse: false, hidden: false },
     data_points: dataPoints
   }
 }

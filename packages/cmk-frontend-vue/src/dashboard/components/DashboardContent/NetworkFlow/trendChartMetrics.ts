@@ -33,7 +33,7 @@ export interface TrendChartSeries {
 /**
  * The trend chart's series as the graph engine's metrics: palette colors cycled
  * by rank, and the display mode expressed as the stack every series shares -
- * no stack id at all draws them as separate lines instead.
+ * the lines mode draws them as separate lines instead.
  */
 export function trendChartMetrics(
   series: TrendChartSeries[],
@@ -47,11 +47,10 @@ export function trendChartMetrics(
       color: SERIES_COLORS[index % SERIES_COLORS.length]!,
       attributes: []
     },
-    render: {
-      stack: displayMode === 'stacked_area' ? STACK_ID : null,
-      inverse: false,
-      hidden: false
-    },
+    render:
+      displayMode === 'stacked_area'
+        ? { shape: 'area', stack: STACK_ID, inverse: false, hidden: false }
+        : { shape: 'line', inverse: false, hidden: false },
     data_points: item.dataPoints
   }))
 }

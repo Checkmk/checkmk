@@ -30,9 +30,14 @@ function decimatedIntoOneBucket(...values: (number | null)[]): M4Bucket {
   return bucket!
 }
 
-// computeStackedSeries only consults render.stack; the rest of Metric is irrelevant here.
+// computeStackedSeries only consults the render; the rest of Metric is irrelevant here.
 function makeMetric(stack: string | null): Metric {
-  return { render: { stack, inverse: false } } as unknown as Metric
+  return {
+    render:
+      stack === null
+        ? { shape: 'line', inverse: false, hidden: false }
+        : { shape: 'area', stack, inverse: false, hidden: false }
+  } as unknown as Metric
 }
 
 function firstColumn(series: StackedSeries | undefined): StackedColumn {

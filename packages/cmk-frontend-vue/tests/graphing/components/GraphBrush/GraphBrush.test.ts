@@ -14,10 +14,20 @@ const DOMAIN = { start: 1000, end: 2000, step: 10 }
 const PLOT_LEFT = 50
 const PLOT_WIDTH = 200
 
-function makeMetric(dataPoints: (number | null)[], render: Partial<Metric['render']> = {}): Metric {
+function makeMetric(
+  dataPoints: (number | null)[],
+  {
+    stack = null,
+    inverse = false,
+    hidden = false
+  }: { stack?: string | null; inverse?: boolean; hidden?: boolean } = {}
+): Metric {
   return {
     data_points: dataPoints,
-    render: { stack: null, inverse: false, hidden: false, ...render },
+    render:
+      stack === null
+        ? { shape: 'line', inverse, hidden }
+        : { shape: 'area', stack, inverse, hidden },
     metadata: { name: 'm', color: '#3366cc' }
   } as unknown as Metric
 }

@@ -111,7 +111,7 @@ export function buildGraphMetrics(
       // Mirroring is the graph's own ``inverse``: it negates the curve and
       // centres the value axis on zero — what a bidirectional graph's lower
       // half needs.
-      render: { hidden: false, inverse: mirrored.has(key), stack: null }
+      render: { shape: 'line', hidden: false, inverse: mirrored.has(key) }
     }
   })
 }

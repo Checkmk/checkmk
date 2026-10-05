@@ -22,10 +22,20 @@ const DATA_RANGE: TimeRange = { start: 0, end: 100, step: STEP }
 const COLUMNS = 10
 const M4_BUCKETS = 4000
 
-function makeMetric(dataPoints: (number | null)[], render: Partial<Metric['render']> = {}): Metric {
+function makeMetric(
+  dataPoints: (number | null)[],
+  {
+    stack = null,
+    inverse = false,
+    hidden = false
+  }: { stack?: string | null; inverse?: boolean; hidden?: boolean } = {}
+): Metric {
   return {
     data_points: dataPoints,
-    render: { stack: null, inverse: false, hidden: false, ...render },
+    render:
+      stack === null
+        ? { shape: 'line', inverse, hidden }
+        : { shape: 'area', stack, inverse, hidden },
     metadata: { name: 'm', color: '#3366cc' }
   } as unknown as Metric
 }

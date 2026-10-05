@@ -86,17 +86,15 @@ const UNIT: components['schemas']['ApiUnitFormat'] = {
   convertible: true
 }
 
-// stack: null makes computeStackedSeries classify the metric as a 'line' series (rather than
-// a stacked area), so this fixture is genuinely a line graph.
 const LINE_METRIC: Metric = {
   metadata: { name: 'cpu', title: 'CPU utilization', unit: UNIT, color: '#ff0000', attributes: [] },
-  render: { stack: null, inverse: false, hidden: false },
+  render: { shape: 'line', inverse: false, hidden: false },
   data_points: [1, 2, 3, 4, 5]
 }
 
 const STACKED_METRIC: Metric = {
   metadata: { name: 'user', title: 'User', unit: UNIT, color: '#00ff00', attributes: [] },
-  render: { stack: 'area', inverse: false, hidden: false },
+  render: { shape: 'area', stack: 'area', inverse: false, hidden: false },
   data_points: [1, 2, 3, 4, 5]
 }
 
@@ -109,7 +107,7 @@ const INVERSE_METRIC: Metric = {
     color: '#0000ff',
     attributes: []
   },
-  render: { stack: null, inverse: true, hidden: false },
+  render: { shape: 'line', inverse: true, hidden: false },
   data_points: [1, 2, 3, 4, 5]
 }
 
@@ -154,7 +152,7 @@ const MEMORY_METRIC: Metric = {
     color: '#ff0000',
     attributes: []
   },
-  render: { stack: null, inverse: false, hidden: false },
+  render: { shape: 'line', inverse: false, hidden: false },
   data_points: [1.2e9, 1.4e9, 1.6e9, 1.8e9, 2.0e9]
 }
 const MEMORY_PROPS: Partial<TimeSeriesGraphProps> = {
@@ -354,7 +352,10 @@ describe('TimeSeriesGraph', () => {
     const metrics = [
       {
         ...LINE_METRIC,
-        render: { ...LINE_METRIC.render, stack },
+        render:
+          stack === null
+            ? LINE_METRIC.render
+            : { shape: 'area' as const, stack, inverse: false, hidden: false },
         data_points: SAMPLES_REACHING_PAST_THE_VIEW
       }
     ]

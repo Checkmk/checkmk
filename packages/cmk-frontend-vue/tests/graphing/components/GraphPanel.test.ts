@@ -165,7 +165,7 @@ const INTERACTION_NONE: GraphPanelProps['interaction'] = {
 function makeMetric(name: string, title: string): Metric {
   return {
     metadata: { name, title, unit: UNIT, color: '#ff0000', attributes: [] },
-    render: { stack: 'area', inverse: false, hidden: false },
+    render: { shape: 'area', stack: 'area', inverse: false, hidden: false },
     data_points: [1, 2, 3]
   }
 }

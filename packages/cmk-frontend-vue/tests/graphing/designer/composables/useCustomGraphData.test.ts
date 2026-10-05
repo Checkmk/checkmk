@@ -65,7 +65,7 @@ function fetchResponse(
         },
         color: '#123456'
       },
-      render: { stack: null, inverse: false, hidden: false },
+      render: { shape: 'line', inverse: false, hidden: false },
       data_points: [1.0, 2.0]
     })),
     group_titles: groupTitles,

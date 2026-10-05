@@ -6,7 +6,7 @@
 import type { Metric } from './TimeSeriesGraph'
 
 /**
- * The metrics as they read down the graph: lines above the areas they overlay, a stack's top
+ * The metrics as they read down the graph: lines above the areas and bars they overlay, a stack's top
  * layer first, the mirrored lower half below the upward one. Legend and tooltip both list in
  * this order. The input is the draw order, which stacks bottom-up.
  */
@@ -17,6 +17,8 @@ export function orderMetricsTopToBottom(metrics: Metric[]): Metric[] {
   return [
     ...topmostFirst(upwardDrawnBottomUp.filter(isLine)),
     ...topmostFirst(upwardDrawnBottomUp.filter(isArea)),
+    ...topmostFirst(upwardDrawnBottomUp.filter(isBar)),
+    ...mirroredDrawnTopDown.filter(isBar),
     ...mirroredDrawnTopDown.filter(isArea),
     ...mirroredDrawnTopDown.filter(isLine),
     ...metrics.filter(isStackReference)
@@ -24,11 +26,15 @@ export function orderMetricsTopToBottom(metrics: Metric[]): Metric[] {
 }
 
 function isLine(metric: Metric): boolean {
-  return metric.render.stack === null
+  return metric.render.shape === 'line'
 }
 
 function isArea(metric: Metric): boolean {
-  return metric.render.stack !== null
+  return metric.render.shape === 'area'
+}
+
+function isBar(metric: Metric): boolean {
+  return metric.render.shape === 'bar'
 }
 
 /** Hidden members carry the baseline a stack is drawn from, not a series of their own. */

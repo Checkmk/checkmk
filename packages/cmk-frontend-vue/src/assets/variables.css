@@ -21,7 +21,6 @@
   --error-msg-bg-color: rgb(200 50 50 / 15%);
   --form-readonly-error-bg-color: rgb(252 85 85);
   --default-help-icon-bg-color: rgb(6 103 193);
-  --default-help-icon-bg-color-hover: rgb(56 133 205);
   --default-nav-popup-border-color: rgb(19 211 137);
   --popup-dialog-success: var(--color-corporate-green-50);
   --popup-dialog-warning: var(--color-yellow-50);
@@ -107,17 +106,13 @@
     --font-color-dimmed: var(--grey-4-dimmed);
     --font-color-disabled: var(--color-conference-grey-70);
     --font-underline-color: var(--color-conference-grey-60);
-    --font-color-light-bg: var(--font-color);
-    --font-perfometer-color: var(--color-conference-grey-100);
 
     /* Colors */
     --default-nav-bg-color: var(--ux-theme-3);
     --default-nav-border-color: var(--ux-theme-6);
-    --default-submit-button-border-color: var(--success-dimmed);
     --default-border-color: rgb(234 234 234);
     --default-bg-color: var(--ux-theme-1);
     --default-form-element-bg-color: var(--ux-theme-5);
-    --default-form-element-bg-color-disabled: var(--ux-theme-6);
     --default-form-element-border-color: var(--color-mid-grey-60);
     --default-form-element-placeholder-color: var(--color-conference-grey-50);
     --default-select-hover-color: var(--success);
@@ -125,15 +120,10 @@
     --default-border-color-green: rgb(21 209 160);
     --default-tooltip-background-color: rgb(233 233 233);
     --default-tooltip-text-color: rgb(17 24 29);
-    --custom-scroll-bar-thumb-border-color: rgb(234 234 234);
     --custom-scroll-bar-thumb-color: rgb(88 88 88);
-    --custom-scroll-bar-backgroud-color: var(--ux-theme-0);
     --default-component-bg-color: rgb(240 240 240);
-    --help-text-bg-color: var(--ux-theme-5);
-    --help-text-font-color: var(--color-conference-grey-100);
     --dropdown-chevron-indicator-color: var(--color-conference-grey-100);
     --default-dialog-bg-color: var(--ux-theme-3);
-    --default-dialog-font-color: var(--font-color);
     --form-element-required-color: var(--success-dimmed-2);
     --input-hover-bg-color: var(--ux-theme-4);
     --global-settings-row-hover-bg-color: var(--color-dark-blue-10);
@@ -252,7 +242,6 @@
     --color-skeleton-shimmer-2: rgb(255 255 255 / 6%);
     --color-warning: rgb(255 215 3);
     --color-danger: rgb(180 45 45);
-    --ux-nav-bg-color: rgb(17 24 29);
     --popup-dialog-bg-color: var(--color-midnight-grey-50);
     --popup-dialog-title-color: var(--color-white-100);
     --popup-dialog-message-color: var(--color-mid-grey-0);
@@ -271,8 +260,6 @@
     --font-color-dimmed: var(--white-dimmed);
     --font-color-disabled: var(--color-white-50);
     --font-underline-color: var(--color-white-60);
-    --font-color-light-bg: var(--color-mist-grey-100);
-    --font-perfometer-color: var(--color-mid-grey-60);
 
     /* Colors */
     --default-nav-bg-color: rgb(17 24 29);
@@ -280,7 +267,6 @@
     --default-border-color: rgb(38 45 52);
     --default-bg-color: var(--ux-theme-1);
     --default-form-element-bg-color: var(--ux-theme-5);
-    --default-form-element-bg-color-disabled: var(--ux-theme-3);
     --default-form-element-border-color: var(--color-mid-grey-60);
     --default-form-element-placeholder-color: var(--color-white-50);
     --default-select-hover-color: var(--success);
@@ -288,14 +274,10 @@
     --default-border-color-green: rgb(21 209 160);
     --default-tooltip-background-color: rgb(17 24 29);
     --default-tooltip-text-color: var(--white);
-    --custom-scroll-bar-thumb-border-color: var(--ux-theme-5);
     --custom-scroll-bar-thumb-color: rgb(224 224 228);
-    --custom-scroll-bar-backgroud-color: var(--ux-theme-5);
     --default-component-bg-color: rgb(46 44 44);
-    --help-text-font-color: var(--color-conference-grey-100);
     --dropdown-chevron-indicator-color: var(--color-white-100);
     --default-dialog-bg-color: var(--ux-theme-5);
-    --default-dialog-font-color: var(--font-color);
     --form-element-required-color: var(--success);
     --input-hover-bg-color: var(--ux-theme-4);
     --global-settings-row-hover-bg-color: var(--color-dark-blue-90);

@@ -10,16 +10,11 @@ UNIT_BYTES_PER_SECOND = metrics.Unit(metrics.IECNotation("B/s"))
 UNIT_EURO = metrics.Unit(metrics.DecimalNotation("€"), metrics.StrictPrecision(2))
 UNIT_DEGREE_CELSIUS = metrics.Unit(metrics.DecimalNotation("°C"))
 UNIT_COUNTER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))
-UNIT_AMPERE = metrics.Unit(metrics.DecimalNotation("A"), metrics.AutoPrecision(3))
 UNIT_PER_SECOND = metrics.Unit(metrics.DecimalNotation("/s"))
-UNIT_ELECTRICAL_APPARENT_POWER = metrics.Unit(
-    metrics.DecimalNotation("VA"), metrics.AutoPrecision(3)
-)
 UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
 UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
 UNIT_HERTZ = metrics.Unit(metrics.DecimalNotation("Hz"))
 UNIT_TIME = metrics.Unit(metrics.TimeNotation())
-UNIT_NUMBER = metrics.Unit(metrics.DecimalNotation(""))
 UNIT_REVOLUTIONS_PER_MINUTE = metrics.Unit(metrics.DecimalNotation("rpm"), metrics.AutoPrecision(4))
 
 metric_time_in_GC = metrics.Metric(
@@ -135,12 +130,6 @@ metric_s2s_bandwidth = metrics.Metric(
 # “Output Queue Length is the length of the output packet queue (in
 # packets). If this is longer than two, there are delays and the bottleneck
 # should be found and eliminated, if possible.
-metric_outqlen = metrics.Metric(
-    name="outqlen",
-    title=Title("Length of output queue"),
-    unit=UNIT_COUNTER,
-    color=metrics.Color.YELLOW,
-)
 metric_channel_utilization = metrics.Metric(
     name="channel_utilization",
     title=Title("Channel utilization"),
@@ -227,24 +216,6 @@ metric_power_usage_percentage = metrics.Metric(
     title=Title("Power usage percentage"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.DARK_PINK,
-)
-metric_differential_current_ac = metrics.Metric(
-    name="differential_current_ac",
-    title=Title("Differential current AC"),
-    unit=UNIT_AMPERE,
-    color=metrics.Color.LIGHT_ORANGE,
-)
-metric_differential_current_dc = metrics.Metric(
-    name="differential_current_dc",
-    title=Title("Differential current DC"),
-    unit=UNIT_AMPERE,
-    color=metrics.Color.LIGHT_ORANGE,
-)
-metric_appower = metrics.Metric(
-    name="appower",
-    title=Title("Electrical apparent power"),
-    unit=UNIT_ELECTRICAL_APPARENT_POWER,
-    color=metrics.Color.DARK_YELLOW,
 )
 metric_frequency = metrics.Metric(
     name="frequency",
@@ -353,12 +324,6 @@ metric_mem_available = metrics.Metric(
     title=Title("Estimated RAM for new processes"),
     unit=UNIT_BYTES,
     color=metrics.Color.YELLOW,
-)
-metric_trend_hoursleft = metrics.Metric(
-    name="trend_hoursleft",
-    title=Title("Time left until full"),
-    unit=UNIT_TIME,
-    color=metrics.Color.BROWN,
 )
 metric_swap_used_percent = metrics.Metric(
     name="swap_used_percent",
@@ -470,23 +435,11 @@ metric_age_oldest = metrics.Metric(
     unit=UNIT_TIME,
     color=metrics.Color.BLUE,
 )
-metric_age_youngest = metrics.Metric(
-    name="age_youngest",
-    title=Title("Youngest age"),
-    unit=UNIT_TIME,
-    color=metrics.Color.YELLOW,
-)
 metric_fs_provisioning = metrics.Metric(
     name="fs_provisioning",
     title=Title("Provisioned space"),
     unit=UNIT_BYTES,
     color=metrics.Color.ORANGE,
-)
-metric_predict_load15 = metrics.Metric(
-    name="predict_load15",
-    title=Title("Predicted average for 15 minute CPU load"),
-    unit=UNIT_NUMBER,
-    color=metrics.Color.GRAY,
 )
 metric_util5 = metrics.Metric(
     name="util5",
@@ -757,10 +710,4 @@ metric_fan_speed = metrics.Metric(
     title=Title("Fan rotation speed"),
     unit=UNIT_REVOLUTIONS_PER_MINUTE,
     color=metrics.Color.ORANGE,
-)
-metric_process_handles = metrics.Metric(
-    name="process_handles",
-    title=Title("Process handles"),
-    unit=UNIT_COUNTER,
-    color=metrics.Color.CYAN,
 )

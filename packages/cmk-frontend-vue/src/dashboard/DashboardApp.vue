@@ -53,7 +53,7 @@ import { useProvideDashboardConstants } from '@/dashboard/composables/useProvide
 import { useProvideMissingRuntimeFiltersAction } from '@/dashboard/composables/useProvideMissingRuntimeFiltersAction.ts'
 import { useProvideVisualInfos } from '@/dashboard/composables/useProvideVisualInfos'
 import { useComputeWidgetTitles } from '@/dashboard/composables/useWidgetTitles'
-import { buildResponsiveWidgetLayouts } from '@/dashboard/dashboardMigration.ts'
+import { buildMigratedWidgetLayouts } from '@/dashboard/dashboardMigration.ts'
 import {
   type ContentRelativeGrid,
   type ContentResponsiveGrid,
@@ -480,20 +480,13 @@ const cloneDashboard = async (
     throw new Error('No active dashboard to clone from')
   }
 
-  // an anchored source needs a responsive placement per widget, which only the rendered grid can
-  // tell us; without it there is nothing to send, so the clone does not start
   const sourceContent = dashboardsManager.activeDashboard.value!.model.content
   let migratedWidgetLayouts: Record<string, ResponsiveGridWidgetLayouts> | null = null
   if (sourceContent.layout.type === 'relative_grid' && layout === DashboardLayout.RESPONSIVE_GRID) {
-    const readingOrder = readRelativeGridWidgetOrder()
-    if (readingOrder === null) {
+    migratedWidgetLayouts = migrateRelativeGridWidgetLayouts(sourceContent as ContentRelativeGrid)
+    if (migratedWidgetLayouts === null) {
       return
     }
-    migratedWidgetLayouts = buildResponsiveWidgetLayouts(
-      readingOrder,
-      sourceContent as ContentRelativeGrid,
-      dashboardsManager.constants.value!
-    )
   }
 
   openDashboardCloneDialog.value = false
@@ -547,11 +540,21 @@ const cloneDashboard = async (
   )
 }
 
-function readRelativeGridWidgetOrder(): string[] | null {
+function migrateRelativeGridWidgetLayouts(
+  relativeContent: ContentRelativeGrid
+): Record<string, ResponsiveGridWidgetLayouts> | null {
   if (isDashboardEmpty.value) {
-    return []
+    return {}
   }
-  return dashboardComponent.value?.getRelativeGridMeasurement()?.readingOrder ?? null
+  const measurement = dashboardComponent.value?.getRelativeGridMeasurement() ?? null
+  if (measurement === null) {
+    return null
+  }
+  return buildMigratedWidgetLayouts(
+    measurement,
+    relativeContent,
+    dashboardsManager.constants.value!
+  )
 }
 
 const openCloneWizard = (preselectedLayout?: DashboardLayout) => {

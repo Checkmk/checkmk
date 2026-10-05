@@ -9,13 +9,13 @@ UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
 
 metric_mem_esx_private = metrics.Metric(
     name="mem_esx_private",
-    title=Title("Private memory"),
+    title=Title("Private guest memory"),
     unit=UNIT_BYTES,
     color=metrics.Color.BLUE,
 )
 metric_mem_esx_shared = metrics.Metric(
     name="mem_esx_shared",
-    title=Title("Shared memory"),
+    title=Title("Shared guest memory"),
     unit=UNIT_BYTES,
     color=metrics.Color.GREEN,
 )

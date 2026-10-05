@@ -36,7 +36,7 @@ metric_elasticsearch_count_avg = metrics.Metric(
 )
 metric_elasticsearch_size = metrics.Metric(
     name="elasticsearch_size",
-    title=Title("Total size"),
+    title=Title("Elasticsearch index size"),
     unit=UNIT_BYTES,
     color=metrics.Color.DARK_CYAN,
 )

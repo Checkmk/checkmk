@@ -1739,7 +1739,7 @@ metric_util5 = metrics.Metric(
 )
 metric_cpu_time_percent = metrics.Metric(
     name="cpu_time_percent",
-    title=Title("CPU time"),
+    title=Title("CPU time percentage"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.BROWN,
 )

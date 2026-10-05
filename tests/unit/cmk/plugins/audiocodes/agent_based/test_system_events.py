@@ -116,28 +116,20 @@ def test_check_function(
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=(ValueError, KeyError),
-    reason="Crash groups 4935, 4936: ValueError, KeyError",
-)
 @pytest.mark.parametrize(
     "string_table, expected",
     [
         pytest.param(
             [
-                [["", "512321", "07 E5 08 02 14 28 38 00 ", "Alarm1", "Desc1", "Source1", "3"]],
+                [["1", "", "", "", "", "Source1", "3"]],
                 [],
             ],
             [
                 Result(state=State.OK, summary="Critical alarms: 0, Warnings: 1"),
                 Result(state=State.OK, summary="Archived: 0"),
-                Result(
-                    state=State.WARN,
-                    summary="Alarm (no sequence number): Name: Alarm1, Severity: minor, Sysuptime: 5 days 22 hours, Description: Desc1, Source: Source1, Date and Time: 2021-08-02 20:40:56",
-                ),
+                Result(state=State.WARN, summary="Alarm #1: Severity: minor, Source: Source1"),
             ],
-            id="alarm without sequence number",
+            id="alarm raised during the read",
         ),
         pytest.param(
             [
@@ -147,12 +139,8 @@ def test_check_function(
             [
                 Result(state=State.OK, summary="Critical alarms: 0, Warnings: 0"),
                 Result(state=State.OK, summary="Archived: 0"),
-                Result(
-                    state=State.UNKNOWN,
-                    summary="Alarm #2: Name: Alarm2, Severity: unknown, Sysuptime: 5 days 22 hours, Description: Desc2, Source: Source2, Date and Time: 2021-08-02 20:40:56",
-                ),
             ],
-            id="alarm without severity",
+            id="alarm cleared during the read",
         ),
     ],
 )

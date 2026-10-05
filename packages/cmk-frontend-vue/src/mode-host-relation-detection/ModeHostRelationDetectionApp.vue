@@ -7,8 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { ScopeChoice } from 'cmk-shared-typing/typescript/mode_host_relation_detection'
 import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
+import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import CmkWizard, { CmkWizardButton, CmkWizardStep } from 'cmk-ui-library/components/CmkWizard'
-import CmkProgressbar from 'cmk-ui-library/components/progress/CmkProgressbar.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -479,9 +479,7 @@ async function scanAgain(): Promise<void> {
               :folders="props.folders"
               :sites="props.sites"
             />
-            <div v-if="suggesting" class="mode-host-relation-detection-app__stack">
-              <CmkProgressbar max="unknown" />
-            </div>
+            <CmkLoading v-if="suggesting" />
             <CmkAlertBoxDeprecated v-else-if="suggestFailed" variant="error">
               {{ _t('The hosts could not be read.') }}
             </CmkAlertBoxDeprecated>
@@ -548,8 +546,8 @@ async function scanAgain(): Promise<void> {
             {{ _t('The hosts could not be read.') }}
           </CmkAlertBoxDeprecated>
           <div v-if="scanning" class="mode-host-relation-detection-app__stack">
-            <CmkProgressbar max="unknown" />
-            <CmkParagraph>{{ scanProgress }}</CmkParagraph>
+            <CmkParagraph v-if="scanProgress">{{ scanProgress }}</CmkParagraph>
+            <CmkLoading />
           </div>
           <CmkParagraph
             v-else-if="suggestions !== null && !canScan"
@@ -676,8 +674,8 @@ async function scanAgain(): Promise<void> {
             <LabeledRow :label="_t('Relations to store')">{{ toStore }}</LabeledRow>
           </div>
           <div v-if="running" class="mode-host-relation-detection-app__stack">
-            <CmkProgressbar max="unknown" />
-            <CmkParagraph>{{ runProgress }}</CmkParagraph>
+            <CmkParagraph v-if="runProgress">{{ runProgress }}</CmkParagraph>
+            <CmkLoading />
           </div>
           <CmkAlertBoxDeprecated v-else-if="runFailed" variant="error">
             {{ _t('The relations could not be stored.') }} {{ runText }}

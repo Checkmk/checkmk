@@ -333,7 +333,7 @@ metric_aws_active_tls_connections = metrics.Metric(
 
 metric_aws_new_connections = metrics.Metric(
     name="aws_new_connections",
-    title=Title("New connections"),
+    title=Title("New connections per second"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.LIGHT_PURPLE,
 )

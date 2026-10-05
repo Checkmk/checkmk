@@ -243,7 +243,6 @@ def test_check_db2_counters_no_perl() -> None:
         list(_check_db2_counters({}, "db1taddm:CMDBS6", {}, section))
 
 
-@pytest.mark.xfail(strict=True, raises=IndexError, reason="Crash group 4824: IndexError")
 def test_check_counter_without_value() -> None:
     section = parse_db2_counters(
         [

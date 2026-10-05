@@ -6,11 +6,12 @@ import enum
 import io
 import logging
 import sys
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from contextlib import contextmanager, nullcontext, redirect_stdout
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Final, Protocol
+from typing import Any, Final, override
 
 import cmk.ccc.debug
 import cmk.utils.paths
@@ -39,7 +40,7 @@ class AutomationError(enum.IntEnum):
     UNKNOWN_ERROR = 2
 
 
-class AutomationState(Protocol):
+class AutomationState(ABC):
     """Whatever an automation needs to have ready before it runs.
 
     The engine builds it with the automation's :attr:`Automation.state_factory`,
@@ -47,6 +48,7 @@ class AutomationState(Protocol):
     :meth:`update` whenever they change.
     """
 
+    @abstractmethod
     def update(self, omd_root: Path, raw_config: Mapping[str, object]) -> None: ...
 
 
@@ -81,7 +83,7 @@ class Automation[StateT: AutomationState, ResultT: AutomationResult]:
 type DiscoveredAutomation = Automation[Any, AutomationResult]  # type: ignore[explicit-any]
 
 
-class NoState:
+class NoState(AutomationState):
     """The state of an automation that needs none.
 
     Such an automation reads nothing but its arguments and its standard input,
@@ -92,11 +94,12 @@ class NoState:
     def __init__(self, *_a: object) -> None:
         pass
 
+    @override
     def update(self, *_a: object) -> None:
         pass
 
 
-class BaseConfigState:
+class BaseConfigState(AutomationState):
     """The state of an automation that needs the base configuration only.
 
     It picks the configuration values from the raw configuration, and derives
@@ -106,11 +109,12 @@ class BaseConfigState:
     def __init__(self, _omd_root: Path, raw_config: Mapping[str, object]) -> None:
         self.loaded_config = config.make_base_config(raw_config)
 
+    @override
     def update(self, _omd_root: Path, raw_config: Mapping[str, object]) -> None:
         self.loaded_config = config.make_base_config(raw_config)
 
 
-class CommonState:
+class CommonState(AutomationState):
     """The state most automations share for now.
 
     It derives what the handlers used to get passed from the raw configuration.
@@ -122,6 +126,7 @@ class CommonState:
         self.app: CheckmkBaseApp = make_app(omd_root)
         self.loading_result = _derive_loading_result(raw_config)
 
+    @override
     def update(self, omd_root: Path, raw_config: Mapping[str, object]) -> None:
         # The site, and with it the app, does not change while we run. We rebuild the
         # app anyway, so that the state is derived from its arguments alone.

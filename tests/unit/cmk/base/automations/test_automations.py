@@ -26,6 +26,7 @@ from cmk.base.automations.automations import (
     Automation,
     AutomationError,
     Automations,
+    AutomationState,
     BaseConfigState,
     DiscoveredAutomation,
     NoState,
@@ -161,10 +162,11 @@ class _Result(AutomationResult):
 
 
 @dataclass
-class _RecordingState:
+class _RecordingState(AutomationState):
     built_for: Path
     updated_for: list[Path] = field(default_factory=list)
 
+    @override
     def update(self, omd_root: Path, _raw_config: Mapping[str, object]) -> None:
         self.updated_for.append(omd_root)
 

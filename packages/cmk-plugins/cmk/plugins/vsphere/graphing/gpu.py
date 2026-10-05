@@ -9,7 +9,7 @@ UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
 
 metric_esx_gpu_utilization = metrics.Metric(
     name="esx_gpu_utilization",
-    title=Title("GPU utilization"),
+    title=Title("ESX GPU utilization"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.PURPLE,
 )

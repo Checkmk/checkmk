@@ -324,3 +324,18 @@ def test_discovery(
     expected: list[Service],
 ) -> None:
     assert list(discovery_func(apc_symmetra.parse_apc_symmetra(string_table))) == expected
+
+
+@pytest.mark.xfail(strict=True, reason="Crash group 4920: KeyError 'status'")
+def test_check_without_battery_data_reports_no_result() -> None:
+    params = apc_symmetra.CheckParameters(
+        capacity=("fixed", (95.0, 80.0)),
+        calibration_state=0,
+        battery_replace_state=1,
+        post_calibration_levels=apc_symmetra.PostCalibrationParameters(
+            altcapacity=50.0, additional_time_span=0
+        ),
+        battime=("fixed", (0.0, 0.0)),
+    )
+    section = apc_symmetra.parse_apc_symmetra(((("Sensor 1", "23"),), []))
+    assert not list(apc_symmetra.check_apc_symmetra(params, section))

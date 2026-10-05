@@ -22,8 +22,15 @@ docker_reference_image = { ->
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
     def safe_branch_name = versioning.safe_branch_name();
+    def container_safe_branch_name = safe_branch_name;
 
-    def container_name = "testing-ubuntu-22.04-checkmk-${safe_branch_name}";
+    // during a release there might be a VERSION specified, this container does not support custom builds like "XXX-v2-5-0p13-rc3"
+    def branch_version = versioning.get_branch_version(checkout_dir);
+    if (params.VERSION && safe_branch_name != branch_version) {
+        container_safe_branch_name = branch_version.replace(".", "-");
+    }
+
+    def container_name = "testing-ubuntu-22.04-checkmk-${container_safe_branch_name}";
 
     docker.withRegistry(DOCKER_REGISTRY, "nexus") {
         def image = docker.image("${docker_registry_no_http}/${container_name}:latest-with-docker");
@@ -160,6 +167,12 @@ inside_container = { Map arg1=[:], Closure arg2 ->
             // because this results in an invalid branch name.
             // The pod templates uses - instead.
             def container_safe_branch_name = safe_branch_name.replace(".", "-")
+
+            // during a release there might be a VERSION specified, this container does not support custom builds like "XXX-v2-5-0p13-rc3"
+            def branch_version = versioning.get_branch_version(checkout_dir);
+            if (params.VERSION && safe_branch_name != branch_version) {
+                container_safe_branch_name = branch_version.replace(".", "-");
+            }
 
             // "ubuntu-2404-master-latest" is part of "klausi-package-builder-base" pod template
             tmp_given_image = "ubuntu-2404-${container_safe_branch_name}-latest";

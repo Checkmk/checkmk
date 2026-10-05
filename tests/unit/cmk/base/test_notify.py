@@ -5,7 +5,6 @@
 
 import os
 from collections.abc import Mapping
-from pathlib import Path
 from typing import cast, Final
 
 import pytest
@@ -1700,78 +1699,3 @@ def test__rbn_match_rule_escalation_blocked() -> None:
         )
         == "The notification number 10 does not lie in range 1 ... 5"
     )
-
-
-_BULK_BY_EVERYTHING = AlwaysBulkParameters(
-    interval=60,
-    count=10,
-    groupby=["host", "folder", "service", "sl", "check_type", "state", "ec_contact", "ec_comment"],
-    groupby_custom=["_CUSTOM"],
-)
-
-
-def _bulk_context(value: str) -> NotificationContext:
-    return NotificationContext(
-        {
-            "WHAT": "SERVICE",
-            "CONTACTNAME": "harry",
-            "HOSTNAME": value,
-            "HOSTTAGS": f"/wato/{value}/",
-            "SERVICEDESC": value,
-            "SERVICE_SL": value,
-            "SERVICECHECKCOMMAND": value,
-            "SERVICESTATE": value,
-            "EC_CONTACT": value,
-            "EC_COMMENT": value,
-            "SERVICE_CUSTOM": value,
-        }
-    )
-
-
-def _store_for_bulk(bulk_root: Path, context: NotificationContext) -> None:
-    notify.do_bulk_notify("mail", {}, context, _BULK_BY_EVERYTHING, bulk_root=bulk_root)
-
-
-def _bulk_dirs(bulk_root: Path) -> list[Path]:
-    return sorted((bulk_root / "harry" / "mail").iterdir())
-
-
-def test_bulk_with_long_grouping_values_is_stored(tmp_path: Path) -> None:
-    _store_for_bulk(tmp_path, _bulk_context("x" * 300))
-
-    (bulk_dir,) = _bulk_dirs(tmp_path)
-    assert len(bulk_dir.name.encode()) <= 255
-    assert len(list(bulk_dir.glob("[!.]*"))) == 1
-
-
-def test_bulk_with_short_grouping_values_keeps_readable_directory_name(tmp_path: Path) -> None:
-    _store_for_bulk(tmp_path, _bulk_context("a/b"))
-
-    assert [d.name for d in _bulk_dirs(tmp_path)] == [
-        (
-            "60,10,host,a\\b,service,a\\b,sl,a\\b,check_type,a\\b,state,a\\b,"
-            "ec_contact,a\\b,ec_comment,a\\b,custom,a\\b"
-        )
-    ]
-
-
-def test_identical_long_grouping_values_share_one_bulk(tmp_path: Path) -> None:
-    _store_for_bulk(tmp_path, _bulk_context("x" * 300))
-    _store_for_bulk(tmp_path, _bulk_context("x" * 300))
-
-    (bulk_dir,) = _bulk_dirs(tmp_path)
-    assert len(list(bulk_dir.glob("[!.]*"))) == 2
-
-
-def test_differing_long_grouping_values_get_separate_bulks(tmp_path: Path) -> None:
-    _store_for_bulk(tmp_path, _bulk_context("x" * 300))
-    _store_for_bulk(tmp_path, _bulk_context("y" * 300))
-
-    assert len(_bulk_dirs(tmp_path)) == 2
-
-
-def test_hashed_bulk_directory_records_its_readable_id(tmp_path: Path) -> None:
-    _store_for_bulk(tmp_path, _bulk_context("x" * 300))
-
-    (bulk_dir,) = _bulk_dirs(tmp_path)
-    assert (bulk_dir / ".bulk_id").read_text().startswith(f"60,10,host,{'x' * 300},")

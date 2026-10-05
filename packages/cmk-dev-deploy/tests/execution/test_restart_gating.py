@@ -7,7 +7,10 @@
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from cmk.dev_deploy.execution.service_manager import (
+    _WHEEL_CONVENTION_DEFAULTS,
     DEPLOYER_CATEGORIES,
     resolve_services,
 )
@@ -224,3 +227,51 @@ class TestResolveServicesWithDeployedDeployers:
         """DEPLOYER_CATEGORIES has entries for all 3 deployer names."""
         expected = {"config_spec", "install_spec", "wheel_spec"}
         assert set(DEPLOYER_CATEGORIES.keys()) == expected
+
+
+@patch("cmk.dev_deploy.manifest.reader.get_config_specs", return_value=())
+@patch(
+    "cmk.dev_deploy.manifest.reader.get_wheel_prefixes",
+    return_value=("packages/cmk-profiling/",),
+)
+class TestWheelConvention:
+    def test_vue_code_of_a_wheel_package_skips_wheel_restarts(
+        self, _mock_whl: object, _mock_cfg: object
+    ) -> None:
+        """The dist's own service spec decides the restarts, not the wheel convention."""
+        vue_file = "packages/cmk-profiling/frontend/App.vue"
+        changes = _make_changes(files=(vue_file,), categories={ChangeCategory.VUE: (vue_file,)})
+        targets = _make_targets(("packages/cmk-frontend-vue",))
+
+        result = resolve_services(
+            changes, targets, _make_site(), deployed_deployers={"install_spec", "wheel_spec"}
+        )
+
+        assert result == [(Service.APACHE, ServiceAction.RELOAD)]
+
+
+@patch("cmk.dev_deploy.manifest.reader.get_config_specs", return_value=())
+@patch(
+    "cmk.dev_deploy.manifest.reader.get_wheel_prefixes",
+    return_value=("packages/cmk-shared-typing/",),
+)
+class TestSharedTypingRestarts:
+    @pytest.mark.parametrize(
+        "deployed_deployers",
+        [
+            pytest.param({"install_spec", "wheel_spec"}, id="dist-and-wheel"),
+            pytest.param({"wheel_spec"}, id="wheel-only-under-frontend"),
+        ],
+    )
+    def test_schemas_keep_the_wheel_restarts(
+        self, _mock_whl: object, _mock_cfg: object, deployed_deployers: set[str]
+    ) -> None:
+        """The schemas build the dist and generate the wheel, so the wheel's restarts stay."""
+        schema = "packages/cmk-shared-typing/source/setup.json"
+        changes = _make_changes(files=(schema,), categories={ChangeCategory.VUE: (schema,)})
+
+        result = resolve_services(
+            changes, None, _make_site(), deployed_deployers=deployed_deployers
+        )
+
+        assert result == list(_WHEEL_CONVENTION_DEFAULTS)

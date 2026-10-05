@@ -87,7 +87,9 @@ def resolve_services(
 
     Uses a three-tier resolution strategy:
       1. Explicit ServiceSpec entries (from deploy_specs.toml overrides)
-      2. Wheel convention: any py_wheel package implies apache:reload
+      2. Wheel convention: any py_wheel package implies apache:reload,
+         except for files an install spec builds (a wheel package's Vue
+         code), whose own service spec applies
       3. Config spec annotations: config specs with a ``services`` field
 
     Explicit specs always take precedence over convention defaults.
@@ -119,9 +121,18 @@ def resolve_services(
             active_files: list[str] = []
             for cat in active_categories:
                 active_files.extend(changes.categories.get(cat, ()))
-            files_to_check: tuple[str, ...] = tuple(active_files)
+            # The wheel step deploys by path, whatever the category.
+            if "wheel_spec" in deployed_deployers:
+                active_files.extend(f for f in changes.files if f.startswith(wheel_prefixes))
+            files_to_check: tuple[str, ...] = tuple(dict.fromkeys(active_files))
         else:
             files_to_check = changes.files
+
+        built_by_install_spec = frozenset(
+            f
+            for cat in DEPLOYER_CATEGORIES["install_spec"]
+            for f in changes.categories.get(cat, ())
+        )
 
         # Three-tier matching for each changed file
         for f in files_to_check:
@@ -142,7 +153,9 @@ def resolve_services(
                 continue
 
             # Tier 2: Wheel convention.
-            if any(f.startswith(prefix) for prefix in wheel_prefixes):
+            if f not in built_by_install_spec and any(
+                f.startswith(prefix) for prefix in wheel_prefixes
+            ):
                 raw.extend(_WHEEL_CONVENTION_DEFAULTS)
                 continue
 

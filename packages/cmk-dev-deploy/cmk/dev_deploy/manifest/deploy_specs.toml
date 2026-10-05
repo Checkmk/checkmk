@@ -40,12 +40,6 @@ prefix = "packages/mk-sql/"
 category = "rust"
 extensions = [".rs"]
 
-# cmk-shared-typing .ts files are consumed by cmk-frontend-vue
-[[categorization]]
-prefix = "packages/cmk-shared-typing/"
-category = "vue"
-extensions = [".ts"]
-
 # Catch-all: notification scripts (no per-file spec)
 [[categorization]]
 prefix = "notifications/"
@@ -198,6 +192,12 @@ services = ["agent-receiver:restart"]
 name = "deploy_svc_cmk_maps"
 package_target = "//packages/cmk-maps:wheel"
 services = ["maps:restart", "apache:reload"]
+
+# The schemas are wheel inputs but categorize as Vue.
+[[service]]
+name = "deploy_svc_cmk_shared_typing"
+package_target = "//packages/cmk-shared-typing:wheel"
+services = ["apache:reload", "automation-helper:restart", "cmc:restart"]
 
 [[service]]
 name = "deploy_svc_cmk_ec"

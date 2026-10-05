@@ -565,6 +565,8 @@ class TestCategorizationRegression:
             ("packages/cmk-ui-library/components/StateTag.vue", ChangeCategory.VUE),
             ("packages/cmk-ui-library/lib/utils.ts", ChangeCategory.VUE),
             ("packages/cmk-ui-library/README.md", ChangeCategory.OTHER),
+            ("packages/cmk-profiling/frontend/App.vue", ChangeCategory.VUE),
+            ("packages/cmk-profiling/cmk/profiling/gui/pages.py", ChangeCategory.PYTHON),
             # Frontend (includes .ts -- the motivating bug fix)
             ("packages/cmk-frontend/scss/main.scss", ChangeCategory.FRONTEND),
             ("packages/cmk-frontend/src/main.js", ChangeCategory.FRONTEND),

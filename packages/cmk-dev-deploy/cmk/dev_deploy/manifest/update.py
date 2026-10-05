@@ -870,19 +870,30 @@ def _workspace_package(path: str) -> str | None:
     return None
 
 
+_WHEEL_EXTENSIONS = frozenset({".py", ".typed"})
+
+
+def _claimed_extensions(
+    package: str,
+    deployed_extensions: Collection[tuple[str, frozenset[str] | None]],
+) -> frozenset[str] | None:
+    """Extensions the deploy prefixes at or above *package* deploy, ``None`` for all files."""
+    claimed: set[str] = set()
+    for prefix, extensions in deployed_extensions:
+        if package.startswith(prefix):
+            if extensions is None:
+                return None
+            claimed |= extensions
+    return frozenset(claimed)
+
+
 def _compute_input_prefixes(
     target_sources: Mapping[str, Collection[str]],
-    deployable_prefixes: Collection[str],
-) -> dict[str, list[str]]:
-    """Find the packages each install target is built from that nothing deploys.
+    deployed_extensions: Collection[tuple[str, frozenset[str] | None]],
+) -> dict[str, dict[str, frozenset[str]]]:
+    """Find the packages each install target is built from, and what it takes from them.
 
-    A workspace package can contribute sources to an install target's
-    closure without having a wheel, install, or config spec of its own --
-    cmk-ui-library feeding the cmk-frontend-vue dist, for instance.
-    Changes there reach the site only through the consuming target, so
-    its install spec records them as ``input_prefixes``.
-
-    Packages whose sources carry no Bazel-buildable extension (see
+    Packages left without a Bazel-buildable extension (see
     ``_EXTENSION_CATEGORY_PRIORITY``) are skipped: the vue dist's closure
     reaches Python packages through the OpenAPI spec generator, and those
     must keep their Python categorization.
@@ -890,49 +901,46 @@ def _compute_input_prefixes(
     Args:
         target_sources: Source paths per package_target, as returned by
             :func:`_query_target_sources`.
-        deployable_prefixes: Source prefixes (trailing ``/``) that some
-            wheel, install, or config spec already deploys.
+        deployed_extensions: ``(prefix, extensions)`` for every wheel,
+            install, and config spec; prefixes carry a trailing ``/``,
+            ``None`` stands for all files.
 
     Returns:
-        Dict mapping package_target to its sorted input prefixes (trailing
-        ``/``); targets without input packages are absent.
+        Dict mapping package_target to its input prefixes (trailing ``/``,
+        sorted) and the extensions taken from each; targets without input
+        packages are absent.
     """
-    deployable = tuple(deployable_prefixes)
-    result: dict[str, list[str]] = {}
+    result: dict[str, dict[str, frozenset[str]]] = {}
     for target, paths in target_sources.items():
-        candidates = {
-            package
-            for path in paths
-            if (package := _workspace_package(path)) is not None
-            and not (package + "/").startswith(deployable)
-        }
-        extensions = _extensions_by_prefix(paths, candidates)
-        prefixes = sorted(
-            package + "/"
-            for package in candidates
-            if _extensions_to_category(extensions.get(package, frozenset())) is not None
-        )
-        if prefixes:
-            result[target] = prefixes
+        packages = {package for path in paths if (package := _workspace_package(path))}
+        inputs: dict[str, frozenset[str]] = {}
+        for package, extensions in _extensions_by_prefix(paths, packages).items():
+            claimed = _claimed_extensions(package + "/", deployed_extensions)
+            if claimed is None:
+                continue
+            if _extensions_to_category(taken := extensions - claimed) is not None:
+                inputs[package + "/"] = taken
+        if inputs:
+            result[target] = dict(sorted(inputs.items()))
     return result
 
 
 def _install_spec_extensions(
-    install_specs: Collection[Mapping[str, Any]],
-    target_sources: Mapping[str, Collection[str]],
+    own_extensions: Mapping[str, frozenset[str]],
+    input_extensions: Mapping[str, Mapping[str, frozenset[str]]],
 ) -> dict[str, frozenset[str]]:
     """Source file extensions per install spec prefix, own and input alike.
 
     Feeds the categorization rules: a prefix's rule matches exactly the
-    extensions Bazel reports under it.  Keys carry no trailing slash.
+    extensions the install targets are built from under it.  Keys carry no
+    trailing slash.
     """
-    prefixes = {
-        prefix.rstrip("/")
-        for spec in install_specs
-        for prefix in (spec.get("source_prefix", ""), *spec.get("input_prefixes", []))
-        if prefix
-    }
-    return _extensions_by_prefix(frozenset().union(*target_sources.values()), prefixes)
+    merged: dict[str, frozenset[str]] = dict(own_extensions)
+    for inputs in input_extensions.values():
+        for prefix, extensions in inputs.items():
+            key = prefix.rstrip("/")
+            merged[key] = merged.get(key, frozenset()) | extensions
+    return merged
 
 
 def _extensions_to_category(
@@ -1312,19 +1320,24 @@ def main(spinner: Spinner | None = None) -> int:
         lbl = "Querying install spec sources"
         t0 = _begin(lbl)
         target_sources = _query_target_sources(manual["install_specs"], repo_root)
-        deployable_prefixes = frozenset(wheel_prefixes) | {
-            spec["source_prefix"].rstrip("/") + "/"
-            for spec in (*manual["install_specs"], *config_specs)
-        }
-        input_prefixes = _compute_input_prefixes(target_sources, deployable_prefixes)
+        install_prefixes = {spec["source_prefix"].rstrip("/") for spec in manual["install_specs"]}
+        own_extensions = _extensions_by_prefix(
+            frozenset().union(*target_sources.values()), install_prefixes
+        )
+        deployed_extensions = [
+            *((prefix, _WHEEL_EXTENSIONS) for prefix in wheel_prefixes),
+            *((p + "/", own_extensions.get(p, frozenset())) for p in install_prefixes),
+            *((spec["source_prefix"].rstrip("/") + "/", None) for spec in config_specs),
+        ]
+        input_extensions = _compute_input_prefixes(target_sources, deployed_extensions)
         for spec in manual["install_specs"]:
-            spec["input_prefixes"] = input_prefixes.get(spec["package_target"], [])
-        install_spec_extensions = _install_spec_extensions(manual["install_specs"], target_sources)
+            spec["input_prefixes"] = list(input_extensions.get(spec["package_target"], {}))
+        install_spec_extensions = _install_spec_extensions(own_extensions, input_extensions)
         _done(
             lbl,
             t0,
             f"{len(target_sources)} targets, "
-            f"{sum(len(p) for p in input_prefixes.values())} input packages",
+            f"{sum(len(p) for p in input_extensions.values())} input packages",
         )
 
     except Exception as exc:

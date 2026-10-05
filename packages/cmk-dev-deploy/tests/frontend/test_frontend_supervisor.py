@@ -1518,28 +1518,14 @@ class TestBazelQueryFiltering:
             categories={
                 ChangeCategory.VUE: (
                     "packages/cmk-frontend-vue/src/App.vue",
-                    "packages/cmk-shared-typing/src/types.ts",
+                    "packages/cmk-shared-typing/source/setup.json",
                 ),
+                ChangeCategory.FRONTEND: ("packages/cmk-frontend/src/main.js",),
             }
         )
         result = _get_bazel_queryable_files(changes, frontend_supervised=True)
-        # cmk-frontend-vue filtered, cmk-shared-typing preserved
-        assert result == ["packages/cmk-shared-typing/src/types.ts"]
-
-    def test_preserves_shared_typing(self) -> None:
-        from cmk.dev_deploy.execution.bazel_resolver import _get_bazel_queryable_files
-
-        changes = _make_changeset(
-            categories={
-                ChangeCategory.VUE: (
-                    "packages/cmk-shared-typing/src/types.ts",
-                    "packages/cmk-shared-typing/src/index.ts",
-                ),
-            }
-        )
-        result = _get_bazel_queryable_files(changes, frontend_supervised=True)
-        # Both preserved -- cmk-shared-typing is NOT frontend-supervised
-        assert len(result) == 2
+        # The vue dist and its inputs filtered, the legacy frontend preserved
+        assert result == ["packages/cmk-frontend/src/main.js"]
 
 
 # ---------------------------------------------------------------------------
@@ -1565,18 +1551,6 @@ class TestFrontendHint:
             print_frontend_hint(changes)
             mock_print.assert_called_once()
             assert "--frontend" in mock_print.call_args[0][0]
-
-    def test_no_hint_for_shared_typing_only(self) -> None:
-        from cmk.dev_deploy.core.output import print_frontend_hint
-
-        changes = _make_changeset(
-            categories={
-                ChangeCategory.VUE: ("packages/cmk-shared-typing/src/types.ts",),
-            }
-        )
-        with patch("cmk.dev_deploy.core.output._print_locked") as mock_print:
-            print_frontend_hint(changes)
-            mock_print.assert_not_called()
 
     def test_no_hint_when_no_vue_changes(self) -> None:
         from cmk.dev_deploy.core.output import print_frontend_hint
@@ -1626,7 +1600,7 @@ class TestVerboseChangesHmrAnnotation:
         finally:
             set_verbosity(Verbosity.DEFAULT)
 
-    def test_no_annotation_for_shared_typing(self) -> None:
+    def test_no_annotation_outside_supervised_prefixes(self) -> None:
         from cmk.dev_deploy.core.output import (
             print_verbose_changes,
             set_verbosity,
@@ -1635,7 +1609,7 @@ class TestVerboseChangesHmrAnnotation:
 
         changes = _make_changeset(
             categories={
-                ChangeCategory.VUE: ("packages/cmk-shared-typing/src/types.ts",),
+                ChangeCategory.VUE: ("packages/cmk-frontend/src/js/modules/popup_menu.ts",),
             }
         )
         set_verbosity(Verbosity.VERBOSE)
@@ -1643,9 +1617,33 @@ class TestVerboseChangesHmrAnnotation:
             with patch("cmk.dev_deploy.core.output._print_locked") as mock_print:
                 print_verbose_changes(changes, frontend_supervised=True)
                 calls_text = [c[0][0] for c in mock_print.call_args_list]
-                typing_calls = [c for c in calls_text if "types.ts" in c]
-                assert len(typing_calls) == 1
-                assert "(Vite HMR)" not in typing_calls[0]
+                file_calls = [c for c in calls_text if "popup_menu.ts" in c]
+                assert len(file_calls) == 1
+                assert "(Vite HMR)" not in file_calls[0]
+        finally:
+            set_verbosity(Verbosity.DEFAULT)
+
+    def test_no_annotation_for_python_in_supervised_prefixes(self) -> None:
+        """A feature package's Python goes to its wheel, not through Vite."""
+        from cmk.dev_deploy.core.output import (
+            print_verbose_changes,
+            set_verbosity,
+            Verbosity,
+        )
+
+        changes = _make_changeset(
+            categories={
+                ChangeCategory.PYTHON: ("packages/cmk-profiling/cmk/profiling/gui/pages.py",),
+            }
+        )
+        set_verbosity(Verbosity.VERBOSE)
+        try:
+            with patch("cmk.dev_deploy.core.output._print_locked") as mock_print:
+                print_verbose_changes(changes, frontend_supervised=True)
+                calls_text = [c[0][0] for c in mock_print.call_args_list]
+                python_calls = [c for c in calls_text if "pages.py" in c]
+                assert len(python_calls) == 1
+                assert "(Vite HMR)" not in python_calls[0]
         finally:
             set_verbosity(Verbosity.DEFAULT)
 

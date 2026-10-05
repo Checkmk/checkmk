@@ -338,7 +338,7 @@ Each deploy cycle follows these stages:
 
 6. **Parallel execution** -- Run applicable deployers in parallel (up to `--jobs` workers).
 
-7. **Service restart** -- Only restart services affected by the deployers that actually ran. Uses a three-tier resolution: explicit service specs > wheel convention (any wheel triggers `apache:reload`) > config spec annotations. Services are restarted in dependency order.
+7. **Service restart** -- Only restart services affected by the deployers that actually ran. Uses a three-tier resolution: explicit service specs > wheel convention (any wheel triggers `apache:reload`, except for files an install spec builds, such as a wheel package's Vue code) > config spec annotations. Services are restarted in dependency order.
 
    After a successful Apache reload or restart, `init-redis` requests a background rebuild of the Setup search index so newly deployed rulesets and menu entries become searchable. Redis keeps running. `--no-restart` skips this refresh along with the service actions.
 
@@ -397,7 +397,7 @@ It contains:
 
 - **Wheel prefixes** -- the source-tree prefixes covered by wheel deployment, used for step gating, `.py` categorization, coverage warnings, and the service-restart convention. Which wheels get deployed (per edition) is defined in `bazel/rules/deploy.bzl`, not here.
 - **Config specs** -- Config/data directories deployed via `copy_dir`, `install_files`, or `locale_compile` methods. Each spec maps a source prefix to a site destination.
-- **Install specs** -- Compiled artifacts (C++ binaries, Rust binaries, frontend dist bundles) built by Bazel and installed with specific permissions and post-install actions. Each spec also records its _input prefixes_: workspace packages in the target's Bazel closure that no wheel, install, or config spec deploys on their own (e.g. `packages/cmk-ui-library/` for the cmk-frontend-vue dist). Changes there categorize, resolve, and deploy through the consuming spec.
+- **Install specs** -- Compiled artifacts (C++ binaries, Rust binaries, frontend dist bundles) built by Bazel and installed with specific permissions and post-install actions. Each spec also records its _input prefixes_, derived from the target's Bazel closure: workspace packages with sources there that no wheel, install, or config spec deploys on their own. Changes to those sources categorize, resolve, and deploy through the consuming spec.
 
 ### deploy_specs.toml
 

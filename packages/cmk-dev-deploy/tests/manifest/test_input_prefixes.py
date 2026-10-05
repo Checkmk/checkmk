@@ -4,9 +4,10 @@
 
 """Unit tests for deriving install spec input prefixes from Bazel closures.
 
-An install target's Bazel closure can contain workspace packages that no
-deployer covers -- cmk-ui-library, which is compiled into the
-cmk-frontend-vue dist.  These tests pin how such packages are found
+An install target's Bazel closure can contain workspace packages whose
+sources there no deployer covers -- cmk-ui-library, which is compiled into
+the cmk-frontend-vue dist, or the Vue code of cmk-profiling, whose wheel
+deploys only its Python.  These tests pin how such packages are found
 (``_compute_input_prefixes``) and how the sources behind the install
 targets are queried and grouped.
 """
@@ -39,25 +40,28 @@ _VUE_SOURCES = frozenset(
         "packages/cmk-ui-library/assets/icons/icon-back.svg",
         "packages/cmk-ui-library/package.json",
         "packages/cmk-frontend/src/main.js",  # install spec of its own
-        "packages/cmk-shared-typing/source/setup.json",  # wheel package
+        "packages/cmk-profiling/frontend/App.vue",  # wheel package with Vue code
+        "packages/cmk-profiling/cmk/profiling/gui/pages.py",
+        "packages/cmk-profiling/cmk/profiling/gui/py.typed",
         "cmk/gui/openapi/spec/spec_generator/main.py",  # not a workspace package
         "non-free/packages/cmk-dcd/cmk/dcd/foo.py",  # wheel package
         "packages/cmk-no-wheel/cmk/no_wheel/foo.py",  # Python without a wheel
+        "packages/cmk-licensing/cmk/licensing/foo.ts",  # config spec of the whole package
         "locale/de/LC_MESSAGES/multisite.po",  # config spec
     }
 )
-_DEPLOYABLE = frozenset(
-    {
-        "packages/cmk-frontend-vue/",
-        "packages/cmk-frontend/",
-        "packages/neb/",
-        "packages/livestatus/",
-        "cmk/",
-        "packages/cmk-shared-typing/",
-        "non-free/packages/cmk-dcd/",
-        "locale/",
-    }
-)
+_WHEEL = frozenset({".py", ".typed"})
+_DEPLOYED: list[tuple[str, frozenset[str] | None]] = [
+    ("packages/cmk-frontend-vue/", frozenset({".vue"})),
+    ("packages/cmk-frontend/", frozenset({".js"})),
+    ("packages/neb/", frozenset({".cc"})),
+    ("packages/livestatus/", frozenset({".h"})),
+    ("cmk/", _WHEEL),
+    ("packages/cmk-profiling/", _WHEEL),
+    ("non-free/packages/cmk-dcd/", _WHEEL),
+    ("packages/cmk-licensing/", None),
+    ("locale/", None),
+]
 
 
 class TestWorkspacePackage:
@@ -95,14 +99,20 @@ class TestExtensionsByPrefix:
 
 
 class TestComputeInputPrefixes:
-    def test_ui_library_is_the_vue_dist_input(self) -> None:
-        """Only the undeployed package with buildable sources survives.
+    def test_inputs_are_the_buildable_sources_no_spec_deploys(self) -> None:
+        """cmk-ui-library comes in whole, cmk-profiling with its Vue code only.
 
-        The spec's own package, packages with install or wheel specs, config
-        directories, and non-workspace paths all have a deployer already.
+        The spec's own package, packages whose specs deploy all of their
+        sources here, config directories, and non-workspace paths all have a
+        deployer already.
         """
-        result = _compute_input_prefixes({_VUE_TARGET: _VUE_SOURCES}, _DEPLOYABLE)
-        assert result == {_VUE_TARGET: ["packages/cmk-ui-library/"]}
+        result = _compute_input_prefixes({_VUE_TARGET: _VUE_SOURCES}, _DEPLOYED)
+        assert result == {
+            _VUE_TARGET: {
+                "packages/cmk-profiling/": frozenset({".vue"}),
+                "packages/cmk-ui-library/": frozenset({".vue", ".ts", ".svg", ".json"}),
+            }
+        }
 
     def test_python_only_package_is_not_an_input(self) -> None:
         """A wheel-less Python package in the closure keeps its Python categorization.
@@ -111,54 +121,48 @@ class TestComputeInputPrefixes:
         claiming it for the dist would turn .py edits into frontend builds.
         """
         sources = {_VUE_TARGET: frozenset({"packages/cmk-no-wheel/cmk/no_wheel/foo.py"})}
-        assert _compute_input_prefixes(sources, _DEPLOYABLE) == {}
+        assert _compute_input_prefixes(sources, _DEPLOYED) == {}
 
     def test_target_without_input_packages_is_absent(self) -> None:
         sources = {
             _NEB_TARGET: frozenset({"packages/neb/src/module.cc", "packages/livestatus/x.h"})
         }
-        assert _compute_input_prefixes(sources, _DEPLOYABLE) == {}
+        assert _compute_input_prefixes(sources, _DEPLOYED) == {}
 
     def test_shared_input_package_is_attributed_to_every_consumer(self) -> None:
         shared = frozenset({"packages/cmk-ui-library/lib/utils.ts"})
-        result = _compute_input_prefixes(
-            {_VUE_TARGET: shared, _FRONTEND_TARGET: shared}, _DEPLOYABLE
-        )
+        result = _compute_input_prefixes({_VUE_TARGET: shared, _FRONTEND_TARGET: shared}, _DEPLOYED)
         assert result == {
-            _VUE_TARGET: ["packages/cmk-ui-library/"],
-            _FRONTEND_TARGET: ["packages/cmk-ui-library/"],
+            _VUE_TARGET: {"packages/cmk-ui-library/": frozenset({".ts"})},
+            _FRONTEND_TARGET: {"packages/cmk-ui-library/": frozenset({".ts"})},
         }
 
     def test_prefixes_are_sorted(self) -> None:
         sources = {
             _VUE_TARGET: frozenset({"packages/zeta/x.vue", "packages/alpha/y.ts"}),
         }
-        result = _compute_input_prefixes(sources, _DEPLOYABLE)
-        assert result == {_VUE_TARGET: ["packages/alpha/", "packages/zeta/"]}
+        result = _compute_input_prefixes(sources, _DEPLOYED)
+        assert list(result[_VUE_TARGET]) == ["packages/alpha/", "packages/zeta/"]
 
 
 class TestInstallSpecExtensions:
-    def test_covers_own_and_input_prefixes(self) -> None:
-        specs = [
-            {
-                "package_target": _VUE_TARGET,
-                "source_prefix": "packages/cmk-frontend-vue",
-                "input_prefixes": ["packages/cmk-ui-library/"],
-            },
-            {"package_target": _NEB_TARGET, "source_prefix": "packages/neb", "input_prefixes": []},
-        ]
-        sources = {
-            _VUE_TARGET: _VUE_SOURCES,
-            _NEB_TARGET: frozenset({"packages/neb/src/module.cc"}),
-        }
-        assert _install_spec_extensions(specs, sources) == {
+    def test_merges_own_and_input_extensions(self) -> None:
+        own = {
             "packages/cmk-frontend-vue": frozenset({".vue"}),
-            "packages/cmk-ui-library": frozenset({".vue", ".ts", ".svg", ".json"}),
+            "packages/neb": frozenset({".cc"}),
+        }
+        inputs = {
+            _VUE_TARGET: {"packages/cmk-ui-library/": frozenset({".vue", ".svg"})},
+            _FRONTEND_TARGET: {"packages/cmk-ui-library/": frozenset({".ts"})},
+        }
+        assert _install_spec_extensions(own, inputs) == {
+            "packages/cmk-frontend-vue": frozenset({".vue"}),
+            "packages/cmk-ui-library": frozenset({".vue", ".svg", ".ts"}),
             "packages/neb": frozenset({".cc"}),
         }
 
     def test_no_specs_no_extensions(self) -> None:
-        assert _install_spec_extensions([], {}) == {}
+        assert _install_spec_extensions({}, {}) == {}
 
 
 class TestQueryTargetSources:

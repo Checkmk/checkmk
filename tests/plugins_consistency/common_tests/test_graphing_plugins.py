@@ -328,10 +328,6 @@ def test_bundles() -> None:
 
 
 _ALLOWED_DUPLICATE_METRIC_TITLES = {
-    "Non-compliant devices": {
-        "mobileiron_non_compliant",
-        "mobileiron_non_compliant_summary",
-    },
     "Power usage": {"power_usage", "power_usage_percentage"},
     "Pressure": {"pressure_pa", "pressure"},
     "Rate of metrics received": {"perf_data_count_rate", "metrics_count_rate"},

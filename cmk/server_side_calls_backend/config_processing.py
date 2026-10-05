@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence, Set
 from dataclasses import dataclass
 from typing import Literal
 from urllib.parse import urlparse
@@ -93,13 +93,25 @@ class OAuth2Connection:
     proxy: _ProxySpec = ("cmk_postprocessed", "environment_proxy", "")
 
 
-def extract_all_adhoc_secrets(
+@dataclass(frozen=True)
+class ExtractedSecrets:
+    """The ad hoc secrets of a configuration, and the ids of all secrets it references.
+
+    `referenced_ids` includes the ids of stored passwords, which are not part of
+    `adhoc` because their value lives in the user managed password store.
+    """
+
+    adhoc: Mapping[str, StoreSecret[str]]
+    referenced_ids: Set[str]
+
+
+def extract_secrets(
     rules_by_name: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     global_proxies_with_lookup: GlobalProxiesWithLookup,
     oauth2_connections: Mapping[str, OAuth2Connection],
-) -> Mapping[str, StoreSecret[str]]:
+) -> ExtractedSecrets:
     """
-    >>> extract_all_adhoc_secrets(
+    >>> extract_secrets(
     ...     rules_by_name=[
     ...         (
     ...             'pure_storage_fa',
@@ -117,32 +129,25 @@ def extract_all_adhoc_secrets(
     ...     ),
     ...     oauth2_connections={},
     ... )
-    {':uuid:1234': Secret('****')}
+    ExtractedSecrets(adhoc={':uuid:1234': Secret('****')}, referenced_ids={':uuid:1234'})
     """
     use_alpha = True  # whatever is more comprehensive in extracting secrets
     preprocessing_results = [
-        (
-            name,
-            [
-                process_configuration_to_parameters(
-                    rule,
-                    global_proxies_with_lookup,
-                    oauth2_connections,
-                    f"ruleset: {name}",
-                    use_alpha,
-                )
-                for rule in rules
-            ],
+        process_configuration_to_parameters(
+            rule,
+            global_proxies_with_lookup,
+            oauth2_connections,
+            f"ruleset: {name}",
+            use_alpha,
         )
         for name, rules in rules_by_name
+        for rule in rules
     ]
 
-    return {
-        k: v
-        for name, prep in preprocessing_results
-        for res in prep
-        for k, v in res.found_secrets.items()
-    }
+    return ExtractedSecrets(
+        adhoc={k: v for res in preprocessing_results for k, v in res.found_secrets.items()},
+        referenced_ids={name for res in preprocessing_results for name in res.surrogates.values()},
+    )
 
 
 @dataclass(frozen=True)

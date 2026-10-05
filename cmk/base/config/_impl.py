@@ -121,7 +121,7 @@ from cmk.server_side_calls_backend import (
     SSCRules,
 )
 from cmk.server_side_calls_backend.config_processing import (
-    extract_all_adhoc_secrets,
+    extract_secrets,
 )
 from cmk.utils import config_warnings, ip_lookup, password_store
 from cmk.utils.caching import cache_manager
@@ -2184,7 +2184,7 @@ class ConfigCache:
                 k: Secret(s)
                 for k, s in password_store.load(password_store.password_store_path()).items()
             },
-            **extract_all_adhoc_secrets(
+            **extract_secrets(
                 rules_by_name=_compose_filtered_ssc_rules(
                     self._loaded_config.active_checks.items()
                 ),
@@ -2193,8 +2193,8 @@ class ConfigCache:
                     ident: config_processing.OAuth2Connection(**entry)
                     for ident, entry in self._loaded_config.oauth2_connections.items()
                 },
-            ),
-            **extract_all_adhoc_secrets(
+            ).adhoc,
+            **extract_secrets(
                 rules_by_name=_compose_filtered_ssc_rules(
                     self._loaded_config.special_agents.items()
                 ),
@@ -2203,7 +2203,7 @@ class ConfigCache:
                     ident: config_processing.OAuth2Connection(**entry)
                     for ident, entry in self._loaded_config.oauth2_connections.items()
                 },
-            ),
+            ).adhoc,
         }
 
     def explicit_check_command(self, host_name: HostName) -> HostCheckCommand:

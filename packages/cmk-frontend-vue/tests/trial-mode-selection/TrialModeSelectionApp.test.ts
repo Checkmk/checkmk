@@ -811,38 +811,13 @@ describe('TrialModeSelectionApp', () => {
       expect(screen.queryByRole('button', { name: 'Back' })).not.toBeInTheDocument()
     })
 
-    it('records the trial and leaves for the page it was given on Start monitoring', async () => {
+    it('leaves for the dashboard on Start monitoring', async () => {
       renderApp()
       await verifyTrial()
 
       await user.click(screen.getByRole('button', { name: 'Start monitoring' }))
 
-      await waitFor(() => {
-        expect(mockCmkAjax).toHaveBeenCalledWith('ajax_save_trial_mode_selection.py', {
-          selection: 'trial',
-          _csrf_token: 'the-csrf-token'
-        })
-        expect(mockLocationAssign).toHaveBeenCalledWith('view.py?view_name=allhosts')
-      })
-    })
-
-    it('stays put and complains when recording the trial fails', async () => {
-      vi.spyOn(console, 'error').mockImplementation(() => {})
-      renderApp()
-      await verifyTrial()
-      mockCmkAjax.mockRejectedValue(new Error('nope'))
-
-      await user.click(screen.getByRole('button', { name: 'Start monitoring' }))
-
-      await waitFor(() => {
-        expect(
-          screen.getByText('Saving your selection failed. Please try again.')
-        ).toBeInTheDocument()
-      })
-      // Leaving for a dashboard that would only bounce the user back here is worse than
-      // staying on a screen with a retryable button.
-      expect(mockLocationAssign).not.toHaveBeenCalled()
-      expect(screen.getByRole('button', { name: 'Start monitoring' })).toBeInTheDocument()
+      expect(mockLocationAssign).toHaveBeenCalledWith('view.py?view_name=allhosts')
     })
   })
 })

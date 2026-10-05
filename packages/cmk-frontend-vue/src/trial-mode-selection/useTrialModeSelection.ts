@@ -243,10 +243,6 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
     window.location.assign(props.start_monitoring_url)
   }
 
-  function recordTrial(): Promise<void> {
-    return persistAndLeave({ selection: 'trial' }, props.start_monitoring_url)
-  }
-
   function resendCode(): void {
     void sendCodeRequest()
   }
@@ -284,7 +280,6 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
     sendCode,
     resendCode,
     goTo,
-    recordTrial,
     startMonitoring,
     verifyNow,
     verifyLater

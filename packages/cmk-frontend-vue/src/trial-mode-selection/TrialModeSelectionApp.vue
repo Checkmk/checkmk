@@ -38,7 +38,6 @@ const {
   sendCode,
   resendCode,
   goTo,
-  recordTrial,
   startMonitoring,
   verifyNow,
   verifyLater
@@ -123,7 +122,7 @@ const {
       :trial-end-timestamp="props.trial_end_timestamp"
       :trial-length-days="props.trial_length_days"
       :saving="saving"
-      @start-monitoring="recordTrial"
+      @start-monitoring="startMonitoring"
     />
 
     <CmkParagraph class="trial-mode-selection-app__footer">

@@ -5,32 +5,32 @@
 
 from cmk.graphing.v1 import graphs, metrics, Title
 
-UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
+UNIT_TIME = metrics.Unit(metrics.TimeNotation())
 
-metric_disk_average_read_request_size = metrics.Metric(
-    name="disk_average_read_request_size",
-    title=Title("Average read request size"),
-    unit=UNIT_BYTES,
+metric_disk_average_read_wait = metrics.Metric(
+    name="disk_average_read_wait",
+    title=Title("Read wait time"),
+    unit=UNIT_TIME,
     color=metrics.Color.GREEN,
 )
-metric_disk_average_write_request_size = metrics.Metric(
-    name="disk_average_write_request_size",
-    title=Title("Average write request size"),
-    unit=UNIT_BYTES,
+metric_disk_average_write_wait = metrics.Metric(
+    name="disk_average_write_wait",
+    title=Title("Write wait time"),
+    unit=UNIT_TIME,
     color=metrics.Color.BLUE,
 )
 
-graph_average_request_size = graphs.Bidirectional(
-    name="average_request_size",
-    title=Title("Average read and write request size"),
+graph_average_end_to_end_wait_time = graphs.Bidirectional(
+    name="average_end_to_end_wait_time",
+    title=Title("Average end to end wait time"),
     lower=graphs.Graph(
-        name="disk_average_write_request_size",
-        title=Title("Average write request size"),
-        compound_lines=["disk_average_write_request_size"],
+        name="disk_average_write_wait",
+        title=Title("Average end to end wait time"),
+        compound_lines=["disk_average_write_wait"],
     ),
     upper=graphs.Graph(
-        name="disk_average_read_request_size",
-        title=Title("Average read request size"),
-        compound_lines=["disk_average_read_request_size"],
+        name="disk_average_read_wait",
+        title=Title("Average end to end wait time"),
+        compound_lines=["disk_average_read_wait"],
     ),
 )

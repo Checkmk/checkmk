@@ -9,7 +9,7 @@ from cmk.ccc.version import Edition
 from tests.testlib.unit.gui.common_fixtures import perform_load_plugins
 
 
-@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture(scope="session")
 def load_plugins(test_edition: Edition) -> None:
     """The rename actions rely on the GUI plug-in registration (host attributes,
     folder validators, site management, rulespecs)"""

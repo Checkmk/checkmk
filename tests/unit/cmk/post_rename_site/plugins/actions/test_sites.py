@@ -35,6 +35,7 @@ def _write_site_config(sites_mk: Path, config: SiteConfigurations) -> None:
         f.write(f"sites.update({config!r})")
 
 
+@pytest.mark.usefixtures("load_plugins")
 def test_update_basic_site_config(site_config_file: Path) -> None:
     _write_site_config(
         site_config_file,
@@ -77,6 +78,7 @@ def test_update_basic_site_config(site_config_file: Path) -> None:
     assert all_sites[SiteId("haha")]["url_prefix"] == "/haha/"
 
 
+@pytest.mark.usefixtures("load_plugins")
 def test_update_remote_site_status_host_config(site_config_file: Path) -> None:
     _write_site_config(
         site_config_file,

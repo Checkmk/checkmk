@@ -68,6 +68,7 @@ def _write_hosts_mk(content: str) -> Path:
     return path
 
 
+@pytest.mark.usefixtures("load_plugins")
 def test_rewrite_folder_explicit_site() -> None:
     _write_folder_attributes(
         {
@@ -94,6 +95,7 @@ def test_rewrite_folder_explicit_site() -> None:
     assert _make_tree().root_folder().attributes.get("site") == "dingdong"
 
 
+@pytest.mark.usefixtures("load_plugins")
 def test_rewrite_host_explicit_site() -> None:
     _write_hosts_mk(
         """# Created by WATO
@@ -127,6 +129,7 @@ host_attributes.update(
     assert hosts_config["host_tags"]["ag"]["site"] == "dingdong"
 
 
+@pytest.mark.usefixtures("load_plugins")
 def test_rewrite_tags_no_explicit_site_set(monkeypatch: MonkeyPatch) -> None:
     _write_folder_attributes(
         {
@@ -253,6 +256,7 @@ def _config_with_extra_site(site_id: SiteId) -> Config:
     return config
 
 
+@pytest.mark.usefixtures("load_plugins")
 def test_updating_site_name_for_dcd() -> None:
     """
     We have one site and two hosts.
@@ -331,6 +335,7 @@ def test_updating_site_name_for_dcd() -> None:
     )
 
 
+@pytest.mark.usefixtures("load_plugins")
 def test_updating_site_name_without_dcd() -> None:
     """
     We have two site and two separate hosts.

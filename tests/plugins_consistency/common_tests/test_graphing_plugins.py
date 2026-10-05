@@ -328,7 +328,6 @@ def test_bundles() -> None:
 
 
 _ALLOWED_DUPLICATE_METRIC_TITLES = {
-    "Number of Go routines": {"bazel_cache_status_num_goroutines", "bazel_cache_go_go_goroutines"},
     "Nodes": {"number_of_nodes", "aws_elasticache_nodes"},
     "Non-compliant devices": {
         "mobileiron_non_compliant",

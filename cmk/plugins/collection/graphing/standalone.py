@@ -393,7 +393,7 @@ metric_24ghz_clients = metrics.Metric(
 )
 metric_connections_failed_rate = metrics.Metric(
     name="connections_failed_rate",
-    title=Title("Failed connections"),
+    title=Title("Failed connections per second"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.ORANGE,
 )

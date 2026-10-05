@@ -328,7 +328,6 @@ def test_bundles() -> None:
 
 
 _ALLOWED_DUPLICATE_METRIC_TITLES = {
-    "Failed connections": {"connections_failed_rate", "failed_connections"},
     "GPU utilization": {"esx_gpu_utilization", "gpu_utilization"},
     "Fan speed": {"fan_perc", "fan", "fan_speed"},
     "HTTP 500 errors": {"http_5xx", "aws_http_500_rate"},

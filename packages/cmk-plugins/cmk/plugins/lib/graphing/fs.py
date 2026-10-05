@@ -64,7 +64,7 @@ metric_space_savings = metrics.Metric(
 )
 metric_system_size = metrics.Metric(
     name="system_size",
-    title=Title("System"),
+    title=Title("System space"),
     unit=UNIT_BYTES,
     color=metrics.Color.GRAY,
 )

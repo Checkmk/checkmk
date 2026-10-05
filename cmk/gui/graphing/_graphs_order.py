@@ -37,7 +37,6 @@ GRAPHS_ORDER = [
     "livestatus_usage",
     "helper_usage",
     "average_helper_latency",
-    "helper_usage_cmk",
     "helper_usage_fetcher",
     "helper_usage_checker",
     "helper_usage_generic",

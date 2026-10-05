@@ -25,6 +25,11 @@ from cmk.gui.dashboard.api.model.contextual_link import (
     ContextualLinkSpec,
     VisualLocation,
 )
+from cmk.gui.dashboard.api.model.widget_content.inventory import InventoryContent
+from cmk.gui.dashboard.api.model.widget_content.state import (
+    HostStateContent,
+    ServiceStateContent,
+)
 from cmk.gui.dashboard.type_defs import ContextFilterConfig
 
 _BY_NAME = VisualLocation(type="views", name="searchhost", owner=None)
@@ -108,3 +113,28 @@ def test_an_object_host_filter_loads_the_host_name() -> None:
 def test_the_host_name_does_not_load_as_an_aggregate_filter() -> None:
     with pytest.raises(ValidationError):
         AGGREGATE_HOST_FILTER_ADAPTER.validate_python(ContextFilterConfig(filter_id="host"))
+
+
+def test_a_host_state_click_may_carry_the_host_name() -> None:
+    options = HostStateContent.contextual_link_options()
+
+    assert options is not None
+    assert options.filters == ["siteopt", "wato_folder", "hoststate", "opthostgroup", "host"]
+    assert options.single_infos == ["host"]
+
+
+def test_a_service_state_click_may_carry_the_host_and_the_service_name() -> None:
+    options = ServiceStateContent.contextual_link_options()
+
+    assert options is not None
+    assert {"host", "service", "svcstate"} <= set(options.filters)
+    assert options.single_infos == ["host", "service"]
+
+
+def test_an_inventory_click_may_carry_the_host_name_in_a_custom_link() -> None:
+    options = InventoryContent.contextual_link_options()
+
+    assert options is not None
+    assert options.modes == ["default", "inherited", "custom"]
+    assert "host" in options.filters
+    assert options.single_infos == ["host"]

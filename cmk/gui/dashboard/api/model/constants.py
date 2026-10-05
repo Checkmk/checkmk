@@ -6,6 +6,7 @@ from typing import Annotated, TypedDict
 
 from annotated_types import Ge
 
+from cmk.gui.dashboard.api.model.contextual_link import ContextualLinkOptions
 from cmk.gui.dashboard.api.model.type_defs import AnnotatedInfoName
 from cmk.gui.dashboard.api.model.widget import (
     WidgetRelativeGridPosition,
@@ -13,7 +14,7 @@ from cmk.gui.dashboard.api.model.widget import (
     WidgetResponsiveGridSize,
 )
 from cmk.gui.dashboard.type_defs import ResponsiveGridBreakpoint
-from cmk.gui.openapi.framework.model import api_field, api_model
+from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 
 
 class _BreakpointConfig(TypedDict):
@@ -82,6 +83,10 @@ class WidgetConstraints:
         description="Filter context constraints for the widget type."
     )
     title_macros: list[str] = api_field(description="Available macros for dynamic widget titles.")
+    contextual_link: ContextualLinkOptions | ApiOmitted = api_field(
+        default_factory=ApiOmitted,
+        description="What a contextual link of the widget may be; omitted if it has none.",
+    )
 
 
 @api_model

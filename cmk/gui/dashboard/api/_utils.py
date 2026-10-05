@@ -58,6 +58,7 @@ from .model.constants import (
     ResponsiveLayoutBreakpointConstraintsModel,
     WidgetConstraints,
 )
+from .model.contextual_link import ContextualLinkOptions
 from .model.dashboard import (
     DashboardGeneralSettings,
     DashboardIcon,
@@ -69,6 +70,7 @@ from .model.widget import (
     WidgetRelativeGridSize,
     WidgetResponsiveGridSize,
 )
+from .model.widget_content import content_type_from_internal_type
 
 
 def make_pending_changes(api_context: ApiContext) -> PendingChanges:
@@ -478,6 +480,7 @@ class DashboardConstants:
                         restricted_to_single=list(widget.single_infos()),
                     ),
                     title_macros=title_macros,
+                    contextual_link=_contextual_link_options(widget_type),
                 )
 
         return DashboardConstantsResponse(
@@ -494,6 +497,12 @@ class DashboardConstants:
     def dict_output() -> dict[str, object]:
         response = DashboardConstants.generate_api_response()
         return dump_dict_without_omitted(DashboardConstantsResponse, response)
+
+
+def _contextual_link_options(widget_type: str) -> ContextualLinkOptions | ApiOmitted:
+    content_type = content_type_from_internal_type(widget_type)
+    options = None if content_type is None else content_type.contextual_link_options()
+    return ApiOmitted() if options is None else options
 
 
 def validated_dashboard_token(token: AuthToken | None) -> tuple[AuthToken, DashboardToken]:

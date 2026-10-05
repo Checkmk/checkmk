@@ -147,6 +147,13 @@ _CONTENT_TYPES = (
 )
 
 
+def content_type_from_internal_type(internal_type: str) -> type[BaseWidgetContent] | None:
+    for content_type in _CONTENT_TYPES:
+        if content_type.internal_type() == internal_type:
+            return content_type
+    return None
+
+
 def content_from_internal(config: DashletConfig) -> WidgetContent:
     type_ = config["type"]
     for content_type in _CONTENT_TYPES:

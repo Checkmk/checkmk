@@ -4,7 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Annotated, assert_never, Literal
+from typing import (
+    Annotated,
+    assert_never,
+    get_args,
+    get_origin,
+    get_type_hints,
+    Literal,
+    TypeAliasType,
+)
 
 from annotated_types import MinLen
 from pydantic import Discriminator, StringConstraints, TypeAdapter, WithJsonSchema
@@ -23,7 +31,7 @@ from cmk.gui.dashboard.type_defs import (
     ContextualLinkTargetType,
 )
 from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.gui.type_defs import AnnotatedUserId, Visual, VisualName
+from cmk.gui.type_defs import AnnotatedUserId, FilterName, InfoName, Visual, VisualName
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals.type import visual_type_registry
 
@@ -34,6 +42,10 @@ from .context_filters import (
     ObjectHostContextFilter,
     ObjectServiceContextFilter,
 )
+
+type ConfigurableLinkMode = Literal["default", "inherited", "custom"]
+_MODES_ADAPTER: TypeAdapter[list[ConfigurableLinkMode]] = TypeAdapter(list[ConfigurableLinkMode])
+
 
 # The request and the response share this model, so both directions state the same schema.
 _OwnerId = Annotated[AnnotatedUserId, WithJsonSchema({"type": "string"})]
@@ -119,6 +131,52 @@ type AnyContextualLinkSpec = (
     | ContextualLinkSpec[ObjectHostContextFilter]
     | ContextualLinkSpec[ObjectServiceContextFilter]
 )
+
+
+@api_model
+class ContextualLinkOptions:
+    modes: list[ConfigurableLinkMode] = api_field(
+        description="The modes the widget offers besides linking nowhere."
+    )
+    filters: list[FilterName] = api_field(
+        description="The filters a custom link of the widget may carry."
+    )
+    single_infos: list[InfoName] = api_field(
+        description=(
+            "The objects a click on the widget names, such as the host. A target restricted to a "
+            "single object only fits a widget whose clicks name that object."
+        )
+    )
+
+
+def contextual_link_options(link_type: object) -> ContextualLinkOptions:
+    """The options a widget's `contextual_link` type `ContextualLinkSpec[F]` accepts.
+
+    Read off the types, so the options cannot drift from what the API accepts.
+    """
+    if (spec := get_origin(link_type)) is None:
+        raise TypeError(f"Not a parameterized contextual link type: {link_type!r}")
+    (filter_type,) = get_args(link_type)
+    filters = [_literal(member, "filter_id") for member in _members(filter_type)]
+    return ContextualLinkOptions(
+        modes=_MODES_ADAPTER.validate_python(
+            [mode for arm in _members(spec) if (mode := _literal(arm, "type")) != "none"]
+        ),
+        filters=filters,
+        # An object filter set holds the name filter of exactly the objects its click names.
+        single_infos=[info for info in ("host", "service") if info in filters],
+    )
+
+
+def _members(alias: TypeAliasType) -> tuple[object, ...]:
+    """The members of an alias of the form `Annotated[A | B | ..., Discriminator(...)]`."""
+    members: tuple[object, ...] = get_args(get_args(alias.__value__)[0])
+    return members
+
+
+def _literal(model: object, field: str) -> str:
+    (value,) = get_args(get_type_hints(get_origin(model) or model)[field])
+    return str(value)
 
 
 def contextual_link_to_internal(

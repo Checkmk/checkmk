@@ -8,7 +8,7 @@ from typing import Literal
 
 from cmk.ccc.user import UserId
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import AnnotatedUserId
+from cmk.gui.type_defs import AnnotatedUserId, InfoName
 from cmk.gui.utils.roles import UserPermissions
 
 from .breadcrumb import dashboard_topic_breadcrumb
@@ -47,6 +47,7 @@ class DashboardMetadataObject:
     is_built_in: bool
     is_editable: bool
     layout_type: DashboardLayoutType
+    restricted_to_single: list[InfoName]
     display: DashboardDisplay
 
     @classmethod
@@ -67,6 +68,7 @@ class DashboardMetadataObject:
             is_built_in=is_built_in,
             is_editable=is_editable,
             layout_type=layout_type,
+            restricted_to_single=list(dashboard["single_infos"]),
             display=DashboardDisplay(
                 title=str(dashboard["title"]),
                 topic=Topic(

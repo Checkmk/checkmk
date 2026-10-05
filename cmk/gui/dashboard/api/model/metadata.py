@@ -11,7 +11,7 @@ from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
     DomainObjectModel,
 )
-from cmk.gui.type_defs import AnnotatedUserId
+from cmk.gui.type_defs import AnnotatedUserId, InfoName
 
 
 @api_model
@@ -56,6 +56,12 @@ class DashboardMetadata:
     layout_type: DashboardLayoutType = api_field(
         description="Layout system used: 'relative' for absolute positioning, 'responsive' for adaptive design."
     )
+    restricted_to_single: list[InfoName] = api_field(
+        description=(
+            "The single infos the dashboard is restricted to: it must be filtered to exactly one "
+            "item of each."
+        )
+    )
     display: DashboardDisplay = api_field(description="Display and presentation preferences.")
 
     @classmethod
@@ -66,6 +72,7 @@ class DashboardMetadata:
             is_built_in=obj.is_built_in,
             is_editable=obj.is_editable,
             layout_type=obj.layout_type,
+            restricted_to_single=obj.restricted_to_single,
             display=DashboardDisplay(
                 title=obj.display.title,
                 topic=Topic(

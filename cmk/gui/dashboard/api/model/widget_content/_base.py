@@ -14,7 +14,12 @@ from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_model
 from cmk.gui.type_defs import DashboardEmbeddedViewSpec
 
-from ..contextual_link import AnyContextualLinkSpec, ContextualLinkDefault
+from ..contextual_link import (
+    AnyContextualLinkSpec,
+    contextual_link_options,
+    ContextualLinkDefault,
+    ContextualLinkOptions,
+)
 
 
 @api_model
@@ -44,6 +49,12 @@ class BaseWidgetContent(ABC):
     def configured_contextual_link(self) -> AnyContextualLinkSpec:
         """The link the widget configures; the default link for a widget without a link field."""
         return ContextualLinkDefault(type="default")
+
+    @classmethod
+    def contextual_link_options(cls) -> ContextualLinkOptions | None:
+        """What a link of this widget may be; None for a widget that configures none."""
+        field = cls.__dataclass_fields__.get("contextual_link")
+        return None if field is None else contextual_link_options(field.type)
 
     def iter_validation_errors(
         self,

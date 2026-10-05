@@ -167,6 +167,37 @@ def test_show_dashboard_constants(clients: ClientRegistry) -> None:
         )
 
 
+def test_dashboard_constants_tell_the_link_options_of_a_widget(clients: ClientRegistry) -> None:
+    widgets = clients.ConstantClient.get_dashboard().json["extensions"]["widgets"]
+
+    assert widgets["host_stats"]["contextual_link"] == {
+        "modes": ["default", "inherited", "custom"],
+        "filters": ["siteopt", "wato_folder", "hoststate", "opthostgroup"],
+        "single_infos": [],
+    }
+    assert "contextual_link" not in widgets["event_stats"]
+
+
+def test_dashboard_metadata_tells_what_a_dashboard_is_restricted_to(
+    clients: ClientRegistry,
+) -> None:
+    payload = create_dashboard_payload("host_dashboard", {})
+    payload["filter_context"] = {
+        "restricted_to_single": ["host"],
+        "filters": {},
+        "mandatory_context_filters": [],
+    }
+    clients.DashboardClient.create_relative_grid_dashboard(payload)
+
+    dashboards = clients.DashboardClient.list_dashboard_metadata().json["value"]
+
+    assert [
+        dashboard["extensions"]["restricted_to_single"]
+        for dashboard in dashboards
+        if dashboard["extensions"]["name"] == "host_dashboard"
+    ] == [["host"]]
+
+
 def test_dashboard_constants_responsive_breakpoints_make_sense(clients: ClientRegistry) -> None:
     """Check that the configured breakpoints and widget constraints make sense."""
     resp = clients.ConstantClient.get_dashboard()

@@ -50,6 +50,7 @@ SUPPORTED_VERSIONS = [
     (1, 32),
     (1, 33),
     (1, 34),
+    (1, 35),
 ]
 # PM decision: LOWEST_FUNCTIONING_VERSION is incremented, if an issue is reported by a customer.
 # Otherwise, we try not change anything in monitoring (despite lack of support).

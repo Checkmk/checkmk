@@ -627,7 +627,7 @@ metric_failed_ad_requests = metrics.Metric(
 )
 metric_http_5xx = metrics.Metric(
     name="http_5xx",
-    title=Title("HTTP 500 errors"),
+    title=Title("HTTP 5xx errors per second"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.DARK_BLUE,
 )

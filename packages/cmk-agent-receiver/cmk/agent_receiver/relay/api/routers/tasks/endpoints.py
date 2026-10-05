@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import hashlib
+from collections.abc import Sequence
 from http import HTTPStatus
 from typing import Annotated, assert_never
 
@@ -33,6 +35,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.localhost_authorization imp
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     ActiveCheckSpec,
     FetchSpec,
+    RelayTask,
     ResultType,
     Spec,
     TaskStatus,
@@ -170,6 +173,8 @@ async def update_task(
 # TODO try to use dependency to check the serial mismatch
 @router.get(
     "/{relay_id}/tasks",
+    response_model=tasks_protocol.TaskListResponse,
+    responses={HTTPStatus.NOT_MODIFIED: {"description": "Task list matches If-None-Match"}},
     dependencies=[
         mtls_authorization_dependency(
             "relay_id", fastapi.status.HTTP_403_FORBIDDEN, ExpectedCA.RELAY
@@ -179,13 +184,13 @@ async def update_task(
 async def get_tasks_endpoint(
     relay_id: str,
     handler: Annotated[GetRelayTasksHandler, fastapi.Depends(get_relay_tasks_handler)],
-    response: fastapi.Response,
     version_handler: Annotated[GetVersionHandler, fastapi.Depends(get_version_handler)],
     relay_serial: Annotated[int | None, fastapi.Header(alias=tasks_protocol.HEADERS.SERIAL)] = None,
+    if_none_match: Annotated[str | None, fastapi.Header()] = None,
     status: Annotated[
         tasks_protocol.TaskStatus | None, fastapi.Query(description="Filter tasks by status")
     ] = None,
-) -> tasks_protocol.TaskListResponse:
+) -> fastapi.Response:
     """Get tasks for a relay, optionally filtered by status.
 
     This endpoint allows clients (especially relays) to GET tasks assigned to them.
@@ -204,6 +209,8 @@ async def get_tasks_endpoint(
     Note:
         - Tasks are subject to expiration based on last_update_timestamp
         - Expired tasks are automatically removed
+        - The response carries an ETag. A relay polling with a matching
+          If-None-Match gets 304 instead of the (possibly large) task list again.
     """
     try:
         tasks = handler.process(
@@ -216,10 +223,25 @@ async def get_tasks_endpoint(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
             detail=e.msg,
         )
-    version = version_handler.process()
-    response.headers[tasks_protocol.HEADERS.VERSION] = version
+    etag = _task_list_etag(tasks)
+    headers = {
+        "ETag": etag,
+        tasks_protocol.HEADERS.VERSION: version_handler.process(),
+    }
+    if if_none_match == etag:
+        return fastapi.Response(status_code=HTTPStatus.NOT_MODIFIED, headers=headers)
+    body = TaskListResponseSerializer.serialize(tasks).model_dump_json().encode()
+    return fastapi.Response(content=body, media_type="application/json", headers=headers)
 
-    return TaskListResponseSerializer.serialize(tasks)
+
+def _task_list_etag(tasks: Sequence[RelayTask]) -> str:
+    # Tasks are immutable except through TasksRepository.update_task, which bumps
+    # update_timestamp, so id and update_timestamp identify the serialized list without
+    # serializing the config tarballs.
+    digest = hashlib.sha256()
+    for task in tasks:
+        digest.update(f"{task.id} {task.update_timestamp.isoformat()}\n".encode())
+    return f'"{digest.hexdigest()}"'
 
 
 @router.get(

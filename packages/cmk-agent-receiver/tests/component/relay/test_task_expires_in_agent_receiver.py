@@ -5,6 +5,7 @@
 
 import pathlib
 import time
+from http import HTTPStatus
 
 import pytest
 from fastapi.testclient import TestClient
@@ -75,6 +76,28 @@ def test_task_expires_in_agent_receiver(
     # Step 4: Verify task is no longer present
     tasks_final = relay.get_task_list()
     assert len(tasks_final.tasks) == 0
+
+
+def test_task_expiry_changes_etag(
+    site: SiteMock,
+    test_client: TestClient,
+    user: User,
+) -> None:
+    """A relay polling with the ETag from before the expiry must see the shrunk task list."""
+    relay_id = random_relay_id()
+    site.set_scenario([], [(relay_id, OP.ADD)])
+    RelayRegistrationClient(test_client, site.site_name).register("Wonderful_relay", relay_id, user)
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    relay.apply_config(site.push_config([relay_id]))
+    SiteClient(test_client, site.site_name).create_task(relay_id, FetchAdHocTask(payload=".."))
+    etag = relay.get_tasks().headers["ETag"]
+
+    time.sleep(1.1)  # past the 1 s task_ttl of ar_site
+
+    response = relay.get_tasks(if_none_match=etag)
+    assert response.status_code == HTTPStatus.OK, response.text
+    assert response.json()["tasks"] == []
+    assert response.headers["ETag"] != etag
 
 
 def test_task_expiration_resets_on_update(

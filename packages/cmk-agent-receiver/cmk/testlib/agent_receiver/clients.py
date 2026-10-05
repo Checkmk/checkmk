@@ -117,10 +117,14 @@ class RelayClient:
             headers=self._identity_headers(),
         )
 
-    def get_tasks(self, status: str | None = None) -> httpx2.Response:
+    def get_tasks(
+        self, status: str | None = None, if_none_match: str | None = None
+    ) -> httpx2.Response:
         headers = self._identity_headers()
         if self._serial:
             headers[HEADERS.SERIAL] = str(self._serial)
+        if if_none_match:
+            headers["If-None-Match"] = if_none_match
         params: dict[str, str] = {}
         if status:
             params = {"status": status}

@@ -493,13 +493,23 @@ def _known_relations(raw: str | None) -> list[ResolvedRelation]:
     """The relations a core reported that this version can place, in the resolved order.
 
     Both reading sites go through here - the cards and the count - so a relation of a kind only a
-    later version knows cannot make the number promise a card that is never rendered.
+    later version knows cannot make the number promise a card that is never rendered. A
+    counterpart whose name is no host name is skipped too: asking Livestatus for it would fail
+    the whole page.
     """
     return [
         relation
         for relation in parse_resolved_relations(raw)
-        if kind_accepts(relation.kind, relation.direction)
+        if kind_accepts(relation.kind, relation.direction) and _is_host_name(relation.host)
     ]
+
+
+def _is_host_name(text: str) -> bool:
+    try:
+        HostName(text)
+    except ValueError:
+        return False
+    return True
 
 
 def _relation_is_shown(

@@ -676,6 +676,30 @@ def test_get_overview_leaves_out_a_relation_of_a_kind_this_version_does_not_know
     assert [related.name for related in host.relations] == ["os-1"]
 
 
+def test_get_overview_leaves_out_a_relation_to_a_name_no_host_can_carry(
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    """The value comes from a core the reader does not control; Livestatus refuses to be asked
+    for such a name, which would fail the whole overview."""
+    relations = [
+        {"kind": "management", "direction": "parent", "host": "os\n1", "site": "NO_SITE"},
+        {"kind": "management", "direction": "parent", "host": "os-1", "site": "NO_SITE"},
+    ]
+    back = [{"kind": "management", "direction": "child", "host": "board", "site": "NO_SITE"}]
+    mock_livestatus.add_table(
+        "hosts", [_overview_row("board", relations), _overview_row("os-1", back)]
+    )
+    _expect_overview_query(mock_livestatus)
+    mock_livestatus.expect_query(
+        ["GET hosts", "Filter: name = os-1"], match_type="loose", sites=["NO_SITE"]
+    )
+
+    host = _get_overview(mock_livestatus)
+
+    assert [related.name for related in host.relations] == ["os-1"]
+
+
 @pytest.mark.parametrize(
     "state, expected_unavailable",
     [

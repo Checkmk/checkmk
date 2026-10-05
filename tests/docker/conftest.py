@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import logging
+import logging  # noqa: I001, RUF100 # needed for docker vs. tests/docker confusion
 from collections.abc import Iterator
 from random import randint
 
+import docker
 import pytest
 
-import docker
 from tests.testlib.common.version import version_from_env
 from tests.testlib.pytest_helpers import diagnostics, registration
 from tests.testlib.system.docker import CheckmkApp

@@ -20,8 +20,8 @@ import logging
 import os
 import queue
 from collections.abc import Callable, Generator, Iterator
-from typing import override
 from contextlib import contextmanager
+from typing import override
 
 import pytest
 
@@ -51,6 +51,10 @@ from cmk.licensing.handler import (  # noqa: E402
     NotificationHandler,
     UserEffect,
 )
+from tests.performance.monitoring_views.in_process.components import (  # noqa: E402
+    ComponentProfile,
+    profile_lines,
+)
 from tests.performance.monitoring_views.in_process.fleet import (  # noqa: E402
     CENTRAL_SITE_ID,
     FleetBuilder,
@@ -61,22 +65,18 @@ from tests.performance.monitoring_views.livestatus_fake import (  # noqa: E402
     FakeVersion,
     QueryLog,
 )
-from tests.performance.monitoring_views.in_process.components import (  # noqa: E402
-    ComponentProfile,
-    profile_lines,
-)
-from tests.performance.monitoring_views.report import Report  # noqa: E402
-from tests.performance.monitoring_views.scenarios import LimitTier, TIERS  # noqa: E402
 from tests.performance.monitoring_views.remotes import (  # noqa: E402
     build_sites,
     patched_remotes,
 )
+from tests.performance.monitoring_views.report import Report  # noqa: E402
+from tests.performance.monitoring_views.scenarios import LimitTier, TIERS  # noqa: E402
 from tests.testlib.unit.gui.common_fixtures import (  # noqa: E402
     create_flask_app,
     create_wsgi_app,
+    patch_theme_context,
     perform_gui_cleanup_after_test,
     perform_load_config,
-    patch_theme_context,
     perform_load_plugins,
     set_config_context,
     validate_background_job_annotation,

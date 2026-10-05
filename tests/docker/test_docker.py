@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import contextlib
+import contextlib  # noqa: I001, RUF100 # needed for docker vs. tests/docker confusion
 import logging
 import os
 from http import HTTPStatus

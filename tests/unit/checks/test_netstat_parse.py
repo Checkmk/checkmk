@@ -50,3 +50,18 @@ def test_parse_netstat(
 ) -> None:
     parsed = Check("netstat").run_parse(info)
     assert parsed == expected_parsed
+
+
+@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4650: foreign line")
+def test_check_netstat_ignores_foreign_line() -> None:
+    check = Check("netstat")
+    parsed = check.run_parse(
+        [
+            ["udp", "UNCONN", "0", "0", "10.0.0.1:53", "10.0.0.2:*"],
+            ["No", "updates", "pending", "for", "installation"],
+        ]
+    )
+
+    results = list(check.run_check("DNS", {"proto": "UDP"}, parsed))
+
+    assert [result[:2] for result in results] == [(0, "Matching entries found: 1")]

@@ -19,7 +19,7 @@ from __future__ import annotations
 import logging
 import os
 import queue
-from collections.abc import Callable, Generator, Iterator
+from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from typing import override
 

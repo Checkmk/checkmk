@@ -9,7 +9,7 @@ UNIT_COUNTER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision
 
 metric_number_of_nodes = metrics.Metric(
     name="number_of_nodes",
-    title=Title("Nodes"),
+    title=Title("Cluster nodes"),
     unit=UNIT_COUNTER,
     color=metrics.Color.BLUE,
 )

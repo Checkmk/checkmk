@@ -328,7 +328,6 @@ def test_bundles() -> None:
 
 
 _ALLOWED_DUPLICATE_METRIC_TITLES = {
-    "Nodes": {"number_of_nodes", "aws_elasticache_nodes"},
     "Non-compliant devices": {
         "mobileiron_non_compliant",
         "mobileiron_non_compliant_summary",

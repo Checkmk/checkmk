@@ -1048,7 +1048,7 @@ metric_aws_ecs_clusters = metrics.Metric(
 
 metric_aws_elasticache_nodes = metrics.Metric(
     name="aws_elasticache_nodes",
-    title=Title("Nodes"),
+    title=Title("ElastiCache nodes"),
     unit=UNIT_NUMBER,
     color=metrics.Color.YELLOW,
 )

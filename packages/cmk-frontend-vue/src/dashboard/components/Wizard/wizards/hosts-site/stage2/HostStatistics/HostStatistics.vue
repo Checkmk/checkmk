@@ -10,6 +10,7 @@ import { computed } from 'vue'
 
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
+import ContextualLinkConfig from '@/dashboard/components/Wizard/components/ContextualLink/ContextualLinkConfig.vue'
 import WidgetVisualization from '@/dashboard/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
 import type { BaseWidgetProp } from '@/dashboard/components/Wizard/types'
 
@@ -47,6 +48,12 @@ const widgetProps = computed(() => handler.value.widgetProps)
       v-model:title-url-validation-errors="handler.titleUrlValidationErrors.value"
       :title-macros="handler.titleMacros.value"
     />
+  </CmkCatalogPanel>
+
+  <ContentSpacer />
+
+  <CmkCatalogPanel :title="_t('Contextual link')" variant="padded">
+    <ContextualLinkConfig v-model:handler="handler.contextualLink" />
   </CmkCatalogPanel>
 
   <ContentSpacer />

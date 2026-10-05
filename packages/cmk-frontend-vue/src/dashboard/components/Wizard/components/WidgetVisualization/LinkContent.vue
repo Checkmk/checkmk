@@ -8,14 +8,14 @@ import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
 import CmkIndent from 'cmk-ui-library/components/CmkIndent.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
-import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref, watch } from 'vue'
 
 import SelectorView from '@/dashboard/components/selectors/SelectorView.vue'
 import { type VisualCopy, useCopyOptions } from '@/dashboard/components/selectors/visualKey'
 
-import { type DashboardTarget, fetchDashboardTargets } from './api'
+import { type DashboardTarget, dashboardCopyOptions, fetchDashboardTargets } from './api'
 
 const { _t } = usei18n()
 
@@ -54,12 +54,7 @@ watch(
 )
 
 const { suggestions: dashboardTargets, key: dashboardKey } = useCopyOptions(linkTarget, () =>
-  dashboards.value.map((dashboard) => ({
-    copy: { name: dashboard.name, owner: dashboard.owner },
-    title: untranslated(
-      dashboard.owner === '' ? dashboard.title : `${dashboard.title} (${dashboard.owner})`
-    )
-  }))
+  dashboardCopyOptions(dashboards.value)
 )
 </script>
 

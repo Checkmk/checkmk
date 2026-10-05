@@ -8,6 +8,10 @@ import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, ref, watch } from 'vue'
 
 import {
+  type UseContextualLink,
+  useContextualLink
+} from '@/dashboard/components/Wizard/components/ContextualLink/useContextualLink'
+import {
   type UseWidgetVisualizationOptions,
   useWidgetVisualizationProps
 } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
@@ -23,6 +27,7 @@ import { determineWidgetEffectiveFilterContext } from '@/dashboard/utils'
 
 const CONTENT_TYPE = 'service_state'
 export interface UseServiceState extends UseWidgetHandler, UseWidgetVisualizationOptions {
+  contextualLink: UseContextualLink<ServiceStateContent>
   //Data settings
   showBackgroundInStatusColorAndLabel: Ref<boolean>
   colorizeStates: Ref<string>
@@ -52,6 +57,11 @@ export const useServiceState = async (
       ? (currentSpec?.content as ServiceStateContent)
       : undefined
 
+  const contextualLink = useContextualLink<ServiceStateContent>(
+    constants.widgets[CONTENT_TYPE]!.contextual_link!,
+    currentContent?.contextual_link
+  )
+
   const showBackgroundInStatusColorAndLabel = ref<boolean>(!!currentContent?.status_display)
   const colorizeStates = ref<string>(currentContent?.status_display?.for_states ?? 'all')
   const showSummaryForNotOKStates = ref<boolean>(currentContent?.show_summary === 'not_ok')
@@ -59,13 +69,15 @@ export const useServiceState = async (
   const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
-    return validateTitle()
+    const isTitleValid = validateTitle()
+    const isLinkValid = contextualLink.validate()
+    return isTitleValid && isLinkValid
   }
 
   const _generateContent = (): ServiceStateContent => {
     const content: ServiceStateContent = {
       type: CONTENT_TYPE,
-      contextual_link: currentContent?.contextual_link ?? { type: 'default' }
+      contextual_link: contextualLink.contextualLink.value ?? { type: 'default' }
     }
 
     if (showSummaryForNotOKStates.value) {
@@ -107,6 +119,7 @@ export const useServiceState = async (
 
   watch(
     [
+      contextualLink.contextualLink,
       widgetGeneralSettings,
       showBackgroundInStatusColorAndLabel,
       colorizeStates,
@@ -121,6 +134,8 @@ export const useServiceState = async (
   await _updateWidgetProps()
 
   return {
+    contextualLink,
+
     showBackgroundInStatusColorAndLabel,
     colorizeStates,
     showSummaryForNotOKStates,

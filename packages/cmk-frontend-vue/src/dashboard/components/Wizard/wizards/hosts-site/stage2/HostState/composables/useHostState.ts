@@ -8,6 +8,10 @@ import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, ref, watch } from 'vue'
 
 import {
+  type UseContextualLink,
+  useContextualLink
+} from '@/dashboard/components/Wizard/components/ContextualLink/useContextualLink'
+import {
   type UseWidgetVisualizationOptions,
   useWidgetVisualizationProps
 } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
@@ -23,6 +27,7 @@ import { determineWidgetEffectiveFilterContext } from '@/dashboard/utils'
 
 const CONTENT_TYPE = 'host_state'
 export interface UseHostState extends UseWidgetHandler, UseWidgetVisualizationOptions {
+  contextualLink: UseContextualLink<HostStateContent>
   //Data settings
   showBackgroundInStatusColorAndLabel: Ref<boolean>
   colorizeStates: Ref<string>
@@ -51,6 +56,11 @@ export const useHostState = async (
   const currentContent =
     currentSpec?.content?.type === CONTENT_TYPE ? (currentSpec?.content as HostStateContent) : null
 
+  const contextualLink = useContextualLink<HostStateContent>(
+    constants.widgets[CONTENT_TYPE]!.contextual_link!,
+    currentContent?.contextual_link
+  )
+
   const showBackgroundInStatusColorAndLabel = ref<boolean>(!!currentContent?.status_display)
   const colorizeStates = ref<string>(currentContent?.status_display?.for_states ?? 'all')
   const showSummaryForNonUpStates = ref<boolean>(currentContent?.show_summary === 'not_ok')
@@ -58,13 +68,15 @@ export const useHostState = async (
   const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
-    return validateTitle()
+    const isTitleValid = validateTitle()
+    const isLinkValid = contextualLink.validate()
+    return isTitleValid && isLinkValid
   }
 
   const _generateContent = (): HostStateContent => {
     const content: HostStateContent = {
       type: CONTENT_TYPE,
-      contextual_link: currentContent?.contextual_link ?? { type: 'default' }
+      contextual_link: contextualLink.contextualLink.value ?? { type: 'default' }
     }
 
     if (showSummaryForNonUpStates.value) {
@@ -106,6 +118,7 @@ export const useHostState = async (
 
   watch(
     [
+      contextualLink.contextualLink,
       widgetGeneralSettings,
       showBackgroundInStatusColorAndLabel,
       colorizeStates,
@@ -120,6 +133,8 @@ export const useHostState = async (
   await _updateWidgetProps()
 
   return {
+    contextualLink,
+
     showBackgroundInStatusColorAndLabel,
     colorizeStates,
     showSummaryForNonUpStates,

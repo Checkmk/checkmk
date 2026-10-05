@@ -8,6 +8,10 @@ import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, ref, watch } from 'vue'
 
 import {
+  type UseContextualLink,
+  useContextualLink
+} from '@/dashboard/components/Wizard/components/ContextualLink/useContextualLink'
+import {
   type UseWidgetVisualizationOptions,
   useWidgetVisualizationProps
 } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
@@ -23,7 +27,9 @@ import { determineWidgetEffectiveFilterContext } from '@/dashboard/utils'
 
 const CONTENT_TYPE = 'host_stats'
 
-export interface UseHostStatistics extends UseWidgetHandler, UseWidgetVisualizationOptions {}
+export interface UseHostStatistics extends UseWidgetHandler, UseWidgetVisualizationOptions {
+  contextualLink: UseContextualLink<HostStatisticsContent>
+}
 
 export const useHostStatistics = async (
   filters: ConfiguredFilters,
@@ -48,18 +54,25 @@ export const useHostStatistics = async (
     currentSpec?.content?.type === CONTENT_TYPE
       ? (currentSpec.content as HostStatisticsContent)
       : null
+  const contextualLink = useContextualLink<HostStatisticsContent>(
+    constants.widgets[CONTENT_TYPE]!.contextual_link!,
+    currentContent?.contextual_link
+  )
 
   const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
-    return validateTitle()
+    const isTitleValid = validateTitle()
+    const isLinkValid = contextualLink.validate()
+    return isTitleValid && isLinkValid
   }
 
   const _generateContent = (): HostStatisticsContent => {
-    return {
+    const content: HostStatisticsContent = {
       type: CONTENT_TYPE,
-      contextual_link: currentContent?.contextual_link ?? { type: 'default' }
+      contextual_link: contextualLink.contextualLink.value ?? { type: 'default' }
     }
+    return content
   }
 
   const _computeWidgetProps = async (): Promise<WidgetProps> => {
@@ -86,7 +99,7 @@ export const useHostStatistics = async (
   }
 
   watch(
-    [widgetGeneralSettings],
+    [contextualLink.contextualLink, widgetGeneralSettings],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),
@@ -96,6 +109,8 @@ export const useHostStatistics = async (
   await _updateWidgetProps()
 
   return {
+    contextualLink,
+
     title,
     showTitle,
     showTitleBackground,

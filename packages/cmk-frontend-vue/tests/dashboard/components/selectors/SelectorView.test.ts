@@ -14,7 +14,7 @@ import type { ViewModel } from '@/dashboard/types/api'
 
 const API = `${location.protocol}//${location.host}/api/internal`
 
-function view(id: string, title: string, owner: string): ViewModel {
+function view(id: string, title: string, owner: string, single: string[] = []): ViewModel {
   return {
     domainType: 'view',
     id,
@@ -22,7 +22,7 @@ function view(id: string, title: string, owner: string): ViewModel {
     links: [],
     extensions: {
       data_source: 'hosts',
-      restricted_to_single: [],
+      restricted_to_single: single,
       filters: {},
       is_mobile: false,
       owner
@@ -32,6 +32,8 @@ function view(id: string, title: string, owner: string): ViewModel {
 
 const BUILT_IN_ALLHOSTS = view('allhosts', 'All hosts', '')
 const OWN_ALLHOSTS = view('allhosts', 'All hosts', 'harry')
+const HOST_VIEW = view('host', 'Single host', '', ['host'])
+const SERVICE_VIEW = view('service', 'Single service', '', ['service', 'host'])
 
 const server = setupServer(
   http.get(`${API}/domain-types/view/collections/all`, ({ request }) => {
@@ -40,7 +42,9 @@ const server = setupServer(
       domainType: 'view',
       id: 'all',
       links: [],
-      value: allOwners ? [BUILT_IN_ALLHOSTS, OWN_ALLHOSTS] : [OWN_ALLHOSTS]
+      value: allOwners
+        ? [BUILT_IN_ALLHOSTS, OWN_ALLHOSTS, HOST_VIEW, SERVICE_VIEW]
+        : [OWN_ALLHOSTS, HOST_VIEW, SERVICE_VIEW]
     })
   }),
   http.get(`${API}/objects/constant/data_source/collections/all`, () =>
@@ -98,6 +102,18 @@ describe('SelectorView', () => {
 
     expect(options).toContain('Hosts - All hosts (allhosts)')
     expect(options).toContain('Hosts - All hosts (allhosts) (harry)')
+  })
+
+  it('offers no single-object view to a click that names no object', async () => {
+    const options = await openedOptions({ singleInfos: [] })
+
+    expect(options).toEqual(['Hosts - All hosts (allhosts)'])
+  })
+
+  it('offers a single-host view but no single-service view to a click that names a host', async () => {
+    const options = await openedOptions({ singleInfos: ['host'] })
+
+    expect(options).toEqual(['Hosts - All hosts (allhosts)', 'Hosts - Single host (host)'])
   })
 
   it('labels a stored copy that is no longer listed by its name and owner', async () => {

@@ -22,12 +22,15 @@ type Width = ButtonVariants['width']
 const {
   readOnly,
   width = 'wide',
-  byOwner = false
+  byOwner = false,
+  singleInfos
 } = defineProps<{
   readOnly: boolean
   width?: Width
   // Offer every copy a user may open by its owner; the model is then `selectedCopy`.
   byOwner?: boolean
+  // When given, only views whose single-object restrictions all lie within it are offered.
+  singleInfos?: string[]
 }>()
 const selectedView = defineModel<string | null>('selectedView', { default: null })
 const selectedCopy = defineModel<VisualCopy | null>('selectedCopy', { default: null })
@@ -56,12 +59,19 @@ onMounted(async () => {
 const viewTitle = (view: ViewModel): TranslatedString =>
   formatViewTitle(view.title!, view.id!, view.extensions.data_source!, view.extensions.is_mobile!)
 const byTitle = (a: { title: string }, b: { title: string }) => a.title.localeCompare(b.title)
+const offeredViews = computed(() =>
+  (viewsList.value ?? []).filter(
+    (view) =>
+      singleInfos === undefined ||
+      view.extensions.restricted_to_single.every((info) => singleInfos.includes(info))
+  )
+)
 
 const nameOptions = computed<Suggestion[]>(() =>
-  (viewsList.value ?? []).map((view) => ({ name: view.id!, title: viewTitle(view) })).sort(byTitle)
+  offeredViews.value.map((view) => ({ name: view.id!, title: viewTitle(view) })).sort(byTitle)
 )
 const { suggestions: copyOptions, key: copyKey } = useCopyOptions(selectedCopy, () =>
-  (viewsList.value ?? [])
+  offeredViews.value
     .map((view) => {
       const owner = view.extensions.owner
       const title = viewTitle(view)

@@ -29,12 +29,26 @@ const cmkLinkCardVariants = cva('', {
   }
 })
 
+const cmkLinkCardSubtitleVariants = cva('cmk-link-card__subtitle', {
+  variants: {
+    color: {
+      dimmed: 'cmk-link-card__subtitle--dimmed',
+      secondary: 'cmk-link-card__subtitle--secondary'
+    }
+  },
+  defaultVariants: {
+    color: 'dimmed'
+  }
+})
+
 export type CmkLinkCardBorders = VariantProps<typeof cmkLinkCardVariants>['borders']
 export type CmkLinkCardContrast = VariantProps<typeof cmkLinkCardVariants>['contrast']
+export type CmkLinkCardSubtitleColor = VariantProps<typeof cmkLinkCardSubtitleVariants>['color']
 interface CmkLinkCardProps {
   iconName?: SimpleIcons | undefined
   title: TranslatedString
   subtitle?: TranslatedString
+  subtitleColor?: CmkLinkCardSubtitleColor
   url?: string | undefined
   callback?: () => void
   openInNewTab: boolean
@@ -62,6 +76,8 @@ const classes = computed(() => [
   cmkLinkCardVariants({ borders: props.borders, contrast: props.contrast }),
   { disabled: props.disabled }
 ])
+
+const subtitleClasses = computed(() => cmkLinkCardSubtitleVariants({ color: props.subtitleColor }))
 </script>
 
 <template>
@@ -78,7 +94,7 @@ const classes = computed(() => [
     </slot>
     <div class="cmk-link-card__text-area">
       <CmkHeading type="h4" class="cmk-link-card__heading">{{ title }}</CmkHeading>
-      <CmkParagraph v-if="subtitle" class="cmk-link-card__subtitle">{{ subtitle }}</CmkParagraph>
+      <CmkParagraph v-if="subtitle" :class="subtitleClasses">{{ subtitle }}</CmkParagraph>
       <div v-if="$slots.default" class="cmk-link-card__content">
         <slot />
       </div>
@@ -165,8 +181,12 @@ body[data-theme='modern-dark'] {
   margin-top: var(--dimension-4);
 }
 
-.cmk-link-card__subtitle {
+.cmk-link-card__subtitle--dimmed {
   color: var(--font-color-dimmed);
+}
+
+.cmk-link-card__subtitle--secondary {
+  color: var(--font-color-secondary);
 }
 
 .cmk-link-card__export-icon {

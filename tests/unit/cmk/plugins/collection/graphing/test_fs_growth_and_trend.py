@@ -7,9 +7,9 @@ import pytest
 
 from cmk.graphing.v1 import metrics, translations
 from cmk.graphing.v1.translations import Translation
+from cmk.plugins.cisco.graphing.mem_growth import metric_mem_growth
+from cmk.plugins.cisco.graphing.mem_trend import metric_mem_trend
 from cmk.plugins.collection.graphing.fs_growth_and_trend import metric_fs_growth, metric_fs_trend
-from cmk.plugins.collection.graphing.mem_growth import metric_mem_growth
-from cmk.plugins.collection.graphing.mem_trend import metric_mem_trend
 from cmk.plugins.collection.graphing.translations import (
     translation_cisco_cpu_memory_cisco_sys_mem,
     translation_cisco_mem_cisco_mem_asa_cisco_mem_asa64,

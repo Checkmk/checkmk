@@ -339,7 +339,6 @@ _ALLOWED_DUPLICATE_METRIC_TITLES = {
         "kube_node_container_count_running",
     },
     "Shared memory": {"mem_esx_shared", "mem_lnx_shmem"},
-    "Smoke": {"smoke_perc", "smoke_ppm"},
     "Storage space used": {"storage_used", "storage_percent"},
     "Streams": {"streams", "num_streams"},
     "Swap used": {"swap_used", "swap_used_percent"},

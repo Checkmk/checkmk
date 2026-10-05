@@ -107,9 +107,10 @@ void main() {
                 collect_test_results();
             }
 
-            // After the tests (they use the bazel outputs, not artefacts/),
-            // so a signing outage still fails the job but keeps the test
-            // feedback.
+            // After the tests (they use the bazel outputs, not artefacts/).
+            // No catchError on purpose: if signing fails, the job fails
+            // right away and archives nothing, so unsigned or partially
+            // signed binaries are never published.
             stage("Sign windows binaries") {
                 sign_windows_binaries(safe_branch_name, cmk_version, "artefacts");
             }

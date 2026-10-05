@@ -29,3 +29,4 @@ class PluginGroup(enum.Enum):
     DIAGNOSTICS = "diagnostics"
     LICENSING = "licensing"
     CLI = "cli"
+    AUTOMATIONS = "automations"

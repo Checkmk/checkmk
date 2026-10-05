@@ -22,7 +22,7 @@ tracer = trace.get_tracer()
 def _mode_automation(
     omd_root: Path, _global_options: GlobalOptions, _options: Options, args: Args
 ) -> int:
-    from cmk.automations.types import AutomationID
+    from cmk.automations.internal import AutomationID
     from cmk.base import config
     from cmk.base.automations.automations import (
         AutomationError,

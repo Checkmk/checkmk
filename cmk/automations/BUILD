@@ -4,10 +4,8 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 py_library(
     name = "automations",
     srcs = [
-        "__init__.py",
         "client.py",
         "logging.py",
-        "types.py",
     ] + glob([
         "backends/*.py",
         "models/*.py",
@@ -33,6 +31,7 @@ py_library(
         "//packages/cmk-check-engine/cmk/checkengine/discovery",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-events",
+        "//packages/cmk-plugin-apis:automations",
         "//packages/cmk-plugin-apis:password_store",
         "//packages/cmk-trace",
         requirement("requests"),

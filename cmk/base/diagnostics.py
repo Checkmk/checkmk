@@ -20,9 +20,9 @@ from typing import Any, Final
 
 import cmk.livestatus_client as livestatus
 import cmk.utils.paths
+from cmk.automations.internal import Automation, AutomationID
 from cmk.automations.results import CreateDiagnosticsDumpResult, CreateDiagnosticsDumpV2Result
-from cmk.automations.types import AutomationID
-from cmk.base.automations.automations import Automation, CommonState
+from cmk.base.automations.automations import CommonState
 from cmk.ccc import tty
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _

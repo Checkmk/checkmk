@@ -12,8 +12,8 @@ from typing import Any, NamedTuple
 
 import cmk.ccc.version as cmk_version
 from cmk.automations import results
+from cmk.automations.internal import AutomationID, AutomationResult
 from cmk.automations.results import SetAutochecksInput
-from cmk.automations.types import AutomationID
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery import DiscoverySettings
 from cmk.checkengine.plugins import CheckPluginName
@@ -116,7 +116,7 @@ def _automation_failure(
     )
 
 
-def _deserialize[ResultType: results.AutomationResult](
+def _deserialize[ResultType: AutomationResult](
     response: AutomationResponse,
     result_type: type[ResultType],
     *,

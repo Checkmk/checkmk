@@ -8,8 +8,8 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import override
 
+from cmk.automations.internal import AutomationID, AutomationResult
 from cmk.automations.results import (
-    AutomationResult,
     DiagSpecialAgentHostConfig,
     DiagSpecialAgentInput,
     Gateway,
@@ -19,7 +19,6 @@ from cmk.automations.results import (
     ServiceDiscoveryPreviewResult,
     ServiceDiscoveryResult,
 )
-from cmk.automations.types import AutomationID
 from cmk.ccc import version as cmk_version
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.discovery import CheckPreviewEntry

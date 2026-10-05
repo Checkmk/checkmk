@@ -10,9 +10,6 @@ All public symbols are re-exported here so that existing imports of the form
 """
 
 from cmk.automations.results._base import (
-    AutomationResult as AutomationResult,
-)
-from cmk.automations.results._base import (
     DiscoveredHostLabelsDict as DiscoveredHostLabelsDict,
 )
 from cmk.automations.results._base import (

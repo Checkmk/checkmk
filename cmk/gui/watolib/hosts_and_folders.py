@@ -56,7 +56,7 @@ from redis.client import Pipeline
 from redis.typing import EncodableT, FieldT
 
 import cmk.utils.paths
-from cmk.automations.results import AutomationResult
+from cmk.automations.internal import AutomationResult
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName

@@ -11,7 +11,7 @@ from io import StringIO
 
 import pytest
 
-from cmk.automations.results import AutomationResult
+from cmk.automations.internal import AutomationResult
 from cmk.base.automations.check_mk import (
     automation_analyze_host_rule_matches,
     automation_analyze_service_rule_matches,

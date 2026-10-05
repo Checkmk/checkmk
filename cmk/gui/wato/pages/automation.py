@@ -20,8 +20,8 @@ import cmk.ccc.version as cmk_version
 import cmk.gui.watolib.utils as watolib_utils
 import cmk.utils.paths
 from cmk import trace
+from cmk.automations.internal import AutomationID
 from cmk.automations.results import result_type_registry
-from cmk.automations.types import AutomationID
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site

@@ -209,6 +209,14 @@ py_library(
 )
 
 py_library(
+    name = "automations",
+    srcs = ["cmk/automations/internal/__init__.py"],
+    data = ["cmk/automations/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
     name = "cli",
     srcs = ["cmk/cli/internal/__init__.py"],
     data = ["cmk/cli/py.typed"],
@@ -293,6 +301,7 @@ py_doc_test(
     size = "small",
     srcs = [
         ":agent_based",
+        ":automations",
         ":bakery",
         ":cli",
         ":dcd_connector_parameters",
@@ -449,6 +458,7 @@ py_wheel(
     visibility = ["//visibility:public"],
     deps = [
         ":agent_based",
+        ":automations",
         ":bakery",
         ":cli",
         ":dcd_connector_parameters",
@@ -476,6 +486,7 @@ filegroup(
     name = "py_typed",
     srcs = [
         "cmk/agent_based/py.typed",
+        "cmk/automations/py.typed",
         "cmk/bakery/py.typed",
         "cmk/cli/py.typed",
         "cmk/dcd_connector_parameters/py.typed",
@@ -511,6 +522,7 @@ py_requirements_test(
     libs = [
         ":agent_based",
         ":bakery",
+        ":automations",
         ":cli",
         ":dcd_connector_parameters",
         ":dcd_connectors",

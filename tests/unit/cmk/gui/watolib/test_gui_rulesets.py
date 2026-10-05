@@ -15,7 +15,7 @@ from unittest.mock import patch
 
 import pytest
 
-from cmk.automations.results import AutomationResult
+from cmk.automations.internal import AutomationResult
 from cmk.base.automations.check_mk import (
     automation_analyze_host_rule_effectiveness,
     automation_analyze_host_rule_matches,

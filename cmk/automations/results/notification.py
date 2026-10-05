@@ -9,13 +9,9 @@ from ast import literal_eval
 from dataclasses import asdict, dataclass
 from typing import override, Self
 
-from cmk.automations.results._base import (
-    AutomationResult,
-    result_type_registry,
-)
+from cmk.automations.internal import AutomationID, AutomationResult
+from cmk.automations.results._base import result_type_registry
 from cmk.events.notify_types import NotifyAnalysisInfo, NotifyBulks
-
-from ..types import AutomationID
 
 
 @dataclass

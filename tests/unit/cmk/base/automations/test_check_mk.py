@@ -23,10 +23,10 @@ import cmk.ccc.resulttype as result
 import cmk.plugins.monitoring_plugins.server_side_calls.ftp
 import cmk.utils.paths
 from cmk.automations import results as automation_results
+from cmk.automations.internal import NoState
 from cmk.automations.results import DiagHostResult
 from cmk.base import config
 from cmk.base.automations import check_mk
-from cmk.base.automations.automations import NoState
 from cmk.base.community_app import make_app
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.ccc.hostaddress import HostAddress, HostName

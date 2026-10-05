@@ -6,18 +6,21 @@ import enum
 import io
 import logging
 import sys
-from abc import ABC, abstractmethod
-from collections.abc import Callable, Iterable, Iterator, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from contextlib import contextmanager, nullcontext, redirect_stdout
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final, override
 
 import cmk.ccc.debug
 import cmk.utils.paths
 from cmk import trace
-from cmk.automations.results import AutomationResult
-from cmk.automations.types import AutomationID
+from cmk.automations.internal import (
+    Automation,
+    AutomationID,
+    AutomationResult,
+    AutomationState,
+    StateFactory,
+)
 from cmk.base import config
 from cmk.base.app import make_app
 from cmk.base.base_app import CheckmkBaseApp
@@ -40,63 +43,10 @@ class AutomationError(enum.IntEnum):
     UNKNOWN_ERROR = 2
 
 
-class AutomationState(ABC):
-    """Whatever an automation needs to have ready before it runs.
-
-    The engine builds it with the automation's :attr:`Automation.state_factory`,
-    keeps it alive between calls and hands it the new arguments via
-    :meth:`update` whenever they change.
-    """
-
-    @abstractmethod
-    def update(self, omd_root: Path, raw_config: Mapping[str, object]) -> None: ...
-
-
-type StateFactory[StateT: AutomationState] = Callable[[Path, Mapping[str, object]], StateT]
-
-
-@dataclass(frozen=True, kw_only=True)
-class Automation[StateT: AutomationState, ResultT: AutomationResult]:
-    """An action the backend performs on request, selected by its :attr:`name`."""
-
-    name: AutomationID
-    state_factory: StateFactory[StateT]
-    """Produce the state :attr:`handler` runs against, ready for the given arguments.
-
-    The engine calls each distinct factory once and keeps what it returns:
-    automations that name the same factory share the same state.
-    """
-    handler: Callable[[StateT, list[str]], ResultT]
-    result: type[ResultT]
-    lock_configuration: bool = False
-    """Read the configuration under the configuration lock when the CLI runs this.
-
-    The GUI holds that lock during every Setup action and calls automations from
-    within them, so this must stay off for any automation it calls that way: the
-    CLI would wait for a lock its own caller holds.
-    """
-
-
 # The engine is deliberately blind to the state type: it only ever hands a state
 # back to the very handler that declared it, and the plug-in built both halves
 # together. There is no single state type to name here, so Any is the honest one.
 type DiscoveredAutomation = Automation[Any, AutomationResult]  # type: ignore[explicit-any]
-
-
-class NoState(AutomationState):
-    """The state of an automation that needs none.
-
-    Such an automation reads nothing but its arguments and its standard input,
-    or loads what it needs itself. Naming this class as the factory spares it
-    deriving anything from the configuration.
-    """
-
-    def __init__(self, *_a: object) -> None:
-        pass
-
-    @override
-    def update(self, *_a: object) -> None:
-        pass
 
 
 class BaseConfigState(AutomationState):

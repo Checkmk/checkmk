@@ -14,8 +14,8 @@ from typing import override
 
 import pytest
 
-from cmk.automations.results import AutomationResult, ResultTypeRegistry
-from cmk.automations.types import AutomationID
+from cmk.automations.internal import AutomationID, AutomationResult
+from cmk.automations.results import ResultTypeRegistry
 from cmk.ccc import store
 from cmk.ccc import version as cmk_version
 from cmk.gui.background_job.job import BackgroundProcessInterface
@@ -43,7 +43,7 @@ class ResultTest(AutomationResult):
     @override
     def serialize(self, for_cmk_version: str) -> str:
         return (
-            self._default_serialize()
+            super().serialize(for_cmk_version)
             if cmk_version.Version.from_str(for_cmk_version)
             >= cmk_version.Version.from_str("2.2.0i1")
             else "i was very different previously"

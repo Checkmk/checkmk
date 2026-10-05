@@ -13,13 +13,12 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import override
 
-from cmk.automations.results._base import AutomationResult, result_type_registry
+from cmk.automations.internal import AutomationID, AutomationResult
+from cmk.automations.results._base import result_type_registry
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.helper_interface import AgentRawData
 from cmk.checkengine.submitters import ServiceDetails
 from cmk.utils.config_warnings import ConfigurationWarnings
-
-from ..types import AutomationID
 
 
 @dataclass

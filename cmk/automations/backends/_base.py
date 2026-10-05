@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
-from cmk.automations.types import AutomationID
+from cmk.automations.internal import AutomationID
 
 
 @dataclass(frozen=True)

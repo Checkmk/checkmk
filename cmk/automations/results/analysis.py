@@ -13,8 +13,8 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import override, TypedDict
 
+from cmk.automations.internal import AutomationID, AutomationResult
 from cmk.automations.results._base import (
-    AutomationResult,
     result_type_registry,
 )
 from cmk.checkengine.specs.checkresults import ServiceState
@@ -23,8 +23,6 @@ from cmk.checkengine.submitters import ServiceDetails
 from cmk.ruleset_matcher.labels import Labels, LabelSources
 from cmk.ruleset_matcher.matcher import RulesetName
 from cmk.utils.servicename import Item, ServiceName
-
-from ..types import AutomationID
 
 
 class ServiceInfo(TypedDict, total=False):

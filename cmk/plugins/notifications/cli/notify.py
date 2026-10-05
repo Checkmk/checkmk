@@ -17,7 +17,7 @@ from pathlib import Path
 import cmk.livestatus_client as livestatus
 import cmk.utils.paths
 from cmk.automations.backends.helper import AutomationHelperUnavailable, HelperExecutor
-from cmk.automations.types import AutomationID
+from cmk.automations.internal import AutomationID
 from cmk.base import config
 from cmk.base.notify import (
     do_notify,

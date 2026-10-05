@@ -39,6 +39,7 @@ import cmk.utils.paths
 import cmk.utils.timeperiod
 from cmk import trace
 from cmk.agent_based.v1.value_store import set_value_store_manager
+from cmk.automations.internal import Automation, AutomationID, NoState
 from cmk.automations.results import (
     ActiveCheckResult,
     AnalyseHostResult,
@@ -82,7 +83,6 @@ from cmk.automations.results import (
     UpdateHostLabelsResult,
     UpdatePasswordsMergedFileResult,
 )
-from cmk.automations.types import AutomationID
 from cmk.base import config
 from cmk.base.active_check_result import normalize_active_check_result
 from cmk.base.automations._environment import (
@@ -90,13 +90,7 @@ from cmk.base.automations._environment import (
     ConfigSource,
     IPLookupFailureMode,
 )
-from cmk.base.automations.automations import (
-    Automation,
-    BaseConfigState,
-    CommonState,
-    MKAutomationError,
-    NoState,
-)
+from cmk.base.automations.automations import BaseConfigState, CommonState, MKAutomationError
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.checkers import (
     CheckerConfig,

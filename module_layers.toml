@@ -54,6 +54,7 @@ network_flow = ["cmk.network_flow"]
 
 plugin_apis = [
   "cmk.agent_based.internal",
+  "cmk.automations.internal",
   "cmk.agent_based.legacy",
   "cmk.agent_based.v1",
   "cmk.agent_based.v2",
@@ -170,7 +171,6 @@ allows = [
   "@ccc",
   "@livestatus_client",
   "cmk.automations.backends.helper",
-  "cmk.automations.types",
   "cmk.base.base_app",
   "cmk.base.config",
   "cmk.base.notify",
@@ -1516,6 +1516,9 @@ allows = [
   "cmk.profiling.backend",
   "cmk.utils",
 ]
+
+[components."cmk.automations.internal"]
+allows = []
 
 [components."cmk.cli.internal"]
 allows = []

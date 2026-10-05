@@ -44,15 +44,15 @@ import cmk.ccc.version as cmk_version
 import cmk.livestatus_client as livestatus
 import cmk.utils.paths
 import cmk.utils.timeperiod
+from cmk.automations.internal import Automation, AutomationID
 from cmk.automations.results import (
     NotificationAnalyseResult,
     NotificationGetBulksResult,
     NotificationReplayResult,
     NotificationTestResult,
 )
-from cmk.automations.types import AutomationID
 from cmk.base import events
-from cmk.base.automations.automations import Automation, BaseConfigState, CommonState
+from cmk.base.automations.automations import BaseConfigState, CommonState
 from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout

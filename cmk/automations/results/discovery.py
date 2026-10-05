@@ -15,8 +15,8 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
 from typing import override, Self
 
+from cmk.automations.internal import AutomationID, AutomationResult
 from cmk.automations.results._base import (
-    AutomationResult,
     DiscoveredHostLabelsDict,
     result_type_registry,
 )
@@ -27,8 +27,6 @@ from cmk.checkengine.plugins import AutocheckEntry
 from cmk.checkengine.specs.checkresults import ServiceState
 from cmk.ruleset_matcher.labels import HostLabel
 from cmk.utils.servicename import ServiceName
-
-from ..types import AutomationID
 
 # Worst state and rendered plug-in output of a single data source. This is a lossy
 # projection of an ActiveCheckResult (summary/details/metrics collapsed via as_text()).

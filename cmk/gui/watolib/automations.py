@@ -30,7 +30,7 @@ from requests import RequestException
 import cmk.ccc.version as cmk_version
 from cmk import trace
 from cmk.automations.backends import AutomationExecutor, HelperExecutor, SubprocessExecutor
-from cmk.automations.types import AutomationID
+from cmk.automations.internal import AutomationID
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import get_omd_config, SiteId

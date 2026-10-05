@@ -17,7 +17,7 @@ import pytest
 import time_machine
 from pytest_mock import MockerFixture
 
-from cmk.automations.results import AutomationResult
+from cmk.automations.internal import AutomationResult
 from cmk.base.automations.check_mk import automation_analyze_host_rule_matches
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId

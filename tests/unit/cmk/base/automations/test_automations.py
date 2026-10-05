@@ -15,21 +15,23 @@ import pytest
 from pytest import MonkeyPatch
 
 import cmk.base.automations.check_mk as automations
+from cmk.automations.internal import (
+    Automation,
+    AutomationID,
+    AutomationResult,
+    AutomationState,
+    NoState,
+)
 from cmk.automations.results import (
     AnalyseHostResult,
     AnalyzeHostRuleEffectivenessResult,
-    AutomationResult,
     GetServicesLabelsResult,
 )
-from cmk.automations.types import AutomationID
 from cmk.base.automations.automations import (
-    Automation,
     AutomationError,
     Automations,
-    AutomationState,
     BaseConfigState,
     DiscoveredAutomation,
-    NoState,
 )
 from cmk.base.config import LoadingResult
 from cmk.ccc.exceptions import MKGeneralException

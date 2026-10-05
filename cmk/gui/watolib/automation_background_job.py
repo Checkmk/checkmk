@@ -16,8 +16,8 @@ from typing import override
 
 from pydantic import BaseModel
 
+from cmk.automations.internal import AutomationID
 from cmk.automations.results import result_type_registry
-from cmk.automations.types import AutomationID
 from cmk.ccc import store  # Some braindead "unit" test monkeypatch this like hell :-/
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Version

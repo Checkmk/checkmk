@@ -21,9 +21,8 @@ from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 from starlette import status
 
+from cmk.automations.internal import AutomationID, AutomationResult
 from cmk.automations.models.helper import AutomationPayload, AutomationResponse
-from cmk.automations.results import AutomationResult
-from cmk.automations.types import AutomationID
 from cmk.base.automation_helper._app import (
     _reloader_task,
     _State,

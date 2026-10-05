@@ -13,8 +13,8 @@ import pytest
 from flask import Flask
 
 import cmk.ccc.version as cmk_version
-from cmk.automations.results import AutomationResult, ResultTypeRegistry
-from cmk.automations.types import AutomationID
+from cmk.automations.internal import AutomationID, AutomationResult
+from cmk.automations.results import ResultTypeRegistry
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 from cmk.gui.config import Config
@@ -34,7 +34,7 @@ class ResultTest(AutomationResult):
     @override
     def serialize(self, for_cmk_version: str) -> str:
         return (
-            self._default_serialize()
+            super().serialize(for_cmk_version)
             if cmk_version.Version.from_str(for_cmk_version)
             >= cmk_version.Version.from_str("3.0.0b1")
             else repr((self.field_1,))

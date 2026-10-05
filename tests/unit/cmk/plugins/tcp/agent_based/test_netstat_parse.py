@@ -340,3 +340,27 @@ def test_parse_connection_state_normalizes_dashes(
 def test_parse_connection_state_raises_on_unknown_state() -> None:
     with pytest.raises(ValueError, match="Unknown connection state 'NOPE'"):
         parse_connection_state("NOPE")
+
+
+@pytest.mark.xfail(strict=True, raises=TypeError, reason="Crash group 4650: TypeError")
+@pytest.mark.parametrize(
+    "foreign_line",
+    [
+        pytest.param(["No", "updates", "pending", "for", "installation"], id="non-numeric"),
+        pytest.param(["Found", "3", "pending", "updates", "now"], id="numeric-second-token"),
+    ],
+)
+def test_parse_netstat_ignores_foreign_line(foreign_line: list[str]) -> None:
+    assert parse_netstat(
+        [
+            ["udp", "UNCONN", "0", "0", "10.0.0.1:53", "10.0.0.2:*"],
+            foreign_line,
+        ]
+    ) == [
+        Connection(
+            proto="UDP",
+            local_address=SplitIP("10.0.0.1", "53"),
+            remote_address=SplitIP("10.0.0.2", "*"),
+            state=ConnectionState.LISTENING,
+        )
+    ]

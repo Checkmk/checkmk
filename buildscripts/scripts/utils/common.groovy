@@ -182,3 +182,13 @@ withNexusCredentials = { Closure body ->
         body();
     }
 }
+
+withHarborCredentials = { Closure body ->
+    withCredentials([usernamePassword(
+        credentialsId: "harbor",
+        usernameVariable: "HARBOR_USERNAME",
+        passwordVariable: "HARBOR_PASSWORD",
+    )]) {
+        body();
+    }
+}

@@ -11,11 +11,8 @@ case "$DISTRO" in
         echo "Installing for Ubuntu"
 
         apt-get update
-        # Needed for building the agent deb/rpm packages
-        # buildscripts/scripts/sign-packages.sh
-        # Not needed for "make dist", but for the post-build steps of
-        # buildscripts/scripts/build-cmk-packages.groovy and
-        # buildscripts/scripts/build-linux-agent-updater.groovy
+        # Needed for building and signing the agent deb/rpm packages.
+        # Not needed for "make dist" itself.
         apt-get install -y \
             rpm \
             alien \

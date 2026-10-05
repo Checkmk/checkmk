@@ -1,6 +1,7 @@
 load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
 load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@bazel_skylib//lib:selects.bzl", "selects")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@cmk_requirements//:requirements.bzl", "all_whl_requirements", "requirement")
@@ -115,6 +116,34 @@ bool_flag(
 config_setting(
     name = "skip_package_compression_enabled",
     flag_values = {":skip_package_compression": "True"},
+    visibility = ["//visibility:public"],
+)
+
+# Mirrors the Jenkins DISABLE_CMK_DISTRO_PACKAGE_SIGNING job parameter: by
+# default the check-mk-agent .rpm bundled in //agents:agents is signed (see
+# agents/BUILD); pass --//:disable_agent_package_signing=true for contexts
+# without --//bazel/rules:signing_key_file access.
+bool_flag(
+    name = "disable_agent_package_signing",
+    build_setting_default = False,
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "agent_package_signing_disabled",
+    flag_values = {":disable_agent_package_signing": "True"},
+    visibility = ["//visibility:public"],
+)
+
+# Fake artifacts never needed a real signing key before - don't make
+# //agents:agents and its dependents incompatible under
+# --//:use_faked_artifacts just because no key is configured.
+selects.config_setting_group(
+    name = "agent_package_signing_effectively_disabled",
+    match_any = [
+        ":agent_package_signing_disabled",
+        ":use_fake_artifacts_enabled",
+    ],
     visibility = ["//visibility:public"],
 )
 

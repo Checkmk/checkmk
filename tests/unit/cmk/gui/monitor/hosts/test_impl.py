@@ -545,10 +545,12 @@ def _fetch_relation_counts() -> Sequence[int | None]:
 
 
 def _expect_overview_query(mock_livestatus: MockLiveStatusConnection) -> None:
-    """The query reading the host itself, which every overview starts with."""
+    """The queries every overview of a host with relations starts with: the host itself, then the
+    hosts its relations may point at for the reader."""
     mock_livestatus.expect_query(
         ["GET hosts", "Filter: name = board"], match_type="loose", sites=["NO_SITE"]
     )
+    mock_livestatus.expect_query(_VISIBLE_RELATION_HOSTS_QUERY, match_type="loose")
 
 
 def _get_overview(
@@ -558,6 +560,23 @@ def _get_overview(
         return LiveStatusHostRepository(
             connection=sites.live(), read_unavailable_sites=lambda: unavailable
         ).get_overview(hostname="board", site_id="NO_SITE")
+
+
+def _management_relations(hosts: Sequence[str]) -> list[dict[str, str]]:
+    return [
+        {"kind": "management", "direction": "parent", "host": host, "site": "NO_SITE"}
+        for host in hosts
+    ]
+
+
+def _expect_related_hosts_query(
+    mock_livestatus: MockLiveStatusConnection, hosts: Sequence[str]
+) -> None:
+    mock_livestatus.expect_query(
+        ["GET hosts", *(f"Filter: name = {host}" for host in hosts)],
+        match_type="loose",
+        sites=["NO_SITE"],
+    )
 
 
 @pytest.mark.parametrize(
@@ -574,30 +593,47 @@ def test_get_overview_stops_resolving_at_the_relation_cap(
     more_expected: bool,
 ) -> None:
     """Cut before the counterparts are read, so the query naming them stays bounded too."""
-    shown = min(related_count, MAX_RESOLVED_RELATIONS)
-    relations = [
-        {"kind": "management", "direction": "parent", "host": f"os-{index}", "site": "NO_SITE"}
-        for index in range(related_count)
-    ]
+    hosts = [f"os-{index}" for index in range(related_count)]
+    shown = hosts[:MAX_RESOLVED_RELATIONS]
     back = [{"kind": "management", "direction": "child", "host": "board", "site": "NO_SITE"}]
     mock_livestatus.add_table(
         "hosts",
         [
-            _overview_row("board", relations),
-            *(_overview_row(f"os-{index}", back) for index in range(related_count)),
+            _overview_row("board", _management_relations(hosts)),
+            *(_overview_row(host, back) for host in hosts),
         ],
     )
     _expect_overview_query(mock_livestatus)
-    mock_livestatus.expect_query(
-        ["GET hosts", *(f"Filter: name = os-{index}" for index in range(shown))],
-        match_type="loose",
-        sites=["NO_SITE"],
-    )
+    _expect_related_hosts_query(mock_livestatus, shown)
 
     host = _get_overview(mock_livestatus)
 
-    assert len(host.relations) == shown
+    assert len(host.relations) == len(shown)
     assert host.more_relations is more_expected
+
+
+def test_get_overview_cuts_the_relations_after_leaving_out_the_hidden_ones(
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    """The relation count names a counterpart behind the cap's worth of hidden ones, so the
+    details have to show it too."""
+    hidden = [f"hidden-{index}" for index in range(MAX_RESOLVED_RELATIONS)]
+    back = [{"kind": "management", "direction": "child", "host": "board", "site": "NO_SITE"}]
+    mock_livestatus.add_table(
+        "hosts",
+        [
+            _overview_row("board", _management_relations([*hidden, "os-1"])),
+            _overview_row("os-1", back),
+        ],
+    )
+    _expect_overview_query(mock_livestatus)
+    _expect_related_hosts_query(mock_livestatus, ["os-1"])
+
+    host = _get_overview(mock_livestatus)
+
+    assert [related.name for related in host.relations] == ["os-1"]
+    assert host.more_relations is False
 
 
 def test_get_overview_keeps_a_counterpart_whose_site_did_not_answer(
@@ -617,7 +653,7 @@ def test_get_overview_keeps_a_counterpart_whose_site_did_not_answer(
     )
     _expect_overview_query(mock_livestatus)
     mock_livestatus.expect_query(
-        ["GET hosts", "Or: 3"], match_type="loose", sites=["NO_SITE", "remote"]
+        ["GET hosts", "Or: 2"], match_type="loose", sites=["NO_SITE", "remote"]
     )
 
     host = _get_overview(mock_livestatus, unavailable=frozenset({"remote"}))
@@ -639,9 +675,6 @@ def test_get_overview_leaves_out_a_counterpart_that_does_not_carry_the_macro(
         "hosts", [_overview_row("board", relations), _overview_row("os-1", [])]
     )
     _expect_overview_query(mock_livestatus)
-    mock_livestatus.expect_query(
-        ["GET hosts", "Filter: name = os-1"], match_type="loose", sites=["NO_SITE"]
-    )
 
     host = _get_overview(mock_livestatus)
 

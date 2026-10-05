@@ -268,7 +268,9 @@ class LiveStatusHostRepository:
             row = q.fetchone(self._connection, True, only_site=SiteId(site_id))
         except ValueError:
             raise HostNotFoundError(f"Host {hostname!r} not found on site {site_id!r}") from None
-        links = _known_relations(row["custom_variables"].get(RELATIONS_CUSTOM_VARIABLE))
+        relations, more_relations = self._fetch_shown_related_hosts(
+            _known_relations(row["custom_variables"].get(RELATIONS_CUSTOM_VARIABLE))
+        )
         return Host(
             name=row["name"],
             alias=row["alias"],
@@ -302,9 +304,8 @@ class LiveStatusHostRepository:
             # The overview does not expose contacts, so its query does not read them.
             contacts=[],
             labels=HostLabelValue.by_label(row["labels"], row["label_sources"]),
-            # Cut before the counterparts are read, so the query reading them is bounded too.
-            relations=self._fetch_related_hosts(links[:MAX_RESOLVED_RELATIONS]),
-            more_relations=len(links) > MAX_RESOLVED_RELATIONS,
+            relations=relations,
+            more_relations=more_relations,
         )
 
     def _setup_access(self, hostname: str, filename: str) -> bool:
@@ -317,7 +318,33 @@ class LiveStatusHostRepository:
             return False
         return self._folders.may_read_host(hostname, path)
 
-    def _fetch_related_hosts(self, links: Sequence[ResolvedRelation]) -> tuple[RelatedHost, ...]:
+    def _fetch_shown_related_hosts(
+        self, links: Sequence[ResolvedRelation]
+    ) -> tuple[tuple[RelatedHost, ...], bool]:
+        """The first ``MAX_RESOLVED_RELATIONS`` related hosts that reach the reader, and whether
+        more of them do.
+
+        Cut after the reader's visibility, on the same set the relation count reads: cut before
+        it, a host whose first relations all point at hidden hosts would show none while the
+        count names the ones further back.
+        """
+        if not links:
+            return (), False
+        unavailable = self._read_unavailable_sites()
+        visible = self._read_relation_hosts()
+        shown = [
+            link
+            for link in links
+            if _relation_is_shown(link, known=visible, unavailable=unavailable)
+        ]
+        return (
+            self._fetch_related_hosts(shown[:MAX_RESOLVED_RELATIONS], unavailable),
+            len(shown) > MAX_RESOLVED_RELATIONS,
+        )
+
+    def _fetch_related_hosts(
+        self, links: Sequence[ResolvedRelation], unavailable: frozenset[str]
+    ) -> tuple[RelatedHost, ...]:
         """Read the state of the hosts a host is related to, in the order they were resolved.
 
         One query for all of them, asking only the sites the relations name - the export resolved
@@ -349,7 +376,6 @@ class LiveStatusHostRepository:
                 self._connection, True, list(dict.fromkeys(SiteId(link.site) for link in links))
             )
         }
-        unavailable = self._read_unavailable_sites()
         return tuple(
             RelatedHost(
                 name=link.host,
@@ -383,6 +409,9 @@ class LiveStatusHostRepository:
         """
         if HostOptionalField.NUM_RELATIONS not in _columns_to_read(fields, sorters):
             return None
+        return self._read_relation_hosts()
+
+    def _read_relation_hosts(self) -> frozenset[tuple[str, str]]:
         q = Query([Hosts.name], Hosts.custom_variable_names == RELATIONS_CUSTOM_VARIABLE)
         with detailed_connection(self._connection) as conn:
             return frozenset((row["site"], row["name"]) for row in q.iterate(conn))

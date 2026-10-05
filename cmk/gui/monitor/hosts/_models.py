@@ -73,7 +73,7 @@ def _state_label(state: HostState) -> HostStateLabel:
 
 
 MAX_RESOLVED_RELATIONS = 100
-"""How many of a host's relations its details resolve and show.
+"""How many related hosts the details of a host show.
 
 Nothing bounds how many relations a host has - a management board collects one per OS host that
 names it - and both the query reading the counterparts' state and the response carrying their

@@ -200,9 +200,9 @@ class HostOverviewResponse:
     )
     more_relations: bool = api_field(
         description=(
-            f"Whether the host has more relations than the {MAX_RESOLVED_RELATIONS} listed "
-            "above. A host reaching that many is related to far more hosts than the details are "
-            "meant to show, so they are cut rather than read and sent in full."
+            f"Whether the user may see more related hosts than the {MAX_RESOLVED_RELATIONS} "
+            "listed above. A host reaching that many is related to far more hosts than the "
+            "details are meant to show, so they are cut rather than sent in full."
         ),
         example=False,
     )

@@ -1203,6 +1203,14 @@ class TestMonitorHostOverview:
             ],
             sites=[_SITE_ID],
         )
+        # The same set the relation count reads, so the hidden hosts are left out before the cut.
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                "Columns: name",
+                "Filter: custom_variable_names >= RELATIONS",
+            ]
+        )
         mock_livestatus.expect_query(
             [
                 "GET hosts",
@@ -1212,8 +1220,6 @@ class TestMonitorHostOverview:
                     "num_services_pending"
                 ),
                 "Filter: name = mgmt-heute",
-                "Filter: name = gone",
-                "Or: 2",
                 # Both ends carry the macro, so a host that does not is not the counterpart.
                 "Filter: custom_variable_names >= RELATIONS",
                 "And: 2",

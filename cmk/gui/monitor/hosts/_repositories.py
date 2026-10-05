@@ -59,9 +59,9 @@ class HostRepository(Protocol):
     def get_overview(self, *, hostname: str, site_id: str) -> Host:
         """Get host overview by identifiers, reading every column.
 
-        `relations` holds at most `MAX_RESOLVED_RELATIONS` of them and `more_relations` says
-        whether there were more; the two belong together, so a reader is never left thinking it
-        has seen all of them.
+        `relations` holds at most `MAX_RESOLVED_RELATIONS` of the related hosts the reader may
+        see and `more_relations` says whether there are more; the two belong together, so a
+        reader is never left thinking it has seen all of them.
         """
         ...
 

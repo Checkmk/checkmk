@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+import re
 import time
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -49,8 +50,11 @@ class BackupTask:
     total_size: int | None
     read_size: int | None
     transferred_size: int | None
-    duration: str | None
-    processing_rate: str | None
+    duration: float | None
+    processing_rate: float | None
+    processing_rate_raw: str | None
+    """The unparsed `processingRate` string, kept so an unexpected format (as opposed
+    to the expected "N/A") can still be surfaced instead of silently disappearing."""
     end_time: str | None
 
 
@@ -61,12 +65,39 @@ class CheckParameters(TypedDict):
     age: LevelsT[float]
 
 
+_RATE_PATTERN = re.compile(
+    r"^\s*(?P<value>\d+(?:\.\d+)?)\s*(?P<unit>[KMGTP]?B)?(?:/s)?\s*$", re.IGNORECASE
+)
+
+# TODO: confirm the real format and unit base of processingRate against actual API
+# traffic. Decimal (SI) prefixes are assumed here (the API's "MB" = 10^6); if the
+# field actually uses binary units (MB = 2^20) instead, every parsed rate is about
+# 4.6% too low. Neither base is confirmed yet.
+_RATE_UNIT_FACTORS = {
+    "B": 1,
+    "KB": 1_000,
+    "MB": 1_000_000,
+    "GB": 1_000_000_000,
+    "TB": 1_000_000_000_000,
+    "PB": 1_000_000_000_000_000,
+}
+
+
+def _parse_processing_rate_bps(processing_rate: str | None) -> float | None:
+    if processing_rate is None or (match := _RATE_PATTERN.match(processing_rate)) is None:
+        return None
+    factor = _RATE_UNIT_FACTORS[(match["unit"] or "B").upper()]
+    return float(match["value"]) * factor
+
+
 def parse_veeam_backups(string_table: StringTable) -> Section:
     section: dict[str, BackupTask] = {}
     for line in string_table:
         task_dict = json.loads(line[0])
         progress = task_dict.get("progress") or {}
         result = task_dict.get("result") or {}
+        duration = progress.get("duration")
+        processing_rate_raw = progress.get("processingRate")
         section[sanitize_name(task_dict["jobName"])] = BackupTask(
             state=task_dict["state"],
             result=result.get("result", "None"),
@@ -74,8 +105,9 @@ def parse_veeam_backups(string_table: StringTable) -> Section:
             total_size=progress.get("processedSize"),
             read_size=progress.get("readSize"),
             transferred_size=progress.get("transferredSize"),
-            duration=progress.get("duration"),
-            processing_rate=progress.get("processingRate"),
+            duration=parse_dotnet_timespan_seconds(duration) if duration is not None else None,
+            processing_rate=_parse_processing_rate_bps(processing_rate_raw),
+            processing_rate_raw=processing_rate_raw,
             end_time=task_dict.get("endTime"),
         )
     return section
@@ -108,16 +140,6 @@ def monitoring_state(state: str, result: str) -> State:
             return State.UNKNOWN
 
 
-def _parse_processing_rate_bps(processing_rate: str) -> float | None:
-    # TODO: confirm the real format/unit of processingRate against actual API traffic.
-    # Only the case where it's a plain byte count is handled; anything else is shown
-    # as text without a metric.
-    try:
-        return float(processing_rate)
-    except ValueError:
-        return None
-
-
 def check_veeam_backups(item: str, params: CheckParameters, section: Section) -> CheckResult:
     if (task := section.get(item)) is None:
         return
@@ -145,39 +167,26 @@ def check_veeam_backups(item: str, params: CheckParameters, section: Section) ->
         )
 
     if task.processing_rate is not None:
-        if (rate_bps := _parse_processing_rate_bps(task.processing_rate)) is not None:
-            yield from check_levels(
-                rate_bps,
-                metric_name="backup_avgspeed",
-                render_func=render.iobandwidth,
-                label="Average speed",
-            )
-        else:
-            # TODO: confirm whether this branch is ever actually reachable once we can
-            # test against real API responses. If it is, move the parsing into the
-            # parse function instead of guessing here.
-            yield Result(
-                state=State.OK,
-                summary=f"FAILED TO PARSE -> Average speed: ({task.processing_rate})",
-            )
+        yield from check_levels(
+            task.processing_rate,
+            metric_name="backup_avgspeed",
+            render_func=render.iobandwidth,
+            label="Average speed",
+        )
+    elif task.processing_rate_raw and task.processing_rate_raw.upper() != "N/A":
+        yield Result(
+            state=State.OK,
+            notice=f"Average speed: unparsable value ({task.processing_rate_raw})",
+        )
 
     if task.state in _TERMINAL_STATES:
         if task.duration is not None:
-            if (duration_seconds := parse_dotnet_timespan_seconds(task.duration)) is not None:
-                yield from check_levels(
-                    duration_seconds,
-                    metric_name="backup_duration",
-                    render_func=render.timespan,
-                    label="Duration",
-                )
-            else:
-                # TODO: confirm whether this branch is ever actually reachable once we
-                # can test against real API responses. If it is, move the parsing into
-                # the parse function instead of guessing here.
-                yield Result(
-                    state=State.OK,
-                    summary=f"FAILED TO PARSE -> Duration: ({task.duration})",
-                )
+            yield from check_levels(
+                task.duration,
+                metric_name="backup_duration",
+                render_func=render.timespan,
+                label="Duration",
+            )
 
         if task.end_time is None:
             yield from check_backup_age(None, params["age"])

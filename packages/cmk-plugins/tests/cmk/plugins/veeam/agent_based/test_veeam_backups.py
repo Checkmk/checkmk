@@ -195,11 +195,61 @@ def test_check_veeam_backups_running_suppresses_duration_and_age() -> None:
     assert not any("Time since last backup" in r.summary for r in results if isinstance(r, Result))
 
 
-def test_check_veeam_backups_unparsable_processing_rate_is_shown_without_metric() -> None:
-    section = parse_veeam_backups([[_task("odd_rate", progress={"processingRate": "40 MB/s"})]])
+def test_check_veeam_backups_formatted_processing_rate_becomes_metric() -> None:
+    # "53.7 MB" is a real example value from the REST API reference's progress
+    # schema (no "/s" suffix, unlike the VBR UI's own display format).
+    section = parse_veeam_backups([[_task("fast", progress={"processingRate": "53.7 MB"})]])
+    results = list(check_veeam_backups("fast", PARAMS, section))
+    assert Metric("backup_avgspeed", 53_700_000.0) in results
+
+
+@pytest.mark.parametrize("processing_rate", ["N/A", "n/a", ""])
+def test_check_veeam_backups_no_processing_rate_is_silent(processing_rate: str) -> None:
+    section = parse_veeam_backups(
+        [[_task("odd_rate", progress={"processingRate": processing_rate})]]
+    )
     results = list(check_veeam_backups("odd_rate", PARAMS, section))
-    assert Result(state=State.OK, summary="FAILED TO PARSE -> Average speed: (40 MB/s)") in results
     assert not any(isinstance(r, Metric) and r.name == "backup_avgspeed" for r in results)
+    assert not any("speed" in r.summary.lower() for r in results if isinstance(r, Result))
+    assert not any("speed" in r.details.lower() for r in results if isinstance(r, Result))
+
+
+def test_check_veeam_backups_unparsable_processing_rate_is_surfaced_as_raw_text() -> None:
+    section = parse_veeam_backups([[_task("odd_rate", progress={"processingRate": "18.3 MiB/s"})]])
+    results = list(check_veeam_backups("odd_rate", PARAMS, section))
+    assert not any(isinstance(r, Metric) and r.name == "backup_avgspeed" for r in results)
+    assert any(
+        r.state == State.OK and "unparsable value (18.3 MiB/s)" in r.details
+        for r in results
+        if isinstance(r, Result)
+    )
+
+
+def test_check_veeam_backups_unparsable_duration_is_omitted() -> None:
+    section = parse_veeam_backups([[_task("odd_duration", progress={"duration": "N/A"})]])
+    results = list(check_veeam_backups("odd_duration", PARAMS, section))
+    assert not any(isinstance(r, Metric) and r.name == "backup_duration" for r in results)
+
+
+@pytest.mark.parametrize(
+    "processing_rate, expected",
+    [
+        pytest.param("41943040", 41_943_040.0, id="plain byte count"),
+        pytest.param("512 B/s", 512.0, id="bytes"),
+        pytest.param("1.5 KB/s", 1_500.0, id="kilobytes"),
+        pytest.param("2 GB/s", 2_000_000_000.0, id="gigabytes"),
+        pytest.param("18.3 mb/s", 18_300_000.0, id="lowercase"),
+        pytest.param("N/A", None, id="not available"),
+        pytest.param("fast", None, id="garbage"),
+        pytest.param(None, None, id="missing"),
+    ],
+)
+def test_parse_processing_rate(processing_rate: str | None, expected: float | None) -> None:
+    progress: dict[str, object] = (
+        {} if processing_rate is None else {"processingRate": processing_rate}
+    )
+    section = parse_veeam_backups([[_task("job", progress=progress)]])
+    assert section["job"].processing_rate == expected
 
 
 def test_parse_veeam_backups() -> None:
@@ -214,6 +264,7 @@ def test_parse_veeam_backups() -> None:
             transferred_size=None,
             duration=None,
             processing_rate=None,
+            processing_rate_raw=None,
             end_time=END_TIME,
         )
     }

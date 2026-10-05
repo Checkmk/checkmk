@@ -46,7 +46,14 @@ function compose(
   visibleTimeRange: [number, number] = [dataRange.start, dataRange.end]
 ) {
   const cache = createM4CacheStore(M4_BUCKETS).ensure(metrics, dataRange)
-  return composeSeries({ metrics, cache, visibleTimeRange, columnCount: COLUMNS })
+  return composeSeries({
+    metrics,
+    cache,
+    dataTimeRange: dataRange,
+    visibleTimeRange,
+    columnCount: COLUMNS,
+    binEdges: null
+  })
 }
 
 const finiteValues = (values: number[]): number[] =>
@@ -126,6 +133,26 @@ describe('composedValueDomain', () => {
 
     expect(yMin).toBe(0)
     expect(yMax).toBe(base + layer)
+  })
+
+  test('a bar series reaches down to zero', () => {
+    const bars: Metric = {
+      ...makeMetric([40, 40, 60, 60]),
+      render: { shape: 'bar', stack: null, aggregation: 'sum', inverse: false, hidden: false }
+    }
+    const fourSteps = { start: 0, end: 4 * STEP, step: STEP }
+    const cache = createM4CacheStore(M4_BUCKETS).ensure([bars], fourSteps)
+
+    const composed = composeSeries({
+      metrics: [bars],
+      cache,
+      dataTimeRange: fourSteps,
+      visibleTimeRange: [0, 4 * STEP],
+      columnCount: COLUMNS,
+      binEdges: [0, 2 * STEP, 4 * STEP]
+    })
+
+    expect(composedValueDomain([bars], composed)).toEqual([0, 120])
   })
 
   test('a hidden stack reference does not drag the domain down to zero', () => {

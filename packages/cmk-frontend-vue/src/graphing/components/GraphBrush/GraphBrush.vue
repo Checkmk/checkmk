@@ -95,8 +95,10 @@ function drawWaveform(): void {
   const composed = composeSeries({
     metrics: props.metrics,
     cache: m4CacheStore.ensure(props.metrics, props.dataDomain),
+    dataTimeRange: props.dataDomain,
     visibleTimeRange: [props.domain.start, props.domain.end],
-    columnCount: Math.max(1, Math.floor(props.plotWidth))
+    columnCount: Math.max(1, Math.floor(props.plotWidth)),
+    binEdges: null
   })
   const [yMin, yMax] = composedValueDomain(props.metrics, composed)
 

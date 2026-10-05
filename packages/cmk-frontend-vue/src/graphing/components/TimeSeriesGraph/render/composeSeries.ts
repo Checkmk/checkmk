@@ -12,6 +12,7 @@ import { type DomainBucket, computeYDomain } from '../axes/valueAxis'
 import { downsampleToColumns, edgeNeighbours, edgeSample, m4 } from '../decimation/decimate'
 import type { M4Bucket, M4Cache } from '../decimation/types'
 import type { Metric, ShadedRegion, TimeRange } from '../types'
+import { type BarSeries, composeBars } from './bars'
 import { invertBucket, keptSamples } from './bucket'
 import { connectorPolylines } from './line'
 import { type TimeValuePoint, clampedValueAt } from './polyline'
@@ -33,10 +34,12 @@ export function withoutOffPlotNeighbours<T>(items: T[]): T[] {
 export function composeSeries(options: {
   metrics: Metric[]
   cache: M4Cache[]
+  dataTimeRange: TimeRange
   visibleTimeRange: [number, number]
   columnCount: number
+  binEdges: number[] | null
 }): ComposedSeries {
-  const { metrics, cache, visibleTimeRange, columnCount } = options
+  const { metrics, cache, dataTimeRange, visibleTimeRange, columnCount, binEdges } = options
 
   const bucketsOnPlot = cache.map((metricCache) => {
     const columns = downsampleToColumns(metricCache, visibleTimeRange, columnCount)
@@ -51,18 +54,32 @@ export function composeSeries(options: {
     return metrics[i]!.render.inverse ? padded.map((bucket) => invertBucket(bucket)) : padded
   })
 
-  const stacks = computeStackedSeries(metrics, paddedBuckets)
+  const bars = composeBars(metrics, dataTimeRange, binEdges)
+  const stacks = computeStackedSeries(metrics, paddedBuckets).map(
+    (series, i): StackedSeries => bars[i] ?? series
+  )
   return {
     bucketsOnPlot,
     paddedBuckets,
     stacks,
     stacksOnPlot: stacks.map(onPlotSeries),
-    valuesDrawnOnPlot: stacks.map((series, i) =>
-      series.kind === 'area-stacked'
-        ? bandValuesDrawnOn(visibleTimeRange, series)
-        : lineValuesDrawnOn(visibleTimeRange, paddedBuckets[i]!)
-    )
+    valuesDrawnOnPlot: stacks.map((series, i) => {
+      switch (series.kind) {
+        case 'area-stacked':
+          return bandValuesDrawnOn(visibleTimeRange, series)
+        case 'bars':
+          return barValuesDrawnOn(visibleTimeRange, series)
+        case 'line':
+          return lineValuesDrawnOn(visibleTimeRange, paddedBuckets[i]!)
+      }
+    })
   }
+}
+
+function barValuesDrawnOn([start, end]: [number, number], series: BarSeries): number[] {
+  return series.bars.flatMap((bar) =>
+    bar.value === null || bar.end <= start || bar.start >= end ? [] : [bar.from, bar.to]
+  )
 }
 
 function isWithin([start, end]: [number, number], time: number): boolean {

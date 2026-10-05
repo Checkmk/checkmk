@@ -72,6 +72,7 @@ test('draws each focus dot where its own sample is, not on the shared crosshair'
     clientY: 50,
     snapX: crosshairX,
     snapTime: 40,
+    snapInterval: null,
     samples
   }
 

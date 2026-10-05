@@ -150,8 +150,10 @@ function mountHoverOverWindow(
   const composed = composeSeries({
     metrics,
     cache: metrics.map((metric) => m4(metric.data_points, dataRange, 4000)),
+    dataTimeRange: dataRange,
     visibleTimeRange: plotWindow,
-    columnCount: PLOT_WIDTH
+    columnCount: PLOT_WIDTH,
+    binEdges: null
   })
   api.recordDrawnGeometry(composed.bucketsOnPlot, composed.stacksOnPlot)
   return api
@@ -699,5 +701,56 @@ describe('useHover — value formatting', () => {
     hover.moveHoverTo(pointAt(PLOT_WIDTH / 2, PLOT_HEIGHT / 2))
 
     expect(hover.hoverState.value!.samples[0]!.formattedValue).toBe('32 MiB')
+  })
+})
+
+describe('useHover — bars', () => {
+  function makeBarMetric(name: string, dataPoints: (number | null)[]): Metric {
+    return {
+      metadata: { name, title: name, unit: UNIT, color: '#ff0000', attributes: [] },
+      render: { shape: 'bar', stack: null, aggregation: 'sum', inverse: false, hidden: false },
+      data_points: dataPoints
+    }
+  }
+
+  function mountBarHover(metrics: Metric[], binEdges: number[]): ReturnType<typeof useHover> {
+    const hover = renderHover(metrics, TIME_RANGE, makeScales())
+    const composed = composeSeries({
+      metrics,
+      cache: metrics.map((metric) => m4(metric.data_points, TIME_RANGE, 4000)),
+      dataTimeRange: TIME_RANGE,
+      visibleTimeRange: [TIME_RANGE.start, TIME_RANGE.end],
+      columnCount: PLOT_WIDTH,
+      binEdges
+    })
+    hover.recordDrawnGeometry(composed.bucketsOnPlot, composed.stacksOnPlot)
+    return hover
+  }
+
+  test('reads the bin under the cursor and snaps to its centre', () => {
+    const hover = mountBarHover([makeBarMetric('alerts', constantPoints(3))], [0, 50, 100])
+
+    hover.moveHoverTo(pointAt(20, 95))
+
+    const state = hover.hoverState.value!
+    expect(state.snapInterval).toEqual({ start: 0, end: 50 })
+    expect(state.snapX).toBe(25)
+    expect(state.samples[0]!.formattedValue).toContain('15')
+  })
+
+  test('places the focus dot on the top of the bar', () => {
+    const hover = mountBarHover([makeBarMetric('alerts', constantPoints(3))], [0, 50, 100])
+
+    hover.moveHoverTo(pointAt(70, 95))
+
+    expect(hover.hoverState.value!.samples[0]!.drawnPoint).toEqual({ x: 75, y: PLOT_HEIGHT - 15 })
+  })
+
+  test('snaps a graph without bars to no interval', () => {
+    const hover = mountHover([makeLineMetric('cpu', constantPoints(50))])
+
+    hover.moveHoverTo(pointAt(50, 50))
+
+    expect(hover.hoverState.value!.snapInterval).toBeNull()
   })
 })

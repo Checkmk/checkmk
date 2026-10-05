@@ -7,6 +7,7 @@ import type { ScaleLinear, ScaleTime } from 'd3-scale'
 
 import type { M4Bucket } from '../decimation/types'
 import type { Metric } from '../types'
+import type { BarSeries } from './bars'
 import { keptSamples } from './bucket'
 import { type TimeValuePoint, clampedValueAt } from './polyline'
 
@@ -30,7 +31,7 @@ export interface AreaSeries {
   columns: StackedColumn[]
 }
 
-export type StackedSeries = LineSeries | AreaSeries
+export type StackedSeries = LineSeries | AreaSeries | BarSeries
 export type StackedSeriesKind = StackedSeries['kind']
 
 type EdgePerColumn = TimeValuePoint[][]

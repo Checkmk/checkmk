@@ -256,6 +256,7 @@ const legendAlignedWithPlot = computed(() =>
             :value-range="viewValueRange"
             :zoom-mode="zoomMode"
             :size="{ width: figureWidth, height: figureHeight, mode: 'fixed' }"
+            :bin-unit="timeAxis.binUnit"
             :min-time-range="minTimeRange"
             :at-min-time-zoom="atMinTimeZoom"
             :min-value-range="null"

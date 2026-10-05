@@ -6,9 +6,10 @@
 import { describe, expect, test } from 'vitest'
 
 import { MIN_ZOOM_SAMPLES, MIN_ZOOM_TIME_RANGE_SECONDS } from '@/graphing/components/constants'
+import { drawnBinEdges, foldIntoBins } from '@/graphing/utils/bins'
 import { binnedTimeAxis, drawnTimeRange, minZoomSpan } from '@/graphing/utils/timeRange'
 
-import { HOUR } from './localTimeCases'
+import { HOUR, SIX_HOUR_GRID, type ServedGrid, ones, servedGrid } from './localTimeCases'
 
 describe('drawnTimeRange', () => {
   const STEP = 60
@@ -164,5 +165,35 @@ describe('binnedTimeAxis', () => {
     const axis = binnedTimeAxis('day', 'UTC')
 
     expect([axis.minSpan(null), axis.minSpan(2 * 86_400)]).toEqual([86_400, 2 * 86_400])
+  })
+})
+
+const PLOT_WIDTH = 750
+
+function drawnBars(
+  unit: 'hour' | 'day',
+  timeZone: string,
+  requested: { start: number; end: number },
+  grid: ServedGrid
+) {
+  const axis = binnedTimeAxis(unit, timeZone)
+  const planned = axis.planFetchWindow(requested, PLOT_WIDTH)
+  const served = servedGrid(grid, planned, planned.step)
+  const view = axis.drawnTimeRange(requested, served)
+  const edges = drawnBinEdges(unit, view, PLOT_WIDTH, timeZone)
+  return { view, bins: foldIntoBins(ones(served), served, edges, 'sum') }
+}
+
+describe('the bars of a binned time axis', () => {
+  test('cover a window shorter than the served step with one bar', () => {
+    const requested = {
+      start: Date.UTC(2026, 0, 1, 21, 30) / 1000,
+      end: Date.UTC(2026, 0, 1, 22, 30) / 1000
+    }
+    const { bins } = drawnBars('hour', 'UTC', requested, SIX_HOUR_GRID)
+
+    expect(bins).toEqual([
+      { start: Date.UTC(2026, 0, 1, 18) / 1000, end: Date.UTC(2026, 0, 2) / 1000, value: 1 }
+    ])
   })
 })

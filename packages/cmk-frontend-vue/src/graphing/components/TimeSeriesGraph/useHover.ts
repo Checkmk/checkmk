@@ -7,12 +7,14 @@ import { bisector } from 'd3-array'
 import type { ScaleLinear, ScaleTime } from 'd3-scale'
 import { type Ref, onBeforeUnmount, ref } from 'vue'
 
+import type { TimeInterval } from '../../types'
 import type { ConsolidationFn } from '../consolidation'
 import { attributesOf } from '../metricAttributes'
 import { orderMetricsTopToBottom } from '../metricOrder'
 import { indexOfValueCovering } from './axes/timeAxis'
 import type { M4Bucket, M4Cache } from './decimation/types'
 import { type HoverSample, type HoverState, metricHitDistance } from './interaction/hover'
+import type { BarSeries } from './render/bars'
 import { consolidatedSampleTime, keptSamples, selectConsolidatedValue } from './render/bucket'
 import { type TimeValuePoint, clampedValueAt } from './render/polyline'
 import type { StackedColumn, StackedSeries } from './render/stacked'
@@ -61,11 +63,16 @@ function drawnEdge(
   drawnValue: number,
   time: number
 ): DrawnEdge | null {
-  if (series.kind === 'line') {
-    return { lower: drawnValue, upper: drawnValue }
+  switch (series.kind) {
+    case 'line':
+      return { lower: drawnValue, upper: drawnValue }
+    case 'area-stacked': {
+      const column = series.columns[columnIndex]
+      return column === undefined || column.gap ? null : edgeAt(column, time)
+    }
+    case 'bars':
+      return null
   }
-  const column = series.columns[columnIndex]
-  return column === undefined || column.gap ? null : edgeAt(column, time)
 }
 
 // The hover reads the buckets as fetched, while an inverse metric is drawn mirrored: what the
@@ -94,6 +101,24 @@ interface Reading {
   value: number
   time: number
   edge: DrawnEdge | null
+  /** The bin a bar reading covers; null for a sample of a line or an area. */
+  interval: TimeInterval | null
+}
+
+function barReadingAt(metric: Metric, series: BarSeries, time: number): Reading | null {
+  if (metric.render.hidden) {
+    return null
+  }
+  const bar = series.bars.find((candidate) => candidate.start <= time && time < candidate.end)
+  if (bar === undefined || bar.value === null) {
+    return null
+  }
+  return {
+    value: bar.value,
+    time: (bar.start + bar.end) / 2,
+    edge: { lower: bar.from, upper: bar.to },
+    interval: { start: bar.start, end: bar.end }
+  }
 }
 
 function indexOfClosest(distances: Array<number | null>): number {
@@ -149,7 +174,7 @@ export function useHover(options: HoverOptions) {
     }
     const series: StackedSeries = drawnStacks[metricIndex] ?? { kind: 'line' }
     const edge = drawnEdge(series, columnIndex, metric.render.inverse ? -value : value, time)
-    return edge === null ? null : { value, time, edge }
+    return edge === null ? null : { value, time, edge, interval: null }
   }
 
   function plotStartTime(): number {
@@ -161,7 +186,7 @@ export function useHover(options: HoverOptions) {
     if (value === null || value === undefined || !Number.isFinite(value)) {
       return null
     }
-    return { value, time: cursorTime, edge: null }
+    return { value, time: cursorTime, edge: null, interval: null }
   }
 
   function readingAtCursor(
@@ -169,6 +194,10 @@ export function useHover(options: HoverOptions) {
     metricIndex: number,
     cursorTime: number
   ): Reading | null {
+    const series = drawnStacks[metricIndex]
+    if (series?.kind === 'bars') {
+      return barReadingAt(metric, series, cursorTime)
+    }
     const buckets = drawnBuckets[metricIndex] ?? []
     const isStackReference = metric.render.hidden
     if (isStackReference || !coversTime(buckets, cursorTime)) {
@@ -197,6 +226,10 @@ export function useHover(options: HoverOptions) {
   }
 
   function drawnReadingAtTime(metric: Metric, metricIndex: number, time: number): Reading | null {
+    const series = drawnStacks[metricIndex]
+    if (series?.kind === 'bars') {
+      return barReadingAt(metric, series, time)
+    }
     const buckets = drawnBuckets[metricIndex] ?? []
     const columnOfTime = bisectColumnStart.right(buckets, time) - 1
     const columnStraddledInto = columnOfTime + 1
@@ -294,6 +327,9 @@ export function useHover(options: HoverOptions) {
         : (drawnReadingAtTime(metricsList[i]!, i, hoverTime) ?? cursorReading)
     )
 
+    const snapInterval =
+      readings.find((reading) => reading?.interval && reading.time === hoverTime)?.interval ?? null
+
     return {
       cursorX,
       cursorY,
@@ -301,6 +337,7 @@ export function useHover(options: HoverOptions) {
       clientY: point.clientY,
       snapX: options.xScale(new Date(hoverTime * 1000)),
       snapTime: hoverTime,
+      snapInterval,
       samples: indicesInLegendOrder.map((i) =>
         toSample(metricsList[i]!, readings[i]!, i === closestIdx)
       )

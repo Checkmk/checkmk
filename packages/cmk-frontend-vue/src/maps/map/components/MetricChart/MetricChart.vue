@@ -125,6 +125,7 @@ const drawable = computed(() => size.value.width > 0 && size.value.height > 0)
       :size="{ width: size.width, height: size.height, mode: 'fixed' }"
       :value-range="null"
       :zoom-mode="'time'"
+      :bin-unit="null"
       :min-time-range="null"
       :min-value-range="null"
       :inspecting="false"

@@ -6,6 +6,7 @@
 import type { CmkTimeSeriesGraph, Size } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 
+import type { BinUnit } from '../../utils/bins'
 import type { ConsolidationFn } from '../consolidation'
 import type { ZoomMode } from './interaction/selection'
 
@@ -28,6 +29,8 @@ export type BarRender = components['schemas']['ApiBarRender']
 export type HorizontalLine = components['schemas']['ApiHorizontalLine']
 export type ShadedRegion = components['schemas']['ApiShadedRegion']
 export type TimeRange = components['schemas']['ApiTimeRange']
+
+export type { BinUnit }
 
 export type LineInterpolator = 'linear' | 'monotoneX' | 'basis'
 export type SizeMode = Size['mode']
@@ -61,6 +64,8 @@ export interface TimeSeriesGraphProps extends Pick<CmkTimeSeriesGraph, 'size' | 
   shaded_regions: ShadedRegion[]
   consolidationFunction?: ConsolidationFn
   curveInterpolator?: LineInterpolator
+  /** The unit bar metrics are binned by; null while the graph holds no bar metric. */
+  binUnit: BinUnit | null
   valueRange: ValueRange | null
   zoomMode: ZoomMode
   minTimeRange: number | null

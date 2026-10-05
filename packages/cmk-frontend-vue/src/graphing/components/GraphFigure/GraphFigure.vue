@@ -284,6 +284,7 @@ onBeforeUnmount(() => {
           :value-range="viewValueRange"
           zoom-mode="time"
           :size="figureSize"
+          :bin-unit="timeAxis.binUnit"
           :min-time-range="timeAxis.minSpan(null)"
           :min-value-range="null"
           :inspecting="inspectionActive"

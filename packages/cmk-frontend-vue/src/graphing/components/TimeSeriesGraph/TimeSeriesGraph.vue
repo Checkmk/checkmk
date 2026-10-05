@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import { getLocalTimeZone } from '@internationalized/date'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkTooltip, {
@@ -20,6 +21,7 @@ import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
 import { scaleLinear, scaleTime } from 'd3-scale'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import { drawnBinEdges } from '../../utils/bins'
 import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from '../consolidation'
 import {
   CANVAS_MARGIN_LEFT,
@@ -286,8 +288,13 @@ function draw(): void {
   const composed = composeSeries({
     metrics: props.metrics,
     cache: m4CacheStore.ensure(props.metrics, timeRangeTheValuesSpan()),
+    dataTimeRange: timeRangeTheValuesSpan(),
     visibleTimeRange: [props.view_time_range.start, props.view_time_range.end],
-    columnCount: Math.max(1, Math.floor(plotWidth.value))
+    columnCount: Math.max(1, Math.floor(plotWidth.value)),
+    binEdges:
+      props.binUnit === null
+        ? null
+        : drawnBinEdges(props.binUnit, props.view_time_range, plotWidth.value, getLocalTimeZone())
   })
   const { paddedBuckets: inverted, stacks } = composed
 
@@ -531,6 +538,7 @@ watch(
     props.size,
     props.consolidationFunction,
     props.curveInterpolator,
+    props.binUnit,
     props.horizontal_lines,
     props.highlightedMetricNames,
     plotWidth.value,

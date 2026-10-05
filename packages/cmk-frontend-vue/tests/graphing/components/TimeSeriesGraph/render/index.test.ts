@@ -28,7 +28,7 @@ vi.mock('@/graphing/components/TimeSeriesGraph/render/stacked', () => ({
 const drawLineSpy = vi.mocked(drawLine)
 const drawStackedBandSpy = vi.mocked(drawStackedBand)
 
-function makeSeries(kind: StackedSeriesKind): StackedSeries {
+function makeSeries(kind: Exclude<StackedSeriesKind, 'bars'>): StackedSeries {
   return kind === 'line' ? { kind } : { kind, columns: [] }
 }
 

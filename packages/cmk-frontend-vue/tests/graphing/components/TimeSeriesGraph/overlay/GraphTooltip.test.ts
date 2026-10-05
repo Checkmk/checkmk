@@ -39,6 +39,7 @@ function makeHoverState(overrides: Partial<HoverState>): HoverState {
     clientY: 205,
     snapX: 5,
     snapTime: 1000,
+    snapInterval: null,
     samples: [makeSample({})],
     ...overrides
   }
@@ -84,6 +85,24 @@ describe('GraphTooltip', () => {
     renderGraphTooltip(makeHoverState({ snapTime: 1781526896 }))
 
     expect(screen.getByText(/, \d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}/)).toBeInTheDocument()
+  })
+
+  test('shows a bin as its start and the clock time of its end', () => {
+    const start = 1781524800
+    const end = start + 3600
+
+    renderGraphTooltip(makeHoverState({ snapTime: start + 1800, snapInterval: { start, end } }))
+
+    expect(screen.getByText(/, \d{4}-\d{2}-\d{2}\s+\d{2}:00:00 – \d{2}:00:00$/)).toBeInTheDocument()
+  })
+
+  test('shows a bin that ends on another day with both dates', () => {
+    const start = 1781526000
+    const end = start + 2 * 86_400
+
+    renderGraphTooltip(makeHoverState({ snapTime: start, snapInterval: { start, end } }))
+
+    expect(screen.getByText(/\d{4}-\d{2}-\d{2}.* – .*\d{4}-\d{2}-\d{2}/)).toBeInTheDocument()
   })
 
   test('keeps its scoped style on the content inside the shared tooltip', () => {

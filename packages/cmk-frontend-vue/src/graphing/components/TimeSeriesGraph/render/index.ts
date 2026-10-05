@@ -7,6 +7,7 @@ import type { ScaleLinear, ScaleTime } from 'd3-scale'
 
 import type { M4Cache } from '../decimation/types'
 import type { LineInterpolator, Metric } from '../types'
+import { drawBars } from './bars'
 import { drawLine } from './line'
 import { type StackedSeries, drawStackedBand } from './stacked'
 
@@ -33,6 +34,14 @@ export function drawData(
   const alphaFor = (metric: Metric): number =>
     highlightedMetricNames.size > 0 && !highlightedMetricNames.has(metric.metadata.name) ? 0.4 : 1
 
+  for (let i = 0; i < metrics.length; i++) {
+    const series = stacks[i]!
+    if (metrics[i]!.render.hidden || series.kind !== 'bars') {
+      continue
+    }
+    ctx.globalAlpha = alphaFor(metrics[i]!)
+    drawBars(ctx, series, xScale, yScale, metrics[i]!.metadata.color)
+  }
   for (let i = 0; i < metrics.length; i++) {
     const series = stacks[i]!
     // Hidden metrics (stack references) shape the stacking sums but are never painted.

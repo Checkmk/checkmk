@@ -20,6 +20,7 @@ export interface Bin {
 
 const SECONDS_PER_HOUR = 3600
 const SECONDS_PER_DAY = 86_400
+const MIN_BAR_WIDTH_PX = 3
 const GRID_STEPS_LARGEST_FIRST: GridStep[] = [3600, 1800, 900]
 const FINEST_GRID_STEP: GridStep = 900
 
@@ -112,6 +113,42 @@ export function gridStep(edges: number[]): GridStep {
     GRID_STEPS_LARGEST_FIRST.find((candidate) => edges.every((edge) => edge % candidate === 0)) ??
     FINEST_GRID_STEP
   )
+}
+
+function binOrdinal(unit: BinUnit, edge: number, timeZone: string): number {
+  const zoned = fromAbsolute(edge * 1000, timeZone)
+  switch (unit) {
+    case 'hour':
+      return Math.floor((edge + zoned.offset / 1000) / SECONDS_PER_HOUR)
+    case 'day':
+      return Date.UTC(zoned.year, zoned.month - 1, zoned.day) / 1000 / SECONDS_PER_DAY
+  }
+}
+
+/**
+ * The bin edges to draw over the interval: bins narrower than a bar can be drawn merge into groups
+ * that start at a fixed multiple of the unit, so a pan keeps the grouping. A local hour that the
+ * clocks repeat or restart starts no second group.
+ */
+export function drawnBinEdges(
+  unit: BinUnit,
+  interval: TimeInterval,
+  plotWidth: number,
+  timeZone: string
+): number[] {
+  const edges = binEdges(unit, interval, timeZone)
+  const binWidthPx = (plotWidth * BIN_UNIT_SECONDS[unit]) / (interval.end - interval.start)
+  const binsPerGroup = Math.max(1, Math.ceil(MIN_BAR_WIDTH_PX / binWidthPx))
+  if (binsPerGroup === 1) {
+    return edges
+  }
+  let latestOrdinal = -Infinity
+  return edges.filter((edge, index) => {
+    const ordinal = binOrdinal(unit, edge, timeZone)
+    const startsGroup = ordinal > latestOrdinal && ordinal % binsPerGroup === 0
+    latestOrdinal = Math.max(latestOrdinal, ordinal)
+    return index === 0 || index === edges.length - 1 || startsGroup
+  })
 }
 
 function gridPhase(grid: TimeRange): number {

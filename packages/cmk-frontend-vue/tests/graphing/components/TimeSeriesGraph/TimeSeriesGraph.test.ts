@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { getLocalTimeZone } from '@internationalized/date'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import { select } from 'd3-selection'
@@ -18,9 +19,11 @@ import {
   PLOT_INSET_X,
   VALUE_LABEL_TICK_OFFSET
 } from '@/graphing/components/constants'
+import { binEdges } from '@/graphing/utils/bins'
 
 let drawnPoints: Array<[number, number]> = []
 let drawnStrokes: Array<Array<[number, number]>> = []
+let filledRects: Array<[number, number, number, number]> = []
 
 // jsdom implements neither a 2D canvas context nor matchMedia, both of which the graph
 // touches on mount (draw() + the devicePixelRatio watcher). Stub them so the component
@@ -43,6 +46,10 @@ function createCanvasContextStub(): CanvasRenderingContext2D {
       if (prop === 'lineTo') {
         return drawLineTo
       }
+      if (prop === 'fillRect') {
+        return (x: number, y: number, width: number, height: number) =>
+          filledRects.push([x, y, width, height])
+      }
       return prop in target ? target[prop] : () => undefined
     },
     set: (target, prop, value) => {
@@ -55,6 +62,7 @@ function createCanvasContextStub(): CanvasRenderingContext2D {
 beforeEach(() => {
   drawnPoints = []
   drawnStrokes = []
+  filledRects = []
   vi.stubGlobal(
     'matchMedia',
     vi.fn().mockReturnValue({
@@ -113,6 +121,7 @@ const INVERSE_METRIC: Metric = {
 
 const DEFAULT_PROPS: TimeSeriesGraphProps = {
   size: { width: 800, height: 400, mode: 'fixed' },
+  binUnit: null,
   options: {
     header: { title: null, show_graph_time: false },
     name: 'graph',
@@ -783,5 +792,35 @@ describe('TimeSeriesGraph — keyboard access to the zoom reset', () => {
     await fireEvent.click(resetButton)
 
     expect(screen.getByRole('img')).toHaveFocus()
+  })
+})
+
+describe('TimeSeriesGraph — bars', () => {
+  const HOUR = 3600
+  const TWO_HOURS = { start: 400_000 * HOUR, end: 400_002 * HOUR, step: 60 }
+  const COUNTS: Metric = {
+    ...LINE_METRIC,
+    render: { shape: 'bar', stack: null, aggregation: 'sum', inverse: false, hidden: false }
+  }
+
+  test('draws one filled bar per local hour of the bar metric', () => {
+    const grid = binEdges('hour', TWO_HOURS, getLocalTimeZone())
+    const dataTimeRange = { start: grid[0]!, end: grid.at(-1)!, step: 900 }
+    const values = Array.from({ length: (dataTimeRange.end - dataTimeRange.start) / 900 }, () => 1)
+
+    renderComponent({
+      binUnit: 'hour',
+      view_time_range: TWO_HOURS,
+      data_time_range: dataTimeRange,
+      metrics: [{ ...COUNTS, data_points: values }]
+    })
+
+    expect(filledRects).toHaveLength(grid.length - 1)
+  })
+
+  test('draws no bar while the graph holds no bar metric', () => {
+    renderComponent()
+
+    expect(filledRects).toHaveLength(0)
   })
 })

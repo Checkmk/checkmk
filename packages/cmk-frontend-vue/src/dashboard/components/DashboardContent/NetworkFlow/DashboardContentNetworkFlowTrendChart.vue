@@ -185,6 +185,7 @@ const graphOptions = computed(
             :value-range="viewValueRange"
             zoom-mode="time"
             :size="figureSize"
+            :bin-unit="null"
             :min-time-range="null"
             :min-value-range="null"
             :inspecting="inspectionActive"

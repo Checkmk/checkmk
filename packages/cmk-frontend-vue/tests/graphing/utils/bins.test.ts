@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { binEdges, binStart, foldIntoBins, gridStep } from '@/graphing/utils/bins'
+import { binEdges, binStart, drawnBinEdges, foldIntoBins, gridStep } from '@/graphing/utils/bins'
 
 import {
   BIN_UNITS,
@@ -23,6 +23,10 @@ import {
 
 function utc(day: number, hour: number, minute = 0, month = 3): number {
   return Date.UTC(2026, month - 1, day, hour, minute) / 1000
+}
+
+function widths(edges: number[]): number[] {
+  return edges.slice(1).map((edge, index) => edge - edges[index]!)
 }
 
 describe('binEdges', () => {
@@ -106,6 +110,87 @@ describe('gridStep', () => {
 
   it('takes quarter hours when no quarter-hour grid reaches every edge', () => {
     expect(gridStep([0, 600])).toBe(900)
+  })
+})
+
+function groupedAtShift(change: 'forward' | 'back') {
+  return LOCAL_TIME_CASES.filter((localTimeCase) => localTimeCase.change === change).flatMap(
+    (localTimeCase) => [48, 120].map((plotWidth) => ({ ...localTimeCase, plotWidth }))
+  )
+}
+
+function innerGroupLengths(edges: number[]): number[] {
+  return widths(edges).slice(1, -1)
+}
+
+function mostCommon(values: number[]): number {
+  const counts = new Map<number, number>()
+  values.forEach((value) => counts.set(value, (counts.get(value) ?? 0) + 1))
+  return [...counts].sort(([, a], [, b]) => b - a)[0]![0]
+}
+
+describe('drawnBinEdges', () => {
+  const twoDays = { start: utc(10, 0), end: utc(12, 0) }
+
+  it('keeps every bin that is wide enough to draw', () => {
+    expect(drawnBinEdges('hour', twoDays, 480, 'UTC')).toEqual(binEdges('hour', twoDays, 'UTC'))
+  })
+
+  it('merges narrow hour bins into groups that start at multiples of the group size', () => {
+    const edges = drawnBinEdges('hour', twoDays, 48, 'UTC')
+
+    expect(widths(edges)).toEqual(Array.from({ length: 16 }, () => 3 * HOUR))
+    expect(edges.every((edge) => (edge / HOUR) % 3 === 0)).toBe(true)
+  })
+
+  it('keeps the grouping when the interval moves by one bin', () => {
+    const moved = { start: twoDays.start + HOUR, end: twoDays.end + HOUR }
+
+    const edges = drawnBinEdges('hour', twoDays, 48, 'UTC')
+    const movedEdges = drawnBinEdges('hour', moved, 48, 'UTC')
+
+    expect(movedEdges.slice(1, -1)).toEqual(edges.slice(1))
+  })
+
+  it('cuts the outer groups at the bin edges of the interval', () => {
+    const moved = { start: twoDays.start + HOUR, end: twoDays.end + HOUR }
+
+    const edges = drawnBinEdges('hour', moved, 48, 'UTC')
+
+    expect(widths(edges)).toEqual([2 * HOUR, ...Array.from({ length: 15 }, () => 3 * HOUR), HOUR])
+  })
+
+  it.each(groupedAtShift('back'))(
+    'draws no inner hour group shorter than the others when the clocks go back: $name, $plotWidth px',
+    ({ timeZone, instant, plotWidth }) => {
+      const groups = innerGroupLengths(
+        drawnBinEdges('hour', windowAround('hour', instant), plotWidth, timeZone)
+      )
+
+      expect(Math.min(...groups)).toBe(mostCommon(groups))
+    }
+  )
+
+  it.each(groupedAtShift('forward'))(
+    'shortens an inner hour group by at most the skipped hour when the clocks go forward: $name, $plotWidth px',
+    ({ timeZone, instant, plotWidth }) => {
+      const groups = innerGroupLengths(
+        drawnBinEdges('hour', windowAround('hour', instant), plotWidth, timeZone)
+      )
+
+      expect(Math.min(...groups)).toBeGreaterThanOrEqual(mostCommon(groups) - HOUR)
+    }
+  )
+
+  it('merges day bins on local calendar days', () => {
+    const edges = drawnBinEdges('day', { start: utc(1, 12), end: utc(29, 12) }, 28, 'Europe/Berlin')
+
+    expect(
+      edges
+        .slice(1, -1)
+        .every((edge) => (edge + HOUR) % 86_400 === 0 || (edge + 2 * HOUR) % 86_400 === 0)
+    ).toBe(true)
+    expect(edges.length).toBeLessThan(29)
   })
 })
 

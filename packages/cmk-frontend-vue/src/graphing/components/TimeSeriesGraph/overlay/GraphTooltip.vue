@@ -7,9 +7,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { getLocalTimeZone } from '@internationalized/date'
 import CmkPointerTooltip from 'cmk-ui-library/components/CmkPointerTooltip.vue'
-import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
+import { renderDate, renderDateAndTime, renderTimeOfDay } from 'cmk-ui-library/lib/renderTime'
 import { computed } from 'vue'
 
+import type { TimeInterval } from '../../../types'
 import { shortWeekday } from '../../../utils/timeFormat'
 import MetricAttributeGroups from '../../MetricAttributeGroups.vue'
 import type { HoverState } from '../interaction/hover'
@@ -23,13 +24,27 @@ const closestSample = computed(() =>
   props.hoverState?.samples.find((sample) => sample.isClosest && sample.attributes.length > 0)
 )
 
+function formatInstant(time: number, timeZone: string): string {
+  return `${shortWeekday(time, timeZone)}, ${renderDateAndTime(time, timeZone)}`
+}
+
+function formatInterval(interval: TimeInterval, timeZone: string): string {
+  const endText =
+    renderDate(interval.start, timeZone) === renderDate(interval.end, timeZone)
+      ? renderTimeOfDay(interval.end, timeZone)
+      : formatInstant(interval.end, timeZone)
+  return `${formatInstant(interval.start, timeZone)} – ${endText}`
+}
+
 const formattedTime = computed(() => {
   if (!props.hoverState) {
     return ''
   }
   const timeZone = getLocalTimeZone()
-  const time = props.hoverState.snapTime
-  return `${shortWeekday(time, timeZone)}, ${renderDateAndTime(time, timeZone)}`
+  const interval = props.hoverState.snapInterval
+  return interval === null
+    ? formatInstant(props.hoverState.snapTime, timeZone)
+    : formatInterval(interval, timeZone)
 })
 </script>
 

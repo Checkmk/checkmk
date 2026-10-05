@@ -47,7 +47,12 @@ def check_ucd_mem(_no_item, params, parsed):
     if params.get("levels") is not None:
         params["levels_ram"] = params.pop("levels")
 
-    results = check_memory_dict(parsed, params)
+    meminfo = parsed
+    if not parsed["MemTotal"]:
+        yield 3, "Cannot evaluate RAM: device reports a total of 0 B"
+        meminfo = {k: v for k, v in parsed.items() if k != "MemTotal"}
+
+    results = check_memory_dict(meminfo, params)
     yield from results.values()
 
     # swap errors

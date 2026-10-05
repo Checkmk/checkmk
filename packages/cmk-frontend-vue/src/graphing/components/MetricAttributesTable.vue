@@ -65,7 +65,7 @@ const rows = computed(() => sortedAttributes(props.attributes))
   }
 
   tbody tr:hover {
-    background: var(--graphing-attributes-row-hover);
+    background: var(--background-row-hover-strong);
   }
 }
 
@@ -80,13 +80,5 @@ const rows = computed(() => sortedAttributes(props.attributes))
 /* Values can be long ids; wrapping keeps them out of the neighbouring columns. */
 .graphing-metric-attributes-table__value {
   overflow-wrap: anywhere;
-}
-
-body[data-theme='facelift'] .graphing-metric-attributes-table {
-  --graphing-attributes-row-hover: var(--ux-theme-5);
-}
-
-body[data-theme='modern-dark'] .graphing-metric-attributes-table {
-  --graphing-attributes-row-hover: var(--color-white-10);
 }
 </style>

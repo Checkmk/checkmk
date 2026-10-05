@@ -784,14 +784,14 @@ defineExpose({ showMaxZoomHint })
   }
 
   .graphing-time-series-graph__axis-highlight {
-    fill: var(--graphing-interactive-wash);
+    fill: var(--background-hover-wash);
   }
 
   .graphing-time-series-graph__zoom-band {
     position: absolute;
     z-index: 1;
     pointer-events: none;
-    background: color-mix(in srgb, var(--color-corporate-green-50) 20%, transparent);
+    background: color-mix(in srgb, var(--success) 20%, transparent);
   }
 
   .graphing-time-series-graph__pan-zone {
@@ -822,10 +822,7 @@ defineExpose({ showMaxZoomHint })
     border-color: var(--border-color-default);
 
     &:hover {
-      background-image: linear-gradient(
-        var(--graphing-interactive-wash),
-        var(--graphing-interactive-wash)
-      );
+      background-image: linear-gradient(var(--background-hover-wash), var(--background-hover-wash));
     }
 
     /* Fades out the tick labels running up to the button, so none collides with it. */
@@ -883,18 +880,6 @@ defineExpose({ showMaxZoomHint })
     font-size: var(--font-size-normal);
     line-height: normal;
     color: var(--default-tooltip-text-color);
-  }
-}
-
-body[data-theme='facelift'] {
-  .graphing-time-series-graph {
-    --graphing-interactive-wash: var(--color-conference-grey-10);
-  }
-}
-
-body[data-theme='modern-dark'] {
-  .graphing-time-series-graph {
-    --graphing-interactive-wash: var(--color-white-10);
   }
 }
 

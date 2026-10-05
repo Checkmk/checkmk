@@ -392,12 +392,12 @@ function toggleLine(name: string) {
   height: var(--legend-row-height);
 
   &:hover td {
-    background: var(--graphing-legend-row-hover);
+    background: var(--background-row-hover);
   }
 
   &--hidden .graphing-graph-legend__name,
   &--hidden .graphing-graph-legend__stat {
-    color: var(--graphing-legend-hidden-color);
+    color: var(--font-color-secondary);
   }
 }
 
@@ -493,18 +493,6 @@ function toggleLine(name: string) {
 
 /* Unqualified, so the hidden row's colour still wins. */
 .graphing-graph-legend__stat {
-  color: var(--graphing-legend-stat-color);
-}
-
-body[data-theme='facelift'] .graphing-graph-legend {
-  --graphing-legend-stat-color: var(--color-mid-grey-100);
-  --graphing-legend-hidden-color: var(--color-conference-grey-70);
-  --graphing-legend-row-hover: var(--ux-theme-4);
-}
-
-body[data-theme='modern-dark'] .graphing-graph-legend {
-  --graphing-legend-stat-color: var(--color-mid-grey-0);
-  --graphing-legend-hidden-color: var(--color-white-70);
-  --graphing-legend-row-hover: var(--color-white-10);
+  color: var(--font-color-strong);
 }
 </style>

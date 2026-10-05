@@ -74,17 +74,9 @@ defineEmits<{
 </template>
 
 <style scoped>
-.graphing-filter-query-section {
-  --graphing-filter-query-section-border: var(--color-mid-grey-10);
-}
-
-body[data-theme='modern-dark'] .graphing-filter-query-section {
-  --graphing-filter-query-section-border: var(--color-mid-grey-90);
-}
-
 .graphing-filter-query-section__container {
   overflow: hidden;
-  border: 1px solid var(--graphing-filter-query-section-border);
+  border: 1px solid var(--border-color-subtle);
   border-radius: var(--border-radius);
 }
 
@@ -93,7 +85,7 @@ body[data-theme='modern-dark'] .graphing-filter-query-section {
   align-items: flex-start;
   gap: var(--dimension-4);
   padding: var(--dimension-7);
-  border-bottom: 1px solid var(--graphing-filter-query-section-border);
+  border-bottom: 1px solid var(--border-color-subtle);
 }
 
 .graphing-filter-query-section__filter-input {

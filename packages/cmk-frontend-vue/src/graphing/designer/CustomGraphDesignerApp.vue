@@ -441,12 +441,6 @@ const saveFailureButtons = computed(() => {
   flex-direction: column;
   overflow-y: auto;
   background: var(--ux-theme-1);
-
-  --graphing-custom-graph-designer-app-header-stroke: var(--color-mid-grey-10);
-}
-
-body[data-theme='modern-dark'] .graphing-custom-graph-designer-app {
-  --graphing-custom-graph-designer-app-header-stroke: var(--color-mid-grey-100);
 }
 
 .graphing-custom-graph-designer-app__header {
@@ -462,7 +456,7 @@ body[data-theme='modern-dark'] .graphing-custom-graph-designer-app {
   padding: var(--dimension-6);
   padding-bottom: 0;
   background: var(--ux-theme-2);
-  border-bottom: 1px solid var(--graphing-custom-graph-designer-app-header-stroke);
+  border-bottom: 1px solid var(--border-color-separator);
 }
 
 .graphing-custom-graph-designer-app__topbar {

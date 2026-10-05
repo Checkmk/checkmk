@@ -91,26 +91,14 @@ function onClick(): void {
 }
 
 .graphing-pin-handle:hover .graphing-pin-handle__body {
-  fill: color-mix(in srgb, var(--color-white-100) 30%, var(--graph-pin-color));
+  fill: color-mix(in srgb, var(--white) 30%, var(--graph-pin-color));
 }
 
-body[data-theme='facelift'] {
-  .graphing-pin-handle--add {
-    --graph-pin-color: var(--color-conference-grey-70);
-  }
-
-  .graphing-pin-handle--remove {
-    --graph-pin-color: var(--color-corporate-green-70);
-  }
+.graphing-pin-handle--add {
+  --graph-pin-color: var(--font-color-secondary);
 }
 
-body[data-theme='modern-dark'] {
-  .graphing-pin-handle--add {
-    --graph-pin-color: var(--color-white-70);
-  }
-
-  .graphing-pin-handle--remove {
-    --graph-pin-color: var(--color-corporate-green-50);
-  }
+.graphing-pin-handle--remove {
+  --graph-pin-color: var(--interactive-accent-strong);
 }
 </style>

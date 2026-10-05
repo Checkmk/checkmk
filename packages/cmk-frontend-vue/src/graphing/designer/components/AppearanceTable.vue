@@ -277,12 +277,6 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
 .graphing-appearance-table {
   flex: 0 1 auto;
   min-height: 0;
-
-  --graphing-appearance-table-series-hover: var(--color-light-blue-0);
-}
-
-body[data-theme='modern-dark'] .graphing-appearance-table {
-  --graphing-appearance-table-series-hover: var(--color-dark-blue-90);
 }
 
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
@@ -298,7 +292,7 @@ body[data-theme='modern-dark'] .graphing-appearance-table {
 /* Direct cells only: the nested attribute table keeps its own row hover. */
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
 .graphing-appearance-table__series--hovered > :deep(td) {
-  background-color: var(--graphing-appearance-table-series-hover);
+  background-color: var(--background-highlight);
 }
 
 .graphing-appearance-table__color-swatch {

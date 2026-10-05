@@ -172,7 +172,7 @@ const lastRefreshLabel = computed(() => {
   gap: var(--dimension-3);
   padding: var(--dimension-3) var(--dimension-4);
   border-radius: var(--border-radius);
-  background: var(--graphing-refresh-live-bg);
+  background: var(--status-background-success);
 
   > :deep(.cmk-dropdown) {
     align-self: center;
@@ -180,7 +180,7 @@ const lastRefreshLabel = computed(() => {
 }
 
 .graphing-global-refresh-control__pill--paused {
-  background: var(--graphing-refresh-off-bg);
+  background: var(--status-background-warning);
 }
 
 .graphing-global-refresh-control__dot {
@@ -188,34 +188,14 @@ const lastRefreshLabel = computed(() => {
   flex: 0 0 auto;
   width: 8px;
   height: 8px;
-  border: var(--border-width-1) solid var(--graphing-refresh-live-dot-stroke);
+  border: var(--border-width-1) solid var(--status-border-color-success-strong);
   border-radius: 50%;
-  background: var(--color-corporate-green-50);
+  background: var(--success);
 }
 
 .graphing-global-refresh-control__pill--paused .graphing-global-refresh-control__dot {
-  border-color: var(--graphing-refresh-off-dot-stroke);
-  background: var(--color-yellow-50);
-}
-
-body[data-theme='facelift'] {
-  .graphing-global-refresh-control {
-    --graphing-refresh-live-bg: var(--color-corporate-green-0);
-    --graphing-refresh-off-bg: var(--color-yellow-0);
-    --graphing-refresh-live-dot-stroke: var(--color-corporate-green-70);
-    --graphing-refresh-off-dot-stroke: var(--color-yellow-70);
-  }
-}
-
-body[data-theme='modern-dark'] {
-  .graphing-global-refresh-control {
-    --graphing-refresh-live-bg: var(--color-corporate-green-100);
-    --graphing-refresh-off-bg: var(--color-yellow-100);
-
-    /* Same colour as the fill: dark mode shows no ring, but the border keeps the dot 8x8. */
-    --graphing-refresh-live-dot-stroke: var(--color-corporate-green-50);
-    --graphing-refresh-off-dot-stroke: var(--color-yellow-50);
-  }
+  border-color: var(--status-border-color-warning-strong);
+  background: var(--color-state-warning);
 }
 
 .graphing-global-refresh-control__title {

@@ -276,12 +276,6 @@ function itemActionLabel(id: ItemId): TranslatedString {
 .graphing-rrd-tab {
   display: flex;
   flex-direction: column;
-
-  --graphing-rrd-tab-separator: var(--color-mid-grey-10);
-}
-
-body[data-theme='modern-dark'] .graphing-rrd-tab {
-  --graphing-rrd-tab-separator: var(--color-mid-grey-90);
 }
 
 .graphing-rrd-tab__toggle {
@@ -355,7 +349,7 @@ body[data-theme='modern-dark'] .graphing-rrd-tab {
   flex-direction: column;
   gap: var(--dimension-4);
   padding: var(--dimension-5);
-  border-bottom: 1px solid var(--graphing-rrd-tab-separator);
+  border-bottom: 1px solid var(--border-color-subtle);
 }
 
 .graphing-rrd-tab__list {

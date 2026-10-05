@@ -341,7 +341,7 @@ const legendAlignedWithPlot = computed(() =>
 <style scoped lang="scss">
 .graphing-graph-panel--hover-graph {
   background-color: var(--ux-theme-5);
-  border: 1px solid var(--color-mid-grey-90);
+  border: 1px solid var(--border-color-emphasis);
 }
 
 .graphing-graph-panel__header {

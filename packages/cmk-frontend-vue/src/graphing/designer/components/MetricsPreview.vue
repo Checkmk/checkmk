@@ -116,14 +116,6 @@ function attributesId(name: string): string {
 </template>
 
 <style scoped>
-.graphing-metrics-preview {
-  --graphing-metrics-preview-line-hover: var(--color-light-blue-0);
-}
-
-body[data-theme='modern-dark'] .graphing-metrics-preview {
-  --graphing-metrics-preview-line-hover: var(--color-dark-blue-90);
-}
-
 .graphing-metrics-preview__table {
   border-collapse: collapse;
   width: 100%;
@@ -132,7 +124,7 @@ body[data-theme='modern-dark'] .graphing-metrics-preview {
 
 /* Direct cells only: the nested attribute table keeps its own row hover. */
 .graphing-metrics-preview__line--hovered > td {
-  background-color: var(--graphing-metrics-preview-line-hover);
+  background-color: var(--background-highlight);
 }
 
 .graphing-metrics-preview__swatch-cell {

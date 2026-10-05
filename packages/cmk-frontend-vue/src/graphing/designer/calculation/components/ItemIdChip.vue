@@ -17,7 +17,7 @@ const { id, color } = defineProps<{
 
 const chipStyle = computed(() =>
   color === undefined
-    ? { backgroundColor: 'var(--color-mid-grey-50)', color: 'var(--color-conference-grey-100)' }
+    ? { backgroundColor: 'var(--background-neutral)', color: 'var(--tag-font-color-dark)' }
     : { backgroundColor: color, color: contrastTextColor(color) }
 )
 </script>

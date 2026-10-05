@@ -120,7 +120,7 @@ onMounted(() => {
   align-items: center;
   padding-top: 0;
   padding-bottom: 0;
-  border: var(--dimension-1) solid var(--color-mid-grey-60);
+  border: var(--dimension-1) solid var(--default-form-element-border-color);
   border-radius: var(--dimension-3);
 }
 </style>

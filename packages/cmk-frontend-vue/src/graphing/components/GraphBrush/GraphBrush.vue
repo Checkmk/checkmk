@@ -456,7 +456,7 @@ onBeforeUnmount(() => {
    take pointer events for its grab cursor, and unfilled rects take none. */
 .graphing-graph-brush__track {
   fill: transparent;
-  stroke: var(--graphing-brush-track-stroke);
+  stroke: var(--border-color-subtle);
   shape-rendering: crispedges;
   cursor: grab;
 }
@@ -482,13 +482,13 @@ onBeforeUnmount(() => {
 }
 
 .graphing-graph-brush__bar {
-  fill: var(--color-corporate-green-50);
-  stroke: var(--graphing-brush-bar-stroke);
+  fill: var(--success);
+  stroke: var(--interactive-accent-strong);
   cursor: grab;
 }
 
 .graphing-graph-brush__bar:hover {
-  fill: color-mix(in srgb, var(--color-corporate-green-50) 70%, var(--white));
+  fill: color-mix(in srgb, var(--success) 70%, var(--white));
 }
 
 .graphing-graph-brush--dragging .graphing-graph-brush__track,
@@ -523,20 +523,8 @@ onBeforeUnmount(() => {
 }
 
 .graphing-graph-brush__range {
-  fill: var(--graphing-brush-extent-color);
+  fill: var(--font-color-strong);
   font-size: var(--font-size-normal);
   pointer-events: none;
-}
-
-body[data-theme='facelift'] .graphing-graph-brush {
-  --graphing-brush-track-stroke: var(--color-mid-grey-10);
-  --graphing-brush-bar-stroke: var(--color-corporate-green-70);
-  --graphing-brush-extent-color: var(--color-mid-grey-100);
-}
-
-body[data-theme='modern-dark'] .graphing-graph-brush {
-  --graphing-brush-track-stroke: var(--color-mid-grey-90);
-  --graphing-brush-bar-stroke: var(--color-corporate-green-50);
-  --graphing-brush-extent-color: var(--color-mid-grey-0);
 }
 </style>

@@ -5,7 +5,7 @@
 
 """What the detection endpoints have in common."""
 
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from http import HTTPStatus
 from typing import assert_never
 
@@ -79,12 +79,16 @@ def need_detection_permissions() -> None:
     user.need_permission("wato.edit_hosts")
 
 
-def finding_args(body: ScanRequestModel) -> list[FindingArgs]:
+def finding_args(body: ScanRequestModel, custom_attributes: Collection[str]) -> list[FindingArgs]:
     """What the page asked the scan to read, or a 400 naming the finding at fault.
 
     Checked here rather than left to the job, so that the page hears about it in the answer
     to its request and not in the log of a job that failed.
     """
+    for finding in body.findings:
+        for value in (finding.marked_by, finding.paired_by):
+            if not isinstance(value, ApiOmitted):
+                _need_offered_value(value.source, value.name, custom_attributes)
     found = [
         FindingArgs(
             id=finding.id,
@@ -126,8 +130,19 @@ def parsed_words(body: SuggestEvidenceRequestModel) -> list[str]:
     return body.words
 
 
-def parsed_values(body: SuggestEvidenceRequestModel) -> list[SharedLabel | SharedAttribute]:
+def parsed_values(
+    body: SuggestEvidenceRequestModel, custom_attributes: Collection[str]
+) -> list[SharedLabel | SharedAttribute]:
+    for value in body.values:
+        _need_offered_value(value.source, value.name, custom_attributes)
     return [ValueArgs(source=value.source, name=value.name).where() for value in body.values]
+
+
+def _need_offered_value(source: str, name: str, custom_attributes: Collection[str]) -> None:
+    """The built-in attributes (address, alias, ...) tell how a host is monitored, not which
+    machine it is."""
+    if source == "attribute" and name not in custom_attributes:
+        raise invalid_request(f"{name!r} is not a custom host attribute.")
 
 
 def parsed_scope(model: ScopeModel | ApiOmitted) -> ScopeArgs:

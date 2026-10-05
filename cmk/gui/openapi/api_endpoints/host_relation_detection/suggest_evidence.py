@@ -42,13 +42,14 @@ def suggest_host_relation_evidence(
     folder or on a site. Changes nothing.
     """
     need_detection_permissions()
+    attribute_names = [attribute["name"] for attribute in api_context.config.wato_host_attrs]
     return as_suggestions_model(
         scan_for_evidence(
             folder_tree(),
-            attribute_names=[attribute["name"] for attribute in api_context.config.wato_host_attrs],
+            attribute_names=attribute_names,
             acting_user=user,
             words=parsed_words(body),
-            values=parsed_values(body),
+            values=parsed_values(body, attribute_names),
             in_names="names" in body.look_in,
             in_values="values" in body.look_in,
             scope=parsed_scope(body.scope).scope(),

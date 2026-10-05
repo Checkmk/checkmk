@@ -40,3 +40,22 @@ def test_the_relation_detection_needs_the_permission_to_change_setup(
     clients.HostRelationDetection.set_credentials("reader", "reader-password")
 
     call(clients.HostRelationDetection).assert_status_code(HTTPStatus.FORBIDDEN)
+
+
+def test_a_scan_pairs_by_custom_host_attributes_only(clients: ClientRegistry) -> None:
+    clients.HostRelationDetection.scan(
+        findings=[
+            {
+                "id": "attribute:ipaddress",
+                "kind": "management",
+                "paired_by": {"source": "attribute", "name": "ipaddress"},
+            }
+        ],
+        expect_ok=False,
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
+
+
+def test_suggestions_are_asked_for_custom_host_attributes_only(clients: ClientRegistry) -> None:
+    clients.HostRelationDetection.suggest(
+        values=[{"source": "attribute", "name": "alias"}], expect_ok=False
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)

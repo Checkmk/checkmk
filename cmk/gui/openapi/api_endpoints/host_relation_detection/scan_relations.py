@@ -35,7 +35,9 @@ def scan_host_relations(api_context: ApiContext, body: ScanRequestModel) -> Rela
     summary and the rows endpoint for the proposals. Changes nothing.
     """
     need_detection_permissions()
-    findings = finding_args(body)
+    findings = finding_args(
+        body, [attribute["name"] for attribute in api_context.config.wato_host_attrs]
+    )
     scope = parsed_scope(body.scope)
     job = RelationScanBackgroundJob()
     if (

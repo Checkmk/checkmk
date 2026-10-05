@@ -3,25 +3,57 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from pathlib import Path
 
 import pytest
+from flask import Flask
 
 import cmk.config_anonymizer
 import cmk.gui.wato._check_mk_configuration as _check_mk_configuration_module
 import cmk.gui.wato._check_plugin_selection as _check_plugin_selection_module
 import cmk.gui.watolib._autocompleters as _autocompleters_module
 import cmk.gui.watolib.rulespecs as _rulespecs_module
-from cmk.ccc import store
+from cmk.ccc import debug, store
+from cmk.ccc.version import edition
+from cmk.checkengine.plugin_backend import load_all_plugins
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.watolib.rulesets import RulesetCollection
 from cmk.gui.watolib.rulespecs import FormSpecNotImplementedError
 from cmk.gui.watolib.utils import ALL_HOSTS, ALL_SERVICES, NEGATE
+from cmk.utils import paths
+from tests.testlib.unit.gui.common_fixtures import create_flask_app, perform_load_plugins
 
 _DEFAULT_RULE_VALUES_PATH = Path(cmk.config_anonymizer.__file__).parent / "default_rule_values.mk"
+
+
+@pytest.fixture(scope="session")
+def load_plugins() -> None:
+    perform_load_plugins(edition(paths.omd_root))
+
+
+@pytest.fixture()
+def flask_app(
+    patch_omd_site: None,  # noqa: ARG001
+    use_fakeredis_client: None,  # noqa: ARG001
+    load_plugins: None,  # noqa: ARG001
+) -> Iterator[Flask]:
+    yield from create_flask_app()
+
+
+@pytest.fixture()
+def request_context(flask_app: Flask) -> Iterator[None]:  # noqa: ARG001
+    """Empty fixture. Invokes usage of `flask_app` fixture."""
+    yield
+
+
+@pytest.fixture(scope="session")
+def agent_based_plugins() -> AgentBasedPlugins:
+    """Load all check plugins, tolerating errors from non-free edition plugins unavailable
+    in the community edition (e.g. missing cmk.plugins.graylog.lib)."""
+    return load_all_plugins(raise_errors=debug.enabled())
 
 
 class _DummyFolder:

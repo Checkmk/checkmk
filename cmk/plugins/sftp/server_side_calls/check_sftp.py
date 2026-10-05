@@ -7,7 +7,13 @@ from collections.abc import Iterable
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig, Secret
+from cmk.server_side_calls.v1 import (
+    ActiveCheckCommand,
+    ActiveCheckConfig,
+    HostConfig,
+    replace_macros,
+    Secret,
+)
 
 
 class Operation(BaseModel, frozen=True):
@@ -34,13 +40,16 @@ def _make_option(name: str, value: str | int | None) -> tuple[str, ...]:
 
 def _commands_check_sftp(
     params: SFTPParameters,
-    host_config: HostConfig,  # noqa: ARG001
+    host_config: HostConfig,
 ) -> Iterable[ActiveCheckCommand]:
+    host = replace_macros(params.host, host_config.macros)
     yield ActiveCheckCommand(
-        service_description=params.description or f"SFTP {params.host}",
+        service_description=replace_macros(params.description, host_config.macros)
+        if params.description
+        else f"SFTP {host}",
         command_arguments=(
             "--host",
-            params.host,
+            host,
             "--user",
             params.user,
             "--secret-reference",

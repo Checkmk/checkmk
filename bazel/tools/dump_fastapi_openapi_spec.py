@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Dumps the OpenAPI 3.1 document openapi-typescript reads for a FastAPI app.
+"""Dumps the OpenAPI 3.1 document openapi-typescript reads for a FastAPI app writing OpenAPI 3.2.
 
 openapi-typescript does not read a stream's `itemSchema`. The document describes a streamed
 item as the response `schema`, with JSON-encoded fields as the value they decode to, since
@@ -18,6 +18,8 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Protocol
 
+from openapi_spec_validator import OpenAPIV32SpecValidator
+
 
 class _OpenApiApp(Protocol):
     def openapi(self) -> Mapping[str, object]: ...
@@ -29,6 +31,15 @@ def _load_factory(spec: str) -> Callable[[], _OpenApiApp]:
         raise ValueError(f"expected <module>:<factory>, got {spec!r}")
     factory: Callable[[], _OpenApiApp] = getattr(importlib.import_module(module_name), factory_name)
     return factory
+
+
+def validate_openapi_3_2(spec: Mapping[str, object]) -> None:
+    version = spec.get("openapi")
+    if not (isinstance(version, str) and version.startswith("3.2.")):
+        raise ValueError(
+            f"expected OpenAPI 3.2, got {version!r}: build the app with cmk.fastapi.FastAPI"
+        )
+    OpenAPIV32SpecValidator(spec).validate()
 
 
 def typescript_view(spec: Mapping[str, object]) -> dict[str, object]:
@@ -72,7 +83,9 @@ def main() -> None:
     parser.add_argument("--out", required=True, type=Path, help="file to write the schema to")
     args = parser.parse_args()
 
-    view = typescript_view(_load_factory(args.app)().openapi())
+    spec = _load_factory(args.app)().openapi()
+    validate_openapi_3_2(spec)
+    view = typescript_view(spec)
     args.out.write_text(json.dumps(view, indent=2, sort_keys=True) + "\n")
 
 

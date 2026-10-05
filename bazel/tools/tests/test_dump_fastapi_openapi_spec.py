@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from dump_fastapi_openapi_spec import typescript_view
+from dump_fastapi_openapi_spec import typescript_view, validate_openapi_3_2
+from openapi_spec_validator.validation.exceptions import OpenAPIValidationError
 
 UPDATE_REF = {"$ref": "#/components/schemas/Update"}
 JSON_UPDATE = {
@@ -84,3 +85,21 @@ def test_media_type_with_schema_and_item_schema_is_rejected() -> None:
         ValueError, match="GET /events 200 text/event-stream has both a schema and an itemSchema"
     ):
         typescript_view(_spec({"schema": {"type": "string"}, "itemSchema": UPDATE_REF}))
+
+
+def test_openapi_3_2_document_with_stream_items_is_valid() -> None:
+    item = {"type": "object", "properties": {"event": {"const": "update"}, "data": JSON_UPDATE}}
+
+    validate_openapi_3_2({**_spec({"itemSchema": item}), "openapi": "3.2.0"})
+
+
+def test_openapi_3_1_document_is_rejected() -> None:
+    with pytest.raises(ValueError, match="build the app with cmk.fastapi.FastAPI"):
+        validate_openapi_3_2(_spec({"schema": UPDATE_REF}))
+
+
+def test_invalid_openapi_3_2_document_is_rejected() -> None:
+    spec = {**_spec({"schema": UPDATE_REF}), "openapi": "3.2.0", "info": {"title": "app"}}
+
+    with pytest.raises(OpenAPIValidationError, match="'version' is a required property"):
+        validate_openapi_3_2(spec)

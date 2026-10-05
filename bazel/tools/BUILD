@@ -159,6 +159,7 @@ py_library(
     name = "dump_fastapi_openapi_spec",
     srcs = ["dump_fastapi_openapi_spec.py"],
     visibility = ["//visibility:public"],
+    deps = [requirement("openapi-spec-validator")],
 )
 
 py_binary(
@@ -215,5 +216,6 @@ py_cmk_test(
     deps = [
         ":dump_fastapi_openapi_spec",
         ":extract_os_packages",
+        requirement("openapi-spec-validator"),
     ],
 )

@@ -28,12 +28,7 @@ import type {
   ResponsiveGridWidgetLayouts
 } from '@/dashboard/types/widget'
 
-/**
- * Place the widgets on a responsive grid in the given order, using the packer that also places a
- * hand-added widget, so the result matches adding them one by one. Widgets the API cannot
- * represent are left out and take up no space.
- */
-export function buildResponsiveWidgetLayouts(
+export function buildReadingOrderWidgetLayouts(
   readingOrder: string[],
   relativeContent: ContentRelativeGrid,
   constants: DashboardConstants
@@ -99,7 +94,7 @@ export function buildMigratedWidgetLayouts(
 ): Record<string, ResponsiveGridWidgetLayouts> {
   return (
     buildRowWidgetLayouts(measurement, relativeContent, constants) ??
-    buildResponsiveWidgetLayouts(measurement.readingOrder, relativeContent, constants)
+    buildReadingOrderWidgetLayouts(measurement.readingOrder, relativeContent, constants)
   )
 }
 

@@ -44,11 +44,8 @@ export const legacySizeValue = (value: WidgetSizeValue): number => {
   throw new Error(`Unsupported size value: ${value}`)
 }
 
-/**
- * Widgets whose rendered top edges are closer together than this belong to the same row band.
- * Half the minimum widget height, so a widget can never span two bands on its own.
- */
-export const READING_ORDER_BANDING_TOLERANCE_PX = (WIDGET_MIN_SIZE[1] * GRID_SIZE) / 2
+const MINIMUM_WIDGET_HEIGHT_PX = WIDGET_MIN_SIZE[1] * GRID_SIZE
+export const READING_ORDER_BANDING_TOLERANCE_PX = MINIMUM_WIDGET_HEIGHT_PX / 2
 
 export function orderWidgetsByReadingOrder(
   absoluteWidgetLayouts: Record<string, AbsoluteWidgetLayout>,

@@ -13,10 +13,6 @@ import type { ResponsiveGridInternalBreakpoint } from '../types'
 export const RESPONSIVE_GRID_ROW_HEIGHT_PX = 24
 export const RESPONSIVE_GRID_MARGIN_PX = 10
 
-/**
- * The single responsive layout every dashboard the frontend creates declares. The server
- * validates a widget's layouts against exactly these breakpoints, so both must stay in sync.
- */
 export function defaultResponsiveGridLayout(): DashboardResponsiveGridLayout {
   return {
     type: 'responsive_grid',

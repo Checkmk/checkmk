@@ -134,14 +134,12 @@ describe('orderWidgetsByReadingOrder', () => {
     expect(readingOrder).toEqual(['left', 'right'])
   })
 
-  it('should anchor a row band at its topmost widget instead of chaining offsets', () => {
-    // each step stays below the tolerance, but the third widget is a full tolerance below the
-    // band anchor, so it must start a band of its own
-    const step = READING_ORDER_BANDING_TOLERANCE_PX - 10
+  it('should start a new row band once a widget is a full tolerance below the topmost one', () => {
+    const stepJustBelowTolerance = READING_ORDER_BANDING_TOLERANCE_PX - 10
     const layouts = {
       top: makeAbsoluteWidgetLayout(0, 300),
-      middle: makeAbsoluteWidgetLayout(step, 200),
-      bottom: makeAbsoluteWidgetLayout(2 * step, 100)
+      middle: makeAbsoluteWidgetLayout(stepJustBelowTolerance, 200),
+      bottom: makeAbsoluteWidgetLayout(2 * stepJustBelowTolerance, 100)
     }
 
     const readingOrder = orderWidgetsByReadingOrder(layouts, READING_ORDER_BANDING_TOLERANCE_PX)

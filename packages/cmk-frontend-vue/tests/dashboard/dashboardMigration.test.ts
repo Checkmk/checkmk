@@ -10,7 +10,7 @@ import { createWidgetLayout } from '@/dashboard/components/ResponsiveGrid/compos
 import { defaultResponsiveGridLayout } from '@/dashboard/components/ResponsiveGrid/composables/utils'
 import {
   buildMigratedWidgetLayouts,
-  buildResponsiveWidgetLayouts
+  buildReadingOrderWidgetLayouts
 } from '@/dashboard/dashboardMigration'
 import type {
   ContentRelativeGrid,
@@ -149,7 +149,7 @@ function layoutViolations(widgetLayouts: Record<string, ResponsiveGridWidgetLayo
   })
 }
 
-describe('buildResponsiveWidgetLayouts', () => {
+describe('buildReadingOrderWidgetLayouts', () => {
   it('should give the first widget of the reading order the placement of an empty grid', () => {
     const content = makeRelativeContent(['a', 'b', 'c'])
     const placementOnAnEmptyGrid = createWidgetLayout(
@@ -158,7 +158,7 @@ describe('buildResponsiveWidgetLayouts', () => {
       constants
     )
 
-    const widgetLayouts = buildResponsiveWidgetLayouts(['b', 'a', 'c'], content, constants)
+    const widgetLayouts = buildReadingOrderWidgetLayouts(['b', 'a', 'c'], content, constants)
 
     expect(widgetLayouts['b']).toEqual(placementOnAnEmptyGrid)
   })
@@ -167,20 +167,20 @@ describe('buildResponsiveWidgetLayouts', () => {
     const readingOrder = ['a', 'b', 'c', 'd', 'e']
     const content = makeRelativeContent(readingOrder)
 
-    const widgetLayouts = buildResponsiveWidgetLayouts(readingOrder, content, constants)
+    const widgetLayouts = buildReadingOrderWidgetLayouts(readingOrder, content, constants)
 
     expect(layoutViolations(widgetLayouts)).toEqual([])
   })
 
   it('should leave widgets of unsupported types out without taking up space', () => {
     const contentWithUnsupported = makeRelativeContent(['a', 'unsupported', 'c'], ['unsupported'])
-    const placementWithoutUnsupported = buildResponsiveWidgetLayouts(
+    const placementWithoutUnsupported = buildReadingOrderWidgetLayouts(
       ['a', 'c'],
       makeRelativeContent(['a', 'c']),
       constants
     )
 
-    const widgetLayouts = buildResponsiveWidgetLayouts(
+    const widgetLayouts = buildReadingOrderWidgetLayouts(
       ['a', 'unsupported', 'c'],
       contentWithUnsupported,
       constants
@@ -223,7 +223,7 @@ function migrate(measurement: MeasuredRelativeGridLayout, unsupportedIds: string
 
 function readingOrderPlacement(measurement: MeasuredRelativeGridLayout) {
   const content = makeRelativeContent(Object.keys(measurement.widgetFrames))
-  return buildResponsiveWidgetLayouts(measurement.readingOrder, content, constants)
+  return buildReadingOrderWidgetLayouts(measurement.readingOrder, content, constants)
 }
 
 function migratedPlacements<WidgetId extends string>(

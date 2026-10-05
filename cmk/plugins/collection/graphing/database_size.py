@@ -39,7 +39,7 @@ metric_indexes_size = metrics.Metric(
 )
 metric_reserved_size = metrics.Metric(
     name="reserved_size",
-    title=Title("Reserved space"),
+    title=Title("Reserved database space"),
     unit=UNIT_BYTES,
     color=metrics.Color.RED,
 )

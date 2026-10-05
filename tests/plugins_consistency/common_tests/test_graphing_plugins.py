@@ -327,9 +327,7 @@ def test_bundles() -> None:
         )
 
 
-_ALLOWED_DUPLICATE_METRIC_TITLES = {
-    "Reserved space": {"reserved_size", "reserved"},
-}
+_ALLOWED_DUPLICATE_METRIC_TITLES: dict[str, set[str]] = {}
 
 
 def test_duplicate_metric_titles_new() -> None:

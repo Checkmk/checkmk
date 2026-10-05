@@ -124,7 +124,6 @@ _NO_DASHBOARD_DATA = Result(
 )
 
 
-@pytest.mark.xfail(strict=True, raises=KeyError, reason="Crash group 4898: KeyError 'hostname'")
 def test_check_without_dashboard_data() -> None:
     section = parse_storeonce4x_appliances(_STRING_TABLE_DASHBOARD_ERROR)
 
@@ -137,7 +136,6 @@ def test_check_without_dashboard_data() -> None:
     ]
 
 
-@pytest.mark.xfail(strict=True, raises=KeyError, reason="Crash group 4898: KeyError 'hostname'")
 def test_check_storage_without_dashboard_data() -> None:
     section = parse_storeonce4x_appliances(_STRING_TABLE_DASHBOARD_ERROR)
 
@@ -146,14 +144,12 @@ def test_check_storage_without_dashboard_data() -> None:
     ) == [_NO_DASHBOARD_DATA]
 
 
-@pytest.mark.xfail(strict=True, raises=KeyError, reason="Crash group 4898: KeyError 'hostname'")
 def test_check_licenses_without_dashboard_data() -> None:
     section = parse_storeonce4x_appliances(_STRING_TABLE_DASHBOARD_ERROR)
 
     assert list(check_storeonce4x_appliances_license("myhostname", section)) == [_NO_DASHBOARD_DATA]
 
 
-@pytest.mark.xfail(strict=True, raises=KeyError, reason="Crash group 4898: KeyError 'hostname'")
 def test_check_summaries_without_dashboard_data() -> None:
     section = parse_storeonce4x_appliances(_STRING_TABLE_DASHBOARD_ERROR)
 

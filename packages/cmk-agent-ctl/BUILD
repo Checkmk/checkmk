@@ -48,6 +48,7 @@ rust_library(
         "src/types.rs",
         "src/updater.rs",
         "src/updater/backend.rs",
+        "src/updater/connection.rs",
         "src/updater/platform.rs",
         ":version.rs",  # invalidates the cache
     ],

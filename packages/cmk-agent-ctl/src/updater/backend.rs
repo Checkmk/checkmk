@@ -2,11 +2,15 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-//! The artifacts of the updater model and their loading and saving.
+//! The artifacts of the updater model, their loading and saving, and the entry
+//! point that works on them.
 //!
 //! See [`crate::updater`] for what the three artifacts are and how they relate.
 
-use crate::config::{tmp_path_for_atomical_save, JSONLoader, JSONLoaderMissingSafe, TOMLLoader};
+use super::connection;
+use crate::config::{
+    tmp_path_for_atomical_save, JSONLoader, JSONLoaderMissingSafe, Registry, TOMLLoader,
+};
 use crate::environment::PathResolver;
 use anyhow::{Context, Error, Result as AnyhowResult};
 use log::{log, Level};
@@ -269,6 +273,54 @@ impl Updater {
         self.load_error.is_none() && self.config.is_some() && self.agent_info.is_some()
     }
 
+    /// Whether this host is supposed to update its agent automatically.
+    ///
+    /// False when no updater configuration is deployed at all.
+    fn is_activated(&self) -> bool {
+        self.config.as_ref().is_some_and(|config| config.activated)
+    }
+
+    // TODO(sk): Split this function into `if check_***() then update_***()`
+    /// Integrated updater main action.
+    ///
+    /// The updater reuses the controller's registration. It picks one of the
+    /// registered connections and talks to that site over the connection's mTLS
+    /// channel, where the receiver authenticates the host by the client
+    /// certificate and resolves its UUID to a host name.
+    ///
+    /// # Returns
+    ///
+    /// `true` when the updater is in a position to contact a site:
+    /// operational, activated, and a connection was selected.
+    pub fn handle_update_cycle(&self, registry: &Registry) -> bool {
+        if !self.is_operational() {
+            log::info!("Skipping the agent update: the updater is not operational");
+            return false;
+        }
+        if !self.is_activated() {
+            log::info!("Skipping the agent update: automatic agent updates are deactivated");
+            return false;
+        }
+        let Some(selected) = connection::select(registry) else {
+            log::info!(
+                "Skipping the agent update: none of the registered connections carries a \
+                 site address (imported connections cannot serve updates)"
+            );
+            return false;
+        };
+        log::info!(
+            "{} of the registered connections can serve agent updates, using the {} \
+             connection to {}: the site authenticates this host by the client \
+             certificate of {}, so the updater needs neither a registration nor a \
+             secret of its own",
+            connection::candidates(registry).count(),
+            selected.mode,
+            selected.site_id,
+            selected.connection.trust.uuid
+        );
+        true
+    }
+
     pub fn signature_keys(&self) -> &[String] {
         self.config
             .as_ref()
@@ -316,6 +368,8 @@ fn write_restricted(path: &Path, contents: &str) -> io::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::test_helpers::TestRegistry;
+    use crate::config::ConnectionMode;
     use crate::environment::SetupMode;
     use std::path::PathBuf;
 
@@ -802,5 +856,56 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         };
 
         assert!(updater(Some(config), some_agent_info()).is_operational());
+    }
+
+    #[test]
+    fn test_is_activated() {
+        assert!(updater(some_config(), some_agent_info()).is_activated());
+    }
+
+    #[test]
+    fn test_is_not_activated_without_config() {
+        assert!(!updater(None, some_agent_info()).is_activated());
+    }
+
+    /// A registry holding the one connection that could serve agent updates.
+    fn registry_with_one_connection() -> TestRegistry {
+        TestRegistry::new().add_connection(
+            &ConnectionMode::Pull,
+            "server/site",
+            "2da62f8f-9e4a-4b1b-8b3a-1c1a0b0f1a01",
+        )
+    }
+
+    #[test]
+    fn test_maybe_update_agent_selects_a_connection() {
+        let registry = registry_with_one_connection();
+
+        assert!(updater(some_config(), some_agent_info()).handle_update_cycle(&registry.registry));
+    }
+
+    #[test]
+    fn test_maybe_update_agent_without_a_reachable_site() {
+        let registry = TestRegistry::new();
+
+        assert!(!updater(some_config(), some_agent_info()).handle_update_cycle(&registry.registry));
+    }
+
+    #[test]
+    fn test_maybe_update_agent_when_not_operational() {
+        let registry = registry_with_one_connection();
+
+        assert!(!updater(some_config(), None).handle_update_cycle(&registry.registry));
+    }
+
+    #[test]
+    fn test_maybe_update_agent_when_deactivated() {
+        let registry = registry_with_one_connection();
+        let config = UpdaterConfig {
+            activated: false,
+            ..some_config().unwrap()
+        };
+
+        assert!(!updater(Some(config), some_agent_info()).handle_update_cycle(&registry.registry));
     }
 }

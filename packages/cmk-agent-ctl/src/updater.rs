@@ -17,9 +17,11 @@
 //! * [`AgentInfo`] - part of the installed agent package, read-only for the
 //!   controller.
 //!
-//! [`Updater`] loads the three of them together.
+//! [`Updater`] loads the three of them together and is the entry point of the
+//! updater: [`Updater::handle_update_cycle`].
 
 mod backend;
+mod connection;
 pub use backend::{AgentInfo, UpdateState, Updater, UpdaterConfig};
 
 #[cfg(windows)]

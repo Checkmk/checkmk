@@ -992,7 +992,7 @@ metric_aws_route53_child_health_check_healthy_count = metrics.Metric(
 
 metric_aws_route53_connection_time = metrics.Metric(
     name="aws_route53_connection_time",
-    title=Title("Connection time"),
+    title=Title("Health check connection time"),
     unit=UNIT_SECOND,
     color=metrics.Color.LIGHT_BLUE,
 )

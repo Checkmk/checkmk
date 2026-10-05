@@ -1293,7 +1293,7 @@ metric_swap_free = metrics.Metric(
 )
 metric_swap_used_percent = metrics.Metric(
     name="swap_used_percent",
-    title=Title("Swap used"),
+    title=Title("Swap used percentage"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.DARK_GREEN,
 )

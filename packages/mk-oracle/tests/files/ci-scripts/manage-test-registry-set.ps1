@@ -9,9 +9,17 @@ function Install-Me {
     Write-Output "Installing $Name..."
     $folderPath = $PSScriptRoot + "\..\windows-registry\$Name"
     $regFiles = Get-ChildItem -Path $folderPath -Filter *.reg
+    if (-not $regFiles) {
+        Write-Output "No .reg files found in $folderPath."
+        exit 1
+    }
     foreach ($file in $regFiles) {
         Write-Host "loading $($file.FullName)"
-        regedit.exe /s $file.FullName
+        reg.exe import $file.FullName
+        if ($LASTEXITCODE -ne 0) {
+            Write-Output "Importing $($file.FullName) failed."
+            exit 1
+        }
     }
 
 }
@@ -25,8 +33,8 @@ function Remove-Me {
 }
 
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)) {
-    Write-Output "This script needs administrator privileges." 
-    exit
+    Write-Output "This script needs administrator privileges."
+    exit 1
 }
 
 
@@ -37,8 +45,11 @@ switch ($command) {
         Remove-Me -Name $name
         Install-Me -Name $name 
     }
-    default { Write-Output "Invalid command $Command. Use --install <name> or --remove <name>." }
+    default {
+        Write-Output "Invalid command $Command. Use --install <name> or --remove <name>."
+        exit 1
+    }
 }
 
 
-#Write-Host "Setting test cases are ready"
+exit 0

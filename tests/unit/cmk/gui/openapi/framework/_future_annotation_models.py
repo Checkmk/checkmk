@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Models of a module that stringifies its annotations, like the generated shared typing code."""
 
+# The alias keeps `pyupgrade --py314-plus` from removing the import, which is the point of this module.
+from __future__ import annotations as annotations
+
 from typing import Literal
 
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted

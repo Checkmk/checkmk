@@ -20,8 +20,6 @@ Register this module as a pytest plugin from a conftest's ``pytest_addoption``
 (see ``tests.testlib.pytest_helpers.registration``).
 """
 
-from __future__ import annotations
-
 import logging
 import os
 from dataclasses import dataclass, field

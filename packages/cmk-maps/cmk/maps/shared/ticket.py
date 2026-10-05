@@ -22,8 +22,6 @@ function (``SiteInternalSecret().secret.hmac``) so this module carries no
 secret-loading or caching policy of its own.
 """
 
-from __future__ import annotations
-
 import base64
 import binascii
 import hmac

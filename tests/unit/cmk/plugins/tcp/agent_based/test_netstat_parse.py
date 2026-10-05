@@ -342,7 +342,6 @@ def test_parse_connection_state_raises_on_unknown_state() -> None:
         parse_connection_state("NOPE")
 
 
-@pytest.mark.xfail(strict=True, raises=TypeError, reason="Crash group 4650: TypeError")
 def test_parse_netstat_ignores_foreign_line() -> None:
     assert parse_netstat(
         [
@@ -355,5 +354,22 @@ def test_parse_netstat_ignores_foreign_line() -> None:
             local_address=SplitIP("10.0.0.1", "53"),
             remote_address=SplitIP("10.0.0.2", "*"),
             state=ConnectionState.LISTENING,
+        )
+    ]
+
+
+def test_parse_netstat_ignores_line_of_unknown_length() -> None:
+    assert parse_netstat(
+        [
+            ["Pending", "updates", "found:", "none"],
+            ["tcp", "0", "0", "10.0.0.1:22", "10.0.0.2:4711", "ESTABLISHED"],
+            ["Pending", "updates", "found:", "none"],
+        ]
+    ) == [
+        Connection(
+            proto="TCP",
+            local_address=SplitIP("10.0.0.1", "22"),
+            remote_address=SplitIP("10.0.0.2", "4711"),
+            state=ConnectionState.ESTABLISHED,
         )
     ]

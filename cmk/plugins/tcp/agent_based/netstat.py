@@ -69,6 +69,10 @@ def parse_connection_state(raw_state: str) -> ConnectionState:
     raise ValueError(f"Unknown connection state {raw_state!r}")
 
 
+def _has_port_separator(address: str) -> bool:
+    return ":" in address or "." in address
+
+
 def parse_netstat(string_table: StringTable) -> Section:
     try:
         is_netstat_format = string_table[1][1].isdecimal()
@@ -89,17 +93,23 @@ def parse_netstat(string_table: StringTable) -> Section:
                 proto = "UDP"
                 connection_state = "LISTENING"
 
-        if len(line) == 5:
+        elif len(line) == 5:
             proto, _recv_q, _send_q, local, remote = line
             proto = "UDP"
             connection_state = "LISTENING"
 
-        if len(line) == 3:
+        elif len(line) == 3:
             # Solaris systems output a different format for udp (3 elements instead 5)
             proto, local, remote = line
             _recv_q, _send_q = "0", "0"
             proto = "UDP"
             connection_state = "LISTENING"
+
+        else:
+            continue
+
+        if not (_has_port_separator(local) and _has_port_separator(remote)):
+            continue
 
         connections.append(
             Connection(

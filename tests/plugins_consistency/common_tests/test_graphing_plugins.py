@@ -328,7 +328,6 @@ def test_bundles() -> None:
 
 
 _ALLOWED_DUPLICATE_METRIC_TITLES = {
-    "Rate of metrics received": {"perf_data_count_rate", "metrics_count_rate"},
     "Queue length": {"queue", "queue_length"},
     "Read latency": {"db_read_latency_s", "read_latency"},
     "Read operations": {"disk_read_ios", "read_ops"},

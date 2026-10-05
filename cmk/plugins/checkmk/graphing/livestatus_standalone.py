@@ -37,7 +37,7 @@ metric_log_message_rate = metrics.Metric(
 )
 metric_perf_data_count_rate = metrics.Metric(
     name="perf_data_count_rate",
-    title=Title("Rate of metrics received"),
+    title=Title("Rate of performance data received"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.YELLOW,
 )

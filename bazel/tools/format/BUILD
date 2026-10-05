@@ -38,16 +38,22 @@ prettier_bin.prettier_binary(
     ],
 )
 
-# npm-groovy-lint runs CodeNarc on the JVM and accepts only Java 17 (its
-# java-caller pins minimumJavaVersion == maximumJavaVersion == 17). Without a
-# match on PATH it downloads a Temurin 17 JRE from github.com into ~/.java-caller
-# while the formatter runs. That download bypasses Bazel's downloader, so neither
-# the mirror rewrites in bazel_downloader.cfg nor the repository cache apply, and
-# one dropped connection fails the whole format check.
+# npm-groovy-lint runs CodeNarc on the JVM and accepts only Java 17 to 24 (its
+# lib/codenarc-caller.js passes minimumJavaVersion = 17 and maximumJavaVersion =
+# 24 to java-caller). Without a match on PATH java-caller downloads a Temurin JRE
+# from github.com into ~/.java-caller while the formatter runs. That download
+# bypasses Bazel's downloader, so neither the mirror rewrites in
+# bazel_downloader.cfg nor the repository cache apply, and one dropped connection
+# fails the whole format check.
 #
 # Passing --javaexecutable removes the fallback rather than making it cheaper:
 # java-caller returns from manageJavaInstall() before any version probe or
 # install as soon as the executable is not the literal "java".
+#
+# --noserver runs CodeNarc in the formatter's own JVM. Otherwise npm-groovy-lint
+# starts a CodeNarc server that outlives the run, listens on localhost:7484 and
+# serves any npm-groovy-lint version that connects, e.g. from another worktree.
+# It also gives every request just 120 s and does not retry a timeout.
 groovy_bin.npm_groovy_lint_binary(
     name = "groovy-format",
     data = [
@@ -59,6 +65,7 @@ groovy_bin.npm_groovy_lint_binary(
     fixed_args = [
         "--config=\"$$JS_BINARY__RUNFILES\"/$(rlocationpath //bazel/tools/format:.groovyformatrc.json)",
         "--javaexecutable=\"$$JS_BINARY__RUNFILES\"/$(rlocationpath @remotejdk17_linux//:bin/java)",
+        "--noserver",
     ],
     # A JDK cannot be copied into the output tree by rules_js — it lives in an
     # external repository and must keep its internal layout intact.

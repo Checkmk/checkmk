@@ -359,9 +359,10 @@ http_file(
 # Java runtimes we hand to tools explicitly:
 #   remotejdk25_linux - Wiremock-based component/unit tests. Previously provided
 #                       implicitly via WORKSPACE; expose it explicitly under Bzlmod.
-#   remotejdk17_linux - CodeNarc, run by the npm-groovy-lint formatter. It insists
-#                       on exactly Java 17 and downloads a JRE from github.com at
-#                       runtime when it cannot find one, which flakes in CI.
+#   remotejdk17_linux - CodeNarc, run by the npm-groovy-lint formatter and linter.
+#                       It insists on Java 17 to 24 and downloads a JRE from
+#                       github.com at runtime when it cannot find one, which
+#                       flakes in CI.
 java_toolchains = use_extension("@rules_java//java:extensions.bzl", "toolchains")
 use_repo(
     java_toolchains,

@@ -68,8 +68,8 @@ void main() {
                                 '${docker_registry_no_http}' "\$NEXUS_USERNAME" "\$NEXUS_PASSWORD" \
                                 > "\$docker_config_dir/config.json"
                         )
-                        bazel build --action_env=DOCKER_CONFIG="\$docker_config_dir" \
-                            //non-free/packages/cmk-update-agent:cmk-update-agent_bin
+                        bazel build //non-free/packages/cmk-update-agent:cmk-update-agent_bin \
+                            --action_env=DOCKER_CONFIG="\$docker_config_dir"
                     """);
                     /* groovylint-enable LineLength */
                 }

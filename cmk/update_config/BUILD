@@ -34,14 +34,10 @@ py_library(
         ],
     ),
     imports = ["../.."],
-    tags = [
-        "deballast-keep=//cmk:message_broker_certs",  # exercised by the config-update at runtime, not a static import
-    ],
     # TODO: factor out an API such that packages only have to depend on that.
     # restrict visibility for the rest.
     visibility = ["//visibility:public"],
     deps = [
-        "//cmk:message_broker_certs",
         "//cmk/base/config",
         "//cmk/gui:app",
         "//cmk/gui:config",

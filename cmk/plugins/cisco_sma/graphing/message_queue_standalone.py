@@ -10,7 +10,7 @@ UNIT_INTEGER = metrics.Unit(metrics.DecimalNotation(""))
 
 metric_queue_length = metrics.Metric(
     name="cisco_sma_queue_length",
-    title=Title("Queue Length"),
+    title=Title("Message queue length"),
     unit=UNIT_INTEGER,
     color=metrics.Color.DARK_GREEN,
 )

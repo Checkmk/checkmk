@@ -6,7 +6,9 @@
 import json
 from typing import Any
 
-from cmk.agent_based.v2 import Metric, Result, StringTable
+import pytest
+
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.redfish.agent_based.redfish_psu import (
     check_redfish_psu,
     discovery_redfish_psu,
@@ -79,3 +81,57 @@ def test_check_matches_item_discovered_via_fallback() -> None:
 def test_check_unknown_item_returns_nothing() -> None:
     section = _power_section({"Name": "PS1", "Status": {"State": "Enabled"}})
     assert list(check_redfish_psu("does-not-exist", section)) == []
+
+
+@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4939: ValueError")
+def test_check_line_input_voltage_with_unit() -> None:
+    section = _power_section(
+        {
+            "Name": "PSU0",
+            "Status": {"State": "Enabled", "Health": "OK"},
+            "PowerInputWatts": 240,
+            "PowerOutputWatts": 220,
+            "LineInputVoltage": "220V",
+            "PowerCapacityWatts": 2000,
+            "Model": "PSU MODEL",
+        },
+    )
+
+    results = list(check_redfish_psu("0-PSU0", section))
+
+    metrics = {m.name: m.value for m in results if isinstance(m, Metric)}
+    assert metrics == {"input_power": 240.0, "output_power": 220.0, "input_voltage": 220.0}
+    assert (
+        Result(
+            state=State.OK,
+            summary="240.0 Watts input, 220.0 Watts output, 220.0 V input, Capacity 2000.0 Watts, Typ PSU MODEL",
+        )
+        in results
+    )
+
+
+@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4939: ValueError")
+def test_check_unparsable_line_input_voltage() -> None:
+    section = _power_section(
+        {
+            "Name": "PSU0",
+            "Status": {"State": "Enabled", "Health": "OK"},
+            "PowerInputWatts": 240,
+            "PowerOutputWatts": 220,
+            "LineInputVoltage": "AC high line",
+            "PowerCapacityWatts": 2000,
+            "Model": "PSU MODEL",
+        },
+    )
+
+    results = list(check_redfish_psu("0-PSU0", section))
+
+    metrics = {m.name: m.value for m in results if isinstance(m, Metric)}
+    assert metrics == {"input_power": 240.0, "output_power": 220.0}
+    assert (
+        Result(
+            state=State.UNKNOWN,
+            summary="Cannot parse line input voltage: got 'AC high line' (expected a number)",
+        )
+        in results
+    )

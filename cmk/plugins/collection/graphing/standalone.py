@@ -1113,7 +1113,7 @@ metric_used_snat_ports = metrics.Metric(
 )
 metric_power_usage_percentage = metrics.Metric(
     name="power_usage_percentage",
-    title=Title("Power usage"),
+    title=Title("Power usage percentage"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.DARK_PINK,
 )

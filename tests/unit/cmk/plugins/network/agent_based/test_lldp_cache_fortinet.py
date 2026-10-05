@@ -113,3 +113,37 @@ def test_parse_lldp_cache_fortinet(data: Sequence[StringByteTable], expected: Ll
     parsed = parse_lldp_cache_fortinet(string_table=data)
 
     assert parsed == expected
+
+
+@pytest.mark.xfail(strict=True, raises=KeyError, reason="Crash group 4876: KeyError ''")
+def test_parse_lldp_cache_fortinet_keeps_neighbor_without_local_index() -> None:
+    string_table: Sequence[StringByteTable] = [
+        [
+            [
+                "1",
+                "4",
+                [99, 160, 210, 120, 34, 200],
+                "5",
+                [112, 111, 114, 116, 49],
+                "",
+                "",
+                "",
+                "",
+                "",
+            ],
+            ["", "", [], "", [], "", "neighbor switch", "neighbor desc", "", ""],
+        ],
+        [["1", "5", [112, 111, 114, 116, 49]]],
+        [],
+        [],
+        [["1", "port1"]],
+        [["TRUNK-0: port7  port8 ::"]],
+    ]
+
+    parsed = parse_lldp_cache_fortinet(string_table=string_table)
+
+    assert parsed is not None
+    assert [(n.neighbor_name, n.local_port) for n in parsed.lldp_neighbors] == [
+        ("63:A0:D2:78:22:C8", "port1"),
+        ("neighbor switch", None),
+    ]

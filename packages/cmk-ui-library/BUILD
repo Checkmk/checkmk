@@ -32,4 +32,8 @@ js_library(
     name = "vitest_shared_setup",
     srcs = ["vitest.shared-setup.ts"],
     visibility = ["//packages/cmk-frontend-vue:__pkg__"],
+    deps = [
+        ":node_modules/@testing-library",
+        "//:node_modules/vitest",
+    ],
 )

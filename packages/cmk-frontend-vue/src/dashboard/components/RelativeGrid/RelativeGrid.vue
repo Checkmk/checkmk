@@ -73,7 +73,7 @@ const dashboard = ref<HTMLElement | null>(null)
 
 const {
   dashboardState,
-  getWidgetReadingOrder,
+  getMeasuredLayout,
   getAbsoluteLayout,
   getLayoutZIndex,
   getAnchorPosition,
@@ -193,8 +193,7 @@ watch(enterMissingRuntimeFiltersAction, async () => {
 })
 
 defineExpose({
-  /** The widget IDs in reading order, or null while the grid has not been measured yet. */
-  getWidgetReadingOrder
+  getMeasuredLayout
 })
 </script>
 

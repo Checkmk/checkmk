@@ -17,6 +17,7 @@ import {
   GRID_SIZE,
   GROW,
   MAX,
+  type MeasuredRelativeGridLayout,
   type Position,
   SIZING_MODE,
   WIDGET_MIN_SIZE
@@ -310,19 +311,29 @@ export function useRelativeGridLayout(
     bringToFront(widgetId)
   }
 
-  function getWidgetReadingOrder(): string[] | null {
+  function getMeasuredLayout(): MeasuredRelativeGridLayout | null {
     if (dashboardState.dimensions.width <= 0 || dashboardState.dimensions.height <= 0) {
       return null
     }
-    return orderWidgetsByReadingOrder(
-      absoluteWidgetLayouts.value,
-      READING_ORDER_BANDING_TOLERANCE_PX
+    const widgetFrames = Object.fromEntries(
+      Object.entries(absoluteWidgetLayouts.value).map(([widgetId, absoluteLayout]) => [
+        widgetId,
+        absoluteLayout.layout.frame
+      ])
     )
+    return {
+      gridWidth: dashboardState.dimensions.width,
+      widgetFrames,
+      readingOrder: orderWidgetsByReadingOrder(
+        absoluteWidgetLayouts.value,
+        READING_ORDER_BANDING_TOLERANCE_PX
+      )
+    }
   }
 
   return {
     dashboardState,
-    getWidgetReadingOrder,
+    getMeasuredLayout,
     getAbsoluteLayout,
     getLayoutZIndex,
     getAnchorPosition,

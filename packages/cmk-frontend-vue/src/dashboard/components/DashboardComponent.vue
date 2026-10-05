@@ -13,6 +13,7 @@ import type {
   ContentPropsRecord
 } from '@/dashboard/components/DashboardContent/types'
 import RelativeGrid from '@/dashboard/components/RelativeGrid/RelativeGrid.vue'
+import type { MeasuredRelativeGridLayout } from '@/dashboard/components/RelativeGrid/types'
 import ResponsiveGrid from '@/dashboard/components/ResponsiveGrid/ResponsiveGrid.vue'
 import { squashFilters } from '@/dashboard/components/Wizard/components/FiltersRecap/utils'
 import type { DashboardFilters } from '@/dashboard/composables/useDashboardFilters'
@@ -82,12 +83,8 @@ const widgetContentProps = computed<ContentPropsRecord>(() => {
 const relativeGrid = ref<InstanceType<typeof RelativeGrid> | null>(null)
 
 defineExpose({
-  /**
-   * The relative grid's widget IDs in reading order, or null when the active dashboard does not
-   * use the relative grid layout or its grid has not been measured yet.
-   */
-  getRelativeGridWidgetOrder: (): string[] | null =>
-    relativeGrid.value?.getWidgetReadingOrder() ?? null
+  getRelativeGridMeasurement: (): MeasuredRelativeGridLayout | null =>
+    relativeGrid.value?.getMeasuredLayout() ?? null
 })
 
 // eslint-disable-next-line @typescript-eslint/naming-convention

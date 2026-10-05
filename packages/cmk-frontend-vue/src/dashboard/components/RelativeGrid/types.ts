@@ -88,3 +88,11 @@ export interface AbsoluteWidgetLayout {
   layout: AbsoluteLayout
   dimensionModes: DimensionModes
 }
+
+export type WidgetFrame = AbsoluteLayout['frame']
+
+export interface MeasuredRelativeGridLayout {
+  gridWidth: number
+  widgetFrames: Record<string, WidgetFrame>
+  readingOrder: string[]
+}

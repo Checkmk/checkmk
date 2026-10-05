@@ -551,7 +551,7 @@ function readRelativeGridWidgetOrder(): string[] | null {
   if (isDashboardEmpty.value) {
     return []
   }
-  return dashboardComponent.value?.getRelativeGridWidgetOrder() ?? null
+  return dashboardComponent.value?.getRelativeGridMeasurement()?.readingOrder ?? null
 }
 
 const openCloneWizard = (preselectedLayout?: DashboardLayout) => {

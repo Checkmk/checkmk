@@ -134,28 +134,6 @@ describe('orderWidgetsByReadingOrder', () => {
     expect(readingOrder).toEqual(['left', 'right'])
   })
 
-  it('should order widgets of separate row bands by their top edge', () => {
-    const layouts = {
-      lower: makeAbsoluteWidgetLayout(200, 100),
-      upper: makeAbsoluteWidgetLayout(0, 600)
-    }
-
-    const readingOrder = orderWidgetsByReadingOrder(layouts, READING_ORDER_BANDING_TOLERANCE_PX)
-
-    expect(readingOrder).toEqual(['upper', 'lower'])
-  })
-
-  it('should order widgets sharing top and left edge by their ID', () => {
-    const layouts = {
-      second: makeAbsoluteWidgetLayout(0, 100),
-      first: makeAbsoluteWidgetLayout(0, 100)
-    }
-
-    const readingOrder = orderWidgetsByReadingOrder(layouts, READING_ORDER_BANDING_TOLERANCE_PX)
-
-    expect(readingOrder).toEqual(['first', 'second'])
-  })
-
   it('should anchor a row band at its topmost widget instead of chaining offsets', () => {
     // each step stays below the tolerance, but the third widget is a full tolerance below the
     // band anchor, so it must start a band of its own
@@ -514,8 +492,31 @@ describe('useRelativeGridLayout', () => {
     })
   })
 
-  describe('getWidgetReadingOrder', () => {
-    it('should order widgets at distinct vertical positions by their rendered top edge', () => {
+  describe('getMeasuredLayout', () => {
+    it('should report nothing while the dashboard has not been measured', () => {
+      const { composable } = setup(makeRelativeGridContent({ w1: makeRelativeGridWidget() }))
+
+      const measurement = composable.getMeasuredLayout()
+
+      expect(measurement).toBeNull()
+    })
+
+    it('should report every widget at its rendered frame', () => {
+      const content = makeRelativeGridContent({
+        left: makeRelativeGridWidget({ position: { x: 1, y: 1 } }),
+        right: makeRelativeGridWidget({ position: { x: 41, y: 1 } })
+      })
+      const { composable } = setupWithDashboard(content)
+
+      const measurement = composable.getMeasuredLayout()
+
+      expect(measurement?.widgetFrames).toEqual({
+        left: composable.getAbsoluteLayout('left').frame,
+        right: composable.getAbsoluteLayout('right').frame
+      })
+    })
+
+    it('should list the widgets in their rendered reading order', () => {
       const content = makeRelativeGridContent({
         lower: makeRelativeGridWidget({ position: { x: 1, y: 41 } }),
         upper: makeRelativeGridWidget({ position: { x: 1, y: 1 } }),
@@ -523,41 +524,9 @@ describe('useRelativeGridLayout', () => {
       })
       const { composable } = setupWithDashboard(content)
 
-      const readingOrder = composable.getWidgetReadingOrder()
+      const measurement = composable.getMeasuredLayout()
 
-      expect(readingOrder).not.toBeNull()
-      const renderedTops = readingOrder!.map(
-        (widgetId) => composable.getAbsoluteLayout(widgetId).frame.position.top
-      )
-      expect(new Set(renderedTops).size).toBe(renderedTops.length)
-      expect(renderedTops).toEqual([...renderedTops].sort((first, second) => first - second))
-    })
-
-    it('should report unavailable while the dashboard has not been measured', () => {
-      const content = makeRelativeGridContent({
-        w1: makeRelativeGridWidget()
-      })
-      const { composable } = setup(content)
-
-      expect(composable.getWidgetReadingOrder()).toBeNull()
-    })
-
-    it('should list every widget exactly once', () => {
-      const widgetIds = ['w1', 'w2', 'w3', 'w4', 'w5']
-      const content = makeRelativeGridContent(
-        Object.fromEntries(
-          widgetIds.map((widgetId, index) => [
-            widgetId,
-            makeRelativeGridWidget({ position: { x: 1 + index, y: 1 + index * 20 } })
-          ])
-        )
-      )
-      const { composable } = setupWithDashboard(content)
-
-      const readingOrder = composable.getWidgetReadingOrder()
-
-      expect(readingOrder).not.toBeNull()
-      expect([...readingOrder!].sort()).toEqual([...widgetIds].sort())
+      expect(measurement?.readingOrder).toEqual(['upper', 'middle', 'lower'])
     })
   })
 })

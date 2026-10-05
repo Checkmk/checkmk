@@ -6,8 +6,6 @@
 import json
 from typing import Any
 
-import pytest
-
 from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.redfish.agent_based.redfish_psu import (
     check_redfish_psu,
@@ -83,7 +81,6 @@ def test_check_unknown_item_returns_nothing() -> None:
     assert list(check_redfish_psu("does-not-exist", section)) == []
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4939: ValueError")
 def test_check_line_input_voltage_with_unit() -> None:
     section = _power_section(
         {
@@ -110,7 +107,6 @@ def test_check_line_input_voltage_with_unit() -> None:
     )
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4939: ValueError")
 def test_check_unparsable_line_input_voltage() -> None:
     section = _power_section(
         {

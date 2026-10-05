@@ -114,3 +114,58 @@ def test_check_function(
         list(check_audiocodes_system_events(params, parse_audiocodes_system_events(string_table)))
         == expected
     )
+
+
+@pytest.mark.parametrize(
+    "string_table, expected",
+    [
+        pytest.param(
+            [
+                [["", "512321", "07 E5 08 02 14 28 38 00 ", "Alarm1", "Desc1", "Source1", "3"]],
+                [],
+            ],
+            [
+                Result(state=State.OK, summary="Critical alarms: 0, Warnings: 1"),
+                Result(state=State.OK, summary="Archived: 0"),
+                Result(
+                    state=State.WARN,
+                    summary="Alarm (no sequence number): Name: Alarm1, Severity: minor, Sysuptime: 5 days 22 hours, Description: Desc1, Source: Source1, Date and Time: 2021-08-02 20:40:56",
+                ),
+            ],
+            id="alarm without sequence number",
+            marks=pytest.mark.xfail(
+                strict=True, raises=ValueError, reason="Crash group 4935: ValueError"
+            ),
+        ),
+        pytest.param(
+            [
+                [["2", "512321", "07 E5 08 02 14 28 38 00 ", "Alarm2", "Desc2", "Source2", ""]],
+                [],
+            ],
+            [
+                Result(state=State.OK, summary="Critical alarms: 0, Warnings: 0"),
+                Result(state=State.OK, summary="Archived: 0"),
+                Result(
+                    state=State.UNKNOWN,
+                    summary="Alarm #2: Name: Alarm2, Severity: unknown, Sysuptime: 5 days 22 hours, Description: Desc2, Source: Source2, Date and Time: 2021-08-02 20:40:56",
+                ),
+            ],
+            id="alarm without severity",
+            marks=pytest.mark.xfail(
+                strict=True, raises=KeyError, reason="Crash group 4936: KeyError"
+            ),
+        ),
+    ],
+)
+def test_check_function_incomplete_alarm(
+    string_table: Sequence[StringTable],
+    expected: CheckResult,
+) -> None:
+    assert (
+        list(
+            check_audiocodes_system_events(
+                _DEFAULT_PARAMS, parse_audiocodes_system_events(string_table)
+            )
+        )
+        == expected
+    )

@@ -14,6 +14,7 @@ import pytest
 import requests
 import responses
 import time_machine
+from responses import matchers
 
 from cmk.password_store.v1 import Secret
 from cmk.plugins.veeam.special_agent.agent_veeam import (
@@ -93,7 +94,7 @@ def test_authenticate_requests_a_token_with_the_credentials_and_api_version(
     _auth(storage).authenticate()
 
     (call,) = api.calls
-    assert call.request.headers["x-api-version"] == "1.3-rev0"
+    assert call.request.headers["x-api-version"] == "1.3-rev1"
     assert parse_qs(str(call.request.body)) == {
         "grant_type": ["password"],
         "username": ["monitoring"],
@@ -584,6 +585,64 @@ def test_unsupported_api_version_names_the_supported_ones(
 
     with pytest.raises(TerminateAgent, match="versions are supported: 1.1-rev0"):
         _auth(storage).authenticate()
+
+
+def _older_server(api: responses.RequestsMock) -> None:
+    """A server that knows 1.3-rev0 but not 1.3-rev1."""
+    api.post(
+        TOKEN_URL,
+        status=HTTPStatus.BAD_REQUEST,
+        json={"errorCode": "NotImplemented", "message": "Unsupported RESTAPI version"},
+        match=[matchers.header_matcher({"x-api-version": "1.3-rev1"})],
+    )
+    api.post(
+        TOKEN_URL,
+        json=_token("first"),
+        match=[matchers.header_matcher({"x-api-version": "1.3-rev0"})],
+    )
+    api.get(f"{URL}/api/v1/jobs", json={"data": [], "pagination": {"total": 0}})
+
+
+def test_an_older_server_is_queried_with_the_newest_api_version_it_supports(
+    api: responses.RequestsMock, storage: Storage
+) -> None:
+    _older_server(api)
+    auth = _auth(storage)
+    auth.authenticate()
+
+    write_sections(_client(auth), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
+
+    assert api.calls[-1].request.headers["x-api-version"] == "1.3-rev0"
+
+
+def test_the_api_version_of_the_previous_run_is_reused(
+    api: responses.RequestsMock, storage: Storage
+) -> None:
+    _older_server(api)
+    _auth(storage).authenticate()
+
+    auth = _auth(storage)
+    auth.authenticate()
+    write_sections(_client(auth), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
+
+    assert len(_token_requests(api)) == 2
+    assert api.calls[-1].request.headers["x-api-version"] == "1.3-rev0"
+
+
+def test_an_upgraded_server_is_queried_with_the_newer_api_version_on_renewal(
+    api: responses.RequestsMock, storage: Storage
+) -> None:
+    _older_server(api)
+    with time_machine.travel(0, tick=False) as traveller:
+        _auth(storage).authenticate()
+        traveller.shift(900)
+        api.reset()
+        api.post(TOKEN_URL, json=_token("second"))
+
+        _auth(storage).authenticate()
+
+    assert [r["grant_type"] for r in _token_requests(api)] == [["password"]]
+    assert api.calls[-1].request.headers["x-api-version"] == "1.3-rev1"
 
 
 def test_unexpected_login_answer_reports_the_http_status(

@@ -177,3 +177,20 @@ def test_parse_veeam_backup_jobs() -> None:
 )
 def test_monitoring_state(last_result: str, expected: State) -> None:
     assert monitoring_state(last_result) == expected
+
+
+def test_file_backup_job_from_vbr_13_is_monitored() -> None:
+    line = (
+        '{"type": "FileBackup", "status": "Stopped", "lastResult": "Success", "workload": "File",'
+        ' "id": "7a597775-1100-4f22-8c74-24eae6da8921", "name": "File Backup Job 1",'
+        ' "lastRun": "2026-10-02T10:50:13.688321+00:00", "nextRun": "2026-10-05T23:00:00+00:00",'
+        ' "repositoryName": "Default Backup Repository", "objectsCount": 1,'
+        ' "sessionProgress": {"bottleneck": "Source", "duration": "00:00:33",'
+        ' "processingRate": "N/A", "processedSize": 0, "progressPercent": 100}}'
+    )
+    section = parse_veeam_backup_jobs([[line]])
+
+    results = list(check_veeam_backup_jobs("File_Backup_Job_1", section))
+
+    assert results[0] == Result(state=State.OK, summary="Status: Stopped, Result: Success")
+    assert Result(state=State.OK, summary="Type: FileBackup") in results

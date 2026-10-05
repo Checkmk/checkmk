@@ -31,10 +31,10 @@ def _ip_version(value: Any) -> str:
 _DISCRIMINATORS: Sequence[tuple[str, Callable[[Any], str]]] = (
     ("type", lambda value: str(value).upper()),
     ("enforce_what", _ip_version),
-    ("port", lambda value: "port %s" % value),
-    ("size", lambda value: "size %s" % value),
-    ("address", lambda value: "from %s" % value),
-    ("max_hops", lambda value: "max hops %s" % value),
+    ("port", lambda value: f"port {value}"),
+    ("size", lambda value: f"size {value}"),
+    ("address", lambda value: f"from {value}"),
+    ("max_hops", lambda value: f"max hops {value}"),
 )
 
 
@@ -62,6 +62,6 @@ def section_names(mtr_config: Sequence[Mapping[str, Any]]) -> Sequence[str]:
                 for key, render in distinguishing
                 if (value := mtr_config[nr].get(key))
             ]
-            names[nr] = "{} ({})".format(hostname, " ".join(tokens)) if tokens else hostname
+            names[nr] = f"{hostname} ({' '.join(tokens)})" if tokens else hostname
 
     return names

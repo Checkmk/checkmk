@@ -105,3 +105,55 @@ def test_check_summaries(section: Section) -> None:
             summary="Cat stores Ok (4 of 4)",
         ),
     ]
+
+
+_STRING_TABLE_DASHBOARD_ERROR = [
+    [
+        '{"members": [{"uuid": "f1bc5e3f", "address": "127.0.0.1", "hostname": "myhostname", "productName": "HPE StoreOnce 3660", "serialNumber": "123456789", "localhost": true, "applianceState": 0, "stateUpdatedDate": "2025-12-01T11:47:34.870Z", "federationApiVersion": 1, "applianceStateString": "Reachable", "sinceStateUpdatedSeconds": 1493050}]}'
+    ],
+    [
+        '{"extendedError": {"extMessage": {"catalogName": "dashboard-business-exceptions", "fields": [{"String": "f1bc5e3f"}], "key": "error"}, "message": "Internal server error", "resolution": null, "severity": "Critical"}}'
+    ],
+]
+
+_NO_DASHBOARD_DATA = Result(
+    state=State.UNKNOWN, summary="No dashboard data received from the StoreOnce REST API"
+)
+
+
+@pytest.mark.xfail(strict=True, raises=KeyError, reason="Crash group 4898: KeyError 'hostname'")
+def test_check_without_dashboard_data() -> None:
+    section = parse_storeonce4x_appliances(_STRING_TABLE_DASHBOARD_ERROR)
+
+    assert list(check_storeonce4x_appliances("myhostname", section)) == [
+        Result(
+            state=State.OK,
+            summary="State: Reachable, Serial Number: 123456789, Product Name: HPE StoreOnce 3660",
+        ),
+        _NO_DASHBOARD_DATA,
+    ]
+
+
+@pytest.mark.xfail(strict=True, raises=KeyError, reason="Crash group 4898: KeyError 'hostname'")
+def test_check_storage_without_dashboard_data() -> None:
+    section = parse_storeonce4x_appliances(_STRING_TABLE_DASHBOARD_ERROR)
+
+    assert list(
+        check_storeonce4x_appliances_storage("myhostname", FILESYSTEM_DEFAULT_PARAMS, section)
+    ) == [_NO_DASHBOARD_DATA]
+
+
+@pytest.mark.xfail(strict=True, raises=KeyError, reason="Crash group 4898: KeyError 'hostname'")
+def test_check_licenses_without_dashboard_data() -> None:
+    section = parse_storeonce4x_appliances(_STRING_TABLE_DASHBOARD_ERROR)
+
+    assert list(check_storeonce4x_appliances_license("myhostname", section)) == [_NO_DASHBOARD_DATA]
+
+
+@pytest.mark.xfail(strict=True, raises=KeyError, reason="Crash group 4898: KeyError 'hostname'")
+def test_check_summaries_without_dashboard_data() -> None:
+    section = parse_storeonce4x_appliances(_STRING_TABLE_DASHBOARD_ERROR)
+
+    assert list(check_storeonce4x_appliances_summaries("myhostname", section)) == [
+        _NO_DASHBOARD_DATA
+    ]

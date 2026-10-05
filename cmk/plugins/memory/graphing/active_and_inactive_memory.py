@@ -9,13 +9,13 @@ UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
 
 metric_mem_lnx_active = metrics.Metric(
     name="mem_lnx_active",
-    title=Title("Active"),
+    title=Title("Active memory"),
     unit=UNIT_BYTES,
     color=metrics.Color.BLUE,
 )
 metric_mem_lnx_inactive = metrics.Metric(
     name="mem_lnx_inactive",
-    title=Title("Inactive"),
+    title=Title("Inactive memory"),
     unit=UNIT_BYTES,
     color=metrics.Color.GREEN,
 )

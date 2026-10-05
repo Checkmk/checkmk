@@ -9,7 +9,7 @@ UNIT_PASCAL = metrics.Unit(metrics.DecimalNotation("Pa"), metrics.AutoPrecision(
 
 metric_pressure_pa = metrics.Metric(
     name="pressure_pa",
-    title=Title("Pressure"),
+    title=Title("Pressure (Pa)"),
     unit=UNIT_PASCAL,
     color=metrics.Color.ORANGE,
 )

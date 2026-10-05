@@ -72,7 +72,7 @@ def discovery_citrix_state_hosting_server(section: Section) -> DiscoveryResult:
 
 
 def check_citrix_state_hosting_server(section: Section) -> CheckResult:
-    yield Result(state=State.OK, summary=section["hosting_server"])
+    yield Result(state=State.OK, summary=section["hosting_server"] or "No hosting server reported")
 
 
 check_plugin_citrix_state_hosting_server = CheckPlugin(

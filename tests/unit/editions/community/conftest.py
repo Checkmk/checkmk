@@ -17,3 +17,6 @@ def load_gui_plugins() -> None:
     snapshots in this directory assert on.
     """
     main_modules.register(Edition.COMMUNITY)
+
+    if errors := main_modules.get_failed_plugins():
+        raise Exception(f"The following errors occurred during plug-in loading: {errors}")

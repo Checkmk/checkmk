@@ -338,7 +338,6 @@ _ALLOWED_DUPLICATE_METRIC_TITLES = {
         "pagefile_used_percent_avg",
         "pagefile_used_avg",
     },
-    "User": {"user", "num_user"},
     "Utilization": {"cisco_sma_queue_utilization", "generic_util"},
 }
 

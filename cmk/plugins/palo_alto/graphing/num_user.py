@@ -15,7 +15,7 @@ metric_max_user = metrics.Metric(
 )
 metric_num_user = metrics.Metric(
     name="num_user",
-    title=Title("User"),
+    title=Title("Number of users"),
     unit=UNIT_COUNTER,
     color=metrics.Color.GREEN,
 )

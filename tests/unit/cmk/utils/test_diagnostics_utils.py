@@ -16,6 +16,7 @@ def test_diagnostics_serialize_wato_parameters_boolean() -> None:
         diagnostics.serialize_wato_parameters(
             {  # type: ignore[typeddict-item]
                 "opt_info": {
+                    diagnostics.OPT_AUTOCHECK_FILES: "ANY",
                     diagnostics.OPT_LOCAL_FILES: "ANY",
                     diagnostics.OPT_OMD_CONFIG: "ANY",
                     diagnostics.OPT_CHECKMK_CRASH_REPORTS: "ANY",
@@ -25,6 +26,7 @@ def test_diagnostics_serialize_wato_parameters_boolean() -> None:
     ) == [
         sorted(
             [
+                diagnostics.OPT_AUTOCHECK_FILES,
                 diagnostics.OPT_LOCAL_FILES,
                 diagnostics.OPT_OMD_CONFIG,
                 diagnostics.OPT_CHECKMK_CRASH_REPORTS,

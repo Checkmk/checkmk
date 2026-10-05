@@ -34,6 +34,7 @@ from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.diagnostics import (
     DiagnosticsModesParameters,
+    OPT_AUTOCHECK_FILES,
     OPT_CHECKMK_CONFIG_FILES,
     OPT_CHECKMK_CORE_FILES,
     OPT_CHECKMK_CRASH_REPORTS,
@@ -3013,6 +3014,14 @@ def mode_create_diagnostics_dump(options: DiagnosticsModesParameters) -> None:
 
 def _get_diagnostics_dump_sub_options() -> list[Option]:
     sub_options = [
+        Option(
+            long_option=OPT_AUTOCHECK_FILES,
+            short_help=(
+                "Pack the autocheck files below $OMD_ROOT/var/check_mk/autochecks. "
+                "These files contain the discovery information for each host and the "
+                "parameters of each service."
+            ),
+        ),
         Option(
             long_option=OPT_LOCAL_FILES,
             short_help=(

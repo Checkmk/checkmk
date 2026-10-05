@@ -53,6 +53,7 @@ class FileMapConfig(TypedDict):
 
 
 OPT_APACHE_CONFIG = "apache-config"
+OPT_AUTOCHECK_FILES = "autocheck-files"
 OPT_BI_RUNTIME_DATA = "bi-runtime-data"
 OPT_CHECKMK_CONFIG_FILES = "checkmk-config-files"
 OPT_CHECKMK_CORE_FILES = "checkmk-core-files"
@@ -82,6 +83,7 @@ _OPTS_WITH_HOST = [
 
 _BOOLEAN_CONFIG_OPTS = [
     OPT_APACHE_CONFIG,
+    OPT_AUTOCHECK_FILES,
     OPT_BI_RUNTIME_DATA,
     OPT_CHECKMK_CRASH_REPORTS,
     OPT_LOCAL_FILES,
@@ -105,6 +107,12 @@ COMPONENT_COMMANDS = {
 }
 
 COMPONENT_DIRECTORIES = {
+    OPT_AUTOCHECK_FILES: {
+        "abs_dirs": [],
+        "rel_dirs": [
+            "var/check_mk/autochecks",
+        ],
+    },
     OPT_APACHE_CONFIG: {
         "abs_dirs": [
             "/etc/apache2",

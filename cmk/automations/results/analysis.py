@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import override, TypedDict
 
 from cmk.automations.results._base import (
-    ABCAutomationResult,
+    AutomationResult,
     result_type_registry,
 )
 from cmk.checkengine.specs.checkresults import ServiceState
@@ -39,7 +39,7 @@ class ServiceInfo(TypedDict, total=False):
 
 
 @dataclass
-class AnalyseServiceResult(ABCAutomationResult):
+class AnalyseServiceResult(AutomationResult):
     service_info: ServiceInfo
     labels: Labels
     label_sources: LabelSources
@@ -54,7 +54,7 @@ result_type_registry.register(AnalyseServiceResult)
 
 
 @dataclass
-class GetServicesLabelsResult(ABCAutomationResult):
+class GetServicesLabelsResult(AutomationResult):
     labels: Mapping[ServiceName, Labels]
 
     @staticmethod
@@ -67,7 +67,7 @@ result_type_registry.register(GetServicesLabelsResult)
 
 
 @dataclass
-class GetServiceNameResult(ABCAutomationResult):
+class GetServiceNameResult(AutomationResult):
     service_name: str
 
     @staticmethod
@@ -80,7 +80,7 @@ result_type_registry.register(GetServiceNameResult)
 
 
 @dataclass
-class AnalyseHostResult(ABCAutomationResult):
+class AnalyseHostResult(AutomationResult):
     labels: Labels
     label_sources: LabelSources
 
@@ -94,7 +94,7 @@ result_type_registry.register(AnalyseHostResult)
 
 
 @dataclass
-class AnalyzeHostRuleMatchesResult(ABCAutomationResult):
+class AnalyzeHostRuleMatchesResult(AutomationResult):
     results: dict[str, list[object]]
 
     @staticmethod
@@ -107,7 +107,7 @@ result_type_registry.register(AnalyzeHostRuleMatchesResult)
 
 
 @dataclass
-class AnalyzeServiceRuleMatchesResult(ABCAutomationResult):
+class AnalyzeServiceRuleMatchesResult(AutomationResult):
     results: dict[str, list[object]]
 
     @staticmethod
@@ -120,7 +120,7 @@ result_type_registry.register(AnalyzeServiceRuleMatchesResult)
 
 
 @dataclass
-class AnalyzeHostRuleEffectivenessResult(ABCAutomationResult):
+class AnalyzeHostRuleEffectivenessResult(AutomationResult):
     results: dict[str, bool]
 
     @staticmethod
@@ -133,7 +133,7 @@ result_type_registry.register(AnalyzeHostRuleEffectivenessResult)
 
 
 @dataclass
-class ActiveCheckResult(ABCAutomationResult):
+class ActiveCheckResult(AutomationResult):
     state: ServiceState | None
     output: ServiceDetails
 
@@ -147,7 +147,7 @@ result_type_registry.register(ActiveCheckResult)
 
 
 @dataclass
-class UnknownCheckParameterRuleSetsResult(ABCAutomationResult):
+class UnknownCheckParameterRuleSetsResult(AutomationResult):
     result: Sequence[str]
 
     @staticmethod

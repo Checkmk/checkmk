@@ -22,7 +22,7 @@ from pytest_mock import MockerFixture
 from starlette import status
 
 from cmk.automations.models.helper import AutomationPayload, AutomationResponse
-from cmk.automations.results import ABCAutomationResult, SerializedResult
+from cmk.automations.results import AutomationResult
 from cmk.automations.types import AutomationID
 from cmk.base.automation_helper._app import (
     _reloader_task,
@@ -37,15 +37,15 @@ from cmk.base.automations.automations import AutomationError
 from tests.testlib.common.utils import wait_until
 
 
-class _DummyAutomationResult(ABCAutomationResult):
+class _DummyAutomationResult(AutomationResult):
     @staticmethod
     @override
     def automation_call() -> AutomationID:
         return AutomationID("dummy")
 
     @override
-    def serialize(self, for_cmk_version: str) -> SerializedResult:
-        return SerializedResult("dummy_serialized")
+    def serialize(self, for_cmk_version: str) -> str:
+        return "dummy_serialized"
 
 
 class _DummyAutomationEngineSuccess:

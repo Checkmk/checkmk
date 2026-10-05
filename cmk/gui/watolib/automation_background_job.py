@@ -16,7 +16,7 @@ from typing import override
 
 from pydantic import BaseModel
 
-from cmk.automations.results import result_type_registry, SerializedResult
+from cmk.automations.results import result_type_registry
 from cmk.automations.types import AutomationID
 from cmk.ccc import store  # Some braindead "unit" test monkeypatch this like hell :-/
 from cmk.ccc.hostaddress import HostName
@@ -212,7 +212,7 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
     def _store_result(
         *,
         path: Path,
-        serialized_result: SerializedResult,
+        serialized_result: str,
         automation_cmd: AutomationID,
         cmdline_cmd: Iterable[str],
         debug: bool,
@@ -223,7 +223,7 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
                 path,
                 result_type_registry[automation_cmd]
                 .deserialize(serialized_result)
-                .serialize(for_cmk_version=str(for_cmk_version)),
+                .serialize(str(for_cmk_version)),
             )
         except SyntaxError as e:
             msg = get_local_automation_failure_message(

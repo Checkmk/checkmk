@@ -36,7 +36,7 @@ from cmk.utils.servicename import Item, ServiceName
 
 class AutomationResponse(NamedTuple):
     command: AutomationID
-    serialized_result: results.SerializedResult
+    serialized_result: str
     local: bool
     cmdline: Iterable[str]
 
@@ -116,7 +116,7 @@ def _automation_failure(
     )
 
 
-def _deserialize[ResultType: results.ABCAutomationResult](
+def _deserialize[ResultType: results.AutomationResult](
     response: AutomationResponse,
     result_type: type[ResultType],
     *,

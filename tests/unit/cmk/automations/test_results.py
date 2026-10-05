@@ -9,14 +9,13 @@ from dataclasses import dataclass
 from typing import override
 
 from cmk.automations.results import (
-    ABCAutomationResult,
+    AutomationResult,
     DiagSpecialAgentHostConfig,
     DiagSpecialAgentInput,
     Gateway,
     GatewayResult,
     NotifyResult,
     ScanParentsResult,
-    SerializedResult,
     ServiceDiscoveryPreviewResult,
     ServiceDiscoveryResult,
 )
@@ -32,7 +31,7 @@ from cmk.utils.ip_lookup import IPStackConfig
 
 
 @dataclass
-class AutomationResultTest(ABCAutomationResult):
+class AutomationResultTest(AutomationResult):
     a: int
     b: str
     c: bool
@@ -115,7 +114,7 @@ class TestTryDiscoveryResult:
 
 
 class TestScanParentsResult:
-    SERIALIZED_RESULT = SerializedResult("([((None, '108.170.228.254', None), 'gateway', 0, '')],)")
+    SERIALIZED_RESULT = "([((None, '108.170.228.254', None), 'gateway', 0, '')],)"
 
     DESERIALIZED_RESULT = ScanParentsResult(
         results=[

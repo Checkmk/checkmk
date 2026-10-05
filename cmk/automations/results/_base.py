@@ -12,7 +12,7 @@ registry that all concrete result modules register into.
 from abc import ABC, abstractmethod
 from ast import literal_eval
 from dataclasses import astuple, dataclass
-from typing import override, TypeVar
+from typing import override, Self
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.ruleset_matcher.labels import HostLabelValueDict
@@ -22,44 +22,32 @@ from ..types import AutomationID
 DiscoveredHostLabelsDict = dict[str, HostLabelValueDict]
 
 
-class ResultTypeRegistry(Registry[type["ABCAutomationResult"]]):
+class ResultTypeRegistry(Registry[type["AutomationResult"]]):
     @override
-    def plugin_name(self, instance: type[ABCAutomationResult]) -> AutomationID:
+    def plugin_name(self, instance: type[AutomationResult]) -> AutomationID:
         return instance.automation_call()
 
 
 result_type_registry = ResultTypeRegistry()
 
 
-class SerializedResult(str): ...
-
-
-_DeserializedType = TypeVar("_DeserializedType", bound="ABCAutomationResult")
-
-
 @dataclass
-class ABCAutomationResult(ABC):
-    def serialize(
-        self,
-        for_cmk_version: str,  # noqa: ARG002
-    ) -> SerializedResult:
+class AutomationResult(ABC):
+    def serialize(self, _for_cmk_version: str, /) -> str:
         """Serialize the result for a peer running the given Checkmk version.
 
         The version lets a result stay compatible with older central sites. Results
-        that depend on it parse it with ``cmk.ccc.version.Version.from_str``.
+        that depend on it may parse it with ``cmk.ccc.version.Version.from_str``.
         """
         return self._default_serialize()
 
     @classmethod
-    def deserialize(
-        cls: type[_DeserializedType],
-        serialized_result: SerializedResult,
-    ) -> _DeserializedType:
+    def deserialize(cls, serialized_result: str, /) -> Self:
         return cls(*literal_eval(serialized_result))
 
     @staticmethod
     @abstractmethod
     def automation_call() -> AutomationID: ...
 
-    def _default_serialize(self) -> SerializedResult:
-        return SerializedResult(repr(astuple(self)))
+    def _default_serialize(self) -> str:
+        return repr(astuple(self))

@@ -30,7 +30,6 @@ from requests import RequestException
 import cmk.ccc.version as cmk_version
 from cmk import trace
 from cmk.automations.backends import AutomationExecutor, HelperExecutor, SubprocessExecutor
-from cmk.automations.results import SerializedResult
 from cmk.automations.types import AutomationID
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
@@ -126,7 +125,7 @@ def check_mk_local_automation_serialized(
     force_cli_interface: bool = False,
     debug: bool,
     collect_all_hosts: Callable[[], Mapping[HostName, CollectedHostAttributes]],
-) -> tuple[Sequence[str], SerializedResult]:
+) -> tuple[Sequence[str], str]:
     with tracer.span(
         f"local_automation[{command}]",
         attributes={"cmk.automation.args": repr(args)},
@@ -206,7 +205,7 @@ def check_mk_local_automation_serialized(
         if command in ["restart", "reload"]:
             call_hook_activate_changes(collect_all_hosts)
 
-        return result.command_description, SerializedResult(result.output)
+        return result.command_description, result.output
 
 
 def get_local_automation_failure_message(
@@ -247,7 +246,7 @@ def check_mk_remote_automation_serialized(
     sync: Callable[[SiteId, bool], None],
     non_blocking_http: bool = False,
     debug: bool,
-) -> SerializedResult:
+) -> str:
     with tracer.span(
         f"remote_automation[{command}]",
         attributes={
@@ -267,21 +266,19 @@ def check_mk_remote_automation_serialized(
             )
 
         # Synchronous execution of the actual remote command in a single blocking HTTP request
-        return SerializedResult(
-            _do_remote_automation_serialized(
-                automation_config=automation_config,
-                command="checkmk-automation",
-                vars_=[
-                    ("automation", command),  # The Checkmk automation command
-                    ("arguments", mk_repr(args).decode("ascii")),  # The arguments for the command
-                    ("indata", mk_repr(indata).decode("ascii")),  # The input data
-                    ("stdin_data", mk_repr(stdin_data).decode("ascii")),  # The input data for stdin
-                    ("timeout", mk_repr(timeout).decode("ascii")),  # The timeout
-                ],
-                files=None,
-                timeout=timeout,
-                debug=debug,
-            )
+        return _do_remote_automation_serialized(
+            automation_config=automation_config,
+            command="checkmk-automation",
+            vars_=[
+                ("automation", command),  # The Checkmk automation command
+                ("arguments", mk_repr(args).decode("ascii")),  # The arguments for the command
+                ("indata", mk_repr(indata).decode("ascii")),  # The input data
+                ("stdin_data", mk_repr(stdin_data).decode("ascii")),  # The input data for stdin
+                ("timeout", mk_repr(timeout).decode("ascii")),  # The timeout
+            ],
+            files=None,
+            timeout=timeout,
+            debug=debug,
         )
 
 
@@ -660,7 +657,7 @@ def _do_check_mk_remote_automation_in_background_job_serialized(
     automation_request: CheckmkAutomationRequest,
     *,
     debug: bool,
-) -> SerializedResult:
+) -> str:
     """Execute the automation in a background job on the remote site
 
     It starts the background job using one call. It then polls the remote site, waiting for
@@ -698,7 +695,7 @@ def _do_check_mk_remote_automation_in_background_job_serialized(
 
     assert isinstance(result, str)
 
-    return SerializedResult(result)
+    return result
 
 
 def _start_remote_automation_job(

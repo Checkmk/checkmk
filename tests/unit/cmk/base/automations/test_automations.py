@@ -16,11 +16,10 @@ from pytest import MonkeyPatch
 
 import cmk.base.automations.check_mk as automations
 from cmk.automations.results import (
-    ABCAutomationResult,
     AnalyseHostResult,
     AnalyzeHostRuleEffectivenessResult,
+    AutomationResult,
     GetServicesLabelsResult,
-    SerializedResult,
 )
 from cmk.automations.types import AutomationID
 from cmk.base.automations.automations import (
@@ -150,15 +149,15 @@ def test_service_labels(monkeypatch: MonkeyPatch) -> None:
     )
 
 
-class _Result(ABCAutomationResult):
+class _Result(AutomationResult):
     @staticmethod
     @override
     def automation_call() -> AutomationID:
         return AutomationID("dummy")
 
     @override
-    def serialize(self, for_cmk_version: str) -> SerializedResult:
-        return SerializedResult("dummy")
+    def serialize(self, for_cmk_version: str) -> str:
+        return "dummy"
 
 
 @dataclass

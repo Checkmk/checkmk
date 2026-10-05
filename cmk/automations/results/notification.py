@@ -10,9 +10,8 @@ from dataclasses import asdict, dataclass
 from typing import override, Self
 
 from cmk.automations.results._base import (
-    ABCAutomationResult,
+    AutomationResult,
     result_type_registry,
-    SerializedResult,
 )
 from cmk.events.notify_types import NotifyAnalysisInfo, NotifyBulks
 
@@ -20,7 +19,7 @@ from ..types import AutomationID
 
 
 @dataclass
-class NotificationReplayResult(ABCAutomationResult):
+class NotificationReplayResult(AutomationResult):
     @staticmethod
     @override
     def automation_call() -> AutomationID:
@@ -31,7 +30,7 @@ result_type_registry.register(NotificationReplayResult)
 
 
 @dataclass
-class NotificationAnalyseResult(ABCAutomationResult):
+class NotificationAnalyseResult(AutomationResult):
     result: NotifyAnalysisInfo | None
 
     @staticmethod
@@ -44,7 +43,7 @@ result_type_registry.register(NotificationAnalyseResult)
 
 
 @dataclass
-class NotificationTestResult(ABCAutomationResult):
+class NotificationTestResult(AutomationResult):
     result: NotifyAnalysisInfo | None
 
     @staticmethod
@@ -57,7 +56,7 @@ result_type_registry.register(NotificationTestResult)
 
 
 @dataclass
-class NotificationGetBulksResult(ABCAutomationResult):
+class NotificationGetBulksResult(AutomationResult):
     result: NotifyBulks
 
     @staticmethod
@@ -70,7 +69,7 @@ result_type_registry.register(NotificationGetBulksResult)
 
 
 @dataclass
-class NotifyResult(ABCAutomationResult):
+class NotifyResult(AutomationResult):
     exit_code: int | None
     output: str
 
@@ -81,15 +80,15 @@ class NotifyResult(ABCAutomationResult):
 
     @classmethod
     @override
-    def deserialize(cls, serialized_result: SerializedResult) -> Self:
+    def deserialize(cls, serialized_result: str) -> Self:
         return cls(**literal_eval(serialized_result))
 
     @override
     def serialize(
         self,
         for_cmk_version: str,
-    ) -> SerializedResult:
-        return SerializedResult(asdict(self))
+    ) -> str:
+        return str(asdict(self))
 
 
 result_type_registry.register(NotifyResult)

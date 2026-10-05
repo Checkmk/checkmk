@@ -14,7 +14,7 @@ from typing import override
 
 import pytest
 
-from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
+from cmk.automations.results import AutomationResult, ResultTypeRegistry
 from cmk.automations.types import AutomationID
 from cmk.ccc import store
 from cmk.ccc import version as cmk_version
@@ -36,17 +36,17 @@ RESULT: object = None
 
 
 @dataclass
-class ResultTest(ABCAutomationResult):
+class ResultTest(AutomationResult):
     field_1: int
     field_2: str | None
 
     @override
-    def serialize(self, for_cmk_version: str) -> SerializedResult:
+    def serialize(self, for_cmk_version: str) -> str:
         return (
             self._default_serialize()
             if cmk_version.Version.from_str(for_cmk_version)
             >= cmk_version.Version.from_str("2.2.0i1")
-            else SerializedResult("i was very different previously")
+            else "i was very different previously"
         )
 
     @staticmethod

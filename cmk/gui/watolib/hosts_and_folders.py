@@ -56,7 +56,7 @@ from redis.client import Pipeline
 from redis.typing import EncodableT, FieldT
 
 import cmk.utils.paths
-from cmk.automations.results import ABCAutomationResult
+from cmk.automations.results import AutomationResult
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
@@ -3478,7 +3478,7 @@ class Folder:
         *,
         automation: Callable[
             [LocalAutomationConfig | RemoteAutomationConfig, Sequence[HostName], bool],
-            ABCAutomationResult,
+            AutomationResult,
         ],
         pprint_value: bool,
         debug: bool,
@@ -3598,7 +3598,7 @@ class Folder:
         *,
         automation: Callable[
             [LocalAutomationConfig | RemoteAutomationConfig, Sequence[HostName], bool],
-            ABCAutomationResult,
+            AutomationResult,
         ],
         debug: bool,
     ) -> None:
@@ -4112,7 +4112,7 @@ class SearchFolder:
         *,
         automation: Callable[
             [LocalAutomationConfig | RemoteAutomationConfig, Sequence[HostName], bool],
-            ABCAutomationResult,
+            AutomationResult,
         ],
         pprint_value: bool,
         debug: bool,

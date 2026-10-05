@@ -9,7 +9,6 @@ from collections.abc import Iterator, Mapping
 import pytest
 
 from cmk.automations import results
-from cmk.automations.results import SerializedResult
 from cmk.ccc.hostaddress import HostName
 from tests.testlib.system.site import Site
 
@@ -61,7 +60,7 @@ def _verdict(site: Site, context: Mapping[str, str]) -> tuple[str, str]:
     """Ask the notification analysis how the rule under test treats this context"""
     # An empty dispatch keeps the analysis from actually sending the notification.
     completed = site.run(["cmk", "--automation", "notification-test", json.dumps(context), ""])
-    result = results.NotificationTestResult.deserialize(SerializedResult(completed.stdout))
+    result = results.NotificationTestResult.deserialize(completed.stdout)
     assert result.result is not None, f"Notification analysis returned nothing for {context}"
 
     rule_info, _plugin_info = result.result

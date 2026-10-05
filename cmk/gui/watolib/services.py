@@ -29,7 +29,6 @@ from pydantic import BaseModel
 
 from cmk import trace
 from cmk.automations.results import (
-    SerializedResult,
     ServiceDiscoveryPreviewResult,
     SetAutochecksInput,
     SourceResult,
@@ -1373,9 +1372,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         try:
             return (
                 int(self._preview_store.path.stat().st_mtime),
-                ServiceDiscoveryPreviewResult.deserialize(
-                    SerializedResult(self._preview_store.read_obj(default=""))
-                ),
+                ServiceDiscoveryPreviewResult.deserialize(self._preview_store.read_obj(default="")),
             )
         except FileNotFoundError, ValueError:
             return None

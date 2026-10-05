@@ -21,7 +21,7 @@ from pydantic import BaseModel
 
 from cmk.automations.logging import LoggingManager
 from cmk.automations.models.helper import AutomationPayload, AutomationResponse
-from cmk.automations.results import ABCAutomationResult
+from cmk.automations.results import AutomationResult
 from cmk.automations.types import AutomationID
 from cmk.base.automations.automations import AutomationError
 from cmk.ccc import version as cmk_version
@@ -34,9 +34,7 @@ from ._tracer import TRACER
 class AutomationEngine(Protocol):
     def update(self, omd_root: Path, raw_config: Mapping[str, object]) -> None: ...
 
-    def execute(
-        self, cmd: AutomationID, args: list[str]
-    ) -> ABCAutomationResult | AutomationError: ...
+    def execute(self, cmd: AutomationID, args: list[str]) -> AutomationResult | AutomationError: ...
 
 
 @dataclass
@@ -306,7 +304,7 @@ def _execute_automation_endpoint(
     ):
         try:
             automation_start_time = time.time()
-            result_or_error_code: ABCAutomationResult | int = state.engine.execute(
+            result_or_error_code: AutomationResult | int = state.engine.execute(
                 payload.name, list(payload.args)
             )
             automation_end_time = time.time()
@@ -331,7 +329,7 @@ def _execute_automation_endpoint(
             )
 
         match result_or_error_code:
-            case ABCAutomationResult():
+            case AutomationResult():
                 return AutomationResponse(
                     serialized_result_or_error_code=result_or_error_code.serialize(
                         cmk_version.__version__

@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 
 from cmk.automations.models.helper import AutomationResponse
-from cmk.automations.results import AnalyseServiceResult, SerializedResult
+from cmk.automations.results import AnalyseServiceResult
 from cmk.base.automation_helper._app import HealthCheckResponse
 from cmk.base.automation_helper._config import (
     Config,
@@ -269,7 +269,7 @@ def _query_health(site: Site) -> str:
 
 def _query_analyse_service(site: Site, args: Sequence[str]) -> AnalyseServiceResult:
     return AnalyseServiceResult.deserialize(
-        SerializedResult(
+        str(
             AutomationResponse.model_validate_json(
                 _run_automation(site, "analyse-service", args)
             ).serialized_result_or_error_code

@@ -11,7 +11,7 @@ from io import StringIO
 
 import pytest
 
-from cmk.automations.results import ABCAutomationResult
+from cmk.automations.results import AutomationResult
 from cmk.base.automations.check_mk import (
     automation_analyze_host_rule_matches,
     automation_analyze_service_rule_matches,
@@ -53,7 +53,7 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
         r: Sequence[Sequence[RuleSpec]],
         *,
         debug: bool,  # noqa: ARG001
-    ) -> ABCAutomationResult:
+    ) -> AutomationResult:
         ts = Scenario()
         ts.add_host(HostName("ding"))
         ts.add_host(HostName("dong"))
@@ -181,7 +181,7 @@ def fixture_mock_analyze_service_rule_matches_automation(monkeypatch: pytest.Mon
         rules: Sequence[Sequence[RuleSpec]],
         *,
         debug: bool,  # noqa: ARG001
-    ) -> ABCAutomationResult:
+    ) -> AutomationResult:
         ts = Scenario()
         ts.add_host(HostName("ding"))
         loading_result = ts.apply(monkeypatch)

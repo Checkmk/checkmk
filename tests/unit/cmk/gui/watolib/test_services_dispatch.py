@@ -52,7 +52,6 @@ from cmk.automations.results import (
     AnalyzeServiceRuleMatchesResult,
     DeleteHostsResult,
     GetServicesLabelsResult,
-    SerializedResult,
     ServiceDiscoveryPreviewResult,
     ServiceDiscoveryResult,
     SetAutochecksV2Result,
@@ -178,7 +177,7 @@ class Transport:
     def args_for(self, command: str) -> list[tuple[str, ...]]:
         return [c.args for c in self.calls if c.command == command]
 
-    def _answer(self, command: str, args: Sequence[str]) -> SerializedResult:
+    def _answer(self, command: str, args: Sequence[str]) -> str:
         match command:
             case "service-discovery-preview":
                 return self.preview.serialize(__version__)
@@ -200,7 +199,7 @@ class Transport:
 
     def local(
         self, *, command: str, args: Sequence[str] | None = None, **_kw: object
-    ) -> tuple[Sequence[str], SerializedResult]:
+    ) -> tuple[Sequence[str], str]:
         self.calls.append(AutomationCall(str(command), None, tuple(args or ())))
         return ["cmk", "--automation", str(command)], self._answer(str(command), args or ())
 
@@ -211,7 +210,7 @@ class Transport:
         command: str,
         args: Sequence[str] | None = None,
         **_kw: object,
-    ) -> SerializedResult:
+    ) -> str:
         self.calls.append(
             AutomationCall(str(command), automation_config.site_id, tuple(args or ()))
         )

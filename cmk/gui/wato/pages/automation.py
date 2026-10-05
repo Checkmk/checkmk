@@ -20,7 +20,7 @@ import cmk.ccc.version as cmk_version
 import cmk.gui.watolib.utils as watolib_utils
 import cmk.utils.paths
 from cmk import trace
-from cmk.automations.results import result_type_registry, SerializedResult
+from cmk.automations.results import result_type_registry
 from cmk.automations.types import AutomationID
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
@@ -211,11 +211,11 @@ class PageAutomation(AjaxPage):
     @staticmethod
     def _format_cmk_automation_result(
         *,
-        serialized_result: SerializedResult,
+        serialized_result: str,
         cmk_command: AutomationID,
         cmdline_cmd: Iterable[str],
         debug: bool,
-    ) -> SerializedResult:
+    ) -> str:
         try:
             return (
                 result_type_registry[cmk_command]
@@ -250,7 +250,7 @@ class PageAutomation(AjaxPage):
         # Don't use write_text() here (not needed, because no HTML document is rendered)
         response.set_data(
             self._format_cmk_automation_result(
-                serialized_result=SerializedResult(serialized_result),
+                serialized_result=serialized_result,
                 cmk_command=cmk_command,
                 cmdline_cmd=cmdline_cmd,
                 debug=debug,

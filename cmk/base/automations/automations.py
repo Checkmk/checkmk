@@ -15,7 +15,7 @@ from typing import Any, Final, Protocol
 import cmk.ccc.debug
 import cmk.utils.paths
 from cmk import trace
-from cmk.automations.results import ABCAutomationResult
+from cmk.automations.results import AutomationResult
 from cmk.automations.types import AutomationID
 from cmk.base import config
 from cmk.base.app import make_app
@@ -54,7 +54,7 @@ type StateFactory[StateT: AutomationState] = Callable[[Path, Mapping[str, object
 
 
 @dataclass(frozen=True, kw_only=True)
-class Automation[StateT: AutomationState, ResultT: ABCAutomationResult]:
+class Automation[StateT: AutomationState, ResultT: AutomationResult]:
     """An action the backend performs on request, selected by its :attr:`name`."""
 
     name: AutomationID
@@ -78,7 +78,7 @@ class Automation[StateT: AutomationState, ResultT: ABCAutomationResult]:
 # The engine is deliberately blind to the state type: it only ever hands a state
 # back to the very handler that declared it, and the plug-in built both halves
 # together. There is no single state type to name here, so Any is the honest one.
-type DiscoveredAutomation = Automation[Any, ABCAutomationResult]  # type: ignore[explicit-any]
+type DiscoveredAutomation = Automation[Any, AutomationResult]  # type: ignore[explicit-any]
 
 
 class NoState:
@@ -205,7 +205,7 @@ class Automations:
 
     # Called either via the CLI's "cmk --automation" mode or via the "/automation" endpoint of the
     # automation helper.
-    def execute(self, cmd: AutomationID, args: list[str]) -> ABCAutomationResult | AutomationError:
+    def execute(self, cmd: AutomationID, args: list[str]) -> AutomationResult | AutomationError:
         remaining_args, timeout = self._extract_timeout_from_args(args)
         with (
             nullcontext()
@@ -214,7 +214,7 @@ class Automations:
         ):
             return self._execute(cmd, remaining_args)
 
-    def _execute(self, cmd: AutomationID, args: list[str]) -> ABCAutomationResult | AutomationError:
+    def _execute(self, cmd: AutomationID, args: list[str]) -> AutomationResult | AutomationError:
         # TODO: Disentangle this control flow mess
         try:
             try:

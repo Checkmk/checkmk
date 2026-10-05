@@ -15,7 +15,7 @@ from unittest.mock import patch
 
 import pytest
 
-from cmk.automations.results import ABCAutomationResult
+from cmk.automations.results import AutomationResult
 from cmk.base.automations.check_mk import (
     automation_analyze_host_rule_effectiveness,
     automation_analyze_host_rule_matches,
@@ -129,7 +129,7 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
         r: Sequence[Sequence[RuleSpec]],
         *,
         debug: bool,
-    ) -> ABCAutomationResult:
+    ) -> AutomationResult:
         ts = Scenario()
         ts.add_host(HostName("foobar123"), host_path="/wato/regex_check/hosts.mk")
         ts.add_host(HostName("foobar456"), host_path="/wato/regex_check/hosts.mk")
@@ -279,7 +279,7 @@ def fixture_inline_analyze_host_rule_effectiveness_automation(
         r: Sequence[Sequence[RuleSpec]],
         *,
         debug: bool,
-    ) -> ABCAutomationResult:
+    ) -> AutomationResult:
         ts = Scenario()
         ts.add_host(HostName("ding"))
         loading_result = ts.apply(monkeypatch)

@@ -10,7 +10,7 @@ All public symbols are re-exported here so that existing imports of the form
 """
 
 from cmk.automations.results._base import (
-    ABCAutomationResult as ABCAutomationResult,
+    AutomationResult as AutomationResult,
 )
 from cmk.automations.results._base import (
     DiscoveredHostLabelsDict as DiscoveredHostLabelsDict,
@@ -20,9 +20,6 @@ from cmk.automations.results._base import (
 )
 from cmk.automations.results._base import (
     ResultTypeRegistry as ResultTypeRegistry,
-)
-from cmk.automations.results._base import (
-    SerializedResult as SerializedResult,
 )
 from cmk.automations.results.analysis import (
     ActiveCheckResult as ActiveCheckResult,

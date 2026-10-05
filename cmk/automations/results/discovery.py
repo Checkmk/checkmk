@@ -16,10 +16,9 @@ from dataclasses import asdict, dataclass
 from typing import override, Self
 
 from cmk.automations.results._base import (
-    ABCAutomationResult,
+    AutomationResult,
     DiscoveredHostLabelsDict,
     result_type_registry,
-    SerializedResult,
 )
 from cmk.ccc import version as cmk_version
 from cmk.ccc.hostaddress import HostName
@@ -66,7 +65,7 @@ def _deserialize_discovery_report(
 
 
 @dataclass
-class ServiceDiscoveryResult(ABCAutomationResult):
+class ServiceDiscoveryResult(AutomationResult):
     hosts: Mapping[HostName, DiscoveryReport]
 
     def _to_dict(self) -> Mapping[HostName, Mapping[str, object]]:
@@ -79,12 +78,12 @@ class ServiceDiscoveryResult(ABCAutomationResult):
         return {k: _deserialize_discovery_report(v) for k, v in serialized.items()}
 
     @override
-    def serialize(self, for_cmk_version: str) -> SerializedResult:
-        return SerializedResult(repr(self._to_dict()))
+    def serialize(self, for_cmk_version: str) -> str:
+        return repr(self._to_dict())
 
     @classmethod
     @override
-    def deserialize(cls, serialized_result: SerializedResult) -> ServiceDiscoveryResult:
+    def deserialize(cls, serialized_result: str) -> ServiceDiscoveryResult:
         return cls(cls._from_dict(literal_eval(serialized_result)))
 
     @staticmethod
@@ -97,7 +96,7 @@ result_type_registry.register(ServiceDiscoveryResult)
 
 
 @dataclass
-class ServiceDiscoveryPreviewResult(ABCAutomationResult):
+class ServiceDiscoveryPreviewResult(AutomationResult):
     output: str
     check_table: Sequence[CheckPreviewEntry]
     nodes_check_table: Mapping[HostName, Sequence[CheckPreviewEntry]]
@@ -110,7 +109,7 @@ class ServiceDiscoveryPreviewResult(ABCAutomationResult):
     config_warnings: Sequence[str]
 
     @override
-    def serialize(self, for_cmk_version: str) -> SerializedResult:
+    def serialize(self, for_cmk_version: str) -> str:
         version = cmk_version.Version.from_str(for_cmk_version)
         # Before 3.0.0b1 source_results was a Mapping keyed by source ident. The
         # ident is no longer available here; emit synthetic keys so an older peer's
@@ -120,22 +119,20 @@ class ServiceDiscoveryPreviewResult(ABCAutomationResult):
             if version < cmk_version.Version.from_str("3.0.0b1")
             else self.source_results
         )
-        return SerializedResult(
-            repr(
-                {
-                    **asdict(self),
-                    "labels_by_host": {
-                        str(host_name): [label.serialize() for label in labels]
-                        for host_name, labels in self.labels_by_host.items()
-                    },
-                    "source_results": source_results,
-                }
-            )
+        return repr(
+            {
+                **asdict(self),
+                "labels_by_host": {
+                    str(host_name): [label.serialize() for label in labels]
+                    for host_name, labels in self.labels_by_host.items()
+                },
+                "source_results": source_results,
+            }
         )
 
     @classmethod
     @override
-    def deserialize(cls, serialized_result: SerializedResult) -> ServiceDiscoveryPreviewResult:
+    def deserialize(cls, serialized_result: str) -> ServiceDiscoveryPreviewResult:
         raw = literal_eval(serialized_result)
         return cls(
             output=raw["output"],
@@ -184,7 +181,7 @@ result_type_registry.register(SpecialAgentDiscoveryPreviewResult)
 
 
 @dataclass
-class AutodiscoveryResult(ABCAutomationResult):
+class AutodiscoveryResult(AutomationResult):
     hosts: Mapping[HostName, DiscoveryReport]
     changes_activated: bool
 
@@ -198,12 +195,12 @@ class AutodiscoveryResult(ABCAutomationResult):
         return {k: _deserialize_discovery_report(v) for k, v in serialized.items()}
 
     @override
-    def serialize(self, for_cmk_version: str) -> SerializedResult:
-        return SerializedResult(repr((self._hosts_to_dict(), self.changes_activated)))
+    def serialize(self, for_cmk_version: str) -> str:
+        return repr((self._hosts_to_dict(), self.changes_activated))
 
     @classmethod
     @override
-    def deserialize(cls, serialized_result: SerializedResult) -> Self:
+    def deserialize(cls, serialized_result: str) -> Self:
         hosts, changes_activated = literal_eval(serialized_result)
         return cls(cls._hosts_from_dict(hosts), changes_activated)
 
@@ -217,7 +214,7 @@ result_type_registry.register(AutodiscoveryResult)
 
 
 @dataclass
-class SetAutochecksV2Result(ABCAutomationResult):
+class SetAutochecksV2Result(AutomationResult):
     @staticmethod
     @override
     def automation_call() -> AutomationID:
@@ -268,7 +265,7 @@ class SetAutochecksInput:
 
 
 @dataclass
-class UpdateHostLabelsResult(ABCAutomationResult):
+class UpdateHostLabelsResult(AutomationResult):
     @staticmethod
     @override
     def automation_call() -> AutomationID:

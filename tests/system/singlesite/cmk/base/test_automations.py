@@ -11,7 +11,7 @@ from collections.abc import Iterator, MutableMapping, Sequence
 import pytest
 
 from cmk.automations import results
-from cmk.automations.results import SerializedResult, SetAutochecksInput
+from cmk.automations.results import SetAutochecksInput
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery import AutochecksSerializer, DiscoveryReport, DiscoverySettings
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
@@ -140,7 +140,7 @@ def _execute_automation(
         assert p.stdout == expect_stdout, error_msg
 
     if parse_data:
-        return results.result_type_registry[cmd].deserialize(SerializedResult(p.stdout))
+        return results.result_type_registry[cmd].deserialize(p.stdout)
 
     return None
 

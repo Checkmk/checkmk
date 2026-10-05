@@ -13,7 +13,7 @@ import pytest
 from flask import Flask
 
 import cmk.ccc.version as cmk_version
-from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
+from cmk.automations.results import AutomationResult, ResultTypeRegistry
 from cmk.automations.types import AutomationID
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
@@ -27,17 +27,17 @@ from cmk.utils.local_secrets import DistributedSetupSecret
 
 
 @dataclass
-class ResultTest(ABCAutomationResult):
+class ResultTest(AutomationResult):
     field_1: tuple[int, int]
     field_2: str | None
 
     @override
-    def serialize(self, for_cmk_version: str) -> SerializedResult:
+    def serialize(self, for_cmk_version: str) -> str:
         return (
             self._default_serialize()
             if cmk_version.Version.from_str(for_cmk_version)
             >= cmk_version.Version.from_str("3.0.0b1")
-            else SerializedResult(repr((self.field_1,)))
+            else repr((self.field_1,))
         )
 
     @staticmethod

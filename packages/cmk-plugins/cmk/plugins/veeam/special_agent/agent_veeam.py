@@ -451,31 +451,99 @@ def _newest(points: Sequence[Mapping[str, object]]) -> Mapping[str, object] | No
     return max(dated, key=lambda item: item[0])[1] if dated else None
 
 
-def fetch_restore_points(limit: int = 500) -> FetchStrategy:
-    """One record per backup object, with its restore points reduced to the newest one
-    and a malware status rollup.
+def _restore_point_object_id(
+    point: Mapping[str, object], candidates: Sequence[Mapping[str, object]]
+) -> str | None:
+    """Picks which of a backup chain's object(s) a restore point belongs to.
 
-    Forwarding every restore point would be far too much output on a mid-sized estate.
-    The restore points carry no field referencing their backup object, so they are
-    matched on name and platform. Fetching them per object
-    (/api/v1/backupObjects/{id}/restorePoints) would be exact, but costs one request
-    per backup object on every run.
+    A chain with one object is unambiguous: take it directly, since the point's
+    own `name` cannot be trusted to match the object's `name` (e.g. a Linux agent's
+    point is named by IP, the object by hostname). A chain shared by several
+    objects (e.g. a multi-folder File Backup job) has no such guarantee, but Veeam
+    suffixes each such point's name with " Id: <n>"; stripping that back out of the
+    point's name is what actually identifies which object it belongs to.
+    """
+    if len(candidates) == 1:
+        object_id = candidates[0].get("id")
+        return object_id if isinstance(object_id, str) else None
+    point_name = point.get("name")
+    if not isinstance(point_name, str):
+        return None
+    base_name = point_name.rsplit(" Id: ", 1)[0]
+    for obj in candidates:
+        if obj.get("name") == base_name and isinstance(object_id := obj.get("id"), str):
+            return object_id
+    return None
+
+
+def fetch_restore_points(limit: int = 500) -> FetchStrategy:
+    """One record per backup object: its newest restore point and a malware rollup.
+
+    Restore points reference their chain via `backupId`, resolved to the chain's
+    object(s) via GET /api/v1/backups/{backupId}/objects; a chain this fails for
+    is simply left unjoined. See `_restore_point_object_id` for how a point is
+    attributed to one of several objects sharing a chain.
     """
 
     def _fetch(client: VeeamClient, name: str) -> str:
         backup_objects = _get_all(client, "/api/v1/backupObjects", limit)
-        points: dict[tuple[object, object], list[Mapping[str, object]]] = {}
-        for point in _get_all(client, "/api/v1/restorePoints", limit):
-            if isinstance(point, dict):
-                points.setdefault((point.get("name"), point.get("platformId")), []).append(point)
+        restore_points = _get_all(client, "/api/v1/restorePoints", limit)
+
+        backup_ids = {
+            backup_id
+            for point in restore_points
+            if isinstance(point, dict) and isinstance(backup_id := point.get("backupId"), str)
+        }
+        objects_by_backup_id: dict[str, list[Mapping[str, object]]] = {}
+        for backup_id in backup_ids:
+            try:
+                objects = _get_all(client, f"/api/v1/backups/{backup_id}/objects", limit)
+            except TerminateAgent as exc:
+                if (
+                    isinstance(exc.__cause__, VeeamApiError)
+                    and exc.__cause__.status != HTTPStatus.UNAUTHORIZED
+                ):
+                    continue
+                raise
+            objects_by_backup_id[backup_id] = [obj for obj in objects if isinstance(obj, dict)]
+
+        object_id_by_name_platform: dict[tuple[str, str], str] = {
+            (obj_name, obj_platform_id): object_id
+            for obj in backup_objects
+            if isinstance(obj, dict)
+            and isinstance(obj_name := obj.get("name"), str)
+            and isinstance(obj_platform_id := obj.get("platformId"), str)
+            and isinstance(object_id := obj.get("id"), str)
+        }
+
+        points: dict[str, list[Mapping[str, object]]] = {}
+        for point in restore_points:
+            if not isinstance(point, dict) or not isinstance(
+                backup_id := point.get("backupId"), str
+            ):
+                continue
+            candidates = objects_by_backup_id.get(backup_id, [])
+            object_id = _restore_point_object_id(point, candidates)
+            if (
+                object_id is None
+                and not candidates
+                and isinstance(point_name := point.get("name"), str)
+                and isinstance(point_platform_id := point.get("platformId"), str)
+            ):
+                # The chain's objects couldn't be resolved via id at all (lookup
+                # failed or unsupported); fall back to the pre-id join, which
+                # still works where the point's own name matches the object's.
+                object_id = object_id_by_name_platform.get((point_name, point_platform_id))
+            if object_id is not None:
+                points.setdefault(object_id, []).append(point)
 
         output = f"<<<{name}:sep(0)>>>\n"
         for backup_object in backup_objects:
-            if not isinstance(backup_object, dict):
+            if not isinstance(backup_object, dict) or not isinstance(
+                object_id := backup_object.get("id"), str
+            ):
                 continue
-            object_points = points.get(
-                (backup_object.get("name"), backup_object.get("platformId")), []
-            )
+            object_points = points.get(object_id, [])
             newest = _newest(object_points)
             record = {
                 "name": backup_object.get("name"),

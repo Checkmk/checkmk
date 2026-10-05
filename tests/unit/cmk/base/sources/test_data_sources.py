@@ -7,7 +7,9 @@
 
 # TODO: Move this file into the cmk-check-engine package. First eliminate dependency on testlib.
 
+import os
 import socket
+import time
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -16,14 +18,24 @@ from typing import Literal, Never
 import pytest
 
 from cmk.base.config import LoadingResult
+from cmk.base.modes.check_mk import handle_fetcher_options
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.checkengine.fetcher_abc import FetcherError, Mode
 from cmk.checkengine.fetchers.piggyback import PiggybackFetcher
 from cmk.checkengine.fetchers.program import ProgramFetcher
 from cmk.checkengine.fetchers.snmp import NoSelectedSNMPSections, SNMPFetcher, SNMPFetcherConfig
 from cmk.checkengine.fetchers.tcp import TCPFetcher, TLSConfig
-from cmk.checkengine.filecache import FileCacheOptions, MaxAge
+from cmk.checkengine.filecache import (
+    AgentFileCache,
+    FileCache,
+    FileCacheOptions,
+    MaxAge,
+    SNMPFileCache,
+)
+from cmk.checkengine.helper_interface import AgentRawData, FetcherType
 from cmk.checkengine.plugins import AgentBasedPlugins
+from cmk.checkengine.snmplib import SNMPRawData
 from cmk.checkengine.source_abc import Source
 from cmk.checkengine.source_builder import SourceBuilder
 from cmk.checkengine.sources._sources import (
@@ -70,6 +82,8 @@ def _make_sources(
     special_agent_command_lines: Sequence[tuple[str, SpecialAgentCommandLine]] | None = None,
     host_address: HostAddress | None | _Default = _DEFAULT,
     ip_stack_config: IPStackConfig = IPStackConfig.IPv4,
+    simulation_mode: bool = True,
+    file_cache_options: FileCacheOptions = FileCacheOptions(),
 ) -> Sequence[Source]:
     # Too many arguments to this function.  Let's wrap it to make it easier
     # to test.
@@ -103,8 +117,8 @@ def _make_sources(
                 caching_config=lambda host_name: {},  # noqa: ARG005
             ),
         ),
-        simulation_mode=True,
-        file_cache_options=FileCacheOptions(),
+        simulation_mode=simulation_mode,
+        file_cache_options=file_cache_options,
         file_cache_max_age=MaxAge.zero(),
         snmp_backend=config_cache.get_snmp_backend(hostname),
         file_cache_path_base=Path("/"),
@@ -473,3 +487,95 @@ def test_datasource_program_not_using_the_address_still_runs(
         )
         if isinstance(source, ProgramSource)
     ] == ["/bin/cat /var/lib/dump"]
+
+
+_NO_TCP_HOSTS = pytest.mark.parametrize(
+    "tags, special_agent_command_lines, fetcher_types",
+    [
+        pytest.param(
+            {TagGroupID("agent"): TagID("cmk-agent"), TagGroupID("snmp_ds"): TagID("snmp-v2")},
+            None,
+            {FetcherType.TCP, FetcherType.SNMP},
+            id="agent-and-snmp",
+        ),
+        pytest.param(
+            {TagGroupID("agent"): TagID("special-agents")},
+            [("my_agent", SpecialAgentCommandLine(""))],
+            {FetcherType.SPECIAL_AGENT},
+            id="special-agent",
+        ),
+    ],
+)
+
+
+def _no_tcp_file_caches(
+    tags: dict[TagGroupID, TagID],
+    special_agent_command_lines: Sequence[tuple[str, SpecialAgentCommandLine]] | None,
+    fetcher_types: set[FetcherType],
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> Sequence[FileCache[AgentRawData] | FileCache[SNMPRawData]]:
+    hostname = HostName("no-tcp-host")
+    ts = Scenario()
+    ts.add_host(hostname, tags=tags)
+    # `cmk -I <host>` defaults to not using the cache at all.
+    file_cache_options = handle_fetcher_options(
+        {"no-tcp": True}, defaults=FileCacheOptions(disabled=True)
+    )
+    sources = [
+        source
+        for source in _make_sources(
+            hostname,
+            ts.apply(monkeypatch),
+            tmp_path=tmp_path,
+            special_agent_command_lines=special_agent_command_lines,
+            simulation_mode=False,
+            file_cache_options=file_cache_options,
+        )
+        if not isinstance(source, PiggybackSource)
+    ]
+    assert {source.source_info().fetcher_type for source in sources} == fetcher_types
+    return [
+        source.file_cache(simulation=False, file_cache_options=file_cache_options)
+        for source in sources
+    ]
+
+
+@_NO_TCP_HOSTS
+def test_no_tcp_reads_outdated_cache_files(
+    tags: dict[TagGroupID, TagID],
+    special_agent_command_lines: Sequence[tuple[str, SpecialAgentCommandLine]] | None,
+    fetcher_types: set[FetcherType],
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    file_caches = _no_tcp_file_caches(
+        tags, special_agent_command_lines, fetcher_types, monkeypatch, tmp_path
+    )
+    for file_cache in file_caches:
+        if isinstance(file_cache, SNMPFileCache):
+            file_cache.write({}, Mode.DISCOVERY)
+        elif isinstance(file_cache, AgentFileCache):
+            file_cache.write(AgentRawData(b"<<<cached>>>"), Mode.DISCOVERY)
+    a_day_ago = time.time() - 86400
+    for path in tmp_path.rglob("*"):
+        if path.is_file():
+            os.utime(path, (a_day_ago, a_day_ago))
+
+    for file_cache in file_caches:
+        assert file_cache.read(Mode.DISCOVERY) is not None
+
+
+@_NO_TCP_HOSTS
+def test_no_tcp_does_not_fetch_without_cache_files(
+    tags: dict[TagGroupID, TagID],
+    special_agent_command_lines: Sequence[tuple[str, SpecialAgentCommandLine]] | None,
+    fetcher_types: set[FetcherType],
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    for file_cache in _no_tcp_file_caches(
+        tags, special_agent_command_lines, fetcher_types, monkeypatch, tmp_path
+    ):
+        with pytest.raises(FetcherError, match="No cached data available"):
+            file_cache.read(Mode.DISCOVERY)

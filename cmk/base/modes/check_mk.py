@@ -217,7 +217,9 @@ def handle_fetcher_options(
         )
 
     if options.get("no-tcp", False):
-        file_cache_options = dataclasses.replace(file_cache_options, tcp_use_only_cache=True)
+        file_cache_options = dataclasses.replace(
+            file_cache_options, disabled=False, use_outdated=True, use_only_cache=True
+        )
 
     if options.get("usewalk", False):
         global _enforce_localhost

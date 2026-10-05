@@ -185,7 +185,8 @@ def discovery_apc_symmetra(section: ParsedSection) -> DiscoveryResult:
 
 
 def check_apc_symmetra(params: CheckParameters, section: ParsedSection) -> CheckResult:
-    data = section["status"]
+    if (data := section.get("status")) is None:
+        return
 
     if data["ups_comm"] == "2":
         yield Result(state=State.UNKNOWN, summary="UPS communication lost")

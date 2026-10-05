@@ -277,6 +277,18 @@ async function store(count: number): Promise<void> {
   )
 }
 
+/** What step 1 says about itself once it is done, apart from its own fields. */
+function mappingRecap(): HTMLElement {
+  const recap = screen
+    .getByRole('heading', { name: 'Relation mapping' })
+    .closest('li')
+    ?.querySelector<HTMLElement>('.mode-host-relation-detection-app__stack')
+  if (!recap) {
+    throw new Error('Step 1 says nothing about itself.')
+  }
+  return recap
+}
+
 function suggestionsAsked(): { sent: unknown[] } {
   const sent: unknown[] = []
   server.use(
@@ -333,7 +345,10 @@ test('a step that is done says what was chosen in it', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Continue' }))
 
   await screen.findByText('"ilo" in the name, "oob" in the name')
-  screen.getByText('Management board and OS host · Host names')
+  const recap = within(mappingRecap())
+  recap.getByText('Management board and OS host')
+  recap.getByText('Host names')
+  recap.getByText('Main')
 })
 
 test('continuing needs somewhere to look, and says so', async () => {
@@ -841,8 +856,8 @@ test('every relation a search matches can be taken out at once', async () => {
 test('a single relation type is named, not offered as a choice', async () => {
   renderApp()
 
-  // Once in step 1, and once more in the summary still to come.
-  expect(await screen.findAllByText('Management board and OS host')).toHaveLength(2)
+  // In step 1, in what step 1 says once it is done, and in the summary still to come.
+  expect(await screen.findAllByText('Management board and OS host')).toHaveLength(3)
   expect(screen.queryByRole('combobox', { name: 'Relation type' })).toBeNull()
   expect(screen.queryByRole('radio')).toBeNull()
 })
@@ -868,7 +883,7 @@ test('the folder the page was opened from is where the relations are looked for'
     { words: [], values: [], look_in: ['names'], scope: { folder: '/oob' } }
   ])
   expect(scanned).toEqual([expect.objectContaining({ scope: { folder: '/oob' } })])
-  screen.getByText('Management board and OS host · Host names · Main / oob')
+  within(mappingRecap()).getByText('Main / oob')
 })
 
 test('a site is only offered where there is more than one', async () => {
@@ -898,8 +913,9 @@ test('the summary says what is about to be stored, and nothing is stored before'
   await userEvent.click(screen.getByRole('button', { name: 'Continue' }))
 
   await screen.findByRole('button', { name: 'Store 3 relations' })
-  screen.getByText('Relations to store')
-  screen.getByText('"ilo" in the name', {
+  const summary = within(screen.getByRole('listitem', { current: 'step' }))
+  summary.getByText('Relations to store')
+  summary.getByText('"ilo" in the name', {
     selector: '.mode-host-relation-detection-labeled-row__value'
   })
   expect(sent).toEqual([])

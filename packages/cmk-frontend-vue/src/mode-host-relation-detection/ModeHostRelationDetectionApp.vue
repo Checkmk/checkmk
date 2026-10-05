@@ -114,16 +114,6 @@ function siteTitle(id: string): string {
   return id ? titleOf(props.sites, id) : _t('All sites')
 }
 
-/** What step 1 said, for the step once it is done. */
-const lookedFor = computed(() =>
-  [
-    pairNounOf(kind.value),
-    indicators.value,
-    ...(folder.value !== MAIN_FOLDER ? [folderTitle(folder.value)] : []),
-    ...(site.value ? [siteTitle(site.value)] : [])
-  ].join(' · ')
-)
-
 // Step 2: what the findings mean.
 const suggestions = ref<Suggestions | null>(null)
 const suggesting = ref(false)
@@ -467,9 +457,14 @@ async function scanAgain(): Promise<void> {
           <CmkHeading type="h3">{{ _t('Relation mapping') }}</CmkHeading>
         </template>
         <template #recap>
-          <CmkParagraph class="mode-host-relation-detection-app__dimmed">{{
-            lookedFor
-          }}</CmkParagraph>
+          <div class="mode-host-relation-detection-app__stack">
+            <LabeledRow :label="_t('Relation type')">{{ pairNounOf(kind) }}</LabeledRow>
+            <LabeledRow :label="_t('Relation indicators')">{{ indicators }}</LabeledRow>
+            <LabeledRow :label="_t('Folder')">{{ folderTitle(folder) }}</LabeledRow>
+            <LabeledRow v-if="props.sites.length > 0" :label="_t('Site')">{{
+              siteTitle(site)
+            }}</LabeledRow>
+          </div>
         </template>
         <template #content>
           <div class="mode-host-relation-detection-app__step">
@@ -484,7 +479,7 @@ async function scanAgain(): Promise<void> {
               :folders="props.folders"
               :sites="props.sites"
             />
-            <div v-if="suggesting" class="mode-host-relation-detection-app__running">
+            <div v-if="suggesting" class="mode-host-relation-detection-app__stack">
               <CmkProgressbar max="unknown" />
             </div>
             <CmkAlertBoxDeprecated v-else-if="suggestFailed" variant="error">
@@ -513,7 +508,7 @@ async function scanAgain(): Promise<void> {
           <CmkHeading type="h3">{{ _t('Relation proposal') }}</CmkHeading>
         </template>
         <template #recap>
-          <CmkParagraph class="mode-host-relation-detection-app__dimmed">{{ ticked }}</CmkParagraph>
+          <LabeledRow :label="_t('Findings')">{{ ticked }}</LabeledRow>
         </template>
         <template #content>
           <div v-if="suggestions !== null" class="mode-host-relation-detection-app__step">
@@ -552,7 +547,7 @@ async function scanAgain(): Promise<void> {
           <CmkAlertBoxDeprecated v-if="suggestFailed || scanFailed" variant="error">
             {{ _t('The hosts could not be read.') }}
           </CmkAlertBoxDeprecated>
-          <div v-if="scanning" class="mode-host-relation-detection-app__running">
+          <div v-if="scanning" class="mode-host-relation-detection-app__stack">
             <CmkProgressbar max="unknown" />
             <CmkParagraph>{{ scanProgress }}</CmkParagraph>
           </div>
@@ -591,9 +586,7 @@ async function scanAgain(): Promise<void> {
           <CmkHeading type="h3">{{ _t('Relation review') }}</CmkHeading>
         </template>
         <template #recap>
-          <CmkParagraph class="mode-host-relation-detection-app__dimmed">{{
-            _tn('1 relation to store', '%{count} relations to store', toStore, { count: toStore })
-          }}</CmkParagraph>
+          <LabeledRow :label="_t('Relations to store')">{{ toStore }}</LabeledRow>
         </template>
         <template #content>
           <div v-if="scanned" class="mode-host-relation-detection-app__step">
@@ -682,7 +675,7 @@ async function scanAgain(): Promise<void> {
             <LabeledRow :label="_t('Findings')">{{ storedFindings }}</LabeledRow>
             <LabeledRow :label="_t('Relations to store')">{{ toStore }}</LabeledRow>
           </div>
-          <div v-if="running" class="mode-host-relation-detection-app__running">
+          <div v-if="running" class="mode-host-relation-detection-app__stack">
             <CmkProgressbar max="unknown" />
             <CmkParagraph>{{ runProgress }}</CmkParagraph>
           </div>
@@ -777,7 +770,7 @@ async function scanAgain(): Promise<void> {
   margin-bottom: var(--spacing);
 }
 
-.mode-host-relation-detection-app__running {
+.mode-host-relation-detection-app__stack {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-half);

@@ -188,10 +188,11 @@ class ResolvedRelation:
 
     ``direction`` is the end *this* host sits at towards ``host``, the same reading as the stored
     :class:`RelationLink` it comes from; ``host`` is the related host and ``site`` the site
-    monitoring it. The site travels with the relation because only the central site knows where
-    every host is monitored; it lets a reader query the counterpart's site directly instead of
-    asking every site whether it knows the name. A reader that wants to label the related host -
-    "this one is my management board" - turns the direction with :func:`reverse_direction`.
+    monitoring it. The site travels with the relation because the reader only has Livestatus,
+    which cannot tell where the counterpart is monitored; with the site it queries that one
+    directly instead of asking every site whether it knows the name. A reader that wants to label
+    the related host - "this one is my management board" - turns the direction with
+    :func:`reverse_direction`.
 
     The host and the site are plain strings: a reader parses them out of a value it did not write,
     and turning them into a ``HostName`` or a ``SiteId`` is its own business.

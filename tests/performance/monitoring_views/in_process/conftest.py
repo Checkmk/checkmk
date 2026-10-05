@@ -176,12 +176,12 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 #   .--environment-----------------------------------------------------------
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def cleanup_cmk() -> Generator[None]:
     yield from fake_site.cleanup_cmk_tmp_dir()
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(autouse=True, scope="session")  # ruff: ignore[pytest-fixture-autouse]
 def fixture_umask() -> Generator[None]:
     old_mask = os.umask(0o0007)
     try:
@@ -190,23 +190,23 @@ def fixture_umask() -> Generator[None]:
         os.umask(old_mask)
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(autouse=True, scope="session")  # ruff: ignore[pytest-fixture-autouse]
 def fixture_omd_site() -> Generator[None]:
     os.environ["OMD_SITE"] = CENTRAL_SITE_ID
     yield
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def cleanup_after_test() -> Generator[None]:
     yield from fake_site.cleanup_omd_root_after_test()
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(autouse=True, scope="session")  # ruff: ignore[pytest-fixture-autouse]
 def reduce_password_hashing_rounds() -> Iterator[None]:
     yield from fake_site.reduce_password_hashing_rounds()
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(autouse=True, scope="session")  # ruff: ignore[pytest-fixture-autouse]
 def prevent_security_event_file_logging() -> Iterator[queue.Queue[logging.LogRecord]]:
     yield from fake_site.prevent_security_event_file_logging()
 
@@ -216,7 +216,7 @@ def test_edition() -> cmk_version.Edition:
     return fake_site.edition()
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def patch_omd_version(test_edition: cmk_version.Edition) -> Iterator[None]:
     with pytest.MonkeyPatch.context() as mp:
         mp.setattr(cmk_version, "orig_omd_version", cmk_version.omd_version, raising=False)
@@ -239,28 +239,28 @@ def use_fakeredis_client() -> Iterator[None]:
     yield from fake_site.use_fakeredis()
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def load_plugins(test_edition: cmk_version.Edition) -> None:
     perform_load_plugins(test_edition)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def disable_automation_helper(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("_CMK_AUTOMATIONS_FORCE_CLI_INTERFACE", "1")
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def execute_background_jobs_without_job_scheduler() -> Iterator[None]:
     with override_default_executor(ThreadedJobExecutor):
         yield
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def gui_cleanup_after_test(mocker: MockerFixture) -> Iterator[None]:
     yield from perform_gui_cleanup_after_test(mocker)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fail_on_unannotated_background_job_start(
     request: pytest.FixtureRequest, mocker: MockerFixture
 ) -> None:

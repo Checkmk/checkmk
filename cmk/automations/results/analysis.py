@@ -16,9 +16,7 @@ from typing import override, TypedDict
 from cmk.automations.results._base import (
     ABCAutomationResult,
     result_type_registry,
-    SerializedResult,
 )
-from cmk.ccc import version as cmk_version
 from cmk.checkengine.specs.checkresults import ServiceState
 from cmk.checkengine.specs.parameters import TimespecificParametersPreview
 from cmk.checkengine.submitters import ServiceDetails
@@ -45,17 +43,6 @@ class AnalyseServiceResult(ABCAutomationResult):
     service_info: ServiceInfo
     labels: Labels
     label_sources: LabelSources
-
-    @override
-    def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
-        if for_cmk_version >= cmk_version.Version.from_str("2.2.0i1"):
-            return self._default_serialize()
-        previous_serialized: Mapping[str, object] = {
-            **self.service_info,
-            "labels": self.labels,
-            "label_sources": self.label_sources,
-        }
-        return SerializedResult(repr((previous_serialized,)))
 
     @staticmethod
     @override

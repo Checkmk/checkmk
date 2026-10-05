@@ -26,6 +26,16 @@ def _psu_service_item(count: int, entry: Mapping[str, object]) -> str | None:
     return f"{count}-{name}" if name else None
 
 
+def _parse_line_input_voltage(raw: object) -> float | None:
+    """0.0 if absent, None if unparsable."""
+    if raw is None:
+        return 0.0
+    try:
+        return float(str(raw).removesuffix("V"))
+    except ValueError:
+        return None
+
+
 def discovery_redfish_psu(section: RedfishAPIData) -> DiscoveryResult:
     for key in section:
         data = section[key].get("PowerSupplies", None)
@@ -61,19 +71,29 @@ def check_redfish_psu(item: str, section: RedfishAPIData) -> CheckResult:
         else psu.get("PowerOutputWatts", psu.get("LastPowerOutputWatts"))
     )
     input_power = float(0 if psu.get("PowerInputWatts") is None else psu.get("PowerInputWatts"))
-    input_voltage = float(0 if psu.get("LineInputVoltage") is None else psu.get("LineInputVoltage"))
+    raw_input_voltage = psu.get("LineInputVoltage")
+    input_voltage = _parse_line_input_voltage(raw_input_voltage)
     dev_model = psu.get("Model")
     capacity = float(0 if psu.get("PowerCapacityWatts") is None else psu.get("PowerCapacityWatts"))
 
     yield Metric("input_power", input_power)
     yield Metric("output_power", output_power)
-    yield Metric("input_voltage", input_voltage)
+    if input_voltage is not None:
+        yield Metric("input_voltage", input_voltage)
 
+    voltage_msg = "" if input_voltage is None else f"{input_voltage} V input, "
     model_msg = (
         f"{input_power} Watts input, {output_power} Watts output, "
-        f"{input_voltage} V input, Capacity {capacity} Watts, Typ {dev_model}"
+        f"{voltage_msg}Capacity {capacity} Watts, Typ {dev_model}"
     )
     yield Result(state=State(0), summary=model_msg)
+    if input_voltage is None:
+        yield Result(
+            state=State.UNKNOWN,
+            summary=(
+                f"Cannot parse line input voltage: got {raw_input_voltage!r} (expected a number)"
+            ),
+        )
     dev_state, dev_msg = redfish_health_state(psu.get("Status", {}))
     yield Result(state=State(dev_state), notice=dev_msg)
 

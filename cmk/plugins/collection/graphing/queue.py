@@ -9,7 +9,7 @@ UNIT_COUNTER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision
 
 metric_queue = metrics.Metric(
     name="queue",
-    title=Title("Queue length"),
+    title=Title("Queued items"),
     unit=UNIT_COUNTER,
     color=metrics.Color.BLUE,
 )

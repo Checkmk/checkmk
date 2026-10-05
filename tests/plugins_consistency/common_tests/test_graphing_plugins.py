@@ -328,7 +328,6 @@ def test_bundles() -> None:
 
 
 _ALLOWED_DUPLICATE_METRIC_TITLES = {
-    "Queue length": {"queue", "queue_length"},
     "Read latency": {"db_read_latency_s", "read_latency"},
     "Read operations": {"disk_read_ios", "read_ops"},
     "Requests per second": {"requests", "requests_per_sec", "requests_per_second"},

@@ -7,13 +7,16 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from 'cmk-ui-library/lib/i18n'
 
 import TrialModeSelectionTrialStatus from '../components/TrialModeSelectionTrialStatus.vue'
+import { formatRepromptInterval } from '../repromptInterval'
 
-const { trialEndTimestamp, trialLengthDays, freeServicesLimit } = defineProps<{
+const { trialEndTimestamp, trialLengthDays, freeServicesLimit, repromptHours } = defineProps<{
   /** When the trial runs out, as a timestamp. */
   trialEndTimestamp: number
   trialLengthDays: number
   /** Services the free edition monitors once the trial has ended. */
   freeServicesLimit: number
+  /** Hours until the dialog reappears. */
+  repromptHours: number
 }>()
 
 const emit = defineEmits<{
@@ -33,8 +36,12 @@ const { _t } = usei18n()
   >
     {{
       _t(
-        "License verification postponed. The site keeps full features for %{days} days from site creation. Verify your license before then — otherwise the site falls back to the limited free edition (%{services} services). We'll remind you every 7 days.",
-        { days: `${trialLengthDays}`, services: `${freeServicesLimit}` }
+        "License verification postponed. The site keeps full features for %{days} days from site creation. Verify your license before then — otherwise the site falls back to the limited free edition (%{services} services). We'll remind you every %{interval}.",
+        {
+          days: `${trialLengthDays}`,
+          services: `${freeServicesLimit}`,
+          interval: formatRepromptInterval(repromptHours)
+        }
       )
     }}
   </TrialModeSelectionTrialStatus>

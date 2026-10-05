@@ -7,13 +7,16 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from 'cmk-ui-library/lib/i18n'
 
 import TrialModeSelectionTrialStatus from '../components/TrialModeSelectionTrialStatus.vue'
+import { formatRepromptInterval } from '../repromptInterval'
 
-const { trialEndTimestamp, trialLengthDays, freeServicesLimit } = defineProps<{
+const { trialEndTimestamp, trialLengthDays, freeServicesLimit, repromptHours } = defineProps<{
   /** When the trial runs out, as a timestamp. */
   trialEndTimestamp: number
   trialLengthDays: number
   /** Services the free edition monitors once the trial has ended. */
   freeServicesLimit: number
+  /** Hours until the dialog reappears. */
+  repromptHours: number
 }>()
 
 const emit = defineEmits<{
@@ -33,8 +36,12 @@ const { _t } = usei18n()
   >
     {{
       _t(
-        'Trial started without verification. Full features for %{days} days from site creation, then fallback to the limited free edition (%{services} services). While the site is under %{days} days old, the dialog reappears on admin login (at most once per 48h) as another chance to verify or license.',
-        { days: `${trialLengthDays}`, services: `${freeServicesLimit}` }
+        'Trial started without verification. Full features for %{days} days from site creation, then fallback to the limited free edition (%{services} services). While the site is under %{days} days old, the dialog reappears on admin login (at most once every %{interval}) as another chance to verify or license.',
+        {
+          days: `${trialLengthDays}`,
+          services: `${freeServicesLimit}`,
+          interval: formatRepromptInterval(repromptHours)
+        }
       )
     }}
   </TrialModeSelectionTrialStatus>

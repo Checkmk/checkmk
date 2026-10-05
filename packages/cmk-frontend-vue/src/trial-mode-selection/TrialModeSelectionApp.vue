@@ -72,6 +72,7 @@ const {
       :trial-end-timestamp="props.trial_end_timestamp"
       :trial-length-days="props.trial_length_days"
       :free-services-limit="props.free_services_limit"
+      :reprompt-hours="props.license_verification_reprompt_hours"
       @start-monitoring="startMonitoring"
     />
 
@@ -89,6 +90,7 @@ const {
       :trial-end-timestamp="props.trial_end_timestamp"
       :trial-length-days="props.trial_length_days"
       :free-services-limit="props.free_services_limit"
+      :reprompt-hours="props.unverified_trial_reprompt_hours"
       @start-monitoring="startMonitoring"
     />
 

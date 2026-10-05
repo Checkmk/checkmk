@@ -46,6 +46,8 @@ function renderApp(overrides: Partial<TrialModeSelectionProps> = {}) {
       trial_length_days: 30,
       free_services_limit: 750,
       verification_domain: 'analytics.checkmk.com',
+      license_verification_reprompt_hours: 168,
+      unverified_trial_reprompt_hours: 48,
       ...overrides
     }
   })
@@ -224,6 +226,15 @@ describe('TrialModeSelectionApp', () => {
       expect(mockCmkAjax).toHaveBeenCalledTimes(1)
     })
 
+    it('names the reminder interval of the pending activation', async () => {
+      renderApp()
+      await goToLicenseVerification()
+
+      await user.click(screen.getByRole('button', { name: 'Verify later' }))
+
+      expect(await screen.findByText(/We'll remind you every 7 days\./)).toBeInTheDocument()
+    })
+
     it('offers no way back once the license activation is pending', async () => {
       renderApp()
       await goToLicenseVerification()
@@ -341,6 +352,14 @@ describe('TrialModeSelectionApp', () => {
 
       expect(screen.getByText('Welcome to your new Checkmk site')).toBeInTheDocument()
       expect(mockCmkAjax).not.toHaveBeenCalled()
+    })
+
+    it('names the reminder interval of the unverified trial', async () => {
+      renderApp({ offline: true })
+
+      await continueOffline()
+
+      expect(await screen.findByText(/at most once every 48 hours/)).toBeInTheDocument()
     })
 
     it('saves the unverified trial and shows it on Continue as offline trial', async () => {

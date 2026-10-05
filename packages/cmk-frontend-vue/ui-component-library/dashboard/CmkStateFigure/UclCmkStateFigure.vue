@@ -56,7 +56,7 @@ export const panelConfig = {
   width: {
     type: 'number' as const,
     title: 'Width (px)',
-    help: 'The measured width the frame hands to the figure.',
+    help: 'The measured width the frame hands to the figure. Drag the corner of the preview to change it.',
     initialState: 300
   },
   height: {
@@ -81,7 +81,8 @@ import {
   UclDetailPageComponent,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel
+  UclPropertiesPanel,
+  UclResizablePreview
 } from '@ucl/_ucl/components/detail-page'
 import { computed } from 'vue'
 
@@ -118,7 +119,7 @@ const value = computed<ObjectState>(() => ({
     <UclDetailPageHeader>CmkStateFigure</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <div class="ucl-cmk-state-figure__container">
+      <UclResizablePreview v-model:width="propState.width" v-model:height="propState.height">
         <CmkStateFigure
           :value="value"
           :width="Math.max(0, propState.width)"
@@ -126,7 +127,7 @@ const value = computed<ObjectState>(() => ({
           :filters="{}"
           :interactive="propState.linked"
         />
-      </div>
+      </UclResizablePreview>
 
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" />
@@ -138,10 +139,3 @@ const value = computed<ObjectState>(() => ({
     <UclDetailPageAccessibility :data="[]" />
   </UclDetailPageLayout>
 </template>
-
-<style scoped>
-.ucl-cmk-state-figure__container {
-  display: inline-block;
-  border: 1px solid var(--ucl-elements-border-color);
-}
-</style>

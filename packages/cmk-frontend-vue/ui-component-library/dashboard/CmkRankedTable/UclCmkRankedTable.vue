@@ -37,8 +37,8 @@ export const panelConfig = {
   containerWidth: {
     type: 'number' as const,
     title: 'Container width (px)',
-    help: 'Width of the box around the table, 0 for the full width. Text cells truncate before any figure does.',
-    initialState: 0
+    help: 'Width of the box around the table. Text cells truncate before any figure does. Drag the corner of the preview to change it.',
+    initialState: 600
   },
   longHostNames: {
     type: 'boolean' as const,
@@ -136,7 +136,8 @@ import {
   UclDetailPageComponent,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel
+  UclPropertiesPanel,
+  UclResizablePreview
 } from '@ucl/_ucl/components/detail-page'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import { computed, ref } from 'vue'
@@ -249,12 +250,9 @@ function onCellClick(column: RankedTableColumn, row: RankedTableRow): void {
     <UclDetailPageHeader>CmkRankedTable</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <div
-        class="ucl-cmk-ranked-table__container"
-        :style="{
-          height: `${Math.max(0, propState.containerHeight)}px`,
-          ...(propState.containerWidth > 0 ? { width: `${propState.containerWidth}px` } : {})
-        }"
+      <UclResizablePreview
+        v-model:width="propState.containerWidth"
+        v-model:height="propState.containerHeight"
       >
         <CmkRankedTable
           :columns="columns"
@@ -262,7 +260,7 @@ function onCellClick(column: RankedTableColumn, row: RankedTableRow): void {
           :bar-color="propState.barColor"
           @cell-click="onCellClick"
         />
-      </div>
+      </UclResizablePreview>
       <CmkParagraph v-if="lastCellClick">Last cellClick: {{ lastCellClick }}</CmkParagraph>
 
       <template #properties>
@@ -275,14 +273,3 @@ function onCellClick(column: RankedTableColumn, row: RankedTableRow): void {
     <UclDetailPageAccessibility :data="[]" />
   </UclDetailPageLayout>
 </template>
-
-<style scoped>
-.ucl-cmk-ranked-table__container {
-  /* The preview area centers its children, so claim the full width explicitly --
-     otherwise the box shrinks to the text columns and leaves the bar no room. */
-  width: 100%;
-  overflow: hidden;
-  resize: both;
-  border: 1px solid var(--ucl-elements-border-color);
-}
-</style>

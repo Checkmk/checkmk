@@ -78,7 +78,7 @@ export const panelConfig = {
   width: {
     type: 'number' as const,
     title: 'Width (px)',
-    help: 'The measured width the frame hands to the figure.',
+    help: 'The measured width the frame hands to the figure. Drag the corner of the preview to change it.',
     initialState: 300
   },
   height: {
@@ -106,7 +106,8 @@ import {
   UclDetailPageComponent,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel
+  UclPropertiesPanel,
+  UclResizablePreview
 } from '@ucl/_ucl/components/detail-page'
 import { computed } from 'vue'
 
@@ -196,7 +197,7 @@ const value = computed<Gauge>(() => {
     <UclDetailPageHeader>CmkGaugeFigure</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <div class="ucl-cmk-gauge-figure__container">
+      <UclResizablePreview v-model:width="propState.width" v-model:height="propState.height">
         <CmkGaugeFigure
           v-if="propState.minimum < propState.maximum"
           :value="value"
@@ -205,7 +206,7 @@ const value = computed<Gauge>(() => {
           :filters="{}"
           :interactive="propState.linked"
         />
-      </div>
+      </UclResizablePreview>
 
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" />
@@ -217,10 +218,3 @@ const value = computed<Gauge>(() => {
     <UclDetailPageAccessibility :data="[]" />
   </UclDetailPageLayout>
 </template>
-
-<style scoped>
-.ucl-cmk-gauge-figure__container {
-  display: inline-block;
-  border: 1px solid var(--ucl-elements-border-color);
-}
-</style>

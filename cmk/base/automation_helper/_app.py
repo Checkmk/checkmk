@@ -334,7 +334,7 @@ def _execute_automation_endpoint(
             case ABCAutomationResult():
                 return AutomationResponse(
                     serialized_result_or_error_code=result_or_error_code.serialize(
-                        cmk_version.Version.from_str(cmk_version.__version__)
+                        cmk_version.__version__
                     ),
                     stdout=buffer_stdout.getvalue(),
                     stderr=buffer_stderr.getvalue(),

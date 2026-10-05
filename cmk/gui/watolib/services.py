@@ -1367,7 +1367,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         )
 
     def _store_last_preview(self, result: ServiceDiscoveryPreviewResult) -> None:
-        self._preview_store.write_obj(result.serialize(Version.from_str(__version__)))
+        self._preview_store.write_obj(result.serialize(__version__))
 
     def _load_last_preview(self) -> tuple[int, ServiceDiscoveryPreviewResult] | None:
         try:

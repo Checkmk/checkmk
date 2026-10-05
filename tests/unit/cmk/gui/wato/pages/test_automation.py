@@ -32,10 +32,11 @@ class ResultTest(ABCAutomationResult):
     field_2: str | None
 
     @override
-    def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
+    def serialize(self, for_cmk_version: str) -> SerializedResult:
         return (
             self._default_serialize()
-            if for_cmk_version >= cmk_version.Version.from_str("3.0.0b1")
+            if cmk_version.Version.from_str(for_cmk_version)
+            >= cmk_version.Version.from_str("3.0.0b1")
             else SerializedResult(repr((self.field_1,)))
         )
 

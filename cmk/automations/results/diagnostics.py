@@ -205,7 +205,7 @@ class DiagSpecialAgentResult(ABCAutomationResult):
         return AutomationID("diag-special-agent")
 
     @override
-    def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
+    def serialize(self, for_cmk_version: str) -> SerializedResult:
         return SerializedResult(
             json.dumps(
                 {

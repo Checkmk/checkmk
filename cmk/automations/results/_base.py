@@ -14,7 +14,6 @@ from ast import literal_eval
 from dataclasses import astuple, dataclass
 from typing import override, TypeVar
 
-from cmk.ccc import version as cmk_version
 from cmk.ccc.plugin_registry import Registry
 from cmk.ruleset_matcher.labels import HostLabelValueDict
 
@@ -42,8 +41,13 @@ _DeserializedType = TypeVar("_DeserializedType", bound="ABCAutomationResult")
 class ABCAutomationResult(ABC):
     def serialize(
         self,
-        for_cmk_version: cmk_version.Version,  # used to stay compatible with older central sites  # noqa: ARG002
+        for_cmk_version: str,  # noqa: ARG002
     ) -> SerializedResult:
+        """Serialize the result for a peer running the given Checkmk version.
+
+        The version lets a result stay compatible with older central sites. Results
+        that depend on it parse it with ``cmk.ccc.version.Version.from_str``.
+        """
         return self._default_serialize()
 
     @classmethod

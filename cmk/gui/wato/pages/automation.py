@@ -220,7 +220,7 @@ class PageAutomation(AjaxPage):
             return (
                 result_type_registry[cmk_command]
                 .deserialize(serialized_result)
-                .serialize(cmk_version_of_remote_automation_source(request))
+                .serialize(str(cmk_version_of_remote_automation_source(request)))
             )
         except SyntaxError as e:
             msg = get_local_automation_failure_message(

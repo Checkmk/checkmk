@@ -79,7 +79,7 @@ class ServiceDiscoveryResult(ABCAutomationResult):
         return {k: _deserialize_discovery_report(v) for k, v in serialized.items()}
 
     @override
-    def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
+    def serialize(self, for_cmk_version: str) -> SerializedResult:
         return SerializedResult(repr(self._to_dict()))
 
     @classmethod
@@ -110,13 +110,14 @@ class ServiceDiscoveryPreviewResult(ABCAutomationResult):
     config_warnings: Sequence[str]
 
     @override
-    def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
+    def serialize(self, for_cmk_version: str) -> SerializedResult:
+        version = cmk_version.Version.from_str(for_cmk_version)
         # Before 3.0.0b1 source_results was a Mapping keyed by source ident. The
         # ident is no longer available here; emit synthetic keys so an older peer's
         # value-only consumers keep working.
         source_results: Mapping[int, SourceResult] | Sequence[SourceResult] = (
             dict(enumerate(self.source_results))
-            if for_cmk_version < cmk_version.Version.from_str("3.0.0b1")
+            if version < cmk_version.Version.from_str("3.0.0b1")
             else self.source_results
         )
         return SerializedResult(
@@ -197,7 +198,7 @@ class AutodiscoveryResult(ABCAutomationResult):
         return {k: _deserialize_discovery_report(v) for k, v in serialized.items()}
 
     @override
-    def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
+    def serialize(self, for_cmk_version: str) -> SerializedResult:
         return SerializedResult(repr((self._hosts_to_dict(), self.changes_activated)))
 
     @classmethod

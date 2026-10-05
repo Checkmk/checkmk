@@ -14,7 +14,6 @@ from cmk.automations.results._base import (
     result_type_registry,
     SerializedResult,
 )
-from cmk.ccc import version as cmk_version
 from cmk.events.notify_types import NotifyAnalysisInfo, NotifyBulks
 
 from ..types import AutomationID
@@ -88,7 +87,7 @@ class NotifyResult(ABCAutomationResult):
     @override
     def serialize(
         self,
-        for_cmk_version: cmk_version.Version,  # used to stay compatible with older central sites
+        for_cmk_version: str,
     ) -> SerializedResult:
         return SerializedResult(asdict(self))
 

@@ -181,20 +181,20 @@ class Transport:
     def _answer(self, command: str, args: Sequence[str]) -> SerializedResult:
         match command:
             case "service-discovery-preview":
-                return self.preview.serialize(_THIS_VERSION)
+                return self.preview.serialize(__version__)
             case "set-autochecks-v2":
-                return SetAutochecksV2Result().serialize(_THIS_VERSION)
+                return SetAutochecksV2Result().serialize(__version__)
             case "update-host-labels":
-                return UpdateHostLabelsResult().serialize(_THIS_VERSION)
+                return UpdateHostLabelsResult().serialize(__version__)
             case "get-services-labels":
                 # args are [host_name, *service_names]; the caller indexes the result by name.
                 return GetServicesLabelsResult(labels={name: {} for name in args[1:]}).serialize(
-                    _THIS_VERSION
+                    __version__
                 )
             case "analyze-service-rule-matches":
-                return AnalyzeServiceRuleMatchesResult(results={}).serialize(_THIS_VERSION)
+                return AnalyzeServiceRuleMatchesResult(results={}).serialize(__version__)
             case "service-discovery":
-                return ServiceDiscoveryResult(hosts={}).serialize(_THIS_VERSION)
+                return ServiceDiscoveryResult(hosts={}).serialize(__version__)
             case _:
                 raise AssertionError(f"unexpected automation {command!r}")
 

@@ -73,9 +73,7 @@ def _mode_automation(
         if isinstance(result, AutomationError):
             return result
         with suppress(IOError):
-            sys.stdout.write(
-                result.serialize(cmk_version.Version.from_str(cmk_version.__version__)) + "\n"
-            )
+            sys.stdout.write(result.serialize(cmk_version.__version__) + "\n")
             sys.stdout.flush()
         return 0
 

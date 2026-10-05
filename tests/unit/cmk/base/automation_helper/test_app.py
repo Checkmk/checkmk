@@ -34,7 +34,6 @@ from cmk.base.automation_helper._app import (
 from cmk.base.automation_helper._cache import Cache, CacheError
 from cmk.base.automation_helper._config import Config, ReloaderConfig, ServerConfig, WatcherConfig
 from cmk.base.automations.automations import AutomationError
-from cmk.ccc.version import Version
 from tests.testlib.common.utils import wait_until
 
 
@@ -45,7 +44,7 @@ class _DummyAutomationResult(ABCAutomationResult):
         return AutomationID("dummy")
 
     @override
-    def serialize(self, for_cmk_version: Version) -> SerializedResult:
+    def serialize(self, for_cmk_version: str) -> SerializedResult:
         return SerializedResult("dummy_serialized")
 
 

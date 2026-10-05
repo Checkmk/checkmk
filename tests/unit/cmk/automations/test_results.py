@@ -60,7 +60,7 @@ def test_serialization() -> None:
         },
     )
     assert automation_res_test == AutomationResultTest.deserialize(
-        automation_res_test.serialize(cmk_version.Version.from_str(cmk_version.__version__))
+        automation_res_test.serialize(cmk_version.__version__)
     )
 
 
@@ -72,9 +72,7 @@ class TestDiscoveryResult:
 
     def test_serialization(self) -> None:
         assert ServiceDiscoveryResult.deserialize(
-            ServiceDiscoveryResult(self.HOSTS).serialize(
-                cmk_version.Version.from_str(cmk_version.__version__)
-            )
+            ServiceDiscoveryResult(self.HOSTS).serialize(cmk_version.__version__)
         ) == ServiceDiscoveryResult(self.HOSTS)
 
 
@@ -111,9 +109,7 @@ class TestTryDiscoveryResult:
             config_warnings=["Don't leave your luggage unattended."],
         )
         assert (
-            ServiceDiscoveryPreviewResult.deserialize(
-                result.serialize(cmk_version.Version.from_str(cmk_version.__version__))
-            )
+            ServiceDiscoveryPreviewResult.deserialize(result.serialize(cmk_version.__version__))
             == result
         )
 
@@ -135,9 +131,7 @@ class TestScanParentsResult:
     def test_serialization_roundtrip(self) -> None:
         assert (
             ScanParentsResult.deserialize(
-                self.DESERIALIZED_RESULT.serialize(
-                    cmk_version.Version.from_str(cmk_version.__version__)
-                )
+                self.DESERIALIZED_RESULT.serialize(cmk_version.__version__)
             )
             == self.DESERIALIZED_RESULT
         )
@@ -211,7 +205,5 @@ class TestDiagSpecialAgentInput:
 
 def test_notify_result_serialization() -> None:
     original = NotifyResult(exit_code=0, output="All good!")
-    deserialized = NotifyResult.deserialize(
-        original.serialize(cmk_version.Version.from_str(cmk_version.__version__))
-    )
+    deserialized = NotifyResult.deserialize(original.serialize(cmk_version.__version__))
     assert original == deserialized

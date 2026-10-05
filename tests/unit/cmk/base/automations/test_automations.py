@@ -34,7 +34,6 @@ from cmk.base.automations.automations import (
 from cmk.base.config import LoadingResult
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.version import Version
 from cmk.ruleset_matcher.labels import LabelSource
 from cmk.ruleset_matcher.matcher import RuleSpec
 from tests.testlib.unit.automations import make_common_state
@@ -158,7 +157,7 @@ class _Result(ABCAutomationResult):
         return AutomationID("dummy")
 
     @override
-    def serialize(self, for_cmk_version: Version) -> SerializedResult:
+    def serialize(self, for_cmk_version: str) -> SerializedResult:
         return SerializedResult("dummy")
 
 

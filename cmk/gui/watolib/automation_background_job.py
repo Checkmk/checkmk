@@ -223,7 +223,7 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
                 path,
                 result_type_registry[automation_cmd]
                 .deserialize(serialized_result)
-                .serialize(for_cmk_version=for_cmk_version),
+                .serialize(for_cmk_version=str(for_cmk_version)),
             )
         except SyntaxError as e:
             msg = get_local_automation_failure_message(

@@ -223,7 +223,7 @@ def patch_omd_version(test_edition: cmk_version.Edition) -> Iterator[None]:
         mp.setattr(
             cmk_version,
             "omd_version",
-            lambda *args, **kw: f"{cmk_version.__version__}.{test_edition.long}",
+            lambda _omd_root: f"{cmk_version.__version__}.{test_edition.long}",
         )
         cmk_version.edition.cache_clear()
         yield
@@ -287,10 +287,14 @@ def fixture_quiesce_licensing(monkeypatch_module: pytest.MonkeyPatch) -> None:
     """
     monkeypatch_module.setattr(
         "cmk.licensing.registry._get_licensing_handler_factory",
-        lambda omd_root: _DummyLicensingHandler.make,
+        lambda _omd_root: _DummyLicensingHandler.make,
     )
-    monkeypatch_module.setattr("cmk.gui.top_heading.show_license_expiry", lambda x, y: None)
-    monkeypatch_module.setattr("cmk.gui.top_heading.show_license_banner", lambda x, y: None)
+    monkeypatch_module.setattr(
+        "cmk.gui.top_heading.show_license_expiry", lambda _writer, _user_role_ids: None
+    )
+    monkeypatch_module.setattr(
+        "cmk.gui.top_heading.show_license_banner", lambda _writer, _user_role_ids: None
+    )
 
 
 @pytest.fixture(name="patch_theme")
@@ -300,21 +304,21 @@ def fixture_patch_theme() -> Iterator[None]:
 
 @pytest.fixture()
 def flask_app(
-    patch_omd_site: None,
-    use_fakeredis_client: None,
-    load_plugins: None,
+    patch_omd_site: None,  # noqa: ARG001
+    use_fakeredis_client: None,  # noqa: ARG001
+    load_plugins: None,  # noqa: ARG001
 ) -> Iterator[Flask]:
     yield from create_flask_app()
 
 
 @pytest.fixture()
-def request_context(flask_app: Flask) -> Iterator[None]:
+def request_context(flask_app: Flask) -> Iterator[None]:  # noqa: ARG001
     """Empty fixture. Invokes usage of the `flask_app` fixture."""
     yield
 
 
 @pytest.fixture()
-def load_config(request_context: None) -> Iterator[Config]:
+def load_config(request_context: None) -> Iterator[Config]:  # noqa: ARG001
     yield from perform_load_config()
 
 
@@ -436,8 +440,8 @@ def fixture_fake_fleet(
     query_log: QueryLog,
     set_config: SetConfig,
     logged_in_admin_wsgi_app: WebTestAppForCMK,
-    quiesce_licensing: None,
-    patch_theme: None,
+    quiesce_licensing: None,  # noqa: ARG001
+    patch_theme: None,  # noqa: ARG001
 ) -> Iterator[WebTestAppForCMK]:
     """A logged-in GUI whose configured sites are all answered by the fake fleet."""
     sites = build_sites(
@@ -460,9 +464,9 @@ def fixture_fleet_builder(
     fake_version: FakeVersion,
     remote_latency: float,
     set_config: SetConfig,
-    logged_in_admin_wsgi_app: WebTestAppForCMK,
-    quiesce_licensing: None,
-    patch_theme: None,
+    logged_in_admin_wsgi_app: WebTestAppForCMK,  # noqa: ARG001
+    quiesce_licensing: None,  # noqa: ARG001
+    patch_theme: None,  # noqa: ARG001
 ) -> FleetBuilder:
     """Hand back a way to stand up a differently shaped fleet inside a test.
 

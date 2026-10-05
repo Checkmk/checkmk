@@ -484,18 +484,6 @@ metric_average_rule_hit_ratio = metrics.Metric(
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.LIGHT_GRAY,
 )
-metric_used_dhcp_leases = metrics.Metric(
-    name="used_dhcp_leases",
-    title=Title("Used DHCP leases"),
-    unit=UNIT_COUNTER,
-    color=metrics.Color.GRAY,
-)
-metric_pending_dhcp_leases = metrics.Metric(
-    name="pending_dhcp_leases",
-    title=Title("Pending DHCP leases"),
-    unit=UNIT_COUNTER,
-    color=metrics.Color.CYAN,
-)
 metric_channel_utilization = metrics.Metric(
     name="channel_utilization",
     title=Title("Channel utilization"),

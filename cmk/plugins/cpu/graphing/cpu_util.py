@@ -51,7 +51,7 @@ metric_nice = metrics.Metric(
 )
 metric_streams = metrics.Metric(
     name="streams",
-    title=Title("Streams"),
+    title=Title("Streams CPU utilization"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.BLUE,
 )

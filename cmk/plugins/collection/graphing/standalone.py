@@ -199,7 +199,7 @@ metric_collectors_failing = metrics.Metric(
 )
 metric_num_streams = metrics.Metric(
     name="num_streams",
-    title=Title("Streams"),
+    title=Title("Number of streams"),
     unit=UNIT_COUNTER,
     color=metrics.Color.PURPLE,
 )

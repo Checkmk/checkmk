@@ -241,3 +241,21 @@ def test_check_db2_counters_no_perl() -> None:
     # Act
     with pytest.raises(IgnoreResultsError, match="Perl"):
         list(_check_db2_counters({}, "db1taddm:CMDBS6", {}, section))
+
+
+@pytest.mark.xfail(strict=True, raises=IndexError, reason="Crash group 4824: IndexError")
+def test_check_counter_without_value() -> None:
+    section = parse_db2_counters(
+        [
+            ["TIMESTAMP", "1782788560"],
+            ["tsminst1:TSMDB1", "deadlocks"],
+            ["TIMESTAMP", "1782788576"],
+            ["db2inst2:CNDB", "deadlocks", "0"],
+            ["db2inst2:CNDB", "lockwaits", "156"],
+        ]
+    )
+
+    assert list(_check_db2_counters({}, "tsminst1:TSMDB1", {}, section)) == [
+        Result(state=State.UNKNOWN, summary="Deadlocks: no value reported"),
+        Result(state=State.UNKNOWN, summary="Lockwaits: no value reported"),
+    ]

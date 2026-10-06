@@ -27,6 +27,7 @@ import NtopWizard from '../Wizard/wizards/ntop/NtopWizard.vue'
 import OtherWizard from '../Wizard/wizards/other/OtherWizard.vue'
 import ServicesOverviewWizard from '../Wizard/wizards/services/ServicesOverviewWizard.vue'
 import ViewWizardWrapper from '../Wizard/wizards/view/ViewWizardWrapper.vue'
+import { wizardSlideInSize } from './utils'
 
 interface AllWizardsProps {
   tick: number
@@ -89,7 +90,7 @@ const handleAddEditWidget = (
       :aria-label="
         props.editWidgetId ? _t('Edit widget properties') : _t('Add widget to dashboard')
       "
-      :size="['other', 'ntop', 'network_flow'].includes(selectedWizard) ? 'small' : 'medium'"
+      :size="wizardSlideInSize(selectedWizard)"
     >
       <AlertsAndNotificationsWizard
         v-if="selectedWizard === 'alerts_notifications'"

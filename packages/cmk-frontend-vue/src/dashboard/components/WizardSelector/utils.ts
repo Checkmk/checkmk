@@ -85,3 +85,13 @@ export function widgetTypeToSelectorMatcher(
     }
   }
 }
+
+export function wizardSlideInSize(wizard: string): 'small' | 'medium' | 'large' {
+  if (['other', 'ntop', 'network_flow'].includes(wizard)) {
+    return 'small'
+  }
+  if (wizard === 'views') {
+    return 'large'
+  }
+  return 'medium'
+}

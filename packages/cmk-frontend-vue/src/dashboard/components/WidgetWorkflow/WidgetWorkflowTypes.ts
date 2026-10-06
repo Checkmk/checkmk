@@ -132,15 +132,18 @@ export function getDashboardWidgetWorkflows(
   return workflows
 }
 
-export type DashboardWidgetWorkflowKey =
-  | 'metrics_graphs'
-  | 'link_custom_graph'
-  | 'views'
-  | 'host_site_overview'
-  | 'service_overview'
-  | 'hw_sw_inventory'
-  | 'alerts_notifications'
-  | 'event_stats'
-  | 'other'
-  | 'ntop'
-  | 'network_flow'
+export const DASHBOARD_WIDGET_WORKFLOW_KEYS = [
+  'metrics_graphs',
+  'link_custom_graph',
+  'views',
+  'host_site_overview',
+  'service_overview',
+  'hw_sw_inventory',
+  'alerts_notifications',
+  'event_stats',
+  'other',
+  'ntop',
+  'network_flow'
+] as const
+
+export type DashboardWidgetWorkflowKey = (typeof DASHBOARD_WIDGET_WORKFLOW_KEYS)[number]

@@ -113,10 +113,10 @@ perfometer_if_unicast_octets = perfometers.Bidirectional(
 
 graph_bandwidth_translated = graphs.Bidirectional(
     name="bandwidth_translated",
-    title=Title("Bandwidth"),
+    title=Title("Data received and sent"),
     lower=graphs.Graph(
         name="bandwidth_translated_out",
-        title=Title("Bandwidth"),
+        title=Title("Data received and sent"),
         compound_lines=[
             metrics.Product(
                 Title("Output bandwidth"),
@@ -166,7 +166,7 @@ graph_bandwidth_translated = graphs.Bidirectional(
     ),
     upper=graphs.Graph(
         name="bandwidth_translated_in",
-        title=Title("Bandwidth"),
+        title=Title("Data received and sent"),
         compound_lines=[
             metrics.Product(
                 Title("Input bandwidth"),

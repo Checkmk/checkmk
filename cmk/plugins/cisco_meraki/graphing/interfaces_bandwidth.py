@@ -72,10 +72,10 @@ perfometer_if_bps_fallback = perfometers.Bidirectional(
 
 graph_bandwidth = graphs.Bidirectional(
     name="bandwidth",
-    title=Title("Bandwidth"),
+    title=Title("Interface bandwidth"),
     lower=graphs.Graph(
         name="bandwidth_out",
-        title=Title("Bandwidth"),
+        title=Title("Interface bandwidth"),
         compound_lines=["if_out_bps"],
         simple_lines=[
             metrics.WarningOf("if_out_bps"),
@@ -84,7 +84,7 @@ graph_bandwidth = graphs.Bidirectional(
     ),
     upper=graphs.Graph(
         name="bandwidth_in",
-        title=Title("Bandwidth"),
+        title=Title("Interface bandwidth"),
         compound_lines=["if_in_bps"],
         simple_lines=[
             metrics.WarningOf("if_in_bps"),

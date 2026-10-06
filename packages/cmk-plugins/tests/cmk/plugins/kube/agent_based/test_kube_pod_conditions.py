@@ -359,11 +359,6 @@ def test_check_handles_unknown_status() -> None:
     ]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason="Crash report b694e63c-662e-11f1-a2f7-bc241139f626: ValueError",
-)
 def test_check_transition_time_in_the_future() -> None:
     """The clock of the cluster may run ahead of the clock of the Checkmk server,
     so a condition appears to have changed in the future.

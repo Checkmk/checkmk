@@ -788,22 +788,15 @@ class InterfaceWithRatesAndAverages:
             )
         return RateWithAverage(
             rate=rate,
-            average=(
-                Average(
-                    value=average,
-                    backlog=averaging_params.backlog_minutes,
-                )
-                if (  # type: ignore[redundant-expr]
-                    average := get_average(
-                        value_store=averaging_params.value_store,
-                        key=averaging_params.value_store_key,
-                        time=averaging_params.timestamp,
-                        value=rate,
-                        backlog_minutes=averaging_params.backlog_minutes,
-                    )
-                )
-                is not None
-                else None
+            average=Average(
+                value=get_average(
+                    value_store=averaging_params.value_store,
+                    key=averaging_params.value_store_key,
+                    time=averaging_params.timestamp,
+                    value=rate,
+                    backlog_minutes=averaging_params.backlog_minutes,
+                ),
+                backlog=averaging_params.backlog_minutes,
             ),
         )
 

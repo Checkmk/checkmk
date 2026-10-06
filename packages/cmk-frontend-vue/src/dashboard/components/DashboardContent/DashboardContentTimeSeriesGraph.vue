@@ -23,7 +23,7 @@ import type {
   ProblemGraphContent,
   SingleTimeseriesContent
 } from '@/dashboard/types/widget.ts'
-import { GraphFigure } from '@/graphing'
+import { GraphFigure, type GraphFigureSource } from '@/graphing'
 
 import DashboardContentContainer from './DashboardContentContainer.vue'
 import { createSharedGraphFetcher } from './sharedGraphFetcher.ts'
@@ -53,9 +53,15 @@ const isDiscovering = ref<boolean>(true)
 // backend discovers the shells at page render and the data is fetched per widget instead.
 const cmkToken = useInjectCmkToken()
 const sharedWidgetGraphs = useInjectSharedWidgetGraphs()
-const fetchGraph = computed(() =>
-  cmkToken === undefined ? undefined : createSharedGraphFetcher(props.widget_id, cmkToken)
-)
+const figureSource = computed<GraphFigureSource | null>(() => {
+  if (shell.value === null) {
+    return null
+  }
+  const internal = shell.value.internal
+  return cmkToken === undefined
+    ? { type: 'definition', internal }
+    : { type: 'fetch', key: internal, fetch: createSharedGraphFetcher(props.widget_id, cmkToken) }
+})
 
 const singleContext = computed(() => {
   const filters = props.effective_filter_context.filters
@@ -348,8 +354,8 @@ onMounted(() => {
         <CmkHtml :html="noDataMessage" />
       </div>
       <GraphFigure
-        v-else-if="shell"
-        :internal="shell.internal"
+        v-else-if="shell && figureSource"
+        :source="figureSource"
         :y-axis="shell.y_axis"
         :timerange="timerange"
         :combination-mode="combinationMode"
@@ -362,7 +368,6 @@ onMounted(() => {
         :min-value-axis-width="valueAxisWidth"
         :show-burger-menu="showBurgerMenu"
         :add-to="addTo"
-        :fetch-graph="fetchGraph"
       />
     </div>
   </DashboardContentContainer>

@@ -5,17 +5,17 @@
  */
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
-import type { GraphDataFetcher } from '@/graphing'
+import type { GraphFetch } from '@/graphing'
 
 /**
  * Builds the fetcher a graph widget uses on a shared (token-authenticated) dashboard.
  *
- * The graph definition is deliberately not sent: the endpoint re-resolves the named widget against
+ * No graph definition is sent: the endpoint re-resolves the named widget against
  * the dashboard the token was issued for, so a token holder cannot fetch anything the dashboard
  * does not already show.
  */
-export function createSharedGraphFetcher(widgetId: string, cmkToken: string): GraphDataFetcher {
-  return async (_definition, params) => {
+export function createSharedGraphFetcher(widgetId: string, cmkToken: string): GraphFetch {
+  return async (params) => {
     const fetched = unwrap(
       await client.POST('/domain-types/dashboard/actions/fetch-widget-graph-data/invoke', {
         params: { header: { 'Content-Type': 'application/json' } },

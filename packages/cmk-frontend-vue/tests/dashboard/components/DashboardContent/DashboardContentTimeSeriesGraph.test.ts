@@ -22,7 +22,7 @@ import { makeContentProps } from '@tests/dashboard/contentProps'
 vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
   default: {
     props: [
-      'internal',
+      'source',
       'timerange',
       'combinationMode',
       'showLegend',
@@ -33,19 +33,18 @@ vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
       'showMargin',
       'minValueAxisWidth',
       'showBurgerMenu',
-      'addTo',
-      'fetchGraph'
+      'addTo'
     ],
     template: `<div
       data-testid="graph-figure"
       :data-show-pin="showPin"
-      :data-has-fetch-graph="fetchGraph !== undefined"
+      :data-source-type="source.type"
       :data-show-time-axis="showTimeAxis"
       :data-show-value-axis="showValueAxis"
       :data-show-margin="showMargin"
       :data-min-value-axis-width="minValueAxisWidth"
       :data-show-burger-menu="showBurgerMenu"
-    >{{ internal }}</div>`
+    >{{ source.type === 'definition' ? source.internal : source.key }}</div>`
   }
 }))
 
@@ -301,7 +300,7 @@ describe('graph widget on a shared dashboard', () => {
     })
 
     const figure = await screen.findByTestId('graph-figure')
-    expect(figure.getAttribute('data-has-fetch-graph')).toBe('true')
+    expect(figure.getAttribute('data-source-type')).toBe('fetch')
   })
 })
 
@@ -320,14 +319,14 @@ describe('createSharedGraphFetcher', () => {
       response: new Response('{}', { status: 200 })
     } as never)
 
-    const fetched = await createSharedGraphFetcher('w1', CMK_TOKEN)(
-      { internal: '{"graphs": []}' },
-      {
-        fetchWindow: { start: 1_000, end: 2_000, step: 60 },
-        consolidationFunction: 'max',
-        combinationMode: null
-      }
-    )
+    const fetched = await createSharedGraphFetcher(
+      'w1',
+      CMK_TOKEN
+    )({
+      fetchWindow: { start: 1_000, end: 2_000, step: 60 },
+      consolidationFunction: 'max',
+      combinationMode: null
+    })
 
     // The body is matched exactly: the graph definition must not be part of it.
     expect(postSpy).toHaveBeenCalledWith(

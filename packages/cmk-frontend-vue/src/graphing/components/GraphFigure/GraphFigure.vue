@@ -71,7 +71,10 @@ const plotWidth = computed(() =>
 const requestedTimeRange = ref<RequestedTimeRange>(computeEpochTimeRange(props.timerange))
 const zoomSessionActive = ref(false)
 
-const graphDefinitions = computed(() => [{ internal: props.internal }])
+const sourceKey = computed(() =>
+  props.source.type === 'definition' ? props.source.internal : props.source.key
+)
+const graphDefinitions = computed(() => [{ internal: sourceKey.value }])
 const timeAxis = continuousTimeAxis()
 
 const { graphs, isLoading, error, partialErrors, warnings, reload } = useGraphData(
@@ -81,7 +84,10 @@ const { graphs, isLoading, error, partialErrors, warnings, reload } = useGraphDa
   () => [DEFAULT_CONSOLIDATION_FN],
   () => props.combinationMode,
   {
-    fetchGraph: props.fetchGraph ?? fetchGraphDataByDefinition,
+    fetchGraph: (definition, params) =>
+      props.source.type === 'definition'
+        ? fetchGraphDataByDefinition(definition, params)
+        : props.source.fetch(params),
     planFetchWindow: timeAxis.planFetchWindow
   }
 )
@@ -182,7 +188,7 @@ const {
 )
 
 watch(
-  () => [props.internal, props.combinationMode, JSON.stringify(props.timerange)],
+  () => [sourceKey.value, props.combinationMode, JSON.stringify(props.timerange)],
   () => {
     zoomSessionActive.value = false
     abandonInspection()

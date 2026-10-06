@@ -5,16 +5,33 @@
  */
 import type { AddTo, YAxis } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
 
-import type { GraphCombinationMode, GraphDataFetcher } from '../../composables/useGraphData'
+import type {
+  FetchedGraph,
+  GraphCombinationMode,
+  GraphFetchParams
+} from '../../composables/useGraphData'
 import type { TimerangeModel } from './computeEpochTimeRange'
 
+/** Fetches the figure's data for one request; the figure picks the window and the resolution. */
+export type GraphFetch = (params: GraphFetchParams) => Promise<FetchedGraph>
+
+/** Where the figure's data comes from: a discovered graph definition, or a fetch of the host. */
+export type GraphFigureSource =
+  | { type: 'definition'; internal: string }
+  | {
+      type: 'fetch'
+      /** Names what the fetch answers; a change resets the figure like a new definition. */
+      key: string
+      fetch: GraphFetch
+    }
+
 /**
- * The embedding contract of the self-managed graph figure: the host provides a discovered
- * graph shell (its internal definition) and display options; the figure owns its data fetch,
- * auto-refresh, resizing, and zoom/pan interaction, and emits nothing.
+ * The embedding contract of the self-managed graph figure: the host provides the data source and
+ * display options; the figure owns its data fetch, auto-refresh, resizing, and zoom/pan
+ * interaction, and emits nothing.
  */
 export interface GraphFigureProps {
-  internal: string
+  source: GraphFigureSource
   timerange: TimerangeModel
   combinationMode?: GraphCombinationMode | null
   showLegend?: boolean
@@ -29,10 +46,5 @@ export interface GraphFigureProps {
   minValueAxisWidth?: number | undefined
   /** Insets the whole figure (header, plot and legend) from its container's edge. */
   showMargin?: boolean
-  /**
-   * Called for every fetch to get the graph's data; defaults to posting the definition to the
-   * session-authenticated graph fetch endpoint.
-   */
-  fetchGraph?: GraphDataFetcher | undefined
   yAxis?: YAxis | null
 }

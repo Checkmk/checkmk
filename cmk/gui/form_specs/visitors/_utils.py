@@ -60,7 +60,7 @@ def localize(localizable: SupportsLocalize | None) -> str:
     return "" if localizable is None else localizable.localize(translate_to_current_language)
 
 
-def optional_validation[ModelT](
+def run_validators[ModelT](
     validators: Sequence[Callable[[ModelT], object]], raw_value: Any
 ) -> list[str]:
     validation_errors = []
@@ -93,7 +93,7 @@ def compute_validation_errors[ModelT](
         shared_type_defs.ValidationMessage(
             location=[], message=msg, replacement_value=replacement_value()
         )
-        for msg in optional_validation(validators, raw_value)
+        for msg in run_validators(validators, raw_value)
     ]
 
 

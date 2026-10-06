@@ -16,9 +16,9 @@ from cmk.gui.form_specs import (
     get_title_and_help,
     IncomingData,
     InvalidValue,
-    optional_validation,
     RawDiskData,
     RawFrontendData,
+    run_validators,
 )
 from cmk.gui.form_specs.visitors.validators import build_vue_validators
 from cmk.gui.i18n import _
@@ -135,9 +135,7 @@ class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword, VuePassword]):
         if parsed_value[1] == "explicit_password":
             return [
                 VueComponents.ValidationMessage(location=[], message=msg, replacement_value="")
-                for msg in optional_validation(
-                    compute_validators(self.form_spec), parsed_value[2][1]
-                )
+                for msg in run_validators(compute_validators(self.form_spec), parsed_value[2][1])
             ]
         if parsed_value[1] == "stored_password" and not parsed_value[2][0]:  # type: ignore[redundant-expr]
             return create_validation_error("", Title("No password selected"))

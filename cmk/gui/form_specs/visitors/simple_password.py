@@ -21,7 +21,7 @@ from ._type_defs import DefaultValue, IncomingData, InvalidValue, RawDiskData
 from ._utils import (
     compute_validators,
     get_title_and_help,
-    optional_validation,
+    run_validators,
 )
 from .validators import build_vue_validators
 
@@ -81,7 +81,7 @@ class SimplePasswordVisitor(FormSpecVisitor[SimplePassword, _ParsedValueModel, _
     ) -> list[shared_type_defs.ValidationMessage]:
         return [
             shared_type_defs.ValidationMessage(location=[], message=msg, replacement_value="")
-            for msg in optional_validation(self._validators(), parsed_value)
+            for msg in run_validators(self._validators(), parsed_value)
         ]
 
     @override

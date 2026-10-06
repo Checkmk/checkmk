@@ -30,9 +30,9 @@ from .visitors import (
     IncomingData,
     InvalidValue,
     localize,
-    optional_validation,
     RawDiskData,
     RawFrontendData,
+    run_validators,
     VisitorOptions,
 )
 
@@ -53,7 +53,7 @@ __all__ = [
     "IncomingData",
     "InvalidValue",
     "localize",
-    "optional_validation",
+    "run_validators",
     "parse_and_validate_frontend_data",
     "parse_data_from_field_id",
     "process_validation_errors",

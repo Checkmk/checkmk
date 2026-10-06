@@ -84,6 +84,11 @@ class MapPage(pagetypes.Overridable[MapConfig]):
 
     @override
     @classmethod
+    def type_is_experimental(cls) -> bool:
+        return True
+
+    @override
+    @classmethod
     def page_handlers(cls) -> dict[str, PageHandler]:
         # Maps own all their routes through the SPA (``maps.py``); the generic
         # pagetype list/edit/show pages would collide with that and are unused.

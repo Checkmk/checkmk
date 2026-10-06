@@ -355,6 +355,11 @@ class Base[T_BaseConfig: BaseConfig](abc.ABC):
         return False
 
     @classmethod
+    def type_is_experimental(cls) -> bool:
+        """Whether or not this page type is marked as experimental in the Customize menu"""
+        return False
+
+    @classmethod
     @abc.abstractmethod
     def type_name(cls) -> str: ...
 
@@ -2548,9 +2553,13 @@ def _customize_menu_topics(user_permissions: UserPermissions) -> list[NavItemTop
         if not user.may(f"general.edit_{page_type_.type_name()}"):
             continue
 
+        title = page_type_.phrase("title_plural")
+        if page_type_.type_is_experimental():
+            title = _("%(title)s (experimental)") % {"title": title}
+
         item = NavItemTopicEntry(
             id=page_type_.type_name(),
-            title=page_type_.phrase("title_plural"),
+            title=title,
             url="%ss.py" % page_type_.type_name(),
             sort_index=40 + (index * 10),
             is_show_more=False,

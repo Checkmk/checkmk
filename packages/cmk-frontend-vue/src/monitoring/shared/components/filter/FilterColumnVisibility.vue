@@ -101,7 +101,9 @@ function toggleVisible(row: VisibilityRow): void {
       >
         <CmkMultitoneIcon
           :name="row.visible ? 'eye' : 'eye-crossed-out'"
-          :primary-color="{ custom: row.visible ? 'currentColor' : 'var(--color-mist-grey-60)' }"
+          :primary-color="{
+            custom: row.visible ? 'currentColor' : 'var(--interactive-icon-color-inactive)'
+          }"
           aria-hidden="true"
           style="pointer-events: none"
         />

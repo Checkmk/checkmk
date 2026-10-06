@@ -485,13 +485,7 @@ function tableRowAt(index: number): Row<T> {
 .monitoring-table__row:hover,
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
 .monitoring-table__row:hover :deep(td) {
-  background-color: var(--color-dark-blue-90);
-}
-
-body[data-theme='facelift'] .monitoring-table__row:hover,
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
-body[data-theme='facelift'] .monitoring-table__row:hover :deep(td) {
-  background-color: var(--color-dark-blue-10);
+  background-color: var(--background-row-hover-highlight);
 }
 
 .monitoring-table__spacer {

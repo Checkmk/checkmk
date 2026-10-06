@@ -61,8 +61,8 @@ watch(model, (value) => {
       >
         <CmkMultitoneIcon
           name="columns"
-          :primary-color="{ custom: 'var(--color-light-blue-20)' }"
-          :secondary-color="{ custom: 'var(--color-corporate-green-70)' }"
+          :primary-color="{ custom: 'var(--interactive-icon-color)' }"
+          :secondary-color="{ custom: 'var(--interactive-icon-color-secondary)' }"
           aria-hidden="true"
         />
         <ArrowDown

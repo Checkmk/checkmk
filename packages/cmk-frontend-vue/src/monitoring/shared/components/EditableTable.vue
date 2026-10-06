@@ -194,12 +194,6 @@ defineExpose({
 <style scoped>
 .monitoring-editable-table {
   width: 100%;
-
-  --monitoring-editable-table-row-error-bg: var(--color-dark-red-20);
-}
-
-body[data-theme='modern-dark'] .monitoring-editable-table {
-  --monitoring-editable-table-row-error-bg: var(--color-dark-red-100);
 }
 
 .monitoring-editable-table__table {
@@ -229,28 +223,14 @@ body[data-theme='modern-dark'] .monitoring-editable-table {
     .monitoring-editable-table__row--error
   ):hover
   :deep(td) {
-  background-color: var(--color-light-blue-0);
-}
-
-body[data-theme='modern-dark']
-  .monitoring-editable-table__row:not(
-    .monitoring-editable-table__row--no-hover,
-    .monitoring-editable-table__row--error
-  ):hover,
-body[data-theme='modern-dark']
-  .monitoring-editable-table__row:not(
-    .monitoring-editable-table__row--no-hover,
-    .monitoring-editable-table__row--error
-  ):hover
-  :deep(td) {
-  background-color: var(--color-dark-blue-90);
+  background-color: var(--background-highlight);
 }
 /* stylelint-enable selector-pseudo-class-no-unknown */
 
 .monitoring-editable-table__row--error,
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
 .monitoring-editable-table__row--error :deep(td) {
-  background-color: var(--monitoring-editable-table-row-error-bg);
+  background-color: var(--status-background-error);
 }
 
 .monitoring-editable-table__row-group--dragging {
@@ -259,12 +239,7 @@ body[data-theme='modern-dark']
 
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
 .monitoring-editable-table__row-group--dragging :deep(td) {
-  background-color: var(--color-light-blue-0);
-}
-
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
-body[data-theme='modern-dark'] .monitoring-editable-table__row-group--dragging :deep(td) {
-  background-color: var(--color-dark-blue-90);
+  background-color: var(--background-highlight);
 }
 
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */

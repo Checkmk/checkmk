@@ -343,58 +343,32 @@ const highlightStyle = computed<CSSProperties>(() =>
 
 /* The accent bar holds across both themes; only the value adapts to its background. */
 .monitoring-base-cell__highlight--color-default {
-  --cell-highlight-accent-color: var(--color-mid-grey-30);
-  --cell-highlight-font-color: var(--color-mid-grey-100);
+  --cell-highlight-accent-color: var(--status-color-neutral);
+  --cell-highlight-font-color: var(--font-color-strong);
 }
 
 .monitoring-base-cell__highlight--color-success {
-  --cell-highlight-accent-color: var(--color-corporate-green-80);
-  --cell-highlight-font-color: var(--color-corporate-green-80);
+  --cell-highlight-accent-color: var(--status-color-success);
+  --cell-highlight-font-color: var(--status-text-color-success);
 }
 
 .monitoring-base-cell__highlight--color-warning {
-  --cell-highlight-accent-color: var(--color-yellow-60);
-  --cell-highlight-font-color: var(--color-yellow-80);
+  --cell-highlight-accent-color: var(--status-color-warning);
+  --cell-highlight-font-color: var(--status-text-color-warning);
 }
 
 .monitoring-base-cell__highlight--color-danger {
-  --cell-highlight-accent-color: var(--color-dark-red-60);
-  --cell-highlight-font-color: var(--color-dark-red-70);
+  --cell-highlight-accent-color: var(--status-color-error);
+  --cell-highlight-font-color: var(--status-text-color-error-strong);
 }
 
 .monitoring-base-cell__highlight--color-unknown {
-  --cell-highlight-accent-color: var(--color-orange-70);
-  --cell-highlight-font-color: var(--color-orange-80);
+  --cell-highlight-accent-color: var(--status-color-unknown);
+  --cell-highlight-font-color: var(--status-text-color-unknown);
 }
 
 .monitoring-base-cell__highlight--color-pending {
-  --cell-highlight-accent-color: var(--color-mist-grey-80);
-  --cell-highlight-font-color: var(--color-mist-grey-70);
-}
-
-body[data-theme='modern-dark'] {
-  .monitoring-base-cell__highlight--color-default {
-    --cell-highlight-font-color: var(--color-mid-grey-0);
-  }
-
-  .monitoring-base-cell__highlight--color-success {
-    --cell-highlight-font-color: var(--color-corporate-green-60);
-  }
-
-  .monitoring-base-cell__highlight--color-warning {
-    --cell-highlight-font-color: var(--color-yellow-50);
-  }
-
-  .monitoring-base-cell__highlight--color-danger {
-    --cell-highlight-font-color: var(--color-dark-red-30);
-  }
-
-  .monitoring-base-cell__highlight--color-unknown {
-    --cell-highlight-font-color: var(--color-orange-60);
-  }
-
-  .monitoring-base-cell__highlight--color-pending {
-    --cell-highlight-font-color: var(--color-mist-grey-40);
-  }
+  --cell-highlight-accent-color: var(--status-color-pending-subtle);
+  --cell-highlight-font-color: var(--status-text-color-pending);
 }
 </style>

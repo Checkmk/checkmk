@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 from collections import Counter
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -327,110 +328,34 @@ def test_bundles() -> None:
         )
 
 
-_ALLOWED_DUPLICATE_METRIC_TITLES: dict[str, set[str]] = {}
+def _normalized_title(title: str) -> str:
+    return re.sub(r"[\s_-]+", " ", title).strip().casefold()
 
 
-def test_duplicate_metric_titles_new() -> None:
-    # CMK-26844
-    metric_names_by_title: dict[str, set[str]] = {}
-    for plugin in graphing_plugins().plugins.values():
-        if isinstance(plugin, metrics_v1.Metric):
-            metric_names_by_title.setdefault(plugin.title.localize(str), set()).add(plugin.name)
+def _names_sharing_a_title(titled_names: Iterable[tuple[str, str]]) -> Mapping[str, Sequence[str]]:
+    names_by_title: dict[str, list[str]] = {}
+    for name, title in titled_names:
+        names_by_title.setdefault(_normalized_title(title), []).append(name)
+    return {title: sorted(names) for title, names in names_by_title.items() if len(names) > 1}
 
-    duplicate_metric_titles = {t: mns for t, mns in metric_names_by_title.items() if len(mns) > 1}
 
-    new = {}
-    for t, duplicates in duplicate_metric_titles.items():
-        if (allowed := _ALLOWED_DUPLICATE_METRIC_TITLES.get(t)) is None:
-            new[t] = duplicates
-            continue
-
-        if duplicates != allowed:
-            new[t] = duplicates.difference(allowed)
-    assert not new, "Found new duplicate titles:\n" + "\n".join(
-        [f"- {t}: {', '.join(mns)}" for t, mns in new.items()]
+def test_metric_titles_are_unique() -> None:
+    assert not _names_sharing_a_title(
+        (plugin.name, plugin.title.localize(str))
+        for plugin in graphing_plugins().plugins.values()
+        if isinstance(plugin, metrics_v1.Metric)
     )
 
 
-def test_duplicate_metric_titles_fixed() -> None:
-    # CMK-26844
-    metric_names_by_title: dict[str, set[str]] = {}
-    for plugin in graphing_plugins().plugins.values():
-        if isinstance(plugin, metrics_v1.Metric):
-            metric_names_by_title.setdefault(plugin.title.localize(str), set()).add(plugin.name)
-
-    duplicate_metric_titles = {t: mns for t, mns in metric_names_by_title.items() if len(mns) > 1}
-
-    already_fixed = {}
-    for t, allowed in _ALLOWED_DUPLICATE_METRIC_TITLES.items():
-        if (duplicates := duplicate_metric_titles.get(t)) is None:
-            already_fixed[t] = allowed
-            continue
-
-        if allowed != duplicates:
-            already_fixed[t] = allowed.difference(duplicates)
-
-    assert not already_fixed, "Found already fixed duplicate titles:\n" + "\n".join(
-        [f"- {t}: {', '.join(gps)}" for t, gps in already_fixed.items()]
-    )
-
-
-_ALLOWED_DUPLICATE_GRAPH_TITLES: dict[str, set[str]] = {}
-
-
-def test_duplicate_graph_titles_new() -> None:
-    # CMK-26844
-    graphs_by_title: dict[str, set[str]] = {}
-    for plugin in graphing_plugins().plugins.values():
+def test_graph_titles_are_unique() -> None:
+    assert not _names_sharing_a_title(
+        (plugin.name, plugin.title.localize(str))
+        for plugin in graphing_plugins().plugins.values()
         if isinstance(
             plugin,
             graphs_v1.Graph
             | graphs_v1.Bidirectional
             | graphs_v2_unstable.Graph
             | graphs_v2_unstable.Bidirectional,
-        ):
-            graphs_by_title.setdefault(plugin.title.localize(str), set()).add(plugin.name)
-
-    duplicate_graph_titles = {t: gps for t, gps in graphs_by_title.items() if len(gps) > 1}
-
-    new = {}
-    for t, duplicates in duplicate_graph_titles.items():
-        if (allowed := _ALLOWED_DUPLICATE_GRAPH_TITLES.get(t)) is None:
-            new[t] = duplicates
-            continue
-
-        if duplicates != allowed:
-            new[t] = duplicates.difference(allowed)
-
-    assert not new, "Found new duplicate titles:\n" + "\n".join(
-        [f"- {t}: {', '.join(gps)}" for t, gps in new.items()]
-    )
-
-
-def test_duplicate_graph_titles_fixed() -> None:
-    # CMK-26844
-    graphs_by_title: dict[str, set[str]] = {}
-    for plugin in graphing_plugins().plugins.values():
-        if isinstance(
-            plugin,
-            graphs_v1.Graph
-            | graphs_v1.Bidirectional
-            | graphs_v2_unstable.Graph
-            | graphs_v2_unstable.Bidirectional,
-        ):
-            graphs_by_title.setdefault(plugin.title.localize(str), set()).add(plugin.name)
-
-    duplicate_graph_titles = {t: gps for t, gps in graphs_by_title.items() if len(gps) > 1}
-
-    already_fixed = {}
-    for t, allowed in _ALLOWED_DUPLICATE_GRAPH_TITLES.items():
-        if (duplicates := duplicate_graph_titles.get(t)) is None:
-            already_fixed[t] = allowed
-            continue
-
-        if allowed != duplicates:
-            already_fixed[t] = allowed.difference(duplicates)
-
-    assert not already_fixed, "Found already fixed duplicate titles:\n" + "\n".join(
-        [f"- {t}: {', '.join(gps)}" for t, gps in already_fixed.items()]
+        )
     )

@@ -91,6 +91,7 @@ py_library(
         "//packages/cmk-plugin-apis:graphing",
         "//packages/cmk-plugin-apis:rulesets",
         "//packages/cmk-plugin-apis:update_config",
+        "//packages/cmk-schema-manager",
         "//packages/cmk-web/cmk/web/utils",
         "//packages/cmk-werks:core",
         "//packages/cmk-werks:flavor_cmk",

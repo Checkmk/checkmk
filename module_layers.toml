@@ -1693,6 +1693,7 @@ allows = [
   "cmk.plugins",
   "cmk.robotmk",
   "cmk.ruleset_matcher",
+  "cmk.schema_manager",
   "cmk.utils",
   "cmk.validate_config",
   "cmk.werks.site",

@@ -19,3 +19,15 @@ metric_job_total = metrics.Metric(
     unit=UNIT_COUNTER,
     color=metrics.Color.GREEN,
 )
+metric_failed_total = metrics.Metric(
+    name="failed_total",
+    title=Title("Total number of failed jobs"),
+    unit=UNIT_COUNTER,
+    color=metrics.Color.PURPLE,
+)
+metric_zombie_total = metrics.Metric(
+    name="zombie_total",
+    title=Title("Total number of zombie jobs"),
+    unit=UNIT_COUNTER,
+    color=metrics.Color.ORANGE,
+)

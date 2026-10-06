@@ -300,18 +300,6 @@ metric_cpu_time_percent = metrics.Metric(
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.BROWN,
 )
-metric_failed_jobs = metrics.Metric(
-    name="failed_jobs",
-    title=Title("Total number of failed jobs"),
-    unit=UNIT_COUNTER,
-    color=metrics.Color.PURPLE,
-)
-metric_zombie_jobs = metrics.Metric(
-    name="zombie_jobs",
-    title=Title("Total number of zombie jobs"),
-    unit=UNIT_COUNTER,
-    color=metrics.Color.ORANGE,
-)
 metric_cpu_percent = metrics.Metric(
     name="cpu_percent",
     title=Title("CPU used"),
